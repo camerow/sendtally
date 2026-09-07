@@ -27,7 +27,7 @@ echo "Importing into ${db} in ${new_account}..."
 CLOUDFLARE_ACCOUNT_ID="$new_account" npx wrangler d1 execute "$db" --remote --yes --file ./dump.sql
 echo "Row counts in the new database:"
 CLOUDFLARE_ACCOUNT_ID="$new_account" npx wrangler d1 execute "$db" --remote --json \
-  --command "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name != 'd1_migrations'" \
+  --command "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE '\_cf\_%' ESCAPE '\' AND name != 'd1_migrations'" \
   | jq -r '.[0].results[].name' \
   | while read -r t; do
       printf '%-28s ' "$t"

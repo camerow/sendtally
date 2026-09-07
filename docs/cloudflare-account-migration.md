@@ -1,6 +1,15 @@
 # Moving sendtally to the Chalk and Circuits Cloudflare account
 
-Status: in progress (started 2026-09-05). Steps marked `[ ]` are pending.
+Status: cut over on 2026-09-07. Steps marked `[ ]` are pending.
+
+What actually happened differed from the plan in one important way: adding
+`sendtally.com` to the destination account (step 3) moved the zone
+immediately, because both accounts share the same login and the domain is on
+Cloudflare Registrar. The new zone came up `active` with a placeholder A
+record for `api.sendtally.com` and nothing else, so the site was down until
+steps 4 and 5 ran. Steps 7's "expect propagation" never applied; the NS
+change was instant. If this is ever repeated, deploy the Workers to the
+destination account _before_ adding the zone there.
 
 Source account: `Cameron.will@gmail.com's Account` (`7b398a51337874fb6b7ceb188e5961e9`).
 Destination: `Chalk and Circuits` (`f3514650e9f74f7fe7db71fdd6577a8f`).
