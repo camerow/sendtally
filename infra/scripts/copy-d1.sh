@@ -17,7 +17,7 @@ echo "Exporting ${db} from ${old_account}..."
 CLOUDFLARE_ACCOUNT_ID="$old_account" npx wrangler d1 export "$db" --remote --output ./dump.sql
 echo "Clearing existing tables in ${db} in ${new_account} (the dump carries schema and migration history)..."
 CLOUDFLARE_ACCOUNT_ID="$new_account" npx wrangler d1 execute "$db" --remote --json \
-  --command "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'" \
+  --command "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE '\_cf\_%' ESCAPE '\'" \
   | jq -r '.[0].results[].name' \
   | sed 's/.*/DROP TABLE IF EXISTS "&";/' > ./clear.sql
 if [ -s ./clear.sql ]; then
