@@ -8,6 +8,7 @@ resource "cloudflare_d1_database" "sendtally" {
   account_id            = var.account_id
   name                  = "sendtally-${each.key}"
   primary_location_hint = "wnam"
+  read_replication      = { mode = "disabled" }
 
   lifecycle {
     prevent_destroy = true
