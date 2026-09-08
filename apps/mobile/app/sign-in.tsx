@@ -5,6 +5,7 @@ import { KeyboardAvoidingView, Platform, Pressable, Text, TextInput, View } from
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { Logo } from "../components/Logo";
+import { SignedOutOnly } from "../features/auth/SignedOutOnly";
 
 type Intent = "sign-in" | "sign-up";
 
@@ -35,7 +36,7 @@ function errorCode(err: unknown): string | undefined {
   return (err as { errors?: Array<{ code?: string }> }).errors?.[0]?.code;
 }
 
-export default function SignIn(): React.ReactElement {
+export default function SignIn(): React.ReactElement | null {
   const params = useLocalSearchParams<{ intent?: string }>();
   const intent: Intent = params.intent === "sign-up" ? "sign-up" : "sign-in";
   const { signIn, isLoaded: signInLoaded, setActive } = useSignIn();
@@ -125,202 +126,204 @@ export default function SignIn(): React.ReactElement {
   const swap = SWAP[intent];
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.white }}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-        style={{ flex: 1 }}
-      >
-        <View style={{ flex: 1, paddingHorizontal: 22, paddingTop: 32, gap: 16 }}>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
-            {router.canGoBack() && (
-              <Pressable
-                onPress={() => router.back()}
-                accessibilityRole="button"
-                accessibilityLabel="Back"
-                hitSlop={12}
-                style={{ minHeight: 32, justifyContent: "center" }}
-              >
-                <Text
-                  style={{ fontFamily: fonts.sansMedium, fontSize: 20, color: colors.textMuted }}
+    <SignedOutOnly>
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.white }}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          style={{ flex: 1 }}
+        >
+          <View style={{ flex: 1, paddingHorizontal: 22, paddingTop: 32, gap: 16 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
+              {router.canGoBack() && (
+                <Pressable
+                  onPress={() => router.back()}
+                  accessibilityRole="button"
+                  accessibilityLabel="Back"
+                  hitSlop={12}
+                  style={{ minHeight: 32, justifyContent: "center" }}
                 >
-                  ←
-                </Text>
-              </Pressable>
-            )}
-            <Logo size={24} />
-          </View>
-          <Text
-            style={{
-              fontFamily: fonts.display,
-              fontSize: 32,
-              letterSpacing: -1,
-              color: colors.gunmetal,
-              marginTop: 6,
-            }}
-          >
-            {inCodePhase ? "Check your inbox." : copy.title}
-          </Text>
-          <Text
-            style={{
-              fontFamily: fonts.sans,
-              fontSize: 14,
-              lineHeight: 21,
-              color: colors.textSecondary,
-            }}
-          >
-            {inCodePhase ? `We sent a six-digit code to ${email}.` : copy.body}
-          </Text>
-          {inCodePhase ? (
-            <TextInput
-              value={code}
-              onChangeText={(t) => {
-                setCode(t);
-                setError(null);
-              }}
-              placeholder="123456"
-              placeholderTextColor={colors.textFaint}
-              keyboardType="number-pad"
-              textContentType="oneTimeCode"
-              autoFocus
+                  <Text
+                    style={{ fontFamily: fonts.sansMedium, fontSize: 20, color: colors.textMuted }}
+                  >
+                    ←
+                  </Text>
+                </Pressable>
+              )}
+              <Logo size={24} />
+            </View>
+            <Text
               style={{
-                fontFamily: fonts.mono,
-                fontSize: 18,
-                letterSpacing: 6,
+                fontFamily: fonts.display,
+                fontSize: 32,
+                letterSpacing: -1,
                 color: colors.gunmetal,
-                backgroundColor: colors.surfaceSoft,
-                borderWidth: 1,
-                borderColor: "rgba(64,63,76,0.12)",
-                borderRadius: radius.control,
-                paddingHorizontal: 15,
-                paddingVertical: 13,
-                minHeight: 48,
+                marginTop: 6,
               }}
-            />
-          ) : (
-            <TextInput
-              value={email}
-              onChangeText={(t) => {
-                setEmail(t);
-                setError(null);
-              }}
-              placeholder="you@email.com"
-              placeholderTextColor={colors.textFaint}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoCorrect={false}
+            >
+              {inCodePhase ? "Check your inbox." : copy.title}
+            </Text>
+            <Text
               style={{
                 fontFamily: fonts.sans,
-                fontSize: 16,
-                color: colors.gunmetal,
-                backgroundColor: colors.surfaceSoft,
-                borderWidth: 1,
-                borderColor: "rgba(64,63,76,0.12)",
-                borderRadius: radius.control,
-                paddingHorizontal: 15,
-                paddingVertical: 13,
-                minHeight: 44,
+                fontSize: 14,
+                lineHeight: 21,
+                color: colors.textSecondary,
               }}
-            />
-          )}
-          {error !== null && (
-            <Text style={{ fontFamily: fonts.mono, fontSize: 12, color: colors.watermelonInk }}>
-              {error}
+            >
+              {inCodePhase ? `We sent a six-digit code to ${email}.` : copy.body}
             </Text>
-          )}
-          <Pressable
-            onPress={() => void (inCodePhase ? verifyCode() : sendCode())}
-            disabled={busy}
-            style={{
-              backgroundColor: colors.azureInk,
-              borderRadius: radius.control,
-              paddingVertical: 14,
-              minHeight: 48,
-              alignItems: "center",
-              justifyContent: "center",
-              opacity: busy ? 0.45 : 1,
-            }}
-          >
-            <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 16, color: colors.white }}>
-              {inCodePhase
-                ? phase.name === "code" && phase.mode === "sign-up"
-                  ? "Create account"
-                  : "Sign in"
-                : "Email me a code"}
-            </Text>
-          </Pressable>
-          {inCodePhase && (
-            <View style={{ flexDirection: "row", gap: 22 }}>
-              <Pressable
-                onPress={() => {
-                  setPhase({ name: "email" });
-                  setCode("");
+            {inCodePhase ? (
+              <TextInput
+                value={code}
+                onChangeText={(t) => {
+                  setCode(t);
                   setError(null);
                 }}
-                style={{ minHeight: 44, justifyContent: "center" }}
-              >
-                <Text
-                  style={{
-                    fontFamily: fonts.mono,
-                    fontSize: 12,
-                    color: "rgba(64,63,76,0.6)",
-                    textDecorationLine: "underline",
-                  }}
-                >
-                  Different email
-                </Text>
-              </Pressable>
-              <Pressable
-                onPress={() => void sendCode()}
-                style={{ minHeight: 44, justifyContent: "center" }}
-              >
-                <Text
-                  style={{
-                    fontFamily: fonts.mono,
-                    fontSize: 12,
-                    color: "rgba(64,63,76,0.6)",
-                    textDecorationLine: "underline",
-                  }}
-                >
-                  Resend
-                </Text>
-              </Pressable>
-            </View>
-          )}
-          {!inCodePhase && (
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 7 }}>
-              <Text style={{ fontFamily: fonts.mono, fontSize: 12, color: colors.textMuted }}>
-                {swap.prompt}
+                placeholder="123456"
+                placeholderTextColor={colors.textFaint}
+                keyboardType="number-pad"
+                textContentType="oneTimeCode"
+                autoFocus
+                style={{
+                  fontFamily: fonts.mono,
+                  fontSize: 18,
+                  letterSpacing: 6,
+                  color: colors.gunmetal,
+                  backgroundColor: colors.surfaceSoft,
+                  borderWidth: 1,
+                  borderColor: "rgba(64,63,76,0.12)",
+                  borderRadius: radius.control,
+                  paddingHorizontal: 15,
+                  paddingVertical: 13,
+                  minHeight: 48,
+                }}
+              />
+            ) : (
+              <TextInput
+                value={email}
+                onChangeText={(t) => {
+                  setEmail(t);
+                  setError(null);
+                }}
+                placeholder="you@email.com"
+                placeholderTextColor={colors.textFaint}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
+                style={{
+                  fontFamily: fonts.sans,
+                  fontSize: 16,
+                  color: colors.gunmetal,
+                  backgroundColor: colors.surfaceSoft,
+                  borderWidth: 1,
+                  borderColor: "rgba(64,63,76,0.12)",
+                  borderRadius: radius.control,
+                  paddingHorizontal: 15,
+                  paddingVertical: 13,
+                  minHeight: 44,
+                }}
+              />
+            )}
+            {error !== null && (
+              <Text style={{ fontFamily: fonts.mono, fontSize: 12, color: colors.watermelonInk }}>
+                {error}
               </Text>
-              <Pressable
-                onPress={() => router.setParams({ intent: swap.to })}
-                style={{ minHeight: 44, justifyContent: "center" }}
-              >
-                <Text
-                  style={{
-                    fontFamily: fonts.mono,
-                    fontSize: 12,
-                    color: colors.azureInk,
-                    textDecorationLine: "underline",
+            )}
+            <Pressable
+              onPress={() => void (inCodePhase ? verifyCode() : sendCode())}
+              disabled={busy}
+              style={{
+                backgroundColor: colors.azureInk,
+                borderRadius: radius.control,
+                paddingVertical: 14,
+                minHeight: 48,
+                alignItems: "center",
+                justifyContent: "center",
+                opacity: busy ? 0.45 : 1,
+              }}
+            >
+              <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 16, color: colors.white }}>
+                {inCodePhase
+                  ? phase.name === "code" && phase.mode === "sign-up"
+                    ? "Create account"
+                    : "Sign in"
+                  : "Email me a code"}
+              </Text>
+            </Pressable>
+            {inCodePhase && (
+              <View style={{ flexDirection: "row", gap: 22 }}>
+                <Pressable
+                  onPress={() => {
+                    setPhase({ name: "email" });
+                    setCode("");
+                    setError(null);
                   }}
+                  style={{ minHeight: 44, justifyContent: "center" }}
                 >
-                  {swap.label}
+                  <Text
+                    style={{
+                      fontFamily: fonts.mono,
+                      fontSize: 12,
+                      color: "rgba(64,63,76,0.6)",
+                      textDecorationLine: "underline",
+                    }}
+                  >
+                    Different email
+                  </Text>
+                </Pressable>
+                <Pressable
+                  onPress={() => void sendCode()}
+                  style={{ minHeight: 44, justifyContent: "center" }}
+                >
+                  <Text
+                    style={{
+                      fontFamily: fonts.mono,
+                      fontSize: 12,
+                      color: "rgba(64,63,76,0.6)",
+                      textDecorationLine: "underline",
+                    }}
+                  >
+                    Resend
+                  </Text>
+                </Pressable>
+              </View>
+            )}
+            {!inCodePhase && (
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 7 }}>
+                <Text style={{ fontFamily: fonts.mono, fontSize: 12, color: colors.textMuted }}>
+                  {swap.prompt}
                 </Text>
-              </Pressable>
-            </View>
-          )}
-          <Text
-            style={{
-              fontFamily: fonts.mono,
-              fontSize: 12,
-              lineHeight: 19,
-              color: "rgba(64,63,76,0.58)",
-            }}
-          >
-            Strava linking happens on the web. Log sessions here or at sendtally.com - same account,
-            same logbook.
-          </Text>
-        </View>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+                <Pressable
+                  onPress={() => router.setParams({ intent: swap.to })}
+                  style={{ minHeight: 44, justifyContent: "center" }}
+                >
+                  <Text
+                    style={{
+                      fontFamily: fonts.mono,
+                      fontSize: 12,
+                      color: colors.azureInk,
+                      textDecorationLine: "underline",
+                    }}
+                  >
+                    {swap.label}
+                  </Text>
+                </Pressable>
+              </View>
+            )}
+            <Text
+              style={{
+                fontFamily: fonts.mono,
+                fontSize: 12,
+                lineHeight: 19,
+                color: "rgba(64,63,76,0.58)",
+              }}
+            >
+              Strava linking happens on the web. Log sessions here or at sendtally.com - same
+              account, same logbook.
+            </Text>
+          </View>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </SignedOutOnly>
   );
 }
