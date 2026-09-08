@@ -65,7 +65,7 @@ sendtally/
 │   ├── design/          design tokens (CSS variables) + React component library
 │   └── ui-native/       NativeWind component kit for mobile
 ├── infra/
-│   ├── terraform/       Cloudflare account resources (zone, DNS, D1, Queues)
+│   ├── terraform/       Cloudflare account resources (zone, DNS, D1)
 │   └── scripts/         operator scripts (secret push, D1 copy)
 └── tools/
     └── cli-go/          the original Go CLI (go.mod lives here)
@@ -89,7 +89,7 @@ The product was briefly named boardsync; that name was dropped because `boardsyn
 
 - Wrangler environments `staging` and `production` for `sync-service` and `web`: separate D1 databases, separate Clerk instances, secrets via `wrangler secret`.
 - **The Cloudflare account is pinned as `account_id` in both `wrangler.jsonc` files** (`f3514650...`, the "Chalk and Circuits" account that owns the `sendtally.com` zone and everything else). The login also sees the older personal account (`7b398a51...`) that sendtally was migrated out of in September 2026; without the pin wrangler can resolve to it - deploys and `secret bulk` then silently land on a shadow Worker in an account with no zone and no D1, while `tail` watches nothing and the live site never changes. Never remove the pin.
-- **Account-level resources are Terraform-managed** in `infra/terraform/` (zone, zone settings, non-Worker DNS records, D1 databases, Queues). Wrangler owns Worker scripts, bindings, crons, queue consumers, secrets, and Worker custom domains. Create a D1 or queue in Terraform, then pin its id in `wrangler.jsonc`; never create them in the dashboard. State is local (single operator); the API token comes from 1Password via `TF_VAR_cloudflare_api_token`. Migration runbook: `docs/cloudflare-account-migration.md`.
+- **Account-level resources are Terraform-managed** in `infra/terraform/` (zone, zone settings, non-Worker DNS records, D1 databases). Wrangler owns Worker scripts, bindings, secrets, and Worker custom domains. Create a D1 database in Terraform, then pin its id in `wrangler.jsonc`; never create them in the dashboard. State is local (single operator); the API token comes from 1Password via `TF_VAR_cloudflare_api_token`. Migration runbook: `docs/cloudflare-account-migration.md`.
 - `main` is the only long-lived branch and is production. All work branches off `main` and PRs target `main`; merging a PR triggers the production deploy and D1 migrations. The `staging` environment still exists for manual deploys, but there is no `staging` branch in the flow.
 - D1 migrations: `wrangler d1 migrations apply`, additive and forward-only. Never delete or rewrite prior migrations.
 - Schema source of truth is Drizzle (`packages/sync-service/src/db/schema.ts`).
