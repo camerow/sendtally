@@ -1,11 +1,11 @@
 import React from "react";
-import type { SendtallyApi, SessionDetail } from "@sendtally/api-client";
+import type { SendtallyApi, SessionDetail, SessionTag } from "@sendtally/api-client";
 import { useQuery, type QueryState } from "../lib/useQuery";
 import { climbVMs, filterAndSortClimbs, sessionDetailVM } from "./transforms";
 import type { ClimbFilter, ClimbSort, ClimbVM, SessionDetailVM } from "./types";
 
 export type SessionDetailFeature = {
-  state: QueryState<{ vm: SessionDetailVM; climbs: ClimbVM[] }>;
+  state: QueryState<{ vm: SessionDetailVM; climbs: ClimbVM[]; tags: SessionTag[] }>;
   filter: ClimbFilter;
   setFilter: (f: ClimbFilter) => void;
   sort: ClimbSort;
@@ -32,6 +32,7 @@ export function useSessionDetail(api: SendtallyApi, fingerprint: string): Sessio
       data: {
         vm: sessionDetailVM(raw.data),
         climbs: filterAndSortClimbs(all, filter, sort),
+        tags: raw.data.tags,
       },
     };
   }, [raw, filter, sort]);

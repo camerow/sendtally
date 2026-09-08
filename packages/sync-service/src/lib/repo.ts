@@ -1,6 +1,15 @@
-import { and, desc, eq } from "drizzle-orm";
+import { and, asc, count, desc, eq, inArray, notInArray } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
-import { boardConnections, sessions, stravaConnections, syncState, users } from "../db/schema";
+import {
+  boardConnections,
+  sessions,
+  sessionTags,
+  stravaConnections,
+  syncState,
+  tags,
+  users,
+} from "../db/schema";
+import type { NormalizedTag } from "./tags";
 
 export type UserRow = typeof users.$inferSelect;
 
@@ -176,7 +185,8 @@ export async function deleteManualSession(
   userId: string,
   fingerprint: string
 ): Promise<boolean> {
-  const result = await drizzle(db)
+  const d = drizzle(db);
+  const result = await d
     .delete(sessions)
     .where(
       and(
@@ -185,7 +195,119 @@ export async function deleteManualSession(
         eq(sessions.source, "manual")
       )
     );
-  return result.meta.changes > 0;
+  if (result.meta.changes === 0) return false;
+  await d
+    .delete(sessionTags)
+    .where(and(eq(sessionTags.user_id, userId), eq(sessionTags.fingerprint, fingerprint)));
+  await pruneUnusedTags(d, userId);
+  return true;
+}
+
+export type TagRow = { id: string; name: string; slug: string };
+
+export type TagSummary = TagRow & { session_count: number };
+
+type Db = ReturnType<typeof drizzle>;
+
+const tagColumns = { id: tags.id, name: tags.name, slug: tags.slug };
+
+function pruneUnusedTags(d: Db, userId: string): Promise<unknown> {
+  const used = d
+    .select({ tag_id: sessionTags.tag_id })
+    .from(sessionTags)
+    .where(eq(sessionTags.user_id, userId));
+  return d.delete(tags).where(and(eq(tags.user_id, userId), notInArray(tags.id, used)));
+}
+
+export async function listTags(db: D1Database, userId: string): Promise<TagSummary[]> {
+  return drizzle(db)
+    .select({ ...tagColumns, session_count: count(sessionTags.fingerprint) })
+    .from(tags)
+    .leftJoin(
+      sessionTags,
+      and(eq(sessionTags.user_id, tags.user_id), eq(sessionTags.tag_id, tags.id))
+    )
+    .where(eq(tags.user_id, userId))
+    .groupBy(tags.id)
+    .orderBy(asc(tags.name))
+    .all();
+}
+
+export async function tagsBySession(
+  db: D1Database,
+  userId: string
+): Promise<Map<string, TagRow[]>> {
+  const rows = await drizzle(db)
+    .select({ fingerprint: sessionTags.fingerprint, ...tagColumns })
+    .from(sessionTags)
+    .innerJoin(tags, and(eq(tags.user_id, sessionTags.user_id), eq(tags.id, sessionTags.tag_id)))
+    .where(eq(sessionTags.user_id, userId))
+    .orderBy(asc(tags.name))
+    .all();
+  const bySession = new Map<string, TagRow[]>();
+  for (const { fingerprint, ...tag } of rows) {
+    const existing = bySession.get(fingerprint);
+    if (existing) existing.push(tag);
+    else bySession.set(fingerprint, [tag]);
+  }
+  return bySession;
+}
+
+export async function getSessionTags(
+  db: D1Database,
+  userId: string,
+  fingerprint: string
+): Promise<TagRow[]> {
+  return drizzle(db)
+    .select(tagColumns)
+    .from(sessionTags)
+    .innerJoin(tags, and(eq(tags.user_id, sessionTags.user_id), eq(tags.id, sessionTags.tag_id)))
+    .where(and(eq(sessionTags.user_id, userId), eq(sessionTags.fingerprint, fingerprint)))
+    .orderBy(asc(tags.name))
+    .all();
+}
+
+export async function setSessionTags(
+  db: D1Database,
+  userId: string,
+  fingerprint: string,
+  wanted: NormalizedTag[]
+): Promise<TagRow[]> {
+  const d = drizzle(db);
+  const slugs = wanted.map((t) => t.slug);
+  const known =
+    slugs.length === 0
+      ? []
+      : await d
+          .select(tagColumns)
+          .from(tags)
+          .where(and(eq(tags.user_id, userId), inArray(tags.slug, slugs)))
+          .all();
+  const bySlug = new Map(known.map((t) => [t.slug, t]));
+
+  const missing = wanted.filter((t) => !bySlug.has(t.slug));
+  if (missing.length > 0) {
+    const created_at = new Date().toISOString();
+    const created = missing.map((t) => ({ id: crypto.randomUUID(), name: t.name, slug: t.slug }));
+    await d.insert(tags).values(created.map((t) => ({ user_id: userId, created_at, ...t })));
+    for (const tag of created) bySlug.set(tag.slug, tag);
+  }
+
+  const linked = wanted.map((t) => bySlug.get(t.slug)!);
+  const clear = d
+    .delete(sessionTags)
+    .where(and(eq(sessionTags.user_id, userId), eq(sessionTags.fingerprint, fingerprint)));
+  if (linked.length === 0) await clear;
+  else {
+    await d.batch([
+      clear,
+      d
+        .insert(sessionTags)
+        .values(linked.map((t) => ({ user_id: userId, fingerprint, tag_id: t.id }))),
+    ]);
+  }
+  await pruneUnusedTags(d, userId);
+  return linked;
 }
 
 export async function listSessions(
@@ -221,6 +343,8 @@ export async function getSession(
 export async function deleteUserData(db: D1Database, userId: string): Promise<void> {
   const d = drizzle(db);
   await d.batch([
+    d.delete(sessionTags).where(eq(sessionTags.user_id, userId)),
+    d.delete(tags).where(eq(tags.user_id, userId)),
     d.delete(sessions).where(eq(sessions.user_id, userId)),
     d.delete(stravaConnections).where(eq(stravaConnections.user_id, userId)),
     // Legacy Aurora rows still hold an encrypted board token for the users who

@@ -116,6 +116,28 @@ export function SessionCard({
       <Text style={{ fontFamily: fonts.mono, fontSize: 11, color: colors.textSecondary }}>
         {session.climb_count} CLIMBS · RPE {session.rpe}/10
       </Text>
+      {session.tags.length > 0 && (
+        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}>
+          {session.tags.map((tag) => (
+            <Text
+              key={tag.id}
+              style={{
+                fontFamily: fonts.monoMedium,
+                fontSize: 9,
+                letterSpacing: 0.7,
+                borderRadius: radius.pill,
+                paddingHorizontal: 8,
+                paddingVertical: 3,
+                overflow: "hidden",
+                backgroundColor: colors.petalTint,
+                color: colors.gunmetal,
+              }}
+            >
+              {tag.name.toUpperCase()}
+            </Text>
+          ))}
+        </View>
+      )}
     </View>
   );
 }

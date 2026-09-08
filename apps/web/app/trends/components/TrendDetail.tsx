@@ -4,6 +4,7 @@ import { useTrends, type TrendMetric } from "@sendtally/features/trends";
 import { useClientApi } from "../../lib/useClientApi";
 import { TrendBars } from "./TrendBars";
 import { TrendFilters } from "./TrendFilters";
+import { TrendTagBreakdown } from "./TrendTagBreakdown";
 
 export type TrendDetailProps = {
   apiUrl: string;
@@ -106,6 +107,10 @@ export function TrendDetail({ apiUrl, metric }: TrendDetailProps): React.ReactEl
                   </div>
                 ))}
               </div>
+              <TrendTagBreakdown
+                title={`BY TAG · ${detail.title.toUpperCase()}`}
+                rows={detail.breakdown}
+              />
               <p
                 style={{
                   margin: 0,

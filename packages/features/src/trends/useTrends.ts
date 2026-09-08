@@ -1,6 +1,7 @@
 import React from "react";
 import type { SendtallyApi, SessionWithClimbs } from "@sendtally/api-client";
 import { useQuery, type QueryState } from "../lib/useQuery";
+import { filterSessionsByTags, sessionTagOptions, type TagOption } from "../sessions/tags";
 import { trendsVM } from "./transforms";
 import type { TrendRange, TrendsVM } from "./types";
 
@@ -9,14 +10,15 @@ export type TrendsFeature = {
   reload: () => void;
   range: TrendRange;
   setRange: (range: TrendRange) => void;
-  board: string | null;
-  setBoard: (board: string | null) => void;
-  boards: string[];
+  tagOptions: TagOption[];
+  selectedTags: string[];
+  toggleTag: (slug: string) => void;
+  clearTags: () => void;
 };
 
 export function useTrends(api: SendtallyApi): TrendsFeature {
   const [range, setRange] = React.useState<TrendRange>("3m");
-  const [board, setBoard] = React.useState<string | null>(null);
+  const [selectedTags, setSelectedTags] = React.useState<string[]>([]);
 
   const load = React.useCallback(async (): Promise<SessionWithClimbs[]> => {
     const { sessions } = await api.sessionsWithClimbs();
@@ -25,16 +27,23 @@ export function useTrends(api: SendtallyApi): TrendsFeature {
 
   const { state: raw, reload } = useQuery(load);
 
-  const boards = React.useMemo((): string[] => {
-    if (raw.status !== "ready") return [];
-    return [...new Set(raw.data.map((s) => s.board).filter((b): b is string => b !== null))];
-  }, [raw]);
+  const tagOptions = React.useMemo(
+    (): TagOption[] => (raw.status === "ready" ? sessionTagOptions(raw.data) : []),
+    [raw]
+  );
 
   const state = React.useMemo((): QueryState<TrendsVM> => {
     if (raw.status !== "ready") return raw;
-    const filtered = board === null ? raw.data : raw.data.filter((s) => s.board === board);
-    return { status: "ready", data: trendsVM(filtered, range) };
-  }, [raw, range, board]);
+    return { status: "ready", data: trendsVM(filterSessionsByTags(raw.data, selectedTags), range) };
+  }, [raw, range, selectedTags]);
 
-  return { state, reload, range, setRange, board, setBoard, boards };
+  const toggleTag = React.useCallback((slug: string): void => {
+    setSelectedTags((prev) =>
+      prev.includes(slug) ? prev.filter((s) => s !== slug) : [...prev, slug]
+    );
+  }, []);
+
+  const clearTags = React.useCallback((): void => setSelectedTags([]), []);
+
+  return { state, reload, range, setRange, tagOptions, selectedTags, toggleTag, clearTags };
 }

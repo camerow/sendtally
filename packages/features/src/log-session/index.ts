@@ -12,5 +12,7 @@ export {
   toLogSessionInput,
   vGradeOf,
   withScale,
+  withTag,
+  withoutTag,
 } from "./transforms";
 export type { ClimbDraft, GradeScale, LogSessionDraft } from "./types";

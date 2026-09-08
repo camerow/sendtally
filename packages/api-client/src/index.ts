@@ -4,7 +4,9 @@ import {
   type LogSessionInput,
   type SessionRow,
   type SessionDetail,
+  type SessionTag,
   type SessionWithClimbs,
+  type TagSummary,
 } from "./types";
 
 export * from "./types";
@@ -74,6 +76,17 @@ export class SendtallyApi {
     return this.request<{ deleted: boolean }>(`/v1/sessions/${encodeURIComponent(fingerprint)}`, {
       method: "DELETE",
     });
+  }
+
+  tags(): Promise<{ tags: TagSummary[] }> {
+    return this.request<{ tags: TagSummary[] }>("/v1/tags");
+  }
+
+  setSessionTags(fingerprint: string, tags: string[]): Promise<{ tags: SessionTag[] }> {
+    return this.request<{ tags: SessionTag[] }>(
+      `/v1/sessions/${encodeURIComponent(fingerprint)}/tags`,
+      { method: "PUT", body: JSON.stringify({ tags }) }
+    );
   }
 
   stravaAuthorizeUrl(): Promise<{ url: string }> {
