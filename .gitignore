@@ -12,6 +12,9 @@ build/
 .react-router/
 apps/mobile/ios/
 apps/mobile/android/
+apps/mobile/store/out/
+apps/mobile/google-service-account.json
+apps/mobile/asc-api-key.p8
 # Written and deleted by the Expo CLI; apps/mobile/types/expo.d.ts owns the
 # same reference so the typecheck does not depend on it.
 apps/mobile/expo-env.d.ts
