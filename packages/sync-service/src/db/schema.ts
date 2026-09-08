@@ -1,4 +1,12 @@
-import { index, integer, primaryKey, real, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import {
+  index,
+  integer,
+  primaryKey,
+  real,
+  sqliteTable,
+  text,
+  uniqueIndex,
+} from "drizzle-orm/sqlite-core";
 
 export const users = sqliteTable("users", {
   id: text("id").primaryKey(),
@@ -65,6 +73,38 @@ export const sessions = sqliteTable(
   (t) => [
     primaryKey({ columns: [t.user_id, t.fingerprint] }),
     index("idx_sessions_user_start").on(t.user_id, t.start_at),
+  ]
+);
+
+export const tags = sqliteTable(
+  "tags",
+  {
+    user_id: text("user_id")
+      .notNull()
+      .references(() => users.id),
+    id: text("id").notNull(),
+    name: text("name").notNull(),
+    slug: text("slug").notNull(),
+    created_at: text("created_at").notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.user_id, t.id] }),
+    uniqueIndex("idx_tags_user_slug").on(t.user_id, t.slug),
+  ]
+);
+
+export const sessionTags = sqliteTable(
+  "session_tags",
+  {
+    user_id: text("user_id")
+      .notNull()
+      .references(() => users.id),
+    fingerprint: text("fingerprint").notNull(),
+    tag_id: text("tag_id").notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.user_id, t.fingerprint, t.tag_id] }),
+    index("idx_session_tags_user_tag").on(t.user_id, t.tag_id),
   ]
 );
 

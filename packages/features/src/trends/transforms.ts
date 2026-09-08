@@ -1,9 +1,11 @@
 import type { SessionWithClimbs } from "@sendtally/api-client";
+import { sessionTagGroups } from "../sessions/tags";
 import type {
   TrendBarVM,
   TrendDetailVM,
   TrendMetric,
   TrendRange,
+  TrendTagRowVM,
   TrendTileVM,
   TrendsVM,
 } from "./types";
@@ -128,6 +130,64 @@ function thinAxis(buckets: Bucket[]): (i: number) => string {
   return (i) => (i % every === 0 || i === buckets.length - 1 ? buckets[i]!.label : "");
 }
 
+const MAX_BREAKDOWN_ROWS = 10;
+
+type TagStat = {
+  key: string;
+  label: string;
+  sessions: number;
+  volume: number;
+  sends: number;
+  hardest: number | null;
+  flash: number | null;
+  avg: number | null;
+};
+
+const METRIC_PICK: Record<TrendMetric, (t: TagStat) => { value: number | null; label: string }> = {
+  volume: (t) => ({ value: t.volume, label: String(t.volume) }),
+  pyramid: (t) => ({ value: t.sends, label: String(t.sends) }),
+  hardest: (t) => ({ value: t.hardest, label: t.hardest === null ? "-" : `V${t.hardest}` }),
+  flash: (t) => ({ value: t.flash, label: t.flash === null ? "-" : `${t.flash}%` }),
+  avggrade: (t) => ({ value: t.avg, label: t.avg === null ? "-" : `V${t.avg.toFixed(1)}` }),
+};
+
+function tagStats(sessions: SessionWithClimbs[], windowStart: number): TagStat[] {
+  return sessionTagGroups(sessions).map((group) => {
+    const sent = sends(group.sessions).filter((c) => c.time >= windowStart);
+    const grades = sent.map((c) => c.grade);
+    return {
+      key: group.key,
+      label: group.label,
+      sessions: group.sessions.length,
+      volume: group.sessions.reduce((a, s) => a + s.climb_count, 0),
+      sends: sent.length,
+      hardest: grades.length === 0 ? null : Math.max(...grades),
+      flash:
+        sent.length === 0
+          ? null
+          : Math.round((sent.filter((c) => c.flash).length / sent.length) * 100),
+      avg: grades.length === 0 ? null : grades.reduce((a, g) => a + g, 0) / grades.length,
+    };
+  });
+}
+
+function breakdownFor(metric: TrendMetric, stats: TagStat[]): TrendTagRowVM[] {
+  const rows = stats
+    .map((stat) => ({ stat, ...METRIC_PICK[metric](stat) }))
+    .filter((r): r is { stat: TagStat; value: number; label: string } => r.value !== null);
+  const max = Math.max(0, ...rows.map((r) => r.value));
+  return rows
+    .sort((a, b) => b.value - a.value || a.stat.label.localeCompare(b.stat.label))
+    .slice(0, MAX_BREAKDOWN_ROWS)
+    .map((r) => ({
+      key: r.stat.key,
+      label: r.stat.label,
+      value: r.label,
+      ratio: max <= 0 ? 0 : r.value / max,
+      sessions: r.stat.sessions,
+    }));
+}
+
 export function trendsVM(
   sessions: SessionWithClimbs[],
   range: TrendRange = "3m",
@@ -173,6 +233,7 @@ export function trendsVM(
   const totalClimbs = inRange.reduce((a, s) => a + s.climb_count, 0);
   const avgGrade = totalSends > 0 ? rangeSends.reduce((a, s) => a + s.grade, 0) / totalSends : 0;
 
+  const stats = tagStats(inRange, windowStart);
   const axis = thinAxis(buckets);
   const countTick = (v: number): string => String(Math.round(v));
   const gradeTick = (v: number): string => `V${Math.round(v)}`;
@@ -285,6 +346,7 @@ export function trendsVM(
           v: biggestBucket > 0 ? `${biggestBucket} · ${buckets[biggestBucketIdx]!.label}` : "-",
         },
       ],
+      breakdown: breakdownFor("volume", stats),
       insight:
         biggestBucket > 0
           ? `${totalClimbs} climbs across ${inRange.length} sessions, peaking at ${biggestBucket}.`
@@ -315,6 +377,7 @@ export function trendsVM(
         },
         { k: "TOTAL", v: `${totalSends} sends` },
       ],
+      breakdown: breakdownFor("pyramid", stats),
       insight:
         totalSends > 0
           ? `A V${pyramid.reduce((a, b) => (b.count > a.count ? b : a)).grade} base carrying V${hi} on top.`
@@ -337,6 +400,7 @@ export function trendsVM(
         },
         { k: "SENDS AT MAX", v: String(rangeSends.filter((s) => s.grade === hi).length) },
       ],
+      breakdown: breakdownFor("hardest", stats),
       insight:
         totalSends > 0
           ? `Top grade V${hi}, with ${rangeSends.filter((s) => s.grade === hi).length} send${
@@ -366,6 +430,7 @@ export function trendsVM(
               : "-",
         },
       ],
+      breakdown: breakdownFor("flash", stats),
       insight:
         totalSends > 0
           ? "Flash rate tracks how well you read a board before pulling on."
@@ -388,6 +453,7 @@ export function trendsVM(
         },
         { k: "SENDS COUNTED", v: String(totalSends) },
       ],
+      breakdown: breakdownFor("avggrade", stats),
       insight:
         totalSends > 0
           ? "Average send grade drifts slowly - steady beats spiky."

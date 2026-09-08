@@ -10,6 +10,7 @@ import {
 import { cloudflareContext } from "../lib/cloudflare-context";
 import { requireApi } from "../lib/api.server";
 import { useClientApi } from "../lib/useClientApi";
+import { SessionTags } from "../sessions/components/SessionTags";
 
 export async function loader(args: LoaderFunctionArgs): Promise<{ apiUrl: string }> {
   await requireApi(args);
@@ -80,7 +81,7 @@ export default function SessionDetailRoute(): React.ReactElement {
       </span>
     );
   }
-  const { vm, climbs } = state.data;
+  const { vm, climbs, tags } = state.data;
 
   const filters: Array<[ClimbFilter, string]> = [
     ["all", `ALL ${vm.filterCounts.all}`],
@@ -150,6 +151,8 @@ export default function SessionDetailRoute(): React.ReactElement {
           </a>
         )}
       </div>
+
+      <SessionTags api={api} fingerprint={params.fingerprint ?? ""} initial={tags} />
 
       <div
         style={{

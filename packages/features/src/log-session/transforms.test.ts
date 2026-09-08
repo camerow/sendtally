@@ -10,6 +10,8 @@ import {
   toLogSessionInput,
   vGradeOf,
   withScale,
+  withTag,
+  withoutTag,
 } from "./transforms";
 import type { LogSessionDraft } from "./types";
 
@@ -20,6 +22,7 @@ function draft(overrides: Partial<LogSessionDraft> = {}): LogSessionDraft {
     startTime: "18:30",
     endTime: "20:00",
     location: "indoor",
+    tags: [],
     scale: "v",
     rpe: null,
     climbs: [
@@ -89,6 +92,22 @@ describe("emptyDraft", () => {
   });
 });
 
+describe("withTag / withoutTag", () => {
+  it("adds a trimmed tag and ignores one it already carries", () => {
+    const tagged = withTag(draft(), "  Endurance ");
+    expect(tagged.tags).toEqual(["Endurance"]);
+    expect(withTag(tagged, "endurance").tags).toEqual(["Endurance"]);
+  });
+
+  it("ignores an empty tag", () => {
+    expect(withTag(draft(), "   ").tags).toEqual([]);
+  });
+
+  it("removes a tag whatever its casing", () => {
+    expect(withoutTag(draft({ tags: ["Bishop"] }), "bishop").tags).toEqual([]);
+  });
+});
+
 describe("draftSummary", () => {
   it("summarises climbs, results, top grade, and duration", () => {
     expect(draftSummary(draft())).toBe("2 CLIMBS · 1 SEND, 1 ATTEMPT · TOP V6 · 1H 30M");
@@ -108,6 +127,16 @@ describe("draftProblem", () => {
     expect(draftProblem(draft({ climbs: [] }))).toContain("climb");
     expect(draftProblem(draft({ endTime: "" }))).toContain("time");
     expect(draftProblem(draft({ startTime: "18:00", endTime: "07:00" }))).toContain("12 hours");
+  });
+});
+
+describe("toLogSessionInput tags", () => {
+  it("omits tags when the draft has none and sends them when it does", () => {
+    expect(toLogSessionInput(draft()).tags).toBeUndefined();
+    expect(toLogSessionInput(draft({ tags: ["Endurance", "Home"] })).tags).toEqual([
+      "Endurance",
+      "Home",
+    ]);
   });
 });
 

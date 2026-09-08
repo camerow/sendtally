@@ -25,6 +25,7 @@ function session(fingerprint: string, startAt: string): SessionRow {
     strava_activity_id: null,
     posted_at: null,
     inProgress: false,
+    tags: [],
   };
 }
 

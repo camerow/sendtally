@@ -1,17 +1,21 @@
 import { describe, expect, it } from "vitest";
-import type { SessionClimb, SessionWithClimbs } from "@sendtally/api-client";
+import type { SessionClimb, SessionTag, SessionWithClimbs } from "@sendtally/api-client";
 import { bucketsFor, trendsVM } from "./transforms";
 
 const NOW = new Date("2026-08-06T12:00:00.000Z");
 
+function tag(name: string): SessionTag {
+  return { id: `id-${name}`, name, slug: name.toLowerCase() };
+}
+
 function session(
   startIso: string,
   climbs: Array<Partial<SessionClimb> & { vGrade: number }>,
-  board = "tension"
+  tags: SessionTag[] = []
 ): SessionWithClimbs {
   return {
-    fingerprint: `fp-${startIso}-${board}`,
-    board,
+    fingerprint: `fp-${startIso}-${tags.map((t) => t.slug).join("-")}`,
+    board: "tension",
     source: "board",
     location: null,
     name: null,
@@ -25,6 +29,7 @@ function session(
     strava_activity_id: null,
     posted_at: null,
     inProgress: false,
+    tags,
     climbs: climbs.map((c, i) => ({
       time: startIso,
       name: `c${i}`,
@@ -101,6 +106,37 @@ describe("trendsVM", () => {
     const vm = trendsVM([], "all", NOW);
     expect(vm.tiles.find((t) => t.metric === "hardest")?.value).toBe("-");
     expect(vm.details.pyramid.specs[2]?.v).toBe("0 sends");
+  });
+});
+
+describe("trendsVM tag breakdown", () => {
+  const endurance = tag("Endurance");
+  const projecting = tag("Projecting");
+  const tagged: SessionWithClimbs[] = [
+    session("2026-08-01T18:00:00.000Z", [{ vGrade: 3 }, { vGrade: 4 }], [endurance]),
+    session("2026-08-02T18:00:00.000Z", [{ vGrade: 3 }], [endurance]),
+    session("2026-08-03T18:00:00.000Z", [{ vGrade: 7, tries: 4 }], [projecting]),
+    session("2026-08-04T18:00:00.000Z", [{ vGrade: 5 }]),
+  ];
+
+  it("ranks tags by the metric and counts an untagged group", () => {
+    const { breakdown } = trendsVM(tagged, "1m", NOW).details.volume;
+    expect(breakdown).toEqual([
+      { key: "endurance", label: "Endurance", value: "3", ratio: 1, sessions: 2 },
+      { key: "projecting", label: "Projecting", value: "1", ratio: 1 / 3, sessions: 1 },
+      { key: "untagged", label: "Untagged", value: "1", ratio: 1 / 3, sessions: 1 },
+    ]);
+  });
+
+  it("scores each metric against the tag's own sessions", () => {
+    const details = trendsVM(tagged, "1m", NOW).details;
+    expect(details.hardest.breakdown[0]).toMatchObject({ key: "projecting", value: "V7" });
+    expect(details.flash.breakdown.find((r) => r.key === "projecting")?.value).toBe("0%");
+    expect(details.avggrade.breakdown.find((r) => r.key === "endurance")?.value).toBe("V3.3");
+  });
+
+  it("is empty when no session in range carries a tag", () => {
+    expect(trendsVM([], "1m", NOW).details.volume.breakdown).toEqual([]);
   });
 });
 

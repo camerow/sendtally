@@ -15,6 +15,29 @@
   margin-top: 22px;
 }
 
+.sessions-filters {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.sessions-filter-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.sessions-filter-label {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: rgba(64, 63, 76, 0.55);
+  min-width: 62px;
+}
+
 .sessions-body {
   display: flex;
   gap: 32px;
@@ -80,6 +103,10 @@
   gap: 10px;
 }
 
+.sessions-tag-rows {
+  margin-top: 14px;
+}
+
 .sessions-scope {
   display: none;
 }
@@ -112,6 +139,27 @@
 @media (max-width: 767px) {
   .sessions-head-action {
     display: none;
+  }
+
+  .sessions-filters {
+    margin-top: 16px;
+    gap: 8px;
+  }
+
+  .sessions-filter-row {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+  }
+
+  .sessions-filter-row::-webkit-scrollbar {
+    display: none;
+  }
+
+  .sessions-filter-label {
+    min-width: 0;
+    flex: none;
   }
 
   .sessions-banner {
@@ -158,6 +206,11 @@
     top: 58px;
     padding-top: 12px;
     scroll-margin-top: 66px;
+  }
+
+  .sessions-year.sessions-tag-head {
+    top: 0;
+    scroll-margin-top: 8px;
   }
 
   .sessions-month {

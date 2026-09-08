@@ -1,6 +1,7 @@
 import { defaultEffortConfig, score, vFromFont, type Climb, type Session } from "@sendtally/core";
 import { z } from "zod";
 import type { ManualSessionInput, SessionRow } from "./repo";
+import { tagNames } from "./tags";
 
 const gradeSchema = z.union([
   z.object({ scale: z.literal("v"), value: z.number().int().min(0).max(17) }),
@@ -36,6 +37,7 @@ const manualSessionShape = z.object({
     .optional(),
   rpe: z.number().int().min(1).max(10).optional(),
   location: z.enum(["indoor", "outdoor"]),
+  tags: tagNames.optional(),
   climbs: z.array(climbSchema).min(1).max(300),
 });
 

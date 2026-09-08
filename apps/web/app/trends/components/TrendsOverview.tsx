@@ -1,9 +1,10 @@
 import React from "react";
 import { Link } from "react-router";
-import { useTrends } from "@sendtally/features/trends";
+import { TILE_BREAKDOWN_ROWS, useTrends } from "@sendtally/features/trends";
 import { useClientApi } from "../../lib/useClientApi";
 import { TrendBars } from "./TrendBars";
 import { TrendFilters } from "./TrendFilters";
+import { TrendTagBreakdown } from "./TrendTagBreakdown";
 
 export type TrendsOverviewProps = {
   apiUrl: string;
@@ -111,6 +112,11 @@ export function TrendsOverview({ apiUrl }: TrendsOverviewProps): React.ReactElem
               <div style={{ marginTop: 4 }}>
                 <TrendBars bars={tile.bars} height={44} />
               </div>
+              <TrendTagBreakdown
+                compact
+                title="BY TAG"
+                rows={state.data.details[tile.metric].breakdown.slice(0, TILE_BREAKDOWN_ROWS)}
+              />
             </Link>
           ))}
         </div>

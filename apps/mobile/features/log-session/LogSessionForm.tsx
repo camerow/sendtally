@@ -9,11 +9,15 @@ import {
   newClimb,
   toLogSessionInput,
   withScale,
+  withTag,
+  withoutTag,
   type ClimbDraft,
   type LogSessionDraft,
 } from "@sendtally/features/log-session";
+import { useTagVocabulary } from "@sendtally/features/sessions";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { useApi } from "../../lib/api";
+import { TagPicker } from "../sessions/TagPicker";
 
 function LabelText({ children }: { children: React.ReactNode }): React.ReactElement {
   return (
@@ -240,6 +244,7 @@ export function LogSessionForm(): React.ReactElement {
   const [error, setError] = React.useState<string | null>(null);
   const nextKey = React.useRef(2);
   const options = gradeOptions(draft.scale);
+  const { suggestionsFor } = useTagVocabulary(api);
 
   async function save(): Promise<void> {
     const problem = draftProblem(draft);
@@ -359,6 +364,17 @@ export function LogSessionForm(): React.ReactElement {
               onPress={() => setDraft({ ...draft, location: "outdoor" })}
             />
           </View>
+        </View>
+
+        <View style={{ gap: 7 }}>
+          <LabelText>TAGS · OPTIONAL</LabelText>
+          <TagPicker
+            tags={draft.tags}
+            suggestions={suggestionsFor(draft.tags)}
+            placeholder="Endurance, Bishop…"
+            onAdd={(name) => setDraft((d) => withTag(d, name))}
+            onRemove={(name) => setDraft((d) => withoutTag(d, name))}
+          />
         </View>
 
         <View style={{ gap: 8 }}>

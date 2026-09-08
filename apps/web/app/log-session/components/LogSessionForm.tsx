@@ -9,10 +9,14 @@ import {
   newClimb,
   toLogSessionInput,
   withScale,
+  withTag,
+  withoutTag,
   type ClimbDraft,
   type GradeScale,
   type LogSessionDraft,
 } from "@sendtally/features/log-session";
+import { useTagVocabulary } from "@sendtally/features/sessions";
+import { TagPicker } from "../../components/TagPicker";
 
 const monoLabel: React.CSSProperties = {
   fontFamily: "var(--font-mono)",
@@ -344,6 +348,7 @@ export function LogSessionForm({ api }: { api: SendtallyApi }): React.ReactEleme
   const [saving, setSaving] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const nextKey = React.useRef(2);
+  const { suggestionsFor } = useTagVocabulary(api);
 
   const problem = draftProblem(draft);
 
@@ -429,6 +434,21 @@ export function LogSessionForm({ api }: { api: SendtallyApi }): React.ReactEleme
                 </button>
               ))}
             </div>
+          </Field>
+          <Field
+            label={
+              <>
+                TAGS <span style={{ color: "rgba(64,63,76,0.45)" }}>· OPTIONAL</span>
+              </>
+            }
+          >
+            <TagPicker
+              tags={draft.tags}
+              suggestions={suggestionsFor(draft.tags)}
+              placeholder="Endurance, Bishop…"
+              onAdd={(name) => setDraft((d) => withTag(d, name))}
+              onRemove={(name) => setDraft((d) => withoutTag(d, name))}
+            />
           </Field>
           <RpePicker rpe={draft.rpe} onChange={(rpe) => setDraft({ ...draft, rpe })} />
           <div

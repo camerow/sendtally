@@ -1,11 +1,12 @@
 import { router } from "expo-router";
 import React from "react";
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
-import { useTrends } from "@sendtally/features/trends";
+import { TILE_BREAKDOWN_ROWS, useTrends } from "@sendtally/features/trends";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { useApi } from "../../lib/api";
 import { TrendBars } from "./TrendBars";
 import { TrendFilters } from "./TrendFilters";
+import { TrendTagBreakdown } from "./TrendTagBreakdown";
 
 export function TrendsList(): React.ReactElement {
   const api = useApi();
@@ -111,6 +112,11 @@ export function TrendsList(): React.ReactElement {
             <View style={{ marginTop: 2 }}>
               <TrendBars bars={t.bars} height={38} />
             </View>
+            <TrendTagBreakdown
+              compact
+              title="BY TAG"
+              rows={state.data.details[t.metric].breakdown.slice(0, TILE_BREAKDOWN_ROWS)}
+            />
           </Pressable>
         ))}
     </>

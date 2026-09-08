@@ -1,5 +1,6 @@
 import { FONT_GRADES, fontFromV, vFromFont } from "@sendtally/core";
 import type { LogClimbInput, LogSessionInput } from "@sendtally/api-client";
+import { sameTagName } from "../sessions/tags";
 import type { ClimbDraft, GradeScale, LogSessionDraft } from "./types";
 
 export const V_GRADE_OPTIONS: readonly string[] = Array.from({ length: 18 }, (_, i) => `V${i}`);
@@ -42,6 +43,7 @@ export function emptyDraft(now: Date): LogSessionDraft {
     startTime: hhmm(start),
     endTime: hhmm(roundedNow),
     location: "indoor",
+    tags: [],
     scale: "v",
     rpe: null,
     climbs: [newClimb("climb-1", "v")],
@@ -50,6 +52,16 @@ export function emptyDraft(now: Date): LogSessionDraft {
 
 export function newClimb(key: string, scale: GradeScale): ClimbDraft {
   return { key, grade: scale === "v" ? "V3" : "6A", name: "", kind: "send", tries: 1 };
+}
+
+export function withTag(draft: LogSessionDraft, name: string): LogSessionDraft {
+  const trimmed = name.trim();
+  if (trimmed === "" || draft.tags.some((t) => sameTagName(t, trimmed))) return draft;
+  return { ...draft, tags: [...draft.tags, trimmed] };
+}
+
+export function withoutTag(draft: LogSessionDraft, name: string): LogSessionDraft {
+  return { ...draft, tags: draft.tags.filter((t) => !sameTagName(t, name)) };
 }
 
 export function withScale(draft: LogSessionDraft, scale: GradeScale): LogSessionDraft {
@@ -131,6 +143,7 @@ export function toLogSessionInput(draft: LogSessionDraft): LogSessionInput {
     endTime: draft.endTime,
     ...(draft.rpe === null ? {} : { rpe: draft.rpe }),
     location: draft.location,
+    ...(draft.tags.length === 0 ? {} : { tags: draft.tags }),
     climbs,
   };
 }

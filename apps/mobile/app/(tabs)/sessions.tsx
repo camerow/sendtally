@@ -1,19 +1,26 @@
 import { router } from "expo-router";
 import React from "react";
-import { FlatList, Pressable, RefreshControl, Text, View } from "react-native";
+import { Pressable, RefreshControl, SectionList, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import type { SessionRow } from "@sendtally/api-client";
 import {
+  filterSessionsByTags,
   resolveSessionMonth,
   sessionBadge,
   sessionMonths,
+  sessionTagGroups,
+  sessionTagOptions,
   sessionTitle,
+  type SessionGrouping,
 } from "@sendtally/features/sessions";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { Logo } from "../../components/Logo";
 import { MonthPicker } from "../../features/sessions/MonthPicker";
 import { SessionCard } from "../../features/sessions/SessionCard";
+import { SessionFilters } from "../../features/sessions/SessionFilters";
 import { useApi } from "../../lib/api";
+
+type Section = { key: string; title: string | null; data: SessionRow[] };
 
 export default function Sessions(): React.ReactElement {
   const api = useApi();
@@ -21,8 +28,28 @@ export default function Sessions(): React.ReactElement {
   const [refreshing, setRefreshing] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [monthKey, setMonthKey] = React.useState<string | null>(null);
-  const months = React.useMemo(() => sessionMonths(sessions ?? []), [sessions]);
-  const selected = resolveSessionMonth(months, monthKey);
+  const [grouping, setGrouping] = React.useState<SessionGrouping>("month");
+  const [selectedTags, setSelectedTags] = React.useState<string[]>([]);
+
+  const all = React.useMemo(() => sessions ?? [], [sessions]);
+  const tagOptions = React.useMemo(() => sessionTagOptions(all), [all]);
+  const untaggedCount = React.useMemo(() => all.filter((s) => s.tags.length === 0).length, [all]);
+  const visible = React.useMemo(() => filterSessionsByTags(all, selectedTags), [all, selectedTags]);
+  const months = React.useMemo(() => sessionMonths(visible), [visible]);
+  const selectedMonth = resolveSessionMonth(months, monthKey);
+
+  const sectionList = React.useMemo((): Section[] => {
+    if (grouping === "tag") {
+      return sessionTagGroups(visible).map((g) => ({
+        key: g.key,
+        title: `${g.label.toUpperCase()} · ${g.sessions.length === 1 ? "1 SESSION" : `${g.sessions.length} SESSIONS`}`,
+        data: g.sessions,
+      }));
+    }
+    return selectedMonth === null
+      ? []
+      : [{ key: selectedMonth.key, title: null, data: selectedMonth.sessions }];
+  }, [grouping, visible, selectedMonth]);
 
   const load = React.useCallback(async (): Promise<void> => {
     try {
@@ -38,16 +65,23 @@ export default function Sessions(): React.ReactElement {
     void load();
   }, [load]);
 
+  const toggleTag = React.useCallback((slug: string): void => {
+    setSelectedTags((prev) =>
+      prev.includes(slug) ? prev.filter((s) => s !== slug) : [...prev, slug]
+    );
+  }, []);
+
   const caption =
     sessions === null
       ? "LOADING…"
-      : `${sessions.length} ${sessions.length === 1 ? "SESSION" : "SESSIONS"}`;
+      : `${visible.length} ${visible.length === 1 ? "SESSION" : "SESSIONS"}`;
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.white }} edges={["top"]}>
-      <FlatList
-        data={selected?.sessions ?? []}
+      <SectionList
+        sections={sectionList}
         keyExtractor={(s) => s.fingerprint}
+        stickySectionHeadersEnabled={false}
         contentContainerStyle={{ paddingHorizontal: 18, paddingBottom: 24, gap: 9 }}
         refreshControl={
           <RefreshControl
@@ -105,9 +139,20 @@ export default function Sessions(): React.ReactElement {
                 {error}
               </Text>
             )}
-            {selected !== null && (
+            {tagOptions.length > 0 && (
+              <SessionFilters
+                grouping={grouping}
+                onGroupingChange={setGrouping}
+                tagOptions={tagOptions}
+                untaggedCount={untaggedCount}
+                selectedTags={selectedTags}
+                onToggleTag={toggleTag}
+                onClearTags={() => setSelectedTags([])}
+              />
+            )}
+            {grouping === "month" && selectedMonth !== null && (
               <View style={{ paddingTop: 8, paddingBottom: 4 }}>
-                <MonthPicker months={months} selected={selected} onSelect={setMonthKey} />
+                <MonthPicker months={months} selected={selectedMonth} onSelect={setMonthKey} />
               </View>
             )}
           </View>
@@ -124,9 +169,27 @@ export default function Sessions(): React.ReactElement {
                 color: colors.textMuted,
               }}
             >
-              No sessions yet. Hit Log a session and your first one takes about a minute.
+              {all.length === 0
+                ? "No sessions yet. Hit Log a session and your first one takes about a minute."
+                : "No sessions carry those tags."}
             </Text>
           ) : null
+        }
+        renderSectionHeader={({ section }) =>
+          section.title === null ? null : (
+            <Text
+              style={{
+                fontFamily: fonts.monoMedium,
+                fontSize: 10,
+                letterSpacing: 0.8,
+                color: colors.watermelonInk,
+                paddingTop: 12,
+                paddingBottom: 2,
+              }}
+            >
+              {section.title}
+            </Text>
+          )
         }
         renderItem={({ item }) => (
           <Pressable

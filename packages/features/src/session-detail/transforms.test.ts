@@ -18,6 +18,7 @@ const detail: SessionDetail = {
   strava_activity_id: 555,
   posted_at: "2026-07-02T00:00:00.000Z",
   inProgress: false,
+  tags: [],
   climbs: [
     {
       time: "2026-07-01T18:00:00.000Z",

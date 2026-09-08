@@ -29,6 +29,16 @@ export type TrendTileVM = {
 
 export type TrendSpecVM = { k: string; v: string };
 
+export const TILE_BREAKDOWN_ROWS = 3;
+
+export type TrendTagRowVM = {
+  key: string;
+  label: string;
+  value: string;
+  ratio: number;
+  sessions: number;
+};
+
 export type TrendDetailVM = {
   metric: TrendMetric;
   title: string;
@@ -36,6 +46,7 @@ export type TrendDetailVM = {
   bars: TrendBarVM[];
   yTicks: string[];
   specs: TrendSpecVM[];
+  breakdown: TrendTagRowVM[];
   insight: string;
 };
 

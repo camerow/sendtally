@@ -11,7 +11,20 @@ export {
   sessionYears,
   type SessionMonth,
 } from "./months";
+export {
+  UNTAGGED_KEY,
+  UNTAGGED_LABEL,
+  filterSessionsByTags,
+  sameTagName,
+  sessionTagGroups,
+  sessionTagOptions,
+  type SessionGrouping,
+  type SessionTagGroup,
+  type TagOption,
+} from "./tags";
 export { sessionTitle } from "./title";
+export { useSessionTags, type SessionTagsEditor } from "./useSessionTags";
+export { useTagVocabulary, type TagVocabulary } from "./useTagVocabulary";
 export {
   countLabel,
   durationLabel,
