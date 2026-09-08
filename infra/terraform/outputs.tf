@@ -16,6 +16,3 @@ output "d1_database_ids" {
   value       = { for env, db in cloudflare_d1_database.sendtally : env => db.id }
 }
 
-output "queue_ids" {
-  value = { for env, q in cloudflare_queue.sync : env => q.id }
-}

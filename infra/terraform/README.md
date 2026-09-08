@@ -6,10 +6,8 @@ Terraform owns the account-level Cloudflare resources for sendtally in the
 - the `sendtally.com` zone and its TLS/HTTPS settings
 - DNS records that are not Worker hostnames (Clerk, mail, verification)
 - D1 databases (`sendtally-staging`, `sendtally-production`)
-- Queues (`sendtally-sync-staging`, `sendtally-sync-production`)
 
-Wrangler still owns what it deploys: the Worker scripts, their bindings, cron
-triggers, queue consumers, Worker secrets, and the Worker custom domains
+Wrangler still owns what it deploys: the Worker scripts, their bindings, Worker secrets, and the Worker custom domains
 (`sendtally.com`, `api.sendtally.com`, `staging.*`, `api-staging.*`). Those are
 created on `wrangler deploy` and need the script to exist first, so they stay in
 `wrangler.jsonc`. Terraform outputs the D1 ids that `wrangler.jsonc` pins.
@@ -51,7 +49,7 @@ that account. Store it in 1Password; never in tfvars or the repo.
 ## Day-to-day
 
 - New DNS record: add to `dns_records` in `terraform.tfvars`, `terraform apply`.
-- New D1/queue environment: extend `local.environments` in `d1.tf`, apply,
+- New D1 environment: extend `local.environments` in `d1.tf`, apply,
   then paste the id from `terraform output d1_database_ids` into `wrangler.jsonc`.
 - D1 schema changes stay in Drizzle + `wrangler d1 migrations apply`; Terraform
   never touches table contents.
