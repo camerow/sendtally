@@ -10,6 +10,7 @@ import { buildManualSession, historySession, manualSessionBody } from "./lib/man
 import { getPostHog } from "./lib/posthog";
 import * as repo from "./lib/repo";
 import { authorizeUrl, exchangeAuthCode, StravaUnauthorizedError } from "./lib/strava";
+import { sessionTagsBody } from "./lib/tags";
 
 export type AppDeps = {
   verifyUser: (req: Request, env: Env) => Promise<AuthedUser | null>;
@@ -200,13 +201,21 @@ export function createApp(deps: AppDeps): Hono<AppEnv> {
   app.get("/v1/sessions", async (c) => {
     const userId = c.get("userId");
     const includeClimbs = c.req.query("include") === "climbs";
-    const rows = await repo.listSessions(c.env.DB, userId, 200, includeClimbs);
+    const [rows, tagsBySession] = await Promise.all([
+      repo.listSessions(c.env.DB, userId, 200, includeClimbs),
+      repo.tagsBySession(c.env.DB, userId),
+    ]);
     const sessions = rows.map(({ climbs_json, ...rest }) => ({
       ...rest,
       inProgress: false,
+      tags: tagsBySession.get(rest.fingerprint) ?? [],
       ...(includeClimbs ? { climbs: climbs_json == null ? [] : JSON.parse(climbs_json) } : {}),
     }));
     return c.json({ sessions });
+  });
+
+  app.get("/v1/tags", async (c) => {
+    return c.json({ tags: await repo.listTags(c.env.DB, c.get("userId")) });
   });
 
   app.get("/v1/sessions/:fingerprint", async (c) => {
@@ -234,6 +243,7 @@ export function createApp(deps: AppDeps): Hono<AppEnv> {
     return {
       ...rest,
       inProgress: false,
+      tags: await repo.getSessionTags(c.env.DB, userId, fingerprint),
       climbs: climbs_json == null ? [] : JSON.parse(climbs_json),
     };
   };
@@ -247,6 +257,9 @@ export function createApp(deps: AppDeps): Hono<AppEnv> {
     const history = await manualScoringHistory(c.env.DB, userId);
     const input = buildManualSession(fingerprint, parsed.data, history);
     await repo.insertManualSession(c.env.DB, userId, input);
+    if (parsed.data.tags !== undefined) {
+      await repo.setSessionTags(c.env.DB, userId, fingerprint, parsed.data.tags);
+    }
     await captureEvent(c.env, "manual_session_created", { session_source: "manual" });
     return c.json({ session: await sessionResponse(c, userId, fingerprint) }, 201);
   });
@@ -264,8 +277,24 @@ export function createApp(deps: AppDeps): Hono<AppEnv> {
     const history = await manualScoringHistory(c.env.DB, userId, fingerprint);
     const input = buildManualSession(fingerprint, parsed.data, history);
     await repo.updateManualSession(c.env.DB, userId, input);
+    await repo.setSessionTags(c.env.DB, userId, fingerprint, parsed.data.tags ?? []);
     await captureEvent(c.env, "manual_session_updated", { session_source: "manual" });
     return c.json({ session: await sessionResponse(c, userId, fingerprint) });
+  });
+
+  // Tags live in their own tables, so legacy board sessions stay taggable
+  // without writing to those read-only rows.
+  app.put("/v1/sessions/:fingerprint/tags", async (c) => {
+    const parsed = sessionTagsBody.safeParse(await c.req.json().catch(() => null));
+    if (!parsed.success) return c.json({ error: "invalid request body" }, 400);
+    const userId = c.get("userId");
+    const fingerprint = c.req.param("fingerprint");
+    if ((await repo.getSession(c.env.DB, userId, fingerprint)) === null) {
+      return c.json({ error: "not found" }, 404);
+    }
+    const tags = await repo.setSessionTags(c.env.DB, userId, fingerprint, parsed.data.tags);
+    await captureEvent(c.env, "session_tags_updated", { tag_count: String(tags.length) });
+    return c.json({ tags });
   });
 
   app.delete("/v1/sessions/:fingerprint", async (c) => {

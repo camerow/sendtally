@@ -10,6 +10,8 @@ import {
   type ClimbVM,
 } from "@sendtally/features/session-detail";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
+import { Chip } from "../../components/Chip";
+import { SessionTags } from "../../features/sessions/SessionTags";
 import { useApi } from "../../lib/api";
 
 const RESULT_BADGES: Record<
@@ -30,42 +32,6 @@ const RESULT_BADGES: Record<
     color: colors.textFaint,
   },
 };
-
-function Chip({
-  label,
-  active,
-  onPress,
-}: {
-  label: string;
-  active: boolean;
-  onPress: () => void;
-}): React.ReactElement {
-  return (
-    <Pressable
-      onPress={onPress}
-      style={{
-        paddingHorizontal: 12,
-        minHeight: 40,
-        justifyContent: "center",
-        borderRadius: 22,
-        backgroundColor: active ? colors.gold : "transparent",
-        borderWidth: 1,
-        borderColor: active ? colors.gold : "rgba(64,63,76,0.18)",
-      }}
-    >
-      <Text
-        style={{
-          fontFamily: fonts.monoMedium,
-          fontSize: 11,
-          letterSpacing: 0.6,
-          color: active ? colors.gunmetal : "rgba(64,63,76,0.65)",
-        }}
-      >
-        {label}
-      </Text>
-    </Pressable>
-  );
-}
 
 export default function SessionDetailScreen(): React.ReactElement {
   const { fingerprint } = useLocalSearchParams<{ fingerprint: string }>();
@@ -149,6 +115,8 @@ export default function SessionDetailScreen(): React.ReactElement {
                 {state.data.vm.meta}
               </Text>
             </View>
+
+            <SessionTags api={api} fingerprint={fingerprint ?? ""} initial={state.data.tags} />
 
             <View
               style={{

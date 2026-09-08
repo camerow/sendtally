@@ -6,6 +6,7 @@ import { useTrends, type TrendMetric } from "@sendtally/features/trends";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { TrendBars } from "../../features/trends/TrendBars";
 import { TrendFilters } from "../../features/trends/TrendFilters";
+import { TrendTagBreakdown } from "../../features/trends/TrendTagBreakdown";
 import { useApi } from "../../lib/api";
 import { INSIGHTS_FEATURE, useHasFeature } from "../../lib/billing";
 import { UpgradeCard } from "../../features/billing/UpgradeCard";
@@ -159,6 +160,10 @@ function TrendDetail(): React.ReactElement {
                 </View>
               ))}
             </View>
+            <TrendTagBreakdown
+              title={`BY TAG · ${state.data.details[metric].title.toUpperCase()}`}
+              rows={state.data.details[metric].breakdown}
+            />
             <Text
               style={{
                 fontFamily: fonts.sans,

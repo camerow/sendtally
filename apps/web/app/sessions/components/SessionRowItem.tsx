@@ -1,5 +1,6 @@
 import React from "react";
 import { Link } from "react-router";
+import { Badge } from "@sendtally/design";
 import type { SessionRow } from "@sendtally/api-client";
 import {
   SESSION_BADGE_LABELS,
@@ -73,6 +74,15 @@ export function SessionRowItem({
         >
           {durationLabel(session.start_at, session.end_at)} · RPE {session.rpe}/10
         </span>
+        {session.tags.length > 0 && (
+          <span style={{ display: "flex", gap: 5, flexWrap: "wrap", marginTop: 3 }}>
+            {session.tags.map((tag) => (
+              <Badge key={tag.id} tone="petal" style={{ fontSize: 9, padding: "3px 7px" }}>
+                {tag.name.toUpperCase()}
+              </Badge>
+            ))}
+          </span>
+        )}
       </span>
       <span style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
         <span

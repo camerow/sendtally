@@ -203,6 +203,154 @@ describe("app", () => {
     };
   };
 
+  const setTags = (userId: string, fingerprint: string, tags: unknown) =>
+    testApp().request(
+      `/v1/sessions/${encodeURIComponent(fingerprint)}/tags`,
+      {
+        method: "PUT",
+        headers: { "x-test-user": userId, "Content-Type": "application/json" },
+        body: JSON.stringify({ tags }),
+      },
+      env
+    );
+
+  const listTags = (userId: string) =>
+    testApp().request("/v1/tags", { headers: { "x-test-user": userId } }, env);
+
+  type Tag = { id: string; name: string; slug: string };
+
+  it("stores tags given when a session is logged and reads them back", async () => {
+    const res = await postSession("user_tags_create", logBody({ tags: ["Endurance", "  Home "] }));
+    expect(res.status).toBe(201);
+    const { session } = (await res.json()) as ManualSessionResponse & { session: { tags: Tag[] } };
+    expect(session.tags.map((t) => t.name)).toEqual(["Endurance", "Home"]);
+    expect(session.tags.map((t) => t.slug)).toEqual(["endurance", "home"]);
+
+    const list = await testApp().request(
+      "/v1/sessions",
+      { headers: { "x-test-user": "user_tags_create" } },
+      env
+    );
+    const { sessions } = (await list.json()) as { sessions: Array<{ tags: Tag[] }> };
+    expect(sessions[0]?.tags.map((t) => t.slug)).toEqual(["endurance", "home"]);
+  });
+
+  it("reuses one tag row across sessions that spell it differently", async () => {
+    const first = await postSession("user_tags_reuse", logBody({ tags: ["Bishop"] }));
+    const second = await postSession("user_tags_reuse", logBody({ tags: ["bishop"] }));
+    const a = (await first.json()) as { session: { tags: Tag[] } };
+    const b = (await second.json()) as { session: { tags: Tag[] } };
+    expect(b.session.tags[0]?.id).toBe(a.session.tags[0]?.id);
+    expect(b.session.tags[0]?.name).toBe("Bishop");
+
+    const tags = (await (await listTags("user_tags_reuse")).json()) as {
+      tags: Array<Tag & { session_count: number }>;
+    };
+    expect(tags.tags).toHaveLength(1);
+    expect(tags.tags[0]?.session_count).toBe(2);
+  });
+
+  it("replaces a session's tags and prunes the ones left unused", async () => {
+    const created = await postSession(
+      "user_tags_replace",
+      logBody({ tags: ["Projecting", "Home"] })
+    );
+    const { session } = (await created.json()) as { session: { fingerprint: string } };
+
+    const res = await setTags("user_tags_replace", session.fingerprint, ["Home", "Bishop"]);
+    expect(res.status).toBe(200);
+    const { tags } = (await res.json()) as { tags: Tag[] };
+    expect(tags.map((t) => t.slug)).toEqual(["home", "bishop"]);
+
+    const all = (await (await listTags("user_tags_replace")).json()) as { tags: Tag[] };
+    expect(all.tags.map((t) => t.slug).sort()).toEqual(["bishop", "home"]);
+  });
+
+  it("tags a legacy board session without touching the session row", async () => {
+    await env.DB.prepare(
+      `INSERT INTO users (id, timezone, created_at) VALUES ('user_tags_board', 'UTC', '')`
+    ).run();
+    await env.DB.prepare(
+      `INSERT INTO sessions (user_id, fingerprint, board, source, start_at, end_at, climb_count, top_grade, top_send_grade, rpe, title, summary)
+       VALUES ('user_tags_board', 'fp_board_tag', 'tension', 'board', '2026-01-01T00:00:00.000Z', '2026-01-01T01:00:00.000Z', 4, 5, 5, 6, 'Board session', 's')`
+    ).run();
+
+    const res = await setTags("user_tags_board", "fp_board_tag", ["Power Endurance"]);
+    expect(res.status).toBe(200);
+
+    const row = await env.DB.prepare(
+      `SELECT source, title FROM sessions WHERE fingerprint = 'fp_board_tag'`
+    ).first<{ source: string; title: string }>();
+    expect(row).toEqual({ source: "board", title: "Board session" });
+  });
+
+  it("clears a session's tags when given an empty list", async () => {
+    const created = await postSession("user_tags_clear", logBody({ tags: ["Endurance"] }));
+    const { session } = (await created.json()) as { session: { fingerprint: string } };
+
+    const res = await setTags("user_tags_clear", session.fingerprint, []);
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ tags: [] });
+
+    const all = (await (await listTags("user_tags_clear")).json()) as { tags: Tag[] };
+    expect(all.tags).toEqual([]);
+  });
+
+  it("keeps tags scoped to their owner", async () => {
+    await postSession("user_tags_mine", logBody({ tags: ["Endurance"] }));
+    const theirs = (await (await listTags("user_tags_theirs")).json()) as { tags: Tag[] };
+    expect(theirs.tags).toEqual([]);
+  });
+
+  it("rejects a tag with nothing sluggable in it", async () => {
+    const created = await postSession("user_tags_bad", logBody());
+    const { session } = (await created.json()) as { session: { fingerprint: string } };
+    const res = await setTags("user_tags_bad", session.fingerprint, ["!!!"]);
+    expect(res.status).toBe(400);
+  });
+
+  it("404s when tagging a session that is not yours", async () => {
+    const created = await postSession("user_tags_owner", logBody());
+    const { session } = (await created.json()) as { session: { fingerprint: string } };
+    const res = await setTags("user_tags_stranger", session.fingerprint, ["Endurance"]);
+    expect(res.status).toBe(404);
+  });
+
+  it("drops tag links when the session is deleted", async () => {
+    const created = await postSession("user_tags_delete", logBody({ tags: ["Endurance"] }));
+    const { session } = (await created.json()) as { session: { fingerprint: string } };
+
+    const res = await testApp().request(
+      `/v1/sessions/${session.fingerprint}`,
+      { method: "DELETE", headers: { "x-test-user": "user_tags_delete" } },
+      env
+    );
+    expect(res.status).toBe(200);
+
+    const all = (await (await listTags("user_tags_delete")).json()) as { tags: Tag[] };
+    expect(all.tags).toEqual([]);
+    const links = await env.DB.prepare(
+      `SELECT COUNT(*) AS n FROM session_tags WHERE user_id = 'user_tags_delete'`
+    ).first<{ n: number }>();
+    expect(links?.n).toBe(0);
+  });
+
+  it("clears tags when the account is deleted", async () => {
+    await postSession("user_tags_purge", logBody({ tags: ["Endurance"] }));
+    const res = await testApp().request(
+      "/v1/account",
+      { method: "DELETE", headers: { "x-test-user": "user_tags_purge" } },
+      env
+    );
+    expect(res.status).toBe(200);
+
+    const rows = await env.DB.prepare(
+      `SELECT (SELECT COUNT(*) FROM tags WHERE user_id = 'user_tags_purge') AS tags,
+              (SELECT COUNT(*) FROM session_tags WHERE user_id = 'user_tags_purge') AS links`
+    ).first<{ tags: number; links: number }>();
+    expect(rows).toEqual({ tags: 0, links: 0 });
+  });
+
   it("logs a manual session with converted grades and a scored effort", async () => {
     const res = await postSession("user_manual", logBody());
     expect(res.status).toBe(201);

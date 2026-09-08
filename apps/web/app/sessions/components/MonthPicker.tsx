@@ -7,34 +7,13 @@ import {
   sessionYears,
   type SessionMonth,
 } from "@sendtally/features/sessions";
+import { chipStyle } from "../../components/chip";
 
-function monthHref(key: string): string {
-  return `/app?month=${key}`;
-}
-
-const chipBase: React.CSSProperties = {
-  fontFamily: "var(--font-mono)",
-  fontWeight: 500,
-  fontSize: 11,
-  letterSpacing: "0.06em",
-  padding: "7px 12px",
-  borderRadius: "var(--radius-pill)",
-  textDecoration: "none",
-  whiteSpace: "nowrap",
-};
-
-const chipStyle = (active: boolean): React.CSSProperties => ({
-  ...chipBase,
-  background: active ? "var(--bs-gold)" : "transparent",
-  color: active ? "var(--bs-gunmetal)" : "rgba(64,63,76,0.65)",
-  border: active ? "1px solid var(--bs-gold)" : "1px solid rgba(64,63,76,0.18)",
-});
-
-const emptyChipStyle: React.CSSProperties = {
-  ...chipBase,
+const emptyChipStyle: React.CSSProperties = chipStyle(false, {
+  cursor: "default",
   color: "rgba(64,63,76,0.28)",
   border: "1px solid rgba(64,63,76,0.08)",
-};
+});
 
 const arrowStyle = (enabled: boolean): React.CSSProperties => ({
   display: "inline-flex",
@@ -57,10 +36,12 @@ const arrowStyle = (enabled: boolean): React.CSSProperties => ({
 function Arrow({
   target,
   label,
+  href,
   children,
 }: {
   target: SessionMonth | null;
   label: string;
+  href: (key: string) => string;
   children: React.ReactNode;
 }): React.ReactElement {
   if (target === null) {
@@ -71,11 +52,7 @@ function Arrow({
     );
   }
   return (
-    <Link
-      to={monthHref(target.key)}
-      aria-label={`${label}: ${target.label}`}
-      style={arrowStyle(true)}
-    >
+    <Link to={href(target.key)} aria-label={`${label}: ${target.label}`} style={arrowStyle(true)}>
       {children}
     </Link>
   );
@@ -84,9 +61,11 @@ function Arrow({
 export function MonthPicker({
   months,
   selected,
+  hrefFor,
 }: {
   months: SessionMonth[];
   selected: SessionMonth;
+  hrefFor: (key: string) => string;
 }): React.ReactElement {
   const { newer, older } = adjacentSessionMonths(months, selected.key);
   const years = sessionYears(months);
@@ -98,7 +77,7 @@ export function MonthPicker({
       style={{ display: "flex", flexDirection: "column", gap: 12 }}
     >
       <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-        <Arrow target={older} label="Older month">
+        <Arrow target={older} label="Older month" href={hrefFor}>
           ‹
         </Arrow>
         <div style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 220 }}>
@@ -124,7 +103,7 @@ export function MonthPicker({
             {count === 1 ? "1 SESSION" : `${count} SESSIONS`}
           </span>
         </div>
-        <Arrow target={newer} label="Newer month">
+        <Arrow target={newer} label="Newer month" href={hrefFor}>
           ›
         </Arrow>
       </div>
@@ -136,7 +115,7 @@ export function MonthPicker({
             return first === undefined ? null : (
               <Link
                 key={year}
-                to={monthHref(active ? selected.key : first.key)}
+                to={hrefFor(active ? selected.key : first.key)}
                 style={chipStyle(active)}
               >
                 {year}
@@ -154,7 +133,7 @@ export function MonthPicker({
           ) : (
             <Link
               key={i}
-              to={monthHref(month.key)}
+              to={hrefFor(month.key)}
               aria-current={month.key === selected.key ? "page" : undefined}
               style={chipStyle(month.key === selected.key)}
             >

@@ -17,6 +17,10 @@ export type SessionClimb = {
   grade?: ClimbGrade;
 };
 
+export type SessionTag = { id: string; name: string; slug: string };
+
+export type TagSummary = SessionTag & { session_count: number };
+
 export type SessionSource = "board" | "manual";
 
 export type SessionLocation = "indoor" | "outdoor";
@@ -37,6 +41,7 @@ export type SessionRow = {
   strava_activity_id: number | null;
   posted_at: string | null;
   inProgress: boolean;
+  tags: SessionTag[];
 };
 
 export type LogClimbInput = {
@@ -53,6 +58,7 @@ export type LogSessionInput = {
   endTime?: string;
   rpe?: number;
   location: SessionLocation;
+  tags?: string[];
   climbs: LogClimbInput[];
 };
 
