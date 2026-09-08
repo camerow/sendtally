@@ -446,6 +446,12 @@ describe("app", () => {
     )
       .bind(userId)
       .run();
+    await env.DB.prepare(
+      `INSERT INTO board_connections (user_id, board, board_user_id, token_ciphertext, status, connected_at)
+       VALUES (?, 'tension', 42, 'legacy-board-token', 'dead', '')`
+    )
+      .bind(userId)
+      .run();
 
     const { fetchImpl, calls } = makeFakeFetch([
       {
@@ -465,7 +471,13 @@ describe("app", () => {
     const deauth = calls.find((c) => c.url.endsWith("/oauth/deauthorize"));
     expect(deauth?.headers["authorization"]).toBe("Bearer access-tok");
 
-    for (const table of ["users", "strava_connections", "sync_state", "sessions"]) {
+    for (const table of [
+      "users",
+      "strava_connections",
+      "board_connections",
+      "sync_state",
+      "sessions",
+    ]) {
       const column = table === "users" ? "id" : "user_id";
       const row = await env.DB.prepare(`SELECT COUNT(*) AS n FROM ${table} WHERE ${column} = ?`)
         .bind(userId)

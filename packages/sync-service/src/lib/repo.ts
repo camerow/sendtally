@@ -1,6 +1,6 @@
 import { and, desc, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
-import { sessions, stravaConnections, syncState, users } from "../db/schema";
+import { boardConnections, sessions, stravaConnections, syncState, users } from "../db/schema";
 
 export type UserRow = typeof users.$inferSelect;
 
@@ -223,6 +223,10 @@ export async function deleteUserData(db: D1Database, userId: string): Promise<vo
   await d.batch([
     d.delete(sessions).where(eq(sessions.user_id, userId)),
     d.delete(stravaConnections).where(eq(stravaConnections.user_id, userId)),
+    // Legacy Aurora rows still hold an encrypted board token for the users who
+    // connected one before the integration was discontinued. Deleting the
+    // account has to take them too, ahead of the tables being dropped.
+    d.delete(boardConnections).where(eq(boardConnections.user_id, userId)),
     d.delete(syncState).where(eq(syncState.user_id, userId)),
     d.delete(users).where(eq(users.id, userId)),
   ]);
