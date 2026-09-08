@@ -1,21 +1,23 @@
 import React from "react";
-import type { LoaderFunctionArgs } from "react-router";
+import type { LinksFunction, LoaderFunctionArgs } from "react-router";
 import { Link, useLoaderData, useSearchParams } from "react-router";
 import type { ConnectionStatus, SessionRow } from "@sendtally/api-client";
-import {
-  resolveSessionMonth,
-  sessionBadge,
-  sessionMonths,
-  sessionTitle,
-} from "@sendtally/features/sessions";
+import { countLabel, sessionYearGroups } from "@sendtally/features/sessions";
 import { requireApi } from "../lib/api.server";
-import { MonthPicker } from "../sessions/components/MonthPicker";
-import { SessionRowItem } from "../sessions/components/SessionRowItem";
+import { monthAnchorId } from "../sessions/anchors";
+import { LogSessionFab } from "../sessions/components/LogSessionFab";
+import { MonthJumpRail } from "../sessions/components/MonthJumpRail";
+import { MonthScopeBar } from "../sessions/components/MonthScopeBar";
+import { SessionYearGroup } from "../sessions/components/SessionYearGroup";
+import sessionsStyles from "../sessions/sessions.css?url";
+import { useVisibleMonth } from "../sessions/useVisibleMonth";
 
 type LoaderData = {
   status: ConnectionStatus;
   sessions: SessionRow[];
 };
+
+export const links: LinksFunction = () => [{ rel: "stylesheet", href: sessionsStyles }];
 
 export async function loader(args: LoaderFunctionArgs): Promise<LoaderData> {
   const api = await requireApi(args);
@@ -24,29 +26,23 @@ export async function loader(args: LoaderFunctionArgs): Promise<LoaderData> {
   return { status, sessions };
 }
 
-const bannerButton: React.CSSProperties = {
-  fontFamily: "var(--font-sans)",
-  fontWeight: 600,
-  fontSize: 13,
-  color: "var(--bs-white)",
-  background: "var(--bs-azure-ink)",
-  border: "none",
-  borderRadius: "var(--radius-control)",
-  padding: "9px 16px",
-  cursor: "pointer",
-  whiteSpace: "nowrap",
-};
-
 export default function Sessions(): React.ReactElement {
   const { status, sessions } = useLoaderData<typeof loader>();
   const [searchParams] = useSearchParams();
   const stravaConnected = status.strava?.status === "active";
-  const months = React.useMemo(() => sessionMonths(sessions), [sessions]);
-  const selected = resolveSessionMonth(months, searchParams.get("month"));
+  const years = React.useMemo(() => sessionYearGroups(sessions), [sessions]);
+  const monthKeys = React.useMemo(() => years.flatMap((y) => y.months.map((m) => m.key)), [years]);
+  const currentKey = useVisibleMonth(monthKeys);
+  const requestedMonth = searchParams.get("month");
+
+  React.useEffect(() => {
+    if (requestedMonth === null) return;
+    document.getElementById(monthAnchorId(requestedMonth))?.scrollIntoView({ block: "start" });
+  }, [requestedMonth]);
 
   return (
     <div>
-      <div style={{ display: "flex", alignItems: "baseline", gap: 16, flexWrap: "wrap" }}>
+      <div className="sessions-head">
         <h1
           style={{
             margin: 0,
@@ -67,11 +63,12 @@ export default function Sessions(): React.ReactElement {
             letterSpacing: "0.06em",
           }}
         >
-          {sessions.length === 1 ? "1 SESSION" : `${sessions.length} SESSIONS`}
+          {countLabel(sessions.length)}
         </span>
         <div style={{ flex: 1 }} />
         <Link
           to="/app/sessions/new"
+          className="sessions-head-action"
           style={{
             fontFamily: "var(--font-sans)",
             fontWeight: 600,
@@ -88,40 +85,39 @@ export default function Sessions(): React.ReactElement {
         </Link>
       </div>
       {!stravaConnected && (
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 16,
-            background: "var(--surface-accent-pink)",
-            borderRadius: "var(--radius-card)",
-            padding: "16px 20px",
-            marginTop: 22,
-          }}
-        >
+        <div className="sessions-banner">
           <span style={{ flex: 1, fontSize: 14, lineHeight: 1.5, color: "var(--text-on-light)" }}>
             Your logbook lives here either way. Connect Strava and your sessions can post to your
             feed as Rock Climbing activities.
           </span>
-          <Link to="/app/setup" style={{ ...bannerButton, textDecoration: "none" }}>
+          <Link
+            to="/app/setup"
+            style={{
+              fontFamily: "var(--font-sans)",
+              fontWeight: 600,
+              fontSize: 13,
+              color: "var(--bs-white)",
+              background: "var(--bs-azure-ink)",
+              borderRadius: "var(--radius-control)",
+              padding: "9px 16px",
+              textDecoration: "none",
+              whiteSpace: "nowrap",
+            }}
+          >
             Connect Strava
           </Link>
         </div>
       )}
-      {selected !== null && (
+      {years.length > 0 && (
         <>
-          <div style={{ marginTop: 26 }}>
-            <MonthPicker months={months} selected={selected} />
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 18 }}>
-            {selected.sessions.map((s) => (
-              <SessionRowItem
-                key={s.fingerprint}
-                session={s}
-                title={sessionTitle(s)}
-                badge={sessionBadge(s)}
-              />
-            ))}
+          <MonthScopeBar years={years} currentKey={currentKey} />
+          <div className="sessions-body">
+            <div className="sessions-list">
+              {years.map((year) => (
+                <SessionYearGroup key={year.year} year={year} />
+              ))}
+            </div>
+            <MonthJumpRail years={years} currentKey={currentKey} />
           </div>
         </>
       )}
@@ -138,6 +134,7 @@ export default function Sessions(): React.ReactElement {
           No sessions yet. Hit Log a session and your first one takes about a minute.
         </div>
       )}
+      <LogSessionFab />
     </div>
   );
 }

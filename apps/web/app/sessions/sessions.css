@@ -1,0 +1,233 @@
+.sessions-head {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.sessions-banner {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: var(--surface-accent-pink);
+  border-radius: var(--radius-card);
+  padding: 16px 20px;
+  margin-top: 22px;
+}
+
+.sessions-body {
+  display: flex;
+  gap: 32px;
+  margin-top: 26px;
+}
+
+.sessions-list {
+  flex: 1;
+  min-width: 0;
+}
+
+.sessions-rail {
+  width: 128px;
+  flex: none;
+  position: sticky;
+  top: 0;
+  align-self: flex-start;
+  display: flex;
+  flex-direction: column;
+  padding-top: 2px;
+}
+
+.sessions-year {
+  margin: 0;
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  background: var(--bs-white);
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 0 0 10px;
+  border-bottom: 2px solid var(--bs-gunmetal);
+  scroll-margin-top: 8px;
+}
+
+.sessions-year + section > .sessions-month {
+  margin-top: 14px;
+}
+
+.sessions-list > section + section > .sessions-year {
+  margin-top: 30px;
+}
+
+.sessions-month {
+  position: sticky;
+  top: 39px;
+  z-index: 2;
+  background: var(--bs-white);
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-top: 22px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line-on-light);
+  margin-bottom: 12px;
+  scroll-margin-top: 46px;
+}
+
+.sessions-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sessions-scope {
+  display: none;
+}
+
+.sessions-fab {
+  display: none;
+}
+
+.session-row {
+  display: grid;
+  grid-template-columns: 72px 1.1fr 1.5fr minmax(112px, auto) 14px;
+  gap: 18px;
+  align-items: center;
+  background: var(--surface-soft);
+  border-radius: var(--radius-card);
+  padding: 16px 20px;
+  text-decoration: none;
+  color: var(--bs-gunmetal);
+}
+
+.session-row-stats {
+  font-size: 12px;
+}
+
+.session-row-date,
+.session-row-chevron {
+  align-self: center;
+}
+
+@media (max-width: 767px) {
+  .sessions-head-action {
+    display: none;
+  }
+
+  .sessions-banner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 16px;
+  }
+
+  .sessions-banner > a {
+    align-self: stretch;
+    text-align: center;
+  }
+
+  .sessions-body {
+    display: block;
+    margin-top: 0;
+  }
+
+  .sessions-rail {
+    display: none;
+  }
+
+  .sessions-scope {
+    display: flex;
+    gap: 7px;
+    align-items: center;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding: 14px 18px 12px;
+    margin: 14px -18px 0;
+    position: sticky;
+    top: 0;
+    z-index: 4;
+    background: var(--bs-white);
+    border-bottom: 1px solid var(--line-on-light-soft);
+  }
+
+  .sessions-scope::-webkit-scrollbar {
+    display: none;
+  }
+
+  .sessions-year {
+    top: 58px;
+    padding-top: 12px;
+    scroll-margin-top: 66px;
+  }
+
+  .sessions-month {
+    top: 108px;
+    scroll-margin-top: 118px;
+    margin-top: 18px;
+  }
+
+  .sessions-rows {
+    gap: 8px;
+  }
+
+  .sessions-fab {
+    position: fixed;
+    right: 18px;
+    bottom: calc(89px + env(safe-area-inset-bottom));
+    z-index: 15;
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    height: 52px;
+    padding: 0 22px;
+    border-radius: 26px;
+    background: var(--bs-azure-ink);
+    color: var(--bs-white);
+    text-decoration: none;
+    font-family: var(--font-sans);
+    font-weight: 600;
+    font-size: 15px;
+    box-shadow: 0 8px 24px rgba(20, 19, 26, 0.28);
+  }
+
+  .session-row {
+    grid-template-columns: 54px minmax(0, 1fr) 16px;
+    column-gap: 12px;
+    row-gap: 5px;
+    padding: 14px;
+  }
+
+  .session-row-date {
+    grid-column: 1;
+    grid-row: 1 / span 3;
+    align-self: start;
+  }
+
+  .session-row-main {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .session-row-stats {
+    grid-column: 2;
+    grid-row: 2;
+    gap: 10px;
+    font-size: 11px;
+  }
+
+  .session-row-badge {
+    grid-column: 2;
+    grid-row: 3;
+    justify-self: start;
+    margin-top: 2px;
+  }
+
+  .session-row-badge:empty {
+    display: none;
+  }
+
+  .session-row-chevron {
+    grid-column: 3;
+    grid-row: 1 / span 3;
+  }
+}

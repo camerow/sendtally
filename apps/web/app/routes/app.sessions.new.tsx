@@ -1,10 +1,13 @@
 import React from "react";
-import type { LoaderFunctionArgs } from "react-router";
+import type { LinksFunction, LoaderFunctionArgs } from "react-router";
 import { Link, useLoaderData } from "react-router";
 import { cloudflareContext } from "../lib/cloudflare-context";
 import { requireApi } from "../lib/api.server";
 import { useClientApi } from "../lib/useClientApi";
 import { LogSessionForm } from "../log-session/components/LogSessionForm";
+import logSessionStyles from "../log-session/log-session.css?url";
+
+export const links: LinksFunction = () => [{ rel: "stylesheet", href: logSessionStyles }];
 
 export async function loader(args: LoaderFunctionArgs): Promise<{ apiUrl: string }> {
   await requireApi(args);

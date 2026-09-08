@@ -1,0 +1,170 @@
+.log-session {
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+}
+
+.log-session-grid {
+  display: grid;
+  grid-template-columns: 380px minmax(0, 1fr);
+  gap: 36px;
+}
+
+.log-session-details {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.log-session-times {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.log-session-climbs {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.climb-row,
+.climb-head {
+  display: grid;
+  grid-template-columns: 88px minmax(0, 1fr) 176px 122px 36px;
+  gap: 10px;
+  align-items: center;
+}
+
+.climb-head {
+  padding: 0 14px;
+}
+
+.climb-row {
+  background: var(--surface-soft);
+  border-radius: var(--radius-card);
+  padding: 12px 14px;
+}
+
+.log-session-rpe {
+  height: 26px;
+}
+
+.climb-step {
+  width: 30px;
+  height: 30px;
+}
+
+.climb-remove {
+  width: 32px;
+  height: 32px;
+}
+
+.log-session-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 26px;
+  border-top: 1px solid var(--line-on-light);
+  padding-top: 20px;
+}
+
+.log-session-status {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.log-session-buttons {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.log-session-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (max-width: 767px) {
+  .log-session-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 26px;
+  }
+
+  .log-session-control {
+    min-height: 48px;
+  }
+
+  .log-session-chip {
+    min-height: 44px;
+  }
+
+  .climb-head {
+    display: none;
+  }
+
+  .log-session-rpe {
+    height: 38px;
+  }
+
+  .climb-step,
+  .climb-remove {
+    width: 36px;
+    height: 36px;
+  }
+
+  .climb-row {
+    grid-template-columns: 84px minmax(0, 1fr) 106px 36px;
+    row-gap: 8px;
+    padding: 12px;
+  }
+
+  .climb-grade {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .climb-result {
+    grid-column: 2 / span 3;
+    grid-row: 1;
+  }
+
+  .climb-name {
+    grid-column: 1 / span 2;
+    grid-row: 2;
+  }
+
+  .climb-tries {
+    grid-column: 3;
+    grid-row: 2;
+  }
+
+  .climb-remove {
+    grid-column: 4;
+    grid-row: 2;
+  }
+
+  .log-session-actions {
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    background: var(--bs-white);
+    margin: 0 -18px;
+    padding: 12px 18px calc(12px + env(safe-area-inset-bottom));
+  }
+
+  .log-session-buttons > button {
+    min-height: 50px;
+  }
+
+  .log-session-buttons > button:last-child {
+    flex: 1;
+  }
+}
