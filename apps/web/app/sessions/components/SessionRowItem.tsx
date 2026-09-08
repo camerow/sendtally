@@ -3,16 +3,11 @@ import { Link } from "react-router";
 import type { SessionRow } from "@sendtally/api-client";
 import {
   SESSION_BADGE_LABELS,
+  durationLabel,
   sessionGradeLabels,
+  sessionMinutes,
   type SessionBadge,
 } from "@sendtally/features/sessions";
-
-function durationLabel(startAt: string, endAt: string): string {
-  const minutes = Math.max(0, Math.round((Date.parse(endAt) - Date.parse(startAt)) / 60_000));
-  const h = Math.floor(minutes / 60);
-  const m = minutes % 60;
-  return h > 0 ? `${h}h ${String(m).padStart(2, "0")}m` : `${m}m`;
-}
 
 const BADGE_STYLES: Record<SessionBadge, { border: string; color: string }> = {
   in_progress: {
@@ -36,21 +31,11 @@ export function SessionRowItem({
 }): React.ReactElement {
   const start = new Date(session.start_at);
   return (
-    <Link
-      to={`/app/sessions/${encodeURIComponent(session.fingerprint)}`}
-      style={{
-        display: "grid",
-        gridTemplateColumns: "72px 1.1fr 1.5fr minmax(112px, auto) 14px",
-        gap: 18,
-        alignItems: "center",
-        background: "#F7F6F3",
-        borderRadius: "var(--radius-card)",
-        padding: "16px 20px",
-        textDecoration: "none",
-        color: "var(--bs-gunmetal)",
-      }}
-    >
-      <span style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+    <Link to={`/app/sessions/${encodeURIComponent(session.fingerprint)}`} className="session-row">
+      <span
+        className="session-row-date"
+        style={{ display: "flex", flexDirection: "column", gap: 3 }}
+      >
         <span
           style={{
             fontFamily: "var(--font-mono)",
@@ -66,18 +51,32 @@ export function SessionRowItem({
           {start.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" })}
         </span>
       </span>
-      <span style={{ display: "flex", flexDirection: "column", gap: 3 }}>
-        <span style={{ fontWeight: 600, fontSize: 15 }}>{title}</span>
+      <span
+        className="session-row-main"
+        style={{ display: "flex", flexDirection: "column", gap: 3, minWidth: 0 }}
+      >
+        <span
+          style={{
+            fontWeight: 600,
+            fontSize: 15,
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          }}
+        >
+          {title}
+        </span>
         <span
           style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "rgba(64,63,76,0.55)" }}
         >
-          {durationLabel(session.start_at, session.end_at)} · RPE {session.rpe}/10
+          {durationLabel(sessionMinutes(session))} · RPE {session.rpe}/10
         </span>
       </span>
-      <span style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
-        <span
-          style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "rgba(64,63,76,0.72)" }}
-        >
+      <span
+        className="session-row-stats"
+        style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}
+      >
+        <span style={{ fontFamily: "var(--font-mono)", color: "rgba(64,63,76,0.72)" }}>
           {session.climb_count} climbs
         </span>
         {sessionGradeLabels(session).map((g) => (
@@ -86,7 +85,6 @@ export function SessionRowItem({
             style={{
               fontFamily: "var(--font-mono)",
               fontWeight: g.kind === "sent" ? 600 : 500,
-              fontSize: 12,
               color: g.kind === "sent" ? "var(--text-label-accent)" : "rgba(64,63,76,0.55)",
               letterSpacing: "0.04em",
             }}
@@ -95,16 +93,18 @@ export function SessionRowItem({
           </span>
         ))}
       </span>
-      <span>
+      <span className="session-row-badge">
         {badge !== null && (
           <span
             style={{
+              display: "inline-block",
               fontFamily: "var(--font-mono)",
               fontWeight: 500,
               fontSize: 10,
               letterSpacing: "0.08em",
               borderRadius: "var(--radius-pill)",
               padding: "3px 9px",
+              whiteSpace: "nowrap",
               border: BADGE_STYLES[badge].border,
               color: BADGE_STYLES[badge].color,
             }}
@@ -114,6 +114,7 @@ export function SessionRowItem({
         )}
       </span>
       <span
+        className="session-row-chevron"
         style={{
           fontFamily: "var(--font-mono)",
           fontWeight: 600,
