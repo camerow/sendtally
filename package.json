@@ -8,6 +8,8 @@
   "scripts": {
     "dev": "turbo dev",
     "build": "turbo build",
+    "preview:build": "CLOUDFLARE_ENV=production pnpm --filter @sendtally/web build",
+    "preview:upload": "pnpm --filter @sendtally/web exec wrangler versions upload",
     "lint": "turbo lint",
     "check-types": "turbo check-types",
     "test": "turbo test",

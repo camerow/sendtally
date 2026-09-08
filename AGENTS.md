@@ -98,6 +98,9 @@ The product was briefly named boardsync; that name was dropped because `boardsyn
   Never hand-write migration SQL for schema changes; never edit `migrations/meta/` by hand.
 - Database access goes through the typed Drizzle queries in `packages/sync-service/src/lib/repo.ts` - no raw SQL strings in Worker code.
 - CI: `.github/workflows/deploy.yml` runs checks (types, tests, format, Go) then deploys both Workers - push to `main` deploys production (a push to a `staging` branch, if one is ever created, deploys the staging env). Needs `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` repo secrets. Each deploy is gated on a secret preflight and followed by a smoke check against the live custom domain, so a green run means the deployed code actually answers.
+- **Cloudflare Workers Builds also watches this repo**, connected to the `sendtally-web-production` Worker. It is the PR preview: it runs `pnpm run preview:build` then `pnpm run preview:upload`, which uploads a version without promoting it, and reports as the `Workers Builds: sendtally-web-production` check. GitHub Actions remains the only thing that promotes a version to live traffic.
+  Both commands live in the root `package.json` rather than in the dashboard, so they are reviewable and stay in step with the app. Two things they must keep doing: build with `CLOUDFLARE_ENV=production` (without it the generated `build/server/wrangler.json` carries the base environment - name `sendtally-web`, empty `vars`, so no `API_URL` or `CLERK_PUBLISHABLE_KEY`), and run wrangler from `apps/web` (the Vite plugin writes the `.wrangler/deploy/config.json` redirect there; from the repo root wrangler finds no config and fails with "Missing entry-point to Worker script").
+  A preview version runs on the production Worker, so it uses production secrets, production D1 and the live Clerk instance. Treat a preview as production data, not a sandbox.
 
 ### Secrets
 
