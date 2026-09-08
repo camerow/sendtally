@@ -12,4 +12,7 @@ build/
 .react-router/
 apps/mobile/ios/
 apps/mobile/android/
+# Written and deleted by the Expo CLI; apps/mobile/types/expo.d.ts owns the
+# same reference so the typecheck does not depend on it.
+apps/mobile/expo-env.d.ts
 .expo/
