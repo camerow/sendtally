@@ -20,6 +20,7 @@ cd infra/terraform
 terraform init
 cp terraform.tfvars.example terraform.tfvars
 export TF_VAR_cloudflare_api_token=...   # from 1Password, vault "Send Tally"
+export TF_VAR_smoke_check_token="$(doppler secrets get SMOKE_CHECK_TOKEN --plain --project sendtally --config prd)"
 terraform plan
 ```
 
@@ -55,6 +56,26 @@ that account. Store it in 1Password; never in tfvars or the repo.
   never touches table contents.
 - `prevent_destroy` is on for D1. Removing an environment needs a deliberate
   two-step (drop the lifecycle block, apply).
+
+## The deploy smoke check and bot protection
+
+`.github/scripts/smoke.sh` runs from a GitHub Actions runner, so its requests
+arrive from an Azure datacenter range and Cloudflare challenges them: the site
+answers 403 with the "Just a moment..." interstitial and the deploy goes red
+while the Worker is serving fine.
+
+The skip rule in `waf.tf` lets requests carrying `x-sendtally-smoke:
+$SMOKE_CHECK_TOKEN` past the security products that run on the Ruleset Engine.
+The token lives in Doppler (`SMOKE_CHECK_TOKEN`, both configs) and as the
+`SMOKE_CHECK_TOKEN` repo secret in GitHub; rotating it means changing it in
+both places and re-applying.
+
+**Bot Fight Mode is the one thing this cannot cover.** It is evaluated outside
+the Ruleset Engine, so no skip rule, page rule, or IP access rule reaches it.
+If the smoke check still gets challenged after this rule is live - the failure
+output prints `cf-mitigated` and `cf-ray` so you can tell - then Bot Fight Mode
+is the source, and the only fixes are turning it off under Security → Bots or
+moving to Super Bot Fight Mode, which does honour skip rules.
 
 The migration from the personal account is documented in
 `docs/cloudflare-account-migration.md`.

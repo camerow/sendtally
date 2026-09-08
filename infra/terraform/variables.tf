@@ -4,6 +4,12 @@ variable "cloudflare_api_token" {
   sensitive   = true
 }
 
+variable "smoke_check_token" {
+  description = "Shared token the post-deploy smoke check sends as x-sendtally-smoke, so its requests skip the Ruleset Engine security products. Supply via TF_VAR_smoke_check_token from Doppler, never in tfvars."
+  type        = string
+  sensitive   = true
+}
+
 variable "account_id" {
   description = "Cloudflare account that owns every sendtally resource."
   type        = string

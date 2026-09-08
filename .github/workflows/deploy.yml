@@ -50,6 +50,8 @@ jobs:
           workingDirectory: packages/sync-service
           command: deploy --env ${{ env.DEPLOY_ENV }}
       - name: Smoke check the deployed API
+        env:
+          SMOKE_TOKEN: ${{ secrets.SMOKE_CHECK_TOKEN }}
         run: .github/scripts/smoke.sh "${{ env.API_URL }}/health"
 
   deploy-web:
@@ -79,4 +81,6 @@ jobs:
           workingDirectory: apps/web
           command: deploy
       - name: Smoke check the deployed site
+        env:
+          SMOKE_TOKEN: ${{ secrets.SMOKE_CHECK_TOKEN }}
         run: .github/scripts/smoke.sh "${{ env.WEB_URL }}"
