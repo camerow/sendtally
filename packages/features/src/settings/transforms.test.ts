@@ -4,10 +4,7 @@ import { deleteConfirmationMatches, settingsVM } from "./transforms";
 
 function status(overrides: Partial<ConnectionStatus> = {}): ConnectionStatus {
   return {
-    boards: [],
     strava: null,
-    sync: null,
-    autoSync: false,
     ...overrides,
   };
 }
