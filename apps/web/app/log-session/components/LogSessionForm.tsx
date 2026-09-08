@@ -59,19 +59,48 @@ const chipStyle = (active: boolean): React.CSSProperties => ({
 });
 
 const stepperButton: React.CSSProperties = {
-  width: 30,
-  height: 30,
   borderRadius: 8,
   border: "1px solid rgba(64,63,76,0.18)",
   background: "none",
   cursor: "pointer",
-  fontFamily: "var(--font-mono)",
-  fontSize: 14,
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
   color: "var(--bs-gunmetal)",
-  lineHeight: 1,
 };
 
-const CLIMB_GRID = "88px minmax(0, 1fr) 176px 122px 36px";
+function Glyph({
+  d,
+  size = 15,
+  width = 1.8,
+}: {
+  d: string;
+  size?: number;
+  width?: number;
+}): React.ReactElement {
+  return (
+    <svg
+      viewBox="0 0 16 16"
+      width={size}
+      height={size}
+      aria-hidden
+      focusable="false"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={width}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      style={{ flex: "none" }}
+    >
+      <path d={d} />
+    </svg>
+  );
+}
+
+const PLUS = "M8 3.6V12.4M3.6 8H12.4";
+const MINUS = "M3.6 8H12.4";
+const CROSS = "M4.2 4.2 11.8 11.8M11.8 4.2 4.2 11.8";
+const CHECK = "M3 8.4 6.2 11.6 12.6 4.8";
 
 function Field({
   label,
@@ -146,9 +175,9 @@ function RpePicker({
               type="button"
               aria-label={`RPE ${value}`}
               onClick={() => onChange(value)}
+              className="log-session-rpe"
               style={{
                 flex: 1,
-                height: 26,
                 borderRadius: 4,
                 border: "none",
                 cursor: "pointer",
@@ -159,6 +188,48 @@ function RpePicker({
         })}
       </div>
     </div>
+  );
+}
+
+function ResultButton({
+  active,
+  activeBackground,
+  glyph,
+  label,
+  onClick,
+}: {
+  active: boolean;
+  activeBackground: string;
+  glyph: string;
+  label: string;
+  onClick: () => void;
+}): React.ReactElement {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      style={{
+        ...chipStyle(false),
+        flex: 1,
+        minWidth: 0,
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 6,
+        fontSize: 10,
+        padding: "8px 12px",
+        ...(active
+          ? {
+              background: activeBackground,
+              color: "var(--bs-white)",
+              border: `1px solid ${activeBackground}`,
+            }
+          : {}),
+      }}
+    >
+      <Glyph d={glyph} size={13} width={2} />
+      {label}
+    </button>
   );
 }
 
@@ -176,20 +247,11 @@ function ClimbRow({
   onRemove: () => void;
 }): React.ReactElement {
   return (
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: CLIMB_GRID,
-        gap: 10,
-        alignItems: "center",
-        background: "var(--surface-soft)",
-        borderRadius: "var(--radius-card)",
-        padding: "12px 14px",
-      }}
-    >
+    <div className="climb-row">
       <select
         value={climb.grade}
         onChange={(e) => onChange({ ...climb, grade: e.target.value })}
+        className="climb-grade log-session-control"
         style={{
           ...inputStyle,
           fontFamily: "var(--font-mono)",
@@ -207,55 +269,38 @@ function ClimbRow({
         value={climb.name}
         placeholder="Name (optional)"
         onChange={(e) => onChange({ ...climb, name: e.target.value })}
+        className="climb-name log-session-control"
         style={inputStyle}
       />
-      <div style={{ display: "flex", gap: 6 }}>
-        <button
-          type="button"
+      <div className="climb-result" style={{ display: "flex", gap: 6, minWidth: 0 }}>
+        <ResultButton
+          active={climb.kind === "send"}
+          activeBackground="var(--bs-azure-ink)"
+          glyph={CHECK}
+          label="SEND"
           onClick={() => onChange({ ...climb, kind: "send" })}
-          style={{
-            ...chipStyle(false),
-            fontSize: 10,
-            padding: "8px 12px",
-            ...(climb.kind === "send"
-              ? {
-                  background: "var(--bs-azure-ink)",
-                  color: "var(--bs-white)",
-                  border: "1px solid var(--bs-azure-ink)",
-                }
-              : {}),
-          }}
-        >
-          ✓ SEND
-        </button>
-        <button
-          type="button"
+        />
+        <ResultButton
+          active={climb.kind === "attempt"}
+          activeBackground="var(--bs-gunmetal)"
+          glyph={CROSS}
+          label="ATTEMPT"
           onClick={() => onChange({ ...climb, kind: "attempt" })}
-          style={{
-            ...chipStyle(false),
-            fontSize: 10,
-            padding: "8px 12px",
-            ...(climb.kind === "attempt"
-              ? {
-                  background: "var(--bs-gunmetal)",
-                  color: "var(--bs-white)",
-                  border: "1px solid var(--bs-gunmetal)",
-                }
-              : {}),
-          }}
-        >
-          ✗ ATTEMPT
-        </button>
+        />
       </div>
-      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+      <div
+        className="climb-tries"
+        style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 8 }}
+      >
         <button
           type="button"
           aria-label="Fewer tries"
           disabled={climb.tries <= 1}
           onClick={() => onChange({ ...climb, tries: climb.tries - 1 })}
+          className="climb-step"
           style={{ ...stepperButton, opacity: climb.tries <= 1 ? 0.4 : 1 }}
         >
-          −
+          <Glyph d={MINUS} />
         </button>
         <span
           style={{
@@ -272,9 +317,10 @@ function ClimbRow({
           type="button"
           aria-label="More tries"
           onClick={() => onChange({ ...climb, tries: Math.min(99, climb.tries + 1) })}
+          className="climb-step"
           style={stepperButton}
         >
-          +
+          <Glyph d={PLUS} />
         </button>
       </div>
       <button
@@ -282,16 +328,15 @@ function ClimbRow({
         aria-label="Remove climb"
         disabled={!removable}
         onClick={onRemove}
+        className="climb-remove"
         style={{
           ...stepperButton,
-          width: 32,
-          height: 32,
           border: "none",
           color: "rgba(64,63,76,0.45)",
           opacity: removable ? 1 : 0,
         }}
       >
-        ✕
+        <Glyph d={CROSS} width={1.7} />
       </button>
     </div>
   );
@@ -328,9 +373,9 @@ export function LogSessionForm({ api }: { api: SendtallyApi }): React.ReactEleme
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 26 }}>
-      <div style={{ display: "grid", gridTemplateColumns: "380px minmax(0, 1fr)", gap: 36 }}>
-        <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
+    <div className="log-session">
+      <div className="log-session-grid">
+        <div className="log-session-details">
           <Field
             label={
               <>
@@ -342,6 +387,7 @@ export function LogSessionForm({ api }: { api: SendtallyApi }): React.ReactEleme
               value={draft.name}
               placeholder="Tuesday board night"
               onChange={(e) => setDraft({ ...draft, name: e.target.value })}
+              className="log-session-control"
               style={inputStyle}
             />
           </Field>
@@ -350,17 +396,17 @@ export function LogSessionForm({ api }: { api: SendtallyApi }): React.ReactEleme
               type="date"
               value={draft.date}
               onChange={(e) => setDraft({ ...draft, date: e.target.value })}
+              className="log-session-control"
               style={inputStyle}
             />
           </Field>
-          <div
-            style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 14 }}
-          >
+          <div className="log-session-times">
             <Field label="START TIME">
               <input
                 type="time"
                 value={draft.startTime}
                 onChange={(e) => setDraft({ ...draft, startTime: e.target.value })}
+                className="log-session-control"
                 style={inputStyle}
               />
             </Field>
@@ -369,6 +415,7 @@ export function LogSessionForm({ api }: { api: SendtallyApi }): React.ReactEleme
                 type="time"
                 value={draft.endTime}
                 onChange={(e) => setDraft({ ...draft, endTime: e.target.value })}
+                className="log-session-control"
                 style={inputStyle}
               />
             </Field>
@@ -380,6 +427,7 @@ export function LogSessionForm({ api }: { api: SendtallyApi }): React.ReactEleme
                   key={loc}
                   type="button"
                   onClick={() => setDraft({ ...draft, location: loc })}
+                  className="log-session-chip"
                   style={chipStyle(draft.location === loc)}
                 >
                   {loc.toUpperCase()}
@@ -421,7 +469,7 @@ export function LogSessionForm({ api }: { api: SendtallyApi }): React.ReactEleme
           </div>
         </div>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+        <div className="log-session-climbs">
           <div
             style={{
               display: "flex",
@@ -447,14 +495,7 @@ export function LogSessionForm({ api }: { api: SendtallyApi }): React.ReactEleme
               ))}
             </div>
           </div>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: CLIMB_GRID,
-              gap: 10,
-              padding: "0 14px",
-            }}
-          >
+          <div className="climb-head">
             <span style={columnHead}>GRADE</span>
             <span style={columnHead}>NAME · OPTIONAL</span>
             <span style={columnHead}>RESULT</span>
@@ -496,27 +537,21 @@ export function LogSessionForm({ api }: { api: SendtallyApi }): React.ReactEleme
                 color: "var(--bs-azure-ink)",
               }}
             >
-              + ADD CLIMB
+              <Glyph d={PLUS} />
+              ADD CLIMB
             </button>
           </div>
         </div>
       </div>
 
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: 26,
-          borderTop: "1px solid rgba(64,63,76,0.1)",
-          paddingTop: 20,
-        }}
-      >
-        <span style={monoLabel}>{draftSummary(draft)}</span>
-        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+      <div className="log-session-actions">
+        <div className="log-session-status">
+          <span style={monoLabel}>{draftSummary(draft)}</span>
           {error !== null && (
             <span style={{ ...monoLabel, color: "var(--text-label-accent)" }}>{error}</span>
           )}
+        </div>
+        <div className="log-session-buttons">
           <button
             type="button"
             onClick={() => void navigate("/app")}

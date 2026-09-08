@@ -42,6 +42,7 @@
   --line-on-dark: rgba(238, 211, 248, 0.18);
   --line-on-light: rgba(64, 63, 76, 0.1);
   --line-on-light-soft: rgba(64, 63, 76, 0.08);
+  --line-on-light-strong: rgba(64, 63, 76, 0.22); /* outlined controls on white */
 
   /* Data viz */
   --data-bar: var(--bs-azure);

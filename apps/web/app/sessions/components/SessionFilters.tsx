@@ -8,15 +8,6 @@ import {
 } from "@sendtally/features/sessions";
 import { chipStyle } from "../../components/chip";
 
-const label: React.CSSProperties = {
-  fontFamily: "var(--font-mono)",
-  fontWeight: 500,
-  fontSize: 10,
-  letterSpacing: "0.08em",
-  color: "rgba(64,63,76,0.55)",
-  minWidth: 62,
-};
-
 export type SessionFiltersProps = {
   grouping: SessionGrouping;
   tagOptions: TagOption[];
@@ -25,10 +16,10 @@ export type SessionFiltersProps = {
   hrefFor: (next: { grouping?: SessionGrouping; tags?: string[] }) => string;
 };
 
-function Row({ children, name }: { children: React.ReactNode; name: string }): React.ReactElement {
+function Row({ name, children }: { name: string; children: React.ReactNode }): React.ReactElement {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-      <span style={label}>{name}</span>
+    <div className="sessions-filter-row">
+      <span className="sessions-filter-label">{name}</span>
       {children}
     </div>
   );
@@ -53,7 +44,7 @@ export function SessionFilters({
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 24 }}>
+    <div className="sessions-filters">
       <Row name="GROUP BY">
         {(["month", "tag"] as const).map((value) => (
           <Link key={value} to={hrefFor({ grouping: value })} style={chipStyle(grouping === value)}>

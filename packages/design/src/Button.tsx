@@ -3,7 +3,8 @@ import React from "react";
 const base: React.CSSProperties = {
   fontFamily: "var(--font-sans)",
   fontWeight: 600,
-  border: "none",
+  border: "1px solid transparent",
+  boxSizing: "border-box",
   borderRadius: "var(--radius-control)",
   cursor: "pointer",
   display: "inline-flex",
@@ -44,6 +45,12 @@ const variants: Record<string, Variant> = {
     hover: "transparent",
     border: "1px solid var(--line-on-dark)",
   },
+  ghostOnLight: {
+    background: "transparent",
+    color: "var(--bs-gunmetal)",
+    hover: "var(--surface-soft)",
+    border: "1px solid var(--line-on-light-strong)",
+  },
   danger: {
     background: "var(--bs-watermelon-ink)",
     color: "var(--bs-white)",
@@ -52,7 +59,7 @@ const variants: Record<string, Variant> = {
 };
 
 export type ButtonProps = {
-  variant?: "gold" | "azure" | "ghostOnDark" | "danger";
+  variant?: "gold" | "azure" | "ghostOnDark" | "ghostOnLight" | "danger";
   size?: "md" | "sm";
   href?: string;
   disabled?: boolean;

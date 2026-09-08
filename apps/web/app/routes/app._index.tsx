@@ -1,26 +1,32 @@
 import React from "react";
-import type { LoaderFunctionArgs } from "react-router";
+import type { LinksFunction, LoaderFunctionArgs } from "react-router";
 import { Link, useLoaderData, useSearchParams } from "react-router";
 import type { ConnectionStatus, SessionRow } from "@sendtally/api-client";
 import {
+  countLabel,
   filterSessionsByTags,
-  resolveSessionMonth,
-  sessionBadge,
-  sessionMonths,
   sessionTagGroups,
   sessionTagOptions,
-  sessionTitle,
+  sessionYearGroups,
   type SessionGrouping,
 } from "@sendtally/features/sessions";
 import { requireApi } from "../lib/api.server";
-import { MonthPicker } from "../sessions/components/MonthPicker";
+import { monthAnchorId } from "../sessions/anchors";
+import { LogSessionFab } from "../sessions/components/LogSessionFab";
+import { MonthJumpRail } from "../sessions/components/MonthJumpRail";
+import { MonthScopeBar } from "../sessions/components/MonthScopeBar";
 import { SessionFilters } from "../sessions/components/SessionFilters";
-import { SessionRowItem } from "../sessions/components/SessionRowItem";
+import { SessionTagSection } from "../sessions/components/SessionTagSection";
+import { SessionYearGroup } from "../sessions/components/SessionYearGroup";
+import sessionsStyles from "../sessions/sessions.css?url";
+import { useVisibleMonth } from "../sessions/useVisibleMonth";
 
 type LoaderData = {
   status: ConnectionStatus;
   sessions: SessionRow[];
 };
+
+export const links: LinksFunction = () => [{ rel: "stylesheet", href: sessionsStyles }];
 
 export async function loader(args: LoaderFunctionArgs): Promise<LoaderData> {
   const api = await requireApi(args);
@@ -29,47 +35,13 @@ export async function loader(args: LoaderFunctionArgs): Promise<LoaderData> {
   return { status, sessions };
 }
 
-const bannerButton: React.CSSProperties = {
-  fontFamily: "var(--font-sans)",
-  fontWeight: 600,
-  fontSize: 13,
-  color: "var(--bs-white)",
-  background: "var(--bs-azure-ink)",
-  border: "none",
-  borderRadius: "var(--radius-control)",
-  padding: "9px 16px",
-  cursor: "pointer",
-  whiteSpace: "nowrap",
-};
-
-const groupHeading: React.CSSProperties = {
-  fontFamily: "var(--font-mono)",
-  fontWeight: 500,
-  fontSize: 11,
-  letterSpacing: "0.08em",
-  color: "var(--text-label-accent)",
-};
-
 const muted: React.CSSProperties = {
+  padding: 36,
+  textAlign: "center",
   fontFamily: "var(--font-mono)",
   fontSize: 13,
   color: "rgba(64,63,76,0.55)",
 };
-
-function SessionList({ sessions }: { sessions: SessionRow[] }): React.ReactElement {
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-      {sessions.map((s) => (
-        <SessionRowItem
-          key={s.fingerprint}
-          session={s}
-          title={sessionTitle(s)}
-          badge={sessionBadge(s)}
-        />
-      ))}
-    </div>
-  );
-}
 
 export default function Sessions(): React.ReactElement {
   const { status, sessions } = useLoaderData<typeof loader>();
@@ -89,9 +61,16 @@ export default function Sessions(): React.ReactElement {
     [sessions, selectedTags]
   );
 
-  const months = React.useMemo(() => sessionMonths(visible), [visible]);
-  const selectedMonth = resolveSessionMonth(months, searchParams.get("month"));
+  const years = React.useMemo(() => sessionYearGroups(visible), [visible]);
   const tagGroups = React.useMemo(() => sessionTagGroups(visible), [visible]);
+  const monthKeys = React.useMemo(() => years.flatMap((y) => y.months.map((m) => m.key)), [years]);
+  const currentKey = useVisibleMonth(monthKeys);
+  const requestedMonth = searchParams.get("month");
+
+  React.useEffect(() => {
+    if (requestedMonth === null) return;
+    document.getElementById(monthAnchorId(requestedMonth))?.scrollIntoView({ block: "start" });
+  }, [requestedMonth]);
 
   const hrefFor = React.useCallback(
     (next: { grouping?: SessionGrouping; tags?: string[] }): string => {
@@ -105,19 +84,9 @@ export default function Sessions(): React.ReactElement {
     [grouping, selectedTags]
   );
 
-  const monthHref = React.useCallback(
-    (key: string): string => {
-      const params = new URLSearchParams();
-      for (const slug of selectedTags) params.append("tag", slug);
-      params.set("month", key);
-      return `/app?${params.toString()}`;
-    },
-    [selectedTags]
-  );
-
   return (
     <div>
-      <div style={{ display: "flex", alignItems: "baseline", gap: 16, flexWrap: "wrap" }}>
+      <div className="sessions-head">
         <h1
           style={{
             margin: 0,
@@ -138,11 +107,12 @@ export default function Sessions(): React.ReactElement {
             letterSpacing: "0.06em",
           }}
         >
-          {visible.length === 1 ? "1 SESSION" : `${visible.length} SESSIONS`}
+          {countLabel(visible.length)}
         </span>
         <div style={{ flex: 1 }} />
         <Link
           to="/app/sessions/new"
+          className="sessions-head-action"
           style={{
             fontFamily: "var(--font-sans)",
             fontWeight: 600,
@@ -159,22 +129,25 @@ export default function Sessions(): React.ReactElement {
         </Link>
       </div>
       {!stravaConnected && (
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 16,
-            background: "var(--surface-accent-pink)",
-            borderRadius: "var(--radius-card)",
-            padding: "16px 20px",
-            marginTop: 22,
-          }}
-        >
+        <div className="sessions-banner">
           <span style={{ flex: 1, fontSize: 14, lineHeight: 1.5, color: "var(--text-on-light)" }}>
             Your logbook lives here either way. Connect Strava and your sessions can post to your
             feed as Rock Climbing activities.
           </span>
-          <Link to="/app/setup" style={{ ...bannerButton, textDecoration: "none" }}>
+          <Link
+            to="/app/setup"
+            style={{
+              fontFamily: "var(--font-sans)",
+              fontWeight: 600,
+              fontSize: 13,
+              color: "var(--bs-white)",
+              background: "var(--bs-azure-ink)",
+              borderRadius: "var(--radius-control)",
+              padding: "9px 16px",
+              textDecoration: "none",
+              whiteSpace: "nowrap",
+            }}
+          >
             Connect Strava
           </Link>
         </div>
@@ -188,42 +161,42 @@ export default function Sessions(): React.ReactElement {
           hrefFor={hrefFor}
         />
       )}
-      {grouping === "month" && selectedMonth !== null && (
+      {grouping === "month" && years.length > 0 && (
         <>
-          <div style={{ marginTop: 26 }}>
-            <MonthPicker months={months} selected={selectedMonth} hrefFor={monthHref} />
-          </div>
-          <div style={{ marginTop: 18 }}>
-            <SessionList sessions={selectedMonth.sessions} />
+          <MonthScopeBar years={years} currentKey={currentKey} />
+          <div className="sessions-body">
+            <div className="sessions-list">
+              {years.map((year) => (
+                <SessionYearGroup key={year.year} year={year} />
+              ))}
+            </div>
+            <MonthJumpRail years={years} currentKey={currentKey} />
           </div>
         </>
       )}
-      {grouping === "tag" && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 26, marginTop: 26 }}>
-          {tagGroups.map((group) => (
-            <section key={group.key} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              <span style={groupHeading}>
-                {group.label.toUpperCase()} ·{" "}
-                {group.sessions.length === 1 ? "1 SESSION" : `${group.sessions.length} SESSIONS`}
-              </span>
-              <SessionList sessions={group.sessions} />
-            </section>
-          ))}
+      {grouping === "tag" && tagGroups.length > 0 && (
+        <div className="sessions-body">
+          <div className="sessions-list">
+            {tagGroups.map((group) => (
+              <SessionTagSection key={group.key} group={group} />
+            ))}
+          </div>
         </div>
       )}
       {sessions.length === 0 && (
-        <div style={{ ...muted, padding: 36, textAlign: "center" }}>
+        <div style={muted}>
           No sessions yet. Hit Log a session and your first one takes about a minute.
         </div>
       )}
       {sessions.length > 0 && visible.length === 0 && (
-        <div style={{ ...muted, padding: 36, textAlign: "center" }}>
+        <div style={muted}>
           No sessions carry those tags.{" "}
           <Link to={hrefFor({ tags: [] })} style={{ color: "var(--bs-azure-ink)" }}>
             Clear the filter
           </Link>
         </div>
       )}
+      <LogSessionFab />
     </div>
   );
 }
