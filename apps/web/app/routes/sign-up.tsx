@@ -4,13 +4,13 @@ import { AuthForm } from "../auth/components/AuthForm";
 import { redirectSignedInToApp } from "../auth/session.server";
 
 export function meta(): Array<Record<string, string>> {
-  return [{ title: "sign in - sendtally" }];
+  return [{ title: "create your account - sendtally" }];
 }
 
 export async function loader(args: LoaderFunctionArgs): Promise<null> {
   return redirectSignedInToApp(args);
 }
 
-export default function SignIn(): React.ReactElement {
-  return <AuthForm intent="sign-in" />;
+export default function SignUp(): React.ReactElement {
+  return <AuthForm intent="sign-up" />;
 }

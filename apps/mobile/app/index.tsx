@@ -5,5 +5,5 @@ import React from "react";
 export default function Index(): React.ReactElement | null {
   const { isLoaded, isSignedIn } = useAuth();
   if (!isLoaded) return null;
-  return isSignedIn ? <Redirect href="/(tabs)/sessions" /> : <Redirect href="/sign-in" />;
+  return isSignedIn ? <Redirect href="/(tabs)/sessions" /> : <Redirect href="/onboarding" />;
 }

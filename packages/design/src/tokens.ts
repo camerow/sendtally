@@ -21,6 +21,7 @@ export const colors = {
   textFaint: "rgba(64,63,76,0.45)",
   lineOnLight: "rgba(64,63,76,0.1)",
   lineOnLightSoft: "rgba(64,63,76,0.08)",
+  lineOnLightStrong: "rgba(64,63,76,0.22)",
   dataBarEmpty: "rgba(64,63,76,0.14)",
 } as const;
 

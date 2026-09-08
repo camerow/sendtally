@@ -1,12 +1,30 @@
 import { useClerk, useSignIn, useSignUp } from "@clerk/clerk-expo";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import React from "react";
 import { KeyboardAvoidingView, Platform, Pressable, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { Logo } from "../components/Logo";
 
-type Phase = { name: "email" } | { name: "code"; mode: "sign-in" | "sign-up" };
+type Intent = "sign-in" | "sign-up";
+
+type Phase = { name: "email" } | { name: "code"; mode: Intent };
+
+const SWAP: Record<Intent, { to: Intent; prompt: string; label: string }> = {
+  "sign-in": { to: "sign-up", prompt: "First time here?", label: "Create an account" },
+  "sign-up": { to: "sign-in", prompt: "Already have an account?", label: "Sign in" },
+};
+
+const COPY: Record<Intent, { title: string; body: string }> = {
+  "sign-in": {
+    title: "Welcome back.",
+    body: "No password. Enter the email you signed up with and we send a one-time code.",
+  },
+  "sign-up": {
+    title: "Create your account.",
+    body: "No password. We email you a one-time code. Logging sessions and Strava sync are free.",
+  },
+};
 
 function errorMessage(err: unknown): string {
   const first = (err as { errors?: Array<{ longMessage?: string; message?: string }> }).errors?.[0];
@@ -18,6 +36,8 @@ function errorCode(err: unknown): string | undefined {
 }
 
 export default function SignIn(): React.ReactElement {
+  const params = useLocalSearchParams<{ intent?: string }>();
+  const intent: Intent = params.intent === "sign-up" ? "sign-up" : "sign-in";
   const { signIn, isLoaded: signInLoaded, setActive } = useSignIn();
   const { signUp, isLoaded: signUpLoaded } = useSignUp();
   const clerk = useClerk();
@@ -101,6 +121,8 @@ export default function SignIn(): React.ReactElement {
   }
 
   const inCodePhase = phase.name === "code";
+  const copy = COPY[intent];
+  const swap = SWAP[intent];
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.white }}>
@@ -109,7 +131,24 @@ export default function SignIn(): React.ReactElement {
         style={{ flex: 1 }}
       >
         <View style={{ flex: 1, paddingHorizontal: 22, paddingTop: 32, gap: 16 }}>
-          <Logo size={24} />
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
+            {router.canGoBack() && (
+              <Pressable
+                onPress={() => router.back()}
+                accessibilityRole="button"
+                accessibilityLabel="Back"
+                hitSlop={12}
+                style={{ minHeight: 32, justifyContent: "center" }}
+              >
+                <Text
+                  style={{ fontFamily: fonts.sansMedium, fontSize: 20, color: colors.textMuted }}
+                >
+                  ←
+                </Text>
+              </Pressable>
+            )}
+            <Logo size={24} />
+          </View>
           <Text
             style={{
               fontFamily: fonts.display,
@@ -119,7 +158,7 @@ export default function SignIn(): React.ReactElement {
               marginTop: 6,
             }}
           >
-            {inCodePhase ? "Check your inbox." : "Sign in."}
+            {inCodePhase ? "Check your inbox." : copy.title}
           </Text>
           <Text
             style={{
@@ -129,9 +168,7 @@ export default function SignIn(): React.ReactElement {
               color: colors.textSecondary,
             }}
           >
-            {inCodePhase
-              ? `We sent a six-digit code to ${email}.`
-              : "No password. We email you a one-time code. New email, new account - same thing."}
+            {inCodePhase ? `We sent a six-digit code to ${email}.` : copy.body}
           </Text>
           {inCodePhase ? (
             <TextInput
@@ -245,6 +282,28 @@ export default function SignIn(): React.ReactElement {
                   }}
                 >
                   Resend
+                </Text>
+              </Pressable>
+            </View>
+          )}
+          {!inCodePhase && (
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 7 }}>
+              <Text style={{ fontFamily: fonts.mono, fontSize: 12, color: colors.textMuted }}>
+                {swap.prompt}
+              </Text>
+              <Pressable
+                onPress={() => router.setParams({ intent: swap.to })}
+                style={{ minHeight: 44, justifyContent: "center" }}
+              >
+                <Text
+                  style={{
+                    fontFamily: fonts.mono,
+                    fontSize: 12,
+                    color: colors.azureInk,
+                    textDecorationLine: "underline",
+                  }}
+                >
+                  {swap.label}
                 </Text>
               </Pressable>
             </View>

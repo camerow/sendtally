@@ -7,11 +7,24 @@
   border-bottom: 1px solid var(--line-on-light);
 }
 
+.l-nav-logo {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+  text-decoration: none;
+}
+
 .l-nav-links {
   display: flex;
   align-items: center;
   gap: clamp(16px, 3vw, 28px);
   justify-content: flex-end;
+}
+
+.l-nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .l-nav-anchor {
@@ -344,5 +357,16 @@
 @media (max-width: 620px) {
   .l-nav-anchor {
     display: none;
+  }
+}
+
+@media (max-width: 400px) {
+  .l-nav {
+    gap: 10px;
+    padding-inline: 16px;
+  }
+
+  .l-nav-actions {
+    gap: 8px;
   }
 }

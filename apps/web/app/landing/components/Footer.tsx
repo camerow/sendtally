@@ -1,7 +1,7 @@
 import React from "react";
 
 const LINKS: Array<[string, string]> = [
-  ["Sign in", "/app"],
+  ["Sign in", "/sign-in"],
   ["Membership", "https://github.com/sponsors/camerow"],
   ["Contact", "mailto:hello@sendtally.com"],
 ];
