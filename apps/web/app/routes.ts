@@ -4,6 +4,7 @@ export default [
   index("routes/home.tsx"),
   route("sign-in", "routes/sign-in.tsx"),
   route("sign-in/verify", "routes/sign-in.verify.tsx"),
+  route("sign-up", "routes/sign-up.tsx"),
   route("connected/strava", "routes/connected.strava.tsx"),
   route("app", "routes/app.tsx", [
     index("routes/app._index.tsx"),

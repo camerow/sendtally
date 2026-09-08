@@ -26,9 +26,12 @@ export function Hero(): React.ReactElement {
           week by week.
         </p>
         <div style={{ display: "flex", flexDirection: "column", gap: 11 }}>
-          <div>
-            <Button variant="gold" href="/app">
+          <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 12 }}>
+            <Button variant="gold" href="/sign-up">
               Create your account →
+            </Button>
+            <Button variant="ghostOnLight" href="/sign-in">
+              Sign in
             </Button>
           </div>
           <span

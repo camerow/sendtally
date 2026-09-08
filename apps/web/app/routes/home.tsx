@@ -1,7 +1,6 @@
-import { getAuth } from "@clerk/react-router/ssr.server";
 import React from "react";
 import type { LinksFunction, LoaderFunctionArgs } from "react-router";
-import { redirect } from "react-router";
+import { redirectSignedInToApp } from "../auth/session.server";
 import { Details } from "../landing/components/Details";
 import { Footer } from "../landing/components/Footer";
 import { Hero } from "../landing/components/Hero";
@@ -27,9 +26,7 @@ export function meta(): Array<Record<string, string>> {
 }
 
 export async function loader(args: LoaderFunctionArgs): Promise<null> {
-  const auth = await getAuth(args);
-  if (auth.isAuthenticated) throw redirect("/app");
-  return null;
+  return redirectSignedInToApp(args);
 }
 
 export default function Home(): React.ReactElement {

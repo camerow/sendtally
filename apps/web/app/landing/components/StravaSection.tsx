@@ -33,7 +33,7 @@ export function StravaSection(): React.ReactElement {
             charge for Strava syncing. Turn it off and sendtally is still yours for the numbers
             alone.
           </p>
-          <Button variant="azure" href="/app">
+          <Button variant="azure" href="/sign-up">
             Create your account →
           </Button>
         </div>
