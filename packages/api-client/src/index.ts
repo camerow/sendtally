@@ -79,4 +79,8 @@ export class SendtallyApi {
   stravaAuthorizeUrl(): Promise<{ url: string }> {
     return this.request<{ url: string }>("/v1/connect/strava/start");
   }
+
+  deleteAccount(): Promise<{ deleted: boolean }> {
+    return this.request<{ deleted: boolean }>("/v1/account", { method: "DELETE" });
+  }
 }

@@ -1,6 +1,6 @@
 import { and, desc, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
-import { sessions, stravaConnections, users } from "../db/schema";
+import { sessions, stravaConnections, syncState, users } from "../db/schema";
 
 export type UserRow = typeof users.$inferSelect;
 
@@ -216,4 +216,14 @@ export async function getSession(
     .where(and(eq(sessions.user_id, userId), eq(sessions.fingerprint, fingerprint)))
     .get();
   return row ?? null;
+}
+
+export async function deleteUserData(db: D1Database, userId: string): Promise<void> {
+  const d = drizzle(db);
+  await d.batch([
+    d.delete(sessions).where(eq(sessions.user_id, userId)),
+    d.delete(stravaConnections).where(eq(stravaConnections.user_id, userId)),
+    d.delete(syncState).where(eq(syncState.user_id, userId)),
+    d.delete(users).where(eq(users.id, userId)),
+  ]);
 }

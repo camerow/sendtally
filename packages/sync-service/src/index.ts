@@ -1,8 +1,12 @@
 import { createApp } from "./app";
-import { verifyClerkUser } from "./auth";
+import { deleteClerkUser, verifyClerkUser, verifyClerkWebhook } from "./auth";
 import type { Env } from "./bindings";
 
-const app = createApp({ verifyUser: verifyClerkUser });
+const app = createApp({
+  verifyUser: verifyClerkUser,
+  deleteAuthUser: deleteClerkUser,
+  verifyAuthWebhook: verifyClerkWebhook,
+});
 
 export default {
   fetch: app.fetch,
