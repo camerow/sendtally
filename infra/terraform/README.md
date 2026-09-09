@@ -5,7 +5,13 @@ Terraform owns the account-level Cloudflare resources for sendtally in the
 
 - the `sendtally.com` zone and its TLS/HTTPS settings
 - DNS records that are not Worker hostnames (Clerk, mail, verification)
+- the redirect rule that sends `www.sendtally.com` to the apex
 - D1 databases (`sendtally-staging`, `sendtally-production`)
+
+`www` is a proxied CNAME, so Cloudflare answers for it but has no origin behind
+it - the Worker custom domain covers the apex only. Without the redirect rule in
+`redirects.tf` every request to `www.sendtally.com` returns a 522. Changing that
+rule needs `terraform apply`; merging alone will not move it.
 
 Wrangler still owns what it deploys: the Worker scripts, their bindings, Worker secrets, and the Worker custom domains
 (`sendtally.com`, `api.sendtally.com`, `staging.*`, `api-staging.*`). Those are
