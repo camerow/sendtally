@@ -385,7 +385,7 @@ export function LogSessionForm({ api }: { api: SendtallyApi }): React.ReactEleme
           >
             <input
               value={draft.name}
-              placeholder="Tuesday board night"
+              placeholder="Tuesday night session"
               onChange={(e) => setDraft({ ...draft, name: e.target.value })}
               className="log-session-control"
               style={inputStyle}

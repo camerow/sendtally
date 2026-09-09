@@ -48,9 +48,14 @@ Create at dash.cloudflare.com/profile/api-tokens ("Create Custom Token"):
 | Zone    | DNS                  | Edit  |
 | Zone    | SSL and Certificates | Edit  |
 | Zone    | Workers Routes       | Edit  |
+| Zone    | Dynamic Redirect     | Edit  |
 
 Account resources: **Chalk and Circuits** only. Zone resources: all zones in
 that account. Store it in 1Password; never in tfvars or the repo.
+
+Dynamic Redirect is what lets Terraform manage `redirects.tf`. A token without it
+plans the ruleset happily and then fails the apply with a bare
+`403 Authentication error` on `POST /zones/<id>/rulesets`.
 
 ## Day-to-day
 

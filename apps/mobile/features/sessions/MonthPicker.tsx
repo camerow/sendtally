@@ -1,5 +1,5 @@
 import React from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { Pressable, ScrollView, Text, View, type LayoutChangeEvent } from "react-native";
 import {
   MONTH_SHORT_NAMES,
   adjacentSessionMonths,
@@ -13,16 +13,19 @@ function Chip({
   label,
   active,
   onPress,
+  onLayout,
 }: {
   label: string;
   active: boolean;
   onPress: (() => void) | null;
+  onLayout?: (event: LayoutChangeEvent) => void;
 }): React.ReactElement {
   const empty = onPress === null;
   return (
     <Pressable
       disabled={empty}
       onPress={onPress ?? undefined}
+      onLayout={onLayout}
       accessibilityRole="button"
       accessibilityState={{ selected: active, disabled: empty }}
       style={{
@@ -103,6 +106,15 @@ export function MonthPicker({
   const { newer, older } = adjacentSessionMonths(months, selected.key);
   const years = sessionYears(months);
   const count = selected.sessions.length;
+  const monthStrip = React.useRef<ScrollView>(null);
+
+  // The strip holds all twelve months and starts at January, so a selection
+  // later in the year sits off-screen and the row reads as having nothing
+  // selected. Scroll to it as soon as it reports its position.
+  const revealSelected = (event: LayoutChangeEvent): void => {
+    const { x } = event.nativeEvent.layout;
+    monthStrip.current?.scrollTo({ x: Math.max(0, x - 80), animated: false });
+  };
 
   return (
     <View style={{ gap: 12 }}>
@@ -153,18 +165,23 @@ export function MonthPicker({
         </ScrollView>
       )}
       <ScrollView
+        ref={monthStrip}
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={{ gap: 6 }}
       >
-        {monthsOfYear(months, selected.year).map((month, i) => (
-          <Chip
-            key={i}
-            label={MONTH_SHORT_NAMES[i] ?? ""}
-            active={month !== null && month.key === selected.key}
-            onPress={month === null ? null : () => onSelect(month.key)}
-          />
-        ))}
+        {monthsOfYear(months, selected.year).map((month, i) => {
+          const active = month !== null && month.key === selected.key;
+          return (
+            <Chip
+              key={i}
+              label={MONTH_SHORT_NAMES[i] ?? ""}
+              active={active}
+              onPress={month === null ? null : () => onSelect(month.key)}
+              onLayout={active ? revealSelected : undefined}
+            />
+          );
+        })}
       </ScrollView>
     </View>
   );
