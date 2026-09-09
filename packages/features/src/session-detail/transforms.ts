@@ -1,10 +1,12 @@
-import type { SessionClimb, SessionDetail } from "@sendtally/api-client";
+import type { ConnectionStatus, SessionClimb, SessionDetail } from "@sendtally/api-client";
 import type {
   ClimbFilter,
   ClimbResult,
   ClimbSort,
   ClimbVM,
   GradeBarVM,
+  PostingStatus,
+  PostStatusVM,
   SessionDetailVM,
   StatVM,
 } from "./types";
@@ -83,7 +85,79 @@ export function filterAndSortClimbs(
   return climbs.filter(FILTERS[filter]).sort(SORTS[sort]);
 }
 
-export function sessionDetailVM(session: SessionDetail): SessionDetailVM {
+export function postingStatus(status: ConnectionStatus | null): PostingStatus | null {
+  if (status === null) return null;
+  const strava = status.strava;
+  if (strava === null) return { connected: false, active: false, since: null };
+  return { connected: true, active: strava.status === "active", since: strava.postSince };
+}
+
+function postedLabel(session: SessionDetail, start: Date): string {
+  const on = session.posted_at !== null ? new Date(session.posted_at) : start;
+  const day = on
+    .toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" })
+    .toUpperCase();
+  return `ON STRAVA · POSTED ${day}`;
+}
+
+export function postStatusVM(
+  session: SessionDetail,
+  posting: PostingStatus | null,
+  start: Date
+): PostStatusVM {
+  const base = { detail: null, alert: false, action: null, actionLabel: null } as const;
+
+  if (session.inProgress) {
+    return { ...base, kind: "in-progress", label: "IN PROGRESS · POSTS WHEN THE SESSION SETTLES" };
+  }
+  if (session.strava_activity_id !== null) {
+    return { ...base, kind: "posted", label: postedLabel(session, start) };
+  }
+  if (session.source !== "manual") {
+    const board = BOARD_LABELS[session.board ?? ""] ?? "Board session";
+    return { ...base, kind: "legacy", label: `${board.toUpperCase()} · READ-ONLY HISTORY` };
+  }
+  if (session.post_state === "pending") {
+    return { ...base, kind: "pending", label: "POSTING TO STRAVA" };
+  }
+
+  // Nothing to post to: no action, and no explanation the user can act on.
+  const postable = posting !== null && posting.connected && posting.active;
+
+  if (session.post_state === "failed") {
+    return {
+      kind: "failed",
+      label: "NOT POSTED TO STRAVA",
+      detail: session.post_error,
+      alert: true,
+      action: postable ? "retry" : null,
+      actionLabel: postable ? "Retry" : null,
+    };
+  }
+  if (postable && posting.since !== null && session.start_at < posting.since) {
+    return {
+      kind: "before-start",
+      label: "NOT POSTED TO STRAVA",
+      detail: "Earlier than your posting start date",
+      alert: false,
+      action: "post",
+      actionLabel: "Post anyway",
+    };
+  }
+  return {
+    kind: "off",
+    label: "LOGGED MANUALLY",
+    detail: null,
+    alert: false,
+    action: postable ? "post" : null,
+    actionLabel: postable ? "Post to Strava" : null,
+  };
+}
+
+export function sessionDetailVM(
+  session: SessionDetail,
+  posting: PostingStatus | null = null
+): SessionDetailVM {
   const board = session.board;
   const climbs = climbVMs(session.climbs);
   const start = new Date(session.start_at);
@@ -158,15 +232,7 @@ export function sessionDetailVM(session: SessionDetail): SessionDetailVM {
     stats,
     bars,
     filterCounts,
-    syncLine: session.inProgress
-      ? "IN PROGRESS · POSTS WHEN THE SESSION SETTLES"
-      : session.strava_activity_id !== null
-        ? `ON STRAVA · POSTED ${(session.posted_at !== null ? new Date(session.posted_at) : start)
-            .toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" })
-            .toUpperCase()}`
-        : session.source === "manual"
-          ? "LOGGED MANUALLY"
-          : "NOT POSTED TO STRAVA",
+    post: postStatusVM(session, posting, start),
     stravaUrl:
       session.strava_activity_id !== null
         ? `https://www.strava.com/activities/${session.strava_activity_id}`

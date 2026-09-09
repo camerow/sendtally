@@ -30,6 +30,8 @@ function session(
     title: "T",
     strava_activity_id: null,
     posted_at: null,
+    post_state: null,
+    post_error: null,
     inProgress: false,
     tags: [],
   };

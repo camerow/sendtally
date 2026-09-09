@@ -106,7 +106,7 @@ describe("score", () => {
       "1 attempt",
       "V4-V7",
       "avg V6.0",
-      "synced by sendtally",
+      "created by https://sendtally.com",
       "RPE",
       "✓ V4 Jug Life",
       "✓ V7 Crimp Reaper",

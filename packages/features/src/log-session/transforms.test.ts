@@ -181,6 +181,8 @@ function session(overrides: Partial<SessionDetail> = {}): SessionDetail {
     title: "Tuesday board night",
     strava_activity_id: null,
     posted_at: null,
+    post_state: null,
+    post_error: null,
     inProgress: false,
     tags: [{ id: "t1", name: "Endurance", slug: "endurance" }],
     climbs: [

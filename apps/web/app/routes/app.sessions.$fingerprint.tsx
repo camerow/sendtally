@@ -12,6 +12,7 @@ import { cloudflareContext } from "../lib/cloudflare-context";
 import { requireApi } from "../lib/api.server";
 import { useClientApi } from "../lib/useClientApi";
 import { SessionTags } from "../sessions/components/SessionTags";
+import { PostStatusBar } from "../session-detail/components/PostStatusBar";
 
 export async function loader(args: LoaderFunctionArgs): Promise<{ apiUrl: string }> {
   await requireApi(args);
@@ -482,24 +483,7 @@ export default function SessionDetailRoute(): React.ReactElement {
           </div>
         </div>
       </div>
-      <div
-        style={{
-          marginTop: 18,
-          paddingTop: 14,
-          borderTop: "1px solid var(--line-on-light)",
-        }}
-      >
-        <span
-          style={{
-            ...monoLabel,
-            fontSize: 11,
-            color: "rgba(64,63,76,0.55)",
-            letterSpacing: "0.06em",
-          }}
-        >
-          {vm.syncLine}
-        </span>
-      </div>
+      <PostStatusBar post={vm.post} action={feature.post} />
     </div>
   );
 }

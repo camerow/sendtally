@@ -16,7 +16,7 @@ export type ClimbLogProps = {
 export function ClimbLog({
   climbs = [],
   on = "light",
-  footer = "synced by sendtally",
+  footer = "created by https://sendtally.com",
 }: ClimbLogProps): React.ReactElement {
   const dark = on === "dark";
   const muted = dark ? "var(--text-on-dark-muted)" : "var(--text-on-white-secondary)";

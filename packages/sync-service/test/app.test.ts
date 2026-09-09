@@ -422,7 +422,7 @@ describe("app", () => {
     expect(row?.source).toBe("manual");
     expect(row?.board).toBeNull();
     expect(row?.location).toBe("indoor");
-    expect(row?.summary).toContain("synced by sendtally");
+    expect(row?.summary).toContain("created by https://sendtally.com");
   });
 
   it("never marks a manual session in progress, even with a recent end time", async () => {
