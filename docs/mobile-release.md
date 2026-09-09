@@ -111,10 +111,12 @@ Project `Sendtally` at app.revenuecat.com, id `f2a60af6`.
    That grant is blocked by the org policy `iam.allowedPolicyMemberDomains` (Domain restricted sharing), which new Workspace organisations enforce by default; the console then hangs on "Updating policy" without an error.
    The project `sendtally` carries an override of that policy (Replace parent, Allow All) for this reason; keep it scoped to that project.
    Finally, Play Console, Monetize with Play, Monetization setup: enable real-time notifications, paste the topic name, Send test notification, Save.
-2. **Products.** Create the subscription in Play Console first (product `member_monthly`, base plan `monthly`, priced to match the web plan), then add it in RevenueCat under Products for the Android app.
-3. **Entitlement.** `sendtally_member`, with `member_monthly` attached.
+2. **Products.** One Play subscription `membership` with two base plans, `monthly` at $3.00 and `yearly` at $24.00 ($2 a month billed yearly); keeping both plans inside one subscription is what lets Play handle a monthly-to-yearly switch as a plan change rather than a second subscription.
+   Play Console refuses to create subscriptions until a build that declares the `BILLING` permission is on a track, and `react-native-purchases` is what adds it, so the first billing build has to ship before the products can exist.
+   In RevenueCat the products are `membership:monthly` and `membership:yearly` under the Android app.
+3. **Entitlement.** `sendtally_member`, with both products attached.
    This identifier is `STORE_ENTITLEMENT` in `packages/sync-service/src/features.ts`; changing one means changing the other.
-4. **Offering.** `default`, with the monthly package pointing at `member_monthly`.
+4. **Offering.** `default`, with the monthly package pointing at `membership:monthly` and the annual package at `membership:yearly`.
    The app renders one button per package in the current offering, so keep the offering to the packages you mean to sell.
 5. **Webhook.** Integrations, Webhooks: URL `https://api.sendtally.com/webhooks/revenuecat`, Authorization header value equal to `REVENUECAT_WEBHOOK_AUTH` in Doppler (a long random string), all events.
 6. **API keys.** The Android public SDK key (`goog_…`) goes in `apps/mobile/eas.json` as `EXPO_PUBLIC_REVENUECAT_ANDROID_KEY`; it is a public key, like the Clerk publishable key.

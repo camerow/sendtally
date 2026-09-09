@@ -73,7 +73,11 @@ const PERIOD_LABELS: Partial<Record<PACKAGE_TYPE, string>> = {
 };
 
 export function packageLabel(pkg: PurchasesPackage): string {
+  const { priceString, pricePerMonthString } = pkg.product;
   const period = PERIOD_LABELS[pkg.packageType];
-  if (pkg.packageType === PACKAGE_TYPE.LIFETIME) return `${pkg.product.priceString} once`;
-  return period === undefined ? pkg.product.priceString : `${pkg.product.priceString} / ${period}`;
+  if (pkg.packageType === PACKAGE_TYPE.LIFETIME) return `${priceString} once`;
+  if (pkg.packageType === PACKAGE_TYPE.ANNUAL && pricePerMonthString !== null) {
+    return `${priceString} / year (${pricePerMonthString} a month)`;
+  }
+  return period === undefined ? priceString : `${priceString} / ${period}`;
 }
