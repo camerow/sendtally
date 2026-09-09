@@ -169,6 +169,11 @@ export function AuthForm({ intent }: { intent: AuthIntent }): React.ReactElement
         setBusy(false);
         return;
       }
+      if (intent === "sign-in") {
+        setError("No account for that email yet. Check the address, or create an account below.");
+        setBusy(false);
+        return;
+      }
       try {
         const signUp = await clerk.client.signUp.create({ emailAddress: email });
         await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
