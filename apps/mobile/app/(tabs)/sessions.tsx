@@ -1,60 +1,107 @@
 import { router } from "expo-router";
 import React from "react";
-import { Pressable, RefreshControl, SectionList, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import type { SessionRow } from "@sendtally/api-client";
 import {
+  RefreshControl,
+  SectionList,
+  Text,
+  View,
+  type SectionListData,
+  type ViewToken,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import type { SessionRow as SessionRowData } from "@sendtally/api-client";
+import {
+  countLabel,
   filterSessionsByTags,
-  resolveSessionMonth,
+  monthScopeItems,
   sessionBadge,
-  sessionMonths,
   sessionTagGroups,
   sessionTagOptions,
   sessionTitle,
-  type SessionGrouping,
+  sessionYearGroups,
+  tagScopeItems,
 } from "@sendtally/features/sessions";
-import { colors, fonts, radius } from "@sendtally/design/tokens";
-import { Logo } from "../../components/Logo";
-import { MonthPicker } from "../../features/sessions/MonthPicker";
-import { SessionCard } from "../../features/sessions/SessionCard";
-import { SessionFilters } from "../../features/sessions/SessionFilters";
+import { colors, fonts } from "@sendtally/design/tokens";
+import { LogoMark } from "../../components/Logo";
+import { FilterSheet, type SessionFilters } from "../../features/sessions/FilterSheet";
+import { LogSessionFab } from "../../features/sessions/LogSessionFab";
+import { ScopeBar } from "../../features/sessions/ScopeBar";
+import { SECTION_HEADER_HEIGHT, SectionHeader } from "../../features/sessions/SectionHeader";
+import { SessionRow, sessionRowHeight } from "../../features/sessions/SessionRow";
 import { useApi } from "../../lib/api";
 
-type Section = { key: string; title: string | null; data: SessionRow[] };
+type Section = { key: string; title: string; meta: string; data: SessionRowData[] };
+
+const HEADER_HEIGHT = 44;
+
+function itemLayout(
+  sections: ReadonlyArray<SectionListData<SessionRowData, Section>> | null,
+  index: number
+): { length: number; offset: number; index: number } {
+  let offset = HEADER_HEIGHT;
+  let cursor = 0;
+  for (const section of sections ?? []) {
+    if (cursor === index) return { length: SECTION_HEADER_HEIGHT, offset, index };
+    offset += SECTION_HEADER_HEIGHT;
+    cursor += 1;
+    for (const session of section.data) {
+      const length = sessionRowHeight(session);
+      if (cursor === index) return { length, offset, index };
+      offset += length;
+      cursor += 1;
+    }
+    if (cursor === index) return { length: 0, offset, index };
+    cursor += 1;
+  }
+  return { length: 0, offset, index };
+}
 
 export default function Sessions(): React.ReactElement {
   const api = useApi();
-  const [sessions, setSessions] = React.useState<SessionRow[] | null>(null);
+  const list = React.useRef<SectionList<SessionRowData, Section>>(null);
+  const [sessions, setSessions] = React.useState<SessionRowData[] | null>(null);
   const [refreshing, setRefreshing] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
-  const [monthKey, setMonthKey] = React.useState<string | null>(null);
-  const [grouping, setGrouping] = React.useState<SessionGrouping>("month");
-  const [selectedTags, setSelectedTags] = React.useState<string[]>([]);
+  const [filters, setFilters] = React.useState<SessionFilters>({ grouping: "month", tags: [] });
+  const [filtersOpen, setFiltersOpen] = React.useState(false);
+  const [currentKey, setCurrentKey] = React.useState<string | null>(null);
 
   const all = React.useMemo(() => sessions ?? [], [sessions]);
   const tagOptions = React.useMemo(() => sessionTagOptions(all), [all]);
   const untaggedCount = React.useMemo(() => all.filter((s) => s.tags.length === 0).length, [all]);
-  const visible = React.useMemo(() => filterSessionsByTags(all, selectedTags), [all, selectedTags]);
-  const months = React.useMemo(() => sessionMonths(visible), [visible]);
-  const selectedMonth = resolveSessionMonth(months, monthKey);
+  const visible = React.useMemo(() => filterSessionsByTags(all, filters.tags), [all, filters.tags]);
 
-  const sectionList = React.useMemo((): Section[] => {
-    if (grouping === "tag") {
-      return sessionTagGroups(visible).map((g) => ({
-        key: g.key,
-        title: `${g.label.toUpperCase()} · ${g.sessions.length === 1 ? "1 SESSION" : `${g.sessions.length} SESSIONS`}`,
-        data: g.sessions,
-      }));
+  const { sections, scopeItems } = React.useMemo(() => {
+    if (filters.grouping === "tag") {
+      const groups = sessionTagGroups(visible);
+      return {
+        sections: groups.map((g): Section => ({
+          key: g.key,
+          title: g.label,
+          meta: countLabel(g.sessions.length),
+          data: g.sessions,
+        })),
+        scopeItems: tagScopeItems(groups),
+      };
     }
-    return selectedMonth === null
-      ? []
-      : [{ key: selectedMonth.key, title: null, data: selectedMonth.sessions }];
-  }, [grouping, visible, selectedMonth]);
+    const years = sessionYearGroups(visible);
+    return {
+      sections: years.flatMap((year) =>
+        year.months.map((m): Section => ({
+          key: m.key,
+          title: m.name,
+          meta: `${m.year} · ${countLabel(m.sessions.length)}`,
+          data: m.sessions,
+        }))
+      ),
+      scopeItems: monthScopeItems(years),
+    };
+  }, [filters.grouping, visible]);
 
   const load = React.useCallback(async (): Promise<void> => {
     try {
-      const list = await api.sessions();
-      setSessions(list.sessions);
+      const result = await api.sessions();
+      setSessions(result.sessions);
       setError(null);
     } catch {
       setError("Could not reach sendtally. Pull to retry.");
@@ -65,24 +112,67 @@ export default function Sessions(): React.ReactElement {
     void load();
   }, [load]);
 
-  const toggleTag = React.useCallback((slug: string): void => {
-    setSelectedTags((prev) =>
-      prev.includes(slug) ? prev.filter((s) => s !== slug) : [...prev, slug]
-    );
-  }, []);
+  const viewability = React.useRef([
+    {
+      viewabilityConfig: { itemVisiblePercentThreshold: 40, minimumViewTime: 40 },
+      onViewableItemsChanged: ({ viewableItems }: { viewableItems: ViewToken[] }) => {
+        const first = viewableItems.find((token) => token.section !== undefined);
+        const section: unknown = first?.section;
+        if (typeof section === "object" && section !== null && "key" in section) {
+          setCurrentKey(String(section.key));
+        }
+      },
+    },
+  ]);
 
-  const caption =
-    sessions === null
-      ? "LOADING…"
-      : `${visible.length} ${visible.length === 1 ? "SESSION" : "SESSIONS"}`;
+  const jumpTo = (sectionKey: string): void => {
+    const sectionIndex = sections.findIndex((s) => s.key === sectionKey);
+    if (sectionIndex < 0) return;
+    setCurrentKey(sectionKey);
+    list.current?.scrollToLocation({ sectionIndex, itemIndex: 0, animated: true });
+  };
+
+  const applyFilters = (next: SessionFilters): void => {
+    setFilters(next);
+    setFiltersOpen(false);
+    list.current?.scrollToLocation({ sectionIndex: 0, itemIndex: 0, animated: false });
+  };
+
+  const filtersActive = filters.tags.length > 0 || filters.grouping === "tag";
+  const caption = sessions === null ? "LOADING…" : countLabel(visible.length);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.white }} edges={["top"]}>
+      {sections.length > 0 && (
+        <ScopeBar
+          items={scopeItems}
+          currentKey={currentKey ?? sections[0]?.key ?? null}
+          onSelect={jumpTo}
+          filtersActive={filtersActive}
+          onOpenFilters={() => setFiltersOpen(true)}
+        />
+      )}
+      {error !== null && (
+        <Text
+          style={{
+            paddingHorizontal: 18,
+            paddingVertical: 8,
+            fontFamily: fonts.mono,
+            fontSize: 12,
+            color: colors.watermelonInk,
+          }}
+        >
+          {error}
+        </Text>
+      )}
       <SectionList
-        sections={sectionList}
+        ref={list}
+        sections={sections}
         keyExtractor={(s) => s.fingerprint}
-        stickySectionHeadersEnabled={false}
-        contentContainerStyle={{ paddingHorizontal: 18, paddingBottom: 24, gap: 9 }}
+        stickySectionHeadersEnabled
+        getItemLayout={itemLayout}
+        viewabilityConfigCallbackPairs={viewability.current}
+        contentContainerStyle={{ paddingBottom: 96 }}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -94,67 +184,37 @@ export default function Sessions(): React.ReactElement {
           />
         }
         ListHeaderComponent={
-          <View style={{ gap: 14, paddingTop: 12, paddingBottom: 5 }}>
-            <Logo size={18} />
-            <View style={{ flexDirection: "row", alignItems: "flex-end", gap: 10 }}>
-              <View style={{ flex: 1, gap: 4 }}>
-                <Text
-                  style={{
-                    fontFamily: fonts.display,
-                    fontSize: 32,
-                    letterSpacing: -1,
-                    color: colors.gunmetal,
-                  }}
-                >
-                  Sessions
-                </Text>
-                <Text
-                  style={{
-                    fontFamily: fonts.monoMedium,
-                    fontSize: 10,
-                    letterSpacing: 0.8,
-                    color: colors.textMuted,
-                  }}
-                >
-                  {caption}
-                </Text>
-              </View>
-              <Pressable
-                onPress={() => router.push("/session/new")}
-                style={{
-                  minHeight: 44,
-                  justifyContent: "center",
-                  paddingHorizontal: 16,
-                  borderRadius: radius.control,
-                  backgroundColor: colors.azureInk,
-                }}
-              >
-                <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 13, color: colors.white }}>
-                  Log a session
-                </Text>
-              </Pressable>
-            </View>
-            {error !== null && (
-              <Text style={{ fontFamily: fonts.mono, fontSize: 12, color: colors.watermelonInk }}>
-                {error}
-              </Text>
-            )}
-            {tagOptions.length > 0 && (
-              <SessionFilters
-                grouping={grouping}
-                onGroupingChange={setGrouping}
-                tagOptions={tagOptions}
-                untaggedCount={untaggedCount}
-                selectedTags={selectedTags}
-                onToggleTag={toggleTag}
-                onClearTags={() => setSelectedTags([])}
-              />
-            )}
-            {grouping === "month" && selectedMonth !== null && (
-              <View style={{ paddingTop: 8, paddingBottom: 4 }}>
-                <MonthPicker months={months} selected={selectedMonth} onSelect={setMonthKey} />
-              </View>
-            )}
+          <View
+            style={{
+              height: HEADER_HEIGHT,
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 9,
+              paddingHorizontal: 18,
+            }}
+          >
+            <LogoMark size={22} />
+            <Text
+              style={{
+                fontFamily: fonts.display,
+                fontSize: 22,
+                letterSpacing: -0.5,
+                color: colors.gunmetal,
+              }}
+            >
+              Sessions
+            </Text>
+            <View style={{ flex: 1 }} />
+            <Text
+              style={{
+                fontFamily: fonts.monoMedium,
+                fontSize: 10,
+                letterSpacing: 0.8,
+                color: colors.textMuted,
+              }}
+            >
+              {caption}
+            </Text>
           </View>
         }
         ListEmptyComponent={
@@ -175,34 +235,32 @@ export default function Sessions(): React.ReactElement {
             </Text>
           ) : null
         }
-        renderSectionHeader={({ section }) =>
-          section.title === null ? null : (
-            <Text
-              style={{
-                fontFamily: fonts.monoMedium,
-                fontSize: 10,
-                letterSpacing: 0.8,
-                color: colors.watermelonInk,
-                paddingTop: 12,
-                paddingBottom: 2,
-              }}
-            >
-              {section.title}
-            </Text>
-          )
-        }
+        renderSectionHeader={({ section }) => (
+          <SectionHeader title={section.title} meta={section.meta} />
+        )}
         renderItem={({ item }) => (
-          <Pressable
+          <SessionRow
+            session={item}
+            title={sessionTitle(item)}
+            badge={sessionBadge(item)}
             onPress={() =>
               router.push({
                 pathname: "/session/[fingerprint]",
                 params: { fingerprint: item.fingerprint },
               })
             }
-          >
-            <SessionCard session={item} title={sessionTitle(item)} badge={sessionBadge(item)} />
-          </Pressable>
+          />
         )}
+      />
+      <LogSessionFab />
+      <FilterSheet
+        visible={filtersOpen}
+        sessions={all}
+        tagOptions={tagOptions}
+        untaggedCount={untaggedCount}
+        filters={filters}
+        onApply={applyFilters}
+        onClose={() => setFiltersOpen(false)}
       />
     </SafeAreaView>
   );

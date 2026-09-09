@@ -34,6 +34,7 @@ export default function SettingsRoute(): React.ReactElement {
       email={user?.primaryEmailAddress?.emailAddress ?? ""}
       deletion={deletion}
       posting={posting}
+      onSignOut={() => void clerk.signOut(() => navigate("/"))}
     />
   );
 }

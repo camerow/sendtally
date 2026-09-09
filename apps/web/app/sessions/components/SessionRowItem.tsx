@@ -1,12 +1,12 @@
 import React from "react";
 import { Link } from "react-router";
-import { Badge } from "@sendtally/design";
 import type { SessionRow } from "@sendtally/api-client";
 import {
+  IN_PROGRESS_LABEL,
   SESSION_BADGE_LABELS,
-  durationLabel,
+  sessionDay,
   sessionGradeLabels,
-  sessionMinutes,
+  sessionMetaLabel,
   type SessionBadge,
 } from "@sendtally/features/sessions";
 
@@ -30,65 +30,52 @@ export function SessionRowItem({
   title: string;
   badge: SessionBadge | null;
 }): React.ReactElement {
-  const start = new Date(session.start_at);
+  const { weekday, day } = sessionDay(session);
+  const month = new Date(session.start_at).toLocaleDateString("en-US", {
+    month: "short",
+    timeZone: "UTC",
+  });
+  const onStrava = badge === "on_strava";
+  const inProgress = badge === "in_progress";
   return (
-    <Link to={`/app/sessions/${encodeURIComponent(session.fingerprint)}`} className="session-row">
-      <span
-        className="session-row-date"
-        style={{ display: "flex", flexDirection: "column", gap: 3 }}
-      >
-        <span
-          style={{
-            fontFamily: "var(--font-mono)",
-            fontWeight: 500,
-            fontSize: 10,
-            color: "rgba(64,63,76,0.55)",
-            letterSpacing: "0.08em",
-          }}
-        >
-          {start.toLocaleDateString("en-US", { weekday: "short", timeZone: "UTC" }).toUpperCase()}
-        </span>
-        <span style={{ fontFamily: "var(--font-mono)", fontWeight: 600, fontSize: 16 }}>
-          {start.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" })}
+    <Link
+      to={`/app/sessions/${encodeURIComponent(session.fingerprint)}`}
+      className="session-row"
+      aria-label={[
+        title,
+        `${weekday} ${month} ${day}`,
+        sessionMetaLabel(session),
+        inProgress ? IN_PROGRESS_LABEL : null,
+        onStrava ? "posted to Strava" : null,
+      ]
+        .filter((part) => part !== null)
+        .join(", ")}
+    >
+      <span className="session-row-date">
+        <span className="session-row-weekday">{weekday}</span>
+        <span className="session-row-day">
+          <span className="session-row-month">{month} </span>
+          {day}
+          {onStrava && <span className="session-row-dot" />}
         </span>
       </span>
-      <span
-        className="session-row-main"
-        style={{ display: "flex", flexDirection: "column", gap: 3, minWidth: 0 }}
-      >
-        <span
-          style={{
-            fontWeight: 600,
-            fontSize: 15,
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
-          }}
-        >
-          {title}
-        </span>
-        <span
-          style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "rgba(64,63,76,0.55)" }}
-        >
-          {durationLabel(sessionMinutes(session))} · RPE {session.rpe}/10
+      <span className="session-row-main">
+        <span className="session-row-title">{title}</span>
+        <span className="session-row-meta">
+          {sessionMetaLabel(session)}
+          {inProgress && <span className="session-row-live"> · {IN_PROGRESS_LABEL}</span>}
         </span>
         {session.tags.length > 0 && (
-          <span style={{ display: "flex", gap: 5, flexWrap: "wrap", marginTop: 3 }}>
+          <span className="session-row-tags">
             {session.tags.map((tag) => (
-              <Badge key={tag.id} tone="petal" style={{ fontSize: 9, padding: "3px 7px" }}>
+              <span key={tag.id} className="session-row-tag">
                 {tag.name.toUpperCase()}
-              </Badge>
+              </span>
             ))}
           </span>
         )}
       </span>
-      <span
-        className="session-row-stats"
-        style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}
-      >
-        <span style={{ fontFamily: "var(--font-mono)", color: "rgba(64,63,76,0.72)" }}>
-          {session.climb_count} climbs
-        </span>
+      <span className="session-row-stats">
         {sessionGradeLabels(session).map((g) => (
           <span
             key={g.kind}
@@ -123,17 +110,7 @@ export function SessionRowItem({
           </span>
         )}
       </span>
-      <span
-        className="session-row-chevron"
-        style={{
-          fontFamily: "var(--font-mono)",
-          fontWeight: 600,
-          fontSize: 16,
-          color: "rgba(64,63,76,0.35)",
-        }}
-      >
-        ›
-      </span>
+      <span className="session-row-chevron">›</span>
     </Link>
   );
 }

@@ -1,5 +1,5 @@
-export function monthAnchorId(key: string): string {
-  return `month-${key}`;
+export function sectionAnchorId(key: string): string {
+  return `section-${key}`;
 }
 
 export function yearAnchorId(year: number): string {

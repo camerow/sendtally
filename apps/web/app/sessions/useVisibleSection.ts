@@ -1,13 +1,14 @@
 import React from "react";
-import { monthAnchorId } from "./anchors";
+import { sectionAnchorId } from "./anchors";
 
 /**
- * Reports which month heading is currently pinned at the top of the list, so
- * the jump rail can mark where the reader is. The headings are sticky, so an
- * IntersectionObserver would report every heading above the fold as visible;
- * instead the current month is the last one that has reached its sticky offset.
+ * Reports which section heading is currently pinned at the top of the list, so
+ * the scope bar and jump rail can mark where the reader is. The headings are
+ * sticky, so an IntersectionObserver would report every heading above the fold
+ * as visible; instead the current section is the last one that has reached its
+ * sticky offset.
  */
-export function useVisibleMonth(keys: string[]): string | null {
+export function useVisibleSection(keys: string[]): string | null {
   const [visible, setVisible] = React.useState<string | null>(keys[0] ?? null);
   const signature = keys.join(",");
 
@@ -20,7 +21,7 @@ export function useVisibleMonth(keys: string[]): string | null {
       frame = 0;
       let current = ordered[0] ?? null;
       for (const key of ordered) {
-        const node = document.getElementById(monthAnchorId(key));
+        const node = document.getElementById(sectionAnchorId(key));
         if (node === null) continue;
         const pinnedAt = Number.parseFloat(window.getComputedStyle(node).top);
         const offset = Number.isFinite(pinnedAt) ? pinnedAt : 0;
