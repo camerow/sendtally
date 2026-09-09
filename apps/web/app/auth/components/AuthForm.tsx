@@ -4,6 +4,7 @@ import React from "react";
 import { useNavigate } from "react-router";
 import type { EmailCodeFactor } from "@clerk/types";
 import { AuthShell, StepBody, StepCard, StepTitle } from "./AuthShell";
+import { PRIVACY_PATH, TERMS_PATH } from "../../legal/constants";
 import type { AuthIntent } from "../types";
 
 const inputStyle: React.CSSProperties = {
@@ -106,6 +107,22 @@ function SwapLink({ intent }: { intent: AuthIntent }): React.ReactElement {
       <a href={copy.swapTo} style={{ color: "var(--text-link)" }}>
         {copy.swapLabel}
       </a>
+    </span>
+  );
+}
+
+function LegalConsent(): React.ReactElement {
+  return (
+    <span style={{ ...footnote, lineHeight: 1.6 }}>
+      By continuing you agree to the{" "}
+      <a href={TERMS_PATH} style={{ color: "var(--text-link)" }}>
+        terms of service
+      </a>{" "}
+      and the{" "}
+      <a href={PRIVACY_PATH} style={{ color: "var(--text-link)" }}>
+        privacy policy
+      </a>
+      .
     </span>
   );
 }
@@ -296,6 +313,7 @@ export function AuthForm({ intent }: { intent: AuthIntent }): React.ReactElement
           <div id="clerk-captcha" />
         </div>
         <SwapLink intent={intent} />
+        <LegalConsent />
       </StepCard>
     </AuthShell>
   );

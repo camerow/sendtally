@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from "expo-router";
 import React from "react";
-import { ActivityIndicator, Linking, Pressable, ScrollView, Text, View } from "react-native";
+import { ActivityIndicator, Alert, Linking, Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
   CLIMB_SORTS,
@@ -34,11 +34,55 @@ const RESULT_BADGES: Record<
   },
 };
 
+function HeaderAction({
+  label,
+  onPress,
+}: {
+  label: string;
+  onPress: () => void;
+}): React.ReactElement {
+  return (
+    <Pressable onPress={onPress} style={{ minHeight: 44, justifyContent: "center" }}>
+      <Text
+        style={{
+          fontFamily: fonts.monoMedium,
+          fontSize: 12,
+          letterSpacing: 0.5,
+          color: colors.watermelonInk,
+        }}
+      >
+        {label}
+      </Text>
+    </Pressable>
+  );
+}
+
 export default function SessionDetailScreen(): React.ReactElement {
   const { fingerprint } = useLocalSearchParams<{ fingerprint: string }>();
   const api = useApi();
   const feature = useSessionDetail(api, fingerprint ?? "");
   const { state, filter, setFilter, sort, setSort } = feature;
+  const [deleting, setDeleting] = React.useState(false);
+
+  function confirmDelete(): void {
+    Alert.alert("Delete session?", "This removes the session and its climb log for good.", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: () => {
+          setDeleting(true);
+          api
+            .deleteLoggedSession(fingerprint ?? "")
+            .then(() => router.replace("/(tabs)/sessions"))
+            .catch(() => {
+              setDeleting(false);
+              Alert.alert("Could not delete", "Something went wrong. Try again.");
+            });
+        },
+      },
+    ]);
+  }
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.white }} edges={["top"]}>
@@ -68,22 +112,29 @@ export default function SessionDetailScreen(): React.ReactElement {
               ← SESSIONS
             </Text>
           </Pressable>
-          {state.status === "ready" && state.data.vm.stravaUrl !== null && (
-            <Pressable
-              onPress={() => void Linking.openURL(state.data.vm.stravaUrl ?? "")}
-              style={{ minHeight: 44, justifyContent: "center" }}
-            >
-              <Text
-                style={{
-                  fontFamily: fonts.monoMedium,
-                  fontSize: 12,
-                  letterSpacing: 0.5,
-                  color: colors.watermelonInk,
+          {state.status === "ready" && (
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 16 }}>
+              {state.data.vm.editable && (
+                <HeaderAction
+                  label="EDIT"
+                  onPress={() =>
+                    router.push(`/session/${encodeURIComponent(fingerprint ?? "")}/edit`)
+                  }
+                />
+              )}
+              <HeaderAction
+                label={deleting ? "DELETING…" : "DELETE"}
+                onPress={() => {
+                  if (!deleting) confirmDelete();
                 }}
-              >
-                STRAVA ↗
-              </Text>
-            </Pressable>
+              />
+              {state.data.vm.stravaUrl !== null && (
+                <HeaderAction
+                  label="STRAVA ↗"
+                  onPress={() => void Linking.openURL(state.data.vm.stravaUrl ?? "")}
+                />
+              )}
+            </View>
           )}
         </View>
 

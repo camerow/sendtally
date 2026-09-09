@@ -1,7 +1,6 @@
 import React from "react";
-import { Linking, Pressable, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
-import { MEMBERSHIP_URL } from "../../lib/billing";
 
 export type UpgradeCardProps = {
   title: string;
@@ -53,31 +52,6 @@ export function UpgradeCard({ title, body, points = [] }: UpgradeCardProps): Rea
           {`·  ${point}`}
         </Text>
       ))}
-      <Pressable
-        onPress={() => void Linking.openURL(MEMBERSHIP_URL)}
-        style={{
-          backgroundColor: colors.azureInk,
-          borderRadius: radius.control,
-          paddingVertical: 14,
-          minHeight: 48,
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 15, color: colors.white }}>
-          See membership
-        </Text>
-      </Pressable>
-      <Text
-        style={{
-          fontFamily: fonts.mono,
-          fontSize: 11,
-          lineHeight: 17,
-          color: colors.textSecondary,
-        }}
-      >
-        Subscriptions are managed on sendtally.com.
-      </Text>
     </View>
   );
 }

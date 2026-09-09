@@ -1,6 +1,14 @@
 import { and, asc, count, desc, eq, inArray, notInArray } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
-import { sessions, sessionTags, stravaConnections, syncState, tags, users } from "../db/schema";
+import {
+  boardConnections,
+  sessions,
+  sessionTags,
+  stravaConnections,
+  syncState,
+  tags,
+  users,
+} from "../db/schema";
 import type { NormalizedTag } from "./tags";
 
 export type UserRow = typeof users.$inferSelect;
@@ -176,7 +184,11 @@ export async function updateManualSession(
   return result.meta.changes > 0;
 }
 
-export async function deleteManualSession(
+// Any session the user owns can be deleted, board-sourced history included.
+// Removing a row of your own is not a refresh: it calls nothing upstream and
+// re-scores nothing. Editing a board row stays blocked, since that would
+// re-score history we can no longer verify.
+export async function deleteSession(
   db: D1Database,
   userId: string,
   fingerprint: string
@@ -184,13 +196,7 @@ export async function deleteManualSession(
   const d = drizzle(db);
   const result = await d
     .delete(sessions)
-    .where(
-      and(
-        eq(sessions.user_id, userId),
-        eq(sessions.fingerprint, fingerprint),
-        eq(sessions.source, "manual")
-      )
-    );
+    .where(and(eq(sessions.user_id, userId), eq(sessions.fingerprint, fingerprint)));
   if (result.meta.changes === 0) return false;
   await d
     .delete(sessionTags)
@@ -442,6 +448,10 @@ export async function deleteUserData(db: D1Database, userId: string): Promise<vo
     d.delete(tags).where(eq(tags.user_id, userId)),
     d.delete(sessions).where(eq(sessions.user_id, userId)),
     d.delete(stravaConnections).where(eq(stravaConnections.user_id, userId)),
+    // Legacy Aurora rows still hold an encrypted board token for the users who
+    // connected one before the integration was discontinued. Deleting the
+    // account has to take them too, ahead of the tables being dropped.
+    d.delete(boardConnections).where(eq(boardConnections.user_id, userId)),
     d.delete(syncState).where(eq(syncState.user_id, userId)),
     d.delete(users).where(eq(users.id, userId)),
   ]);

@@ -13,12 +13,12 @@ Aurora asked Will to stop, because using their API this way is against their ter
 
 - Never call any Aurora-hosted API, from the Worker, the apps, tests, scripts, or the Go CLI. Do not add new code paths that do, and do not "fix" or revive existing ones.
 - The board connect flow, the cron/queue sync pipeline, the per-board climb cache, and the `board` session source are legacy. They are being removed; until they are gone, treat them as dead code that must not run in production.
-- Existing `board`-sourced session rows in D1 stay as read-only history for the users who have them. They are never refreshed.
+- Existing `board`-sourced session rows in D1 stay as read-only history for the users who have them. They are never refreshed, and never edited. Their owner can still delete them.
 - Do not describe the product as syncing from boards anywhere (marketing copy, store listings, app strings, docs).
 - Manual entry (`source = "manual"`) is the product. Any future integration must be an officially sanctioned one, agreed with the provider first, and is a decision for Will.
 
 The product is free for users; the monetization path is ad revenue (SEO content pages on the web app first, mobile ads later) plus the paid long-term insights tier.
-The core user value is the effort/RPE trend history - "Strava for board climbing effort".
+The core user value is the effort/RPE trend history - "Strava for climbing effort".
 
 Current scope: sign up, log sessions via the form, session list and detail, trends, optional Strava posting. Journal entries and project tracking are next.
 
@@ -120,7 +120,7 @@ The product was briefly named boardsync; that name was dropped because `boardsyn
 1. The user submits the log-session form (name, date, start/end time, location, climbs with grade, send/attempt, tries, optional RPE). Zod validates the body (`manualSessionBody`).
 2. The Worker assigns `fingerprint = manual-<uuid>` and builds the session with `buildManualSession`, scoring it against the user's other sessions with `@sendtally/core` to produce RPE, title, and summary.
 3. The row is written to `sessions` with `source = "manual"` and the climbs stored in `climbs_json`.
-4. Strava posting for manual sessions is not wired yet (it only ever ran inside the removed Aurora pipeline). When it is added: post on create, then patch perceived exertion in a second call (the create endpoint ignores the field). `StravaClient` in `lib/strava.ts` and the `posting_enabled` / `post_since` columns on `strava_connections` are ready for it.
+4. If Strava posting is on, the session posts after the response via `waitUntil`: create the activity, record `strava_activity_id` immediately, then patch perceived exertion in a second call (the create endpoint ignores the field). Posting is gated on `posting_enabled` and `post_since`; an explicit request from the session page (`POST /v1/sessions/:fingerprint/strava`) bypasses both gates. Failures land in `post_state` / `post_error` and are retried from the session screen - there is no background retry.
 
 Invariants:
 
@@ -129,7 +129,10 @@ Invariants:
 - Strava rate limiting is a clean pause, not an error.
 - Unknown grades are `-1` and score conservatively as V1.
 - Keep the "created by https://sendtally.com" attribution line in activity descriptions (Strava attribution expectations).
-- Legacy `source = "board"` rows are read-only history: never re-scored, never re-posted, never deleted by anything except account deletion.
+- Legacy `source = "board"` rows are read-only history: never re-scored, never re-posted, never edited.
+  Their owner can delete them, though, same as any other session.
+  Deleting a row you own calls nothing upstream and re-scores nothing, so the read-only rule does not reach it - the rule exists to stop us refreshing from an API we no longer call, not to hold a user's own history hostage.
+  Tags on board rows work for the same reason.
 
 ## Strava operational constraints
 
@@ -158,6 +161,20 @@ Design work (Claude-generated or otherwise) targets the token vocabulary; each p
 6. Journal entries (free-text, attachable to a session).
 7. Project tracking (climbs worked across many sessions before sending).
 8. Apply for the Strava quota increase; open sign-ups on approval.
+
+---
+
+## Copy
+
+Rules for anything a user reads: app strings, store listings, marketing pages, docs.
+
+- **Say "climbing", not "board climbing".** The product is a climbing log. Board climbing is one thing people use it for, not the category. "A session log for climbers", never "a session log for board climbers".
+- Do not describe the product as syncing from boards, or from any third party. The log-session form is the only source of session data.
+- Board brand names (Kilter, Tension, Moonboard) are fine in store **keywords**, where they serve discovery. Keep them out of visible prose and out of sample data in screenshots.
+- Sample session names in placeholders and mockups should read like something anyone would type: "Tuesday night session", not "Tuesday board night".
+- The exception is legacy UI that labels a `source = "board"` session. Those rows really did come from a board, and `BOARD_LABELS` naming them is accurate history, not positioning.
+
+Store listing copy lives in `apps/mobile/store/listing.md` and should match what is actually live in the console.
 
 ---
 

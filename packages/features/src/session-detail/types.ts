@@ -39,6 +39,7 @@ export type PostingStatus = { connected: boolean; active: boolean; since: string
 export type SessionDetailVM = {
   title: string;
   meta: string;
+  editable: boolean;
   stats: StatVM[];
   bars: GradeBarVM[];
   filterCounts: Record<ClimbFilter, number>;

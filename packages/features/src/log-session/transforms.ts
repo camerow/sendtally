@@ -1,5 +1,10 @@
 import { FONT_GRADES, fontFromV, vFromFont } from "@sendtally/core";
-import type { LogClimbInput, LogSessionInput } from "@sendtally/api-client";
+import type {
+  LogClimbInput,
+  LogSessionInput,
+  SessionClimb,
+  SessionDetail,
+} from "@sendtally/api-client";
 import { sameTagName } from "../sessions/tags";
 import type { ClimbDraft, GradeScale, LogSessionDraft } from "./types";
 
@@ -145,5 +150,46 @@ export function toLogSessionInput(draft: LogSessionDraft): LogSessionInput {
     location: draft.location,
     ...(draft.tags.length === 0 ? {} : { tags: draft.tags }),
     climbs,
+  };
+}
+
+function utcTime(iso: string): string {
+  const d = new Date(iso);
+  return `${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}`;
+}
+
+function utcDate(iso: string): string {
+  const d = new Date(iso);
+  return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`;
+}
+
+function climbGrade(climb: SessionClimb, scale: GradeScale): string {
+  if (climb.grade !== undefined) {
+    const written = climb.grade.scale === "v" ? `V${climb.grade.value}` : climb.grade.value;
+    return convertGrade(written, climb.grade.scale, scale);
+  }
+  const v = Math.max(0, climb.vGrade);
+  return scale === "v" ? `V${v}` : (fontFromV(v) ?? `V${v}`);
+}
+
+export function draftFromSession(session: SessionDetail): LogSessionDraft {
+  const climbs = [...session.climbs].sort((a, b) => Date.parse(a.time) - Date.parse(b.time));
+  const scale: GradeScale = climbs.find((c) => c.grade !== undefined)?.grade?.scale ?? "v";
+  return {
+    name: session.name ?? "",
+    date: utcDate(session.start_at),
+    startTime: utcTime(session.start_at),
+    endTime: utcTime(session.end_at),
+    location: session.location ?? "indoor",
+    tags: session.tags.map((t) => t.name),
+    scale,
+    rpe: session.rpe,
+    climbs: climbs.map((c, i) => ({
+      key: `climb-${i + 1}`,
+      grade: climbGrade(c, scale),
+      name: c.name,
+      kind: c.kind,
+      tries: c.tries,
+    })),
   };
 }

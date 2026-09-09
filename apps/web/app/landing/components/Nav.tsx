@@ -9,18 +9,23 @@ const SECTIONS: Array<[string, string]> = [
   ["Membership", "#price"],
 ];
 
-export function Nav(): React.ReactElement {
+export type NavProps = {
+  sections?: boolean;
+};
+
+export function Nav({ sections = true }: NavProps): React.ReactElement {
   return (
     <div className="l-nav">
       <a href="/" className="l-nav-logo" aria-label="sendtally home">
         <Logo tone="on-light" size={24} />
       </a>
       <div className="l-nav-links">
-        {SECTIONS.map(([label, href]) => (
-          <a key={label} href={href} className="l-nav-anchor">
-            {label}
-          </a>
-        ))}
+        {sections &&
+          SECTIONS.map(([label, href]) => (
+            <a key={label} href={href} className="l-nav-anchor">
+              {label}
+            </a>
+          ))}
         <div className="l-nav-actions">
           <Button variant="ghostOnLight" size="sm" href="/sign-in">
             Sign in

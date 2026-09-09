@@ -237,12 +237,18 @@ function ClimbCard({
   );
 }
 
-export function LogSessionForm(): React.ReactElement {
+export function LogSessionForm({
+  editing,
+}: {
+  editing?: { fingerprint: string; draft: LogSessionDraft };
+}): React.ReactElement {
   const api = useApi();
-  const [draft, setDraft] = React.useState<LogSessionDraft>(() => emptyDraft(new Date()));
+  const [draft, setDraft] = React.useState<LogSessionDraft>(
+    () => editing?.draft ?? emptyDraft(new Date())
+  );
   const [saving, setSaving] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
-  const nextKey = React.useRef(2);
+  const nextKey = React.useRef(draft.climbs.length + 1);
   const options = gradeOptions(draft.scale);
   const { suggestionsFor } = useTagVocabulary(api);
 
@@ -255,7 +261,11 @@ export function LogSessionForm(): React.ReactElement {
     setSaving(true);
     setError(null);
     try {
-      const { session } = await api.logSession(toLogSessionInput(draft));
+      const input = toLogSessionInput(draft);
+      const { session } =
+        editing === undefined
+          ? await api.logSession(input)
+          : await api.updateLoggedSession(editing.fingerprint, input);
       router.replace(`/session/${encodeURIComponent(session.fingerprint)}`);
     } catch {
       setError("Could not save the session. Try again.");
@@ -280,7 +290,7 @@ export function LogSessionForm(): React.ReactElement {
               color: colors.watermelonInk,
             }}
           >
-            ← SESSIONS
+            {editing === undefined ? "← SESSIONS" : "← SESSION"}
           </Text>
         </Pressable>
         <View style={{ gap: 4 }}>
@@ -292,7 +302,7 @@ export function LogSessionForm(): React.ReactElement {
               color: colors.gunmetal,
             }}
           >
-            Log a session
+            {editing === undefined ? "Log a session" : "Edit session"}
           </Text>
           <Text
             style={{
@@ -302,7 +312,9 @@ export function LogSessionForm(): React.ReactElement {
               color: colors.textMuted,
             }}
           >
-            MANUAL ENTRY · EFFORT SCORED ON SAVE
+            {editing === undefined
+              ? "MANUAL ENTRY · EFFORT SCORED ON SAVE"
+              : "EFFORT IS RE-SCORED WHEN YOU SAVE"}
           </Text>
         </View>
 
@@ -310,7 +322,7 @@ export function LogSessionForm(): React.ReactElement {
           <LabelText>SESSION NAME · OPTIONAL</LabelText>
           <TextInput
             value={draft.name}
-            placeholder="Tuesday board night"
+            placeholder="Tuesday night session"
             placeholderTextColor={colors.textFaint}
             onChangeText={(name) => setDraft({ ...draft, name })}
             style={inputStyle}
@@ -553,7 +565,7 @@ export function LogSessionForm(): React.ReactElement {
           }}
         >
           <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 15, color: colors.white }}>
-            {saving ? "Saving…" : "Log session"}
+            {saving ? "Saving…" : editing === undefined ? "Log session" : "Save changes"}
           </Text>
         </Pressable>
       </View>
