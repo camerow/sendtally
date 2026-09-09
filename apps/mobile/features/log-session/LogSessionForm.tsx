@@ -1,8 +1,11 @@
 import { router } from "expo-router";
 import React from "react";
 import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import type { ClimbSummary } from "@sendtally/api-client";
+import { climbDraftGrade, findClimb, useClimbVocabulary } from "@sendtally/features/climbs";
 import {
   GRADE_SCALE_OPTIONS,
+  draftGrade,
   draftProblem,
   draftSummary,
   emptyDraft,
@@ -13,11 +16,13 @@ import {
   withTag,
   withoutTag,
   type ClimbDraft,
+  type GradeScale,
   type LogSessionDraft,
 } from "@sendtally/features/log-session";
 import { useTagVocabulary } from "@sendtally/features/sessions";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { useApi } from "../../lib/api";
+import { Chip as SuggestionChip } from "../../components/Chip";
 import { TagPicker } from "../sessions/TagPicker";
 
 function LabelText({ children }: { children: React.ReactNode }): React.ReactElement {
@@ -121,17 +126,32 @@ const inputStyle = {
 function ClimbCard({
   climb,
   options,
+  scale,
   removable,
+  project,
+  suggestions,
   onChange,
+  onChangeName,
+  onPick,
+  onToggleProject,
   onRemove,
 }: {
   climb: ClimbDraft;
   options: readonly string[];
+  scale: GradeScale;
   removable: boolean;
+  project: boolean;
+  suggestions: ClimbSummary[];
   onChange: (climb: ClimbDraft) => void;
+  onChangeName: (name: string) => void;
+  onPick: (climb: ClimbSummary) => void;
+  onToggleProject: () => void;
   onRemove: () => void;
 }): React.ReactElement {
+  const [focused, setFocused] = React.useState(false);
   const gradeIndex = options.indexOf(climb.grade);
+  const named = climb.name.trim() !== "";
+  const showSuggestions = focused && suggestions.length > 0;
   return (
     <View
       style={{
@@ -168,10 +188,30 @@ function ClimbCard({
           value={climb.name}
           placeholder="Name (optional)"
           placeholderTextColor={colors.textFaint}
-          onChangeText={(name) => onChange({ ...climb, name })}
+          autoCorrect={false}
+          onChangeText={onChangeName}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
           style={{ ...inputStyle, flex: 1, minWidth: 0 }}
         />
       </View>
+      {showSuggestions && (
+        <ScrollView
+          horizontal
+          keyboardShouldPersistTaps="always"
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ gap: 8, alignItems: "center" }}
+        >
+          {suggestions.map((s) => (
+            <SuggestionChip
+              key={s.slug}
+              label={`${s.name.toUpperCase()} · ${climbDraftGrade(s, scale)}`}
+              active={false}
+              onPress={() => onPick(s)}
+            />
+          ))}
+        </ScrollView>
+      )}
       <View
         style={{
           flexDirection: "row",
@@ -219,21 +259,42 @@ function ClimbCard({
           />
         </View>
       </View>
-      {removable && (
-        <Pressable onPress={onRemove} style={{ alignSelf: "flex-start", minHeight: 32 }}>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 18 }}>
+        <Pressable
+          onPress={onToggleProject}
+          disabled={!named}
+          accessibilityRole="button"
+          accessibilityState={{ selected: project, disabled: !named }}
+          style={{ minHeight: 32, justifyContent: "center", opacity: named ? 1 : 0.35 }}
+        >
           <Text
             style={{
               fontFamily: fonts.monoMedium,
               fontSize: 10,
               letterSpacing: 0.8,
-              color: colors.textFaint,
+              color: project ? colors.gunmetal : colors.textFaint,
               paddingTop: 2,
             }}
           >
-            REMOVE
+            {project ? "⚑ PROJECT" : "⚐ MARK AS PROJECT"}
           </Text>
         </Pressable>
-      )}
+        {removable && (
+          <Pressable onPress={onRemove} style={{ minHeight: 32, justifyContent: "center" }}>
+            <Text
+              style={{
+                fontFamily: fonts.monoMedium,
+                fontSize: 10,
+                letterSpacing: 0.8,
+                color: colors.textFaint,
+                paddingTop: 2,
+              }}
+            >
+              REMOVE
+            </Text>
+          </Pressable>
+        )}
+      </View>
     </View>
   );
 }
@@ -252,6 +313,31 @@ export function LogSessionForm({
   const nextKey = React.useRef(draft.climbs.length + 1);
   const options = gradeOptions(draft.scale);
   const { suggestionsFor } = useTagVocabulary(api);
+  const vocabulary = useClimbVocabulary(api);
+
+  function updateClimb(key: string, patch: (climb: ClimbDraft) => ClimbDraft): void {
+    setDraft((d) => ({ ...d, climbs: d.climbs.map((c) => (c.key === key ? patch(c) : c)) }));
+  }
+
+  function updateClimbName(key: string, name: string): void {
+    const known = findClimb(vocabulary.climbs, name);
+    updateClimb(key, (c) => ({
+      ...c,
+      name,
+      ...(known === undefined ? {} : { grade: climbDraftGrade(known, draft.scale) }),
+    }));
+  }
+
+  async function toggleProject(climb: ClimbDraft): Promise<void> {
+    const grade = draftGrade(climb.grade, draft.scale);
+    if (grade === undefined) return;
+    setError(null);
+    try {
+      await vocabulary.setProject(climb.name, grade, !vocabulary.isProject(climb.name));
+    } catch {
+      setError("Could not update the project. Try again.");
+    }
+  }
 
   async function save(): Promise<void> {
     const problem = draftProblem(draft);
@@ -480,13 +566,20 @@ export function LogSessionForm({
               key={climb.key}
               climb={climb}
               options={options}
+              scale={draft.scale}
               removable={draft.climbs.length > 1}
-              onChange={(c) =>
-                setDraft((d) => ({
-                  ...d,
-                  climbs: d.climbs.map((x) => (x.key === climb.key ? c : x)),
+              project={vocabulary.isProject(climb.name)}
+              suggestions={vocabulary.suggestionsFor(climb.name)}
+              onChange={(c) => updateClimb(climb.key, () => c)}
+              onChangeName={(name) => updateClimbName(climb.key, name)}
+              onPick={(known) =>
+                updateClimb(climb.key, (c) => ({
+                  ...c,
+                  name: known.name,
+                  grade: climbDraftGrade(known, draft.scale),
                 }))
               }
+              onToggleProject={() => void toggleProject(climb)}
               onRemove={() =>
                 setDraft((d) => ({ ...d, climbs: d.climbs.filter((x) => x.key !== climb.key) }))
               }

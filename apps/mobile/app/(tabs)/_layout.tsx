@@ -38,6 +38,10 @@ export default function TabsLayout(): React.ReactElement | null {
         options={{ tabBarLabel: "SESSIONS", tabBarIcon: tabIcon("sessions") }}
       />
       <Tabs.Screen
+        name="projects"
+        options={{ tabBarLabel: "PROJECTS", tabBarIcon: tabIcon("projects") }}
+      />
+      <Tabs.Screen
         name="trends"
         options={{ tabBarLabel: "TRENDS", tabBarIcon: tabIcon("trends") }}
       />

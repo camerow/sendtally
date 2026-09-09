@@ -1,8 +1,10 @@
 import React from "react";
 import { useNavigate } from "react-router";
 import type { SendtallyApi } from "@sendtally/api-client";
+import { climbDraftGrade, findClimb, useClimbVocabulary } from "@sendtally/features/climbs";
 import {
   GRADE_SCALE_OPTIONS,
+  draftGrade,
   draftProblem,
   draftSummary,
   emptyDraft,
@@ -102,6 +104,8 @@ const PLUS = "M8 3.6V12.4M3.6 8H12.4";
 const MINUS = "M3.6 8H12.4";
 const CROSS = "M4.2 4.2 11.8 11.8M11.8 4.2 4.2 11.8";
 const CHECK = "M3 8.4 6.2 11.6 12.6 4.8";
+const FLAG = "M4 14V2.8h7.6L9.4 6l2.2 3.2H4";
+const CLIMB_NAMES_LIST = "climb-names";
 
 function Field({
   label,
@@ -238,15 +242,22 @@ function ClimbRow({
   climb,
   scale,
   removable,
+  project,
   onChange,
+  onChangeName,
+  onToggleProject,
   onRemove,
 }: {
   climb: ClimbDraft;
   scale: GradeScale;
   removable: boolean;
+  project: boolean;
   onChange: (climb: ClimbDraft) => void;
+  onChangeName: (name: string) => void;
+  onToggleProject: () => void;
   onRemove: () => void;
 }): React.ReactElement {
+  const named = climb.name.trim() !== "";
   return (
     <div className="climb-row">
       <select
@@ -269,7 +280,9 @@ function ClimbRow({
       <input
         value={climb.name}
         placeholder="Name (optional)"
-        onChange={(e) => onChange({ ...climb, name: e.target.value })}
+        list={CLIMB_NAMES_LIST}
+        autoComplete="off"
+        onChange={(e) => onChangeName(e.target.value)}
         className="climb-name log-session-control"
         style={inputStyle}
       />
@@ -326,6 +339,38 @@ function ClimbRow({
       </div>
       <button
         type="button"
+        aria-label={project ? "Unmark project" : "Mark as project"}
+        aria-pressed={project}
+        title={named ? undefined : "Name the climb to track it as a project"}
+        disabled={!named}
+        onClick={onToggleProject}
+        className="climb-project"
+        style={{
+          ...stepperButton,
+          border: project ? "1px solid var(--bs-gold)" : "1px solid rgba(64,63,76,0.18)",
+          background: project ? "var(--bs-gold)" : "none",
+          color: project ? "var(--bs-gunmetal)" : "rgba(64,63,76,0.45)",
+          opacity: named ? 1 : 0.35,
+          cursor: named ? "pointer" : "default",
+        }}
+      >
+        <svg
+          viewBox="0 0 16 16"
+          width={15}
+          height={15}
+          aria-hidden
+          focusable="false"
+          fill={project ? "currentColor" : "none"}
+          stroke="currentColor"
+          strokeWidth={1.7}
+          strokeLinejoin="round"
+          style={{ flex: "none" }}
+        >
+          <path d={FLAG} />
+        </svg>
+      </button>
+      <button
+        type="button"
         aria-label="Remove climb"
         disabled={!removable}
         onClick={onRemove}
@@ -358,6 +403,7 @@ export function LogSessionForm({
   const [error, setError] = React.useState<string | null>(null);
   const nextKey = React.useRef(draft.climbs.length + 1);
   const { suggestionsFor } = useTagVocabulary(api);
+  const vocabulary = useClimbVocabulary(api);
   const cancelTo =
     editing === undefined ? "/app" : `/app/sessions/${encodeURIComponent(editing.fingerprint)}`;
 
@@ -365,6 +411,33 @@ export function LogSessionForm({
 
   function updateClimb(key: string, climb: ClimbDraft): void {
     setDraft((d) => ({ ...d, climbs: d.climbs.map((c) => (c.key === key ? climb : c)) }));
+  }
+
+  function updateClimbName(key: string, name: string): void {
+    const known = findClimb(vocabulary.climbs, name);
+    setDraft((d) => ({
+      ...d,
+      climbs: d.climbs.map((c) =>
+        c.key !== key
+          ? c
+          : {
+              ...c,
+              name,
+              ...(known === undefined ? {} : { grade: climbDraftGrade(known, d.scale) }),
+            }
+      ),
+    }));
+  }
+
+  async function toggleProject(climb: ClimbDraft): Promise<void> {
+    const grade = draftGrade(climb.grade, draft.scale);
+    if (grade === undefined) return;
+    setError(null);
+    try {
+      await vocabulary.setProject(climb.name, grade, !vocabulary.isProject(climb.name));
+    } catch {
+      setError("Could not update the project. Try again.");
+    }
   }
 
   async function save(): Promise<void> {
@@ -521,16 +594,27 @@ export function LogSessionForm({
             <span style={columnHead}>NAME · OPTIONAL</span>
             <span style={columnHead}>RESULT</span>
             <span style={columnHead}>TRIES</span>
+            <span style={columnHead}>PROJECT</span>
             <span />
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
+            <datalist id={CLIMB_NAMES_LIST}>
+              {vocabulary.climbs.map((c) => (
+                <option key={c.slug} value={c.name}>
+                  {climbDraftGrade(c, draft.scale)}
+                </option>
+              ))}
+            </datalist>
             {draft.climbs.map((climb) => (
               <ClimbRow
                 key={climb.key}
                 climb={climb}
                 scale={draft.scale}
                 removable={draft.climbs.length > 1}
+                project={vocabulary.isProject(climb.name)}
                 onChange={(c) => updateClimb(climb.key, c)}
+                onChangeName={(name) => updateClimbName(climb.key, name)}
+                onToggleProject={() => void toggleProject(climb)}
                 onRemove={() =>
                   setDraft((d) => ({ ...d, climbs: d.climbs.filter((c) => c.key !== climb.key) }))
                 }

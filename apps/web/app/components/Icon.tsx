@@ -1,6 +1,7 @@
 import React from "react";
 
-export type IconName = "sessions" | "trends" | "settings" | "membership" | "funnel" | "plus";
+export type IconName =
+  "sessions" | "projects" | "trends" | "settings" | "membership" | "funnel" | "plus";
 
 const SHAPES: Record<IconName, React.ReactElement> = {
   sessions: (
@@ -9,6 +10,7 @@ const SHAPES: Record<IconName, React.ReactElement> = {
       <rect x="3.5" y="13" width="17" height="6" rx="2" />
     </>
   ),
+  projects: <path d="M6 20.5V4h11.5l-3 4.5 3 4.5H6" />,
   trends: <path d="M4 16.8 9.2 10.4 13.2 13.6 20 5.8" />,
   settings: (
     <>

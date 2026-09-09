@@ -178,6 +178,68 @@ describe("app", () => {
     ...overrides,
   });
 
+  it("catalogues named climbs and marks projects", async () => {
+    await postSession("user_projects", logBody());
+    await postSession(
+      "user_projects",
+      logBody({
+        date: "2026-08-22",
+        climbs: [
+          { name: "cave problem", grade: { scale: "v", value: 4 }, kind: "attempt", tries: 5 },
+        ],
+      })
+    );
+    const headers = { "x-test-user": "user_projects", "Content-Type": "application/json" };
+
+    const marked = await testApp().request(
+      "/v1/projects",
+      {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ name: "Cave Problem", grade: { scale: "v", value: 4 } }),
+      },
+      env
+    );
+    expect(marked.status).toBe(201);
+    expect(await marked.json()).toEqual({
+      project: { slug: "cave-problem", name: "Cave Problem", grade: { scale: "v", value: 4 } },
+    });
+
+    const listed = await testApp().request("/v1/climbs", { headers }, env);
+    expect(listed.status).toBe(200);
+    const { climbs } = (await listed.json()) as { climbs: Array<Record<string, unknown>> };
+    expect(climbs).toEqual([
+      {
+        slug: "cave-problem",
+        name: "cave problem",
+        grade: { scale: "v", value: 4 },
+        project: true,
+        sessions: 2,
+        attempts: 7,
+        sends: 1,
+        first_at: "2026-08-20T18:00:00.000Z",
+        last_at: "2026-08-22T18:00:00.000Z",
+      },
+    ]);
+
+    const unmarked = await testApp().request(
+      "/v1/projects/cave-problem",
+      { method: "DELETE", headers },
+      env
+    );
+    expect(unmarked.status).toBe(200);
+    const again = await testApp().request(
+      "/v1/projects/cave-problem",
+      { method: "DELETE", headers },
+      env
+    );
+    expect(again.status).toBe(404);
+
+    const relisted = await testApp().request("/v1/climbs", { headers }, env);
+    const after = (await relisted.json()) as { climbs: Array<{ project: boolean }> };
+    expect(after.climbs[0]?.project).toBe(false);
+  });
+
   const postSession = (userId: string, body: unknown) =>
     testApp().request(
       "/v1/sessions",

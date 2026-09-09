@@ -1,9 +1,12 @@
 import {
   ApiError,
+  type ClimbGrade,
+  type ClimbSummary,
   type ConnectionStatus,
   type Entitlements,
   type LogSessionInput,
   type PostOutcome,
+  type Project,
   type SessionRow,
   type SessionDetail,
   type SessionTag,
@@ -97,6 +100,23 @@ export class SendtallyApi {
       `/v1/sessions/${encodeURIComponent(fingerprint)}/tags`,
       { method: "PUT", body: JSON.stringify({ tags }) }
     );
+  }
+
+  climbs(): Promise<{ climbs: ClimbSummary[] }> {
+    return this.request<{ climbs: ClimbSummary[] }>("/v1/climbs");
+  }
+
+  markProject(name: string, grade: ClimbGrade): Promise<{ project: Project }> {
+    return this.request<{ project: Project }>("/v1/projects", {
+      method: "POST",
+      body: JSON.stringify({ name, grade }),
+    });
+  }
+
+  unmarkProject(slug: string): Promise<{ deleted: boolean }> {
+    return this.request<{ deleted: boolean }>(`/v1/projects/${encodeURIComponent(slug)}`, {
+      method: "DELETE",
+    });
   }
 
   postSessionToStrava(

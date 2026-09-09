@@ -128,6 +128,20 @@ export const sessionTags = sqliteTable(
   ]
 );
 
+export const projects = sqliteTable(
+  "projects",
+  {
+    user_id: text("user_id")
+      .notNull()
+      .references(() => users.id),
+    slug: text("slug").notNull(),
+    name: text("name").notNull(),
+    grade_json: text("grade_json").notNull(),
+    created_at: text("created_at").notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.user_id, t.slug] })]
+);
+
 export const boardClimbNames = sqliteTable(
   "board_climb_names",
   {

@@ -18,6 +18,7 @@ type NavItem = { label: string; to: string; icon: IconName };
 
 const NAV_ITEMS: NavItem[] = [
   { label: "Sessions", to: "/app", icon: "sessions" },
+  { label: "Projects", to: "/app/projects", icon: "projects" },
   { label: "Trends", to: "/app/trends", icon: "trends" },
   { label: "Settings", to: "/app/settings", icon: "settings" },
   { label: "Membership", to: "/app/membership", icon: "membership" },

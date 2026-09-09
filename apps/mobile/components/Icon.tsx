@@ -1,7 +1,8 @@
 import React from "react";
 import Svg, { Circle, Path, Rect } from "react-native-svg";
 
-export type IconName = "sessions" | "trends" | "settings" | "funnel" | "plus" | "chevron";
+export type IconName =
+  "sessions" | "projects" | "trends" | "settings" | "funnel" | "plus" | "chevron";
 
 const SHAPES: Record<IconName, React.ReactElement> = {
   sessions: (
@@ -10,6 +11,7 @@ const SHAPES: Record<IconName, React.ReactElement> = {
       <Rect x={3.5} y={13} width={17} height={6} rx={2} />
     </>
   ),
+  projects: <Path d="M6 20.5V4h11.5l-3 4.5 3 4.5H6" />,
   trends: <Path d="M4 16.8 9.2 10.4 13.2 13.6 20 5.8" />,
   settings: (
     <>

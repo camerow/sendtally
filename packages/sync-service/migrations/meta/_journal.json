@@ -50,6 +50,13 @@
       "when": 1788983743824,
       "tag": "0011_common_killraven",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "6",
+      "when": 1788988514697,
+      "tag": "0012_wet_thunderbolt",
+      "breakpoints": true
     }
   ]
 }
