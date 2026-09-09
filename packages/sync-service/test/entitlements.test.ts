@@ -96,7 +96,12 @@ async function entitlements(app: ReturnType<typeof testApp>, userId: string, fea
     membership: {
       active: boolean;
       web: boolean;
-      store: { store: string; expiresAt: string | null; willRenew: boolean } | null;
+      store: {
+        store: string;
+        productId: string;
+        expiresAt: string | null;
+        willRenew: boolean;
+      } | null;
     };
   };
 }
@@ -187,7 +192,12 @@ describe("RevenueCat webhook", () => {
     expect(membership).toEqual({
       active: true,
       web: false,
-      store: { store: "play_store", expiresAt: FUTURE, willRenew: true },
+      store: {
+        store: "play_store",
+        productId: "member_monthly",
+        expiresAt: FUTURE,
+        willRenew: true,
+      },
     });
   });
 

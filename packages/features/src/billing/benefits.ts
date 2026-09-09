@@ -1,8 +1,4 @@
-export type MemberBenefit = {
-  title: string;
-  body: string;
-  soon?: boolean;
-};
+import type { MemberBenefit } from "./types";
 
 export const MEMBER_BENEFITS: MemberBenefit[] = [
   {

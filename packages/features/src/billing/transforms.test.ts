@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatRenewalDate, managedInOf, membershipVM, storeName } from "./transforms";
+import { formatRenewalDate, managedInOf, membershipVM, planOf, storeName } from "./transforms";
 
 const FUTURE = "2099-01-01T00:00:00Z";
 
@@ -9,6 +9,7 @@ describe("membershipVM", () => {
       active: false,
       statusLabel: "NOT A MEMBER",
       managedIn: null,
+      plan: null,
       renewalLine: null,
     });
   });
@@ -24,13 +25,19 @@ describe("membershipVM", () => {
       membership: {
         active: true,
         web: false,
-        store: { store: "play_store", expiresAt: FUTURE, willRenew: true },
+        store: {
+          store: "play_store",
+          productId: "membership:yearly",
+          expiresAt: FUTURE,
+          willRenew: true,
+        },
       },
     });
     expect(vm).toEqual({
       active: true,
       statusLabel: "MEMBER · GOOGLE PLAY",
       managedIn: "play_store",
+      plan: "yearly",
       renewalLine: `Renews ${formatRenewalDate(FUTURE)}`,
     });
   });
@@ -40,7 +47,12 @@ describe("membershipVM", () => {
       membership: {
         active: true,
         web: false,
-        store: { store: "app_store", expiresAt: FUTURE, willRenew: false },
+        store: {
+          store: "app_store",
+          productId: "membership_monthly",
+          expiresAt: FUTURE,
+          willRenew: false,
+        },
       },
     });
     expect(vm.statusLabel).toBe("MEMBER · APP STORE");
@@ -52,7 +64,12 @@ describe("membershipVM", () => {
       membership: {
         active: true,
         web: false,
-        store: { store: "promotional", expiresAt: null, willRenew: false },
+        store: {
+          store: "promotional",
+          productId: "rc_promo_lifetime",
+          expiresAt: null,
+          willRenew: false,
+        },
       },
     });
     expect(vm.managedIn).toBe("other");
@@ -64,7 +81,12 @@ describe("membershipVM", () => {
       membership: {
         active: true,
         web: true,
-        store: { store: "play_store", expiresAt: FUTURE, willRenew: true },
+        store: {
+          store: "play_store",
+          productId: "membership:monthly",
+          expiresAt: FUTURE,
+          willRenew: true,
+        },
       },
     });
     expect(vm.managedIn).toBe("play_store");
@@ -75,8 +97,29 @@ describe("membershipVM", () => {
       active: true,
       statusLabel: "MEMBER · WEB",
       managedIn: "web",
+      plan: null,
       renewalLine: null,
     });
+  });
+});
+
+describe("planOf", () => {
+  it("reads the plan from a Play base plan id", () => {
+    expect(planOf("membership:monthly")).toBe("monthly");
+    expect(planOf("membership:yearly")).toBe("yearly");
+  });
+
+  it("reads the plan from an App Store product id", () => {
+    expect(planOf("com.sendtally.membership.annual")).toBe("yearly");
+    expect(planOf("sendtally_member_monthly")).toBe("monthly");
+  });
+
+  it("has no plan for a product it does not recognise", () => {
+    expect(planOf("rc_promo_lifetime")).toBeNull();
+  });
+
+  it("survives a Worker that does not send the product id yet", () => {
+    expect(planOf(undefined)).toBeNull();
   });
 });
 
@@ -85,6 +128,9 @@ describe("store names", () => {
     expect(storeName(managedInOf("play_store"))).toBe("Google Play");
     expect(storeName(managedInOf("app_store"))).toBe("the App Store");
     expect(storeName(managedInOf("stripe"))).toBe("your store");
+    expect(managedInOf("test_store")).toBe("test_store");
+    expect(managedInOf("RC_TEST_STORE")).toBe("test_store");
+    expect(storeName("test_store")).toBe("the test store");
     expect(storeName("web")).toBe("sendtally.com");
   });
 });

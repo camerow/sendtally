@@ -10,7 +10,7 @@ import {
   sectionLabel,
   underlineLabel,
   underlinePress,
-} from "./styles";
+} from "../../lib/styles";
 
 export type DeleteAccountSectionProps = {
   deletion: DeleteAccountFeature;
