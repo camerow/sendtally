@@ -1,15 +1,13 @@
+import { COPY, type TrendCopy } from "../copy";
 import type { MiniBar } from "./MiniBars";
+
+type TrendMetricKey = keyof typeof COPY.trends.cards;
 
 const MONTHS = ["MAR", "APR", "MAY", "JUN", "JUL", "AUG"];
 
-export type InsightSeries = {
-  metric: string;
-  eyebrow: string;
-  headline: string;
-  meta: string;
+export type InsightSeries = TrendCopy & {
+  metric: TrendMetricKey;
   bars: MiniBar[];
-  body: string;
-  memberLine: string;
 };
 
 const VOLUME: MiniBar[] = [24, 29, 11, 27, 31, 41, 28, 0, 25, 27, 31, 32].map((v, i) => ({
@@ -62,53 +60,14 @@ const AVG_GRADE: MiniBar[] = [
   peak: week === "8/3",
 }));
 
+function series(metric: TrendMetricKey, bars: MiniBar[]): InsightSeries {
+  return { metric, bars, ...COPY.trends.cards[metric] };
+}
+
 export const INSIGHT_SERIES: InsightSeries[] = [
-  {
-    metric: "volume",
-    eyebrow: "VOLUME",
-    headline: "328 climbs",
-    meta: "22 SESSIONS · LAST 12 WEEKS",
-    bars: VOLUME,
-    body: "One empty week in July was travel, not a slump. Volume has held near thirty climbs a week since May.",
-    memberLine: "Climbs and sessions per week, month or year - and the weeks you missed.",
-  },
-  {
-    metric: "pyramid",
-    eyebrow: "GRADE PYRAMID",
-    headline: "111 sends",
-    meta: "ALL-TIME · BY GRADE",
-    bars: PYRAMID,
-    body: "A V4 base with 28 V5s behind it and two V7s on top. The shape says V6 volume is what feeds the next grade.",
-    memberLine:
-      "Every send stacked by grade, so you can see which grade is holding the next one up.",
-  },
-  {
-    metric: "flash",
-    eyebrow: "FLASH RATE",
-    headline: "36%",
-    meta: "UP FROM 22% IN MARCH",
-    bars: FLASH,
-    body: "Reading a problem is trainable. Six months of mileage shows up here before it shows up in the grades.",
-    memberLine:
-      "The share you get first go, tracked over time - movement skill before grades move.",
-  },
-  {
-    metric: "hardest",
-    eyebrow: "HARDEST SEND",
-    headline: "V7",
-    meta: "JUL 30 · THREAD THE NEEDLE",
-    bars: HARDEST,
-    body: "Twelve weeks from the first V6 to the first V7, and both V7s came inside three weeks of each other.",
-    memberLine: "Your ceiling by period, with the climb and the date that set it.",
-  },
-  {
-    metric: "avggrade",
-    eyebrow: "AVG SEND GRADE",
-    headline: "V4.9 this week",
-    meta: "+0.7 SINCE MID-MAY",
-    bars: AVG_GRADE,
-    body: "Average send grade has drifted up about V0.7 over twelve weeks - steady, not a spike, which tracks with the volume behind it. A logbook can tell you what you climbed on Tuesday; it can't tell you this.",
-    memberLine:
-      "The slow line through everything you send - the one number a logbook can never show you.",
-  },
+  series("volume", VOLUME),
+  series("pyramid", PYRAMID),
+  series("hardest", HARDEST),
+  series("flash", FLASH),
+  series("avggrade", AVG_GRADE),
 ];

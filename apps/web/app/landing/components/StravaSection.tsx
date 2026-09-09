@@ -1,5 +1,7 @@
 import React from "react";
-import { Button, Label } from "@sendtally/design";
+import { Label } from "@sendtally/design";
+import { COPY } from "../copy";
+import { AccountCta } from "./AccountCta";
 import { SessionPreviewCard } from "./SessionPreviewCard";
 
 export function StravaSection(): React.ReactElement {
@@ -10,13 +12,13 @@ export function StravaSection(): React.ReactElement {
           style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 20 }}
         >
           <Label on="dark" style={{ letterSpacing: "0.1em" }}>
-            ALSO: STRAVA · FREE
+            {COPY.strava.eyebrow}
           </Label>
           <h2
             className="l-section-title"
             style={{ color: "var(--text-on-dark)", textWrap: "balance" }}
           >
-            And it gives you credit for the training, too.
+            {COPY.strava.title}
           </h2>
           <p
             style={{
@@ -28,14 +30,9 @@ export function StravaSection(): React.ReactElement {
               textWrap: "pretty",
             }}
           >
-            Each logged session becomes one Rock Climbing activity, with duration, sends, attempts
-            and grades already filled in. It is free for everyone and always will be - we do not
-            charge for Strava syncing. Turn it off and sendtally is still yours for the numbers
-            alone.
+            {COPY.strava.body}
           </p>
-          <Button variant="azure" href="/sign-up">
-            Create your account →
-          </Button>
+          <AccountCta variant="azure" label={COPY.strava.cta} />
         </div>
         <SessionPreviewCard />
       </div>

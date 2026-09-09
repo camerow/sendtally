@@ -1,20 +1,14 @@
 import React from "react";
-
-const LINKS: Array<[string, string]> = [
-  ["Sign in", "/sign-in"],
-  ["Privacy", "/privacy"],
-  ["Terms", "/terms"],
-  ["Support", "/support"],
-];
+import { COPY } from "../copy";
 
 export function Footer(): React.ReactElement {
   return (
     <div className="l-footer">
       <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "rgba(64,63,76,0.58)" }}>
-        sendtally · not affiliated with Strava
+        {COPY.footer.line}
       </span>
       <div style={{ display: "flex", gap: 22 }}>
-        {LINKS.map(([label, href]) => (
+        {COPY.footer.links.map(({ label, href }) => (
           <a
             key={label}
             href={href}
