@@ -88,7 +88,7 @@ describe("sessionDetailVM", () => {
     expect(byLabel["TOP"]).toBe("V7");
     expect(vm.title).toContain("Tension Board");
     expect(vm.stravaUrl).toBe("https://www.strava.com/activities/555");
-    expect(vm.syncLine).toBe("ON STRAVA · POSTED JUL 2");
+    expect(vm.post.label).toBe("ON STRAVA · POSTED JUL 2");
 
     const v7 = vm.bars.find((b) => b.gradeLabel === "V7");
     expect(v7?.peak).toBe(true);
@@ -97,7 +97,7 @@ describe("sessionDetailVM", () => {
     expect(vm.filterCounts).toEqual({ all: 4, sent: 3, flash: 2, project: 1 });
   });
 
-  it("shows the in-progress sync line even when not yet posted", () => {
+  it("shows the in-progress line even when not yet posted", () => {
     const vm = sessionDetailVM({
       ...detail,
       inProgress: true,
@@ -106,15 +106,15 @@ describe("sessionDetailVM", () => {
       post_state: null,
       post_error: null,
     });
-    expect(vm.syncLine).toBe("IN PROGRESS · POSTS WHEN THE SESSION SETTLES");
+    expect(vm.post.label).toBe("IN PROGRESS · POSTS WHEN THE SESSION SETTLES");
   });
 
-  it("prefers the in-progress sync line over an already-posted session", () => {
+  it("prefers the in-progress line over an already-posted session", () => {
     const vm = sessionDetailVM({ ...detail, inProgress: true });
-    expect(vm.syncLine).toBe("IN PROGRESS · POSTS WHEN THE SESSION SETTLES");
+    expect(vm.post.label).toBe("IN PROGRESS · POSTS WHEN THE SESSION SETTLES");
   });
 
-  it("shows NOT POSTED TO STRAVA for a settled, unposted session", () => {
+  it("marks a settled, unposted board session as read-only history", () => {
     const vm = sessionDetailVM({
       ...detail,
       inProgress: false,
@@ -123,12 +123,14 @@ describe("sessionDetailVM", () => {
       post_state: null,
       post_error: null,
     });
-    expect(vm.syncLine).toBe("NOT POSTED TO STRAVA");
+    expect(vm.post.kind).toBe("legacy");
+    expect(vm.post.label).toBe("TENSION BOARD · READ-ONLY HISTORY");
+    expect(vm.post.action).toBeNull();
   });
 
   it("still shows ON STRAVA for a settled, posted session", () => {
     const vm = sessionDetailVM({ ...detail, inProgress: false });
-    expect(vm.syncLine).toBe("ON STRAVA · POSTED JUL 2");
+    expect(vm.post.label).toBe("ON STRAVA · POSTED JUL 2");
   });
 
   it("titles a manual session by its name and shows its location", () => {
@@ -145,7 +147,67 @@ describe("sessionDetailVM", () => {
     });
     expect(vm.title).toContain("Tuesday board night");
     expect(vm.meta).toContain("· INDOOR ·");
-    expect(vm.syncLine).toBe("LOGGED MANUALLY");
+    expect(vm.post.label).toBe("LOGGED MANUALLY");
+  });
+
+  const unposted = {
+    ...detail,
+    source: "manual" as const,
+    board: null,
+    strava_activity_id: null,
+    posted_at: null,
+    post_state: null,
+    post_error: null,
+  };
+  const connected = { connected: true, active: true, since: null };
+
+  it("offers a post action only when Strava is connected and active", () => {
+    expect(sessionDetailVM(unposted, connected).post.action).toBe("post");
+    expect(
+      sessionDetailVM(unposted, { connected: true, active: false, since: null }).post.action
+    ).toBeNull();
+    expect(
+      sessionDetailVM(unposted, { connected: false, active: false, since: null }).post.action
+    ).toBeNull();
+    expect(sessionDetailVM(unposted, null).post.action).toBeNull();
+  });
+
+  it("surfaces the failure reason with a retry action", () => {
+    const vm = sessionDetailVM(
+      { ...unposted, post_state: "failed", post_error: "strava rate limit hit, not posted yet" },
+      connected
+    );
+    expect(vm.post.kind).toBe("failed");
+    expect(vm.post.alert).toBe(true);
+    expect(vm.post.detail).toBe("strava rate limit hit, not posted yet");
+    expect(vm.post.action).toBe("retry");
+  });
+
+  it("reports a pending post without an action", () => {
+    const vm = sessionDetailVM({ ...unposted, post_state: "pending" }, connected);
+    expect(vm.post.kind).toBe("pending");
+    expect(vm.post.label).toBe("POSTING TO STRAVA");
+    expect(vm.post.action).toBeNull();
+  });
+
+  it("explains a session that starts before the posting start date", () => {
+    const vm = sessionDetailVM(unposted, {
+      connected: true,
+      active: true,
+      since: "2026-08-01T00:00:00Z",
+    });
+    expect(vm.post.kind).toBe("before-start");
+    expect(vm.post.detail).toBe("Earlier than your posting start date");
+    expect(vm.post.actionLabel).toBe("Post anyway");
+  });
+
+  it("does not call a session before-start when it starts after the date", () => {
+    const vm = sessionDetailVM(unposted, {
+      connected: true,
+      active: true,
+      since: "2026-01-01T00:00:00Z",
+    });
+    expect(vm.post.kind).toBe("off");
   });
 
   it("falls back to a generic title for an unnamed manual session", () => {

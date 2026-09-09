@@ -1,10 +1,15 @@
 import React from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import type { DeleteAccountFeature, SettingsVM } from "@sendtally/features/settings";
+import type {
+  DeleteAccountFeature,
+  SettingsVM,
+  StravaPostingFeature,
+} from "@sendtally/features/settings";
 import { colors, fonts } from "@sendtally/design/tokens";
 import { Logo } from "../../components/Logo";
 import { DeleteAccountSection } from "./DeleteAccountSection";
+import { StravaPostingSection } from "./StravaPostingSection";
 import {
   bodyText,
   monoMuted,
@@ -18,6 +23,7 @@ export type SettingsViewProps = {
   vm: SettingsVM;
   email: string;
   deletion: DeleteAccountFeature;
+  posting: StravaPostingFeature;
   onSignOut: () => void;
 };
 
@@ -25,6 +31,7 @@ export function SettingsView({
   vm,
   email,
   deletion,
+  posting,
   onSignOut,
 }: SettingsViewProps): React.ReactElement {
   return (
@@ -62,6 +69,7 @@ export function SettingsView({
                 ? "Strava access has lapsed. Re-link it on the web at sendtally.com."
                 : "Connect Strava on the web at sendtally.com and your logged sessions can post to your feed."}
           </Text>
+          {vm.stravaActive && <StravaPostingSection posting={posting} />}
         </View>
 
         <View style={sectionCard}>

@@ -1,9 +1,15 @@
-export { useSessionDetail, type SessionDetailFeature } from "./useSessionDetail";
+export {
+  useSessionDetail,
+  type PostActionFeature,
+  type SessionDetailFeature,
+} from "./useSessionDetail";
 export {
   climbVMs,
   durationLabel,
   filterAndSortClimbs,
   gradeLabel,
+  postingStatus,
+  postStatusVM,
   sessionDetailVM,
 } from "./transforms";
 export {
@@ -14,6 +20,10 @@ export {
   type ClimbSort,
   type ClimbVM,
   type GradeBarVM,
+  type PostAction,
+  type PostingStatus,
+  type PostStatusKind,
+  type PostStatusVM,
   type SessionDetailVM,
   type StatVM,
 } from "./types";

@@ -20,13 +20,29 @@ export type ClimbFilter = "all" | "sent" | "flash" | "project";
 
 export type ClimbSort = "order" | "gradeDesc" | "gradeAsc" | "burns";
 
+export type PostStatusKind =
+  "posted" | "pending" | "failed" | "before-start" | "off" | "legacy" | "in-progress";
+
+export type PostAction = "retry" | "post";
+
+export type PostStatusVM = {
+  kind: PostStatusKind;
+  label: string;
+  detail: string | null;
+  alert: boolean;
+  action: PostAction | null;
+  actionLabel: string | null;
+};
+
+export type PostingStatus = { connected: boolean; active: boolean; since: string | null };
+
 export type SessionDetailVM = {
   title: string;
   meta: string;
   stats: StatVM[];
   bars: GradeBarVM[];
   filterCounts: Record<ClimbFilter, number>;
-  syncLine: string;
+  post: PostStatusVM;
   stravaUrl: string | null;
 };
 

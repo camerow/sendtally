@@ -46,11 +46,15 @@ function describe(err: unknown): string {
   return err instanceof Error ? err.message : String(err);
 }
 
+// `explicit` is a user asking for this one session from the session page, which
+// is allowed past the posting_enabled and post_since gates. Those gates exist to
+// stop automatic posting, not to stop someone posting a session on purpose.
 export async function syncSessionToStrava(
   env: Env,
   userId: string,
   fingerprint: string,
-  fetchImpl: typeof fetch
+  fetchImpl: typeof fetch,
+  explicit = false
 ): Promise<PostResult> {
   const session = await repo.getSessionForPosting(env.DB, userId, fingerprint);
   if (session === null) return { outcome: "skipped", reason: "session not found" };
@@ -61,9 +65,11 @@ export async function syncSessionToStrava(
   if (connection.status !== "active") {
     return { outcome: "skipped", reason: "strava connection is dead" };
   }
-  if (connection.posting_enabled !== 1) return { outcome: "skipped", reason: "posting is off" };
-  if (connection.post_since !== null && session.start_at < connection.post_since) {
-    return { outcome: "skipped", reason: "session predates post_since" };
+  if (!explicit) {
+    if (connection.posting_enabled !== 1) return { outcome: "skipped", reason: "posting is off" };
+    if (connection.post_since !== null && session.start_at < connection.post_since) {
+      return { outcome: "skipped", reason: "session predates post_since" };
+    }
   }
 
   const client = await clientFor(env, connection, fetchImpl);

@@ -322,7 +322,7 @@ export function createApp(deps: AppDeps): Hono<AppEnv> {
     if ((await repo.getSession(c.env.DB, userId, fingerprint)) === null) {
       return c.json({ error: "not found" }, 404);
     }
-    const result = await syncSessionToStrava(c.env, userId, fingerprint, fetchImpl);
+    const result = await syncSessionToStrava(c.env, userId, fingerprint, fetchImpl, true);
     if (result.outcome === "failed") {
       return c.json({ outcome: result.outcome, reason: result.reason }, 502);
     }

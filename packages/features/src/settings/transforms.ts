@@ -1,6 +1,11 @@
 import type { ConnectionStatus } from "@sendtally/api-client";
 import type { SettingsVM } from "./types";
 
+// post_since is stored as a wall-clock timestamp; the date input wants YYYY-MM-DD.
+export function toDateInput(postSince: string | null): string {
+  return postSince === null ? "" : postSince.slice(0, 10);
+}
+
 export function settingsVM(status: ConnectionStatus | null): SettingsVM {
   const strava = status?.strava ?? null;
   const stravaActive = strava?.status === "active";
@@ -12,6 +17,8 @@ export function settingsVM(status: ConnectionStatus | null): SettingsVM {
         ? "NOT CONNECTED"
         : `ATHLETE ${strava.athleteId} · ${strava.status.toUpperCase()}`,
     headerBadge: stravaActive ? "STRAVA CONNECTED" : "STRAVA NOT CONNECTED",
+    postingEnabled: strava?.postingEnabled ?? false,
+    postSince: toDateInput(strava?.postSince ?? null),
   };
 }
 

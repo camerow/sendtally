@@ -11,6 +11,7 @@ import {
 } from "@sendtally/features/session-detail";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { Chip } from "../../components/Chip";
+import { PostStatusBar } from "../../features/sessions/PostStatusBar";
 import { SessionTags } from "../../features/sessions/SessionTags";
 import { useApi } from "../../lib/api";
 
@@ -36,7 +37,8 @@ const RESULT_BADGES: Record<
 export default function SessionDetailScreen(): React.ReactElement {
   const { fingerprint } = useLocalSearchParams<{ fingerprint: string }>();
   const api = useApi();
-  const { state, filter, setFilter, sort, setSort } = useSessionDetail(api, fingerprint ?? "");
+  const feature = useSessionDetail(api, fingerprint ?? "");
+  const { state, filter, setFilter, sort, setSort } = feature;
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.white }} edges={["top"]}>
@@ -322,19 +324,7 @@ export default function SessionDetailScreen(): React.ReactElement {
                 );
               })}
             </View>
-            <Text
-              style={{
-                fontFamily: fonts.monoMedium,
-                fontSize: 9,
-                letterSpacing: 0.7,
-                color: colors.textMuted,
-                paddingTop: 8,
-                borderTopWidth: 1,
-                borderTopColor: colors.lineOnLight,
-              }}
-            >
-              {state.data.vm.syncLine}
-            </Text>
+            <PostStatusBar post={state.data.vm.post} action={feature.post} />
           </>
         )}
       </ScrollView>

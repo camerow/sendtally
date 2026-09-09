@@ -235,6 +235,41 @@ describe("strava posting", () => {
     expect(row?.strava_activity_id).toBeNull();
   });
 
+  it("posts one session on request even when posting is off", async () => {
+    const userId = "user_post_anyway";
+    await connectStrava(userId, { postingEnabled: false });
+    const quiet = stravaRoutes();
+    const fingerprint = await createSession(userId, quiet.fetchImpl);
+    expect(quiet.calls).toHaveLength(0);
+
+    const { fetchImpl, calls } = stravaRoutes();
+    const res = await testApp(fetchImpl).request(
+      `/v1/sessions/${fingerprint}/strava`,
+      { method: "POST", headers: { "x-test-user": userId } },
+      env
+    );
+    expect(res.status).toBe(200);
+    expect(((await res.json()) as { outcome: string }).outcome).toBe("posted");
+    expect(calls.some((c) => c.method === "POST")).toBe(true);
+    expect((await postRow(userId, fingerprint))?.strava_activity_id).toBe(424242);
+  });
+
+  it("posts one session on request even when it predates post_since", async () => {
+    const userId = "user_post_anyway_since";
+    await connectStrava(userId, { postingEnabled: true, postSince: "2026-06-01T00:00:00Z" });
+    const quiet = stravaRoutes();
+    const fingerprint = await createSession(userId, quiet.fetchImpl);
+    expect(quiet.calls).toHaveLength(0);
+
+    const { fetchImpl } = stravaRoutes();
+    const res = await testApp(fetchImpl).request(
+      `/v1/sessions/${fingerprint}/strava`,
+      { method: "POST", headers: { "x-test-user": userId } },
+      env
+    );
+    expect(((await res.json()) as { outcome: string }).outcome).toBe("posted");
+  });
+
   it("never posts a legacy board session", async () => {
     const userId = "user_post_board";
     await connectStrava(userId);

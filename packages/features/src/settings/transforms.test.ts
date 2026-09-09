@@ -16,6 +16,8 @@ describe("settingsVM", () => {
       stravaActive: false,
       stravaStatusLabel: "NOT CONNECTED",
       headerBadge: "STRAVA NOT CONNECTED",
+      postingEnabled: false,
+      postSince: "",
     });
     expect(settingsVM(status()).stravaConnected).toBe(false);
   });
@@ -30,6 +32,21 @@ describe("settingsVM", () => {
     expect(vm.stravaActive).toBe(true);
     expect(vm.stravaStatusLabel).toBe("ATHLETE 42 · ACTIVE");
     expect(vm.headerBadge).toBe("STRAVA CONNECTED");
+  });
+
+  it("carries the posting toggle and start date through as a date input value", () => {
+    const vm = settingsVM(
+      status({
+        strava: {
+          athleteId: 42,
+          status: "active",
+          postingEnabled: true,
+          postSince: "2026-03-01T00:00:00Z",
+        },
+      })
+    );
+    expect(vm.postingEnabled).toBe(true);
+    expect(vm.postSince).toBe("2026-03-01");
   });
 
   it("flags a dead Strava connection as connected but inactive", () => {
