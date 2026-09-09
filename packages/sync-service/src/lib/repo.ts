@@ -180,7 +180,11 @@ export async function updateManualSession(
   return result.meta.changes > 0;
 }
 
-export async function deleteManualSession(
+// Any session the user owns can be deleted, board-sourced history included.
+// Removing a row of your own is not a refresh: it calls nothing upstream and
+// re-scores nothing. Editing a board row stays blocked, since that would
+// re-score history we can no longer verify.
+export async function deleteSession(
   db: D1Database,
   userId: string,
   fingerprint: string
@@ -188,13 +192,7 @@ export async function deleteManualSession(
   const d = drizzle(db);
   const result = await d
     .delete(sessions)
-    .where(
-      and(
-        eq(sessions.user_id, userId),
-        eq(sessions.fingerprint, fingerprint),
-        eq(sessions.source, "manual")
-      )
-    );
+    .where(and(eq(sessions.user_id, userId), eq(sessions.fingerprint, fingerprint)));
   if (result.meta.changes === 0) return false;
   await d
     .delete(sessionTags)

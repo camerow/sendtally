@@ -302,11 +302,8 @@ export function createApp(deps: AppDeps): Hono<AppEnv> {
     const fingerprint = c.req.param("fingerprint");
     const existing = await repo.getSession(c.env.DB, userId, fingerprint);
     if (existing === null) return c.json({ error: "not found" }, 404);
-    if (existing.source !== "manual") {
-      return c.json({ error: "only manually logged sessions can be deleted" }, 409);
-    }
-    await repo.deleteManualSession(c.env.DB, userId, fingerprint);
-    await captureEvent(c.env, "manual_session_deleted", { session_source: "manual" });
+    await repo.deleteSession(c.env.DB, userId, fingerprint);
+    await captureEvent(c.env, "manual_session_deleted", { session_source: existing.source });
     return c.json({ deleted: true });
   });
 
