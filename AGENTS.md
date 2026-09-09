@@ -13,7 +13,7 @@ Aurora asked Will to stop, because using their API this way is against their ter
 
 - Never call any Aurora-hosted API, from the Worker, the apps, tests, scripts, or the Go CLI. Do not add new code paths that do, and do not "fix" or revive existing ones.
 - The board connect flow, the cron/queue sync pipeline, the per-board climb cache, and the `board` session source are legacy. They are being removed; until they are gone, treat them as dead code that must not run in production.
-- Existing `board`-sourced session rows in D1 stay as read-only history for the users who have them. They are never refreshed.
+- Existing `board`-sourced session rows in D1 stay as read-only history for the users who have them. They are never refreshed, and never edited. Their owner can still delete them.
 - Do not describe the product as syncing from boards anywhere (marketing copy, store listings, app strings, docs).
 - Manual entry (`source = "manual"`) is the product. Any future integration must be an officially sanctioned one, agreed with the provider first, and is a decision for Will.
 
@@ -123,7 +123,7 @@ The product was briefly named boardsync; that name was dropped because `boardsyn
 1. The user submits the log-session form (name, date, start/end time, location, climbs with grade, send/attempt, tries, optional RPE). Zod validates the body (`manualSessionBody`).
 2. The Worker assigns `fingerprint = manual-<uuid>` and builds the session with `buildManualSession`, scoring it against the user's other sessions with `@sendtally/core` to produce RPE, title, and summary.
 3. The row is written to `sessions` with `source = "manual"` and the climbs stored in `climbs_json`.
-4. Strava posting for manual sessions is not wired yet (it only ever ran inside the removed Aurora pipeline). When it is added: post on create, then patch perceived exertion in a second call (the create endpoint ignores the field). `StravaClient` in `lib/strava.ts` and the `posting_enabled` / `post_since` columns on `strava_connections` are ready for it.
+4. If Strava posting is on, the session posts after the response via `waitUntil`: create the activity, record `strava_activity_id` immediately, then patch perceived exertion in a second call (the create endpoint ignores the field). Posting is gated on `posting_enabled` and `post_since`; an explicit request from the session page (`POST /v1/sessions/:fingerprint/strava`) bypasses both gates. Failures land in `post_state` / `post_error` and are retried from the session screen - there is no background retry.
 
 Invariants:
 
@@ -131,8 +131,11 @@ Invariants:
 - Dedup lives in the database (`strava_activity_id` / `posted_at` checked before posting, set after). Retries are always safe.
 - Strava rate limiting is a clean pause, not an error.
 - Unknown grades are `-1` and score conservatively as V1.
-- Keep the "synced by sendtally" attribution line in activity descriptions (Strava attribution expectations).
-- Legacy `source = "board"` rows are read-only history: never re-scored, never re-posted, never deleted by anything except account deletion.
+- Keep the "created by https://sendtally.com" attribution line in activity descriptions (Strava attribution expectations).
+- Legacy `source = "board"` rows are read-only history: never re-scored, never re-posted, never edited.
+  Their owner can delete them, though, same as any other session.
+  Deleting a row you own calls nothing upstream and re-scores nothing, so the read-only rule does not reach it - the rule exists to stop us refreshing from an API we no longer call, not to hold a user's own history hostage.
+  Tags on board rows work for the same reason.
 
 ## Strava operational constraints
 

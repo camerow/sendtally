@@ -6,6 +6,7 @@
   "exports": {
     "./billing": "./src/billing/index.ts",
     "./log-session": "./src/log-session/index.ts",
+    "./log-session/transforms": "./src/log-session/transforms.ts",
     "./session-detail": "./src/session-detail/index.ts",
     "./sessions": "./src/sessions/index.ts",
     "./trends": "./src/trends/index.ts",

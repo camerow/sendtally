@@ -2,24 +2,28 @@ import React from "react";
 import type { LinksFunction, LoaderFunctionArgs } from "react-router";
 import { Link, useLoaderData, useSearchParams } from "react-router";
 import type { ConnectionStatus, SessionRow } from "@sendtally/api-client";
+import { Logo } from "@sendtally/design";
 import {
   countLabel,
   filterSessionsByTags,
+  monthScopeItems,
   sessionTagGroups,
   sessionTagOptions,
   sessionYearGroups,
+  tagScopeItems,
   type SessionGrouping,
 } from "@sendtally/features/sessions";
 import { requireApi } from "../lib/api.server";
-import { monthAnchorId } from "../sessions/anchors";
+import { sectionAnchorId } from "../sessions/anchors";
 import { LogSessionFab } from "../sessions/components/LogSessionFab";
 import { MonthJumpRail } from "../sessions/components/MonthJumpRail";
-import { MonthScopeBar } from "../sessions/components/MonthScopeBar";
+import { ScopeBar } from "../sessions/components/ScopeBar";
 import { SessionFilters } from "../sessions/components/SessionFilters";
+import { SessionFilterSheet } from "../sessions/components/SessionFilterSheet";
 import { SessionTagSection } from "../sessions/components/SessionTagSection";
 import { SessionYearGroup } from "../sessions/components/SessionYearGroup";
 import sessionsStyles from "../sessions/sessions.css?url";
-import { useVisibleMonth } from "../sessions/useVisibleMonth";
+import { useVisibleSection } from "../sessions/useVisibleSection";
 
 type LoaderData = {
   status: ConnectionStatus;
@@ -46,6 +50,7 @@ const muted: React.CSSProperties = {
 export default function Sessions(): React.ReactElement {
   const { status, sessions } = useLoaderData<typeof loader>();
   const [searchParams] = useSearchParams();
+  const [filtersOpen, setFiltersOpen] = React.useState(false);
   const stravaConnected = status.strava?.status === "active";
 
   const grouping: SessionGrouping = searchParams.get("group") === "tag" ? "tag" : "month";
@@ -63,13 +68,23 @@ export default function Sessions(): React.ReactElement {
 
   const years = React.useMemo(() => sessionYearGroups(visible), [visible]);
   const tagGroups = React.useMemo(() => sessionTagGroups(visible), [visible]);
-  const monthKeys = React.useMemo(() => years.flatMap((y) => y.months.map((m) => m.key)), [years]);
-  const currentKey = useVisibleMonth(monthKeys);
+  const scopeItems = React.useMemo(
+    () => (grouping === "tag" ? tagScopeItems(tagGroups) : monthScopeItems(years)),
+    [grouping, tagGroups, years]
+  );
+  const sectionKeys = React.useMemo(
+    () =>
+      grouping === "tag"
+        ? tagGroups.map((g) => g.key)
+        : years.flatMap((y) => y.months.map((m) => m.key)),
+    [grouping, tagGroups, years]
+  );
+  const currentKey = useVisibleSection(sectionKeys);
   const requestedMonth = searchParams.get("month");
 
   React.useEffect(() => {
     if (requestedMonth === null) return;
-    document.getElementById(monthAnchorId(requestedMonth))?.scrollIntoView({ block: "start" });
+    document.getElementById(sectionAnchorId(requestedMonth))?.scrollIntoView({ block: "start" });
   }, [requestedMonth]);
 
   const hrefFor = React.useCallback(
@@ -87,17 +102,10 @@ export default function Sessions(): React.ReactElement {
   return (
     <div>
       <div className="sessions-head">
-        <h1
-          style={{
-            margin: 0,
-            fontFamily: "var(--font-display)",
-            fontWeight: 700,
-            fontSize: 32,
-            letterSpacing: "-0.03em",
-          }}
-        >
-          Sessions
-        </h1>
+        <span className="sessions-head-mark">
+          <Logo variant="mark" size={22} />
+        </span>
+        <h1 className="sessions-title">Sessions</h1>
         <span
           style={{
             fontFamily: "var(--font-mono)",
@@ -161,18 +169,23 @@ export default function Sessions(): React.ReactElement {
           hrefFor={hrefFor}
         />
       )}
+      {scopeItems.length > 0 && (
+        <ScopeBar
+          items={scopeItems}
+          currentKey={currentKey}
+          filtersActive={selectedTags.length > 0 || grouping === "tag"}
+          onOpenFilters={() => setFiltersOpen(true)}
+        />
+      )}
       {grouping === "month" && years.length > 0 && (
-        <>
-          <MonthScopeBar years={years} currentKey={currentKey} />
-          <div className="sessions-body">
-            <div className="sessions-list">
-              {years.map((year) => (
-                <SessionYearGroup key={year.year} year={year} />
-              ))}
-            </div>
-            <MonthJumpRail years={years} currentKey={currentKey} />
+        <div className="sessions-body">
+          <div className="sessions-list">
+            {years.map((year) => (
+              <SessionYearGroup key={year.year} year={year} />
+            ))}
           </div>
-        </>
+          <MonthJumpRail years={years} currentKey={currentKey} />
+        </div>
       )}
       {grouping === "tag" && tagGroups.length > 0 && (
         <div className="sessions-body">
@@ -197,6 +210,16 @@ export default function Sessions(): React.ReactElement {
         </div>
       )}
       <LogSessionFab />
+      <SessionFilterSheet
+        open={filtersOpen}
+        onClose={() => setFiltersOpen(false)}
+        sessions={sessions}
+        grouping={grouping}
+        tagOptions={tagOptions}
+        untaggedCount={untaggedCount}
+        selectedTags={selectedTags}
+        hrefFor={hrefFor}
+      />
     </div>
   );
 }

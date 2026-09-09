@@ -1,8 +1,8 @@
 import React from "react";
 
-export type NavIconName = "sessions" | "trends" | "settings" | "membership";
+export type IconName = "sessions" | "trends" | "settings" | "membership" | "funnel" | "plus";
 
-const SHAPES: Record<NavIconName, React.ReactElement> = {
+const SHAPES: Record<IconName, React.ReactElement> = {
   sessions: (
     <>
       <rect x="3.5" y="5" width="17" height="6" rx="2" />
@@ -18,14 +18,18 @@ const SHAPES: Record<NavIconName, React.ReactElement> = {
     </>
   ),
   membership: <path d="M12 3.9l2.5 5.1 5.6.8-4.1 4 1 5.6-5-2.7-5 2.7 1-5.6-4.1-4 5.6-.8z" />,
+  funnel: <path d="M4 5h16l-6.2 7.2V18.5l-3.6 1.8v-8.1z" />,
+  plus: <path d="M12 5v14M5 12h14" />,
 };
 
-export function NavIcon({
+export function Icon({
   name,
   size = 20,
+  strokeWidth = 1.7,
 }: {
-  name: NavIconName;
+  name: IconName;
   size?: number;
+  strokeWidth?: number;
 }): React.ReactElement {
   return (
     <svg
@@ -36,7 +40,7 @@ export function NavIcon({
       focusable="false"
       fill="none"
       stroke="currentColor"
-      strokeWidth={1.7}
+      strokeWidth={strokeWidth}
       strokeLinecap="round"
       strokeLinejoin="round"
       style={{ flex: "none" }}

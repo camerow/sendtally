@@ -1,7 +1,7 @@
 import { useClerk, useUser } from "@clerk/clerk-expo";
 import { useRouter } from "expo-router";
 import React from "react";
-import { useDeleteAccount, useSettings } from "@sendtally/features/settings";
+import { useDeleteAccount, useSettings, useStravaPosting } from "@sendtally/features/settings";
 import type { MembershipFeature } from "@sendtally/features/billing";
 import { useBilling } from "../../features/billing/useBilling";
 import { usePurchase } from "../../features/billing/usePurchase";
@@ -22,11 +22,12 @@ export default function Settings(): React.ReactElement {
   const { user } = useUser();
   const router = useRouter();
   const billing = useBilling();
-  const { vm } = useSettings(api);
+  const { vm, reload } = useSettings(api);
   const onDeleted = React.useCallback(() => {
     void clerk.signOut().then(() => router.replace("/sign-in"));
   }, [clerk, router]);
   const deletion = useDeleteAccount(api, onDeleted);
+  const posting = useStravaPosting(api, vm, reload);
   const onSignOut = React.useCallback(() => {
     void clerk.signOut().then(() => router.replace("/sign-in"));
   }, [clerk, router]);
@@ -34,6 +35,7 @@ export default function Settings(): React.ReactElement {
     vm,
     email: user?.primaryEmailAddress?.emailAddress ?? "",
     deletion,
+    posting,
     onSignOut,
   };
 

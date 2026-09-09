@@ -1,13 +1,27 @@
 import React from "react";
 import { Link } from "react-router";
-import type { DeleteAccountFeature, SettingsVM } from "@sendtally/features/settings";
-import { azureButton, bodyText, linkAction, monoMuted, sectionLabel } from "./styles";
+import type {
+  DeleteAccountFeature,
+  SettingsVM,
+  StravaPostingFeature,
+} from "@sendtally/features/settings";
+import {
+  azureButton,
+  bodyText,
+  linkAction,
+  monoMuted,
+  sectionLabel,
+  underlineButton,
+} from "./styles";
 import { DeleteAccountSection } from "./DeleteAccountSection";
+import { StravaPostingSection } from "./StravaPostingSection";
 
 export type SettingsViewProps = {
   vm: SettingsVM;
   email: string;
   deletion: DeleteAccountFeature;
+  posting: StravaPostingFeature;
+  onSignOut: () => void;
 };
 
 function Section({ children }: { children: React.ReactNode }): React.ReactElement {
@@ -28,7 +42,13 @@ function Section({ children }: { children: React.ReactNode }): React.ReactElemen
   );
 }
 
-export function SettingsView({ vm, email, deletion }: SettingsViewProps): React.ReactElement {
+export function SettingsView({
+  vm,
+  email,
+  deletion,
+  posting,
+  onSignOut,
+}: SettingsViewProps): React.ReactElement {
   return (
     <div style={{ maxWidth: 640, display: "flex", flexDirection: "column", gap: 14 }}>
       <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
@@ -83,11 +103,15 @@ export function SettingsView({ vm, email, deletion }: SettingsViewProps): React.
             Strava access has lapsed. Re-link it to start posting your sessions again.
           </p>
         )}
+        {vm.stravaConnected && vm.stravaActive && <StravaPostingSection posting={posting} />}
       </Section>
 
       <Section>
         <span style={sectionLabel}>ACCOUNT</span>
         <span style={monoMuted}>{email}</span>
+        <button type="button" onClick={onSignOut} style={underlineButton}>
+          Sign out
+        </button>
         <DeleteAccountSection deletion={deletion} />
       </Section>
     </div>

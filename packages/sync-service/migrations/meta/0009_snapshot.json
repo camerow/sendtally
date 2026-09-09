@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "46fd509f-d979-459b-8107-c9b1a72ac6f2",
+  "id": "4cb0fed8-ad4b-45d9-901f-52314a3c0877",
   "prevId": "364b37ca-ce56-409f-9cc7-76e1ed9c61c4",
   "tables": {
     "board_climb_names": {
@@ -384,6 +384,20 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
+        },
+        "post_state": {
+          "name": "post_state",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "post_error": {
+          "name": "post_error",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
         }
       },
       "indexes": {
@@ -408,81 +422,6 @@
         "sessions_user_id_fingerprint_pk": {
           "columns": ["user_id", "fingerprint"],
           "name": "sessions_user_id_fingerprint_pk"
-        }
-      },
-      "uniqueConstraints": {},
-      "checkConstraints": {}
-    },
-    "store_entitlements": {
-      "name": "store_entitlements",
-      "columns": {
-        "user_id": {
-          "name": "user_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "entitlement": {
-          "name": "entitlement",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "store": {
-          "name": "store",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "product_id": {
-          "name": "product_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "expires_at": {
-          "name": "expires_at",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "will_renew": {
-          "name": "will_renew",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": 1
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "store_entitlements_user_id_users_id_fk": {
-          "name": "store_entitlements_user_id_users_id_fk",
-          "tableFrom": "store_entitlements",
-          "tableTo": "users",
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {
-        "store_entitlements_user_id_entitlement_pk": {
-          "columns": ["user_id", "entitlement"],
-          "name": "store_entitlements_user_id_entitlement_pk"
         }
       },
       "uniqueConstraints": {},

@@ -342,13 +342,23 @@ function ClimbRow({
   );
 }
 
-export function LogSessionForm({ api }: { api: SendtallyApi }): React.ReactElement {
+export function LogSessionForm({
+  api,
+  editing,
+}: {
+  api: SendtallyApi;
+  editing?: { fingerprint: string; draft: LogSessionDraft };
+}): React.ReactElement {
   const navigate = useNavigate();
-  const [draft, setDraft] = React.useState<LogSessionDraft>(() => emptyDraft(new Date()));
+  const [draft, setDraft] = React.useState<LogSessionDraft>(
+    () => editing?.draft ?? emptyDraft(new Date())
+  );
   const [saving, setSaving] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
-  const nextKey = React.useRef(2);
+  const nextKey = React.useRef(draft.climbs.length + 1);
   const { suggestionsFor } = useTagVocabulary(api);
+  const cancelTo =
+    editing === undefined ? "/app" : `/app/sessions/${encodeURIComponent(editing.fingerprint)}`;
 
   const problem = draftProblem(draft);
 
@@ -364,7 +374,11 @@ export function LogSessionForm({ api }: { api: SendtallyApi }): React.ReactEleme
     setSaving(true);
     setError(null);
     try {
-      const { session } = await api.logSession(toLogSessionInput(draft));
+      const input = toLogSessionInput(draft);
+      const { session } =
+        editing === undefined
+          ? await api.logSession(input)
+          : await api.updateLoggedSession(editing.fingerprint, input);
       await navigate(`/app/sessions/${encodeURIComponent(session.fingerprint)}`);
     } catch {
       setError("Could not save the session. Try again.");
@@ -463,8 +477,9 @@ export function LogSessionForm({ api }: { api: SendtallyApi }): React.ReactEleme
           >
             <span style={columnHead}>AFTER YOU SAVE</span>
             <p style={{ margin: 0, fontSize: 14, lineHeight: 1.55, color: "rgba(64,63,76,0.88)" }}>
-              sendtally titles the session and builds the climb log. Leave RPE on auto and it is
-              scored against your last 8 weeks of sessions.
+              {editing === undefined
+                ? "sendtally titles the session and builds the climb log. Leave RPE on auto and it is scored against your last 8 weeks of sessions."
+                : "sendtally rebuilds the title and climb log from these edits. Reset RPE to auto to have it scored against your last 8 weeks of sessions again."}
             </p>
           </div>
         </div>
@@ -554,7 +569,7 @@ export function LogSessionForm({ api }: { api: SendtallyApi }): React.ReactEleme
         <div className="log-session-buttons">
           <button
             type="button"
-            onClick={() => void navigate("/app")}
+            onClick={() => void navigate(cancelTo)}
             style={{
               fontFamily: "var(--font-sans)",
               fontWeight: 600,
@@ -586,7 +601,7 @@ export function LogSessionForm({ api }: { api: SendtallyApi }): React.ReactEleme
               opacity: saving ? 0.45 : 1,
             }}
           >
-            {saving ? "Saving…" : "Log session"}
+            {saving ? "Saving…" : editing === undefined ? "Log session" : "Save changes"}
           </button>
         </div>
       </div>

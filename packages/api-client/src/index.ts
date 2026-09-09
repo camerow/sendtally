@@ -3,6 +3,7 @@ import {
   type ConnectionStatus,
   type Entitlements,
   type LogSessionInput,
+  type PostOutcome,
   type SessionRow,
   type SessionDetail,
   type SessionTag,
@@ -96,6 +97,24 @@ export class SendtallyApi {
       `/v1/sessions/${encodeURIComponent(fingerprint)}/tags`,
       { method: "PUT", body: JSON.stringify({ tags }) }
     );
+  }
+
+  postSessionToStrava(
+    fingerprint: string
+  ): Promise<{ outcome: PostOutcome; reason?: string; session: SessionDetail }> {
+    return this.request(`/v1/sessions/${encodeURIComponent(fingerprint)}/strava`, {
+      method: "POST",
+    });
+  }
+
+  setStravaPosting(
+    enabled: boolean,
+    since?: string | null
+  ): Promise<{ postingEnabled: boolean; postSince: string | null }> {
+    return this.request("/v1/connections/strava/posting", {
+      method: "PUT",
+      body: JSON.stringify({ enabled, since: since ?? null }),
+    });
   }
 
   stravaAuthorizeUrl(): Promise<{ url: string }> {

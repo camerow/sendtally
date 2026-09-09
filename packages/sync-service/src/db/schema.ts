@@ -85,6 +85,8 @@ export const sessions = sqliteTable(
     climbs_json: text("climbs_json"),
     strava_activity_id: integer("strava_activity_id"),
     posted_at: text("posted_at"),
+    post_state: text("post_state"),
+    post_error: text("post_error"),
   },
   (t) => [
     primaryKey({ columns: [t.user_id, t.fingerprint] }),

@@ -28,6 +28,8 @@ function session(
     title: "",
     strava_activity_id: null,
     posted_at: null,
+    post_state: null,
+    post_error: null,
     inProgress: false,
     tags,
     climbs: climbs.map((c, i) => ({

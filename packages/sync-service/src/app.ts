@@ -1,4 +1,4 @@
-import { Hono } from "hono";
+import { type Context, Hono } from "hono";
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 import { cors } from "hono/cors";
 import { z } from "zod";
@@ -9,6 +9,7 @@ import { decryptSecret, encryptSecret } from "./lib/crypto";
 import { mirrorStoreEntitlements, resolveEntitlements } from "./lib/entitlements";
 import { buildManualSession, historySession, manualSessionBody } from "./lib/manual";
 import { getPostHog } from "./lib/posthog";
+import { syncSessionToStrava } from "./lib/posting";
 import * as repo from "./lib/repo";
 import { RevenueCatClient, webhookBody, webhookUserIds } from "./lib/revenuecat";
 import { authorizeUrl, exchangeAuthCode, StravaUnauthorizedError } from "./lib/strava";
@@ -261,6 +262,34 @@ export function createApp(deps: AppDeps): Hono<AppEnv> {
       .filter((s): s is NonNullable<typeof s> => s !== null);
   };
 
+  // Posting is two Strava calls plus a possible token refresh, so it runs after the
+  // response rather than making the user wait for it. Failures land in post_state,
+  // which the retry endpoint reads.
+  const postAfterResponse = (c: Context<AppEnv>, userId: string, fingerprint: string): void => {
+    let sink: ((work: Promise<unknown>) => void) | null = null;
+    try {
+      const ctx = c.executionCtx;
+      sink = (work) => ctx.waitUntil(work);
+    } catch {
+      // No execution context means no background work: never start a promise that
+      // would outlive the request and write after it.
+      return;
+    }
+    sink(
+      syncSessionToStrava(c.env, userId, fingerprint, fetchImpl).then(
+        (result) => {
+          if (result.outcome === "failed") {
+            console.error(`strava post failed for ${fingerprint}: ${result.reason}`);
+          }
+        },
+        (err: unknown) => {
+          const message = err instanceof Error ? err.message : String(err);
+          console.error(`strava post threw for ${fingerprint}: ${message}`);
+        }
+      )
+    );
+  };
+
   const sessionResponse = async (c: { env: Env }, userId: string, fingerprint: string) => {
     const row = await repo.getSession(c.env.DB, userId, fingerprint);
     if (row === null) return null;
@@ -286,7 +315,9 @@ export function createApp(deps: AppDeps): Hono<AppEnv> {
       await repo.setSessionTags(c.env.DB, userId, fingerprint, parsed.data.tags);
     }
     await captureEvent(c.env, "manual_session_created", { session_source: "manual" });
-    return c.json({ session: await sessionResponse(c, userId, fingerprint) }, 201);
+    const body = { session: await sessionResponse(c, userId, fingerprint) };
+    postAfterResponse(c, userId, fingerprint);
+    return c.json(body, 201);
   });
 
   app.put("/v1/sessions/:fingerprint", async (c) => {
@@ -304,7 +335,28 @@ export function createApp(deps: AppDeps): Hono<AppEnv> {
     await repo.updateManualSession(c.env.DB, userId, input);
     await repo.setSessionTags(c.env.DB, userId, fingerprint, parsed.data.tags ?? []);
     await captureEvent(c.env, "manual_session_updated", { session_source: "manual" });
-    return c.json({ session: await sessionResponse(c, userId, fingerprint) });
+    const body = { session: await sessionResponse(c, userId, fingerprint) };
+    // Already posted sessions get the activity patched, never a second one.
+    postAfterResponse(c, userId, fingerprint);
+    return c.json(body);
+  });
+
+  app.post("/v1/sessions/:fingerprint/strava", async (c) => {
+    const userId = c.get("userId");
+    const fingerprint = c.req.param("fingerprint");
+    if ((await repo.getSession(c.env.DB, userId, fingerprint)) === null) {
+      return c.json({ error: "not found" }, 404);
+    }
+    const result = await syncSessionToStrava(c.env, userId, fingerprint, fetchImpl, true);
+    if (result.outcome === "failed") {
+      return c.json({ outcome: result.outcome, reason: result.reason }, 502);
+    }
+    await captureEvent(c.env, "strava_post_retried", { outcome: result.outcome });
+    return c.json({
+      outcome: result.outcome,
+      ...(result.reason === undefined ? {} : { reason: result.reason }),
+      session: await sessionResponse(c, userId, fingerprint),
+    });
   });
 
   // Tags live in their own tables, so legacy board sessions stay taggable
@@ -327,18 +379,23 @@ export function createApp(deps: AppDeps): Hono<AppEnv> {
     const fingerprint = c.req.param("fingerprint");
     const existing = await repo.getSession(c.env.DB, userId, fingerprint);
     if (existing === null) return c.json({ error: "not found" }, 404);
-    if (existing.source !== "manual") {
-      return c.json({ error: "only manually logged sessions can be deleted" }, 409);
-    }
-    await repo.deleteManualSession(c.env.DB, userId, fingerprint);
-    await captureEvent(c.env, "manual_session_deleted", { session_source: "manual" });
+    await repo.deleteSession(c.env.DB, userId, fingerprint);
+    await captureEvent(c.env, "manual_session_deleted", { session_source: existing.source });
     return c.json({ deleted: true });
   });
 
   app.get("/v1/status", async (c) => {
     const strava = await repo.getStravaConnection(c.env.DB, c.get("userId"));
     return c.json({
-      strava: strava === null ? null : { athleteId: strava.athlete_id, status: strava.status },
+      strava:
+        strava === null
+          ? null
+          : {
+              athleteId: strava.athlete_id,
+              status: strava.status,
+              postingEnabled: strava.posting_enabled === 1,
+              postSince: strava.post_since,
+            },
     });
   });
 
@@ -354,6 +411,29 @@ export function createApp(deps: AppDeps): Hono<AppEnv> {
     await mirrorStoreEntitlements(c.env, revenuecat(c.env), user.userId);
     await captureEvent(c.env, "entitlements_refreshed", {});
     return c.json(await resolveEntitlements(c.env, user));
+  });
+
+  const stravaPostingBody = z.object({
+    enabled: z.boolean(),
+    since: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/)
+      .nullish(),
+  });
+
+  app.put("/v1/connections/strava/posting", async (c) => {
+    const parsed = stravaPostingBody.safeParse(await c.req.json().catch(() => null));
+    if (!parsed.success) return c.json({ error: "invalid request body" }, 400);
+    const userId = c.get("userId");
+    const strava = await repo.getStravaConnection(c.env.DB, userId);
+    if (strava === null) return c.json({ error: "strava not connected" }, 409);
+    const since =
+      parsed.data.since === undefined || parsed.data.since === null
+        ? null
+        : `${parsed.data.since}T00:00:00Z`;
+    await repo.setStravaPosting(c.env.DB, userId, parsed.data.enabled, since);
+    await captureEvent(c.env, "strava_posting_updated", { enabled: parsed.data.enabled });
+    return c.json({ postingEnabled: parsed.data.enabled, postSince: since });
   });
 
   app.delete("/v1/account", async (c) => {

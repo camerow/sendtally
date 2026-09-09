@@ -59,7 +59,6 @@
   min-width: 0;
 }
 
-.app-topbar,
 .app-tabbar {
   display: none;
 }
@@ -72,16 +71,6 @@
 
   .app-sidebar {
     display: none;
-  }
-
-  .app-topbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    padding: 12px 16px;
-    background: #f7f6f3;
-    border-bottom: 1px solid rgba(64, 63, 76, 0.08);
   }
 
   .app-tabbar {

@@ -247,6 +247,12 @@ importers:
       '@cloudflare/workers-types':
         specifier: ^4.20250823.0
         version: 4.20260702.1
+      '@sendtally/api-client':
+        specifier: workspace:*
+        version: link:../api-client
+      '@sendtally/features':
+        specifier: workspace:*
+        version: link:../features
       drizzle-kit:
         specifier: ^0.31.10
         version: 0.31.10
