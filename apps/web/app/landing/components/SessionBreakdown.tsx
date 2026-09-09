@@ -1,5 +1,6 @@
 import React from "react";
 import { Label } from "@sendtally/design";
+import { COPY } from "../copy";
 import { StatGrid } from "./StatGrid";
 
 type Result = "FLASH" | "SENT" | "PROJECT";
@@ -145,12 +146,9 @@ export function SessionBreakdown(): React.ReactElement {
     <div id="session" className="l-session">
       <div className="l-section-header">
         <h2 className="l-section-title" style={{ color: "var(--bs-gunmetal)" }}>
-          Every session, climb by climb.
+          {COPY.session.title}
         </h2>
-        <span className="l-section-blurb">
-          Grades, burns and results - kept for every climb so a project you have been chipping at
-          for a month reads as one story.
-        </span>
+        <span className="l-section-blurb">{COPY.session.blurb}</span>
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
@@ -197,7 +195,7 @@ export function SessionBreakdown(): React.ReactElement {
       </div>
 
       <Label on="light" style={{ letterSpacing: "0.06em" }}>
-        6 OF 12 CLIMBS SHOWN · FILTER BY SENT, FLASHED OR PROJECT IN THE APP
+        {COPY.session.footnote}
       </Label>
     </div>
   );

@@ -138,7 +138,7 @@ export default function Sessions(): React.ReactElement {
       </div>
       {!stravaConnected && (
         <div className="sessions-banner">
-          <span style={{ flex: 1, fontSize: 14, lineHeight: 1.5, color: "var(--text-on-light)" }}>
+          <span style={{ flex: 1, fontSize: 14, lineHeight: 1.5, color: "var(--text-on-dark)" }}>
             Your logbook lives here either way. Connect Strava and your sessions can post to your
             feed as Rock Climbing activities.
           </span>
@@ -148,8 +148,8 @@ export default function Sessions(): React.ReactElement {
               fontFamily: "var(--font-sans)",
               fontWeight: 600,
               fontSize: 13,
-              color: "var(--bs-white)",
-              background: "var(--bs-azure-ink)",
+              color: "var(--bs-gunmetal)",
+              background: "var(--bs-gold)",
               borderRadius: "var(--radius-control)",
               padding: "9px 16px",
               textDecoration: "none",

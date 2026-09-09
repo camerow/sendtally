@@ -13,8 +13,8 @@ const primaryLink: React.CSSProperties = {
   fontFamily: "var(--font-sans)",
   fontWeight: 600,
   fontSize: 15,
-  color: "var(--bs-white)",
-  background: "var(--bs-azure-ink)",
+  color: "var(--bs-gunmetal)",
+  background: "var(--bs-gold)",
   borderRadius: "var(--radius-control)",
   padding: "14px 22px",
   textDecoration: "none",
@@ -39,7 +39,7 @@ export function UpgradePanel({
         maxWidth: 620,
       }}
     >
-      <Label on="accent">{eyebrow}</Label>
+      <Label on="dark">{eyebrow}</Label>
       <h2
         style={{
           margin: 0,
@@ -48,6 +48,7 @@ export function UpgradePanel({
           fontSize: 28,
           letterSpacing: "-0.03em",
           textWrap: "balance",
+          color: "var(--text-on-dark)",
         }}
       >
         {title}
@@ -57,7 +58,7 @@ export function UpgradePanel({
           margin: 0,
           fontSize: 15,
           lineHeight: 1.55,
-          color: "var(--text-on-light-secondary)",
+          color: "var(--text-on-dark-secondary)",
           textWrap: "pretty",
         }}
       >
@@ -73,7 +74,7 @@ export function UpgradePanel({
             gap: 6,
             fontSize: 14,
             lineHeight: 1.5,
-            color: "var(--text-on-light-secondary)",
+            color: "var(--text-on-dark-secondary)",
           }}
         >
           {points.map((point) => (

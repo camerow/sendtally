@@ -1,19 +1,15 @@
 import React from "react";
 import { Button, Logo } from "@sendtally/design";
-
-const SECTIONS: Array<[string, string]> = [
-  ["What members see", "#insights"],
-  ["Sessions", "#session"],
-  ["Strava", "#strava"],
-  ["How it works", "#how"],
-  ["Membership", "#price"],
-];
+import { COPY } from "../copy";
+import { useLanding } from "../LandingContext";
+import { AccountCta } from "./AccountCta";
 
 export type NavProps = {
   sections?: boolean;
 };
 
 export function Nav({ sections = true }: NavProps): React.ReactElement {
+  const { signedIn } = useLanding();
   return (
     <div className="l-nav">
       <a href="/" className="l-nav-logo" aria-label="sendtally home">
@@ -21,18 +17,18 @@ export function Nav({ sections = true }: NavProps): React.ReactElement {
       </a>
       <div className="l-nav-links">
         {sections &&
-          SECTIONS.map(([label, href]) => (
-            <a key={label} href={href} className="l-nav-anchor">
-              {label}
+          COPY.nav.sections.map((section) => (
+            <a key={section.href} href={section.href} className="l-nav-anchor">
+              {section.label}
             </a>
           ))}
         <div className="l-nav-actions">
-          <Button variant="ghostOnLight" size="sm" href="/sign-in">
-            Sign in
-          </Button>
-          <Button variant="gold" size="sm" href="/sign-up">
-            Create account
-          </Button>
+          {!signedIn && (
+            <Button variant="ghostOnLight" size="sm" href="/sign-in">
+              {COPY.nav.signIn}
+            </Button>
+          )}
+          <AccountCta size="sm" label={COPY.nav.createAccount} />
         </div>
       </div>
     </div>

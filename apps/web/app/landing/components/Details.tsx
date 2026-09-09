@@ -1,24 +1,5 @@
 import React from "react";
-
-const DETAILS: Array<[string, string]> = [
-  [
-    "KEPT PER CLIMB",
-    "Grade in V-scale or Font, send or attempt, tries, and the climb's name if you give it one",
-  ],
-  [
-    "EFFORT",
-    "Every session scored 1-10 against your own rolling eight weeks - set it yourself or leave it on auto",
-  ],
-  [
-    "TRENDS",
-    "Volume, grade pyramid, hardest send, flash rate and average grade, weekly or all-time - the membership half",
-  ],
-  [
-    "STRAVA",
-    "Optional and free for everyone. One Rock Climbing activity per session, fingerprinted so it never doubles up",
-  ],
-  ["LEAVING", "Delete your account and every session and token goes with it the same day"],
-];
+import { COPY } from "../copy";
 
 function DetailRow({
   label,
@@ -58,11 +39,16 @@ export function Details(): React.ReactElement {
     <div id="details" className="l-details">
       <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
         <h2 className="l-section-title" style={{ color: "var(--bs-gunmetal)" }}>
-          Details
+          {COPY.details.title}
         </h2>
         <div style={{ display: "flex", flexDirection: "column" }}>
-          {DETAILS.map(([label, body], i) => (
-            <DetailRow key={label} label={label} body={body} last={i === DETAILS.length - 1} />
+          {COPY.details.rows.map((row, i) => (
+            <DetailRow
+              key={row.label}
+              label={row.label}
+              body={row.body}
+              last={i === COPY.details.rows.length - 1}
+            />
           ))}
         </div>
       </div>

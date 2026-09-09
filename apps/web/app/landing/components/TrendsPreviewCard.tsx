@@ -1,38 +1,41 @@
 import React from "react";
 import { Label } from "@sendtally/design";
-import { MiniBars, type MiniBar } from "./MiniBars";
+import { COPY } from "../copy";
+import { prefersReducedMotion } from "../useInView";
+import { HERO_RANGES } from "./heroRanges";
+import { MiniBars } from "./MiniBars";
+import { RangeChips } from "./RangeChips";
 import { StatGrid } from "./StatGrid";
 
-const WEEKS: MiniBar[] = [
-  { key: "5/18", label: "5/18", value: 24 },
-  { key: "5/25", label: "5/25", value: 29 },
-  { key: "6/1", label: "6/1", value: 11 },
-  { key: "6/8", label: "6/8", value: 27 },
-  { key: "6/15", label: "6/15", value: 31 },
-  { key: "6/22", label: "6/22", value: 41 },
-  { key: "6/29", label: "6/29", value: 28 },
-  { key: "7/6", label: "7/6", value: 0 },
-  { key: "7/13", label: "7/13", value: 25 },
-  { key: "7/20", label: "7/20", value: 27 },
-  { key: "7/27", label: "7/27", value: 31 },
-  { key: "8/3", label: "8/3", value: 32, peak: true },
-];
+const CYCLE_MS = 3200;
+const FADE_MS = 240;
 
 export function TrendsPreviewCard(): React.ReactElement {
+  const [index, setIndex] = React.useState(0);
+  const [cycled, setCycled] = React.useState(false);
+  const [swapping, setSwapping] = React.useState(false);
+
+  React.useEffect(() => {
+    if (prefersReducedMotion()) return;
+    let fade: ReturnType<typeof setTimeout> | undefined;
+    const tick = setInterval(() => {
+      setSwapping(true);
+      fade = setTimeout(() => {
+        setIndex((i) => (i + 1) % HERO_RANGES.length);
+        setCycled(true);
+        setSwapping(false);
+      }, FADE_MS);
+    }, CYCLE_MS);
+    return () => {
+      clearInterval(tick);
+      if (fade !== undefined) clearTimeout(fade);
+    };
+  }, []);
+
+  const range = HERO_RANGES[index] ?? HERO_RANGES[0]!;
+
   return (
-    <div
-      style={{
-        background: "var(--surface-card)",
-        borderRadius: "var(--radius-card-lg)",
-        boxShadow: "var(--shadow-float)",
-        padding: "clamp(18px, 3vw, 26px)",
-        display: "flex",
-        flexDirection: "column",
-        gap: 18,
-        fontFamily: "var(--font-sans)",
-        color: "var(--bs-gunmetal)",
-      }}
-    >
+    <div className={swapping ? "l-hero-card l-hero-card--swap" : "l-hero-card"}>
       <div
         style={{
           display: "flex",
@@ -50,27 +53,25 @@ export function TrendsPreviewCard(): React.ReactElement {
             letterSpacing: "-0.02em",
           }}
         >
-          Trends
+          {COPY.hero.card.title}
         </span>
-        <Label on="light" size={10}>
-          LAST 12 WEEKS · 47 SESSIONS
-        </Label>
+        <span className="l-hero-card-fade">
+          <Label on="light" size={10}>
+            {range.caption}
+          </Label>
+        </span>
       </div>
+
+      <RangeChips active={range.chip} size="sm" />
 
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-        <Label on="accent">CLIMBS PER WEEK</Label>
-        <MiniBars bars={WEEKS} height={78} />
+        <Label on="accent">{COPY.hero.card.chartLabel}</Label>
+        <MiniBars key={range.key} bars={range.bars} height={78} grow={cycled ? "mount" : "off"} />
       </div>
 
-      <StatGrid
-        tone="white"
-        items={[
-          { label: "CLIMBS", value: "328" },
-          { label: "AVG GRADE", value: "V4.9" },
-          { label: "FLASH RATE", value: "36%" },
-          { label: "TOP", value: "V7", accent: true },
-        ]}
-      />
+      <div className="l-hero-card-fade">
+        <StatGrid tone="white" items={range.stats} />
+      </div>
     </div>
   );
 }

@@ -1,17 +1,29 @@
 import React from "react";
 import { Button, Label } from "@sendtally/design";
+import { COPY } from "../copy";
+import { useLanding } from "../LandingContext";
+import { AccountCta } from "./AccountCta";
+import { LANDING_PHOTOS } from "../photos";
+import { Photo } from "./Photo";
 import { TrendsPreviewCard } from "./TrendsPreviewCard";
 
 export function Hero(): React.ReactElement {
+  const { signedIn } = useLanding();
   return (
     <div className="l-hero">
       <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 26 }}>
-        <Label on="accent" style={{ letterSpacing: "0.1em" }}>
-          FREE TO LOG · MEMBER TRENDS
-        </Label>
-        <h1 className="l-hero-title">See what six months of climbing adds up to.</h1>
+        <div className="l-rise" style={{ animationDelay: "60ms" }}>
+          <Label on="accent" style={{ letterSpacing: "0.1em" }}>
+            {COPY.hero.eyebrow}
+          </Label>
+        </div>
+        <h1 className="l-hero-title l-rise" style={{ animationDelay: "140ms" }}>
+          {COPY.hero.title}
+        </h1>
         <p
+          className="l-rise"
           style={{
+            animationDelay: "220ms",
             margin: 0,
             fontSize: 18,
             lineHeight: 1.55,
@@ -20,32 +32,39 @@ export function Hero(): React.ReactElement {
             textWrap: "pretty",
           }}
         >
-          A session takes a minute to log - grades, sends, attempts - and every one gets an effort
-          score against your own last eight weeks and posts to Strava. That part is free. Membership
-          turns the history into volume, grade pyramids, flash rate, hardest send and average grade,
-          week by week.
+          {COPY.hero.body}
         </p>
-        <div style={{ display: "flex", flexDirection: "column", gap: 11 }}>
-          <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 12 }}>
-            <Button variant="gold" href="/sign-up">
-              Create your account →
-            </Button>
+        <div
+          className="l-rise"
+          style={{
+            animationDelay: "300ms",
+            display: "flex",
+            flexWrap: "wrap",
+            alignItems: "center",
+            gap: 12,
+          }}
+        >
+          <AccountCta label={COPY.hero.cta} />
+          {!signedIn && (
             <Button variant="ghostOnLight" href="/sign-in">
-              Sign in
+              {COPY.hero.signIn}
             </Button>
-          </div>
-          <span
-            style={{
-              fontFamily: "var(--font-mono)",
-              fontSize: 13,
-              color: "rgba(64,63,76,0.58)",
-            }}
-          >
-            Free to log · one-time code sign-in · Strava sync included, never paywalled
-          </span>
+          )}
+        </div>
+        <div className="l-free-pills l-rise" style={{ animationDelay: "380ms" }}>
+          {COPY.hero.pills.map((pill) => (
+            <span key={pill} className="l-free-pill">
+              {pill}
+            </span>
+          ))}
         </div>
       </div>
-      <TrendsPreviewCard />
+      <div className="l-hero-visual">
+        <Photo photo={LANDING_PHOTOS.hero} className="l-hero-photo l-rise" priority />
+        <div className="l-hero-card-slot l-rise" style={{ animationDelay: "260ms" }}>
+          <TrendsPreviewCard />
+        </div>
+      </div>
     </div>
   );
 }
