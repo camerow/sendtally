@@ -15,7 +15,7 @@ const STEPS: Array<[string, string, string]> = [
   [
     "03",
     "Authorise Strava, if you want it",
-    "Standard OAuth, activity-write scope only. We never see your password and you can revoke it from Strava at any time.",
+    "Standard OAuth, scoped to activities and nothing else. We never see your password, we only ever write the sessions you log, and you can revoke it from Strava at any time.",
   ],
 ];
 

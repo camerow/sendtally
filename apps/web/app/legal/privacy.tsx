@@ -71,7 +71,8 @@ export const PRIVACY: LegalDocument = {
         </>,
         <>
           <strong>Strava</strong> - only if you connect it, and only to post the activities you have
-          asked for. Your use of Strava is governed by{" "}
+          asked for. Strava's consent screen also asks for activity read access; sendtally does not
+          read your Strava activities. Your use of Strava is governed by{" "}
           <a href="https://www.strava.com/legal/privacy" rel="noreferrer">
             Strava's privacy policy
           </a>
