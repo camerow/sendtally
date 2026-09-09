@@ -1,7 +1,5 @@
-// Expo's ambient types, including the `process.env` shape the EXPO_PUBLIC_*
-// reads in lib/config.ts depend on.
-//
-// The Expo CLI writes the same reference into expo-env.d.ts, but it owns that
-// file and deletes it on `expo start` while typedRoutes is off. Keeping our own
-// copy means running the dev server can no longer break `pnpm check-types`.
+// Same reference Expo generates into expo-env.d.ts, kept in a file Expo does not
+// own. `expo start` deletes and regenerates expo-env.d.ts as it runs, so a commit
+// made with Metro running drops the file and `pnpm check-types` then fails on
+// lib/config.ts with "Cannot find name 'process'".
 /// <reference types="expo/types" />

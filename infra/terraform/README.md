@@ -5,7 +5,13 @@ Terraform owns the account-level Cloudflare resources for sendtally in the
 
 - the `sendtally.com` zone and its TLS/HTTPS settings
 - DNS records that are not Worker hostnames (Clerk, mail, verification)
+- the redirect rule that sends `www.sendtally.com` to the apex
 - D1 databases (`sendtally-staging`, `sendtally-production`)
+
+`www` is a proxied CNAME, so Cloudflare answers for it but has no origin behind
+it - the Worker custom domain covers the apex only. Without the redirect rule in
+`redirects.tf` every request to `www.sendtally.com` returns a 522. Changing that
+rule needs `terraform apply`; merging alone will not move it.
 
 Wrangler still owns what it deploys: the Worker scripts, their bindings, Worker secrets, and the Worker custom domains
 (`sendtally.com`, `api.sendtally.com`, `staging.*`, `api-staging.*`). Those are
@@ -42,9 +48,14 @@ Create at dash.cloudflare.com/profile/api-tokens ("Create Custom Token"):
 | Zone    | DNS                  | Edit  |
 | Zone    | SSL and Certificates | Edit  |
 | Zone    | Workers Routes       | Edit  |
+| Zone    | Dynamic Redirect     | Edit  |
 
 Account resources: **Chalk and Circuits** only. Zone resources: all zones in
 that account. Store it in 1Password; never in tfvars or the repo.
+
+Dynamic Redirect is what lets Terraform manage `redirects.tf`. A token without it
+plans the ruleset happily and then fails the apply with a bare
+`403 Authentication error` on `POST /zones/<id>/rulesets`.
 
 ## Day-to-day
 
