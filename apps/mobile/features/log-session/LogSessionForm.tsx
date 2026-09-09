@@ -9,21 +9,20 @@ import {
   draftProblem,
   draftSummary,
   emptyDraft,
-  gradeOptions,
   newClimb,
   toLogSessionInput,
   withScale,
   withTag,
   withoutTag,
   type ClimbDraft,
-  type GradeScale,
   type LogSessionDraft,
 } from "@sendtally/features/log-session";
 import { useTagVocabulary } from "@sendtally/features/sessions";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { useApi } from "../../lib/api";
-import { Chip as SuggestionChip } from "../../components/Chip";
 import { TagPicker } from "../sessions/TagPicker";
+import { ClimbEditorSheet } from "./ClimbEditorSheet";
+import { ClimbLedgerRow } from "./ClimbLedgerRow";
 
 function LabelText({ children }: { children: React.ReactNode }): React.ReactElement {
   return (
@@ -80,37 +79,6 @@ function Chip({
   );
 }
 
-function StepperButton({
-  label,
-  disabled = false,
-  onPress,
-}: {
-  label: string;
-  disabled?: boolean;
-  onPress: () => void;
-}): React.ReactElement {
-  return (
-    <Pressable
-      onPress={onPress}
-      disabled={disabled}
-      style={{
-        width: 40,
-        height: 40,
-        borderRadius: 8,
-        borderWidth: 1,
-        borderColor: "rgba(64,63,76,0.18)",
-        alignItems: "center",
-        justifyContent: "center",
-        opacity: disabled ? 0.4 : 1,
-      }}
-    >
-      <Text style={{ fontFamily: fonts.monoMedium, fontSize: 16, color: colors.gunmetal }}>
-        {label}
-      </Text>
-    </Pressable>
-  );
-}
-
 const inputStyle = {
   fontFamily: fonts.sans,
   fontSize: 15,
@@ -122,182 +90,6 @@ const inputStyle = {
   paddingHorizontal: 13,
   paddingVertical: 12,
 } as const;
-
-function ClimbCard({
-  climb,
-  options,
-  scale,
-  removable,
-  project,
-  suggestions,
-  onChange,
-  onChangeName,
-  onPick,
-  onToggleProject,
-  onRemove,
-}: {
-  climb: ClimbDraft;
-  options: readonly string[];
-  scale: GradeScale;
-  removable: boolean;
-  project: boolean;
-  suggestions: ClimbSummary[];
-  onChange: (climb: ClimbDraft) => void;
-  onChangeName: (name: string) => void;
-  onPick: (climb: ClimbSummary) => void;
-  onToggleProject: () => void;
-  onRemove: () => void;
-}): React.ReactElement {
-  const [focused, setFocused] = React.useState(false);
-  const gradeIndex = options.indexOf(climb.grade);
-  const named = climb.name.trim() !== "";
-  const showSuggestions = focused && suggestions.length > 0;
-  return (
-    <View
-      style={{
-        backgroundColor: colors.surfaceSoft,
-        borderRadius: radius.card,
-        paddingHorizontal: 14,
-        paddingVertical: 12,
-        gap: 10,
-      }}
-    >
-      <View style={{ flexDirection: "row", alignItems: "center", gap: 9 }}>
-        <StepperButton
-          label="−"
-          disabled={gradeIndex <= 0}
-          onPress={() => onChange({ ...climb, grade: options[gradeIndex - 1] ?? climb.grade })}
-        />
-        <Text
-          style={{
-            width: 60,
-            textAlign: "center",
-            fontFamily: fonts.monoSemiBold,
-            fontSize: 16,
-            color: colors.gunmetal,
-          }}
-        >
-          {climb.grade}
-        </Text>
-        <StepperButton
-          label="+"
-          disabled={gradeIndex === options.length - 1}
-          onPress={() => onChange({ ...climb, grade: options[gradeIndex + 1] ?? climb.grade })}
-        />
-        <TextInput
-          value={climb.name}
-          placeholder="Name (optional)"
-          placeholderTextColor={colors.textFaint}
-          autoCorrect={false}
-          onChangeText={onChangeName}
-          onFocus={() => setFocused(true)}
-          onBlur={() => setFocused(false)}
-          style={{ ...inputStyle, flex: 1, minWidth: 0 }}
-        />
-      </View>
-      {showSuggestions && (
-        <ScrollView
-          horizontal
-          keyboardShouldPersistTaps="always"
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ gap: 8, alignItems: "center" }}
-        >
-          {suggestions.map((s) => (
-            <SuggestionChip
-              key={s.slug}
-              label={`${s.name.toUpperCase()} · ${climbDraftGrade(s, scale)}`}
-              active={false}
-              onPress={() => onPick(s)}
-            />
-          ))}
-        </ScrollView>
-      )}
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: 9,
-        }}
-      >
-        <View style={{ flexDirection: "row", gap: 6 }}>
-          <Chip
-            label="✓ SEND"
-            active={climb.kind === "send"}
-            activeColor={colors.azureInk}
-            activeText={colors.white}
-            onPress={() => onChange({ ...climb, kind: "send" })}
-          />
-          <Chip
-            label="✗ ATTEMPT"
-            active={climb.kind === "attempt"}
-            activeColor={colors.gunmetal}
-            activeText={colors.white}
-            onPress={() => onChange({ ...climb, kind: "attempt" })}
-          />
-        </View>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 7 }}>
-          <StepperButton
-            label="−"
-            disabled={climb.tries <= 1}
-            onPress={() => onChange({ ...climb, tries: climb.tries - 1 })}
-          />
-          <Text
-            style={{
-              width: 22,
-              textAlign: "center",
-              fontFamily: fonts.monoSemiBold,
-              fontSize: 15,
-              color: colors.gunmetal,
-            }}
-          >
-            {climb.tries}
-          </Text>
-          <StepperButton
-            label="+"
-            onPress={() => onChange({ ...climb, tries: Math.min(99, climb.tries + 1) })}
-          />
-        </View>
-      </View>
-      <View style={{ flexDirection: "row", alignItems: "center", gap: 18 }}>
-        <Pressable
-          onPress={onToggleProject}
-          disabled={!named}
-          accessibilityRole="button"
-          accessibilityState={{ selected: project, disabled: !named }}
-          style={{ minHeight: 32, justifyContent: "center", opacity: named ? 1 : 0.35 }}
-        >
-          <Text
-            style={{
-              fontFamily: fonts.monoMedium,
-              fontSize: 10,
-              letterSpacing: 0.8,
-              color: project ? colors.gunmetal : colors.textFaint,
-              paddingTop: 2,
-            }}
-          >
-            {project ? "⚑ PROJECT" : "⚐ MARK AS PROJECT"}
-          </Text>
-        </Pressable>
-        {removable && (
-          <Pressable onPress={onRemove} style={{ minHeight: 32, justifyContent: "center" }}>
-            <Text
-              style={{
-                fontFamily: fonts.monoMedium,
-                fontSize: 10,
-                letterSpacing: 0.8,
-                color: colors.textFaint,
-                paddingTop: 2,
-              }}
-            >
-              REMOVE
-            </Text>
-          </Pressable>
-        )}
-      </View>
-    </View>
-  );
-}
 
 export function LogSessionForm({
   editing,
@@ -311,9 +103,11 @@ export function LogSessionForm({
   const [saving, setSaving] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const nextKey = React.useRef(draft.climbs.length + 1);
-  const options = gradeOptions(draft.scale);
   const { suggestionsFor } = useTagVocabulary(api);
   const vocabulary = useClimbVocabulary(api);
+  const [editingKey, setEditingKey] = React.useState<string | null>(null);
+  const editingIndex = draft.climbs.findIndex((c) => c.key === editingKey);
+  const editingClimb = editingIndex < 0 ? null : draft.climbs[editingIndex]!;
 
   function updateClimb(key: string, patch: (climb: ClimbDraft) => ClimbDraft): void {
     setDraft((d) => ({ ...d, climbs: d.climbs.map((c) => (c.key === key ? patch(c) : c)) }));
@@ -326,6 +120,25 @@ export function LogSessionForm({
       name,
       ...(known === undefined ? {} : { grade: climbDraftGrade(known, draft.scale) }),
     }));
+  }
+
+  function pickClimb(key: string, known: ClimbSummary): void {
+    updateClimb(key, (c) => ({
+      ...c,
+      name: known.name,
+      grade: climbDraftGrade(known, draft.scale),
+    }));
+  }
+
+  function removeClimb(key: string): void {
+    setDraft((d) => ({ ...d, climbs: d.climbs.filter((c) => c.key !== key) }));
+    setEditingKey(null);
+  }
+
+  function addClimb(): void {
+    const key = `climb-${nextKey.current++}`;
+    setDraft((d) => ({ ...d, climbs: [...d.climbs, newClimb(key, d.scale)] }));
+    setEditingKey(key);
   }
 
   async function toggleProject(climb: ClimbDraft): Promise<void> {
@@ -560,60 +373,50 @@ export function LogSessionForm({
           </View>
         </View>
 
-        <View style={{ gap: 9 }}>
+        <View>
           {draft.climbs.map((climb) => (
-            <ClimbCard
+            <ClimbLedgerRow
               key={climb.key}
               climb={climb}
-              options={options}
-              scale={draft.scale}
-              removable={draft.climbs.length > 1}
               project={vocabulary.isProject(climb.name)}
-              suggestions={vocabulary.suggestionsFor(climb.name)}
-              onChange={(c) => updateClimb(climb.key, () => c)}
-              onChangeName={(name) => updateClimbName(climb.key, name)}
-              onPick={(known) =>
-                updateClimb(climb.key, (c) => ({
-                  ...c,
-                  name: known.name,
-                  grade: climbDraftGrade(known, draft.scale),
-                }))
-              }
-              onToggleProject={() => void toggleProject(climb)}
-              onRemove={() =>
-                setDraft((d) => ({ ...d, climbs: d.climbs.filter((x) => x.key !== climb.key) }))
-              }
+              onPress={() => setEditingKey(climb.key)}
             />
           ))}
-          <Pressable
-            onPress={() =>
-              setDraft((d) => ({
-                ...d,
-                climbs: [...d.climbs, newClimb(`climb-${nextKey.current++}`, d.scale)],
-              }))
-            }
+        </View>
+        <Pressable
+          onPress={addClimb}
+          style={{
+            minHeight: 48,
+            alignItems: "center",
+            justifyContent: "center",
+            borderWidth: 1,
+            borderStyle: "dashed",
+            borderColor: "rgba(64,63,76,0.25)",
+            borderRadius: radius.card,
+          }}
+        >
+          <Text
             style={{
-              minHeight: 48,
-              alignItems: "center",
-              justifyContent: "center",
-              borderWidth: 1,
-              borderStyle: "dashed",
-              borderColor: "rgba(64,63,76,0.25)",
-              borderRadius: radius.card,
+              fontFamily: fonts.monoMedium,
+              fontSize: 10,
+              letterSpacing: 0.8,
+              color: colors.azureInk,
             }}
           >
-            <Text
-              style={{
-                fontFamily: fonts.monoMedium,
-                fontSize: 10,
-                letterSpacing: 0.8,
-                color: colors.azureInk,
-              }}
-            >
-              + ADD CLIMB
-            </Text>
-          </Pressable>
-        </View>
+            + ADD CLIMB
+          </Text>
+        </Pressable>
+        <Text
+          style={{
+            fontFamily: fonts.monoMedium,
+            fontSize: 10,
+            letterSpacing: 0.8,
+            color: colors.textFaint,
+            textAlign: "center",
+          }}
+        >
+          TAP A CLIMB TO EDIT IT
+        </Text>
 
         {error !== null && (
           <Text style={{ fontFamily: fonts.mono, fontSize: 12, color: colors.watermelonInk }}>
@@ -621,6 +424,29 @@ export function LogSessionForm({
           </Text>
         )}
       </ScrollView>
+
+      <ClimbEditorSheet
+        climb={editingClimb}
+        index={editingIndex}
+        count={draft.climbs.length}
+        scale={draft.scale}
+        project={editingClimb === null ? false : vocabulary.isProject(editingClimb.name)}
+        suggestions={vocabulary.suggestionsFor(editingClimb?.name ?? "")}
+        onChange={(c) => updateClimb(c.key, () => c)}
+        onChangeName={(name) => {
+          if (editingClimb !== null) updateClimbName(editingClimb.key, name);
+        }}
+        onPick={(known) => {
+          if (editingClimb !== null) pickClimb(editingClimb.key, known);
+        }}
+        onToggleProject={() => {
+          if (editingClimb !== null) void toggleProject(editingClimb);
+        }}
+        onRemove={() => {
+          if (editingClimb !== null) removeClimb(editingClimb.key);
+        }}
+        onClose={() => setEditingKey(null)}
+      />
 
       <View
         style={{
