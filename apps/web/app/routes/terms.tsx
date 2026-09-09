@@ -20,7 +20,7 @@ export default function Terms(): React.ReactElement {
   return (
     <LegalPage
       title="Terms of service"
-      updated="8 SEPTEMBER 2026"
+      updated="9 SEPTEMBER 2026"
       lede="sendtally is a climbing logbook run by one person. These terms say what you can expect from it, what it expects from you, and what happens if either of us walks away."
     >
       <h2>Agreeing to these terms</h2>
@@ -88,9 +88,13 @@ export default function Terms(): React.ReactElement {
       </p>
       <p>
         Membership is a paid subscription that unlocks the long-term trend screens. It is billed in
-        advance on a recurring monthly basis through our billing provider, Clerk, and renews
-        automatically until you cancel. Cancel any time from your account settings: your membership
-        then runs to the end of the period you have already paid for and does not renew.
+        advance, monthly or yearly, and renews automatically until you cancel. On sendtally.com it
+        is billed through our billing provider, Clerk; in the mobile app it is billed through the
+        app store you bought it from (Google Play or the App Store), under that store&rsquo;s terms.
+        Cancel any time from your account settings on the web, or from your app store subscriptions
+        for a membership bought in the app: your membership then runs to the end of the period you
+        have already paid for and does not renew. A membership bought in one place unlocks the
+        trends everywhere you sign in.
       </p>
       <p>
         We do not pro-rate or refund part-used periods except where the law requires it. If we

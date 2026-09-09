@@ -95,7 +95,15 @@ export default function MembershipRoute(): React.ReactElement {
       {storeOnly ? (
         <StoreMembershipPanel vm={membershipVM({ membership })} />
       ) : (
-        <MembershipPricing />
+        <div
+          style={{
+            background: "var(--surface-accent-gold)",
+            borderRadius: "var(--radius-panel)",
+            padding: "clamp(20px, 4vw, 40px)",
+          }}
+        >
+          <MembershipPricing />
+        </div>
       )}
     </div>
   );

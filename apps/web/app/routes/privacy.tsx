@@ -20,7 +20,7 @@ export default function Privacy(): React.ReactElement {
   return (
     <LegalPage
       title="Privacy policy"
-      updated="8 SEPTEMBER 2026"
+      updated="9 SEPTEMBER 2026"
       lede="sendtally holds the climbing sessions you type in and almost nothing else. This page lists every piece of data it keeps, who else touches it, and how to get it all deleted."
     >
       <h2>Who this covers</h2>
@@ -87,13 +87,20 @@ export default function Privacy(): React.ReactElement {
 
       <h2>Who else touches it</h2>
       <p>
-        Four processors, each handling only what it needs, and each processing data on our
+        Five processors, each handling only what it needs, and each processing data on our
         instructions.
       </p>
       <ul>
         <li>
-          <strong>Clerk</strong> - authentication and billing. Holds your email address and account,
-          and processes membership payments through its payment processor.
+          <strong>Clerk</strong> - authentication and billing on the web. Holds your email address
+          and account, and processes membership payments made on sendtally.com through its payment
+          processor.
+        </li>
+        <li>
+          <strong>RevenueCat</strong> - membership bought in the mobile app. The app store takes the
+          payment; RevenueCat validates the purchase and tells us whether your membership is active.
+          It sees your account identifier and purchase history, never your card details, which stay
+          with Google or Apple.
         </li>
         <li>
           <strong>Cloudflare</strong> - hosting, the database that stores your logbook, and network
@@ -143,10 +150,12 @@ export default function Privacy(): React.ReactElement {
       </p>
       <p>
         Deleting your account removes every session, tag and effort score we hold for you, revokes
-        and deletes your Strava tokens, and closes your sign-in. It happens the same day, with no
-        soft-delete or recovery window. Residual copies may persist in encrypted backups for a short
-        period before they roll off. If you delete your account from Clerk&rsquo;s own portal
-        instead, a webhook triggers the same purge on our side.
+        and deletes your Strava tokens, deletes your record at RevenueCat, and closes your sign-in.
+        A subscription bought through an app store is cancelled from that store, not by deleting
+        your account. It happens the same day, with no soft-delete or recovery window. Residual
+        copies may persist in encrypted backups for a short period before they roll off. If you
+        delete your account from Clerk&rsquo;s own portal instead, a webhook triggers the same purge
+        on our side.
       </p>
       <p>
         Activities already posted to Strava live in your Strava account and stay there. Delete those

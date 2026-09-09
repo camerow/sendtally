@@ -56,8 +56,8 @@ export function PricePanel(): React.ReactElement {
             }}
           >
             Sign up, log sessions, keep your logbook, post to Strava - that costs nothing and always
-            will. Five dollars a month is what turns the log into a training history, and it is what
-            pays for the server.
+            will. Three dollars a month, or two a month billed yearly, is what turns the log into a
+            training history, and it is what pays for the server.
           </p>
           <div
             style={{
