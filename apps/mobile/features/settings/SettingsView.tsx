@@ -5,6 +5,7 @@ import type { DeleteAccountFeature, SettingsVM } from "@sendtally/features/setti
 import { colors, fonts } from "@sendtally/design/tokens";
 import { Logo } from "../../components/Logo";
 import { DeleteAccountSection } from "./DeleteAccountSection";
+import { MembershipSection, type MembershipSectionProps } from "./MembershipSection";
 import {
   bodyText,
   monoMuted,
@@ -18,6 +19,7 @@ export type SettingsViewProps = {
   vm: SettingsVM;
   email: string;
   deletion: DeleteAccountFeature;
+  billing: MembershipSectionProps | null;
   onSignOut: () => void;
 };
 
@@ -25,6 +27,7 @@ export function SettingsView({
   vm,
   email,
   deletion,
+  billing,
   onSignOut,
 }: SettingsViewProps): React.ReactElement {
   return (
@@ -63,6 +66,12 @@ export function SettingsView({
                 : "Connect Strava on the web at sendtally.com and your logged sessions can post to your feed."}
           </Text>
         </View>
+
+        {billing !== null && (
+          <View style={sectionCard}>
+            <MembershipSection {...billing} />
+          </View>
+        )}
 
         <View style={sectionCard}>
           <Text style={sectionLabel}>ACCOUNT</Text>

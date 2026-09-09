@@ -8,13 +8,14 @@ import { TrendBars } from "../../features/trends/TrendBars";
 import { TrendFilters } from "../../features/trends/TrendFilters";
 import { TrendTagBreakdown } from "../../features/trends/TrendTagBreakdown";
 import { useApi } from "../../lib/api";
-import { INSIGHTS_FEATURE, useHasFeature } from "../../lib/billing";
-import { UpgradeCard } from "../../features/billing/UpgradeCard";
+import { Paywall } from "../../features/billing/Paywall";
+import { useCanSeeInsights } from "../../features/billing/useBilling";
 
 const METRICS: TrendMetric[] = ["volume", "pyramid", "hardest", "flash", "avggrade"];
 
-export default function TrendDetailScreen(): React.ReactElement {
-  const canSeeInsights = useHasFeature(INSIGHTS_FEATURE);
+export default function TrendDetailScreen(): React.ReactElement | null {
+  const canSeeInsights = useCanSeeInsights();
+  if (canSeeInsights === null) return null;
   return canSeeInsights ? <TrendDetail /> : <TrendDetailLocked />;
 }
 
@@ -37,7 +38,7 @@ function TrendDetailLocked(): React.ReactElement {
             ← TRENDS
           </Text>
         </Pressable>
-        <UpgradeCard
+        <Paywall
           title="This one is for members."
           body="Membership unlocks volume, RPE, average send grade and flash rate across your whole history."
         />

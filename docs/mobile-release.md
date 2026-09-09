@@ -75,9 +75,52 @@ When a screen changes in the app, the matching artboard has to change with it, i
 
 ## Billing on mobile
 
-Clerk Billing has no native checkout: its documented support on React Native is the data APIs and `has()` only.
-So the app gates the trends screens on the `long_term_insights` feature and offers no purchase path at all.
-`UpgradeCard` deliberately carries no button and no URL, because a link out to web checkout is a guideline 3.1.1 violation on every storefront except the United States.
-Members subscribe on sendtally.com and the entitlement shows up in the app on the next token refresh.
+Membership can be bought two ways, and the Worker is the only thing that knows about both.
 
-Real in-app purchase is separate work: store billing through RevenueCat or `expo-iap`, a store webhook into the Worker, and a single entitlement endpoint that unions Clerk Billing subscriptions with store subscriptions so the app asks one question instead of two.
+- On the web, Clerk Billing sells the `member` plan, which carries the `long_term_insights` feature.
+- In the app, RevenueCat sells the `sendtally_member` entitlement through Google Play, and through the App Store once the iOS app exists.
+
+The app never asks Clerk about billing.
+It asks `GET /v1/entitlements`, which unions the Clerk feature with the `store_entitlements` rows in D1 and answers with one `membership` object.
+The web app asks the same endpoint, so a Play subscriber sees the trends on sendtally.com too.
+
+The D1 rows are a mirror of RevenueCat, written two ways:
+
+1. `POST /webhooks/revenuecat`: every event re-reads the subscriber from RevenueCat's REST API and replaces the user's rows, so retries and out-of-order delivery converge on the same state.
+   The route checks the `Authorization` header against `REVENUECAT_WEBHOOK_AUTH` and answers 500 when the read fails, which makes RevenueCat retry.
+2. `POST /v1/entitlements/refresh`: the app calls it right after a purchase or restore, so the answer does not wait on the webhook.
+
+The RevenueCat app user id is the Clerk user id (`Purchases.configure({ appUserID })` on sign-in), so no identity mapping exists anywhere.
+Account deletion deletes the RevenueCat subscriber along with the D1 rows.
+
+### RevenueCat project setup (one time)
+
+Project `Sendtally` at app.revenuecat.com, id `f2a60af6`.
+
+1. **Apps.** `sendtally Android`, package `com.sendtally.app`.
+   Upload a Play service account JSON with the Play Console permissions RevenueCat needs (View financial data, Manage orders and subscriptions); RevenueCat validates every transaction with it.
+   Set up Google real-time developer notifications from the same page so cancellations reach RevenueCat within seconds.
+2. **Products.** Create the subscription in Play Console first (product `member_monthly`, base plan `monthly`, priced to match the web plan), then add it in RevenueCat under Products for the Android app.
+3. **Entitlement.** `sendtally_member`, with `member_monthly` attached.
+   This identifier is `STORE_ENTITLEMENT` in `packages/sync-service/src/features.ts`; changing one means changing the other.
+4. **Offering.** `default`, with the monthly package pointing at `member_monthly`.
+   The app renders one button per package in the current offering, so keep the offering to the packages you mean to sell.
+5. **Webhook.** Integrations, Webhooks: URL `https://api.sendtally.com/webhooks/revenuecat`, Authorization header value equal to `REVENUECAT_WEBHOOK_AUTH` in Doppler (a long random string), all events.
+6. **API keys.** The Android public SDK key (`goog_…`) goes in `apps/mobile/eas.json` as `EXPO_PUBLIC_REVENUECAT_ANDROID_KEY`; it is a public key, like the Clerk publishable key.
+   The secret key (`sk_…`) goes to Doppler as `REVENUECAT_SECRET_API_KEY`, then `infra/scripts/push-secrets.sh production`.
+
+The project also carries RevenueCat's Test Store app, with test products attached to the same entitlement and offering.
+A development build with the `test_…` key in `EXPO_PUBLIC_REVENUECAT_ANDROID_KEY` runs the whole purchase flow without Play, which is how to check the paywall before the store credentials are in place.
+Never ship a production build with the test key.
+
+### Testing on a device
+
+Play Billing only works in a build installed through Play (the internal testing track) on a device whose Google account is a licence tester (Play Console, Setup, Licence testing).
+A sideloaded APK fails the purchase with "item not available".
+
+### Store guidelines
+
+- Restore purchases is on the paywall and under Settings.
+- The paywall states the price, the period, that it auto-renews, and links to the terms and privacy pages.
+- Nothing in the app links out to web checkout (guideline 3.1.1 on iOS). The web membership page tells store subscribers to manage the subscription in the store instead of showing Clerk's pricing table.
+- Play data safety: RevenueCat's SDK collects purchase history, so the form declares Purchase history under Financial info, tied to the user, not shared.

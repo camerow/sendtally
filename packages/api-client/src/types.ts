@@ -5,6 +5,20 @@ export type ConnectionStatus = {
   } | null;
 };
 
+export type StoreMembership = {
+  store: string;
+  expiresAt: string | null;
+  willRenew: boolean;
+};
+
+export type Membership = {
+  active: boolean;
+  web: boolean;
+  store: StoreMembership | null;
+};
+
+export type Entitlements = { membership: Membership };
+
 export type ClimbGrade = { scale: "v"; value: number } | { scale: "font"; value: string };
 
 export type SessionClimb = {

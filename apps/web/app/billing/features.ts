@@ -1,6 +1,3 @@
-export const MEMBER_PLAN = "member";
-export const INSIGHTS_FEATURE = "long_term_insights";
-
 export type MemberBenefit = {
   title: string;
   body: string;

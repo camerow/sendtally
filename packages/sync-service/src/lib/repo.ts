@@ -4,11 +4,13 @@ import {
   boardConnections,
   sessions,
   sessionTags,
+  storeEntitlements,
   stravaConnections,
   syncState,
   tags,
   users,
 } from "../db/schema";
+import type { StoreEntitlement } from "./revenuecat";
 import type { NormalizedTag } from "./tags";
 
 export type UserRow = typeof users.$inferSelect;
@@ -134,6 +136,47 @@ export async function markStravaConnectionDeadByAthlete(
     .update(stravaConnections)
     .set({ status: "dead" })
     .where(eq(stravaConnections.athlete_id, athleteId));
+}
+
+export type StoreEntitlementRow = typeof storeEntitlements.$inferSelect;
+
+export async function listStoreEntitlements(
+  db: D1Database,
+  userId: string
+): Promise<StoreEntitlementRow[]> {
+  return drizzle(db)
+    .select()
+    .from(storeEntitlements)
+    .where(eq(storeEntitlements.user_id, userId))
+    .all();
+}
+
+export async function replaceStoreEntitlements(
+  db: D1Database,
+  userId: string,
+  rows: StoreEntitlement[]
+): Promise<void> {
+  const d = drizzle(db);
+  const clear = d.delete(storeEntitlements).where(eq(storeEntitlements.user_id, userId));
+  if (rows.length === 0) {
+    await clear;
+    return;
+  }
+  const updated_at = new Date().toISOString();
+  await d.batch([
+    clear,
+    d.insert(storeEntitlements).values(
+      rows.map((r) => ({
+        user_id: userId,
+        entitlement: r.entitlement,
+        store: r.store,
+        product_id: r.product_id,
+        expires_at: r.expires_at,
+        will_renew: r.will_renew ? 1 : 0,
+        updated_at,
+      }))
+    ),
+  ]);
 }
 
 export type ManualSessionInput = {
@@ -347,6 +390,7 @@ export async function deleteUserData(db: D1Database, userId: string): Promise<vo
     d.delete(tags).where(eq(tags.user_id, userId)),
     d.delete(sessions).where(eq(sessions.user_id, userId)),
     d.delete(stravaConnections).where(eq(stravaConnections.user_id, userId)),
+    d.delete(storeEntitlements).where(eq(storeEntitlements.user_id, userId)),
     // Legacy Aurora rows still hold an encrypted board token for the users who
     // connected one before the integration was discontinued. Deleting the
     // account has to take them too, ahead of the tables being dropped.

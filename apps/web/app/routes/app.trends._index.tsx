@@ -2,19 +2,16 @@ import React from "react";
 import type { LoaderFunctionArgs } from "react-router";
 import { useLoaderData } from "react-router";
 import { UpgradePanel } from "../billing/components/UpgradePanel";
-import { INSIGHTS_FEATURE } from "../billing/features";
 import { cloudflareContext } from "../lib/cloudflare-context";
-import { requireApi } from "../lib/api.server";
-import { hasFeature } from "../lib/billing.server";
+import { getMembership } from "../lib/billing.server";
 import { TrendsOverview } from "../trends/components/TrendsOverview";
 
 type LoaderData = { apiUrl: string; canSeeInsights: boolean };
 
 export async function loader(args: LoaderFunctionArgs): Promise<LoaderData> {
-  await requireApi(args);
   return {
     apiUrl: args.context.get(cloudflareContext).env.API_URL,
-    canSeeInsights: await hasFeature(args, INSIGHTS_FEATURE),
+    canSeeInsights: (await getMembership(args)).active,
   };
 }
 

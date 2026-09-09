@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "exports": {
+    "./billing": "./src/billing/index.ts",
     "./log-session": "./src/log-session/index.ts",
     "./session-detail": "./src/session-detail/index.ts",
     "./sessions": "./src/sessions/index.ts",

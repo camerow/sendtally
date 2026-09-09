@@ -65,7 +65,7 @@ Membership adds the trends:
 
 We never store your Strava password. Standard OAuth with activity-write scope only, revocable from Strava at any time. Delete your account and every session and token goes with it the same day.
 
-Subscriptions are managed on sendtally.com.
+Membership is a monthly subscription. Join in the app or on sendtally.com; either one unlocks the trends everywhere.
 ```
 
 ## What's new, first release
@@ -97,11 +97,12 @@ iPad screenshots are not needed: `supportsTablet` is false.
 
 - Email address, collected for the account, tied to the user, not shared, deletable in app.
 - App activity (logged sessions), tied to the user, not shared, deletable in app.
+- Purchase history (Financial info), collected by the RevenueCat SDK to validate membership, tied to the user, not shared, deleted with the account.
 - No advertising SDK.
 - Data in transit is encrypted; account deletion is available in the app under Settings.
 
 ## App Review notes
 
-Membership is a web subscription managed on sendtally.com.
-The app has no purchase path: it reads the entitlement and gates the trends screens on it.
-Reviewers need the demo account so the trends screens in the screenshots are reachable.
+Membership is an auto-renewing subscription sold in the app through the store's billing (one monthly product), and also on sendtally.com.
+The trends screens are gated on it; the paywall on the Trends tab carries the price, the renewal terms, restore purchases, and the terms and privacy links.
+Reviewers need the demo account so the trends screens in the screenshots are reachable without buying.
