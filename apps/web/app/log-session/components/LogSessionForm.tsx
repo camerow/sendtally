@@ -1,6 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router";
-import type { SendtallyApi } from "@sendtally/api-client";
+import type { ClimbSummary, SendtallyApi } from "@sendtally/api-client";
 import { climbDraftGrade, findClimb, useClimbVocabulary } from "@sendtally/features/climbs";
 import {
   GRADE_SCALE_OPTIONS,
@@ -8,104 +8,22 @@ import {
   draftProblem,
   draftSummary,
   emptyDraft,
-  gradeOptions,
   newClimb,
   toLogSessionInput,
   withScale,
   withTag,
   withoutTag,
   type ClimbDraft,
-  type GradeScale,
   type LogSessionDraft,
 } from "@sendtally/features/log-session";
 import { useTagVocabulary } from "@sendtally/features/sessions";
 import { TagPicker } from "../../components/TagPicker";
-
-const monoLabel: React.CSSProperties = {
-  fontFamily: "var(--font-mono)",
-  fontWeight: 500,
-  fontSize: 11,
-  letterSpacing: "0.08em",
-  color: "rgba(64,63,76,0.72)",
-};
-
-const columnHead: React.CSSProperties = {
-  ...monoLabel,
-  fontSize: 10,
-  color: "rgba(64,63,76,0.55)",
-};
-
-const inputStyle: React.CSSProperties = {
-  fontFamily: "var(--font-sans)",
-  fontSize: 15,
-  color: "var(--bs-gunmetal)",
-  background: "var(--bs-white)",
-  border: "1px solid rgba(64,63,76,0.15)",
-  borderRadius: "var(--radius-control)",
-  padding: "12px 14px",
-  outline: "none",
-  width: "100%",
-  boxSizing: "border-box",
-};
-
-const chipStyle = (active: boolean): React.CSSProperties => ({
-  fontFamily: "var(--font-mono)",
-  fontWeight: 500,
-  fontSize: 11,
-  letterSpacing: "0.06em",
-  padding: "10px 16px",
-  borderRadius: "var(--radius-pill)",
-  cursor: "pointer",
-  background: active ? "var(--bs-gold)" : "transparent",
-  color: active ? "var(--bs-gunmetal)" : "rgba(64,63,76,0.65)",
-  border: active ? "1px solid var(--bs-gold)" : "1px solid rgba(64,63,76,0.18)",
-});
-
-const stepperButton: React.CSSProperties = {
-  borderRadius: 8,
-  border: "1px solid rgba(64,63,76,0.18)",
-  background: "none",
-  cursor: "pointer",
-  display: "inline-flex",
-  alignItems: "center",
-  justifyContent: "center",
-  color: "var(--bs-gunmetal)",
-};
-
-function Glyph({
-  d,
-  size = 15,
-  width = 1.8,
-}: {
-  d: string;
-  size?: number;
-  width?: number;
-}): React.ReactElement {
-  return (
-    <svg
-      viewBox="0 0 16 16"
-      width={size}
-      height={size}
-      aria-hidden
-      focusable="false"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={width}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      style={{ flex: "none" }}
-    >
-      <path d={d} />
-    </svg>
-  );
-}
-
-const PLUS = "M8 3.6V12.4M3.6 8H12.4";
-const MINUS = "M3.6 8H12.4";
-const CROSS = "M4.2 4.2 11.8 11.8M11.8 4.2 4.2 11.8";
-const CHECK = "M3 8.4 6.2 11.6 12.6 4.8";
-const FLAG = "M4 14V2.8h7.6L9.4 6l2.2 3.2H4";
-const CLIMB_NAMES_LIST = "climb-names";
+import { useIsNarrow } from "../../lib/useIsNarrow";
+import { ClimbCard } from "./ClimbCard";
+import { ClimbEditorSheet } from "./ClimbEditorSheet";
+import { ClimbLedgerRow } from "./ClimbLedgerRow";
+import { Glyph } from "./Glyph";
+import { PLUS, chipStyle, columnHead, inputStyle, monoLabel } from "./styles";
 
 function Field({
   label,
@@ -196,198 +114,6 @@ function RpePicker({
   );
 }
 
-function ResultButton({
-  active,
-  activeBackground,
-  glyph,
-  label,
-  onClick,
-}: {
-  active: boolean;
-  activeBackground: string;
-  glyph: string;
-  label: string;
-  onClick: () => void;
-}): React.ReactElement {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      style={{
-        ...chipStyle(false),
-        flex: 1,
-        minWidth: 0,
-        display: "inline-flex",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: 6,
-        fontSize: 10,
-        padding: "8px 12px",
-        ...(active
-          ? {
-              background: activeBackground,
-              color: "var(--bs-white)",
-              border: `1px solid ${activeBackground}`,
-            }
-          : {}),
-      }}
-    >
-      <Glyph d={glyph} size={13} width={2} />
-      {label}
-    </button>
-  );
-}
-
-function ClimbRow({
-  climb,
-  scale,
-  removable,
-  project,
-  onChange,
-  onChangeName,
-  onToggleProject,
-  onRemove,
-}: {
-  climb: ClimbDraft;
-  scale: GradeScale;
-  removable: boolean;
-  project: boolean;
-  onChange: (climb: ClimbDraft) => void;
-  onChangeName: (name: string) => void;
-  onToggleProject: () => void;
-  onRemove: () => void;
-}): React.ReactElement {
-  const named = climb.name.trim() !== "";
-  return (
-    <div className="climb-row">
-      <select
-        value={climb.grade}
-        onChange={(e) => onChange({ ...climb, grade: e.target.value })}
-        className="climb-grade log-session-control"
-        style={{
-          ...inputStyle,
-          fontFamily: "var(--font-mono)",
-          fontWeight: 600,
-          padding: "11px 8px",
-        }}
-      >
-        {gradeOptions(scale).map((g) => (
-          <option key={g} value={g}>
-            {g}
-          </option>
-        ))}
-      </select>
-      <input
-        value={climb.name}
-        placeholder="Name (optional)"
-        list={CLIMB_NAMES_LIST}
-        autoComplete="off"
-        onChange={(e) => onChangeName(e.target.value)}
-        className="climb-name log-session-control"
-        style={inputStyle}
-      />
-      <div className="climb-result" style={{ display: "flex", gap: 6, minWidth: 0 }}>
-        <ResultButton
-          active={climb.kind === "send"}
-          activeBackground="var(--bs-azure-ink)"
-          glyph={CHECK}
-          label="SEND"
-          onClick={() => onChange({ ...climb, kind: "send" })}
-        />
-        <ResultButton
-          active={climb.kind === "attempt"}
-          activeBackground="var(--bs-gunmetal)"
-          glyph={CROSS}
-          label="ATTEMPT"
-          onClick={() => onChange({ ...climb, kind: "attempt" })}
-        />
-      </div>
-      <div
-        className="climb-tries"
-        style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 8 }}
-      >
-        <button
-          type="button"
-          aria-label="Fewer tries"
-          disabled={climb.tries <= 1}
-          onClick={() => onChange({ ...climb, tries: climb.tries - 1 })}
-          className="climb-step"
-          style={{ ...stepperButton, opacity: climb.tries <= 1 ? 0.4 : 1 }}
-        >
-          <Glyph d={MINUS} />
-        </button>
-        <span
-          style={{
-            fontFamily: "var(--font-mono)",
-            fontWeight: 600,
-            fontSize: 15,
-            width: 18,
-            textAlign: "center",
-          }}
-        >
-          {climb.tries}
-        </span>
-        <button
-          type="button"
-          aria-label="More tries"
-          onClick={() => onChange({ ...climb, tries: Math.min(99, climb.tries + 1) })}
-          className="climb-step"
-          style={stepperButton}
-        >
-          <Glyph d={PLUS} />
-        </button>
-      </div>
-      <button
-        type="button"
-        aria-label={project ? "Unmark project" : "Mark as project"}
-        aria-pressed={project}
-        title={named ? undefined : "Name the climb to track it as a project"}
-        disabled={!named}
-        onClick={onToggleProject}
-        className="climb-project"
-        style={{
-          ...stepperButton,
-          border: project ? "1px solid var(--bs-gold)" : "1px solid rgba(64,63,76,0.18)",
-          background: project ? "var(--bs-gold)" : "none",
-          color: project ? "var(--bs-gunmetal)" : "rgba(64,63,76,0.45)",
-          opacity: named ? 1 : 0.35,
-          cursor: named ? "pointer" : "default",
-        }}
-      >
-        <svg
-          viewBox="0 0 16 16"
-          width={15}
-          height={15}
-          aria-hidden
-          focusable="false"
-          fill={project ? "currentColor" : "none"}
-          stroke="currentColor"
-          strokeWidth={1.7}
-          strokeLinejoin="round"
-          style={{ flex: "none" }}
-        >
-          <path d={FLAG} />
-        </svg>
-      </button>
-      <button
-        type="button"
-        aria-label="Remove climb"
-        disabled={!removable}
-        onClick={onRemove}
-        className="climb-remove"
-        style={{
-          ...stepperButton,
-          border: "none",
-          color: "rgba(64,63,76,0.45)",
-          opacity: removable ? 1 : 0,
-        }}
-      >
-        <Glyph d={CROSS} width={1.7} />
-      </button>
-    </div>
-  );
-}
-
 export function LogSessionForm({
   api,
   editing,
@@ -404,6 +130,10 @@ export function LogSessionForm({
   const nextKey = React.useRef(draft.climbs.length + 1);
   const { suggestionsFor } = useTagVocabulary(api);
   const vocabulary = useClimbVocabulary(api);
+  const narrow = useIsNarrow();
+  const [editingKey, setEditingKey] = React.useState<string | null>(null);
+  const editingIndex = draft.climbs.findIndex((c) => c.key === editingKey);
+  const editingClimb = editingIndex < 0 ? null : draft.climbs[editingIndex]!;
   const cancelTo =
     editing === undefined ? "/app" : `/app/sessions/${encodeURIComponent(editing.fingerprint)}`;
 
@@ -427,6 +157,26 @@ export function LogSessionForm({
             }
       ),
     }));
+  }
+
+  function pickClimb(key: string, known: ClimbSummary): void {
+    setDraft((d) => ({
+      ...d,
+      climbs: d.climbs.map((c) =>
+        c.key !== key ? c : { ...c, name: known.name, grade: climbDraftGrade(known, d.scale) }
+      ),
+    }));
+  }
+
+  function removeClimb(key: string): void {
+    setDraft((d) => ({ ...d, climbs: d.climbs.filter((c) => c.key !== key) }));
+    setEditingKey(null);
+  }
+
+  function addClimb(): void {
+    const key = `climb-${nextKey.current++}`;
+    setDraft((d) => ({ ...d, climbs: [...d.climbs, newClimb(key, d.scale)] }));
+    if (narrow) setEditingKey(key);
   }
 
   async function toggleProject(climb: ClimbDraft): Promise<void> {
@@ -589,45 +339,42 @@ export function LogSessionForm({
               ))}
             </div>
           </div>
-          <div className="climb-head">
-            <span style={columnHead}>GRADE</span>
-            <span style={columnHead}>NAME · OPTIONAL</span>
-            <span style={columnHead}>RESULT</span>
-            <span style={columnHead}>TRIES</span>
-            <span style={columnHead}>PROJECT</span>
-            <span />
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
-            <datalist id={CLIMB_NAMES_LIST}>
-              {vocabulary.climbs.map((c) => (
-                <option key={c.slug} value={c.name}>
-                  {climbDraftGrade(c, draft.scale)}
-                </option>
-              ))}
-            </datalist>
-            {draft.climbs.map((climb) => (
-              <ClimbRow
-                key={climb.key}
-                climb={climb}
-                scale={draft.scale}
-                removable={draft.climbs.length > 1}
-                project={vocabulary.isProject(climb.name)}
-                onChange={(c) => updateClimb(climb.key, c)}
-                onChangeName={(name) => updateClimbName(climb.key, name)}
-                onToggleProject={() => void toggleProject(climb)}
-                onRemove={() =>
-                  setDraft((d) => ({ ...d, climbs: d.climbs.filter((c) => c.key !== climb.key) }))
-                }
-              />
-            ))}
+          {!narrow && (
+            <div className="climb-head">
+              <span style={columnHead}>GRADE</span>
+              <span style={columnHead}>NAME · OPTIONAL</span>
+              <span style={columnHead}>TRIES</span>
+              <span />
+            </div>
+          )}
+          <div className={narrow ? "climb-ledger" : "climb-cards"}>
+            {draft.climbs.map((climb) =>
+              narrow ? (
+                <ClimbLedgerRow
+                  key={climb.key}
+                  climb={climb}
+                  project={vocabulary.isProject(climb.name)}
+                  onPress={() => setEditingKey(climb.key)}
+                />
+              ) : (
+                <ClimbCard
+                  key={climb.key}
+                  climb={climb}
+                  scale={draft.scale}
+                  removable={draft.climbs.length > 1}
+                  project={vocabulary.isProject(climb.name)}
+                  suggestions={vocabulary.suggestionsFor(climb.name)}
+                  onChange={(c) => updateClimb(climb.key, c)}
+                  onChangeName={(name) => updateClimbName(climb.key, name)}
+                  onPick={(known) => pickClimb(climb.key, known)}
+                  onToggleProject={() => void toggleProject(climb)}
+                  onRemove={() => removeClimb(climb.key)}
+                />
+              )
+            )}
             <button
               type="button"
-              onClick={() =>
-                setDraft((d) => ({
-                  ...d,
-                  climbs: [...d.climbs, newClimb(`climb-${nextKey.current++}`, d.scale)],
-                }))
-              }
+              onClick={addClimb}
               style={{
                 display: "flex",
                 alignItems: "center",
@@ -645,9 +392,29 @@ export function LogSessionForm({
               <Glyph d={PLUS} />
               ADD CLIMB
             </button>
+            {narrow && (
+              <span style={{ ...columnHead, textAlign: "center" }}>TAP A CLIMB TO EDIT IT</span>
+            )}
           </div>
         </div>
       </div>
+
+      {narrow && editingClimb !== null && (
+        <ClimbEditorSheet
+          climb={editingClimb}
+          index={editingIndex}
+          count={draft.climbs.length}
+          scale={draft.scale}
+          project={vocabulary.isProject(editingClimb.name)}
+          suggestions={vocabulary.suggestionsFor(editingClimb.name)}
+          onChange={(c) => updateClimb(editingClimb.key, c)}
+          onChangeName={(name) => updateClimbName(editingClimb.key, name)}
+          onPick={(known) => pickClimb(editingClimb.key, known)}
+          onToggleProject={() => void toggleProject(editingClimb)}
+          onRemove={() => removeClimb(editingClimb.key)}
+          onClose={() => setEditingKey(null)}
+        />
+      )}
 
       <div className="log-session-actions">
         <div className="log-session-status">

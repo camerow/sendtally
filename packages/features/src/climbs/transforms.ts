@@ -2,7 +2,7 @@ import type { ClimbSummary } from "@sendtally/api-client";
 import { formatGrade, type Grade, type GradeScale } from "@sendtally/core";
 import { convertGrade } from "../log-session/transforms";
 
-export const MAX_CLIMB_SUGGESTIONS = 6;
+export const MAX_CLIMB_SUGGESTIONS = 4;
 
 export type ProjectStatus = "open" | "sent";
 
