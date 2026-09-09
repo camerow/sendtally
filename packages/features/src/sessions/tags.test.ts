@@ -6,6 +6,7 @@ import {
   sameTagName,
   sessionTagGroups,
   sessionTagOptions,
+  tagMatches,
 } from "./tags";
 
 function tag(name: string): SessionTag {
@@ -99,5 +100,45 @@ describe("sameTagName", () => {
   it("ignores case and surrounding space", () => {
     expect(sameTagName(" Bishop ", "bishop")).toBe(true);
     expect(sameTagName("Bishop", "Bishop Hills")).toBe(false);
+  });
+});
+
+describe("tagMatches", () => {
+  const options = [
+    { slug: "bishop", name: "Bishop", count: 9 },
+    { slug: "projecting", name: "Projecting", count: 7 },
+    { slug: "bishop-trip", name: "Bishop trip", count: 2 },
+    { slug: "big-wall", name: "Big wall", count: 1 },
+  ];
+
+  it("returns everything with no create row when nothing is typed", () => {
+    expect(tagMatches(options, "  ")).toEqual({ options, create: null });
+  });
+
+  it("filters by case-insensitive substring and offers to create the typed name", () => {
+    expect(tagMatches(options, "bI")).toEqual({
+      options: [options[0], options[2], options[3]],
+      create: "bI",
+    });
+  });
+
+  it("puts an exact match first and never offers to create a twin", () => {
+    expect(tagMatches(options, " bishop ")).toEqual({
+      options: [options[0], options[2]],
+      create: null,
+    });
+  });
+
+  it("offers only the create row when nothing matches", () => {
+    expect(tagMatches(options, "Slab")).toEqual({ options: [], create: "Slab" });
+  });
+
+  it("caps the list", () => {
+    const many = Array.from({ length: 10 }, (_, i) => ({
+      slug: `t${i}`,
+      name: `Tag ${i}`,
+      count: 1,
+    }));
+    expect(tagMatches(many, "").options).toHaveLength(6);
   });
 });

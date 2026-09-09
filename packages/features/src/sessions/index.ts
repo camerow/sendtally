@@ -26,14 +26,17 @@ export {
 } from "./months";
 export { monthScopeItems, tagScopeItems, type ScopeItem } from "./scope";
 export {
+  MAX_TAG_MATCHES,
   UNTAGGED_KEY,
   UNTAGGED_LABEL,
   filterSessionsByTags,
   sameTagName,
   sessionTagGroups,
   sessionTagOptions,
+  tagMatches,
   type SessionGrouping,
   type SessionTagGroup,
+  type TagMatches,
   type TagOption,
 } from "./tags";
 export { sessionTitle } from "./title";

@@ -64,3 +64,20 @@ export function sessionTagGroups<T extends Tagged>(sessions: T[]): Array<Session
 export function sameTagName(a: string, b: string): boolean {
   return a.trim().toLowerCase() === b.trim().toLowerCase();
 }
+
+export const MAX_TAG_MATCHES = 6;
+
+export type TagMatches = { options: TagOption[]; create: string | null };
+
+export function tagMatches(options: TagOption[], query: string): TagMatches {
+  const wanted = query.trim();
+  const needle = wanted.toLowerCase();
+  const matching =
+    needle === "" ? options : options.filter((o) => o.name.toLowerCase().includes(needle));
+  const exact = matching.find((o) => sameTagName(o.name, wanted));
+  const ordered = exact ? [exact, ...matching.filter((o) => o !== exact)] : matching;
+  return {
+    options: ordered.slice(0, MAX_TAG_MATCHES),
+    create: wanted === "" || exact ? null : wanted,
+  };
+}
