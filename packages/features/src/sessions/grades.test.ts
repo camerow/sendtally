@@ -18,6 +18,8 @@ function session(overrides: Partial<SessionRow> = {}): SessionRow {
     title: "T",
     strava_activity_id: null,
     posted_at: null,
+    post_state: null,
+    post_error: null,
     inProgress: false,
     tags: [],
     ...overrides,

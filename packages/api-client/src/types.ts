@@ -2,8 +2,14 @@ export type ConnectionStatus = {
   strava: {
     athleteId: number;
     status: string;
+    postingEnabled: boolean;
+    postSince: string | null;
   } | null;
 };
+
+export type PostState = "pending" | "posted" | "failed";
+
+export type PostOutcome = "posted" | "updated" | "skipped" | "failed";
 
 export type ClimbGrade = { scale: "v"; value: number } | { scale: "font"; value: string };
 
@@ -40,6 +46,8 @@ export type SessionRow = {
   title: string;
   strava_activity_id: number | null;
   posted_at: string | null;
+  post_state: PostState | null;
+  post_error: string | null;
   inProgress: boolean;
   tags: SessionTag[];
 };

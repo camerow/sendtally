@@ -128,7 +128,7 @@ Invariants:
 - Dedup lives in the database (`strava_activity_id` / `posted_at` checked before posting, set after). Retries are always safe.
 - Strava rate limiting is a clean pause, not an error.
 - Unknown grades are `-1` and score conservatively as V1.
-- Keep the "synced by sendtally" attribution line in activity descriptions (Strava attribution expectations).
+- Keep the "created by https://sendtally.com" attribution line in activity descriptions (Strava attribution expectations).
 - Legacy `source = "board"` rows are read-only history: never re-scored, never re-posted, never deleted by anything except account deletion.
 
 ## Strava operational constraints

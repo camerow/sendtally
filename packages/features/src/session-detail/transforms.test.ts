@@ -17,6 +17,8 @@ const detail: SessionDetail = {
   title: "Solid climbing session · 4 climbs, top V7",
   strava_activity_id: 555,
   posted_at: "2026-07-02T00:00:00.000Z",
+  post_state: "posted",
+  post_error: null,
   inProgress: false,
   tags: [],
   climbs: [
@@ -101,6 +103,8 @@ describe("sessionDetailVM", () => {
       inProgress: true,
       strava_activity_id: null,
       posted_at: null,
+      post_state: null,
+      post_error: null,
     });
     expect(vm.syncLine).toBe("IN PROGRESS · POSTS WHEN THE SESSION SETTLES");
   });
@@ -116,6 +120,8 @@ describe("sessionDetailVM", () => {
       inProgress: false,
       strava_activity_id: null,
       posted_at: null,
+      post_state: null,
+      post_error: null,
     });
     expect(vm.syncLine).toBe("NOT POSTED TO STRAVA");
   });
@@ -134,6 +140,8 @@ describe("sessionDetailVM", () => {
       location: "indoor",
       strava_activity_id: null,
       posted_at: null,
+      post_state: null,
+      post_error: null,
     });
     expect(vm.title).toContain("Tuesday board night");
     expect(vm.meta).toContain("· INDOOR ·");

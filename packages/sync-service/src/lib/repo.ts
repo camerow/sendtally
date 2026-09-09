@@ -22,6 +22,8 @@ export type SessionRow = {
   title: string;
   strava_activity_id: number | null;
   posted_at: string | null;
+  post_state: string | null;
+  post_error: string | null;
 };
 
 const sessionListColumns = {
@@ -39,6 +41,8 @@ const sessionListColumns = {
   title: sessions.title,
   strava_activity_id: sessions.strava_activity_id,
   posted_at: sessions.posted_at,
+  post_state: sessions.post_state,
+  post_error: sessions.post_error,
 };
 
 export async function upsertUser(db: D1Database, id: string, timezone: string): Promise<void> {
@@ -300,6 +304,105 @@ export async function setSessionTags(
   }
   await pruneUnusedTags(d, userId);
   return linked;
+}
+
+export type PostableSessionRow = {
+  fingerprint: string;
+  source: string;
+  start_at: string;
+  end_at: string;
+  rpe: number;
+  title: string;
+  summary: string;
+  strava_activity_id: number | null;
+};
+
+// Its own query rather than widening sessionListColumns: summary carries the whole
+// climb log, which the session list has no reason to ship for 200 rows.
+export async function getSessionForPosting(
+  db: D1Database,
+  userId: string,
+  fingerprint: string
+): Promise<PostableSessionRow | null> {
+  const row = await drizzle(db)
+    .select({
+      fingerprint: sessions.fingerprint,
+      source: sessions.source,
+      start_at: sessions.start_at,
+      end_at: sessions.end_at,
+      rpe: sessions.rpe,
+      title: sessions.title,
+      summary: sessions.summary,
+      strava_activity_id: sessions.strava_activity_id,
+    })
+    .from(sessions)
+    .where(and(eq(sessions.user_id, userId), eq(sessions.fingerprint, fingerprint)))
+    .get();
+  return row ?? null;
+}
+
+export async function markSessionPostPending(
+  db: D1Database,
+  userId: string,
+  fingerprint: string
+): Promise<void> {
+  await drizzle(db)
+    .update(sessions)
+    .set({ post_state: "pending", post_error: null })
+    .where(and(eq(sessions.user_id, userId), eq(sessions.fingerprint, fingerprint)));
+}
+
+export async function markSessionPosted(
+  db: D1Database,
+  userId: string,
+  fingerprint: string,
+  activityId: number
+): Promise<void> {
+  await drizzle(db)
+    .update(sessions)
+    .set({
+      strava_activity_id: activityId,
+      posted_at: new Date().toISOString(),
+      post_state: "posted",
+      post_error: null,
+    })
+    .where(and(eq(sessions.user_id, userId), eq(sessions.fingerprint, fingerprint)));
+}
+
+export async function setSessionPostError(
+  db: D1Database,
+  userId: string,
+  fingerprint: string,
+  error: string
+): Promise<void> {
+  await drizzle(db)
+    .update(sessions)
+    .set({ post_error: error })
+    .where(and(eq(sessions.user_id, userId), eq(sessions.fingerprint, fingerprint)));
+}
+
+export async function markSessionPostFailed(
+  db: D1Database,
+  userId: string,
+  fingerprint: string,
+  error: string
+): Promise<void> {
+  await drizzle(db)
+    .update(sessions)
+    .set({ post_state: "failed", post_error: error })
+    .where(and(eq(sessions.user_id, userId), eq(sessions.fingerprint, fingerprint)));
+}
+
+export async function setStravaPosting(
+  db: D1Database,
+  userId: string,
+  postingEnabled: boolean,
+  postSince: string | null
+): Promise<void> {
+  await drizzle(db)
+    .update(stravaConnections)
+    .set({ posting_enabled: postingEnabled ? 1 : 0, post_since: postSince })
+    .where(eq(stravaConnections.user_id, userId));
 }
 
 export async function listSessions(

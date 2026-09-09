@@ -23,6 +23,12 @@ export type StravaActivity = {
   perceivedExertion: number;
 };
 
+export type StravaActivityUpdate = {
+  name?: string;
+  description?: string;
+  perceivedExertion?: number;
+};
+
 export type StravaAppConfig = {
   clientId: string;
   clientSecret: string;
@@ -164,21 +170,31 @@ export class StravaClient {
   }
 
   async setPerceivedExertion(activityId: number, rpe: number): Promise<void> {
+    await this.updateActivity(activityId, { perceivedExertion: rpe });
+  }
+
+  async updateActivity(activityId: number, fields: StravaActivityUpdate): Promise<void> {
     await this.ensureFresh();
+    const form = new URLSearchParams();
+    if (fields.name !== undefined) form.set("name", fields.name);
+    if (fields.description !== undefined) form.set("description", fields.description);
+    if (fields.perceivedExertion !== undefined && fields.perceivedExertion > 0) {
+      form.set("perceived_exertion", String(fields.perceivedExertion));
+      form.set("prefer_perceived_exertion", "true");
+    }
+    if ([...form.keys()].length === 0) return;
     const resp = await this.fetchImpl(`${this.apiBase}/activities/${activityId}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
         Authorization: `Bearer ${this.tokens.accessToken}`,
       },
-      body: new URLSearchParams({
-        perceived_exertion: String(rpe),
-        prefer_perceived_exertion: "true",
-      }),
+      body: form,
     });
     if (resp.status === 429) throw new StravaRateLimitedError("strava rate limit hit");
+    if (resp.status === 401) throw new StravaUnauthorizedError("strava token rejected");
     if (resp.status !== 200) {
-      throw new Error(`set perceived exertion failed: HTTP ${resp.status}`);
+      throw new Error(`update activity failed: HTTP ${resp.status}`);
     }
   }
 }
