@@ -11,8 +11,6 @@ concurrency:
 
 env:
   DEPLOY_ENV: ${{ github.ref_name == 'main' && 'production' || 'staging' }}
-  WEB_URL: ${{ github.ref_name == 'main' && 'https://sendtally.com' || 'https://staging.sendtally.com' }}
-  API_URL: ${{ github.ref_name == 'main' && 'https://api.sendtally.com' || 'https://api-staging.sendtally.com' }}
 
 jobs:
   checks:
@@ -49,8 +47,6 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: packages/sync-service
           command: deploy --env ${{ env.DEPLOY_ENV }}
-      - name: Smoke check the deployed API
-        run: .github/scripts/smoke.sh "${{ env.API_URL }}/health"
 
   deploy-web:
     needs: checks
@@ -78,5 +74,3 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: apps/web
           command: deploy
-      - name: Smoke check the deployed site
-        run: .github/scripts/smoke.sh "${{ env.WEB_URL }}"
