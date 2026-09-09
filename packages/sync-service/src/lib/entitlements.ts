@@ -6,6 +6,7 @@ import type { RevenueCatClient } from "./revenuecat";
 
 export type StoreMembership = {
   store: string;
+  productId: string;
   expiresAt: string | null;
   willRenew: boolean;
 };
@@ -43,6 +44,11 @@ export async function resolveEntitlements(
   const store =
     row === undefined
       ? null
-      : { store: row.store, expiresAt: row.expires_at, willRenew: row.will_renew === 1 };
+      : {
+          store: row.store,
+          productId: row.product_id,
+          expiresAt: row.expires_at,
+          willRenew: row.will_renew === 1,
+        };
   return { membership: { active: web || store !== null, web, store } };
 }

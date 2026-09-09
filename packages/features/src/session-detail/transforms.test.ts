@@ -13,6 +13,8 @@ const detail: SessionDetail = {
   climb_count: 4,
   top_grade: 7,
   top_send_grade: 7,
+  top_grade_label: null,
+  top_send_grade_label: null,
   rpe: 7,
   title: "Solid climbing session · 4 climbs, top V7",
   strava_activity_id: 555,
@@ -213,5 +215,78 @@ describe("sessionDetailVM", () => {
   it("falls back to a generic title for an unnamed manual session", () => {
     const vm = sessionDetailVM({ ...detail, source: "manual", board: null, name: null });
     expect(vm.title).toContain("Logged session");
+  });
+});
+
+describe("route sessions", () => {
+  const routes: SessionDetail = {
+    ...detail,
+    source: "manual",
+    board: null,
+    top_grade: 4,
+    top_send_grade: 3,
+    top_grade_label: "5.12a",
+    top_send_grade_label: "5.11d",
+    climbs: [
+      {
+        time: "2026-07-01T18:00:00.000Z",
+        name: "Warm up",
+        vGrade: 0,
+        kind: "send",
+        tries: 1,
+        angle: null,
+        grade: { scale: "yds", value: "5.10a" },
+      },
+      {
+        time: "2026-07-01T18:20:00.000Z",
+        name: "Pumpfest",
+        vGrade: 3,
+        kind: "send",
+        tries: 2,
+        angle: null,
+        grade: { scale: "yds", value: "5.11d" },
+      },
+      {
+        time: "2026-07-01T18:50:00.000Z",
+        name: "Project",
+        vGrade: 4,
+        kind: "attempt",
+        tries: 3,
+        angle: null,
+        grade: { scale: "yds", value: "5.12a" },
+      },
+    ],
+  };
+
+  it("labels climbs in the route scale and flags the top route send", () => {
+    const vms = climbVMs(routes.climbs);
+    expect(vms.map((c) => c.gradeLabel)).toEqual(["5.10a", "5.11d", "5.12a"]);
+    expect(vms.map((c) => c.isTopSend)).toEqual([false, true, false]);
+  });
+
+  it("reports stats and grade bars in the route scale", () => {
+    const vm = sessionDetailVM(routes);
+    const stat = (label: string): string | undefined =>
+      vm.stats.find((s) => s.label === label)?.value;
+    expect(stat("TOP")).toBe("5.11d");
+    expect(stat("AVG GRADE")).toBe("5.11b");
+    expect(vm.bars[0]?.gradeLabel).toBe("5.10a");
+    expect(vm.bars[vm.bars.length - 1]?.gradeLabel).toBe("5.12a");
+    expect(vm.bars.filter((b) => b.count > 0).map((b) => b.gradeLabel)).toEqual(["5.10a", "5.11d"]);
+  });
+
+  it("uses the dominant discipline for stats in a mixed session", () => {
+    const mixed: SessionDetail = {
+      ...routes,
+      climbs: [...routes.climbs, { ...detail.climbs[0]!, grade: { scale: "v", value: 4 } }],
+    };
+    const vm = sessionDetailVM(mixed);
+    expect(vm.stats.find((s) => s.label === "TOP")?.value).toBe("5.11d");
+    expect(climbVMs(mixed.climbs).map((c) => c.gradeLabel)).toEqual([
+      "5.10a",
+      "V4",
+      "5.11d",
+      "5.12a",
+    ]);
   });
 });

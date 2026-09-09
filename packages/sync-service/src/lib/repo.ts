@@ -28,6 +28,8 @@ export type SessionRow = {
   climb_count: number;
   top_grade: number;
   top_send_grade: number;
+  top_grade_label: string | null;
+  top_send_grade_label: string | null;
   rpe: number;
   title: string;
   strava_activity_id: number | null;
@@ -47,6 +49,8 @@ const sessionListColumns = {
   climb_count: sessions.climb_count,
   top_grade: sessions.top_grade,
   top_send_grade: sessions.top_send_grade,
+  top_grade_label: sessions.top_grade_label,
+  top_send_grade_label: sessions.top_send_grade_label,
   rpe: sessions.rpe,
   title: sessions.title,
   strava_activity_id: sessions.strava_activity_id,
@@ -192,6 +196,8 @@ export type ManualSessionInput = {
   climb_count: number;
   top_grade: number;
   top_send_grade: number;
+  top_grade_label: string | null;
+  top_send_grade_label: string | null;
   rpe: number;
   title: string;
   summary: string;

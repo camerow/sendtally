@@ -1,13 +1,35 @@
-import { defaultEffortConfig, score, vFromFont, type Climb, type Session } from "@sendtally/core";
+import {
+  defaultEffortConfig,
+  effortGrade,
+  parseGrade,
+  score,
+  topGradeLabel,
+  type Climb,
+  type Grade,
+  type Session,
+} from "@sendtally/core";
 import { z } from "zod";
 import type { ManualSessionInput, SessionRow } from "./repo";
 import { tagNames } from "./tags";
+
+const knownGrade =
+  (scale: "font" | "yds" | "french") =>
+  (value: string): boolean =>
+    parseGrade(scale, value) !== undefined;
 
 const gradeSchema = z.union([
   z.object({ scale: z.literal("v"), value: z.number().int().min(0).max(17) }),
   z.object({
     scale: z.literal("font"),
-    value: z.string().refine((g) => vFromFont(g) !== undefined, "unknown Font grade"),
+    value: z.string().refine(knownGrade("font"), "unknown Font grade"),
+  }),
+  z.object({
+    scale: z.literal("yds"),
+    value: z.string().refine(knownGrade("yds"), "unknown YDS grade"),
+  }),
+  z.object({
+    scale: z.literal("french"),
+    value: z.string().refine(knownGrade("french"), "unknown French grade"),
   }),
 ]);
 
@@ -67,8 +89,9 @@ function sessionMinutes(body: {
 
 type ManualGrade = z.infer<typeof gradeSchema>;
 
-function toVGrade(grade: ManualGrade): number {
-  return grade.scale === "v" ? grade.value : (vFromFont(grade.value) ?? -1);
+function normalisedGrade(grade: ManualGrade): Grade {
+  if (grade.scale === "v") return grade;
+  return parseGrade(grade.scale, grade.value) ?? grade;
 }
 
 function toSession(body: ManualSessionBody): Session {
@@ -76,13 +99,17 @@ function toSession(body: ManualSessionBody): Session {
   const durationMs = sessionMinutes(body) * 60_000;
   const end = new Date(start.getTime() + durationMs);
   const step = durationMs / Math.max(body.climbs.length - 1, 1);
-  const climbs: Climb[] = body.climbs.map((c, i) => ({
-    time: new Date(start.getTime() + Math.round(step * i)),
-    vGrade: toVGrade(c.grade),
-    name: c.name,
-    kind: c.kind,
-    tries: c.tries,
-  }));
+  const climbs: Climb[] = body.climbs.map((c, i) => {
+    const grade = normalisedGrade(c.grade);
+    return {
+      time: new Date(start.getTime() + Math.round(step * i)),
+      vGrade: effortGrade(grade),
+      name: c.name,
+      kind: c.kind,
+      tries: c.tries,
+      grade,
+    };
+  });
   return { start, end, climbs, inProgress: false };
 }
 
@@ -121,6 +148,7 @@ export function buildManualSession(
     (hi, c) => (c.kind === "send" && c.vGrade > hi ? c.vGrade : hi),
     -1
   );
+  const sends = session.climbs.filter((c) => c.kind === "send");
   return {
     fingerprint,
     location: body.location,
@@ -130,18 +158,20 @@ export function buildManualSession(
     climb_count: session.climbs.length,
     top_grade: topGrade,
     top_send_grade: topSendGrade,
+    top_grade_label: topGradeLabel(session.climbs) ?? null,
+    top_send_grade_label: topGradeLabel(sends) ?? null,
     rpe: result.rpe,
     title: body.name ?? result.title,
     summary: result.summary,
     climbs_json: JSON.stringify(
-      session.climbs.map((c, i) => ({
+      session.climbs.map((c) => ({
         time: c.time.toISOString(),
         name: c.name,
         vGrade: c.vGrade,
         kind: c.kind,
         tries: c.tries,
         angle: null,
-        grade: body.climbs[i]!.grade,
+        grade: c.grade,
       }))
     ),
   };

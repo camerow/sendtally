@@ -1,4 +1,6 @@
+import { climbDiscipline, climbRank, dominantDiscipline } from "@sendtally/core";
 import type { ConnectionStatus, SessionClimb, SessionDetail } from "@sendtally/api-client";
+import { climbGradeLabel, gradeFormatterFor } from "../sessions/grades";
 import type {
   ClimbFilter,
   ClimbResult,
@@ -34,27 +36,31 @@ function restLabel(minutes: number | null): string {
   return `${minutes}m`;
 }
 
-function topSendGrade(climbs: SessionClimb[]): number {
+function topSendRank(climbs: SessionClimb[]): number {
   let hi = -1;
   for (const c of climbs) {
-    if (c.kind === "send" && c.vGrade > hi) hi = c.vGrade;
+    const rank = climbRank(c);
+    if (c.kind === "send" && rank > hi) hi = rank;
   }
   return hi;
 }
 
 export function climbVMs(climbs: SessionClimb[]): ClimbVM[] {
   const ordered = [...climbs].sort((a, b) => Date.parse(a.time) - Date.parse(b.time));
-  const top = topSendGrade(ordered);
+  const discipline = dominantDiscipline(ordered);
+  const top = topSendRank(ordered.filter((c) => climbDiscipline(c) === discipline));
   return ordered.map((c, i) => {
     const prev = ordered[i - 1];
     const rest =
       prev === undefined ? null : Math.round((Date.parse(c.time) - Date.parse(prev.time)) / 60_000);
+    const rank = climbRank(c);
     return {
       n: i + 1,
       name: c.name !== "" ? c.name : "Unknown climb",
-      gradeLabel: gradeLabel(c.vGrade),
+      gradeLabel: climbGradeLabel(c),
       grade: c.vGrade,
-      isTopSend: c.kind === "send" && c.vGrade >= 0 && c.vGrade === top,
+      isTopSend:
+        c.kind === "send" && rank >= 0 && climbDiscipline(c) === discipline && rank === top,
       angleLabel: c.angle !== null ? `${c.angle}°` : "-",
       burns: c.tries,
       restLabel: restLabel(rest),
@@ -163,9 +169,17 @@ export function sessionDetailVM(
   const start = new Date(session.start_at);
   const sends = climbs.filter((c) => c.result !== "project");
   const flashes = climbs.filter((c) => c.result === "flash");
-  const graded = session.climbs.filter((c) => c.vGrade >= 0);
-  const avg = graded.length > 0 ? graded.reduce((a, c) => a + c.vGrade, 0) / graded.length : null;
-  const top = topSendGrade(session.climbs);
+  const discipline = dominantDiscipline(session.climbs);
+  const format = gradeFormatterFor(session.climbs, discipline);
+  const inDiscipline = session.climbs.filter((c) => climbDiscipline(c) === discipline);
+  const graded = inDiscipline.filter((c) => climbRank(c) >= 0);
+  const avg =
+    graded.length > 0 ? graded.reduce((a, c) => a + climbRank(c), 0) / graded.length : null;
+  const top = topSendRank(inDiscipline);
+  const topLabel =
+    top >= 0
+      ? format.label(top)
+      : (session.top_send_grade_label ?? gradeLabel(session.top_send_grade));
 
   const titleLabel =
     session.name !== null && session.name !== ""
@@ -189,26 +203,26 @@ export function sessionDetailVM(
     { label: "TIME", value: durationLabel(session.start_at, session.end_at), accent: false },
     { label: "CLIMBS", value: String(climbs.length), accent: false },
     { label: "SENDS", value: String(sends.length), accent: false },
-    { label: "AVG GRADE", value: avg === null ? "-" : `V${avg.toFixed(1)}`, accent: false },
+    { label: "AVG GRADE", value: avg === null ? "-" : format.average(avg), accent: false },
     { label: "FLASHES", value: String(flashes.length), accent: false },
     { label: "RPE", value: `${session.rpe}/10`, accent: false },
-    { label: "TOP", value: gradeLabel(top >= 0 ? top : session.top_send_grade), accent: true },
+    { label: "TOP", value: topLabel, accent: true },
   ];
 
-  const grades = session.climbs.filter((c) => c.vGrade >= 0).map((c) => c.vGrade);
+  const grades = graded.map((c) => climbRank(c));
   const lo = grades.length > 0 ? Math.min(...grades) : 0;
   const hi = grades.length > 0 ? Math.max(...grades) : 0;
   const bars: GradeBarVM[] = [];
   if (grades.length > 0) {
     const counts = new Map<number, number>();
-    for (const c of session.climbs) {
-      if (c.kind === "send" && c.vGrade >= 0) counts.set(c.vGrade, (counts.get(c.vGrade) ?? 0) + 1);
+    for (const c of graded) {
+      if (c.kind === "send") counts.set(climbRank(c), (counts.get(climbRank(c)) ?? 0) + 1);
     }
     const max = Math.max(1, ...counts.values());
     for (let g = lo; g <= hi; g++) {
       const count = counts.get(g) ?? 0;
       bars.push({
-        gradeLabel: `V${g}`,
+        gradeLabel: format.label(g),
         count,
         height: count === 0 ? 0 : count / max,
         peak: g === top && count > 0,

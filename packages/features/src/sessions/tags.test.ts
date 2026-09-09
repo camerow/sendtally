@@ -24,6 +24,8 @@ function session(fingerprint: string, tags: SessionTag[]): SessionRow {
     climb_count: 10,
     top_grade: 6,
     top_send_grade: 5,
+    top_grade_label: null,
+    top_send_grade_label: null,
     rpe: 6,
     title: fingerprint,
     strava_activity_id: null,

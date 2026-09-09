@@ -2,6 +2,7 @@ import React from "react";
 import { useNavigate } from "react-router";
 import type { SendtallyApi } from "@sendtally/api-client";
 import {
+  GRADE_SCALE_OPTIONS,
   draftProblem,
   draftSummary,
   emptyDraft,
@@ -498,14 +499,19 @@ export function LogSessionForm({
             </span>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <span style={columnHead}>GRADE SCALE</span>
-              {(["v", "font"] as const).map((scale) => (
+              {GRADE_SCALE_OPTIONS.map((option) => (
                 <button
-                  key={scale}
+                  key={option.value}
                   type="button"
-                  onClick={() => setDraft(withScale(draft, scale))}
-                  style={{ ...chipStyle(draft.scale === scale), fontSize: 10, padding: "6px 12px" }}
+                  onClick={() => setDraft(withScale(draft, option.value))}
+                  aria-pressed={draft.scale === option.value}
+                  style={{
+                    ...chipStyle(draft.scale === option.value),
+                    fontSize: 10,
+                    padding: "6px 12px",
+                  }}
                 >
-                  {scale === "v" ? "V" : "FONT"}
+                  {option.label}
                 </button>
               ))}
             </div>

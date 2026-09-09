@@ -383,7 +383,7 @@ export default function SessionDetailRoute(): React.ReactElement {
               alignItems: "center",
             }}
           >
-            {["#", "PROBLEM", "GRADE", "ANGLE", "BURNS", "REST", "RESULT"].map((h) => (
+            {["#", "CLIMB", "GRADE", "ANGLE", "BURNS", "REST", "RESULT"].map((h) => (
               <span key={h} style={monoLabel}>
                 {h}
               </span>

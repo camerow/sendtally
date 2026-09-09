@@ -1,4 +1,30 @@
-export { FONT_GRADES, fontFromV, v, vFromDisplay, vFromFont } from "./grades";
+export {
+  FONT_GRADES,
+  FRENCH_GRADES,
+  YDS_GRADES,
+  boulderGradeFromV,
+  convertGrade,
+  disciplineOf,
+  effortGrade,
+  fontFromV,
+  formatGrade,
+  frenchFromRouteIndex,
+  isKnownGrade,
+  parseGrade,
+  routeGradeFromIndex,
+  routeIndexFromFrench,
+  routeIndexFromV,
+  routeIndexFromYds,
+  routeIndexOf,
+  v,
+  vFromDisplay,
+  vFromFont,
+  vFromRouteIndex,
+  ydsFromRouteIndex,
+  type Discipline,
+  type Grade,
+  type GradeScale,
+} from "./grades";
 export {
   buildSessions,
   defaultSessionConfig,
@@ -9,10 +35,16 @@ export {
   type SessionConfig,
 } from "./session";
 export {
+  climbDiscipline,
+  climbGrade,
+  climbRank,
   defaultEffortConfig,
+  dominantDiscipline,
   points,
   score,
   sessionPoints,
+  topGradeLabel,
+  type GradedClimb,
   type EffortConfig,
   type EffortResult,
 } from "./effort";

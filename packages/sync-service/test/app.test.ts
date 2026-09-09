@@ -201,6 +201,8 @@ describe("app", () => {
       climb_count: number;
       top_grade: number;
       top_send_grade: number;
+      top_grade_label: string | null;
+      top_send_grade_label: string | null;
       rpe: number;
       title: string;
       inProgress: boolean;
@@ -462,6 +464,46 @@ describe("app", () => {
     expect(body.sessions).toHaveLength(1);
     expect(body.sessions[0]?.source).toBe("manual");
     expect(body.sessions[0]?.inProgress).toBe(false);
+  });
+
+  it("logs a route session in YDS and French and reads it back in those scales", async () => {
+    const userId = "user_manual_routes";
+    const res = await postSession(
+      userId,
+      logBody({
+        name: undefined,
+        climbs: [
+          { name: "Warm up", grade: { scale: "yds", value: "5.10A" } },
+          { name: "Pumpfest", grade: { scale: "yds", value: "5.11d" }, tries: 2 },
+          { name: "Project", grade: { scale: "french", value: "7A+" }, kind: "attempt" },
+        ],
+      })
+    );
+    expect(res.status).toBe(201);
+    const { session } = (await res.json()) as ManualSessionResponse;
+    expect(session.climbs.map((c) => c.grade)).toEqual([
+      { scale: "yds", value: "5.10a" },
+      { scale: "yds", value: "5.11d" },
+      { scale: "french", value: "7a+" },
+    ]);
+    expect(session.climbs.map((c) => c.vGrade)).toEqual([0, 3, 4]);
+    expect(session.top_grade).toBe(4);
+    expect(session.top_send_grade).toBe(3);
+    expect(session.top_grade_label).toBe("7a+");
+    expect(session.top_send_grade_label).toBe("5.11d");
+    expect(session.title).toContain("3 climbs, top 7a+");
+  });
+
+  it("rejects route grades outside the ladders", async () => {
+    for (const grade of [
+      { scale: "yds", value: "5.10" },
+      { scale: "yds", value: "5.16a" },
+      { scale: "french", value: "6d" },
+      { scale: "french", value: "V4" },
+    ]) {
+      const res = await postSession("user_manual_bad_routes", logBody({ climbs: [{ grade }] }));
+      expect(res.status).toBe(400);
+    }
   });
 
   it("rejects invalid manual session bodies", async () => {

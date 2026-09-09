@@ -9,6 +9,7 @@ export type ConnectionStatus = {
 
 export type StoreMembership = {
   store: string;
+  productId?: string;
   expiresAt: string | null;
   willRenew: boolean;
 };
@@ -25,7 +26,13 @@ export type PostState = "pending" | "posted" | "failed";
 
 export type PostOutcome = "posted" | "updated" | "skipped" | "failed";
 
-export type ClimbGrade = { scale: "v"; value: number } | { scale: "font"; value: string };
+export type GradeScale = "v" | "font" | "yds" | "french";
+
+export type ClimbGrade =
+  | { scale: "v"; value: number }
+  | { scale: "font"; value: string }
+  | { scale: "yds"; value: string }
+  | { scale: "french"; value: string };
 
 export type SessionClimb = {
   time: string;
@@ -56,6 +63,8 @@ export type SessionRow = {
   climb_count: number;
   top_grade: number;
   top_send_grade: number;
+  top_grade_label: string | null;
+  top_send_grade_label: string | null;
   rpe: number;
   title: string;
   strava_activity_id: number | null;

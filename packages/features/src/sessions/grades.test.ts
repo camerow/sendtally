@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { SessionRow } from "@sendtally/api-client";
-import { sessionGradeLabels } from "./grades";
+import { climbGradeLabel, gradeFormatter, routeScaleOf, sessionGradeLabels } from "./grades";
 
 function session(overrides: Partial<SessionRow> = {}): SessionRow {
   return {
@@ -14,6 +14,8 @@ function session(overrides: Partial<SessionRow> = {}): SessionRow {
     climb_count: 3,
     top_grade: 6,
     top_send_grade: 6,
+    top_grade_label: null,
+    top_send_grade_label: null,
     rpe: 7,
     title: "T",
     strava_activity_id: null,
@@ -44,7 +46,61 @@ describe("sessionGradeLabels", () => {
     ]);
   });
 
+  it("prefers the stored labels so route sessions read in their own scale", () => {
+    expect(
+      sessionGradeLabels(
+        session({
+          top_grade: 4,
+          top_send_grade: 3,
+          top_grade_label: "5.12a",
+          top_send_grade_label: "5.11d",
+        })
+      )
+    ).toEqual([
+      { kind: "sent", label: "SENT 5.11d" },
+      { kind: "tried", label: "TRIED 5.12a" },
+    ]);
+  });
+
   it("shows nothing when no grades are known", () => {
     expect(sessionGradeLabels(session({ top_grade: -1, top_send_grade: -1 }))).toEqual([]);
+  });
+});
+
+describe("climbGradeLabel", () => {
+  it("formats the grade a climb was logged in and falls back to V", () => {
+    expect(climbGradeLabel({ vGrade: 4, grade: { scale: "yds", value: "5.12a" } })).toBe("5.12a");
+    expect(climbGradeLabel({ vGrade: 3, grade: { scale: "french", value: "7a" } })).toBe("7a");
+    expect(climbGradeLabel({ vGrade: 4, grade: { scale: "font", value: "6B" } })).toBe("6B");
+    expect(climbGradeLabel({ vGrade: 5 })).toBe("V5");
+    expect(climbGradeLabel({ vGrade: -1 })).toBe("V?");
+  });
+});
+
+describe("gradeFormatter", () => {
+  it("labels boulder ranks as V grades with one decimal averages", () => {
+    const f = gradeFormatter("boulder", "yds");
+    expect(f.label(4)).toBe("V4");
+    expect(f.average(4.25)).toBe("V4.3");
+  });
+
+  it("labels route ranks in the chosen route scale and rounds averages to a grade", () => {
+    const yds = gradeFormatter("route", "yds");
+    expect(yds.label(13)).toBe("5.12a");
+    expect(yds.average(13.6)).toBe("5.12b");
+    expect(gradeFormatter("route", "french").label(13)).toBe("7a+");
+  });
+});
+
+describe("routeScaleOf", () => {
+  it("picks the scale most of the route climbs were logged in, defaulting to YDS", () => {
+    expect(routeScaleOf([])).toBe("yds");
+    expect(
+      routeScaleOf([
+        { vGrade: 3, grade: { scale: "french", value: "7a" } },
+        { vGrade: 3, grade: { scale: "french", value: "6c" } },
+        { vGrade: 3, grade: { scale: "yds", value: "5.11d" } },
+      ])
+    ).toBe("french");
   });
 });
