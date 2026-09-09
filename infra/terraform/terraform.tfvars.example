@@ -3,9 +3,10 @@
 # staging.*, api-staging.*) are NOT listed here: wrangler creates those as Worker
 # custom domains on deploy.
 dns_records = {
-  clerk_frontend = { name = "clerk", type = "CNAME", content = "frontend-api.clerk.services", comment = "Clerk production instance" }
+  www            = { name = "www", type = "CNAME", content = "sendtally.com", proxied = true, comment = "Redirect www to the apex Worker" }
+  clerk_frontend = { name = "clerk", type = "CNAME", content = "frontend-api.clerk.services", comment = "Clerk production frontend API" }
   clerk_accounts = { name = "accounts", type = "CNAME", content = "accounts.clerk.services", comment = "Clerk account portal" }
-  # clerk_mail     = { name = "clkmail", type = "CNAME", content = "mail.<id>.clerk.services" }
-  # clerk_dkim1    = { name = "clk._domainkey", type = "CNAME", content = "dkim1.<id>.clerk.services" }
-  # clerk_dkim2    = { name = "clk2._domainkey", type = "CNAME", content = "dkim2.<id>.clerk.services" }
+  clerk_mail     = { name = "clkmail", type = "CNAME", content = "mail.<clerk-instance-id>.clerk.services", comment = "Clerk email sending" }
+  clerk_dkim1    = { name = "clk._domainkey", type = "CNAME", content = "dkim1.<clerk-instance-id>.clerk.services", comment = "Clerk DKIM 1" }
+  clerk_dkim2    = { name = "clk2._domainkey", type = "CNAME", content = "dkim2.<clerk-instance-id>.clerk.services", comment = "Clerk DKIM 2" }
 }
