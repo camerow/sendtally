@@ -322,7 +322,7 @@ export function LogSessionForm({
           <LabelText>SESSION NAME · OPTIONAL</LabelText>
           <TextInput
             value={draft.name}
-            placeholder="Tuesday board night"
+            placeholder="Tuesday night session"
             placeholderTextColor={colors.textFaint}
             onChangeText={(name) => setDraft({ ...draft, name })}
             style={inputStyle}

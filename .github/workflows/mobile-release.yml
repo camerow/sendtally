@@ -1,0 +1,76 @@
+name: Mobile release
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/mobile/**"
+      - "packages/core/**"
+      - "packages/design/**"
+      - "packages/features/**"
+      - "packages/api-client/**"
+      - ".github/workflows/mobile-release.yml"
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: Platform to build and submit
+        type: choice
+        default: android
+        options: [android, ios, all]
+
+concurrency:
+  group: mobile-release
+  cancel-in-progress: false
+
+jobs:
+  checks:
+    uses: ./.github/workflows/checks.yml
+
+  release:
+    needs: checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+      - run: pnpm install --frozen-lockfile
+
+      # EAS Submit reads both credentials from a file path, so the secrets are
+      # materialised here and nowhere else. The runner is discarded after the job.
+      - name: Write store credentials
+        working-directory: apps/mobile
+        env:
+          GOOGLE_SERVICE_ACCOUNT_KEY: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_KEY }}
+          ASC_API_KEY: ${{ secrets.ASC_API_KEY }}
+        run: |
+          umask 077
+          printf '%s' "$GOOGLE_SERVICE_ACCOUNT_KEY" > google-service-account.json
+          printf '%s' "$ASC_API_KEY" > asc-api-key.p8
+
+      # No --no-wait: the job holds until EAS finishes so a failed build or a
+      # rejected upload fails the run instead of passing silently. Platforms
+      # default to android and widen to "all" via the MOBILE_PLATFORMS repo
+      # variable once Apple Developer enrollment completes.
+      - name: Build and submit
+        working-directory: apps/mobile
+        timeout-minutes: 90
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          GOOGLE_SERVICE_ACCOUNT_KEY_PATH: ./google-service-account.json
+          ASC_API_KEY_PATH: ./asc-api-key.p8
+          ASC_API_KEY_ID: ${{ secrets.ASC_API_KEY_ID }}
+          ASC_API_KEY_ISSUER_ID: ${{ secrets.ASC_API_KEY_ISSUER_ID }}
+          ASC_APP_ID: ${{ secrets.ASC_APP_ID }}
+        run: >
+          eas build
+          --platform ${{ inputs.platform || vars.MOBILE_PLATFORMS || 'android' }}
+          --profile production
+          --auto-submit
+          --non-interactive

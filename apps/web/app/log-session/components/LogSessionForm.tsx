@@ -399,7 +399,7 @@ export function LogSessionForm({
           >
             <input
               value={draft.name}
-              placeholder="Tuesday board night"
+              placeholder="Tuesday night session"
               onChange={(e) => setDraft({ ...draft, name: e.target.value })}
               className="log-session-control"
               style={inputStyle}

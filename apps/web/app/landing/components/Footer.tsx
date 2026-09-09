@@ -2,8 +2,9 @@ import React from "react";
 
 const LINKS: Array<[string, string]> = [
   ["Sign in", "/sign-in"],
-  ["Membership", "https://github.com/sponsors/camerow"],
-  ["Contact", "mailto:hello@sendtally.com"],
+  ["Privacy", "/privacy"],
+  ["Terms", "/terms"],
+  ["Support", "/support"],
 ];
 
 export function Footer(): React.ReactElement {

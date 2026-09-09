@@ -7,16 +7,47 @@
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
+    "platforms": ["ios", "android"],
+    "icon": "./assets/icon.png",
+    "primaryColor": "#f9dc5c",
     "ios": {
       "bundleIdentifier": "com.sendtally.app",
-      "supportsTablet": false
+      "supportsTablet": false,
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
-      "package": "com.sendtally.app"
+      "package": "com.sendtally.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#f9dc5c"
+      }
     },
-    "plugins": ["expo-router", "expo-secure-store", "expo-font", "expo-web-browser"],
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      "expo-font",
+      "expo-web-browser",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-mark.png",
+          "imageWidth": 180,
+          "resizeMode": "contain",
+          "backgroundColor": "#f9dc5c"
+        }
+      ]
+    ],
     "experiments": {
       "typedRoutes": false
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "4dea1644-ecbb-43e8-ad9c-a6f646f6d844"
+      }
+    },
+    "owner": "chalk-and-circuits"
   }
 }
