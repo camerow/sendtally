@@ -106,3 +106,4 @@ iPad screenshots are not needed: `supportsTablet` is false.
 Membership is an auto-renewing subscription sold in the app through the store's billing (one monthly product), and also on sendtally.com.
 The trends screens are gated on it; the paywall on the Trends tab carries the price, the renewal terms, restore purchases, and the terms and privacy links.
 Reviewers need the demo account so the trends screens in the screenshots are reachable without buying.
+The demo account signs in with a password; every other account signs in with an emailed one-time code, which is why the form gets a username and password plus that one sentence under "Any other information required to access your app".

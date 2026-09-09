@@ -53,7 +53,11 @@ Both paths are gitignored, and the runner is discarded after the job.
 1. **Expo.** Run `eas init` from `apps/mobile`, not the repo root: eas-cli finds the project by walking up for `app.json`, so the root has neither a project nor an `eas.json`. It writes `owner` and `extra.eas.projectId` into `app.json`. Commit that.
 2. **Google Play.** Create the app in Play Console, complete the store listing from `apps/mobile/store/listing.md`, upload the rendered assets, and fill the data safety form. Then create a service account with the Release Manager role and download its JSON key. EAS Submit can perform the first upload; no manual bundle upload is needed. The account is an organization, so the 12-testers-for-14-days requirement that gates production access for personal accounts does not apply.
 3. **Apple.** Register the `com.sendtally.app` bundle id, create the App Store Connect record, and generate an App Store Connect API key with the App Manager role.
-4. **App Review demo account.** Create a Clerk user with the `long_term_insights` feature granted and a few logged sessions, and give App Review its credentials. Without it a reviewer sees the gated state rather than the trends screens the screenshots advertise.
+4. **App Review demo account.** Reviewers cannot read our one-time codes, and Google's sign-in-details form asks for "reusable sign in details that don't expire", so the reviewer account signs in with a password while everyone else keeps the code flow.
+   In the Clerk **Production** instance: Configure, User & authentication, Password tab, turn on **Add password to account** only. Leave **Sign-up with password** off; that one would demand a password from every new sign-up, and neither app collects one.
+   Then create the reviewer user in the Clerk dashboard (a mailbox you own, e.g. `play-review@sendtally.com`), set a strong password on it there, grant it the `long_term_insights` feature, and log a few sessions on it so the trends screens are not empty.
+   The mobile sign-in screen reads `supportedFirstFactors` after `signIn.create`; Clerk lists `password` only for accounts that have one, so only this user ever sees the password field.
+   Put the email and password in the store's sign-in-details form (Play: App content, App access) and in 1Password, nowhere else.
 
 ## Store assets
 
