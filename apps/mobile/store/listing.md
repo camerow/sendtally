@@ -21,7 +21,7 @@ Climbing log with effort score
 **Short description, Play** [80]
 
 ```
-Log board climbing sessions, get an effort score, sync to Strava. Free.
+Log climbing sessions, see trends in your climbing, sync to Strava.
 ```
 
 **Promotional text, iOS** [170]
@@ -44,7 +44,7 @@ Secondary: Sports.
 ## Description, both stores
 
 ```
-sendtally is a session log for board climbers.
+sendtally is a session log for climbers.
 
 Log a session in about a minute: date, times, grades in V-scale or Font, sends and attempts, tries, and a name for the climb if you want one. Every session gets an effort score from 1 to 10, measured against your own last eight weeks rather than a fixed scale, so a big night reads as a big night.
 
