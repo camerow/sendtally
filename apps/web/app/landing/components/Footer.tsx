@@ -3,6 +3,8 @@ import React from "react";
 const LINKS: Array<[string, string]> = [
   ["Sign in", "/sign-in"],
   ["Membership", "https://github.com/sponsors/camerow"],
+  ["Terms", "/terms"],
+  ["Privacy", "/privacy"],
   ["Contact", "mailto:hello@sendtally.com"],
 ];
 
@@ -12,7 +14,7 @@ export function Footer(): React.ReactElement {
       <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "rgba(64,63,76,0.58)" }}>
         sendtally · not affiliated with Strava
       </span>
-      <div style={{ display: "flex", gap: 22 }}>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "8px 22px" }}>
         {LINKS.map(([label, href]) => (
           <a
             key={label}
