@@ -6,10 +6,17 @@ export type ChipProps = {
   label: string;
   active: boolean;
   disabled?: boolean;
+  dashed?: boolean;
   onPress: () => void;
 };
 
-export function Chip({ label, active, disabled = false, onPress }: ChipProps): React.ReactElement {
+export function Chip({
+  label,
+  active,
+  disabled = false,
+  dashed = false,
+  onPress,
+}: ChipProps): React.ReactElement {
   return (
     <Pressable
       onPress={onPress}
@@ -23,7 +30,8 @@ export function Chip({ label, active, disabled = false, onPress }: ChipProps): R
         borderRadius: radius.pill,
         backgroundColor: active ? colors.gold : "transparent",
         borderWidth: 1,
-        borderColor: active ? colors.gold : "rgba(64,63,76,0.18)",
+        borderStyle: dashed ? "dashed" : "solid",
+        borderColor: active ? colors.gold : dashed ? "rgba(64,63,76,0.3)" : "rgba(64,63,76,0.18)",
         opacity: disabled ? 0.5 : 1,
       }}
     >
