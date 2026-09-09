@@ -4,7 +4,7 @@ import { useLoaderData } from "react-router";
 import type { Membership } from "@sendtally/api-client";
 import { Badge, Label } from "@sendtally/design";
 import { membershipVM } from "@sendtally/features/billing";
-import { MEMBER_BENEFITS } from "../billing/features";
+import { MEMBER_BENEFITS } from "@sendtally/features/billing";
 import { MembershipPricing } from "../billing/components/MembershipPricing";
 import { StoreMembershipPanel } from "../billing/components/StoreMembershipPanel";
 import { getMembership } from "../lib/billing.server";

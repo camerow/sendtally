@@ -65,7 +65,7 @@ function LogArt(): React.ReactElement {
   return (
     <View style={{ ...CARD, gap: 14 }}>
       <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-        <Text style={MONO_LABEL}>THU SEP 3 · KILTER · 1H 52M</Text>
+        <Text style={MONO_LABEL}>THU SEP 3 · INDOOR · 1H 52M</Text>
         <Text style={MONO_LABEL}>14 CLIMBS</Text>
       </View>
       <View style={{ height: 1, backgroundColor: colors.lineOnLight }} />

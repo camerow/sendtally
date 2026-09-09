@@ -9,6 +9,7 @@ export type ConnectionStatus = {
 
 export type StoreMembership = {
   store: string;
+  productId?: string;
   expiresAt: string | null;
   willRenew: boolean;
 };

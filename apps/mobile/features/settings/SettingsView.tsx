@@ -18,7 +18,7 @@ import {
   sectionLabel,
   underlineLabel,
   underlinePress,
-} from "./styles";
+} from "../../lib/styles";
 
 export type SettingsViewProps = {
   vm: SettingsVM;

@@ -117,12 +117,14 @@ Project `Sendtally` at app.revenuecat.com, id `f2a60af6`.
 3. **Entitlement.** `sendtally_member`, with both products attached.
    This identifier is `STORE_ENTITLEMENT` in `packages/sync-service/src/features.ts`; changing one means changing the other.
 4. **Offering.** `default`, with the monthly package pointing at `membership:monthly` and the annual package at `membership:yearly`.
-   The app renders one button per package in the current offering, so keep the offering to the packages you mean to sell.
+   The app renders one plan card per package in the current offering and one purchase button for the selected card, so keep the offering to the packages you mean to sell.
 5. **Webhook.** Integrations, Webhooks: URL `https://api.sendtally.com/webhooks/revenuecat`, Authorization header value equal to `REVENUECAT_WEBHOOK_AUTH` in Doppler (a long random string), all events.
 6. **API keys.** The Android public SDK key (`goog_…`) goes in `apps/mobile/eas.json` as `EXPO_PUBLIC_REVENUECAT_ANDROID_KEY`; it is a public key, like the Clerk publishable key.
    The secret key (`sk_…`) goes to Doppler as `REVENUECAT_SECRET_API_KEY`, then `infra/scripts/push-secrets.sh production`.
 
 The project also carries RevenueCat's Test Store app, with test products attached to the same entitlement and offering.
+Its products are `membership_monthly` at $3.00 and `membership_yearly` at $24.00, mirroring the Play prices; RevenueCat's auto-created `monthly`, `yearly` and `lifetime` test products are inactive.
+A test product's price cannot be edited after creation, so a price change means a new test product, attaching it to `sendtally_member`, and repointing the package in the `default` offering.
 A development build with the `test_…` key in `EXPO_PUBLIC_REVENUECAT_ANDROID_KEY` runs the whole purchase flow without Play, which is how to check the paywall before the store credentials are in place.
 Never ship a production build with the test key.
 
@@ -133,7 +135,8 @@ A sideloaded APK fails the purchase with "item not available".
 
 ### Store guidelines
 
-- Restore purchases is on the paywall and under Settings.
+- Restore purchases is on the paywall and on the membership screen, which Settings links to.
+- The membership screen (Settings, Manage membership) shows the current plan and renewal date, opens the store's subscription management page, and sells the store plans to anyone without a store subscription, web members included, with a note to cancel the web plan afterwards.
 - The paywall states the price, the period, that it auto-renews, and links to the terms and privacy pages.
 - Nothing in the app links out to web checkout (guideline 3.1.1 on iOS). The web membership page tells store subscribers to manage the subscription in the store instead of showing Clerk's pricing table.
 - Play data safety: RevenueCat's SDK collects purchase history, so the form declares Purchase history under Financial info, tied to the user, not shared.

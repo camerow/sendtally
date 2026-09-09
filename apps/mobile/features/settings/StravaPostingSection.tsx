@@ -2,7 +2,7 @@ import React from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
 import type { StravaPostingFeature } from "@sendtally/features/settings";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
-import { bodyText, messageText } from "./styles";
+import { bodyText, messageText } from "../../lib/styles";
 
 export type StravaPostingSectionProps = {
   posting: StravaPostingFeature;

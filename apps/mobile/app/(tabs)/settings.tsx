@@ -2,19 +2,9 @@ import { useClerk, useUser } from "@clerk/clerk-expo";
 import { useRouter } from "expo-router";
 import React from "react";
 import { useDeleteAccount, useSettings, useStravaPosting } from "@sendtally/features/settings";
-import type { MembershipFeature } from "@sendtally/features/billing";
 import { useBilling } from "../../features/billing/useBilling";
-import { usePurchase } from "../../features/billing/usePurchase";
-import { SettingsView, type SettingsViewProps } from "../../features/settings/SettingsView";
+import { SettingsView } from "../../features/settings/SettingsView";
 import { useApi } from "../../lib/api";
-
-function SettingsWithBilling({
-  membership,
-  ...rest
-}: Omit<SettingsViewProps, "billing"> & { membership: MembershipFeature }): React.ReactElement {
-  const purchase = usePurchase(membership.refresh);
-  return <SettingsView {...rest} billing={{ membership: membership.vm, purchase }} />;
-}
 
 export default function Settings(): React.ReactElement {
   const api = useApi();
@@ -31,14 +21,18 @@ export default function Settings(): React.ReactElement {
   const onSignOut = React.useCallback(() => {
     void clerk.signOut().then(() => router.replace("/sign-in"));
   }, [clerk, router]);
-  const shared = {
-    vm,
-    email: user?.primaryEmailAddress?.emailAddress ?? "",
-    deletion,
-    posting,
-    onSignOut,
-  };
+  const onOpenMembership = React.useCallback(() => router.push("/membership"), [router]);
 
-  if (billing === null) return <SettingsView {...shared} billing={null} />;
-  return <SettingsWithBilling {...shared} membership={billing.membership} />;
+  return (
+    <SettingsView
+      vm={vm}
+      email={user?.primaryEmailAddress?.emailAddress ?? ""}
+      deletion={deletion}
+      billing={
+        billing === null ? null : { membership: billing.membership.vm, onOpen: onOpenMembership }
+      }
+      posting={posting}
+      onSignOut={onSignOut}
+    />
+  );
 }
