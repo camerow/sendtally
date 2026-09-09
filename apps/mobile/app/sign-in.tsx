@@ -9,7 +9,9 @@ import { SignedOutOnly } from "../features/auth/SignedOutOnly";
 
 type Intent = "sign-in" | "sign-up";
 
-type Phase = { name: "email" } | { name: "code"; mode: Intent };
+// The password phase only ever appears for accounts that carry a password,
+// which Clerk reports per user. Store reviewers get one; nobody else does.
+type Phase = { name: "email" } | { name: "code"; mode: Intent } | { name: "password" };
 
 const SWAP: Record<Intent, { to: Intent; prompt: string; label: string }> = {
   "sign-in": { to: "sign-up", prompt: "First time here?", label: "Create an account" },
@@ -45,6 +47,7 @@ export default function SignIn(): React.ReactElement | null {
   const router = useRouter();
   const [email, setEmail] = React.useState("");
   const [code, setCode] = React.useState("");
+  const [password, setPassword] = React.useState("");
   const [phase, setPhase] = React.useState<Phase>({ name: "email" });
   const [error, setError] = React.useState<string | null>(null);
   const [busy, setBusy] = React.useState(false);
@@ -59,6 +62,11 @@ export default function SignIn(): React.ReactElement | null {
     setBusy(true);
     try {
       const attempt = await signIn.create({ identifier: email });
+      if (attempt.supportedFirstFactors?.some((f) => f.strategy === "password")) {
+        setPhase({ name: "password" });
+        setBusy(false);
+        return;
+      }
       const factor = attempt.supportedFirstFactors?.find((f) => f.strategy === "email_code");
       if (factor === undefined || !("emailAddressId" in factor)) {
         setError("Email code sign-in is not enabled for this account.");
@@ -126,9 +134,71 @@ export default function SignIn(): React.ReactElement | null {
     setBusy(false);
   }
 
+  async function signInWithPassword(): Promise<void> {
+    if (!signInLoaded || phase.name !== "password") return;
+    if (password === "") {
+      setError("Enter your password.");
+      return;
+    }
+    setError(null);
+    setBusy(true);
+    try {
+      const result = await signIn.attemptFirstFactor({ strategy: "password", password });
+      if (result.status === "complete" && setActive !== undefined) {
+        await setActive({ session: result.createdSessionId });
+        router.replace("/(tabs)/sessions");
+        return;
+      }
+      setError("That password didn't work. Try again.");
+    } catch (err) {
+      setError(errorMessage(err));
+    }
+    setBusy(false);
+  }
+
+  function backToEmail(): void {
+    setPhase({ name: "email" });
+    setCode("");
+    setPassword("");
+    setError(null);
+  }
+
   const inCodePhase = phase.name === "code";
+  const inPasswordPhase = phase.name === "password";
   const copy = COPY[intent];
   const swap = SWAP[intent];
+  const title = inCodePhase ? "Check your inbox." : inPasswordPhase ? "Welcome back." : copy.title;
+  const body = inCodePhase
+    ? `We sent a six-digit code to ${email}.`
+    : inPasswordPhase
+      ? `Enter the password for ${email}.`
+      : copy.body;
+  const buttonLabel = inCodePhase
+    ? phase.name === "code" && phase.mode === "sign-up"
+      ? "Create account"
+      : "Sign in"
+    : inPasswordPhase
+      ? "Sign in"
+      : "Email me a code";
+  const submit = inCodePhase ? verifyCode : inPasswordPhase ? signInWithPassword : sendCode;
+  const fieldStyle = {
+    fontFamily: fonts.sans,
+    fontSize: 16,
+    color: colors.gunmetal,
+    backgroundColor: colors.surfaceSoft,
+    borderWidth: 1,
+    borderColor: "rgba(64,63,76,0.12)",
+    borderRadius: radius.control,
+    paddingHorizontal: 15,
+    paddingVertical: 13,
+    minHeight: 44,
+  };
+  const secondaryLink = {
+    fontFamily: fonts.mono,
+    fontSize: 12,
+    color: "rgba(64,63,76,0.6)",
+    textDecorationLine: "underline" as const,
+  };
 
   return (
     <SignedOutOnly>
@@ -165,7 +235,7 @@ export default function SignIn(): React.ReactElement | null {
                 marginTop: 6,
               }}
             >
-              {inCodePhase ? "Check your inbox." : copy.title}
+              {title}
             </Text>
             <Text
               style={{
@@ -175,9 +245,27 @@ export default function SignIn(): React.ReactElement | null {
                 color: colors.textSecondary,
               }}
             >
-              {inCodePhase ? `We sent a six-digit code to ${email}.` : copy.body}
+              {body}
             </Text>
-            {inCodePhase ? (
+            {inPasswordPhase && (
+              <TextInput
+                value={password}
+                onChangeText={(t) => {
+                  setPassword(t);
+                  setError(null);
+                }}
+                placeholder="Password"
+                placeholderTextColor={colors.textFaint}
+                secureTextEntry
+                textContentType="password"
+                autoCapitalize="none"
+                autoCorrect={false}
+                autoFocus
+                onSubmitEditing={() => void signInWithPassword()}
+                style={fieldStyle}
+              />
+            )}
+            {inCodePhase && (
               <TextInput
                 value={code}
                 onChangeText={(t) => {
@@ -203,7 +291,8 @@ export default function SignIn(): React.ReactElement | null {
                   minHeight: 48,
                 }}
               />
-            ) : (
+            )}
+            {phase.name === "email" && (
               <TextInput
                 value={email}
                 onChangeText={(t) => {
@@ -215,18 +304,7 @@ export default function SignIn(): React.ReactElement | null {
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoCorrect={false}
-                style={{
-                  fontFamily: fonts.sans,
-                  fontSize: 16,
-                  color: colors.gunmetal,
-                  backgroundColor: colors.surfaceSoft,
-                  borderWidth: 1,
-                  borderColor: "rgba(64,63,76,0.12)",
-                  borderRadius: radius.control,
-                  paddingHorizontal: 15,
-                  paddingVertical: 13,
-                  minHeight: 44,
-                }}
+                style={fieldStyle}
               />
             )}
             {error !== null && (
@@ -235,7 +313,7 @@ export default function SignIn(): React.ReactElement | null {
               </Text>
             )}
             <Pressable
-              onPress={() => void (inCodePhase ? verifyCode() : sendCode())}
+              onPress={() => void submit()}
               disabled={busy}
               style={{
                 backgroundColor: colors.azureInk,
@@ -248,52 +326,28 @@ export default function SignIn(): React.ReactElement | null {
               }}
             >
               <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 16, color: colors.white }}>
-                {inCodePhase
-                  ? phase.name === "code" && phase.mode === "sign-up"
-                    ? "Create account"
-                    : "Sign in"
-                  : "Email me a code"}
+                {buttonLabel}
               </Text>
             </Pressable>
-            {inCodePhase && (
+            {phase.name !== "email" && (
               <View style={{ flexDirection: "row", gap: 22 }}>
                 <Pressable
-                  onPress={() => {
-                    setPhase({ name: "email" });
-                    setCode("");
-                    setError(null);
-                  }}
+                  onPress={backToEmail}
                   style={{ minHeight: 44, justifyContent: "center" }}
                 >
-                  <Text
-                    style={{
-                      fontFamily: fonts.mono,
-                      fontSize: 12,
-                      color: "rgba(64,63,76,0.6)",
-                      textDecorationLine: "underline",
-                    }}
-                  >
-                    Different email
-                  </Text>
+                  <Text style={secondaryLink}>Different email</Text>
                 </Pressable>
-                <Pressable
-                  onPress={() => void sendCode()}
-                  style={{ minHeight: 44, justifyContent: "center" }}
-                >
-                  <Text
-                    style={{
-                      fontFamily: fonts.mono,
-                      fontSize: 12,
-                      color: "rgba(64,63,76,0.6)",
-                      textDecorationLine: "underline",
-                    }}
+                {inCodePhase && (
+                  <Pressable
+                    onPress={() => void sendCode()}
+                    style={{ minHeight: 44, justifyContent: "center" }}
                   >
-                    Resend
-                  </Text>
-                </Pressable>
+                    <Text style={secondaryLink}>Resend</Text>
+                  </Pressable>
+                )}
               </View>
             )}
-            {!inCodePhase && (
+            {phase.name === "email" && (
               <View style={{ flexDirection: "row", alignItems: "center", gap: 7 }}>
                 <Text style={{ fontFamily: fonts.mono, fontSize: 12, color: colors.textMuted }}>
                   {swap.prompt}

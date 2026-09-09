@@ -1,15 +1,17 @@
-import { getAuth } from "@clerk/react-router/ssr.server";
 import { redirect } from "react-router";
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
+import type { Membership } from "@sendtally/api-client";
+import { requireApi } from "./api.server";
 
 type Args = LoaderFunctionArgs | ActionFunctionArgs;
 
-export async function hasFeature(args: Args, feature: string): Promise<boolean> {
-  const auth = await getAuth(args);
-  if (!auth.isAuthenticated || auth.tokenType !== "session_token") return false;
-  return auth.has({ feature });
+export async function getMembership(args: Args): Promise<Membership> {
+  const api = await requireApi(args);
+  return (await api.entitlements()).membership;
 }
 
-export async function requireFeature(args: Args, feature: string): Promise<void> {
-  if (!(await hasFeature(args, feature))) throw redirect("/app/membership");
+export async function requireMembership(args: Args): Promise<Membership> {
+  const membership = await getMembership(args);
+  if (!membership.active) throw redirect("/app/membership");
+  return membership;
 }

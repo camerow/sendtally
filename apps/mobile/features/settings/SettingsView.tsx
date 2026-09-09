@@ -9,6 +9,7 @@ import type {
 import { colors, fonts } from "@sendtally/design/tokens";
 import { Logo } from "../../components/Logo";
 import { DeleteAccountSection } from "./DeleteAccountSection";
+import { MembershipSection, type MembershipSectionProps } from "./MembershipSection";
 import { StravaPostingSection } from "./StravaPostingSection";
 import {
   bodyText,
@@ -23,6 +24,7 @@ export type SettingsViewProps = {
   vm: SettingsVM;
   email: string;
   deletion: DeleteAccountFeature;
+  billing: MembershipSectionProps | null;
   posting: StravaPostingFeature;
   onSignOut: () => void;
 };
@@ -31,6 +33,7 @@ export function SettingsView({
   vm,
   email,
   deletion,
+  billing,
   posting,
   onSignOut,
 }: SettingsViewProps): React.ReactElement {
@@ -71,6 +74,12 @@ export function SettingsView({
           </Text>
           {vm.stravaActive && <StravaPostingSection posting={posting} />}
         </View>
+
+        {billing !== null && (
+          <View style={sectionCard}>
+            <MembershipSection {...billing} />
+          </View>
+        )}
 
         <View style={sectionCard}>
           <Text style={sectionLabel}>ACCOUNT</Text>

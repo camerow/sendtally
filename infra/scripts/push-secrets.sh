@@ -18,5 +18,5 @@ all="$(doppler secrets download --no-file --format json --project sendtally --co
 
 pick() { jq -c --argjson keys "$1" 'with_entries(select(.key as $k | $keys | index($k)))' <<<"$all"; }
 
-(cd "$root/packages/sync-service" && pick '["TOKEN_KEY","CLERK_SECRET_KEY","CLERK_WEBHOOK_SIGNING_SECRET","STRAVA_CLIENT_ID","STRAVA_CLIENT_SECRET","STRAVA_WEBHOOK_VERIFY_TOKEN"]' | npx wrangler secret bulk --env "$env_name")
+(cd "$root/packages/sync-service" && pick '["TOKEN_KEY","CLERK_SECRET_KEY","CLERK_WEBHOOK_SIGNING_SECRET","STRAVA_CLIENT_ID","STRAVA_CLIENT_SECRET","STRAVA_WEBHOOK_VERIFY_TOKEN","REVENUECAT_SECRET_API_KEY","REVENUECAT_WEBHOOK_AUTH"]' | npx wrangler secret bulk --env "$env_name")
 (cd "$root/apps/web" && pick '["CLERK_SECRET_KEY"]' | npx wrangler secret bulk --env "$env_name")

@@ -7,6 +7,20 @@ export type ConnectionStatus = {
   } | null;
 };
 
+export type StoreMembership = {
+  store: string;
+  expiresAt: string | null;
+  willRenew: boolean;
+};
+
+export type Membership = {
+  active: boolean;
+  web: boolean;
+  store: StoreMembership | null;
+};
+
+export type Entitlements = { membership: Membership };
+
 export type PostState = "pending" | "posted" | "failed";
 
 export type PostOutcome = "posted" | "updated" | "skipped" | "failed";

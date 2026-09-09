@@ -6,9 +6,15 @@ export type UpgradeCardProps = {
   title: string;
   body: string;
   points?: string[];
+  children?: React.ReactNode;
 };
 
-export function UpgradeCard({ title, body, points = [] }: UpgradeCardProps): React.ReactElement {
+export function UpgradeCard({
+  title,
+  body,
+  points = [],
+  children,
+}: UpgradeCardProps): React.ReactElement {
   return (
     <View
       style={{
@@ -52,6 +58,7 @@ export function UpgradeCard({ title, body, points = [] }: UpgradeCardProps): Rea
           {`·  ${point}`}
         </Text>
       ))}
+      {children}
     </View>
   );
 }

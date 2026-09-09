@@ -8,7 +8,17 @@ import { jsonResponse, makeFakeFetch } from "./fakes";
 
 type TestOverrides = Partial<Pick<AppDeps, "deleteAuthUser" | "verifyAuthWebhook">>;
 
-function testApp(fetchImpl?: typeof fetch, overrides: TestOverrides = {}) {
+// Tests never reach the network: anything a test does not stub throws inside
+// the fake. Account deletion always forgets the RevenueCat subscriber, so that
+// one call is answered here rather than in every deletion test.
+const offlineFetch = makeFakeFetch([
+  {
+    match: (url, method) => method === "DELETE" && url.startsWith("https://api.revenuecat.com/"),
+    respond: () => jsonResponse(200, { deleted: true }),
+  },
+]).fetchImpl;
+
+function testApp(fetchImpl: typeof fetch = offlineFetch, overrides: TestOverrides = {}) {
   return createApp({
     verifyUser: async (req) => {
       const userId = req.headers.get("x-test-user");
@@ -21,7 +31,7 @@ function testApp(fetchImpl?: typeof fetch, overrides: TestOverrides = {}) {
       throw new Error("unsigned webhook");
     },
     ...overrides,
-    ...(fetchImpl === undefined ? {} : { fetchImpl }),
+    fetchImpl,
   });
 }
 

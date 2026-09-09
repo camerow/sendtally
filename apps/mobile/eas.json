@@ -9,14 +9,18 @@
       "node": "24.19.0",
       "env": {
         "EXPO_PUBLIC_API_URL": "https://api.sendtally.com",
-        "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_live_Y2xlcmsuc2VuZHRhbGx5LmNvbSQ"
+        "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_live_Y2xlcmsuc2VuZHRhbGx5LmNvbSQ",
+        "EXPO_PUBLIC_REVENUECAT_ANDROID_KEY": "goog_TsTamyxqBbukzZbEAUieLNrZABL"
       }
     },
     "development": {
       "extends": "base",
       "developmentClient": true,
       "distribution": "internal",
-      "ios": { "simulator": true }
+      "ios": { "simulator": true },
+      "env": {
+        "EXPO_PUBLIC_REVENUECAT_ANDROID_KEY": "test_RuludwkwBfxgCwPaffqspLVvcOp"
+      }
     },
     "preview": {
       "extends": "base",

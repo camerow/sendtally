@@ -18,6 +18,8 @@ export default defineWorkersConfig(async () => {
               STRAVA_CLIENT_ID: "12345",
               STRAVA_CLIENT_SECRET: "test-strava-secret",
               STRAVA_WEBHOOK_VERIFY_TOKEN: "test-verify-token",
+              REVENUECAT_SECRET_API_KEY: "test-revenuecat-secret",
+              REVENUECAT_WEBHOOK_AUTH: "test-revenuecat-webhook-auth",
               WEB_APP_URL: "https://sendtally.test",
             },
           },

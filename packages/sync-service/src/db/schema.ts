@@ -47,6 +47,22 @@ export const stravaConnections = sqliteTable("strava_connections", {
   post_since: text("post_since"),
 });
 
+export const storeEntitlements = sqliteTable(
+  "store_entitlements",
+  {
+    user_id: text("user_id")
+      .notNull()
+      .references(() => users.id),
+    entitlement: text("entitlement").notNull(),
+    store: text("store").notNull(),
+    product_id: text("product_id").notNull(),
+    expires_at: text("expires_at"),
+    will_renew: integer("will_renew").notNull().default(1),
+    updated_at: text("updated_at").notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.user_id, t.entitlement] })]
+);
+
 export const sessions = sqliteTable(
   "sessions",
   {

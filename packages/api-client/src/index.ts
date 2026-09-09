@@ -1,6 +1,7 @@
 import {
   ApiError,
   type ConnectionStatus,
+  type Entitlements,
   type LogSessionInput,
   type PostOutcome,
   type SessionRow,
@@ -40,6 +41,14 @@ export class SendtallyApi {
 
   status(): Promise<ConnectionStatus> {
     return this.request<ConnectionStatus>("/v1/status");
+  }
+
+  entitlements(): Promise<Entitlements> {
+    return this.request<Entitlements>("/v1/entitlements");
+  }
+
+  refreshEntitlements(): Promise<Entitlements> {
+    return this.request<Entitlements>("/v1/entitlements/refresh", { method: "POST" });
   }
 
   sessions(): Promise<{ sessions: SessionRow[] }> {

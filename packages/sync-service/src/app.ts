@@ -6,10 +6,12 @@ import type { AuthedUser, AuthWebhookEvent } from "./auth";
 import type { Env } from "./bindings";
 import { purgeAccount } from "./lib/account";
 import { decryptSecret, encryptSecret } from "./lib/crypto";
+import { mirrorStoreEntitlements, resolveEntitlements } from "./lib/entitlements";
 import { buildManualSession, historySession, manualSessionBody } from "./lib/manual";
 import { getPostHog } from "./lib/posthog";
 import { syncSessionToStrava } from "./lib/posting";
 import * as repo from "./lib/repo";
+import { RevenueCatClient, webhookBody, webhookUserIds } from "./lib/revenuecat";
 import { authorizeUrl, exchangeAuthCode, StravaUnauthorizedError } from "./lib/strava";
 import { sessionTagsBody } from "./lib/tags";
 
@@ -26,9 +28,17 @@ type AppEnv = { Bindings: Env; Variables: Vars };
 
 const OAUTH_STATE_TTL_MS = 15 * 60 * 1000;
 
+function sameSecret(presented: string | undefined, expected: string): boolean {
+  if (presented === undefined || expected === "") return false;
+  const a = new TextEncoder().encode(presented);
+  const b = new TextEncoder().encode(expected);
+  return a.byteLength === b.byteLength && crypto.subtle.timingSafeEqual(a, b);
+}
+
 export function createApp(deps: AppDeps): Hono<AppEnv> {
   const fetchImpl: typeof fetch = deps.fetchImpl ?? ((input, init) => fetch(input, init));
   const app = new Hono<AppEnv>();
+  const revenuecat = (env: Env) => new RevenueCatClient(env.REVENUECAT_SECRET_API_KEY, fetchImpl);
 
   const captureEvent = async (
     env: Env,
@@ -94,6 +104,21 @@ export function createApp(deps: AppDeps): Hono<AppEnv> {
     // user's D1 rows and leave their Strava grant live.
     if (event.type === "user.deleted" && event.userId !== null) {
       await purgeAccount(c.env, event.userId, fetchImpl);
+    }
+    return c.json({ ok: true });
+  });
+
+  // Every event re-reads the subscriber from RevenueCat instead of trusting
+  // the event body, so retries and out-of-order delivery converge on the same
+  // rows. A failed mirror returns 500 on purpose: RevenueCat retries those.
+  app.post("/webhooks/revenuecat", async (c) => {
+    if (!sameSecret(c.req.header("Authorization"), c.env.REVENUECAT_WEBHOOK_AUTH)) {
+      return c.json({ error: "unauthorized" }, 401);
+    }
+    const parsed = webhookBody.safeParse(await c.req.json().catch(() => null));
+    if (!parsed.success) return c.json({ error: "invalid request body" }, 400);
+    for (const userId of webhookUserIds(parsed.data.event)) {
+      await mirrorStoreEntitlements(c.env, revenuecat(c.env), userId);
     }
     return c.json({ ok: true });
   });
@@ -372,6 +397,20 @@ export function createApp(deps: AppDeps): Hono<AppEnv> {
               postSince: strava.post_since,
             },
     });
+  });
+
+  app.get("/v1/entitlements", async (c) => {
+    const user = { userId: c.get("userId"), hasFeature: c.get("hasFeature") };
+    return c.json(await resolveEntitlements(c.env, user));
+  });
+
+  // Called by the app right after a purchase or restore, so the answer does not
+  // wait on the webhook.
+  app.post("/v1/entitlements/refresh", async (c) => {
+    const user = { userId: c.get("userId"), hasFeature: c.get("hasFeature") };
+    await mirrorStoreEntitlements(c.env, revenuecat(c.env), user.userId);
+    await captureEvent(c.env, "entitlements_refreshed", {});
+    return c.json(await resolveEntitlements(c.env, user));
   });
 
   const stravaPostingBody = z.object({

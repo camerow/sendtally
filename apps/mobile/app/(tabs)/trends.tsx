@@ -1,15 +1,15 @@
 import React from "react";
-import { ScrollView, View } from "react-native";
+import { ActivityIndicator, ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors, fonts } from "@sendtally/design/tokens";
 import { Text } from "react-native";
 import { Logo } from "../../components/Logo";
-import { UpgradeCard } from "../../features/billing/UpgradeCard";
+import { Paywall } from "../../features/billing/Paywall";
+import { useCanSeeInsights } from "../../features/billing/useBilling";
 import { TrendsList } from "../../features/trends/TrendsList";
-import { INSIGHTS_FEATURE, useHasFeature } from "../../lib/billing";
 
 export default function Trends(): React.ReactElement {
-  const canSeeInsights = useHasFeature(INSIGHTS_FEATURE);
+  const canSeeInsights = useCanSeeInsights();
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.white }} edges={["top"]}>
@@ -22,9 +22,11 @@ export default function Trends(): React.ReactElement {
         }}
       >
         <Logo size={18} />
-        {canSeeInsights ? (
-          <TrendsList />
-        ) : (
+        {canSeeInsights === null && (
+          <ActivityIndicator color={colors.gunmetal} style={{ alignSelf: "flex-start" }} />
+        )}
+        {canSeeInsights === true && <TrendsList />}
+        {canSeeInsights === false && (
           <View style={{ gap: 14 }}>
             <Text
               style={{
@@ -36,7 +38,7 @@ export default function Trends(): React.ReactElement {
             >
               Trends
             </Text>
-            <UpgradeCard
+            <Paywall
               title="Your sessions are adding up to something."
               body="Logging stays free. Membership unlocks the screens that read your whole history back to you."
               points={[

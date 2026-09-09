@@ -1,21 +1,26 @@
 import React from "react";
 import type { LoaderFunctionArgs } from "react-router";
 import { useLoaderData } from "react-router";
+import type { Membership } from "@sendtally/api-client";
 import { Badge, Label } from "@sendtally/design";
-import { INSIGHTS_FEATURE, MEMBER_BENEFITS } from "../billing/features";
+import { membershipVM } from "@sendtally/features/billing";
+import { MEMBER_BENEFITS } from "../billing/features";
 import { MembershipPricing } from "../billing/components/MembershipPricing";
-import { hasFeature } from "../lib/billing.server";
-import { requireApi } from "../lib/api.server";
+import { StoreMembershipPanel } from "../billing/components/StoreMembershipPanel";
+import { getMembership } from "../lib/billing.server";
 
-type LoaderData = { isMember: boolean };
+type LoaderData = { membership: Membership };
 
 export async function loader(args: LoaderFunctionArgs): Promise<LoaderData> {
-  await requireApi(args);
-  return { isMember: await hasFeature(args, INSIGHTS_FEATURE) };
+  return { membership: await getMembership(args) };
 }
 
 export default function MembershipRoute(): React.ReactElement {
-  const { isMember } = useLoaderData<typeof loader>();
+  const { membership } = useLoaderData<typeof loader>();
+  const isMember = membership.active;
+  // A store subscription has no web checkout to show; Clerk's table only
+  // knows about web plans, so it stays for web members and non-members.
+  const storeOnly = membership.store !== null && !membership.web;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
@@ -87,7 +92,11 @@ export default function MembershipRoute(): React.ReactElement {
         ))}
       </div>
 
-      <MembershipPricing />
+      {storeOnly ? (
+        <StoreMembershipPanel vm={membershipVM({ membership })} />
+      ) : (
+        <MembershipPricing />
+      )}
     </div>
   );
 }
