@@ -1,5 +1,7 @@
 import { env } from "cloudflare:test";
 import { describe, expect, it } from "vitest";
+import type { SessionDetail } from "@sendtally/api-client";
+import { draftFromSession, toLogSessionInput } from "@sendtally/features/log-session/transforms";
 import { createApp, type AppDeps } from "../src/app";
 import { decryptSecret, encryptSecret } from "../src/lib/crypto";
 import { jsonResponse, makeFakeFetch } from "./fakes";
@@ -508,6 +510,63 @@ describe("app", () => {
     expect(after.title).toContain("climbing session");
     expect(after.climb_count).toBe(1);
     expect(after.top_grade).toBe(6);
+  });
+
+  // The edit screen loads a session, rebuilds the form draft from it, and PUTs
+  // that draft back. Anything the draft cannot express is silently lost, so the
+  // round trip is asserted against the real API rather than a fixture.
+  it("survives a no-op edit made through the client's own draft transforms", async () => {
+    const userId = "user_manual_roundtrip";
+    const body = logBody({
+      tags: ["Endurance"],
+      rpe: 8,
+      climbs: [
+        { name: "Cave problem", grade: { scale: "font", value: "6C+" }, kind: "send", tries: 2 },
+        { grade: { scale: "font", value: "7A" }, kind: "attempt", tries: 4 },
+      ],
+    });
+    const created = await postSession(userId, body);
+    const { session: before } = (await created.json()) as ManualSessionResponse;
+
+    const draft = draftFromSession(before as unknown as SessionDetail);
+    expect(draft.scale).toBe("font");
+
+    const updated = await testApp().request(
+      `/v1/sessions/${before.fingerprint}`,
+      {
+        method: "PUT",
+        headers: { "x-test-user": userId, "Content-Type": "application/json" },
+        body: JSON.stringify(toLogSessionInput(draft)),
+      },
+      env
+    );
+    expect(updated.status).toBe(200);
+    const { session: after } = (await updated.json()) as ManualSessionResponse;
+    expect(after).toEqual(before);
+  });
+
+  it("preserves every climb's grade when a mixed-scale session is edited", async () => {
+    const userId = "user_manual_mixed";
+    const created = await postSession(userId, logBody());
+    const { session: before } = (await created.json()) as ManualSessionResponse;
+
+    const updated = await testApp().request(
+      `/v1/sessions/${before.fingerprint}`,
+      {
+        method: "PUT",
+        headers: { "x-test-user": userId, "Content-Type": "application/json" },
+        body: JSON.stringify(
+          toLogSessionInput(draftFromSession(before as unknown as SessionDetail))
+        ),
+      },
+      env
+    );
+    const { session: after } = (await updated.json()) as ManualSessionResponse;
+    expect(after.climbs.map((c) => c.vGrade)).toEqual(before.climbs.map((c) => c.vGrade));
+    expect(after.climbs.map((c) => c.tries)).toEqual(before.climbs.map((c) => c.tries));
+    expect(after.climbs.map((c) => c.kind)).toEqual(before.climbs.map((c) => c.kind));
+    expect(after.top_grade).toBe(before.top_grade);
+    expect(after.top_send_grade).toBe(before.top_send_grade);
   });
 
   it("refuses to edit or delete board-synced sessions", async () => {

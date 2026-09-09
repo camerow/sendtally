@@ -154,6 +154,7 @@ export function sessionDetailVM(session: SessionDetail): SessionDetailVM {
   return {
     title: `${titleLabel} - ${dateLabel}`,
     meta: `${weekday} ${dateLabel.toUpperCase()} · ${time} · ${durationLabel(session.start_at, session.end_at)}${location} · RPE ${session.rpe}/10`,
+    editable: session.source === "manual",
     stats,
     bars,
     filterCounts,

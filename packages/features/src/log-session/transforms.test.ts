@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
+import type { SessionDetail } from "@sendtally/api-client";
 import {
   convertGrade,
+  draftFromSession,
   draftProblem,
   draftSummary,
   durationLabel,
@@ -160,5 +162,119 @@ describe("toLogSessionInput", () => {
     expect(input.rpe).toBe(8);
     expect(input.name).toBeUndefined();
     expect(input.climbs[0]?.grade).toEqual({ scale: "font", value: "6B" });
+  });
+});
+
+function session(overrides: Partial<SessionDetail> = {}): SessionDetail {
+  return {
+    fingerprint: "manual-1",
+    board: null,
+    source: "manual",
+    location: "indoor",
+    name: "Tuesday board night",
+    start_at: "2026-08-26T18:30:00.000Z",
+    end_at: "2026-08-26T20:00:00.000Z",
+    climb_count: 2,
+    top_grade: 6,
+    top_send_grade: 4,
+    rpe: 7,
+    title: "Tuesday board night",
+    strava_activity_id: null,
+    posted_at: null,
+    inProgress: false,
+    tags: [{ id: "t1", name: "Endurance", slug: "endurance" }],
+    climbs: [
+      {
+        time: "2026-08-26T18:30:00.000Z",
+        name: "Cave traverse",
+        vGrade: 4,
+        kind: "send",
+        tries: 2,
+        angle: null,
+        grade: { scale: "v", value: 4 },
+      },
+      {
+        time: "2026-08-26T20:00:00.000Z",
+        name: "",
+        vGrade: 6,
+        kind: "attempt",
+        tries: 4,
+        angle: null,
+        grade: { scale: "v", value: 6 },
+      },
+    ],
+    ...overrides,
+  };
+}
+
+describe("draftFromSession", () => {
+  it("rebuilds the draft a session was logged from", () => {
+    expect(draftFromSession(session())).toEqual({
+      name: "Tuesday board night",
+      date: "2026-08-26",
+      startTime: "18:30",
+      endTime: "20:00",
+      location: "indoor",
+      tags: ["Endurance"],
+      scale: "v",
+      rpe: 7,
+      climbs: [
+        { key: "climb-1", grade: "V4", name: "Cave traverse", kind: "send", tries: 2 },
+        { key: "climb-2", grade: "V6", name: "", kind: "attempt", tries: 4 },
+      ],
+    });
+  });
+
+  it("round-trips back to the same API payload, bar the now-pinned RPE", () => {
+    const input = toLogSessionInput(draftFromSession(session()));
+    expect(input).toEqual({
+      name: "Tuesday board night",
+      date: "2026-08-26",
+      startTime: "18:30",
+      endTime: "20:00",
+      rpe: 7,
+      location: "indoor",
+      tags: ["Endurance"],
+      climbs: [
+        { name: "Cave traverse", grade: { scale: "v", value: 4 }, kind: "send", tries: 2 },
+        { grade: { scale: "v", value: 6 }, kind: "attempt", tries: 4 },
+      ],
+    });
+  });
+
+  it("keeps the scale the climbs were entered in", () => {
+    const fontSession = session({
+      climbs: session().climbs.map((c) => ({
+        ...c,
+        grade: { scale: "font" as const, value: c.vGrade === 4 ? "6B" : "7A" },
+      })),
+    });
+    const d = draftFromSession(fontSession);
+    expect(d.scale).toBe("font");
+    expect(d.climbs.map((c) => c.grade)).toEqual(["6B", "7A"]);
+  });
+
+  it("orders climbs by the time they were logged, not by array order", () => {
+    const reversed = session({ climbs: [...session().climbs].reverse() });
+    expect(draftFromSession(reversed).climbs.map((c) => c.grade)).toEqual(["V4", "V6"]);
+  });
+
+  it("falls back to the V grade for a climb stored without an entered grade", () => {
+    const legacy = session({
+      climbs: session().climbs.map(({ grade: _grade, ...c }) => c),
+    });
+    expect(draftFromSession(legacy).climbs.map((c) => c.grade)).toEqual(["V4", "V6"]);
+  });
+
+  it("defaults an unnamed, unlocated session to a usable draft", () => {
+    const bare = session({ name: null, location: null, tags: [] });
+    const d = draftFromSession(bare);
+    expect(d.name).toBe("");
+    expect(d.location).toBe("indoor");
+    expect(d.tags).toEqual([]);
+  });
+
+  it("produces a draft with no problems to report", () => {
+    expect(draftProblem(draftFromSession(session()))).toBeNull();
   });
 });

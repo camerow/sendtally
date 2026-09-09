@@ -1,6 +1,7 @@
 import React from "react";
 import type { LoaderFunctionArgs } from "react-router";
-import { Link, useLoaderData, useParams } from "react-router";
+import { Link, useLoaderData, useNavigate, useParams } from "react-router";
+import type { SendtallyApi } from "@sendtally/api-client";
 import {
   CLIMB_SORTS,
   useSessionDetail,
@@ -63,6 +64,104 @@ const RESULT_BADGES: Record<
 };
 
 const GRID = "34px 1.9fr 62px 62px 62px 70px 92px";
+
+const actionButton: React.CSSProperties = {
+  fontFamily: "var(--font-sans)",
+  fontWeight: 600,
+  fontSize: 13,
+  color: "rgba(64,63,76,0.72)",
+  border: "1px solid rgba(64,63,76,0.25)",
+  borderRadius: "var(--radius-control)",
+  padding: "8px 14px",
+  background: "none",
+  textDecoration: "none",
+  cursor: "pointer",
+  whiteSpace: "nowrap",
+};
+
+function SessionActions({
+  api,
+  fingerprint,
+  editable,
+  stravaUrl,
+}: {
+  api: SendtallyApi;
+  fingerprint: string;
+  editable: boolean;
+  stravaUrl: string | null;
+}): React.ReactElement {
+  const navigate = useNavigate();
+  const [confirming, setConfirming] = React.useState(false);
+  const [deleting, setDeleting] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+
+  async function remove(): Promise<void> {
+    setDeleting(true);
+    setError(null);
+    try {
+      await api.deleteLoggedSession(fingerprint);
+      await navigate("/app");
+    } catch {
+      setError("Could not delete this session. Try again.");
+      setDeleting(false);
+      setConfirming(false);
+    }
+  }
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8 }}>
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
+        {editable && !confirming && (
+          <>
+            <Link to={`/app/sessions/${encodeURIComponent(fingerprint)}/edit`} style={actionButton}>
+              Edit
+            </Link>
+            <button type="button" onClick={() => setConfirming(true)} style={actionButton}>
+              Delete
+            </button>
+          </>
+        )}
+        {confirming && (
+          <>
+            <span style={{ ...monoLabel, alignSelf: "center", fontSize: 11 }}>DELETE SESSION?</span>
+            <button
+              type="button"
+              onClick={() => setConfirming(false)}
+              disabled={deleting}
+              style={actionButton}
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={() => void remove()}
+              disabled={deleting}
+              style={{
+                ...actionButton,
+                background: "var(--bs-watermelon-ink)",
+                borderColor: "transparent",
+                color: "var(--bs-white)",
+                opacity: deleting ? 0.45 : 1,
+              }}
+            >
+              {deleting ? "Deleting…" : "Delete"}
+            </button>
+          </>
+        )}
+        {stravaUrl !== null && (
+          <a href={stravaUrl} target="_blank" rel="noreferrer" style={actionButton}>
+            View on Strava ↗
+          </a>
+        )}
+      </div>
+      {error !== null && (
+        <span style={{ ...monoLabel, fontSize: 11, color: "var(--text-label-accent)" }}>
+          {error}
+        </span>
+      )}
+    </div>
+  );
+}
 
 export default function SessionDetailRoute(): React.ReactElement {
   const { apiUrl } = useLoaderData<typeof loader>();
@@ -131,25 +230,12 @@ export default function SessionDetailRoute(): React.ReactElement {
             {vm.meta}
           </span>
         </div>
-        {vm.stravaUrl !== null && (
-          <a
-            href={vm.stravaUrl}
-            target="_blank"
-            rel="noreferrer"
-            style={{
-              fontFamily: "var(--font-sans)",
-              fontWeight: 600,
-              fontSize: 13,
-              color: "rgba(64,63,76,0.72)",
-              border: "1px solid rgba(64,63,76,0.25)",
-              borderRadius: "var(--radius-control)",
-              padding: "8px 14px",
-              textDecoration: "none",
-            }}
-          >
-            View on Strava ↗
-          </a>
-        )}
+        <SessionActions
+          api={api}
+          fingerprint={params.fingerprint ?? ""}
+          editable={vm.editable}
+          stravaUrl={vm.stravaUrl}
+        />
       </div>
 
       <SessionTags api={api} fingerprint={params.fingerprint ?? ""} initial={tags} />

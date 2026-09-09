@@ -23,6 +23,7 @@ export type ClimbSort = "order" | "gradeDesc" | "gradeAsc" | "burns";
 export type SessionDetailVM = {
   title: string;
   meta: string;
+  editable: boolean;
   stats: StatVM[];
   bars: GradeBarVM[];
   filterCounts: Record<ClimbFilter, number>;
