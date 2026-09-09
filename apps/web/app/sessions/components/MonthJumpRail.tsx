@@ -1,6 +1,6 @@
 import React from "react";
 import { MONTH_SHORT_NAMES, type SessionYear } from "@sendtally/features/sessions";
-import { monthAnchorId, yearAnchorId } from "../anchors";
+import { sectionAnchorId, yearAnchorId } from "../anchors";
 
 const railLabel: React.CSSProperties = {
   fontFamily: "var(--font-mono)",
@@ -53,7 +53,7 @@ export function MonthJumpRail({
             return (
               <a
                 key={month.key}
-                href={`#${monthAnchorId(month.key)}`}
+                href={`#${sectionAnchorId(month.key)}`}
                 aria-current={active ? "true" : undefined}
                 style={{
                   display: "block",

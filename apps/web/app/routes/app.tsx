@@ -3,7 +3,7 @@ import React from "react";
 import type { LinksFunction, LoaderFunctionArgs } from "react-router";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router";
 import { Logo } from "@sendtally/design";
-import { NavIcon, type NavIconName } from "../components/NavIcon";
+import { Icon, type IconName } from "../components/Icon";
 import { requireApi } from "../lib/api.server";
 import appShellStyles from "../styles/app-shell.css?url";
 
@@ -14,7 +14,7 @@ export async function loader(args: LoaderFunctionArgs): Promise<null> {
   return null;
 }
 
-type NavItem = { label: string; to: string; icon: NavIconName };
+type NavItem = { label: string; to: string; icon: IconName };
 
 const NAV_ITEMS: NavItem[] = [
   { label: "Sessions", to: "/app", icon: "sessions" },
@@ -84,12 +84,6 @@ export default function AppLayout(): React.ReactElement {
           {signOut}
         </div>
       </div>
-      <header className="app-topbar">
-        <a href="/" style={{ display: "inline-flex", textDecoration: "none" }}>
-          <Logo tone="on-light" size={24} />
-        </a>
-        {signOut}
-      </header>
       <div className={focused ? "app-content app-content--focused" : "app-content"}>
         <Outlet />
       </div>
@@ -97,7 +91,7 @@ export default function AppLayout(): React.ReactElement {
         <nav className="app-tabbar" aria-label="Sections">
           {NAV_ITEMS.map(({ label, to, icon }) => (
             <NavLink key={label} to={to} end className="app-tab">
-              <NavIcon name={icon} />
+              <Icon name={icon} />
               {label.toUpperCase()}
             </NavLink>
           ))}

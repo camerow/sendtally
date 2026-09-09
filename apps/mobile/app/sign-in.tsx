@@ -76,6 +76,11 @@ export default function SignIn(): React.ReactElement | null {
         setBusy(false);
         return;
       }
+      if (intent === "sign-in") {
+        setError("No account for that email yet. Check the address, or create an account below.");
+        setBusy(false);
+        return;
+      }
       try {
         await signUp.create({ emailAddress: email });
         await signUp.prepareEmailAddressVerification({ strategy: "email_code" });

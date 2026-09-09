@@ -1,16 +1,21 @@
 export { SESSION_BADGE_LABELS, sessionBadge, type SessionBadge } from "./badges";
 export { sessionGradeLabels, type SessionGradeLabel } from "./grades";
 export {
+  IN_PROGRESS_LABEL,
+  climbCountLabel,
+  sessionDay,
+  sessionMetaLabel,
+  type SessionDay,
+} from "./meta";
+export {
   MONTH_SHORT_NAMES,
-  adjacentSessionMonths,
   monthKey,
   monthLabel,
-  monthsOfYear,
-  resolveSessionMonth,
+  monthName,
   sessionMonths,
-  sessionYears,
   type SessionMonth,
 } from "./months";
+export { monthScopeItems, tagScopeItems, type ScopeItem } from "./scope";
 export {
   UNTAGGED_KEY,
   UNTAGGED_LABEL,
