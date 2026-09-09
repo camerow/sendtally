@@ -111,15 +111,15 @@ function SessionActions({
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8 }}>
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
-        {editable && !confirming && (
-          <>
-            <Link to={`/app/sessions/${encodeURIComponent(fingerprint)}/edit`} style={actionButton}>
-              Edit
-            </Link>
-            <button type="button" onClick={() => setConfirming(true)} style={actionButton}>
-              Delete
-            </button>
-          </>
+        {!confirming && editable && (
+          <Link to={`/app/sessions/${encodeURIComponent(fingerprint)}/edit`} style={actionButton}>
+            Edit
+          </Link>
+        )}
+        {!confirming && (
+          <button type="button" onClick={() => setConfirming(true)} style={actionButton}>
+            Delete
+          </button>
         )}
         {confirming && (
           <>

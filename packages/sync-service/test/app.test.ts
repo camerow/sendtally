@@ -286,6 +286,27 @@ describe("app", () => {
     expect(row).toEqual({ source: "board", title: "Board session" });
   });
 
+  it("prunes the tags of a deleted board session", async () => {
+    await env.DB.prepare(
+      `INSERT INTO users (id, timezone, created_at) VALUES ('user_board_del_tags', 'UTC', '')`
+    ).run();
+    await env.DB.prepare(
+      `INSERT INTO sessions (user_id, fingerprint, board, source, start_at, end_at, climb_count, top_grade, top_send_grade, rpe, title, summary)
+       VALUES ('user_board_del_tags', 'fp_board_del', 'tension', 'board', '2026-01-01T00:00:00.000Z', '2026-01-01T01:00:00.000Z', 4, 5, 5, 6, 'Board session', 's')`
+    ).run();
+    await setTags("user_board_del_tags", "fp_board_del", ["Power Endurance"]);
+
+    const res = await testApp().request(
+      "/v1/sessions/fp_board_del",
+      { method: "DELETE", headers: { "x-test-user": "user_board_del_tags" } },
+      env
+    );
+    expect(res.status).toBe(200);
+
+    const all = (await (await listTags("user_board_del_tags")).json()) as { tags: Tag[] };
+    expect(all.tags).toEqual([]);
+  });
+
   it("clears a session's tags when given an empty list", async () => {
     const created = await postSession("user_tags_clear", logBody({ tags: ["Endurance"] }));
     const { session } = (await created.json()) as { session: { fingerprint: string } };
@@ -569,7 +590,7 @@ describe("app", () => {
     expect(after.top_send_grade).toBe(before.top_send_grade);
   });
 
-  it("refuses to edit or delete board-synced sessions", async () => {
+  it("refuses to edit a board-synced session but lets its owner delete it", async () => {
     const userId = "user_manual_guard";
     await env.DB.prepare(`INSERT INTO users (id, timezone, created_at) VALUES (?, 'UTC', '')`)
       .bind(userId)
@@ -597,7 +618,13 @@ describe("app", () => {
       { method: "DELETE", headers: { "x-test-user": userId } },
       env
     );
-    expect(del.status).toBe(409);
+    expect(del.status).toBe(200);
+    const gone = await env.DB.prepare(
+      `SELECT COUNT(*) AS n FROM sessions WHERE user_id = ? AND fingerprint = 'fp_board'`
+    )
+      .bind(userId)
+      .first<{ n: number }>();
+    expect(gone?.n).toBe(0);
 
     const missing = await testApp().request(
       "/v1/sessions/manual-nope",

@@ -13,7 +13,7 @@ Aurora asked Will to stop, because using their API this way is against their ter
 
 - Never call any Aurora-hosted API, from the Worker, the apps, tests, scripts, or the Go CLI. Do not add new code paths that do, and do not "fix" or revive existing ones.
 - The board connect flow, the cron/queue sync pipeline, the per-board climb cache, and the `board` session source are legacy. They are being removed; until they are gone, treat them as dead code that must not run in production.
-- Existing `board`-sourced session rows in D1 stay as read-only history for the users who have them. They are never refreshed.
+- Existing `board`-sourced session rows in D1 stay as read-only history for the users who have them. They are never refreshed, and never edited. Their owner can still delete them.
 - Do not describe the product as syncing from boards anywhere (marketing copy, store listings, app strings, docs).
 - Manual entry (`source = "manual"`) is the product. Any future integration must be an officially sanctioned one, agreed with the provider first, and is a decision for Will.
 
@@ -129,7 +129,10 @@ Invariants:
 - Strava rate limiting is a clean pause, not an error.
 - Unknown grades are `-1` and score conservatively as V1.
 - Keep the "synced by sendtally" attribution line in activity descriptions (Strava attribution expectations).
-- Legacy `source = "board"` rows are read-only history: never re-scored, never re-posted, never deleted by anything except account deletion.
+- Legacy `source = "board"` rows are read-only history: never re-scored, never re-posted, never edited.
+  Their owner can delete them, though, same as any other session.
+  Deleting a row you own calls nothing upstream and re-scores nothing, so the read-only rule does not reach it - the rule exists to stop us refreshing from an API we no longer call, not to hold a user's own history hostage.
+  Tags on board rows work for the same reason.
 
 ## Strava operational constraints
 

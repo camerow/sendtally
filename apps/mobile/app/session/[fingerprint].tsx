@@ -113,21 +113,19 @@ export default function SessionDetailScreen(): React.ReactElement {
           {state.status === "ready" && (
             <View style={{ flexDirection: "row", alignItems: "center", gap: 16 }}>
               {state.data.vm.editable && (
-                <>
-                  <HeaderAction
-                    label="EDIT"
-                    onPress={() =>
-                      router.push(`/session/${encodeURIComponent(fingerprint ?? "")}/edit`)
-                    }
-                  />
-                  <HeaderAction
-                    label={deleting ? "DELETING…" : "DELETE"}
-                    onPress={() => {
-                      if (!deleting) confirmDelete();
-                    }}
-                  />
-                </>
+                <HeaderAction
+                  label="EDIT"
+                  onPress={() =>
+                    router.push(`/session/${encodeURIComponent(fingerprint ?? "")}/edit`)
+                  }
+                />
               )}
+              <HeaderAction
+                label={deleting ? "DELETING…" : "DELETE"}
+                onPress={() => {
+                  if (!deleting) confirmDelete();
+                }}
+              />
               {state.data.vm.stravaUrl !== null && (
                 <HeaderAction
                   label="STRAVA ↗"
