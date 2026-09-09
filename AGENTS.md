@@ -166,7 +166,7 @@ Design work (Claude-generated or otherwise) targets the token vocabulary; each p
 4. ~~`apps/web` and `apps/mobile`: sign-in, log-session form, session list and detail, trends, Strava connect.~~ Done.
 5. **Aurora removal (in progress):** delete the board connect flow, cron + queue pipeline, Aurora client, catalogue cron, and the `board_*` tables; drop board-sync copy from the apps and web. Keep `source = "board"` rows readable.
 6. Journal entries (free-text, attachable to a session).
-7. Project tracking (climbs worked across many sessions before sending).
+7. ~~Project tracking (climbs worked across many sessions before sending).~~ Done: climb names autocomplete from the user's own history, and a named climb can be flagged as a project (`projects` table, `GET /v1/climbs`) to total its sessions and attempts.
 8. Apply for the Strava quota increase; open sign-ups on approval.
 
 ---

@@ -15,6 +15,7 @@ export default [
     route("sessions/new", "routes/app.sessions.new.tsx"),
     route("sessions/:fingerprint", "routes/app.sessions.$fingerprint.tsx"),
     route("sessions/:fingerprint/edit", "routes/app.sessions.$fingerprint.edit.tsx"),
+    route("projects", "routes/app.projects.tsx"),
     route("trends", "routes/app.trends._index.tsx"),
     route("trends/:metric", "routes/app.trends.$metric.tsx"),
     route("settings", "routes/app.settings.tsx"),

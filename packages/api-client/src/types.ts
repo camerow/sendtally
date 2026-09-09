@@ -45,6 +45,20 @@ export type SessionClimb = {
 
 export type SessionTag = { id: string; name: string; slug: string };
 
+export type ClimbSummary = {
+  slug: string;
+  name: string;
+  grade: ClimbGrade;
+  project: boolean;
+  sessions: number;
+  attempts: number;
+  sends: number;
+  first_at: string;
+  last_at: string;
+};
+
+export type Project = { slug: string; name: string; grade: ClimbGrade };
+
 export type TagSummary = SessionTag & { session_count: number };
 
 export type SessionSource = "board" | "manual";

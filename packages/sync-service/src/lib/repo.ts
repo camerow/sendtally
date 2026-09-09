@@ -2,6 +2,7 @@ import { and, asc, count, desc, eq, inArray, notInArray } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import {
   boardConnections,
+  projects,
   sessions,
   sessionTags,
   storeEntitlements,
@@ -361,6 +362,47 @@ export async function setSessionTags(
   return linked;
 }
 
+export type ClimbGrade =
+  { scale: "v"; value: number } | { scale: "font" | "yds" | "french"; value: string };
+
+export type ProjectRow = typeof projects.$inferSelect;
+
+export async function listProjects(db: D1Database, userId: string): Promise<ProjectRow[]> {
+  return drizzle(db).select().from(projects).where(eq(projects.user_id, userId)).all();
+}
+
+export async function upsertProject(
+  db: D1Database,
+  userId: string,
+  project: { slug: string; name: string; grade: ClimbGrade }
+): Promise<void> {
+  const grade_json = JSON.stringify(project.grade);
+  await drizzle(db)
+    .insert(projects)
+    .values({
+      user_id: userId,
+      slug: project.slug,
+      name: project.name,
+      grade_json,
+      created_at: new Date().toISOString(),
+    })
+    .onConflictDoUpdate({
+      target: [projects.user_id, projects.slug],
+      set: { name: project.name, grade_json },
+    });
+}
+
+export async function deleteProject(
+  db: D1Database,
+  userId: string,
+  slug: string
+): Promise<boolean> {
+  const result = await drizzle(db)
+    .delete(projects)
+    .where(and(eq(projects.user_id, userId), eq(projects.slug, slug)));
+  return result.meta.changes > 0;
+}
+
 export type PostableSessionRow = {
   fingerprint: string;
   source: string;
@@ -495,6 +537,7 @@ export async function deleteUserData(db: D1Database, userId: string): Promise<vo
   await d.batch([
     d.delete(sessionTags).where(eq(sessionTags.user_id, userId)),
     d.delete(tags).where(eq(tags.user_id, userId)),
+    d.delete(projects).where(eq(projects.user_id, userId)),
     d.delete(sessions).where(eq(sessions.user_id, userId)),
     d.delete(stravaConnections).where(eq(stravaConnections.user_id, userId)),
     d.delete(storeEntitlements).where(eq(storeEntitlements.user_id, userId)),

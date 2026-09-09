@@ -5,6 +5,7 @@ import { z } from "zod";
 import type { AuthedUser, AuthWebhookEvent } from "./auth";
 import type { Env } from "./bindings";
 import { purgeAccount } from "./lib/account";
+import { climbCatalogue, climbSlug, projectBody } from "./lib/climbs";
 import { decryptSecret, encryptSecret } from "./lib/crypto";
 import { mirrorStoreEntitlements, resolveEntitlements } from "./lib/entitlements";
 import { buildManualSession, historySession, manualSessionBody } from "./lib/manual";
@@ -242,6 +243,37 @@ export function createApp(deps: AppDeps): Hono<AppEnv> {
 
   app.get("/v1/tags", async (c) => {
     return c.json({ tags: await repo.listTags(c.env.DB, c.get("userId")) });
+  });
+
+  // Every named climb the user has logged, with a project flag. Stats come
+  // from the session rows on read, so edits and deletions never leave a
+  // project count stale.
+  app.get("/v1/climbs", async (c) => {
+    const userId = c.get("userId");
+    const [rows, projects] = await Promise.all([
+      repo.listSessions(c.env.DB, userId, 5000, true),
+      repo.listProjects(c.env.DB, userId),
+    ]);
+    return c.json({ climbs: climbCatalogue(rows, projects) });
+  });
+
+  app.post("/v1/projects", async (c) => {
+    const parsed = projectBody.safeParse(await c.req.json().catch(() => null));
+    if (!parsed.success) return c.json({ error: "invalid request body" }, 400);
+    const slug = climbSlug(parsed.data.name);
+    if (slug === "") return c.json({ error: "invalid request body" }, 400);
+    const userId = c.get("userId");
+    await repo.ensureUser(c.env.DB, userId);
+    await repo.upsertProject(c.env.DB, userId, { slug, ...parsed.data });
+    await captureEvent(c.env, "project_marked", {});
+    return c.json({ project: { slug, name: parsed.data.name, grade: parsed.data.grade } }, 201);
+  });
+
+  app.delete("/v1/projects/:slug", async (c) => {
+    const deleted = await repo.deleteProject(c.env.DB, c.get("userId"), c.req.param("slug"));
+    if (!deleted) return c.json({ error: "not found" }, 404);
+    await captureEvent(c.env, "project_unmarked", {});
+    return c.json({ deleted: true });
   });
 
   app.get("/v1/sessions/:fingerprint", async (c) => {
