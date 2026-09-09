@@ -1,4 +1,13 @@
+import type { Discipline } from "@sendtally/core";
+
+export type { Discipline };
+
 export type TrendMetric = "volume" | "pyramid" | "hardest" | "flash" | "avggrade";
+
+export const TREND_DISCIPLINES: Array<{ value: Discipline; label: string }> = [
+  { value: "boulder", label: "BOULDERS" },
+  { value: "route", label: "ROUTES" },
+];
 
 export type TrendRange = "1m" | "3m" | "6m" | "ytd" | "1y" | "all";
 
@@ -52,6 +61,8 @@ export type TrendDetailVM = {
 
 export type TrendsVM = {
   caption: string;
+  discipline: Discipline;
+  disciplines: Discipline[];
   tiles: TrendTileVM[];
   details: Record<TrendMetric, TrendDetailVM>;
 };

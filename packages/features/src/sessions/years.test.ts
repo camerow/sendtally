@@ -26,6 +26,8 @@ function session(
     climb_count: 3,
     top_grade: grades.top,
     top_send_grade: grades.send,
+    top_grade_label: null,
+    top_send_grade_label: null,
     rpe: 7,
     title: "T",
     strava_activity_id: null,
@@ -54,8 +56,8 @@ describe("sessionYearGroups", () => {
 
   it("rolls up totals across every month in the year", () => {
     const [first, second] = sessionYearGroups(sessions);
-    expect(first?.totals).toEqual({ count: 3, minutes: 270, topGrade: 8 });
-    expect(second?.totals).toEqual({ count: 1, minutes: 90, topGrade: 4 });
+    expect(first?.totals).toEqual({ count: 3, minutes: 270, topGrade: 8, topGradeLabel: null });
+    expect(second?.totals).toEqual({ count: 1, minutes: 90, topGrade: 4, topGradeLabel: null });
   });
 
   it("returns nothing for an empty history", () => {
@@ -91,9 +93,17 @@ describe("labels", () => {
   });
 
   it("drops the top grade when it is unknown", () => {
-    expect(totalsLabel({ count: 2, minutes: 90, topGrade: -1 })).toBe("2 SESSIONS · 1H 30M");
-    expect(totalsLabel({ count: 2, minutes: 90, topGrade: 6 })).toBe(
+    expect(totalsLabel({ count: 2, minutes: 90, topGrade: -1, topGradeLabel: null })).toBe(
+      "2 SESSIONS · 1H 30M"
+    );
+    expect(totalsLabel({ count: 2, minutes: 90, topGrade: 6, topGradeLabel: null })).toBe(
       "2 SESSIONS · 1H 30M · TOP V6"
+    );
+  });
+
+  it("shows the stored label for the hardest session, route grades included", () => {
+    expect(totalsLabel({ count: 1, minutes: 60, topGrade: 4, topGradeLabel: "5.12b" })).toBe(
+      "1 SESSION · 1H · TOP 5.12b"
     );
   });
 });

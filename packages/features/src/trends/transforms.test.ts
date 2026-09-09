@@ -24,6 +24,8 @@ function session(
     climb_count: climbs.length,
     top_grade: Math.max(...climbs.map((c) => c.vGrade)),
     top_send_grade: Math.max(...climbs.filter((c) => c.kind === "send").map((c) => c.vGrade), -1),
+    top_grade_label: null,
+    top_send_grade_label: null,
     rpe: 6,
     title: "",
     strava_activity_id: null,
@@ -155,5 +157,63 @@ describe("bucketsFor", () => {
     expect(shortSpan.map((b) => b.label)).toContain("JAN");
     const longSpan = bucketsFor("all", NOW, Date.parse("2022-03-15T00:00:00.000Z"));
     expect(longSpan.map((b) => b.label)).toEqual(["2022", "2023", "2024", "2025", "2026"]);
+  });
+});
+
+describe("disciplines", () => {
+  const routeSessions: SessionWithClimbs[] = [
+    session("2026-08-01T18:00:00.000Z", [
+      { vGrade: 2, grade: { scale: "yds", value: "5.11a" } },
+      { vGrade: 4, grade: { scale: "yds", value: "5.12a" }, tries: 2 },
+    ]),
+    session("2026-07-20T18:00:00.000Z", [{ vGrade: 3, grade: { scale: "yds", value: "5.11d" } }]),
+  ];
+
+  it("reads a route-only logbook in the route scale", () => {
+    const vm = trendsVM(routeSessions, "1y", NOW);
+    expect(vm.discipline).toBe("route");
+    expect(vm.disciplines).toEqual(["route"]);
+    expect(vm.details.pyramid.bars.map((b) => b.axisLabel)).toEqual([
+      "5.11a",
+      "5.11b",
+      "5.11c",
+      "5.11d",
+      "5.12a",
+    ]);
+    expect(vm.tiles.find((t) => t.metric === "hardest")?.value).toBe("5.12a");
+    expect(vm.tiles.find((t) => t.metric === "avggrade")?.value).toBe("5.11c");
+    expect(vm.details.flash.specs[0]?.v).toBe("5.11d - hardest flash");
+  });
+
+  it("offers both disciplines and follows the requested one", () => {
+    const both = [...sessions, ...routeSessions];
+    const auto = trendsVM(both, "1y", NOW);
+    expect(auto.disciplines).toEqual(["boulder", "route"]);
+    expect(auto.discipline).toBe("boulder");
+    expect(auto.tiles.find((t) => t.metric === "hardest")?.value).toBe("V7");
+
+    const routes = trendsVM(both, "1y", NOW, "route");
+    expect(routes.discipline).toBe("route");
+    expect(routes.tiles.find((t) => t.metric === "hardest")?.value).toBe("5.12a");
+    expect(routes.tiles.find((t) => t.metric === "volume")?.value).toBe("10 climbs");
+  });
+
+  it("uses French labels when most routes were logged in French", () => {
+    const french = routeSessions.map((s) => ({
+      ...s,
+      climbs: s.climbs.map((c) => ({
+        ...c,
+        grade: { scale: "french" as const, value: c.vGrade === 4 ? "7a+" : "6c" },
+      })),
+    }));
+    expect(trendsVM(french, "1y", NOW).tiles.find((t) => t.metric === "hardest")?.value).toBe(
+      "7a+"
+    );
+  });
+
+  it("falls back to boulders for an empty logbook", () => {
+    const vm = trendsVM([], "1y", NOW, "route");
+    expect(vm.discipline).toBe("boulder");
+    expect(vm.disciplines).toEqual([]);
   });
 });

@@ -1,5 +1,14 @@
 export { SESSION_BADGE_LABELS, sessionBadge, type SessionBadge } from "./badges";
-export { sessionGradeLabels, type SessionGradeLabel } from "./grades";
+export {
+  climbGradeLabel,
+  gradeFormatter,
+  gradeFormatterFor,
+  routeScaleOf,
+  sessionGradeLabels,
+  type GradeFormatter,
+  type RouteScale,
+  type SessionGradeLabel,
+} from "./grades";
 export {
   IN_PROGRESS_LABEL,
   climbCountLabel,

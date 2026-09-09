@@ -3,13 +3,14 @@ import type { SendtallyApi, SessionWithClimbs } from "@sendtally/api-client";
 import { useQuery, type QueryState } from "../lib/useQuery";
 import { filterSessionsByTags, sessionTagOptions, type TagOption } from "../sessions/tags";
 import { trendsVM } from "./transforms";
-import type { TrendRange, TrendsVM } from "./types";
+import type { Discipline, TrendRange, TrendsVM } from "./types";
 
 export type TrendsFeature = {
   state: QueryState<TrendsVM>;
   reload: () => void;
   range: TrendRange;
   setRange: (range: TrendRange) => void;
+  setDiscipline: (discipline: Discipline) => void;
   tagOptions: TagOption[];
   selectedTags: string[];
   toggleTag: (slug: string) => void;
@@ -18,6 +19,7 @@ export type TrendsFeature = {
 
 export function useTrends(api: SendtallyApi): TrendsFeature {
   const [range, setRange] = React.useState<TrendRange>("3m");
+  const [discipline, setDiscipline] = React.useState<Discipline | null>(null);
   const [selectedTags, setSelectedTags] = React.useState<string[]>([]);
 
   const load = React.useCallback(async (): Promise<SessionWithClimbs[]> => {
@@ -34,8 +36,11 @@ export function useTrends(api: SendtallyApi): TrendsFeature {
 
   const state = React.useMemo((): QueryState<TrendsVM> => {
     if (raw.status !== "ready") return raw;
-    return { status: "ready", data: trendsVM(filterSessionsByTags(raw.data, selectedTags), range) };
-  }, [raw, range, selectedTags]);
+    return {
+      status: "ready",
+      data: trendsVM(filterSessionsByTags(raw.data, selectedTags), range, new Date(), discipline),
+    };
+  }, [raw, range, selectedTags, discipline]);
 
   const toggleTag = React.useCallback((slug: string): void => {
     setSelectedTags((prev) =>
@@ -45,5 +50,15 @@ export function useTrends(api: SendtallyApi): TrendsFeature {
 
   const clearTags = React.useCallback((): void => setSelectedTags([]), []);
 
-  return { state, reload, range, setRange, tagOptions, selectedTags, toggleTag, clearTags };
+  return {
+    state,
+    reload,
+    range,
+    setRange,
+    setDiscipline,
+    tagOptions,
+    selectedTags,
+    toggleTag,
+    clearTags,
+  };
 }

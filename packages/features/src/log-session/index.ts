@@ -1,8 +1,11 @@
 export {
   FONT_GRADE_OPTIONS,
+  FRENCH_GRADE_OPTIONS,
   V_GRADE_OPTIONS,
+  YDS_GRADE_OPTIONS,
   convertGrade,
   draftFromSession,
+  draftGrade,
   draftProblem,
   draftSummary,
   durationLabel,
@@ -17,4 +20,11 @@ export {
   withoutTag,
 } from "./transforms";
 export { useSessionDraft, type EditableSession } from "./useSessionDraft";
-export type { ClimbDraft, GradeScale, LogSessionDraft } from "./types";
+export { GRADE_SCALE_OPTIONS } from "./types";
+export type {
+  ClimbDraft,
+  Discipline,
+  GradeScale,
+  GradeScaleOption,
+  LogSessionDraft,
+} from "./types";

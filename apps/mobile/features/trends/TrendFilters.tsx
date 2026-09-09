@@ -1,12 +1,27 @@
 import React from "react";
 import { ScrollView, View } from "react-native";
-import { TREND_RANGES, type TrendsFeature } from "@sendtally/features/trends";
+import { TREND_DISCIPLINES, TREND_RANGES, type TrendsFeature } from "@sendtally/features/trends";
 import { Chip } from "../../components/Chip";
 
 export function TrendFilters({ feature }: { feature: TrendsFeature }): React.ReactElement {
-  const { range, setRange, tagOptions, selectedTags, toggleTag, clearTags } = feature;
+  const { state, range, setRange, setDiscipline, tagOptions, selectedTags, toggleTag, clearTags } =
+    feature;
+  const disciplines = state.status === "ready" ? state.data.disciplines : [];
+  const discipline = state.status === "ready" ? state.data.discipline : null;
   return (
     <View style={{ gap: 8 }}>
+      {disciplines.length > 1 && (
+        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+          {TREND_DISCIPLINES.map((d) => (
+            <Chip
+              key={d.value}
+              label={d.label}
+              active={discipline === d.value}
+              onPress={() => setDiscipline(d.value)}
+            />
+          ))}
+        </View>
+      )}
       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
         {TREND_RANGES.map((r) => (
           <Chip

@@ -1,4 +1,14 @@
-import { FONT_GRADES, fontFromV, vFromFont } from "@sendtally/core";
+import {
+  FONT_GRADES,
+  FRENCH_GRADES,
+  YDS_GRADES,
+  climbRank,
+  convertGrade as convertCoreGrade,
+  effortGrade,
+  formatGrade,
+  parseGrade,
+  type Grade,
+} from "@sendtally/core";
 import type {
   LogClimbInput,
   LogSessionInput,
@@ -14,21 +24,46 @@ export const FONT_GRADE_OPTIONS: readonly string[] = FONT_GRADES.filter(
   (g) => !["1", "2", "3"].includes(g)
 );
 
+export const YDS_GRADE_OPTIONS: readonly string[] = YDS_GRADES;
+
+export const FRENCH_GRADE_OPTIONS: readonly string[] = FRENCH_GRADES;
+
+const GRADE_OPTIONS: Record<GradeScale, readonly string[]> = {
+  v: V_GRADE_OPTIONS,
+  font: FONT_GRADE_OPTIONS,
+  yds: YDS_GRADE_OPTIONS,
+  french: FRENCH_GRADE_OPTIONS,
+};
+
+const DEFAULT_GRADE: Record<GradeScale, string> = {
+  v: "V3",
+  font: "6A",
+  yds: "5.10b",
+  french: "6a",
+};
+
 export function gradeOptions(scale: GradeScale): readonly string[] {
-  return scale === "v" ? V_GRADE_OPTIONS : FONT_GRADE_OPTIONS;
+  return GRADE_OPTIONS[scale];
+}
+
+export function draftGrade(grade: string, scale: GradeScale): Grade | undefined {
+  const parsed = parseGrade(scale, grade);
+  if (parsed === undefined) return undefined;
+  if (parsed.scale === "v" && parsed.value > 17) return undefined;
+  return parsed;
 }
 
 export function vGradeOf(grade: string, scale: GradeScale): number | undefined {
-  if (scale === "font") return vFromFont(grade);
-  const n = Number(grade.replace(/^V/i, ""));
-  return Number.isInteger(n) && n >= 0 && n <= 17 ? n : undefined;
+  const parsed = draftGrade(grade, scale);
+  return parsed === undefined ? undefined : effortGrade(parsed);
 }
 
 export function convertGrade(grade: string, from: GradeScale, to: GradeScale): string {
   if (from === to) return grade;
-  const v = vGradeOf(grade, from);
-  if (v === undefined) return grade;
-  return to === "v" ? `V${v}` : (fontFromV(v) ?? grade);
+  const parsed = draftGrade(grade, from);
+  if (parsed === undefined) return grade;
+  const converted = convertCoreGrade(parsed, to);
+  return converted === undefined ? grade : formatGrade(converted);
 }
 
 function pad(n: number): string {
@@ -56,7 +91,7 @@ export function emptyDraft(now: Date): LogSessionDraft {
 }
 
 export function newClimb(key: string, scale: GradeScale): ClimbDraft {
-  return { key, grade: scale === "v" ? "V3" : "6A", name: "", kind: "send", tries: 1 };
+  return { key, grade: DEFAULT_GRADE[scale], name: "", kind: "send", tries: 1 };
 }
 
 export function withTag(draft: LogSessionDraft, name: string): LogSessionDraft {
@@ -96,20 +131,30 @@ export function durationLabel(minutes: number): string {
   return m === 0 ? `${h}H` : `${h}H ${pad(m)}M`;
 }
 
+function topDraftGrade(draft: LogSessionDraft): Grade | undefined {
+  let top: Grade | undefined;
+  let topRank = -1;
+  for (const c of draft.climbs) {
+    const grade = draftGrade(c.grade, draft.scale);
+    if (grade === undefined) continue;
+    const rank = climbRank({ vGrade: effortGrade(grade), grade });
+    if (rank > topRank) {
+      topRank = rank;
+      top = grade;
+    }
+  }
+  return top;
+}
+
 export function draftSummary(draft: LogSessionDraft): string {
   const sends = draft.climbs.filter((c) => c.kind === "send").length;
   const attempts = draft.climbs.length - sends;
-  const grades = draft.climbs
-    .map((c) => vGradeOf(c.grade, draft.scale))
-    .filter((v): v is number => v !== undefined);
-  const top = grades.length === 0 ? undefined : Math.max(...grades);
+  const top = topDraftGrade(draft);
   const parts = [
     `${draft.climbs.length} ${draft.climbs.length === 1 ? "CLIMB" : "CLIMBS"}`,
     `${sends} ${sends === 1 ? "SEND" : "SENDS"}, ${attempts} ${attempts === 1 ? "ATTEMPT" : "ATTEMPTS"}`,
   ];
-  if (top !== undefined) {
-    parts.push(`TOP ${draft.scale === "v" ? `V${top}` : (fontFromV(top) ?? `V${top}`)}`);
-  }
+  if (top !== undefined) parts.push(`TOP ${formatGrade(top)}`);
   const minutes = durationMinutes(draft.startTime, draft.endTime);
   if (minutes !== undefined) parts.push(durationLabel(minutes));
   return parts.join(" · ");
@@ -125,7 +170,7 @@ export function draftProblem(draft: LogSessionDraft): string | null {
     return "Sessions longer than 12 hours can't be logged.";
   }
   if (draft.climbs.length === 0) return "Add at least one climb.";
-  if (draft.climbs.some((c) => vGradeOf(c.grade, draft.scale) === undefined)) {
+  if (draft.climbs.some((c) => draftGrade(c.grade, draft.scale) === undefined)) {
     return "Every climb needs a grade.";
   }
   return null;
@@ -134,10 +179,7 @@ export function draftProblem(draft: LogSessionDraft): string | null {
 export function toLogSessionInput(draft: LogSessionDraft): LogSessionInput {
   const climbs: LogClimbInput[] = draft.climbs.map((c) => ({
     ...(c.name.trim() === "" ? {} : { name: c.name.trim() }),
-    grade:
-      draft.scale === "v"
-        ? { scale: "v", value: vGradeOf(c.grade, "v") ?? 0 }
-        : { scale: "font", value: c.grade },
+    grade: draftGrade(c.grade, draft.scale) ?? fallbackGrade(c.grade, draft.scale),
     kind: c.kind,
     tries: c.tries,
   }));
@@ -153,6 +195,10 @@ export function toLogSessionInput(draft: LogSessionDraft): LogSessionInput {
   };
 }
 
+function fallbackGrade(grade: string, scale: GradeScale): Grade {
+  return scale === "v" ? { scale, value: 0 } : { scale, value: grade };
+}
+
 function utcTime(iso: string): string {
   const d = new Date(iso);
   return `${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}`;
@@ -164,12 +210,8 @@ function utcDate(iso: string): string {
 }
 
 function climbGrade(climb: SessionClimb, scale: GradeScale): string {
-  if (climb.grade !== undefined) {
-    const written = climb.grade.scale === "v" ? `V${climb.grade.value}` : climb.grade.value;
-    return convertGrade(written, climb.grade.scale, scale);
-  }
-  const v = Math.max(0, climb.vGrade);
-  return scale === "v" ? `V${v}` : (fontFromV(v) ?? `V${v}`);
+  const stored: Grade = climb.grade ?? { scale: "v", value: Math.max(0, climb.vGrade) };
+  return convertGrade(formatGrade(stored), stored.scale, scale);
 }
 
 export function draftFromSession(session: SessionDetail): LogSessionDraft {

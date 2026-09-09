@@ -1,3 +1,11 @@
+import {
+  disciplineOf,
+  formatGrade,
+  routeGradeFromIndex,
+  routeIndexOf,
+  type Discipline,
+  type Grade,
+} from "./grades";
 import type { Climb, Session } from "./session";
 
 export type EffortConfig = {
@@ -89,7 +97,7 @@ export function score(
 }
 
 function volumeDriven(s: Session, rollingMax: number): boolean {
-  const { hi } = gradeRange(s);
+  const hi = topEffortGrade(s);
   return rollingMax > 0 && hi >= 0 && hi <= rollingMax - 2;
 }
 
@@ -109,15 +117,84 @@ function adjective(rpe: number): string {
   return "Max effort climbing session";
 }
 
-function gradeRange(s: Session): { lo: number; hi: number } {
-  let lo = -1;
-  let hi = -1;
-  for (const c of s.climbs) {
-    if (c.vGrade < 0) continue;
-    if (lo === -1 || c.vGrade < lo) lo = c.vGrade;
-    if (c.vGrade > hi) hi = c.vGrade;
+function topEffortGrade(s: Session): number {
+  return s.climbs.reduce((hi, c) => (c.vGrade > hi ? c.vGrade : hi), -1);
+}
+
+export type GradedClimb = { vGrade: number; grade?: Grade | undefined };
+
+export function climbGrade(c: GradedClimb): Grade {
+  return c.grade ?? { scale: "v", value: c.vGrade };
+}
+
+export function climbDiscipline(c: GradedClimb): Discipline {
+  return disciplineOf(climbGrade(c).scale);
+}
+
+export function dominantDiscipline(climbs: readonly GradedClimb[]): Discipline {
+  const routes = climbs.filter((c) => climbDiscipline(c) === "route").length;
+  return routes > climbs.length - routes ? "route" : "boulder";
+}
+
+export function climbRank(c: GradedClimb): number {
+  const grade = climbGrade(c);
+  return disciplineOf(grade.scale) === "route" ? (routeIndexOf(grade) ?? -1) : c.vGrade;
+}
+
+type DisciplineStats = {
+  discipline: Discipline;
+  scale: Grade["scale"];
+  lo: number;
+  hi: number;
+  avg: number;
+  top: Climb;
+};
+
+function disciplineStats(climbs: readonly Climb[], discipline: Discipline): DisciplineStats | null {
+  const graded = climbs.filter((c) => climbDiscipline(c) === discipline && climbRank(c) >= 0);
+  if (graded.length === 0) return null;
+  let top = graded[0]!;
+  let lo = climbRank(top);
+  let hi = lo;
+  let sum = 0;
+  for (const c of graded) {
+    const r = climbRank(c);
+    sum += r;
+    if (r < lo) lo = r;
+    if (r > hi) {
+      hi = r;
+      top = c;
+    }
   }
-  return { lo, hi };
+  return {
+    discipline,
+    scale: climbGrade(graded[0]!).scale,
+    lo,
+    hi,
+    avg: sum / graded.length,
+    top,
+  };
+}
+
+function rankLabel(stats: DisciplineStats, rank: number): string {
+  if (stats.discipline === "boulder") return `V${rank}`;
+  const scale = stats.scale === "french" ? "french" : "yds";
+  const grade = routeGradeFromIndex(scale, rank);
+  return grade === undefined ? "?" : formatGrade(grade);
+}
+
+function averageLabel(stats: DisciplineStats): string {
+  if (stats.discipline === "boulder") return `V${stats.avg.toFixed(1)}`;
+  return rankLabel(stats, Math.round(stats.avg));
+}
+
+function gradeStats(stats: DisciplineStats): string {
+  return `${rankLabel(stats, stats.lo)}-${rankLabel(stats, stats.hi)} · avg ${averageLabel(stats)}`;
+}
+
+export function topGradeLabel(climbs: readonly Climb[]): string | undefined {
+  const stats = disciplineStats(climbs, dominantDiscipline(climbs));
+  return stats === null ? undefined : formatGrade(climbGrade(stats.top));
 }
 
 function title(rpe: number, s: Session, volume: boolean): string {
@@ -125,10 +202,10 @@ function title(rpe: number, s: Session, volume: boolean): string {
   if (volume && rpe >= 8) {
     adj = rpe === 10 ? "Max volume climbing session" : "High volume climbing session";
   }
-  const { hi } = gradeRange(s);
   const climbs = plural(s.climbs.length, "climb");
-  if (hi < 0) return `${adj} · ${climbs}`;
-  return `${adj} · ${climbs}, top V${hi}`;
+  const top = topGradeLabel(s.climbs);
+  if (top === undefined) return `${adj} · ${climbs}`;
+  return `${adj} · ${climbs}, top ${top}`;
 }
 
 function plural(n: number, word: string): string {
@@ -138,18 +215,15 @@ function plural(n: number, word: string): string {
 function summary(rpe: number, s: Session): string {
   let sends = 0;
   let attempts = 0;
-  let gradeSum = 0;
-  let graded = 0;
   for (const c of s.climbs) {
     if (c.kind === "send") sends++;
     else attempts++;
-    if (c.vGrade >= 0) {
-      gradeSum += c.vGrade;
-      graded++;
-    }
   }
-  const { lo, hi } = gradeRange(s);
-  const grades = lo >= 0 ? ` · V${lo}-V${hi} · avg V${(gradeSum / graded).toFixed(1)}` : "";
+  const grades = (["boulder", "route"] as const)
+    .map((d) => disciplineStats(s.climbs, d))
+    .filter((stats): stats is DisciplineStats => stats !== null)
+    .map((stats) => ` · ${gradeStats(stats)}`)
+    .join("");
 
   const lines = [
     `RPE ${rpe}/10 · ${plural(sends, "send")}, ${plural(attempts, "attempt")}${grades}`,
@@ -161,8 +235,7 @@ function summary(rpe: number, s: Session): string {
 
 function climbLine(c: Climb): string {
   const mark = c.kind === "attempt" ? "✗" : "✓";
-  const grade = c.vGrade >= 0 ? `V${c.vGrade}` : "V?";
-  let line = `${mark} ${grade}`;
+  let line = `${mark} ${formatGrade(climbGrade(c))}`;
   if (c.name !== "") line += ` ${c.name}`;
   if (c.tries > 1) line += ` (${c.tries} tries)`;
   return line;
