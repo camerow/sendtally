@@ -106,6 +106,11 @@ Project `Sendtally` at app.revenuecat.com, id `f2a60af6`.
 1. **Apps.** `sendtally Android`, package `com.sendtally.app`.
    Upload a Play service account JSON with the Play Console permissions RevenueCat needs (View financial data, Manage orders and subscriptions); RevenueCat validates every transaction with it.
    Set up Google real-time developer notifications from the same page so cancellations reach RevenueCat within seconds.
+   That flow needs the service account to hold **Pub/Sub Admin** on the GCP project (`sendtally`); Pub/Sub Editor cannot set the topic's IAM policy and RevenueCat reports error 7627.
+   RevenueCat creates the topic `projects/sendtally/topics/Play-Store-Notifications` and its own subscription, but it did not grant Google's publisher, so add `google-play-developer-notifications@system.gserviceaccount.com` as **Pub/Sub Publisher** on the topic yourself.
+   That grant is blocked by the org policy `iam.allowedPolicyMemberDomains` (Domain restricted sharing), which new Workspace organisations enforce by default; the console then hangs on "Updating policy" without an error.
+   The project `sendtally` carries an override of that policy (Replace parent, Allow All) for this reason; keep it scoped to that project.
+   Finally, Play Console, Monetize with Play, Monetization setup: enable real-time notifications, paste the topic name, Send test notification, Save.
 2. **Products.** Create the subscription in Play Console first (product `member_monthly`, base plan `monthly`, priced to match the web plan), then add it in RevenueCat under Products for the Android app.
 3. **Entitlement.** `sendtally_member`, with `member_monthly` attached.
    This identifier is `STORE_ENTITLEMENT` in `packages/sync-service/src/features.ts`; changing one means changing the other.
