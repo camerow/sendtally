@@ -20,7 +20,7 @@ export type LegalPageProps = {
 export function LegalPage({ title, updated, lede, children }: LegalPageProps): React.ReactElement {
   return (
     <div>
-      <Nav />
+      <Nav sections={false} />
       <main className="l-doc">
         <h1 className="l-doc-title">{title}</h1>
         <span className="l-doc-updated">LAST UPDATED {updated}</span>
