@@ -5,6 +5,7 @@ export type SessionGroupTotals = {
   count: number;
   minutes: number;
   topGrade: number;
+  topGradeLabel: string | null;
 };
 
 export type SessionYear = {
@@ -19,14 +20,26 @@ export function sessionMinutes(session: SessionRow): number {
   return Number.isFinite(ms) ? Math.max(0, Math.round(ms / 60_000)) : 0;
 }
 
+function sessionTop(session: SessionRow): { grade: number; label: string | null } {
+  if (session.top_send_grade > session.top_grade) {
+    return { grade: session.top_send_grade, label: session.top_send_grade_label };
+  }
+  return { grade: session.top_grade, label: session.top_grade_label };
+}
+
 export function sessionTotals(sessions: SessionRow[]): SessionGroupTotals {
   return sessions.reduce<SessionGroupTotals>(
-    (totals, session) => ({
-      count: totals.count + 1,
-      minutes: totals.minutes + sessionMinutes(session),
-      topGrade: Math.max(totals.topGrade, session.top_grade, session.top_send_grade),
-    }),
-    { count: 0, minutes: 0, topGrade: -1 }
+    (totals, session) => {
+      const top = sessionTop(session);
+      const harder = top.grade > totals.topGrade;
+      return {
+        count: totals.count + 1,
+        minutes: totals.minutes + sessionMinutes(session),
+        topGrade: harder ? top.grade : totals.topGrade,
+        topGradeLabel: harder ? top.label : totals.topGradeLabel,
+      };
+    },
+    { count: 0, minutes: 0, topGrade: -1, topGradeLabel: null }
   );
 }
 
@@ -60,6 +73,6 @@ export function countLabel(count: number): string {
 
 export function totalsLabel(totals: SessionGroupTotals): string {
   const parts = [countLabel(totals.count), durationLabel(totals.minutes).toUpperCase()];
-  if (totals.topGrade >= 0) parts.push(`TOP V${totals.topGrade}`);
+  if (totals.topGrade >= 0) parts.push(`TOP ${totals.topGradeLabel ?? `V${totals.topGrade}`}`);
   return parts.join(" · ");
 }

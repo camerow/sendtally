@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { defaultEffortConfig, points, score, sessionPoints } from "./effort";
-import type { Session } from "./session";
+import { effortGrade } from "./grades";
+import type { Climb, Session } from "./session";
 
 function at(day: number, hour: number, minute: number): Date {
   return new Date(2026, 6, day, hour, minute);
@@ -162,5 +163,78 @@ describe("score", () => {
   it("clamps the RPE override to 1-10", () => {
     expect(score(mkSession(10, 18, 3, 4), [], defaultEffortConfig(), 0).rpe).toBe(1);
     expect(score(mkSession(10, 18, 3, 4), [], defaultEffortConfig(), 12).rpe).toBe(10);
+  });
+});
+
+describe("route grades in titles and summaries", () => {
+  function route(minute: number, yds: string, kind: "send" | "attempt" = "send"): Climb {
+    return {
+      time: at(1, 18, minute),
+      vGrade: effortGrade({ scale: "yds", value: yds }),
+      name: "",
+      kind,
+      tries: 1,
+      grade: { scale: "yds", value: yds },
+    };
+  }
+
+  function session(climbs: Climb[]): Session {
+    return { start: at(1, 17, 50), end: at(1, 19, 0), climbs, inProgress: false };
+  }
+
+  it("titles a route session with its top route grade", () => {
+    const res = score(
+      session([route(0, "5.10a"), route(10, "5.11b"), route(20, "5.12a", "attempt")]),
+      [],
+      defaultEffortConfig()
+    );
+    expect(res.title).toContain("3 climbs, top 5.12a");
+  });
+
+  it("prints route ranges and averages in the route scale", () => {
+    const res = score(
+      session([route(0, "5.10a"), route(10, "5.11b"), route(20, "5.10c")]),
+      [],
+      defaultEffortConfig()
+    );
+    expect(res.summary).toContain("5.10a-5.11b · avg 5.10c");
+    expect(res.summary).toContain("✓ 5.11b");
+    expect(res.summary).not.toContain("V");
+  });
+
+  it("prints french grades as entered", () => {
+    const climb: Climb = {
+      time: at(1, 18, 0),
+      vGrade: effortGrade({ scale: "french", value: "7a" }),
+      name: "Biographie lite",
+      kind: "send",
+      tries: 2,
+      grade: { scale: "french", value: "7a" },
+    };
+    const res = score(session([climb]), [], defaultEffortConfig());
+    expect(res.title).toContain("1 climb, top 7a");
+    expect(res.summary).toContain("7a-7a · avg 7a");
+    expect(res.summary).toContain("✓ 7a Biographie lite (2 tries)");
+  });
+
+  it("keeps V grades for climbs without an explicit grade", () => {
+    const res = score(mkSession(1, 18, 3, 5), [], defaultEffortConfig());
+    expect(res.title).toContain("top V5");
+    expect(res.summary).toContain("V5-V5 · avg V5.0");
+  });
+
+  it("reports both disciplines in a mixed session and titles by the dominant one", () => {
+    const boulder: Climb = { time: at(1, 18, 5), vGrade: 6, name: "", kind: "send", tries: 1 };
+    const res = score(
+      session([route(0, "5.11a"), route(10, "5.11d"), boulder]),
+      [],
+      defaultEffortConfig()
+    );
+    expect(res.title).toContain("3 climbs, top 5.11d");
+    expect(res.summary).toContain("V6-V6 · avg V6.0 · 5.11a-5.11d · avg 5.11c");
+  });
+
+  it("scores routes through their effort equivalent", () => {
+    expect(sessionPoints(session([route(0, "5.12a")]), defaultEffortConfig())).toBe(points(4));
   });
 });

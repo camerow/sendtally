@@ -9,6 +9,7 @@ import {
   durationMinutes,
   emptyDraft,
   gradeOptions,
+  newClimb,
   toLogSessionInput,
   vGradeOf,
   withScale,
@@ -44,6 +45,15 @@ describe("gradeOptions", () => {
   });
 });
 
+describe("gradeOptions for routes", () => {
+  it("lists the YDS and French ladders", () => {
+    expect(gradeOptions("yds")[0]).toBe("5.5");
+    expect(gradeOptions("yds")).toContain("5.12a");
+    expect(gradeOptions("french")).toContain("7a+");
+    expect(gradeOptions("yds")).toHaveLength(gradeOptions("french").length);
+  });
+});
+
 describe("vGradeOf", () => {
   it("parses both scales", () => {
     expect(vGradeOf("V7", "v")).toBe(7);
@@ -58,6 +68,62 @@ describe("convertGrade", () => {
     expect(convertGrade("V4", "v", "font")).toBe("6B");
     expect(convertGrade("7A", "font", "v")).toBe("V6");
     expect(convertGrade("mystery", "v", "font")).toBe("mystery");
+  });
+
+  it("converts route grades between YDS and French", () => {
+    expect(convertGrade("5.12a", "yds", "french")).toBe("7a+");
+    expect(convertGrade("6c", "french", "yds")).toBe("5.11b");
+  });
+
+  it("crosses disciplines through the effort scale", () => {
+    expect(convertGrade("V4", "v", "yds")).toBe("5.12b");
+    expect(convertGrade("5.13a", "yds", "v")).toBe("V7");
+  });
+});
+
+describe("route drafts", () => {
+  it("summarises the top route in its own scale and validates route grades", () => {
+    const routes = withScale(draft(), "yds");
+    expect(routes.climbs.map((c) => c.grade)).toEqual(["5.12b", "5.12d"]);
+    expect(draftSummary(routes)).toContain("TOP 5.12d");
+    expect(draftProblem(routes)).toBeNull();
+    expect(draftProblem({ ...routes, climbs: [{ ...routes.climbs[0]!, grade: "5.10" }] })).toBe(
+      "Every climb needs a grade."
+    );
+  });
+
+  it("starts a new route climb at a sensible default", () => {
+    expect(newClimb("k", "yds").grade).toBe("5.10b");
+    expect(newClimb("k", "french").grade).toBe("6a");
+  });
+
+  it("sends route grades to the API as entered", () => {
+    const input = toLogSessionInput(withScale(draft(), "french"));
+    expect(input.climbs.map((c) => c.grade)).toEqual([
+      { scale: "french", value: "7b" },
+      { scale: "french", value: "7c" },
+    ]);
+  });
+
+  it("rebuilds a route session draft in the scale it was logged in", () => {
+    const routeSession = session({
+      climbs: [
+        {
+          ...session().climbs[0]!,
+          vGrade: 2,
+          grade: { scale: "yds", value: "5.11a" },
+        },
+        {
+          ...session().climbs[1]!,
+          vGrade: 4,
+          grade: { scale: "yds", value: "5.12a" },
+        },
+      ],
+    });
+    const d = draftFromSession(routeSession);
+    expect(d.scale).toBe("yds");
+    expect(d.climbs.map((c) => c.grade)).toEqual(["5.11a", "5.12a"]);
+    expect(withScale(d, "french").climbs.map((c) => c.grade)).toEqual(["6b+", "7a+"]);
   });
 });
 
@@ -177,6 +243,8 @@ function session(overrides: Partial<SessionDetail> = {}): SessionDetail {
     climb_count: 2,
     top_grade: 6,
     top_send_grade: 4,
+    top_grade_label: null,
+    top_send_grade_label: null,
     rpe: 7,
     title: "Tuesday board night",
     strava_activity_id: null,

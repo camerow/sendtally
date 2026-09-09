@@ -79,6 +79,8 @@ export const sessions = sqliteTable(
     climb_count: integer("climb_count").notNull(),
     top_grade: integer("top_grade").notNull(),
     top_send_grade: integer("top_send_grade").notNull().default(-1),
+    top_grade_label: text("top_grade_label"),
+    top_send_grade_label: text("top_send_grade_label"),
     rpe: integer("rpe").notNull(),
     title: text("title").notNull(),
     summary: text("summary").notNull(),

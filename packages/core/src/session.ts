@@ -1,3 +1,5 @@
+import type { Grade } from "./grades";
+
 export type ClimbKind = "send" | "attempt";
 
 export type Climb = {
@@ -7,6 +9,7 @@ export type Climb = {
   kind: ClimbKind;
   tries: number;
   angle?: number;
+  grade?: Grade;
 };
 
 export type Session = {

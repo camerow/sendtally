@@ -2,6 +2,7 @@ import { router } from "expo-router";
 import React from "react";
 import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import {
+  GRADE_SCALE_OPTIONS,
   draftProblem,
   draftSummary,
   emptyDraft,
@@ -149,7 +150,7 @@ function ClimbCard({
         />
         <Text
           style={{
-            width: 52,
+            width: 60,
             textAlign: "center",
             fontFamily: fonts.monoSemiBold,
             fontSize: 16,
@@ -462,16 +463,14 @@ export function LogSessionForm({
             CLIMBS · {draft.climbs.length}
           </Text>
           <View style={{ flexDirection: "row", gap: 6 }}>
-            <Chip
-              label="V"
-              active={draft.scale === "v"}
-              onPress={() => setDraft(withScale(draft, "v"))}
-            />
-            <Chip
-              label="FONT"
-              active={draft.scale === "font"}
-              onPress={() => setDraft(withScale(draft, "font"))}
-            />
+            {GRADE_SCALE_OPTIONS.map((option) => (
+              <Chip
+                key={option.value}
+                label={option.label}
+                active={draft.scale === option.value}
+                onPress={() => setDraft(withScale(draft, option.value))}
+              />
+            ))}
           </View>
         </View>
 
