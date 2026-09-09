@@ -18,7 +18,7 @@ Aurora asked Will to stop, because using their API this way is against their ter
 - Manual entry (`source = "manual"`) is the product. Any future integration must be an officially sanctioned one, agreed with the provider first, and is a decision for Will.
 
 The product is free for users; the monetization path is ad revenue (SEO content pages on the web app first, mobile ads later) plus the paid long-term insights tier.
-The core user value is the effort/RPE trend history - "Strava for board climbing effort".
+The core user value is the effort/RPE trend history - "Strava for climbing effort".
 
 Current scope: sign up, log sessions via the form, session list and detail, trends, optional Strava posting. Journal entries and project tracking are next.
 
@@ -158,6 +158,20 @@ Design work (Claude-generated or otherwise) targets the token vocabulary; each p
 6. Journal entries (free-text, attachable to a session).
 7. Project tracking (climbs worked across many sessions before sending).
 8. Apply for the Strava quota increase; open sign-ups on approval.
+
+---
+
+## Copy
+
+Rules for anything a user reads: app strings, store listings, marketing pages, docs.
+
+- **Say "climbing", not "board climbing".** The product is a climbing log. Board climbing is one thing people use it for, not the category. "A session log for climbers", never "a session log for board climbers".
+- Do not describe the product as syncing from boards, or from any third party. The log-session form is the only source of session data.
+- Board brand names (Kilter, Tension, Moonboard) are fine in store **keywords**, where they serve discovery. Keep them out of visible prose and out of sample data in screenshots.
+- Sample session names in placeholders and mockups should read like something anyone would type: "Tuesday night session", not "Tuesday board night".
+- The exception is legacy UI that labels a `source = "board"` session. Those rows really did come from a board, and `BOARD_LABELS` naming them is accurate history, not positioning.
+
+Store listing copy lives in `apps/mobile/store/listing.md` and should match what is actually live in the console.
 
 ---
 
