@@ -182,6 +182,7 @@ export function toLogSessionInput(draft: LogSessionDraft): LogSessionInput {
     grade: draftGrade(c.grade, draft.scale) ?? fallbackGrade(c.grade, draft.scale),
     kind: c.kind,
     tries: c.tries,
+    ...(c.project === undefined ? {} : { project: c.project }),
   }));
   return {
     ...(draft.name.trim() === "" ? {} : { name: draft.name.trim() }),

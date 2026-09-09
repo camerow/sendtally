@@ -58,8 +58,6 @@ export type ClimbSummary = {
   last_at: string;
 };
 
-export type Project = { slug: string; name: string; grade: ClimbGrade };
-
 export type TagSummary = SessionTag & { session_count: number };
 
 export type SessionSource = "board" | "manual";
@@ -94,6 +92,7 @@ export type LogClimbInput = {
   grade: ClimbGrade;
   kind?: "send" | "attempt";
   tries?: number;
+  project?: boolean;
 };
 
 export type LogSessionInput = {

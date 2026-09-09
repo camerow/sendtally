@@ -17,6 +17,7 @@ export type ClimbDraft = {
   name: string;
   kind: "send" | "attempt";
   tries: number;
+  project?: boolean;
 };
 
 export type LogSessionDraft = {
