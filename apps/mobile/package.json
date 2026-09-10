@@ -10,7 +10,8 @@
     "check-types": "tsc --noEmit",
     "store:render": "node store/render.mjs",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "store:check": "node store/check-locales.mjs"
   },
   "dependencies": {
     "@clerk/clerk-expo": "^2.14.5",

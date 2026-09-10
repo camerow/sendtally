@@ -118,8 +118,13 @@ Nor is a 6.5" set: App Store Connect accepts the 1290x2796 images as the one req
 
 German, French and Spanish, written to the same rules the translation brief carries: grade scales and terms of art stay untranslated, and every field is rewritten to fit its cap rather than translated and truncated.
 
-The remaining locales are generated from `store/play-listing.csv`, which carries these three already filled in, through Play Console's translation upload.
-Regenerate that file if any of the English copy changes here.
+`store/play-listing.csv` carries these three plus English for Play Console's translation upload: one row per language, columns `Language`, `App name`, `Short description`, `Full description`.
+Release notes are deliberately not in it - they belong to a release, not to a store listing.
+Only filled rows are included; a row naming a language with empty fields risks being read as an instruction to blank that listing.
+Regenerate the file if any of the English copy changes here.
+
+Google does not publish the importer's expected headers.
+If an upload reports "Language import skipped", check the column names against whatever template or example the console offers at the upload step and correct them here.
 
 ### German (`de-DE`)
 
@@ -150,7 +155,7 @@ Boulder- und Klettersessions loggen: Anstrengung, Grad-Trends, Strava.
 boulder,halle,fels,grad,tour,route,tracker,training,rpe,strava,kilter,tension,moonboard,seil,sichern
 ```
 
-**Description** [4000, using 1675]
+**Description** [4000, using 1719]
 
 ```
 Sendtally ist ein Session-Logbuch fürs Klettern und Bouldern.
@@ -177,7 +182,7 @@ Die Mitgliedschaft bringt die Trends:
 
 Wir speichern niemals dein Strava-Passwort. Standard-OAuth, nur mit activity-write-Scope, jederzeit über Strava widerrufbar. Wenn du dein Konto löschst, verschwinden noch am selben Tag alle Sessions und Tokens mit.
 
-Die Mitgliedschaft ist ein Monatsabo. Schließ sie in der App oder auf sendtally.com ab; beides schaltet die Trends überall frei.
+Die Mitgliedschaft ist ein automatisch verlängertes Abo, monatlich oder jährlich. Schließ sie in der App oder auf sendtally.com ab; beides schaltet die Trends überall frei.
 ```
 
 **What's new** [500, using 86]
@@ -215,7 +220,7 @@ Enregistrez vos séances de bloc et d'escalade : effort, cotations, Strava.
 salle,voie,falaise,cotation,journal,seance,entrainement,rpe,strava,kilter,tension,moonboard,assurage
 ```
 
-**Description** [4000, using 1709]
+**Description** [4000, using 1749]
 
 ```
 Sendtally est un carnet de séances pour l'escalade et le bloc.
@@ -242,7 +247,7 @@ L'abonnement ajoute les tendances :
 
 Nous ne stockons jamais votre mot de passe Strava. OAuth standard, avec la seule autorisation activity-write, révocable depuis Strava à tout moment. Supprimez votre compte et toutes vos séances et vos jetons partent avec, le jour même.
 
-L'abonnement est mensuel. Souscrivez dans l'application ou sur sendtally.com : l'un comme l'autre débloque les tendances partout.
+L'abonnement est à renouvellement automatique, mensuel ou annuel. Souscrivez dans l'application ou sur sendtally.com : l'un comme l'autre débloque les tendances partout.
 ```
 
 **What's new** [500, using 95]
@@ -280,7 +285,7 @@ Registra tus sesiones de búlder y escalada: esfuerzo, grados, Strava.
 boulder,rocodromo,via,roca,grado,sesion,entrenamiento,registro,rpe,strava,kilter,tension,moonboard
 ```
 
-**Description** [4000, using 1700]
+**Description** [4000, using 1734]
 
 ```
 Sendtally es un diario de sesiones para escalada y búlder.
@@ -307,7 +312,7 @@ La suscripción añade las tendencias:
 
 Nunca guardamos tu contraseña de Strava. OAuth estándar, solo con el permiso activity-write, revocable desde Strava en cualquier momento. Borra tu cuenta y todas las sesiones y tokens se van con ella el mismo día.
 
-La suscripción es mensual. Suscríbete en la app o en sendtally.com; cualquiera de las dos desbloquea las tendencias en todas partes.
+La suscripción es de renovación automática, mensual o anual. Suscríbete en la app o en sendtally.com; cualquiera de las dos desbloquea las tendencias en todas partes.
 ```
 
 **What's new** [500, using 92]
