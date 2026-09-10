@@ -28,7 +28,7 @@ export function pageMeta({
     { property: "og:image:height", content: "630" },
     {
       property: "og:image:alt",
-      content: "sendtally - a climbing session log with an effort score",
+      content: "sendtally - track your climbing, see the trends",
     },
     { name: "twitter:card", content: "summary_large_image" },
     { name: "twitter:title", content: title },
