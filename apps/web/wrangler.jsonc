@@ -21,6 +21,8 @@
         "API_URL": "https://api.sendtally.com",
         "CLERK_PUBLISHABLE_KEY": "pk_live_Y2xlcmsuc2VuZHRhbGx5LmNvbSQ",
         "GA_MEASUREMENT_ID": "G-88YV4KNVJL",
+        "POSTHOG_PROJECT_TOKEN": "phc_mK5KViTzigeXd5KwHRkP2pK2WNCSUdeTcvmTEudpatRH",
+        "POSTHOG_HOST": "https://us.i.posthog.com",
       },
     },
   },
