@@ -9,4 +9,5 @@ dns_records = {
   clerk_mail     = { name = "clkmail", type = "CNAME", content = "mail.<clerk-instance-id>.clerk.services", comment = "Clerk email sending" }
   clerk_dkim1    = { name = "clk._domainkey", type = "CNAME", content = "dkim1.<clerk-instance-id>.clerk.services", comment = "Clerk DKIM 1" }
   clerk_dkim2    = { name = "clk2._domainkey", type = "CNAME", content = "dkim2.<clerk-instance-id>.clerk.services", comment = "Clerk DKIM 2" }
+  posthog_proxy  = { name = "v", type = "CNAME", content = "<proxy-id>.cf-prod-us-proxy.proxyhog.com", comment = "PostHog managed reverse proxy" }
 }
