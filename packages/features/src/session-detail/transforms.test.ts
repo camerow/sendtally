@@ -15,6 +15,7 @@ const detail: SessionDetail = {
   top_send_grade: 7,
   top_grade_label: null,
   top_send_grade_label: null,
+  notes: null,
   rpe: 7,
   title: "Solid climbing session · 4 climbs, top V7",
   strava_activity_id: 555,

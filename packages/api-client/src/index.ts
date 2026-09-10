@@ -100,6 +100,13 @@ export class SendtallyApi {
     );
   }
 
+  setSessionNotes(fingerprint: string, notes: string): Promise<{ notes: string | null }> {
+    return this.request<{ notes: string | null }>(
+      `/v1/sessions/${encodeURIComponent(fingerprint)}/notes`,
+      { method: "PUT", body: JSON.stringify({ notes }) }
+    );
+  }
+
   climbs(): Promise<{ climbs: ClimbSummary[] }> {
     return this.request<{ climbs: ClimbSummary[] }>("/v1/climbs");
   }

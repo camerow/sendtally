@@ -84,6 +84,7 @@ export function emptyDraft(now: Date): LogSessionDraft {
     endTime: hhmm(roundedNow),
     location: "indoor",
     tags: [],
+    notes: "",
     scale: "v",
     rpe: null,
     climbs: [newClimb("climb-1", "v")],
@@ -192,6 +193,7 @@ export function toLogSessionInput(draft: LogSessionDraft): LogSessionInput {
     ...(draft.rpe === null ? {} : { rpe: draft.rpe }),
     location: draft.location,
     ...(draft.tags.length === 0 ? {} : { tags: draft.tags }),
+    ...(draft.notes.trim() === "" ? {} : { notes: draft.notes.trim() }),
     climbs,
   };
 }
@@ -225,6 +227,7 @@ export function draftFromSession(session: SessionDetail): LogSessionDraft {
     endTime: utcTime(session.end_at),
     location: session.location ?? "indoor",
     tags: session.tags.map((t) => t.name),
+    notes: session.notes ?? "",
     scale,
     rpe: session.rpe,
     climbs: climbs.map((c, i) => ({

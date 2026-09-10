@@ -57,6 +57,13 @@
       "when": 1788988514697,
       "tag": "0012_wet_thunderbolt",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "6",
+      "when": 1789017414232,
+      "tag": "0013_curved_taskmaster",
+      "breakpoints": true
     }
   ]
 }

@@ -1,3 +1,4 @@
+export { SESSION_NOTE_MAX } from "./notes";
 export { SESSION_BADGE_LABELS, sessionBadge, type SessionBadge } from "./badges";
 export {
   climbGradeLabel,

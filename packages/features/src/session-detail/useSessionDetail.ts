@@ -11,7 +11,12 @@ export type PostActionFeature = {
 };
 
 export type SessionDetailFeature = {
-  state: QueryState<{ vm: SessionDetailVM; climbs: ClimbVM[]; tags: SessionTag[] }>;
+  state: QueryState<{
+    vm: SessionDetailVM;
+    climbs: ClimbVM[];
+    tags: SessionTag[];
+    notes: string | null;
+  }>;
   filter: ClimbFilter;
   setFilter: (f: ClimbFilter) => void;
   sort: ClimbSort;
@@ -49,6 +54,7 @@ export function useSessionDetail(api: SendtallyApi, fingerprint: string): Sessio
         vm: sessionDetailVM(raw.data.session, raw.data.posting),
         climbs: filterAndSortClimbs(all, filter, sort),
         tags: raw.data.session.tags,
+        notes: raw.data.session.notes,
       },
     };
   }, [raw, filter, sort]);

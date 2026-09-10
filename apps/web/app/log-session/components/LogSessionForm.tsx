@@ -15,7 +15,7 @@ import {
   type ClimbDraft,
   type LogSessionDraft,
 } from "@sendtally/features/log-session";
-import { useTagVocabulary } from "@sendtally/features/sessions";
+import { SESSION_NOTE_MAX, useTagVocabulary } from "@sendtally/features/sessions";
 import { TagPicker } from "../../components/TagPicker";
 import { useIsNarrow } from "../../lib/useIsNarrow";
 import { ClimbCard } from "./ClimbCard";
@@ -288,6 +288,23 @@ export function LogSessionForm({
             />
           </Field>
           <RpePicker rpe={draft.rpe} onChange={(rpe) => setDraft({ ...draft, rpe })} />
+          <Field
+            label={
+              <>
+                NOTES <span style={{ color: "rgba(64,63,76,0.45)" }}>· OPTIONAL</span>
+              </>
+            }
+          >
+            <textarea
+              value={draft.notes}
+              rows={4}
+              maxLength={SESSION_NOTE_MAX}
+              placeholder="How it felt, what to try next time."
+              onChange={(e) => setDraft({ ...draft, notes: e.target.value })}
+              className="log-session-control"
+              style={{ ...inputStyle, lineHeight: 1.55, resize: "vertical" }}
+            />
+          </Field>
           <div
             style={{
               background: "var(--surface-soft)",
@@ -301,8 +318,8 @@ export function LogSessionForm({
             <span style={columnHead}>AFTER YOU SAVE</span>
             <p style={{ margin: 0, fontSize: 14, lineHeight: 1.55, color: "rgba(64,63,76,0.88)" }}>
               {editing === undefined
-                ? "sendtally titles the session and builds the climb log. Leave RPE on auto and it is scored against your last 8 weeks of sessions."
-                : "sendtally rebuilds the title and climb log from these edits. Reset RPE to auto to have it scored against your last 8 weeks of sessions again."}
+                ? "sendtally titles the session and builds the climb log. Leave RPE on auto and it is scored against your last 8 weeks of sessions. Notes stay in sendtally and are never posted to Strava."
+                : "sendtally rebuilds the title and climb log from these edits. Reset RPE to auto to have it scored against your last 8 weeks of sessions again. Notes stay in sendtally and are never posted to Strava."}
             </p>
           </div>
         </div>

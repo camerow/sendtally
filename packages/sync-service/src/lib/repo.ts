@@ -33,6 +33,7 @@ export type SessionRow = {
   top_send_grade_label: string | null;
   rpe: number;
   title: string;
+  notes: string | null;
   strava_activity_id: number | null;
   posted_at: string | null;
   post_state: string | null;
@@ -54,6 +55,7 @@ const sessionListColumns = {
   top_send_grade_label: sessions.top_send_grade_label,
   rpe: sessions.rpe,
   title: sessions.title,
+  notes: sessions.notes,
   strava_activity_id: sessions.strava_activity_id,
   posted_at: sessions.posted_at,
   post_state: sessions.post_state,
@@ -203,6 +205,7 @@ export type ManualSessionInput = {
   title: string;
   summary: string;
   climbs_json: string;
+  notes: string | null;
 };
 
 export async function insertManualSession(
@@ -317,6 +320,21 @@ export async function getSessionTags(
     .where(and(eq(sessionTags.user_id, userId), eq(sessionTags.fingerprint, fingerprint)))
     .orderBy(asc(tags.name))
     .all();
+}
+
+// Notes belong to the user, not to the scoring engine, so they are written on
+// their own and any owned session takes one, board-sourced history included.
+export async function setSessionNotes(
+  db: D1Database,
+  userId: string,
+  fingerprint: string,
+  notes: string | null
+): Promise<boolean> {
+  const result = await drizzle(db)
+    .update(sessions)
+    .set({ notes })
+    .where(and(eq(sessions.user_id, userId), eq(sessions.fingerprint, fingerprint)));
+  return result.meta.changes > 0;
 }
 
 export async function setSessionTags(

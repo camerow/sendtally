@@ -26,6 +26,7 @@ function draft(overrides: Partial<LogSessionDraft> = {}): LogSessionDraft {
     endTime: "20:00",
     location: "indoor",
     tags: [],
+    notes: "",
     scale: "v",
     rpe: null,
     climbs: [
@@ -245,6 +246,7 @@ function session(overrides: Partial<SessionDetail> = {}): SessionDetail {
     top_send_grade: 4,
     top_grade_label: null,
     top_send_grade_label: null,
+    notes: null,
     rpe: 7,
     title: "Tuesday board night",
     strava_activity_id: null,
@@ -286,6 +288,7 @@ describe("draftFromSession", () => {
       endTime: "20:00",
       location: "indoor",
       tags: ["Endurance"],
+      notes: "",
       scale: "v",
       rpe: 7,
       climbs: [

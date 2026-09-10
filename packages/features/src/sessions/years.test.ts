@@ -28,6 +28,7 @@ function session(
     top_send_grade: grades.send,
     top_grade_label: null,
     top_send_grade_label: null,
+    notes: null,
     rpe: 7,
     title: "T",
     strava_activity_id: null,

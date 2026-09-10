@@ -363,6 +363,64 @@ describe("app", () => {
     expect(all.tags.map((t) => t.slug).sort()).toEqual(["bishop", "home"]);
   });
 
+  const setNotes = (userId: string, fingerprint: string, notes: unknown) =>
+    testApp().request(
+      `/v1/sessions/${encodeURIComponent(fingerprint)}/notes`,
+      {
+        method: "PUT",
+        headers: { "x-test-user": userId, "Content-Type": "application/json" },
+        body: JSON.stringify({ notes }),
+      },
+      env
+    );
+
+  const readNotes = async (userId: string, fingerprint: string) => {
+    const res = await testApp().request(
+      `/v1/sessions/${encodeURIComponent(fingerprint)}`,
+      { headers: { "x-test-user": userId } },
+      env
+    );
+    return ((await res.json()) as { session: { notes: string | null } }).session.notes;
+  };
+
+  it("keeps the note given when a session is logged and lets an edit replace it", async () => {
+    const res = await postSession("user_notes", logBody({ notes: "  Shoulder held up.  " }));
+    const { session } = (await res.json()) as ManualSessionResponse;
+    expect(await readNotes("user_notes", session.fingerprint)).toBe("Shoulder held up.");
+
+    const saved = await setNotes("user_notes", session.fingerprint, "Heel kept rolling off.");
+    expect(saved.status).toBe(200);
+    expect(await readNotes("user_notes", session.fingerprint)).toBe("Heel kept rolling off.");
+  });
+
+  it("clears a note written as blank and rejects one over the limit", async () => {
+    const res = await postSession("user_notes_clear", logBody({ notes: "First pass." }));
+    const { session } = (await res.json()) as ManualSessionResponse;
+
+    expect((await setNotes("user_notes_clear", session.fingerprint, "   ")).status).toBe(200);
+    expect(await readNotes("user_notes_clear", session.fingerprint)).toBeNull();
+
+    const tooLong = await setNotes("user_notes_clear", session.fingerprint, "x".repeat(2001));
+    expect(tooLong.status).toBe(400);
+  });
+
+  it("notes a legacy board session without touching the session row", async () => {
+    await env.DB.prepare(
+      `INSERT INTO users (id, timezone, created_at) VALUES ('user_notes_board', 'UTC', '')`
+    ).run();
+    await env.DB.prepare(
+      `INSERT INTO sessions (user_id, fingerprint, board, source, start_at, end_at, climb_count, top_grade, top_send_grade, rpe, title, summary)
+       VALUES ('user_notes_board', 'fp_board_note', 'tension', 'board', '2026-01-01T00:00:00.000Z', '2026-01-01T01:00:00.000Z', 4, 5, 5, 6, 'Board session', 's')`
+    ).run();
+
+    expect((await setNotes("user_notes_board", "fp_board_note", "Old history.")).status).toBe(200);
+
+    const row = await env.DB.prepare(
+      `SELECT source, title, rpe, notes FROM sessions WHERE fingerprint = 'fp_board_note'`
+    ).first<{ source: string; title: string; rpe: number; notes: string }>();
+    expect(row).toEqual({ source: "board", title: "Board session", rpe: 6, notes: "Old history." });
+  });
+
   it("tags a legacy board session without touching the session row", async () => {
     await env.DB.prepare(
       `INSERT INTO users (id, timezone, created_at) VALUES ('user_tags_board', 'UTC', '')`
