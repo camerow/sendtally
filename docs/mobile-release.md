@@ -22,7 +22,7 @@ Bump it by hand when a release deserves a new number.
 ### Platform selection
 
 The `MOBILE_PLATFORMS` repo variable picks what gets built, defaulting to `android`.
-Set it to `all` once Apple Developer enrollment completes and the App Store Connect record exists.
+It is `all` now that the App Store Connect record and the iOS signing credentials exist.
 A manual run can override it with the `platform` input.
 
 ### Promotion to public release
@@ -52,7 +52,10 @@ Both paths are gitignored, and the runner is discarded after the job.
 
 1. **Expo.** Run `eas init` from `apps/mobile`, not the repo root: eas-cli finds the project by walking up for `app.json`, so the root has neither a project nor an `eas.json`. It writes `owner` and `extra.eas.projectId` into `app.json`. Commit that.
 2. **Google Play.** Create the app in Play Console, complete the store listing from `apps/mobile/store/listing.md`, upload the rendered assets, and fill the data safety form. Then create a service account with the Release Manager role and download its JSON key. EAS Submit can perform the first upload; no manual bundle upload is needed. The account is an organization, so the 12-testers-for-14-days requirement that gates production access for personal accounts does not apply.
-3. **Apple.** Register the `com.sendtally.app` bundle id, create the App Store Connect record, and generate an App Store Connect API key with the App Manager role.
+3. **Apple.** Done, September 2026. The team is `GUMXLRF3B6` (Chalk and Circuits, organization enrollment), the bundle id `com.sendtally.app` is registered, and the App Store Connect record is Apple ID `6810779919`, name "sendtally".
+   The App Store Connect API key is a **team key with the Admin role**, not App Manager: only Admin carries access to Certificates, Identifiers & Profiles, which is what lets EAS create the signing certificate.
+   With `EXPO_ASC_API_KEY_PATH`, `EXPO_ASC_KEY_ID`, `EXPO_ASC_ISSUER_ID`, `EXPO_APPLE_TEAM_ID` and `EXPO_APPLE_TEAM_TYPE` in the environment, `eas credentials:configure-build --platform ios --profile production` runs without asking anything about Apple, which is how the distribution certificate and provisioning profile were generated.
+   The `.p8` downloads once; it lives in 1Password and at `~/.appstoreconnect/private_keys/`.
 4. **App Review demo account.** Reviewers cannot read our one-time codes, and Google's sign-in-details form asks for "reusable sign in details that don't expire", so the reviewer account signs in with a password while everyone else keeps the code flow.
    In the Clerk **Production** instance: Configure, User & authentication, Password tab, turn on **Add password to account** only. Leave **Sign-up with password** off; that one would demand a password from every new sign-up, and neither app collects one.
    Also turn off **Device Trust** under Configure, Protect, Rules: it applies only to password sign-ins and demands an emailed code from any new device, which a reviewer cannot read. It protects nothing here, because the reviewer is the only account with a password.
@@ -121,6 +124,11 @@ Project `Sendtally` at app.revenuecat.com, id `f2a60af6`.
 5. **Webhook.** Integrations, Webhooks: URL `https://api.sendtally.com/webhooks/revenuecat`, Authorization header value equal to `REVENUECAT_WEBHOOK_AUTH` in Doppler (a long random string), all events.
 6. **API keys.** The Android public SDK key (`goog_…`) goes in `apps/mobile/eas.json` as `EXPO_PUBLIC_REVENUECAT_ANDROID_KEY`; it is a public key, like the Clerk publishable key.
    The secret key (`sk_…`) goes to Doppler as `REVENUECAT_SECRET_API_KEY`, then `infra/scripts/push-secrets.sh production`.
+
+iOS billing is not set up yet.
+`EXPO_PUBLIC_REVENUECAT_IOS_KEY` is unset, so `storeBillingAvailable` is false on iOS and the app simply shows no purchase option - it does not crash, and nothing links out to web checkout.
+The order is the same one Play forced: ship a build first, because App Store Connect will not accept in-app purchase products for an app with no build, then add the `sendtally iOS` app to the RevenueCat project, create the subscription products, attach them to `sendtally_member`, add them to the `default` offering, and put the `appl_…` key in `eas.json`.
+The App Store also needs the paid applications agreement signed and banking details filled in before it will sell anything.
 
 The project also carries RevenueCat's Test Store app, with test products attached to the same entitlement and offering.
 Its products are `membership_monthly` at $3.00 and `membership_yearly` at $24.00, mirroring the Play prices; RevenueCat's auto-created `monthly`, `yearly` and `lifetime` test products are inactive.
