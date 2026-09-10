@@ -25,6 +25,7 @@ export function Footer(): React.ReactElement {
           </a>
         ))}
       </div>
+      <p className="l-footer-trademarks">{COPY.footer.trademarks}</p>
     </div>
   );
 }
