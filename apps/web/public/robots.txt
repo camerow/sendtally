@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /app/
+Disallow: /connected/
+Disallow: /sign-in/verify
+
+Sitemap: https://sendtally.com/sitemap.xml

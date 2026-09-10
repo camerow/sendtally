@@ -6,6 +6,7 @@ export default [
   route("sign-in/verify", "routes/sign-in.verify.tsx"),
   route("sign-up", "routes/sign-up.tsx"),
   route("connected/strava", "routes/connected.strava.tsx"),
+  route("sitemap.xml", "routes/sitemap.xml.ts"),
   route("privacy", "routes/privacy.tsx"),
   route("terms", "routes/terms.tsx"),
   route("support", "routes/support.tsx"),

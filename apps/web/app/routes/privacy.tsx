@@ -2,18 +2,17 @@ import React from "react";
 import type { LinksFunction } from "react-router";
 import { LegalPage, legalLinks } from "../legal/components/LegalPage";
 import { CONTACT_EMAIL } from "../legal/constants";
+import { pageMeta } from "../lib/seo";
 
 export const links: LinksFunction = legalLinks;
 
 export function meta(): Array<Record<string, string>> {
-  return [
-    { title: "Privacy policy - sendtally" },
-    {
-      name: "description",
-      content:
-        "Everything sendtally stores about you, who processes it, how Strava tokens are encrypted, and how to have all of it deleted the same day.",
-    },
-  ];
+  return pageMeta({
+    title: "Privacy policy - sendtally",
+    description:
+      "Everything sendtally stores about you, who processes it, how Strava tokens are encrypted, and how to have all of it deleted the same day.",
+    path: "/privacy",
+  });
 }
 
 export default function Privacy(): React.ReactElement {

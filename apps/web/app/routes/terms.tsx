@@ -2,18 +2,17 @@ import React from "react";
 import type { LinksFunction } from "react-router";
 import { LegalPage, legalLinks } from "../legal/components/LegalPage";
 import { CONTACT_EMAIL, GOVERNING_STATE } from "../legal/constants";
+import { pageMeta } from "../lib/seo";
 
 export const links: LinksFunction = legalLinks;
 
 export function meta(): Array<Record<string, string>> {
-  return [
-    { title: "Terms of service - sendtally" },
-    {
-      name: "description",
-      content:
-        "The terms you agree to when you use sendtally: what the service does, what membership costs, how Strava posting works, and how to leave.",
-    },
-  ];
+  return pageMeta({
+    title: "Terms of service - sendtally",
+    description:
+      "The terms you agree to when you use sendtally: what the service does, what membership costs, how Strava posting works, and how to leave.",
+    path: "/terms",
+  });
 }
 
 export default function Terms(): React.ReactElement {

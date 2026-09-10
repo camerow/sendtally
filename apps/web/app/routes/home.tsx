@@ -3,6 +3,7 @@ import React from "react";
 import type { LinksFunction, LoaderFunctionArgs } from "react-router";
 import { useLoaderData } from "react-router";
 import { isSignedIn } from "../auth/session.server";
+import { pageMeta, SITE_URL } from "../lib/seo";
 import { Details } from "../landing/components/Details";
 import { Footer } from "../landing/components/Footer";
 import { FreeSection } from "../landing/components/FreeSection";
@@ -24,8 +25,22 @@ export const links: LinksFunction = () => [
   { rel: "preload", as: "image", href: LANDING_PHOTOS.hero.src },
 ];
 
-export function meta(): Array<Record<string, string>> {
-  return [{ title: COPY.meta.title }, { name: "description", content: COPY.meta.description }];
+export function meta(): Array<Record<string, unknown>> {
+  return [
+    ...pageMeta({ title: COPY.meta.title, description: COPY.meta.description, path: "/" }),
+    {
+      "script:ld+json": {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        name: "sendtally",
+        url: SITE_URL,
+        applicationCategory: "HealthApplication",
+        operatingSystem: "Web, iOS, Android",
+        description: COPY.meta.description,
+        offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+      },
+    },
+  ];
 }
 
 type LoaderData = { signedIn: boolean };

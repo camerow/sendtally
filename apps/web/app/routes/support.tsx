@@ -1,18 +1,17 @@
 import React from "react";
 import type { LinksFunction } from "react-router";
 import { LegalPage, legalLinks } from "../legal/components/LegalPage";
+import { pageMeta } from "../lib/seo";
 
 export const links: LinksFunction = legalLinks;
 
 export function meta(): Array<Record<string, string>> {
-  return [
-    { title: "Support - sendtally" },
-    {
-      name: "description",
-      content:
-        "How to get help with sendtally: signing in, Strava, membership, deleting your account, and how to reach a person.",
-    },
-  ];
+  return pageMeta({
+    title: "Support - sendtally",
+    description:
+      "How to get help with sendtally: signing in, Strava, membership, deleting your account, and how to reach a person.",
+    path: "/support",
+  });
 }
 
 export default function Support(): React.ReactElement {
