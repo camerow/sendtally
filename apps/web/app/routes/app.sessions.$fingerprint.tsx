@@ -13,6 +13,7 @@ import { requireApi } from "../lib/api.server";
 import { useClientApi } from "../lib/useClientApi";
 import { SessionTags } from "../sessions/components/SessionTags";
 import { PostStatusBar } from "../session-detail/components/PostStatusBar";
+import { SessionNotes } from "../session-detail/components/SessionNotes";
 
 export async function loader(args: LoaderFunctionArgs): Promise<{ apiUrl: string }> {
   await requireApi(args);
@@ -181,7 +182,7 @@ export default function SessionDetailRoute(): React.ReactElement {
       </span>
     );
   }
-  const { vm, climbs, tags } = state.data;
+  const { vm, climbs, tags, notes } = state.data;
 
   const filters: Array<[ClimbFilter, string]> = [
     ["all", `ALL ${vm.filterCounts.all}`],
@@ -277,6 +278,8 @@ export default function SessionDetailRoute(): React.ReactElement {
           </span>
         ))}
       </div>
+
+      <SessionNotes api={api} fingerprint={params.fingerprint ?? ""} initial={notes} />
 
       {vm.bars.length > 0 && (
         <div

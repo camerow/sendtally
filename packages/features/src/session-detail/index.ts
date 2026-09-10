@@ -3,6 +3,7 @@ export {
   type PostActionFeature,
   type SessionDetailFeature,
 } from "./useSessionDetail";
+export { useSessionNotes, type SessionNotesEditor } from "./useSessionNotes";
 export {
   climbVMs,
   durationLabel,

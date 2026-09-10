@@ -41,6 +41,17 @@ const climbSchema = z.object({
   project: z.boolean().optional(),
 });
 
+export const NOTE_MAX = 2000;
+
+const sessionNote = z.string().max(NOTE_MAX).optional();
+
+export const sessionNotesBody = z.object({ notes: sessionNote });
+
+export function normalisedNote(notes: string | undefined): string | null {
+  const trimmed = notes?.trim() ?? "";
+  return trimmed === "" ? null : trimmed;
+}
+
 const manualSessionShape = z.object({
   name: z.string().min(1).max(120).optional(),
   date: z
@@ -61,6 +72,7 @@ const manualSessionShape = z.object({
   rpe: z.number().int().min(1).max(10).optional(),
   location: z.enum(["indoor", "outdoor"]),
   tags: tagNames.optional(),
+  notes: sessionNote,
   climbs: z.array(climbSchema).min(1).max(300),
 });
 
@@ -164,6 +176,7 @@ export function buildManualSession(
     rpe: result.rpe,
     title: body.name ?? result.title,
     summary: result.summary,
+    notes: normalisedNote(body.notes),
     climbs_json: JSON.stringify(
       session.climbs.map((c) => ({
         time: c.time.toISOString(),

@@ -79,6 +79,7 @@ export type SessionRow = {
   top_send_grade_label: string | null;
   rpe: number;
   title: string;
+  notes: string | null;
   strava_activity_id: number | null;
   posted_at: string | null;
   post_state: PostState | null;
@@ -103,6 +104,7 @@ export type LogSessionInput = {
   rpe?: number;
   location: SessionLocation;
   tags?: string[];
+  notes?: string;
   climbs: LogClimbInput[];
 };
 

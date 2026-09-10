@@ -16,7 +16,7 @@ import {
   type ClimbDraft,
   type LogSessionDraft,
 } from "@sendtally/features/log-session";
-import { useTagVocabulary } from "@sendtally/features/sessions";
+import { SESSION_NOTE_MAX, useTagVocabulary } from "@sendtally/features/sessions";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { useApi } from "../../lib/api";
 import { TagPicker } from "../sessions/TagPicker";
@@ -339,6 +339,19 @@ export function LogSessionForm({
               );
             })}
           </View>
+        </View>
+
+        <View style={{ gap: 7 }}>
+          <LabelText>NOTES · OPTIONAL</LabelText>
+          <TextInput
+            value={draft.notes}
+            multiline
+            maxLength={SESSION_NOTE_MAX}
+            placeholder="How it felt, what to try next time."
+            placeholderTextColor={colors.textFaint}
+            onChangeText={(notes) => setDraft({ ...draft, notes })}
+            style={{ ...inputStyle, minHeight: 96, lineHeight: 22, textAlignVertical: "top" }}
+          />
         </View>
 
         <View

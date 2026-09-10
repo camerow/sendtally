@@ -27,6 +27,7 @@ export type LogSessionDraft = {
   endTime: string;
   location: "indoor" | "outdoor";
   tags: string[];
+  notes: string;
   scale: GradeScale;
   rpe: number | null;
   climbs: ClimbDraft[];

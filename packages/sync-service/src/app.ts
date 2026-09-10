@@ -8,7 +8,13 @@ import { purgeAccount } from "./lib/account";
 import { applyProjectFlags, climbCatalogue } from "./lib/climbs";
 import { decryptSecret, encryptSecret } from "./lib/crypto";
 import { mirrorStoreEntitlements, resolveEntitlements } from "./lib/entitlements";
-import { buildManualSession, historySession, manualSessionBody } from "./lib/manual";
+import {
+  buildManualSession,
+  historySession,
+  manualSessionBody,
+  normalisedNote,
+  sessionNotesBody,
+} from "./lib/manual";
 import { getPostHog } from "./lib/posthog";
 import { syncSessionToStrava } from "./lib/posting";
 import * as repo from "./lib/repo";
@@ -379,6 +385,23 @@ export function createApp(deps: AppDeps): Hono<AppEnv> {
       ...(result.reason === undefined ? {} : { reason: result.reason }),
       session: await sessionResponse(c, userId, fingerprint),
     });
+  });
+
+  // A note is the user's own writing about their session, so every session they
+  // own takes one, legacy board rows included. Nothing is re-scored or reposted.
+  app.put("/v1/sessions/:fingerprint/notes", async (c) => {
+    const parsed = sessionNotesBody.safeParse(await c.req.json().catch(() => null));
+    if (!parsed.success) return c.json({ error: "invalid request body" }, 400);
+    const notes = normalisedNote(parsed.data.notes);
+    const saved = await repo.setSessionNotes(
+      c.env.DB,
+      c.get("userId"),
+      c.req.param("fingerprint"),
+      notes
+    );
+    if (!saved) return c.json({ error: "not found" }, 404);
+    await captureEvent(c.env, "session_notes_updated", { cleared: String(notes === null) });
+    return c.json({ notes });
   });
 
   // Tags live in their own tables, so legacy board sessions stay taggable

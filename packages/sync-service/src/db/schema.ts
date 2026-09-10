@@ -85,6 +85,7 @@ export const sessions = sqliteTable(
     title: text("title").notNull(),
     summary: text("summary").notNull(),
     climbs_json: text("climbs_json"),
+    notes: text("notes"),
     strava_activity_id: integer("strava_activity_id"),
     posted_at: text("posted_at"),
     post_state: text("post_state"),

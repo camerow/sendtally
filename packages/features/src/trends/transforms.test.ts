@@ -26,6 +26,7 @@ function session(
     top_send_grade: Math.max(...climbs.filter((c) => c.kind === "send").map((c) => c.vGrade), -1),
     top_grade_label: null,
     top_send_grade_label: null,
+    notes: null,
     rpe: 6,
     title: "",
     strava_activity_id: null,

@@ -12,6 +12,7 @@ import {
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { Chip } from "../../components/Chip";
 import { PostStatusBar } from "../../features/sessions/PostStatusBar";
+import { SessionNotes } from "../../features/sessions/SessionNotes";
 import { SessionTags } from "../../features/sessions/SessionTags";
 import { useApi } from "../../lib/api";
 
@@ -215,6 +216,8 @@ export default function SessionDetailScreen(): React.ReactElement {
                 </View>
               ))}
             </View>
+
+            <SessionNotes api={api} fingerprint={fingerprint ?? ""} initial={state.data.notes} />
 
             {state.data.vm.bars.length > 0 && (
               <View
