@@ -9,5 +9,10 @@ dns_records = {
   clerk_mail     = { name = "clkmail", type = "CNAME", content = "mail.<clerk-instance-id>.clerk.services", comment = "Clerk email sending" }
   clerk_dkim1    = { name = "clk._domainkey", type = "CNAME", content = "dkim1.<clerk-instance-id>.clerk.services", comment = "Clerk DKIM 1" }
   clerk_dkim2    = { name = "clk2._domainkey", type = "CNAME", content = "dkim2.<clerk-instance-id>.clerk.services", comment = "Clerk DKIM 2" }
-  posthog_proxy  = { name = "v", type = "CNAME", content = "<proxy-id>.cf-prod-us-proxy.proxyhog.com", comment = "PostHog managed reverse proxy" }
+  clerk_mail2    = { name = "clkmail2", type = "CNAME", content = "mail2.<clerk-instance-id>.clerk.services", comment = "Clerk email sending (second host)" }
+  clerk_dkim3    = { name = "pdk1._domainkey.clkmail2", type = "CNAME", content = "dkim3.<clerk-instance-id>.clerk.services", comment = "Clerk DKIM 3" }
+  clerk_dkim4    = { name = "pdk2._domainkey.clkmail2", type = "CNAME", content = "dkim4.<clerk-instance-id>.clerk.services", comment = "Clerk DKIM 4" }
+  # TXT content keeps the quotes Cloudflare stores it with, otherwise every plan rewrites the record.
+  google_search  = { name = "sendtally.com", type = "TXT", content = "\"google-site-verification=<token>\"", ttl = 3600, comment = "Google Search Console verification" }
+  posthog_proxy  = { name = "v", type = "CNAME", content = "<proxy-id>.cf-prod-us-proxy.proxyhog.com", ttl = 3600, comment = "PostHog managed reverse proxy" }
 }
