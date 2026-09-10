@@ -1,4 +1,4 @@
-import { ClerkProvider } from "@clerk/react-router";
+import { ClerkProvider, useUser } from "@clerk/react-router";
 import { clerkMiddleware } from "@clerk/react-router/server";
 import { rootAuthLoader } from "@clerk/react-router/ssr.server";
 import React from "react";
@@ -13,6 +13,7 @@ import {
   useRouteLoaderData,
 } from "react-router";
 import designStyles from "@sendtally/design/styles.css?url";
+import { identify, resetIdentity } from "./lib/analytics";
 import { cloudflareContext } from "./lib/cloudflare-context";
 
 export const links: LinksFunction = () => [
@@ -101,10 +102,42 @@ export function Layout({ children }: { children: React.ReactNode }): React.React
   );
 }
 
+/**
+ * Ties browser events to the same key the Worker uses (the Clerk user id) and
+ * puts the email on the person, which is what the project's internal-user
+ * cohort filters us out by.
+ */
+function Identify(): null {
+  const { isLoaded, isSignedIn, user } = useUser();
+  const identified = React.useRef(false);
+
+  React.useEffect(() => {
+    if (!isLoaded) return;
+    if (isSignedIn && user !== null && user !== undefined) {
+      identified.current = true;
+      identify(user.id, {
+        email: user.primaryEmailAddress?.emailAddress,
+        name: user.fullName ?? undefined,
+        created_at: user.createdAt?.toISOString(),
+      });
+      return;
+    }
+    // Only on the way out: resetting on every anonymous page load would break
+    // the anonymous-to-signed-up funnel by cutting the distinct id.
+    if (identified.current) {
+      identified.current = false;
+      resetIdentity();
+    }
+  }, [isLoaded, isSignedIn, user]);
+
+  return null;
+}
+
 export default function App(): React.ReactElement {
   const loaderData = useLoaderData<typeof loader>();
   return (
     <ClerkProvider loaderData={loaderData}>
+      <Identify />
       <Outlet />
     </ClerkProvider>
   );

@@ -1,6 +1,7 @@
 import { env } from "cloudflare:test";
 import { describe, expect, it } from "vitest";
 import { createApp } from "../src/app";
+import { newlyGranted } from "../src/lib/entitlements";
 import { INSIGHTS_FEATURE, STORE_ENTITLEMENT } from "../src/features";
 import { storeEntitlementsOf, webhookUserIds } from "../src/lib/revenuecat";
 import { jsonResponse, makeFakeFetch, type RecordedCall } from "./fakes";
@@ -300,5 +301,28 @@ describe("account deletion", () => {
       `SELECT COUNT(*) AS n FROM store_entitlements WHERE user_id = 'user_del_1'`
     ).first<{ n: number }>();
     expect(row?.n).toBe(0);
+  });
+});
+
+describe("newlyGranted", () => {
+  const row = {
+    entitlement: STORE_ENTITLEMENT,
+    store: "play_store",
+    product_id: "member_monthly",
+    expires_at: FUTURE,
+    will_renew: true,
+  };
+
+  it("reports an entitlement the user did not have", () => {
+    expect(newlyGranted([], [row])).toEqual([row]);
+  });
+
+  it("stays quiet when the same entitlement renews", () => {
+    const prior = { ...row, user_id: "user_x", will_renew: 1, updated_at: "" };
+    expect(newlyGranted([prior], [row])).toEqual([]);
+  });
+
+  it("ignores entitlements that are not the membership", () => {
+    expect(newlyGranted([], [{ ...row, entitlement: "something_else" }])).toEqual([]);
   });
 });

@@ -2,6 +2,8 @@ import { PricingTable } from "@clerk/react-router";
 import React from "react";
 import { colors, radius } from "@sendtally/design/tokens";
 
+export const SUBSCRIBED_PARAM = "subscribed";
+
 export type MembershipPricingProps = {
   newSubscriptionRedirectUrl?: string;
 };
@@ -16,7 +18,9 @@ const appearance = {
 } as const;
 
 export function MembershipPricing({
-  newSubscriptionRedirectUrl = "/app",
+  // Clerk hosts the checkout, so the redirect it lands on is the only hook we
+  // get for "they just subscribed".
+  newSubscriptionRedirectUrl = `/app/membership?${SUBSCRIBED_PARAM}=1`,
 }: MembershipPricingProps): React.ReactElement {
   return (
     <PricingTable

@@ -49,9 +49,13 @@ export default function Privacy(): React.ReactElement {
         posted for you.
       </p>
       <p>
-        <strong>Usage.</strong> Standard web analytics through Google Analytics (pages viewed,
-        approximate region, device and browser), and the request logs Cloudflare keeps for the sites
-        and API it serves us.
+        <strong>Usage.</strong> Standard web analytics through Google Analytics and PostHog (pages
+        viewed, approximate region, device and browser), and the request logs Cloudflare keeps for
+        the sites and API it serves us. Once you sign in, PostHog records your account identifier
+        and email address against that usage, so we can tell how many people are using a feature
+        rather than how many browsers are. PostHog also records screen replays of app sessions and
+        the errors your browser hits, so we can see what broke. Form fields are masked in those
+        replays, so what you type is not captured.
       </p>
 
       <h2>What we never collect</h2>
@@ -114,6 +118,11 @@ export default function Privacy(): React.ReactElement {
           <strong>Google Analytics</strong> - aggregate web analytics on sendtally.com. There is no
           advertising network and no retargeting.
         </li>
+        <li>
+          <strong>PostHog</strong> - product analytics, session replay and error reports, including
+          your account identifier and email address once you are signed in. Your logbook is not sent
+          to PostHog.
+        </li>
       </ul>
       <p>
         Activities you post to Strava are governed by your Strava privacy settings from that point
@@ -157,6 +166,11 @@ export default function Privacy(): React.ReactElement {
         on our side.
       </p>
       <p>
+        Usage records at PostHog are not part of that purge. They age off on their own after twelve
+        months, and session replays after thirty days. Write to us if you want yours removed sooner
+        and we will delete them.
+      </p>
+      <p>
         Activities already posted to Strava live in your Strava account and stay there. Delete those
         in Strava if you want them gone.
       </p>
@@ -166,9 +180,9 @@ export default function Privacy(): React.ReactElement {
         Clerk sets a session cookie so you stay signed in. It is required for the service to work.
       </p>
       <p>
-        Google Analytics sets cookies to count visits and sessions on the marketing pages. We do not
-        run advertising cookies, retargeting pixels, or third-party trackers beyond the analytics
-        described here.
+        Google Analytics and PostHog set cookies to count visits and sessions and to join the pages
+        you visit into one session. We do not run advertising cookies, retargeting pixels, or
+        third-party trackers beyond the analytics described here.
       </p>
 
       <h2>Your rights</h2>

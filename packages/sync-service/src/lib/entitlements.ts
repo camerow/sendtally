@@ -1,8 +1,9 @@
 import type { AuthedUser } from "../auth";
 import type { Env } from "../bindings";
 import { INSIGHTS_FEATURE, STORE_ENTITLEMENT } from "../features";
+import { captureUserEvent } from "./posthog";
 import * as repo from "./repo";
-import type { RevenueCatClient } from "./revenuecat";
+import type { RevenueCatClient, StoreEntitlement } from "./revenuecat";
 
 export type StoreMembership = {
   store: string;
@@ -19,6 +20,21 @@ export type Membership = {
 
 export type Entitlements = { membership: Membership };
 
+/**
+ * A renewal, a transfer and a plain refresh all re-send the entitlement the
+ * user already had, so only the ones missing a moment ago are a conversion.
+ */
+export function newlyGranted(
+  before: repo.StoreEntitlementRow[],
+  after: StoreEntitlement[]
+): StoreEntitlement[] {
+  return after.filter(
+    (row) =>
+      row.entitlement === STORE_ENTITLEMENT &&
+      !before.some((prior) => prior.entitlement === row.entitlement)
+  );
+}
+
 export async function mirrorStoreEntitlements(
   env: Env,
   revenuecat: RevenueCatClient,
@@ -26,7 +42,14 @@ export async function mirrorStoreEntitlements(
 ): Promise<void> {
   const subscriber = await revenuecat.fetchSubscriber(userId);
   await repo.ensureUser(env.DB, userId);
+  const before = await repo.listStoreEntitlements(env.DB, userId);
   await repo.replaceStoreEntitlements(env.DB, userId, subscriber.entitlements);
+  for (const row of newlyGranted(before, subscriber.entitlements)) {
+    await captureUserEvent(env, userId, "membership_started", {
+      channel: row.store,
+      product_id: row.product_id,
+    });
+  }
 }
 
 function isLive(expiresAt: string | null, now: Date): boolean {

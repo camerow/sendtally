@@ -21,3 +21,29 @@ export function getPostHog(env: Env): PostHog | null {
   });
   return posthog;
 }
+
+// Person properties are what the project's "Internal / Test users" cohort
+// matches on, so an identified email is also how our own accounts stay out of
+// the numbers.
+export async function identifyUser(
+  env: Env,
+  distinctId: string,
+  properties: Record<string, string | boolean>
+): Promise<void> {
+  const posthog = getPostHog(env);
+  if (posthog === null) return;
+  posthog.identify({ distinctId, properties });
+  await posthog.flush();
+}
+
+export async function captureUserEvent(
+  env: Env,
+  distinctId: string,
+  event: string,
+  properties: Record<string, string | boolean> = {}
+): Promise<void> {
+  const posthog = getPostHog(env);
+  if (posthog === null) return;
+  posthog.capture({ distinctId, event, properties });
+  await posthog.flush();
+}

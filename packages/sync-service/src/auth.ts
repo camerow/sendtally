@@ -3,6 +3,7 @@ import { createClerkClient, verifyToken } from "@clerk/backend";
 // Clerk SDK calls after verifying a token, and it keeps billing claim parsing out of our code.
 import { signedInAuthObject } from "@clerk/backend/internal";
 import { verifyWebhook } from "@clerk/backend/webhooks";
+import { z } from "zod";
 import type { Env } from "./bindings";
 
 export type AuthedUser = {
@@ -28,12 +29,29 @@ export async function deleteClerkUser(userId: string, env: Env): Promise<void> {
   await createClerkClient({ secretKey: env.CLERK_SECRET_KEY }).users.deleteUser(userId);
 }
 
-export type AuthWebhookEvent = { type: string; userId: string | null };
+export type AuthWebhookEvent = { type: string; userId: string | null; email: string | null };
+
+const clerkUser = z.object({
+  primary_email_address_id: z.string().nullish(),
+  email_addresses: z.array(z.object({ id: z.string(), email_address: z.string() })).nullish(),
+});
+
+export function primaryEmail(data: unknown): string | null {
+  const parsed = clerkUser.safeParse(data);
+  if (!parsed.success) return null;
+  const addresses = parsed.data.email_addresses ?? [];
+  const primary = addresses.find((a) => a.id === parsed.data.primary_email_address_id);
+  return (primary ?? addresses[0])?.email_address ?? null;
+}
 
 export async function verifyClerkWebhook(req: Request, env: Env): Promise<AuthWebhookEvent> {
   const event = await verifyWebhook(req, {
     signingSecret: env.CLERK_WEBHOOK_SIGNING_SECRET,
   });
   const id: unknown = event.data.id;
-  return { type: event.type, userId: typeof id === "string" ? id : null };
+  return {
+    type: event.type,
+    userId: typeof id === "string" ? id : null,
+    email: primaryEmail(event.data),
+  };
 }

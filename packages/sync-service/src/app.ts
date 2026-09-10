@@ -15,7 +15,7 @@ import {
   normalisedNote,
   sessionNotesBody,
 } from "./lib/manual";
-import { getPostHog } from "./lib/posthog";
+import { captureUserEvent, getPostHog, identifyUser } from "./lib/posthog";
 import { syncSessionToStrava } from "./lib/posting";
 import * as repo from "./lib/repo";
 import { RevenueCatClient, webhookBody, webhookUserIds } from "./lib/revenuecat";
@@ -47,18 +47,17 @@ export function createApp(deps: AppDeps): Hono<AppEnv> {
   const app = new Hono<AppEnv>();
   const revenuecat = (env: Env) => new RevenueCatClient(env.REVENUECAT_SECRET_API_KEY, fetchImpl);
 
+  // Without a distinct id posthog-node invents a random one per call, so every
+  // event lands on its own anonymous person. The signed-in user id is the same
+  // key the browser identifies with, which is what joins the two streams.
   const captureEvent = async (
-    env: Env,
+    c: Context<AppEnv>,
     event: string,
-    properties: Record<string, string | boolean>,
-    distinctId?: string
+    properties: Record<string, string | boolean> = {},
+    distinctId: string | undefined = c.get("userId")
   ) => {
-    const posthog = getPostHog(env);
-    if (posthog === null) return;
-    posthog.capture(
-      distinctId === undefined ? { event, properties } : { distinctId, event, properties }
-    );
-    await posthog.flush();
+    if (distinctId === undefined) return;
+    await captureUserEvent(c.env, distinctId, event, properties);
   };
 
   app.onError(async (error, c) => {
@@ -111,6 +110,14 @@ export function createApp(deps: AppDeps): Hono<AppEnv> {
     // user's D1 rows and leave their Strava grant live.
     if (event.type === "user.deleted" && event.userId !== null) {
       await purgeAccount(c.env, event.userId, fetchImpl);
+    }
+    // Clerk owns account creation on both web and mobile, so its webhook is the
+    // one place that sees every signup exactly once, with the email attached.
+    if (event.type === "user.created" && event.userId !== null) {
+      if (event.email !== null) {
+        await identifyUser(c.env, event.userId, { email: event.email });
+      }
+      await captureEvent(c, "account_created", {}, event.userId);
     }
     return c.json({ ok: true });
   });
@@ -173,7 +180,7 @@ export function createApp(deps: AppDeps): Hono<AppEnv> {
       refresh_token_ciphertext: await encryptSecret(exchanged.tokens.refreshToken, c.env.TOKEN_KEY),
       expires_at: exchanged.tokens.expiresAt,
     });
-    await captureEvent(c.env, "strava_connection_completed", {}, state.userId);
+    await captureEvent(c, "strava_connection_completed", {}, state.userId);
     return c.redirect(`${c.env.WEB_APP_URL}/connected/strava`);
   });
 
@@ -227,7 +234,7 @@ export function createApp(deps: AppDeps): Hono<AppEnv> {
       redirectUri,
       state
     );
-    await captureEvent(c.env, "strava_connection_started", {});
+    await captureEvent(c, "strava_connection_started", {});
     return c.json({ url });
   });
 
@@ -266,7 +273,7 @@ export function createApp(deps: AppDeps): Hono<AppEnv> {
   app.delete("/v1/projects/:slug", async (c) => {
     const deleted = await repo.deleteProject(c.env.DB, c.get("userId"), c.req.param("slug"));
     if (!deleted) return c.json({ error: "not found" }, 404);
-    await captureEvent(c.env, "project_unmarked", {});
+    await captureEvent(c, "project_unmarked", {});
     return c.json({ deleted: true });
   });
 
@@ -341,7 +348,7 @@ export function createApp(deps: AppDeps): Hono<AppEnv> {
       await repo.setSessionTags(c.env.DB, userId, fingerprint, parsed.data.tags);
     }
     await applyProjectFlags(c.env.DB, userId, parsed.data.climbs);
-    await captureEvent(c.env, "manual_session_created", { session_source: "manual" });
+    await captureEvent(c, "manual_session_created", { session_source: "manual" });
     const body = { session: await sessionResponse(c, userId, fingerprint) };
     postAfterResponse(c, userId, fingerprint);
     return c.json(body, 201);
@@ -362,7 +369,7 @@ export function createApp(deps: AppDeps): Hono<AppEnv> {
     await repo.updateManualSession(c.env.DB, userId, input);
     await repo.setSessionTags(c.env.DB, userId, fingerprint, parsed.data.tags ?? []);
     await applyProjectFlags(c.env.DB, userId, parsed.data.climbs);
-    await captureEvent(c.env, "manual_session_updated", { session_source: "manual" });
+    await captureEvent(c, "manual_session_updated", { session_source: "manual" });
     const body = { session: await sessionResponse(c, userId, fingerprint) };
     // Already posted sessions get the activity patched, never a second one.
     postAfterResponse(c, userId, fingerprint);
@@ -379,7 +386,7 @@ export function createApp(deps: AppDeps): Hono<AppEnv> {
     if (result.outcome === "failed") {
       return c.json({ outcome: result.outcome, reason: result.reason }, 502);
     }
-    await captureEvent(c.env, "strava_post_retried", { outcome: result.outcome });
+    await captureEvent(c, "strava_post_retried", { outcome: result.outcome });
     return c.json({
       outcome: result.outcome,
       ...(result.reason === undefined ? {} : { reason: result.reason }),
@@ -400,7 +407,7 @@ export function createApp(deps: AppDeps): Hono<AppEnv> {
       notes
     );
     if (!saved) return c.json({ error: "not found" }, 404);
-    await captureEvent(c.env, "session_notes_updated", { cleared: String(notes === null) });
+    await captureEvent(c, "session_notes_updated", { cleared: String(notes === null) });
     return c.json({ notes });
   });
 
@@ -415,7 +422,7 @@ export function createApp(deps: AppDeps): Hono<AppEnv> {
       return c.json({ error: "not found" }, 404);
     }
     const tags = await repo.setSessionTags(c.env.DB, userId, fingerprint, parsed.data.tags);
-    await captureEvent(c.env, "session_tags_updated", { tag_count: String(tags.length) });
+    await captureEvent(c, "session_tags_updated", { tag_count: String(tags.length) });
     return c.json({ tags });
   });
 
@@ -425,7 +432,7 @@ export function createApp(deps: AppDeps): Hono<AppEnv> {
     const existing = await repo.getSession(c.env.DB, userId, fingerprint);
     if (existing === null) return c.json({ error: "not found" }, 404);
     await repo.deleteSession(c.env.DB, userId, fingerprint);
-    await captureEvent(c.env, "manual_session_deleted", { session_source: existing.source });
+    await captureEvent(c, "manual_session_deleted", { session_source: existing.source });
     return c.json({ deleted: true });
   });
 
@@ -454,7 +461,7 @@ export function createApp(deps: AppDeps): Hono<AppEnv> {
   app.post("/v1/entitlements/refresh", async (c) => {
     const user = { userId: c.get("userId"), hasFeature: c.get("hasFeature") };
     await mirrorStoreEntitlements(c.env, revenuecat(c.env), user.userId);
-    await captureEvent(c.env, "entitlements_refreshed", {});
+    await captureEvent(c, "entitlements_refreshed", {});
     return c.json(await resolveEntitlements(c.env, user));
   });
 
@@ -477,7 +484,7 @@ export function createApp(deps: AppDeps): Hono<AppEnv> {
         ? null
         : `${parsed.data.since}T00:00:00Z`;
     await repo.setStravaPosting(c.env.DB, userId, parsed.data.enabled, since);
-    await captureEvent(c.env, "strava_posting_updated", { enabled: parsed.data.enabled });
+    await captureEvent(c, "strava_posting_updated", { enabled: parsed.data.enabled });
     return c.json({ postingEnabled: parsed.data.enabled, postSince: since });
   });
 
