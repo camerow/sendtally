@@ -1,0 +1,101 @@
+"field","limit","en-US","de-DE","fr-FR","es-ES","it-IT","pt-BR","pl-PL","cs-CZ","ja-JP","ko-KR"
+"title","30","Sendtally: Climbing log","Sendtally: Kletter-Logbuch","Sendtally : carnet d'escalade","Sendtally: diario de escalada","","","","","",""
+"short_description","80","Log bouldering & climbing sessions: effort score, grade trends, Strava sync.","Boulder- und Klettersessions loggen: Anstrengung, Grad-Trends, Strava.","Enregistrez vos séances de bloc et d'escalade : effort, cotations, Strava.","Registra tus sesiones de búlder y escalada: esfuerzo, grados, Strava.","","","","","",""
+"full_description","4000","sendtally is a session log for climbing and bouldering.
+
+Log a bouldering session at the gym or a day at the crag in about a minute: date, times, grades in V-scale or Font, sends and attempts, tries, and a name for the climb if you want one. Every session gets an effort score from 1 to 10, measured against your own last eight weeks rather than a fixed scale, so a big night reads as a big night.
+
+Turn on Strava and each session posts as one Rock Climbing activity with the climb log and effort score in the description. Sessions are fingerprinted, so a re-sync never posts twice.
+
+This is a training journal, not a workout generator. sendtally records what you actually climbed, whether you boulder, climb ropes, or split the week between both, and shows you the shape of it over months.
+
+Free, for everyone:
+· Unlimited session logging, indoor and outdoor
+· Bouldering and rope climbing, V-scale, Font, YDS or French
+· Effort score on every session
+· Strava sync
+· Session history by month
+
+Membership adds the trends:
+· Climbing volume over time
+· Grade pyramid
+· Hardest send
+· Flash rate
+· Average grade
+
+We never store your Strava password. Standard OAuth with activity-write scope only, revocable from Strava at any time. Delete your account and every session and token goes with it the same day.
+
+Membership is an auto-renewing subscription, monthly or yearly. Join in the app or on sendtally.com; either one unlocks the trends everywhere.","Sendtally ist ein Session-Logbuch fürs Klettern und Bouldern.
+
+Eine Hallensession oder einen Tag am Fels in etwa einer Minute eintragen: Datum, Zeiten, Grade in V-Skala, Fontainebleau, YDS oder Französisch, Begehungen und Versuche, Anzahl der Versuche und auf Wunsch ein Name für die Route. Jede Session bekommt einen Anstrengungswert von 1 bis 10, gemessen an deinen eigenen letzten acht Wochen statt an einer festen Skala. So liest sich ein harter Abend auch wie ein harter Abend.
+
+Mit aktiviertem Strava wird jede Session als eine einzige Rock Climbing-Aktivität gepostet, mit dem Kletterprotokoll und dem Anstrengungswert in der Beschreibung. Sessions tragen einen Fingerabdruck, ein erneuter Sync postet also nie doppelt.
+
+Das hier ist ein Trainingstagebuch, kein Trainingsplan-Generator. Sendtally hält fest, was du tatsächlich geklettert bist, ob du boulderst, im Seil kletterst oder beides über die Woche verteilst, und zeigt dir die Entwicklung über Monate.
+
+Kostenlos, für alle:
+· Unbegrenzt Sessions loggen, drinnen und draußen
+· Bouldern und Seilklettern, V-Skala, Fontainebleau, YDS oder Französisch
+· Anstrengungswert für jede Session
+· Strava-Sync
+· Sessionverlauf nach Monat
+
+Die Mitgliedschaft bringt die Trends:
+· Klettervolumen über die Zeit
+· Gradpyramide
+· Härteste Begehung
+· Flash-Quote
+· Durchschnittsgrad
+
+Wir speichern niemals dein Strava-Passwort. Standard-OAuth, nur mit activity-write-Scope, jederzeit über Strava widerrufbar. Wenn du dein Konto löschst, verschwinden noch am selben Tag alle Sessions und Tokens mit.
+
+Die Mitgliedschaft ist ein Monatsabo. Schließ sie in der App oder auf sendtally.com ab; beides schaltet die Trends überall frei.","Sendtally est un carnet de séances pour l'escalade et le bloc.
+
+Enregistrez une séance en salle ou une journée en falaise en une minute environ : date, horaires, cotations en échelle V, Fontainebleau, YDS ou française, réussites et essais, nombre de tentatives, et le nom de la voie si vous le voulez. Chaque séance reçoit une note d'effort de 1 à 10, mesurée par rapport à vos huit dernières semaines plutôt qu'à une échelle fixe : une grosse soirée se lit donc comme une grosse soirée.
+
+Activez Strava et chaque séance est publiée comme une seule activité Rock Climbing, avec le détail des voies et la note d'effort dans la description. Les séances portent une empreinte unique, une resynchronisation ne publie donc jamais deux fois.
+
+C'est un carnet d'entraînement, pas un générateur de séances. Sendtally note ce que vous avez réellement grimpé, que vous fassiez du bloc, de la voie, ou les deux dans la semaine, et vous montre l'évolution sur plusieurs mois.
+
+Gratuit, pour tout le monde :
+· Séances illimitées, en salle et en extérieur
+· Bloc et escalade en tête, échelle V, Fontainebleau, YDS ou française
+· Note d'effort sur chaque séance
+· Synchronisation Strava
+· Historique par mois
+
+L'abonnement ajoute les tendances :
+· Volume grimpé dans le temps
+· Pyramide des cotations
+· Croix la plus dure
+· Taux de flash
+· Cotation moyenne
+
+Nous ne stockons jamais votre mot de passe Strava. OAuth standard, avec la seule autorisation activity-write, révocable depuis Strava à tout moment. Supprimez votre compte et toutes vos séances et vos jetons partent avec, le jour même.
+
+L'abonnement est mensuel. Souscrivez dans l'application ou sur sendtally.com : l'un comme l'autre débloque les tendances partout.","Sendtally es un diario de sesiones para escalada y búlder.
+
+Registra una sesión en el rocódromo o un día en roca en aproximadamente un minuto: fecha, horas, grados en escala V, Fontainebleau, YDS o francesa, encadenes e intentos, número de pegues y el nombre de la vía si quieres. Cada sesión recibe una puntuación de esfuerzo del 1 al 10, medida contra tus propias últimas ocho semanas en lugar de contra una escala fija, así que una noche dura se lee como una noche dura.
+
+Activa Strava y cada sesión se publica como una única actividad Rock Climbing, con el registro de vías y la puntuación de esfuerzo en la descripción. Las sesiones llevan una huella única, así que volver a sincronizar nunca publica dos veces.
+
+Esto es un diario de entrenamiento, no un generador de rutinas. Sendtally registra lo que realmente has escalado, ya escales búlder, de cuerda, o repartas la semana entre ambos, y te muestra la evolución a lo largo de los meses.
+
+Gratis, para todo el mundo:
+· Sesiones ilimitadas, en interior y exterior
+· Búlder y escalada de cuerda, escala V, Fontainebleau, YDS o francesa
+· Puntuación de esfuerzo en cada sesión
+· Sincronización con Strava
+· Historial de sesiones por mes
+
+La suscripción añade las tendencias:
+· Volumen de escalada a lo largo del tiempo
+· Pirámide de grados
+· Encadene más duro
+· Porcentaje de flash
+· Grado medio
+
+Nunca guardamos tu contraseña de Strava. OAuth estándar, solo con el permiso activity-write, revocable desde Strava en cualquier momento. Borra tu cuenta y todas las sesiones y tokens se van con ella el mismo día.
+
+La suscripción es mensual. Suscríbete en la app o en sendtally.com; cualquiera de las dos desbloquea las tendencias en todas partes.","","","","","",""
+"release_notes","500","First release. Log sessions, get an effort score, sync to Strava.","Erste Version. Sessions loggen, Anstrengungswert bekommen, mit Strava synchronisieren.","Première version. Enregistrez vos séances, obtenez une note d'effort, synchronisez avec Strava.","Primera versión. Registra sesiones, obtén una puntuación de esfuerzo, sincroniza con Strava.","","","","","",""
