@@ -60,6 +60,7 @@ The id is public anyway - it is the number in the App Store URL.
    The App Store Connect API key is a **team key with the Admin role**, not App Manager: only Admin carries access to Certificates, Identifiers & Profiles, which is what lets EAS create the signing certificate.
    With `EXPO_ASC_API_KEY_PATH`, `EXPO_ASC_KEY_ID`, `EXPO_ASC_ISSUER_ID`, `EXPO_APPLE_TEAM_ID` and `EXPO_APPLE_TEAM_TYPE` in the environment, `eas credentials:configure-build --platform ios --profile production` runs without asking anything about Apple, which is how the distribution certificate and provisioning profile were generated.
    The `.p8` downloads once; it lives in 1Password and at `~/.appstoreconnect/private_keys/`.
+   The App Store Connect record, its screenshots, the subscription group and both subscription products were all created through the App Store Connect REST API with that key rather than by hand.
 4. **App Review demo account.** Reviewers cannot read our one-time codes, and Google's sign-in-details form asks for "reusable sign in details that don't expire", so the reviewer account signs in with a password while everyone else keeps the code flow.
    In the Clerk **Production** instance: Configure, User & authentication, Password tab, turn on **Add password to account** only. Leave **Sign-up with password** off; that one would demand a password from every new sign-up, and neither app collects one.
    Also turn off **Device Trust** under Configure, Protect, Rules: it applies only to password sign-ins and demands an emailed code from any new device, which a reviewer cannot read. It protects nothing here, because the reviewer is the only account with a password.
@@ -105,6 +106,31 @@ The D1 rows are a mirror of RevenueCat, written two ways:
 
 The RevenueCat app user id is the Clerk user id (`Purchases.configure({ appUserID })` on sign-in), so no identity mapping exists anywhere.
 Account deletion deletes the RevenueCat subscriber along with the D1 rows.
+
+### The App Store products
+
+Subscription group `Sendtally Membership` (`22375103`) on app `6810779919`, holding both products at group level 1 so Apple treats monthly-to-yearly as a plan change rather than a second subscription, the same way the single Play subscription with two base plans does.
+
+| Product id           | Period  | Apple id     | USA price |
+| -------------------- | ------- | ------------ | --------- |
+| `membership_monthly` | 1 month | `6810791319` | $2.99     |
+| `membership_yearly`  | 1 year  | `6810791477` | $23.99    |
+
+The ids match the RevenueCat test-store products, so one name means one thing everywhere.
+
+Pricing is not free-form: Apple sells from a fixed ladder of price points, and $23.88 - the figure that would have made the yearly card read exactly $1.99 a month - is not on it.
+$23.99 is, and it divides to $2.00, which is also what Play charges.
+That matters because the annual plan card headlines `pricePerMonthString` rather than the yearly total, with the total on the line beneath it.
+
+The price point ids returned by `GET /v1/subscriptions/<id>/pricePoints` are per subscription and per territory, and `customerPrice` is a bare-decimal string (`"3.0"`, not `"3.00"`), so compare it as a number.
+Setting the monthly price through `POST /v1/subscriptionPrices` worked and equalized itself across 175 territories; the same call for the yearly product returned `409 ENTITY_ERROR.RELATIONSHIP.INVALID` against a price point id that decodes to exactly that subscription, and it was set in the console instead.
+
+Each product also carries two assets that the app screenshot set does not cover, both rendered from artboards by `store:render`:
+
+- a 1024x1024 promotional image (`subscriptionImages`), flattened RGB with square corners, used if the purchase is ever promoted on the product page or redeemed through an offer code
+- a review-only screenshot (`appStoreReviewScreenshot`) at 1290x2796, which mirrors the real paywall so a reviewer sees what the app renders
+
+A subscription sitting at `MISSING_METADATA` once it has a localization, a price and a review screenshot is usually not missing metadata at all - it is the Paid Applications Agreement. Both products flipped to `READY_TO_SUBMIT` the moment that agreement went active.
 
 ### RevenueCat project setup (one time)
 
