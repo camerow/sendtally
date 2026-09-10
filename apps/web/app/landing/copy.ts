@@ -234,12 +234,15 @@ export const COPY = {
 
   stores: {
     lead: "Log a session from your phone:",
-    ios: "iPhone app coming soon",
+    ios: "Download sendtally on the App Store",
     android: "Get sendtally on Google Play",
+    pending: "Coming soon",
   },
 
   footer: {
     line: "sendtally · not affiliated with Strava",
+    trademarks:
+      "Google Play and the Google Play logo are trademarks of Google LLC. Apple and the Apple logo are trademarks of Apple Inc.",
     links: [
       { label: "Sign in", href: "/sign-in" },
       { label: "Privacy", href: "/privacy" },
