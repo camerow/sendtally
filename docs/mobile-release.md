@@ -61,6 +61,38 @@ Both paths are gitignored, and the runner is discarded after the job.
    The mobile sign-in screen reads `supportedFirstFactors` after `signIn.create`; Clerk lists `password` only for accounts that have one, so only this user ever sees the password field.
    Put the email and password in the store's sign-in-details form (Play: App content, App access) and in 1Password, nowhere else.
 
+## Analytics on mobile
+
+PostHog runs in the app through `posthog-react-native` plus its `posthog-react-native/expo` config plugin, wired in `apps/mobile/features/analytics/AnalyticsProvider.tsx`.
+The distinct id is the Clerk user id and the identify call carries the email, same rule as the web app, so the internal-users cohort excludes our own sessions.
+
+Unlike the Clerk and RevenueCat public keys, the PostHog values are **not** in `apps/mobile/eas.json`.
+They are EAS project environment variables, because one of them is a secret and splitting the set across two places is how they drift apart.
+Check them with `eas env:list --scope project --environment production`:
+
+| Name                          | Visibility | Value                                     |
+| ----------------------------- | ---------- | ----------------------------------------- |
+| `EXPO_PUBLIC_POSTHOG_API_KEY` | plaintext  | the `phc_…` project token, public         |
+| `EXPO_PUBLIC_POSTHOG_HOST`    | plaintext  | `https://us.i.posthog.com`                |
+| `POSTHOG_CLI_HOST`            | plaintext  | `https://us.posthog.com`                  |
+| `POSTHOG_CLI_PROJECT_ID`      | plaintext  | `594324`                                  |
+| `POSTHOG_CLI_API_KEY`         | secret     | a personal API key, for source-map upload |
+
+The two hosts differ and both are right: the SDK ingests at `us.i.posthog.com`, while the CLI talks to the API at `us.posthog.com`.
+Pointing the SDK at the app host is the easy mistake, and `npx posthog-cli` writes exactly that value into `.env.local` when it sets the project up.
+
+`POSTHOG_CLI_API_KEY` comes from [User API keys](https://us.posthog.com/settings/user-api-keys) with the error-tracking symbol-set write scope:
+
+```
+eas env:set --scope project --name POSTHOG_CLI_API_KEY --value <phx_…> \
+  --visibility secret --environment production --environment preview --environment development
+```
+
+Without it in the build environment the plugin skips the upload silently and stack traces in Error tracking stay minified.
+It is deliberately not in Doppler: Doppler feeds `push-secrets.sh`, which only pushes to the two Workers, so a mobile-only build secret there would have no consumer.
+
+Locally the same five values sit in `apps/mobile/.env.local`, which is gitignored.
+
 ## Store assets
 
 Every store image is generated from artboards vendored out of the Sendtally Marketing Kit design canvas.
