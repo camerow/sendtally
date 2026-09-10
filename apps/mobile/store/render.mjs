@@ -24,15 +24,15 @@ const targets = [
   { board: "icon-play-512", to: "store/out/play-icon-512.png", alpha: false },
   { board: "feature-graphic", to: "store/out/feature-graphic.png", alpha: false },
   { board: "ios-sessions", to: "store/out/ios/1-sessions.png", alpha: false },
-  { board: "ios-log-session", to: "store/out/ios/2-log-session.png", alpha: false },
-  { board: "ios-session-detail", to: "store/out/ios/3-session-detail.png", alpha: false },
-  { board: "ios-trends", to: "store/out/ios/4-trends.png", alpha: false },
-  { board: "ios-strava", to: "store/out/ios/5-strava.png", alpha: false },
+  { board: "ios-strava", to: "store/out/ios/2-strava.png", alpha: false },
+  { board: "ios-log-session", to: "store/out/ios/3-log-session.png", alpha: false },
+  { board: "ios-session-detail", to: "store/out/ios/4-session-detail.png", alpha: false },
+  { board: "ios-trends", to: "store/out/ios/5-trends.png", alpha: false },
   { board: "android-sessions", to: "store/out/android/1-sessions.png", alpha: false },
-  { board: "android-log-session", to: "store/out/android/2-log-session.png", alpha: false },
-  { board: "android-session-detail", to: "store/out/android/3-session-detail.png", alpha: false },
-  { board: "android-trends", to: "store/out/android/4-trends.png", alpha: false },
-  { board: "android-strava", to: "store/out/android/5-strava.png", alpha: false },
+  { board: "android-strava", to: "store/out/android/2-strava.png", alpha: false },
+  { board: "android-log-session", to: "store/out/android/3-log-session.png", alpha: false },
+  { board: "android-session-detail", to: "store/out/android/4-session-detail.png", alpha: false },
+  { board: "android-trends", to: "store/out/android/5-trends.png", alpha: false },
   // In-app purchase assets. Apple wants the promotional image flattened with no
   // rounded corners, and the review screenshot at one of the sizes the app
   // supports, so it is rendered at 430x932 logical, the 6.7" phone.
