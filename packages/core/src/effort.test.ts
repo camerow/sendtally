@@ -115,6 +115,9 @@ describe("score", () => {
     ]) {
       expect(res.summary).toContain(want);
     }
+    const lines = res.summary.split("\n");
+    expect(lines[1]).toBe("created by https://sendtally.com");
+    expect(lines[2]).toBe("✓ V4 Jug Life");
   });
 
   it("omits grade stats when no grades are known", () => {

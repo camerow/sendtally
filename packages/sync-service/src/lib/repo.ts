@@ -466,18 +466,6 @@ export async function markSessionPosted(
     .where(and(eq(sessions.user_id, userId), eq(sessions.fingerprint, fingerprint)));
 }
 
-export async function setSessionPostError(
-  db: D1Database,
-  userId: string,
-  fingerprint: string,
-  error: string
-): Promise<void> {
-  await drizzle(db)
-    .update(sessions)
-    .set({ post_error: error })
-    .where(and(eq(sessions.user_id, userId), eq(sessions.fingerprint, fingerprint)));
-}
-
 export async function markSessionPostFailed(
   db: D1Database,
   userId: string,

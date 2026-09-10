@@ -20,13 +20,11 @@ export type StravaActivity = {
   description: string;
   startDateLocal: Date;
   elapsedSeconds: number;
-  perceivedExertion: number;
 };
 
 export type StravaActivityUpdate = {
   name?: string;
   description?: string;
-  perceivedExertion?: number;
 };
 
 export type StravaAppConfig = {
@@ -140,7 +138,6 @@ export class StravaClient {
       description: a.description,
       trainer: "0",
     });
-    if (a.perceivedExertion > 0) form.set("perceived_exertion", String(a.perceivedExertion));
     const resp = await this.fetchImpl(`${this.apiBase}/activities`, {
       method: "POST",
       headers: {
@@ -169,19 +166,11 @@ export class StravaClient {
     if (resp.status !== 200) throw new Error(`strava deauthorize failed: HTTP ${resp.status}`);
   }
 
-  async setPerceivedExertion(activityId: number, rpe: number): Promise<void> {
-    await this.updateActivity(activityId, { perceivedExertion: rpe });
-  }
-
   async updateActivity(activityId: number, fields: StravaActivityUpdate): Promise<void> {
     await this.ensureFresh();
     const form = new URLSearchParams();
     if (fields.name !== undefined) form.set("name", fields.name);
     if (fields.description !== undefined) form.set("description", fields.description);
-    if (fields.perceivedExertion !== undefined && fields.perceivedExertion > 0) {
-      form.set("perceived_exertion", String(fields.perceivedExertion));
-      form.set("prefer_perceived_exertion", "true");
-    }
     if ([...form.keys()].length === 0) return;
     const resp = await this.fetchImpl(`${this.apiBase}/activities/${activityId}`, {
       method: "PUT",
