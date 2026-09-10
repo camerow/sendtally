@@ -84,7 +84,7 @@ Membership adds the trends:
 
 We never store your Strava password. Standard OAuth with activity-write scope only, revocable from Strava at any time. Delete your account and every session and token goes with it the same day.
 
-Membership is a monthly subscription. Join in the app or on sendtally.com; either one unlocks the trends everywhere.
+Membership is an auto-renewing subscription, monthly or yearly. Join in the app or on sendtally.com; either one unlocks the trends everywhere.
 ```
 
 ## What's new, first release
@@ -93,6 +93,10 @@ Membership is a monthly subscription. Join in the app or on sendtally.com; eithe
 First release. Log sessions, get an effort score, sync to Strava.
 ```
 
+Play takes this; the App Store refuses it on a first version.
+Setting `whatsNew` there returns `409 STATE_ERROR`, "Attribute 'whatsNew' cannot be edited at this time", because release notes describe a change from a previous version and there is none.
+It becomes editable from the second version onward.
+
 ## Assets
 
 Screenshot order puts Strava second: only the first two are visible without swiping, and Strava is the strongest hook for a climber who already has the app.
@@ -100,7 +104,6 @@ Screenshot order puts Strava second: only the first two are visible without swip
 | Asset                          | Size                | File                                                |
 | ------------------------------ | ------------------- | --------------------------------------------------- |
 | iOS screenshots, 6.9" and 6.7" | 1290x2796           | `out/ios/1-sessions.png` through `5-trends.png`     |
-| iOS screenshots, 6.5"          | 1284x2778           | scale the 6.7" set                                  |
 | Play phone screenshots         | 1080x1920           | `out/android/1-sessions.png` through `5-trends.png` |
 | Play feature graphic           | 1024x500            | `out/feature-graphic.png`                           |
 | Play icon                      | 512x512             | `out/play-icon-512.png`                             |
@@ -109,6 +112,7 @@ Screenshot order puts Strava second: only the first two are visible without swip
 Screenshot captions, in order: "Every session, in about a minute.", "Your climbing on Strava", "Log it right after you climb.", "See the whole night, climb by climb.", "Watch six months add up."
 
 iPad screenshots are not needed: `supportsTablet` is false.
+Nor is a 6.5" set: App Store Connect accepts the 1290x2796 images as the one required iPhone size and scales them down for smaller devices.
 
 ## Console setup beyond the copy
 
@@ -135,7 +139,8 @@ These are store-side and cost nothing, but none of them live in this repo.
 
 ## App Review notes
 
-Membership is an auto-renewing subscription sold in the app through the store's billing (one monthly product), and also on sendtally.com.
-The trends screens are gated on it; the paywall on the Trends tab carries the price, the renewal terms, restore purchases, and the terms and privacy links.
+Membership is an auto-renewing subscription sold in the app through the store's billing (a monthly product and a yearly one, in a single subscription group), and also on sendtally.com.
+The trends screens are gated on it; the paywall on the Trends tab carries both plans, the price and renewal terms, restore purchases, and the terms and privacy links.
+The yearly card headlines the per-month equivalent and states the billed-yearly total underneath it, which is what the store returns for the annual package.
 Reviewers need the demo account so the trends screens in the screenshots are reachable without buying.
 The demo account signs in with a password; every other account signs in with an emailed one-time code, which is why the form gets a username and password plus that one sentence under "Any other information required to access your app".

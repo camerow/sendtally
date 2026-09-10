@@ -19,6 +19,7 @@ import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React from "react";
 import { colors } from "@sendtally/design/tokens";
+import { AnalyticsProvider } from "../features/analytics/AnalyticsProvider";
 import { BillingProvider } from "../features/billing/BillingProvider";
 import { CLERK_PUBLISHABLE_KEY } from "../lib/config";
 
@@ -37,15 +38,17 @@ export default function RootLayout(): React.ReactElement | null {
 
   return (
     <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY} tokenCache={tokenCache}>
-      <BillingProvider>
-        <StatusBar style="dark" />
-        <Stack
-          screenOptions={{
-            headerShown: false,
-            contentStyle: { backgroundColor: colors.white },
-          }}
-        />
-      </BillingProvider>
+      <AnalyticsProvider>
+        <BillingProvider>
+          <StatusBar style="dark" />
+          <Stack
+            screenOptions={{
+              headerShown: false,
+              contentStyle: { backgroundColor: colors.white },
+            }}
+          />
+        </BillingProvider>
+      </AnalyticsProvider>
     </ClerkProvider>
   );
 }

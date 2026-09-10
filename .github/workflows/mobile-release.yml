@@ -67,7 +67,6 @@ jobs:
           ASC_API_KEY_PATH: ./asc-api-key.p8
           ASC_API_KEY_ID: ${{ secrets.ASC_API_KEY_ID }}
           ASC_API_KEY_ISSUER_ID: ${{ secrets.ASC_API_KEY_ISSUER_ID }}
-          ASC_APP_ID: ${{ secrets.ASC_APP_ID }}
         run: >
           eas build
           --platform ${{ inputs.platform || vars.MOBILE_PLATFORMS || 'android' }}
