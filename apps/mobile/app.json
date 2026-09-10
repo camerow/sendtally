@@ -37,7 +37,9 @@
           "resizeMode": "contain",
           "backgroundColor": "#f9dc5c"
         }
-      ]
+      ],
+      "expo-localization",
+      "posthog-react-native/expo"
     ],
     "experiments": {
       "typedRoutes": false
