@@ -41,12 +41,16 @@ GitHub repo secrets:
 | `ASC_API_KEY`                | App Store Connect API key `.p8` file, whole file contents |
 | `ASC_API_KEY_ID`             | App Store Connect, Users and Access, Integrations         |
 | `ASC_API_KEY_ISSUER_ID`      | Same page as the key id                                   |
-| `ASC_APP_ID`                 | App Store Connect, App Information, the numeric Apple ID  |
 
 Repo variable: `MOBILE_PLATFORMS`, one of `android`, `ios`, `all`.
 
 The workflow writes the two file-shaped credentials to disk in `apps/mobile` because EAS Submit reads them from a path.
 Both paths are gitignored, and the runner is discarded after the job.
+
+The App Store Connect app id is inline in `eas.json` rather than an environment variable.
+EAS validates `ascAppId` against a digits-only pattern before it interpolates `$VAR`, so a variable there fails the submit with "Invalid Apple App Store Connect App ID" even when the variable is set.
+The path-shaped fields around it interpolate normally, which is why Android never hit this.
+The id is public anyway - it is the number in the App Store URL.
 
 ## One-time setup
 
