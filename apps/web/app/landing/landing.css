@@ -954,3 +954,20 @@
   color: rgba(64, 63, 76, 0.45);
   border-style: dashed;
 }
+
+.l-stores--hero {
+  flex-basis: auto;
+  padding-bottom: 0;
+  gap: 10px;
+}
+
+.l-stores--hero .l-store-badge {
+  padding: 10px 18px;
+  font-size: 13px;
+  border-color: var(--line-on-light-strong);
+}
+
+.l-stores--hero .l-store-badge--soon {
+  border: 0;
+  padding-left: 4px;
+}

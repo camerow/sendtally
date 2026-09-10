@@ -234,7 +234,7 @@ export const COPY = {
 
   stores: {
     lead: "Log a session from your phone:",
-    ios: "Download sendtally for iPhone",
+    ios: "iPhone app coming soon",
     android: "Get sendtally on Google Play",
   },
 

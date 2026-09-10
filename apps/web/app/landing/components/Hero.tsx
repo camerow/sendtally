@@ -3,6 +3,7 @@ import { Button, Label } from "@sendtally/design";
 import { COPY } from "../copy";
 import { useLanding } from "../LandingContext";
 import { AccountCta } from "./AccountCta";
+import { AppStores } from "./AppStores";
 import { LANDING_PHOTOS } from "../photos";
 import { Photo } from "./Photo";
 import { TrendsPreviewCard } from "./TrendsPreviewCard";
@@ -51,7 +52,10 @@ export function Hero(): React.ReactElement {
             </Button>
           )}
         </div>
-        <div className="l-free-pills l-rise" style={{ animationDelay: "380ms" }}>
+        <div className="l-rise" style={{ animationDelay: "340ms" }}>
+          <AppStores prominent />
+        </div>
+        <div className="l-free-pills l-rise" style={{ animationDelay: "420ms" }}>
           {COPY.hero.pills.map((pill) => (
             <span key={pill} className="l-free-pill">
               {pill}
