@@ -348,3 +348,31 @@ describe("draftFromSession", () => {
     expect(draftProblem(draftFromSession(session()))).toBeNull();
   });
 });
+
+describe("toLogSessionInput project flags", () => {
+  it("sends the flag only for climbs the user toggled", () => {
+    const draft = {
+      ...emptyDraft(new Date("2026-09-09T19:00:00")),
+      climbs: [
+        {
+          key: "a",
+          grade: "V4",
+          name: "Moonraker",
+          kind: "send" as const,
+          tries: 1,
+          project: true,
+        },
+        {
+          key: "b",
+          grade: "V5",
+          name: "Torque",
+          kind: "attempt" as const,
+          tries: 2,
+          project: false,
+        },
+        { key: "c", grade: "V2", name: "", kind: "send" as const, tries: 1 },
+      ],
+    };
+    expect(toLogSessionInput(draft).climbs.map((c) => c.project)).toEqual([true, false, undefined]);
+  });
+});

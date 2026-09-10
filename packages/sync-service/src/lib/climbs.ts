@@ -1,4 +1,5 @@
 import { z } from "zod";
+import * as repo from "./repo";
 import type { ClimbGrade, ProjectRow, SessionRow } from "./repo";
 import { tagSlug } from "./tags";
 
@@ -21,12 +22,26 @@ const gradeJson = z.union([
   z.object({ scale: z.enum(["font", "yds", "french"]), value: z.string() }),
 ]);
 
-export const projectBody = z.object({
-  name: z.string().trim().min(1).max(MAX_CLIMB_NAME_LENGTH),
-  grade: gradeJson,
-});
-
 export const climbSlug = tagSlug;
+
+type FlaggedClimb = { name: string; grade: ClimbGrade; project?: boolean | undefined };
+
+// A climb's project flag rides along with the session it was logged in and is
+// only sent when the user touched it, so an untouched form never unmarks.
+export async function applyProjectFlags(
+  db: D1Database,
+  userId: string,
+  climbs: FlaggedClimb[]
+): Promise<void> {
+  for (const climb of climbs) {
+    if (climb.project === undefined) continue;
+    const name = climb.name.trim();
+    const slug = climbSlug(name);
+    if (slug === "") continue;
+    if (climb.project) await repo.upsertProject(db, userId, { slug, name, grade: climb.grade });
+    else await repo.deleteProject(db, userId, slug);
+  }
+}
 
 type StoredClimb = {
   name?: string;

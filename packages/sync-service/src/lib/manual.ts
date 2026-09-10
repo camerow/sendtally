@@ -38,6 +38,7 @@ const climbSchema = z.object({
   grade: gradeSchema,
   kind: z.enum(["send", "attempt"]).default("send"),
   tries: z.number().int().min(1).max(99).default(1),
+  project: z.boolean().optional(),
 });
 
 const manualSessionShape = z.object({

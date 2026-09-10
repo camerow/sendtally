@@ -5,7 +5,6 @@ import type { ClimbSummary } from "@sendtally/api-client";
 import { climbDraftGrade, findClimb, useClimbVocabulary } from "@sendtally/features/climbs";
 import {
   GRADE_SCALE_OPTIONS,
-  draftGrade,
   draftProblem,
   draftSummary,
   emptyDraft,
@@ -118,6 +117,7 @@ export function LogSessionForm({
     updateClimb(key, (c) => ({
       ...c,
       name,
+      project: undefined,
       ...(known === undefined ? {} : { grade: climbDraftGrade(known, draft.scale) }),
     }));
   }
@@ -127,6 +127,7 @@ export function LogSessionForm({
       ...c,
       name: known.name,
       grade: climbDraftGrade(known, draft.scale),
+      project: undefined,
     }));
   }
 
@@ -141,15 +142,12 @@ export function LogSessionForm({
     setEditingKey(key);
   }
 
-  async function toggleProject(climb: ClimbDraft): Promise<void> {
-    const grade = draftGrade(climb.grade, draft.scale);
-    if (grade === undefined) return;
-    setError(null);
-    try {
-      await vocabulary.setProject(climb.name, grade, !vocabulary.isProject(climb.name));
-    } catch {
-      setError("Could not update the project. Try again.");
-    }
+  function isProject(climb: ClimbDraft): boolean {
+    return climb.project ?? vocabulary.isProject(climb.name);
+  }
+
+  function toggleProject(climb: ClimbDraft): void {
+    updateClimb(climb.key, (c) => ({ ...c, project: !isProject(c) }));
   }
 
   async function save(): Promise<void> {
@@ -378,7 +376,7 @@ export function LogSessionForm({
             <ClimbLedgerRow
               key={climb.key}
               climb={climb}
-              project={vocabulary.isProject(climb.name)}
+              project={isProject(climb)}
               onPress={() => setEditingKey(climb.key)}
             />
           ))}
@@ -430,7 +428,7 @@ export function LogSessionForm({
         index={editingIndex}
         count={draft.climbs.length}
         scale={draft.scale}
-        project={editingClimb === null ? false : vocabulary.isProject(editingClimb.name)}
+        project={editingClimb === null ? false : isProject(editingClimb)}
         suggestions={vocabulary.suggestionsFor(editingClimb?.name ?? "")}
         onChange={(c) => updateClimb(c.key, () => c)}
         onChangeName={(name) => {
@@ -440,7 +438,7 @@ export function LogSessionForm({
           if (editingClimb !== null) pickClimb(editingClimb.key, known);
         }}
         onToggleProject={() => {
-          if (editingClimb !== null) void toggleProject(editingClimb);
+          if (editingClimb !== null) toggleProject(editingClimb);
         }}
         onRemove={() => {
           if (editingClimb !== null) removeClimb(editingClimb.key);

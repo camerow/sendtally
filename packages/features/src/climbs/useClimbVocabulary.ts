@@ -1,6 +1,6 @@
 import React from "react";
-import type { ClimbGrade, ClimbSummary, SendtallyApi } from "@sendtally/api-client";
-import { findClimb, matchClimbs, sameClimbName } from "./transforms";
+import type { ClimbSummary, SendtallyApi } from "@sendtally/api-client";
+import { findClimb, matchClimbs } from "./transforms";
 
 export type ClimbVocabulary = {
   climbs: ClimbSummary[];
@@ -8,7 +8,7 @@ export type ClimbVocabulary = {
   reload: () => Promise<void>;
   suggestionsFor: (query: string) => ClimbSummary[];
   isProject: (name: string) => boolean;
-  setProject: (name: string, grade: ClimbGrade, on: boolean) => Promise<void>;
+  unmarkProject: (climb: ClimbSummary) => Promise<void>;
 };
 
 export function useClimbVocabulary(api: SendtallyApi): ClimbVocabulary {
@@ -39,42 +39,18 @@ export function useClimbVocabulary(api: SendtallyApi): ClimbVocabulary {
     [climbs]
   );
 
-  const setProject = React.useCallback(
-    async (name: string, grade: ClimbGrade, on: boolean): Promise<void> => {
-      const trimmed = name.trim();
-      if (trimmed === "") return;
-      const known = findClimb(climbs, trimmed);
-      if (on) {
-        const { project } = await api.markProject(trimmed, grade);
-        setClimbs((all) =>
-          known === undefined
-            ? [
-                {
-                  ...project,
-                  project: true,
-                  sessions: 0,
-                  attempts: 0,
-                  sends: 0,
-                  first_at: new Date().toISOString(),
-                  last_at: new Date().toISOString(),
-                },
-                ...all,
-              ]
-            : all.map((c) => (c.slug === project.slug ? { ...c, project: true } : c))
-        );
-        return;
-      }
-      if (known === undefined) return;
-      await api.unmarkProject(known.slug);
+  const unmarkProject = React.useCallback(
+    async (climb: ClimbSummary): Promise<void> => {
+      await api.unmarkProject(climb.slug);
       setClimbs((all) =>
         all.flatMap((c) => {
-          if (!sameClimbName(c.name, trimmed)) return [c];
+          if (c.slug !== climb.slug) return [c];
           return c.sessions === 0 ? [] : [{ ...c, project: false }];
         })
       );
     },
-    [api, climbs]
+    [api]
   );
 
-  return { climbs, loaded, reload, suggestionsFor, isProject, setProject };
+  return { climbs, loaded, reload, suggestionsFor, isProject, unmarkProject };
 }

@@ -4,7 +4,6 @@ import type { ClimbSummary, SendtallyApi } from "@sendtally/api-client";
 import { climbDraftGrade, findClimb, useClimbVocabulary } from "@sendtally/features/climbs";
 import {
   GRADE_SCALE_OPTIONS,
-  draftGrade,
   draftProblem,
   draftSummary,
   emptyDraft,
@@ -153,6 +152,7 @@ export function LogSessionForm({
           : {
               ...c,
               name,
+              project: undefined,
               ...(known === undefined ? {} : { grade: climbDraftGrade(known, d.scale) }),
             }
       ),
@@ -163,7 +163,9 @@ export function LogSessionForm({
     setDraft((d) => ({
       ...d,
       climbs: d.climbs.map((c) =>
-        c.key !== key ? c : { ...c, name: known.name, grade: climbDraftGrade(known, d.scale) }
+        c.key !== key
+          ? c
+          : { ...c, name: known.name, grade: climbDraftGrade(known, d.scale), project: undefined }
       ),
     }));
   }
@@ -179,15 +181,12 @@ export function LogSessionForm({
     if (narrow) setEditingKey(key);
   }
 
-  async function toggleProject(climb: ClimbDraft): Promise<void> {
-    const grade = draftGrade(climb.grade, draft.scale);
-    if (grade === undefined) return;
-    setError(null);
-    try {
-      await vocabulary.setProject(climb.name, grade, !vocabulary.isProject(climb.name));
-    } catch {
-      setError("Could not update the project. Try again.");
-    }
+  function isProject(climb: ClimbDraft): boolean {
+    return climb.project ?? vocabulary.isProject(climb.name);
+  }
+
+  function toggleProject(climb: ClimbDraft): void {
+    updateClimb(climb.key, { ...climb, project: !isProject(climb) });
   }
 
   async function save(): Promise<void> {
@@ -353,7 +352,7 @@ export function LogSessionForm({
                 <ClimbLedgerRow
                   key={climb.key}
                   climb={climb}
-                  project={vocabulary.isProject(climb.name)}
+                  project={isProject(climb)}
                   onPress={() => setEditingKey(climb.key)}
                 />
               ) : (
@@ -362,12 +361,12 @@ export function LogSessionForm({
                   climb={climb}
                   scale={draft.scale}
                   removable={draft.climbs.length > 1}
-                  project={vocabulary.isProject(climb.name)}
+                  project={isProject(climb)}
                   suggestions={vocabulary.suggestionsFor(climb.name)}
                   onChange={(c) => updateClimb(climb.key, c)}
                   onChangeName={(name) => updateClimbName(climb.key, name)}
                   onPick={(known) => pickClimb(climb.key, known)}
-                  onToggleProject={() => void toggleProject(climb)}
+                  onToggleProject={() => toggleProject(climb)}
                   onRemove={() => removeClimb(climb.key)}
                 />
               )
@@ -405,12 +404,12 @@ export function LogSessionForm({
           index={editingIndex}
           count={draft.climbs.length}
           scale={draft.scale}
-          project={vocabulary.isProject(editingClimb.name)}
+          project={isProject(editingClimb)}
           suggestions={vocabulary.suggestionsFor(editingClimb.name)}
           onChange={(c) => updateClimb(editingClimb.key, c)}
           onChangeName={(name) => updateClimbName(editingClimb.key, name)}
           onPick={(known) => pickClimb(editingClimb.key, known)}
-          onToggleProject={() => void toggleProject(editingClimb)}
+          onToggleProject={() => toggleProject(editingClimb)}
           onRemove={() => removeClimb(editingClimb.key)}
           onClose={() => setEditingKey(null)}
         />

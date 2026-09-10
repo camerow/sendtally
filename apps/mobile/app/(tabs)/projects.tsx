@@ -20,7 +20,7 @@ export default function Projects(): React.ReactElement {
   const unmark = async (climb: ClimbSummary): Promise<void> => {
     setError(null);
     try {
-      await vocabulary.setProject(climb.name, climb.grade, false);
+      await vocabulary.unmarkProject(climb);
     } catch {
       setError("Could not remove the project. Try again.");
     }
