@@ -74,18 +74,22 @@ Membership is an auto-renewing subscription, monthly or yearly. Join in the app 
 First release. Log sessions, get an effort score, sync to Strava.
 ```
 
+Play takes this; the App Store refuses it on a first version.
+Setting `whatsNew` there returns `409 STATE_ERROR`, "Attribute 'whatsNew' cannot be edited at this time", because release notes describe a change from a previous version and there is none.
+It becomes editable from the second version onward.
+
 ## Assets
 
 | Asset                          | Size                | File                                                |
 | ------------------------------ | ------------------- | --------------------------------------------------- |
 | iOS screenshots, 6.9" and 6.7" | 1290x2796           | `out/ios/1-sessions.png` through `5-strava.png`     |
-| iOS screenshots, 6.5"          | 1284x2778           | scale the 6.7" set                                  |
 | Play phone screenshots         | 1080x1920           | `out/android/1-sessions.png` through `5-strava.png` |
 | Play feature graphic           | 1024x500            | `out/feature-graphic.png`                           |
 | Play icon                      | 512x512             | `out/play-icon-512.png`                             |
 | iOS icon                       | 1024x1024, no alpha | `../assets/icon.png`, shipped in the build          |
 
 iPad screenshots are not needed: `supportsTablet` is false.
+Nor is a 6.5" set: App Store Connect accepts the 1290x2796 images as the one required iPhone size and scales them down for smaller devices.
 
 ## URLs
 
