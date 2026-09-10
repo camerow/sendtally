@@ -47,6 +47,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.25.0",
+    "@posthog/cli": "^0.18.1",
     "@types/react": "~19.1.0",
     "puppeteer-core": "^25.10.0",
     "sharp": "^0.34.4",
