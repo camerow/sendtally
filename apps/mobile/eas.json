@@ -10,7 +10,8 @@
       "env": {
         "EXPO_PUBLIC_API_URL": "https://api.sendtally.com",
         "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_live_Y2xlcmsuc2VuZHRhbGx5LmNvbSQ",
-        "EXPO_PUBLIC_REVENUECAT_ANDROID_KEY": "goog_TsTamyxqBbukzZbEAUieLNrZABL"
+        "EXPO_PUBLIC_REVENUECAT_ANDROID_KEY": "goog_TsTamyxqBbukzZbEAUieLNrZABL",
+        "EXPO_PUBLIC_REVENUECAT_IOS_KEY": "appl_IlzSBshbPLcWxzBbHZkHCdJoeOn"
       }
     },
     "development": {
@@ -19,7 +20,8 @@
       "distribution": "internal",
       "ios": { "simulator": true },
       "env": {
-        "EXPO_PUBLIC_REVENUECAT_ANDROID_KEY": "test_RuludwkwBfxgCwPaffqspLVvcOp"
+        "EXPO_PUBLIC_REVENUECAT_ANDROID_KEY": "test_RuludwkwBfxgCwPaffqspLVvcOp",
+        "EXPO_PUBLIC_REVENUECAT_IOS_KEY": "test_RuludwkwBfxgCwPaffqspLVvcOp"
       }
     },
     "preview": {
@@ -36,7 +38,7 @@
   "submit": {
     "production": {
       "ios": {
-        "ascAppId": "$ASC_APP_ID",
+        "ascAppId": "6810779919",
         "ascApiKeyPath": "$ASC_API_KEY_PATH",
         "ascApiKeyId": "$ASC_API_KEY_ID",
         "ascApiKeyIssuerId": "$ASC_API_KEY_ISSUER_ID"
