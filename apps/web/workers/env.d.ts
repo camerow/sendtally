@@ -4,6 +4,8 @@ declare global {
     CLERK_SECRET_KEY: string;
     API_URL: string;
     GA_MEASUREMENT_ID?: string;
+    POSTHOG_PROJECT_TOKEN?: string;
+    POSTHOG_HOST?: string;
   };
 }
 
