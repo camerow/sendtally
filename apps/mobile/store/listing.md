@@ -13,7 +13,7 @@ Google indexes the short and full descriptions instead, so the description carri
 **App name** [30]
 
 ```
-sendtally: Climbing Log
+Sendtally: Climbing log
 ```
 
 **Subtitle, iOS** [30]
@@ -25,7 +25,7 @@ Bouldering tracker & trends
 **Title, Play** [30]
 
 ```
-sendtally: Climbing Log
+Sendtally: Climbing log
 ```
 
 **Short description, Play** [80]
