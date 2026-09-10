@@ -4,6 +4,7 @@ import React from "react";
 import { useNavigate } from "react-router";
 import type { EmailCodeFactor } from "@clerk/types";
 import { AuthShell, StepBody, StepCard, StepTitle } from "./AuthShell";
+import { capture } from "../../lib/analytics";
 import { PRIVACY_PATH, TERMS_PATH } from "../../legal/constants";
 import type { AuthIntent } from "../types";
 
@@ -115,6 +116,10 @@ function clerkErrorMessage(err: unknown): string {
 
 type Phase = { name: "email" } | { name: "code"; mode: AuthIntent };
 
+function funnel(intent: AuthIntent): "signup" | "signin" {
+  return intent === "sign-up" ? "signup" : "signin";
+}
+
 function GoogleMark(): React.ReactElement {
   return (
     <svg width="17" height="17" viewBox="0 0 48 48" aria-hidden="true">
@@ -196,6 +201,7 @@ export function AuthForm({ intent }: { intent: AuthIntent }): React.ReactElement
     if (!clerk.loaded || clerk.client === undefined) return;
     setError(null);
     setBusy(true);
+    capture(`${funnel(intent)}_started`, { method: "google" });
     try {
       const flow = intent === "sign-up" ? clerk.client.signUp : clerk.client.signIn;
       await flow.authenticateWithRedirect({
@@ -217,6 +223,7 @@ export function AuthForm({ intent }: { intent: AuthIntent }): React.ReactElement
     }
     setError(null);
     setBusy(true);
+    capture(`${funnel(intent)}_started`, { method: "email_code" });
     try {
       const signIn = await clerk.client.signIn.create({ identifier: email });
       const factor = signIn.supportedFirstFactors?.find(
@@ -231,6 +238,7 @@ export function AuthForm({ intent }: { intent: AuthIntent }): React.ReactElement
         strategy: "email_code",
         emailAddressId: factor.emailAddressId,
       });
+      capture("auth_code_sent", { mode: "sign-in" });
       setPhase({ name: "code", mode: "sign-in" });
     } catch (signInErr) {
       const identifierNotFound =
@@ -249,6 +257,7 @@ export function AuthForm({ intent }: { intent: AuthIntent }): React.ReactElement
       try {
         const signUp = await clerk.client.signUp.create({ emailAddress: email });
         await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
+        capture("auth_code_sent", { mode: "sign-up" });
         setPhase({ name: "code", mode: "sign-up" });
       } catch (signUpErr) {
         setError(clerkErrorMessage(signUpErr));
@@ -272,6 +281,7 @@ export function AuthForm({ intent }: { intent: AuthIntent }): React.ReactElement
           code: code.trim(),
         });
         if (result.status === "complete" && result.createdSessionId !== null) {
+          capture("signin_completed", { method: "email_code" });
           await clerk.setActive({ session: result.createdSessionId });
           await navigate("/app");
           return;
@@ -285,6 +295,7 @@ export function AuthForm({ intent }: { intent: AuthIntent }): React.ReactElement
           signUp = await signUp.update({});
         }
         if (signUp.status === "complete" && signUp.createdSessionId !== null) {
+          capture("signup_completed", { method: "email_code" });
           await clerk.setActive({ session: signUp.createdSessionId });
           await navigate("/app");
           return;

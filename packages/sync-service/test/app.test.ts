@@ -1027,7 +1027,7 @@ describe("app", () => {
     ]);
 
     const res = await testApp(fetchImpl, {
-      verifyAuthWebhook: async () => ({ type: "user.deleted", userId }),
+      verifyAuthWebhook: async () => ({ type: "user.deleted", userId, email: null }),
     }).request("/webhooks/clerk", { method: "POST", body: "{}" }, env);
     expect(res.status).toBe(200);
 
@@ -1054,7 +1054,7 @@ describe("app", () => {
       .run();
 
     const res = await testApp(undefined, {
-      verifyAuthWebhook: async () => ({ type: "user.updated", userId }),
+      verifyAuthWebhook: async () => ({ type: "user.updated", userId, email: null }),
     }).request("/webhooks/clerk", { method: "POST", body: "{}" }, env);
     expect(res.status).toBe(200);
 
@@ -1078,7 +1078,7 @@ describe("app", () => {
     expect(first.status).toBe(200);
 
     const second = await testApp(undefined, {
-      verifyAuthWebhook: async () => ({ type: "user.deleted", userId }),
+      verifyAuthWebhook: async () => ({ type: "user.deleted", userId, email: null }),
     }).request("/webhooks/clerk", { method: "POST", body: "{}" }, env);
     expect(second.status).toBe(200);
   });

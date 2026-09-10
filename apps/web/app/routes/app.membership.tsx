@@ -1,15 +1,34 @@
 import React from "react";
 import type { LoaderFunctionArgs } from "react-router";
-import { useLoaderData } from "react-router";
+import { useLoaderData, useSearchParams } from "react-router";
 import type { Membership } from "@sendtally/api-client";
 import { Badge, Label } from "@sendtally/design";
 import { membershipVM } from "@sendtally/features/billing";
 import { MEMBER_BENEFITS } from "@sendtally/features/billing";
-import { MembershipPricing } from "../billing/components/MembershipPricing";
+import { MembershipPricing, SUBSCRIBED_PARAM } from "../billing/components/MembershipPricing";
 import { StoreMembershipPanel } from "../billing/components/StoreMembershipPanel";
+import { capture } from "../lib/analytics";
 import { getMembership } from "../lib/billing.server";
 
 type LoaderData = { membership: Membership };
+
+/** Fires once for the checkout redirect, then drops the marker so a reload cannot double count. */
+function useSubscribedRedirect(): void {
+  const [params, setParams] = useSearchParams();
+  const marked = params.get(SUBSCRIBED_PARAM) !== null;
+
+  React.useEffect(() => {
+    if (!marked) return;
+    capture("membership_started", { channel: "web" });
+    setParams(
+      (next) => {
+        next.delete(SUBSCRIBED_PARAM);
+        return next;
+      },
+      { replace: true }
+    );
+  }, [marked, setParams]);
+}
 
 export async function loader(args: LoaderFunctionArgs): Promise<LoaderData> {
   return { membership: await getMembership(args) };
@@ -17,6 +36,7 @@ export async function loader(args: LoaderFunctionArgs): Promise<LoaderData> {
 
 export default function MembershipRoute(): React.ReactElement {
   const { membership } = useLoaderData<typeof loader>();
+  useSubscribedRedirect();
   const isMember = membership.active;
   // A store subscription has no web checkout to show; Clerk's table only
   // knows about web plans, so it stays for web members and non-members.
