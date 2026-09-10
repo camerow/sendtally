@@ -321,6 +321,71 @@ La suscripción es de renovación automática, mensual o anual. Suscríbete en l
 Primera versión. Registra sesiones, obtén una puntuación de esfuerzo, sincroniza con Strava.
 ```
 
+### Spanish (Latin America) (`es-419`)
+
+Adapted from the Castilian copy, not copied.
+"Rocodromo" and "pegues" are Spain-only, and "boulder" is the usual word outside Spain; "encadenar" travels and stays.
+
+**App name** [30, using 29]
+
+```
+Sendtally: diario de escalada
+```
+
+**Subtitle, iOS** [30, using 28]
+
+```
+Boulder, grados y tendencias
+```
+
+**Short description, Play** [80, using 70]
+
+```
+Registra tus sesiones de boulder y escalada: esfuerzo, grados, Strava.
+```
+
+**Keywords, iOS** [100, using 98]
+
+```
+muro,via,roca,grado,sesion,entrenamiento,registro,rpe,strava,kilter,tension,moonboard,cuerda,presa
+```
+
+**Description** [4000, using 1742]
+
+```
+Sendtally es un diario de sesiones para escalada y boulder.
+
+Registra una sesión en el muro o un día en roca en aproximadamente un minuto: fecha, horas, grados en escala V, Fontainebleau, YDS o francesa, si lo encadenaste o no, cuántos intentos te tomó y el nombre de la vía si quieres. Cada sesión recibe una puntuación de esfuerzo del 1 al 10, medida contra tus propias últimas ocho semanas en lugar de contra una escala fija, así que una noche dura se lee como una noche dura.
+
+Activa Strava y cada sesión se publica como una única actividad Rock Climbing, con el registro de vías y la puntuación de esfuerzo en la descripción. Las sesiones llevan una huella única, así que volver a sincronizar nunca publica dos veces.
+
+Esto es un diario de entrenamiento, no un generador de rutinas. Sendtally registra lo que realmente has escalado, ya escales boulder, de cuerda, o repartas la semana entre ambos, y te muestra la evolución a lo largo de los meses.
+
+Gratis, para todo el mundo:
+· Sesiones ilimitadas, en interior y exterior
+· Boulder y escalada de cuerda, escala V, Fontainebleau, YDS o francesa
+· Puntuación de esfuerzo en cada sesión
+· Sincronización con Strava
+· Historial de sesiones por mes
+
+La suscripción añade las tendencias:
+· Volumen de escalada a lo largo del tiempo
+· Pirámide de grados
+· Encadene más duro
+· Porcentaje de flash
+· Grado medio
+
+Nunca guardamos tu contraseña de Strava. OAuth estándar, solo con el permiso activity-write, revocable desde Strava en cualquier momento. Borra tu cuenta y todas las sesiones y tokens se van con ella el mismo día.
+
+La suscripción es de renovación automática, mensual o anual. Suscríbete en la app o en sendtally.com; cualquiera de las dos desbloquea las tendencias en todas partes.
+```
+
+**What's new** [500, using 92]
+
+```
+Primera versión. Registra sesiones, obtén una puntuación de esfuerzo, sincroniza con Strava.
+```
+
 ## Console setup beyond the copy
 
 These are store-side and cost nothing, but none of them live in this repo.
