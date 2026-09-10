@@ -78,7 +78,6 @@ export async function syncSessionToStrava(
       await client.updateActivity(session.strava_activity_id, {
         name: session.title,
         description: session.summary,
-        perceivedExertion: session.rpe,
       });
       await persistTokens(env, userId, client);
       return { outcome: "updated" };
@@ -89,21 +88,11 @@ export async function syncSessionToStrava(
       description: session.summary,
       startDateLocal: new Date(session.start_at),
       elapsedSeconds: elapsedSeconds(session.start_at, session.end_at),
-      perceivedExertion: session.rpe,
     });
-    // Written before the exertion patch: once Strava holds the activity, a retry
-    // must find the id and never create a second one.
+    // Once Strava holds the activity, a retry must find the id and never create
+    // a second one.
     await repo.markSessionPosted(env.DB, userId, fingerprint, activityId);
     await persistTokens(env, userId, client);
-
-    // Strava's create endpoint ignores perceived_exertion, so it takes its own call.
-    // A failure here leaves a posted activity with no RPE, which a retry patches.
-    try {
-      await client.setPerceivedExertion(activityId, session.rpe);
-      await persistTokens(env, userId, client);
-    } catch (err) {
-      await repo.setSessionPostError(env.DB, userId, fingerprint, describe(err));
-    }
     return { outcome: "posted" };
   } catch (err) {
     if (err instanceof StravaUnauthorizedError) {

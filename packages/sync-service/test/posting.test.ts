@@ -109,7 +109,7 @@ function postRow(userId: string, fingerprint: string) {
 }
 
 describe("strava posting", () => {
-  it("posts a new session, then patches perceived exertion in a second call", async () => {
+  it("posts a new session in a single call, carrying the effort score in the description", async () => {
     const userId = "user_post_create";
     await connectStrava(userId);
     const { fetchImpl, calls } = stravaRoutes();
@@ -122,10 +122,10 @@ describe("strava posting", () => {
     expect(form.get("start_date_local")).toBe("2026-03-04T18:00:00Z");
     expect(form.get("elapsed_time")).toBe("5400");
     expect(form.get("description")).toContain("created by https://sendtally.com");
+    expect(form.get("description")).toMatch(/RPE \d+\/10/);
 
-    const patch = calls.find((c) => c.method === "PUT");
-    expect(patch).toBeDefined();
-    expect(new URLSearchParams(patch?.body ?? "").get("prefer_perceived_exertion")).toBe("true");
+    // Strava's public API silently drops perceived_exertion, so we never patch for it.
+    expect(calls.some((c) => c.method === "PUT")).toBe(false);
 
     const row = await postRow(userId, fingerprint);
     expect(row?.strava_activity_id).toBe(424242);

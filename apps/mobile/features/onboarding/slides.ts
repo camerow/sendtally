@@ -22,7 +22,7 @@ export const ONBOARDING_SLIDES: OnboardingSlide[] = [
     key: "strava",
     eyebrow: "STRAVA",
     title: "One activity per session, never doubled.",
-    body: "Each session posts as one Rock Climbing activity with the climb log in the description and perceived exertion filled in. Sessions are fingerprinted, so a re-sync never posts twice.",
+    body: "Each session posts as one Rock Climbing activity with the climb log and effort score in the description. Sessions are fingerprinted, so a re-sync never posts twice.",
   },
   {
     key: "trends",

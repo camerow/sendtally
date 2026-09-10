@@ -227,8 +227,8 @@ function summary(rpe: number, s: Session): string {
 
   const lines = [
     `RPE ${rpe}/10 · ${plural(sends, "send")}, ${plural(attempts, "attempt")}${grades}`,
-    ...s.climbs.map(climbLine),
     "created by https://sendtally.com",
+    ...s.climbs.map(climbLine),
   ];
   return lines.join("\n");
 }

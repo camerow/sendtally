@@ -48,7 +48,7 @@ sendtally is a session log for climbers.
 
 Log a session in about a minute: date, times, grades in V-scale or Font, sends and attempts, tries, and a name for the climb if you want one. Every session gets an effort score from 1 to 10, measured against your own last eight weeks rather than a fixed scale, so a big night reads as a big night.
 
-Turn on Strava and each session posts as one Rock Climbing activity with the climb log in the description and perceived exertion filled in. Sessions are fingerprinted, so a re-sync never posts twice.
+Turn on Strava and each session posts as one Rock Climbing activity with the climb log and effort score in the description. Sessions are fingerprinted, so a re-sync never posts twice.
 
 Free, for everyone:
 · Unlimited session logging
