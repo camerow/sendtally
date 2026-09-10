@@ -917,3 +917,40 @@
 .l-plan--member .l-plan-foot {
   color: var(--text-on-dark-muted);
 }
+
+.l-stores {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  flex-basis: 100%;
+  padding-bottom: 16px;
+}
+
+.l-stores-lead {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: rgba(64, 63, 76, 0.58);
+}
+
+.l-store-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border: 1px solid var(--line-on-light);
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--bs-gunmetal);
+  text-decoration: none;
+}
+
+.l-store-badge:hover {
+  border-color: var(--bs-gunmetal);
+}
+
+.l-store-badge--soon {
+  color: rgba(64, 63, 76, 0.45);
+  border-style: dashed;
+}

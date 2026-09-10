@@ -1,6 +1,11 @@
 import { useClerk } from "@clerk/react-router";
 import React from "react";
 import { AuthShell, StepBody, StepCard, StepTitle } from "../auth/components/AuthShell";
+import { pageMeta } from "../lib/seo";
+
+export function meta(): Array<Record<string, string>> {
+  return pageMeta({ title: "sign in - sendtally", path: "/sign-in/verify", noindex: true });
+}
 
 type VerifyState = "verifying" | "verified-elsewhere" | "expired" | "failed";
 

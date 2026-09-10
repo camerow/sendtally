@@ -232,6 +232,12 @@ export const COPY = {
     },
   },
 
+  stores: {
+    lead: "Log a session from your phone:",
+    ios: "Download sendtally for iPhone",
+    android: "Get sendtally on Google Play",
+  },
+
   footer: {
     line: "sendtally · not affiliated with Strava",
     links: [

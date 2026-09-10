@@ -6,6 +6,11 @@ import { Logo } from "@sendtally/design";
 import { Icon, type IconName } from "../components/Icon";
 import { requireApi } from "../lib/api.server";
 import appShellStyles from "../styles/app-shell.css?url";
+import { pageMeta } from "../lib/seo";
+
+export function meta(): Array<Record<string, string>> {
+  return pageMeta({ title: "sendtally", path: "/app", noindex: true });
+}
 
 export const links: LinksFunction = () => [{ rel: "stylesheet", href: appShellStyles }];
 
