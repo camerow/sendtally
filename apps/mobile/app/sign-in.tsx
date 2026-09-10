@@ -1,13 +1,41 @@
-import { useClerk, useSignIn, useSignUp } from "@clerk/clerk-expo";
+import { useClerk, useSSO, useSignIn, useSignUp } from "@clerk/clerk-expo";
+import { makeRedirectUri } from "expo-auth-session";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import * as WebBrowser from "expo-web-browser";
 import React from "react";
 import { KeyboardAvoidingView, Platform, Pressable, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import Svg, { Path } from "react-native-svg";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { Logo } from "../components/Logo";
 import { SignedOutOnly } from "../features/auth/SignedOutOnly";
 
+WebBrowser.maybeCompleteAuthSession();
+
 type Intent = "sign-in" | "sign-up";
+
+function GoogleMark(): React.ReactElement {
+  return (
+    <Svg width={17} height={17} viewBox="0 0 48 48">
+      <Path
+        fill="#4285F4"
+        d="M45.12 24.55c0-1.64-.15-3.22-.42-4.73H24v8.95h11.83c-.51 2.75-2.06 5.08-4.39 6.64v5.52h7.11c4.16-3.83 6.57-9.47 6.57-16.38z"
+      />
+      <Path
+        fill="#34A853"
+        d="M24 46c5.94 0 10.92-1.97 14.56-5.33l-7.11-5.52c-1.97 1.32-4.49 2.1-7.45 2.1-5.73 0-10.58-3.87-12.31-9.07H4.34v5.7C7.96 41.07 15.4 46 24 46z"
+      />
+      <Path
+        fill="#FBBC05"
+        d="M11.69 28.18c-.44-1.32-.69-2.73-.69-4.18s.25-2.86.69-4.18v-5.7H4.34A21.99 21.99 0 0 0 2 24c0 3.55.85 6.91 2.34 9.88l7.35-5.7z"
+      />
+      <Path
+        fill="#EA4335"
+        d="M24 10.75c3.23 0 6.13 1.11 8.41 3.29l6.31-6.31C34.91 4.18 29.93 2 24 2 15.4 2 7.96 6.93 4.34 14.12l7.35 5.7c1.73-5.2 6.58-9.07 12.31-9.07z"
+      />
+    </Svg>
+  );
+}
 
 // The password phase only ever appears for accounts that carry a password,
 // which Clerk reports per user. Store reviewers get one; nobody else does.
@@ -44,6 +72,7 @@ export default function SignIn(): React.ReactElement | null {
   const { signIn, isLoaded: signInLoaded, setActive } = useSignIn();
   const { signUp, isLoaded: signUpLoaded } = useSignUp();
   const clerk = useClerk();
+  const { startSSOFlow } = useSSO();
   const router = useRouter();
   const [email, setEmail] = React.useState("");
   const [code, setCode] = React.useState("");
@@ -51,6 +80,26 @@ export default function SignIn(): React.ReactElement | null {
   const [phase, setPhase] = React.useState<Phase>({ name: "email" });
   const [error, setError] = React.useState<string | null>(null);
   const [busy, setBusy] = React.useState(false);
+
+  async function continueWithGoogle(): Promise<void> {
+    setError(null);
+    setBusy(true);
+    try {
+      const result = await startSSOFlow({
+        strategy: "oauth_google",
+        redirectUrl: makeRedirectUri(),
+      });
+      if (result.createdSessionId !== undefined && result.setActive !== undefined) {
+        await result.setActive({ session: result.createdSessionId });
+        router.replace("/(tabs)/sessions");
+        return;
+      }
+      setError("Google sign-in didn't complete. Try again.");
+    } catch (err) {
+      setError(errorMessage(err));
+    }
+    setBusy(false);
+  }
 
   async function sendCode(): Promise<void> {
     if (!signInLoaded || !signUpLoaded) return;
@@ -291,6 +340,41 @@ export default function SignIn(): React.ReactElement | null {
                   minHeight: 48,
                 }}
               />
+            )}
+            {phase.name === "email" && (
+              <>
+                <Pressable
+                  onPress={() => void continueWithGoogle()}
+                  disabled={busy}
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 10,
+                    backgroundColor: colors.white,
+                    borderWidth: 1,
+                    borderColor: "rgba(64,63,76,0.18)",
+                    borderRadius: radius.control,
+                    paddingVertical: 13,
+                    minHeight: 48,
+                    opacity: busy ? 0.45 : 1,
+                  }}
+                >
+                  <GoogleMark />
+                  <Text
+                    style={{ fontFamily: fonts.sansSemiBold, fontSize: 16, color: colors.gunmetal }}
+                  >
+                    Continue with Google
+                  </Text>
+                </Pressable>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+                  <View style={{ flex: 1, height: 1, backgroundColor: "rgba(64,63,76,0.12)" }} />
+                  <Text style={{ fontFamily: fonts.mono, fontSize: 11, color: colors.textMuted }}>
+                    OR
+                  </Text>
+                  <View style={{ flex: 1, height: 1, backgroundColor: "rgba(64,63,76,0.12)" }} />
+                </View>
+              </>
             )}
             {phase.name === "email" && (
               <TextInput
