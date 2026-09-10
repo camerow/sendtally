@@ -29,6 +29,7 @@ import { ScopeBar } from "../../features/sessions/ScopeBar";
 import { SECTION_HEADER_HEIGHT, SectionHeader } from "../../features/sessions/SectionHeader";
 import { SessionRow, sessionRowHeight } from "../../features/sessions/SessionRow";
 import { useApi } from "../../lib/api";
+import { maybeAskForReview } from "../../lib/review";
 
 type Section = { key: string; title: string; meta: string; data: SessionRowData[] };
 
@@ -103,6 +104,7 @@ export default function Sessions(): React.ReactElement {
       const result = await api.sessions();
       setSessions(result.sessions);
       setError(null);
+      void maybeAskForReview(result.sessions.length);
     } catch {
       setError("Could not reach sendtally. Pull to retry.");
     }
