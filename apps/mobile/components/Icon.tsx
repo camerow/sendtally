@@ -1,4 +1,5 @@
 import React from "react";
+import type { ColorValue } from "react-native";
 import Svg, { Circle, Path, Rect } from "react-native-svg";
 
 export type IconName =
@@ -28,7 +29,7 @@ const SHAPES: Record<IconName, React.ReactElement> = {
 
 export type IconProps = {
   name: IconName;
-  color: string;
+  color: ColorValue;
   size?: number;
   strokeWidth?: number;
 };

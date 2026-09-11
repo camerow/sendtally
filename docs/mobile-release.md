@@ -4,26 +4,63 @@ How a commit on `main` becomes a build in TestFlight and Play internal testing, 
 
 ## The pipeline
 
-`.github/workflows/mobile-release.yml` runs on a push to `main` that touches `apps/mobile/**` or any package the app consumes, and on `workflow_dispatch`.
-It reuses `checks.yml`, so a release cannot ship past failing types, tests, or formatting.
-Then it runs one command:
+Most commits never produce a build.
+`.github/workflows/mobile-release.yml` runs on a push to `main` that touches `apps/mobile/**`, any package the app consumes, or `pnpm-lock.yaml`, and on `workflow_dispatch`.
+It reuses `checks.yml`, so nothing ships past failing types, tests, or formatting.
+Then it takes one of two paths, decided by the fingerprint.
+
+### The fingerprint decides
+
+`app.json` sets `runtimeVersion` to `{ "policy": "fingerprint" }`, so a build's runtime version _is_ the hash of everything native about it: the native modules, the config plugins, the app config, the build profile.
+An update can only reach a build whose runtime version matches, which makes the question "can this commit ship over the air?" answerable before spending anything:
 
 ```
-eas build --platform <platforms> --profile production --auto-submit --non-interactive
+eas fingerprint:generate --platform <p> --build-profile production --environment production
+eas build:list --platform <p> --channel production --status finished --fingerprint-hash <hash>
 ```
 
-`--auto-submit` hands each finished build to EAS Submit using the matching `submit.production` profile in `apps/mobile/eas.json`.
-Version codes and build numbers come from EAS remote versioning (`appVersionSource: "remote"` plus `autoIncrement` on the production profile), so no file in the repo is bumped per release.
+If a finished production build carries that hash, the commit is pure JavaScript and assets as far as the installed app is concerned, and the workflow publishes an update:
+
+```
+eas update --channel production --environment production --message "<commit subject>"
+```
+
+That costs no build minutes.
+Installed apps pick it up on the next cold launch, and apply it on the one after - budget up to two launches when verifying by hand.
+
+If no production build carries the hash, the native layer moved and an update would reach nobody.
+The workflow says so in the job summary and falls through to a full release.
+
+### The release path
+
+A release runs when the fingerprint moved, and a manual `workflow_dispatch` always takes this path.
+It derives the next semantic version from conventional commits since the last `mobile-v*` tag - `feat` is a minor bump, a `!` or a `BREAKING CHANGE` footer is a major one, anything else is a patch - then:
+
+1. Writes it to `apps/mobile/app.json` and commits that to `main`, because `eas.json` sets `requireCommit` and EAS builds the committed tree.
+2. Runs `eas build --profile production --auto-submit`, which hands each finished build to EAS Submit through the matching `submit.production` profile.
+3. Creates the `mobile-vX.Y.Z` GitHub release with generated notes.
+
+While the app is pre-1.0 a breaking change bumps the minor, per semver's 0.y rule.
+The tag is written after the stores have the build, so a tag always names something that shipped.
+
+The version is part of the fingerprint, so the bump commit is itself a native change by the fingerprint's reckoning.
+That is why the release job must not re-enter this workflow: it would find no build carrying the new hash, release again, and loop until the build quota was gone.
+A `GITHUB_TOKEN` push does not trigger workflows, so today it cannot, and the `update` job additionally skips any commit whose subject starts with `chore(mobile): release v`, which keeps that true if the push ever moves to a personal access token or a GitHub App.
+The hash the update job reports on a native change is therefore the hash before the bump, not the hash of the build that follows it.
+
+Build numbers and version codes still come from EAS remote versioning (`appVersionSource: "remote"` plus `autoIncrement`); only the marketing version is derived here.
 The job deliberately waits for EAS rather than passing `--no-wait`: a failed build or a rejected upload has to fail the run.
 
-`apps/mobile/app.json` `version` is the user-visible marketing version.
-Bump it by hand when a release deserves a new number.
+### Local development builds
+
+`eas build:dev` reuses an existing development build whose fingerprint matches the working tree, and only builds a new one when it has to.
+Prefer it to `eas build --profile development` for the same reason CI checks the fingerprint.
 
 ### Platform selection
 
 The `MOBILE_PLATFORMS` repo variable picks what gets built, defaulting to `android`.
 It is `all` now that the App Store Connect record and the iOS signing credentials exist.
-A manual run can override it with the `platform` input.
+A release builds every platform in that variable, even when only one of them drifted, so the two stores stay on the same version.
 
 ### Promotion to public release
 
@@ -43,6 +80,8 @@ GitHub repo secrets:
 | `ASC_API_KEY_ISSUER_ID`      | Same page as the key id                                   |
 
 Repo variable: `MOBILE_PLATFORMS`, one of `android`, `ios`, `all`.
+
+The release job needs `contents: write` on `GITHUB_TOKEN` to push the version bump and cut the release; that is granted in the workflow, not in repo settings.
 
 The workflow writes the two file-shaped credentials to disk in `apps/mobile` because EAS Submit reads them from a path.
 Both paths are gitignored, and the runner is discarded after the job.
@@ -68,6 +107,25 @@ The id is public anyway - it is the number in the App Store URL.
    Clerk's dashboard cannot comp a paid plan, so the entitlement is a RevenueCat promotional grant: `POST /v1/subscribers/<clerk user id>/entitlements/sendtally_member/promotional` with `{"duration":"lifetime"}` and the secret key (run it under `doppler run`). The Worker mirrors it like any store entitlement on the next webhook or refresh.
    The mobile sign-in screen reads `supportedFirstFactors` after `signIn.create`; Clerk lists `password` only for accounts that have one, so only this user ever sees the password field.
    Put the email and password in the store's sign-in-details form (Play: App content, App access) and in 1Password, nowhere else.
+
+## Performance monitoring
+
+EAS Observe collects startup and navigation timings from real builds, wired in `apps/mobile/app/_layout.tsx`:
+
+- `ObserveRoot.wrap(RootLayout)` measures time to first render.
+- `Observe.configure({ integrations: { "expo-router": true } })` adds per-route cold and warm time-to-render, tagged with the route pattern.
+- `<ObserveInteractiveMarker />` renders once Clerk has resolved, which is the first moment the app is genuinely usable, and that is what time-to-interactive measures.
+
+It needs a development or production build; nothing is collected in Expo Go, and debug builds do not dispatch.
+Read it in the Observe tab of the EAS dashboard, or from the terminal:
+
+```
+eas observe:metrics-summary
+eas observe:routes
+```
+
+Observe is about performance, not product behaviour.
+PostHog still answers every product question, and Observe has no crash reporting.
 
 ## Analytics on mobile
 

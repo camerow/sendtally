@@ -6,7 +6,6 @@
     "scheme": "sendtally",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
     "platforms": ["ios", "android"],
     "icon": "./assets/icon.png",
     "primaryColor": "#f9dc5c",
@@ -50,6 +49,12 @@
         "projectId": "4dea1644-ecbb-43e8-ad9c-a6f646f6d844"
       }
     },
-    "owner": "chalk-and-circuits"
+    "owner": "chalk-and-circuits",
+    "runtimeVersion": {
+      "policy": "fingerprint"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/4dea1644-ecbb-43e8-ad9c-a6f646f6d844"
+    }
   }
 }
