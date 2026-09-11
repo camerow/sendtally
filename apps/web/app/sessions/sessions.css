@@ -202,11 +202,6 @@
   color: rgba(64, 63, 76, 0.72);
 }
 
-.session-row-live {
-  font-weight: 500;
-  color: var(--bs-watermelon-ink);
-}
-
 .session-row-tags {
   display: flex;
   gap: 5px;

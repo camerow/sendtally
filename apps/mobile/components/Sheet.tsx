@@ -1,3 +1,7 @@
+/* eslint-disable react-hooks/refs, react-hooks/set-state-in-effect --
+   `progress` is an Animated.Value: an animation handle the rules read as render
+   state, and reading `.current` during render is how Animated is wired up. The
+   effect drives mount/unmount around the animation, which is external-system work. */
 import React from "react";
 import { Animated, Easing, Modal, Pressable, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";

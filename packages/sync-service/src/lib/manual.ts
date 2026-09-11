@@ -5,6 +5,7 @@ import {
   score,
   topGradeLabel,
   type Climb,
+  type ClimbKind,
   type Grade,
   type Session,
 } from "@sendtally/core";
@@ -52,7 +53,7 @@ export function normalisedNote(notes: string | undefined): string | null {
   return trimmed === "" ? null : trimmed;
 }
 
-const manualSessionShape = z.object({
+export const manualSessionShape = z.object({
   name: z.string().min(1).max(120).optional(),
   date: z
     .string()
@@ -123,29 +124,37 @@ function toSession(body: ManualSessionBody): Session {
       grade,
     };
   });
-  return { start, end, climbs, inProgress: false };
+  return { start, end, climbs };
+}
+
+// The shape `climbs_json` holds: every climb the user logged, as written by
+// buildManualSession and read back by the session endpoints.
+export type StoredClimb = {
+  time: string;
+  name: string;
+  vGrade: number;
+  kind: ClimbKind;
+  tries: number;
+  angle: number | null;
+  grade?: Grade;
+};
+
+export function parseClimbs(climbsJson: string | null | undefined): StoredClimb[] {
+  return climbsJson == null ? [] : (JSON.parse(climbsJson) as StoredClimb[]);
 }
 
 export function historySession(row: SessionRow & { climbs_json?: string | null }): Session | null {
   if (row.climbs_json == null) return null;
-  const raw = JSON.parse(row.climbs_json) as Array<{
-    time: string;
-    name: string;
-    vGrade: number;
-    kind: "send" | "attempt";
-    tries: number;
-  }>;
   return {
     start: new Date(row.start_at),
     end: new Date(row.end_at),
-    climbs: raw.map((c) => ({
+    climbs: parseClimbs(row.climbs_json).map((c) => ({
       time: new Date(c.time),
       vGrade: c.vGrade,
       name: c.name,
       kind: c.kind,
       tries: c.tries,
     })),
-    inProgress: false,
   };
 }
 
@@ -178,7 +187,7 @@ export function buildManualSession(
     summary: result.summary,
     notes: normalisedNote(body.notes),
     climbs_json: JSON.stringify(
-      session.climbs.map((c) => ({
+      session.climbs.map((c): StoredClimb => ({
         time: c.time.toISOString(),
         name: c.name,
         vGrade: c.vGrade,
@@ -190,3 +199,9 @@ export function buildManualSession(
     ),
   };
 }
+
+// What the log-session form sends. Derived from the validator, so a schema
+// change reaches the apps as a type error rather than a runtime rejection.
+export type LogSessionInput = z.input<typeof manualSessionShape>;
+
+export type LogClimbInput = LogSessionInput["climbs"][number];

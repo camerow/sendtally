@@ -21,16 +21,14 @@ export function useStravaPosting(
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
-  // The status query resolves after the first render, so adopt its values until
-  // the user has changed something.
-  const loaded = React.useRef(false);
-  React.useEffect(() => {
-    if (loaded.current) return;
-    if (!vm.stravaConnected) return;
-    loaded.current = true;
+  // The status query resolves after the first render, so adopt its values once,
+  // and leave anything the user has since changed alone.
+  const [adopted, setAdopted] = React.useState(false);
+  if (!adopted && vm.stravaConnected) {
+    setAdopted(true);
     setEnabledLocal(vm.postingEnabled);
     setSinceLocal(vm.postSince);
-  }, [vm.stravaConnected, vm.postingEnabled, vm.postSince]);
+  }
 
   const save = React.useCallback(
     (nextEnabled: boolean, nextSince: string) => {

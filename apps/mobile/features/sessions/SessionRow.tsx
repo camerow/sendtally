@@ -1,13 +1,7 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import type { SessionRow as SessionRowData } from "@sendtally/api-client";
-import {
-  IN_PROGRESS_LABEL,
-  sessionDay,
-  sessionGradeLabels,
-  sessionMetaLabel,
-  type SessionBadge,
-} from "@sendtally/features/sessions";
+import { sessionDay, sessionGradeLabels, sessionMetaLabel } from "@sendtally/features/sessions";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { Icon } from "../../components/Icon";
 import { pressRow } from "../../lib/press";
@@ -22,27 +16,14 @@ export function sessionRowHeight(session: SessionRowData): number {
 export type SessionRowProps = {
   session: SessionRowData;
   title: string;
-  badge: SessionBadge | null;
   onPress: () => void;
 };
 
-export function SessionRow({
-  session,
-  title,
-  badge,
-  onPress,
-}: SessionRowProps): React.ReactElement {
+export function SessionRow({ session, title, onPress }: SessionRowProps): React.ReactElement {
   const { weekday, day } = sessionDay(session);
   const meta = sessionMetaLabel(session);
-  const onStrava = badge === "on_strava";
-  const inProgress = badge === "in_progress";
-  const spoken = [
-    title,
-    `${weekday} ${day}`,
-    meta,
-    inProgress ? IN_PROGRESS_LABEL : null,
-    onStrava ? "posted to Strava" : null,
-  ]
+  const onStrava = session.strava_activity_id !== null;
+  const spoken = [title, `${weekday} ${day}`, meta, onStrava ? "posted to Strava" : null]
     .filter((part) => part !== null)
     .join(", ");
 
@@ -120,11 +101,6 @@ export function SessionRow({
           }}
         >
           {meta}
-          {inProgress && (
-            <Text style={{ fontFamily: fonts.monoMedium, color: colors.watermelonInk }}>
-              {` · ${IN_PROGRESS_LABEL}`}
-            </Text>
-          )}
         </Text>
         {session.tags.length > 0 && (
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 4 }}>

@@ -20,8 +20,7 @@ export type ClimbFilter = "all" | "sent" | "flash" | "project";
 
 export type ClimbSort = "order" | "gradeDesc" | "gradeAsc" | "burns";
 
-export type PostStatusKind =
-  "posted" | "pending" | "failed" | "before-start" | "off" | "legacy" | "in-progress";
+export type PostStatusKind = "posted" | "pending" | "failed" | "before-start" | "off" | "legacy";
 
 export type PostAction = "retry" | "post";
 

@@ -21,6 +21,7 @@ export function useTagVocabulary(api: SendtallyApi): TagVocabulary {
   }, [api]);
 
   React.useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- reload only sets state after its await
     void reload();
   }, [reload]);
 

@@ -1,23 +1,10 @@
 import { createExecutionContext, env, waitOnExecutionContext } from "cloudflare:test";
-import { describe, expect, it } from "vitest";
-import { createApp } from "../src/app";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { encryptSecret } from "../src/lib/crypto";
 import { jsonResponse, makeFakeFetch } from "./fakes";
+import { testApp } from "./harness";
 
-function testApp(fetchImpl?: typeof fetch) {
-  return createApp({
-    verifyUser: async (req) => {
-      const userId = req.headers.get("x-test-user");
-      if (userId === null) return null;
-      return { userId, hasFeature: () => false };
-    },
-    deleteAuthUser: async () => {},
-    verifyAuthWebhook: async () => {
-      throw new Error("unsigned webhook");
-    },
-    ...(fetchImpl === undefined ? {} : { fetchImpl }),
-  });
-}
+afterEach(() => vi.unstubAllGlobals());
 
 async function connectStrava(
   userId: string,

@@ -23,7 +23,6 @@ function session(fingerprint: string, startAt: string): SessionRow {
     posted_at: null,
     post_state: null,
     post_error: null,
-    inProgress: false,
     tags: [],
   };
 }

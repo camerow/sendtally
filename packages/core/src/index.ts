@@ -26,15 +26,6 @@ export {
   type GradeScale,
 } from "./grades";
 export {
-  buildSessions,
-  defaultSessionConfig,
-  isInProgress,
-  type Climb,
-  type ClimbKind,
-  type Session,
-  type SessionConfig,
-} from "./session";
-export {
   climbDiscipline,
   climbGrade,
   climbRank,
@@ -44,7 +35,10 @@ export {
   score,
   sessionPoints,
   topGradeLabel,
+  type Climb,
+  type ClimbKind,
   type GradedClimb,
+  type Session,
   type EffortConfig,
   type EffortResult,
 } from "./effort";

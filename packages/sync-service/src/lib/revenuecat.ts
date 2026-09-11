@@ -97,10 +97,7 @@ export function storeEntitlementsOf(subscriber: SubscriberPayload): StoreEntitle
 }
 
 export class RevenueCatClient {
-  constructor(
-    private readonly secretKey: string,
-    private readonly fetchImpl: typeof fetch
-  ) {}
+  constructor(private readonly secretKey: string) {}
 
   private subscriberUrl(appUserId: string): string {
     return `${BASE_URL}/subscribers/${encodeURIComponent(appUserId)}`;
@@ -111,7 +108,7 @@ export class RevenueCatClient {
   }
 
   async fetchSubscriber(appUserId: string): Promise<Subscriber> {
-    const resp = await this.fetchImpl(this.subscriberUrl(appUserId), { headers: this.headers() });
+    const resp = await fetch(this.subscriberUrl(appUserId), { headers: this.headers() });
     if (!resp.ok) throw new Error(`revenuecat subscriber fetch failed: HTTP ${resp.status}`);
     const { subscriber } = subscriberResponse.parse(await resp.json());
     return {
@@ -122,7 +119,7 @@ export class RevenueCatClient {
 
   // 404 is success here: the subscriber never existed or was already removed.
   async deleteSubscriber(appUserId: string): Promise<void> {
-    const resp = await this.fetchImpl(this.subscriberUrl(appUserId), {
+    const resp = await fetch(this.subscriberUrl(appUserId), {
       method: "DELETE",
       headers: this.headers(),
     });

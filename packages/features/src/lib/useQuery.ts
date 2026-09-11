@@ -3,19 +3,18 @@ import React from "react";
 export type QueryState<T> =
   { status: "loading" } | { status: "error"; message: string } | { status: "ready"; data: T };
 
+/** `load` is a dependency of the fetching effect, so callers must memoise it -
+ * an inline function would re-fetch on every render. */
 export function useQuery<T>(load: () => Promise<T>): {
   state: QueryState<T>;
   reload: () => void;
 } {
   const [state, setState] = React.useState<QueryState<T>>({ status: "loading" });
   const [tick, setTick] = React.useState(0);
-  const loadRef = React.useRef(load);
-  loadRef.current = load;
 
   React.useEffect(() => {
     let cancelled = false;
-    loadRef
-      .current()
+    load()
       .then((data) => {
         if (!cancelled) setState({ status: "ready", data });
       })
@@ -30,7 +29,7 @@ export function useQuery<T>(load: () => Promise<T>): {
     return () => {
       cancelled = true;
     };
-  }, [tick]);
+  }, [load, tick]);
 
   const reload = React.useCallback(() => {
     setState({ status: "loading" });

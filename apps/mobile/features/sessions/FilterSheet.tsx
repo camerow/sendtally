@@ -45,9 +45,13 @@ export function FilterSheet({
 }: FilterSheetProps): React.ReactElement {
   const [draft, setDraft] = React.useState<SessionFilters>(filters);
 
-  React.useEffect(() => {
+  // The sheet stays mounted so the Modal can animate, so opening it is what
+  // resets the draft back to what the screen is actually filtered by.
+  const [wasVisible, setWasVisible] = React.useState(visible);
+  if (visible !== wasVisible) {
+    setWasVisible(visible);
     if (visible) setDraft(filters);
-  }, [visible, filters]);
+  }
 
   const toggleTag = (slug: string): void =>
     setDraft((prev) => ({

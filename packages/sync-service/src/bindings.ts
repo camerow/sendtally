@@ -1,3 +1,8 @@
+// The Worker's globals (D1Database, ExportedHandler, workerd's crypto and URL
+// extensions) travel with this file, so any package that imports AppType for
+// the typed client resolves them without its own tsconfig entry.
+/// <reference types="@cloudflare/workers-types" />
+
 export type Env = {
   DB: D1Database;
   TOKEN_KEY: string;

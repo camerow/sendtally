@@ -4,7 +4,6 @@ import {
   RefreshControl,
   SectionList,
   Text,
-  View,
   type SectionListData,
   type ViewToken,
 } from "react-native";
@@ -14,7 +13,6 @@ import {
   countLabel,
   filterSessionsByTags,
   monthScopeItems,
-  sessionBadge,
   sessionTagGroups,
   sessionTagOptions,
   sessionTitle,
@@ -109,21 +107,25 @@ export default function Sessions(): React.ReactElement {
   }, [api]);
 
   React.useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- load only sets state after its await
     void load();
   }, [load]);
 
-  const viewability = React.useRef([
-    {
-      viewabilityConfig: { itemVisiblePercentThreshold: 40, minimumViewTime: 40 },
-      onViewableItemsChanged: ({ viewableItems }: { viewableItems: ViewToken[] }) => {
-        const first = viewableItems.find((token) => token.section !== undefined);
-        const section: unknown = first?.section;
-        if (typeof section === "object" && section !== null && "key" in section) {
-          setCurrentKey(String(section.key));
-        }
+  const viewability = React.useMemo(
+    () => [
+      {
+        viewabilityConfig: { itemVisiblePercentThreshold: 40, minimumViewTime: 40 },
+        onViewableItemsChanged: ({ viewableItems }: { viewableItems: ViewToken[] }) => {
+          const first = viewableItems.find((token) => token.section !== undefined);
+          const section: unknown = first?.section;
+          if (typeof section === "object" && section !== null && "key" in section) {
+            setCurrentKey(String(section.key));
+          }
+        },
       },
-    },
-  ]);
+    ],
+    []
+  );
 
   const jumpTo = (sectionKey: string): void => {
     const sectionIndex = sections.findIndex((s) => s.key === sectionKey);
@@ -172,7 +174,7 @@ export default function Sessions(): React.ReactElement {
         keyExtractor={(s) => s.fingerprint}
         stickySectionHeadersEnabled
         getItemLayout={itemLayout}
-        viewabilityConfigCallbackPairs={viewability.current}
+        viewabilityConfigCallbackPairs={viewability}
         contentContainerStyle={{ paddingBottom: 96 }}
         refreshControl={
           <RefreshControl
@@ -209,7 +211,6 @@ export default function Sessions(): React.ReactElement {
           <SessionRow
             session={item}
             title={sessionTitle(item)}
-            badge={sessionBadge(item)}
             onPress={() =>
               router.push({
                 pathname: "/session/[fingerprint]",

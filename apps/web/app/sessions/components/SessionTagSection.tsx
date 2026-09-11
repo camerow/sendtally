@@ -1,7 +1,6 @@
 import React from "react";
 import type { SessionRow } from "@sendtally/api-client";
 import {
-  sessionBadge,
   sessionTitle,
   sessionTotals,
   totalsLabel,
@@ -26,12 +25,7 @@ export function SessionTagSection({
       />
       <div className="sessions-rows">
         {group.sessions.map((s) => (
-          <SessionRowItem
-            key={s.fingerprint}
-            session={s}
-            title={sessionTitle(s)}
-            badge={sessionBadge(s)}
-          />
+          <SessionRowItem key={s.fingerprint} session={s} title={sessionTitle(s)} />
         ))}
       </div>
     </section>

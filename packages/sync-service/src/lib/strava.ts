@@ -1,7 +1,5 @@
 import { toWallClockString } from "./time";
 
-const boundFetch: typeof fetch = (input, init) => fetch(input, init);
-
 export const STRAVA_API_BASE = "https://www.strava.com/api/v3";
 export const STRAVA_OAUTH_BASE = "https://www.strava.com/oauth";
 
@@ -54,10 +52,9 @@ type TokenResponse = {
 async function exchange(
   cfg: StravaAppConfig,
   oauthBase: string,
-  grant: Record<string, string>,
-  fetchImpl: typeof fetch
+  grant: Record<string, string>
 ): Promise<TokenResponse> {
-  const resp = await fetchImpl(`${oauthBase}/token`, {
+  const resp = await fetch(`${oauthBase}/token`, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams({
@@ -76,10 +73,9 @@ async function exchange(
 export async function exchangeAuthCode(
   cfg: StravaAppConfig,
   code: string,
-  fetchImpl: typeof fetch = boundFetch,
   oauthBase: string = STRAVA_OAUTH_BASE
 ): Promise<{ tokens: StravaTokens; athleteId: number }> {
-  const out = await exchange(cfg, oauthBase, { code, grant_type: "authorization_code" }, fetchImpl);
+  const out = await exchange(cfg, oauthBase, { code, grant_type: "authorization_code" });
   return {
     tokens: {
       accessToken: out.access_token,
@@ -97,7 +93,6 @@ export class StravaClient {
   constructor(
     private readonly cfg: StravaAppConfig,
     tokens: StravaTokens,
-    private readonly fetchImpl: typeof fetch = boundFetch,
     private readonly apiBase: string = STRAVA_API_BASE,
     private readonly oauthBase: string = STRAVA_OAUTH_BASE
   ) {
@@ -114,12 +109,10 @@ export class StravaClient {
 
   private async ensureFresh(): Promise<void> {
     if (Date.now() / 1000 < this.tokens.expiresAt - 300) return;
-    const out = await exchange(
-      this.cfg,
-      this.oauthBase,
-      { refresh_token: this.tokens.refreshToken, grant_type: "refresh_token" },
-      this.fetchImpl
-    );
+    const out = await exchange(this.cfg, this.oauthBase, {
+      refresh_token: this.tokens.refreshToken,
+      grant_type: "refresh_token",
+    });
     this.tokens = {
       accessToken: out.access_token,
       refreshToken: out.refresh_token,
@@ -138,7 +131,7 @@ export class StravaClient {
       description: a.description,
       trainer: "0",
     });
-    const resp = await this.fetchImpl(`${this.apiBase}/activities`, {
+    const resp = await fetch(`${this.apiBase}/activities`, {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
@@ -157,7 +150,7 @@ export class StravaClient {
 
   async deauthorize(): Promise<void> {
     await this.ensureFresh();
-    const resp = await this.fetchImpl(`${this.oauthBase}/deauthorize`, {
+    const resp = await fetch(`${this.oauthBase}/deauthorize`, {
       method: "POST",
       headers: { Authorization: `Bearer ${this.tokens.accessToken}` },
     });
@@ -172,7 +165,7 @@ export class StravaClient {
     if (fields.name !== undefined) form.set("name", fields.name);
     if (fields.description !== undefined) form.set("description", fields.description);
     if ([...form.keys()].length === 0) return;
-    const resp = await this.fetchImpl(`${this.apiBase}/activities/${activityId}`, {
+    const resp = await fetch(`${this.apiBase}/activities/${activityId}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
