@@ -1,116 +1,47 @@
-export type ConnectionStatus = {
-  strava: {
-    athleteId: number;
-    status: string;
-    postingEnabled: boolean;
-    postSince: string | null;
-  } | null;
-};
+import type { hc, InferResponseType } from "hono/client";
+import type { AppType } from "@sendtally/sync-service/app";
 
-export type StoreMembership = {
-  store: string;
-  productId?: string;
-  expiresAt: string | null;
-  willRenew: boolean;
-};
+export type { LogClimbInput, LogSessionInput } from "@sendtally/sync-service/app";
 
-export type Membership = {
-  active: boolean;
-  web: boolean;
-  store: StoreMembership | null;
-};
+type Client = ReturnType<typeof hc<AppType>>;
 
-export type Entitlements = { membership: Membership };
+type Ok<T> = InferResponseType<T, 200>;
 
-export type PostState = "pending" | "posted" | "failed";
+export type ConnectionStatus = Ok<Client["v1"]["status"]["$get"]>;
 
-export type PostOutcome = "posted" | "updated" | "skipped" | "failed";
+export type Entitlements = Ok<Client["v1"]["entitlements"]["$get"]>;
 
-export type GradeScale = "v" | "font" | "yds" | "french";
+export type Membership = Entitlements["membership"];
 
-export type ClimbGrade =
-  | { scale: "v"; value: number }
-  | { scale: "font"; value: string }
-  | { scale: "yds"; value: string }
-  | { scale: "french"; value: string };
+export type StoreMembership = NonNullable<Membership["store"]>;
 
-export type SessionClimb = {
-  time: string;
-  name: string;
-  vGrade: number;
-  kind: "send" | "attempt";
-  tries: number;
-  angle: number | null;
-  grade?: ClimbGrade;
-};
+export type SessionDetail = Ok<Client["v1"]["sessions"][":fingerprint"]["$get"]>["session"];
 
-export type SessionTag = { id: string; name: string; slug: string };
+export type SessionRow = Omit<Ok<Client["v1"]["sessions"]["$get"]>["sessions"][number], "climbs">;
 
-export type ClimbSummary = {
-  slug: string;
-  name: string;
-  grade: ClimbGrade;
-  project: boolean;
-  sessions: number;
-  attempts: number;
-  sends: number;
-  first_at: string;
-  last_at: string;
-};
-
-export type TagSummary = SessionTag & { session_count: number };
-
-export type SessionSource = "board" | "manual";
-
-export type SessionLocation = "indoor" | "outdoor";
-
-export type SessionRow = {
-  fingerprint: string;
-  board: string | null;
-  source: SessionSource;
-  location: SessionLocation | null;
-  name: string | null;
-  start_at: string;
-  end_at: string;
-  climb_count: number;
-  top_grade: number;
-  top_send_grade: number;
-  top_grade_label: string | null;
-  top_send_grade_label: string | null;
-  rpe: number;
-  title: string;
-  notes: string | null;
-  strava_activity_id: number | null;
-  posted_at: string | null;
-  post_state: PostState | null;
-  post_error: string | null;
-  inProgress: boolean;
-  tags: SessionTag[];
-};
-
-export type LogClimbInput = {
-  name?: string;
-  grade: ClimbGrade;
-  kind?: "send" | "attempt";
-  tries?: number;
-  project?: boolean;
-};
-
-export type LogSessionInput = {
-  name?: string;
-  date: string;
-  startTime?: string;
-  endTime?: string;
-  rpe?: number;
-  location: SessionLocation;
-  tags?: string[];
-  notes?: string;
-  climbs: LogClimbInput[];
-};
-
-export type SessionDetail = SessionRow & { climbs: SessionClimb[] };
+export type SessionClimb = SessionDetail["climbs"][number];
 
 export type SessionWithClimbs = SessionRow & { climbs: SessionClimb[] };
+
+export type SessionTag = SessionDetail["tags"][number];
+
+export type TagSummary = Ok<Client["v1"]["tags"]["$get"]>["tags"][number];
+
+export type ClimbSummary = Ok<Client["v1"]["climbs"]["$get"]>["climbs"][number];
+
+export type ClimbGrade = ClimbSummary["grade"];
+
+export type GradeScale = ClimbGrade["scale"];
+
+export type PostOutcome = Ok<
+  Client["v1"]["sessions"][":fingerprint"]["strava"]["$post"]
+>["outcome"];
+
+export type PostState = NonNullable<SessionRow["post_state"]>;
+
+export type SessionSource = SessionRow["source"];
+
+export type SessionLocation = NonNullable<SessionRow["location"]>;
 
 export class ApiError extends Error {
   constructor(

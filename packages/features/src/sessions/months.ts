@@ -9,29 +9,24 @@ export type SessionMonth = {
   sessions: SessionRow[];
 };
 
-const MONTH_NAMES = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-];
+function monthDate(month: number): Date {
+  return new Date(Date.UTC(2000, month - 1, 1));
+}
 
-export const MONTH_SHORT_NAMES = MONTH_NAMES.map((m) => m.slice(0, 3).toUpperCase());
+function formatMonth(month: number, style: "long" | "short"): string {
+  return monthDate(month).toLocaleDateString("en-US", { month: style, timeZone: "UTC" });
+}
+
+export const MONTH_SHORT_NAMES = Array.from({ length: 12 }, (_, i) =>
+  formatMonth(i + 1, "short").toUpperCase()
+);
 
 export function monthKey(year: number, month: number): string {
   return `${year}-${String(month).padStart(2, "0")}`;
 }
 
 export function monthName(month: number): string {
-  return MONTH_NAMES[month - 1] ?? "";
+  return formatMonth(month, "long");
 }
 
 export function monthLabel(year: number, month: number): string {

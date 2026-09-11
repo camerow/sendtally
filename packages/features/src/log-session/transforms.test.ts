@@ -253,7 +253,6 @@ function session(overrides: Partial<SessionDetail> = {}): SessionDetail {
     posted_at: null,
     post_state: null,
     post_error: null,
-    inProgress: false,
     tags: [{ id: "t1", name: "Endurance", slug: "endurance" }],
     climbs: [
       {

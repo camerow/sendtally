@@ -1,8 +1,9 @@
+import { zValidator } from "@hono/zod-validator";
 import { type Context, Hono } from "hono";
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 import { cors } from "hono/cors";
 import { z } from "zod";
-import type { AuthedUser, AuthWebhookEvent } from "./auth";
+import { auth } from "./auth";
 import type { Env } from "./bindings";
 import { purgeAccount } from "./lib/account";
 import { applyProjectFlags, climbCatalogue } from "./lib/climbs";
@@ -13,6 +14,7 @@ import {
   historySession,
   manualSessionBody,
   normalisedNote,
+  parseClimbs,
   sessionNotesBody,
 } from "./lib/manual";
 import { captureUserEvent, getPostHog, identifyUser } from "./lib/posthog";
@@ -22,64 +24,117 @@ import { RevenueCatClient, webhookBody, webhookUserIds } from "./lib/revenuecat"
 import { authorizeUrl, exchangeAuthCode, StravaUnauthorizedError } from "./lib/strava";
 import { sessionTagsBody } from "./lib/tags";
 
-export type AppDeps = {
-  verifyUser: (req: Request, env: Env) => Promise<AuthedUser | null>;
-  deleteAuthUser: (userId: string, env: Env) => Promise<void>;
-  verifyAuthWebhook: (req: Request, env: Env) => Promise<AuthWebhookEvent>;
-  fetchImpl?: typeof fetch;
-};
-
 type Vars = { userId: string; hasFeature: (feature: string) => boolean };
 
 type AppEnv = { Bindings: Env; Variables: Vars };
 
 const OAUTH_STATE_TTL_MS = 15 * 60 * 1000;
 
+// workerd's constant-time compare. lib.dom does not declare it, and the apps
+// typecheck this file for the client's response types, so it is narrowed here
+// rather than declared globally.
+const timingSafeEqual = (a: ArrayBufferView, b: ArrayBufferView): boolean =>
+  (
+    crypto.subtle as unknown as { timingSafeEqual(x: ArrayBufferView, y: ArrayBufferView): boolean }
+  ).timingSafeEqual(a, b);
+
 function sameSecret(presented: string | undefined, expected: string): boolean {
   if (presented === undefined || expected === "") return false;
   const a = new TextEncoder().encode(presented);
   const b = new TextEncoder().encode(expected);
-  return a.byteLength === b.byteLength && crypto.subtle.timingSafeEqual(a, b);
+  return a.byteLength === b.byteLength && timingSafeEqual(a, b);
 }
 
-export function createApp(deps: AppDeps): Hono<AppEnv> {
-  const fetchImpl: typeof fetch = deps.fetchImpl ?? ((input, init) => fetch(input, init));
-  const app = new Hono<AppEnv>();
-  const revenuecat = (env: Env) => new RevenueCatClient(env.REVENUECAT_SECRET_API_KEY, fetchImpl);
+const revenuecat = (env: Env): RevenueCatClient =>
+  new RevenueCatClient(env.REVENUECAT_SECRET_API_KEY);
 
-  // Without a distinct id posthog-node invents a random one per call, so every
-  // event lands on its own anonymous person. The signed-in user id is the same
-  // key the browser identifies with, which is what joins the two streams.
-  const captureEvent = async (
-    c: Context<AppEnv>,
-    event: string,
-    properties: Record<string, string | boolean> = {},
-    distinctId: string | undefined = c.get("userId")
-  ) => {
-    if (distinctId === undefined) return;
-    await captureUserEvent(c.env, distinctId, event, properties);
+// Without a distinct id posthog-node invents a random one per call, so every
+// event lands on its own anonymous person. The signed-in user id is the same
+// key the browser identifies with, which is what joins the two streams.
+const captureEvent = async (
+  c: Context<AppEnv>,
+  event: string,
+  properties: Record<string, string | boolean> = {},
+  distinctId: string | undefined = c.get("userId")
+): Promise<void> => {
+  if (distinctId === undefined) return;
+  await captureUserEvent(c.env, distinctId, event, properties);
+};
+
+const manualScoringHistory = async (
+  db: D1Database,
+  userId: string,
+  excludeFingerprint?: string
+) => {
+  const rows = await repo.listSessions(db, userId, 200, true);
+  return rows
+    .filter((r) => r.fingerprint !== excludeFingerprint)
+    .map(historySession)
+    .filter((s): s is NonNullable<typeof s> => s !== null);
+};
+
+// Posting is two Strava calls plus a possible token refresh, so it runs after the
+// response rather than making the user wait for it. Failures land in post_state,
+// which the retry endpoint reads.
+const postAfterResponse = (c: Context<AppEnv>, userId: string, fingerprint: string): void => {
+  let ctx: Context<AppEnv>["executionCtx"];
+  try {
+    ctx = c.executionCtx;
+  } catch {
+    // No execution context means no background work: never start a promise that
+    // would outlive the request and write after it.
+    return;
+  }
+  ctx.waitUntil(
+    syncSessionToStrava(c.env, userId, fingerprint).then(
+      (result) => {
+        if (result.outcome === "failed") {
+          console.error(`strava post failed for ${fingerprint}: ${result.reason}`);
+        }
+      },
+      (err: unknown) => {
+        const message = err instanceof Error ? err.message : String(err);
+        console.error(`strava post threw for ${fingerprint}: ${message}`);
+      }
+    )
+  );
+};
+
+const sessionResponse = async (env: Env, userId: string, fingerprint: string) => {
+  const row = await repo.getSession(env.DB, userId, fingerprint);
+  if (row === null) return null;
+  const { climbs_json, ...rest } = row;
+  return {
+    ...rest,
+    tags: await repo.getSessionTags(env.DB, userId, fingerprint),
+    climbs: parseClimbs(climbs_json),
   };
+};
 
-  app.onError(async (error, c) => {
-    console.error(error);
-    const posthog = getPostHog(c.env);
-    if (posthog !== null) {
-      posthog.captureException(error, c.get("userId"));
-      await posthog.flush();
-    }
-    return c.json({ error: "internal server error" }, 500);
-  });
+// Every validated body answers the same way, so the shape a client sees for a
+// rejected request does not depend on which endpoint rejected it.
+const invalidBody: Parameters<typeof zValidator>[2] = (result, c) =>
+  result.success ? undefined : c.json({ error: "invalid request body" }, 400);
 
-  app.get("/health", (c) => c.json({ ok: true }));
+const stravaPostingBody = z.object({
+  enabled: z.boolean(),
+  since: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .nullish(),
+});
 
-  app.get("/webhooks/strava", (c) => {
+const app = new Hono<AppEnv>()
+  .get("/health", (c) => c.json({ ok: true }))
+
+  .get("/webhooks/strava", (c) => {
     if (c.req.query("hub.verify_token") !== c.env.STRAVA_WEBHOOK_VERIFY_TOKEN) {
       return c.json({ error: "bad verify token" }, 403);
     }
     return c.json({ "hub.challenge": c.req.query("hub.challenge") ?? "" });
-  });
+  })
 
-  app.post("/webhooks/strava", async (c) => {
+  .post("/webhooks/strava", async (c) => {
     const event = (await c.req.json()) as {
       object_type?: string;
       object_id?: number;
@@ -95,12 +150,12 @@ export function createApp(deps: AppDeps): Hono<AppEnv> {
       await repo.markStravaConnectionDeadByAthlete(c.env.DB, event.object_id);
     }
     return c.json({ ok: true });
-  });
+  })
 
-  app.post("/webhooks/clerk", async (c) => {
-    let event: AuthWebhookEvent;
+  .post("/webhooks/clerk", async (c) => {
+    let event;
     try {
-      event = await deps.verifyAuthWebhook(c.req.raw, c.env);
+      event = await auth.verifyWebhook(c.req.raw, c.env);
     } catch (err) {
       console.error(`clerk webhook rejected: ${err instanceof Error ? err.message : String(err)}`);
       return c.json({ error: "bad signature" }, 400);
@@ -109,7 +164,7 @@ export function createApp(deps: AppDeps): Hono<AppEnv> {
     // Clerk dashboard both land here, and they would otherwise orphan the
     // user's D1 rows and leave their Strava grant live.
     if (event.type === "user.deleted" && event.userId !== null) {
-      await purgeAccount(c.env, event.userId, fetchImpl);
+      await purgeAccount(c.env, event.userId);
     }
     // Clerk owns account creation on both web and mobile, so its webhook is the
     // one place that sees every signup exactly once, with the email attached.
@@ -120,24 +175,22 @@ export function createApp(deps: AppDeps): Hono<AppEnv> {
       await captureEvent(c, "account_created", {}, event.userId);
     }
     return c.json({ ok: true });
-  });
+  })
 
   // Every event re-reads the subscriber from RevenueCat instead of trusting
   // the event body, so retries and out-of-order delivery converge on the same
   // rows. A failed mirror returns 500 on purpose: RevenueCat retries those.
-  app.post("/webhooks/revenuecat", async (c) => {
+  .post("/webhooks/revenuecat", zValidator("json", webhookBody, invalidBody), async (c) => {
     if (!sameSecret(c.req.header("Authorization"), c.env.REVENUECAT_WEBHOOK_AUTH)) {
       return c.json({ error: "unauthorized" }, 401);
     }
-    const parsed = webhookBody.safeParse(await c.req.json().catch(() => null));
-    if (!parsed.success) return c.json({ error: "invalid request body" }, 400);
-    for (const userId of webhookUserIds(parsed.data.event)) {
+    for (const userId of webhookUserIds(c.req.valid("json").event)) {
       await mirrorStoreEntitlements(c.env, revenuecat(c.env), userId);
     }
     return c.json({ ok: true });
-  });
+  })
 
-  app.get("/connect/strava/callback", async (c) => {
+  .get("/connect/strava/callback", async (c) => {
     const code = c.req.query("code");
     const stateRaw = c.req.query("state");
     if (code === undefined || stateRaw === undefined) {
@@ -163,8 +216,7 @@ export function createApp(deps: AppDeps): Hono<AppEnv> {
     try {
       exchanged = await exchangeAuthCode(
         { clientId: c.env.STRAVA_CLIENT_ID, clientSecret: c.env.STRAVA_CLIENT_SECRET },
-        code,
-        fetchImpl
+        code
       );
     } catch (err) {
       if (err instanceof StravaUnauthorizedError) {
@@ -182,9 +234,9 @@ export function createApp(deps: AppDeps): Hono<AppEnv> {
     });
     await captureEvent(c, "strava_connection_completed", {}, state.userId);
     return c.redirect(`${c.env.WEB_APP_URL}/connected/strava`);
-  });
+  })
 
-  app.use("/v1/*", (c, next) =>
+  .use("/v1/*", (c, next) =>
     cors({
       origin: c.env.WEB_APP_URL,
       allowHeaders: [
@@ -195,9 +247,10 @@ export function createApp(deps: AppDeps): Hono<AppEnv> {
       ],
       allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     })(c, next)
-  );
-  app.use("/v1/*", async (c, next) => {
-    const user = await deps.verifyUser(c.req.raw, c.env);
+  )
+
+  .use("/v1/*", async (c, next) => {
+    const user = await auth.verifyUser(c.req.raw, c.env);
     if (user === null) return c.json({ error: "unauthorized" }, 401);
     c.set("userId", user.userId);
     c.set("hasFeature", user.hasFeature);
@@ -212,9 +265,9 @@ export function createApp(deps: AppDeps): Hono<AppEnv> {
       },
       next
     );
-  });
+  })
 
-  app.get("/v1/connect/strava/start", async (c) => {
+  .get("/v1/connect/strava/start", async (c) => {
     const userId = c.get("userId");
     const nonce = crypto.randomUUID();
     setCookie(c, "st_oauth", nonce, {
@@ -236,9 +289,9 @@ export function createApp(deps: AppDeps): Hono<AppEnv> {
     );
     await captureEvent(c, "strava_connection_started", {});
     return c.json({ url });
-  });
+  })
 
-  app.get("/v1/sessions", async (c) => {
+  .get("/v1/sessions", async (c) => {
     const userId = c.get("userId");
     const includeClimbs = c.req.query("include") === "climbs";
     const [rows, tagsBySession] = await Promise.all([
@@ -247,186 +300,144 @@ export function createApp(deps: AppDeps): Hono<AppEnv> {
     ]);
     const sessions = rows.map(({ climbs_json, ...rest }) => ({
       ...rest,
-      inProgress: false,
       tags: tagsBySession.get(rest.fingerprint) ?? [],
-      ...(includeClimbs ? { climbs: climbs_json == null ? [] : JSON.parse(climbs_json) } : {}),
+      climbs: includeClimbs ? parseClimbs(climbs_json) : undefined,
     }));
     return c.json({ sessions });
-  });
+  })
 
-  app.get("/v1/tags", async (c) => {
+  .get("/v1/tags", async (c) => {
     return c.json({ tags: await repo.listTags(c.env.DB, c.get("userId")) });
-  });
+  })
 
   // Every named climb the user has logged, with a project flag. Stats come
   // from the session rows on read, so edits and deletions never leave a
   // project count stale.
-  app.get("/v1/climbs", async (c) => {
+  .get("/v1/climbs", async (c) => {
     const userId = c.get("userId");
     const [rows, projects] = await Promise.all([
       repo.listSessions(c.env.DB, userId, 5000, true),
       repo.listProjects(c.env.DB, userId),
     ]);
     return c.json({ climbs: climbCatalogue(rows, projects) });
-  });
+  })
 
-  app.delete("/v1/projects/:slug", async (c) => {
+  .delete("/v1/projects/:slug", async (c) => {
     const deleted = await repo.deleteProject(c.env.DB, c.get("userId"), c.req.param("slug"));
     if (!deleted) return c.json({ error: "not found" }, 404);
     await captureEvent(c, "project_unmarked", {});
     return c.json({ deleted: true });
-  });
+  })
 
-  app.get("/v1/sessions/:fingerprint", async (c) => {
-    const session = await sessionResponse(c, c.get("userId"), c.req.param("fingerprint"));
+  .get("/v1/sessions/:fingerprint", async (c) => {
+    const session = await sessionResponse(c.env, c.get("userId"), c.req.param("fingerprint"));
     if (session === null) return c.json({ error: "not found" }, 404);
     return c.json({ session });
-  });
+  })
 
-  const manualScoringHistory = async (
-    db: D1Database,
-    userId: string,
-    excludeFingerprint?: string
-  ) => {
-    const rows = await repo.listSessions(db, userId, 200, true);
-    return rows
-      .filter((r) => r.fingerprint !== excludeFingerprint)
-      .map(historySession)
-      .filter((s): s is NonNullable<typeof s> => s !== null);
-  };
-
-  // Posting is two Strava calls plus a possible token refresh, so it runs after the
-  // response rather than making the user wait for it. Failures land in post_state,
-  // which the retry endpoint reads.
-  const postAfterResponse = (c: Context<AppEnv>, userId: string, fingerprint: string): void => {
-    let sink: ((work: Promise<unknown>) => void) | null = null;
-    try {
-      const ctx = c.executionCtx;
-      sink = (work) => ctx.waitUntil(work);
-    } catch {
-      // No execution context means no background work: never start a promise that
-      // would outlive the request and write after it.
-      return;
-    }
-    sink(
-      syncSessionToStrava(c.env, userId, fingerprint, fetchImpl).then(
-        (result) => {
-          if (result.outcome === "failed") {
-            console.error(`strava post failed for ${fingerprint}: ${result.reason}`);
-          }
-        },
-        (err: unknown) => {
-          const message = err instanceof Error ? err.message : String(err);
-          console.error(`strava post threw for ${fingerprint}: ${message}`);
-        }
-      )
-    );
-  };
-
-  const sessionResponse = async (c: { env: Env }, userId: string, fingerprint: string) => {
-    const row = await repo.getSession(c.env.DB, userId, fingerprint);
-    if (row === null) return null;
-    const { climbs_json, ...rest } = row;
-    return {
-      ...rest,
-      inProgress: false,
-      tags: await repo.getSessionTags(c.env.DB, userId, fingerprint),
-      climbs: climbs_json == null ? [] : JSON.parse(climbs_json),
-    };
-  };
-
-  app.post("/v1/sessions", async (c) => {
-    const parsed = manualSessionBody.safeParse(await c.req.json().catch(() => null));
-    if (!parsed.success) return c.json({ error: "invalid request body" }, 400);
+  .post("/v1/sessions", zValidator("json", manualSessionBody, invalidBody), async (c) => {
+    const form = c.req.valid("json");
     const userId = c.get("userId");
     await repo.ensureUser(c.env.DB, userId);
     const fingerprint = `manual-${crypto.randomUUID()}`;
     const history = await manualScoringHistory(c.env.DB, userId);
-    const input = buildManualSession(fingerprint, parsed.data, history);
+    const input = buildManualSession(fingerprint, form, history);
     await repo.insertManualSession(c.env.DB, userId, input);
-    if (parsed.data.tags !== undefined) {
-      await repo.setSessionTags(c.env.DB, userId, fingerprint, parsed.data.tags);
+    if (form.tags !== undefined) {
+      await repo.setSessionTags(c.env.DB, userId, fingerprint, form.tags);
     }
-    await applyProjectFlags(c.env.DB, userId, parsed.data.climbs);
+    await applyProjectFlags(c.env.DB, userId, form.climbs);
     await captureEvent(c, "manual_session_created", { session_source: "manual" });
-    const body = { session: await sessionResponse(c, userId, fingerprint) };
+    const body = { session: await sessionResponse(c.env, userId, fingerprint) };
     postAfterResponse(c, userId, fingerprint);
     return c.json(body, 201);
-  });
+  })
 
-  app.put("/v1/sessions/:fingerprint", async (c) => {
-    const parsed = manualSessionBody.safeParse(await c.req.json().catch(() => null));
-    if (!parsed.success) return c.json({ error: "invalid request body" }, 400);
-    const userId = c.get("userId");
-    const fingerprint = c.req.param("fingerprint");
-    const existing = await repo.getSession(c.env.DB, userId, fingerprint);
-    if (existing === null) return c.json({ error: "not found" }, 404);
-    if (existing.source !== "manual") {
-      return c.json({ error: "only manually logged sessions can be edited" }, 409);
+  .put(
+    "/v1/sessions/:fingerprint",
+    zValidator("json", manualSessionBody, invalidBody),
+    async (c) => {
+      const form = c.req.valid("json");
+      const userId = c.get("userId");
+      const fingerprint = c.req.param("fingerprint");
+      const existing = await repo.getSession(c.env.DB, userId, fingerprint);
+      if (existing === null) return c.json({ error: "not found" }, 404);
+      if (existing.source !== "manual") {
+        return c.json({ error: "only manually logged sessions can be edited" }, 409);
+      }
+      const history = await manualScoringHistory(c.env.DB, userId, fingerprint);
+      const input = buildManualSession(fingerprint, form, history);
+      await repo.updateManualSession(c.env.DB, userId, input);
+      await repo.setSessionTags(c.env.DB, userId, fingerprint, form.tags ?? []);
+      await applyProjectFlags(c.env.DB, userId, form.climbs);
+      await captureEvent(c, "manual_session_updated", { session_source: "manual" });
+      const body = { session: await sessionResponse(c.env, userId, fingerprint) };
+      // Already posted sessions get the activity patched, never a second one.
+      postAfterResponse(c, userId, fingerprint);
+      return c.json(body);
     }
-    const history = await manualScoringHistory(c.env.DB, userId, fingerprint);
-    const input = buildManualSession(fingerprint, parsed.data, history);
-    await repo.updateManualSession(c.env.DB, userId, input);
-    await repo.setSessionTags(c.env.DB, userId, fingerprint, parsed.data.tags ?? []);
-    await applyProjectFlags(c.env.DB, userId, parsed.data.climbs);
-    await captureEvent(c, "manual_session_updated", { session_source: "manual" });
-    const body = { session: await sessionResponse(c, userId, fingerprint) };
-    // Already posted sessions get the activity patched, never a second one.
-    postAfterResponse(c, userId, fingerprint);
-    return c.json(body);
-  });
+  )
 
-  app.post("/v1/sessions/:fingerprint/strava", async (c) => {
+  .post("/v1/sessions/:fingerprint/strava", async (c) => {
     const userId = c.get("userId");
     const fingerprint = c.req.param("fingerprint");
     if ((await repo.getSession(c.env.DB, userId, fingerprint)) === null) {
       return c.json({ error: "not found" }, 404);
     }
-    const result = await syncSessionToStrava(c.env, userId, fingerprint, fetchImpl, true);
+    const result = await syncSessionToStrava(c.env, userId, fingerprint, true);
     if (result.outcome === "failed") {
       return c.json({ outcome: result.outcome, reason: result.reason }, 502);
     }
     await captureEvent(c, "strava_post_retried", { outcome: result.outcome });
     return c.json({
       outcome: result.outcome,
-      ...(result.reason === undefined ? {} : { reason: result.reason }),
-      session: await sessionResponse(c, userId, fingerprint),
+      reason: result.reason,
+      session: await sessionResponse(c.env, userId, fingerprint),
     });
-  });
+  })
 
   // A note is the user's own writing about their session, so every session they
   // own takes one, legacy board rows included. Nothing is re-scored or reposted.
-  app.put("/v1/sessions/:fingerprint/notes", async (c) => {
-    const parsed = sessionNotesBody.safeParse(await c.req.json().catch(() => null));
-    if (!parsed.success) return c.json({ error: "invalid request body" }, 400);
-    const notes = normalisedNote(parsed.data.notes);
-    const saved = await repo.setSessionNotes(
-      c.env.DB,
-      c.get("userId"),
-      c.req.param("fingerprint"),
-      notes
-    );
-    if (!saved) return c.json({ error: "not found" }, 404);
-    await captureEvent(c, "session_notes_updated", { cleared: String(notes === null) });
-    return c.json({ notes });
-  });
+  .put(
+    "/v1/sessions/:fingerprint/notes",
+    zValidator("json", sessionNotesBody, invalidBody),
+    async (c) => {
+      const notes = normalisedNote(c.req.valid("json").notes);
+      const saved = await repo.setSessionNotes(
+        c.env.DB,
+        c.get("userId"),
+        c.req.param("fingerprint"),
+        notes
+      );
+      if (!saved) return c.json({ error: "not found" }, 404);
+      await captureEvent(c, "session_notes_updated", { cleared: String(notes === null) });
+      return c.json({ notes });
+    }
+  )
 
   // Tags live in their own tables, so legacy board sessions stay taggable
   // without writing to those read-only rows.
-  app.put("/v1/sessions/:fingerprint/tags", async (c) => {
-    const parsed = sessionTagsBody.safeParse(await c.req.json().catch(() => null));
-    if (!parsed.success) return c.json({ error: "invalid request body" }, 400);
-    const userId = c.get("userId");
-    const fingerprint = c.req.param("fingerprint");
-    if ((await repo.getSession(c.env.DB, userId, fingerprint)) === null) {
-      return c.json({ error: "not found" }, 404);
+  .put(
+    "/v1/sessions/:fingerprint/tags",
+    zValidator("json", sessionTagsBody, invalidBody),
+    async (c) => {
+      const userId = c.get("userId");
+      const fingerprint = c.req.param("fingerprint");
+      if ((await repo.getSession(c.env.DB, userId, fingerprint)) === null) {
+        return c.json({ error: "not found" }, 404);
+      }
+      const tags = await repo.setSessionTags(
+        c.env.DB,
+        userId,
+        fingerprint,
+        c.req.valid("json").tags
+      );
+      await captureEvent(c, "session_tags_updated", { tag_count: String(tags.length) });
+      return c.json({ tags });
     }
-    const tags = await repo.setSessionTags(c.env.DB, userId, fingerprint, parsed.data.tags);
-    await captureEvent(c, "session_tags_updated", { tag_count: String(tags.length) });
-    return c.json({ tags });
-  });
+  )
 
-  app.delete("/v1/sessions/:fingerprint", async (c) => {
+  .delete("/v1/sessions/:fingerprint", async (c) => {
     const userId = c.get("userId");
     const fingerprint = c.req.param("fingerprint");
     const existing = await repo.getSession(c.env.DB, userId, fingerprint);
@@ -434,9 +445,9 @@ export function createApp(deps: AppDeps): Hono<AppEnv> {
     await repo.deleteSession(c.env.DB, userId, fingerprint);
     await captureEvent(c, "manual_session_deleted", { session_source: existing.source });
     return c.json({ deleted: true });
-  });
+  })
 
-  app.get("/v1/status", async (c) => {
+  .get("/v1/status", async (c) => {
     const strava = await repo.getStravaConnection(c.env.DB, c.get("userId"));
     return c.json({
       strava:
@@ -449,50 +460,43 @@ export function createApp(deps: AppDeps): Hono<AppEnv> {
               postSince: strava.post_since,
             },
     });
-  });
+  })
 
-  app.get("/v1/entitlements", async (c) => {
+  .get("/v1/entitlements", async (c) => {
     const user = { userId: c.get("userId"), hasFeature: c.get("hasFeature") };
     return c.json(await resolveEntitlements(c.env, user));
-  });
+  })
 
   // Called by the app right after a purchase or restore, so the answer does not
   // wait on the webhook.
-  app.post("/v1/entitlements/refresh", async (c) => {
+  .post("/v1/entitlements/refresh", async (c) => {
     const user = { userId: c.get("userId"), hasFeature: c.get("hasFeature") };
     await mirrorStoreEntitlements(c.env, revenuecat(c.env), user.userId);
     await captureEvent(c, "entitlements_refreshed", {});
     return c.json(await resolveEntitlements(c.env, user));
-  });
+  })
 
-  const stravaPostingBody = z.object({
-    enabled: z.boolean(),
-    since: z
-      .string()
-      .regex(/^\d{4}-\d{2}-\d{2}$/)
-      .nullish(),
-  });
+  .put(
+    "/v1/connections/strava/posting",
+    zValidator("json", stravaPostingBody, invalidBody),
+    async (c) => {
+      const form = c.req.valid("json");
+      const userId = c.get("userId");
+      const strava = await repo.getStravaConnection(c.env.DB, userId);
+      if (strava === null) return c.json({ error: "strava not connected" }, 409);
+      const since =
+        form.since === undefined || form.since === null ? null : `${form.since}T00:00:00Z`;
+      await repo.setStravaPosting(c.env.DB, userId, form.enabled, since);
+      await captureEvent(c, "strava_posting_updated", { enabled: form.enabled });
+      return c.json({ postingEnabled: form.enabled, postSince: since });
+    }
+  )
 
-  app.put("/v1/connections/strava/posting", async (c) => {
-    const parsed = stravaPostingBody.safeParse(await c.req.json().catch(() => null));
-    if (!parsed.success) return c.json({ error: "invalid request body" }, 400);
+  .delete("/v1/account", async (c) => {
     const userId = c.get("userId");
-    const strava = await repo.getStravaConnection(c.env.DB, userId);
-    if (strava === null) return c.json({ error: "strava not connected" }, 409);
-    const since =
-      parsed.data.since === undefined || parsed.data.since === null
-        ? null
-        : `${parsed.data.since}T00:00:00Z`;
-    await repo.setStravaPosting(c.env.DB, userId, parsed.data.enabled, since);
-    await captureEvent(c, "strava_posting_updated", { enabled: parsed.data.enabled });
-    return c.json({ postingEnabled: parsed.data.enabled, postSince: since });
-  });
-
-  app.delete("/v1/account", async (c) => {
-    const userId = c.get("userId");
-    await purgeAccount(c.env, userId, fetchImpl);
+    await purgeAccount(c.env, userId);
     try {
-      await deps.deleteAuthUser(userId, c.env);
+      await auth.deleteUser(userId, c.env);
     } catch (err) {
       console.error(
         `clerk user deletion failed: ${err instanceof Error ? err.message : String(err)}`
@@ -502,5 +506,18 @@ export function createApp(deps: AppDeps): Hono<AppEnv> {
     return c.json({ deleted: true });
   });
 
-  return app;
-}
+app.onError(async (error, c) => {
+  console.error(error);
+  const posthog = getPostHog(c.env);
+  if (posthog !== null) {
+    posthog.captureException(error, c.get("userId"));
+    await posthog.flush();
+  }
+  return c.json({ error: "internal server error" }, 500);
+});
+
+export type AppType = typeof app;
+
+export type { LogClimbInput, LogSessionInput } from "./lib/manual";
+
+export { app };

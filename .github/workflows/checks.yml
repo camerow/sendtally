@@ -19,6 +19,7 @@ jobs:
           cache-dependency-path: tools/cli-go/go.sum
       - run: pnpm install --frozen-lockfile
       - run: pnpm check-types
+      - run: pnpm lint
       - name: Expo packages match the installed SDK
         run: pnpm --filter @sendtally/mobile exec expo install --check
       - name: Test (one retry for the vitest-pool-workers isolated-storage flake)

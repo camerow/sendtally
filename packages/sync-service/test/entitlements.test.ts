@@ -1,10 +1,12 @@
 import { env } from "cloudflare:test";
-import { describe, expect, it } from "vitest";
-import { createApp } from "../src/app";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { newlyGranted } from "../src/lib/entitlements";
 import { INSIGHTS_FEATURE, STORE_ENTITLEMENT } from "../src/features";
 import { storeEntitlementsOf, webhookUserIds } from "../src/lib/revenuecat";
 import { jsonResponse, makeFakeFetch, type RecordedCall } from "./fakes";
+import { testApp } from "./harness";
+
+afterEach(() => vi.unstubAllGlobals());
 
 const FUTURE = "2099-01-01T00:00:00Z";
 const PAST = "2001-01-01T00:00:00Z";
@@ -60,22 +62,6 @@ function revenueCatFetch(
       },
     },
   ]);
-}
-
-function testApp(fetchImpl: typeof fetch) {
-  return createApp({
-    verifyUser: async (req) => {
-      const userId = req.headers.get("x-test-user");
-      if (userId === null) return null;
-      const features = (req.headers.get("x-test-features") ?? "").split(",");
-      return { userId, hasFeature: (feature) => features.includes(feature) };
-    },
-    deleteAuthUser: async () => {},
-    verifyAuthWebhook: async () => {
-      throw new Error("unsigned webhook");
-    },
-    fetchImpl,
-  });
 }
 
 function webhook(event: Record<string, unknown>, auth = "test-revenuecat-webhook-auth") {

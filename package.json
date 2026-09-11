@@ -1,6 +1,7 @@
 {
   "name": "sendtally",
   "private": true,
+  "type": "module",
   "packageManager": "pnpm@10.34.5",
   "engines": {
     "node": ">=24.0.0"
@@ -10,16 +11,21 @@
     "build": "turbo build",
     "preview:build": "CLOUDFLARE_ENV=production pnpm --filter @sendtally/web build",
     "preview:upload": "pnpm run preview:build && pnpm --filter @sendtally/web exec wrangler versions upload",
-    "lint": "turbo lint",
+    "lint": "eslint .",
     "check-types": "turbo check-types",
     "test": "turbo test",
     "format": "turbo format --continue -- && prettier --write \"*.{md,json,yaml,yml}\" \"docs/**/*.md\"",
     "format:check": "turbo format:check --continue -- && prettier --check \"*.{md,json,yaml,yml}\" \"docs/**/*.md\""
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.10.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "globals": "^17.12.0",
     "prettier": "^3.6.2",
     "turbo": "^2.5.8",
-    "typescript": "^5.9.2"
+    "typescript": "^5.9.2",
+    "typescript-eslint": "^8.70.0"
   },
   "pnpm": {
     "overrides": {

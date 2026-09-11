@@ -62,7 +62,7 @@ sendtally/
 ├── packages/
 │   ├── core/            ported session/effort/grades logic - pure, no I/O, no platform deps
 │   ├── sync-service/    Hono Worker: API + D1 schema/migrations (cron/queue handlers are legacy, being removed)
-│   ├── api-client/      typed hono/client wrapper consumed by mobile and web
+│   ├── api-client/      hono/client (hc<AppType>) wrapper consumed by mobile and web
 │   ├── design/          design tokens (CSS variables) + React component library
 │   └── ui-native/       NativeWind component kit for mobile
 ├── infra/
@@ -73,7 +73,8 @@ sendtally/
 ```
 
 - **Package manager:** `pnpm`. Never `npm` or `yarn`.
-- **Build system:** Turborepo. Tasks run from the repo root: `pnpm dev`, `pnpm build`, `pnpm lint`, `pnpm check-types`, `pnpm test`, `pnpm format`.
+- **Build system:** Turborepo. Tasks run from the repo root: `pnpm dev`, `pnpm build`, `pnpm check-types`, `pnpm test`, `pnpm format`.
+  `pnpm lint` is ESLint, run once at the root rather than per package; the flat config is `eslint.config.js`.
 - **Toolchain versions:** pinned in `.prototools` (proto manages Node and Go here; this repo does not use asdf).
 - **Package scope:** every workspace package is `@sendtally/*` (e.g. `@sendtally/core`, `@sendtally/sync-service`). Never introduce another scope.
 
@@ -151,7 +152,7 @@ Invariants:
 
 Three layers; the tokens file is the contract between platforms.
 
-1. `@sendtally/design`: CSS-variable tokens (`styles.css` + `tokens/`) and a typed React component library (Logo, Button, Input, Badge, Label, Card, SpecRow, StatStrip, GradeBars, ActivityCard, RpeMeter, ClimbLog), both synced from the "Sendtally Design System" project on claude.ai/design via the DesignSync tool. That project is the design source of truth - read its `readme.md` (voice, contrast rules, iconography, layout) before designing anything new. Note: its internal copy still says "boardsync"; the code here is renamed to sendtally.
+1. `@sendtally/design`: CSS-variable tokens (`styles.css` + `tokens/`) and a typed React component library (Logo, Button, Badge, Label, Card, StatStrip, GradeBars), both synced from the "Sendtally Design System" project on claude.ai/design via the DesignSync tool. That project is the design source of truth - read its `readme.md` (voice, contrast rules, iconography, layout) before designing anything new. Note: its internal copy still says "boardsync"; the code here is renamed to sendtally.
 2. Web: consumes `@sendtally/design` components directly (inline styles driven by the tokens - no Tailwind, no shadcn; the design system ships its own components). Clerk headless hooks get skinned with these.
 3. Native: NativeWind 4 + a small hand-rolled kit in `@sendtally/ui-native` (button, card, list row, stat tile, sheet, input, ...). No pre-built RN component library.
 
@@ -224,6 +225,7 @@ Store listing copy lives in `apps/mobile/store/listing.md` and should match what
 ### Formatting
 
 Prettier owns formatting; config at `.prettierrc` in the repo root.
+ESLint owns everything a type error would not catch; nothing in `eslint.config.js` is stylistic.
 Run `pnpm format` before committing.
 Avoid comments in code; make code short, composable, and obviously named.
 

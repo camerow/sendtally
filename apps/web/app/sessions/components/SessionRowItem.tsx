@@ -1,42 +1,21 @@
 import React from "react";
 import { Link } from "react-router";
 import type { SessionRow } from "@sendtally/api-client";
-import {
-  IN_PROGRESS_LABEL,
-  SESSION_BADGE_LABELS,
-  sessionDay,
-  sessionGradeLabels,
-  sessionMetaLabel,
-  type SessionBadge,
-} from "@sendtally/features/sessions";
-
-const BADGE_STYLES: Record<SessionBadge, { border: string; color: string }> = {
-  in_progress: {
-    border: "1px solid rgba(196,48,61,0.4)",
-    color: "var(--bs-watermelon-ink)",
-  },
-  on_strava: {
-    border: "1px solid rgba(27,98,206,0.4)",
-    color: "var(--bs-azure-ink)",
-  },
-};
+import { sessionDay, sessionGradeLabels, sessionMetaLabel } from "@sendtally/features/sessions";
 
 export function SessionRowItem({
   session,
   title,
-  badge,
 }: {
   session: SessionRow;
   title: string;
-  badge: SessionBadge | null;
 }): React.ReactElement {
   const { weekday, day } = sessionDay(session);
   const month = new Date(session.start_at).toLocaleDateString("en-US", {
     month: "short",
     timeZone: "UTC",
   });
-  const onStrava = badge === "on_strava";
-  const inProgress = badge === "in_progress";
+  const onStrava = session.strava_activity_id !== null;
   return (
     <Link
       to={`/app/sessions/${encodeURIComponent(session.fingerprint)}`}
@@ -45,7 +24,6 @@ export function SessionRowItem({
         title,
         `${weekday} ${month} ${day}`,
         sessionMetaLabel(session),
-        inProgress ? IN_PROGRESS_LABEL : null,
         onStrava ? "posted to Strava" : null,
       ]
         .filter((part) => part !== null)
@@ -61,10 +39,7 @@ export function SessionRowItem({
       </span>
       <span className="session-row-main">
         <span className="session-row-title">{title}</span>
-        <span className="session-row-meta">
-          {sessionMetaLabel(session)}
-          {inProgress && <span className="session-row-live"> · {IN_PROGRESS_LABEL}</span>}
-        </span>
+        <span className="session-row-meta">{sessionMetaLabel(session)}</span>
         {session.tags.length > 0 && (
           <span className="session-row-tags">
             {session.tags.map((tag) => (
@@ -91,7 +66,7 @@ export function SessionRowItem({
         ))}
       </span>
       <span className="session-row-badge">
-        {badge !== null && (
+        {onStrava && (
           <span
             style={{
               display: "inline-block",
@@ -102,11 +77,11 @@ export function SessionRowItem({
               borderRadius: "var(--radius-pill)",
               padding: "3px 9px",
               whiteSpace: "nowrap",
-              border: BADGE_STYLES[badge].border,
-              color: BADGE_STYLES[badge].color,
+              border: "1px solid rgba(27,98,206,0.4)",
+              color: "var(--bs-azure-ink)",
             }}
           >
-            {SESSION_BADGE_LABELS[badge]}
+            ON STRAVA
           </span>
         )}
       </span>

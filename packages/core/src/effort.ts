@@ -6,7 +6,23 @@ import {
   type Discipline,
   type Grade,
 } from "./grades";
-import type { Climb, Session } from "./session";
+export type ClimbKind = "send" | "attempt";
+
+export type Climb = {
+  time: Date;
+  vGrade: number;
+  name: string;
+  kind: ClimbKind;
+  tries: number;
+  angle?: number;
+  grade?: Grade;
+};
+
+export type Session = {
+  start: Date;
+  end: Date;
+  climbs: Climb[];
+};
 
 export type EffortConfig = {
   bidWeight: number;

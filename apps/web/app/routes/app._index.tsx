@@ -210,16 +210,17 @@ export default function Sessions(): React.ReactElement {
         </div>
       )}
       <LogSessionFab />
-      <SessionFilterSheet
-        open={filtersOpen}
-        onClose={() => setFiltersOpen(false)}
-        sessions={sessions}
-        grouping={grouping}
-        tagOptions={tagOptions}
-        untaggedCount={untaggedCount}
-        selectedTags={selectedTags}
-        hrefFor={hrefFor}
-      />
+      {filtersOpen && (
+        <SessionFilterSheet
+          onClose={() => setFiltersOpen(false)}
+          sessions={sessions}
+          grouping={grouping}
+          tagOptions={tagOptions}
+          untaggedCount={untaggedCount}
+          selectedTags={selectedTags}
+          hrefFor={hrefFor}
+        />
+      )}
     </div>
   );
 }

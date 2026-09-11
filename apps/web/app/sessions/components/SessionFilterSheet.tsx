@@ -12,7 +12,6 @@ import {
 import { chipStyle } from "../../components/chip";
 
 export type SessionFilterSheetProps = {
-  open: boolean;
   onClose: () => void;
   sessions: SessionRow[];
   grouping: SessionGrouping;
@@ -47,7 +46,6 @@ function Field({
 }
 
 export function SessionFilterSheet({
-  open,
   onClose,
   sessions,
   grouping,
@@ -55,18 +53,10 @@ export function SessionFilterSheet({
   untaggedCount,
   selectedTags,
   hrefFor,
-}: SessionFilterSheetProps): React.ReactElement | null {
+}: SessionFilterSheetProps): React.ReactElement {
   const navigate = useNavigate();
   const [draftGrouping, setDraftGrouping] = React.useState<SessionGrouping>(grouping);
   const [draftTags, setDraftTags] = React.useState<string[]>(selectedTags);
-
-  React.useEffect(() => {
-    if (!open) return;
-    setDraftGrouping(grouping);
-    setDraftTags(selectedTags);
-  }, [open, grouping, selectedTags]);
-
-  if (!open) return null;
 
   const toggleTag = (slug: string): void =>
     setDraftTags((prev) =>

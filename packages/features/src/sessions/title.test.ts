@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 import type { SessionRow } from "@sendtally/api-client";
-import { sessionBadge } from "./badges";
 import { sessionTitle } from "./title";
 
 function session(overrides: Partial<SessionRow> = {}): SessionRow {
@@ -24,26 +23,10 @@ function session(overrides: Partial<SessionRow> = {}): SessionRow {
     posted_at: null,
     post_state: null,
     post_error: null,
-    inProgress: false,
     tags: [],
     ...overrides,
   };
 }
-
-describe("sessionBadge", () => {
-  it("marks in-progress sessions first", () => {
-    expect(sessionBadge(session({ inProgress: true, strava_activity_id: 5 }))).toBe("in_progress");
-  });
-
-  it("marks posted sessions as on Strava", () => {
-    expect(sessionBadge(session({ strava_activity_id: 555 }))).toBe("on_strava");
-  });
-
-  it("shows no badge for an ordinary unposted session", () => {
-    expect(sessionBadge(session())).toBeNull();
-    expect(sessionBadge(session({ source: "manual", board: null }))).toBeNull();
-  });
-});
 
 describe("sessionTitle", () => {
   it("prefers the user-given name", () => {

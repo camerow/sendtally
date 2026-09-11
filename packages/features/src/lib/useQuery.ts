@@ -9,13 +9,10 @@ export function useQuery<T>(load: () => Promise<T>): {
 } {
   const [state, setState] = React.useState<QueryState<T>>({ status: "loading" });
   const [tick, setTick] = React.useState(0);
-  const loadRef = React.useRef(load);
-  loadRef.current = load;
 
   React.useEffect(() => {
     let cancelled = false;
-    loadRef
-      .current()
+    load()
       .then((data) => {
         if (!cancelled) setState({ status: "ready", data });
       })
@@ -30,7 +27,7 @@ export function useQuery<T>(load: () => Promise<T>): {
     return () => {
       cancelled = true;
     };
-  }, [tick]);
+  }, [load, tick]);
 
   const reload = React.useCallback(() => {
     setState({ status: "loading" });
