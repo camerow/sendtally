@@ -4,6 +4,7 @@ import type { SendtallyApi } from "@sendtally/api-client";
 import { useSessionNotes } from "@sendtally/features/session-detail";
 import { SESSION_NOTE_MAX } from "@sendtally/features/sessions";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
+import { press } from "../../lib/press";
 
 const heading = {
   fontFamily: fonts.monoMedium,
@@ -88,14 +89,14 @@ export function SessionNotes({
             <Pressable
               onPress={cancel}
               disabled={saving}
-              style={{ minHeight: 44, justifyContent: "center" }}
+              style={press({ minHeight: 44, justifyContent: "center" })}
             >
               <Text style={{ ...action, color: colors.textSecondary }}>CANCEL</Text>
             </Pressable>
             <Pressable
               onPress={save}
               disabled={saving}
-              style={{ minHeight: 44, justifyContent: "center" }}
+              style={press({ minHeight: 44, justifyContent: "center" })}
             >
               <Text style={{ ...action, color: colors.watermelonInk }}>
                 {saving ? "SAVING…" : "SAVE NOTE"}
@@ -126,7 +127,7 @@ export function SessionNotes({
             How it felt, what to try next time.
           </Text>
         </View>
-        <Pressable onPress={start} style={{ minHeight: 44, justifyContent: "center" }}>
+        <Pressable onPress={start} style={press({ minHeight: 44, justifyContent: "center" })}>
           <Text style={{ ...action, color: colors.watermelonInk }}>ADD A NOTE</Text>
         </Pressable>
       </View>
@@ -148,7 +149,7 @@ export function SessionNotes({
     >
       <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
         <Text style={{ ...heading, color: colors.watermelonInk }}>NOTES</Text>
-        <Pressable onPress={start} style={{ minHeight: 32, justifyContent: "center" }}>
+        <Pressable onPress={start} style={press({ minHeight: 32, justifyContent: "center" })}>
           <Text style={{ ...action, color: colors.azureInk }}>EDIT</Text>
         </Pressable>
       </View>

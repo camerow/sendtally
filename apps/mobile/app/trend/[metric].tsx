@@ -10,6 +10,7 @@ import { TrendTagBreakdown } from "../../features/trends/TrendTagBreakdown";
 import { useApi } from "../../lib/api";
 import { Paywall } from "../../features/billing/Paywall";
 import { useCanSeeInsights } from "../../features/billing/useBilling";
+import { press } from "../../lib/press";
 
 const METRICS: TrendMetric[] = ["volume", "pyramid", "hardest", "flash", "avggrade"];
 
@@ -25,7 +26,7 @@ function TrendDetailLocked(): React.ReactElement {
       <ScrollView contentContainerStyle={{ paddingHorizontal: 18, paddingTop: 12, gap: 12 }}>
         <Pressable
           onPress={() => router.back()}
-          style={{ minHeight: 44, justifyContent: "center" }}
+          style={press({ minHeight: 44, justifyContent: "center" })}
         >
           <Text
             style={{
@@ -63,7 +64,7 @@ function TrendDetail(): React.ReactElement {
       >
         <Pressable
           onPress={() => router.back()}
-          style={{ minHeight: 44, justifyContent: "center" }}
+          style={press({ minHeight: 44, justifyContent: "center" })}
         >
           <Text
             style={{

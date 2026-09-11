@@ -9,10 +9,11 @@ import {
   emptyDraft,
   newClimb,
   toLogSessionInput,
-  withScale,
+  withClimbScale,
   withTag,
   withoutTag,
   type ClimbDraft,
+  type GradeScale,
   type LogSessionDraft,
 } from "@sendtally/features/log-session";
 import { SESSION_NOTE_MAX, useTagVocabulary } from "@sendtally/features/sessions";
@@ -136,7 +137,12 @@ export function LogSessionForm({
   const cancelTo =
     editing === undefined ? "/app" : `/app/sessions/${encodeURIComponent(editing.fingerprint)}`;
 
+  const scale = draft.climbs[0]?.scale ?? "v";
   const problem = draftProblem(draft);
+
+  function setScale(next: GradeScale): void {
+    setDraft((d) => ({ ...d, climbs: d.climbs.map((c) => withClimbScale(c, next)) }));
+  }
 
   function updateClimb(key: string, climb: ClimbDraft): void {
     setDraft((d) => ({ ...d, climbs: d.climbs.map((c) => (c.key === key ? climb : c)) }));
@@ -153,7 +159,7 @@ export function LogSessionForm({
               ...c,
               name,
               project: undefined,
-              ...(known === undefined ? {} : { grade: climbDraftGrade(known, d.scale) }),
+              ...(known === undefined ? {} : { grade: climbDraftGrade(known, c.scale) }),
             }
       ),
     }));
@@ -165,7 +171,7 @@ export function LogSessionForm({
       climbs: d.climbs.map((c) =>
         c.key !== key
           ? c
-          : { ...c, name: known.name, grade: climbDraftGrade(known, d.scale), project: undefined }
+          : { ...c, name: known.name, grade: climbDraftGrade(known, c.scale), project: undefined }
       ),
     }));
   }
@@ -177,7 +183,10 @@ export function LogSessionForm({
 
   function addClimb(): void {
     const key = `climb-${nextKey.current++}`;
-    setDraft((d) => ({ ...d, climbs: [...d.climbs, newClimb(key, d.scale)] }));
+    setDraft((d) => ({
+      ...d,
+      climbs: [...d.climbs, newClimb(key, d.climbs[d.climbs.length - 1]?.scale ?? "v")],
+    }));
     if (narrow) setEditingKey(key);
   }
 
@@ -342,10 +351,10 @@ export function LogSessionForm({
                 <button
                   key={option.value}
                   type="button"
-                  onClick={() => setDraft(withScale(draft, option.value))}
-                  aria-pressed={draft.scale === option.value}
+                  onClick={() => setScale(option.value)}
+                  aria-pressed={scale === option.value}
                   style={{
-                    ...chipStyle(draft.scale === option.value),
+                    ...chipStyle(scale === option.value),
                     fontSize: 10,
                     padding: "6px 12px",
                   }}
@@ -376,7 +385,7 @@ export function LogSessionForm({
                 <ClimbCard
                   key={climb.key}
                   climb={climb}
-                  scale={draft.scale}
+                  scale={climb.scale}
                   removable={draft.climbs.length > 1}
                   project={isProject(climb)}
                   suggestions={vocabulary.suggestionsFor(climb.name)}
@@ -420,7 +429,7 @@ export function LogSessionForm({
           climb={editingClimb}
           index={editingIndex}
           count={draft.climbs.length}
-          scale={draft.scale}
+          scale={editingClimb.scale}
           project={isProject(editingClimb)}
           suggestions={vocabulary.suggestionsFor(editingClimb.name)}
           onChange={(c) => updateClimb(editingClimb.key, c)}

@@ -223,6 +223,8 @@ const VOLUME = [
   { label: "", value: 0.55 },
 ];
 
+const BAR_BOX_HEIGHT = 72;
+
 function TrendsArt(): React.ReactElement {
   const peak = Math.max(...VOLUME.map((b) => b.value));
   return (
@@ -231,20 +233,29 @@ function TrendsArt(): React.ReactElement {
         <Text style={MONO_LABEL}>CLIMBS PER WEEK</Text>
         <Text style={MONO_LABEL}>LAST 8 WEEKS</Text>
       </View>
-      <View style={{ flexDirection: "row", alignItems: "flex-end", gap: 6, height: 92 }}>
-        {VOLUME.map((bar, i) => (
-          <View key={i} style={{ flex: 1, alignItems: "center", gap: 6 }}>
+      <View style={{ gap: 6 }}>
+        <View
+          style={{ flexDirection: "row", alignItems: "flex-end", gap: 6, height: BAR_BOX_HEIGHT }}
+        >
+          {VOLUME.map((bar, i) => (
             <View
+              key={i}
               style={{
-                width: "100%",
-                height: Math.max(6, Math.round(bar.value * 72)),
+                flex: 1,
+                height: Math.max(6, Math.round(bar.value * BAR_BOX_HEIGHT)),
                 borderRadius: 3,
                 backgroundColor: bar.value === peak ? colors.watermelon : colors.azure,
               }}
             />
-            <Text style={{ ...MONO_LABEL, fontSize: 8 }}>{bar.label}</Text>
-          </View>
-        ))}
+          ))}
+        </View>
+        <View style={{ flexDirection: "row", gap: 6 }}>
+          {VOLUME.map((bar, i) => (
+            <Text key={i} style={{ ...MONO_LABEL, flex: 1, fontSize: 8, textAlign: "center" }}>
+              {bar.label}
+            </Text>
+          ))}
+        </View>
       </View>
       <View style={{ height: 1, backgroundColor: colors.lineOnLight }} />
       <View style={{ flexDirection: "row", justifyContent: "space-between" }}>

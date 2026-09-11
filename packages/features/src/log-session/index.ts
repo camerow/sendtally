@@ -9,21 +9,25 @@ export {
   draftProblem,
   draftSummary,
   durationLabel,
+  disciplineOf,
   durationMinutes,
   emptyDraft,
   gradeOptions,
   newClimb,
+  scaleOptionsFor,
   toLogSessionInput,
   vGradeOf,
-  withScale,
+  withClimbDiscipline,
+  withClimbScale,
   withTag,
   withoutTag,
 } from "./transforms";
 export { useSessionDraft, type EditableSession } from "./useSessionDraft";
-export { GRADE_SCALE_OPTIONS } from "./types";
+export { DEFAULT_GRADE_PREFS, DISCIPLINE_LABELS, GRADE_SCALE_OPTIONS } from "./types";
 export type {
   ClimbDraft,
   Discipline,
+  GradePrefs,
   GradeScale,
   GradeScaleOption,
   LogSessionDraft,

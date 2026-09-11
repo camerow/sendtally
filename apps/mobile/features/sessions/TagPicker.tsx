@@ -3,6 +3,7 @@ import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import { tagMatches, type TagOption } from "@sendtally/features/sessions";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { Chip } from "../../components/Chip";
+import { pressRow } from "../../lib/press";
 
 export type TagPickerProps = {
   tags: string[];
@@ -43,7 +44,7 @@ export function TagPicker({
       <Pressable
         onPress={() => inputRef.current?.focus()}
         disabled={disabled}
-        style={{
+        style={pressRow({
           flexDirection: "row",
           flexWrap: "wrap",
           alignItems: "center",
@@ -55,7 +56,7 @@ export function TagPicker({
           borderWidth: 1,
           borderColor: focused ? colors.azure : "rgba(64,63,76,0.15)",
           borderRadius: radius.control,
-        }}
+        })}
       >
         {tags.map((tag) => (
           <Pressable
@@ -64,7 +65,7 @@ export function TagPicker({
             disabled={disabled}
             hitSlop={5}
             accessibilityLabel={`Remove ${tag}`}
-            style={{
+            style={pressRow({
               flexDirection: "row",
               alignItems: "center",
               gap: 8,
@@ -74,7 +75,7 @@ export function TagPicker({
               borderRadius: radius.pill,
               backgroundColor: colors.petalTint,
               opacity: disabled ? 0.5 : 1,
-            }}
+            })}
           >
             <Text
               style={{
