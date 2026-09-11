@@ -1,5 +1,10 @@
 name: Mobile release
 
+# Every push to main publishes an EAS Update, which costs no build minutes.
+# A store build only happens when the fingerprint moved - meaning the native
+# layer changed and no installed build can receive the update - or when this
+# workflow is dispatched by hand.
+
 on:
   push:
     branches: [main]
@@ -9,14 +14,14 @@ on:
       - "packages/design/**"
       - "packages/features/**"
       - "packages/api-client/**"
+      - "pnpm-lock.yaml"
       - ".github/workflows/mobile-release.yml"
   workflow_dispatch:
     inputs:
-      platform:
-        description: Platform to build and submit
-        type: choice
-        default: android
-        options: [android, ios, all]
+      release:
+        description: Build and submit to the stores regardless of the fingerprint
+        type: boolean
+        default: true
 
 concurrency:
   group: mobile-release
@@ -26,9 +31,11 @@ jobs:
   checks:
     uses: ./.github/workflows/checks.yml
 
-  release:
+  update:
     needs: checks
     runs-on: ubuntu-latest
+    outputs:
+      needs-build: ${{ steps.fingerprint.outputs.needs-build }}
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -42,8 +49,110 @@ jobs:
           token: ${{ secrets.EXPO_TOKEN }}
       - run: pnpm install --frozen-lockfile
 
-      # EAS Submit reads both credentials from a file path, so the secrets are
-      # materialised here and nowhere else. The runner is discarded after the job.
+      # The runtime version is the fingerprint, so a production build with a
+      # matching fingerprint hash is exactly the set of installs that can run
+      # an update published from this commit.
+      - name: Does a production build match this fingerprint?
+        id: fingerprint
+        working-directory: apps/mobile
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          PLATFORMS: ${{ vars.MOBILE_PLATFORMS || 'android' }}
+        run: |
+          set -euo pipefail
+          platforms=$([ "$PLATFORMS" = all ] && echo "android ios" || echo "$PLATFORMS")
+          needs_build=false
+          for platform in $platforms; do
+            hash=$(eas fingerprint:generate --platform "$platform" \
+              --build-profile production --environment production \
+              --json --non-interactive | jq -r .hash)
+            matches=$(eas build:list --platform "$platform" --channel production \
+              --status finished --fingerprint-hash "$hash" --limit 1 \
+              --json --non-interactive | jq length)
+            echo "$platform fingerprint $hash matches $matches production build(s)"
+            if [ "$matches" = 0 ]; then needs_build=true; fi
+          done
+          echo "needs-build=$needs_build" >> "$GITHUB_OUTPUT"
+
+      - name: Publish update
+        if: steps.fingerprint.outputs.needs-build == 'false' && github.event_name == 'push'
+        working-directory: apps/mobile
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          MESSAGE: ${{ github.event.head_commit.message }}
+        run: |
+          eas update --channel production --environment production --non-interactive \
+            --message "$(head -1 <<<"$MESSAGE")"
+
+      - name: Explain why a build is needed
+        if: steps.fingerprint.outputs.needs-build == 'true'
+        run: |
+          echo "### Native change detected" >> "$GITHUB_STEP_SUMMARY"
+          echo "No production build carries this fingerprint, so an update" \
+            "would reach nobody. Building and submitting instead." >> "$GITHUB_STEP_SUMMARY"
+
+  release:
+    needs: update
+    if: needs.update.outputs.needs-build == 'true' || inputs.release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+      - run: pnpm install --frozen-lockfile
+
+      # eas.json sets appVersionSource "remote", so EAS owns the build number.
+      # The semver in app.json is the only part we choose, and conventional
+      # commits since the last release choose it.
+      - name: Derive the next version
+        id: version
+        run: |
+          set -euo pipefail
+          previous=$(git tag --list 'mobile-v*' --sort=-v:refname | head -1)
+          range=HEAD
+          if [ -n "$previous" ]; then range="$previous..HEAD"; fi
+          log=$(git log --format='%s%n%b' "$range")
+          bump=patch
+          if grep -qE '^feat(\([^)]*\))?:' <<<"$log"; then bump=minor; fi
+          if grep -qE '^BREAKING CHANGE|^[a-z]+(\([^)]*\))?!:' <<<"$log"; then bump=major; fi
+          version=$(jq -r .expo.version apps/mobile/app.json)
+          IFS=. read -r major minor patch <<<"$version"
+          # Pre-1.0, a breaking change is a minor bump, per semver's 0.y rule.
+          if [ "$bump" = major ] && [ "$major" = 0 ]; then bump=minor; fi
+          case $bump in
+            major) next="$((major + 1)).0.0" ;;
+            minor) next="$major.$((minor + 1)).0" ;;
+            patch) next="$major.$minor.$((patch + 1))" ;;
+          esac
+          echo "Releasing $version -> $next ($bump) since ${previous:-the first commit}"
+          echo "version=$next" >> "$GITHUB_OUTPUT"
+          echo "previous=$previous" >> "$GITHUB_OUTPUT"
+
+      # eas.json sets requireCommit, so the bump has to land before the build.
+      - name: Commit the version bump
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          jq --arg v "$VERSION" '.expo.version = $v' apps/mobile/app.json > app.json.tmp
+          mv app.json.tmp apps/mobile/app.json
+          pnpm exec prettier --write apps/mobile/app.json
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -am "chore(mobile): release v$VERSION"
+          git push origin HEAD:main
+
       - name: Write store credentials
         working-directory: apps/mobile
         env:
@@ -55,9 +164,7 @@ jobs:
           printf '%s' "$ASC_API_KEY" > asc-api-key.p8
 
       # No --no-wait: the job holds until EAS finishes so a failed build or a
-      # rejected upload fails the run instead of passing silently. Platforms
-      # default to android and widen to "all" via the MOBILE_PLATFORMS repo
-      # variable once Apple Developer enrollment completes.
+      # rejected upload fails the run instead of passing silently.
       - name: Build and submit
         working-directory: apps/mobile
         timeout-minutes: 90
@@ -69,7 +176,24 @@ jobs:
           ASC_API_KEY_ISSUER_ID: ${{ secrets.ASC_API_KEY_ISSUER_ID }}
         run: >
           eas build
-          --platform ${{ inputs.platform || vars.MOBILE_PLATFORMS || 'android' }}
+          --platform ${{ vars.MOBILE_PLATFORMS || 'android' }}
           --profile production
+          --message "v${{ steps.version.outputs.version }}"
           --auto-submit
           --non-interactive
+
+      # Tagged only once the stores have the build, so a tag always names
+      # something that shipped.
+      - name: Create the GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+          PREVIOUS: ${{ steps.version.outputs.previous }}
+        run: |
+          set -euo pipefail
+          notes_start=()
+          if [ -n "$PREVIOUS" ]; then notes_start=(--notes-start-tag "$PREVIOUS"); fi
+          gh release create "mobile-v$VERSION" \
+            --title "Mobile v$VERSION" \
+            --target "$(git rev-parse HEAD)" \
+            --generate-notes "${notes_start[@]}"

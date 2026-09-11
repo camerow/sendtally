@@ -7,8 +7,8 @@ export const CLERK_PUBLISHABLE_KEY =
 
 export const REVENUECAT_API_KEY =
   Platform.select({
-    android: process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY,
-    ios: process.env.EXPO_PUBLIC_REVENUECAT_IOS_KEY,
+    android: process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY ?? "goog_TsTamyxqBbukzZbEAUieLNrZABL",
+    ios: process.env.EXPO_PUBLIC_REVENUECAT_IOS_KEY ?? "appl_IlzSBshbPLcWxzBbHZkHCdJoeOn",
   }) ?? "";
 
 export const WEB_URL = "https://sendtally.com";

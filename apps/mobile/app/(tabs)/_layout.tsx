@@ -1,11 +1,12 @@
 import { useAuth } from "@clerk/clerk-expo";
 import { Redirect, Tabs } from "expo-router";
 import React from "react";
+import type { ColorValue } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { Icon, type IconName } from "../../components/Icon";
 
-function tabIcon(name: IconName): (props: { color: string }) => React.ReactElement {
+function tabIcon(name: IconName): (props: { color: ColorValue }) => React.ReactElement {
   return ({ color }) => <Icon name={name} color={color} />;
 }
 
