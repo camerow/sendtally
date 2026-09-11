@@ -25,6 +25,20 @@ describe("app", () => {
     expect(res.status).toBe(200);
   });
 
+  it("answers a body it cannot parse with 400, not a server error", async () => {
+    const res = await testApp().request(
+      "/v1/sessions",
+      {
+        method: "POST",
+        headers: { "x-test-user": "u_malformed", "Content-Type": "application/json" },
+        body: '{"climbs":[',
+      },
+      env
+    );
+    expect(res.status).toBe(400);
+    expect(await res.json()).toEqual({ error: "invalid request body" });
+  });
+
   it("rejects /v1 routes without a verified user", async () => {
     const res = await testApp().request("/v1/sessions", {}, env);
     expect(res.status).toBe(401);

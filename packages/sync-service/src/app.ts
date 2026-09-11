@@ -1,5 +1,6 @@
 import { zValidator } from "@hono/zod-validator";
 import { type Context, Hono } from "hono";
+import { HTTPException } from "hono/http-exception";
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 import { cors } from "hono/cors";
 import { z } from "zod";
@@ -180,15 +181,24 @@ const app = new Hono<AppEnv>()
   // Every event re-reads the subscriber from RevenueCat instead of trusting
   // the event body, so retries and out-of-order delivery converge on the same
   // rows. A failed mirror returns 500 on purpose: RevenueCat retries those.
-  .post("/webhooks/revenuecat", zValidator("json", webhookBody, invalidBody), async (c) => {
-    if (!sameSecret(c.req.header("Authorization"), c.env.REVENUECAT_WEBHOOK_AUTH)) {
-      return c.json({ error: "unauthorized" }, 401);
+  .post(
+    "/webhooks/revenuecat",
+    // Ahead of the validator on purpose: an unauthenticated caller must not be
+    // able to tell a well-formed payload from a malformed one.
+    async (c, next) => {
+      if (!sameSecret(c.req.header("Authorization"), c.env.REVENUECAT_WEBHOOK_AUTH)) {
+        return c.json({ error: "unauthorized" }, 401);
+      }
+      return next();
+    },
+    zValidator("json", webhookBody, invalidBody),
+    async (c) => {
+      for (const userId of webhookUserIds(c.req.valid("json").event)) {
+        await mirrorStoreEntitlements(c.env, revenuecat(c.env), userId);
+      }
+      return c.json({ ok: true });
     }
-    for (const userId of webhookUserIds(c.req.valid("json").event)) {
-      await mirrorStoreEntitlements(c.env, revenuecat(c.env), userId);
-    }
-    return c.json({ ok: true });
-  })
+  )
 
   .get("/connect/strava/callback", async (c) => {
     const code = c.req.query("code");
@@ -507,6 +517,15 @@ const app = new Hono<AppEnv>()
   });
 
 app.onError(async (error, c) => {
+  // zValidator throws this for a body it cannot parse at all. Without this the
+  // catch-all below would answer 500 and log a false exception for what is a
+  // malformed request, and RevenueCat would retry a payload that can never work.
+  if (error instanceof HTTPException) {
+    return c.json(
+      { error: error.status === 400 ? "invalid request body" : error.message },
+      error.status
+    );
+  }
   console.error(error);
   const posthog = getPostHog(c.env);
   if (posthog !== null) {

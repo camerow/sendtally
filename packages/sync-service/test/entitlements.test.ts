@@ -154,6 +154,22 @@ describe("RevenueCat webhook", () => {
     expect(res.status).toBe(401);
   });
 
+  // The secret gates the route ahead of body validation, so an unauthenticated
+  // caller cannot tell a well-formed payload from a malformed one.
+  it("rejects an unsigned request before it reads the body", async () => {
+    const { fetchImpl } = revenueCatFetch({});
+    const res = await testApp(fetchImpl).request(
+      "/webhooks/revenuecat",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: "wrong" },
+        body: "{ not json",
+      },
+      env
+    );
+    expect(res.status).toBe(401);
+  });
+
   it("acknowledges the dashboard test event without touching RevenueCat", async () => {
     const { fetchImpl, calls } = revenueCatFetch({});
     const res = await testApp(fetchImpl).request(

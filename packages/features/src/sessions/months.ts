@@ -9,12 +9,12 @@ export type SessionMonth = {
   sessions: SessionRow[];
 };
 
-function monthDate(month: number): Date {
-  return new Date(Date.UTC(2000, month - 1, 1));
-}
-
 function formatMonth(month: number, style: "long" | "short"): string {
-  return monthDate(month).toLocaleDateString("en-US", { month: style, timeZone: "UTC" });
+  if (month < 1 || month > 12) return "";
+  return new Date(Date.UTC(2000, month - 1, 1)).toLocaleDateString("en-US", {
+    month: style,
+    timeZone: "UTC",
+  });
 }
 
 export const MONTH_SHORT_NAMES = Array.from({ length: 12 }, (_, i) =>

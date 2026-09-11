@@ -77,6 +77,9 @@ sendtally/
   `pnpm lint` is ESLint, run once at the root rather than per package; the flat config is `eslint.config.js`.
 - **Toolchain versions:** pinned in `.prototools` (proto manages Node and Go here; this repo does not use asdf).
 - **Package scope:** every workspace package is `@sendtally/*` (e.g. `@sendtally/core`, `@sendtally/sync-service`). Never introduce another scope.
+- **`@sendtally/api-client` depends on `@sendtally/sync-service`** for `AppType`, so the dependency arrow runs client -> server and nothing in `sync-service` may import `api-client` or `features` (that closes a cycle turbo rejects).
+  The import is type-only and erases at build time - no Worker code reaches the app bundles - but it does put the Worker's source in the apps' type programs, so `bindings.ts` carries a `/// <reference types="@cloudflare/workers-types" />` for them.
+  The cost is that a Workers-only global such as `D1Database` or `HTMLRewriter` typechecks inside `apps/web` and `apps/mobile`; it still fails at runtime there, so treat a Worker API appearing in app code as a mistake the compiler will not catch for you.
 
 ### Domain and routing
 

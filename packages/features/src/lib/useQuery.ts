@@ -3,6 +3,8 @@ import React from "react";
 export type QueryState<T> =
   { status: "loading" } | { status: "error"; message: string } | { status: "ready"; data: T };
 
+/** `load` is a dependency of the fetching effect, so callers must memoise it -
+ * an inline function would re-fetch on every render. */
 export function useQuery<T>(load: () => Promise<T>): {
   state: QueryState<T>;
   reload: () => void;
