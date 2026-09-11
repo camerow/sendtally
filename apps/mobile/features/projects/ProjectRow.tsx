@@ -3,6 +3,7 @@ import { Pressable, Text, View } from "react-native";
 import type { ClimbSummary } from "@sendtally/api-client";
 import { climbGradeLabel, projectMetaLabel, projectStatus } from "@sendtally/features/climbs";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
+import { pressRow } from "../../lib/press";
 
 export type ProjectRowProps = {
   climb: ClimbSummary;
@@ -79,7 +80,7 @@ export function ProjectRow({ climb, onUnmark }: ProjectRowProps): React.ReactEle
           onPress={onUnmark}
           accessibilityRole="button"
           accessibilityLabel={`Remove ${climb.name} from projects`}
-          style={{ minHeight: 28, justifyContent: "center" }}
+          style={pressRow({ minHeight: 28, justifyContent: "center" })}
         >
           <Text
             style={{

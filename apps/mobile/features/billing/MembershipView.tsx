@@ -2,7 +2,6 @@ import React from "react";
 import { ActivityIndicator, Linking, Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
-  MEMBER_BENEFITS,
   planLabel,
   storeName,
   type MembershipFeature,
@@ -17,10 +16,13 @@ import {
   underlineLabel,
   underlinePress,
 } from "../../lib/styles";
+import { MEMBER_SLIDES } from "../onboarding/slides";
+import { OnboardingCarousel } from "../onboarding/OnboardingCarousel";
 import { MembershipStatusCard } from "./MembershipStatusCard";
 import { PurchaseControls } from "./PurchaseControls";
 import { STORE_NAME, storeBillingAvailable, subscriptionManagementUrl } from "./store";
 import type { PurchaseFeature } from "./usePurchase";
+import { press } from "../../lib/press";
 
 export type MembershipViewProps = {
   membership: MembershipFeature;
@@ -58,7 +60,7 @@ function StatusCard({
         label={vm.statusLabel}
         headline="Logging is free"
         detail={null}
-        body={`Membership is what turns the log into a training history, and it is what pays for the server.${storeBillingAvailable ? " Pick a plan below to join." : ""}`}
+        body={`Membership turns the log into a training history. It also pays for the server.${storeBillingAvailable ? " Pick a plan below to join." : ""}`}
       />
     );
   }
@@ -77,7 +79,7 @@ function StatusCard({
           <Pressable
             onPress={openManagement}
             accessibilityRole="button"
-            style={{ ...chipButton, alignSelf: "flex-start" }}
+            style={press({ ...chipButton, alignSelf: "flex-start" })}
           >
             <Text style={chipButtonLabel}>{`Manage in ${where.replace("the ", "")}`}</Text>
           </Pressable>
@@ -137,44 +139,6 @@ function PlansSection({
   );
 }
 
-function Benefits(): React.ReactElement {
-  return (
-    <View style={{ gap: 4 }}>
-      <Text style={{ ...sectionLabel, paddingBottom: 4 }}>WHAT MEMBERS GET</Text>
-      {MEMBER_BENEFITS.map((benefit) => (
-        <View
-          key={benefit.title}
-          style={{
-            gap: 4,
-            paddingVertical: 12,
-            borderTopWidth: 1,
-            borderTopColor: colors.lineOnLight,
-          }}
-        >
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-            <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 15, color: colors.gunmetal }}>
-              {benefit.title}
-            </Text>
-            {benefit.soon === true && (
-              <Text
-                style={{
-                  fontFamily: fonts.monoMedium,
-                  fontSize: 9,
-                  letterSpacing: 0.6,
-                  color: colors.watermelonInk,
-                }}
-              >
-                COMING SOON
-              </Text>
-            )}
-          </View>
-          <Text style={bodyText}>{benefit.body}</Text>
-        </View>
-      ))}
-    </View>
-  );
-}
-
 function MemberBadge(): React.ReactElement {
   return (
     <View
@@ -215,7 +179,7 @@ export function MembershipView({
           gap: 16,
         }}
       >
-        <Pressable onPress={onBack} style={{ minHeight: 44, justifyContent: "center" }}>
+        <Pressable onPress={onBack} style={press({ minHeight: 44, justifyContent: "center" })}>
           <Text
             style={{
               fontFamily: fonts.monoMedium,
@@ -249,9 +213,13 @@ export function MembershipView({
               color: colors.textSecondary,
             }}
           >
-            Logging sessions and posting them to Strava are free and always will be. Membership
-            unlocks the screens that read your whole history back to you.
+            Logging sessions and posting them to Strava are free, and always will be. Membership
+            opens the screens that read your whole history back to you.
           </Text>
+        </View>
+
+        <View style={{ marginHorizontal: -18 }}>
+          <OnboardingCarousel slides={MEMBER_SLIDES} fill={false} />
         </View>
 
         {state.status === "loading" && (
@@ -270,7 +238,6 @@ export function MembershipView({
         {state.status === "ready" && (
           <>
             <StatusCard vm={vm} purchase={purchase} />
-            <Benefits />
             <PlansSection vm={vm} purchase={purchase} />
           </>
         )}

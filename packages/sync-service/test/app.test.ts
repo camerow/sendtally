@@ -743,7 +743,7 @@ describe("app", () => {
     const { session: before } = (await created.json()) as ManualSessionResponse;
 
     const draft = draftFromSession(before as unknown as SessionDetail);
-    expect(draft.scale).toBe("font");
+    expect(draft.climbs.map((c) => c.scale)).toEqual(["font", "font"]);
 
     const updated = await testApp().request(
       `/v1/sessions/${before.fingerprint}`,

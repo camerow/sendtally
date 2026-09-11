@@ -1,7 +1,6 @@
 import React from "react";
 import {
   KeyboardAvoidingView,
-  Modal,
   Platform,
   Pressable,
   ScrollView,
@@ -9,20 +8,30 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { ClimbSummary } from "@sendtally/api-client";
-import { climbDraftGrade } from "@sendtally/features/climbs";
-import { gradeOptions, type ClimbDraft, type GradeScale } from "@sendtally/features/log-session";
+import { climbDraftGrade, projectMetaLabel } from "@sendtally/features/climbs";
+import {
+  DISCIPLINE_LABELS,
+  disciplineOf,
+  gradeOptions,
+  withClimbDiscipline,
+  type ClimbDraft,
+  type Discipline,
+  type GradePrefs,
+} from "@sendtally/features/log-session";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { Chip } from "../../components/Chip";
 import { Icon } from "../../components/Icon";
+import { Sheet } from "../../components/Sheet";
+import { press, pressRow } from "../../lib/press";
 
 export type ClimbEditorSheetProps = {
   climb: ClimbDraft | null;
   index: number;
   count: number;
-  scale: GradeScale;
+  prefs: GradePrefs;
   project: boolean;
+  known: ClimbSummary | null;
   suggestions: ClimbSummary[];
   onChange: (climb: ClimbDraft) => void;
   onChangeName: (name: string) => void;
@@ -55,13 +64,13 @@ function Segment({
       onPress={onPress}
       accessibilityRole="radio"
       accessibilityState={{ checked: active }}
-      style={{
+      style={press({
         flex: 1,
         height: 44,
         alignItems: "center",
         justifyContent: "center",
         backgroundColor: active ? activeColor : "transparent",
-      }}
+      })}
     >
       <Text
         style={{
@@ -74,6 +83,64 @@ function Segment({
         {text}
       </Text>
     </Pressable>
+  );
+}
+
+/**
+ * Quiet by design: a session is usually all one discipline, and the climb carries its choice to
+ * the next one added, so most nights never touch this.
+ */
+function DisciplineToggle({
+  value,
+  onChange,
+}: {
+  value: Discipline;
+  onChange: (discipline: Discipline) => void;
+}): React.ReactElement {
+  return (
+    <View
+      accessibilityRole="radiogroup"
+      style={{
+        flexDirection: "row",
+        height: 30,
+        borderRadius: 15,
+        borderWidth: 1,
+        borderColor: "rgba(64,63,76,0.18)",
+        overflow: "hidden",
+      }}
+    >
+      {(["boulder", "route"] as const).map((discipline) => {
+        const active = value === discipline;
+        return (
+          <Pressable
+            key={discipline}
+            onPress={() => onChange(discipline)}
+            accessibilityRole="radio"
+            accessibilityState={{ checked: active }}
+            accessibilityLabel={DISCIPLINE_LABELS[discipline]}
+            hitSlop={{ top: 7, bottom: 7 }}
+            style={press({
+              height: 28,
+              paddingHorizontal: 10,
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor: active ? "rgba(64,63,76,0.08)" : "transparent",
+            })}
+          >
+            <Text
+              style={{
+                fontFamily: active ? fonts.monoSemiBold : fonts.monoMedium,
+                fontSize: 9,
+                letterSpacing: 0.7,
+                color: active ? colors.gunmetal : colors.textFaint,
+              }}
+            >
+              {discipline === "boulder" ? "BOULDER" : "ROUTE"}
+            </Text>
+          </Pressable>
+        );
+      })}
+    </View>
   );
 }
 
@@ -90,7 +157,7 @@ function StepButton({
     <Pressable
       onPress={onPress}
       disabled={disabled}
-      style={{
+      style={press({
         width: 40,
         height: 40,
         borderRadius: 8,
@@ -99,7 +166,7 @@ function StepButton({
         alignItems: "center",
         justifyContent: "center",
         opacity: disabled ? 0.4 : 1,
-      }}
+      })}
     >
       <Text style={{ fontFamily: fonts.monoMedium, fontSize: 16, color: colors.gunmetal }}>
         {glyph}
@@ -117,10 +184,11 @@ function MarkedName({ name, query }: { name: string; query: string }): React.Rea
     fontSize: 11,
     letterSpacing: 0.6,
     color: colors.gunmetal,
+    flexShrink: 1,
   };
   if (at < 0) return <Text style={base}>{upper}</Text>;
   return (
-    <Text style={base}>
+    <Text numberOfLines={1} style={base}>
       {upper.slice(0, at)}
       <Text style={{ fontFamily: fonts.monoSemiBold, color: colors.petalInk }}>
         {upper.slice(at, at + needle.length)}
@@ -130,12 +198,72 @@ function MarkedName({ name, query }: { name: string; query: string }): React.Rea
   );
 }
 
+function ProjectRow({
+  on,
+  enabled,
+  meta,
+  onPress,
+}: {
+  on: boolean;
+  enabled: boolean;
+  meta: string | null;
+  onPress: () => void;
+}): React.ReactElement {
+  return (
+    <Pressable
+      onPress={onPress}
+      disabled={!enabled}
+      accessibilityRole="checkbox"
+      accessibilityState={{ checked: on, disabled: !enabled }}
+      accessibilityLabel="Project"
+      style={press({
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 11,
+        minHeight: 46,
+        paddingHorizontal: 13,
+        borderRadius: radius.control,
+        borderWidth: 1,
+        borderColor: on ? colors.gold : colors.lineOnLightStrong,
+        backgroundColor: on ? "rgba(249,220,92,0.22)" : "transparent",
+        opacity: enabled ? 1 : 0.4,
+      })}
+    >
+      <Icon
+        name="projects"
+        color={on ? colors.gunmetal : colors.textFaint}
+        size={18}
+        strokeWidth={2}
+      />
+      <View style={{ flex: 1, gap: 2 }}>
+        <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 14, color: colors.gunmetal }}>
+          {on ? "Project" : "Mark as project"}
+        </Text>
+        {on && meta !== null && (
+          <Text
+            style={{
+              fontFamily: fonts.mono,
+              fontSize: 10,
+              letterSpacing: 0.5,
+              color: colors.textSecondary,
+            }}
+          >
+            {meta}
+          </Text>
+        )}
+      </View>
+      {on && <Icon name="check" color={colors.gunmetal} size={16} strokeWidth={2.4} />}
+    </Pressable>
+  );
+}
+
 export function ClimbEditorSheet({
   climb,
   index,
   count,
-  scale,
+  prefs,
   project,
+  known,
   suggestions,
   onChange,
   onChangeName,
@@ -144,10 +272,10 @@ export function ClimbEditorSheet({
   onRemove,
   onClose,
 }: ClimbEditorSheetProps): React.ReactElement {
-  const insets = useSafeAreaInsets();
   const rail = React.useRef<ScrollView>(null);
   const chipX = React.useRef(new Map<string, number>());
   const [nameFocused, setNameFocused] = React.useState(false);
+  const scale = climb?.scale ?? prefs.boulder;
   const options = gradeOptions(scale);
   const grade = climb?.grade ?? "";
 
@@ -160,28 +288,10 @@ export function ClimbEditorSheet({
   const showList = nameFocused && suggestions.length > 0;
 
   return (
-    <Modal visible={climb !== null} transparent animationType="slide" onRequestClose={onClose}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-        style={{ flex: 1, justifyContent: "flex-end" }}
-      >
-        <Pressable
-          onPress={onClose}
-          accessibilityLabel="Close climb editor"
-          style={{ flex: 1, backgroundColor: "rgba(64,63,76,0.45)" }}
-        />
+    <Sheet visible={climb !== null} onClose={onClose} closeLabel="Close climb editor">
+      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined}>
         {climb !== null && (
-          <View
-            style={{
-              gap: 14,
-              paddingTop: 10,
-              paddingHorizontal: 18,
-              paddingBottom: Math.max(insets.bottom, 16) + 4,
-              borderTopLeftRadius: radius.panel,
-              borderTopRightRadius: radius.panel,
-              backgroundColor: colors.white,
-            }}
-          >
+          <View style={{ gap: 14, paddingTop: 10, paddingHorizontal: 18, paddingBottom: 4 }}>
             <View
               style={{
                 alignSelf: "center",
@@ -202,14 +312,32 @@ export function ClimbEditorSheet({
                 CLIMB {index + 1} OF {count}
               </Text>
               {count > 1 && (
-                <Pressable onPress={onRemove} hitSlop={8} accessibilityRole="button">
+                <Pressable
+                  onPress={onRemove}
+                  hitSlop={8}
+                  accessibilityRole="button"
+                  style={press({})}
+                >
                   <Text style={{ ...label, color: colors.textFaint }}>REMOVE</Text>
                 </Pressable>
               )}
             </View>
 
             <View style={{ gap: 7 }}>
-              <Text style={label}>GRADE</Text>
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: 12,
+                }}
+              >
+                <Text style={label}>GRADE</Text>
+                <DisciplineToggle
+                  value={disciplineOf(climb.scale)}
+                  onChange={(discipline) => onChange(withClimbDiscipline(climb, discipline, prefs))}
+                />
+              </View>
               <ScrollView
                 ref={rail}
                 horizontal
@@ -268,12 +396,15 @@ export function ClimbEditorSheet({
                       RECENT
                     </Text>
                   )}
-                  {suggestions.map((known) => (
+                  {suggestions.map((candidate) => (
                     <Pressable
-                      key={known.slug}
-                      onPress={() => onPick(known)}
+                      key={candidate.slug}
+                      onPress={() => onPick(candidate)}
                       accessibilityRole="button"
-                      style={{
+                      accessibilityLabel={
+                        candidate.project ? `${candidate.name}, project` : candidate.name
+                      }
+                      style={pressRow({
                         flexDirection: "row",
                         alignItems: "center",
                         justifyContent: "space-between",
@@ -281,7 +412,10 @@ export function ClimbEditorSheet({
                         height: 40,
                         paddingHorizontal: 12,
                         borderRadius: radius.sm,
-                      }}
+                        backgroundColor: candidate.project
+                          ? "rgba(249,220,92,0.14)"
+                          : "transparent",
+                      })}
                     >
                       <View
                         style={{
@@ -291,10 +425,32 @@ export function ClimbEditorSheet({
                           flexShrink: 1,
                         }}
                       >
-                        {known.project && (
-                          <Icon name="projects" color={colors.gunmetal} size={13} strokeWidth={2} />
+                        {candidate.project && (
+                          <Icon
+                            name="projects"
+                            color={colors.gunmetal}
+                            size={14}
+                            strokeWidth={2.2}
+                          />
                         )}
-                        <MarkedName name={known.name} query={climb.name} />
+                        <MarkedName name={candidate.name} query={climb.name} />
+                        {candidate.project && (
+                          <Text
+                            style={{
+                              fontFamily: fonts.monoSemiBold,
+                              fontSize: 8,
+                              letterSpacing: 0.7,
+                              paddingHorizontal: 6,
+                              paddingVertical: 2,
+                              borderRadius: radius.pill,
+                              overflow: "hidden",
+                              backgroundColor: colors.gold,
+                              color: colors.gunmetal,
+                            }}
+                          >
+                            PROJECT
+                          </Text>
+                        )}
                       </View>
                       <Text
                         style={{
@@ -304,7 +460,7 @@ export function ClimbEditorSheet({
                           color: colors.textMuted,
                         }}
                       >
-                        {climbDraftGrade(known, scale)}
+                        {climbDraftGrade(candidate, climb.scale)}
                       </Text>
                     </Pressable>
                   ))}
@@ -362,41 +518,23 @@ export function ClimbEditorSheet({
               </View>
             </View>
 
-            <Pressable
+            <ProjectRow
+              on={project}
+              enabled={named}
+              meta={known === null ? null : projectMetaLabel(known)}
               onPress={onToggleProject}
-              disabled={!named}
-              accessibilityRole="button"
-              accessibilityState={{ selected: project, disabled: !named }}
-              style={{
-                alignSelf: "flex-start",
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 6,
-                minHeight: 32,
-                opacity: named ? 1 : 0.4,
-              }}
-            >
-              <Icon
-                name="projects"
-                color={project ? colors.gunmetal : colors.textFaint}
-                size={14}
-                strokeWidth={2}
-              />
-              <Text style={{ ...label, color: project ? colors.gunmetal : colors.textFaint }}>
-                {project ? "PROJECT" : "MARK AS PROJECT"}
-              </Text>
-            </Pressable>
+            />
 
             <Pressable
               onPress={onClose}
               accessibilityRole="button"
-              style={{
+              style={press({
                 minHeight: 50,
                 alignItems: "center",
                 justifyContent: "center",
                 borderRadius: radius.control,
                 backgroundColor: colors.azureInk,
-              }}
+              })}
             >
               <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 15, color: colors.white }}>
                 Done
@@ -405,6 +543,6 @@ export function ClimbEditorSheet({
           </View>
         )}
       </KeyboardAvoidingView>
-    </Modal>
+    </Sheet>
   );
 }

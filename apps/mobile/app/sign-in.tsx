@@ -9,6 +9,7 @@ import Svg, { Path } from "react-native-svg";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { Logo } from "../components/Logo";
 import { SignedOutOnly } from "../features/auth/SignedOutOnly";
+import { press } from "../lib/press";
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -53,7 +54,7 @@ const COPY: Record<Intent, { title: string; body: string }> = {
   },
   "sign-up": {
     title: "Create your account.",
-    body: "No password. We email you a one-time code. Logging sessions and Strava sync are free.",
+    body: "No password. We email you a one-time code. Logging sessions and posting them to Strava are free.",
   },
 };
 
@@ -436,7 +437,7 @@ export default function SignIn(): React.ReactElement | null {
               <View style={{ flexDirection: "row", gap: 22 }}>
                 <Pressable
                   onPress={backToEmail}
-                  style={{ minHeight: 44, justifyContent: "center" }}
+                  style={press({ minHeight: 44, justifyContent: "center" })}
                 >
                   <Text style={secondaryLink}>Different email</Text>
                 </Pressable>

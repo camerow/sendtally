@@ -4,13 +4,11 @@ import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import type { ClimbSummary } from "@sendtally/api-client";
 import { climbDraftGrade, findClimb, useClimbVocabulary } from "@sendtally/features/climbs";
 import {
-  GRADE_SCALE_OPTIONS,
   draftProblem,
   draftSummary,
   emptyDraft,
   newClimb,
   toLogSessionInput,
-  withScale,
   withTag,
   withoutTag,
   type ClimbDraft,
@@ -19,9 +17,11 @@ import {
 import { SESSION_NOTE_MAX, useTagVocabulary } from "@sendtally/features/sessions";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { useApi } from "../../lib/api";
+import { useGradePrefs } from "../../lib/gradePrefs";
 import { TagPicker } from "../sessions/TagPicker";
 import { ClimbEditorSheet } from "./ClimbEditorSheet";
 import { ClimbLedgerRow } from "./ClimbLedgerRow";
+import { press } from "../../lib/press";
 
 function LabelText({ children }: { children: React.ReactNode }): React.ReactElement {
   return (
@@ -54,7 +54,7 @@ function Chip({
   return (
     <Pressable
       onPress={onPress}
-      style={{
+      style={press({
         paddingHorizontal: 14,
         minHeight: 40,
         justifyContent: "center",
@@ -62,7 +62,7 @@ function Chip({
         backgroundColor: active ? activeColor : "transparent",
         borderWidth: 1,
         borderColor: active ? activeColor : "rgba(64,63,76,0.18)",
-      }}
+      })}
     >
       <Text
         style={{
@@ -96,8 +96,9 @@ export function LogSessionForm({
   editing?: { fingerprint: string; draft: LogSessionDraft };
 }): React.ReactElement {
   const api = useApi();
+  const gradePrefs = useGradePrefs();
   const [draft, setDraft] = React.useState<LogSessionDraft>(
-    () => editing?.draft ?? emptyDraft(new Date())
+    () => editing?.draft ?? emptyDraft(new Date(), gradePrefs)
   );
   const [saving, setSaving] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
@@ -118,7 +119,7 @@ export function LogSessionForm({
       ...c,
       name,
       project: undefined,
-      ...(known === undefined ? {} : { grade: climbDraftGrade(known, draft.scale) }),
+      ...(known === undefined ? {} : { grade: climbDraftGrade(known, c.scale) }),
     }));
   }
 
@@ -126,7 +127,7 @@ export function LogSessionForm({
     updateClimb(key, (c) => ({
       ...c,
       name: known.name,
-      grade: climbDraftGrade(known, draft.scale),
+      grade: climbDraftGrade(known, c.scale),
       project: undefined,
     }));
   }
@@ -138,7 +139,10 @@ export function LogSessionForm({
 
   function addClimb(): void {
     const key = `climb-${nextKey.current++}`;
-    setDraft((d) => ({ ...d, climbs: [...d.climbs, newClimb(key, d.scale)] }));
+    setDraft((d) => {
+      const previous = d.climbs[d.climbs.length - 1];
+      return { ...d, climbs: [...d.climbs, newClimb(key, previous?.scale ?? gradePrefs.boulder)] };
+    });
     setEditingKey(key);
   }
 
@@ -354,14 +358,7 @@ export function LogSessionForm({
           />
         </View>
 
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "space-between",
-            marginTop: 2,
-          }}
-        >
+        <View style={{ marginTop: 2 }}>
           <Text
             style={{
               fontFamily: fonts.monoMedium,
@@ -372,16 +369,6 @@ export function LogSessionForm({
           >
             CLIMBS · {draft.climbs.length}
           </Text>
-          <View style={{ flexDirection: "row", gap: 6 }}>
-            {GRADE_SCALE_OPTIONS.map((option) => (
-              <Chip
-                key={option.value}
-                label={option.label}
-                active={draft.scale === option.value}
-                onPress={() => setDraft(withScale(draft, option.value))}
-              />
-            ))}
-          </View>
         </View>
 
         <View>
@@ -396,7 +383,7 @@ export function LogSessionForm({
         </View>
         <Pressable
           onPress={addClimb}
-          style={{
+          style={press({
             minHeight: 48,
             alignItems: "center",
             justifyContent: "center",
@@ -404,7 +391,7 @@ export function LogSessionForm({
             borderStyle: "dashed",
             borderColor: "rgba(64,63,76,0.25)",
             borderRadius: radius.card,
-          }}
+          })}
         >
           <Text
             style={{
@@ -440,8 +427,11 @@ export function LogSessionForm({
         climb={editingClimb}
         index={editingIndex}
         count={draft.climbs.length}
-        scale={draft.scale}
+        prefs={gradePrefs}
         project={editingClimb === null ? false : isProject(editingClimb)}
+        known={
+          editingClimb === null ? null : (findClimb(vocabulary.climbs, editingClimb.name) ?? null)
+        }
         suggestions={vocabulary.suggestionsFor(editingClimb?.name ?? "")}
         onChange={(c) => updateClimb(c.key, () => c)}
         onChangeName={(name) => {

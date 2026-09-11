@@ -1,12 +1,38 @@
 import { useAuth } from "@clerk/clerk-expo";
 import { Redirect, Tabs } from "expo-router";
 import React from "react";
+import { View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { colors, fonts, radius } from "@sendtally/design/tokens";
+import { colors, fonts } from "@sendtally/design/tokens";
 import { Icon, type IconName } from "../../components/Icon";
 
-function tabIcon(name: IconName): (props: { color: string }) => React.ReactElement {
-  return ({ color }) => <Icon name={name} color={color} />;
+const SELECTED_RULE_HEIGHT = 3;
+
+function tabIcon(name: IconName): (props: { focused: boolean }) => React.ReactElement {
+  return function TabIcon({ focused }) {
+    return (
+      <View style={{ alignItems: "center", justifyContent: "center" }}>
+        {focused && (
+          <View
+            style={{
+              position: "absolute",
+              top: -8,
+              left: 0,
+              right: 0,
+              height: SELECTED_RULE_HEIGHT,
+              borderRadius: 2,
+              backgroundColor: colors.gold,
+            }}
+          />
+        )}
+        <Icon
+          name={name}
+          color={focused ? colors.gold : colors.textMuted}
+          strokeWidth={focused ? 2.3 : 1.7}
+        />
+      </View>
+    );
+  };
 }
 
 export default function TabsLayout(): React.ReactElement | null {
@@ -27,8 +53,7 @@ export default function TabsLayout(): React.ReactElement | null {
         },
         tabBarActiveTintColor: colors.gunmetal,
         tabBarInactiveTintColor: colors.textMuted,
-        tabBarActiveBackgroundColor: "rgba(64,63,76,0.08)",
-        tabBarItemStyle: { borderRadius: radius.control, marginHorizontal: 4, marginVertical: 5 },
+        tabBarItemStyle: { marginHorizontal: 4, marginVertical: 5 },
         tabBarLabelPosition: "below-icon",
         tabBarLabelStyle: { fontFamily: fonts.monoMedium, fontSize: 10, letterSpacing: 0.6 },
       }}

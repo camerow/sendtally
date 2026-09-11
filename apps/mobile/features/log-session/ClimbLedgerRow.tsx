@@ -3,6 +3,7 @@ import { Pressable, Text, View } from "react-native";
 import type { ClimbDraft } from "@sendtally/features/log-session";
 import { colors, fonts } from "@sendtally/design/tokens";
 import { Icon } from "../../components/Icon";
+import { pressRow } from "../../lib/press";
 
 export type ClimbLedgerRowProps = {
   climb: ClimbDraft;
@@ -22,7 +23,7 @@ export function ClimbLedgerRow({
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={`${climb.grade} ${named ? climb.name : "unnamed"}, ${send ? "send" : "attempt"}, ${climb.tries} tries`}
-      style={{
+      style={pressRow({
         flexDirection: "row",
         alignItems: "center",
         gap: 12,
@@ -30,12 +31,14 @@ export function ClimbLedgerRow({
         paddingHorizontal: 4,
         borderBottomWidth: 1,
         borderBottomColor: colors.lineOnLightSoft,
-      }}
+      })}
     >
       <View
         style={{
-          width: 44,
+          minWidth: 44,
           height: 32,
+          flexShrink: 0,
+          paddingHorizontal: 9,
           borderRadius: 8,
           backgroundColor: colors.surfaceSoft,
           alignItems: "center",
@@ -64,6 +67,7 @@ export function ClimbLedgerRow({
         style={{
           width: 22,
           height: 22,
+          flexShrink: 0,
           borderRadius: 11,
           backgroundColor: send ? colors.azureInk : colors.gunmetal,
           alignItems: "center",
@@ -77,6 +81,7 @@ export function ClimbLedgerRow({
       <Text
         style={{
           width: 30,
+          flexShrink: 0,
           textAlign: "right",
           fontFamily: fonts.monoMedium,
           fontSize: 13,
