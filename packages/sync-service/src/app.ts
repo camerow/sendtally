@@ -181,24 +181,20 @@ const app = new Hono<AppEnv>()
   // Every event re-reads the subscriber from RevenueCat instead of trusting
   // the event body, so retries and out-of-order delivery converge on the same
   // rows. A failed mirror returns 500 on purpose: RevenueCat retries those.
-  .post(
-    "/webhooks/revenuecat",
-    // Ahead of the validator on purpose: an unauthenticated caller must not be
-    // able to tell a well-formed payload from a malformed one.
-    async (c, next) => {
-      if (!sameSecret(c.req.header("Authorization"), c.env.REVENUECAT_WEBHOOK_AUTH)) {
-        return c.json({ error: "unauthorized" }, 401);
-      }
-      return next();
-    },
-    zValidator("json", webhookBody, invalidBody),
-    async (c) => {
-      for (const userId of webhookUserIds(c.req.valid("json").event)) {
-        await mirrorStoreEntitlements(c.env, revenuecat(c.env), userId);
-      }
-      return c.json({ ok: true });
+  // Parsed by hand rather than through zValidator: nothing types this route, and
+  // zValidator would start requiring a JSON Content-Type from a third party whose
+  // headers we do not control. The secret is still checked before the body is read.
+  .post("/webhooks/revenuecat", async (c) => {
+    if (!sameSecret(c.req.header("Authorization"), c.env.REVENUECAT_WEBHOOK_AUTH)) {
+      return c.json({ error: "unauthorized" }, 401);
     }
-  )
+    const parsed = webhookBody.safeParse(await c.req.json().catch(() => null));
+    if (!parsed.success) return c.json({ error: "invalid request body" }, 400);
+    for (const userId of webhookUserIds(parsed.data.event)) {
+      await mirrorStoreEntitlements(c.env, revenuecat(c.env), userId);
+    }
+    return c.json({ ok: true });
+  })
 
   .get("/connect/strava/callback", async (c) => {
     const code = c.req.query("code");
