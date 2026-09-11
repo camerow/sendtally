@@ -40,7 +40,12 @@ function GoogleMark(): React.ReactElement {
 
 // The password phase only ever appears for accounts that carry a password,
 // which Clerk reports per user. Store reviewers get one; nobody else does.
-type Phase = { name: "email" } | { name: "code"; mode: Intent } | { name: "password" };
+// Clerk's Device Trust then challenges that password from an unrecognised device and
+// emails a code, which is the "second-factor" code mode.
+type CodeMode = Intent | "second-factor";
+type Phase = { name: "email" } | { name: "code"; mode: CodeMode } | { name: "password" };
+
+type SecondFactor = { strategy: string; emailAddressId?: string };
 
 const SWAP: Record<Intent, { to: Intent; prompt: string; label: string }> = {
   "sign-in": { to: "sign-up", prompt: "First time here?", label: "Create an account" },
@@ -120,6 +125,20 @@ export default function SignIn(): React.ReactElement | null {
     setBusy(false);
   }
 
+  // Clerk answers a challenged credential with "needs_second_factor" instead of throwing,
+  // so treating every non-complete status as a bad credential told store reviewers their
+  // correct password was wrong. Device Trust raises this on any unrecognised device.
+  async function startSecondFactor(factors: SecondFactor[] | null): Promise<boolean> {
+    const factor = factors?.find((f) => f.strategy === "email_code");
+    if (!signInLoaded || factor?.emailAddressId === undefined) return false;
+    await signIn.prepareSecondFactor({
+      strategy: "email_code",
+      emailAddressId: factor.emailAddressId,
+    });
+    setPhase({ name: "code", mode: "second-factor" });
+    return true;
+  }
+
   async function sendCode(): Promise<void> {
     if (!signInLoaded || !signUpLoaded) return;
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
@@ -178,7 +197,17 @@ export default function SignIn(): React.ReactElement | null {
     setError(null);
     setBusy(true);
     try {
-      if (phase.mode === "sign-in") {
+      if (phase.mode === "second-factor") {
+        const result = await signIn.attemptSecondFactor({
+          strategy: "email_code",
+          code: code.trim(),
+        });
+        if (result.status === "complete" && setActive !== undefined) {
+          await setActive({ session: result.createdSessionId });
+          router.replace("/(tabs)/sessions");
+          return;
+        }
+      } else if (phase.mode === "sign-in") {
         const result = await signIn.attemptFirstFactor({
           strategy: "email_code",
           code: code.trim(),
@@ -186,6 +215,14 @@ export default function SignIn(): React.ReactElement | null {
         if (result.status === "complete" && setActive !== undefined) {
           await setActive({ session: result.createdSessionId });
           router.replace("/(tabs)/sessions");
+          return;
+        }
+        if (
+          result.status === "needs_second_factor" &&
+          (await startSecondFactor(result.supportedSecondFactors))
+        ) {
+          setCode("");
+          setBusy(false);
           return;
         }
       } else {
@@ -218,7 +255,34 @@ export default function SignIn(): React.ReactElement | null {
         router.replace("/(tabs)/sessions");
         return;
       }
+      if (
+        result.status === "needs_second_factor" &&
+        (await startSecondFactor(result.supportedSecondFactors))
+      ) {
+        setBusy(false);
+        return;
+      }
       setError("That password didn't work. Try again.");
+    } catch (err) {
+      setError(errorMessage(err));
+    }
+    setBusy(false);
+  }
+
+  // Resending a second-factor code re-prepares that factor. Falling back to sendCode would
+  // restart from the identifier and drop the reviewer back on the password form.
+  async function resendCode(): Promise<void> {
+    if (phase.name !== "code" || phase.mode !== "second-factor") {
+      await sendCode();
+      return;
+    }
+    if (!signInLoaded) return;
+    setError(null);
+    setBusy(true);
+    try {
+      if (!(await startSecondFactor(signIn.supportedSecondFactors))) {
+        setError("Couldn't resend the code. Try again.");
+      }
     } catch (err) {
       setError(errorMessage(err));
     }
@@ -238,7 +302,9 @@ export default function SignIn(): React.ReactElement | null {
   const swap = SWAP[intent];
   const title = inCodePhase ? "Check your inbox." : inPasswordPhase ? "Welcome back." : copy.title;
   const body = inCodePhase
-    ? `We sent a six-digit code to ${email}.`
+    ? phase.name === "code" && phase.mode === "second-factor"
+      ? `New device. We sent a six-digit code to ${email} to confirm it's you.`
+      : `We sent a six-digit code to ${email}.`
     : inPasswordPhase
       ? `Enter the password for ${email}.`
       : copy.body;
@@ -443,7 +509,7 @@ export default function SignIn(): React.ReactElement | null {
                 </Pressable>
                 {inCodePhase && (
                   <Pressable
-                    onPress={() => void sendCode()}
+                    onPress={() => void resendCode()}
                     style={{ minHeight: 44, justifyContent: "center" }}
                   >
                     <Text style={secondaryLink}>Resend</Text>
