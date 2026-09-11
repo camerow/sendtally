@@ -38,7 +38,17 @@
         }
       ],
       "expo-localization",
-      "posthog-react-native/expo"
+      "posthog-react-native/expo",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "enableProguardInReleaseBuilds": true,
+            "enableShrinkResourcesInReleaseBuilds": true
+          }
+        }
+      ],
+      "./plugins/with-android-play-compliance.js"
     ],
     "experiments": {
       "typedRoutes": false
