@@ -4,6 +4,7 @@ import type { SessionRow as SessionRowData } from "@sendtally/api-client";
 import { sessionDay, sessionGradeLabels, sessionMetaLabel } from "@sendtally/features/sessions";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { Icon } from "../../components/Icon";
+import { pressRow } from "../../lib/press";
 
 export const SESSION_ROW_HEIGHT = 59;
 export const SESSION_ROW_TAGS_HEIGHT = 17;
@@ -31,7 +32,7 @@ export function SessionRow({ session, title, onPress }: SessionRowProps): React.
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={spoken}
-      style={{
+      style={pressRow({
         flexDirection: "row",
         alignItems: "center",
         gap: 12,
@@ -39,7 +40,7 @@ export function SessionRow({ session, title, onPress }: SessionRowProps): React.
         paddingHorizontal: 18,
         borderBottomWidth: 1,
         borderBottomColor: colors.lineOnLightSoft,
-      }}
+      })}
     >
       <View style={{ width: 34 }}>
         <Text

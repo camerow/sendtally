@@ -2,7 +2,37 @@ name: CI
 
 on:
   pull_request:
+    types: [opened, reopened, synchronize, edited]
 
 jobs:
   checks:
     uses: ./.github/workflows/checks.yml
+
+  # The mobile release derives its semantic version from the commit subjects
+  # since the last tag, so an unconventional commit does not just read badly -
+  # it silently downgrades a release to a patch bump.
+  commits:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - name: Every commit on the branch
+        run: >
+          pnpm exec commitlint --verbose
+          --from ${{ github.event.pull_request.base.sha }}
+          --to ${{ github.event.pull_request.head.sha }}
+
+      # A squash merge lands the pull request title rather than any of the
+      # commits above, so it has to hold up on its own.
+      - name: The pull request title
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+        run: printf '%s' "$TITLE" | pnpm exec commitlint --verbose

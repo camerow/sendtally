@@ -7,6 +7,7 @@ import { useApi } from "../../lib/api";
 import { TrendBars } from "./TrendBars";
 import { TrendFilters } from "./TrendFilters";
 import { TrendTagBreakdown } from "./TrendTagBreakdown";
+import { pressRow } from "../../lib/press";
 
 export function TrendsList(): React.ReactElement {
   const api = useApi();
@@ -15,30 +16,6 @@ export function TrendsList(): React.ReactElement {
 
   return (
     <>
-      <View style={{ gap: 4 }}>
-        <Text
-          style={{
-            fontFamily: fonts.display,
-            fontSize: 32,
-            letterSpacing: -1,
-            color: colors.gunmetal,
-          }}
-        >
-          Trends
-        </Text>
-        {state.status === "ready" && (
-          <Text
-            style={{
-              fontFamily: fonts.monoMedium,
-              fontSize: 10,
-              letterSpacing: 0.8,
-              color: colors.textMuted,
-            }}
-          >
-            {state.data.caption}
-          </Text>
-        )}
-      </View>
       <TrendFilters feature={feature} />
       {state.status === "loading" && <ActivityIndicator color={colors.gunmetal} />}
       {state.status === "error" && (
@@ -51,7 +28,7 @@ export function TrendsList(): React.ReactElement {
           <Pressable
             key={t.metric}
             onPress={() => router.push(`/trend/${t.metric}`)}
-            style={{
+            style={pressRow({
               backgroundColor: colors.white,
               borderWidth: 1,
               borderColor: colors.lineOnLightSoft,
@@ -59,7 +36,7 @@ export function TrendsList(): React.ReactElement {
               paddingVertical: 18,
               paddingHorizontal: 20,
               gap: 8,
-            }}
+            })}
           >
             <View
               style={{

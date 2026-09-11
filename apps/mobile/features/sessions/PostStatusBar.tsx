@@ -2,6 +2,7 @@ import React from "react";
 import { Pressable, Text, View } from "react-native";
 import type { PostActionFeature, PostStatusVM } from "@sendtally/features/session-detail";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
+import { press } from "../../lib/press";
 
 export type PostStatusBarProps = {
   post: PostStatusVM;
@@ -47,7 +48,7 @@ export function PostStatusBar({ post, action }: PostStatusBarProps): React.React
         <Pressable
           onPress={action.run}
           disabled={action.busy}
-          style={{
+          style={press({
             minHeight: 44,
             alignItems: "center",
             justifyContent: "center",
@@ -56,7 +57,7 @@ export function PostStatusBar({ post, action }: PostStatusBarProps): React.React
             borderRadius: radius.control,
             paddingHorizontal: 18,
             opacity: action.busy ? 0.55 : 1,
-          }}
+          })}
         >
           <Text
             style={{ fontFamily: fonts.sansSemiBold, fontSize: 14, color: colors.textSecondary }}

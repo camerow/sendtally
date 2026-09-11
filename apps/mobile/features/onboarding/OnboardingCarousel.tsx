@@ -3,7 +3,7 @@ import { ScrollView, Text, View, useWindowDimensions } from "react-native";
 import type { NativeScrollEvent, NativeSyntheticEvent } from "react-native";
 import { colors, fonts } from "@sendtally/design/tokens";
 import { SlideArt } from "./SlideArt";
-import { ONBOARDING_SLIDES } from "./slides";
+import { ONBOARDING_SLIDES, type OnboardingSlide } from "./slides";
 
 const PAGE_PADDING = 22;
 
@@ -37,8 +37,20 @@ function Dots({ count, active }: { count: number; active: number }): React.React
   );
 }
 
-export function OnboardingCarousel(): React.ReactElement {
-  const { width } = useWindowDimensions();
+export type OnboardingCarouselProps = {
+  slides?: OnboardingSlide[];
+  pageWidth?: number;
+  /** False sizes the carousel to its slides, for placing it inside a scrolling page. */
+  fill?: boolean;
+};
+
+export function OnboardingCarousel({
+  slides = ONBOARDING_SLIDES,
+  pageWidth,
+  fill = true,
+}: OnboardingCarouselProps = {}): React.ReactElement {
+  const window = useWindowDimensions();
+  const width = pageWidth ?? window.width;
   const [active, setActive] = React.useState(0);
 
   function onScroll(e: NativeSyntheticEvent<NativeScrollEvent>): void {
@@ -47,16 +59,16 @@ export function OnboardingCarousel(): React.ReactElement {
   }
 
   return (
-    <View style={{ flex: 1, gap: 20 }}>
+    <View style={{ flex: fill ? 1 : undefined, gap: 20 }}>
       <ScrollView
         horizontal
         pagingEnabled
         showsHorizontalScrollIndicator={false}
         onScroll={onScroll}
         scrollEventThrottle={16}
-        style={{ flex: 1 }}
+        style={{ flex: fill ? 1 : undefined }}
       >
-        {ONBOARDING_SLIDES.map((slide) => (
+        {slides.map((slide) => (
           <View
             key={slide.key}
             style={{
@@ -105,7 +117,7 @@ export function OnboardingCarousel(): React.ReactElement {
           </View>
         ))}
       </ScrollView>
-      <Dots count={ONBOARDING_SLIDES.length} active={active} />
+      <Dots count={slides.length} active={active} />
     </View>
   );
 }

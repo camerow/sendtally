@@ -3,6 +3,7 @@ import { Pressable, Text, TextInput, View } from "react-native";
 import type { StravaPostingFeature } from "@sendtally/features/settings";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { bodyText, messageText } from "../../lib/styles";
+import { press } from "../../lib/press";
 
 export type StravaPostingSectionProps = {
   posting: StravaPostingFeature;
@@ -33,7 +34,7 @@ function Switch({
       disabled={disabled}
       onPress={() => onChange(!checked)}
       hitSlop={10}
-      style={{
+      style={press({
         width: 46,
         height: 28,
         borderRadius: radius.pill,
@@ -41,7 +42,7 @@ function Switch({
         justifyContent: "center",
         backgroundColor: checked ? colors.azureInk : "rgba(64,63,76,0.22)",
         opacity: disabled ? 0.55 : 1,
-      }}
+      })}
     >
       <View
         style={{
@@ -71,18 +72,18 @@ export function StravaPostingSection({ posting }: StravaPostingSectionProps): Re
         }}
       >
         <View style={{ flex: 1, gap: 3 }}>
-          <Text style={rowTitle}>Post sessions to Strava</Text>
+          <Text style={rowTitle}>Post sessions automatically</Text>
           <Text style={bodyText}>
             {posting.enabled
               ? "Logged sessions post to your feed as Rock Climbing activities."
-              : "Off. Each session keeps a Post to Strava action on its own page."}
+              : "Off. Each session page keeps its own Post to Strava button."}
           </Text>
         </View>
         <Switch
           checked={posting.enabled}
           onChange={posting.setEnabled}
           disabled={posting.busy}
-          label="Post sessions to Strava"
+          label="Post sessions automatically"
         />
       </View>
 

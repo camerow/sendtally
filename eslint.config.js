@@ -38,8 +38,8 @@ export default tseslint.config(
     },
   },
   {
-    // Expo's toolchain reads these as CommonJS.
-    files: ["**/*.config.js"],
+    // Expo's toolchain reads its config and config plugins as CommonJS.
+    files: ["**/*.config.js", "apps/mobile/plugins/**/*.js"],
     languageOptions: { sourceType: "commonjs", globals: globals.node },
     rules: { "@typescript-eslint/no-require-imports": "off" },
   },

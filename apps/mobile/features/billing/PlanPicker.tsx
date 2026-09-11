@@ -3,6 +3,7 @@ import { Pressable, Text, View } from "react-native";
 import type { PurchasesPackage } from "react-native-purchases";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { planCardOf } from "./store";
+import { press } from "../../lib/press";
 
 export type PlanPickerProps = {
   packages: PurchasesPackage[];
@@ -32,7 +33,7 @@ export function PlanPicker({
             accessibilityRole="radio"
             accessibilityState={{ selected: active, disabled }}
             accessibilityLabel={`${card.name}, ${card.price} ${card.cadence}`}
-            style={{
+            style={press({
               flex: 1,
               borderWidth: 1.5,
               borderColor: active ? colors.gold : colors.lineOnLightStrong,
@@ -41,7 +42,7 @@ export function PlanPicker({
               padding: 14,
               gap: 4,
               opacity: disabled ? 0.6 : 1,
-            }}
+            })}
           >
             <View style={{ minHeight: 16, alignItems: "flex-start" }}>
               {card.bestValue && (
