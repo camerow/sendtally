@@ -170,6 +170,23 @@ describe("RevenueCat webhook", () => {
     expect(res.status).toBe(401);
   });
 
+  // RevenueCat is a third party whose headers we do not control, so this route
+  // parses the body itself rather than through zValidator, which would demand a
+  // JSON Content-Type.
+  it("accepts a signed event that arrives without a JSON content type", async () => {
+    const { fetchImpl } = revenueCatFetch({});
+    const res = await testApp(fetchImpl).request(
+      "/webhooks/revenuecat",
+      {
+        method: "POST",
+        headers: { Authorization: "test-revenuecat-webhook-auth" },
+        body: JSON.stringify({ api_version: "1.0", event: { type: "TEST", app_user_id: "test" } }),
+      },
+      env
+    );
+    expect(res.status).toBe(200);
+  });
+
   it("acknowledges the dashboard test event without touching RevenueCat", async () => {
     const { fetchImpl, calls } = revenueCatFetch({});
     const res = await testApp(fetchImpl).request(
