@@ -22,6 +22,7 @@
     "@sendtally/api-client": "workspace:*",
     "@sendtally/design": "workspace:*",
     "@sendtally/features": "workspace:*",
+    "babel-preset-expo": "~57.0.11",
     "expo": "~57.0.22",
     "expo-application": "~57.0.3",
     "expo-auth-session": "~57.0.12",
