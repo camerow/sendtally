@@ -249,9 +249,15 @@ Avoid comments in code; make code short, composable, and obviously named.
 
 ### Worktrees
 
-Use **workmux** for all worktree creation and lifecycle (`workmux add` / `merge` / `remove`).
-Configuration lives in `.workmux.yaml` at the repo root.
+Use **worktrunk** (`wt`) for all worktree creation and lifecycle (`wt switch --create` / `merge` / `remove`).
+Project configuration lives in `.config/wt.toml`; personal settings belong in `~/.config/worktrunk/config.toml`.
 Never hand-roll `git worktree add`.
+
+A new worktree gets the gitignored local secrets and an install from the `pre-start` hook, which blocks before any dev server starts.
+`.worktreeinclude` at the repo root is the allowlist of files that travel - currently `.env` and the two `.dev.vars`.
+It is an allowlist rather than "copy everything ignored" because the latter also duplicates `infra/terraform` state, which is local and single-operator.
+Add a file there when a new gitignored thing turns out to be needed per worktree; without the Clerk keys the web app starts in keyless mode and every signed-in request fails a JWKS key-id check against a throwaway instance.
+The hook needs a one-time approval per machine, which `wt` prompts for on first use.
 
 ---
 
