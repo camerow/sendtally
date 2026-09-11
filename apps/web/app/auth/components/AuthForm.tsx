@@ -2,7 +2,7 @@ import { useClerk } from "@clerk/react-router";
 import { isClerkAPIResponseError } from "@clerk/react-router/errors";
 import React from "react";
 import { useNavigate } from "react-router";
-import type { EmailCodeFactor } from "@clerk/types";
+import type { EmailCodeFactor, SignInSecondFactor } from "@clerk/types";
 import { AuthShell, StepBody, StepCard, StepTitle } from "./AuthShell";
 import { capture } from "../../lib/analytics";
 import { PRIVACY_PATH, TERMS_PATH } from "../../legal/constants";
@@ -114,7 +114,12 @@ function clerkErrorMessage(err: unknown): string {
   return "Something went wrong. Try again.";
 }
 
-type Phase = { name: "email" } | { name: "code"; mode: AuthIntent };
+// The password phase only ever appears for accounts that carry a password, which Clerk
+// reports per user. Store reviewers get one; nobody else does. Clerk's Device Trust then
+// challenges that password from an unrecognised device and emails a code, which is the
+// "second-factor" code mode.
+type CodeMode = AuthIntent | "second-factor";
+type Phase = { name: "email" } | { name: "code"; mode: CodeMode } | { name: "password" };
 
 function funnel(intent: AuthIntent): "signup" | "signin" {
   return intent === "sign-up" ? "signup" : "signin";
@@ -192,6 +197,7 @@ export function AuthForm({ intent }: { intent: AuthIntent }): React.ReactElement
   const navigate = useNavigate();
   const [email, setEmail] = React.useState("");
   const [code, setCode] = React.useState("");
+  const [password, setPassword] = React.useState("");
   const [phase, setPhase] = React.useState<Phase>({ name: "email" });
   const [error, setError] = React.useState<string | null>(null);
   const [busy, setBusy] = React.useState(false);
@@ -215,6 +221,55 @@ export function AuthForm({ intent }: { intent: AuthIntent }): React.ReactElement
     }
   }
 
+  // Clerk answers a challenged credential with "needs_second_factor" instead of throwing,
+  // so treating every non-complete status as a failure would tell someone with a correct
+  // password that it was wrong. Device Trust raises this on any unrecognised device.
+  async function startSecondFactor(factors: SignInSecondFactor[] | null): Promise<boolean> {
+    if (!clerk.loaded || clerk.client === undefined) return false;
+    const factor = factors?.find((f): f is EmailCodeFactor => f.strategy === "email_code");
+    if (factor === undefined) return false;
+    await clerk.client.signIn.prepareSecondFactor({
+      strategy: "email_code",
+      emailAddressId: factor.emailAddressId,
+    });
+    capture("auth_code_sent", { mode: "second-factor" });
+    setPhase({ name: "code", mode: "second-factor" });
+    return true;
+  }
+
+  async function signInWithPassword(): Promise<void> {
+    if (!clerk.loaded || clerk.client === undefined || phase.name !== "password") return;
+    if (password === "") {
+      setError("Enter your password.");
+      return;
+    }
+    setError(null);
+    setBusy(true);
+    try {
+      const result = await clerk.client.signIn.attemptFirstFactor({
+        strategy: "password",
+        password,
+      });
+      if (result.status === "complete" && result.createdSessionId !== null) {
+        capture("signin_completed", { method: "password" });
+        await clerk.setActive({ session: result.createdSessionId });
+        await navigate("/app");
+        return;
+      }
+      if (
+        result.status === "needs_second_factor" &&
+        (await startSecondFactor(result.supportedSecondFactors))
+      ) {
+        setBusy(false);
+        return;
+      }
+      setError("That password didn't work. Try again.");
+    } catch (err) {
+      setError(clerkErrorMessage(err));
+    }
+    setBusy(false);
+  }
+
   async function sendCode(): Promise<void> {
     if (!clerk.loaded || clerk.client === undefined) return;
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
@@ -226,6 +281,11 @@ export function AuthForm({ intent }: { intent: AuthIntent }): React.ReactElement
     capture(`${funnel(intent)}_started`, { method: "email_code" });
     try {
       const signIn = await clerk.client.signIn.create({ identifier: email });
+      if (signIn.supportedFirstFactors?.some((f) => f.strategy === "password") === true) {
+        setPhase({ name: "password" });
+        setBusy(false);
+        return;
+      }
       const factor = signIn.supportedFirstFactors?.find(
         (f): f is EmailCodeFactor => f.strategy === "email_code"
       );
@@ -275,7 +335,19 @@ export function AuthForm({ intent }: { intent: AuthIntent }): React.ReactElement
     setError(null);
     setBusy(true);
     try {
-      if (phase.mode === "sign-in") {
+      if (phase.mode === "second-factor") {
+        const result = await clerk.client.signIn.attemptSecondFactor({
+          strategy: "email_code",
+          code: code.trim(),
+        });
+        if (result.status === "complete" && result.createdSessionId !== null) {
+          capture("signin_completed", { method: "password_second_factor" });
+          await clerk.setActive({ session: result.createdSessionId });
+          await navigate("/app");
+          return;
+        }
+        setError(`Sign-in incomplete (status: ${result.status ?? "unknown"}). Try resending.`);
+      } else if (phase.mode === "sign-in") {
         const result = await clerk.client.signIn.attemptFirstFactor({
           strategy: "email_code",
           code: code.trim(),
@@ -284,6 +356,14 @@ export function AuthForm({ intent }: { intent: AuthIntent }): React.ReactElement
           capture("signin_completed", { method: "email_code" });
           await clerk.setActive({ session: result.createdSessionId });
           await navigate("/app");
+          return;
+        }
+        if (
+          result.status === "needs_second_factor" &&
+          (await startSecondFactor(result.supportedSecondFactors))
+        ) {
+          setCode("");
+          setBusy(false);
           return;
         }
         setError(`Sign-in incomplete (status: ${result.status ?? "unknown"}). Try resending.`);
@@ -313,15 +393,90 @@ export function AuthForm({ intent }: { intent: AuthIntent }): React.ReactElement
     setBusy(false);
   }
 
+  function backToEmail(): void {
+    setPhase({ name: "email" });
+    setCode("");
+    setPassword("");
+    setError(null);
+  }
+
+  // Resending a second-factor code re-prepares that factor. Falling back to sendCode would
+  // restart from the identifier and drop the user back on the password form.
+  async function resendCode(): Promise<void> {
+    if (phase.name !== "code" || phase.mode !== "second-factor") {
+      await sendCode();
+      return;
+    }
+    if (!clerk.loaded || clerk.client === undefined) return;
+    setError(null);
+    setBusy(true);
+    try {
+      if (!(await startSecondFactor(clerk.client.signIn.supportedSecondFactors))) {
+        setError("Couldn't resend the code. Try again.");
+      }
+    } catch (err) {
+      setError(clerkErrorMessage(err));
+    }
+    setBusy(false);
+  }
+
+  if (phase.name === "password") {
+    return (
+      <AuthShell>
+        <StepCard step={COPY["sign-in"].step}>
+          <StepTitle>Welcome back.</StepTitle>
+          <StepBody>
+            Enter the password for{" "}
+            <span style={{ color: "var(--bs-gunmetal)", fontWeight: 600 }}>{email}</span>.
+          </StepBody>
+          <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
+            <label htmlFor="bs-password" style={stepLabel}>
+              PASSWORD
+            </label>
+            <input
+              id="bs-password"
+              type="password"
+              autoComplete="current-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") void signInWithPassword();
+              }}
+              style={inputStyle}
+            />
+            {error !== null && <span style={errorText}>{error}</span>}
+            <button
+              onClick={() => void signInWithPassword()}
+              disabled={busy}
+              style={{ ...azureButton, opacity: busy ? 0.45 : 1 }}
+            >
+              Sign in
+            </button>
+          </div>
+          <button onClick={backToEmail} style={linkButton}>
+            Use a different email
+          </button>
+        </StepCard>
+      </AuthShell>
+    );
+  }
+
   if (phase.name === "code") {
     return (
       <AuthShell>
-        <StepCard step={copy.step}>
+        <StepCard step={phase.mode === "second-factor" ? COPY["sign-in"].step : copy.step}>
           <StepTitle>Check your inbox.</StepTitle>
           <StepBody>
+            {phase.mode === "second-factor" && "New device. "}
             We sent a six-digit code to{" "}
             <span style={{ color: "var(--bs-gunmetal)", fontWeight: 600 }}>{email}</span>. Enter it
-            here to {phase.mode === "sign-up" ? "create your account" : "sign in"}.
+            here to{" "}
+            {phase.mode === "sign-up"
+              ? "create your account"
+              : phase.mode === "second-factor"
+                ? "confirm it's you"
+                : "sign in"}
+            .
           </StepBody>
           <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
             <label htmlFor="bs-code" style={stepLabel}>
@@ -350,17 +505,10 @@ export function AuthForm({ intent }: { intent: AuthIntent }): React.ReactElement
             </button>
           </div>
           <div style={{ display: "flex", gap: 18, alignItems: "center" }}>
-            <button
-              onClick={() => {
-                setPhase({ name: "email" });
-                setCode("");
-                setError(null);
-              }}
-              style={linkButton}
-            >
+            <button onClick={backToEmail} style={linkButton}>
               Use a different email
             </button>
-            <button onClick={() => void sendCode()} style={linkButton}>
+            <button onClick={() => void resendCode()} style={linkButton}>
               Resend code
             </button>
           </div>
