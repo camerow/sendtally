@@ -33,7 +33,7 @@ The workflow says so in the job summary and falls through to a full release.
 
 ### The release path
 
-A release runs when the fingerprint moved, or when the workflow is dispatched by hand with the `release` input.
+A release runs when the fingerprint moved, and a manual `workflow_dispatch` always takes this path.
 It derives the next semantic version from conventional commits since the last `mobile-v*` tag - `feat` is a minor bump, a `!` or a `BREAKING CHANGE` footer is a major one, anything else is a patch - then:
 
 1. Writes it to `apps/mobile/app.json` and commits that to `main`, because `eas.json` sets `requireCommit` and EAS builds the committed tree.

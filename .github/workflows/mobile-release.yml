@@ -17,11 +17,6 @@ on:
       - "pnpm-lock.yaml"
       - ".github/workflows/mobile-release.yml"
   workflow_dispatch:
-    inputs:
-      release:
-        description: Build and submit to the stores regardless of the fingerprint
-        type: boolean
-        default: true
 
 concurrency:
   group: mobile-release
@@ -60,7 +55,7 @@ jobs:
           PLATFORMS: ${{ vars.MOBILE_PLATFORMS || 'android' }}
         run: |
           set -euo pipefail
-          platforms=$([ "$PLATFORMS" = all ] && echo "android ios" || echo "$PLATFORMS")
+          platforms=${PLATFORMS/all/android ios}
           needs_build=false
           for platform in $platforms; do
             hash=$(eas fingerprint:generate --platform "$platform" \
@@ -82,7 +77,7 @@ jobs:
           MESSAGE: ${{ github.event.head_commit.message }}
         run: |
           eas update --channel production --environment production --non-interactive \
-            --message "$(head -1 <<<"$MESSAGE")"
+            --message "${MESSAGE%%$'\n'*}"
 
       - name: Explain why a build is needed
         if: steps.fingerprint.outputs.needs-build == 'true'
@@ -93,7 +88,7 @@ jobs:
 
   release:
     needs: update
-    if: needs.update.outputs.needs-build == 'true' || inputs.release
+    if: needs.update.outputs.needs-build == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -137,7 +132,6 @@ jobs:
           esac
           echo "Releasing $version -> $next ($bump) since ${previous:-the first commit}"
           echo "version=$next" >> "$GITHUB_OUTPUT"
-          echo "previous=$previous" >> "$GITHUB_OUTPUT"
 
       # eas.json sets requireCommit, so the bump has to land before the build.
       - name: Commit the version bump
@@ -183,17 +177,14 @@ jobs:
           --non-interactive
 
       # Tagged only once the stores have the build, so a tag always names
-      # something that shipped.
+      # something that shipped. --generate-notes starts from the previous
+      # release on its own.
       - name: Create the GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ steps.version.outputs.version }}
-          PREVIOUS: ${{ steps.version.outputs.previous }}
-        run: |
-          set -euo pipefail
-          notes_start=()
-          if [ -n "$PREVIOUS" ]; then notes_start=(--notes-start-tag "$PREVIOUS"); fi
-          gh release create "mobile-v$VERSION" \
-            --title "Mobile v$VERSION" \
-            --target "$(git rev-parse HEAD)" \
-            --generate-notes "${notes_start[@]}"
+        run: >
+          gh release create "mobile-v$VERSION"
+          --title "Mobile v$VERSION"
+          --target "$(git rev-parse HEAD)"
+          --generate-notes
