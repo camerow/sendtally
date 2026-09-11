@@ -12,11 +12,17 @@ import {
   newClimb,
   toLogSessionInput,
   vGradeOf,
-  withScale,
+  withClimbDiscipline,
+  withClimbScale,
   withTag,
   withoutTag,
 } from "./transforms";
-import type { LogSessionDraft } from "./types";
+import { DEFAULT_GRADE_PREFS } from "./types";
+import type { ClimbDraft, GradeScale, LogSessionDraft } from "./types";
+
+function atScale(d: LogSessionDraft, scale: GradeScale): LogSessionDraft {
+  return { ...d, climbs: d.climbs.map((c) => withClimbScale(c, scale)) };
+}
 
 function draft(overrides: Partial<LogSessionDraft> = {}): LogSessionDraft {
   return {
@@ -27,11 +33,10 @@ function draft(overrides: Partial<LogSessionDraft> = {}): LogSessionDraft {
     location: "indoor",
     tags: [],
     notes: "",
-    scale: "v",
     rpe: null,
     climbs: [
-      { key: "a", grade: "V4", name: "Cave traverse", kind: "send", tries: 2 },
-      { key: "b", grade: "V6", name: "", kind: "attempt", tries: 4 },
+      { key: "a", scale: "v", grade: "V4", name: "Cave traverse", kind: "send", tries: 2 },
+      { key: "b", scale: "v", grade: "V6", name: "", kind: "attempt", tries: 4 },
     ],
     ...overrides,
   };
@@ -84,7 +89,7 @@ describe("convertGrade", () => {
 
 describe("route drafts", () => {
   it("summarises the top route in its own scale and validates route grades", () => {
-    const routes = withScale(draft(), "yds");
+    const routes = atScale(draft(), "yds");
     expect(routes.climbs.map((c) => c.grade)).toEqual(["5.12b", "5.12d"]);
     expect(draftSummary(routes)).toContain("TOP 5.12d");
     expect(draftProblem(routes)).toBeNull();
@@ -99,7 +104,7 @@ describe("route drafts", () => {
   });
 
   it("sends route grades to the API as entered", () => {
-    const input = toLogSessionInput(withScale(draft(), "french"));
+    const input = toLogSessionInput(atScale(draft(), "french"));
     expect(input.climbs.map((c) => c.grade)).toEqual([
       { scale: "french", value: "7b" },
       { scale: "french", value: "7c" },
@@ -122,17 +127,58 @@ describe("route drafts", () => {
       ],
     });
     const d = draftFromSession(routeSession);
-    expect(d.scale).toBe("yds");
+    expect(d.climbs.map((c) => c.scale)).toEqual(["yds", "yds"]);
     expect(d.climbs.map((c) => c.grade)).toEqual(["5.11a", "5.12a"]);
-    expect(withScale(d, "french").climbs.map((c) => c.grade)).toEqual(["6b+", "7a+"]);
+    expect(atScale(d, "french").climbs.map((c) => c.grade)).toEqual(["6b+", "7a+"]);
   });
 });
 
-describe("withScale", () => {
-  it("converts every climb's grade label", () => {
-    const font = withScale(draft(), "font");
+describe("withClimbScale", () => {
+  it("converts one climb's grade label and leaves its siblings alone", () => {
+    const [first, second] = draft().climbs as [ClimbDraft, ClimbDraft];
+    const font = withClimbScale(first, "font");
     expect(font.scale).toBe("font");
-    expect(font.climbs.map((c) => c.grade)).toEqual(["6B", "7A"]);
+    expect(font.grade).toBe("6B");
+    expect(second.grade).toBe("V6");
+  });
+
+  it("is a no-op when the climb is already in that scale", () => {
+    const [first] = draft().climbs as [ClimbDraft];
+    expect(withClimbScale(first, "v")).toBe(first);
+  });
+});
+
+describe("withClimbDiscipline", () => {
+  it("moves a climb onto the scale the user prefers for that discipline", () => {
+    const [boulder] = draft().climbs as [ClimbDraft];
+    const route = withClimbDiscipline(boulder, "route", DEFAULT_GRADE_PREFS);
+    expect(route.scale).toBe("yds");
+    expect(route.grade).toBe("5.12b");
+    expect(withClimbDiscipline(route, "boulder", DEFAULT_GRADE_PREFS).grade).toBe("V4");
+  });
+
+  it("honours a non-default preference", () => {
+    const [boulder] = draft().climbs as [ClimbDraft];
+    const route = withClimbDiscipline(boulder, "route", { boulder: "font", route: "french" });
+    expect(route.scale).toBe("french");
+    expect(route.grade).toBe("7b");
+  });
+});
+
+describe("mixed sessions", () => {
+  it("validates and summarises a draft holding both boulders and routes", () => {
+    const mixed = draft({
+      climbs: [
+        { key: "a", scale: "v", grade: "V4", name: "", kind: "send", tries: 1 },
+        { key: "b", scale: "yds", grade: "5.12d", name: "", kind: "attempt", tries: 3 },
+      ],
+    });
+    expect(draftProblem(mixed)).toBeNull();
+    expect(draftSummary(mixed)).toContain("TOP 5.12d");
+    expect(toLogSessionInput(mixed).climbs.map((c) => c.grade)).toEqual([
+      { scale: "v", value: 4 },
+      { scale: "yds", value: "5.12d" },
+    ]);
   });
 });
 
@@ -183,7 +229,7 @@ describe("draftSummary", () => {
   });
 
   it("uses the active scale for the top grade", () => {
-    expect(draftSummary(withScale(draft(), "font"))).toContain("TOP 7A");
+    expect(draftSummary(atScale(draft(), "font"))).toContain("TOP 7A");
   });
 });
 
@@ -225,7 +271,7 @@ describe("toLogSessionInput", () => {
   });
 
   it("carries the RPE override and Font grades", () => {
-    const input = toLogSessionInput(withScale(draft({ rpe: 8, name: "  " }), "font"));
+    const input = toLogSessionInput(atScale(draft({ rpe: 8, name: "  " }), "font"));
     expect(input.rpe).toBe(8);
     expect(input.name).toBeUndefined();
     expect(input.climbs[0]?.grade).toEqual({ scale: "font", value: "6B" });
@@ -289,11 +335,10 @@ describe("draftFromSession", () => {
       location: "indoor",
       tags: ["Endurance"],
       notes: "",
-      scale: "v",
       rpe: 7,
       climbs: [
-        { key: "climb-1", grade: "V4", name: "Cave traverse", kind: "send", tries: 2 },
-        { key: "climb-2", grade: "V6", name: "", kind: "attempt", tries: 4 },
+        { key: "climb-1", scale: "v", grade: "V4", name: "Cave traverse", kind: "send", tries: 2 },
+        { key: "climb-2", scale: "v", grade: "V6", name: "", kind: "attempt", tries: 4 },
       ],
     });
   });
@@ -323,7 +368,7 @@ describe("draftFromSession", () => {
       })),
     });
     const d = draftFromSession(fontSession);
-    expect(d.scale).toBe("font");
+    expect(d.climbs.map((c) => c.scale)).toEqual(["font", "font"]);
     expect(d.climbs.map((c) => c.grade)).toEqual(["6B", "7A"]);
   });
 
@@ -354,11 +399,12 @@ describe("draftFromSession", () => {
 
 describe("toLogSessionInput project flags", () => {
   it("sends the flag only for climbs the user toggled", () => {
-    const draft = {
+    const draft: LogSessionDraft = {
       ...emptyDraft(new Date("2026-09-09T19:00:00")),
       climbs: [
         {
           key: "a",
+          scale: "v",
           grade: "V4",
           name: "Moonraker",
           kind: "send" as const,
@@ -367,13 +413,14 @@ describe("toLogSessionInput project flags", () => {
         },
         {
           key: "b",
+          scale: "v",
           grade: "V5",
           name: "Torque",
           kind: "attempt" as const,
           tries: 2,
           project: false,
         },
-        { key: "c", grade: "V2", name: "", kind: "send" as const, tries: 1 },
+        { key: "c", scale: "v", grade: "V2", name: "", kind: "send" as const, tries: 1 },
       ],
     };
     expect(toLogSessionInput(draft).climbs.map((c) => c.project)).toEqual([true, false, undefined]);

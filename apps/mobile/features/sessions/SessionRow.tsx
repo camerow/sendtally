@@ -10,6 +10,7 @@ import {
 } from "@sendtally/features/sessions";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { Icon } from "../../components/Icon";
+import { pressRow } from "../../lib/press";
 
 export const SESSION_ROW_HEIGHT = 59;
 export const SESSION_ROW_TAGS_HEIGHT = 17;
@@ -50,7 +51,7 @@ export function SessionRow({
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={spoken}
-      style={{
+      style={pressRow({
         flexDirection: "row",
         alignItems: "center",
         gap: 12,
@@ -58,7 +59,7 @@ export function SessionRow({
         paddingHorizontal: 18,
         borderBottomWidth: 1,
         borderBottomColor: colors.lineOnLightSoft,
-      }}
+      })}
     >
       <View style={{ width: 34 }}>
         <Text

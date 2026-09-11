@@ -10,7 +10,7 @@ export const ONBOARDING_SLIDES: OnboardingSlide[] = [
     key: "log",
     eyebrow: "LOG",
     title: "A session takes a minute to log.",
-    body: "Date, times, grades in V-scale or Font, sends and attempts, tries, and a name for the climb if you want one.",
+    body: "Date, times, grades in whichever scale you think in, sends and attempts, tries, and a name for the climb if you want one.",
   },
   {
     key: "effort",
@@ -28,6 +28,11 @@ export const ONBOARDING_SLIDES: OnboardingSlide[] = [
     key: "trends",
     eyebrow: "TRENDS",
     title: "See what six months adds up to.",
-    body: "Volume over time, grade pyramid, hardest send, flash rate, average grade. Logging and Strava sync are free; membership adds the trends.",
+    body: "Volume over time, grade pyramid, hardest send, flash rate, average grade. Logging and posting to Strava are free; membership adds the trends.",
   },
 ];
+
+/** Membership sells the screens the log feeds, so it shows the same art for those two. */
+export const MEMBER_SLIDES: OnboardingSlide[] = (["trends", "effort"] as const).flatMap((key) =>
+  ONBOARDING_SLIDES.filter((slide) => slide.key === key)
+);

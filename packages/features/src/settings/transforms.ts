@@ -13,10 +13,7 @@ export function settingsVM(status: ConnectionStatus | null): SettingsVM {
     stravaConnected: strava !== null,
     stravaActive,
     stravaStatusLabel:
-      strava === null
-        ? "NOT CONNECTED"
-        : `ATHLETE ${strava.athleteId} · ${strava.status.toUpperCase()}`,
-    headerBadge: stravaActive ? "STRAVA CONNECTED" : "STRAVA NOT CONNECTED",
+      strava === null ? "NOT CONNECTED" : stravaActive ? "CONNECTED" : "RECONNECT NEEDED",
     postingEnabled: strava?.postingEnabled ?? false,
     postSince: toDateInput(strava?.postSince ?? null),
   };

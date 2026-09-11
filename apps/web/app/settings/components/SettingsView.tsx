@@ -63,7 +63,7 @@ export function SettingsView({
         >
           Settings
         </h1>
-        <span style={monoMuted}>{vm.headerBadge}</span>
+        <span style={monoMuted}>{`STRAVA ${vm.stravaStatusLabel}`}</span>
       </div>
 
       <Section>

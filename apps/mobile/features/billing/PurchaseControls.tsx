@@ -6,6 +6,7 @@ import { WEB_URL } from "../../lib/config";
 import { PlanPicker } from "./PlanPicker";
 import { defaultPackage, packageLabel, STORE_NAME, storeBillingAvailable } from "./store";
 import type { PurchaseFeature } from "./usePurchase";
+import { press } from "../../lib/press";
 
 export type PurchaseControlsProps = {
   purchase: PurchaseFeature;
@@ -21,7 +22,7 @@ const legalLink = {
 
 function LegalLink({ label, onPress }: { label: string; onPress: () => void }): React.ReactElement {
   return (
-    <Pressable onPress={onPress} style={{ minHeight: 44, justifyContent: "center" }}>
+    <Pressable onPress={onPress} style={press({ minHeight: 44, justifyContent: "center" })}>
       <Text style={legalLink}>{label}</Text>
     </Pressable>
   );
@@ -57,14 +58,14 @@ export function PurchaseControls({ purchase }: PurchaseControlsProps): React.Rea
             onPress={() => selected !== null && purchase.purchase(selected)}
             disabled={busy || selected === null}
             accessibilityRole="button"
-            style={{
+            style={press({
               backgroundColor: colors.azureInk,
               borderRadius: radius.control,
               minHeight: 48,
               alignItems: "center",
               justifyContent: "center",
               opacity: busy ? 0.6 : 1,
-            }}
+            })}
           >
             {purchase.status === "purchasing" ? (
               <ActivityIndicator color={colors.white} />
@@ -87,7 +88,7 @@ export function PurchaseControls({ purchase }: PurchaseControlsProps): React.Rea
         <Pressable
           onPress={purchase.restore}
           disabled={busy}
-          style={{ minHeight: 44, justifyContent: "center" }}
+          style={press({ minHeight: 44, justifyContent: "center" })}
         >
           <Text style={legalLink}>
             {purchase.status === "restoring" ? "Restoring…" : "Restore purchases"}

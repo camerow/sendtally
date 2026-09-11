@@ -1,28 +1,17 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
-import type { SessionRow } from "@sendtally/api-client";
-import {
-  UNTAGGED_KEY,
-  UNTAGGED_LABEL,
-  countLabel,
-  filterSessionsByTags,
-  type SessionGrouping,
-  type TagOption,
-} from "@sendtally/features/sessions";
+import { UNTAGGED_KEY, UNTAGGED_LABEL, type TagOption } from "@sendtally/features/sessions";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { Chip } from "../../components/Chip";
 import { Sheet } from "../../components/Sheet";
 import { press } from "../../lib/press";
 
-export type SessionFilters = { grouping: SessionGrouping; tags: string[] };
-
-export type FilterSheetProps = {
+export type TrendFilterSheetProps = {
   visible: boolean;
-  sessions: SessionRow[];
   tagOptions: TagOption[];
   untaggedCount: number;
-  filters: SessionFilters;
-  onApply: (filters: SessionFilters) => void;
+  selectedTags: string[];
+  onApply: (tags: string[]) => void;
   onClose: () => void;
 };
 
@@ -34,27 +23,22 @@ const label = {
   color: colors.textMuted,
 } as const;
 
-export function FilterSheet({
+export function TrendFilterSheet({
   visible,
-  sessions,
   tagOptions,
   untaggedCount,
-  filters,
+  selectedTags,
   onApply,
   onClose,
-}: FilterSheetProps): React.ReactElement {
-  const [draft, setDraft] = React.useState<SessionFilters>(filters);
+}: TrendFilterSheetProps): React.ReactElement {
+  const [draft, setDraft] = React.useState<string[]>(selectedTags);
 
   React.useEffect(() => {
-    if (visible) setDraft(filters);
-  }, [visible, filters]);
+    if (visible) setDraft(selectedTags);
+  }, [visible, selectedTags]);
 
-  const toggleTag = (slug: string): void =>
-    setDraft((prev) => ({
-      ...prev,
-      tags: prev.tags.includes(slug) ? prev.tags.filter((s) => s !== slug) : [...prev.tags, slug],
-    }));
-  const count = filterSessionsByTags(sessions, draft.tags).length;
+  const toggle = (slug: string): void =>
+    setDraft((prev) => (prev.includes(slug) ? prev.filter((s) => s !== slug) : [...prev, slug]));
 
   return (
     <Sheet visible={visible} onClose={onClose} closeLabel="Close filters">
@@ -82,7 +66,7 @@ export function FilterSheet({
             Filters
           </Text>
           <Pressable
-            onPress={() => setDraft({ grouping: "month", tags: [] })}
+            onPress={() => setDraft([])}
             accessibilityRole="button"
             hitSlop={8}
             style={press({})}
@@ -100,40 +84,35 @@ export function FilterSheet({
           </Pressable>
         </View>
         <View style={{ gap: 9 }}>
-          <Text style={label}>GROUP BY</Text>
-          <View style={{ flexDirection: "row", gap: 8 }}>
-            {(["month", "tag"] as const).map((value) => (
+          <Text style={label}>TAGS</Text>
+          <Text
+            style={{
+              fontFamily: fonts.sans,
+              fontSize: 13,
+              lineHeight: 20,
+              color: colors.textSecondary,
+            }}
+          >
+            Every trend below is drawn from the sessions carrying these tags.
+          </Text>
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+            {tagOptions.map((tag) => (
               <Chip
-                key={value}
-                label={value.toUpperCase()}
-                active={draft.grouping === value}
-                onPress={() => setDraft((prev) => ({ ...prev, grouping: value }))}
+                key={tag.slug}
+                label={`${tag.name.toUpperCase()} ${tag.count}`}
+                active={draft.includes(tag.slug)}
+                onPress={() => toggle(tag.slug)}
               />
             ))}
+            {untaggedCount > 0 && (
+              <Chip
+                label={`${UNTAGGED_LABEL.toUpperCase()} ${untaggedCount}`}
+                active={draft.includes(UNTAGGED_KEY)}
+                onPress={() => toggle(UNTAGGED_KEY)}
+              />
+            )}
           </View>
         </View>
-        {tagOptions.length > 0 && (
-          <View style={{ gap: 9 }}>
-            <Text style={label}>TAGS</Text>
-            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-              {tagOptions.map((tag) => (
-                <Chip
-                  key={tag.slug}
-                  label={`${tag.name.toUpperCase()} ${tag.count}`}
-                  active={draft.tags.includes(tag.slug)}
-                  onPress={() => toggleTag(tag.slug)}
-                />
-              ))}
-              {untaggedCount > 0 && (
-                <Chip
-                  label={`${UNTAGGED_LABEL.toUpperCase()} ${untaggedCount}`}
-                  active={draft.tags.includes(UNTAGGED_KEY)}
-                  onPress={() => toggleTag(UNTAGGED_KEY)}
-                />
-              )}
-            </View>
-          </View>
-        )}
         <Pressable
           onPress={() => onApply(draft)}
           accessibilityRole="button"
@@ -147,7 +126,7 @@ export function FilterSheet({
           })}
         >
           <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 15, color: colors.white }}>
-            Show {countLabel(count).toLowerCase()}
+            {draft.length === 0 ? "Show all sessions" : "Show these trends"}
           </Text>
         </Pressable>
       </View>

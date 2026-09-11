@@ -3,7 +3,7 @@ import type { ColorValue } from "react-native";
 import Svg, { Circle, Path, Rect } from "react-native-svg";
 
 export type IconName =
-  "sessions" | "projects" | "trends" | "settings" | "funnel" | "plus" | "chevron";
+  "sessions" | "projects" | "trends" | "settings" | "funnel" | "plus" | "chevron" | "check";
 
 const SHAPES: Record<IconName, React.ReactElement> = {
   sessions: (
@@ -24,6 +24,7 @@ const SHAPES: Record<IconName, React.ReactElement> = {
   funnel: <Path d="M4 5h16l-6.2 7.2V18.5l-3.6 1.8v-8.1z" />,
   plus: <Path d="M12 5v14M5 12h14" />,
   chevron: <Path d="M9 6l6 6-6 6" />,
+  check: <Path d="M5 12.5l4.5 4.5L19 7" />,
 };
 
 export type IconProps = {

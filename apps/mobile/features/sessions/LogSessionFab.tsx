@@ -3,13 +3,14 @@ import React from "react";
 import { Pressable, Text } from "react-native";
 import { colors, fonts } from "@sendtally/design/tokens";
 import { Icon } from "../../components/Icon";
+import { press } from "../../lib/press";
 
 export function LogSessionFab(): React.ReactElement {
   return (
     <Pressable
       onPress={() => router.push("/session/new")}
       accessibilityRole="button"
-      style={{
+      style={press({
         position: "absolute",
         right: 18,
         bottom: 16,
@@ -25,7 +26,7 @@ export function LogSessionFab(): React.ReactElement {
         shadowRadius: 12,
         shadowOffset: { width: 0, height: 8 },
         elevation: 6,
-      }}
+      })}
     >
       <Icon name="plus" size={17} strokeWidth={3} color={colors.white} />
       <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 15, color: colors.white }}>

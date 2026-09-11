@@ -10,7 +10,7 @@ export type MembershipSectionProps = {
 };
 
 function summary(vm: MembershipVM): string {
-  if (!vm.active) return "Logging is free. Membership unlocks the trends screens.";
+  if (!vm.active) return "Logging is free. Membership adds the trends.";
   if (vm.managedIn === "play_store" || vm.managedIn === "app_store") {
     const plan = vm.plan === null ? "Membership" : planLabel(vm.plan);
     return `${plan}, billed through ${storeName(vm.managedIn)}.`;

@@ -1,10 +1,11 @@
 import React from "react";
 import { Pressable, ScrollView, Text, View, type LayoutChangeEvent } from "react-native";
 import type { ScopeItem } from "@sendtally/features/sessions";
-import { colors, fonts, radius } from "@sendtally/design/tokens";
-import { Icon } from "../../components/Icon";
+import { colors, fonts } from "@sendtally/design/tokens";
+import { FILTER_BAR_HEIGHT, FilterButton } from "../../components/FilterButton";
+import { press } from "../../lib/press";
 
-export const SCOPE_BAR_HEIGHT = 44;
+export const SCOPE_BAR_HEIGHT = FILTER_BAR_HEIGHT;
 
 function ScopeChip({
   item,
@@ -26,7 +27,7 @@ function ScopeChip({
       accessibilityLabel={`Jump to ${item.label}`}
       accessibilityState={{ selected: active }}
       hitSlop={{ top: 7, bottom: 7 }}
-      style={{
+      style={press({
         height: 30,
         justifyContent: "center",
         paddingHorizontal: 11,
@@ -34,7 +35,7 @@ function ScopeChip({
         borderWidth: 1,
         borderColor: active ? colors.gold : strong ? colors.gunmetal : colors.lineOnLightStrong,
         backgroundColor: active ? colors.gold : "transparent",
-      }}
+      })}
     >
       <Text
         style={{
@@ -103,36 +104,7 @@ export function ScopeBar({
           />
         ))}
       </ScrollView>
-      <View
-        style={{
-          height: SCOPE_BAR_HEIGHT,
-          justifyContent: "center",
-          paddingLeft: 4,
-          paddingRight: 10,
-          borderLeftWidth: 1,
-          borderLeftColor: colors.lineOnLightSoft,
-        }}
-      >
-        <Pressable
-          onPress={onOpenFilters}
-          accessibilityRole="button"
-          accessibilityLabel="Filters"
-          accessibilityState={{ selected: filtersActive }}
-          hitSlop={4}
-          style={{
-            width: 36,
-            height: 36,
-            alignItems: "center",
-            justifyContent: "center",
-            borderRadius: radius.pill,
-            borderWidth: 1,
-            borderColor: filtersActive ? colors.gold : colors.lineOnLightStrong,
-            backgroundColor: filtersActive ? colors.gold : "transparent",
-          }}
-        >
-          <Icon name="funnel" size={18} color={colors.gunmetal} />
-        </Pressable>
-      </View>
+      <FilterButton active={filtersActive} onPress={onOpenFilters} />
     </View>
   );
 }

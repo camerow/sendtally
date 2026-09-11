@@ -1,6 +1,7 @@
 import React from "react";
 import { Pressable, Text } from "react-native";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
+import { press } from "../lib/press";
 
 export type ChipProps = {
   label: string;
@@ -23,7 +24,7 @@ export function Chip({
       disabled={disabled}
       accessibilityRole="button"
       accessibilityState={{ selected: active, disabled }}
-      style={{
+      style={press({
         paddingHorizontal: 12,
         minHeight: 40,
         justifyContent: "center",
@@ -33,7 +34,7 @@ export function Chip({
         borderStyle: dashed ? "dashed" : "solid",
         borderColor: active ? colors.gold : dashed ? "rgba(64,63,76,0.3)" : "rgba(64,63,76,0.18)",
         opacity: disabled ? 0.5 : 1,
-      }}
+      })}
     >
       <Text
         style={{

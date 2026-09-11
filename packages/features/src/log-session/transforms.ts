@@ -16,7 +16,15 @@ import type {
   SessionDetail,
 } from "@sendtally/api-client";
 import { sameTagName } from "../sessions/tags";
-import type { ClimbDraft, GradeScale, LogSessionDraft } from "./types";
+import {
+  DEFAULT_GRADE_PREFS,
+  GRADE_SCALE_OPTIONS,
+  type ClimbDraft,
+  type Discipline,
+  type GradePrefs,
+  type GradeScale,
+  type LogSessionDraft,
+} from "./types";
 
 export const V_GRADE_OPTIONS: readonly string[] = Array.from({ length: 18 }, (_, i) => `V${i}`);
 
@@ -44,6 +52,14 @@ const DEFAULT_GRADE: Record<GradeScale, string> = {
 
 export function gradeOptions(scale: GradeScale): readonly string[] {
   return GRADE_OPTIONS[scale];
+}
+
+export function disciplineOf(scale: GradeScale): Discipline {
+  return GRADE_SCALE_OPTIONS.find((o) => o.value === scale)?.discipline ?? "boulder";
+}
+
+export function scaleOptionsFor(discipline: Discipline): readonly GradeScale[] {
+  return GRADE_SCALE_OPTIONS.filter((o) => o.discipline === discipline).map((o) => o.value);
 }
 
 export function draftGrade(grade: string, scale: GradeScale): Grade | undefined {
@@ -74,7 +90,7 @@ function hhmm(d: Date): string {
   return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
-export function emptyDraft(now: Date): LogSessionDraft {
+export function emptyDraft(now: Date, prefs: GradePrefs = DEFAULT_GRADE_PREFS): LogSessionDraft {
   const roundedNow = new Date(Math.floor(now.getTime() / (5 * 60_000)) * 5 * 60_000);
   const start = new Date(roundedNow.getTime() - 90 * 60_000);
   return {
@@ -85,14 +101,13 @@ export function emptyDraft(now: Date): LogSessionDraft {
     location: "indoor",
     tags: [],
     notes: "",
-    scale: "v",
     rpe: null,
-    climbs: [newClimb("climb-1", "v")],
+    climbs: [newClimb("climb-1", prefs.boulder)],
   };
 }
 
 export function newClimb(key: string, scale: GradeScale): ClimbDraft {
-  return { key, grade: DEFAULT_GRADE[scale], name: "", kind: "send", tries: 1 };
+  return { key, scale, grade: DEFAULT_GRADE[scale], name: "", kind: "send", tries: 1 };
 }
 
 export function withTag(draft: LogSessionDraft, name: string): LogSessionDraft {
@@ -105,12 +120,17 @@ export function withoutTag(draft: LogSessionDraft, name: string): LogSessionDraf
   return { ...draft, tags: draft.tags.filter((t) => !sameTagName(t, name)) };
 }
 
-export function withScale(draft: LogSessionDraft, scale: GradeScale): LogSessionDraft {
-  return {
-    ...draft,
-    scale,
-    climbs: draft.climbs.map((c) => ({ ...c, grade: convertGrade(c.grade, draft.scale, scale) })),
-  };
+export function withClimbScale(climb: ClimbDraft, scale: GradeScale): ClimbDraft {
+  if (climb.scale === scale) return climb;
+  return { ...climb, scale, grade: convertGrade(climb.grade, climb.scale, scale) };
+}
+
+export function withClimbDiscipline(
+  climb: ClimbDraft,
+  discipline: Discipline,
+  prefs: GradePrefs
+): ClimbDraft {
+  return withClimbScale(climb, prefs[discipline]);
 }
 
 const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
@@ -136,7 +156,7 @@ function topDraftGrade(draft: LogSessionDraft): Grade | undefined {
   let top: Grade | undefined;
   let topRank = -1;
   for (const c of draft.climbs) {
-    const grade = draftGrade(c.grade, draft.scale);
+    const grade = draftGrade(c.grade, c.scale);
     if (grade === undefined) continue;
     const rank = climbRank({ vGrade: effortGrade(grade), grade });
     if (rank > topRank) {
@@ -171,7 +191,7 @@ export function draftProblem(draft: LogSessionDraft): string | null {
     return "Sessions longer than 12 hours can't be logged.";
   }
   if (draft.climbs.length === 0) return "Add at least one climb.";
-  if (draft.climbs.some((c) => draftGrade(c.grade, draft.scale) === undefined)) {
+  if (draft.climbs.some((c) => draftGrade(c.grade, c.scale) === undefined)) {
     return "Every climb needs a grade.";
   }
   return null;
@@ -180,7 +200,7 @@ export function draftProblem(draft: LogSessionDraft): string | null {
 export function toLogSessionInput(draft: LogSessionDraft): LogSessionInput {
   const climbs: LogClimbInput[] = draft.climbs.map((c) => ({
     ...(c.name.trim() === "" ? {} : { name: c.name.trim() }),
-    grade: draftGrade(c.grade, draft.scale) ?? fallbackGrade(c.grade, draft.scale),
+    grade: draftGrade(c.grade, c.scale) ?? fallbackGrade(c.grade, c.scale),
     kind: c.kind,
     tries: c.tries,
     ...(c.project === undefined ? {} : { project: c.project }),
@@ -219,7 +239,6 @@ function climbGrade(climb: SessionClimb, scale: GradeScale): string {
 
 export function draftFromSession(session: SessionDetail): LogSessionDraft {
   const climbs = [...session.climbs].sort((a, b) => Date.parse(a.time) - Date.parse(b.time));
-  const scale: GradeScale = climbs.find((c) => c.grade !== undefined)?.grade?.scale ?? "v";
   return {
     name: session.name ?? "",
     date: utcDate(session.start_at),
@@ -228,14 +247,17 @@ export function draftFromSession(session: SessionDetail): LogSessionDraft {
     location: session.location ?? "indoor",
     tags: session.tags.map((t) => t.name),
     notes: session.notes ?? "",
-    scale,
     rpe: session.rpe,
-    climbs: climbs.map((c, i) => ({
-      key: `climb-${i + 1}`,
-      grade: climbGrade(c, scale),
-      name: c.name,
-      kind: c.kind,
-      tries: c.tries,
-    })),
+    climbs: climbs.map((c, i) => {
+      const scale = c.grade?.scale ?? "v";
+      return {
+        key: `climb-${i + 1}`,
+        scale,
+        grade: climbGrade(c, scale),
+        name: c.name,
+        kind: c.kind,
+        tries: c.tries,
+      };
+    }),
   };
 }

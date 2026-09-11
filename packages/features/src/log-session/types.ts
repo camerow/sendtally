@@ -11,8 +11,18 @@ export const GRADE_SCALE_OPTIONS: readonly GradeScaleOption[] = [
   { value: "french", label: "FRENCH", discipline: "route" },
 ];
 
+export type GradePrefs = { boulder: GradeScale; route: GradeScale };
+
+export const DEFAULT_GRADE_PREFS: GradePrefs = { boulder: "v", route: "yds" };
+
+export const DISCIPLINE_LABELS: Record<Discipline, string> = {
+  boulder: "Boulders",
+  route: "Routes",
+};
+
 export type ClimbDraft = {
   key: string;
+  scale: GradeScale;
   grade: string;
   name: string;
   kind: "send" | "attempt";
@@ -28,7 +38,6 @@ export type LogSessionDraft = {
   location: "indoor" | "outdoor";
   tags: string[];
   notes: string;
-  scale: GradeScale;
   rpe: number | null;
   climbs: ClimbDraft[];
 };
