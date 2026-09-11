@@ -98,9 +98,12 @@ export default function SignIn(): React.ReactElement | null {
     setError(null);
     setBusy(true);
     try {
+      // The redirect needs a path. A bare "sendtally://" is not hierarchical, so Clerk's
+      // callback comes back as "sendtally:?...&rotating_token_nonce=<nonce>%23" and the
+      // nonce parses with a trailing "#", which Clerk rejects as signed out.
       const result = await startSSOFlow({
         strategy: "oauth_google",
-        redirectUrl: makeRedirectUri(),
+        redirectUrl: makeRedirectUri({ path: "sso-callback" }),
       });
       if (result.createdSessionId !== null && result.setActive !== undefined) {
         await result.setActive({ session: result.createdSessionId });
