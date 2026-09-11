@@ -2,7 +2,7 @@
   "expo": {
     "name": "sendtally",
     "slug": "sendtally",
-    "version": "0.3.0",
+    "version": "0.3.1",
     "scheme": "sendtally",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
