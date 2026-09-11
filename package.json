@@ -17,6 +17,8 @@
     "format:check": "turbo format:check --continue -- && prettier --check \"*.{md,json,yaml,yml}\" \"docs/**/*.md\""
   },
   "devDependencies": {
+    "@commitlint/cli": "^21.2.2",
+    "@commitlint/config-conventional": "^21.2.2",
     "prettier": "^3.6.2",
     "turbo": "^2.5.8",
     "typescript": "^6.0.3"
@@ -25,6 +27,22 @@
     "overrides": {
       "react": "19.2.3",
       "react-dom": "19.2.3"
+    }
+  },
+  "commitlint": {
+    "extends": [
+      "@commitlint/config-conventional"
+    ],
+    "rules": {
+      "subject-case": [
+        0
+      ],
+      "body-max-line-length": [
+        0
+      ],
+      "footer-max-line-length": [
+        0
+      ]
     }
   }
 }
