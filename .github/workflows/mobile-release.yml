@@ -28,6 +28,13 @@ jobs:
 
   update:
     needs: checks
+    # The release job pushes its version bump to main. A GITHUB_TOKEN push does
+    # not trigger workflows, so that commit does not arrive back here - but
+    # swap in a personal access token or a GitHub App (the usual fix when
+    # branch protection blocks the bot) and it would, and every pass would bump,
+    # build and push again until the build quota was gone. Skipping the release
+    # commit by name makes that safe whichever token does the push.
+    if: "!startsWith(github.event.head_commit.message, 'chore(mobile): release v')"
     runs-on: ubuntu-latest
     outputs:
       needs-build: ${{ steps.fingerprint.outputs.needs-build }}
@@ -59,8 +66,7 @@ jobs:
           needs_build=false
           for platform in $platforms; do
             hash=$(eas fingerprint:generate --platform "$platform" \
-              --build-profile production --environment production \
-              --json --non-interactive | jq -r .hash)
+              --build-profile production --json --non-interactive | jq -r .hash)
             matches=$(eas build:list --platform "$platform" --channel production \
               --status finished --fingerprint-hash "$hash" --limit 1 \
               --json --non-interactive | jq length)

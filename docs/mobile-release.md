@@ -43,6 +43,11 @@ It derives the next semantic version from conventional commits since the last `m
 While the app is pre-1.0 a breaking change bumps the minor, per semver's 0.y rule.
 The tag is written after the stores have the build, so a tag always names something that shipped.
 
+The version is part of the fingerprint, so the bump commit is itself a native change by the fingerprint's reckoning.
+That is why the release job must not re-enter this workflow: it would find no build carrying the new hash, release again, and loop until the build quota was gone.
+A `GITHUB_TOKEN` push does not trigger workflows, so today it cannot, and the `update` job additionally skips any commit whose subject starts with `chore(mobile): release v`, which keeps that true if the push ever moves to a personal access token or a GitHub App.
+The hash the update job reports on a native change is therefore the hash before the bump, not the hash of the build that follows it.
+
 Build numbers and version codes still come from EAS remote versioning (`appVersionSource: "remote"` plus `autoIncrement`); only the marketing version is derived here.
 The job deliberately waits for EAS rather than passing `--no-wait`: a failed build or a rejected upload has to fail the run.
 
