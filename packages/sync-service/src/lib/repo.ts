@@ -1,3 +1,4 @@
+import { disciplineOf } from "@sendtally/core";
 import { and, asc, count, desc, eq, inArray, notInArray } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import {
@@ -380,6 +381,8 @@ export async function setSessionTags(
   return linked;
 }
 
+export type Discipline = "boulder" | "route";
+
 export type ClimbGrade =
   { scale: "v"; value: number } | { scale: "font" | "yds" | "french"; value: string };
 
@@ -389,12 +392,35 @@ export async function listProjects(db: D1Database, userId: string): Promise<Proj
   return drizzle(db).select().from(projects).where(eq(projects.user_id, userId)).all();
 }
 
+export type ProjectInput = {
+  slug: string;
+  name: string;
+  grade?: ClimbGrade;
+  discipline?: Discipline;
+  beta?: string;
+};
+
+// A project row carries only what the caller supplied: the log form knows the
+// grade, the projects page knows the discipline and the beta, and neither
+// overwrites what the other wrote.
 export async function upsertProject(
   db: D1Database,
   userId: string,
-  project: { slug: string; name: string; grade: ClimbGrade }
+  project: ProjectInput
 ): Promise<void> {
-  const grade_json = JSON.stringify(project.grade);
+  const now = new Date().toISOString();
+  const grade_json = project.grade === undefined ? null : JSON.stringify(project.grade);
+  const discipline =
+    project.discipline ??
+    (project.grade === undefined ? "boulder" : disciplineOf(project.grade.scale));
+  const beta = project.beta?.trim() ?? null;
+  const set: Partial<typeof projects.$inferInsert> = { name: project.name };
+  if (grade_json !== null) set.grade_json = grade_json;
+  if (project.discipline !== undefined || project.grade !== undefined) set.discipline = discipline;
+  if (beta !== null) {
+    set.beta = beta === "" ? null : beta;
+    set.beta_updated_at = beta === "" ? null : now;
+  }
   await drizzle(db)
     .insert(projects)
     .values({
@@ -402,12 +428,12 @@ export async function upsertProject(
       slug: project.slug,
       name: project.name,
       grade_json,
-      created_at: new Date().toISOString(),
+      discipline,
+      beta: beta === "" ? null : beta,
+      beta_updated_at: beta === null || beta === "" ? null : now,
+      created_at: now,
     })
-    .onConflictDoUpdate({
-      target: [projects.user_id, projects.slug],
-      set: { name: project.name, grade_json },
-    });
+    .onConflictDoUpdate({ target: [projects.user_id, projects.slug], set });
 }
 
 export async function deleteProject(

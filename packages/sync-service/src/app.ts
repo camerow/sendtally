@@ -5,7 +5,7 @@ import { z } from "zod";
 import type { AuthedUser, AuthWebhookEvent } from "./auth";
 import type { Env } from "./bindings";
 import { purgeAccount } from "./lib/account";
-import { applyProjectFlags, climbCatalogue } from "./lib/climbs";
+import { applyProjectFlags, climbCatalogue, climbSlug, projectBody } from "./lib/climbs";
 import { decryptSecret, encryptSecret } from "./lib/crypto";
 import { mirrorStoreEntitlements, resolveEntitlements } from "./lib/entitlements";
 import {
@@ -268,6 +268,26 @@ export function createApp(deps: AppDeps): Hono<AppEnv> {
       repo.listProjects(c.env.DB, userId),
     ]);
     return c.json({ climbs: climbCatalogue(rows, projects) });
+  });
+
+  // Marking a project from the projects page rather than the log form: the
+  // name is the identity, so re-posting an existing one edits its beta.
+  app.post("/v1/projects", async (c) => {
+    const parsed = projectBody.safeParse(await c.req.json().catch(() => null));
+    if (!parsed.success) return c.json({ error: "invalid request body" }, 400);
+    const name = parsed.data.name.trim();
+    const slug = climbSlug(name);
+    if (slug === "") return c.json({ error: "invalid request body" }, 400);
+    const userId = c.get("userId");
+    await repo.ensureUser(c.env.DB, userId);
+    await repo.upsertProject(c.env.DB, userId, {
+      slug,
+      name,
+      ...(parsed.data.discipline === undefined ? {} : { discipline: parsed.data.discipline }),
+      ...(parsed.data.beta === undefined ? {} : { beta: parsed.data.beta }),
+    });
+    await captureEvent(c, "project_marked", { source: "projects" });
+    return c.json({ slug });
   });
 
   app.delete("/v1/projects/:slug", async (c) => {

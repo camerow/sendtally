@@ -46,11 +46,22 @@ export type SessionClimb = {
 
 export type SessionTag = { id: string; name: string; slug: string };
 
+export type Discipline = "boulder" | "route";
+
+export type ProjectInput = {
+  name: string;
+  discipline?: Discipline;
+  beta?: string;
+};
+
 export type ClimbSummary = {
   slug: string;
   name: string;
-  grade: ClimbGrade;
+  grade: ClimbGrade | null;
+  discipline: Discipline;
   project: boolean;
+  beta: string | null;
+  beta_updated_at: string | null;
   sessions: number;
   attempts: number;
   sends: number;

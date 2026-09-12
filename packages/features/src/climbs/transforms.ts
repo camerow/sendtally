@@ -6,8 +6,14 @@ export const MAX_CLIMB_SUGGESTIONS = 4;
 
 export type ProjectStatus = "open" | "sent";
 
+// The name is a climb's identity across sessions: the autocomplete, projects
+// and the flash rate all match on it the same way.
+export function climbKey(name: string): string {
+  return name.trim().toLowerCase();
+}
+
 export function sameClimbName(a: string, b: string): boolean {
-  return a.trim().toLowerCase() === b.trim().toLowerCase();
+  return climbKey(a) === climbKey(b);
 }
 
 export function findClimb(climbs: ClimbSummary[], name: string): ClimbSummary | undefined {
@@ -22,13 +28,25 @@ export function matchClimbs(climbs: ClimbSummary[], query: string): ClimbSummary
     .slice(0, MAX_CLIMB_SUGGESTIONS);
 }
 
+// A project added from the projects page has no grade until the climb turns up
+// in a logged session, so the draft keeps whatever the user already picked.
 export function climbDraftGrade(climb: ClimbSummary, scale: GradeScale): string {
-  const stored: Grade = climb.grade;
+  const stored: Grade | null = climb.grade;
+  if (stored === null) return "";
   return convertGrade(formatGrade(stored), stored.scale, scale);
 }
 
+// Names of climbs the user had already logged before a session started - what
+// separates a flash from a redpoint on that session's climb list.
+export function climbsWorkedBefore(catalogue: ClimbSummary[], startAt: string): Set<string> {
+  const start = Date.parse(startAt);
+  return new Set(
+    catalogue.filter((c) => Date.parse(c.first_at) < start).map((c) => climbKey(c.name))
+  );
+}
+
 export function climbGradeLabel(climb: ClimbSummary): string {
-  return formatGrade(climb.grade);
+  return climb.grade === null ? "-" : formatGrade(climb.grade);
 }
 
 export function projectStatus(climb: ClimbSummary): ProjectStatus {

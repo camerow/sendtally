@@ -1,5 +1,6 @@
 import { climbDiscipline, climbRank, dominantDiscipline } from "@sendtally/core";
 import type { ConnectionStatus, SessionClimb, SessionDetail } from "@sendtally/api-client";
+import { climbKey } from "../climbs/transforms";
 import { climbGradeLabel, gradeFormatterFor } from "../sessions/grades";
 import type {
   ClimbFilter,
@@ -25,9 +26,9 @@ export function gradeLabel(vGrade: number): string {
   return vGrade >= 0 ? `V${vGrade}` : "V?";
 }
 
-function resultOf(c: SessionClimb): ClimbResult {
+function resultOf(c: SessionClimb, firstEncounter: boolean): ClimbResult {
   if (c.kind === "attempt") return "project";
-  return c.tries <= 1 ? "flash" : "sent";
+  return firstEncounter && c.tries <= 1 ? "flash" : "sent";
 }
 
 function restLabel(minutes: number | null): string {
@@ -45,8 +46,15 @@ function topSendRank(climbs: SessionClimb[]): number {
   return hi;
 }
 
-export function climbVMs(climbs: SessionClimb[]): ClimbVM[] {
+// `workedBefore` carries the names the user had already logged before this
+// session, so a one-try send of a long-standing project reads as a send rather
+// than a flash. Without it every first try in the session counts as a flash.
+export function climbVMs(
+  climbs: SessionClimb[],
+  workedBefore: ReadonlySet<string> = new Set()
+): ClimbVM[] {
   const ordered = [...climbs].sort((a, b) => Date.parse(a.time) - Date.parse(b.time));
+  const seen = new Set(workedBefore);
   const discipline = dominantDiscipline(ordered);
   const top = topSendRank(ordered.filter((c) => climbDiscipline(c) === discipline));
   return ordered.map((c, i) => {
@@ -54,6 +62,9 @@ export function climbVMs(climbs: SessionClimb[]): ClimbVM[] {
     const rest =
       prev === undefined ? null : Math.round((Date.parse(c.time) - Date.parse(prev.time)) / 60_000);
     const rank = climbRank(c);
+    const key = climbKey(c.name);
+    const firstEncounter = key === "" || !seen.has(key);
+    if (key !== "") seen.add(key);
     return {
       n: i + 1,
       name: c.name !== "" ? c.name : "Unknown climb",
@@ -64,7 +75,7 @@ export function climbVMs(climbs: SessionClimb[]): ClimbVM[] {
       angleLabel: c.angle !== null ? `${c.angle}°` : "-",
       burns: c.tries,
       restLabel: restLabel(rest),
-      result: resultOf(c),
+      result: resultOf(c, firstEncounter),
     };
   });
 }
@@ -162,10 +173,11 @@ export function postStatusVM(
 
 export function sessionDetailVM(
   session: SessionDetail,
-  posting: PostingStatus | null = null
+  posting: PostingStatus | null = null,
+  workedBefore: ReadonlySet<string> = new Set()
 ): SessionDetailVM {
   const board = session.board;
-  const climbs = climbVMs(session.climbs);
+  const climbs = climbVMs(session.climbs, workedBefore);
   const start = new Date(session.start_at);
   const sends = climbs.filter((c) => c.result !== "project");
   const flashes = climbs.filter((c) => c.result === "flash");

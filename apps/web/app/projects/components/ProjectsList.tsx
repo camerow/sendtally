@@ -2,14 +2,15 @@ import React from "react";
 import { Link } from "react-router";
 import type { ClimbSummary } from "@sendtally/api-client";
 import {
-  climbGradeLabel,
-  projectMetaLabel,
-  projectStatus,
-  projectsOf,
   useClimbVocabulary,
+  useProjects,
+  type ProjectListItem,
+  type ProjectsOverviewVM,
 } from "@sendtally/features/climbs";
-import { Logo } from "@sendtally/design";
+import { Button, Logo } from "@sendtally/design";
 import { useClientApi } from "../../lib/useClientApi";
+import { AddProjectDialog } from "./AddProjectDialog";
+import { ProjectRow } from "./ProjectRow";
 
 export type ProjectsListProps = {
   apiUrl: string;
@@ -32,75 +33,78 @@ const muted: React.CSSProperties = {
   color: "rgba(64,63,76,0.55)",
 };
 
-function lastTriedLabel(climb: ClimbSummary): string {
-  if (climb.sessions === 0) return "NOT TRIED YET";
-  const d = new Date(climb.last_at);
-  return `LAST ${d.toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "UTC" }).toUpperCase()}`;
+type Tile = { label: string; value: string; caption: string; to?: string };
+
+// A tile with nothing to say is noise, so the strip grows as the history does.
+function tiles(overview: ProjectsOverviewVM): Tile[] {
+  const { longestRunning, mostSessions } = overview;
+  const all: Array<Tile | null> = [
+    {
+      label: "OPEN PROJECTS",
+      value: String(overview.open),
+      caption: `${overview.attemptsInvested} ATTEMPTS INVESTED`,
+    },
+    overview.avgAttemptsToSend === null
+      ? null
+      : {
+          label: "ATTEMPTS TO SEND",
+          value: String(overview.avgAttemptsToSend),
+          caption: `AVERAGE OF ${overview.sent} SENT`,
+        },
+    longestRunning === null
+      ? null
+      : {
+          label: "LONGEST RUNNING",
+          value: longestRunning.value,
+          caption: longestRunning.name.toUpperCase(),
+          to: `/app/projects/${longestRunning.slug}`,
+        },
+    mostSessions === null
+      ? null
+      : {
+          label: "MOST SESSIONS SPENT",
+          value: mostSessions.value,
+          caption: mostSessions.name.toUpperCase(),
+          to: `/app/projects/${mostSessions.slug}`,
+        },
+  ];
+  return all.filter((t): t is Tile => t !== null);
 }
 
-function ProjectRow({
-  climb,
-  onUnmark,
+function Section({
+  title,
+  meta,
+  items,
 }: {
-  climb: ClimbSummary;
-  onUnmark: () => void;
-}): React.ReactElement {
-  const sent = projectStatus(climb) === "sent";
+  title: string;
+  meta: string;
+  items: ProjectListItem[];
+}): React.ReactElement | null {
+  if (items.length === 0) return null;
   return (
-    <div className="project-row">
-      <span className="project-grade">{climbGradeLabel(climb)}</span>
-      <div style={{ minWidth: 0, display: "flex", flexDirection: "column", gap: 4 }}>
-        <span className="project-name">{climb.name}</span>
-        <span style={monoMuted}>
-          {projectMetaLabel(climb)} · {lastTriedLabel(climb)}
-        </span>
+    <>
+      <div className="projects-section">
+        <h2 className="projects-section-title">{title}</h2>
+        <span className="projects-section-meta">{meta}</span>
       </div>
-      <span
-        className="project-status"
-        style={{
-          ...monoMuted,
-          fontSize: 10,
-          padding: "5px 9px",
-          borderRadius: "var(--radius-pill)",
-          background: sent ? "var(--bs-gold)" : "rgba(64,63,76,0.06)",
-          color: "var(--bs-gunmetal)",
-        }}
-      >
-        {sent ? "SENT" : "OPEN"}
-      </span>
-      <button
-        type="button"
-        onClick={onUnmark}
-        className="project-unmark"
-        style={{
-          ...monoMuted,
-          fontSize: 10,
-          background: "none",
-          border: "none",
-          cursor: "pointer",
-        }}
-      >
-        REMOVE
-      </button>
-    </div>
+      <div className="projects-list">
+        {items.map((item) => (
+          <ProjectRow key={item.climb.slug} item={item} />
+        ))}
+      </div>
+    </>
   );
 }
 
 export function ProjectsList({ apiUrl }: ProjectsListProps): React.ReactElement {
   const api = useClientApi(apiUrl);
+  const projects = useProjects(api);
   const vocabulary = useClimbVocabulary(api);
-  const [error, setError] = React.useState<string | null>(null);
-  const projects = projectsOf(vocabulary.climbs);
-  const open = projects.filter((p) => projectStatus(p) === "open").length;
+  const [adding, setAdding] = React.useState(false);
+  const { state } = projects;
 
-  async function unmark(climb: ClimbSummary): Promise<void> {
-    setError(null);
-    try {
-      await vocabulary.unmarkProject(climb);
-    } catch {
-      setError("Could not remove the project. Try again.");
-    }
-  }
+  const climbs: ClimbSummary[] = vocabulary.climbs;
+  const ready = state.status === "ready" ? state.data : null;
 
   return (
     <div>
@@ -109,42 +113,84 @@ export function ProjectsList({ apiUrl }: ProjectsListProps): React.ReactElement 
           <Logo variant="mark" size={22} />
         </span>
         <h1 className="sessions-title">Projects</h1>
-        {vocabulary.loaded && (
+        {ready !== null && (
           <span style={monoMuted}>
-            {open} OPEN · {projects.length - open} SENT
+            {ready.overview.open} OPEN · {ready.overview.sent} SENT
           </span>
         )}
+        <div style={{ flex: 1 }} />
+        <Button variant="azure" size="sm" onClick={() => setAdding(true)}>
+          New project
+        </Button>
       </div>
-      {error !== null && (
-        <span
-          style={{
-            ...monoMuted,
-            display: "block",
-            marginTop: 22,
-            color: "var(--text-label-accent)",
-          }}
-        >
-          {error}
-        </span>
-      )}
-      {!vocabulary.loaded && (
+
+      {state.status === "loading" && (
         <span style={{ ...monoMuted, display: "block", marginTop: 22 }}>LOADING…</span>
       )}
-      {vocabulary.loaded && projects.length === 0 && (
-        <div style={muted}>
-          No projects yet. Flag a climb while{" "}
-          <Link to="/app/sessions/new" style={{ color: "var(--bs-azure-ink)" }}>
-            logging a session
-          </Link>{" "}
-          and every attempt and session you put into it adds up here.
-        </div>
+      {state.status === "error" && (
+        <span style={{ ...monoMuted, display: "block", marginTop: 22 }}>
+          Could not load your projects. Refresh to retry.
+        </span>
       )}
-      {projects.length > 0 && (
-        <div className="projects-list">
-          {projects.map((climb) => (
-            <ProjectRow key={climb.slug} climb={climb} onUnmark={() => void unmark(climb)} />
-          ))}
-        </div>
+
+      {ready !== null && (
+        <>
+          {(ready.open.length > 0 || ready.sent.length > 0) && (
+            <div className="projects-stats">
+              {tiles(ready.overview).map((tile) =>
+                tile.to === undefined ? (
+                  <div key={tile.label} className="projects-stat">
+                    <span className="projects-stat-label">{tile.label}</span>
+                    <span className="projects-stat-value">{tile.value}</span>
+                    <span className="projects-stat-caption">{tile.caption}</span>
+                  </div>
+                ) : (
+                  <Link key={tile.label} to={tile.to} className="projects-stat">
+                    <span className="projects-stat-label">{tile.label}</span>
+                    <span className="projects-stat-value">{tile.value}</span>
+                    <span className="projects-stat-caption">{tile.caption}</span>
+                  </Link>
+                )
+              )}
+            </div>
+          )}
+
+          <Section
+            title="Open"
+            meta={`${ready.open.length} ${ready.open.length === 1 ? "PROJECT" : "PROJECTS"} · ${ready.overview.attemptsInvested} ATTEMPTS`}
+            items={ready.open}
+          />
+          <Section
+            title="Sent"
+            meta={
+              ready.overview.hardestSentLabel === null
+                ? `${ready.sent.length} ${ready.sent.length === 1 ? "PROJECT" : "PROJECTS"}`
+                : `${ready.sent.length} ${ready.sent.length === 1 ? "PROJECT" : "PROJECTS"} · HARDEST ${ready.overview.hardestSentLabel}`
+            }
+            items={ready.sent}
+          />
+
+          {ready.open.length === 0 && ready.sent.length === 0 && (
+            <div style={muted}>
+              No projects yet. Add one here, or flag a climb while{" "}
+              <Link to="/app/sessions/new" style={{ color: "var(--bs-azure-ink)" }}>
+                logging a session
+              </Link>{" "}
+              and every attempt and session you put into it adds up here.
+            </div>
+          )}
+        </>
+      )}
+
+      {adding && (
+        <AddProjectDialog
+          climbs={climbs}
+          onClose={() => setAdding(false)}
+          onSave={async (input) => {
+            await projects.save(input);
+            await vocabulary.reload();
+          }}
+        />
       )}
     </div>
   );

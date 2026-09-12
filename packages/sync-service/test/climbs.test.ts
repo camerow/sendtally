@@ -28,7 +28,10 @@ describe("climbCatalogue", () => {
         slug: "moonraker",
         name: "Moonraker",
         grade: { scale: "v", value: 7 },
+        discipline: "boulder",
         project: false,
+        beta: null,
+        beta_updated_at: null,
         sessions: 2,
         attempts: 9,
         sends: 1,
@@ -39,7 +42,10 @@ describe("climbCatalogue", () => {
         slug: "warm-up",
         name: "Warm up",
         grade: { scale: "v", value: 2 },
+        discipline: "boulder",
         project: false,
+        beta: null,
+        beta_updated_at: null,
         sessions: 1,
         attempts: 1,
         sends: 1,
@@ -58,13 +64,19 @@ describe("climbCatalogue", () => {
           slug: "moonraker",
           name: "Moonraker",
           grade_json: '{"scale":"v","value":6}',
+          discipline: "boulder",
+          beta: "Heel hook the ar\u00eate.",
+          beta_updated_at: "2026-09-02T00:00:00Z",
           created_at: "2026-08-01T00:00:00Z",
         },
         {
           user_id: "u",
           slug: "dreamcatcher",
           name: "Dreamcatcher",
-          grade_json: '{"scale":"yds","value":"5.14a"}',
+          grade_json: null,
+          discipline: "route",
+          beta: null,
+          beta_updated_at: null,
           created_at: "2026-09-05T00:00:00Z",
         },
       ]
@@ -73,6 +85,8 @@ describe("climbCatalogue", () => {
       ["dreamcatcher", true, 0, 0],
       ["moonraker", true, 1, 1],
     ]);
-    expect(catalogue[0]?.grade).toEqual({ scale: "yds", value: "5.14a" });
+    expect(catalogue[0]?.grade).toBeNull();
+    expect(catalogue[0]?.discipline).toBe("route");
+    expect(catalogue[1]?.beta).toBe("Heel hook the ar\u00eate.");
   });
 });

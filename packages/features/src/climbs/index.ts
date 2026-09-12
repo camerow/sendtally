@@ -2,6 +2,8 @@ export {
   MAX_CLIMB_SUGGESTIONS,
   climbDraftGrade,
   climbGradeLabel,
+  climbKey,
+  climbsWorkedBefore,
   findClimb,
   matchClimbs,
   projectMetaLabel,
@@ -10,4 +12,28 @@ export {
   sameClimbName,
   type ProjectStatus,
 } from "./transforms";
+export {
+  dateLabel,
+  disciplineLabel,
+  gradeRank,
+  projectBars,
+  projectDetailVM,
+  projectSessions,
+  projectsOverview,
+  weeksBetween,
+  type ProjectBar,
+  type ProjectDetailVM,
+  type ProjectHighlight,
+  type ProjectSessionVM,
+  type ProjectStat,
+  type ProjectsOverviewVM,
+} from "./projects";
 export { useClimbVocabulary, type ClimbVocabulary } from "./useClimbVocabulary";
+export {
+  useProject,
+  useProjects,
+  type ProjectFeature,
+  type ProjectListItem,
+  type ProjectsData,
+  type ProjectsFeature,
+} from "./useProjects";

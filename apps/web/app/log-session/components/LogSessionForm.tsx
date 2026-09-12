@@ -153,7 +153,9 @@ export function LogSessionForm({
               ...c,
               name,
               project: undefined,
-              ...(known === undefined ? {} : { grade: climbDraftGrade(known, d.scale) }),
+              ...(known === undefined || climbDraftGrade(known, d.scale) === ""
+                ? {}
+                : { grade: climbDraftGrade(known, d.scale) }),
             }
       ),
     }));
@@ -165,7 +167,16 @@ export function LogSessionForm({
       climbs: d.climbs.map((c) =>
         c.key !== key
           ? c
-          : { ...c, name: known.name, grade: climbDraftGrade(known, d.scale), project: undefined }
+          : {
+              ...c,
+              name: known.name,
+              project: undefined,
+              // A project added from the projects page has no grade yet, so the
+              // one the user already picked in the form stands.
+              ...(climbDraftGrade(known, d.scale) === ""
+                ? {}
+                : { grade: climbDraftGrade(known, d.scale) }),
+            }
       ),
     }));
   }

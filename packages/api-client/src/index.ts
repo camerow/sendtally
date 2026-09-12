@@ -5,6 +5,7 @@ import {
   type Entitlements,
   type LogSessionInput,
   type PostOutcome,
+  type ProjectInput,
   type SessionRow,
   type SessionDetail,
   type SessionTag,
@@ -109,6 +110,13 @@ export class SendtallyApi {
 
   climbs(): Promise<{ climbs: ClimbSummary[] }> {
     return this.request<{ climbs: ClimbSummary[] }>("/v1/climbs");
+  }
+
+  saveProject(project: ProjectInput): Promise<{ slug: string }> {
+    return this.request<{ slug: string }>("/v1/projects", {
+      method: "POST",
+      body: JSON.stringify(project),
+    });
   }
 
   unmarkProject(slug: string): Promise<{ deleted: boolean }> {

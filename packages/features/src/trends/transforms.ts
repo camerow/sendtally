@@ -1,5 +1,6 @@
 import { climbDiscipline, climbRank, type Discipline } from "@sendtally/core";
 import type { SessionWithClimbs } from "@sendtally/api-client";
+import { climbKey } from "../climbs/transforms";
 import { gradeFormatterFor, type GradeFormatter } from "../sessions/grades";
 import { sessionTagGroups } from "../sessions/tags";
 import type {
@@ -27,14 +28,22 @@ const RANGE_LABELS: Record<TrendRange, string> = {
   all: "ALL TIME",
 };
 
+// A flash is a first encounter: one try on a climb with nothing logged against
+// its name before, in this session or any earlier one. Working a project is
+// what makes the later send a redpoint, so those attempts count here.
 function sends(sessions: SessionWithClimbs[], discipline: Discipline): Sent[] {
+  const climbs = sessions
+    .flatMap((s) => s.climbs.map((c) => ({ climb: c, time: Date.parse(c.time) })))
+    .sort((a, b) => a.time - b.time);
+  const seen = new Set<string>();
   const out: Sent[] = [];
-  for (const s of sessions) {
-    for (const c of s.climbs) {
-      const rank = climbRank(c);
-      if (c.kind === "send" && rank >= 0 && climbDiscipline(c) === discipline) {
-        out.push({ grade: rank, flash: c.tries <= 1, time: Date.parse(c.time) });
-      }
+  for (const { climb, time } of climbs) {
+    const key = climbKey(climb.name);
+    const firstEncounter = key === "" || !seen.has(key);
+    if (key !== "") seen.add(key);
+    const rank = climbRank(climb);
+    if (climb.kind === "send" && rank >= 0 && climbDiscipline(climb) === discipline) {
+      out.push({ grade: rank, flash: firstEncounter && climb.tries <= 1, time });
     }
   }
   return out;
