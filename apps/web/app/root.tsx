@@ -1,6 +1,5 @@
 import { ClerkProvider, useUser } from "@clerk/react-router";
-import { clerkMiddleware } from "@clerk/react-router/server";
-import { rootAuthLoader } from "@clerk/react-router/ssr.server";
+import { clerkMiddleware, rootAuthLoader } from "@clerk/react-router/server";
 import React from "react";
 import type { LinksFunction, LoaderFunctionArgs, MiddlewareFunction } from "react-router";
 import {
