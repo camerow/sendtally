@@ -3,12 +3,14 @@ import { Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import type {
   DeleteAccountFeature,
+  GradeScalesFeature,
   SettingsVM,
   StravaPostingFeature,
 } from "@sendtally/features/settings";
 import { colors, fonts } from "@sendtally/design/tokens";
 import { Logo } from "../../components/Logo";
 import { DeleteAccountSection } from "./DeleteAccountSection";
+import { GradeScaleSection } from "./GradeScaleSection";
 import { MembershipSection, type MembershipSectionProps } from "./MembershipSection";
 import { StravaPostingSection } from "./StravaPostingSection";
 import {
@@ -26,6 +28,7 @@ export type SettingsViewProps = {
   deletion: DeleteAccountFeature;
   billing: MembershipSectionProps | null;
   posting: StravaPostingFeature;
+  scales: GradeScalesFeature;
   onSignOut: () => void;
 };
 
@@ -35,6 +38,7 @@ export function SettingsView({
   deletion,
   billing,
   posting,
+  scales,
   onSignOut,
 }: SettingsViewProps): React.ReactElement {
   return (
@@ -60,6 +64,11 @@ export function SettingsView({
             Settings
           </Text>
           <Text style={monoMuted}>{vm.headerBadge}</Text>
+        </View>
+
+        <View style={sectionCard}>
+          <Text style={sectionLabel}>GRADES</Text>
+          <GradeScaleSection scales={scales} />
         </View>
 
         <View style={sectionCard}>

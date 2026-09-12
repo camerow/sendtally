@@ -3,6 +3,7 @@ import {
   type ClimbSummary,
   type ConnectionStatus,
   type Entitlements,
+  type GradeScales,
   type LogSessionInput,
   type PostOutcome,
   type ProjectInput,
@@ -106,6 +107,13 @@ export class SendtallyApi {
       `/v1/sessions/${encodeURIComponent(fingerprint)}/notes`,
       { method: "PUT", body: JSON.stringify({ notes }) }
     );
+  }
+
+  setGradeScales(scales: Partial<GradeScales>): Promise<{ gradeScales: GradeScales }> {
+    return this.request<{ gradeScales: GradeScales }>("/v1/preferences/grade-scales", {
+      method: "PUT",
+      body: JSON.stringify(scales),
+    });
   }
 
   climbs(): Promise<{ climbs: ClimbSummary[] }> {

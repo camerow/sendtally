@@ -10,6 +10,7 @@ export {
   projectStatus,
   projectsOf,
   sameClimbName,
+  typicalGradeIndex,
   type ProjectStatus,
 } from "./transforms";
 export {

@@ -8,6 +8,7 @@ import {
   type ProjectListItem,
   type ProjectsOverviewVM,
 } from "@sendtally/features/climbs";
+import { useGradeScalePrefs } from "@sendtally/features/settings";
 import { colors, fonts } from "@sendtally/design/tokens";
 import { Icon } from "../../components/Icon";
 import { LogoMark } from "../../components/Logo";
@@ -115,6 +116,7 @@ function Section({
 export default function Projects(): React.ReactElement {
   const api = useApi();
   const projects = useProjects(api);
+  const { scales } = useGradeScalePrefs(api);
   const vocabulary = useClimbVocabulary(api);
   const [refreshing, setRefreshing] = React.useState(false);
   const [adding, setAdding] = React.useState(false);
@@ -249,6 +251,7 @@ export default function Projects(): React.ReactElement {
       <AddProjectSheet
         visible={adding}
         climbs={vocabulary.climbs}
+        scales={scales}
         onClose={() => setAdding(false)}
         onSave={async (input) => {
           await projects.save(input);

@@ -17,6 +17,7 @@ import {
   type LogSessionDraft,
 } from "@sendtally/features/log-session";
 import { SESSION_NOTE_MAX, useTagVocabulary } from "@sendtally/features/sessions";
+import { useGradeScalePrefs } from "@sendtally/features/settings";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { useApi } from "../../lib/api";
 import { TagPicker } from "../sessions/TagPicker";
@@ -103,6 +104,19 @@ export function LogSessionForm({
   const [error, setError] = React.useState<string | null>(null);
   const nextKey = React.useRef(draft.climbs.length + 1);
   const { suggestionsFor } = useTagVocabulary(api);
+  const prefs = useGradeScalePrefs(api);
+
+  // The preference query resolves after the first render, so a new draft adopts
+  // the user's scale once. An edit keeps the scale the session was logged in,
+  // and touching the scale picker stops the adoption.
+  const adopted = React.useRef(editing !== undefined);
+  React.useEffect(() => {
+    if (adopted.current) return;
+    if (!prefs.ready) return;
+    adopted.current = true;
+    setDraft((d) => withScale(d, prefs.scales.boulder));
+  }, [prefs.ready, prefs.scales]);
+
   const vocabulary = useClimbVocabulary(api);
   const [editingKey, setEditingKey] = React.useState<string | null>(null);
   const editingIndex = draft.climbs.findIndex((c) => c.key === editingKey);
@@ -378,7 +392,10 @@ export function LogSessionForm({
                 key={option.value}
                 label={option.label}
                 active={draft.scale === option.value}
-                onPress={() => setDraft(withScale(draft, option.value))}
+                onPress={() => {
+                  adopted.current = true;
+                  setDraft(withScale(draft, option.value));
+                }}
               />
             ))}
           </View>

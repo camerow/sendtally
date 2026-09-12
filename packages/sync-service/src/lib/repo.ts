@@ -82,6 +82,31 @@ export async function getUser(db: D1Database, id: string): Promise<UserRow | nul
   return row ?? null;
 }
 
+// The scale a user reads grades in, per discipline. Stored so anywhere we show a
+// grade without asking - the project dialog, a new session draft - shows theirs.
+export type GradeScales = { boulder: "v" | "font"; route: "yds" | "french" };
+
+export const DEFAULT_GRADE_SCALES: GradeScales = { boulder: "v", route: "yds" };
+
+export function gradeScalesOf(user: UserRow | null): GradeScales {
+  if (user === null) return DEFAULT_GRADE_SCALES;
+  return { boulder: user.boulder_scale, route: user.route_scale };
+}
+
+export async function setGradeScales(
+  db: D1Database,
+  id: string,
+  scales: Partial<GradeScales>
+): Promise<void> {
+  await drizzle(db)
+    .update(users)
+    .set({
+      ...(scales.boulder === undefined ? {} : { boulder_scale: scales.boulder }),
+      ...(scales.route === undefined ? {} : { route_scale: scales.route }),
+    })
+    .where(eq(users.id, id));
+}
+
 export type StravaConnectionInput = {
   user_id: string;
   athlete_id: number;

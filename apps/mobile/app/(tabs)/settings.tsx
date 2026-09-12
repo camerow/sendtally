@@ -1,7 +1,12 @@
 import { useClerk, useUser } from "@clerk/clerk-expo";
 import { useRouter } from "expo-router";
 import React from "react";
-import { useDeleteAccount, useSettings, useStravaPosting } from "@sendtally/features/settings";
+import {
+  useDeleteAccount,
+  useGradeScales,
+  useSettings,
+  useStravaPosting,
+} from "@sendtally/features/settings";
 import { useBilling } from "../../features/billing/useBilling";
 import { SettingsView } from "../../features/settings/SettingsView";
 import { useApi } from "../../lib/api";
@@ -18,6 +23,7 @@ export default function Settings(): React.ReactElement {
   }, [clerk, router]);
   const deletion = useDeleteAccount(api, onDeleted);
   const posting = useStravaPosting(api, vm, reload);
+  const scales = useGradeScales(api, vm, reload);
   const onSignOut = React.useCallback(() => {
     void clerk.signOut().then(() => router.replace("/sign-in"));
   }, [clerk, router]);
@@ -32,6 +38,7 @@ export default function Settings(): React.ReactElement {
         billing === null ? null : { membership: billing.membership.vm, onOpen: onOpenMembership }
       }
       posting={posting}
+      scales={scales}
       onSignOut={onSignOut}
     />
   );

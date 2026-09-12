@@ -9,6 +9,7 @@ import {
 } from "@sendtally/features/climbs";
 import { Button, Logo } from "@sendtally/design";
 import { useClientApi } from "../../lib/useClientApi";
+import { useGradeScalePrefs } from "@sendtally/features/settings";
 import { AddProjectDialog } from "./AddProjectDialog";
 import { ProjectRow } from "./ProjectRow";
 
@@ -100,6 +101,7 @@ export function ProjectsList({ apiUrl }: ProjectsListProps): React.ReactElement 
   const api = useClientApi(apiUrl);
   const projects = useProjects(api);
   const vocabulary = useClimbVocabulary(api);
+  const { scales } = useGradeScalePrefs(api);
   const [adding, setAdding] = React.useState(false);
   const { state } = projects;
 
@@ -185,6 +187,7 @@ export function ProjectsList({ apiUrl }: ProjectsListProps): React.ReactElement 
       {adding && (
         <AddProjectDialog
           climbs={climbs}
+          scales={scales}
           onClose={() => setAdding(false)}
           onSave={async (input) => {
             await projects.save(input);

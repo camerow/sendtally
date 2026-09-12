@@ -317,6 +317,39 @@ describe("app", () => {
     expect(rejected.status).toBe(400);
   });
 
+  it("defaults the grade scales and remembers a change", async () => {
+    const headers = { "x-test-user": "user_scales", "Content-Type": "application/json" };
+
+    const before = await testApp().request("/v1/status", { headers }, env);
+    expect(await before.json()).toMatchObject({ gradeScales: { boulder: "v", route: "yds" } });
+
+    const saved = await testApp().request(
+      "/v1/preferences/grade-scales",
+      { method: "PUT", headers, body: JSON.stringify({ boulder: "font", route: "french" }) },
+      env
+    );
+    expect(saved.status).toBe(200);
+    expect(await saved.json()).toEqual({ gradeScales: { boulder: "font", route: "french" } });
+
+    const after = await testApp().request("/v1/status", { headers }, env);
+    expect(await after.json()).toMatchObject({ gradeScales: { boulder: "font", route: "french" } });
+
+    // One scale at a time leaves the other alone.
+    const one = await testApp().request(
+      "/v1/preferences/grade-scales",
+      { method: "PUT", headers, body: JSON.stringify({ boulder: "v" }) },
+      env
+    );
+    expect(await one.json()).toEqual({ gradeScales: { boulder: "v", route: "french" } });
+
+    const rejected = await testApp().request(
+      "/v1/preferences/grade-scales",
+      { method: "PUT", headers, body: JSON.stringify({ boulder: "yds" }) },
+      env
+    );
+    expect(rejected.status).toBe(400);
+  });
+
   it("keeps the grade a project was added with", async () => {
     const headers = { "x-test-user": "user_gradedproject", "Content-Type": "application/json" };
     const created = await testApp().request(

@@ -459,8 +459,14 @@ export function createApp(deps: AppDeps): Hono<AppEnv> {
   });
 
   app.get("/v1/status", async (c) => {
-    const strava = await repo.getStravaConnection(c.env.DB, c.get("userId"));
+    const userId = c.get("userId");
+    const [strava, user] = await Promise.all([
+      repo.getStravaConnection(c.env.DB, userId),
+      repo.getUser(c.env.DB, userId),
+    ]);
+    const scales = repo.gradeScalesOf(user);
     return c.json({
+      gradeScales: { boulder: scales.boulder, route: scales.route },
       strava:
         strava === null
           ? null
@@ -485,6 +491,22 @@ export function createApp(deps: AppDeps): Hono<AppEnv> {
     await mirrorStoreEntitlements(c.env, revenuecat(c.env), user.userId);
     await captureEvent(c, "entitlements_refreshed", {});
     return c.json(await resolveEntitlements(c.env, user));
+  });
+
+  const gradeScalesBody = z.object({
+    boulder: z.enum(["v", "font"]).optional(),
+    route: z.enum(["yds", "french"]).optional(),
+  });
+
+  app.put("/v1/preferences/grade-scales", async (c) => {
+    const parsed = gradeScalesBody.safeParse(await c.req.json().catch(() => null));
+    if (!parsed.success) return c.json({ error: "invalid request body" }, 400);
+    const userId = c.get("userId");
+    await repo.ensureUser(c.env.DB, userId);
+    await repo.setGradeScales(c.env.DB, userId, parsed.data);
+    const scales = repo.gradeScalesOf(await repo.getUser(c.env.DB, userId));
+    await captureEvent(c, "grade_scales_updated", scales);
+    return c.json({ gradeScales: scales });
   });
 
   const stravaPostingBody = z.object({

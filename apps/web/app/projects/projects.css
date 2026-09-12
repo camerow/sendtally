@@ -356,6 +356,29 @@
   display: none;
 }
 
+.project-dialog-identity {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  box-sizing: border-box;
+  padding: 13px 16px;
+  background: var(--surface-soft);
+  border: 1px solid rgba(64, 63, 76, 0.15);
+  border-radius: var(--radius-control);
+}
+
+.project-dialog-change {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  color: var(--bs-azure-ink);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
 .project-dialog-actions {
   display: flex;
   align-items: center;

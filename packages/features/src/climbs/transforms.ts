@@ -1,6 +1,6 @@
 import type { ClimbSummary } from "@sendtally/api-client";
-import { formatGrade, type Grade, type GradeScale } from "@sendtally/core";
-import { convertGrade } from "../log-session/transforms";
+import { disciplineOf, formatGrade, type Grade, type GradeScale } from "@sendtally/core";
+import { convertGrade, gradeOptions } from "../log-session/transforms";
 
 export const MAX_CLIMB_SUGGESTIONS = 4;
 
@@ -34,6 +34,21 @@ export function climbDraftGrade(climb: ClimbSummary, scale: GradeScale): string 
   const stored: Grade | null = climb.grade;
   if (stored === null) return "";
   return convertGrade(formatGrade(stored), stored.scale, scale);
+}
+
+// A grade rail is long enough that opening it at the bottom of the ladder hides
+// every grade the user would pick. This is the middle of what they have logged
+// in that discipline, and a third of the way up the ladder before they log
+// anything at all.
+export function typicalGradeIndex(climbs: ClimbSummary[], scale: GradeScale): number {
+  const ladder = gradeOptions(scale);
+  const discipline = disciplineOf(scale);
+  const indices = climbs
+    .filter((c) => c.grade !== null && c.discipline === discipline)
+    .map((c) => ladder.indexOf(climbDraftGrade(c, scale)))
+    .filter((i) => i >= 0);
+  if (indices.length === 0) return Math.floor(ladder.length / 3);
+  return Math.round(indices.reduce((a, b) => a + b, 0) / indices.length);
 }
 
 // Names of climbs the user had already logged before a session started - what

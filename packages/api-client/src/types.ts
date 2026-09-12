@@ -1,4 +1,7 @@
+export type GradeScales = { boulder: "v" | "font"; route: "yds" | "french" };
+
 export type ConnectionStatus = {
+  gradeScales: GradeScales;
   strava: {
     athleteId: number;
     status: string;

@@ -13,6 +13,12 @@ export const users = sqliteTable("users", {
   timezone: text("timezone").notNull().default("UTC"),
   created_at: text("created_at").notNull(),
   auto_sync: integer("auto_sync").notNull().default(0),
+  boulder_scale: text("boulder_scale", { enum: ["v", "font"] })
+    .notNull()
+    .default("v"),
+  route_scale: text("route_scale", { enum: ["yds", "french"] })
+    .notNull()
+    .default("yds"),
 });
 
 export const boardConnections = sqliteTable(
