@@ -9,6 +9,7 @@
   "env": {
     "staging": {
       "routes": [{ "pattern": "staging.sendtally.com", "custom_domain": true }],
+      "preview_urls": true,
       "vars": {
         "API_URL": "https://api-staging.sendtally.com",
         "CLERK_PUBLISHABLE_KEY": "pk_test_bGlnaHQtbGlnZXItOTkuY2xlcmsuYWNjb3VudHMuZGV2JA",

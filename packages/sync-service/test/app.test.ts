@@ -39,6 +39,25 @@ describe("app", () => {
     expect(await res.json()).toEqual({ error: "invalid request body" });
   });
 
+  it("lets a preview version of the web app through CORS, but not any other origin", async () => {
+    const preflight = async (origin: string) =>
+      (
+        await testApp().request(
+          "/v1/sessions",
+          {
+            method: "OPTIONS",
+            headers: { Origin: origin, "Access-Control-Request-Method": "GET" },
+          },
+          env
+        )
+      ).headers.get("Access-Control-Allow-Origin");
+
+    const preview = "https://a1b2c3d4-sendtally-web-staging.workers.test";
+    expect(await preflight("https://sendtally.test")).toBe("https://sendtally.test");
+    expect(await preflight(preview)).toBe(preview);
+    expect(await preflight("https://evil.example")).toBe("https://sendtally.test");
+  });
+
   it("rejects /v1 routes without a verified user", async () => {
     const res = await testApp().request("/v1/sessions", {}, env);
     expect(res.status).toBe(401);

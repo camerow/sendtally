@@ -21,6 +21,7 @@ export default defineWorkersConfig(async () => {
               REVENUECAT_SECRET_API_KEY: "test-revenuecat-secret",
               REVENUECAT_WEBHOOK_AUTH: "test-revenuecat-webhook-auth",
               WEB_APP_URL: "https://sendtally.test",
+              PREVIEW_ORIGIN_SUFFIX: "-sendtally-web-staging.workers.test",
             },
           },
         },
