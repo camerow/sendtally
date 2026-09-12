@@ -9,6 +9,8 @@ import {
   emptyDraft,
   newClimb,
   toLogSessionInput,
+  useDraftAutosave,
+  withStartTime,
   withTag,
   withoutTag,
   type ClimbDraft,
@@ -18,6 +20,8 @@ import { SESSION_NOTE_MAX, useTagVocabulary } from "@sendtally/features/sessions
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { useApi } from "../../lib/api";
 import { useGradePrefs } from "../../lib/gradePrefs";
+import { sessionDraftStorage } from "../../lib/sessionDraftStorage";
+import { DraftBanner } from "./DraftBanner";
 import { TagPicker } from "../sessions/TagPicker";
 import { ClimbEditorSheet } from "./ClimbEditorSheet";
 import { ClimbLedgerRow } from "./ClimbLedgerRow";
@@ -31,6 +35,21 @@ function LabelText({ children }: { children: React.ReactNode }): React.ReactElem
         fontSize: 10,
         letterSpacing: 0.8,
         color: colors.textSecondary,
+      }}
+    >
+      {children}
+    </Text>
+  );
+}
+
+function Caption({ children }: { children: React.ReactNode }): React.ReactElement {
+  return (
+    <Text
+      style={{
+        fontFamily: fonts.monoMedium,
+        fontSize: 9,
+        letterSpacing: 0.7,
+        color: colors.textFaint,
       }}
     >
       {children}
@@ -108,6 +127,16 @@ export function LogSessionForm({
   const [editingKey, setEditingKey] = React.useState<string | null>(null);
   const editingIndex = draft.climbs.findIndex((c) => c.key === editingKey);
   const editingClimb = editingIndex < 0 ? null : draft.climbs[editingIndex]!;
+  const [defaultTimes] = React.useState({ start: draft.startTime, end: draft.endTime });
+  const autosave = useDraftAutosave(
+    editing === undefined ? sessionDraftStorage : null,
+    draft,
+    setDraft
+  );
+  const untouchedTimes =
+    editing === undefined &&
+    draft.startTime === defaultTimes.start &&
+    draft.endTime === defaultTimes.end;
 
   function updateClimb(key: string, patch: (climb: ClimbDraft) => ClimbDraft): void {
     setDraft((d) => ({ ...d, climbs: d.climbs.map((c) => (c.key === key ? patch(c) : c)) }));
@@ -168,6 +197,7 @@ export function LogSessionForm({
         editing === undefined
           ? await api.logSession(input)
           : await api.updateLoggedSession(editing.fingerprint, input);
+      autosave.clear();
       router.replace(`/session/${encodeURIComponent(session.fingerprint)}`);
     } catch {
       setError("Could not save the session. Try again.");
@@ -220,6 +250,14 @@ export function LogSessionForm({
           </Text>
         </View>
 
+        {autosave.offered !== null && (
+          <DraftBanner
+            stored={autosave.offered}
+            onResume={autosave.resume}
+            onStartFresh={autosave.startFresh}
+          />
+        )}
+
         <View style={{ gap: 7 }}>
           <LabelText>SESSION NAME · OPTIONAL</LabelText>
           <TextInput
@@ -248,9 +286,10 @@ export function LogSessionForm({
               value={draft.startTime}
               placeholder="HH:MM"
               placeholderTextColor={colors.textFaint}
-              onChangeText={(startTime) => setDraft({ ...draft, startTime })}
+              onChangeText={(startTime) => setDraft((d) => withStartTime(d, startTime))}
               style={{ ...inputStyle, fontFamily: fonts.mono, fontSize: 13 }}
             />
+            {untouchedTimes && <Caption>WHEN YOU OPENED THIS</Caption>}
           </View>
           <View style={{ flex: 1, gap: 7 }}>
             <LabelText>END</LabelText>
@@ -261,6 +300,7 @@ export function LogSessionForm({
               onChangeText={(endTime) => setDraft({ ...draft, endTime })}
               style={{ ...inputStyle, fontFamily: fonts.mono, fontSize: 13 }}
             />
+            {untouchedTimes && <Caption>START + 1H</Caption>}
           </View>
         </View>
 
@@ -471,6 +511,20 @@ export function LogSessionForm({
         >
           {draftSummary(draft)}
         </Text>
+        {autosave.savedAt !== null && (
+          <Text
+            style={{
+              fontFamily: fonts.monoMedium,
+              fontSize: 10,
+              letterSpacing: 0.8,
+              color: colors.textFaint,
+              textAlign: "center",
+            }}
+          >
+            ✓ DRAFT SAVED{" "}
+            {autosave.savedAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+          </Text>
+        )}
         <Pressable
           onPress={() => void save()}
           disabled={saving}

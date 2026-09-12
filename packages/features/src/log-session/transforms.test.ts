@@ -16,6 +16,7 @@ import {
   withClimbScale,
   withTag,
   withoutTag,
+  withStartTime,
 } from "./transforms";
 import { DEFAULT_GRADE_PREFS } from "./types";
 import type { ClimbDraft, GradeScale, LogSessionDraft } from "./types";
@@ -187,6 +188,8 @@ describe("durationMinutes", () => {
     expect(durationMinutes("18:30", "20:00")).toBe(90);
     expect(durationMinutes("23:00", "01:00")).toBe(120);
     expect(durationMinutes("bad", "20:00")).toBeUndefined();
+    expect(durationMinutes("09:00", "00:30")).toBeUndefined();
+    expect(durationMinutes("18:00", "18:00")).toBeUndefined();
   });
 
   it("labels durations", () => {
@@ -197,11 +200,11 @@ describe("durationMinutes", () => {
 });
 
 describe("emptyDraft", () => {
-  it("defaults to a 90-minute window ending now", () => {
+  it("starts now and runs an hour", () => {
     const d = emptyDraft(new Date(2026, 7, 26, 20, 2));
     expect(d.date).toBe("2026-08-26");
-    expect(d.startTime).toBe("18:30");
-    expect(d.endTime).toBe("20:00");
+    expect(d.startTime).toBe("20:00");
+    expect(d.endTime).toBe("21:00");
     expect(d.climbs).toHaveLength(1);
     expect(d.rpe).toBeNull();
   });
@@ -241,7 +244,34 @@ describe("draftProblem", () => {
   it("flags missing climbs, bad times, and over-long sessions", () => {
     expect(draftProblem(draft({ climbs: [] }))).toContain("climb");
     expect(draftProblem(draft({ endTime: "" }))).toContain("time");
-    expect(draftProblem(draft({ startTime: "18:00", endTime: "07:00" }))).toContain("12 hours");
+    expect(draftProblem(draft({ startTime: "06:00", endTime: "23:00" }))).toContain("12 hours");
+  });
+
+  it("names an end before the start rather than blaming the 12-hour rule", () => {
+    expect(draftProblem(draft({ startTime: "09:00", endTime: "00:30" }))).toBe(
+      "End time is before the start time."
+    );
+  });
+
+  it("still accepts a session that runs past midnight", () => {
+    expect(draftProblem(draft({ startTime: "22:00", endTime: "01:00" }))).toBeNull();
+  });
+});
+
+describe("withStartTime", () => {
+  it("moves the end time by the same amount", () => {
+    const moved = withStartTime(draft({ startTime: "18:30", endTime: "20:00" }), "17:15");
+    expect(moved).toMatchObject({ startTime: "17:15", endTime: "18:45" });
+  });
+
+  it("wraps the end past midnight", () => {
+    const moved = withStartTime(draft({ startTime: "18:30", endTime: "20:00" }), "23:30");
+    expect(moved.endTime).toBe("01:00");
+  });
+
+  it("leaves the end alone when the current pair makes no sense", () => {
+    const moved = withStartTime(draft({ startTime: "09:00", endTime: "00:30" }), "10:00");
+    expect(moved).toMatchObject({ startTime: "10:00", endTime: "00:30" });
   });
 });
 

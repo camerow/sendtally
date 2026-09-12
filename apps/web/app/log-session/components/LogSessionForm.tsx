@@ -9,7 +9,9 @@ import {
   emptyDraft,
   newClimb,
   toLogSessionInput,
+  useDraftAutosave,
   withClimbScale,
+  withStartTime,
   withTag,
   withoutTag,
   type ClimbDraft,
@@ -19,11 +21,17 @@ import {
 import { SESSION_NOTE_MAX, useTagVocabulary } from "@sendtally/features/sessions";
 import { TagPicker } from "../../components/TagPicker";
 import { useIsNarrow } from "../../lib/useIsNarrow";
+import { sessionDraftStorage } from "../../lib/sessionDraftStorage";
+import { DraftBanner } from "./DraftBanner";
 import { ClimbCard } from "./ClimbCard";
 import { ClimbEditorSheet } from "./ClimbEditorSheet";
 import { ClimbLedgerRow } from "./ClimbLedgerRow";
 import { Glyph } from "./Glyph";
-import { PLUS, chipStyle, columnHead, inputStyle, monoLabel } from "./styles";
+import { CHECK, PLUS, chipStyle, columnHead, inputStyle, monoLabel } from "./styles";
+
+function hhmm(at: Date): string {
+  return at.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+}
 
 function Field({
   label,
@@ -132,6 +140,12 @@ export function LogSessionForm({
   const vocabulary = useClimbVocabulary(api);
   const narrow = useIsNarrow();
   const [editingKey, setEditingKey] = React.useState<string | null>(null);
+  const [defaultTimes] = React.useState({ start: draft.startTime, end: draft.endTime });
+  const autosave = useDraftAutosave(
+    editing === undefined ? sessionDraftStorage : null,
+    draft,
+    setDraft
+  );
   const editingIndex = draft.climbs.findIndex((c) => c.key === editingKey);
   const editingClimb = editingIndex < 0 ? null : draft.climbs[editingIndex]!;
   const cancelTo =
@@ -139,6 +153,10 @@ export function LogSessionForm({
 
   const scale = draft.climbs[0]?.scale ?? "v";
   const problem = draftProblem(draft);
+  const untouchedTimes =
+    editing === undefined &&
+    draft.startTime === defaultTimes.start &&
+    draft.endTime === defaultTimes.end;
 
   function setScale(next: GradeScale): void {
     setDraft((d) => ({ ...d, climbs: d.climbs.map((c) => withClimbScale(c, next)) }));
@@ -211,6 +229,7 @@ export function LogSessionForm({
         editing === undefined
           ? await api.logSession(input)
           : await api.updateLoggedSession(editing.fingerprint, input);
+      autosave.clear();
       await navigate(`/app/sessions/${encodeURIComponent(session.fingerprint)}`);
     } catch {
       setError("Could not save the session. Try again.");
@@ -220,6 +239,13 @@ export function LogSessionForm({
 
   return (
     <div className="log-session">
+      {autosave.offered !== null && (
+        <DraftBanner
+          stored={autosave.offered}
+          onResume={autosave.resume}
+          onStartFresh={autosave.startFresh}
+        />
+      )}
       <div className="log-session-grid">
         <div className="log-session-details">
           <Field
@@ -251,10 +277,11 @@ export function LogSessionForm({
               <input
                 type="time"
                 value={draft.startTime}
-                onChange={(e) => setDraft({ ...draft, startTime: e.target.value })}
+                onChange={(e) => setDraft((d) => withStartTime(d, e.target.value))}
                 className="log-session-control"
                 style={inputStyle}
               />
+              {untouchedTimes && <span style={columnHead}>WHEN YOU OPENED THIS FORM</span>}
             </Field>
             <Field label="END TIME">
               <input
@@ -264,6 +291,7 @@ export function LogSessionForm({
                 className="log-session-control"
                 style={inputStyle}
               />
+              {untouchedTimes && <span style={columnHead}>START + 1H</span>}
             </Field>
           </div>
           <Field label="LOCATION">
@@ -444,6 +472,20 @@ export function LogSessionForm({
       <div className="log-session-actions">
         <div className="log-session-status">
           <span style={monoLabel}>{draftSummary(draft)}</span>
+          {autosave.savedAt !== null && (
+            <span
+              style={{
+                ...monoLabel,
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 7,
+                color: "rgba(64,63,76,0.55)",
+              }}
+            >
+              <Glyph d={CHECK} />
+              DRAFT SAVED {hhmm(autosave.savedAt)}
+            </span>
+          )}
           {error !== null && (
             <span style={{ ...monoLabel, color: "var(--text-label-accent)" }}>{error}</span>
           )}

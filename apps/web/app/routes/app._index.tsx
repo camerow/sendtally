@@ -15,6 +15,7 @@ import {
 } from "@sendtally/features/sessions";
 import { requireApi } from "../lib/api.server";
 import { sectionAnchorId } from "../sessions/anchors";
+import { DraftSessionRow } from "../sessions/components/DraftSessionRow";
 import { LogSessionFab } from "../sessions/components/LogSessionFab";
 import { MonthJumpRail } from "../sessions/components/MonthJumpRail";
 import { ScopeBar } from "../sessions/components/ScopeBar";
@@ -136,6 +137,7 @@ export default function Sessions(): React.ReactElement {
           Log a session
         </Link>
       </div>
+      <DraftSessionRow />
       {!stravaConnected && (
         <div className="sessions-banner">
           <span style={{ flex: 1, fontSize: 14, lineHeight: 1.5, color: "var(--text-on-dark)" }}>

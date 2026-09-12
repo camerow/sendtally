@@ -91,13 +91,13 @@ function hhmm(d: Date): string {
 }
 
 export function emptyDraft(now: Date, prefs: GradePrefs = DEFAULT_GRADE_PREFS): LogSessionDraft {
-  const roundedNow = new Date(Math.floor(now.getTime() / (5 * 60_000)) * 5 * 60_000);
-  const start = new Date(roundedNow.getTime() - 90 * 60_000);
+  const start = new Date(Math.floor(now.getTime() / (5 * 60_000)) * 5 * 60_000);
+  const end = new Date(start.getTime() + 60 * 60_000);
   return {
     name: "",
-    date: `${roundedNow.getFullYear()}-${pad(roundedNow.getMonth() + 1)}-${pad(roundedNow.getDate())}`,
+    date: `${start.getFullYear()}-${pad(start.getMonth() + 1)}-${pad(start.getDate())}`,
     startTime: hhmm(start),
-    endTime: hhmm(roundedNow),
+    endTime: hhmm(end),
     location: "indoor",
     tags: [],
     notes: "",
@@ -139,10 +139,22 @@ function minutesOf(time: string): number {
   return Number(time.slice(0, 2)) * 60 + Number(time.slice(3, 5));
 }
 
+const MAX_SESSION_MINUTES = 720;
+
 export function durationMinutes(startTime: string, endTime: string): number | undefined {
   if (!TIME.test(startTime) || !TIME.test(endTime)) return undefined;
   const diff = minutesOf(endTime) - minutesOf(startTime);
-  return diff > 0 ? diff : diff + 24 * 60;
+  if (diff > 0) return diff;
+  const overnight = diff + 24 * 60;
+  return overnight <= MAX_SESSION_MINUTES ? overnight : undefined;
+}
+
+export function withStartTime(draft: LogSessionDraft, startTime: string): LogSessionDraft {
+  const held = durationMinutes(draft.startTime, draft.endTime);
+  if (held === undefined || !TIME.test(startTime)) return { ...draft, startTime };
+  const endMinutes = (minutesOf(startTime) + held) % (24 * 60);
+  const endTime = `${pad(Math.floor(endMinutes / 60))}:${pad(endMinutes % 60)}`;
+  return { ...draft, startTime, endTime };
 }
 
 export function durationLabel(minutes: number): string {
@@ -187,9 +199,8 @@ export function draftProblem(draft: LogSessionDraft): string | null {
     return "Set a start and end time.";
   }
   const minutes = durationMinutes(draft.startTime, draft.endTime);
-  if (minutes === undefined || minutes > 720) {
-    return "Sessions longer than 12 hours can't be logged.";
-  }
+  if (minutes === undefined) return "End time is before the start time.";
+  if (minutes > MAX_SESSION_MINUTES) return "Sessions longer than 12 hours can't be logged.";
   if (draft.climbs.length === 0) return "Add at least one climb.";
   if (draft.climbs.some((c) => draftGrade(c.grade, c.scale) === undefined)) {
     return "Every climb needs a grade.";

@@ -19,10 +19,24 @@ export {
   vGradeOf,
   withClimbDiscipline,
   withClimbScale,
+  withStartTime,
   withTag,
   withoutTag,
 } from "./transforms";
 export { useSessionDraft, type EditableSession } from "./useSessionDraft";
+export {
+  useDraftAutosave,
+  useStoredDraft,
+  type DraftAutosave,
+  type StoredDraftEntry,
+} from "./useDraftAutosave";
+export {
+  DRAFT_TTL_MS,
+  draftStorage,
+  type DraftStorage,
+  type DraftStorageIo,
+  type StoredSessionDraft,
+} from "./draftStore";
 export { DEFAULT_GRADE_PREFS, DISCIPLINE_LABELS, GRADE_SCALE_OPTIONS } from "./types";
 export type {
   ClimbDraft,
