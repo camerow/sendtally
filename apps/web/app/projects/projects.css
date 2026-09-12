@@ -338,8 +338,22 @@
   border-top: none;
 }
 
-.project-dialog-suggestion[aria-selected="true"] {
+.project-dialog-suggestion[aria-selected="true"],
+.project-dialog-suggestion:hover {
   background: rgba(64, 63, 76, 0.04);
+}
+
+.project-dialog-rail {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  margin: 0 -26px;
+  padding: 2px 26px;
+}
+
+.project-dialog-rail::-webkit-scrollbar {
+  display: none;
 }
 
 .project-dialog-actions {

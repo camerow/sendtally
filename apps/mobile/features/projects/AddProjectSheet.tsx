@@ -1,8 +1,16 @@
 import React from "react";
 import { Modal, Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import type { ClimbSummary, Discipline, ProjectInput } from "@sendtally/api-client";
+import type { ClimbSummary, ProjectInput } from "@sendtally/api-client";
 import { climbGradeLabel, matchClimbs, projectMetaLabel } from "@sendtally/features/climbs";
+import {
+  GRADE_SCALE_OPTIONS,
+  convertGrade,
+  disciplineOf,
+  draftGrade,
+  gradeOptions,
+  type GradeScale,
+} from "@sendtally/features/log-session";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { Chip } from "../../components/Chip";
 import { Icon } from "../../components/Icon";
@@ -48,7 +56,9 @@ export function AddProjectSheet({
 }: AddProjectSheetProps): React.ReactElement {
   const insets = useSafeAreaInsets();
   const [name, setName] = React.useState("");
-  const [discipline, setDiscipline] = React.useState<Discipline>("boulder");
+  const [scale, setScale] = React.useState<GradeScale>("v");
+  const [grade, setGrade] = React.useState("");
+  const [settled, setSettled] = React.useState(false);
   const [beta, setBeta] = React.useState("");
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
@@ -56,7 +66,9 @@ export function AddProjectSheet({
   React.useEffect(() => {
     if (visible) {
       setName("");
-      setDiscipline("boulder");
+      setScale("v");
+      setGrade("");
+      setSettled(false);
       setBeta("");
       setError(null);
     }
@@ -65,15 +77,31 @@ export function AddProjectSheet({
   const trimmed = name.trim();
   const matches = trimmed === "" ? [] : matchClimbs(climbs, name);
   const exact = climbs.find((c) => c.name.toLowerCase() === trimmed.toLowerCase());
+  const showSuggestions = !settled && trimmed !== "" && (matches.length > 0 || exact === undefined);
+
+  const pick = (climb: ClimbSummary): void => {
+    setName(climb.name);
+    setSettled(true);
+    if (climb.grade === null) return;
+    setScale(climb.grade.scale);
+    setGrade(climb.grade.scale === "v" ? `V${climb.grade.value}` : climb.grade.value);
+  };
+
+  const changeScale = (next: GradeScale): void => {
+    setGrade(grade === "" ? "" : convertGrade(grade, scale, next));
+    setScale(next);
+  };
 
   const save = async (): Promise<void> => {
     if (trimmed === "") return;
     setBusy(true);
     setError(null);
+    const picked = draftGrade(grade, scale);
     try {
       await onSave({
         name: trimmed,
-        discipline,
+        discipline: disciplineOf(scale),
+        ...(picked === undefined ? {} : { grade: picked }),
         ...(beta.trim() === "" ? {} : { beta: beta.trim() }),
       });
       setBusy(false);
@@ -126,13 +154,16 @@ export function AddProjectSheet({
           <Text style={label}>NAME</Text>
           <TextInput
             value={name}
-            onChangeText={setName}
+            onChangeText={(value) => {
+              setName(value);
+              setSettled(false);
+            }}
             placeholder="Name of the climb"
             placeholderTextColor={colors.textFaint}
             autoCorrect={false}
             style={input}
           />
-          {trimmed !== "" && (
+          {showSuggestions && (
             <ScrollView
               keyboardShouldPersistTaps="handled"
               style={{
@@ -146,10 +177,7 @@ export function AddProjectSheet({
                 <Pressable
                   key={climb.slug}
                   accessibilityRole="button"
-                  onPress={() => {
-                    setName(climb.name);
-                    setDiscipline(climb.discipline);
-                  }}
+                  onPress={() => pick(climb)}
                   style={{
                     flexDirection: "row",
                     alignItems: "center",
@@ -185,7 +213,9 @@ export function AddProjectSheet({
                 </Pressable>
               ))}
               {exact === undefined && (
-                <View
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={() => setSettled(true)}
                   style={{
                     flexDirection: "row",
                     alignItems: "center",
@@ -203,27 +233,40 @@ export function AddProjectSheet({
                   >
                     Track “{trimmed}” as a new climb
                   </Text>
-                </View>
+                </Pressable>
               )}
             </ScrollView>
           )}
         </View>
 
         <View style={{ gap: 9 }}>
-          <Text style={label}>DISCIPLINE</Text>
-          <View style={{ flexDirection: "row", gap: 8 }}>
-            <Chip
-              label="BOULDER"
-              active={discipline === "boulder"}
-              onPress={() => setDiscipline("boulder")}
-            />
-            <Chip
-              label="SPORT"
-              active={discipline === "route"}
-              onPress={() => setDiscipline("route")}
-            />
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+            <Text style={{ ...label, flex: 1 }}>GRADE · OPTIONAL</Text>
+            {GRADE_SCALE_OPTIONS.map((option) => (
+              <Chip
+                key={option.value}
+                label={option.label}
+                active={scale === option.value}
+                onPress={() => changeScale(option.value)}
+              />
+            ))}
           </View>
-          <Text style={label}>THE GRADE COMES FROM THE FIRST SESSION YOU LOG IT IN</Text>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={{ gap: 6 }}
+          >
+            {gradeOptions(scale).map((g) => (
+              <Chip
+                key={g}
+                label={g}
+                active={g === grade}
+                onPress={() => setGrade(g === grade ? "" : g)}
+              />
+            ))}
+          </ScrollView>
+          <Text style={label}>LEAVE IT OFF AND THE GRADE COMES FROM THE FIRST SESSION</Text>
         </View>
 
         <View style={{ gap: 9 }}>

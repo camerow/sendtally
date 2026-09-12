@@ -285,6 +285,7 @@ export function createApp(deps: AppDeps): Hono<AppEnv> {
       slug,
       name,
       ...(parsed.data.discipline === undefined ? {} : { discipline: parsed.data.discipline }),
+      ...(parsed.data.grade === undefined ? {} : { grade: parsed.data.grade }),
       ...(parsed.data.beta === undefined ? {} : { beta: parsed.data.beta }),
     });
     await captureEvent(c, "project_marked", { source: "projects" });

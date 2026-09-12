@@ -1,6 +1,14 @@
 import React from "react";
-import type { ClimbSummary, Discipline, ProjectInput } from "@sendtally/api-client";
+import type { ClimbSummary, ProjectInput } from "@sendtally/api-client";
 import { climbGradeLabel, matchClimbs, projectMetaLabel } from "@sendtally/features/climbs";
+import {
+  GRADE_SCALE_OPTIONS,
+  convertGrade,
+  disciplineOf,
+  draftGrade,
+  gradeOptions,
+  type GradeScale,
+} from "@sendtally/features/log-session";
 import { Button } from "@sendtally/design";
 
 export type AddProjectDialogProps = {
@@ -9,19 +17,15 @@ export type AddProjectDialogProps = {
   onSave: (input: ProjectInput) => Promise<void>;
 };
 
-const DISCIPLINES: Array<{ value: Discipline; label: string }> = [
-  { value: "boulder", label: "BOULDER" },
-  { value: "route", label: "SPORT" },
-];
-
-const chip = (active: boolean): React.CSSProperties => ({
+const chip = (active: boolean, small = false): React.CSSProperties => ({
   fontFamily: "var(--font-mono)",
   fontWeight: 500,
-  fontSize: 11,
+  fontSize: small ? 10 : 11,
   letterSpacing: "0.06em",
-  padding: "10px 16px",
+  padding: small ? "6px 12px" : "10px 16px",
   borderRadius: "var(--radius-pill)",
   cursor: "pointer",
+  flex: "none",
   background: active ? "var(--bs-gold)" : "transparent",
   color: active ? "var(--bs-gunmetal)" : "rgba(64,63,76,0.65)",
   border: active ? "1px solid var(--bs-gold)" : "1px solid rgba(64,63,76,0.18)",
@@ -52,28 +56,53 @@ export function AddProjectDialog({
   onSave,
 }: AddProjectDialogProps): React.ReactElement {
   const [name, setName] = React.useState("");
-  const [discipline, setDiscipline] = React.useState<Discipline>("boulder");
+  const [scale, setScale] = React.useState<GradeScale>("v");
+  const [grade, setGrade] = React.useState("");
+  const [settled, setSettled] = React.useState(false);
   const [beta, setBeta] = React.useState("");
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  const rail = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    rail.current
+      ?.querySelector<HTMLElement>('[aria-pressed="true"]')
+      ?.scrollIntoView({ inline: "center", block: "nearest" });
+  }, [grade, scale]);
 
   const trimmed = name.trim();
   const matches = trimmed === "" ? [] : matchClimbs(climbs, name);
   const exact = climbs.find((c) => c.name.toLowerCase() === trimmed.toLowerCase());
+  const showSuggestions = !settled && trimmed !== "" && (matches.length > 0 || exact === undefined);
+
+  function type(value: string): void {
+    setName(value);
+    setSettled(false);
+  }
 
   function pick(climb: ClimbSummary): void {
     setName(climb.name);
-    setDiscipline(climb.discipline);
+    setSettled(true);
+    if (climb.grade === null) return;
+    setScale(climb.grade.scale);
+    setGrade(climb.grade.scale === "v" ? `V${climb.grade.value}` : climb.grade.value);
+  }
+
+  function changeScale(next: GradeScale): void {
+    setGrade(grade === "" ? "" : convertGrade(grade, scale, next));
+    setScale(next);
   }
 
   async function save(): Promise<void> {
     if (trimmed === "") return;
     setBusy(true);
     setError(null);
+    const picked = draftGrade(grade, scale);
     try {
       await onSave({
         name: trimmed,
-        discipline,
+        discipline: disciplineOf(scale),
+        ...(picked === undefined ? {} : { grade: picked }),
         ...(beta.trim() === "" ? {} : { beta: beta.trim() }),
       });
       onClose();
@@ -116,10 +145,10 @@ export function AddProjectDialog({
             autoFocus
             autoComplete="off"
             placeholder="Name of the climb"
-            onChange={(e) => setName(e.target.value)}
+            onChange={(e) => type(e.target.value)}
             style={input}
           />
-          {trimmed !== "" && (
+          {showSuggestions && (
             <div className="project-dialog-suggestions">
               {matches.map((climb) => (
                 <button
@@ -144,7 +173,11 @@ export function AddProjectDialog({
                 </button>
               ))}
               {exact === undefined && (
-                <span className="project-dialog-suggestion">
+                <button
+                  type="button"
+                  className="project-dialog-suggestion"
+                  onClick={() => setSettled(true)}
+                >
                   <svg
                     viewBox="0 0 24 24"
                     width="15"
@@ -160,7 +193,7 @@ export function AddProjectDialog({
                   <span style={{ fontWeight: 600, fontSize: 14, color: "var(--bs-azure-ink)" }}>
                     Track “{trimmed}” as a new climb
                   </span>
-                </span>
+                </button>
               )}
             </div>
           )}
@@ -170,22 +203,37 @@ export function AddProjectDialog({
         </div>
 
         <div className="project-dialog-field">
-          <span className="project-dialog-label">DISCIPLINE</span>
-          <div style={{ display: "flex", gap: 8 }}>
-            {DISCIPLINES.map((d) => (
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span className="project-dialog-label" style={{ marginRight: "auto" }}>
+              GRADE <span style={{ color: "rgba(64,63,76,0.45)" }}>· OPTIONAL</span>
+            </span>
+            {GRADE_SCALE_OPTIONS.map((option) => (
               <button
-                key={d.value}
+                key={option.value}
                 type="button"
-                aria-pressed={discipline === d.value}
-                onClick={() => setDiscipline(d.value)}
-                style={chip(discipline === d.value)}
+                aria-pressed={scale === option.value}
+                onClick={() => changeScale(option.value)}
+                style={chip(scale === option.value, true)}
               >
-                {d.label}
+                {option.label}
+              </button>
+            ))}
+          </div>
+          <div ref={rail} className="project-dialog-rail">
+            {gradeOptions(scale).map((g) => (
+              <button
+                key={g}
+                type="button"
+                aria-pressed={g === grade}
+                onClick={() => setGrade(g === grade ? "" : g)}
+                style={chip(g === grade)}
+              >
+                {g}
               </button>
             ))}
           </div>
           <span className="project-dialog-hint">
-            THE GRADE COMES FROM THE FIRST SESSION YOU LOG IT IN
+            LEAVE IT OFF AND THE GRADE COMES FROM THE FIRST SESSION YOU LOG IT IN
           </span>
         </div>
 

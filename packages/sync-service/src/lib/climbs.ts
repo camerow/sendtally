@@ -7,11 +7,17 @@ import { tagSlug } from "./tags";
 export const MAX_CLIMB_NAME_LENGTH = 200;
 export const MAX_BETA_LENGTH = 2000;
 
-// A project the user adds from the projects page has no grade yet: the grade
-// arrives with the first session the climb is logged in.
+const gradeJson = z.union([
+  z.object({ scale: z.literal("v"), value: z.number().int() }),
+  z.object({ scale: z.enum(["font", "yds", "french"]), value: z.string() }),
+]);
+
+// A project can be added before the climb has been logged, so the grade is
+// optional: without one it arrives with the first session the climb is in.
 export const projectBody = z.object({
   name: z.string().trim().min(1).max(MAX_CLIMB_NAME_LENGTH),
   discipline: z.enum(["boulder", "route"]).optional(),
+  grade: gradeJson.optional(),
   beta: z.string().max(MAX_BETA_LENGTH).optional(),
 });
 
@@ -29,11 +35,6 @@ export type ClimbSummary = {
   first_at: string;
   last_at: string;
 };
-
-const gradeJson = z.union([
-  z.object({ scale: z.literal("v"), value: z.number().int() }),
-  z.object({ scale: z.enum(["font", "yds", "french"]), value: z.string() }),
-]);
 
 export const climbSlug = tagSlug;
 

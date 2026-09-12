@@ -317,6 +317,29 @@ describe("app", () => {
     expect(rejected.status).toBe(400);
   });
 
+  it("keeps the grade a project was added with", async () => {
+    const headers = { "x-test-user": "user_gradedproject", "Content-Type": "application/json" };
+    const created = await testApp().request(
+      "/v1/projects",
+      {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ name: "Moonraker", grade: { scale: "v", value: 7 } }),
+      },
+      env
+    );
+    expect(created.status).toBe(200);
+
+    const listed = await testApp().request("/v1/climbs", { headers }, env);
+    const { climbs } = (await listed.json()) as { climbs: Array<Record<string, unknown>> };
+    expect(climbs[0]).toMatchObject({
+      slug: "moonraker",
+      grade: { scale: "v", value: 7 },
+      discipline: "boulder",
+      project: true,
+    });
+  });
+
   const postSession = (userId: string, body: unknown) =>
     testApp().request(
       "/v1/sessions",

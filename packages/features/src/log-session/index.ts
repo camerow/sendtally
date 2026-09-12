@@ -20,7 +20,7 @@ export {
   withoutTag,
 } from "./transforms";
 export { useSessionDraft, type EditableSession } from "./useSessionDraft";
-export { GRADE_SCALE_OPTIONS } from "./types";
+export { GRADE_SCALE_OPTIONS, disciplineOf } from "./types";
 export type {
   ClimbDraft,
   Discipline,

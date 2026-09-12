@@ -1,6 +1,7 @@
-import type { Discipline, GradeScale } from "@sendtally/core";
+import { disciplineOf, type Discipline, type GradeScale } from "@sendtally/core";
 
 export type { Discipline, GradeScale };
+export { disciplineOf };
 
 export type GradeScaleOption = { value: GradeScale; label: string; discipline: Discipline };
 

@@ -51,6 +51,7 @@ export type Discipline = "boulder" | "route";
 export type ProjectInput = {
   name: string;
   discipline?: Discipline;
+  grade?: ClimbGrade;
   beta?: string;
 };
 
