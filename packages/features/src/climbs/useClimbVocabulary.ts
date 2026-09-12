@@ -15,13 +15,16 @@ export function useClimbVocabulary(api: SendtallyApi): ClimbVocabulary {
   const [climbs, setClimbs] = React.useState<ClimbSummary[]>([]);
   const [loaded, setLoaded] = React.useState(false);
 
+  // A failed load still finishes: suggestions go quiet rather than leaving the
+  // screen on a spinner that never resolves.
   const reload = React.useCallback(async (): Promise<void> => {
     try {
       const result = await api.climbs();
       setClimbs(result.climbs);
-      setLoaded(true);
     } catch {
       setClimbs([]);
+    } finally {
+      setLoaded(true);
     }
   }, [api]);
 

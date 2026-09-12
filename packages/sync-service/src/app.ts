@@ -6,6 +6,7 @@ import type { AuthedUser, AuthWebhookEvent } from "./auth";
 import type { Env } from "./bindings";
 import { purgeAccount } from "./lib/account";
 import { applyProjectFlags, climbCatalogue, climbSlug, projectBody } from "./lib/climbs";
+import { allowedOrigin } from "./lib/origins";
 import { decryptSecret, encryptSecret } from "./lib/crypto";
 import { mirrorStoreEntitlements, resolveEntitlements } from "./lib/entitlements";
 import {
@@ -186,7 +187,7 @@ export function createApp(deps: AppDeps): Hono<AppEnv> {
 
   app.use("/v1/*", (c, next) =>
     cors({
-      origin: c.env.WEB_APP_URL,
+      origin: (origin) => allowedOrigin(origin, c.env.WEB_APP_URL),
       allowHeaders: [
         "Authorization",
         "Content-Type",

@@ -5,6 +5,10 @@
   "main": "src/index.ts",
   "compatibility_date": "2025-10-11",
   "observability": { "enabled": true },
+  // Pinned so a busy port fails loudly. Without it wrangler picks the next free
+  // one, the web app keeps calling the API_URL it was given, and every screen
+  // sits loading with nothing to say.
+  "dev": { "port": 8787 },
   "d1_databases": [
     {
       "binding": "DB",
