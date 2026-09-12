@@ -36,23 +36,3 @@ jobs:
         env:
           TITLE: ${{ github.event.pull_request.title }}
         run: printf '%s' "$TITLE" | pnpm exec commitlint --verbose
-
-  # Workers Builds comments a logs link and no preview URL. The URL is a pure
-  # function of the branch, though - it aliases each version to the branch name
-  # - so the link can go up straight away and works the moment the build lands.
-  preview:
-    runs-on: ubuntu-latest
-    permissions:
-      pull-requests: write
-    steps:
-      - name: Comment the preview URL
-        env:
-          GH_TOKEN: ${{ github.token }}
-          BRANCH: ${{ github.event.pull_request.head.ref }}
-          PR: ${{ github.event.pull_request.number }}
-        run: |
-          set -euo pipefail
-          slug=$(printf '%s' "$BRANCH" | tr '[:upper:]' '[:lower:]' | tr -c 'a-z0-9' '-' | cut -c1-63)
-          url="https://${slug%-}-sendtally-web-staging.chalk-and-circuits.workers.dev"
-          printf '**Preview:** %s\n\nLive once `Workers Builds: sendtally-web-staging` passes. It is the staging sandbox - the development Clerk instance and the staging database - so sign in and click anything.\n' "$url" \
-            | gh pr comment "$PR" --edit-last --create-if-none --body-file -
