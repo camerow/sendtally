@@ -1,0 +1,8 @@
+# Worktrunk project hooks. Commands here need `wt config approvals add` once
+# per machine before Worktrunk will run them.
+
+# A dev server outlives the worktree that started it: wrangler and vite keep
+# their ports, and the next worktree to run `pnpm dev` cannot bind. The worktree
+# is gone by the time this runs, so the script matches on the path the processes
+# still carry in their command line.
+post-remove = "{{ primary_worktree_path }}/infra/scripts/kill-worktree-servers.sh {{ worktree_path }}"

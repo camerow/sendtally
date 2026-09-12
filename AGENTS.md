@@ -244,9 +244,15 @@ Avoid comments in code; make code short, composable, and obviously named.
 
 ### Worktrees
 
-Use **workmux** for all worktree creation and lifecycle (`workmux add` / `merge` / `remove`).
-Configuration lives in `.workmux.yaml` at the repo root.
+Use **worktrunk** (`wt`) for all worktree creation and lifecycle (`wt switch --create` / `wt merge` / `wt remove`).
+Project hooks live in `.config/wt.toml` at the repo root; personal settings live in `~/.config/worktrunk/config.toml`.
 Never hand-roll `git worktree add`.
+
+Worktrunk asks for approval the first time it runs this repo's hooks.
+Run `wt config approvals add` once per machine and review what it lists - an agent must never approve them for you.
+
+`post-remove` kills the dev servers a removed worktree left behind (`infra/scripts/kill-worktree-servers.sh`).
+Without it an orphaned wrangler or vite keeps port 8787 or 5173, and the next worktree to run `pnpm dev` fails to bind for reasons that point nowhere.
 
 ---
 
