@@ -1,0 +1,27 @@
+appId: com.sendtally.app
+# Locally the app is a development build that opens on its launcher unless it is deep-linked
+# to Metro, and shows a developer menu the first time, so `pnpm e2e` passes DEV_CLIENT=true.
+# In CI the bundle is embedded and the app just launches. A default here would win over the
+# command line (a flow's env block is applied after -e), so there is none.
+---
+- launchApp:
+    stopApp: true
+- runFlow:
+    when:
+      true: ${DEV_CLIENT == "true"}
+    commands:
+      - openLink: "com.sendtally.app://expo-development-client/?url=http%3A%2F%2Flocalhost%3A8081"
+      - runFlow:
+          when:
+            visible: "Open"
+          commands:
+            - tapOn: "Open"
+      - extendedWaitUntil:
+          visible:
+            text: ".*"
+          timeout: 30000
+      - runFlow:
+          when:
+            visible: "This is the developer menu.*"
+          commands:
+            - tapOn: "Close"

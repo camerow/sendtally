@@ -1,0 +1,126 @@
+name: Mobile E2E
+
+# The Maestro flows in apps/mobile/maestro on an Android emulator. Android because it runs
+# on a Linux runner, which has KVM and bills at 1x; iOS would need a macOS runner at 10x and
+# stays a local run (docs/mobile-e2e.md). The app is a release build with the JavaScript
+# embedded, pointed at staging and the Clerk development instance like the mobile preview.
+
+on:
+  pull_request:
+    paths:
+      - "apps/mobile/**"
+      - "packages/core/**"
+      - "packages/design/**"
+      - "packages/features/**"
+      - "packages/api-client/**"
+      - "pnpm-lock.yaml"
+      - ".github/workflows/mobile-e2e.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: mobile-e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  API_LEVEL: 34
+  AVD_ARCH: x86_64
+  AVD_TARGET: google_apis
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v4
+
+      # The PostHog Expo plugin uploads Hermes source maps on every release bundle and fails
+      # without POSTHOG_CLI_API_KEY, which only EAS holds. This build ships nowhere, so the
+      # hook comes out of the generated project rather than a secret going in. For the same
+      # reason it is x86_64 only (the emulator's ABI) and skips ProGuard and resource
+      # shrinking; the store build is EAS's job. The template's 512m metaspace ran out on the
+      # runner and hung the daemon, hence the larger JVM.
+      - name: Build the app with the bundle embedded
+        working-directory: apps/mobile
+        env:
+          EXPO_PUBLIC_API_URL: https://api-staging.sendtally.com
+          EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_bGlnaHQtbGlnZXItOTkuY2xlcmsuYWNjb3VudHMuZGV2JA
+          # No RevenueCat test-store key here: the SDK refuses one in a release build and
+          # closes the app. The public Play key in lib/config.ts applies instead, and the
+          # flows never reach a paywall.
+        run: |
+          set -euo pipefail
+          npx expo prebuild --platform android --no-install --non-interactive
+          sed -i '/posthog.gradle/d' android/app/build.gradle
+          printf '\norg.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=1g\n' >> android/gradle.properties
+          cd android && ./gradlew :app:assembleRelease --no-daemon \
+            -PreactNativeArchitectures=x86_64 \
+            -Pandroid.enableProguardInReleaseBuilds=false \
+            -Pandroid.enableShrinkResourcesInReleaseBuilds=false
+
+      - name: Install Maestro
+        run: |
+          curl -Ls "https://get.maestro.mobile.dev" | bash
+          echo "$HOME/.maestro/bin" >> "$GITHUB_PATH"
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: AVD cache
+        uses: actions/cache@v4
+        id: avd-cache
+        with:
+          path: |
+            ~/.android/avd/*
+            ~/.android/adb*
+          key: avd-${{ env.API_LEVEL }}-${{ env.AVD_ARCH }}-${{ env.AVD_TARGET }}
+
+      - name: Create the AVD snapshot
+        if: steps.avd-cache.outputs.cache-hit != 'true'
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ env.API_LEVEL }}
+          arch: ${{ env.AVD_ARCH }}
+          target: ${{ env.AVD_TARGET }}
+          force-avd-creation: false
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          disable-animations: false
+          script: echo "Generated AVD snapshot for caching."
+
+      - name: Run the flows
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ env.API_LEVEL }}
+          arch: ${{ env.AVD_ARCH }}
+          target: ${{ env.AVD_TARGET }}
+          force-avd-creation: false
+          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          disable-animations: true
+          working-directory: apps/mobile
+          script: |
+            adb install -r android/app/build/outputs/apk/release/app-release.apk
+            adb logcat -c
+            maestro test -e DEV_CLIENT=false maestro/ || { adb logcat -d > ~/.maestro/logcat.txt; exit 1; }
+
+      - name: Keep the screenshots and hierarchy of a failed run
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: maestro-debug
+          path: |
+            ~/.maestro/tests
+            ~/.maestro/logcat.txt
+          if-no-files-found: ignore

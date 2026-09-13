@@ -5,6 +5,7 @@
   "main": "expo-router/entry",
   "scripts": {
     "start": "expo start",
+    "e2e": "maestro test -e DEV_CLIENT=true maestro/",
     "ios": "expo run:ios",
     "android": "expo run:android",
     "check-types": "tsc --noEmit",

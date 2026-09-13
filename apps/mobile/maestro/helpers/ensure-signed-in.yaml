@@ -1,0 +1,41 @@
+appId: com.sendtally.app
+env:
+  EMAIL: maestro+clerk_test@sendtally.com
+  CODE: "424242"
+# Clerk development instances accept any +clerk_test address with the fixed code 424242,
+# so this needs no mailbox. Sign up runs the first time the account does not exist yet.
+---
+- extendedWaitUntil:
+    visible:
+      text: "Sign in|Log a session"
+    timeout: 30000
+- runFlow:
+    when:
+      notVisible: "Log a session"
+    commands:
+      - tapOn: "Sign in"
+      - tapOn: "you@email.com"
+      - inputText: ${EMAIL}
+      - runFlow: ../helpers/hide-keyboard.yaml
+      - tapOn: "Email me a code"
+      - extendedWaitUntil:
+          visible:
+            text: "123456|No account for that email yet.*"
+          timeout: 20000
+      - runFlow:
+          when:
+            visible: "No account for that email yet.*"
+          commands:
+            - tapOn: "Create an account"
+            - tapOn: "Email me a code"
+            - extendedWaitUntil:
+                visible: "123456"
+                timeout: 20000
+      - tapOn: "123456"
+      - inputText: ${CODE}
+      - runFlow: ../helpers/hide-keyboard.yaml
+      - tapOn:
+          text: "Sign in|Create account"
+- extendedWaitUntil:
+    visible: "Log a session"
+    timeout: 20000
