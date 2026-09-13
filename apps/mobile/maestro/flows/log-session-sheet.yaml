@@ -16,10 +16,24 @@ name: log-session-sheet
 - inputText: "Cascade"
 - assertVisible: "Done"
 - pressKey: Enter
-# A direction swipe reaches React Native's responder system; a coordinate swipe does not.
-- swipe:
-    direction: DOWN
-    duration: 400
+# On iOS only a bare direction swipe reaches React Native's responder system (coordinate and
+# element swipes go through a press-and-drag that RN never sees). On Android every form works,
+# and a coordinate swipe is the one that starts on the sheet rather than the scrim.
+- runFlow:
+    when:
+      platform: iOS
+    commands:
+      - swipe:
+          direction: DOWN
+          duration: 400
+- runFlow:
+    when:
+      platform: Android
+    commands:
+      - swipe:
+          start: "50%, 72%"
+          end: "50%, 96%"
+          duration: 300
 - assertNotVisible: "CLIMB 2 OF 2"
 - assertVisible: "V3 Cascade.*"
 - scrollUntilVisible:

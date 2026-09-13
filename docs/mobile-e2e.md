@@ -1,7 +1,7 @@
 # Mobile end-to-end tests
 
 Maestro flows under `apps/mobile/maestro/` drive a development build on an iOS simulator through the screens that only misbehave on a device: sign-in, the climb editor sheet with the keyboard up, drag to dismiss, and the draft surviving a trip out of the form.
-They run locally against Metro; there is no CI job yet.
+They run locally on an iOS simulator against Metro, and in CI on an Android emulator.
 
 ## One-time setup
 
@@ -23,6 +23,16 @@ They run locally against Metro; there is no CI job yet.
 
 Failures leave screenshots and the UI hierarchy under `~/.maestro/tests/<timestamp>/`.
 
+## In CI
+
+`.github/workflows/mobile-e2e.yml` runs the same flows on every pull request that touches the app or a package it bundles.
+Android only: the emulator runs on a Linux runner with KVM at the 1x minute rate, where an iOS simulator would need a macOS runner at 10x.
+The job prebuilds the Android project, builds a release APK so the JavaScript is embedded (no Metro on the runner), and points it at `api-staging.sendtally.com` and the Clerk development instance, the same pair the mobile preview uses.
+The PostHog source map upload hook is stripped from the generated Gradle file first, since it needs an EAS-only key and this build ships nowhere.
+Flows get `DEV_CLIENT=false`, which skips the dev-client deep link and developer menu in `helpers/open-dev-client.yaml`.
+A failed run uploads Maestro's screenshots and UI hierarchy as the `maestro-debug` artifact.
+The AVD snapshot is cached between runs; a cold run is around twenty minutes, a warm one closer to twelve.
+
 ## The test account
 
 Flows sign in as `maestro+clerk_test@sendtally.com`.
@@ -33,7 +43,7 @@ Never point the flows at production keys: the address does not exist there and t
 ## Writing flows
 
 - `helpers/open-dev-client.yaml` and `helpers/ensure-signed-in.yaml` start every flow; add new flows to `config.yaml` so `executionOrder` stays explicit.
-- A swipe must be `direction: DOWN` (or another direction); a coordinate swipe never reaches React Native's responder system, so a drag-to-dismiss assertion passes only with the direction form.
+- Swipes differ by platform. On iOS only a bare `direction: DOWN` reaches React Native's responder system; coordinate and element swipes go through a press-and-drag RN never sees. On Android a coordinate swipe works and is the one that starts on the sheet rather than the scrim. Split with `runFlow: when: platform:`.
 - `hideKeyboard` fails on these inputs. Press `Enter` on a single-line field, or tap a static label, before swiping.
 - A climb ledger row is one accessible element, so match it by its accessibility text, for example `V3 Cascade.*`, not by the name alone.
 - The log-session form is longer than the screen; `scrollUntilVisible` to `\+ ADD CLIMB` before tapping it, and back up to `← SESSIONS` to leave.
