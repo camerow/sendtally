@@ -83,6 +83,10 @@ eas build --profile development --platform android
 Android only, by choice: an APK installs off a QR code with no device registration.
 Adding iOS means registering the phone's UDID with `eas device:create` first.
 
+That build needs `expo-dev-client`, which is a dependency of the app rather than something a build profile can inject, so adding it moved the fingerprint once - from `9d5ec47a` to `13b109fe`.
+The Play build carrying the old hash cannot receive updates published from a tree with the new one, so the first push to `main` after that change builds and submits a release rather than publishing an update.
+That is the whole cost, and it is paid once.
+
 The `development` and `production` fingerprints are identical for this project, because `expo-dev-client` is a dependency either way rather than something the build profile injects.
 So a development build receives exactly the updates a store build would, and the dev launcher additionally lists every branch in the project under Extensions, EAS Update - which is how you switch between two open pull requests without reinstalling anything.
 
