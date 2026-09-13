@@ -9,8 +9,10 @@
   "scripts": {
     "dev": "turbo dev",
     "build": "turbo build",
-    "preview:build": "CLOUDFLARE_ENV=production pnpm --filter @sendtally/web build",
+    "preview:build": "CLOUDFLARE_ENV=staging pnpm --filter @sendtally/web build",
     "preview:upload": "pnpm run preview:build && pnpm --filter @sendtally/web exec wrangler versions upload",
+    "staging:web": "pnpm run preview:build && pnpm --filter @sendtally/web exec wrangler deploy",
+    "staging:api": "pnpm --filter @sendtally/sync-service exec wrangler d1 migrations apply DB --env staging --remote && pnpm --filter @sendtally/sync-service exec wrangler deploy --env staging",
     "lint": "eslint .",
     "check-types": "turbo check-types",
     "test": "turbo test",

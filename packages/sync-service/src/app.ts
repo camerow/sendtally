@@ -244,7 +244,11 @@ const app = new Hono<AppEnv>()
 
   .use("/v1/*", (c, next) =>
     cors({
-      origin: c.env.WEB_APP_URL,
+      origin: (origin) =>
+        origin === c.env.WEB_APP_URL ||
+        (c.env.PREVIEW_ORIGIN_SUFFIX !== undefined && origin.endsWith(c.env.PREVIEW_ORIGIN_SUFFIX))
+          ? origin
+          : c.env.WEB_APP_URL,
       allowHeaders: [
         "Authorization",
         "Content-Type",
