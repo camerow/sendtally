@@ -4,7 +4,6 @@ import {
   RefreshControl,
   SectionList,
   Text,
-  View,
   type SectionListData,
   type ViewToken,
 } from "react-native";
@@ -14,7 +13,6 @@ import {
   countLabel,
   filterSessionsByTags,
   monthScopeItems,
-  sessionBadge,
   sessionTagGroups,
   sessionTagOptions,
   sessionTitle,
@@ -22,7 +20,7 @@ import {
   tagScopeItems,
 } from "@sendtally/features/sessions";
 import { colors, fonts } from "@sendtally/design/tokens";
-import { LogoMark } from "../../components/Logo";
+import { ScreenHeader } from "../../components/ScreenHeader";
 import { FilterSheet, type SessionFilters } from "../../features/sessions/FilterSheet";
 import { LogSessionFab } from "../../features/sessions/LogSessionFab";
 import { ScopeBar } from "../../features/sessions/ScopeBar";
@@ -33,13 +31,11 @@ import { maybeAskForReview } from "../../lib/review";
 
 type Section = { key: string; title: string; meta: string; data: SessionRowData[] };
 
-const HEADER_HEIGHT = 44;
-
 function itemLayout(
   sections: ReadonlyArray<SectionListData<SessionRowData, Section>> | null,
   index: number
 ): { length: number; offset: number; index: number } {
-  let offset = HEADER_HEIGHT;
+  let offset = 0;
   let cursor = 0;
   for (const section of sections ?? []) {
     if (cursor === index) return { length: SECTION_HEADER_HEIGHT, offset, index };
@@ -111,21 +107,25 @@ export default function Sessions(): React.ReactElement {
   }, [api]);
 
   React.useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- load only sets state after its await
     void load();
   }, [load]);
 
-  const viewability = React.useRef([
-    {
-      viewabilityConfig: { itemVisiblePercentThreshold: 40, minimumViewTime: 40 },
-      onViewableItemsChanged: ({ viewableItems }: { viewableItems: ViewToken[] }) => {
-        const first = viewableItems.find((token) => token.section !== undefined);
-        const section: unknown = first?.section;
-        if (typeof section === "object" && section !== null && "key" in section) {
-          setCurrentKey(String(section.key));
-        }
+  const viewability = React.useMemo(
+    () => [
+      {
+        viewabilityConfig: { itemVisiblePercentThreshold: 40, minimumViewTime: 40 },
+        onViewableItemsChanged: ({ viewableItems }: { viewableItems: ViewToken[] }) => {
+          const first = viewableItems.find((token) => token.section !== undefined);
+          const section: unknown = first?.section;
+          if (typeof section === "object" && section !== null && "key" in section) {
+            setCurrentKey(String(section.key));
+          }
+        },
       },
-    },
-  ]);
+    ],
+    []
+  );
 
   const jumpTo = (sectionKey: string): void => {
     const sectionIndex = sections.findIndex((s) => s.key === sectionKey);
@@ -145,6 +145,7 @@ export default function Sessions(): React.ReactElement {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.white }} edges={["top"]}>
+      <ScreenHeader title="Sessions" caption={caption} />
       {sections.length > 0 && (
         <ScopeBar
           items={scopeItems}
@@ -173,7 +174,7 @@ export default function Sessions(): React.ReactElement {
         keyExtractor={(s) => s.fingerprint}
         stickySectionHeadersEnabled
         getItemLayout={itemLayout}
-        viewabilityConfigCallbackPairs={viewability.current}
+        viewabilityConfigCallbackPairs={viewability}
         contentContainerStyle={{ paddingBottom: 96 }}
         refreshControl={
           <RefreshControl
@@ -184,40 +185,6 @@ export default function Sessions(): React.ReactElement {
             }}
             tintColor={colors.gunmetal}
           />
-        }
-        ListHeaderComponent={
-          <View
-            style={{
-              height: HEADER_HEIGHT,
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 9,
-              paddingHorizontal: 18,
-            }}
-          >
-            <LogoMark size={22} />
-            <Text
-              style={{
-                fontFamily: fonts.display,
-                fontSize: 22,
-                letterSpacing: -0.5,
-                color: colors.gunmetal,
-              }}
-            >
-              Sessions
-            </Text>
-            <View style={{ flex: 1 }} />
-            <Text
-              style={{
-                fontFamily: fonts.monoMedium,
-                fontSize: 10,
-                letterSpacing: 0.8,
-                color: colors.textMuted,
-              }}
-            >
-              {caption}
-            </Text>
-          </View>
         }
         ListEmptyComponent={
           sessions !== null ? (
@@ -232,7 +199,7 @@ export default function Sessions(): React.ReactElement {
               }}
             >
               {all.length === 0
-                ? "No sessions yet. Hit Log a session and your first one takes about a minute."
+                ? "No sessions yet. Log a session - the first one takes about a minute."
                 : "No sessions carry those tags."}
             </Text>
           ) : null
@@ -244,7 +211,6 @@ export default function Sessions(): React.ReactElement {
           <SessionRow
             session={item}
             title={sessionTitle(item)}
-            badge={sessionBadge(item)}
             onPress={() =>
               router.push({
                 pathname: "/session/[fingerprint]",

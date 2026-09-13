@@ -119,7 +119,9 @@ export default function Projects(): React.ReactElement {
   const { scales } = useGradeScalePrefs(api);
   const vocabulary = useClimbVocabulary(api);
   const [refreshing, setRefreshing] = React.useState(false);
-  const [adding, setAdding] = React.useState(false);
+  // A fresh key on each open is how the sheet starts blank: remounting beats
+  // an effect that resets seven pieces of state.
+  const [adding, setAdding] = React.useState(0);
   const { state } = projects;
   const ready = state.status === "ready" ? state.data : null;
 
@@ -222,7 +224,7 @@ export default function Projects(): React.ReactElement {
       </ScrollView>
 
       <Pressable
-        onPress={() => setAdding(true)}
+        onPress={() => setAdding((n) => n + 1)}
         accessibilityRole="button"
         style={{
           position: "absolute",
@@ -249,10 +251,11 @@ export default function Projects(): React.ReactElement {
       </Pressable>
 
       <AddProjectSheet
-        visible={adding}
+        key={adding}
+        visible={adding > 0}
         climbs={vocabulary.climbs}
         scales={scales}
-        onClose={() => setAdding(false)}
+        onClose={() => setAdding(0)}
         onSave={async (input) => {
           await projects.save(input);
           await vocabulary.reload();

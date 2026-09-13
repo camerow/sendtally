@@ -2,11 +2,10 @@
   "expo": {
     "name": "sendtally",
     "slug": "sendtally",
-    "version": "0.1.0",
+    "version": "0.3.1",
     "scheme": "sendtally",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
     "platforms": ["ios", "android"],
     "icon": "./assets/icon.png",
     "primaryColor": "#f9dc5c",
@@ -39,7 +38,17 @@
         }
       ],
       "expo-localization",
-      "posthog-react-native/expo"
+      "posthog-react-native/expo",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "enableProguardInReleaseBuilds": true,
+            "enableShrinkResourcesInReleaseBuilds": true
+          }
+        }
+      ],
+      "./plugins/with-android-play-compliance.js"
     ],
     "experiments": {
       "typedRoutes": false
@@ -50,6 +59,12 @@
         "projectId": "4dea1644-ecbb-43e8-ad9c-a6f646f6d844"
       }
     },
-    "owner": "chalk-and-circuits"
+    "owner": "chalk-and-circuits",
+    "runtimeVersion": {
+      "policy": "fingerprint"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/4dea1644-ecbb-43e8-ad9c-a6f646f6d844"
+    }
   }
 }

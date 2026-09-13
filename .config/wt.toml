@@ -1,5 +1,21 @@
-# Worktrunk project hooks. Commands here need `wt config approvals add` once
-# per machine before Worktrunk will run them.
+# Project configuration for worktrunk (https://worktrunk.dev).
+# Shared with the repo; personal settings belong in ~/.config/worktrunk/config.toml.
+# Commands here need `wt config approvals add` once per machine before Worktrunk
+# will run them.
+
+# Make a new worktree runnable before anything tries to start a dev server.
+# pre-start blocks and runs in order, so the secrets land before the install,
+# and both finish before post-start.
+#
+# `.worktreeinclude` is the allowlist of gitignored files that travel. Without
+# them the web app finds no Clerk keys, falls back to keyless mode, and every
+# signed-in request fails a JWKS kid check against a throwaway instance.
+# The allowlist is deliberate: copying every ignored path would also duplicate
+# infra/terraform state, which is local and single-operator.
+pre-start = [
+  "wt step copy-ignored --require-include",
+  "pnpm install --frozen-lockfile",
+]
 
 # A dev server outlives the worktree that started it: wrangler and vite keep
 # their ports, and the next worktree to run `pnpm dev` cannot bind. The worktree

@@ -12,6 +12,10 @@
     "format:check": "prettier --check ."
   },
   "devDependencies": {
-    "typescript": "^5.9.2"
+    "typescript": "^6.0.3"
+  },
+  "dependencies": {
+    "@sendtally/sync-service": "workspace:*",
+    "hono": "^4.9.6"
   }
 }

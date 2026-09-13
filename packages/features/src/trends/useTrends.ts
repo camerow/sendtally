@@ -12,7 +12,9 @@ export type TrendsFeature = {
   setRange: (range: TrendRange) => void;
   setDiscipline: (discipline: Discipline) => void;
   tagOptions: TagOption[];
+  untaggedCount: number;
   selectedTags: string[];
+  setTags: (slugs: string[]) => void;
   toggleTag: (slug: string) => void;
   clearTags: () => void;
 };
@@ -34,6 +36,11 @@ export function useTrends(api: SendtallyApi): TrendsFeature {
     [raw]
   );
 
+  const untaggedCount = React.useMemo(
+    (): number => (raw.status === "ready" ? raw.data.filter((s) => s.tags.length === 0).length : 0),
+    [raw]
+  );
+
   const state = React.useMemo((): QueryState<TrendsVM> => {
     if (raw.status !== "ready") return raw;
     return {
@@ -50,6 +57,8 @@ export function useTrends(api: SendtallyApi): TrendsFeature {
 
   const clearTags = React.useCallback((): void => setSelectedTags([]), []);
 
+  const setTags = React.useCallback((slugs: string[]): void => setSelectedTags(slugs), []);
+
   return {
     state,
     reload,
@@ -57,7 +66,9 @@ export function useTrends(api: SendtallyApi): TrendsFeature {
     setRange,
     setDiscipline,
     tagOptions,
+    untaggedCount,
     selectedTags,
+    setTags,
     toggleTag,
     clearTags,
   };

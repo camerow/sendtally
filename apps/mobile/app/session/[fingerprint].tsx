@@ -15,6 +15,7 @@ import { PostStatusBar } from "../../features/sessions/PostStatusBar";
 import { SessionNotes } from "../../features/sessions/SessionNotes";
 import { SessionTags } from "../../features/sessions/SessionTags";
 import { useApi } from "../../lib/api";
+import { press } from "../../lib/press";
 
 const RESULT_BADGES: Record<
   ClimbVM["result"],
@@ -43,7 +44,7 @@ function HeaderAction({
   onPress: () => void;
 }): React.ReactElement {
   return (
-    <Pressable onPress={onPress} style={{ minHeight: 44, justifyContent: "center" }}>
+    <Pressable onPress={onPress} style={press({ minHeight: 44, justifyContent: "center" })}>
       <Text
         style={{
           fontFamily: fonts.monoMedium,

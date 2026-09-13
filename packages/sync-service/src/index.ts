@@ -1,13 +1,4 @@
-import { createApp } from "./app";
-import { deleteClerkUser, verifyClerkUser, verifyClerkWebhook } from "./auth";
+import { app } from "./app";
 import type { Env } from "./bindings";
 
-const app = createApp({
-  verifyUser: verifyClerkUser,
-  deleteAuthUser: deleteClerkUser,
-  verifyAuthWebhook: verifyClerkWebhook,
-});
-
-export default {
-  fetch: app.fetch,
-} satisfies ExportedHandler<Env>;
+export default { fetch: app.fetch } satisfies ExportedHandler<Env>;

@@ -7,19 +7,14 @@ export type PostOutcome = "posted" | "updated" | "skipped" | "failed";
 
 export type PostResult = { outcome: PostOutcome; reason?: string };
 
-async function clientFor(
-  env: Env,
-  connection: repo.StravaConnectionRow,
-  fetchImpl: typeof fetch
-): Promise<StravaClient> {
+async function clientFor(env: Env, connection: repo.StravaConnectionRow): Promise<StravaClient> {
   return new StravaClient(
     { clientId: env.STRAVA_CLIENT_ID, clientSecret: env.STRAVA_CLIENT_SECRET },
     {
       accessToken: await decryptSecret(connection.access_token_ciphertext, env.TOKEN_KEY),
       refreshToken: await decryptSecret(connection.refresh_token_ciphertext, env.TOKEN_KEY),
       expiresAt: connection.expires_at,
-    },
-    fetchImpl
+    }
   );
 }
 
@@ -53,7 +48,6 @@ export async function syncSessionToStrava(
   env: Env,
   userId: string,
   fingerprint: string,
-  fetchImpl: typeof fetch,
   explicit = false
 ): Promise<PostResult> {
   const session = await repo.getSessionForPosting(env.DB, userId, fingerprint);
@@ -72,7 +66,7 @@ export async function syncSessionToStrava(
     }
   }
 
-  const client = await clientFor(env, connection, fetchImpl);
+  const client = await clientFor(env, connection);
   try {
     if (session.strava_activity_id !== null) {
       await client.updateActivity(session.strava_activity_id, {

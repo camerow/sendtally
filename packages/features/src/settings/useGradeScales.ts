@@ -15,24 +15,15 @@ export function useGradeScales(
   vm: SettingsVM,
   onSaved: () => void
 ): GradeScalesFeature {
-  const [scales, setLocal] = React.useState<GradeScales>(vm.gradeScales);
+  // The status query resolves after the first render, so the server's values
+  // are the source and an unsaved choice is layered over them.
+  const [pending, setPending] = React.useState<Partial<GradeScales>>({});
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
-  // The status query resolves after the first render, so adopt its values until
-  // the user has changed something.
-  const loaded = React.useRef(false);
-  React.useEffect(() => {
-    if (loaded.current) return;
-    if (!vm.ready) return;
-    loaded.current = true;
-    setLocal(vm.gradeScales);
-  }, [vm.ready, vm.gradeScales]);
-
   const set = React.useCallback(
     (next: Partial<GradeScales>) => {
-      loaded.current = true;
-      setLocal((current) => ({ ...current, ...next }));
+      setPending((current) => ({ ...current, ...next }));
       setBusy(true);
       setError(null);
       api
@@ -49,7 +40,7 @@ export function useGradeScales(
     [api, onSaved]
   );
 
-  return { scales, busy, error, set };
+  return { scales: { ...vm.gradeScales, ...pending }, busy, error, set };
 }
 
 // Read-only counterpart for the screens that only need to know which scale to

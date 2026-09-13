@@ -1,0 +1,10 @@
+# Gitignored files a new worktree needs, copied by `wt step copy-ignored`.
+# Without these the web app starts in Clerk keyless mode and every signed-in
+# request fails a JWKS kid check against a throwaway instance.
+#
+# Deliberately an allowlist: copying every ignored path also drags in
+# infra/terraform state, which is local and single-operator, and must not be
+# duplicated per worktree.
+.env
+apps/web/.dev.vars
+packages/sync-service/.dev.vars

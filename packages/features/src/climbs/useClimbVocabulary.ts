@@ -29,6 +29,7 @@ export function useClimbVocabulary(api: SendtallyApi): ClimbVocabulary {
   }, [api]);
 
   React.useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- reload only sets state after its await
     void reload();
   }, [reload]);
 

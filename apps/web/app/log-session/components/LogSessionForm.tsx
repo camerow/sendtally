@@ -9,10 +9,11 @@ import {
   emptyDraft,
   newClimb,
   toLogSessionInput,
-  withScale,
+  withClimbScale,
   withTag,
   withoutTag,
   type ClimbDraft,
+  type GradeScale,
   type LogSessionDraft,
 } from "@sendtally/features/log-session";
 import { SESSION_NOTE_MAX, useTagVocabulary } from "@sendtally/features/sessions";
@@ -136,12 +137,10 @@ export function LogSessionForm({
   // and touching the scale picker stops the adoption.
   const adopted = React.useRef(editing !== undefined);
   React.useEffect(() => {
-    if (adopted.current) return;
-    if (!prefs.ready) return;
+    if (adopted.current || !prefs.ready) return;
     adopted.current = true;
-    setDraft((d) => withScale(d, prefs.scales.boulder));
-  }, [prefs.ready, prefs.scales]);
-
+    setScale(prefs.scales.boulder);
+  }, [prefs.ready, prefs.scales.boulder]);
   const vocabulary = useClimbVocabulary(api);
   const narrow = useIsNarrow();
   const [editingKey, setEditingKey] = React.useState<string | null>(null);
@@ -150,7 +149,12 @@ export function LogSessionForm({
   const cancelTo =
     editing === undefined ? "/app" : `/app/sessions/${encodeURIComponent(editing.fingerprint)}`;
 
+  const scale = draft.climbs[0]?.scale ?? "v";
   const problem = draftProblem(draft);
+
+  function setScale(next: GradeScale): void {
+    setDraft((d) => ({ ...d, climbs: d.climbs.map((c) => withClimbScale(c, next)) }));
+  }
 
   function updateClimb(key: string, climb: ClimbDraft): void {
     setDraft((d) => ({ ...d, climbs: d.climbs.map((c) => (c.key === key ? climb : c)) }));
@@ -167,9 +171,11 @@ export function LogSessionForm({
               ...c,
               name,
               project: undefined,
-              ...(known === undefined || climbDraftGrade(known, d.scale) === ""
+              // A project added from the projects page has no grade yet, so the
+              // one the user already picked in the form stands.
+              ...(known === undefined || climbDraftGrade(known, c.scale) === ""
                 ? {}
-                : { grade: climbDraftGrade(known, d.scale) }),
+                : { grade: climbDraftGrade(known, c.scale) }),
             }
       ),
     }));
@@ -185,11 +191,9 @@ export function LogSessionForm({
               ...c,
               name: known.name,
               project: undefined,
-              // A project added from the projects page has no grade yet, so the
-              // one the user already picked in the form stands.
-              ...(climbDraftGrade(known, d.scale) === ""
+              ...(climbDraftGrade(known, c.scale) === ""
                 ? {}
-                : { grade: climbDraftGrade(known, d.scale) }),
+                : { grade: climbDraftGrade(known, c.scale) }),
             }
       ),
     }));
@@ -202,7 +206,10 @@ export function LogSessionForm({
 
   function addClimb(): void {
     const key = `climb-${nextKey.current++}`;
-    setDraft((d) => ({ ...d, climbs: [...d.climbs, newClimb(key, d.scale)] }));
+    setDraft((d) => ({
+      ...d,
+      climbs: [...d.climbs, newClimb(key, d.climbs[d.climbs.length - 1]?.scale ?? "v")],
+    }));
     if (narrow) setEditingKey(key);
   }
 
@@ -369,11 +376,11 @@ export function LogSessionForm({
                   type="button"
                   onClick={() => {
                     adopted.current = true;
-                    setDraft(withScale(draft, option.value));
+                    setScale(option.value);
                   }}
-                  aria-pressed={draft.scale === option.value}
+                  aria-pressed={scale === option.value}
                   style={{
-                    ...chipStyle(draft.scale === option.value),
+                    ...chipStyle(scale === option.value),
                     fontSize: 10,
                     padding: "6px 12px",
                   }}
@@ -404,7 +411,7 @@ export function LogSessionForm({
                 <ClimbCard
                   key={climb.key}
                   climb={climb}
-                  scale={draft.scale}
+                  scale={climb.scale}
                   removable={draft.climbs.length > 1}
                   project={isProject(climb)}
                   suggestions={vocabulary.suggestionsFor(climb.name)}
@@ -448,7 +455,7 @@ export function LogSessionForm({
           climb={editingClimb}
           index={editingIndex}
           count={draft.climbs.length}
-          scale={draft.scale}
+          scale={editingClimb.scale}
           project={isProject(editingClimb)}
           suggestions={vocabulary.suggestionsFor(editingClimb.name)}
           onChange={(c) => updateClimb(editingClimb.key, c)}

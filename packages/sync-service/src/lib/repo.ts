@@ -1,5 +1,5 @@
 import { disciplineOf } from "@sendtally/core";
-import { and, asc, count, desc, eq, inArray, notInArray } from "drizzle-orm";
+import { and, asc, count, desc, eq, getTableColumns, inArray, notInArray } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import {
   boardConnections,
@@ -19,49 +19,20 @@ export type UserRow = typeof users.$inferSelect;
 
 export type StravaConnectionRow = typeof stravaConnections.$inferSelect;
 
-export type SessionRow = {
-  fingerprint: string;
-  board: string | null;
-  source: string;
-  location: string | null;
-  name: string | null;
-  start_at: string;
-  end_at: string;
-  climb_count: number;
-  top_grade: number;
-  top_send_grade: number;
-  top_grade_label: string | null;
-  top_send_grade_label: string | null;
-  rpe: number;
-  title: string;
-  notes: string | null;
-  strava_activity_id: number | null;
-  posted_at: string | null;
-  post_state: string | null;
-  post_error: string | null;
-};
+// What the apps read. `summary` and `climbs_json` are the Strava description
+// and the raw climb blob, which the endpoints shape themselves.
+const SESSION_PRIVATE_COLUMNS = ["user_id", "summary", "climbs_json"] as const;
 
-const sessionListColumns = {
-  fingerprint: sessions.fingerprint,
-  board: sessions.board,
-  source: sessions.source,
-  location: sessions.location,
-  name: sessions.name,
-  start_at: sessions.start_at,
-  end_at: sessions.end_at,
-  climb_count: sessions.climb_count,
-  top_grade: sessions.top_grade,
-  top_send_grade: sessions.top_send_grade,
-  top_grade_label: sessions.top_grade_label,
-  top_send_grade_label: sessions.top_send_grade_label,
-  rpe: sessions.rpe,
-  title: sessions.title,
-  notes: sessions.notes,
-  strava_activity_id: sessions.strava_activity_id,
-  posted_at: sessions.posted_at,
-  post_state: sessions.post_state,
-  post_error: sessions.post_error,
-};
+export type SessionRow = Omit<
+  typeof sessions.$inferSelect,
+  (typeof SESSION_PRIVATE_COLUMNS)[number]
+>;
+
+const sessionListColumns = Object.fromEntries(
+  Object.entries(getTableColumns(sessions)).filter(
+    ([name]) => !SESSION_PRIVATE_COLUMNS.includes(name as (typeof SESSION_PRIVATE_COLUMNS)[number])
+  )
+) as { [K in keyof SessionRow]: (typeof sessions)[K] };
 
 export async function upsertUser(db: D1Database, id: string, timezone: string): Promise<void> {
   await drizzle(db)
@@ -218,7 +189,7 @@ export async function replaceStoreEntitlements(
 
 export type ManualSessionInput = {
   fingerprint: string;
-  location: string;
+  location: "indoor" | "outdoor";
   name: string | null;
   start_at: string;
   end_at: string;

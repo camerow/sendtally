@@ -55,3 +55,12 @@ export async function verifyClerkWebhook(req: Request, env: Env): Promise<AuthWe
     email: primaryEmail(event.data),
   };
 }
+
+// The Worker's only identity provider. It is a mutable record rather than three
+// imports because vitest's module mocking does not reach a transitive import
+// inside the workers pool, and the tests have to answer as a signed-in user.
+export const auth = {
+  verifyUser: verifyClerkUser,
+  deleteUser: deleteClerkUser,
+  verifyWebhook: verifyClerkWebhook,
+};

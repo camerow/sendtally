@@ -25,7 +25,6 @@ function session(fingerprint: string, startAt: string, tags: string[] = []): Ses
     posted_at: null,
     post_state: null,
     post_error: null,
-    inProgress: false,
     tags: tags.map((name) => ({ id: name, slug: name, name })),
   };
 }

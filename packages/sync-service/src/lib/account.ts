@@ -8,11 +8,7 @@ import { StravaClient } from "./strava";
 // lapsed grant or a vendor outage must never leave the user's data behind. Safe
 // to run twice - the webhook fires after our own endpoint has already purged,
 // and every step no-ops on missing rows.
-export async function purgeAccount(
-  env: Env,
-  userId: string,
-  fetchImpl: typeof fetch
-): Promise<void> {
+export async function purgeAccount(env: Env, userId: string): Promise<void> {
   const strava = await repo.getStravaConnection(env.DB, userId);
   if (strava !== null) {
     const client = new StravaClient(
@@ -21,8 +17,7 @@ export async function purgeAccount(
         accessToken: await decryptSecret(strava.access_token_ciphertext, env.TOKEN_KEY),
         refreshToken: await decryptSecret(strava.refresh_token_ciphertext, env.TOKEN_KEY),
         expiresAt: strava.expires_at,
-      },
-      fetchImpl
+      }
     );
     try {
       await client.deauthorize();
@@ -33,7 +28,7 @@ export async function purgeAccount(
     }
   }
   try {
-    await new RevenueCatClient(env.REVENUECAT_SECRET_API_KEY, fetchImpl).deleteSubscriber(userId);
+    await new RevenueCatClient(env.REVENUECAT_SECRET_API_KEY).deleteSubscriber(userId);
   } catch (err) {
     console.error(
       `revenuecat subscriber delete failed during account deletion: ${err instanceof Error ? err.message : String(err)}`

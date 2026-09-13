@@ -21,6 +21,8 @@ export const projectBody = z.object({
   beta: z.string().max(MAX_BETA_LENGTH).optional(),
 });
 
+export type ProjectInput = z.input<typeof projectBody>;
+
 export type ClimbSummary = {
   slug: string;
   name: string;

@@ -1,5 +1,4 @@
 export { SESSION_NOTE_MAX } from "./notes";
-export { SESSION_BADGE_LABELS, sessionBadge, type SessionBadge } from "./badges";
 export {
   climbGradeLabel,
   gradeFormatter,
@@ -10,13 +9,7 @@ export {
   type RouteScale,
   type SessionGradeLabel,
 } from "./grades";
-export {
-  IN_PROGRESS_LABEL,
-  climbCountLabel,
-  sessionDay,
-  sessionMetaLabel,
-  type SessionDay,
-} from "./meta";
+export { climbCountLabel, sessionDay, sessionMetaLabel, type SessionDay } from "./meta";
 export {
   MONTH_SHORT_NAMES,
   monthKey,

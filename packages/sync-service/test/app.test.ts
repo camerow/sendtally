@@ -1,44 +1,61 @@
 import { env } from "cloudflare:test";
-import { describe, expect, it } from "vitest";
-import type { SessionDetail } from "@sendtally/api-client";
-import { draftFromSession, toLogSessionInput } from "@sendtally/features/log-session/transforms";
-import { createApp, type AppDeps } from "../src/app";
-import { decryptSecret, encryptSecret } from "../src/lib/crypto";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { encryptSecret } from "../src/lib/crypto";
 import { jsonResponse, makeFakeFetch } from "./fakes";
+import { testApp } from "./harness";
 
-type TestOverrides = Partial<Pick<AppDeps, "deleteAuthUser" | "verifyAuthWebhook">>;
+afterEach(() => vi.unstubAllGlobals());
 
-// Tests never reach the network: anything a test does not stub throws inside
-// the fake. Account deletion always forgets the RevenueCat subscriber, so that
-// one call is answered here rather than in every deletion test.
-const offlineFetch = makeFakeFetch([
-  {
-    match: (url, method) => method === "DELETE" && url.startsWith("https://api.revenuecat.com/"),
-    respond: () => jsonResponse(200, { deleted: true }),
-  },
-]).fetchImpl;
+type ManualClimb = {
+  time: string;
+  name: string;
+  vGrade: number;
+  kind: string;
+  tries: number;
+  grade: { scale: string; value: string | number };
+};
 
-function testApp(fetchImpl: typeof fetch = offlineFetch, overrides: TestOverrides = {}) {
-  return createApp({
-    verifyUser: async (req) => {
-      const userId = req.headers.get("x-test-user");
-      if (userId === null) return null;
-      const features = (req.headers.get("x-test-features") ?? "").split(",");
-      return { userId, hasFeature: (feature) => features.includes(feature) };
-    },
-    deleteAuthUser: async () => {},
-    verifyAuthWebhook: async () => {
-      throw new Error("unsigned webhook");
-    },
-    ...overrides,
-    fetchImpl,
-  });
-}
+// What an edit screen can send back: the fields the read shape carries.
+const resent = (session: { climbs: ManualClimb[] }) =>
+  session.climbs.map(({ name, grade, kind, tries }) => ({ name, grade, kind, tries }));
 
 describe("app", () => {
   it("serves health without auth", async () => {
     const res = await testApp().request("/health", {}, env);
     expect(res.status).toBe(200);
+  });
+
+  it("answers a body it cannot parse with 400, not a server error", async () => {
+    const res = await testApp().request(
+      "/v1/sessions",
+      {
+        method: "POST",
+        headers: { "x-test-user": "u_malformed", "Content-Type": "application/json" },
+        body: '{"climbs":[',
+      },
+      env
+    );
+    expect(res.status).toBe(400);
+    expect(await res.json()).toEqual({ error: "invalid request body" });
+  });
+
+  it("lets a preview version of the web app through CORS, but not any other origin", async () => {
+    const preflight = async (origin: string) =>
+      (
+        await testApp().request(
+          "/v1/sessions",
+          {
+            method: "OPTIONS",
+            headers: { Origin: origin, "Access-Control-Request-Method": "GET" },
+          },
+          env
+        )
+      ).headers.get("Access-Control-Allow-Origin");
+
+    const preview = "https://a1b2c3d4-sendtally-web-staging.workers.test";
+    expect(await preflight("https://sendtally.test")).toBe("https://sendtally.test");
+    expect(await preflight(preview)).toBe(preview);
+    expect(await preflight("https://evil.example")).toBeNull();
   });
 
   it("rejects /v1 routes without a verified user", async () => {
@@ -400,15 +417,7 @@ describe("app", () => {
       top_send_grade_label: string | null;
       rpe: number;
       title: string;
-      inProgress: boolean;
-      climbs: Array<{
-        time: string;
-        name: string;
-        vGrade: number;
-        kind: string;
-        tries: number;
-        grade: { scale: string; value: string | number };
-      }>;
+      climbs: ManualClimb[];
     };
   };
 
@@ -657,7 +666,6 @@ describe("app", () => {
     expect(session.top_send_grade).toBe(5);
     expect(session.rpe).toBeGreaterThanOrEqual(1);
     expect(session.rpe).toBeLessThanOrEqual(10);
-    expect(session.inProgress).toBe(false);
 
     expect(session.climbs).toHaveLength(3);
     expect(session.climbs[0]).toMatchObject({
@@ -690,33 +698,18 @@ describe("app", () => {
     expect(row?.summary).toContain("created by https://sendtally.com");
   });
 
-  it("never marks a manual session in progress, even with a recent end time", async () => {
+  it("lists a logged session as manually sourced", async () => {
     const userId = "user_manual_recent";
-    const start = new Date(Date.now() - 30 * 60_000);
-    const end = new Date(start.getTime() + 25 * 60_000);
-    const res = await postSession(
-      userId,
-      logBody({
-        date: start.toISOString().slice(0, 10),
-        startTime: start.toISOString().slice(11, 16),
-        endTime: end.toISOString().slice(11, 16),
-      })
-    );
-    expect(res.status).toBe(201);
-    const { session } = (await res.json()) as ManualSessionResponse;
-    expect(session.inProgress).toBe(false);
+    expect((await postSession(userId, logBody())).status).toBe(201);
 
     const list = await testApp().request(
       "/v1/sessions",
       { headers: { "x-test-user": userId } },
       env
     );
-    const body = (await list.json()) as {
-      sessions: Array<{ fingerprint: string; source: string; inProgress: boolean }>;
-    };
+    const body = (await list.json()) as { sessions: Array<{ source: string }> };
     expect(body.sessions).toHaveLength(1);
     expect(body.sessions[0]?.source).toBe("manual");
-    expect(body.sessions[0]?.inProgress).toBe(false);
   });
 
   it("logs a route session in YDS and French and reads it back in those scales", async () => {
@@ -838,10 +831,10 @@ describe("app", () => {
     expect(after.top_grade).toBe(6);
   });
 
-  // The edit screen loads a session, rebuilds the form draft from it, and PUTs
-  // that draft back. Anything the draft cannot express is silently lost, so the
-  // round trip is asserted against the real API rather than a fixture.
-  it("survives a no-op edit made through the client's own draft transforms", async () => {
+  // The edit screen loads a session and PUTs its own climbs back. Anything the
+  // read shape cannot express is silently lost on the next save, so the round
+  // trip is asserted end to end rather than over a fixture.
+  it("survives a no-op edit that sends the session's own climbs back", async () => {
     const userId = "user_manual_roundtrip";
     const body = logBody({
       tags: ["Endurance"],
@@ -854,15 +847,12 @@ describe("app", () => {
     const created = await postSession(userId, body);
     const { session: before } = (await created.json()) as ManualSessionResponse;
 
-    const draft = draftFromSession(before as unknown as SessionDetail);
-    expect(draft.scale).toBe("font");
-
     const updated = await testApp().request(
       `/v1/sessions/${before.fingerprint}`,
       {
         method: "PUT",
         headers: { "x-test-user": userId, "Content-Type": "application/json" },
-        body: JSON.stringify(toLogSessionInput(draft)),
+        body: JSON.stringify({ ...body, climbs: resent(before) }),
       },
       env
     );
@@ -881,9 +871,7 @@ describe("app", () => {
       {
         method: "PUT",
         headers: { "x-test-user": userId, "Content-Type": "application/json" },
-        body: JSON.stringify(
-          toLogSessionInput(draftFromSession(before as unknown as SessionDetail))
-        ),
+        body: JSON.stringify({ ...logBody(), climbs: resent(before) }),
       },
       env
     );
@@ -1001,7 +989,7 @@ describe("app", () => {
     const deleted: string[] = [];
 
     const res = await testApp(fetchImpl, {
-      deleteAuthUser: async (id) => void deleted.push(id),
+      deleteUser: async (id: string) => void deleted.push(id),
     }).request("/v1/account", { method: "DELETE", headers: { "x-test-user": userId } }, env);
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ deleted: true });
@@ -1090,7 +1078,7 @@ describe("app", () => {
       .run();
 
     const res = await testApp(undefined, {
-      deleteAuthUser: async () => {
+      deleteUser: async () => {
         throw new Error("clerk down");
       },
     }).request("/v1/account", { method: "DELETE", headers: { "x-test-user": userId } }, env);
@@ -1139,7 +1127,7 @@ describe("app", () => {
     ]);
 
     const res = await testApp(fetchImpl, {
-      verifyAuthWebhook: async () => ({ type: "user.deleted", userId, email: null }),
+      verifyWebhook: async () => ({ type: "user.deleted", userId, email: null }),
     }).request("/webhooks/clerk", { method: "POST", body: "{}" }, env);
     expect(res.status).toBe(200);
 
@@ -1166,7 +1154,7 @@ describe("app", () => {
       .run();
 
     const res = await testApp(undefined, {
-      verifyAuthWebhook: async () => ({ type: "user.updated", userId, email: null }),
+      verifyWebhook: async () => ({ type: "user.updated", userId, email: null }),
     }).request("/webhooks/clerk", { method: "POST", body: "{}" }, env);
     expect(res.status).toBe(200);
 
@@ -1190,7 +1178,7 @@ describe("app", () => {
     expect(first.status).toBe(200);
 
     const second = await testApp(undefined, {
-      verifyAuthWebhook: async () => ({ type: "user.deleted", userId, email: null }),
+      verifyWebhook: async () => ({ type: "user.deleted", userId, email: null }),
     }).request("/webhooks/clerk", { method: "POST", body: "{}" }, env);
     expect(second.status).toBe(200);
   });

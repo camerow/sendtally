@@ -124,9 +124,6 @@ export function postStatusVM(
 ): PostStatusVM {
   const base = { detail: null, alert: false, action: null, actionLabel: null } as const;
 
-  if (session.inProgress) {
-    return { ...base, kind: "in-progress", label: "IN PROGRESS · POSTS WHEN THE SESSION SETTLES" };
-  }
   if (session.strava_activity_id !== null) {
     return { ...base, kind: "posted", label: postedLabel(session, start) };
   }

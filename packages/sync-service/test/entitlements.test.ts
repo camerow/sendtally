@@ -1,10 +1,12 @@
 import { env } from "cloudflare:test";
-import { describe, expect, it } from "vitest";
-import { createApp } from "../src/app";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { newlyGranted } from "../src/lib/entitlements";
 import { INSIGHTS_FEATURE, STORE_ENTITLEMENT } from "../src/features";
 import { storeEntitlementsOf, webhookUserIds } from "../src/lib/revenuecat";
 import { jsonResponse, makeFakeFetch, type RecordedCall } from "./fakes";
+import { testApp } from "./harness";
+
+afterEach(() => vi.unstubAllGlobals());
 
 const FUTURE = "2099-01-01T00:00:00Z";
 const PAST = "2001-01-01T00:00:00Z";
@@ -60,22 +62,6 @@ function revenueCatFetch(
       },
     },
   ]);
-}
-
-function testApp(fetchImpl: typeof fetch) {
-  return createApp({
-    verifyUser: async (req) => {
-      const userId = req.headers.get("x-test-user");
-      if (userId === null) return null;
-      const features = (req.headers.get("x-test-features") ?? "").split(",");
-      return { userId, hasFeature: (feature) => features.includes(feature) };
-    },
-    deleteAuthUser: async () => {},
-    verifyAuthWebhook: async () => {
-      throw new Error("unsigned webhook");
-    },
-    fetchImpl,
-  });
 }
 
 function webhook(event: Record<string, unknown>, auth = "test-revenuecat-webhook-auth") {
@@ -166,6 +152,39 @@ describe("RevenueCat webhook", () => {
       env
     );
     expect(res.status).toBe(401);
+  });
+
+  // The secret gates the route ahead of body validation, so an unauthenticated
+  // caller cannot tell a well-formed payload from a malformed one.
+  it("rejects an unsigned request before it reads the body", async () => {
+    const { fetchImpl } = revenueCatFetch({});
+    const res = await testApp(fetchImpl).request(
+      "/webhooks/revenuecat",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: "wrong" },
+        body: "{ not json",
+      },
+      env
+    );
+    expect(res.status).toBe(401);
+  });
+
+  // RevenueCat is a third party whose headers we do not control, so this route
+  // parses the body itself rather than through zValidator, which would demand a
+  // JSON Content-Type.
+  it("accepts a signed event that arrives without a JSON content type", async () => {
+    const { fetchImpl } = revenueCatFetch({});
+    const res = await testApp(fetchImpl).request(
+      "/webhooks/revenuecat",
+      {
+        method: "POST",
+        headers: { Authorization: "test-revenuecat-webhook-auth" },
+        body: JSON.stringify({ api_version: "1.0", event: { type: "TEST", app_user_id: "test" } }),
+      },
+      env
+    );
+    expect(res.status).toBe(200);
   });
 
   it("acknowledges the dashboard test event without touching RevenueCat", async () => {

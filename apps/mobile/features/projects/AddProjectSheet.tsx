@@ -77,17 +77,6 @@ export function AddProjectSheet({
   const [error, setError] = React.useState<string | null>(null);
   const rail = React.useRef<ScrollView>(null);
 
-  React.useEffect(() => {
-    if (!visible) return;
-    setName("");
-    setPicked(null);
-    setTracking(false);
-    setDiscipline("boulder");
-    setGrade("");
-    setBeta("");
-    setError(null);
-  }, [visible]);
-
   const trimmed = name.trim();
   const matches = trimmed === "" ? [] : matchClimbs(climbs, name);
   const exact = climbs.find((c) => c.name.toLowerCase() === trimmed.toLowerCase());

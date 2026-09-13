@@ -19,8 +19,12 @@ jobs:
           cache-dependency-path: tools/cli-go/go.sum
       - run: pnpm install --frozen-lockfile
       - run: pnpm check-types
-      - name: Expo packages match the installed SDK
-        run: pnpm --filter @sendtally/mobile exec expo install --check
+      - run: pnpm lint
+      # expo-doctor is the superset of "expo install --check": it also catches
+      # a transitive native dependency pulled to a version the SDK does not
+      # support, which is how a build passes CI and then crashes on launch.
+      - name: Expo dependencies and config match the installed SDK
+        run: pnpm --filter @sendtally/mobile exec expo-doctor
       - name: Test (one retry for the vitest-pool-workers isolated-storage flake)
         run: pnpm test || pnpm test
       - run: pnpm format:check

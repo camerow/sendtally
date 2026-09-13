@@ -12,6 +12,19 @@ describe("allowedOrigin", () => {
     expect(allowedOrigin("https://sendtally.com", "http://localhost:5175")).toBeNull();
   });
 
+  it("allows the preview URLs a pull request deploys to", () => {
+    expect(
+      allowedOrigin(
+        "https://pr-7-sendtally-web.workers.dev",
+        "https://sendtally.com",
+        ".workers.dev"
+      )
+    ).toBe("https://pr-7-sendtally-web.workers.dev");
+    expect(
+      allowedOrigin("https://evil.example", "https://sendtally.com", ".workers.dev")
+    ).toBeNull();
+  });
+
   it("pins the configured origin everywhere else", () => {
     expect(allowedOrigin("https://sendtally.com", "https://sendtally.com")).toBe(
       "https://sendtally.com"

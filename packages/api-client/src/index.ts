@@ -1,161 +1,150 @@
-import {
-  ApiError,
-  type ClimbSummary,
-  type ConnectionStatus,
-  type Entitlements,
-  type GradeScales,
-  type LogSessionInput,
-  type PostOutcome,
-  type ProjectInput,
-  type SessionRow,
-  type SessionDetail,
-  type SessionTag,
-  type SessionWithClimbs,
-  type TagSummary,
+import { hc } from "hono/client";
+import type { AppType } from "@sendtally/sync-service/app";
+import { ApiError } from "./types";
+import type {
+  ClimbSummary,
+  ConnectionStatus,
+  Entitlements,
+  GradeScales,
+  LogSessionInput,
+  PostOutcome,
+  ProjectInput,
+  SessionDetail,
+  SessionRow,
+  SessionTag,
+  SessionWithClimbs,
+  TagSummary,
 } from "./types";
 
 export * from "./types";
 
 export type TokenProvider = () => Promise<string | null>;
 
-export class SendtallyApi {
-  constructor(
-    private readonly baseUrl: string,
-    private readonly getToken: TokenProvider
-  ) {}
+type JsonResponse = { ok: boolean; status: number; json: () => Promise<unknown> };
 
-  private async request<T>(path: string, init?: RequestInit): Promise<T> {
-    const token = await this.getToken();
-    if (token === null) throw new ApiError(401, "not signed in");
-    const resp = await fetch(`${this.baseUrl}${path}`, {
-      ...init,
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-        ...init?.headers,
+// hono/client resolves every status, so this is where a non-2xx becomes the
+// ApiError the screens catch.
+async function body<T>(pending: Promise<JsonResponse>): Promise<T> {
+  const response = await pending;
+  if (!response.ok) {
+    const failure = (await response.json().catch(() => null)) as { error?: string } | null;
+    throw new ApiError(
+      response.status,
+      failure?.error ?? `request failed: HTTP ${response.status}`
+    );
+  }
+  return (await response.json()) as T;
+}
+
+export class SendtallyApi {
+  private readonly client: ReturnType<typeof hc<AppType>>;
+
+  constructor(baseUrl: string, getToken: TokenProvider) {
+    this.client = hc<AppType>(baseUrl, {
+      headers: async () => {
+        const token = await getToken();
+        if (token === null) throw new ApiError(401, "not signed in");
+        return { Authorization: `Bearer ${token}`, "Content-Type": "application/json" };
       },
     });
-    if (!resp.ok) {
-      const body = (await resp.json().catch(() => null)) as { error?: string } | null;
-      throw new ApiError(resp.status, body?.error ?? `request failed: HTTP ${resp.status}`);
-    }
-    return (await resp.json()) as T;
   }
 
   status(): Promise<ConnectionStatus> {
-    return this.request<ConnectionStatus>("/v1/status");
+    return body(this.client.v1.status.$get());
   }
 
   entitlements(): Promise<Entitlements> {
-    return this.request<Entitlements>("/v1/entitlements");
+    return body(this.client.v1.entitlements.$get());
   }
 
   refreshEntitlements(): Promise<Entitlements> {
-    return this.request<Entitlements>("/v1/entitlements/refresh", { method: "POST" });
+    return body(this.client.v1.entitlements.refresh.$post());
   }
 
   sessions(): Promise<{ sessions: SessionRow[] }> {
-    return this.request<{ sessions: SessionRow[] }>("/v1/sessions");
+    return body(this.client.v1.sessions.$get());
   }
 
   sessionsWithClimbs(): Promise<{ sessions: SessionWithClimbs[] }> {
-    return this.request<{ sessions: SessionWithClimbs[] }>("/v1/sessions?include=climbs");
+    return body(this.client.v1.sessions.$get({ query: { include: "climbs" } }));
   }
 
   session(fingerprint: string): Promise<{ session: SessionDetail }> {
-    return this.request<{ session: SessionDetail }>(
-      `/v1/sessions/${encodeURIComponent(fingerprint)}`
-    );
+    return body(this.client.v1.sessions[":fingerprint"].$get({ param: { fingerprint } }));
   }
 
   logSession(input: LogSessionInput): Promise<{ session: SessionDetail }> {
-    return this.request<{ session: SessionDetail }>("/v1/sessions", {
-      method: "POST",
-      body: JSON.stringify(input),
-    });
+    return body(this.client.v1.sessions.$post({ json: input }));
   }
 
   updateLoggedSession(
     fingerprint: string,
     input: LogSessionInput
   ): Promise<{ session: SessionDetail }> {
-    return this.request<{ session: SessionDetail }>(
-      `/v1/sessions/${encodeURIComponent(fingerprint)}`,
-      { method: "PUT", body: JSON.stringify(input) }
+    return body(
+      this.client.v1.sessions[":fingerprint"].$put({ param: { fingerprint }, json: input })
     );
   }
 
   deleteLoggedSession(fingerprint: string): Promise<{ deleted: boolean }> {
-    return this.request<{ deleted: boolean }>(`/v1/sessions/${encodeURIComponent(fingerprint)}`, {
-      method: "DELETE",
-    });
+    return body(this.client.v1.sessions[":fingerprint"].$delete({ param: { fingerprint } }));
   }
 
   tags(): Promise<{ tags: TagSummary[] }> {
-    return this.request<{ tags: TagSummary[] }>("/v1/tags");
+    return body(this.client.v1.tags.$get());
   }
 
   setSessionTags(fingerprint: string, tags: string[]): Promise<{ tags: SessionTag[] }> {
-    return this.request<{ tags: SessionTag[] }>(
-      `/v1/sessions/${encodeURIComponent(fingerprint)}/tags`,
-      { method: "PUT", body: JSON.stringify({ tags }) }
+    return body(
+      this.client.v1.sessions[":fingerprint"].tags.$put({ param: { fingerprint }, json: { tags } })
     );
   }
 
   setSessionNotes(fingerprint: string, notes: string): Promise<{ notes: string | null }> {
-    return this.request<{ notes: string | null }>(
-      `/v1/sessions/${encodeURIComponent(fingerprint)}/notes`,
-      { method: "PUT", body: JSON.stringify({ notes }) }
+    return body(
+      this.client.v1.sessions[":fingerprint"].notes.$put({
+        param: { fingerprint },
+        json: { notes },
+      })
     );
   }
 
   setGradeScales(scales: Partial<GradeScales>): Promise<{ gradeScales: GradeScales }> {
-    return this.request<{ gradeScales: GradeScales }>("/v1/preferences/grade-scales", {
-      method: "PUT",
-      body: JSON.stringify(scales),
-    });
+    return body(this.client.v1.preferences["grade-scales"].$put({ json: scales }));
   }
 
   climbs(): Promise<{ climbs: ClimbSummary[] }> {
-    return this.request<{ climbs: ClimbSummary[] }>("/v1/climbs");
+    return body(this.client.v1.climbs.$get());
   }
 
   saveProject(project: ProjectInput): Promise<{ slug: string }> {
-    return this.request<{ slug: string }>("/v1/projects", {
-      method: "POST",
-      body: JSON.stringify(project),
-    });
+    return body(this.client.v1.projects.$post({ json: project }));
   }
 
   unmarkProject(slug: string): Promise<{ deleted: boolean }> {
-    return this.request<{ deleted: boolean }>(`/v1/projects/${encodeURIComponent(slug)}`, {
-      method: "DELETE",
-    });
+    return body(this.client.v1.projects[":slug"].$delete({ param: { slug } }));
   }
 
   postSessionToStrava(
     fingerprint: string
   ): Promise<{ outcome: PostOutcome; reason?: string; session: SessionDetail }> {
-    return this.request(`/v1/sessions/${encodeURIComponent(fingerprint)}/strava`, {
-      method: "POST",
-    });
+    return body(this.client.v1.sessions[":fingerprint"].strava.$post({ param: { fingerprint } }));
   }
 
   setStravaPosting(
     enabled: boolean,
     since?: string | null
   ): Promise<{ postingEnabled: boolean; postSince: string | null }> {
-    return this.request("/v1/connections/strava/posting", {
-      method: "PUT",
-      body: JSON.stringify({ enabled, since: since ?? null }),
-    });
+    return body(
+      this.client.v1.connections.strava.posting.$put({ json: { enabled, since: since ?? null } })
+    );
   }
 
   stravaAuthorizeUrl(): Promise<{ url: string }> {
-    return this.request<{ url: string }>("/v1/connect/strava/start");
+    return body(this.client.v1.connect.strava.start.$get());
   }
 
   deleteAccount(): Promise<{ deleted: boolean }> {
-    return this.request<{ deleted: boolean }>("/v1/account", { method: "DELETE" });
+    return body(this.client.v1.account.$delete());
   }
 }

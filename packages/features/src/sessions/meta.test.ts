@@ -23,7 +23,6 @@ function session(overrides: Partial<SessionRow> = {}): SessionRow {
     posted_at: null,
     post_state: null,
     post_error: null,
-    inProgress: false,
     tags: [],
     ...overrides,
   };
@@ -32,14 +31,6 @@ function session(overrides: Partial<SessionRow> = {}): SessionRow {
 describe("sessionMetaLabel", () => {
   it("joins duration, climbs and RPE", () => {
     expect(sessionMetaLabel(session())).toBe("1h 40m · 14 climbs · RPE 7/10");
-  });
-
-  it("leaves the RPE off while a session is in progress", () => {
-    expect(
-      sessionMetaLabel(
-        session({ inProgress: true, climb_count: 1, end_at: "2026-09-07T18:40:00.000Z" })
-      )
-    ).toBe("40m · 1 climb");
   });
 });
 

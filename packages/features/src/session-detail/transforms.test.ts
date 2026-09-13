@@ -22,7 +22,6 @@ const detail: SessionDetail = {
   posted_at: "2026-07-02T00:00:00.000Z",
   post_state: "posted",
   post_error: null,
-  inProgress: false,
   tags: [],
   climbs: [
     {
@@ -105,27 +104,9 @@ describe("sessionDetailVM", () => {
     expect(vm.filterCounts).toEqual({ all: 4, sent: 3, flash: 2, project: 1 });
   });
 
-  it("shows the in-progress line even when not yet posted", () => {
-    const vm = sessionDetailVM({
-      ...detail,
-      inProgress: true,
-      strava_activity_id: null,
-      posted_at: null,
-      post_state: null,
-      post_error: null,
-    });
-    expect(vm.post.label).toBe("IN PROGRESS · POSTS WHEN THE SESSION SETTLES");
-  });
-
-  it("prefers the in-progress line over an already-posted session", () => {
-    const vm = sessionDetailVM({ ...detail, inProgress: true });
-    expect(vm.post.label).toBe("IN PROGRESS · POSTS WHEN THE SESSION SETTLES");
-  });
-
   it("marks a settled, unposted board session as read-only history", () => {
     const vm = sessionDetailVM({
       ...detail,
-      inProgress: false,
       strava_activity_id: null,
       posted_at: null,
       post_state: null,
@@ -136,8 +117,8 @@ describe("sessionDetailVM", () => {
     expect(vm.post.action).toBeNull();
   });
 
-  it("still shows ON STRAVA for a settled, posted session", () => {
-    const vm = sessionDetailVM({ ...detail, inProgress: false });
+  it("shows ON STRAVA for a posted session", () => {
+    const vm = sessionDetailVM(detail);
     expect(vm.post.label).toBe("ON STRAVA · POSTED JUL 2");
   });
 
