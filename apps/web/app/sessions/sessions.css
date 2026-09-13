@@ -509,8 +509,7 @@
   margin-top: 26px;
 }
 
-.session-row-draft-action,
-.session-row-draft-action--danger {
+.session-row-draft-action {
   font-family: var(--font-sans);
   font-weight: 600;
   font-size: 13px;
@@ -525,9 +524,4 @@
 .session-row-draft-action {
   background: var(--bs-gold);
   color: var(--bs-gunmetal);
-}
-
-.session-row-draft-action--danger {
-  background: var(--bs-watermelon-ink);
-  color: var(--bs-white);
 }

@@ -1,6 +1,7 @@
 import React from "react";
 import { Link } from "react-router";
 import { useStoredDraft } from "@sendtally/features/log-session";
+import { DiscardDraftDialog } from "../../components/DiscardDraftDialog";
 import { sessionDraftStorage } from "../../lib/sessionDraftStorage";
 
 const label: React.CSSProperties = {
@@ -20,53 +21,56 @@ export function DraftSessionRow(): React.ReactElement | null {
   const climbs = `${draft.climbs.length} ${draft.climbs.length === 1 ? "CLIMB" : "CLIMBS"}`;
 
   return (
-    <div className="session-row session-row--draft">
-      <span className="session-row-date">
-        <span className="session-row-weekday">
-          {savedAt.toLocaleDateString([], { weekday: "short" }).toUpperCase()}
+    <>
+      <div className="session-row session-row--draft">
+        <span className="session-row-date">
+          <span className="session-row-weekday">
+            {savedAt.toLocaleDateString([], { weekday: "short" }).toUpperCase()}
+          </span>
+          <span className="session-row-day">
+            {savedAt.toLocaleDateString([], { month: "short", day: "numeric" })}
+          </span>
         </span>
-        <span className="session-row-day">
-          {savedAt.toLocaleDateString([], { month: "short", day: "numeric" })}
+        <span className="session-row-main">
+          <span className="session-row-title">Unfinished session</span>
+          <span className="session-row-meta">
+            {climbs} · {draft.startTime}–{draft.endTime}
+          </span>
         </span>
-      </span>
-      <span className="session-row-main">
-        <span className="session-row-title">
-          {confirming ? "Discard this draft?" : "Unfinished session"}
+        <span style={label}>
+          SAVED ON THIS DEVICE AT{" "}
+          {savedAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
         </span>
-        <span className="session-row-meta">
-          {climbs} · {draft.startTime}–{draft.endTime}
-        </span>
-      </span>
-      <span style={label}>
-        SAVED ON THIS DEVICE AT{" "}
-        {savedAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-      </span>
-      <span style={{ display: "flex", alignItems: "center", gap: 10, justifyContent: "flex-end" }}>
-        <button
-          type="button"
-          onClick={() => setConfirming((c) => !c)}
-          style={{
-            ...label,
-            background: "none",
-            border: "none",
-            padding: 0,
-            cursor: "pointer",
-            textDecoration: "underline",
-          }}
+        <span
+          style={{ display: "flex", alignItems: "center", gap: 10, justifyContent: "flex-end" }}
         >
-          {confirming ? "Keep it" : "Discard"}
-        </button>
-        {confirming ? (
-          <button type="button" onClick={discard} className="session-row-draft-action--danger">
+          <button
+            type="button"
+            onClick={() => setConfirming(true)}
+            style={{
+              ...label,
+              background: "none",
+              border: "none",
+              padding: 0,
+              cursor: "pointer",
+              textDecoration: "underline",
+            }}
+          >
             Discard
           </button>
-        ) : (
           <Link to="/app/sessions/new" className="session-row-draft-action">
             Resume
           </Link>
-        )}
-      </span>
-      <span />
-    </div>
+        </span>
+        <span />
+      </div>
+      {confirming && (
+        <DiscardDraftDialog
+          stored={stored}
+          onCancel={() => setConfirming(false)}
+          onDiscard={discard}
+        />
+      )}
+    </>
   );
 }

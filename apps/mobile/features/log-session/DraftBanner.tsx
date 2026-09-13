@@ -1,5 +1,5 @@
 import React from "react";
-import { Pressable, Text, View } from "react-native";
+import { Alert, Pressable, Text, View } from "react-native";
 import type { StoredSessionDraft } from "@sendtally/features/log-session";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { press } from "../../lib/press";
@@ -45,9 +45,23 @@ export function DraftBanner({
   onResume: () => void;
   onStartFresh: () => void;
 }): React.ReactElement {
-  const [confirming, setConfirming] = React.useState(false);
   const { draft, savedAt } = stored;
-  const climbs = `${draft.climbs.length} ${draft.climbs.length === 1 ? "CLIMB" : "CLIMBS"}`;
+  const count = draft.climbs.length;
+  const climbs = `${count} ${count === 1 ? "CLIMB" : "CLIMBS"}`;
+
+  function confirmDiscard(): void {
+    Alert.alert(
+      "Discard this draft?",
+      `The ${count} ${count === 1 ? "climb" : "climbs"} you logged for ${savedAt.toLocaleDateString(
+        [],
+        { weekday: "long" }
+      )} will be deleted from this device.`,
+      [
+        { text: "Cancel", style: "cancel" },
+        { text: "Discard", style: "destructive", onPress: onStartFresh },
+      ]
+    );
+  }
 
   return (
     <View style={{ gap: 12, backgroundColor: colors.gold, borderRadius: radius.card, padding: 16 }}>
@@ -60,13 +74,8 @@ export function DraftBanner({
             color: colors.gunmetal,
           }}
         >
-          {confirming
-            ? "Throw away the unfinished session?"
-            : `You have an unfinished session from ${savedAt.toLocaleString([], {
-                weekday: "long",
-                hour: "numeric",
-                minute: "2-digit",
-              })}`}
+          You have an unfinished session from{" "}
+          {savedAt.toLocaleString([], { weekday: "long", hour: "numeric", minute: "2-digit" })}
         </Text>
         <Text
           style={{
@@ -80,41 +89,20 @@ export function DraftBanner({
         </Text>
       </View>
       <View style={{ flexDirection: "row", gap: 10 }}>
-        {confirming ? (
-          <>
-            <Action
-              label="Keep it"
-              onPress={() => setConfirming(false)}
-              background="transparent"
-              text="rgba(64,63,76,0.8)"
-              flex={1}
-            />
-            <Action
-              label="Discard"
-              onPress={onStartFresh}
-              background={colors.watermelonInk}
-              text={colors.white}
-              flex={1}
-            />
-          </>
-        ) : (
-          <>
-            <Action
-              label="Start fresh"
-              onPress={() => setConfirming(true)}
-              background="transparent"
-              text="rgba(64,63,76,0.8)"
-              flex={1}
-            />
-            <Action
-              label="Pick up"
-              onPress={onResume}
-              background={colors.gunmetal}
-              text={colors.white}
-              flex={1.4}
-            />
-          </>
-        )}
+        <Action
+          label="Start fresh"
+          onPress={confirmDiscard}
+          background="transparent"
+          text="rgba(64,63,76,0.8)"
+          flex={1}
+        />
+        <Action
+          label="Pick up"
+          onPress={onResume}
+          background={colors.gunmetal}
+          text={colors.white}
+          flex={1.4}
+        />
       </View>
     </View>
   );

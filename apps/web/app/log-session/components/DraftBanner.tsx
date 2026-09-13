@@ -1,5 +1,6 @@
 import React from "react";
 import type { StoredSessionDraft } from "@sendtally/features/log-session";
+import { DiscardDraftDialog } from "../../components/DiscardDraftDialog";
 import { columnHead } from "./styles";
 
 const buttonBase: React.CSSProperties = {
@@ -19,12 +20,12 @@ const ghost: React.CSSProperties = {
   color: "rgba(64,63,76,0.8)",
 };
 
-const filled = (background: string): React.CSSProperties => ({
+const resume: React.CSSProperties = {
   ...buttonBase,
-  background,
+  background: "var(--bs-gunmetal)",
   border: "none",
   color: "var(--bs-white)",
-});
+};
 
 function savedLabel(at: Date): string {
   return at.toLocaleString([], { weekday: "long", hour: "numeric", minute: "2-digit" });
@@ -43,48 +44,42 @@ export function DraftBanner({
   const { draft, savedAt } = stored;
 
   return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: 16,
-        background: "var(--bs-gold)",
-        borderRadius: "var(--radius-card)",
-        padding: "16px 20px",
-      }}
-    >
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 2, minWidth: 0 }}>
-        <span style={{ fontWeight: 600, fontSize: 15, color: "var(--bs-gunmetal)" }}>
-          {confirming
-            ? "Throw away the unfinished session?"
-            : `You have an unfinished session from ${savedLabel(savedAt)}`}
-        </span>
-        <span style={{ ...columnHead, color: "rgba(64,63,76,0.7)" }}>
-          {draft.climbs.length} {draft.climbs.length === 1 ? "CLIMB" : "CLIMBS"} · {draft.startTime}
-          –{draft.endTime} · SAVED ON THIS DEVICE ONLY
-        </span>
+    <>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 16,
+          background: "var(--bs-gold)",
+          borderRadius: "var(--radius-card)",
+          padding: "16px 20px",
+        }}
+      >
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 2, minWidth: 0 }}>
+          <span style={{ fontWeight: 600, fontSize: 15, color: "var(--bs-gunmetal)" }}>
+            You have an unfinished session from {savedLabel(savedAt)}
+          </span>
+          <span style={{ ...columnHead, color: "rgba(64,63,76,0.7)" }}>
+            {draft.climbs.length} {draft.climbs.length === 1 ? "CLIMB" : "CLIMBS"} ·{" "}
+            {draft.startTime}–{draft.endTime} · SAVED ON THIS DEVICE ONLY
+          </span>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, flex: "none" }}>
+          <button type="button" onClick={() => setConfirming(true)} style={ghost}>
+            Start fresh
+          </button>
+          <button type="button" onClick={onResume} style={resume}>
+            Pick up where I left off
+          </button>
+        </div>
       </div>
-      <div style={{ display: "flex", alignItems: "center", gap: 10, flex: "none" }}>
-        {confirming ? (
-          <>
-            <button type="button" onClick={() => setConfirming(false)} style={ghost}>
-              Keep it
-            </button>
-            <button type="button" onClick={onStartFresh} style={filled("var(--bs-watermelon-ink)")}>
-              Discard
-            </button>
-          </>
-        ) : (
-          <>
-            <button type="button" onClick={() => setConfirming(true)} style={ghost}>
-              Start fresh
-            </button>
-            <button type="button" onClick={onResume} style={filled("var(--bs-gunmetal)")}>
-              Pick up where I left off
-            </button>
-          </>
-        )}
-      </div>
-    </div>
+      {confirming && (
+        <DiscardDraftDialog
+          stored={stored}
+          onCancel={() => setConfirming(false)}
+          onDiscard={onStartFresh}
+        />
+      )}
+    </>
   );
 }
