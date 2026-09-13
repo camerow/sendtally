@@ -1,6 +1,7 @@
 import { climbDiscipline, climbRank, dominantDiscipline } from "@sendtally/core";
 import type { ConnectionStatus, SessionClimb, SessionDetail } from "@sendtally/api-client";
 import { climbKey } from "../climbs/transforms";
+import { sendStyleLabel } from "../log-session/types";
 import { climbGradeLabel, gradeFormatterFor } from "../sessions/grades";
 import type {
   ClimbFilter,
@@ -37,8 +38,7 @@ function resultOf(c: SessionClimb, firstEncounter: boolean): ClimbResult {
 }
 
 function resultLabelOf(c: SessionClimb, result: ClimbResult): string {
-  if (result !== "sent") return result.toUpperCase();
-  return climbDiscipline(c) === "route" ? "REDPOINT" : "SENT";
+  return result === "sent" ? sendStyleLabel(climbDiscipline(c), "redpoint") : result.toUpperCase();
 }
 
 /** Flash and onsight are both first-go sends; only the beta differs. */

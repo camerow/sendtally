@@ -133,7 +133,7 @@ export function withClimbOutcome(climb: ClimbDraft, outcome: ClimbOutcome): Clim
 }
 
 /** Onsight is a route idea; a boulder carrying one from an earlier edit falls back to sent. */
-export function withClimbScaleStyle(climb: ClimbDraft): ClimbDraft {
+function withClimbScaleStyle(climb: ClimbDraft): ClimbDraft {
   const allowed = sendStylesFor(disciplineOf(climb.scale));
   return allowed.includes(climb.style) ? climb : { ...climb, style: "redpoint" };
 }

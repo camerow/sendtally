@@ -39,11 +39,6 @@ export type ClimbDraft = {
  */
 export type ClimbOutcome = { kind: "send"; style: ClimbStyle } | { kind: "attempt" };
 
-const OUTCOME_LABELS: Record<Discipline, Record<ClimbStyle, string>> = {
-  boulder: { redpoint: "SENT", flash: "FLASH", onsight: "ONSIGHT" },
-  route: { redpoint: "REDPOINT", flash: "FLASH", onsight: "ONSIGHT" },
-};
-
 const OUTCOME_STYLES: Record<Discipline, readonly ClimbStyle[]> = {
   boulder: ["redpoint", "flash"],
   route: ["redpoint", "flash", "onsight"],
@@ -53,8 +48,10 @@ export function sendStylesFor(discipline: Discipline): readonly ClimbStyle[] {
   return OUTCOME_STYLES[discipline];
 }
 
+/** Only a redpoint is named differently by discipline: a boulder is just sent. */
 export function sendStyleLabel(discipline: Discipline, style: ClimbStyle): string {
-  return OUTCOME_LABELS[discipline][style];
+  if (style !== "redpoint") return style.toUpperCase();
+  return discipline === "route" ? "REDPOINT" : "SENT";
 }
 
 export type LogSessionDraft = {

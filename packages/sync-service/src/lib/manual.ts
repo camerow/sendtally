@@ -1,5 +1,6 @@
 import {
   defaultEffortConfig,
+  disciplineOf,
   effortGrade,
   parseGrade,
   score,
@@ -50,11 +51,7 @@ const climbSchema = z
       ctx.addIssue({ code: "custom", path: ["style"], message: "an attempt has no send style" });
       return;
     }
-    if (
-      climb.style === "onsight" &&
-      climb.grade.scale !== "yds" &&
-      climb.grade.scale !== "french"
-    ) {
+    if (climb.style === "onsight" && disciplineOf(climb.grade.scale) !== "route") {
       ctx.addIssue({ code: "custom", path: ["style"], message: "only routes are onsighted" });
     }
     if (climb.style !== "redpoint" && climb.tries !== 1) {
