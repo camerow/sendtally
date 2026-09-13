@@ -8,6 +8,7 @@ import {
   Easing,
   Keyboard,
   Modal,
+  PanResponder,
   Platform,
   Pressable,
   ScrollView,
@@ -22,6 +23,8 @@ import { colors, radius } from "@sendtally/design/tokens";
 const SCRIM = "rgba(64,63,76,0.45)";
 const OPEN_MS = 260;
 const CLOSE_MS = 180;
+const DISMISS_DISTANCE = 80;
+const DISMISS_VELOCITY = 0.6;
 
 export type SheetProps = {
   visible: boolean;
@@ -37,6 +40,9 @@ export type SheetProps = {
  * The panel also rides the keyboard itself: KeyboardAvoidingView measures nothing useful inside a
  * Modal, so a focused field would otherwise vanish behind the keys. Everything animates on the JS
  * driver because the keyboard inset is padding, which the native driver cannot animate.
+ *
+ * A downward drag anywhere on the panel (once its content is scrolled to the top) follows the
+ * finger and dismisses past a distance or a flick; anything shorter springs back.
  */
 export function Sheet({ visible, onClose, closeLabel, children }: SheetProps): React.ReactElement {
   const insets = useSafeAreaInsets();
@@ -44,7 +50,35 @@ export function Sheet({ visible, onClose, closeLabel, children }: SheetProps): R
   const [mounted, setMounted] = React.useState(visible);
   const progress = React.useRef(new Animated.Value(0)).current;
   const keyboard = React.useRef(new Animated.Value(0)).current;
+  const drag = React.useRef(new Animated.Value(0)).current;
+  const scrolledToTop = React.useRef(true);
+  const closeRef = React.useRef(onClose);
+  closeRef.current = onClose;
   const [panelHeight, setPanelHeight] = React.useState(0);
+  const [contentHeight, setContentHeight] = React.useState(0);
+  const [viewportHeight, setViewportHeight] = React.useState(0);
+  const scrollable = contentHeight > viewportHeight + 1;
+
+  const pan = React.useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (_, gesture) =>
+        scrolledToTop.current && gesture.dy > 8 && gesture.dy > Math.abs(gesture.dx) * 1.5,
+      onMoveShouldSetPanResponderCapture: (_, gesture) =>
+        scrolledToTop.current && gesture.dy > 8 && gesture.dy > Math.abs(gesture.dx) * 1.5,
+      onPanResponderMove: (_, gesture) => drag.setValue(Math.max(0, gesture.dy)),
+      onPanResponderTerminationRequest: () => false,
+      onPanResponderRelease: (_, gesture) => {
+        if (gesture.dy > DISMISS_DISTANCE || gesture.vy > DISMISS_VELOCITY) {
+          Keyboard.dismiss();
+          closeRef.current();
+          return;
+        }
+        Animated.spring(drag, { toValue: 0, useNativeDriver: false, bounciness: 4 }).start();
+      },
+      onPanResponderTerminate: () =>
+        Animated.spring(drag, { toValue: 0, useNativeDriver: false, bounciness: 4 }).start(),
+    })
+  ).current;
 
   React.useEffect(() => {
     if (visible) setMounted(true);
@@ -55,10 +89,13 @@ export function Sheet({ visible, onClose, closeLabel, children }: SheetProps): R
       useNativeDriver: false,
     });
     animation.start(({ finished }) => {
-      if (finished && !visible) setMounted(false);
+      if (finished && !visible) {
+        setMounted(false);
+        drag.setValue(0);
+      }
     });
     return () => animation.stop();
-  }, [visible, progress]);
+  }, [visible, progress, drag]);
 
   // Android's Modal window already shrinks around the keyboard (SOFT_INPUT_ADJUST_RESIZE).
   React.useEffect(() => {
@@ -106,15 +143,19 @@ export function Sheet({ visible, onClose, closeLabel, children }: SheetProps): R
           />
         </Animated.View>
         <Animated.View
+          {...pan.panHandlers}
           onLayout={(event) => setPanelHeight(event.nativeEvent.layout.height)}
           style={{
             maxHeight: windowHeight - insets.top - 24,
             transform: [
               {
-                translateY: progress.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [panelHeight === 0 ? windowHeight : panelHeight, 0],
-                }),
+                translateY: Animated.add(
+                  progress.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [panelHeight === 0 ? windowHeight : panelHeight, 0],
+                  }),
+                  drag
+                ),
               },
             ],
             paddingBottom,
@@ -123,7 +164,28 @@ export function Sheet({ visible, onClose, closeLabel, children }: SheetProps): R
             backgroundColor: colors.white,
           }}
         >
-          <ScrollView bounces={false} keyboardShouldPersistTaps="handled" style={{ flexGrow: 0 }}>
+          <View
+            style={{
+              alignSelf: "center",
+              width: 36,
+              height: 4,
+              marginTop: 10,
+              borderRadius: 2,
+              backgroundColor: "rgba(64,63,76,0.2)",
+            }}
+          />
+          <ScrollView
+            bounces={false}
+            scrollEnabled={scrollable}
+            keyboardShouldPersistTaps="handled"
+            scrollEventThrottle={16}
+            onLayout={(event) => setViewportHeight(event.nativeEvent.layout.height)}
+            onContentSizeChange={(_, height) => setContentHeight(height)}
+            onScroll={(event) => {
+              scrolledToTop.current = event.nativeEvent.contentOffset.y <= 0;
+            }}
+            style={{ flexGrow: 0 }}
+          >
             {children}
           </ScrollView>
         </Animated.View>

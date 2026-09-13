@@ -109,3 +109,68 @@ describe("ClimbEditorSheet", () => {
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 });
+
+function drag(grip: Element, from: number, to: number, ms = 300): void {
+  const now = vi.spyOn(performance, "now");
+  now.mockReturnValue(0);
+  act(() => {
+    grip.dispatchEvent(
+      new MouseEvent("pointerdown", { bubbles: true, clientY: from, button: 0 }) as PointerEvent
+    );
+  });
+  act(() => {
+    grip.dispatchEvent(new MouseEvent("pointermove", { bubbles: true, clientY: to }));
+  });
+  now.mockReturnValue(ms);
+  act(() => {
+    grip.dispatchEvent(new MouseEvent("pointerup", { bubbles: true, clientY: to }));
+  });
+  now.mockRestore();
+}
+
+describe("ClimbEditorSheet drag to dismiss", () => {
+  beforeEach(() => {
+    container = document.createElement("div");
+    document.body.appendChild(container);
+    root = createRoot(container);
+  });
+
+  afterEach(() => {
+    act(() => root.unmount());
+    container.remove();
+  });
+
+  it("closes after a long drag down on the grip", () => {
+    const onClose = vi.fn();
+    const dialog = mount(onClose);
+    drag(dialog.querySelector(".climb-sheet-grip")!, 100, 260);
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it("closes after a short flick", () => {
+    const onClose = vi.fn();
+    const dialog = mount(onClose);
+    drag(dialog.querySelector(".climb-sheet-grip")!, 100, 150, 40);
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it("springs back after a short, slow drag", () => {
+    const onClose = vi.fn();
+    const dialog = mount(onClose);
+    const panel = dialog.querySelector<HTMLElement>(".climb-sheet-panel")!;
+    drag(dialog.querySelector(".climb-sheet-grip")!, 100, 130, 600);
+    expect(onClose).not.toHaveBeenCalled();
+    expect(panel.style.transform).toBe("");
+  });
+
+  it("follows the pointer while dragging", () => {
+    const dialog = mount(() => {});
+    const grip = dialog.querySelector(".climb-sheet-grip")!;
+    const panel = dialog.querySelector<HTMLElement>(".climb-sheet-panel")!;
+    act(() => {
+      grip.dispatchEvent(new MouseEvent("pointerdown", { bubbles: true, clientY: 100, button: 0 }));
+      grip.dispatchEvent(new MouseEvent("pointermove", { bubbles: true, clientY: 140 }));
+    });
+    expect(panel.style.transform).toBe("translateY(40px)");
+  });
+});

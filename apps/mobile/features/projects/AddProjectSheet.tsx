@@ -143,16 +143,7 @@ export function AddProjectSheet({
 
   return (
     <Sheet visible={visible} onClose={onClose} closeLabel="Close new project">
-      <View style={{ gap: 18, paddingTop: 10, paddingHorizontal: 18, paddingBottom: 18 }}>
-        <View
-          style={{
-            alignSelf: "center",
-            width: 36,
-            height: 4,
-            borderRadius: 2,
-            backgroundColor: "rgba(64,63,76,0.2)",
-          }}
-        />
+      <View style={{ gap: 18, paddingTop: 2, paddingHorizontal: 18, paddingBottom: 18 }}>
         <Text
           style={{
             fontFamily: fonts.monoMedium,

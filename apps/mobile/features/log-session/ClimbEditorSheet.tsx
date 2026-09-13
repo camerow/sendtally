@@ -303,16 +303,7 @@ export function ClimbEditorSheet({
   return (
     <Sheet visible={current !== null} onClose={onClose} closeLabel="Close climb editor">
       {climb !== null && (
-        <View style={{ gap: 14, paddingTop: 10, paddingHorizontal: 18, paddingBottom: 4 }}>
-          <View
-            style={{
-              alignSelf: "center",
-              width: 36,
-              height: 4,
-              borderRadius: 2,
-              backgroundColor: "rgba(64,63,76,0.2)",
-            }}
-          />
+        <View style={{ gap: 14, paddingTop: 2, paddingHorizontal: 18, paddingBottom: 4 }}>
           <View
             style={{
               flexDirection: "row",

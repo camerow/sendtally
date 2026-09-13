@@ -259,6 +259,16 @@ body:has(.climb-sheet[open]) {
   }
 }
 
+.climb-sheet-grip {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: -10px -18px 0;
+  padding: 10px 18px 0;
+  touch-action: none;
+  cursor: grab;
+}
+
 .climb-sheet-handle {
   align-self: center;
   width: 36px;
