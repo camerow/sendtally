@@ -55,7 +55,9 @@ jobs:
         env:
           EXPO_PUBLIC_API_URL: https://api-staging.sendtally.com
           EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_bGlnaHQtbGlnZXItOTkuY2xlcmsuYWNjb3VudHMuZGV2JA
-          EXPO_PUBLIC_REVENUECAT_ANDROID_KEY: test_RuludwkwBfxgCwPaffqspLVvcOp
+          # No RevenueCat test-store key here: the SDK refuses one in a release build and
+          # closes the app. The public Play key in lib/config.ts applies instead, and the
+          # flows never reach a paywall.
         run: |
           set -euo pipefail
           npx expo prebuild --platform android --no-install --non-interactive
