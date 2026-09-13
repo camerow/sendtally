@@ -14,5 +14,16 @@ dns_records = {
   clerk_dkim4    = { name = "pdk2._domainkey.clkmail2", type = "CNAME", content = "dkim4.<clerk-instance-id>.clerk.services", comment = "Clerk DKIM 4" }
   # TXT content keeps the quotes Cloudflare stores it with, otherwise every plan rewrites the record.
   google_search  = { name = "sendtally.com", type = "TXT", content = "\"google-site-verification=<token>\"", ttl = 3600, comment = "Google Search Console verification" }
+  # Google Workspace, for sendtally.com as a user alias domain of chalkandcircuits.com.
+  # DKIM is generated per domain in Admin console > Apps > Gmail > Authenticate email.
+  google_mx      = { name = "sendtally.com", type = "MX", content = "smtp.google.com", priority = 1, ttl = 3600, comment = "Google Workspace mail for the sendtally.com alias domain" }
+  google_spf     = { name = "sendtally.com", type = "TXT", content = "\"v=spf1 include:_spf.google.com include:mailgun.org ~all\"", ttl = 3600, comment = "SPF: Google Workspace plus Mailgun, which PostHog sends through" }
+  # The DKIM value is past 255 characters, so Cloudflare stores it as two quoted
+  # strings split at 255. Write it the same way here or every plan rewrites it.
+  google_dkim    = { name = "google._domainkey", type = "TXT", content = "\"v=DKIM1; k=rsa; p=<first 255 chars>\" \"<remainder>\"", ttl = 3600, comment = "Google Workspace DKIM" }
+  google_dmarc   = { name = "_dmarc", type = "TXT", content = "\"v=DMARC1; p=reject;\"", ttl = 3600, comment = "DMARC, matching chalkandcircuits.com" }
+  # One SPF record per domain, so every sender merges into the line above rather
+  # than adding a second TXT. PostHog sends through Mailgun.
+  posthog_dkim   = { name = "mailo._domainkey", type = "TXT", content = "\"k=rsa; p=<posthog dkim key>\"", ttl = 3600, comment = "PostHog outbound sending (Mailgun) DKIM" }
   posthog_proxy  = { name = "v", type = "CNAME", content = "<proxy-id>.cf-prod-us-proxy.proxyhog.com", ttl = 3600, comment = "PostHog managed reverse proxy" }
 }
