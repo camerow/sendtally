@@ -60,3 +60,100 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: pnpm run staging:api
+
+  # A pull request never builds the app. The runtime version is a fingerprint,
+  # so a pull request that only moves JavaScript can be published as an update
+  # and loaded by the development build already on the phone. When the
+  # fingerprint moves, no installed build can run it and the job says so
+  # instead of publishing something unreachable.
+  mobile-preview:
+    needs: checks
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Did anything the app bundles change?
+        id: touched
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          changed=$(git diff --name-only "$BASE" "$HEAD" -- \
+            apps/mobile packages/core packages/design packages/features \
+            packages/api-client pnpm-lock.yaml)
+          if [ -n "$changed" ]; then echo "yes=true"; else echo "yes=false"; fi >> "$GITHUB_OUTPUT"
+
+      - uses: pnpm/action-setup@v4
+        if: steps.touched.outputs.yes == 'true'
+      - uses: actions/setup-node@v4
+        if: steps.touched.outputs.yes == 'true'
+        with:
+          node-version: 24
+          cache: pnpm
+      - uses: expo/expo-github-action@v8
+        if: steps.touched.outputs.yes == 'true'
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+      - run: pnpm install --frozen-lockfile
+        if: steps.touched.outputs.yes == 'true'
+
+      - name: Can an installed development build run this?
+        id: fingerprint
+        if: steps.touched.outputs.yes == 'true'
+        working-directory: apps/mobile
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          set -euo pipefail
+          hash=$(eas fingerprint:generate --platform android \
+            --build-profile development --json --non-interactive | jq -r .hash)
+          matches=$(eas build:list --platform android --profile development \
+            --status finished --fingerprint-hash "$hash" --limit 1 \
+            --json --non-interactive | jq length)
+          echo "hash=$hash" >> "$GITHUB_OUTPUT"
+          echo "reachable=$([ "$matches" = 0 ] && echo false || echo true)" >> "$GITHUB_OUTPUT"
+
+      # The preview runs against staging, so nothing it does touches real user
+      # data. That means the dev Clerk instance too, so it is a separate
+      # sign-in from the store app's.
+      - name: Publish the update
+        id: update
+        if: steps.fingerprint.outputs.reachable == 'true'
+        working-directory: apps/mobile
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          TITLE: ${{ github.event.pull_request.title }}
+          BRANCH: ${{ github.event.pull_request.head.ref }}
+          EXPO_PUBLIC_API_URL: https://api-staging.sendtally.com
+          EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_bGlnaHQtbGlnZXItOTkuY2xlcmsuYWNjb3VudHMuZGV2JA
+          EXPO_PUBLIC_REVENUECAT_ANDROID_KEY: test_RuludwkwBfxgCwPaffqspLVvcOp
+        run: |
+          set -euo pipefail
+          group=$(eas update --branch "$BRANCH" --platform android \
+            --environment preview --message "$TITLE" \
+            --json --non-interactive | jq -r '.[0].group')
+          echo "group=$group" >> "$GITHUB_OUTPUT"
+
+      - name: Say where to open it
+        if: steps.touched.outputs.yes == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+          BRANCH: ${{ github.event.pull_request.head.ref }}
+          GROUP: ${{ steps.update.outputs.group }}
+          HASH: ${{ steps.fingerprint.outputs.hash }}
+        run: |
+          set -euo pipefail
+          if [ -n "${GROUP:-}" ]; then
+            body=$(printf '### Mobile preview\n\n**[Open this pull request in the app](https://expo.dev/accounts/chalk-and-circuits/projects/sendtally/updates/%s)** - the page hands off to the development build on the phone you open it from.\n\nOr open the app and pick `%s` under Extensions, EAS Update, which lists every open branch.\n\nIt runs against `api-staging.sendtally.com` on the dev Clerk instance, so it is a separate sign-in from the store app and a separate, empty logbook.\n' "$GROUP" "$BRANCH")
+          else
+            body=$(printf '### Mobile preview\n\nNo update published: the native fingerprint moved to `%s`, and no finished development build carries it, so an update would reach nothing.\n\nRun `eas build --profile development --platform android` from `apps/mobile` and install the result to preview this branch.\n' "$HASH")
+          fi
+          printf '%s' "$body" | gh pr comment "$PR" --body-file - --edit-last --create-if-none
