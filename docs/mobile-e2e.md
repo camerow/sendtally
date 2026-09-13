@@ -29,8 +29,8 @@ Failures leave screenshots and the UI hierarchy under `~/.maestro/tests/<timesta
 Android only: the emulator runs on a Linux runner with KVM at the 1x minute rate, where an iOS simulator would need a macOS runner at 10x.
 The job prebuilds the Android project, builds a release APK so the JavaScript is embedded (no Metro on the runner), and points it at `api-staging.sendtally.com` and the Clerk development instance, the same pair the mobile preview uses.
 The PostHog source map upload hook is stripped from the generated Gradle file first, since it needs an EAS-only key and this build ships nowhere.
-Flows get `DEV_CLIENT=false`, which skips the dev-client deep link and developer menu in `helpers/open-dev-client.yaml`.
-A failed run uploads Maestro's screenshots and UI hierarchy as the `maestro-debug` artifact.
+Locally `pnpm e2e` passes `DEV_CLIENT=true`, which makes `helpers/open-dev-client.yaml` deep-link the development build to Metro; CI leaves it unset so the app just launches. The helper has no default of its own because a flow's `env` block is applied after `-e` and would win.
+A failed run uploads Maestro's screenshots and UI hierarchy plus a logcat dump as the `maestro-debug` artifact; a flow that ends on the Android launcher means the app crashed, and logcat has the trace.
 The AVD snapshot is cached between runs; a cold run is around twenty minutes, a warm one closer to twelve.
 
 ## The test account

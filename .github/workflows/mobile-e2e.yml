@@ -110,12 +110,15 @@ jobs:
           working-directory: apps/mobile
           script: |
             adb install -r android/app/build/outputs/apk/release/app-release.apk
-            maestro test -e DEV_CLIENT=false maestro/
+            adb logcat -c
+            maestro test -e DEV_CLIENT=false maestro/ || { adb logcat -d > ~/.maestro/logcat.txt; exit 1; }
 
       - name: Keep the screenshots and hierarchy of a failed run
         if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: maestro-debug
-          path: ~/.maestro/tests
+          path: |
+            ~/.maestro/tests
+            ~/.maestro/logcat.txt
           if-no-files-found: ignore
