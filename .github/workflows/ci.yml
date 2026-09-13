@@ -36,3 +36,27 @@ jobs:
         env:
           TITLE: ${{ github.event.pull_request.title }}
         run: printf '%s' "$TITLE" | pnpm exec commitlint --verbose
+
+  # The staging API is deployed here rather than from the web Worker's build
+  # commands: Workers Builds reports the last real `wrangler deploy` it saw as
+  # the build's deployment, so an API deploy in there made every pull request
+  # comment point at api-staging.sendtally.com instead of the web preview.
+  staging-api:
+    needs: checks
+    runs-on: ubuntu-latest
+    concurrency:
+      group: staging-api
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Deploy the branch's API to staging
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: pnpm run staging:api
