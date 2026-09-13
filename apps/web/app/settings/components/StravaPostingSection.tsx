@@ -32,11 +32,12 @@ export function StravaPostingSection({ posting }: StravaPostingSectionProps): Re
       <Row>
         <span style={{ display: "flex", flexDirection: "column", gap: 3, maxWidth: 380 }}>
           <span style={rowTitle}>Post sessions to Strava</span>
-          <p style={bodyText}>
-            {posting.enabled
-              ? "Every session you log goes to your feed as a Rock Climbing activity, with the climb log in the description."
-              : "Off. Sessions stay in sendtally, and each one keeps a Post to Strava action on its own page."}
-          </p>
+          {!posting.enabled && (
+            <p style={bodyText}>
+              Off. Sessions stay in sendtally, and each one keeps a Post to Strava action on its own
+              page.
+            </p>
+          )}
         </span>
         <Switch
           checked={posting.enabled}
@@ -52,10 +53,7 @@ export function StravaPostingSection({ posting }: StravaPostingSectionProps): Re
           <Row>
             <span style={{ display: "flex", flexDirection: "column", gap: 3, maxWidth: 380 }}>
               <span style={rowTitle}>Post sessions logged from</span>
-              <p style={bodyText}>
-                Anything earlier stays in sendtally only, so turning posting on never backfills your
-                feed.
-              </p>
+              <p style={bodyText}>Anything earlier stays in sendtally only.</p>
             </span>
             <input
               type="date"

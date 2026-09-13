@@ -1,7 +1,7 @@
 import React from "react";
 import type { GradeScales } from "@sendtally/api-client";
 import type { GradeScalesFeature } from "@sendtally/features/settings";
-import { bodyText, messageText } from "./styles";
+import { messageText } from "./styles";
 
 export type GradeScaleSectionProps = {
   scales: GradeScalesFeature;
@@ -48,10 +48,6 @@ const chip = (active: boolean): React.CSSProperties => ({
 export function GradeScaleSection({ scales }: GradeScaleSectionProps): React.ReactElement {
   return (
     <>
-      <p style={bodyText}>
-        The scale you read grades in. Used wherever we show a grade without asking, and as the
-        starting scale for a new session.
-      </p>
       {ROWS.map((row) => {
         const active = row.active(scales.scales);
         return (
