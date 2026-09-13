@@ -67,6 +67,35 @@ A release builds every platform in that variable, even when only one of them dri
 The pipeline stops at TestFlight and the Play internal track.
 Promoting to App Store review or Play production stays a manual decision in each console.
 
+## Previewing a pull request on a phone
+
+A pull request never builds the app.
+`runtimeVersion` is a fingerprint, so the same question the release pipeline asks - can this ship over the air? - answers "can I look at this branch on my phone?" too.
+`.github/workflows/ci.yml` (job `mobile-preview`) publishes the branch as an EAS Update and comments where to open it.
+
+The one-time cost is a single development build, which you install on the phone and keep:
+
+```
+cd apps/mobile
+eas build --profile development --platform android
+```
+
+Android only, by choice: an APK installs off a QR code with no device registration.
+Adding iOS means registering the phone's UDID with `eas device:create` first.
+
+The `development` and `production` fingerprints are identical for this project, because `expo-dev-client` is a dependency either way rather than something the build profile injects.
+So a development build receives exactly the updates a store build would, and the dev launcher additionally lists every branch in the project under Extensions, EAS Update - which is how you switch between two open pull requests without reinstalling anything.
+
+Each pull request push then publishes `eas update --branch <git branch> --platform android`, costing no build minutes, and comments a link to that update's EAS page.
+Opening that page on the phone hands off to the installed development build.
+
+The preview bundles staging configuration through `EXPO_PUBLIC_API_URL` and `EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY`, so it talks to `api-staging.sendtally.com` on the dev Clerk instance.
+That is a different Clerk instance from the store app's, so it is a separate sign-in and a separate, empty logbook - log a session or two to have something to look at.
+Those variables are ordinary environment variables read at bundle time, not build configuration, so setting them does not move the fingerprint.
+`EXPO_PUBLIC_POSTHOG_API_KEY` is unset, so a preview sends no analytics.
+
+When the fingerprint moves, the job publishes nothing and says so on the pull request: no installed build could run that update, and the fix is a new development build rather than a retry.
+
 ## Secrets and variables
 
 GitHub repo secrets:
