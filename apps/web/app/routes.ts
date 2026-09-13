@@ -22,6 +22,7 @@ export default [
     route("trends", "routes/app.trends._index.tsx"),
     route("trends/:metric", "routes/app.trends.$metric.tsx"),
     route("settings", "routes/app.settings.tsx"),
+    route("account", "routes/app.account.tsx"),
     route("membership", "routes/app.membership.tsx"),
   ]),
 ] satisfies RouteConfig;

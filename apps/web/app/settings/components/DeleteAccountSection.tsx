@@ -12,8 +12,8 @@ export function DeleteAccountSection({ deletion }: DeleteAccountSectionProps): R
     <>
       <span style={sectionLabel}>DELETE ACCOUNT</span>
       <p style={bodyText}>
-        Deleting removes every session you have logged, disconnects Strava, and closes your sign-in.
-        Activities already posted to Strava stay on Strava. This cannot be undone.
+        Deleting removes every session you have logged, disconnects Strava, and deletes your
+        account. Activities already posted to Strava stay on Strava. This cannot be undone.
       </p>
       {deletion.status === "idle" ? (
         <button type="button" onClick={deletion.open} style={dangerButton}>

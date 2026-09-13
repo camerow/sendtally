@@ -10,3 +10,10 @@ export const MEMBER_BENEFITS: MemberBenefit[] = [
     body: "Members say what comes next. One person builds this, and the people paying for the server set the order.",
   },
 ];
+
+export const MEMBER_POINTS: string[] = [
+  "Volume - how much you actually climbed, week by week",
+  "RPE - how hard your sessions have been feeling over time",
+  "Average send grade - the drift a logbook can never show you",
+  "Flash rate - the first thing to move when your reading improves",
+];

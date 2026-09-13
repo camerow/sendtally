@@ -1,47 +1,39 @@
-import { useClerk, useUser } from "@clerk/react-router";
+import { useUser } from "@clerk/react-router";
 import React from "react";
 import type { LoaderFunctionArgs } from "react-router";
-import { useLoaderData, useNavigate } from "react-router";
-import {
-  useDeleteAccount,
-  useGradeScales,
-  useSettings,
-  useStravaPosting,
-} from "@sendtally/features/settings";
+import { useLoaderData } from "react-router";
+import type { Membership } from "@sendtally/api-client";
+import { membershipVM } from "@sendtally/features/billing";
+import { useGradeScales, useSettings, useStravaPosting } from "@sendtally/features/settings";
 import { cloudflareContext } from "../lib/cloudflare-context";
-import { requireApi } from "../lib/api.server";
+import { getMembership } from "../lib/billing.server";
 import { useClientApi } from "../lib/useClientApi";
 import { SettingsView } from "../settings/components/SettingsView";
 
-type LoaderData = { apiUrl: string };
+type LoaderData = { apiUrl: string; membership: Membership };
 
 export async function loader(args: LoaderFunctionArgs): Promise<LoaderData> {
-  await requireApi(args);
-  return { apiUrl: args.context.get(cloudflareContext).env.API_URL };
+  return {
+    apiUrl: args.context.get(cloudflareContext).env.API_URL,
+    membership: await getMembership(args),
+  };
 }
 
 export default function SettingsRoute(): React.ReactElement {
-  const { apiUrl } = useLoaderData<typeof loader>();
+  const { apiUrl, membership } = useLoaderData<typeof loader>();
   const api = useClientApi(apiUrl);
-  const clerk = useClerk();
   const { user } = useUser();
-  const navigate = useNavigate();
   const { vm, reload } = useSettings(api);
-  const onDeleted = React.useCallback(
-    () => void clerk.signOut(() => navigate("/")),
-    [clerk, navigate]
-  );
-  const deletion = useDeleteAccount(api, onDeleted);
   const posting = useStravaPosting(api, vm, reload);
   const scales = useGradeScales(api, vm, reload);
+
   return (
     <SettingsView
       vm={vm}
       email={user?.primaryEmailAddress?.emailAddress ?? ""}
-      deletion={deletion}
+      membership={membershipVM({ membership })}
       posting={posting}
       scales={scales}
-      onSignOut={() => void clerk.signOut(() => navigate("/"))}
     />
   );
 }

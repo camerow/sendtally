@@ -78,3 +78,23 @@ export const dangerButton: React.CSSProperties = {
   cursor: "pointer",
   alignSelf: "flex-start",
 };
+
+export const pageTitle: React.CSSProperties = {
+  margin: 0,
+  fontFamily: "var(--font-display)",
+  fontWeight: 700,
+  fontSize: 32,
+  letterSpacing: "-0.03em",
+};
+
+export const secondaryButton: React.CSSProperties = {
+  fontFamily: "var(--font-sans)",
+  fontWeight: 600,
+  fontSize: 15,
+  color: "var(--bs-gunmetal)",
+  background: "var(--bs-white)",
+  border: "1px solid var(--line-on-light-strong)",
+  borderRadius: "var(--radius-control)",
+  padding: "12px 18px",
+  cursor: "pointer",
+};

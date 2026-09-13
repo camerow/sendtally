@@ -1,6 +1,7 @@
 import React from "react";
 import type { LoaderFunctionArgs } from "react-router";
 import { useLoaderData } from "react-router";
+import { MEMBER_POINTS } from "@sendtally/features/billing";
 import { UpgradePanel } from "../billing/components/UpgradePanel";
 import { cloudflareContext } from "../lib/cloudflare-context";
 import { getMembership } from "../lib/billing.server";
@@ -24,12 +25,7 @@ export default function TrendsRoute(): React.ReactElement {
         eyebrow="MEMBERS"
         title="Your sessions are adding up to something. Trends is where you see it."
         body="Keep logging for free - your logbook is yours either way. Membership unlocks the screens that read the whole history back to you."
-        points={[
-          "Volume - how much you actually climbed, week by week",
-          "RPE - how hard your sessions have been feeling over time",
-          "Average send grade - the drift a logbook can never show you",
-          "Flash rate - the first thing to move when your reading improves",
-        ]}
+        points={MEMBER_POINTS}
       />
     );
   }

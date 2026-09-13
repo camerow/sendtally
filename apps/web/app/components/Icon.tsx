@@ -1,7 +1,7 @@
 import React from "react";
 
 export type IconName =
-  "sessions" | "projects" | "trends" | "settings" | "membership" | "funnel" | "plus";
+  "sessions" | "projects" | "trends" | "settings" | "membership" | "funnel" | "plus" | "chevron";
 
 const SHAPES: Record<IconName, React.ReactElement> = {
   sessions: (
@@ -22,6 +22,7 @@ const SHAPES: Record<IconName, React.ReactElement> = {
   membership: <path d="M12 3.9l2.5 5.1 5.6.8-4.1 4 1 5.6-5-2.7-5 2.7 1-5.6-4.1-4 5.6-.8z" />,
   funnel: <path d="M4 5h16l-6.2 7.2V18.5l-3.6 1.8v-8.1z" />,
   plus: <path d="M12 5v14M5 12h14" />,
+  chevron: <path d="M9.5 5.5 16 12l-6.5 6.5" />,
 };
 
 export function Icon({
