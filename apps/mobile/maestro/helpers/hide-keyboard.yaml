@@ -1,0 +1,10 @@
+appId: com.sendtally.app
+# On Android the keyboard covers the submit button and a tap on its stale position lands on
+# Gboard's toolbar, so it has to go first; hideKeyboard is the back key there and works.
+# On iOS hideKeyboard fails on these inputs and the layout keeps the button visible.
+---
+- runFlow:
+    when:
+      platform: Android
+    commands:
+      - hideKeyboard

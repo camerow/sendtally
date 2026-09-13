@@ -16,6 +16,7 @@ env:
       - tapOn: "Sign in"
       - tapOn: "you@email.com"
       - inputText: ${EMAIL}
+      - runFlow: ../helpers/hide-keyboard.yaml
       - tapOn: "Email me a code"
       - extendedWaitUntil:
           visible:
@@ -32,6 +33,7 @@ env:
                 timeout: 20000
       - tapOn: "123456"
       - inputText: ${CODE}
+      - runFlow: ../helpers/hide-keyboard.yaml
       - tapOn:
           text: "Sign in|Create account"
 - extendedWaitUntil:

@@ -44,6 +44,6 @@ Never point the flows at production keys: the address does not exist there and t
 
 - `helpers/open-dev-client.yaml` and `helpers/ensure-signed-in.yaml` start every flow; add new flows to `config.yaml` so `executionOrder` stays explicit.
 - Swipes differ by platform. On iOS only a bare `direction: DOWN` reaches React Native's responder system; coordinate and element swipes go through a press-and-drag RN never sees. On Android a coordinate swipe works and is the one that starts on the sheet rather than the scrim. Split with `runFlow: when: platform:`.
-- `hideKeyboard` fails on these inputs. Press `Enter` on a single-line field, or tap a static label, before swiping.
+- Keyboards differ by platform. On iOS `hideKeyboard` fails on these inputs; press `Enter` on a single-line field before swiping. On Android the keyboard covers the submit button and a tap on its stale position opens Gboard's settings, so run `helpers/hide-keyboard.yaml` after every `inputText`.
 - A climb ledger row is one accessible element, so match it by its accessibility text, for example `V3 Cascade.*`, not by the name alone.
 - The log-session form is longer than the screen; `scrollUntilVisible` to `\+ ADD CLIMB` before tapping it, and back up to `← SESSIONS` to leave.
