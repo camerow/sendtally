@@ -3,24 +3,29 @@
 # staging.*, api-staging.*) are NOT listed here: wrangler creates those as Worker
 # custom domains on deploy.
 dns_records = {
-  www            = { name = "www", type = "CNAME", content = "sendtally.com", proxied = true, comment = "Redirect www to the apex Worker" }
-  clerk_frontend = { name = "clerk", type = "CNAME", content = "frontend-api.clerk.services", comment = "Clerk production frontend API" }
-  clerk_accounts = { name = "accounts", type = "CNAME", content = "accounts.clerk.services", comment = "Clerk account portal" }
-  clerk_mail     = { name = "clkmail", type = "CNAME", content = "mail.<clerk-instance-id>.clerk.services", comment = "Clerk email sending" }
-  clerk_dkim1    = { name = "clk._domainkey", type = "CNAME", content = "dkim1.<clerk-instance-id>.clerk.services", comment = "Clerk DKIM 1" }
-  clerk_dkim2    = { name = "clk2._domainkey", type = "CNAME", content = "dkim2.<clerk-instance-id>.clerk.services", comment = "Clerk DKIM 2" }
-  clerk_mail2    = { name = "clkmail2", type = "CNAME", content = "mail2.<clerk-instance-id>.clerk.services", comment = "Clerk email sending (second host)" }
-  clerk_dkim3    = { name = "pdk1._domainkey.clkmail2", type = "CNAME", content = "dkim3.<clerk-instance-id>.clerk.services", comment = "Clerk DKIM 3" }
-  clerk_dkim4    = { name = "pdk2._domainkey.clkmail2", type = "CNAME", content = "dkim4.<clerk-instance-id>.clerk.services", comment = "Clerk DKIM 4" }
+  www             = { name = "www", type = "CNAME", content = "sendtally.com", proxied = true, comment = "Redirect www to the apex Worker" }
+  clerk_frontend  = { name = "clerk", type = "CNAME", content = "frontend-api.clerk.services", comment = "Clerk production frontend API" }
+  clerk_accounts  = { name = "accounts", type = "CNAME", content = "accounts.clerk.services", comment = "Clerk account portal" }
+  clerk_mail      = { name = "clkmail", type = "CNAME", content = "mail.<clerk-instance-id>.clerk.services", comment = "Clerk email sending" }
+  clerk_dkim1     = { name = "clk._domainkey", type = "CNAME", content = "dkim1.<clerk-instance-id>.clerk.services", comment = "Clerk DKIM 1" }
+  clerk_dkim2     = { name = "clk2._domainkey", type = "CNAME", content = "dkim2.<clerk-instance-id>.clerk.services", comment = "Clerk DKIM 2" }
+  clerk_mail2     = { name = "clkmail2", type = "CNAME", content = "mail2.<clerk-instance-id>.clerk.services", comment = "Clerk email sending (second host)" }
+  clerk_dkim3     = { name = "pdk1._domainkey.clkmail2", type = "CNAME", content = "dkim3.<clerk-instance-id>.clerk.services", comment = "Clerk DKIM 3" }
+  clerk_dkim4     = { name = "pdk2._domainkey.clkmail2", type = "CNAME", content = "dkim4.<clerk-instance-id>.clerk.services", comment = "Clerk DKIM 4" }
   # TXT content keeps the quotes Cloudflare stores it with, otherwise every plan rewrites the record.
-  google_search  = { name = "sendtally.com", type = "TXT", content = "\"google-site-verification=<token>\"", ttl = 3600, comment = "Google Search Console verification" }
+  google_search   = { name = "sendtally.com", type = "TXT", content = "\"google-site-verification=<token>\"", ttl = 3600, comment = "Google Search Console verification" }
   # Google Workspace, for sendtally.com as a user alias domain of chalkandcircuits.com.
   # DKIM is generated per domain in Admin console > Apps > Gmail > Authenticate email.
-  google_mx      = { name = "sendtally.com", type = "MX", content = "smtp.google.com", priority = 1, ttl = 3600, comment = "Google Workspace mail for the sendtally.com alias domain" }
-  google_spf     = { name = "sendtally.com", type = "TXT", content = "\"v=spf1 include:_spf.google.com ~all\"", ttl = 3600, comment = "SPF for Google Workspace" }
+  google_mx       = { name = "sendtally.com", type = "MX", content = "smtp.google.com", priority = 1, ttl = 3600, comment = "Google Workspace mail for the sendtally.com alias domain" }
+  google_spf      = { name = "sendtally.com", type = "TXT", content = "\"v=spf1 include:_spf.google.com ~all\"", ttl = 3600, comment = "SPF for Google Workspace" }
   # The DKIM value is past 255 characters, so Cloudflare stores it as two quoted
   # strings split at 255. Write it the same way here or every plan rewrites it.
-  google_dkim    = { name = "google._domainkey", type = "TXT", content = "\"v=DKIM1; k=rsa; p=<first 255 chars>\" \"<remainder>\"", ttl = 3600, comment = "Google Workspace DKIM" }
-  google_dmarc   = { name = "_dmarc", type = "TXT", content = "\"v=DMARC1; p=reject;\"", ttl = 3600, comment = "DMARC, matching chalkandcircuits.com" }
-  posthog_proxy  = { name = "v", type = "CNAME", content = "<proxy-id>.cf-prod-us-proxy.proxyhog.com", ttl = 3600, comment = "PostHog managed reverse proxy" }
+  google_dkim     = { name = "google._domainkey", type = "TXT", content = "\"v=DKIM1; k=rsa; p=<first 255 chars>\" \"<remainder>\"", ttl = 3600, comment = "Google Workspace DKIM" }
+  google_dmarc    = { name = "_dmarc", type = "TXT", content = "\"v=DMARC1; p=reject;\"", ttl = 3600, comment = "DMARC, matching chalkandcircuits.com" }
+  # Custom URLs for Google services (mail.sendtally.com and friends). These must
+  # stay unproxied: Cloudflare in front of ghs.googlehosted.com breaks the redirect.
+  google_calendar = { name = "calendar", type = "CNAME", content = "ghs.googlehosted.com", ttl = 3600, comment = "Custom URL for Google Calendar" }
+  google_drive    = { name = "drive", type = "CNAME", content = "ghs.googlehosted.com", ttl = 3600, comment = "Custom URL for Google Drive" }
+  google_mail     = { name = "mail", type = "CNAME", content = "ghs.googlehosted.com", ttl = 3600, comment = "Custom URL for Google Mail" }
+  posthog_proxy   = { name = "v", type = "CNAME", content = "<proxy-id>.cf-prod-us-proxy.proxyhog.com", ttl = 3600, comment = "PostHog managed reverse proxy" }
 }
