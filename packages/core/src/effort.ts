@@ -9,8 +9,8 @@ import {
 export type ClimbKind = "send" | "attempt";
 
 /**
- * How a send happened. Display only - effort scores a send by grade and tries,
- * the same as it always has, so adding a style never moves an RPE.
+ * How a send happened. Display only - every send scores the same points for its grade,
+ * whether it took one go or twenty, so adding a style never moves an RPE.
  * Onsight is a route idea; boulders read "redpoint" as plain "sent".
  */
 export type ClimbStyle = "redpoint" | "flash" | "onsight";

@@ -2,7 +2,12 @@ import { useClerk, useUser } from "@clerk/react-router";
 import React from "react";
 import type { LoaderFunctionArgs } from "react-router";
 import { useLoaderData, useNavigate } from "react-router";
-import { useDeleteAccount, useSettings, useStravaPosting } from "@sendtally/features/settings";
+import {
+  useDeleteAccount,
+  useGradeScales,
+  useSettings,
+  useStravaPosting,
+} from "@sendtally/features/settings";
 import { cloudflareContext } from "../lib/cloudflare-context";
 import { requireApi } from "../lib/api.server";
 import { useClientApi } from "../lib/useClientApi";
@@ -28,12 +33,14 @@ export default function SettingsRoute(): React.ReactElement {
   );
   const deletion = useDeleteAccount(api, onDeleted);
   const posting = useStravaPosting(api, vm, reload);
+  const scales = useGradeScales(api, vm, reload);
   return (
     <SettingsView
       vm={vm}
       email={user?.primaryEmailAddress?.emailAddress ?? ""}
       deletion={deletion}
       posting={posting}
+      scales={scales}
       onSignOut={() => void clerk.signOut(() => navigate("/"))}
     />
   );

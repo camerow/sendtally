@@ -34,11 +34,16 @@ export type DraftAutosave = {
   clear: () => void;
 };
 
-/** `storage` is null where autosave does not apply - only a new session is worth rescuing. */
+/**
+ * `storage` is null where autosave does not apply - only a new session is worth rescuing.
+ * `ready` holds saving off while the form is still settling into the user's preferences,
+ * so adopting a saved grade scale is not mistaken for the first thing they typed.
+ */
 export function useDraftAutosave(
   storage: DraftStorage | null,
   draft: LogSessionDraft,
-  onResume: (draft: LogSessionDraft) => void
+  onResume: (draft: LogSessionDraft) => void,
+  ready = true
 ): DraftAutosave {
   const [mountedAt] = React.useState(() => Date.now());
   const [dismissed, setDismissed] = React.useState(false);
@@ -52,6 +57,10 @@ export function useDraftAutosave(
     dismissed || stored === null || stored.savedAt.getTime() >= mountedAt ? null : stored;
 
   React.useEffect(() => {
+    if (!ready) {
+      baseline.current = JSON.stringify(draft);
+      return;
+    }
     if (storage === null || offered !== null || done.current) return;
     const serialized = JSON.stringify(draft);
     if (serialized === baseline.current) return;
@@ -59,7 +68,7 @@ export function useDraftAutosave(
       setSavedAt(writeStoredDraft(storage, draft, new Date()));
     }, DEBOUNCE_MS);
     return () => clearTimeout(timer);
-  }, [draft, offered, storage]);
+  }, [draft, offered, ready, storage]);
 
   const resume = React.useCallback(() => {
     if (offered === null) return;

@@ -1,26 +1,42 @@
+import { disciplineOf, type Discipline } from "@sendtally/core";
 import { z } from "zod";
 import * as repo from "./repo";
 import type { ClimbGrade, ProjectRow, SessionRow } from "./repo";
 import { tagSlug } from "./tags";
 
 export const MAX_CLIMB_NAME_LENGTH = 200;
+export const MAX_BETA_LENGTH = 2000;
+
+const gradeJson = z.union([
+  z.object({ scale: z.literal("v"), value: z.number().int() }),
+  z.object({ scale: z.enum(["font", "yds", "french"]), value: z.string() }),
+]);
+
+// A project can be added before the climb has been logged, so the grade is
+// optional: without one it arrives with the first session the climb is in.
+export const projectBody = z.object({
+  name: z.string().trim().min(1).max(MAX_CLIMB_NAME_LENGTH),
+  discipline: z.enum(["boulder", "route"]).optional(),
+  grade: gradeJson.optional(),
+  beta: z.string().max(MAX_BETA_LENGTH).optional(),
+});
+
+export type ProjectInput = z.input<typeof projectBody>;
 
 export type ClimbSummary = {
   slug: string;
   name: string;
-  grade: ClimbGrade;
+  grade: ClimbGrade | null;
+  discipline: Discipline;
   project: boolean;
+  beta: string | null;
+  beta_updated_at: string | null;
   sessions: number;
   attempts: number;
   sends: number;
   first_at: string;
   last_at: string;
 };
-
-const gradeJson = z.union([
-  z.object({ scale: z.literal("v"), value: z.number().int() }),
-  z.object({ scale: z.enum(["font", "yds", "french"]), value: z.string() }),
-]);
 
 export const climbSlug = tagSlug;
 
@@ -75,11 +91,15 @@ export function climbCatalogue(
       const sends = climb.kind === "attempt" ? 0 : 1;
       const existing = bySlug.get(slug);
       if (existing === undefined) {
+        const grade = storedGrade(climb);
         bySlug.set(slug, {
           slug,
           name,
-          grade: storedGrade(climb),
+          grade,
+          discipline: disciplineOf(grade.scale),
           project: false,
+          beta: null,
+          beta_updated_at: null,
           sessions: 1,
           attempts: tries,
           sends,
@@ -99,13 +119,20 @@ export function climbCatalogue(
     const existing = bySlug.get(project.slug);
     if (existing !== undefined) {
       existing.project = true;
+      existing.beta = project.beta;
+      existing.beta_updated_at = project.beta_updated_at;
       continue;
     }
+    const grade =
+      project.grade_json === null ? null : (JSON.parse(project.grade_json) as ClimbGrade);
     bySlug.set(project.slug, {
       slug: project.slug,
       name: project.name,
-      grade: JSON.parse(project.grade_json) as ClimbGrade,
+      grade,
+      discipline: grade === null ? project.discipline : disciplineOf(grade.scale),
       project: true,
+      beta: project.beta,
+      beta_updated_at: project.beta_updated_at,
       sessions: 0,
       attempts: 0,
       sends: 0,

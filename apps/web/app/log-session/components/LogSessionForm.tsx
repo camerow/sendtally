@@ -10,6 +10,7 @@ import {
   toLogSessionInput,
   useDraftAutosave,
   withClimbDiscipline,
+  withClimbScale,
   withStartTime,
   withTag,
   withoutTag,
@@ -18,9 +19,9 @@ import {
   type LogSessionDraft,
 } from "@sendtally/features/log-session";
 import { SESSION_NOTE_MAX, useTagVocabulary } from "@sendtally/features/sessions";
+import { useGradeScalePrefs } from "@sendtally/features/settings";
 import { TagPicker } from "../../components/TagPicker";
 import { useIsNarrow } from "../../lib/useIsNarrow";
-import { useGradePrefs } from "../../lib/gradePrefs";
 import { sessionDraftStorage } from "../../lib/sessionDraftStorage";
 import { DraftBanner } from "./DraftBanner";
 import { ClimbCard } from "./ClimbCard";
@@ -130,14 +131,27 @@ export function LogSessionForm({
   editing?: { fingerprint: string; draft: LogSessionDraft };
 }): React.ReactElement {
   const navigate = useNavigate();
-  const gradePrefs = useGradePrefs();
+  const prefs = useGradeScalePrefs(api);
   const [draft, setDraft] = React.useState<LogSessionDraft>(
-    () => editing?.draft ?? emptyDraft(new Date(), gradePrefs)
+    () => editing?.draft ?? emptyDraft(new Date(), prefs.scales)
   );
   const [saving, setSaving] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const nextKey = React.useRef(draft.climbs.length + 1);
   const { suggestionsFor } = useTagVocabulary(api);
+
+  // The preference query resolves after the first render, so a new draft adopts
+  // the user's scale once. An edit keeps the scale the session was logged in,
+  // and touching the scale picker stops the adoption.
+  const adopted = React.useRef(editing !== undefined);
+  React.useEffect(() => {
+    if (adopted.current || !prefs.ready) return;
+    adopted.current = true;
+    setDraft((d) => ({
+      ...d,
+      climbs: d.climbs.map((c) => withClimbScale(c, prefs.scales.boulder)),
+    }));
+  }, [prefs.ready, prefs.scales.boulder]);
   const vocabulary = useClimbVocabulary(api);
   const narrow = useIsNarrow();
   const [editingKey, setEditingKey] = React.useState<string | null>(null);
@@ -145,7 +159,8 @@ export function LogSessionForm({
   const autosave = useDraftAutosave(
     editing === undefined ? sessionDraftStorage : null,
     draft,
-    setDraft
+    setDraft,
+    prefs.ready
   );
   const editingIndex = draft.climbs.findIndex((c) => c.key === editingKey);
   const editingClimb = editingIndex < 0 ? null : draft.climbs[editingIndex]!;
@@ -162,7 +177,7 @@ export function LogSessionForm({
     setDraft((d) => ({
       ...d,
       climbs: d.climbs.map((c) =>
-        c.key === key ? withClimbDiscipline(c, discipline, gradePrefs) : c
+        c.key === key ? withClimbDiscipline(c, discipline, prefs.scales) : c
       ),
     }));
   }
@@ -182,7 +197,11 @@ export function LogSessionForm({
               ...c,
               name,
               project: undefined,
-              ...(known === undefined ? {} : { grade: climbDraftGrade(known, c.scale) }),
+              // A project added from the projects page has no grade yet, so the
+              // one the user already picked in the form stands.
+              ...(known === undefined || climbDraftGrade(known, c.scale) === ""
+                ? {}
+                : { grade: climbDraftGrade(known, c.scale) }),
             }
       ),
     }));
@@ -194,7 +213,14 @@ export function LogSessionForm({
       climbs: d.climbs.map((c) =>
         c.key !== key
           ? c
-          : { ...c, name: known.name, grade: climbDraftGrade(known, c.scale), project: undefined }
+          : {
+              ...c,
+              name: known.name,
+              project: undefined,
+              ...(climbDraftGrade(known, c.scale) === ""
+                ? {}
+                : { grade: climbDraftGrade(known, c.scale) }),
+            }
       ),
     }));
   }

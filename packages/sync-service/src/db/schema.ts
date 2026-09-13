@@ -13,6 +13,12 @@ export const users = sqliteTable("users", {
   timezone: text("timezone").notNull().default("UTC"),
   created_at: text("created_at").notNull(),
   auto_sync: integer("auto_sync").notNull().default(0),
+  boulder_scale: text("boulder_scale", { enum: ["v", "font"] })
+    .notNull()
+    .default("v"),
+  route_scale: text("route_scale", { enum: ["yds", "french"] })
+    .notNull()
+    .default("yds"),
 });
 
 export const boardConnections = sqliteTable(
@@ -137,7 +143,12 @@ export const projects = sqliteTable(
       .references(() => users.id),
     slug: text("slug").notNull(),
     name: text("name").notNull(),
-    grade_json: text("grade_json").notNull(),
+    grade_json: text("grade_json"),
+    discipline: text("discipline", { enum: ["boulder", "route"] })
+      .notNull()
+      .default("boulder"),
+    beta: text("beta"),
+    beta_updated_at: text("beta_updated_at"),
     created_at: text("created_at").notNull(),
   },
   (t) => [primaryKey({ columns: [t.user_id, t.slug] })]

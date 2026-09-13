@@ -5,6 +5,10 @@
   "main": "src/index.ts",
   "compatibility_date": "2025-10-11",
   "observability": { "enabled": true },
+  // Pinned so a busy port fails loudly. Without it wrangler picks the next free
+  // one, the web app keeps calling the API_URL it was given, and every screen
+  // sits loading with nothing to say.
+  "dev": { "port": 8787 },
   "d1_databases": [
     {
       "binding": "DB",
@@ -29,6 +33,7 @@
       ],
       "vars": {
         "WEB_APP_URL": "https://staging.sendtally.com",
+        "PREVIEW_ORIGIN_SUFFIX": "-sendtally-web-staging.chalk-and-circuits.workers.dev",
         "POSTHOG_PROJECT_TOKEN": "phc_mK5KViTzigeXd5KwHRkP2pK2WNCSUdeTcvmTEudpatRH",
         "POSTHOG_HOST": "https://us.i.posthog.com",
       },

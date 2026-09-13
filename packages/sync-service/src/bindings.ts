@@ -14,6 +14,7 @@ export type Env = {
   REVENUECAT_SECRET_API_KEY: string;
   REVENUECAT_WEBHOOK_AUTH: string;
   WEB_APP_URL: string;
+  PREVIEW_ORIGIN_SUFFIX?: string;
   POSTHOG_PROJECT_TOKEN?: string;
   POSTHOG_HOST?: string;
 };

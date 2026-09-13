@@ -63,6 +63,11 @@ describe("climbVMs", () => {
     expect(vms[3]?.gradeLabel).toBe("V?");
     expect(vms[2]?.angleLabel).toBe("45°");
   });
+
+  it("reads a one-try send of an earlier project as a send, not a flash", () => {
+    const vms = climbVMs(detail.climbs, new Set(["jug life"]));
+    expect(vms.map((c) => c.result)).toEqual(["sent", "sent", "project", "flash"]);
+  });
 });
 
 describe("filterAndSortClimbs", () => {

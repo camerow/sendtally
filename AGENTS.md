@@ -96,7 +96,7 @@ The product was briefly named boardsync; that name was dropped because `boardsyn
 - Wrangler environments `staging` and `production` for `sync-service` and `web`: separate D1 databases, secrets via `wrangler secret`. There is a single Clerk instance shared by both.
 - **The Cloudflare account is pinned as `account_id` in both `wrangler.jsonc` files** (`f3514650...`, the "Chalk and Circuits" account that owns the `sendtally.com` zone and everything else). The login also sees the older personal account (`7b398a51...`) that sendtally was migrated out of in September 2026; without the pin wrangler can resolve to it - deploys and `secret bulk` then silently land on a shadow Worker in an account with no zone and no D1, while `tail` watches nothing and the live site never changes. Never remove the pin.
 - **Account-level resources are Terraform-managed** in `infra/terraform/` (zone, zone settings, non-Worker DNS records, D1 databases). Wrangler owns Worker scripts, bindings, secrets, and Worker custom domains. Create a D1 database in Terraform, then pin its id in `wrangler.jsonc`; never create them in the dashboard. State is local (single operator); the API token comes from 1Password via `TF_VAR_cloudflare_api_token`. Migration runbook: `docs/cloudflare-account-migration.md`.
-- `main` is the only long-lived branch and is production. All work branches off `main` and PRs target `main`; merging a PR triggers the production deploy and D1 migrations. The `staging` environment still exists for manual deploys, but there is no `staging` branch in the flow.
+- `main` is the only long-lived branch and is production. All work branches off `main` and PRs target `main`; merging a PR triggers the production deploy and D1 migrations. There is no `staging` branch: the staging environment is the pull request preview sandbox, described below.
 - D1 migrations: `wrangler d1 migrations apply`, additive and forward-only. Never delete or rewrite prior migrations.
 - Schema source of truth is Drizzle (`packages/sync-service/src/db/schema.ts`).
   Change the schema there, then run `pnpm --filter @sendtally/sync-service db:generate` to emit the next migration into `migrations/` (drizzle-kit diffs against `migrations/meta/`; `0005_drizzle_baseline.sql` anchors the pre-Drizzle history).
@@ -105,17 +105,30 @@ The product was briefly named boardsync; that name was dropped because `boardsyn
 - Database access goes through the typed Drizzle queries in `packages/sync-service/src/lib/repo.ts` - no raw SQL strings in Worker code.
 - CI: `.github/workflows/deploy.yml` runs checks (types, tests, format, Go) then deploys both Workers - push to `main` deploys production (a push to a `staging` branch, if one is ever created, deploys the staging env). Needs `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` repo secrets. Each deploy is gated on a secret preflight, so a Worker never ships without the secrets it needs to answer a request.
   There is no post-deploy check against the live domain: Cloudflare challenges the GitHub runner's requests as datacenter traffic, so the check failed on a healthy site. Bot Fight Mode cannot be skipped by a WAF rule (it runs outside the Ruleset Engine), so this is not worth re-adding against `sendtally.com`. A Workers Builds preview URL is a hostname outside the zone's bot protection, which is where such a check belongs if we want one back.
-- **Cloudflare Workers Builds also watches this repo**, connected to the `sendtally-web-production` Worker, and reports as the `Workers Builds: sendtally-web-production` check. Its build configuration has three command fields and the split matters: **Build** runs for every build, **Version** runs for non-production branches, and **Deploy** runs only for the production branch. A pull request therefore executes Build then Version - editing the Deploy command changes nothing about PR previews, which is worth remembering before debugging one.
-  Both `preview:*` scripts use `versions upload`, which uploads without promoting, so GitHub Actions stays the only thing that puts code on live traffic. Never set any of these fields to `wrangler deploy` - in the Version field that publishes a PR branch straight to `sendtally.com`.
-  `preview:upload` runs `preview:build` itself, so it does not depend on the Build command being right.
-  The commands live in the root `package.json` rather than in the dashboard, so they are reviewable and stay in step with the app. Two things they must keep doing: build with `CLOUDFLARE_ENV=production` (without it the generated `build/server/wrangler.json` carries the base environment - name `sendtally-web`, empty `vars`, so no `API_URL` or `CLERK_PUBLISHABLE_KEY`), and run wrangler from `apps/web` (the Vite plugin writes the `.wrangler/deploy/config.json` redirect there; from the repo root wrangler finds no config and fails with "Missing entry-point to Worker script").
-  A preview version runs on the production Worker, so it uses production secrets, production D1 and the live Clerk instance. Treat a preview as production data, not a sandbox.
+- **Pull request previews are Cloudflare Workers Builds, and they target staging.** The connection lives on the `sendtally-web-staging` Worker (production branch `main`, "Builds for non-production branches" on) and reports as the `Workers Builds: sendtally-web-staging` check, which carries the preview URL. `sendtally-web-production` has no git connection - a build must never be able to reach live traffic.
+  Its three command fields split by branch: **Build** runs for every build, **Version** runs for non-production branches, and **Deploy** runs only for `main`. A pull request therefore executes Build then Version - editing the Deploy command changes nothing about PR previews, which is worth remembering before debugging one.
+
+  | Field   | Command                                           | Effect                                                                                                         |
+  | ------- | ------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+  | Build   | `pnpm run preview:build`                          | Builds `apps/web` with `CLOUDFLARE_ENV=staging`                                                                |
+  | Version | `pnpm run staging:api && pnpm run preview:upload` | Deploys the branch's API to `api-staging.sendtally.com`, then uploads a web version and prints its preview URL |
+  | Deploy  | `pnpm run staging:api && pnpm run staging:web`    | Puts `main` on `api-staging.sendtally.com` and `staging.sendtally.com`                                         |
+
+  A preview is a sandbox, not production: the dev Clerk instance (which is why sign-in works on a `workers.dev` origin at all - the live instance is locked to `sendtally.com`), the `sendtally-staging` D1, and the staging secrets from Doppler `stg`. Nothing a preview does touches real user data, and staging D1 starts empty, so log a session or two there to have something to look at.
+  The API half is a real `wrangler deploy`, so `api-staging.sendtally.com` runs whichever branch built last. With one open pull request that is what you want; with several, the newest build wins and an older preview is talking to a newer API. Per-branch API previews via `versions upload --preview-alias` are the upgrade if that ever bites.
+  `staging:api` applies D1 migrations before deploying, so a preview of a schema change is a preview of the migrated schema.
+  The commands live in the root `package.json` rather than in the dashboard, so they are reviewable and stay in step with the app. Two things they must keep doing: build with `CLOUDFLARE_ENV=staging` (without it the generated `build/server/wrangler.json` carries the base environment - name `sendtally-web`, empty `vars`, so no `API_URL` or `CLERK_PUBLISHABLE_KEY`), and run wrangler from `apps/web` (the Vite plugin writes the `.wrangler/deploy/config.json` redirect there; from the repo root wrangler finds no config and fails with "Missing entry-point to Worker script"). The web commands pass no `--env` for the same reason - the generated config already names `sendtally-web-staging`.
+  `preview_urls: true` in the staging env is necessary but not sufficient: a newly created Worker starts with `previews_enabled: false`, and while it is off wrangler uploads a version and prints no URL at all, so there is nothing for Cloudflare's pull request comment to carry. Turn it on once - the Preview toggle under the Worker's Domains tab, or `POST /accounts/:account/workers/scripts/sendtally-web-staging/subdomain` with `{"enabled": false, "previews_enabled": true}` - and it holds from there. Check it first if a build passes and the comment has only a logs link.
+  Do not read anything into a **Retry build**: it reruns without this branch's `package.json`, so it fails on `Missing script: staging:api` no matter what the branch contains. Only a real push tests a preview.
+  Workers Builds aliases each version to its branch, so the preview URL is stable per branch rather than per build: `https://<branch>-sendtally-web-staging.chalk-and-circuits.workers.dev`.
+  The API's CORS allowlist is one origin, `WEB_APP_URL`, which no preview URL matches. Staging additionally sets `PREVIEW_ORIGIN_SUFFIX`, and an origin ending in it is echoed back; production leaves the var unset, so nothing changes there.
 
 ### Secrets
 
 - Source of truth is the **Doppler project `sendtally`** (configs `stg` and `prd`): `TOKEN_KEY`, `CLERK_SECRET_KEY`, `CLERK_WEBHOOK_SIGNING_SECRET`, `VITE_CLERK_PUBLISHABLE_KEY`, `STRAVA_CLIENT_ID`, `STRAVA_CLIENT_SECRET`, `STRAVA_WEBHOOK_VERIFY_TOKEN`, `REVENUECAT_SECRET_API_KEY`, `REVENUECAT_WEBHOOK_AUTH`.
 - Push to Workers with `infra/scripts/push-secrets.sh <production|staging>`, which runs `doppler secrets download ... | wrangler secret bulk` for both Workers. The script pushes an explicit allowlist per Worker, so a new secret must be added there as well as to Doppler or it is silently skipped. Never paste secret values into files, commits, or chat.
 - **Both Workers need secrets.** For `packages/sync-service`: `TOKEN_KEY`, `CLERK_SECRET_KEY`, `CLERK_WEBHOOK_SIGNING_SECRET`, `STRAVA_CLIENT_ID`, `STRAVA_CLIENT_SECRET`, `STRAVA_WEBHOOK_VERIFY_TOKEN`, `REVENUECAT_SECRET_API_KEY`, `REVENUECAT_WEBHOOK_AUTH`. For `apps/web`: `CLERK_SECRET_KEY` - `apps/web` renders every route through `clerkMiddleware()`, so without it the Worker throws on every request and the whole site 500s while the deploy still reports success.
+- Doppler `stg` deliberately lacks `CLERK_WEBHOOK_SIGNING_SECRET` and `REVENUECAT_SECRET_API_KEY`: neither Clerk nor RevenueCat has a staging webhook endpoint, so the staging Worker runs without them and `push-secrets.sh staging` skips them. Only the two webhook routes are dead on staging; previews do not use them.
 - `push-secrets.sh` fails for `apps/web` with Cloudflare error 10215 ("latest version of your Worker isn't currently deployed") whenever a PR preview has been uploaded with `versions upload` since the last production deploy. The `sync-service` half still succeeds. If the web Worker needs a changed secret, merge or deploy first, then push again; otherwise the error can be ignored.
 - Secrets live on the Worker, not in the config, so **a Worker deleted and recreated in the dashboard comes back with none of them**. `deploy.yml` runs `.github/scripts/require-secrets.sh` before each deploy to fail loudly instead of shipping a Worker that 500s.
 - The Strava credentials originate from the maker's Strava API app; Clerk keys from the Clerk dashboard (kept in 1Password, vault "Send Tally").
@@ -254,7 +267,7 @@ Avoid comments in code; make code short, composable, and obviously named.
 
 ### Worktrees
 
-Use **worktrunk** (`wt`) for all worktree creation and lifecycle (`wt switch --create` / `merge` / `remove`).
+Use **worktrunk** (`wt`) for all worktree creation and lifecycle (`wt switch --create` / `wt merge` / `wt remove`).
 Project configuration lives in `.config/wt.toml`; personal settings belong in `~/.config/worktrunk/config.toml`.
 Never hand-roll `git worktree add`.
 
@@ -262,7 +275,12 @@ A new worktree gets the gitignored local secrets and an install from the `pre-st
 `.worktreeinclude` at the repo root is the allowlist of files that travel - currently `.env` and the two `.dev.vars`.
 It is an allowlist rather than "copy everything ignored" because the latter also duplicates `infra/terraform` state, which is local and single-operator.
 Add a file there when a new gitignored thing turns out to be needed per worktree; without the Clerk keys the web app starts in keyless mode and every signed-in request fails a JWKS key-id check against a throwaway instance.
-The hook needs a one-time approval per machine, which `wt` prompts for on first use.
+
+`post-remove` kills the dev servers a removed worktree left behind (`infra/scripts/kill-worktree-servers.sh`).
+Without it an orphaned wrangler or vite keeps port 8787 or 5173, and the next worktree to run `pnpm dev` fails to bind for reasons that point nowhere.
+
+The hooks need a one-time approval per machine, which `wt` prompts for on first use.
+Run `wt config approvals add` and review what it lists - an agent must never approve them for you.
 
 ---
 

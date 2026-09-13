@@ -2,6 +2,7 @@ import React from "react";
 import { Link } from "react-router";
 import type {
   DeleteAccountFeature,
+  GradeScalesFeature,
   SettingsVM,
   StravaPostingFeature,
 } from "@sendtally/features/settings";
@@ -13,9 +14,8 @@ import {
   sectionLabel,
   underlineButton,
 } from "./styles";
-import { setGradePref, useGradePrefs } from "../../lib/gradePrefs";
 import { DeleteAccountSection } from "./DeleteAccountSection";
-import { GradeSection } from "./GradeSection";
+import { GradeScaleSection } from "./GradeScaleSection";
 import { StravaPostingSection } from "./StravaPostingSection";
 
 export type SettingsViewProps = {
@@ -23,6 +23,7 @@ export type SettingsViewProps = {
   email: string;
   deletion: DeleteAccountFeature;
   posting: StravaPostingFeature;
+  scales: GradeScalesFeature;
   onSignOut: () => void;
 };
 
@@ -49,10 +50,9 @@ export function SettingsView({
   email,
   deletion,
   posting,
+  scales,
   onSignOut,
 }: SettingsViewProps): React.ReactElement {
-  const gradePrefs = useGradePrefs();
-
   return (
     <div style={{ maxWidth: 640, display: "flex", flexDirection: "column", gap: 14 }}>
       <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
@@ -69,6 +69,11 @@ export function SettingsView({
         </h1>
         <span style={monoMuted}>{`STRAVA ${vm.stravaStatusLabel}`}</span>
       </div>
+
+      <Section>
+        <span style={sectionLabel}>GRADES</span>
+        <GradeScaleSection scales={scales} />
+      </Section>
 
       <Section>
         <span style={sectionLabel}>STRAVA</span>
@@ -108,10 +113,6 @@ export function SettingsView({
           </p>
         )}
         {vm.stravaConnected && vm.stravaActive && <StravaPostingSection posting={posting} />}
-      </Section>
-
-      <Section>
-        <GradeSection prefs={gradePrefs} onChange={setGradePref} />
       </Section>
 
       <Section>

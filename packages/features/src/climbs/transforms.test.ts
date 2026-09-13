@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { ClimbSummary } from "@sendtally/api-client";
+import { gradeOptions } from "../log-session/transforms";
 import {
   climbDraftGrade,
   findClimb,
@@ -7,13 +8,17 @@ import {
   projectMetaLabel,
   projectStatus,
   projectsOf,
+  typicalGradeIndex,
 } from "./transforms";
 
 const climb = (overrides: Partial<ClimbSummary>): ClimbSummary => ({
   slug: "moonraker",
   name: "Moonraker",
   grade: { scale: "v", value: 6 },
+  discipline: "boulder",
   project: false,
+  beta: null,
+  beta_updated_at: null,
   sessions: 3,
   attempts: 11,
   sends: 0,
@@ -73,5 +78,29 @@ describe("projects", () => {
   it("labels totals with the right plurals", () => {
     expect(projectMetaLabel(climb({}))).toBe("3 SESSIONS · 11 ATTEMPTS");
     expect(projectMetaLabel(climb({ sessions: 1, attempts: 1 }))).toBe("1 SESSION · 1 ATTEMPT");
+  });
+});
+
+describe("typicalGradeIndex", () => {
+  it("lands on the middle of what the user has logged in that discipline", () => {
+    const climbs = [
+      climb({ slug: "a", grade: { scale: "v", value: 4 } }),
+      climb({ slug: "b", grade: { scale: "v", value: 8 } }),
+      climb({ slug: "c", grade: { scale: "yds", value: "5.13a" }, discipline: "route" }),
+    ];
+    expect(typicalGradeIndex(climbs, "v")).toBe(6);
+  });
+
+  it("converts into the scale being shown", () => {
+    const climbs = [climb({ grade: { scale: "v", value: 6 } })];
+    expect(gradeOptions("font")[typicalGradeIndex(climbs, "font")]).toBe("7A");
+  });
+
+  it("ignores the other discipline and climbs with no grade", () => {
+    const climbs = [
+      climb({ slug: "a", grade: { scale: "yds", value: "5.13a" }, discipline: "route" }),
+      climb({ slug: "b", grade: null }),
+    ];
+    expect(typicalGradeIndex(climbs, "v")).toBe(Math.floor(gradeOptions("v").length / 3));
   });
 });
