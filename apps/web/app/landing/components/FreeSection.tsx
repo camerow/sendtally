@@ -17,9 +17,6 @@ export function FreeSection(): React.ReactElement {
             {COPY.free.title}
           </h2>
         </Reveal>
-        <Reveal delay={80}>
-          <span className="l-section-blurb">{COPY.free.blurb}</span>
-        </Reveal>
       </div>
 
       <div className="l-free-grid">

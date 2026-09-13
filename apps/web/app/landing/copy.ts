@@ -85,8 +85,6 @@ export const COPY = {
 
   free: {
     title: "Most of sendtally costs nothing.",
-    blurb:
-      "No trial, no card, no cap on sessions. The free account is the whole logbook - the only thing it does not include is the trend screens.",
     features: [
       {
         eyebrow: "SESSIONS",
@@ -132,14 +130,13 @@ export const COPY = {
   band: {
     eyebrow: "MEMBERSHIP",
     title: "Six months from now, you will want to know what changed.",
-    body: "Every session you log is already a data point. Membership is the five screens that read them back to you - and it is what pays for the server.",
+    body: "Logging your sessions over time creates a powerful history full of insights. Become a member to see your climbing trends.",
     cta: "See what members see ↓",
   },
 
   trends: {
     title: "Five screens only members see.",
-    blurb:
-      "Built from the sessions you already log, over any range from a month to all-time. This is the Trends tab, exactly as it looks in the app.",
+    blurb: "Built from the sessions you already log, over any range from a month to all-time.",
     rangeLabel: "RANGE",
     memberTag: "MEMBER",
     cards: {
@@ -186,14 +183,13 @@ export const COPY = {
 
   session: {
     title: "Every session, climb by climb.",
-    blurb:
-      "Grades, burns and results - kept for every climb so a project you have been chipping at for a month reads as one story.",
+    blurb: "Grades, burns and results - kept for every climb over time.",
     footnote: "6 OF 12 CLIMBS SHOWN · FILTER BY SENT, FLASHED OR PROJECT IN THE APP",
   },
 
   strava: {
     eyebrow: "ALSO: STRAVA · FREE",
-    title: "And it gives you credit for the training, too.",
+    title: "We'll sync with Strava, if you're into that.",
     body: "Each logged session becomes one Rock Climbing activity, with duration, sends, attempts and grades already filled in. It is free for everyone and always will be - we do not charge for Strava syncing. Turn it off and sendtally is still yours for the numbers alone.",
     cta: "Create your account →",
   },
@@ -247,7 +243,7 @@ export const COPY = {
   price: {
     eyebrow: "MEMBERSHIP",
     title: "Logging is free. Membership gives you the trends.",
-    lead: "Two dollars a month, billed yearly, turns the log into a training history - and it is what pays for the server. Everything else stays free for everyone.",
+    lead: "Two dollars a month, billed yearly, turns the log into deep insights into your climbing trends.",
     free: {
       name: "Free",
       amount: "$0",
@@ -262,7 +258,7 @@ export const COPY = {
       roadmapEyebrow: "EVERYTHING IN FREE, PLUS THE ROADMAP",
       roadmapBody:
         "Members say what gets built next - the people paying for the server get first call.",
-      footnote: "CANCEL ANY TIME · TRENDS STAY UNTIL THE PAID PERIOD ENDS",
+      footnote: "CANCEL ANY TIME",
       cta: "Become a member →",
     },
   },
