@@ -14,6 +14,7 @@ import { useClientApi } from "../lib/useClientApi";
 import { SessionTags } from "../sessions/components/SessionTags";
 import { PostStatusBar } from "../session-detail/components/PostStatusBar";
 import { SessionNotes } from "../session-detail/components/SessionNotes";
+import { BackLink } from "../components/BackLink";
 
 export async function loader(args: LoaderFunctionArgs): Promise<{ apiUrl: string }> {
   await requireApi(args);
@@ -193,12 +194,7 @@ export default function SessionDetailRoute(): React.ReactElement {
 
   return (
     <div>
-      <Link
-        to="/app"
-        style={{ ...monoLabel, fontSize: 12, letterSpacing: "0.04em", textDecoration: "none" }}
-      >
-        ← SESSIONS
-      </Link>
+      <BackLink to="/app">SESSIONS</BackLink>
       <div
         style={{
           display: "flex",

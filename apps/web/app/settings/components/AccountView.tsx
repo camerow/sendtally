@@ -1,7 +1,7 @@
 import React from "react";
-import { Link } from "react-router";
 import type { DeleteAccountFeature } from "@sendtally/features/settings";
-import { backLink, bodyText, pageTitle, sectionLabel, secondaryButton } from "./styles";
+import { BackLink } from "../../components/BackLink";
+import { bodyText, pageTitle, sectionLabel, secondaryButton } from "./styles";
 import { DeleteAccountSection } from "./DeleteAccountSection";
 import { Section } from "./Section";
 
@@ -14,9 +14,7 @@ export type AccountViewProps = {
 export function AccountView({ email, deletion, onSignOut }: AccountViewProps): React.ReactElement {
   return (
     <div style={{ maxWidth: 640, display: "flex", flexDirection: "column", gap: 14 }}>
-      <Link to="/app/settings" style={backLink}>
-        ← SETTINGS
-      </Link>
+      <BackLink to="/app/settings">SETTINGS</BackLink>
       <h1 style={pageTitle}>Account</h1>
 
       <Section>

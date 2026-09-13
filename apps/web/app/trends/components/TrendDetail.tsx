@@ -1,10 +1,10 @@
 import React from "react";
-import { Link } from "react-router";
 import { useTrends, type TrendMetric } from "@sendtally/features/trends";
 import { useClientApi } from "../../lib/useClientApi";
 import { TrendBars } from "./TrendBars";
 import { TrendFilters } from "./TrendFilters";
 import { TrendTagBreakdown } from "./TrendTagBreakdown";
+import { BackLink } from "../../components/BackLink";
 
 export type TrendDetailProps = {
   apiUrl: string;
@@ -26,19 +26,7 @@ export function TrendDetail({ apiUrl, metric }: TrendDetailProps): React.ReactEl
 
   return (
     <div>
-      <Link
-        to="/app/trends"
-        style={{
-          fontFamily: "var(--font-mono)",
-          fontWeight: 500,
-          fontSize: 12,
-          letterSpacing: "0.04em",
-          color: "var(--text-label-accent)",
-          textDecoration: "none",
-        }}
-      >
-        ← TRENDS
-      </Link>
+      <BackLink to="/app/trends">TRENDS</BackLink>
       <TrendFilters feature={feature} />
       {state.status === "loading" && (
         <span style={{ ...monoMuted, display: "block", marginTop: 22 }}>LOADING…</span>

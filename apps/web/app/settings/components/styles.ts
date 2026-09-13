@@ -87,16 +87,6 @@ export const pageTitle: React.CSSProperties = {
   letterSpacing: "-0.03em",
 };
 
-export const backLink: React.CSSProperties = {
-  fontFamily: "var(--font-mono)",
-  fontWeight: 500,
-  fontSize: 12,
-  letterSpacing: "0.05em",
-  color: "var(--text-label-accent)",
-  textDecoration: "none",
-  alignSelf: "flex-start",
-};
-
 export const secondaryButton: React.CSSProperties = {
   fontFamily: "var(--font-sans)",
   fontWeight: 600,

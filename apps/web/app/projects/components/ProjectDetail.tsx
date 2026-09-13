@@ -6,6 +6,7 @@ import { useClientApi } from "../../lib/useClientApi";
 import { BetaCard } from "./BetaCard";
 import { ProjectChart } from "./ProjectChart";
 import { UnmarkProjectDialog } from "./UnmarkProjectDialog";
+import { BackLink } from "../../components/BackLink";
 
 export type ProjectDetailProps = {
   apiUrl: string;
@@ -51,19 +52,7 @@ export function ProjectDetail({ apiUrl, slug }: ProjectDetailProps): React.React
 
   return (
     <div>
-      <Link
-        to="/app/projects"
-        style={{
-          fontFamily: "var(--font-mono)",
-          fontWeight: 500,
-          fontSize: 12,
-          letterSpacing: "0.04em",
-          color: "var(--text-label-accent)",
-          textDecoration: "none",
-        }}
-      >
-        ← PROJECTS
-      </Link>
+      <BackLink to="/app/projects">PROJECTS</BackLink>
 
       <div className="project-detail-head">
         <span className="project-detail-grade">{vm.gradeLabel ?? vm.disciplineLabel}</span>

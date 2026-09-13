@@ -1,11 +1,12 @@
 import React from "react";
 import type { LinksFunction, LoaderFunctionArgs } from "react-router";
-import { Link, useLoaderData } from "react-router";
+import { useLoaderData } from "react-router";
 import { cloudflareContext } from "../lib/cloudflare-context";
 import { requireApi } from "../lib/api.server";
 import { useClientApi } from "../lib/useClientApi";
 import { LogSessionForm } from "../log-session/components/LogSessionForm";
 import logSessionStyles from "../log-session/log-session.css?url";
+import { BackLink } from "../components/BackLink";
 
 export const links: LinksFunction = () => [{ rel: "stylesheet", href: logSessionStyles }];
 
@@ -20,19 +21,7 @@ export default function LogSessionRoute(): React.ReactElement {
 
   return (
     <div>
-      <Link
-        to="/app"
-        style={{
-          fontFamily: "var(--font-mono)",
-          fontWeight: 500,
-          fontSize: 12,
-          letterSpacing: "0.04em",
-          color: "var(--text-label-accent)",
-          textDecoration: "none",
-        }}
-      >
-        ← SESSIONS
-      </Link>
+      <BackLink to="/app">SESSIONS</BackLink>
       <div style={{ display: "flex", flexDirection: "column", gap: 6, margin: "14px 0 26px" }}>
         <h1
           style={{

@@ -6,8 +6,8 @@ import type {
   StravaPostingFeature,
 } from "@sendtally/features/settings";
 import type { MembershipVM } from "@sendtally/features/billing";
-import { Icon } from "../../components/Icon";
 import { azureButton, bodyText, linkAction, monoMuted, pageTitle, sectionLabel } from "./styles";
+import { ChevronRow } from "./ChevronRow";
 import { GradeScaleSection } from "./GradeScaleSection";
 import { MembershipSection } from "./MembershipSection";
 import { Section } from "./Section";
@@ -79,15 +79,7 @@ export function SettingsView({
 
       <Link to="/app/account" style={{ textDecoration: "none", color: "inherit" }}>
         <Section>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              gap: 12,
-              minHeight: 44,
-            }}
-          >
+          <ChevronRow>
             <span style={{ display: "flex", flexDirection: "column", gap: 4, minWidth: 0 }}>
               <span style={sectionLabel}>ACCOUNT</span>
               <span
@@ -102,10 +94,7 @@ export function SettingsView({
                 {email}
               </span>
             </span>
-            <span style={{ display: "flex", color: "rgba(64,63,76,0.45)" }}>
-              <Icon name="chevron" size={16} />
-            </span>
-          </div>
+          </ChevronRow>
         </Section>
       </Link>
     </div>

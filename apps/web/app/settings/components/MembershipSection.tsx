@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router";
 import { MEMBER_POINTS, storeName, type MembershipVM } from "@sendtally/features/billing";
-import { Icon } from "../../components/Icon";
+import { ChevronRow } from "./ChevronRow";
 import { bodyText, monoMuted, rowDivider, sectionLabel } from "./styles";
 import { StatusPill } from "./StatusPill";
 
@@ -9,16 +9,13 @@ export type MembershipSectionProps = {
   membership: MembershipVM;
 };
 
-function summary(vm: MembershipVM): string | null {
-  if (!vm.active) return "A membership unlocks trends and insights in your climbing habits.";
-  if (vm.managedIn === "play_store" || vm.managedIn === "app_store") {
-    return `Billed through ${storeName(vm.managedIn)}. Manage it there.`;
-  }
-  return null;
-}
-
 export function MembershipSection({ membership }: MembershipSectionProps): React.ReactElement {
-  const line = summary(membership);
+  const store = membership.managedIn;
+  const line = !membership.active
+    ? "A membership unlocks trends and insights in your climbing habits."
+    : store === "play_store" || store === "app_store"
+      ? `Billed through ${storeName(store)}. Manage it there.`
+      : null;
   return (
     <>
       <div
@@ -51,21 +48,13 @@ export function MembershipSection({ membership }: MembershipSectionProps): React
       <Link
         to="/app/membership"
         style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: 12,
-          minHeight: 44,
           fontWeight: 600,
           fontSize: 13,
           color: "var(--bs-gunmetal)",
           textDecoration: "none",
         }}
       >
-        {membership.active ? "Manage membership" : "See plans"}
-        <span style={{ display: "flex", color: "rgba(64,63,76,0.45)" }}>
-          <Icon name="chevron" size={16} />
-        </span>
+        <ChevronRow>{membership.active ? "Manage membership" : "See plans"}</ChevronRow>
       </Link>
     </>
   );
