@@ -46,7 +46,10 @@ jobs:
 
       # The PostHog Expo plugin uploads Hermes source maps on every release bundle and fails
       # without POSTHOG_CLI_API_KEY, which only EAS holds. This build ships nowhere, so the
-      # hook comes out of the generated project rather than a secret going in.
+      # hook comes out of the generated project rather than a secret going in. For the same
+      # reason it is x86_64 only (the emulator's ABI) and skips ProGuard and resource
+      # shrinking; the store build is EAS's job. The template's 512m metaspace ran out on the
+      # runner and hung the daemon, hence the larger JVM.
       - name: Build the app with the bundle embedded
         working-directory: apps/mobile
         env:
@@ -57,7 +60,11 @@ jobs:
           set -euo pipefail
           npx expo prebuild --platform android --no-install --non-interactive
           sed -i '/posthog.gradle/d' android/app/build.gradle
-          cd android && ./gradlew :app:assembleRelease --no-daemon
+          printf '\norg.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=1g\n' >> android/gradle.properties
+          cd android && ./gradlew :app:assembleRelease --no-daemon \
+            -PreactNativeArchitectures=x86_64 \
+            -Pandroid.enableProguardInReleaseBuilds=false \
+            -Pandroid.enableShrinkResourcesInReleaseBuilds=false
 
       - name: Install Maestro
         run: |
