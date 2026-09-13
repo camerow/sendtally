@@ -525,3 +525,68 @@
   background: var(--bs-gold);
   color: var(--bs-gunmetal);
 }
+
+.session-row-draft-saved,
+.session-row-draft-discard {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: rgba(64, 63, 76, 0.6);
+}
+
+.session-row-draft-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.session-row-draft-discard {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+@media (max-width: 767px) {
+  .session-row--draft {
+    grid-template-columns: auto minmax(0, 1fr);
+    column-gap: 12px;
+    row-gap: 10px;
+    align-items: start;
+    padding: 12px 14px;
+    border-radius: var(--radius-card);
+  }
+
+  .session-row--draft .session-row-date {
+    padding-top: 2px;
+  }
+
+  .session-row--draft .session-row-day {
+    white-space: nowrap;
+  }
+
+  .session-row-draft-saved {
+    grid-column: 1 / -1;
+    font-size: 10px;
+  }
+
+  .session-row-draft-actions {
+    grid-column: 1 / -1;
+    justify-content: space-between;
+  }
+
+  .session-row-draft-action {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+  }
+
+  .session-row-draft-discard {
+    min-height: 44px;
+    text-align: left;
+  }
+}
