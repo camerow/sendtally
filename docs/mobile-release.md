@@ -309,11 +309,12 @@ On iOS the equivalent is a locally built app plus an App Store sandbox tester, a
 
    ```
    cd apps/mobile
-   PATH=/opt/homebrew/bin:$PATH npx expo run:ios --device <udid> --configuration Release --no-bundler
+   npx expo run:ios --device <udid> --configuration Release --no-bundler
    ```
 
    Release rather than Debug: the JS is embedded, so no Metro process has to survive the build, and it is the configuration a reviewer runs.
-   Two things bite here, both known: the rbenv ruby is broken so Homebrew's `pod` has to come first on PATH, and the PostHog sourcemap phase needs `POSTHOG_CLI_API_KEY`, an EAS-only secret, so strip its prefix from the "Bundle React Native code" shellScript in the generated `ios/sendtally.xcodeproj/project.pbxproj` first.
+   CocoaPods runs under the rbenv ruby, which needs Homebrew `gmp` installed - without it the ruby aborts on a missing `libgmp.10.dylib` and every `pod` call dies before it prints anything.
+   The PostHog sourcemap phase needs `POSTHOG_CLI_API_KEY`, an EAS-only secret, so strip its prefix from the "Bundle React Native code" shellScript in the generated `ios/sendtally.xcodeproj/project.pbxproj` before building.
    A local run picks up the real `appl_…` key from `lib/config.ts`; the EAS `development` profile does not, it overrides both keys with the RevenueCat test store.
 
 4. **Install.** `xcrun devicectl device install app --device <udid> <path to sendtally.app>` with the phone unlocked. If the App Store or TestFlight copy of `com.sendtally.app` is on the phone, the install fails with CoreDeviceError 3002, "a coordinated app install already exists"; delete the app from the home screen and install again.
