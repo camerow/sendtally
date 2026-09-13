@@ -3,3 +3,4 @@ android/
 .expo/
 store/artboards/
 store/out/
+dist/
