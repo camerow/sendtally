@@ -24,45 +24,36 @@ const DISMISS_VELOCITY = 0.6;
  * distance or a flick. The grip is the only drag surface because the rail and the panel scroll
  * would otherwise fight the browser for vertical touches.
  */
-function useDragToDismiss(
-  panel: React.RefObject<HTMLDivElement | null>,
+function startDrag(
+  down: React.PointerEvent<HTMLElement>,
+  panel: HTMLElement | null,
   onClose: () => void
-): { onPointerDown: (e: React.PointerEvent<HTMLElement>) => void } {
-  const start = React.useRef<{ y: number; at: number } | null>(null);
-  const onPointerDown = (down: React.PointerEvent<HTMLElement>): void => {
-    if (down.button !== 0) return;
-    start.current = { y: down.clientY, at: performance.now() };
-    const grip = down.currentTarget;
-    grip.setPointerCapture?.(down.pointerId);
-    const el = panel.current;
-    if (el) el.style.transition = "none";
+): void {
+  if (down.button !== 0 || panel === null) return;
+  const grip = down.currentTarget;
+  const origin = { y: down.clientY, at: performance.now() };
+  grip.setPointerCapture?.(down.pointerId);
+  panel.style.transition = "none";
 
-    const move = (e: PointerEvent): void => {
-      if (start.current === null || !el) return;
-      el.style.transform = `translateY(${Math.max(0, e.clientY - start.current.y)}px)`;
-    };
-    const end = (e: PointerEvent): void => {
-      grip.removeEventListener("pointermove", move);
-      grip.removeEventListener("pointerup", end);
-      grip.removeEventListener("pointercancel", end);
-      if (start.current === null) return;
-      const dy = Math.max(0, e.clientY - start.current.y);
-      const velocity = dy / Math.max(1, performance.now() - start.current.at);
-      start.current = null;
-      if (e.type !== "pointercancel" && (dy > DISMISS_DISTANCE || velocity > DISMISS_VELOCITY)) {
-        onClose();
-        return;
-      }
-      if (el) {
-        el.style.transition = "transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1)";
-        el.style.transform = "";
-      }
-    };
-    grip.addEventListener("pointermove", move);
-    grip.addEventListener("pointerup", end);
-    grip.addEventListener("pointercancel", end);
+  const move = (e: PointerEvent): void => {
+    panel.style.transform = `translateY(${Math.max(0, e.clientY - origin.y)}px)`;
   };
-  return { onPointerDown };
+  const end = (e: PointerEvent): void => {
+    grip.removeEventListener("pointermove", move);
+    grip.removeEventListener("pointerup", end);
+    grip.removeEventListener("pointercancel", end);
+    const dy = Math.max(0, e.clientY - origin.y);
+    const velocity = dy / Math.max(1, performance.now() - origin.at);
+    if (e.type !== "pointercancel" && (dy > DISMISS_DISTANCE || velocity > DISMISS_VELOCITY)) {
+      onClose();
+      return;
+    }
+    panel.style.transition = "transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1)";
+    panel.style.transform = "";
+  };
+  grip.addEventListener("pointermove", move);
+  grip.addEventListener("pointerup", end);
+  grip.addEventListener("pointercancel", end);
 }
 
 export type ClimbEditorSheetProps = {
@@ -100,7 +91,6 @@ export function ClimbEditorSheet({
   const panel = React.useRef<HTMLDivElement>(null);
   const rail = React.useRef<HTMLDivElement>(null);
   const pressedBackdrop = React.useRef(false);
-  const grip = useDragToDismiss(panel, onClose);
 
   React.useEffect(() => {
     const el = dialog.current;
@@ -132,7 +122,10 @@ export function ClimbEditorSheet({
       }}
     >
       <div ref={panel} className="climb-sheet-panel">
-        <div className="climb-sheet-grip" onPointerDown={grip.onPointerDown}>
+        <div
+          className="climb-sheet-grip"
+          onPointerDown={(e) => startDrag(e, panel.current, onClose)}
+        >
           <div className="climb-sheet-handle" />
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <span style={{ ...monoLabel, color: "var(--text-label-accent)" }}>
