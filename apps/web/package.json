@@ -9,6 +9,7 @@
     "deploy:staging": "CLOUDFLARE_ENV=staging react-router build && wrangler deploy",
     "deploy:production": "CLOUDFLARE_ENV=production react-router build && wrangler deploy",
     "check-types": "react-router typegen && tsc --noEmit",
+    "test": "vitest run",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },
@@ -29,8 +30,10 @@
     "@react-router/dev": "^7.8.2",
     "@types/react": "^19.1.0",
     "@types/react-dom": "^19.1.0",
+    "jsdom": "^30.0.1",
     "typescript": "^6.0.3",
     "vite": "^7.1.4",
+    "vitest": "^3.2.7",
     "wrangler": "^4.33.1"
   }
 }

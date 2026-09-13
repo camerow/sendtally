@@ -47,23 +47,40 @@ export function ClimbEditorSheet({
   onRemove,
   onClose,
 }: ClimbEditorSheetProps): React.ReactElement {
+  const dialog = React.useRef<HTMLDialogElement>(null);
   const rail = React.useRef<HTMLDivElement>(null);
+  const pressedBackdrop = React.useRef(false);
 
   React.useEffect(() => {
-    rail.current
-      ?.querySelector<HTMLElement>('[aria-pressed="true"]')
-      ?.scrollIntoView({ inline: "center", block: "nearest" });
+    const el = dialog.current;
+    if (el !== null && !el.open) el.showModal();
+  }, []);
+
+  React.useEffect(() => {
+    const track = rail.current;
+    const chip = track?.querySelector<HTMLElement>('[aria-pressed="true"]');
+    if (track && chip) {
+      track.scrollLeft = chip.offsetLeft - (track.clientWidth - chip.offsetWidth) / 2;
+    }
   }, [climb.grade]);
 
   return (
-    <div className="climb-sheet-backdrop" onClick={onClose}>
-      <div
-        className="climb-sheet"
-        role="dialog"
-        aria-modal="true"
-        aria-label={`Climb ${index + 1} of ${count}`}
-        onClick={(e) => e.stopPropagation()}
-      >
+    <dialog
+      ref={dialog}
+      className="climb-sheet"
+      aria-label={`Climb ${index + 1} of ${count}`}
+      onCancel={(e) => {
+        e.preventDefault();
+        onClose();
+      }}
+      onPointerDown={(e) => {
+        pressedBackdrop.current = e.target === e.currentTarget;
+      }}
+      onClick={(e) => {
+        if (pressedBackdrop.current && e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div className="climb-sheet-panel">
         <div className="climb-sheet-handle" />
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <span style={{ ...monoLabel, color: "var(--text-label-accent)" }}>
@@ -133,6 +150,6 @@ export function ClimbEditorSheet({
           Done
         </button>
       </div>
-    </div>
+    </dialog>
   );
 }

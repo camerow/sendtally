@@ -1,10 +1,6 @@
 import React from "react";
-import {
-  parseStoredDraft,
-  writeStoredDraft,
-  type DraftStorage,
-  type StoredSessionDraft,
-} from "./draftStore";
+import { createDraftAutosaver, type DraftAutosaver as Autosaver } from "./draftAutosaver";
+import { parseStoredDraft, type DraftStorage, type StoredSessionDraft } from "./draftStore";
 import type { LogSessionDraft } from "./types";
 
 const DEBOUNCE_MS = 400;
@@ -38,6 +34,10 @@ export type DraftAutosave = {
  * `storage` is null where autosave does not apply - only a new session is worth rescuing.
  * `ready` holds saving off while the form is still settling into the user's preferences,
  * so adopting a saved grade scale is not mistaken for the first thing they typed.
+ *
+ * A pending write is flushed when the form unmounts, so leaving right after an edit keeps it.
+ * Editing while an older draft is on offer overwrites that draft: the user saw the offer and
+ * typed anyway, and what they are typing now is the session worth keeping.
  */
 export function useDraftAutosave(
   storage: DraftStorage | null,
@@ -48,8 +48,12 @@ export function useDraftAutosave(
   const [mountedAt] = React.useState(() => Date.now());
   const [dismissed, setDismissed] = React.useState(false);
   const [savedAt, setSavedAt] = React.useState<Date | null>(null);
-  const baseline = React.useRef(JSON.stringify(draft));
-  const done = React.useRef(false);
+  const [saver] = React.useState<Autosaver | null>(() => {
+    if (storage === null) return null;
+    const created = createDraftAutosaver(storage, DEBOUNCE_MS, setSavedAt);
+    created.reset(draft);
+    return created;
+  });
 
   const stored = useParsedDraft(useStoredRaw(storage));
   /** Anything saved since this form opened is our own autosave, never an offer to resume. */
@@ -57,26 +61,20 @@ export function useDraftAutosave(
     dismissed || stored === null || stored.savedAt.getTime() >= mountedAt ? null : stored;
 
   React.useEffect(() => {
-    if (!ready) {
-      baseline.current = JSON.stringify(draft);
-      return;
-    }
-    if (storage === null || offered !== null || done.current) return;
-    const serialized = JSON.stringify(draft);
-    if (serialized === baseline.current) return;
-    const timer = setTimeout(() => {
-      setSavedAt(writeStoredDraft(storage, draft, new Date()));
-    }, DEBOUNCE_MS);
-    return () => clearTimeout(timer);
-  }, [draft, offered, ready, storage]);
+    if (saver === null) return;
+    if (ready) saver.update(draft);
+    else saver.reset(draft);
+  }, [draft, ready, saver]);
+
+  React.useEffect(() => () => saver?.flush(), [saver]);
 
   const resume = React.useCallback(() => {
     if (offered === null) return;
-    baseline.current = JSON.stringify(offered.draft);
+    saver?.reset(offered.draft);
     onResume(offered.draft);
     setSavedAt(offered.savedAt);
     setDismissed(true);
-  }, [offered, onResume]);
+  }, [offered, onResume, saver]);
 
   const startFresh = React.useCallback(() => {
     storage?.remove();
@@ -84,10 +82,10 @@ export function useDraftAutosave(
   }, [storage]);
 
   const clear = React.useCallback(() => {
-    done.current = true;
+    saver?.stop();
     storage?.remove();
     setSavedAt(null);
-  }, [storage]);
+  }, [saver, storage]);
 
   return { offered, savedAt, resume, startFresh, clear };
 }
