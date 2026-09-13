@@ -2,6 +2,7 @@ import React from "react";
 import { Link } from "react-router";
 import type {
   DeleteAccountFeature,
+  GradeScalesFeature,
   SettingsVM,
   StravaPostingFeature,
 } from "@sendtally/features/settings";
@@ -14,6 +15,7 @@ import {
   underlineButton,
 } from "./styles";
 import { DeleteAccountSection } from "./DeleteAccountSection";
+import { GradeScaleSection } from "./GradeScaleSection";
 import { StravaPostingSection } from "./StravaPostingSection";
 
 export type SettingsViewProps = {
@@ -21,6 +23,7 @@ export type SettingsViewProps = {
   email: string;
   deletion: DeleteAccountFeature;
   posting: StravaPostingFeature;
+  scales: GradeScalesFeature;
   onSignOut: () => void;
 };
 
@@ -47,6 +50,7 @@ export function SettingsView({
   email,
   deletion,
   posting,
+  scales,
   onSignOut,
 }: SettingsViewProps): React.ReactElement {
   return (
@@ -65,6 +69,11 @@ export function SettingsView({
         </h1>
         <span style={monoMuted}>{`STRAVA ${vm.stravaStatusLabel}`}</span>
       </div>
+
+      <Section>
+        <span style={sectionLabel}>GRADES</span>
+        <GradeScaleSection scales={scales} />
+      </Section>
 
       <Section>
         <span style={sectionLabel}>STRAVA</span>

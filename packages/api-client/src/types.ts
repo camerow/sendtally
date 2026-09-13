@@ -1,13 +1,15 @@
 import type { hc, InferResponseType } from "hono/client";
 import type { AppType } from "@sendtally/sync-service/app";
 
-export type { LogClimbInput, LogSessionInput } from "@sendtally/sync-service/app";
+export type { LogClimbInput, LogSessionInput, ProjectInput } from "@sendtally/sync-service/app";
 
 type Client = ReturnType<typeof hc<AppType>>;
 
 type Ok<T> = InferResponseType<T, 200>;
 
 export type ConnectionStatus = Ok<Client["v1"]["status"]["$get"]>;
+
+export type GradeScales = ConnectionStatus["gradeScales"];
 
 export type Entitlements = Ok<Client["v1"]["entitlements"]["$get"]>;
 
@@ -29,9 +31,11 @@ export type TagSummary = Ok<Client["v1"]["tags"]["$get"]>["tags"][number];
 
 export type ClimbSummary = Ok<Client["v1"]["climbs"]["$get"]>["climbs"][number];
 
-export type ClimbGrade = ClimbSummary["grade"];
+export type ClimbGrade = NonNullable<ClimbSummary["grade"]>;
 
 export type GradeScale = ClimbGrade["scale"];
+
+export type Discipline = ClimbSummary["discipline"];
 
 export type PostOutcome = Ok<
   Client["v1"]["sessions"][":fingerprint"]["strava"]["$post"]

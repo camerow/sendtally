@@ -5,8 +5,10 @@ import type {
   ClimbSummary,
   ConnectionStatus,
   Entitlements,
+  GradeScales,
   LogSessionInput,
   PostOutcome,
+  ProjectInput,
   SessionDetail,
   SessionRow,
   SessionTag,
@@ -107,8 +109,16 @@ export class SendtallyApi {
     );
   }
 
+  setGradeScales(scales: Partial<GradeScales>): Promise<{ gradeScales: GradeScales }> {
+    return body(this.client.v1.preferences["grade-scales"].$put({ json: scales }));
+  }
+
   climbs(): Promise<{ climbs: ClimbSummary[] }> {
     return body(this.client.v1.climbs.$get());
+  }
+
+  saveProject(project: ProjectInput): Promise<{ slug: string }> {
+    return body(this.client.v1.projects.$post({ json: project }));
   }
 
   unmarkProject(slug: string): Promise<{ deleted: boolean }> {

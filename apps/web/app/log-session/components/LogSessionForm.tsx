@@ -17,6 +17,7 @@ import {
   type LogSessionDraft,
 } from "@sendtally/features/log-session";
 import { SESSION_NOTE_MAX, useTagVocabulary } from "@sendtally/features/sessions";
+import { useGradeScalePrefs } from "@sendtally/features/settings";
 import { TagPicker } from "../../components/TagPicker";
 import { useIsNarrow } from "../../lib/useIsNarrow";
 import { ClimbCard } from "./ClimbCard";
@@ -129,6 +130,17 @@ export function LogSessionForm({
   const [error, setError] = React.useState<string | null>(null);
   const nextKey = React.useRef(draft.climbs.length + 1);
   const { suggestionsFor } = useTagVocabulary(api);
+  const prefs = useGradeScalePrefs(api);
+
+  // The preference query resolves after the first render, so a new draft adopts
+  // the user's scale once. An edit keeps the scale the session was logged in,
+  // and touching the scale picker stops the adoption.
+  const adopted = React.useRef(editing !== undefined);
+  React.useEffect(() => {
+    if (adopted.current || !prefs.ready) return;
+    adopted.current = true;
+    setScale(prefs.scales.boulder);
+  }, [prefs.ready, prefs.scales.boulder]);
   const vocabulary = useClimbVocabulary(api);
   const narrow = useIsNarrow();
   const [editingKey, setEditingKey] = React.useState<string | null>(null);
@@ -159,7 +171,11 @@ export function LogSessionForm({
               ...c,
               name,
               project: undefined,
-              ...(known === undefined ? {} : { grade: climbDraftGrade(known, c.scale) }),
+              // A project added from the projects page has no grade yet, so the
+              // one the user already picked in the form stands.
+              ...(known === undefined || climbDraftGrade(known, c.scale) === ""
+                ? {}
+                : { grade: climbDraftGrade(known, c.scale) }),
             }
       ),
     }));
@@ -171,7 +187,14 @@ export function LogSessionForm({
       climbs: d.climbs.map((c) =>
         c.key !== key
           ? c
-          : { ...c, name: known.name, grade: climbDraftGrade(known, c.scale), project: undefined }
+          : {
+              ...c,
+              name: known.name,
+              project: undefined,
+              ...(climbDraftGrade(known, c.scale) === ""
+                ? {}
+                : { grade: climbDraftGrade(known, c.scale) }),
+            }
       ),
     }));
   }
@@ -351,7 +374,10 @@ export function LogSessionForm({
                 <button
                   key={option.value}
                   type="button"
-                  onClick={() => setScale(option.value)}
+                  onClick={() => {
+                    adopted.current = true;
+                    setScale(option.value);
+                  }}
                   aria-pressed={scale === option.value}
                   style={{
                     ...chipStyle(scale === option.value),

@@ -1,13 +1,19 @@
 import type { ClimbSummary } from "@sendtally/api-client";
-import { formatGrade, type Grade, type GradeScale } from "@sendtally/core";
-import { convertGrade } from "../log-session/transforms";
+import { disciplineOf, formatGrade, type Grade, type GradeScale } from "@sendtally/core";
+import { convertGrade, gradeOptions } from "../log-session/transforms";
 
 export const MAX_CLIMB_SUGGESTIONS = 4;
 
 export type ProjectStatus = "open" | "sent";
 
+// The name is a climb's identity across sessions: the autocomplete, projects
+// and the flash rate all match on it the same way.
+export function climbKey(name: string): string {
+  return name.trim().toLowerCase();
+}
+
 export function sameClimbName(a: string, b: string): boolean {
-  return a.trim().toLowerCase() === b.trim().toLowerCase();
+  return climbKey(a) === climbKey(b);
 }
 
 export function findClimb(climbs: ClimbSummary[], name: string): ClimbSummary | undefined {
@@ -22,13 +28,40 @@ export function matchClimbs(climbs: ClimbSummary[], query: string): ClimbSummary
     .slice(0, MAX_CLIMB_SUGGESTIONS);
 }
 
+// A project added from the projects page has no grade until the climb turns up
+// in a logged session, so the draft keeps whatever the user already picked.
 export function climbDraftGrade(climb: ClimbSummary, scale: GradeScale): string {
-  const stored: Grade = climb.grade;
+  const stored: Grade | null = climb.grade;
+  if (stored === null) return "";
   return convertGrade(formatGrade(stored), stored.scale, scale);
 }
 
+// A grade rail is long enough that opening it at the bottom of the ladder hides
+// every grade the user would pick. This is the middle of what they have logged
+// in that discipline, and a third of the way up the ladder before they log
+// anything at all.
+export function typicalGradeIndex(climbs: ClimbSummary[], scale: GradeScale): number {
+  const ladder = gradeOptions(scale);
+  const discipline = disciplineOf(scale);
+  const indices = climbs
+    .filter((c) => c.grade !== null && c.discipline === discipline)
+    .map((c) => ladder.indexOf(climbDraftGrade(c, scale)))
+    .filter((i) => i >= 0);
+  if (indices.length === 0) return Math.floor(ladder.length / 3);
+  return Math.round(indices.reduce((a, b) => a + b, 0) / indices.length);
+}
+
+// Names of climbs the user had already logged before a session started - what
+// separates a flash from a redpoint on that session's climb list.
+export function climbsWorkedBefore(catalogue: ClimbSummary[], startAt: string): Set<string> {
+  const start = Date.parse(startAt);
+  return new Set(
+    catalogue.filter((c) => Date.parse(c.first_at) < start).map((c) => climbKey(c.name))
+  );
+}
+
 export function climbGradeLabel(climb: ClimbSummary): string {
-  return formatGrade(climb.grade);
+  return climb.grade === null ? "-" : formatGrade(climb.grade);
 }
 
 export function projectStatus(climb: ClimbSummary): ProjectStatus {

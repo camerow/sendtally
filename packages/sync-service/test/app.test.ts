@@ -55,7 +55,7 @@ describe("app", () => {
     const preview = "https://a1b2c3d4-sendtally-web-staging.workers.test";
     expect(await preflight("https://sendtally.test")).toBe("https://sendtally.test");
     expect(await preflight(preview)).toBe(preview);
-    expect(await preflight("https://evil.example")).toBe("https://sendtally.test");
+    expect(await preflight("https://evil.example")).toBeNull();
   });
 
   it("rejects /v1 routes without a verified user", async () => {
@@ -224,7 +224,10 @@ describe("app", () => {
         slug: "cave-problem",
         name: "Cave Problem",
         grade: { scale: "v", value: 4 },
+        discipline: "boulder",
         project: true,
+        beta: null,
+        beta_updated_at: null,
         sessions: 2,
         attempts: 7,
         sends: 1,
@@ -235,7 +238,10 @@ describe("app", () => {
         slug: "warm-up",
         name: "Warm up",
         grade: { scale: "v", value: 1 },
+        discipline: "boulder",
         project: false,
+        beta: null,
+        beta_updated_at: null,
         sessions: 1,
         attempts: 1,
         sends: 1,
@@ -276,6 +282,112 @@ describe("app", () => {
       env
     );
     expect(gone.status).toBe(404);
+  });
+
+  it("adds a project with no grade and edits its beta", async () => {
+    const headers = { "x-test-user": "user_addproject", "Content-Type": "application/json" };
+    const created = await testApp().request(
+      "/v1/projects",
+      {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          name: "  The Prow  ",
+          discipline: "route",
+          beta: " Rest at the jug ",
+        }),
+      },
+      env
+    );
+    expect(created.status).toBe(200);
+    expect(await created.json()).toEqual({ slug: "the-prow" });
+
+    const listed = await testApp().request("/v1/climbs", { headers }, env);
+    const { climbs } = (await listed.json()) as { climbs: Array<Record<string, unknown>> };
+    expect(climbs).toHaveLength(1);
+    expect(climbs[0]).toMatchObject({
+      slug: "the-prow",
+      name: "The Prow",
+      grade: null,
+      discipline: "route",
+      project: true,
+      beta: "Rest at the jug",
+      sessions: 0,
+      attempts: 0,
+    });
+
+    const edited = await testApp().request(
+      "/v1/projects",
+      { method: "POST", headers, body: JSON.stringify({ name: "The Prow", beta: "Skip the jug" }) },
+      env
+    );
+    expect(edited.status).toBe(200);
+    const relisted = await testApp().request("/v1/climbs", { headers }, env);
+    const after = (await relisted.json()) as { climbs: Array<Record<string, unknown>> };
+    expect(after.climbs[0]).toMatchObject({ discipline: "route", beta: "Skip the jug" });
+
+    const rejected = await testApp().request(
+      "/v1/projects",
+      { method: "POST", headers, body: JSON.stringify({ name: "   " }) },
+      env
+    );
+    expect(rejected.status).toBe(400);
+  });
+
+  it("defaults the grade scales and remembers a change", async () => {
+    const headers = { "x-test-user": "user_scales", "Content-Type": "application/json" };
+
+    const before = await testApp().request("/v1/status", { headers }, env);
+    expect(await before.json()).toMatchObject({ gradeScales: { boulder: "v", route: "yds" } });
+
+    const saved = await testApp().request(
+      "/v1/preferences/grade-scales",
+      { method: "PUT", headers, body: JSON.stringify({ boulder: "font", route: "french" }) },
+      env
+    );
+    expect(saved.status).toBe(200);
+    expect(await saved.json()).toEqual({ gradeScales: { boulder: "font", route: "french" } });
+
+    const after = await testApp().request("/v1/status", { headers }, env);
+    expect(await after.json()).toMatchObject({ gradeScales: { boulder: "font", route: "french" } });
+
+    // One scale at a time leaves the other alone.
+    const one = await testApp().request(
+      "/v1/preferences/grade-scales",
+      { method: "PUT", headers, body: JSON.stringify({ boulder: "v" }) },
+      env
+    );
+    expect(await one.json()).toEqual({ gradeScales: { boulder: "v", route: "french" } });
+
+    const rejected = await testApp().request(
+      "/v1/preferences/grade-scales",
+      { method: "PUT", headers, body: JSON.stringify({ boulder: "yds" }) },
+      env
+    );
+    expect(rejected.status).toBe(400);
+  });
+
+  it("keeps the grade a project was added with", async () => {
+    const headers = { "x-test-user": "user_gradedproject", "Content-Type": "application/json" };
+    const created = await testApp().request(
+      "/v1/projects",
+      {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ name: "Moonraker", grade: { scale: "v", value: 7 } }),
+      },
+      env
+    );
+    expect(created.status).toBe(200);
+
+    const listed = await testApp().request("/v1/climbs", { headers }, env);
+    const { climbs } = (await listed.json()) as { climbs: Array<Record<string, unknown>> };
+    expect(climbs[0]).toMatchObject({
+      slug: "moonraker",
+      grade: { scale: "v", value: 7 },
+      discipline: "boulder",
+      project: true,
+    });
   });
 
   const postSession = (userId: string, body: unknown) =>

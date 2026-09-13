@@ -9,15 +9,16 @@ import {
   emptyDraft,
   newClimb,
   toLogSessionInput,
+  withClimbScale,
   withTag,
   withoutTag,
   type ClimbDraft,
   type LogSessionDraft,
 } from "@sendtally/features/log-session";
 import { SESSION_NOTE_MAX, useTagVocabulary } from "@sendtally/features/sessions";
+import { useGradeScalePrefs } from "@sendtally/features/settings";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { useApi } from "../../lib/api";
-import { useGradePrefs } from "../../lib/gradePrefs";
 import { TagPicker } from "../sessions/TagPicker";
 import { ClimbEditorSheet } from "./ClimbEditorSheet";
 import { ClimbLedgerRow } from "./ClimbLedgerRow";
@@ -96,13 +97,26 @@ export function LogSessionForm({
   editing?: { fingerprint: string; draft: LogSessionDraft };
 }): React.ReactElement {
   const api = useApi();
-  const gradePrefs = useGradePrefs();
+  const { scales: gradePrefs, ready: prefsReady } = useGradeScalePrefs(api);
   const [draft, setDraft] = React.useState<LogSessionDraft>(
     () => editing?.draft ?? emptyDraft(new Date(), gradePrefs)
   );
   const [saving, setSaving] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const nextKey = React.useRef(draft.climbs.length + 1);
+
+  // The preference query resolves after the first render, so a new draft adopts
+  // the user's scale once. An edit keeps the scale the session was logged in.
+  const adopted = React.useRef(editing !== undefined);
+  React.useEffect(() => {
+    if (adopted.current || !prefsReady) return;
+    adopted.current = true;
+    setDraft((d) => ({
+      ...d,
+      climbs: d.climbs.map((c) => withClimbScale(c, gradePrefs.boulder)),
+    }));
+  }, [prefsReady, gradePrefs.boulder]);
+
   const { suggestionsFor } = useTagVocabulary(api);
   const vocabulary = useClimbVocabulary(api);
   const [editingKey, setEditingKey] = React.useState<string | null>(null);
@@ -119,7 +133,11 @@ export function LogSessionForm({
       ...c,
       name,
       project: undefined,
-      ...(known === undefined ? {} : { grade: climbDraftGrade(known, c.scale) }),
+      // A project added from the projects page has no grade yet, so the one
+      // the user already picked in the form stands.
+      ...(known === undefined || climbDraftGrade(known, c.scale) === ""
+        ? {}
+        : { grade: climbDraftGrade(known, c.scale) }),
     }));
   }
 
@@ -127,8 +145,8 @@ export function LogSessionForm({
     updateClimb(key, (c) => ({
       ...c,
       name: known.name,
-      grade: climbDraftGrade(known, c.scale),
       project: undefined,
+      ...(climbDraftGrade(known, c.scale) === "" ? {} : { grade: climbDraftGrade(known, c.scale) }),
     }));
   }
 

@@ -1,9 +1,10 @@
 import { describe, expect, it } from "vitest";
 import type { ConnectionStatus } from "@sendtally/api-client";
-import { deleteConfirmationMatches, settingsVM } from "./transforms";
+import { DEFAULT_GRADE_SCALES, deleteConfirmationMatches, settingsVM } from "./transforms";
 
 function status(overrides: Partial<ConnectionStatus> = {}): ConnectionStatus {
   return {
+    gradeScales: DEFAULT_GRADE_SCALES,
     strava: null,
     ...overrides,
   };
@@ -12,6 +13,7 @@ function status(overrides: Partial<ConnectionStatus> = {}): ConnectionStatus {
 describe("settingsVM", () => {
   it("reports a disconnected state while loading or without Strava", () => {
     expect(settingsVM(null)).toEqual({
+      gradeScales: DEFAULT_GRADE_SCALES,
       stravaConnected: false,
       stravaActive: false,
       stravaStatusLabel: "NOT CONNECTED",

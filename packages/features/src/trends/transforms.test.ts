@@ -36,7 +36,7 @@ function session(
     tags,
     climbs: climbs.map((c, i) => ({
       time: startIso,
-      name: `c${i}`,
+      name: `${startIso}-c${i}`,
       kind: "send",
       tries: 1,
       angle: 40,
@@ -68,6 +68,37 @@ describe("trendsVM", () => {
     expect(aug?.valueLabel).toBe("67%");
     const may = flash.bars[flash.bars.length - 4];
     expect(may?.valueLabel).toBe("100%");
+  });
+
+  it("does not flash a climb that was worked in an earlier session", () => {
+    const worked: SessionWithClimbs[] = [
+      session("2026-05-10T18:00:00.000Z", [
+        { vGrade: 7, name: "Sandbagger", kind: "attempt", tries: 9 },
+      ]),
+      session("2026-08-01T18:00:00.000Z", [
+        { vGrade: 7, name: "Sandbagger", kind: "send", tries: 1 },
+        { vGrade: 5, name: "Low Ceiling", kind: "send", tries: 1 },
+      ]),
+    ];
+    const flash = trendsVM(worked, "1y", NOW).details.flash;
+    expect(flash.bars[flash.bars.length - 1]?.valueLabel).toBe("50%");
+  });
+
+  it("does not flash a climb sent on the second go within one session", () => {
+    const twice: SessionWithClimbs[] = [
+      session("2026-08-01T18:00:00.000Z", [
+        {
+          vGrade: 6,
+          name: "Blue Crux",
+          kind: "attempt",
+          tries: 4,
+          time: "2026-08-01T18:00:00.000Z",
+        },
+        { vGrade: 6, name: "Blue Crux", kind: "send", tries: 1, time: "2026-08-01T19:00:00.000Z" },
+      ]),
+    ];
+    const flash = trendsVM(twice, "1y", NOW).details.flash;
+    expect(flash.bars[flash.bars.length - 1]?.valueLabel).toBe("0%");
   });
 
   it("tracks hardest send by month and marks improvements", () => {

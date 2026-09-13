@@ -267,7 +267,7 @@ Avoid comments in code; make code short, composable, and obviously named.
 
 ### Worktrees
 
-Use **worktrunk** (`wt`) for all worktree creation and lifecycle (`wt switch --create` / `merge` / `remove`).
+Use **worktrunk** (`wt`) for all worktree creation and lifecycle (`wt switch --create` / `wt merge` / `wt remove`).
 Project configuration lives in `.config/wt.toml`; personal settings belong in `~/.config/worktrunk/config.toml`.
 Never hand-roll `git worktree add`.
 
@@ -275,7 +275,12 @@ A new worktree gets the gitignored local secrets and an install from the `pre-st
 `.worktreeinclude` at the repo root is the allowlist of files that travel - currently `.env` and the two `.dev.vars`.
 It is an allowlist rather than "copy everything ignored" because the latter also duplicates `infra/terraform` state, which is local and single-operator.
 Add a file there when a new gitignored thing turns out to be needed per worktree; without the Clerk keys the web app starts in keyless mode and every signed-in request fails a JWKS key-id check against a throwaway instance.
-The hook needs a one-time approval per machine, which `wt` prompts for on first use.
+
+`post-remove` kills the dev servers a removed worktree left behind (`infra/scripts/kill-worktree-servers.sh`).
+Without it an orphaned wrangler or vite keeps port 8787 or 5173, and the next worktree to run `pnpm dev` fails to bind for reasons that point nowhere.
+
+The hooks need a one-time approval per machine, which `wt` prompts for on first use.
+Run `wt config approvals add` and review what it lists - an agent must never approve them for you.
 
 ---
 

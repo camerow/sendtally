@@ -1,5 +1,6 @@
 import React from "react";
 import type { SendtallyApi, SessionDetail, SessionTag } from "@sendtally/api-client";
+import { climbsWorkedBefore } from "../climbs/transforms";
 import { useQuery, type QueryState } from "../lib/useQuery";
 import { climbVMs, filterAndSortClimbs, postingStatus, sessionDetailVM } from "./transforms";
 import type { ClimbFilter, ClimbSort, ClimbVM, PostingStatus, SessionDetailVM } from "./types";
@@ -25,7 +26,11 @@ export type SessionDetailFeature = {
   reload: () => void;
 };
 
-type Loaded = { session: SessionDetail; posting: PostingStatus | null };
+type Loaded = {
+  session: SessionDetail;
+  posting: PostingStatus | null;
+  workedBefore: ReadonlySet<string>;
+};
 
 export function useSessionDetail(api: SendtallyApi, fingerprint: string): SessionDetailFeature {
   const [filter, setFilter] = React.useState<ClimbFilter>("all");
@@ -36,22 +41,32 @@ export function useSessionDetail(api: SendtallyApi, fingerprint: string): Sessio
   const load = React.useCallback(async (): Promise<Loaded> => {
     // The status call decides whether the footer can offer a post action, so a
     // failure there degrades to "no action" rather than failing the whole screen.
-    const [{ session }, status] = await Promise.all([
+    // The catalogue tells a one-try send apart from a redpoint; without it the
+    // screen falls back to treating every first try as a flash.
+    const [{ session }, status, catalogue] = await Promise.all([
       api.session(fingerprint),
       api.status().catch(() => null),
+      api.climbs().catch(() => null),
     ]);
-    return { session, posting: postingStatus(status) };
+    return {
+      session,
+      posting: postingStatus(status),
+      workedBefore:
+        catalogue === null
+          ? new Set<string>()
+          : climbsWorkedBefore(catalogue.climbs, session.start_at),
+    };
   }, [api, fingerprint]);
 
   const { state: raw, reload } = useQuery(load);
 
   const state = React.useMemo((): SessionDetailFeature["state"] => {
     if (raw.status !== "ready") return raw;
-    const all = climbVMs(raw.data.session.climbs);
+    const all = climbVMs(raw.data.session.climbs, raw.data.workedBefore);
     return {
       status: "ready",
       data: {
-        vm: sessionDetailVM(raw.data.session, raw.data.posting),
+        vm: sessionDetailVM(raw.data.session, raw.data.posting, raw.data.workedBefore),
         climbs: filterAndSortClimbs(all, filter, sort),
         tags: raw.data.session.tags,
         notes: raw.data.session.notes,

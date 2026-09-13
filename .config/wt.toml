@@ -1,5 +1,7 @@
 # Project configuration for worktrunk (https://worktrunk.dev).
 # Shared with the repo; personal settings belong in ~/.config/worktrunk/config.toml.
+# Commands here need `wt config approvals add` once per machine before Worktrunk
+# will run them.
 
 # Make a new worktree runnable before anything tries to start a dev server.
 # pre-start blocks and runs in order, so the secrets land before the install,
@@ -14,3 +16,9 @@ pre-start = [
   "wt step copy-ignored --require-include",
   "pnpm install --frozen-lockfile",
 ]
+
+# A dev server outlives the worktree that started it: wrangler and vite keep
+# their ports, and the next worktree to run `pnpm dev` cannot bind. The worktree
+# is gone by the time this runs, so the script matches on the path the processes
+# still carry in their command line.
+post-remove = "{{ primary_worktree_path }}/infra/scripts/kill-worktree-servers.sh {{ worktree_path }}"

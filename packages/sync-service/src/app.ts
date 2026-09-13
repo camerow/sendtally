@@ -7,7 +7,7 @@ import { z } from "zod";
 import { auth } from "./auth";
 import type { Env } from "./bindings";
 import { purgeAccount } from "./lib/account";
-import { applyProjectFlags, climbCatalogue } from "./lib/climbs";
+import { applyProjectFlags, climbCatalogue, climbSlug, projectBody } from "./lib/climbs";
 import { decryptSecret, encryptSecret } from "./lib/crypto";
 import { mirrorStoreEntitlements, resolveEntitlements } from "./lib/entitlements";
 import {
@@ -18,6 +18,7 @@ import {
   parseClimbs,
   sessionNotesBody,
 } from "./lib/manual";
+import { allowedOrigin } from "./lib/origins";
 import { captureUserEvent, getPostHog, identifyUser } from "./lib/posthog";
 import { syncSessionToStrava } from "./lib/posting";
 import * as repo from "./lib/repo";
@@ -116,6 +117,11 @@ const sessionResponse = async (env: Env, userId: string, fingerprint: string) =>
 // rejected request does not depend on which endpoint rejected it.
 const invalidBody: Parameters<typeof zValidator>[2] = (result, c) =>
   result.success ? undefined : c.json({ error: "invalid request body" }, 400);
+
+const gradeScalesBody = z.object({
+  boulder: z.enum(["v", "font"]).optional(),
+  route: z.enum(["yds", "french"]).optional(),
+});
 
 const stravaPostingBody = z.object({
   enabled: z.boolean(),
@@ -244,11 +250,7 @@ const app = new Hono<AppEnv>()
 
   .use("/v1/*", (c, next) =>
     cors({
-      origin: (origin) =>
-        origin === c.env.WEB_APP_URL ||
-        (c.env.PREVIEW_ORIGIN_SUFFIX !== undefined && origin.endsWith(c.env.PREVIEW_ORIGIN_SUFFIX))
-          ? origin
-          : c.env.WEB_APP_URL,
+      origin: (origin) => allowedOrigin(origin, c.env.WEB_APP_URL, c.env.PREVIEW_ORIGIN_SUFFIX),
       allowHeaders: [
         "Authorization",
         "Content-Type",
@@ -330,6 +332,26 @@ const app = new Hono<AppEnv>()
       repo.listProjects(c.env.DB, userId),
     ]);
     return c.json({ climbs: climbCatalogue(rows, projects) });
+  })
+
+  // Marking a project from the projects page rather than the log form: the
+  // name is the identity, so re-posting an existing one edits its beta.
+  .post("/v1/projects", zValidator("json", projectBody, invalidBody), async (c) => {
+    const form = c.req.valid("json");
+    const name = form.name.trim();
+    const slug = climbSlug(name);
+    if (slug === "") return c.json({ error: "invalid request body" }, 400);
+    const userId = c.get("userId");
+    await repo.ensureUser(c.env.DB, userId);
+    await repo.upsertProject(c.env.DB, userId, {
+      slug,
+      name,
+      ...(form.discipline === undefined ? {} : { discipline: form.discipline }),
+      ...(form.grade === undefined ? {} : { grade: form.grade }),
+      ...(form.beta === undefined ? {} : { beta: form.beta }),
+    });
+    await captureEvent(c, "project_marked", { source: "projects" });
+    return c.json({ slug });
   })
 
   .delete("/v1/projects/:slug", async (c) => {
@@ -458,8 +480,14 @@ const app = new Hono<AppEnv>()
   })
 
   .get("/v1/status", async (c) => {
-    const strava = await repo.getStravaConnection(c.env.DB, c.get("userId"));
+    const userId = c.get("userId");
+    const [strava, user] = await Promise.all([
+      repo.getStravaConnection(c.env.DB, userId),
+      repo.getUser(c.env.DB, userId),
+    ]);
+    const scales = repo.gradeScalesOf(user);
     return c.json({
+      gradeScales: { boulder: scales.boulder, route: scales.route },
       strava:
         strava === null
           ? null
@@ -485,6 +513,19 @@ const app = new Hono<AppEnv>()
     await captureEvent(c, "entitlements_refreshed", {});
     return c.json(await resolveEntitlements(c.env, user));
   })
+
+  .put(
+    "/v1/preferences/grade-scales",
+    zValidator("json", gradeScalesBody, invalidBody),
+    async (c) => {
+      const userId = c.get("userId");
+      await repo.ensureUser(c.env.DB, userId);
+      await repo.setGradeScales(c.env.DB, userId, c.req.valid("json"));
+      const scales = repo.gradeScalesOf(await repo.getUser(c.env.DB, userId));
+      await captureEvent(c, "grade_scales_updated", scales);
+      return c.json({ gradeScales: scales });
+    }
+  )
 
   .put(
     "/v1/connections/strava/posting",
@@ -536,6 +577,8 @@ app.onError(async (error, c) => {
 });
 
 export type AppType = typeof app;
+
+export type { ProjectInput } from "./lib/climbs";
 
 export type { LogClimbInput, LogSessionInput } from "./lib/manual";
 
