@@ -19,7 +19,10 @@ import { sameTagName } from "../sessions/tags";
 import {
   DEFAULT_GRADE_PREFS,
   GRADE_SCALE_OPTIONS,
+  sendStylesFor,
   type ClimbDraft,
+  type ClimbOutcome,
+  type ClimbStyle,
   type Discipline,
   type GradePrefs,
   type GradeScale,
@@ -107,7 +110,32 @@ export function emptyDraft(now: Date, prefs: GradePrefs = DEFAULT_GRADE_PREFS): 
 }
 
 export function newClimb(key: string, scale: GradeScale): ClimbDraft {
-  return { key, scale, grade: DEFAULT_GRADE[scale], name: "", kind: "send", tries: 1 };
+  return {
+    key,
+    scale,
+    grade: DEFAULT_GRADE[scale],
+    name: "",
+    kind: "send",
+    style: "redpoint",
+    tries: 1,
+  };
+}
+
+export function climbOutcome(climb: ClimbDraft): ClimbOutcome {
+  return climb.kind === "attempt" ? { kind: "attempt" } : { kind: "send", style: climb.style };
+}
+
+/** A flash or an onsight is one try by definition, so picking one settles the count. */
+export function withClimbOutcome(climb: ClimbDraft, outcome: ClimbOutcome): ClimbDraft {
+  if (outcome.kind === "attempt") return { ...climb, kind: "attempt" };
+  const tries = outcome.style === "redpoint" ? climb.tries : 1;
+  return { ...climb, kind: "send", style: outcome.style, tries };
+}
+
+/** Onsight is a route idea; a boulder carrying one from an earlier edit falls back to sent. */
+export function withClimbScaleStyle(climb: ClimbDraft): ClimbDraft {
+  const allowed = sendStylesFor(disciplineOf(climb.scale));
+  return allowed.includes(climb.style) ? climb : { ...climb, style: "redpoint" };
 }
 
 export function withTag(draft: LogSessionDraft, name: string): LogSessionDraft {
@@ -122,7 +150,11 @@ export function withoutTag(draft: LogSessionDraft, name: string): LogSessionDraf
 
 export function withClimbScale(climb: ClimbDraft, scale: GradeScale): ClimbDraft {
   if (climb.scale === scale) return climb;
-  return { ...climb, scale, grade: convertGrade(climb.grade, climb.scale, scale) };
+  return withClimbScaleStyle({
+    ...climb,
+    scale,
+    grade: convertGrade(climb.grade, climb.scale, scale),
+  });
 }
 
 export function withClimbDiscipline(
@@ -213,6 +245,7 @@ export function toLogSessionInput(draft: LogSessionDraft): LogSessionInput {
     ...(c.name.trim() === "" ? {} : { name: c.name.trim() }),
     grade: draftGrade(c.grade, c.scale) ?? fallbackGrade(c.grade, c.scale),
     kind: c.kind,
+    ...(c.kind === "send" ? { style: c.style } : {}),
     tries: c.tries,
     ...(c.project === undefined ? {} : { project: c.project }),
   }));
@@ -248,6 +281,12 @@ function climbGrade(climb: SessionClimb, scale: GradeScale): string {
   return convertGrade(formatGrade(stored), stored.scale, scale);
 }
 
+/** Rows logged before send styles existed: a one-try send was a flash, whatever it was called. */
+function storedStyle(climb: SessionClimb): ClimbStyle {
+  if (climb.style !== undefined) return climb.style;
+  return climb.kind === "send" && climb.tries <= 1 ? "flash" : "redpoint";
+}
+
 export function draftFromSession(session: SessionDetail): LogSessionDraft {
   const climbs = [...session.climbs].sort((a, b) => Date.parse(a.time) - Date.parse(b.time));
   return {
@@ -267,6 +306,7 @@ export function draftFromSession(session: SessionDetail): LogSessionDraft {
         grade: climbGrade(c, scale),
         name: c.name,
         kind: c.kind,
+        style: storedStyle(c),
         tries: c.tries,
       };
     }),

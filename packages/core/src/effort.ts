@@ -8,12 +8,20 @@ import {
 } from "./grades";
 export type ClimbKind = "send" | "attempt";
 
+/**
+ * How a send happened. Display only - effort scores a send by grade and tries,
+ * the same as it always has, so adding a style never moves an RPE.
+ * Onsight is a route idea; boulders read "redpoint" as plain "sent".
+ */
+export type ClimbStyle = "redpoint" | "flash" | "onsight";
+
 export type Climb = {
   time: Date;
   vGrade: number;
   name: string;
   kind: ClimbKind;
   tries: number;
+  style?: ClimbStyle;
   angle?: number;
   grade?: Grade;
 };
@@ -253,6 +261,7 @@ function climbLine(c: Climb): string {
   const mark = c.kind === "attempt" ? "✗" : "✓";
   let line = `${mark} ${formatGrade(climbGrade(c))}`;
   if (c.name !== "") line += ` ${c.name}`;
-  if (c.tries > 1) line += ` (${c.tries} tries)`;
+  if (c.kind === "send" && (c.style === "flash" || c.style === "onsight")) line += ` (${c.style})`;
+  else if (c.tries > 1) line += ` (${c.tries} tries)`;
   return line;
 }

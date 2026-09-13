@@ -17,23 +17,11 @@ import { SessionTags } from "../../features/sessions/SessionTags";
 import { useApi } from "../../lib/api";
 import { press } from "../../lib/press";
 
-const RESULT_BADGES: Record<
-  ClimbVM["result"],
-  { label: string; bg: string; border: string; color: string }
-> = {
-  flash: { label: "FLASH", bg: colors.gold, border: colors.gold, color: colors.gunmetal },
-  sent: {
-    label: "SENT",
-    bg: "transparent",
-    border: "rgba(64,63,76,0.25)",
-    color: colors.textSecondary,
-  },
-  project: {
-    label: "PROJECT",
-    bg: "transparent",
-    border: "rgba(64,63,76,0.15)",
-    color: colors.textFaint,
-  },
+const RESULT_BADGES: Record<ClimbVM["result"], { bg: string; border: string; color: string }> = {
+  onsight: { bg: colors.petalInk, border: colors.petalInk, color: colors.white },
+  flash: { bg: colors.gold, border: colors.gold, color: colors.gunmetal },
+  sent: { bg: "transparent", border: "rgba(64,63,76,0.25)", color: colors.textSecondary },
+  project: { bg: "transparent", border: "rgba(64,63,76,0.15)", color: colors.textFaint },
 };
 
 function HeaderAction({
@@ -372,7 +360,7 @@ export default function SessionDetailScreen(): React.ReactElement {
                           color: badge.color,
                         }}
                       >
-                        {badge.label}
+                        {c.resultLabel}
                       </Text>
                     </View>
                   </View>

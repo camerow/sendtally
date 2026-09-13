@@ -1,10 +1,19 @@
 import React from "react";
 import type { ClimbSummary } from "@sendtally/api-client";
-import { gradeOptions, type ClimbDraft, type GradeScale } from "@sendtally/features/log-session";
+import {
+  climbOutcome,
+  disciplineOf,
+  gradeOptions,
+  withClimbOutcome,
+  type ClimbDraft,
+  type Discipline,
+  type GradeScale,
+} from "@sendtally/features/log-session";
 import { ClimbNameField } from "./ClimbNameField";
+import { DisciplineToggle } from "./DisciplineToggle";
 import { Glyph } from "./Glyph";
+import { OutcomeControl } from "./OutcomeControl";
 import { ProjectToggle } from "./ProjectToggle";
-import { ResultControl } from "./ResultControl";
 import { TriesStepper } from "./TriesStepper";
 import { CROSS, columnHead, inputStyle, stepperButton } from "./styles";
 
@@ -15,6 +24,7 @@ export type ClimbCardProps = {
   project: boolean;
   suggestions: ClimbSummary[];
   onChange: (climb: ClimbDraft) => void;
+  onChangeDiscipline: (discipline: Discipline) => void;
   onChangeName: (name: string) => void;
   onPick: (climb: ClimbSummary) => void;
   onToggleProject: () => void;
@@ -28,6 +38,7 @@ export function ClimbCard({
   project,
   suggestions,
   onChange,
+  onChangeDiscipline,
   onChangeName,
   onPick,
   onToggleProject,
@@ -60,7 +71,11 @@ export function ClimbCard({
           onChange={onChangeName}
           onPick={onPick}
         />
-        <TriesStepper tries={climb.tries} onChange={(tries) => onChange({ ...climb, tries })} />
+        <TriesStepper
+          tries={climb.tries}
+          disabled={climb.kind === "send" && climb.style !== "redpoint"}
+          onChange={(tries) => onChange({ ...climb, tries })}
+        />
         <button
           type="button"
           aria-label="Remove climb"
@@ -79,9 +94,17 @@ export function ClimbCard({
         </button>
       </div>
       <div className="climb-card-result">
+        <span style={columnHead}>DISCIPLINE</span>
+        <DisciplineToggle value={disciplineOf(climb.scale)} onChange={onChangeDiscipline} />
+      </div>
+      <div className="climb-card-result">
         <span style={columnHead}>RESULT</span>
         <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
-          <ResultControl kind={climb.kind} onChange={(kind) => onChange({ ...climb, kind })} />
+          <OutcomeControl
+            discipline={disciplineOf(climb.scale)}
+            outcome={climbOutcome(climb)}
+            onChange={(outcome) => onChange(withClimbOutcome(climb, outcome))}
+          />
           <ProjectToggle
             project={project}
             named={climb.name.trim() !== ""}

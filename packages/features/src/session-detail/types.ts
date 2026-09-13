@@ -1,4 +1,4 @@
-export type ClimbResult = "flash" | "sent" | "project";
+export type ClimbResult = "onsight" | "flash" | "sent" | "project";
 
 export type ClimbVM = {
   n: number;
@@ -10,6 +10,8 @@ export type ClimbVM = {
   burns: number;
   restLabel: string;
   result: ClimbResult;
+  /** A send reads in its own discipline's words: boulders are SENT, routes REDPOINT. */
+  resultLabel: string;
 };
 
 export type StatVM = { label: string; value: string; accent: boolean };

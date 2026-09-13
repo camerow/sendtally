@@ -1,9 +1,18 @@
 import React from "react";
 import type { ClimbSummary } from "@sendtally/api-client";
-import { gradeOptions, type ClimbDraft, type GradeScale } from "@sendtally/features/log-session";
+import {
+  climbOutcome,
+  disciplineOf,
+  gradeOptions,
+  withClimbOutcome,
+  type ClimbDraft,
+  type Discipline,
+  type GradeScale,
+} from "@sendtally/features/log-session";
 import { ClimbNameField } from "./ClimbNameField";
+import { DisciplineToggle } from "./DisciplineToggle";
+import { OutcomeControl } from "./OutcomeControl";
 import { ProjectToggle } from "./ProjectToggle";
-import { ResultControl } from "./ResultControl";
 import { TriesStepper } from "./TriesStepper";
 import { chipStyle, monoLabel } from "./styles";
 
@@ -15,6 +24,7 @@ export type ClimbEditorSheetProps = {
   project: boolean;
   suggestions: ClimbSummary[];
   onChange: (climb: ClimbDraft) => void;
+  onChangeDiscipline: (discipline: Discipline) => void;
   onChangeName: (name: string) => void;
   onPick: (climb: ClimbSummary) => void;
   onToggleProject: () => void;
@@ -30,6 +40,7 @@ export function ClimbEditorSheet({
   project,
   suggestions,
   onChange,
+  onChangeDiscipline,
   onChangeName,
   onPick,
   onToggleProject,
@@ -98,11 +109,18 @@ export function ClimbEditorSheet({
             onPick={onPick}
           />
         </div>
+        <DisciplineToggle value={disciplineOf(climb.scale)} onChange={onChangeDiscipline} />
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <ResultControl kind={climb.kind} full onChange={(kind) => onChange({ ...climb, kind })} />
+          <OutcomeControl
+            discipline={disciplineOf(climb.scale)}
+            outcome={climbOutcome(climb)}
+            full
+            onChange={(outcome) => onChange(withClimbOutcome(climb, outcome))}
+          />
           <TriesStepper
             tries={climb.tries}
             size={40}
+            disabled={climb.kind === "send" && climb.style !== "redpoint"}
             onChange={(tries) => onChange({ ...climb, tries })}
           />
         </div>

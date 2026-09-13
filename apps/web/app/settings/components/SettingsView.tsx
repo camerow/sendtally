@@ -13,7 +13,9 @@ import {
   sectionLabel,
   underlineButton,
 } from "./styles";
+import { setGradePref, useGradePrefs } from "../../lib/gradePrefs";
 import { DeleteAccountSection } from "./DeleteAccountSection";
+import { GradeSection } from "./GradeSection";
 import { StravaPostingSection } from "./StravaPostingSection";
 
 export type SettingsViewProps = {
@@ -49,6 +51,8 @@ export function SettingsView({
   posting,
   onSignOut,
 }: SettingsViewProps): React.ReactElement {
+  const gradePrefs = useGradePrefs();
+
   return (
     <div style={{ maxWidth: 640, display: "flex", flexDirection: "column", gap: 14 }}>
       <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
@@ -104,6 +108,10 @@ export function SettingsView({
           </p>
         )}
         {vm.stravaConnected && vm.stravaActive && <StravaPostingSection posting={posting} />}
+      </Section>
+
+      <Section>
+        <GradeSection prefs={gradePrefs} onChange={setGradePref} />
       </Section>
 
       <Section>

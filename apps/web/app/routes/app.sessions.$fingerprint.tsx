@@ -41,27 +41,26 @@ const chipStyle = (active: boolean): React.CSSProperties => ({
   border: active ? "1px solid var(--bs-gold)" : "1px solid rgba(64,63,76,0.18)",
 });
 
-const RESULT_BADGES: Record<
-  ClimbVM["result"],
-  { label: string; bg: string; border: string; color: string }
-> = {
+const RESULT_BADGES: Record<ClimbVM["result"], { bg: string; border: string; color: string }> = {
+  onsight: {
+    bg: "var(--bs-petal-ink)",
+    border: "var(--bs-petal-ink)",
+    color: "var(--bs-white)",
+  },
   flash: {
-    label: "FLASH",
     bg: "var(--bs-gold)",
     border: "var(--bs-gold)",
     color: "var(--bs-gunmetal)",
   },
   sent: {
-    label: "SENT",
     bg: "transparent",
     border: "rgba(64,63,76,0.25)",
     color: "rgba(64,63,76,0.72)",
   },
   project: {
-    label: "PROJECT",
     bg: "transparent",
     border: "rgba(64,63,76,0.15)",
-    color: "rgba(64,63,76,0.5)",
+    color: "rgba(64,63,76,0.45)",
   },
 };
 
@@ -478,7 +477,7 @@ export default function SessionDetailRoute(): React.ReactElement {
                       color: badge.color,
                     }}
                   >
-                    {badge.label}
+                    {c.resultLabel}
                   </span>
                 </div>
               );

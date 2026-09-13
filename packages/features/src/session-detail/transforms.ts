@@ -27,7 +27,20 @@ export function gradeLabel(vGrade: number): string {
 
 function resultOf(c: SessionClimb): ClimbResult {
   if (c.kind === "attempt") return "project";
-  return c.tries <= 1 ? "flash" : "sent";
+  if (c.style === "onsight") return "onsight";
+  if (c.style === "flash") return "flash";
+  // Rows logged before send styles existed: a one-try send was a flash by any name.
+  return c.style === undefined && c.tries <= 1 ? "flash" : "sent";
+}
+
+function resultLabelOf(c: SessionClimb, result: ClimbResult): string {
+  if (result !== "sent") return result.toUpperCase();
+  return climbDiscipline(c) === "route" ? "REDPOINT" : "SENT";
+}
+
+/** Flash and onsight are both first-go sends; only the beta differs. */
+function firstGo(result: ClimbResult): boolean {
+  return result === "flash" || result === "onsight";
 }
 
 function restLabel(minutes: number | null): string {
@@ -54,6 +67,7 @@ export function climbVMs(climbs: SessionClimb[]): ClimbVM[] {
     const rest =
       prev === undefined ? null : Math.round((Date.parse(c.time) - Date.parse(prev.time)) / 60_000);
     const rank = climbRank(c);
+    const result = resultOf(c);
     return {
       n: i + 1,
       name: c.name !== "" ? c.name : "Unknown climb",
@@ -64,15 +78,16 @@ export function climbVMs(climbs: SessionClimb[]): ClimbVM[] {
       angleLabel: c.angle !== null ? `${c.angle}°` : "-",
       burns: c.tries,
       restLabel: restLabel(rest),
-      result: resultOf(c),
+      result,
+      resultLabel: resultLabelOf(c, result),
     };
   });
 }
 
 const FILTERS: Record<ClimbFilter, (c: ClimbVM) => boolean> = {
   all: () => true,
-  sent: (c) => c.result === "flash" || c.result === "sent",
-  flash: (c) => c.result === "flash",
+  sent: (c) => c.result !== "project",
+  flash: (c) => firstGo(c.result),
   project: (c) => c.result === "project",
 };
 
@@ -165,7 +180,7 @@ export function sessionDetailVM(
   const climbs = climbVMs(session.climbs);
   const start = new Date(session.start_at);
   const sends = climbs.filter((c) => c.result !== "project");
-  const flashes = climbs.filter((c) => c.result === "flash");
+  const flashes = climbs.filter((c) => firstGo(c.result));
   const discipline = dominantDiscipline(session.climbs);
   const format = gradeFormatterFor(session.climbs, discipline);
   const inDiscipline = session.climbs.filter((c) => climbDiscipline(c) === discipline);

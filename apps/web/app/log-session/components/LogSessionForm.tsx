@@ -3,24 +3,24 @@ import { useNavigate } from "react-router";
 import type { ClimbSummary, SendtallyApi } from "@sendtally/api-client";
 import { climbDraftGrade, findClimb, useClimbVocabulary } from "@sendtally/features/climbs";
 import {
-  GRADE_SCALE_OPTIONS,
   draftProblem,
   draftSummary,
   emptyDraft,
   newClimb,
   toLogSessionInput,
   useDraftAutosave,
-  withClimbScale,
+  withClimbDiscipline,
   withStartTime,
   withTag,
   withoutTag,
   type ClimbDraft,
-  type GradeScale,
+  type Discipline,
   type LogSessionDraft,
 } from "@sendtally/features/log-session";
 import { SESSION_NOTE_MAX, useTagVocabulary } from "@sendtally/features/sessions";
 import { TagPicker } from "../../components/TagPicker";
 import { useIsNarrow } from "../../lib/useIsNarrow";
+import { useGradePrefs } from "../../lib/gradePrefs";
 import { sessionDraftStorage } from "../../lib/sessionDraftStorage";
 import { DraftBanner } from "./DraftBanner";
 import { ClimbCard } from "./ClimbCard";
@@ -130,8 +130,9 @@ export function LogSessionForm({
   editing?: { fingerprint: string; draft: LogSessionDraft };
 }): React.ReactElement {
   const navigate = useNavigate();
+  const gradePrefs = useGradePrefs();
   const [draft, setDraft] = React.useState<LogSessionDraft>(
-    () => editing?.draft ?? emptyDraft(new Date())
+    () => editing?.draft ?? emptyDraft(new Date(), gradePrefs)
   );
   const [saving, setSaving] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
@@ -151,15 +152,19 @@ export function LogSessionForm({
   const cancelTo =
     editing === undefined ? "/app" : `/app/sessions/${encodeURIComponent(editing.fingerprint)}`;
 
-  const scale = draft.climbs[0]?.scale ?? "v";
   const problem = draftProblem(draft);
   const untouchedTimes =
     editing === undefined &&
     draft.startTime === defaultTimes.start &&
     draft.endTime === defaultTimes.end;
 
-  function setScale(next: GradeScale): void {
-    setDraft((d) => ({ ...d, climbs: d.climbs.map((c) => withClimbScale(c, next)) }));
+  function setDiscipline(key: string, discipline: Discipline): void {
+    setDraft((d) => ({
+      ...d,
+      climbs: d.climbs.map((c) =>
+        c.key === key ? withClimbDiscipline(c, discipline, gradePrefs) : c
+      ),
+    }));
   }
 
   function updateClimb(key: string, climb: ClimbDraft): void {
@@ -373,24 +378,7 @@ export function LogSessionForm({
             <span style={{ ...monoLabel, color: "var(--text-label-accent)" }}>
               CLIMBS · {draft.climbs.length}
             </span>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span style={columnHead}>GRADE SCALE</span>
-              {GRADE_SCALE_OPTIONS.map((option) => (
-                <button
-                  key={option.value}
-                  type="button"
-                  onClick={() => setScale(option.value)}
-                  aria-pressed={scale === option.value}
-                  style={{
-                    ...chipStyle(scale === option.value),
-                    fontSize: 10,
-                    padding: "6px 12px",
-                  }}
-                >
-                  {option.label}
-                </button>
-              ))}
-            </div>
+            <span style={columnHead}>GRADE SCALES LIVE IN SETTINGS</span>
           </div>
           {!narrow && (
             <div className="climb-head">
@@ -414,6 +402,7 @@ export function LogSessionForm({
                   key={climb.key}
                   climb={climb}
                   scale={climb.scale}
+                  onChangeDiscipline={(discipline) => setDiscipline(climb.key, discipline)}
                   removable={draft.climbs.length > 1}
                   project={isProject(climb)}
                   suggestions={vocabulary.suggestionsFor(climb.name)}
@@ -458,6 +447,7 @@ export function LogSessionForm({
           index={editingIndex}
           count={draft.climbs.length}
           scale={editingClimb.scale}
+          onChangeDiscipline={(discipline) => setDiscipline(editingClimb.key, discipline)}
           project={isProject(editingClimb)}
           suggestions={vocabulary.suggestionsFor(editingClimb.name)}
           onChange={(c) => updateClimb(editingClimb.key, c)}
