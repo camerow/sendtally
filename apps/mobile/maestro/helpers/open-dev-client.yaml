@@ -1,0 +1,21 @@
+appId: com.sendtally.app
+# A development build opens on its launcher unless it is deep-linked to a bundler,
+# so point it at Metro and dismiss the first-run developer menu when it shows.
+---
+- launchApp:
+    stopApp: true
+- openLink: "com.sendtally.app://expo-development-client/?url=http%3A%2F%2Flocalhost%3A8081"
+- runFlow:
+    when:
+      visible: "Open"
+    commands:
+      - tapOn: "Open"
+- extendedWaitUntil:
+    visible:
+      text: ".*"
+    timeout: 30000
+- runFlow:
+    when:
+      visible: "This is the developer menu.*"
+    commands:
+      - tapOn: "Close"

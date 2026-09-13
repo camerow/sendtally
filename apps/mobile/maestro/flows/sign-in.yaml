@@ -1,0 +1,8 @@
+appId: com.sendtally.app
+name: sign-in
+# Signs in with the Clerk test account on the development instance, where the one-time
+# code is always Clerk's fixed test code. Every other flow starts from the signed-in app.
+---
+- runFlow: ../helpers/open-dev-client.yaml
+- runFlow: ../helpers/ensure-signed-in.yaml
+- assertVisible: "Log a session"

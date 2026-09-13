@@ -1,0 +1,10 @@
+# Maestro workspace for apps/mobile. Flows run against a development build on a simulator
+# that is already loading JavaScript from a local Metro (see docs/mobile-e2e.md).
+flows:
+  - "flows/*.yaml"
+executionOrder:
+  continueOnFailure: false
+  flowsOrder:
+    - sign-in
+    - log-session-sheet
+    - draft-survives-leaving

@@ -1,0 +1,29 @@
+appId: com.sendtally.app
+name: log-session-sheet
+# The climb editor sheet: opens on add, stays usable with the keyboard up, and goes away on a
+# swipe down. This is the interaction that broke on Expo SDK 57 and only shows on a device.
+---
+- runFlow: ../helpers/open-dev-client.yaml
+- runFlow: ../helpers/ensure-signed-in.yaml
+- tapOn: "Log a session"
+- scrollUntilVisible:
+    element:
+      text: "\\+ ADD CLIMB"
+    direction: DOWN
+- tapOn: "\\+ ADD CLIMB"
+- assertVisible: "CLIMB 2 OF 2"
+- tapOn: "Name (optional)"
+- inputText: "Cascade"
+- assertVisible: "Done"
+- pressKey: Enter
+# A direction swipe reaches React Native's responder system; a coordinate swipe does not.
+- swipe:
+    direction: DOWN
+    duration: 400
+- assertNotVisible: "CLIMB 2 OF 2"
+- assertVisible: "V3 Cascade.*"
+- scrollUntilVisible:
+    element:
+      text: "← SESSIONS"
+    direction: UP
+- tapOn: "← SESSIONS"
