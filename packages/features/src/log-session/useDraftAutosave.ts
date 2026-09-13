@@ -45,20 +45,28 @@ export function useDraftAutosave(
   onResume: (draft: LogSessionDraft) => void,
   ready = true
 ): DraftAutosave {
-  const [mountedAt] = React.useState(() => Date.now());
   const [dismissed, setDismissed] = React.useState(false);
   const [savedAt, setSavedAt] = React.useState<Date | null>(null);
+  /** Whether this form has autosaved yet - what makes a stored draft ours rather than an offer. */
+  const [saved, setSaved] = React.useState(false);
   const [saver] = React.useState<Autosaver | null>(() => {
     if (storage === null) return null;
-    const created = createDraftAutosaver(storage, DEBOUNCE_MS, setSavedAt);
+    const created = createDraftAutosaver(storage, DEBOUNCE_MS, (at) => {
+      setSavedAt(at);
+      setSaved(true);
+    });
     created.reset(draft);
     return created;
   });
 
   const stored = useParsedDraft(useStoredRaw(storage));
-  /** Anything saved since this form opened is our own autosave, never an offer to resume. */
-  const offered =
-    dismissed || stored === null || stored.savedAt.getTime() >= mountedAt ? null : stored;
+  /**
+   * Our own autosave is never an offer to resume. Which writes are ours is something the
+   * saver knows, so ask it: comparing the stored draft's clock time against this form's
+   * mount time made it a race, and the previous form's flush lands whenever React unmounts
+   * it - sometimes after the next form is already up, which silently swallowed the offer.
+   */
+  const offered = dismissed || saved || stored === null ? null : stored;
 
   React.useEffect(() => {
     if (saver === null) return;
