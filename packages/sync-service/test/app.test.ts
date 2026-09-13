@@ -763,11 +763,60 @@ describe("app", () => {
       logBody({ rpe: 11 }),
       logBody({ rpe: 6.5 }),
       logBody({ startTime: "18:00", endTime: "07:00" }),
+      // Send styles: an attempt has none, only routes are onsighted, first-go sends are one try.
+      logBody({
+        climbs: [{ grade: { scale: "v", value: 4 }, kind: "attempt", style: "flash" }],
+      }),
+      logBody({
+        climbs: [{ grade: { scale: "v", value: 4 }, kind: "send", style: "onsight" }],
+      }),
+      logBody({
+        climbs: [
+          { grade: { scale: "yds", value: "5.11a" }, kind: "send", style: "flash", tries: 3 },
+        ],
+      }),
+      logBody({
+        climbs: [{ grade: { scale: "v", value: 4 }, kind: "send", style: "toprope" }],
+      }),
     ];
     for (const body of bad) {
       const res = await postSession("user_manual_bad", body);
       expect(res.status).toBe(400);
     }
+  });
+
+  it("stores the send style and reads it back", async () => {
+    const res = await postSession(
+      "user_manual_styles",
+      logBody({
+        climbs: [
+          { name: "Slab", grade: { scale: "v", value: 4 }, kind: "send", style: "flash", tries: 1 },
+          {
+            name: "Arete",
+            grade: { scale: "yds", value: "5.11a" },
+            kind: "send",
+            style: "onsight",
+            tries: 1,
+          },
+          { grade: { scale: "v", value: 6 }, kind: "send", style: "redpoint", tries: 5 },
+          { grade: { scale: "v", value: 6 }, kind: "attempt", tries: 2 },
+        ],
+      })
+    );
+    expect(res.status).toBe(201);
+    const { session } = (await res.json()) as ManualSessionResponse;
+    expect(session.climbs.map((c) => (c as { style?: string }).style)).toEqual([
+      "flash",
+      "onsight",
+      "redpoint",
+      undefined,
+    ]);
+    const row = await env.DB.prepare(
+      `SELECT summary FROM sessions WHERE user_id = 'user_manual_styles'`
+    ).first<{ summary: string }>();
+    expect(row?.summary).toContain("(flash)");
+    expect(row?.summary).toContain("(onsight)");
+    expect(row?.summary).toContain("(5 tries)");
   });
 
   it("uses a manual RPE override for the score and summary", async () => {

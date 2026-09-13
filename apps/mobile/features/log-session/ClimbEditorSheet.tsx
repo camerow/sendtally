@@ -14,8 +14,12 @@ import {
   DISCIPLINE_LABELS,
   disciplineOf,
   gradeOptions,
+  sendStyleLabel,
+  sendStylesFor,
   withClimbDiscipline,
+  withClimbOutcome,
   type ClimbDraft,
+  type ClimbStyle,
   type Discipline,
   type GradePrefs,
 } from "@sendtally/features/log-session";
@@ -52,11 +56,13 @@ function Segment({
   label: text,
   active,
   activeColor,
+  activeText = colors.white,
   onPress,
 }: {
   label: string;
   active: boolean;
   activeColor: string;
+  activeText?: string;
   onPress: () => void;
 }): React.ReactElement {
   return (
@@ -77,7 +83,7 @@ function Segment({
           fontFamily: fonts.monoMedium,
           fontSize: 11,
           letterSpacing: 0.6,
-          color: active ? colors.white : "rgba(64,63,76,0.65)",
+          color: active ? activeText : "rgba(64,63,76,0.65)",
         }}
       >
         {text}
@@ -85,6 +91,12 @@ function Segment({
     </Pressable>
   );
 }
+
+const STYLE_FILL: Record<ClimbStyle, { background: string; text: string }> = {
+  redpoint: { background: colors.azureInk, text: colors.white },
+  flash: { background: colors.gold, text: colors.gunmetal },
+  onsight: { background: colors.petalInk, text: colors.white },
+};
 
 /**
  * Quiet by design: a session is usually all one discipline, and the climb carries its choice to
@@ -285,6 +297,7 @@ export function ClimbEditorSheet({
   }, [grade]);
 
   const named = climb !== null && climb.name.trim() !== "";
+  const firstGo = climb !== null && climb.kind === "send" && climb.style !== "redpoint";
   const showList = nameFocused && suggestions.length > 0;
 
   return (
@@ -481,23 +494,27 @@ export function ClimbEditorSheet({
                   overflow: "hidden",
                 }}
               >
-                <Segment
-                  label="✓ SEND"
-                  active={climb.kind === "send"}
-                  activeColor={colors.azureInk}
-                  onPress={() => onChange({ ...climb, kind: "send" })}
-                />
+                {sendStylesFor(disciplineOf(climb.scale)).map((style) => (
+                  <Segment
+                    key={style}
+                    label={`✓ ${sendStyleLabel(disciplineOf(climb.scale), style)}`}
+                    active={climb.kind === "send" && climb.style === style}
+                    activeColor={STYLE_FILL[style].background}
+                    activeText={STYLE_FILL[style].text}
+                    onPress={() => onChange(withClimbOutcome(climb, { kind: "send", style }))}
+                  />
+                ))}
                 <Segment
                   label="✗ ATTEMPT"
                   active={climb.kind === "attempt"}
                   activeColor={colors.gunmetal}
-                  onPress={() => onChange({ ...climb, kind: "attempt" })}
+                  onPress={() => onChange(withClimbOutcome(climb, { kind: "attempt" }))}
                 />
               </View>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
                 <StepButton
                   glyph="−"
-                  disabled={climb.tries <= 1}
+                  disabled={firstGo || climb.tries <= 1}
                   onPress={() => onChange({ ...climb, tries: climb.tries - 1 })}
                 />
                 <Text
@@ -513,6 +530,7 @@ export function ClimbEditorSheet({
                 </Text>
                 <StepButton
                   glyph="+"
+                  disabled={firstGo}
                   onPress={() => onChange({ ...climb, tries: Math.min(99, climb.tries + 1) })}
                 />
               </View>

@@ -1,6 +1,6 @@
-import { disciplineOf, type Discipline, type GradeScale } from "@sendtally/core";
+import { disciplineOf, type ClimbStyle, type Discipline, type GradeScale } from "@sendtally/core";
 
-export type { Discipline, GradeScale };
+export type { ClimbStyle, Discipline, GradeScale };
 export { disciplineOf };
 
 export type GradeScaleOption = { value: GradeScale; label: string; discipline: Discipline };
@@ -27,9 +27,32 @@ export type ClimbDraft = {
   grade: string;
   name: string;
   kind: "send" | "attempt";
+  style: ClimbStyle;
   tries: number;
   project?: boolean;
 };
+
+/**
+ * What a climber picks per climb: how it went, in the vocabulary of its discipline.
+ * A boulder is sent or flashed; a route is redpointed, flashed with beta, or
+ * onsighted with none. An attempt is the same idea either way.
+ */
+export type ClimbOutcome = { kind: "send"; style: ClimbStyle } | { kind: "attempt" };
+
+const OUTCOME_STYLES: Record<Discipline, readonly ClimbStyle[]> = {
+  boulder: ["redpoint", "flash"],
+  route: ["redpoint", "flash", "onsight"],
+};
+
+export function sendStylesFor(discipline: Discipline): readonly ClimbStyle[] {
+  return OUTCOME_STYLES[discipline];
+}
+
+/** Only a redpoint is named differently by discipline: a boulder is just sent. */
+export function sendStyleLabel(discipline: Discipline, style: ClimbStyle): string {
+  if (style !== "redpoint") return style.toUpperCase();
+  return discipline === "route" ? "REDPOINT" : "SENT";
+}
 
 export type LogSessionDraft = {
   name: string;

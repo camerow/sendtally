@@ -4,6 +4,7 @@ import { Link, useLoaderData } from "react-router";
 import { cloudflareContext } from "../lib/cloudflare-context";
 import { requireApi } from "../lib/api.server";
 import { useClientApi } from "../lib/useClientApi";
+import { useHydrated } from "../lib/useHydrated";
 import { LogSessionForm } from "../log-session/components/LogSessionForm";
 import logSessionStyles from "../log-session/log-session.css?url";
 
@@ -17,6 +18,7 @@ export async function loader(args: LoaderFunctionArgs): Promise<{ apiUrl: string
 export default function LogSessionRoute(): React.ReactElement {
   const { apiUrl } = useLoaderData<typeof loader>();
   const api = useClientApi(apiUrl);
+  const hydrated = useHydrated();
 
   return (
     <div>
@@ -58,7 +60,8 @@ export default function LogSessionRoute(): React.ReactElement {
           MANUAL ENTRY · EFFORT IS SCORED WHEN YOU SAVE
         </span>
       </div>
-      <LogSessionForm api={api} />
+      {/* The session starts on the visitor's clock, so the form waits for their browser. */}
+      {hydrated && <LogSessionForm api={api} />}
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import { climbDiscipline, climbRank, dominantDiscipline } from "@sendtally/core";
 import type { ConnectionStatus, SessionClimb, SessionDetail } from "@sendtally/api-client";
 import { climbKey } from "../climbs/transforms";
+import { sendStyleLabel } from "../log-session/types";
 import { climbGradeLabel, gradeFormatterFor } from "../sessions/grades";
 import type {
   ClimbFilter,
@@ -28,7 +29,21 @@ export function gradeLabel(vGrade: number): string {
 
 function resultOf(c: SessionClimb, firstEncounter: boolean): ClimbResult {
   if (c.kind === "attempt") return "project";
-  return firstEncounter && c.tries <= 1 ? "flash" : "sent";
+  // A climb already worked is no longer a first go, whatever the row claims.
+  if (!firstEncounter) return "sent";
+  if (c.style === "onsight") return "onsight";
+  if (c.style === "flash") return "flash";
+  // Rows logged before send styles existed: a one-try send was a flash by any name.
+  return c.style === undefined && c.tries <= 1 ? "flash" : "sent";
+}
+
+function resultLabelOf(c: SessionClimb, result: ClimbResult): string {
+  return result === "sent" ? sendStyleLabel(climbDiscipline(c), "redpoint") : result.toUpperCase();
+}
+
+/** Flash and onsight are both first-go sends; only the beta differs. */
+function firstGo(result: ClimbResult): boolean {
+  return result === "flash" || result === "onsight";
 }
 
 function restLabel(minutes: number | null): string {
@@ -65,6 +80,7 @@ export function climbVMs(
     const key = climbKey(c.name);
     const firstEncounter = key === "" || !seen.has(key);
     if (key !== "") seen.add(key);
+    const result = resultOf(c, firstEncounter);
     return {
       n: i + 1,
       name: c.name !== "" ? c.name : "Unknown climb",
@@ -75,15 +91,16 @@ export function climbVMs(
       angleLabel: c.angle !== null ? `${c.angle}°` : "-",
       burns: c.tries,
       restLabel: restLabel(rest),
-      result: resultOf(c, firstEncounter),
+      result,
+      resultLabel: resultLabelOf(c, result),
     };
   });
 }
 
 const FILTERS: Record<ClimbFilter, (c: ClimbVM) => boolean> = {
   all: () => true,
-  sent: (c) => c.result === "flash" || c.result === "sent",
-  flash: (c) => c.result === "flash",
+  sent: (c) => c.result !== "project",
+  flash: (c) => firstGo(c.result),
   project: (c) => c.result === "project",
 };
 
@@ -177,7 +194,7 @@ export function sessionDetailVM(
   const climbs = climbVMs(session.climbs, workedBefore);
   const start = new Date(session.start_at);
   const sends = climbs.filter((c) => c.result !== "project");
-  const flashes = climbs.filter((c) => c.result === "flash");
+  const flashes = climbs.filter((c) => firstGo(c.result));
   const discipline = dominantDiscipline(session.climbs);
   const format = gradeFormatterFor(session.climbs, discipline);
   const inDiscipline = session.climbs.filter((c) => climbDiscipline(c) === discipline);

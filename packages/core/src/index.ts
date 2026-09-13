@@ -37,6 +37,7 @@ export {
   topGradeLabel,
   type Climb,
   type ClimbKind,
+  type ClimbStyle,
   type GradedClimb,
   type Session,
   type EffortConfig,

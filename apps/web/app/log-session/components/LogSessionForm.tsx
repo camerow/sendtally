@@ -3,28 +3,36 @@ import { useNavigate } from "react-router";
 import type { ClimbSummary, SendtallyApi } from "@sendtally/api-client";
 import { climbDraftGrade, findClimb, useClimbVocabulary } from "@sendtally/features/climbs";
 import {
-  GRADE_SCALE_OPTIONS,
   draftProblem,
   draftSummary,
   emptyDraft,
   newClimb,
   toLogSessionInput,
+  useDraftAutosave,
+  withClimbDiscipline,
   withClimbScale,
+  withStartTime,
   withTag,
   withoutTag,
   type ClimbDraft,
-  type GradeScale,
+  type Discipline,
   type LogSessionDraft,
 } from "@sendtally/features/log-session";
 import { SESSION_NOTE_MAX, useTagVocabulary } from "@sendtally/features/sessions";
 import { useGradeScalePrefs } from "@sendtally/features/settings";
 import { TagPicker } from "../../components/TagPicker";
 import { useIsNarrow } from "../../lib/useIsNarrow";
+import { sessionDraftStorage } from "../../lib/sessionDraftStorage";
+import { DraftBanner } from "./DraftBanner";
 import { ClimbCard } from "./ClimbCard";
 import { ClimbEditorSheet } from "./ClimbEditorSheet";
 import { ClimbLedgerRow } from "./ClimbLedgerRow";
 import { Glyph } from "./Glyph";
-import { PLUS, chipStyle, columnHead, inputStyle, monoLabel } from "./styles";
+import { CHECK, PLUS, chipStyle, columnHead, inputStyle, monoLabel } from "./styles";
+
+function hhmm(at: Date): string {
+  return at.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+}
 
 function Field({
   label,
@@ -123,14 +131,14 @@ export function LogSessionForm({
   editing?: { fingerprint: string; draft: LogSessionDraft };
 }): React.ReactElement {
   const navigate = useNavigate();
+  const prefs = useGradeScalePrefs(api);
   const [draft, setDraft] = React.useState<LogSessionDraft>(
-    () => editing?.draft ?? emptyDraft(new Date())
+    () => editing?.draft ?? emptyDraft(new Date(), prefs.scales)
   );
   const [saving, setSaving] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const nextKey = React.useRef(draft.climbs.length + 1);
   const { suggestionsFor } = useTagVocabulary(api);
-  const prefs = useGradeScalePrefs(api);
 
   // The preference query resolves after the first render, so a new draft adopts
   // the user's scale once. An edit keeps the scale the session was logged in,
@@ -139,21 +147,39 @@ export function LogSessionForm({
   React.useEffect(() => {
     if (adopted.current || !prefs.ready) return;
     adopted.current = true;
-    setScale(prefs.scales.boulder);
+    setDraft((d) => ({
+      ...d,
+      climbs: d.climbs.map((c) => withClimbScale(c, prefs.scales.boulder)),
+    }));
   }, [prefs.ready, prefs.scales.boulder]);
   const vocabulary = useClimbVocabulary(api);
   const narrow = useIsNarrow();
   const [editingKey, setEditingKey] = React.useState<string | null>(null);
+  const [defaultTimes] = React.useState({ start: draft.startTime, end: draft.endTime });
+  const autosave = useDraftAutosave(
+    editing === undefined ? sessionDraftStorage : null,
+    draft,
+    setDraft,
+    prefs.ready
+  );
   const editingIndex = draft.climbs.findIndex((c) => c.key === editingKey);
   const editingClimb = editingIndex < 0 ? null : draft.climbs[editingIndex]!;
   const cancelTo =
     editing === undefined ? "/app" : `/app/sessions/${encodeURIComponent(editing.fingerprint)}`;
 
-  const scale = draft.climbs[0]?.scale ?? "v";
   const problem = draftProblem(draft);
+  const untouchedTimes =
+    editing === undefined &&
+    draft.startTime === defaultTimes.start &&
+    draft.endTime === defaultTimes.end;
 
-  function setScale(next: GradeScale): void {
-    setDraft((d) => ({ ...d, climbs: d.climbs.map((c) => withClimbScale(c, next)) }));
+  function setDiscipline(key: string, discipline: Discipline): void {
+    setDraft((d) => ({
+      ...d,
+      climbs: d.climbs.map((c) =>
+        c.key === key ? withClimbDiscipline(c, discipline, prefs.scales) : c
+      ),
+    }));
   }
 
   function updateClimb(key: string, climb: ClimbDraft): void {
@@ -234,6 +260,7 @@ export function LogSessionForm({
         editing === undefined
           ? await api.logSession(input)
           : await api.updateLoggedSession(editing.fingerprint, input);
+      autosave.clear();
       await navigate(`/app/sessions/${encodeURIComponent(session.fingerprint)}`);
     } catch {
       setError("Could not save the session. Try again.");
@@ -243,6 +270,13 @@ export function LogSessionForm({
 
   return (
     <div className="log-session">
+      {autosave.offered !== null && (
+        <DraftBanner
+          stored={autosave.offered}
+          onResume={autosave.resume}
+          onStartFresh={autosave.startFresh}
+        />
+      )}
       <div className="log-session-grid">
         <div className="log-session-details">
           <Field
@@ -274,10 +308,11 @@ export function LogSessionForm({
               <input
                 type="time"
                 value={draft.startTime}
-                onChange={(e) => setDraft({ ...draft, startTime: e.target.value })}
+                onChange={(e) => setDraft((d) => withStartTime(d, e.target.value))}
                 className="log-session-control"
                 style={inputStyle}
               />
+              {untouchedTimes && <span style={columnHead}>WHEN YOU OPENED THIS FORM</span>}
             </Field>
             <Field label="END TIME">
               <input
@@ -287,6 +322,7 @@ export function LogSessionForm({
                 className="log-session-control"
                 style={inputStyle}
               />
+              {untouchedTimes && <span style={columnHead}>START + 1H</span>}
             </Field>
           </div>
           <Field label="LOCATION">
@@ -368,27 +404,7 @@ export function LogSessionForm({
             <span style={{ ...monoLabel, color: "var(--text-label-accent)" }}>
               CLIMBS · {draft.climbs.length}
             </span>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span style={columnHead}>GRADE SCALE</span>
-              {GRADE_SCALE_OPTIONS.map((option) => (
-                <button
-                  key={option.value}
-                  type="button"
-                  onClick={() => {
-                    adopted.current = true;
-                    setScale(option.value);
-                  }}
-                  aria-pressed={scale === option.value}
-                  style={{
-                    ...chipStyle(scale === option.value),
-                    fontSize: 10,
-                    padding: "6px 12px",
-                  }}
-                >
-                  {option.label}
-                </button>
-              ))}
-            </div>
+            <span style={columnHead}>GRADE SCALES LIVE IN SETTINGS</span>
           </div>
           {!narrow && (
             <div className="climb-head">
@@ -412,6 +428,7 @@ export function LogSessionForm({
                   key={climb.key}
                   climb={climb}
                   scale={climb.scale}
+                  onChangeDiscipline={(discipline) => setDiscipline(climb.key, discipline)}
                   removable={draft.climbs.length > 1}
                   project={isProject(climb)}
                   suggestions={vocabulary.suggestionsFor(climb.name)}
@@ -456,6 +473,7 @@ export function LogSessionForm({
           index={editingIndex}
           count={draft.climbs.length}
           scale={editingClimb.scale}
+          onChangeDiscipline={(discipline) => setDiscipline(editingClimb.key, discipline)}
           project={isProject(editingClimb)}
           suggestions={vocabulary.suggestionsFor(editingClimb.name)}
           onChange={(c) => updateClimb(editingClimb.key, c)}
@@ -470,6 +488,20 @@ export function LogSessionForm({
       <div className="log-session-actions">
         <div className="log-session-status">
           <span style={monoLabel}>{draftSummary(draft)}</span>
+          {autosave.savedAt !== null && (
+            <span
+              style={{
+                ...monoLabel,
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 7,
+                color: "rgba(64,63,76,0.55)",
+              }}
+            >
+              <Glyph d={CHECK} />
+              DRAFT SAVED {hhmm(autosave.savedAt)}
+            </span>
+          )}
           {error !== null && (
             <span style={{ ...monoLabel, color: "var(--text-label-accent)" }}>{error}</span>
           )}

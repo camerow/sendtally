@@ -16,8 +16,10 @@ import {
   withClimbScale,
   withTag,
   withoutTag,
+  withClimbOutcome,
+  withStartTime,
 } from "./transforms";
-import { DEFAULT_GRADE_PREFS } from "./types";
+import { DEFAULT_GRADE_PREFS, sendStyleLabel, sendStylesFor } from "./types";
 import type { ClimbDraft, GradeScale, LogSessionDraft } from "./types";
 
 function atScale(d: LogSessionDraft, scale: GradeScale): LogSessionDraft {
@@ -35,8 +37,16 @@ function draft(overrides: Partial<LogSessionDraft> = {}): LogSessionDraft {
     notes: "",
     rpe: null,
     climbs: [
-      { key: "a", scale: "v", grade: "V4", name: "Cave traverse", kind: "send", tries: 2 },
-      { key: "b", scale: "v", grade: "V6", name: "", kind: "attempt", tries: 4 },
+      {
+        key: "a",
+        scale: "v",
+        grade: "V4",
+        name: "Cave traverse",
+        kind: "send",
+        style: "redpoint",
+        tries: 2,
+      },
+      { key: "b", scale: "v", grade: "V6", name: "", kind: "attempt", style: "redpoint", tries: 4 },
     ],
     ...overrides,
   };
@@ -169,8 +179,16 @@ describe("mixed sessions", () => {
   it("validates and summarises a draft holding both boulders and routes", () => {
     const mixed = draft({
       climbs: [
-        { key: "a", scale: "v", grade: "V4", name: "", kind: "send", tries: 1 },
-        { key: "b", scale: "yds", grade: "5.12d", name: "", kind: "attempt", tries: 3 },
+        { key: "a", scale: "v", grade: "V4", name: "", kind: "send", style: "redpoint", tries: 1 },
+        {
+          key: "b",
+          scale: "yds",
+          grade: "5.12d",
+          name: "",
+          kind: "attempt",
+          style: "redpoint",
+          tries: 3,
+        },
       ],
     });
     expect(draftProblem(mixed)).toBeNull();
@@ -182,11 +200,87 @@ describe("mixed sessions", () => {
   });
 });
 
+describe("send styles", () => {
+  const boulder = (): ClimbDraft => ({
+    key: "a",
+    scale: "v",
+    grade: "V4",
+    name: "",
+    kind: "send",
+    style: "redpoint",
+    tries: 4,
+  });
+
+  it("offers sent and flash on boulders, redpoint, flash and onsight on routes", () => {
+    expect(sendStylesFor("boulder")).toEqual(["redpoint", "flash"]);
+    expect(sendStylesFor("route")).toEqual(["redpoint", "flash", "onsight"]);
+    expect(sendStyleLabel("boulder", "redpoint")).toBe("SENT");
+    expect(sendStyleLabel("route", "redpoint")).toBe("REDPOINT");
+  });
+
+  it("settles the try count at one for a flash or an onsight", () => {
+    expect(withClimbOutcome(boulder(), { kind: "send", style: "flash" }).tries).toBe(1);
+    expect(withClimbOutcome(boulder(), { kind: "send", style: "redpoint" }).tries).toBe(4);
+  });
+
+  it("keeps the try count on an attempt", () => {
+    const attempt = withClimbOutcome(boulder(), { kind: "attempt" });
+    expect(attempt).toMatchObject({ kind: "attempt", tries: 4 });
+  });
+
+  it("drops an onsight when a route becomes a boulder", () => {
+    const onsighted: ClimbDraft = { ...boulder(), scale: "yds", grade: "5.11a", style: "onsight" };
+    expect(withClimbScale(onsighted, "v").style).toBe("redpoint");
+    expect(withClimbScale(onsighted, "french").style).toBe("onsight");
+  });
+
+  it("sends the style only on a send", () => {
+    const both = draft({
+      climbs: [
+        { key: "a", scale: "v", grade: "V4", name: "", kind: "send", style: "flash", tries: 1 },
+        {
+          key: "b",
+          scale: "v",
+          grade: "V4",
+          name: "",
+          kind: "attempt",
+          style: "redpoint",
+          tries: 3,
+        },
+      ],
+    });
+    const climbs = toLogSessionInput(both).climbs;
+    expect(climbs[0]).toMatchObject({ style: "flash" });
+    expect(climbs[1]).not.toHaveProperty("style");
+  });
+
+  it("reads a one-try send logged before styles existed back as a flash", () => {
+    const legacy = draftFromSession(
+      session({
+        climbs: [
+          {
+            time: "2026-08-26T18:30:00.000Z",
+            name: "",
+            vGrade: 4,
+            kind: "send",
+            tries: 1,
+            angle: null,
+            grade: { scale: "v", value: 4 },
+          },
+        ],
+      })
+    );
+    expect(legacy.climbs[0]?.style).toBe("flash");
+  });
+});
+
 describe("durationMinutes", () => {
   it("derives duration and wraps past midnight", () => {
     expect(durationMinutes("18:30", "20:00")).toBe(90);
     expect(durationMinutes("23:00", "01:00")).toBe(120);
     expect(durationMinutes("bad", "20:00")).toBeUndefined();
+    expect(durationMinutes("09:00", "00:30")).toBeUndefined();
+    expect(durationMinutes("18:00", "18:00")).toBeUndefined();
   });
 
   it("labels durations", () => {
@@ -197,11 +291,11 @@ describe("durationMinutes", () => {
 });
 
 describe("emptyDraft", () => {
-  it("defaults to a 90-minute window ending now", () => {
+  it("starts now and runs an hour", () => {
     const d = emptyDraft(new Date(2026, 7, 26, 20, 2));
     expect(d.date).toBe("2026-08-26");
-    expect(d.startTime).toBe("18:30");
-    expect(d.endTime).toBe("20:00");
+    expect(d.startTime).toBe("20:00");
+    expect(d.endTime).toBe("21:00");
     expect(d.climbs).toHaveLength(1);
     expect(d.rpe).toBeNull();
   });
@@ -241,7 +335,34 @@ describe("draftProblem", () => {
   it("flags missing climbs, bad times, and over-long sessions", () => {
     expect(draftProblem(draft({ climbs: [] }))).toContain("climb");
     expect(draftProblem(draft({ endTime: "" }))).toContain("time");
-    expect(draftProblem(draft({ startTime: "18:00", endTime: "07:00" }))).toContain("12 hours");
+    expect(draftProblem(draft({ startTime: "06:00", endTime: "23:00" }))).toContain("12 hours");
+  });
+
+  it("names an end before the start rather than blaming the 12-hour rule", () => {
+    expect(draftProblem(draft({ startTime: "09:00", endTime: "00:30" }))).toBe(
+      "End time is before the start time."
+    );
+  });
+
+  it("still accepts a session that runs past midnight", () => {
+    expect(draftProblem(draft({ startTime: "22:00", endTime: "01:00" }))).toBeNull();
+  });
+});
+
+describe("withStartTime", () => {
+  it("moves the end time by the same amount", () => {
+    const moved = withStartTime(draft({ startTime: "18:30", endTime: "20:00" }), "17:15");
+    expect(moved).toMatchObject({ startTime: "17:15", endTime: "18:45" });
+  });
+
+  it("wraps the end past midnight", () => {
+    const moved = withStartTime(draft({ startTime: "18:30", endTime: "20:00" }), "23:30");
+    expect(moved.endTime).toBe("01:00");
+  });
+
+  it("leaves the end alone when the current pair makes no sense", () => {
+    const moved = withStartTime(draft({ startTime: "09:00", endTime: "00:30" }), "10:00");
+    expect(moved).toMatchObject({ startTime: "10:00", endTime: "00:30" });
   });
 });
 
@@ -264,7 +385,13 @@ describe("toLogSessionInput", () => {
       endTime: "20:00",
       location: "indoor",
       climbs: [
-        { name: "Cave traverse", grade: { scale: "v", value: 4 }, kind: "send", tries: 2 },
+        {
+          name: "Cave traverse",
+          grade: { scale: "v", value: 4 },
+          kind: "send",
+          style: "redpoint",
+          tries: 2,
+        },
         { grade: { scale: "v", value: 6 }, kind: "attempt", tries: 4 },
       ],
     });
@@ -336,8 +463,24 @@ describe("draftFromSession", () => {
       notes: "",
       rpe: 7,
       climbs: [
-        { key: "climb-1", scale: "v", grade: "V4", name: "Cave traverse", kind: "send", tries: 2 },
-        { key: "climb-2", scale: "v", grade: "V6", name: "", kind: "attempt", tries: 4 },
+        {
+          key: "climb-1",
+          scale: "v",
+          grade: "V4",
+          name: "Cave traverse",
+          kind: "send",
+          style: "redpoint",
+          tries: 2,
+        },
+        {
+          key: "climb-2",
+          scale: "v",
+          grade: "V6",
+          name: "",
+          kind: "attempt",
+          style: "redpoint",
+          tries: 4,
+        },
       ],
     });
   });
@@ -353,7 +496,13 @@ describe("draftFromSession", () => {
       location: "indoor",
       tags: ["Endurance"],
       climbs: [
-        { name: "Cave traverse", grade: { scale: "v", value: 4 }, kind: "send", tries: 2 },
+        {
+          name: "Cave traverse",
+          grade: { scale: "v", value: 4 },
+          kind: "send",
+          style: "redpoint",
+          tries: 2,
+        },
         { grade: { scale: "v", value: 6 }, kind: "attempt", tries: 4 },
       ],
     });
@@ -406,7 +555,8 @@ describe("toLogSessionInput project flags", () => {
           scale: "v",
           grade: "V4",
           name: "Moonraker",
-          kind: "send" as const,
+          kind: "send",
+          style: "redpoint" as const,
           tries: 1,
           project: true,
         },
@@ -415,11 +565,20 @@ describe("toLogSessionInput project flags", () => {
           scale: "v",
           grade: "V5",
           name: "Torque",
-          kind: "attempt" as const,
+          kind: "attempt",
+          style: "redpoint" as const,
           tries: 2,
           project: false,
         },
-        { key: "c", scale: "v", grade: "V2", name: "", kind: "send" as const, tries: 1 },
+        {
+          key: "c",
+          scale: "v",
+          grade: "V2",
+          name: "",
+          kind: "send",
+          style: "redpoint" as const,
+          tries: 1,
+        },
       ],
     };
     expect(toLogSessionInput(draft).climbs.map((c) => c.project)).toEqual([true, false, undefined]);

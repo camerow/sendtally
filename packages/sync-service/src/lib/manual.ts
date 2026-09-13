@@ -1,11 +1,13 @@
 import {
   defaultEffortConfig,
+  disciplineOf,
   effortGrade,
   parseGrade,
   score,
   topGradeLabel,
   type Climb,
   type ClimbKind,
+  type ClimbStyle,
   type Grade,
   type Session,
 } from "@sendtally/core";
@@ -34,13 +36,28 @@ const gradeSchema = z.union([
   }),
 ]);
 
-const climbSchema = z.object({
-  name: z.string().max(200).default(""),
-  grade: gradeSchema,
-  kind: z.enum(["send", "attempt"]).default("send"),
-  tries: z.number().int().min(1).max(99).default(1),
-  project: z.boolean().optional(),
-});
+const climbSchema = z
+  .object({
+    name: z.string().max(200).default(""),
+    grade: gradeSchema,
+    kind: z.enum(["send", "attempt"]).default("send"),
+    style: z.enum(["redpoint", "flash", "onsight"]).optional(),
+    tries: z.number().int().min(1).max(99).default(1),
+    project: z.boolean().optional(),
+  })
+  .superRefine((climb, ctx) => {
+    if (climb.style === undefined) return;
+    if (climb.kind === "attempt") {
+      ctx.addIssue({ code: "custom", path: ["style"], message: "an attempt has no send style" });
+      return;
+    }
+    if (climb.style === "onsight" && disciplineOf(climb.grade.scale) !== "route") {
+      ctx.addIssue({ code: "custom", path: ["style"], message: "only routes are onsighted" });
+    }
+    if (climb.style !== "redpoint" && climb.tries !== 1) {
+      ctx.addIssue({ code: "custom", path: ["tries"], message: "a flash or onsight is one try" });
+    }
+  });
 
 export const NOTE_MAX = 2000;
 
@@ -120,6 +137,7 @@ function toSession(body: ManualSessionBody): Session {
       vGrade: effortGrade(grade),
       name: c.name,
       kind: c.kind,
+      ...(c.style === undefined ? {} : { style: c.style }),
       tries: c.tries,
       grade,
     };
@@ -134,6 +152,7 @@ export type StoredClimb = {
   name: string;
   vGrade: number;
   kind: ClimbKind;
+  style?: ClimbStyle;
   tries: number;
   angle: number | null;
   grade?: Grade;
@@ -192,6 +211,7 @@ export function buildManualSession(
         name: c.name,
         vGrade: c.vGrade,
         kind: c.kind,
+        ...(c.style === undefined ? {} : { style: c.style }),
         tries: c.tries,
         angle: null,
         grade: c.grade,
