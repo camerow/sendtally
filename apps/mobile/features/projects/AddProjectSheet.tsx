@@ -1,6 +1,6 @@
 import React from "react";
-import { Modal, Pressable, ScrollView, Text, TextInput, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import { Sheet } from "../../components/Sheet";
 import type { ClimbSummary, GradeScales, ProjectInput } from "@sendtally/api-client";
 import {
   climbGradeLabel,
@@ -66,7 +66,6 @@ export function AddProjectSheet({
   onSave,
   onClose,
 }: AddProjectSheetProps): React.ReactElement {
-  const insets = useSafeAreaInsets();
   const [name, setName] = React.useState("");
   const [picked, setPicked] = React.useState<ClimbSummary | null>(null);
   const [tracking, setTracking] = React.useState(false);
@@ -143,32 +142,8 @@ export function AddProjectSheet({
   const ready = identified && !(needsGrade && grade === "");
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <Pressable
-        onPress={onClose}
-        accessibilityLabel="Close new project"
-        style={{ flex: 1, backgroundColor: "rgba(64,63,76,0.45)" }}
-      />
-      <View
-        style={{
-          gap: 18,
-          paddingTop: 10,
-          paddingHorizontal: 18,
-          paddingBottom: Math.max(insets.bottom, 16) + 18,
-          borderTopLeftRadius: radius.panel,
-          borderTopRightRadius: radius.panel,
-          backgroundColor: colors.white,
-        }}
-      >
-        <View
-          style={{
-            alignSelf: "center",
-            width: 36,
-            height: 4,
-            borderRadius: 2,
-            backgroundColor: "rgba(64,63,76,0.2)",
-          }}
-        />
+    <Sheet visible={visible} onClose={onClose} closeLabel="Close new project">
+      <View style={{ gap: 18, paddingTop: 2, paddingHorizontal: 18, paddingBottom: 18 }}>
         <Text
           style={{
             fontFamily: fonts.monoMedium,
@@ -395,6 +370,6 @@ export function AddProjectSheet({
           </Text>
         </Pressable>
       </View>
-    </Modal>
+    </Sheet>
   );
 }

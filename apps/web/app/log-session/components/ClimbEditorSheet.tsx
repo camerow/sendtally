@@ -16,6 +16,46 @@ import { ProjectToggle } from "./ProjectToggle";
 import { TriesStepper } from "./TriesStepper";
 import { chipStyle, monoLabel } from "./styles";
 
+const DISMISS_DISTANCE = 80;
+const DISMISS_VELOCITY = 0.6;
+
+/**
+ * A downward drag on the grip (handle and title row) follows the pointer and dismisses past a
+ * distance or a flick. The grip is the only drag surface because the rail and the panel scroll
+ * would otherwise fight the browser for vertical touches.
+ */
+function startDrag(
+  down: React.PointerEvent<HTMLElement>,
+  panel: HTMLElement | null,
+  onClose: () => void
+): void {
+  if (down.button !== 0 || panel === null) return;
+  const grip = down.currentTarget;
+  const origin = { y: down.clientY, at: performance.now() };
+  grip.setPointerCapture?.(down.pointerId);
+  panel.style.transition = "none";
+
+  const move = (e: PointerEvent): void => {
+    panel.style.transform = `translateY(${Math.max(0, e.clientY - origin.y)}px)`;
+  };
+  const end = (e: PointerEvent): void => {
+    grip.removeEventListener("pointermove", move);
+    grip.removeEventListener("pointerup", end);
+    grip.removeEventListener("pointercancel", end);
+    const dy = Math.max(0, e.clientY - origin.y);
+    const velocity = dy / Math.max(1, performance.now() - origin.at);
+    if (e.type !== "pointercancel" && (dy > DISMISS_DISTANCE || velocity > DISMISS_VELOCITY)) {
+      onClose();
+      return;
+    }
+    panel.style.transition = "transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1)";
+    panel.style.transform = "";
+  };
+  grip.addEventListener("pointermove", move);
+  grip.addEventListener("pointerup", end);
+  grip.addEventListener("pointercancel", end);
+}
+
 export type ClimbEditorSheetProps = {
   climb: ClimbDraft;
   index: number;
@@ -47,33 +87,56 @@ export function ClimbEditorSheet({
   onRemove,
   onClose,
 }: ClimbEditorSheetProps): React.ReactElement {
+  const dialog = React.useRef<HTMLDialogElement>(null);
+  const panel = React.useRef<HTMLDivElement>(null);
   const rail = React.useRef<HTMLDivElement>(null);
+  const pressedBackdrop = React.useRef(false);
 
   React.useEffect(() => {
-    rail.current
-      ?.querySelector<HTMLElement>('[aria-pressed="true"]')
-      ?.scrollIntoView({ inline: "center", block: "nearest" });
+    const el = dialog.current;
+    if (el !== null && !el.open) el.showModal();
+  }, []);
+
+  React.useEffect(() => {
+    const track = rail.current;
+    const chip = track?.querySelector<HTMLElement>('[aria-pressed="true"]');
+    if (track && chip) {
+      track.scrollLeft = chip.offsetLeft - (track.clientWidth - chip.offsetWidth) / 2;
+    }
   }, [climb.grade]);
 
   return (
-    <div className="climb-sheet-backdrop" onClick={onClose}>
-      <div
-        className="climb-sheet"
-        role="dialog"
-        aria-modal="true"
-        aria-label={`Climb ${index + 1} of ${count}`}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="climb-sheet-handle" />
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <span style={{ ...monoLabel, color: "var(--text-label-accent)" }}>
-            CLIMB {index + 1} OF {count}
-          </span>
-          {count > 1 && (
-            <button type="button" onClick={onRemove} className="climb-sheet-remove">
-              REMOVE
-            </button>
-          )}
+    <dialog
+      ref={dialog}
+      className="climb-sheet"
+      aria-label={`Climb ${index + 1} of ${count}`}
+      onCancel={(e) => {
+        e.preventDefault();
+        onClose();
+      }}
+      onPointerDown={(e) => {
+        pressedBackdrop.current = e.target === e.currentTarget;
+      }}
+      onClick={(e) => {
+        if (pressedBackdrop.current && e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div ref={panel} className="climb-sheet-panel">
+        <div
+          className="climb-sheet-grip"
+          onPointerDown={(e) => startDrag(e, panel.current, onClose)}
+        >
+          <div className="climb-sheet-handle" />
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <span style={{ ...monoLabel, color: "var(--text-label-accent)" }}>
+              CLIMB {index + 1} OF {count}
+            </span>
+            {count > 1 && (
+              <button type="button" onClick={onRemove} className="climb-sheet-remove">
+                REMOVE
+              </button>
+            )}
+          </div>
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
           <span style={monoLabel}>GRADE</span>
@@ -133,6 +196,6 @@ export function ClimbEditorSheet({
           Done
         </button>
       </div>
-    </div>
+    </dialog>
   );
 }

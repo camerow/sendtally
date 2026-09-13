@@ -1,13 +1,5 @@
 import React from "react";
-import {
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import type { ClimbSummary } from "@sendtally/api-client";
 import { climbDraftGrade, projectMetaLabel } from "@sendtally/features/climbs";
 import {
@@ -269,8 +261,15 @@ function ProjectRow({
   );
 }
 
+/** The climb stays rendered while the sheet slides away, so closing does not empty the panel mid-slide. */
+function useLingering(climb: ClimbDraft | null): ClimbDraft | null {
+  const [shown, setShown] = React.useState(climb);
+  if (climb !== null && climb !== shown) setShown(climb);
+  return climb ?? shown;
+}
+
 export function ClimbEditorSheet({
-  climb,
+  climb: current,
   index,
   count,
   prefs,
@@ -284,6 +283,7 @@ export function ClimbEditorSheet({
   onRemove,
   onClose,
 }: ClimbEditorSheetProps): React.ReactElement {
+  const climb = useLingering(current);
   const rail = React.useRef<ScrollView>(null);
   const chipX = React.useRef(new Map<string, number>());
   const [nameFocused, setNameFocused] = React.useState(false);
@@ -301,266 +301,248 @@ export function ClimbEditorSheet({
   const showList = nameFocused && suggestions.length > 0;
 
   return (
-    <Sheet visible={climb !== null} onClose={onClose} closeLabel="Close climb editor">
-      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined}>
-        {climb !== null && (
-          <View style={{ gap: 14, paddingTop: 10, paddingHorizontal: 18, paddingBottom: 4 }}>
-            <View
-              style={{
-                alignSelf: "center",
-                width: 36,
-                height: 4,
-                borderRadius: 2,
-                backgroundColor: "rgba(64,63,76,0.2)",
-              }}
-            />
+    <Sheet visible={current !== null} onClose={onClose} closeLabel="Close climb editor">
+      {climb !== null && (
+        <View style={{ gap: 14, paddingTop: 2, paddingHorizontal: 18, paddingBottom: 4 }}>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            <Text style={{ ...label, color: colors.watermelonInk }}>
+              CLIMB {index + 1} OF {count}
+            </Text>
+            {count > 1 && (
+              <Pressable
+                onPress={onRemove}
+                hitSlop={8}
+                accessibilityRole="button"
+                style={press({})}
+              >
+                <Text style={{ ...label, color: colors.textFaint }}>REMOVE</Text>
+              </Pressable>
+            )}
+          </View>
+
+          <View style={{ gap: 7 }}>
             <View
               style={{
                 flexDirection: "row",
                 alignItems: "center",
                 justifyContent: "space-between",
+                gap: 12,
               }}
             >
-              <Text style={{ ...label, color: colors.watermelonInk }}>
-                CLIMB {index + 1} OF {count}
-              </Text>
-              {count > 1 && (
-                <Pressable
-                  onPress={onRemove}
-                  hitSlop={8}
-                  accessibilityRole="button"
-                  style={press({})}
-                >
-                  <Text style={{ ...label, color: colors.textFaint }}>REMOVE</Text>
-                </Pressable>
-              )}
+              <Text style={label}>GRADE</Text>
+              <DisciplineToggle
+                value={disciplineOf(climb.scale)}
+                onChange={(discipline) => onChange(withClimbDiscipline(climb, discipline, prefs))}
+              />
             </View>
+            <ScrollView
+              ref={rail}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              keyboardShouldPersistTaps="always"
+              style={{ marginHorizontal: -18 }}
+              contentContainerStyle={{ gap: 6, paddingHorizontal: 18 }}
+            >
+              {options.map((g) => (
+                <View key={g} onLayout={(e) => chipX.current.set(g, e.nativeEvent.layout.x)}>
+                  <Chip
+                    label={g}
+                    active={g === climb.grade}
+                    onPress={() => onChange({ ...climb, grade: g })}
+                  />
+                </View>
+              ))}
+            </ScrollView>
+          </View>
 
-            <View style={{ gap: 7 }}>
+          <View style={{ gap: 7 }}>
+            <Text style={label}>NAME · OPTIONAL</Text>
+            <TextInput
+              value={climb.name}
+              placeholder="Name (optional)"
+              placeholderTextColor={colors.textFaint}
+              autoCorrect={false}
+              returnKeyType="done"
+              onChangeText={onChangeName}
+              onFocus={() => setNameFocused(true)}
+              onBlur={() => setNameFocused(false)}
+              style={{
+                fontFamily: fonts.sans,
+                fontSize: 15,
+                color: colors.gunmetal,
+                backgroundColor: colors.white,
+                borderWidth: 1,
+                borderColor: nameFocused ? colors.azure : "rgba(64,63,76,0.15)",
+                borderRadius: radius.control,
+                paddingHorizontal: 13,
+                minHeight: 46,
+              }}
+            />
+            {showList && (
               <View
                 style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  gap: 12,
-                }}
-              >
-                <Text style={label}>GRADE</Text>
-                <DisciplineToggle
-                  value={disciplineOf(climb.scale)}
-                  onChange={(discipline) => onChange(withClimbDiscipline(climb, discipline, prefs))}
-                />
-              </View>
-              <ScrollView
-                ref={rail}
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                keyboardShouldPersistTaps="always"
-                style={{ marginHorizontal: -18 }}
-                contentContainerStyle={{ gap: 6, paddingHorizontal: 18 }}
-              >
-                {options.map((g) => (
-                  <View key={g} onLayout={(e) => chipX.current.set(g, e.nativeEvent.layout.x)}>
-                    <Chip
-                      label={g}
-                      active={g === climb.grade}
-                      onPress={() => onChange({ ...climb, grade: g })}
-                    />
-                  </View>
-                ))}
-              </ScrollView>
-            </View>
-
-            <View style={{ gap: 7 }}>
-              <Text style={label}>NAME · OPTIONAL</Text>
-              <TextInput
-                value={climb.name}
-                placeholder="Name (optional)"
-                placeholderTextColor={colors.textFaint}
-                autoCorrect={false}
-                returnKeyType="done"
-                onChangeText={onChangeName}
-                onFocus={() => setNameFocused(true)}
-                onBlur={() => setNameFocused(false)}
-                style={{
-                  fontFamily: fonts.sans,
-                  fontSize: 15,
-                  color: colors.gunmetal,
-                  backgroundColor: colors.white,
+                  gap: 2,
+                  padding: 6,
                   borderWidth: 1,
-                  borderColor: nameFocused ? colors.azure : "rgba(64,63,76,0.15)",
+                  borderColor: "rgba(64,63,76,0.15)",
                   borderRadius: radius.control,
-                  paddingHorizontal: 13,
-                  minHeight: 46,
                 }}
-              />
-              {showList && (
-                <View
-                  style={{
-                    gap: 2,
-                    padding: 6,
-                    borderWidth: 1,
-                    borderColor: "rgba(64,63,76,0.15)",
-                    borderRadius: radius.control,
-                  }}
-                >
-                  {climb.name.trim() === "" && (
-                    <Text style={{ ...label, fontSize: 9, color: colors.textMuted, padding: 4 }}>
-                      RECENT
-                    </Text>
-                  )}
-                  {suggestions.map((candidate) => (
-                    <Pressable
-                      key={candidate.slug}
-                      onPress={() => onPick(candidate)}
-                      accessibilityRole="button"
-                      accessibilityLabel={
-                        candidate.project ? `${candidate.name}, project` : candidate.name
-                      }
-                      style={pressRow({
+              >
+                {climb.name.trim() === "" && (
+                  <Text style={{ ...label, fontSize: 9, color: colors.textMuted, padding: 4 }}>
+                    RECENT
+                  </Text>
+                )}
+                {suggestions.map((candidate) => (
+                  <Pressable
+                    key={candidate.slug}
+                    onPress={() => onPick(candidate)}
+                    accessibilityRole="button"
+                    accessibilityLabel={
+                      candidate.project ? `${candidate.name}, project` : candidate.name
+                    }
+                    style={pressRow({
+                      flexDirection: "row",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      gap: 8,
+                      height: 40,
+                      paddingHorizontal: 12,
+                      borderRadius: radius.sm,
+                      backgroundColor: candidate.project ? "rgba(249,220,92,0.14)" : "transparent",
+                    })}
+                  >
+                    <View
+                      style={{
                         flexDirection: "row",
                         alignItems: "center",
-                        justifyContent: "space-between",
-                        gap: 8,
-                        height: 40,
-                        paddingHorizontal: 12,
-                        borderRadius: radius.sm,
-                        backgroundColor: candidate.project
-                          ? "rgba(249,220,92,0.14)"
-                          : "transparent",
-                      })}
+                        gap: 7,
+                        flexShrink: 1,
+                      }}
                     >
-                      <View
-                        style={{
-                          flexDirection: "row",
-                          alignItems: "center",
-                          gap: 7,
-                          flexShrink: 1,
-                        }}
-                      >
-                        {candidate.project && (
-                          <Icon
-                            name="projects"
-                            color={colors.gunmetal}
-                            size={14}
-                            strokeWidth={2.2}
-                          />
-                        )}
-                        <MarkedName name={candidate.name} query={climb.name} />
-                        {candidate.project && (
-                          <Text
-                            style={{
-                              fontFamily: fonts.monoSemiBold,
-                              fontSize: 8,
-                              letterSpacing: 0.7,
-                              paddingHorizontal: 6,
-                              paddingVertical: 2,
-                              borderRadius: radius.pill,
-                              overflow: "hidden",
-                              backgroundColor: colors.gold,
-                              color: colors.gunmetal,
-                            }}
-                          >
-                            PROJECT
-                          </Text>
-                        )}
-                      </View>
-                      <Text
-                        style={{
-                          fontFamily: fonts.monoMedium,
-                          fontSize: 11,
-                          letterSpacing: 0.6,
-                          color: colors.textMuted,
-                        }}
-                      >
-                        {climbDraftGrade(candidate, climb.scale)}
-                      </Text>
-                    </Pressable>
-                  ))}
-                </View>
-              )}
-            </View>
+                      {candidate.project && (
+                        <Icon name="projects" color={colors.gunmetal} size={14} strokeWidth={2.2} />
+                      )}
+                      <MarkedName name={candidate.name} query={climb.name} />
+                      {candidate.project && (
+                        <Text
+                          style={{
+                            fontFamily: fonts.monoSemiBold,
+                            fontSize: 8,
+                            letterSpacing: 0.7,
+                            paddingHorizontal: 6,
+                            paddingVertical: 2,
+                            borderRadius: radius.pill,
+                            overflow: "hidden",
+                            backgroundColor: colors.gold,
+                            color: colors.gunmetal,
+                          }}
+                        >
+                          PROJECT
+                        </Text>
+                      )}
+                    </View>
+                    <Text
+                      style={{
+                        fontFamily: fonts.monoMedium,
+                        fontSize: 11,
+                        letterSpacing: 0.6,
+                        color: colors.textMuted,
+                      }}
+                    >
+                      {climbDraftGrade(candidate, climb.scale)}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+            )}
+          </View>
 
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-              <View
-                accessibilityRole="radiogroup"
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+            <View
+              accessibilityRole="radiogroup"
+              style={{
+                flex: 1,
+                flexDirection: "row",
+                height: 44,
+                borderRadius: 22,
+                borderWidth: 1,
+                borderColor: "rgba(64,63,76,0.18)",
+                overflow: "hidden",
+              }}
+            >
+              {sendStylesFor(disciplineOf(climb.scale)).map((style) => (
+                <Segment
+                  key={style}
+                  label={`✓ ${sendStyleLabel(disciplineOf(climb.scale), style)}`}
+                  active={climb.kind === "send" && climb.style === style}
+                  activeColor={STYLE_FILL[style].background}
+                  activeText={STYLE_FILL[style].text}
+                  onPress={() => onChange(withClimbOutcome(climb, { kind: "send", style }))}
+                />
+              ))}
+              <Segment
+                label="✗ ATTEMPT"
+                active={climb.kind === "attempt"}
+                activeColor={colors.gunmetal}
+                onPress={() => onChange(withClimbOutcome(climb, { kind: "attempt" }))}
+              />
+            </View>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+              <StepButton
+                glyph="−"
+                disabled={firstGo || climb.tries <= 1}
+                onPress={() => onChange({ ...climb, tries: climb.tries - 1 })}
+              />
+              <Text
                 style={{
-                  flex: 1,
-                  flexDirection: "row",
-                  height: 44,
-                  borderRadius: 22,
-                  borderWidth: 1,
-                  borderColor: "rgba(64,63,76,0.18)",
-                  overflow: "hidden",
+                  width: 24,
+                  textAlign: "center",
+                  fontFamily: fonts.monoSemiBold,
+                  fontSize: 15,
+                  color: colors.gunmetal,
                 }}
               >
-                {sendStylesFor(disciplineOf(climb.scale)).map((style) => (
-                  <Segment
-                    key={style}
-                    label={`✓ ${sendStyleLabel(disciplineOf(climb.scale), style)}`}
-                    active={climb.kind === "send" && climb.style === style}
-                    activeColor={STYLE_FILL[style].background}
-                    activeText={STYLE_FILL[style].text}
-                    onPress={() => onChange(withClimbOutcome(climb, { kind: "send", style }))}
-                  />
-                ))}
-                <Segment
-                  label="✗ ATTEMPT"
-                  active={climb.kind === "attempt"}
-                  activeColor={colors.gunmetal}
-                  onPress={() => onChange(withClimbOutcome(climb, { kind: "attempt" }))}
-                />
-              </View>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-                <StepButton
-                  glyph="−"
-                  disabled={firstGo || climb.tries <= 1}
-                  onPress={() => onChange({ ...climb, tries: climb.tries - 1 })}
-                />
-                <Text
-                  style={{
-                    width: 24,
-                    textAlign: "center",
-                    fontFamily: fonts.monoSemiBold,
-                    fontSize: 15,
-                    color: colors.gunmetal,
-                  }}
-                >
-                  {climb.tries}
-                </Text>
-                <StepButton
-                  glyph="+"
-                  disabled={firstGo}
-                  onPress={() => onChange({ ...climb, tries: Math.min(99, climb.tries + 1) })}
-                />
-              </View>
-            </View>
-
-            <ProjectRow
-              on={project}
-              enabled={named}
-              meta={known === null ? null : projectMetaLabel(known)}
-              onPress={onToggleProject}
-            />
-
-            <Pressable
-              onPress={onClose}
-              accessibilityRole="button"
-              style={press({
-                minHeight: 50,
-                alignItems: "center",
-                justifyContent: "center",
-                borderRadius: radius.control,
-                backgroundColor: colors.azureInk,
-              })}
-            >
-              <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 15, color: colors.white }}>
-                Done
+                {climb.tries}
               </Text>
-            </Pressable>
+              <StepButton
+                glyph="+"
+                disabled={firstGo}
+                onPress={() => onChange({ ...climb, tries: Math.min(99, climb.tries + 1) })}
+              />
+            </View>
           </View>
-        )}
-      </KeyboardAvoidingView>
+
+          <ProjectRow
+            on={project}
+            enabled={named}
+            meta={known === null ? null : projectMetaLabel(known)}
+            onPress={onToggleProject}
+          />
+
+          <Pressable
+            onPress={onClose}
+            accessibilityRole="button"
+            style={press({
+              minHeight: 50,
+              alignItems: "center",
+              justifyContent: "center",
+              borderRadius: radius.control,
+              backgroundColor: colors.azureInk,
+            })}
+          >
+            <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 15, color: colors.white }}>
+              Done
+            </Text>
+          </Pressable>
+        </View>
+      )}
     </Sheet>
   );
 }
