@@ -278,10 +278,17 @@ Project `Sendtally` at app.revenuecat.com, id `f2a60af6`.
 6. **API keys.** The Android public SDK key (`goog_…`) goes in `apps/mobile/eas.json` as `EXPO_PUBLIC_REVENUECAT_ANDROID_KEY`; it is a public key, like the Clerk publishable key.
    The secret key (`sk_…`) goes to Doppler as `REVENUECAT_SECRET_API_KEY`, then `infra/scripts/push-secrets.sh production`.
 
-iOS billing is not set up yet.
-`EXPO_PUBLIC_REVENUECAT_IOS_KEY` is unset, so `storeBillingAvailable` is false on iOS and the app simply shows no purchase option - it does not crash, and nothing links out to web checkout.
-The order is the same one Play forced: ship a build first, because App Store Connect will not accept in-app purchase products for an app with no build, then add the `sendtally iOS` app to the RevenueCat project, create the subscription products, attach them to `sendtally_member`, add them to the `default` offering, and put the `appl_…` key in `eas.json`.
-The App Store also needs the paid applications agreement signed and banking details filled in before it will sell anything.
+iOS billing is live.
+The `sendtally iOS` app exists in the RevenueCat project, `membership_monthly` and `membership_yearly` are attached to `sendtally_member` and sit in the `default` offering, and the `appl_…` public key is the iOS default in `apps/mobile/lib/config.ts`.
+Confirm the server half without building anything:
+
+```
+curl -s -H "Authorization: Bearer <appl_ key>" -H "X-Platform: ios" \
+  "https://api.revenuecat.com/v1/subscribers/%24RCAnonymousID%3Aprobe/offerings"
+```
+
+It answers with the `default` offering and both product ids when iOS is wired up correctly.
+Getting there took the order Play forced: ship a build first, because App Store Connect will not accept in-app purchase products for an app with no build, and sign the paid applications agreement, without which both products sit at `MISSING_METADATA`.
 
 The project also carries RevenueCat's Test Store app, with test products attached to the same entitlement and offering.
 Its products are `membership_monthly` at $3.00 and `membership_yearly` at $24.00, mirroring the Play prices; RevenueCat's auto-created `monthly`, `yearly` and `lifetime` test products are inactive.
@@ -293,6 +300,25 @@ Never ship a production build with the test key.
 
 Play Billing only works in a build installed through Play (the internal testing track) on a device whose Google account is a licence tester (Play Console, Setup, Licence testing).
 A sideloaded APK fails the purchase with "item not available".
+
+On iOS the equivalent is a locally built app plus an App Store sandbox tester, and it is worth running before every submission, because it exercises exactly what a reviewer's device does.
+
+1. **Sandbox tester.** App Store Connect, Users and Access, Sandbox, Test Accounts. It has to be an email that is not already an Apple ID; a `+alias` address works. Region United States, so the prices match the ladder above. The API cannot create these - the console is the only way.
+2. **Sign the phone in.** Settings, Developer, Sandbox Apple Account. That slot is separate from the real Apple ID, so nothing has to be signed out.
+3. **Build and install.**
+
+   ```
+   cd apps/mobile
+   npx expo run:ios --device <udid> --configuration Release --no-bundler
+   ```
+
+   Release rather than Debug: the JS is embedded, so no Metro process has to survive the build, and it is the configuration a reviewer runs.
+   CocoaPods runs under the rbenv ruby, which needs Homebrew `gmp` installed - without it the ruby aborts on a missing `libgmp.10.dylib` and every `pod` call dies before it prints anything.
+   The PostHog sourcemap phase needs `POSTHOG_CLI_API_KEY`, an EAS-only secret, so strip its prefix from the "Bundle React Native code" shellScript in the generated `ios/sendtally.xcodeproj/project.pbxproj` before building.
+   A local run picks up the real `appl_…` key from `lib/config.ts`; the EAS `development` profile does not, it overrides both keys with the RevenueCat test store.
+
+4. **Install.** `xcrun devicectl device install app --device <udid> <path to sendtally.app>` with the phone unlocked. If the App Store or TestFlight copy of `com.sendtally.app` is on the phone, the install fails with CoreDeviceError 3002, "a coordinated app install already exists"; delete the app from the home screen and install again.
+5. **Buy.** Sign into the app with a throwaway account, Settings, Manage membership, and buy a plan. A sandbox purchase is a real RevenueCat event, so it hits the production webhook and writes a real `store_entitlements` row for whichever Clerk user is signed in - which is why the account is a throwaway.
 
 ### Store guidelines
 
