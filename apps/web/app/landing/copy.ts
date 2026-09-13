@@ -36,16 +36,51 @@ export const COPY = {
   },
 
   hero: {
-    eyebrow: "CLIMBING TRAINING LOG · TREND INSIGHTS",
-    title: "See what six months of climbing adds up to.",
+    features: [
+      {
+        key: "trends",
+        eyebrow: "TREND INSIGHTS",
+        cardTitle: "Trends",
+        cardCaption: "LAST 3 MONTHS · 31 SESSIONS",
+        chartLabel: "CLIMBS PER WEEK",
+      },
+      {
+        key: "tags",
+        eyebrow: "TAGS & FILTERS",
+        cardTitle: "Tags",
+        cardCaption: "4 TAGS · 31 SESSIONS",
+        chartLabel: "SESSIONS PER TAG",
+      },
+      {
+        key: "effort",
+        eyebrow: "EFFORT SCORE",
+        cardTitle: "Effort",
+        cardCaption: "RPE · LAST 8 WEEKS",
+        chartLabel: "RPE PER SESSION",
+      },
+      {
+        key: "pyramid",
+        eyebrow: "GRADE PYRAMID",
+        cardTitle: "Pyramid",
+        cardCaption: "LAST 3 MONTHS · 90 SENDS",
+        chartLabel: "SENDS BY GRADE",
+      },
+      {
+        key: "projects",
+        eyebrow: "PROJECT TRACKING",
+        cardTitle: "Projects",
+        cardCaption: "3 OPEN · 1 SENT",
+      },
+      {
+        key: "strava",
+        eyebrow: "STRAVA POSTING",
+        cardTitle: "Posted to Strava",
+        cardCaption: "TODAY AT 6:42 PM",
+        chartLabel: "SENDS BY GRADE",
+      },
+    ] as const,
+    title: "Your new favorite climbing journal",
     body: "Quickly and easily log your sessions - grades, sends, attempts. Use RPE to track effort over time. Post to Strava to see your climbing with your other activities. Membership adds trends and insight: volume, grade pyramid, hardest send, flash rate and average grade.",
-    cta: "Create account →",
-    signIn: "Sign in",
-    pills: ["Log sessions", "RPE score", "Strava posting", "Trend insights"],
-    card: {
-      title: "Trends",
-      chartLabel: "CLIMBS PER WEEK",
-    },
   },
 
   free: {

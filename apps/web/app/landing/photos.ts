@@ -5,8 +5,8 @@ export type LandingPhoto = {
 
 export const LANDING_PHOTOS = {
   hero: {
-    src: "/images/landing/hero.jpg",
-    alt: "A boulderer heel-hooking under a steep granite roof",
+    src: "/images/landing/hero-wall.webp",
+    alt: "A climber high on a long limestone wall under clear sky",
   },
   band: {
     src: "/images/landing/band.jpg",
