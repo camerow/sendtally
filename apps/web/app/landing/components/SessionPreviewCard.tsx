@@ -41,7 +41,7 @@ export function SessionPreviewCard(): React.ReactElement {
           WH
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-          <span style={{ fontWeight: 600, fontSize: 14 }}>Will Hendriks</span>
+          <span style={{ fontWeight: 600, fontSize: 14 }}>Will Cameron</span>
           <span
             style={{
               fontFamily: "var(--font-mono)",

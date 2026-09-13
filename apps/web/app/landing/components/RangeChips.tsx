@@ -1,5 +1,5 @@
 import React from "react";
-import { RANGE_CHIPS } from "./heroRanges";
+const RANGE_CHIPS = ["1M", "3M", "6M", "YTD", "1Y", "ALL"];
 
 export type RangeChipsProps = {
   active: string;

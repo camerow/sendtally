@@ -45,18 +45,68 @@
 }
 
 .l-hero {
-  display: grid;
-  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
-  gap: clamp(32px, 5vw, 64px);
-  align-items: center;
-  padding: clamp(40px, 8vw, 78px) clamp(20px, 5vw, 56px) clamp(48px, 8vw, 84px);
+  /* Vertical crop of the hero photo. 0% shows the summit, 100% the base of the wall.
+     The photo is portrait and the band is wide, so cover crops height only and this
+     is the single knob that positions the climber. */
+  --hero-crop: 47%;
+
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+/* .l-photo sets position: relative further down this file, so the hero background
+   needs the two-class selector to win on specificity rather than order. */
+.l-photo.l-hero-bg {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+}
+
+.l-hero-bg .l-photo-img {
+  object-position: 50% var(--hero-crop);
+}
+
+/* Narrow scrim: dense enough for the copy, clear of the climber by ~42%.
+   The second gradient keeps the nav edge legible without darkening the whole frame. */
+.l-hero-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    linear-gradient(
+      100deg,
+      rgba(53, 52, 63, 0.95) 0%,
+      rgba(53, 52, 63, 0.8) 22%,
+      rgba(53, 52, 63, 0.1) 42%,
+      rgba(53, 52, 63, 0) 56%
+    ),
+    linear-gradient(180deg, rgba(53, 52, 63, 0.42) 0%, rgba(53, 52, 63, 0) 22%);
+}
+
+.l-hero-inner {
   max-width: 1440px;
   margin: 0 auto;
+  min-height: clamp(430px, 46vw, 580px);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.78fr);
+  gap: clamp(32px, 5vw, 64px);
+  align-items: center;
+  padding: clamp(44px, 7vw, 84px) clamp(20px, 5vw, 56px);
 }
 
 @media (max-width: 860px) {
-  .l-hero {
+  .l-hero-inner {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .l-hero-scrim {
+    background: linear-gradient(
+      180deg,
+      rgba(53, 52, 63, 0.9) 0%,
+      rgba(53, 52, 63, 0.78) 55%,
+      rgba(53, 52, 63, 0.88) 100%
+    );
   }
 }
 
@@ -64,10 +114,10 @@
   margin: 0;
   font-family: var(--font-display);
   font-weight: 800;
-  font-size: clamp(38px, 7vw, 66px);
-  line-height: 0.98;
+  font-size: clamp(44px, 8.2vw, 80px);
+  line-height: 0.96;
   letter-spacing: -0.035em;
-  color: var(--bs-gunmetal);
+  color: var(--text-on-dark);
   text-wrap: balance;
 }
 
@@ -399,6 +449,56 @@
   animation: l-rise 720ms var(--motion-reveal) both;
 }
 
+.l-word-slot,
+.l-eyebrow-slot {
+  display: inline-block;
+  overflow: hidden;
+  padding-bottom: 0.14em;
+  margin-bottom: -0.14em;
+}
+
+.l-word-slot {
+  color: var(--bs-azure-ink);
+}
+
+.l-eyebrow-slot {
+  color: var(--bs-gold);
+  font-weight: 700;
+  font-size: 1.9em;
+  letter-spacing: 0.08em;
+}
+
+.l-eyebrow-slot .l-word {
+  animation: l-word-swell 560ms var(--motion-reveal) both;
+}
+
+@keyframes l-word-swell {
+  from {
+    opacity: 0;
+    transform: translateY(100%) scale(0.86);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.l-word {
+  display: inline-block;
+  animation: l-word-up 560ms var(--motion-reveal) both;
+}
+
+@keyframes l-word-up {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 .l-reveal--armed {
   opacity: 0;
   transform: translateY(18px);
@@ -438,7 +538,9 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .l-rise {
+  .l-rise,
+  .l-word,
+  .l-hero-face {
     animation: none;
   }
 
@@ -482,24 +584,8 @@
   display: none;
 }
 
-.l-hero-visual {
-  position: relative;
-  padding-bottom: 150px;
-}
-
-.l-hero-photo {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 1440 / 1220;
-  border-radius: var(--radius-panel);
-  animation-duration: 900ms;
-}
-
 .l-hero-card-slot {
-  position: absolute;
-  left: 0;
-  bottom: 0;
-  width: min(400px, 72%);
+  width: 100%;
   animation-duration: 900ms;
 }
 
@@ -508,9 +594,10 @@
   border-radius: var(--radius-card-lg);
   box-shadow: var(--shadow-float);
   padding: clamp(18px, 3vw, 26px);
+  min-height: 286px;
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  justify-content: center;
   font-family: var(--font-sans);
   color: var(--bs-gunmetal);
 }
@@ -519,30 +606,58 @@
   padding: 12px;
 }
 
-.l-hero-card-fade {
-  transition: opacity 250ms ease-out;
+.l-hero-face {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  animation: l-face-in 420ms var(--motion-reveal) both;
 }
 
-.l-hero-card--swap .l-hero-card-fade {
-  opacity: 0.25;
+@keyframes l-face-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
-@media (max-width: 480px) {
-  .l-hero-visual {
-    padding-bottom: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
+.l-hero-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
 
-  .l-hero-photo {
-    aspect-ratio: 16 / 10;
-  }
+.l-hero-project {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--line-on-light-soft);
+}
 
-  .l-hero-card-slot {
-    position: relative;
-    width: 100%;
-  }
+.l-hero-project:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.l-hero-project-meta {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-on-white-secondary);
+  white-space: nowrap;
+}
+
+.l-hero-figure {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 44px;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: var(--text-label-accent);
 }
 
 .l-free-pills {
