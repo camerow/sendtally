@@ -4,14 +4,6 @@ import { useStoredDraft } from "@sendtally/features/log-session";
 import { DiscardDraftDialog } from "../../components/DiscardDraftDialog";
 import { sessionDraftStorage } from "../../lib/sessionDraftStorage";
 
-const label: React.CSSProperties = {
-  fontFamily: "var(--font-mono)",
-  fontWeight: 500,
-  fontSize: 11,
-  letterSpacing: "0.08em",
-  color: "rgba(64,63,76,0.6)",
-};
-
 export function DraftSessionRow(): React.ReactElement | null {
   const { stored, discard } = useStoredDraft(sessionDraftStorage);
   const [confirming, setConfirming] = React.useState(false);
@@ -37,24 +29,15 @@ export function DraftSessionRow(): React.ReactElement | null {
             {climbs} · {draft.startTime}–{draft.endTime}
           </span>
         </span>
-        <span style={label}>
+        <span className="session-row-draft-saved">
           SAVED ON THIS DEVICE AT{" "}
           {savedAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
         </span>
-        <span
-          style={{ display: "flex", alignItems: "center", gap: 10, justifyContent: "flex-end" }}
-        >
+        <span className="session-row-draft-actions">
           <button
             type="button"
             onClick={() => setConfirming(true)}
-            style={{
-              ...label,
-              background: "none",
-              border: "none",
-              padding: 0,
-              cursor: "pointer",
-              textDecoration: "underline",
-            }}
+            className="session-row-draft-discard"
           >
             Discard
           </button>
@@ -62,7 +45,6 @@ export function DraftSessionRow(): React.ReactElement | null {
             Resume
           </Link>
         </span>
-        <span />
       </div>
       {confirming && (
         <DiscardDraftDialog
