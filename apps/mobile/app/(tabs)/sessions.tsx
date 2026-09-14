@@ -67,6 +67,7 @@ export default function Sessions(): React.ReactElement {
   const [filters, setFilters] = React.useState<SessionFilters>({ grouping: "month", tags: [] });
   const [filtersOpen, setFiltersOpen] = React.useState(false);
   const [currentKey, setCurrentKey] = React.useState<string | null>(null);
+  // ponytail: a second status() read per mount, to know if Strava is live; a Strava-status context across tabs if it ever matters
   const settings = useSettings(api);
   const connect = useStravaConnect(api, settings.reload);
   const stravaPrompt = useStravaSetupDismissed();

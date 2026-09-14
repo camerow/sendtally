@@ -29,14 +29,8 @@ export function useTrends(
   api: SendtallyApi,
   { preview = false }: TrendsOptions = {}
 ): TrendsFeature {
-  const [chosenRange, setChosenRange] = React.useState<TrendRange>("3m");
+  const [chosenRange, setRange] = React.useState<TrendRange>("3m");
   const range = preview ? PREVIEW_TREND_RANGE : chosenRange;
-  const setRange = React.useCallback(
-    (next: TrendRange): void => {
-      if (!preview || next === PREVIEW_TREND_RANGE) setChosenRange(next);
-    },
-    [preview]
-  );
   const [discipline, setDiscipline] = React.useState<Discipline | null>(null);
   const [selectedTags, setSelectedTags] = React.useState<string[]>([]);
 

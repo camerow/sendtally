@@ -171,7 +171,7 @@ export default function Sessions(): React.ReactElement {
           <p className="sessions-first-body">
             Name, where, the climbs you got on. About a minute, and it scores itself.
           </p>
-          <Link to="/app/sessions/new" className="sessions-primary-link sessions-primary-link--lg">
+          <Link to="/app/sessions/new" className="sessions-primary-link">
             Log a session
           </Link>
         </div>

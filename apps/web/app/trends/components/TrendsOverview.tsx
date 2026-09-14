@@ -36,6 +36,11 @@ const scrollToPanel = (): void => {
   document.getElementById(UPGRADE_PANEL_ID)?.scrollIntoView({ behavior: "smooth", block: "start" });
 };
 
+const lockTile = (event: React.MouseEvent): void => {
+  event.preventDefault();
+  scrollToPanel();
+};
+
 export function TrendsOverview({
   apiUrl,
   preview = false,
@@ -78,67 +83,61 @@ export function TrendsOverview({
             marginTop: 24,
           }}
         >
-          {state.data.tiles.map((tile) => {
-            const body = (
-              <>
-                <span
-                  style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}
-                >
-                  <span
-                    style={{
-                      fontFamily: "var(--font-mono)",
-                      fontWeight: 500,
-                      fontSize: 11,
-                      letterSpacing: "0.08em",
-                      color: "var(--text-label-accent)",
-                    }}
-                  >
-                    {tile.label}
-                  </span>
-                  {!preview && (
-                    <span
-                      style={{
-                        ...monoMuted,
-                        fontSize: 10,
-                        letterSpacing: "0.08em",
-                        color: "rgba(64,63,76,0.72)",
-                      }}
-                    >
-                      DETAILS →
-                    </span>
-                  )}
-                </span>
+          {state.data.tiles.map((tile) => (
+            <Link
+              key={tile.metric}
+              to={`/app/trends/${tile.metric}`}
+              style={tileStyle}
+              onClick={preview ? lockTile : undefined}
+            >
+              <span
+                style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}
+              >
                 <span
                   style={{
-                    fontFamily: "var(--font-display)",
-                    fontWeight: 700,
-                    fontSize: 30,
-                    letterSpacing: "-0.02em",
+                    fontFamily: "var(--font-mono)",
+                    fontWeight: 500,
+                    fontSize: 11,
+                    letterSpacing: "0.08em",
+                    color: "var(--text-label-accent)",
                   }}
                 >
-                  {tile.value}
+                  {tile.label}
                 </span>
-                <span style={{ ...monoMuted, color: "rgba(64,63,76,0.72)" }}>{tile.caption}</span>
-                <div style={{ marginTop: 4 }}>
-                  <TrendBars bars={tile.bars} height={44} />
-                </div>
-                <TrendTagBreakdown
-                  compact
-                  title="BY TAG"
-                  rows={state.data.details[tile.metric].breakdown.slice(0, TILE_BREAKDOWN_ROWS)}
-                />
-              </>
-            );
-            return preview ? (
-              <div key={tile.metric} style={tileStyle}>
-                {body}
+                {!preview && (
+                  <span
+                    style={{
+                      ...monoMuted,
+                      fontSize: 10,
+                      letterSpacing: "0.08em",
+                      color: "rgba(64,63,76,0.72)",
+                    }}
+                  >
+                    DETAILS →
+                  </span>
+                )}
+              </span>
+              <span
+                style={{
+                  fontFamily: "var(--font-display)",
+                  fontWeight: 700,
+                  fontSize: 30,
+                  letterSpacing: "-0.02em",
+                }}
+              >
+                {tile.value}
+              </span>
+              <span style={{ ...monoMuted, color: "rgba(64,63,76,0.72)" }}>{tile.caption}</span>
+              <div style={{ marginTop: 4 }}>
+                <TrendBars bars={tile.bars} height={44} />
               </div>
-            ) : (
-              <Link key={tile.metric} to={`/app/trends/${tile.metric}`} style={tileStyle}>
-                {body}
-              </Link>
-            );
-          })}
+              <TrendTagBreakdown
+                compact
+                title="BY TAG"
+                rows={state.data.details[tile.metric].breakdown.slice(0, TILE_BREAKDOWN_ROWS)}
+              />
+            </Link>
+          ))}
         </div>
       )}
       {preview && (

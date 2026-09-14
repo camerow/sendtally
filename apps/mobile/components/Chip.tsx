@@ -64,7 +64,11 @@ export function Chip({
         backgroundColor: active ? colors.gold : "transparent",
         borderWidth: 1,
         borderStyle: dashedBorder ? "dashed" : "solid",
-        borderColor: active ? colors.gold : dashed ? "rgba(64,63,76,0.3)" : "rgba(64,63,76,0.18)",
+        borderColor: active
+          ? colors.gold
+          : dashedBorder
+            ? "rgba(64,63,76,0.3)"
+            : "rgba(64,63,76,0.18)",
         opacity: disabled ? 0.5 : 1,
       })}
     >

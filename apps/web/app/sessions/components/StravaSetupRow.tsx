@@ -2,14 +2,12 @@ import React from "react";
 import { Link } from "react-router";
 import { useDismissed } from "../../lib/useDismissed";
 
-export const STRAVA_SETUP_DISMISSED_KEY = "sendtally:strava-setup:dismissed";
-
 export type StravaSetupRowProps = {
   lapsed: boolean;
 };
 
 export function StravaSetupRow({ lapsed }: StravaSetupRowProps): React.ReactElement | null {
-  const { dismissed, dismiss } = useDismissed(STRAVA_SETUP_DISMISSED_KEY);
+  const { dismissed, dismiss } = useDismissed();
   if (dismissed !== false) return null;
 
   return (
