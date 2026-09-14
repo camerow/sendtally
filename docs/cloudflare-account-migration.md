@@ -16,13 +16,13 @@ Destination: `Chalk and Circuits` (`f3514650e9f74f7fe7db71fdd6577a8f`).
 
 What lives in the source account today:
 
-| Resource                                   | Note                                                                   |
-| ------------------------------------------ | ---------------------------------------------------------------------- |
-| Zone `sendtally.com`                       | Cloudflare Registrar domain, registered 2026-08-06, expires 2027-08-06 |
+| Resource                          | Note                                                                   |
+| --------------------------------- | ---------------------------------------------------------------------- |
+| Zone `sendtally.com`              | Cloudflare Registrar domain, registered 2026-08-06, expires 2027-08-06 |
 | Worker `sendtally-api-production` | custom domain `api.sendtally.com`, 5 secrets, hourly + 04:00 crons     |
-| Worker `sendtally-web-production`          | custom domain `sendtally.com`, 1 secret                                |
-| D1 `sendtally-production`                  | ~43 MB. The `sendtally-staging` id in wrangler.jsonc never existed     |
-| Queue `sendtally-sync-production`          |                                                                        |
+| Worker `sendtally-web-production` | custom domain `sendtally.com`, 1 secret                                |
+| D1 `sendtally-production`         | ~43 MB. The `sendtally-staging` id in wrangler.jsonc never existed     |
+| Queue `sendtally-sync-production` |                                                                        |
 
 The destination already has an empty queue `sendtally-sync-production`
 (created 2026-09-03) that Terraform imports rather than recreates.
