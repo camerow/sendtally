@@ -24,6 +24,7 @@ import {
 import { t } from "@sendtally/features/i18n";
 import { colors, fonts } from "@sendtally/design/tokens";
 import { ScreenHeader } from "../../components/ScreenHeader";
+import { DraftSessionRow } from "../../features/sessions/DraftSessionRow";
 import { FilterSheet, type SessionFilters } from "../../features/sessions/FilterSheet";
 import { LogSessionFab } from "../../features/sessions/LogSessionFab";
 import { ScopeBar } from "../../features/sessions/ScopeBar";
@@ -192,13 +193,16 @@ export default function Sessions(): React.ReactElement {
         viewabilityConfigCallbackPairs={viewability}
         contentContainerStyle={{ paddingBottom: 96 }}
         ListHeaderComponent={
-          showStravaSetup ? (
-            <StravaSetupRow
-              lapsed={settings.vm.stravaConnected}
-              connect={connect}
-              onDismiss={stravaPrompt.dismiss}
-            />
-          ) : null
+          <>
+            {showStravaSetup && (
+              <StravaSetupRow
+                lapsed={settings.vm.stravaConnected}
+                connect={connect}
+                onDismiss={stravaPrompt.dismiss}
+              />
+            )}
+            <DraftSessionRow />
+          </>
         }
         refreshControl={
           <RefreshControl

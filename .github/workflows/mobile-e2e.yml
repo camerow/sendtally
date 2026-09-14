@@ -21,12 +21,12 @@ on:
       - ".github/workflows/mobile-e2e.yml"
   workflow_dispatch:
 
-# One run at a time across every branch, not one per ref. Every run publishes to the same
-# `e2e` update branch, because that is the branch the APK's channel resolves to, so two
-# runs in flight would each be looking at the other's JavaScript.
+# Two levels, because the two things being protected pull in opposite directions.
+# Per ref: a push supersedes the run before it, which would otherwise finish against
+# JavaScript nobody is proposing any more and hold the shared slot while it did.
 concurrency:
-  group: mobile-e2e
-  cancel-in-progress: false
+  group: mobile-e2e-${{ github.ref }}
+  cancel-in-progress: true
 
 env:
   API_LEVEL: 34
@@ -45,6 +45,12 @@ jobs:
   android:
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    # Across branches: one run at a time, never cancelled. Every run publishes to the same
+    # `e2e` update branch, because that is the branch the APK's channel resolves to, so two
+    # runs in flight would each be looking at the other's JavaScript.
+    concurrency:
+      group: mobile-e2e-shared
+      cancel-in-progress: false
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
