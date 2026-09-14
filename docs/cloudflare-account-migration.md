@@ -19,7 +19,7 @@ What lives in the source account today:
 | Resource                                   | Note                                                                   |
 | ------------------------------------------ | ---------------------------------------------------------------------- |
 | Zone `sendtally.com`                       | Cloudflare Registrar domain, registered 2026-08-06, expires 2027-08-06 |
-| Worker `sendtally-sync-service-production` | custom domain `api.sendtally.com`, 5 secrets, hourly + 04:00 crons     |
+| Worker `sendtally-api-production` | custom domain `api.sendtally.com`, 5 secrets, hourly + 04:00 crons     |
 | Worker `sendtally-web-production`          | custom domain `sendtally.com`, 1 secret                                |
 | D1 `sendtally-production`                  | ~43 MB. The `sendtally-staging` id in wrangler.jsonc never existed     |
 | Queue `sendtally-sync-production`          |                                                                        |
@@ -90,7 +90,7 @@ the zone does. Until then the new Workers are reachable only on their
 
 Stop the old cron so no further sessions post from the old account. The
 cleanest switch is to delete its triggers in the dashboard
-(Workers → sendtally-sync-service-production → Settings → Triggers), leaving
+(Workers → sendtally-api-production → Settings → Triggers), leaving
 the HTTP route up so the site stays live.
 
 Then copy the database:

@@ -1,8 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  // Keeps the historical Worker name: renaming it would create a new Worker with no secrets
-  // and the custom domains still attached to the old one. Move it as its own ops task.
-  "name": "sendtally-sync-service",
+  "name": "sendtally-api",
   "account_id": "f3514650e9f74f7fe7db71fdd6577a8f",
   "main": "src/index.ts",
   "compatibility_date": "2025-10-11",
