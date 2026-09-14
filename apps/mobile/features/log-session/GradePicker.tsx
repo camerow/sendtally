@@ -14,7 +14,7 @@ export type GradePickerProps = {
 
 export function GradePicker({ climb, onChange }: GradePickerProps): React.ReactElement {
   return (
-    <SelectRow label={t("common.grade")} value={climb.grade} mono>
+    <SelectRow label={t("common.grade")} value={climb.grade} valueFont={fonts.monoSemiBold}>
       {(close) =>
         gradeOptions(climb.scale).map((g) => {
           const selected = g === climb.grade;

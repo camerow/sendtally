@@ -24,24 +24,11 @@ const STYLE_FILL: Record<ClimbStyle, { fill: string; ink: string }> = {
   onsight: { fill: colors.petalInk, ink: colors.white },
 };
 
-const STYLE_HINT: Record<
-  ClimbStyle,
-  "logSession.hintRedpoint" | "logSession.hintFlash" | "logSession.hintOnsight"
-> = {
+const STYLE_HINT = {
   redpoint: "logSession.hintRedpoint",
   flash: "logSession.hintFlash",
   onsight: "logSession.hintOnsight",
-};
-
-function attemptOption(): Option {
-  return {
-    outcome: { kind: "attempt" },
-    label: t("logSession.attempt"),
-    hint: t("logSession.hintAttempt"),
-    fill: colors.gunmetal,
-    ink: colors.white,
-  };
-}
+} as const;
 
 function optionsFor(discipline: Discipline): Option[] {
   const sends = sendStylesFor(discipline).map((style) => ({
@@ -50,12 +37,16 @@ function optionsFor(discipline: Discipline): Option[] {
     hint: t(STYLE_HINT[style]),
     ...STYLE_FILL[style],
   }));
-  return [...sends, attemptOption()];
-}
-
-function matches(climb: ClimbDraft, outcome: ClimbOutcome): boolean {
-  if (outcome.kind === "attempt") return climb.kind === "attempt";
-  return climb.kind === "send" && climb.style === outcome.style;
+  return [
+    ...sends,
+    {
+      outcome: { kind: "attempt" },
+      label: t("logSession.attempt"),
+      hint: t("logSession.hintAttempt"),
+      fill: colors.gunmetal,
+      ink: colors.white,
+    },
+  ];
 }
 
 function Mark({ option, size }: { option: Option; size: number }): React.ReactElement {
@@ -93,7 +84,11 @@ export type ResultPickerProps = {
 export function ResultPicker({ climb, onChange }: ResultPickerProps): React.ReactElement {
   const options = optionsFor(disciplineOf(climb.scale));
   const current =
-    options.find((option) => matches(climb, option.outcome)) ?? options[options.length - 1]!;
+    options.find(({ outcome }) =>
+      outcome.kind === "attempt"
+        ? climb.kind === "attempt"
+        : climb.kind === "send" && climb.style === outcome.style
+    ) ?? options[options.length - 1]!;
 
   return (
     <SelectRow
@@ -101,53 +96,51 @@ export function ResultPicker({ climb, onChange }: ResultPickerProps): React.Reac
       value={current.label}
       leading={<Mark option={current} size={22} />}
     >
-      {(close) => (
-        <>
-          {options.map((option) => {
-            const selected = option === current;
-            return (
-              <Pressable
-                key={option.label}
-                accessibilityRole="radio"
-                accessibilityState={{ checked: selected }}
-                onPress={() => {
-                  onChange(withClimbOutcome(climb, option.outcome));
-                  close();
-                }}
-                style={pressRow({
-                  height: 56,
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  paddingHorizontal: 12,
-                  borderRadius: radius.control,
-                  backgroundColor: selected ? "rgba(27,98,206,0.08)" : "transparent",
-                })}
-              >
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-                  <Mark option={option} size={24} />
-                  <Text
-                    style={{ fontFamily: fonts.sansMedium, fontSize: 16, color: colors.gunmetal }}
-                  >
-                    {option.label}
-                  </Text>
-                </View>
+      {(close) =>
+        options.map((option) => {
+          const selected = option === current;
+          return (
+            <Pressable
+              key={option.label}
+              accessibilityRole="radio"
+              accessibilityState={{ checked: selected }}
+              onPress={() => {
+                onChange(withClimbOutcome(climb, option.outcome));
+                close();
+              }}
+              style={pressRow({
+                height: 56,
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+                paddingHorizontal: 12,
+                borderRadius: radius.control,
+                backgroundColor: selected ? "rgba(27,98,206,0.08)" : "transparent",
+              })}
+            >
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+                <Mark option={option} size={24} />
                 <Text
-                  style={{
-                    fontFamily: fonts.monoMedium,
-                    fontSize: 10,
-                    letterSpacing: 0.6,
-                    textTransform: "uppercase",
-                    color: colors.textMuted,
-                  }}
+                  style={{ fontFamily: fonts.sansMedium, fontSize: 16, color: colors.gunmetal }}
                 >
-                  {option.hint}
+                  {option.label}
                 </Text>
-              </Pressable>
-            );
-          })}
-        </>
-      )}
+              </View>
+              <Text
+                style={{
+                  fontFamily: fonts.monoMedium,
+                  fontSize: 10,
+                  letterSpacing: 0.6,
+                  textTransform: "uppercase",
+                  color: colors.textMuted,
+                }}
+              >
+                {option.hint}
+              </Text>
+            </Pressable>
+          );
+        })
+      }
     </SelectRow>
   );
 }

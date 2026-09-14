@@ -10,7 +10,7 @@ export type SelectRowProps = {
   label: string;
   value: string;
   leading?: React.ReactNode;
-  mono?: boolean;
+  valueFont?: string;
   children: (close: () => void) => React.ReactNode;
 };
 
@@ -22,7 +22,7 @@ export function SelectRow({
   label,
   value,
   leading,
-  mono = false,
+  valueFont = fonts.sansMedium,
   children,
 }: SelectRowProps): React.ReactElement {
   const [open, setOpen] = React.useState(false);
@@ -49,7 +49,7 @@ export function SelectRow({
           {leading}
           <Text
             style={{
-              fontFamily: mono ? fonts.monoSemiBold : fonts.sansMedium,
+              fontFamily: valueFont,
               fontSize: 15,
               color: colors.gunmetal,
             }}
