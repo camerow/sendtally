@@ -20,6 +20,7 @@ export {
   isoDay,
   isThreadUpdate,
   isUpdateDraft,
+  linkedSessions,
   logItems,
   openInjuries,
   sessionsInSpan,

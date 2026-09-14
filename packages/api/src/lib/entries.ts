@@ -23,7 +23,7 @@ export const entryBody = z
     ends_at: isoDate.nullish(),
     title: z.string().max(ENTRY_TITLE_MAX).nullish(),
     body: z.string().max(ENTRY_BODY_MAX).default(""),
-    fingerprint: z.string().max(200).nullish(),
+    fingerprints: z.array(z.string().max(200)).max(50).optional(),
     parent_id: z.string().max(200).nullish(),
     severity: z.number().int().min(0).max(10).nullish(),
     status: z.enum(["ongoing", "resolved"]).nullish(),
@@ -83,7 +83,6 @@ export type EntryWrite = {
   ends_at: string | null;
   title: string | null;
   body: string;
-  fingerprint: string | null;
   parent_id: string | null;
   severity: number | null;
   status: "ongoing" | "resolved" | null;
@@ -96,7 +95,6 @@ export function buildEntry(body: EntryBody): EntryWrite {
     ends_at: body.ends_at ?? null,
     title: trimmedOrNull(body.title),
     body: body.body.trim(),
-    fingerprint: trimmedOrNull(body.fingerprint),
     parent_id: trimmedOrNull(body.parent_id),
     severity: body.severity ?? null,
     // An injury is open until someone says otherwise; nothing else has a status.

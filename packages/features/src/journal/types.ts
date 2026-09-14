@@ -25,7 +25,7 @@ export type EntryDraft = {
   endsAt: string;
   title: string;
   body: string;
-  fingerprint: string;
+  fingerprints: string[];
   tags: string[];
   /** Set only while writing an update on a thread. */
   parentId: string;

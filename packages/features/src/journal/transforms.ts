@@ -63,7 +63,14 @@ export function sessionsInSpan(sessions: SessionRow[], entry: JournalEntry): Ses
 }
 
 export function entriesForSession(entries: JournalEntry[], fingerprint: string): JournalEntry[] {
-  return entries.filter((e) => e.fingerprint === fingerprint && !isThreadUpdate(e));
+  return entries.filter((e) => e.fingerprints.includes(fingerprint) && !isThreadUpdate(e));
+}
+
+/** The sessions an entry names, in the order the log shows them. */
+export function linkedSessions(sessions: SessionRow[], entry: JournalEntry): SessionRow[] {
+  return sessions
+    .filter((s) => entry.fingerprints.includes(s.fingerprint))
+    .sort((a, b) => b.start_at.localeCompare(a.start_at));
 }
 
 export function openInjuries(entries: JournalEntry[]): JournalEntry[] {
@@ -77,7 +84,7 @@ export function emptyDraft(kind: EntryKind, occurredAt: string): EntryDraft {
     endsAt: "",
     title: "",
     body: "",
-    fingerprint: "",
+    fingerprints: [],
     tags: [],
     parentId: "",
     severity: null,
@@ -91,7 +98,7 @@ export function draftFromEntry(entry: JournalEntry): EntryDraft {
     endsAt: entry.ends_at ?? "",
     title: entry.title ?? "",
     body: entry.body,
-    fingerprint: entry.fingerprint ?? "",
+    fingerprints: entry.fingerprints,
     tags: entry.tags.map((tag) => tag.name),
     parentId: entry.parent_id ?? "",
     severity: entry.severity,
@@ -106,7 +113,7 @@ export function entryInput(draft: EntryDraft): EntryInput {
     ends_at: spanning && draft.endsAt !== "" ? draft.endsAt : null,
     title: draft.title.trim() === "" ? null : draft.title.trim(),
     body: draft.body,
-    fingerprint: draft.fingerprint === "" ? null : draft.fingerprint,
+    fingerprints: draft.fingerprints,
     parent_id: draft.parentId === "" ? null : draft.parentId,
     severity: draft.severity,
     tags: draft.tags,

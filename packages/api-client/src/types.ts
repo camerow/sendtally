@@ -39,7 +39,7 @@ export type EntryInput = {
   ends_at?: string | null;
   title?: string | null;
   body: string;
-  fingerprint?: string | null;
+  fingerprints?: string[];
   parent_id?: string | null;
   severity?: number | null;
   status?: "ongoing" | "resolved" | null;

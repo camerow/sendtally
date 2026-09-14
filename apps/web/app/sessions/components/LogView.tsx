@@ -68,9 +68,12 @@ export function LogView({
   const inScope = React.useMemo(() => {
     if (scope === "sessions") return all.filter((i) => i.type === "session");
     if (scope === "journal") return all.filter((i) => i.type === "entry");
-    // An entry written about a session is read on that session: showing both
-    // puts the same night in the list twice, one row above the other.
-    return all.filter((i) => i.type === "session" || i.entry.fingerprint === null);
+    // A note written about a session is read on that session: showing both puts
+    // the same night in the list twice, one row above the other. Trips and
+    // injuries are their own thing and stay in the log whatever they link.
+    return all.filter(
+      (i) => i.type === "session" || i.entry.kind !== "journal" || i.entry.fingerprints.length === 0
+    );
   }, [all, scope]);
 
   const tagOptions = React.useMemo(() => sessionTagOptions(inScope), [inScope]);

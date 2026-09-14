@@ -11,9 +11,9 @@ import {
   useEntryComposer,
   type EntryDraft,
 } from "@sendtally/features/journal";
-import { sessionTitle, useTagVocabulary } from "@sendtally/features/sessions";
+import { useTagVocabulary } from "@sendtally/features/sessions";
 import { TagPicker } from "../../components/TagPicker";
-import { SessionSelect } from "./SessionSelect";
+import { SessionPicker } from "./SessionPicker";
 import { SeverityPicker } from "./SeverityPicker";
 
 const label: React.CSSProperties = {
@@ -176,12 +176,12 @@ export function EntryComposer({
         </Field>
       )}
 
-      <SessionSelect
+      <SessionPicker
         sessions={sessions}
         occurredAt={draft.occurredAt}
-        value={draft.fingerprint}
-        onChange={(fingerprint) => setDraft((d) => ({ ...d, fingerprint }))}
-        titleOf={sessionTitle}
+        endsAt={draft.endsAt}
+        value={draft.fingerprints}
+        onChange={(fingerprints) => setDraft((d) => ({ ...d, fingerprints }))}
       />
 
       <div style={{ display: "flex", alignItems: "center", gap: 16 }}>

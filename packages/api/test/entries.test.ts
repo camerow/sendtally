@@ -9,7 +9,7 @@ type Entry = {
   ends_at: string | null;
   title: string | null;
   body: string;
-  fingerprint: string | null;
+  fingerprints: string[];
   parent_id: string | null;
   severity: number | null;
   status: string | null;
@@ -188,7 +188,9 @@ describe("journal entries", () => {
 describe("session notes backfill", () => {
   const backfill = async (): Promise<void> => {
     const sql = await import("../migrations/0018_backfill_session_notes.sql?raw");
-    await env.DB.prepare(sql.default).run();
+    for (const statement of sql.default.split("--> statement-breakpoint")) {
+      await env.DB.prepare(statement).run();
+    }
   };
 
   const seedSession = (userId: string, fingerprint: string, notes: string | null) =>
@@ -210,7 +212,10 @@ describe("session notes backfill", () => {
     await backfill();
 
     const rows = await env.DB.prepare(
-      `SELECT kind, occurred_at, body, fingerprint FROM journal_entries WHERE user_id = 'u_backfill'`
+      `SELECT e.kind, e.occurred_at, e.body, s.fingerprint
+       FROM journal_entries e
+       LEFT JOIN entry_sessions s ON s.user_id = e.user_id AND s.entry_id = e.id
+       WHERE e.user_id = 'u_backfill'`
     ).all<{ kind: string; occurred_at: string; body: string; fingerprint: string }>();
     expect(rows.results).toEqual([
       {
@@ -231,5 +236,76 @@ describe("session notes backfill", () => {
       `SELECT COUNT(*) AS count FROM journal_entries WHERE user_id = 'u_backfill_twice'`
     ).first<{ count: number }>())!;
     expect(count).toBe(1);
+  });
+});
+
+describe("linking sessions", () => {
+  const seed = (userId: string, fingerprint: string) =>
+    env.DB.batch([
+      env.DB.prepare(
+        `INSERT OR IGNORE INTO users (id, timezone, created_at) VALUES (?, 'UTC', '')`
+      ).bind(userId),
+      env.DB.prepare(
+        `INSERT INTO sessions (user_id, fingerprint, source, start_at, end_at, climb_count, top_grade, top_send_grade, rpe, title, summary)
+         VALUES (?, ?, 'manual', '2026-05-22T18:00:00.000Z', '2026-05-22T19:30:00.000Z', 6, 5, 5, 6, 'Session', 's')`
+      ).bind(userId, fingerprint),
+    ]);
+
+  it("links an entry to several sessions and reads them back on both sides", async () => {
+    await seed("u_link", "fp_a");
+    await seed("u_link", "fp_b");
+
+    const trip = await created("u_link", {
+      kind: "trip",
+      occurred_at: "2026-05-22",
+      ends_at: "2026-05-26",
+      body: "Five days in Fontainebleau.",
+      fingerprints: ["fp_a", "fp_b"],
+    });
+    expect([...trip.fingerprints].sort()).toEqual(["fp_a", "fp_b"]);
+
+    const res = await call("u_link", "/v1/sessions/fp_a");
+    const { session } = (await res.json()) as { session: { entries: Entry[] } };
+    expect(session.entries.map((e) => e.id)).toEqual([trip.id]);
+  });
+
+  it("ignores a session the user does not own", async () => {
+    await seed("u_link_mine", "fp_mine");
+    await seed("u_link_theirs", "fp_theirs");
+    const entry = await created("u_link_mine", {
+      ...note,
+      fingerprints: ["fp_mine", "fp_theirs"],
+    });
+    expect(entry.fingerprints).toEqual(["fp_mine"]);
+  });
+
+  it("replaces the whole set on an edit", async () => {
+    await seed("u_link_edit", "fp_1");
+    await seed("u_link_edit", "fp_2");
+    const entry = await created("u_link_edit", { ...note, fingerprints: ["fp_1", "fp_2"] });
+
+    const res = await call("u_link_edit", `/v1/entries/${entry.id}`, {
+      method: "PUT",
+      body: JSON.stringify({ ...note, fingerprints: ["fp_2"] }),
+    });
+    expect(((await res.json()) as { entry: Entry }).entry.fingerprints).toEqual(["fp_2"]);
+  });
+
+  it("keeps the writing when a linked session is deleted", async () => {
+    await seed("u_link_del", "fp_gone");
+    await seed("u_link_del", "fp_stays");
+    const entry = await created("u_link_del", {
+      ...note,
+      fingerprints: ["fp_gone", "fp_stays"],
+    });
+
+    expect((await call("u_link_del", "/v1/sessions/fp_gone", { method: "DELETE" })).status).toBe(
+      200
+    );
+
+    const res = await call("u_link_del", `/v1/entries/${entry.id}`);
+    const read = ((await res.json()) as { entry: Entry }).entry;
+    expect(read.fingerprints).toEqual(["fp_stays"]);
+    expect(read.body).toBe(note.body);
   });
 });

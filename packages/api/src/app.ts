@@ -112,7 +112,7 @@ const sessionResponse = async (env: Env, userId: string, fingerprint: string) =>
   const { climbs_json, notes: _legacyNotes, ...rest } = row;
   const [tags, entries] = await Promise.all([
     repo.getSessionTags(env.DB, userId, fingerprint),
-    entriesResponse(env, userId, (e) => e.fingerprint === fingerprint),
+    entriesResponse(env, userId, (e) => e.fingerprints.includes(fingerprint)),
   ]);
   // `notes` is the log form's single field, now the session's first note entry.
   // Kept on the response so the session page and the edit form need no change.
@@ -122,28 +122,38 @@ const sessionResponse = async (env: Env, userId: string, fingerprint: string) =>
 
 // One read of the user's entries, tagged, filtered in memory. There are never
 // many, and the alternative is a per-entry tag query.
+type EntryResponse = repo.EntryRow & { tags: repo.TagRow[]; fingerprints: string[] };
+
 const entriesResponse = async (
   env: Env,
   userId: string,
-  keep: (entry: repo.EntryRow) => boolean = () => true
-) => {
-  const [rows, tagsByEntry] = await Promise.all([
+  keep: (entry: EntryResponse) => boolean = () => true
+): Promise<EntryResponse[]> => {
+  const [rows, tagsByEntry, sessionsByEntry] = await Promise.all([
     repo.listEntries(env.DB, userId),
     repo.tagsByEntry(env.DB, userId),
+    repo.sessionsByEntry(env.DB, userId),
   ]);
-  return rows.filter(keep).map((entry) => ({ ...entry, tags: tagsByEntry.get(entry.id) ?? [] }));
+  return rows
+    .map((entry) => ({
+      ...entry,
+      tags: tagsByEntry.get(entry.id) ?? [],
+      fingerprints: sessionsByEntry.get(entry.id) ?? [],
+    }))
+    .filter(keep);
 };
 
 const entryResponse = async (env: Env, userId: string, id: string) => {
   const row = await repo.getEntry(env.DB, userId, id);
   if (row === null) return null;
-  const [tags, updates] = await Promise.all([
+  const [tags, fingerprints, updates] = await Promise.all([
     repo.getEntryTags(env.DB, userId, id),
+    repo.getEntrySessions(env.DB, userId, id),
     entriesResponse(env, userId, (e) => e.parent_id === id),
   ]);
   // Oldest first: a thread reads as a story, unlike the log.
   updates.reverse();
-  return { ...row, tags, updates };
+  return { ...row, tags, fingerprints, updates };
 };
 
 // Every validated body answers the same way, so the shape a client sees for a
@@ -367,9 +377,10 @@ const app = new Hono<AppEnv>()
     const id = crypto.randomUUID();
     await repo.insertEntry(c.env.DB, userId, id, buildEntry(form));
     if (form.tags !== undefined) await repo.setEntryTags(c.env.DB, userId, id, form.tags);
+    const linked = await repo.setEntrySessions(c.env.DB, userId, id, form.fingerprints ?? []);
     await captureEvent(c, "journal_entry_created", {
       entry_kind: form.kind,
-      attached: String(form.fingerprint != null),
+      session_count: String(linked.length),
     });
     return c.json({ entry: await entryResponse(c.env, userId, id) }, 201);
   })
@@ -387,6 +398,7 @@ const app = new Hono<AppEnv>()
     const updated = await repo.updateEntry(c.env.DB, userId, id, buildEntry(form));
     if (!updated) return c.json({ error: "not found" }, 404);
     await repo.setEntryTags(c.env.DB, userId, id, form.tags ?? []);
+    await repo.setEntrySessions(c.env.DB, userId, id, form.fingerprints ?? []);
     await captureEvent(c, "journal_entry_updated", { entry_kind: form.kind });
     return c.json({ entry: await entryResponse(c.env, userId, id) });
   })
@@ -576,7 +588,7 @@ const app = new Hono<AppEnv>()
     const existing = await repo.getSession(c.env.DB, userId, fingerprint);
     if (existing === null) return c.json({ error: "not found" }, 404);
     await repo.deleteSession(c.env.DB, userId, fingerprint);
-    await repo.clearEntrySessions(c.env.DB, userId, fingerprint);
+    await repo.unlinkSession(c.env.DB, userId, fingerprint);
     await captureEvent(c, "manual_session_deleted", { session_source: existing.source });
     return c.json({ deleted: true });
   })

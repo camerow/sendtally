@@ -9,20 +9,26 @@ import {
   entryKindLabel,
   entryTitle,
   isoDay,
+  linkedSessions,
   sessionsInSpan,
   severitySeries,
   spanLabel,
   spansDates,
 } from "@sendtally/features/journal";
 import { sessionTitle } from "@sendtally/features/sessions";
+import { SessionRowItem } from "../sessions/components/SessionRowItem";
 import { BackLink } from "../components/BackLink";
 import { SeverityChart } from "../journal/components/SeverityChart";
 import journalStyles from "../journal/journal.css?url";
+import sessionsStyles from "../sessions/sessions.css?url";
 import { cloudflareContext } from "../lib/cloudflare-context";
 import { requireApi } from "../lib/api.server";
 import { useClientApi } from "../lib/useClientApi";
 
-export const links: LinksFunction = () => [{ rel: "stylesheet", href: journalStyles }];
+export const links: LinksFunction = () => [
+  { rel: "stylesheet", href: sessionsStyles },
+  { rel: "stylesheet", href: journalStyles },
+];
 
 export async function loader(
   args: LoaderFunctionArgs
@@ -45,8 +51,12 @@ export default function EntryDetailRoute(): React.ReactElement {
   const [error, setError] = React.useState<string | null>(null);
 
   const spanning = spansDates(entry.kind);
-  const inSpan = spanning ? sessionsInSpan(sessions, entry) : [];
-  const attached = sessions.find((s) => s.fingerprint === entry.fingerprint) ?? null;
+  const linked = linkedSessions(sessions, entry);
+  // A trip is a date range, so sessions inside it are matched rather than linked;
+  // anything already linked is not listed twice.
+  const inSpan = spanning
+    ? sessionsInSpan(sessions, entry).filter((s) => !entry.fingerprints.includes(s.fingerprint))
+    : [];
   const points = severitySeries(entry, entry.updates);
   const sessionsPerPoint = points.map(
     (point) =>
@@ -121,18 +131,20 @@ export default function EntryDetailRoute(): React.ReactElement {
 
       {entry.body.trim() !== "" && <p className="journal-body">{entry.body}</p>}
 
-      {attached !== null && (
+      {linked.length > 0 && (
         <div className="journal-card">
-          <span className="journal-card-label">{t("journal.session")}</span>
-          <Link to={`/app/sessions/${encodeURIComponent(attached.fingerprint)}`}>
-            {sessionTitle(attached)} · {dayLabel(isoDay(attached.start_at))}
-          </Link>
-        </div>
-      )}
-      {attached === null && entry.fingerprint !== null && (
-        <div className="journal-card">
-          <span className="journal-card-label">{t("journal.session")}</span>
-          <span className="journal-muted">{t("journal.sessionDeleted")}</span>
+          <span className="journal-card-label">
+            {t("journal.sessionCount", { count: linked.length })}
+          </span>
+          <div className="sessions-rows">
+            {linked.map((session) => (
+              <SessionRowItem
+                key={session.fingerprint}
+                session={session}
+                title={sessionTitle(session)}
+              />
+            ))}
+          </div>
         </div>
       )}
 
@@ -141,14 +153,15 @@ export default function EntryDetailRoute(): React.ReactElement {
           <span className="journal-card-label">
             {t("journal.sessionsInSpan", { count: inSpan.length })}
           </span>
-          {inSpan.map((session) => (
-            <Link
-              key={session.fingerprint}
-              to={`/app/sessions/${encodeURIComponent(session.fingerprint)}`}
-            >
-              {dayLabel(isoDay(session.start_at))} · {sessionTitle(session)}
-            </Link>
-          ))}
+          <div className="sessions-rows">
+            {inSpan.map((session) => (
+              <SessionRowItem
+                key={session.fingerprint}
+                session={session}
+                title={sessionTitle(session)}
+              />
+            ))}
+          </div>
         </div>
       )}
 

@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "2cb05b1f-27cb-4c2d-b4a5-bb8d9187ff2b",
+  "id": "1af45480-fe66-4ca0-bd50-5215a15140d9",
   "prevId": "07fec750-89db-403e-94d5-6f513ae47f3b",
   "tables": {
     "board_climb_names": {
@@ -209,6 +209,58 @@
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
+    "entry_sessions": {
+      "name": "entry_sessions",
+      "columns": {
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "entry_id": {
+          "name": "entry_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "fingerprint": {
+          "name": "fingerprint",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "idx_entry_sessions_user_fingerprint": {
+          "name": "idx_entry_sessions_user_fingerprint",
+          "columns": ["user_id", "fingerprint"],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "entry_sessions_user_id_users_id_fk": {
+          "name": "entry_sessions_user_id_users_id_fk",
+          "tableFrom": "entry_sessions",
+          "tableTo": "users",
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "entry_sessions_user_id_entry_id_fingerprint_pk": {
+          "columns": ["user_id", "entry_id", "fingerprint"],
+          "name": "entry_sessions_user_id_entry_id_fingerprint_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
     "entry_tags": {
       "name": "entry_tags",
       "columns": {
@@ -313,13 +365,6 @@
           "notNull": true,
           "autoincrement": false
         },
-        "fingerprint": {
-          "name": "fingerprint",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
         "parent_id": {
           "name": "parent_id",
           "type": "text",
@@ -360,11 +405,6 @@
         "idx_entries_user_occurred": {
           "name": "idx_entries_user_occurred",
           "columns": ["user_id", "occurred_at"],
-          "isUnique": false
-        },
-        "idx_entries_user_fingerprint": {
-          "name": "idx_entries_user_fingerprint",
-          "columns": ["user_id", "fingerprint"],
           "isUnique": false
         },
         "idx_entries_user_parent": {

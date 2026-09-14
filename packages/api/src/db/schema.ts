@@ -151,9 +151,6 @@ export const journalEntries = sqliteTable(
     ends_at: text("ends_at"),
     title: text("title"),
     body: text("body").notNull(),
-    // The session this was written about, if any. Cleared rather than cascaded
-    // when a session is deleted: the writing is the user's, the logbook row is not.
-    fingerprint: text("fingerprint"),
     // An injury update points at its injury. Children never appear in the log on
     // their own - they belong to the thread.
     parent_id: text("parent_id"),
@@ -167,8 +164,25 @@ export const journalEntries = sqliteTable(
   (t) => [
     primaryKey({ columns: [t.user_id, t.id] }),
     index("idx_entries_user_occurred").on(t.user_id, t.occurred_at),
-    index("idx_entries_user_fingerprint").on(t.user_id, t.fingerprint),
     index("idx_entries_user_parent").on(t.user_id, t.parent_id),
+  ]
+);
+
+// The sessions an entry is about. A trip is three days of climbing and a
+// reflection can cover a week, so this is a link table rather than a column.
+// A deleted session takes its links, never the writing.
+export const entrySessions = sqliteTable(
+  "entry_sessions",
+  {
+    user_id: text("user_id")
+      .notNull()
+      .references(() => users.id),
+    entry_id: text("entry_id").notNull(),
+    fingerprint: text("fingerprint").notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.user_id, t.entry_id, t.fingerprint] }),
+    index("idx_entry_sessions_user_fingerprint").on(t.user_id, t.fingerprint),
   ]
 );
 

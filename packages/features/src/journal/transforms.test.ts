@@ -7,6 +7,7 @@ import {
   emptyDraft,
   entryInput,
   entryTitle,
+  linkedSessions,
   logItems,
   openInjuries,
   sessionsInSpan,
@@ -21,7 +22,7 @@ function entry(overrides: Partial<JournalEntry> = {}): JournalEntry {
     ends_at: null,
     title: null,
     body: "Good hour at the end.",
-    fingerprint: null,
+    fingerprints: [],
     parent_id: null,
     severity: null,
     status: null,
@@ -128,7 +129,6 @@ describe("drafts", () => {
       occurred_at: "2026-05-22",
       ends_at: "2026-05-26",
       title: "Five days in Fontainebleau",
-      fingerprint: null,
       tags: [{ id: "t1", name: "Outdoor", slug: "outdoor" }],
     });
     expect(entryInput(draftFromEntry(trip))).toMatchObject({
@@ -179,5 +179,27 @@ describe("openInjuries and daysSince", () => {
     const now = new Date("2026-06-14T12:00:00.000Z");
     expect(daysSince("2026-05-18", now)).toBe(27);
     expect(daysSince("2026-07-01", now)).toBe(0);
+  });
+});
+
+describe("linkedSessions", () => {
+  it("returns the sessions an entry names, newest first", () => {
+    const trip = entry({
+      kind: "trip",
+      fingerprints: ["b", "a"],
+    });
+    const linked = linkedSessions(
+      [
+        session("a", "2026-05-22T09:00:00.000Z"),
+        session("b", "2026-05-24T09:00:00.000Z"),
+        session("c", "2026-05-26T09:00:00.000Z"),
+      ],
+      trip
+    );
+    expect(linked.map((s) => s.fingerprint)).toEqual(["b", "a"]);
+  });
+
+  it("drops a link whose session is gone", () => {
+    expect(linkedSessions([], entry({ fingerprints: ["gone"] }))).toEqual([]);
   });
 });

@@ -7,6 +7,7 @@ import { draftFromEntry } from "@sendtally/features/journal";
 import { BackLink } from "../components/BackLink";
 import { EntryComposer } from "../journal/components/EntryComposer";
 import journalStyles from "../journal/journal.css?url";
+import sessionsStyles from "../sessions/sessions.css?url";
 import { cloudflareContext } from "../lib/cloudflare-context";
 import { requireApi } from "../lib/api.server";
 import { useClientApi } from "../lib/useClientApi";
@@ -14,6 +15,7 @@ import logSessionStyles from "../log-session/log-session.css?url";
 
 export const links: LinksFunction = () => [
   { rel: "stylesheet", href: logSessionStyles },
+  { rel: "stylesheet", href: sessionsStyles },
   { rel: "stylesheet", href: journalStyles },
 ];
 

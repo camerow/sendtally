@@ -3,6 +3,7 @@ import { and, asc, count, desc, eq, getTableColumns, inArray, notInArray } from 
 import { drizzle } from "drizzle-orm/d1";
 import {
   boardConnections,
+  entrySessions,
   entryTags,
   journalEntries,
   projects,
@@ -372,10 +373,17 @@ export async function upsertSessionNote(
   const existing = await drizzle(db)
     .select({ id: journalEntries.id })
     .from(journalEntries)
+    .innerJoin(
+      entrySessions,
+      and(
+        eq(entrySessions.user_id, journalEntries.user_id),
+        eq(entrySessions.entry_id, journalEntries.id)
+      )
+    )
     .where(
       and(
         eq(journalEntries.user_id, userId),
-        eq(journalEntries.fingerprint, fingerprint),
+        eq(entrySessions.fingerprint, fingerprint),
         eq(journalEntries.kind, "journal")
       )
     )
@@ -384,17 +392,18 @@ export async function upsertSessionNote(
 
   if (existing === undefined) {
     if (body === null) return true;
-    await insertEntry(db, userId, crypto.randomUUID(), {
+    const id = crypto.randomUUID();
+    await insertEntry(db, userId, id, {
       kind: "journal",
       occurred_at: occurredAt,
       ends_at: null,
       title: null,
       body,
-      fingerprint,
       parent_id: null,
       severity: null,
       status: null,
     });
+    await setEntrySessions(db, userId, id, [fingerprint]);
     return true;
   }
 
@@ -519,6 +528,66 @@ export async function getEntry(
   return row ?? null;
 }
 
+export async function getEntrySessions(
+  db: D1Database,
+  userId: string,
+  entryId: string
+): Promise<string[]> {
+  const rows = await drizzle(db)
+    .select({ fingerprint: entrySessions.fingerprint })
+    .from(entrySessions)
+    .where(and(eq(entrySessions.user_id, userId), eq(entrySessions.entry_id, entryId)))
+    .all();
+  return rows.map((r) => r.fingerprint);
+}
+
+export async function sessionsByEntry(
+  db: D1Database,
+  userId: string
+): Promise<Map<string, string[]>> {
+  const rows = await drizzle(db)
+    .select({ entry_id: entrySessions.entry_id, fingerprint: entrySessions.fingerprint })
+    .from(entrySessions)
+    .where(eq(entrySessions.user_id, userId))
+    .all();
+  const byEntry = new Map<string, string[]>();
+  for (const { entry_id, fingerprint } of rows) {
+    const existing = byEntry.get(entry_id);
+    if (existing) existing.push(fingerprint);
+    else byEntry.set(entry_id, [fingerprint]);
+  }
+  return byEntry;
+}
+
+export async function setEntrySessions(
+  db: D1Database,
+  userId: string,
+  entryId: string,
+  fingerprints: string[]
+): Promise<string[]> {
+  const d = drizzle(db);
+  // Only sessions the user owns, and each at most once.
+  const owned = await d
+    .select({ fingerprint: sessions.fingerprint })
+    .from(sessions)
+    .where(and(eq(sessions.user_id, userId), inArray(sessions.fingerprint, fingerprints)))
+    .all();
+  const wanted = [...new Set(owned.map((s) => s.fingerprint))];
+  const clear = d
+    .delete(entrySessions)
+    .where(and(eq(entrySessions.user_id, userId), eq(entrySessions.entry_id, entryId)));
+  if (wanted.length === 0) await clear;
+  else {
+    await d.batch([
+      clear,
+      d
+        .insert(entrySessions)
+        .values(wanted.map((fingerprint) => ({ user_id: userId, entry_id: entryId, fingerprint }))),
+    ]);
+  }
+  return wanted;
+}
+
 export async function insertEntry(
   db: D1Database,
   userId: string,
@@ -557,23 +626,25 @@ export async function deleteEntry(db: D1Database, userId: string, id: string): P
   await d.batch([
     d.delete(entryTags).where(and(eq(entryTags.user_id, userId), inArray(entryTags.entry_id, ids))),
     d
+      .delete(entrySessions)
+      .where(and(eq(entrySessions.user_id, userId), inArray(entrySessions.entry_id, ids))),
+    d
       .delete(journalEntries)
       .where(and(eq(journalEntries.user_id, userId), inArray(journalEntries.id, ids))),
   ]);
   await pruneUnusedTags(d, userId);
 }
 
-// A deleted session must not destroy what the user wrote about it, so the link
-// is cleared and the entry stands on its own.
-export async function clearEntrySessions(
+// A deleted session must not destroy what the user wrote about it, so only the
+// links go and the entry stands on whatever sessions it still has.
+export async function unlinkSession(
   db: D1Database,
   userId: string,
   fingerprint: string
 ): Promise<void> {
   await drizzle(db)
-    .update(journalEntries)
-    .set({ fingerprint: null, updated_at: new Date().toISOString() })
-    .where(and(eq(journalEntries.user_id, userId), eq(journalEntries.fingerprint, fingerprint)));
+    .delete(entrySessions)
+    .where(and(eq(entrySessions.user_id, userId), eq(entrySessions.fingerprint, fingerprint)));
 }
 
 export type Discipline = "boulder" | "route";
@@ -764,6 +835,7 @@ export async function deleteUserData(db: D1Database, userId: string): Promise<vo
   await d.batch([
     d.delete(sessionTags).where(eq(sessionTags.user_id, userId)),
     d.delete(entryTags).where(eq(entryTags.user_id, userId)),
+    d.delete(entrySessions).where(eq(entrySessions.user_id, userId)),
     d.delete(journalEntries).where(eq(journalEntries.user_id, userId)),
     d.delete(tags).where(eq(tags.user_id, userId)),
     d.delete(projects).where(eq(projects.user_id, userId)),

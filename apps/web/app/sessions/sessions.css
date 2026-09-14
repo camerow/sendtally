@@ -816,3 +816,26 @@
     display: none;
   }
 }
+
+.session-row-remove {
+  align-self: center;
+  justify-self: end;
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 12px;
+  background: none;
+  font-family: var(--font-mono);
+  font-size: 16px;
+  line-height: 1;
+  color: rgba(64, 63, 76, 0.55);
+  cursor: pointer;
+}
+
+.session-row-remove:hover {
+  background: rgba(64, 63, 76, 0.08);
+  color: var(--bs-gunmetal);
+}
