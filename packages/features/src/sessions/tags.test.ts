@@ -83,7 +83,7 @@ describe("filterSessionsByTags", () => {
 describe("sessionTagGroups", () => {
   it("puts a session in a group per tag and untagged sessions last", () => {
     expect(
-      sessionTagGroups(sessions).map((g) => [g.key, g.sessions.map((s) => s.fingerprint)])
+      sessionTagGroups(sessions).map((g) => [g.key, g.items.map((s) => s.fingerprint)])
     ).toEqual([
       ["endurance", ["a", "b"]],
       ["bishop", ["a"]],

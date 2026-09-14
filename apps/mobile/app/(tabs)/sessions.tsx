@@ -18,9 +18,11 @@ import {
   sessionTagGroups,
   sessionTagOptions,
   sessionTitle,
-  sessionYearGroups,
+  logYearGroups,
+  sessionsIn,
   tagScopeItems,
 } from "@sendtally/features/sessions";
+import { logItems } from "@sendtally/features/journal";
 import { t } from "@sendtally/features/i18n";
 import { colors, fonts } from "@sendtally/design/tokens";
 import { ScreenHeader } from "../../components/ScreenHeader";
@@ -80,20 +82,24 @@ export default function Sessions(): React.ReactElement {
   const untaggedCount = React.useMemo(() => all.filter((s) => s.tags.length === 0).length, [all]);
   const visible = React.useMemo(() => filterSessionsByTags(all, filters.tags), [all, filters.tags]);
 
+  // The log will hold entries here too; for now the phone still shows sessions
+  // only, mapped through the same grouping the web log uses.
+  const items = React.useMemo(() => logItems(visible, []), [visible]);
+
   const { sections, scopeItems } = React.useMemo(() => {
     if (filters.grouping === "tag") {
-      const groups = sessionTagGroups(visible);
+      const groups = sessionTagGroups(items);
       return {
         sections: groups.map((g): Section => ({
           key: g.key,
           title: g.label,
-          meta: countLabel(g.sessions.length),
-          data: g.sessions,
+          meta: countLabel(sessionsIn(g.items).length),
+          data: sessionsIn(g.items),
         })),
         scopeItems: tagScopeItems(groups),
       };
     }
-    const years = sessionYearGroups(visible);
+    const years = logYearGroups(items);
     return {
       sections: years.flatMap((year) =>
         year.months.map((m): Section => ({
@@ -101,14 +107,14 @@ export default function Sessions(): React.ReactElement {
           title: m.name,
           meta: t("sessions.monthMeta", {
             year: m.year,
-            sessions: countLabel(m.sessions.length),
+            sessions: countLabel(sessionsIn(m.items).length),
           }),
-          data: m.sessions,
+          data: sessionsIn(m.items),
         }))
       ),
       scopeItems: monthScopeItems(years),
     };
-  }, [filters.grouping, visible]);
+  }, [filters.grouping, items]);
 
   const load = React.useCallback(async (): Promise<void> => {
     try {

@@ -135,6 +135,60 @@ export const sessionTags = sqliteTable(
   ]
 );
 
+// One table for everything a user writes. `kind` decides which of the nullable
+// columns mean anything, which is what keeps the composer one form: picking a
+// kind swaps a field group, never a table.
+export const journalEntries = sqliteTable(
+  "journal_entries",
+  {
+    user_id: text("user_id")
+      .notNull()
+      .references(() => users.id),
+    id: text("id").notNull(),
+    kind: text("kind", { enum: ["note", "reflection", "trip", "injury"] }).notNull(),
+    occurred_at: text("occurred_at").notNull(),
+    // Trips and injuries are spans. An injury with no end is still going.
+    ends_at: text("ends_at"),
+    title: text("title"),
+    body: text("body").notNull(),
+    // The session this was written about, if any. Cleared rather than cascaded
+    // when a session is deleted: the writing is the user's, the logbook row is not.
+    fingerprint: text("fingerprint"),
+    // An injury update points at its injury. Children never appear in the log on
+    // their own - they belong to the thread.
+    parent_id: text("parent_id"),
+    // 0-10 on an injury update. Optional: an update with no number just does not
+    // plot a point.
+    severity: integer("severity"),
+    status: text("status", { enum: ["ongoing", "resolved"] }),
+    created_at: text("created_at").notNull(),
+    updated_at: text("updated_at").notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.user_id, t.id] }),
+    index("idx_entries_user_occurred").on(t.user_id, t.occurred_at),
+    index("idx_entries_user_fingerprint").on(t.user_id, t.fingerprint),
+    index("idx_entries_user_parent").on(t.user_id, t.parent_id),
+  ]
+);
+
+// Entries share the user's one flat tag vocabulary with sessions. A second link
+// table rather than widening session_tags: no rebuild of every existing row.
+export const entryTags = sqliteTable(
+  "entry_tags",
+  {
+    user_id: text("user_id")
+      .notNull()
+      .references(() => users.id),
+    entry_id: text("entry_id").notNull(),
+    tag_id: text("tag_id").notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.user_id, t.entry_id, t.tag_id] }),
+    index("idx_entry_tags_user_tag").on(t.user_id, t.tag_id),
+  ]
+);
+
 export const projects = sqliteTable(
   "projects",
   {

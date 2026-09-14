@@ -15,7 +15,7 @@ export {
   monthKey,
   monthLabel,
   monthName,
-  sessionMonths,
+  logMonths,
   type SessionMonth,
 } from "./months";
 export { monthScopeItems, tagScopeItems, type ScopeItem } from "./scope";
@@ -38,10 +38,14 @@ export { useSessionTags, type SessionTagsEditor } from "./useSessionTags";
 export { useTagVocabulary, type TagVocabulary } from "./useTagVocabulary";
 export {
   countLabel,
+  logCountLabel,
+  logTotalsLabel,
   durationLabel,
   sessionMinutes,
   sessionTotals,
-  sessionYearGroups,
+  logYearGroups,
+  sessionsIn,
+  entriesIn,
   totalsLabel,
   type SessionGroupTotals,
   type SessionYear,

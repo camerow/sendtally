@@ -9,6 +9,7 @@ import type { Env } from "./bindings";
 import { purgeAccount } from "./lib/account";
 import { applyProjectFlags, climbCatalogue, climbSlug, projectBody } from "./lib/climbs";
 import { decryptSecret, encryptSecret } from "./lib/crypto";
+import { buildEntry, entryBody } from "./lib/entries";
 import { mirrorStoreEntitlements, resolveEntitlements } from "./lib/entitlements";
 import {
   buildManualSession,
@@ -108,12 +109,41 @@ const postAfterResponse = (c: Context<AppEnv>, userId: string, fingerprint: stri
 const sessionResponse = async (env: Env, userId: string, fingerprint: string) => {
   const row = await repo.getSession(env.DB, userId, fingerprint);
   if (row === null) return null;
-  const { climbs_json, ...rest } = row;
-  return {
-    ...rest,
-    tags: await repo.getSessionTags(env.DB, userId, fingerprint),
-    climbs: parseClimbs(climbs_json),
-  };
+  const { climbs_json, notes: _legacyNotes, ...rest } = row;
+  const [tags, entries] = await Promise.all([
+    repo.getSessionTags(env.DB, userId, fingerprint),
+    entriesResponse(env, userId, (e) => e.fingerprint === fingerprint),
+  ]);
+  // `notes` is the log form's single field, now the session's first note entry.
+  // Kept on the response so the session page and the edit form need no change.
+  const notes = entries.find((e) => e.kind === "note" && e.parent_id === null)?.body ?? null;
+  return { ...rest, notes, tags, entries, climbs: parseClimbs(climbs_json) };
+};
+
+// One read of the user's entries, tagged, filtered in memory. There are never
+// many, and the alternative is a per-entry tag query.
+const entriesResponse = async (
+  env: Env,
+  userId: string,
+  keep: (entry: repo.EntryRow) => boolean = () => true
+) => {
+  const [rows, tagsByEntry] = await Promise.all([
+    repo.listEntries(env.DB, userId),
+    repo.tagsByEntry(env.DB, userId),
+  ]);
+  return rows.filter(keep).map((entry) => ({ ...entry, tags: tagsByEntry.get(entry.id) ?? [] }));
+};
+
+const entryResponse = async (env: Env, userId: string, id: string) => {
+  const row = await repo.getEntry(env.DB, userId, id);
+  if (row === null) return null;
+  const [tags, updates] = await Promise.all([
+    repo.getEntryTags(env.DB, userId, id),
+    entriesResponse(env, userId, (e) => e.parent_id === id),
+  ]);
+  // Oldest first: a thread reads as a story, unlike the log.
+  updates.reverse();
+  return { ...row, tags, updates };
 };
 
 // Every validated body answers the same way, so the shape a client sees for a
@@ -326,6 +356,51 @@ const app = new Hono<AppEnv>()
     return c.json({ sessions });
   })
 
+  .get("/v1/entries", async (c) => {
+    return c.json({ entries: await entriesResponse(c.env, c.get("userId")) });
+  })
+
+  .post("/v1/entries", zValidator("json", entryBody, invalidBody), async (c) => {
+    const form = c.req.valid("json");
+    const userId = c.get("userId");
+    await repo.ensureUser(c.env.DB, userId);
+    const id = crypto.randomUUID();
+    await repo.insertEntry(c.env.DB, userId, id, buildEntry(form));
+    if (form.tags !== undefined) await repo.setEntryTags(c.env.DB, userId, id, form.tags);
+    await captureEvent(c, "journal_entry_created", {
+      entry_kind: form.kind,
+      attached: String(form.fingerprint != null),
+    });
+    return c.json({ entry: await entryResponse(c.env, userId, id) }, 201);
+  })
+
+  .get("/v1/entries/:id", async (c) => {
+    const entry = await entryResponse(c.env, c.get("userId"), c.req.param("id"));
+    if (entry === null) return c.json({ error: "not found" }, 404);
+    return c.json({ entry });
+  })
+
+  .put("/v1/entries/:id", zValidator("json", entryBody, invalidBody), async (c) => {
+    const form = c.req.valid("json");
+    const userId = c.get("userId");
+    const id = c.req.param("id");
+    const updated = await repo.updateEntry(c.env.DB, userId, id, buildEntry(form));
+    if (!updated) return c.json({ error: "not found" }, 404);
+    await repo.setEntryTags(c.env.DB, userId, id, form.tags ?? []);
+    await captureEvent(c, "journal_entry_updated", { entry_kind: form.kind });
+    return c.json({ entry: await entryResponse(c.env, userId, id) });
+  })
+
+  .delete("/v1/entries/:id", async (c) => {
+    const userId = c.get("userId");
+    const id = c.req.param("id");
+    const existing = await repo.getEntry(c.env.DB, userId, id);
+    if (existing === null) return c.json({ error: "not found" }, 404);
+    await repo.deleteEntry(c.env.DB, userId, id);
+    await captureEvent(c, "journal_entry_deleted", { entry_kind: existing.kind });
+    return c.json({ deleted: true });
+  })
+
   .get("/v1/tags", async (c) => {
     return c.json({ tags: await repo.listTags(c.env.DB, c.get("userId")) });
   })
@@ -383,6 +458,13 @@ const app = new Hono<AppEnv>()
     const history = await manualScoringHistory(c.env.DB, userId);
     const input = buildManualSession(fingerprint, form, history);
     await repo.insertManualSession(c.env.DB, userId, input);
+    await repo.upsertSessionNote(
+      c.env.DB,
+      userId,
+      fingerprint,
+      form.date,
+      normalisedNote(form.notes)
+    );
     if (form.tags !== undefined) {
       await repo.setSessionTags(c.env.DB, userId, fingerprint, form.tags);
     }
@@ -408,6 +490,13 @@ const app = new Hono<AppEnv>()
       const history = await manualScoringHistory(c.env.DB, userId, fingerprint);
       const input = buildManualSession(fingerprint, form, history);
       await repo.updateManualSession(c.env.DB, userId, input);
+      await repo.upsertSessionNote(
+        c.env.DB,
+        userId,
+        fingerprint,
+        form.date,
+        normalisedNote(form.notes)
+      );
       await repo.setSessionTags(c.env.DB, userId, fingerprint, form.tags ?? []);
       await applyProjectFlags(c.env.DB, userId, form.climbs);
       await captureEvent(c, "manual_session_updated", { session_source: "manual" });
@@ -436,20 +525,24 @@ const app = new Hono<AppEnv>()
     });
   })
 
-  // A note is the user's own writing about their session, so every session they
-  // own takes one, legacy board rows included. Nothing is re-scored or reposted.
+  // The log form's single notes field, kept as one endpoint so an edit from the
+  // session page does not have to know it is writing a journal entry.
   .put(
     "/v1/sessions/:fingerprint/notes",
     zValidator("json", sessionNotesBody, invalidBody),
     async (c) => {
+      const userId = c.get("userId");
+      const fingerprint = c.req.param("fingerprint");
       const notes = normalisedNote(c.req.valid("json").notes);
-      const saved = await repo.setSessionNotes(
+      const session = await repo.getSession(c.env.DB, userId, fingerprint);
+      if (session === null) return c.json({ error: "not found" }, 404);
+      await repo.upsertSessionNote(
         c.env.DB,
-        c.get("userId"),
-        c.req.param("fingerprint"),
+        userId,
+        fingerprint,
+        session.start_at.slice(0, 10),
         notes
       );
-      if (!saved) return c.json({ error: "not found" }, 404);
       await captureEvent(c, "session_notes_updated", { cleared: String(notes === null) });
       return c.json({ notes });
     }
@@ -483,6 +576,7 @@ const app = new Hono<AppEnv>()
     const existing = await repo.getSession(c.env.DB, userId, fingerprint);
     if (existing === null) return c.json({ error: "not found" }, 404);
     await repo.deleteSession(c.env.DB, userId, fingerprint);
+    await repo.clearEntrySessions(c.env.DB, userId, fingerprint);
     await captureEvent(c, "manual_session_deleted", { session_source: existing.source });
     return c.json({ deleted: true });
   })

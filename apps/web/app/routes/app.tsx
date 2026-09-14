@@ -23,7 +23,7 @@ export async function loader(args: LoaderFunctionArgs): Promise<null> {
 type NavItem = { label: MessageKey; to: string; icon: IconName };
 
 const NAV_ITEMS: NavItem[] = [
-  { label: "common.sessions", to: "/app", icon: "sessions" },
+  { label: "journal.log", to: "/app", icon: "sessions" },
   { label: "common.projects", to: "/app/projects", icon: "projects" },
   { label: "common.trends", to: "/app/trends", icon: "trends" },
   { label: "common.settings", to: "/app/settings", icon: "settings" },

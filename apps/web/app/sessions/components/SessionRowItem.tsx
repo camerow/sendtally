@@ -3,6 +3,7 @@ import { Link } from "react-router";
 import type { SessionRow } from "@sendtally/api-client";
 import { sessionDay, sessionGradeLabels, sessionMetaLabel } from "@sendtally/features/sessions";
 import { formatDate, t } from "@sendtally/features/i18n";
+import { StravaMark } from "../../components/StravaMark";
 
 export function SessionRowItem({
   session,
@@ -32,11 +33,13 @@ export function SessionRowItem({
         <span className="session-row-day">
           <span className="session-row-month">{month} </span>
           {day}
-          {onStrava && <span className="session-row-dot" />}
         </span>
       </span>
       <span className="session-row-main">
-        <span className="session-row-title">{title}</span>
+        <span className="session-row-title">
+          {title}
+          {onStrava && <StravaMark />}
+        </span>
         <span className="session-row-meta">{sessionMetaLabel(session)}</span>
         {session.tags.length > 0 && (
           <span className="session-row-tags">
@@ -63,27 +66,7 @@ export function SessionRowItem({
           </span>
         ))}
       </span>
-      <span className="session-row-badge">
-        {onStrava && (
-          <span
-            style={{
-              display: "inline-block",
-              fontFamily: "var(--font-mono)",
-              fontWeight: 500,
-              fontSize: 10,
-              letterSpacing: "0.08em",
-              textTransform: "uppercase",
-              borderRadius: "var(--radius-pill)",
-              padding: "3px 9px",
-              whiteSpace: "nowrap",
-              border: "1px solid rgba(27,98,206,0.4)",
-              color: "var(--bs-azure-ink)",
-            }}
-          >
-            {t("sessions.onStrava")}
-          </span>
-        )}
-      </span>
+      <span className="session-row-badge" />
       <span className="session-row-chevron">›</span>
     </Link>
   );

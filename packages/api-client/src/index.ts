@@ -3,6 +3,9 @@ import type { AppType } from "@sendtally/api/app";
 import { ApiError } from "./types";
 import type {
   ClimbSummary,
+  EntryDetail,
+  EntryInput,
+  JournalEntry,
   ConnectionStatus,
   Entitlements,
   GradeScales,
@@ -88,6 +91,26 @@ export class SendtallyApi {
 
   deleteLoggedSession(fingerprint: string): Promise<{ deleted: boolean }> {
     return body(this.client.v1.sessions[":fingerprint"].$delete({ param: { fingerprint } }));
+  }
+
+  entries(): Promise<{ entries: JournalEntry[] }> {
+    return body(this.client.v1.entries.$get());
+  }
+
+  entry(id: string): Promise<{ entry: EntryDetail }> {
+    return body(this.client.v1.entries[":id"].$get({ param: { id } }));
+  }
+
+  createEntry(input: EntryInput): Promise<{ entry: EntryDetail }> {
+    return body(this.client.v1.entries.$post({ json: input }));
+  }
+
+  updateEntry(id: string, input: EntryInput): Promise<{ entry: EntryDetail }> {
+    return body(this.client.v1.entries[":id"].$put({ param: { id }, json: input }));
+  }
+
+  deleteEntry(id: string): Promise<{ deleted: boolean }> {
+    return body(this.client.v1.entries[":id"].$delete({ param: { id } }));
   }
 
   tags(): Promise<{ tags: TagSummary[] }> {

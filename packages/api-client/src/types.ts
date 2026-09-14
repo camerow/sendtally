@@ -27,6 +27,25 @@ export type SessionWithClimbs = SessionRow & { climbs: SessionClimb[] };
 
 export type SessionTag = SessionDetail["tags"][number];
 
+export type JournalEntry = Ok<Client["v1"]["entries"]["$get"]>["entries"][number];
+
+export type EntryDetail = Ok<Client["v1"]["entries"][":id"]["$get"]>["entry"];
+
+export type EntryKind = JournalEntry["kind"];
+
+export type EntryInput = {
+  kind: EntryKind;
+  occurred_at: string;
+  ends_at?: string | null;
+  title?: string | null;
+  body: string;
+  fingerprint?: string | null;
+  parent_id?: string | null;
+  severity?: number | null;
+  status?: "ongoing" | "resolved" | null;
+  tags?: string[];
+};
+
 export type TagSummary = Ok<Client["v1"]["tags"]["$get"]>["tags"][number];
 
 export type ClimbSummary = Ok<Client["v1"]["climbs"]["$get"]>["climbs"][number];

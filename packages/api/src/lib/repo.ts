@@ -3,6 +3,8 @@ import { and, asc, count, desc, eq, getTableColumns, inArray, notInArray } from 
 import { drizzle } from "drizzle-orm/d1";
 import {
   boardConnections,
+  entryTags,
+  journalEntries,
   projects,
   sessions,
   sessionTags,
@@ -12,6 +14,7 @@ import {
   tags,
   users,
 } from "../db/schema";
+import type { EntryWrite } from "./entries";
 import type { StoreEntitlement } from "./revenuecat";
 import type { NormalizedTag } from "./tags";
 
@@ -202,7 +205,6 @@ export type ManualSessionInput = {
   title: string;
   summary: string;
   climbs_json: string;
-  notes: string | null;
 };
 
 export async function insertManualSession(
@@ -263,12 +265,48 @@ type Db = ReturnType<typeof drizzle>;
 
 const tagColumns = { id: tags.id, name: tags.name, slug: tags.slug };
 
-function pruneUnusedTags(d: Db, userId: string): Promise<unknown> {
-  const used = d
-    .select({ tag_id: sessionTags.tag_id })
-    .from(sessionTags)
-    .where(eq(sessionTags.user_id, userId));
-  return d.delete(tags).where(and(eq(tags.user_id, userId), notInArray(tags.id, used)));
+// A tag exists while something wears it. Both link tables count, so a tag left
+// only on an entry survives being taken off every session.
+async function pruneUnusedTags(d: Db, userId: string): Promise<void> {
+  const [onSessions, onEntries] = await Promise.all([
+    d
+      .select({ tag_id: sessionTags.tag_id })
+      .from(sessionTags)
+      .where(eq(sessionTags.user_id, userId))
+      .all(),
+    d
+      .select({ tag_id: entryTags.tag_id })
+      .from(entryTags)
+      .where(eq(entryTags.user_id, userId))
+      .all(),
+  ]);
+  const used = [...new Set([...onSessions, ...onEntries].map((r) => r.tag_id))];
+  const unused = used.length === 0 ? undefined : notInArray(tags.id, used);
+  await d.delete(tags).where(and(eq(tags.user_id, userId), unused));
+}
+
+/** Find or create the user's tags by slug. The vocabulary is shared; the links are not. */
+async function ensureTags(d: Db, userId: string, wanted: NormalizedTag[]): Promise<TagRow[]> {
+  const slugs = wanted.map((t) => t.slug);
+  const known =
+    slugs.length === 0
+      ? []
+      : await d
+          .select(tagColumns)
+          .from(tags)
+          .where(and(eq(tags.user_id, userId), inArray(tags.slug, slugs)))
+          .all();
+  const bySlug = new Map(known.map((t) => [t.slug, t]));
+
+  const missing = wanted.filter((t) => !bySlug.has(t.slug));
+  if (missing.length > 0) {
+    const created_at = new Date().toISOString();
+    const created = missing.map((t) => ({ id: crypto.randomUUID(), name: t.name, slug: t.slug }));
+    await d.insert(tags).values(created.map((t) => ({ user_id: userId, created_at, ...t })));
+    for (const tag of created) bySlug.set(tag.slug, tag);
+  }
+
+  return wanted.map((t) => bySlug.get(t.slug)!);
 }
 
 export async function listTags(db: D1Database, userId: string): Promise<TagSummary[]> {
@@ -319,19 +357,54 @@ export async function getSessionTags(
     .all();
 }
 
-// Notes belong to the user, not to the scoring engine, so they are written on
-// their own and any owned session takes one, board-sourced history included.
-export async function setSessionNotes(
+// A note belongs to the user, not to the scoring engine, so any owned session
+// takes one, board-sourced history included. Storage is the journal now: the
+// log form's single notes field edits the session's first entry, which is what
+// the old column could hold, and creates one when there is none.
+export async function upsertSessionNote(
   db: D1Database,
   userId: string,
   fingerprint: string,
-  notes: string | null
+  occurredAt: string,
+  body: string | null
 ): Promise<boolean> {
-  const result = await drizzle(db)
-    .update(sessions)
-    .set({ notes })
-    .where(and(eq(sessions.user_id, userId), eq(sessions.fingerprint, fingerprint)));
-  return result.meta.changes > 0;
+  if ((await getSession(db, userId, fingerprint)) === null) return false;
+  const existing = await drizzle(db)
+    .select({ id: journalEntries.id })
+    .from(journalEntries)
+    .where(
+      and(
+        eq(journalEntries.user_id, userId),
+        eq(journalEntries.fingerprint, fingerprint),
+        eq(journalEntries.kind, "note")
+      )
+    )
+    .orderBy(asc(journalEntries.created_at))
+    .get();
+
+  if (existing === undefined) {
+    if (body === null) return true;
+    await insertEntry(db, userId, crypto.randomUUID(), {
+      kind: "note",
+      occurred_at: occurredAt,
+      ends_at: null,
+      title: null,
+      body,
+      fingerprint,
+      parent_id: null,
+      severity: null,
+      status: null,
+    });
+    return true;
+  }
+
+  if (body === null) await deleteEntry(db, userId, existing.id);
+  else
+    await drizzle(db)
+      .update(journalEntries)
+      .set({ body, updated_at: new Date().toISOString() })
+      .where(and(eq(journalEntries.user_id, userId), eq(journalEntries.id, existing.id)));
+  return true;
 }
 
 export async function setSessionTags(
@@ -341,26 +414,7 @@ export async function setSessionTags(
   wanted: NormalizedTag[]
 ): Promise<TagRow[]> {
   const d = drizzle(db);
-  const slugs = wanted.map((t) => t.slug);
-  const known =
-    slugs.length === 0
-      ? []
-      : await d
-          .select(tagColumns)
-          .from(tags)
-          .where(and(eq(tags.user_id, userId), inArray(tags.slug, slugs)))
-          .all();
-  const bySlug = new Map(known.map((t) => [t.slug, t]));
-
-  const missing = wanted.filter((t) => !bySlug.has(t.slug));
-  if (missing.length > 0) {
-    const created_at = new Date().toISOString();
-    const created = missing.map((t) => ({ id: crypto.randomUUID(), name: t.name, slug: t.slug }));
-    await d.insert(tags).values(created.map((t) => ({ user_id: userId, created_at, ...t })));
-    for (const tag of created) bySlug.set(tag.slug, tag);
-  }
-
-  const linked = wanted.map((t) => bySlug.get(t.slug)!);
+  const linked = await ensureTags(d, userId, wanted);
   const clear = d
     .delete(sessionTags)
     .where(and(eq(sessionTags.user_id, userId), eq(sessionTags.fingerprint, fingerprint)));
@@ -375,6 +429,151 @@ export async function setSessionTags(
   }
   await pruneUnusedTags(d, userId);
   return linked;
+}
+
+export async function getEntryTags(
+  db: D1Database,
+  userId: string,
+  entryId: string
+): Promise<TagRow[]> {
+  return drizzle(db)
+    .select(tagColumns)
+    .from(entryTags)
+    .innerJoin(tags, and(eq(tags.user_id, entryTags.user_id), eq(tags.id, entryTags.tag_id)))
+    .where(and(eq(entryTags.user_id, userId), eq(entryTags.entry_id, entryId)))
+    .orderBy(asc(tags.name))
+    .all();
+}
+
+export async function tagsByEntry(db: D1Database, userId: string): Promise<Map<string, TagRow[]>> {
+  const rows = await drizzle(db)
+    .select({ entry_id: entryTags.entry_id, ...tagColumns })
+    .from(entryTags)
+    .innerJoin(tags, and(eq(tags.user_id, entryTags.user_id), eq(tags.id, entryTags.tag_id)))
+    .where(eq(entryTags.user_id, userId))
+    .orderBy(asc(tags.name))
+    .all();
+  const byEntry = new Map<string, TagRow[]>();
+  for (const { entry_id, ...tag } of rows) {
+    const existing = byEntry.get(entry_id);
+    if (existing) existing.push(tag);
+    else byEntry.set(entry_id, [tag]);
+  }
+  return byEntry;
+}
+
+export async function setEntryTags(
+  db: D1Database,
+  userId: string,
+  entryId: string,
+  wanted: NormalizedTag[]
+): Promise<TagRow[]> {
+  const d = drizzle(db);
+  const linked = await ensureTags(d, userId, wanted);
+  const clear = d
+    .delete(entryTags)
+    .where(and(eq(entryTags.user_id, userId), eq(entryTags.entry_id, entryId)));
+  if (linked.length === 0) await clear;
+  else {
+    await d.batch([
+      clear,
+      d
+        .insert(entryTags)
+        .values(linked.map((t) => ({ user_id: userId, entry_id: entryId, tag_id: t.id }))),
+    ]);
+  }
+  await pruneUnusedTags(d, userId);
+  return linked;
+}
+
+export type EntryRow = Omit<typeof journalEntries.$inferSelect, "user_id">;
+
+const entryColumns = Object.fromEntries(
+  Object.entries(getTableColumns(journalEntries)).filter(([name]) => name !== "user_id")
+) as { [K in keyof EntryRow]: (typeof journalEntries)[K] };
+
+export async function listEntries(
+  db: D1Database,
+  userId: string,
+  limit = 500
+): Promise<EntryRow[]> {
+  return drizzle(db)
+    .select(entryColumns)
+    .from(journalEntries)
+    .where(eq(journalEntries.user_id, userId))
+    .orderBy(desc(journalEntries.occurred_at), desc(journalEntries.created_at))
+    .limit(limit)
+    .all();
+}
+
+export async function getEntry(
+  db: D1Database,
+  userId: string,
+  id: string
+): Promise<EntryRow | null> {
+  const row = await drizzle(db)
+    .select(entryColumns)
+    .from(journalEntries)
+    .where(and(eq(journalEntries.user_id, userId), eq(journalEntries.id, id)))
+    .get();
+  return row ?? null;
+}
+
+export async function insertEntry(
+  db: D1Database,
+  userId: string,
+  id: string,
+  entry: EntryWrite
+): Promise<void> {
+  const now = new Date().toISOString();
+  await drizzle(db)
+    .insert(journalEntries)
+    .values({ user_id: userId, id, ...entry, created_at: now, updated_at: now });
+}
+
+export async function updateEntry(
+  db: D1Database,
+  userId: string,
+  id: string,
+  entry: EntryWrite
+): Promise<boolean> {
+  const result = await drizzle(db)
+    .update(journalEntries)
+    .set({ ...entry, updated_at: new Date().toISOString() })
+    .where(and(eq(journalEntries.user_id, userId), eq(journalEntries.id, id)));
+  return result.meta.changes > 0;
+}
+
+// Deleting a thread's parent takes its updates with it - an orphaned "felt
+// better today" belongs to nothing. Deleting a session does not: see clearEntrySessions.
+export async function deleteEntry(db: D1Database, userId: string, id: string): Promise<void> {
+  const d = drizzle(db);
+  const children = await d
+    .select({ id: journalEntries.id })
+    .from(journalEntries)
+    .where(and(eq(journalEntries.user_id, userId), eq(journalEntries.parent_id, id)))
+    .all();
+  const ids = [id, ...children.map((c) => c.id)];
+  await d.batch([
+    d.delete(entryTags).where(and(eq(entryTags.user_id, userId), inArray(entryTags.entry_id, ids))),
+    d
+      .delete(journalEntries)
+      .where(and(eq(journalEntries.user_id, userId), inArray(journalEntries.id, ids))),
+  ]);
+  await pruneUnusedTags(d, userId);
+}
+
+// A deleted session must not destroy what the user wrote about it, so the link
+// is cleared and the entry stands on its own.
+export async function clearEntrySessions(
+  db: D1Database,
+  userId: string,
+  fingerprint: string
+): Promise<void> {
+  await drizzle(db)
+    .update(journalEntries)
+    .set({ fingerprint: null, updated_at: new Date().toISOString() })
+    .where(and(eq(journalEntries.user_id, userId), eq(journalEntries.fingerprint, fingerprint)));
 }
 
 export type Discipline = "boulder" | "route";
@@ -564,6 +763,8 @@ export async function deleteUserData(db: D1Database, userId: string): Promise<vo
   const d = drizzle(db);
   await d.batch([
     d.delete(sessionTags).where(eq(sessionTags.user_id, userId)),
+    d.delete(entryTags).where(eq(entryTags.user_id, userId)),
+    d.delete(journalEntries).where(eq(journalEntries.user_id, userId)),
     d.delete(tags).where(eq(tags.user_id, userId)),
     d.delete(projects).where(eq(projects.user_id, userId)),
     d.delete(sessions).where(eq(sessions.user_id, userId)),

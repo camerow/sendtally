@@ -1,18 +1,13 @@
 import React from "react";
-import type { SessionRow } from "@sendtally/api-client";
-import {
-  sessionTitle,
-  sessionTotals,
-  totalsLabel,
-  type SessionTagGroup,
-} from "@sendtally/features/sessions";
+import { logTotalsLabel, type SessionTagGroup } from "@sendtally/features/sessions";
+import type { LogItem } from "@sendtally/features/journal";
 import { SectionHeading } from "./SectionHeading";
-import { SessionRowItem } from "./SessionRowItem";
+import { LogRowItem } from "./LogRowItem";
 
 export function SessionTagSection({
   group,
 }: {
-  group: SessionTagGroup<SessionRow>;
+  group: SessionTagGroup<LogItem>;
 }): React.ReactElement {
   return (
     <section>
@@ -20,12 +15,12 @@ export function SessionTagSection({
         sectionKey={group.key}
         title={group.label}
         year={null}
-        meta={totalsLabel(sessionTotals(group.sessions))}
+        meta={logTotalsLabel(group.items)}
         top
       />
       <div className="sessions-rows">
-        {group.sessions.map((s) => (
-          <SessionRowItem key={s.fingerprint} session={s} title={sessionTitle(s)} />
+        {group.items.map((item) => (
+          <LogRowItem key={item.key} item={item} />
         ))}
       </div>
     </section>
