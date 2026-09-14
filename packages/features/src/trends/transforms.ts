@@ -13,13 +13,15 @@ import type {
   TrendsVM,
 } from "./types";
 
-const WEEK_MS = 7 * 24 * 3_600_000;
+const DAY_MS = 24 * 3_600_000;
+const WEEK_MS = 7 * DAY_MS;
 
 type Sent = { grade: number; flash: boolean; time: number };
 
 type Bucket = { start: number; end: number; label: string };
 
 const RANGE_LABELS: Record<TrendRange, string> = {
+  "7d": "LAST 7 DAYS",
   "1m": "LAST MONTH",
   "3m": "LAST 3 MONTHS",
   "6m": "LAST 6 MONTHS",
@@ -94,6 +96,22 @@ function monthLabelOf(ms: number): string {
     .toUpperCase();
 }
 
+function dayLabel(msStart: number): string {
+  return new Date(msStart)
+    .toLocaleDateString("en-US", { weekday: "short", timeZone: "UTC" })
+    .toUpperCase();
+}
+
+function trailingDays(now: Date, days: number): Bucket[] {
+  const today = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+  const out: Bucket[] = [];
+  for (let i = days - 1; i >= 0; i--) {
+    const start = today - i * DAY_MS;
+    out.push({ start, end: start + DAY_MS, label: dayLabel(start) });
+  }
+  return out;
+}
+
 function trailingWeeks(now: Date, weeks: number): Bucket[] {
   const out: Bucket[] = [];
   for (let i = weeks - 1; i >= 0; i--) {
@@ -136,6 +154,8 @@ function yearsBetween(firstMs: number, now: Date): Bucket[] {
 
 export function bucketsFor(range: TrendRange, now: Date, firstSessionMs: number | null): Bucket[] {
   switch (range) {
+    case "7d":
+      return trailingDays(now, 7);
     case "1m":
       return trailingWeeks(now, 4);
     case "3m":
@@ -160,7 +180,7 @@ function ticks(max: number, format: (v: number) => string): string[] {
 }
 
 function thinAxis(buckets: Bucket[]): (i: number) => string {
-  const every = Math.max(1, Math.ceil(buckets.length / 6));
+  const every = Math.max(1, Math.ceil(buckets.length / 7));
   return (i) => (i % every === 0 || i === buckets.length - 1 ? buckets[i]!.label : "");
 }
 

@@ -149,7 +149,7 @@ export function AddProjectSheet({
             fontFamily: fonts.monoMedium,
             fontSize: 11,
             letterSpacing: 0.88,
-            color: colors.watermelonInk,
+            color: colors.labelAccent,
           }}
         >
           NEW PROJECT

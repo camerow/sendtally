@@ -122,6 +122,22 @@ describe("trendsVM", () => {
     expect(all.tiles.find((t) => t.metric === "volume")?.value).toBe("7 climbs");
   });
 
+  it("scopes the preview range to the last seven days", () => {
+    const vm = trendsVM(sessions, "7d", NOW);
+    const volume = vm.tiles.find((t) => t.metric === "volume");
+    expect(volume?.value).toBe("3 climbs");
+    expect(volume?.caption).toBe("1 SESSIONS · LAST 7 DAYS");
+    expect(volume?.bars.map((b) => b.axisLabel)).toEqual([
+      "FRI",
+      "SAT",
+      "SUN",
+      "MON",
+      "TUE",
+      "WED",
+      "THU",
+    ]);
+  });
+
   it("excludes sessions outside the range from the pyramid", () => {
     const vm = trendsVM(sessions, "1m", NOW);
     expect(vm.tiles.find((t) => t.metric === "pyramid")?.value).toBe("5 sends");
@@ -176,6 +192,14 @@ describe("trendsVM tag breakdown", () => {
 });
 
 describe("bucketsFor", () => {
+  it("builds seven day buckets ending today for the preview range", () => {
+    const buckets = bucketsFor("7d", NOW, null);
+    expect(buckets).toHaveLength(7);
+    expect(buckets.map((b) => b.label)).toEqual(["FRI", "SAT", "SUN", "MON", "TUE", "WED", "THU"]);
+    expect(buckets[6]?.start).toBe(Date.parse("2026-08-06T00:00:00.000Z"));
+    expect(buckets[6]?.end).toBe(Date.parse("2026-08-07T00:00:00.000Z"));
+  });
+
   it("builds year-to-date month buckets", () => {
     const buckets = bucketsFor("ytd", NOW, null);
     expect(buckets).toHaveLength(8);

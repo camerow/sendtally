@@ -33,16 +33,13 @@ function TrendDetailLocked(): React.ReactElement {
               fontFamily: fonts.monoMedium,
               fontSize: 12,
               letterSpacing: 0.5,
-              color: colors.watermelonInk,
+              color: colors.labelAccent,
             }}
           >
             ← TRENDS
           </Text>
         </Pressable>
-        <Paywall
-          title="This one is for members."
-          body="Membership unlocks volume, RPE, average send grade and flash rate across your whole history."
-        />
+        <Paywall />
       </ScrollView>
     </SafeAreaView>
   );
@@ -71,7 +68,7 @@ function TrendDetail(): React.ReactElement {
               fontFamily: fonts.monoMedium,
               fontSize: 12,
               letterSpacing: 0.5,
-              color: colors.watermelonInk,
+              color: colors.labelAccent,
             }}
           >
             ← TRENDS
@@ -143,7 +140,7 @@ function TrendDetail(): React.ReactElement {
                       fontFamily: fonts.monoMedium,
                       fontSize: 10,
                       letterSpacing: 0.7,
-                      color: colors.watermelonInk,
+                      color: colors.labelAccent,
                       paddingTop: 1,
                     }}
                   >

@@ -1,4 +1,5 @@
-export { MEMBER_BENEFITS, MEMBER_POINTS } from "./benefits";
+export { MEMBER_BENEFITS, MEMBER_POINTS, MEMBERSHIP_PANEL } from "./benefits";
+export type { MembershipPanelRow } from "./benefits";
 export {
   formatRenewalDate,
   managedInOf,

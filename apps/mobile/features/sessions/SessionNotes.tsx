@@ -48,7 +48,7 @@ export function SessionNotes({
           padding: 16,
         }}
       >
-        <Text style={{ ...heading, color: colors.watermelonInk }}>NOTES</Text>
+        <Text style={{ ...heading, color: colors.labelAccent }}>NOTES</Text>
         <TextInput
           value={draft}
           autoFocus
@@ -98,7 +98,7 @@ export function SessionNotes({
               disabled={saving}
               style={press({ minHeight: 44, justifyContent: "center" })}
             >
-              <Text style={{ ...action, color: colors.watermelonInk }}>
+              <Text style={{ ...action, color: colors.labelAccent }}>
                 {saving ? "SAVING…" : "SAVE NOTE"}
               </Text>
             </Pressable>
@@ -128,7 +128,7 @@ export function SessionNotes({
           </Text>
         </View>
         <Pressable onPress={start} style={press({ minHeight: 44, justifyContent: "center" })}>
-          <Text style={{ ...action, color: colors.watermelonInk }}>ADD A NOTE</Text>
+          <Text style={{ ...action, color: colors.labelAccent }}>ADD A NOTE</Text>
         </Pressable>
       </View>
     );
@@ -148,7 +148,7 @@ export function SessionNotes({
       }}
     >
       <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-        <Text style={{ ...heading, color: colors.watermelonInk }}>NOTES</Text>
+        <Text style={{ ...heading, color: colors.labelAccent }}>NOTES</Text>
         <Pressable onPress={start} style={press({ minHeight: 32, justifyContent: "center" })}>
           <Text style={{ ...action, color: colors.azureInk }}>EDIT</Text>
         </Pressable>

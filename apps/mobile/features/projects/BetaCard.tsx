@@ -43,7 +43,7 @@ export function BetaCard({ beta, updatedLabel, onSave }: BetaCardProps): React.R
         padding: 16,
       }}
     >
-      <Text style={{ ...heading, color: colors.watermelonInk }}>BETA</Text>
+      <Text style={{ ...heading, color: colors.labelAccent }}>BETA</Text>
       {editing ? (
         <TextInput
           value={draft}

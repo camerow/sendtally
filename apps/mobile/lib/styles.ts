@@ -14,7 +14,7 @@ export const sectionLabel: TextStyle = {
   fontFamily: fonts.monoMedium,
   fontSize: 10,
   letterSpacing: 0.8,
-  color: colors.watermelonInk,
+  color: colors.labelAccent,
 };
 
 export const bodyText: TextStyle = {

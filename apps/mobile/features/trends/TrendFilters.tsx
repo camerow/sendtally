@@ -1,14 +1,26 @@
 import React from "react";
 import { ScrollView, View } from "react-native";
-import { TREND_DISCIPLINES, TREND_RANGES, type TrendsFeature } from "@sendtally/features/trends";
+import {
+  PREVIEW_TREND_RANGE,
+  TREND_DISCIPLINES,
+  TREND_RANGES,
+  type TrendsFeature,
+} from "@sendtally/features/trends";
 import { colors } from "@sendtally/design/tokens";
 import { Chip } from "../../components/Chip";
 import { FILTER_BAR_HEIGHT, FilterButton } from "../../components/FilterButton";
 import { TrendFilterSheet } from "./TrendFilterSheet";
 
-export function TrendFilters({ feature }: { feature: TrendsFeature }): React.ReactElement {
+export function TrendFilters({
+  feature,
+  onLockedRange,
+}: {
+  feature: TrendsFeature;
+  onLockedRange?: () => void;
+}): React.ReactElement {
   const {
     state,
+    preview,
     range,
     setRange,
     setDiscipline,
@@ -39,14 +51,18 @@ export function TrendFilters({ feature }: { feature: TrendsFeature }): React.Rea
           style={{ flex: 1 }}
           contentContainerStyle={{ alignItems: "center", gap: 6, paddingHorizontal: 18 }}
         >
-          {TREND_RANGES.map((r) => (
-            <Chip
-              key={r.value}
-              label={r.label}
-              active={range === r.value}
-              onPress={() => setRange(r.value)}
-            />
-          ))}
+          {TREND_RANGES.map((r) => {
+            const locked = preview && r.value !== PREVIEW_TREND_RANGE;
+            return (
+              <Chip
+                key={r.value}
+                label={r.label}
+                active={range === r.value}
+                locked={locked}
+                onPress={() => (locked ? onLockedRange?.() : setRange(r.value))}
+              />
+            );
+          })}
           {disciplines.length > 1 &&
             TREND_DISCIPLINES.map((d) => (
               <Chip
