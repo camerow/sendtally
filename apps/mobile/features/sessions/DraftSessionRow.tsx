@@ -1,14 +1,31 @@
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import React from "react";
 import { Alert, Pressable, Text, View } from "react-native";
-import { useStoredDraft } from "@sendtally/features/log-session";
+import { parseStoredDraft, type StoredSessionDraft } from "@sendtally/features/log-session";
 import { formatDate, t } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { press, pressRow } from "../../lib/press";
 import { sessionDraftStorage } from "../../lib/sessionDraftStorage";
 
+const read = (): StoredSessionDraft | null =>
+  parseStoredDraft(sessionDraftStorage.read(), new Date());
+
 export function DraftSessionRow(): React.ReactElement | null {
-  const { stored, discard } = useStoredDraft(sessionDraftStorage);
+  const [stored, setStored] = React.useState(read);
+  // The draft is written by the form, on another screen. A store notification reaching a
+  // blurred tab is not something to depend on - the tab regaining focus is, and it is the
+  // only moment this row can need to change.
+  useFocusEffect(
+    React.useCallback(() => {
+      setStored(read());
+    }, [])
+  );
+
+  const discard = (): void => {
+    sessionDraftStorage.remove();
+    setStored(null);
+  };
+
   if (stored === null) return null;
 
   const { draft, savedAt } = stored;
