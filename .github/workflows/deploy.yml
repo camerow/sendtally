@@ -80,7 +80,7 @@ jobs:
   # deploy. Nothing in the web app carries a version number, so the tag itself
   # is the version: the last one plus whatever the commits since it call for.
   release:
-    needs: [deploy-sync-service, deploy-web]
+    needs: [deploy-api, deploy-web]
     if: github.ref_name == 'main'
     runs-on: ubuntu-latest
     permissions:
