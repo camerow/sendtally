@@ -1,24 +1,20 @@
 import React from "react";
-import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import { Pressable, Text, TextInput, View } from "react-native";
 import type { ClimbSummary } from "@sendtally/api-client";
 import { climbDraftGrade, projectMetaLabel } from "@sendtally/features/climbs";
 import {
   DISCIPLINE_LABELS,
   disciplineOf,
-  gradeOptions,
-  sendStyleLabel,
-  sendStylesFor,
   withClimbDiscipline,
-  withClimbOutcome,
   type ClimbDraft,
-  type ClimbStyle,
   type Discipline,
   type GradePrefs,
 } from "@sendtally/features/log-session";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
-import { Chip } from "../../components/Chip";
 import { Icon } from "../../components/Icon";
 import { Sheet } from "../../components/Sheet";
+import { GradePicker } from "./GradePicker";
+import { ResultPicker } from "./ResultPicker";
 import { press, pressRow } from "../../lib/press";
 
 export type ClimbEditorSheetProps = {
@@ -43,52 +39,6 @@ const label = {
   letterSpacing: 0.8,
   color: colors.textSecondary,
 } as const;
-
-function Segment({
-  label: text,
-  active,
-  activeColor,
-  activeText = colors.white,
-  onPress,
-}: {
-  label: string;
-  active: boolean;
-  activeColor: string;
-  activeText?: string;
-  onPress: () => void;
-}): React.ReactElement {
-  return (
-    <Pressable
-      onPress={onPress}
-      accessibilityRole="radio"
-      accessibilityState={{ checked: active }}
-      style={press({
-        flex: 1,
-        height: 44,
-        alignItems: "center",
-        justifyContent: "center",
-        backgroundColor: active ? activeColor : "transparent",
-      })}
-    >
-      <Text
-        style={{
-          fontFamily: fonts.monoMedium,
-          fontSize: 11,
-          letterSpacing: 0.6,
-          color: active ? activeText : "rgba(64,63,76,0.65)",
-        }}
-      >
-        {text}
-      </Text>
-    </Pressable>
-  );
-}
-
-const STYLE_FILL: Record<ClimbStyle, { background: string; text: string }> = {
-  redpoint: { background: colors.azureInk, text: colors.white },
-  flash: { background: colors.gold, text: colors.gunmetal },
-  onsight: { background: colors.petalInk, text: colors.white },
-};
 
 /**
  * Quiet by design: a session is usually all one discipline, and the climb carries its choice to
@@ -284,18 +234,7 @@ export function ClimbEditorSheet({
   onClose,
 }: ClimbEditorSheetProps): React.ReactElement {
   const climb = useLingering(current);
-  const rail = React.useRef<ScrollView>(null);
-  const chipX = React.useRef(new Map<string, number>());
   const [nameFocused, setNameFocused] = React.useState(false);
-  const scale = climb?.scale ?? prefs.boulder;
-  const options = gradeOptions(scale);
-  const grade = climb?.grade ?? "";
-
-  React.useEffect(() => {
-    const x = chipX.current.get(grade);
-    if (x !== undefined) rail.current?.scrollTo({ x: Math.max(0, x - 120), animated: false });
-  }, [grade]);
-
   const named = climb !== null && climb.name.trim() !== "";
   const firstGo = climb !== null && climb.kind === "send" && climb.style !== "redpoint";
   const showList = nameFocused && suggestions.length > 0;
@@ -341,24 +280,7 @@ export function ClimbEditorSheet({
                 onChange={(discipline) => onChange(withClimbDiscipline(climb, discipline, prefs))}
               />
             </View>
-            <ScrollView
-              ref={rail}
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              keyboardShouldPersistTaps="always"
-              style={{ marginHorizontal: -18 }}
-              contentContainerStyle={{ gap: 6, paddingHorizontal: 18 }}
-            >
-              {options.map((g) => (
-                <View key={g} onLayout={(e) => chipX.current.set(g, e.nativeEvent.layout.x)}>
-                  <Chip
-                    label={g}
-                    active={g === climb.grade}
-                    onPress={() => onChange({ ...climb, grade: g })}
-                  />
-                </View>
-              ))}
-            </ScrollView>
+            <GradePicker climb={climb} onChange={onChange} />
           </View>
 
           <View style={{ gap: 7 }}>
@@ -465,35 +387,7 @@ export function ClimbEditorSheet({
           </View>
 
           <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-            <View
-              accessibilityRole="radiogroup"
-              style={{
-                flex: 1,
-                flexDirection: "row",
-                height: 44,
-                borderRadius: 22,
-                borderWidth: 1,
-                borderColor: "rgba(64,63,76,0.18)",
-                overflow: "hidden",
-              }}
-            >
-              {sendStylesFor(disciplineOf(climb.scale)).map((style) => (
-                <Segment
-                  key={style}
-                  label={`✓ ${sendStyleLabel(disciplineOf(climb.scale), style)}`}
-                  active={climb.kind === "send" && climb.style === style}
-                  activeColor={STYLE_FILL[style].background}
-                  activeText={STYLE_FILL[style].text}
-                  onPress={() => onChange(withClimbOutcome(climb, { kind: "send", style }))}
-                />
-              ))}
-              <Segment
-                label="✗ ATTEMPT"
-                active={climb.kind === "attempt"}
-                activeColor={colors.gunmetal}
-                onPress={() => onChange(withClimbOutcome(climb, { kind: "attempt" }))}
-              />
-            </View>
+            <ResultPicker climb={climb} onChange={onChange} />
             <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
               <StepButton
                 glyph="−"
