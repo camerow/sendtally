@@ -50,6 +50,10 @@ That makes the update branch shared state, which is why the whole workflow takes
 `expo-updates` launches the bundle it already has and downloads the new one behind it, so the job opens the app once, waits for the update id to appear in logcat, force-stops it, and only then runs the flows.
 The wait is a check, not a pause: a download that never lands fails the job, because the alternative is a green run against whatever JavaScript the APK happened to be built with.
 
+The profile sets `EXPO_PUBLIC_E2E=true`, which makes the app identify its person to PostHog with `$internal_or_test_user`.
+The internal cohort every insight filters out already matches that property, so a flow run signing in and logging a session is not product traffic.
+The workflow sets the same variable for itself, because `EXPO_PUBLIC_*` is inlined at bundle time and the update and the Gradle fallback both bundle on the runner.
+
 Nothing about the `e2e` profile carries a RevenueCat key.
 The SDK refuses a test-store key in a release build and closes the app, and the flows never reach a paywall.
 
