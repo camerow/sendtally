@@ -19,7 +19,8 @@ They run locally on an iOS simulator against Metro, and in CI on an Android emul
    npx expo start --port 8081 --clear
    ```
    The flows deep-link the development client to `localhost:8081` themselves.
-3. `pnpm --filter @sendtally/mobile e2e`, or `maestro test maestro/flows/<flow>.yaml` for one flow.
+3. `pnpm run mobile:e2e` from the repo root, or `maestro test maestro/flows/<flow>.yaml` from `apps/mobile` for one flow.
+   The script lives in the root `package.json` on purpose: the `scripts` block of `apps/mobile/package.json` is one of the sources the Android fingerprint hashes, so a convenience script in there moves the runtime version and strands the branch from every build EAS holds (see In CI below).
 
 Failures leave screenshots and the UI hierarchy under `~/.maestro/tests/<timestamp>/`.
 
@@ -27,11 +28,79 @@ Failures leave screenshots and the UI hierarchy under `~/.maestro/tests/<timesta
 
 `.github/workflows/mobile-e2e.yml` runs the same flows on every pull request that touches the app or a package it bundles.
 Android only: the emulator runs on a Linux runner with KVM at the 1x minute rate, where an iOS simulator would need a macOS runner at 10x.
-The job prebuilds the Android project, builds a release APK so the JavaScript is embedded (no Metro on the runner), and points it at `api-staging.sendtally.com` and the Clerk development instance, the same pair the mobile preview uses.
-The PostHog source map upload hook is stripped from the generated Gradle file first, since it needs an EAS-only key and this build ships nowhere.
-Locally `pnpm e2e` passes `DEV_CLIENT=true`, which makes `helpers/open-dev-client.yaml` deep-link the development build to Metro; CI leaves it unset so the app just launches. The helper has no default of its own because a flow's `env` block is applied after `-e` and would win.
+
+### The app the flows run on
+
+The job does not build the app.
+`runtimeVersion` is a fingerprint, so the question the release pipeline asks - can this commit ship over the air? - answers "can this branch run on an APK EAS already built?" too:
+
+```
+eas fingerprint:generate --platform android --build-profile e2e
+eas build:list --platform android --profile e2e --status finished \
+  --distribution internal --fingerprint-hash <hash>
+```
+
+When a finished `e2e` build carries the hash, the job downloads its APK, publishes the branch as an EAS Update, and installs the two together.
+That is the whole saving: the Gradle release build this replaced took sixteen of the job's twenty minutes.
+
+The `e2e` build profile exists for this job alone: it extends `preview`, so it is the same staging API and development Clerk instance, but it ships on its own `e2e` channel.
+That channel resolves to the `e2e` update branch, so every run publishes there and nothing the job does can land on a `preview` build someone is holding on a phone.
+The publish is `--branch e2e --environment preview`, and the mismatch is deliberate: the branch is where the update lands, the environment is where the staging keys live, and there is no `e2e` EAS environment holding a second copy of them.
+The profile inherits the rest of its `env` from `preview` too, so `EXPO_PUBLIC_E2E` is the only variable it declares.
+That makes the update branch shared state, which is why the whole workflow takes a single `mobile-e2e` concurrency group rather than one per ref: two runs in flight would each be looking at the other's JavaScript.
+
+`expo-updates` launches the bundle it already has and downloads the new one behind it, so the job opens the app once, waits for the update id to appear in logcat, force-stops it, and only then runs the flows.
+The wait is a check, not a pause: a download that never lands fails the job, because the alternative is a green run against whatever JavaScript the APK happened to be built with.
+
+The profile sets `EXPO_PUBLIC_E2E=true`, and `AnalyticsProvider` renders no `PostHogProvider` when it is set, so a flow run sends PostHog nothing at all.
+Marking the person `$internal_or_test_user` instead does not work here: person-on-events keeps an event's person properties as they were at ingestion, so the anonymous events a run fires before it signs in stay product traffic however the person is marked afterwards.
+Sending nothing also stops session replay recording twenty minutes of a robot on every pull request.
+The workflow sets the same variable for itself, because `EXPO_PUBLIC_*` is inlined at bundle time and the update and the Gradle fallback both bundle on the runner.
+
+The server half is the staging sync-service Worker, which carries no `POSTHOG_PROJECT_TOKEN` for the same reason: the flows log real sessions against `api-staging.sendtally.com`, and `captureUserEvent` would put those in the one PostHog project next to real ones.
+That was the only staging leak - `apps/web` has always declared its token on the production environment alone, so the staging site's browser has never sent anything, and a staging PostHog var missing anywhere is the design rather than an oversight.
+
+What a run costs in visibility is PostHog replay. Maestro's screenshots and UI hierarchy and the logcat dump are what a failure leaves instead.
+
+Nothing about the `e2e` profile carries a RevenueCat key.
+The SDK refuses a test-store key in a release build and closes the app, and the flows never reach a paywall.
+
+### When the fallback build fires
+
+A run builds with Gradle when no finished `e2e` build carries the branch's fingerprint, and the job summary says so, because a native change is worth seeing.
+Anything that changes the native layer does it: a new native dependency or config plugin, an `app.json` change, a version bump - and two that are easy to miss, since neither looks native at all:
+
+- **`eas.json`.** The file is hashed whole, so editing any build profile moves the fingerprint for all of them.
+- **The `scripts` block of `apps/mobile/package.json`.** Adding one line there moved this project's fingerprint from `13b109fe` to `01ffc80a`, which is why `pnpm run mobile:e2e` lives in the root `package.json`.
+
+Warm the new fingerprint once and later runs on it go back to reusing the APK:
+
+```
+cd apps/mobile
+eas build --profile e2e --platform android
+```
+
+Until that build finishes, every run on that fingerprint pays for Gradle again, so warm it as soon as the summary reports one rather than at the end of the branch.
+
+### The rest of the run
+
+The PostHog source map upload hook is stripped from the generated Gradle file on the fallback path, since it needs an EAS-only key and a build that ships nowhere.
+Locally `pnpm run mobile:e2e` passes `DEV_CLIENT=true`, which makes `helpers/open-dev-client.yaml` deep-link the development build to Metro; CI passes `false` so the app just launches. The helper has no default of its own because a flow's `env` block is applied after `-e` and would win.
 A failed run uploads Maestro's screenshots and UI hierarchy plus a logcat dump as the `maestro-debug` artifact; a flow that ends on the Android launcher means the app crashed, and logcat has the trace.
-The AVD snapshot is cached between runs; a cold run is around twenty minutes, a warm one closer to twelve.
+The AVD snapshot is cached between runs.
+
+`android-emulator-runner` runs its `script` one line at a time, each through its own `sh -c` under dash.
+So no `set -o pipefail`, and no `if` or `for` block either - which is why the update-loading sequence is `.github/scripts/load-e2e-update.sh`, called as a single line.
+
+### What it costs
+
+|                              | Reusing the APK | Building with Gradle |
+| ---------------------------- | --------------- | -------------------- |
+| Whole job                    | 6m38s           | 21m23s               |
+| Deciding, and getting an app | 55s             | 16m43s               |
+| Flows                        | 3m04s           | 3m04s                |
+
+The reuse figure includes 1m33s creating the AVD snapshot, which a cache hit skips, so a run that finds one lands closer to five minutes.
 
 ## The test account
 

@@ -1,7 +1,7 @@
 import { useUser } from "@clerk/clerk-expo";
 import React from "react";
 import { PostHogProvider, usePostHog } from "posthog-react-native";
-import { POSTHOG_API_KEY, POSTHOG_HOST } from "../../lib/config";
+import { IS_E2E, POSTHOG_API_KEY, POSTHOG_HOST } from "../../lib/config";
 
 function IdentifyUser(): null {
   const posthog = usePostHog();
@@ -17,7 +17,11 @@ function IdentifyUser(): null {
 }
 
 export function AnalyticsProvider({ children }: { children: React.ReactNode }): React.ReactElement {
-  if (!POSTHOG_API_KEY) return <>{children}</>;
+  // Person-on-events keeps an event's person properties as they were at ingestion, so a
+  // flow's anonymous events stay product traffic however the person is marked later. Sending
+  // nothing is the only thing that actually keeps a CI run out, and it stops session replay
+  // recording one too.
+  if (!POSTHOG_API_KEY || IS_E2E) return <>{children}</>;
 
   return (
     <PostHogProvider

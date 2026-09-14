@@ -83,6 +83,8 @@ eas build --profile development --platform android
 Android only, by choice: an APK installs off a QR code with no device registration.
 Adding iOS means registering the phone's UDID with `eas device:create` first.
 
+The `preview` profile is a different thing from this one and is not for phones: it builds the release APK the end-to-end job runs its flows on, pointed at staging and the Clerk development instance, and publishes to the `preview` channel. See `docs/mobile-e2e.md`.
+
 That build needs `expo-dev-client`, which is a dependency of the app rather than something a build profile can inject, so adding it moved the fingerprint once - from `9d5ec47a` to `13b109fe`.
 The Play build carrying the old hash cannot receive updates published from a tree with the new one, so the first push to `main` after that change builds and submits a release rather than publishing an update.
 That is the whole cost, and it is paid once.

@@ -2,8 +2,12 @@ name: Mobile E2E
 
 # The Maestro flows in apps/mobile/maestro on an Android emulator. Android because it runs
 # on a Linux runner, which has KVM and bills at 1x; iOS would need a macOS runner at 10x and
-# stays a local run (docs/mobile-e2e.md). The app is a release build with the JavaScript
-# embedded, pointed at staging and the Clerk development instance like the mobile preview.
+# stays a local run (docs/mobile-e2e.md).
+#
+# The app is the same `e2e` APK from one run to the next. `runtimeVersion` is a
+# fingerprint, so a branch that only moves JavaScript can take an EAS Update on top of an
+# APK that EAS already built, and the sixteen minutes of Gradle this job used to spend go
+# away. Only a branch that moves the native layer builds, and the summary says so.
 
 on:
   pull_request:
@@ -17,14 +21,25 @@ on:
       - ".github/workflows/mobile-e2e.yml"
   workflow_dispatch:
 
+# One run at a time across every branch, not one per ref. Every run publishes to the same
+# `e2e` update branch, because that is the branch the APK's channel resolves to, so two
+# runs in flight would each be looking at the other's JavaScript.
 concurrency:
-  group: mobile-e2e-${{ github.ref }}
-  cancel-in-progress: true
+  group: mobile-e2e
+  cancel-in-progress: false
 
 env:
   API_LEVEL: 34
   AVD_ARCH: x86_64
   AVD_TARGET: google_apis
+  EXPO_PUBLIC_API_URL: https://api-staging.sendtally.com
+  EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_bGlnaHQtbGlnZXItOTkuY2xlcmsuYWNjb3VudHMuZGV2JA
+  # Marks the person PostHog sees with `$internal_or_test_user`, which every insight filters
+  # out, so a flow run is not product traffic. Inlined into the bundle, so it has to be set
+  # for `eas update` and for the Gradle fallback alike.
+  EXPO_PUBLIC_E2E: "true"
+  # No RevenueCat key: the SDK refuses a test-store key in a release build and closes the
+  # app, and the flows never reach a paywall.
 
 jobs:
   android:
@@ -37,27 +52,71 @@ jobs:
         with:
           node-version: 24
           cache: pnpm
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
       - run: pnpm install --frozen-lockfile
+
+      # eas.json is one of the sources the fingerprint hashes, and so is the `scripts` block
+      # of apps/mobile/package.json - a one-line convenience script in there is enough to
+      # strand a branch from every build EAS holds.
+      - name: Is there an APK the flows can run on?
+        id: apk
+        working-directory: apps/mobile
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          set -euo pipefail
+          hash=$(eas fingerprint:generate --platform android --build-profile e2e \
+            --json --non-interactive | jq -r .hash)
+          url=$(eas build:list --platform android --profile e2e --status finished \
+            --distribution internal --fingerprint-hash "$hash" --limit 5 \
+            --json --non-interactive \
+            | jq -r '[.[] | .artifacts.applicationArchiveUrl // empty
+                     | select(test("\\.apk(\\?|$)"))][0] // ""')
+          echo "hash=$hash" >> "$GITHUB_OUTPUT"
+          if [ -n "$url" ]; then
+            curl -fsSL "$url" -o "$RUNNER_TEMP/app.apk"
+            echo "path=$RUNNER_TEMP/app.apk" >> "$GITHUB_OUTPUT"
+            echo "reused=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "reused=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      # The branch's JavaScript reaches that APK as an update. The APK is built on the
+      # `e2e` channel, which resolves to the `e2e` update branch, so this is where every run
+      # publishes and why the whole job is serialised.
+      - name: Publish the branch as an update
+        id: update
+        if: steps.apk.outputs.reused == 'true'
+        working-directory: apps/mobile
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          TITLE: ${{ github.event.pull_request.title || github.ref_name }}
+        run: |
+          set -euo pipefail
+          id=$(eas update --branch e2e --platform android --environment preview \
+            --message "$TITLE" --json --non-interactive | jq -r '.[0].id')
+          echo "id=$id" >> "$GITHUB_OUTPUT"
+
+      # Only a native change gets here. The PostHog Expo plugin uploads Hermes source maps on
+      # every release bundle and fails without POSTHOG_CLI_API_KEY, which only EAS holds;
+      # this build ships nowhere, so the hook comes out of the generated project rather than
+      # a secret going in. For the same reason it is x86_64 only (the emulator's ABI) and
+      # skips ProGuard and resource shrinking. The template's 512m metaspace ran out on the
+      # runner and hung the daemon, hence the larger JVM.
       - uses: actions/setup-java@v4
+        if: steps.apk.outputs.reused == 'false'
         with:
           distribution: temurin
           java-version: 17
       - uses: gradle/actions/setup-gradle@v4
-
-      # The PostHog Expo plugin uploads Hermes source maps on every release bundle and fails
-      # without POSTHOG_CLI_API_KEY, which only EAS holds. This build ships nowhere, so the
-      # hook comes out of the generated project rather than a secret going in. For the same
-      # reason it is x86_64 only (the emulator's ABI) and skips ProGuard and resource
-      # shrinking; the store build is EAS's job. The template's 512m metaspace ran out on the
-      # runner and hung the daemon, hence the larger JVM.
+        if: steps.apk.outputs.reused == 'false'
       - name: Build the app with the bundle embedded
+        id: gradle
+        if: steps.apk.outputs.reused == 'false'
         working-directory: apps/mobile
-        env:
-          EXPO_PUBLIC_API_URL: https://api-staging.sendtally.com
-          EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_bGlnaHQtbGlnZXItOTkuY2xlcmsuYWNjb3VudHMuZGV2JA
-          # No RevenueCat test-store key here: the SDK refuses one in a release build and
-          # closes the app. The public Play key in lib/config.ts applies instead, and the
-          # flows never reach a paywall.
         run: |
           set -euo pipefail
           npx expo prebuild --platform android --no-install --non-interactive
@@ -67,6 +126,7 @@ jobs:
             -PreactNativeArchitectures=x86_64 \
             -Pandroid.enableProguardInReleaseBuilds=false \
             -Pandroid.enableShrinkResourcesInReleaseBuilds=false
+          echo "path=$PWD/app/build/outputs/apk/release/app-release.apk" >> "$GITHUB_OUTPUT"
 
       - name: Install Maestro
         run: |
@@ -100,8 +160,19 @@ jobs:
           disable-animations: false
           script: echo "Generated AVD snapshot for caching."
 
+      # expo-updates launches the bundle it already has and downloads the new one behind it,
+      # so a reused APK has to be opened twice before the branch's JavaScript is what runs.
+      # load-e2e-update.sh does that and fails the run if the download never lands, rather
+      # than letting the flows pass against the JavaScript the APK was built with.
+      #
+      # Every line here is a whole script to android-emulator-runner, which runs them one at
+      # a time through separate `sh -c` calls - which is why that sequence is a file and not
+      # an `if` block in here.
       - name: Run the flows
         uses: reactivecircus/android-emulator-runner@v2
+        env:
+          APK: ${{ steps.apk.outputs.path || steps.gradle.outputs.path }}
+          UPDATE_ID: ${{ steps.update.outputs.id }}
         with:
           api-level: ${{ env.API_LEVEL }}
           arch: ${{ env.AVD_ARCH }}
@@ -111,9 +182,23 @@ jobs:
           disable-animations: true
           working-directory: apps/mobile
           script: |
-            adb install -r android/app/build/outputs/apk/release/app-release.apk
-            adb logcat -c
+            adb install -r "$APK"
+            bash "$GITHUB_WORKSPACE/.github/scripts/load-e2e-update.sh"
             maestro test -e DEV_CLIENT=false maestro/ || { adb logcat -d > ~/.maestro/logcat.txt; exit 1; }
+
+      - name: Say which app the flows ran on
+        if: always()
+        env:
+          REUSED: ${{ steps.apk.outputs.reused }}
+          HASH: ${{ steps.apk.outputs.hash }}
+        run: |
+          if [ "$REUSED" = "true" ]; then
+            echo "The flows ran on the EAS e2e APK carrying fingerprint \`$HASH\`, with this branch published over it as an update. No Gradle build." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "**The native layer moved.** No finished e2e build carries fingerprint \`$HASH\`, so this run built the app with Gradle instead of reusing one, which is where most of its minutes went." >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "Warm the new fingerprint with \`eas build --profile e2e --platform android\` from \`apps/mobile\` and later runs on it go back to reusing the APK." >> "$GITHUB_STEP_SUMMARY"
+          fi
 
       - name: Keep the screenshots and hierarchy of a failed run
         if: failure()
