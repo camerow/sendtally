@@ -13,7 +13,7 @@
     "preview:alias": "printf %s \"${WORKERS_CI_BRANCH:-$(git rev-parse --abbrev-ref HEAD)}\" | tr '[:upper:]' '[:lower:]' | tr -cs 'a-z0-9' '-' | cut -c1-63 | sed 's/^-*//; s/-*$//'",
     "preview:upload": "pnpm run preview:build && pnpm --filter @sendtally/web exec wrangler versions upload --preview-alias \"$(pnpm -s run preview:alias)\"",
     "staging:web": "pnpm run preview:build && pnpm --filter @sendtally/web exec wrangler deploy",
-    "staging:api": "pnpm --filter @sendtally/sync-service exec wrangler d1 migrations apply DB --env staging --remote && pnpm --filter @sendtally/sync-service exec wrangler deploy --env staging",
+    "staging:api": "pnpm --filter @sendtally/api exec wrangler d1 migrations apply DB --env staging --remote && pnpm --filter @sendtally/api exec wrangler deploy --env staging",
     "mobile:e2e": "pnpm --filter @sendtally/mobile exec maestro test -e DEV_CLIENT=true maestro/",
     "lint": "eslint .",
     "check-types": "turbo check-types",

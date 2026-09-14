@@ -1,7 +1,7 @@
 import type { hc, InferResponseType } from "hono/client";
-import type { AppType } from "@sendtally/sync-service/app";
+import type { AppType } from "@sendtally/api/app";
 
-export type { LogClimbInput, LogSessionInput, ProjectInput } from "@sendtally/sync-service/app";
+export type { LogClimbInput, LogSessionInput, ProjectInput } from "@sendtally/api/app";
 
 type Client = ReturnType<typeof hc<AppType>>;
 

@@ -69,15 +69,15 @@ terraform output d1_database_ids
 
 The zone is created in `pending` state; that is expected until step 7. Paste
 the two D1 ids into the `staging` and `production` blocks of
-`packages/sync-service/wrangler.jsonc` (the account pin there and in
+`packages/api/wrangler.jsonc` (the account pin there and in
 `apps/web/wrangler.jsonc` already points at Chalk and Circuits).
 
 ### 4. Deploy the Workers and their secrets `[ ]`
 
 ```sh
 infra/scripts/push-secrets.sh production
-pnpm --filter @sendtally/sync-service exec wrangler d1 migrations apply DB --env production --remote
-pnpm --filter @sendtally/sync-service exec wrangler deploy --env production
+pnpm --filter @sendtally/api exec wrangler d1 migrations apply DB --env production --remote
+pnpm --filter @sendtally/api exec wrangler deploy --env production
 CLOUDFLARE_ENV=production pnpm --filter @sendtally/web build
 pnpm --filter @sendtally/web exec wrangler deploy --env production
 ```

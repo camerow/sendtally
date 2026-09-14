@@ -12,7 +12,7 @@ output "name_servers" {
 }
 
 output "d1_database_ids" {
-  description = "Paste into the matching env block of packages/sync-service/wrangler.jsonc."
+  description = "Paste into the matching env block of packages/api/wrangler.jsonc."
   value       = { for env, db in cloudflare_d1_database.sendtally : env => db.id }
 }
 

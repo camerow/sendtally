@@ -240,11 +240,54 @@ importers:
         specifier: ^4.33.1
         version: 4.119.0(@cloudflare/workers-types@4.20260702.1)(bufferutil@4.1.0)(utf-8-validate@6.0.6)
 
+  packages/api:
+    dependencies:
+      '@clerk/backend':
+        specifier: ^2.9.2
+        version: 2.33.6(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+      '@cloudflare/workers-types':
+        specifier: ^4.20250823.0
+        version: 4.20260702.1
+      '@hono/zod-validator':
+        specifier: ^0.9.1
+        version: 0.9.1(hono@4.13.0)(zod@4.4.3)
+      '@sendtally/core':
+        specifier: workspace:*
+        version: link:../core
+      drizzle-orm:
+        specifier: ^0.45.2
+        version: 0.45.2(@cloudflare/workers-types@4.20260702.1)
+      hono:
+        specifier: ^4.9.6
+        version: 4.13.0
+      posthog-node:
+        specifier: ^5.46.1
+        version: 5.51.6
+      zod:
+        specifier: ^4.1.5
+        version: 4.4.3
+    devDependencies:
+      '@cloudflare/vitest-pool-workers':
+        specifier: ^0.9.5
+        version: 0.9.14(@cloudflare/workers-types@4.20260702.1)(@vitest/runner@3.2.7)(@vitest/snapshot@3.2.7)(bufferutil@4.1.0)(utf-8-validate@6.0.6)(vitest@3.2.7(@types/node@26.1.2)(jiti@2.6.1)(jsdom@30.0.1(@noble/hashes@1.8.0))(lightningcss@1.33.0)(terser@5.49.2)(tsx@4.23.11)(yaml@2.9.0))
+      drizzle-kit:
+        specifier: ^0.31.10
+        version: 0.31.10
+      typescript:
+        specifier: ^6.0.3
+        version: 6.0.3
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.7(@types/node@26.1.2)(jiti@2.6.1)(jsdom@30.0.1(@noble/hashes@1.8.0))(lightningcss@1.33.0)(terser@5.49.2)(tsx@4.23.11)(yaml@2.9.0)
+      wrangler:
+        specifier: ^4.33.1
+        version: 4.119.0(@cloudflare/workers-types@4.20260702.1)(bufferutil@4.1.0)(utf-8-validate@6.0.6)
+
   packages/api-client:
     dependencies:
-      '@sendtally/sync-service':
+      '@sendtally/api':
         specifier: workspace:*
-        version: link:../sync-service
+        version: link:../api
       hono:
         specifier: ^4.9.6
         version: 4.13.0
@@ -295,49 +338,6 @@ importers:
       vitest:
         specifier: ^3.2.4
         version: 3.2.7(@types/node@26.1.2)(jiti@2.6.1)(jsdom@30.0.1(@noble/hashes@1.8.0))(lightningcss@1.33.0)(terser@5.49.2)(tsx@4.23.11)(yaml@2.9.0)
-
-  packages/sync-service:
-    dependencies:
-      '@clerk/backend':
-        specifier: ^2.9.2
-        version: 2.33.6(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
-      '@cloudflare/workers-types':
-        specifier: ^4.20250823.0
-        version: 4.20260702.1
-      '@hono/zod-validator':
-        specifier: ^0.9.1
-        version: 0.9.1(hono@4.13.0)(zod@4.4.3)
-      '@sendtally/core':
-        specifier: workspace:*
-        version: link:../core
-      drizzle-orm:
-        specifier: ^0.45.2
-        version: 0.45.2(@cloudflare/workers-types@4.20260702.1)
-      hono:
-        specifier: ^4.9.6
-        version: 4.13.0
-      posthog-node:
-        specifier: ^5.46.1
-        version: 5.51.6
-      zod:
-        specifier: ^4.1.5
-        version: 4.4.3
-    devDependencies:
-      '@cloudflare/vitest-pool-workers':
-        specifier: ^0.9.5
-        version: 0.9.14(@cloudflare/workers-types@4.20260702.1)(@vitest/runner@3.2.7)(@vitest/snapshot@3.2.7)(bufferutil@4.1.0)(utf-8-validate@6.0.6)(vitest@3.2.7(@types/node@26.1.2)(jiti@2.6.1)(jsdom@30.0.1(@noble/hashes@1.8.0))(lightningcss@1.33.0)(terser@5.49.2)(tsx@4.23.11)(yaml@2.9.0))
-      drizzle-kit:
-        specifier: ^0.31.10
-        version: 0.31.10
-      typescript:
-        specifier: ^6.0.3
-        version: 6.0.3
-      vitest:
-        specifier: ^3.2.4
-        version: 3.2.7(@types/node@26.1.2)(jiti@2.6.1)(jsdom@30.0.1(@noble/hashes@1.8.0))(lightningcss@1.33.0)(terser@5.49.2)(tsx@4.23.11)(yaml@2.9.0)
-      wrangler:
-        specifier: ^4.33.1
-        version: 4.119.0(@cloudflare/workers-types@4.20260702.1)(bufferutil@4.1.0)(utf-8-validate@6.0.6)
 
 packages:
 
@@ -2388,9 +2388,6 @@ packages:
     engines: {node: '>=14.14', npm: '>=6'}
     hasBin: true
 
-  '@posthog/core@1.50.5':
-    resolution: {integrity: sha512-afEchuShDaVIoxAIj76kDZQ1DhfesDmgfVp+mtTzsA3wlc8DF5uoz8YjuTjnxOicWkpP5HCDqYidK/1kT125Cg==}
-
   '@posthog/core@1.53.0':
     resolution: {integrity: sha512-qlEavIUVIdTUJIsJoMLO+mPxB9OfUiTMPwaIRkO+r8iabEQGeatu+MDCiDWYIvHaSQsWQhBvZfojYRmqoom7KQ==}
 
@@ -2399,9 +2396,6 @@ packages:
     peerDependencies:
       react: 19.2.3
       react-native: '*'
-
-  '@posthog/types@1.409.0':
-    resolution: {integrity: sha512-239umoaZVb2GBaXeEyJpwFvjhrrChJH8NHCwiao23EBSu3NA6EN0MTMoaHSmMEf4yjiXEFFoYJA6FjJAXF5HGA==}
 
   '@posthog/types@1.411.0':
     resolution: {integrity: sha512-QGdIzlcdCHKYvu3aANP2yjM80ly5Y5BRCygFrLMzavJ9WqiLtsPJQG1fRnpMAelK3j07DjmVwgTSlFY1FBCpzw==}
@@ -9179,10 +9173,6 @@ snapshots:
     dependencies:
       detect-libc: 2.1.2
 
-  '@posthog/core@1.50.5':
-    dependencies:
-      '@posthog/types': 1.409.0
-
   '@posthog/core@1.53.0':
     dependencies:
       '@posthog/types': 1.411.0
@@ -9191,8 +9181,6 @@ snapshots:
     dependencies:
       react: 19.2.3
       react-native: 0.86.3(@babel/core@7.29.7)(@react-native/metro-config@0.87.1(@babel/core@7.29.7)(bufferutil@4.1.0)(utf-8-validate@6.0.6))(@types/react@19.2.18)(bufferutil@4.1.0)(react@19.2.3)(utf-8-validate@6.0.6)
-
-  '@posthog/types@1.409.0': {}
 
   '@posthog/types@1.411.0': {}
 
@@ -13209,7 +13197,7 @@ snapshots:
 
   posthog-node@5.51.6:
     dependencies:
-      '@posthog/core': 1.50.5
+      '@posthog/core': 1.53.0
 
   posthog-react-native@4.68.9(0336e68836c816065a12f08979e87409):
     dependencies:

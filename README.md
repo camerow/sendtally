@@ -6,16 +6,16 @@ Sessions are entered by the user through the log-session form. sendtally does no
 
 sendtally is a monorepo:
 
-| Path                    | What                                                                                 |
-| ----------------------- | ------------------------------------------------------------------------------------ |
-| `apps/web`              | Web app (React Router 7 on Cloudflare Workers): marketing, Strava connect, dashboard |
-| `apps/mobile`           | Expo app (iOS + Android)                                                             |
-| `packages/core`         | Pure domain logic: session grouping, grade mapping, effort scoring                   |
-| `packages/sync-service` | Hono Worker: API, Strava posting, D1                                                 |
-| `packages/api-client`   | Typed API client shared by web and mobile                                            |
-| `packages/design`       | Design tokens + shared Tailwind config                                               |
-| `packages/ui-native`    | NativeWind component kit for mobile                                                  |
-| `tools/cli-go`          | The original single-user macOS CLI ([its README](tools/cli-go/README.md))            |
+| Path                  | What                                                                                 |
+| --------------------- | ------------------------------------------------------------------------------------ |
+| `apps/web`            | Web app (React Router 7 on Cloudflare Workers): marketing, Strava connect, dashboard |
+| `apps/mobile`         | Expo app (iOS + Android)                                                             |
+| `packages/core`       | Pure domain logic: session grouping, grade mapping, effort scoring                   |
+| `packages/api`        | Hono Worker: API, Strava posting, D1                                                 |
+| `packages/api-client` | Typed API client shared by web and mobile                                            |
+| `packages/design`     | Design tokens + shared Tailwind config                                               |
+| `packages/ui-native`  | NativeWind component kit for mobile                                                  |
+| `tools/cli-go`        | The original single-user macOS CLI ([its README](tools/cli-go/README.md))            |
 
 See [AGENTS.md](AGENTS.md) for architecture and conventions.
 

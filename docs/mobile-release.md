@@ -273,7 +273,7 @@ Project `Sendtally` at app.revenuecat.com, id `f2a60af6`.
    Play Console refuses to create subscriptions until a build that declares the `BILLING` permission is on a track, and `react-native-purchases` is what adds it, so the first billing build has to ship before the products can exist.
    In RevenueCat the products are `membership:monthly` and `membership:yearly` under the Android app.
 3. **Entitlement.** `sendtally_member`, with both products attached.
-   This identifier is `STORE_ENTITLEMENT` in `packages/sync-service/src/features.ts`; changing one means changing the other.
+   This identifier is `STORE_ENTITLEMENT` in `packages/api/src/features.ts`; changing one means changing the other.
 4. **Offering.** `default`, with the monthly package pointing at `membership:monthly` and the annual package at `membership:yearly`.
    The app renders one plan card per package in the current offering and one purchase button for the selected card, so keep the offering to the packages you mean to sell.
 5. **Webhook.** Integrations, Webhooks: URL `https://api.sendtally.com/webhooks/revenuecat`, Authorization header value equal to `REVENUECAT_WEBHOOK_AUTH` in Doppler (a long random string), all events.
