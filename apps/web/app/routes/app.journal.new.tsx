@@ -58,7 +58,7 @@ export default function NewEntry(): React.ReactElement {
 
   return (
     <div>
-      <BackLink to="/app/journal">{t("journal.title")}</BackLink>
+      <BackLink to="/app/journal">{t("common.back")}</BackLink>
       <EntryComposer api={api} initial={initial} heading={heading} sessions={sessions} />
     </div>
   );

@@ -88,23 +88,22 @@ export function EntryComposer({
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24, maxWidth: 720 }}>
-      {!update && (
-        <div className="journal-head-row" style={{ marginBottom: -12 }}>
-          <span className={`entry-kind entry-kind--${draft.kind}`}>
-            {entryKindLabel(draft.kind)}
-          </span>
-          <div style={{ flex: 1 }} />
-          <button
-            type="button"
-            onClick={() => setKindOpen((was) => !was)}
-            aria-expanded={kindOpen}
-            className="journal-action"
-          >
-            {t("journal.changeKind")}
-          </button>
-        </div>
-      )}
-      <h1 className="journal-title">{heading}</h1>
+      <div className="journal-head-row">
+        <h1 className="journal-title">{heading}</h1>
+        {!update && (
+          <>
+            <div style={{ flex: 1 }} />
+            <button
+              type="button"
+              onClick={() => setKindOpen((was) => !was)}
+              aria-expanded={kindOpen}
+              className="journal-action"
+            >
+              {t("journal.changeKind")}
+            </button>
+          </>
+        )}
+      </div>
 
       {!update && kindOpen && (
         <div role="radiogroup" aria-label={t("journal.kind")} className="entry-kinds">

@@ -57,4 +57,5 @@ export const common = {
   "common.optional": "· optional",
   "common.membersOnly": "{label}, members only",
   "common.closeOptions": "Close {label} options",
+  "common.back": "Back",
 } as const;

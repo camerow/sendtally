@@ -35,7 +35,7 @@ export default function EditEntry(): React.ReactElement {
 
   return (
     <div>
-      <BackLink to={`/app/journal/${encodeURIComponent(entry.id)}`}>{t("journal.title")}</BackLink>
+      <BackLink to={`/app/journal/${encodeURIComponent(entry.id)}`}>{t("common.back")}</BackLink>
       <EntryComposer
         api={api}
         initial={initial}
