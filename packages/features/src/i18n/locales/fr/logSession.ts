@@ -5,7 +5,7 @@ export const logSession = {
   "logSession.scaleFrench": "Française",
   "logSession.boulders": "Blocs",
   "logSession.routes": "Voies",
-  "logSession.styleSent": "Enchaîné",
+  "logSession.styleSent": "Croix",
   "logSession.styleRedpoint": "Après travail",
   "logSession.styleFlash": "Flash",
   "logSession.styleOnsight": "À vue",

@@ -8,6 +8,6 @@ export const webBilling = {
   "web.billing.activeOnAccount": "Deine Mitgliedschaft ist auf diesem Konto aktiv.",
   "web.billing.billedThrough":
     "Deine Mitgliedschaft wird über {store} abgerechnet. Ändern oder kündigen kannst du sie in deinen {store}-Abos; die Trends bleiben bis zum Ende des bezahlten Zeitraums.",
-  "web.billing.manageIn": "In {store} verwalten →",
+  "web.billing.manageIn": "Verwalten über {store} →",
   "web.billing.seeMembership": "Mitgliedschaft ansehen →",
 } as const;

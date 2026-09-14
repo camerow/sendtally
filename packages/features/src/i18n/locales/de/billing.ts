@@ -1,9 +1,9 @@
 export const billing = {
   "billing.storeWeb": "sendtally.com",
   "billing.storePlay": "Google Play",
-  "billing.storeApp": "dem App Store",
-  "billing.storeTest": "dem Test-Store",
-  "billing.storeOther": "deinem Store",
+  "billing.storeApp": "App Store",
+  "billing.storeTest": "Test-Store",
+  "billing.storeOther": "Store",
   "billing.storeChipWeb": "sendtally.com",
   "billing.storeChipPlay": "Google Play",
   "billing.storeChipApp": "App Store",

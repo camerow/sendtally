@@ -47,7 +47,7 @@ export const mobileBilling = {
   "mobile.billing.membership": "Mitgliedschaft",
   "mobile.billing.storeBody":
     "Abrechnung über {store}. Abo wechseln oder kündigen kannst du in deinen {store}-Abos; die Trends bleiben bis zum Ende des bezahlten Zeitraums.",
-  "mobile.billing.manageIn": "In {store} verwalten",
+  "mobile.billing.manageIn": "Verwalten über {store}",
   "mobile.billing.webBody":
     "Diese Mitgliedschaft wurde auf sendtally.com gekauft und verlängert sich dort. Sie schaltet die Trends in der App genauso frei.",
   "mobile.billing.activeBody": "Die Mitgliedschaft ist auf diesem Konto aktiv.",

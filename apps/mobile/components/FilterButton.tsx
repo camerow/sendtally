@@ -1,6 +1,7 @@
 import React from "react";
 import { Pressable, View } from "react-native";
 import { colors, radius } from "@sendtally/design/tokens";
+import { t } from "@sendtally/features/i18n";
 import { Icon } from "./Icon";
 import { press } from "../lib/press";
 
@@ -26,7 +27,7 @@ export function FilterButton({ active, onPress }: FilterButtonProps): React.Reac
       <Pressable
         onPress={onPress}
         accessibilityRole="button"
-        accessibilityLabel="Filters"
+        accessibilityLabel={t("mobile.sessions.filters")}
         accessibilityState={{ selected: active }}
         hitSlop={4}
         style={press({
