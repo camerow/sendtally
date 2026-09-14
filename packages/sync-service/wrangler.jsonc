@@ -34,9 +34,11 @@
       "vars": {
         "WEB_APP_URL": "https://staging.sendtally.com",
         "PREVIEW_ORIGIN_SUFFIX": "-sendtally-web-staging.chalk-and-circuits.workers.dev",
-        // No PostHog token: staging is the pull request sandbox and the e2e flows, and its
-        // events would land in the one project alongside real ones. An absent token is a
-        // no-op in getPostHog, so nothing else changes.
+        // No PostHog token: staging is the pull request sandbox and the e2e flows, so its
+        // server-side captures would land in the one project alongside real ones. An absent
+        // token is a no-op in getPostHog, so nothing else changes. apps/web declares its own
+        // token on production only for the same reason - staging missing one is the design,
+        // not an oversight to correct.
         "POSTHOG_HOST": "https://us.i.posthog.com",
       },
     },
