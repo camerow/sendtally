@@ -17,6 +17,53 @@ export type HeroFeatureCopy = {
   chartLabel?: string;
 };
 
+export type HeroFacesCopy = {
+  stats: {
+    climbs: string;
+    avgGrade: string;
+    flash: string;
+    top: string;
+    tags: string;
+    sessions: string;
+    topTag: string;
+    avgRpe: string;
+    hardest: string;
+    sends: string;
+    avg: string;
+    open: string;
+    attempts: string;
+    time: string;
+    grades: string;
+  };
+  tags: [string, string, string, string];
+  weekPrefix: string;
+  projects: [string, string, string];
+  rpeLastSession: string;
+  via: string;
+  rockClimbing: string;
+  stravaTitle: string;
+  projectMeta: string;
+};
+
+export type SessionSampleCopy = {
+  title: string;
+  meta: string;
+  stats: {
+    time: string;
+    climbs: string;
+    sends: string;
+    avgGrade: string;
+    flashes: string;
+    attempts: string;
+    top: string;
+  };
+  headings: [string, string, string, string, string];
+  burn: string;
+  burns: string;
+  results: { FLASH: string; SENT: string; PROJECT: string };
+  climbs: [string, string, string, string, string, string];
+};
+
 export type FreeFeatureCopy = {
   eyebrow: string;
   title: string;
@@ -87,6 +134,33 @@ export const COPY = {
         chartLabel: "SENDS BY GRADE",
       },
     ] satisfies [HeroFeatureCopy, ...HeroFeatureCopy[]],
+    faces: {
+      stats: {
+        climbs: "CLIMBS",
+        avgGrade: "AVG GRADE",
+        flash: "FLASH",
+        top: "TOP",
+        tags: "TAGS",
+        sessions: "SESSIONS",
+        topTag: "TOP TAG",
+        avgRpe: "AVG RPE",
+        hardest: "HARDEST",
+        sends: "SENDS",
+        avg: "AVG",
+        open: "OPEN",
+        attempts: "ATTEMPTS",
+        time: "TIME",
+        grades: "GRADES",
+      },
+      tags: ["Gym", "Board", "Outdoor", "Power"],
+      weekPrefix: "W",
+      projects: ["The Arete", "Slab Problem", "Roof Traverse"],
+      rpeLastSession: "RPE LAST SESSION",
+      via: "via sendtally",
+      rockClimbing: "ROCK CLIMBING",
+      stravaTitle: "Solid climbing session - 18 climbs, top V7",
+      projectMeta: "{sessions} sessions · {attempts} tries",
+    } satisfies HeroFacesCopy,
     title: "Your new favorite climbing journal",
     body: "Quickly and easily log your sessions - grades, sends, attempts. Use RPE to track effort over time. Post to Strava to see your climbing with your other activities. Membership adds trends and insight: volume, grade pyramid, hardest send, flash rate and average grade.",
   },
@@ -193,6 +267,31 @@ export const COPY = {
     title: "Every session, climb by climb.",
     blurb: "Grades, burns and results - kept for every climb over time.",
     footnote: "6 OF 12 CLIMBS SHOWN · FILTER BY SENT, FLASHED OR PROJECT IN THE APP",
+    sample: {
+      title: "Tuesday night - Jul 30",
+      meta: "THU JUL 30 · 7:02 PM · INDOOR · 1H 28M",
+      stats: {
+        time: "TIME",
+        climbs: "CLIMBS",
+        sends: "SENDS",
+        avgGrade: "AVG GRADE",
+        flashes: "FLASHES",
+        attempts: "ATTEMPTS",
+        top: "TOP",
+      },
+      headings: ["#", "CLIMB", "GRADE", "BURNS", "RESULT"],
+      burn: " burn",
+      burns: " burns",
+      results: { FLASH: "FLASH", SENT: "SENT", PROJECT: "PROJECT" },
+      climbs: [
+        "Static Cling",
+        "Pinch Point",
+        "Dead Point Drill",
+        "Cutting Loose",
+        "Thread the Needle",
+        "Full Value",
+      ],
+    } satisfies SessionSampleCopy,
   },
 
   strava: {
@@ -200,6 +299,7 @@ export const COPY = {
     title: "We'll sync with Strava, if you're into that.",
     body: "Each logged session becomes one Rock Climbing activity, with duration, sends, attempts and grades already filled in. It is free for everyone and always will be - we do not charge for Strava syncing. Turn it off and sendtally is still yours for the numbers alone.",
     cta: "Create your account →",
+    preview: { meta: "Today at 6:42 PM · Rock Climbing", chartLabel: "SENDS BY GRADE" },
   },
 
   how: {

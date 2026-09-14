@@ -1,0 +1,17 @@
+export const sessions = {
+  "sessions.climbCount_one": "{count} escalada",
+  "sessions.climbCount_other": "{count} escaladas",
+  "sessions.sessionCount_one": "{count} sesión",
+  "sessions.sessionCount_other": "{count} sesiones",
+  "sessions.hoursShort": "h",
+  "sessions.minutesShort": "m",
+  "sessions.rpe": "RPE {rpe}",
+  "sessions.rpeOutOfTen": "RPE {rpe}/10",
+  "sessions.topGrade": "MÁX {grade}",
+  "sessions.sentGrade": "ENCADENADO {grade}",
+  "sessions.triedGrade": "PROBADO {grade}",
+  "sessions.loggedSession": "Sesión registrada",
+  "sessions.boardSession": "Sesión de board",
+  "sessions.untagged": "Sin etiqueta",
+  "sessions.tagsSaveFailed": "No se pudieron guardar las etiquetas. Inténtalo de nuevo.",
+} as const;

@@ -1,0 +1,31 @@
+export const billing = {
+  "billing.storeWeb": "sendtally.com",
+  "billing.storePlay": "Google Play",
+  "billing.storeApp": "dem App Store",
+  "billing.storeTest": "dem Test-Store",
+  "billing.storeOther": "deinem Store",
+  "billing.storeChipWeb": "sendtally.com",
+  "billing.storeChipPlay": "Google Play",
+  "billing.storeChipApp": "App Store",
+  "billing.storeChipTest": "Test-Store",
+  "billing.storeChipOther": "Dein Store",
+  "billing.monthlyPlan": "Monatsabo",
+  "billing.yearlyPlan": "Jahresabo",
+  "billing.lifetime": "Lebenslang",
+  "billing.renews": "Verlängert sich am {date}",
+  "billing.ends": "Endet am {date}",
+  "billing.notAMember": "Kein Mitglied",
+  "billing.memberVia": "Mitglied · {store}",
+  "billing.memberWeb": "Mitglied · Web",
+  "billing.benefitTrendsTitle": "Volumen, Anstrengung, Durchschnittsgrad und Flash-Quote",
+  "billing.benefitTrendsBody":
+    "Jede Session, die du einträgst, fließt in die Trends ein - wie viel du geklettert bist, wie hart es sich angefühlt hat, wohin dein durchschnittlicher Begehungsgrad driftet und wie oft du ein Problem im ersten Versuch liest.",
+  "billing.benefitInfluenceTitle": "Direkter Einfluss darauf, was gebaut wird",
+  "billing.benefitInfluenceBody":
+    "Mitglieder bestimmen, was als Nächstes kommt. Eine Person baut das hier, und die Leute, die den Server bezahlen, legen die Reihenfolge fest.",
+  "billing.pointVolume": "Volumen - wie viel du wirklich geklettert bist, Woche für Woche",
+  "billing.pointRpe": "RPE - wie hart sich deine Sessions über die Zeit angefühlt haben",
+  "billing.pointAvgGrade":
+    "Durchschnittlicher Begehungsgrad - die Drift, die ein Logbuch dir nie zeigen kann",
+  "billing.pointFlashRate": "Flash-Quote - das Erste, was sich bewegt, wenn du besser liest",
+} as const;

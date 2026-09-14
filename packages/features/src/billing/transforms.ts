@@ -21,6 +21,18 @@ export function storeName(managedIn: MembershipManagedIn): string {
   return t(STORE_NAMES[managedIn]);
 }
 
+const STORE_CHIPS: Record<MembershipManagedIn, MessageKey> = {
+  web: "billing.storeChipWeb",
+  play_store: "billing.storeChipPlay",
+  app_store: "billing.storeChipApp",
+  test_store: "billing.storeChipTest",
+  other: "billing.storeChipOther",
+};
+
+export function storeChipName(managedIn: MembershipManagedIn): string {
+  return t(STORE_CHIPS[managedIn]);
+}
+
 const PLAN_LABELS: Record<MembershipPlan, MessageKey> = {
   monthly: "billing.monthlyPlan",
   yearly: "billing.yearlyPlan",
@@ -62,9 +74,7 @@ export function membershipVM(entitlements: Entitlements | null): MembershipVM {
     const managedIn = managedInOf(membership.store.store);
     return {
       active: true,
-      statusLabel: upper(
-        t("billing.memberVia", { store: storeName(managedIn).replace("the ", "") })
-      ),
+      statusLabel: upper(t("billing.memberVia", { store: storeChipName(managedIn) })),
       managedIn,
       plan: planOf(membership.store.productId),
       renewalLine: renewalLine(membership.store),

@@ -1,0 +1,17 @@
+export const sessions = {
+  "sessions.climbCount_one": "{count} Kletterei",
+  "sessions.climbCount_other": "{count} Klettereien",
+  "sessions.sessionCount_one": "{count} Session",
+  "sessions.sessionCount_other": "{count} Sessions",
+  "sessions.hoursShort": "h",
+  "sessions.minutesShort": "m",
+  "sessions.rpe": "RPE {rpe}",
+  "sessions.rpeOutOfTen": "RPE {rpe}/10",
+  "sessions.topGrade": "TOP {grade}",
+  "sessions.sentGrade": "GESCHAFFT {grade}",
+  "sessions.triedGrade": "PROBIERT {grade}",
+  "sessions.loggedSession": "Eingetragene Session",
+  "sessions.boardSession": "Board-Session",
+  "sessions.untagged": "Ohne Tag",
+  "sessions.tagsSaveFailed": "Tags konnten nicht gespeichert werden. Versuch es noch einmal.",
+} as const;

@@ -3,6 +3,7 @@ import { ActivityIndicator, Linking, Pressable, ScrollView, Text, View } from "r
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
   planLabel,
+  storeChipName,
   storeName,
   type MembershipFeature,
   type MembershipVM,
@@ -83,7 +84,7 @@ function StatusCard({
             style={press({ ...chipButton, alignSelf: "flex-start" })}
           >
             <Text style={chipButtonLabel}>
-              {t("mobile.billing.manageIn", { store: where.replace("the ", "") })}
+              {t("mobile.billing.manageIn", { store: storeChipName(vm.managedIn) })}
             </Text>
           </Pressable>
           {restoreLink}

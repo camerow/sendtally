@@ -1,22 +1,8 @@
 import React from "react";
-import type { HeroFeatureCopy } from "../copy";
+import type { HeroFacesCopy, HeroFeatureCopy } from "../copy";
 import { useLanding } from "../LandingContext";
 import { Badge, GradeBars, Label } from "@sendtally/design";
-import {
-  EFFORT_BARS,
-  EFFORT_STATS,
-  PYRAMID_BARS,
-  PROJECT_STATS,
-  PROJECTS,
-  PYRAMID_STATS,
-  STRAVA_BARS,
-  STRAVA_STATS,
-  TAG_BARS,
-  TAG_STATS,
-  TAGS,
-  TREND_BARS,
-  TREND_STATS,
-} from "./heroFaces";
+import { heroFaces, type HeroFaces } from "./heroFaces";
 import { MiniBars } from "./MiniBars";
 import { RangeChips } from "./RangeChips";
 import { StatGrid } from "./StatGrid";
@@ -36,21 +22,29 @@ function Chart({
   );
 }
 
-function Face({ feature }: { feature: HeroFeatureCopy }): React.ReactElement {
+function Face({
+  feature,
+  faces,
+  copy,
+}: {
+  feature: HeroFeatureCopy;
+  faces: HeroFaces;
+  copy: HeroFacesCopy;
+}): React.ReactElement {
   if (feature.key === "tags") {
     return (
       <>
         <div className="l-hero-tags">
-          {TAGS.map((tag) => (
+          {faces.tags.map((tag) => (
             <span key={tag} className="l-free-pill">
               {tag}
             </span>
           ))}
         </div>
         <Chart label={feature.chartLabel}>
-          <MiniBars bars={TAG_BARS} height={64} grow="mount" />
+          <MiniBars bars={faces.tagBars} height={64} grow="mount" />
         </Chart>
-        <StatGrid tone="white" items={TAG_STATS} />
+        <StatGrid tone="white" items={faces.tagStats} />
       </>
     );
   }
@@ -60,13 +54,13 @@ function Face({ feature }: { feature: HeroFeatureCopy }): React.ReactElement {
         <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
           <span className="l-hero-figure">7.4</span>
           <Label on="light" size={10}>
-            RPE LAST SESSION
+            {copy.rpeLastSession}
           </Label>
         </div>
         <Chart label={feature.chartLabel}>
-          <MiniBars bars={EFFORT_BARS} height={64} grow="mount" />
+          <MiniBars bars={faces.effortBars} height={64} grow="mount" />
         </Chart>
-        <StatGrid tone="white" items={EFFORT_STATS} />
+        <StatGrid tone="white" items={faces.effortStats} />
       </>
     );
   }
@@ -74,9 +68,9 @@ function Face({ feature }: { feature: HeroFeatureCopy }): React.ReactElement {
     return (
       <>
         <Chart label={feature.chartLabel}>
-          <GradeBars bars={PYRAMID_BARS} height={104} />
+          <GradeBars bars={faces.pyramidBars} height={104} />
         </Chart>
-        <StatGrid tone="white" items={PYRAMID_STATS} />
+        <StatGrid tone="white" items={faces.pyramidStats} />
       </>
     );
   }
@@ -84,19 +78,21 @@ function Face({ feature }: { feature: HeroFeatureCopy }): React.ReactElement {
     return (
       <>
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          {PROJECTS.map((project) => (
+          {faces.projects.map((project) => (
             <div key={project.name} className="l-hero-project">
               <span style={{ fontWeight: 600, fontSize: 14 }}>{project.name}</span>
               <Badge tone={project.sent ? "petal" : "azure"} pill={false}>
                 {project.grade}
               </Badge>
               <span className="l-hero-project-meta">
-                {project.sessions} sessions · {project.attempts} tries
+                {copy.projectMeta
+                  .replace("{sessions}", String(project.sessions))
+                  .replace("{attempts}", String(project.attempts))}
               </span>
             </div>
           ))}
         </div>
-        <StatGrid tone="white" items={PROJECT_STATS} />
+        <StatGrid tone="white" items={faces.projectStats} />
       </>
     );
   }
@@ -105,19 +101,19 @@ function Face({ feature }: { feature: HeroFeatureCopy }): React.ReactElement {
       <>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <Badge tone="azure" pill={false}>
-            via sendtally
+            {copy.via}
           </Badge>
           <Label on="light" size={10}>
-            ROCK CLIMBING
+            {copy.rockClimbing}
           </Label>
         </div>
         <div style={{ fontWeight: 600, fontSize: 17, letterSpacing: "-0.01em" }}>
-          Solid climbing session - 18 climbs, top V7
+          {copy.stravaTitle}
         </div>
         <Chart label={feature.chartLabel}>
-          <GradeBars bars={STRAVA_BARS} height={82} />
+          <GradeBars bars={faces.stravaBars} height={82} />
         </Chart>
-        <StatGrid tone="white" items={STRAVA_STATS} />
+        <StatGrid tone="white" items={faces.stravaStats} />
       </>
     );
   }
@@ -125,15 +121,16 @@ function Face({ feature }: { feature: HeroFeatureCopy }): React.ReactElement {
     <>
       <RangeChips active="3M" size="sm" />
       <Chart label={feature.chartLabel}>
-        <MiniBars bars={TREND_BARS} height={78} grow="mount" />
+        <MiniBars bars={faces.trendBars} height={78} grow="mount" />
       </Chart>
-      <StatGrid tone="white" items={TREND_STATS} />
+      <StatGrid tone="white" items={faces.trendStats} />
     </>
   );
 }
 
 export function HeroFeatureCard({ index }: { index: number }): React.ReactElement {
   const { copy } = useLanding();
+  const faces = heroFaces(copy);
   const feature = copy.hero.features[index] ?? copy.hero.features[0];
   return (
     <div className="l-hero-card">
@@ -161,7 +158,7 @@ export function HeroFeatureCard({ index }: { index: number }): React.ReactElemen
             {feature.cardCaption}
           </Label>
         </div>
-        <Face feature={feature} />
+        <Face feature={feature} faces={faces} copy={copy.hero.faces} />
       </div>
     </div>
   );

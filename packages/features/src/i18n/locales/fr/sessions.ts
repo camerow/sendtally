@@ -1,0 +1,17 @@
+export const sessions = {
+  "sessions.climbCount_one": "{count} ligne",
+  "sessions.climbCount_other": "{count} lignes",
+  "sessions.sessionCount_one": "{count} séance",
+  "sessions.sessionCount_other": "{count} séances",
+  "sessions.hoursShort": "h",
+  "sessions.minutesShort": "m",
+  "sessions.rpe": "RPE {rpe}",
+  "sessions.rpeOutOfTen": "RPE {rpe}/10",
+  "sessions.topGrade": "MAX {grade}",
+  "sessions.sentGrade": "ENCHAÎNÉ {grade}",
+  "sessions.triedGrade": "ESSAYÉ {grade}",
+  "sessions.loggedSession": "Séance enregistrée",
+  "sessions.boardSession": "Séance de board",
+  "sessions.untagged": "Sans tag",
+  "sessions.tagsSaveFailed": "Impossible d'enregistrer les tags. Réessaie.",
+} as const;

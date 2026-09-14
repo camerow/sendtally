@@ -1,5 +1,6 @@
 import React from "react";
 import { useLanding } from "../LandingContext";
+import type { SessionSampleCopy } from "../copy";
 import { Label } from "@sendtally/design";
 import { StatGrid } from "./StatGrid";
 
@@ -7,7 +8,6 @@ type Result = "FLASH" | "SENT" | "PROJECT";
 
 type Climb = {
   n: number;
-  name: string;
   grade: string;
   burns: string;
   result: Result;
@@ -17,35 +17,30 @@ type Climb = {
 const CLIMBS: Climb[] = [
   {
     n: 1,
-    name: "Static Cling",
     grade: "V2",
     burns: "1",
     result: "FLASH",
   },
   {
     n: 4,
-    name: "Pinch Point",
     grade: "V5",
     burns: "2",
     result: "SENT",
   },
   {
     n: 7,
-    name: "Dead Point Drill",
     grade: "V6",
     burns: "2",
     result: "SENT",
   },
   {
     n: 9,
-    name: "Cutting Loose",
     grade: "V6",
     burns: "3",
     result: "SENT",
   },
   {
     n: 10,
-    name: "Thread the Needle",
     grade: "V7",
     burns: "5",
     result: "SENT",
@@ -53,14 +48,11 @@ const CLIMBS: Climb[] = [
   },
   {
     n: 12,
-    name: "Full Value",
     grade: "V8",
     burns: "2",
     result: "PROJECT",
   },
 ];
-
-const HEADINGS = ["#", "CLIMB", "GRADE", "BURNS", "RESULT"];
 
 const resultStyles: Record<Result, React.CSSProperties> = {
   FLASH: {
@@ -81,6 +73,7 @@ const resultStyles: Record<Result, React.CSSProperties> = {
 };
 
 function ResultBadge({ result }: { result: Result }): React.ReactElement {
+  const { copy } = useLanding();
   return (
     <span
       style={{
@@ -95,7 +88,7 @@ function ResultBadge({ result }: { result: Result }): React.ReactElement {
         ...resultStyles[result],
       }}
     >
-      {result}
+      {copy.session.sample.results[result]}
     </span>
   );
 }
@@ -106,7 +99,15 @@ const metaStyle: React.CSSProperties = {
   color: "var(--text-on-white-secondary)",
 };
 
-function ClimbRow({ climb }: { climb: Climb }): React.ReactElement {
+function ClimbRow({
+  climb,
+  name,
+  sample,
+}: {
+  climb: Climb;
+  name: string;
+  sample: SessionSampleCopy;
+}): React.ReactElement {
   return (
     <div className="l-climb-row">
       <span
@@ -116,7 +117,7 @@ function ClimbRow({ climb }: { climb: Climb }): React.ReactElement {
         {climb.n}
       </span>
       <span className="l-climb-name" style={{ fontWeight: 500, fontSize: 15, minWidth: 0 }}>
-        {climb.name}
+        {name}
       </span>
       <span className="l-climb-meta">
         <span
@@ -131,7 +132,7 @@ function ClimbRow({ climb }: { climb: Climb }): React.ReactElement {
         </span>
         <span style={metaStyle}>
           {climb.burns}
-          <span className="l-inline-label">{climb.burns === "1" ? " burn" : " burns"}</span>
+          <span className="l-inline-label">{climb.burns === "1" ? sample.burn : sample.burns}</span>
         </span>
       </span>
       <span className="l-climb-result">
@@ -143,6 +144,7 @@ function ClimbRow({ climb }: { climb: Climb }): React.ReactElement {
 
 export function SessionBreakdown(): React.ReactElement {
   const { copy } = useLanding();
+  const { sample } = copy.session;
   return (
     <div id="session" className="l-session">
       <div className="l-section-header">
@@ -161,36 +163,36 @@ export function SessionBreakdown(): React.ReactElement {
             letterSpacing: "-0.02em",
           }}
         >
-          Tuesday night - Jul 30
+          {sample.title}
         </span>
         <Label on="light" style={{ letterSpacing: "0.06em" }}>
-          THU JUL 30 · 7:02 PM · INDOOR · 1H 28M
+          {sample.meta}
         </Label>
       </div>
 
       <StatGrid
         items={[
-          { label: "TIME", value: "1H 28M" },
-          { label: "CLIMBS", value: "12" },
-          { label: "SENDS", value: "10" },
-          { label: "AVG GRADE", value: "V4.9" },
-          { label: "FLASHES", value: "3" },
-          { label: "ATTEMPTS", value: "24" },
-          { label: "TOP", value: "V7", accent: true },
+          { label: sample.stats.time, value: "1H 28M" },
+          { label: sample.stats.climbs, value: "12" },
+          { label: sample.stats.sends, value: "10" },
+          { label: sample.stats.avgGrade, value: "V4.9" },
+          { label: sample.stats.flashes, value: "3" },
+          { label: sample.stats.attempts, value: "24" },
+          { label: sample.stats.top, value: "V7", accent: true },
         ]}
       />
 
       <div style={{ display: "flex", flexDirection: "column" }}>
         <div className="l-climb-head">
-          {HEADINGS.map((h) => (
+          {sample.headings.map((h) => (
             <Label key={h} on="accent" size={10}>
               {h}
             </Label>
           ))}
         </div>
         <div style={{ display: "flex", flexDirection: "column" }}>
-          {CLIMBS.map((c) => (
-            <ClimbRow key={c.n} climb={c} />
+          {CLIMBS.map((c, i) => (
+            <ClimbRow key={c.n} climb={c} name={sample.climbs[i] ?? ""} sample={sample} />
           ))}
         </div>
       </div>

@@ -5,6 +5,7 @@ export {
   membershipVM,
   planLabel,
   planOf,
+  storeChipName,
   storeName,
 } from "./transforms";
 export { useMembership, type MembershipFeature } from "./useMembership";

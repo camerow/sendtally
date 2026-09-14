@@ -1,6 +1,6 @@
 import React from "react";
 import { Label } from "@sendtally/design";
-import { storeName, type MembershipVM } from "@sendtally/features/billing";
+import { storeChipName, storeName, type MembershipVM } from "@sendtally/features/billing";
 import { t, upper } from "@sendtally/features/i18n";
 
 export type StoreMembershipPanelProps = {
@@ -63,7 +63,7 @@ export function StoreMembershipPanel({ vm }: StoreMembershipPanelProps): React.R
             alignSelf: "flex-start",
           }}
         >
-          {t("web.billing.manageIn", { store: where.replace("the ", "") })}
+          {t("web.billing.manageIn", { store: storeChipName(managedIn) })}
         </a>
       )}
     </div>

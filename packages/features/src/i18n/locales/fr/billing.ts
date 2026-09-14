@@ -1,0 +1,31 @@
+export const billing = {
+  "billing.storeWeb": "sendtally.com",
+  "billing.storePlay": "Google Play",
+  "billing.storeApp": "l'App Store",
+  "billing.storeTest": "la boutique de test",
+  "billing.storeOther": "ta boutique",
+  "billing.storeChipWeb": "sendtally.com",
+  "billing.storeChipPlay": "Google Play",
+  "billing.storeChipApp": "App Store",
+  "billing.storeChipTest": "Boutique de test",
+  "billing.storeChipOther": "Ta boutique",
+  "billing.monthlyPlan": "Formule mensuelle",
+  "billing.yearlyPlan": "Formule annuelle",
+  "billing.lifetime": "À vie",
+  "billing.renews": "Renouvellement le {date}",
+  "billing.ends": "Se termine le {date}",
+  "billing.notAMember": "Non abonné",
+  "billing.memberVia": "Abonné · {store}",
+  "billing.memberWeb": "Abonné · web",
+  "billing.benefitTrendsTitle": "Volume, effort, cotation moyenne et taux de flash",
+  "billing.benefitTrendsBody":
+    "Chaque séance enregistrée alimente les tendances : combien tu as grimpé, à quel point c'était dur, où dérive ta cotation moyenne enchaînée, et à quelle fréquence tu lis une ligne du premier coup.",
+  "billing.benefitInfluenceTitle": "Une influence directe sur ce qui est construit",
+  "billing.benefitInfluenceBody":
+    "Les abonnés décident de la suite. Une seule personne développe l'appli, et ceux qui paient le serveur fixent l'ordre.",
+  "billing.pointVolume": "Volume - ce que tu as vraiment grimpé, semaine après semaine",
+  "billing.pointRpe": "RPE - la difficulté ressentie de tes séances dans le temps",
+  "billing.pointAvgGrade": "Cotation moyenne enchaînée - la dérive qu'un carnet ne montre jamais",
+  "billing.pointFlashRate":
+    "Taux de flash - la première chose qui bouge quand ta lecture progresse",
+} as const;
