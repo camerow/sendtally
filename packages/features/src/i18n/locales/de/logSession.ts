@@ -54,10 +54,6 @@ export const logSession = {
   "logSession.ledgerLabel": "{grade} {name}, {kind}, {tries}",
   "logSession.triesCount_one": "{count} Versuch",
   "logSession.triesCount_other": "{count} Versuche",
-  "logSession.discardBody_one":
-    "Die {count} Kletterei, die du für {day} eingetragen hast, wird von diesem Gerät gelöscht.",
-  "logSession.discardBody_other":
-    "Die {count} Klettereien, die du für {day} eingetragen hast, werden von diesem Gerät gelöscht.",
   "logSession.unfinished": "Du hast eine unfertige Session von {when}",
   "logSession.draftMetaShort": "{climbs} · {start}–{end}",
   "logSession.startFresh": "Neu anfangen",

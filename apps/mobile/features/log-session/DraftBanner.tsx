@@ -53,7 +53,7 @@ export function DraftBanner({
   function confirmDiscard(): void {
     Alert.alert(
       t("common.discardDraftTitle"),
-      t("logSession.discardBody", {
+      t("common.discardDraftBody", {
         count,
         day: formatDate(savedAt, { weekday: "long" }),
       }),
