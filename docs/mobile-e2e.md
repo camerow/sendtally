@@ -45,6 +45,8 @@ That is the whole saving: the Gradle release build this replaced took sixteen of
 
 The `e2e` build profile exists for this job alone: it extends `preview`, so it is the same staging API and development Clerk instance, but it ships on its own `e2e` channel.
 That channel resolves to the `e2e` update branch, so every run publishes there and nothing the job does can land on a `preview` build someone is holding on a phone.
+The publish is `--branch e2e --environment preview`, and the mismatch is deliberate: the branch is where the update lands, the environment is where the staging keys live, and there is no `e2e` EAS environment holding a second copy of them.
+The profile inherits the rest of its `env` from `preview` too, so `EXPO_PUBLIC_E2E` is the only variable it declares.
 That makes the update branch shared state, which is why the whole workflow takes a single `mobile-e2e` concurrency group rather than one per ref: two runs in flight would each be looking at the other's JavaScript.
 
 `expo-updates` launches the bundle it already has and downloads the new one behind it, so the job opens the app once, waits for the update id to appear in logcat, force-stops it, and only then runs the flows.
