@@ -52,9 +52,14 @@ That makes the update branch shared state, which is why the whole workflow takes
 `expo-updates` launches the bundle it already has and downloads the new one behind it, so the job opens the app once, waits for the update id to appear in logcat, force-stops it, and only then runs the flows.
 The wait is a check, not a pause: a download that never lands fails the job, because the alternative is a green run against whatever JavaScript the APK happened to be built with.
 
-The profile sets `EXPO_PUBLIC_E2E=true`, which makes the app identify its person to PostHog with `$internal_or_test_user`.
-The internal cohort every insight filters out already matches that property, so a flow run signing in and logging a session is not product traffic.
+The profile sets `EXPO_PUBLIC_E2E=true`, and `AnalyticsProvider` renders no `PostHogProvider` when it is set, so a flow run sends PostHog nothing at all.
+Marking the person `$internal_or_test_user` instead does not work here: person-on-events keeps an event's person properties as they were at ingestion, so the anonymous events a run fires before it signs in stay product traffic however the person is marked afterwards.
+Sending nothing also stops session replay recording twenty minutes of a robot on every pull request.
 The workflow sets the same variable for itself, because `EXPO_PUBLIC_*` is inlined at bundle time and the update and the Gradle fallback both bundle on the runner.
+
+The server half is the staging Worker, which carries no `POSTHOG_PROJECT_TOKEN` for the same reason: the flows log real sessions against `api-staging.sendtally.com`, and those captures would land in the one PostHog project next to real ones.
+
+What a run costs in visibility is PostHog replay. Maestro's screenshots and UI hierarchy and the logcat dump are what a failure leaves instead.
 
 Nothing about the `e2e` profile carries a RevenueCat key.
 The SDK refuses a test-store key in a release build and closes the app, and the flows never reach a paywall.
