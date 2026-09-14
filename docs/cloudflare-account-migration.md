@@ -16,13 +16,13 @@ Destination: `Chalk and Circuits` (`f3514650e9f74f7fe7db71fdd6577a8f`).
 
 What lives in the source account today:
 
-| Resource                          | Note                                                                   |
-| --------------------------------- | ---------------------------------------------------------------------- |
-| Zone `sendtally.com`              | Cloudflare Registrar domain, registered 2026-08-06, expires 2027-08-06 |
-| Worker `sendtally-api-production` | custom domain `api.sendtally.com`, 5 secrets, hourly + 04:00 crons     |
-| Worker `sendtally-web-production` | custom domain `sendtally.com`, 1 secret                                |
-| D1 `sendtally-production`         | ~43 MB. The `sendtally-staging` id in wrangler.jsonc never existed     |
-| Queue `sendtally-sync-production` |                                                                        |
+| Resource                                   | Note                                                                   |
+| ------------------------------------------ | ---------------------------------------------------------------------- |
+| Zone `sendtally.com`                       | Cloudflare Registrar domain, registered 2026-08-06, expires 2027-08-06 |
+| Worker `sendtally-sync-service-production` | custom domain `api.sendtally.com`, 5 secrets, hourly + 04:00 crons     |
+| Worker `sendtally-web-production`          | custom domain `sendtally.com`, 1 secret                                |
+| D1 `sendtally-production`                  | ~43 MB. The `sendtally-staging` id in wrangler.jsonc never existed     |
+| Queue `sendtally-sync-production`          |                                                                        |
 
 The destination already has an empty queue `sendtally-sync-production`
 (created 2026-09-03) that Terraform imports rather than recreates.
@@ -90,7 +90,7 @@ the zone does. Until then the new Workers are reachable only on their
 
 Stop the old cron so no further sessions post from the old account. The
 cleanest switch is to delete its triggers in the dashboard
-(Workers → sendtally-api-production → Settings → Triggers), leaving
+(Workers → sendtally-sync-service-production → Settings → Triggers), leaving
 the HTTP route up so the site stays live.
 
 Then copy the database:
@@ -147,3 +147,30 @@ finally the (now `moved`) zone. Revoke the old export token.
 Before step 7 nothing user-facing has changed; restore the old cron triggers
 and stop. After step 7, moving the registration back is another five-day-window
 support flow, so verify thoroughly at step 7 before touching the old account.
+
+## Renaming a Worker
+
+Done once, in September 2026, when `sendtally-sync-service` became
+`sendtally-api`.
+A rename is a new Worker plus a domain move plus a deletion, and the order
+matters because the custom domain is what users hit.
+
+1. Deploy the new Worker **without** its `routes` block, so it exists but owns
+   no domain, then push its secrets.
+   Secrets live on the Worker, not in the config, so a new Worker starts with
+   none and answers every authenticated request with a 500 until they land.
+   Do this first and the domain never points at a Worker that cannot serve.
+2. Deploy again with `routes` restored.
+   A non-interactive `wrangler deploy` takes the custom domain over from the
+   other Worker without prompting, so this step is the cutover and there is no
+   confirmation to catch a mistake.
+3. Check the domain answers from the new Worker, then delete the old one.
+   `wrangler delete` takes a positional name and does not append `--env`, so
+   pass the full name: `wrangler delete sendtally-sync-service-production`.
+
+`infra/scripts/push-secrets.sh` is not the tool for step 1: it also pushes to
+`apps/web`, which fails with Cloudflare error 10215 whenever a pull request
+preview has been uploaded since the last production deploy, and it runs under
+`set -e`.
+Push the API Worker's secrets on their own with `doppler secrets download`
+piped into `wrangler secret bulk --env <env>`.
