@@ -25,9 +25,9 @@ name: draft-survives-leaving
 - tapOn: "Done"
 - scrollUntilVisible:
     element:
-      text: "← SESSIONS"
+      text: "← LOG"
     direction: UP
-- tapOn: "← SESSIONS"
+- tapOn: "← LOG"
 - tapOn: "Log a session"
 - assertVisible: "You have an unfinished session.*"
 - assertVisible: "3 CLIMBS.*"
@@ -35,6 +35,6 @@ name: draft-survives-leaving
 - assertVisible: "3 CLIMBS.*"
 - scrollUntilVisible:
     element:
-      text: "← SESSIONS"
+      text: "← LOG"
     direction: UP
-- tapOn: "← SESSIONS"
+- tapOn: "← LOG"

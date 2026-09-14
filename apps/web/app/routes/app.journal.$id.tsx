@@ -6,11 +6,12 @@ import { formatDate, t } from "@sendtally/features/i18n";
 import {
   dayLabel,
   daysSince,
+  entryBodyBelowTitle,
   entryKindLabel,
   entryTitle,
-  isoDay,
   linkedSessions,
   sessionsInSpan,
+  sessionsNearPoints,
   severitySeries,
   spanLabel,
   spansDates,
@@ -58,15 +59,7 @@ export default function EntryDetailRoute(): React.ReactElement {
     ? sessionsInSpan(sessions, entry).filter((s) => !entry.fingerprints.includes(s.fingerprint))
     : [];
   const points = severitySeries(entry, entry.updates);
-  const sessionsPerPoint = points.map(
-    (point) =>
-      sessions.filter((s) => {
-        const day = isoDay(s.start_at);
-        const from = new Date(`${point.at}T00:00:00Z`);
-        from.setUTCDate(from.getUTCDate() - 6);
-        return day <= point.at && day >= from.toISOString().slice(0, 10);
-      }).length
-  );
+  const sessionsPerPoint = sessionsNearPoints(sessions, points);
 
   const remove = (): void => {
     setDeleting(true);
@@ -129,7 +122,9 @@ export default function EntryDetailRoute(): React.ReactElement {
         {error !== null && <span className="journal-error">{error}</span>}
       </div>
 
-      {entry.body.trim() !== "" && <p className="journal-body">{entry.body}</p>}
+      {entryBodyBelowTitle(entry) !== "" && (
+        <p className="journal-body">{entryBodyBelowTitle(entry)}</p>
+      )}
 
       {linked.length > 0 && (
         <div className="journal-card">

@@ -10,23 +10,28 @@ import {
 } from "react-native";
 import { useSettings } from "@sendtally/features/settings";
 import { SafeAreaView } from "react-native-safe-area-context";
-import type { SessionRow as SessionRowData } from "@sendtally/api-client";
+import type { JournalEntry, SessionRow as SessionRowData } from "@sendtally/api-client";
 import {
-  countLabel,
   filterSessionsByTags,
   monthScopeItems,
   sessionTagGroups,
   sessionTagOptions,
   sessionTitle,
+  logCountLabel,
   logYearGroups,
-  sessionsIn,
   tagScopeItems,
 } from "@sendtally/features/sessions";
-import { logItems } from "@sendtally/features/journal";
+import { logItems, logScopeItems, type LogItem } from "@sendtally/features/journal";
 import { t } from "@sendtally/features/i18n";
 import { colors, fonts } from "@sendtally/design/tokens";
 import { ScreenHeader } from "../../components/ScreenHeader";
-import { FilterSheet, type SessionFilters } from "../../features/sessions/FilterSheet";
+import { EntryRow, entryRowHeight } from "../../features/journal/EntryRow";
+import { WriteEntryFab } from "../../features/journal/WriteEntryFab";
+import {
+  DEFAULT_FILTERS,
+  FilterSheet,
+  type SessionFilters,
+} from "../../features/sessions/FilterSheet";
 import { LogSessionFab } from "../../features/sessions/LogSessionFab";
 import { ScopeBar } from "../../features/sessions/ScopeBar";
 import { SECTION_HEADER_HEIGHT, SectionHeader } from "../../features/sessions/SectionHeader";
@@ -37,10 +42,13 @@ import { useApi } from "../../lib/api";
 import { maybeAskForReview } from "../../lib/review";
 import { useStravaSetupDismissed } from "../../lib/stravaSetupPrompt";
 
-type Section = { key: string; title: string; meta: string; data: SessionRowData[] };
+type Section = { key: string; title: string; meta: string; data: LogItem[] };
+
+const rowHeight = (item: LogItem): number =>
+  item.type === "session" ? sessionRowHeight(item.session) : entryRowHeight(item.entry);
 
 function itemLayout(
-  sections: ReadonlyArray<SectionListData<SessionRowData, Section>> | null,
+  sections: ReadonlyArray<SectionListData<LogItem, Section>> | null,
   index: number
 ): { length: number; offset: number; index: number } {
   let offset = 0;
@@ -49,8 +57,8 @@ function itemLayout(
     if (cursor === index) return { length: SECTION_HEADER_HEIGHT, offset, index };
     offset += SECTION_HEADER_HEIGHT;
     cursor += 1;
-    for (const session of section.data) {
-      const length = sessionRowHeight(session);
+    for (const item of section.data) {
+      const length = rowHeight(item);
       if (cursor === index) return { length, offset, index };
       offset += length;
       cursor += 1;
@@ -61,13 +69,30 @@ function itemLayout(
   return { length: 0, offset, index };
 }
 
-export default function Sessions(): React.ReactElement {
+const emptyLabel = {
+  fontFamily: fonts.monoMedium,
+  fontSize: 20,
+  letterSpacing: 1.6,
+  textTransform: "uppercase",
+  color: colors.petalInk,
+} as const;
+
+const emptyBody = {
+  textAlign: "center",
+  fontFamily: fonts.sans,
+  fontSize: 14,
+  lineHeight: 21,
+  color: colors.textSecondary,
+} as const;
+
+export default function Log(): React.ReactElement {
   const api = useApi();
-  const list = React.useRef<SectionList<SessionRowData, Section>>(null);
+  const list = React.useRef<SectionList<LogItem, Section>>(null);
   const [sessions, setSessions] = React.useState<SessionRowData[] | null>(null);
+  const [entries, setEntries] = React.useState<JournalEntry[]>([]);
   const [refreshing, setRefreshing] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
-  const [filters, setFilters] = React.useState<SessionFilters>({ grouping: "month", tags: [] });
+  const [filters, setFilters] = React.useState<SessionFilters>(DEFAULT_FILTERS);
   const [filtersOpen, setFiltersOpen] = React.useState(false);
   const [currentKey, setCurrentKey] = React.useState<string | null>(null);
   // ponytail: a second status() read per mount, to know if Strava is live; a Strava-status context across tabs if it ever matters
@@ -77,49 +102,50 @@ export default function Sessions(): React.ReactElement {
   const showStravaSetup =
     settings.ready && !settings.vm.stravaActive && stravaPrompt.dismissed === false;
 
-  const all = React.useMemo(() => sessions ?? [], [sessions]);
-  const tagOptions = React.useMemo(() => sessionTagOptions(all), [all]);
-  const untaggedCount = React.useMemo(() => all.filter((s) => s.tags.length === 0).length, [all]);
-  const visible = React.useMemo(() => filterSessionsByTags(all, filters.tags), [all, filters.tags]);
-
-  // The log will hold entries here too; for now the phone still shows sessions
-  // only, mapped through the same grouping the web log uses.
-  const items = React.useMemo(() => logItems(visible, []), [visible]);
+  const all = React.useMemo(() => logItems(sessions ?? [], entries), [sessions, entries]);
+  const inScope = React.useMemo(() => logScopeItems(all, filters.scope), [all, filters.scope]);
+  const tagOptions = React.useMemo(() => sessionTagOptions(inScope), [inScope]);
+  const untaggedCount = React.useMemo(
+    () => inScope.filter((i) => i.tags.length === 0).length,
+    [inScope]
+  );
+  const visible = React.useMemo(
+    () => filterSessionsByTags(inScope, filters.tags),
+    [inScope, filters.tags]
+  );
 
   const { sections, scopeItems } = React.useMemo(() => {
     if (filters.grouping === "tag") {
-      const groups = sessionTagGroups(items);
+      const groups = sessionTagGroups(visible);
       return {
         sections: groups.map((g): Section => ({
           key: g.key,
           title: g.label,
-          meta: countLabel(sessionsIn(g.items).length),
-          data: sessionsIn(g.items),
+          meta: logCountLabel(g.items),
+          data: g.items,
         })),
         scopeItems: tagScopeItems(groups),
       };
     }
-    const years = logYearGroups(items);
+    const years = logYearGroups(visible);
     return {
       sections: years.flatMap((year) =>
         year.months.map((m): Section => ({
           key: m.key,
           title: m.name,
-          meta: t("sessions.monthMeta", {
-            year: m.year,
-            sessions: countLabel(sessionsIn(m.items).length),
-          }),
-          data: sessionsIn(m.items),
+          meta: t("sessions.monthMeta", { year: m.year, sessions: logCountLabel(m.items) }),
+          data: m.items,
         }))
       ),
       scopeItems: monthScopeItems(years),
     };
-  }, [filters.grouping, items]);
+  }, [filters.grouping, visible]);
 
   const load = React.useCallback(async (): Promise<void> => {
     try {
-      const result = await api.sessions();
+      const [result, journal] = await Promise.all([api.sessions(), api.entries()]);
       setSessions(result.sessions);
+      setEntries(journal.entries);
       setError(null);
       void maybeAskForReview(result.sessions.length);
     } catch {
@@ -161,12 +187,13 @@ export default function Sessions(): React.ReactElement {
     list.current?.scrollToLocation({ sectionIndex: 0, itemIndex: 0, animated: false });
   };
 
-  const filtersActive = filters.tags.length > 0 || filters.grouping === "tag";
-  const caption = sessions === null ? t("common.loading") : countLabel(visible.length);
+  const filtersActive =
+    filters.tags.length > 0 || filters.grouping === "tag" || filters.scope !== "all";
+  const caption = sessions === null ? t("common.loading") : logCountLabel(visible);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.white }} edges={["top"]}>
-      <ScreenHeader title={t("common.sessions")} caption={caption} />
+      <ScreenHeader title={t("journal.log")} caption={caption} />
       {sections.length > 0 && (
         <ScopeBar
           items={scopeItems}
@@ -192,11 +219,11 @@ export default function Sessions(): React.ReactElement {
       <SectionList
         ref={list}
         sections={sections}
-        keyExtractor={(s) => s.fingerprint}
+        keyExtractor={(item) => item.key}
         stickySectionHeadersEnabled
         getItemLayout={itemLayout}
         viewabilityConfigCallbackPairs={viewability}
-        contentContainerStyle={{ paddingBottom: 96 }}
+        contentContainerStyle={{ paddingBottom: 140 }}
         ListHeaderComponent={
           showStravaSetup ? (
             <StravaSetupRow
@@ -217,29 +244,15 @@ export default function Sessions(): React.ReactElement {
           />
         }
         ListEmptyComponent={
-          sessions === null ? null : all.length === 0 ? (
+          sessions === null ? null : inScope.length === 0 && filters.scope === "journal" ? (
             <View style={{ alignItems: "center", gap: 8, paddingHorizontal: 28, paddingTop: 44 }}>
-              <Text
-                style={{
-                  fontFamily: fonts.monoMedium,
-                  fontSize: 20,
-                  letterSpacing: 1.6,
-                  color: colors.petalInk,
-                }}
-              >
-                FIRST SESSION
-              </Text>
-              <Text
-                style={{
-                  textAlign: "center",
-                  fontFamily: fonts.sans,
-                  fontSize: 14,
-                  lineHeight: 21,
-                  color: colors.textSecondary,
-                }}
-              >
-                Name, where, the climbs you got on. About a minute, and it scores itself.
-              </Text>
+              <Text style={emptyLabel}>{t("journal.emptyTitle")}</Text>
+              <Text style={emptyBody}>{t("journal.emptyBody")}</Text>
+            </View>
+          ) : inScope.length === 0 ? (
+            <View style={{ alignItems: "center", gap: 8, paddingHorizontal: 28, paddingTop: 44 }}>
+              <Text style={emptyLabel}>{t("sessions.firstSessionLabel")}</Text>
+              <Text style={emptyBody}>{t("sessions.firstSessionBody")}</Text>
             </View>
           ) : (
             <Text
@@ -252,30 +265,40 @@ export default function Sessions(): React.ReactElement {
                 color: colors.textMuted,
               }}
             >
-              {all.length === 0 ? t("sessions.emptyMobile") : t("sessions.noneForTags")}
+              {t("sessions.noneForTags")}
             </Text>
           )
         }
         renderSectionHeader={({ section }) => (
           <SectionHeader title={section.title} meta={section.meta} />
         )}
-        renderItem={({ item }) => (
-          <SessionRow
-            session={item}
-            title={sessionTitle(item)}
-            onPress={() =>
-              router.push({
-                pathname: "/session/[fingerprint]",
-                params: { fingerprint: item.fingerprint },
-              })
-            }
-          />
-        )}
+        renderItem={({ item }) =>
+          item.type === "session" ? (
+            <SessionRow
+              session={item.session}
+              title={sessionTitle(item.session)}
+              onPress={() =>
+                router.push({
+                  pathname: "/session/[fingerprint]",
+                  params: { fingerprint: item.session.fingerprint },
+                })
+              }
+            />
+          ) : (
+            <EntryRow
+              entry={item.entry}
+              onPress={() =>
+                router.push({ pathname: "/journal/[id]", params: { id: item.entry.id } })
+              }
+            />
+          )
+        }
       />
+      <WriteEntryFab />
       <LogSessionFab />
       <FilterSheet
         visible={filtersOpen}
-        sessions={all}
+        items={all}
         tagOptions={tagOptions}
         untaggedCount={untaggedCount}
         filters={filters}

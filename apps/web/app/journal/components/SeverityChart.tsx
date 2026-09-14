@@ -66,7 +66,7 @@ export function SeverityChart({
 
       {sessionsPerPoint.map((count, i) => (
         <rect
-          key={`band-${points[i]?.at ?? i}`}
+          key={`band-${i}`}
           x={at(i) - 18}
           y={BOTTOM + 8}
           width={36}
@@ -86,7 +86,7 @@ export function SeverityChart({
       />
       {points.map((p, i) => (
         <circle
-          key={p.at}
+          key={i}
           cx={at(i)}
           cy={y(p.severity)}
           r={i === points.length - 1 ? 6.5 : 5}

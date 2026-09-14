@@ -3,7 +3,14 @@ import { Link, useSearchParams } from "react-router";
 import type { ConnectionStatus, JournalEntry, SessionRow } from "@sendtally/api-client";
 import { Logo } from "@sendtally/design";
 import { t } from "@sendtally/features/i18n";
-import { logItems, today } from "@sendtally/features/journal";
+import {
+  LOG_SCOPES,
+  logItems,
+  logScopeItems,
+  logScopeLabel,
+  today,
+  type LogScope,
+} from "@sendtally/features/journal";
 import { NewEntryMenu } from "../../journal/components/NewEntryMenu";
 import {
   filterSessionsByTags,
@@ -26,15 +33,6 @@ import { SessionTagSection } from "./SessionTagSection";
 import { SessionYearGroup } from "./SessionYearGroup";
 import { StravaSetupRow } from "./StravaSetupRow";
 import { useVisibleSection } from "../useVisibleSection";
-
-/** Which half of the log is on show. "journal" is what /app/journal is. */
-export type LogScope = "all" | "sessions" | "journal";
-
-const SCOPES: Array<{ value: LogScope; label: () => string }> = [
-  { value: "all", label: () => t("journal.showEverything") },
-  { value: "sessions", label: () => t("journal.showSessions") },
-  { value: "journal", label: () => t("journal.showJournal") },
-];
 
 const muted: React.CSSProperties = {
   padding: 36,
@@ -66,16 +64,7 @@ export function LogView({
   const selectedTags = searchParams.getAll("tag");
 
   const all = React.useMemo(() => logItems(sessions, entries), [sessions, entries]);
-  const inScope = React.useMemo(() => {
-    if (scope === "sessions") return all.filter((i) => i.type === "session");
-    if (scope === "journal") return all.filter((i) => i.type === "entry");
-    // A note written about a session is read on that session: showing both puts
-    // the same night in the list twice, one row above the other. Trips and
-    // injuries are their own thing and stay in the log whatever they link.
-    return all.filter(
-      (i) => i.type === "session" || i.entry.kind !== "journal" || i.entry.fingerprints.length === 0
-    );
-  }, [all, scope]);
+  const inScope = React.useMemo(() => logScopeItems(all, scope), [all, scope]);
 
   const tagOptions = React.useMemo(() => sessionTagOptions(inScope), [inScope]);
   const untaggedCount = React.useMemo(
@@ -156,7 +145,7 @@ export function LogView({
       <div className="sessions-filters">
         <div className="sessions-filter-row">
           <span className="sessions-filter-label">{t("journal.show")}</span>
-          {SCOPES.map(({ value, label }) => (
+          {LOG_SCOPES.map((value) => (
             <Link
               key={value}
               to={
@@ -169,7 +158,7 @@ export function LogView({
               aria-current={scope === value ? "page" : undefined}
               className={scope === value ? "sessions-scope-chip is-on" : "sessions-scope-chip"}
             >
-              {label()}
+              {logScopeLabel(value)}
             </Link>
           ))}
         </div>

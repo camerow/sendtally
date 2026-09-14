@@ -1,25 +1,33 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
-import type { SessionRow } from "@sendtally/api-client";
 import {
   UNTAGGED_KEY,
   untaggedLabel,
-  countLabel,
   filterSessionsByTags,
+  logCountLabel,
   type SessionGrouping,
   type TagOption,
 } from "@sendtally/features/sessions";
+import {
+  LOG_SCOPES,
+  logScopeItems,
+  logScopeLabel,
+  type LogItem,
+  type LogScope,
+} from "@sendtally/features/journal";
 import { t } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { Chip } from "../../components/Chip";
 import { Sheet } from "../../components/Sheet";
 import { press } from "../../lib/press";
 
-export type SessionFilters = { grouping: SessionGrouping; tags: string[] };
+export type SessionFilters = { scope: LogScope; grouping: SessionGrouping; tags: string[] };
+
+export const DEFAULT_FILTERS: SessionFilters = { scope: "all", grouping: "month", tags: [] };
 
 export type FilterSheetProps = {
   visible: boolean;
-  sessions: SessionRow[];
+  items: LogItem[];
   tagOptions: TagOption[];
   untaggedCount: number;
   filters: SessionFilters;
@@ -38,7 +46,7 @@ const label = {
 
 export function FilterSheet({
   visible,
-  sessions,
+  items,
   tagOptions,
   untaggedCount,
   filters,
@@ -60,7 +68,7 @@ export function FilterSheet({
       ...prev,
       tags: prev.tags.includes(slug) ? prev.tags.filter((s) => s !== slug) : [...prev.tags, slug],
     }));
-  const count = filterSessionsByTags(sessions, draft.tags).length;
+  const count = filterSessionsByTags(logScopeItems(items, draft.scope), draft.tags);
 
   return (
     <Sheet visible={visible} onClose={onClose} closeLabel={t("common.closeFilters")}>
@@ -79,7 +87,7 @@ export function FilterSheet({
             {t("common.filters")}
           </Text>
           <Pressable
-            onPress={() => setDraft({ grouping: "month", tags: [] })}
+            onPress={() => setDraft(DEFAULT_FILTERS)}
             accessibilityRole="button"
             hitSlop={8}
             style={press({})}
@@ -96,6 +104,19 @@ export function FilterSheet({
               {t("common.clear")}
             </Text>
           </Pressable>
+        </View>
+        <View style={{ gap: 9 }}>
+          <Text style={label}>{t("journal.show")}</Text>
+          <View style={{ flexDirection: "row", gap: 8 }}>
+            {LOG_SCOPES.map((value) => (
+              <Chip
+                key={value}
+                label={logScopeLabel(value)}
+                active={draft.scope === value}
+                onPress={() => setDraft((prev) => ({ ...prev, scope: value }))}
+              />
+            ))}
+          </View>
         </View>
         <View style={{ gap: 9 }}>
           <Text style={label}>{t("sessions.groupBy")}</Text>
@@ -145,7 +166,7 @@ export function FilterSheet({
           })}
         >
           <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 15, color: colors.white }}>
-            {t("sessions.showCount", { label: countLabel(count).toLowerCase() })}
+            {t("sessions.showCount", { label: logCountLabel(count).toLowerCase() })}
           </Text>
         </Pressable>
       </View>

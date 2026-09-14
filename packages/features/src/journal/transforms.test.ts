@@ -5,12 +5,15 @@ import {
   draftFromEntry,
   draftIsEmpty,
   emptyDraft,
+  entryBodyBelowTitle,
   entryInput,
   entryTitle,
   linkedSessions,
   logItems,
+  logScopeItems,
   openInjuries,
   sessionsInSpan,
+  sessionsNearPoints,
   severitySeries,
 } from "./transforms";
 
@@ -201,5 +204,62 @@ describe("linkedSessions", () => {
 
   it("drops a link whose session is gone", () => {
     expect(linkedSessions([], entry({ fingerprints: ["gone"] }))).toEqual([]);
+  });
+});
+
+describe("logScopeItems", () => {
+  const items = logItems(
+    [session("a", "2026-05-22T09:00:00.000Z")],
+    [
+      entry({ id: "note", kind: "journal", fingerprints: ["a"] }),
+      entry({ id: "free", kind: "journal" }),
+      entry({ id: "hurt", kind: "injury", fingerprints: ["a"] }),
+    ]
+  );
+
+  it("drops a note on a session from everything, and keeps the injury", () => {
+    expect(logScopeItems(items, "all").map((i) => i.key)).toEqual([
+      "entry:free",
+      "entry:hurt",
+      "session:a",
+    ]);
+  });
+
+  it("shows each half on its own", () => {
+    expect(logScopeItems(items, "sessions").map((i) => i.key)).toEqual(["session:a"]);
+    expect(logScopeItems(items, "journal").map((i) => i.key)).toEqual([
+      "entry:note",
+      "entry:free",
+      "entry:hurt",
+    ]);
+  });
+});
+
+describe("sessionsNearPoints", () => {
+  it("counts the week up to each point", () => {
+    const sessions = [
+      session("a", "2026-05-16T09:00:00.000Z"),
+      session("b", "2026-05-20T09:00:00.000Z"),
+      session("c", "2026-05-23T09:00:00.000Z"),
+    ];
+    expect(
+      sessionsNearPoints(sessions, [
+        { at: "2026-05-22", severity: 6 },
+        { at: "2026-05-29", severity: 3 },
+      ])
+    ).toEqual([2, 1]);
+  });
+});
+
+describe("entryBodyBelowTitle", () => {
+  it("keeps the whole body under a real title", () => {
+    expect(entryBodyBelowTitle(entry({ title: "Pulley", body: "Line one\nLine two" }))).toBe(
+      "Line one\nLine two"
+    );
+  });
+
+  it("drops the first line an untitled entry already used as its heading", () => {
+    expect(entryBodyBelowTitle(entry({ body: "Line one\nLine two" }))).toBe("Line two");
+    expect(entryBodyBelowTitle(entry({ body: "Only line" }))).toBe("");
   });
 });

@@ -123,15 +123,6 @@ export class SendtallyApi {
     );
   }
 
-  setSessionNotes(fingerprint: string, notes: string): Promise<{ notes: string | null }> {
-    return body(
-      this.client.v1.sessions[":fingerprint"].notes.$put({
-        param: { fingerprint },
-        json: { notes },
-      })
-    );
-  }
-
   setGradeScales(scales: Partial<GradeScales>): Promise<{ gradeScales: GradeScales }> {
     return body(this.client.v1.preferences["grade-scales"].$put({ json: scales }));
   }

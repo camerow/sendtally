@@ -16,12 +16,18 @@ export {
   entriesForSession,
   entryInput,
   entryKindLabel,
+  entryBodyBelowTitle,
   entryTitle,
   isoDay,
   isThreadUpdate,
   isUpdateDraft,
   linkedSessions,
   logItems,
+  logScopeItems,
+  logScopeLabel,
+  LOG_SCOPES,
+  sessionsNearPoints,
+  type LogScope,
   openInjuries,
   sessionsInSpan,
   severitySeries,
@@ -31,4 +37,5 @@ export {
   type SeverityPoint,
 } from "./transforms";
 export { useEntries } from "./useEntries";
+export { useEntryDetail, useSessionRows, type EntryDetailData } from "./useEntryDetail";
 export { useEntryComposer, type EntryComposer } from "./useEntryComposer";

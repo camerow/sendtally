@@ -29,6 +29,34 @@ export function today(now: Date = new Date()): string {
   return now.toISOString().slice(0, 10);
 }
 
+/** Which half of the log is on show. "journal" is what the journal page is. */
+export type LogScope = "all" | "sessions" | "journal";
+
+export const LOG_SCOPES: LogScope[] = ["all", "sessions", "journal"];
+
+const SCOPE_LABELS: Record<LogScope, MessageKey> = {
+  all: "journal.showEverything",
+  sessions: "journal.showSessions",
+  journal: "journal.showJournal",
+};
+
+export function logScopeLabel(scope: LogScope): string {
+  return t(SCOPE_LABELS[scope]);
+}
+
+/**
+ * A note written about a session is read on that session: showing both puts
+ * the same night in the list twice, one row above the other. Trips and
+ * injuries are their own thing and stay in the log whatever they link.
+ */
+export function logScopeItems(items: LogItem[], scope: LogScope): LogItem[] {
+  if (scope === "sessions") return items.filter((i) => i.type === "session");
+  if (scope === "journal") return items.filter((i) => i.type === "entry");
+  return items.filter(
+    (i) => i.type === "session" || i.entry.kind !== "journal" || i.entry.fingerprints.length === 0
+  );
+}
+
 export function logItems(sessions: SessionRow[], entries: JournalEntry[]): LogItem[] {
   const items: LogItem[] = [
     ...sessions.map((session): LogItem => ({
@@ -138,6 +166,13 @@ export function entryTitle(entry: JournalEntry): string {
   return firstLine === "" ? entryKindLabel(entry.kind) : firstLine;
 }
 
+/** What is left to read under the heading: an untitled entry already spent its first line there. */
+export function entryBodyBelowTitle(entry: JournalEntry): string {
+  const body = entry.body.trim();
+  if ((entry.title?.trim() ?? "") !== "") return body;
+  return body.split("\n").slice(1).join("\n").trim();
+}
+
 const day = (value: string): Date => new Date(`${value}T00:00:00Z`);
 
 export function dayLabel(value: string): string {
@@ -156,6 +191,19 @@ export function daysSince(from: string, now: Date = new Date()): number {
 }
 
 export type SeverityPoint = { at: string; severity: number };
+
+/** Sessions climbed in the week up to each point - what tells a settling injury from a stopped one. */
+export function sessionsNearPoints(sessions: SessionRow[], points: SeverityPoint[]): number[] {
+  return points.map((point) => {
+    const from = new Date(`${point.at}T00:00:00Z`);
+    from.setUTCDate(from.getUTCDate() - 6);
+    const start = from.toISOString().slice(0, 10);
+    return sessions.filter((s) => {
+      const day = isoDay(s.start_at);
+      return day <= point.at && day >= start;
+    }).length;
+  });
+}
 
 /** The plottable part of a thread, oldest first. An update with no number is not a point. */
 export function severitySeries(parent: JournalEntry, updates: JournalEntry[]): SeverityPoint[] {

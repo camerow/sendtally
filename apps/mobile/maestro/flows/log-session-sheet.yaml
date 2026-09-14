@@ -38,6 +38,6 @@ name: log-session-sheet
 - assertVisible: "V3 Cascade.*"
 - scrollUntilVisible:
     element:
-      text: "← SESSIONS"
+      text: "← LOG"
     direction: UP
-- tapOn: "← SESSIONS"
+- tapOn: "← LOG"
