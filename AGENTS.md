@@ -235,6 +235,16 @@ Store listing copy lives in `apps/mobile/store/listing.md` and should match what
 - Prefer `type` over `interface` unless declaration merging is needed.
 - Zod at every I/O boundary (API input, external API responses, queue messages).
 
+### Localization
+
+- Every user-facing string goes through `t()` from `@sendtally/features/i18n`; never hardcode English in a component, transform, or `meta()`.
+  Catalogs are typed TS modules per locale and namespace under `packages/features/src/i18n/locales/<locale>/`, spread into that locale's `index.ts`; keys are `namespace.name`, plural forms are `name_one` / `name_other` picked by `Intl.PluralRules` when `count` is passed.
+  A key must exist in all four catalogs (`en`, `de`, `fr`, `es`) with the same placeholders or the parity test in `i18n.test.ts` fails.
+- Dates and numbers go through `formatDate` / `formatNumber` (locale-aware `Intl`); uppercase labels are stored in natural case and uppercased at the call site with `upper()`.
+- Never call `t()` at module scope: the locale is set after modules load on mobile and per request on the web Worker (`AsyncLocalStorage` in `entry.server.tsx`), so a module-level constant freezes to English. Wrap it in a function or a getter.
+- Locale is the device language on mobile (`expo-localization`) and `Accept-Language` on the web; the marketing landing is additionally served per locale at `/de`, `/fr`, `/es` from `apps/web/app/landing/copy.<locale>.ts` with hreflang alternates.
+  Terms, privacy, support, API error bodies, and the Strava activity description stay English.
+
 ### Code organization
 
 - Features live in colocated directories: everything a feature needs (components, hooks, transforms, tests) sits together in one directory named for the feature.
