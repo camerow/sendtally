@@ -31,8 +31,3 @@ export const ONBOARDING_SLIDES: OnboardingSlide[] = [
     body: "Volume over time, grade pyramid, hardest send, flash rate, average grade. Logging and posting to Strava are free; membership adds the trends.",
   },
 ];
-
-/** Membership sells the screens the log feeds, so it shows the same art for those two. */
-export const MEMBER_SLIDES: OnboardingSlide[] = (["trends", "effort"] as const).flatMap((key) =>
-  ONBOARDING_SLIDES.filter((slide) => slide.key === key)
-);

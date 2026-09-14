@@ -2,6 +2,7 @@ import React from "react";
 import { ActivityIndicator, Linking, Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
+  MEMBERSHIP_PANEL,
   planLabel,
   storeName,
   type MembershipFeature,
@@ -16,8 +17,7 @@ import {
   underlineLabel,
   underlinePress,
 } from "../../lib/styles";
-import { MEMBER_SLIDES } from "../onboarding/slides";
-import { OnboardingCarousel } from "../onboarding/OnboardingCarousel";
+import { ledgerEyebrow, MembershipLedger } from "./MembershipLedger";
 import { MembershipStatusCard } from "./MembershipStatusCard";
 import { PurchaseControls } from "./PurchaseControls";
 import { STORE_NAME, storeBillingAvailable, subscriptionManagementUrl } from "./store";
@@ -214,9 +214,30 @@ export function MembershipView({
           </Text>
         </View>
 
-        <View style={{ marginHorizontal: -18 }}>
-          <OnboardingCarousel slides={MEMBER_SLIDES} fill={false} />
-        </View>
+        {state.status === "ready" && !vm.active && (
+          <View
+            style={{
+              backgroundColor: colors.gold,
+              borderRadius: radius.card,
+              padding: 18,
+              gap: 12,
+            }}
+          >
+            <Text style={ledgerEyebrow}>{MEMBERSHIP_PANEL.eyebrow}</Text>
+            <Text
+              style={{
+                fontFamily: fonts.displayHeavy,
+                fontSize: 24,
+                lineHeight: 27,
+                letterSpacing: -0.8,
+                color: colors.gunmetal,
+              }}
+            >
+              {MEMBERSHIP_PANEL.pageTitle}
+            </Text>
+            <MembershipLedger />
+          </View>
+        )}
 
         {state.status === "loading" && (
           <ActivityIndicator color={colors.gunmetal} style={{ alignSelf: "flex-start" }} />
