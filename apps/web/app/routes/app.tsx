@@ -27,7 +27,6 @@ const NAV_ITEMS: NavItem[] = [
   { label: "common.projects", to: "/app/projects", icon: "projects" },
   { label: "common.trends", to: "/app/trends", icon: "trends" },
   { label: "common.settings", to: "/app/settings", icon: "settings" },
-  { label: "common.membership", to: "/app/membership", icon: "membership" },
 ];
 
 /** Screens reached by a back link, whose own action bar owns the bottom edge. */

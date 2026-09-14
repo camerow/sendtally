@@ -85,17 +85,17 @@
     gap: 4px;
     padding: 6px 8px calc(8px + env(safe-area-inset-bottom));
     background: #f7f6f3;
-    border-top: 1px solid rgba(64, 63, 76, 0.08);
+    border-top: 1px solid rgba(64, 63, 76, 0.1);
   }
 
   .app-tab {
+    position: relative;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     gap: 5px;
     height: 58px;
-    border-radius: var(--radius-control);
     text-decoration: none;
     font-family: var(--font-mono);
     text-transform: uppercase;
@@ -106,8 +106,22 @@
   }
 
   .app-tab[aria-current="page"] {
-    background: rgba(64, 63, 76, 0.08);
     color: var(--bs-gunmetal);
+  }
+
+  .app-tab[aria-current="page"] svg {
+    color: var(--bs-gold);
+    stroke-width: 2.3;
+  }
+
+  .app-tab[aria-current="page"]::before {
+    content: "";
+    position: absolute;
+    top: 2px;
+    width: 22px;
+    height: 3px;
+    border-radius: 2px;
+    background: var(--bs-gold);
   }
 
   .app-content {
