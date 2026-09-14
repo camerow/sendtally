@@ -13,7 +13,9 @@
       "bundleIdentifier": "com.sendtally.app",
       "supportsTablet": false,
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "CFBundleDevelopmentRegion": "en",
+        "CFBundleLocalizations": ["en", "de", "fr", "es"]
       }
     },
     "android": {

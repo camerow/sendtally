@@ -1,6 +1,6 @@
 import React from "react";
 import { Text, View } from "react-native";
-import { MEMBERSHIP_PANEL, type MembershipPanelRow } from "@sendtally/features/billing";
+import { membershipPanel, type MembershipPanelRow } from "@sendtally/features/billing";
 import { colors, fonts } from "@sendtally/design/tokens";
 
 export const ledgerEyebrow = {
@@ -53,7 +53,7 @@ function LedgerRow({ row }: { row: MembershipPanelRow }): React.ReactElement {
 export function MembershipLedger(): React.ReactElement {
   return (
     <View>
-      {MEMBERSHIP_PANEL.rows.map((row) => (
+      {membershipPanel().rows.map((row) => (
         <LedgerRow key={row.eyebrow} row={row} />
       ))}
     </View>

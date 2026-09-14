@@ -2,6 +2,7 @@ import React from "react";
 import type { ClimbSummary } from "@sendtally/api-client";
 import { climbDraftGrade } from "@sendtally/features/climbs";
 import type { GradeScale } from "@sendtally/features/log-session";
+import { t } from "@sendtally/features/i18n";
 import { Glyph } from "./Glyph";
 import { FLAG, columnHead, inputStyle } from "./styles";
 
@@ -33,17 +34,16 @@ const rowStyle = (active: boolean): React.CSSProperties => ({
 });
 
 function MarkedName({ name, query }: { name: string; query: string }): React.ReactElement {
-  const upper = name.toUpperCase();
-  const needle = query.trim().toUpperCase();
-  const at = needle === "" ? -1 : upper.indexOf(needle);
-  if (at < 0) return <span>{upper}</span>;
+  const needle = query.trim();
+  const at = needle === "" ? -1 : name.toUpperCase().indexOf(needle.toUpperCase());
+  if (at < 0) return <span>{name}</span>;
   return (
     <span>
-      {upper.slice(0, at)}
+      {name.slice(0, at)}
       <span style={{ fontWeight: 600, color: "var(--bs-petal-ink)" }}>
-        {upper.slice(at, at + needle.length)}
+        {name.slice(at, at + needle.length)}
       </span>
-      {upper.slice(at + needle.length)}
+      {name.slice(at + needle.length)}
     </span>
   );
 }
@@ -94,7 +94,7 @@ export function ClimbNameField({
       className={inline ? "climb-name-list climb-name-list--inline" : "climb-name-list"}
     >
       {value.trim() === "" && (
-        <span style={{ ...columnHead, padding: "6px 10px 4px" }}>RECENT</span>
+        <span style={{ ...columnHead, padding: "6px 10px 4px" }}>{t("common.recent")}</span>
       )}
       {suggestions.map((climb, i) => (
         <div
@@ -105,7 +105,15 @@ export function ClimbNameField({
           onClick={() => pick(climb)}
           style={rowStyle(i === highlighted)}
         >
-          <span style={{ display: "inline-flex", alignItems: "center", gap: 7, minWidth: 0 }}>
+          <span
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 7,
+              minWidth: 0,
+              textTransform: "uppercase",
+            }}
+          >
             {climb.project && <Glyph d={FLAG} size={11} width={1.8} filled />}
             <MarkedName name={climb.name} query={value} />
           </span>
@@ -129,7 +137,7 @@ export function ClimbNameField({
     >
       <input
         value={value}
-        placeholder="Name (optional)"
+        placeholder={t("logSession.climbNamePlaceholder")}
         autoComplete="off"
         autoFocus={autoFocus}
         role="combobox"

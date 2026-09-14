@@ -1,10 +1,13 @@
 import type { SessionTag } from "@sendtally/api-client";
+import { t } from "../i18n";
 
 type Tagged = { tags: SessionTag[] };
 
 export const UNTAGGED_KEY = "untagged";
 
-export const UNTAGGED_LABEL = "Untagged";
+export function untaggedLabel(): string {
+  return t("sessions.untagged");
+}
 
 export type SessionGrouping = "month" | "tag";
 
@@ -58,7 +61,7 @@ export function sessionTagGroups<T extends Tagged>(sessions: T[]): Array<Session
   );
   return untagged.length === 0
     ? tagged
-    : [...tagged, { key: UNTAGGED_KEY, label: UNTAGGED_LABEL, sessions: untagged }];
+    : [...tagged, { key: UNTAGGED_KEY, label: t("sessions.untagged"), sessions: untagged }];
 }
 
 export function sameTagName(a: string, b: string): boolean {

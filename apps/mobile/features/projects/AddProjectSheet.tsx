@@ -14,6 +14,7 @@ import {
   gradeOptions,
   type Discipline,
 } from "@sendtally/features/log-session";
+import { t } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { Chip } from "../../components/Chip";
 import { Icon } from "../../components/Icon";
@@ -26,11 +27,6 @@ export type AddProjectSheetProps = {
   onClose: () => void;
 };
 
-const DISCIPLINES: Array<{ value: Discipline; label: string }> = [
-  { value: "boulder", label: "BOULDER" },
-  { value: "route", label: "SPORT" },
-];
-
 const CHIP_WIDTH = 74;
 
 const label = {
@@ -38,6 +34,7 @@ const label = {
   fontSize: 10,
   lineHeight: 13,
   letterSpacing: 0.8,
+  textTransform: "uppercase",
   color: colors.textMuted,
 } as const;
 
@@ -54,8 +51,8 @@ const input = {
 } as const;
 
 function suggestionMeta(climb: ClimbSummary): string {
-  if (climb.project) return "ALREADY A PROJECT";
-  if (climb.sessions === 0) return "NOTHING LOGGED YET";
+  if (climb.project) return t("projects.alreadyAProject");
+  if (climb.sessions === 0) return t("common.nothingLoggedYet");
   return projectMetaLabel(climb);
 }
 
@@ -135,29 +132,34 @@ export function AddProjectSheet({
       onClose();
     } catch {
       setBusy(false);
-      setError("Could not add the project. Try again.");
+      setError(t("projects.addFailed"));
     }
   };
 
   const ready = identified && !(needsGrade && grade === "");
+  const disciplines: Array<{ value: Discipline; label: string }> = [
+    { value: "boulder", label: t("common.boulder") },
+    { value: "route", label: t("projects.sport") },
+  ];
 
   return (
-    <Sheet visible={visible} onClose={onClose} closeLabel="Close new project">
+    <Sheet visible={visible} onClose={onClose} closeLabel={t("projects.closeNewProject")}>
       <View style={{ gap: 18, paddingTop: 2, paddingHorizontal: 18, paddingBottom: 18 }}>
         <Text
           style={{
             fontFamily: fonts.monoMedium,
             fontSize: 11,
             letterSpacing: 0.88,
+            textTransform: "uppercase",
             color: colors.labelAccent,
           }}
         >
-          NEW PROJECT
+          {t("projects.newProject")}
         </Text>
 
         {searching && (
           <View style={{ gap: 9 }}>
-            <Text style={label}>WHICH CLIMB</Text>
+            <Text style={label}>{t("projects.whichClimb")}</Text>
             <TextInput
               value={name}
               onChangeText={(value) => {
@@ -165,7 +167,7 @@ export function AddProjectSheet({
                 setPicked(null);
                 setTracking(false);
               }}
-              placeholder="Name of the climb"
+              placeholder={t("projects.namePlaceholder")}
               placeholderTextColor={colors.textFaint}
               autoCorrect={false}
               style={input}
@@ -246,21 +248,21 @@ export function AddProjectSheet({
                         color: colors.azureInk,
                       }}
                     >
-                      Track “{trimmed}” as a new climb
+                      {t("projects.trackAsNew", { name: trimmed })}
                     </Text>
                   </Pressable>
                 )}
               </ScrollView>
             )}
-            <Text style={label}>
-              START TYPING - PICK ONE YOU HAVE LOGGED AND IT KEEPS ITS HISTORY
-            </Text>
+            <Text style={label}>{t("projects.startTyping")}</Text>
           </View>
         )}
 
         {identified && (
           <View style={{ gap: 9 }}>
-            <Text style={label}>{picked === null ? "NEW CLIMB" : "FROM YOUR LOGBOOK"}</Text>
+            <Text style={label}>
+              {picked === null ? t("projects.newClimb") : t("projects.fromLogbook")}
+            </Text>
             <View
               style={{
                 flexDirection: "row",
@@ -296,7 +298,7 @@ export function AddProjectSheet({
                 {identityName}
               </Text>
               <Pressable accessibilityRole="button" onPress={change}>
-                <Text style={{ ...label, color: colors.azureInk }}>CHANGE</Text>
+                <Text style={{ ...label, color: colors.azureInk }}>{t("projects.change")}</Text>
               </Pressable>
             </View>
           </View>
@@ -305,9 +307,9 @@ export function AddProjectSheet({
         {needsGrade && (
           <>
             <View style={{ gap: 9 }}>
-              <Text style={label}>DISCIPLINE</Text>
+              <Text style={label}>{t("common.discipline")}</Text>
               <View style={{ flexDirection: "row", gap: 8 }}>
-                {DISCIPLINES.map((d) => (
+                {disciplines.map((d) => (
                   <Chip
                     key={d.value}
                     label={d.label}
@@ -322,7 +324,7 @@ export function AddProjectSheet({
               </View>
             </View>
             <View style={{ gap: 9 }}>
-              <Text style={label}>GRADE</Text>
+              <Text style={label}>{t("common.grade")}</Text>
               <ScrollView
                 ref={rail}
                 horizontal
@@ -331,7 +333,13 @@ export function AddProjectSheet({
                 contentContainerStyle={{ gap: 6 }}
               >
                 {ladder.map((g) => (
-                  <Chip key={g} label={g} active={g === grade} onPress={() => setGrade(g)} />
+                  <Chip
+                    key={g}
+                    label={g}
+                    uppercase={false}
+                    active={g === grade}
+                    onPress={() => setGrade(g)}
+                  />
                 ))}
               </ScrollView>
             </View>
@@ -339,18 +347,22 @@ export function AddProjectSheet({
         )}
 
         <View style={{ gap: 9 }}>
-          <Text style={label}>BETA · OPTIONAL</Text>
+          <Text style={label}>{t("projects.betaOptional")}</Text>
           <TextInput
             value={beta}
             onChangeText={setBeta}
             multiline
-            placeholder="What you know about it so far"
+            placeholder={t("projects.betaPlaceholderShort")}
             placeholderTextColor={colors.textFaint}
             style={{ ...input, minHeight: 64, textAlignVertical: "top" }}
           />
         </View>
 
-        {error !== null && <Text style={{ ...label, color: colors.watermelonInk }}>{error}</Text>}
+        {error !== null && (
+          <Text style={{ ...label, textTransform: "none", color: colors.watermelonInk }}>
+            {error}
+          </Text>
+        )}
 
         <Pressable
           onPress={() => void save()}
@@ -366,7 +378,7 @@ export function AddProjectSheet({
           }}
         >
           <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 15, color: colors.white }}>
-            {busy ? "Adding…" : "Add project"}
+            {busy ? t("projects.adding") : t("projects.addProject")}
           </Text>
         </Pressable>
       </View>

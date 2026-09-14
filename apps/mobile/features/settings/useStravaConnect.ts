@@ -1,6 +1,7 @@
 import { makeRedirectUri } from "expo-auth-session";
 import * as WebBrowser from "expo-web-browser";
 import React from "react";
+import { t } from "@sendtally/features/i18n";
 import type { SendtallyApi } from "@sendtally/api-client";
 
 export type StravaConnectFeature = {
@@ -28,7 +29,7 @@ export function useStravaConnect(api: SendtallyApi, onConnected: () => void): St
       })
       .catch((err: unknown) => {
         setBusy(false);
-        setError(err instanceof Error ? err.message : "Could not reach Strava. Try again.");
+        setError(err instanceof Error ? err.message : t("settings.stravaUnreachable"));
       });
   }, [api, onConnected]);
 

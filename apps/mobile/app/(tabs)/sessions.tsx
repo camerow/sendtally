@@ -21,6 +21,7 @@ import {
   sessionYearGroups,
   tagScopeItems,
 } from "@sendtally/features/sessions";
+import { t } from "@sendtally/features/i18n";
 import { colors, fonts } from "@sendtally/design/tokens";
 import { ScreenHeader } from "../../components/ScreenHeader";
 import { FilterSheet, type SessionFilters } from "../../features/sessions/FilterSheet";
@@ -98,7 +99,10 @@ export default function Sessions(): React.ReactElement {
         year.months.map((m): Section => ({
           key: m.key,
           title: m.name,
-          meta: `${m.year} · ${countLabel(m.sessions.length)}`,
+          meta: t("sessions.monthMeta", {
+            year: m.year,
+            sessions: countLabel(m.sessions.length),
+          }),
           data: m.sessions,
         }))
       ),
@@ -113,7 +117,7 @@ export default function Sessions(): React.ReactElement {
       setError(null);
       void maybeAskForReview(result.sessions.length);
     } catch {
-      setError("Could not reach sendtally. Pull to retry.");
+      setError(t("sessions.loadFailed"));
     }
   }, [api]);
 
@@ -152,11 +156,11 @@ export default function Sessions(): React.ReactElement {
   };
 
   const filtersActive = filters.tags.length > 0 || filters.grouping === "tag";
-  const caption = sessions === null ? "LOADING…" : countLabel(visible.length);
+  const caption = sessions === null ? t("common.loading") : countLabel(visible.length);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.white }} edges={["top"]}>
-      <ScreenHeader title="Sessions" caption={caption} />
+      <ScreenHeader title={t("common.sessions")} caption={caption} />
       {sections.length > 0 && (
         <ScopeBar
           items={scopeItems}
@@ -242,7 +246,7 @@ export default function Sessions(): React.ReactElement {
                 color: colors.textMuted,
               }}
             >
-              No sessions carry those tags.
+              {all.length === 0 ? t("sessions.emptyMobile") : t("sessions.noneForTags")}
             </Text>
           )
         }

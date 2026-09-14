@@ -22,6 +22,7 @@ export function TrendTagBreakdown({
           fontFamily: fonts.monoMedium,
           fontSize: compact ? 9 : 10,
           letterSpacing: 0.7,
+          textTransform: "uppercase",
           color: compact ? colors.textMuted : colors.labelAccent,
         }}
       >
@@ -36,10 +37,11 @@ export function TrendTagBreakdown({
               fontFamily: fonts.mono,
               fontSize: compact ? 10 : 11,
               letterSpacing: 0.5,
+              textTransform: "uppercase",
               color: compact ? colors.textSecondary : colors.gunmetal,
             }}
           >
-            {row.label.toUpperCase()}
+            {row.label}
           </Text>
           <View
             style={{

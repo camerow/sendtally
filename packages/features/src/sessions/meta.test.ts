@@ -43,9 +43,9 @@ describe("climbCountLabel", () => {
 
 describe("sessionDay", () => {
   it("reads the weekday and day of month in UTC", () => {
-    expect(sessionDay(session())).toEqual({ weekday: "MON", day: 7 });
+    expect(sessionDay(session())).toEqual({ weekday: "Mon", day: 7 });
     expect(sessionDay(session({ start_at: "2025-12-31T23:30:00.000Z" }))).toEqual({
-      weekday: "WED",
+      weekday: "Wed",
       day: 31,
     });
   });

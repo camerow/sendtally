@@ -18,6 +18,7 @@ export function StatStrip({ stats = [] }: StatStripProps): React.ReactElement {
               fontWeight: 500,
               fontSize: 10,
               letterSpacing: "var(--type-label-track)",
+              textTransform: "uppercase",
               color: "var(--text-on-white-secondary)",
             }}
           >

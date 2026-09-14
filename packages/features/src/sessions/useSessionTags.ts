@@ -1,5 +1,6 @@
 import React from "react";
 import type { SendtallyApi, SessionTag } from "@sendtally/api-client";
+import { t } from "../i18n";
 import { sameTagName, type TagOption } from "./tags";
 import { useTagVocabulary } from "./useTagVocabulary";
 
@@ -33,7 +34,7 @@ export function useSessionTags(
         await reloadVocabulary();
       } catch {
         setTags(previous);
-        setError("Could not save tags. Try again.");
+        setError(t("sessions.tagsSaveFailed"));
       } finally {
         setSaving(false);
       }

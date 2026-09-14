@@ -1,6 +1,6 @@
 import React from "react";
+import { useLanding } from "../LandingContext";
 import { Label } from "@sendtally/design";
-import { COPY } from "../copy";
 import { AccountCta } from "./AccountCta";
 import { Reveal } from "./Reveal";
 
@@ -9,18 +9,19 @@ function Tick(): React.ReactElement {
 }
 
 export function FreeSection(): React.ReactElement {
+  const { copy } = useLanding();
   return (
     <div id="free" className="l-free">
       <div className="l-section-header">
         <Reveal>
           <h2 className="l-section-title" style={{ color: "var(--bs-gunmetal)" }}>
-            {COPY.free.title}
+            {copy.free.title}
           </h2>
         </Reveal>
       </div>
 
       <div className="l-free-grid">
-        {COPY.free.features.map((f, i) => (
+        {copy.free.features.map((f, i) => (
           <Reveal key={f.eyebrow} delay={i * 80} className="l-free-cell">
             <div
               style={{
@@ -49,9 +50,9 @@ export function FreeSection(): React.ReactElement {
         <span
           style={{ fontFamily: "var(--font-mono)", fontSize: 13, color: "rgba(64,63,76,0.58)" }}
         >
-          {COPY.free.footnote}
+          {copy.free.footnote}
         </span>
-        <AccountCta label={COPY.free.cta} />
+        <AccountCta label={copy.free.cta} />
       </Reveal>
     </div>
   );

@@ -1,6 +1,6 @@
 import React from "react";
 import { Text, View } from "react-native";
-import { MEMBERSHIP_PANEL } from "@sendtally/features/billing";
+import { membershipPanel } from "@sendtally/features/billing";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { ledgerEyebrow, MembershipLedger } from "./MembershipLedger";
 
@@ -9,6 +9,7 @@ export type UpgradeCardProps = {
 };
 
 export function UpgradeCard({ children }: UpgradeCardProps): React.ReactElement {
+  const panel = membershipPanel();
   return (
     <View
       style={{
@@ -18,7 +19,7 @@ export function UpgradeCard({ children }: UpgradeCardProps): React.ReactElement 
         gap: 12,
       }}
     >
-      <Text style={ledgerEyebrow}>{MEMBERSHIP_PANEL.eyebrow}</Text>
+      <Text style={ledgerEyebrow}>{panel.eyebrow}</Text>
       <Text
         style={{
           fontFamily: fonts.displayHeavy,
@@ -28,7 +29,7 @@ export function UpgradeCard({ children }: UpgradeCardProps): React.ReactElement 
           color: colors.gunmetal,
         }}
       >
-        {MEMBERSHIP_PANEL.title}
+        {panel.title}
       </Text>
       <Text
         style={{
@@ -38,7 +39,7 @@ export function UpgradeCard({ children }: UpgradeCardProps): React.ReactElement 
           color: "rgba(64,63,76,0.88)",
         }}
       >
-        {MEMBERSHIP_PANEL.body}
+        {panel.body}
       </Text>
       <MembershipLedger />
       {children}

@@ -1,5 +1,6 @@
 import React from "react";
 import { Logo } from "@sendtally/design";
+import { t } from "@sendtally/features/i18n";
 
 export function AuthShell({ children }: { children: React.ReactNode }): React.ReactElement {
   return (
@@ -32,7 +33,7 @@ export function AuthShell({ children }: { children: React.ReactNode }): React.Re
         <span
           style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "rgba(64,63,76,0.55)" }}
         >
-          free · not affiliated with Strava
+          {t("auth.footer")}
         </span>
       </div>
     </div>
@@ -69,6 +70,7 @@ export function StepCard({
           fontWeight: 500,
           fontSize: 11,
           letterSpacing: "0.1em",
+          textTransform: "uppercase",
           color: "var(--text-label-accent)",
         }}
       >

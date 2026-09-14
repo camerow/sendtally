@@ -11,7 +11,7 @@ export {
 } from "./grades";
 export { climbCountLabel, sessionDay, sessionMetaLabel, type SessionDay } from "./meta";
 export {
-  MONTH_SHORT_NAMES,
+  monthShortName,
   monthKey,
   monthLabel,
   monthName,
@@ -22,7 +22,7 @@ export { monthScopeItems, tagScopeItems, type ScopeItem } from "./scope";
 export {
   MAX_TAG_MATCHES,
   UNTAGGED_KEY,
-  UNTAGGED_LABEL,
+  untaggedLabel,
   filterSessionsByTags,
   sameTagName,
   sessionTagGroups,

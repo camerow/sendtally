@@ -1,5 +1,6 @@
 import React from "react";
 import { Text, View } from "react-native";
+import { t, type MessageKey } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import type { OnboardingSlide } from "./slides";
 
@@ -15,6 +16,7 @@ const MONO_LABEL = {
   fontFamily: fonts.monoMedium,
   fontSize: 10,
   letterSpacing: 0.8,
+  textTransform: "uppercase",
   color: colors.textMuted,
 } as const;
 
@@ -65,17 +67,17 @@ function LogArt(): React.ReactElement {
   return (
     <View style={{ ...CARD, gap: 14 }}>
       <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-        <Text style={MONO_LABEL}>THU SEP 3 · INDOOR · 1H 52M</Text>
-        <Text style={MONO_LABEL}>14 CLIMBS</Text>
+        <Text style={MONO_LABEL}>{t("onboarding.art.logHeader")}</Text>
+        <Text style={MONO_LABEL}>{t("onboarding.art.climbCount")}</Text>
       </View>
       <View style={{ height: 1, backgroundColor: colors.lineOnLight }} />
       <View style={{ gap: 12 }}>
-        <ClimbRow name="Cascade" grade="V6" detail="SEND · 3 TRIES" sent />
-        <ClimbRow name="Left Hand Drive" grade="V5" detail="SEND · 1 TRY" sent />
-        <ClimbRow name="Torque" grade="V7" detail="ATTEMPT · 4 TRIES" sent={false} />
+        <ClimbRow name="Cascade" grade="V6" detail={t("onboarding.art.sendTries")} sent />
+        <ClimbRow name="Left Hand Drive" grade="V5" detail={t("onboarding.art.sendTry")} sent />
+        <ClimbRow name="Torque" grade="V7" detail={t("onboarding.art.attemptTries")} sent={false} />
       </View>
       <View style={{ height: 1, backgroundColor: colors.lineOnLight }} />
-      <Text style={MONO_LABEL}>10 SENDS · 4 ATTEMPTS · AVG V4.6</Text>
+      <Text style={MONO_LABEL}>{t("onboarding.art.logSummary")}</Text>
     </View>
   );
 }
@@ -98,7 +100,7 @@ function EffortArt(): React.ReactElement {
         </Text>
         <Text style={{ fontFamily: fonts.mono, fontSize: 16, color: colors.textMuted }}>/10</Text>
         <View style={{ flex: 1 }} />
-        <Text style={MONO_LABEL}>HARD SESSION</Text>
+        <Text style={MONO_LABEL}>{t("onboarding.art.hardSession")}</Text>
       </View>
       <View style={{ flexDirection: "row", gap: 4 }}>
         {Array.from({ length: 10 }, (_, i) => (
@@ -122,7 +124,7 @@ function EffortArt(): React.ReactElement {
           color: colors.textSecondary,
         }}
       >
-        Scored against your own last eight weeks, not a global scale.
+        {t("onboarding.art.effortNote")}
       </Text>
     </View>
   );
@@ -139,12 +141,13 @@ function StravaArt(): React.ReactElement {
           gap: 10,
         }}
       >
-        <Text style={MONO_LABEL}>THU SEP 3 · 1H 52M</Text>
+        <Text style={MONO_LABEL}>{t("onboarding.art.stravaHeader")}</Text>
         <Text
           style={{
             fontFamily: fonts.monoMedium,
             fontSize: 9,
             letterSpacing: 0.7,
+            textTransform: "uppercase",
             borderRadius: radius.pill,
             paddingHorizontal: 8,
             paddingVertical: 3,
@@ -154,7 +157,7 @@ function StravaArt(): React.ReactElement {
             overflow: "hidden",
           }}
         >
-          ON STRAVA
+          {t("sessions.onStrava")}
         </Text>
       </View>
       <View
@@ -169,7 +172,7 @@ function StravaArt(): React.ReactElement {
           numberOfLines={1}
           style={{ fontFamily: fonts.sansSemiBold, fontSize: 16, color: colors.gunmetal }}
         >
-          Hard climbing session
+          {t("onboarding.art.stravaTitle")}
         </Text>
         <View style={{ flexDirection: "row", gap: 10, flexShrink: 0 }}>
           <Text
@@ -177,25 +180,28 @@ function StravaArt(): React.ReactElement {
               fontFamily: fonts.monoSemiBold,
               fontSize: 12,
               letterSpacing: 0.5,
+              textTransform: "uppercase",
               color: colors.labelAccent,
             }}
           >
-            SENT V6
+            {t("onboarding.art.sentGrade")}
           </Text>
           <Text
             style={{
               fontFamily: fonts.monoMedium,
               fontSize: 12,
               letterSpacing: 0.5,
+              textTransform: "uppercase",
               color: colors.textMuted,
             }}
           >
-            TRIED V7
+            {t("onboarding.art.triedGrade")}
           </Text>
         </View>
       </View>
       <Text style={{ fontFamily: fonts.mono, fontSize: 11, color: colors.textSecondary }}>
-        14 CLIMBS · RPE 8/10
+        textTransform: "uppercase",
+        {t("onboarding.art.stravaMeta")}
       </Text>
       <View style={{ height: 1, backgroundColor: colors.lineOnLight, marginTop: 4 }} />
       <Text
@@ -206,21 +212,21 @@ function StravaArt(): React.ReactElement {
           color: colors.textSecondary,
         }}
       >
-        Posted once, with the climb log in the description.
+        {t("onboarding.art.stravaNote")}
       </Text>
     </View>
   );
 }
 
-const VOLUME = [
-  { label: "JUL", value: 0.42 },
-  { label: "", value: 0.58 },
-  { label: "", value: 0.35 },
-  { label: "AUG", value: 0.71 },
-  { label: "", value: 0.64 },
-  { label: "", value: 0.88 },
-  { label: "SEP", value: 1 },
-  { label: "", value: 0.55 },
+const VOLUME: Array<{ label: MessageKey | null; value: number }> = [
+  { label: "onboarding.art.jul", value: 0.42 },
+  { label: null, value: 0.58 },
+  { label: null, value: 0.35 },
+  { label: "onboarding.art.aug", value: 0.71 },
+  { label: null, value: 0.64 },
+  { label: null, value: 0.88 },
+  { label: "onboarding.art.sep", value: 1 },
+  { label: null, value: 0.55 },
 ];
 
 const BAR_BOX_HEIGHT = 72;
@@ -230,8 +236,8 @@ function TrendsArt(): React.ReactElement {
   return (
     <View style={{ ...CARD, gap: 14 }}>
       <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-        <Text style={MONO_LABEL}>CLIMBS PER WEEK</Text>
-        <Text style={MONO_LABEL}>LAST 8 WEEKS</Text>
+        <Text style={MONO_LABEL}>{t("onboarding.art.climbsPerWeek")}</Text>
+        <Text style={MONO_LABEL}>{t("onboarding.art.lastEightWeeks")}</Text>
       </View>
       <View style={{ gap: 6 }}>
         <View
@@ -252,15 +258,15 @@ function TrendsArt(): React.ReactElement {
         <View style={{ flexDirection: "row", gap: 6 }}>
           {VOLUME.map((bar, i) => (
             <Text key={i} style={{ ...MONO_LABEL, flex: 1, fontSize: 8, textAlign: "center" }}>
-              {bar.label}
+              {bar.label === null ? "" : t(bar.label)}
             </Text>
           ))}
         </View>
       </View>
       <View style={{ height: 1, backgroundColor: colors.lineOnLight }} />
       <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-        <Text style={MONO_LABEL}>HARDEST SEND V7</Text>
-        <Text style={MONO_LABEL}>FLASH RATE 38%</Text>
+        <Text style={MONO_LABEL}>{t("onboarding.art.hardestSend")}</Text>
+        <Text style={MONO_LABEL}>{t("onboarding.art.flashRate")}</Text>
       </View>
     </View>
   );

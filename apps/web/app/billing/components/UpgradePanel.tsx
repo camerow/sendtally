@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router";
-import { MEMBERSHIP_PANEL } from "@sendtally/features/billing";
+import { membershipPanel } from "@sendtally/features/billing";
 import { ledgerEyebrow, MembershipLedger } from "./MembershipLedger";
 
 export const UPGRADE_PANEL_ID = "membership-panel";
@@ -26,10 +26,11 @@ export const goldPanelTitle: React.CSSProperties = {
 };
 
 export function UpgradePanel(): React.ReactElement {
+  const panel = membershipPanel();
   return (
     <div id={UPGRADE_PANEL_ID} style={{ ...goldPanel, scrollMarginTop: 24 }}>
-      <span style={ledgerEyebrow}>{MEMBERSHIP_PANEL.eyebrow}</span>
-      <h2 style={goldPanelTitle}>{MEMBERSHIP_PANEL.title}</h2>
+      <span style={ledgerEyebrow}>{panel.eyebrow}</span>
+      <h2 style={goldPanelTitle}>{panel.title}</h2>
       <p
         style={{
           margin: 0,
@@ -40,7 +41,7 @@ export function UpgradePanel(): React.ReactElement {
           textWrap: "pretty",
         }}
       >
-        {MEMBERSHIP_PANEL.body}
+        {panel.body}
       </p>
       <MembershipLedger />
       <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
@@ -58,10 +59,10 @@ export function UpgradePanel(): React.ReactElement {
             whiteSpace: "nowrap",
           }}
         >
-          {MEMBERSHIP_PANEL.cta} →
+          {panel.cta} →
         </Link>
         <span style={{ ...ledgerEyebrow, fontSize: 10, color: "rgba(64,63,76,0.75)" }}>
-          {MEMBERSHIP_PANEL.footnote}
+          {panel.footnote}
         </span>
       </div>
     </div>

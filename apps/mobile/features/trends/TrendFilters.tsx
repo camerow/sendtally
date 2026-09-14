@@ -1,9 +1,11 @@
 import React from "react";
 import { ScrollView, View } from "react-native";
+import { disciplineLabel } from "@sendtally/features/log-session";
 import {
   PREVIEW_TREND_RANGE,
   TREND_DISCIPLINES,
   TREND_RANGES,
+  trendRangeLabel,
   type TrendsFeature,
 } from "@sendtally/features/trends";
 import { colors } from "@sendtally/design/tokens";
@@ -52,24 +54,24 @@ export function TrendFilters({
           contentContainerStyle={{ alignItems: "center", gap: 6, paddingHorizontal: 18 }}
         >
           {TREND_RANGES.map((r) => {
-            const locked = preview && r.value !== PREVIEW_TREND_RANGE;
+            const locked = preview && r !== PREVIEW_TREND_RANGE;
             return (
               <Chip
-                key={r.value}
-                label={r.label}
-                active={range === r.value}
+                key={r}
+                label={trendRangeLabel(r)}
+                active={range === r}
                 locked={locked}
-                onPress={() => (locked ? onLockedRange?.() : setRange(r.value))}
+                onPress={() => (locked ? onLockedRange?.() : setRange(r))}
               />
             );
           })}
           {disciplines.length > 1 &&
             TREND_DISCIPLINES.map((d) => (
               <Chip
-                key={d.value}
-                label={d.label}
-                active={discipline === d.value}
-                onPress={() => setDiscipline(d.value)}
+                key={d}
+                label={disciplineLabel(d)}
+                active={discipline === d}
+                onPress={() => setDiscipline(d)}
               />
             ))}
         </ScrollView>

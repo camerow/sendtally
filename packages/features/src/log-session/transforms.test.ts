@@ -214,8 +214,8 @@ describe("send styles", () => {
   it("offers sent and flash on boulders, redpoint, flash and onsight on routes", () => {
     expect(sendStylesFor("boulder")).toEqual(["redpoint", "flash"]);
     expect(sendStylesFor("route")).toEqual(["redpoint", "flash", "onsight"]);
-    expect(sendStyleLabel("boulder", "redpoint")).toBe("SENT");
-    expect(sendStyleLabel("route", "redpoint")).toBe("REDPOINT");
+    expect(sendStyleLabel("boulder", "redpoint")).toBe("Sent");
+    expect(sendStyleLabel("route", "redpoint")).toBe("Redpoint");
   });
 
   it("settles the try count at one for a flash or an onsight", () => {
@@ -284,9 +284,9 @@ describe("durationMinutes", () => {
   });
 
   it("labels durations", () => {
-    expect(durationLabel(90)).toBe("1H 30M");
-    expect(durationLabel(60)).toBe("1H");
-    expect(durationLabel(45)).toBe("45M");
+    expect(durationLabel(90)).toBe("1h 30m");
+    expect(durationLabel(60)).toBe("1h");
+    expect(durationLabel(45)).toBe("45m");
   });
 });
 
@@ -319,7 +319,7 @@ describe("withTag / withoutTag", () => {
 
 describe("draftSummary", () => {
   it("summarises climbs, results, top grade, and duration", () => {
-    expect(draftSummary(draft())).toBe("2 CLIMBS · 1 SEND, 1 ATTEMPT · TOP V6 · 1H 30M");
+    expect(draftSummary(draft())).toBe("2 climbs · 1 send, 1 attempt · TOP V6 · 1h 30m");
   });
 
   it("uses the active scale for the top grade", () => {

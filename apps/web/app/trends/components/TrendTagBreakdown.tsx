@@ -1,8 +1,10 @@
 import React from "react";
 import type { TrendTagRowVM } from "@sendtally/features/trends";
+import { t } from "@sendtally/features/i18n";
 
 const label: React.CSSProperties = {
   fontFamily: "var(--font-mono)",
+  textTransform: "uppercase",
   fontWeight: 500,
   fontSize: 10,
   letterSpacing: "0.08em",
@@ -44,15 +46,16 @@ export function TrendTagBreakdown({
               style={{
                 fontFamily: "var(--font-mono)",
                 fontSize: compact ? 10 : 11,
+                textTransform: "uppercase",
                 letterSpacing: "0.06em",
                 color: compact ? "rgba(64,63,76,0.72)" : "var(--bs-gunmetal)",
                 overflow: "hidden",
                 textOverflow: "ellipsis",
                 whiteSpace: "nowrap",
               }}
-              title={`${row.label} · ${row.sessions} ${row.sessions === 1 ? "session" : "sessions"}`}
+              title={t("trends.tagRowTitle", { label: row.label, count: row.sessions })}
             >
-              {row.label.toUpperCase()}
+              {row.label}
             </span>
             <span
               style={{

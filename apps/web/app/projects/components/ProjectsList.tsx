@@ -8,6 +8,7 @@ import {
   type ProjectsOverviewVM,
 } from "@sendtally/features/climbs";
 import { Button, Logo } from "@sendtally/design";
+import { t } from "@sendtally/features/i18n";
 import { useClientApi } from "../../lib/useClientApi";
 import { useGradeScalePrefs } from "@sendtally/features/settings";
 import { AddProjectDialog } from "./AddProjectDialog";
@@ -19,6 +20,7 @@ export type ProjectsListProps = {
 
 const monoMuted: React.CSSProperties = {
   fontFamily: "var(--font-mono)",
+  textTransform: "uppercase",
   fontWeight: 500,
   fontSize: 11,
   letterSpacing: "0.06em",
@@ -41,31 +43,31 @@ function tiles(overview: ProjectsOverviewVM): Tile[] {
   const { longestRunning, mostSessions } = overview;
   const all: Array<Tile | null> = [
     {
-      label: "OPEN PROJECTS",
+      label: t("projects.tileOpen"),
       value: String(overview.open),
-      caption: `${overview.attemptsInvested} ATTEMPTS INVESTED`,
+      caption: t("projects.tileOpenCaption", { n: overview.attemptsInvested }),
     },
     overview.avgAttemptsToSend === null
       ? null
       : {
-          label: "ATTEMPTS TO SEND",
+          label: t("projects.attemptsToSend"),
           value: String(overview.avgAttemptsToSend),
-          caption: `AVERAGE OF ${overview.sent} SENT`,
+          caption: t("projects.tileAttemptsToSendCaption", { n: overview.sent }),
         },
     longestRunning === null
       ? null
       : {
-          label: "LONGEST RUNNING",
+          label: t("projects.longestRunning"),
           value: longestRunning.value,
-          caption: longestRunning.name.toUpperCase(),
+          caption: longestRunning.name,
           to: `/app/projects/${longestRunning.slug}`,
         },
     mostSessions === null
       ? null
       : {
-          label: "MOST SESSIONS SPENT",
+          label: t("projects.tileMostSessions"),
           value: mostSessions.value,
-          caption: mostSessions.name.toUpperCase(),
+          caption: mostSessions.name,
           to: `/app/projects/${mostSessions.slug}`,
         },
   ];
@@ -114,24 +116,27 @@ export function ProjectsList({ apiUrl }: ProjectsListProps): React.ReactElement 
         <span className="sessions-head-mark">
           <Logo variant="mark" size={22} />
         </span>
-        <h1 className="sessions-title">Projects</h1>
+        <h1 className="sessions-title">{t("common.projects")}</h1>
         {ready !== null && (
           <span style={monoMuted}>
-            {ready.overview.open} OPEN · {ready.overview.sent} SENT
+            {t("projects.openSentCount", {
+              open: ready.overview.open,
+              sent: ready.overview.sent,
+            })}
           </span>
         )}
         <div style={{ flex: 1 }} />
         <Button variant="azure" size="sm" onClick={() => setAdding(true)}>
-          New project
+          {t("projects.newProject")}
         </Button>
       </div>
 
       {state.status === "loading" && (
-        <span style={{ ...monoMuted, display: "block", marginTop: 22 }}>LOADING…</span>
+        <span style={{ ...monoMuted, display: "block", marginTop: 22 }}>{t("common.loading")}</span>
       )}
       {state.status === "error" && (
-        <span style={{ ...monoMuted, display: "block", marginTop: 22 }}>
-          Could not load your projects. Refresh to retry.
+        <span style={{ ...monoMuted, textTransform: "none", display: "block", marginTop: 22 }}>
+          {t("projects.loadFailed")}
         </span>
       )}
 
@@ -158,27 +163,33 @@ export function ProjectsList({ apiUrl }: ProjectsListProps): React.ReactElement 
           )}
 
           <Section
-            title="Open"
-            meta={`${ready.open.length} ${ready.open.length === 1 ? "PROJECT" : "PROJECTS"} · ${ready.overview.attemptsInvested} ATTEMPTS`}
+            title={t("common.open")}
+            meta={t("projects.sectionOpenMeta", {
+              count: ready.open.length,
+              attempts: ready.overview.attemptsInvested,
+            })}
             items={ready.open}
           />
           <Section
-            title="Sent"
+            title={t("common.sentStatus")}
             meta={
               ready.overview.hardestSentLabel === null
-                ? `${ready.sent.length} ${ready.sent.length === 1 ? "PROJECT" : "PROJECTS"}`
-                : `${ready.sent.length} ${ready.sent.length === 1 ? "PROJECT" : "PROJECTS"} · HARDEST ${ready.overview.hardestSentLabel}`
+                ? t("projects.sectionSentMeta", { count: ready.sent.length })
+                : t("projects.sectionSentMetaHardest", {
+                    count: ready.sent.length,
+                    hardest: ready.overview.hardestSentLabel,
+                  })
             }
             items={ready.sent}
           />
 
           {ready.open.length === 0 && ready.sent.length === 0 && (
             <div style={muted}>
-              No projects yet. Add one here, or flag a climb while{" "}
+              {t("projects.emptyBefore")}{" "}
               <Link to="/app/sessions/new" style={{ color: "var(--bs-azure-ink)" }}>
-                logging a session
+                {t("projects.emptyLink")}
               </Link>{" "}
-              and every attempt and session you put into it adds up here.
+              {t("projects.emptyAfter")}
             </div>
           )}
         </>

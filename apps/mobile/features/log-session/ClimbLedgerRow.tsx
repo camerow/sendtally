@@ -1,6 +1,7 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import type { ClimbDraft } from "@sendtally/features/log-session";
+import { t } from "@sendtally/features/i18n";
 import { colors, fonts } from "@sendtally/design/tokens";
 import { Icon } from "../../components/Icon";
 import { pressRow } from "../../lib/press";
@@ -22,7 +23,12 @@ export function ClimbLedgerRow({
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel={`${climb.grade} ${named ? climb.name : "unnamed"}, ${send ? "send" : "attempt"}, ${climb.tries} tries`}
+      accessibilityLabel={t("logSession.ledgerLabel", {
+        grade: climb.grade,
+        name: named ? climb.name : t("logSession.unnamed"),
+        kind: send ? t("logSession.sendLower") : t("logSession.attemptKind"),
+        tries: t("logSession.triesCount", { count: climb.tries }),
+      })}
       style={pressRow({
         flexDirection: "row",
         alignItems: "center",
@@ -60,7 +66,7 @@ export function ClimbLedgerRow({
             color: named ? colors.gunmetal : colors.textFaint,
           }}
         >
-          {named ? climb.name : "Unnamed"}
+          {named ? climb.name : t("logSession.unnamed")}
         </Text>
       </View>
       <View

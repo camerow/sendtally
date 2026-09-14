@@ -3,6 +3,7 @@ import React from "react";
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTrends, type TrendMetric } from "@sendtally/features/trends";
+import { t } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { TrendBars } from "../../features/trends/TrendBars";
 import { TrendFilters } from "../../features/trends/TrendFilters";
@@ -33,10 +34,11 @@ function TrendDetailLocked(): React.ReactElement {
               fontFamily: fonts.monoMedium,
               fontSize: 12,
               letterSpacing: 0.5,
+              textTransform: "uppercase",
               color: colors.labelAccent,
             }}
           >
-            ← TRENDS
+            {t("trends.backToTrends")}
           </Text>
         </Pressable>
         <Paywall />
@@ -68,17 +70,18 @@ function TrendDetail(): React.ReactElement {
               fontFamily: fonts.monoMedium,
               fontSize: 12,
               letterSpacing: 0.5,
+              textTransform: "uppercase",
               color: colors.labelAccent,
             }}
           >
-            ← TRENDS
+            {t("trends.backToTrends")}
           </Text>
         </Pressable>
         <TrendFilters feature={feature} />
         {state.status === "loading" && <ActivityIndicator color={colors.gunmetal} />}
         {state.status === "error" && (
           <Text style={{ fontFamily: fonts.mono, fontSize: 12, color: colors.watermelonInk }}>
-            Could not load trends.
+            {t("trends.loadFailedMobile")}
           </Text>
         )}
         {state.status === "ready" && (
@@ -99,6 +102,7 @@ function TrendDetail(): React.ReactElement {
                   fontFamily: fonts.monoMedium,
                   fontSize: 10,
                   letterSpacing: 0.6,
+                  textTransform: "uppercase",
                   color: colors.textMuted,
                 }}
               >
@@ -140,6 +144,7 @@ function TrendDetail(): React.ReactElement {
                       fontFamily: fonts.monoMedium,
                       fontSize: 10,
                       letterSpacing: 0.7,
+                      textTransform: "uppercase",
                       color: colors.labelAccent,
                       paddingTop: 1,
                     }}
@@ -160,7 +165,7 @@ function TrendDetail(): React.ReactElement {
               ))}
             </View>
             <TrendTagBreakdown
-              title={`BY TAG · ${state.data.details[metric].title.toUpperCase()}`}
+              title={t("trends.byTagTitled", { title: state.data.details[metric].title })}
               rows={state.data.details[metric].breakdown}
             />
             <Text

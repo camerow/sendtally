@@ -33,6 +33,7 @@ export function MembershipStatusCard({
           fontFamily: fonts.monoMedium,
           fontSize: 10,
           letterSpacing: 0.8,
+          textTransform: "uppercase",
           color: colors.labelAccent,
         }}
       >
@@ -56,10 +57,11 @@ export function MembershipStatusCard({
               fontFamily: fonts.monoMedium,
               fontSize: 11,
               letterSpacing: 0.6,
+              textTransform: "uppercase",
               color: colors.textSecondary,
             }}
           >
-            {detail.toUpperCase()}
+            {detail}
           </Text>
         )}
       </View>

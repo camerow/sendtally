@@ -3,7 +3,7 @@ import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import type { ClimbSummary } from "@sendtally/api-client";
 import { climbDraftGrade, projectMetaLabel } from "@sendtally/features/climbs";
 import {
-  DISCIPLINE_LABELS,
+  disciplineLabel,
   disciplineOf,
   gradeOptions,
   sendStyleLabel,
@@ -15,6 +15,7 @@ import {
   type Discipline,
   type GradePrefs,
 } from "@sendtally/features/log-session";
+import { t } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { Chip } from "../../components/Chip";
 import { Icon } from "../../components/Icon";
@@ -41,6 +42,7 @@ const label = {
   fontFamily: fonts.monoMedium,
   fontSize: 10,
   letterSpacing: 0.8,
+  textTransform: "uppercase",
   color: colors.textSecondary,
 } as const;
 
@@ -75,6 +77,7 @@ function Segment({
           fontFamily: fonts.monoMedium,
           fontSize: 11,
           letterSpacing: 0.6,
+          textTransform: "uppercase",
           color: active ? activeText : "rgba(64,63,76,0.65)",
         }}
       >
@@ -121,7 +124,7 @@ function DisciplineToggle({
             onPress={() => onChange(discipline)}
             accessibilityRole="radio"
             accessibilityState={{ checked: active }}
-            accessibilityLabel={DISCIPLINE_LABELS[discipline]}
+            accessibilityLabel={disciplineLabel(discipline)}
             hitSlop={{ top: 7, bottom: 7 }}
             style={press({
               height: 28,
@@ -136,10 +139,11 @@ function DisciplineToggle({
                 fontFamily: active ? fonts.monoSemiBold : fonts.monoMedium,
                 fontSize: 9,
                 letterSpacing: 0.7,
+                textTransform: "uppercase",
                 color: active ? colors.gunmetal : colors.textFaint,
               }}
             >
-              {discipline === "boulder" ? "BOULDER" : "ROUTE"}
+              {discipline === "boulder" ? t("common.boulder") : t("common.route")}
             </Text>
           </Pressable>
         );
@@ -180,24 +184,24 @@ function StepButton({
 }
 
 function MarkedName({ name, query }: { name: string; query: string }): React.ReactElement {
-  const upper = name.toUpperCase();
   const needle = query.trim().toUpperCase();
-  const at = needle === "" ? -1 : upper.indexOf(needle);
+  const at = needle === "" ? -1 : name.toUpperCase().indexOf(needle);
   const base = {
     fontFamily: fonts.monoMedium,
     fontSize: 11,
     letterSpacing: 0.6,
     color: colors.gunmetal,
+    textTransform: "uppercase" as const,
     flexShrink: 1,
   };
-  if (at < 0) return <Text style={base}>{upper}</Text>;
+  if (at < 0) return <Text style={base}>{name}</Text>;
   return (
     <Text numberOfLines={1} style={base}>
-      {upper.slice(0, at)}
+      {name.slice(0, at)}
       <Text style={{ fontFamily: fonts.monoSemiBold, color: colors.petalInk }}>
-        {upper.slice(at, at + needle.length)}
+        {name.slice(at, at + needle.length)}
       </Text>
-      {upper.slice(at + needle.length)}
+      {name.slice(at + needle.length)}
     </Text>
   );
 }
@@ -219,7 +223,7 @@ function ProjectRow({
       disabled={!enabled}
       accessibilityRole="checkbox"
       accessibilityState={{ checked: on, disabled: !enabled }}
-      accessibilityLabel="Project"
+      accessibilityLabel={t("common.project")}
       style={press({
         flexDirection: "row",
         alignItems: "center",
@@ -241,7 +245,7 @@ function ProjectRow({
       />
       <View style={{ flex: 1, gap: 2 }}>
         <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 14, color: colors.gunmetal }}>
-          {on ? "Project" : "Mark as project"}
+          {on ? t("common.project") : t("logSession.markAsProject")}
         </Text>
         {on && meta !== null && (
           <Text
@@ -249,6 +253,7 @@ function ProjectRow({
               fontFamily: fonts.mono,
               fontSize: 10,
               letterSpacing: 0.5,
+              textTransform: "uppercase",
               color: colors.textSecondary,
             }}
           >
@@ -301,7 +306,7 @@ export function ClimbEditorSheet({
   const showList = nameFocused && suggestions.length > 0;
 
   return (
-    <Sheet visible={current !== null} onClose={onClose} closeLabel="Close climb editor">
+    <Sheet visible={current !== null} onClose={onClose} closeLabel={t("logSession.closeEditor")}>
       {climb !== null && (
         <View style={{ gap: 14, paddingTop: 2, paddingHorizontal: 18, paddingBottom: 4 }}>
           <View
@@ -311,8 +316,8 @@ export function ClimbEditorSheet({
               justifyContent: "space-between",
             }}
           >
-            <Text style={{ ...label, color: colors.labelAccent }}>
-              CLIMB {index + 1} OF {count}
+            <Text style={{ ...label, color: colors.watermelonInk }}>
+              {t("logSession.climbOf", { n: index + 1, total: count })}
             </Text>
             {count > 1 && (
               <Pressable
@@ -321,7 +326,7 @@ export function ClimbEditorSheet({
                 accessibilityRole="button"
                 style={press({})}
               >
-                <Text style={{ ...label, color: colors.textFaint }}>REMOVE</Text>
+                <Text style={{ ...label, color: colors.textFaint }}>{t("logSession.remove")}</Text>
               </Pressable>
             )}
           </View>
@@ -335,7 +340,7 @@ export function ClimbEditorSheet({
                 gap: 12,
               }}
             >
-              <Text style={label}>GRADE</Text>
+              <Text style={label}>{t("common.grade")}</Text>
               <DisciplineToggle
                 value={disciplineOf(climb.scale)}
                 onChange={(discipline) => onChange(withClimbDiscipline(climb, discipline, prefs))}
@@ -353,6 +358,7 @@ export function ClimbEditorSheet({
                 <View key={g} onLayout={(e) => chipX.current.set(g, e.nativeEvent.layout.x)}>
                   <Chip
                     label={g}
+                    uppercase={false}
                     active={g === climb.grade}
                     onPress={() => onChange({ ...climb, grade: g })}
                   />
@@ -362,10 +368,10 @@ export function ClimbEditorSheet({
           </View>
 
           <View style={{ gap: 7 }}>
-            <Text style={label}>NAME · OPTIONAL</Text>
+            <Text style={label}>{t("logSession.nameOptional")}</Text>
             <TextInput
               value={climb.name}
-              placeholder="Name (optional)"
+              placeholder={t("logSession.climbNamePlaceholder")}
               placeholderTextColor={colors.textFaint}
               autoCorrect={false}
               returnKeyType="done"
@@ -396,7 +402,7 @@ export function ClimbEditorSheet({
               >
                 {climb.name.trim() === "" && (
                   <Text style={{ ...label, fontSize: 9, color: colors.textMuted, padding: 4 }}>
-                    RECENT
+                    {t("common.recent")}
                   </Text>
                 )}
                 {suggestions.map((candidate) => (
@@ -405,7 +411,9 @@ export function ClimbEditorSheet({
                     onPress={() => onPick(candidate)}
                     accessibilityRole="button"
                     accessibilityLabel={
-                      candidate.project ? `${candidate.name}, project` : candidate.name
+                      candidate.project
+                        ? t("logSession.candidateProject", { name: candidate.name })
+                        : candidate.name
                     }
                     style={pressRow({
                       flexDirection: "row",
@@ -436,6 +444,7 @@ export function ClimbEditorSheet({
                             fontFamily: fonts.monoSemiBold,
                             fontSize: 8,
                             letterSpacing: 0.7,
+                            textTransform: "uppercase",
                             paddingHorizontal: 6,
                             paddingVertical: 2,
                             borderRadius: radius.pill,
@@ -444,7 +453,7 @@ export function ClimbEditorSheet({
                             color: colors.gunmetal,
                           }}
                         >
-                          PROJECT
+                          {t("common.project")}
                         </Text>
                       )}
                     </View>
@@ -488,7 +497,7 @@ export function ClimbEditorSheet({
                 />
               ))}
               <Segment
-                label="✗ ATTEMPT"
+                label={`✗ ${t("logSession.attempt")}`}
                 active={climb.kind === "attempt"}
                 activeColor={colors.gunmetal}
                 onPress={() => onChange(withClimbOutcome(climb, { kind: "attempt" }))}
@@ -538,7 +547,7 @@ export function ClimbEditorSheet({
             })}
           >
             <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 15, color: colors.white }}>
-              Done
+              {t("common.done")}
             </Text>
           </Pressable>
         </View>

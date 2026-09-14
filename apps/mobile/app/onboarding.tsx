@@ -2,6 +2,7 @@ import { router } from "expo-router";
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { t } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { Logo } from "../components/Logo";
 import { SignedOutOnly } from "../features/auth/SignedOutOnly";
@@ -35,7 +36,7 @@ export default function Onboarding(): React.ReactElement | null {
               <Text
                 style={{ fontFamily: fonts.sansSemiBold, fontSize: 16, color: colors.gunmetal }}
               >
-                Create account
+                {t("common.createAccount")}
               </Text>
             </Pressable>
             <Pressable
@@ -55,7 +56,7 @@ export default function Onboarding(): React.ReactElement | null {
               <Text
                 style={{ fontFamily: fonts.sansSemiBold, fontSize: 16, color: colors.gunmetal }}
               >
-                Sign in
+                {t("common.signIn")}
               </Text>
             </Pressable>
             <Text
@@ -67,7 +68,7 @@ export default function Onboarding(): React.ReactElement | null {
                 color: colors.textMuted,
               }}
             >
-              Free to log · one-time code sign-in · no password
+              {t("onboarding.footer")}
             </Text>
           </View>
         </View>

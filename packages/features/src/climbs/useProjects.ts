@@ -1,5 +1,6 @@
 import React from "react";
 import type { ClimbSummary, ProjectInput, SendtallyApi } from "@sendtally/api-client";
+import { t } from "../i18n";
 import { useQuery, type QueryState } from "../lib/useQuery";
 import {
   projectBars,
@@ -65,7 +66,7 @@ export function useProject(api: SendtallyApi, slug: string): ProjectFeature {
   const load = React.useCallback(async (): Promise<ProjectDetailVM> => {
     const [{ climbs }, { sessions }] = await Promise.all([api.climbs(), api.sessionsWithClimbs()]);
     const climb = climbs.find((c) => c.slug === slug);
-    if (climb === undefined) throw new Error("Project not found.");
+    if (climb === undefined) throw new Error(t("climbs.projectNotFound"));
     return projectDetailVM(climb, sessions);
   }, [api, slug]);
 

@@ -1,19 +1,20 @@
 import React from "react";
+import { useLanding } from "../LandingContext";
 import { Card, Label } from "@sendtally/design";
-import { COPY } from "../copy";
 
 export function HowItWorks(): React.ReactElement {
+  const { copy } = useLanding();
   return (
     <div id="how" className="l-how">
       <div className="l-section-inner">
         <div className="l-section-header">
           <h2 className="l-section-title" style={{ color: "var(--bs-gunmetal)" }}>
-            {COPY.how.title}
+            {copy.how.title}
           </h2>
-          <span className="l-section-blurb">{COPY.how.blurb}</span>
+          <span className="l-section-blurb">{copy.how.blurb}</span>
         </div>
         <div className="l-card-grid">
-          {COPY.how.steps.map((step, i) => (
+          {copy.how.steps.map((step, i) => (
             <Card
               key={step.title}
               style={{

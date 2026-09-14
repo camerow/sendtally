@@ -9,6 +9,7 @@ import {
   type Discipline,
   type GradeScale,
 } from "@sendtally/features/log-session";
+import { t } from "@sendtally/features/i18n";
 import { ClimbNameField } from "./ClimbNameField";
 import { DisciplineToggle } from "./DisciplineToggle";
 import { Glyph } from "./Glyph";
@@ -78,7 +79,7 @@ export function ClimbCard({
         />
         <button
           type="button"
-          aria-label="Remove climb"
+          aria-label={t("logSession.removeClimb")}
           disabled={!removable}
           onClick={onRemove}
           style={{
@@ -94,11 +95,11 @@ export function ClimbCard({
         </button>
       </div>
       <div className="climb-card-result">
-        <span style={columnHead}>DISCIPLINE</span>
+        <span style={columnHead}>{t("common.discipline")}</span>
         <DisciplineToggle value={disciplineOf(climb.scale)} onChange={onChangeDiscipline} />
       </div>
       <div className="climb-card-result">
-        <span style={columnHead}>RESULT</span>
+        <span style={columnHead}>{t("common.result")}</span>
         <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
           <OutcomeControl
             discipline={disciplineOf(climb.scale)}

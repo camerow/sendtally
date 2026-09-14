@@ -1,13 +1,14 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import {
-  DISCIPLINE_LABELS,
-  GRADE_SCALE_OPTIONS,
+  disciplineLabel,
+  scaleLabel,
   scaleOptionsFor,
   type Discipline,
   type GradePrefs,
   type GradeScale,
 } from "@sendtally/features/log-session";
+import { t } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { press } from "../../lib/press";
 import { bodyText, sectionCard, sectionLabel } from "../../lib/styles";
@@ -16,10 +17,6 @@ export type GradeSectionProps = {
   prefs: GradePrefs;
   onChange: (discipline: Discipline, scale: GradeScale) => void;
 };
-
-function scaleLabel(scale: GradeScale): string {
-  return GRADE_SCALE_OPTIONS.find((o) => o.value === scale)?.label ?? scale.toUpperCase();
-}
 
 function Segment({
   label,
@@ -80,7 +77,7 @@ function Row({
       }}
     >
       <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 13, color: colors.gunmetal }}>
-        {DISCIPLINE_LABELS[discipline]}
+        {disciplineLabel(discipline)}
       </Text>
       <View
         style={{
@@ -108,10 +105,8 @@ function Row({
 export function GradeSection({ prefs, onChange }: GradeSectionProps): React.ReactElement {
   return (
     <View style={sectionCard}>
-      <Text style={sectionLabel}>GRADES</Text>
-      <Text style={bodyText}>
-        The scale you log in. Climbs you have already logged keep the scale they were entered in.
-      </Text>
+      <Text style={sectionLabel}>{t("settings.grades")}</Text>
+      <Text style={bodyText}>{t("settings.gradesBody")}</Text>
       <Row discipline="boulder" prefs={prefs} onChange={onChange} />
       <View style={{ borderTopWidth: 1, borderTopColor: colors.lineOnLight }} />
       <Row discipline="route" prefs={prefs} onChange={onChange} />

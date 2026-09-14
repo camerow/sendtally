@@ -1,3 +1,5 @@
+import { t } from "@sendtally/features/i18n";
+
 export type OnboardingSlide = {
   key: "log" | "effort" | "strava" | "trends";
   eyebrow: string;
@@ -5,29 +7,31 @@ export type OnboardingSlide = {
   body: string;
 };
 
-export const ONBOARDING_SLIDES: OnboardingSlide[] = [
-  {
-    key: "log",
-    eyebrow: "LOG",
-    title: "A session takes a minute to log.",
-    body: "Date, times, grades in whichever scale you think in, sends and attempts, tries, and a name for the climb if you want one.",
-  },
-  {
-    key: "effort",
-    eyebrow: "EFFORT SCORE",
-    title: "A big night should read like a big night.",
-    body: "Every session is scored 1 to 10 against your own last eight weeks rather than a fixed scale, so the number says something about you.",
-  },
-  {
-    key: "strava",
-    eyebrow: "STRAVA",
-    title: "One activity per session, never doubled.",
-    body: "Each session posts as one Rock Climbing activity with the climb log and effort score in the description. Sessions are fingerprinted, so a re-sync never posts twice.",
-  },
-  {
-    key: "trends",
-    eyebrow: "TRENDS",
-    title: "See what six months adds up to.",
-    body: "Volume over time, grade pyramid, hardest send, flash rate, average grade. Logging and posting to Strava are free; membership adds the trends.",
-  },
-];
+export function onboardingSlides(): OnboardingSlide[] {
+  return [
+    {
+      key: "log",
+      eyebrow: t("onboarding.log.eyebrow"),
+      title: t("onboarding.log.title"),
+      body: t("onboarding.log.body"),
+    },
+    {
+      key: "effort",
+      eyebrow: t("onboarding.effort.eyebrow"),
+      title: t("onboarding.effort.title"),
+      body: t("onboarding.effort.body"),
+    },
+    {
+      key: "strava",
+      eyebrow: "Strava",
+      title: t("onboarding.strava.title"),
+      body: t("onboarding.strava.body"),
+    },
+    {
+      key: "trends",
+      eyebrow: t("common.trends"),
+      title: t("onboarding.trends.title"),
+      body: t("onboarding.trends.body"),
+    },
+  ];
+}

@@ -1,9 +1,26 @@
+import { AsyncLocalStorage } from "node:async_hooks";
 import { isbot } from "isbot";
 import { renderToReadableStream } from "react-dom/server";
 import type { EntryContext } from "react-router";
 import { ServerRouter } from "react-router";
+import { setLocaleResolver, type Locale } from "@sendtally/features/i18n";
+import { requestLocale } from "./lib/locale";
+
+const localeStore = new AsyncLocalStorage<Locale>();
+setLocaleResolver(() => localeStore.getStore() ?? "en");
 
 export default async function handleRequest(
+  request: Request,
+  responseStatusCode: number,
+  responseHeaders: Headers,
+  routerContext: EntryContext
+): Promise<Response> {
+  return localeStore.run(requestLocale(request), () =>
+    render(request, responseStatusCode, responseHeaders, routerContext)
+  );
+}
+
+async function render(
   request: Request,
   responseStatusCode: number,
   responseHeaders: Headers,

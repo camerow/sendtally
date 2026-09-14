@@ -1,25 +1,30 @@
 import { disciplineOf, type ClimbStyle, type Discipline, type GradeScale } from "@sendtally/core";
+import { t } from "../i18n";
 
 export type { ClimbStyle, Discipline, GradeScale };
 export { disciplineOf };
 
-export type GradeScaleOption = { value: GradeScale; label: string; discipline: Discipline };
+export type GradeScaleOption = { value: GradeScale; discipline: Discipline };
 
 export const GRADE_SCALE_OPTIONS: readonly GradeScaleOption[] = [
-  { value: "v", label: "V", discipline: "boulder" },
-  { value: "font", label: "FONT", discipline: "boulder" },
-  { value: "yds", label: "YDS", discipline: "route" },
-  { value: "french", label: "FRENCH", discipline: "route" },
+  { value: "v", discipline: "boulder" },
+  { value: "font", discipline: "boulder" },
+  { value: "yds", discipline: "route" },
+  { value: "french", discipline: "route" },
 ];
+
+export function scaleLabel(scale: GradeScale): string {
+  if (scale === "french") return t("logSession.scaleFrench");
+  return scale === "font" ? "Font" : scale.toUpperCase();
+}
 
 export type GradePrefs = { boulder: GradeScale; route: GradeScale };
 
 export const DEFAULT_GRADE_PREFS: GradePrefs = { boulder: "v", route: "yds" };
 
-export const DISCIPLINE_LABELS: Record<Discipline, string> = {
-  boulder: "Boulders",
-  route: "Routes",
-};
+export function disciplineLabel(discipline: Discipline): string {
+  return t(discipline === "route" ? "logSession.routes" : "logSession.boulders");
+}
 
 export type ClimbDraft = {
   key: string;
@@ -50,8 +55,9 @@ export function sendStylesFor(discipline: Discipline): readonly ClimbStyle[] {
 
 /** Only a redpoint is named differently by discipline: a boulder is just sent. */
 export function sendStyleLabel(discipline: Discipline, style: ClimbStyle): string {
-  if (style !== "redpoint") return style.toUpperCase();
-  return discipline === "route" ? "REDPOINT" : "SENT";
+  if (style === "flash") return t("logSession.styleFlash");
+  if (style === "onsight") return t("logSession.styleOnsight");
+  return t(discipline === "route" ? "logSession.styleRedpoint" : "logSession.styleSent");
 }
 
 export type LogSessionDraft = {

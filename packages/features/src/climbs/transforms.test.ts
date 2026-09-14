@@ -76,8 +76,8 @@ describe("projects", () => {
   });
 
   it("labels totals with the right plurals", () => {
-    expect(projectMetaLabel(climb({}))).toBe("3 SESSIONS · 11 ATTEMPTS");
-    expect(projectMetaLabel(climb({ sessions: 1, attempts: 1 }))).toBe("1 SESSION · 1 ATTEMPT");
+    expect(projectMetaLabel(climb({}))).toBe("3 sessions · 11 attempts");
+    expect(projectMetaLabel(climb({ sessions: 1, attempts: 1 }))).toBe("1 session · 1 attempt");
   });
 });
 

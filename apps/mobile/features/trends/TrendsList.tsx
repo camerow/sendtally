@@ -2,6 +2,7 @@ import { router } from "expo-router";
 import React from "react";
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import { TILE_BREAKDOWN_ROWS, useTrends } from "@sendtally/features/trends";
+import { t } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { Paywall } from "../billing/Paywall";
 import { useApi } from "../../lib/api";
@@ -15,7 +16,7 @@ export type TrendsListProps = {
   onLockedRange?: () => void;
 };
 
-const tile = {
+const card = {
   backgroundColor: colors.white,
   borderWidth: 1,
   borderColor: colors.lineOnLightSoft,
@@ -39,16 +40,16 @@ export function TrendsList({
       {state.status === "loading" && <ActivityIndicator color={colors.gunmetal} />}
       {state.status === "error" && (
         <Text style={{ fontFamily: fonts.mono, fontSize: 12, color: colors.watermelonInk }}>
-          Could not load trends. Pull to retry.
+          {t("trends.loadFailedPull")}
         </Text>
       )}
       {state.status === "ready" &&
-        state.data.tiles.map((t) => (
+        state.data.tiles.map((tile) => (
           <Pressable
-            key={t.metric}
+            key={tile.metric}
             disabled={preview}
-            onPress={() => router.push(`/trend/${t.metric}`)}
-            style={pressRow(tile)}
+            onPress={() => router.push(`/trend/${tile.metric}`)}
+            style={pressRow(card)}
           >
             <View
               style={{
@@ -62,10 +63,11 @@ export function TrendsList({
                   fontFamily: fonts.monoMedium,
                   fontSize: 10,
                   letterSpacing: 0.7,
+                  textTransform: "uppercase",
                   color: colors.labelAccent,
                 }}
               >
-                {t.label}
+                {tile.label}
               </Text>
               {!preview && (
                 <Text
@@ -73,10 +75,11 @@ export function TrendsList({
                     fontFamily: fonts.monoMedium,
                     fontSize: 9,
                     letterSpacing: 0.7,
+                    textTransform: "uppercase",
                     color: colors.textSecondary,
                   }}
                 >
-                  DETAILS →
+                  {t("trends.details")}
                 </Text>
               )}
             </View>
@@ -88,25 +91,26 @@ export function TrendsList({
                 color: colors.gunmetal,
               }}
             >
-              {t.value}
+              {tile.value}
             </Text>
             <Text
               style={{
                 fontFamily: fonts.monoMedium,
                 fontSize: 10,
                 letterSpacing: 0.5,
+                textTransform: "uppercase",
                 color: colors.textSecondary,
               }}
             >
-              {t.caption}
+              {tile.caption}
             </Text>
             <View style={{ marginTop: 2 }}>
-              <TrendBars bars={t.bars} height={38} />
+              <TrendBars bars={tile.bars} height={38} />
             </View>
             <TrendTagBreakdown
               compact
-              title="BY TAG"
-              rows={state.data.details[t.metric].breakdown.slice(0, TILE_BREAKDOWN_ROWS)}
+              title={t("trends.byTag")}
+              rows={state.data.details[tile.metric].breakdown.slice(0, TILE_BREAKDOWN_ROWS)}
             />
           </Pressable>
         ))}

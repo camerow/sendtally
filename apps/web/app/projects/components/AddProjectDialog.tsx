@@ -13,6 +13,7 @@ import {
   type Discipline,
 } from "@sendtally/features/log-session";
 import { Button } from "@sendtally/design";
+import { t } from "@sendtally/features/i18n";
 
 export type AddProjectDialogProps = {
   climbs: ClimbSummary[];
@@ -21,9 +22,9 @@ export type AddProjectDialogProps = {
   onSave: (input: ProjectInput) => Promise<void>;
 };
 
-const DISCIPLINES: Array<{ value: Discipline; label: string }> = [
-  { value: "boulder", label: "BOULDER" },
-  { value: "route", label: "SPORT" },
+const DISCIPLINES: Array<{ value: Discipline; label: () => string }> = [
+  { value: "boulder", label: () => t("common.boulder") },
+  { value: "route", label: () => t("projects.sport") },
 ];
 
 const chip = (active: boolean): React.CSSProperties => ({
@@ -55,8 +56,8 @@ const input: React.CSSProperties = {
 };
 
 function suggestionMeta(climb: ClimbSummary): string {
-  if (climb.project) return "ALREADY A PROJECT";
-  if (climb.sessions === 0) return "NOTHING LOGGED YET";
+  if (climb.project) return t("projects.alreadyAProject");
+  if (climb.sessions === 0) return t("common.nothingLoggedYet");
   return projectMetaLabel(climb);
 }
 
@@ -141,7 +142,7 @@ export function AddProjectDialog({
       onClose();
     } catch {
       setBusy(false);
-      setError("Could not add the project. Try again.");
+      setError(t("projects.addFailed"));
     }
   }
 
@@ -153,7 +154,12 @@ export function AddProjectDialog({
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="project-dialog" role="dialog" aria-modal="true" aria-label="New project">
+      <div
+        className="project-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-label={t("projects.newProject")}
+      >
         <div style={{ display: "flex", alignItems: "center" }}>
           <span
             style={{
@@ -161,24 +167,25 @@ export function AddProjectDialog({
               fontWeight: 500,
               fontSize: 11,
               letterSpacing: "0.08em",
+              textTransform: "uppercase",
               color: "var(--text-label-accent)",
             }}
           >
-            NEW PROJECT
+            {t("projects.newProject")}
           </span>
         </div>
 
         {searching && (
           <div className="project-dialog-field">
             <label className="project-dialog-label" htmlFor="project-name">
-              WHICH CLIMB
+              {t("projects.whichClimb")}
             </label>
             <input
               id="project-name"
               value={name}
               autoFocus
               autoComplete="off"
-              placeholder="Name of the climb"
+              placeholder={t("projects.namePlaceholder")}
               onChange={(e) => type(e.target.value)}
               style={input}
             />
@@ -228,22 +235,20 @@ export function AddProjectDialog({
                       </svg>
                     </span>
                     <span style={{ fontWeight: 600, fontSize: 14, color: "var(--bs-azure-ink)" }}>
-                      Track “{trimmed}” as a new climb
+                      {t("projects.trackAsNew", { name: trimmed })}
                     </span>
                   </button>
                 )}
               </div>
             )}
-            <span className="project-dialog-hint">
-              START TYPING - PICK ONE YOU HAVE LOGGED AND IT KEEPS ITS HISTORY
-            </span>
+            <span className="project-dialog-hint">{t("projects.startTyping")}</span>
           </div>
         )}
 
         {identified && (
           <div className="project-dialog-field">
             <span className="project-dialog-label">
-              {picked === null ? "NEW CLIMB" : "FROM YOUR LOGBOOK"}
+              {t(picked === null ? "projects.newClimb" : "projects.fromLogbook")}
             </span>
             <div className="project-dialog-identity">
               <span
@@ -260,7 +265,7 @@ export function AddProjectDialog({
               <span style={{ fontWeight: 600, fontSize: 15 }}>{identityName}</span>
               <span style={{ flex: 1 }} />
               <button type="button" onClick={change} className="project-dialog-change">
-                CHANGE
+                {t("projects.change")}
               </button>
             </div>
           </div>
@@ -269,7 +274,7 @@ export function AddProjectDialog({
         {needsGrade && (
           <>
             <div className="project-dialog-field">
-              <span className="project-dialog-label">DISCIPLINE</span>
+              <span className="project-dialog-label">{t("common.discipline")}</span>
               <div style={{ display: "flex", gap: 8 }}>
                 {DISCIPLINES.map((d) => (
                   <button
@@ -281,15 +286,15 @@ export function AddProjectDialog({
                       setDiscipline(d.value);
                       setGrade("");
                     }}
-                    style={chip(discipline === d.value)}
+                    style={{ ...chip(discipline === d.value), textTransform: "uppercase" }}
                   >
-                    {d.label}
+                    {d.label()}
                   </button>
                 ))}
               </div>
             </div>
             <div className="project-dialog-field">
-              <span className="project-dialog-label">GRADE</span>
+              <span className="project-dialog-label">{t("common.grade")}</span>
               <div ref={rail} className="project-dialog-rail">
                 {ladder.map((g) => (
                   <button
@@ -309,34 +314,38 @@ export function AddProjectDialog({
 
         <div className="project-dialog-field">
           <label className="project-dialog-label" htmlFor="project-beta">
-            BETA <span style={{ color: "rgba(64,63,76,0.45)" }}>· OPTIONAL</span>
+            {t("projects.beta")}{" "}
+            <span style={{ color: "rgba(64,63,76,0.45)" }}>{t("common.optional")}</span>
           </label>
           <textarea
             id="project-beta"
             value={beta}
             rows={2}
-            placeholder="What you know about it so far"
+            placeholder={t("projects.betaPlaceholderShort")}
             onChange={(e) => setBeta(e.target.value)}
             style={{ ...input, resize: "vertical", fontFamily: "var(--font-sans)" }}
           />
         </div>
 
         {error !== null && (
-          <span className="project-dialog-hint" style={{ color: "var(--text-label-accent)" }}>
+          <span
+            className="project-dialog-hint"
+            style={{ textTransform: "none", color: "var(--text-label-accent)" }}
+          >
             {error}
           </span>
         )}
 
         <div className="project-dialog-actions">
           <Button variant="ghostOnLight" onClick={onClose}>
-            Cancel
+            {t("common.cancel")}
           </Button>
           <Button
             variant="azure"
             disabled={!identified || (needsGrade && grade === "") || busy}
             onClick={() => void save()}
           >
-            {busy ? "Adding…" : "Add project"}
+            {busy ? t("projects.adding") : t("projects.addProject")}
           </Button>
         </div>
       </div>

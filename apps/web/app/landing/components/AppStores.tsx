@@ -1,6 +1,6 @@
 import React from "react";
+import { useLanding } from "../LandingContext";
 import { STORE_LINKS } from "../../lib/stores";
-import { COPY } from "../copy";
 
 export type AppStoresProps = {
   prominent?: boolean;
@@ -30,20 +30,21 @@ function Badge({ href, src, alt, pending }: BadgeProps): React.ReactElement {
 }
 
 export function AppStores({ prominent = false }: AppStoresProps): React.ReactElement {
+  const { copy } = useLanding();
   return (
     <div className={prominent ? "l-stores l-stores--hero" : "l-stores"}>
-      {!prominent && <span className="l-stores-lead">{COPY.stores.lead}</span>}
+      {!prominent && <span className="l-stores-lead">{copy.stores.lead}</span>}
       <Badge
         href={STORE_LINKS.android}
         src="/images/badges/google-play.png"
-        alt={COPY.stores.android}
-        pending={COPY.stores.pending}
+        alt={copy.stores.android}
+        pending={copy.stores.pending}
       />
       <Badge
         href={STORE_LINKS.ios}
         src="/images/badges/app-store.svg"
-        alt={COPY.stores.ios}
-        pending={COPY.stores.pending}
+        alt={copy.stores.ios}
+        pending={copy.stores.pending}
       />
     </div>
   );

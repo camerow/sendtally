@@ -1,6 +1,5 @@
 import React from "react";
 import { Button, type ButtonProps } from "@sendtally/design";
-import { COPY } from "../copy";
 import { useLanding } from "../LandingContext";
 
 export type AccountCtaProps = {
@@ -16,7 +15,7 @@ export function AccountCta({
   size = "md",
   className,
 }: AccountCtaProps): React.ReactElement {
-  const { signedIn } = useLanding();
+  const { signedIn, copy } = useLanding();
   return (
     <Button
       variant={variant}
@@ -24,7 +23,7 @@ export function AccountCta({
       href={signedIn ? "/app" : "/sign-up"}
       className={className}
     >
-      {signedIn ? COPY.nav.openApp : label}
+      {signedIn ? copy.nav.openApp : label}
     </Button>
   );
 }
