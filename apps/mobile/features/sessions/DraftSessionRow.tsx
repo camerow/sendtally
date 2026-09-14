@@ -4,7 +4,7 @@ import { Pressable, Text, View } from "react-native";
 import { parseStoredDraft, type StoredSessionDraft } from "@sendtally/features/log-session";
 import { formatDate, t } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
-import { confirmDiscardDraft } from "../log-session/confirmDiscardDraft";
+import { confirmDiscardDraft } from "../../lib/confirmDiscardDraft";
 import { press, pressRow } from "../../lib/press";
 import { DayColumn, RowTitle } from "./SessionRowParts";
 import { sessionDraftStorage } from "../../lib/sessionDraftStorage";

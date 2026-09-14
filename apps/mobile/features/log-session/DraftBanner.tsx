@@ -4,7 +4,7 @@ import type { StoredSessionDraft } from "@sendtally/features/log-session";
 import { formatDate, t } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { press } from "../../lib/press";
-import { confirmDiscardDraft } from "./confirmDiscardDraft";
+import { confirmDiscardDraft } from "../../lib/confirmDiscardDraft";
 
 function Action({
   label,
