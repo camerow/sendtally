@@ -1,6 +1,7 @@
 import React from "react";
 import { Pressable, Text } from "react-native";
 import { colors, fonts } from "@sendtally/design/tokens";
+import { press } from "../lib/press";
 import { Icon } from "./Icon";
 
 export type LinkRowProps = {
@@ -13,12 +14,11 @@ export function LinkRow({ label, onPress }: LinkRowProps): React.ReactElement {
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
-      style={({ pressed }) => ({
+      style={press({
         minHeight: 44,
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "space-between",
-        opacity: pressed ? 0.6 : 1,
       })}
     >
       <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 14, color: colors.azureInk }}>

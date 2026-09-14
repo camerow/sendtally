@@ -2,11 +2,11 @@ import type { StyleProp, ViewStyle } from "react-native";
 
 type PressState = { pressed: boolean };
 
-const PRESSED_TINT = "rgba(64,63,76,0.06)";
+const PRESSED_TINT = "rgba(64,63,76,0.03)";
 
 /** Dims a control while it is held. For buttons, chips, icons and anything with its own fill. */
 export function press(style: StyleProp<ViewStyle>): (state: PressState) => StyleProp<ViewStyle> {
-  return ({ pressed }) => (pressed ? [style, { opacity: 0.62 }] : style);
+  return ({ pressed }) => (pressed ? [style, { opacity: 0.88 }] : style);
 }
 
 /** Tints a row while it is held. For list rows and other flat surfaces, where dimming reads as a glitch. */
