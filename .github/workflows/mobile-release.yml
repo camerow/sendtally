@@ -121,21 +121,9 @@ jobs:
         run: |
           set -euo pipefail
           previous=$(git tag --list 'mobile-v*' --sort=-v:refname | head -1)
-          range=HEAD
-          if [ -n "$previous" ]; then range="$previous..HEAD"; fi
-          log=$(git log --format='%s%n%b' "$range")
-          bump=patch
-          if grep -qE '^feat(\([^)]*\))?:' <<<"$log"; then bump=minor; fi
-          if grep -qE '^BREAKING CHANGE|^[a-z]+(\([^)]*\))?!:' <<<"$log"; then bump=major; fi
+          range=${previous:+$previous..}HEAD
           version=$(jq -r .expo.version apps/mobile/app.json)
-          IFS=. read -r major minor patch <<<"$version"
-          # Pre-1.0, a breaking change is a minor bump, per semver's 0.y rule.
-          if [ "$bump" = major ] && [ "$major" = 0 ]; then bump=minor; fi
-          case $bump in
-            major) next="$((major + 1)).0.0" ;;
-            minor) next="$major.$((minor + 1)).0" ;;
-            patch) next="$major.$minor.$((patch + 1))" ;;
-          esac
+          read -r next bump < <(.github/scripts/next-version.sh "$version" "$range")
           echo "Releasing $version -> $next ($bump) since ${previous:-the first commit}"
           echo "version=$next" >> "$GITHUB_OUTPUT"
           .github/scripts/release-notes.sh "$range" . ':!apps/web' > notes.md

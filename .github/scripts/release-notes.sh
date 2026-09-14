@@ -6,7 +6,6 @@ set -euo pipefail
 
 range="$1"
 shift
-paths=("$@")
 
 heading() {
   case "$1" in
@@ -20,7 +19,7 @@ heading() {
 
 conventional='^([a-z]+)(\(([^)]*)\))?!?:[[:space:]]*(.*)$'
 
-subjects=$(git log --no-merges --format='%h%x09%s' "$range" -- "${paths[@]}")
+subjects=$(git log --no-merges --format='%h%x09%s' "$range" -- "$@")
 
 for group in New Fixed Faster "Other changes"; do
   body=""

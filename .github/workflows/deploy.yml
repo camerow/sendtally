@@ -103,19 +103,8 @@ jobs:
             echo "skip=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          log=$(git log --format='%s%n%b' "$range" -- . ':!apps/mobile')
-          bump=patch
-          if grep -qE '^feat(\([^)]*\))?:' <<<"$log"; then bump=minor; fi
-          if grep -qE '^BREAKING CHANGE|^[a-z]+(\([^)]*\))?!:' <<<"$log"; then bump=major; fi
-          IFS=. read -r major minor patch <<<"${previous#web-v}"
-          major=${major:-0} minor=${minor:-0} patch=${patch:-0}
-          # Pre-1.0, a breaking change is a minor bump, per semver's 0.y rule.
-          if [ "$bump" = major ] && [ "$major" = 0 ]; then bump=minor; fi
-          case $bump in
-            major) next="$((major + 1)).0.0" ;;
-            minor) next="$major.$((minor + 1)).0" ;;
-            patch) next="$major.$minor.$((patch + 1))" ;;
-          esac
+          read -r next bump < <(.github/scripts/next-version.sh "${previous#web-v}" "$range" . ':!apps/mobile')
+          echo "Releasing web-v$next ($bump) since ${previous:-the first commit}"
           echo "version=$next" >> "$GITHUB_OUTPUT"
 
       - name: Create the GitHub release
