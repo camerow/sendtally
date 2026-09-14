@@ -15,6 +15,7 @@ export {
   emptyDraft,
   gradeOptions,
   newClimb,
+  nextClimbKey,
   scaleOptionsFor,
   toLogSessionInput,
   vGradeOf,

@@ -97,27 +97,32 @@ export function Sheet({ visible, onClose, closeLabel, children }: SheetProps): R
     return () => animation.stop();
   }, [visible, progress, drag]);
 
-  // Android's Modal window already shrinks around the keyboard (SOFT_INPUT_ADJUST_RESIZE).
+  // Android only has the "did" events, reports the keyboard height minus the navigation bar,
+  // and with edge-to-edge (target SDK 35) its Modal window no longer shrinks around the
+  // keyboard, so both platforms follow it here.
   React.useEffect(() => {
-    if (!mounted || Platform.OS !== "ios") return;
+    if (!mounted) return;
+    const ios = Platform.OS === "ios";
     const follow = (event: KeyboardEvent, height: number): void => {
       Animated.timing(keyboard, {
         toValue: height,
-        duration: event.duration,
+        duration: event.duration || 160,
         easing: Easing.out(Easing.cubic),
         useNativeDriver: false,
       }).start();
     };
-    const show = Keyboard.addListener("keyboardWillShow", (event) =>
-      follow(event, event.endCoordinates.height)
+    const show = Keyboard.addListener(ios ? "keyboardWillShow" : "keyboardDidShow", (event) =>
+      follow(event, event.endCoordinates.height + (ios ? 0 : insets.bottom))
     );
-    const hide = Keyboard.addListener("keyboardWillHide", (event) => follow(event, 0));
+    const hide = Keyboard.addListener(ios ? "keyboardWillHide" : "keyboardDidHide", (event) =>
+      follow(event, 0)
+    );
     return () => {
       show.remove();
       hide.remove();
       keyboard.setValue(0);
     };
-  }, [mounted, keyboard]);
+  }, [mounted, keyboard, insets.bottom]);
 
   const bottomInset = Math.max(insets.bottom, 16);
   // The keyboard covers the home indicator, so its inset gives way to a plain 16 above the keys.
@@ -132,6 +137,7 @@ export function Sheet({ visible, onClose, closeLabel, children }: SheetProps): R
       transparent
       animationType="none"
       statusBarTranslucent
+      navigationBarTranslucent
       onRequestClose={onClose}
     >
       <View style={{ flex: 1, justifyContent: "flex-end" }}>

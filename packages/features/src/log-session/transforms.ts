@@ -111,6 +111,10 @@ export function emptyDraft(now: Date, prefs: GradePrefs = DEFAULT_GRADE_PREFS): 
   };
 }
 
+export function nextClimbKey(climbs: readonly ClimbDraft[]): string {
+  return `climb-${Math.max(0, ...climbs.map((c) => Number(c.key.slice(6)) || 0)) + 1}`;
+}
+
 export function newClimb(key: string, scale: GradeScale): ClimbDraft {
   return {
     key,

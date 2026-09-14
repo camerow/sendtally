@@ -7,6 +7,7 @@ import {
   draftSummary,
   emptyDraft,
   newClimb,
+  nextClimbKey,
   toLogSessionInput,
   useDraftAutosave,
   withClimbDiscipline,
@@ -140,7 +141,6 @@ export function LogSessionForm({
   );
   const [saving, setSaving] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
-  const nextKey = React.useRef(draft.climbs.length + 1);
   const { suggestionsFor } = useTagVocabulary(api);
 
   // The preference query resolves after the first render, so a new draft adopts
@@ -234,11 +234,11 @@ export function LogSessionForm({
   }
 
   function addClimb(): void {
-    const key = `climb-${nextKey.current++}`;
-    setDraft((d) => ({
-      ...d,
-      climbs: [...d.climbs, newClimb(key, d.climbs[d.climbs.length - 1]?.scale ?? "v")],
-    }));
+    const key = nextClimbKey(draft.climbs);
+    setDraft({
+      ...draft,
+      climbs: [...draft.climbs, newClimb(key, draft.climbs[draft.climbs.length - 1]?.scale ?? "v")],
+    });
     if (narrow) setEditingKey(key);
   }
 

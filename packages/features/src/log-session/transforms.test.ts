@@ -10,6 +10,7 @@ import {
   emptyDraft,
   gradeOptions,
   newClimb,
+  nextClimbKey,
   toLogSessionInput,
   vGradeOf,
   withClimbDiscipline,
@@ -582,5 +583,14 @@ describe("toLogSessionInput project flags", () => {
       ],
     };
     expect(toLogSessionInput(draft).climbs.map((c) => c.project)).toEqual([true, false, undefined]);
+  });
+});
+
+describe("nextClimbKey", () => {
+  it("continues past the highest key of a picked-up draft", () => {
+    const climbs = [newClimb("climb-1", "v"), newClimb("climb-2", "v")];
+    expect(nextClimbKey(climbs)).toBe("climb-3");
+    expect(nextClimbKey([climbs[1]!])).toBe("climb-3");
+    expect(nextClimbKey([])).toBe("climb-1");
   });
 });

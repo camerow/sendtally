@@ -56,4 +56,5 @@ export const common = {
   "common.sectionsAria": "Sections",
   "common.optional": "· optional",
   "common.membersOnly": "{label}, members only",
+  "common.closeOptions": "Close {label} options",
 } as const;

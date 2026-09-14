@@ -8,6 +8,7 @@ import {
   draftSummary,
   emptyDraft,
   newClimb,
+  nextClimbKey,
   toLogSessionInput,
   useDraftAutosave,
   withClimbScale,
@@ -126,7 +127,6 @@ export function LogSessionForm({
   );
   const [saving, setSaving] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
-  const nextKey = React.useRef(draft.climbs.length + 1);
 
   // The preference query resolves after the first render, so a new draft adopts
   // the user's scale once. An edit keeps the scale the session was logged in.
@@ -190,10 +190,11 @@ export function LogSessionForm({
   }
 
   function addClimb(): void {
-    const key = `climb-${nextKey.current++}`;
-    setDraft((d) => {
-      const previous = d.climbs[d.climbs.length - 1];
-      return { ...d, climbs: [...d.climbs, newClimb(key, previous?.scale ?? gradePrefs.boulder)] };
+    const key = nextClimbKey(draft.climbs);
+    const previous = draft.climbs[draft.climbs.length - 1];
+    setDraft({
+      ...draft,
+      climbs: [...draft.climbs, newClimb(key, previous?.scale ?? gradePrefs.boulder)],
     });
     setEditingKey(key);
   }
