@@ -1,12 +1,13 @@
 import type { Entitlements, StoreMembership } from "@sendtally/api-client";
+import { formatDate, t, type MessageKey } from "../i18n";
 import type { MembershipManagedIn, MembershipPlan, MembershipVM } from "./types";
 
-const STORE_NAMES: Record<MembershipManagedIn, string> = {
-  web: "sendtally.com",
-  play_store: "Google Play",
-  app_store: "the App Store",
-  test_store: "the test store",
-  other: "your store",
+const STORE_NAMES: Record<MembershipManagedIn, () => string> = {
+  web: () => "sendtally.com",
+  play_store: () => "Google Play",
+  app_store: () => t("billing.storeApp"),
+  test_store: () => t("billing.storeTest"),
+  other: () => t("billing.storeOther"),
 };
 
 export function managedInOf(store: string): MembershipManagedIn {
@@ -17,12 +18,24 @@ export function managedInOf(store: string): MembershipManagedIn {
 }
 
 export function storeName(managedIn: MembershipManagedIn): string {
-  return STORE_NAMES[managedIn];
+  return STORE_NAMES[managedIn]();
 }
 
-const PLAN_LABELS: Record<MembershipPlan, string> = {
-  monthly: "Monthly plan",
-  yearly: "Yearly plan",
+const STORE_CHIPS: Record<MembershipManagedIn, () => string> = {
+  web: () => "sendtally.com",
+  play_store: () => "Google Play",
+  app_store: () => "App Store",
+  test_store: () => t("billing.storeChipTest"),
+  other: () => t("billing.storeChipOther"),
+};
+
+export function storeChipName(managedIn: MembershipManagedIn): string {
+  return STORE_CHIPS[managedIn]();
+}
+
+const PLAN_LABELS: Record<MembershipPlan, MessageKey> = {
+  monthly: "billing.monthlyPlan",
+  yearly: "billing.yearlyPlan",
 };
 
 export function planOf(productId: string | undefined): MembershipPlan | null {
@@ -33,21 +46,17 @@ export function planOf(productId: string | undefined): MembershipPlan | null {
 }
 
 export function planLabel(plan: MembershipPlan): string {
-  return PLAN_LABELS[plan];
+  return t(PLAN_LABELS[plan]);
 }
 
 export function formatRenewalDate(iso: string): string {
-  return new Date(iso).toLocaleDateString(undefined, {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
+  return formatDate(new Date(iso), { day: "numeric", month: "short", year: "numeric" });
 }
 
 function renewalLine(store: StoreMembership): string {
-  if (store.expiresAt === null) return "Lifetime";
+  if (store.expiresAt === null) return t("billing.lifetime");
   const date = formatRenewalDate(store.expiresAt);
-  return store.willRenew ? `Renews ${date}` : `Ends ${date}`;
+  return t(store.willRenew ? "billing.renews" : "billing.ends", { date });
 }
 
 export function membershipVM(entitlements: Entitlements | null): MembershipVM {
@@ -55,7 +64,7 @@ export function membershipVM(entitlements: Entitlements | null): MembershipVM {
   if (membership === null || !membership.active) {
     return {
       active: false,
-      statusLabel: "NOT A MEMBER",
+      statusLabel: t("billing.notAMember"),
       managedIn: null,
       plan: null,
       renewalLine: null,
@@ -65,7 +74,7 @@ export function membershipVM(entitlements: Entitlements | null): MembershipVM {
     const managedIn = managedInOf(membership.store.store);
     return {
       active: true,
-      statusLabel: `MEMBER · ${storeName(managedIn).replace("the ", "").toUpperCase()}`,
+      statusLabel: t("billing.memberVia", { store: storeChipName(managedIn) }),
       managedIn,
       plan: planOf(membership.store.productId),
       renewalLine: renewalLine(membership.store),
@@ -73,7 +82,7 @@ export function membershipVM(entitlements: Entitlements | null): MembershipVM {
   }
   return {
     active: true,
-    statusLabel: "MEMBER · WEB",
+    statusLabel: t("billing.memberWeb"),
     managedIn: "web",
     plan: null,
     renewalLine: null,

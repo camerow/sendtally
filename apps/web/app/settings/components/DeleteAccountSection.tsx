@@ -1,5 +1,6 @@
 import React from "react";
 import { DELETE_CONFIRMATION_WORD, type DeleteAccountFeature } from "@sendtally/features/settings";
+import { t } from "@sendtally/features/i18n";
 import { bodyText, dangerButton, messageText, sectionLabel, underlineButton } from "./styles";
 
 export type DeleteAccountSectionProps = {
@@ -10,19 +11,16 @@ export function DeleteAccountSection({ deletion }: DeleteAccountSectionProps): R
   const busy = deletion.status === "deleting" || deletion.status === "deleted";
   return (
     <>
-      <span style={sectionLabel}>DELETE ACCOUNT</span>
-      <p style={bodyText}>
-        Deleting removes every session you have logged, disconnects Strava, and deletes your
-        account. Activities already posted to Strava stay on Strava. This cannot be undone.
-      </p>
+      <span style={sectionLabel}>{t("account.deleteAccount")}</span>
+      <p style={bodyText}>{t("account.deleteBody")}</p>
       {deletion.status === "idle" ? (
         <button type="button" onClick={deletion.open} style={dangerButton}>
-          Delete account
+          {t("account.deleteAccount")}
         </button>
       ) : (
         <>
           <label style={{ ...bodyText, display: "flex", flexDirection: "column", gap: 6 }}>
-            Type {DELETE_CONFIRMATION_WORD} to confirm.
+            {t("account.typeToConfirm", { word: DELETE_CONFIRMATION_WORD })}
             <input
               value={deletion.confirmation}
               onChange={(e) => deletion.setConfirmation(e.target.value)}
@@ -49,10 +47,10 @@ export function DeleteAccountSection({ deletion }: DeleteAccountSectionProps): R
                 cursor: !deletion.canConfirm || busy ? "not-allowed" : "pointer",
               }}
             >
-              {busy ? "Deleting…" : "Delete my account"}
+              {busy ? t("common.deleting") : t("account.deleteMyAccount")}
             </button>
             <button type="button" onClick={deletion.cancel} disabled={busy} style={underlineButton}>
-              Cancel
+              {t("common.cancel")}
             </button>
           </div>
         </>

@@ -1,3 +1,4 @@
+import { t } from "@sendtally/features/i18n";
 import React from "react";
 import type { PurchasesPackage } from "react-native-purchases";
 import type { Entitlements } from "@sendtally/api-client";
@@ -5,8 +6,8 @@ import {
   loadPackages,
   purchasePackage,
   restorePurchases,
-  STORE_NAME,
   storeBillingAvailable,
+  storeLabel,
 } from "./store";
 
 export type PurchaseStatus = "loading" | "ready" | "purchasing" | "restoring" | "unavailable";
@@ -18,11 +19,6 @@ export type PurchaseFeature = {
   purchase: (pkg: PurchasesPackage) => void;
   restore: () => void;
 };
-
-const PURCHASE_FAILED = `The purchase could not be completed. Nothing was charged; try again in a moment.`;
-const NOT_ENTITLED_AFTER_PURCHASE = `${STORE_NAME} confirmed the purchase but membership has not arrived yet. Reopen the app in a minute.`;
-const NOTHING_TO_RESTORE = `No membership was found for this ${STORE_NAME} account.`;
-const RESTORE_FAILED = `Restoring did not go through. Try again in a moment.`;
 
 export function usePurchase(refresh: () => Promise<Entitlements>): PurchaseFeature {
   const [status, setStatus] = React.useState<PurchaseStatus>(
@@ -57,11 +53,12 @@ export function usePurchase(refresh: () => Promise<Entitlements>): PurchaseFeatu
         .then(async (outcome) => {
           if (outcome === "cancelled") return;
           const next = await refresh();
-          if (!next.membership.active) setError(NOT_ENTITLED_AFTER_PURCHASE);
+          if (!next.membership.active)
+            setError(t("billing.notEntitledAfterPurchase", { store: storeLabel() }));
         })
         .catch((err: unknown) => {
           console.error(`purchase failed: ${err instanceof Error ? err.message : String(err)}`);
-          setError(PURCHASE_FAILED);
+          setError(t("billing.purchaseFailed"));
         })
         .finally(() => setStatus("ready"));
     },
@@ -74,11 +71,12 @@ export function usePurchase(refresh: () => Promise<Entitlements>): PurchaseFeatu
     restorePurchases()
       .then(async () => {
         const next = await refresh();
-        if (!next.membership.active) setError(NOTHING_TO_RESTORE);
+        if (!next.membership.active)
+          setError(t("billing.nothingToRestore", { store: storeLabel() }));
       })
       .catch((err: unknown) => {
         console.error(`restore failed: ${err instanceof Error ? err.message : String(err)}`);
-        setError(RESTORE_FAILED);
+        setError(t("billing.restoreFailed"));
       })
       .finally(() => setStatus(packages.length === 0 ? "unavailable" : "ready"));
   }, [packages.length, refresh]);

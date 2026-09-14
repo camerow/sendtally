@@ -9,6 +9,7 @@ import {
   projectStatus,
   type ProjectListItem,
 } from "@sendtally/features/climbs";
+import { t } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { Icon } from "../../components/Icon";
 
@@ -16,13 +17,16 @@ export type ProjectRowProps = { item: ProjectListItem };
 
 function metaLabel({ climb }: ProjectListItem): string {
   if (climb.sessions === 0) {
-    return `${disciplineLabel(climb)} · ADDED ${dateLabel(climb.first_at)}`;
+    return t("projects.addedOn", {
+      discipline: disciplineLabel(climb),
+      date: dateLabel(climb.first_at),
+    });
   }
   const when =
     projectStatus(climb) === "sent"
-      ? `SENT ${dateLabel(climb.last_at)}`
-      : `LAST ${dateLabel(climb.last_at)}`;
-  return `${projectMetaLabel(climb)} · ${when}`;
+      ? t("projects.sentOn", { date: dateLabel(climb.last_at) })
+      : t("projects.lastOn", { date: dateLabel(climb.last_at) });
+  return t("projects.rowMeta", { meta: projectMetaLabel(climb), when });
 }
 
 export function ProjectRow({ item }: ProjectRowProps): React.ReactElement {
@@ -64,6 +68,7 @@ export function ProjectRow({ item }: ProjectRowProps): React.ReactElement {
               fontFamily: fonts.monoMedium,
               fontSize: 10,
               letterSpacing: 0.6,
+              textTransform: "uppercase",
               color: colors.textMuted,
             }}
           >
@@ -75,6 +80,7 @@ export function ProjectRow({ item }: ProjectRowProps): React.ReactElement {
             fontFamily: fonts.monoMedium,
             fontSize: 10,
             letterSpacing: 0.6,
+            textTransform: "uppercase",
             color: colors.gunmetal,
             paddingHorizontal: 9,
             paddingVertical: 4,
@@ -83,7 +89,7 @@ export function ProjectRow({ item }: ProjectRowProps): React.ReactElement {
             overflow: "hidden",
           }}
         >
-          {sent ? "SENT" : "OPEN"}
+          {sent ? t("common.sentStatus") : t("common.open")}
         </Text>
         <Icon name="chevron" size={14} color={colors.textFaint} />
       </View>

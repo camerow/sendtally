@@ -31,6 +31,7 @@ export function Badge({
         fontWeight: 500,
         fontSize: 10,
         letterSpacing: "var(--type-label-track)",
+        textTransform: "uppercase",
         padding: "4px 8px",
         borderRadius: pill ? "var(--radius-pill)" : "var(--radius-sm)",
         ...t,

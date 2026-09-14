@@ -1,6 +1,7 @@
 import { climbDiscipline, climbRank, type Discipline } from "@sendtally/core";
 import type { SessionWithClimbs } from "@sendtally/api-client";
 import { climbKey } from "../climbs/transforms";
+import { formatDate, formatNumber, t, type MessageKey } from "../i18n";
 import { gradeFormatterFor, type GradeFormatter } from "../sessions/grades";
 import { sessionTagGroups } from "../sessions/tags";
 import type {
@@ -20,15 +21,19 @@ type Sent = { grade: number; flash: boolean; time: number };
 
 type Bucket = { start: number; end: number; label: string };
 
-const RANGE_LABELS: Record<TrendRange, string> = {
-  "7d": "LAST 7 DAYS",
-  "1m": "LAST MONTH",
-  "3m": "LAST 3 MONTHS",
-  "6m": "LAST 6 MONTHS",
-  ytd: "YEAR TO DATE",
-  "1y": "LAST 12 MONTHS",
-  all: "ALL TIME",
+const RANGE_KEYS: Record<TrendRange, MessageKey> = {
+  "7d": "trends.range7d",
+  "1m": "trends.range1m",
+  "3m": "trends.range3m",
+  "6m": "trends.range6m",
+  ytd: "trends.rangeYtd",
+  "1y": "trends.range1y",
+  all: "trends.rangeAll",
 };
+
+function percent(n: number): string {
+  return formatNumber(n / 100, { style: "percent" });
+}
 
 // A flash is a first encounter: one try on a climb with nothing logged against
 // its name before, in this session or any earlier one. Working a project is
@@ -79,11 +84,7 @@ function normalize(values: number[]): number[] {
 }
 
 function weekLabel(msStart: number): string {
-  return new Date(msStart).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    timeZone: "UTC",
-  });
+  return formatDate(new Date(msStart), { month: "short", day: "numeric", timeZone: "UTC" });
 }
 
 function monthStartUtc(year: number, month: number): number {
@@ -91,15 +92,11 @@ function monthStartUtc(year: number, month: number): number {
 }
 
 function monthLabelOf(ms: number): string {
-  return new Date(ms)
-    .toLocaleDateString("en-US", { month: "short", timeZone: "UTC" })
-    .toUpperCase();
+  return formatDate(new Date(ms), { month: "short", timeZone: "UTC" });
 }
 
 function dayLabel(msStart: number): string {
-  return new Date(msStart)
-    .toLocaleDateString("en-US", { weekday: "short", timeZone: "UTC" })
-    .toUpperCase();
+  return formatDate(new Date(msStart), { weekday: "short", timeZone: "UTC" });
 }
 
 function trailingDays(now: Date, days: number): Bucket[] {
@@ -206,7 +203,7 @@ const METRIC_PICK: Record<TrendMetric, MetricPick> = {
     value: t.hardest,
     label: t.hardest === null ? "-" : format.label(t.hardest),
   }),
-  flash: (t) => ({ value: t.flash, label: t.flash === null ? "-" : `${t.flash}%` }),
+  flash: (t) => ({ value: t.flash, label: t.flash === null ? "-" : percent(t.flash) }),
   avggrade: (t, format) => ({ value: t.avg, label: t.avg === null ? "-" : format.average(t.avg) }),
 };
 
@@ -261,7 +258,7 @@ export function trendsVM(
   now: Date = new Date(),
   requestedDiscipline: Discipline | null = null
 ): TrendsVM {
-  const rangeLabel = RANGE_LABELS[range];
+  const rangeLabel = t(RANGE_KEYS[range]);
   const { discipline, disciplines } = resolveDiscipline(sessions, requestedDiscipline);
   const format = gradeFormatterFor(
     sessions.flatMap((s) => s.climbs),
@@ -313,7 +310,7 @@ export function trendsVM(
   const countTick = (v: number): string => String(Math.round(v));
   const gradeTick = (v: number): string => grade(Math.round(v));
   const avgTick = (v: number): string => avgLabel(v);
-  const pctTick = (v: number): string => `${Math.round(v)}%`;
+  const pctTick = (v: number): string => percent(Math.round(v));
 
   const volumeBars: TrendBarVM[] = normalize(bucketClimbs).map((h, i) => ({
     height: h,
@@ -348,7 +345,7 @@ export function trendsVM(
   const flashBars: TrendBarVM[] = bucketFlash.map((f, i) => ({
     height: f === null || flashBest === 0 ? 0 : f / flashBest,
     peak: f !== null && f === flashBest && flashBest > 0,
-    valueLabel: f === null ? "-" : `${f}%`,
+    valueLabel: f === null ? "-" : percent(f),
     axisLabel: axis(i),
   }));
 
@@ -363,26 +360,33 @@ export function trendsVM(
   const biggestBucket = Math.max(0, ...bucketClimbs);
   const biggestBucketIdx = bucketClimbs.indexOf(biggestBucket);
 
+  const sessionCount = t("sessions.sessionCount", { count: inRange.length });
+  const sendCount = t("logSession.sendCount", { count: totalSends });
+  const baseGrade = grade(
+    pyramid.reduce((a, b) => (b.count > a.count ? b : a), { grade: 0, count: 0 }).grade
+  );
+  const sendsAtMax = rangeSends.filter((s) => s.grade === hi).length;
+  const flashed = rangeSends.filter((s) => s.flash);
   const tiles: TrendTileVM[] = [
     {
       metric: "volume",
-      label: "VOLUME",
-      value: `${totalClimbs} climbs`,
-      caption: `${inRange.length} SESSIONS · ${rangeLabel}`,
+      label: t("trends.volume"),
+      value: t("common.climbCount", { count: totalClimbs }),
+      caption: `${sessionCount} · ${rangeLabel}`,
       bars: volumeBars,
       yTicks: ticks(volumeMax, countTick),
     },
     {
       metric: "pyramid",
-      label: "GRADE PYRAMID",
-      value: `${totalSends} sends`,
+      label: t("trends.gradePyramid"),
+      value: sendCount,
       caption: totalSends > 0 ? `${rangeLabel} · ${grade(lo)}-${grade(hi)}` : rangeLabel,
       bars: pyramidBars,
       yTicks: ticks(pyramidPeak, countTick),
     },
     {
       metric: "hardest",
-      label: "HARDEST SEND",
+      label: t("trends.hardestSend"),
       value: totalSends > 0 ? grade(hi) : "-",
       caption: rangeLabel,
       bars: hardestBars,
@@ -390,15 +394,15 @@ export function trendsVM(
     },
     {
       metric: "flash",
-      label: "FLASH RATE",
-      value: lastFlash === null ? "-" : `${lastFlash}%`,
-      caption: `SENDS ON THE FIRST TRY · ${rangeLabel}`,
+      label: t("trends.flashRate"),
+      value: lastFlash === null ? "-" : percent(lastFlash),
+      caption: `${t("trends.firstTrySends")} · ${rangeLabel}`,
       bars: flashBars,
       yTicks: ticks(flashBest, pctTick),
     },
     {
       metric: "avggrade",
-      label: "AVG GRADE",
+      label: t("trends.avgGrade"),
       value: totalSends > 0 ? avgLabel(avgGrade) : "-",
       caption: rangeLabel,
       bars: avgBars,
@@ -409,130 +413,128 @@ export function trendsVM(
   const details: Record<TrendMetric, TrendDetailVM> = {
     volume: {
       metric: "volume",
-      title: "Volume",
-      caption: `CLIMBS OVER TIME · ${rangeLabel}`,
+      title: t("trends.volume"),
+      caption: `${t("trends.climbsOverTime")} · ${rangeLabel}`,
       bars: volumeBars,
       yTicks: ticks(volumeMax, countTick),
       specs: [
-        { k: "SESSIONS", v: String(inRange.length) },
-        { k: "CLIMBS", v: String(totalClimbs) },
+        { k: t("common.sessions"), v: String(inRange.length) },
+        { k: t("common.climbs"), v: String(totalClimbs) },
         {
-          k: "BIGGEST",
+          k: t("trends.specBiggest"),
           v: biggestBucket > 0 ? `${biggestBucket} · ${buckets[biggestBucketIdx]!.label}` : "-",
         },
       ],
       breakdown: breakdownFor("volume", stats, format),
       insight:
         biggestBucket > 0
-          ? `${totalClimbs} climbs across ${inRange.length} sessions, peaking at ${biggestBucket}.`
-          : "Log a few sessions and the rhythm shows up here.",
+          ? t("trends.volumeInsight", {
+              climbs: t("common.climbCount", { count: totalClimbs }),
+              sessions: t("sessions.sessionCount", { count: inRange.length }),
+              peak: biggestBucket,
+            })
+          : t("trends.volumeEmpty"),
     },
     pyramid: {
       metric: "pyramid",
-      title: "Grade pyramid",
-      caption: `SENDS BY GRADE · ${rangeLabel}`,
+      title: t("trends.gradePyramid"),
+      caption: `${t("trends.sendsByGrade")} · ${rangeLabel}`,
       bars: pyramidBars,
       yTicks: ticks(pyramidPeak, countTick),
       specs: [
         {
-          k: "BASE",
+          k: t("trends.specBase"),
           v:
             totalSends > 0
-              ? `${grade(pyramid.reduce((a, b) => (b.count > a.count ? b : a)).grade)} · ${Math.max(
-                  ...pyramid.map((p) => p.count)
-                )} sends`
+              ? `${baseGrade} · ${t("logSession.sendCount", { count: pyramidPeak })}`
               : "-",
         },
         {
-          k: "TOP",
+          k: t("trends.specTop"),
           v:
             totalSends > 0
-              ? `${grade(hi)} · ${pyramid.find((p) => p.grade === hi)?.count ?? 0} sends`
+              ? `${grade(hi)} · ${t("logSession.sendCount", { count: sendsAtMax })}`
               : "-",
         },
-        { k: "TOTAL", v: `${totalSends} sends` },
+        { k: t("trends.specTotal"), v: sendCount },
       ],
       breakdown: breakdownFor("pyramid", stats, format),
       insight:
         totalSends > 0
-          ? `A ${grade(pyramid.reduce((a, b) => (b.count > a.count ? b : a)).grade)} base carrying ${grade(hi)} on top.`
-          : "Sends stack up here by grade.",
+          ? t("trends.baseCarrying", { base: baseGrade, top: grade(hi) })
+          : t("trends.pyramidEmpty"),
     },
     hardest: {
       metric: "hardest",
-      title: "Hardest send",
-      caption: `MAX GRADE OVER TIME · ${rangeLabel}`,
+      title: t("trends.hardestSend"),
+      caption: `${t("trends.maxGradeOverTime")} · ${rangeLabel}`,
       bars: hardestBars,
       yTicks: ticks(hi, gradeTick),
       specs: [
-        { k: "MAX", v: totalSends > 0 ? grade(hi) : "-" },
+        { k: t("trends.specMax"), v: totalSends > 0 ? grade(hi) : "-" },
         {
-          k: "LATEST",
+          k: t("trends.specLatest"),
           v:
             bucketHardest[bucketHardest.length - 1] == null
               ? "-"
               : grade(bucketHardest[bucketHardest.length - 1]!),
         },
-        { k: "SENDS AT MAX", v: String(rangeSends.filter((s) => s.grade === hi).length) },
+        { k: t("trends.specSendsAtMax"), v: String(sendsAtMax) },
       ],
       breakdown: breakdownFor("hardest", stats, format),
       insight:
         totalSends > 0
-          ? `Top grade ${grade(hi)}, with ${rangeSends.filter((s) => s.grade === hi).length} send${
-              rangeSends.filter((s) => s.grade === hi).length === 1 ? "" : "s"
-            } there so far.`
-          : "Your max grade charts here.",
+          ? t("trends.hardestInsight", {
+              grade: grade(hi),
+              sends: t("logSession.sendCount", { count: sendsAtMax }),
+            })
+          : t("trends.hardestEmpty"),
     },
     flash: {
       metric: "flash",
-      title: "Flash rate",
-      caption: `FLASHES AS % OF SENDS · ${rangeLabel}`,
+      title: t("trends.flashRate"),
+      caption: `${t("trends.flashesOfSends")} · ${rangeLabel}`,
       bars: flashBars,
       yTicks: ticks(flashBest, pctTick),
       specs: [
         {
-          k: "FLASH CEILING",
-          v: rangeSends.some((s) => s.flash)
-            ? `${grade(Math.max(...rangeSends.filter((s) => s.flash).map((s) => s.grade)))} - hardest flash`
-            : "-",
+          k: t("trends.specFlashCeiling"),
+          v:
+            flashed.length > 0
+              ? t("trends.hardestFlash", { grade: grade(Math.max(...flashed.map((s) => s.grade))) })
+              : "-",
         },
-        { k: "BEST", v: flashBest > 0 ? `${flashBest}%` : "-" },
+        { k: t("trends.specBest"), v: flashBest > 0 ? percent(flashBest) : "-" },
         {
-          k: "TOTAL",
+          k: t("trends.specTotal"),
           v:
             totalSends > 0
-              ? `${rangeSends.filter((s) => s.flash).length} of ${totalSends} flashed`
+              ? t("trends.flashedOf", { flashed: flashed.length, total: totalSends })
               : "-",
         },
       ],
       breakdown: breakdownFor("flash", stats, format),
-      insight:
-        totalSends > 0
-          ? "Flash rate tracks how well you read a climb before pulling on."
-          : "First-try sends chart here.",
+      insight: totalSends > 0 ? t("trends.flashInsight") : t("trends.flashEmpty"),
     },
     avggrade: {
       metric: "avggrade",
-      title: "Avg grade",
-      caption: `AVG SEND GRADE OVER TIME · ${rangeLabel}`,
+      title: t("trends.avgGrade"),
+      caption: `${t("trends.avgSendGradeOverTime")} · ${rangeLabel}`,
       bars: avgBars,
       yTicks: ticks(avgMax, avgTick),
       specs: [
-        { k: "AVG", v: totalSends > 0 ? avgLabel(avgGrade) : "-" },
+        { k: t("trends.specAvg"), v: totalSends > 0 ? avgLabel(avgGrade) : "-" },
         {
-          k: "LATEST",
+          k: t("trends.specLatest"),
           v:
             bucketAvg[bucketAvg.length - 1] === 0 || bucketAvg[bucketAvg.length - 1] === undefined
               ? "-"
               : avgLabel(bucketAvg[bucketAvg.length - 1]!),
         },
-        { k: "SENDS COUNTED", v: String(totalSends) },
+        { k: t("trends.specSendsCounted"), v: String(totalSends) },
       ],
       breakdown: breakdownFor("avggrade", stats, format),
-      insight:
-        totalSends > 0
-          ? "Average send grade drifts slowly - steady beats spiky."
-          : "Average send grade lands here.",
+      insight: totalSends > 0 ? t("trends.avgInsight") : t("trends.avgEmpty"),
     },
   };
 

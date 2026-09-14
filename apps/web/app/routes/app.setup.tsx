@@ -3,6 +3,7 @@ import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
 import { Form, redirect } from "react-router";
 import { AuthShell, StepBody, StepCard, StepTitle } from "../auth/components/AuthShell";
 import { requireApi } from "../lib/api.server";
+import { t } from "@sendtally/features/i18n";
 
 export async function loader(args: LoaderFunctionArgs): Promise<null> {
   const api = await requireApi(args);
@@ -27,6 +28,7 @@ const detailRow: React.CSSProperties = {
 
 const detailLabel: React.CSSProperties = {
   fontFamily: "var(--font-mono)",
+  textTransform: "uppercase",
   fontWeight: 500,
   fontSize: 11,
   letterSpacing: "0.08em",
@@ -56,31 +58,27 @@ const primaryButton: React.CSSProperties = {
 export default function Setup(): React.ReactElement {
   return (
     <AuthShell>
-      <StepCard step="STEP 2 OF 2 · STRAVA · OPTIONAL" width={520}>
-        <StepTitle>Connect Strava.</StepTitle>
-        <StepBody>
-          Each logged session can become one Rock Climbing activity on your feed. You approve this
-          on strava.com; we keep the token, and you can revoke it there any time. Skip it and your
-          sessions still land in sendtally - connect whenever you want them on Strava.
-        </StepBody>
+      <StepCard step={t("auth.setupStep")} width={520}>
+        <StepTitle>{t("auth.setupTitle")}</StepTitle>
+        <StepBody>{t("auth.setupBody")}</StepBody>
         <div style={{ display: "flex", flexDirection: "column" }}>
           <div style={detailRow}>
-            <span style={detailLabel}>WRITES</span>
-            <span style={detailBody}>New Rock Climbing activities, one per logged session</span>
+            <span style={detailLabel}>{t("auth.setupWrites")}</span>
+            <span style={detailBody}>{t("auth.setupWritesBody")}</span>
           </div>
           <div style={detailRow}>
-            <span style={detailLabel}>READS</span>
-            <span style={detailBody}>Your name and avatar, to confirm the right account</span>
+            <span style={detailLabel}>{t("auth.setupReads")}</span>
+            <span style={detailBody}>{t("auth.setupReadsBody")}</span>
           </div>
           <div style={{ ...detailRow, borderBottom: "1px solid var(--line-on-light)" }}>
-            <span style={detailLabel}>NEVER</span>
-            <span style={detailBody}>Your other activities, messages, or followers</span>
+            <span style={detailLabel}>{t("auth.setupNever")}</span>
+            <span style={detailBody}>{t("auth.setupNeverBody")}</span>
           </div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
           <Form method="post">
             <button type="submit" style={primaryButton}>
-              Connect Strava →
+              {t("sessions.connectStrava")} →
             </button>
           </Form>
           <a
@@ -92,7 +90,7 @@ export default function Setup(): React.ReactElement {
               textDecoration: "underline",
             }}
           >
-            Skip for now
+            {t("auth.skipForNow")}
           </a>
         </div>
       </StepCard>

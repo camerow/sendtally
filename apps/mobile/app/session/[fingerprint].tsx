@@ -4,11 +4,12 @@ import { ActivityIndicator, Alert, Linking, Pressable, ScrollView, Text, View } 
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
   CLIMB_SORTS,
+  climbSortLabel,
   useSessionDetail,
   type ClimbFilter,
-  type ClimbSort,
   type ClimbVM,
 } from "@sendtally/features/session-detail";
+import { t } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { Chip } from "../../components/Chip";
 import { PostStatusBar } from "../../features/sessions/PostStatusBar";
@@ -38,6 +39,7 @@ function HeaderAction({
           fontFamily: fonts.monoMedium,
           fontSize: 12,
           letterSpacing: 0.5,
+          textTransform: "uppercase",
           color: colors.labelAccent,
         }}
       >
@@ -55,10 +57,10 @@ export default function SessionDetailScreen(): React.ReactElement {
   const [deleting, setDeleting] = React.useState(false);
 
   function confirmDelete(): void {
-    Alert.alert("Delete session?", "This removes the session and its climb log for good.", [
-      { text: "Cancel", style: "cancel" },
+    Alert.alert(t("sessions.deleteTitle"), t("sessions.deleteBody"), [
+      { text: t("common.cancel"), style: "cancel" },
       {
-        text: "Delete",
+        text: t("common.delete"),
         style: "destructive",
         onPress: () => {
           setDeleting(true);
@@ -67,7 +69,7 @@ export default function SessionDetailScreen(): React.ReactElement {
             .then(() => router.replace("/(tabs)/sessions"))
             .catch(() => {
               setDeleting(false);
-              Alert.alert("Could not delete", "Something went wrong. Try again.");
+              Alert.alert(t("sessions.deleteFailed"), t("common.somethingWentWrongTryAgain"));
             });
         },
       },
@@ -96,31 +98,32 @@ export default function SessionDetailScreen(): React.ReactElement {
                 fontFamily: fonts.monoMedium,
                 fontSize: 12,
                 letterSpacing: 0.5,
+                textTransform: "uppercase",
                 color: colors.labelAccent,
               }}
             >
-              ← SESSIONS
+              {t("sessions.back")}
             </Text>
           </Pressable>
           {state.status === "ready" && (
             <View style={{ flexDirection: "row", alignItems: "center", gap: 16 }}>
               {state.data.vm.editable && (
                 <HeaderAction
-                  label="EDIT"
+                  label={t("common.edit")}
                   onPress={() =>
                     router.push(`/session/${encodeURIComponent(fingerprint ?? "")}/edit`)
                   }
                 />
               )}
               <HeaderAction
-                label={deleting ? "DELETING…" : "DELETE"}
+                label={deleting ? t("common.deleting") : t("common.delete")}
                 onPress={() => {
                   if (!deleting) confirmDelete();
                 }}
               />
               {state.data.vm.stravaUrl !== null && (
                 <HeaderAction
-                  label="STRAVA ↗"
+                  label="Strava ↗"
                   onPress={() => void Linking.openURL(state.data.vm.stravaUrl ?? "")}
                 />
               )}
@@ -131,7 +134,7 @@ export default function SessionDetailScreen(): React.ReactElement {
         {state.status === "loading" && <ActivityIndicator color={colors.gunmetal} />}
         {state.status === "error" && (
           <Text style={{ fontFamily: fonts.mono, fontSize: 12, color: colors.watermelonInk }}>
-            Could not load this session.
+            {t("sessionDetail.loadFailed")}
           </Text>
         )}
         {state.status === "ready" && (
@@ -152,6 +155,7 @@ export default function SessionDetailScreen(): React.ReactElement {
                   fontFamily: fonts.monoMedium,
                   fontSize: 10,
                   letterSpacing: 0.6,
+                  textTransform: "uppercase",
                   color: colors.textMuted,
                 }}
               >
@@ -188,6 +192,7 @@ export default function SessionDetailScreen(): React.ReactElement {
                       fontFamily: fonts.monoMedium,
                       fontSize: 9,
                       letterSpacing: 0.7,
+                      textTransform: "uppercase",
                       color: colors.textMuted,
                     }}
                   >
@@ -224,10 +229,11 @@ export default function SessionDetailScreen(): React.ReactElement {
                     fontFamily: fonts.monoMedium,
                     fontSize: 10,
                     letterSpacing: 0.7,
+                    textTransform: "uppercase",
                     color: colors.labelAccent,
                   }}
                 >
-                  SENDS BY GRADE
+                  {t("trends.sendsByGrade")}
                 </Text>
                 <View style={{ flexDirection: "row", alignItems: "flex-end", gap: 5 }}>
                   {state.data.vm.bars.map((b) => (
@@ -268,10 +274,13 @@ export default function SessionDetailScreen(): React.ReactElement {
             >
               {(
                 [
-                  ["all", `ALL ${state.data.vm.filterCounts.all}`],
-                  ["sent", `SENT ${state.data.vm.filterCounts.sent}`],
-                  ["flash", `FLASHED ${state.data.vm.filterCounts.flash}`],
-                  ["project", `PROJECTS ${state.data.vm.filterCounts.project}`],
+                  ["all", t("sessions.filterAll", { n: state.data.vm.filterCounts.all })],
+                  ["sent", t("sessions.filterSent", { n: state.data.vm.filterCounts.sent })],
+                  ["flash", t("sessions.filterFlashed", { n: state.data.vm.filterCounts.flash })],
+                  [
+                    "project",
+                    t("sessions.filterProjects", { n: state.data.vm.filterCounts.project }),
+                  ],
                 ] as Array<[ClimbFilter, string]>
               ).map(([value, label]) => (
                 <Chip
@@ -289,10 +298,10 @@ export default function SessionDetailScreen(): React.ReactElement {
             >
               {CLIMB_SORTS.map((s) => (
                 <Chip
-                  key={s.value}
-                  label={s.label.toUpperCase()}
-                  active={sort === s.value}
-                  onPress={() => setSort(s.value as ClimbSort)}
+                  key={s}
+                  label={climbSortLabel(s)}
+                  active={sort === s}
+                  onPress={() => setSort(s)}
                 />
               ))}
             </ScrollView>
@@ -331,8 +340,11 @@ export default function SessionDetailScreen(): React.ReactElement {
                           color: "rgba(64,63,76,0.6)",
                         }}
                       >
-                        {c.angleLabel} · {c.burns} {c.burns === 1 ? "BURN" : "BURNS"} · REST{" "}
-                        {c.restLabel}
+                        {t("sessions.climbMeta", {
+                          angle: c.angleLabel,
+                          burns: t("sessions.burns", { count: c.burns }),
+                          rest: c.restLabel,
+                        })}
                       </Text>
                     </View>
                     <View style={{ alignItems: "flex-end", gap: 5 }}>
@@ -350,6 +362,7 @@ export default function SessionDetailScreen(): React.ReactElement {
                           fontFamily: fonts.monoMedium,
                           fontSize: 9,
                           letterSpacing: 0.7,
+                          textTransform: "uppercase",
                           borderRadius: radius.pill,
                           paddingHorizontal: 8,
                           paddingVertical: 3,

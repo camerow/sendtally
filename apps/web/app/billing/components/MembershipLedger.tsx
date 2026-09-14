@@ -1,11 +1,12 @@
 import React from "react";
-import { MEMBERSHIP_PANEL, type MembershipPanelRow } from "@sendtally/features/billing";
+import { membershipPanel, type MembershipPanelRow } from "@sendtally/features/billing";
 
 export const ledgerEyebrow: React.CSSProperties = {
   fontFamily: "var(--font-mono)",
   fontWeight: 500,
   fontSize: 11,
   letterSpacing: "var(--type-label-track)",
+  textTransform: "uppercase",
   color: "var(--text-on-light)",
 };
 
@@ -48,7 +49,7 @@ function LedgerRow({ row }: { row: MembershipPanelRow }): React.ReactElement {
 export function MembershipLedger(): React.ReactElement {
   return (
     <div className="upgrade-ledger">
-      {MEMBERSHIP_PANEL.rows.map((row) => (
+      {membershipPanel().rows.map((row) => (
         <LedgerRow key={row.eyebrow} row={row} />
       ))}
     </div>

@@ -1,9 +1,8 @@
-import { COPY, type TrendCopy } from "../copy";
+import { formatDate } from "@sendtally/features/i18n";
+import type { LandingCopy, TrendCopy } from "../copy";
 import type { MiniBar } from "./MiniBars";
 
-type TrendMetricKey = keyof typeof COPY.trends.cards;
-
-const MONTHS = ["MAR", "APR", "MAY", "JUN", "JUL", "AUG"];
+type TrendMetricKey = keyof LandingCopy["trends"]["cards"];
 
 export type InsightSeries = TrendCopy & {
   metric: TrendMetricKey;
@@ -25,19 +24,20 @@ const PYRAMID: MiniBar[] = [
   { key: "V8", label: "V8", value: 0 },
 ];
 
-const FLASH: MiniBar[] = [22, 26, 25, 31, 33, 36].map((v, i) => ({
-  key: MONTHS[i] ?? `m${i}`,
-  label: MONTHS[i] ?? "",
-  value: v,
-  peak: i === 5,
-}));
+function months(): string[] {
+  return [0, 1, 2, 3, 4, 5].map((i) =>
+    formatDate(new Date(Date.UTC(2000, 2 + i, 1)), { month: "short", timeZone: "UTC" })
+  );
+}
 
-const HARDEST: MiniBar[] = [20, 20, 35, 35, 52, 52].map((v, i) => ({
-  key: MONTHS[i] ?? `m${i}`,
-  label: MONTHS[i] ?? "",
-  value: v,
-  peak: i === 2 || i === 4,
-}));
+function monthly(values: number[], labels: string[], peaks: number[]): MiniBar[] {
+  return values.map((v, i) => ({
+    key: labels[i] ?? `m${i}`,
+    label: labels[i] ?? "",
+    value: v,
+    peak: peaks.includes(i),
+  }));
+}
 
 const AVG_GRADE: MiniBar[] = [
   ["5/18", "V4.2", 42],
@@ -60,14 +60,18 @@ const AVG_GRADE: MiniBar[] = [
   peak: week === "8/3",
 }));
 
-function series(metric: TrendMetricKey, bars: MiniBar[]): InsightSeries {
-  return { metric, bars, ...COPY.trends.cards[metric] };
+export function insightSeries(copy: LandingCopy): InsightSeries[] {
+  const labels = months();
+  const bars: Record<TrendMetricKey, MiniBar[]> = {
+    volume: VOLUME,
+    pyramid: PYRAMID,
+    hardest: monthly([20, 20, 35, 35, 52, 52], labels, [2, 4]),
+    flash: monthly([22, 26, 25, 31, 33, 36], labels, [5]),
+    avggrade: AVG_GRADE,
+  };
+  return (Object.keys(bars) as TrendMetricKey[]).map((metric) => ({
+    metric,
+    bars: bars[metric],
+    ...copy.trends.cards[metric],
+  }));
 }
-
-export const INSIGHT_SERIES: InsightSeries[] = [
-  series("volume", VOLUME),
-  series("pyramid", PYRAMID),
-  series("hardest", HARDEST),
-  series("flash", FLASH),
-  series("avggrade", AVG_GRADE),
-];

@@ -1,9 +1,10 @@
 import React from "react";
 import type { StoredSessionDraft } from "@sendtally/features/log-session";
+import { formatDate, t } from "@sendtally/features/i18n";
 import { DiscardDraftDialog } from "../../components/DiscardDraftDialog";
 
 function savedLabel(at: Date): string {
-  return at.toLocaleString([], { weekday: "long", hour: "numeric", minute: "2-digit" });
+  return formatDate(at, { weekday: "long", hour: "numeric", minute: "2-digit" });
 }
 
 export function DraftBanner({
@@ -23,11 +24,14 @@ export function DraftBanner({
       <div className="draft-banner">
         <div className="draft-banner-text">
           <span className="draft-banner-title">
-            You have an unfinished session from {savedLabel(savedAt)}
+            {t("logSession.unfinished", { when: savedLabel(savedAt) })}
           </span>
           <span className="draft-banner-meta">
-            {draft.climbs.length} {draft.climbs.length === 1 ? "CLIMB" : "CLIMBS"} ·{" "}
-            {draft.startTime}–{draft.endTime} · SAVED ON THIS DEVICE ONLY
+            {t("logSession.draftMeta", {
+              count: draft.climbs.length,
+              start: draft.startTime,
+              end: draft.endTime,
+            })}
           </span>
         </div>
         <div className="draft-banner-actions">
@@ -36,10 +40,10 @@ export function DraftBanner({
             onClick={() => setConfirming(true)}
             className="draft-banner-button draft-banner-button--ghost"
           >
-            Start fresh
+            {t("logSession.startFresh")}
           </button>
           <button type="button" onClick={onResume} className="draft-banner-button">
-            Pick up where I left off
+            {t("logSession.pickUp")}
           </button>
         </div>
       </div>

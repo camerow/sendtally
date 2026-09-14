@@ -21,6 +21,7 @@ export function Label({ on = "dark", size = 11, children, style }: LabelProps): 
         fontWeight: 500,
         fontSize: size,
         letterSpacing: "var(--type-label-track)",
+        textTransform: "uppercase",
         color,
         ...style,
       }}

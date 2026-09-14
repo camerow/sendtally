@@ -71,17 +71,17 @@ describe("projectDetailVM", () => {
   it("reads the sessions invested newest first and the bars oldest first", () => {
     const vm = projectDetailVM(climb({}), sessions, NOW);
     expect(vm.sessions.map((s) => [s.dateLabel, s.attempts])).toEqual([
-      ["4 SEP", 7],
-      ["3 JUN", 4],
+      ["4 Sep", 7],
+      ["3 Jun", 4],
     ]);
     expect(vm.sessions[0]?.notes).toBe("Stuck on the crossover");
     expect(vm.bars.map((b) => b.valueLabel)).toEqual(["4", "7"]);
     expect(vm.bars[1]?.peak).toBe(true);
     expect(vm.stats.map((s) => [s.label, s.value])).toEqual([
-      ["ATTEMPTS", "11"],
-      ["SESSIONS", "2"],
-      ["RUNNING", "14 WEEKS"],
-      ["LAST TRIED", "4 SEP"],
+      ["Attempts", "11"],
+      ["Sessions", "2"],
+      ["Running", "14 weeks"],
+      ["Last tried", "4 Sep"],
     ]);
     expect(vm.storyLabel).toBeNull();
   });
@@ -90,7 +90,7 @@ describe("projectDetailVM", () => {
     const vm = projectDetailVM(climb({ sends: 1, attempts: 42, sessions: 7 }), sessions, NOW);
     expect(vm.status).toBe("sent");
     expect(vm.storyLabel).toBe("42 attempts over 7 sessions");
-    expect(vm.stats[2]).toEqual({ label: "TOOK", value: "13 WEEKS" });
+    expect(vm.stats[2]).toEqual({ label: "Took", value: "13 weeks" });
   });
 
   it("labels a project with no grade by its discipline", () => {
@@ -100,9 +100,9 @@ describe("projectDetailVM", () => {
       NOW
     );
     expect(vm.gradeLabel).toBeNull();
-    expect(vm.disciplineLabel).toBe("ROUTE");
-    expect(vm.stats[2]).toEqual({ label: "RUNNING", value: "-" });
-    expect(vm.stats[3]).toEqual({ label: "LAST TRIED", value: "-" });
+    expect(vm.disciplineLabel).toBe("Route");
+    expect(vm.stats[2]).toEqual({ label: "Running", value: "-" });
+    expect(vm.stats[3]).toEqual({ label: "Last tried", value: "-" });
   });
 });
 
@@ -130,7 +130,7 @@ describe("projectsOverview", () => {
     expect(vm.attemptsInvested).toBe(22);
     expect(vm.avgAttemptsToSend).toBe(26);
     expect(vm.longestRunning?.name).toBe("Blue Crux");
-    expect(vm.longestRunning?.value).toBe("22 WEEKS");
+    expect(vm.longestRunning?.value).toBe("22 weeks");
     expect(vm.mostSessions?.name).toBe("Sandbagger");
     expect(vm.hardestSentLabel).toBe("V7");
   });

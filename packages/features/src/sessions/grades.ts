@@ -7,6 +7,7 @@ import {
   type GradedClimb,
 } from "@sendtally/core";
 import type { SessionRow } from "@sendtally/api-client";
+import { formatNumber, t } from "../i18n";
 
 export type SessionGradeLabel = { kind: "sent" | "tried"; label: string };
 
@@ -14,11 +15,11 @@ export function sessionGradeLabels(session: SessionRow): SessionGradeLabel[] {
   const out: SessionGradeLabel[] = [];
   if (session.top_send_grade >= 0) {
     const label = session.top_send_grade_label ?? `V${session.top_send_grade}`;
-    out.push({ kind: "sent", label: `SENT ${label}` });
+    out.push({ kind: "sent", label: t("sessions.sentGrade", { grade: label }) });
   }
   if (session.top_grade >= 0 && session.top_grade > session.top_send_grade) {
     const label = session.top_grade_label ?? `V${session.top_grade}`;
-    out.push({ kind: "tried", label: `TRIED ${label}` });
+    out.push({ kind: "tried", label: t("sessions.triedGrade", { grade: label }) });
   }
   return out;
 }
@@ -51,7 +52,8 @@ export function gradeFormatter(discipline: Discipline, routeScale: RouteScale): 
     return {
       discipline,
       label: (rank) => (rank >= 0 ? `V${Math.round(rank)}` : "V?"),
-      average: (rank) => `V${rank.toFixed(1)}`,
+      average: (rank) =>
+        `V${formatNumber(rank, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}`,
     };
   }
   const label = (rank: number): string => {

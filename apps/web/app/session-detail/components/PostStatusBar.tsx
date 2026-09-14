@@ -1,5 +1,6 @@
 import React from "react";
 import type { PostActionFeature, PostStatusVM } from "@sendtally/features/session-detail";
+import { t } from "@sendtally/features/i18n";
 
 export type PostStatusBarProps = {
   post: PostStatusVM;
@@ -32,6 +33,7 @@ export function PostStatusBar({ post, action }: PostStatusBarProps): React.React
         <span
           style={{
             ...line,
+            textTransform: "uppercase",
             color: post.alert ? "var(--text-label-accent)" : "rgba(64,63,76,0.55)",
           }}
         >
@@ -69,7 +71,7 @@ export function PostStatusBar({ post, action }: PostStatusBarProps): React.React
             whiteSpace: "nowrap",
           }}
         >
-          {action.busy ? "Posting…" : post.actionLabel}
+          {action.busy ? t("sessions.posting") : post.actionLabel}
         </button>
       )}
     </div>

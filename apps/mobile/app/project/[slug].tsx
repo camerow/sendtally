@@ -3,6 +3,7 @@ import React from "react";
 import { ActivityIndicator, Alert, Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useProject } from "@sendtally/features/climbs";
+import { t } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { Icon } from "../../components/Icon";
 import { BetaCard } from "../../features/projects/BetaCard";
@@ -13,6 +14,7 @@ const label = {
   fontFamily: fonts.monoMedium,
   fontSize: 10,
   letterSpacing: 0.8,
+  textTransform: "uppercase",
   color: colors.textSecondary,
 } as const;
 
@@ -23,10 +25,10 @@ export default function ProjectDetailScreen(): React.ReactElement {
   const { state } = project;
 
   function confirmUnmark(name: string, keeps: string): void {
-    Alert.alert(`Stop tracking ${name}?`, `It leaves your projects list. ${keeps}`, [
-      { text: "Cancel", style: "cancel" },
+    Alert.alert(t("projects.stopTracking", { name }), t("projects.stopTrackingBody", { keeps }), [
+      { text: t("common.cancel"), style: "cancel" },
       {
-        text: "Unmark",
+        text: t("projects.unmark"),
         style: "destructive",
         onPress: () => {
           void project.unmark().then(() => router.back());
@@ -43,7 +45,7 @@ export default function ProjectDetailScreen(): React.ReactElement {
             <ActivityIndicator color={colors.gunmetal} />
           ) : (
             <Text style={{ fontFamily: fonts.mono, fontSize: 13, color: colors.textMuted }}>
-              Could not load this project.
+              {t("projects.loadOneFailed")}
             </Text>
           )}
         </View>
@@ -55,8 +57,11 @@ export default function ProjectDetailScreen(): React.ReactElement {
   const sent = vm.status === "sent";
   const keeps =
     vm.sessions.length === 0
-      ? "Nothing is logged against it yet."
-      : `The ${vm.stats[0]?.value} attempts over ${vm.stats[1]?.value} sessions stay in your log and the beta stays on the climb.`;
+      ? t("projects.keepsNothing")
+      : t("projects.historyStays", {
+          attempts: vm.stats[0]?.value ?? "",
+          sessions: vm.stats[1]?.value ?? "",
+        });
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.white }} edges={["top"]}>
@@ -67,6 +72,7 @@ export default function ProjectDetailScreen(): React.ReactElement {
               fontFamily: fonts.monoSemiBold,
               fontSize: 15,
               color: colors.gunmetal,
+              textTransform: vm.gradeLabel === null ? "uppercase" : "none",
               paddingHorizontal: 12,
               paddingVertical: 7,
               borderRadius: radius.control,
@@ -99,7 +105,7 @@ export default function ProjectDetailScreen(): React.ReactElement {
               overflow: "hidden",
             }}
           >
-            {sent ? "SENT" : "OPEN"}
+            {sent ? t("common.sentStatus") : t("common.open")}
           </Text>
         </View>
 
@@ -107,7 +113,9 @@ export default function ProjectDetailScreen(): React.ReactElement {
           <View
             style={{ gap: 8, padding: 18, borderRadius: radius.card, backgroundColor: colors.gold }}
           >
-            <Text style={{ ...label, color: colors.textSecondary }}>SENT {vm.stats[3]?.value}</Text>
+            <Text style={{ ...label, color: colors.textSecondary }}>
+              {t("projects.sentOn", { date: vm.stats[3]?.value ?? "" })}
+            </Text>
             <Text
               style={{
                 fontFamily: fonts.display,
@@ -119,7 +127,10 @@ export default function ProjectDetailScreen(): React.ReactElement {
               {vm.storyLabel}
             </Text>
             <Text style={{ ...label, color: colors.textSecondary }}>
-              FIRST TRIED {vm.bars[0]?.axisLabel ?? "-"} · {vm.stats[2]?.value}
+              {t("projects.firstTried", {
+                date: vm.bars[0]?.axisLabel ?? "-",
+                value: vm.stats[2]?.value ?? "",
+              })}
             </Text>
           </View>
         )}
@@ -148,7 +159,12 @@ export default function ProjectDetailScreen(): React.ReactElement {
             >
               <Text style={label}>{stat.label}</Text>
               <Text
-                style={{ fontFamily: fonts.monoSemiBold, fontSize: 17, color: colors.gunmetal }}
+                style={{
+                  fontFamily: fonts.monoSemiBold,
+                  fontSize: 17,
+                  color: colors.gunmetal,
+                  textTransform: "uppercase",
+                }}
               >
                 {stat.value}
               </Text>
@@ -172,10 +188,11 @@ export default function ProjectDetailScreen(): React.ReactElement {
                 fontFamily: fonts.monoMedium,
                 fontSize: 11,
                 letterSpacing: 0.8,
+                textTransform: "uppercase",
                 color: colors.labelAccent,
               }}
             >
-              ATTEMPTS PER SESSION
+              {t("projects.attemptsPerSession")}
             </Text>
             <View style={{ flex: 1 }} />
             <Text style={{ ...label, color: colors.textMuted }}>{vm.rangeLabel}</Text>
@@ -189,7 +206,7 @@ export default function ProjectDetailScreen(): React.ReactElement {
                 color: colors.textSecondary,
               }}
             >
-              Log a session with this climb in it and every go you put in shows up here.
+              {t("projects.chartEmpty")}
             </Text>
           ) : (
             <ProjectChart bars={vm.bars} />
@@ -220,7 +237,7 @@ export default function ProjectDetailScreen(): React.ReactElement {
               color: colors.gunmetal,
             }}
           >
-            Sessions invested
+            {t("projects.sessionsInvested")}
           </Text>
           <Text style={{ ...label, color: colors.textMuted }}>{vm.sessionsMetaLabel}</Text>
         </View>
@@ -240,7 +257,12 @@ export default function ProjectDetailScreen(): React.ReactElement {
               <View style={{ width: 62, gap: 3 }}>
                 <Text style={label}>{session.weekday}</Text>
                 <Text
-                  style={{ fontFamily: fonts.monoSemiBold, fontSize: 16, color: colors.gunmetal }}
+                  style={{
+                    fontFamily: fonts.monoSemiBold,
+                    fontSize: 16,
+                    color: colors.gunmetal,
+                    textTransform: "uppercase",
+                  }}
                 >
                   {session.dateLabel}
                 </Text>
@@ -254,10 +276,15 @@ export default function ProjectDetailScreen(): React.ReactElement {
                 </Text>
                 <Text
                   numberOfLines={1}
-                  style={{ fontFamily: fonts.mono, fontSize: 11, color: colors.textSecondary }}
+                  style={{
+                    fontFamily: fonts.mono,
+                    fontSize: 11,
+                    color: colors.textSecondary,
+                    textTransform: "uppercase",
+                  }}
                 >
                   {session.metaLabel}
-                  {session.sent ? " · SENT" : ""}
+                  {session.sent ? t("projects.sessionSent") : ""}
                 </Text>
                 {session.notes !== null && (
                   <Text
@@ -280,7 +307,7 @@ export default function ProjectDetailScreen(): React.ReactElement {
                   {session.attempts}
                 </Text>
                 <Text style={{ ...label, fontSize: 9, color: colors.textMuted }}>
-                  {session.attempts === 1 ? "ATTEMPT" : "ATTEMPTS"}
+                  {t("projects.attemptsUnit", { count: session.attempts })}
                 </Text>
               </View>
               <Icon name="chevron" size={14} color={colors.textFaint} />
@@ -288,7 +315,7 @@ export default function ProjectDetailScreen(): React.ReactElement {
           </Link>
         ))}
         {vm.sessions.length === 0 && (
-          <Text style={{ ...label, color: colors.textMuted }}>NOT TRIED YET</Text>
+          <Text style={{ ...label, color: colors.textMuted }}>{t("projects.notTriedYet")}</Text>
         )}
 
         <Pressable
@@ -306,7 +333,7 @@ export default function ProjectDetailScreen(): React.ReactElement {
           <Text
             style={{ fontFamily: fonts.sansSemiBold, fontSize: 15, color: colors.watermelonInk }}
           >
-            Unmark project
+            {t("projects.unmarkProject")}
           </Text>
         </Pressable>
       </ScrollView>

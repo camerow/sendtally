@@ -1,6 +1,7 @@
 import React from "react";
 import type { StravaPostingFeature } from "@sendtally/features/settings";
 import { bodyText, messageText, rowDivider } from "./styles";
+import { t } from "@sendtally/features/i18n";
 import { Switch } from "./Switch";
 
 export type StravaPostingSectionProps = {
@@ -31,19 +32,14 @@ export function StravaPostingSection({ posting }: StravaPostingSectionProps): Re
       <div style={rowDivider} />
       <Row>
         <span style={{ display: "flex", flexDirection: "column", gap: 3, maxWidth: 380 }}>
-          <span style={rowTitle}>Post sessions to Strava</span>
-          {!posting.enabled && (
-            <p style={bodyText}>
-              Off. Sessions stay in sendtally, and each one keeps a Post to Strava action on its own
-              page.
-            </p>
-          )}
+          <span style={rowTitle}>{t("settings.postToStrava")}</span>
+          {!posting.enabled && <p style={bodyText}>{t("settings.postingOff")}</p>}
         </span>
         <Switch
           checked={posting.enabled}
           onChange={posting.setEnabled}
           disabled={posting.busy}
-          label="Post sessions to Strava"
+          label={t("settings.postToStrava")}
         />
       </Row>
 
@@ -52,8 +48,8 @@ export function StravaPostingSection({ posting }: StravaPostingSectionProps): Re
           <div style={rowDivider} />
           <Row>
             <span style={{ display: "flex", flexDirection: "column", gap: 3, maxWidth: 380 }}>
-              <span style={rowTitle}>Post sessions logged from</span>
-              <p style={bodyText}>Anything earlier stays in sendtally only.</p>
+              <span style={rowTitle}>{t("settings.postSince")}</span>
+              <p style={bodyText}>{t("settings.postSinceBody")}</p>
             </span>
             <input
               type="date"

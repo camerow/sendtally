@@ -42,6 +42,7 @@ export function SectionHeader({
           fontSize: 10,
           lineHeight: 13,
           letterSpacing: 0.8,
+          textTransform: "uppercase",
           color: colors.textMuted,
         }}
       >

@@ -1,0 +1,40 @@
+export const onboarding = {
+  "onboarding.footer": "Eintragen kostenlos · Anmeldung per Einmalcode · kein Passwort",
+  "onboarding.featureOf": "Feature {n} von {total}",
+  "onboarding.log.eyebrow": "Eintragen",
+  "onboarding.log.title": "Eine Session ist in einer Minute eingetragen.",
+  "onboarding.log.body":
+    "Datum, Zeiten, Grade in der Skala, in der du denkst, Begehungen und Versuche, Anzahl der Versuche und auf Wunsch ein Name für die Kletterei.",
+  "onboarding.effort.eyebrow": "Anstrengungswert",
+  "onboarding.effort.title": "Ein harter Abend soll sich auch wie einer lesen.",
+  "onboarding.effort.body":
+    "Jede Session wird von 1 bis 10 an deinen eigenen letzten acht Wochen gemessen statt an einer festen Skala. So sagt die Zahl etwas über dich aus.",
+  "onboarding.strava.title": "Eine Aktivität pro Session, nie doppelt.",
+  "onboarding.strava.body":
+    "Jede Session wird als eine Rock Climbing-Aktivität gepostet, mit Kletterprotokoll und Anstrengungswert in der Beschreibung. Sessions tragen einen Fingerabdruck, ein erneuter Sync postet also nie zweimal.",
+  "onboarding.trends.title": "Sieh, was sechs Monate ergeben.",
+  "onboarding.trends.body":
+    "Volumen über die Zeit, Gradpyramide, härteste Begehung, Flash-Quote, Durchschnittsgrad. Eintragen und auf Strava posten sind kostenlos; die Mitgliedschaft bringt die Trends.",
+  "onboarding.art.logHeader": "Do 3. Sep · Halle · 1h 52m",
+  "onboarding.art.climbCount": "14 Boulder",
+  "onboarding.art.sendTries": "Begehung · 3 Versuche",
+  "onboarding.art.sendTry": "Begehung · 1 Versuch",
+  "onboarding.art.attemptTries": "Versuch · 4 Versuche",
+  "onboarding.art.logSummary": "10 Begehungen · 4 Versuche · Ø V4.6",
+  "onboarding.art.hardSession": "Harte Session",
+  "onboarding.art.effortNote":
+    "Gemessen an deinen eigenen letzten acht Wochen, nicht an einer globalen Skala.",
+  "onboarding.art.stravaHeader": "Do 3. Sep · 1h 52m",
+  "onboarding.art.stravaTitle": "Harte Klettersession",
+  "onboarding.art.sentGrade": "V6 geschafft",
+  "onboarding.art.triedGrade": "V7 probiert",
+  "onboarding.art.stravaMeta": "14 Boulder · RPE 8/10",
+  "onboarding.art.stravaNote": "Einmal gepostet, mit dem Kletterprotokoll in der Beschreibung.",
+  "onboarding.art.climbsPerWeek": "Klettereien pro Woche",
+  "onboarding.art.lastEightWeeks": "Letzte 8 Wochen",
+  "onboarding.art.jul": "Jul",
+  "onboarding.art.aug": "Aug",
+  "onboarding.art.sep": "Sep",
+  "onboarding.art.hardestSend": "Härteste Begehung V7",
+  "onboarding.art.flashRate": "Flash-Quote 38%",
+} as const;

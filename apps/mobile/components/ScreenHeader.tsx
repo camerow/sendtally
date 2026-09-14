@@ -39,6 +39,7 @@ export function ScreenHeader({ title, caption = null }: ScreenHeaderProps): Reac
             fontFamily: fonts.monoMedium,
             fontSize: 10,
             letterSpacing: 0.8,
+            textTransform: "uppercase",
             color: colors.textMuted,
           }}
         >

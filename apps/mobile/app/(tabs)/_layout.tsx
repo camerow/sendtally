@@ -3,6 +3,7 @@ import { Redirect, Tabs } from "expo-router";
 import React from "react";
 import { View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { t } from "@sendtally/features/i18n";
 import { colors, fonts } from "@sendtally/design/tokens";
 import { Icon, type IconName } from "../../components/Icon";
 
@@ -55,24 +56,29 @@ export default function TabsLayout(): React.ReactElement | null {
         tabBarInactiveTintColor: colors.textMuted,
         tabBarItemStyle: { marginHorizontal: 4, marginVertical: 5 },
         tabBarLabelPosition: "below-icon",
-        tabBarLabelStyle: { fontFamily: fonts.monoMedium, fontSize: 10, letterSpacing: 0.6 },
+        tabBarLabelStyle: {
+          fontFamily: fonts.monoMedium,
+          fontSize: 10,
+          letterSpacing: 0.6,
+          textTransform: "uppercase",
+        },
       }}
     >
       <Tabs.Screen
         name="sessions"
-        options={{ tabBarLabel: "SESSIONS", tabBarIcon: tabIcon("sessions") }}
+        options={{ tabBarLabel: t("common.sessions"), tabBarIcon: tabIcon("sessions") }}
       />
       <Tabs.Screen
         name="projects"
-        options={{ tabBarLabel: "PROJECTS", tabBarIcon: tabIcon("projects") }}
+        options={{ tabBarLabel: t("common.projects"), tabBarIcon: tabIcon("projects") }}
       />
       <Tabs.Screen
         name="trends"
-        options={{ tabBarLabel: "TRENDS", tabBarIcon: tabIcon("trends") }}
+        options={{ tabBarLabel: t("common.trends"), tabBarIcon: tabIcon("trends") }}
       />
       <Tabs.Screen
         name="settings"
-        options={{ tabBarLabel: "SETTINGS", tabBarIcon: tabIcon("settings") }}
+        options={{ tabBarLabel: t("settings.tab"), tabBarIcon: tabIcon("settings") }}
       />
     </Tabs>
   );

@@ -2,11 +2,13 @@ import React from "react";
 import type { SendtallyApi } from "@sendtally/api-client";
 import { useSessionNotes } from "@sendtally/features/session-detail";
 import { SESSION_NOTE_MAX } from "@sendtally/features/sessions";
+import { t } from "@sendtally/features/i18n";
 
 const CLAMP_LINES = 4;
 
 const heading: React.CSSProperties = {
   fontFamily: "var(--font-mono)",
+  textTransform: "uppercase",
   fontWeight: 500,
   fontSize: 11,
   letterSpacing: "0.08em",
@@ -64,13 +66,13 @@ export function SessionNotes({
   if (editing) {
     return (
       <section style={card}>
-        <span style={heading}>NOTES</span>
+        <span style={heading}>{t("common.notes")}</span>
         <textarea
           value={draft}
           autoFocus
           rows={6}
           maxLength={SESSION_NOTE_MAX}
-          placeholder="How it felt, what to try next time."
+          placeholder={t("common.notesPlaceholder")}
           onChange={(e) => setDraft(e.target.value)}
           style={{
             fontFamily: "var(--font-sans)",
@@ -95,11 +97,11 @@ export function SessionNotes({
           }}
         >
           <span style={error === null ? meta : { ...meta, color: "var(--bs-watermelon-ink)" }}>
-            {error ?? `${draft.length} / ${SESSION_NOTE_MAX}`}
+            {error ?? t("sessionDetail.noteCounter", { n: draft.length, max: SESSION_NOTE_MAX })}
           </span>
           <div style={{ display: "flex", gap: 8 }}>
             <button type="button" onClick={cancel} disabled={saving} style={button}>
-              Cancel
+              {t("common.cancel")}
             </button>
             <button
               type="button"
@@ -113,7 +115,7 @@ export function SessionNotes({
                 opacity: saving ? 0.45 : 1,
               }}
             >
-              {saving ? "Saving…" : "Save note"}
+              {saving ? t("common.saving") : t("sessions.saveNote")}
             </button>
           </div>
         </div>
@@ -137,13 +139,13 @@ export function SessionNotes({
         }}
       >
         <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-          <span style={{ ...heading, color: "rgba(64,63,76,0.55)" }}>NOTES</span>
+          <span style={{ ...heading, color: "rgba(64,63,76,0.55)" }}>{t("common.notes")}</span>
           <span style={{ fontSize: 14, lineHeight: 1.55, color: "rgba(64,63,76,0.72)" }}>
-            How it felt, what to try next time.
+            {t("common.notesPlaceholder")}
           </span>
         </div>
         <button type="button" onClick={start} style={{ ...button, padding: "10px 16px" }}>
-          Add a note
+          {t("sessions.addANote")}
         </button>
       </section>
     );
@@ -156,9 +158,9 @@ export function SessionNotes({
       <div
         style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14 }}
       >
-        <span style={heading}>NOTES</span>
+        <span style={heading}>{t("common.notes")}</span>
         <button type="button" onClick={start} style={button}>
-          Edit note
+          {t("sessionDetail.editNote")}
         </button>
       </div>
       <p
@@ -188,6 +190,7 @@ export function SessionNotes({
           style={{
             ...meta,
             alignSelf: "flex-start",
+            textTransform: "uppercase",
             color: "var(--text-link)",
             background: "none",
             border: "none",
@@ -195,7 +198,7 @@ export function SessionNotes({
             cursor: "pointer",
           }}
         >
-          {expanded ? "SHOW LESS" : "SHOW MORE"}
+          {t(expanded ? "sessions.showLess" : "sessions.showMore")}
         </button>
       )}
     </section>

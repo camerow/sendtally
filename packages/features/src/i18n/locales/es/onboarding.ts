@@ -1,0 +1,40 @@
+export const onboarding = {
+  "onboarding.footer": "Registro gratis · acceso con código de un solo uso · sin contraseña",
+  "onboarding.featureOf": "Función {n} de {total}",
+  "onboarding.log.eyebrow": "Registro",
+  "onboarding.log.title": "Registrar una sesión lleva un minuto.",
+  "onboarding.log.body":
+    "Fecha, horas, grados en la escala en la que pienses, encadenes e intentos, pegues y un nombre para la vía si quieres.",
+  "onboarding.effort.eyebrow": "Puntuación de esfuerzo",
+  "onboarding.effort.title": "Una noche dura debe leerse como una noche dura.",
+  "onboarding.effort.body":
+    "Cada sesión se puntúa del 1 al 10 contra tus propias últimas ocho semanas en lugar de contra una escala fija, así que el número dice algo de ti.",
+  "onboarding.strava.title": "Una actividad por sesión, nunca duplicada.",
+  "onboarding.strava.body":
+    "Cada sesión se publica como una única actividad Rock Climbing con el registro de vías y la puntuación de esfuerzo en la descripción. Las sesiones llevan una huella única, así que volver a sincronizar nunca publica dos veces.",
+  "onboarding.trends.title": "Mira lo que suman seis meses.",
+  "onboarding.trends.body":
+    "Volumen a lo largo del tiempo, pirámide de grados, encadene más duro, porcentaje de flash, grado medio. Registrar y publicar en Strava es gratis; la suscripción añade las tendencias.",
+  "onboarding.art.logHeader": "Jue 3 sep · Interior · 1h 52m",
+  "onboarding.art.climbCount": "14 bloques",
+  "onboarding.art.sendTries": "Encadenado · 3 pegues",
+  "onboarding.art.sendTry": "Encadenado · 1 pegue",
+  "onboarding.art.attemptTries": "Intento · 4 pegues",
+  "onboarding.art.logSummary": "10 encadenes · 4 intentos · media V4.6",
+  "onboarding.art.hardSession": "Sesión dura",
+  "onboarding.art.effortNote":
+    "Puntuado contra tus propias últimas ocho semanas, no contra una escala global.",
+  "onboarding.art.stravaHeader": "Jue 3 sep · 1h 52m",
+  "onboarding.art.stravaTitle": "Sesión dura de escalada",
+  "onboarding.art.sentGrade": "Encadenado V6",
+  "onboarding.art.triedGrade": "Probado V7",
+  "onboarding.art.stravaMeta": "14 bloques · RPE 8/10",
+  "onboarding.art.stravaNote": "Publicado una vez, con el registro de bloques en la descripción.",
+  "onboarding.art.climbsPerWeek": "Bloques por semana",
+  "onboarding.art.lastEightWeeks": "Últimas 8 semanas",
+  "onboarding.art.jul": "Jul",
+  "onboarding.art.aug": "Ago",
+  "onboarding.art.sep": "Sep",
+  "onboarding.art.hardestSend": "Encadene más duro V7",
+  "onboarding.art.flashRate": "Porcentaje de flash 38%",
+} as const;

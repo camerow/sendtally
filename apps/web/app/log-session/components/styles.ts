@@ -5,6 +5,7 @@ export const monoLabel: React.CSSProperties = {
   fontWeight: 500,
   fontSize: 11,
   letterSpacing: "0.08em",
+  textTransform: "uppercase",
   color: "rgba(64,63,76,0.72)",
 };
 
@@ -32,6 +33,7 @@ export const chipStyle = (active: boolean): React.CSSProperties => ({
   fontWeight: 500,
   fontSize: 11,
   letterSpacing: "0.06em",
+  textTransform: "uppercase",
   padding: "10px 16px",
   borderRadius: "var(--radius-pill)",
   cursor: "pointer",

@@ -2,6 +2,7 @@ import React from "react";
 import { Link, useNavigate } from "react-router";
 import { useProject } from "@sendtally/features/climbs";
 import { Button } from "@sendtally/design";
+import { t } from "@sendtally/features/i18n";
 import { useClientApi } from "../../lib/useClientApi";
 import { BetaCard } from "./BetaCard";
 import { ProjectChart } from "./ProjectChart";
@@ -15,6 +16,7 @@ export type ProjectDetailProps = {
 
 const monoMuted: React.CSSProperties = {
   fontFamily: "var(--font-mono)",
+  textTransform: "uppercase",
   fontWeight: 500,
   fontSize: 11,
   letterSpacing: "0.06em",
@@ -23,6 +25,7 @@ const monoMuted: React.CSSProperties = {
 
 const cardLabel: React.CSSProperties = {
   fontFamily: "var(--font-mono)",
+  textTransform: "uppercase",
   fontWeight: 500,
   fontSize: 11,
   letterSpacing: "0.08em",
@@ -37,12 +40,12 @@ export function ProjectDetail({ apiUrl, slug }: ProjectDetailProps): React.React
   const { state } = project;
 
   if (state.status === "loading") {
-    return <span style={{ ...monoMuted, display: "block" }}>LOADING…</span>;
+    return <span style={{ ...monoMuted, display: "block" }}>{t("common.loading")}</span>;
   }
   if (state.status === "error") {
     return (
-      <span style={{ ...monoMuted, display: "block" }}>
-        Could not load this project. <Link to="/app/projects">Back to projects</Link>
+      <span style={{ ...monoMuted, textTransform: "none", display: "block" }}>
+        {t("projects.loadOneFailed")} <Link to="/app/projects">{t("projects.backToProjects")}</Link>
       </span>
     );
   }
@@ -52,26 +55,35 @@ export function ProjectDetail({ apiUrl, slug }: ProjectDetailProps): React.React
 
   return (
     <div>
-      <BackLink to="/app/projects">PROJECTS</BackLink>
+      <BackLink to="/app/projects">{t("common.projects")}</BackLink>
 
       <div className="project-detail-head">
-        <span className="project-detail-grade">{vm.gradeLabel ?? vm.disciplineLabel}</span>
+        <span className="project-detail-grade">
+          {vm.gradeLabel ?? (
+            <span style={{ textTransform: "uppercase" }}>{vm.disciplineLabel}</span>
+          )}
+        </span>
         <h1 className="project-detail-title">{vm.name}</h1>
         <span className={sent ? "project-status project-status--sent" : "project-status"}>
-          {sent ? "SENT" : "OPEN"}
+          {t(sent ? "common.sent" : "projects.statusOpen")}
         </span>
         <div style={{ flex: 1 }} />
         <Button variant="ghostOnLight" size="sm" onClick={() => setUnmarking(true)}>
-          Unmark project
+          {t("projects.unmarkProject")}
         </Button>
       </div>
 
       {sent && vm.storyLabel !== null && (
         <div className="project-send-banner">
-          <span className="project-send-banner-label">SENT {vm.stats[3]?.value}</span>
+          <span className="project-send-banner-label">
+            {t("projects.sentBanner", { value: vm.stats[3]?.value ?? "" })}
+          </span>
           <span className="project-send-banner-value">{vm.storyLabel}</span>
           <span className="project-send-banner-label">
-            FIRST TRIED {vm.bars[0]?.axisLabel ?? "-"} · {vm.stats[2]?.value}
+            {t("projects.firstTried", {
+              date: vm.bars[0]?.axisLabel ?? "-",
+              value: vm.stats[2]?.value ?? "",
+            })}
           </span>
         </div>
       )}
@@ -88,12 +100,20 @@ export function ProjectDetail({ apiUrl, slug }: ProjectDetailProps): React.React
                 fontWeight: 500,
                 fontSize: 10,
                 letterSpacing: "0.08em",
+                textTransform: "uppercase",
                 color: "var(--text-on-white-secondary)",
               }}
             >
               {stat.label}
             </span>
-            <span style={{ fontFamily: "var(--font-mono)", fontWeight: 600, fontSize: 17 }}>
+            <span
+              style={{
+                fontFamily: "var(--font-mono)",
+                fontWeight: 600,
+                fontSize: 17,
+                textTransform: "uppercase",
+              }}
+            >
               {stat.value}
             </span>
           </div>
@@ -103,7 +123,7 @@ export function ProjectDetail({ apiUrl, slug }: ProjectDetailProps): React.React
       <div className="project-detail-panels">
         <div className="project-card">
           <div style={{ display: "flex", alignItems: "baseline", gap: 12 }}>
-            <span style={cardLabel}>ATTEMPTS PER SESSION</span>
+            <span style={cardLabel}>{t("projects.attemptsPerSession")}</span>
             <div style={{ flex: 1 }} />
             <span style={{ ...monoMuted, fontSize: 10, letterSpacing: "0.08em" }}>
               {vm.rangeLabel}
@@ -113,7 +133,7 @@ export function ProjectDetail({ apiUrl, slug }: ProjectDetailProps): React.React
             <span
               style={{ fontSize: 14, lineHeight: 1.55, color: "var(--text-on-white-secondary)" }}
             >
-              Log a session with this climb in it and every go you put in shows up here.
+              {t("projects.chartEmpty")}
             </span>
           ) : (
             <ProjectChart bars={vm.bars} />
@@ -128,7 +148,7 @@ export function ProjectDetail({ apiUrl, slug }: ProjectDetailProps): React.React
       </div>
 
       <div className="projects-section">
-        <h2 className="projects-section-title">Sessions invested</h2>
+        <h2 className="projects-section-title">{t("projects.sessionsInvested")}</h2>
         <span className="projects-section-meta">{vm.sessionsMetaLabel}</span>
       </div>
 
@@ -143,7 +163,14 @@ export function ProjectDetail({ apiUrl, slug }: ProjectDetailProps): React.React
               <span style={{ ...monoMuted, fontSize: 10, letterSpacing: "0.08em" }}>
                 {session.weekday}
               </span>
-              <span style={{ fontFamily: "var(--font-mono)", fontWeight: 600, fontSize: 16 }}>
+              <span
+                style={{
+                  fontFamily: "var(--font-mono)",
+                  fontWeight: 600,
+                  fontSize: 16,
+                  textTransform: "uppercase",
+                }}
+              >
                 {session.dateLabel}
               </span>
             </span>
@@ -157,7 +184,9 @@ export function ProjectDetail({ apiUrl, slug }: ProjectDetailProps): React.React
                 }}
               >
                 {session.metaLabel}
-                {session.sent ? " · SENT" : ""}
+                {session.sent && (
+                  <span style={{ textTransform: "uppercase" }}>{t("projects.sessionSent")}</span>
+                )}
               </span>
             </span>
             <span className="project-session-note">{session.notes ?? ""}</span>
@@ -168,14 +197,14 @@ export function ProjectDetail({ apiUrl, slug }: ProjectDetailProps): React.React
                 {session.attempts}
               </span>
               <span style={{ ...monoMuted, fontSize: 9 }}>
-                {session.attempts === 1 ? "ATTEMPT" : "ATTEMPTS"}
+                {t("projects.attemptsUnit", { count: session.attempts })}
               </span>
             </span>
             <span className="project-chevron">›</span>
           </Link>
         ))}
         {vm.sessions.length === 0 && (
-          <span style={{ ...monoMuted, padding: "18px 4px" }}>NOT TRIED YET</span>
+          <span style={{ ...monoMuted, padding: "18px 4px" }}>{t("projects.notTriedYet")}</span>
         )}
       </div>
 

@@ -1,10 +1,13 @@
 import React from "react";
+import { disciplineLabel } from "@sendtally/features/log-session";
 import {
   PREVIEW_TREND_RANGE,
   TREND_DISCIPLINES,
   TREND_RANGES,
+  trendRangeLabel,
   type TrendsFeature,
 } from "@sendtally/features/trends";
+import { t } from "@sendtally/features/i18n";
 import { chipStyle } from "../../components/chip";
 
 const lockedChip: React.CSSProperties = {
@@ -64,29 +67,31 @@ export function TrendFilters({
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           {TREND_DISCIPLINES.map((d) => (
             <button
-              key={d.value}
-              onClick={() => setDiscipline(d.value)}
-              aria-pressed={discipline === d.value}
-              style={chipStyle(discipline === d.value)}
+              key={d}
+              onClick={() => setDiscipline(d)}
+              aria-pressed={discipline === d}
+              style={chipStyle(discipline === d)}
             >
-              {d.label}
+              {disciplineLabel(d)}
             </button>
           ))}
         </div>
       )}
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
         {TREND_RANGES.map((r) => {
-          const locked = preview && r.value !== PREVIEW_TREND_RANGE;
+          const locked = preview && r !== PREVIEW_TREND_RANGE;
           return (
             <button
-              key={r.value}
-              onClick={() => (locked ? onLockedRange?.() : setRange(r.value))}
-              aria-pressed={range === r.value}
-              aria-label={locked ? `${r.label}, members only` : undefined}
-              style={chipStyle(range === r.value, locked ? lockedChip : {})}
+              key={r}
+              onClick={() => (locked ? onLockedRange?.() : setRange(r))}
+              aria-pressed={range === r}
+              aria-label={
+                locked ? t("common.membersOnly", { label: trendRangeLabel(r) }) : undefined
+              }
+              style={chipStyle(range === r, locked ? lockedChip : {})}
             >
               {locked && <LockGlyph />}
-              {r.label}
+              {trendRangeLabel(r)}
             </button>
           );
         })}
@@ -94,7 +99,7 @@ export function TrendFilters({
       {tagOptions.length > 0 && (
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           <button onClick={clearTags} style={chipStyle(selectedTags.length === 0)}>
-            ALL TAGS
+            {t("trends.allTags")}
           </button>
           {tagOptions.map((tag) => (
             <button
@@ -103,7 +108,7 @@ export function TrendFilters({
               aria-pressed={selectedTags.includes(tag.slug)}
               style={chipStyle(selectedTags.includes(tag.slug))}
             >
-              {tag.name.toUpperCase()}
+              {tag.name}
             </button>
           ))}
         </div>

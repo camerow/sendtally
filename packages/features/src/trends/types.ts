@@ -1,28 +1,25 @@
 import type { Discipline } from "@sendtally/core";
+import { t } from "../i18n";
 
 export type { Discipline };
 
 export type TrendMetric = "volume" | "pyramid" | "hardest" | "flash" | "avggrade";
 
-export const TREND_DISCIPLINES: Array<{ value: Discipline; label: string }> = [
-  { value: "boulder", label: "BOULDERS" },
-  { value: "route", label: "ROUTES" },
-];
+export const TREND_DISCIPLINES: readonly Discipline[] = ["boulder", "route"];
 
 export type TrendRange = "7d" | "1m" | "3m" | "6m" | "ytd" | "1y" | "all";
 
 /** The one range a non-member can see; every longer range is the membership. */
 export const PREVIEW_TREND_RANGE: TrendRange = "7d";
 
-export const TREND_RANGES: Array<{ value: TrendRange; label: string }> = [
-  { value: "7d", label: "7D" },
-  { value: "1m", label: "1M" },
-  { value: "3m", label: "3M" },
-  { value: "6m", label: "6M" },
-  { value: "ytd", label: "YTD" },
-  { value: "1y", label: "1Y" },
-  { value: "all", label: "ALL" },
-];
+export const TREND_RANGES: readonly TrendRange[] = ["7d", "1m", "3m", "6m", "ytd", "1y", "all"];
+
+export function trendRangeLabel(range: TrendRange): string {
+  if (range === "ytd") return t("trends.rangeShortYtd");
+  if (range === "1y") return t("trends.rangeShort1y");
+  if (range === "all") return t("trends.rangeShortAll");
+  return range.toUpperCase();
+}
 
 export type TrendBarVM = {
   height: number;

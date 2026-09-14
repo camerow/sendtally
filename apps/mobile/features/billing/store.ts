@@ -1,3 +1,4 @@
+import { t, type MessageKey } from "@sendtally/features/i18n";
 import { Platform } from "react-native";
 import Purchases, {
   PACKAGE_TYPE,
@@ -9,7 +10,9 @@ import { REVENUECAT_API_KEY } from "../../lib/config";
 
 export const storeBillingAvailable = REVENUECAT_API_KEY !== "";
 
-export const STORE_NAME = Platform.OS === "ios" ? "the App Store" : "Google Play";
+export function storeLabel(): string {
+  return Platform.OS === "ios" ? t("billing.storeApp") : "Google Play";
+}
 
 const MANAGE_URL =
   Platform.OS === "ios"
@@ -63,30 +66,37 @@ function isCancellation(err: unknown): boolean {
   );
 }
 
-const PERIOD_LABELS: Partial<Record<PACKAGE_TYPE, string>> = {
-  [PACKAGE_TYPE.WEEKLY]: "week",
-  [PACKAGE_TYPE.MONTHLY]: "month",
-  [PACKAGE_TYPE.TWO_MONTH]: "2 months",
-  [PACKAGE_TYPE.THREE_MONTH]: "3 months",
-  [PACKAGE_TYPE.SIX_MONTH]: "6 months",
-  [PACKAGE_TYPE.ANNUAL]: "year",
+const PERIOD_KEYS: Partial<Record<PACKAGE_TYPE, MessageKey>> = {
+  [PACKAGE_TYPE.WEEKLY]: "billing.period.week",
+  [PACKAGE_TYPE.MONTHLY]: "billing.period.month",
+  [PACKAGE_TYPE.TWO_MONTH]: "billing.plan.twoMonths",
+  [PACKAGE_TYPE.THREE_MONTH]: "billing.plan.threeMonths",
+  [PACKAGE_TYPE.SIX_MONTH]: "billing.plan.sixMonths",
+  [PACKAGE_TYPE.ANNUAL]: "billing.period.year",
 };
+
+function periodLabel(type: PACKAGE_TYPE): string | undefined {
+  const key = PERIOD_KEYS[type];
+  return key === undefined ? undefined : t(key);
+}
 
 export function packageLabel(pkg: PurchasesPackage): string {
   const { priceString } = pkg.product;
-  const period = PERIOD_LABELS[pkg.packageType];
-  if (pkg.packageType === PACKAGE_TYPE.LIFETIME) return `${priceString} once`;
+  const period = periodLabel(pkg.packageType);
+  if (pkg.packageType === PACKAGE_TYPE.LIFETIME) {
+    return t("billing.priceOnce", { price: priceString });
+  }
   return period === undefined ? priceString : `${priceString} / ${period}`;
 }
 
-const PLAN_NAMES: Partial<Record<PACKAGE_TYPE, string>> = {
-  [PACKAGE_TYPE.WEEKLY]: "Weekly",
-  [PACKAGE_TYPE.MONTHLY]: "Monthly",
-  [PACKAGE_TYPE.TWO_MONTH]: "2 months",
-  [PACKAGE_TYPE.THREE_MONTH]: "3 months",
-  [PACKAGE_TYPE.SIX_MONTH]: "6 months",
-  [PACKAGE_TYPE.ANNUAL]: "Yearly",
-  [PACKAGE_TYPE.LIFETIME]: "Lifetime",
+const PLAN_KEYS: Partial<Record<PACKAGE_TYPE, MessageKey>> = {
+  [PACKAGE_TYPE.WEEKLY]: "billing.plan.weekly",
+  [PACKAGE_TYPE.MONTHLY]: "billing.plan.monthly",
+  [PACKAGE_TYPE.TWO_MONTH]: "billing.plan.twoMonths",
+  [PACKAGE_TYPE.THREE_MONTH]: "billing.plan.threeMonths",
+  [PACKAGE_TYPE.SIX_MONTH]: "billing.plan.sixMonths",
+  [PACKAGE_TYPE.ANNUAL]: "billing.plan.yearly",
+  [PACKAGE_TYPE.LIFETIME]: "billing.lifetime",
 };
 
 export type PlanCard = {
@@ -100,28 +110,34 @@ export type PlanCard = {
 
 export function planCardOf(pkg: PurchasesPackage): PlanCard {
   const { priceString, pricePerMonthString } = pkg.product;
-  const period = PERIOD_LABELS[pkg.packageType];
+  const period = periodLabel(pkg.packageType);
+  const planKey = PLAN_KEYS[pkg.packageType];
   const base = {
     id: pkg.identifier,
-    name: PLAN_NAMES[pkg.packageType] ?? pkg.product.title,
+    name: planKey === undefined ? pkg.product.title : t(planKey),
     bestValue: false,
   };
   if (pkg.packageType === PACKAGE_TYPE.ANNUAL && pricePerMonthString !== null) {
     return {
       ...base,
       price: pricePerMonthString,
-      cadence: "per month",
-      equivalent: `Billed ${priceString} a year`,
+      cadence: t("billing.perMonth"),
+      equivalent: t("billing.billedYearly", { price: priceString }),
       bestValue: true,
     };
   }
   if (pkg.packageType === PACKAGE_TYPE.LIFETIME) {
-    return { ...base, price: priceString, cadence: "one payment", equivalent: null };
+    return {
+      ...base,
+      price: priceString,
+      cadence: t("billing.onePayment"),
+      equivalent: null,
+    };
   }
   return {
     ...base,
     price: priceString,
-    cadence: period === undefined ? "" : `per ${period}`,
+    cadence: period === undefined ? "" : t("billing.perPeriod", { period }),
     equivalent: null,
   };
 }

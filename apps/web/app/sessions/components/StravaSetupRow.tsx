@@ -1,5 +1,6 @@
 import React from "react";
 import { Link } from "react-router";
+import { t } from "@sendtally/features/i18n";
 import { useDismissed } from "../../lib/useDismissed";
 
 export type StravaSetupRowProps = {
@@ -14,23 +15,21 @@ export function StravaSetupRow({ lapsed }: StravaSetupRowProps): React.ReactElem
     <div className="sessions-setup">
       <span className="sessions-setup-text">
         <span className="sessions-setup-eyebrow">
-          {lapsed ? "STRAVA · RECONNECT NEEDED" : "STRAVA · OPTIONAL"}
+          {lapsed ? t("sessions.setupEyebrowLapsed") : t("sessions.setupEyebrow")}
         </span>
         <span className="sessions-setup-title">
-          {lapsed ? "Strava access has lapsed" : "Post sessions to your Strava feed"}
+          {lapsed ? t("sessions.setupLapsedTitle") : t("sessions.setupTitle")}
         </span>
         <span className="sessions-setup-body">
-          {lapsed
-            ? "Re-link it and your sessions can post to your feed again."
-            : "One Rock Climbing activity per logged session. You approve it on strava.com and can revoke it any time."}
+          {lapsed ? t("sessions.setupLapsedBody") : t("sessions.setupBody")}
         </span>
       </span>
       <span className="sessions-setup-actions">
         <Link to="/app/setup" className="sessions-setup-connect">
-          {lapsed ? "Re-link Strava" : "Connect Strava"}
+          {lapsed ? t("settings.relinkStrava") : t("sessions.connectStrava")}
         </Link>
         <button type="button" onClick={dismiss} className="sessions-setup-later">
-          Not now
+          {t("sessions.notNow")}
         </button>
       </span>
     </div>

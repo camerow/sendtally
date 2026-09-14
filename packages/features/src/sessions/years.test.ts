@@ -88,22 +88,22 @@ describe("labels", () => {
   });
 
   it("singularises one session", () => {
-    expect(countLabel(1)).toBe("1 SESSION");
-    expect(countLabel(9)).toBe("9 SESSIONS");
+    expect(countLabel(1)).toBe("1 session");
+    expect(countLabel(9)).toBe("9 sessions");
   });
 
   it("drops the top grade when it is unknown", () => {
     expect(totalsLabel({ count: 2, minutes: 90, topGrade: -1, topGradeLabel: null })).toBe(
-      "2 SESSIONS · 1H 30M"
+      "2 sessions · 1h 30m"
     );
     expect(totalsLabel({ count: 2, minutes: 90, topGrade: 6, topGradeLabel: null })).toBe(
-      "2 SESSIONS · 1H 30M · TOP V6"
+      "2 sessions · 1h 30m · TOP V6"
     );
   });
 
   it("shows the stored label for the hardest session, route grades included", () => {
     expect(totalsLabel({ count: 1, minutes: 60, topGrade: 4, topGradeLabel: "5.12b" })).toBe(
-      "1 SESSION · 1H · TOP 5.12b"
+      "1 session · 1h · TOP 5.12b"
     );
   });
 });

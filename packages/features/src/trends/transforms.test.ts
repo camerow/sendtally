@@ -115,8 +115,8 @@ describe("trendsVM", () => {
     const vm = trendsVM(sessions, "1m", NOW);
     const volume = vm.tiles.find((t) => t.metric === "volume");
     expect(volume?.value).toBe("5 climbs");
-    expect(volume?.caption).toContain("2 SESSIONS");
-    expect(volume?.caption).toContain("LAST MONTH");
+    expect(volume?.caption).toContain("2 sessions");
+    expect(volume?.caption).toContain("Last month");
 
     const all = trendsVM(sessions, "all", NOW);
     expect(all.tiles.find((t) => t.metric === "volume")?.value).toBe("7 climbs");
@@ -126,15 +126,15 @@ describe("trendsVM", () => {
     const vm = trendsVM(sessions, "7d", NOW);
     const volume = vm.tiles.find((t) => t.metric === "volume");
     expect(volume?.value).toBe("3 climbs");
-    expect(volume?.caption).toBe("1 SESSIONS · LAST 7 DAYS");
+    expect(volume?.caption).toBe("1 session · Last 7 days");
     expect(volume?.bars.map((b) => b.axisLabel)).toEqual([
-      "FRI",
-      "SAT",
-      "SUN",
-      "MON",
-      "TUE",
-      "WED",
-      "THU",
+      "Fri",
+      "Sat",
+      "Sun",
+      "Mon",
+      "Tue",
+      "Wed",
+      "Thu",
     ]);
   });
 
@@ -195,7 +195,7 @@ describe("bucketsFor", () => {
   it("builds seven day buckets ending today for the preview range", () => {
     const buckets = bucketsFor("7d", NOW, null);
     expect(buckets).toHaveLength(7);
-    expect(buckets.map((b) => b.label)).toEqual(["FRI", "SAT", "SUN", "MON", "TUE", "WED", "THU"]);
+    expect(buckets.map((b) => b.label)).toEqual(["Fri", "Sat", "Sun", "Mon", "Tue", "Wed", "Thu"]);
     expect(buckets[6]?.start).toBe(Date.parse("2026-08-06T00:00:00.000Z"));
     expect(buckets[6]?.end).toBe(Date.parse("2026-08-07T00:00:00.000Z"));
   });
@@ -203,13 +203,13 @@ describe("bucketsFor", () => {
   it("builds year-to-date month buckets", () => {
     const buckets = bucketsFor("ytd", NOW, null);
     expect(buckets).toHaveLength(8);
-    expect(buckets[0]?.label).toBe("JAN");
-    expect(buckets[7]?.label).toBe("AUG");
+    expect(buckets[0]?.label).toBe("Jan");
+    expect(buckets[7]?.label).toBe("Aug");
   });
 
   it("uses month buckets for short histories and year buckets for long ones", () => {
     const shortSpan = bucketsFor("all", NOW, Date.parse("2026-01-15T00:00:00.000Z"));
-    expect(shortSpan.map((b) => b.label)).toContain("JAN");
+    expect(shortSpan.map((b) => b.label)).toContain("Jan");
     const longSpan = bucketsFor("all", NOW, Date.parse("2022-03-15T00:00:00.000Z"));
     expect(longSpan.map((b) => b.label)).toEqual(["2022", "2023", "2024", "2025", "2026"]);
   });

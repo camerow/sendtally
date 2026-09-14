@@ -1,4 +1,5 @@
 import React from "react";
+import { t } from "@sendtally/features/i18n";
 import { Pressable, Text, View } from "react-native";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import type { StravaConnectFeature } from "../settings/useStravaConnect";
@@ -30,14 +31,14 @@ export function StravaSetupRow({
         borderRadius: radius.card,
       }}
     >
-      <Text style={monoMuted}>{lapsed ? "STRAVA · RECONNECT NEEDED" : "STRAVA · OPTIONAL"}</Text>
+      <Text style={monoMuted}>
+        {lapsed ? t("sessions.setupEyebrowLapsed") : t("sessions.setupEyebrow")}
+      </Text>
       <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 14, color: colors.gunmetal }}>
-        {lapsed ? "Strava access has lapsed" : "Post sessions to your Strava feed"}
+        {lapsed ? t("sessions.setupLapsedTitle") : t("sessions.setupTitle")}
       </Text>
       <Text style={bodyText}>
-        {lapsed
-          ? "Re-link it and your sessions can post to your feed again."
-          : "One Rock Climbing activity per logged session. Revoke it on strava.com any time."}
+        {lapsed ? t("sessions.setupLapsedBody") : t("sessions.setupBody")}
       </Text>
       <View style={{ flexDirection: "row", alignItems: "center", gap: 14, marginTop: 6 }}>
         <Pressable
@@ -56,7 +57,11 @@ export function StravaSetupRow({
           })}
         >
           <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 14, color: colors.gunmetal }}>
-            {connect.busy ? "Opening Strava…" : lapsed ? "Re-link Strava" : "Connect Strava"}
+            {connect.busy
+              ? t("settings.openingStrava")
+              : lapsed
+                ? t("settings.relinkStrava")
+                : t("sessions.connectStrava")}
           </Text>
         </Pressable>
         <Pressable
@@ -73,7 +78,7 @@ export function StravaSetupRow({
               textDecorationLine: "underline",
             }}
           >
-            Not now
+            {t("sessions.notNow")}
           </Text>
         </Pressable>
       </View>

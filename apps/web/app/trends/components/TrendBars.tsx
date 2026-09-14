@@ -129,6 +129,7 @@ export function TrendBars({
                 flex: 1,
                 minWidth: 0,
                 textAlign: "center",
+                textTransform: "uppercase",
                 paddingTop: 3,
                 overflow: "visible",
               }}

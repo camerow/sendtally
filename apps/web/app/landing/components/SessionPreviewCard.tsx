@@ -1,7 +1,10 @@
 import React from "react";
 import { Badge, GradeBars, Label, StatStrip } from "@sendtally/design";
+import { useLanding } from "../LandingContext";
 
 export function SessionPreviewCard(): React.ReactElement {
+  const { copy } = useLanding();
+  const { stats } = copy.hero.faces;
   return (
     <div
       style={{
@@ -49,29 +52,29 @@ export function SessionPreviewCard(): React.ReactElement {
               color: "var(--text-on-white-secondary)",
             }}
           >
-            Today at 6:42 PM · Rock Climbing
+            {copy.strava.preview.meta}
           </span>
         </div>
         <Badge tone="azure" pill={false} style={{ marginLeft: "auto", whiteSpace: "nowrap" }}>
-          via sendtally
+          {copy.hero.faces.via}
         </Badge>
       </div>
       <div
         style={{ padding: "0 18px 14px", fontWeight: 600, fontSize: 19, letterSpacing: "-0.01em" }}
       >
-        Solid climbing session - 18 climbs, top V7
+        {copy.hero.faces.stravaTitle}
       </div>
       <StatStrip
         stats={[
-          { label: "TIME", value: "1:24" },
-          { label: "SENDS", value: "14" },
-          { label: "ATTEMPTS", value: "31" },
-          { label: "GRADES", value: "V4–V7" },
+          { label: stats.time, value: "1:24" },
+          { label: stats.sends, value: "14" },
+          { label: stats.attempts, value: "31" },
+          { label: stats.grades, value: "V4–V7" },
         ]}
       />
       <div style={{ padding: "16px 18px 18px", display: "flex", flexDirection: "column", gap: 10 }}>
         <Label on="light" size={10}>
-          SENDS BY GRADE
+          {copy.strava.preview.chartLabel}
         </Label>
         <GradeBars
           bars={[

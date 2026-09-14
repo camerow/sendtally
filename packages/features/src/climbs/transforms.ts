@@ -1,5 +1,6 @@
 import type { ClimbSummary } from "@sendtally/api-client";
 import { disciplineOf, formatGrade, type Grade, type GradeScale } from "@sendtally/core";
+import { t } from "../i18n";
 import { convertGrade, gradeOptions } from "../log-session/transforms";
 
 export const MAX_CLIMB_SUGGESTIONS = 4;
@@ -79,7 +80,7 @@ export function projectsOf(climbs: ClimbSummary[]): ClimbSummary[] {
 }
 
 export function projectMetaLabel(climb: ClimbSummary): string {
-  const sessions = `${climb.sessions} ${climb.sessions === 1 ? "SESSION" : "SESSIONS"}`;
-  const attempts = `${climb.attempts} ${climb.attempts === 1 ? "ATTEMPT" : "ATTEMPTS"}`;
+  const sessions = t("sessions.sessionCount", { count: climb.sessions });
+  const attempts = t("logSession.attemptCount", { count: climb.attempts });
   return `${sessions} · ${attempts}`;
 }

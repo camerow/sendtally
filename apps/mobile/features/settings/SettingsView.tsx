@@ -4,6 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import type { SettingsVM, StravaPostingFeature } from "@sendtally/features/settings";
 import type { StravaConnectFeature } from "./useStravaConnect";
 import type { Discipline, GradePrefs, GradeScale } from "@sendtally/features/log-session";
+import { t } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { Icon } from "../../components/Icon";
 import { ScreenHeader } from "../../components/ScreenHeader";
@@ -32,6 +33,7 @@ function StatusPill({ label, active }: { label: string; active: boolean }): Reac
         fontFamily: fonts.monoMedium,
         fontSize: 9,
         letterSpacing: 0.7,
+        textTransform: "uppercase",
         paddingHorizontal: 8,
         paddingVertical: 3,
         borderRadius: radius.pill,
@@ -58,7 +60,7 @@ export function SettingsView({
 }: SettingsViewProps): React.ReactElement {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.white }} edges={["top"]}>
-      <ScreenHeader title="Settings" />
+      <ScreenHeader title={t("common.settings")} />
       <ScrollView
         contentContainerStyle={{
           paddingHorizontal: 18,
@@ -73,15 +75,15 @@ export function SettingsView({
           <View
             style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}
           >
-            <Text style={sectionLabel}>STRAVA</Text>
+            <Text style={sectionLabel}>Strava</Text>
             <StatusPill label={vm.stravaStatusLabel} active={vm.stravaActive} />
           </View>
           <Text style={bodyText}>
             {vm.stravaActive
-              ? "Linked to your Strava account. Sessions you log can post to your feed as Rock Climbing activities."
+              ? t("settings.stravaActive")
               : vm.stravaConnected
-                ? "Strava access has lapsed. Re-link it and your sessions can post to your feed again."
-                : "Each logged session can post to your feed as a Rock Climbing activity. You approve it on strava.com and can revoke it there any time."}
+                ? t("settings.stravaLapsedMobile")
+                : t("settings.stravaNotConnectedMobile")}
           </Text>
           {vm.stravaActive ? (
             <StravaPostingSection posting={posting} />
@@ -106,10 +108,10 @@ export function SettingsView({
                   style={{ fontFamily: fonts.sansSemiBold, fontSize: 15, color: colors.gunmetal }}
                 >
                   {connect.busy
-                    ? "Opening Strava…"
+                    ? t("settings.openingStrava")
                     : vm.stravaConnected
-                      ? "Re-link Strava"
-                      : "Connect Strava"}
+                      ? t("settings.relinkStrava")
+                      : t("sessions.connectStrava")}
                 </Text>
               </Pressable>
               {connect.error !== null && <Text style={messageText}>{connect.error}</Text>}
@@ -126,7 +128,7 @@ export function SettingsView({
         <Pressable
           onPress={onOpenAccount}
           accessibilityRole="button"
-          accessibilityLabel="Account"
+          accessibilityLabel={t("common.account")}
           style={pressRow({
             ...sectionCard,
             flexDirection: "row",
@@ -137,7 +139,7 @@ export function SettingsView({
           })}
         >
           <View style={{ gap: 4, flexShrink: 1 }}>
-            <Text style={sectionLabel}>ACCOUNT</Text>
+            <Text style={sectionLabel}>{t("common.account")}</Text>
             <Text
               numberOfLines={1}
               style={{ fontFamily: fonts.mono, fontSize: 11, color: colors.textMuted }}

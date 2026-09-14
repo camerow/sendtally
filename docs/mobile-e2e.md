@@ -8,6 +8,7 @@ They run locally on an iOS simulator against Metro, and in CI on an Android emul
 - Install Maestro: `curl -Ls https://get.maestro.mobile.dev | bash` (lands in `~/.maestro/bin`).
 - Maestro needs a Java runtime and this machine has none on PATH; Android Studio's bundled one works: `export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"`.
 - Build the development client onto a simulator once: `npx expo run:ios --device <udid> --no-bundler` from `apps/mobile` (about ten minutes; the watchman stub and Homebrew `pod` notes in `docs/mobile-release.md` apply).
+- To check a language, `infra/scripts/sim-language.sh de` (or `fr`, `es`, an explicit locale like `fr fr_CA`, or `reset`) sets the simulator language and reboots it; it takes the device from `SIM_UDID`, `--udid`, or the booted simulator. Relaunch the app afterwards.
 
 ## Running
 

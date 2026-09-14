@@ -1,7 +1,7 @@
 import React from "react";
+import { useLanding } from "../LandingContext";
 import { Card, Label } from "@sendtally/design";
-import { COPY } from "../copy";
-import { INSIGHT_SERIES } from "./insightSeries";
+import { insightSeries } from "./insightSeries";
 import { MiniBars } from "./MiniBars";
 import { RangeChips } from "./RangeChips";
 import { Reveal } from "./Reveal";
@@ -23,12 +23,13 @@ function InsightCard({
   wide?: boolean;
   delay: number;
 }): React.ReactElement {
+  const { copy } = useLanding();
   return (
     <Reveal delay={delay} className={wide ? "l-card-wide" : undefined}>
       <Card className="l-lift" style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <Label on="accent">{eyebrow}</Label>
-          <span className="l-member-tag">{COPY.trends.memberTag}</span>
+          <span className="l-member-tag">{copy.trends.memberTag}</span>
         </div>
         <span
           style={{
@@ -53,39 +54,41 @@ function InsightCard({
 }
 
 export function Insights(): React.ReactElement {
+  const { copy } = useLanding();
+  const series = insightSeries(copy);
   return (
     <div id="insights" className="l-insights">
       <div className="l-section-inner">
         <div className="l-section-header">
           <Reveal>
             <h2 className="l-section-title" style={{ maxWidth: 640, textWrap: "balance" }}>
-              {COPY.trends.title}
+              {copy.trends.title}
             </h2>
           </Reveal>
           <Reveal delay={80}>
-            <span className="l-section-blurb">{COPY.trends.blurb}</span>
+            <span className="l-section-blurb">{copy.trends.blurb}</span>
           </Reveal>
         </div>
 
         <Reveal delay={80} className="l-rangebar">
-          <Label on="dark">{COPY.trends.rangeLabel}</Label>
+          <Label on="dark">{copy.trends.rangeLabel}</Label>
           <RangeChips active="3M" />
         </Reveal>
 
         <div className="l-card-grid">
-          {INSIGHT_SERIES.map((s, i) => (
+          {series.map((s, i) => (
             <InsightCard
               key={s.metric}
               delay={(i % 3) * 80}
-              wide={i === INSIGHT_SERIES.length - 1}
+              wide={i === series.length - 1}
               eyebrow={s.eyebrow}
               headline={s.headline}
               meta={s.meta}
               chart={
                 <MiniBars
                   bars={s.bars}
-                  height={i === INSIGHT_SERIES.length - 1 ? 62 : 48}
-                  gap={i === INSIGHT_SERIES.length - 1 ? 8 : s.metric === "volume" ? 4 : 6}
+                  height={i === series.length - 1 ? 62 : 48}
+                  gap={i === series.length - 1 ? 8 : s.metric === "volume" ? 4 : 6}
                   grow="in-view"
                 />
               }

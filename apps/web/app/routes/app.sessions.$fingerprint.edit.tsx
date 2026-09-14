@@ -8,6 +8,7 @@ import { useClientApi } from "../lib/useClientApi";
 import { LogSessionForm } from "../log-session/components/LogSessionForm";
 import logSessionStyles from "../log-session/log-session.css?url";
 import { BackLink } from "../components/BackLink";
+import { t } from "@sendtally/features/i18n";
 
 export const links: LinksFunction = () => [{ rel: "stylesheet", href: logSessionStyles }];
 
@@ -18,6 +19,7 @@ export async function loader(args: LoaderFunctionArgs): Promise<{ apiUrl: string
 
 const monoLabel: React.CSSProperties = {
   fontFamily: "var(--font-mono)",
+  textTransform: "uppercase",
   fontWeight: 500,
   fontSize: 11,
   letterSpacing: "0.08em",
@@ -33,7 +35,7 @@ export default function EditSessionRoute(): React.ReactElement {
 
   return (
     <div>
-      <BackLink to={backTo}>SESSION</BackLink>
+      <BackLink to={backTo}>{t("sessionDetail.backSession")}</BackLink>
       <div style={{ display: "flex", flexDirection: "column", gap: 6, margin: "14px 0 26px" }}>
         <h1
           style={{
@@ -45,14 +47,15 @@ export default function EditSessionRoute(): React.ReactElement {
             letterSpacing: "-0.03em",
           }}
         >
-          Edit session
+          {t("logSession.editTitle")}
         </h1>
-        <span style={monoLabel}>EFFORT IS RE-SCORED WHEN YOU SAVE</span>
+        <span style={monoLabel}>{t("logSession.editSubtitle")}</span>
       </div>
-      {state.status === "loading" && <span style={monoLabel}>LOADING…</span>}
+      {state.status === "loading" && <span style={monoLabel}>{t("common.loading")}</span>}
       {state.status === "error" && (
-        <span style={{ ...monoLabel, color: "var(--text-label-accent)" }}>
-          Could not load this session. <Link to={backTo}>Back to the session</Link>
+        <span style={{ ...monoLabel, textTransform: "none", color: "var(--text-label-accent)" }}>
+          {t("sessionDetail.loadFailed")}{" "}
+          <Link to={backTo}>{t("sessionDetail.backToSession")}</Link>
         </span>
       )}
       {state.status === "ready" &&
@@ -60,8 +63,8 @@ export default function EditSessionRoute(): React.ReactElement {
           <LogSessionForm api={api} editing={{ fingerprint, draft: state.data.draft }} />
         ) : (
           <span style={{ ...monoLabel, color: "var(--text-label-accent)" }}>
-            This session was synced from a board and is kept as read-only history.{" "}
-            <Link to={backTo}>Back to the session</Link>
+            {t("sessions.readOnlyBoard")}{" "}
+            <Link to={backTo}>{t("sessionDetail.backToSession")}</Link>
           </span>
         ))}
     </div>
