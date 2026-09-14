@@ -4,12 +4,12 @@ import { ActivityIndicator, Alert, Linking, Pressable, ScrollView, Text, View } 
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
   CLIMB_SORTS,
+  climbSortLabel,
   useSessionDetail,
   type ClimbFilter,
-  type ClimbSort,
   type ClimbVM,
 } from "@sendtally/features/session-detail";
-import { t, upper } from "@sendtally/features/i18n";
+import { t } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { Chip } from "../../components/Chip";
 import { PostStatusBar } from "../../features/sessions/PostStatusBar";
@@ -39,6 +39,7 @@ function HeaderAction({
           fontFamily: fonts.monoMedium,
           fontSize: 12,
           letterSpacing: 0.5,
+          textTransform: "uppercase",
           color: colors.watermelonInk,
         }}
       >
@@ -56,10 +57,10 @@ export default function SessionDetailScreen(): React.ReactElement {
   const [deleting, setDeleting] = React.useState(false);
 
   function confirmDelete(): void {
-    Alert.alert(t("mobile.sessions.deleteTitle"), t("mobile.sessions.deleteBody"), [
-      { text: t("mobile.common.cancel"), style: "cancel" },
+    Alert.alert(t("sessions.deleteTitle"), t("sessions.deleteBody"), [
+      { text: t("common.cancel"), style: "cancel" },
       {
-        text: t("mobile.common.delete"),
+        text: t("common.delete"),
         style: "destructive",
         onPress: () => {
           setDeleting(true);
@@ -68,10 +69,7 @@ export default function SessionDetailScreen(): React.ReactElement {
             .then(() => router.replace("/(tabs)/sessions"))
             .catch(() => {
               setDeleting(false);
-              Alert.alert(
-                t("mobile.sessions.deleteFailed"),
-                t("mobile.common.somethingWentWrongTryAgain")
-              );
+              Alert.alert(t("sessions.deleteFailed"), t("common.somethingWentWrongTryAgain"));
             });
         },
       },
@@ -100,31 +98,32 @@ export default function SessionDetailScreen(): React.ReactElement {
                 fontFamily: fonts.monoMedium,
                 fontSize: 12,
                 letterSpacing: 0.5,
+                textTransform: "uppercase",
                 color: colors.watermelonInk,
               }}
             >
-              {upper(t("mobile.sessions.backToSessions"))}
+              {t("sessions.back")}
             </Text>
           </Pressable>
           {state.status === "ready" && (
             <View style={{ flexDirection: "row", alignItems: "center", gap: 16 }}>
               {state.data.vm.editable && (
                 <HeaderAction
-                  label={upper(t("mobile.common.edit"))}
+                  label={t("common.edit")}
                   onPress={() =>
                     router.push(`/session/${encodeURIComponent(fingerprint ?? "")}/edit`)
                   }
                 />
               )}
               <HeaderAction
-                label={upper(deleting ? t("mobile.sessions.deleting") : t("mobile.common.delete"))}
+                label={deleting ? t("common.deleting") : t("common.delete")}
                 onPress={() => {
                   if (!deleting) confirmDelete();
                 }}
               />
               {state.data.vm.stravaUrl !== null && (
                 <HeaderAction
-                  label={upper(t("mobile.sessions.strava"))}
+                  label="Strava ↗"
                   onPress={() => void Linking.openURL(state.data.vm.stravaUrl ?? "")}
                 />
               )}
@@ -135,7 +134,7 @@ export default function SessionDetailScreen(): React.ReactElement {
         {state.status === "loading" && <ActivityIndicator color={colors.gunmetal} />}
         {state.status === "error" && (
           <Text style={{ fontFamily: fonts.mono, fontSize: 12, color: colors.watermelonInk }}>
-            {t("mobile.sessions.loadOneFailed")}
+            {t("sessionDetail.loadFailed")}
           </Text>
         )}
         {state.status === "ready" && (
@@ -156,6 +155,7 @@ export default function SessionDetailScreen(): React.ReactElement {
                   fontFamily: fonts.monoMedium,
                   fontSize: 10,
                   letterSpacing: 0.6,
+                  textTransform: "uppercase",
                   color: colors.textMuted,
                 }}
               >
@@ -192,6 +192,7 @@ export default function SessionDetailScreen(): React.ReactElement {
                       fontFamily: fonts.monoMedium,
                       fontSize: 9,
                       letterSpacing: 0.7,
+                      textTransform: "uppercase",
                       color: colors.textMuted,
                     }}
                   >
@@ -228,10 +229,11 @@ export default function SessionDetailScreen(): React.ReactElement {
                     fontFamily: fonts.monoMedium,
                     fontSize: 10,
                     letterSpacing: 0.7,
+                    textTransform: "uppercase",
                     color: colors.watermelonInk,
                   }}
                 >
-                  {upper(t("mobile.sessions.sendsByGrade"))}
+                  {t("trends.sendsByGrade")}
                 </Text>
                 <View style={{ flexDirection: "row", alignItems: "flex-end", gap: 5 }}>
                   {state.data.vm.bars.map((b) => (
@@ -272,21 +274,18 @@ export default function SessionDetailScreen(): React.ReactElement {
             >
               {(
                 [
-                  ["all", t("mobile.sessions.filterAll", { n: state.data.vm.filterCounts.all })],
-                  ["sent", t("mobile.sessions.filterSent", { n: state.data.vm.filterCounts.sent })],
-                  [
-                    "flash",
-                    t("mobile.sessions.filterFlashed", { n: state.data.vm.filterCounts.flash }),
-                  ],
+                  ["all", t("sessions.filterAll", { n: state.data.vm.filterCounts.all })],
+                  ["sent", t("sessions.filterSent", { n: state.data.vm.filterCounts.sent })],
+                  ["flash", t("sessions.filterFlashed", { n: state.data.vm.filterCounts.flash })],
                   [
                     "project",
-                    t("mobile.sessions.filterProjects", { n: state.data.vm.filterCounts.project }),
+                    t("sessions.filterProjects", { n: state.data.vm.filterCounts.project }),
                   ],
                 ] as Array<[ClimbFilter, string]>
               ).map(([value, label]) => (
                 <Chip
                   key={value}
-                  label={upper(label)}
+                  label={label}
                   active={filter === value}
                   onPress={() => setFilter(value)}
                 />
@@ -299,10 +298,10 @@ export default function SessionDetailScreen(): React.ReactElement {
             >
               {CLIMB_SORTS.map((s) => (
                 <Chip
-                  key={s.value}
-                  label={upper(s.label)}
-                  active={sort === s.value}
-                  onPress={() => setSort(s.value as ClimbSort)}
+                  key={s}
+                  label={climbSortLabel(s)}
+                  active={sort === s}
+                  onPress={() => setSort(s)}
                 />
               ))}
             </ScrollView>
@@ -341,13 +340,11 @@ export default function SessionDetailScreen(): React.ReactElement {
                           color: "rgba(64,63,76,0.6)",
                         }}
                       >
-                        {upper(
-                          t("mobile.sessions.climbMeta", {
-                            angle: c.angleLabel,
-                            burns: t("mobile.sessions.burns", { count: c.burns }),
-                            rest: c.restLabel,
-                          })
-                        )}
+                        {t("sessions.climbMeta", {
+                          angle: c.angleLabel,
+                          burns: t("sessions.burns", { count: c.burns }),
+                          rest: c.restLabel,
+                        })}
                       </Text>
                     </View>
                     <View style={{ alignItems: "flex-end", gap: 5 }}>
@@ -365,6 +362,7 @@ export default function SessionDetailScreen(): React.ReactElement {
                           fontFamily: fonts.monoMedium,
                           fontSize: 9,
                           letterSpacing: 0.7,
+                          textTransform: "uppercase",
                           borderRadius: radius.pill,
                           paddingHorizontal: 8,
                           paddingVertical: 3,

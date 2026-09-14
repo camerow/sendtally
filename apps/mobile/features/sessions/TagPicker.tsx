@@ -1,7 +1,7 @@
 import React from "react";
 import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import { tagMatches, type TagOption } from "@sendtally/features/sessions";
-import { t, upper } from "@sendtally/features/i18n";
+import { t } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { Chip } from "../../components/Chip";
 import { pressRow } from "../../lib/press";
@@ -65,7 +65,7 @@ export function TagPicker({
             onPress={() => onRemove(tag)}
             disabled={disabled}
             hitSlop={5}
-            accessibilityLabel={t("mobile.sessions.removeTag", { tag })}
+            accessibilityLabel={t("common.removeTag", { tag })}
             style={pressRow({
               flexDirection: "row",
               alignItems: "center",
@@ -83,10 +83,11 @@ export function TagPicker({
                 fontFamily: fonts.monoMedium,
                 fontSize: 11,
                 letterSpacing: 0.6,
+                textTransform: "uppercase",
                 color: colors.gunmetal,
               }}
             >
-              {tag.toUpperCase()}
+              {tag}
             </Text>
             <Text style={{ fontFamily: fonts.mono, fontSize: 12, color: colors.textMuted }}>✕</Text>
           </Pressable>
@@ -95,9 +96,7 @@ export function TagPicker({
           ref={inputRef}
           value={entry}
           placeholder={
-            tags.length === 0
-              ? (placeholder ?? t("mobile.sessions.addATag"))
-              : t("mobile.sessions.addATag")
+            tags.length === 0 ? (placeholder ?? t("common.addATag")) : t("common.addATag")
           }
           placeholderTextColor={colors.textFaint}
           editable={!disabled}
@@ -137,23 +136,24 @@ export function TagPicker({
                 fontFamily: fonts.monoMedium,
                 fontSize: 9,
                 letterSpacing: 0.7,
+                textTransform: "uppercase",
                 color: colors.textMuted,
               }}
             >
-              {upper(t("mobile.sessions.recent"))}
+              {t("common.recent")}
             </Text>
           )}
           {options.map((option) => (
             <Chip
               key={option.slug}
-              label={option.name.toUpperCase()}
+              label={option.name}
               active={false}
               onPress={() => pick(option.name)}
             />
           ))}
           {create !== null && (
             <Chip
-              label={upper(t("mobile.sessions.createTag", { name: create }))}
+              label={t("sessions.createTag", { name: create })}
               active={false}
               dashed
               onPress={() => pick(create)}

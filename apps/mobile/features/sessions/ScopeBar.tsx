@@ -25,7 +25,7 @@ function ScopeChip({
       onPress={onPress}
       onLayout={onLayout}
       accessibilityRole="button"
-      accessibilityLabel={t("mobile.sessions.jumpTo", { label: item.label })}
+      accessibilityLabel={t("sessions.jumpToLabel", { label: item.label })}
       accessibilityState={{ selected: active }}
       hitSlop={{ top: 7, bottom: 7 }}
       style={press({
@@ -44,6 +44,7 @@ function ScopeChip({
           fontSize: 11,
           lineHeight: 14,
           letterSpacing: 0.66,
+          textTransform: "uppercase",
           color: active || strong ? colors.gunmetal : "rgba(64,63,76,0.65)",
         }}
       >

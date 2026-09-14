@@ -2,7 +2,7 @@ import React from "react";
 import { Text, View } from "react-native";
 import type { SendtallyApi, SessionTag } from "@sendtally/api-client";
 import { useSessionTags } from "@sendtally/features/sessions";
-import { t, upper } from "@sendtally/features/i18n";
+import { t } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { TagPicker } from "./TagPicker";
 
@@ -10,6 +10,7 @@ const heading = {
   fontFamily: fonts.monoMedium,
   fontSize: 10,
   letterSpacing: 0.7,
+  textTransform: "uppercase",
 } as const;
 
 export function SessionTags({
@@ -37,15 +38,15 @@ export function SessionTags({
       }}
     >
       <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-        <Text style={{ ...heading, color: colors.watermelonInk }}>
-          {upper(t("mobile.sessions.tags"))}
-        </Text>
+        <Text style={{ ...heading, color: colors.watermelonInk }}>{t("common.tags")}</Text>
         {saving && (
-          <Text style={{ ...heading, color: colors.textFaint }}>
-            {upper(t("mobile.common.saving"))}
+          <Text style={{ ...heading, color: colors.textFaint }}>{t("common.saving")}</Text>
+        )}
+        {error !== null && (
+          <Text style={{ ...heading, textTransform: "none", color: colors.watermelonInk }}>
+            {error}
           </Text>
         )}
-        {error !== null && <Text style={{ ...heading, color: colors.watermelonInk }}>{error}</Text>}
       </View>
       <TagPicker
         tags={tags}

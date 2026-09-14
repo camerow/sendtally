@@ -1,4 +1,4 @@
-import { t, upper } from "@sendtally/features/i18n";
+import { t } from "@sendtally/features/i18n";
 
 export type OnboardingSlide = {
   key: "log" | "effort" | "strava" | "trends";
@@ -11,27 +11,27 @@ export function onboardingSlides(): OnboardingSlide[] {
   return [
     {
       key: "log",
-      eyebrow: upper(t("mobile.onboarding.log.eyebrow")),
-      title: t("mobile.onboarding.log.title"),
-      body: t("mobile.onboarding.log.body"),
+      eyebrow: t("onboarding.log.eyebrow"),
+      title: t("onboarding.log.title"),
+      body: t("onboarding.log.body"),
     },
     {
       key: "effort",
-      eyebrow: upper(t("mobile.onboarding.effort.eyebrow")),
-      title: t("mobile.onboarding.effort.title"),
-      body: t("mobile.onboarding.effort.body"),
+      eyebrow: t("onboarding.effort.eyebrow"),
+      title: t("onboarding.effort.title"),
+      body: t("onboarding.effort.body"),
     },
     {
       key: "strava",
-      eyebrow: upper(t("mobile.onboarding.strava.eyebrow")),
-      title: t("mobile.onboarding.strava.title"),
-      body: t("mobile.onboarding.strava.body"),
+      eyebrow: "Strava",
+      title: t("onboarding.strava.title"),
+      body: t("onboarding.strava.body"),
     },
     {
       key: "trends",
-      eyebrow: upper(t("mobile.onboarding.trends.eyebrow")),
-      title: t("mobile.onboarding.trends.title"),
-      body: t("mobile.onboarding.trends.body"),
+      eyebrow: t("common.trends"),
+      title: t("onboarding.trends.title"),
+      body: t("onboarding.trends.body"),
     },
   ];
 }

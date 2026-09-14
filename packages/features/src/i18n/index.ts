@@ -18,15 +18,14 @@ export type Vars = Record<string, string | number>;
 type Catalog = Readonly<Record<string, string>>;
 const CATALOGS: Record<Locale, Catalog> = { en, de, fr, es };
 
-let current: Locale = "en";
-let resolver: () => Locale = () => current;
-
-export function setLocale(locale: Locale): void {
-  current = locale;
-}
+let resolver: () => Locale = () => "en";
 
 export function setLocaleResolver(fn: () => Locale): void {
   resolver = fn;
+}
+
+export function setLocale(locale: Locale): void {
+  setLocaleResolver(() => locale);
 }
 
 export function getLocale(): Locale {
@@ -70,8 +69,4 @@ export function formatDate(date: Date, options: Intl.DateTimeFormatOptions): str
 
 export function formatNumber(n: number, options?: Intl.NumberFormatOptions): string {
   return new Intl.NumberFormat(getLocale(), options).format(n);
-}
-
-export function upper(s: string): string {
-  return s.toLocaleUpperCase(getLocale());
 }

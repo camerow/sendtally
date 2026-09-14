@@ -1,5 +1,5 @@
 import type { ConnectionStatus, GradeScales } from "@sendtally/api-client";
-import { t, upper } from "../i18n";
+import { t } from "../i18n";
 import type { SettingsVM } from "./types";
 
 // post_since is stored as a wall-clock timestamp; the date input wants YYYY-MM-DD.
@@ -16,14 +16,12 @@ export function settingsVM(status: ConnectionStatus | null): SettingsVM {
     gradeScales: status?.gradeScales ?? DEFAULT_GRADE_SCALES,
     stravaConnected: strava !== null,
     stravaActive,
-    stravaStatusLabel: upper(
-      t(
-        strava === null
-          ? "settings.stravaNotConnected"
-          : stravaActive
-            ? "settings.stravaConnected"
-            : "settings.stravaReconnectNeeded"
-      )
+    stravaStatusLabel: t(
+      strava === null
+        ? "settings.stravaNotConnected"
+        : stravaActive
+          ? "settings.stravaConnected"
+          : "settings.stravaReconnectNeeded"
     ),
     postingEnabled: strava?.postingEnabled ?? false,
     postSince: toDateInput(strava?.postSince ?? null),

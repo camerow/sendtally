@@ -6,6 +6,7 @@ import { sectionAnchorId } from "../anchors";
 
 const chip: React.CSSProperties = {
   fontFamily: "var(--font-mono)",
+  textTransform: "uppercase",
   fontWeight: 500,
   fontSize: 11,
   letterSpacing: "0.06em",
@@ -31,7 +32,7 @@ export function ScopeBar({
   onOpenFilters: () => void;
 }): React.ReactElement {
   return (
-    <nav className="sessions-scope" aria-label={t("web.sessions.jumpTo")}>
+    <nav className="sessions-scope" aria-label={t("sessions.jumpTo")}>
       <div className="sessions-scope-strip">
         {items.map((item) => {
           const strong = item.kind === "year";
@@ -60,7 +61,7 @@ export function ScopeBar({
         <button
           type="button"
           onClick={onOpenFilters}
-          aria-label={t("web.sessions.filters")}
+          aria-label={t("common.filters")}
           aria-pressed={filtersActive}
           className="sessions-scope-filters"
           style={{

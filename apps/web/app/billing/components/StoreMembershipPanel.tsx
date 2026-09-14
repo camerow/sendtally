@@ -1,7 +1,7 @@
 import React from "react";
 import { Label } from "@sendtally/design";
 import { storeChipName, storeName, type MembershipVM } from "@sendtally/features/billing";
-import { t, upper } from "@sendtally/features/i18n";
+import { t } from "@sendtally/features/i18n";
 
 export type StoreMembershipPanelProps = {
   vm: MembershipVM;
@@ -31,8 +31,8 @@ export function StoreMembershipPanel({ vm }: StoreMembershipPanelProps): React.R
       <Label on="accent">{vm.statusLabel}</Label>
       <p style={{ margin: 0, fontSize: 15, lineHeight: 1.55, textWrap: "pretty" }}>
         {manageUrl === undefined
-          ? t("web.billing.activeOnAccount")
-          : t("web.billing.billedThrough", { store: where })}
+          ? t("billing.activeOnAccount")
+          : t("billing.billedThrough", { store: where })}
       </p>
       {vm.renewalLine !== null && (
         <span
@@ -40,10 +40,11 @@ export function StoreMembershipPanel({ vm }: StoreMembershipPanelProps): React.R
             fontFamily: "var(--font-mono)",
             fontSize: 12,
             letterSpacing: "0.06em",
+            textTransform: "uppercase",
             color: "var(--text-on-white-secondary)",
           }}
         >
-          {upper(vm.renewalLine)}
+          {vm.renewalLine}
         </span>
       )}
       {manageUrl !== undefined && (
@@ -63,7 +64,7 @@ export function StoreMembershipPanel({ vm }: StoreMembershipPanelProps): React.R
             alignSelf: "flex-start",
           }}
         >
-          {t("web.billing.manageIn", { store: storeChipName(managedIn) })}
+          {t("billing.manageIn", { store: storeChipName(managedIn) })} →
         </a>
       )}
     </div>

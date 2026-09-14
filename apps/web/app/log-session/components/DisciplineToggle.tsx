@@ -1,12 +1,10 @@
 import React from "react";
-import { DISCIPLINE_LABELS, type Discipline } from "@sendtally/features/log-session";
+import { disciplineLabel, type Discipline } from "@sendtally/features/log-session";
 import { t } from "@sendtally/features/i18n";
 import { Segmented } from "../../components/Segmented";
 
-const OPTIONS = (["boulder", "route"] as const).map((value) => ({
-  value,
-  label: DISCIPLINE_LABELS[value].toUpperCase(),
-}));
+const OPTIONS = (): Array<{ value: Discipline; label: string }> =>
+  (["boulder", "route"] as const).map((value) => ({ value, label: disciplineLabel(value) }));
 
 export function DisciplineToggle({
   value,
@@ -17,8 +15,8 @@ export function DisciplineToggle({
 }): React.ReactElement {
   return (
     <Segmented
-      label={t("web.logSession.discipline")}
-      options={OPTIONS}
+      label={t("common.discipline")}
+      options={OPTIONS()}
       value={value}
       onChange={onChange}
     />

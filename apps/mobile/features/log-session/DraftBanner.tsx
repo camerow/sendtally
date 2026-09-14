@@ -1,7 +1,7 @@
 import React from "react";
 import { Alert, Pressable, Text, View } from "react-native";
 import type { StoredSessionDraft } from "@sendtally/features/log-session";
-import { formatDate, t, upper } from "@sendtally/features/i18n";
+import { formatDate, t } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { press } from "../../lib/press";
 
@@ -48,18 +48,18 @@ export function DraftBanner({
 }): React.ReactElement {
   const { draft, savedAt } = stored;
   const count = draft.climbs.length;
-  const climbs = upper(t("mobile.logSession.climbCount", { count }));
+  const climbs = t("common.climbCount", { count });
 
   function confirmDiscard(): void {
     Alert.alert(
-      t("mobile.logSession.discardTitle"),
-      t("mobile.logSession.discardBody", {
+      t("common.discardDraftTitle"),
+      t("logSession.discardBody", {
         count,
         day: formatDate(savedAt, { weekday: "long" }),
       }),
       [
-        { text: t("mobile.common.cancel"), style: "cancel" },
-        { text: t("mobile.logSession.discard"), style: "destructive", onPress: onStartFresh },
+        { text: t("common.cancel"), style: "cancel" },
+        { text: t("common.discard"), style: "destructive", onPress: onStartFresh },
       ]
     );
   }
@@ -75,7 +75,7 @@ export function DraftBanner({
             color: colors.gunmetal,
           }}
         >
-          {t("mobile.logSession.unfinished", {
+          {t("logSession.unfinished", {
             when: formatDate(savedAt, { weekday: "long", hour: "numeric", minute: "2-digit" }),
           })}
         </Text>
@@ -84,10 +84,11 @@ export function DraftBanner({
             fontFamily: fonts.monoMedium,
             fontSize: 10,
             letterSpacing: 0.8,
+            textTransform: "uppercase",
             color: "rgba(64,63,76,0.7)",
           }}
         >
-          {t("mobile.logSession.draftMeta", {
+          {t("logSession.draftMetaShort", {
             climbs,
             start: draft.startTime,
             end: draft.endTime,
@@ -96,14 +97,14 @@ export function DraftBanner({
       </View>
       <View style={{ flexDirection: "row", gap: 10 }}>
         <Action
-          label={t("mobile.logSession.startFresh")}
+          label={t("logSession.startFresh")}
           onPress={confirmDiscard}
           background="transparent"
           text="rgba(64,63,76,0.8)"
           flex={1}
         />
         <Action
-          label={t("mobile.logSession.pickUp")}
+          label={t("logSession.pickUpShort")}
           onPress={onResume}
           background={colors.gunmetal}
           text={colors.white}

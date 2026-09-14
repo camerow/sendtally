@@ -88,14 +88,14 @@ describe("sessionDetailVM", () => {
   it("builds the stats grid and grade bars", () => {
     const vm = sessionDetailVM(detail);
     const byLabel = Object.fromEntries(vm.stats.map((s) => [s.label, s.value]));
-    expect(byLabel["TIME"]).toBe("1h 35m");
-    expect(byLabel["CLIMBS"]).toBe("4");
-    expect(byLabel["SENDS"]).toBe("3");
-    expect(byLabel["FLASHES"]).toBe("2");
-    expect(byLabel["TOP"]).toBe("V7");
+    expect(byLabel["Time"]).toBe("1h 35m");
+    expect(byLabel["Climbs"]).toBe("4");
+    expect(byLabel["Sends"]).toBe("3");
+    expect(byLabel["Flashes"]).toBe("2");
+    expect(byLabel["Top"]).toBe("V7");
     expect(vm.title).toContain("Tension Board");
     expect(vm.stravaUrl).toBe("https://www.strava.com/activities/555");
-    expect(vm.post.label).toBe("ON STRAVA · POSTED JUL 2");
+    expect(vm.post.label).toBe("On Strava · posted Jul 2");
 
     const v7 = vm.bars.find((b) => b.gradeLabel === "V7");
     expect(v7?.peak).toBe(true);
@@ -113,13 +113,13 @@ describe("sessionDetailVM", () => {
       post_error: null,
     });
     expect(vm.post.kind).toBe("legacy");
-    expect(vm.post.label).toBe("TENSION BOARD · READ-ONLY HISTORY");
+    expect(vm.post.label).toBe("Tension Board · read-only history");
     expect(vm.post.action).toBeNull();
   });
 
-  it("shows ON STRAVA for a posted session", () => {
+  it("shows On Strava for a posted session", () => {
     const vm = sessionDetailVM(detail);
-    expect(vm.post.label).toBe("ON STRAVA · POSTED JUL 2");
+    expect(vm.post.label).toBe("On Strava · posted Jul 2");
   });
 
   it("titles a manual session by its name and shows its location", () => {
@@ -135,8 +135,8 @@ describe("sessionDetailVM", () => {
       post_error: null,
     });
     expect(vm.title).toContain("Tuesday board night");
-    expect(vm.meta).toContain("· INDOOR ·");
-    expect(vm.post.label).toBe("LOGGED MANUALLY");
+    expect(vm.meta).toContain("· Indoor ·");
+    expect(vm.post.label).toBe("Logged manually");
   });
 
   const unposted = {
@@ -175,7 +175,7 @@ describe("sessionDetailVM", () => {
   it("reports a pending post without an action", () => {
     const vm = sessionDetailVM({ ...unposted, post_state: "pending" }, connected);
     expect(vm.post.kind).toBe("pending");
-    expect(vm.post.label).toBe("POSTING TO STRAVA");
+    expect(vm.post.label).toBe("Posting to Strava");
     expect(vm.post.action).toBeNull();
   });
 
@@ -255,8 +255,8 @@ describe("route sessions", () => {
     const vm = sessionDetailVM(routes);
     const stat = (label: string): string | undefined =>
       vm.stats.find((s) => s.label === label)?.value;
-    expect(stat("TOP")).toBe("5.11d");
-    expect(stat("AVG GRADE")).toBe("5.11b");
+    expect(stat("Top")).toBe("5.11d");
+    expect(stat("Avg grade")).toBe("5.11b");
     expect(vm.bars[0]?.gradeLabel).toBe("5.10a");
     expect(vm.bars[vm.bars.length - 1]?.gradeLabel).toBe("5.12a");
     expect(vm.bars.filter((b) => b.count > 0).map((b) => b.gradeLabel)).toEqual(["5.10a", "5.11d"]);
@@ -268,7 +268,7 @@ describe("route sessions", () => {
       climbs: [...routes.climbs, { ...detail.climbs[0]!, grade: { scale: "v", value: 4 } }],
     };
     const vm = sessionDetailVM(mixed);
-    expect(vm.stats.find((s) => s.label === "TOP")?.value).toBe("5.11d");
+    expect(vm.stats.find((s) => s.label === "Top")?.value).toBe("5.11d");
     expect(climbVMs(mixed.climbs).map((c) => c.gradeLabel)).toEqual([
       "5.10a",
       "V4",

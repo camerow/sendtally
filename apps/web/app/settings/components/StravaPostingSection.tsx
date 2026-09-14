@@ -32,14 +32,14 @@ export function StravaPostingSection({ posting }: StravaPostingSectionProps): Re
       <div style={rowDivider} />
       <Row>
         <span style={{ display: "flex", flexDirection: "column", gap: 3, maxWidth: 380 }}>
-          <span style={rowTitle}>{t("web.settings.postToStrava")}</span>
-          {!posting.enabled && <p style={bodyText}>{t("web.settings.postingOff")}</p>}
+          <span style={rowTitle}>{t("settings.postToStrava")}</span>
+          {!posting.enabled && <p style={bodyText}>{t("settings.postingOff")}</p>}
         </span>
         <Switch
           checked={posting.enabled}
           onChange={posting.setEnabled}
           disabled={posting.busy}
-          label={t("web.settings.postToStrava")}
+          label={t("settings.postToStrava")}
         />
       </Row>
 
@@ -48,8 +48,8 @@ export function StravaPostingSection({ posting }: StravaPostingSectionProps): Re
           <div style={rowDivider} />
           <Row>
             <span style={{ display: "flex", flexDirection: "column", gap: 3, maxWidth: 380 }}>
-              <span style={rowTitle}>{t("web.settings.postSince")}</span>
-              <p style={bodyText}>{t("web.settings.postSinceBody")}</p>
+              <span style={rowTitle}>{t("settings.postSince")}</span>
+              <p style={bodyText}>{t("settings.postSinceBody")}</p>
             </span>
             <input
               type="date"

@@ -9,7 +9,7 @@ import {
   type SessionGrouping,
   type TagOption,
 } from "@sendtally/features/sessions";
-import { t, upper } from "@sendtally/features/i18n";
+import { t } from "@sendtally/features/i18n";
 import { chipStyle } from "../../components/chip";
 
 export type SessionFilterSheetProps = {
@@ -66,10 +66,10 @@ export function SessionFilterSheet({
   const count = filterSessionsByTags(sessions, draftTags).length;
   const chips: Array<{ key: string; text: string }> = tagOptions.map((t) => ({
     key: t.slug,
-    text: `${t.name.toUpperCase()} ${t.count}`,
+    text: `${t.name} ${t.count}`,
   }));
   if (untaggedCount > 0) {
-    chips.push({ key: UNTAGGED_KEY, text: `${upper(untaggedLabel())} ${untaggedCount}` });
+    chips.push({ key: UNTAGGED_KEY, text: `${untaggedLabel()} ${untaggedCount}` });
   }
 
   return (
@@ -78,7 +78,7 @@ export function SessionFilterSheet({
         className="sessions-sheet"
         role="dialog"
         aria-modal="true"
-        aria-label={t("web.sessions.filters")}
+        aria-label={t("common.filters")}
         onClick={(event) => event.stopPropagation()}
       >
         <div className="sessions-sheet-handle" />
@@ -91,7 +91,7 @@ export function SessionFilterSheet({
               letterSpacing: "-0.02em",
             }}
           >
-            {t("web.sessions.filters")}
+            {t("common.filters")}
           </span>
           <button
             type="button"
@@ -101,10 +101,10 @@ export function SessionFilterSheet({
               setDraftTags([]);
             }}
           >
-            {upper(t("web.sessions.clear"))}
+            {t("common.clear")}
           </button>
         </div>
-        <Field name={upper(t("web.sessions.groupBy"))}>
+        <Field name={t("sessions.groupBy")}>
           {(["month", "tag"] as const).map((value) => (
             <button
               key={value}
@@ -113,12 +113,12 @@ export function SessionFilterSheet({
               style={sheetChip(draftGrouping === value)}
               onClick={() => setDraftGrouping(value)}
             >
-              {upper(t(value === "month" ? "web.sessions.groupMonth" : "web.sessions.groupTag"))}
+              {t(value === "month" ? "sessions.groupMonth" : "sessions.groupTag")}
             </button>
           ))}
         </Field>
         {chips.length > 0 && (
-          <Field name={upper(t("web.sessions.tags"))}>
+          <Field name={t("common.tags")}>
             {chips.map((chip) => (
               <button
                 key={chip.key}
@@ -140,7 +140,7 @@ export function SessionFilterSheet({
             void navigate(hrefFor({ grouping: draftGrouping, tags: draftTags }));
           }}
         >
-          {t("web.sessions.showCount", { label: countLabel(count).toLowerCase() })}
+          {t("sessions.showCount", { label: countLabel(count).toLowerCase() })}
         </button>
       </div>
     </div>

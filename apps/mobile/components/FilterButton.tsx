@@ -27,7 +27,7 @@ export function FilterButton({ active, onPress }: FilterButtonProps): React.Reac
       <Pressable
         onPress={onPress}
         accessibilityRole="button"
-        accessibilityLabel={t("mobile.sessions.filters")}
+        accessibilityLabel={t("common.filters")}
         accessibilityState={{ selected: active }}
         hitSlop={4}
         style={press({

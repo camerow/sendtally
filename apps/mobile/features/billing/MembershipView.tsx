@@ -8,7 +8,7 @@ import {
   type MembershipFeature,
   type MembershipVM,
 } from "@sendtally/features/billing";
-import { t, upper } from "@sendtally/features/i18n";
+import { t } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import {
   bodyText,
@@ -50,7 +50,7 @@ function StatusCard({
   const restoreLink = (
     <Pressable onPress={purchase.restore} disabled={restoring} style={underlinePress}>
       <Text style={{ ...underlineLabel, fontSize: 12 }}>
-        {restoring ? t("mobile.billing.restoring") : t("mobile.billing.restorePurchases")}
+        {restoring ? t("billing.restoring") : t("billing.restorePurchases")}
       </Text>
     </Pressable>
   );
@@ -60,9 +60,9 @@ function StatusCard({
       <MembershipStatusCard
         active={false}
         label={vm.statusLabel}
-        headline={t("mobile.billing.loggingIsFree")}
+        headline={t("billing.loggingIsFree")}
         detail={null}
-        body={`${t("mobile.billing.freeBody")}${storeBillingAvailable ? t("mobile.billing.pickAPlan") : ""}`}
+        body={`${t("billing.freeBody")}${storeBillingAvailable ? t("billing.pickAPlan") : ""}`}
       />
     );
   }
@@ -73,9 +73,9 @@ function StatusCard({
       <MembershipStatusCard
         active
         label={vm.statusLabel}
-        headline={vm.plan === null ? t("mobile.billing.membership") : planLabel(vm.plan)}
+        headline={vm.plan === null ? t("common.membership") : planLabel(vm.plan)}
         detail={vm.renewalLine}
-        body={t("mobile.billing.storeBody", { store: where })}
+        body={t("billing.storeBody", { store: where })}
       >
         <View style={{ flexDirection: "row", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
           <Pressable
@@ -84,7 +84,7 @@ function StatusCard({
             style={press({ ...chipButton, alignSelf: "flex-start" })}
           >
             <Text style={chipButtonLabel}>
-              {t("mobile.billing.manageIn", { store: storeChipName(vm.managedIn) })}
+              {t("billing.manageIn", { store: storeChipName(vm.managedIn) })}
             </Text>
           </Pressable>
           {restoreLink}
@@ -98,9 +98,9 @@ function StatusCard({
       <MembershipStatusCard
         active
         label={vm.statusLabel}
-        headline={t("mobile.billing.membership")}
+        headline={t("common.membership")}
         detail={null}
-        body={t("mobile.billing.webBody")}
+        body={t("billing.webBody")}
       />
     );
   }
@@ -109,9 +109,9 @@ function StatusCard({
     <MembershipStatusCard
       active
       label={vm.statusLabel}
-      headline={vm.plan === null ? t("mobile.billing.membership") : planLabel(vm.plan)}
+      headline={vm.plan === null ? t("common.membership") : planLabel(vm.plan)}
       detail={vm.renewalLine}
-      body={t("mobile.billing.activeBody")}
+      body={t("billing.activeBody")}
     >
       {restoreLink}
     </MembershipStatusCard>
@@ -131,14 +131,10 @@ function PlansSection({
   return (
     <View style={{ gap: 12 }}>
       <Text style={sectionLabel}>
-        {upper(
-          switching
-            ? t("mobile.billing.payThroughInstead", { store: storeLabel() })
-            : t("mobile.billing.plans")
-        )}
+        {switching ? t("billing.payThroughInstead", { store: storeLabel() }) : t("billing.plans")}
       </Text>
       {switching && (
-        <Text style={bodyText}>{t("mobile.billing.switchBody", { store: storeLabel() })}</Text>
+        <Text style={bodyText}>{t("billing.switchBody", { store: storeLabel() })}</Text>
       )}
       <PurchaseControls purchase={purchase} />
     </View>
@@ -160,10 +156,11 @@ function MemberBadge(): React.ReactElement {
           fontFamily: fonts.monoSemiBold,
           fontSize: 10,
           letterSpacing: 0.8,
+          textTransform: "uppercase",
           color: colors.petalInk,
         }}
       >
-        {upper(t("mobile.billing.member"))}
+        {t("common.member")}
       </Text>
     </View>
   );
@@ -191,10 +188,11 @@ export function MembershipView({
               fontFamily: fonts.monoMedium,
               fontSize: 12,
               letterSpacing: 0.5,
+              textTransform: "uppercase",
               color: colors.watermelonInk,
             }}
           >
-            {upper(t("mobile.billing.backToSettings"))}
+            {t("common.backToSettings")}
           </Text>
         </Pressable>
         <View style={{ gap: 8 }}>
@@ -207,7 +205,7 @@ export function MembershipView({
                 color: colors.gunmetal,
               }}
             >
-              {t("mobile.billing.membership")}
+              {t("common.membership")}
             </Text>
             {vm.active && <MemberBadge />}
           </View>
@@ -219,7 +217,7 @@ export function MembershipView({
               color: colors.textSecondary,
             }}
           >
-            {t("mobile.billing.intro")}
+            {t("billing.introMobile")}
           </Text>
         </View>
 
@@ -233,10 +231,10 @@ export function MembershipView({
         {state.status === "error" && (
           <View style={{ gap: 6 }}>
             <Text style={{ fontFamily: fonts.mono, fontSize: 12, color: colors.watermelonInk }}>
-              {t("mobile.billing.loadFailed")}
+              {t("billing.loadFailed")}
             </Text>
             <Pressable onPress={membership.reload} style={underlinePress}>
-              <Text style={{ ...underlineLabel, fontSize: 12 }}>{t("mobile.common.tryAgain")}</Text>
+              <Text style={{ ...underlineLabel, fontSize: 12 }}>{t("common.tryAgain")}</Text>
             </Pressable>
           </View>
         )}

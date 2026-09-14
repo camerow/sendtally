@@ -238,10 +238,11 @@ Store listing copy lives in `apps/mobile/store/listing.md` and should match what
 ### Localization
 
 - Every user-facing string goes through `t()` from `@sendtally/features/i18n`; never hardcode English in a component, transform, or `meta()`.
-  Catalogs are typed TS modules per locale and namespace under `packages/features/src/i18n/locales/<locale>/`, spread into that locale's `index.ts`; keys are `namespace.name`, plural forms are `name_one` / `name_other` picked when `count` is passed (a hand-rolled rule: iOS Hermes has no `Intl.PluralRules`, so never reach for it).
+  Catalogs are typed TS modules per locale and namespace under `packages/features/src/i18n/locales/<locale>/`, spread into that locale's `index.ts`; keys are `namespace.name` where the namespace is the feature (`sessions`, `projects`, `auth`, ...) or `common` for words shared across features, never the platform: one string has one key, and web and mobile share it. Plural forms are `name_one` / `name_other` picked when `count` is passed (a hand-rolled rule: iOS Hermes has no `Intl.PluralRules`, so never reach for it).
+  Proper nouns and symbols no translator would change ("Strava", "RPE", "V", "YDS", "Google Play", "{n}/10") are literals in code, not catalog keys.
   A key must exist in all four catalogs (`en`, `de`, `fr`, `es`) with the same placeholders or the parity test in `i18n.test.ts` fails.
-- Dates and numbers go through `formatDate` / `formatNumber` (locale-aware `Intl`); uppercase labels are stored in natural case and uppercased at the call site with `upper()`.
-- Never call `t()` at module scope: the locale is set after modules load on mobile and per request on the web Worker (`AsyncLocalStorage` in `entry.server.tsx`), so a module-level constant freezes to English. Wrap it in a function or a getter.
+- Dates and numbers go through `formatDate` / `formatNumber` (locale-aware `Intl`); labels are stored and passed around in natural case, and the component or text style that renders a label uppercases it (`textTransform: "uppercase"`) - never the caller, never a transform.
+- Never call `t()` at module scope: the locale is set after modules load on mobile and per request on the web Worker (`AsyncLocalStorage` in `entry.server.tsx`), so a module-level constant freezes to English. Keep module-level data as plain values or keys and resolve the text in a function (`trendRangeLabel(range)`, `memberBenefits()`).
 - Locale is the device language on mobile (`expo-localization`) and `Accept-Language` on the web; the marketing landing is additionally served per locale at `/de`, `/fr`, `/es` from `apps/web/app/landing/copy.<locale>.ts` with hreflang alternates.
   Terms, privacy, support, API error bodies, and the Strava activity description stay English.
 

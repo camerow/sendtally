@@ -2,7 +2,7 @@ import { router } from "expo-router";
 import React from "react";
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import { TILE_BREAKDOWN_ROWS, useTrends } from "@sendtally/features/trends";
-import { t, upper } from "@sendtally/features/i18n";
+import { t } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { useApi } from "../../lib/api";
 import { TrendBars } from "./TrendBars";
@@ -21,7 +21,7 @@ export function TrendsList(): React.ReactElement {
       {state.status === "loading" && <ActivityIndicator color={colors.gunmetal} />}
       {state.status === "error" && (
         <Text style={{ fontFamily: fonts.mono, fontSize: 12, color: colors.watermelonInk }}>
-          {t("mobile.trends.loadFailedPull")}
+          {t("trends.loadFailedPull")}
         </Text>
       )}
       {state.status === "ready" &&
@@ -51,6 +51,7 @@ export function TrendsList(): React.ReactElement {
                   fontFamily: fonts.monoMedium,
                   fontSize: 10,
                   letterSpacing: 0.7,
+                  textTransform: "uppercase",
                   color: colors.watermelonInk,
                 }}
               >
@@ -61,10 +62,11 @@ export function TrendsList(): React.ReactElement {
                   fontFamily: fonts.monoMedium,
                   fontSize: 9,
                   letterSpacing: 0.7,
+                  textTransform: "uppercase",
                   color: colors.textSecondary,
                 }}
               >
-                {upper(t("mobile.trends.details"))}
+                {t("trends.details")}
               </Text>
             </View>
             <Text
@@ -82,6 +84,7 @@ export function TrendsList(): React.ReactElement {
                 fontFamily: fonts.monoMedium,
                 fontSize: 10,
                 letterSpacing: 0.5,
+                textTransform: "uppercase",
                 color: colors.textSecondary,
               }}
             >
@@ -92,7 +95,7 @@ export function TrendsList(): React.ReactElement {
             </View>
             <TrendTagBreakdown
               compact
-              title={upper(t("mobile.trends.byTag"))}
+              title={t("trends.byTag")}
               rows={state.data.details[tile.metric].breakdown.slice(0, TILE_BREAKDOWN_ROWS)}
             />
           </Pressable>

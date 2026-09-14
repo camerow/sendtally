@@ -73,16 +73,16 @@ export function StravaPostingSection({ posting }: StravaPostingSectionProps): Re
         }}
       >
         <View style={{ flex: 1, gap: 3 }}>
-          <Text style={rowTitle}>{t("mobile.settings.postAutomatically")}</Text>
+          <Text style={rowTitle}>{t("settings.postAutomatically")}</Text>
           <Text style={bodyText}>
-            {posting.enabled ? t("mobile.settings.postingOn") : t("mobile.settings.postingOff")}
+            {posting.enabled ? t("settings.postingOn") : t("settings.postingOffMobile")}
           </Text>
         </View>
         <Switch
           checked={posting.enabled}
           onChange={posting.setEnabled}
           disabled={posting.busy}
-          label={t("mobile.settings.postAutomatically")}
+          label={t("settings.postAutomatically")}
         />
       </View>
 
@@ -90,8 +90,8 @@ export function StravaPostingSection({ posting }: StravaPostingSectionProps): Re
         <>
           <View style={{ borderTopWidth: 1, borderTopColor: colors.lineOnLight }} />
           <View style={{ gap: 8 }}>
-            <Text style={rowTitle}>{t("mobile.settings.postSince")}</Text>
-            <Text style={bodyText}>{t("mobile.settings.postSinceBody")}</Text>
+            <Text style={rowTitle}>{t("settings.postSince")}</Text>
+            <Text style={bodyText}>{t("settings.postSinceBody")}</Text>
             <TextInput
               value={posting.since}
               placeholder="YYYY-MM-DD"

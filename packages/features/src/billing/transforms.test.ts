@@ -7,7 +7,7 @@ describe("membershipVM", () => {
   it("is not a member while nothing has loaded", () => {
     expect(membershipVM(null)).toEqual({
       active: false,
-      statusLabel: "NOT A MEMBER",
+      statusLabel: "Not a member",
       managedIn: null,
       plan: null,
       renewalLine: null,
@@ -35,7 +35,7 @@ describe("membershipVM", () => {
     });
     expect(vm).toEqual({
       active: true,
-      statusLabel: "MEMBER · GOOGLE PLAY",
+      statusLabel: "Member · Google Play",
       managedIn: "play_store",
       plan: "yearly",
       renewalLine: `Renews ${formatRenewalDate(FUTURE)}`,
@@ -55,7 +55,7 @@ describe("membershipVM", () => {
         },
       },
     });
-    expect(vm.statusLabel).toBe("MEMBER · APP STORE");
+    expect(vm.statusLabel).toBe("Member · App Store");
     expect(vm.renewalLine).toBe(`Ends ${formatRenewalDate(FUTURE)}`);
   });
 
@@ -95,7 +95,7 @@ describe("membershipVM", () => {
   it("reads a web-only membership as managed on the web", () => {
     expect(membershipVM({ membership: { active: true, web: true, store: null } })).toEqual({
       active: true,
-      statusLabel: "MEMBER · WEB",
+      statusLabel: "Member · web",
       managedIn: "web",
       plan: null,
       renewalLine: null,

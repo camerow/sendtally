@@ -20,7 +20,7 @@ import {
 } from "@sendtally/features/log-session";
 import { SESSION_NOTE_MAX, useTagVocabulary } from "@sendtally/features/sessions";
 import { useGradeScalePrefs } from "@sendtally/features/settings";
-import { formatDate, t, upper } from "@sendtally/features/i18n";
+import { formatDate, t } from "@sendtally/features/i18n";
 import { TagPicker } from "../../components/TagPicker";
 import { useIsNarrow } from "../../lib/useIsNarrow";
 import { sessionDraftStorage } from "../../lib/sessionDraftStorage";
@@ -61,7 +61,7 @@ function RpePicker({
     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
       <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
         <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
-          <span style={monoLabel}>{upper(t("web.logSession.rpe"))}</span>
+          <span style={monoLabel}>RPE</span>
           <span
             style={{
               fontFamily: "var(--font-mono)",
@@ -72,12 +72,12 @@ function RpePicker({
           >
             {rpe === null ? (
               <span style={{ fontSize: 12, color: "rgba(64,63,76,0.55)" }}>
-                {upper(t("web.logSession.auto"))}
+                {t("logSession.auto")}
               </span>
             ) : (
               <>
                 {rpe}
-                <span style={{ fontSize: 12, opacity: 0.6 }}>{t("web.logSession.outOfTen")}</span>
+                <span style={{ fontSize: 12, opacity: 0.6 }}>/10</span>
               </>
             )}
           </span>
@@ -96,7 +96,7 @@ function RpePicker({
               padding: 0,
             }}
           >
-            {upper(t("web.logSession.resetToAuto"))}
+            {t("logSession.resetToAuto")}
           </button>
         )}
       </div>
@@ -108,7 +108,7 @@ function RpePicker({
             <button
               key={value}
               type="button"
-              aria-label={t("web.logSession.rpeValue", { n: value })}
+              aria-label={`RPE ${value}`}
               onClick={() => onChange(value)}
               className="log-session-rpe"
               style={{
@@ -266,7 +266,7 @@ export function LogSessionForm({
       autosave.clear();
       await navigate(`/app/sessions/${encodeURIComponent(session.fingerprint)}`);
     } catch {
-      setError(t("web.logSession.saveFailed"));
+      setError(t("logSession.saveFailed"));
       setSaving(false);
     }
   }
@@ -285,22 +285,20 @@ export function LogSessionForm({
           <Field
             label={
               <>
-                {upper(t("web.logSession.sessionName"))}{" "}
-                <span style={{ color: "rgba(64,63,76,0.45)" }}>
-                  {upper(t("web.shell.optional"))}
-                </span>
+                {t("logSession.sessionName")}{" "}
+                <span style={{ color: "rgba(64,63,76,0.45)" }}>{t("common.optional")}</span>
               </>
             }
           >
             <input
               value={draft.name}
-              placeholder={t("web.logSession.namePlaceholder")}
+              placeholder={t("logSession.sessionNamePlaceholder")}
               onChange={(e) => setDraft({ ...draft, name: e.target.value })}
               className="log-session-control"
               style={inputStyle}
             />
           </Field>
-          <Field label={upper(t("web.logSession.date"))}>
+          <Field label={t("logSession.date")}>
             <input
               type="date"
               value={draft.date}
@@ -310,7 +308,7 @@ export function LogSessionForm({
             />
           </Field>
           <div className="log-session-times">
-            <Field label={upper(t("web.logSession.startTime"))}>
+            <Field label={t("logSession.startTime")}>
               <input
                 type="time"
                 value={draft.startTime}
@@ -318,11 +316,9 @@ export function LogSessionForm({
                 className="log-session-control"
                 style={inputStyle}
               />
-              {untouchedTimes && (
-                <span style={columnHead}>{upper(t("web.logSession.whenYouOpened"))}</span>
-              )}
+              {untouchedTimes && <span style={columnHead}>{t("logSession.whenYouOpened")}</span>}
             </Field>
-            <Field label={upper(t("web.logSession.endTime"))}>
+            <Field label={t("logSession.endTime")}>
               <input
                 type="time"
                 value={draft.endTime}
@@ -330,12 +326,10 @@ export function LogSessionForm({
                 className="log-session-control"
                 style={inputStyle}
               />
-              {untouchedTimes && (
-                <span style={columnHead}>{upper(t("web.logSession.startPlusHour"))}</span>
-              )}
+              {untouchedTimes && <span style={columnHead}>{t("logSession.startPlusHour")}</span>}
             </Field>
           </div>
-          <Field label={upper(t("web.logSession.location"))}>
+          <Field label={t("logSession.location")}>
             <div style={{ display: "flex", gap: 8 }}>
               {(["indoor", "outdoor"] as const).map((loc) => (
                 <button
@@ -345,7 +339,7 @@ export function LogSessionForm({
                   className="log-session-chip"
                   style={chipStyle(draft.location === loc)}
                 >
-                  {upper(t(loc === "indoor" ? "web.logSession.indoor" : "web.logSession.outdoor"))}
+                  {t(loc === "indoor" ? "common.indoor" : "common.outdoor")}
                 </button>
               ))}
             </div>
@@ -353,17 +347,15 @@ export function LogSessionForm({
           <Field
             label={
               <>
-                {upper(t("web.logSession.tags"))}{" "}
-                <span style={{ color: "rgba(64,63,76,0.45)" }}>
-                  {upper(t("web.shell.optional"))}
-                </span>
+                {t("common.tags")}{" "}
+                <span style={{ color: "rgba(64,63,76,0.45)" }}>{t("common.optional")}</span>
               </>
             }
           >
             <TagPicker
               tags={draft.tags}
               suggestions={suggestionsFor(draft.tags)}
-              placeholder={t("web.logSession.tagsPlaceholder")}
+              placeholder={t("logSession.tagsPlaceholder")}
               onAdd={(name) => setDraft((d) => withTag(d, name))}
               onRemove={(name) => setDraft((d) => withoutTag(d, name))}
             />
@@ -372,10 +364,8 @@ export function LogSessionForm({
           <Field
             label={
               <>
-                {upper(t("web.logSession.notes"))}{" "}
-                <span style={{ color: "rgba(64,63,76,0.45)" }}>
-                  {upper(t("web.shell.optional"))}
-                </span>
+                {t("common.notes")}{" "}
+                <span style={{ color: "rgba(64,63,76,0.45)" }}>{t("common.optional")}</span>
               </>
             }
           >
@@ -383,7 +373,7 @@ export function LogSessionForm({
               value={draft.notes}
               rows={4}
               maxLength={SESSION_NOTE_MAX}
-              placeholder={t("web.logSession.notesPlaceholder")}
+              placeholder={t("common.notesPlaceholder")}
               onChange={(e) => setDraft({ ...draft, notes: e.target.value })}
               className="log-session-control"
               style={{ ...inputStyle, lineHeight: 1.55, resize: "vertical" }}
@@ -399,11 +389,9 @@ export function LogSessionForm({
               gap: 10,
             }}
           >
-            <span style={columnHead}>{upper(t("web.logSession.afterYouSave"))}</span>
+            <span style={columnHead}>{t("logSession.afterYouSave")}</span>
             <p style={{ margin: 0, fontSize: 14, lineHeight: 1.55, color: "rgba(64,63,76,0.88)" }}>
-              {editing === undefined
-                ? t("web.logSession.afterSaveNew")
-                : t("web.logSession.afterSaveEdit")}
+              {editing === undefined ? t("logSession.afterSaveNew") : t("logSession.afterSaveEdit")}
             </p>
           </div>
         </div>
@@ -418,15 +406,15 @@ export function LogSessionForm({
             }}
           >
             <span style={{ ...monoLabel, color: "var(--text-label-accent)" }}>
-              {upper(t("web.logSession.climbsCount", { n: draft.climbs.length }))}
+              {t("logSession.climbsCount", { n: draft.climbs.length })}
             </span>
-            <span style={columnHead}>{upper(t("web.logSession.scalesInSettings"))}</span>
+            <span style={columnHead}>{t("logSession.scalesInSettings")}</span>
           </div>
           {!narrow && (
             <div className="climb-head">
-              <span style={columnHead}>{upper(t("web.logSession.grade"))}</span>
-              <span style={columnHead}>{upper(t("web.logSession.nameOptional"))}</span>
-              <span style={columnHead}>{upper(t("web.logSession.tries"))}</span>
+              <span style={columnHead}>{t("common.grade")}</span>
+              <span style={columnHead}>{t("logSession.nameOptional")}</span>
+              <span style={columnHead}>{t("logSession.tries")}</span>
               <span />
             </div>
           )}
@@ -474,11 +462,11 @@ export function LogSessionForm({
               }}
             >
               <Glyph d={PLUS} />
-              {upper(t("web.logSession.addClimb"))}
+              {t("logSession.addClimb")}
             </button>
             {narrow && (
               <span style={{ ...columnHead, textAlign: "center" }}>
-                {upper(t("web.logSession.tapToEdit"))}
+                {t("logSession.tapToEdit")}
               </span>
             )}
           </div>
@@ -517,11 +505,15 @@ export function LogSessionForm({
               }}
             >
               <Glyph d={CHECK} />
-              {upper(t("web.logSession.draftSaved", { time: hhmm(autosave.savedAt) }))}
+              {t("logSession.draftSaved", { time: hhmm(autosave.savedAt) })}
             </span>
           )}
           {error !== null && (
-            <span style={{ ...monoLabel, color: "var(--text-label-accent)" }}>{error}</span>
+            <span
+              style={{ ...monoLabel, textTransform: "none", color: "var(--text-label-accent)" }}
+            >
+              {error}
+            </span>
           )}
         </div>
         <div className="log-session-buttons">
@@ -540,7 +532,7 @@ export function LogSessionForm({
               cursor: "pointer",
             }}
           >
-            {t("web.shell.cancel")}
+            {t("common.cancel")}
           </button>
           <button
             type="button"
@@ -560,10 +552,10 @@ export function LogSessionForm({
             }}
           >
             {saving
-              ? t("web.shell.saving")
+              ? t("common.saving")
               : editing === undefined
-                ? t("web.logSession.logSession")
-                : t("web.logSession.saveChanges")}
+                ? t("logSession.logSession")
+                : t("logSession.saveChanges")}
           </button>
         </div>
       </div>

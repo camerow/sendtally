@@ -13,6 +13,7 @@ export function StatusPill({ label, active }: StatusPillProps): React.ReactEleme
         fontWeight: 500,
         fontSize: 9,
         letterSpacing: "0.07em",
+        textTransform: "uppercase",
         padding: "3px 8px",
         borderRadius: "var(--radius-pill)",
         border: `1px solid ${active ? "rgba(27,98,206,0.4)" : "var(--line-on-light-strong)"}`,

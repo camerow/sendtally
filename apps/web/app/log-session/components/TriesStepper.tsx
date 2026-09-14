@@ -22,7 +22,7 @@ export function TriesStepper({
     <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 8 }}>
       <button
         type="button"
-        aria-label={t("web.logSession.fewerTries")}
+        aria-label={t("logSession.fewerTries")}
         disabled={disabled || tries <= 1}
         onClick={() => onChange(tries - 1)}
         style={{ ...button, opacity: disabled || tries <= 1 ? 0.4 : 1 }}
@@ -43,7 +43,7 @@ export function TriesStepper({
       </span>
       <button
         type="button"
-        aria-label={t("web.logSession.moreTries")}
+        aria-label={t("logSession.moreTries")}
         disabled={disabled}
         onClick={() => onChange(Math.min(99, tries + 1))}
         style={{ ...button, opacity: disabled ? 0.4 : 1 }}

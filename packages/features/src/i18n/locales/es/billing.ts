@@ -1,12 +1,7 @@
 export const billing = {
-  "billing.storeWeb": "sendtally.com",
-  "billing.storePlay": "Google Play",
   "billing.storeApp": "App Store",
   "billing.storeTest": "la tienda de pruebas",
   "billing.storeOther": "tu tienda",
-  "billing.storeChipWeb": "sendtally.com",
-  "billing.storeChipPlay": "Google Play",
-  "billing.storeChipApp": "App Store",
   "billing.storeChipTest": "Tienda de pruebas",
   "billing.storeChipOther": "Tu tienda",
   "billing.monthlyPlan": "Plan mensual",
@@ -27,4 +22,60 @@ export const billing = {
   "billing.pointRpe": "RPE: lo duras que se han sentido tus sesiones con el tiempo",
   "billing.pointAvgGrade": "Grado medio encadenado: la deriva que un cuaderno nunca te muestra",
   "billing.pointFlashRate": "Porcentaje de flash: lo primero que se mueve cuando mejora tu lectura",
+  "billing.period.week": "semana",
+  "billing.period.month": "mes",
+  "billing.plan.twoMonths": "2 meses",
+  "billing.plan.threeMonths": "3 meses",
+  "billing.plan.sixMonths": "6 meses",
+  "billing.period.year": "año",
+  "billing.plan.weekly": "Semanal",
+  "billing.plan.monthly": "Mensual",
+  "billing.plan.yearly": "Anual",
+  "billing.priceOnce": "{price} una vez",
+  "billing.perMonth": "al mes",
+  "billing.perPeriod": "por {period}",
+  "billing.onePayment": "pago único",
+  "billing.billedYearly": "Se cobran {price} al año",
+  "billing.bestValue": "Mejor precio",
+  "billing.purchaseFailed":
+    "No se pudo completar la compra. No se ha cobrado nada; inténtalo de nuevo en un momento.",
+  "billing.notEntitledAfterPurchase":
+    "{store} confirmó la compra, pero la suscripción todavía no ha llegado. Vuelve a abrir la app en un minuto.",
+  "billing.nothingToRestore": "No se encontró ninguna suscripción para esta cuenta de {store}.",
+  "billing.restoreFailed": "La restauración no se completó. Inténtalo de nuevo en un momento.",
+  "billing.plansUnavailable":
+    "No se pudieron cargar los planes desde {store} ahora mismo. Revisa tu conexión y vuelve a abrir la app para intentarlo de nuevo.",
+  "billing.becomeAMember": "Suscribirme",
+  "billing.becomeAMemberPlan": "Suscribirme · {plan}",
+  "billing.renewalNote":
+    "Se cobra a través de {store}. Se renueva automáticamente hasta que canceles, lo que puedes hacer en cualquier momento desde tus suscripciones de {store}.",
+  "billing.restoring": "Restaurando…",
+  "billing.restorePurchases": "Restaurar compras",
+  "billing.terms": "Términos",
+  "billing.privacy": "Privacidad",
+  "billing.loggingIsFree": "Registrar es gratis",
+  "billing.freeBody":
+    "La suscripción convierte el registro en un historial de entrenamiento. También paga el servidor.",
+  "billing.pickAPlan": " Elige un plan abajo para unirte.",
+  "billing.storeBody":
+    "Se cobra a través de {store}. Cambia de plan o cancela desde tus suscripciones de {store}; las tendencias se mantienen hasta que termine el periodo pagado.",
+  "billing.manageIn": "Gestionar en {store}",
+  "billing.webBody":
+    "Esta suscripción se compró en sendtally.com y se renueva allí. Desbloquea igualmente las tendencias en la app.",
+  "billing.activeBody": "La suscripción está activa en esta cuenta.",
+  "billing.payThroughInstead": "Pagar a través de {store} en su lugar",
+  "billing.plans": "Planes",
+  "billing.switchBody":
+    "Suscríbete aquí para cobrar la suscripción a través de {store}. Cancela después el plan de sendtally.com para no pagar dos veces.",
+  "billing.introMobile":
+    "Registrar sesiones y publicarlas en Strava es gratis, y siempre lo será. La suscripción abre las pantallas que te leen todo tu historial.",
+  "billing.loadFailed": "No se pudo cargar tu suscripción.",
+  "billing.comingSoon": "Próximamente",
+  "billing.intro":
+    "Registrar sesiones y publicarlas en Strava es gratis y siempre lo será. La suscripción es lo que convierte el registro en un historial de entrenamiento, y es lo que paga el servidor.",
+  "billing.loadingPlans": "Cargando planes…",
+  "billing.activeOnAccount": "Tu suscripción está activa en esta cuenta.",
+  "billing.billedThrough":
+    "Tu suscripción se cobra a través de {store}. Cámbiala o cancélala desde tus suscripciones de {store}; las tendencias se mantienen hasta que termine el periodo pagado.",
+  "billing.seeMembership": "Ver suscripción →",
 } as const;

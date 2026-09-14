@@ -25,12 +25,12 @@ export function ClimbLedgerRow({
         style={named ? {} : { fontWeight: 400, color: "rgba(64,63,76,0.45)" }}
       >
         {project && <Glyph d={FLAG} size={12} width={1.8} filled />}
-        {named ? climb.name : t("web.logSession.unnamed")}
+        {named ? climb.name : t("logSession.unnamed")}
       </span>
       <span
         className="climb-ledger-result"
         style={{ background: send ? "var(--bs-azure-ink)" : "var(--bs-gunmetal)" }}
-        aria-label={send ? t("web.logSession.send") : t("web.logSession.attempt")}
+        aria-label={send ? t("logSession.send") : t("logSession.attempt")}
       >
         <Glyph d={send ? CHECK : CROSS} size={send ? 12 : 11} width={2.2} />
       </span>

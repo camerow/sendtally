@@ -55,7 +55,11 @@ export function ProjectChart({ bars }: { bars: ProjectBar[] }): React.ReactEleme
         }}
       >
         {bars.map((bar, i) => (
-          <Text key={i} numberOfLines={1} style={[labelStyle, { flex: 1, textAlign: "center" }]}>
+          <Text
+            key={i}
+            numberOfLines={1}
+            style={[labelStyle, { flex: 1, textAlign: "center", textTransform: "uppercase" }]}
+          >
             {bar.axisLabel}
           </Text>
         ))}

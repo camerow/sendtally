@@ -15,7 +15,7 @@ import type {
   SessionClimb,
   SessionDetail,
 } from "@sendtally/api-client";
-import { t, upper } from "../i18n";
+import { t } from "../i18n";
 import { sameTagName } from "../sessions/tags";
 import { durationLabel as lowerDurationLabel } from "../sessions/years";
 import {
@@ -192,7 +192,7 @@ export function withStartTime(draft: LogSessionDraft, startTime: string): LogSes
 }
 
 export function durationLabel(minutes: number): string {
-  return upper(lowerDurationLabel(minutes));
+  return lowerDurationLabel(minutes);
 }
 
 function topDraftGrade(draft: LogSessionDraft): Grade | undefined {
@@ -215,8 +215,8 @@ export function draftSummary(draft: LogSessionDraft): string {
   const attempts = draft.climbs.length - sends;
   const top = topDraftGrade(draft);
   const parts = [
-    upper(t("sessions.climbCount", { count: draft.climbs.length })),
-    `${upper(t("logSession.sendCount", { count: sends }))}, ${upper(t("logSession.attemptCount", { count: attempts }))}`,
+    t("common.climbCount", { count: draft.climbs.length }),
+    `${t("logSession.sendCount", { count: sends })}, ${t("logSession.attemptCount", { count: attempts })}`,
   ];
   if (top !== undefined) parts.push(t("sessions.topGrade", { grade: formatGrade(top) }));
   const minutes = durationMinutes(draft.startTime, draft.endTime);

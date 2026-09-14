@@ -14,7 +14,7 @@ const ROWS: Array<{
   active: (current: GradeScales) => string;
 }> = [
   {
-    title: "web.settings.boulders",
+    title: "logSession.boulders",
     options: [
       { label: "V", patch: { boulder: "v" } },
       { label: "FONT", patch: { boulder: "font" } },
@@ -22,7 +22,7 @@ const ROWS: Array<{
     active: (current) => (current.boulder === "v" ? "V" : "FONT"),
   },
   {
-    title: "web.settings.routes",
+    title: "logSession.routes",
     options: [
       { label: "YDS", patch: { route: "yds" } },
       { label: "FRENCH", patch: { route: "french" } },

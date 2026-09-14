@@ -3,9 +3,9 @@ import type { LoaderFunctionArgs } from "react-router";
 import { useLoaderData, useSearchParams } from "react-router";
 import type { Membership } from "@sendtally/api-client";
 import { Badge, Label } from "@sendtally/design";
-import { t, upper } from "@sendtally/features/i18n";
+import { t } from "@sendtally/features/i18n";
 import { membershipVM } from "@sendtally/features/billing";
-import { MEMBER_BENEFITS } from "@sendtally/features/billing";
+import { memberBenefits } from "@sendtally/features/billing";
 import { MembershipPricing, SUBSCRIBED_PARAM } from "../billing/components/MembershipPricing";
 import { StoreMembershipPanel } from "../billing/components/StoreMembershipPanel";
 import { capture } from "../lib/analytics";
@@ -56,9 +56,9 @@ export default function MembershipRoute(): React.ReactElement {
               letterSpacing: "-0.03em",
             }}
           >
-            {t("web.billing.title")}
+            {t("common.membership")}
           </h1>
-          {isMember && <Badge tone="petal">{upper(t("web.billing.member"))}</Badge>}
+          {isMember && <Badge tone="petal">{t("common.member")}</Badge>}
         </div>
         <p
           style={{
@@ -70,12 +70,12 @@ export default function MembershipRoute(): React.ReactElement {
             textWrap: "pretty",
           }}
         >
-          {t("web.billing.intro")}
+          {t("billing.intro")}
         </p>
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 16, maxWidth: 620 }}>
-        {MEMBER_BENEFITS.map((benefit) => (
+        {memberBenefits().map((benefit) => (
           <div
             key={benefit.title}
             style={{
@@ -97,9 +97,7 @@ export default function MembershipRoute(): React.ReactElement {
               }}
             >
               {benefit.title}
-              {benefit.soon === true && (
-                <Label on="accent">{upper(t("web.billing.comingSoon"))}</Label>
-              )}
+              {benefit.soon === true && <Label on="accent">{t("billing.comingSoon")}</Label>}
             </span>
             <span
               style={{

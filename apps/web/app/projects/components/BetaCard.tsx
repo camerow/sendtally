@@ -1,5 +1,5 @@
 import React from "react";
-import { t, upper } from "@sendtally/features/i18n";
+import { t } from "@sendtally/features/i18n";
 
 export type BetaCardProps = {
   beta: string | null;
@@ -9,6 +9,7 @@ export type BetaCardProps = {
 
 const label: React.CSSProperties = {
   fontFamily: "var(--font-mono)",
+  textTransform: "uppercase",
   fontWeight: 500,
   fontSize: 11,
   letterSpacing: "0.08em",
@@ -17,6 +18,7 @@ const label: React.CSSProperties = {
 
 const meta: React.CSSProperties = {
   fontFamily: "var(--font-mono)",
+  textTransform: "uppercase",
   fontWeight: 500,
   fontSize: 10,
   letterSpacing: "0.06em",
@@ -49,19 +51,19 @@ export function BetaCard({ beta, updatedLabel, onSave }: BetaCardProps): React.R
       setEditing(false);
     } catch {
       setBusy(false);
-      setError(t("web.projects.betaSaveFailed"));
+      setError(t("projects.betaSaveFailed"));
     }
   }
 
   return (
     <div className="project-card">
-      <span style={label}>{upper(t("web.projects.beta"))}</span>
+      <span style={label}>{t("projects.beta")}</span>
       {editing ? (
         <textarea
           value={draft}
           rows={6}
           autoFocus
-          placeholder={t("web.projects.betaPlaceholder")}
+          placeholder={t("projects.betaPlaceholder")}
           onChange={(e) => setDraft(e.target.value)}
           style={{
             fontFamily: "var(--font-sans)",
@@ -85,11 +87,13 @@ export function BetaCard({ beta, updatedLabel, onSave }: BetaCardProps): React.R
             color: beta === null ? "rgba(64,63,76,0.45)" : "var(--bs-gunmetal)",
           }}
         >
-          {beta ?? t("web.projects.betaEmpty")}
+          {beta ?? t("projects.noBeta")}
         </span>
       )}
       {error !== null && (
-        <span style={{ ...meta, color: "var(--text-label-accent)" }}>{error}</span>
+        <span style={{ ...meta, textTransform: "none", color: "var(--text-label-accent)" }}>
+          {error}
+        </span>
       )}
       <div style={{ flex: 1 }} />
       <div
@@ -113,15 +117,15 @@ export function BetaCard({ beta, updatedLabel, onSave }: BetaCardProps): React.R
                 setEditing(false);
               }}
             >
-              {upper(t("web.shell.cancel"))}
+              {t("common.cancel")}
             </button>
             <button type="button" style={linkButton} disabled={busy} onClick={() => void save()}>
-              {upper(busy ? t("web.shell.saving") : t("web.projects.save"))}
+              {busy ? t("common.saving") : t("common.save")}
             </button>
           </>
         ) : (
           <button type="button" style={linkButton} onClick={() => setEditing(true)}>
-            {upper(beta === null ? t("web.projects.addBeta") : t("web.projects.edit"))}
+            {beta === null ? t("projects.addBeta") : t("common.edit")}
           </button>
         )}
       </div>

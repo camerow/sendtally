@@ -3,7 +3,7 @@ import React from "react";
 import { ActivityIndicator, Alert, Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useProject } from "@sendtally/features/climbs";
-import { t, upper } from "@sendtally/features/i18n";
+import { t } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { Icon } from "../../components/Icon";
 import { BetaCard } from "../../features/projects/BetaCard";
@@ -14,6 +14,7 @@ const label = {
   fontFamily: fonts.monoMedium,
   fontSize: 10,
   letterSpacing: 0.8,
+  textTransform: "uppercase",
   color: colors.textSecondary,
 } as const;
 
@@ -24,20 +25,16 @@ export default function ProjectDetailScreen(): React.ReactElement {
   const { state } = project;
 
   function confirmUnmark(name: string, keeps: string): void {
-    Alert.alert(
-      t("mobile.projects.stopTracking", { name }),
-      t("mobile.projects.stopTrackingBody", { keeps }),
-      [
-        { text: t("mobile.common.cancel"), style: "cancel" },
-        {
-          text: t("mobile.projects.unmark"),
-          style: "destructive",
-          onPress: () => {
-            void project.unmark().then(() => router.back());
-          },
+    Alert.alert(t("projects.stopTracking", { name }), t("projects.stopTrackingBody", { keeps }), [
+      { text: t("common.cancel"), style: "cancel" },
+      {
+        text: t("projects.unmark"),
+        style: "destructive",
+        onPress: () => {
+          void project.unmark().then(() => router.back());
         },
-      ]
-    );
+      },
+    ]);
   }
 
   if (state.status !== "ready") {
@@ -48,7 +45,7 @@ export default function ProjectDetailScreen(): React.ReactElement {
             <ActivityIndicator color={colors.gunmetal} />
           ) : (
             <Text style={{ fontFamily: fonts.mono, fontSize: 13, color: colors.textMuted }}>
-              {t("mobile.projects.loadOneFailed")}
+              {t("projects.loadOneFailed")}
             </Text>
           )}
         </View>
@@ -60,8 +57,8 @@ export default function ProjectDetailScreen(): React.ReactElement {
   const sent = vm.status === "sent";
   const keeps =
     vm.sessions.length === 0
-      ? t("mobile.projects.nothingLogged")
-      : t("mobile.projects.historyStays", {
+      ? t("projects.keepsNothing")
+      : t("projects.historyStays", {
           attempts: vm.stats[0]?.value ?? "",
           sessions: vm.stats[1]?.value ?? "",
         });
@@ -75,6 +72,7 @@ export default function ProjectDetailScreen(): React.ReactElement {
               fontFamily: fonts.monoSemiBold,
               fontSize: 15,
               color: colors.gunmetal,
+              textTransform: vm.gradeLabel === null ? "uppercase" : "none",
               paddingHorizontal: 12,
               paddingVertical: 7,
               borderRadius: radius.control,
@@ -107,7 +105,7 @@ export default function ProjectDetailScreen(): React.ReactElement {
               overflow: "hidden",
             }}
           >
-            {upper(sent ? t("mobile.projects.sent") : t("mobile.projects.open"))}
+            {sent ? t("common.sentStatus") : t("common.open")}
           </Text>
         </View>
 
@@ -116,7 +114,7 @@ export default function ProjectDetailScreen(): React.ReactElement {
             style={{ gap: 8, padding: 18, borderRadius: radius.card, backgroundColor: colors.gold }}
           >
             <Text style={{ ...label, color: colors.textSecondary }}>
-              {upper(t("mobile.projects.sentOn", { date: vm.stats[3]?.value ?? "" }))}
+              {t("projects.sentOn", { date: vm.stats[3]?.value ?? "" })}
             </Text>
             <Text
               style={{
@@ -129,12 +127,10 @@ export default function ProjectDetailScreen(): React.ReactElement {
               {vm.storyLabel}
             </Text>
             <Text style={{ ...label, color: colors.textSecondary }}>
-              {upper(
-                t("mobile.projects.firstTried", {
-                  date: vm.bars[0]?.axisLabel ?? "-",
-                  span: vm.stats[2]?.value ?? "",
-                })
-              )}
+              {t("projects.firstTried", {
+                date: vm.bars[0]?.axisLabel ?? "-",
+                value: vm.stats[2]?.value ?? "",
+              })}
             </Text>
           </View>
         )}
@@ -163,7 +159,12 @@ export default function ProjectDetailScreen(): React.ReactElement {
             >
               <Text style={label}>{stat.label}</Text>
               <Text
-                style={{ fontFamily: fonts.monoSemiBold, fontSize: 17, color: colors.gunmetal }}
+                style={{
+                  fontFamily: fonts.monoSemiBold,
+                  fontSize: 17,
+                  color: colors.gunmetal,
+                  textTransform: "uppercase",
+                }}
               >
                 {stat.value}
               </Text>
@@ -187,10 +188,11 @@ export default function ProjectDetailScreen(): React.ReactElement {
                 fontFamily: fonts.monoMedium,
                 fontSize: 11,
                 letterSpacing: 0.8,
+                textTransform: "uppercase",
                 color: colors.watermelonInk,
               }}
             >
-              {upper(t("mobile.projects.attemptsPerSession"))}
+              {t("projects.attemptsPerSession")}
             </Text>
             <View style={{ flex: 1 }} />
             <Text style={{ ...label, color: colors.textMuted }}>{vm.rangeLabel}</Text>
@@ -204,7 +206,7 @@ export default function ProjectDetailScreen(): React.ReactElement {
                 color: colors.textSecondary,
               }}
             >
-              {t("mobile.projects.chartEmpty")}
+              {t("projects.chartEmpty")}
             </Text>
           ) : (
             <ProjectChart bars={vm.bars} />
@@ -235,7 +237,7 @@ export default function ProjectDetailScreen(): React.ReactElement {
               color: colors.gunmetal,
             }}
           >
-            {t("mobile.projects.sessionsInvested")}
+            {t("projects.sessionsInvested")}
           </Text>
           <Text style={{ ...label, color: colors.textMuted }}>{vm.sessionsMetaLabel}</Text>
         </View>
@@ -255,7 +257,12 @@ export default function ProjectDetailScreen(): React.ReactElement {
               <View style={{ width: 62, gap: 3 }}>
                 <Text style={label}>{session.weekday}</Text>
                 <Text
-                  style={{ fontFamily: fonts.monoSemiBold, fontSize: 16, color: colors.gunmetal }}
+                  style={{
+                    fontFamily: fonts.monoSemiBold,
+                    fontSize: 16,
+                    color: colors.gunmetal,
+                    textTransform: "uppercase",
+                  }}
                 >
                   {session.dateLabel}
                 </Text>
@@ -269,10 +276,15 @@ export default function ProjectDetailScreen(): React.ReactElement {
                 </Text>
                 <Text
                   numberOfLines={1}
-                  style={{ fontFamily: fonts.mono, fontSize: 11, color: colors.textSecondary }}
+                  style={{
+                    fontFamily: fonts.mono,
+                    fontSize: 11,
+                    color: colors.textSecondary,
+                    textTransform: "uppercase",
+                  }}
                 >
                   {session.metaLabel}
-                  {session.sent ? upper(t("mobile.projects.sentSuffix")) : ""}
+                  {session.sent ? t("projects.sessionSent") : ""}
                 </Text>
                 {session.notes !== null && (
                   <Text
@@ -295,7 +307,7 @@ export default function ProjectDetailScreen(): React.ReactElement {
                   {session.attempts}
                 </Text>
                 <Text style={{ ...label, fontSize: 9, color: colors.textMuted }}>
-                  {upper(t("mobile.projects.attemptUnit", { count: session.attempts }))}
+                  {t("projects.attemptsUnit", { count: session.attempts })}
                 </Text>
               </View>
               <Icon name="chevron" size={14} color={colors.textFaint} />
@@ -303,9 +315,7 @@ export default function ProjectDetailScreen(): React.ReactElement {
           </Link>
         ))}
         {vm.sessions.length === 0 && (
-          <Text style={{ ...label, color: colors.textMuted }}>
-            {upper(t("mobile.projects.notTriedYet"))}
-          </Text>
+          <Text style={{ ...label, color: colors.textMuted }}>{t("projects.notTriedYet")}</Text>
         )}
 
         <Pressable
@@ -323,7 +333,7 @@ export default function ProjectDetailScreen(): React.ReactElement {
           <Text
             style={{ fontFamily: fonts.sansSemiBold, fontSize: 15, color: colors.watermelonInk }}
           >
-            {t("mobile.projects.unmarkProject")}
+            {t("projects.unmarkProject")}
           </Text>
         </Pressable>
       </ScrollView>

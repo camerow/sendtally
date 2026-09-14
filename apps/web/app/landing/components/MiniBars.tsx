@@ -21,6 +21,7 @@ function BarLabel({ text }: { text: string | undefined }): React.ReactElement {
         fontFamily: "var(--font-mono)",
         fontWeight: 500,
         fontSize: 10,
+        textTransform: "uppercase",
         color: "var(--text-on-white-secondary)",
         whiteSpace: "nowrap",
       }}

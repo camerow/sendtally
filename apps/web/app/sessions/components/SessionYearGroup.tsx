@@ -23,6 +23,7 @@ export function SessionYearGroup({ year }: { year: SessionYear }): React.ReactEl
             fontFamily: "var(--font-mono)",
             fontWeight: 500,
             fontSize: 10,
+            textTransform: "uppercase",
             letterSpacing: "0.08em",
             color: "rgba(64,63,76,0.55)",
           }}

@@ -1,6 +1,6 @@
 export const sessionDetail = {
+  "sessionDetail.loadFailed": "Diese Session konnte nicht geladen werden.",
   "sessionDetail.unknownClimb": "Unbekannte Kletterei",
-  "sessionDetail.resultProject": "Projekt",
   "sessionDetail.sortOrder": "Reihenfolge",
   "sessionDetail.sortGradeDesc": "Grad - schwerste zuerst",
   "sessionDetail.sortGradeAsc": "Grad - leichteste zuerst",
@@ -15,10 +15,21 @@ export const sessionDetail = {
   "sessionDetail.loggedManually": "Manuell eingetragen",
   "sessionDetail.postToStrava": "Auf Strava posten",
   "sessionDetail.statTime": "Zeit",
-  "sessionDetail.statClimbs": "Klettereien",
   "sessionDetail.statSends": "Begehungen",
   "sessionDetail.statFlashes": "Flashes",
   "sessionDetail.statTop": "Top",
   "sessionDetail.noteSaveFailed":
     "Die Notiz konnte nicht gespeichert werden. Versuch es noch einmal.",
+  "sessionDetail.backToSessions": "Zurück zu den Sessions",
+  "sessionDetail.deleteFailed":
+    "Diese Session konnte nicht gelöscht werden. Versuch es noch einmal.",
+  "sessionDetail.viewOnStrava": "Auf Strava ansehen ↗",
+  "sessionDetail.colClimb": "Kletterei",
+  "sessionDetail.colAngle": "Winkel",
+  "sessionDetail.colBurns": "Versuche",
+  "sessionDetail.colRest": "Pause",
+  "sessionDetail.noteCounter": "{n} / {max}",
+  "sessionDetail.editNote": "Notiz bearbeiten",
+  "sessionDetail.backToSession": "Zurück zur Session",
+  "sessionDetail.backSession": "Session",
 } as const;

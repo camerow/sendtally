@@ -14,7 +14,7 @@ import {
   gradeOptions,
   type Discipline,
 } from "@sendtally/features/log-session";
-import { t, upper } from "@sendtally/features/i18n";
+import { t } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { Chip } from "../../components/Chip";
 import { Icon } from "../../components/Icon";
@@ -34,6 +34,7 @@ const label = {
   fontSize: 10,
   lineHeight: 13,
   letterSpacing: 0.8,
+  textTransform: "uppercase",
   color: colors.textMuted,
 } as const;
 
@@ -50,8 +51,8 @@ const input = {
 } as const;
 
 function suggestionMeta(climb: ClimbSummary): string {
-  if (climb.project) return upper(t("mobile.projects.alreadyAProject"));
-  if (climb.sessions === 0) return upper(t("mobile.projects.nothingLoggedYet"));
+  if (climb.project) return t("projects.alreadyAProject");
+  if (climb.sessions === 0) return t("common.nothingLoggedYet");
   return projectMetaLabel(climb);
 }
 
@@ -131,33 +132,34 @@ export function AddProjectSheet({
       onClose();
     } catch {
       setBusy(false);
-      setError(t("mobile.projects.addFailed"));
+      setError(t("projects.addFailed"));
     }
   };
 
   const ready = identified && !(needsGrade && grade === "");
   const disciplines: Array<{ value: Discipline; label: string }> = [
-    { value: "boulder", label: upper(t("mobile.projects.boulder")) },
-    { value: "route", label: upper(t("mobile.projects.sport")) },
+    { value: "boulder", label: t("common.boulder") },
+    { value: "route", label: t("projects.sport") },
   ];
 
   return (
-    <Sheet visible={visible} onClose={onClose} closeLabel={t("mobile.projects.closeNewProject")}>
+    <Sheet visible={visible} onClose={onClose} closeLabel={t("projects.closeNewProject")}>
       <View style={{ gap: 18, paddingTop: 2, paddingHorizontal: 18, paddingBottom: 18 }}>
         <Text
           style={{
             fontFamily: fonts.monoMedium,
             fontSize: 11,
             letterSpacing: 0.88,
+            textTransform: "uppercase",
             color: colors.watermelonInk,
           }}
         >
-          {upper(t("mobile.projects.newProject"))}
+          {t("projects.newProject")}
         </Text>
 
         {searching && (
           <View style={{ gap: 9 }}>
-            <Text style={label}>{upper(t("mobile.projects.whichClimb"))}</Text>
+            <Text style={label}>{t("projects.whichClimb")}</Text>
             <TextInput
               value={name}
               onChangeText={(value) => {
@@ -165,7 +167,7 @@ export function AddProjectSheet({
                 setPicked(null);
                 setTracking(false);
               }}
-              placeholder={t("mobile.projects.namePlaceholder")}
+              placeholder={t("projects.namePlaceholder")}
               placeholderTextColor={colors.textFaint}
               autoCorrect={false}
               style={input}
@@ -246,22 +248,20 @@ export function AddProjectSheet({
                         color: colors.azureInk,
                       }}
                     >
-                      {t("mobile.projects.trackAsNew", { name: trimmed })}
+                      {t("projects.trackAsNew", { name: trimmed })}
                     </Text>
                   </Pressable>
                 )}
               </ScrollView>
             )}
-            <Text style={label}>{upper(t("mobile.projects.startTyping"))}</Text>
+            <Text style={label}>{t("projects.startTyping")}</Text>
           </View>
         )}
 
         {identified && (
           <View style={{ gap: 9 }}>
             <Text style={label}>
-              {upper(
-                picked === null ? t("mobile.projects.newClimb") : t("mobile.projects.fromLogbook")
-              )}
+              {picked === null ? t("projects.newClimb") : t("projects.fromLogbook")}
             </Text>
             <View
               style={{
@@ -298,9 +298,7 @@ export function AddProjectSheet({
                 {identityName}
               </Text>
               <Pressable accessibilityRole="button" onPress={change}>
-                <Text style={{ ...label, color: colors.azureInk }}>
-                  {upper(t("mobile.projects.change"))}
-                </Text>
+                <Text style={{ ...label, color: colors.azureInk }}>{t("projects.change")}</Text>
               </Pressable>
             </View>
           </View>
@@ -309,7 +307,7 @@ export function AddProjectSheet({
         {needsGrade && (
           <>
             <View style={{ gap: 9 }}>
-              <Text style={label}>{upper(t("mobile.projects.discipline"))}</Text>
+              <Text style={label}>{t("common.discipline")}</Text>
               <View style={{ flexDirection: "row", gap: 8 }}>
                 {disciplines.map((d) => (
                   <Chip
@@ -326,7 +324,7 @@ export function AddProjectSheet({
               </View>
             </View>
             <View style={{ gap: 9 }}>
-              <Text style={label}>{upper(t("mobile.projects.grade"))}</Text>
+              <Text style={label}>{t("common.grade")}</Text>
               <ScrollView
                 ref={rail}
                 horizontal
@@ -335,7 +333,13 @@ export function AddProjectSheet({
                 contentContainerStyle={{ gap: 6 }}
               >
                 {ladder.map((g) => (
-                  <Chip key={g} label={g} active={g === grade} onPress={() => setGrade(g)} />
+                  <Chip
+                    key={g}
+                    label={g}
+                    uppercase={false}
+                    active={g === grade}
+                    onPress={() => setGrade(g)}
+                  />
                 ))}
               </ScrollView>
             </View>
@@ -343,18 +347,22 @@ export function AddProjectSheet({
         )}
 
         <View style={{ gap: 9 }}>
-          <Text style={label}>{upper(t("mobile.projects.betaOptional"))}</Text>
+          <Text style={label}>{t("projects.betaOptional")}</Text>
           <TextInput
             value={beta}
             onChangeText={setBeta}
             multiline
-            placeholder={t("mobile.projects.betaPlaceholder")}
+            placeholder={t("projects.betaPlaceholderShort")}
             placeholderTextColor={colors.textFaint}
             style={{ ...input, minHeight: 64, textAlignVertical: "top" }}
           />
         </View>
 
-        {error !== null && <Text style={{ ...label, color: colors.watermelonInk }}>{error}</Text>}
+        {error !== null && (
+          <Text style={{ ...label, textTransform: "none", color: colors.watermelonInk }}>
+            {error}
+          </Text>
+        )}
 
         <Pressable
           onPress={() => void save()}
@@ -370,7 +378,7 @@ export function AddProjectSheet({
           }}
         >
           <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 15, color: colors.white }}>
-            {busy ? t("mobile.projects.adding") : t("mobile.projects.addProject")}
+            {busy ? t("projects.adding") : t("projects.addProject")}
           </Text>
         </Pressable>
       </View>

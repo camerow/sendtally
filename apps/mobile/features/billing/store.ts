@@ -11,7 +11,7 @@ import { REVENUECAT_API_KEY } from "../../lib/config";
 export const storeBillingAvailable = REVENUECAT_API_KEY !== "";
 
 export function storeLabel(): string {
-  return Platform.OS === "ios" ? t("mobile.billing.appStore") : t("mobile.billing.googlePlay");
+  return Platform.OS === "ios" ? t("billing.storeApp") : "Google Play";
 }
 
 const MANAGE_URL =
@@ -67,12 +67,12 @@ function isCancellation(err: unknown): boolean {
 }
 
 const PERIOD_KEYS: Partial<Record<PACKAGE_TYPE, MessageKey>> = {
-  [PACKAGE_TYPE.WEEKLY]: "mobile.billing.period.week",
-  [PACKAGE_TYPE.MONTHLY]: "mobile.billing.period.month",
-  [PACKAGE_TYPE.TWO_MONTH]: "mobile.billing.period.twoMonths",
-  [PACKAGE_TYPE.THREE_MONTH]: "mobile.billing.period.threeMonths",
-  [PACKAGE_TYPE.SIX_MONTH]: "mobile.billing.period.sixMonths",
-  [PACKAGE_TYPE.ANNUAL]: "mobile.billing.period.year",
+  [PACKAGE_TYPE.WEEKLY]: "billing.period.week",
+  [PACKAGE_TYPE.MONTHLY]: "billing.period.month",
+  [PACKAGE_TYPE.TWO_MONTH]: "billing.plan.twoMonths",
+  [PACKAGE_TYPE.THREE_MONTH]: "billing.plan.threeMonths",
+  [PACKAGE_TYPE.SIX_MONTH]: "billing.plan.sixMonths",
+  [PACKAGE_TYPE.ANNUAL]: "billing.period.year",
 };
 
 function periodLabel(type: PACKAGE_TYPE): string | undefined {
@@ -84,21 +84,19 @@ export function packageLabel(pkg: PurchasesPackage): string {
   const { priceString } = pkg.product;
   const period = periodLabel(pkg.packageType);
   if (pkg.packageType === PACKAGE_TYPE.LIFETIME) {
-    return t("mobile.billing.priceOnce", { price: priceString });
+    return t("billing.priceOnce", { price: priceString });
   }
-  return period === undefined
-    ? priceString
-    : t("mobile.billing.pricePerPeriod", { price: priceString, period });
+  return period === undefined ? priceString : `${priceString} / ${period}`;
 }
 
 const PLAN_KEYS: Partial<Record<PACKAGE_TYPE, MessageKey>> = {
-  [PACKAGE_TYPE.WEEKLY]: "mobile.billing.plan.weekly",
-  [PACKAGE_TYPE.MONTHLY]: "mobile.billing.plan.monthly",
-  [PACKAGE_TYPE.TWO_MONTH]: "mobile.billing.plan.twoMonths",
-  [PACKAGE_TYPE.THREE_MONTH]: "mobile.billing.plan.threeMonths",
-  [PACKAGE_TYPE.SIX_MONTH]: "mobile.billing.plan.sixMonths",
-  [PACKAGE_TYPE.ANNUAL]: "mobile.billing.plan.yearly",
-  [PACKAGE_TYPE.LIFETIME]: "mobile.billing.plan.lifetime",
+  [PACKAGE_TYPE.WEEKLY]: "billing.plan.weekly",
+  [PACKAGE_TYPE.MONTHLY]: "billing.plan.monthly",
+  [PACKAGE_TYPE.TWO_MONTH]: "billing.plan.twoMonths",
+  [PACKAGE_TYPE.THREE_MONTH]: "billing.plan.threeMonths",
+  [PACKAGE_TYPE.SIX_MONTH]: "billing.plan.sixMonths",
+  [PACKAGE_TYPE.ANNUAL]: "billing.plan.yearly",
+  [PACKAGE_TYPE.LIFETIME]: "billing.lifetime",
 };
 
 export type PlanCard = {
@@ -123,8 +121,8 @@ export function planCardOf(pkg: PurchasesPackage): PlanCard {
     return {
       ...base,
       price: pricePerMonthString,
-      cadence: t("mobile.billing.perMonth"),
-      equivalent: t("mobile.billing.billedYearly", { price: priceString }),
+      cadence: t("billing.perMonth"),
+      equivalent: t("billing.billedYearly", { price: priceString }),
       bestValue: true,
     };
   }
@@ -132,14 +130,14 @@ export function planCardOf(pkg: PurchasesPackage): PlanCard {
     return {
       ...base,
       price: priceString,
-      cadence: t("mobile.billing.onePayment"),
+      cadence: t("billing.onePayment"),
       equivalent: null,
     };
   }
   return {
     ...base,
     price: priceString,
-    cadence: period === undefined ? "" : t("mobile.billing.perPeriod", { period }),
+    cadence: period === undefined ? "" : t("billing.perPeriod", { period }),
     equivalent: null,
   };
 }

@@ -1,12 +1,7 @@
 export const billing = {
-  "billing.storeWeb": "sendtally.com",
-  "billing.storePlay": "Google Play",
   "billing.storeApp": "the App Store",
   "billing.storeTest": "the test store",
   "billing.storeOther": "your store",
-  "billing.storeChipWeb": "sendtally.com",
-  "billing.storeChipPlay": "Google Play",
-  "billing.storeChipApp": "App Store",
   "billing.storeChipTest": "Test store",
   "billing.storeChipOther": "Your store",
   "billing.monthlyPlan": "Monthly plan",
@@ -27,4 +22,60 @@ export const billing = {
   "billing.pointRpe": "RPE - how hard your sessions have been feeling over time",
   "billing.pointAvgGrade": "Average send grade - the drift a logbook can never show you",
   "billing.pointFlashRate": "Flash rate - the first thing to move when your reading improves",
+  "billing.period.week": "week",
+  "billing.period.month": "month",
+  "billing.plan.twoMonths": "2 months",
+  "billing.plan.threeMonths": "3 months",
+  "billing.plan.sixMonths": "6 months",
+  "billing.period.year": "year",
+  "billing.plan.weekly": "Weekly",
+  "billing.plan.monthly": "Monthly",
+  "billing.plan.yearly": "Yearly",
+  "billing.priceOnce": "{price} once",
+  "billing.perMonth": "per month",
+  "billing.perPeriod": "per {period}",
+  "billing.onePayment": "one payment",
+  "billing.billedYearly": "Billed {price} a year",
+  "billing.bestValue": "Best value",
+  "billing.purchaseFailed":
+    "The purchase could not be completed. Nothing was charged; try again in a moment.",
+  "billing.notEntitledAfterPurchase":
+    "{store} confirmed the purchase but membership has not arrived yet. Reopen the app in a minute.",
+  "billing.nothingToRestore": "No membership was found for this {store} account.",
+  "billing.restoreFailed": "Restoring did not go through. Try again in a moment.",
+  "billing.plansUnavailable":
+    "Plans could not be loaded from {store} right now. Check your connection and reopen the app to try again.",
+  "billing.becomeAMember": "Become a member",
+  "billing.becomeAMemberPlan": "Become a member · {plan}",
+  "billing.renewalNote":
+    "Billed through {store}. Renews automatically until you cancel, which you can do any time from your {store} subscriptions.",
+  "billing.restoring": "Restoring…",
+  "billing.restorePurchases": "Restore purchases",
+  "billing.terms": "Terms",
+  "billing.privacy": "Privacy",
+  "billing.loggingIsFree": "Logging is free",
+  "billing.freeBody":
+    "Membership turns the log into a training history. It also pays for the server.",
+  "billing.pickAPlan": " Pick a plan below to join.",
+  "billing.storeBody":
+    "Billed through {store}. Change plan or cancel from your {store} subscriptions; the trends stay until the paid period ends.",
+  "billing.manageIn": "Manage in {store}",
+  "billing.webBody":
+    "This membership was bought on sendtally.com and renews there. It unlocks the trends in the app all the same.",
+  "billing.activeBody": "Membership is active on this account.",
+  "billing.payThroughInstead": "Pay through {store} instead",
+  "billing.plans": "Plans",
+  "billing.switchBody":
+    "Subscribe here to bill membership through {store}. Cancel the sendtally.com plan afterwards so you are not paying twice.",
+  "billing.introMobile":
+    "Logging sessions and posting them to Strava are free, and always will be. Membership opens the screens that read your whole history back to you.",
+  "billing.loadFailed": "Could not load your membership.",
+  "billing.comingSoon": "Coming soon",
+  "billing.intro":
+    "Logging sessions and posting them to Strava are free and always will be. Membership is what turns the log into a training history, and it is what pays for the server.",
+  "billing.loadingPlans": "Loading plans…",
+  "billing.activeOnAccount": "Your membership is active on this account.",
+  "billing.billedThrough":
+    "Your membership is billed through {store}. Change or cancel it from your {store} subscriptions; the trends stay until the paid period ends.",
+  "billing.seeMembership": "See membership →",
 } as const;

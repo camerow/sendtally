@@ -1,4 +1,4 @@
-import { formatDate, upper } from "@sendtally/features/i18n";
+import { formatDate } from "@sendtally/features/i18n";
 import type { LandingCopy, TrendCopy } from "../copy";
 import type { MiniBar } from "./MiniBars";
 
@@ -26,7 +26,7 @@ const PYRAMID: MiniBar[] = [
 
 function months(): string[] {
   return [0, 1, 2, 3, 4, 5].map((i) =>
-    upper(formatDate(new Date(Date.UTC(2000, 2 + i, 1)), { month: "short", timeZone: "UTC" }))
+    formatDate(new Date(Date.UTC(2000, 2 + i, 1)), { month: "short", timeZone: "UTC" })
   );
 }
 

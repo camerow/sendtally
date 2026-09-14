@@ -6,7 +6,7 @@ import React from "react";
 import { KeyboardAvoidingView, Platform, Pressable, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, { Path } from "react-native-svg";
-import { t, upper } from "@sendtally/features/i18n";
+import { t } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { Logo } from "../components/Logo";
 import { SignedOutOnly } from "../features/auth/SignedOutOnly";
@@ -52,25 +52,25 @@ function swapFor(intent: Intent): { to: Intent; prompt: string; label: string } 
   return intent === "sign-in"
     ? {
         to: "sign-up",
-        prompt: t("mobile.signIn.swapToSignUpPrompt"),
-        label: t("mobile.signIn.swapToSignUpLabel"),
+        prompt: t("auth.signInSwapPrompt"),
+        label: t("auth.signInSwapLabel"),
       }
     : {
         to: "sign-in",
-        prompt: t("mobile.signIn.swapToSignInPrompt"),
-        label: t("mobile.signIn.swapToSignInLabel"),
+        prompt: t("auth.signUpSwapPrompt"),
+        label: t("common.signIn"),
       };
 }
 
 function copyFor(intent: Intent): { title: string; body: string } {
   return intent === "sign-in"
-    ? { title: t("mobile.signIn.signInTitle"), body: t("mobile.signIn.signInBody") }
-    : { title: t("mobile.signIn.signUpTitle"), body: t("mobile.signIn.signUpBody") };
+    ? { title: t("auth.signInHeading"), body: t("auth.signInBody") }
+    : { title: t("auth.signUpHeading"), body: t("auth.signUpBody") };
 }
 
 function errorMessage(err: unknown): string {
   const first = (err as { errors?: Array<{ longMessage?: string; message?: string }> }).errors?.[0];
-  return first?.longMessage ?? first?.message ?? t("mobile.common.somethingWentWrongTryAgain");
+  return first?.longMessage ?? first?.message ?? t("common.somethingWentWrongTryAgain");
 }
 
 function errorCode(err: unknown): string | undefined {
@@ -122,7 +122,7 @@ export default function SignIn(): React.ReactElement | null {
         return;
       }
       if (await adoptExistingSession()) return;
-      setError(t("mobile.signIn.googleIncomplete"));
+      setError(t("auth.googleIncomplete"));
     } catch (err) {
       if (errorCode(err) === "session_exists" && (await adoptExistingSession())) return;
       setError(errorMessage(err));
@@ -147,7 +147,7 @@ export default function SignIn(): React.ReactElement | null {
   async function sendCode(): Promise<void> {
     if (!signInLoaded || !signUpLoaded) return;
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
-      setError(t("mobile.signIn.invalidEmail"));
+      setError(t("auth.invalidEmail"));
       return;
     }
     setError(null);
@@ -161,7 +161,7 @@ export default function SignIn(): React.ReactElement | null {
       }
       const factor = attempt.supportedFirstFactors?.find((f) => f.strategy === "email_code");
       if (factor === undefined || !("emailAddressId" in factor)) {
-        setError(t("mobile.signIn.emailCodeDisabled"));
+        setError(t("auth.emailCodeDisabled"));
         setBusy(false);
         return;
       }
@@ -178,7 +178,7 @@ export default function SignIn(): React.ReactElement | null {
         return;
       }
       if (intent === "sign-in") {
-        setError(t("mobile.signIn.noAccount"));
+        setError(t("auth.noAccount"));
         setBusy(false);
         return;
       }
@@ -196,7 +196,7 @@ export default function SignIn(): React.ReactElement | null {
   async function verifyCode(): Promise<void> {
     if (!signInLoaded || !signUpLoaded || phase.name !== "code") return;
     if (!/^\d{6}$/.test(code.trim())) {
-      setError(t("mobile.signIn.invalidCode"));
+      setError(t("auth.invalidCode"));
       return;
     }
     setError(null);
@@ -238,7 +238,7 @@ export default function SignIn(): React.ReactElement | null {
           return;
         }
       }
-      setError(t("mobile.signIn.codeFailed"));
+      setError(t("auth.codeFailed"));
     } catch (err) {
       setError(errorMessage(err));
     }
@@ -248,7 +248,7 @@ export default function SignIn(): React.ReactElement | null {
   async function signInWithPassword(): Promise<void> {
     if (!signInLoaded || phase.name !== "password") return;
     if (password === "") {
-      setError(t("mobile.signIn.enterPassword"));
+      setError(t("auth.enterPassword"));
       return;
     }
     setError(null);
@@ -267,7 +267,7 @@ export default function SignIn(): React.ReactElement | null {
         setBusy(false);
         return;
       }
-      setError(t("mobile.signIn.passwordFailed"));
+      setError(t("auth.wrongPassword"));
     } catch (err) {
       setError(errorMessage(err));
     }
@@ -286,7 +286,7 @@ export default function SignIn(): React.ReactElement | null {
     setBusy(true);
     try {
       if (!(await startSecondFactor(signIn.supportedSecondFactors))) {
-        setError(t("mobile.signIn.resendFailed"));
+        setError(t("auth.resendFailed"));
       }
     } catch (err) {
       setError(errorMessage(err));
@@ -306,24 +306,24 @@ export default function SignIn(): React.ReactElement | null {
   const copy = copyFor(intent);
   const swap = swapFor(intent);
   const title = inCodePhase
-    ? t("mobile.signIn.checkInbox")
+    ? t("auth.checkInbox")
     : inPasswordPhase
-      ? t("mobile.signIn.signInTitle")
+      ? t("auth.signInHeading")
       : copy.title;
   const body = inCodePhase
     ? phase.name === "code" && phase.mode === "second-factor"
-      ? t("mobile.signIn.secondFactorBody", { email })
-      : t("mobile.signIn.codeSentBody", { email })
+      ? t("auth.secondFactorBody", { email })
+      : t("auth.codeSentBody", { email })
     : inPasswordPhase
-      ? t("mobile.signIn.passwordBody", { email })
+      ? t("auth.passwordBody", { email })
       : copy.body;
   const buttonLabel = inCodePhase
     ? phase.name === "code" && phase.mode === "sign-up"
-      ? t("mobile.signIn.createAccount")
-      : t("mobile.signIn.signIn")
+      ? t("common.createAccount")
+      : t("common.signIn")
     : inPasswordPhase
-      ? t("mobile.signIn.signIn")
-      : t("mobile.signIn.emailMeACode");
+      ? t("common.signIn")
+      : t("auth.emailMeACode");
   const submit = inCodePhase ? verifyCode : inPasswordPhase ? signInWithPassword : sendCode;
   const fieldStyle = {
     fontFamily: fonts.sans,
@@ -357,7 +357,7 @@ export default function SignIn(): React.ReactElement | null {
                 <Pressable
                   onPress={() => router.back()}
                   accessibilityRole="button"
-                  accessibilityLabel={t("mobile.signIn.back")}
+                  accessibilityLabel={t("auth.back")}
                   hitSlop={12}
                   style={{ minHeight: 32, justifyContent: "center" }}
                 >
@@ -398,7 +398,7 @@ export default function SignIn(): React.ReactElement | null {
                   setPassword(t);
                   setError(null);
                 }}
-                placeholder={t("mobile.signIn.passwordPlaceholder")}
+                placeholder={t("auth.passwordLabel")}
                 placeholderTextColor={colors.textFaint}
                 secureTextEntry
                 textContentType="password"
@@ -459,13 +459,21 @@ export default function SignIn(): React.ReactElement | null {
                   <Text
                     style={{ fontFamily: fonts.sansSemiBold, fontSize: 16, color: colors.gunmetal }}
                   >
-                    {t("mobile.signIn.continueWithGoogle")}
+                    {t("auth.continueWithGoogle")}
                   </Text>
                 </Pressable>
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
                   <View style={{ flex: 1, height: 1, backgroundColor: "rgba(64,63,76,0.12)" }} />
-                  <Text style={{ fontFamily: fonts.mono, fontSize: 11, color: colors.textMuted }}>
-                    {upper(t("mobile.signIn.or"))}
+                  <Text
+                    style={{
+                      fontFamily: fonts.mono,
+                      fontSize: 11,
+                      color: colors.textMuted,
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    {" "}
+                    {t("auth.or")}
                   </Text>
                   <View style={{ flex: 1, height: 1, backgroundColor: "rgba(64,63,76,0.12)" }} />
                 </View>
@@ -514,14 +522,14 @@ export default function SignIn(): React.ReactElement | null {
                   onPress={backToEmail}
                   style={press({ minHeight: 44, justifyContent: "center" })}
                 >
-                  <Text style={secondaryLink}>{t("mobile.signIn.differentEmail")}</Text>
+                  <Text style={secondaryLink}>{t("auth.differentEmail")}</Text>
                 </Pressable>
                 {inCodePhase && (
                   <Pressable
                     onPress={() => void resendCode()}
                     style={{ minHeight: 44, justifyContent: "center" }}
                   >
-                    <Text style={secondaryLink}>{t("mobile.signIn.resend")}</Text>
+                    <Text style={secondaryLink}>{t("auth.resend")}</Text>
                   </Pressable>
                 )}
               </View>
@@ -556,7 +564,7 @@ export default function SignIn(): React.ReactElement | null {
                 color: "rgba(64,63,76,0.58)",
               }}
             >
-              {t("mobile.signIn.stravaNote")}
+              {t("auth.stravaNote")}
             </Text>
           </View>
         </KeyboardAvoidingView>

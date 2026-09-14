@@ -1,6 +1,6 @@
 import React from "react";
 import { Text, View } from "react-native";
-import { t, upper } from "@sendtally/features/i18n";
+import { t } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 
 export type UpgradeCardProps = {
@@ -30,10 +30,11 @@ export function UpgradeCard({
           fontFamily: fonts.monoMedium,
           fontSize: 10,
           letterSpacing: 0.8,
+          textTransform: "uppercase",
           color: colors.watermelonInk,
         }}
       >
-        {upper(t("mobile.billing.members"))}
+        {t("common.members")}
       </Text>
       <Text
         style={{

@@ -6,7 +6,7 @@ import { pageMeta } from "../lib/seo";
 import { t } from "@sendtally/features/i18n";
 
 export function meta(): Array<Record<string, string>> {
-  return pageMeta({ title: t("web.auth.signUpTitle"), path: "/sign-up", noindex: true });
+  return pageMeta({ title: t("auth.signUpTitle"), path: "/sign-up", noindex: true });
 }
 
 export async function loader(args: LoaderFunctionArgs): Promise<null> {

@@ -4,6 +4,7 @@ import { Link, useLoaderData, useNavigate, useParams } from "react-router";
 import type { SendtallyApi } from "@sendtally/api-client";
 import {
   CLIMB_SORTS,
+  climbSortLabel,
   useSessionDetail,
   type ClimbFilter,
   type ClimbVM,
@@ -15,7 +16,7 @@ import { SessionTags } from "../sessions/components/SessionTags";
 import { PostStatusBar } from "../session-detail/components/PostStatusBar";
 import { SessionNotes } from "../session-detail/components/SessionNotes";
 import { BackLink } from "../components/BackLink";
-import { t, upper } from "@sendtally/features/i18n";
+import { t } from "@sendtally/features/i18n";
 
 export async function loader(args: LoaderFunctionArgs): Promise<{ apiUrl: string }> {
   await requireApi(args);
@@ -24,6 +25,7 @@ export async function loader(args: LoaderFunctionArgs): Promise<{ apiUrl: string
 
 const monoLabel: React.CSSProperties = {
   fontFamily: "var(--font-mono)",
+  textTransform: "uppercase",
   fontWeight: 500,
   fontSize: 10,
   letterSpacing: "0.08em",
@@ -32,6 +34,7 @@ const monoLabel: React.CSSProperties = {
 
 const chipStyle = (active: boolean): React.CSSProperties => ({
   fontFamily: "var(--font-mono)",
+  textTransform: "uppercase",
   fontWeight: 500,
   fontSize: 11,
   letterSpacing: "0.06em",
@@ -105,7 +108,7 @@ function SessionActions({
       await api.deleteLoggedSession(fingerprint);
       await navigate("/app");
     } catch {
-      setError(t("web.sessionDetail.deleteFailed"));
+      setError(t("sessionDetail.deleteFailed"));
       setDeleting(false);
       setConfirming(false);
     }
@@ -116,18 +119,18 @@ function SessionActions({
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
         {!confirming && editable && (
           <Link to={`/app/sessions/${encodeURIComponent(fingerprint)}/edit`} style={actionButton}>
-            {t("web.sessionDetail.edit")}
+            {t("common.edit")}
           </Link>
         )}
         {!confirming && (
           <button type="button" onClick={() => setConfirming(true)} style={actionButton}>
-            {t("web.sessionDetail.delete")}
+            {t("common.delete")}
           </button>
         )}
         {confirming && (
           <>
             <span style={{ ...monoLabel, alignSelf: "center", fontSize: 11 }}>
-              {upper(t("web.sessionDetail.confirmDelete"))}
+              {t("sessions.deleteTitle")}
             </span>
             <button
               type="button"
@@ -135,7 +138,7 @@ function SessionActions({
               disabled={deleting}
               style={actionButton}
             >
-              {t("web.shell.cancel")}
+              {t("common.cancel")}
             </button>
             <button
               type="button"
@@ -149,18 +152,25 @@ function SessionActions({
                 opacity: deleting ? 0.45 : 1,
               }}
             >
-              {deleting ? t("web.sessionDetail.deleting") : t("web.sessionDetail.delete")}
+              {deleting ? t("common.deleting") : t("common.delete")}
             </button>
           </>
         )}
         {stravaUrl !== null && (
           <a href={stravaUrl} target="_blank" rel="noreferrer" style={actionButton}>
-            {t("web.sessionDetail.viewOnStrava")}
+            {t("sessionDetail.viewOnStrava")}
           </a>
         )}
       </div>
       {error !== null && (
-        <span style={{ ...monoLabel, fontSize: 11, color: "var(--text-label-accent)" }}>
+        <span
+          style={{
+            ...monoLabel,
+            textTransform: "none",
+            fontSize: 11,
+            color: "var(--text-label-accent)",
+          }}
+        >
           {error}
         </span>
       )}
@@ -177,31 +187,28 @@ export default function SessionDetailRoute(): React.ReactElement {
 
   if (state.status === "loading") {
     return (
-      <span style={{ ...monoLabel, color: "rgba(64,63,76,0.55)" }}>
-        {upper(t("web.shell.loading"))}
-      </span>
+      <span style={{ ...monoLabel, color: "rgba(64,63,76,0.55)" }}>{t("common.loading")}</span>
     );
   }
   if (state.status === "error") {
     return (
-      <span style={{ ...monoLabel }}>
-        {t("web.sessionDetail.loadFailed")}{" "}
-        <Link to="/app">{t("web.sessionDetail.backToSessions")}</Link>
+      <span style={{ ...monoLabel, textTransform: "none" }}>
+        {t("sessionDetail.loadFailed")} <Link to="/app">{t("sessionDetail.backToSessions")}</Link>
       </span>
     );
   }
   const { vm, climbs, tags, notes } = state.data;
 
   const filters: Array<[ClimbFilter, string]> = [
-    ["all", upper(t("web.sessionDetail.filterAll", { n: vm.filterCounts.all }))],
-    ["sent", upper(t("web.sessionDetail.filterSent", { n: vm.filterCounts.sent }))],
-    ["flash", upper(t("web.sessionDetail.filterFlashed", { n: vm.filterCounts.flash }))],
-    ["project", upper(t("web.sessionDetail.filterProjects", { n: vm.filterCounts.project }))],
+    ["all", t("sessions.filterAll", { n: vm.filterCounts.all })],
+    ["sent", t("sessions.filterSent", { n: vm.filterCounts.sent })],
+    ["flash", t("sessions.filterFlashed", { n: vm.filterCounts.flash })],
+    ["project", t("sessions.filterProjects", { n: vm.filterCounts.project })],
   ];
 
   return (
     <div>
-      <BackLink to="/app">{upper(t("web.shell.navSessions"))}</BackLink>
+      <BackLink to="/app">{t("common.sessions")}</BackLink>
       <div
         style={{
           display: "flex",
@@ -297,9 +304,7 @@ export default function SessionDetailRoute(): React.ReactElement {
             gap: 12,
           }}
         >
-          <span style={{ ...monoLabel, fontSize: 11 }}>
-            {upper(t("web.sessionDetail.sendsByGrade"))}
-          </span>
+          <span style={{ ...monoLabel, fontSize: 11 }}>{t("trends.sendsByGrade")}</span>
           <div style={{ display: "flex", alignItems: "flex-end", gap: 6, height: 84 }}>
             {vm.bars.map((b) => (
               <div
@@ -373,8 +378,8 @@ export default function SessionDetailRoute(): React.ReactElement {
           }}
         >
           {CLIMB_SORTS.map((s) => (
-            <option key={s.value} value={s.value}>
-              {s.label}
+            <option key={s} value={s}>
+              {climbSortLabel(s)}
             </option>
           ))}
         </select>
@@ -393,12 +398,12 @@ export default function SessionDetailRoute(): React.ReactElement {
           >
             {[
               "#",
-              upper(t("web.sessionDetail.colClimb")),
-              upper(t("web.sessionDetail.colGrade")),
-              upper(t("web.sessionDetail.colAngle")),
-              upper(t("web.sessionDetail.colBurns")),
-              upper(t("web.sessionDetail.colRest")),
-              upper(t("web.sessionDetail.colResult")),
+              t("sessionDetail.colClimb"),
+              t("common.grade"),
+              t("sessionDetail.colAngle"),
+              t("sessionDetail.colBurns"),
+              t("sessionDetail.colRest"),
+              t("common.result"),
             ].map((h) => (
               <span key={h} style={monoLabel}>
                 {h}
@@ -484,6 +489,7 @@ export default function SessionDetailRoute(): React.ReactElement {
                       fontWeight: 500,
                       fontSize: 10,
                       letterSpacing: "0.08em",
+                      textTransform: "uppercase",
                       borderRadius: "var(--radius-pill)",
                       padding: "3px 9px",
                       background: badge.bg,

@@ -1,6 +1,6 @@
 import React from "react";
 import type { StoredSessionDraft } from "@sendtally/features/log-session";
-import { formatDate, t, upper } from "@sendtally/features/i18n";
+import { formatDate, t } from "@sendtally/features/i18n";
 import { DiscardDraftDialog } from "../../components/DiscardDraftDialog";
 
 function savedLabel(at: Date): string {
@@ -24,16 +24,14 @@ export function DraftBanner({
       <div className="draft-banner">
         <div className="draft-banner-text">
           <span className="draft-banner-title">
-            {t("web.logSession.unfinishedFrom", { when: savedLabel(savedAt) })}
+            {t("logSession.unfinished", { when: savedLabel(savedAt) })}
           </span>
           <span className="draft-banner-meta">
-            {upper(
-              t("web.logSession.draftMeta", {
-                count: draft.climbs.length,
-                start: draft.startTime,
-                end: draft.endTime,
-              })
-            )}
+            {t("logSession.draftMeta", {
+              count: draft.climbs.length,
+              start: draft.startTime,
+              end: draft.endTime,
+            })}
           </span>
         </div>
         <div className="draft-banner-actions">
@@ -42,10 +40,10 @@ export function DraftBanner({
             onClick={() => setConfirming(true)}
             className="draft-banner-button draft-banner-button--ghost"
           >
-            {t("web.logSession.startFresh")}
+            {t("logSession.startFresh")}
           </button>
           <button type="button" onClick={onResume} className="draft-banner-button">
-            {t("web.logSession.pickUp")}
+            {t("logSession.pickUp")}
           </button>
         </div>
       </div>

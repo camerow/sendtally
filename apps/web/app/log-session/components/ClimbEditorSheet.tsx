@@ -9,7 +9,7 @@ import {
   type Discipline,
   type GradeScale,
 } from "@sendtally/features/log-session";
-import { t, upper } from "@sendtally/features/i18n";
+import { t } from "@sendtally/features/i18n";
 import { ClimbNameField } from "./ClimbNameField";
 import { DisciplineToggle } from "./DisciplineToggle";
 import { OutcomeControl } from "./OutcomeControl";
@@ -110,7 +110,7 @@ export function ClimbEditorSheet({
     <dialog
       ref={dialog}
       className="climb-sheet"
-      aria-label={t("web.logSession.climbOf", { n: index + 1, total: count })}
+      aria-label={t("logSession.climbOf", { n: index + 1, total: count })}
       onCancel={(e) => {
         e.preventDefault();
         onClose();
@@ -130,17 +130,17 @@ export function ClimbEditorSheet({
           <div className="climb-sheet-handle" />
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <span style={{ ...monoLabel, color: "var(--text-label-accent)" }}>
-              {upper(t("web.logSession.climbOf", { n: index + 1, total: count }))}
+              {t("logSession.climbOf", { n: index + 1, total: count })}
             </span>
             {count > 1 && (
               <button type="button" onClick={onRemove} className="climb-sheet-remove">
-                {upper(t("web.logSession.remove"))}
+                {t("logSession.remove")}
               </button>
             )}
           </div>
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
-          <span style={monoLabel}>{upper(t("web.logSession.grade"))}</span>
+          <span style={monoLabel}>{t("common.grade")}</span>
           <div ref={rail} className="climb-sheet-rail">
             {gradeOptions(scale).map((g) => (
               <button
@@ -162,8 +162,8 @@ export function ClimbEditorSheet({
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
           <span style={monoLabel}>
-            {upper(t("web.logSession.name"))}{" "}
-            <span style={{ color: "rgba(64,63,76,0.45)" }}>{upper(t("web.shell.optional"))}</span>
+            {t("logSession.name")}{" "}
+            <span style={{ color: "rgba(64,63,76,0.45)" }}>{t("common.optional")}</span>
           </span>
           <ClimbNameField
             value={climb.name}
@@ -195,7 +195,7 @@ export function ClimbEditorSheet({
           onToggle={onToggleProject}
         />
         <button type="button" onClick={onClose} className="climb-sheet-done">
-          {t("web.logSession.done")}
+          {t("common.done")}
         </button>
       </div>
     </dialog>

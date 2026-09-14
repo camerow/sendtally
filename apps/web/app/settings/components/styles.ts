@@ -5,6 +5,7 @@ export const sectionLabel: React.CSSProperties = {
   fontWeight: 500,
   fontSize: 10,
   letterSpacing: "0.08em",
+  textTransform: "uppercase",
   color: "var(--text-label-accent)",
 };
 

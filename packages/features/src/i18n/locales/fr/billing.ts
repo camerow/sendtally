@@ -1,12 +1,7 @@
 export const billing = {
-  "billing.storeWeb": "sendtally.com",
-  "billing.storePlay": "Google Play",
   "billing.storeApp": "App Store",
   "billing.storeTest": "la boutique de test",
   "billing.storeOther": "ta boutique",
-  "billing.storeChipWeb": "sendtally.com",
-  "billing.storeChipPlay": "Google Play",
-  "billing.storeChipApp": "App Store",
   "billing.storeChipTest": "Boutique de test",
   "billing.storeChipOther": "Ta boutique",
   "billing.monthlyPlan": "Formule mensuelle",
@@ -28,4 +23,60 @@ export const billing = {
   "billing.pointAvgGrade": "Cotation moyenne enchaînée - la dérive qu'un carnet ne montre jamais",
   "billing.pointFlashRate":
     "Taux de flash - la première chose qui bouge quand ta lecture progresse",
+  "billing.period.week": "semaine",
+  "billing.period.month": "mois",
+  "billing.plan.twoMonths": "2 mois",
+  "billing.plan.threeMonths": "3 mois",
+  "billing.plan.sixMonths": "6 mois",
+  "billing.period.year": "an",
+  "billing.plan.weekly": "Hebdomadaire",
+  "billing.plan.monthly": "Mensuel",
+  "billing.plan.yearly": "Annuel",
+  "billing.priceOnce": "{price} une fois",
+  "billing.perMonth": "par mois",
+  "billing.perPeriod": "par {period}",
+  "billing.onePayment": "paiement unique",
+  "billing.billedYearly": "Facturé {price} par an",
+  "billing.bestValue": "Meilleur prix",
+  "billing.purchaseFailed":
+    "L'achat n'a pas abouti. Rien n'a été débité ; réessaie dans un instant.",
+  "billing.notEntitledAfterPurchase":
+    "{store} a confirmé l'achat mais l'abonnement n'est pas encore arrivé. Rouvre l'appli dans une minute.",
+  "billing.nothingToRestore": "Aucun abonnement trouvé pour ce compte {store}.",
+  "billing.restoreFailed": "La restauration n'a pas abouti. Réessaie dans un instant.",
+  "billing.plansUnavailable":
+    "Impossible de charger les formules depuis {store} pour le moment. Vérifie ta connexion et rouvre l'appli pour réessayer.",
+  "billing.becomeAMember": "Devenir abonné",
+  "billing.becomeAMemberPlan": "Devenir abonné · {plan}",
+  "billing.renewalNote":
+    "Facturé via {store}. Renouvelé automatiquement jusqu'à résiliation, possible à tout moment depuis tes abonnements {store}.",
+  "billing.restoring": "Restauration…",
+  "billing.restorePurchases": "Restaurer les achats",
+  "billing.terms": "Conditions",
+  "billing.privacy": "Confidentialité",
+  "billing.loggingIsFree": "Enregistrer est gratuit",
+  "billing.freeBody":
+    "L'abonnement transforme le carnet en historique d'entraînement. Il paie aussi le serveur.",
+  "billing.pickAPlan": " Choisis une formule ci-dessous pour t'abonner.",
+  "billing.storeBody":
+    "Facturé via {store}. Change de formule ou résilie depuis tes abonnements {store} ; les tendances restent jusqu'à la fin de la période payée.",
+  "billing.manageIn": "Gérer dans {store}",
+  "billing.webBody":
+    "Cet abonnement a été acheté sur sendtally.com et s'y renouvelle. Il débloque quand même les tendances dans l'appli.",
+  "billing.activeBody": "L'abonnement est actif sur ce compte.",
+  "billing.payThroughInstead": "Payer via {store} à la place",
+  "billing.plans": "Formules",
+  "billing.switchBody":
+    "Abonne-toi ici pour facturer l'abonnement via {store}. Résilie ensuite la formule sendtally.com pour ne pas payer deux fois.",
+  "billing.introMobile":
+    "Enregistrer tes séances et les publier sur Strava est gratuit, et le restera. L'abonnement ouvre les écrans qui relisent tout ton historique.",
+  "billing.loadFailed": "Impossible de charger ton abonnement.",
+  "billing.comingSoon": "Bientôt disponible",
+  "billing.intro":
+    "Enregistrer tes séances et les publier sur Strava est gratuit et le restera. L'abonnement transforme le carnet en historique d'entraînement, et c'est lui qui paie le serveur.",
+  "billing.loadingPlans": "Chargement des formules…",
+  "billing.activeOnAccount": "Ton abonnement est actif sur ce compte.",
+  "billing.billedThrough":
+    "Ton abonnement est facturé via {store}. Modifie-le ou résilie-le depuis tes abonnements {store} ; les tendances restent jusqu'à la fin de la période payée.",
+  "billing.seeMembership": "Voir l'abonnement →",
 } as const;

@@ -20,14 +20,14 @@ describe("t", () => {
   });
 
   it("picks the plural form without Intl.PluralRules, which iOS Hermes lacks", () => {
-    expect(t("sessions.climbCount", { count: 1 })).toBe("1 climb");
-    expect(t("sessions.climbCount", { count: 3 })).toBe("3 climbs");
+    expect(t("common.climbCount", { count: 1 })).toBe("1 climb");
+    expect(t("common.climbCount", { count: 3 })).toBe("3 climbs");
     setLocale("fr");
-    expect(t("sessions.climbCount", { count: 0 })).toBe(
-      fr["sessions.climbCount_one"].replace("{count}", "0")
+    expect(t("common.climbCount", { count: 0 })).toBe(
+      fr["common.climbCount_one"].replace("{count}", "0")
     );
-    expect(t("sessions.climbCount", { count: 2 })).toBe(
-      fr["sessions.climbCount_other"].replace("{count}", "2")
+    expect(t("common.climbCount", { count: 2 })).toBe(
+      fr["common.climbCount_other"].replace("{count}", "2")
     );
   });
 

@@ -54,11 +54,11 @@ export function usePurchase(refresh: () => Promise<Entitlements>): PurchaseFeatu
           if (outcome === "cancelled") return;
           const next = await refresh();
           if (!next.membership.active)
-            setError(t("mobile.billing.notEntitledAfterPurchase", { store: storeLabel() }));
+            setError(t("billing.notEntitledAfterPurchase", { store: storeLabel() }));
         })
         .catch((err: unknown) => {
           console.error(`purchase failed: ${err instanceof Error ? err.message : String(err)}`);
-          setError(t("mobile.billing.purchaseFailed"));
+          setError(t("billing.purchaseFailed"));
         })
         .finally(() => setStatus("ready"));
     },
@@ -72,11 +72,11 @@ export function usePurchase(refresh: () => Promise<Entitlements>): PurchaseFeatu
       .then(async () => {
         const next = await refresh();
         if (!next.membership.active)
-          setError(t("mobile.billing.nothingToRestore", { store: storeLabel() }));
+          setError(t("billing.nothingToRestore", { store: storeLabel() }));
       })
       .catch((err: unknown) => {
         console.error(`restore failed: ${err instanceof Error ? err.message : String(err)}`);
-        setError(t("mobile.billing.restoreFailed"));
+        setError(t("billing.restoreFailed"));
       })
       .finally(() => setStatus(packages.length === 0 ? "unavailable" : "ready"));
   }, [packages.length, refresh]);

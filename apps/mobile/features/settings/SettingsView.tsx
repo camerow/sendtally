@@ -3,7 +3,7 @@ import { Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import type { SettingsVM, StravaPostingFeature } from "@sendtally/features/settings";
 import type { Discipline, GradePrefs, GradeScale } from "@sendtally/features/log-session";
-import { t, upper } from "@sendtally/features/i18n";
+import { t } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { Icon } from "../../components/Icon";
 import { ScreenHeader } from "../../components/ScreenHeader";
@@ -30,6 +30,7 @@ function StatusPill({ label, active }: { label: string; active: boolean }): Reac
         fontFamily: fonts.monoMedium,
         fontSize: 9,
         letterSpacing: 0.7,
+        textTransform: "uppercase",
         paddingHorizontal: 8,
         paddingVertical: 3,
         borderRadius: radius.pill,
@@ -55,7 +56,7 @@ export function SettingsView({
 }: SettingsViewProps): React.ReactElement {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.white }} edges={["top"]}>
-      <ScreenHeader title={t("mobile.settings.title")} />
+      <ScreenHeader title={t("common.settings")} />
       <ScrollView
         contentContainerStyle={{
           paddingHorizontal: 18,
@@ -70,15 +71,15 @@ export function SettingsView({
           <View
             style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}
           >
-            <Text style={sectionLabel}>{upper(t("mobile.settings.strava"))}</Text>
+            <Text style={sectionLabel}>Strava</Text>
             <StatusPill label={vm.stravaStatusLabel} active={vm.stravaActive} />
           </View>
           <Text style={bodyText}>
             {vm.stravaActive
-              ? t("mobile.settings.stravaActive")
+              ? t("settings.stravaActive")
               : vm.stravaConnected
-                ? t("mobile.settings.stravaLapsed")
-                : t("mobile.settings.stravaNotConnected")}
+                ? t("settings.stravaLapsedMobile")
+                : t("settings.stravaNotConnectedMobile")}
           </Text>
           {vm.stravaActive && <StravaPostingSection posting={posting} />}
         </View>
@@ -92,7 +93,7 @@ export function SettingsView({
         <Pressable
           onPress={onOpenAccount}
           accessibilityRole="button"
-          accessibilityLabel={t("mobile.settings.account")}
+          accessibilityLabel={t("common.account")}
           style={pressRow({
             ...sectionCard,
             flexDirection: "row",
@@ -103,7 +104,7 @@ export function SettingsView({
           })}
         >
           <View style={{ gap: 4, flexShrink: 1 }}>
-            <Text style={sectionLabel}>{upper(t("mobile.settings.account"))}</Text>
+            <Text style={sectionLabel}>{t("common.account")}</Text>
             <Text
               numberOfLines={1}
               style={{ fontFamily: fonts.mono, fontSize: 11, color: colors.textMuted }}

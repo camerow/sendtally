@@ -1,6 +1,6 @@
 import React from "react";
 import { tagMatches, type TagOption } from "@sendtally/features/sessions";
-import { t, upper } from "@sendtally/features/i18n";
+import { t } from "@sendtally/features/i18n";
 
 export type TagPickerProps = {
   tags: string[];
@@ -13,6 +13,7 @@ export type TagPickerProps = {
 
 const mono: React.CSSProperties = {
   fontFamily: "var(--font-mono)",
+  textTransform: "uppercase",
   fontWeight: 500,
   fontSize: 11,
   letterSpacing: "0.06em",
@@ -75,17 +76,16 @@ function Plus(): React.ReactElement {
 }
 
 function MarkedName({ name, query }: { name: string; query: string }): React.ReactElement {
-  const upper = name.toUpperCase();
-  const needle = query.trim().toUpperCase();
-  const at = needle === "" ? -1 : upper.indexOf(needle);
-  if (at < 0) return <span>{upper}</span>;
+  const needle = query.trim();
+  const at = needle === "" ? -1 : name.toUpperCase().indexOf(needle.toUpperCase());
+  if (at < 0) return <span>{name}</span>;
   return (
     <span>
-      {upper.slice(0, at)}
+      {name.slice(0, at)}
       <span style={{ fontWeight: 600, color: "var(--bs-petal-ink)" }}>
-        {upper.slice(at, at + needle.length)}
+        {name.slice(at, at + needle.length)}
       </span>
-      {upper.slice(at + needle.length)}
+      {name.slice(at + needle.length)}
     </span>
   );
 }
@@ -93,7 +93,7 @@ function MarkedName({ name, query }: { name: string; query: string }): React.Rea
 export function TagPicker({
   tags,
   suggestions,
-  placeholder = t("web.components.addTag"),
+  placeholder = t("common.addATag"),
   disabled = false,
   onAdd,
   onRemove,
@@ -174,10 +174,10 @@ export function TagPicker({
             color: "var(--bs-gunmetal)",
           }}
         >
-          {tag.toUpperCase()}
+          {tag}
           <button
             type="button"
-            aria-label={t("web.components.removeTag", { tag })}
+            aria-label={t("common.removeTag", { tag })}
             disabled={disabled}
             onClick={(e) => {
               e.stopPropagation();
@@ -199,7 +199,7 @@ export function TagPicker({
       <input
         ref={inputRef}
         value={entry}
-        placeholder={tags.length === 0 ? placeholder : t("web.components.addTag")}
+        placeholder={tags.length === 0 ? placeholder : t("common.addATag")}
         disabled={disabled}
         role="combobox"
         aria-expanded={showPopover}
@@ -248,9 +248,7 @@ export function TagPicker({
             boxShadow: "0 12px 32px rgba(20,19,26,0.14)",
           }}
         >
-          {entry.trim() === "" && (
-            <span style={columnHead}>{upper(t("web.components.recent"))}</span>
-          )}
+          {entry.trim() === "" && <span style={columnHead}>{t("common.recent")}</span>}
           {options.map((option, i) => (
             <div
               key={option.slug}
@@ -282,7 +280,7 @@ export function TagPicker({
                 }}
               >
                 <Plus />
-                <span>{upper(t("web.components.createTag", { name: create }))}</span>
+                <span>{t("common.createTag", { name: create })}</span>
               </div>
             </>
           )}

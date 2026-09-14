@@ -4,7 +4,7 @@ import { t } from "@sendtally/features/i18n";
 
 export function meta(): Array<Record<string, string>> {
   return pageMeta({
-    title: t("web.auth.stravaConnectedTitle"),
+    title: t("auth.stravaConnectedTitle"),
     path: "/connected/strava",
     noindex: true,
   });

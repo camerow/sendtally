@@ -107,7 +107,7 @@ export default function Sessions(): React.ReactElement {
         <span className="sessions-head-mark">
           <Logo variant="mark" size={22} />
         </span>
-        <h1 className="sessions-title">{t("web.sessions.title")}</h1>
+        <h1 className="sessions-title">{t("common.sessions")}</h1>
         <span
           style={{
             fontFamily: "var(--font-mono)",
@@ -115,6 +115,7 @@ export default function Sessions(): React.ReactElement {
             fontSize: 11,
             color: "rgba(64,63,76,0.55)",
             letterSpacing: "0.06em",
+            textTransform: "uppercase",
           }}
         >
           {countLabel(visible.length)}
@@ -135,14 +136,14 @@ export default function Sessions(): React.ReactElement {
             whiteSpace: "nowrap",
           }}
         >
-          {t("web.sessions.logASession")}
+          {t("common.logASession")}
         </Link>
       </div>
       <DraftSessionRow />
       {!stravaConnected && (
         <div className="sessions-banner">
           <span style={{ flex: 1, fontSize: 14, lineHeight: 1.5, color: "var(--text-on-dark)" }}>
-            {t("web.sessions.stravaBanner")}
+            {t("sessions.stravaBanner")}
           </span>
           <Link
             to="/app/setup"
@@ -158,7 +159,7 @@ export default function Sessions(): React.ReactElement {
               whiteSpace: "nowrap",
             }}
           >
-            {t("web.sessions.connectStrava")}
+            {t("sessions.connectStrava")}
           </Link>
         </div>
       )}
@@ -198,12 +199,12 @@ export default function Sessions(): React.ReactElement {
           </div>
         </div>
       )}
-      {sessions.length === 0 && <div style={muted}>{t("web.sessions.empty")}</div>}
+      {sessions.length === 0 && <div style={muted}>{t("sessions.empty")}</div>}
       {sessions.length > 0 && visible.length === 0 && (
         <div style={muted}>
-          {t("web.sessions.noneForTags")}{" "}
+          {t("sessions.noneForTags")}{" "}
           <Link to={hrefFor({ tags: [] })} style={{ color: "var(--bs-azure-ink)" }}>
-            {t("web.sessions.clearFilter")}
+            {t("sessions.clearFilter")}
           </Link>
         </div>
       )}

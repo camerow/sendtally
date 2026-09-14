@@ -1,4 +1,4 @@
-import type { Locale } from "@sendtally/features/i18n";
+import { LOCALES, type Locale } from "@sendtally/features/i18n";
 
 export const SITE_URL = "https://sendtally.com";
 
@@ -16,7 +16,7 @@ type PageMeta = {
   path: string;
   noindex?: boolean;
   locale?: Locale;
-  alternates?: readonly Locale[];
+  hreflang?: boolean;
 };
 
 export function pageMeta({
@@ -25,7 +25,7 @@ export function pageMeta({
   path,
   noindex,
   locale = "en",
-  alternates,
+  hreflang = false,
 }: PageMeta): Array<Record<string, string>> {
   const url = `${SITE_URL}${path}`;
   const image = `${SITE_URL}/og.jpg`;
@@ -65,15 +65,15 @@ export function pageMeta({
       { name: "twitter:description", content: description }
     );
   }
-  for (const alt of alternates ?? []) {
-    tags.push({
-      tagName: "link",
-      rel: "alternate",
-      hrefLang: alt,
-      href: `${SITE_URL}${landingPath(alt)}`,
-    });
-  }
-  if (alternates !== undefined) {
+  if (hreflang) {
+    for (const alt of LOCALES) {
+      tags.push({
+        tagName: "link",
+        rel: "alternate",
+        hrefLang: alt,
+        href: `${SITE_URL}${landingPath(alt)}`,
+      });
+    }
     tags.push({ tagName: "link", rel: "alternate", hrefLang: "x-default", href: `${SITE_URL}/` });
   }
   if (noindex === true) tags.push({ name: "robots", content: "noindex, nofollow" });

@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router";
 import { TILE_BREAKDOWN_ROWS, useTrends } from "@sendtally/features/trends";
-import { t, upper } from "@sendtally/features/i18n";
+import { t } from "@sendtally/features/i18n";
 import { useClientApi } from "../../lib/useClientApi";
 import { TrendBars } from "./TrendBars";
 import { TrendFilters } from "./TrendFilters";
@@ -13,6 +13,7 @@ export type TrendsOverviewProps = {
 
 const monoMuted: React.CSSProperties = {
   fontFamily: "var(--font-mono)",
+  textTransform: "uppercase",
   fontWeight: 500,
   fontSize: 11,
   letterSpacing: "0.06em",
@@ -36,19 +37,17 @@ export function TrendsOverview({ apiUrl }: TrendsOverviewProps): React.ReactElem
             letterSpacing: "-0.03em",
           }}
         >
-          {t("web.trends.title")}
+          {t("common.trends")}
         </h1>
         {state.status === "ready" && <span style={monoMuted}>{state.data.caption}</span>}
       </div>
       <TrendFilters feature={feature} />
       {state.status === "loading" && (
-        <span style={{ ...monoMuted, display: "block", marginTop: 22 }}>
-          {upper(t("web.shell.loading"))}
-        </span>
+        <span style={{ ...monoMuted, display: "block", marginTop: 22 }}>{t("common.loading")}</span>
       )}
       {state.status === "error" && (
-        <span style={{ ...monoMuted, display: "block", marginTop: 22 }}>
-          {t("web.trends.loadFailed")}
+        <span style={{ ...monoMuted, textTransform: "none", display: "block", marginTop: 22 }}>
+          {t("trends.loadFailed")}
         </span>
       )}
       {state.status === "ready" && (
@@ -85,6 +84,7 @@ export function TrendsOverview({ apiUrl }: TrendsOverviewProps): React.ReactElem
                     fontWeight: 500,
                     fontSize: 11,
                     letterSpacing: "0.08em",
+                    textTransform: "uppercase",
                     color: "var(--text-label-accent)",
                   }}
                 >
@@ -98,7 +98,7 @@ export function TrendsOverview({ apiUrl }: TrendsOverviewProps): React.ReactElem
                     color: "rgba(64,63,76,0.72)",
                   }}
                 >
-                  {upper(t("web.trends.details"))}
+                  {t("trends.details")}
                 </span>
               </span>
               <span
@@ -117,7 +117,7 @@ export function TrendsOverview({ apiUrl }: TrendsOverviewProps): React.ReactElem
               </div>
               <TrendTagBreakdown
                 compact
-                title={upper(t("web.trends.byTag"))}
+                title={t("trends.byTag")}
                 rows={state.data.details[tile.metric].breakdown.slice(0, TILE_BREAKDOWN_ROWS)}
               />
             </Link>

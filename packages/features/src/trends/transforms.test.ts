@@ -115,8 +115,8 @@ describe("trendsVM", () => {
     const vm = trendsVM(sessions, "1m", NOW);
     const volume = vm.tiles.find((t) => t.metric === "volume");
     expect(volume?.value).toBe("5 climbs");
-    expect(volume?.caption).toContain("2 SESSIONS");
-    expect(volume?.caption).toContain("LAST MONTH");
+    expect(volume?.caption).toContain("2 sessions");
+    expect(volume?.caption).toContain("Last month");
 
     const all = trendsVM(sessions, "all", NOW);
     expect(all.tiles.find((t) => t.metric === "volume")?.value).toBe("7 climbs");
@@ -179,13 +179,13 @@ describe("bucketsFor", () => {
   it("builds year-to-date month buckets", () => {
     const buckets = bucketsFor("ytd", NOW, null);
     expect(buckets).toHaveLength(8);
-    expect(buckets[0]?.label).toBe("JAN");
-    expect(buckets[7]?.label).toBe("AUG");
+    expect(buckets[0]?.label).toBe("Jan");
+    expect(buckets[7]?.label).toBe("Aug");
   });
 
   it("uses month buckets for short histories and year buckets for long ones", () => {
     const shortSpan = bucketsFor("all", NOW, Date.parse("2026-01-15T00:00:00.000Z"));
-    expect(shortSpan.map((b) => b.label)).toContain("JAN");
+    expect(shortSpan.map((b) => b.label)).toContain("Jan");
     const longSpan = bucketsFor("all", NOW, Date.parse("2022-03-15T00:00:00.000Z"));
     expect(longSpan.map((b) => b.label)).toEqual(["2022", "2023", "2024", "2025", "2026"]);
   });

@@ -8,26 +8,19 @@ import {
   projectStatus,
   type ProjectListItem,
 } from "@sendtally/features/climbs";
-import { t, upper } from "@sendtally/features/i18n";
+import { t } from "@sendtally/features/i18n";
 
 const MAX_SPARK_BARS = 6;
 
 function metaLabel({ climb }: ProjectListItem): string {
   if (climb.sessions === 0) {
-    return upper(
-      t("web.projects.rowMetaNew", {
-        discipline: disciplineLabel(climb),
-        date: dateLabel(climb.first_at),
-      })
-    );
+    return t("projects.rowMetaNew", {
+      discipline: disciplineLabel(climb),
+      date: dateLabel(climb.first_at),
+    });
   }
   const vars = { meta: projectMetaLabel(climb), date: dateLabel(climb.last_at) };
-  return upper(
-    t(
-      projectStatus(climb) === "sent" ? "web.projects.rowMetaSent" : "web.projects.rowMetaLast",
-      vars
-    )
-  );
+  return t(projectStatus(climb) === "sent" ? "projects.rowMetaSent" : "projects.rowMetaLast", vars);
 }
 
 export function ProjectRow({ item }: { item: ProjectListItem }): React.ReactElement {
@@ -48,7 +41,7 @@ export function ProjectRow({ item }: { item: ProjectListItem }): React.ReactElem
       </span>
       {sent || spark.length === 0 ? (
         <span className="project-sent-at">
-          {sent ? upper(t("web.projects.sentOn", { date: dateLabel(climb.last_at) })) : ""}
+          {sent ? t("projects.sentOn", { date: dateLabel(climb.last_at) }) : ""}
         </span>
       ) : (
         <span className="project-spark">
@@ -63,11 +56,11 @@ export function ProjectRow({ item }: { item: ProjectListItem }): React.ReactElem
               />
             ))}
           </span>
-          <span className="project-spark-label">{upper(t("web.projects.attemptsPerSession"))}</span>
+          <span className="project-spark-label">{t("projects.attemptsPerSessionShort")}</span>
         </span>
       )}
       <span className={sent ? "project-status project-status--sent" : "project-status"}>
-        {upper(t(sent ? "web.projects.statusSent" : "web.projects.statusOpen"))}
+        {t(sent ? "common.sent" : "projects.statusOpen")}
       </span>
       <span className="project-chevron">›</span>
     </Link>

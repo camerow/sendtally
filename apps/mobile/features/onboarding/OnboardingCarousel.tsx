@@ -20,7 +20,7 @@ function Dots({ count, active }: { count: number; active: number }): React.React
     <View
       accessible
       accessibilityRole="progressbar"
-      accessibilityLabel={t("mobile.onboarding.featureOf", { n: active + 1, total: count })}
+      accessibilityLabel={t("onboarding.featureOf", { n: active + 1, total: count })}
       style={{ flexDirection: "row", gap: 7, justifyContent: "center" }}
     >
       {Array.from({ length: count }, (_, i) => (
@@ -89,6 +89,7 @@ export function OnboardingCarousel({
                   fontFamily: fonts.monoMedium,
                   fontSize: 11,
                   letterSpacing: 1,
+                  textTransform: "uppercase",
                   color: colors.watermelonInk,
                 }}
               >

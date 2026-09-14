@@ -1,6 +1,6 @@
 import { formatGrade, routeIndexOf, vFromFont, type Grade } from "@sendtally/core";
 import type { ClimbSummary, SessionWithClimbs } from "@sendtally/api-client";
-import { t, upper } from "../i18n";
+import { t } from "../i18n";
 import { sessionDay } from "../sessions/meta";
 import { monthShortName } from "../sessions/months";
 import { sessionTitle } from "../sessions/title";
@@ -88,12 +88,12 @@ export function weeksBetween(fromIso: string, toIso: string): number {
 }
 
 function spanLabel(weeks: number): string {
-  if (weeks < 1) return upper(t("climbs.thisWeek"));
-  return upper(t("climbs.weekCount", { count: weeks }));
+  if (weeks < 1) return t("climbs.thisWeek");
+  return t("climbs.weekCount", { count: weeks });
 }
 
 export function disciplineLabel(climb: ClimbSummary): string {
-  return upper(t(climb.discipline === "route" ? "climbs.route" : "climbs.boulder"));
+  return t(climb.discipline === "route" ? "common.route" : "common.boulder");
 }
 
 // Every session the climb appears in, oldest first: the attempts that went into
@@ -114,7 +114,7 @@ export function projectSessions(
       weekday: day.weekday,
       dateLabel: dateLabel(session.start_at),
       title: sessionTitle(session),
-      metaLabel: `${t("sessions.rpe", { rpe: session.rpe })} · ${durationLabel(sessionMinutes(session))}`,
+      metaLabel: `RPE ${session.rpe} · ${durationLabel(sessionMinutes(session))}`,
       attempts: rows.reduce((n, c) => n + c.tries, 0),
       sent: rows.some((c) => c.kind === "send"),
       notes: session.notes,
@@ -150,14 +150,14 @@ export function projectDetailVM(
   const endIso = status === "sent" ? climb.last_at : now.toISOString();
   const weeks = weeksBetween(climb.first_at, endIso);
   const stats: ProjectStat[] = [
-    { label: upper(t("climbs.attempts")), value: String(climb.attempts) },
-    { label: upper(t("climbs.sessions")), value: String(climb.sessions) },
+    { label: t("climbs.attempts"), value: String(climb.attempts) },
+    { label: t("common.sessions"), value: String(climb.sessions) },
     {
-      label: upper(t(status === "sent" ? "climbs.took" : "climbs.running")),
+      label: t(status === "sent" ? "climbs.took" : "climbs.running"),
       value: climb.sessions === 0 ? "-" : spanLabel(weeks),
     },
     {
-      label: upper(t(status === "sent" ? "climbs.sent" : "climbs.lastTried")),
+      label: t(status === "sent" ? "common.sent" : "climbs.lastTried"),
       value: climb.sessions === 0 ? "-" : dateLabel(climb.last_at),
     },
   ];
@@ -179,7 +179,7 @@ export function projectDetailVM(
     sessionsMetaLabel: projectMetaLabel(climb),
     rangeLabel:
       first === undefined
-        ? upper(t("climbs.nothingLoggedYet"))
+        ? t("common.nothingLoggedYet")
         : first === last
           ? first.dateLabel
           : `${first.dateLabel} → ${last?.dateLabel}`,
@@ -190,7 +190,7 @@ export function projectDetailVM(
     betaUpdatedLabel:
       climb.beta_updated_at === null
         ? null
-        : upper(t("climbs.updatedOn", { date: dateLabel(climb.beta_updated_at) })),
+        : t("climbs.updatedOn", { date: dateLabel(climb.beta_updated_at) }),
   };
 }
 

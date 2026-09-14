@@ -13,7 +13,7 @@ export default function Trends(): React.ReactElement {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.white }} edges={["top"]}>
-      <ScreenHeader title={t("mobile.trends.title")} />
+      <ScreenHeader title={t("common.trends")} />
       <ScrollView
         contentContainerStyle={{
           paddingHorizontal: 18,
@@ -29,13 +29,13 @@ export default function Trends(): React.ReactElement {
         {canSeeInsights === false && (
           <View style={{ gap: 14 }}>
             <Paywall
-              title={t("mobile.trends.paywallTitle")}
-              body={t("mobile.trends.paywallBody")}
+              title={t("trends.paywallTitle")}
+              body={t("trends.paywallBody")}
               points={[
-                t("mobile.trends.paywallVolume"),
-                t("mobile.trends.paywallEffort"),
-                t("mobile.trends.paywallAvgGrade"),
-                t("mobile.trends.paywallFlash"),
+                t("billing.pointVolume"),
+                t("trends.paywallEffort"),
+                t("trends.paywallAvgGrade"),
+                t("billing.pointFlashRate"),
               ]}
             />
           </View>

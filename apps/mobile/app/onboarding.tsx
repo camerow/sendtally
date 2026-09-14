@@ -36,7 +36,7 @@ export default function Onboarding(): React.ReactElement | null {
               <Text
                 style={{ fontFamily: fonts.sansSemiBold, fontSize: 16, color: colors.gunmetal }}
               >
-                {t("mobile.onboarding.createAccount")}
+                {t("common.createAccount")}
               </Text>
             </Pressable>
             <Pressable
@@ -56,7 +56,7 @@ export default function Onboarding(): React.ReactElement | null {
               <Text
                 style={{ fontFamily: fonts.sansSemiBold, fontSize: 16, color: colors.gunmetal }}
               >
-                {t("mobile.onboarding.signIn")}
+                {t("common.signIn")}
               </Text>
             </Pressable>
             <Text
@@ -68,7 +68,7 @@ export default function Onboarding(): React.ReactElement | null {
                 color: colors.textMuted,
               }}
             >
-              {t("mobile.onboarding.footer")}
+              {t("onboarding.footer")}
             </Text>
           </View>
         </View>

@@ -1,7 +1,7 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import type { PurchasesPackage } from "react-native-purchases";
-import { t, upper } from "@sendtally/features/i18n";
+import { t } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { planCardOf } from "./store";
 import { press } from "../../lib/press";
@@ -60,10 +60,11 @@ export function PlanPicker({
                       fontFamily: fonts.monoSemiBold,
                       fontSize: 9,
                       letterSpacing: 0.6,
+                      textTransform: "uppercase",
                       color: colors.gunmetal,
                     }}
                   >
-                    {upper(t("mobile.billing.bestValue"))}
+                    {t("billing.bestValue")}
                   </Text>
                 </View>
               )}
@@ -73,11 +74,12 @@ export function PlanPicker({
                 fontFamily: fonts.monoMedium,
                 fontSize: 10,
                 letterSpacing: 0.8,
+                textTransform: "uppercase",
                 color: colors.watermelonInk,
                 paddingTop: 4,
               }}
             >
-              {upper(card.name)}
+              {card.name}
             </Text>
             <Text
               numberOfLines={1}
@@ -98,10 +100,11 @@ export function PlanPicker({
                 fontFamily: fonts.monoMedium,
                 fontSize: 10,
                 letterSpacing: 0.6,
+                textTransform: "uppercase",
                 color: colors.textMuted,
               }}
             >
-              {upper(card.cadence)}
+              {card.cadence}
             </Text>
             {card.equivalent !== null && (
               <Text

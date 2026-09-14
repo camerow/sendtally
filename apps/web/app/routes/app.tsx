@@ -3,7 +3,7 @@ import React from "react";
 import type { LinksFunction, LoaderFunctionArgs } from "react-router";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router";
 import { Logo } from "@sendtally/design";
-import { t, upper, type MessageKey } from "@sendtally/features/i18n";
+import { t, type MessageKey } from "@sendtally/features/i18n";
 import { Icon, type IconName } from "../components/Icon";
 import { requireApi } from "../lib/api.server";
 import appShellStyles from "../styles/app-shell.css?url";
@@ -23,11 +23,11 @@ export async function loader(args: LoaderFunctionArgs): Promise<null> {
 type NavItem = { label: MessageKey; to: string; icon: IconName };
 
 const NAV_ITEMS: NavItem[] = [
-  { label: "web.shell.navSessions", to: "/app", icon: "sessions" },
-  { label: "web.shell.navProjects", to: "/app/projects", icon: "projects" },
-  { label: "web.shell.navTrends", to: "/app/trends", icon: "trends" },
-  { label: "web.shell.navSettings", to: "/app/settings", icon: "settings" },
-  { label: "web.shell.navMembership", to: "/app/membership", icon: "membership" },
+  { label: "common.sessions", to: "/app", icon: "sessions" },
+  { label: "common.projects", to: "/app/projects", icon: "projects" },
+  { label: "common.trends", to: "/app/trends", icon: "trends" },
+  { label: "common.settings", to: "/app/settings", icon: "settings" },
+  { label: "common.membership", to: "/app/membership", icon: "membership" },
 ];
 
 /** Screens reached by a back link, whose own action bar owns the bottom edge. */
@@ -43,7 +43,7 @@ export default function AppLayout(): React.ReactElement {
 
   const signOut = (
     <button onClick={() => void clerk.signOut(() => navigate("/"))} className="app-sign-out">
-      {t("web.shell.signOut")}
+      {t("common.signOut")}
     </button>
   );
 
@@ -95,11 +95,11 @@ export default function AppLayout(): React.ReactElement {
         <Outlet />
       </div>
       {!focused && (
-        <nav className="app-tabbar" aria-label={t("web.shell.sectionsAria")}>
+        <nav className="app-tabbar" aria-label={t("common.sectionsAria")}>
           {NAV_ITEMS.map(({ label, to, icon }) => (
             <NavLink key={label} to={to} end className="app-tab">
               <Icon name={icon} />
-              {upper(t(label))}
+              {t(label)}
             </NavLink>
           ))}
         </nav>

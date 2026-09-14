@@ -47,17 +47,17 @@ export function DiscardDraftDialog({
           letterSpacing: "-0.02em",
         }}
       >
-        {t("web.components.discardDraftTitle")}
+        {t("common.discardDraftTitle")}
       </h2>
       <p style={{ margin: 0, fontSize: 14, lineHeight: 1.55, color: "rgba(64,63,76,0.88)" }}>
-        {t("web.components.discardDraftBody", { count, day })}
+        {t("common.discardDraftBody", { count, day })}
       </p>
       <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 4 }}>
         <button type="button" autoFocus onClick={onCancel} className="confirm-dialog-cancel">
-          {t("web.shell.cancel")}
+          {t("common.cancel")}
         </button>
         <button type="button" onClick={onDiscard} className="confirm-dialog-confirm">
-          {t("web.components.discard")}
+          {t("common.discard")}
         </button>
       </div>
     </dialog>

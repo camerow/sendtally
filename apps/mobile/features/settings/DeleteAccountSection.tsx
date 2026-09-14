@@ -1,7 +1,7 @@
 import React from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
 import { DELETE_CONFIRMATION_WORD, type DeleteAccountFeature } from "@sendtally/features/settings";
-import { t, upper } from "@sendtally/features/i18n";
+import { t } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { press } from "../../lib/press";
 import {
@@ -38,7 +38,7 @@ export function DeleteAccountSection({ deletion }: DeleteAccountSectionProps): R
               textDecorationLine: "underline",
             }}
           >
-            {t("mobile.account.deleteAccount")}
+            {t("account.deleteAccount")}
           </Text>
         </Pressable>
         {deletion.error !== null && <Text style={messageText}>{deletion.error}</Text>}
@@ -48,11 +48,9 @@ export function DeleteAccountSection({ deletion }: DeleteAccountSectionProps): R
 
   return (
     <View style={{ ...sectionCard, gap: 12 }}>
-      <Text style={sectionLabel}>{upper(t("mobile.account.deleteAccount"))}</Text>
-      <Text style={bodyText}>{t("mobile.account.deleteBody")}</Text>
-      <Text style={bodyText}>
-        {t("mobile.account.typeToConfirm", { word: DELETE_CONFIRMATION_WORD })}
-      </Text>
+      <Text style={sectionLabel}>{t("account.deleteAccount")}</Text>
+      <Text style={bodyText}>{t("account.deleteBody")}</Text>
+      <Text style={bodyText}>{t("account.typeToConfirm", { word: DELETE_CONFIRMATION_WORD })}</Text>
       <TextInput
         value={deletion.confirmation}
         onChangeText={deletion.setConfirmation}
@@ -78,7 +76,7 @@ export function DeleteAccountSection({ deletion }: DeleteAccountSectionProps): R
         style={press({ ...dangerButton, opacity: !deletion.canConfirm || busy ? 0.5 : 1 })}
       >
         <Text style={dangerButtonLabel}>
-          {busy ? t("mobile.account.deleting") : t("mobile.account.deleteMyAccount")}
+          {busy ? t("common.deleting") : t("account.deleteMyAccount")}
         </Text>
       </Pressable>
       <Pressable
@@ -87,7 +85,7 @@ export function DeleteAccountSection({ deletion }: DeleteAccountSectionProps): R
         accessibilityRole="button"
         style={press(underlinePress)}
       >
-        <Text style={{ ...underlineLabel, fontSize: 12 }}>{t("mobile.common.cancel")}</Text>
+        <Text style={{ ...underlineLabel, fontSize: 12 }}>{t("common.cancel")}</Text>
       </Pressable>
       {deletion.error !== null && <Text style={messageText}>{deletion.error}</Text>}
     </View>

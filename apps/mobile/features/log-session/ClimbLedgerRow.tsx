@@ -23,11 +23,11 @@ export function ClimbLedgerRow({
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel={t("mobile.logSession.ledgerLabel", {
+      accessibilityLabel={t("logSession.ledgerLabel", {
         grade: climb.grade,
-        name: named ? climb.name : t("mobile.logSession.unnamed"),
-        kind: send ? t("mobile.logSession.send") : t("mobile.logSession.attemptKind"),
-        tries: t("mobile.logSession.tries", { count: climb.tries }),
+        name: named ? climb.name : t("logSession.unnamed"),
+        kind: send ? t("logSession.sendLower") : t("logSession.attemptKind"),
+        tries: t("logSession.triesCount", { count: climb.tries }),
       })}
       style={pressRow({
         flexDirection: "row",
@@ -66,7 +66,7 @@ export function ClimbLedgerRow({
             color: named ? colors.gunmetal : colors.textFaint,
           }}
         >
-          {named ? climb.name : t("mobile.logSession.unnamed")}
+          {named ? climb.name : t("logSession.unnamed")}
         </Text>
       </View>
       <View

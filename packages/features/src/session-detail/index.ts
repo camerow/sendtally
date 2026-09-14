@@ -16,6 +16,7 @@ export {
 export {
   BOARD_LABELS,
   CLIMB_SORTS,
+  climbSortLabel,
   type ClimbFilter,
   type ClimbResult,
   type ClimbSort,

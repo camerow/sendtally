@@ -1,5 +1,5 @@
 import type { SessionRow } from "@sendtally/api-client";
-import { t, upper } from "../i18n";
+import { t } from "../i18n";
 import { sessionMonths, type SessionMonth } from "./months";
 
 export type SessionGroupTotals = {
@@ -70,11 +70,11 @@ export function durationLabel(minutes: number): string {
 }
 
 export function countLabel(count: number): string {
-  return upper(t("sessions.sessionCount", { count }));
+  return t("sessions.sessionCount", { count });
 }
 
 export function totalsLabel(totals: SessionGroupTotals): string {
-  const parts = [countLabel(totals.count), upper(durationLabel(totals.minutes))];
+  const parts = [countLabel(totals.count), durationLabel(totals.minutes)];
   if (totals.topGrade >= 0) {
     parts.push(t("sessions.topGrade", { grade: totals.topGradeLabel ?? `V${totals.topGrade}` }));
   }

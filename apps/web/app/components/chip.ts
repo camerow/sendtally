@@ -6,6 +6,7 @@ export function chipStyle(
 ): React.CSSProperties {
   return {
     fontFamily: "var(--font-mono)",
+    textTransform: "uppercase",
     fontWeight: 500,
     fontSize: 11,
     letterSpacing: "0.06em",

@@ -2,7 +2,7 @@ import React from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import type { DeleteAccountFeature } from "@sendtally/features/settings";
-import { t, upper } from "@sendtally/features/i18n";
+import { t } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { press } from "../../lib/press";
 import { bodyText, sectionCard, sectionLabel } from "../../lib/styles";
@@ -43,10 +43,11 @@ export function AccountView({
               fontFamily: fonts.monoMedium,
               fontSize: 12,
               letterSpacing: 0.5,
+              textTransform: "uppercase",
               color: colors.watermelonInk,
             }}
           >
-            {upper(t("mobile.account.backToSettings"))}
+            {t("common.backToSettings")}
           </Text>
         </Pressable>
 
@@ -58,15 +59,15 @@ export function AccountView({
             color: colors.gunmetal,
           }}
         >
-          {t("mobile.account.title")}
+          {t("common.account")}
         </Text>
 
         <View style={sectionCard}>
-          <Text style={sectionLabel}>{upper(t("mobile.account.signedInAs"))}</Text>
+          <Text style={sectionLabel}>{t("account.signedInAs")}</Text>
           <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 15, color: colors.gunmetal }}>
             {email}
           </Text>
-          <Text style={bodyText}>{t("mobile.account.codeNote")}</Text>
+          <Text style={bodyText}>{t("account.codeSignIn")}</Text>
           <Pressable
             onPress={onSignOut}
             accessibilityRole="button"
@@ -81,7 +82,7 @@ export function AccountView({
             })}
           >
             <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 15, color: colors.gunmetal }}>
-              {t("mobile.account.signOut")}
+              {t("common.signOut")}
             </Text>
           </Pressable>
         </View>

@@ -1,65 +1,22 @@
 import type { Discipline } from "@sendtally/core";
-import { t, upper } from "../i18n";
+import { t } from "../i18n";
 
 export type { Discipline };
 
 export type TrendMetric = "volume" | "pyramid" | "hardest" | "flash" | "avggrade";
 
-export const TREND_DISCIPLINES: Array<{ value: Discipline; label: string }> = [
-  {
-    value: "boulder",
-    get label() {
-      return upper(t("logSession.boulders"));
-    },
-  },
-  {
-    value: "route",
-    get label() {
-      return upper(t("logSession.routes"));
-    },
-  },
-];
+export const TREND_DISCIPLINES: readonly Discipline[] = ["boulder", "route"];
 
 export type TrendRange = "1m" | "3m" | "6m" | "ytd" | "1y" | "all";
 
-export const TREND_RANGES: Array<{ value: TrendRange; label: string }> = [
-  {
-    value: "1m",
-    get label() {
-      return upper(t("trends.rangeShort1m"));
-    },
-  },
-  {
-    value: "3m",
-    get label() {
-      return upper(t("trends.rangeShort3m"));
-    },
-  },
-  {
-    value: "6m",
-    get label() {
-      return upper(t("trends.rangeShort6m"));
-    },
-  },
-  {
-    value: "ytd",
-    get label() {
-      return upper(t("trends.rangeShortYtd"));
-    },
-  },
-  {
-    value: "1y",
-    get label() {
-      return upper(t("trends.rangeShort1y"));
-    },
-  },
-  {
-    value: "all",
-    get label() {
-      return upper(t("trends.rangeShortAll"));
-    },
-  },
-];
+export const TREND_RANGES: readonly TrendRange[] = ["1m", "3m", "6m", "ytd", "1y", "all"];
+
+export function trendRangeLabel(range: TrendRange): string {
+  if (range === "ytd") return t("trends.rangeShortYtd");
+  if (range === "1y") return t("trends.rangeShort1y");
+  if (range === "all") return t("trends.rangeShortAll");
+  return range.toUpperCase();
+}
 
 export type TrendBarVM = {
   height: number;

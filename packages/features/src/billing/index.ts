@@ -1,4 +1,4 @@
-export { MEMBER_BENEFITS, memberPoints } from "./benefits";
+export { memberBenefits, memberPoints } from "./benefits";
 export {
   formatRenewalDate,
   managedInOf,

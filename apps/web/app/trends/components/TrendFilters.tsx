@@ -1,6 +1,12 @@
 import React from "react";
-import { TREND_DISCIPLINES, TREND_RANGES, type TrendsFeature } from "@sendtally/features/trends";
-import { t, upper } from "@sendtally/features/i18n";
+import { disciplineLabel } from "@sendtally/features/log-session";
+import {
+  TREND_DISCIPLINES,
+  TREND_RANGES,
+  trendRangeLabel,
+  type TrendsFeature,
+} from "@sendtally/features/trends";
+import { t } from "@sendtally/features/i18n";
 import { chipStyle } from "../../components/chip";
 
 export function TrendFilters({ feature }: { feature: TrendsFeature }): React.ReactElement {
@@ -14,31 +20,27 @@ export function TrendFilters({ feature }: { feature: TrendsFeature }): React.Rea
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           {TREND_DISCIPLINES.map((d) => (
             <button
-              key={d.value}
-              onClick={() => setDiscipline(d.value)}
-              aria-pressed={discipline === d.value}
-              style={chipStyle(discipline === d.value)}
+              key={d}
+              onClick={() => setDiscipline(d)}
+              aria-pressed={discipline === d}
+              style={chipStyle(discipline === d)}
             >
-              {d.label}
+              {disciplineLabel(d)}
             </button>
           ))}
         </div>
       )}
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
         {TREND_RANGES.map((r) => (
-          <button
-            key={r.value}
-            onClick={() => setRange(r.value)}
-            style={chipStyle(range === r.value)}
-          >
-            {r.label}
+          <button key={r} onClick={() => setRange(r)} style={chipStyle(range === r)}>
+            {trendRangeLabel(r)}
           </button>
         ))}
       </div>
       {tagOptions.length > 0 && (
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           <button onClick={clearTags} style={chipStyle(selectedTags.length === 0)}>
-            {upper(t("web.trends.allTags"))}
+            {t("trends.allTags")}
           </button>
           {tagOptions.map((tag) => (
             <button
@@ -47,7 +49,7 @@ export function TrendFilters({ feature }: { feature: TrendsFeature }): React.Rea
               aria-pressed={selectedTags.includes(tag.slug)}
               style={chipStyle(selectedTags.includes(tag.slug))}
             >
-              {tag.name.toUpperCase()}
+              {tag.name}
             </button>
           ))}
         </div>

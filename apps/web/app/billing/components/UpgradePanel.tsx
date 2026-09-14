@@ -84,7 +84,7 @@ export function UpgradePanel({
         </ul>
       )}
       <Link to="/app/membership" style={primaryLink}>
-        {t("web.billing.seeMembership")}
+        {t("billing.seeMembership")}
       </Link>
     </div>
   );

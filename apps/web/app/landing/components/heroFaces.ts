@@ -1,5 +1,4 @@
 import type { GradeBar } from "@sendtally/design";
-import { upper } from "@sendtally/features/i18n";
 import type { LandingCopy } from "../copy";
 import type { MiniBar } from "./MiniBars";
 import type { StatGridItem } from "./StatGrid";
@@ -69,7 +68,7 @@ export function heroFaces(copy: LandingCopy): HeroFaces {
       { label: stats.top, value: "V7", accent: true },
     ],
     tags,
-    tagBars: series([14, 9, 5, 3], tags.map(upper), 0),
+    tagBars: series([14, 9, 5, 3], tags, 0),
     tagStats: [
       { label: stats.tags, value: "4" },
       { label: stats.sessions, value: "31" },

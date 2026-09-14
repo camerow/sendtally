@@ -1,6 +1,6 @@
 import React from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
-import { t, upper } from "@sendtally/features/i18n";
+import { t } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 
 export type BetaCardProps = {
@@ -9,8 +9,18 @@ export type BetaCardProps = {
   onSave: (beta: string) => Promise<void>;
 };
 
-const heading = { fontFamily: fonts.monoMedium, fontSize: 11, letterSpacing: 0.8 } as const;
-const action = { fontFamily: fonts.monoMedium, fontSize: 11, letterSpacing: 0.6 } as const;
+const heading = {
+  fontFamily: fonts.monoMedium,
+  fontSize: 11,
+  letterSpacing: 0.8,
+  textTransform: "uppercase",
+} as const;
+const action = {
+  fontFamily: fonts.monoMedium,
+  fontSize: 11,
+  letterSpacing: 0.6,
+  textTransform: "uppercase",
+} as const;
 
 // Beta belongs to the climb rather than to any one session, so it is edited on
 // the project itself and carries across every session the climb turns up in.
@@ -29,7 +39,7 @@ export function BetaCard({ beta, updatedLabel, onSave }: BetaCardProps): React.R
       setEditing(false);
     } catch {
       setBusy(false);
-      setError(t("mobile.projects.betaSaveFailed"));
+      setError(t("projects.betaSaveFailed"));
     }
   };
 
@@ -44,16 +54,14 @@ export function BetaCard({ beta, updatedLabel, onSave }: BetaCardProps): React.R
         padding: 16,
       }}
     >
-      <Text style={{ ...heading, color: colors.watermelonInk }}>
-        {upper(t("mobile.projects.beta"))}
-      </Text>
+      <Text style={{ ...heading, color: colors.watermelonInk }}>{t("projects.beta")}</Text>
       {editing ? (
         <TextInput
           value={draft}
           autoFocus
           multiline
           maxLength={2000}
-          placeholder={t("mobile.projects.betaEditPlaceholder")}
+          placeholder={t("projects.betaEditPlaceholder")}
           placeholderTextColor={colors.textFaint}
           onChangeText={setDraft}
           style={{
@@ -74,10 +82,14 @@ export function BetaCard({ beta, updatedLabel, onSave }: BetaCardProps): React.R
             color: beta === null ? colors.textFaint : colors.gunmetal,
           }}
         >
-          {beta ?? t("mobile.projects.noBeta")}
+          {beta ?? t("projects.noBeta")}
         </Text>
       )}
-      {error !== null && <Text style={{ ...action, color: colors.watermelonInk }}>{error}</Text>}
+      {error !== null && (
+        <Text style={{ ...action, textTransform: "none", color: colors.watermelonInk }}>
+          {error}
+        </Text>
+      )}
       <View style={{ flexDirection: "row", alignItems: "center", gap: 16 }}>
         {!editing && updatedLabel !== null && (
           <Text style={{ ...action, color: colors.textMuted }}>{updatedLabel}</Text>
@@ -93,9 +105,7 @@ export function BetaCard({ beta, updatedLabel, onSave }: BetaCardProps): React.R
               accessibilityRole="button"
               style={{ minHeight: 44, justifyContent: "center" }}
             >
-              <Text style={{ ...action, color: colors.textMuted }}>
-                {upper(t("mobile.common.cancel"))}
-              </Text>
+              <Text style={{ ...action, color: colors.textMuted }}>{t("common.cancel")}</Text>
             </Pressable>
             <Pressable
               onPress={() => void save()}
@@ -104,7 +114,7 @@ export function BetaCard({ beta, updatedLabel, onSave }: BetaCardProps): React.R
               style={{ minHeight: 44, justifyContent: "center" }}
             >
               <Text style={{ ...action, color: colors.azureInk }}>
-                {upper(busy ? t("mobile.common.saving") : t("mobile.common.save"))}
+                {busy ? t("common.saving") : t("common.save")}
               </Text>
             </Pressable>
           </>
@@ -115,7 +125,7 @@ export function BetaCard({ beta, updatedLabel, onSave }: BetaCardProps): React.R
             style={{ minHeight: 44, justifyContent: "center" }}
           >
             <Text style={{ ...action, color: colors.azureInk }}>
-              {upper(beta === null ? t("mobile.projects.addBeta") : t("mobile.common.edit"))}
+              {beta === null ? t("projects.addBeta") : t("common.edit")}
             </Text>
           </Pressable>
         )}

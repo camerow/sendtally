@@ -3,7 +3,7 @@ import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
 import { Form, redirect } from "react-router";
 import { AuthShell, StepBody, StepCard, StepTitle } from "../auth/components/AuthShell";
 import { requireApi } from "../lib/api.server";
-import { t, upper } from "@sendtally/features/i18n";
+import { t } from "@sendtally/features/i18n";
 
 export async function loader(args: LoaderFunctionArgs): Promise<null> {
   const api = await requireApi(args);
@@ -28,6 +28,7 @@ const detailRow: React.CSSProperties = {
 
 const detailLabel: React.CSSProperties = {
   fontFamily: "var(--font-mono)",
+  textTransform: "uppercase",
   fontWeight: 500,
   fontSize: 11,
   letterSpacing: "0.08em",
@@ -57,27 +58,27 @@ const primaryButton: React.CSSProperties = {
 export default function Setup(): React.ReactElement {
   return (
     <AuthShell>
-      <StepCard step={upper(t("web.auth.setupStep"))} width={520}>
-        <StepTitle>{t("web.auth.setupTitle")}</StepTitle>
-        <StepBody>{t("web.auth.setupBody")}</StepBody>
+      <StepCard step={t("auth.setupStep")} width={520}>
+        <StepTitle>{t("auth.setupTitle")}</StepTitle>
+        <StepBody>{t("auth.setupBody")}</StepBody>
         <div style={{ display: "flex", flexDirection: "column" }}>
           <div style={detailRow}>
-            <span style={detailLabel}>{upper(t("web.auth.setupWrites"))}</span>
-            <span style={detailBody}>{t("web.auth.setupWritesBody")}</span>
+            <span style={detailLabel}>{t("auth.setupWrites")}</span>
+            <span style={detailBody}>{t("auth.setupWritesBody")}</span>
           </div>
           <div style={detailRow}>
-            <span style={detailLabel}>{upper(t("web.auth.setupReads"))}</span>
-            <span style={detailBody}>{t("web.auth.setupReadsBody")}</span>
+            <span style={detailLabel}>{t("auth.setupReads")}</span>
+            <span style={detailBody}>{t("auth.setupReadsBody")}</span>
           </div>
           <div style={{ ...detailRow, borderBottom: "1px solid var(--line-on-light)" }}>
-            <span style={detailLabel}>{upper(t("web.auth.setupNever"))}</span>
-            <span style={detailBody}>{t("web.auth.setupNeverBody")}</span>
+            <span style={detailLabel}>{t("auth.setupNever")}</span>
+            <span style={detailBody}>{t("auth.setupNeverBody")}</span>
           </div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
           <Form method="post">
             <button type="submit" style={primaryButton}>
-              {t("web.auth.continueToStrava")}
+              {t("auth.continueToStrava")}
             </button>
           </Form>
           <a
@@ -89,7 +90,7 @@ export default function Setup(): React.ReactElement {
               textDecoration: "underline",
             }}
           >
-            {t("web.auth.skipForNow")}
+            {t("auth.skipForNow")}
           </a>
         </div>
       </StepCard>

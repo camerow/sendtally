@@ -24,12 +24,7 @@ export function SessionRow({ session, title, onPress }: SessionRowProps): React.
   const { weekday, day } = sessionDay(session);
   const meta = sessionMetaLabel(session);
   const onStrava = session.strava_activity_id !== null;
-  const spoken = [
-    title,
-    `${weekday} ${day}`,
-    meta,
-    onStrava ? t("mobile.sessions.postedToStrava") : null,
-  ]
+  const spoken = [title, `${weekday} ${day}`, meta, onStrava ? t("sessions.postedToStrava") : null]
     .filter((part) => part !== null)
     .join(", ");
 
@@ -55,6 +50,7 @@ export function SessionRow({ session, title, onPress }: SessionRowProps): React.
             fontSize: 9,
             lineHeight: 11,
             letterSpacing: 0.72,
+            textTransform: "uppercase",
             color: colors.textMuted,
           }}
         >
@@ -118,6 +114,7 @@ export function SessionRow({ session, title, onPress }: SessionRowProps): React.
                   fontSize: 8,
                   lineHeight: 10,
                   letterSpacing: 0.6,
+                  textTransform: "uppercase",
                   paddingHorizontal: 6,
                   paddingVertical: 2,
                   borderRadius: radius.pill,
@@ -126,7 +123,7 @@ export function SessionRow({ session, title, onPress }: SessionRowProps): React.
                   color: colors.gunmetal,
                 }}
               >
-                {tag.name.toUpperCase()}
+                {tag.name}
               </Text>
             ))}
           </View>

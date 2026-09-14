@@ -1,6 +1,12 @@
 import React from "react";
 import { ScrollView, View } from "react-native";
-import { TREND_DISCIPLINES, TREND_RANGES, type TrendsFeature } from "@sendtally/features/trends";
+import { disciplineLabel } from "@sendtally/features/log-session";
+import {
+  TREND_DISCIPLINES,
+  TREND_RANGES,
+  trendRangeLabel,
+  type TrendsFeature,
+} from "@sendtally/features/trends";
 import { colors } from "@sendtally/design/tokens";
 import { Chip } from "../../components/Chip";
 import { FILTER_BAR_HEIGHT, FilterButton } from "../../components/FilterButton";
@@ -41,19 +47,19 @@ export function TrendFilters({ feature }: { feature: TrendsFeature }): React.Rea
         >
           {TREND_RANGES.map((r) => (
             <Chip
-              key={r.value}
-              label={r.label}
-              active={range === r.value}
-              onPress={() => setRange(r.value)}
+              key={r}
+              label={trendRangeLabel(r)}
+              active={range === r}
+              onPress={() => setRange(r)}
             />
           ))}
           {disciplines.length > 1 &&
             TREND_DISCIPLINES.map((d) => (
               <Chip
-                key={d.value}
-                label={d.label}
-                active={discipline === d.value}
-                onPress={() => setDiscipline(d.value)}
+                key={d}
+                label={disciplineLabel(d)}
+                active={discipline === d}
+                onPress={() => setDiscipline(d)}
               />
             ))}
         </ScrollView>

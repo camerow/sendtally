@@ -7,7 +7,7 @@ import type {
 } from "@sendtally/features/settings";
 import type { MembershipVM } from "@sendtally/features/billing";
 import { azureButton, bodyText, linkAction, monoMuted, pageTitle, sectionLabel } from "./styles";
-import { t, upper } from "@sendtally/features/i18n";
+import { t } from "@sendtally/features/i18n";
 import { ChevronRow } from "./ChevronRow";
 import { GradeScaleSection } from "./GradeScaleSection";
 import { MembershipSection } from "./MembershipSection";
@@ -32,10 +32,10 @@ export function SettingsView({
 }: SettingsViewProps): React.ReactElement {
   return (
     <div style={{ maxWidth: 640, display: "flex", flexDirection: "column", gap: 14 }}>
-      <h1 style={pageTitle}>{t("web.settings.title")}</h1>
+      <h1 style={pageTitle}>{t("common.settings")}</h1>
 
       <Section>
-        <span style={sectionLabel}>{upper(t("web.settings.grades"))}</span>
+        <span style={sectionLabel}>{t("settings.grades")}</span>
         <GradeScaleSection scales={scales} />
       </Section>
 
@@ -48,12 +48,12 @@ export function SettingsView({
             gap: 12,
           }}
         >
-          <span style={sectionLabel}>{upper(t("web.settings.strava"))}</span>
+          <span style={sectionLabel}>Strava</span>
           <span style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <StatusPill label={vm.stravaStatusLabel} active={vm.stravaActive} />
             {vm.stravaActive && (
               <Link to="/app/setup" style={linkAction}>
-                {t("web.settings.relink")}
+                {t("settings.relink")}
               </Link>
             )}
           </span>
@@ -63,14 +63,10 @@ export function SettingsView({
         ) : (
           <>
             <p style={bodyText}>
-              {vm.stravaConnected
-                ? t("web.settings.stravaLapsed")
-                : t("web.settings.stravaConnectBody")}
+              {vm.stravaConnected ? t("settings.stravaLapsed") : t("settings.stravaConnectBody")}
             </p>
             <Link to="/app/setup" style={{ ...azureButton, textDecoration: "none" }}>
-              {vm.stravaConnected
-                ? t("web.settings.relinkStrava")
-                : t("web.settings.connectStrava")}
+              {vm.stravaConnected ? t("settings.relinkStrava") : t("sessions.connectStrava")}
             </Link>
           </>
         )}
@@ -84,7 +80,7 @@ export function SettingsView({
         <Section>
           <ChevronRow>
             <span style={{ display: "flex", flexDirection: "column", gap: 4, minWidth: 0 }}>
-              <span style={sectionLabel}>{upper(t("web.settings.account"))}</span>
+              <span style={sectionLabel}>{t("common.account")}</span>
               <span
                 style={{
                   ...monoMuted,

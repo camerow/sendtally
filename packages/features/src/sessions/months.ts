@@ -1,5 +1,5 @@
 import type { SessionRow } from "@sendtally/api-client";
-import { formatDate, upper } from "../i18n";
+import { formatDate } from "../i18n";
 
 export type SessionMonth = {
   key: string;
@@ -16,7 +16,7 @@ function formatMonth(month: number, style: "long" | "short"): string {
 }
 
 export function monthShortName(month: number): string {
-  return upper(formatMonth(month, "short"));
+  return formatMonth(month, "short");
 }
 
 export function monthKey(year: number, month: number): string {

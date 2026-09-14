@@ -1,7 +1,6 @@
 import React from "react";
 import { Text, View } from "react-native";
 import type { TrendTagRowVM } from "@sendtally/features/trends";
-import { upper } from "@sendtally/features/i18n";
 import { colors, fonts } from "@sendtally/design/tokens";
 
 export type TrendTagBreakdownProps = {
@@ -23,6 +22,7 @@ export function TrendTagBreakdown({
           fontFamily: fonts.monoMedium,
           fontSize: compact ? 9 : 10,
           letterSpacing: 0.7,
+          textTransform: "uppercase",
           color: compact ? colors.textMuted : colors.watermelonInk,
         }}
       >
@@ -37,10 +37,11 @@ export function TrendTagBreakdown({
               fontFamily: fonts.mono,
               fontSize: compact ? 10 : 11,
               letterSpacing: 0.5,
+              textTransform: "uppercase",
               color: compact ? colors.textSecondary : colors.gunmetal,
             }}
           >
-            {upper(row.label)}
+            {row.label}
           </Text>
           <View
             style={{

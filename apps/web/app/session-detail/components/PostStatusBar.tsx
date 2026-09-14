@@ -33,6 +33,7 @@ export function PostStatusBar({ post, action }: PostStatusBarProps): React.React
         <span
           style={{
             ...line,
+            textTransform: "uppercase",
             color: post.alert ? "var(--text-label-accent)" : "rgba(64,63,76,0.55)",
           }}
         >
@@ -70,7 +71,7 @@ export function PostStatusBar({ post, action }: PostStatusBarProps): React.React
             whiteSpace: "nowrap",
           }}
         >
-          {action.busy ? t("web.sessionDetail.posting") : post.actionLabel}
+          {action.busy ? t("sessions.posting") : post.actionLabel}
         </button>
       )}
     </div>

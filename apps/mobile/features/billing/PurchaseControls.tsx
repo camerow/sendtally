@@ -45,7 +45,7 @@ export function PurchaseControls({ purchase }: PurchaseControlsProps): React.Rea
         <Text
           style={{ fontFamily: fonts.sans, fontSize: 13, lineHeight: 20, color: colors.gunmetal }}
         >
-          {t("mobile.billing.plansUnavailable", { store: storeLabel() })}
+          {t("billing.plansUnavailable", { store: storeLabel() })}
         </Text>
       ) : (
         <>
@@ -73,15 +73,15 @@ export function PurchaseControls({ purchase }: PurchaseControlsProps): React.Rea
             ) : (
               <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 15, color: colors.white }}>
                 {selected === null
-                  ? t("mobile.billing.becomeAMember")
-                  : t("mobile.billing.becomeAMemberPlan", { plan: packageLabel(selected) })}
+                  ? t("billing.becomeAMember")
+                  : t("billing.becomeAMemberPlan", { plan: packageLabel(selected) })}
               </Text>
             )}
           </Pressable>
           <Text
             style={{ fontFamily: fonts.sans, fontSize: 12, lineHeight: 18, color: colors.gunmetal }}
           >
-            {t("mobile.billing.renewalNote", { store: storeLabel() })}
+            {t("billing.renewalNote", { store: storeLabel() })}
           </Text>
         </>
       )}
@@ -93,16 +93,16 @@ export function PurchaseControls({ purchase }: PurchaseControlsProps): React.Rea
         >
           <Text style={legalLink}>
             {purchase.status === "restoring"
-              ? t("mobile.billing.restoring")
-              : t("mobile.billing.restorePurchases")}
+              ? t("billing.restoring")
+              : t("billing.restorePurchases")}
           </Text>
         </Pressable>
         <LegalLink
-          label={t("mobile.billing.terms")}
+          label={t("billing.terms")}
           onPress={() => void Linking.openURL(`${WEB_URL}/terms`)}
         />
         <LegalLink
-          label={t("mobile.billing.privacy")}
+          label={t("billing.privacy")}
           onPress={() => void Linking.openURL(`${WEB_URL}/privacy`)}
         />
       </View>

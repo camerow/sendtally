@@ -1,7 +1,7 @@
 import { climbDiscipline, climbRank, dominantDiscipline } from "@sendtally/core";
 import type { ConnectionStatus, SessionClimb, SessionDetail } from "@sendtally/api-client";
 import { climbKey } from "../climbs/transforms";
-import { formatDate, t, upper } from "../i18n";
+import { formatDate, t } from "../i18n";
 import { sendStyleLabel } from "../log-session/types";
 import { climbGradeLabel, gradeFormatterFor } from "../sessions/grades";
 import { durationLabel as minutesLabel } from "../sessions/years";
@@ -37,7 +37,7 @@ function resultOf(c: SessionClimb, firstEncounter: boolean): ClimbResult {
 }
 
 function resultLabelOf(c: SessionClimb, result: ClimbResult): string {
-  if (result === "project") return upper(t("sessionDetail.resultProject"));
+  if (result === "project") return t("common.project");
   return sendStyleLabel(climbDiscipline(c), result === "sent" ? "redpoint" : result);
 }
 
@@ -130,7 +130,7 @@ export function postingStatus(status: ConnectionStatus | null): PostingStatus | 
 function postedLabel(session: SessionDetail, start: Date): string {
   const on = session.posted_at !== null ? new Date(session.posted_at) : start;
   const day = formatDate(on, { month: "short", day: "numeric", timeZone: "UTC" });
-  return upper(t("sessionDetail.postedOn", { date: day }));
+  return t("sessionDetail.postedOn", { date: day });
 }
 
 export function postStatusVM(
@@ -145,10 +145,10 @@ export function postStatusVM(
   }
   if (session.source !== "manual") {
     const board = BOARD_LABELS[session.board ?? ""] ?? t("sessions.boardSession");
-    return { ...base, kind: "legacy", label: upper(t("sessionDetail.readOnlyHistory", { board })) };
+    return { ...base, kind: "legacy", label: t("sessionDetail.readOnlyHistory", { board }) };
   }
   if (session.post_state === "pending") {
-    return { ...base, kind: "pending", label: upper(t("sessionDetail.postingToStrava")) };
+    return { ...base, kind: "pending", label: t("sessionDetail.postingToStrava") };
   }
 
   // Nothing to post to: no action, and no explanation the user can act on.
@@ -157,7 +157,7 @@ export function postStatusVM(
   if (session.post_state === "failed") {
     return {
       kind: "failed",
-      label: upper(t("sessionDetail.notPostedToStrava")),
+      label: t("sessionDetail.notPostedToStrava"),
       detail: session.post_error,
       alert: true,
       action: postable ? "retry" : null,
@@ -167,7 +167,7 @@ export function postStatusVM(
   if (postable && posting.since !== null && session.start_at < posting.since) {
     return {
       kind: "before-start",
-      label: upper(t("sessionDetail.notPostedToStrava")),
+      label: t("sessionDetail.notPostedToStrava"),
       detail: t("sessionDetail.beforePostingStart"),
       alert: false,
       action: "post",
@@ -176,7 +176,7 @@ export function postStatusVM(
   }
   return {
     kind: "off",
-    label: upper(t("sessionDetail.loggedManually")),
+    label: t("sessionDetail.loggedManually"),
     detail: null,
     alert: false,
     action: postable ? "post" : null,
@@ -213,25 +213,25 @@ export function sessionDetailVM(
         ? t("sessions.loggedSession")
         : (BOARD_LABELS[board ?? ""] ?? t("sessions.boardSession"));
   const dateLabel = formatDate(start, { month: "short", day: "numeric", timeZone: "UTC" });
-  const weekday = upper(formatDate(start, { weekday: "short", timeZone: "UTC" }));
-  const time = upper(formatDate(start, { hour: "numeric", minute: "2-digit", timeZone: "UTC" }));
+  const weekday = formatDate(start, { weekday: "short", timeZone: "UTC" });
+  const time = formatDate(start, { hour: "numeric", minute: "2-digit", timeZone: "UTC" });
 
   const stats: StatVM[] = [
     {
-      label: upper(t("sessionDetail.statTime")),
+      label: t("sessionDetail.statTime"),
       value: durationLabel(session.start_at, session.end_at),
       accent: false,
     },
-    { label: upper(t("sessionDetail.statClimbs")), value: String(climbs.length), accent: false },
-    { label: upper(t("sessionDetail.statSends")), value: String(sends.length), accent: false },
+    { label: t("common.climbs"), value: String(climbs.length), accent: false },
+    { label: t("sessionDetail.statSends"), value: String(sends.length), accent: false },
     {
-      label: upper(t("trends.avgGrade")),
+      label: t("trends.avgGrade"),
       value: avg === null ? "-" : format.average(avg),
       accent: false,
     },
-    { label: upper(t("sessionDetail.statFlashes")), value: String(flashes.length), accent: false },
+    { label: t("sessionDetail.statFlashes"), value: String(flashes.length), accent: false },
     { label: "RPE", value: `${session.rpe}/10`, accent: false },
-    { label: upper(t("sessionDetail.statTop")), value: topLabel, accent: true },
+    { label: t("sessionDetail.statTop"), value: topLabel, accent: true },
   ];
 
   const grades = graded.map((c) => climbRank(c));
@@ -265,11 +265,11 @@ export function sessionDetailVM(
   const location =
     session.location === null
       ? ""
-      : ` · ${upper(t(session.location === "outdoor" ? "logSession.outdoor" : "logSession.indoor"))}`;
+      : ` · ${t(session.location === "outdoor" ? "common.outdoor" : "common.indoor")}`;
 
   return {
     title: `${titleLabel} - ${dateLabel}`,
-    meta: `${weekday} ${upper(dateLabel)} · ${time} · ${durationLabel(session.start_at, session.end_at)}${location} · ${t("sessions.rpeOutOfTen", { rpe: session.rpe })}`,
+    meta: `${weekday} ${dateLabel} · ${time} · ${durationLabel(session.start_at, session.end_at)}${location} · RPE ${session.rpe}/10`,
     editable: session.source === "manual",
     stats,
     bars,

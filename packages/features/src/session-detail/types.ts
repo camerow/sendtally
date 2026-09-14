@@ -50,32 +50,18 @@ export type SessionDetailVM = {
   stravaUrl: string | null;
 };
 
-export const CLIMB_SORTS: Array<{ value: ClimbSort; label: string }> = [
-  {
-    value: "order",
-    get label() {
-      return t("sessionDetail.sortOrder");
-    },
-  },
-  {
-    value: "gradeDesc",
-    get label() {
-      return t("sessionDetail.sortGradeDesc");
-    },
-  },
-  {
-    value: "gradeAsc",
-    get label() {
-      return t("sessionDetail.sortGradeAsc");
-    },
-  },
-  {
-    value: "burns",
-    get label() {
-      return t("sessionDetail.sortBurns");
-    },
-  },
-];
+export const CLIMB_SORTS: readonly ClimbSort[] = ["order", "gradeDesc", "gradeAsc", "burns"];
+
+const CLIMB_SORT_KEYS = {
+  order: "sessionDetail.sortOrder",
+  gradeDesc: "sessionDetail.sortGradeDesc",
+  gradeAsc: "sessionDetail.sortGradeAsc",
+  burns: "sessionDetail.sortBurns",
+} as const;
+
+export function climbSortLabel(sort: ClimbSort): string {
+  return t(CLIMB_SORT_KEYS[sort]);
+}
 
 export const BOARD_LABELS: Record<string, string> = {
   tension: "Tension Board",

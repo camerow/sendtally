@@ -2,7 +2,7 @@ import React from "react";
 import { Link } from "react-router";
 import type { SessionRow } from "@sendtally/api-client";
 import { sessionDay, sessionGradeLabels, sessionMetaLabel } from "@sendtally/features/sessions";
-import { formatDate, t, upper } from "@sendtally/features/i18n";
+import { formatDate, t } from "@sendtally/features/i18n";
 
 export function SessionRowItem({
   session,
@@ -22,7 +22,7 @@ export function SessionRowItem({
         title,
         `${weekday} ${month} ${day}`,
         sessionMetaLabel(session),
-        onStrava ? t("web.sessions.postedToStrava") : null,
+        onStrava ? t("sessions.postedToStrava") : null,
       ]
         .filter((part) => part !== null)
         .join(", ")}
@@ -42,7 +42,7 @@ export function SessionRowItem({
           <span className="session-row-tags">
             {session.tags.map((tag) => (
               <span key={tag.id} className="session-row-tag">
-                {tag.name.toUpperCase()}
+                {tag.name}
               </span>
             ))}
           </span>
@@ -72,6 +72,7 @@ export function SessionRowItem({
               fontWeight: 500,
               fontSize: 10,
               letterSpacing: "0.08em",
+              textTransform: "uppercase",
               borderRadius: "var(--radius-pill)",
               padding: "3px 9px",
               whiteSpace: "nowrap",
@@ -79,7 +80,7 @@ export function SessionRowItem({
               color: "var(--bs-azure-ink)",
             }}
           >
-            {upper(t("web.sessions.onStrava"))}
+            {t("sessions.onStrava")}
           </span>
         )}
       </span>

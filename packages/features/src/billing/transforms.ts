@@ -1,13 +1,13 @@
 import type { Entitlements, StoreMembership } from "@sendtally/api-client";
-import { formatDate, t, upper, type MessageKey } from "../i18n";
+import { formatDate, t, type MessageKey } from "../i18n";
 import type { MembershipManagedIn, MembershipPlan, MembershipVM } from "./types";
 
-const STORE_NAMES: Record<MembershipManagedIn, MessageKey> = {
-  web: "billing.storeWeb",
-  play_store: "billing.storePlay",
-  app_store: "billing.storeApp",
-  test_store: "billing.storeTest",
-  other: "billing.storeOther",
+const STORE_NAMES: Record<MembershipManagedIn, () => string> = {
+  web: () => "sendtally.com",
+  play_store: () => "Google Play",
+  app_store: () => t("billing.storeApp"),
+  test_store: () => t("billing.storeTest"),
+  other: () => t("billing.storeOther"),
 };
 
 export function managedInOf(store: string): MembershipManagedIn {
@@ -18,19 +18,19 @@ export function managedInOf(store: string): MembershipManagedIn {
 }
 
 export function storeName(managedIn: MembershipManagedIn): string {
-  return t(STORE_NAMES[managedIn]);
+  return STORE_NAMES[managedIn]();
 }
 
-const STORE_CHIPS: Record<MembershipManagedIn, MessageKey> = {
-  web: "billing.storeChipWeb",
-  play_store: "billing.storeChipPlay",
-  app_store: "billing.storeChipApp",
-  test_store: "billing.storeChipTest",
-  other: "billing.storeChipOther",
+const STORE_CHIPS: Record<MembershipManagedIn, () => string> = {
+  web: () => "sendtally.com",
+  play_store: () => "Google Play",
+  app_store: () => "App Store",
+  test_store: () => t("billing.storeChipTest"),
+  other: () => t("billing.storeChipOther"),
 };
 
 export function storeChipName(managedIn: MembershipManagedIn): string {
-  return t(STORE_CHIPS[managedIn]);
+  return STORE_CHIPS[managedIn]();
 }
 
 const PLAN_LABELS: Record<MembershipPlan, MessageKey> = {
@@ -64,7 +64,7 @@ export function membershipVM(entitlements: Entitlements | null): MembershipVM {
   if (membership === null || !membership.active) {
     return {
       active: false,
-      statusLabel: upper(t("billing.notAMember")),
+      statusLabel: t("billing.notAMember"),
       managedIn: null,
       plan: null,
       renewalLine: null,
@@ -74,7 +74,7 @@ export function membershipVM(entitlements: Entitlements | null): MembershipVM {
     const managedIn = managedInOf(membership.store.store);
     return {
       active: true,
-      statusLabel: upper(t("billing.memberVia", { store: storeChipName(managedIn) })),
+      statusLabel: t("billing.memberVia", { store: storeChipName(managedIn) }),
       managedIn,
       plan: planOf(membership.store.productId),
       renewalLine: renewalLine(membership.store),
@@ -82,7 +82,7 @@ export function membershipVM(entitlements: Entitlements | null): MembershipVM {
   }
   return {
     active: true,
-    statusLabel: upper(t("billing.memberWeb")),
+    statusLabel: t("billing.memberWeb"),
     managedIn: "web",
     plan: null,
     renewalLine: null,

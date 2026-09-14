@@ -3,7 +3,7 @@ import React from "react";
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTrends, type TrendMetric } from "@sendtally/features/trends";
-import { t, upper } from "@sendtally/features/i18n";
+import { t } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { TrendBars } from "../../features/trends/TrendBars";
 import { TrendFilters } from "../../features/trends/TrendFilters";
@@ -34,13 +34,14 @@ function TrendDetailLocked(): React.ReactElement {
               fontFamily: fonts.monoMedium,
               fontSize: 12,
               letterSpacing: 0.5,
+              textTransform: "uppercase",
               color: colors.watermelonInk,
             }}
           >
-            {upper(t("mobile.trends.backToTrends"))}
+            {t("trends.backToTrends")}
           </Text>
         </Pressable>
-        <Paywall title={t("mobile.trends.lockedTitle")} body={t("mobile.trends.lockedBody")} />
+        <Paywall title={t("trends.lockedTitle")} body={t("trends.lockedBody")} />
       </ScrollView>
     </SafeAreaView>
   );
@@ -69,17 +70,18 @@ function TrendDetail(): React.ReactElement {
               fontFamily: fonts.monoMedium,
               fontSize: 12,
               letterSpacing: 0.5,
+              textTransform: "uppercase",
               color: colors.watermelonInk,
             }}
           >
-            {upper(t("mobile.trends.backToTrends"))}
+            {t("trends.backToTrends")}
           </Text>
         </Pressable>
         <TrendFilters feature={feature} />
         {state.status === "loading" && <ActivityIndicator color={colors.gunmetal} />}
         {state.status === "error" && (
           <Text style={{ fontFamily: fonts.mono, fontSize: 12, color: colors.watermelonInk }}>
-            {t("mobile.trends.loadFailed")}
+            {t("trends.loadFailedMobile")}
           </Text>
         )}
         {state.status === "ready" && (
@@ -100,6 +102,7 @@ function TrendDetail(): React.ReactElement {
                   fontFamily: fonts.monoMedium,
                   fontSize: 10,
                   letterSpacing: 0.6,
+                  textTransform: "uppercase",
                   color: colors.textMuted,
                 }}
               >
@@ -141,6 +144,7 @@ function TrendDetail(): React.ReactElement {
                       fontFamily: fonts.monoMedium,
                       fontSize: 10,
                       letterSpacing: 0.7,
+                      textTransform: "uppercase",
                       color: colors.watermelonInk,
                       paddingTop: 1,
                     }}
@@ -161,9 +165,7 @@ function TrendDetail(): React.ReactElement {
               ))}
             </View>
             <TrendTagBreakdown
-              title={upper(
-                t("mobile.trends.byTagTitle", { title: state.data.details[metric].title })
-              )}
+              title={t("trends.byTagTitled", { title: state.data.details[metric].title })}
               rows={state.data.details[metric].breakdown}
             />
             <Text

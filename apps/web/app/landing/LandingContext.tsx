@@ -1,6 +1,6 @@
 import React from "react";
 import type { Locale } from "@sendtally/features/i18n";
-import { landingCopy } from "./copies";
+import { COPIES } from "./copies";
 import { COPY, type LandingCopy } from "./copy";
 
 export type LandingState = { signedIn: boolean; locale: Locale; copy: LandingCopy };
@@ -21,7 +21,7 @@ export function LandingProvider({
   children: React.ReactNode;
 }): React.ReactElement {
   const value = React.useMemo(
-    () => ({ signedIn, locale, copy: landingCopy(locale) }),
+    () => ({ signedIn, locale, copy: COPIES[locale] }),
     [signedIn, locale]
   );
   return <LandingContext.Provider value={value}>{children}</LandingContext.Provider>;

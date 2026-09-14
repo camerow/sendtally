@@ -2,10 +2,10 @@ import { useClerk } from "@clerk/react-router";
 import React from "react";
 import { AuthShell, StepBody, StepCard, StepTitle } from "../auth/components/AuthShell";
 import { pageMeta } from "../lib/seo";
-import { t, upper } from "@sendtally/features/i18n";
+import { t } from "@sendtally/features/i18n";
 
 export function meta(): Array<Record<string, string>> {
-  return pageMeta({ title: t("web.auth.signInTitle"), path: "/sign-in/verify", noindex: true });
+  return pageMeta({ title: t("auth.signInTitle"), path: "/sign-in/verify", noindex: true });
 }
 
 type VerifyState = "verifying" | "verified-elsewhere" | "expired" | "failed";
@@ -13,16 +13,16 @@ type VerifyState = "verifying" | "verified-elsewhere" | "expired" | "failed";
 function copyFor(state: VerifyState): { title: string; body: string } {
   switch (state) {
     case "verifying":
-      return { title: t("web.auth.verifyingTitle"), body: t("web.auth.verifyingBody") };
+      return { title: t("auth.verifyingTitle"), body: t("auth.verifyingBody") };
     case "verified-elsewhere":
       return {
-        title: t("web.auth.verifiedElsewhereTitle"),
-        body: t("web.auth.verifiedElsewhereBody"),
+        title: t("auth.verifiedElsewhereTitle"),
+        body: t("auth.verifiedElsewhereBody"),
       };
     case "expired":
-      return { title: t("web.auth.expiredTitle"), body: t("web.auth.expiredBody") };
+      return { title: t("auth.expiredTitle"), body: t("auth.expiredBody") };
     case "failed":
-      return { title: t("web.auth.failedTitle"), body: t("web.auth.failedBody") };
+      return { title: t("auth.failedTitle"), body: t("auth.failedBody") };
   }
 }
 
@@ -50,7 +50,7 @@ export default function SignInVerify(): React.ReactElement {
   const { title, body } = copyFor(state);
   return (
     <AuthShell>
-      <StepCard step={upper(t("web.auth.stepAccount"))}>
+      <StepCard step={t("auth.stepAccount")}>
         <StepTitle>{title}</StepTitle>
         <StepBody>{body}</StepBody>
         {state !== "verifying" && (
@@ -58,9 +58,7 @@ export default function SignInVerify(): React.ReactElement {
             href="/sign-in"
             style={{ fontFamily: "var(--font-mono)", fontSize: 13, color: "var(--text-link)" }}
           >
-            {state === "verified-elsewhere"
-              ? t("web.auth.signInOnThisDevice")
-              : t("web.auth.backToSignIn")}
+            {state === "verified-elsewhere" ? t("auth.signInOnThisDevice") : t("auth.backToSignIn")}
           </a>
         )}
       </StepCard>

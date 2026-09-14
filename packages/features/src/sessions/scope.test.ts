@@ -38,7 +38,7 @@ const sessions = [
 describe("monthScopeItems", () => {
   it("lists each year followed by its months, newest first", () => {
     const items = monthScopeItems(sessionYearGroups(sessions));
-    expect(items.map((i) => i.label)).toEqual(["2026", "AUG", "MAY", "2025", "DEC"]);
+    expect(items.map((i) => i.label)).toEqual(["2026", "Aug", "May", "2025", "Dec"]);
     expect(items.map((i) => i.kind)).toEqual(["year", "month", "month", "year", "month"]);
   });
 
@@ -54,9 +54,9 @@ describe("monthScopeItems", () => {
 });
 
 describe("tagScopeItems", () => {
-  it("mirrors the tag groups with uppercase labels", () => {
+  it("mirrors the tag groups with natural-case labels", () => {
     const items = tagScopeItems(sessionTagGroups(sessions));
-    expect(items.map((i) => i.label)).toEqual(["GYM", "PROJECTS", "UNTAGGED"]);
+    expect(items.map((i) => i.label)).toEqual(["gym", "projects", "Untagged"]);
     expect(items.map((i) => i.sectionKey)).toEqual(["gym", "projects", "untagged"]);
     expect(items.every((i) => i.kind === "tag")).toBe(true);
   });

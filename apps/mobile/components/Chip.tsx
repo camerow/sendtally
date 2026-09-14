@@ -8,6 +8,7 @@ export type ChipProps = {
   active: boolean;
   disabled?: boolean;
   dashed?: boolean;
+  uppercase?: boolean;
   onPress: () => void;
 };
 
@@ -16,6 +17,7 @@ export function Chip({
   active,
   disabled = false,
   dashed = false,
+  uppercase = true,
   onPress,
 }: ChipProps): React.ReactElement {
   return (
@@ -41,6 +43,7 @@ export function Chip({
           fontFamily: fonts.monoMedium,
           fontSize: 11,
           letterSpacing: 0.6,
+          textTransform: uppercase ? "uppercase" : "none",
           color: active ? colors.gunmetal : "rgba(64,63,76,0.65)",
         }}
       >

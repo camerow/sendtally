@@ -30,9 +30,7 @@ export default function EditSessionScreen(): React.ReactElement {
               textAlign: "center",
             }}
           >
-            {state.status === "error"
-              ? t("mobile.sessions.loadOneFailed")
-              : t("mobile.sessions.readOnlyBoard")}
+            {state.status === "error" ? t("sessionDetail.loadFailed") : t("sessions.readOnlyBoard")}
           </Text>
         </View>
       )}

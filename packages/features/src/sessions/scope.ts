@@ -1,5 +1,4 @@
 import type { SessionTag } from "@sendtally/api-client";
-import { upper } from "../i18n";
 import { monthShortName } from "./months";
 import type { SessionTagGroup } from "./tags";
 import type { SessionYear } from "./years";
@@ -32,7 +31,7 @@ export function tagScopeItems<T extends { tags: SessionTag[] }>(
 ): ScopeItem[] {
   return groups.map((group) => ({
     key: group.key,
-    label: upper(group.label),
+    label: group.label,
     sectionKey: group.key,
     kind: "tag",
   }));

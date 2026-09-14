@@ -2,7 +2,7 @@ import React from "react";
 import type { LoaderFunctionArgs } from "react-router";
 import { useLoaderData } from "react-router";
 import { memberPoints } from "@sendtally/features/billing";
-import { t, upper } from "@sendtally/features/i18n";
+import { t } from "@sendtally/features/i18n";
 import { UpgradePanel } from "../billing/components/UpgradePanel";
 import { cloudflareContext } from "../lib/cloudflare-context";
 import { getMembership } from "../lib/billing.server";
@@ -23,9 +23,9 @@ export default function TrendsRoute(): React.ReactElement {
   if (!canSeeInsights) {
     return (
       <UpgradePanel
-        eyebrow={upper(t("web.trends.upgradeEyebrow"))}
-        title={t("web.trends.upgradeTitle")}
-        body={t("web.trends.upgradeBody")}
+        eyebrow={t("common.members")}
+        title={t("trends.upgradeTitle")}
+        body={t("trends.upgradeBody")}
         points={memberPoints()}
       />
     );
