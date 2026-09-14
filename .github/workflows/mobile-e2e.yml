@@ -4,7 +4,7 @@ name: Mobile E2E
 # on a Linux runner, which has KVM and bills at 1x; iOS would need a macOS runner at 10x and
 # stays a local run (docs/mobile-e2e.md).
 #
-# The app is the same preview APK from one run to the next. `runtimeVersion` is a
+# The app is the same `e2e` APK from one run to the next. `runtimeVersion` is a
 # fingerprint, so a branch that only moves JavaScript can take an EAS Update on top of an
 # APK that EAS already built, and the sixteen minutes of Gradle this job used to spend go
 # away. Only a branch that moves the native layer builds, and the summary says so.
@@ -22,7 +22,7 @@ on:
   workflow_dispatch:
 
 # One run at a time across every branch, not one per ref. Every run publishes to the same
-# `preview` update branch, because that is the branch the APK's channel resolves to, so two
+# `e2e` update branch, because that is the branch the APK's channel resolves to, so two
 # runs in flight would each be looking at the other's JavaScript.
 concurrency:
   group: mobile-e2e
@@ -64,9 +64,9 @@ jobs:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
         run: |
           set -euo pipefail
-          hash=$(eas fingerprint:generate --platform android --build-profile preview \
+          hash=$(eas fingerprint:generate --platform android --build-profile e2e \
             --json --non-interactive | jq -r .hash)
-          url=$(eas build:list --platform android --profile preview --status finished \
+          url=$(eas build:list --platform android --profile e2e --status finished \
             --distribution internal --fingerprint-hash "$hash" --limit 5 \
             --json --non-interactive \
             | jq -r '[.[] | .artifacts.applicationArchiveUrl // empty
@@ -81,8 +81,8 @@ jobs:
           fi
 
       # The branch's JavaScript reaches that APK as an update. The APK is built on the
-      # `preview` channel, which resolves to the `preview` update branch, so this is where
-      # every run publishes and why the whole job is serialised.
+      # `e2e` channel, which resolves to the `e2e` update branch, so this is where every run
+      # publishes and why the whole job is serialised.
       - name: Publish the branch as an update
         id: update
         if: steps.apk.outputs.reused == 'true'
@@ -92,7 +92,7 @@ jobs:
           TITLE: ${{ github.event.pull_request.title || github.ref_name }}
         run: |
           set -euo pipefail
-          id=$(eas update --branch preview --platform android --environment preview \
+          id=$(eas update --branch e2e --platform android --environment preview \
             --message "$TITLE" --json --non-interactive | jq -r '.[0].id')
           echo "id=$id" >> "$GITHUB_OUTPUT"
 
@@ -189,11 +189,11 @@ jobs:
           HASH: ${{ steps.apk.outputs.hash }}
         run: |
           if [ "$REUSED" = "true" ]; then
-            echo "The flows ran on the EAS preview APK carrying fingerprint \`$HASH\`, with this branch published over it as an update. No Gradle build." >> "$GITHUB_STEP_SUMMARY"
+            echo "The flows ran on the EAS e2e APK carrying fingerprint \`$HASH\`, with this branch published over it as an update. No Gradle build." >> "$GITHUB_STEP_SUMMARY"
           else
-            echo "**The native layer moved.** No finished preview build carries fingerprint \`$HASH\`, so this run built the app with Gradle instead of reusing one, which is where most of its minutes went." >> "$GITHUB_STEP_SUMMARY"
+            echo "**The native layer moved.** No finished e2e build carries fingerprint \`$HASH\`, so this run built the app with Gradle instead of reusing one, which is where most of its minutes went." >> "$GITHUB_STEP_SUMMARY"
             echo "" >> "$GITHUB_STEP_SUMMARY"
-            echo "Warm the new fingerprint with \`eas build --profile preview --platform android\` from \`apps/mobile\` and later runs on it go back to reusing the APK." >> "$GITHUB_STEP_SUMMARY"
+            echo "Warm the new fingerprint with \`eas build --profile e2e --platform android\` from \`apps/mobile\` and later runs on it go back to reusing the APK." >> "$GITHUB_STEP_SUMMARY"
           fi
 
       - name: Keep the screenshots and hierarchy of a failed run

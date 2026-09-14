@@ -35,26 +35,27 @@ The job does not build the app.
 `runtimeVersion` is a fingerprint, so the question the release pipeline asks - can this commit ship over the air? - answers "can this branch run on an APK EAS already built?" too:
 
 ```
-eas fingerprint:generate --platform android --build-profile preview
-eas build:list --platform android --profile preview --status finished \
+eas fingerprint:generate --platform android --build-profile e2e
+eas build:list --platform android --profile e2e --status finished \
   --distribution internal --fingerprint-hash <hash>
 ```
 
-When a finished preview build carries the hash, the job downloads its APK, publishes the branch as an EAS Update, and installs the two together.
+When a finished `e2e` build carries the hash, the job downloads its APK, publishes the branch as an EAS Update, and installs the two together.
 That is the whole saving: the Gradle release build this replaced took sixteen of the job's twenty minutes.
 
-The APK is built on the `preview` channel, which resolves to the `preview` update branch, so every run publishes there rather than to a branch of its own.
+The `e2e` build profile exists for this job alone: it extends `preview`, so it is the same staging API and development Clerk instance, but it ships on its own `e2e` channel.
+That channel resolves to the `e2e` update branch, so every run publishes there and nothing the job does can land on a `preview` build someone is holding on a phone.
 That makes the update branch shared state, which is why the whole workflow takes a single `mobile-e2e` concurrency group rather than one per ref: two runs in flight would each be looking at the other's JavaScript.
 
 `expo-updates` launches the bundle it already has and downloads the new one behind it, so the job opens the app once, waits for the update id to appear in logcat, force-stops it, and only then runs the flows.
 The wait is a check, not a pause: a download that never lands fails the job, because the alternative is a green run against whatever JavaScript the APK happened to be built with.
 
-Nothing about the preview profile carries a RevenueCat key.
+Nothing about the `e2e` profile carries a RevenueCat key.
 The SDK refuses a test-store key in a release build and closes the app, and the flows never reach a paywall.
 
 ### When the fallback build fires
 
-A run builds with Gradle when no finished preview build carries the branch's fingerprint, and the job summary says so, because a native change is worth seeing.
+A run builds with Gradle when no finished `e2e` build carries the branch's fingerprint, and the job summary says so, because a native change is worth seeing.
 Anything that changes the native layer does it: a new native dependency or config plugin, an `app.json` change, a version bump - and two that are easy to miss, since neither looks native at all:
 
 - **`eas.json`.** The file is hashed whole, so editing any build profile moves the fingerprint for all of them.
@@ -64,7 +65,7 @@ Warm the new fingerprint once and later runs on it go back to reusing the APK:
 
 ```
 cd apps/mobile
-eas build --profile preview --platform android
+eas build --profile e2e --platform android
 ```
 
 Until that build finishes, every run on that fingerprint pays for Gradle again, so warm it as soon as the summary reports one rather than at the end of the branch.
