@@ -1,4 +1,5 @@
 import React from "react";
+import { t } from "../i18n";
 
 export type QueryState<T> =
   { status: "loading" } | { status: "error"; message: string } | { status: "ready"; data: T };
@@ -22,7 +23,7 @@ export function useQuery<T>(load: () => Promise<T>): {
         if (!cancelled) {
           setState({
             status: "error",
-            message: err instanceof Error ? err.message : "Something went wrong.",
+            message: err instanceof Error ? err.message : t("common.somethingWentWrong"),
           });
         }
       });

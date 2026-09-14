@@ -15,16 +15,19 @@ import {
   IBMPlexSans_600SemiBold,
 } from "@expo-google-fonts/ibm-plex-sans";
 import { useFonts } from "expo-font";
+import { getLocales } from "expo-localization";
 import { Observe, ObserveInteractiveMarker, ObserveRoot } from "expo-observe";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React from "react";
 import { colors } from "@sendtally/design/tokens";
+import { resolveLocale, setLocale } from "@sendtally/features/i18n";
 import { AnalyticsProvider } from "../features/analytics/AnalyticsProvider";
 import { BillingProvider } from "../features/billing/BillingProvider";
 import { CLERK_PUBLISHABLE_KEY } from "../lib/config";
 
 Observe.configure({ integrations: { "expo-router": true } });
+setLocale(resolveLocale(getLocales()[0]?.languageTag));
 
 function InteractiveMarker(): React.ReactElement | null {
   const { isLoaded } = useAuth();
