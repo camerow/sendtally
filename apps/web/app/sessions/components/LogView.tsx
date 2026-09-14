@@ -124,9 +124,7 @@ export function LogView({
         <span className="sessions-head-mark">
           <Logo variant="mark" size={22} />
         </span>
-        <h1 className="sessions-title">
-          {scope === "journal" ? t("journal.title") : t("journal.log")}
-        </h1>
+        <h1 className="sessions-title">{t("journal.log")}</h1>
         <span
           style={{
             fontFamily: "var(--font-mono)",

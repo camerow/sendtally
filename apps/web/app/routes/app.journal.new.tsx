@@ -25,10 +25,10 @@ export async function loader(
   return { apiUrl: args.context.get(cloudflareContext).env.API_URL, sessions };
 }
 
-const KINDS: EntryKind[] = ["note", "reflection", "trip", "injury"];
+const KINDS: EntryKind[] = ["journal", "trip", "injury"];
 
 const kindParam = (value: string | null): EntryKind =>
-  KINDS.find((kind) => kind === value) ?? "note";
+  KINDS.find((kind) => kind === value) ?? "journal";
 
 // Every doorway lands here with what it already knows in the query: the date,
 // sometimes the session, sometimes the kind. Nothing has to be re-stated.

@@ -40,13 +40,13 @@ const list = async (userId: string): Promise<Entry[]> => {
   return ((await res.json()) as { entries: Entry[] }).entries;
 };
 
-const note = { kind: "note", occurred_at: "2026-05-30", body: "Good hour at the end." };
+const note = { kind: "journal", occurred_at: "2026-05-30", body: "Good hour at the end." };
 
 describe("journal entries", () => {
   it("creates, reads back and lists newest first", async () => {
     const older = await created("u_entries", { ...note, occurred_at: "2026-05-20" });
     const newer = await created("u_entries", {
-      kind: "reflection",
+      kind: "journal",
       occurred_at: "2026-05-28",
       title: "Steep ground feels easy now",
       body: "Keep the volume where it is.",
@@ -112,14 +112,14 @@ describe("journal entries", () => {
       body: "Onset.",
     });
     await created("u_thread", {
-      kind: "note",
+      kind: "journal",
       occurred_at: "2026-06-08",
       body: "Full session open handed.",
       parent_id: injury.id,
       severity: 4,
     });
     await created("u_thread", {
-      kind: "note",
+      kind: "journal",
       occurred_at: "2026-05-22",
       body: "Still sore.",
       parent_id: injury.id,
@@ -143,7 +143,7 @@ describe("journal entries", () => {
       body: "Onset.",
     });
     await created("u_thread_del", {
-      kind: "note",
+      kind: "journal",
       occurred_at: "2026-05-22",
       body: "Sore.",
       parent_id: injury.id,
@@ -214,7 +214,7 @@ describe("session notes backfill", () => {
     ).all<{ kind: string; occurred_at: string; body: string; fingerprint: string }>();
     expect(rows.results).toEqual([
       {
-        kind: "note",
+        kind: "journal",
         occurred_at: "2026-02-14",
         body: "Shoulder held up.",
         fingerprint: "fp_written",

@@ -16,7 +16,7 @@ import {
 function entry(overrides: Partial<JournalEntry> = {}): JournalEntry {
   return {
     id: "e1",
-    kind: "note",
+    kind: "journal",
     occurred_at: "2026-05-30",
     ends_at: null,
     title: null,
@@ -141,15 +141,15 @@ describe("drafts", () => {
   });
 
   it("drops an end date when the kind cannot span one", () => {
-    const draft = { ...emptyDraft("note", "2026-05-30"), endsAt: "2026-06-01", body: "x" };
+    const draft = { ...emptyDraft("journal", "2026-05-30"), endsAt: "2026-06-01", body: "x" };
     expect(entryInput(draft).ends_at).toBeNull();
   });
 
   it("refuses an empty draft but accepts an update carrying only a number", () => {
-    expect(draftIsEmpty(emptyDraft("note", "2026-05-30"))).toBe(true);
-    expect(draftIsEmpty({ ...emptyDraft("note", "2026-05-30"), parentId: "i1", severity: 0 })).toBe(
-      false
-    );
+    expect(draftIsEmpty(emptyDraft("journal", "2026-05-30"))).toBe(true);
+    expect(
+      draftIsEmpty({ ...emptyDraft("journal", "2026-05-30"), parentId: "i1", severity: 0 })
+    ).toBe(false);
   });
 });
 

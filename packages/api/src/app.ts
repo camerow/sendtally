@@ -116,7 +116,7 @@ const sessionResponse = async (env: Env, userId: string, fingerprint: string) =>
   ]);
   // `notes` is the log form's single field, now the session's first note entry.
   // Kept on the response so the session page and the edit form need no change.
-  const notes = entries.find((e) => e.kind === "note" && e.parent_id === null)?.body ?? null;
+  const notes = entries.find((e) => e.kind === "journal" && e.parent_id === null)?.body ?? null;
   return { ...rest, notes, tags, entries, climbs: parseClimbs(climbs_json) };
 };
 

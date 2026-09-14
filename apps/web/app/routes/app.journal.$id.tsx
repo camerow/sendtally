@@ -160,7 +160,7 @@ export default function EntryDetailRoute(): React.ReactElement {
             </span>
             <div style={{ flex: 1 }} />
             <Link
-              to={`/app/journal/new?kind=note&parent=${encodeURIComponent(entry.id)}`}
+              to={`/app/journal/new?kind=journal&parent=${encodeURIComponent(entry.id)}`}
               className="journal-action"
             >
               {t("journal.addUpdate")}

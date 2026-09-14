@@ -10,7 +10,7 @@ INSERT INTO journal_entries (
 SELECT
   s.user_id,
   lower(hex(randomblob(16))),
-  'note',
+  'journal',
   substr(s.start_at, 1, 10),
   NULL,
   NULL,

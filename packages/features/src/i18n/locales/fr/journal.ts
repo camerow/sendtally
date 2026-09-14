@@ -1,8 +1,7 @@
 export const journal = {
   "journal.title": "Journal",
   "journal.log": "Journal de bord",
-  "journal.kindNote": "Note",
-  "journal.kindReflection": "Réflexion",
+  "journal.kindJournal": "Journal",
   "journal.kindTrip": "Voyage",
   "journal.kindInjury": "Blessure",
   "journal.newEntry": "Nouvelle entrée",

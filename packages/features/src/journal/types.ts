@@ -2,7 +2,7 @@ import type { EntryKind, JournalEntry, SessionRow, SessionTag } from "@sendtally
 
 export type { EntryKind, JournalEntry };
 
-export const ENTRY_KINDS = ["note", "reflection", "trip", "injury"] as const;
+export const ENTRY_KINDS = ["journal", "trip", "injury"] as const;
 
 /** Only these span dates; the composer swaps a field group on the rest. */
 export const SPANNING_KINDS: EntryKind[] = ["trip", "injury"];

@@ -3,8 +3,7 @@ import { formatDate, t, type MessageKey } from "../i18n";
 import { SPANNING_KINDS, type EntryDraft, type EntryKind, type LogItem } from "./types";
 
 const KIND_LABELS: Record<EntryKind, MessageKey> = {
-  note: "journal.kindNote",
-  reflection: "journal.kindReflection",
+  journal: "journal.kindJournal",
   trip: "journal.kindTrip",
   injury: "journal.kindInjury",
 };

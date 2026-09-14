@@ -376,7 +376,7 @@ export async function upsertSessionNote(
       and(
         eq(journalEntries.user_id, userId),
         eq(journalEntries.fingerprint, fingerprint),
-        eq(journalEntries.kind, "note")
+        eq(journalEntries.kind, "journal")
       )
     )
     .orderBy(asc(journalEntries.created_at))
@@ -385,7 +385,7 @@ export async function upsertSessionNote(
   if (existing === undefined) {
     if (body === null) return true;
     await insertEntry(db, userId, crypto.randomUUID(), {
-      kind: "note",
+      kind: "journal",
       occurred_at: occurredAt,
       ends_at: null,
       title: null,

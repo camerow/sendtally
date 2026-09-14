@@ -4,7 +4,7 @@ import { tagNames } from "./tags";
 export const ENTRY_BODY_MAX = 10000;
 export const ENTRY_TITLE_MAX = 200;
 
-export const ENTRY_KINDS = ["note", "reflection", "trip", "injury"] as const;
+export const ENTRY_KINDS = ["journal", "trip", "injury"] as const;
 
 export type EntryKind = (typeof ENTRY_KINDS)[number];
 
@@ -51,11 +51,11 @@ export const entryBody = z
         message: "only an injury carries a status",
       });
     }
-    if (entry.parent_id != null && entry.kind !== "note") {
+    if (entry.parent_id != null && entry.kind !== "journal") {
       ctx.addIssue({
         code: "custom",
         path: ["parent_id"],
-        message: "only a note can belong to a thread",
+        message: "only a journal entry can belong to a thread",
       });
     }
     // The injury itself carries the reading it opened with; everything after it

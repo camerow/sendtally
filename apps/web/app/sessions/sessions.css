@@ -759,8 +759,7 @@
   white-space: nowrap;
 }
 
-.entry-kind--note,
-.entry-kind--reflection {
+.entry-kind--journal {
   border: 1px solid var(--line-on-light-strong);
   color: rgba(64, 63, 76, 0.72);
 }

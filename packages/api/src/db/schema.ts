@@ -145,7 +145,7 @@ export const journalEntries = sqliteTable(
       .notNull()
       .references(() => users.id),
     id: text("id").notNull(),
-    kind: text("kind", { enum: ["note", "reflection", "trip", "injury"] }).notNull(),
+    kind: text("kind", { enum: ["journal", "trip", "injury"] }).notNull(),
     occurred_at: text("occurred_at").notNull(),
     // Trips and injuries are spans. An injury with no end is still going.
     ends_at: text("ends_at"),
