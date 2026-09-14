@@ -30,6 +30,9 @@
 }
 
 .sessions-ghost-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
   font-family: var(--font-sans);
   font-weight: 600;
   font-size: 13px;
@@ -40,6 +43,7 @@
   padding: 8px 15px;
   text-decoration: none;
   white-space: nowrap;
+  cursor: pointer;
 }
 
 .sessions-setup {
