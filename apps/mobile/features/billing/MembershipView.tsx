@@ -56,7 +56,6 @@ function StatusCard({
   if (!vm.active) {
     return (
       <MembershipStatusCard
-        active={false}
         label={vm.statusLabel}
         headline="Logging is free"
         detail={null}
@@ -69,7 +68,6 @@ function StatusCard({
     const where = storeName(vm.managedIn);
     return (
       <MembershipStatusCard
-        active
         label={vm.statusLabel}
         headline={vm.plan === null ? "Membership" : planLabel(vm.plan)}
         detail={vm.renewalLine}
@@ -92,7 +90,6 @@ function StatusCard({
   if (vm.managedIn === "web") {
     return (
       <MembershipStatusCard
-        active
         label={vm.statusLabel}
         headline="Membership"
         detail={null}
@@ -103,7 +100,6 @@ function StatusCard({
 
   return (
     <MembershipStatusCard
-      active
       label={vm.statusLabel}
       headline={vm.plan === null ? "Membership" : planLabel(vm.plan)}
       detail={vm.renewalLine}
@@ -185,7 +181,7 @@ export function MembershipView({
               fontFamily: fonts.monoMedium,
               fontSize: 12,
               letterSpacing: 0.5,
-              color: colors.watermelonInk,
+              color: colors.labelAccent,
             }}
           >
             ← SETTINGS
