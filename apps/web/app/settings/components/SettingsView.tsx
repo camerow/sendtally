@@ -6,7 +6,14 @@ import type {
   StravaPostingFeature,
 } from "@sendtally/features/settings";
 import type { MembershipVM } from "@sendtally/features/billing";
-import { azureButton, bodyText, linkAction, monoMuted, pageTitle, sectionLabel } from "./styles";
+import {
+  bodyText,
+  linkAction,
+  monoMuted,
+  pageTitle,
+  secondaryButton,
+  sectionLabel,
+} from "./styles";
 import { ChevronRow } from "./ChevronRow";
 import { GradeScaleSection } from "./GradeScaleSection";
 import { MembershipSection } from "./MembershipSection";
@@ -66,7 +73,15 @@ export function SettingsView({
                 ? "Strava access has lapsed. Re-link it to start posting your sessions again."
                 : "Connect Strava and your logged sessions can post to your feed as Rock Climbing activities."}
             </p>
-            <Link to="/app/setup" style={{ ...azureButton, textDecoration: "none" }}>
+            <Link
+              to="/app/setup"
+              style={{
+                ...secondaryButton,
+                fontSize: 14,
+                textDecoration: "none",
+                alignSelf: "flex-start",
+              }}
+            >
               {vm.stravaConnected ? "Re-link Strava" : "Connect Strava"}
             </Link>
           </>
