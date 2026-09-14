@@ -35,7 +35,7 @@
   --text-on-light: var(--bs-gunmetal); /* 7.5:1 on gold, 8.9:1 on petal-tint */
   --text-on-light-secondary: rgba(64, 63, 76, 0.88); /* 6.5:1 on gold */
   --text-on-white-secondary: rgba(64, 63, 76, 0.72); /* 5.5:1 on white */
-  --text-label-accent: var(--bs-petal-ink);
+  --text-label-accent: var(--bs-watermelon-ink);
   --text-link: var(--bs-azure-ink);
 
   /* Lines */

@@ -15,7 +15,7 @@ export const colors = {
   petalTint: "#EED3F8",
   petalInk: "#8C1FB5",
   white: "#FFFFFF",
-  labelAccent: "#8C1FB5",
+  labelAccent: "#C4303D",
   dataBarPeak: "#8C1FB5",
   surfaceSoft: "#F7F6F3",
   textSecondary: "rgba(64,63,76,0.72)",
