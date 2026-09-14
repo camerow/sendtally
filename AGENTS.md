@@ -238,7 +238,7 @@ Store listing copy lives in `apps/mobile/store/listing.md` and should match what
 ### Localization
 
 - Every user-facing string goes through `t()` from `@sendtally/features/i18n`; never hardcode English in a component, transform, or `meta()`.
-  Catalogs are typed TS modules per locale and namespace under `packages/features/src/i18n/locales/<locale>/`, spread into that locale's `index.ts`; keys are `namespace.name`, plural forms are `name_one` / `name_other` picked by `Intl.PluralRules` when `count` is passed.
+  Catalogs are typed TS modules per locale and namespace under `packages/features/src/i18n/locales/<locale>/`, spread into that locale's `index.ts`; keys are `namespace.name`, plural forms are `name_one` / `name_other` picked when `count` is passed (a hand-rolled rule: iOS Hermes has no `Intl.PluralRules`, so never reach for it).
   A key must exist in all four catalogs (`en`, `de`, `fr`, `es`) with the same placeholders or the parity test in `i18n.test.ts` fails.
 - Dates and numbers go through `formatDate` / `formatNumber` (locale-aware `Intl`); uppercase labels are stored in natural case and uppercased at the call site with `upper()`.
 - Never call `t()` at module scope: the locale is set after modules load on mobile and per request on the web Worker (`AsyncLocalStorage` in `entry.server.tsx`), so a module-level constant freezes to English. Wrap it in a function or a getter.

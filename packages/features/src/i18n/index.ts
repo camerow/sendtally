@@ -43,20 +43,15 @@ export function resolveLocale(tag: string | null | undefined): Locale {
   return "en";
 }
 
-const rules = new Map<Locale, Intl.PluralRules>();
-function pluralRules(locale: Locale): Intl.PluralRules {
-  let r = rules.get(locale);
-  if (r === undefined) {
-    r = new Intl.PluralRules(locale);
-    rules.set(locale, r);
-  }
-  return r;
+function pluralCategory(locale: Locale, n: number): "one" | "other" {
+  const one = locale === "fr" ? n === 0 || n === 1 : n === 1;
+  return one ? "one" : "other";
 }
 
 function lookup(locale: Locale, key: string, count: number | undefined): string | undefined {
   const catalog = CATALOGS[locale];
   if (count === undefined) return catalog[key];
-  return catalog[`${key}_${pluralRules(locale).select(count)}`] ?? catalog[`${key}_other`];
+  return catalog[`${key}_${pluralCategory(locale, count)}`] ?? catalog[`${key}_other`];
 }
 
 export function t(key: MessageKey, vars?: Vars): string {

@@ -19,9 +19,16 @@ describe("t", () => {
     expect(t("common.somethingWentWrong")).toBe("Etwas ist schiefgelaufen.");
   });
 
-  it("picks the plural form from Intl.PluralRules", () => {
+  it("picks the plural form without Intl.PluralRules, which iOS Hermes lacks", () => {
+    expect(t("sessions.climbCount", { count: 1 })).toBe("1 climb");
+    expect(t("sessions.climbCount", { count: 3 })).toBe("3 climbs");
     setLocale("fr");
-    expect(new Intl.PluralRules("fr").select(0)).toBe("one");
+    expect(t("sessions.climbCount", { count: 0 })).toBe(
+      fr["sessions.climbCount_one"].replace("{count}", "0")
+    );
+    expect(t("sessions.climbCount", { count: 2 })).toBe(
+      fr["sessions.climbCount_other"].replace("{count}", "2")
+    );
   });
 
   it("resolves Accept-Language and device tags", () => {
