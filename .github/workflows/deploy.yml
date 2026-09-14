@@ -75,3 +75,56 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: apps/web
           command: deploy
+
+  # A web release is a record of what is live, so it is cut after both Workers
+  # deploy. Nothing in the web app carries a version number, so the tag itself
+  # is the version: the last one plus whatever the commits since it call for.
+  release:
+    needs: [deploy-sync-service, deploy-web]
+    if: github.ref_name == 'main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Derive the version and notes
+        id: release
+        run: |
+          set -euo pipefail
+          previous=$(git tag --list 'web-v*' --sort=-v:refname | head -1)
+          range=${previous:+$previous..}HEAD
+          # Mobile-only commits deploy nothing here, so they release nothing.
+          .github/scripts/release-notes.sh "$range" . ':!apps/mobile' > notes.md
+          if [ ! -s notes.md ]; then
+            echo "Nothing user-facing since ${previous:-the first commit}; no release."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          log=$(git log --format='%s%n%b' "$range" -- . ':!apps/mobile')
+          bump=patch
+          if grep -qE '^feat(\([^)]*\))?:' <<<"$log"; then bump=minor; fi
+          if grep -qE '^BREAKING CHANGE|^[a-z]+(\([^)]*\))?!:' <<<"$log"; then bump=major; fi
+          IFS=. read -r major minor patch <<<"${previous#web-v}"
+          major=${major:-0} minor=${minor:-0} patch=${patch:-0}
+          # Pre-1.0, a breaking change is a minor bump, per semver's 0.y rule.
+          if [ "$bump" = major ] && [ "$major" = 0 ]; then bump=minor; fi
+          case $bump in
+            major) next="$((major + 1)).0.0" ;;
+            minor) next="$major.$((minor + 1)).0" ;;
+            patch) next="$major.$minor.$((patch + 1))" ;;
+          esac
+          echo "version=$next" >> "$GITHUB_OUTPUT"
+
+      - name: Create the GitHub release
+        if: steps.release.outputs.skip != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.release.outputs.version }}
+        run: >
+          gh release create "web-v$VERSION"
+          --title "Web v$VERSION"
+          --target "$GITHUB_SHA"
+          --notes-file notes.md
