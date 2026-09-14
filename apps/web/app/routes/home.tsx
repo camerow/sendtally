@@ -37,6 +37,7 @@ export function meta(): Array<Record<string, unknown>> {
         applicationCategory: "HealthApplication",
         operatingSystem: "Web, iOS, Android",
         description: COPY.meta.description,
+        image: `${SITE_URL}/og.jpg`,
         offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
       },
     },

@@ -30,9 +30,20 @@ export function pageMeta({
       property: "og:image:alt",
       content: "sendtally - track your climbing, see the trends",
     },
+    { property: "og:locale", content: "en_US" },
     { name: "twitter:card", content: "summary_large_image" },
     { name: "twitter:title", content: title },
     { name: "twitter:image", content: image },
+    {
+      name: "twitter:image:alt",
+      content: "sendtally - track your climbing, see the trends",
+    },
+    { name: "author", content: "sendtally" },
+    {
+      name: "keywords",
+      content:
+        "climbing log, climbing training log, boulder log, send tracker, climbing grades, climbing trends, Strava climbing",
+    },
     { tagName: "link", rel: "canonical", href: url },
   ];
   if (description !== undefined) {

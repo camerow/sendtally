@@ -18,6 +18,8 @@ import { cloudflareContext } from "./lib/cloudflare-context";
 export const links: LinksFunction = () => [
   { rel: "stylesheet", href: designStyles },
   { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
+  { rel: "icon", type: "image/x-icon", href: "/favicon.ico", sizes: "32x32" },
+  { rel: "apple-touch-icon", sizes: "180x180", href: "/apple-touch-icon.png" },
 ];
 
 export const middleware: MiddlewareFunction<Response>[] = [

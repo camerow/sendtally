@@ -20,7 +20,7 @@ export const COPY = {
   meta: {
     title: "sendtally - log your climbing sessions and see your climbing trends",
     description:
-      "Logging is free for everyone - unlimited sessions, grades, sends, attempts, an effort score, tags and Strava posting. Membership adds trends and insight: volume, grade pyramid, hardest send, flash rate and average grade and more to come!",
+      "Log every climbing session - grades, sends, attempts and an effort score - then watch your trends. Free, with Strava posting.",
   },
 
   nav: {
