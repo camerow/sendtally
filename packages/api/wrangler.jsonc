@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "sendtally-sync-service",
+  "name": "sendtally-api",
   "account_id": "f3514650e9f74f7fe7db71fdd6577a8f",
   "main": "src/index.ts",
   "compatibility_date": "2025-10-11",

@@ -69,15 +69,15 @@ terraform output d1_database_ids
 
 The zone is created in `pending` state; that is expected until step 7. Paste
 the two D1 ids into the `staging` and `production` blocks of
-`packages/sync-service/wrangler.jsonc` (the account pin there and in
+`packages/api/wrangler.jsonc` (the account pin there and in
 `apps/web/wrangler.jsonc` already points at Chalk and Circuits).
 
 ### 4. Deploy the Workers and their secrets `[ ]`
 
 ```sh
 infra/scripts/push-secrets.sh production
-pnpm --filter @sendtally/sync-service exec wrangler d1 migrations apply DB --env production --remote
-pnpm --filter @sendtally/sync-service exec wrangler deploy --env production
+pnpm --filter @sendtally/api exec wrangler d1 migrations apply DB --env production --remote
+pnpm --filter @sendtally/api exec wrangler deploy --env production
 CLOUDFLARE_ENV=production pnpm --filter @sendtally/web build
 pnpm --filter @sendtally/web exec wrangler deploy --env production
 ```
@@ -147,3 +147,30 @@ finally the (now `moved`) zone. Revoke the old export token.
 Before step 7 nothing user-facing has changed; restore the old cron triggers
 and stop. After step 7, moving the registration back is another five-day-window
 support flow, so verify thoroughly at step 7 before touching the old account.
+
+## Renaming a Worker
+
+Done once, in September 2026, when `sendtally-sync-service` became
+`sendtally-api`.
+A rename is a new Worker plus a domain move plus a deletion, and the order
+matters because the custom domain is what users hit.
+
+1. Deploy the new Worker **without** its `routes` block, so it exists but owns
+   no domain, then push its secrets.
+   Secrets live on the Worker, not in the config, so a new Worker starts with
+   none and answers every authenticated request with a 500 until they land.
+   Do this first and the domain never points at a Worker that cannot serve.
+2. Deploy again with `routes` restored.
+   A non-interactive `wrangler deploy` takes the custom domain over from the
+   other Worker without prompting, so this step is the cutover and there is no
+   confirmation to catch a mistake.
+3. Check the domain answers from the new Worker, then delete the old one.
+   `wrangler delete` takes a positional name and does not append `--env`, so
+   pass the full name: `wrangler delete sendtally-sync-service-production`.
+
+`infra/scripts/push-secrets.sh` is not the tool for step 1: it also pushes to
+`apps/web`, which fails with Cloudflare error 10215 whenever a pull request
+preview has been uploaded since the last production deploy, and it runs under
+`set -e`.
+Push the API Worker's secrets on their own with `doppler secrets download`
+piped into `wrangler secret bulk --env <env>`.

@@ -11,7 +11,7 @@ They run locally on an iOS simulator against Metro, and in CI on an Android emul
 
 ## Running
 
-1. Start the local API from `packages/sync-service` with `npx wrangler dev`.
+1. Start the local API from `packages/api` with `npx wrangler dev`.
 2. Start Metro from `apps/mobile` pointed at the local API and the Clerk development instance:
    ```
    EXPO_PUBLIC_API_URL=http://localhost:8787 \
@@ -57,7 +57,7 @@ Marking the person `$internal_or_test_user` instead does not work here: person-o
 Sending nothing also stops session replay recording twenty minutes of a robot on every pull request.
 The workflow sets the same variable for itself, because `EXPO_PUBLIC_*` is inlined at bundle time and the update and the Gradle fallback both bundle on the runner.
 
-The server half is the staging sync-service Worker, which carries no `POSTHOG_PROJECT_TOKEN` for the same reason: the flows log real sessions against `api-staging.sendtally.com`, and `captureUserEvent` would put those in the one PostHog project next to real ones.
+The server half is the staging API Worker, which carries no `POSTHOG_PROJECT_TOKEN` for the same reason: the flows log real sessions against `api-staging.sendtally.com`, and `captureUserEvent` would put those in the one PostHog project next to real ones.
 That was the only staging leak - `apps/web` has always declared its token on the production environment alone, so the staging site's browser has never sent anything, and a staging PostHog var missing anywhere is the design rather than an oversight.
 
 What a run costs in visibility is PostHog replay. Maestro's screenshots and UI hierarchy and the logcat dump are what a failure leaves instead.

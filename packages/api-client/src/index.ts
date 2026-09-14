@@ -1,5 +1,5 @@
 import { hc } from "hono/client";
-import type { AppType } from "@sendtally/sync-service/app";
+import type { AppType } from "@sendtally/api/app";
 import { ApiError } from "./types";
 import type {
   ClimbSummary,
