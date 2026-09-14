@@ -1,6 +1,7 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import type { PostActionFeature, PostStatusVM } from "@sendtally/features/session-detail";
+import { t } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { press } from "../../lib/press";
 
@@ -26,6 +27,7 @@ export function PostStatusBar({ post, action }: PostStatusBarProps): React.React
             fontFamily: fonts.monoMedium,
             fontSize: 11,
             letterSpacing: 0.7,
+            textTransform: "uppercase",
             color: post.alert ? colors.watermelonInk : colors.textMuted,
           }}
         >
@@ -62,7 +64,7 @@ export function PostStatusBar({ post, action }: PostStatusBarProps): React.React
           <Text
             style={{ fontFamily: fonts.sansSemiBold, fontSize: 14, color: colors.textSecondary }}
           >
-            {action.busy ? "Posting…" : post.actionLabel}
+            {action.busy ? t("sessions.posting") : post.actionLabel}
           </Text>
         </Pressable>
       )}

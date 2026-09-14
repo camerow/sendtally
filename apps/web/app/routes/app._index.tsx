@@ -3,6 +3,7 @@ import type { LinksFunction, LoaderFunctionArgs } from "react-router";
 import { Link, useLoaderData, useSearchParams } from "react-router";
 import type { ConnectionStatus, SessionRow } from "@sendtally/api-client";
 import { Logo } from "@sendtally/design";
+import { t } from "@sendtally/features/i18n";
 import {
   countLabel,
   filterSessionsByTags,
@@ -108,7 +109,7 @@ export default function Sessions(): React.ReactElement {
         <span className="sessions-head-mark">
           <Logo variant="mark" size={22} />
         </span>
-        <h1 className="sessions-title">Sessions</h1>
+        <h1 className="sessions-title">{t("common.sessions")}</h1>
         <span
           style={{
             fontFamily: "var(--font-mono)",
@@ -116,6 +117,7 @@ export default function Sessions(): React.ReactElement {
             fontSize: 11,
             color: "rgba(64,63,76,0.55)",
             letterSpacing: "0.06em",
+            textTransform: "uppercase",
           }}
         >
           {countLabel(visible.length)}
@@ -123,7 +125,7 @@ export default function Sessions(): React.ReactElement {
         <div style={{ flex: 1 }} />
         {sessions.length > 0 && (
           <Link to="/app/sessions/new" className="sessions-head-action sessions-primary-link">
-            Log a session
+            {t("common.logASession")}
           </Link>
         )}
       </div>
@@ -167,10 +169,8 @@ export default function Sessions(): React.ReactElement {
       )}
       {sessions.length === 0 && (
         <div className="sessions-first">
-          <span className="sessions-first-label">FIRST SESSION</span>
-          <p className="sessions-first-body">
-            Name, where, the climbs you got on. About a minute, and it scores itself.
-          </p>
+          <span className="sessions-first-label">{t("sessions.firstSessionLabel")}</span>
+          <p className="sessions-first-body">{t("sessions.firstSessionBody")}</p>
           <Link to="/app/sessions/new" className="sessions-primary-link">
             Log a session
           </Link>
@@ -178,9 +178,9 @@ export default function Sessions(): React.ReactElement {
       )}
       {sessions.length > 0 && visible.length === 0 && (
         <div style={muted}>
-          No sessions carry those tags.{" "}
+          {t("sessions.noneForTags")}{" "}
           <Link to={hrefFor({ tags: [] })} style={{ color: "var(--bs-azure-ink)" }}>
-            Clear the filter
+            {t("sessions.clearFilter")}
           </Link>
         </div>
       )}

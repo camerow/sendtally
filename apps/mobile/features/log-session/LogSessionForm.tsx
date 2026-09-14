@@ -20,6 +20,7 @@ import {
 } from "@sendtally/features/log-session";
 import { SESSION_NOTE_MAX, useTagVocabulary } from "@sendtally/features/sessions";
 import { useGradeScalePrefs } from "@sendtally/features/settings";
+import { formatDate, t } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { useApi } from "../../lib/api";
 import { sessionDraftStorage } from "../../lib/sessionDraftStorage";
@@ -36,6 +37,7 @@ function LabelText({ children }: { children: React.ReactNode }): React.ReactElem
         fontFamily: fonts.monoMedium,
         fontSize: 10,
         letterSpacing: 0.8,
+        textTransform: "uppercase",
         color: colors.textSecondary,
       }}
     >
@@ -51,6 +53,7 @@ function Caption({ children }: { children: React.ReactNode }): React.ReactElemen
         fontFamily: fonts.monoMedium,
         fontSize: 9,
         letterSpacing: 0.7,
+        textTransform: "uppercase",
         color: colors.textFaint,
       }}
     >
@@ -90,6 +93,7 @@ function Chip({
           fontFamily: fonts.monoMedium,
           fontSize: 10,
           letterSpacing: 0.6,
+          textTransform: "uppercase",
           color: active ? activeText : "rgba(64,63,76,0.65)",
         }}
       >
@@ -220,7 +224,7 @@ export function LogSessionForm({
       autosave.clear();
       router.replace(`/session/${encodeURIComponent(session.fingerprint)}`);
     } catch {
-      setError("Could not save the session. Try again.");
+      setError(t("logSession.saveFailed"));
       setSaving(false);
     }
   }
@@ -239,10 +243,11 @@ export function LogSessionForm({
               fontFamily: fonts.monoMedium,
               fontSize: 11,
               letterSpacing: 0.4,
+              textTransform: "uppercase",
               color: colors.labelAccent,
             }}
           >
-            {editing === undefined ? "← SESSIONS" : "← SESSION"}
+            {editing === undefined ? t("sessions.back") : t("logSession.backToSession")}
           </Text>
         </Pressable>
         <View style={{ gap: 4 }}>
@@ -254,19 +259,18 @@ export function LogSessionForm({
               color: colors.gunmetal,
             }}
           >
-            {editing === undefined ? "Log a session" : "Edit session"}
+            {editing === undefined ? t("common.logASession") : t("logSession.editTitle")}
           </Text>
           <Text
             style={{
               fontFamily: fonts.monoMedium,
               fontSize: 10,
               letterSpacing: 0.8,
+              textTransform: "uppercase",
               color: colors.textMuted,
             }}
           >
-            {editing === undefined
-              ? "MANUAL ENTRY · EFFORT SCORED ON SAVE"
-              : "EFFORT IS RE-SCORED WHEN YOU SAVE"}
+            {editing === undefined ? t("logSession.subtitleShort") : t("logSession.editSubtitle")}
           </Text>
         </View>
 
@@ -279,10 +283,10 @@ export function LogSessionForm({
         )}
 
         <View style={{ gap: 7 }}>
-          <LabelText>SESSION NAME · OPTIONAL</LabelText>
+          <LabelText>{t("logSession.sessionNameOptional")}</LabelText>
           <TextInput
             value={draft.name}
-            placeholder="Tuesday night session"
+            placeholder={t("logSession.sessionNamePlaceholder")}
             placeholderTextColor={colors.textFaint}
             onChangeText={(name) => setDraft({ ...draft, name })}
             style={inputStyle}
@@ -291,7 +295,7 @@ export function LogSessionForm({
 
         <View style={{ flexDirection: "row", gap: 8 }}>
           <View style={{ flex: 1, gap: 7 }}>
-            <LabelText>DATE</LabelText>
+            <LabelText>{t("logSession.date")}</LabelText>
             <TextInput
               value={draft.date}
               placeholder="YYYY-MM-DD"
@@ -301,7 +305,7 @@ export function LogSessionForm({
             />
           </View>
           <View style={{ flex: 1, gap: 7 }}>
-            <LabelText>START</LabelText>
+            <LabelText>{t("logSession.start")}</LabelText>
             <TextInput
               value={draft.startTime}
               placeholder="HH:MM"
@@ -309,10 +313,10 @@ export function LogSessionForm({
               onChangeText={(startTime) => setDraft((d) => withStartTime(d, startTime))}
               style={{ ...inputStyle, fontFamily: fonts.mono, fontSize: 13 }}
             />
-            {untouchedTimes && <Caption>WHEN YOU OPENED THIS</Caption>}
+            {untouchedTimes && <Caption>{t("logSession.whenYouOpenedThis")}</Caption>}
           </View>
           <View style={{ flex: 1, gap: 7 }}>
-            <LabelText>END</LabelText>
+            <LabelText>{t("logSession.end")}</LabelText>
             <TextInput
               value={draft.endTime}
               placeholder="HH:MM"
@@ -320,20 +324,20 @@ export function LogSessionForm({
               onChangeText={(endTime) => setDraft({ ...draft, endTime })}
               style={{ ...inputStyle, fontFamily: fonts.mono, fontSize: 13 }}
             />
-            {untouchedTimes && <Caption>START + 1H</Caption>}
+            {untouchedTimes && <Caption>{t("logSession.startPlusHour")}</Caption>}
           </View>
         </View>
 
         <View style={{ gap: 7 }}>
-          <LabelText>LOCATION</LabelText>
+          <LabelText>{t("logSession.location")}</LabelText>
           <View style={{ flexDirection: "row", gap: 7 }}>
             <Chip
-              label="INDOOR"
+              label={t("common.indoor")}
               active={draft.location === "indoor"}
               onPress={() => setDraft({ ...draft, location: "indoor" })}
             />
             <Chip
-              label="OUTDOOR"
+              label={t("common.outdoor")}
               active={draft.location === "outdoor"}
               onPress={() => setDraft({ ...draft, location: "outdoor" })}
             />
@@ -341,11 +345,11 @@ export function LogSessionForm({
         </View>
 
         <View style={{ gap: 7 }}>
-          <LabelText>TAGS · OPTIONAL</LabelText>
+          <LabelText>{t("logSession.tagsOptional")}</LabelText>
           <TagPicker
             tags={draft.tags}
             suggestions={suggestionsFor(draft.tags)}
-            placeholder="Endurance, Bishop…"
+            placeholder={t("logSession.tagsPlaceholder")}
             onAdd={(name) => setDraft((d) => withTag(d, name))}
             onRemove={(name) => setDraft((d) => withoutTag(d, name))}
           />
@@ -362,9 +366,14 @@ export function LogSessionForm({
             <View style={{ flexDirection: "row", alignItems: "baseline", gap: 7 }}>
               <LabelText>RPE</LabelText>
               <Text
-                style={{ fontFamily: fonts.monoSemiBold, fontSize: 17, color: colors.gunmetal }}
+                style={{
+                  fontFamily: fonts.monoSemiBold,
+                  fontSize: 17,
+                  color: colors.gunmetal,
+                  textTransform: "uppercase",
+                }}
               >
-                {draft.rpe === null ? "AUTO" : `${draft.rpe}/10`}
+                {draft.rpe === null ? t("logSession.auto") : `${draft.rpe}/10`}
               </Text>
             </View>
             {draft.rpe !== null && (
@@ -377,10 +386,11 @@ export function LogSessionForm({
                     fontFamily: fonts.monoMedium,
                     fontSize: 10,
                     letterSpacing: 0.8,
+                    textTransform: "uppercase",
                     color: colors.azureInk,
                   }}
                 >
-                  RESET TO AUTO
+                  {t("logSession.resetToAuto")}
                 </Text>
               </Pressable>
             )}
@@ -406,12 +416,12 @@ export function LogSessionForm({
         </View>
 
         <View style={{ gap: 7 }}>
-          <LabelText>NOTES · OPTIONAL</LabelText>
+          <LabelText>{t("logSession.notesOptional")}</LabelText>
           <TextInput
             value={draft.notes}
             multiline
             maxLength={SESSION_NOTE_MAX}
-            placeholder="How it felt, what to try next time."
+            placeholder={t("common.notesPlaceholder")}
             placeholderTextColor={colors.textFaint}
             onChangeText={(notes) => setDraft({ ...draft, notes })}
             style={{ ...inputStyle, minHeight: 96, lineHeight: 22, textAlignVertical: "top" }}
@@ -424,10 +434,11 @@ export function LogSessionForm({
               fontFamily: fonts.monoMedium,
               fontSize: 10,
               letterSpacing: 0.8,
+              textTransform: "uppercase",
               color: colors.labelAccent,
             }}
           >
-            CLIMBS · {draft.climbs.length}
+            {t("logSession.climbsCount", { n: draft.climbs.length })}
           </Text>
         </View>
 
@@ -458,10 +469,11 @@ export function LogSessionForm({
               fontFamily: fonts.monoMedium,
               fontSize: 10,
               letterSpacing: 0.8,
+              textTransform: "uppercase",
               color: colors.azureInk,
             }}
           >
-            + ADD CLIMB
+            {`+ ${t("logSession.addClimb")}`}
           </Text>
         </Pressable>
         <Text
@@ -469,11 +481,12 @@ export function LogSessionForm({
             fontFamily: fonts.monoMedium,
             fontSize: 10,
             letterSpacing: 0.8,
+            textTransform: "uppercase",
             color: colors.textFaint,
             textAlign: "center",
           }}
         >
-          TAP A CLIMB TO EDIT IT
+          {t("logSession.tapToEdit")}
         </Text>
 
         {error !== null && (
@@ -525,6 +538,7 @@ export function LogSessionForm({
             fontFamily: fonts.monoMedium,
             fontSize: 10,
             letterSpacing: 0.8,
+            textTransform: "uppercase",
             color: colors.textMuted,
             textAlign: "center",
           }}
@@ -537,12 +551,14 @@ export function LogSessionForm({
               fontFamily: fonts.monoMedium,
               fontSize: 10,
               letterSpacing: 0.8,
+              textTransform: "uppercase",
               color: colors.textFaint,
               textAlign: "center",
             }}
           >
-            ✓ DRAFT SAVED{" "}
-            {autosave.savedAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+            {`✓ ${t("logSession.draftSaved", {
+              time: formatDate(autosave.savedAt, { hour: "2-digit", minute: "2-digit" }),
+            })}`}
           </Text>
         )}
         <Pressable
@@ -558,7 +574,11 @@ export function LogSessionForm({
           }}
         >
           <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 15, color: colors.white }}>
-            {saving ? "Saving…" : editing === undefined ? "Log session" : "Save changes"}
+            {saving
+              ? t("common.saving")
+              : editing === undefined
+                ? t("logSession.logSession")
+                : t("logSession.saveChanges")}
           </Text>
         </Pressable>
       </View>

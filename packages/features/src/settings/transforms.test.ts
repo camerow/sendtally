@@ -16,7 +16,7 @@ describe("settingsVM", () => {
       gradeScales: DEFAULT_GRADE_SCALES,
       stravaConnected: false,
       stravaActive: false,
-      stravaStatusLabel: "NOT CONNECTED",
+      stravaStatusLabel: "Not connected",
       postingEnabled: false,
       postSince: "",
     });
@@ -31,7 +31,7 @@ describe("settingsVM", () => {
     );
     expect(vm.stravaConnected).toBe(true);
     expect(vm.stravaActive).toBe(true);
-    expect(vm.stravaStatusLabel).toBe("CONNECTED");
+    expect(vm.stravaStatusLabel).toBe("Connected");
   });
 
   it("carries the posting toggle and start date through as a date input value", () => {
@@ -55,7 +55,7 @@ describe("settingsVM", () => {
     );
     expect(vm.stravaConnected).toBe(true);
     expect(vm.stravaActive).toBe(false);
-    expect(vm.stravaStatusLabel).toBe("RECONNECT NEEDED");
+    expect(vm.stravaStatusLabel).toBe("Reconnect needed");
   });
 });
 

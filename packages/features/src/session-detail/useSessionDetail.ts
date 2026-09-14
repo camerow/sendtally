@@ -1,6 +1,7 @@
 import React from "react";
 import type { SendtallyApi, SessionDetail, SessionTag } from "@sendtally/api-client";
 import { climbsWorkedBefore } from "../climbs/transforms";
+import { t } from "../i18n";
 import { useQuery, type QueryState } from "../lib/useQuery";
 import { climbVMs, filterAndSortClimbs, postingStatus, sessionDetailVM } from "./transforms";
 import type { ClimbFilter, ClimbSort, ClimbVM, PostingStatus, SessionDetailVM } from "./types";
@@ -85,7 +86,7 @@ export function useSessionDetail(api: SendtallyApi, fingerprint: string): Sessio
       })
       .catch((err: unknown) => {
         setPosting(false);
-        setPostError(err instanceof Error ? err.message : "Something went wrong.");
+        setPostError(err instanceof Error ? err.message : t("common.somethingWentWrong"));
       });
   }, [api, fingerprint, reload]);
 

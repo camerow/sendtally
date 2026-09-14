@@ -2,7 +2,7 @@
   "expo": {
     "name": "sendtally",
     "slug": "sendtally",
-    "version": "0.6.0",
+    "version": "0.7.0",
     "scheme": "sendtally",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
@@ -13,7 +13,9 @@
       "bundleIdentifier": "com.sendtally.app",
       "supportsTablet": false,
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "CFBundleDevelopmentRegion": "en",
+        "CFBundleLocalizations": ["en", "de", "fr", "es"]
       }
     },
     "android": {

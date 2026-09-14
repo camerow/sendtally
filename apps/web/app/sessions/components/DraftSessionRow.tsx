@@ -1,6 +1,7 @@
 import React from "react";
 import { Link } from "react-router";
 import { useStoredDraft } from "@sendtally/features/log-session";
+import { formatDate, t } from "@sendtally/features/i18n";
 import { DiscardDraftDialog } from "../../components/DiscardDraftDialog";
 import { sessionDraftStorage } from "../../lib/sessionDraftStorage";
 
@@ -10,28 +11,27 @@ export function DraftSessionRow(): React.ReactElement | null {
 
   if (stored === null) return null;
   const { draft, savedAt } = stored;
-  const climbs = `${draft.climbs.length} ${draft.climbs.length === 1 ? "CLIMB" : "CLIMBS"}`;
+  const climbs = t("common.climbCount", { count: draft.climbs.length });
 
   return (
     <>
       <div className="session-row session-row--draft">
         <span className="session-row-date">
-          <span className="session-row-weekday">
-            {savedAt.toLocaleDateString([], { weekday: "short" }).toUpperCase()}
-          </span>
+          <span className="session-row-weekday">{formatDate(savedAt, { weekday: "short" })}</span>
           <span className="session-row-day">
-            {savedAt.toLocaleDateString([], { month: "short", day: "numeric" })}
+            {formatDate(savedAt, { month: "short", day: "numeric" })}
           </span>
         </span>
         <span className="session-row-main">
-          <span className="session-row-title">Unfinished session</span>
-          <span className="session-row-meta">
+          <span className="session-row-title">{t("sessions.unfinishedSession")}</span>
+          <span className="session-row-meta" style={{ textTransform: "uppercase" }}>
             {climbs} · {draft.startTime}–{draft.endTime}
           </span>
         </span>
         <span className="session-row-draft-saved">
-          SAVED ON THIS DEVICE AT{" "}
-          {savedAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+          {t("sessions.savedOnDeviceAt", {
+            time: formatDate(savedAt, { hour: "2-digit", minute: "2-digit" }),
+          })}
         </span>
         <span className="session-row-draft-actions">
           <button
@@ -39,10 +39,10 @@ export function DraftSessionRow(): React.ReactElement | null {
             onClick={() => setConfirming(true)}
             className="session-row-draft-discard"
           >
-            Discard
+            {t("common.discard")}
           </button>
           <Link to="/app/sessions/new" className="session-row-draft-action">
-            Resume
+            {t("sessions.resume")}
           </Link>
         </span>
       </div>

@@ -1,6 +1,7 @@
 import React from "react";
 import { Link } from "react-router";
 import { TILE_BREAKDOWN_ROWS, useTrends } from "@sendtally/features/trends";
+import { t } from "@sendtally/features/i18n";
 import { UPGRADE_PANEL_ID, UpgradePanel } from "../../billing/components/UpgradePanel";
 import { useClientApi } from "../../lib/useClientApi";
 import { TrendBars } from "./TrendBars";
@@ -14,6 +15,7 @@ export type TrendsOverviewProps = {
 
 const monoMuted: React.CSSProperties = {
   fontFamily: "var(--font-mono)",
+  textTransform: "uppercase",
   fontWeight: 500,
   fontSize: 11,
   letterSpacing: "0.06em",
@@ -61,17 +63,17 @@ export function TrendsOverview({
             letterSpacing: "-0.03em",
           }}
         >
-          Trends
+          {t("common.trends")}
         </h1>
         {state.status === "ready" && <span style={monoMuted}>{state.data.caption}</span>}
       </div>
       <TrendFilters feature={feature} onLockedRange={scrollToPanel} />
       {state.status === "loading" && (
-        <span style={{ ...monoMuted, display: "block", marginTop: 22 }}>LOADING…</span>
+        <span style={{ ...monoMuted, display: "block", marginTop: 22 }}>{t("common.loading")}</span>
       )}
       {state.status === "error" && (
-        <span style={{ ...monoMuted, display: "block", marginTop: 22 }}>
-          Could not load trends. Refresh to retry.
+        <span style={{ ...monoMuted, textTransform: "none", display: "block", marginTop: 22 }}>
+          {t("trends.loadFailed")}
         </span>
       )}
       {state.status === "ready" && (
@@ -99,6 +101,7 @@ export function TrendsOverview({
                     fontWeight: 500,
                     fontSize: 11,
                     letterSpacing: "0.08em",
+                    textTransform: "uppercase",
                     color: "var(--text-label-accent)",
                   }}
                 >
@@ -113,7 +116,7 @@ export function TrendsOverview({
                       color: "rgba(64,63,76,0.72)",
                     }}
                   >
-                    DETAILS →
+                    {t("trends.details")}
                   </span>
                 )}
               </span>
@@ -133,7 +136,7 @@ export function TrendsOverview({
               </div>
               <TrendTagBreakdown
                 compact
-                title="BY TAG"
+                title={t("trends.byTag")}
                 rows={state.data.details[tile.metric].breakdown.slice(0, TILE_BREAKDOWN_ROWS)}
               />
             </Link>

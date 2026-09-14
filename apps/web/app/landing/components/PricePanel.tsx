@@ -1,7 +1,7 @@
 import React from "react";
+import { useLanding } from "../LandingContext";
 import { Label } from "@sendtally/design";
-import { COPY } from "../copy";
-import { INSIGHT_SERIES } from "./insightSeries";
+import { insightSeries } from "./insightSeries";
 import { MiniBars } from "./MiniBars";
 import { AccountCta } from "./AccountCta";
 import { Reveal } from "./Reveal";
@@ -27,11 +27,12 @@ function PlanHeader({
 }
 
 function FreePlan(): React.ReactElement {
+  const { copy } = useLanding();
   return (
     <Reveal className="l-plan">
-      <PlanHeader {...COPY.price.free} />
+      <PlanHeader {...copy.price.free} />
       <ul className="l-plan-list">
-        {COPY.free.features.map((f) => (
+        {copy.free.features.map((f) => (
           <li key={f.eyebrow} className="l-plan-row">
             <span className="l-tick l-tick--sm" aria-hidden="true" />
             <span>{f.short}</span>
@@ -39,19 +40,20 @@ function FreePlan(): React.ReactElement {
         ))}
       </ul>
       <div className="l-plan-actions">
-        <span className="l-plan-foot">{COPY.price.free.footnote}</span>
-        <AccountCta variant="ghostOnLight" label={COPY.price.free.cta} />
+        <span className="l-plan-foot">{copy.price.free.footnote}</span>
+        <AccountCta variant="ghostOnLight" label={copy.price.free.cta} />
       </div>
     </Reveal>
   );
 }
 
 function MemberPlan(): React.ReactElement {
+  const { copy } = useLanding();
   return (
     <Reveal delay={80} className="l-plan l-plan--member">
-      <PlanHeader {...COPY.price.member} />
+      <PlanHeader {...copy.price.member} />
       <ul className="l-plan-list">
-        {INSIGHT_SERIES.map((s) => (
+        {insightSeries(copy).map((s) => (
           <li key={s.metric} className="l-plan-row">
             <span className="l-plan-mini">
               <MiniBars
@@ -75,21 +77,22 @@ function MemberPlan(): React.ReactElement {
           </span>
           <span className="l-plan-text">
             <Label on="dark" size={10} style={{ color: "rgba(238,211,248,0.7)" }}>
-              {COPY.price.member.roadmapEyebrow}
+              {copy.price.member.roadmapEyebrow}
             </Label>
-            <span>{COPY.price.member.roadmapBody}</span>
+            <span>{copy.price.member.roadmapBody}</span>
           </span>
         </li>
       </ul>
       <div className="l-plan-actions">
-        <span className="l-plan-foot">{COPY.price.member.footnote}</span>
-        <AccountCta label={COPY.price.member.cta} />
+        <span className="l-plan-foot">{copy.price.member.footnote}</span>
+        <AccountCta label={copy.price.member.cta} />
       </div>
     </Reveal>
   );
 }
 
 export function PricePanel(): React.ReactElement {
+  const { copy } = useLanding();
   return (
     <div id="price" className="l-price">
       <div className="l-price-panel">
@@ -98,11 +101,11 @@ export function PricePanel(): React.ReactElement {
         >
           <Reveal>
             <Label on="light" style={{ color: "var(--text-on-light)" }}>
-              {COPY.price.eyebrow}
+              {copy.price.eyebrow}
             </Label>
           </Reveal>
           <Reveal delay={80}>
-            <h2 className="l-price-title">{COPY.price.title}</h2>
+            <h2 className="l-price-title">{copy.price.title}</h2>
           </Reveal>
           <Reveal delay={160}>
             <p
@@ -115,7 +118,7 @@ export function PricePanel(): React.ReactElement {
                 textWrap: "pretty",
               }}
             >
-              {COPY.price.lead}
+              {copy.price.lead}
             </p>
           </Reveal>
         </div>

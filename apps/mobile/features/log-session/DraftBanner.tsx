@@ -1,6 +1,7 @@
 import React from "react";
 import { Alert, Pressable, Text, View } from "react-native";
 import type { StoredSessionDraft } from "@sendtally/features/log-session";
+import { formatDate, t } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { press } from "../../lib/press";
 
@@ -47,18 +48,18 @@ export function DraftBanner({
 }): React.ReactElement {
   const { draft, savedAt } = stored;
   const count = draft.climbs.length;
-  const climbs = `${count} ${count === 1 ? "CLIMB" : "CLIMBS"}`;
+  const climbs = t("common.climbCount", { count });
 
   function confirmDiscard(): void {
     Alert.alert(
-      "Discard this draft?",
-      `The ${count} ${count === 1 ? "climb" : "climbs"} you logged for ${savedAt.toLocaleDateString(
-        [],
-        { weekday: "long" }
-      )} will be deleted from this device.`,
+      t("common.discardDraftTitle"),
+      t("logSession.discardBody", {
+        count,
+        day: formatDate(savedAt, { weekday: "long" }),
+      }),
       [
-        { text: "Cancel", style: "cancel" },
-        { text: "Discard", style: "destructive", onPress: onStartFresh },
+        { text: t("common.cancel"), style: "cancel" },
+        { text: t("common.discard"), style: "destructive", onPress: onStartFresh },
       ]
     );
   }
@@ -74,30 +75,36 @@ export function DraftBanner({
             color: colors.gunmetal,
           }}
         >
-          You have an unfinished session from{" "}
-          {savedAt.toLocaleString([], { weekday: "long", hour: "numeric", minute: "2-digit" })}
+          {t("logSession.unfinished", {
+            when: formatDate(savedAt, { weekday: "long", hour: "numeric", minute: "2-digit" }),
+          })}
         </Text>
         <Text
           style={{
             fontFamily: fonts.monoMedium,
             fontSize: 10,
             letterSpacing: 0.8,
+            textTransform: "uppercase",
             color: "rgba(64,63,76,0.7)",
           }}
         >
-          {climbs} · {draft.startTime}–{draft.endTime}
+          {t("logSession.draftMetaShort", {
+            climbs,
+            start: draft.startTime,
+            end: draft.endTime,
+          })}
         </Text>
       </View>
       <View style={{ flexDirection: "row", gap: 10 }}>
         <Action
-          label="Start fresh"
+          label={t("logSession.startFresh")}
           onPress={confirmDiscard}
           background="transparent"
           text="rgba(64,63,76,0.8)"
           flex={1}
         />
         <Action
-          label="Pick up"
+          label={t("logSession.pickUpShort")}
           onPress={onResume}
           background={colors.gunmetal}
           text={colors.white}

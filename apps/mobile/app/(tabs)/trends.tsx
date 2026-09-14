@@ -1,6 +1,7 @@
 import React from "react";
 import { ActivityIndicator, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { t } from "@sendtally/features/i18n";
 import { colors } from "@sendtally/design/tokens";
 import { ScreenHeader } from "../../components/ScreenHeader";
 import { useCanSeeInsights } from "../../features/billing/useBilling";
@@ -15,7 +16,7 @@ export default function Trends(): React.ReactElement {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.white }} edges={["top"]}>
-      <ScreenHeader title="Trends" />
+      <ScreenHeader title={t("common.trends")} />
       <ScrollView
         ref={scroll}
         contentContainerStyle={{

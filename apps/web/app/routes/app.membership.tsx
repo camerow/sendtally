@@ -3,7 +3,8 @@ import type { LoaderFunctionArgs } from "react-router";
 import { useLoaderData, useSearchParams } from "react-router";
 import type { Membership } from "@sendtally/api-client";
 import { Badge } from "@sendtally/design";
-import { MEMBERSHIP_PANEL, membershipVM } from "@sendtally/features/billing";
+import { membershipPanel, membershipVM } from "@sendtally/features/billing";
+import { t } from "@sendtally/features/i18n";
 import { ledgerEyebrow, MembershipLedger } from "../billing/components/MembershipLedger";
 import { MembershipPricing, SUBSCRIBED_PARAM } from "../billing/components/MembershipPricing";
 import { goldPanel, goldPanelTitle } from "../billing/components/UpgradePanel";
@@ -36,6 +37,7 @@ export async function loader(args: LoaderFunctionArgs): Promise<LoaderData> {
 }
 
 export default function MembershipRoute(): React.ReactElement {
+  const panel = membershipPanel();
   const { membership } = useLoaderData<typeof loader>();
   useSubscribedRedirect();
   const isMember = membership.active;
@@ -56,9 +58,9 @@ export default function MembershipRoute(): React.ReactElement {
               letterSpacing: "-0.03em",
             }}
           >
-            Membership
+            {t("common.membership")}
           </h1>
-          {isMember && <Badge tone="petal">MEMBER</Badge>}
+          {isMember && <Badge tone="petal">{t("common.member")}</Badge>}
         </div>
         <p
           style={{
@@ -70,15 +72,14 @@ export default function MembershipRoute(): React.ReactElement {
             textWrap: "pretty",
           }}
         >
-          Logging sessions and posting them to Strava are free and always will be. Membership is
-          what turns the log into a training history, and it is what pays for the server.
+          {t("billing.intro")}
         </p>
       </div>
 
       {!isMember && (
         <div style={goldPanel}>
-          <span style={ledgerEyebrow}>{MEMBERSHIP_PANEL.eyebrow}</span>
-          <h2 style={goldPanelTitle}>{MEMBERSHIP_PANEL.pageTitle}</h2>
+          <span style={ledgerEyebrow}>{panel.eyebrow}</span>
+          <h2 style={goldPanelTitle}>{panel.pageTitle}</h2>
           <MembershipLedger />
         </div>
       )}

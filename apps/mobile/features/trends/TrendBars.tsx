@@ -116,7 +116,11 @@ export function TrendBars({
           }}
         >
           {bars.map((b, i) => (
-            <Text key={i} numberOfLines={1} style={[labelStyle, { flex: 1, textAlign: "center" }]}>
+            <Text
+              key={i}
+              numberOfLines={1}
+              style={[labelStyle, { flex: 1, textAlign: "center", textTransform: "uppercase" }]}
+            >
               {b.axisLabel}
             </Text>
           ))}

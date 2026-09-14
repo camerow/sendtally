@@ -1,6 +1,7 @@
 import React from "react";
 import { Pressable, ScrollView, Text, View, type LayoutChangeEvent } from "react-native";
 import type { ScopeItem } from "@sendtally/features/sessions";
+import { t } from "@sendtally/features/i18n";
 import { colors, fonts } from "@sendtally/design/tokens";
 import { FILTER_BAR_HEIGHT, FilterButton } from "../../components/FilterButton";
 import { press } from "../../lib/press";
@@ -24,7 +25,7 @@ function ScopeChip({
       onPress={onPress}
       onLayout={onLayout}
       accessibilityRole="button"
-      accessibilityLabel={`Jump to ${item.label}`}
+      accessibilityLabel={t("sessions.jumpToLabel", { label: item.label })}
       accessibilityState={{ selected: active }}
       hitSlop={{ top: 7, bottom: 7 }}
       style={press({
@@ -43,6 +44,7 @@ function ScopeChip({
           fontSize: 11,
           lineHeight: 14,
           letterSpacing: 0.66,
+          textTransform: "uppercase",
           color: active || strong ? colors.gunmetal : "rgba(64,63,76,0.65)",
         }}
       >

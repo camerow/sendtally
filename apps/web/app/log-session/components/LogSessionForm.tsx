@@ -21,6 +21,7 @@ import {
 } from "@sendtally/features/log-session";
 import { SESSION_NOTE_MAX, useTagVocabulary } from "@sendtally/features/sessions";
 import { useGradeScalePrefs } from "@sendtally/features/settings";
+import { formatDate, t } from "@sendtally/features/i18n";
 import { TagPicker } from "../../components/TagPicker";
 import { useIsNarrow } from "../../lib/useIsNarrow";
 import { sessionDraftStorage } from "../../lib/sessionDraftStorage";
@@ -32,7 +33,7 @@ import { Glyph } from "./Glyph";
 import { CHECK, PLUS, chipStyle, columnHead, inputStyle, monoLabel } from "./styles";
 
 function hhmm(at: Date): string {
-  return at.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  return formatDate(at, { hour: "2-digit", minute: "2-digit" });
 }
 
 function Field({
@@ -71,7 +72,9 @@ function RpePicker({
             }}
           >
             {rpe === null ? (
-              <span style={{ fontSize: 12, color: "rgba(64,63,76,0.55)" }}>AUTO</span>
+              <span style={{ fontSize: 12, color: "rgba(64,63,76,0.55)" }}>
+                {t("logSession.auto")}
+              </span>
             ) : (
               <>
                 {rpe}
@@ -94,7 +97,7 @@ function RpePicker({
               padding: 0,
             }}
           >
-            RESET TO AUTO
+            {t("logSession.resetToAuto")}
           </button>
         )}
       </div>
@@ -263,7 +266,7 @@ export function LogSessionForm({
       autosave.clear();
       await navigate(`/app/sessions/${encodeURIComponent(session.fingerprint)}`);
     } catch {
-      setError("Could not save the session. Try again.");
+      setError(t("logSession.saveFailed"));
       setSaving(false);
     }
   }
@@ -282,19 +285,20 @@ export function LogSessionForm({
           <Field
             label={
               <>
-                SESSION NAME <span style={{ color: "rgba(64,63,76,0.45)" }}>· OPTIONAL</span>
+                {t("logSession.sessionName")}{" "}
+                <span style={{ color: "rgba(64,63,76,0.45)" }}>{t("common.optional")}</span>
               </>
             }
           >
             <input
               value={draft.name}
-              placeholder="Tuesday night session"
+              placeholder={t("logSession.sessionNamePlaceholder")}
               onChange={(e) => setDraft({ ...draft, name: e.target.value })}
               className="log-session-control"
               style={inputStyle}
             />
           </Field>
-          <Field label="DATE">
+          <Field label={t("logSession.date")}>
             <input
               type="date"
               value={draft.date}
@@ -304,7 +308,7 @@ export function LogSessionForm({
             />
           </Field>
           <div className="log-session-times">
-            <Field label="START TIME">
+            <Field label={t("logSession.startTime")}>
               <input
                 type="time"
                 value={draft.startTime}
@@ -312,9 +316,9 @@ export function LogSessionForm({
                 className="log-session-control"
                 style={inputStyle}
               />
-              {untouchedTimes && <span style={columnHead}>WHEN YOU OPENED THIS FORM</span>}
+              {untouchedTimes && <span style={columnHead}>{t("logSession.whenYouOpened")}</span>}
             </Field>
-            <Field label="END TIME">
+            <Field label={t("logSession.endTime")}>
               <input
                 type="time"
                 value={draft.endTime}
@@ -322,10 +326,10 @@ export function LogSessionForm({
                 className="log-session-control"
                 style={inputStyle}
               />
-              {untouchedTimes && <span style={columnHead}>START + 1H</span>}
+              {untouchedTimes && <span style={columnHead}>{t("logSession.startPlusHour")}</span>}
             </Field>
           </div>
-          <Field label="LOCATION">
+          <Field label={t("logSession.location")}>
             <div style={{ display: "flex", gap: 8 }}>
               {(["indoor", "outdoor"] as const).map((loc) => (
                 <button
@@ -335,7 +339,7 @@ export function LogSessionForm({
                   className="log-session-chip"
                   style={chipStyle(draft.location === loc)}
                 >
-                  {loc.toUpperCase()}
+                  {t(loc === "indoor" ? "common.indoor" : "common.outdoor")}
                 </button>
               ))}
             </div>
@@ -343,14 +347,15 @@ export function LogSessionForm({
           <Field
             label={
               <>
-                TAGS <span style={{ color: "rgba(64,63,76,0.45)" }}>· OPTIONAL</span>
+                {t("common.tags")}{" "}
+                <span style={{ color: "rgba(64,63,76,0.45)" }}>{t("common.optional")}</span>
               </>
             }
           >
             <TagPicker
               tags={draft.tags}
               suggestions={suggestionsFor(draft.tags)}
-              placeholder="Endurance, Bishop…"
+              placeholder={t("logSession.tagsPlaceholder")}
               onAdd={(name) => setDraft((d) => withTag(d, name))}
               onRemove={(name) => setDraft((d) => withoutTag(d, name))}
             />
@@ -359,7 +364,8 @@ export function LogSessionForm({
           <Field
             label={
               <>
-                NOTES <span style={{ color: "rgba(64,63,76,0.45)" }}>· OPTIONAL</span>
+                {t("common.notes")}{" "}
+                <span style={{ color: "rgba(64,63,76,0.45)" }}>{t("common.optional")}</span>
               </>
             }
           >
@@ -367,7 +373,7 @@ export function LogSessionForm({
               value={draft.notes}
               rows={4}
               maxLength={SESSION_NOTE_MAX}
-              placeholder="How it felt, what to try next time."
+              placeholder={t("common.notesPlaceholder")}
               onChange={(e) => setDraft({ ...draft, notes: e.target.value })}
               className="log-session-control"
               style={{ ...inputStyle, lineHeight: 1.55, resize: "vertical" }}
@@ -383,11 +389,9 @@ export function LogSessionForm({
               gap: 10,
             }}
           >
-            <span style={columnHead}>AFTER YOU SAVE</span>
+            <span style={columnHead}>{t("logSession.afterYouSave")}</span>
             <p style={{ margin: 0, fontSize: 14, lineHeight: 1.55, color: "rgba(64,63,76,0.88)" }}>
-              {editing === undefined
-                ? "sendtally titles the session and builds the climb log. Leave RPE on auto and it is scored against your last 8 weeks of sessions. Notes stay in sendtally and are never posted to Strava."
-                : "sendtally rebuilds the title and climb log from these edits. Reset RPE to auto to have it scored against your last 8 weeks of sessions again. Notes stay in sendtally and are never posted to Strava."}
+              {editing === undefined ? t("logSession.afterSaveNew") : t("logSession.afterSaveEdit")}
             </p>
           </div>
         </div>
@@ -402,15 +406,15 @@ export function LogSessionForm({
             }}
           >
             <span style={{ ...monoLabel, color: "var(--text-label-accent)" }}>
-              CLIMBS · {draft.climbs.length}
+              {t("logSession.climbsCount", { n: draft.climbs.length })}
             </span>
-            <span style={columnHead}>GRADE SCALES LIVE IN SETTINGS</span>
+            <span style={columnHead}>{t("logSession.scalesInSettings")}</span>
           </div>
           {!narrow && (
             <div className="climb-head">
-              <span style={columnHead}>GRADE</span>
-              <span style={columnHead}>NAME · OPTIONAL</span>
-              <span style={columnHead}>TRIES</span>
+              <span style={columnHead}>{t("common.grade")}</span>
+              <span style={columnHead}>{t("logSession.nameOptional")}</span>
+              <span style={columnHead}>{t("logSession.tries")}</span>
               <span />
             </div>
           )}
@@ -458,10 +462,12 @@ export function LogSessionForm({
               }}
             >
               <Glyph d={PLUS} />
-              ADD CLIMB
+              {t("logSession.addClimb")}
             </button>
             {narrow && (
-              <span style={{ ...columnHead, textAlign: "center" }}>TAP A CLIMB TO EDIT IT</span>
+              <span style={{ ...columnHead, textAlign: "center" }}>
+                {t("logSession.tapToEdit")}
+              </span>
             )}
           </div>
         </div>
@@ -499,11 +505,15 @@ export function LogSessionForm({
               }}
             >
               <Glyph d={CHECK} />
-              DRAFT SAVED {hhmm(autosave.savedAt)}
+              {t("logSession.draftSaved", { time: hhmm(autosave.savedAt) })}
             </span>
           )}
           {error !== null && (
-            <span style={{ ...monoLabel, color: "var(--text-label-accent)" }}>{error}</span>
+            <span
+              style={{ ...monoLabel, textTransform: "none", color: "var(--text-label-accent)" }}
+            >
+              {error}
+            </span>
           )}
         </div>
         <div className="log-session-buttons">
@@ -522,7 +532,7 @@ export function LogSessionForm({
               cursor: "pointer",
             }}
           >
-            Cancel
+            {t("common.cancel")}
           </button>
           <button
             type="button"
@@ -541,7 +551,11 @@ export function LogSessionForm({
               opacity: saving ? 0.45 : 1,
             }}
           >
-            {saving ? "Saving…" : editing === undefined ? "Log session" : "Save changes"}
+            {saving
+              ? t("common.saving")
+              : editing === undefined
+                ? t("logSession.logSession")
+                : t("logSession.saveChanges")}
           </button>
         </div>
       </div>

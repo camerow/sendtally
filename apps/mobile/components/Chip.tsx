@@ -2,6 +2,7 @@ import React from "react";
 import { Pressable, Text } from "react-native";
 import Svg, { Path, Rect } from "react-native-svg";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
+import { t } from "@sendtally/features/i18n";
 import { press } from "../lib/press";
 
 export type ChipProps = {
@@ -9,6 +10,7 @@ export type ChipProps = {
   active: boolean;
   disabled?: boolean;
   dashed?: boolean;
+  uppercase?: boolean;
   /** Members-only: drawn dashed with a lock, still pressable so the press can explain itself. */
   locked?: boolean;
   onPress: () => void;
@@ -37,6 +39,7 @@ export function Chip({
   active,
   disabled = false,
   dashed = false,
+  uppercase = true,
   locked = false,
   onPress,
 }: ChipProps): React.ReactElement {
@@ -51,7 +54,7 @@ export function Chip({
       onPress={onPress}
       disabled={disabled}
       accessibilityRole="button"
-      accessibilityLabel={locked ? `${label}, members only` : undefined}
+      accessibilityLabel={locked ? t("common.membersOnly", { label }) : undefined}
       accessibilityState={{ selected: active, disabled }}
       style={press({
         flexDirection: "row",
@@ -78,6 +81,7 @@ export function Chip({
           fontFamily: fonts.monoMedium,
           fontSize: 11,
           letterSpacing: 0.6,
+          textTransform: uppercase ? "uppercase" : "none",
           color: textColor,
         }}
       >

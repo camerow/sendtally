@@ -42,8 +42,9 @@ export {
 } from "./draftStore";
 export {
   DEFAULT_GRADE_PREFS,
-  DISCIPLINE_LABELS,
+  disciplineLabel,
   GRADE_SCALE_OPTIONS,
+  scaleLabel,
   sendStyleLabel,
   sendStylesFor,
 } from "./types";

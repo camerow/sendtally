@@ -6,6 +6,7 @@ import {
   type ClimbStyle,
   type Discipline,
 } from "@sendtally/features/log-session";
+import { t } from "@sendtally/features/i18n";
 import { Glyph } from "./Glyph";
 import { CHECK, CROSS } from "./styles";
 
@@ -28,7 +29,12 @@ function segmentsFor(discipline: Discipline): Segment[] {
   }));
   return [
     ...sends,
-    { key: "attempt", label: "ATTEMPT", glyph: CROSS, outcome: { kind: "attempt" } },
+    {
+      key: "attempt",
+      label: t("logSession.attempt"),
+      glyph: CROSS,
+      outcome: { kind: "attempt" },
+    },
   ];
 }
 
@@ -55,7 +61,7 @@ export function OutcomeControl({
   return (
     <div
       role="radiogroup"
-      aria-label="Result"
+      aria-label={t("common.result")}
       className={full ? "climb-result climb-result--full" : "climb-result"}
     >
       {segmentsFor(discipline).map((segment) => {

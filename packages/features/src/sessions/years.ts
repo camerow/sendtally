@@ -1,4 +1,5 @@
 import type { SessionRow } from "@sendtally/api-client";
+import { t } from "../i18n";
 import { sessionMonths, type SessionMonth } from "./months";
 
 export type SessionGroupTotals = {
@@ -63,16 +64,19 @@ export function sessionYearGroups(sessions: SessionRow[]): SessionYear[] {
 export function durationLabel(minutes: number): string {
   const h = Math.floor(minutes / 60);
   const m = minutes % 60;
-  if (h === 0) return `${m}m`;
-  return m === 0 ? `${h}h` : `${h}h ${String(m).padStart(2, "0")}m`;
+  const hours = `${h}${t("sessions.hoursShort")}`;
+  if (h === 0) return `${m}${t("sessions.minutesShort")}`;
+  return m === 0 ? hours : `${hours} ${String(m).padStart(2, "0")}${t("sessions.minutesShort")}`;
 }
 
 export function countLabel(count: number): string {
-  return count === 1 ? "1 SESSION" : `${count} SESSIONS`;
+  return t("sessions.sessionCount", { count });
 }
 
 export function totalsLabel(totals: SessionGroupTotals): string {
-  const parts = [countLabel(totals.count), durationLabel(totals.minutes).toUpperCase()];
-  if (totals.topGrade >= 0) parts.push(`TOP ${totals.topGradeLabel ?? `V${totals.topGrade}`}`);
+  const parts = [countLabel(totals.count), durationLabel(totals.minutes)];
+  if (totals.topGrade >= 0) {
+    parts.push(t("sessions.topGrade", { grade: totals.topGradeLabel ?? `V${totals.topGrade}` }));
+  }
   return parts.join(" · ");
 }

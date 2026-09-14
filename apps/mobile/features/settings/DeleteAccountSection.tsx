@@ -1,6 +1,7 @@
 import React from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
 import { DELETE_CONFIRMATION_WORD, type DeleteAccountFeature } from "@sendtally/features/settings";
+import { t } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { press } from "../../lib/press";
 import {
@@ -37,7 +38,7 @@ export function DeleteAccountSection({ deletion }: DeleteAccountSectionProps): R
               textDecorationLine: "underline",
             }}
           >
-            Delete account
+            {t("account.deleteAccount")}
           </Text>
         </Pressable>
         {deletion.error !== null && <Text style={messageText}>{deletion.error}</Text>}
@@ -47,12 +48,9 @@ export function DeleteAccountSection({ deletion }: DeleteAccountSectionProps): R
 
   return (
     <View style={{ ...sectionCard, gap: 12 }}>
-      <Text style={sectionLabel}>DELETE ACCOUNT</Text>
-      <Text style={bodyText}>
-        Deleting removes every session you have logged, disconnects Strava, and deletes your
-        account. Activities already posted to Strava stay on Strava. This cannot be undone.
-      </Text>
-      <Text style={bodyText}>Type {DELETE_CONFIRMATION_WORD} to confirm.</Text>
+      <Text style={sectionLabel}>{t("account.deleteAccount")}</Text>
+      <Text style={bodyText}>{t("account.deleteBody")}</Text>
+      <Text style={bodyText}>{t("account.typeToConfirm", { word: DELETE_CONFIRMATION_WORD })}</Text>
       <TextInput
         value={deletion.confirmation}
         onChangeText={deletion.setConfirmation}
@@ -77,7 +75,9 @@ export function DeleteAccountSection({ deletion }: DeleteAccountSectionProps): R
         accessibilityRole="button"
         style={press({ ...dangerButton, opacity: !deletion.canConfirm || busy ? 0.5 : 1 })}
       >
-        <Text style={dangerButtonLabel}>{busy ? "Deleting…" : "Delete my account"}</Text>
+        <Text style={dangerButtonLabel}>
+          {busy ? t("common.deleting") : t("account.deleteMyAccount")}
+        </Text>
       </Pressable>
       <Pressable
         onPress={deletion.cancel}
@@ -85,7 +85,7 @@ export function DeleteAccountSection({ deletion }: DeleteAccountSectionProps): R
         accessibilityRole="button"
         style={press(underlinePress)}
       >
-        <Text style={{ ...underlineLabel, fontSize: 12 }}>Cancel</Text>
+        <Text style={{ ...underlineLabel, fontSize: 12 }}>{t("common.cancel")}</Text>
       </Pressable>
       {deletion.error !== null && <Text style={messageText}>{deletion.error}</Text>}
     </View>

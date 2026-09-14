@@ -2,12 +2,14 @@ import React from "react";
 import { ActivityIndicator, Linking, Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
-  MEMBERSHIP_PANEL,
+  membershipPanel,
   planLabel,
+  storeChipName,
   storeName,
   type MembershipFeature,
   type MembershipVM,
 } from "@sendtally/features/billing";
+import { t } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import {
   bodyText,
@@ -20,7 +22,7 @@ import {
 import { ledgerEyebrow, MembershipLedger } from "./MembershipLedger";
 import { MembershipStatusCard } from "./MembershipStatusCard";
 import { PurchaseControls } from "./PurchaseControls";
-import { STORE_NAME, storeBillingAvailable, subscriptionManagementUrl } from "./store";
+import { storeBillingAvailable, storeLabel, subscriptionManagementUrl } from "./store";
 import type { PurchaseFeature } from "./usePurchase";
 import { press } from "../../lib/press";
 
@@ -48,7 +50,7 @@ function StatusCard({
   const restoreLink = (
     <Pressable onPress={purchase.restore} disabled={restoring} style={underlinePress}>
       <Text style={{ ...underlineLabel, fontSize: 12 }}>
-        {restoring ? "Restoring…" : "Restore purchases"}
+        {restoring ? t("billing.restoring") : t("billing.restorePurchases")}
       </Text>
     </Pressable>
   );
@@ -57,9 +59,9 @@ function StatusCard({
     return (
       <MembershipStatusCard
         label={vm.statusLabel}
-        headline="Logging is free"
+        headline={t("billing.loggingIsFree")}
         detail={null}
-        body={`Membership turns the log into a training history. It also pays for the server.${storeBillingAvailable ? " Pick a plan below to join." : ""}`}
+        body={`${t("billing.freeBody")}${storeBillingAvailable ? t("billing.pickAPlan") : ""}`}
       />
     );
   }
@@ -69,9 +71,9 @@ function StatusCard({
     return (
       <MembershipStatusCard
         label={vm.statusLabel}
-        headline={vm.plan === null ? "Membership" : planLabel(vm.plan)}
+        headline={vm.plan === null ? t("common.membership") : planLabel(vm.plan)}
         detail={vm.renewalLine}
-        body={`Billed through ${where}. Change plan or cancel from your ${where} subscriptions; the trends stay until the paid period ends.`}
+        body={t("billing.storeBody", { store: where })}
       >
         <View style={{ flexDirection: "row", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
           <Pressable
@@ -79,7 +81,9 @@ function StatusCard({
             accessibilityRole="button"
             style={press({ ...chipButton, alignSelf: "flex-start" })}
           >
-            <Text style={chipButtonLabel}>{`Manage in ${where.replace("the ", "")}`}</Text>
+            <Text style={chipButtonLabel}>
+              {t("billing.manageIn", { store: storeChipName(vm.managedIn) })}
+            </Text>
           </Pressable>
           {restoreLink}
         </View>
@@ -91,9 +95,9 @@ function StatusCard({
     return (
       <MembershipStatusCard
         label={vm.statusLabel}
-        headline="Membership"
+        headline={t("common.membership")}
         detail={null}
-        body="This membership was bought on sendtally.com and renews there. It unlocks the trends in the app all the same."
+        body={t("billing.webBody")}
       />
     );
   }
@@ -101,9 +105,9 @@ function StatusCard({
   return (
     <MembershipStatusCard
       label={vm.statusLabel}
-      headline={vm.plan === null ? "Membership" : planLabel(vm.plan)}
+      headline={vm.plan === null ? t("common.membership") : planLabel(vm.plan)}
       detail={vm.renewalLine}
-      body="Membership is active on this account."
+      body={t("billing.activeBody")}
     >
       {restoreLink}
     </MembershipStatusCard>
@@ -123,12 +127,10 @@ function PlansSection({
   return (
     <View style={{ gap: 12 }}>
       <Text style={sectionLabel}>
-        {switching ? `PAY THROUGH ${STORE_NAME.toUpperCase()} INSTEAD` : "PLANS"}
+        {switching ? t("billing.payThroughInstead", { store: storeLabel() }) : t("billing.plans")}
       </Text>
       {switching && (
-        <Text style={bodyText}>
-          {`Subscribe here to bill membership through ${STORE_NAME}. Cancel the sendtally.com plan afterwards so you are not paying twice.`}
-        </Text>
+        <Text style={bodyText}>{t("billing.switchBody", { store: storeLabel() })}</Text>
       )}
       <PurchaseControls purchase={purchase} />
     </View>
@@ -150,10 +152,11 @@ function MemberBadge(): React.ReactElement {
           fontFamily: fonts.monoSemiBold,
           fontSize: 10,
           letterSpacing: 0.8,
+          textTransform: "uppercase",
           color: colors.petalInk,
         }}
       >
-        MEMBER
+        {t("common.member")}
       </Text>
     </View>
   );
@@ -164,6 +167,7 @@ export function MembershipView({
   purchase,
   onBack,
 }: MembershipViewProps): React.ReactElement {
+  const panel = membershipPanel();
   const { state, vm } = membership;
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.white }} edges={["top"]}>
@@ -181,10 +185,11 @@ export function MembershipView({
               fontFamily: fonts.monoMedium,
               fontSize: 12,
               letterSpacing: 0.5,
+              textTransform: "uppercase",
               color: colors.labelAccent,
             }}
           >
-            ← SETTINGS
+            {t("common.backToSettings")}
           </Text>
         </Pressable>
         <View style={{ gap: 8 }}>
@@ -197,7 +202,7 @@ export function MembershipView({
                 color: colors.gunmetal,
               }}
             >
-              Membership
+              {t("common.membership")}
             </Text>
             {vm.active && <MemberBadge />}
           </View>
@@ -209,8 +214,7 @@ export function MembershipView({
               color: colors.textSecondary,
             }}
           >
-            Logging sessions and posting them to Strava are free, and always will be. Membership
-            opens the screens that read your whole history back to you.
+            {t("billing.introMobile")}
           </Text>
         </View>
 
@@ -223,7 +227,7 @@ export function MembershipView({
               gap: 12,
             }}
           >
-            <Text style={ledgerEyebrow}>{MEMBERSHIP_PANEL.eyebrow}</Text>
+            <Text style={ledgerEyebrow}>{panel.eyebrow}</Text>
             <Text
               style={{
                 fontFamily: fonts.displayHeavy,
@@ -233,7 +237,7 @@ export function MembershipView({
                 color: colors.gunmetal,
               }}
             >
-              {MEMBERSHIP_PANEL.pageTitle}
+              {panel.pageTitle}
             </Text>
             <MembershipLedger />
           </View>
@@ -245,10 +249,10 @@ export function MembershipView({
         {state.status === "error" && (
           <View style={{ gap: 6 }}>
             <Text style={{ fontFamily: fonts.mono, fontSize: 12, color: colors.watermelonInk }}>
-              Could not load your membership.
+              {t("billing.loadFailed")}
             </Text>
             <Pressable onPress={membership.reload} style={underlinePress}>
-              <Text style={{ ...underlineLabel, fontSize: 12 }}>Try again</Text>
+              <Text style={{ ...underlineLabel, fontSize: 12 }}>{t("common.tryAgain")}</Text>
             </Pressable>
           </View>
         )}

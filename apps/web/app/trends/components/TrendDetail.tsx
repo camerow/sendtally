@@ -4,6 +4,7 @@ import { useClientApi } from "../../lib/useClientApi";
 import { TrendBars } from "./TrendBars";
 import { TrendFilters } from "./TrendFilters";
 import { TrendTagBreakdown } from "./TrendTagBreakdown";
+import { t } from "@sendtally/features/i18n";
 import { BackLink } from "../../components/BackLink";
 
 export type TrendDetailProps = {
@@ -13,6 +14,7 @@ export type TrendDetailProps = {
 
 const monoMuted: React.CSSProperties = {
   fontFamily: "var(--font-mono)",
+  textTransform: "uppercase",
   fontWeight: 500,
   fontSize: 11,
   letterSpacing: "0.06em",
@@ -26,14 +28,14 @@ export function TrendDetail({ apiUrl, metric }: TrendDetailProps): React.ReactEl
 
   return (
     <div>
-      <BackLink to="/app/trends">TRENDS</BackLink>
+      <BackLink to="/app/trends">{t("common.trends")}</BackLink>
       <TrendFilters feature={feature} />
       {state.status === "loading" && (
-        <span style={{ ...monoMuted, display: "block", marginTop: 22 }}>LOADING…</span>
+        <span style={{ ...monoMuted, display: "block", marginTop: 22 }}>{t("common.loading")}</span>
       )}
       {state.status === "error" && (
-        <span style={{ ...monoMuted, display: "block", marginTop: 22 }}>
-          Could not load trends. Refresh to retry.
+        <span style={{ ...monoMuted, textTransform: "none", display: "block", marginTop: 22 }}>
+          {t("trends.loadFailed")}
         </span>
       )}
       {state.status === "ready" &&
@@ -83,6 +85,7 @@ export function TrendDetail({ apiUrl, metric }: TrendDetailProps): React.ReactEl
                         fontWeight: 500,
                         fontSize: 10,
                         letterSpacing: "0.08em",
+                        textTransform: "uppercase",
                         color: "var(--text-label-accent)",
                         paddingTop: 2,
                       }}
@@ -96,7 +99,7 @@ export function TrendDetail({ apiUrl, metric }: TrendDetailProps): React.ReactEl
                 ))}
               </div>
               <TrendTagBreakdown
-                title={`BY TAG · ${detail.title.toUpperCase()}`}
+                title={t("trends.byTagTitled", { title: detail.title })}
                 rows={detail.breakdown}
               />
               <p

@@ -1,5 +1,6 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
+import { t } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { Icon } from "./Icon";
 import { Sheet } from "./Sheet";
@@ -60,18 +61,19 @@ export function SelectRow({
           <Icon name="chevron" color={colors.textMuted} size={16} strokeWidth={2} />
         </View>
       </Pressable>
-      <Sheet visible={open} onClose={close} closeLabel={`Close ${label.toLowerCase()} options`}>
+      <Sheet visible={open} onClose={close} closeLabel={t("common.closeOptions", { label })}>
         <View style={{ paddingHorizontal: 16, paddingTop: 12, paddingBottom: 4 }}>
           <Text
             style={{
               fontFamily: fonts.monoMedium,
               fontSize: 10,
               letterSpacing: 0.8,
+              textTransform: "uppercase",
               color: colors.textSecondary,
               marginBottom: 6,
             }}
           >
-            {label.toUpperCase()}
+            {label}
           </Text>
           {children(close)}
         </View>

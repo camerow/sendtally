@@ -14,6 +14,7 @@ export const sectionLabel: TextStyle = {
   fontFamily: fonts.monoMedium,
   fontSize: 10,
   letterSpacing: 0.8,
+  textTransform: "uppercase",
   color: colors.labelAccent,
 };
 
@@ -28,6 +29,7 @@ export const monoMuted: TextStyle = {
   fontFamily: fonts.monoMedium,
   fontSize: 10,
   letterSpacing: 0.6,
+  textTransform: "uppercase",
   color: colors.textMuted,
 };
 

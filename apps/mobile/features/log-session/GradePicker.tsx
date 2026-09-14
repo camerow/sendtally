@@ -1,6 +1,7 @@
 import React from "react";
 import { Pressable, Text } from "react-native";
 import { gradeOptions, type ClimbDraft } from "@sendtally/features/log-session";
+import { t } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { Icon } from "../../components/Icon";
 import { SelectRow } from "../../components/SelectRow";
@@ -13,7 +14,7 @@ export type GradePickerProps = {
 
 export function GradePicker({ climb, onChange }: GradePickerProps): React.ReactElement {
   return (
-    <SelectRow label="Grade" value={climb.grade} mono>
+    <SelectRow label={t("common.grade")} value={climb.grade} mono>
       {(close) =>
         gradeOptions(climb.scale).map((g) => {
           const selected = g === climb.grade;

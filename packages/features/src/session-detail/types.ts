@@ -1,3 +1,5 @@
+import { t } from "../i18n";
+
 export type ClimbResult = "onsight" | "flash" | "sent" | "project";
 
 export type ClimbVM = {
@@ -48,12 +50,18 @@ export type SessionDetailVM = {
   stravaUrl: string | null;
 };
 
-export const CLIMB_SORTS: Array<{ value: ClimbSort; label: string }> = [
-  { value: "order", label: "Order climbed" },
-  { value: "gradeDesc", label: "Grade - hardest first" },
-  { value: "gradeAsc", label: "Grade - easiest first" },
-  { value: "burns", label: "Most burns" },
-];
+export const CLIMB_SORTS: readonly ClimbSort[] = ["order", "gradeDesc", "gradeAsc", "burns"];
+
+const CLIMB_SORT_KEYS = {
+  order: "sessionDetail.sortOrder",
+  gradeDesc: "sessionDetail.sortGradeDesc",
+  gradeAsc: "sessionDetail.sortGradeAsc",
+  burns: "sessionDetail.sortBurns",
+} as const;
+
+export function climbSortLabel(sort: ClimbSort): string {
+  return t(CLIMB_SORT_KEYS[sort]);
+}
 
 export const BOARD_LABELS: Record<string, string> = {
   tension: "Tension Board",

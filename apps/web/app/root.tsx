@@ -11,7 +11,10 @@ import {
   useLoaderData,
   useRouteLoaderData,
 } from "react-router";
+import { deDE, esES, frFR } from "@clerk/localizations";
 import designStyles from "@sendtally/design/styles.css?url";
+import type { Locale } from "@sendtally/features/i18n";
+import { requestLocale } from "./lib/locale";
 import { identify, resetIdentity } from "./lib/analytics";
 import { cloudflareContext } from "./lib/cloudflare-context";
 
@@ -32,12 +35,16 @@ export const middleware: MiddlewareFunction<Response>[] = [
   },
 ];
 
+const CLERK_LOCALIZATIONS = { en: undefined, de: deDE, fr: frFR, es: esES } as const;
+
 export async function loader(args: LoaderFunctionArgs): Promise<{
+  locale: Locale;
   gtagIds: string[];
   posthog: { token: string; host: string } | null;
 }> {
   const { env } = args.context.get(cloudflareContext);
   return rootAuthLoader(args, () => ({
+    locale: requestLocale(args.request),
     gtagIds: [env.GA_MEASUREMENT_ID, env.GOOGLE_ADS_ID].filter((id): id is string => Boolean(id)),
     posthog:
       env.POSTHOG_PROJECT_TOKEN && env.POSTHOG_HOST
@@ -77,7 +84,7 @@ function GoogleTag({ ids }: { ids: string[] }): React.ReactElement {
 export function Layout({ children }: { children: React.ReactNode }): React.ReactElement {
   const data = useRouteLoaderData<typeof loader>("root");
   return (
-    <html lang="en">
+    <html lang={data?.locale ?? "en"}>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -137,7 +144,7 @@ function Identify(): null {
 export default function App(): React.ReactElement {
   const loaderData = useLoaderData<typeof loader>();
   return (
-    <ClerkProvider loaderData={loaderData}>
+    <ClerkProvider loaderData={loaderData} localization={CLERK_LOCALIZATIONS[loaderData.locale]}>
       <Identify />
       <Outlet />
     </ClerkProvider>

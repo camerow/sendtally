@@ -2,10 +2,11 @@ import React from "react";
 import { Link } from "react-router";
 import {
   UNTAGGED_KEY,
-  UNTAGGED_LABEL,
+  untaggedLabel,
   type SessionGrouping,
   type TagOption,
 } from "@sendtally/features/sessions";
+import { t } from "@sendtally/features/i18n";
 import { chipStyle } from "../../components/chip";
 
 export type SessionFiltersProps = {
@@ -37,24 +38,24 @@ export function SessionFilters({
 
   const chips: Array<{ key: string; text: string }> = tagOptions.map((t) => ({
     key: t.slug,
-    text: `${t.name.toUpperCase()} ${t.count}`,
+    text: `${t.name} ${t.count}`,
   }));
   if (untaggedCount > 0) {
-    chips.push({ key: UNTAGGED_KEY, text: `${UNTAGGED_LABEL.toUpperCase()} ${untaggedCount}` });
+    chips.push({ key: UNTAGGED_KEY, text: `${untaggedLabel()} ${untaggedCount}` });
   }
 
   return (
     <div className="sessions-filters">
-      <Row name="GROUP BY">
+      <Row name={t("sessions.groupBy")}>
         {(["month", "tag"] as const).map((value) => (
           <Link key={value} to={hrefFor({ grouping: value })} style={chipStyle(grouping === value)}>
-            {value.toUpperCase()}
+            {t(value === "month" ? "sessions.groupMonth" : "sessions.groupTag")}
           </Link>
         ))}
       </Row>
-      <Row name="TAGS">
+      <Row name={t("common.tags")}>
         <Link to={hrefFor({ tags: [] })} style={chipStyle(selectedTags.length === 0)}>
-          ALL
+          {t("sessions.all")}
         </Link>
         {chips.map((chip) => (
           <Link

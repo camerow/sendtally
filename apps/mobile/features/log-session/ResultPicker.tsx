@@ -2,6 +2,7 @@ import React from "react";
 import { Pressable, Text, View } from "react-native";
 import {
   disciplineOf,
+  sendStyleLabel,
   sendStylesFor,
   withClimbOutcome,
   type ClimbDraft,
@@ -9,6 +10,7 @@ import {
   type ClimbStyle,
   type Discipline,
 } from "@sendtally/features/log-session";
+import { t } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { Icon } from "../../components/Icon";
 import { SelectRow } from "../../components/SelectRow";
@@ -22,33 +24,33 @@ const STYLE_FILL: Record<ClimbStyle, { fill: string; ink: string }> = {
   onsight: { fill: colors.petalInk, ink: colors.white },
 };
 
-const STYLE_HINT: Record<ClimbStyle, string> = {
-  redpoint: "Sent after working it",
-  flash: "First go, with beta",
-  onsight: "First go, no beta",
+const STYLE_HINT: Record<
+  ClimbStyle,
+  "logSession.hintRedpoint" | "logSession.hintFlash" | "logSession.hintOnsight"
+> = {
+  redpoint: "logSession.hintRedpoint",
+  flash: "logSession.hintFlash",
+  onsight: "logSession.hintOnsight",
 };
 
-function styleLabel(discipline: Discipline, style: ClimbStyle): string {
-  if (style === "redpoint") return discipline === "route" ? "Redpoint" : "Sent";
-  return style === "flash" ? "Flash" : "Onsight";
+function attemptOption(): Option {
+  return {
+    outcome: { kind: "attempt" },
+    label: t("logSession.attempt"),
+    hint: t("logSession.hintAttempt"),
+    fill: colors.gunmetal,
+    ink: colors.white,
+  };
 }
-
-const ATTEMPT: Option = {
-  outcome: { kind: "attempt" },
-  label: "Attempt",
-  hint: "Not sent yet",
-  fill: colors.gunmetal,
-  ink: colors.white,
-};
 
 function optionsFor(discipline: Discipline): Option[] {
   const sends = sendStylesFor(discipline).map((style) => ({
     outcome: { kind: "send", style } as const,
-    label: styleLabel(discipline, style),
-    hint: STYLE_HINT[style],
+    label: sendStyleLabel(discipline, style),
+    hint: t(STYLE_HINT[style]),
     ...STYLE_FILL[style],
   }));
-  return [...sends, ATTEMPT];
+  return [...sends, attemptOption()];
 }
 
 function matches(climb: ClimbDraft, outcome: ClimbOutcome): boolean {
@@ -90,10 +92,15 @@ export type ResultPickerProps = {
  */
 export function ResultPicker({ climb, onChange }: ResultPickerProps): React.ReactElement {
   const options = optionsFor(disciplineOf(climb.scale));
-  const current = options.find((option) => matches(climb, option.outcome)) ?? ATTEMPT;
+  const current =
+    options.find((option) => matches(climb, option.outcome)) ?? options[options.length - 1]!;
 
   return (
-    <SelectRow label="Result" value={current.label} leading={<Mark option={current} size={22} />}>
+    <SelectRow
+      label={t("common.result")}
+      value={current.label}
+      leading={<Mark option={current} size={22} />}
+    >
       {(close) => (
         <>
           {options.map((option) => {
@@ -130,10 +137,11 @@ export function ResultPicker({ climb, onChange }: ResultPickerProps): React.Reac
                     fontFamily: fonts.monoMedium,
                     fontSize: 10,
                     letterSpacing: 0.6,
+                    textTransform: "uppercase",
                     color: colors.textMuted,
                   }}
                 >
-                  {option.hint.toUpperCase()}
+                  {option.hint}
                 </Text>
               </Pressable>
             );
