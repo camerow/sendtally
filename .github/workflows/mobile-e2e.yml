@@ -34,6 +34,10 @@ env:
   AVD_TARGET: google_apis
   EXPO_PUBLIC_API_URL: https://api-staging.sendtally.com
   EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_bGlnaHQtbGlnZXItOTkuY2xlcmsuYWNjb3VudHMuZGV2JA
+  # Marks the person PostHog sees with `$internal_or_test_user`, which every insight filters
+  # out, so a flow run is not product traffic. Inlined into the bundle, so it has to be set
+  # for `eas update` and for the Gradle fallback alike.
+  EXPO_PUBLIC_E2E: "true"
   # No RevenueCat key: the SDK refuses a test-store key in a release build and closes the
   # app, and the flows never reach a paywall.
 

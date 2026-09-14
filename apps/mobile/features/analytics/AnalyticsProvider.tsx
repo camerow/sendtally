@@ -1,7 +1,7 @@
 import { useUser } from "@clerk/clerk-expo";
 import React from "react";
 import { PostHogProvider, usePostHog } from "posthog-react-native";
-import { POSTHOG_API_KEY, POSTHOG_HOST } from "../../lib/config";
+import { IS_E2E, POSTHOG_API_KEY, POSTHOG_HOST } from "../../lib/config";
 
 function IdentifyUser(): null {
   const posthog = usePostHog();
@@ -10,7 +10,10 @@ function IdentifyUser(): null {
 
   React.useEffect(() => {
     if (!user) return;
-    posthog.identify(user.id, email ? { email } : undefined);
+    posthog.identify(user.id, {
+      ...(email ? { email } : {}),
+      ...(IS_E2E ? { $internal_or_test_user: true } : {}),
+    });
   }, [posthog, user, email]);
 
   return null;
