@@ -1,35 +1,41 @@
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import React from "react";
-import { Alert, Pressable, Text, View } from "react-native";
-import { useStoredDraft } from "@sendtally/features/log-session";
+import { Pressable, Text, View } from "react-native";
+import { parseStoredDraft, type StoredSessionDraft } from "@sendtally/features/log-session";
 import { formatDate, t } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
+import { confirmDiscardDraft } from "../../lib/confirmDiscardDraft";
 import { press, pressRow } from "../../lib/press";
+import { DayColumn, RowTitle } from "./SessionRowParts";
 import { sessionDraftStorage } from "../../lib/sessionDraftStorage";
 
+const read = (): StoredSessionDraft | null =>
+  parseStoredDraft(sessionDraftStorage.read(), new Date());
+
 export function DraftSessionRow(): React.ReactElement | null {
-  const { stored, discard } = useStoredDraft(sessionDraftStorage);
+  const [stored, setStored] = React.useState(read);
+  // The draft is written by the form, on another screen. A store notification reaching a
+  // blurred tab is not something to depend on - the tab regaining focus is, and it is the
+  // only moment this row can need to change.
+  useFocusEffect(
+    React.useCallback(() => {
+      setStored(read());
+    }, [])
+  );
+
+  const discard = (): void => {
+    sessionDraftStorage.remove();
+    setStored(null);
+  };
+
   if (stored === null) return null;
 
   const { draft, savedAt } = stored;
-  const count = draft.climbs.length;
-  const climbs = t("common.climbCount", { count });
   const meta = t("logSession.draftMetaShort", {
-    climbs,
+    climbs: t("common.climbCount", { count: draft.climbs.length }),
     start: draft.startTime,
     end: draft.endTime,
   });
-
-  function confirmDiscard(): void {
-    Alert.alert(
-      t("common.discardDraftTitle"),
-      t("common.discardDraftBody", { count, day: formatDate(savedAt, { weekday: "long" }) }),
-      [
-        { text: t("common.cancel"), style: "cancel" },
-        { text: t("common.discard"), style: "destructive", onPress: discard },
-      ]
-    );
-  }
 
   return (
     <View
@@ -56,58 +62,16 @@ export function DraftSessionRow(): React.ReactElement | null {
           paddingRight: 12,
         })}
       >
-        <View style={{ width: 34 }}>
-          <Text
-            style={{
-              fontFamily: fonts.monoMedium,
-              fontSize: 9,
-              lineHeight: 11,
-              letterSpacing: 0.72,
-              textTransform: "uppercase",
-              color: colors.textMuted,
-            }}
-          >
-            {formatDate(savedAt, { weekday: "short" })}
-          </Text>
-          <Text
-            style={{
-              fontFamily: fonts.monoSemiBold,
-              fontSize: 17,
-              lineHeight: 20,
-              letterSpacing: -0.2,
-              color: colors.gunmetal,
-            }}
-          >
-            {formatDate(savedAt, { day: "numeric" })}
-          </Text>
-        </View>
+        <DayColumn
+          weekday={formatDate(savedAt, { weekday: "short" })}
+          day={formatDate(savedAt, { day: "numeric" })}
+        />
         <View style={{ flex: 1, gap: 3 }}>
-          <Text
-            numberOfLines={1}
-            style={{
-              fontFamily: fonts.sansSemiBold,
-              fontSize: 15,
-              lineHeight: 19,
-              color: colors.gunmetal,
-            }}
-          >
-            {t("sessions.unfinishedSession")}
-          </Text>
-          <Text
-            numberOfLines={1}
-            style={{
-              fontFamily: fonts.mono,
-              fontSize: 11,
-              lineHeight: 14,
-              color: colors.textSecondary,
-            }}
-          >
-            {meta}
-          </Text>
+          <RowTitle title={t("sessions.unfinishedSession")} meta={meta} />
         </View>
       </Pressable>
       <Pressable
-        onPress={confirmDiscard}
+        onPress={() => confirmDiscardDraft(stored, discard)}
         accessibilityRole="button"
         accessibilityLabel={t("common.discard")}
         hitSlop={8}

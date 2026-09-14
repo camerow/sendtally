@@ -6,6 +6,7 @@ import { t } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { Icon } from "../../components/Icon";
 import { pressRow } from "../../lib/press";
+import { DayColumn, RowTitle } from "./SessionRowParts";
 
 export const SESSION_ROW_HEIGHT = 59;
 export const SESSION_ROW_TAGS_HEIGHT = 17;
@@ -43,32 +44,11 @@ export function SessionRow({ session, title, onPress }: SessionRowProps): React.
         borderBottomColor: colors.lineOnLightSoft,
       })}
     >
-      <View style={{ width: 34 }}>
-        <Text
-          style={{
-            fontFamily: fonts.monoMedium,
-            fontSize: 9,
-            lineHeight: 11,
-            letterSpacing: 0.72,
-            textTransform: "uppercase",
-            color: colors.textMuted,
-          }}
-        >
-          {weekday}
-        </Text>
-        <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 3 }}>
-          <Text
-            style={{
-              fontFamily: fonts.monoSemiBold,
-              fontSize: 17,
-              lineHeight: 20,
-              letterSpacing: -0.2,
-              color: colors.gunmetal,
-            }}
-          >
-            {day}
-          </Text>
-          {onStrava && (
+      <DayColumn
+        weekday={weekday}
+        day={day}
+        marker={
+          onStrava && (
             <View
               style={{
                 width: 6,
@@ -78,32 +58,11 @@ export function SessionRow({ session, title, onPress }: SessionRowProps): React.
                 backgroundColor: colors.azure,
               }}
             />
-          )}
-        </View>
-      </View>
+          )
+        }
+      />
       <View style={{ flex: 1, gap: 3 }}>
-        <Text
-          numberOfLines={1}
-          style={{
-            fontFamily: fonts.sansSemiBold,
-            fontSize: 15,
-            lineHeight: 19,
-            color: colors.gunmetal,
-          }}
-        >
-          {title}
-        </Text>
-        <Text
-          numberOfLines={1}
-          style={{
-            fontFamily: fonts.mono,
-            fontSize: 11,
-            lineHeight: 14,
-            color: colors.textSecondary,
-          }}
-        >
-          {meta}
-        </Text>
+        <RowTitle title={title} meta={meta} />
         {session.tags.length > 0 && (
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 4 }}>
             {session.tags.map((tag) => (
