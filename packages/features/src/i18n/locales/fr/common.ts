@@ -11,7 +11,6 @@ export const common = {
   "common.account": "Compte",
   "common.signOut": "Se déconnecter",
   "common.deleting": "Suppression…",
-  "common.members": "Abonnés",
   "common.membership": "Abonnement",
   "common.member": "Abonné",
   "common.cancel": "Annuler",
@@ -56,4 +55,5 @@ export const common = {
   "common.createTag": "Créer « {name} »",
   "common.sectionsAria": "Sections",
   "common.optional": "· optionnel",
+  "common.membersOnly": "{label}, réservé aux abonnés",
 } as const;

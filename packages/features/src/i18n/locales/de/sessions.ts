@@ -40,11 +40,7 @@ export const sessions = {
   "sessions.boardSession": "Board-Session",
   "sessions.untagged": "Ohne Tag",
   "sessions.tagsSaveFailed": "Tags konnten nicht gespeichert werden. Versuch es noch einmal.",
-  "sessions.stravaBanner":
-    "Dein Logbuch lebt so oder so hier. Verbinde Strava und deine Sessions können als Rock Climbing-Aktivitäten in deinem Feed landen.",
   "sessions.connectStrava": "Strava verbinden",
-  "sessions.empty":
-    "Noch keine Sessions. Klick auf Session eintragen - die erste dauert etwa eine Minute.",
   "sessions.clearFilter": "Filter zurücksetzen",
   "sessions.all": "Alle",
   "sessions.jumpTo": "Springe zu",
@@ -52,4 +48,15 @@ export const sessions = {
   "sessions.unfinishedSession": "Unfertige Session",
   "sessions.savedOnDeviceAt": "Auf diesem Gerät gespeichert um {time}",
   "sessions.resume": "Weitermachen",
+  "sessions.setupEyebrowLapsed": "Strava · neu verbinden nötig",
+  "sessions.setupEyebrow": "Strava · optional",
+  "sessions.setupLapsedTitle": "Der Strava-Zugang ist abgelaufen",
+  "sessions.setupTitle": "Sessions in deinen Strava-Feed posten",
+  "sessions.setupLapsedBody": "Verbinde es neu und deine Sessions landen wieder in deinem Feed.",
+  "sessions.setupBody":
+    "Eine Rock-Climbing-Aktivität pro geloggter Session. Du bestätigst das auf strava.com und kannst es jederzeit widerrufen.",
+  "sessions.notNow": "Jetzt nicht",
+  "sessions.firstSessionLabel": "Erste Session",
+  "sessions.firstSessionBody":
+    "Name, Ort, die Routen, an denen du warst. Etwa eine Minute, und die Session bewertet sich selbst.",
 } as const;

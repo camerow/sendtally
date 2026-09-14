@@ -12,12 +12,6 @@ export const billing = {
   "billing.notAMember": "Kein Mitglied",
   "billing.memberVia": "Mitglied · {store}",
   "billing.memberWeb": "Mitglied · Web",
-  "billing.benefitTrendsTitle": "Volumen, Anstrengung, Durchschnittsgrad und Flash-Quote",
-  "billing.benefitTrendsBody":
-    "Jede Session, die du einträgst, fließt in die Trends ein - wie viel du geklettert bist, wie hart es sich angefühlt hat, wohin dein durchschnittlicher Begehungsgrad driftet und wie oft du ein Problem im ersten Versuch liest.",
-  "billing.benefitInfluenceTitle": "Direkter Einfluss darauf, was gebaut wird",
-  "billing.benefitInfluenceBody":
-    "Mitglieder bestimmen, was als Nächstes kommt. Eine Person baut das hier, und die Leute, die den Server bezahlen, legen die Reihenfolge fest.",
   "billing.pointVolume": "Volumen - wie viel du wirklich geklettert bist, Woche für Woche",
   "billing.pointRpe": "RPE - wie hart sich deine Sessions über die Zeit angefühlt haben",
   "billing.pointAvgGrade":
@@ -72,12 +66,20 @@ export const billing = {
   "billing.introMobile":
     "Sessions eintragen und auf Strava posten ist kostenlos, und das bleibt so. Die Mitgliedschaft öffnet die Screens, die dir deine ganze Historie zurücklesen.",
   "billing.loadFailed": "Deine Mitgliedschaft konnte nicht geladen werden.",
-  "billing.comingSoon": "Bald verfügbar",
   "billing.intro":
     "Sessions eintragen und auf Strava posten ist kostenlos, und das bleibt so. Die Mitgliedschaft macht aus dem Log ein Trainingstagebuch, und sie bezahlt den Server.",
   "billing.loadingPlans": "Abos werden geladen…",
   "billing.activeOnAccount": "Deine Mitgliedschaft ist auf diesem Konto aktiv.",
   "billing.billedThrough":
     "Deine Mitgliedschaft wird über {store} abgerechnet. Ändern oder kündigen kannst du sie in deinen {store}-Abos; die Trends bleiben bis zum Ende des bezahlten Zeitraums.",
-  "billing.seeMembership": "Mitgliedschaft ansehen →",
+  "billing.panelTitle": "Werde Mitglied und sieh deine langfristigen Trends.",
+  "billing.panelPageTitle": "Alles, worauf sich deine Sessions summieren.",
+  "billing.panelBody":
+    "Zwei Dollar im Monat, jährlich abgerechnet, öffnen auf jedem Screen hier jeden Zeitraum von einem Monat bis zu allem - aus den Sessions, die du schon geloggt hast.",
+  "billing.panelFootnote":
+    "2 $/Monat jährlich abgerechnet · oder 3 $ monatlich · jederzeit kündbar",
+  "billing.panelVolume": "Wie viel du geklettert bist, Woche für Woche",
+  "billing.panelPyramid": "Wo deine Tops wirklich liegen",
+  "billing.panelHardest": "Dein Limit pro Zeitraum, mit der Route, die es gesetzt hat",
+  "billing.panelFlash": "Tops im ersten Versuch, über die Zeit verfolgt",
 } as const;

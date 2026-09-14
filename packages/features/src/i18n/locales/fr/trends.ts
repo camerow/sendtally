@@ -1,14 +1,6 @@
 export const trends = {
   "trends.sendsByGrade": "Croix par cotation",
-  "trends.paywallTitle": "Tes séances commencent à raconter quelque chose.",
-  "trends.paywallBody":
-    "Enregistrer reste gratuit. L'abonnement ouvre les écrans qui relisent tout ton historique.",
-  "trends.paywallEffort": "Effort - la difficulté ressentie de tes séances",
-  "trends.paywallAvgGrade": "Cotation moyenne enchaînée - la dérive qu'un carnet ne montre jamais",
   "trends.backToTrends": "← Tendances",
-  "trends.lockedTitle": "Celle-ci est réservée aux abonnés.",
-  "trends.lockedBody":
-    "L'abonnement débloque le volume, le RPE, la cotation moyenne enchaînée et le taux de flash sur tout ton historique.",
   "trends.loadFailedMobile": "Impossible de charger les tendances.",
   "trends.loadFailedPull": "Impossible de charger les tendances. Tire pour réessayer.",
   "trends.byTag": "Par tag",
@@ -64,8 +56,5 @@ export const trends = {
   "trends.allTags": "Tous les tags",
   "trends.tagRowTitle_one": "{label} · {count} séance",
   "trends.tagRowTitle_other": "{label} · {count} séances",
-  "trends.upgradeTitle":
-    "Tes séances commencent à raconter quelque chose. Les tendances, c'est là que tu le vois.",
-  "trends.upgradeBody":
-    "Continue d'enregistrer gratuitement - ton carnet est à toi quoi qu'il arrive. L'abonnement débloque les écrans qui relisent tout ton historique.",
+  "trends.range7d": "7 derniers jours",
 } as const;

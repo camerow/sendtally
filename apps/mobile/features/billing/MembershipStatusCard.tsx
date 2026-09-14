@@ -7,7 +7,6 @@ export type MembershipStatusCardProps = {
   headline: string;
   detail: string | null;
   body: string;
-  active: boolean;
   children?: React.ReactNode;
 };
 
@@ -16,15 +15,14 @@ export function MembershipStatusCard({
   headline,
   detail,
   body,
-  active,
   children,
 }: MembershipStatusCardProps): React.ReactElement {
   return (
     <View
       style={{
-        backgroundColor: active ? colors.petalTint : colors.surfaceSoft,
+        backgroundColor: colors.surfaceSoft,
         borderWidth: 1,
-        borderColor: active ? colors.petalTint : colors.lineOnLightSoft,
+        borderColor: colors.lineOnLightSoft,
         borderRadius: radius.card,
         padding: 18,
         gap: 10,
@@ -36,7 +34,7 @@ export function MembershipStatusCard({
           fontSize: 10,
           letterSpacing: 0.8,
           textTransform: "uppercase",
-          color: active ? colors.petalInk : colors.watermelonInk,
+          color: colors.labelAccent,
         }}
       >
         {label}

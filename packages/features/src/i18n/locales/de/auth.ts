@@ -87,6 +87,5 @@ export const auth = {
   "auth.setupReadsBody": "Deinen Namen und Avatar, um das richtige Konto zu bestätigen",
   "auth.setupNever": "Nie",
   "auth.setupNeverBody": "Deine anderen Aktivitäten, Nachrichten oder Follower",
-  "auth.continueToStrava": "Weiter zu Strava →",
   "auth.skipForNow": "Vorerst überspringen",
 } as const;

@@ -1,15 +1,6 @@
 export const trends = {
   "trends.sendsByGrade": "Begehungen nach Grad",
-  "trends.paywallTitle": "Deine Sessions ergeben langsam ein Bild.",
-  "trends.paywallBody":
-    "Eintragen bleibt kostenlos. Die Mitgliedschaft öffnet die Screens, die dir deine ganze Historie zurücklesen.",
-  "trends.paywallEffort": "Anstrengung - wie hart sich deine Sessions angefühlt haben",
-  "trends.paywallAvgGrade":
-    "Durchschnittlicher Begehungsgrad - die Drift, die ein Logbuch nie zeigt",
   "trends.backToTrends": "← Trends",
-  "trends.lockedTitle": "Das hier ist für Mitglieder.",
-  "trends.lockedBody":
-    "Die Mitgliedschaft schaltet Volumen, RPE, durchschnittlichen Begehungsgrad und Flash-Quote über deine ganze Historie frei.",
   "trends.loadFailedMobile": "Trends konnten nicht geladen werden.",
   "trends.loadFailedPull": "Trends konnten nicht geladen werden. Zum Neuladen ziehen.",
   "trends.byTag": "Nach Tag",
@@ -66,7 +57,5 @@ export const trends = {
   "trends.allTags": "Alle Tags",
   "trends.tagRowTitle_one": "{label} · {count} Session",
   "trends.tagRowTitle_other": "{label} · {count} Sessions",
-  "trends.upgradeTitle": "Deine Sessions ergeben langsam ein Bild. In den Trends siehst du es.",
-  "trends.upgradeBody":
-    "Trag weiter kostenlos ein - dein Logbuch gehört dir so oder so. Die Mitgliedschaft schaltet die Screens frei, die dir die ganze Historie zurücklesen.",
+  "trends.range7d": "Letzte 7 Tage",
 } as const;

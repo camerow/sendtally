@@ -4,9 +4,10 @@ export const settings = {
     "L'échelle dans laquelle tu enregistres. Les lignes déjà enregistrées gardent leur échelle d'origine.",
   "settings.stravaActive":
     "Lié à ton compte Strava. Les séances que tu enregistres peuvent être publiées dans ton fil comme activités Rock Climbing.",
-  "settings.stravaLapsedMobile": "L'accès Strava a expiré. Relie-le sur le web, sur sendtally.com.",
+  "settings.stravaLapsedMobile":
+    "L’accès Strava a expiré. Relie-le à nouveau et tes sessions pourront de nouveau être publiées dans ton fil.",
   "settings.stravaNotConnectedMobile":
-    "Connecte Strava sur le web, sur sendtally.com, et tes séances enregistrées pourront être publiées dans ton fil.",
+    "Chaque session enregistrée peut être publiée dans ton fil comme activité Rock Climbing. Tu l’approuves sur strava.com et peux la révoquer là-bas à tout moment.",
   "settings.postAutomatically": "Publier les séances automatiquement",
   "settings.postingOn":
     "Les séances enregistrées sont publiées dans ton fil comme activités Rock Climbing.",
@@ -34,4 +35,6 @@ export const settings = {
     "L'abonnement débloque les tendances et des analyses de tes habitudes d'escalade.",
   "settings.billedThrough": "Facturé via {store}. Gère-le là-bas.",
   "settings.tab": "Réglages",
+  "settings.openingStrava": "Ouverture de Strava…",
+  "settings.stravaUnreachable": "Impossible de joindre Strava. Réessaie.",
 } as const;

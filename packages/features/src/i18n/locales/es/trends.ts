@@ -1,14 +1,6 @@
 export const trends = {
   "trends.sendsByGrade": "Encadenes por grado",
-  "trends.paywallTitle": "Tus sesiones están sumando algo.",
-  "trends.paywallBody":
-    "Registrar sigue siendo gratis. La suscripción abre las pantallas que te leen todo tu historial.",
-  "trends.paywallEffort": "Esfuerzo: lo duras que se han sentido tus sesiones",
-  "trends.paywallAvgGrade": "Grado medio encadenado: la deriva que un cuaderno nunca muestra",
   "trends.backToTrends": "← Tendencias",
-  "trends.lockedTitle": "Esta es para suscriptores.",
-  "trends.lockedBody":
-    "La suscripción desbloquea volumen, RPE, grado medio encadenado y porcentaje de flash en todo tu historial.",
   "trends.loadFailedMobile": "No se pudieron cargar las tendencias.",
   "trends.loadFailedPull": "No se pudieron cargar las tendencias. Desliza para reintentar.",
   "trends.byTag": "Por etiqueta",
@@ -65,7 +57,5 @@ export const trends = {
   "trends.allTags": "Todas las etiquetas",
   "trends.tagRowTitle_one": "{label} · {count} sesión",
   "trends.tagRowTitle_other": "{label} · {count} sesiones",
-  "trends.upgradeTitle": "Tus sesiones están sumando algo. Tendencias es donde lo ves.",
-  "trends.upgradeBody":
-    "Sigue registrando gratis: tu registro es tuyo de todos modos. La suscripción desbloquea las pantallas que te leen todo el historial.",
+  "trends.range7d": "Últimos 7 días",
 } as const;

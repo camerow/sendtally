@@ -1,14 +1,6 @@
 export const trends = {
   "trends.sendsByGrade": "Sends by grade",
-  "trends.paywallTitle": "Your sessions are adding up to something.",
-  "trends.paywallBody":
-    "Logging stays free. Membership opens the screens that read your whole history back to you.",
-  "trends.paywallEffort": "Effort - how hard your sessions have been feeling",
-  "trends.paywallAvgGrade": "Average send grade - the drift a logbook never shows",
   "trends.backToTrends": "← Trends",
-  "trends.lockedTitle": "This one is for members.",
-  "trends.lockedBody":
-    "Membership unlocks volume, RPE, average send grade and flash rate across your whole history.",
   "trends.loadFailedMobile": "Could not load trends.",
   "trends.loadFailedPull": "Could not load trends. Pull to retry.",
   "trends.byTag": "By tag",
@@ -63,7 +55,5 @@ export const trends = {
   "trends.allTags": "All tags",
   "trends.tagRowTitle_one": "{label} · {count} session",
   "trends.tagRowTitle_other": "{label} · {count} sessions",
-  "trends.upgradeTitle": "Your sessions are adding up to something. Trends is where you see it.",
-  "trends.upgradeBody":
-    "Keep logging for free - your logbook is yours either way. Membership unlocks the screens that read the whole history back to you.",
+  "trends.range7d": "Last 7 days",
 } as const;

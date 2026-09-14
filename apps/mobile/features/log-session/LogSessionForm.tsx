@@ -243,7 +243,7 @@ export function LogSessionForm({
               fontSize: 11,
               letterSpacing: 0.4,
               textTransform: "uppercase",
-              color: colors.watermelonInk,
+              color: colors.labelAccent,
             }}
           >
             {editing === undefined ? t("sessions.back") : t("logSession.backToSession")}
@@ -434,7 +434,7 @@ export function LogSessionForm({
               fontSize: 10,
               letterSpacing: 0.8,
               textTransform: "uppercase",
-              color: colors.watermelonInk,
+              color: colors.labelAccent,
             }}
           >
             {t("logSession.climbsCount", { n: draft.climbs.length })}

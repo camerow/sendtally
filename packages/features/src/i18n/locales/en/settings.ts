@@ -5,9 +5,9 @@ export const settings = {
   "settings.stravaActive":
     "Linked to your Strava account. Sessions you log can post to your feed as Rock Climbing activities.",
   "settings.stravaLapsedMobile":
-    "Strava access has lapsed. Re-link it on the web at sendtally.com.",
+    "Strava access has lapsed. Re-link it and your sessions can post to your feed again.",
   "settings.stravaNotConnectedMobile":
-    "Connect Strava on the web at sendtally.com and your logged sessions can post to your feed.",
+    "Each logged session can post to your feed as a Rock Climbing activity. You approve it on strava.com and can revoke it there any time.",
   "settings.postAutomatically": "Post sessions automatically",
   "settings.postingOn": "Logged sessions post to your feed as Rock Climbing activities.",
   "settings.postingOffMobile": "Off. Each session page keeps its own Post to Strava button.",
@@ -33,4 +33,6 @@ export const settings = {
   "settings.membershipPitch": "A membership unlocks trends and insights in your climbing habits.",
   "settings.billedThrough": "Billed through {store}. Manage it there.",
   "settings.tab": "Settings",
+  "settings.openingStrava": "Opening Strava…",
+  "settings.stravaUnreachable": "Could not reach Strava. Try again.",
 } as const;

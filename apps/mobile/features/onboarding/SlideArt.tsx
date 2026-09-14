@@ -54,7 +54,7 @@ function ClimbRow({
           fontFamily: fonts.monoSemiBold,
           fontSize: 13,
           letterSpacing: 0.5,
-          color: sent ? colors.watermelonInk : colors.textMuted,
+          color: sent ? colors.labelAccent : colors.textMuted,
         }}
       >
         {grade}
@@ -111,7 +111,7 @@ function EffortArt(): React.ReactElement {
               height: 10,
               borderRadius: 3,
               backgroundColor:
-                i < rpe ? (i === rpe - 1 ? colors.watermelon : colors.azure) : colors.dataBarEmpty,
+                i < rpe ? (i === rpe - 1 ? colors.dataBarPeak : colors.azure) : colors.dataBarEmpty,
             }}
           />
         ))}
@@ -181,7 +181,7 @@ function StravaArt(): React.ReactElement {
               fontSize: 12,
               letterSpacing: 0.5,
               textTransform: "uppercase",
-              color: colors.watermelonInk,
+              color: colors.labelAccent,
             }}
           >
             {t("onboarding.art.sentGrade")}
@@ -250,7 +250,7 @@ function TrendsArt(): React.ReactElement {
                 flex: 1,
                 height: Math.max(6, Math.round(bar.value * BAR_BOX_HEIGHT)),
                 borderRadius: 3,
-                backgroundColor: bar.value === peak ? colors.watermelon : colors.azure,
+                backgroundColor: bar.value === peak ? colors.dataBarPeak : colors.azure,
               }}
             />
           ))}

@@ -12,12 +12,6 @@ export const billing = {
   "billing.notAMember": "Sin suscripción",
   "billing.memberVia": "Suscriptor · {store}",
   "billing.memberWeb": "Suscriptor · web",
-  "billing.benefitTrendsTitle": "Volumen, esfuerzo, grado medio y porcentaje de flash",
-  "billing.benefitTrendsBody":
-    "Cada sesión que registras alimenta las pantallas de tendencias: cuánto escalaste, lo duro que se sintió, hacia dónde se mueve tu grado medio encadenado y con qué frecuencia lees un bloque a la primera.",
-  "billing.benefitInfluenceTitle": "Influencia directa en lo que se construye",
-  "billing.benefitInfluenceBody":
-    "Los suscriptores deciden qué viene después. Esto lo construye una sola persona, y quienes pagan el servidor marcan el orden.",
   "billing.pointVolume": "Volumen: cuánto escalaste de verdad, semana a semana",
   "billing.pointRpe": "RPE: lo duras que se han sentido tus sesiones con el tiempo",
   "billing.pointAvgGrade": "Grado medio encadenado: la deriva que un cuaderno nunca te muestra",
@@ -70,12 +64,20 @@ export const billing = {
   "billing.introMobile":
     "Registrar sesiones y publicarlas en Strava es gratis, y siempre lo será. La suscripción abre las pantallas que te leen todo tu historial.",
   "billing.loadFailed": "No se pudo cargar tu suscripción.",
-  "billing.comingSoon": "Próximamente",
   "billing.intro":
     "Registrar sesiones y publicarlas en Strava es gratis y siempre lo será. La suscripción es lo que convierte el registro en un historial de entrenamiento, y es lo que paga el servidor.",
   "billing.loadingPlans": "Cargando planes…",
   "billing.activeOnAccount": "Tu suscripción está activa en esta cuenta.",
   "billing.billedThrough":
     "Tu suscripción se cobra a través de {store}. Cámbiala o cancélala desde tus suscripciones de {store}; las tendencias se mantienen hasta que termine el periodo pagado.",
-  "billing.seeMembership": "Ver suscripción →",
+  "billing.panelTitle": "Hazte miembro para ver tus tendencias a largo plazo.",
+  "billing.panelPageTitle": "Todo lo que tus sesiones han ido sumando.",
+  "billing.panelBody":
+    "Dos dólares al mes, facturados anualmente, abren en cada pantalla todos los rangos, de un mes a todo el historial - a partir de las sesiones que ya registraste.",
+  "billing.panelFootnote":
+    "2 $/mes facturados anualmente · o 3 $ mes a mes · cancela cuando quieras",
+  "billing.panelVolume": "Cuánto escalaste, semana a semana",
+  "billing.panelPyramid": "Dónde están realmente tus encadenes",
+  "billing.panelHardest": "Tu techo por periodo, con la vía que lo marcó",
+  "billing.panelFlash": "Encadenes al primer intento, seguidos en el tiempo",
 } as const;

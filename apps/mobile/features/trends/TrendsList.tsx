@@ -4,20 +4,39 @@ import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import { TILE_BREAKDOWN_ROWS, useTrends } from "@sendtally/features/trends";
 import { t } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
+import { Paywall } from "../billing/Paywall";
 import { useApi } from "../../lib/api";
 import { TrendBars } from "./TrendBars";
 import { TrendFilters } from "./TrendFilters";
 import { TrendTagBreakdown } from "./TrendTagBreakdown";
 import { pressRow } from "../../lib/press";
 
-export function TrendsList(): React.ReactElement {
+export type TrendsListProps = {
+  preview?: boolean;
+  onLockedRange?: () => void;
+};
+
+const card = {
+  backgroundColor: colors.white,
+  borderWidth: 1,
+  borderColor: colors.lineOnLightSoft,
+  borderRadius: radius.card,
+  paddingVertical: 18,
+  paddingHorizontal: 20,
+  gap: 8,
+} as const;
+
+export function TrendsList({
+  preview = false,
+  onLockedRange,
+}: TrendsListProps): React.ReactElement {
   const api = useApi();
-  const feature = useTrends(api);
+  const feature = useTrends(api, { preview });
   const { state } = feature;
 
   return (
     <>
-      <TrendFilters feature={feature} />
+      <TrendFilters feature={feature} onLockedRange={onLockedRange} />
       {state.status === "loading" && <ActivityIndicator color={colors.gunmetal} />}
       {state.status === "error" && (
         <Text style={{ fontFamily: fonts.mono, fontSize: 12, color: colors.watermelonInk }}>
@@ -28,16 +47,9 @@ export function TrendsList(): React.ReactElement {
         state.data.tiles.map((tile) => (
           <Pressable
             key={tile.metric}
+            disabled={preview}
             onPress={() => router.push(`/trend/${tile.metric}`)}
-            style={pressRow({
-              backgroundColor: colors.white,
-              borderWidth: 1,
-              borderColor: colors.lineOnLightSoft,
-              borderRadius: radius.card,
-              paddingVertical: 18,
-              paddingHorizontal: 20,
-              gap: 8,
-            })}
+            style={pressRow(card)}
           >
             <View
               style={{
@@ -52,22 +64,24 @@ export function TrendsList(): React.ReactElement {
                   fontSize: 10,
                   letterSpacing: 0.7,
                   textTransform: "uppercase",
-                  color: colors.watermelonInk,
+                  color: colors.labelAccent,
                 }}
               >
                 {tile.label}
               </Text>
-              <Text
-                style={{
-                  fontFamily: fonts.monoMedium,
-                  fontSize: 9,
-                  letterSpacing: 0.7,
-                  textTransform: "uppercase",
-                  color: colors.textSecondary,
-                }}
-              >
-                {t("trends.details")}
-              </Text>
+              {!preview && (
+                <Text
+                  style={{
+                    fontFamily: fonts.monoMedium,
+                    fontSize: 9,
+                    letterSpacing: 0.7,
+                    textTransform: "uppercase",
+                    color: colors.textSecondary,
+                  }}
+                >
+                  {t("trends.details")}
+                </Text>
+              )}
             </View>
             <Text
               style={{
@@ -100,6 +114,7 @@ export function TrendsList(): React.ReactElement {
             />
           </Pressable>
         ))}
+      {preview && state.status === "ready" && <Paywall />}
     </>
   );
 }

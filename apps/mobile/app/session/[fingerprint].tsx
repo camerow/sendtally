@@ -40,7 +40,7 @@ function HeaderAction({
           fontSize: 12,
           letterSpacing: 0.5,
           textTransform: "uppercase",
-          color: colors.watermelonInk,
+          color: colors.labelAccent,
         }}
       >
         {label}
@@ -99,7 +99,7 @@ export default function SessionDetailScreen(): React.ReactElement {
                 fontSize: 12,
                 letterSpacing: 0.5,
                 textTransform: "uppercase",
-                color: colors.watermelonInk,
+                color: colors.labelAccent,
               }}
             >
               {t("sessions.back")}
@@ -202,7 +202,7 @@ export default function SessionDetailScreen(): React.ReactElement {
                     style={{
                       fontFamily: fonts.monoSemiBold,
                       fontSize: 16,
-                      color: st.accent ? colors.watermelonInk : colors.gunmetal,
+                      color: st.accent ? colors.labelAccent : colors.gunmetal,
                     }}
                   >
                     {st.value}
@@ -230,7 +230,7 @@ export default function SessionDetailScreen(): React.ReactElement {
                     fontSize: 10,
                     letterSpacing: 0.7,
                     textTransform: "uppercase",
-                    color: colors.watermelonInk,
+                    color: colors.labelAccent,
                   }}
                 >
                   {t("trends.sendsByGrade")}
@@ -246,7 +246,7 @@ export default function SessionDetailScreen(): React.ReactElement {
                             b.height === 0
                               ? colors.dataBarEmpty
                               : b.peak
-                                ? colors.watermelon
+                                ? colors.dataBarPeak
                                 : colors.azure,
                           borderTopLeftRadius: 3,
                           borderTopRightRadius: 3,
@@ -352,7 +352,7 @@ export default function SessionDetailScreen(): React.ReactElement {
                         style={{
                           fontFamily: fonts.monoSemiBold,
                           fontSize: 14,
-                          color: c.isTopSend ? colors.watermelonInk : colors.gunmetal,
+                          color: c.isTopSend ? colors.labelAccent : colors.gunmetal,
                         }}
                       >
                         {c.gradeLabel}

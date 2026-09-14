@@ -35,9 +35,3 @@ export function onboardingSlides(): OnboardingSlide[] {
     },
   ];
 }
-
-/** Membership sells the screens the log feeds, so it shows the same art for those two. */
-export function memberSlides(): OnboardingSlide[] {
-  const all = onboardingSlides();
-  return (["trends", "effort"] as const).flatMap((key) => all.filter((slide) => slide.key === key));
-}

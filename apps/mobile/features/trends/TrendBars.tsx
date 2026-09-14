@@ -94,7 +94,7 @@ export function TrendBars({
                       b.height === 0
                         ? colors.dataBarEmpty
                         : b.peak
-                          ? colors.watermelon
+                          ? colors.dataBarPeak
                           : colors.azure,
                     borderTopLeftRadius: 3,
                     borderTopRightRadius: 3,

@@ -2,6 +2,7 @@ import React from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import type { SettingsVM, StravaPostingFeature } from "@sendtally/features/settings";
+import type { StravaConnectFeature } from "./useStravaConnect";
 import type { Discipline, GradePrefs, GradeScale } from "@sendtally/features/log-session";
 import { t } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
@@ -11,7 +12,8 @@ import { pressRow } from "../../lib/press";
 import { GradeSection } from "./GradeSection";
 import { MembershipSection, type MembershipSectionProps } from "./MembershipSection";
 import { StravaPostingSection } from "./StravaPostingSection";
-import { bodyText, sectionCard, sectionLabel } from "../../lib/styles";
+import { bodyText, messageText, sectionCard, sectionLabel } from "../../lib/styles";
+import { press } from "../../lib/press";
 
 export type SettingsViewProps = {
   vm: SettingsVM;
@@ -19,6 +21,7 @@ export type SettingsViewProps = {
   gradePrefs: GradePrefs;
   billing: MembershipSectionProps | null;
   posting: StravaPostingFeature;
+  connect: StravaConnectFeature;
   onChangeGradePref: (discipline: Discipline, scale: GradeScale) => void;
   onOpenAccount: () => void;
 };
@@ -51,6 +54,7 @@ export function SettingsView({
   gradePrefs,
   billing,
   posting,
+  connect,
   onChangeGradePref,
   onOpenAccount,
 }: SettingsViewProps): React.ReactElement {
@@ -81,7 +85,38 @@ export function SettingsView({
                 ? t("settings.stravaLapsedMobile")
                 : t("settings.stravaNotConnectedMobile")}
           </Text>
-          {vm.stravaActive && <StravaPostingSection posting={posting} />}
+          {vm.stravaActive ? (
+            <StravaPostingSection posting={posting} />
+          ) : (
+            <>
+              <Pressable
+                onPress={connect.connect}
+                disabled={connect.busy}
+                accessibilityRole="button"
+                style={press({
+                  minHeight: 46,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  borderRadius: radius.control,
+                  borderWidth: 1,
+                  borderColor: colors.lineOnLightStrong,
+                  backgroundColor: colors.white,
+                  opacity: connect.busy ? 0.55 : 1,
+                })}
+              >
+                <Text
+                  style={{ fontFamily: fonts.sansSemiBold, fontSize: 15, color: colors.gunmetal }}
+                >
+                  {connect.busy
+                    ? t("settings.openingStrava")
+                    : vm.stravaConnected
+                      ? t("settings.relinkStrava")
+                      : t("sessions.connectStrava")}
+                </Text>
+              </Pressable>
+              {connect.error !== null && <Text style={messageText}>{connect.error}</Text>}
+            </>
+          )}
         </View>
 
         {billing !== null && (

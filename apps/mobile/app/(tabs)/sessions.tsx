@@ -4,9 +4,11 @@ import {
   RefreshControl,
   SectionList,
   Text,
+  View,
   type SectionListData,
   type ViewToken,
 } from "react-native";
+import { useSettings } from "@sendtally/features/settings";
 import { SafeAreaView } from "react-native-safe-area-context";
 import type { SessionRow as SessionRowData } from "@sendtally/api-client";
 import {
@@ -27,8 +29,11 @@ import { LogSessionFab } from "../../features/sessions/LogSessionFab";
 import { ScopeBar } from "../../features/sessions/ScopeBar";
 import { SECTION_HEADER_HEIGHT, SectionHeader } from "../../features/sessions/SectionHeader";
 import { SessionRow, sessionRowHeight } from "../../features/sessions/SessionRow";
+import { StravaSetupRow } from "../../features/sessions/StravaSetupRow";
+import { useStravaConnect } from "../../features/settings/useStravaConnect";
 import { useApi } from "../../lib/api";
 import { maybeAskForReview } from "../../lib/review";
+import { useStravaSetupDismissed } from "../../lib/stravaSetupPrompt";
 
 type Section = { key: string; title: string; meta: string; data: SessionRowData[] };
 
@@ -63,6 +68,12 @@ export default function Sessions(): React.ReactElement {
   const [filters, setFilters] = React.useState<SessionFilters>({ grouping: "month", tags: [] });
   const [filtersOpen, setFiltersOpen] = React.useState(false);
   const [currentKey, setCurrentKey] = React.useState<string | null>(null);
+  // ponytail: a second status() read per mount, to know if Strava is live; a Strava-status context across tabs if it ever matters
+  const settings = useSettings(api);
+  const connect = useStravaConnect(api, settings.reload);
+  const stravaPrompt = useStravaSetupDismissed();
+  const showStravaSetup =
+    settings.ready && !settings.vm.stravaActive && stravaPrompt.dismissed === false;
 
   const all = React.useMemo(() => sessions ?? [], [sessions]);
   const tagOptions = React.useMemo(() => sessionTagOptions(all), [all]);
@@ -180,6 +191,15 @@ export default function Sessions(): React.ReactElement {
         getItemLayout={itemLayout}
         viewabilityConfigCallbackPairs={viewability}
         contentContainerStyle={{ paddingBottom: 96 }}
+        ListHeaderComponent={
+          showStravaSetup ? (
+            <StravaSetupRow
+              lapsed={settings.vm.stravaConnected}
+              connect={connect}
+              onDismiss={stravaPrompt.dismiss}
+            />
+          ) : null
+        }
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -191,7 +211,31 @@ export default function Sessions(): React.ReactElement {
           />
         }
         ListEmptyComponent={
-          sessions !== null ? (
+          sessions === null ? null : all.length === 0 ? (
+            <View style={{ alignItems: "center", gap: 8, paddingHorizontal: 28, paddingTop: 44 }}>
+              <Text
+                style={{
+                  fontFamily: fonts.monoMedium,
+                  fontSize: 20,
+                  letterSpacing: 1.6,
+                  color: colors.petalInk,
+                }}
+              >
+                FIRST SESSION
+              </Text>
+              <Text
+                style={{
+                  textAlign: "center",
+                  fontFamily: fonts.sans,
+                  fontSize: 14,
+                  lineHeight: 21,
+                  color: colors.textSecondary,
+                }}
+              >
+                Name, where, the climbs you got on. About a minute, and it scores itself.
+              </Text>
+            </View>
+          ) : (
             <Text
               style={{
                 padding: 28,
@@ -204,7 +248,7 @@ export default function Sessions(): React.ReactElement {
             >
               {all.length === 0 ? t("sessions.emptyMobile") : t("sessions.noneForTags")}
             </Text>
-          ) : null
+          )
         }
         renderSectionHeader={({ section }) => (
           <SectionHeader title={section.title} meta={section.meta} />

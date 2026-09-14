@@ -46,6 +46,6 @@
 
   /* Data viz */
   --data-bar: var(--bs-azure);
-  --data-bar-peak: var(--bs-watermelon);
+  --data-bar-peak: var(--bs-petal-ink);
   --data-bar-empty: rgba(64, 63, 76, 0.14);
 }

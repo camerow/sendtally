@@ -24,19 +24,6 @@ export const monoMuted: React.CSSProperties = {
   color: "rgba(64,63,76,0.55)",
 };
 
-export const azureButton: React.CSSProperties = {
-  fontFamily: "var(--font-sans)",
-  fontWeight: 600,
-  fontSize: 14,
-  color: "var(--bs-white)",
-  background: "var(--bs-azure-ink)",
-  border: "none",
-  borderRadius: "var(--radius-control)",
-  padding: "12px 18px",
-  cursor: "pointer",
-  alignSelf: "flex-start",
-};
-
 export const underlineButton: React.CSSProperties = {
   fontFamily: "var(--font-mono)",
   fontSize: 11,

@@ -151,7 +151,7 @@ export function AddProjectSheet({
             fontSize: 11,
             letterSpacing: 0.88,
             textTransform: "uppercase",
-            color: colors.watermelonInk,
+            color: colors.labelAccent,
           }}
         >
           {t("projects.newProject")}

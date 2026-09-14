@@ -2,6 +2,7 @@ import React from "react";
 import { ActivityIndicator, Linking, Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
+  membershipPanel,
   planLabel,
   storeChipName,
   storeName,
@@ -18,8 +19,7 @@ import {
   underlineLabel,
   underlinePress,
 } from "../../lib/styles";
-import { memberSlides } from "../onboarding/slides";
-import { OnboardingCarousel } from "../onboarding/OnboardingCarousel";
+import { ledgerEyebrow, MembershipLedger } from "./MembershipLedger";
 import { MembershipStatusCard } from "./MembershipStatusCard";
 import { PurchaseControls } from "./PurchaseControls";
 import { storeBillingAvailable, storeLabel, subscriptionManagementUrl } from "./store";
@@ -58,7 +58,6 @@ function StatusCard({
   if (!vm.active) {
     return (
       <MembershipStatusCard
-        active={false}
         label={vm.statusLabel}
         headline={t("billing.loggingIsFree")}
         detail={null}
@@ -71,7 +70,6 @@ function StatusCard({
     const where = storeName(vm.managedIn);
     return (
       <MembershipStatusCard
-        active
         label={vm.statusLabel}
         headline={vm.plan === null ? t("common.membership") : planLabel(vm.plan)}
         detail={vm.renewalLine}
@@ -96,7 +94,6 @@ function StatusCard({
   if (vm.managedIn === "web") {
     return (
       <MembershipStatusCard
-        active
         label={vm.statusLabel}
         headline={t("common.membership")}
         detail={null}
@@ -107,7 +104,6 @@ function StatusCard({
 
   return (
     <MembershipStatusCard
-      active
       label={vm.statusLabel}
       headline={vm.plan === null ? t("common.membership") : planLabel(vm.plan)}
       detail={vm.renewalLine}
@@ -171,6 +167,7 @@ export function MembershipView({
   purchase,
   onBack,
 }: MembershipViewProps): React.ReactElement {
+  const panel = membershipPanel();
   const { state, vm } = membership;
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.white }} edges={["top"]}>
@@ -189,7 +186,7 @@ export function MembershipView({
               fontSize: 12,
               letterSpacing: 0.5,
               textTransform: "uppercase",
-              color: colors.watermelonInk,
+              color: colors.labelAccent,
             }}
           >
             {t("common.backToSettings")}
@@ -221,9 +218,30 @@ export function MembershipView({
           </Text>
         </View>
 
-        <View style={{ marginHorizontal: -18 }}>
-          <OnboardingCarousel slides={memberSlides()} fill={false} />
-        </View>
+        {state.status === "ready" && !vm.active && (
+          <View
+            style={{
+              backgroundColor: colors.gold,
+              borderRadius: radius.card,
+              padding: 18,
+              gap: 12,
+            }}
+          >
+            <Text style={ledgerEyebrow}>{panel.eyebrow}</Text>
+            <Text
+              style={{
+                fontFamily: fonts.displayHeavy,
+                fontSize: 24,
+                lineHeight: 27,
+                letterSpacing: -0.8,
+                color: colors.gunmetal,
+              }}
+            >
+              {panel.pageTitle}
+            </Text>
+            <MembershipLedger />
+          </View>
+        )}
 
         {state.status === "loading" && (
           <ActivityIndicator color={colors.gunmetal} style={{ alignSelf: "flex-start" }} />

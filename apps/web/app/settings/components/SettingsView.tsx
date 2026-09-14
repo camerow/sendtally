@@ -6,7 +6,14 @@ import type {
   StravaPostingFeature,
 } from "@sendtally/features/settings";
 import type { MembershipVM } from "@sendtally/features/billing";
-import { azureButton, bodyText, linkAction, monoMuted, pageTitle, sectionLabel } from "./styles";
+import {
+  bodyText,
+  linkAction,
+  monoMuted,
+  pageTitle,
+  secondaryButton,
+  sectionLabel,
+} from "./styles";
 import { t } from "@sendtally/features/i18n";
 import { ChevronRow } from "./ChevronRow";
 import { GradeScaleSection } from "./GradeScaleSection";
@@ -65,7 +72,15 @@ export function SettingsView({
             <p style={bodyText}>
               {vm.stravaConnected ? t("settings.stravaLapsed") : t("settings.stravaConnectBody")}
             </p>
-            <Link to="/app/setup" style={{ ...azureButton, textDecoration: "none" }}>
+            <Link
+              to="/app/setup"
+              style={{
+                ...secondaryButton,
+                fontSize: 14,
+                textDecoration: "none",
+                alignSelf: "flex-start",
+              }}
+            >
               {vm.stravaConnected ? t("settings.relinkStrava") : t("sessions.connectStrava")}
             </Link>
           </>

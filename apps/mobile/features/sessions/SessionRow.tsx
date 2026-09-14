@@ -138,7 +138,7 @@ export function SessionRow({ session, title, onPress }: SessionRowProps): React.
               fontSize: 11,
               lineHeight: 13,
               letterSpacing: 0.44,
-              color: g.kind === "sent" ? colors.watermelonInk : colors.textMuted,
+              color: g.kind === "sent" ? colors.labelAccent : colors.textMuted,
             }}
           >
             {g.label}

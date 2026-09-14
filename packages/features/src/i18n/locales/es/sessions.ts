@@ -41,11 +41,7 @@ export const sessions = {
   "sessions.boardSession": "Sesión de board",
   "sessions.untagged": "Sin etiqueta",
   "sessions.tagsSaveFailed": "No se pudieron guardar las etiquetas. Inténtalo de nuevo.",
-  "sessions.stravaBanner":
-    "Tu registro vive aquí de todos modos. Conecta Strava y tus sesiones podrán publicarse en tu feed como actividades Rock Climbing.",
   "sessions.connectStrava": "Conectar Strava",
-  "sessions.empty":
-    "Todavía no hay sesiones. Pulsa Registrar una sesión y la primera lleva más o menos un minuto.",
   "sessions.clearFilter": "Quitar el filtro",
   "sessions.all": "Todas",
   "sessions.jumpTo": "Ir a",
@@ -53,4 +49,16 @@ export const sessions = {
   "sessions.unfinishedSession": "Sesión sin terminar",
   "sessions.savedOnDeviceAt": "Guardada en este dispositivo a las {time}",
   "sessions.resume": "Continuar",
+  "sessions.setupEyebrowLapsed": "Strava · hay que volver a conectar",
+  "sessions.setupEyebrow": "Strava · opcional",
+  "sessions.setupLapsedTitle": "El acceso a Strava ha caducado",
+  "sessions.setupTitle": "Publica tus sesiones en tu feed de Strava",
+  "sessions.setupLapsedBody":
+    "Vuelve a vincularlo y tus sesiones podrán publicarse de nuevo en tu feed.",
+  "sessions.setupBody":
+    "Una actividad Rock Climbing por sesión registrada. Lo apruebas en strava.com y puedes revocarlo cuando quieras.",
+  "sessions.notNow": "Ahora no",
+  "sessions.firstSessionLabel": "Primera sesión",
+  "sessions.firstSessionBody":
+    "Nombre, lugar, las vías que probaste. Un minuto más o menos, y la sesión se puntúa sola.",
 } as const;

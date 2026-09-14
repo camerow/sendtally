@@ -7,9 +7,12 @@ export type TrendMetric = "volume" | "pyramid" | "hardest" | "flash" | "avggrade
 
 export const TREND_DISCIPLINES: readonly Discipline[] = ["boulder", "route"];
 
-export type TrendRange = "1m" | "3m" | "6m" | "ytd" | "1y" | "all";
+export type TrendRange = "7d" | "1m" | "3m" | "6m" | "ytd" | "1y" | "all";
 
-export const TREND_RANGES: readonly TrendRange[] = ["1m", "3m", "6m", "ytd", "1y", "all"];
+/** The one range a non-member can see; every longer range is the membership. */
+export const PREVIEW_TREND_RANGE: TrendRange = "7d";
+
+export const TREND_RANGES: readonly TrendRange[] = ["7d", "1m", "3m", "6m", "ytd", "1y", "all"];
 
 export function trendRangeLabel(range: TrendRange): string {
   if (range === "ytd") return t("trends.rangeShortYtd");

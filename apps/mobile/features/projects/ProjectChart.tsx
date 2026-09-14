@@ -15,7 +15,7 @@ const labelStyle = {
 
 function fill(bar: ProjectBar): string {
   if (bar.sent) return colors.gold;
-  return bar.peak ? colors.watermelon : colors.azure;
+  return bar.peak ? colors.dataBarPeak : colors.azure;
 }
 
 export function ProjectChart({ bars }: { bars: ProjectBar[] }): React.ReactElement {

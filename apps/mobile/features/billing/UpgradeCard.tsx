@@ -1,65 +1,47 @@
 import React from "react";
 import { Text, View } from "react-native";
-import { t } from "@sendtally/features/i18n";
+import { membershipPanel } from "@sendtally/features/billing";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
+import { ledgerEyebrow, MembershipLedger } from "./MembershipLedger";
 
 export type UpgradeCardProps = {
-  title: string;
-  body: string;
-  points?: string[];
   children?: React.ReactNode;
 };
 
-export function UpgradeCard({
-  title,
-  body,
-  points = [],
-  children,
-}: UpgradeCardProps): React.ReactElement {
+export function UpgradeCard({ children }: UpgradeCardProps): React.ReactElement {
+  const panel = membershipPanel();
   return (
     <View
       style={{
-        backgroundColor: colors.petalTint,
+        backgroundColor: colors.gold,
         borderRadius: radius.card,
-        padding: 20,
+        padding: 18,
         gap: 12,
       }}
     >
+      <Text style={ledgerEyebrow}>{panel.eyebrow}</Text>
       <Text
         style={{
-          fontFamily: fonts.monoMedium,
-          fontSize: 10,
-          letterSpacing: 0.8,
-          textTransform: "uppercase",
-          color: colors.watermelonInk,
-        }}
-      >
-        {t("common.members")}
-      </Text>
-      <Text
-        style={{
-          fontFamily: fonts.display,
+          fontFamily: fonts.displayHeavy,
           fontSize: 24,
-          lineHeight: 28,
-          letterSpacing: -0.6,
+          lineHeight: 27,
+          letterSpacing: -0.8,
           color: colors.gunmetal,
         }}
       >
-        {title}
+        {panel.title}
       </Text>
       <Text
-        style={{ fontFamily: fonts.sans, fontSize: 14, lineHeight: 21, color: colors.gunmetal }}
+        style={{
+          fontFamily: fonts.sans,
+          fontSize: 13,
+          lineHeight: 20,
+          color: "rgba(64,63,76,0.88)",
+        }}
       >
-        {body}
+        {panel.body}
       </Text>
-      {points.map((point) => (
-        <Text
-          key={point}
-          style={{ fontFamily: fonts.sans, fontSize: 13, lineHeight: 20, color: colors.gunmetal }}
-        >
-          {`·  ${point}`}
-        </Text>
-      ))}
+      <MembershipLedger />
       {children}
     </View>
   );

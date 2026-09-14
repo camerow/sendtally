@@ -101,7 +101,7 @@ export function SessionNotes({
               disabled={saving}
               style={press({ minHeight: 44, justifyContent: "center" })}
             >
-              <Text style={{ ...action, color: colors.watermelonInk }}>
+              <Text style={{ ...action, color: colors.labelAccent }}>
                 {saving ? t("common.saving") : t("sessions.saveNote")}
               </Text>
             </Pressable>
@@ -131,7 +131,7 @@ export function SessionNotes({
           </Text>
         </View>
         <Pressable onPress={start} style={press({ minHeight: 44, justifyContent: "center" })}>
-          <Text style={{ ...action, color: colors.watermelonInk }}>{t("sessions.addANote")}</Text>
+          <Text style={{ ...action, color: colors.labelAccent }}>{t("sessions.addANote")}</Text>
         </Pressable>
       </View>
     );

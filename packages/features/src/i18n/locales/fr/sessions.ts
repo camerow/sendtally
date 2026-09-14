@@ -41,11 +41,7 @@ export const sessions = {
   "sessions.boardSession": "Séance de board",
   "sessions.untagged": "Sans tag",
   "sessions.tagsSaveFailed": "Impossible d'enregistrer les tags. Réessaie.",
-  "sessions.stravaBanner":
-    "Ton carnet vit ici quoi qu'il arrive. Connecte Strava et tes séances pourront être publiées dans ton fil comme activités Rock Climbing.",
   "sessions.connectStrava": "Connecter Strava",
-  "sessions.empty":
-    "Pas encore de séance. Clique sur Enregistrer une séance et la première prend environ une minute.",
   "sessions.clearFilter": "Effacer le filtre",
   "sessions.all": "Tout",
   "sessions.jumpTo": "Aller à",
@@ -53,4 +49,16 @@ export const sessions = {
   "sessions.unfinishedSession": "Séance inachevée",
   "sessions.savedOnDeviceAt": "Enregistrée sur cet appareil à {time}",
   "sessions.resume": "Reprendre",
+  "sessions.setupEyebrowLapsed": "Strava · reconnexion requise",
+  "sessions.setupEyebrow": "Strava · optionnel",
+  "sessions.setupLapsedTitle": "L’accès Strava a expiré",
+  "sessions.setupTitle": "Publie tes sessions dans ton fil Strava",
+  "sessions.setupLapsedBody":
+    "Relie-le à nouveau et tes sessions pourront de nouveau être publiées dans ton fil.",
+  "sessions.setupBody":
+    "Une activité Rock Climbing par session enregistrée. Tu l’approuves sur strava.com et peux la révoquer à tout moment.",
+  "sessions.notNow": "Pas maintenant",
+  "sessions.firstSessionLabel": "Première session",
+  "sessions.firstSessionBody":
+    "Un nom, le lieu, les voies que tu as faites. Une minute environ, et la session se note toute seule.",
 } as const;

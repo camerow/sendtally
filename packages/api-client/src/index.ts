@@ -140,8 +140,8 @@ export class SendtallyApi {
     );
   }
 
-  stravaAuthorizeUrl(): Promise<{ url: string }> {
-    return body(this.client.v1.connect.strava.start.$get());
+  stravaAuthorizeUrl(returnTo: "web" | "app" = "web"): Promise<{ url: string }> {
+    return body(this.client.v1.connect.strava.start.$get({ query: { return: returnTo } }));
   }
 
   deleteAccount(): Promise<{ deleted: boolean }> {

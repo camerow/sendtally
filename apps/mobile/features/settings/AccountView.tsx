@@ -44,7 +44,7 @@ export function AccountView({
               fontSize: 12,
               letterSpacing: 0.5,
               textTransform: "uppercase",
-              color: colors.watermelonInk,
+              color: colors.labelAccent,
             }}
           >
             {t("common.backToSettings")}

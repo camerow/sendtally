@@ -35,13 +35,13 @@ function TrendDetailLocked(): React.ReactElement {
               fontSize: 12,
               letterSpacing: 0.5,
               textTransform: "uppercase",
-              color: colors.watermelonInk,
+              color: colors.labelAccent,
             }}
           >
             {t("trends.backToTrends")}
           </Text>
         </Pressable>
-        <Paywall title={t("trends.lockedTitle")} body={t("trends.lockedBody")} />
+        <Paywall />
       </ScrollView>
     </SafeAreaView>
   );
@@ -71,7 +71,7 @@ function TrendDetail(): React.ReactElement {
               fontSize: 12,
               letterSpacing: 0.5,
               textTransform: "uppercase",
-              color: colors.watermelonInk,
+              color: colors.labelAccent,
             }}
           >
             {t("trends.backToTrends")}
@@ -145,7 +145,7 @@ function TrendDetail(): React.ReactElement {
                       fontSize: 10,
                       letterSpacing: 0.7,
                       textTransform: "uppercase",
-                      color: colors.watermelonInk,
+                      color: colors.labelAccent,
                       paddingTop: 1,
                     }}
                   >

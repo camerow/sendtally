@@ -5,9 +5,9 @@ export const settings = {
   "settings.stravaActive":
     "Mit deinem Strava-Konto verbunden. Eingetragene Sessions können als Rock Climbing-Aktivitäten in deinem Feed landen.",
   "settings.stravaLapsedMobile":
-    "Der Strava-Zugang ist abgelaufen. Verbinde ihn im Web auf sendtally.com neu.",
+    "Der Strava-Zugang ist abgelaufen. Verbinde es neu und deine Sessions landen wieder in deinem Feed.",
   "settings.stravaNotConnectedMobile":
-    "Verbinde Strava im Web auf sendtally.com, dann können deine Sessions in deinem Feed landen.",
+    "Jede geloggte Session kann als Rock-Climbing-Aktivität in deinem Feed landen. Du bestätigst das auf strava.com und kannst es dort jederzeit widerrufen.",
   "settings.postAutomatically": "Sessions automatisch posten",
   "settings.postingOn":
     "Eingetragene Sessions landen als Rock Climbing-Aktivitäten in deinem Feed.",
@@ -36,4 +36,6 @@ export const settings = {
     "Die Mitgliedschaft schaltet Trends und Einblicke in deine Klettergewohnheiten frei.",
   "settings.billedThrough": "Abrechnung über {store}. Verwalte sie dort.",
   "settings.tab": "Mehr",
+  "settings.openingStrava": "Strava wird geöffnet…",
+  "settings.stravaUnreachable": "Strava ist nicht erreichbar. Versuch es noch einmal.",
 } as const;

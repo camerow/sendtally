@@ -12,12 +12,6 @@ export const billing = {
   "billing.notAMember": "Non abonné",
   "billing.memberVia": "Abonné · {store}",
   "billing.memberWeb": "Abonné · web",
-  "billing.benefitTrendsTitle": "Volume, effort, cotation moyenne et taux de flash",
-  "billing.benefitTrendsBody":
-    "Chaque séance enregistrée alimente les tendances : combien tu as grimpé, à quel point c'était dur, où dérive ta cotation moyenne enchaînée, et à quelle fréquence tu lis une ligne du premier coup.",
-  "billing.benefitInfluenceTitle": "Une influence directe sur ce qui est construit",
-  "billing.benefitInfluenceBody":
-    "Les abonnés décident de la suite. Une seule personne développe l'appli, et ceux qui paient le serveur fixent l'ordre.",
   "billing.pointVolume": "Volume - ce que tu as vraiment grimpé, semaine après semaine",
   "billing.pointRpe": "RPE - la difficulté ressentie de tes séances dans le temps",
   "billing.pointAvgGrade": "Cotation moyenne enchaînée - la dérive qu'un carnet ne montre jamais",
@@ -71,12 +65,20 @@ export const billing = {
   "billing.introMobile":
     "Enregistrer tes séances et les publier sur Strava est gratuit, et le restera. L'abonnement ouvre les écrans qui relisent tout ton historique.",
   "billing.loadFailed": "Impossible de charger ton abonnement.",
-  "billing.comingSoon": "Bientôt disponible",
   "billing.intro":
     "Enregistrer tes séances et les publier sur Strava est gratuit et le restera. L'abonnement transforme le carnet en historique d'entraînement, et c'est lui qui paie le serveur.",
   "billing.loadingPlans": "Chargement des formules…",
   "billing.activeOnAccount": "Ton abonnement est actif sur ce compte.",
   "billing.billedThrough":
     "Ton abonnement est facturé via {store}. Modifie-le ou résilie-le depuis tes abonnements {store} ; les tendances restent jusqu'à la fin de la période payée.",
-  "billing.seeMembership": "Voir l'abonnement →",
+  "billing.panelTitle": "Deviens membre pour voir tes tendances à long terme.",
+  "billing.panelPageTitle": "Tout ce que tes sessions ont accumulé.",
+  "billing.panelBody":
+    "Deux dollars par mois, facturés à l’année, ouvrent sur chaque écran toutes les périodes, d’un mois à tout l’historique - à partir des sessions déjà enregistrées.",
+  "billing.panelFootnote":
+    "2 $/mois facturés à l’année · ou 3 $ au mois · résiliable à tout moment",
+  "billing.panelVolume": "Combien tu as grimpé, semaine après semaine",
+  "billing.panelPyramid": "Où se situent vraiment tes réussites",
+  "billing.panelHardest": "Ton plafond par période, avec la voie qui l’a fixé",
+  "billing.panelFlash": "Réussites du premier coup, suivies dans le temps",
 } as const;

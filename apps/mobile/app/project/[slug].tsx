@@ -189,7 +189,7 @@ export default function ProjectDetailScreen(): React.ReactElement {
                 fontSize: 11,
                 letterSpacing: 0.8,
                 textTransform: "uppercase",
-                color: colors.watermelonInk,
+                color: colors.labelAccent,
               }}
             >
               {t("projects.attemptsPerSession")}

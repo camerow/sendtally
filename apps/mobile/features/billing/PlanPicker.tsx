@@ -75,7 +75,7 @@ export function PlanPicker({
                 fontSize: 10,
                 letterSpacing: 0.8,
                 textTransform: "uppercase",
-                color: colors.watermelonInk,
+                color: colors.labelAccent,
                 paddingTop: 4,
               }}
             >

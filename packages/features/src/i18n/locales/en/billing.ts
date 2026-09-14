@@ -12,12 +12,6 @@ export const billing = {
   "billing.notAMember": "Not a member",
   "billing.memberVia": "Member · {store}",
   "billing.memberWeb": "Member · web",
-  "billing.benefitTrendsTitle": "Volume, effort, average grade and flash rate",
-  "billing.benefitTrendsBody":
-    "Every session you log feeds the trend screens - how much you climbed, how hard it felt, where your average send grade is drifting, and how often you read a problem first go.",
-  "billing.benefitInfluenceTitle": "Direct influence on what gets built",
-  "billing.benefitInfluenceBody":
-    "Members say what comes next. One person builds this, and the people paying for the server set the order.",
   "billing.pointVolume": "Volume - how much you actually climbed, week by week",
   "billing.pointRpe": "RPE - how hard your sessions have been feeling over time",
   "billing.pointAvgGrade": "Average send grade - the drift a logbook can never show you",
@@ -70,12 +64,19 @@ export const billing = {
   "billing.introMobile":
     "Logging sessions and posting them to Strava are free, and always will be. Membership opens the screens that read your whole history back to you.",
   "billing.loadFailed": "Could not load your membership.",
-  "billing.comingSoon": "Coming soon",
   "billing.intro":
     "Logging sessions and posting them to Strava are free and always will be. Membership is what turns the log into a training history, and it is what pays for the server.",
   "billing.loadingPlans": "Loading plans…",
   "billing.activeOnAccount": "Your membership is active on this account.",
   "billing.billedThrough":
     "Your membership is billed through {store}. Change or cancel it from your {store} subscriptions; the trends stay until the paid period ends.",
-  "billing.seeMembership": "See membership →",
+  "billing.panelTitle": "Join to see your long-term trends.",
+  "billing.panelPageTitle": "Everything your sessions have been adding up to.",
+  "billing.panelBody":
+    "Two dollars a month, billed yearly, opens every range from a month to all-time on every screen here - built from the sessions you already logged.",
+  "billing.panelFootnote": "$2/mo billed yearly · or $3 month to month · cancel any time",
+  "billing.panelVolume": "How much you climbed, week by week",
+  "billing.panelPyramid": "Where your sends actually sit",
+  "billing.panelHardest": "Your ceiling by period, with the climb that set it",
+  "billing.panelFlash": "Sends on the first try, tracked over time",
 } as const;

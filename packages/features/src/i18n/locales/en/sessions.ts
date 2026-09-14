@@ -40,10 +40,7 @@ export const sessions = {
   "sessions.boardSession": "Board session",
   "sessions.untagged": "Untagged",
   "sessions.tagsSaveFailed": "Could not save tags. Try again.",
-  "sessions.stravaBanner":
-    "Your logbook lives here either way. Connect Strava and your sessions can post to your feed as Rock Climbing activities.",
   "sessions.connectStrava": "Connect Strava",
-  "sessions.empty": "No sessions yet. Hit Log a session and your first one takes about a minute.",
   "sessions.clearFilter": "Clear the filter",
   "sessions.all": "All",
   "sessions.jumpTo": "Jump to",
@@ -51,4 +48,15 @@ export const sessions = {
   "sessions.unfinishedSession": "Unfinished session",
   "sessions.savedOnDeviceAt": "Saved on this device at {time}",
   "sessions.resume": "Resume",
+  "sessions.setupEyebrowLapsed": "Strava · reconnect needed",
+  "sessions.setupEyebrow": "Strava · optional",
+  "sessions.setupLapsedTitle": "Strava access has lapsed",
+  "sessions.setupTitle": "Post sessions to your Strava feed",
+  "sessions.setupLapsedBody": "Re-link it and your sessions can post to your feed again.",
+  "sessions.setupBody":
+    "One Rock Climbing activity per logged session. You approve it on strava.com and can revoke it any time.",
+  "sessions.notNow": "Not now",
+  "sessions.firstSessionLabel": "First session",
+  "sessions.firstSessionBody":
+    "Name, where, the climbs you got on. About a minute, and it scores itself.",
 } as const;

@@ -24,6 +24,7 @@ import { SessionFilters } from "../sessions/components/SessionFilters";
 import { SessionFilterSheet } from "../sessions/components/SessionFilterSheet";
 import { SessionTagSection } from "../sessions/components/SessionTagSection";
 import { SessionYearGroup } from "../sessions/components/SessionYearGroup";
+import { StravaSetupRow } from "../sessions/components/StravaSetupRow";
 import sessionsStyles from "../sessions/sessions.css?url";
 import { useVisibleSection } from "../sessions/useVisibleSection";
 
@@ -54,6 +55,7 @@ export default function Sessions(): React.ReactElement {
   const [searchParams] = useSearchParams();
   const [filtersOpen, setFiltersOpen] = React.useState(false);
   const stravaConnected = status.strava?.status === "active";
+  const stravaLapsed = status.strava !== null && !stravaConnected;
 
   const grouping: SessionGrouping = searchParams.get("group") === "tag" ? "tag" : "month";
   const selectedTags = searchParams.getAll("tag");
@@ -121,48 +123,14 @@ export default function Sessions(): React.ReactElement {
           {countLabel(visible.length)}
         </span>
         <div style={{ flex: 1 }} />
-        <Link
-          to="/app/sessions/new"
-          className="sessions-head-action"
-          style={{
-            fontFamily: "var(--font-sans)",
-            fontWeight: 600,
-            fontSize: 13,
-            color: "var(--bs-white)",
-            background: "var(--bs-azure-ink)",
-            borderRadius: "var(--radius-control)",
-            padding: "9px 16px",
-            textDecoration: "none",
-            whiteSpace: "nowrap",
-          }}
-        >
-          {t("common.logASession")}
-        </Link>
-      </div>
-      <DraftSessionRow />
-      {!stravaConnected && (
-        <div className="sessions-banner">
-          <span style={{ flex: 1, fontSize: 14, lineHeight: 1.5, color: "var(--text-on-dark)" }}>
-            {t("sessions.stravaBanner")}
-          </span>
-          <Link
-            to="/app/setup"
-            style={{
-              fontFamily: "var(--font-sans)",
-              fontWeight: 600,
-              fontSize: 13,
-              color: "var(--bs-gunmetal)",
-              background: "var(--bs-gold)",
-              borderRadius: "var(--radius-control)",
-              padding: "9px 16px",
-              textDecoration: "none",
-              whiteSpace: "nowrap",
-            }}
-          >
-            {t("sessions.connectStrava")}
+        {sessions.length > 0 && (
+          <Link to="/app/sessions/new" className="sessions-head-action sessions-primary-link">
+            {t("common.logASession")}
           </Link>
-        </div>
-      )}
+        )}
+      </div>
+      {!stravaConnected && <StravaSetupRow lapsed={stravaLapsed} />}
+      <DraftSessionRow />
       {tagOptions.length > 0 && (
         <SessionFilters
           grouping={grouping}
@@ -199,7 +167,15 @@ export default function Sessions(): React.ReactElement {
           </div>
         </div>
       )}
-      {sessions.length === 0 && <div style={muted}>{t("sessions.empty")}</div>}
+      {sessions.length === 0 && (
+        <div className="sessions-first">
+          <span className="sessions-first-label">{t("sessions.firstSessionLabel")}</span>
+          <p className="sessions-first-body">{t("sessions.firstSessionBody")}</p>
+          <Link to="/app/sessions/new" className="sessions-primary-link">
+            Log a session
+          </Link>
+        </div>
+      )}
       {sessions.length > 0 && visible.length === 0 && (
         <div style={muted}>
           {t("sessions.noneForTags")}{" "}

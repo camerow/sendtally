@@ -90,7 +90,7 @@ export function OnboardingCarousel({
                   fontSize: 11,
                   letterSpacing: 1,
                   textTransform: "uppercase",
-                  color: colors.watermelonInk,
+                  color: colors.labelAccent,
                 }}
               >
                 {slide.eyebrow}

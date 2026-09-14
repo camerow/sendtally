@@ -136,6 +136,42 @@ describe("app", () => {
     expect(conn?.athlete_id).toBe(1234);
   });
 
+  it("returns the app flow to the sendtally scheme and the web flow to the site", async () => {
+    const { fetchImpl } = makeFakeFetch([
+      {
+        match: (url) => url.includes("/oauth/token"),
+        respond: () =>
+          jsonResponse(200, {
+            access_token: "at",
+            refresh_token: "rt",
+            expires_at: 4102444800,
+            athlete: { id: 4321 },
+          }),
+      },
+    ]);
+    const callback = async (returnTo?: "app" | "web"): Promise<string | null> => {
+      const state = await encryptSecret(
+        JSON.stringify({
+          userId: "user_return",
+          nonce: "n",
+          exp: Date.now() + 60_000,
+          return: returnTo,
+        }),
+        env.TOKEN_KEY
+      );
+      const res = await testApp(fetchImpl).request(
+        `/connect/strava/callback?code=x&state=${encodeURIComponent(state)}`,
+        {},
+        env
+      );
+      expect(res.status).toBe(302);
+      return res.headers.get("location");
+    };
+    expect(await callback("app")).toBe("sendtally://connected/strava");
+    expect(await callback("web")).toBe(`${env.WEB_APP_URL}/connected/strava`);
+    expect(await callback()).toBe(`${env.WEB_APP_URL}/connected/strava`);
+  });
+
   it("binds the OAuth callback to the browser nonce when the cookie is present", async () => {
     await env.DB.prepare(
       `INSERT INTO users (id, timezone, created_at) VALUES ('user_oauth', 'UTC', '')`
@@ -1143,6 +1179,13 @@ describe("app", () => {
     expect(res.status).toBe(200);
     const { url } = (await res.json()) as { url: string };
     expect(url).toContain("https://www.strava.com/oauth/authorize");
+
+    const bad = await testApp().request(
+      "/v1/connect/strava/start?return=elsewhere",
+      { headers: { "x-test-user": "user_free" } },
+      env
+    );
+    expect(bad.status).toBe(400);
   });
 
   it("purges the account when Clerk reports a user.deleted webhook", async () => {
