@@ -213,7 +213,7 @@ export default function Sessions(): React.ReactElement {
                   fontFamily: fonts.monoMedium,
                   fontSize: 20,
                   letterSpacing: 1.6,
-                  color: colors.labelAccent,
+                  color: colors.petalInk,
                 }}
               >
                 FIRST SESSION

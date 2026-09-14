@@ -116,7 +116,7 @@
   font-weight: 500;
   font-size: 22px;
   letter-spacing: 0.08em;
-  color: var(--text-label-accent);
+  color: var(--bs-petal-ink);
 }
 
 .sessions-first-body {
