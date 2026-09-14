@@ -8,6 +8,7 @@ import { useClientApi } from "../lib/useClientApi";
 import { LogSessionForm } from "../log-session/components/LogSessionForm";
 import logSessionStyles from "../log-session/log-session.css?url";
 import { BackLink } from "../components/BackLink";
+import { t, upper } from "@sendtally/features/i18n";
 
 export const links: LinksFunction = () => [{ rel: "stylesheet", href: logSessionStyles }];
 
@@ -33,7 +34,7 @@ export default function EditSessionRoute(): React.ReactElement {
 
   return (
     <div>
-      <BackLink to={backTo}>SESSION</BackLink>
+      <BackLink to={backTo}>{upper(t("web.sessionDetail.backSession"))}</BackLink>
       <div style={{ display: "flex", flexDirection: "column", gap: 6, margin: "14px 0 26px" }}>
         <h1
           style={{
@@ -45,14 +46,15 @@ export default function EditSessionRoute(): React.ReactElement {
             letterSpacing: "-0.03em",
           }}
         >
-          Edit session
+          {t("web.sessionDetail.editTitle")}
         </h1>
-        <span style={monoLabel}>EFFORT IS RE-SCORED WHEN YOU SAVE</span>
+        <span style={monoLabel}>{upper(t("web.sessionDetail.editSubtitle"))}</span>
       </div>
-      {state.status === "loading" && <span style={monoLabel}>LOADING…</span>}
+      {state.status === "loading" && <span style={monoLabel}>{upper(t("web.shell.loading"))}</span>}
       {state.status === "error" && (
         <span style={{ ...monoLabel, color: "var(--text-label-accent)" }}>
-          Could not load this session. <Link to={backTo}>Back to the session</Link>
+          {t("web.sessionDetail.loadFailed")}{" "}
+          <Link to={backTo}>{t("web.sessionDetail.backToSession")}</Link>
         </span>
       )}
       {state.status === "ready" &&
@@ -60,8 +62,8 @@ export default function EditSessionRoute(): React.ReactElement {
           <LogSessionForm api={api} editing={{ fingerprint, draft: state.data.draft }} />
         ) : (
           <span style={{ ...monoLabel, color: "var(--text-label-accent)" }}>
-            This session was synced from a board and is kept as read-only history.{" "}
-            <Link to={backTo}>Back to the session</Link>
+            {t("web.sessionDetail.readOnlyBoard")}{" "}
+            <Link to={backTo}>{t("web.sessionDetail.backToSession")}</Link>
           </span>
         ))}
     </div>

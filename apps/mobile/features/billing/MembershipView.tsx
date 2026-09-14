@@ -7,6 +7,7 @@ import {
   type MembershipFeature,
   type MembershipVM,
 } from "@sendtally/features/billing";
+import { t, upper } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import {
   bodyText,
@@ -16,11 +17,11 @@ import {
   underlineLabel,
   underlinePress,
 } from "../../lib/styles";
-import { MEMBER_SLIDES } from "../onboarding/slides";
+import { memberSlides } from "../onboarding/slides";
 import { OnboardingCarousel } from "../onboarding/OnboardingCarousel";
 import { MembershipStatusCard } from "./MembershipStatusCard";
 import { PurchaseControls } from "./PurchaseControls";
-import { STORE_NAME, storeBillingAvailable, subscriptionManagementUrl } from "./store";
+import { storeBillingAvailable, storeLabel, subscriptionManagementUrl } from "./store";
 import type { PurchaseFeature } from "./usePurchase";
 import { press } from "../../lib/press";
 
@@ -48,7 +49,7 @@ function StatusCard({
   const restoreLink = (
     <Pressable onPress={purchase.restore} disabled={restoring} style={underlinePress}>
       <Text style={{ ...underlineLabel, fontSize: 12 }}>
-        {restoring ? "Restoring…" : "Restore purchases"}
+        {restoring ? t("mobile.billing.restoring") : t("mobile.billing.restorePurchases")}
       </Text>
     </Pressable>
   );
@@ -58,9 +59,9 @@ function StatusCard({
       <MembershipStatusCard
         active={false}
         label={vm.statusLabel}
-        headline="Logging is free"
+        headline={t("mobile.billing.loggingIsFree")}
         detail={null}
-        body={`Membership turns the log into a training history. It also pays for the server.${storeBillingAvailable ? " Pick a plan below to join." : ""}`}
+        body={`${t("mobile.billing.freeBody")}${storeBillingAvailable ? t("mobile.billing.pickAPlan") : ""}`}
       />
     );
   }
@@ -71,9 +72,9 @@ function StatusCard({
       <MembershipStatusCard
         active
         label={vm.statusLabel}
-        headline={vm.plan === null ? "Membership" : planLabel(vm.plan)}
+        headline={vm.plan === null ? t("mobile.billing.membership") : planLabel(vm.plan)}
         detail={vm.renewalLine}
-        body={`Billed through ${where}. Change plan or cancel from your ${where} subscriptions; the trends stay until the paid period ends.`}
+        body={t("mobile.billing.storeBody", { store: where })}
       >
         <View style={{ flexDirection: "row", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
           <Pressable
@@ -81,7 +82,9 @@ function StatusCard({
             accessibilityRole="button"
             style={press({ ...chipButton, alignSelf: "flex-start" })}
           >
-            <Text style={chipButtonLabel}>{`Manage in ${where.replace("the ", "")}`}</Text>
+            <Text style={chipButtonLabel}>
+              {t("mobile.billing.manageIn", { store: where.replace("the ", "") })}
+            </Text>
           </Pressable>
           {restoreLink}
         </View>
@@ -94,9 +97,9 @@ function StatusCard({
       <MembershipStatusCard
         active
         label={vm.statusLabel}
-        headline="Membership"
+        headline={t("mobile.billing.membership")}
         detail={null}
-        body="This membership was bought on sendtally.com and renews there. It unlocks the trends in the app all the same."
+        body={t("mobile.billing.webBody")}
       />
     );
   }
@@ -105,9 +108,9 @@ function StatusCard({
     <MembershipStatusCard
       active
       label={vm.statusLabel}
-      headline={vm.plan === null ? "Membership" : planLabel(vm.plan)}
+      headline={vm.plan === null ? t("mobile.billing.membership") : planLabel(vm.plan)}
       detail={vm.renewalLine}
-      body="Membership is active on this account."
+      body={t("mobile.billing.activeBody")}
     >
       {restoreLink}
     </MembershipStatusCard>
@@ -127,12 +130,14 @@ function PlansSection({
   return (
     <View style={{ gap: 12 }}>
       <Text style={sectionLabel}>
-        {switching ? `PAY THROUGH ${STORE_NAME.toUpperCase()} INSTEAD` : "PLANS"}
+        {upper(
+          switching
+            ? t("mobile.billing.payThroughInstead", { store: storeLabel() })
+            : t("mobile.billing.plans")
+        )}
       </Text>
       {switching && (
-        <Text style={bodyText}>
-          {`Subscribe here to bill membership through ${STORE_NAME}. Cancel the sendtally.com plan afterwards so you are not paying twice.`}
-        </Text>
+        <Text style={bodyText}>{t("mobile.billing.switchBody", { store: storeLabel() })}</Text>
       )}
       <PurchaseControls purchase={purchase} />
     </View>
@@ -157,7 +162,7 @@ function MemberBadge(): React.ReactElement {
           color: colors.petalInk,
         }}
       >
-        MEMBER
+        {upper(t("mobile.billing.member"))}
       </Text>
     </View>
   );
@@ -188,7 +193,7 @@ export function MembershipView({
               color: colors.watermelonInk,
             }}
           >
-            ← SETTINGS
+            {upper(t("mobile.billing.backToSettings"))}
           </Text>
         </Pressable>
         <View style={{ gap: 8 }}>
@@ -201,7 +206,7 @@ export function MembershipView({
                 color: colors.gunmetal,
               }}
             >
-              Membership
+              {t("mobile.billing.membership")}
             </Text>
             {vm.active && <MemberBadge />}
           </View>
@@ -213,13 +218,12 @@ export function MembershipView({
               color: colors.textSecondary,
             }}
           >
-            Logging sessions and posting them to Strava are free, and always will be. Membership
-            opens the screens that read your whole history back to you.
+            {t("mobile.billing.intro")}
           </Text>
         </View>
 
         <View style={{ marginHorizontal: -18 }}>
-          <OnboardingCarousel slides={MEMBER_SLIDES} fill={false} />
+          <OnboardingCarousel slides={memberSlides()} fill={false} />
         </View>
 
         {state.status === "loading" && (
@@ -228,10 +232,10 @@ export function MembershipView({
         {state.status === "error" && (
           <View style={{ gap: 6 }}>
             <Text style={{ fontFamily: fonts.mono, fontSize: 12, color: colors.watermelonInk }}>
-              Could not load your membership.
+              {t("mobile.billing.loadFailed")}
             </Text>
             <Pressable onPress={membership.reload} style={underlinePress}>
-              <Text style={{ ...underlineLabel, fontSize: 12 }}>Try again</Text>
+              <Text style={{ ...underlineLabel, fontSize: 12 }}>{t("mobile.common.tryAgain")}</Text>
             </Pressable>
           </View>
         )}

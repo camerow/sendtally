@@ -1,0 +1,26 @@
+export const mobileTrends = {
+  "mobile.trends.title": "Trends",
+  "mobile.trends.paywallTitle": "Your sessions are adding up to something.",
+  "mobile.trends.paywallBody":
+    "Logging stays free. Membership opens the screens that read your whole history back to you.",
+  "mobile.trends.paywallVolume": "Volume - how much you actually climbed, week by week",
+  "mobile.trends.paywallEffort": "Effort - how hard your sessions have been feeling",
+  "mobile.trends.paywallAvgGrade": "Average send grade - the drift a logbook never shows",
+  "mobile.trends.paywallFlash": "Flash rate - the first thing to move when your reading improves",
+  "mobile.trends.backToTrends": "← Trends",
+  "mobile.trends.lockedTitle": "This one is for members.",
+  "mobile.trends.lockedBody":
+    "Membership unlocks volume, RPE, average send grade and flash rate across your whole history.",
+  "mobile.trends.loadFailed": "Could not load trends.",
+  "mobile.trends.loadFailedPull": "Could not load trends. Pull to retry.",
+  "mobile.trends.byTag": "By tag",
+  "mobile.trends.byTagTitle": "By tag · {title}",
+  "mobile.trends.details": "Details →",
+  "mobile.trends.filters": "Filters",
+  "mobile.trends.clear": "Clear",
+  "mobile.trends.tags": "Tags",
+  "mobile.trends.tagsBody": "Every trend below is drawn from the sessions carrying these tags.",
+  "mobile.trends.closeFilters": "Close filters",
+  "mobile.trends.showAll": "Show all sessions",
+  "mobile.trends.showThese": "Show these trends",
+} as const;

@@ -1,6 +1,7 @@
 import React from "react";
 import { Link } from "react-router";
 import { TILE_BREAKDOWN_ROWS, useTrends } from "@sendtally/features/trends";
+import { t, upper } from "@sendtally/features/i18n";
 import { useClientApi } from "../../lib/useClientApi";
 import { TrendBars } from "./TrendBars";
 import { TrendFilters } from "./TrendFilters";
@@ -35,17 +36,19 @@ export function TrendsOverview({ apiUrl }: TrendsOverviewProps): React.ReactElem
             letterSpacing: "-0.03em",
           }}
         >
-          Trends
+          {t("web.trends.title")}
         </h1>
         {state.status === "ready" && <span style={monoMuted}>{state.data.caption}</span>}
       </div>
       <TrendFilters feature={feature} />
       {state.status === "loading" && (
-        <span style={{ ...monoMuted, display: "block", marginTop: 22 }}>LOADING…</span>
+        <span style={{ ...monoMuted, display: "block", marginTop: 22 }}>
+          {upper(t("web.shell.loading"))}
+        </span>
       )}
       {state.status === "error" && (
         <span style={{ ...monoMuted, display: "block", marginTop: 22 }}>
-          Could not load trends. Refresh to retry.
+          {t("web.trends.loadFailed")}
         </span>
       )}
       {state.status === "ready" && (
@@ -95,7 +98,7 @@ export function TrendsOverview({ apiUrl }: TrendsOverviewProps): React.ReactElem
                     color: "rgba(64,63,76,0.72)",
                   }}
                 >
-                  DETAILS →
+                  {upper(t("web.trends.details"))}
                 </span>
               </span>
               <span
@@ -114,7 +117,7 @@ export function TrendsOverview({ apiUrl }: TrendsOverviewProps): React.ReactElem
               </div>
               <TrendTagBreakdown
                 compact
-                title="BY TAG"
+                title={upper(t("web.trends.byTag"))}
                 rows={state.data.details[tile.metric].breakdown.slice(0, TILE_BREAKDOWN_ROWS)}
               />
             </Link>

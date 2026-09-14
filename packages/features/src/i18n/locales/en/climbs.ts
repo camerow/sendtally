@@ -1,0 +1,17 @@
+export const climbs = {
+  "climbs.thisWeek": "This week",
+  "climbs.weekCount_one": "{count} week",
+  "climbs.weekCount_other": "{count} weeks",
+  "climbs.route": "Route",
+  "climbs.boulder": "Boulder",
+  "climbs.attempts": "Attempts",
+  "climbs.sessions": "Sessions",
+  "climbs.took": "Took",
+  "climbs.running": "Running",
+  "climbs.sent": "Sent",
+  "climbs.lastTried": "Last tried",
+  "climbs.story": "{attempts} over {sessions}",
+  "climbs.nothingLoggedYet": "Nothing logged yet",
+  "climbs.updatedOn": "Updated {date}",
+  "climbs.projectNotFound": "Project not found.",
+} as const;

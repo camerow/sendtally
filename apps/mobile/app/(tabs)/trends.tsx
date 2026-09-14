@@ -1,6 +1,7 @@
 import React from "react";
 import { ActivityIndicator, ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { t } from "@sendtally/features/i18n";
 import { colors } from "@sendtally/design/tokens";
 import { ScreenHeader } from "../../components/ScreenHeader";
 import { Paywall } from "../../features/billing/Paywall";
@@ -12,7 +13,7 @@ export default function Trends(): React.ReactElement {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.white }} edges={["top"]}>
-      <ScreenHeader title="Trends" />
+      <ScreenHeader title={t("mobile.trends.title")} />
       <ScrollView
         contentContainerStyle={{
           paddingHorizontal: 18,
@@ -28,13 +29,13 @@ export default function Trends(): React.ReactElement {
         {canSeeInsights === false && (
           <View style={{ gap: 14 }}>
             <Paywall
-              title="Your sessions are adding up to something."
-              body="Logging stays free. Membership opens the screens that read your whole history back to you."
+              title={t("mobile.trends.paywallTitle")}
+              body={t("mobile.trends.paywallBody")}
               points={[
-                "Volume - how much you actually climbed, week by week",
-                "Effort - how hard your sessions have been feeling",
-                "Average send grade - the drift a logbook never shows",
-                "Flash rate - the first thing to move when your reading improves",
+                t("mobile.trends.paywallVolume"),
+                t("mobile.trends.paywallEffort"),
+                t("mobile.trends.paywallAvgGrade"),
+                t("mobile.trends.paywallFlash"),
               ]}
             />
           </View>

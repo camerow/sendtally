@@ -1,0 +1,61 @@
+export const mobileBilling = {
+  "mobile.billing.appStore": "the App Store",
+  "mobile.billing.googlePlay": "Google Play",
+  "mobile.billing.period.week": "week",
+  "mobile.billing.period.month": "month",
+  "mobile.billing.period.twoMonths": "2 months",
+  "mobile.billing.period.threeMonths": "3 months",
+  "mobile.billing.period.sixMonths": "6 months",
+  "mobile.billing.period.year": "year",
+  "mobile.billing.plan.weekly": "Weekly",
+  "mobile.billing.plan.monthly": "Monthly",
+  "mobile.billing.plan.twoMonths": "2 months",
+  "mobile.billing.plan.threeMonths": "3 months",
+  "mobile.billing.plan.sixMonths": "6 months",
+  "mobile.billing.plan.yearly": "Yearly",
+  "mobile.billing.plan.lifetime": "Lifetime",
+  "mobile.billing.priceOnce": "{price} once",
+  "mobile.billing.pricePerPeriod": "{price} / {period}",
+  "mobile.billing.perMonth": "per month",
+  "mobile.billing.perPeriod": "per {period}",
+  "mobile.billing.onePayment": "one payment",
+  "mobile.billing.billedYearly": "Billed {price} a year",
+  "mobile.billing.bestValue": "Best value",
+  "mobile.billing.purchaseFailed":
+    "The purchase could not be completed. Nothing was charged; try again in a moment.",
+  "mobile.billing.notEntitledAfterPurchase":
+    "{store} confirmed the purchase but membership has not arrived yet. Reopen the app in a minute.",
+  "mobile.billing.nothingToRestore": "No membership was found for this {store} account.",
+  "mobile.billing.restoreFailed": "Restoring did not go through. Try again in a moment.",
+  "mobile.billing.plansUnavailable":
+    "Plans could not be loaded from {store} right now. Check your connection and reopen the app to try again.",
+  "mobile.billing.becomeAMember": "Become a member",
+  "mobile.billing.becomeAMemberPlan": "Become a member · {plan}",
+  "mobile.billing.renewalNote":
+    "Billed through {store}. Renews automatically until you cancel, which you can do any time from your {store} subscriptions.",
+  "mobile.billing.restoring": "Restoring…",
+  "mobile.billing.restorePurchases": "Restore purchases",
+  "mobile.billing.terms": "Terms",
+  "mobile.billing.privacy": "Privacy",
+  "mobile.billing.members": "Members",
+  "mobile.billing.loggingIsFree": "Logging is free",
+  "mobile.billing.freeBody":
+    "Membership turns the log into a training history. It also pays for the server.",
+  "mobile.billing.pickAPlan": " Pick a plan below to join.",
+  "mobile.billing.membership": "Membership",
+  "mobile.billing.storeBody":
+    "Billed through {store}. Change plan or cancel from your {store} subscriptions; the trends stay until the paid period ends.",
+  "mobile.billing.manageIn": "Manage in {store}",
+  "mobile.billing.webBody":
+    "This membership was bought on sendtally.com and renews there. It unlocks the trends in the app all the same.",
+  "mobile.billing.activeBody": "Membership is active on this account.",
+  "mobile.billing.payThroughInstead": "Pay through {store} instead",
+  "mobile.billing.plans": "Plans",
+  "mobile.billing.switchBody":
+    "Subscribe here to bill membership through {store}. Cancel the sendtally.com plan afterwards so you are not paying twice.",
+  "mobile.billing.member": "Member",
+  "mobile.billing.backToSettings": "← Settings",
+  "mobile.billing.intro":
+    "Logging sessions and posting them to Strava are free, and always will be. Membership opens the screens that read your whole history back to you.",
+  "mobile.billing.loadFailed": "Could not load your membership.",
+} as const;

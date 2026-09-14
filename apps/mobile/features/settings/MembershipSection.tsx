@@ -1,3 +1,4 @@
+import { t, upper } from "@sendtally/features/i18n";
 import React from "react";
 import { Text, View } from "react-native";
 import { planLabel, storeName, type MembershipVM } from "@sendtally/features/billing";
@@ -10,13 +11,13 @@ export type MembershipSectionProps = {
 };
 
 function summary(vm: MembershipVM): string {
-  if (!vm.active) return "Logging is free. Membership adds the trends.";
+  if (!vm.active) return t("mobile.settings.membershipFree");
   if (vm.managedIn === "play_store" || vm.managedIn === "app_store") {
-    const plan = vm.plan === null ? "Membership" : planLabel(vm.plan);
-    return `${plan}, billed through ${storeName(vm.managedIn)}.`;
+    const plan = vm.plan === null ? t("mobile.settings.membershipDefaultPlan") : planLabel(vm.plan);
+    return t("mobile.settings.membershipStore", { plan, store: storeName(vm.managedIn) });
   }
-  if (vm.managedIn === "web") return "Bought on sendtally.com. It unlocks the trends here too.";
-  return "Membership is active on this account.";
+  if (vm.managedIn === "web") return t("mobile.settings.membershipWeb");
+  return t("mobile.settings.membershipActive");
 }
 
 export function MembershipSection({
@@ -25,14 +26,19 @@ export function MembershipSection({
 }: MembershipSectionProps): React.ReactElement {
   return (
     <View style={{ gap: 12 }}>
-      <Text style={sectionLabel}>MEMBERSHIP</Text>
+      <Text style={sectionLabel}>{upper(t("mobile.settings.membership"))}</Text>
       <Text style={monoMuted}>
         {membership.renewalLine === null
           ? membership.statusLabel
-          : `${membership.statusLabel} · ${membership.renewalLine.toUpperCase()}`}
+          : `${membership.statusLabel} · ${upper(membership.renewalLine)}`}
       </Text>
       <Text style={bodyText}>{summary(membership)}</Text>
-      <LinkRow label={membership.active ? "Manage membership" : "See plans"} onPress={onOpen} />
+      <LinkRow
+        label={
+          membership.active ? t("mobile.settings.manageMembership") : t("mobile.settings.seePlans")
+        }
+        onPress={onOpen}
+      />
     </View>
   );
 }

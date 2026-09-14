@@ -8,6 +8,7 @@ import {
   type GradePrefs,
   type GradeScale,
 } from "@sendtally/features/log-session";
+import { t, upper } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { press } from "../../lib/press";
 import { bodyText, sectionCard, sectionLabel } from "../../lib/styles";
@@ -108,10 +109,8 @@ function Row({
 export function GradeSection({ prefs, onChange }: GradeSectionProps): React.ReactElement {
   return (
     <View style={sectionCard}>
-      <Text style={sectionLabel}>GRADES</Text>
-      <Text style={bodyText}>
-        The scale you log in. Climbs you have already logged keep the scale they were entered in.
-      </Text>
+      <Text style={sectionLabel}>{upper(t("mobile.settings.grades"))}</Text>
+      <Text style={bodyText}>{t("mobile.settings.gradesBody")}</Text>
       <Row discipline="boulder" prefs={prefs} onChange={onChange} />
       <View style={{ borderTopWidth: 1, borderTopColor: colors.lineOnLight }} />
       <Row discipline="route" prefs={prefs} onChange={onChange} />

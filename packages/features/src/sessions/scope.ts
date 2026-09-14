@@ -1,5 +1,6 @@
 import type { SessionTag } from "@sendtally/api-client";
-import { MONTH_SHORT_NAMES } from "./months";
+import { upper } from "../i18n";
+import { monthShortName } from "./months";
 import type { SessionTagGroup } from "./tags";
 import type { SessionYear } from "./years";
 
@@ -18,7 +19,7 @@ export function monthScopeItems(years: SessionYear[]): ScopeItem[] {
       { key: `year-${year.year}`, label: year.label, sectionKey: first.key, kind: "year" },
       ...year.months.map((month): ScopeItem => ({
         key: month.key,
-        label: MONTH_SHORT_NAMES[month.month - 1] ?? "",
+        label: monthShortName(month.month),
         sectionKey: month.key,
         kind: "month",
       })),
@@ -31,7 +32,7 @@ export function tagScopeItems<T extends { tags: SessionTag[] }>(
 ): ScopeItem[] {
   return groups.map((group) => ({
     key: group.key,
-    label: group.label.toUpperCase(),
+    label: upper(group.label),
     sectionKey: group.key,
     kind: "tag",
   }));

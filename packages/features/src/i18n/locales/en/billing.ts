@@ -1,0 +1,25 @@
+export const billing = {
+  "billing.storeWeb": "sendtally.com",
+  "billing.storePlay": "Google Play",
+  "billing.storeApp": "the App Store",
+  "billing.storeTest": "the test store",
+  "billing.storeOther": "your store",
+  "billing.monthlyPlan": "Monthly plan",
+  "billing.yearlyPlan": "Yearly plan",
+  "billing.lifetime": "Lifetime",
+  "billing.renews": "Renews {date}",
+  "billing.ends": "Ends {date}",
+  "billing.notAMember": "Not a member",
+  "billing.memberVia": "Member · {store}",
+  "billing.memberWeb": "Member · web",
+  "billing.benefitTrendsTitle": "Volume, effort, average grade and flash rate",
+  "billing.benefitTrendsBody":
+    "Every session you log feeds the trend screens - how much you climbed, how hard it felt, where your average send grade is drifting, and how often you read a problem first go.",
+  "billing.benefitInfluenceTitle": "Direct influence on what gets built",
+  "billing.benefitInfluenceBody":
+    "Members say what comes next. One person builds this, and the people paying for the server set the order.",
+  "billing.pointVolume": "Volume - how much you actually climbed, week by week",
+  "billing.pointRpe": "RPE - how hard your sessions have been feeling over time",
+  "billing.pointAvgGrade": "Average send grade - the drift a logbook can never show you",
+  "billing.pointFlashRate": "Flash rate - the first thing to move when your reading improves",
+} as const;

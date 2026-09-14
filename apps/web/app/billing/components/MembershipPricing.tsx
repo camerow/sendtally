@@ -1,6 +1,7 @@
 import { PricingTable } from "@clerk/react-router";
 import React from "react";
 import { colors, radius } from "@sendtally/design/tokens";
+import { t, upper } from "@sendtally/features/i18n";
 
 export const SUBSCRIBED_PARAM = "subscribed";
 
@@ -41,7 +42,7 @@ export function MembershipPricing({
             color: "rgba(64,63,76,0.55)",
           }}
         >
-          LOADING PLANS…
+          {upper(t("web.billing.loadingPlans"))}
         </div>
       }
     />

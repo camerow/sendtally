@@ -3,6 +3,7 @@ import React from "react";
 import type { LinksFunction, LoaderFunctionArgs } from "react-router";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router";
 import { Logo } from "@sendtally/design";
+import { t, upper, type MessageKey } from "@sendtally/features/i18n";
 import { Icon, type IconName } from "../components/Icon";
 import { requireApi } from "../lib/api.server";
 import appShellStyles from "../styles/app-shell.css?url";
@@ -19,14 +20,14 @@ export async function loader(args: LoaderFunctionArgs): Promise<null> {
   return null;
 }
 
-type NavItem = { label: string; to: string; icon: IconName };
+type NavItem = { label: MessageKey; to: string; icon: IconName };
 
 const NAV_ITEMS: NavItem[] = [
-  { label: "Sessions", to: "/app", icon: "sessions" },
-  { label: "Projects", to: "/app/projects", icon: "projects" },
-  { label: "Trends", to: "/app/trends", icon: "trends" },
-  { label: "Settings", to: "/app/settings", icon: "settings" },
-  { label: "Membership", to: "/app/membership", icon: "membership" },
+  { label: "web.shell.navSessions", to: "/app", icon: "sessions" },
+  { label: "web.shell.navProjects", to: "/app/projects", icon: "projects" },
+  { label: "web.shell.navTrends", to: "/app/trends", icon: "trends" },
+  { label: "web.shell.navSettings", to: "/app/settings", icon: "settings" },
+  { label: "web.shell.navMembership", to: "/app/membership", icon: "membership" },
 ];
 
 /** Screens reached by a back link, whose own action bar owns the bottom edge. */
@@ -42,7 +43,7 @@ export default function AppLayout(): React.ReactElement {
 
   const signOut = (
     <button onClick={() => void clerk.signOut(() => navigate("/"))} className="app-sign-out">
-      Sign out
+      {t("web.shell.signOut")}
     </button>
   );
 
@@ -70,7 +71,7 @@ export default function AppLayout(): React.ReactElement {
               flex: "none",
             })}
           >
-            {label}
+            {t(label)}
           </NavLink>
         ))}
         <div className="app-sidebar-spacer" />
@@ -94,11 +95,11 @@ export default function AppLayout(): React.ReactElement {
         <Outlet />
       </div>
       {!focused && (
-        <nav className="app-tabbar" aria-label="Sections">
+        <nav className="app-tabbar" aria-label={t("web.shell.sectionsAria")}>
           {NAV_ITEMS.map(({ label, to, icon }) => (
             <NavLink key={label} to={to} end className="app-tab">
               <Icon name={icon} />
-              {label.toUpperCase()}
+              {upper(t(label))}
             </NavLink>
           ))}
         </nav>

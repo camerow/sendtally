@@ -1,7 +1,7 @@
-import { COPY, type TrendCopy } from "../copy";
+import type { LandingCopy, TrendCopy } from "../copy";
 import type { MiniBar } from "./MiniBars";
 
-type TrendMetricKey = keyof typeof COPY.trends.cards;
+type TrendMetricKey = keyof LandingCopy["trends"]["cards"];
 
 const MONTHS = ["MAR", "APR", "MAY", "JUN", "JUL", "AUG"];
 
@@ -60,14 +60,18 @@ const AVG_GRADE: MiniBar[] = [
   peak: week === "8/3",
 }));
 
-function series(metric: TrendMetricKey, bars: MiniBar[]): InsightSeries {
-  return { metric, bars, ...COPY.trends.cards[metric] };
-}
+const BARS: Record<TrendMetricKey, MiniBar[]> = {
+  volume: VOLUME,
+  pyramid: PYRAMID,
+  hardest: HARDEST,
+  flash: FLASH,
+  avggrade: AVG_GRADE,
+};
 
-export const INSIGHT_SERIES: InsightSeries[] = [
-  series("volume", VOLUME),
-  series("pyramid", PYRAMID),
-  series("hardest", HARDEST),
-  series("flash", FLASH),
-  series("avggrade", AVG_GRADE),
-];
+export function insightSeries(copy: LandingCopy): InsightSeries[] {
+  return (Object.keys(BARS) as TrendMetricKey[]).map((metric) => ({
+    metric,
+    bars: BARS[metric],
+    ...copy.trends.cards[metric],
+  }));
+}

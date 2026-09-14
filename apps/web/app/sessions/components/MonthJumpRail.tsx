@@ -1,5 +1,6 @@
 import React from "react";
-import { MONTH_SHORT_NAMES, type SessionYear } from "@sendtally/features/sessions";
+import { monthShortName, type SessionYear } from "@sendtally/features/sessions";
+import { t, upper } from "@sendtally/features/i18n";
 import { sectionAnchorId, yearAnchorId } from "../anchors";
 
 const railLabel: React.CSSProperties = {
@@ -18,8 +19,8 @@ export function MonthJumpRail({
   currentKey: string | null;
 }): React.ReactElement {
   return (
-    <nav className="sessions-rail" aria-label="Jump to month">
-      <span style={{ ...railLabel, padding: "0 0 4px" }}>JUMP TO</span>
+    <nav className="sessions-rail" aria-label={t("web.sessions.jumpToMonth")}>
+      <span style={{ ...railLabel, padding: "0 0 4px" }}>{upper(t("web.sessions.jumpTo"))}</span>
       {years.map((year) => (
         <React.Fragment key={year.year}>
           <a
@@ -67,7 +68,7 @@ export function MonthJumpRail({
                   color: active ? "var(--bs-gunmetal)" : "rgba(64,63,76,0.55)",
                 }}
               >
-                {MONTH_SHORT_NAMES[month.month - 1]}
+                {monthShortName(month.month)}
               </a>
             );
           })}

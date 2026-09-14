@@ -1,6 +1,6 @@
 import React from "react";
+import { useLanding } from "../LandingContext";
 import { Label } from "@sendtally/design";
-import { COPY } from "../copy";
 import { StatGrid } from "./StatGrid";
 
 type Result = "FLASH" | "SENT" | "PROJECT";
@@ -142,13 +142,14 @@ function ClimbRow({ climb }: { climb: Climb }): React.ReactElement {
 }
 
 export function SessionBreakdown(): React.ReactElement {
+  const { copy } = useLanding();
   return (
     <div id="session" className="l-session">
       <div className="l-section-header">
         <h2 className="l-section-title" style={{ color: "var(--bs-gunmetal)" }}>
-          {COPY.session.title}
+          {copy.session.title}
         </h2>
-        <span className="l-section-blurb">{COPY.session.blurb}</span>
+        <span className="l-section-blurb">{copy.session.blurb}</span>
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
@@ -195,7 +196,7 @@ export function SessionBreakdown(): React.ReactElement {
       </div>
 
       <Label on="light" style={{ letterSpacing: "0.06em" }}>
-        {COPY.session.footnote}
+        {copy.session.footnote}
       </Label>
     </div>
   );

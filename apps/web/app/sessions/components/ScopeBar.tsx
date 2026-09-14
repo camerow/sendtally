@@ -1,5 +1,6 @@
 import React from "react";
 import type { ScopeItem } from "@sendtally/features/sessions";
+import { t } from "@sendtally/features/i18n";
 import { Icon } from "../../components/Icon";
 import { sectionAnchorId } from "../anchors";
 
@@ -30,7 +31,7 @@ export function ScopeBar({
   onOpenFilters: () => void;
 }): React.ReactElement {
   return (
-    <nav className="sessions-scope" aria-label="Jump to">
+    <nav className="sessions-scope" aria-label={t("web.sessions.jumpTo")}>
       <div className="sessions-scope-strip">
         {items.map((item) => {
           const strong = item.kind === "year";
@@ -59,7 +60,7 @@ export function ScopeBar({
         <button
           type="button"
           onClick={onOpenFilters}
-          aria-label="Filters"
+          aria-label={t("web.sessions.filters")}
           aria-pressed={filtersActive}
           className="sessions-scope-filters"
           style={{

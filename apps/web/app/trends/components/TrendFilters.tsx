@@ -1,5 +1,6 @@
 import React from "react";
 import { TREND_DISCIPLINES, TREND_RANGES, type TrendsFeature } from "@sendtally/features/trends";
+import { t, upper } from "@sendtally/features/i18n";
 import { chipStyle } from "../../components/chip";
 
 export function TrendFilters({ feature }: { feature: TrendsFeature }): React.ReactElement {
@@ -37,7 +38,7 @@ export function TrendFilters({ feature }: { feature: TrendsFeature }): React.Rea
       {tagOptions.length > 0 && (
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           <button onClick={clearTags} style={chipStyle(selectedTags.length === 0)}>
-            ALL TAGS
+            {upper(t("web.trends.allTags"))}
           </button>
           {tagOptions.map((tag) => (
             <button

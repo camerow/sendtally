@@ -2,6 +2,7 @@ import React from "react";
 import { Pressable, Text, View } from "react-native";
 import type { SessionRow as SessionRowData } from "@sendtally/api-client";
 import { sessionDay, sessionGradeLabels, sessionMetaLabel } from "@sendtally/features/sessions";
+import { t } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { Icon } from "../../components/Icon";
 import { pressRow } from "../../lib/press";
@@ -23,7 +24,12 @@ export function SessionRow({ session, title, onPress }: SessionRowProps): React.
   const { weekday, day } = sessionDay(session);
   const meta = sessionMetaLabel(session);
   const onStrava = session.strava_activity_id !== null;
-  const spoken = [title, `${weekday} ${day}`, meta, onStrava ? "posted to Strava" : null]
+  const spoken = [
+    title,
+    `${weekday} ${day}`,
+    meta,
+    onStrava ? t("mobile.sessions.postedToStrava") : null,
+  ]
     .filter((part) => part !== null)
     .join(", ");
 

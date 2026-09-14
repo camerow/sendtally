@@ -3,6 +3,7 @@ import type { LoaderFunctionArgs } from "react-router";
 import { useLoaderData, useSearchParams } from "react-router";
 import type { Membership } from "@sendtally/api-client";
 import { Badge, Label } from "@sendtally/design";
+import { t, upper } from "@sendtally/features/i18n";
 import { membershipVM } from "@sendtally/features/billing";
 import { MEMBER_BENEFITS } from "@sendtally/features/billing";
 import { MembershipPricing, SUBSCRIBED_PARAM } from "../billing/components/MembershipPricing";
@@ -55,9 +56,9 @@ export default function MembershipRoute(): React.ReactElement {
               letterSpacing: "-0.03em",
             }}
           >
-            Membership
+            {t("web.billing.title")}
           </h1>
-          {isMember && <Badge tone="petal">MEMBER</Badge>}
+          {isMember && <Badge tone="petal">{upper(t("web.billing.member"))}</Badge>}
         </div>
         <p
           style={{
@@ -69,8 +70,7 @@ export default function MembershipRoute(): React.ReactElement {
             textWrap: "pretty",
           }}
         >
-          Logging sessions and posting them to Strava are free and always will be. Membership is
-          what turns the log into a training history, and it is what pays for the server.
+          {t("web.billing.intro")}
         </p>
       </div>
 
@@ -97,7 +97,9 @@ export default function MembershipRoute(): React.ReactElement {
               }}
             >
               {benefit.title}
-              {benefit.soon === true && <Label on="accent">COMING SOON</Label>}
+              {benefit.soon === true && (
+                <Label on="accent">{upper(t("web.billing.comingSoon"))}</Label>
+              )}
             </span>
             <span
               style={{

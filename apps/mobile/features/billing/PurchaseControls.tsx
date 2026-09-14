@@ -1,10 +1,11 @@
 import React from "react";
 import { ActivityIndicator, Linking, Pressable, Text, View } from "react-native";
 import type { PurchasesPackage } from "react-native-purchases";
+import { t } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { WEB_URL } from "../../lib/config";
 import { PlanPicker } from "./PlanPicker";
-import { defaultPackage, packageLabel, STORE_NAME, storeBillingAvailable } from "./store";
+import { defaultPackage, packageLabel, storeBillingAvailable, storeLabel } from "./store";
 import type { PurchaseFeature } from "./usePurchase";
 import { press } from "../../lib/press";
 
@@ -44,7 +45,7 @@ export function PurchaseControls({ purchase }: PurchaseControlsProps): React.Rea
         <Text
           style={{ fontFamily: fonts.sans, fontSize: 13, lineHeight: 20, color: colors.gunmetal }}
         >
-          {`Plans could not be loaded from ${STORE_NAME} right now. Check your connection and reopen the app to try again.`}
+          {t("mobile.billing.plansUnavailable", { store: storeLabel() })}
         </Text>
       ) : (
         <>
@@ -72,15 +73,15 @@ export function PurchaseControls({ purchase }: PurchaseControlsProps): React.Rea
             ) : (
               <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 15, color: colors.white }}>
                 {selected === null
-                  ? "Become a member"
-                  : `Become a member · ${packageLabel(selected)}`}
+                  ? t("mobile.billing.becomeAMember")
+                  : t("mobile.billing.becomeAMemberPlan", { plan: packageLabel(selected) })}
               </Text>
             )}
           </Pressable>
           <Text
             style={{ fontFamily: fonts.sans, fontSize: 12, lineHeight: 18, color: colors.gunmetal }}
           >
-            {`Billed through ${STORE_NAME}. Renews automatically until you cancel, which you can do any time from your ${STORE_NAME} subscriptions.`}
+            {t("mobile.billing.renewalNote", { store: storeLabel() })}
           </Text>
         </>
       )}
@@ -91,11 +92,19 @@ export function PurchaseControls({ purchase }: PurchaseControlsProps): React.Rea
           style={press({ minHeight: 44, justifyContent: "center" })}
         >
           <Text style={legalLink}>
-            {purchase.status === "restoring" ? "Restoring…" : "Restore purchases"}
+            {purchase.status === "restoring"
+              ? t("mobile.billing.restoring")
+              : t("mobile.billing.restorePurchases")}
           </Text>
         </Pressable>
-        <LegalLink label="Terms" onPress={() => void Linking.openURL(`${WEB_URL}/terms`)} />
-        <LegalLink label="Privacy" onPress={() => void Linking.openURL(`${WEB_URL}/privacy`)} />
+        <LegalLink
+          label={t("mobile.billing.terms")}
+          onPress={() => void Linking.openURL(`${WEB_URL}/terms`)}
+        />
+        <LegalLink
+          label={t("mobile.billing.privacy")}
+          onPress={() => void Linking.openURL(`${WEB_URL}/privacy`)}
+        />
       </View>
       {purchase.error !== null && (
         <Text

@@ -1,6 +1,7 @@
 import React from "react";
 import type { GradeScales } from "@sendtally/api-client";
 import type { GradeScalesFeature } from "@sendtally/features/settings";
+import { t, type MessageKey } from "@sendtally/features/i18n";
 import { messageText } from "./styles";
 
 export type GradeScaleSectionProps = {
@@ -8,12 +9,12 @@ export type GradeScaleSectionProps = {
 };
 
 const ROWS: Array<{
-  title: string;
+  title: MessageKey;
   options: Array<{ label: string; patch: Partial<GradeScales> }>;
   active: (current: GradeScales) => string;
 }> = [
   {
-    title: "Boulders",
+    title: "web.settings.boulders",
     options: [
       { label: "V", patch: { boulder: "v" } },
       { label: "FONT", patch: { boulder: "font" } },
@@ -21,7 +22,7 @@ const ROWS: Array<{
     active: (current) => (current.boulder === "v" ? "V" : "FONT"),
   },
   {
-    title: "Routes",
+    title: "web.settings.routes",
     options: [
       { label: "YDS", patch: { route: "yds" } },
       { label: "FRENCH", patch: { route: "french" } },
@@ -61,7 +62,7 @@ export function GradeScaleSection({ scales }: GradeScaleSectionProps): React.Rea
               flexWrap: "wrap",
             }}
           >
-            <span style={{ fontWeight: 600, fontSize: 13 }}>{row.title}</span>
+            <span style={{ fontWeight: 600, fontSize: 13 }}>{t(row.title)}</span>
             <div style={{ display: "flex", gap: 8 }}>
               {row.options.map((option) => (
                 <button

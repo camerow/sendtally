@@ -1,5 +1,5 @@
 import React from "react";
-import { COPY } from "../copy";
+import { useLanding } from "../LandingContext";
 
 function DetailRow({
   label,
@@ -35,19 +35,20 @@ function DetailRow({
 }
 
 export function Details(): React.ReactElement {
+  const { copy } = useLanding();
   return (
     <div id="details" className="l-details">
       <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
         <h2 className="l-section-title" style={{ color: "var(--bs-gunmetal)" }}>
-          {COPY.details.title}
+          {copy.details.title}
         </h2>
         <div style={{ display: "flex", flexDirection: "column" }}>
-          {COPY.details.rows.map((row, i) => (
+          {copy.details.rows.map((row, i) => (
             <DetailRow
               key={row.label}
               label={row.label}
               body={row.body}
-              last={i === COPY.details.rows.length - 1}
+              last={i === copy.details.rows.length - 1}
             />
           ))}
         </div>

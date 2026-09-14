@@ -3,12 +3,13 @@ import { Pressable, Text, View } from "react-native";
 import type { SessionRow } from "@sendtally/api-client";
 import {
   UNTAGGED_KEY,
-  UNTAGGED_LABEL,
+  untaggedLabel,
   countLabel,
   filterSessionsByTags,
   type SessionGrouping,
   type TagOption,
 } from "@sendtally/features/sessions";
+import { t, upper } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { Chip } from "../../components/Chip";
 import { Sheet } from "../../components/Sheet";
@@ -61,7 +62,7 @@ export function FilterSheet({
   const count = filterSessionsByTags(sessions, draft.tags).length;
 
   return (
-    <Sheet visible={visible} onClose={onClose} closeLabel="Close filters">
+    <Sheet visible={visible} onClose={onClose} closeLabel={t("mobile.sessions.closeFilters")}>
       <View style={{ gap: 18, paddingTop: 2, paddingHorizontal: 18, paddingBottom: 18 }}>
         <View
           style={{ flexDirection: "row", alignItems: "baseline", justifyContent: "space-between" }}
@@ -74,7 +75,7 @@ export function FilterSheet({
               color: colors.gunmetal,
             }}
           >
-            Filters
+            {t("mobile.sessions.filters")}
           </Text>
           <Pressable
             onPress={() => setDraft({ grouping: "month", tags: [] })}
@@ -90,17 +91,21 @@ export function FilterSheet({
                 color: colors.azureInk,
               }}
             >
-              CLEAR
+              {upper(t("mobile.sessions.clear"))}
             </Text>
           </Pressable>
         </View>
         <View style={{ gap: 9 }}>
-          <Text style={label}>GROUP BY</Text>
+          <Text style={label}>{upper(t("mobile.sessions.groupBy"))}</Text>
           <View style={{ flexDirection: "row", gap: 8 }}>
             {(["month", "tag"] as const).map((value) => (
               <Chip
                 key={value}
-                label={value.toUpperCase()}
+                label={upper(
+                  value === "month"
+                    ? t("mobile.sessions.groupMonth")
+                    : t("mobile.sessions.groupTag")
+                )}
                 active={draft.grouping === value}
                 onPress={() => setDraft((prev) => ({ ...prev, grouping: value }))}
               />
@@ -109,19 +114,19 @@ export function FilterSheet({
         </View>
         {tagOptions.length > 0 && (
           <View style={{ gap: 9 }}>
-            <Text style={label}>TAGS</Text>
+            <Text style={label}>{upper(t("mobile.sessions.tags"))}</Text>
             <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
               {tagOptions.map((tag) => (
                 <Chip
                   key={tag.slug}
-                  label={`${tag.name.toUpperCase()} ${tag.count}`}
+                  label={`${upper(tag.name)} ${tag.count}`}
                   active={draft.tags.includes(tag.slug)}
                   onPress={() => toggleTag(tag.slug)}
                 />
               ))}
               {untaggedCount > 0 && (
                 <Chip
-                  label={`${UNTAGGED_LABEL.toUpperCase()} ${untaggedCount}`}
+                  label={`${upper(untaggedLabel())} ${untaggedCount}`}
                   active={draft.tags.includes(UNTAGGED_KEY)}
                   onPress={() => toggleTag(UNTAGGED_KEY)}
                 />
@@ -142,7 +147,7 @@ export function FilterSheet({
           })}
         >
           <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 15, color: colors.white }}>
-            Show {countLabel(count).toLowerCase()}
+            {t("mobile.sessions.showCount", { sessions: countLabel(count).toLowerCase() })}
           </Text>
         </Pressable>
       </View>

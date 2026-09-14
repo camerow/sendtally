@@ -9,6 +9,14 @@ export type TrendCopy = {
   memberLine: string;
 };
 
+export type HeroFeatureCopy = {
+  key: "trends" | "tags" | "effort" | "pyramid" | "projects" | "strava";
+  eyebrow: string;
+  cardTitle: string;
+  cardCaption: string;
+  chartLabel?: string;
+};
+
 export type FreeFeatureCopy = {
   eyebrow: string;
   title: string;
@@ -78,7 +86,7 @@ export const COPY = {
         cardCaption: "TODAY AT 6:42 PM",
         chartLabel: "SENDS BY GRADE",
       },
-    ] as const,
+    ] satisfies [HeroFeatureCopy, ...HeroFeatureCopy[]],
     title: "Your new favorite climbing journal",
     body: "Quickly and easily log your sessions - grades, sends, attempts. Use RPE to track effort over time. Post to Strava to see your climbing with your other activities. Membership adds trends and insight: volume, grade pyramid, hardest send, flash rate and average grade.",
   },
@@ -281,4 +289,6 @@ export const COPY = {
       { label: "Support", href: "/support" },
     ],
   },
-} as const;
+};
+
+export type LandingCopy = typeof COPY;

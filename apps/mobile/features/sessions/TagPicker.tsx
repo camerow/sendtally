@@ -1,6 +1,7 @@
 import React from "react";
 import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import { tagMatches, type TagOption } from "@sendtally/features/sessions";
+import { t, upper } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { Chip } from "../../components/Chip";
 import { pressRow } from "../../lib/press";
@@ -17,7 +18,7 @@ export type TagPickerProps = {
 export function TagPicker({
   tags,
   suggestions,
-  placeholder = "Add a tag",
+  placeholder,
   disabled = false,
   onAdd,
   onRemove,
@@ -64,7 +65,7 @@ export function TagPicker({
             onPress={() => onRemove(tag)}
             disabled={disabled}
             hitSlop={5}
-            accessibilityLabel={`Remove ${tag}`}
+            accessibilityLabel={t("mobile.sessions.removeTag", { tag })}
             style={pressRow({
               flexDirection: "row",
               alignItems: "center",
@@ -93,7 +94,11 @@ export function TagPicker({
         <TextInput
           ref={inputRef}
           value={entry}
-          placeholder={tags.length === 0 ? placeholder : "Add a tag"}
+          placeholder={
+            tags.length === 0
+              ? (placeholder ?? t("mobile.sessions.addATag"))
+              : t("mobile.sessions.addATag")
+          }
           placeholderTextColor={colors.textFaint}
           editable={!disabled}
           autoCapitalize="words"
@@ -135,7 +140,7 @@ export function TagPicker({
                 color: colors.textMuted,
               }}
             >
-              RECENT
+              {upper(t("mobile.sessions.recent"))}
             </Text>
           )}
           {options.map((option) => (
@@ -148,7 +153,7 @@ export function TagPicker({
           ))}
           {create !== null && (
             <Chip
-              label={`+ CREATE “${create.toUpperCase()}”`}
+              label={upper(t("mobile.sessions.createTag", { name: create }))}
               active={false}
               dashed
               onPress={() => pick(create)}

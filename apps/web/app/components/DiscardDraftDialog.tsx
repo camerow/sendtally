@@ -1,5 +1,6 @@
 import React from "react";
 import type { StoredSessionDraft } from "@sendtally/features/log-session";
+import { formatDate, t } from "@sendtally/features/i18n";
 
 export function DiscardDraftDialog({
   stored,
@@ -12,7 +13,7 @@ export function DiscardDraftDialog({
 }): React.ReactElement {
   const ref = React.useRef<HTMLDialogElement>(null);
   const count = stored.draft.climbs.length;
-  const day = stored.savedAt.toLocaleDateString([], { weekday: "long" });
+  const day = formatDate(stored.savedAt, { weekday: "long" });
 
   const cancel = React.useRef(onCancel);
   React.useEffect(() => {
@@ -46,18 +47,17 @@ export function DiscardDraftDialog({
           letterSpacing: "-0.02em",
         }}
       >
-        Discard this draft?
+        {t("web.components.discardDraftTitle")}
       </h2>
       <p style={{ margin: 0, fontSize: 14, lineHeight: 1.55, color: "rgba(64,63,76,0.88)" }}>
-        The {count} {count === 1 ? "climb" : "climbs"} you logged for {day} will be deleted from
-        this device. This can&rsquo;t be undone.
+        {t("web.components.discardDraftBody", { count, day })}
       </p>
       <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 4 }}>
         <button type="button" autoFocus onClick={onCancel} className="confirm-dialog-cancel">
-          Cancel
+          {t("web.shell.cancel")}
         </button>
         <button type="button" onClick={onDiscard} className="confirm-dialog-confirm">
-          Discard
+          {t("web.components.discard")}
         </button>
       </div>
     </dialog>

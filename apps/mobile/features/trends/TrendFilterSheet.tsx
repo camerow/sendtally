@@ -1,6 +1,7 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
-import { UNTAGGED_KEY, UNTAGGED_LABEL, type TagOption } from "@sendtally/features/sessions";
+import { UNTAGGED_KEY, untaggedLabel, type TagOption } from "@sendtally/features/sessions";
+import { t, upper } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { Chip } from "../../components/Chip";
 import { Sheet } from "../../components/Sheet";
@@ -45,7 +46,7 @@ export function TrendFilterSheet({
     setDraft((prev) => (prev.includes(slug) ? prev.filter((s) => s !== slug) : [...prev, slug]));
 
   return (
-    <Sheet visible={visible} onClose={onClose} closeLabel="Close filters">
+    <Sheet visible={visible} onClose={onClose} closeLabel={t("mobile.trends.closeFilters")}>
       <View style={{ gap: 18, paddingTop: 2, paddingHorizontal: 18, paddingBottom: 18 }}>
         <View
           style={{ flexDirection: "row", alignItems: "baseline", justifyContent: "space-between" }}
@@ -58,7 +59,7 @@ export function TrendFilterSheet({
               color: colors.gunmetal,
             }}
           >
-            Filters
+            {t("mobile.trends.filters")}
           </Text>
           <Pressable
             onPress={() => setDraft([])}
@@ -74,12 +75,12 @@ export function TrendFilterSheet({
                 color: colors.azureInk,
               }}
             >
-              CLEAR
+              {upper(t("mobile.trends.clear"))}
             </Text>
           </Pressable>
         </View>
         <View style={{ gap: 9 }}>
-          <Text style={label}>TAGS</Text>
+          <Text style={label}>{upper(t("mobile.trends.tags"))}</Text>
           <Text
             style={{
               fontFamily: fonts.sans,
@@ -88,20 +89,20 @@ export function TrendFilterSheet({
               color: colors.textSecondary,
             }}
           >
-            Every trend below is drawn from the sessions carrying these tags.
+            {t("mobile.trends.tagsBody")}
           </Text>
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
             {tagOptions.map((tag) => (
               <Chip
                 key={tag.slug}
-                label={`${tag.name.toUpperCase()} ${tag.count}`}
+                label={`${upper(tag.name)} ${tag.count}`}
                 active={draft.includes(tag.slug)}
                 onPress={() => toggle(tag.slug)}
               />
             ))}
             {untaggedCount > 0 && (
               <Chip
-                label={`${UNTAGGED_LABEL.toUpperCase()} ${untaggedCount}`}
+                label={`${upper(untaggedLabel())} ${untaggedCount}`}
                 active={draft.includes(UNTAGGED_KEY)}
                 onPress={() => toggle(UNTAGGED_KEY)}
               />
@@ -121,7 +122,7 @@ export function TrendFilterSheet({
           })}
         >
           <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 15, color: colors.white }}>
-            {draft.length === 0 ? "Show all sessions" : "Show these trends"}
+            {draft.length === 0 ? t("mobile.trends.showAll") : t("mobile.trends.showThese")}
           </Text>
         </Pressable>
       </View>

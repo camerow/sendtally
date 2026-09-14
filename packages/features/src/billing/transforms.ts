@@ -1,12 +1,13 @@
 import type { Entitlements, StoreMembership } from "@sendtally/api-client";
+import { formatDate, t, upper, type MessageKey } from "../i18n";
 import type { MembershipManagedIn, MembershipPlan, MembershipVM } from "./types";
 
-const STORE_NAMES: Record<MembershipManagedIn, string> = {
-  web: "sendtally.com",
-  play_store: "Google Play",
-  app_store: "the App Store",
-  test_store: "the test store",
-  other: "your store",
+const STORE_NAMES: Record<MembershipManagedIn, MessageKey> = {
+  web: "billing.storeWeb",
+  play_store: "billing.storePlay",
+  app_store: "billing.storeApp",
+  test_store: "billing.storeTest",
+  other: "billing.storeOther",
 };
 
 export function managedInOf(store: string): MembershipManagedIn {
@@ -17,12 +18,12 @@ export function managedInOf(store: string): MembershipManagedIn {
 }
 
 export function storeName(managedIn: MembershipManagedIn): string {
-  return STORE_NAMES[managedIn];
+  return t(STORE_NAMES[managedIn]);
 }
 
-const PLAN_LABELS: Record<MembershipPlan, string> = {
-  monthly: "Monthly plan",
-  yearly: "Yearly plan",
+const PLAN_LABELS: Record<MembershipPlan, MessageKey> = {
+  monthly: "billing.monthlyPlan",
+  yearly: "billing.yearlyPlan",
 };
 
 export function planOf(productId: string | undefined): MembershipPlan | null {
@@ -33,21 +34,17 @@ export function planOf(productId: string | undefined): MembershipPlan | null {
 }
 
 export function planLabel(plan: MembershipPlan): string {
-  return PLAN_LABELS[plan];
+  return t(PLAN_LABELS[plan]);
 }
 
 export function formatRenewalDate(iso: string): string {
-  return new Date(iso).toLocaleDateString(undefined, {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
+  return formatDate(new Date(iso), { day: "numeric", month: "short", year: "numeric" });
 }
 
 function renewalLine(store: StoreMembership): string {
-  if (store.expiresAt === null) return "Lifetime";
+  if (store.expiresAt === null) return t("billing.lifetime");
   const date = formatRenewalDate(store.expiresAt);
-  return store.willRenew ? `Renews ${date}` : `Ends ${date}`;
+  return t(store.willRenew ? "billing.renews" : "billing.ends", { date });
 }
 
 export function membershipVM(entitlements: Entitlements | null): MembershipVM {
@@ -55,7 +52,7 @@ export function membershipVM(entitlements: Entitlements | null): MembershipVM {
   if (membership === null || !membership.active) {
     return {
       active: false,
-      statusLabel: "NOT A MEMBER",
+      statusLabel: upper(t("billing.notAMember")),
       managedIn: null,
       plan: null,
       renewalLine: null,
@@ -65,7 +62,9 @@ export function membershipVM(entitlements: Entitlements | null): MembershipVM {
     const managedIn = managedInOf(membership.store.store);
     return {
       active: true,
-      statusLabel: `MEMBER · ${storeName(managedIn).replace("the ", "").toUpperCase()}`,
+      statusLabel: upper(
+        t("billing.memberVia", { store: storeName(managedIn).replace("the ", "") })
+      ),
       managedIn,
       plan: planOf(membership.store.productId),
       renewalLine: renewalLine(membership.store),
@@ -73,7 +72,7 @@ export function membershipVM(entitlements: Entitlements | null): MembershipVM {
   }
   return {
     active: true,
-    statusLabel: "MEMBER · WEB",
+    statusLabel: upper(t("billing.memberWeb")),
     managedIn: "web",
     plan: null,
     renewalLine: null,

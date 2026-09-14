@@ -2,6 +2,7 @@ import { router } from "expo-router";
 import React from "react";
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import { TILE_BREAKDOWN_ROWS, useTrends } from "@sendtally/features/trends";
+import { t, upper } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { useApi } from "../../lib/api";
 import { TrendBars } from "./TrendBars";
@@ -20,14 +21,14 @@ export function TrendsList(): React.ReactElement {
       {state.status === "loading" && <ActivityIndicator color={colors.gunmetal} />}
       {state.status === "error" && (
         <Text style={{ fontFamily: fonts.mono, fontSize: 12, color: colors.watermelonInk }}>
-          Could not load trends. Pull to retry.
+          {t("mobile.trends.loadFailedPull")}
         </Text>
       )}
       {state.status === "ready" &&
-        state.data.tiles.map((t) => (
+        state.data.tiles.map((tile) => (
           <Pressable
-            key={t.metric}
-            onPress={() => router.push(`/trend/${t.metric}`)}
+            key={tile.metric}
+            onPress={() => router.push(`/trend/${tile.metric}`)}
             style={pressRow({
               backgroundColor: colors.white,
               borderWidth: 1,
@@ -53,7 +54,7 @@ export function TrendsList(): React.ReactElement {
                   color: colors.watermelonInk,
                 }}
               >
-                {t.label}
+                {tile.label}
               </Text>
               <Text
                 style={{
@@ -63,7 +64,7 @@ export function TrendsList(): React.ReactElement {
                   color: colors.textSecondary,
                 }}
               >
-                DETAILS →
+                {upper(t("mobile.trends.details"))}
               </Text>
             </View>
             <Text
@@ -74,7 +75,7 @@ export function TrendsList(): React.ReactElement {
                 color: colors.gunmetal,
               }}
             >
-              {t.value}
+              {tile.value}
             </Text>
             <Text
               style={{
@@ -84,15 +85,15 @@ export function TrendsList(): React.ReactElement {
                 color: colors.textSecondary,
               }}
             >
-              {t.caption}
+              {tile.caption}
             </Text>
             <View style={{ marginTop: 2 }}>
-              <TrendBars bars={t.bars} height={38} />
+              <TrendBars bars={tile.bars} height={38} />
             </View>
             <TrendTagBreakdown
               compact
-              title="BY TAG"
-              rows={state.data.details[t.metric].breakdown.slice(0, TILE_BREAKDOWN_ROWS)}
+              title={upper(t("mobile.trends.byTag"))}
+              rows={state.data.details[tile.metric].breakdown.slice(0, TILE_BREAKDOWN_ROWS)}
             />
           </Pressable>
         ))}

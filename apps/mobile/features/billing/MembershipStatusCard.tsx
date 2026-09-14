@@ -1,5 +1,6 @@
 import React from "react";
 import { Text, View } from "react-native";
+import { upper } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 
 export type MembershipStatusCardProps = {
@@ -61,7 +62,7 @@ export function MembershipStatusCard({
               color: colors.textSecondary,
             }}
           >
-            {detail.toUpperCase()}
+            {upper(detail)}
           </Text>
         )}
       </View>

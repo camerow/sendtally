@@ -3,6 +3,7 @@ import { Redirect, Tabs } from "expo-router";
 import React from "react";
 import { View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { t, upper } from "@sendtally/features/i18n";
 import { colors, fonts } from "@sendtally/design/tokens";
 import { Icon, type IconName } from "../../components/Icon";
 
@@ -60,19 +61,19 @@ export default function TabsLayout(): React.ReactElement | null {
     >
       <Tabs.Screen
         name="sessions"
-        options={{ tabBarLabel: "SESSIONS", tabBarIcon: tabIcon("sessions") }}
+        options={{ tabBarLabel: upper(t("mobile.tabs.sessions")), tabBarIcon: tabIcon("sessions") }}
       />
       <Tabs.Screen
         name="projects"
-        options={{ tabBarLabel: "PROJECTS", tabBarIcon: tabIcon("projects") }}
+        options={{ tabBarLabel: upper(t("mobile.tabs.projects")), tabBarIcon: tabIcon("projects") }}
       />
       <Tabs.Screen
         name="trends"
-        options={{ tabBarLabel: "TRENDS", tabBarIcon: tabIcon("trends") }}
+        options={{ tabBarLabel: upper(t("mobile.tabs.trends")), tabBarIcon: tabIcon("trends") }}
       />
       <Tabs.Screen
         name="settings"
-        options={{ tabBarLabel: "SETTINGS", tabBarIcon: tabIcon("settings") }}
+        options={{ tabBarLabel: upper(t("mobile.tabs.settings")), tabBarIcon: tabIcon("settings") }}
       />
     </Tabs>
   );

@@ -1,6 +1,7 @@
 import React from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
 import type { StravaPostingFeature } from "@sendtally/features/settings";
+import { t } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { bodyText, messageText } from "../../lib/styles";
 import { press } from "../../lib/press";
@@ -72,18 +73,16 @@ export function StravaPostingSection({ posting }: StravaPostingSectionProps): Re
         }}
       >
         <View style={{ flex: 1, gap: 3 }}>
-          <Text style={rowTitle}>Post sessions automatically</Text>
+          <Text style={rowTitle}>{t("mobile.settings.postAutomatically")}</Text>
           <Text style={bodyText}>
-            {posting.enabled
-              ? "Logged sessions post to your feed as Rock Climbing activities."
-              : "Off. Each session page keeps its own Post to Strava button."}
+            {posting.enabled ? t("mobile.settings.postingOn") : t("mobile.settings.postingOff")}
           </Text>
         </View>
         <Switch
           checked={posting.enabled}
           onChange={posting.setEnabled}
           disabled={posting.busy}
-          label="Post sessions automatically"
+          label={t("mobile.settings.postAutomatically")}
         />
       </View>
 
@@ -91,8 +90,8 @@ export function StravaPostingSection({ posting }: StravaPostingSectionProps): Re
         <>
           <View style={{ borderTopWidth: 1, borderTopColor: colors.lineOnLight }} />
           <View style={{ gap: 8 }}>
-            <Text style={rowTitle}>Post sessions logged from</Text>
-            <Text style={bodyText}>Anything earlier stays in sendtally only.</Text>
+            <Text style={rowTitle}>{t("mobile.settings.postSince")}</Text>
+            <Text style={bodyText}>{t("mobile.settings.postSinceBody")}</Text>
             <TextInput
               value={posting.since}
               placeholder="YYYY-MM-DD"

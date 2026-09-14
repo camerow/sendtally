@@ -15,6 +15,7 @@ import {
   type Discipline,
   type GradePrefs,
 } from "@sendtally/features/log-session";
+import { t, upper } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { Chip } from "../../components/Chip";
 import { Icon } from "../../components/Icon";
@@ -139,7 +140,11 @@ function DisciplineToggle({
                 color: active ? colors.gunmetal : colors.textFaint,
               }}
             >
-              {discipline === "boulder" ? "BOULDER" : "ROUTE"}
+              {upper(
+                discipline === "boulder"
+                  ? t("mobile.logSession.boulder")
+                  : t("mobile.logSession.route")
+              )}
             </Text>
           </Pressable>
         );
@@ -219,7 +224,7 @@ function ProjectRow({
       disabled={!enabled}
       accessibilityRole="checkbox"
       accessibilityState={{ checked: on, disabled: !enabled }}
-      accessibilityLabel="Project"
+      accessibilityLabel={t("mobile.logSession.project")}
       style={press({
         flexDirection: "row",
         alignItems: "center",
@@ -241,7 +246,7 @@ function ProjectRow({
       />
       <View style={{ flex: 1, gap: 2 }}>
         <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 14, color: colors.gunmetal }}>
-          {on ? "Project" : "Mark as project"}
+          {on ? t("mobile.logSession.project") : t("mobile.logSession.markAsProject")}
         </Text>
         {on && meta !== null && (
           <Text
@@ -301,7 +306,11 @@ export function ClimbEditorSheet({
   const showList = nameFocused && suggestions.length > 0;
 
   return (
-    <Sheet visible={current !== null} onClose={onClose} closeLabel="Close climb editor">
+    <Sheet
+      visible={current !== null}
+      onClose={onClose}
+      closeLabel={t("mobile.logSession.closeEditor")}
+    >
       {climb !== null && (
         <View style={{ gap: 14, paddingTop: 2, paddingHorizontal: 18, paddingBottom: 4 }}>
           <View
@@ -312,7 +321,7 @@ export function ClimbEditorSheet({
             }}
           >
             <Text style={{ ...label, color: colors.watermelonInk }}>
-              CLIMB {index + 1} OF {count}
+              {upper(t("mobile.logSession.climbOf", { n: index + 1, total: count }))}
             </Text>
             {count > 1 && (
               <Pressable
@@ -321,7 +330,9 @@ export function ClimbEditorSheet({
                 accessibilityRole="button"
                 style={press({})}
               >
-                <Text style={{ ...label, color: colors.textFaint }}>REMOVE</Text>
+                <Text style={{ ...label, color: colors.textFaint }}>
+                  {upper(t("mobile.logSession.remove"))}
+                </Text>
               </Pressable>
             )}
           </View>
@@ -335,7 +346,7 @@ export function ClimbEditorSheet({
                 gap: 12,
               }}
             >
-              <Text style={label}>GRADE</Text>
+              <Text style={label}>{upper(t("mobile.logSession.grade"))}</Text>
               <DisciplineToggle
                 value={disciplineOf(climb.scale)}
                 onChange={(discipline) => onChange(withClimbDiscipline(climb, discipline, prefs))}
@@ -362,10 +373,10 @@ export function ClimbEditorSheet({
           </View>
 
           <View style={{ gap: 7 }}>
-            <Text style={label}>NAME · OPTIONAL</Text>
+            <Text style={label}>{upper(t("mobile.logSession.nameOptional"))}</Text>
             <TextInput
               value={climb.name}
-              placeholder="Name (optional)"
+              placeholder={t("mobile.logSession.namePlaceholder")}
               placeholderTextColor={colors.textFaint}
               autoCorrect={false}
               returnKeyType="done"
@@ -396,7 +407,7 @@ export function ClimbEditorSheet({
               >
                 {climb.name.trim() === "" && (
                   <Text style={{ ...label, fontSize: 9, color: colors.textMuted, padding: 4 }}>
-                    RECENT
+                    {upper(t("mobile.logSession.recent"))}
                   </Text>
                 )}
                 {suggestions.map((candidate) => (
@@ -405,7 +416,9 @@ export function ClimbEditorSheet({
                     onPress={() => onPick(candidate)}
                     accessibilityRole="button"
                     accessibilityLabel={
-                      candidate.project ? `${candidate.name}, project` : candidate.name
+                      candidate.project
+                        ? t("mobile.logSession.candidateProject", { name: candidate.name })
+                        : candidate.name
                     }
                     style={pressRow({
                       flexDirection: "row",
@@ -444,7 +457,7 @@ export function ClimbEditorSheet({
                             color: colors.gunmetal,
                           }}
                         >
-                          PROJECT
+                          {upper(t("mobile.logSession.projectBadge"))}
                         </Text>
                       )}
                     </View>
@@ -488,7 +501,7 @@ export function ClimbEditorSheet({
                 />
               ))}
               <Segment
-                label="✗ ATTEMPT"
+                label={upper(t("mobile.logSession.attempt"))}
                 active={climb.kind === "attempt"}
                 activeColor={colors.gunmetal}
                 onPress={() => onChange(withClimbOutcome(climb, { kind: "attempt" }))}
@@ -538,7 +551,7 @@ export function ClimbEditorSheet({
             })}
           >
             <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 15, color: colors.white }}>
-              Done
+              {t("mobile.common.done")}
             </Text>
           </Pressable>
         </View>

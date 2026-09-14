@@ -1,5 +1,6 @@
 import React from "react";
 import type { SendtallyApi } from "@sendtally/api-client";
+import { t } from "../i18n";
 
 export type SessionNotesEditor = {
   notes: string | null;
@@ -44,7 +45,7 @@ export function useSessionNotes(
         setNotes(saved);
         setEditing(false);
       })
-      .catch(() => setError("Could not save this note. Try again."))
+      .catch(() => setError(t("sessionDetail.noteSaveFailed")))
       .finally(() => setSaving(false));
   }, [api, draft, fingerprint]);
 

@@ -1,0 +1,17 @@
+export const sessions = {
+  "sessions.climbCount_one": "{count} climb",
+  "sessions.climbCount_other": "{count} climbs",
+  "sessions.sessionCount_one": "{count} session",
+  "sessions.sessionCount_other": "{count} sessions",
+  "sessions.hoursShort": "h",
+  "sessions.minutesShort": "m",
+  "sessions.rpe": "RPE {rpe}",
+  "sessions.rpeOutOfTen": "RPE {rpe}/10",
+  "sessions.topGrade": "TOP {grade}",
+  "sessions.sentGrade": "SENT {grade}",
+  "sessions.triedGrade": "TRIED {grade}",
+  "sessions.loggedSession": "Logged session",
+  "sessions.boardSession": "Board session",
+  "sessions.untagged": "Untagged",
+  "sessions.tagsSaveFailed": "Could not save tags. Try again.",
+} as const;

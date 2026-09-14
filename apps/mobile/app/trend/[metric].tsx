@@ -3,6 +3,7 @@ import React from "react";
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTrends, type TrendMetric } from "@sendtally/features/trends";
+import { t, upper } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { TrendBars } from "../../features/trends/TrendBars";
 import { TrendFilters } from "../../features/trends/TrendFilters";
@@ -36,13 +37,10 @@ function TrendDetailLocked(): React.ReactElement {
               color: colors.watermelonInk,
             }}
           >
-            ← TRENDS
+            {upper(t("mobile.trends.backToTrends"))}
           </Text>
         </Pressable>
-        <Paywall
-          title="This one is for members."
-          body="Membership unlocks volume, RPE, average send grade and flash rate across your whole history."
-        />
+        <Paywall title={t("mobile.trends.lockedTitle")} body={t("mobile.trends.lockedBody")} />
       </ScrollView>
     </SafeAreaView>
   );
@@ -74,14 +72,14 @@ function TrendDetail(): React.ReactElement {
               color: colors.watermelonInk,
             }}
           >
-            ← TRENDS
+            {upper(t("mobile.trends.backToTrends"))}
           </Text>
         </Pressable>
         <TrendFilters feature={feature} />
         {state.status === "loading" && <ActivityIndicator color={colors.gunmetal} />}
         {state.status === "error" && (
           <Text style={{ fontFamily: fonts.mono, fontSize: 12, color: colors.watermelonInk }}>
-            Could not load trends.
+            {t("mobile.trends.loadFailed")}
           </Text>
         )}
         {state.status === "ready" && (
@@ -163,7 +161,9 @@ function TrendDetail(): React.ReactElement {
               ))}
             </View>
             <TrendTagBreakdown
-              title={`BY TAG · ${state.data.details[metric].title.toUpperCase()}`}
+              title={upper(
+                t("mobile.trends.byTagTitle", { title: state.data.details[metric].title })
+              )}
               rows={state.data.details[metric].breakdown}
             />
             <Text

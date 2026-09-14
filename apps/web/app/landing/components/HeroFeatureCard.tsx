@@ -1,6 +1,7 @@
 import React from "react";
+import type { HeroFeatureCopy } from "../copy";
+import { useLanding } from "../LandingContext";
 import { Badge, GradeBars, Label } from "@sendtally/design";
-import { COPY } from "../copy";
 import {
   EFFORT_BARS,
   EFFORT_STATS,
@@ -24,7 +25,7 @@ function Chart({
   label,
   children,
 }: {
-  label: string;
+  label?: string;
   children: React.ReactNode;
 }): React.ReactElement {
   return (
@@ -35,7 +36,7 @@ function Chart({
   );
 }
 
-function Face({ feature }: { feature: (typeof COPY.hero.features)[number] }): React.ReactElement {
+function Face({ feature }: { feature: HeroFeatureCopy }): React.ReactElement {
   if (feature.key === "tags") {
     return (
       <>
@@ -132,7 +133,8 @@ function Face({ feature }: { feature: (typeof COPY.hero.features)[number] }): Re
 }
 
 export function HeroFeatureCard({ index }: { index: number }): React.ReactElement {
-  const feature = COPY.hero.features[index] ?? COPY.hero.features[0];
+  const { copy } = useLanding();
+  const feature = copy.hero.features[index] ?? copy.hero.features[0];
   return (
     <div className="l-hero-card">
       <div key={feature.key} className="l-hero-face">

@@ -1,6 +1,6 @@
 import React from "react";
+import { useLanding } from "../LandingContext";
 import { Label } from "@sendtally/design";
-import { COPY } from "../copy";
 import { AppStores } from "./AppStores";
 import { LANDING_PHOTOS } from "../photos";
 import { Photo } from "./Photo";
@@ -11,7 +11,8 @@ import { useRotation } from "../useRotation";
 const ROTATION_MS = 3200;
 
 export function Hero(): React.ReactElement {
-  const index = useRotation(COPY.hero.features.length, ROTATION_MS);
+  const { copy } = useLanding();
+  const index = useRotation(copy.hero.features.length, ROTATION_MS);
   return (
     <div className="l-hero">
       <Photo photo={LANDING_PHOTOS.hero} className="l-hero-bg" priority />
@@ -21,12 +22,12 @@ export function Hero(): React.ReactElement {
           style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 26 }}
         >
           <h1 className="l-hero-title l-rise" style={{ animationDelay: "60ms" }}>
-            {COPY.hero.title}
+            {copy.hero.title}
           </h1>
           <div className="l-rise" style={{ animationDelay: "140ms" }}>
             <Label on="dark" style={{ letterSpacing: "0.1em" }}>
               <RotatingWord
-                words={COPY.hero.features.map((f) => f.eyebrow)}
+                words={copy.hero.features.map((f) => f.eyebrow)}
                 index={index}
                 className="l-eyebrow-slot"
               />
@@ -44,7 +45,7 @@ export function Hero(): React.ReactElement {
               textWrap: "pretty",
             }}
           >
-            {COPY.hero.body}
+            {copy.hero.body}
           </p>
           <div className="l-rise" style={{ animationDelay: "340ms" }}>
             <AppStores prominent />

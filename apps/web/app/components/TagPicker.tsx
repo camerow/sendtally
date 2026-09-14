@@ -1,5 +1,6 @@
 import React from "react";
 import { tagMatches, type TagOption } from "@sendtally/features/sessions";
+import { t, upper } from "@sendtally/features/i18n";
 
 export type TagPickerProps = {
   tags: string[];
@@ -92,7 +93,7 @@ function MarkedName({ name, query }: { name: string; query: string }): React.Rea
 export function TagPicker({
   tags,
   suggestions,
-  placeholder = "Add a tag",
+  placeholder = t("web.components.addTag"),
   disabled = false,
   onAdd,
   onRemove,
@@ -176,7 +177,7 @@ export function TagPicker({
           {tag.toUpperCase()}
           <button
             type="button"
-            aria-label={`Remove ${tag}`}
+            aria-label={t("web.components.removeTag", { tag })}
             disabled={disabled}
             onClick={(e) => {
               e.stopPropagation();
@@ -198,7 +199,7 @@ export function TagPicker({
       <input
         ref={inputRef}
         value={entry}
-        placeholder={tags.length === 0 ? placeholder : "Add a tag"}
+        placeholder={tags.length === 0 ? placeholder : t("web.components.addTag")}
         disabled={disabled}
         role="combobox"
         aria-expanded={showPopover}
@@ -247,7 +248,9 @@ export function TagPicker({
             boxShadow: "0 12px 32px rgba(20,19,26,0.14)",
           }}
         >
-          {entry.trim() === "" && <span style={columnHead}>RECENT</span>}
+          {entry.trim() === "" && (
+            <span style={columnHead}>{upper(t("web.components.recent"))}</span>
+          )}
           {options.map((option, i) => (
             <div
               key={option.slug}
@@ -279,7 +282,7 @@ export function TagPicker({
                 }}
               >
                 <Plus />
-                <span>CREATE “{create.toUpperCase()}”</span>
+                <span>{upper(t("web.components.createTag", { name: create }))}</span>
               </div>
             </>
           )}

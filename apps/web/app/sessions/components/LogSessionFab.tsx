@@ -1,5 +1,6 @@
 import React from "react";
 import { Link } from "react-router";
+import { t } from "@sendtally/features/i18n";
 
 export function LogSessionFab(): React.ReactElement {
   return (
@@ -18,7 +19,7 @@ export function LogSessionFab(): React.ReactElement {
       >
         <path d="M8 3.6V12.4M3.6 8H12.4" />
       </svg>
-      Log a session
+      {t("web.sessions.logASession")}
     </Link>
   );
 }

@@ -2,6 +2,7 @@ import React from "react";
 import { Text, View } from "react-native";
 import type { SendtallyApi, SessionTag } from "@sendtally/api-client";
 import { useSessionTags } from "@sendtally/features/sessions";
+import { t, upper } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { TagPicker } from "./TagPicker";
 
@@ -36,8 +37,14 @@ export function SessionTags({
       }}
     >
       <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-        <Text style={{ ...heading, color: colors.watermelonInk }}>TAGS</Text>
-        {saving && <Text style={{ ...heading, color: colors.textFaint }}>SAVING…</Text>}
+        <Text style={{ ...heading, color: colors.watermelonInk }}>
+          {upper(t("mobile.sessions.tags"))}
+        </Text>
+        {saving && (
+          <Text style={{ ...heading, color: colors.textFaint }}>
+            {upper(t("mobile.common.saving"))}
+          </Text>
+        )}
         {error !== null && <Text style={{ ...heading, color: colors.watermelonInk }}>{error}</Text>}
       </View>
       <TagPicker

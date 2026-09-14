@@ -1,9 +1,10 @@
 import React from "react";
 import { ScrollView, Text, View, useWindowDimensions } from "react-native";
 import type { NativeScrollEvent, NativeSyntheticEvent } from "react-native";
+import { t } from "@sendtally/features/i18n";
 import { colors, fonts } from "@sendtally/design/tokens";
 import { SlideArt } from "./SlideArt";
-import { ONBOARDING_SLIDES, type OnboardingSlide } from "./slides";
+import { onboardingSlides, type OnboardingSlide } from "./slides";
 
 const PAGE_PADDING = 22;
 
@@ -19,7 +20,7 @@ function Dots({ count, active }: { count: number; active: number }): React.React
     <View
       accessible
       accessibilityRole="progressbar"
-      accessibilityLabel={`Feature ${active + 1} of ${count}`}
+      accessibilityLabel={t("mobile.onboarding.featureOf", { n: active + 1, total: count })}
       style={{ flexDirection: "row", gap: 7, justifyContent: "center" }}
     >
       {Array.from({ length: count }, (_, i) => (
@@ -45,10 +46,11 @@ export type OnboardingCarouselProps = {
 };
 
 export function OnboardingCarousel({
-  slides = ONBOARDING_SLIDES,
+  slides: given,
   pageWidth,
   fill = true,
 }: OnboardingCarouselProps = {}): React.ReactElement {
+  const slides = given ?? onboardingSlides();
   const window = useWindowDimensions();
   const width = pageWidth ?? window.width;
   const [active, setActive] = React.useState(0);

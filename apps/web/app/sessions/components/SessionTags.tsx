@@ -1,6 +1,7 @@
 import React from "react";
 import type { SendtallyApi, SessionTag } from "@sendtally/api-client";
 import { useSessionTags } from "@sendtally/features/sessions";
+import { t, upper } from "@sendtally/features/i18n";
 import { TagPicker } from "../../components/TagPicker";
 
 const heading: React.CSSProperties = {
@@ -39,8 +40,12 @@ export function SessionTags({
       }}
     >
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-        <span style={heading}>TAGS</span>
-        {saving && <span style={{ ...heading, color: "rgba(64,63,76,0.45)" }}>SAVING…</span>}
+        <span style={heading}>{upper(t("web.sessions.tags"))}</span>
+        {saving && (
+          <span style={{ ...heading, color: "rgba(64,63,76,0.45)" }}>
+            {upper(t("web.sessions.savingTags"))}
+          </span>
+        )}
         {error !== null && (
           <span style={{ ...heading, color: "var(--bs-watermelon-ink)" }}>{error}</span>
         )}

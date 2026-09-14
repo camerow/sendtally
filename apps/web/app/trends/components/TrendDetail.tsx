@@ -4,6 +4,7 @@ import { useClientApi } from "../../lib/useClientApi";
 import { TrendBars } from "./TrendBars";
 import { TrendFilters } from "./TrendFilters";
 import { TrendTagBreakdown } from "./TrendTagBreakdown";
+import { t, upper } from "@sendtally/features/i18n";
 import { BackLink } from "../../components/BackLink";
 
 export type TrendDetailProps = {
@@ -26,14 +27,16 @@ export function TrendDetail({ apiUrl, metric }: TrendDetailProps): React.ReactEl
 
   return (
     <div>
-      <BackLink to="/app/trends">TRENDS</BackLink>
+      <BackLink to="/app/trends">{upper(t("web.trends.back"))}</BackLink>
       <TrendFilters feature={feature} />
       {state.status === "loading" && (
-        <span style={{ ...monoMuted, display: "block", marginTop: 22 }}>LOADING…</span>
+        <span style={{ ...monoMuted, display: "block", marginTop: 22 }}>
+          {upper(t("web.shell.loading"))}
+        </span>
       )}
       {state.status === "error" && (
         <span style={{ ...monoMuted, display: "block", marginTop: 22 }}>
-          Could not load trends. Refresh to retry.
+          {t("web.trends.loadFailed")}
         </span>
       )}
       {state.status === "ready" &&
@@ -96,7 +99,7 @@ export function TrendDetail({ apiUrl, metric }: TrendDetailProps): React.ReactEl
                 ))}
               </div>
               <TrendTagBreakdown
-                title={`BY TAG · ${detail.title.toUpperCase()}`}
+                title={upper(t("web.trends.byTagTitled", { title: detail.title }))}
                 rows={detail.breakdown}
               />
               <p

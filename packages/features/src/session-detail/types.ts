@@ -1,3 +1,5 @@
+import { t } from "../i18n";
+
 export type ClimbResult = "onsight" | "flash" | "sent" | "project";
 
 export type ClimbVM = {
@@ -49,10 +51,30 @@ export type SessionDetailVM = {
 };
 
 export const CLIMB_SORTS: Array<{ value: ClimbSort; label: string }> = [
-  { value: "order", label: "Order climbed" },
-  { value: "gradeDesc", label: "Grade - hardest first" },
-  { value: "gradeAsc", label: "Grade - easiest first" },
-  { value: "burns", label: "Most burns" },
+  {
+    value: "order",
+    get label() {
+      return t("sessionDetail.sortOrder");
+    },
+  },
+  {
+    value: "gradeDesc",
+    get label() {
+      return t("sessionDetail.sortGradeDesc");
+    },
+  },
+  {
+    value: "gradeAsc",
+    get label() {
+      return t("sessionDetail.sortGradeAsc");
+    },
+  },
+  {
+    value: "burns",
+    get label() {
+      return t("sessionDetail.sortBurns");
+    },
+  },
 ];
 
 export const BOARD_LABELS: Record<string, string> = {

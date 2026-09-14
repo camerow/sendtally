@@ -1,8 +1,10 @@
 import { climbDiscipline, climbRank, dominantDiscipline } from "@sendtally/core";
 import type { ConnectionStatus, SessionClimb, SessionDetail } from "@sendtally/api-client";
 import { climbKey } from "../climbs/transforms";
+import { formatDate, t, upper } from "../i18n";
 import { sendStyleLabel } from "../log-session/types";
 import { climbGradeLabel, gradeFormatterFor } from "../sessions/grades";
+import { durationLabel as minutesLabel } from "../sessions/years";
 import type {
   ClimbFilter,
   ClimbResult,
@@ -17,10 +19,7 @@ import type {
 import { BOARD_LABELS } from "./types";
 
 export function durationLabel(startAt: string, endAt: string): string {
-  const minutes = Math.max(0, Math.round((Date.parse(endAt) - Date.parse(startAt)) / 60_000));
-  const h = Math.floor(minutes / 60);
-  const m = minutes % 60;
-  return h > 0 ? `${h}h ${String(m).padStart(2, "0")}m` : `${m}m`;
+  return minutesLabel(Math.max(0, Math.round((Date.parse(endAt) - Date.parse(startAt)) / 60_000)));
 }
 
 export function gradeLabel(vGrade: number): string {
@@ -38,7 +37,8 @@ function resultOf(c: SessionClimb, firstEncounter: boolean): ClimbResult {
 }
 
 function resultLabelOf(c: SessionClimb, result: ClimbResult): string {
-  return result === "sent" ? sendStyleLabel(climbDiscipline(c), "redpoint") : result.toUpperCase();
+  if (result === "project") return upper(t("sessionDetail.resultProject"));
+  return sendStyleLabel(climbDiscipline(c), result === "sent" ? "redpoint" : result);
 }
 
 /** Flash and onsight are both first-go sends; only the beta differs. */
@@ -48,8 +48,9 @@ function firstGo(result: ClimbResult): boolean {
 
 function restLabel(minutes: number | null): string {
   if (minutes === null || minutes <= 0) return "-";
-  if (minutes >= 60) return `${Math.floor(minutes / 60)}h ${minutes % 60}m`;
-  return `${minutes}m`;
+  const m = `${minutes % 60}${t("sessions.minutesShort")}`;
+  if (minutes >= 60) return `${Math.floor(minutes / 60)}${t("sessions.hoursShort")} ${m}`;
+  return m;
 }
 
 function topSendRank(climbs: SessionClimb[]): number {
@@ -83,7 +84,7 @@ export function climbVMs(
     const result = resultOf(c, firstEncounter);
     return {
       n: i + 1,
-      name: c.name !== "" ? c.name : "Unknown climb",
+      name: c.name !== "" ? c.name : t("sessionDetail.unknownClimb"),
       gradeLabel: climbGradeLabel(c),
       grade: c.vGrade,
       isTopSend:
@@ -128,10 +129,8 @@ export function postingStatus(status: ConnectionStatus | null): PostingStatus | 
 
 function postedLabel(session: SessionDetail, start: Date): string {
   const on = session.posted_at !== null ? new Date(session.posted_at) : start;
-  const day = on
-    .toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" })
-    .toUpperCase();
-  return `ON STRAVA · POSTED ${day}`;
+  const day = formatDate(on, { month: "short", day: "numeric", timeZone: "UTC" });
+  return upper(t("sessionDetail.postedOn", { date: day }));
 }
 
 export function postStatusVM(
@@ -145,11 +144,11 @@ export function postStatusVM(
     return { ...base, kind: "posted", label: postedLabel(session, start) };
   }
   if (session.source !== "manual") {
-    const board = BOARD_LABELS[session.board ?? ""] ?? "Board session";
-    return { ...base, kind: "legacy", label: `${board.toUpperCase()} · READ-ONLY HISTORY` };
+    const board = BOARD_LABELS[session.board ?? ""] ?? t("sessions.boardSession");
+    return { ...base, kind: "legacy", label: upper(t("sessionDetail.readOnlyHistory", { board })) };
   }
   if (session.post_state === "pending") {
-    return { ...base, kind: "pending", label: "POSTING TO STRAVA" };
+    return { ...base, kind: "pending", label: upper(t("sessionDetail.postingToStrava")) };
   }
 
   // Nothing to post to: no action, and no explanation the user can act on.
@@ -158,30 +157,30 @@ export function postStatusVM(
   if (session.post_state === "failed") {
     return {
       kind: "failed",
-      label: "NOT POSTED TO STRAVA",
+      label: upper(t("sessionDetail.notPostedToStrava")),
       detail: session.post_error,
       alert: true,
       action: postable ? "retry" : null,
-      actionLabel: postable ? "Retry" : null,
+      actionLabel: postable ? t("sessionDetail.retry") : null,
     };
   }
   if (postable && posting.since !== null && session.start_at < posting.since) {
     return {
       kind: "before-start",
-      label: "NOT POSTED TO STRAVA",
-      detail: "Earlier than your posting start date",
+      label: upper(t("sessionDetail.notPostedToStrava")),
+      detail: t("sessionDetail.beforePostingStart"),
       alert: false,
       action: "post",
-      actionLabel: "Post anyway",
+      actionLabel: t("sessionDetail.postAnyway"),
     };
   }
   return {
     kind: "off",
-    label: "LOGGED MANUALLY",
+    label: upper(t("sessionDetail.loggedManually")),
     detail: null,
     alert: false,
     action: postable ? "post" : null,
-    actionLabel: postable ? "Post to Strava" : null,
+    actionLabel: postable ? t("sessionDetail.postToStrava") : null,
   };
 }
 
@@ -211,28 +210,28 @@ export function sessionDetailVM(
     session.name !== null && session.name !== ""
       ? session.name
       : session.source === "manual"
-        ? "Logged session"
-        : (BOARD_LABELS[board ?? ""] ?? "Board session");
-  const dateLabel = start.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    timeZone: "UTC",
-  });
-  const weekday = start
-    .toLocaleDateString("en-US", { weekday: "short", timeZone: "UTC" })
-    .toUpperCase();
-  const time = start
-    .toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: "UTC" })
-    .toUpperCase();
+        ? t("sessions.loggedSession")
+        : (BOARD_LABELS[board ?? ""] ?? t("sessions.boardSession"));
+  const dateLabel = formatDate(start, { month: "short", day: "numeric", timeZone: "UTC" });
+  const weekday = upper(formatDate(start, { weekday: "short", timeZone: "UTC" }));
+  const time = upper(formatDate(start, { hour: "numeric", minute: "2-digit", timeZone: "UTC" }));
 
   const stats: StatVM[] = [
-    { label: "TIME", value: durationLabel(session.start_at, session.end_at), accent: false },
-    { label: "CLIMBS", value: String(climbs.length), accent: false },
-    { label: "SENDS", value: String(sends.length), accent: false },
-    { label: "AVG GRADE", value: avg === null ? "-" : format.average(avg), accent: false },
-    { label: "FLASHES", value: String(flashes.length), accent: false },
+    {
+      label: upper(t("sessionDetail.statTime")),
+      value: durationLabel(session.start_at, session.end_at),
+      accent: false,
+    },
+    { label: upper(t("sessionDetail.statClimbs")), value: String(climbs.length), accent: false },
+    { label: upper(t("sessionDetail.statSends")), value: String(sends.length), accent: false },
+    {
+      label: upper(t("trends.avgGrade")),
+      value: avg === null ? "-" : format.average(avg),
+      accent: false,
+    },
+    { label: upper(t("sessionDetail.statFlashes")), value: String(flashes.length), accent: false },
     { label: "RPE", value: `${session.rpe}/10`, accent: false },
-    { label: "TOP", value: topLabel, accent: true },
+    { label: upper(t("sessionDetail.statTop")), value: topLabel, accent: true },
   ];
 
   const grades = graded.map((c) => climbRank(c));
@@ -263,11 +262,14 @@ export function sessionDetailVM(
     project: climbs.filter(FILTERS.project).length,
   };
 
-  const location = session.location === null ? "" : ` · ${session.location.toUpperCase()}`;
+  const location =
+    session.location === null
+      ? ""
+      : ` · ${upper(t(session.location === "outdoor" ? "logSession.outdoor" : "logSession.indoor"))}`;
 
   return {
     title: `${titleLabel} - ${dateLabel}`,
-    meta: `${weekday} ${dateLabel.toUpperCase()} · ${time} · ${durationLabel(session.start_at, session.end_at)}${location} · RPE ${session.rpe}/10`,
+    meta: `${weekday} ${upper(dateLabel)} · ${time} · ${durationLabel(session.start_at, session.end_at)}${location} · ${t("sessions.rpeOutOfTen", { rpe: session.rpe })}`,
     editable: session.source === "manual",
     stats,
     bars,

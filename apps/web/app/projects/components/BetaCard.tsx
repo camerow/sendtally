@@ -1,4 +1,5 @@
 import React from "react";
+import { t, upper } from "@sendtally/features/i18n";
 
 export type BetaCardProps = {
   beta: string | null;
@@ -48,19 +49,19 @@ export function BetaCard({ beta, updatedLabel, onSave }: BetaCardProps): React.R
       setEditing(false);
     } catch {
       setBusy(false);
-      setError("Could not save the beta. Try again.");
+      setError(t("web.projects.betaSaveFailed"));
     }
   }
 
   return (
     <div className="project-card">
-      <span style={label}>BETA</span>
+      <span style={label}>{upper(t("web.projects.beta"))}</span>
       {editing ? (
         <textarea
           value={draft}
           rows={6}
           autoFocus
-          placeholder="The moves, the sequence, what went wrong last time"
+          placeholder={t("web.projects.betaPlaceholder")}
           onChange={(e) => setDraft(e.target.value)}
           style={{
             fontFamily: "var(--font-sans)",
@@ -84,7 +85,7 @@ export function BetaCard({ beta, updatedLabel, onSave }: BetaCardProps): React.R
             color: beta === null ? "rgba(64,63,76,0.45)" : "var(--bs-gunmetal)",
           }}
         >
-          {beta ?? "No beta yet. Write down the sequence while it is fresh."}
+          {beta ?? t("web.projects.betaEmpty")}
         </span>
       )}
       {error !== null && (
@@ -112,15 +113,15 @@ export function BetaCard({ beta, updatedLabel, onSave }: BetaCardProps): React.R
                 setEditing(false);
               }}
             >
-              CANCEL
+              {upper(t("web.shell.cancel"))}
             </button>
             <button type="button" style={linkButton} disabled={busy} onClick={() => void save()}>
-              {busy ? "SAVING…" : "SAVE"}
+              {upper(busy ? t("web.shell.saving") : t("web.projects.save"))}
             </button>
           </>
         ) : (
           <button type="button" style={linkButton} onClick={() => setEditing(true)}>
-            {beta === null ? "ADD BETA" : "EDIT"}
+            {upper(beta === null ? t("web.projects.addBeta") : t("web.projects.edit"))}
           </button>
         )}
       </div>

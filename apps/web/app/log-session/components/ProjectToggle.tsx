@@ -1,4 +1,5 @@
 import React from "react";
+import { t, upper } from "@sendtally/features/i18n";
 import { Glyph } from "./Glyph";
 import { FLAG } from "./styles";
 
@@ -18,7 +19,7 @@ export function ProjectToggle({
       type="button"
       aria-pressed={project}
       disabled={!named}
-      title={named ? undefined : "Name the climb to track it as a project"}
+      title={named ? undefined : t("web.logSession.projectHint")}
       onClick={onToggle}
       className="climb-project"
       style={{
@@ -30,7 +31,7 @@ export function ProjectToggle({
       }}
     >
       <Glyph d={FLAG} size={13} width={1.7} filled={project} />
-      PROJECT
+      {upper(t("web.logSession.project"))}
     </button>
   );
 }

@@ -1,6 +1,6 @@
 import React from "react";
+import { useLanding } from "../LandingContext";
 import { Button, Label } from "@sendtally/design";
-import { COPY } from "../copy";
 import { LANDING_PHOTOS } from "../photos";
 import { prefersReducedMotion } from "../useInView";
 import { Photo } from "./Photo";
@@ -44,6 +44,7 @@ function useParallax(): [
 }
 
 export function PhotoBand(): React.ReactElement {
+  const { copy } = useLanding();
   const [bandRef, imgRef] = useParallax();
   return (
     <div ref={bandRef} className="l-band">
@@ -52,18 +53,18 @@ export function PhotoBand(): React.ReactElement {
       <div className="l-band-copy">
         <Reveal>
           <Label on="dark" style={{ letterSpacing: "0.1em" }}>
-            {COPY.band.eyebrow}
+            {copy.band.eyebrow}
           </Label>
         </Reveal>
         <Reveal delay={80}>
-          <h2 className="l-band-title">{COPY.band.title}</h2>
+          <h2 className="l-band-title">{copy.band.title}</h2>
         </Reveal>
         <Reveal delay={160}>
-          <p className="l-band-body">{COPY.band.body}</p>
+          <p className="l-band-body">{copy.band.body}</p>
         </Reveal>
         <Reveal delay={240}>
           <Button variant="gold" href="#insights">
-            {COPY.band.cta}
+            {copy.band.cta}
           </Button>
         </Reveal>
       </div>

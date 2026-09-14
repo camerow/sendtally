@@ -1,6 +1,7 @@
 import { router } from "expo-router";
 import React from "react";
 import { Pressable, Text } from "react-native";
+import { t } from "@sendtally/features/i18n";
 import { colors, fonts } from "@sendtally/design/tokens";
 import { Icon } from "../../components/Icon";
 import { press } from "../../lib/press";
@@ -30,7 +31,7 @@ export function LogSessionFab(): React.ReactElement {
     >
       <Icon name="plus" size={17} strokeWidth={3} color={colors.white} />
       <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 15, color: colors.white }}>
-        Log a session
+        {t("mobile.sessions.logASession")}
       </Text>
     </Pressable>
   );

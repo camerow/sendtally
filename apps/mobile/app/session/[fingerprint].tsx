@@ -9,6 +9,7 @@ import {
   type ClimbSort,
   type ClimbVM,
 } from "@sendtally/features/session-detail";
+import { t, upper } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { Chip } from "../../components/Chip";
 import { PostStatusBar } from "../../features/sessions/PostStatusBar";
@@ -55,10 +56,10 @@ export default function SessionDetailScreen(): React.ReactElement {
   const [deleting, setDeleting] = React.useState(false);
 
   function confirmDelete(): void {
-    Alert.alert("Delete session?", "This removes the session and its climb log for good.", [
-      { text: "Cancel", style: "cancel" },
+    Alert.alert(t("mobile.sessions.deleteTitle"), t("mobile.sessions.deleteBody"), [
+      { text: t("mobile.common.cancel"), style: "cancel" },
       {
-        text: "Delete",
+        text: t("mobile.common.delete"),
         style: "destructive",
         onPress: () => {
           setDeleting(true);
@@ -67,7 +68,10 @@ export default function SessionDetailScreen(): React.ReactElement {
             .then(() => router.replace("/(tabs)/sessions"))
             .catch(() => {
               setDeleting(false);
-              Alert.alert("Could not delete", "Something went wrong. Try again.");
+              Alert.alert(
+                t("mobile.sessions.deleteFailed"),
+                t("mobile.common.somethingWentWrongTryAgain")
+              );
             });
         },
       },
@@ -99,28 +103,28 @@ export default function SessionDetailScreen(): React.ReactElement {
                 color: colors.watermelonInk,
               }}
             >
-              ← SESSIONS
+              {upper(t("mobile.sessions.backToSessions"))}
             </Text>
           </Pressable>
           {state.status === "ready" && (
             <View style={{ flexDirection: "row", alignItems: "center", gap: 16 }}>
               {state.data.vm.editable && (
                 <HeaderAction
-                  label="EDIT"
+                  label={upper(t("mobile.common.edit"))}
                   onPress={() =>
                     router.push(`/session/${encodeURIComponent(fingerprint ?? "")}/edit`)
                   }
                 />
               )}
               <HeaderAction
-                label={deleting ? "DELETING…" : "DELETE"}
+                label={upper(deleting ? t("mobile.sessions.deleting") : t("mobile.common.delete"))}
                 onPress={() => {
                   if (!deleting) confirmDelete();
                 }}
               />
               {state.data.vm.stravaUrl !== null && (
                 <HeaderAction
-                  label="STRAVA ↗"
+                  label={upper(t("mobile.sessions.strava"))}
                   onPress={() => void Linking.openURL(state.data.vm.stravaUrl ?? "")}
                 />
               )}
@@ -131,7 +135,7 @@ export default function SessionDetailScreen(): React.ReactElement {
         {state.status === "loading" && <ActivityIndicator color={colors.gunmetal} />}
         {state.status === "error" && (
           <Text style={{ fontFamily: fonts.mono, fontSize: 12, color: colors.watermelonInk }}>
-            Could not load this session.
+            {t("mobile.sessions.loadOneFailed")}
           </Text>
         )}
         {state.status === "ready" && (
@@ -227,7 +231,7 @@ export default function SessionDetailScreen(): React.ReactElement {
                     color: colors.watermelonInk,
                   }}
                 >
-                  SENDS BY GRADE
+                  {upper(t("mobile.sessions.sendsByGrade"))}
                 </Text>
                 <View style={{ flexDirection: "row", alignItems: "flex-end", gap: 5 }}>
                   {state.data.vm.bars.map((b) => (
@@ -268,15 +272,21 @@ export default function SessionDetailScreen(): React.ReactElement {
             >
               {(
                 [
-                  ["all", `ALL ${state.data.vm.filterCounts.all}`],
-                  ["sent", `SENT ${state.data.vm.filterCounts.sent}`],
-                  ["flash", `FLASHED ${state.data.vm.filterCounts.flash}`],
-                  ["project", `PROJECTS ${state.data.vm.filterCounts.project}`],
+                  ["all", t("mobile.sessions.filterAll", { n: state.data.vm.filterCounts.all })],
+                  ["sent", t("mobile.sessions.filterSent", { n: state.data.vm.filterCounts.sent })],
+                  [
+                    "flash",
+                    t("mobile.sessions.filterFlashed", { n: state.data.vm.filterCounts.flash }),
+                  ],
+                  [
+                    "project",
+                    t("mobile.sessions.filterProjects", { n: state.data.vm.filterCounts.project }),
+                  ],
                 ] as Array<[ClimbFilter, string]>
               ).map(([value, label]) => (
                 <Chip
                   key={value}
-                  label={label}
+                  label={upper(label)}
                   active={filter === value}
                   onPress={() => setFilter(value)}
                 />
@@ -290,7 +300,7 @@ export default function SessionDetailScreen(): React.ReactElement {
               {CLIMB_SORTS.map((s) => (
                 <Chip
                   key={s.value}
-                  label={s.label.toUpperCase()}
+                  label={upper(s.label)}
                   active={sort === s.value}
                   onPress={() => setSort(s.value as ClimbSort)}
                 />
@@ -331,8 +341,13 @@ export default function SessionDetailScreen(): React.ReactElement {
                           color: "rgba(64,63,76,0.6)",
                         }}
                       >
-                        {c.angleLabel} · {c.burns} {c.burns === 1 ? "BURN" : "BURNS"} · REST{" "}
-                        {c.restLabel}
+                        {upper(
+                          t("mobile.sessions.climbMeta", {
+                            angle: c.angleLabel,
+                            burns: t("mobile.sessions.burns", { count: c.burns }),
+                            rest: c.restLabel,
+                          })
+                        )}
                       </Text>
                     </View>
                     <View style={{ alignItems: "flex-end", gap: 5 }}>

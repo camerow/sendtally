@@ -3,6 +3,7 @@ import type { LinksFunction, LoaderFunctionArgs } from "react-router";
 import { Link, useLoaderData, useSearchParams } from "react-router";
 import type { ConnectionStatus, SessionRow } from "@sendtally/api-client";
 import { Logo } from "@sendtally/design";
+import { t } from "@sendtally/features/i18n";
 import {
   countLabel,
   filterSessionsByTags,
@@ -106,7 +107,7 @@ export default function Sessions(): React.ReactElement {
         <span className="sessions-head-mark">
           <Logo variant="mark" size={22} />
         </span>
-        <h1 className="sessions-title">Sessions</h1>
+        <h1 className="sessions-title">{t("web.sessions.title")}</h1>
         <span
           style={{
             fontFamily: "var(--font-mono)",
@@ -134,15 +135,14 @@ export default function Sessions(): React.ReactElement {
             whiteSpace: "nowrap",
           }}
         >
-          Log a session
+          {t("web.sessions.logASession")}
         </Link>
       </div>
       <DraftSessionRow />
       {!stravaConnected && (
         <div className="sessions-banner">
           <span style={{ flex: 1, fontSize: 14, lineHeight: 1.5, color: "var(--text-on-dark)" }}>
-            Your logbook lives here either way. Connect Strava and your sessions can post to your
-            feed as Rock Climbing activities.
+            {t("web.sessions.stravaBanner")}
           </span>
           <Link
             to="/app/setup"
@@ -158,7 +158,7 @@ export default function Sessions(): React.ReactElement {
               whiteSpace: "nowrap",
             }}
           >
-            Connect Strava
+            {t("web.sessions.connectStrava")}
           </Link>
         </div>
       )}
@@ -198,16 +198,12 @@ export default function Sessions(): React.ReactElement {
           </div>
         </div>
       )}
-      {sessions.length === 0 && (
-        <div style={muted}>
-          No sessions yet. Hit Log a session and your first one takes about a minute.
-        </div>
-      )}
+      {sessions.length === 0 && <div style={muted}>{t("web.sessions.empty")}</div>}
       {sessions.length > 0 && visible.length === 0 && (
         <div style={muted}>
-          No sessions carry those tags.{" "}
+          {t("web.sessions.noneForTags")}{" "}
           <Link to={hrefFor({ tags: [] })} style={{ color: "var(--bs-azure-ink)" }}>
-            Clear the filter
+            {t("web.sessions.clearFilter")}
           </Link>
         </div>
       )}

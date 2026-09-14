@@ -1,6 +1,7 @@
 import React from "react";
 import { Button } from "@sendtally/design";
 import type { ProjectDetailVM } from "@sendtally/features/climbs";
+import { t, upper } from "@sendtally/features/i18n";
 
 export type UnmarkProjectDialogProps = {
   project: ProjectDetailVM;
@@ -9,10 +10,10 @@ export type UnmarkProjectDialogProps = {
 };
 
 function keepsLabel(project: ProjectDetailVM): string {
-  if (project.sessions.length === 0) return "Nothing is logged against it yet.";
+  if (project.sessions.length === 0) return t("web.projects.keepsNothing");
   const attempts = project.stats[0]?.value ?? "0";
   const sessions = project.stats[1]?.value ?? "0";
-  return `The ${attempts} attempts over ${sessions} sessions stay in your log and the beta stays on the climb, so you can flag it again any time.`;
+  return t("web.projects.keepsHistory", { attempts, sessions });
 }
 
 export function UnmarkProjectDialog({
@@ -30,7 +31,7 @@ export function UnmarkProjectDialog({
       await onConfirm();
     } catch {
       setBusy(false);
-      setError("Could not unmark the project. Try again.");
+      setError(t("web.projects.unmarkFailed"));
     }
   }
 
@@ -46,7 +47,7 @@ export function UnmarkProjectDialog({
         className="project-dialog"
         role="dialog"
         aria-modal="true"
-        aria-label="Unmark project"
+        aria-label={t("web.projects.unmarkProject")}
         style={{ gap: 14 }}
       >
         <span
@@ -58,7 +59,7 @@ export function UnmarkProjectDialog({
             color: "var(--text-label-accent)",
           }}
         >
-          UNMARK PROJECT
+          {upper(t("web.projects.unmarkProject"))}
         </span>
         <span
           style={{
@@ -68,10 +69,10 @@ export function UnmarkProjectDialog({
             letterSpacing: "-0.02em",
           }}
         >
-          Stop tracking {project.name}?
+          {t("web.projects.stopTracking", { name: project.name })}
         </span>
         <span style={{ fontSize: 15, lineHeight: 1.55, color: "var(--text-on-white-secondary)" }}>
-          It leaves your projects list. {keepsLabel(project)}
+          {t("web.projects.leavesList")} {keepsLabel(project)}
         </span>
         {error !== null && (
           <span className="project-dialog-hint" style={{ color: "var(--text-label-accent)" }}>
@@ -80,10 +81,10 @@ export function UnmarkProjectDialog({
         )}
         <div className="project-dialog-actions" style={{ marginTop: 6 }}>
           <Button variant="ghostOnLight" onClick={onClose}>
-            Cancel
+            {t("web.shell.cancel")}
           </Button>
           <Button variant="danger" disabled={busy} onClick={() => void confirm()}>
-            {busy ? "Unmarking…" : "Unmark project"}
+            {busy ? t("web.projects.unmarking") : t("web.projects.unmarkProject")}
           </Button>
         </div>
       </div>

@@ -15,6 +15,7 @@ import { SessionTags } from "../sessions/components/SessionTags";
 import { PostStatusBar } from "../session-detail/components/PostStatusBar";
 import { SessionNotes } from "../session-detail/components/SessionNotes";
 import { BackLink } from "../components/BackLink";
+import { t, upper } from "@sendtally/features/i18n";
 
 export async function loader(args: LoaderFunctionArgs): Promise<{ apiUrl: string }> {
   await requireApi(args);
@@ -104,7 +105,7 @@ function SessionActions({
       await api.deleteLoggedSession(fingerprint);
       await navigate("/app");
     } catch {
-      setError("Could not delete this session. Try again.");
+      setError(t("web.sessionDetail.deleteFailed"));
       setDeleting(false);
       setConfirming(false);
     }
@@ -115,24 +116,26 @@ function SessionActions({
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
         {!confirming && editable && (
           <Link to={`/app/sessions/${encodeURIComponent(fingerprint)}/edit`} style={actionButton}>
-            Edit
+            {t("web.sessionDetail.edit")}
           </Link>
         )}
         {!confirming && (
           <button type="button" onClick={() => setConfirming(true)} style={actionButton}>
-            Delete
+            {t("web.sessionDetail.delete")}
           </button>
         )}
         {confirming && (
           <>
-            <span style={{ ...monoLabel, alignSelf: "center", fontSize: 11 }}>DELETE SESSION?</span>
+            <span style={{ ...monoLabel, alignSelf: "center", fontSize: 11 }}>
+              {upper(t("web.sessionDetail.confirmDelete"))}
+            </span>
             <button
               type="button"
               onClick={() => setConfirming(false)}
               disabled={deleting}
               style={actionButton}
             >
-              Cancel
+              {t("web.shell.cancel")}
             </button>
             <button
               type="button"
@@ -146,13 +149,13 @@ function SessionActions({
                 opacity: deleting ? 0.45 : 1,
               }}
             >
-              {deleting ? "Deleting…" : "Delete"}
+              {deleting ? t("web.sessionDetail.deleting") : t("web.sessionDetail.delete")}
             </button>
           </>
         )}
         {stravaUrl !== null && (
           <a href={stravaUrl} target="_blank" rel="noreferrer" style={actionButton}>
-            View on Strava ↗
+            {t("web.sessionDetail.viewOnStrava")}
           </a>
         )}
       </div>
@@ -173,27 +176,32 @@ export default function SessionDetailRoute(): React.ReactElement {
   const { state, filter, setFilter, sort, setSort } = feature;
 
   if (state.status === "loading") {
-    return <span style={{ ...monoLabel, color: "rgba(64,63,76,0.55)" }}>LOADING…</span>;
+    return (
+      <span style={{ ...monoLabel, color: "rgba(64,63,76,0.55)" }}>
+        {upper(t("web.shell.loading"))}
+      </span>
+    );
   }
   if (state.status === "error") {
     return (
       <span style={{ ...monoLabel }}>
-        Could not load this session. <Link to="/app">Back to sessions</Link>
+        {t("web.sessionDetail.loadFailed")}{" "}
+        <Link to="/app">{t("web.sessionDetail.backToSessions")}</Link>
       </span>
     );
   }
   const { vm, climbs, tags, notes } = state.data;
 
   const filters: Array<[ClimbFilter, string]> = [
-    ["all", `ALL ${vm.filterCounts.all}`],
-    ["sent", `SENT ${vm.filterCounts.sent}`],
-    ["flash", `FLASHED ${vm.filterCounts.flash}`],
-    ["project", `PROJECTS ${vm.filterCounts.project}`],
+    ["all", upper(t("web.sessionDetail.filterAll", { n: vm.filterCounts.all }))],
+    ["sent", upper(t("web.sessionDetail.filterSent", { n: vm.filterCounts.sent }))],
+    ["flash", upper(t("web.sessionDetail.filterFlashed", { n: vm.filterCounts.flash }))],
+    ["project", upper(t("web.sessionDetail.filterProjects", { n: vm.filterCounts.project }))],
   ];
 
   return (
     <div>
-      <BackLink to="/app">SESSIONS</BackLink>
+      <BackLink to="/app">{upper(t("web.shell.navSessions"))}</BackLink>
       <div
         style={{
           display: "flex",
@@ -289,7 +297,9 @@ export default function SessionDetailRoute(): React.ReactElement {
             gap: 12,
           }}
         >
-          <span style={{ ...monoLabel, fontSize: 11 }}>SENDS BY GRADE</span>
+          <span style={{ ...monoLabel, fontSize: 11 }}>
+            {upper(t("web.sessionDetail.sendsByGrade"))}
+          </span>
           <div style={{ display: "flex", alignItems: "flex-end", gap: 6, height: 84 }}>
             {vm.bars.map((b) => (
               <div
@@ -381,7 +391,15 @@ export default function SessionDetailRoute(): React.ReactElement {
               alignItems: "center",
             }}
           >
-            {["#", "CLIMB", "GRADE", "ANGLE", "BURNS", "REST", "RESULT"].map((h) => (
+            {[
+              "#",
+              upper(t("web.sessionDetail.colClimb")),
+              upper(t("web.sessionDetail.colGrade")),
+              upper(t("web.sessionDetail.colAngle")),
+              upper(t("web.sessionDetail.colBurns")),
+              upper(t("web.sessionDetail.colRest")),
+              upper(t("web.sessionDetail.colResult")),
+            ].map((h) => (
               <span key={h} style={monoLabel}>
                 {h}
               </span>

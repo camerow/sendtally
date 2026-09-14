@@ -8,6 +8,7 @@ import { useHydrated } from "../lib/useHydrated";
 import { LogSessionForm } from "../log-session/components/LogSessionForm";
 import logSessionStyles from "../log-session/log-session.css?url";
 import { BackLink } from "../components/BackLink";
+import { t, upper } from "@sendtally/features/i18n";
 
 export const links: LinksFunction = () => [{ rel: "stylesheet", href: logSessionStyles }];
 
@@ -23,7 +24,7 @@ export default function LogSessionRoute(): React.ReactElement {
 
   return (
     <div>
-      <BackLink to="/app">SESSIONS</BackLink>
+      <BackLink to="/app">{upper(t("web.shell.navSessions"))}</BackLink>
       <div style={{ display: "flex", flexDirection: "column", gap: 6, margin: "14px 0 26px" }}>
         <h1
           style={{
@@ -35,7 +36,7 @@ export default function LogSessionRoute(): React.ReactElement {
             letterSpacing: "-0.03em",
           }}
         >
-          Log a session
+          {t("web.logSession.title")}
         </h1>
         <span
           style={{
@@ -46,7 +47,7 @@ export default function LogSessionRoute(): React.ReactElement {
             color: "rgba(64,63,76,0.72)",
           }}
         >
-          MANUAL ENTRY · EFFORT IS SCORED WHEN YOU SAVE
+          {upper(t("web.logSession.subtitle"))}
         </span>
       </div>
       {/* The session starts on the visitor's clock, so the form waits for their browser. */}

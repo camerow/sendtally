@@ -15,7 +15,9 @@ import type {
   SessionClimb,
   SessionDetail,
 } from "@sendtally/api-client";
+import { t, upper } from "../i18n";
 import { sameTagName } from "../sessions/tags";
+import { durationLabel as lowerDurationLabel } from "../sessions/years";
 import {
   DEFAULT_GRADE_PREFS,
   GRADE_SCALE_OPTIONS,
@@ -190,10 +192,7 @@ export function withStartTime(draft: LogSessionDraft, startTime: string): LogSes
 }
 
 export function durationLabel(minutes: number): string {
-  const h = Math.floor(minutes / 60);
-  const m = minutes % 60;
-  if (h === 0) return `${m}M`;
-  return m === 0 ? `${h}H` : `${h}H ${pad(m)}M`;
+  return upper(lowerDurationLabel(minutes));
 }
 
 function topDraftGrade(draft: LogSessionDraft): Grade | undefined {
@@ -216,26 +215,26 @@ export function draftSummary(draft: LogSessionDraft): string {
   const attempts = draft.climbs.length - sends;
   const top = topDraftGrade(draft);
   const parts = [
-    `${draft.climbs.length} ${draft.climbs.length === 1 ? "CLIMB" : "CLIMBS"}`,
-    `${sends} ${sends === 1 ? "SEND" : "SENDS"}, ${attempts} ${attempts === 1 ? "ATTEMPT" : "ATTEMPTS"}`,
+    upper(t("sessions.climbCount", { count: draft.climbs.length })),
+    `${upper(t("logSession.sendCount", { count: sends }))}, ${upper(t("logSession.attemptCount", { count: attempts }))}`,
   ];
-  if (top !== undefined) parts.push(`TOP ${formatGrade(top)}`);
+  if (top !== undefined) parts.push(t("sessions.topGrade", { grade: formatGrade(top) }));
   const minutes = durationMinutes(draft.startTime, draft.endTime);
   if (minutes !== undefined) parts.push(durationLabel(minutes));
   return parts.join(" · ");
 }
 
 export function draftProblem(draft: LogSessionDraft): string | null {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(draft.date)) return "Pick a date.";
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(draft.date)) return t("logSession.pickDate");
   if (!TIME.test(draft.startTime) || !TIME.test(draft.endTime)) {
-    return "Set a start and end time.";
+    return t("logSession.setTimes");
   }
   const minutes = durationMinutes(draft.startTime, draft.endTime);
-  if (minutes === undefined) return "End time is before the start time.";
-  if (minutes > MAX_SESSION_MINUTES) return "Sessions longer than 12 hours can't be logged.";
-  if (draft.climbs.length === 0) return "Add at least one climb.";
+  if (minutes === undefined) return t("logSession.endBeforeStart");
+  if (minutes > MAX_SESSION_MINUTES) return t("logSession.tooLong");
+  if (draft.climbs.length === 0) return t("logSession.needClimb");
   if (draft.climbs.some((c) => draftGrade(c.grade, c.scale) === undefined)) {
-    return "Every climb needs a grade.";
+    return t("logSession.needGrade");
   }
   return null;
 }

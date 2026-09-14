@@ -19,6 +19,7 @@ import {
   sessionYearGroups,
   tagScopeItems,
 } from "@sendtally/features/sessions";
+import { t, upper } from "@sendtally/features/i18n";
 import { colors, fonts } from "@sendtally/design/tokens";
 import { ScreenHeader } from "../../components/ScreenHeader";
 import { FilterSheet, type SessionFilters } from "../../features/sessions/FilterSheet";
@@ -87,7 +88,10 @@ export default function Sessions(): React.ReactElement {
         year.months.map((m): Section => ({
           key: m.key,
           title: m.name,
-          meta: `${m.year} · ${countLabel(m.sessions.length)}`,
+          meta: t("mobile.sessions.monthMeta", {
+            year: m.year,
+            sessions: countLabel(m.sessions.length),
+          }),
           data: m.sessions,
         }))
       ),
@@ -102,7 +106,7 @@ export default function Sessions(): React.ReactElement {
       setError(null);
       void maybeAskForReview(result.sessions.length);
     } catch {
-      setError("Could not reach sendtally. Pull to retry.");
+      setError(t("mobile.sessions.loadFailed"));
     }
   }, [api]);
 
@@ -141,11 +145,12 @@ export default function Sessions(): React.ReactElement {
   };
 
   const filtersActive = filters.tags.length > 0 || filters.grouping === "tag";
-  const caption = sessions === null ? "LOADING…" : countLabel(visible.length);
+  const caption =
+    sessions === null ? upper(t("mobile.common.loading")) : countLabel(visible.length);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.white }} edges={["top"]}>
-      <ScreenHeader title="Sessions" caption={caption} />
+      <ScreenHeader title={t("mobile.sessions.title")} caption={caption} />
       {sections.length > 0 && (
         <ScopeBar
           items={scopeItems}
@@ -198,9 +203,7 @@ export default function Sessions(): React.ReactElement {
                 color: colors.textMuted,
               }}
             >
-              {all.length === 0
-                ? "No sessions yet. Log a session - the first one takes about a minute."
-                : "No sessions carry those tags."}
+              {all.length === 0 ? t("mobile.sessions.empty") : t("mobile.sessions.emptyFiltered")}
             </Text>
           ) : null
         }

@@ -1,7 +1,8 @@
 import { formatGrade, routeIndexOf, vFromFont, type Grade } from "@sendtally/core";
 import type { ClimbSummary, SessionWithClimbs } from "@sendtally/api-client";
+import { t, upper } from "../i18n";
 import { sessionDay } from "../sessions/meta";
-import { MONTH_SHORT_NAMES } from "../sessions/months";
+import { monthShortName } from "../sessions/months";
 import { sessionTitle } from "../sessions/title";
 import { durationLabel, sessionMinutes } from "../sessions/years";
 import {
@@ -78,7 +79,7 @@ export function gradeRank(grade: Grade): number {
 // a label reads the same in the Worker, the browser and the app.
 export function dateLabel(iso: string): string {
   const d = new Date(iso);
-  return `${d.getUTCDate()} ${MONTH_SHORT_NAMES[d.getUTCMonth()] ?? ""}`;
+  return `${d.getUTCDate()} ${monthShortName(d.getUTCMonth() + 1)}`;
 }
 
 export function weeksBetween(fromIso: string, toIso: string): number {
@@ -87,12 +88,12 @@ export function weeksBetween(fromIso: string, toIso: string): number {
 }
 
 function spanLabel(weeks: number): string {
-  if (weeks < 1) return "THIS WEEK";
-  return `${weeks} ${weeks === 1 ? "WEEK" : "WEEKS"}`;
+  if (weeks < 1) return upper(t("climbs.thisWeek"));
+  return upper(t("climbs.weekCount", { count: weeks }));
 }
 
 export function disciplineLabel(climb: ClimbSummary): string {
-  return climb.discipline === "route" ? "ROUTE" : "BOULDER";
+  return upper(t(climb.discipline === "route" ? "climbs.route" : "climbs.boulder"));
 }
 
 // Every session the climb appears in, oldest first: the attempts that went into
@@ -113,7 +114,7 @@ export function projectSessions(
       weekday: day.weekday,
       dateLabel: dateLabel(session.start_at),
       title: sessionTitle(session),
-      metaLabel: `RPE ${session.rpe} · ${durationLabel(sessionMinutes(session))}`,
+      metaLabel: `${t("sessions.rpe", { rpe: session.rpe })} · ${durationLabel(sessionMinutes(session))}`,
       attempts: rows.reduce((n, c) => n + c.tries, 0),
       sent: rows.some((c) => c.kind === "send"),
       notes: session.notes,
@@ -149,14 +150,14 @@ export function projectDetailVM(
   const endIso = status === "sent" ? climb.last_at : now.toISOString();
   const weeks = weeksBetween(climb.first_at, endIso);
   const stats: ProjectStat[] = [
-    { label: "ATTEMPTS", value: String(climb.attempts) },
-    { label: "SESSIONS", value: String(climb.sessions) },
+    { label: upper(t("climbs.attempts")), value: String(climb.attempts) },
+    { label: upper(t("climbs.sessions")), value: String(climb.sessions) },
     {
-      label: status === "sent" ? "TOOK" : "RUNNING",
+      label: upper(t(status === "sent" ? "climbs.took" : "climbs.running")),
       value: climb.sessions === 0 ? "-" : spanLabel(weeks),
     },
     {
-      label: status === "sent" ? "SENT" : "LAST TRIED",
+      label: upper(t(status === "sent" ? "climbs.sent" : "climbs.lastTried")),
       value: climb.sessions === 0 ? "-" : dateLabel(climb.last_at),
     },
   ];
@@ -170,12 +171,15 @@ export function projectDetailVM(
     status,
     storyLabel:
       status === "sent"
-        ? `${climb.attempts} ${climb.attempts === 1 ? "attempt" : "attempts"} over ${climb.sessions} ${climb.sessions === 1 ? "session" : "sessions"}`
+        ? t("climbs.story", {
+            attempts: t("logSession.attemptCount", { count: climb.attempts }),
+            sessions: t("sessions.sessionCount", { count: climb.sessions }),
+          })
         : null,
     sessionsMetaLabel: projectMetaLabel(climb),
     rangeLabel:
       first === undefined
-        ? "NOTHING LOGGED YET"
+        ? upper(t("climbs.nothingLoggedYet"))
         : first === last
           ? first.dateLabel
           : `${first.dateLabel} → ${last?.dateLabel}`,
@@ -184,7 +188,9 @@ export function projectDetailVM(
     sessions: [...ordered].reverse(),
     beta: climb.beta,
     betaUpdatedLabel:
-      climb.beta_updated_at === null ? null : `UPDATED ${dateLabel(climb.beta_updated_at)}`,
+      climb.beta_updated_at === null
+        ? null
+        : upper(t("climbs.updatedOn", { date: dateLabel(climb.beta_updated_at) })),
   };
 }
 

@@ -3,6 +3,7 @@ import { Pressable, Text, TextInput, View } from "react-native";
 import type { SendtallyApi } from "@sendtally/api-client";
 import { useSessionNotes } from "@sendtally/features/session-detail";
 import { SESSION_NOTE_MAX } from "@sendtally/features/sessions";
+import { t, upper } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { press } from "../../lib/press";
 
@@ -48,13 +49,15 @@ export function SessionNotes({
           padding: 16,
         }}
       >
-        <Text style={{ ...heading, color: colors.watermelonInk }}>NOTES</Text>
+        <Text style={{ ...heading, color: colors.watermelonInk }}>
+          {upper(t("mobile.sessions.notes"))}
+        </Text>
         <TextInput
           value={draft}
           autoFocus
           multiline
           maxLength={SESSION_NOTE_MAX}
-          placeholder="How it felt, what to try next time."
+          placeholder={t("mobile.sessions.notesPlaceholder")}
           placeholderTextColor={colors.textFaint}
           onChangeText={setDraft}
           style={{
@@ -91,7 +94,9 @@ export function SessionNotes({
               disabled={saving}
               style={press({ minHeight: 44, justifyContent: "center" })}
             >
-              <Text style={{ ...action, color: colors.textSecondary }}>CANCEL</Text>
+              <Text style={{ ...action, color: colors.textSecondary }}>
+                {upper(t("mobile.common.cancel"))}
+              </Text>
             </Pressable>
             <Pressable
               onPress={save}
@@ -99,7 +104,7 @@ export function SessionNotes({
               style={press({ minHeight: 44, justifyContent: "center" })}
             >
               <Text style={{ ...action, color: colors.watermelonInk }}>
-                {saving ? "SAVING…" : "SAVE NOTE"}
+                {upper(saving ? t("mobile.common.saving") : t("mobile.sessions.saveNote"))}
               </Text>
             </Pressable>
           </View>
@@ -122,13 +127,17 @@ export function SessionNotes({
         }}
       >
         <View style={{ flex: 1, gap: 4 }}>
-          <Text style={{ ...heading, color: colors.textMuted }}>NOTES</Text>
+          <Text style={{ ...heading, color: colors.textMuted }}>
+            {upper(t("mobile.sessions.notes"))}
+          </Text>
           <Text style={{ fontFamily: fonts.sans, fontSize: 14, color: colors.textSecondary }}>
-            How it felt, what to try next time.
+            {t("mobile.sessions.notesPlaceholder")}
           </Text>
         </View>
         <Pressable onPress={start} style={press({ minHeight: 44, justifyContent: "center" })}>
-          <Text style={{ ...action, color: colors.watermelonInk }}>ADD A NOTE</Text>
+          <Text style={{ ...action, color: colors.watermelonInk }}>
+            {upper(t("mobile.sessions.addANote"))}
+          </Text>
         </Pressable>
       </View>
     );
@@ -148,9 +157,13 @@ export function SessionNotes({
       }}
     >
       <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-        <Text style={{ ...heading, color: colors.watermelonInk }}>NOTES</Text>
+        <Text style={{ ...heading, color: colors.watermelonInk }}>
+          {upper(t("mobile.sessions.notes"))}
+        </Text>
         <Pressable onPress={start} style={press({ minHeight: 32, justifyContent: "center" })}>
-          <Text style={{ ...action, color: colors.azureInk }}>EDIT</Text>
+          <Text style={{ ...action, color: colors.azureInk }}>
+            {upper(t("mobile.common.edit"))}
+          </Text>
         </Pressable>
       </View>
       <Text
@@ -170,7 +183,7 @@ export function SessionNotes({
           style={{ minHeight: 32, justifyContent: "center" }}
         >
           <Text style={{ ...action, fontSize: 10, letterSpacing: 0.8, color: colors.azureInk }}>
-            {expanded ? "SHOW LESS" : "SHOW MORE"}
+            {upper(expanded ? t("mobile.sessions.showLess") : t("mobile.sessions.showMore"))}
           </Text>
         </Pressable>
       )}

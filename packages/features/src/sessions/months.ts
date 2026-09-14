@@ -1,4 +1,5 @@
 import type { SessionRow } from "@sendtally/api-client";
+import { formatDate, upper } from "../i18n";
 
 export type SessionMonth = {
   key: string;
@@ -11,15 +12,12 @@ export type SessionMonth = {
 
 function formatMonth(month: number, style: "long" | "short"): string {
   if (month < 1 || month > 12) return "";
-  return new Date(Date.UTC(2000, month - 1, 1)).toLocaleDateString("en-US", {
-    month: style,
-    timeZone: "UTC",
-  });
+  return formatDate(new Date(Date.UTC(2000, month - 1, 1)), { month: style, timeZone: "UTC" });
 }
 
-export const MONTH_SHORT_NAMES = Array.from({ length: 12 }, (_, i) =>
-  formatMonth(i + 1, "short").toUpperCase()
-);
+export function monthShortName(month: number): string {
+  return upper(formatMonth(month, "short"));
+}
 
 export function monthKey(year: number, month: number): string {
   return `${year}-${String(month).padStart(2, "0")}`;

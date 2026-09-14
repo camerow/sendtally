@@ -3,6 +3,7 @@ import React from "react";
 import { ActivityIndicator, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useSessionDraft } from "@sendtally/features/log-session";
+import { t } from "@sendtally/features/i18n";
 import { colors, fonts } from "@sendtally/design/tokens";
 import { LogSessionForm } from "../../../features/log-session/LogSessionForm";
 import { useApi } from "../../../lib/api";
@@ -30,8 +31,8 @@ export default function EditSessionScreen(): React.ReactElement {
             }}
           >
             {state.status === "error"
-              ? "Could not load this session."
-              : "This session was synced from a board and is kept as read-only history."}
+              ? t("mobile.sessions.loadOneFailed")
+              : t("mobile.sessions.readOnlyBoard")}
           </Text>
         </View>
       )}

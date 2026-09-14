@@ -14,6 +14,7 @@ import {
   gradeOptions,
   type Discipline,
 } from "@sendtally/features/log-session";
+import { t, upper } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { Chip } from "../../components/Chip";
 import { Icon } from "../../components/Icon";
@@ -25,11 +26,6 @@ export type AddProjectSheetProps = {
   onSave: (input: ProjectInput) => Promise<void>;
   onClose: () => void;
 };
-
-const DISCIPLINES: Array<{ value: Discipline; label: string }> = [
-  { value: "boulder", label: "BOULDER" },
-  { value: "route", label: "SPORT" },
-];
 
 const CHIP_WIDTH = 74;
 
@@ -54,8 +50,8 @@ const input = {
 } as const;
 
 function suggestionMeta(climb: ClimbSummary): string {
-  if (climb.project) return "ALREADY A PROJECT";
-  if (climb.sessions === 0) return "NOTHING LOGGED YET";
+  if (climb.project) return upper(t("mobile.projects.alreadyAProject"));
+  if (climb.sessions === 0) return upper(t("mobile.projects.nothingLoggedYet"));
   return projectMetaLabel(climb);
 }
 
@@ -135,14 +131,18 @@ export function AddProjectSheet({
       onClose();
     } catch {
       setBusy(false);
-      setError("Could not add the project. Try again.");
+      setError(t("mobile.projects.addFailed"));
     }
   };
 
   const ready = identified && !(needsGrade && grade === "");
+  const disciplines: Array<{ value: Discipline; label: string }> = [
+    { value: "boulder", label: upper(t("mobile.projects.boulder")) },
+    { value: "route", label: upper(t("mobile.projects.sport")) },
+  ];
 
   return (
-    <Sheet visible={visible} onClose={onClose} closeLabel="Close new project">
+    <Sheet visible={visible} onClose={onClose} closeLabel={t("mobile.projects.closeNewProject")}>
       <View style={{ gap: 18, paddingTop: 2, paddingHorizontal: 18, paddingBottom: 18 }}>
         <Text
           style={{
@@ -152,12 +152,12 @@ export function AddProjectSheet({
             color: colors.watermelonInk,
           }}
         >
-          NEW PROJECT
+          {upper(t("mobile.projects.newProject"))}
         </Text>
 
         {searching && (
           <View style={{ gap: 9 }}>
-            <Text style={label}>WHICH CLIMB</Text>
+            <Text style={label}>{upper(t("mobile.projects.whichClimb"))}</Text>
             <TextInput
               value={name}
               onChangeText={(value) => {
@@ -165,7 +165,7 @@ export function AddProjectSheet({
                 setPicked(null);
                 setTracking(false);
               }}
-              placeholder="Name of the climb"
+              placeholder={t("mobile.projects.namePlaceholder")}
               placeholderTextColor={colors.textFaint}
               autoCorrect={false}
               style={input}
@@ -246,21 +246,23 @@ export function AddProjectSheet({
                         color: colors.azureInk,
                       }}
                     >
-                      Track “{trimmed}” as a new climb
+                      {t("mobile.projects.trackAsNew", { name: trimmed })}
                     </Text>
                   </Pressable>
                 )}
               </ScrollView>
             )}
-            <Text style={label}>
-              START TYPING - PICK ONE YOU HAVE LOGGED AND IT KEEPS ITS HISTORY
-            </Text>
+            <Text style={label}>{upper(t("mobile.projects.startTyping"))}</Text>
           </View>
         )}
 
         {identified && (
           <View style={{ gap: 9 }}>
-            <Text style={label}>{picked === null ? "NEW CLIMB" : "FROM YOUR LOGBOOK"}</Text>
+            <Text style={label}>
+              {upper(
+                picked === null ? t("mobile.projects.newClimb") : t("mobile.projects.fromLogbook")
+              )}
+            </Text>
             <View
               style={{
                 flexDirection: "row",
@@ -296,7 +298,9 @@ export function AddProjectSheet({
                 {identityName}
               </Text>
               <Pressable accessibilityRole="button" onPress={change}>
-                <Text style={{ ...label, color: colors.azureInk }}>CHANGE</Text>
+                <Text style={{ ...label, color: colors.azureInk }}>
+                  {upper(t("mobile.projects.change"))}
+                </Text>
               </Pressable>
             </View>
           </View>
@@ -305,9 +309,9 @@ export function AddProjectSheet({
         {needsGrade && (
           <>
             <View style={{ gap: 9 }}>
-              <Text style={label}>DISCIPLINE</Text>
+              <Text style={label}>{upper(t("mobile.projects.discipline"))}</Text>
               <View style={{ flexDirection: "row", gap: 8 }}>
-                {DISCIPLINES.map((d) => (
+                {disciplines.map((d) => (
                   <Chip
                     key={d.value}
                     label={d.label}
@@ -322,7 +326,7 @@ export function AddProjectSheet({
               </View>
             </View>
             <View style={{ gap: 9 }}>
-              <Text style={label}>GRADE</Text>
+              <Text style={label}>{upper(t("mobile.projects.grade"))}</Text>
               <ScrollView
                 ref={rail}
                 horizontal
@@ -339,12 +343,12 @@ export function AddProjectSheet({
         )}
 
         <View style={{ gap: 9 }}>
-          <Text style={label}>BETA · OPTIONAL</Text>
+          <Text style={label}>{upper(t("mobile.projects.betaOptional"))}</Text>
           <TextInput
             value={beta}
             onChangeText={setBeta}
             multiline
-            placeholder="What you know about it so far"
+            placeholder={t("mobile.projects.betaPlaceholder")}
             placeholderTextColor={colors.textFaint}
             style={{ ...input, minHeight: 64, textAlignVertical: "top" }}
           />
@@ -366,7 +370,7 @@ export function AddProjectSheet({
           }}
         >
           <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 15, color: colors.white }}>
-            {busy ? "Adding…" : "Add project"}
+            {busy ? t("mobile.projects.adding") : t("mobile.projects.addProject")}
           </Text>
         </Pressable>
       </View>

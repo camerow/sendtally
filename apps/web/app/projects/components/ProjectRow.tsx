@@ -8,18 +8,26 @@ import {
   projectStatus,
   type ProjectListItem,
 } from "@sendtally/features/climbs";
+import { t, upper } from "@sendtally/features/i18n";
 
 const MAX_SPARK_BARS = 6;
 
 function metaLabel({ climb }: ProjectListItem): string {
   if (climb.sessions === 0) {
-    return `${disciplineLabel(climb)} · ADDED ${dateLabel(climb.first_at)} · NOT TRIED YET`;
+    return upper(
+      t("web.projects.rowMetaNew", {
+        discipline: disciplineLabel(climb),
+        date: dateLabel(climb.first_at),
+      })
+    );
   }
-  const when =
-    projectStatus(climb) === "sent"
-      ? `SENT ${dateLabel(climb.last_at)}`
-      : `LAST ${dateLabel(climb.last_at)}`;
-  return `${projectMetaLabel(climb)} · ${when}`;
+  const vars = { meta: projectMetaLabel(climb), date: dateLabel(climb.last_at) };
+  return upper(
+    t(
+      projectStatus(climb) === "sent" ? "web.projects.rowMetaSent" : "web.projects.rowMetaLast",
+      vars
+    )
+  );
 }
 
 export function ProjectRow({ item }: { item: ProjectListItem }): React.ReactElement {
@@ -39,7 +47,9 @@ export function ProjectRow({ item }: { item: ProjectListItem }): React.ReactElem
         <span className="project-meta">{metaLabel(item)}</span>
       </span>
       {sent || spark.length === 0 ? (
-        <span className="project-sent-at">{sent ? `SENT ${dateLabel(climb.last_at)}` : ""}</span>
+        <span className="project-sent-at">
+          {sent ? upper(t("web.projects.sentOn", { date: dateLabel(climb.last_at) })) : ""}
+        </span>
       ) : (
         <span className="project-spark">
           <span className="project-spark-bars">
@@ -53,11 +63,11 @@ export function ProjectRow({ item }: { item: ProjectListItem }): React.ReactElem
               />
             ))}
           </span>
-          <span className="project-spark-label">ATTEMPTS / SESSION</span>
+          <span className="project-spark-label">{upper(t("web.projects.attemptsPerSession"))}</span>
         </span>
       )}
       <span className={sent ? "project-status project-status--sent" : "project-status"}>
-        {sent ? "SENT" : "OPEN"}
+        {upper(t(sent ? "web.projects.statusSent" : "web.projects.statusOpen"))}
       </span>
       <span className="project-chevron">›</span>
     </Link>

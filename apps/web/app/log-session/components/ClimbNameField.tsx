@@ -2,6 +2,7 @@ import React from "react";
 import type { ClimbSummary } from "@sendtally/api-client";
 import { climbDraftGrade } from "@sendtally/features/climbs";
 import type { GradeScale } from "@sendtally/features/log-session";
+import { t, upper } from "@sendtally/features/i18n";
 import { Glyph } from "./Glyph";
 import { FLAG, columnHead, inputStyle } from "./styles";
 
@@ -94,7 +95,9 @@ export function ClimbNameField({
       className={inline ? "climb-name-list climb-name-list--inline" : "climb-name-list"}
     >
       {value.trim() === "" && (
-        <span style={{ ...columnHead, padding: "6px 10px 4px" }}>RECENT</span>
+        <span style={{ ...columnHead, padding: "6px 10px 4px" }}>
+          {upper(t("web.logSession.recent"))}
+        </span>
       )}
       {suggestions.map((climb, i) => (
         <div
@@ -129,7 +132,7 @@ export function ClimbNameField({
     >
       <input
         value={value}
-        placeholder="Name (optional)"
+        placeholder={t("web.logSession.climbNamePlaceholder")}
         autoComplete="off"
         autoFocus={autoFocus}
         role="combobox"

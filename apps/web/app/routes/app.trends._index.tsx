@@ -1,7 +1,8 @@
 import React from "react";
 import type { LoaderFunctionArgs } from "react-router";
 import { useLoaderData } from "react-router";
-import { MEMBER_POINTS } from "@sendtally/features/billing";
+import { memberPoints } from "@sendtally/features/billing";
+import { t, upper } from "@sendtally/features/i18n";
 import { UpgradePanel } from "../billing/components/UpgradePanel";
 import { cloudflareContext } from "../lib/cloudflare-context";
 import { getMembership } from "../lib/billing.server";
@@ -22,10 +23,10 @@ export default function TrendsRoute(): React.ReactElement {
   if (!canSeeInsights) {
     return (
       <UpgradePanel
-        eyebrow="MEMBERS"
-        title="Your sessions are adding up to something. Trends is where you see it."
-        body="Keep logging for free - your logbook is yours either way. Membership unlocks the screens that read the whole history back to you."
-        points={MEMBER_POINTS}
+        eyebrow={upper(t("web.trends.upgradeEyebrow"))}
+        title={t("web.trends.upgradeTitle")}
+        body={t("web.trends.upgradeBody")}
+        points={memberPoints()}
       />
     );
   }

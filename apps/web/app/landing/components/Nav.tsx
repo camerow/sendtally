@@ -1,6 +1,5 @@
 import React from "react";
 import { Button, Logo } from "@sendtally/design";
-import { COPY } from "../copy";
 import { useLanding } from "../LandingContext";
 import { AccountCta } from "./AccountCta";
 
@@ -9,7 +8,7 @@ export type NavProps = {
 };
 
 export function Nav({ sections = true }: NavProps): React.ReactElement {
-  const { signedIn } = useLanding();
+  const { signedIn, copy } = useLanding();
   return (
     <div className="l-nav">
       <a href="/" className="l-nav-logo" aria-label="sendtally home">
@@ -17,7 +16,7 @@ export function Nav({ sections = true }: NavProps): React.ReactElement {
       </a>
       <div className="l-nav-links">
         {sections &&
-          COPY.nav.sections.map((section) => (
+          copy.nav.sections.map((section) => (
             <a key={section.href} href={section.href} className="l-nav-anchor">
               {section.label}
             </a>
@@ -25,10 +24,10 @@ export function Nav({ sections = true }: NavProps): React.ReactElement {
         <div className="l-nav-actions">
           {!signedIn && (
             <Button variant="ghostOnLight" size="sm" href="/sign-in">
-              {COPY.nav.signIn}
+              {copy.nav.signIn}
             </Button>
           )}
-          <AccountCta size="sm" label={COPY.nav.createAccount} />
+          <AccountCta size="sm" label={copy.nav.createAccount} />
         </div>
       </div>
     </div>

@@ -7,6 +7,7 @@ import { AuthShell, StepBody, StepCard, StepTitle } from "./AuthShell";
 import { capture } from "../../lib/analytics";
 import { PRIVACY_PATH, TERMS_PATH } from "../../legal/constants";
 import type { AuthIntent } from "../types";
+import { t, upper } from "@sendtally/features/i18n";
 
 const inputStyle: React.CSSProperties = {
   fontFamily: "var(--font-sans)",
@@ -77,41 +78,41 @@ const footnote: React.CSSProperties = {
   color: "rgba(64,63,76,0.58)",
 };
 
-const COPY: Record<
-  AuthIntent,
-  {
-    step: string;
-    title: string;
-    body: string;
-    swapPrompt: string;
-    swapLabel: string;
-    swapTo: string;
-  }
-> = {
-  "sign-in": {
-    step: "SIGN IN",
-    title: "Welcome back.",
-    body: "No password. Enter the email you signed up with and we send a one-time code.",
-    swapPrompt: "First time here?",
-    swapLabel: "Create an account",
-    swapTo: "/sign-up",
-  },
-  "sign-up": {
-    step: "STEP 1 OF 2 · ACCOUNT",
-    title: "Create your account.",
-    body: "No password. Enter your email and we send a one-time code. Logging sessions and Strava sync are free.",
-    swapPrompt: "Already have an account?",
-    swapLabel: "Sign in",
-    swapTo: "/sign-in",
-  },
+type Copy = {
+  step: string;
+  title: string;
+  body: string;
+  swapPrompt: string;
+  swapLabel: string;
+  swapTo: string;
 };
+
+function copyFor(intent: AuthIntent): Copy {
+  return intent === "sign-in"
+    ? {
+        step: upper(t("web.auth.stepSignIn")),
+        title: t("web.auth.signInHeading"),
+        body: t("web.auth.signInBody"),
+        swapPrompt: t("web.auth.signInSwapPrompt"),
+        swapLabel: t("web.auth.signInSwapLabel"),
+        swapTo: "/sign-up",
+      }
+    : {
+        step: upper(t("web.auth.stepAccount")),
+        title: t("web.auth.signUpHeading"),
+        body: t("web.auth.signUpBody"),
+        swapPrompt: t("web.auth.signUpSwapPrompt"),
+        swapLabel: t("web.auth.signUpSwapLabel"),
+        swapTo: "/sign-in",
+      };
+}
 
 function clerkErrorMessage(err: unknown): string {
   if (isClerkAPIResponseError(err)) {
     const first = err.errors[0];
     if (first !== undefined) return first.longMessage ?? first.message;
   }
-  return "Something went wrong. Try again.";
+  return t("web.auth.genericError");
 }
 
 // The password phase only ever appears for accounts that carry a password, which Clerk
@@ -165,7 +166,7 @@ const dividerRule: React.CSSProperties = {
 };
 
 function SwapLink({ intent }: { intent: AuthIntent }): React.ReactElement {
-  const copy = COPY[intent];
+  const copy = copyFor(intent);
   return (
     <span style={footnote}>
       {copy.swapPrompt}{" "}
@@ -179,13 +180,13 @@ function SwapLink({ intent }: { intent: AuthIntent }): React.ReactElement {
 function LegalConsent(): React.ReactElement {
   return (
     <span style={{ ...footnote, lineHeight: 1.6 }}>
-      By continuing you agree to the{" "}
+      {t("web.auth.legalConsentBefore")}{" "}
       <a href={TERMS_PATH} style={{ color: "var(--text-link)" }}>
-        terms of service
+        {t("web.auth.termsOfService")}
       </a>{" "}
-      and the{" "}
+      {t("web.auth.legalConsentAnd")}{" "}
       <a href={PRIVACY_PATH} style={{ color: "var(--text-link)" }}>
-        privacy policy
+        {t("web.auth.privacyPolicy")}
       </a>
       .
     </span>
@@ -201,7 +202,7 @@ export function AuthForm({ intent }: { intent: AuthIntent }): React.ReactElement
   const [phase, setPhase] = React.useState<Phase>({ name: "email" });
   const [error, setError] = React.useState<string | null>(null);
   const [busy, setBusy] = React.useState(false);
-  const copy = COPY[intent];
+  const copy = copyFor(intent);
 
   async function continueWithGoogle(): Promise<void> {
     if (!clerk.loaded || clerk.client === undefined) return;
@@ -240,7 +241,7 @@ export function AuthForm({ intent }: { intent: AuthIntent }): React.ReactElement
   async function signInWithPassword(): Promise<void> {
     if (!clerk.loaded || clerk.client === undefined || phase.name !== "password") return;
     if (password === "") {
-      setError("Enter your password.");
+      setError(t("web.auth.enterPassword"));
       return;
     }
     setError(null);
@@ -263,7 +264,7 @@ export function AuthForm({ intent }: { intent: AuthIntent }): React.ReactElement
         setBusy(false);
         return;
       }
-      setError("That password didn't work. Try again.");
+      setError(t("web.auth.wrongPassword"));
     } catch (err) {
       setError(clerkErrorMessage(err));
     }
@@ -273,7 +274,7 @@ export function AuthForm({ intent }: { intent: AuthIntent }): React.ReactElement
   async function sendCode(): Promise<void> {
     if (!clerk.loaded || clerk.client === undefined) return;
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
-      setError("That doesn't look like an email address.");
+      setError(t("web.auth.invalidEmail"));
       return;
     }
     setError(null);
@@ -290,7 +291,7 @@ export function AuthForm({ intent }: { intent: AuthIntent }): React.ReactElement
         (f): f is EmailCodeFactor => f.strategy === "email_code"
       );
       if (factor === undefined) {
-        setError("Email code sign-in is not enabled for this account.");
+        setError(t("web.auth.emailCodeDisabled"));
         setBusy(false);
         return;
       }
@@ -310,7 +311,7 @@ export function AuthForm({ intent }: { intent: AuthIntent }): React.ReactElement
         return;
       }
       if (intent === "sign-in") {
-        setError("No account for that email yet. Check the address, or create an account below.");
+        setError(t("web.auth.noAccount"));
         setBusy(false);
         return;
       }
@@ -329,7 +330,7 @@ export function AuthForm({ intent }: { intent: AuthIntent }): React.ReactElement
   async function verifyCode(): Promise<void> {
     if (!clerk.loaded || clerk.client === undefined || phase.name !== "code") return;
     if (!/^\d{6}$/.test(code.trim())) {
-      setError("Enter the six-digit code from the email.");
+      setError(t("web.auth.invalidCode"));
       return;
     }
     setError(null);
@@ -346,7 +347,11 @@ export function AuthForm({ intent }: { intent: AuthIntent }): React.ReactElement
           await navigate("/app");
           return;
         }
-        setError(`Sign-in incomplete (status: ${result.status ?? "unknown"}). Try resending.`);
+        setError(
+          t("web.auth.signInIncomplete", {
+            status: result.status ?? t("web.auth.unknownStatus"),
+          })
+        );
       } else if (phase.mode === "sign-in") {
         const result = await clerk.client.signIn.attemptFirstFactor({
           strategy: "email_code",
@@ -366,7 +371,11 @@ export function AuthForm({ intent }: { intent: AuthIntent }): React.ReactElement
           setBusy(false);
           return;
         }
-        setError(`Sign-in incomplete (status: ${result.status ?? "unknown"}). Try resending.`);
+        setError(
+          t("web.auth.signInIncomplete", {
+            status: result.status ?? t("web.auth.unknownStatus"),
+          })
+        );
       } else {
         let signUp = await clerk.client.signUp.attemptEmailAddressVerification({
           code: code.trim(),
@@ -381,10 +390,11 @@ export function AuthForm({ intent }: { intent: AuthIntent }): React.ReactElement
           return;
         }
         const missing = signUp.missingFields.join(", ");
+        const status = signUp.status ?? t("web.auth.unknownStatus");
         setError(
-          `Account creation incomplete (status: ${signUp.status ?? "unknown"}${
-            missing !== "" ? `, missing: ${missing}` : ""
-          }). This is a setup gap on our side - tell us what this says.`
+          missing === ""
+            ? t("web.auth.signUpIncomplete", { status })
+            : t("web.auth.signUpIncompleteMissing", { status, missing })
         );
       }
     } catch (err) {
@@ -412,7 +422,7 @@ export function AuthForm({ intent }: { intent: AuthIntent }): React.ReactElement
     setBusy(true);
     try {
       if (!(await startSecondFactor(clerk.client.signIn.supportedSecondFactors))) {
-        setError("Couldn't resend the code. Try again.");
+        setError(t("web.auth.resendFailed"));
       }
     } catch (err) {
       setError(clerkErrorMessage(err));
@@ -423,15 +433,15 @@ export function AuthForm({ intent }: { intent: AuthIntent }): React.ReactElement
   if (phase.name === "password") {
     return (
       <AuthShell>
-        <StepCard step={COPY["sign-in"].step}>
-          <StepTitle>Welcome back.</StepTitle>
+        <StepCard step={upper(t("web.auth.stepSignIn"))}>
+          <StepTitle>{t("web.auth.signInHeading")}</StepTitle>
           <StepBody>
-            Enter the password for{" "}
+            {t("web.auth.passwordBodyBefore")}{" "}
             <span style={{ color: "var(--bs-gunmetal)", fontWeight: 600 }}>{email}</span>.
           </StepBody>
           <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
             <label htmlFor="bs-password" style={stepLabel}>
-              PASSWORD
+              {upper(t("web.auth.passwordLabel"))}
             </label>
             <input
               id="bs-password"
@@ -450,11 +460,11 @@ export function AuthForm({ intent }: { intent: AuthIntent }): React.ReactElement
               disabled={busy}
               style={{ ...azureButton, opacity: busy ? 0.45 : 1 }}
             >
-              Sign in
+              {t("web.auth.signIn")}
             </button>
           </div>
           <button onClick={backToEmail} style={linkButton}>
-            Use a different email
+            {t("web.auth.useDifferentEmail")}
           </button>
         </StepCard>
       </AuthShell>
@@ -464,23 +474,25 @@ export function AuthForm({ intent }: { intent: AuthIntent }): React.ReactElement
   if (phase.name === "code") {
     return (
       <AuthShell>
-        <StepCard step={phase.mode === "second-factor" ? COPY["sign-in"].step : copy.step}>
-          <StepTitle>Check your inbox.</StepTitle>
+        <StepCard
+          step={phase.mode === "second-factor" ? upper(t("web.auth.stepSignIn")) : copy.step}
+        >
+          <StepTitle>{t("web.auth.checkInbox")}</StepTitle>
           <StepBody>
-            {phase.mode === "second-factor" && "New device. "}
-            We sent a six-digit code to{" "}
-            <span style={{ color: "var(--bs-gunmetal)", fontWeight: 600 }}>{email}</span>. Enter it
-            here to{" "}
+            {phase.mode === "second-factor" && `${t("web.auth.newDevice")} `}
+            {t("web.auth.codeSentBefore")}{" "}
+            <span style={{ color: "var(--bs-gunmetal)", fontWeight: 600 }}>{email}</span>.{" "}
+            {t("web.auth.codeSentAfter")}{" "}
             {phase.mode === "sign-up"
-              ? "create your account"
+              ? t("web.auth.codePurposeSignUp")
               : phase.mode === "second-factor"
-                ? "confirm it's you"
-                : "sign in"}
+                ? t("web.auth.codePurposeSecondFactor")
+                : t("web.auth.codePurposeSignIn")}
             .
           </StepBody>
           <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
             <label htmlFor="bs-code" style={stepLabel}>
-              CODE
+              {upper(t("web.auth.codeLabel"))}
             </label>
             <input
               id="bs-code"
@@ -501,18 +513,18 @@ export function AuthForm({ intent }: { intent: AuthIntent }): React.ReactElement
               disabled={busy}
               style={{ ...azureButton, opacity: busy ? 0.45 : 1 }}
             >
-              {phase.mode === "sign-up" ? "Create account" : "Sign in"}
+              {phase.mode === "sign-up" ? t("web.auth.createAccount") : t("web.auth.signIn")}
             </button>
           </div>
           <div style={{ display: "flex", gap: 18, alignItems: "center" }}>
             <button onClick={backToEmail} style={linkButton}>
-              Use a different email
+              {t("web.auth.useDifferentEmail")}
             </button>
             <button onClick={() => void resendCode()} style={linkButton}>
-              Resend code
+              {t("web.auth.resendCode")}
             </button>
           </div>
-          <span style={footnote}>The code works once and expires quickly.</span>
+          <span style={footnote}>{t("web.auth.codeExpires")}</span>
         </StepCard>
       </AuthShell>
     );
@@ -529,21 +541,21 @@ export function AuthForm({ intent }: { intent: AuthIntent }): React.ReactElement
           style={{ ...oauthButton, opacity: busy ? 0.45 : 1 }}
         >
           <GoogleMark />
-          Continue with Google
+          {t("web.auth.continueWithGoogle")}
         </button>
         <div style={dividerStyle}>
           <span style={dividerRule} />
-          OR
+          {upper(t("web.auth.or"))}
           <span style={dividerRule} />
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
           <label htmlFor="bs-email" style={stepLabel}>
-            EMAIL
+            {upper(t("web.auth.emailLabel"))}
           </label>
           <input
             id="bs-email"
             type="email"
-            placeholder="you@email.com"
+            placeholder={t("web.auth.emailPlaceholder")}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             onKeyDown={(e) => {
@@ -557,7 +569,7 @@ export function AuthForm({ intent }: { intent: AuthIntent }): React.ReactElement
             disabled={busy}
             style={{ ...azureButton, opacity: busy ? 0.45 : 1 }}
           >
-            Email me a code
+            {t("web.auth.emailMeACode")}
           </button>
           <div id="clerk-captcha" />
         </div>

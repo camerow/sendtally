@@ -1,5 +1,6 @@
 import React from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
+import { t, upper } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 
 export type BetaCardProps = {
@@ -28,7 +29,7 @@ export function BetaCard({ beta, updatedLabel, onSave }: BetaCardProps): React.R
       setEditing(false);
     } catch {
       setBusy(false);
-      setError("Could not save the beta. Try again.");
+      setError(t("mobile.projects.betaSaveFailed"));
     }
   };
 
@@ -43,14 +44,16 @@ export function BetaCard({ beta, updatedLabel, onSave }: BetaCardProps): React.R
         padding: 16,
       }}
     >
-      <Text style={{ ...heading, color: colors.watermelonInk }}>BETA</Text>
+      <Text style={{ ...heading, color: colors.watermelonInk }}>
+        {upper(t("mobile.projects.beta"))}
+      </Text>
       {editing ? (
         <TextInput
           value={draft}
           autoFocus
           multiline
           maxLength={2000}
-          placeholder="The moves, the sequence, what went wrong last time."
+          placeholder={t("mobile.projects.betaEditPlaceholder")}
           placeholderTextColor={colors.textFaint}
           onChangeText={setDraft}
           style={{
@@ -71,7 +74,7 @@ export function BetaCard({ beta, updatedLabel, onSave }: BetaCardProps): React.R
             color: beta === null ? colors.textFaint : colors.gunmetal,
           }}
         >
-          {beta ?? "No beta yet. Write down the sequence while it is fresh."}
+          {beta ?? t("mobile.projects.noBeta")}
         </Text>
       )}
       {error !== null && <Text style={{ ...action, color: colors.watermelonInk }}>{error}</Text>}
@@ -90,7 +93,9 @@ export function BetaCard({ beta, updatedLabel, onSave }: BetaCardProps): React.R
               accessibilityRole="button"
               style={{ minHeight: 44, justifyContent: "center" }}
             >
-              <Text style={{ ...action, color: colors.textMuted }}>CANCEL</Text>
+              <Text style={{ ...action, color: colors.textMuted }}>
+                {upper(t("mobile.common.cancel"))}
+              </Text>
             </Pressable>
             <Pressable
               onPress={() => void save()}
@@ -98,7 +103,9 @@ export function BetaCard({ beta, updatedLabel, onSave }: BetaCardProps): React.R
               accessibilityRole="button"
               style={{ minHeight: 44, justifyContent: "center" }}
             >
-              <Text style={{ ...action, color: colors.azureInk }}>{busy ? "SAVING…" : "SAVE"}</Text>
+              <Text style={{ ...action, color: colors.azureInk }}>
+                {upper(busy ? t("mobile.common.saving") : t("mobile.common.save"))}
+              </Text>
             </Pressable>
           </>
         ) : (
@@ -108,7 +115,7 @@ export function BetaCard({ beta, updatedLabel, onSave }: BetaCardProps): React.R
             style={{ minHeight: 44, justifyContent: "center" }}
           >
             <Text style={{ ...action, color: colors.azureInk }}>
-              {beta === null ? "ADD BETA" : "EDIT"}
+              {upper(beta === null ? t("mobile.projects.addBeta") : t("mobile.common.edit"))}
             </Text>
           </Pressable>
         )}

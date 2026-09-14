@@ -6,6 +6,7 @@ import React from "react";
 import { KeyboardAvoidingView, Platform, Pressable, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, { Path } from "react-native-svg";
+import { t, upper } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { Logo } from "../components/Logo";
 import { SignedOutOnly } from "../features/auth/SignedOutOnly";
@@ -47,25 +48,29 @@ type Phase = { name: "email" } | { name: "code"; mode: CodeMode } | { name: "pas
 
 type SecondFactor = { strategy: string; emailAddressId?: string };
 
-const SWAP: Record<Intent, { to: Intent; prompt: string; label: string }> = {
-  "sign-in": { to: "sign-up", prompt: "First time here?", label: "Create an account" },
-  "sign-up": { to: "sign-in", prompt: "Already have an account?", label: "Sign in" },
-};
+function swapFor(intent: Intent): { to: Intent; prompt: string; label: string } {
+  return intent === "sign-in"
+    ? {
+        to: "sign-up",
+        prompt: t("mobile.signIn.swapToSignUpPrompt"),
+        label: t("mobile.signIn.swapToSignUpLabel"),
+      }
+    : {
+        to: "sign-in",
+        prompt: t("mobile.signIn.swapToSignInPrompt"),
+        label: t("mobile.signIn.swapToSignInLabel"),
+      };
+}
 
-const COPY: Record<Intent, { title: string; body: string }> = {
-  "sign-in": {
-    title: "Welcome back.",
-    body: "No password. Enter the email you signed up with and we send a one-time code.",
-  },
-  "sign-up": {
-    title: "Create your account.",
-    body: "No password. We email you a one-time code. Logging sessions and posting them to Strava are free.",
-  },
-};
+function copyFor(intent: Intent): { title: string; body: string } {
+  return intent === "sign-in"
+    ? { title: t("mobile.signIn.signInTitle"), body: t("mobile.signIn.signInBody") }
+    : { title: t("mobile.signIn.signUpTitle"), body: t("mobile.signIn.signUpBody") };
+}
 
 function errorMessage(err: unknown): string {
   const first = (err as { errors?: Array<{ longMessage?: string; message?: string }> }).errors?.[0];
-  return first?.longMessage ?? first?.message ?? "Something went wrong. Try again.";
+  return first?.longMessage ?? first?.message ?? t("mobile.common.somethingWentWrongTryAgain");
 }
 
 function errorCode(err: unknown): string | undefined {
@@ -117,7 +122,7 @@ export default function SignIn(): React.ReactElement | null {
         return;
       }
       if (await adoptExistingSession()) return;
-      setError("Google sign-in didn't complete. Try again.");
+      setError(t("mobile.signIn.googleIncomplete"));
     } catch (err) {
       if (errorCode(err) === "session_exists" && (await adoptExistingSession())) return;
       setError(errorMessage(err));
@@ -142,7 +147,7 @@ export default function SignIn(): React.ReactElement | null {
   async function sendCode(): Promise<void> {
     if (!signInLoaded || !signUpLoaded) return;
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
-      setError("Enter a valid email address.");
+      setError(t("mobile.signIn.invalidEmail"));
       return;
     }
     setError(null);
@@ -156,7 +161,7 @@ export default function SignIn(): React.ReactElement | null {
       }
       const factor = attempt.supportedFirstFactors?.find((f) => f.strategy === "email_code");
       if (factor === undefined || !("emailAddressId" in factor)) {
-        setError("Email code sign-in is not enabled for this account.");
+        setError(t("mobile.signIn.emailCodeDisabled"));
         setBusy(false);
         return;
       }
@@ -173,7 +178,7 @@ export default function SignIn(): React.ReactElement | null {
         return;
       }
       if (intent === "sign-in") {
-        setError("No account for that email yet. Check the address, or create an account below.");
+        setError(t("mobile.signIn.noAccount"));
         setBusy(false);
         return;
       }
@@ -191,7 +196,7 @@ export default function SignIn(): React.ReactElement | null {
   async function verifyCode(): Promise<void> {
     if (!signInLoaded || !signUpLoaded || phase.name !== "code") return;
     if (!/^\d{6}$/.test(code.trim())) {
-      setError("Enter the six-digit code from the email.");
+      setError(t("mobile.signIn.invalidCode"));
       return;
     }
     setError(null);
@@ -233,7 +238,7 @@ export default function SignIn(): React.ReactElement | null {
           return;
         }
       }
-      setError("That code didn't verify. Try again or resend.");
+      setError(t("mobile.signIn.codeFailed"));
     } catch (err) {
       setError(errorMessage(err));
     }
@@ -243,7 +248,7 @@ export default function SignIn(): React.ReactElement | null {
   async function signInWithPassword(): Promise<void> {
     if (!signInLoaded || phase.name !== "password") return;
     if (password === "") {
-      setError("Enter your password.");
+      setError(t("mobile.signIn.enterPassword"));
       return;
     }
     setError(null);
@@ -262,7 +267,7 @@ export default function SignIn(): React.ReactElement | null {
         setBusy(false);
         return;
       }
-      setError("That password didn't work. Try again.");
+      setError(t("mobile.signIn.passwordFailed"));
     } catch (err) {
       setError(errorMessage(err));
     }
@@ -281,7 +286,7 @@ export default function SignIn(): React.ReactElement | null {
     setBusy(true);
     try {
       if (!(await startSecondFactor(signIn.supportedSecondFactors))) {
-        setError("Couldn't resend the code. Try again.");
+        setError(t("mobile.signIn.resendFailed"));
       }
     } catch (err) {
       setError(errorMessage(err));
@@ -298,23 +303,27 @@ export default function SignIn(): React.ReactElement | null {
 
   const inCodePhase = phase.name === "code";
   const inPasswordPhase = phase.name === "password";
-  const copy = COPY[intent];
-  const swap = SWAP[intent];
-  const title = inCodePhase ? "Check your inbox." : inPasswordPhase ? "Welcome back." : copy.title;
+  const copy = copyFor(intent);
+  const swap = swapFor(intent);
+  const title = inCodePhase
+    ? t("mobile.signIn.checkInbox")
+    : inPasswordPhase
+      ? t("mobile.signIn.signInTitle")
+      : copy.title;
   const body = inCodePhase
     ? phase.name === "code" && phase.mode === "second-factor"
-      ? `New device. We sent a six-digit code to ${email} to confirm it's you.`
-      : `We sent a six-digit code to ${email}.`
+      ? t("mobile.signIn.secondFactorBody", { email })
+      : t("mobile.signIn.codeSentBody", { email })
     : inPasswordPhase
-      ? `Enter the password for ${email}.`
+      ? t("mobile.signIn.passwordBody", { email })
       : copy.body;
   const buttonLabel = inCodePhase
     ? phase.name === "code" && phase.mode === "sign-up"
-      ? "Create account"
-      : "Sign in"
+      ? t("mobile.signIn.createAccount")
+      : t("mobile.signIn.signIn")
     : inPasswordPhase
-      ? "Sign in"
-      : "Email me a code";
+      ? t("mobile.signIn.signIn")
+      : t("mobile.signIn.emailMeACode");
   const submit = inCodePhase ? verifyCode : inPasswordPhase ? signInWithPassword : sendCode;
   const fieldStyle = {
     fontFamily: fonts.sans,
@@ -348,7 +357,7 @@ export default function SignIn(): React.ReactElement | null {
                 <Pressable
                   onPress={() => router.back()}
                   accessibilityRole="button"
-                  accessibilityLabel="Back"
+                  accessibilityLabel={t("mobile.signIn.back")}
                   hitSlop={12}
                   style={{ minHeight: 32, justifyContent: "center" }}
                 >
@@ -389,7 +398,7 @@ export default function SignIn(): React.ReactElement | null {
                   setPassword(t);
                   setError(null);
                 }}
-                placeholder="Password"
+                placeholder={t("mobile.signIn.passwordPlaceholder")}
                 placeholderTextColor={colors.textFaint}
                 secureTextEntry
                 textContentType="password"
@@ -450,13 +459,13 @@ export default function SignIn(): React.ReactElement | null {
                   <Text
                     style={{ fontFamily: fonts.sansSemiBold, fontSize: 16, color: colors.gunmetal }}
                   >
-                    Continue with Google
+                    {t("mobile.signIn.continueWithGoogle")}
                   </Text>
                 </Pressable>
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
                   <View style={{ flex: 1, height: 1, backgroundColor: "rgba(64,63,76,0.12)" }} />
                   <Text style={{ fontFamily: fonts.mono, fontSize: 11, color: colors.textMuted }}>
-                    OR
+                    {upper(t("mobile.signIn.or"))}
                   </Text>
                   <View style={{ flex: 1, height: 1, backgroundColor: "rgba(64,63,76,0.12)" }} />
                 </View>
@@ -505,14 +514,14 @@ export default function SignIn(): React.ReactElement | null {
                   onPress={backToEmail}
                   style={press({ minHeight: 44, justifyContent: "center" })}
                 >
-                  <Text style={secondaryLink}>Different email</Text>
+                  <Text style={secondaryLink}>{t("mobile.signIn.differentEmail")}</Text>
                 </Pressable>
                 {inCodePhase && (
                   <Pressable
                     onPress={() => void resendCode()}
                     style={{ minHeight: 44, justifyContent: "center" }}
                   >
-                    <Text style={secondaryLink}>Resend</Text>
+                    <Text style={secondaryLink}>{t("mobile.signIn.resend")}</Text>
                   </Pressable>
                 )}
               </View>
@@ -547,8 +556,7 @@ export default function SignIn(): React.ReactElement | null {
                 color: "rgba(64,63,76,0.58)",
               }}
             >
-              Strava linking happens on the web. Log sessions here or at sendtally.com - same
-              account, same logbook.
+              {t("mobile.signIn.stravaNote")}
             </Text>
           </View>
         </KeyboardAvoidingView>

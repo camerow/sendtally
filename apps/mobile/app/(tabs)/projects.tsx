@@ -9,6 +9,7 @@ import {
   type ProjectsOverviewVM,
 } from "@sendtally/features/climbs";
 import { useGradeScalePrefs } from "@sendtally/features/settings";
+import { t, upper } from "@sendtally/features/i18n";
 import { colors, fonts } from "@sendtally/design/tokens";
 import { Icon } from "../../components/Icon";
 import { LogoMark } from "../../components/Logo";
@@ -58,14 +59,30 @@ function Stats({ overview }: { overview: ProjectsOverviewVM }): React.ReactEleme
         borderColor: colors.lineOnLight,
       }}
     >
-      <Stat name="ATTEMPTS INVESTED" value={String(overview.attemptsInvested)} last={false} />
       <Stat
-        name="ATTEMPTS TO SEND"
-        value={overview.avgAttemptsToSend === null ? "-" : `${overview.avgAttemptsToSend} AVG`}
+        name={upper(t("mobile.projects.attemptsInvested"))}
+        value={String(overview.attemptsInvested)}
+        last={false}
+      />
+      <Stat
+        name={upper(t("mobile.projects.attemptsToSend"))}
+        value={
+          overview.avgAttemptsToSend === null
+            ? "-"
+            : upper(t("mobile.projects.avg", { avg: overview.avgAttemptsToSend }))
+        }
         last
       />
-      <Stat name="LONGEST RUNNING" value={overview.longestRunning?.value ?? "-"} last={false} />
-      <Stat name="MOST SESSIONS" value={overview.mostSessions?.value ?? "-"} last />
+      <Stat
+        name={upper(t("mobile.projects.longestRunning"))}
+        value={overview.longestRunning?.value ?? "-"}
+        last={false}
+      />
+      <Stat
+        name={upper(t("mobile.projects.mostSessions"))}
+        value={overview.mostSessions?.value ?? "-"}
+        last
+      />
     </View>
   );
 }
@@ -159,13 +176,18 @@ export default function Projects(): React.ReactElement {
               color: colors.gunmetal,
             }}
           >
-            Projects
+            {t("mobile.projects.title")}
           </Text>
           <View style={{ flex: 1 }} />
           <Text style={{ ...label, color: colors.textMuted }}>
             {ready === null
-              ? "LOADING…"
-              : `${ready.overview.open} OPEN · ${ready.overview.sent} SENT`}
+              ? upper(t("mobile.common.loading"))
+              : upper(
+                  t("mobile.projects.openSentCount", {
+                    open: ready.overview.open,
+                    sent: ready.overview.sent,
+                  })
+                )}
           </Text>
         </View>
 
@@ -178,7 +200,7 @@ export default function Projects(): React.ReactElement {
               color: colors.watermelonInk,
             }}
           >
-            Could not load your projects. Pull to retry.
+            {t("mobile.projects.loadFailed")}
           </Text>
         )}
 
@@ -188,16 +210,26 @@ export default function Projects(): React.ReactElement {
               <Stats overview={ready.overview} />
             )}
             <Section
-              title="Open"
-              meta={`${ready.open.length} · ${ready.overview.attemptsInvested} ATTEMPTS`}
+              title={t("mobile.projects.open")}
+              meta={upper(
+                t("mobile.projects.openMeta", {
+                  open: ready.open.length,
+                  count: ready.overview.attemptsInvested,
+                })
+              )}
               items={ready.open}
             />
             <Section
-              title="Sent"
+              title={t("mobile.projects.sent")}
               meta={
                 ready.overview.hardestSentLabel === null
                   ? String(ready.sent.length)
-                  : `${ready.sent.length} · HARDEST ${ready.overview.hardestSentLabel}`
+                  : upper(
+                      t("mobile.projects.sentMeta", {
+                        sent: ready.sent.length,
+                        grade: ready.overview.hardestSentLabel,
+                      })
+                    )
               }
               items={ready.sent}
             />
@@ -212,11 +244,11 @@ export default function Projects(): React.ReactElement {
                   color: colors.textMuted,
                 }}
               >
-                No projects yet. Add one here, or flag a climb while{" "}
+                {t("mobile.projects.emptyBefore")}
                 <Link href="/session/new" style={{ color: colors.azureInk }}>
-                  logging a session
-                </Link>{" "}
-                and every attempt and session you put into it adds up here.
+                  {t("mobile.projects.emptyLink")}
+                </Link>
+                {t("mobile.projects.emptyAfter")}
               </Text>
             )}
           </>
@@ -246,7 +278,7 @@ export default function Projects(): React.ReactElement {
       >
         <Icon name="plus" size={17} strokeWidth={3} color={colors.white} />
         <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 15, color: colors.white }}>
-          New project
+          {t("mobile.projects.newProject")}
         </Text>
       </Pressable>
 

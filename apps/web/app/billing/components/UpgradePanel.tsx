@@ -1,12 +1,13 @@
 import React from "react";
 import { Link } from "react-router";
 import { Label } from "@sendtally/design";
+import { t } from "@sendtally/features/i18n";
 
 export type UpgradePanelProps = {
   eyebrow: string;
   title: string;
   body: string;
-  points?: string[];
+  points?: readonly string[];
 };
 
 const primaryLink: React.CSSProperties = {
@@ -83,7 +84,7 @@ export function UpgradePanel({
         </ul>
       )}
       <Link to="/app/membership" style={primaryLink}>
-        See membership →
+        {t("web.billing.seeMembership")}
       </Link>
     </div>
   );

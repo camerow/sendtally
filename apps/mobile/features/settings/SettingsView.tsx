@@ -3,6 +3,7 @@ import { Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import type { SettingsVM, StravaPostingFeature } from "@sendtally/features/settings";
 import type { Discipline, GradePrefs, GradeScale } from "@sendtally/features/log-session";
+import { t, upper } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { Icon } from "../../components/Icon";
 import { ScreenHeader } from "../../components/ScreenHeader";
@@ -54,7 +55,7 @@ export function SettingsView({
 }: SettingsViewProps): React.ReactElement {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.white }} edges={["top"]}>
-      <ScreenHeader title="Settings" />
+      <ScreenHeader title={t("mobile.settings.title")} />
       <ScrollView
         contentContainerStyle={{
           paddingHorizontal: 18,
@@ -69,15 +70,15 @@ export function SettingsView({
           <View
             style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}
           >
-            <Text style={sectionLabel}>STRAVA</Text>
+            <Text style={sectionLabel}>{upper(t("mobile.settings.strava"))}</Text>
             <StatusPill label={vm.stravaStatusLabel} active={vm.stravaActive} />
           </View>
           <Text style={bodyText}>
             {vm.stravaActive
-              ? "Linked to your Strava account. Sessions you log can post to your feed as Rock Climbing activities."
+              ? t("mobile.settings.stravaActive")
               : vm.stravaConnected
-                ? "Strava access has lapsed. Re-link it on the web at sendtally.com."
-                : "Connect Strava on the web at sendtally.com and your logged sessions can post to your feed."}
+                ? t("mobile.settings.stravaLapsed")
+                : t("mobile.settings.stravaNotConnected")}
           </Text>
           {vm.stravaActive && <StravaPostingSection posting={posting} />}
         </View>
@@ -91,7 +92,7 @@ export function SettingsView({
         <Pressable
           onPress={onOpenAccount}
           accessibilityRole="button"
-          accessibilityLabel="Account"
+          accessibilityLabel={t("mobile.settings.account")}
           style={pressRow({
             ...sectionCard,
             flexDirection: "row",
@@ -102,7 +103,7 @@ export function SettingsView({
           })}
         >
           <View style={{ gap: 4, flexShrink: 1 }}>
-            <Text style={sectionLabel}>ACCOUNT</Text>
+            <Text style={sectionLabel}>{upper(t("mobile.settings.account"))}</Text>
             <Text
               numberOfLines={1}
               style={{ fontFamily: fonts.mono, fontSize: 11, color: colors.textMuted }}
