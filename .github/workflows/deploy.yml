@@ -75,3 +75,45 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: apps/web
           command: deploy
+
+  # A web release is a record of what is live, so it is cut after both Workers
+  # deploy. Nothing in the web app carries a version number, so the tag itself
+  # is the version: the last one plus whatever the commits since it call for.
+  release:
+    needs: [deploy-sync-service, deploy-web]
+    if: github.ref_name == 'main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Derive the version and notes
+        id: release
+        run: |
+          set -euo pipefail
+          previous=$(git tag --list 'web-v*' --sort=-v:refname | head -1)
+          range=${previous:+$previous..}HEAD
+          # Mobile-only commits deploy nothing here, so they release nothing.
+          .github/scripts/release-notes.sh "$range" . ':!apps/mobile' > notes.md
+          if [ ! -s notes.md ]; then
+            echo "Nothing user-facing since ${previous:-the first commit}; no release."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          read -r next bump < <(.github/scripts/next-version.sh "${previous#web-v}" "$range" . ':!apps/mobile')
+          echo "Releasing web-v$next ($bump) since ${previous:-the first commit}"
+          echo "version=$next" >> "$GITHUB_OUTPUT"
+
+      - name: Create the GitHub release
+        if: steps.release.outputs.skip != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.release.outputs.version }}
+        run: >
+          gh release create "web-v$VERSION"
+          --title "Web v$VERSION"
+          --target "$GITHUB_SHA"
+          --notes-file notes.md
