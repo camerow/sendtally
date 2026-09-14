@@ -33,12 +33,12 @@ export const middleware: MiddlewareFunction<Response>[] = [
 ];
 
 export async function loader(args: LoaderFunctionArgs): Promise<{
-  gaMeasurementId: string | null;
+  gtagIds: string[];
   posthog: { token: string; host: string } | null;
 }> {
   const { env } = args.context.get(cloudflareContext);
   return rootAuthLoader(args, () => ({
-    gaMeasurementId: env.GA_MEASUREMENT_ID ?? null,
+    gtagIds: [env.GA_MEASUREMENT_ID, env.GOOGLE_ADS_ID].filter((id): id is string => Boolean(id)),
     posthog:
       env.POSTHOG_PROJECT_TOKEN && env.POSTHOG_HOST
         ? { token: env.POSTHOG_PROJECT_TOKEN, host: env.POSTHOG_HOST }
@@ -56,17 +56,17 @@ function PostHog({ token, host }: { token: string; host: string }): React.ReactE
   );
 }
 
-function GoogleAnalytics({ measurementId }: { measurementId: string }): React.ReactElement {
+function GoogleTag({ ids }: { ids: string[] }): React.ReactElement {
   return (
     <>
-      <script async src={`https://www.googletagmanager.com/gtag/js?id=${measurementId}`} />
+      <script async src={`https://www.googletagmanager.com/gtag/js?id=${ids[0]}`} />
       <script
         dangerouslySetInnerHTML={{
           __html: [
             "window.dataLayer=window.dataLayer||[];",
             "function gtag(){dataLayer.push(arguments);}",
             "gtag('js',new Date());",
-            `gtag('config',${JSON.stringify(measurementId)});`,
+            ...ids.map((id) => `gtag('config',${JSON.stringify(id)});`),
           ].join(""),
         }}
       />
@@ -81,7 +81,7 @@ export function Layout({ children }: { children: React.ReactNode }): React.React
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        {data?.gaMeasurementId ? <GoogleAnalytics measurementId={data.gaMeasurementId} /> : null}
+        {data && data.gtagIds.length > 0 ? <GoogleTag ids={data.gtagIds} /> : null}
         {data?.posthog ? <PostHog {...data.posthog} /> : null}
         <Meta />
         <Links />
