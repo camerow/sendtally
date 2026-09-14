@@ -80,7 +80,7 @@ export default function Setup(): React.ReactElement {
         <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
           <Form method="post">
             <button type="submit" style={primaryButton}>
-              Continue to Strava →
+              Connect Strava →
             </button>
           </Form>
           <a

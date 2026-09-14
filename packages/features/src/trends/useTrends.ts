@@ -3,11 +3,17 @@ import type { SendtallyApi, SessionWithClimbs } from "@sendtally/api-client";
 import { useQuery, type QueryState } from "../lib/useQuery";
 import { filterSessionsByTags, sessionTagOptions, type TagOption } from "../sessions/tags";
 import { trendsVM } from "./transforms";
-import type { Discipline, TrendRange, TrendsVM } from "./types";
+import { PREVIEW_TREND_RANGE, type Discipline, type TrendRange, type TrendsVM } from "./types";
+
+export type TrendsOptions = {
+  /** Non-member preview: pinned to the last 7 days, every other range reads as locked. */
+  preview?: boolean;
+};
 
 export type TrendsFeature = {
   state: QueryState<TrendsVM>;
   reload: () => void;
+  preview: boolean;
   range: TrendRange;
   setRange: (range: TrendRange) => void;
   setDiscipline: (discipline: Discipline) => void;
@@ -19,8 +25,12 @@ export type TrendsFeature = {
   clearTags: () => void;
 };
 
-export function useTrends(api: SendtallyApi): TrendsFeature {
-  const [range, setRange] = React.useState<TrendRange>("3m");
+export function useTrends(
+  api: SendtallyApi,
+  { preview = false }: TrendsOptions = {}
+): TrendsFeature {
+  const [chosenRange, setRange] = React.useState<TrendRange>("3m");
+  const range = preview ? PREVIEW_TREND_RANGE : chosenRange;
   const [discipline, setDiscipline] = React.useState<Discipline | null>(null);
   const [selectedTags, setSelectedTags] = React.useState<string[]>([]);
 
@@ -62,6 +72,7 @@ export function useTrends(api: SendtallyApi): TrendsFeature {
   return {
     state,
     reload,
+    preview,
     range,
     setRange,
     setDiscipline,

@@ -172,7 +172,7 @@ export default function ProjectDetailScreen(): React.ReactElement {
                 fontFamily: fonts.monoMedium,
                 fontSize: 11,
                 letterSpacing: 0.8,
-                color: colors.watermelonInk,
+                color: colors.labelAccent,
               }}
             >
               ATTEMPTS PER SESSION

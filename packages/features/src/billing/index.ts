@@ -1,4 +1,5 @@
-export { MEMBER_BENEFITS, MEMBER_POINTS } from "./benefits";
+export { MEMBER_POINTS, MEMBERSHIP_PANEL } from "./benefits";
+export type { MembershipPanelRow } from "./benefits";
 export {
   formatRenewalDate,
   managedInOf,
@@ -8,4 +9,4 @@ export {
   storeName,
 } from "./transforms";
 export { useMembership, type MembershipFeature } from "./useMembership";
-export type { MemberBenefit, MembershipManagedIn, MembershipPlan, MembershipVM } from "./types";
+export type { MembershipManagedIn, MembershipPlan, MembershipVM } from "./types";

@@ -1,6 +1,7 @@
 import React from "react";
 import { Link } from "react-router";
 import { TILE_BREAKDOWN_ROWS, useTrends } from "@sendtally/features/trends";
+import { UPGRADE_PANEL_ID, UpgradePanel } from "../../billing/components/UpgradePanel";
 import { useClientApi } from "../../lib/useClientApi";
 import { TrendBars } from "./TrendBars";
 import { TrendFilters } from "./TrendFilters";
@@ -8,6 +9,7 @@ import { TrendTagBreakdown } from "./TrendTagBreakdown";
 
 export type TrendsOverviewProps = {
   apiUrl: string;
+  preview?: boolean;
 };
 
 const monoMuted: React.CSSProperties = {
@@ -18,9 +20,33 @@ const monoMuted: React.CSSProperties = {
   color: "rgba(64,63,76,0.55)",
 };
 
-export function TrendsOverview({ apiUrl }: TrendsOverviewProps): React.ReactElement {
+const tileStyle: React.CSSProperties = {
+  background: "var(--bs-white)",
+  border: "1px solid var(--line-on-light-soft)",
+  borderRadius: "var(--radius-card)",
+  padding: 26,
+  display: "flex",
+  flexDirection: "column",
+  gap: 10,
+  textDecoration: "none",
+  color: "var(--bs-gunmetal)",
+};
+
+const scrollToPanel = (): void => {
+  document.getElementById(UPGRADE_PANEL_ID)?.scrollIntoView({ behavior: "smooth", block: "start" });
+};
+
+const lockTile = (event: React.MouseEvent): void => {
+  event.preventDefault();
+  scrollToPanel();
+};
+
+export function TrendsOverview({
+  apiUrl,
+  preview = false,
+}: TrendsOverviewProps): React.ReactElement {
   const api = useClientApi(apiUrl);
-  const feature = useTrends(api);
+  const feature = useTrends(api, { preview });
   const { state } = feature;
 
   return (
@@ -39,7 +65,7 @@ export function TrendsOverview({ apiUrl }: TrendsOverviewProps): React.ReactElem
         </h1>
         {state.status === "ready" && <span style={monoMuted}>{state.data.caption}</span>}
       </div>
-      <TrendFilters feature={feature} />
+      <TrendFilters feature={feature} onLockedRange={scrollToPanel} />
       {state.status === "loading" && (
         <span style={{ ...monoMuted, display: "block", marginTop: 22 }}>LOADING…</span>
       )}
@@ -61,17 +87,8 @@ export function TrendsOverview({ apiUrl }: TrendsOverviewProps): React.ReactElem
             <Link
               key={tile.metric}
               to={`/app/trends/${tile.metric}`}
-              style={{
-                background: "var(--bs-white)",
-                border: "1px solid var(--line-on-light-soft)",
-                borderRadius: "var(--radius-card)",
-                padding: 26,
-                display: "flex",
-                flexDirection: "column",
-                gap: 10,
-                textDecoration: "none",
-                color: "var(--bs-gunmetal)",
-              }}
+              style={tileStyle}
+              onClick={preview ? lockTile : undefined}
             >
               <span
                 style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}
@@ -87,16 +104,18 @@ export function TrendsOverview({ apiUrl }: TrendsOverviewProps): React.ReactElem
                 >
                   {tile.label}
                 </span>
-                <span
-                  style={{
-                    ...monoMuted,
-                    fontSize: 10,
-                    letterSpacing: "0.08em",
-                    color: "rgba(64,63,76,0.72)",
-                  }}
-                >
-                  DETAILS →
-                </span>
+                {!preview && (
+                  <span
+                    style={{
+                      ...monoMuted,
+                      fontSize: 10,
+                      letterSpacing: "0.08em",
+                      color: "rgba(64,63,76,0.72)",
+                    }}
+                  >
+                    DETAILS →
+                  </span>
+                )}
               </span>
               <span
                 style={{
@@ -119,6 +138,11 @@ export function TrendsOverview({ apiUrl }: TrendsOverviewProps): React.ReactElem
               />
             </Link>
           ))}
+        </div>
+      )}
+      {preview && (
+        <div style={{ marginTop: 24 }}>
+          <UpgradePanel />
         </div>
       )}
     </div>

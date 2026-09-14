@@ -238,7 +238,7 @@ export function LogSessionForm({
               fontFamily: fonts.monoMedium,
               fontSize: 11,
               letterSpacing: 0.4,
-              color: colors.watermelonInk,
+              color: colors.labelAccent,
             }}
           >
             {editing === undefined ? "← SESSIONS" : "← SESSION"}
@@ -423,7 +423,7 @@ export function LogSessionForm({
               fontFamily: fonts.monoMedium,
               fontSize: 10,
               letterSpacing: 0.8,
-              color: colors.watermelonInk,
+              color: colors.labelAccent,
             }}
           >
             CLIMBS · {draft.climbs.length}

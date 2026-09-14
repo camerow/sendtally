@@ -1,0 +1,56 @@
+import React from "react";
+import { MEMBERSHIP_PANEL, type MembershipPanelRow } from "@sendtally/features/billing";
+
+export const ledgerEyebrow: React.CSSProperties = {
+  fontFamily: "var(--font-mono)",
+  fontWeight: 500,
+  fontSize: 11,
+  letterSpacing: "var(--type-label-track)",
+  color: "var(--text-on-light)",
+};
+
+function LedgerRow({ row }: { row: MembershipPanelRow }): React.ReactElement {
+  return (
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: "44px 1fr",
+        gap: 12,
+        alignItems: "center",
+        padding: "8px 0",
+        borderTop: "1px solid rgba(64,63,76,0.14)",
+      }}
+    >
+      <span style={{ display: "flex", alignItems: "flex-end", gap: 2, height: 24 }}>
+        {row.bars.map((value, i) => (
+          <i
+            key={i}
+            style={{
+              flex: 1,
+              display: "block",
+              height: `${value}%`,
+              borderRadius: "2px 2px 0 0",
+              background: i === row.peak ? "var(--data-bar-peak)" : "var(--bs-gunmetal)",
+              opacity: i === row.peak ? 1 : 0.85,
+            }}
+          />
+        ))}
+      </span>
+      <span style={{ display: "flex", flexDirection: "column", gap: 1 }}>
+        <span style={{ ...ledgerEyebrow, fontSize: 9 }}>{row.eyebrow}</span>
+        <span style={{ fontSize: 13, lineHeight: 1.45 }}>{row.line}</span>
+      </span>
+    </div>
+  );
+}
+
+/** The four trend rows every membership pitch shows, on the gold panel ground. */
+export function MembershipLedger(): React.ReactElement {
+  return (
+    <div className="upgrade-ledger">
+      {MEMBERSHIP_PANEL.rows.map((row) => (
+        <LedgerRow key={row.eyebrow} row={row} />
+      ))}
+    </div>
+  );
+}

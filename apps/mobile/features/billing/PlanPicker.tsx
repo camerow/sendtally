@@ -72,7 +72,7 @@ export function PlanPicker({
                 fontFamily: fonts.monoMedium,
                 fontSize: 10,
                 letterSpacing: 0.8,
-                color: colors.watermelonInk,
+                color: colors.labelAccent,
                 paddingTop: 4,
               }}
             >

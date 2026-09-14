@@ -87,7 +87,7 @@ export function OnboardingCarousel({
                   fontFamily: fonts.monoMedium,
                   fontSize: 11,
                   letterSpacing: 1,
-                  color: colors.watermelonInk,
+                  color: colors.labelAccent,
                 }}
               >
                 {slide.eyebrow}

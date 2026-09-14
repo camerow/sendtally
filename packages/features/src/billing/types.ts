@@ -9,9 +9,3 @@ export type MembershipVM = {
   plan: MembershipPlan | null;
   renewalLine: string | null;
 };
-
-export type MemberBenefit = {
-  title: string;
-  body: string;
-  soon?: boolean;
-};

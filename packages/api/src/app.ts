@@ -31,6 +31,9 @@ type Vars = { userId: string; hasFeature: (feature: string) => boolean };
 type AppEnv = { Bindings: Env; Variables: Vars };
 
 const OAUTH_STATE_TTL_MS = 15 * 60 * 1000;
+const APP_SCHEME = "sendtally";
+const oauthStartQuery = z.object({ return: z.enum(["web", "app"]).default("web") });
+type OAuthReturn = z.infer<typeof oauthStartQuery>["return"];
 
 // workerd's constant-time compare. lib.dom does not declare it, and the apps
 // typecheck this file for the client's response types, so it is narrowed here
@@ -208,7 +211,7 @@ const app = new Hono<AppEnv>()
     if (code === undefined || stateRaw === undefined) {
       return c.json({ error: "missing code or state" }, 400);
     }
-    let state: { userId: string; nonce: string; exp: number };
+    let state: { userId: string; nonce: string; exp: number; return?: OAuthReturn };
     try {
       state = JSON.parse(await decryptSecret(stateRaw, c.env.TOKEN_KEY)) as typeof state;
     } catch {
@@ -245,7 +248,11 @@ const app = new Hono<AppEnv>()
       expires_at: exchanged.tokens.expiresAt,
     });
     await captureEvent(c, "strava_connection_completed", {}, state.userId);
-    return c.redirect(`${c.env.WEB_APP_URL}/connected/strava`);
+    return c.redirect(
+      state.return === "app"
+        ? `${APP_SCHEME}://connected/strava`
+        : `${c.env.WEB_APP_URL}/connected/strava`
+    );
   })
 
   .use("/v1/*", (c, next) =>
@@ -279,8 +286,9 @@ const app = new Hono<AppEnv>()
     );
   })
 
-  .get("/v1/connect/strava/start", async (c) => {
+  .get("/v1/connect/strava/start", zValidator("query", oauthStartQuery, invalidBody), async (c) => {
     const userId = c.get("userId");
+    const { return: returnTo } = c.req.valid("query");
     const nonce = crypto.randomUUID();
     setCookie(c, "st_oauth", nonce, {
       httpOnly: true,
@@ -290,7 +298,7 @@ const app = new Hono<AppEnv>()
       path: "/connect/strava",
     });
     const state = await encryptSecret(
-      JSON.stringify({ userId, nonce, exp: Date.now() + OAUTH_STATE_TTL_MS }),
+      JSON.stringify({ userId, nonce, exp: Date.now() + OAUTH_STATE_TTL_MS, return: returnTo }),
       c.env.TOKEN_KEY
     );
     const redirectUri = new URL("/connect/strava/callback", c.req.url).toString();

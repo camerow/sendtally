@@ -1,9 +1,12 @@
+const WATERMELON_INK = "#C4303D";
+const PETAL_INK = "#8C1FB5";
+
 export const colors = {
   gunmetal: "#403F4C",
   gunmetalDeep: "#35343F",
   watermelon: "#E84855",
   watermelonPress: "#D63A47",
-  watermelonInk: "#C4303D",
+  watermelonInk: WATERMELON_INK,
   watermelonInkPress: "#A62633",
   gold: "#F9DC5C",
   goldHover: "#FBE583",
@@ -13,8 +16,10 @@ export const colors = {
   azureInkPress: "#144EA6",
   petal: "#CC79EA",
   petalTint: "#EED3F8",
-  petalInk: "#8C1FB5",
+  petalInk: PETAL_INK,
   white: "#FFFFFF",
+  labelAccent: WATERMELON_INK,
+  dataBarPeak: PETAL_INK,
   surfaceSoft: "#F7F6F3",
   textSecondary: "rgba(64,63,76,0.72)",
   textMuted: "rgba(64,63,76,0.55)",

@@ -311,7 +311,7 @@ export function ClimbEditorSheet({
               justifyContent: "space-between",
             }}
           >
-            <Text style={{ ...label, color: colors.watermelonInk }}>
+            <Text style={{ ...label, color: colors.labelAccent }}>
               CLIMB {index + 1} OF {count}
             </Text>
             {count > 1 && (

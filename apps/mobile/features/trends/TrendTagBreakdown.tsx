@@ -22,7 +22,7 @@ export function TrendTagBreakdown({
           fontFamily: fonts.monoMedium,
           fontSize: compact ? 9 : 10,
           letterSpacing: 0.7,
-          color: compact ? colors.textMuted : colors.watermelonInk,
+          color: compact ? colors.textMuted : colors.labelAccent,
         }}
       >
         {title}

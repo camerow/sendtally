@@ -36,7 +36,7 @@ export function SessionTags({
       }}
     >
       <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-        <Text style={{ ...heading, color: colors.watermelonInk }}>TAGS</Text>
+        <Text style={{ ...heading, color: colors.labelAccent }}>TAGS</Text>
         {saving && <Text style={{ ...heading, color: colors.textFaint }}>SAVING…</Text>}
         {error !== null && <Text style={{ ...heading, color: colors.watermelonInk }}>{error}</Text>}
       </View>

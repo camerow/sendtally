@@ -42,7 +42,7 @@ export function AccountView({
               fontFamily: fonts.monoMedium,
               fontSize: 12,
               letterSpacing: 0.5,
-              color: colors.watermelonInk,
+              color: colors.labelAccent,
             }}
           >
             ← SETTINGS
