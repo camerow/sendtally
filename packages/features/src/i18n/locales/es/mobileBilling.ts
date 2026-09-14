@@ -1,5 +1,5 @@
 export const mobileBilling = {
-  "mobile.billing.appStore": "el App Store",
+  "mobile.billing.appStore": "App Store",
   "mobile.billing.googlePlay": "Google Play",
   "mobile.billing.period.week": "semana",
   "mobile.billing.period.month": "mes",
