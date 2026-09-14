@@ -57,11 +57,13 @@ export function EntryComposer({
   api,
   initial,
   editing,
+  heading,
   sessions,
 }: {
   api: SendtallyApi;
   initial: EntryDraft;
   editing?: string;
+  heading: string;
   sessions: SessionRow[];
 }): React.ReactElement {
   const navigate = useNavigate();
@@ -80,26 +82,47 @@ export function EntryComposer({
   // An update belongs to its thread: it never picks a kind, and it is the one
   // place the number matters more than the words.
   const update = isUpdateDraft(draft);
+  // Changing your mind happens once in fifty entries, so it is a link rather
+  // than a control taking up the top of every form.
+  const [kindOpen, setKindOpen] = React.useState(false);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24, maxWidth: 720 }}>
       {!update && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
-          <span style={label}>{t("journal.kind")}</span>
-          <div role="radiogroup" aria-label={t("journal.kind")} className="entry-kinds">
-            {ENTRY_KINDS.map((kind) => (
-              <button
-                key={kind}
-                type="button"
-                role="radio"
-                aria-checked={draft.kind === kind}
-                onClick={() => setDraft((d) => ({ ...d, kind }))}
-                className="entry-kind-segment"
-              >
-                {entryKindLabel(kind)}
-              </button>
-            ))}
-          </div>
+        <div className="journal-head-row" style={{ marginBottom: -12 }}>
+          <span className={`entry-kind entry-kind--${draft.kind}`}>
+            {entryKindLabel(draft.kind)}
+          </span>
+          <div style={{ flex: 1 }} />
+          <button
+            type="button"
+            onClick={() => setKindOpen((was) => !was)}
+            aria-expanded={kindOpen}
+            className="journal-action"
+          >
+            {t("journal.changeKind")}
+          </button>
+        </div>
+      )}
+      <h1 className="journal-title">{heading}</h1>
+
+      {!update && kindOpen && (
+        <div role="radiogroup" aria-label={t("journal.kind")} className="entry-kinds">
+          {ENTRY_KINDS.map((kind) => (
+            <button
+              key={kind}
+              type="button"
+              role="radio"
+              aria-checked={draft.kind === kind}
+              onClick={() => {
+                setDraft((d) => ({ ...d, kind }));
+                setKindOpen(false);
+              }}
+              className="entry-kind-segment"
+            >
+              {entryKindLabel(kind)}
+            </button>
+          ))}
         </div>
       )}
 

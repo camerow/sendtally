@@ -839,3 +839,7 @@
   background: rgba(64, 63, 76, 0.08);
   color: var(--bs-gunmetal);
 }
+
+.sessions-ghost-link.is-open {
+  border-color: var(--bs-gunmetal);
+}

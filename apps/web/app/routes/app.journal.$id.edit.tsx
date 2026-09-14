@@ -36,8 +36,13 @@ export default function EditEntry(): React.ReactElement {
   return (
     <div>
       <BackLink to={`/app/journal/${encodeURIComponent(entry.id)}`}>{t("journal.title")}</BackLink>
-      <h1 className="journal-title">{t("journal.editEntry")}</h1>
-      <EntryComposer api={api} initial={initial} editing={entry.id} sessions={sessions} />
+      <EntryComposer
+        api={api}
+        initial={initial}
+        editing={entry.id}
+        heading={t("journal.editEntry")}
+        sessions={sessions}
+      />
     </div>
   );
 }

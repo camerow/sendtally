@@ -62,4 +62,9 @@ export const journal = {
   "journal.unlinkSession": "Desvincular esta sesión",
   "journal.sessionCount_one": "{count} sesión",
   "journal.sessionCount_other": "{count} sesiones",
+  "journal.changeKind": "Cambiar el tipo",
+  "journal.newOfKind": "Nuevo: {kind}",
+  "journal.hintJournal": "Cómo fue, qué buscas.",
+  "journal.hintTrip": "Unos días fuera, y las sesiones de esos días.",
+  "journal.hintInjury": "Algo que duele, y cómo va cambiando.",
 } as const;

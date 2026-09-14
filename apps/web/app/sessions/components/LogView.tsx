@@ -4,6 +4,7 @@ import type { ConnectionStatus, JournalEntry, SessionRow } from "@sendtally/api-
 import { Logo } from "@sendtally/design";
 import { t } from "@sendtally/features/i18n";
 import { logItems, today } from "@sendtally/features/journal";
+import { NewEntryMenu } from "../../journal/components/NewEntryMenu";
 import {
   filterSessionsByTags,
   logYearGroups,
@@ -141,12 +142,9 @@ export function LogView({
           {countText}
         </span>
         <div style={{ flex: 1 }} />
-        <Link
-          to={`/app/journal/new?date=${today()}`}
-          className="sessions-head-action sessions-ghost-link"
-        >
-          {t("journal.writeAnEntry")}
-        </Link>
+        <span className="sessions-head-action">
+          <NewEntryMenu />
+        </span>
         {sessions.length > 0 && (
           <Link to="/app/sessions/new" className="sessions-head-action sessions-primary-link">
             {t("common.logASession")}
@@ -216,7 +214,10 @@ export function LogView({
         <div className="sessions-first">
           <span className="sessions-first-label">{t("journal.emptyTitle")}</span>
           <p className="sessions-first-body">{t("journal.emptyBody")}</p>
-          <Link to={`/app/journal/new?date=${today()}`} className="sessions-primary-link">
+          <Link
+            to={`/app/journal/new?kind=journal&date=${today()}`}
+            className="sessions-primary-link"
+          >
             {t("journal.writeAnEntry")}
           </Link>
         </div>
@@ -238,6 +239,7 @@ export function LogView({
           </Link>
         </div>
       )}
+      <NewEntryMenu variant="fab" />
       <LogSessionFab />
       {filtersOpen && (
         <SessionFilterSheet

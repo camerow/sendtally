@@ -4,6 +4,7 @@ import { useLoaderData, useSearchParams } from "react-router";
 import type { ConnectionStatus, JournalEntry, SessionRow } from "@sendtally/api-client";
 import { requireApi } from "../lib/api.server";
 import { LogView, type LogScope } from "../sessions/components/LogView";
+import journalStyles from "../journal/journal.css?url";
 import sessionsStyles from "../sessions/sessions.css?url";
 
 type LoaderData = {
@@ -12,7 +13,10 @@ type LoaderData = {
   entries: JournalEntry[];
 };
 
-export const links: LinksFunction = () => [{ rel: "stylesheet", href: sessionsStyles }];
+export const links: LinksFunction = () => [
+  { rel: "stylesheet", href: sessionsStyles },
+  { rel: "stylesheet", href: journalStyles },
+];
 
 export async function loader(args: LoaderFunctionArgs): Promise<LoaderData> {
   const api = await requireApi(args);
