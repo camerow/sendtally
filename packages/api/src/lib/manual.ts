@@ -204,7 +204,6 @@ export function buildManualSession(
     rpe: result.rpe,
     title: body.name ?? result.title,
     summary: result.summary,
-    notes: normalisedNote(body.notes),
     climbs_json: JSON.stringify(
       session.climbs.map((c): StoredClimb => ({
         time: c.time.toISOString(),

@@ -47,16 +47,9 @@ export const billing = {
   "billing.restorePurchases": "Restaurar compras",
   "billing.terms": "Términos",
   "billing.privacy": "Privacidad",
-  "billing.loggingIsFree": "Registrar es gratis",
-  "billing.freeBody":
-    "La suscripción convierte el registro en un historial de entrenamiento. También paga el servidor.",
-  "billing.pickAPlan": " Elige un plan abajo para unirte.",
-  "billing.storeBody":
-    "Se cobra a través de {store}. Cambia de plan o cancela desde tus suscripciones de {store}; las tendencias se mantienen hasta que termine el periodo pagado.",
   "billing.manageIn": "Gestionar en {store}",
   "billing.webBody":
     "Esta suscripción se compró en sendtally.com y se renueva allí. Desbloquea igualmente las tendencias en la app.",
-  "billing.activeBody": "La suscripción está activa en esta cuenta.",
   "billing.payThroughInstead": "Pagar a través de {store} en su lugar",
   "billing.plans": "Planes",
   "billing.switchBody":
@@ -64,12 +57,8 @@ export const billing = {
   "billing.introMobile":
     "Registrar sesiones y publicarlas en Strava es gratis, y siempre lo será. La suscripción abre las pantallas que te leen todo tu historial.",
   "billing.loadFailed": "No se pudo cargar tu suscripción.",
-  "billing.intro":
-    "Registrar sesiones y publicarlas en Strava es gratis y siempre lo será. La suscripción es lo que convierte el registro en un historial de entrenamiento, y es lo que paga el servidor.",
   "billing.loadingPlans": "Cargando planes…",
   "billing.activeOnAccount": "Tu suscripción está activa en esta cuenta.",
-  "billing.billedThrough":
-    "Tu suscripción se cobra a través de {store}. Cámbiala o cancélala desde tus suscripciones de {store}; las tendencias se mantienen hasta que termine el periodo pagado.",
   "billing.panelTitle": "Hazte miembro para ver tus tendencias a largo plazo.",
   "billing.panelPageTitle": "Todo lo que tus sesiones han ido sumando.",
   "billing.panelBody":
@@ -80,4 +69,17 @@ export const billing = {
   "billing.panelPyramid": "Dónde están realmente tus encadenes",
   "billing.panelHardest": "Tu techo por periodo, con la vía que lo marcó",
   "billing.panelFlash": "Encadenes al primer intento, seguidos en el tiempo",
+  "billing.trendsOpen": "Tus tendencias están abiertas.",
+  "billing.trendsOpenUntil": "Tus tendencias están abiertas hasta el {date}.",
+  "billing.freeTrialEnds": "Prueba gratis · termina el {date}",
+  "billing.cancelledEnds": "Cancelada · termina el {date}",
+  "billing.perMonthBilledYearly": "/mes, facturado al año",
+  "billing.cancelAnyTime": "cancela cuando quieras",
+  "billing.yearlyPrice": "Anual · {price}",
+  "billing.monthlyPrice": "Mensual · {price}",
+  "billing.manageMembership": "Gestionar suscripción",
+  "billing.openTrend": "Abrir",
+  "billing.renewsOnWeb": "Se renueva en sendtally.com",
+  "billing.plansUnavailableWeb":
+    "No se pudieron cargar los planes ahora mismo. Recarga la página para intentarlo de nuevo.",
 } as const;

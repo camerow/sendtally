@@ -4,6 +4,20 @@ export const common = {
   "common.sessions": "Séances",
   "common.sent": "Enchaîné",
   "common.nothingLoggedYet": "Rien d'enregistré pour l'instant",
+  "common.notFoundLabel": "Page introuvable",
+  "common.notFoundTitle": "Hors itinéraire.",
+  "common.notFoundBody":
+    "Il n'y a rien à cette adresse. Le lien est sans doute ancien, ou la session qu'il visait a été supprimée.",
+  "common.forbiddenLabel": "Pas à toi",
+  "common.forbiddenTitle": "Accès fermé.",
+  "common.forbiddenBody":
+    "Cela appartient à un autre compte. Si c'est le tien, connecte-toi avec l'adresse utilisée pour l'enregistrer.",
+  "common.serverErrorLabel": "Erreur serveur",
+  "common.serverErrorTitle": "Jour de forte gravité.",
+  "common.serverErrorBody":
+    "Quelque chose a cassé chez nous, pas chez toi. Toutes les sessions que tu as enregistrées sont conservées. Réessaie dans un instant.",
+  "common.switchAccount": "Changer de compte",
+  "common.backToLog": "Retour au journal de bord",
   "common.somethingWentWrong": "Une erreur s'est produite.",
   "common.indoor": "En salle",
   "common.outdoor": "En extérieur",
@@ -22,6 +36,7 @@ export const common = {
   "common.loading": "Chargement…",
   "common.tryAgain": "Réessayer",
   "common.somethingWentWrongTryAgain": "Une erreur s'est produite. Réessaie.",
+  "common.climbingSession": "Séance d'escalade",
   "common.logASession": "Enregistrer une séance",
   "common.notesPlaceholder": "Les sensations, quoi tenter la prochaine fois.",
   "common.grade": "Cotation",
@@ -57,4 +72,5 @@ export const common = {
   "common.optional": "· optionnel",
   "common.membersOnly": "{label}, réservé aux abonnés",
   "common.closeOptions": "Fermer les options {label}",
+  "common.back": "Retour",
 } as const;

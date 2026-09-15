@@ -58,10 +58,6 @@ export const logSession = {
   "logSession.ledgerLabel": "{grade} {name}, {kind}, {tries}",
   "logSession.triesCount_one": "{count} pegue",
   "logSession.triesCount_other": "{count} pegues",
-  "logSession.discardBody_one":
-    "La {count} escalada que registraste para el {day} se borrará de este dispositivo.",
-  "logSession.discardBody_other":
-    "Las {count} escaladas que registraste para el {day} se borrarán de este dispositivo.",
   "logSession.unfinished": "Tienes una sesión sin terminar de {when}",
   "logSession.draftMetaShort": "{climbs} · {start}–{end}",
   "logSession.startFresh": "Empezar de cero",

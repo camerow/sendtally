@@ -36,6 +36,7 @@ export {
 export {
   DRAFT_TTL_MS,
   draftStorage,
+  parseStoredDraft,
   type DraftStorage,
   type DraftStorageIo,
   type StoredSessionDraft,

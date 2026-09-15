@@ -49,16 +49,9 @@ export const billing = {
   "billing.restorePurchases": "Käufe wiederherstellen",
   "billing.terms": "AGB",
   "billing.privacy": "Datenschutz",
-  "billing.loggingIsFree": "Eintragen ist kostenlos",
-  "billing.freeBody":
-    "Die Mitgliedschaft macht aus dem Log ein Trainingstagebuch. Und sie bezahlt den Server.",
-  "billing.pickAPlan": " Wähl unten ein Abo, um dabei zu sein.",
-  "billing.storeBody":
-    "Abrechnung über {store}. Abo wechseln oder kündigen kannst du in deinen {store}-Abos; die Trends bleiben bis zum Ende des bezahlten Zeitraums.",
   "billing.manageIn": "Verwalten über {store}",
   "billing.webBody":
     "Diese Mitgliedschaft wurde auf sendtally.com gekauft und verlängert sich dort. Sie schaltet die Trends in der App genauso frei.",
-  "billing.activeBody": "Die Mitgliedschaft ist auf diesem Konto aktiv.",
   "billing.payThroughInstead": "Stattdessen über {store} bezahlen",
   "billing.plans": "Abos",
   "billing.switchBody":
@@ -66,12 +59,8 @@ export const billing = {
   "billing.introMobile":
     "Sessions eintragen und auf Strava posten ist kostenlos, und das bleibt so. Die Mitgliedschaft öffnet die Screens, die dir deine ganze Historie zurücklesen.",
   "billing.loadFailed": "Deine Mitgliedschaft konnte nicht geladen werden.",
-  "billing.intro":
-    "Sessions eintragen und auf Strava posten ist kostenlos, und das bleibt so. Die Mitgliedschaft macht aus dem Log ein Trainingstagebuch, und sie bezahlt den Server.",
   "billing.loadingPlans": "Abos werden geladen…",
   "billing.activeOnAccount": "Deine Mitgliedschaft ist auf diesem Konto aktiv.",
-  "billing.billedThrough":
-    "Deine Mitgliedschaft wird über {store} abgerechnet. Ändern oder kündigen kannst du sie in deinen {store}-Abos; die Trends bleiben bis zum Ende des bezahlten Zeitraums.",
   "billing.panelTitle": "Werde Mitglied und sieh deine langfristigen Trends.",
   "billing.panelPageTitle": "Alles, worauf sich deine Sessions summieren.",
   "billing.panelBody":
@@ -82,4 +71,17 @@ export const billing = {
   "billing.panelPyramid": "Wo deine Tops wirklich liegen",
   "billing.panelHardest": "Dein Limit pro Zeitraum, mit der Route, die es gesetzt hat",
   "billing.panelFlash": "Tops im ersten Versuch, über die Zeit verfolgt",
+  "billing.trendsOpen": "Deine Trends sind offen.",
+  "billing.trendsOpenUntil": "Deine Trends sind bis {date} offen.",
+  "billing.freeTrialEnds": "Kostenlos testen · endet am {date}",
+  "billing.cancelledEnds": "Gekündigt · endet am {date}",
+  "billing.perMonthBilledYearly": "/Monat, jährlich abgerechnet",
+  "billing.cancelAnyTime": "jederzeit kündbar",
+  "billing.yearlyPrice": "Jährlich · {price}",
+  "billing.monthlyPrice": "Monatlich · {price}",
+  "billing.manageMembership": "Mitgliedschaft verwalten",
+  "billing.openTrend": "Öffnen",
+  "billing.renewsOnWeb": "Verlängert sich auf sendtally.com",
+  "billing.plansUnavailableWeb":
+    "Die Abos konnten gerade nicht geladen werden. Lade die Seite neu, um es noch einmal zu versuchen.",
 } as const;

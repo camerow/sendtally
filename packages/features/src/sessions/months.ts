@@ -1,5 +1,5 @@
-import type { SessionRow } from "@sendtally/api-client";
 import { formatDate } from "../i18n";
+import type { LogItem } from "../journal/types";
 
 export type SessionMonth = {
   key: string;
@@ -7,7 +7,7 @@ export type SessionMonth = {
   month: number;
   name: string;
   label: string;
-  sessions: SessionRow[];
+  items: LogItem[];
 };
 
 function formatMonth(month: number, style: "long" | "short"): string {
@@ -31,15 +31,15 @@ export function monthLabel(year: number, month: number): string {
   return `${monthName(month)} ${year}`;
 }
 
-export function sessionMonths(sessions: SessionRow[]): SessionMonth[] {
+export function logMonths(items: LogItem[]): SessionMonth[] {
   const byKey = new Map<string, SessionMonth>();
-  for (const session of sessions) {
-    const start = new Date(session.start_at);
-    const year = start.getUTCFullYear();
-    const month = start.getUTCMonth() + 1;
+  for (const item of items) {
+    const at = new Date(item.at);
+    const year = at.getUTCFullYear();
+    const month = at.getUTCMonth() + 1;
     const key = monthKey(year, month);
     const existing = byKey.get(key);
-    if (existing) existing.sessions.push(session);
+    if (existing) existing.items.push(item);
     else
       byKey.set(key, {
         key,
@@ -47,7 +47,7 @@ export function sessionMonths(sessions: SessionRow[]): SessionMonth[] {
         month,
         name: monthName(month),
         label: monthLabel(year, month),
-        sessions: [session],
+        items: [item],
       });
   }
   return [...byKey.values()].sort((a, b) => b.key.localeCompare(a.key));

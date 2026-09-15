@@ -19,7 +19,7 @@ export function LogSessionFab(): React.ReactElement {
       >
         <path d="M8 3.6V12.4M3.6 8H12.4" />
       </svg>
-      {t("common.logASession")}
+      {t("common.climbingSession")}
     </Link>
   );
 }

@@ -573,9 +573,10 @@ describe("app", () => {
     expect((await setNotes("user_notes_board", "fp_board_note", "Old history.")).status).toBe(200);
 
     const row = await env.DB.prepare(
-      `SELECT source, title, rpe, notes FROM sessions WHERE fingerprint = 'fp_board_note'`
-    ).first<{ source: string; title: string; rpe: number; notes: string }>();
-    expect(row).toEqual({ source: "board", title: "Board session", rpe: 6, notes: "Old history." });
+      `SELECT source, title, rpe FROM sessions WHERE fingerprint = 'fp_board_note'`
+    ).first<{ source: string; title: string; rpe: number }>();
+    expect(row).toEqual({ source: "board", title: "Board session", rpe: 6 });
+    expect(await readNotes("user_notes_board", "fp_board_note")).toBe("Old history.");
   });
 
   it("tags a legacy board session without touching the session row", async () => {

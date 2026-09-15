@@ -3,6 +3,7 @@ import { auth } from "./auth";
 import { billing } from "./billing";
 import { climbs } from "./climbs";
 import { common } from "./common";
+import { journal } from "./journal";
 import { logSession } from "./logSession";
 import { onboarding } from "./onboarding";
 import { projects } from "./projects";
@@ -17,6 +18,7 @@ export const fr = {
   ...billing,
   ...climbs,
   ...common,
+  ...journal,
   ...logSession,
   ...onboarding,
   ...projects,

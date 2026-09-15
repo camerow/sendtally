@@ -21,12 +21,10 @@ on:
       - ".github/workflows/mobile-e2e.yml"
   workflow_dispatch:
 
-# One run at a time across every branch, not one per ref. Every run publishes to the same
-# `e2e` update branch, because that is the branch the APK's channel resolves to, so two
-# runs in flight would each be looking at the other's JavaScript.
+# Per ref, cancelling: a push supersedes the run before it. The job below adds the second level.
 concurrency:
-  group: mobile-e2e
-  cancel-in-progress: false
+  group: mobile-e2e-${{ github.ref }}
+  cancel-in-progress: true
 
 env:
   API_LEVEL: 34
@@ -43,8 +41,15 @@ env:
 
 jobs:
   android:
+    # No EXPO_TOKEN in the dependabot secret scope, so the fingerprint step dies
+    # on an unauthenticated eas call.
+    if: github.actor != 'dependabot[bot]'
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    # Across branches, never cancelling: every run publishes to the one `e2e` update branch the APK resolves to.
+    concurrency:
+      group: mobile-e2e-shared
+      cancel-in-progress: false
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4

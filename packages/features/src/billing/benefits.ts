@@ -1,4 +1,5 @@
 import { t } from "../i18n";
+import type { TrendMetric } from "../trends/types";
 
 export function memberPoints(): string[] {
   return [
@@ -10,6 +11,7 @@ export function memberPoints(): string[] {
 }
 
 export type MembershipPanelRow = {
+  metric: TrendMetric;
   eyebrow: string;
   line: string;
   bars: number[];
@@ -37,24 +39,28 @@ export function membershipPanel(): MembershipPanel {
     footnote: t("billing.panelFootnote"),
     rows: [
       {
+        metric: "volume",
         eyebrow: t("trends.volume"),
         line: t("billing.panelVolume"),
         bars: [40, 55, 45, 70, 60, 100],
         peak: 5,
       },
       {
+        metric: "pyramid",
         eyebrow: t("trends.gradePyramid"),
         line: t("billing.panelPyramid"),
         bars: [30, 60, 100, 80, 45, 20],
         peak: 2,
       },
       {
+        metric: "hardest",
         eyebrow: t("trends.hardestSend"),
         line: t("billing.panelHardest"),
         bars: [50, 50, 65, 65, 80, 100],
         peak: 5,
       },
       {
+        metric: "flash",
         eyebrow: t("trends.flashRate"),
         line: t("billing.panelFlash"),
         bars: [35, 45, 40, 70, 100, 85],

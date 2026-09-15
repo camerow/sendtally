@@ -1,6 +1,7 @@
 import type { SessionRow } from "@sendtally/api-client";
 import { t } from "../i18n";
-import { sessionMonths, type SessionMonth } from "./months";
+import type { LogItem } from "../journal/types";
+import { logMonths, type SessionMonth } from "./months";
 
 export type SessionGroupTotals = {
   count: number;
@@ -28,6 +29,14 @@ function sessionTop(session: SessionRow): { grade: number; label: string | null 
   return { grade: session.top_grade, label: session.top_grade_label };
 }
 
+export function sessionsIn(items: LogItem[]): SessionRow[] {
+  return items.flatMap((item) => (item.type === "session" ? [item.session] : []));
+}
+
+export function entriesIn(items: LogItem[]): LogItem[] {
+  return items.filter((item) => item.type === "entry");
+}
+
 export function sessionTotals(sessions: SessionRow[]): SessionGroupTotals {
   return sessions.reduce<SessionGroupTotals>(
     (totals, session) => {
@@ -44,9 +53,9 @@ export function sessionTotals(sessions: SessionRow[]): SessionGroupTotals {
   );
 }
 
-export function sessionYearGroups(sessions: SessionRow[]): SessionYear[] {
+export function logYearGroups(items: LogItem[]): SessionYear[] {
   const byYear = new Map<number, SessionMonth[]>();
-  for (const month of sessionMonths(sessions)) {
+  for (const month of logMonths(items)) {
     const existing = byYear.get(month.year);
     if (existing) existing.push(month);
     else byYear.set(month.year, [month]);
@@ -57,7 +66,7 @@ export function sessionYearGroups(sessions: SessionRow[]): SessionYear[] {
       year,
       label: String(year),
       months,
-      totals: sessionTotals(months.flatMap((m) => m.sessions)),
+      totals: sessionTotals(sessionsIn(months.flatMap((m) => m.items))),
     }));
 }
 
@@ -71,6 +80,28 @@ export function durationLabel(minutes: number): string {
 
 export function countLabel(count: number): string {
   return t("sessions.sessionCount", { count });
+}
+
+/**
+ * What a log group carries, saying only what is actually in it: a month of
+ * writing should not announce "0 sessions".
+ */
+export function logCountLabel(items: LogItem[]): string {
+  const sessions = sessionsIn(items).length;
+  const entries = items.length - sessions;
+  const parts = [
+    sessions === 0 && entries > 0 ? null : countLabel(sessions),
+    entries === 0 ? null : t("journal.entryCount", { count: entries }),
+  ].filter((part) => part !== null);
+  return parts.join(" · ");
+}
+
+export function logTotalsLabel(items: LogItem[]): string {
+  const sessions = sessionsIn(items);
+  if (sessions.length === 0) return logCountLabel(items);
+  const entries = items.length - sessions.length;
+  const totals = totalsLabel(sessionTotals(sessions));
+  return entries === 0 ? totals : `${totals} · ${t("journal.entryCount", { count: entries })}`;
 }
 
 export function totalsLabel(totals: SessionGroupTotals): string {

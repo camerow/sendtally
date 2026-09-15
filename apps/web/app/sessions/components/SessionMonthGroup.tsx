@@ -1,7 +1,7 @@
 import React from "react";
-import { countLabel, sessionTitle, type SessionMonth } from "@sendtally/features/sessions";
+import { logCountLabel, type SessionMonth } from "@sendtally/features/sessions";
 import { SectionHeading } from "./SectionHeading";
-import { SessionRowItem } from "./SessionRowItem";
+import { LogRowItem } from "./LogRowItem";
 
 export function SessionMonthGroup({ month }: { month: SessionMonth }): React.ReactElement {
   return (
@@ -10,11 +10,11 @@ export function SessionMonthGroup({ month }: { month: SessionMonth }): React.Rea
         sectionKey={month.key}
         title={month.name}
         year={month.year}
-        meta={countLabel(month.sessions.length)}
+        meta={logCountLabel(month.items)}
       />
       <div className="sessions-rows">
-        {month.sessions.map((s) => (
-          <SessionRowItem key={s.fingerprint} session={s} title={sessionTitle(s)} />
+        {month.items.map((item) => (
+          <LogRowItem key={item.key} item={item} />
         ))}
       </div>
     </section>

@@ -2,7 +2,8 @@ import React from "react";
 import { Link } from "react-router";
 import { TILE_BREAKDOWN_ROWS, useTrends } from "@sendtally/features/trends";
 import { t } from "@sendtally/features/i18n";
-import { UPGRADE_PANEL_ID, UpgradePanel } from "../../billing/components/UpgradePanel";
+import { MEMBERSHIP_PANEL_ID } from "../../billing/components/MembershipPanel";
+import { UpgradePanel } from "../../billing/components/UpgradePanel";
 import { useClientApi } from "../../lib/useClientApi";
 import { TrendBars } from "./TrendBars";
 import { TrendFilters } from "./TrendFilters";
@@ -35,7 +36,9 @@ const tileStyle: React.CSSProperties = {
 };
 
 const scrollToPanel = (): void => {
-  document.getElementById(UPGRADE_PANEL_ID)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  document
+    .getElementById(MEMBERSHIP_PANEL_ID)
+    ?.scrollIntoView({ behavior: "smooth", block: "start" });
 };
 
 const lockTile = (event: React.MouseEvent): void => {

@@ -213,13 +213,13 @@ function tagStats(
   discipline: Discipline
 ): TagStat[] {
   return sessionTagGroups(sessions).map((group) => {
-    const sent = sends(group.sessions, discipline).filter((c) => c.time >= windowStart);
+    const sent = sends(group.items, discipline).filter((c) => c.time >= windowStart);
     const grades = sent.map((c) => c.grade);
     return {
       key: group.key,
       label: group.label,
-      sessions: group.sessions.length,
-      volume: group.sessions.reduce((a, s) => a + s.climb_count, 0),
+      sessions: group.items.length,
+      volume: group.items.reduce((a, s) => a + s.climb_count, 0),
       sends: sent.length,
       hardest: grades.length === 0 ? null : Math.max(...grades),
       flash:
