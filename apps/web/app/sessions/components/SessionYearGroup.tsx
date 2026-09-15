@@ -1,5 +1,5 @@
 import React from "react";
-import { totalsLabel, type SessionYear } from "@sendtally/features/sessions";
+import { logTotalsLabel, type SessionYear } from "@sendtally/features/sessions";
 import { yearAnchorId } from "../anchors";
 import { SessionMonthGroup } from "./SessionMonthGroup";
 
@@ -28,7 +28,7 @@ export function SessionYearGroup({ year }: { year: SessionYear }): React.ReactEl
             color: "rgba(64,63,76,0.55)",
           }}
         >
-          {totalsLabel(year.totals)}
+          {logTotalsLabel(year.months.flatMap((m) => m.items))}
         </span>
       </h2>
       {year.months.map((month) => (

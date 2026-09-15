@@ -41,6 +41,8 @@ export type PostingStatus = { connected: boolean; active: boolean; since: string
 
 export type SessionDetailVM = {
   title: string;
+  /** The session's UTC day, for anything that opens dated to it. */
+  startDay: string;
   meta: string;
   editable: boolean;
   stats: StatVM[];

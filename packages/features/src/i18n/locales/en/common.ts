@@ -22,6 +22,7 @@ export const common = {
   "common.loading": "Loading…",
   "common.tryAgain": "Try again",
   "common.somethingWentWrongTryAgain": "Something went wrong. Try again.",
+  "common.climbingSession": "Climbing session",
   "common.logASession": "Log a session",
   "common.notesPlaceholder": "How it felt, what to try next time.",
   "common.grade": "Grade",
@@ -57,4 +58,5 @@ export const common = {
   "common.optional": "· optional",
   "common.membersOnly": "{label}, members only",
   "common.closeOptions": "Close {label} options",
+  "common.back": "Back",
 } as const;

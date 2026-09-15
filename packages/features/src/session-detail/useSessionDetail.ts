@@ -1,5 +1,5 @@
 import React from "react";
-import type { SendtallyApi, SessionDetail, SessionTag } from "@sendtally/api-client";
+import type { JournalEntry, SendtallyApi, SessionDetail, SessionTag } from "@sendtally/api-client";
 import { climbsWorkedBefore } from "../climbs/transforms";
 import { t } from "../i18n";
 import { useQuery, type QueryState } from "../lib/useQuery";
@@ -17,6 +17,8 @@ export type SessionDetailFeature = {
     vm: SessionDetailVM;
     climbs: ClimbVM[];
     tags: SessionTag[];
+    entries: JournalEntry[];
+    /** The first note on the session - what the log form's single field edits. */
     notes: string | null;
   }>;
   filter: ClimbFilter;
@@ -70,6 +72,7 @@ export function useSessionDetail(api: SendtallyApi, fingerprint: string): Sessio
         vm: sessionDetailVM(raw.data.session, raw.data.posting, raw.data.workedBefore),
         climbs: filterAndSortClimbs(all, filter, sort),
         tags: raw.data.session.tags,
+        entries: raw.data.session.entries,
         notes: raw.data.session.notes,
       },
     };

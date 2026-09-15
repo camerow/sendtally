@@ -22,6 +22,7 @@ export const common = {
   "common.loading": "Lädt…",
   "common.tryAgain": "Noch einmal",
   "common.somethingWentWrongTryAgain": "Etwas ist schiefgelaufen. Versuch es noch einmal.",
+  "common.climbingSession": "Klettersession",
   "common.logASession": "Session eintragen",
   "common.notesPlaceholder": "Wie es sich angefühlt hat, was du nächstes Mal probierst.",
   "common.grade": "Grad",
@@ -57,4 +58,5 @@ export const common = {
   "common.optional": "· optional",
   "common.membersOnly": "{label}, nur für Mitglieder",
   "common.closeOptions": "{label}-Optionen schließen",
+  "common.back": "Zurück",
 } as const;

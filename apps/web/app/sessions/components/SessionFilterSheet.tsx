@@ -1,6 +1,5 @@
 import React from "react";
 import { useNavigate } from "react-router";
-import type { SessionRow } from "@sendtally/api-client";
 import {
   UNTAGGED_KEY,
   untaggedLabel,
@@ -9,12 +8,13 @@ import {
   type SessionGrouping,
   type TagOption,
 } from "@sendtally/features/sessions";
+import type { LogItem } from "@sendtally/features/journal";
 import { t } from "@sendtally/features/i18n";
 import { chipStyle } from "../../components/chip";
 
 export type SessionFilterSheetProps = {
   onClose: () => void;
-  sessions: SessionRow[];
+  items: LogItem[];
   grouping: SessionGrouping;
   tagOptions: TagOption[];
   untaggedCount: number;
@@ -48,7 +48,7 @@ function Field({
 
 export function SessionFilterSheet({
   onClose,
-  sessions,
+  items,
   grouping,
   tagOptions,
   untaggedCount,
@@ -63,7 +63,7 @@ export function SessionFilterSheet({
     setDraftTags((prev) =>
       prev.includes(slug) ? prev.filter((s) => s !== slug) : [...prev, slug]
     );
-  const count = filterSessionsByTags(sessions, draftTags).length;
+  const count = filterSessionsByTags(items, draftTags).length;
   const chips: Array<{ key: string; text: string }> = tagOptions.map((t) => ({
     key: t.slug,
     text: `${t.name} ${t.count}`,

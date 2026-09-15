@@ -2,7 +2,8 @@ import { describe, expect, it } from "vitest";
 import type { SessionRow } from "@sendtally/api-client";
 import { monthScopeItems, tagScopeItems } from "./scope";
 import { sessionTagGroups } from "./tags";
-import { sessionYearGroups } from "./years";
+import { logYearGroups } from "./years";
+import { logItems } from "../journal/transforms";
 
 function session(fingerprint: string, startAt: string, tags: string[] = []): SessionRow {
   return {
@@ -37,13 +38,13 @@ const sessions = [
 
 describe("monthScopeItems", () => {
   it("lists each year followed by its months, newest first", () => {
-    const items = monthScopeItems(sessionYearGroups(sessions));
+    const items = monthScopeItems(logYearGroups(logItems(sessions, [])));
     expect(items.map((i) => i.label)).toEqual(["2026", "Aug", "May", "2025", "Dec"]);
     expect(items.map((i) => i.kind)).toEqual(["year", "month", "month", "year", "month"]);
   });
 
   it("points a year at its newest month", () => {
-    const items = monthScopeItems(sessionYearGroups(sessions));
+    const items = monthScopeItems(logYearGroups(logItems(sessions, [])));
     expect(items[0]?.sectionKey).toBe("2026-08");
     expect(items[3]?.sectionKey).toBe("2025-12");
   });

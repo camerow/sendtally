@@ -5,7 +5,7 @@ name: draft-survives-leaving
 ---
 - runFlow: ../helpers/open-dev-client.yaml
 - runFlow: ../helpers/ensure-signed-in.yaml
-- tapOn: "Log a session"
+- tapOn: "Climbing session"
 - runFlow:
     when:
       visible: "Start fresh"
@@ -26,17 +26,17 @@ name: draft-survives-leaving
 - tapOn: "Done"
 - scrollUntilVisible:
     element:
-      text: "← SESSIONS"
+      text: "← LOG"
     direction: UP
-- tapOn: "← SESSIONS"
+- tapOn: "← LOG"
 - assertVisible: "Unfinished session"
-- tapOn: "Log a session"
+- tapOn: "Climbing session"
 - assertVisible: "You have an unfinished session.*"
 - assertVisible: "3 CLIMBS.*"
 - tapOn: "Pick up"
 - assertVisible: "3 CLIMBS.*"
 - scrollUntilVisible:
     element:
-      text: "← SESSIONS"
+      text: "← LOG"
     direction: UP
-- tapOn: "← SESSIONS"
+- tapOn: "← LOG"

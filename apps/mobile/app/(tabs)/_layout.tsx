@@ -66,7 +66,7 @@ export default function TabsLayout(): React.ReactElement | null {
     >
       <Tabs.Screen
         name="sessions"
-        options={{ tabBarLabel: t("common.sessions"), tabBarIcon: tabIcon("sessions") }}
+        options={{ tabBarLabel: t("journal.log"), tabBarIcon: tabIcon("sessions") }}
       />
       <Tabs.Screen
         name="projects"

@@ -1,9 +1,7 @@
 export const sessions = {
-  "sessions.back": "← Sesiones",
+  "sessions.back": "← Registro",
   "sessions.onStrava": "En Strava",
   "sessions.loadFailed": "No se pudo conectar con sendtally. Desliza para reintentar.",
-  "sessions.emptyMobile":
-    "Todavía no hay sesiones. Registra una sesión: la primera lleva más o menos un minuto.",
   "sessions.noneForTags": "Ninguna sesión lleva esas etiquetas.",
   "sessions.monthMeta": "{year} · {sessions}",
   "sessions.groupBy": "Agrupar por",
@@ -13,10 +11,6 @@ export const sessions = {
   "sessions.jumpToLabel": "Ir a {label}",
   "sessions.postedToStrava": "publicada en Strava",
   "sessions.posting": "Publicando…",
-  "sessions.saveNote": "Guardar nota",
-  "sessions.addANote": "Añadir una nota",
-  "sessions.showLess": "Mostrar menos",
-  "sessions.showMore": "Mostrar más",
   "sessions.createTag": "+ Crear “{name}”",
   "sessions.deleteTitle": "¿Eliminar la sesión?",
   "sessions.deleteBody": "Esto elimina la sesión y su registro de escaladas para siempre.",

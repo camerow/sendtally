@@ -3,25 +3,33 @@ import { Pressable, Text, View } from "react-native";
 import type { SessionRow as SessionRowData } from "@sendtally/api-client";
 import { sessionDay, sessionGradeLabels, sessionMetaLabel } from "@sendtally/features/sessions";
 import { t } from "@sendtally/features/i18n";
-import { colors, fonts, radius } from "@sendtally/design/tokens";
+import { colors, fonts } from "@sendtally/design/tokens";
 import { Icon } from "../../components/Icon";
+import { StravaMark } from "../../components/StravaMark";
 import { pressRow } from "../../lib/press";
-import { DayColumn, RowTitle } from "./SessionRowParts";
+import { RowTags, ROW_TAGS_HEIGHT } from "./RowTags";
+import { DayColumn } from "./SessionRowParts";
 
 export const SESSION_ROW_HEIGHT = 59;
-export const SESSION_ROW_TAGS_HEIGHT = 17;
 
 export function sessionRowHeight(session: SessionRowData): number {
-  return SESSION_ROW_HEIGHT + (session.tags.length > 0 ? SESSION_ROW_TAGS_HEIGHT : 0);
+  return SESSION_ROW_HEIGHT + (session.tags.length > 0 ? ROW_TAGS_HEIGHT : 0);
 }
 
 export type SessionRowProps = {
   session: SessionRowData;
   title: string;
   onPress: () => void;
+  /** The last cell is the caller's: a chevron in the log, a remove control in the composer. */
+  trailing?: React.ReactNode;
 };
 
-export function SessionRow({ session, title, onPress }: SessionRowProps): React.ReactElement {
+export function SessionRow({
+  session,
+  title,
+  onPress,
+  trailing,
+}: SessionRowProps): React.ReactElement {
   const { weekday, day } = sessionDay(session);
   const meta = sessionMetaLabel(session);
   const onStrava = session.strava_activity_id !== null;
@@ -44,49 +52,18 @@ export function SessionRow({ session, title, onPress }: SessionRowProps): React.
         borderBottomColor: colors.lineOnLightSoft,
       })}
     >
-      <DayColumn
-        weekday={weekday}
-        day={day}
-        marker={
-          onStrava && (
-            <View
-              style={{
-                width: 6,
-                height: 6,
-                marginTop: 4,
-                borderRadius: 3,
-                backgroundColor: colors.azure,
-              }}
-            />
-          )
-        }
-      />
+      <DayColumn weekday={weekday} day={day} />
       <View style={{ flex: 1, gap: 3 }}>
-        <RowTitle title={title} meta={meta} />
-        {session.tags.length > 0 && (
-          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 4 }}>
-            {session.tags.map((tag) => (
-              <Text
-                key={tag.id}
-                style={{
-                  fontFamily: fonts.monoMedium,
-                  fontSize: 8,
-                  lineHeight: 10,
-                  letterSpacing: 0.6,
-                  textTransform: "uppercase",
-                  paddingHorizontal: 6,
-                  paddingVertical: 2,
-                  borderRadius: radius.pill,
-                  overflow: "hidden",
-                  backgroundColor: colors.petalTint,
-                  color: colors.gunmetal,
-                }}
-              >
-                {tag.name}
-              </Text>
-            ))}
-          </View>
-        )}
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+          <Text numberOfLines={1} style={{ flexShrink: 1, ...rowTitle }}>
+            {title}
+          </Text>
+          {onStrava && <StravaMark />}
+        </View>
+        <Text numberOfLines={1} style={rowMeta}>
+          {meta}
+        </Text>
+        <RowTags tags={session.tags} />
       </View>
       <View style={{ alignItems: "flex-end", gap: 2 }}>
         {sessionGradeLabels(session).map((g) => (
@@ -104,7 +81,21 @@ export function SessionRow({ session, title, onPress }: SessionRowProps): React.
           </Text>
         ))}
       </View>
-      <Icon name="chevron" size={12} strokeWidth={2} color="rgba(64,63,76,0.35)" />
+      {trailing ?? <Icon name="chevron" size={12} strokeWidth={2} color="rgba(64,63,76,0.35)" />}
     </Pressable>
   );
 }
+
+export const rowTitle = {
+  fontFamily: fonts.sansSemiBold,
+  fontSize: 15,
+  lineHeight: 19,
+  color: colors.gunmetal,
+} as const;
+
+export const rowMeta = {
+  fontFamily: fonts.mono,
+  fontSize: 11,
+  lineHeight: 14,
+  color: colors.textSecondary,
+} as const;
