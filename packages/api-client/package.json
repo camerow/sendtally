@@ -16,6 +16,6 @@
   },
   "dependencies": {
     "@sendtally/api": "workspace:*",
-    "hono": "^4.9.6"
+    "hono": "^4.13.5"
   }
 }
