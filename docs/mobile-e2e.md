@@ -27,7 +27,9 @@ Failures leave screenshots and the UI hierarchy under `~/.maestro/tests/<timesta
 
 ## In CI
 
-`.github/workflows/mobile-e2e.yml` runs the same flows on every pull request that touches the app or a package it bundles.
+`.github/workflows/mobile-e2e.yml` runs the same flows on merges to `main` that touch the app or a package it bundles.
+It is a health signal, not a merge gate: twenty minutes in front of every pull request bought too little to be worth the wait.
+Before merging something risky, run the flows locally as above, or fire the workflow by hand from the Actions tab.
 Android only: the emulator runs on a Linux runner with KVM at the 1x minute rate, where an iOS simulator would need a macOS runner at 10x.
 
 ### The app the flows run on
@@ -55,7 +57,7 @@ The wait is a check, not a pause: a download that never lands fails the job, bec
 
 The profile sets `EXPO_PUBLIC_E2E=true`, and `AnalyticsProvider` renders no `PostHogProvider` when it is set, so a flow run sends PostHog nothing at all.
 Marking the person `$internal_or_test_user` instead does not work here: person-on-events keeps an event's person properties as they were at ingestion, so the anonymous events a run fires before it signs in stay product traffic however the person is marked afterwards.
-Sending nothing also stops session replay recording twenty minutes of a robot on every pull request.
+Sending nothing also stops session replay recording twenty minutes of a robot on every run.
 The workflow sets the same variable for itself, because `EXPO_PUBLIC_*` is inlined at bundle time and the update and the Gradle fallback both bundle on the runner.
 
 The server half is the staging API Worker, which carries no `POSTHOG_PROJECT_TOKEN` for the same reason: the flows log real sessions against `api-staging.sendtally.com`, and `captureUserEvent` would put those in the one PostHog project next to real ones.
