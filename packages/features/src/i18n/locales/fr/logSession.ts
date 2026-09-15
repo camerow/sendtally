@@ -58,10 +58,6 @@ export const logSession = {
   "logSession.ledgerLabel": "{grade} {name}, {kind}, {tries}",
   "logSession.triesCount_one": "{count} essai",
   "logSession.triesCount_other": "{count} essais",
-  "logSession.discardBody_one":
-    "{count} ligne enregistrée pour {day} sera supprimée de cet appareil.",
-  "logSession.discardBody_other":
-    "Les {count} lignes enregistrées pour {day} seront supprimées de cet appareil.",
   "logSession.unfinished": "Tu as une séance inachevée de {when}",
   "logSession.draftMetaShort": "{climbs} · {start}–{end}",
   "logSession.startFresh": "Repartir de zéro",

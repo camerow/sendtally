@@ -13,10 +13,11 @@ import { t } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { Chip } from "../../components/Chip";
 import { PostStatusBar } from "../../features/sessions/PostStatusBar";
-import { SessionNotes } from "../../features/sessions/SessionNotes";
+import { SessionJournal } from "../../features/journal/SessionJournal";
 import { SessionTags } from "../../features/sessions/SessionTags";
 import { useApi } from "../../lib/api";
 import { press } from "../../lib/press";
+import { useReloadOnReturn } from "../../lib/useReloadOnReturn";
 
 const RESULT_BADGES: Record<ClimbVM["result"], { bg: string; border: string; color: string }> = {
   onsight: { bg: colors.petalInk, border: colors.petalInk, color: colors.white },
@@ -54,6 +55,7 @@ export default function SessionDetailScreen(): React.ReactElement {
   const api = useApi();
   const feature = useSessionDetail(api, fingerprint ?? "");
   const { state, filter, setFilter, sort, setSort } = feature;
+  useReloadOnReturn(feature.reload);
   const [deleting, setDeleting] = React.useState(false);
 
   function confirmDelete(): void {
@@ -211,7 +213,11 @@ export default function SessionDetailScreen(): React.ReactElement {
               ))}
             </View>
 
-            <SessionNotes api={api} fingerprint={fingerprint ?? ""} initial={state.data.notes} />
+            <SessionJournal
+              fingerprint={fingerprint ?? ""}
+              date={state.data.vm.startDay}
+              entries={state.data.entries}
+            />
 
             {state.data.vm.bars.length > 0 && (
               <View

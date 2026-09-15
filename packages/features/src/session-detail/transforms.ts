@@ -270,6 +270,7 @@ export function sessionDetailVM(
 
   return {
     title: `${titleLabel} - ${dateLabel}`,
+    startDay: session.start_at.slice(0, 10),
     meta: `${weekday} ${dateLabel} · ${time} · ${durationLabel(session.start_at, session.end_at)}${location} · RPE ${session.rpe}/10`,
     editable: session.source === "manual",
     stats,

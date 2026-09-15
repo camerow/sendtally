@@ -1,9 +1,7 @@
 export const sessions = {
-  "sessions.back": "← Séances",
+  "sessions.back": "← Journal de bord",
   "sessions.onStrava": "Sur Strava",
   "sessions.loadFailed": "Impossible de joindre sendtally. Tire pour réessayer.",
-  "sessions.emptyMobile":
-    "Pas encore de séance. Enregistre une séance - la première prend environ une minute.",
   "sessions.noneForTags": "Aucune séance ne porte ces tags.",
   "sessions.monthMeta": "{year} · {sessions}",
   "sessions.groupBy": "Grouper par",
@@ -13,10 +11,6 @@ export const sessions = {
   "sessions.jumpToLabel": "Aller à {label}",
   "sessions.postedToStrava": "publiée sur Strava",
   "sessions.posting": "Publication…",
-  "sessions.saveNote": "Enregistrer la note",
-  "sessions.addANote": "Ajouter une note",
-  "sessions.showLess": "Voir moins",
-  "sessions.showMore": "Voir plus",
   "sessions.createTag": "+ Créer « {name} »",
   "sessions.deleteTitle": "Supprimer la séance ?",
   "sessions.deleteBody": "La séance et son détail seront supprimés définitivement.",

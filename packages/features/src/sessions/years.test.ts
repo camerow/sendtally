@@ -5,9 +5,10 @@ import {
   durationLabel,
   sessionMinutes,
   sessionTotals,
-  sessionYearGroups,
+  logYearGroups,
   totalsLabel,
 } from "./years";
+import { logItems } from "../journal/transforms";
 
 function session(
   fingerprint: string,
@@ -46,22 +47,22 @@ const sessions = [
   session("d", "2025-12-31T22:00:00.000Z", "2025-12-31T23:30:00.000Z", { top: 4, send: 4 }),
 ];
 
-describe("sessionYearGroups", () => {
+describe("logYearGroups", () => {
   it("nests months under years, newest first", () => {
-    const years = sessionYearGroups(sessions);
+    const years = logYearGroups(logItems(sessions, []));
     expect(years.map((y) => y.year)).toEqual([2026, 2025]);
     expect(years[0]?.months.map((m) => m.key)).toEqual(["2026-08", "2026-05"]);
     expect(years[1]?.months.map((m) => m.key)).toEqual(["2025-12"]);
   });
 
   it("rolls up totals across every month in the year", () => {
-    const [first, second] = sessionYearGroups(sessions);
+    const [first, second] = logYearGroups(logItems(sessions, []));
     expect(first?.totals).toEqual({ count: 3, minutes: 270, topGrade: 8, topGradeLabel: null });
     expect(second?.totals).toEqual({ count: 1, minutes: 90, topGrade: 4, topGradeLabel: null });
   });
 
   it("returns nothing for an empty history", () => {
-    expect(sessionYearGroups([])).toEqual([]);
+    expect(logYearGroups([])).toEqual([]);
   });
 });
 

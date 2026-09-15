@@ -13,7 +13,7 @@ export type SessionGrouping = "month" | "tag";
 
 export type TagOption = { slug: string; name: string; count: number };
 
-export type SessionTagGroup<T extends Tagged> = { key: string; label: string; sessions: T[] };
+export type SessionTagGroup<T extends Tagged> = { key: string; label: string; items: T[] };
 
 function byCountThenName(a: { count: number; name: string }, b: { count: number; name: string }) {
   return b.count - a.count || a.name.localeCompare(b.name);
@@ -39,29 +39,29 @@ export function filterSessionsByTags<T extends Tagged>(sessions: T[], slugs: str
   );
 }
 
-export function sessionTagGroups<T extends Tagged>(sessions: T[]): Array<SessionTagGroup<T>> {
+export function sessionTagGroups<T extends Tagged>(items: T[]): Array<SessionTagGroup<T>> {
   const groups = new Map<string, SessionTagGroup<T>>();
   const untagged: T[] = [];
-  for (const session of sessions) {
-    if (session.tags.length === 0) {
-      untagged.push(session);
+  for (const item of items) {
+    if (item.tags.length === 0) {
+      untagged.push(item);
       continue;
     }
-    for (const tag of session.tags) {
+    for (const tag of item.tags) {
       const existing = groups.get(tag.slug);
-      if (existing) existing.sessions.push(session);
-      else groups.set(tag.slug, { key: tag.slug, label: tag.name, sessions: [session] });
+      if (existing) existing.items.push(item);
+      else groups.set(tag.slug, { key: tag.slug, label: tag.name, items: [item] });
     }
   }
   const tagged = [...groups.values()].sort((a, b) =>
     byCountThenName(
-      { count: a.sessions.length, name: a.label },
-      { count: b.sessions.length, name: b.label }
+      { count: a.items.length, name: a.label },
+      { count: b.items.length, name: b.label }
     )
   );
   return untagged.length === 0
     ? tagged
-    : [...tagged, { key: UNTAGGED_KEY, label: t("sessions.untagged"), sessions: untagged }];
+    : [...tagged, { key: UNTAGGED_KEY, label: t("sessions.untagged"), items: untagged }];
 }
 
 export function sameTagName(a: string, b: string): boolean {

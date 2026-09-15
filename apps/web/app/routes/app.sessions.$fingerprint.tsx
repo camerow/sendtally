@@ -1,5 +1,5 @@
 import React from "react";
-import type { LoaderFunctionArgs } from "react-router";
+import type { LinksFunction, LoaderFunctionArgs } from "react-router";
 import { Link, useLoaderData, useNavigate, useParams } from "react-router";
 import type { SendtallyApi } from "@sendtally/api-client";
 import {
@@ -14,9 +14,17 @@ import { requireApi } from "../lib/api.server";
 import { useClientApi } from "../lib/useClientApi";
 import { SessionTags } from "../sessions/components/SessionTags";
 import { PostStatusBar } from "../session-detail/components/PostStatusBar";
-import { SessionNotes } from "../session-detail/components/SessionNotes";
+import { SessionJournal } from "../session-detail/components/SessionJournal";
+import journalStyles from "../journal/journal.css?url";
 import { BackLink } from "../components/BackLink";
 import { t } from "@sendtally/features/i18n";
+
+import sessionsStyles from "../sessions/sessions.css?url";
+
+export const links: LinksFunction = () => [
+  { rel: "stylesheet", href: sessionsStyles },
+  { rel: "stylesheet", href: journalStyles },
+];
 
 export async function loader(args: LoaderFunctionArgs): Promise<{ apiUrl: string }> {
   await requireApi(args);
@@ -197,7 +205,7 @@ export default function SessionDetailRoute(): React.ReactElement {
       </span>
     );
   }
-  const { vm, climbs, tags, notes } = state.data;
+  const { vm, climbs, tags, entries } = state.data;
 
   const filters: Array<[ClimbFilter, string]> = [
     ["all", t("sessions.filterAll", { n: vm.filterCounts.all })],
@@ -208,7 +216,7 @@ export default function SessionDetailRoute(): React.ReactElement {
 
   return (
     <div>
-      <BackLink to="/app">{t("common.sessions")}</BackLink>
+      <BackLink to="/app">{t("journal.log")}</BackLink>
       <div
         style={{
           display: "flex",
@@ -289,7 +297,7 @@ export default function SessionDetailRoute(): React.ReactElement {
         ))}
       </div>
 
-      <SessionNotes api={api} fingerprint={params.fingerprint ?? ""} initial={notes} />
+      <SessionJournal fingerprint={params.fingerprint ?? ""} date={vm.startDay} entries={entries} />
 
       {vm.bars.length > 0 && (
         <div

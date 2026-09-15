@@ -58,10 +58,6 @@ export const logSession = {
   "logSession.ledgerLabel": "{grade} {name}, {kind}, {tries}",
   "logSession.triesCount_one": "{count} try",
   "logSession.triesCount_other": "{count} tries",
-  "logSession.discardBody_one":
-    "The {count} climb you logged for {day} will be deleted from this device.",
-  "logSession.discardBody_other":
-    "The {count} climbs you logged for {day} will be deleted from this device.",
   "logSession.unfinished": "You have an unfinished session from {when}",
   "logSession.draftMetaShort": "{climbs} · {start}–{end}",
   "logSession.startFresh": "Start fresh",

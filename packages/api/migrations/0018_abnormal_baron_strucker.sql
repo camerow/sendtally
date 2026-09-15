@@ -8,4 +8,6 @@ CREATE TABLE `climb_notes` (
 	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
-CREATE INDEX `idx_climb_notes_user_climb` ON `climb_notes` (`user_id`,`climb_slug`);
+CREATE INDEX `idx_climb_notes_user_climb` ON `climb_notes` (`user_id`,`climb_slug`);--> statement-breakpoint
+ALTER TABLE `projects` DROP COLUMN `beta`;--> statement-breakpoint
+ALTER TABLE `projects` DROP COLUMN `beta_updated_at`;

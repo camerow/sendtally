@@ -453,6 +453,7 @@ function session(overrides: Partial<SessionDetail> = {}): SessionDetail {
     top_grade_label: null,
     top_send_grade_label: null,
     notes: null,
+    entries: [],
     rpe: 7,
     title: "Tuesday board night",
     strava_activity_id: null,

@@ -31,7 +31,7 @@ export function LogSessionFab(): React.ReactElement {
     >
       <Icon name="plus" size={17} strokeWidth={3} color={colors.white} />
       <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 15, color: colors.white }}>
-        {t("common.logASession")}
+        {t("common.climbingSession")}
       </Text>
     </Pressable>
   );

@@ -4,6 +4,20 @@ export const common = {
   "common.sessions": "Sessions",
   "common.sent": "Geschafft",
   "common.nothingLoggedYet": "Noch nichts eingetragen",
+  "common.notFoundLabel": "Seite nicht gefunden",
+  "common.notFoundTitle": "Route verfehlt.",
+  "common.notFoundBody":
+    "Unter dieser Adresse liegt nichts. Der Link ist vermutlich alt, oder die Session dahinter wurde gelöscht.",
+  "common.forbiddenLabel": "Nicht deins",
+  "common.forbiddenTitle": "Gesperrt.",
+  "common.forbiddenBody":
+    "Das gehört zu einem anderen Konto. Wenn es deins sein sollte, melde dich mit der Adresse an, unter der du es eingetragen hast.",
+  "common.serverErrorLabel": "Serverfehler",
+  "common.serverErrorTitle": "Tag mit hoher Schwerkraft.",
+  "common.serverErrorBody":
+    "Bei uns ist etwas kaputtgegangen, nicht bei dir. Alle Sessions, die du eingetragen hast, sind gespeichert. Versuche es gleich noch einmal.",
+  "common.switchAccount": "Konto wechseln",
+  "common.backToLog": "Zurück zum Log",
   "common.somethingWentWrong": "Etwas ist schiefgelaufen.",
   "common.indoor": "Halle",
   "common.outdoor": "Fels",
@@ -22,6 +36,7 @@ export const common = {
   "common.loading": "Lädt…",
   "common.tryAgain": "Noch einmal",
   "common.somethingWentWrongTryAgain": "Etwas ist schiefgelaufen. Versuch es noch einmal.",
+  "common.climbingSession": "Klettersession",
   "common.logASession": "Session eintragen",
   "common.notesPlaceholder": "Wie es sich angefühlt hat, was du nächstes Mal probierst.",
   "common.grade": "Grad",
@@ -58,4 +73,5 @@ export const common = {
   "common.membersOnly": "{label}, nur für Mitglieder",
   "common.closeOptions": "{label}-Optionen schließen",
   "common.note": "Notiz",
+  "common.back": "Zurück",
 } as const;

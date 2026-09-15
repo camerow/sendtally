@@ -24,7 +24,7 @@ export default function LogSessionRoute(): React.ReactElement {
 
   return (
     <div>
-      <BackLink to="/app">{t("common.sessions")}</BackLink>
+      <BackLink to="/app">{t("journal.log")}</BackLink>
       <div style={{ display: "flex", flexDirection: "column", gap: 6, margin: "14px 0 26px" }}>
         <h1
           style={{
