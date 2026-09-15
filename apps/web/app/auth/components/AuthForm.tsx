@@ -116,10 +116,10 @@ function clerkErrorMessage(err: unknown): string {
   return t("common.somethingWentWrongTryAgain");
 }
 
-// The password phase only ever appears for accounts that carry a password, which Clerk
-// reports per user. Store reviewers get one; nobody else does. Clerk's Device Trust then
-// challenges that password from an unrecognised device and emails a code, which is the
-// "second-factor" code mode.
+// The password phase appears for any account that carries a password, which Clerk reports
+// per user. It offers the code as an escape hatch, because an account that grew a password
+// otherwise loses email codes entirely. Clerk's Device Trust then challenges that password
+// from an unrecognised device and emails a code, which is the "second-factor" code mode.
 type CodeMode = AuthIntent | "second-factor";
 type Phase = { name: "email" } | { name: "code"; mode: CodeMode } | { name: "password" };
 
@@ -273,6 +273,35 @@ export function AuthForm({ intent }: { intent: AuthIntent }): React.ReactElement
     setBusy(false);
   }
 
+  function emailCodeFactor(): EmailCodeFactor | undefined {
+    return clerk.client?.signIn.supportedFirstFactors?.find(
+      (f): f is EmailCodeFactor => f.strategy === "email_code"
+    );
+  }
+
+  async function prepareEmailCode(): Promise<boolean> {
+    const factor = emailCodeFactor();
+    if (factor === undefined || !clerk.loaded || clerk.client === undefined) return false;
+    await clerk.client.signIn.prepareFirstFactor({
+      strategy: "email_code",
+      emailAddressId: factor.emailAddressId,
+    });
+    capture("auth_code_sent", { mode: "sign-in" });
+    setPhase({ name: "code", mode: "sign-in" });
+    return true;
+  }
+
+  async function sendEmailCodeInstead(): Promise<void> {
+    setError(null);
+    setBusy(true);
+    try {
+      if (!(await prepareEmailCode())) setError(t("auth.emailCodeDisabled"));
+    } catch (err) {
+      setError(clerkErrorMessage(err));
+    }
+    setBusy(false);
+  }
+
   async function sendCode(): Promise<void> {
     if (!clerk.loaded || clerk.client === undefined) return;
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
@@ -289,20 +318,11 @@ export function AuthForm({ intent }: { intent: AuthIntent }): React.ReactElement
         setBusy(false);
         return;
       }
-      const factor = signIn.supportedFirstFactors?.find(
-        (f): f is EmailCodeFactor => f.strategy === "email_code"
-      );
-      if (factor === undefined) {
+      if (!(await prepareEmailCode())) {
         setError(t("auth.emailCodeDisabled"));
         setBusy(false);
         return;
       }
-      await signIn.prepareFirstFactor({
-        strategy: "email_code",
-        emailAddressId: factor.emailAddressId,
-      });
-      capture("auth_code_sent", { mode: "sign-in" });
-      setPhase({ name: "code", mode: "sign-in" });
     } catch (signInErr) {
       const identifierNotFound =
         isClerkAPIResponseError(signInErr) &&
@@ -415,7 +435,7 @@ export function AuthForm({ intent }: { intent: AuthIntent }): React.ReactElement
   // Resending a second-factor code re-prepares that factor. Falling back to sendCode would
   // restart from the identifier and drop the user back on the password form.
   async function resendCode(): Promise<void> {
-    if (phase.name !== "code" || phase.mode !== "second-factor") {
+    if (phase.name !== "code" || phase.mode === "sign-up") {
       await sendCode();
       return;
     }
@@ -423,9 +443,11 @@ export function AuthForm({ intent }: { intent: AuthIntent }): React.ReactElement
     setError(null);
     setBusy(true);
     try {
-      if (!(await startSecondFactor(clerk.client.signIn.supportedSecondFactors))) {
-        setError(t("auth.resendFailed"));
-      }
+      const resent =
+        phase.mode === "second-factor"
+          ? await startSecondFactor(clerk.client.signIn.supportedSecondFactors)
+          : await prepareEmailCode();
+      if (!resent) setError(t("auth.resendFailed"));
     } catch (err) {
       setError(clerkErrorMessage(err));
     }
@@ -465,9 +487,20 @@ export function AuthForm({ intent }: { intent: AuthIntent }): React.ReactElement
               {t("common.signIn")}
             </button>
           </div>
-          <button onClick={backToEmail} style={linkButton}>
-            {t("auth.useDifferentEmail")}
-          </button>
+          <div style={{ display: "flex", gap: 18, alignItems: "center" }}>
+            <button onClick={backToEmail} style={linkButton}>
+              {t("auth.useDifferentEmail")}
+            </button>
+            {emailCodeFactor() !== undefined && (
+              <button
+                onClick={() => void sendEmailCodeInstead()}
+                disabled={busy}
+                style={linkButton}
+              >
+                {t("auth.emailMeACode")}
+              </button>
+            )}
+          </div>
         </StepCard>
       </AuthShell>
     );
