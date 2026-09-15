@@ -6,7 +6,8 @@ import { entryKindLabel, entryTitle, spanLabel, spansDates } from "@sendtally/fe
 import { colors } from "@sendtally/design/tokens";
 import { Icon } from "../../components/Icon";
 import { pressRow } from "../../lib/press";
-import { RowDate, rowMeta, rowTitle, SESSION_ROW_HEIGHT } from "../sessions/SessionRow";
+import { rowMeta, rowTitle, SESSION_ROW_HEIGHT } from "../sessions/SessionRow";
+import { DayColumn } from "../sessions/SessionRowParts";
 import { ROW_TAGS_HEIGHT, RowTags } from "../sessions/RowTags";
 import { EntryKindChip } from "./EntryKindChip";
 
@@ -49,7 +50,7 @@ export function EntryRow({
         borderBottomColor: colors.lineOnLightSoft,
       })}
     >
-      <RowDate weekday={weekday} day={day} />
+      <DayColumn weekday={weekday} day={day} />
       <View style={{ flex: 1, gap: 3 }}>
         <Text numberOfLines={1} style={rowTitle}>
           {title}

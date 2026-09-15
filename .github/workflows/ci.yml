@@ -4,6 +4,12 @@ on:
   pull_request:
     types: [opened, reopened, synchronize, edited]
 
+# A push supersedes the run before it: the staging API and the preview update both want to
+# carry the newest commit, and a finished run against an older one is a misleading check.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   checks:
     uses: ./.github/workflows/checks.yml

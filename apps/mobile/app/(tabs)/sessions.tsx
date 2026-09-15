@@ -32,6 +32,7 @@ import {
   FilterSheet,
   type SessionFilters,
 } from "../../features/sessions/FilterSheet";
+import { DraftSessionRow } from "../../features/sessions/DraftSessionRow";
 import { LogSessionFab } from "../../features/sessions/LogSessionFab";
 import { ScopeBar } from "../../features/sessions/ScopeBar";
 import { SECTION_HEADER_HEIGHT, SectionHeader } from "../../features/sessions/SectionHeader";
@@ -225,13 +226,16 @@ export default function Log(): React.ReactElement {
         viewabilityConfigCallbackPairs={viewability}
         contentContainerStyle={{ paddingBottom: 140 }}
         ListHeaderComponent={
-          showStravaSetup ? (
-            <StravaSetupRow
-              lapsed={settings.vm.stravaConnected}
-              connect={connect}
-              onDismiss={stravaPrompt.dismiss}
-            />
-          ) : null
+          <>
+            {showStravaSetup && (
+              <StravaSetupRow
+                lapsed={settings.vm.stravaConnected}
+                connect={connect}
+                onDismiss={stravaPrompt.dismiss}
+              />
+            )}
+            <DraftSessionRow />
+          </>
         }
         refreshControl={
           <RefreshControl

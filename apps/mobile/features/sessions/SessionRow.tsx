@@ -8,6 +8,7 @@ import { Icon } from "../../components/Icon";
 import { StravaMark } from "../../components/StravaMark";
 import { pressRow } from "../../lib/press";
 import { RowTags, ROW_TAGS_HEIGHT } from "./RowTags";
+import { DayColumn } from "./SessionRowParts";
 
 export const SESSION_ROW_HEIGHT = 59;
 
@@ -51,7 +52,7 @@ export function SessionRow({
         borderBottomColor: colors.lineOnLightSoft,
       })}
     >
-      <RowDate weekday={weekday} day={day} />
+      <DayColumn weekday={weekday} day={day} />
       <View style={{ flex: 1, gap: 3 }}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
           <Text numberOfLines={1} style={{ flexShrink: 1, ...rowTitle }}>
@@ -98,39 +99,3 @@ export const rowMeta = {
   lineHeight: 14,
   color: colors.textSecondary,
 } as const;
-
-export function RowDate({
-  weekday,
-  day,
-}: {
-  weekday: string;
-  day: string | number;
-}): React.ReactElement {
-  return (
-    <View style={{ width: 34 }}>
-      <Text
-        style={{
-          fontFamily: fonts.monoMedium,
-          fontSize: 9,
-          lineHeight: 11,
-          letterSpacing: 0.72,
-          textTransform: "uppercase",
-          color: colors.textMuted,
-        }}
-      >
-        {weekday}
-      </Text>
-      <Text
-        style={{
-          fontFamily: fonts.monoSemiBold,
-          fontSize: 17,
-          lineHeight: 20,
-          letterSpacing: -0.2,
-          color: colors.gunmetal,
-        }}
-      >
-        {day}
-      </Text>
-    </View>
-  );
-}

@@ -1,9 +1,10 @@
 import React from "react";
-import { Alert, Pressable, Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import type { StoredSessionDraft } from "@sendtally/features/log-session";
 import { formatDate, t } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { press } from "../../lib/press";
+import { confirmDiscardDraft } from "../../lib/confirmDiscardDraft";
 
 function Action({
   label,
@@ -50,20 +51,6 @@ export function DraftBanner({
   const count = draft.climbs.length;
   const climbs = t("common.climbCount", { count });
 
-  function confirmDiscard(): void {
-    Alert.alert(
-      t("common.discardDraftTitle"),
-      t("logSession.discardBody", {
-        count,
-        day: formatDate(savedAt, { weekday: "long" }),
-      }),
-      [
-        { text: t("common.cancel"), style: "cancel" },
-        { text: t("common.discard"), style: "destructive", onPress: onStartFresh },
-      ]
-    );
-  }
-
   return (
     <View style={{ gap: 12, backgroundColor: colors.gold, borderRadius: radius.card, padding: 16 }}>
       <View style={{ gap: 3 }}>
@@ -98,7 +85,7 @@ export function DraftBanner({
       <View style={{ flexDirection: "row", gap: 10 }}>
         <Action
           label={t("logSession.startFresh")}
-          onPress={confirmDiscard}
+          onPress={() => confirmDiscardDraft(stored, onStartFresh)}
           background="transparent"
           text="rgba(64,63,76,0.8)"
           flex={1}
