@@ -1,10 +1,12 @@
+# Security updates only: open-pull-requests-limit 0 turns off version-update
+# pull requests, leaving the ones raised from Dependabot alerts.
 version: 2
 updates:
   - package-ecosystem: npm
     directory: /
     schedule:
       interval: weekly
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 0
     commit-message:
       prefix: chore
       include: scope
@@ -22,30 +24,21 @@ updates:
       # Pinned by the overrides in pnpm-workspace.yaml.
       - dependency-name: react
       - dependency-name: react-dom
-    groups:
-      npm:
-        patterns:
-          - "*"
-        update-types:
-          - minor
-          - patch
 
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: weekly
+    open-pull-requests-limit: 0
     commit-message:
       prefix: chore
       include: scope
-    groups:
-      actions:
-        patterns:
-          - "*"
 
   - package-ecosystem: gomod
     directory: /tools/cli-go
     schedule:
       interval: monthly
+    open-pull-requests-limit: 0
     commit-message:
       prefix: chore
       include: scope
