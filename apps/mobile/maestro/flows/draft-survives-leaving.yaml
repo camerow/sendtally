@@ -29,7 +29,7 @@ name: draft-survives-leaving
       text: "← LOG"
     direction: UP
 - tapOn: "← LOG"
-- assertVisible: "Unfinished session"
+- assertVisible: "Unfinished session.*"
 - tapOn: "Climbing session"
 - assertVisible: "You have an unfinished session.*"
 - assertVisible: "3 CLIMBS.*"
