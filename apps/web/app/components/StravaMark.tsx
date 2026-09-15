@@ -10,7 +10,7 @@ export function StravaMark({ size = 12 }: { size?: number }): React.ReactElement
       height={size}
       role="img"
       aria-label={t("sessions.onStrava")}
-      style={{ flex: "none" }}
+      style={{ flex: "none", marginLeft: 2 }}
     >
       <path
         fill="#fc4c02"

@@ -5,7 +5,7 @@ import {
   draftFromEntry,
   draftIsEmpty,
   emptyDraft,
-  entryBodyBelowTitle,
+  entryHasTitle,
   entryInput,
   entryTitle,
   linkedSessions,
@@ -217,12 +217,18 @@ describe("logScopeItems", () => {
     ]
   );
 
-  it("drops a note on a session from everything, and keeps the injury", () => {
+  it("shows everything, a note on a session included", () => {
     expect(logScopeItems(items, "all").map((i) => i.key)).toEqual([
+      "entry:note",
       "entry:free",
       "entry:hurt",
       "session:a",
     ]);
+  });
+
+  it("picks one kind of entry", () => {
+    expect(logScopeItems(items, "injuries").map((i) => i.key)).toEqual(["entry:hurt"]);
+    expect(logScopeItems(items, "trips")).toEqual([]);
   });
 
   it("shows each half on its own", () => {
@@ -251,15 +257,9 @@ describe("sessionsNearPoints", () => {
   });
 });
 
-describe("entryBodyBelowTitle", () => {
-  it("keeps the whole body under a real title", () => {
-    expect(entryBodyBelowTitle(entry({ title: "Pulley", body: "Line one\nLine two" }))).toBe(
-      "Line one\nLine two"
-    );
-  });
-
-  it("drops the first line an untitled entry already used as its heading", () => {
-    expect(entryBodyBelowTitle(entry({ body: "Line one\nLine two" }))).toBe("Line two");
-    expect(entryBodyBelowTitle(entry({ body: "Only line" }))).toBe("");
+describe("entryHasTitle", () => {
+  it("ignores whitespace", () => {
+    expect(entryHasTitle(entry({ title: "  " }))).toBe(false);
+    expect(entryHasTitle(entry({ title: "Pulley" }))).toBe(true);
   });
 });

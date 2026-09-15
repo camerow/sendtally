@@ -153,7 +153,7 @@ export function LogView({
                   ? "/app/journal"
                   : value === "all"
                     ? "/app"
-                    : "/app?show=sessions"
+                    : `/app?show=${value}`
               }
               aria-current={scope === value ? "page" : undefined}
               className={scope === value ? "sessions-scope-chip is-on" : "sessions-scope-chip"}

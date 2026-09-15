@@ -39,32 +39,29 @@ export function today(now: Date = new Date()): string {
   return now.toISOString().slice(0, 10);
 }
 
-/** Which half of the log is on show. "journal" is what the journal page is. */
-export type LogScope = "all" | "sessions" | "journal";
+/** Which slice of the log is on show. "journal" is what the journal page is. */
+export type LogScope = "all" | "sessions" | "journal" | "trips" | "injuries";
 
-export const LOG_SCOPES: LogScope[] = ["all", "sessions", "journal"];
+export const LOG_SCOPES: LogScope[] = ["all", "sessions", "journal", "trips", "injuries"];
 
 const SCOPE_LABELS: Record<LogScope, MessageKey> = {
   all: "journal.showEverything",
   sessions: "journal.showSessions",
   journal: "journal.showJournal",
+  trips: "journal.showTrips",
+  injuries: "journal.showInjuries",
 };
 
 export function logScopeLabel(scope: LogScope): string {
   return t(SCOPE_LABELS[scope]);
 }
 
-/**
- * A note written about a session is read on that session: showing both puts
- * the same night in the list twice, one row above the other. Trips and
- * injuries are their own thing and stay in the log whatever they link.
- */
 export function logScopeItems(items: LogItem[], scope: LogScope): LogItem[] {
+  if (scope === "all") return items;
   if (scope === "sessions") return items.filter((i) => i.type === "session");
   if (scope === "journal") return items.filter((i) => i.type === "entry");
-  return items.filter(
-    (i) => i.type === "session" || i.entry.kind !== "journal" || i.entry.fingerprints.length === 0
-  );
+  const kind: EntryKind = scope === "trips" ? "trip" : "injury";
+  return items.filter((i) => i.type === "entry" && i.entry.kind === kind);
 }
 
 export function logItems(sessions: SessionRow[], entries: JournalEntry[]): LogItem[] {
@@ -169,24 +166,37 @@ export function isUpdateDraft(draft: EntryDraft): boolean {
   return draft.parentId !== "";
 }
 
-export function entryTitle(entry: JournalEntry): string {
-  const title = entry.title?.trim() ?? "";
-  if (title !== "") return title;
-  const firstLine = entry.body.trim().split("\n")[0] ?? "";
-  return firstLine === "" ? entryKindLabel(entry.kind) : firstLine;
+export function entryHasTitle(entry: JournalEntry): boolean {
+  return (entry.title?.trim() ?? "") !== "";
 }
 
-/** What is left to read under the heading: an untitled entry already spent its first line there. */
-export function entryBodyBelowTitle(entry: JournalEntry): string {
-  const body = entry.body.trim();
-  if ((entry.title?.trim() ?? "") !== "") return body;
-  return body.split("\n").slice(1).join("\n").trim();
+export function entryTitle(entry: JournalEntry): string {
+  if (entryHasTitle(entry)) return entry.title!.trim();
+  const firstLine = entry.body.trim().split("\n")[0] ?? "";
+  return firstLine === "" ? entryKindLabel(entry.kind) : firstLine;
 }
 
 const day = (value: string): Date => new Date(`${value}T00:00:00Z`);
 
 export function dayLabel(value: string): string {
   return formatDate(day(value), { day: "numeric", month: "short", timeZone: "UTC" });
+}
+
+export function longDayLabel(value: string): string {
+  return formatDate(day(value), {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+}
+
+/** "22 - 26 May" for a trip or injury, the full date for anything else. */
+export function entryWhen(entry: JournalEntry): string {
+  return spansDates(entry.kind)
+    ? spanLabel(entry.occurred_at, entry.ends_at)
+    : longDayLabel(entry.occurred_at);
 }
 
 /** "22 - 26 May", "From 18 May" while it is still going. */

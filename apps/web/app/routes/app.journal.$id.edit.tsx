@@ -9,7 +9,7 @@ import { EntryComposer } from "../journal/components/EntryComposer";
 import journalStyles from "../journal/journal.css?url";
 import sessionsStyles from "../sessions/sessions.css?url";
 import { cloudflareContext } from "../lib/cloudflare-context";
-import { requireApi } from "../lib/api.server";
+import { orNotFound, requireApi } from "../lib/api.server";
 import { useClientApi } from "../lib/useClientApi";
 import logSessionStyles from "../log-session/log-session.css?url";
 
@@ -24,7 +24,7 @@ export async function loader(
 ): Promise<{ apiUrl: string; entry: EntryDetail; sessions: SessionRow[] }> {
   const api = await requireApi(args);
   const id = args.params["id"] ?? "";
-  const [{ entry }, { sessions }] = await Promise.all([api.entry(id), api.sessions()]);
+  const [{ entry }, { sessions }] = await Promise.all([orNotFound(api.entry(id)), api.sessions()]);
   return { apiUrl: args.context.get(cloudflareContext).env.API_URL, entry, sessions };
 }
 

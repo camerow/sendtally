@@ -30,6 +30,8 @@ export const journal = {
     "Las sesiones cuentan qué escalaste. Las entradas cuentan por qué salió así: cómo te sentiste, qué buscas, qué te dolió.",
   "journal.showEverything": "Todo",
   "journal.showSessions": "Sesiones",
+  "journal.showTrips": "Viajes",
+  "journal.showInjuries": "Lesiones",
   "journal.showJournal": "Diario",
   "journal.entryCount_one": "{count} entrada",
   "journal.entryCount_other": "{count} entradas",
