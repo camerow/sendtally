@@ -83,4 +83,8 @@ export const logSession = {
   "logSession.draftMeta_one": "{count} climb · {start}–{end} · saved on this device only",
   "logSession.draftMeta_other": "{count} climbs · {start}–{end} · saved on this device only",
   "logSession.pickUp": "Pick up where I left off",
+  "logSession.noteOptional": "Note · optional",
+  "logSession.climbNotePlaceholder": "How it went, what to try next",
+  "logSession.noteKeptOn": "Kept on {name}, with every other session on it",
+  "logSession.noteNeedsName": "Note · climb must have a name to have a note",
 } as const;

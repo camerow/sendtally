@@ -83,7 +83,10 @@ export function parseStoredDraft(raw: string | null, now: Date): StoredSessionDr
   const at = typeof savedAt === "string" ? new Date(savedAt) : new Date(Number.NaN);
   if (!isDraft(draft) || Number.isNaN(at.getTime())) return null;
   if (now.getTime() - at.getTime() > DRAFT_TTL_MS) return null;
-  return { draft, savedAt: at };
+  // A draft outlives the build that wrote it, so a climb field added since then
+  // is missing here and the form would edit `undefined`.
+  const climbs = draft.climbs.map((climb) => ({ ...climb, note: climb.note ?? "" }));
+  return { draft: { ...draft, climbs }, savedAt: at };
 }
 
 /** The draft on disk, for a form opened to pick it up rather than to offer it. */

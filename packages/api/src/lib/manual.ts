@@ -36,6 +36,8 @@ const gradeSchema = z.union([
   }),
 ]);
 
+export const CLIMB_NOTE_MAX = 2000;
+
 const climbSchema = z
   .object({
     name: z.string().max(200).default(""),
@@ -44,6 +46,7 @@ const climbSchema = z
     style: z.enum(["redpoint", "flash", "onsight"]).optional(),
     tries: z.number().int().min(1).max(99).default(1),
     project: z.boolean().optional(),
+    note: z.string().max(CLIMB_NOTE_MAX).optional(),
   })
   .superRefine((climb, ctx) => {
     if (climb.style === undefined) return;
@@ -63,7 +66,7 @@ export const NOTE_MAX = 2000;
 
 const sessionNote = z.string().max(NOTE_MAX).optional();
 
-export const sessionNotesBody = z.object({ notes: sessionNote });
+export const climbNoteBody = z.object({ note: z.string().max(CLIMB_NOTE_MAX).optional() });
 
 export function normalisedNote(notes: string | undefined): string | null {
   const trimmed = notes?.trim() ?? "";

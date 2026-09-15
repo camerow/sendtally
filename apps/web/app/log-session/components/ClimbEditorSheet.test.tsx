@@ -21,11 +21,11 @@ HTMLDialogElement.prototype.close = function close(this: HTMLDialogElement) {
 let container: HTMLDivElement;
 let root: Root;
 
-function mount(onClose: () => void): HTMLDialogElement {
+function mount(onClose: () => void, name = ""): HTMLDialogElement {
   act(() =>
     root.render(
       <ClimbEditorSheet
-        climb={newClimb("climb-1", "v")}
+        climb={{ ...newClimb("climb-1", "v"), name }}
         index={0}
         count={2}
         scale="v"
@@ -100,6 +100,20 @@ describe("ClimbEditorSheet", () => {
       dialog.dispatchEvent(new Event("cancel", { bubbles: true, cancelable: true }));
     });
     expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  // A note needs a climb name to roll up under, so there is nothing to type into
+  // until the climb has one - the label says why instead of a dead field.
+  it("offers no note field until the climb is named", () => {
+    const dialog = mount(() => {});
+    expect(dialog.querySelector("textarea")).toBeNull();
+    expect(dialog.textContent).toContain("climb must have a name to have a note");
+  });
+
+  it("offers the note field once the climb is named", () => {
+    const dialog = mount(() => {}, "Cave problem");
+    expect(dialog.querySelector("textarea")).not.toBeNull();
+    expect(dialog.textContent).not.toContain("climb must have a name to have a note");
   });
 
   it("closes from the Done button", () => {

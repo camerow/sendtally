@@ -203,6 +203,26 @@ export const entryTags = sqliteTable(
   ]
 );
 
+// A note the user wrote about one named climb in one session. It lives beside
+// the session rather than inside climbs_json, so a note can be written or
+// rewritten from the climb page without touching the logged climbs.
+export const climbNotes = sqliteTable(
+  "climb_notes",
+  {
+    user_id: text("user_id")
+      .notNull()
+      .references(() => users.id),
+    fingerprint: text("fingerprint").notNull(),
+    climb_slug: text("climb_slug").notNull(),
+    note: text("note").notNull(),
+    updated_at: text("updated_at").notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.user_id, t.fingerprint, t.climb_slug] }),
+    index("idx_climb_notes_user_climb").on(t.user_id, t.climb_slug),
+  ]
+);
+
 export const projects = sqliteTable(
   "projects",
   {
@@ -215,8 +235,6 @@ export const projects = sqliteTable(
     discipline: text("discipline", { enum: ["boulder", "route"] })
       .notNull()
       .default("boulder"),
-    beta: text("beta"),
-    beta_updated_at: text("beta_updated_at"),
     created_at: text("created_at").notNull(),
   },
   (t) => [primaryKey({ columns: [t.user_id, t.slug] })]

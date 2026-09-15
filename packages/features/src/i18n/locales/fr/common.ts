@@ -72,5 +72,6 @@ export const common = {
   "common.optional": "· optionnel",
   "common.membersOnly": "{label}, réservé aux abonnés",
   "common.closeOptions": "Fermer les options {label}",
+  "common.note": "Note",
   "common.back": "Retour",
 } as const;

@@ -7,6 +7,11 @@ export const climbs = {
   "climbs.running": "En cours",
   "climbs.lastTried": "Dernier essai",
   "climbs.story": "{attempts} sur {sessions}",
-  "climbs.updatedOn": "Mis à jour le {date}",
   "climbs.projectNotFound": "Projet introuvable.",
+  "climbs.notes": "Notes",
+  "climbs.noteLatest": "Dernière · {date}",
+  "climbs.noNotes": "Pas encore de notes. Écris-en une après une séance et elles s'accumulent ici.",
+  "climbs.addNoteFor": "Ajouter une note pour le {date}",
+  "climbs.notePlaceholder": "Ce qui s'est passé, ce que tu essaieras ensuite",
+  "climbs.noteSaveFailed": "Impossible d'enregistrer la note. Réessaie.",
 } as const;

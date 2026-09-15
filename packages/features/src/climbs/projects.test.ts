@@ -10,8 +10,6 @@ const climb = (overrides: Partial<ClimbSummary>): ClimbSummary => ({
   grade: { scale: "v", value: 7 },
   discipline: "boulder",
   project: true,
-  beta: null,
-  beta_updated_at: null,
   sessions: 2,
   attempts: 11,
   sends: 0,
@@ -22,7 +20,7 @@ const climb = (overrides: Partial<ClimbSummary>): ClimbSummary => ({
 
 const session = (
   startIso: string,
-  climbs: Array<{ name: string; kind?: "send" | "attempt"; tries?: number }>,
+  climbs: Array<{ name: string; kind?: "send" | "attempt"; tries?: number; note?: string }>,
   notes: string | null = null
 ): SessionWithClimbs => ({
   fingerprint: `fp-${startIso}`,
@@ -52,6 +50,7 @@ const session = (
     kind: c.kind ?? "attempt",
     tries: c.tries ?? 1,
     angle: null,
+    note: c.note ?? null,
   })),
 });
 
@@ -59,12 +58,12 @@ describe("projectDetailVM", () => {
   const sessions = [
     session(
       "2026-09-04T18:00:00.000Z",
-      [{ name: "Moonraker", tries: 7 }],
-      "Stuck on the crossover"
+      [{ name: "Moonraker", tries: 7, note: "Stuck on the crossover" }],
+      "Busy Friday, shared the wall"
     ),
     session("2026-06-03T18:00:00.000Z", [
-      { name: "moonraker", tries: 4 },
-      { name: "Warm up", kind: "send" },
+      { name: "moonraker", tries: 4, note: "First look, every move goes" },
+      { name: "Warm up", kind: "send", note: "not this climb" },
     ]),
   ];
 
@@ -74,7 +73,7 @@ describe("projectDetailVM", () => {
       ["4 Sep", 7],
       ["3 Jun", 4],
     ]);
-    expect(vm.sessions[0]?.notes).toBe("Stuck on the crossover");
+    expect(vm.sessions[0]?.note).toBe("Stuck on the crossover");
     expect(vm.bars.map((b) => b.valueLabel)).toEqual(["4", "7"]);
     expect(vm.bars[1]?.peak).toBe(true);
     expect(vm.stats.map((s) => [s.label, s.value])).toEqual([
@@ -84,6 +83,32 @@ describe("projectDetailVM", () => {
       ["Last tried", "4 Sep"],
     ]);
     expect(vm.storyLabel).toBeNull();
+  });
+
+  it("rolls the per-climb notes up newest first, ignoring other climbs' notes", () => {
+    const vm = projectDetailVM(climb({}), sessions, NOW);
+    expect(vm.notes).toEqual([
+      {
+        fingerprint: "fp-2026-09-04T18:00:00.000Z",
+        dateLabel: "4 Sep",
+        note: "Stuck on the crossover",
+      },
+      {
+        fingerprint: "fp-2026-06-03T18:00:00.000Z",
+        dateLabel: "3 Jun",
+        note: "First look, every move goes",
+      },
+    ]);
+  });
+
+  it("leaves the notes empty when no session carries one for this climb", () => {
+    const vm = projectDetailVM(
+      climb({}),
+      [session("2026-09-04T18:00:00.000Z", [{ name: "Moonraker" }])],
+      NOW
+    );
+    expect(vm.notes).toEqual([]);
+    expect(vm.sessions[0]?.note).toBeNull();
   });
 
   it("tells the send story once it goes", () => {

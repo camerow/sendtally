@@ -34,6 +34,7 @@ export type ClimbDraft = {
   kind: "send" | "attempt";
   style: ClimbStyle;
   tries: number;
+  note: string;
   project?: boolean;
 };
 

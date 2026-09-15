@@ -32,6 +32,7 @@ const detail: SessionDetail = {
       kind: "send",
       tries: 1,
       angle: 40,
+      note: null,
     },
     {
       time: "2026-07-01T18:20:00.000Z",
@@ -40,6 +41,7 @@ const detail: SessionDetail = {
       kind: "send",
       tries: 3,
       angle: 40,
+      note: null,
     },
     {
       time: "2026-07-01T18:50:00.000Z",
@@ -48,8 +50,17 @@ const detail: SessionDetail = {
       kind: "attempt",
       tries: 4,
       angle: 45,
+      note: null,
     },
-    { time: "2026-07-01T19:20:00.000Z", name: "", vGrade: -1, kind: "send", tries: 1, angle: null },
+    {
+      time: "2026-07-01T19:20:00.000Z",
+      name: "",
+      vGrade: -1,
+      kind: "send",
+      tries: 1,
+      angle: null,
+      note: null,
+    },
   ],
 };
 
@@ -224,6 +235,7 @@ describe("route sessions", () => {
         tries: 1,
         angle: null,
         grade: { scale: "yds", value: "5.10a" },
+        note: null,
       },
       {
         time: "2026-07-01T18:20:00.000Z",
@@ -233,6 +245,7 @@ describe("route sessions", () => {
         tries: 2,
         angle: null,
         grade: { scale: "yds", value: "5.11d" },
+        note: null,
       },
       {
         time: "2026-07-01T18:50:00.000Z",
@@ -242,6 +255,7 @@ describe("route sessions", () => {
         tries: 3,
         angle: null,
         grade: { scale: "yds", value: "5.12a" },
+        note: null,
       },
     ],
   };

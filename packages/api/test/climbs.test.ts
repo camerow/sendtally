@@ -30,8 +30,6 @@ describe("climbCatalogue", () => {
         grade: { scale: "v", value: 7 },
         discipline: "boulder",
         project: false,
-        beta: null,
-        beta_updated_at: null,
         sessions: 2,
         attempts: 9,
         sends: 1,
@@ -44,8 +42,6 @@ describe("climbCatalogue", () => {
         grade: { scale: "v", value: 2 },
         discipline: "boulder",
         project: false,
-        beta: null,
-        beta_updated_at: null,
         sessions: 1,
         attempts: 1,
         sends: 1,
@@ -65,8 +61,6 @@ describe("climbCatalogue", () => {
           name: "Moonraker",
           grade_json: '{"scale":"v","value":6}',
           discipline: "boulder",
-          beta: "Heel hook the ar\u00eate.",
-          beta_updated_at: "2026-09-02T00:00:00Z",
           created_at: "2026-08-01T00:00:00Z",
         },
         {
@@ -75,8 +69,6 @@ describe("climbCatalogue", () => {
           name: "Dreamcatcher",
           grade_json: null,
           discipline: "route",
-          beta: null,
-          beta_updated_at: null,
           created_at: "2026-09-05T00:00:00Z",
         },
       ]
@@ -87,6 +79,5 @@ describe("climbCatalogue", () => {
     ]);
     expect(catalogue[0]?.grade).toBeNull();
     expect(catalogue[0]?.discipline).toBe("route");
-    expect(catalogue[1]?.beta).toBe("Heel hook the ar\u00eate.");
   });
 });

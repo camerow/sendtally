@@ -50,6 +50,18 @@ describe("session draft store", () => {
     expect(parseStoredDraft(storage.read(), later)).not.toBeNull();
   });
 
+  it("fills in a climb field the build that wrote the draft did not have", () => {
+    const draft = emptyDraft(NOW);
+    const stored = JSON.stringify({
+      draft: {
+        ...draft,
+        climbs: [{ name: "Cave problem", grade: "4", scale: "v", kind: "send", tries: 2 }],
+      },
+      savedAt: NOW.toISOString(),
+    });
+    expect(parseStoredDraft(stored, NOW)?.draft.climbs[0]?.note).toBe("");
+  });
+
   it("reads nothing back from anything that is not a draft", () => {
     for (const raw of ["not json", "null", '{"draft":{},"savedAt":"2026-08-26T00:00:00.000Z"}']) {
       expect(parseStoredDraft(raw, NOW)).toBeNull();

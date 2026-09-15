@@ -7,6 +7,11 @@ export const climbs = {
   "climbs.running": "Running",
   "climbs.lastTried": "Last tried",
   "climbs.story": "{attempts} over {sessions}",
-  "climbs.updatedOn": "Updated {date}",
   "climbs.projectNotFound": "Project not found.",
+  "climbs.notes": "Notes",
+  "climbs.noteLatest": "Latest · {date}",
+  "climbs.noNotes": "No notes yet. Write one after a session and they stack up here.",
+  "climbs.addNoteFor": "Add a note for {date}",
+  "climbs.notePlaceholder": "What happened, what to try next",
+  "climbs.noteSaveFailed": "Could not save the note. Try again.",
 } as const;

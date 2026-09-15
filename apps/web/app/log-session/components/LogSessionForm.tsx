@@ -427,14 +427,6 @@ export function LogSessionForm({
             </span>
             <span style={columnHead}>{t("logSession.scalesInSettings")}</span>
           </div>
-          {!narrow && (
-            <div className="climb-head">
-              <span style={columnHead}>{t("common.grade")}</span>
-              <span style={columnHead}>{t("logSession.nameOptional")}</span>
-              <span style={columnHead}>{t("logSession.tries")}</span>
-              <span />
-            </div>
-          )}
           <div className={narrow ? "climb-ledger" : "climb-cards"}>
             {draft.climbs.map((climb) =>
               narrow ? (

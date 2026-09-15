@@ -1,0 +1,28 @@
+appId: com.sendtally.app
+name: climb-note
+# A note written in the climb sheet belongs to the climb, not the session: it needs a name to
+# roll up under, and the sheet says which climb it will be kept on. What it rolls up into is
+# covered by the API and view-model tests; this is the part that only shows on a device.
+---
+- runFlow: ../helpers/open-dev-client.yaml
+- runFlow: ../helpers/ensure-signed-in.yaml
+- tapOn: "Climbing session"
+- scrollUntilVisible:
+    element:
+      text: "\\+ ADD CLIMB"
+    direction: DOWN
+- tapOn: "\\+ ADD CLIMB"
+- assertVisible: "CLIMB 2 OF 2"
+- assertVisible: "NOTE · CLIMB MUST HAVE A NAME TO HAVE A NOTE"
+- assertNotVisible: "How it went, what to try next"
+- tapOn: "Name (optional)"
+- inputText: "Maestro Arete"
+- runFlow: ../helpers/hide-keyboard.yaml
+- assertVisible: "NOTE · OPTIONAL"
+- tapOn: "How it went, what to try next"
+- inputText: "Heel slipped off the crux again."
+- runFlow: ../helpers/hide-keyboard.yaml
+- assertVisible: "Kept on Maestro Arete, with every other session on it"
+- assertVisible: "Heel slipped off the crux again."
+- tapOn: "Done"
+- assertVisible: "Maestro Arete"

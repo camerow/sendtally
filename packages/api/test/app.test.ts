@@ -12,6 +12,7 @@ type ManualClimb = {
   vGrade: number;
   kind: string;
   tries: number;
+  note: string | null;
   grade: { scale: string; value: string | number };
 };
 
@@ -262,8 +263,6 @@ describe("app", () => {
         grade: { scale: "v", value: 4 },
         discipline: "boulder",
         project: true,
-        beta: null,
-        beta_updated_at: null,
         sessions: 2,
         attempts: 7,
         sends: 1,
@@ -276,8 +275,6 @@ describe("app", () => {
         grade: { scale: "v", value: 1 },
         discipline: "boulder",
         project: false,
-        beta: null,
-        beta_updated_at: null,
         sessions: 1,
         attempts: 1,
         sends: 1,
@@ -320,18 +317,14 @@ describe("app", () => {
     expect(gone.status).toBe(404);
   });
 
-  it("adds a project with no grade and edits its beta", async () => {
+  it("adds a project with no grade and keeps it on a re-post", async () => {
     const headers = { "x-test-user": "user_addproject", "Content-Type": "application/json" };
     const created = await testApp().request(
       "/v1/projects",
       {
         method: "POST",
         headers,
-        body: JSON.stringify({
-          name: "  The Prow  ",
-          discipline: "route",
-          beta: " Rest at the jug ",
-        }),
+        body: JSON.stringify({ name: "  The Prow  ", discipline: "route" }),
       },
       env
     );
@@ -347,20 +340,19 @@ describe("app", () => {
       grade: null,
       discipline: "route",
       project: true,
-      beta: "Rest at the jug",
       sessions: 0,
       attempts: 0,
     });
 
     const edited = await testApp().request(
       "/v1/projects",
-      { method: "POST", headers, body: JSON.stringify({ name: "The Prow", beta: "Skip the jug" }) },
+      { method: "POST", headers, body: JSON.stringify({ name: "The Prow" }) },
       env
     );
     expect(edited.status).toBe(200);
     const relisted = await testApp().request("/v1/climbs", { headers }, env);
     const after = (await relisted.json()) as { climbs: Array<Record<string, unknown>> };
-    expect(after.climbs[0]).toMatchObject({ discipline: "route", beta: "Skip the jug" });
+    expect(after.climbs[0]).toMatchObject({ slug: "the-prow", discipline: "route", project: true });
 
     const rejected = await testApp().request(
       "/v1/projects",
@@ -522,11 +514,11 @@ describe("app", () => {
 
   const setNotes = (userId: string, fingerprint: string, notes: unknown) =>
     testApp().request(
-      `/v1/sessions/${encodeURIComponent(fingerprint)}/notes`,
+      `/v1/sessions/${encodeURIComponent(fingerprint)}`,
       {
         method: "PUT",
         headers: { "x-test-user": userId, "Content-Type": "application/json" },
-        body: JSON.stringify({ notes }),
+        body: JSON.stringify(logBody({ notes })),
       },
       env
     );
@@ -561,22 +553,50 @@ describe("app", () => {
     expect(tooLong.status).toBe(400);
   });
 
-  it("notes a legacy board session without touching the session row", async () => {
-    await env.DB.prepare(
-      `INSERT INTO users (id, timezone, created_at) VALUES ('user_notes_board', 'UTC', '')`
-    ).run();
-    await env.DB.prepare(
-      `INSERT INTO sessions (user_id, fingerprint, board, source, start_at, end_at, climb_count, top_grade, top_send_grade, rpe, title, summary)
-       VALUES ('user_notes_board', 'fp_board_note', 'tension', 'board', '2026-01-01T00:00:00.000Z', '2026-01-01T01:00:00.000Z', 4, 5, 5, 6, 'Board session', 's')`
-    ).run();
+  // An update linked to a session is a journal entry on the same session, and
+  // clearing the session's note must not reach it.
+  it("leaves a thread update alone when the session note is written", async () => {
+    const res = await postSession("user_notes_thread", logBody());
+    const { session } = (await res.json()) as ManualSessionResponse;
 
-    expect((await setNotes("user_notes_board", "fp_board_note", "Old history.")).status).toBe(200);
+    const createEntry = async (body: unknown) => {
+      const created = await testApp().request(
+        "/v1/entries",
+        {
+          method: "POST",
+          headers: { "x-test-user": "user_notes_thread", "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        },
+        env
+      );
+      return ((await created.json()) as { entry: { id: string } }).entry;
+    };
 
-    const row = await env.DB.prepare(
-      `SELECT source, title, rpe FROM sessions WHERE fingerprint = 'fp_board_note'`
-    ).first<{ source: string; title: string; rpe: number }>();
-    expect(row).toEqual({ source: "board", title: "Board session", rpe: 6 });
-    expect(await readNotes("user_notes_board", "fp_board_note")).toBe("Old history.");
+    const injury = await createEntry({
+      kind: "injury",
+      occurred_at: "2026-08-19",
+      body: "Left ring finger.",
+    });
+    const update = await createEntry({
+      kind: "journal",
+      occurred_at: "2026-08-20",
+      body: "Sore after the session.",
+      parent_id: injury.id,
+      fingerprints: [session.fingerprint],
+    });
+
+    expect((await setNotes("user_notes_thread", session.fingerprint, "Felt strong.")).status).toBe(
+      200
+    );
+    expect(await readNotes("user_notes_thread", session.fingerprint)).toBe("Felt strong.");
+
+    expect((await setNotes("user_notes_thread", session.fingerprint, "")).status).toBe(200);
+    expect(await readNotes("user_notes_thread", session.fingerprint)).toBeNull();
+
+    const kept = await env.DB.prepare(`SELECT body FROM journal_entries WHERE id = ?`)
+      .bind(update.id)
+      .first<{ body: string }>();
+    expect(kept?.body).toBe("Sore after the session.");
   });
 
   it("tags a legacy board session without touching the session row", async () => {
@@ -683,6 +703,114 @@ describe("app", () => {
               (SELECT COUNT(*) FROM session_tags WHERE user_id = 'user_tags_purge') AS links`
     ).first<{ tags: number; links: number }>();
     expect(rows).toEqual({ tags: 0, links: 0 });
+  });
+
+  it("keeps a climb note through the log, the read back, and an edit", async () => {
+    const user = "user_climbnote";
+    const logged = await postSession(
+      user,
+      logBody({
+        climbs: [
+          {
+            name: "Silverback",
+            grade: { scale: "v", value: 8 },
+            kind: "attempt",
+            tries: 5,
+            note: "  Heel slipped off the crux again.  ",
+          },
+          { name: "", grade: { scale: "v", value: 4 }, note: "nowhere to keep this" },
+        ],
+      })
+    );
+    expect(logged.status).toBe(201);
+    const { session } = (await logged.json()) as ManualSessionResponse;
+    expect(session.climbs[0]?.note).toBe("Heel slipped off the crux again.");
+    expect(session.climbs[1]?.note).toBeNull();
+
+    const listed = await testApp().request(
+      "/v1/sessions?include=climbs",
+      { headers: { "x-test-user": user } },
+      env
+    );
+    const { sessions } = (await listed.json()) as {
+      sessions: Array<{ climbs: ManualClimb[] }>;
+    };
+    expect(sessions[0]?.climbs[0]?.note).toBe("Heel slipped off the crux again.");
+
+    const edited = await testApp().request(
+      `/v1/sessions/${session.fingerprint}`,
+      {
+        method: "PUT",
+        headers: { "x-test-user": user, "Content-Type": "application/json" },
+        body: JSON.stringify(
+          logBody({
+            climbs: [
+              {
+                name: "Silverback",
+                grade: { scale: "v", value: 8 },
+                kind: "attempt",
+                tries: 7,
+                note: "Heel slipped off the crux again.",
+              },
+            ],
+          })
+        ),
+      },
+      env
+    );
+    expect(edited.status).toBe(200);
+    const after = (await edited.json()) as ManualSessionResponse;
+    expect(after.session.climbs[0]?.note).toBe("Heel slipped off the crux again.");
+  });
+
+  it("writes and clears a climb note from the climb page without touching the climbs", async () => {
+    const user = "user_notepatch";
+    const logged = await postSession(
+      user,
+      logBody({
+        climbs: [
+          { name: "Silverback", grade: { scale: "v", value: 8 }, kind: "attempt", tries: 5 },
+        ],
+      })
+    );
+    const { session } = (await logged.json()) as ManualSessionResponse;
+
+    const setNote = (note: string) =>
+      testApp().request(
+        `/v1/sessions/${session.fingerprint}/climbs/silverback/note`,
+        {
+          method: "PUT",
+          headers: { "x-test-user": user, "Content-Type": "application/json" },
+          body: JSON.stringify({ note }),
+        },
+        env
+      );
+
+    const saved = await setNote("  Try the low heel.  ");
+    expect(saved.status).toBe(200);
+    expect(await saved.json()).toEqual({ note: "Try the low heel." });
+
+    const read = await testApp().request(
+      `/v1/sessions/${session.fingerprint}`,
+      { headers: { "x-test-user": user } },
+      env
+    );
+    const reread = (await read.json()) as ManualSessionResponse;
+    expect(reread.session.climbs[0]).toMatchObject({ tries: 5, note: "Try the low heel." });
+
+    const cleared = await setNote("   ");
+    expect(await cleared.json()).toEqual({ note: null });
+
+    const missing = await testApp().request(
+      "/v1/sessions/manual-nope/climbs/silverback/note",
+      {
+        method: "PUT",
+        headers: { "x-test-user": user, "Content-Type": "application/json" },
+        body: JSON.stringify({ note: "x" }),
+      },
+      env
+    );
+    expect(missing.status).toBe(404);
   });
 
   it("logs a manual session with converted grades and a scored effort", async () => {

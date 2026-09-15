@@ -46,8 +46,18 @@ function draft(overrides: Partial<LogSessionDraft> = {}): LogSessionDraft {
         kind: "send",
         style: "redpoint",
         tries: 2,
+        note: "",
       },
-      { key: "b", scale: "v", grade: "V6", name: "", kind: "attempt", style: "redpoint", tries: 4 },
+      {
+        key: "b",
+        scale: "v",
+        grade: "V6",
+        name: "",
+        kind: "attempt",
+        style: "redpoint",
+        tries: 4,
+        note: "",
+      },
     ],
     ...overrides,
   };
@@ -180,7 +190,16 @@ describe("mixed sessions", () => {
   it("validates and summarises a draft holding both boulders and routes", () => {
     const mixed = draft({
       climbs: [
-        { key: "a", scale: "v", grade: "V4", name: "", kind: "send", style: "redpoint", tries: 1 },
+        {
+          key: "a",
+          scale: "v",
+          grade: "V4",
+          name: "",
+          kind: "send",
+          style: "redpoint",
+          tries: 1,
+          note: "",
+        },
         {
           key: "b",
           scale: "yds",
@@ -189,6 +208,7 @@ describe("mixed sessions", () => {
           kind: "attempt",
           style: "redpoint",
           tries: 3,
+          note: "",
         },
       ],
     });
@@ -210,6 +230,7 @@ describe("send styles", () => {
     kind: "send",
     style: "redpoint",
     tries: 4,
+    note: "",
   });
 
   it("offers sent and flash on boulders, redpoint, flash and onsight on routes", () => {
@@ -238,7 +259,16 @@ describe("send styles", () => {
   it("sends the style only on a send", () => {
     const both = draft({
       climbs: [
-        { key: "a", scale: "v", grade: "V4", name: "", kind: "send", style: "flash", tries: 1 },
+        {
+          key: "a",
+          scale: "v",
+          grade: "V4",
+          name: "",
+          kind: "send",
+          style: "flash",
+          tries: 1,
+          note: "",
+        },
         {
           key: "b",
           scale: "v",
@@ -247,6 +277,7 @@ describe("send styles", () => {
           kind: "attempt",
           style: "redpoint",
           tries: 3,
+          note: "",
         },
       ],
     });
@@ -267,6 +298,7 @@ describe("send styles", () => {
             tries: 1,
             angle: null,
             grade: { scale: "v", value: 4 },
+            note: null,
           },
         ],
       })
@@ -438,6 +470,7 @@ function session(overrides: Partial<SessionDetail> = {}): SessionDetail {
         tries: 2,
         angle: null,
         grade: { scale: "v", value: 4 },
+        note: null,
       },
       {
         time: "2026-08-26T20:00:00.000Z",
@@ -447,6 +480,7 @@ function session(overrides: Partial<SessionDetail> = {}): SessionDetail {
         tries: 4,
         angle: null,
         grade: { scale: "v", value: 6 },
+        note: null,
       },
     ],
     ...overrides,
@@ -473,6 +507,7 @@ describe("draftFromSession", () => {
           kind: "send",
           style: "redpoint",
           tries: 2,
+          note: "",
         },
         {
           key: "climb-2",
@@ -482,6 +517,7 @@ describe("draftFromSession", () => {
           kind: "attempt",
           style: "redpoint",
           tries: 4,
+          note: "",
         },
       ],
     });
@@ -547,6 +583,61 @@ describe("draftFromSession", () => {
   });
 });
 
+describe("toLogSessionInput climb notes", () => {
+  it("sends a note only for a named climb, trimmed", () => {
+    const withNotes: LogSessionDraft = {
+      ...emptyDraft(new Date("2026-09-09T19:00:00")),
+      climbs: [
+        {
+          key: "a",
+          scale: "v",
+          grade: "V4",
+          name: "Moonraker",
+          kind: "attempt",
+          style: "redpoint" as const,
+          tries: 3,
+          note: "  Heel slipped off the crux again.  ",
+        },
+        {
+          key: "b",
+          scale: "v",
+          grade: "V2",
+          name: "",
+          kind: "send",
+          style: "redpoint" as const,
+          tries: 1,
+          note: "nowhere to keep this",
+        },
+        {
+          key: "c",
+          scale: "v",
+          grade: "V5",
+          name: "Torque",
+          kind: "attempt",
+          style: "redpoint" as const,
+          tries: 2,
+          note: "   ",
+        },
+      ],
+    };
+    expect(toLogSessionInput(withNotes).climbs.map((c) => c.note)).toEqual([
+      "Heel slipped off the crux again.",
+      undefined,
+      undefined,
+    ]);
+  });
+
+  it("reads a stored note back into the draft so an edit keeps it", () => {
+    const stored = session();
+    const draft = draftFromSession({
+      ...stored,
+      climbs: [{ ...stored.climbs[0]!, note: "Stuck on the crossover" }, stored.climbs[1]!],
+    });
+    expect(draft.climbs.map((c) => c.note)).toEqual(["Stuck on the crossover", ""]);
+    expect(toLogSessionInput(draft).climbs[0]?.note).toBe("Stuck on the crossover");
+  });
+});
+
 describe("toLogSessionInput project flags", () => {
   it("sends the flag only for climbs the user toggled", () => {
     const draft: LogSessionDraft = {
@@ -560,6 +651,7 @@ describe("toLogSessionInput project flags", () => {
           kind: "send",
           style: "redpoint" as const,
           tries: 1,
+          note: "",
           project: true,
         },
         {
@@ -570,6 +662,7 @@ describe("toLogSessionInput project flags", () => {
           kind: "attempt",
           style: "redpoint" as const,
           tries: 2,
+          note: "",
           project: false,
         },
         {
@@ -580,6 +673,7 @@ describe("toLogSessionInput project flags", () => {
           kind: "send",
           style: "redpoint" as const,
           tries: 1,
+          note: "",
         },
       ],
     };

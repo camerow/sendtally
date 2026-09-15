@@ -42,6 +42,17 @@ const label = {
   color: colors.textSecondary,
 } as const;
 
+const input = {
+  fontFamily: fonts.sans,
+  fontSize: 15,
+  color: colors.gunmetal,
+  backgroundColor: colors.white,
+  borderWidth: 1,
+  borderColor: "rgba(64,63,76,0.15)",
+  borderRadius: radius.control,
+  paddingHorizontal: 13,
+} as const;
+
 /**
  * Quiet by design: a session is usually all one discipline, and the climb carries its choice to
  * the next one added, so most nights never touch this.
@@ -299,14 +310,8 @@ export function ClimbEditorSheet({
               onFocus={() => setNameFocused(true)}
               onBlur={() => setNameFocused(false)}
               style={{
-                fontFamily: fonts.sans,
-                fontSize: 15,
-                color: colors.gunmetal,
-                backgroundColor: colors.white,
-                borderWidth: 1,
-                borderColor: nameFocused ? colors.azure : "rgba(64,63,76,0.15)",
-                borderRadius: radius.control,
-                paddingHorizontal: 13,
+                ...input,
+                ...(nameFocused ? { borderColor: colors.azure } : {}),
                 minHeight: 46,
               }}
             />
@@ -426,6 +431,34 @@ export function ClimbEditorSheet({
             meta={known === null ? null : projectMetaLabel(known)}
             onPress={onToggleProject}
           />
+
+          <View style={{ gap: 7 }}>
+            <Text style={label}>
+              {named ? t("logSession.noteOptional") : t("logSession.noteNeedsName")}
+            </Text>
+            {named && (
+              <>
+                <TextInput
+                  value={climb.note}
+                  multiline
+                  maxLength={2000}
+                  placeholder={t("logSession.climbNotePlaceholder")}
+                  placeholderTextColor={colors.textFaint}
+                  onChangeText={(note) => onChange({ ...climb, note })}
+                  style={{
+                    ...input,
+                    lineHeight: 22,
+                    paddingVertical: 11,
+                    minHeight: 72,
+                    textAlignVertical: "top",
+                  }}
+                />
+                <Text style={{ fontFamily: fonts.sans, fontSize: 12, color: colors.textSecondary }}>
+                  {t("logSession.noteKeptOn", { name: climb.name.trim() })}
+                </Text>
+              </>
+            )}
+          </View>
 
           <Pressable
             onPress={onClose}

@@ -6,7 +6,7 @@ import { useProject } from "@sendtally/features/climbs";
 import { t } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { Icon } from "../../components/Icon";
-import { BetaCard } from "../../features/projects/BetaCard";
+import { NotesCard } from "../../features/projects/NotesCard";
 import { ProjectChart } from "../../features/projects/ProjectChart";
 import { useApi } from "../../lib/api";
 
@@ -213,10 +213,10 @@ export default function ProjectDetailScreen(): React.ReactElement {
           )}
         </View>
 
-        <BetaCard
-          beta={vm.beta}
-          updatedLabel={vm.betaUpdatedLabel}
-          onSave={(beta) => project.saveBeta(beta)}
+        <NotesCard
+          notes={vm.notes}
+          latestSession={vm.sessions[0]}
+          onSave={(fingerprint, note) => project.saveNote(fingerprint, note)}
         />
 
         <View
@@ -286,7 +286,7 @@ export default function ProjectDetailScreen(): React.ReactElement {
                   {session.metaLabel}
                   {session.sent ? t("projects.sessionSent") : ""}
                 </Text>
-                {session.notes !== null && (
+                {session.note !== null && (
                   <Text
                     numberOfLines={2}
                     style={{
@@ -296,7 +296,7 @@ export default function ProjectDetailScreen(): React.ReactElement {
                       color: colors.textSecondary,
                     }}
                   >
-                    {session.notes}
+                    {session.note}
                   </Text>
                 )}
               </View>
