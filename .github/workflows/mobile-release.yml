@@ -89,11 +89,13 @@ jobs:
         working-directory: apps/mobile
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-          MESSAGE: ${{ github.event.head_commit.message }}
-          SHA: ${{ github.sha }}
         run: |
+          # Not github.event.head_commit.message: pull requests land here as
+          # merge commits, so that is "Merge pull request #126 from ...". The
+          # newest non-merge ancestor is the conventional commit that the
+          # release notes quote, which is what the dashboard entry should say.
           eas update --channel production --environment production --non-interactive \
-            --message "${SHA:0:7} ${MESSAGE%%$'\n'*}"
+            --message "$(git log -1 --no-merges --format='%h %s')"
 
       # An update ships to the installs running the latest store release, so it
       # belongs in that release's notes rather than in the next one's. The body
