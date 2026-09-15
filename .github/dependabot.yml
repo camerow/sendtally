@@ -8,6 +8,20 @@ updates:
     commit-message:
       prefix: chore
       include: scope
+    ignore:
+      # Expo pins these to the SDK; `expo install --fix` owns their versions.
+      - dependency-name: expo
+      - dependency-name: expo-*
+      - dependency-name: "@expo/*"
+      - dependency-name: "@expo-google-fonts/*"
+      - dependency-name: babel-preset-expo
+      - dependency-name: react-native
+      - dependency-name: react-native-safe-area-context
+      - dependency-name: react-native-screens
+      - dependency-name: react-native-svg
+      # Pinned by the overrides in pnpm-workspace.yaml.
+      - dependency-name: react
+      - dependency-name: react-dom
     groups:
       npm:
         patterns:
