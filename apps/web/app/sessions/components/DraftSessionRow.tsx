@@ -41,7 +41,7 @@ export function DraftSessionRow(): React.ReactElement | null {
           >
             {t("common.discard")}
           </button>
-          <Link to="/app/sessions/new" className="session-row-draft-action">
+          <Link to="/app/sessions/new?resume=1" className="session-row-draft-action">
             {t("sessions.resume")}
           </Link>
         </span>

@@ -1,7 +1,8 @@
 appId: com.sendtally.app
 name: draft-survives-leaving
 # A climb added right before leaving the form must be there when the form is opened again,
-# and the session list must offer the draft back.
+# the session list must offer the draft back, and tapping that offer must open the form
+# already on the draft rather than asking again.
 ---
 - runFlow: ../helpers/open-dev-client.yaml
 - runFlow: ../helpers/ensure-signed-in.yaml
@@ -29,12 +30,20 @@ name: draft-survives-leaving
       text: "← LOG"
     direction: UP
 - tapOn: "← LOG"
-- assertVisible: "Unfinished session"
+- assertVisible: "Unfinished session.*"
 - tapOn: "Climbing session"
 - assertVisible: "You have an unfinished session.*"
 - assertVisible: "3 CLIMBS.*"
 - tapOn: "Pick up"
 - assertVisible: "3 CLIMBS.*"
+- scrollUntilVisible:
+    element:
+      text: "← LOG"
+    direction: UP
+- tapOn: "← LOG"
+- tapOn: "Unfinished session.*"
+- assertVisible: "3 CLIMBS.*"
+- assertNotVisible: "You have an unfinished session.*"
 - scrollUntilVisible:
     element:
       text: "← LOG"

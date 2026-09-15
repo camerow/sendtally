@@ -8,6 +8,11 @@ export type DraftAutosaver = {
   flush: () => void;
   /** Take the draft as the new baseline without writing it. */
   reset: (draft: LogSessionDraft) => void;
+  /**
+   * The form settling into the user's preferences, which is not an edit - unless they have
+   * already edited, in which case it rides along with what they typed.
+   */
+  rebase: (draft: LogSessionDraft) => void;
   /** No more writes: the session reached the server. */
   stop: () => void;
 };
@@ -21,6 +26,7 @@ export function createDraftAutosaver(
   let pending: LogSessionDraft | null = null;
   let timer: ReturnType<typeof setTimeout> | null = null;
   let stopped = false;
+  let wrote = false;
 
   const cancel = (): void => {
     if (timer !== null) clearTimeout(timer);
@@ -33,27 +39,42 @@ export function createDraftAutosaver(
     const draft = pending;
     pending = null;
     baseline = JSON.stringify(draft);
+    wrote = true;
     const at = writeStoredDraft(storage, draft, new Date());
     if (at !== null) onSaved(at);
   };
 
-  return {
-    update: (draft) => {
-      if (stopped) return;
-      const serialized = JSON.stringify(draft);
-      if (serialized === baseline) {
-        pending = null;
-        cancel();
-        return;
-      }
-      pending = draft;
+  const update = (draft: LogSessionDraft): void => {
+    if (stopped) return;
+    const serialized = JSON.stringify(draft);
+    if (serialized === baseline) {
+      pending = null;
       cancel();
-      timer = setTimeout(flush, debounceMs);
-    },
+      return;
+    }
+    pending = draft;
+    cancel();
+    timer = setTimeout(flush, debounceMs);
+  };
+
+  return {
+    update,
     flush,
     reset: (draft) => {
       cancel();
       pending = null;
+      baseline = JSON.stringify(draft);
+    },
+    rebase: (draft) => {
+      if (stopped) return;
+      if (pending !== null) {
+        pending = draft;
+        return;
+      }
+      if (wrote) {
+        update(draft);
+        return;
+      }
       baseline = JSON.stringify(draft);
     },
     stop: () => {

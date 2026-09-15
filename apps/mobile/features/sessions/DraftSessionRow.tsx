@@ -14,19 +14,15 @@ const read = (): StoredSessionDraft | null =>
 
 export function DraftSessionRow(): React.ReactElement | null {
   const [stored, setStored] = React.useState(read);
-  // The draft is written by the form, on another screen. A store notification reaching a
-  // blurred tab is not something to depend on - the tab regaining focus is, and it is the
-  // only moment this row can need to change.
-  useFocusEffect(
-    React.useCallback(() => {
-      setStored(read());
-    }, [])
-  );
+  const reread = React.useCallback(() => setStored(read()), []);
+  // The draft is written by the form, on another screen, and its last write lands whenever
+  // React unmounts it - sometimes after this tab has already regained focus and read the
+  // file. So take both: focus for a draft written while this row was gone, and the store's
+  // own notification for a write that arrives after.
+  useFocusEffect(reread);
+  React.useEffect(() => sessionDraftStorage.subscribe(reread), [reread]);
 
-  const discard = (): void => {
-    sessionDraftStorage.remove();
-    setStored(null);
-  };
+  const discard = (): void => sessionDraftStorage.remove();
 
   if (stored === null) return null;
 
@@ -49,7 +45,7 @@ export function DraftSessionRow(): React.ReactElement | null {
       }}
     >
       <Pressable
-        onPress={() => router.push("/session/new")}
+        onPress={() => router.push("/session/new?resume=1")}
         accessibilityRole="button"
         accessibilityLabel={`${t("sessions.unfinishedSession")}, ${meta}, ${t("sessions.resume")}`}
         style={pressRow({

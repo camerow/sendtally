@@ -1,4 +1,4 @@
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import React from "react";
 import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import type { ClimbSummary } from "@sendtally/api-client";
@@ -6,7 +6,9 @@ import { climbDraftGrade, findClimb, useClimbVocabulary } from "@sendtally/featu
 import {
   draftProblem,
   draftSummary,
+  disciplineOf,
   emptyDraft,
+  storedDraft,
   newClimb,
   nextClimbKey,
   toLogSessionInput,
@@ -121,24 +123,15 @@ export function LogSessionForm({
   editing?: { fingerprint: string; draft: LogSessionDraft };
 }): React.ReactElement {
   const api = useApi();
+  const { resume } = useLocalSearchParams<{ resume?: string }>();
   const { scales: gradePrefs, ready: prefsReady } = useGradeScalePrefs(api);
+  // Opened by tapping the draft itself: start on it rather than offering it back.
+  const [picked] = React.useState(() => (resume === "1" ? storedDraft(sessionDraftStorage) : null));
   const [draft, setDraft] = React.useState<LogSessionDraft>(
-    () => editing?.draft ?? emptyDraft(new Date(), gradePrefs)
+    () => editing?.draft ?? picked ?? emptyDraft(new Date(), gradePrefs)
   );
   const [saving, setSaving] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
-
-  // The preference query resolves after the first render, so a new draft adopts
-  // the user's scale once. An edit keeps the scale the session was logged in.
-  const adopted = React.useRef(editing !== undefined);
-  React.useEffect(() => {
-    if (adopted.current || !prefsReady) return;
-    adopted.current = true;
-    setDraft((d) => ({
-      ...d,
-      climbs: d.climbs.map((c) => withClimbScale(c, gradePrefs.boulder)),
-    }));
-  }, [prefsReady, gradePrefs.boulder]);
 
   const { suggestionsFor } = useTagVocabulary(api);
   const vocabulary = useClimbVocabulary(api);
@@ -146,12 +139,34 @@ export function LogSessionForm({
   const editingIndex = draft.climbs.findIndex((c) => c.key === editingKey);
   const editingClimb = editingIndex < 0 ? null : draft.climbs[editingIndex]!;
   const [defaultTimes] = React.useState({ start: draft.startTime, end: draft.endTime });
+
+  // The preference query resolves after the first render, so a new draft adopts the user's
+  // scale once, per discipline and only where no grade has been typed yet. A draft picked
+  // back up, and anything already graded, keeps the scale it was written in.
+  const adopted = React.useRef(editing !== undefined || picked !== null);
+  const resumeDraft = React.useCallback((resumed: LogSessionDraft) => {
+    adopted.current = true;
+    setDraft(resumed);
+  }, []);
   const autosave = useDraftAutosave(
     editing === undefined ? sessionDraftStorage : null,
     draft,
-    setDraft,
-    prefsReady
+    resumeDraft,
+    picked !== null
   );
+
+  React.useEffect(() => {
+    if (adopted.current || !prefsReady) return;
+    adopted.current = true;
+    const next = {
+      ...draft,
+      climbs: draft.climbs.map((c) =>
+        c.grade === "" ? withClimbScale(c, gradePrefs[disciplineOf(c.scale)]) : c
+      ),
+    };
+    autosave.rebase(next);
+    setDraft(next);
+  }, [prefsReady, gradePrefs, draft, autosave]);
   const untouchedTimes =
     editing === undefined &&
     draft.startTime === defaultTimes.start &&
