@@ -8,3 +8,4 @@ executionOrder:
     - sign-in
     - log-session-sheet
     - draft-survives-leaving
+    - cancel-discards-draft

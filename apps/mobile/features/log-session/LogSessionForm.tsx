@@ -26,6 +26,7 @@ import { formatDate, t } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { useApi } from "../../lib/api";
 import { sessionDraftStorage } from "../../lib/sessionDraftStorage";
+import { confirmDiscardDraft } from "../../lib/confirmDiscardDraft";
 import { DraftBanner } from "./DraftBanner";
 import { TagPicker } from "../sessions/TagPicker";
 import { ClimbEditorSheet } from "./ClimbEditorSheet";
@@ -220,6 +221,18 @@ export function LogSessionForm({
 
   function toggleProject(climb: ClimbDraft): void {
     updateClimb(climb.key, (c) => ({ ...c, project: !isProject(c) }));
+  }
+
+  /** Cancel abandons the draft, so it only leaves one behind after a confirmation. */
+  function cancel(): void {
+    if (autosave.savedAt === null) {
+      router.back();
+      return;
+    }
+    confirmDiscardDraft({ draft, savedAt: autosave.savedAt }, () => {
+      autosave.clear();
+      router.back();
+    });
   }
 
   async function save(): Promise<void> {
@@ -571,31 +584,53 @@ export function LogSessionForm({
               textAlign: "center",
             }}
           >
-            {`✓ ${t("logSession.draftSaved", {
+            {t("logSession.draftSaved", {
               time: formatDate(autosave.savedAt, { hour: "2-digit", minute: "2-digit" }),
-            })}`}
+            })}
           </Text>
         )}
-        <Pressable
-          onPress={() => void save()}
-          disabled={saving}
-          style={{
-            minHeight: 50,
-            alignItems: "center",
-            justifyContent: "center",
-            borderRadius: radius.control,
-            backgroundColor: colors.azureInk,
-            opacity: saving ? 0.45 : 1,
-          }}
-        >
-          <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 15, color: colors.white }}>
-            {saving
-              ? t("common.saving")
-              : editing === undefined
-                ? t("logSession.logSession")
-                : t("logSession.saveChanges")}
-          </Text>
-        </Pressable>
+        <View style={{ flexDirection: "row", gap: 10 }}>
+          <Pressable
+            onPress={cancel}
+            disabled={saving}
+            style={press({
+              flex: 1,
+              minHeight: 50,
+              alignItems: "center",
+              justifyContent: "center",
+              borderRadius: radius.control,
+              borderWidth: 1,
+              borderColor: "rgba(64,63,76,0.24)",
+            })}
+          >
+            <Text
+              style={{ fontFamily: fonts.sansSemiBold, fontSize: 15, color: colors.textSecondary }}
+            >
+              {t("common.cancel")}
+            </Text>
+          </Pressable>
+          <Pressable
+            onPress={() => void save()}
+            disabled={saving}
+            style={{
+              flex: 2,
+              minHeight: 50,
+              alignItems: "center",
+              justifyContent: "center",
+              borderRadius: radius.control,
+              backgroundColor: colors.azureInk,
+              opacity: saving ? 0.45 : 1,
+            }}
+          >
+            <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 15, color: colors.white }}>
+              {saving
+                ? t("common.saving")
+                : editing === undefined
+                  ? t("logSession.logSession")
+                  : t("logSession.saveChanges")}
+            </Text>
+          </Pressable>
+        </View>
       </View>
     </View>
   );
