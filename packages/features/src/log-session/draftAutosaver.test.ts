@@ -104,6 +104,33 @@ describe("draft autosaver", () => {
     expect(storage.writes).toBe(0);
   });
 
+  it("rebase takes a new baseline before anything is edited", () => {
+    const storage = memory();
+    const saver = createDraftAutosaver(storage, 400, () => {});
+    const base = emptyDraft(NOW);
+    saver.reset(base);
+
+    saver.rebase(withClimb(base));
+    vi.advanceTimersByTime(400);
+    saver.flush();
+    expect(storage.writes).toBe(0);
+  });
+
+  it("rebase saves once the user has edited, so a slow preference never eats their work", () => {
+    const storage = memory();
+    const saver = createDraftAutosaver(storage, 400, () => {});
+    const base = emptyDraft(NOW);
+    saver.reset(base);
+
+    const edited = withClimb(base);
+    saver.update(edited);
+    saver.rebase(withClimb(edited));
+    saver.flush();
+    expect(parseStoredDraft(storage.read(), NOW)?.draft.climbs).toHaveLength(
+      base.climbs.length + 2
+    );
+  });
+
   it("stop ends saving, including a pending edit", () => {
     const storage = memory();
     const saver = createDraftAutosaver(storage, 400, () => {});

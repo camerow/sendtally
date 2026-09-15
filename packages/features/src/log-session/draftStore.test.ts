@@ -3,6 +3,7 @@ import {
   DRAFT_TTL_MS,
   draftStorage,
   parseStoredDraft,
+  storedDraft,
   writeStoredDraft,
   type DraftStorage,
 } from "./draftStore";
@@ -67,7 +68,15 @@ describe("session draft store", () => {
     expect(listener).toHaveBeenCalledTimes(2);
   });
 
-  it("survives storage that refuses to answer", () => {
+  it("hands back the stored draft for a form opened to pick it up", () => {
+    const storage = memory();
+    expect(storedDraft(storage)).toBeNull();
+    const draft = { ...emptyDraft(NOW), name: "Tuesday night session" };
+    writeStoredDraft(storage, draft, new Date());
+    expect(storedDraft(storage)?.name).toBe("Tuesday night session");
+  });
+
+  it("survives storage that refuses to answer, and still tells subscribers", () => {
     const broken = draftStorage({
       read: () => {
         throw new Error("blocked");
@@ -79,8 +88,11 @@ describe("session draft store", () => {
         throw new Error("blocked");
       },
     });
+    const listener = vi.fn();
+    broken.subscribe(listener);
     expect(broken.read()).toBeNull();
     expect(writeStoredDraft(broken, emptyDraft(NOW), NOW)).toBeNull();
     expect(() => broken.remove()).not.toThrow();
+    expect(listener).toHaveBeenCalledTimes(1);
   });
 });

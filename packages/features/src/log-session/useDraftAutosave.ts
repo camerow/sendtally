@@ -24,6 +24,8 @@ export type DraftAutosave = {
   /** A draft from a previous visit, waiting on resume or start-fresh. */
   offered: StoredSessionDraft | null;
   savedAt: Date | null;
+  /** The form adopting the user's saved grade scale - a settling, not something they typed. */
+  rebase: (draft: LogSessionDraft) => void;
   resume: () => void;
   startFresh: () => void;
   /** Drop the stored draft and stop saving - the session made it to the server. */
@@ -32,21 +34,28 @@ export type DraftAutosave = {
 
 /**
  * `storage` is null where autosave does not apply - only a new session is worth rescuing.
- * `ready` holds saving off while the form is still settling into the user's preferences,
- * so adopting a saved grade scale is not mistaken for the first thing they typed.
+ * Adopting the user's saved grade scale is not an edit, so the form announces it with `rebase`
+ * rather than saving holding off until preferences arrive: a preference request that never
+ * settles used to swallow everything typed while it hung.
  *
  * A pending write is flushed when the form unmounts, so leaving right after an edit keeps it.
  * Editing while an older draft is on offer overwrites that draft: the user saw the offer and
  * typed anyway, and what they are typing now is the session worth keeping.
+ *
+ * `autoResume` is the form opened by tapping the draft itself: the form starts on that draft
+ * (see `storedDraft`), so there is nothing to offer - the user already chose it.
  */
 export function useDraftAutosave(
   storage: DraftStorage | null,
   draft: LogSessionDraft,
   onResume: (draft: LogSessionDraft) => void,
-  ready = true
+  autoResume = false
 ): DraftAutosave {
   const [dismissed, setDismissed] = React.useState(false);
-  const [savedAt, setSavedAt] = React.useState<Date | null>(null);
+  const [savedAt, setSavedAt] = React.useState<Date | null>(
+    () =>
+      (autoResume ? parseStoredDraft(storage?.read() ?? null, new Date()) : null)?.savedAt ?? null
+  );
   /** Whether this form has autosaved yet - what makes a stored draft ours rather than an offer. */
   const [saved, setSaved] = React.useState(false);
   const [saver] = React.useState<Autosaver | null>(() => {
@@ -66,13 +75,13 @@ export function useDraftAutosave(
    * mount time made it a race, and the previous form's flush lands whenever React unmounts
    * it - sometimes after the next form is already up, which silently swallowed the offer.
    */
-  const offered = dismissed || saved || stored === null ? null : stored;
+  const offered = dismissed || saved || autoResume || stored === null ? null : stored;
 
   React.useEffect(() => {
-    if (saver === null) return;
-    if (ready) saver.update(draft);
-    else saver.reset(draft);
-  }, [draft, ready, saver]);
+    saver?.update(draft);
+  }, [draft, saver]);
+
+  const rebase = React.useCallback((next: LogSessionDraft) => saver?.rebase(next), [saver]);
 
   React.useEffect(() => () => saver?.flush(), [saver]);
 
@@ -95,7 +104,7 @@ export function useDraftAutosave(
     setSavedAt(null);
   }, [saver, storage]);
 
-  return { offered, savedAt, resume, startFresh, clear };
+  return { offered, savedAt, rebase, resume, startFresh, clear };
 }
 
 export type StoredDraftEntry = { stored: StoredSessionDraft | null; discard: () => void };

@@ -46,7 +46,7 @@ export function draftStorage(io: DraftStorageIo): DraftStorage {
       try {
         io.remove();
       } catch {
-        return;
+        // A delete that failed leaves the draft where it was; subscribers read the truth.
       }
       notify();
     },
@@ -84,6 +84,11 @@ export function parseStoredDraft(raw: string | null, now: Date): StoredSessionDr
   if (!isDraft(draft) || Number.isNaN(at.getTime())) return null;
   if (now.getTime() - at.getTime() > DRAFT_TTL_MS) return null;
   return { draft, savedAt: at };
+}
+
+/** The draft on disk, for a form opened to pick it up rather than to offer it. */
+export function storedDraft(storage: DraftStorage): LogSessionDraft | null {
+  return parseStoredDraft(storage.read(), new Date())?.draft ?? null;
 }
 
 export function writeStoredDraft(
