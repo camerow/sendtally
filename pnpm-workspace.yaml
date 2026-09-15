@@ -12,13 +12,10 @@ allowBuilds:
   utf-8-validate: false
   workerd: false
 minimumReleaseAgeExclude:
-  - expo-app-metrics@57.0.19
-  - expo-build-properties@57.0.18
-  - expo-observe@57.0.22
-  - "@expo/cli@57.0.25"
-  - "@expo/router-server@57.0.10"
-  - babel-preset-expo@57.0.12
-  - expo@57.0.23
+  - expo
+  - "expo-*"
+  - "@expo/*"
+  - babel-preset-expo
 overrides:
   react: "19.2.3"
   react-dom: "19.2.3"
