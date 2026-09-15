@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@clerk/localizations": "^4.16.1",
+    "@clerk/react": "6.12.11",
     "@clerk/react-router": "^3.6.3",
     "@sendtally/api-client": "workspace:*",
     "@sendtally/design": "workspace:*",

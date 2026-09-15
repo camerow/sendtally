@@ -17,7 +17,7 @@ function summary(vm: MembershipVM): string {
     return t("settings.membershipStore", { plan, store: storeName(vm.managedIn) });
   }
   if (vm.managedIn === "web") return t("settings.membershipWeb");
-  return t("billing.activeBody");
+  return t("billing.activeOnAccount");
 }
 
 export function MembershipSection({

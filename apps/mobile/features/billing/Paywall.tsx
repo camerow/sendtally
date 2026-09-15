@@ -1,21 +1,26 @@
 import React from "react";
 import type { Entitlements } from "@sendtally/api-client";
+import { membershipPanel } from "@sendtally/features/billing";
+import { MembershipPanel } from "./MembershipPanel";
 import { PurchaseControls } from "./PurchaseControls";
-import { UpgradeCard } from "./UpgradeCard";
 import { useBilling } from "./useBilling";
 import { usePurchase } from "./usePurchase";
 
 function StorePaywall({ refresh }: { refresh: () => Promise<Entitlements> }): React.ReactElement {
   const purchase = usePurchase(refresh);
+  const panel = membershipPanel();
   return (
-    <UpgradeCard>
+    <MembershipPanel eyebrow={panel.eyebrow} title={panel.title} body={panel.body}>
       <PurchaseControls purchase={purchase} />
-    </UpgradeCard>
+    </MembershipPanel>
   );
 }
 
 export function Paywall(): React.ReactElement {
   const billing = useBilling();
-  if (billing === null) return <UpgradeCard />;
+  const panel = membershipPanel();
+  if (billing === null) {
+    return <MembershipPanel eyebrow={panel.eyebrow} title={panel.title} body={panel.body} />;
+  }
   return <StorePaywall refresh={billing.membership.refresh} />;
 }

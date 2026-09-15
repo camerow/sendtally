@@ -184,6 +184,9 @@ importers:
       '@clerk/localizations':
         specifier: ^4.16.1
         version: 4.16.1(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+      '@clerk/react':
+        specifier: 6.12.11
+        version: 6.12.11(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@clerk/react-router':
         specifier: ^3.6.3
         version: 3.6.3(react-dom@19.2.3(react@19.2.3))(react-router@7.18.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react@19.2.3)
@@ -7787,7 +7790,7 @@ snapshots:
 
   '@clerk/react@6.12.11(react-dom@19.2.3(react@19.2.3))(react@19.2.3)':
     dependencies:
-      '@clerk/shared': 4.26.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+      '@clerk/shared': 4.31.1(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       react: 19.2.3
       react-dom: 19.2.3(react@19.2.3)
       tslib: 2.8.1

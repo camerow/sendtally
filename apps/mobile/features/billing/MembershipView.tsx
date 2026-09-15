@@ -3,9 +3,7 @@ import { ActivityIndicator, Linking, Pressable, ScrollView, Text, View } from "r
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
   membershipPanel,
-  planLabel,
   storeChipName,
-  storeName,
   type MembershipFeature,
   type MembershipVM,
 } from "@sendtally/features/billing";
@@ -19,8 +17,7 @@ import {
   underlineLabel,
   underlinePress,
 } from "../../lib/styles";
-import { ledgerEyebrow, MembershipLedger } from "./MembershipLedger";
-import { MembershipStatusCard } from "./MembershipStatusCard";
+import { MembershipPanel, panelMono, panelNote } from "./MembershipPanel";
 import { PurchaseControls } from "./PurchaseControls";
 import { storeBillingAvailable, storeLabel, subscriptionManagementUrl } from "./store";
 import type { PurchaseFeature } from "./usePurchase";
@@ -32,106 +29,74 @@ export type MembershipViewProps = {
   onBack: () => void;
 };
 
-const inStore = (vm: MembershipVM): boolean =>
-  vm.managedIn === "play_store" || vm.managedIn === "app_store";
-
 function openManagement(): void {
   void subscriptionManagementUrl().then((url) => Linking.openURL(url));
 }
 
-function StatusCard({
-  vm,
-  purchase,
-}: {
-  vm: MembershipVM;
-  purchase: PurchaseFeature;
-}): React.ReactElement {
+function RestoreLink({ purchase }: { purchase: PurchaseFeature }): React.ReactElement {
   const restoring = purchase.status === "restoring";
-  const restoreLink = (
+  return (
     <Pressable onPress={purchase.restore} disabled={restoring} style={underlinePress}>
       <Text style={{ ...underlineLabel, fontSize: 12 }}>
         {restoring ? t("billing.restoring") : t("billing.restorePurchases")}
       </Text>
     </Pressable>
   );
+}
 
+function Panel({
+  vm,
+  purchase,
+}: {
+  vm: MembershipVM;
+  purchase: PurchaseFeature;
+}): React.ReactElement {
+  const panel = membershipPanel();
   if (!vm.active) {
     return (
-      <MembershipStatusCard
-        label={vm.statusLabel}
-        headline={t("billing.loggingIsFree")}
-        detail={null}
-        body={`${t("billing.freeBody")}${storeBillingAvailable ? t("billing.pickAPlan") : ""}`}
-      />
+      <MembershipPanel eyebrow={panel.eyebrow} title={panel.pageTitle}>
+        <PurchaseControls purchase={purchase} />
+      </MembershipPanel>
     );
   }
-
-  if (inStore(vm) && vm.managedIn !== null) {
-    const where = storeName(vm.managedIn);
+  const eyebrow = t("billing.memberVia", { store: storeChipName(vm.managedIn ?? "other") });
+  if (vm.managedIn === "web") {
     return (
-      <MembershipStatusCard
-        label={vm.statusLabel}
-        headline={vm.plan === null ? t("common.membership") : planLabel(vm.plan)}
-        detail={vm.renewalLine}
-        body={t("billing.storeBody", { store: where })}
-      >
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
+      <MembershipPanel eyebrow={eyebrow} title={t("billing.trendsOpen")} linkRows>
+        <Text style={panelMono}>{t("billing.renewsOnWeb")}</Text>
+        <Text style={panelNote}>{t("billing.webBody")}</Text>
+      </MembershipPanel>
+    );
+  }
+  const inStore = vm.managedIn === "play_store" || vm.managedIn === "app_store";
+  return (
+    <MembershipPanel eyebrow={eyebrow} title={t("billing.trendsOpen")} linkRows>
+      {vm.renewalLine !== null && <Text style={panelMono}>{vm.renewalLine}</Text>}
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
+        {inStore && (
           <Pressable
             onPress={openManagement}
             accessibilityRole="button"
             style={press({ ...chipButton, alignSelf: "flex-start" })}
           >
             <Text style={chipButtonLabel}>
-              {t("billing.manageIn", { store: storeChipName(vm.managedIn) })}
+              {t("billing.manageIn", { store: storeChipName(vm.managedIn ?? "other") })}
             </Text>
           </Pressable>
-          {restoreLink}
-        </View>
-      </MembershipStatusCard>
-    );
-  }
-
-  if (vm.managedIn === "web") {
-    return (
-      <MembershipStatusCard
-        label={vm.statusLabel}
-        headline={t("common.membership")}
-        detail={null}
-        body={t("billing.webBody")}
-      />
-    );
-  }
-
-  return (
-    <MembershipStatusCard
-      label={vm.statusLabel}
-      headline={vm.plan === null ? t("common.membership") : planLabel(vm.plan)}
-      detail={vm.renewalLine}
-      body={t("billing.activeBody")}
-    >
-      {restoreLink}
-    </MembershipStatusCard>
+        )}
+        <RestoreLink purchase={purchase} />
+      </View>
+    </MembershipPanel>
   );
 }
 
-function PlansSection({
-  vm,
-  purchase,
-}: {
-  vm: MembershipVM;
-  purchase: PurchaseFeature;
-}): React.ReactElement | null {
+/** A web member can move billing to the store; the plans sit under the panel as their own section. */
+function SwitchToStore({ purchase }: { purchase: PurchaseFeature }): React.ReactElement | null {
   if (!storeBillingAvailable) return null;
-  if (vm.active && vm.managedIn !== "web") return null;
-  const switching = vm.active;
   return (
     <View style={{ gap: 12 }}>
-      <Text style={sectionLabel}>
-        {switching ? t("billing.payThroughInstead", { store: storeLabel() }) : t("billing.plans")}
-      </Text>
-      {switching && (
-        <Text style={bodyText}>{t("billing.switchBody", { store: storeLabel() })}</Text>
-      )}
+      <Text style={sectionLabel}>{t("billing.payThroughInstead", { store: storeLabel() })}</Text>
+      <Text style={bodyText}>{t("billing.switchBody", { store: storeLabel() })}</Text>
       <PurchaseControls purchase={purchase} />
     </View>
   );
@@ -167,7 +132,6 @@ export function MembershipView({
   purchase,
   onBack,
 }: MembershipViewProps): React.ReactElement {
-  const panel = membershipPanel();
   const { state, vm } = membership;
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.white }} edges={["top"]}>
@@ -218,31 +182,6 @@ export function MembershipView({
           </Text>
         </View>
 
-        {state.status === "ready" && !vm.active && (
-          <View
-            style={{
-              backgroundColor: colors.gold,
-              borderRadius: radius.card,
-              padding: 18,
-              gap: 12,
-            }}
-          >
-            <Text style={ledgerEyebrow}>{panel.eyebrow}</Text>
-            <Text
-              style={{
-                fontFamily: fonts.displayHeavy,
-                fontSize: 24,
-                lineHeight: 27,
-                letterSpacing: -0.8,
-                color: colors.gunmetal,
-              }}
-            >
-              {panel.pageTitle}
-            </Text>
-            <MembershipLedger />
-          </View>
-        )}
-
         {state.status === "loading" && (
           <ActivityIndicator color={colors.gunmetal} style={{ alignSelf: "flex-start" }} />
         )}
@@ -258,8 +197,8 @@ export function MembershipView({
         )}
         {state.status === "ready" && (
           <>
-            <StatusCard vm={vm} purchase={purchase} />
-            <PlansSection vm={vm} purchase={purchase} />
+            <Panel vm={vm} purchase={purchase} />
+            {vm.active && vm.managedIn === "web" && <SwitchToStore purchase={purchase} />}
           </>
         )}
       </ScrollView>

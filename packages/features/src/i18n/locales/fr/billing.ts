@@ -48,16 +48,9 @@ export const billing = {
   "billing.restorePurchases": "Restaurer les achats",
   "billing.terms": "Conditions",
   "billing.privacy": "Confidentialité",
-  "billing.loggingIsFree": "Enregistrer est gratuit",
-  "billing.freeBody":
-    "L'abonnement transforme le carnet en historique d'entraînement. Il paie aussi le serveur.",
-  "billing.pickAPlan": " Choisis une formule ci-dessous pour t'abonner.",
-  "billing.storeBody":
-    "Facturé via {store}. Change de formule ou résilie depuis tes abonnements {store} ; les tendances restent jusqu'à la fin de la période payée.",
   "billing.manageIn": "Gérer dans {store}",
   "billing.webBody":
     "Cet abonnement a été acheté sur sendtally.com et s'y renouvelle. Il débloque quand même les tendances dans l'appli.",
-  "billing.activeBody": "L'abonnement est actif sur ce compte.",
   "billing.payThroughInstead": "Payer via {store} à la place",
   "billing.plans": "Formules",
   "billing.switchBody":
@@ -65,12 +58,8 @@ export const billing = {
   "billing.introMobile":
     "Enregistrer tes séances et les publier sur Strava est gratuit, et le restera. L'abonnement ouvre les écrans qui relisent tout ton historique.",
   "billing.loadFailed": "Impossible de charger ton abonnement.",
-  "billing.intro":
-    "Enregistrer tes séances et les publier sur Strava est gratuit et le restera. L'abonnement transforme le carnet en historique d'entraînement, et c'est lui qui paie le serveur.",
   "billing.loadingPlans": "Chargement des formules…",
   "billing.activeOnAccount": "Ton abonnement est actif sur ce compte.",
-  "billing.billedThrough":
-    "Ton abonnement est facturé via {store}. Modifie-le ou résilie-le depuis tes abonnements {store} ; les tendances restent jusqu'à la fin de la période payée.",
   "billing.panelTitle": "Deviens membre pour voir tes tendances à long terme.",
   "billing.panelPageTitle": "Tout ce que tes sessions ont accumulé.",
   "billing.panelBody":
@@ -81,4 +70,17 @@ export const billing = {
   "billing.panelPyramid": "Où se situent vraiment tes réussites",
   "billing.panelHardest": "Ton plafond par période, avec la voie qui l’a fixé",
   "billing.panelFlash": "Réussites du premier coup, suivies dans le temps",
+  "billing.trendsOpen": "Tes tendances sont ouvertes.",
+  "billing.trendsOpenUntil": "Tes tendances sont ouvertes jusqu'au {date}.",
+  "billing.freeTrialEnds": "Essai gratuit · se termine le {date}",
+  "billing.cancelledEnds": "Annulé · se termine le {date}",
+  "billing.perMonthBilledYearly": "/mois, facturé à l'année",
+  "billing.cancelAnyTime": "résiliable à tout moment",
+  "billing.yearlyPrice": "Annuel · {price}",
+  "billing.monthlyPrice": "Mensuel · {price}",
+  "billing.manageMembership": "Gérer l'abonnement",
+  "billing.openTrend": "Ouvrir",
+  "billing.renewsOnWeb": "Se renouvelle sur sendtally.com",
+  "billing.plansUnavailableWeb":
+    "Les formules n'ont pas pu être chargées. Recharge la page pour réessayer.",
 } as const;
