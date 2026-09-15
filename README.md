@@ -1,5 +1,7 @@
 # sendtally
 
+[![CI](https://github.com/camerow/sendtally/actions/workflows/ci.yml/badge.svg)](https://github.com/camerow/sendtally/actions/workflows/ci.yml) [![Mobile release](https://github.com/camerow/sendtally/actions/workflows/mobile-release.yml/badge.svg)](https://github.com/camerow/sendtally/actions/workflows/mobile-release.yml) [![Web release](https://github.com/camerow/sendtally/actions/workflows/deploy.yml/badge.svg)](https://github.com/camerow/sendtally/actions/workflows/deploy.yml)
+
 A climbing log with effort tracking. Record each session (climbs, grades, sends and attempts) in the app; every session is scored for effort on an RPE-style 1-10 scale and can optionally be posted to Strava as a `RockClimbing` activity with an effort-based title and per-climb log.
 
 Sessions are entered by the user through the log-session form. sendtally does not import data from board apps or any other third party. The original Aurora Climbing board integration was discontinued in September 2026 at Aurora's request; see [AGENTS.md](AGENTS.md).
