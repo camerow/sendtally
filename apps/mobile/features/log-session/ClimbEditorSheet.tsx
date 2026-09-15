@@ -42,6 +42,17 @@ const label = {
   color: colors.textSecondary,
 } as const;
 
+const input = {
+  fontFamily: fonts.sans,
+  fontSize: 15,
+  color: colors.gunmetal,
+  backgroundColor: colors.white,
+  borderWidth: 1,
+  borderColor: "rgba(64,63,76,0.15)",
+  borderRadius: radius.control,
+  paddingHorizontal: 13,
+} as const;
+
 /**
  * Quiet by design: a session is usually all one discipline, and the climb carries its choice to
  * the next one added, so most nights never touch this.
@@ -299,14 +310,8 @@ export function ClimbEditorSheet({
               onFocus={() => setNameFocused(true)}
               onBlur={() => setNameFocused(false)}
               style={{
-                fontFamily: fonts.sans,
-                fontSize: 15,
-                color: colors.gunmetal,
-                backgroundColor: colors.white,
-                borderWidth: 1,
-                borderColor: nameFocused ? colors.azure : "rgba(64,63,76,0.15)",
-                borderRadius: radius.control,
-                paddingHorizontal: 13,
+                ...input,
+                ...(nameFocused ? { borderColor: colors.azure } : {}),
                 minHeight: 46,
               }}
             />
@@ -438,15 +443,8 @@ export function ClimbEditorSheet({
               placeholderTextColor={colors.textFaint}
               onChangeText={(note) => onChange({ ...climb, note })}
               style={{
-                fontFamily: fonts.sans,
-                fontSize: 15,
+                ...input,
                 lineHeight: 22,
-                color: colors.gunmetal,
-                backgroundColor: colors.white,
-                borderWidth: 1,
-                borderColor: "rgba(64,63,76,0.15)",
-                borderRadius: radius.control,
-                paddingHorizontal: 13,
                 paddingVertical: 11,
                 minHeight: 72,
                 textAlignVertical: "top",

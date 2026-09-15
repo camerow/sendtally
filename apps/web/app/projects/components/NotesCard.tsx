@@ -166,20 +166,15 @@ export function NotesCard({ notes, latestSession, onSave }: NotesCardProps): Rea
             className="climb-note-row climb-note-row--button"
             onClick={() => open(note.fingerprint, note.note)}
           >
-            <span style={{ display: "flex", flexDirection: "column", gap: 3 }}>
-              <span
-                style={{
-                  fontFamily: "var(--font-mono)",
-                  fontWeight: 600,
-                  fontSize: 13,
-                  textTransform: "uppercase",
-                }}
-              >
-                {note.dateLabel}
-              </span>
-              <span style={{ ...meta, fontSize: 9 }}>
-                {t("logSession.attemptCount", { count: note.attempts })}
-              </span>
+            <span
+              style={{
+                fontFamily: "var(--font-mono)",
+                fontWeight: 600,
+                fontSize: 13,
+                textTransform: "uppercase",
+              }}
+            >
+              {note.dateLabel}
             </span>
             <span style={{ fontSize: 14, lineHeight: 1.6, whiteSpace: "pre-line" }}>
               {note.note}

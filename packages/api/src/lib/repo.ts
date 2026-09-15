@@ -416,15 +416,15 @@ export async function setClimbNotes(
   const clear = d
     .delete(climbNotes)
     .where(and(eq(climbNotes.user_id, userId), eq(climbNotes.fingerprint, fingerprint)));
-  if (notes.length === 0) {
-    await clear;
-    return;
-  }
   await d.batch([
     clear,
-    d
-      .insert(climbNotes)
-      .values(notes.map((n) => ({ user_id: userId, fingerprint, updated_at, ...n }))),
+    ...(notes.length === 0
+      ? []
+      : [
+          d
+            .insert(climbNotes)
+            .values(notes.map((n) => ({ user_id: userId, fingerprint, updated_at, ...n }))),
+        ]),
   ]);
 }
 

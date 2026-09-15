@@ -91,13 +91,11 @@ describe("projectDetailVM", () => {
       {
         fingerprint: "fp-2026-09-04T18:00:00.000Z",
         dateLabel: "4 Sep",
-        attempts: 7,
         note: "Stuck on the crossover",
       },
       {
         fingerprint: "fp-2026-06-03T18:00:00.000Z",
         dateLabel: "3 Jun",
-        attempts: 4,
         note: "First look, every move goes",
       },
     ]);

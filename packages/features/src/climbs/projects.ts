@@ -39,7 +39,6 @@ export type ProjectSessionVM = {
 export type ProjectNoteVM = {
   fingerprint: string;
   dateLabel: string;
-  attempts: number;
   note: string;
 };
 
@@ -193,17 +192,8 @@ export function projectDetailVM(
     stats,
     bars: bars(ordered),
     sessions: newestFirst,
-    notes: newestFirst.flatMap((s) =>
-      s.note === null
-        ? []
-        : [
-            {
-              fingerprint: s.fingerprint,
-              dateLabel: s.dateLabel,
-              attempts: s.attempts,
-              note: s.note,
-            },
-          ]
+    notes: newestFirst.flatMap(({ fingerprint, dateLabel, note }) =>
+      note === null ? [] : [{ fingerprint, dateLabel, note }]
     ),
   };
 }

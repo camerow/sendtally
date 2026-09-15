@@ -554,15 +554,6 @@
   color: var(--bs-azure-ink);
 }
 
-.climb-note {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  font-size: 13px;
-  line-height: 1.5;
-  color: var(--text-on-white-secondary);
-}
-
 @media (max-width: 767px) {
   .climb-note-row {
     grid-template-columns: minmax(0, 1fr);

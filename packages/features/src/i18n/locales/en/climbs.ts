@@ -7,7 +7,6 @@ export const climbs = {
   "climbs.running": "Running",
   "climbs.lastTried": "Last tried",
   "climbs.story": "{attempts} over {sessions}",
-  "climbs.updatedOn": "Updated {date}",
   "climbs.projectNotFound": "Project not found.",
   "climbs.notes": "Notes",
   "climbs.noteLatest": "Latest · {date}",
