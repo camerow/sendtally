@@ -2,6 +2,7 @@ import { useUser } from "@clerk/clerk-expo";
 import React from "react";
 import { PostHogProvider, usePostHog } from "posthog-react-native";
 import { IS_E2E, POSTHOG_API_KEY, POSTHOG_HOST } from "../../lib/config";
+import { ScreenTracker } from "./ScreenTracker";
 
 function IdentifyUser(): null {
   const posthog = usePostHog();
@@ -27,9 +28,10 @@ export function AnalyticsProvider({ children }: { children: React.ReactNode }): 
     <PostHogProvider
       apiKey={POSTHOG_API_KEY}
       options={{ host: POSTHOG_HOST, enableSessionReplay: true }}
-      autocapture
+      autocapture={{ captureTouches: true, captureScreens: false }}
     >
       <IdentifyUser />
+      <ScreenTracker />
       {children}
     </PostHogProvider>
   );
