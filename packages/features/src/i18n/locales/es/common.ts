@@ -22,6 +22,7 @@ export const common = {
   "common.loading": "Cargando…",
   "common.tryAgain": "Reintentar",
   "common.somethingWentWrongTryAgain": "Algo salió mal. Inténtalo de nuevo.",
+  "common.climbingSession": "Sesión de escalada",
   "common.logASession": "Registrar una sesión",
   "common.notesPlaceholder": "Cómo fue, qué probar la próxima vez.",
   "common.grade": "Grado",

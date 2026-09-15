@@ -47,7 +47,7 @@ export function SessionJournal({
           }
           style={press({ minHeight: 32, justifyContent: "center" })}
         >
-          <Text style={{ ...heading, color: colors.azureInk }}>{t("journal.writeAnEntry")}</Text>
+          <Text style={{ ...heading, color: colors.azureInk }}>{t("journal.journalEntry")}</Text>
         </Pressable>
       </View>
       {entries.length === 0 && (

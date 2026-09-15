@@ -16,6 +16,7 @@ export {
   entriesForSession,
   entryInput,
   entryKindLabel,
+  newEntryHeading,
   entryBodyBelowTitle,
   entryTitle,
   isoDay,

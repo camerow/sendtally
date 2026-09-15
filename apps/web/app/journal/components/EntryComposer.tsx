@@ -4,8 +4,6 @@ import type { JournalEntry, SendtallyApi, SessionRow } from "@sendtally/api-clie
 import { t } from "@sendtally/features/i18n";
 import {
   ENTRY_BODY_MAX,
-  ENTRY_KINDS,
-  entryKindLabel,
   isUpdateDraft,
   spansDates,
   useEntryComposer,
@@ -82,48 +80,12 @@ export function EntryComposer({
   // An update belongs to its thread: it never picks a kind, and it is the one
   // place the number matters more than the words.
   const update = isUpdateDraft(draft);
-  // Changing your mind happens once in fifty entries, so it is a link rather
-  // than a control taking up the top of every form.
-  const [kindOpen, setKindOpen] = React.useState(false);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24, maxWidth: 720 }}>
       <div className="journal-head-row">
         <h1 className="journal-title">{heading}</h1>
-        {!update && (
-          <>
-            <div style={{ flex: 1 }} />
-            <button
-              type="button"
-              onClick={() => setKindOpen((was) => !was)}
-              aria-expanded={kindOpen}
-              className="journal-action"
-            >
-              {t("journal.changeKind")}
-            </button>
-          </>
-        )}
       </div>
-
-      {!update && kindOpen && (
-        <div role="radiogroup" aria-label={t("journal.kind")} className="entry-kinds">
-          {ENTRY_KINDS.map((kind) => (
-            <button
-              key={kind}
-              type="button"
-              role="radio"
-              aria-checked={draft.kind === kind}
-              onClick={() => {
-                setDraft((d) => ({ ...d, kind }));
-                setKindOpen(false);
-              }}
-              className="entry-kind-segment"
-            >
-              {entryKindLabel(kind)}
-            </button>
-          ))}
-        </div>
-      )}
 
       {(update || draft.kind === "injury") && (
         <>
@@ -138,7 +100,7 @@ export function EntryComposer({
       )}
 
       <div className="entry-dates">
-        <Field name={t("journal.date")}>
+        <Field name={spanning ? t("journal.startDate") : t("journal.date")}>
           <input
             type="date"
             value={draft.occurredAt}
@@ -198,13 +160,17 @@ export function EntryComposer({
         </Field>
       )}
 
-      <SessionPicker
-        sessions={sessions}
-        occurredAt={draft.occurredAt}
-        endsAt={draft.endsAt}
-        value={draft.fingerprints}
-        onChange={(fingerprints) => setDraft((d) => ({ ...d, fingerprints }))}
-      />
+      {draft.kind === "trip" ? (
+        <p className="journal-muted">{t("journal.tripSessionsNote")}</p>
+      ) : (
+        <SessionPicker
+          sessions={sessions}
+          occurredAt={draft.occurredAt}
+          endsAt={draft.endsAt}
+          value={draft.fingerprints}
+          onChange={(fingerprints) => setDraft((d) => ({ ...d, fingerprints }))}
+        />
+      )}
 
       <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
         {error !== null && (

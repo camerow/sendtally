@@ -6,7 +6,7 @@ import { t } from "@sendtally/features/i18n";
 import {
   ENTRY_KINDS,
   emptyDraft,
-  entryKindLabel,
+  newEntryHeading,
   today,
   useSessionRows,
   type EntryKind,
@@ -37,9 +37,7 @@ export default function NewEntryScreen(): React.ReactElement {
   );
 
   const heading =
-    params.parent !== undefined
-      ? t("journal.addUpdate")
-      : t("journal.newOfKind", { kind: entryKindLabel(initial.kind).toLowerCase() });
+    params.parent !== undefined ? t("journal.addUpdate") : newEntryHeading(initial.kind);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.white }} edges={["top", "bottom"]}>

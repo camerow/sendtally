@@ -3,7 +3,7 @@ import type { LinksFunction, LoaderFunctionArgs } from "react-router";
 import { useLoaderData, useSearchParams } from "react-router";
 import type { SessionRow } from "@sendtally/api-client";
 import { t } from "@sendtally/features/i18n";
-import { emptyDraft, entryKindLabel, today, type EntryKind } from "@sendtally/features/journal";
+import { emptyDraft, newEntryHeading, today, type EntryKind } from "@sendtally/features/journal";
 import { BackLink } from "../components/BackLink";
 import { EntryComposer } from "../journal/components/EntryComposer";
 import journalStyles from "../journal/journal.css?url";
@@ -52,9 +52,7 @@ export default function NewEntry(): React.ReactElement {
   }, [searchParams]);
 
   const heading =
-    searchParams.get("parent") !== null
-      ? t("journal.addUpdate")
-      : t("journal.newOfKind", { kind: entryKindLabel(initial.kind).toLowerCase() });
+    searchParams.get("parent") !== null ? t("journal.addUpdate") : newEntryHeading(initial.kind);
 
   return (
     <div>

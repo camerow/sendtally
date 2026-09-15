@@ -136,7 +136,7 @@ export function LogView({
         </span>
         {sessions.length > 0 && (
           <Link to="/app/sessions/new" className="sessions-head-action sessions-primary-link">
-            {t("common.logASession")}
+            {t("common.climbingSession")}
           </Link>
         )}
       </div>
@@ -207,7 +207,7 @@ export function LogView({
             to={`/app/journal/new?kind=journal&date=${today()}`}
             className="sessions-primary-link"
           >
-            {t("journal.writeAnEntry")}
+            {t("journal.journalEntry")}
           </Link>
         </div>
       )}
@@ -216,7 +216,7 @@ export function LogView({
           <span className="sessions-first-label">{t("sessions.firstSessionLabel")}</span>
           <p className="sessions-first-body">{t("sessions.firstSessionBody")}</p>
           <Link to="/app/sessions/new" className="sessions-primary-link">
-            {t("common.logASession")}
+            {t("common.climbingSession")}
           </Link>
         </div>
       )}

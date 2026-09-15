@@ -128,36 +128,6 @@
   white-space: nowrap;
 }
 
-.entry-kinds {
-  display: inline-flex;
-  align-self: flex-start;
-  height: 44px;
-  border-radius: 22px;
-  border: 1px solid rgba(64, 63, 76, 0.18);
-  overflow: hidden;
-}
-
-.entry-kind-segment {
-  display: inline-flex;
-  align-items: center;
-  padding: 0 20px;
-  font-family: var(--font-mono);
-  font-weight: 500;
-  font-size: 11px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: rgba(64, 63, 76, 0.65);
-  background: none;
-  border: none;
-  cursor: pointer;
-}
-
-.entry-kind-segment[aria-checked="true"] {
-  background: var(--bs-gunmetal);
-  color: var(--bs-white);
-  font-weight: 600;
-}
-
 .entry-dates {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 220px));
@@ -167,16 +137,6 @@
 @media (max-width: 767px) {
   .journal-title {
     font-size: 24px;
-  }
-
-  .entry-kinds {
-    align-self: stretch;
-    overflow-x: auto;
-    scrollbar-width: none;
-  }
-
-  .entry-kinds::-webkit-scrollbar {
-    display: none;
   }
 
   .entry-dates {

@@ -110,7 +110,7 @@ export function NewEntryMenu({
           .filter((part) => part !== null)
           .join(" ")}
       >
-        {t("journal.writeAnEntry")}
+        {t("journal.journalEntry")}
         <Caret />
       </button>
 

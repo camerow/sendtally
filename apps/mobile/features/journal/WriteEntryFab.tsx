@@ -33,7 +33,7 @@ export function WriteEntryFab(): React.ReactElement {
         })}
       >
         <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 14, color: colors.gunmetal }}>
-          {t("journal.writeAnEntry")}
+          {t("journal.journalEntry")}
         </Text>
         <View style={{ transform: [{ rotate: "90deg" }] }}>
           <Icon name="chevron" size={12} strokeWidth={2.2} color={colors.gunmetal} />

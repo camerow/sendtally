@@ -13,8 +13,6 @@ import type { JournalEntry, SendtallyApi, SessionRow } from "@sendtally/api-clie
 import { t } from "@sendtally/features/i18n";
 import {
   ENTRY_BODY_MAX,
-  ENTRY_KINDS,
-  entryKindLabel,
   isUpdateDraft,
   spansDates,
   useEntryComposer,
@@ -22,7 +20,7 @@ import {
 } from "@sendtally/features/journal";
 import { useTagVocabulary } from "@sendtally/features/sessions";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
-import { Chip } from "../../components/Chip";
+import { BackButton } from "../../components/BackButton";
 import { press } from "../../lib/press";
 import { primaryButton, primaryButtonLabel } from "../../lib/styles";
 import { TagPicker } from "../sessions/TagPicker";
@@ -35,14 +33,6 @@ const label = {
   letterSpacing: 0.8,
   textTransform: "uppercase",
   color: colors.textSecondary,
-} as const;
-
-const action = {
-  fontFamily: fonts.monoMedium,
-  fontSize: 12,
-  letterSpacing: 0.5,
-  textTransform: "uppercase",
-  color: colors.labelAccent,
 } as const;
 
 const input = {
@@ -104,7 +94,6 @@ export function EntryComposer({
   const { suggestionsFor } = useTagVocabulary(api);
   const spanning = spansDates(draft.kind);
   const update = isUpdateDraft(draft);
-  const [kindOpen, setKindOpen] = React.useState(false);
 
   return (
     <KeyboardAvoidingView
@@ -123,21 +112,7 @@ export function EntryComposer({
             alignItems: "center",
           }}
         >
-          <Pressable
-            onPress={() => router.back()}
-            style={press({ minHeight: 44, justifyContent: "center" })}
-          >
-            <Text style={action}>{t("common.back")}</Text>
-          </Pressable>
-          {!update && (
-            <Pressable
-              onPress={() => setKindOpen((was) => !was)}
-              accessibilityState={{ expanded: kindOpen }}
-              style={press({ minHeight: 44, justifyContent: "center" })}
-            >
-              <Text style={action}>{t("journal.changeKind")}</Text>
-            </Pressable>
-          )}
+          <BackButton />
         </View>
 
         <Text
@@ -150,22 +125,6 @@ export function EntryComposer({
         >
           {heading}
         </Text>
-
-        {!update && kindOpen && (
-          <View style={{ flexDirection: "row", gap: 8 }}>
-            {ENTRY_KINDS.map((kind) => (
-              <Chip
-                key={kind}
-                label={entryKindLabel(kind)}
-                active={draft.kind === kind}
-                onPress={() => {
-                  setDraft((d) => ({ ...d, kind }));
-                  setKindOpen(false);
-                }}
-              />
-            ))}
-          </View>
-        )}
 
         {(update || draft.kind === "injury") && (
           <View style={{ gap: 8 }}>
@@ -188,7 +147,7 @@ export function EntryComposer({
 
         <View style={{ flexDirection: "row", gap: 8 }}>
           <View style={{ flex: 1 }}>
-            <Field name={t("journal.date")}>
+            <Field name={spanning ? t("journal.startDate") : t("journal.date")}>
               <TextInput
                 testID="entry-date"
                 value={draft.occurredAt}
@@ -259,13 +218,26 @@ export function EntryComposer({
           </Field>
         )}
 
-        <SessionPicker
-          sessions={sessions}
-          occurredAt={draft.occurredAt}
-          endsAt={draft.endsAt}
-          value={draft.fingerprints}
-          onChange={(fingerprints) => setDraft((d) => ({ ...d, fingerprints }))}
-        />
+        {draft.kind === "trip" ? (
+          <Text
+            style={{
+              fontFamily: fonts.sans,
+              fontSize: 13,
+              lineHeight: 18,
+              color: colors.textMuted,
+            }}
+          >
+            {t("journal.tripSessionsNote")}
+          </Text>
+        ) : (
+          <SessionPicker
+            sessions={sessions}
+            occurredAt={draft.occurredAt}
+            endsAt={draft.endsAt}
+            value={draft.fingerprints}
+            onChange={(fingerprints) => setDraft((d) => ({ ...d, fingerprints }))}
+          />
+        )}
 
         {error !== null && (
           <Text style={{ fontFamily: fonts.mono, fontSize: 12, color: colors.watermelonInk }}>

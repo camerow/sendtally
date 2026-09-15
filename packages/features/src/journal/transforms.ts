@@ -12,6 +12,16 @@ export function entryKindLabel(kind: EntryKind): string {
   return t(KIND_LABELS[kind]);
 }
 
+const NEW_HEADINGS: Record<EntryKind, MessageKey> = {
+  journal: "journal.newJournalEntry",
+  trip: "journal.newTrip",
+  injury: "journal.newInjury",
+};
+
+export function newEntryHeading(kind: EntryKind): string {
+  return t(NEW_HEADINGS[kind]);
+}
+
 export function spansDates(kind: EntryKind): boolean {
   return SPANNING_KINDS.includes(kind);
 }

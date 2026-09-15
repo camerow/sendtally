@@ -19,6 +19,7 @@ import {
 } from "@sendtally/features/journal";
 import { sessionTitle } from "@sendtally/features/sessions";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
+import { BackButton } from "../../components/BackButton";
 import { EntryKindChip } from "../../features/journal/EntryKindChip";
 import { SeverityChart } from "../../features/journal/SeverityChart";
 import { RowTags } from "../../features/sessions/RowTags";
@@ -149,12 +150,7 @@ export default function EntryDetailScreen(): React.ReactElement {
             alignItems: "center",
           }}
         >
-          <Pressable
-            onPress={() => router.back()}
-            style={{ minHeight: 44, justifyContent: "center" }}
-          >
-            <Text style={action}>{t("common.back")}</Text>
-          </Pressable>
+          <BackButton />
           {state.status === "ready" && (
             <View style={{ flexDirection: "row", alignItems: "center", gap: 16 }}>
               <HeaderAction

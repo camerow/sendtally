@@ -25,7 +25,7 @@ export function SessionJournal({
         <span className="journal-card-label">{t("journal.title")}</span>
         <div style={{ flex: 1 }} />
         <Link to={newEntryHref} className="journal-action">
-          {t("journal.writeAnEntry")}
+          {t("journal.journalEntry")}
         </Link>
       </div>
       {entries.length === 0 && <p className="journal-muted">{t("journal.emptyTitle")}</p>}
