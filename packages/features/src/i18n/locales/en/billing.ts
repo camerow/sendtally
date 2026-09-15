@@ -47,16 +47,9 @@ export const billing = {
   "billing.restorePurchases": "Restore purchases",
   "billing.terms": "Terms",
   "billing.privacy": "Privacy",
-  "billing.loggingIsFree": "Logging is free",
-  "billing.freeBody":
-    "Membership turns the log into a training history. It also pays for the server.",
-  "billing.pickAPlan": " Pick a plan below to join.",
-  "billing.storeBody":
-    "Billed through {store}. Change plan or cancel from your {store} subscriptions; the trends stay until the paid period ends.",
   "billing.manageIn": "Manage in {store}",
   "billing.webBody":
     "This membership was bought on sendtally.com and renews there. It unlocks the trends in the app all the same.",
-  "billing.activeBody": "Membership is active on this account.",
   "billing.payThroughInstead": "Pay through {store} instead",
   "billing.plans": "Plans",
   "billing.switchBody":
@@ -64,12 +57,8 @@ export const billing = {
   "billing.introMobile":
     "Logging sessions and posting them to Strava are free, and always will be. Membership opens the screens that read your whole history back to you.",
   "billing.loadFailed": "Could not load your membership.",
-  "billing.intro":
-    "Logging sessions and posting them to Strava are free and always will be. Membership is what turns the log into a training history, and it is what pays for the server.",
   "billing.loadingPlans": "Loading plans…",
   "billing.activeOnAccount": "Your membership is active on this account.",
-  "billing.billedThrough":
-    "Your membership is billed through {store}. Change or cancel it from your {store} subscriptions; the trends stay until the paid period ends.",
   "billing.panelTitle": "Join to see your long-term trends.",
   "billing.panelPageTitle": "Everything your sessions have been adding up to.",
   "billing.panelBody":
@@ -79,4 +68,17 @@ export const billing = {
   "billing.panelPyramid": "Where your sends actually sit",
   "billing.panelHardest": "Your ceiling by period, with the climb that set it",
   "billing.panelFlash": "Sends on the first try, tracked over time",
+  "billing.trendsOpen": "Your trends are open.",
+  "billing.trendsOpenUntil": "Your trends are open until {date}.",
+  "billing.freeTrialEnds": "Free trial · ends {date}",
+  "billing.cancelledEnds": "Cancelled · ends {date}",
+  "billing.perMonthBilledYearly": "/mo billed yearly",
+  "billing.cancelAnyTime": "cancel any time",
+  "billing.yearlyPrice": "Yearly · {price}",
+  "billing.monthlyPrice": "Monthly · {price}",
+  "billing.manageMembership": "Manage membership",
+  "billing.openTrend": "Open",
+  "billing.renewsOnWeb": "Renews on sendtally.com",
+  "billing.plansUnavailableWeb":
+    "Plans could not be loaded right now. Reload the page to try again.",
 } as const;

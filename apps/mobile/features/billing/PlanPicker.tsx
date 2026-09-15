@@ -13,8 +13,6 @@ export type PlanPickerProps = {
   onSelect: (pkg: PurchasesPackage) => void;
 };
 
-const GOLD_TINT = "rgba(249,220,92,0.22)";
-
 export function PlanPicker({
   packages,
   selected,
@@ -37,8 +35,8 @@ export function PlanPicker({
             style={press({
               flex: 1,
               borderWidth: 1.5,
-              borderColor: active ? colors.gold : colors.lineOnLightStrong,
-              backgroundColor: active ? GOLD_TINT : colors.white,
+              borderColor: active ? colors.gunmetal : "transparent",
+              backgroundColor: active ? colors.white : "rgba(255,255,255,0.55)",
               borderRadius: radius.card,
               padding: 14,
               gap: 4,
