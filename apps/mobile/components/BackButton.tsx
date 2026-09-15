@@ -6,7 +6,7 @@ import { colors, fonts } from "@sendtally/design/tokens";
 import { press } from "../lib/press";
 import { Icon } from "./Icon";
 
-export function BackButton(): React.ReactElement {
+export function BackButton({ label }: { label?: string }): React.ReactElement {
   return (
     <Pressable
       onPress={() => router.back()}
@@ -25,7 +25,7 @@ export function BackButton(): React.ReactElement {
           color: colors.labelAccent,
         }}
       >
-        {t("common.back")}
+        {label ?? t("common.back")}
       </Text>
     </Pressable>
   );

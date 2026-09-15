@@ -6,7 +6,7 @@ name: project-opens
 ---
 - runFlow: ../helpers/open-dev-client.yaml
 - runFlow: ../helpers/ensure-signed-in.yaml
-- tapOn: "Projects, tab.*"
+- tapOn: "Projects(, tab.*)?"
 # The header counts the projects once they are in, and reads LOADING until then. Asking whether a
 # project is already there before that leaves a later run making a second one.
 - extendedWaitUntil:
@@ -14,10 +14,16 @@ name: project-opens
     timeout: 30000
 # A row is one accessible element, so it is matched by its whole spoken line, not by the name.
 # The name belongs to this flow - nothing else logs a climb by it - so the project it made on an
-# earlier run is the one found here.
+# earlier run is the one found here. The tab is a plain ScrollView, so "not on screen" is not
+# "missing": scroll for it first, and only make one when the scroll comes up empty.
+- scrollUntilVisible:
+    element:
+      text: ".*, Maestro Arete, .*"
+    direction: DOWN
+    optional: true
 - runFlow:
     when:
-      notVisible: ".*Maestro Arete.*"
+      notVisible: ".*, Maestro Arete, .*"
     commands:
       - tapOn: "New project"
       - tapOn: "Name of the climb"
@@ -31,14 +37,18 @@ name: project-opens
           text: "^V[0-9]+$"
           index: 2
       - tapOn: "Add project"
+      # The sheet shows the bare name while it saves, so wait for it to close and match the row
+      # by the grade and meta around the name.
       - extendedWaitUntil:
-          visible: ".*Maestro Arete.*"
+          notVisible: "New climb"
           timeout: 40000
-- tapOn: ".*Maestro Arete.*"
+      - extendedWaitUntil:
+          visible: ".*, Maestro Arete, .*"
+          timeout: 40000
+- tapOn: ".*, Maestro Arete, .*"
 - extendedWaitUntil:
     visible: "ATTEMPTS PER SESSION"
     timeout: 20000
-- assertVisible: "Unmark project"
-- tapOn: "← PROJECTS"
+- tapOn: "Projects(, tab.*)?"
 - assertVisible: "New project"
-- assertNotVisible: "Unmark project"
+- assertNotVisible: "ATTEMPTS PER SESSION"

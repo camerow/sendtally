@@ -2,8 +2,8 @@ appId: com.sendtally.app
 # Locally the app is a development build that opens on its launcher unless it is deep-linked
 # to Metro, and shows a developer menu the first time, so `pnpm run mobile:e2e` passes DEV_CLIENT=true.
 # In CI the bundle is embedded and the app just launches. A default here would win over the
-# command line (a flow's env block is applied after -e), so there is none. METRO_PORT is passed
-# the same way, which is how a second worktree's bundler gets tested against.
+# command line (a flow's env block is applied after -e), so there is none. METRO_PORT defaults
+# inline instead, which -e still overrides; that is how a second worktree's bundler gets tested.
 ---
 - launchApp:
     stopApp: true
@@ -11,7 +11,7 @@ appId: com.sendtally.app
     when:
       true: ${DEV_CLIENT == "true"}
     commands:
-      - openLink: "com.sendtally.app://expo-development-client/?url=http%3A%2F%2Flocalhost%3A${METRO_PORT}"
+      - openLink: 'com.sendtally.app://expo-development-client/?url=http%3A%2F%2Flocalhost%3A${METRO_PORT || "8081"}'
       - runFlow:
           when:
             visible: "Open"
