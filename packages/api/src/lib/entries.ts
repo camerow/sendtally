@@ -26,7 +26,6 @@ export const entryBody = z
     fingerprints: z.array(z.string().max(200)).max(50).optional(),
     parent_id: z.string().max(200).nullish(),
     severity: z.number().int().min(0).max(10).nullish(),
-    status: z.enum(["ongoing", "resolved"]).nullish(),
     tags: tagNames.optional(),
   })
   .superRefine((entry, ctx) => {
@@ -42,13 +41,6 @@ export const entryBody = z
         code: "custom",
         path: ["ends_at"],
         message: "only trips and injuries span dates",
-      });
-    }
-    if (entry.status != null && entry.kind !== "injury") {
-      ctx.addIssue({
-        code: "custom",
-        path: ["status"],
-        message: "only an injury carries a status",
       });
     }
     if (entry.parent_id != null && entry.kind !== "journal") {
@@ -89,15 +81,17 @@ export type EntryWrite = {
 };
 
 export function buildEntry(body: EntryBody): EntryWrite {
+  const ends_at = body.ends_at ?? null;
   return {
     kind: body.kind,
     occurred_at: body.occurred_at,
-    ends_at: body.ends_at ?? null,
+    ends_at,
     title: trimmedOrNull(body.title),
     body: body.body.trim(),
     parent_id: trimmedOrNull(body.parent_id),
     severity: body.severity ?? null,
-    // An injury is open until someone says otherwise; nothing else has a status.
-    status: body.kind === "injury" ? (body.status ?? "ongoing") : null,
+    // An injury is over when it has an end date - the same thing the composer's
+    // "still going" field already says. Nothing else has a status.
+    status: body.kind !== "injury" ? null : ends_at === null ? "ongoing" : "resolved",
   };
 }

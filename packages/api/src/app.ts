@@ -25,7 +25,6 @@ import {
   manualSessionBody,
   normalisedNote,
   parseClimbs,
-  sessionNotesBody,
 } from "./lib/manual";
 import { allowedOrigin } from "./lib/origins";
 import { captureUserEvent, getPostHog, identifyUser } from "./lib/posthog";
@@ -561,29 +560,6 @@ const app = new Hono<AppEnv>()
       session: await sessionResponse(c.env, userId, fingerprint),
     });
   })
-
-  // The log form's single notes field, kept as one endpoint so an edit from the
-  // session page does not have to know it is writing a journal entry.
-  .put(
-    "/v1/sessions/:fingerprint/notes",
-    zValidator("json", sessionNotesBody, invalidBody),
-    async (c) => {
-      const userId = c.get("userId");
-      const fingerprint = c.req.param("fingerprint");
-      const notes = normalisedNote(c.req.valid("json").notes);
-      const session = await repo.getSession(c.env.DB, userId, fingerprint);
-      if (session === null) return c.json({ error: "not found" }, 404);
-      await repo.upsertSessionNote(
-        c.env.DB,
-        userId,
-        fingerprint,
-        session.start_at.slice(0, 10),
-        notes
-      );
-      await captureEvent(c, "session_notes_updated", { cleared: String(notes === null) });
-      return c.json({ notes });
-    }
-  )
 
   // A climb note is the user's own writing too, and it lives beside the session
   // rather than in it, so board rows take one and nothing is re-scored. The

@@ -103,6 +103,17 @@ describe("journal entries", () => {
       body: "Felt it on a two-finger pocket.",
     });
     expect(injury.status).toBe("ongoing");
+
+    const res = await call("u_entries_injury", `/v1/entries/${injury.id}`, {
+      method: "PUT",
+      body: JSON.stringify({
+        kind: "injury",
+        occurred_at: "2026-05-18",
+        ends_at: "2026-06-30",
+        body: "Felt it on a two-finger pocket.",
+      }),
+    });
+    expect(((await res.json()) as { entry: Entry }).entry.status).toBe("resolved");
   });
 
   it("threads updates under an injury, oldest first, and keeps them out of the log", async () => {

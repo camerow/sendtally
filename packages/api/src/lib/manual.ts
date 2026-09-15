@@ -66,8 +66,6 @@ export const NOTE_MAX = 2000;
 
 const sessionNote = z.string().max(NOTE_MAX).optional();
 
-export const sessionNotesBody = z.object({ notes: sessionNote });
-
 export const climbNoteBody = z.object({ note: z.string().max(CLIMB_NOTE_MAX).optional() });
 
 export function normalisedNote(notes: string | undefined): string | null {

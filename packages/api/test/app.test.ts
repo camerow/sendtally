@@ -514,11 +514,11 @@ describe("app", () => {
 
   const setNotes = (userId: string, fingerprint: string, notes: unknown) =>
     testApp().request(
-      `/v1/sessions/${encodeURIComponent(fingerprint)}/notes`,
+      `/v1/sessions/${encodeURIComponent(fingerprint)}`,
       {
         method: "PUT",
         headers: { "x-test-user": userId, "Content-Type": "application/json" },
-        body: JSON.stringify({ notes }),
+        body: JSON.stringify(logBody({ notes })),
       },
       env
     );
@@ -553,22 +553,50 @@ describe("app", () => {
     expect(tooLong.status).toBe(400);
   });
 
-  it("notes a legacy board session without touching the session row", async () => {
-    await env.DB.prepare(
-      `INSERT INTO users (id, timezone, created_at) VALUES ('user_notes_board', 'UTC', '')`
-    ).run();
-    await env.DB.prepare(
-      `INSERT INTO sessions (user_id, fingerprint, board, source, start_at, end_at, climb_count, top_grade, top_send_grade, rpe, title, summary)
-       VALUES ('user_notes_board', 'fp_board_note', 'tension', 'board', '2026-01-01T00:00:00.000Z', '2026-01-01T01:00:00.000Z', 4, 5, 5, 6, 'Board session', 's')`
-    ).run();
+  // An update linked to a session is a journal entry on the same session, and
+  // clearing the session's note must not reach it.
+  it("leaves a thread update alone when the session note is written", async () => {
+    const res = await postSession("user_notes_thread", logBody());
+    const { session } = (await res.json()) as ManualSessionResponse;
 
-    expect((await setNotes("user_notes_board", "fp_board_note", "Old history.")).status).toBe(200);
+    const createEntry = async (body: unknown) => {
+      const created = await testApp().request(
+        "/v1/entries",
+        {
+          method: "POST",
+          headers: { "x-test-user": "user_notes_thread", "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        },
+        env
+      );
+      return ((await created.json()) as { entry: { id: string } }).entry;
+    };
 
-    const row = await env.DB.prepare(
-      `SELECT source, title, rpe FROM sessions WHERE fingerprint = 'fp_board_note'`
-    ).first<{ source: string; title: string; rpe: number }>();
-    expect(row).toEqual({ source: "board", title: "Board session", rpe: 6 });
-    expect(await readNotes("user_notes_board", "fp_board_note")).toBe("Old history.");
+    const injury = await createEntry({
+      kind: "injury",
+      occurred_at: "2026-08-19",
+      body: "Left ring finger.",
+    });
+    const update = await createEntry({
+      kind: "journal",
+      occurred_at: "2026-08-20",
+      body: "Sore after the session.",
+      parent_id: injury.id,
+      fingerprints: [session.fingerprint],
+    });
+
+    expect((await setNotes("user_notes_thread", session.fingerprint, "Felt strong.")).status).toBe(
+      200
+    );
+    expect(await readNotes("user_notes_thread", session.fingerprint)).toBe("Felt strong.");
+
+    expect((await setNotes("user_notes_thread", session.fingerprint, "")).status).toBe(200);
+    expect(await readNotes("user_notes_thread", session.fingerprint)).toBeNull();
+
+    const kept = await env.DB.prepare(`SELECT body FROM journal_entries WHERE id = ?`)
+      .bind(update.id)
+      .first<{ body: string }>();
+    expect(kept?.body).toBe("Sore after the session.");
   });
 
   it("tags a legacy board session without touching the session row", async () => {

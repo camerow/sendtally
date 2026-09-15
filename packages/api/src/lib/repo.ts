@@ -1,5 +1,15 @@
 import { disciplineOf } from "@sendtally/core";
-import { and, asc, count, desc, eq, getTableColumns, inArray, notInArray } from "drizzle-orm";
+import {
+  and,
+  asc,
+  count,
+  desc,
+  eq,
+  getTableColumns,
+  inArray,
+  isNull,
+  notInArray,
+} from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import {
   boardConnections,
@@ -390,10 +400,15 @@ export async function upsertSessionNote(
       and(
         eq(journalEntries.user_id, userId),
         eq(entrySessions.fingerprint, fingerprint),
-        eq(journalEntries.kind, "journal")
+        eq(journalEntries.kind, "journal"),
+        // A thread update is a journal entry too, and it can be linked to a
+        // session. It is not the session's note and must never be edited as one.
+        isNull(journalEntries.parent_id)
       )
     )
-    .orderBy(asc(journalEntries.created_at))
+    // The same entry `sessionResponse` reads back as `notes`, or the form would
+    // show one entry and overwrite another.
+    .orderBy(desc(journalEntries.occurred_at), desc(journalEntries.created_at))
     .get();
 
   if (existing === undefined) {
