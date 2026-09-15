@@ -10,7 +10,8 @@ name: Mobile E2E
 # away. Only a branch that moves the native layer builds, and the summary says so.
 
 on:
-  pull_request:
+  push:
+    branches: [main]
     paths:
       - "apps/mobile/**"
       - "packages/core/**"
@@ -20,6 +21,9 @@ on:
       - "pnpm-lock.yaml"
       - ".github/workflows/mobile-e2e.yml"
   workflow_dispatch:
+
+# Runs on merges to main only, as a health signal. It is too slow to sit in front of a pull
+# request; run it locally (docs/mobile-e2e.md) or with workflow_dispatch before merging.
 
 # Per ref, cancelling: a push supersedes the run before it. The job below adds the second level.
 concurrency:
@@ -41,9 +45,6 @@ env:
 
 jobs:
   android:
-    # No EXPO_TOKEN in the dependabot secret scope, so the fingerprint step dies
-    # on an unauthenticated eas call.
-    if: github.actor != 'dependabot[bot]'
     runs-on: ubuntu-latest
     timeout-minutes: 45
     # Across branches, never cancelling: every run publishes to the one `e2e` update branch the APK resolves to.
@@ -98,7 +99,7 @@ jobs:
         working-directory: apps/mobile
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-          TITLE: ${{ github.event.pull_request.title || github.ref_name }}
+          TITLE: ${{ github.ref_name }}
         run: |
           set -euo pipefail
           id=$(eas update --branch e2e --platform android --environment preview \
