@@ -36,10 +36,16 @@ jobs:
     # commit by name makes that safe whichever token does the push.
     if: "!startsWith(github.event.head_commit.message, 'chore(mobile): release v')"
     runs-on: ubuntu-latest
+    # gh release edit writes to the release the update landed on.
+    permissions:
+      contents: write
     outputs:
       needs-build: ${{ steps.fingerprint.outputs.needs-build }}
     steps:
+      # Full history: the release body is rebuilt from the mobile-v* tags.
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
@@ -64,6 +70,7 @@ jobs:
           set -euo pipefail
           platforms=${PLATFORMS/all/android ios}
           needs_build=false
+          hashes=
           for platform in $platforms; do
             hash=$(eas fingerprint:generate --platform "$platform" \
               --build-profile production --json --non-interactive | jq -r .hash)
@@ -71,9 +78,11 @@ jobs:
               --status finished --fingerprint-hash "$hash" --limit 1 \
               --json --non-interactive | jq length)
             echo "$platform fingerprint $hash matches $matches production build(s)"
+            hashes="${hashes:+$hashes, }$platform \`$hash\`"
             if [ "$matches" = 0 ]; then needs_build=true; fi
           done
           echo "needs-build=$needs_build" >> "$GITHUB_OUTPUT"
+          echo "hashes=$hashes" >> "$GITHUB_OUTPUT"
 
       - name: Publish update
         if: steps.fingerprint.outputs.needs-build == 'false' && github.event_name == 'push'
@@ -81,9 +90,36 @@ jobs:
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
           MESSAGE: ${{ github.event.head_commit.message }}
+          SHA: ${{ github.sha }}
         run: |
           eas update --channel production --environment production --non-interactive \
-            --message "${MESSAGE%%$'\n'*}"
+            --message "${SHA:0:7} ${MESSAGE%%$'\n'*}"
+
+      # An update ships to the installs running the latest store release, so it
+      # belongs in that release's notes rather than in the next one's. The body
+      # is rebuilt from the tags each time instead of appended to, so a re-run
+      # cannot double up and a release that is edited by hand is not clobbered
+      # into nonsense.
+      - name: Fold the update into the live release
+        if: steps.fingerprint.outputs.needs-build == 'false' && github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HASHES: ${{ steps.fingerprint.outputs.hashes }}
+        run: |
+          set -euo pipefail
+          tag=$(git tag --list 'mobile-v*' --sort=-v:refname | head -1)
+          if [ -z "$tag" ]; then echo "No mobile-v* tag yet, nothing to edit"; exit 0; fi
+          previous=$(git tag --list 'mobile-v*' --sort=-v:refname | sed -n 2p)
+          .github/scripts/release-notes.sh "${previous:+$previous..}$tag" . ':!apps/web' \
+            > "$RUNNER_TEMP/notes.md"
+          # A chore or test commit also triggers this workflow and produces no
+          # notes, so the heading only goes in when there is something under it.
+          ota=$(.github/scripts/release-notes.sh "$tag..HEAD" . ':!apps/web')
+          if [ -n "$ota" ]; then
+            printf '## Over the air since %s\n\nDelivered to installs whose runtime fingerprint is %s.\n\n%s\n' \
+              "$tag" "$HASHES" "$ota" >> "$RUNNER_TEMP/notes.md"
+          fi
+          gh release edit "$tag" --notes-file "$RUNNER_TEMP/notes.md"
 
       - name: Explain why a build is needed
         if: steps.fingerprint.outputs.needs-build == 'true'
