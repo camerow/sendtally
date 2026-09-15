@@ -37,4 +37,5 @@ export const settings = {
   "settings.tab": "Réglages",
   "settings.openingStrava": "Ouverture de Strava…",
   "settings.stravaUnreachable": "Impossible de joindre Strava. Réessaie.",
+  "settings.embeddedBundle": "Intégré",
 } as const;
