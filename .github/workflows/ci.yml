@@ -41,8 +41,13 @@ jobs:
   # commands: Workers Builds reports the last real `wrangler deploy` it saw as
   # the build's deployment, so an API deploy in there made every pull request
   # comment point at api-staging.sendtally.com instead of the web preview.
+  # Dependabot pull requests run with the dependabot secret scope, so every
+  # secret below reads as empty and the deploy fails on a missing token. They
+  # have no business reaching staging anyway - checks and commits still gate
+  # them.
   staging-api:
     needs: checks
+    if: github.actor != 'dependabot[bot]'
     runs-on: ubuntu-latest
     concurrency:
       group: staging-api
@@ -68,6 +73,7 @@ jobs:
   # instead of publishing something unreachable.
   mobile-preview:
     needs: checks
+    if: github.actor != 'dependabot[bot]'
     runs-on: ubuntu-latest
     permissions:
       contents: read
