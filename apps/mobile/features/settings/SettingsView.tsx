@@ -9,6 +9,7 @@ import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { Icon } from "../../components/Icon";
 import { ScreenHeader } from "../../components/ScreenHeader";
 import { pressRow } from "../../lib/press";
+import { BuildInfo } from "./BuildInfo";
 import { GradeSection } from "./GradeSection";
 import { MembershipSection, type MembershipSectionProps } from "./MembershipSection";
 import { StravaPostingSection } from "./StravaPostingSection";
@@ -149,6 +150,8 @@ export function SettingsView({
           </View>
           <Icon name="chevron" color={colors.textFaint} size={16} />
         </Pressable>
+
+        <BuildInfo />
       </ScrollView>
     </SafeAreaView>
   );
