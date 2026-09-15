@@ -5,6 +5,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useProject } from "@sendtally/features/climbs";
 import { t } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
+import { BackButton } from "../../components/BackButton";
 import { Icon } from "../../components/Icon";
 import { NotesCard } from "../../features/projects/NotesCard";
 import { ProjectChart } from "../../features/projects/ProjectChart";
@@ -18,28 +19,6 @@ const label = {
   textTransform: "uppercase",
   color: colors.textSecondary,
 } as const;
-
-function BackLink(): React.ReactElement {
-  return (
-    <Pressable
-      onPress={() => router.back()}
-      accessibilityRole="button"
-      style={press({ minHeight: 44, justifyContent: "center" })}
-    >
-      <Text
-        style={{
-          fontFamily: fonts.monoMedium,
-          fontSize: 12,
-          letterSpacing: 0.5,
-          textTransform: "uppercase",
-          color: colors.labelAccent,
-        }}
-      >
-        {t("projects.back")}
-      </Text>
-    </Pressable>
-  );
-}
 
 export default function ProjectDetailScreen(): React.ReactElement {
   const { slug } = useLocalSearchParams<{ slug: string }>();
@@ -64,7 +43,7 @@ export default function ProjectDetailScreen(): React.ReactElement {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: colors.white }} edges={["top"]}>
         <View style={{ paddingHorizontal: 18 }}>
-          <BackLink />
+          <BackButton label={t("common.projects")} />
         </View>
         <View style={{ padding: 28, alignItems: "center", gap: 12 }}>
           {state.status === "loading" ? (
@@ -92,7 +71,7 @@ export default function ProjectDetailScreen(): React.ReactElement {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.white }} edges={["top"]}>
       <ScrollView contentContainerStyle={{ padding: 18, paddingBottom: 48, gap: 18 }}>
-        <BackLink />
+        <BackButton label={t("common.projects")} />
         <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
           <Text
             style={{

@@ -2,7 +2,8 @@ appId: com.sendtally.app
 name: project-session-opens
 # The sessions a project lists are links to those sessions, and had the same dead View-inside-a-
 # Link as the project rows. Logging a session on the climb project-opens made is what puts a row
-# there to tap, so this runs after it.
+# there to tap, so this runs after it. The session is deleted at the end so the account does not
+# grow one per run.
 ---
 - runFlow: ../helpers/open-dev-client.yaml
 - runFlow: ../helpers/ensure-signed-in.yaml
@@ -35,11 +36,11 @@ name: project-session-opens
     visible: "← LOG"
     timeout: 30000
 - tapOn: "← LOG"
-- tapOn: "Projects, tab.*"
+- tapOn: "Projects(, tab.*)?"
 - extendedWaitUntil:
-    visible: ".*Maestro Arete.*"
+    visible: ".*, Maestro Arete, .*"
     timeout: 30000
-- tapOn: ".*Maestro Arete.*"
+- tapOn: ".*, Maestro Arete, .*"
 - extendedWaitUntil:
     visible: "SESSIONS INVESTED"
     timeout: 20000
@@ -52,5 +53,24 @@ name: project-session-opens
     timeout: 20000
 - tapOn: "← LOG"
 - assertVisible: "SESSIONS INVESTED"
-- tapOn: "← PROJECTS"
+- tapOn: "Projects(, tab.*)?"
 - assertVisible: "New project"
+- tapOn: ".*, Maestro Arete, .*"
+- extendedWaitUntil:
+    visible: "SESSIONS INVESTED"
+    timeout: 20000
+- tapOn: ".*Logged session.*"
+- extendedWaitUntil:
+    visible: "Delete"
+    timeout: 20000
+- tapOn: "Delete"
+- extendedWaitUntil:
+    visible: "Delete session?"
+    timeout: 10000
+# The header's Delete is still in the tree under the alert, so the alert's is the second one.
+- tapOn:
+    text: "Delete"
+    index: 1
+- extendedWaitUntil:
+    visible: "Climbing session"
+    timeout: 20000
