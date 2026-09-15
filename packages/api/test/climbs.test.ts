@@ -61,8 +61,6 @@ describe("climbCatalogue", () => {
           name: "Moonraker",
           grade_json: '{"scale":"v","value":6}',
           discipline: "boulder",
-          beta: "Heel hook the ar\u00eate.",
-          beta_updated_at: "2026-09-02T00:00:00Z",
           created_at: "2026-08-01T00:00:00Z",
         },
         {
@@ -71,8 +69,6 @@ describe("climbCatalogue", () => {
           name: "Dreamcatcher",
           grade_json: null,
           discipline: "route",
-          beta: null,
-          beta_updated_at: null,
           created_at: "2026-09-05T00:00:00Z",
         },
       ]

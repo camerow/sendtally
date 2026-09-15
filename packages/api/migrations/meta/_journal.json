@@ -92,6 +92,13 @@
       "when": 1789443333045,
       "tag": "0017_supreme_thunderbird",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "6",
+      "when": 1789446693713,
+      "tag": "0018_aberrant_blindfold",
+      "breakpoints": true
     }
   ]
 }

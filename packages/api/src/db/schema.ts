@@ -167,8 +167,6 @@ export const projects = sqliteTable(
     discipline: text("discipline", { enum: ["boulder", "route"] })
       .notNull()
       .default("boulder"),
-    beta: text("beta"),
-    beta_updated_at: text("beta_updated_at"),
     created_at: text("created_at").notNull(),
   },
   (t) => [primaryKey({ columns: [t.user_id, t.slug] })]
