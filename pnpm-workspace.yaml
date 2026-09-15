@@ -13,7 +13,7 @@ allowBuilds:
   workerd: false
 minimumReleaseAgeExclude:
   - expo-app-metrics@57.0.19
-  - expo-build-properties@57.0.18
+  - expo-build-properties@57.0.18 || 57.0.19
   - expo-observe@57.0.22
   - "@expo/cli@57.0.25"
   - "@expo/router-server@57.0.10"
