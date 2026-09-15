@@ -1,6 +1,6 @@
-import { Link } from "expo-router";
+import { router } from "expo-router";
 import React from "react";
-import { Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import {
   climbGradeLabel,
   dateLabel,
@@ -12,6 +12,7 @@ import {
 import { t } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { Icon } from "../../components/Icon";
+import { pressRow } from "../../lib/press";
 
 export type ProjectRowProps = { item: ProjectListItem };
 
@@ -33,66 +34,66 @@ export function ProjectRow({ item }: ProjectRowProps): React.ReactElement {
   const { climb } = item;
   const sent = projectStatus(climb) === "sent";
   return (
-    <Link href={`/project/${climb.slug}`} asChild>
-      <View
+    <Pressable
+      onPress={() => router.push(`/project/${climb.slug}`)}
+      accessibilityRole="button"
+      style={pressRow({
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 12,
+        paddingVertical: 14,
+        paddingHorizontal: 18,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.lineOnLightSoft,
+      })}
+    >
+      <Text
         style={{
-          flexDirection: "row",
-          alignItems: "center",
-          gap: 12,
-          paddingVertical: 14,
-          paddingHorizontal: 18,
-          borderBottomWidth: 1,
-          borderBottomColor: colors.lineOnLightSoft,
+          width: 56,
+          fontFamily: fonts.monoSemiBold,
+          fontSize: 15,
+          color: climb.grade === null ? colors.textFaint : colors.gunmetal,
         }}
       >
+        {climb.grade === null ? "–" : climbGradeLabel(climb)}
+      </Text>
+      <View style={{ flex: 1, minWidth: 0, gap: 4 }}>
         <Text
-          style={{
-            width: 56,
-            fontFamily: fonts.monoSemiBold,
-            fontSize: 15,
-            color: climb.grade === null ? colors.textFaint : colors.gunmetal,
-          }}
+          numberOfLines={1}
+          style={{ fontFamily: fonts.sansSemiBold, fontSize: 15, color: colors.gunmetal }}
         >
-          {climb.grade === null ? "–" : climbGradeLabel(climb)}
+          {climb.name}
         </Text>
-        <View style={{ flex: 1, minWidth: 0, gap: 4 }}>
-          <Text
-            numberOfLines={1}
-            style={{ fontFamily: fonts.sansSemiBold, fontSize: 15, color: colors.gunmetal }}
-          >
-            {climb.name}
-          </Text>
-          <Text
-            numberOfLines={1}
-            style={{
-              fontFamily: fonts.monoMedium,
-              fontSize: 10,
-              letterSpacing: 0.6,
-              textTransform: "uppercase",
-              color: colors.textMuted,
-            }}
-          >
-            {metaLabel(item)}
-          </Text>
-        </View>
         <Text
+          numberOfLines={1}
           style={{
             fontFamily: fonts.monoMedium,
             fontSize: 10,
             letterSpacing: 0.6,
             textTransform: "uppercase",
-            color: colors.gunmetal,
-            paddingHorizontal: 9,
-            paddingVertical: 4,
-            borderRadius: radius.pill,
-            backgroundColor: sent ? colors.gold : "rgba(64,63,76,0.06)",
-            overflow: "hidden",
+            color: colors.textMuted,
           }}
         >
-          {sent ? t("common.sentStatus") : t("common.open")}
+          {metaLabel(item)}
         </Text>
-        <Icon name="chevron" size={14} color={colors.textFaint} />
       </View>
-    </Link>
+      <Text
+        style={{
+          fontFamily: fonts.monoMedium,
+          fontSize: 10,
+          letterSpacing: 0.6,
+          textTransform: "uppercase",
+          color: colors.gunmetal,
+          paddingHorizontal: 9,
+          paddingVertical: 4,
+          borderRadius: radius.pill,
+          backgroundColor: sent ? colors.gold : "rgba(64,63,76,0.06)",
+          overflow: "hidden",
+        }}
+      >
+        {sent ? t("common.sentStatus") : t("common.open")}
+      </Text>
+      <Icon name="chevron" size={14} color={colors.textFaint} />
+    </Pressable>
   );
 }

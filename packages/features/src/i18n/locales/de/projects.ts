@@ -1,4 +1,5 @@
 export const projects = {
+  "projects.back": "← Projekte",
   "projects.attemptsInvested": "Investierte Versuche",
   "projects.attemptsToSend": "Versuche bis zur Begehung",
   "projects.avg": "Ø {avg}",
