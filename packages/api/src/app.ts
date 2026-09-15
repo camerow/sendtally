@@ -7,11 +7,19 @@ import { z } from "zod";
 import { auth } from "./auth";
 import type { Env } from "./bindings";
 import { purgeAccount } from "./lib/account";
-import { applyProjectFlags, climbCatalogue, climbSlug, projectBody } from "./lib/climbs";
+import {
+  applyProjectFlags,
+  climbCatalogue,
+  climbNotesOf,
+  climbSlug,
+  projectBody,
+  withClimbNotes,
+} from "./lib/climbs";
 import { decryptSecret, encryptSecret } from "./lib/crypto";
 import { mirrorStoreEntitlements, resolveEntitlements } from "./lib/entitlements";
 import {
   buildManualSession,
+  climbNoteBody,
   historySession,
   manualSessionBody,
   normalisedNote,
@@ -109,11 +117,11 @@ const sessionResponse = async (env: Env, userId: string, fingerprint: string) =>
   const row = await repo.getSession(env.DB, userId, fingerprint);
   if (row === null) return null;
   const { climbs_json, ...rest } = row;
-  return {
-    ...rest,
-    tags: await repo.getSessionTags(env.DB, userId, fingerprint),
-    climbs: parseClimbs(climbs_json),
-  };
+  const [tags, notes] = await Promise.all([
+    repo.getSessionTags(env.DB, userId, fingerprint),
+    repo.getSessionClimbNotes(env.DB, userId, fingerprint),
+  ]);
+  return { ...rest, tags, climbs: withClimbNotes(parseClimbs(climbs_json), notes) };
 };
 
 // Every validated body answers the same way, so the shape a client sees for a
@@ -314,14 +322,23 @@ const app = new Hono<AppEnv>()
   .get("/v1/sessions", async (c) => {
     const userId = c.get("userId");
     const includeClimbs = c.req.query("include") === "climbs";
-    const [rows, tagsBySession] = await Promise.all([
+    const [rows, tagsBySession, notes] = await Promise.all([
       repo.listSessions(c.env.DB, userId, 200, includeClimbs),
       repo.tagsBySession(c.env.DB, userId),
+      includeClimbs ? repo.listClimbNotes(c.env.DB, userId) : [],
     ]);
+    const notesBySession = new Map<string, repo.ClimbNoteRow[]>();
+    for (const note of notes) {
+      const list = notesBySession.get(note.fingerprint);
+      if (list === undefined) notesBySession.set(note.fingerprint, [note]);
+      else list.push(note);
+    }
     const sessions = rows.map(({ climbs_json, ...rest }) => ({
       ...rest,
       tags: tagsBySession.get(rest.fingerprint) ?? [],
-      climbs: includeClimbs ? parseClimbs(climbs_json) : undefined,
+      climbs: includeClimbs
+        ? withClimbNotes(parseClimbs(climbs_json), notesBySession.get(rest.fingerprint) ?? [])
+        : undefined,
     }));
     return c.json({ sessions });
   })
@@ -343,7 +360,7 @@ const app = new Hono<AppEnv>()
   })
 
   // Marking a project from the projects page rather than the log form: the
-  // name is the identity, so re-posting an existing one edits its beta.
+  // name is the identity, so re-posting an existing one updates it in place.
   .post("/v1/projects", zValidator("json", projectBody, invalidBody), async (c) => {
     const form = c.req.valid("json");
     const name = form.name.trim();
@@ -356,7 +373,6 @@ const app = new Hono<AppEnv>()
       name,
       ...(form.discipline === undefined ? {} : { discipline: form.discipline }),
       ...(form.grade === undefined ? {} : { grade: form.grade }),
-      ...(form.beta === undefined ? {} : { beta: form.beta }),
     });
     await captureEvent(c, "project_marked", { source: "projects" });
     return c.json({ slug });
@@ -387,6 +403,7 @@ const app = new Hono<AppEnv>()
       await repo.setSessionTags(c.env.DB, userId, fingerprint, form.tags);
     }
     await applyProjectFlags(c.env.DB, userId, form.climbs);
+    await repo.setClimbNotes(c.env.DB, userId, fingerprint, climbNotesOf(form.climbs));
     await captureEvent(c, "manual_session_created", { session_source: "manual" });
     const body = { session: await sessionResponse(c.env, userId, fingerprint) };
     postAfterResponse(c, userId, fingerprint);
@@ -410,6 +427,7 @@ const app = new Hono<AppEnv>()
       await repo.updateManualSession(c.env.DB, userId, input);
       await repo.setSessionTags(c.env.DB, userId, fingerprint, form.tags ?? []);
       await applyProjectFlags(c.env.DB, userId, form.climbs);
+      await repo.setClimbNotes(c.env.DB, userId, fingerprint, climbNotesOf(form.climbs));
       await captureEvent(c, "manual_session_updated", { session_source: "manual" });
       const body = { session: await sessionResponse(c.env, userId, fingerprint) };
       // Already posted sessions get the activity patched, never a second one.
@@ -452,6 +470,27 @@ const app = new Hono<AppEnv>()
       if (!saved) return c.json({ error: "not found" }, 404);
       await captureEvent(c, "session_notes_updated", { cleared: String(notes === null) });
       return c.json({ notes });
+    }
+  )
+
+  // A climb note is the user's own writing too, and it lives beside the session
+  // rather than in it, so board rows take one and nothing is re-scored. The
+  // climb is addressed by its slug, which is what the notes roll up under.
+  .put(
+    "/v1/sessions/:fingerprint/climbs/:slug/note",
+    zValidator("json", climbNoteBody, invalidBody),
+    async (c) => {
+      const userId = c.get("userId");
+      const fingerprint = c.req.param("fingerprint");
+      const slug = climbSlug(c.req.param("slug"));
+      if (slug === "") return c.json({ error: "invalid request body" }, 400);
+      if ((await repo.getSession(c.env.DB, userId, fingerprint)) === null) {
+        return c.json({ error: "not found" }, 404);
+      }
+      const note = normalisedNote(c.req.valid("json").note);
+      await repo.setClimbNote(c.env.DB, userId, fingerprint, slug, note);
+      await captureEvent(c, "climb_note_updated", { cleared: String(note === null) });
+      return c.json({ note });
     }
   )
 

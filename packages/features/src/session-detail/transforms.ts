@@ -94,6 +94,7 @@ export function climbVMs(
       restLabel: restLabel(rest),
       result,
       resultLabel: resultLabelOf(c, result),
+      note: c.note,
     };
   });
 }

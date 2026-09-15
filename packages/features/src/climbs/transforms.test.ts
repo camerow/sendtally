@@ -17,8 +17,6 @@ const climb = (overrides: Partial<ClimbSummary>): ClimbSummary => ({
   grade: { scale: "v", value: 6 },
   discipline: "boulder",
   project: false,
-  beta: null,
-  beta_updated_at: null,
   sessions: 3,
   attempts: 11,
   sends: 0,

@@ -40,6 +40,7 @@ function session(
       kind: "send",
       tries: 1,
       angle: 40,
+      note: null,
       ...c,
     })),
   };

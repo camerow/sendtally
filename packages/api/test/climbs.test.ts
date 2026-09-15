@@ -30,8 +30,6 @@ describe("climbCatalogue", () => {
         grade: { scale: "v", value: 7 },
         discipline: "boulder",
         project: false,
-        beta: null,
-        beta_updated_at: null,
         sessions: 2,
         attempts: 9,
         sends: 1,
@@ -44,8 +42,6 @@ describe("climbCatalogue", () => {
         grade: { scale: "v", value: 2 },
         discipline: "boulder",
         project: false,
-        beta: null,
-        beta_updated_at: null,
         sessions: 1,
         attempts: 1,
         sends: 1,
@@ -87,6 +83,5 @@ describe("climbCatalogue", () => {
     ]);
     expect(catalogue[0]?.grade).toBeNull();
     expect(catalogue[0]?.discipline).toBe("route");
-    expect(catalogue[1]?.beta).toBe("Heel hook the ar\u00eate.");
   });
 });

@@ -117,6 +117,15 @@ export class SendtallyApi {
     return body(this.client.v1.climbs.$get());
   }
 
+  setClimbNote(fingerprint: string, slug: string, note: string): Promise<{ note: string | null }> {
+    return body(
+      this.client.v1.sessions[":fingerprint"].climbs[":slug"].note.$put({
+        param: { fingerprint, slug },
+        json: { note },
+      })
+    );
+  }
+
   saveProject(project: ProjectInput): Promise<{ slug: string }> {
     return body(this.client.v1.projects.$post({ json: project }));
   }

@@ -14,6 +14,8 @@ export type ClimbVM = {
   result: ClimbResult;
   /** A send reads in its own discipline's words: boulders are SENT, routes REDPOINT. */
   resultLabel: string;
+  /** What the climber wrote about this climb that session. Named climbs only. */
+  note: string | null;
 };
 
 export type StatVM = { label: string; value: string; accent: boolean };

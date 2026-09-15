@@ -11,6 +11,7 @@ import {
 } from "@sendtally/features/log-session";
 import { t } from "@sendtally/features/i18n";
 import { ClimbNameField } from "./ClimbNameField";
+import { ClimbNoteField } from "./ClimbNoteField";
 import { DisciplineToggle } from "./DisciplineToggle";
 import { Glyph } from "./Glyph";
 import { OutcomeControl } from "./OutcomeControl";
@@ -48,35 +49,44 @@ export function ClimbCard({
   return (
     <div className="climb-card">
       <div className="climb-card-main">
-        <select
-          value={climb.grade}
-          onChange={(e) => onChange({ ...climb, grade: e.target.value })}
-          className="log-session-control"
-          style={{
-            ...inputStyle,
-            fontFamily: "var(--font-mono)",
-            fontWeight: 600,
-            padding: "11px 8px",
-          }}
-        >
-          {gradeOptions(scale).map((g) => (
-            <option key={g} value={g}>
-              {g}
-            </option>
-          ))}
-        </select>
-        <ClimbNameField
-          value={climb.name}
-          scale={scale}
-          suggestions={suggestions}
-          onChange={onChangeName}
-          onPick={onPick}
-        />
-        <TriesStepper
-          tries={climb.tries}
-          disabled={climb.kind === "send" && climb.style !== "redpoint"}
-          onChange={(tries) => onChange({ ...climb, tries })}
-        />
+        <div className="climb-card-cell">
+          <span style={columnHead}>{t("common.grade")}</span>
+          <select
+            value={climb.grade}
+            onChange={(e) => onChange({ ...climb, grade: e.target.value })}
+            className="log-session-control"
+            style={{
+              ...inputStyle,
+              fontFamily: "var(--font-mono)",
+              fontWeight: 600,
+              padding: "11px 8px",
+            }}
+          >
+            {gradeOptions(scale).map((g) => (
+              <option key={g} value={g}>
+                {g}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="climb-card-cell">
+          <span style={columnHead}>{t("logSession.nameOptional")}</span>
+          <ClimbNameField
+            value={climb.name}
+            scale={scale}
+            suggestions={suggestions}
+            onChange={onChangeName}
+            onPick={onPick}
+          />
+        </div>
+        <div className="climb-card-cell">
+          <span style={columnHead}>{t("logSession.tries")}</span>
+          <TriesStepper
+            tries={climb.tries}
+            disabled={climb.kind === "send" && climb.style !== "redpoint"}
+            onChange={(tries) => onChange({ ...climb, tries })}
+          />
+        </div>
         <button
           type="button"
           aria-label={t("logSession.removeClimb")}
@@ -86,6 +96,7 @@ export function ClimbCard({
             ...stepperButton,
             width: 32,
             height: 32,
+            alignSelf: "end",
             border: "none",
             color: "rgba(64,63,76,0.45)",
             opacity: removable ? 1 : 0,
@@ -112,6 +123,14 @@ export function ClimbCard({
             onToggle={onToggleProject}
           />
         </div>
+      </div>
+      <div className="climb-card-result climb-card-result--note">
+        <span style={columnHead}>{t("common.note")}</span>
+        <ClimbNoteField
+          note={climb.note}
+          name={climb.name}
+          onChange={(note) => onChange({ ...climb, note })}
+        />
       </div>
     </div>
   );

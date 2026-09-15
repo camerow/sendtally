@@ -427,6 +427,39 @@ export function ClimbEditorSheet({
             onPress={onToggleProject}
           />
 
+          <View style={{ gap: 7 }}>
+            <Text style={label}>{t("logSession.noteOptional")}</Text>
+            <TextInput
+              value={climb.note}
+              editable={named}
+              multiline
+              maxLength={2000}
+              placeholder={t("logSession.climbNotePlaceholder")}
+              placeholderTextColor={colors.textFaint}
+              onChangeText={(note) => onChange({ ...climb, note })}
+              style={{
+                fontFamily: fonts.sans,
+                fontSize: 15,
+                lineHeight: 22,
+                color: colors.gunmetal,
+                backgroundColor: colors.white,
+                borderWidth: 1,
+                borderColor: "rgba(64,63,76,0.15)",
+                borderRadius: radius.control,
+                paddingHorizontal: 13,
+                paddingVertical: 11,
+                minHeight: 72,
+                textAlignVertical: "top",
+                opacity: named ? 1 : 0.5,
+              }}
+            />
+            <Text style={{ fontFamily: fonts.sans, fontSize: 12, color: colors.textSecondary }}>
+              {named
+                ? t("logSession.noteKeptOn", { name: climb.name.trim() })
+                : t("logSession.noteHint")}
+            </Text>
+          </View>
+
           <Pressable
             onPress={onClose}
             accessibilityRole="button"

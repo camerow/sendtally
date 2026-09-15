@@ -55,7 +55,7 @@ export function useProjects(api: SendtallyApi): ProjectsFeature {
 
 export type ProjectFeature = {
   state: QueryState<ProjectDetailVM>;
-  saveBeta: (beta: string) => Promise<void>;
+  saveNote: (fingerprint: string, note: string) => Promise<void>;
   unmark: () => Promise<void>;
   reload: () => void;
 };
@@ -72,10 +72,10 @@ export function useProject(api: SendtallyApi, slug: string): ProjectFeature {
 
   const { state, reload } = useQuery(load);
 
-  const saveBeta = React.useCallback(
-    async (beta: string): Promise<void> => {
+  const saveNote = React.useCallback(
+    async (fingerprint: string, note: string): Promise<void> => {
       if (state.status !== "ready") return;
-      await api.saveProject({ name: state.data.name, beta });
+      await api.setClimbNote(fingerprint, state.data.slug, note);
       reload();
     },
     [api, reload, state]
@@ -85,5 +85,5 @@ export function useProject(api: SendtallyApi, slug: string): ProjectFeature {
     await api.unmarkProject(slug);
   }, [api, slug]);
 
-  return { state, saveBeta, unmark, reload };
+  return { state, saveNote, unmark, reload };
 }

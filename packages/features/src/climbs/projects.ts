@@ -33,7 +33,14 @@ export type ProjectSessionVM = {
   metaLabel: string;
   attempts: number;
   sent: boolean;
-  notes: string | null;
+  note: string | null;
+};
+
+export type ProjectNoteVM = {
+  fingerprint: string;
+  dateLabel: string;
+  attempts: number;
+  note: string;
 };
 
 export type ProjectDetailVM = {
@@ -48,8 +55,7 @@ export type ProjectDetailVM = {
   stats: ProjectStat[];
   bars: ProjectBar[];
   sessions: ProjectSessionVM[];
-  beta: string | null;
-  betaUpdatedLabel: string | null;
+  notes: ProjectNoteVM[];
 };
 
 export type ProjectHighlight = { name: string; slug: string; value: string };
@@ -97,7 +103,7 @@ export function disciplineLabel(climb: ClimbSummary): string {
 }
 
 // Every session the climb appears in, oldest first: the attempts that went into
-// it, and the session's own note for the context around them.
+// it, and the note the user wrote about this climb that night.
 export function projectSessions(
   climb: ClimbSummary,
   sessions: SessionWithClimbs[]
@@ -117,7 +123,7 @@ export function projectSessions(
       metaLabel: `RPE ${session.rpe} · ${durationLabel(sessionMinutes(session))}`,
       attempts: rows.reduce((n, c) => n + c.tries, 0),
       sent: rows.some((c) => c.kind === "send"),
-      notes: session.notes,
+      note: rows.find((c) => c.note !== null)?.note ?? null,
     });
   }
   return out;
@@ -163,6 +169,7 @@ export function projectDetailVM(
   ];
   const first = ordered[0];
   const last = ordered[ordered.length - 1];
+  const newestFirst = [...ordered].reverse();
   return {
     slug: climb.slug,
     name: climb.name,
@@ -185,12 +192,19 @@ export function projectDetailVM(
           : `${first.dateLabel} → ${last?.dateLabel}`,
     stats,
     bars: bars(ordered),
-    sessions: [...ordered].reverse(),
-    beta: climb.beta,
-    betaUpdatedLabel:
-      climb.beta_updated_at === null
-        ? null
-        : t("climbs.updatedOn", { date: dateLabel(climb.beta_updated_at) }),
+    sessions: newestFirst,
+    notes: newestFirst.flatMap((s) =>
+      s.note === null
+        ? []
+        : [
+            {
+              fingerprint: s.fingerprint,
+              dateLabel: s.dateLabel,
+              attempts: s.attempts,
+              note: s.note,
+            },
+          ]
+    ),
   };
 }
 

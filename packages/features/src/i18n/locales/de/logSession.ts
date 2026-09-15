@@ -89,4 +89,8 @@ export const logSession = {
   "logSession.draftMeta_other":
     "{count} Klettereien · {start}–{end} · nur auf diesem Gerät gespeichert",
   "logSession.pickUp": "Weitermachen, wo ich aufgehört habe",
+  "logSession.noteOptional": "Notiz · optional",
+  "logSession.climbNotePlaceholder": "Wie es lief, was du als Nächstes probierst",
+  "logSession.noteKeptOn": "Bleibt an {name}, zusammen mit jeder anderen Session daran",
+  "logSession.noteHint": "Gib der Kletterei einen Namen, um eine Notiz daran zu behalten",
 } as const;

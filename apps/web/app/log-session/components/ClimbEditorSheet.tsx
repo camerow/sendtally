@@ -11,6 +11,7 @@ import {
 } from "@sendtally/features/log-session";
 import { t } from "@sendtally/features/i18n";
 import { ClimbNameField } from "./ClimbNameField";
+import { ClimbNoteField } from "./ClimbNoteField";
 import { DisciplineToggle } from "./DisciplineToggle";
 import { OutcomeControl } from "./OutcomeControl";
 import { ProjectToggle } from "./ProjectToggle";
@@ -194,6 +195,14 @@ export function ClimbEditorSheet({
           named={climb.name.trim() !== ""}
           onToggle={onToggleProject}
         />
+        <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
+          <span style={monoLabel}>{t("logSession.noteOptional")}</span>
+          <ClimbNoteField
+            note={climb.note}
+            name={climb.name}
+            onChange={(note) => onChange({ ...climb, note })}
+          />
+        </div>
         <button type="button" onClick={onClose} className="climb-sheet-done">
           {t("common.done")}
         </button>

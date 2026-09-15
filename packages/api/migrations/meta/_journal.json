@@ -85,6 +85,13 @@
       "when": 1789246998201,
       "tag": "0016_eager_vulture",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "6",
+      "when": 1789443333045,
+      "tag": "0017_supreme_thunderbird",
+      "breakpoints": true
     }
   ]
 }

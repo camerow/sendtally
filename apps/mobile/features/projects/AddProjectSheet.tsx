@@ -68,7 +68,6 @@ export function AddProjectSheet({
   const [tracking, setTracking] = React.useState(false);
   const [discipline, setDiscipline] = React.useState<Discipline>("boulder");
   const [grade, setGrade] = React.useState("");
-  const [beta, setBeta] = React.useState("");
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const rail = React.useRef<ScrollView>(null);
@@ -126,7 +125,6 @@ export function AddProjectSheet({
       await onSave({
         name: identityName,
         ...(chosen === undefined ? {} : { grade: chosen, discipline: disciplineOf(chosen.scale) }),
-        ...(beta.trim() === "" ? {} : { beta: beta.trim() }),
       });
       setBusy(false);
       onClose();
@@ -345,18 +343,6 @@ export function AddProjectSheet({
             </View>
           </>
         )}
-
-        <View style={{ gap: 9 }}>
-          <Text style={label}>{t("projects.betaOptional")}</Text>
-          <TextInput
-            value={beta}
-            onChangeText={setBeta}
-            multiline
-            placeholder={t("projects.betaPlaceholderShort")}
-            placeholderTextColor={colors.textFaint}
-            style={{ ...input, minHeight: 64, textAlignVertical: "top" }}
-          />
-        </View>
 
         {error !== null && (
           <Text style={{ ...label, textTransform: "none", color: colors.watermelonInk }}>

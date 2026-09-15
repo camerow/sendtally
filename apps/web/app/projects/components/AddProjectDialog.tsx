@@ -72,7 +72,6 @@ export function AddProjectDialog({
   const [tracking, setTracking] = React.useState(false);
   const [discipline, setDiscipline] = React.useState<Discipline>("boulder");
   const [grade, setGrade] = React.useState("");
-  const [beta, setBeta] = React.useState("");
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const rail = React.useRef<HTMLDivElement>(null);
@@ -137,7 +136,6 @@ export function AddProjectDialog({
       await onSave({
         name: picked?.name ?? trimmed,
         ...(chosen === undefined ? {} : { grade: chosen, discipline: disciplineOf(chosen.scale) }),
-        ...(beta.trim() === "" ? {} : { beta: beta.trim() }),
       });
       onClose();
     } catch {
@@ -311,21 +309,6 @@ export function AddProjectDialog({
             </div>
           </>
         )}
-
-        <div className="project-dialog-field">
-          <label className="project-dialog-label" htmlFor="project-beta">
-            {t("projects.beta")}{" "}
-            <span style={{ color: "rgba(64,63,76,0.45)" }}>{t("common.optional")}</span>
-          </label>
-          <textarea
-            id="project-beta"
-            value={beta}
-            rows={2}
-            placeholder={t("projects.betaPlaceholderShort")}
-            onChange={(e) => setBeta(e.target.value)}
-            style={{ ...input, resize: "vertical", fontFamily: "var(--font-sans)" }}
-          />
-        </div>
 
         {error !== null && (
           <span

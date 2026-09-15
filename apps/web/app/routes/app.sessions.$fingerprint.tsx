@@ -421,7 +421,7 @@ export default function SessionDetailRoute(): React.ReactElement {
                     gridTemplateColumns: GRID,
                     gap: 12,
                     padding: "12px 4px",
-                    alignItems: "center",
+                    alignItems: "start",
                     borderTop: "1px solid var(--line-on-light)",
                   }}
                 >
@@ -434,16 +434,32 @@ export default function SessionDetailRoute(): React.ReactElement {
                   >
                     {c.n}
                   </span>
-                  <span
-                    style={{
-                      fontWeight: 500,
-                      fontSize: 15,
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {c.name}
+                  <span style={{ display: "flex", flexDirection: "column", gap: 6, minWidth: 0 }}>
+                    <span
+                      style={{
+                        fontWeight: 500,
+                        fontSize: 15,
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {c.name}
+                    </span>
+                    {c.note !== null && (
+                      <span
+                        style={{
+                          fontSize: 13,
+                          lineHeight: 1.5,
+                          whiteSpace: "pre-line",
+                          color: "var(--text-on-white-secondary)",
+                          borderLeft: "2px solid rgba(64,63,76,0.12)",
+                          paddingLeft: 10,
+                        }}
+                      >
+                        {c.note}
+                      </span>
+                    )}
                   </span>
                   <span
                     style={{

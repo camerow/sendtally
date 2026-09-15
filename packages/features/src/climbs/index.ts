@@ -25,6 +25,7 @@ export {
   type ProjectBar,
   type ProjectDetailVM,
   type ProjectHighlight,
+  type ProjectNoteVM,
   type ProjectSessionVM,
   type ProjectStat,
   type ProjectsOverviewVM,

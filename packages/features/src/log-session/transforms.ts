@@ -124,6 +124,7 @@ export function newClimb(key: string, scale: GradeScale): ClimbDraft {
     kind: "send",
     style: "redpoint",
     tries: 1,
+    note: "",
   };
 }
 
@@ -250,6 +251,7 @@ export function toLogSessionInput(draft: LogSessionDraft): LogSessionInput {
     kind: c.kind,
     ...(c.kind === "send" ? { style: c.style } : {}),
     tries: c.tries,
+    ...(c.name.trim() === "" || c.note.trim() === "" ? {} : { note: c.note.trim() }),
     ...(c.project === undefined ? {} : { project: c.project }),
   }));
   return {
@@ -311,6 +313,7 @@ export function draftFromSession(session: SessionDetail): LogSessionDraft {
         kind: c.kind,
         style: storedStyle(c),
         tries: c.tries,
+        note: c.note ?? "",
       };
     }),
   };

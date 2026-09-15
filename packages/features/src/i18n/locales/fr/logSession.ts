@@ -89,4 +89,8 @@ export const logSession = {
   "logSession.draftMeta_other":
     "{count} lignes · {start}–{end} · enregistrées sur cet appareil uniquement",
   "logSession.pickUp": "Reprendre où j'en étais",
+  "logSession.noteOptional": "Note · optionnel",
+  "logSession.climbNotePlaceholder": "Comment ça s'est passé, ce que tu essaieras ensuite",
+  "logSession.noteKeptOn": "Conservée sur {name}, avec toutes les autres séances dessus",
+  "logSession.noteHint": "Donne un nom à la ligne pour y garder une note",
 } as const;

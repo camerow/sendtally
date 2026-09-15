@@ -89,4 +89,8 @@ export const logSession = {
   "logSession.draftMeta_other":
     "{count} escaladas · {start}–{end} · guardadas solo en este dispositivo",
   "logSession.pickUp": "Seguir donde lo dejé",
+  "logSession.noteOptional": "Nota · opcional",
+  "logSession.climbNotePlaceholder": "Cómo fue, qué probar la próxima vez",
+  "logSession.noteKeptOn": "Se guarda en {name}, junto a todas las demás sesiones en ella",
+  "logSession.noteHint": "Ponle nombre a la vía para guardar una nota en ella",
 } as const;

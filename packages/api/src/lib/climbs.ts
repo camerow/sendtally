@@ -5,7 +5,6 @@ import type { ClimbGrade, ProjectRow, SessionRow } from "./repo";
 import { tagSlug } from "./tags";
 
 export const MAX_CLIMB_NAME_LENGTH = 200;
-export const MAX_BETA_LENGTH = 2000;
 
 const gradeJson = z.union([
   z.object({ scale: z.literal("v"), value: z.number().int() }),
@@ -18,7 +17,6 @@ export const projectBody = z.object({
   name: z.string().trim().min(1).max(MAX_CLIMB_NAME_LENGTH),
   discipline: z.enum(["boulder", "route"]).optional(),
   grade: gradeJson.optional(),
-  beta: z.string().max(MAX_BETA_LENGTH).optional(),
 });
 
 export type ProjectInput = z.input<typeof projectBody>;
@@ -29,8 +27,6 @@ export type ClimbSummary = {
   grade: ClimbGrade | null;
   discipline: Discipline;
   project: boolean;
-  beta: string | null;
-  beta_updated_at: string | null;
   sessions: number;
   attempts: number;
   sends: number;
@@ -57,6 +53,32 @@ export async function applyProjectFlags(
     if (climb.project) await repo.upsertProject(db, userId, { slug, name, grade: climb.grade });
     else await repo.deleteProject(db, userId, slug);
   }
+}
+
+type NotedClimb = { name: string; note?: string | undefined };
+
+// A note belongs to a named climb in a session, so two rows for the same climb
+// share one note and the last one the user wrote is the one kept.
+export function climbNotesOf(climbs: NotedClimb[]): repo.ClimbNoteInput[] {
+  const bySlug = new Map<string, repo.ClimbNoteInput>();
+  for (const climb of climbs) {
+    const note = climb.note?.trim() ?? "";
+    const slug = climbSlug(climb.name.trim());
+    if (slug === "" || note === "") continue;
+    bySlug.set(slug, { climb_slug: slug, note });
+  }
+  return [...bySlug.values()];
+}
+
+export function withClimbNotes<T extends { name: string }>(
+  climbs: T[],
+  notes: repo.ClimbNoteRow[]
+): Array<T & { note: string | null }> {
+  const bySlug = new Map(notes.map((n) => [n.climb_slug, n.note]));
+  return climbs.map((climb) => ({
+    ...climb,
+    note: bySlug.get(climbSlug(climb.name.trim())) ?? null,
+  }));
 }
 
 type StoredClimb = {
@@ -98,8 +120,6 @@ export function climbCatalogue(
           grade,
           discipline: disciplineOf(grade.scale),
           project: false,
-          beta: null,
-          beta_updated_at: null,
           sessions: 1,
           attempts: tries,
           sends,
@@ -119,8 +139,6 @@ export function climbCatalogue(
     const existing = bySlug.get(project.slug);
     if (existing !== undefined) {
       existing.project = true;
-      existing.beta = project.beta;
-      existing.beta_updated_at = project.beta_updated_at;
       continue;
     }
     const grade =
@@ -131,8 +149,6 @@ export function climbCatalogue(
       grade,
       discipline: grade === null ? project.discipline : disciplineOf(grade.scale),
       project: true,
-      beta: project.beta,
-      beta_updated_at: project.beta_updated_at,
       sessions: 0,
       attempts: 0,
       sends: 0,

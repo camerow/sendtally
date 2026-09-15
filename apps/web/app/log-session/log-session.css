@@ -28,16 +28,18 @@
   gap: 14px;
 }
 
-.climb-head,
 .climb-card-main {
   display: grid;
   grid-template-columns: 88px minmax(0, 1fr) 122px 36px;
   gap: 10px;
-  align-items: center;
+  align-items: end;
 }
 
-.climb-head {
-  padding: 0 14px;
+.climb-card-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 0;
 }
 
 .climb-cards,
@@ -61,6 +63,11 @@
   grid-template-columns: 88px minmax(0, 1fr);
   gap: 10px;
   align-items: center;
+}
+
+.climb-card-result--note {
+  align-items: start;
+  padding-top: 13px;
 }
 
 .climb-result {
@@ -443,10 +450,6 @@ body:has(.climb-sheet[open]) {
 
   .log-session-chip {
     min-height: 44px;
-  }
-
-  .climb-head {
-    display: none;
   }
 
   .log-session-rpe {

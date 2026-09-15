@@ -489,3 +489,83 @@
     gap: 18px;
   }
 }
+
+.climb-note-latest {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  box-sizing: border-box;
+  text-align: left;
+  border: none;
+  border-radius: var(--radius-control);
+  padding: 16px 18px;
+  background: var(--bs-gold);
+  color: var(--bs-gunmetal);
+  cursor: pointer;
+}
+
+.climb-note-latest:hover {
+  background: var(--bs-gold-hover);
+}
+
+.climb-note-add {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  font-weight: 500;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  color: rgba(64, 63, 76, 0.55);
+  border: 1px dashed rgba(64, 63, 76, 0.22);
+  border-radius: var(--radius-pill);
+  padding: 8px 14px;
+  background: none;
+  cursor: pointer;
+}
+
+.climb-note-add:hover {
+  color: var(--bs-gunmetal);
+  border-color: rgba(64, 63, 76, 0.4);
+}
+
+.climb-note-row {
+  display: grid;
+  grid-template-columns: 78px minmax(0, 1fr);
+  gap: 16px;
+  width: 100%;
+  box-sizing: border-box;
+  text-align: left;
+  padding: 16px 0 0;
+  border: none;
+  border-top: 1px solid var(--line-on-light-soft);
+  background: none;
+  color: var(--bs-gunmetal);
+}
+
+.climb-note-row--button {
+  cursor: pointer;
+}
+
+.climb-note-row--button:hover {
+  color: var(--bs-azure-ink);
+}
+
+.climb-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-on-white-secondary);
+}
+
+@media (max-width: 767px) {
+  .climb-note-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 6px;
+  }
+}

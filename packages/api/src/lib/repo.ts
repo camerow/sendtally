@@ -3,6 +3,7 @@ import { and, asc, count, desc, eq, getTableColumns, inArray, notInArray } from 
 import { drizzle } from "drizzle-orm/d1";
 import {
   boardConnections,
+  climbNotes,
   projects,
   sessions,
   sessionTags,
@@ -248,9 +249,14 @@ export async function deleteSession(
     .delete(sessions)
     .where(and(eq(sessions.user_id, userId), eq(sessions.fingerprint, fingerprint)));
   if (result.meta.changes === 0) return false;
-  await d
-    .delete(sessionTags)
-    .where(and(eq(sessionTags.user_id, userId), eq(sessionTags.fingerprint, fingerprint)));
+  await d.batch([
+    d
+      .delete(sessionTags)
+      .where(and(eq(sessionTags.user_id, userId), eq(sessionTags.fingerprint, fingerprint))),
+    d
+      .delete(climbNotes)
+      .where(and(eq(climbNotes.user_id, userId), eq(climbNotes.fingerprint, fingerprint))),
+  ]);
   await pruneUnusedTags(d, userId);
   return true;
 }
@@ -377,6 +383,81 @@ export async function setSessionTags(
   return linked;
 }
 
+export type ClimbNoteRow = typeof climbNotes.$inferSelect;
+
+export type ClimbNoteInput = { climb_slug: string; note: string };
+
+export async function listClimbNotes(db: D1Database, userId: string): Promise<ClimbNoteRow[]> {
+  return drizzle(db).select().from(climbNotes).where(eq(climbNotes.user_id, userId)).all();
+}
+
+export async function getSessionClimbNotes(
+  db: D1Database,
+  userId: string,
+  fingerprint: string
+): Promise<ClimbNoteRow[]> {
+  return drizzle(db)
+    .select()
+    .from(climbNotes)
+    .where(and(eq(climbNotes.user_id, userId), eq(climbNotes.fingerprint, fingerprint)))
+    .all();
+}
+
+// The log form carries every note the user can see for that session, so saving
+// it replaces the session's whole set - the same contract as its tags.
+export async function setClimbNotes(
+  db: D1Database,
+  userId: string,
+  fingerprint: string,
+  notes: ClimbNoteInput[]
+): Promise<void> {
+  const d = drizzle(db);
+  const updated_at = new Date().toISOString();
+  const clear = d
+    .delete(climbNotes)
+    .where(and(eq(climbNotes.user_id, userId), eq(climbNotes.fingerprint, fingerprint)));
+  if (notes.length === 0) {
+    await clear;
+    return;
+  }
+  await d.batch([
+    clear,
+    d
+      .insert(climbNotes)
+      .values(notes.map((n) => ({ user_id: userId, fingerprint, updated_at, ...n }))),
+  ]);
+}
+
+export async function setClimbNote(
+  db: D1Database,
+  userId: string,
+  fingerprint: string,
+  climb_slug: string,
+  note: string | null
+): Promise<void> {
+  const d = drizzle(db);
+  if (note === null) {
+    await d
+      .delete(climbNotes)
+      .where(
+        and(
+          eq(climbNotes.user_id, userId),
+          eq(climbNotes.fingerprint, fingerprint),
+          eq(climbNotes.climb_slug, climb_slug)
+        )
+      );
+    return;
+  }
+  const updated_at = new Date().toISOString();
+  await d
+    .insert(climbNotes)
+    .values({ user_id: userId, fingerprint, climb_slug, note, updated_at })
+    .onConflictDoUpdate({
+      target: [climbNotes.user_id, climbNotes.fingerprint, climbNotes.climb_slug],
+      set: { note, updated_at },
+    });
+}
+
 export type Discipline = "boulder" | "route";
 
 export type ClimbGrade =
@@ -393,12 +474,11 @@ export type ProjectInput = {
   name: string;
   grade?: ClimbGrade;
   discipline?: Discipline;
-  beta?: string;
 };
 
 // A project row carries only what the caller supplied: the log form knows the
-// grade, the projects page knows the discipline and the beta, and neither
-// overwrites what the other wrote.
+// grade and the projects page knows the discipline, and neither overwrites
+// what the other wrote.
 export async function upsertProject(
   db: D1Database,
   userId: string,
@@ -409,14 +489,9 @@ export async function upsertProject(
   const discipline =
     project.discipline ??
     (project.grade === undefined ? "boulder" : disciplineOf(project.grade.scale));
-  const beta = project.beta?.trim() ?? null;
   const set: Partial<typeof projects.$inferInsert> = { name: project.name };
   if (grade_json !== null) set.grade_json = grade_json;
   if (project.discipline !== undefined || project.grade !== undefined) set.discipline = discipline;
-  if (beta !== null) {
-    set.beta = beta === "" ? null : beta;
-    set.beta_updated_at = beta === "" ? null : now;
-  }
   await drizzle(db)
     .insert(projects)
     .values({
@@ -425,8 +500,6 @@ export async function upsertProject(
       name: project.name,
       grade_json,
       discipline,
-      beta: beta === "" ? null : beta,
-      beta_updated_at: beta === null || beta === "" ? null : now,
       created_at: now,
     })
     .onConflictDoUpdate({ target: [projects.user_id, projects.slug], set });
@@ -564,6 +637,7 @@ export async function deleteUserData(db: D1Database, userId: string): Promise<vo
   const d = drizzle(db);
   await d.batch([
     d.delete(sessionTags).where(eq(sessionTags.user_id, userId)),
+    d.delete(climbNotes).where(eq(climbNotes.user_id, userId)),
     d.delete(tags).where(eq(tags.user_id, userId)),
     d.delete(projects).where(eq(projects.user_id, userId)),
     d.delete(sessions).where(eq(sessions.user_id, userId)),

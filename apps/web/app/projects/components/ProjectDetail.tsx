@@ -4,7 +4,7 @@ import { useProject } from "@sendtally/features/climbs";
 import { Button } from "@sendtally/design";
 import { t } from "@sendtally/features/i18n";
 import { useClientApi } from "../../lib/useClientApi";
-import { BetaCard } from "./BetaCard";
+import { NotesCard } from "./NotesCard";
 import { ProjectChart } from "./ProjectChart";
 import { UnmarkProjectDialog } from "./UnmarkProjectDialog";
 import { BackLink } from "../../components/BackLink";
@@ -140,10 +140,10 @@ export function ProjectDetail({ apiUrl, slug }: ProjectDetailProps): React.React
           )}
         </div>
 
-        <BetaCard
-          beta={vm.beta}
-          updatedLabel={vm.betaUpdatedLabel}
-          onSave={(beta) => project.saveBeta(beta)}
+        <NotesCard
+          notes={vm.notes}
+          latestSession={vm.sessions[0]}
+          onSave={(fingerprint, note) => project.saveNote(fingerprint, note)}
         />
       </div>
 
@@ -189,7 +189,7 @@ export function ProjectDetail({ apiUrl, slug }: ProjectDetailProps): React.React
                 )}
               </span>
             </span>
-            <span className="project-session-note">{session.notes ?? ""}</span>
+            <span className="project-session-note">{session.note ?? ""}</span>
             <span
               style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 2 }}
             >
