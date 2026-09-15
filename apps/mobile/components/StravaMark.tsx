@@ -9,6 +9,7 @@ export function StravaMark({ size = 12 }: { size?: number }): React.ReactElement
       viewBox="0 0 24 24"
       width={size}
       height={size}
+      style={{ marginLeft: 2 }}
       accessibilityRole="image"
       accessibilityLabel={t("sessions.onStrava")}
     >

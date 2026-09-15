@@ -4,6 +4,20 @@ export const common = {
   "common.sessions": "Sesiones",
   "common.sent": "Encadenado",
   "common.nothingLoggedYet": "Nada registrado todavía",
+  "common.notFoundLabel": "Página no encontrada",
+  "common.notFoundTitle": "Fuera de ruta.",
+  "common.notFoundBody":
+    "No hay nada en esta dirección. El enlace probablemente sea antiguo, o la sesión a la que apuntaba se ha eliminado.",
+  "common.forbiddenLabel": "No es tuyo",
+  "common.forbiddenTitle": "Zona cerrada.",
+  "common.forbiddenBody":
+    "Esto pertenece a otra cuenta. Si debería ser tuya, entra con la dirección con la que la registraste.",
+  "common.serverErrorLabel": "Error del servidor",
+  "common.serverErrorTitle": "Día de mucha gravedad.",
+  "common.serverErrorBody":
+    "Algo se ha roto por nuestra parte, no por la tuya. Todas las sesiones que has registrado siguen guardadas. Inténtalo de nuevo en un momento.",
+  "common.switchAccount": "Cambiar de cuenta",
+  "common.backToLog": "Volver al registro",
   "common.somethingWentWrong": "Algo salió mal.",
   "common.indoor": "Interior",
   "common.outdoor": "Exterior",

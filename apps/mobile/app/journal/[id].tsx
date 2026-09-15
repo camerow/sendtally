@@ -3,17 +3,17 @@ import React from "react";
 import { ActivityIndicator, Alert, Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import type { EntryDetail, SessionRow as SessionRowData } from "@sendtally/api-client";
-import { formatDate, t } from "@sendtally/features/i18n";
+import { t } from "@sendtally/features/i18n";
 import {
   dayLabel,
   daysSince,
-  entryBodyBelowTitle,
+  entryHasTitle,
   entryTitle,
+  entryWhen,
   linkedSessions,
   sessionsInSpan,
   sessionsNearPoints,
   severitySeries,
-  spanLabel,
   spansDates,
   useEntryDetail,
 } from "@sendtally/features/journal";
@@ -202,15 +202,12 @@ function Loaded({
     : [];
   const points = severitySeries(entry, entry.updates);
   const sessionsPerPoint = sessionsNearPoints(sessions, points);
-  const when = spanning
-    ? spanLabel(entry.occurred_at, entry.ends_at)
-    : formatDate(new Date(`${entry.occurred_at}T00:00:00Z`), {
-        weekday: "long",
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-        timeZone: "UTC",
-      });
+  const titled = entryHasTitle(entry);
+  const dayCount =
+    entry.kind === "injury" && entry.status === "ongoing"
+      ? t("journal.dayN", { n: daysSince(entry.occurred_at) })
+      : null;
+  const meta = [titled ? entryWhen(entry) : null, dayCount].filter(Boolean).join(" · ");
 
   return (
     <>
@@ -232,18 +229,13 @@ function Loaded({
             color: colors.gunmetal,
           }}
         >
-          {entryTitle(entry)}
+          {titled ? entryTitle(entry) : entryWhen(entry)}
         </Text>
-        <Text style={cardLabel}>
-          {when}
-          {entry.kind === "injury" &&
-            entry.status === "ongoing" &&
-            ` · ${t("journal.dayN", { n: daysSince(entry.occurred_at) })}`}
-        </Text>
+        {meta !== "" && <Text style={cardLabel}>{meta}</Text>}
         <RowTags tags={entry.tags} />
       </View>
 
-      {entryBodyBelowTitle(entry) !== "" && <Text style={body}>{entryBodyBelowTitle(entry)}</Text>}
+      {entry.body.trim() !== "" && <Text style={body}>{entry.body.trim()}</Text>}
 
       {linked.length > 0 && (
         <SessionCard

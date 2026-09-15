@@ -4,6 +4,20 @@ export const common = {
   "common.sessions": "Sessions",
   "common.sent": "Sent",
   "common.nothingLoggedYet": "Nothing logged yet",
+  "common.notFoundLabel": "Page not found",
+  "common.notFoundTitle": "Off route.",
+  "common.notFoundBody":
+    "Nothing lives at this address. The link is probably old, or the session it pointed at was deleted.",
+  "common.forbiddenLabel": "Not yours",
+  "common.forbiddenTitle": "Roped off.",
+  "common.forbiddenBody":
+    "This belongs to another account. If it should be yours, sign in with the address you logged it under.",
+  "common.serverErrorLabel": "Server error",
+  "common.serverErrorTitle": "High gravity day.",
+  "common.serverErrorBody":
+    "Something broke on our side, not yours. Every session you have logged is still saved. Try again in a moment.",
+  "common.switchAccount": "Switch account",
+  "common.backToLog": "Back to the log",
   "common.somethingWentWrong": "Something went wrong.",
   "common.indoor": "Indoor",
   "common.outdoor": "Outdoor",

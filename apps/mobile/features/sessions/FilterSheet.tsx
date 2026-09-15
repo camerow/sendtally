@@ -107,7 +107,7 @@ export function FilterSheet({
         </View>
         <View style={{ gap: 9 }}>
           <Text style={label}>{t("journal.show")}</Text>
-          <View style={{ flexDirection: "row", gap: 8 }}>
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
             {LOG_SCOPES.map((value) => (
               <Chip
                 key={value}

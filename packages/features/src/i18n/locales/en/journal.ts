@@ -30,6 +30,8 @@ export const journal = {
     "Sessions tell you what you climbed. Entries tell you why it went the way it did - how you felt, what you are chasing, what hurt.",
   "journal.showEverything": "Everything",
   "journal.showSessions": "Sessions",
+  "journal.showTrips": "Trips",
+  "journal.showInjuries": "Injuries",
   "journal.showJournal": "Journal",
   "journal.entryCount_one": "{count} entry",
   "journal.entryCount_other": "{count} entries",

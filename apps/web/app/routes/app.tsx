@@ -1,9 +1,10 @@
 import { useClerk, useUser } from "@clerk/react-router";
 import React from "react";
 import type { LinksFunction, LoaderFunctionArgs } from "react-router";
-import { NavLink, Outlet, useLocation, useNavigate } from "react-router";
+import { NavLink, Outlet, useLocation, useNavigate, useRouteError } from "react-router";
 import { Logo } from "@sendtally/design";
 import { t, type MessageKey } from "@sendtally/features/i18n";
+import { ErrorPage } from "../components/ErrorPage";
 import { Icon, type IconName } from "../components/Icon";
 import { requireApi } from "../lib/api.server";
 import appShellStyles from "../styles/app-shell.css?url";
@@ -32,7 +33,7 @@ const NAV_ITEMS: NavItem[] = [
 /** Screens reached by a back link, whose own action bar owns the bottom edge. */
 const FOCUSED_ROUTES = ["/app/sessions/new"];
 
-export default function AppLayout(): React.ReactElement {
+function Shell({ children }: { children: React.ReactNode }): React.ReactElement {
   const clerk = useClerk();
   const { user } = useUser();
   const navigate = useNavigate();
@@ -90,9 +91,7 @@ export default function AppLayout(): React.ReactElement {
           {signOut}
         </div>
       </div>
-      <div className={focused ? "app-content app-content--focused" : "app-content"}>
-        <Outlet />
-      </div>
+      <div className={focused ? "app-content app-content--focused" : "app-content"}>{children}</div>
       {!focused && (
         <nav className="app-tabbar" aria-label={t("common.sectionsAria")}>
           {NAV_ITEMS.map(({ label, to, icon }) => (
@@ -104,5 +103,22 @@ export default function AppLayout(): React.ReactElement {
         </nav>
       )}
     </div>
+  );
+}
+
+export default function AppLayout(): React.ReactElement {
+  return (
+    <Shell>
+      <Outlet />
+    </Shell>
+  );
+}
+
+export function ErrorBoundary(): React.ReactElement {
+  const error = useRouteError();
+  return (
+    <Shell>
+      <ErrorPage error={error} />
+    </Shell>
   );
 }

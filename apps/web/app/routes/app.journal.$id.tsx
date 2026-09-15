@@ -2,18 +2,18 @@ import React from "react";
 import type { LinksFunction, LoaderFunctionArgs } from "react-router";
 import { Link, redirect, useLoaderData, useNavigate } from "react-router";
 import type { EntryDetail, SessionRow } from "@sendtally/api-client";
-import { formatDate, t } from "@sendtally/features/i18n";
+import { t } from "@sendtally/features/i18n";
 import {
   dayLabel,
   daysSince,
-  entryBodyBelowTitle,
+  entryHasTitle,
   entryKindLabel,
   entryTitle,
+  entryWhen,
   linkedSessions,
   sessionsInSpan,
   sessionsNearPoints,
   severitySeries,
-  spanLabel,
   spansDates,
 } from "@sendtally/features/journal";
 import { sessionTitle } from "@sendtally/features/sessions";
@@ -23,7 +23,7 @@ import { SeverityChart } from "../journal/components/SeverityChart";
 import journalStyles from "../journal/journal.css?url";
 import sessionsStyles from "../sessions/sessions.css?url";
 import { cloudflareContext } from "../lib/cloudflare-context";
-import { requireApi } from "../lib/api.server";
+import { orNotFound, requireApi } from "../lib/api.server";
 import { useClientApi } from "../lib/useClientApi";
 
 export const links: LinksFunction = () => [
@@ -36,7 +36,7 @@ export async function loader(
 ): Promise<{ apiUrl: string; entry: EntryDetail; sessions: SessionRow[] }> {
   const api = await requireApi(args);
   const id = args.params["id"] ?? "";
-  const [{ entry }, { sessions }] = await Promise.all([api.entry(id), api.sessions()]);
+  const [{ entry }, { sessions }] = await Promise.all([orNotFound(api.entry(id)), api.sessions()]);
   // An update is read on its thread, never on a page of its own.
   if (entry.parent_id !== null) {
     throw redirect(`/app/journal/${encodeURIComponent(entry.parent_id)}`);
@@ -52,6 +52,11 @@ export default function EntryDetailRoute(): React.ReactElement {
   const [error, setError] = React.useState<string | null>(null);
 
   const spanning = spansDates(entry.kind);
+  const titled = entryHasTitle(entry);
+  const dayCount =
+    entry.kind === "injury" && entry.status === "ongoing"
+      ? t("journal.dayN", { n: daysSince(entry.occurred_at) })
+      : null;
   const linked = linkedSessions(sessions, entry);
   // A trip is a date range, so sessions inside it are matched rather than linked;
   // anything already linked is not listed twice.
@@ -95,21 +100,12 @@ export default function EntryDetailRoute(): React.ReactElement {
             {deleting ? t("common.deleting") : t("common.delete")}
           </button>
         </div>
-        <h1 className="journal-title">{entryTitle(entry)}</h1>
-        <span className="journal-meta">
-          {spanning
-            ? spanLabel(entry.occurred_at, entry.ends_at)
-            : formatDate(new Date(`${entry.occurred_at}T00:00:00Z`), {
-                weekday: "long",
-                day: "numeric",
-                month: "long",
-                year: "numeric",
-                timeZone: "UTC",
-              })}
-          {entry.kind === "injury" &&
-            entry.status === "ongoing" &&
-            ` · ${t("journal.dayN", { n: daysSince(entry.occurred_at) })}`}
-        </span>
+        <h1 className="journal-title">{titled ? entryTitle(entry) : entryWhen(entry)}</h1>
+        {(titled || dayCount !== null) && (
+          <span className="journal-meta">
+            {[titled ? entryWhen(entry) : null, dayCount].filter(Boolean).join(" · ")}
+          </span>
+        )}
         {entry.tags.length > 0 && (
           <span className="session-row-tags">
             {entry.tags.map((tag) => (
@@ -122,9 +118,7 @@ export default function EntryDetailRoute(): React.ReactElement {
         {error !== null && <span className="journal-error">{error}</span>}
       </div>
 
-      {entryBodyBelowTitle(entry) !== "" && (
-        <p className="journal-body">{entryBodyBelowTitle(entry)}</p>
-      )}
+      {entry.body.trim() !== "" && <p className="journal-body">{entry.body.trim()}</p>}
 
       {linked.length > 0 && (
         <div className="journal-card">
