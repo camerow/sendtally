@@ -13,18 +13,18 @@ import { t } from "@sendtally/features/i18n";
 import { ClimbNameField } from "./ClimbNameField";
 import { ClimbNoteField } from "./ClimbNoteField";
 import { DisciplineToggle } from "./DisciplineToggle";
-import { OutcomeControl } from "./OutcomeControl";
+import { OutcomeSelect } from "./OutcomeControl";
 import { ProjectToggle } from "./ProjectToggle";
 import { TriesStepper } from "./TriesStepper";
-import { chipStyle, monoLabel } from "./styles";
+import { inputStyle, monoLabel } from "./styles";
 
 const DISMISS_DISTANCE = 80;
 const DISMISS_VELOCITY = 0.6;
 
 /**
  * A downward drag on the grip (handle and title row) follows the pointer and dismisses past a
- * distance or a flick. The grip is the only drag surface because the rail and the panel scroll
- * would otherwise fight the browser for vertical touches.
+ * distance or a flick. The grip is the only drag surface because the panel scroll would
+ * otherwise fight the browser for vertical touches.
  */
 function startDrag(
   down: React.PointerEvent<HTMLElement>,
@@ -92,21 +92,12 @@ export function ClimbEditorSheet({
   const named = climb.name.trim() !== "";
   const dialog = React.useRef<HTMLDialogElement>(null);
   const panel = React.useRef<HTMLDivElement>(null);
-  const rail = React.useRef<HTMLDivElement>(null);
   const pressedBackdrop = React.useRef(false);
 
   React.useEffect(() => {
     const el = dialog.current;
     if (el !== null && !el.open) el.showModal();
   }, []);
-
-  React.useEffect(() => {
-    const track = rail.current;
-    const chip = track?.querySelector<HTMLElement>('[aria-pressed="true"]');
-    if (track && chip) {
-      track.scrollLeft = chip.offsetLeft - (track.clientWidth - chip.offsetWidth) / 2;
-    }
-  }, [climb.grade]);
 
   return (
     <dialog
@@ -143,24 +134,23 @@ export function ClimbEditorSheet({
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
           <span style={monoLabel}>{t("common.grade")}</span>
-          <div ref={rail} className="climb-sheet-rail">
+          <select
+            value={climb.grade}
+            onChange={(e) => onChange({ ...climb, grade: e.target.value })}
+            className="log-session-control"
+            style={{
+              ...inputStyle,
+              fontFamily: "var(--font-mono)",
+              fontWeight: 600,
+              height: 46,
+            }}
+          >
             {gradeOptions(scale).map((g) => (
-              <button
-                key={g}
-                type="button"
-                aria-pressed={g === climb.grade}
-                onClick={() => onChange({ ...climb, grade: g })}
-                style={{
-                  ...chipStyle(g === climb.grade),
-                  flex: "none",
-                  padding: "0 14px",
-                  height: 40,
-                }}
-              >
+              <option key={g} value={g}>
                 {g}
-              </button>
+              </option>
             ))}
-          </div>
+          </select>
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
           <span style={monoLabel}>
@@ -178,10 +168,9 @@ export function ClimbEditorSheet({
         </div>
         <DisciplineToggle value={disciplineOf(climb.scale)} onChange={onChangeDiscipline} />
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <OutcomeControl
+          <OutcomeSelect
             discipline={disciplineOf(climb.scale)}
             outcome={climbOutcome(climb)}
-            full
             onChange={(outcome) => onChange(withClimbOutcome(climb, outcome))}
           />
           <TriesStepper
