@@ -5,7 +5,7 @@ name: log-session-sheet
 ---
 - runFlow: ../helpers/open-dev-client.yaml
 - runFlow: ../helpers/ensure-signed-in.yaml
-- tapOn: "Log a session"
+- tapOn: "Climbing session"
 - scrollUntilVisible:
     element:
       text: "\\+ ADD CLIMB"
