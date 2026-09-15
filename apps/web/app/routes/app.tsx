@@ -53,12 +53,15 @@ function Shell({ children }: { children: React.ReactNode }): React.ReactElement 
         <a href="/" className="app-logo-link">
           <Logo tone="on-light" size={24} />
         </a>
-        {NAV_ITEMS.map(({ label, to }) => (
+        {NAV_ITEMS.map(({ label, to, icon }) => (
           <NavLink
             key={label}
             to={to}
             end
             style={({ isActive }) => ({
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
               fontWeight: 500,
               fontSize: 14,
               textAlign: "left",
@@ -71,7 +74,14 @@ function Shell({ children }: { children: React.ReactNode }): React.ReactElement 
               flex: "none",
             })}
           >
-            {t(label)}
+            {({ isActive }) => (
+              <>
+                <span style={{ display: "flex", color: isActive ? "var(--bs-gold)" : "inherit" }}>
+                  <Icon name={icon} strokeWidth={isActive ? 2.3 : 1.7} />
+                </span>
+                {t(label)}
+              </>
+            )}
           </NavLink>
         ))}
         <div className="app-sidebar-spacer" />
