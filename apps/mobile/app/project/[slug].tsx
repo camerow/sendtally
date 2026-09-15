@@ -1,4 +1,4 @@
-import { Link, router, useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import React from "react";
 import { ActivityIndicator, Alert, Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -9,6 +9,7 @@ import { Icon } from "../../components/Icon";
 import { NotesCard } from "../../features/projects/NotesCard";
 import { ProjectChart } from "../../features/projects/ProjectChart";
 import { useApi } from "../../lib/api";
+import { press } from "../../lib/press";
 
 const label = {
   fontFamily: fonts.monoMedium,
@@ -17,6 +18,28 @@ const label = {
   textTransform: "uppercase",
   color: colors.textSecondary,
 } as const;
+
+function BackLink(): React.ReactElement {
+  return (
+    <Pressable
+      onPress={() => router.back()}
+      accessibilityRole="button"
+      style={press({ minHeight: 44, justifyContent: "center" })}
+    >
+      <Text
+        style={{
+          fontFamily: fonts.monoMedium,
+          fontSize: 12,
+          letterSpacing: 0.5,
+          textTransform: "uppercase",
+          color: colors.labelAccent,
+        }}
+      >
+        {t("projects.back")}
+      </Text>
+    </Pressable>
+  );
+}
 
 export default function ProjectDetailScreen(): React.ReactElement {
   const { slug } = useLocalSearchParams<{ slug: string }>();
@@ -40,6 +63,9 @@ export default function ProjectDetailScreen(): React.ReactElement {
   if (state.status !== "ready") {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: colors.white }} edges={["top"]}>
+        <View style={{ paddingHorizontal: 18 }}>
+          <BackLink />
+        </View>
         <View style={{ padding: 28, alignItems: "center", gap: 12 }}>
           {state.status === "loading" ? (
             <ActivityIndicator color={colors.gunmetal} />
@@ -66,6 +92,7 @@ export default function ProjectDetailScreen(): React.ReactElement {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.white }} edges={["top"]}>
       <ScrollView contentContainerStyle={{ padding: 18, paddingBottom: 48, gap: 18 }}>
+        <BackLink />
         <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
           <Text
             style={{
@@ -243,76 +270,77 @@ export default function ProjectDetailScreen(): React.ReactElement {
         </View>
 
         {vm.sessions.map((session) => (
-          <Link key={session.fingerprint} href={`/session/${session.fingerprint}`} asChild>
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 12,
-                padding: 16,
-                borderRadius: radius.card,
-                backgroundColor: colors.surfaceSoft,
-              }}
-            >
-              <View style={{ width: 62, gap: 3 }}>
-                <Text style={label}>{session.weekday}</Text>
-                <Text
-                  style={{
-                    fontFamily: fonts.monoSemiBold,
-                    fontSize: 16,
-                    color: colors.gunmetal,
-                    textTransform: "uppercase",
-                  }}
-                >
-                  {session.dateLabel}
-                </Text>
-              </View>
-              <View style={{ flex: 1, minWidth: 0, gap: 3 }}>
-                <Text
-                  numberOfLines={1}
-                  style={{ fontFamily: fonts.sansSemiBold, fontSize: 15, color: colors.gunmetal }}
-                >
-                  {session.title}
-                </Text>
-                <Text
-                  numberOfLines={1}
-                  style={{
-                    fontFamily: fonts.mono,
-                    fontSize: 11,
-                    color: colors.textSecondary,
-                    textTransform: "uppercase",
-                  }}
-                >
-                  {session.metaLabel}
-                  {session.sent ? t("projects.sessionSent") : ""}
-                </Text>
-                {session.note !== null && (
-                  <Text
-                    numberOfLines={2}
-                    style={{
-                      fontFamily: fonts.sans,
-                      fontSize: 13,
-                      lineHeight: 19,
-                      color: colors.textSecondary,
-                    }}
-                  >
-                    {session.note}
-                  </Text>
-                )}
-              </View>
-              <View style={{ alignItems: "flex-end", gap: 2 }}>
-                <Text
-                  style={{ fontFamily: fonts.monoSemiBold, fontSize: 15, color: colors.gunmetal }}
-                >
-                  {session.attempts}
-                </Text>
-                <Text style={{ ...label, fontSize: 9, color: colors.textMuted }}>
-                  {t("projects.attemptsUnit", { count: session.attempts })}
-                </Text>
-              </View>
-              <Icon name="chevron" size={14} color={colors.textFaint} />
+          <Pressable
+            key={session.fingerprint}
+            onPress={() => router.push(`/session/${session.fingerprint}`)}
+            accessibilityRole="button"
+            style={press({
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 12,
+              padding: 16,
+              borderRadius: radius.card,
+              backgroundColor: colors.surfaceSoft,
+            })}
+          >
+            <View style={{ width: 62, gap: 3 }}>
+              <Text style={label}>{session.weekday}</Text>
+              <Text
+                style={{
+                  fontFamily: fonts.monoSemiBold,
+                  fontSize: 16,
+                  color: colors.gunmetal,
+                  textTransform: "uppercase",
+                }}
+              >
+                {session.dateLabel}
+              </Text>
             </View>
-          </Link>
+            <View style={{ flex: 1, minWidth: 0, gap: 3 }}>
+              <Text
+                numberOfLines={1}
+                style={{ fontFamily: fonts.sansSemiBold, fontSize: 15, color: colors.gunmetal }}
+              >
+                {session.title}
+              </Text>
+              <Text
+                numberOfLines={1}
+                style={{
+                  fontFamily: fonts.mono,
+                  fontSize: 11,
+                  color: colors.textSecondary,
+                  textTransform: "uppercase",
+                }}
+              >
+                {session.metaLabel}
+                {session.sent ? t("projects.sessionSent") : ""}
+              </Text>
+              {session.note !== null && (
+                <Text
+                  numberOfLines={2}
+                  style={{
+                    fontFamily: fonts.sans,
+                    fontSize: 13,
+                    lineHeight: 19,
+                    color: colors.textSecondary,
+                  }}
+                >
+                  {session.note}
+                </Text>
+              )}
+            </View>
+            <View style={{ alignItems: "flex-end", gap: 2 }}>
+              <Text
+                style={{ fontFamily: fonts.monoSemiBold, fontSize: 15, color: colors.gunmetal }}
+              >
+                {session.attempts}
+              </Text>
+              <Text style={{ ...label, fontSize: 9, color: colors.textMuted }}>
+                {t("projects.attemptsUnit", { count: session.attempts })}
+              </Text>
+            </View>
+            <Icon name="chevron" size={14} color={colors.textFaint} />
+          </Pressable>
         ))}
         {vm.sessions.length === 0 && (
           <Text style={{ ...label, color: colors.textMuted }}>{t("projects.notTriedYet")}</Text>
