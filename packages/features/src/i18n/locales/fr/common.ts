@@ -4,8 +4,19 @@ export const common = {
   "common.sessions": "Séances",
   "common.sent": "Enchaîné",
   "common.nothingLoggedYet": "Rien d'enregistré pour l'instant",
-  "common.notFoundTitle": "Introuvable",
-  "common.notFoundBody": "Cette page n'existe pas ou a été supprimée.",
+  "common.notFoundLabel": "Page introuvable",
+  "common.notFoundTitle": "Hors itinéraire.",
+  "common.notFoundBody":
+    "Il n'y a rien à cette adresse. Le lien est sans doute ancien, ou la session qu'il visait a été supprimée.",
+  "common.forbiddenLabel": "Pas à toi",
+  "common.forbiddenTitle": "Accès fermé.",
+  "common.forbiddenBody":
+    "Cela appartient à un autre compte. Si c'est le tien, connecte-toi avec l'adresse utilisée pour l'enregistrer.",
+  "common.serverErrorLabel": "Erreur serveur",
+  "common.serverErrorTitle": "Jour de forte gravité.",
+  "common.serverErrorBody":
+    "Quelque chose a cassé chez nous, pas chez toi. Toutes les sessions que tu as enregistrées sont conservées. Réessaie dans un instant.",
+  "common.switchAccount": "Changer de compte",
   "common.backToLog": "Retour au journal de bord",
   "common.somethingWentWrong": "Une erreur s'est produite.",
   "common.indoor": "En salle",

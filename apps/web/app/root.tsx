@@ -13,6 +13,7 @@ import {
   useRouteLoaderData,
 } from "react-router";
 import { deDE, esES, frFR } from "@clerk/localizations";
+import { Logo } from "@sendtally/design";
 import designStyles from "@sendtally/design/styles.css?url";
 import type { Locale } from "@sendtally/features/i18n";
 import { ErrorPage } from "./components/ErrorPage";
@@ -156,7 +157,19 @@ export default function App(): React.ReactElement {
 export function ErrorBoundary(): React.ReactElement {
   const error = useRouteError();
   return (
-    <div style={{ maxWidth: 640, margin: "0 auto", padding: "0 24px" }}>
+    <div style={{ maxWidth: 720, margin: "0 auto", padding: "0 24px" }}>
+      <a
+        href="/"
+        style={{
+          display: "inline-flex",
+          padding: "16px 0",
+          borderBottom: "1px solid var(--line-on-light-soft)",
+          width: "100%",
+          textDecoration: "none",
+        }}
+      >
+        <Logo tone="on-light" size={26} />
+      </a>
       <ErrorPage error={error} />
     </div>
   );

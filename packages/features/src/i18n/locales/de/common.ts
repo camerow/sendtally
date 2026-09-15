@@ -4,8 +4,19 @@ export const common = {
   "common.sessions": "Sessions",
   "common.sent": "Geschafft",
   "common.nothingLoggedYet": "Noch nichts eingetragen",
-  "common.notFoundTitle": "Nicht gefunden",
-  "common.notFoundBody": "Diese Seite existiert nicht oder wurde gelöscht.",
+  "common.notFoundLabel": "Seite nicht gefunden",
+  "common.notFoundTitle": "Route verfehlt.",
+  "common.notFoundBody":
+    "Unter dieser Adresse liegt nichts. Der Link ist vermutlich alt, oder die Session dahinter wurde gelöscht.",
+  "common.forbiddenLabel": "Nicht deins",
+  "common.forbiddenTitle": "Gesperrt.",
+  "common.forbiddenBody":
+    "Das gehört zu einem anderen Konto. Wenn es deins sein sollte, melde dich mit der Adresse an, unter der du es eingetragen hast.",
+  "common.serverErrorLabel": "Serverfehler",
+  "common.serverErrorTitle": "Tag mit hoher Schwerkraft.",
+  "common.serverErrorBody":
+    "Bei uns ist etwas kaputtgegangen, nicht bei dir. Alle Sessions, die du eingetragen hast, sind gespeichert. Versuche es gleich noch einmal.",
+  "common.switchAccount": "Konto wechseln",
   "common.backToLog": "Zurück zum Log",
   "common.somethingWentWrong": "Etwas ist schiefgelaufen.",
   "common.indoor": "Halle",
