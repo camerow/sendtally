@@ -41,6 +41,9 @@ env:
 
 jobs:
   android:
+    # No EXPO_TOKEN in the dependabot secret scope, so the fingerprint step dies
+    # on an unauthenticated eas call.
+    if: github.actor != 'dependabot[bot]'
     runs-on: ubuntu-latest
     timeout-minutes: 45
     # Across branches, never cancelling: every run publishes to the one `e2e` update branch the APK resolves to.
