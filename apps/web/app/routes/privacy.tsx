@@ -50,12 +50,12 @@ export default function Privacy(): React.ReactElement {
       </p>
       <p>
         <strong>Usage.</strong> Standard web analytics through Google Analytics and PostHog (pages
-        viewed, approximate region, device and browser), and the request logs Cloudflare keeps for
-        the sites and API it serves us. Once you sign in, PostHog records your account identifier
-        and email address against that usage, so we can tell how many people are using a feature
-        rather than how many browsers are. PostHog also records screen replays of app sessions and
-        the errors your browser hits, so we can see what broke. Form fields are masked in those
-        replays, so what you type is not captured.
+        and app screens viewed, approximate region, device and browser), and the request logs
+        Cloudflare keeps for the sites and API it serves us. Once you sign in, PostHog records your
+        account identifier and email address against that usage, so we can tell how many people are
+        using a feature rather than how many browsers are. PostHog also records screen replays of
+        app sessions and the errors your browser hits, so we can see what broke. Form fields are
+        masked in those replays, so what you type is not captured.
       </p>
 
       <h2>What we never collect</h2>
