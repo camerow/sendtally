@@ -24,6 +24,7 @@ import {
 import { SESSION_NOTE_MAX, useTagVocabulary } from "@sendtally/features/sessions";
 import { useGradeScalePrefs } from "@sendtally/features/settings";
 import { formatDate, t } from "@sendtally/features/i18n";
+import { DiscardDraftDialog } from "../../components/DiscardDraftDialog";
 import { TagPicker } from "../../components/TagPicker";
 import { useIsNarrow } from "../../lib/useIsNarrow";
 import { sessionDraftStorage } from "../../lib/sessionDraftStorage";
@@ -148,6 +149,7 @@ export function LogSessionForm({
   );
   const [saving, setSaving] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  const [confirmingCancel, setConfirmingCancel] = React.useState(false);
   const { suggestionsFor } = useTagVocabulary(api);
 
   const vocabulary = useClimbVocabulary(api);
@@ -188,6 +190,13 @@ export function LogSessionForm({
     editing === undefined ? "/app" : `/app/sessions/${encodeURIComponent(editing.fingerprint)}`;
 
   const problem = draftProblem(draft);
+
+  /** Cancel walks away from the draft, so it only leaves one behind after a confirmation. */
+  function cancel(): void {
+    if (autosave.savedAt === null) void navigate(cancelTo);
+    else setConfirmingCancel(true);
+  }
+
   const untouchedTimes =
     editing === undefined &&
     draft.startTime === defaultTimes.start &&
@@ -482,6 +491,17 @@ export function LogSessionForm({
         </div>
       </div>
 
+      {confirmingCancel && autosave.savedAt !== null && (
+        <DiscardDraftDialog
+          stored={{ draft, savedAt: autosave.savedAt }}
+          onCancel={() => setConfirmingCancel(false)}
+          onDiscard={() => {
+            autosave.clear();
+            void navigate(cancelTo);
+          }}
+        />
+      )}
+
       {narrow && editingClimb !== null && (
         <ClimbEditorSheet
           climb={editingClimb}
@@ -528,7 +548,7 @@ export function LogSessionForm({
         <div className="log-session-buttons">
           <button
             type="button"
-            onClick={() => void navigate(cancelTo)}
+            onClick={cancel}
             style={{
               fontFamily: "var(--font-sans)",
               fontWeight: 600,

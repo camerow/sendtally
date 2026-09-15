@@ -80,7 +80,7 @@ export function ClimbLedgerRow({
           justifyContent: "center",
         }}
       >
-        <Text style={{ fontFamily: fonts.monoSemiBold, fontSize: 12, color: colors.white }}>
+        <Text style={{ fontSize: 12, fontWeight: "600", color: colors.white }}>
           {send ? "✓" : "✗"}
         </Text>
       </View>

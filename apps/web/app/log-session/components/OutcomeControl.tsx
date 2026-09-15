@@ -50,20 +50,14 @@ function matches(a: ClimbOutcome, b: ClimbOutcome): boolean {
 export function OutcomeControl({
   discipline,
   outcome,
-  full = false,
   onChange,
 }: {
   discipline: Discipline;
   outcome: ClimbOutcome;
-  full?: boolean;
   onChange: (outcome: ClimbOutcome) => void;
 }): React.ReactElement {
   return (
-    <div
-      role="radiogroup"
-      aria-label={t("common.result")}
-      className={full ? "climb-result climb-result--full" : "climb-result"}
-    >
+    <div role="radiogroup" aria-label={t("common.result")} className="climb-result">
       {segmentsFor(discipline).map((segment) => {
         const active = matches(segment.outcome, outcome);
         const fill = fillFor(segment.outcome);
@@ -86,5 +80,41 @@ export function OutcomeControl({
         );
       })}
     </div>
+  );
+}
+
+/**
+ * The same choices as a dropdown. Four segments (REDPOINT · FLASH · ONSIGHT · ATTEMPT) do not
+ * fit side by side at phone width, and a native select is the phone's own picker.
+ */
+export function OutcomeSelect({
+  discipline,
+  outcome,
+  onChange,
+}: {
+  discipline: Discipline;
+  outcome: ClimbOutcome;
+  onChange: (outcome: ClimbOutcome) => void;
+}): React.ReactElement {
+  const segments = segmentsFor(discipline);
+  const current = segments.find((segment) => matches(segment.outcome, outcome)) ?? segments[0]!;
+  const fill = fillFor(current.outcome);
+  return (
+    <select
+      aria-label={t("common.result")}
+      value={current.key}
+      onChange={(e) => {
+        const picked = segments.find((segment) => segment.key === e.target.value);
+        if (picked !== undefined) onChange(picked.outcome);
+      }}
+      className="climb-result-select"
+      style={{ backgroundColor: fill.background, color: fill.color }}
+    >
+      {segments.map((segment) => (
+        <option key={segment.key} value={segment.key}>
+          {segment.label}
+        </option>
+      ))}
+    </select>
   );
 }

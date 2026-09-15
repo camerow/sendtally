@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import React from "react";
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { newClimb } from "@sendtally/features/log-session";
+import { newClimb, type ClimbDraft } from "@sendtally/features/log-session";
 import { ClimbEditorSheet } from "./ClimbEditorSheet";
 
 declare global {
@@ -21,7 +21,11 @@ HTMLDialogElement.prototype.close = function close(this: HTMLDialogElement) {
 let container: HTMLDivElement;
 let root: Root;
 
-function mount(onClose: () => void, name = ""): HTMLDialogElement {
+function mount(
+  onClose: () => void,
+  onChange: (climb: ClimbDraft) => void = () => {},
+  name = ""
+): HTMLDialogElement {
   act(() =>
     root.render(
       <ClimbEditorSheet
@@ -31,7 +35,7 @@ function mount(onClose: () => void, name = ""): HTMLDialogElement {
         scale="v"
         project={false}
         suggestions={[]}
-        onChange={() => {}}
+        onChange={onChange}
         onChangeDiscipline={() => {}}
         onChangeName={() => {}}
         onPick={() => {}}
@@ -79,7 +83,7 @@ describe("ClimbEditorSheet", () => {
   it("stays open when a drag starts inside the panel and ends on the backdrop", () => {
     const onClose = vi.fn();
     const dialog = mount(onClose);
-    pointer(dialog.querySelector(".climb-sheet-rail")!, "pointerdown");
+    pointer(dialog.querySelector(".climb-result-select")!, "pointerdown");
     pointer(dialog, "click");
     expect(onClose).not.toHaveBeenCalled();
   });
@@ -91,6 +95,30 @@ describe("ClimbEditorSheet", () => {
     pointer(panel, "pointerdown");
     pointer(panel, "click");
     expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it("picks a grade from the dropdown", () => {
+    const onChange = vi.fn();
+    const dialog = mount(() => {}, onChange);
+    const select = dialog.getElementsByTagName("select")[0]!;
+    expect(select.options.length).toBeGreaterThan(1);
+    act(() => {
+      select.value = "V5";
+      select.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+    expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ grade: "V5" }));
+  });
+
+  it("picks a result from the dropdown", () => {
+    const onChange = vi.fn();
+    const dialog = mount(() => {}, onChange);
+    const select = dialog.getElementsByTagName("select")[1]!;
+    expect([...select.options].map((o) => o.value)).toEqual(["redpoint", "flash", "attempt"]);
+    act(() => {
+      select.value = "attempt";
+      select.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+    expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ kind: "attempt" }));
   });
 
   it("closes on Escape", () => {
@@ -111,7 +139,11 @@ describe("ClimbEditorSheet", () => {
   });
 
   it("offers the note field once the climb is named", () => {
-    const dialog = mount(() => {}, "Cave problem");
+    const dialog = mount(
+      () => {},
+      () => {},
+      "Cave problem"
+    );
     expect(dialog.querySelector("textarea")).not.toBeNull();
     expect(dialog.textContent).not.toContain("climb must have a name to have a note");
   });

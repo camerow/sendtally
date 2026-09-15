@@ -79,12 +79,6 @@
   overflow: hidden;
 }
 
-.climb-result--full {
-  flex: 1;
-  height: 44px;
-  border-radius: 22px;
-}
-
 .climb-result-segment {
   display: inline-flex;
   align-items: center;
@@ -101,8 +95,29 @@
   white-space: nowrap;
 }
 
-.climb-result--full .climb-result-segment {
+.climb-result-select {
   flex: 1;
+  min-width: 0;
+  height: 44px;
+  padding: 0 32px 0 16px;
+  border: none;
+  border-radius: 22px;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 6 6.5l5-5' fill='none' stroke='currentColor' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  background-size: 11px;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+}
+
+.climb-result-select option {
+  color: var(--bs-gunmetal);
+  background: var(--bs-white);
 }
 
 .climb-project {
@@ -284,20 +299,6 @@ body:has(.climb-sheet[open]) {
   height: 4px;
   border-radius: 2px;
   background: rgba(64, 63, 76, 0.2);
-}
-
-.climb-sheet-rail {
-  display: flex;
-  gap: 6px;
-  overflow-x: auto;
-  overscroll-behavior-x: contain;
-  scrollbar-width: none;
-  margin: 0 -18px;
-  padding: 0 18px;
-}
-
-.climb-sheet-rail::-webkit-scrollbar {
-  display: none;
 }
 
 .climb-sheet-remove {

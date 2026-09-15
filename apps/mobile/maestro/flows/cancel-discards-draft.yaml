@@ -1,0 +1,35 @@
+appId: com.sendtally.app
+name: cancel-discards-draft
+# Cancel walks away from the form, so it must not leave the autosaved draft behind:
+# it confirms first, and once discarded neither the session list nor the form offers
+# the draft back.
+---
+- runFlow: ../helpers/open-dev-client.yaml
+- runFlow: ../helpers/ensure-signed-in.yaml
+- tapOn: "Climbing session"
+- runFlow:
+    when:
+      visible: "Start fresh"
+    commands:
+      - tapOn: "Start fresh"
+      - tapOn: "Discard"
+- scrollUntilVisible:
+    element:
+      text: "\\+ ADD CLIMB"
+    direction: DOWN
+- tapOn: "\\+ ADD CLIMB"
+- tapOn: "Done"
+- tapOn: "Cancel"
+- assertVisible: "Discard this draft.*"
+- tapOn: "Discard"
+- extendedWaitUntil:
+    visible: "Climbing session"
+    timeout: 15000
+- assertNotVisible: "Unfinished session.*"
+- tapOn: "Climbing session"
+- assertNotVisible: "You have an unfinished session.*"
+- scrollUntilVisible:
+    element:
+      text: "← LOG"
+    direction: UP
+- tapOn: "← LOG"
