@@ -28,6 +28,14 @@ eas update --channel production --environment production --message "<commit subj
 That costs no build minutes.
 Installed apps pick it up on the next cold launch, and apply it on the one after - budget up to two launches when verifying by hand.
 
+The workflow then rewrites the body of the newest `mobile-v*` GitHub release, because that release is what the update actually shipped to.
+The body is two ranges of conventional commits: the store build's own notes, from the tag before it up to the tag, then an "Over the air since `mobile-vX.Y.Z`" section from the tag up to `HEAD`, labelled with the runtime fingerprint the update can reach.
+Both ranges come from the tags, so the body is rebuilt rather than appended to and a re-run cannot double an entry up.
+A push whose only commits are housekeeping types produces no notes, and the section is left out rather than left empty.
+
+This is why the `update` job checks out full history and holds `contents: write`.
+A release tag stays a plain `mobile-vX.Y.Z`: the fingerprint differs per platform and changes with every native change, so it belongs in the body, not in an identity that `--sort=-v:refname` and the `mobile-v*` glob both have to keep parsing.
+
 If no production build carries the hash, the native layer moved and an update would reach nobody.
 The workflow says so in the job summary and falls through to a full release.
 
