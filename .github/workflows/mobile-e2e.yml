@@ -190,7 +190,7 @@ jobs:
           script: |
             adb install -r "$APK"
             bash "$GITHUB_WORKSPACE/.github/scripts/load-e2e-update.sh"
-            maestro test -e DEV_CLIENT=false maestro/ || { adb logcat -d > ~/.maestro/logcat.txt; exit 1; }
+            maestro test -e DEV_CLIENT=false -e METRO_PORT=8081 maestro/ || { adb logcat -d > ~/.maestro/logcat.txt; exit 1; }
 
       - name: Say which app the flows ran on
         if: always()

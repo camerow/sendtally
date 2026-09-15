@@ -9,3 +9,5 @@ executionOrder:
     - log-session-sheet
     - draft-survives-leaving
     - cancel-discards-draft
+    - project-opens
+    - project-session-opens

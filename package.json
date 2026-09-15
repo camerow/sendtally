@@ -14,7 +14,7 @@
     "preview:upload": "pnpm run preview:build && pnpm --filter @sendtally/web exec wrangler versions upload --preview-alias \"$(pnpm -s run preview:alias)\"",
     "staging:web": "pnpm run preview:build && pnpm --filter @sendtally/web exec wrangler deploy",
     "staging:api": "pnpm --filter @sendtally/api exec wrangler d1 migrations apply DB --env staging --remote && pnpm --filter @sendtally/api exec wrangler deploy --env staging",
-    "mobile:e2e": "pnpm --filter @sendtally/mobile exec maestro test -e DEV_CLIENT=true maestro/",
+    "mobile:e2e": "pnpm --filter @sendtally/mobile exec maestro test -e DEV_CLIENT=true -e METRO_PORT=8081 maestro/",
     "lint": "eslint .",
     "check-types": "turbo check-types",
     "test": "turbo test",

@@ -1,0 +1,56 @@
+appId: com.sendtally.app
+name: project-session-opens
+# The sessions a project lists are links to those sessions, and had the same dead View-inside-a-
+# Link as the project rows. Logging a session on the climb project-opens made is what puts a row
+# there to tap, so this runs after it.
+---
+- runFlow: ../helpers/open-dev-client.yaml
+- runFlow: ../helpers/ensure-signed-in.yaml
+- tapOn: "Climbing session"
+- runFlow:
+    when:
+      visible: "Start fresh"
+    commands:
+      - tapOn: "Start fresh"
+      - tapOn: "Discard"
+- scrollUntilVisible:
+    element:
+      text: "\\+ ADD CLIMB"
+    direction: DOWN
+- tapOn: "\\+ ADD CLIMB"
+- tapOn: "Name (optional)"
+# The climb rolls up by its name, so typing the project's name is what files this session under
+# it. iOS keeps the keyboard over the rest of the sheet and hideKeyboard does not take on these
+# inputs; Enter on a single-line field does.
+- inputText: "Maestro Arete"
+- pressKey: Enter
+- runFlow: ../helpers/hide-keyboard.yaml
+- tapOn: "Done"
+- scrollUntilVisible:
+    element:
+      text: "Log session"
+    direction: DOWN
+- tapOn: "Log session"
+- extendedWaitUntil:
+    visible: "← LOG"
+    timeout: 30000
+- tapOn: "← LOG"
+- tapOn: "Projects, tab.*"
+- extendedWaitUntil:
+    visible: ".*Maestro Arete.*"
+    timeout: 30000
+- tapOn: ".*Maestro Arete.*"
+- extendedWaitUntil:
+    visible: "SESSIONS INVESTED"
+    timeout: 20000
+- assertNotVisible: "NOT TRIED YET"
+# The session row is one accessible element too, spoken date-first, so it is matched by the
+# session title in the middle of it.
+- tapOn: ".*Logged session.*"
+- extendedWaitUntil:
+    visible: "← LOG"
+    timeout: 20000
+- tapOn: "← LOG"
+- assertVisible: "SESSIONS INVESTED"
+- tapOn: "← PROJECTS"
+- assertVisible: "New project"

@@ -1,0 +1,44 @@
+appId: com.sendtally.app
+name: project-opens
+# A project row on the projects tab is a link to the project. It was a View inside a Link, so it
+# rendered and was never pressable: the whole list was dead on a device and nothing off-device
+# noticed. The project page's own way back is here for the same reason.
+---
+- runFlow: ../helpers/open-dev-client.yaml
+- runFlow: ../helpers/ensure-signed-in.yaml
+- tapOn: "Projects, tab.*"
+# The header counts the projects once they are in, and reads LOADING until then. Asking whether a
+# project is already there before that leaves a later run making a second one.
+- extendedWaitUntil:
+    visible: ".*OPEN.*SENT"
+    timeout: 30000
+# A row is one accessible element, so it is matched by its whole spoken line, not by the name.
+# The name belongs to this flow - nothing else logs a climb by it - so the project it made on an
+# earlier run is the one found here.
+- runFlow:
+    when:
+      notVisible: ".*Maestro Arete.*"
+    commands:
+      - tapOn: "New project"
+      - tapOn: "Name of the climb"
+      - inputText: "Maestro Arete"
+      - runFlow: ../helpers/hide-keyboard.yaml
+      - tapOn: "Track .*Maestro Arete.* as a new climb"
+      # The grade rail scrolls itself to where this climber usually is, so which chips are on
+      # screen depends on their history; a project needs a grade, not a particular one. Not the
+      # leftmost chip: a development build parks its floating menu button over it.
+      - tapOn:
+          text: "^V[0-9]+$"
+          index: 2
+      - tapOn: "Add project"
+      - extendedWaitUntil:
+          visible: ".*Maestro Arete.*"
+          timeout: 40000
+- tapOn: ".*Maestro Arete.*"
+- extendedWaitUntil:
+    visible: "ATTEMPTS PER SESSION"
+    timeout: 20000
+- assertVisible: "Unmark project"
+- tapOn: "← PROJECTS"
+- assertVisible: "New project"
+- assertNotVisible: "Unmark project"

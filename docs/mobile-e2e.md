@@ -21,6 +21,8 @@ They run locally on an iOS simulator against Metro, and in CI on an Android emul
    ```
    The flows deep-link the development client to `localhost:8081` themselves.
 3. `pnpm run mobile:e2e` from the repo root, or `maestro test maestro/flows/<flow>.yaml` from `apps/mobile` for one flow.
+   Both the port and `DEV_CLIENT` come in as Maestro variables, so a second worktree's bundler is reachable without editing anything: start Metro on its own port and pass it through, `maestro test -e DEV_CLIENT=true -e METRO_PORT=8082 maestro/`.
+   Only one simulator can be deep-linked at a time, so the run still takes the machine.
    The script lives in the root `package.json` on purpose: the `scripts` block of `apps/mobile/package.json` is one of the sources the Android fingerprint hashes, so a convenience script in there moves the runtime version and strands the branch from every build EAS holds (see In CI below).
 
 Failures leave screenshots and the UI hierarchy under `~/.maestro/tests/<timestamp>/`.
@@ -119,3 +121,7 @@ Never point the flows at production keys: the address does not exist there and t
 - Keyboards differ by platform. On iOS `hideKeyboard` fails on these inputs; press `Enter` on a single-line field before swiping. On Android the keyboard covers the submit button and a tap on its stale position opens Gboard's settings, so run `helpers/hide-keyboard.yaml` after every `inputText`.
 - A climb ledger row is one accessible element, so match it by its accessibility text, for example `V3 Cascade.*`, not by the name alone.
 - The log-session form is longer than the screen; `scrollUntilVisible` to `\+ ADD CLIMB` before tapping it, and back up to `← LOG` to leave.
+- Maestro matches a selector against the whole spoken string, so a row reads date-first and a tab reads `Projects, tab, 2 of 4`; wrap the part you know in `.*`.
+- A development build parks its floating menu button over the bottom-left corner, which is where the first chip of a grade rail sits. Tapping `index: 0` there opens the developer menu instead, and every later tap lands on it.
+- A list that is still loading answers "no" to every `notVisible`, so a flow that creates its own fixture when one is missing has to wait for the screen to settle first or it makes a second one on every run.
+- `project-opens` and `project-session-opens` leave a project and a session on the test account on purpose: they find what the last run made and skip creating it again.
