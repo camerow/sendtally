@@ -88,5 +88,5 @@ export const logSession = {
   "logSession.noteOptional": "Note · optionnel",
   "logSession.climbNotePlaceholder": "Comment ça s'est passé, ce que tu essaieras ensuite",
   "logSession.noteKeptOn": "Conservée sur {name}, avec toutes les autres séances dessus",
-  "logSession.noteHint": "Donne un nom à la ligne pour y garder une note",
+  "logSession.noteNeedsName": "Note · la ligne doit avoir un nom pour porter une note",
 } as const;

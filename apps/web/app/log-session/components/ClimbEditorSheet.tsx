@@ -89,6 +89,7 @@ export function ClimbEditorSheet({
   onRemove,
   onClose,
 }: ClimbEditorSheetProps): React.ReactElement {
+  const named = climb.name.trim() !== "";
   const dialog = React.useRef<HTMLDialogElement>(null);
   const panel = React.useRef<HTMLDivElement>(null);
   const rail = React.useRef<HTMLDivElement>(null);
@@ -190,18 +191,18 @@ export function ClimbEditorSheet({
             onChange={(tries) => onChange({ ...climb, tries })}
           />
         </div>
-        <ProjectToggle
-          project={project}
-          named={climb.name.trim() !== ""}
-          onToggle={onToggleProject}
-        />
+        <ProjectToggle project={project} named={named} onToggle={onToggleProject} />
         <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
-          <span style={monoLabel}>{t("logSession.noteOptional")}</span>
-          <ClimbNoteField
-            note={climb.note}
-            name={climb.name}
-            onChange={(note) => onChange({ ...climb, note })}
-          />
+          <span style={monoLabel}>
+            {named ? t("logSession.noteOptional") : t("logSession.noteNeedsName")}
+          </span>
+          {named && (
+            <ClimbNoteField
+              note={climb.note}
+              name={climb.name}
+              onChange={(note) => onChange({ ...climb, note })}
+            />
+          )}
         </div>
         <button type="button" onClick={onClose} className="climb-sheet-done">
           {t("common.done")}

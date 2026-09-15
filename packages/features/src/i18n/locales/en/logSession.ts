@@ -86,5 +86,5 @@ export const logSession = {
   "logSession.noteOptional": "Note · optional",
   "logSession.climbNotePlaceholder": "How it went, what to try next",
   "logSession.noteKeptOn": "Kept on {name}, with every other session on it",
-  "logSession.noteHint": "Name the climb to keep a note on it",
+  "logSession.noteNeedsName": "Note · climb must have a name to have a note",
 } as const;

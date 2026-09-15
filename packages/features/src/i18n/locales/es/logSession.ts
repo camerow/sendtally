@@ -88,5 +88,5 @@ export const logSession = {
   "logSession.noteOptional": "Nota · opcional",
   "logSession.climbNotePlaceholder": "Cómo fue, qué probar la próxima vez",
   "logSession.noteKeptOn": "Se guarda en {name}, junto a todas las demás sesiones en ella",
-  "logSession.noteHint": "Ponle nombre a la vía para guardar una nota en ella",
+  "logSession.noteNeedsName": "Nota · la vía necesita un nombre para llevar una nota",
 } as const;

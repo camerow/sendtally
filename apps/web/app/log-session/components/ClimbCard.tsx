@@ -46,6 +46,7 @@ export function ClimbCard({
   onToggleProject,
   onRemove,
 }: ClimbCardProps): React.ReactElement {
+  const named = climb.name.trim() !== "";
   return (
     <div className="climb-card">
       <div className="climb-card-main">
@@ -117,20 +118,24 @@ export function ClimbCard({
             outcome={climbOutcome(climb)}
             onChange={(outcome) => onChange(withClimbOutcome(climb, outcome))}
           />
-          <ProjectToggle
-            project={project}
-            named={climb.name.trim() !== ""}
-            onToggle={onToggleProject}
-          />
+          <ProjectToggle project={project} named={named} onToggle={onToggleProject} />
         </div>
       </div>
       <div className="climb-card-result climb-card-result--note">
-        <span style={columnHead}>{t("common.note")}</span>
-        <ClimbNoteField
-          note={climb.note}
-          name={climb.name}
-          onChange={(note) => onChange({ ...climb, note })}
-        />
+        {named ? (
+          <>
+            <span style={columnHead}>{t("common.note")}</span>
+            <ClimbNoteField
+              note={climb.note}
+              name={climb.name}
+              onChange={(note) => onChange({ ...climb, note })}
+            />
+          </>
+        ) : (
+          <span style={{ ...columnHead, gridColumn: "1 / -1" }}>
+            {t("logSession.noteNeedsName")}
+          </span>
+        )}
       </div>
     </div>
   );
