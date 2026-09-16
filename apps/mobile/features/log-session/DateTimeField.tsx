@@ -52,7 +52,7 @@ export function DateTimeField({
   const text = formatDate(
     date,
     mode === "date"
-      ? { month: "short", day: "numeric", year: "numeric" }
+      ? { year: "numeric", month: "numeric", day: "numeric" }
       : { hour: "2-digit", minute: "2-digit" }
   );
 

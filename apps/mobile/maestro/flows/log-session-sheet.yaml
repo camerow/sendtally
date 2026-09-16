@@ -10,6 +10,7 @@ name: log-session-sheet
     element:
       text: "\\+ ADD CLIMB"
     direction: DOWN
+    centerElement: true
 - tapOn: "\\+ ADD CLIMB"
 - assertVisible: "CLIMB 2 OF 2"
 - tapOn: "Name (optional)"

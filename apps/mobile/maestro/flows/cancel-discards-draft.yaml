@@ -17,6 +17,7 @@ name: cancel-discards-draft
     element:
       text: "\\+ ADD CLIMB"
     direction: DOWN
+    centerElement: true
 - tapOn: "\\+ ADD CLIMB"
 - tapOn: "Save"
 - tapOn: "Cancel"

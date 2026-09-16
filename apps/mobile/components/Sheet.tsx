@@ -20,16 +20,30 @@ export type SheetProps = {
  * A bottom sheet sized to its content, dismissed by a drag down, a tap on the scrim or the
  * hardware back button. It rides the keyboard so a focused field stays above the keys; text
  * fields inside it should be `BottomSheetTextInput` for that to hold across focus changes.
+ *
+ * Every open mounts a fresh modal (the `key`): a modal presented again after a dismiss can
+ * come back mounted but closed, and dismissing one that was never presented leaves it stuck.
  */
-export function Sheet({ visible, onClose, closeLabel, children }: SheetProps): React.ReactElement {
+export function Sheet({
+  visible,
+  onClose,
+  closeLabel,
+  children,
+}: SheetProps): React.ReactElement | null {
   const ref = React.useRef<BottomSheetModal>(null);
   const insets = useSafeAreaInsets();
   const { height: windowHeight } = useWindowDimensions();
+  const [generation, setGeneration] = React.useState(0);
+  const [wasVisible, setWasVisible] = React.useState(false);
+  if (visible !== wasVisible) {
+    setWasVisible(visible);
+    if (visible) setGeneration((g) => g + 1);
+  }
 
   React.useEffect(() => {
     if (visible) ref.current?.present();
     else ref.current?.dismiss();
-  }, [visible]);
+  }, [visible, generation]);
 
   const renderBackdrop = React.useCallback(
     (props: BottomSheetBackdropProps) => (
@@ -45,11 +59,15 @@ export function Sheet({ visible, onClose, closeLabel, children }: SheetProps): R
     [closeLabel]
   );
 
+  if (generation === 0) return <></>;
   return (
     <BottomSheetModal
+      key={generation}
       ref={ref}
       onDismiss={onClose}
+      accessible={false}
       enableDynamicSizing
+      topInset={insets.top + 24}
       maxDynamicContentSize={windowHeight - insets.top - 24}
       backdropComponent={renderBackdrop}
       keyboardBehavior="interactive"
