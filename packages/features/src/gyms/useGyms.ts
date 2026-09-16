@@ -13,7 +13,8 @@ export type GymsFeature = {
 
 export function useGyms(api: SendtallyApi): GymsFeature {
   const load = React.useCallback(() => api.gyms(), [api]);
-  const { state, reload } = useQuery(load);
+  const cacheKey = React.useMemo(() => ({ owner: api, key: "gyms" }), [api]);
+  const { state, reload } = useQuery(load, cacheKey);
   const gyms = state.status === "ready" ? state.data.gyms : [];
 
   const save = React.useCallback(
