@@ -11,7 +11,8 @@ export type IconName =
   | "plus"
   | "chevron"
   | "check"
-  | "trash";
+  | "trash"
+  | "x";
 
 const SHAPES: Record<IconName, React.ReactElement> = {
   sessions: (
@@ -34,6 +35,7 @@ const SHAPES: Record<IconName, React.ReactElement> = {
   chevron: <Path d="M9 6l6 6-6 6" />,
   check: <Path d="M5 12.5l4.5 4.5L19 7" />,
   trash: <Path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3" />,
+  x: <Path d="M6 6l12 12M18 6L6 18" />,
 };
 
 export type IconProps = {

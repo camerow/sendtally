@@ -2,7 +2,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import React from "react";
 import { AppState, Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import type { ClimbSummary } from "@sendtally/api-client";
-import { climbDraftGrade, findClimb, useClimbVocabulary } from "@sendtally/features/climbs";
+import { findClimb, useClimbVocabulary } from "@sendtally/features/climbs";
 import {
   draftProblem,
   draftSummary,
@@ -13,7 +13,9 @@ import {
   nextClimbKey,
   toLogSessionInput,
   useDraftAutosave,
+  withClimbName,
   withClimbScale,
+  withPickedClimb,
   withStartTime,
   withTag,
   withoutTag,
@@ -166,26 +168,11 @@ export function LogSessionForm({
   }
 
   function updateClimbName(key: string, name: string): void {
-    const known = findClimb(vocabulary.climbs, name);
-    updateClimb(key, (c) => ({
-      ...c,
-      name,
-      project: undefined,
-      // A project added from the projects page has no grade yet, so the one
-      // the user already picked in the form stands.
-      ...(known === undefined || climbDraftGrade(known, c.scale) === ""
-        ? {}
-        : { grade: climbDraftGrade(known, c.scale) }),
-    }));
+    updateClimb(key, (c) => withClimbName(c, name, findClimb(vocabulary.climbs, name)));
   }
 
   function pickClimb(key: string, known: ClimbSummary): void {
-    updateClimb(key, (c) => ({
-      ...c,
-      name: known.name,
-      project: undefined,
-      ...(climbDraftGrade(known, c.scale) === "" ? {} : { grade: climbDraftGrade(known, c.scale) }),
-    }));
+    updateClimb(key, (c) => withPickedClimb(c, known));
   }
 
   function removeClimb(key: string): void {
@@ -277,9 +264,13 @@ export function LogSessionForm({
               color: colors.gunmetal,
             }}
           >
-            {editing === undefined ? t("common.logASession") : t("logSession.editTitle")}
+            {editing !== undefined
+              ? t("logSession.editTitle")
+              : picked !== null
+                ? t("logSession.wrapUpTitle")
+                : t("common.logASession")}
           </Text>
-          {editing !== undefined && (
+          {(editing !== undefined || picked !== null) && (
             <Text
               style={{
                 fontFamily: fonts.monoMedium,
@@ -289,7 +280,9 @@ export function LogSessionForm({
                 color: colors.textMuted,
               }}
             >
-              {t("logSession.editSubtitle")}
+              {editing !== undefined
+                ? t("logSession.editSubtitle")
+                : t("logSession.wrapUpSubtitle")}
             </Text>
           )}
         </View>

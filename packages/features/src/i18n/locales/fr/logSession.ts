@@ -83,4 +83,10 @@ export const logSession = {
   "logSession.climbNotePlaceholder": "Comment ça s'est passé, ce que tu essaieras ensuite",
   "logSession.noteKeptOn": "Conservée sur {name}, avec toutes les autres séances dessus",
   "logSession.noteNeedsName": "Note · la ligne doit avoir un nom pour porter une note",
+  "logSession.defaultNameMorning": "Séance du matin, {date}",
+  "logSession.defaultNameAfternoon": "Séance de l'après-midi, {date}",
+  "logSession.defaultNameEvening": "Séance du soir, {date}",
+  "logSession.wrapUpTitle": "Conclure",
+  "logSession.wrapUpSubtitle":
+    "Les horaires viennent de vos voies · l'effort est noté à l'enregistrement",
 } as const;

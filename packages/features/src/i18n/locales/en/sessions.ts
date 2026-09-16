@@ -54,4 +54,17 @@ export const sessions = {
   "sessions.firstSessionLabel": "First session",
   "sessions.firstSessionBody":
     "Name, where, the climbs you got on. About a minute, and it scores itself.",
+  "sessions.logClimb": "Climb",
+  "sessions.moreWaysToLog": "More ways to log",
+  "sessions.logAClimb": "Climb",
+  "sessions.logAClimbHint": "Log a single climb. Starts a live session",
+  "sessions.logFullSession": "Session",
+  "sessions.logFullSessionHint":
+    "Group climbs into a single session with a name, notes, date, location and RPE.",
+  "sessions.liveMeta": "Live · {climbs} · since {start}",
+  "sessions.wrapUp": "Wrap up",
+  "sessions.stillClimbing": "Still climbing?",
+  "sessions.idleFor": "Nothing logged for {duration}",
+  "sessions.idleSinceYesterday": "Started on {date}",
+  "sessions.discardSession": "Discard session",
 } as const;

@@ -6,7 +6,7 @@ name: cancel-discards-draft
 ---
 - runFlow: ../helpers/open-dev-client.yaml
 - runFlow: ../helpers/ensure-signed-in.yaml
-- tapOn: "Climbing session"
+- runFlow: ../helpers/open-log-form.yaml
 - runFlow:
     when:
       visible: "Start fresh"
@@ -24,10 +24,10 @@ name: cancel-discards-draft
 - assertVisible: "Discard this draft.*"
 - tapOn: "Discard"
 - extendedWaitUntil:
-    visible: "Climbing session"
+    visible: "Climb"
     timeout: 15000
 - assertNotVisible: "Unfinished session.*"
-- tapOn: "Climbing session"
+- runFlow: ../helpers/open-log-form.yaml
 - assertNotVisible: "You have an unfinished session.*"
 - scrollUntilVisible:
     element:

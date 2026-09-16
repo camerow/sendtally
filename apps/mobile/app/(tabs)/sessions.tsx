@@ -25,15 +25,18 @@ import { logItems, logScopeItems, type LogItem } from "@sendtally/features/journ
 import { t } from "@sendtally/features/i18n";
 import { colors, fonts } from "@sendtally/design/tokens";
 import { ScreenHeader } from "../../components/ScreenHeader";
+import { useClimbVocabulary } from "@sendtally/features/climbs";
+import { useGradeScalePrefs } from "@sendtally/features/settings";
 import { EntryRow, entryRowHeight } from "../../features/journal/EntryRow";
-import { WriteEntryFab } from "../../features/journal/WriteEntryFab";
+import { LiveClimbEditor } from "../../features/live-session/LiveClimbEditor";
+import { LiveSessionCard } from "../../features/live-session/LiveSessionCard";
+import { LogFab } from "../../features/live-session/LogFab";
+import { useLiveSession } from "../../features/live-session/useLiveSession";
 import {
   DEFAULT_FILTERS,
   FilterSheet,
   type SessionFilters,
 } from "../../features/sessions/FilterSheet";
-import { DraftSessionRow } from "../../features/sessions/DraftSessionRow";
-import { LogSessionFab } from "../../features/sessions/LogSessionFab";
 import { ScopeBar } from "../../features/sessions/ScopeBar";
 import { SECTION_HEADER_HEIGHT, SectionHeader } from "../../features/sessions/SectionHeader";
 import { SessionRow, sessionRowHeight } from "../../features/sessions/SessionRow";
@@ -98,6 +101,10 @@ export default function Log(): React.ReactElement {
   const [currentKey, setCurrentKey] = React.useState<string | null>(null);
   // ponytail: a second status() read per mount, to know if Strava is live; a Strava-status context across tabs if it ever matters
   const settings = useSettings(api);
+  const { scales } = useGradeScalePrefs(api);
+  const live = useLiveSession();
+  const vocabulary = useClimbVocabulary(api);
+  const [editingClimb, setEditingClimb] = React.useState<string | null>(null);
   const connect = useStravaConnect(api, settings.reload);
   const stravaPrompt = useStravaSetupDismissed();
   const showStravaSetup =
@@ -234,7 +241,14 @@ export default function Log(): React.ReactElement {
                 onDismiss={stravaPrompt.dismiss}
               />
             )}
-            <DraftSessionRow />
+            {live.stored !== null && (
+              <LiveSessionCard
+                stored={live.stored}
+                vocabulary={vocabulary}
+                onEditClimb={setEditingClimb}
+                onDiscard={live.discard}
+              />
+            )}
           </>
         }
         refreshControl={
@@ -298,8 +312,13 @@ export default function Log(): React.ReactElement {
           )
         }
       />
-      <WriteEntryFab />
-      <LogSessionFab />
+      <LogFab onLogClimb={() => setEditingClimb(live.addClimb(scales))} />
+      <LiveClimbEditor
+        live={live}
+        vocabulary={vocabulary}
+        editingKey={editingClimb}
+        onClose={() => setEditingClimb(null)}
+      />
       <FilterSheet
         visible={filtersOpen}
         items={all}

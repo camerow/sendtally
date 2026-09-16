@@ -23,6 +23,8 @@ export type ClimbEditorSheetProps = {
   climb: ClimbDraft | null;
   index: number;
   count: number;
+  /** The form keeps one climb; a live session may lose its last one. */
+  removable?: boolean;
   prefs: GradePrefs;
   project: boolean;
   known: ClimbSummary | null;
@@ -238,6 +240,7 @@ export function ClimbEditorSheet({
   climb: current,
   index,
   count,
+  removable = count > 1,
   prefs,
   project,
   known,
@@ -269,7 +272,7 @@ export function ClimbEditorSheet({
             <Text style={{ ...label, color: colors.gunmetal }}>
               {t("logSession.climbOf", { n: index + 1, total: count })}
             </Text>
-            {count > 1 && (
+            {removable && (
               <Pressable
                 onPress={onRemove}
                 hitSlop={12}
