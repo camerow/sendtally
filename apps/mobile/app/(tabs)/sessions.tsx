@@ -26,7 +26,7 @@ import { t } from "@sendtally/features/i18n";
 import { colors, fonts } from "@sendtally/design/tokens";
 import { ScreenHeader } from "../../components/ScreenHeader";
 import { useClimbVocabulary } from "@sendtally/features/climbs";
-import { useLiveSession } from "@sendtally/features/log-session";
+import { useLiveSession, withTries } from "@sendtally/features/log-session";
 import { sessionDraftStorage } from "../../lib/sessionDraftStorage";
 import { useGradeScalePrefs } from "@sendtally/features/settings";
 import { EntryRow, entryRowHeight } from "../../features/journal/EntryRow";
@@ -283,7 +283,7 @@ export default function Log(): React.ReactElement {
                 vocabulary={vocabulary}
                 gym={liveGym}
                 onEditClimb={setEditingClimb}
-                onChangeTries={(key, tries) => live.updateClimb(key, (c) => ({ ...c, tries }))}
+                onChangeTries={(key, tries) => live.updateClimb(key, (c) => withTries(c, tries))}
                 onDiscard={live.discard}
               />
             )}

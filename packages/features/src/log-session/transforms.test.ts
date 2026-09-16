@@ -18,6 +18,7 @@ import {
   withTag,
   withoutTag,
   withClimbOutcome,
+  withTries,
   withStartTime,
 } from "./transforms";
 import { DEFAULT_GRADE_PREFS, sendStyleLabel, sendStylesFor } from "./types";
@@ -243,6 +244,12 @@ describe("send styles", () => {
   it("settles the try count at one for a flash or an onsight", () => {
     expect(withClimbOutcome(boulder(), { kind: "send", style: "flash" }).tries).toBe(1);
     expect(withClimbOutcome(boulder(), { kind: "send", style: "redpoint" }).tries).toBe(4);
+  });
+
+  it("flashes a send stepped down to one try and unflashes one stepped up", () => {
+    expect(withTries(boulder(), 1).style).toBe("flash");
+    expect(withTries(withTries(boulder(), 1), 2)).toMatchObject({ style: "redpoint", tries: 2 });
+    expect(withTries(withClimbOutcome(boulder(), { kind: "attempt" }), 1).kind).toBe("attempt");
   });
 
   it("keeps the try count on an attempt", () => {

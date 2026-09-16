@@ -24,6 +24,7 @@ export {
   withClimbScale,
   withStartTime,
   withTag,
+  withTries,
   withoutTag,
 } from "./transforms";
 export {

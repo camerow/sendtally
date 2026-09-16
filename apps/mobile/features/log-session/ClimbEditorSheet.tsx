@@ -15,6 +15,7 @@ import {
   disciplineLabel,
   disciplineOf,
   withClimbDiscipline,
+  withTries,
   type ClimbDraft,
   type Discipline,
   type GradePrefs,
@@ -384,7 +385,6 @@ export function ClimbEditorSheet({
   const climb = useLingering(current);
   const [nameFocused, setNameFocused] = React.useState(false);
   const named = climb !== null && climb.name.trim() !== "";
-  const firstGo = climb !== null && climb.kind === "send" && climb.style !== "redpoint";
   const showList = nameFocused && suggestions.length > 0;
 
   return (
@@ -547,8 +547,8 @@ export function ClimbEditorSheet({
             <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
               <StepButton
                 glyph="−"
-                disabled={firstGo || climb.tries <= 1}
-                onPress={() => onChange({ ...climb, tries: climb.tries - 1 })}
+                disabled={climb.tries <= 1}
+                onPress={() => onChange(withTries(climb, climb.tries - 1))}
               />
               <Text
                 style={{
@@ -563,8 +563,8 @@ export function ClimbEditorSheet({
               </Text>
               <StepButton
                 glyph="+"
-                disabled={firstGo}
-                onPress={() => onChange({ ...climb, tries: Math.min(99, climb.tries + 1) })}
+                disabled={climb.tries >= 99}
+                onPress={() => onChange(withTries(climb, climb.tries + 1))}
               />
             </View>
           </View>

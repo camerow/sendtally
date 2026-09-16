@@ -143,12 +143,18 @@ export function ClimbLedgerRow({
           height: 22,
           flexShrink: 0,
           borderRadius: 11,
-          backgroundColor: send ? colors.azureInk : colors.gunmetal,
+          backgroundColor: firstGo ? colors.gold : send ? colors.azureInk : colors.gunmetal,
           alignItems: "center",
           justifyContent: "center",
         }}
       >
-        <Text style={{ fontSize: 12, fontWeight: "600", color: colors.white }}>
+        <Text
+          style={{
+            fontSize: 12,
+            fontWeight: "600",
+            color: firstGo ? colors.gunmetal : colors.white,
+          }}
+        >
           {send ? "✓" : "✗"}
         </Text>
       </View>
@@ -169,7 +175,7 @@ export function ClimbLedgerRow({
         <View style={{ flexDirection: "row", alignItems: "center", gap: 2 }}>
           <Stepper
             glyph="−"
-            disabled={firstGo || climb.tries <= 1}
+            disabled={climb.tries <= 1}
             label={t("logSession.fewerTries")}
             onPress={() => onChangeTries(climb.tries - 1)}
           />
@@ -186,7 +192,7 @@ export function ClimbLedgerRow({
           </Text>
           <Stepper
             glyph="+"
-            disabled={firstGo || climb.tries >= 99}
+            disabled={climb.tries >= 99}
             label={t("logSession.moreTries")}
             onPress={() => onChangeTries(climb.tries + 1)}
           />

@@ -139,6 +139,15 @@ export function withClimbOutcome(climb: ClimbDraft, outcome: ClimbOutcome): Clim
   return { ...climb, kind: "send", style: outcome.style, tries };
 }
 
+/** A one-try send is a flash and a flash on more tries is not, so the count settles the style. */
+export function withTries(climb: ClimbDraft, tries: number): ClimbDraft {
+  const next = Math.min(99, Math.max(1, tries));
+  if (climb.kind !== "send") return { ...climb, tries: next };
+  if (next === 1)
+    return { ...climb, tries: next, style: climb.style === "onsight" ? "onsight" : "flash" };
+  return { ...climb, tries: next, style: "redpoint" };
+}
+
 /** Onsight is a route idea; a boulder carrying one from an earlier edit falls back to sent. */
 function withClimbScaleStyle(climb: ClimbDraft): ClimbDraft {
   const allowed = sendStylesFor(disciplineOf(climb.scale));
