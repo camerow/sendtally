@@ -37,7 +37,7 @@ export const gyms = {
   "gyms.gym": "Gym",
   "gyms.noGym": "No gym",
   "gyms.circuit": "Circuit",
-  "gyms.wall": "Wall",
+  "gyms.wall": "Wall - add walls in settings",
   "gyms.noWall": "Anywhere",
   "gyms.feltLike": "Felt like",
   "gyms.feltHint": "Middle of {circuit} unless you say otherwise",

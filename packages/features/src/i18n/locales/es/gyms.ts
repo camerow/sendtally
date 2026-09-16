@@ -38,7 +38,7 @@ export const gyms = {
   "gyms.gym": "Rocódromo",
   "gyms.noGym": "Sin rocódromo",
   "gyms.circuit": "Circuito",
-  "gyms.wall": "Pared",
+  "gyms.wall": "Pared - añade paredes en ajustes",
   "gyms.noWall": "Cualquiera",
   "gyms.feltLike": "Sensación",
   "gyms.feltHint": "Mitad de {circuit} salvo que digas otra cosa",

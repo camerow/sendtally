@@ -38,7 +38,7 @@ export const gyms = {
   "gyms.gym": "Salle",
   "gyms.noGym": "Aucune salle",
   "gyms.circuit": "Circuit",
-  "gyms.wall": "Mur",
+  "gyms.wall": "Mur - ajoutez des murs dans les réglages",
   "gyms.noWall": "N’importe où",
   "gyms.feltLike": "Ressenti",
   "gyms.feltHint": "Milieu de {circuit} sauf indication contraire",
