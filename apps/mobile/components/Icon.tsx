@@ -12,7 +12,6 @@ export type IconName =
   | "chevron"
   | "check"
   | "trash"
-  | "pen"
   | "x";
 
 const SHAPES: Record<IconName, React.ReactElement> = {
@@ -36,7 +35,6 @@ const SHAPES: Record<IconName, React.ReactElement> = {
   chevron: <Path d="M9 6l6 6-6 6" />,
   check: <Path d="M5 12.5l4.5 4.5L19 7" />,
   trash: <Path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3" />,
-  pen: <Path d="M4 20h4L18.5 9.5a2.1 2.1 0 0 0-3-3L5 17zM13.5 6.5l3 3" />,
   x: <Path d="M6 6l12 12M18 6L6 18" />,
 };
 

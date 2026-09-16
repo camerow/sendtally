@@ -3,10 +3,20 @@ import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { t } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
+import { ENTRY_KINDS, entryKindLabel, today, type EntryKind } from "@sendtally/features/journal";
 import { Icon, type IconName } from "../../components/Icon";
 import { Sheet } from "../../components/Sheet";
 import { press, pressRow } from "../../lib/press";
-import { NewEntrySheet } from "../journal/NewEntrySheet";
+import { EntryKindIcon } from "../journal/EntryKindIcon";
+
+const ENTRY_HINTS: Record<
+  EntryKind,
+  "journal.hintJournal" | "journal.hintTrip" | "journal.hintInjury"
+> = {
+  journal: "journal.hintJournal",
+  trip: "journal.hintTrip",
+  injury: "journal.hintInjury",
+};
 
 function MenuRow({
   icon,
@@ -15,7 +25,7 @@ function MenuRow({
   highlighted = false,
   onPress,
 }: {
-  icon: IconName;
+  icon: IconName | EntryKind;
   title: string;
   hint: string;
   highlighted?: boolean;
@@ -45,7 +55,11 @@ function MenuRow({
           backgroundColor: colors.surfaceSoft,
         }}
       >
-        <Icon name={icon} size={20} strokeWidth={2} color={colors.gunmetal} />
+        {icon === "journal" || icon === "trip" || icon === "injury" ? (
+          <EntryKindIcon kind={icon} size={20} color={colors.gunmetal} />
+        ) : (
+          <Icon name={icon} size={20} strokeWidth={2} color={colors.gunmetal} />
+        )}
       </View>
       <View style={{ flex: 1, gap: 3 }}>
         <Text
@@ -59,12 +73,7 @@ function MenuRow({
           {title}
         </Text>
         <Text
-          style={{
-            fontFamily: fonts.mono,
-            fontSize: 11,
-            lineHeight: 14,
-            color: colors.textSecondary,
-          }}
+          style={{ fontFamily: fonts.sans, fontSize: 13, lineHeight: 18, color: colors.textMuted }}
         >
           {hint}
         </Text>
@@ -77,12 +86,15 @@ function MenuRow({
 export type LogFabProps = { onLogClimb: () => void };
 
 /**
- * One climb is the frequent action, so it gets the wide half. The chevron half holds the two
- * slower paths: the full form and a journal entry.
+ * One climb is the frequent action, so it gets the wide half. The chevron half holds the
+ * slower paths: the full form and the journal entry kinds.
  */
 export function LogFab({ onLogClimb }: LogFabProps): React.ReactElement {
   const [menuOpen, setMenuOpen] = React.useState(false);
-  const [entryOpen, setEntryOpen] = React.useState(false);
+  const pickEntry = (kind: EntryKind): void => {
+    setMenuOpen(false);
+    router.push({ pathname: "/journal/new", params: { kind, date: today() } });
+  };
 
   return (
     <>
@@ -153,18 +165,17 @@ export function LogFab({ onLogClimb }: LogFabProps): React.ReactElement {
               router.push("/session/new");
             }}
           />
-          <MenuRow
-            icon="pen"
-            title={t("journal.journalEntry")}
-            hint={t("sessions.journalEntryHint")}
-            onPress={() => {
-              setMenuOpen(false);
-              setEntryOpen(true);
-            }}
-          />
+          {ENTRY_KINDS.map((kind) => (
+            <MenuRow
+              key={kind}
+              icon={kind}
+              title={entryKindLabel(kind)}
+              hint={t(ENTRY_HINTS[kind])}
+              onPress={() => pickEntry(kind)}
+            />
+          ))}
         </View>
       </Sheet>
-      <NewEntrySheet visible={entryOpen} onClose={() => setEntryOpen(false)} />
     </>
   );
 }
