@@ -37,6 +37,7 @@ export {
   withPickedClimb,
   withQuickClimb,
 } from "./liveSession";
+export { useLiveSession, type LiveSession } from "./useLiveSession";
 export { useSessionDraft, type EditableSession } from "./useSessionDraft";
 export {
   useDraftAutosave,

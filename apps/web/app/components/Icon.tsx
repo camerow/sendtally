@@ -9,7 +9,8 @@ export type IconName =
   | "funnel"
   | "plus"
   | "chevron"
-  | "trash";
+  | "trash"
+  | "x";
 
 const SHAPES: Record<IconName, React.ReactElement> = {
   sessions: (
@@ -32,6 +33,7 @@ const SHAPES: Record<IconName, React.ReactElement> = {
   plus: <path d="M12 5v14M5 12h14" />,
   chevron: <path d="M9.5 5.5 16 12l-6.5 6.5" />,
   trash: <path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3" />,
+  x: <path d="M6 6l12 12M18 6L6 18" />,
 };
 
 export function Icon({

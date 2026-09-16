@@ -11,7 +11,11 @@ import {
   today,
   type LogScope,
 } from "@sendtally/features/journal";
-import { NewEntryMenu } from "../../journal/components/NewEntryMenu";
+import { useClimbVocabulary } from "@sendtally/features/climbs";
+import { useLiveSession } from "@sendtally/features/log-session";
+import { useGradeScalePrefs } from "@sendtally/features/settings";
+import { useClientApi } from "../../lib/useClientApi";
+import { sessionDraftStorage } from "../../lib/sessionDraftStorage";
 import {
   filterSessionsByTags,
   logYearGroups,
@@ -23,8 +27,9 @@ import {
   type SessionGrouping,
 } from "@sendtally/features/sessions";
 import { sectionAnchorId } from "../anchors";
-import { DraftSessionRow } from "./DraftSessionRow";
-import { LogSessionFab } from "./LogSessionFab";
+import { LiveClimbEditor } from "./LiveClimbEditor";
+import { LiveSessionCard } from "./LiveSessionCard";
+import { LogMenu } from "./LogMenu";
 import { MonthJumpRail } from "./MonthJumpRail";
 import { ScopeBar } from "./ScopeBar";
 import { SessionFilters } from "./SessionFilters";
@@ -43,12 +48,14 @@ const muted: React.CSSProperties = {
 };
 
 export function LogView({
+  apiUrl,
   status,
   sessions,
   entries,
   scope,
   basePath,
 }: {
+  apiUrl: string;
   status: ConnectionStatus;
   sessions: SessionRow[];
   entries: JournalEntry[];
@@ -57,6 +64,12 @@ export function LogView({
 }): React.ReactElement {
   const [searchParams] = useSearchParams();
   const [filtersOpen, setFiltersOpen] = React.useState(false);
+  const api = useClientApi(apiUrl);
+  const { scales } = useGradeScalePrefs(api);
+  const live = useLiveSession(sessionDraftStorage);
+  const vocabulary = useClimbVocabulary(api);
+  const [editingClimb, setEditingClimb] = React.useState<string | null>(null);
+  const logClimb = (): void => setEditingClimb(live.addClimb(scales));
   const stravaConnected = status.strava?.status === "active";
   const stravaLapsed = status.strava !== null && !stravaConnected;
 
@@ -132,16 +145,18 @@ export function LogView({
         </span>
         <div style={{ flex: 1 }} />
         <span className="sessions-head-action">
-          <NewEntryMenu />
+          <LogMenu variant="header" onLogClimb={logClimb} />
         </span>
-        {sessions.length > 0 && (
-          <Link to="/app/sessions/new" className="sessions-head-action sessions-primary-link">
-            {t("common.climbingSession")}
-          </Link>
-        )}
       </div>
       {!stravaConnected && <StravaSetupRow lapsed={stravaLapsed} />}
-      <DraftSessionRow />
+      {live.stored !== null && (
+        <LiveSessionCard
+          stored={live.stored}
+          vocabulary={vocabulary}
+          onEditClimb={setEditingClimb}
+          onDiscard={live.discard}
+        />
+      )}
       <div className="sessions-filters">
         <div className="sessions-filter-row">
           <span className="sessions-filter-label">{t("journal.show")}</span>
@@ -228,8 +243,16 @@ export function LogView({
           </Link>
         </div>
       )}
-      <NewEntryMenu variant="fab" />
-      <LogSessionFab />
+      <LogMenu variant="fab" onLogClimb={logClimb} />
+      {editingClimb !== null && (
+        <LiveClimbEditor
+          live={live}
+          scales={scales}
+          vocabulary={vocabulary}
+          editingKey={editingClimb}
+          onClose={() => setEditingClimb(null)}
+        />
+      )}
       {filtersOpen && (
         <SessionFilterSheet
           onClose={() => setFiltersOpen(false)}

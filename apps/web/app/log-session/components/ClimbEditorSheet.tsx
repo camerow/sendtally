@@ -33,6 +33,7 @@ function startDrag(
   onClose: () => void
 ): void {
   if (down.button !== 0 || panel === null) return;
+  if ((down.target as HTMLElement).closest("button") !== null) return;
   const grip = down.currentTarget;
   const origin = { y: down.clientY, at: performance.now() };
   grip.setPointerCapture?.(down.pointerId);
@@ -65,6 +66,8 @@ export type ClimbEditorSheetProps = {
   count: number;
   scale: GradeScale;
   project: boolean;
+  /** Defaults to "not the last climb"; a live session lets the last one go too. */
+  removable?: boolean;
   suggestions: ClimbSummary[];
   onChange: (climb: ClimbDraft) => void;
   onChangeDiscipline: (discipline: Discipline) => void;
@@ -81,6 +84,7 @@ export function ClimbEditorSheet({
   count,
   scale,
   project,
+  removable = count > 1,
   suggestions,
   onChange,
   onChangeDiscipline,
@@ -123,24 +127,26 @@ export function ClimbEditorSheet({
         >
           <div className="climb-sheet-handle" />
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <span style={{ ...monoLabel, color: "var(--text-label-accent)" }}>
-              {t("logSession.climbOf", { n: index + 1, total: count })}
-            </span>
-            {count > 1 && (
+            <span style={monoLabel}>{t("logSession.climbOf", { n: index + 1, total: count })}</span>
+            {removable && (
               <button
                 type="button"
                 onClick={onRemove}
                 className="climb-sheet-remove"
                 aria-label={t("logSession.removeClimb")}
               >
-                <Icon name="trash" size={16} strokeWidth={1.8} />
+                <Icon name="trash" size={18} strokeWidth={1.8} />
               </button>
             )}
           </div>
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
-          <span style={monoLabel}>{t("common.grade")}</span>
+          <label htmlFor="climb-grade" style={monoLabel}>
+            {t("common.grade")}
+          </label>
           <select
+            id="climb-grade"
+            name="grade"
             value={climb.grade}
             onChange={(e) => onChange({ ...climb, grade: e.target.value })}
             className="log-session-control"
