@@ -23,6 +23,9 @@ export type SheetProps = {
  *
  * Every open mounts a fresh modal (the `key`): a modal presented again after a dismiss can
  * come back mounted but closed, and dismissing one that was never presented leaves it stuck.
+ *
+ * Sheets stack (`push`): the library's default minimizes the sheet underneath when one opens
+ * over it, and that minimize sometimes lands as a dismiss, closing both a beat later.
  */
 export function Sheet({
   visible,
@@ -65,6 +68,7 @@ export function Sheet({
       key={generation}
       ref={ref}
       onDismiss={onClose}
+      stackBehavior="push"
       accessible={false}
       enableDynamicSizing
       topInset={insets.top + 24}

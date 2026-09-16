@@ -1,0 +1,43 @@
+appId: com.sendtally.app
+name: result-sheet-stays-open
+# The result picker is a sheet opened from inside the climb editor sheet. Both must stay open
+# once the options show; the outer sheet must not be dismissed when the inner one presents.
+---
+- runFlow: ../helpers/open-dev-client.yaml
+- runFlow: ../helpers/ensure-signed-in.yaml
+- runFlow:
+    when:
+      visible: "DISCARD SESSION"
+    commands:
+      - tapOn: "DISCARD SESSION"
+      - tapOn: "Discard"
+- tapOn: "Climb"
+- assertVisible: "CLIMB 1 OF 1"
+- repeat:
+    times: 6
+    commands:
+      - tapOn: "Result, .*"
+      - assertVisible: ".*Attempt, .*"
+      - extendedWaitUntil:
+          visible: ".*Attempt, .*"
+          timeout: 1500
+      - assertVisible: ".*Attempt, .*"
+      - assertVisible: "RESULT"
+      - tapOn: ".*Attempt, .*"
+      - assertVisible: "CLIMB 1 OF 1"
+      - tapOn: "Result, .*"
+      - assertVisible: "Sent, .*"
+      - extendedWaitUntil:
+          visible: "Sent, .*"
+          timeout: 1500
+      - assertVisible: "Sent, .*"
+      - tapOn: "Sent, .*"
+      - assertVisible: "CLIMB 1 OF 1"
+- tapOn: "Save"
+- assertNotVisible: "CLIMB 1 OF 1"
+- runFlow:
+    when:
+      visible: "DISCARD SESSION"
+    commands:
+      - tapOn: "DISCARD SESSION"
+      - tapOn: "Discard"
