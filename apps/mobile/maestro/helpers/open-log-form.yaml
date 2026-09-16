@@ -1,0 +1,5 @@
+appId: com.sendtally.app
+# The full form sits behind the chevron half of the log button.
+---
+- tapOn: "More ways to log"
+- tapOn: "Log a full session.*"

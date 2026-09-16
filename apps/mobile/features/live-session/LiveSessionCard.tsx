@@ -1,0 +1,215 @@
+import { router } from "expo-router";
+import React from "react";
+import { Pressable, Text, View } from "react-native";
+import type { ClimbVocabulary } from "@sendtally/features/climbs";
+import {
+  durationLabel,
+  idleMinutes,
+  wantsWrapUpReminder,
+  type StoredSessionDraft,
+} from "@sendtally/features/log-session";
+import { formatDate, t } from "@sendtally/features/i18n";
+import { colors, fonts, radius } from "@sendtally/design/tokens";
+import { Icon } from "../../components/Icon";
+import { confirmDiscardDraft } from "../../lib/confirmDiscardDraft";
+import { press, pressRow } from "../../lib/press";
+import { ClimbLedgerRow } from "../log-session/ClimbLedgerRow";
+import { DayColumn, RowTitle } from "../sessions/SessionRowParts";
+
+const wrapUpButton = {
+  minHeight: 32,
+  paddingHorizontal: 12,
+  alignItems: "center",
+  justifyContent: "center",
+  borderRadius: radius.control,
+} as const;
+
+const buttonLabel = { fontFamily: fonts.sansSemiBold, fontSize: 13 } as const;
+
+function useMinuteClock(): Date {
+  const [now, setNow] = React.useState(() => new Date());
+  React.useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 60_000);
+    return () => clearInterval(timer);
+  }, []);
+  return now;
+}
+
+function ReminderBar({
+  stored,
+  now,
+}: {
+  stored: StoredSessionDraft;
+  now: Date;
+}): React.ReactElement {
+  const idle = idleMinutes(stored.draft, now);
+  const meta =
+    idle === null
+      ? t("sessions.idleSinceYesterday", {
+          date: formatDate(stored.savedAt, { weekday: "long", day: "numeric", month: "short" }),
+        })
+      : t("sessions.idleFor", { duration: durationLabel(idle) });
+  return (
+    <View
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 12,
+        paddingHorizontal: 18,
+        paddingVertical: 12,
+        backgroundColor: colors.gunmetal,
+      }}
+    >
+      <View style={{ flex: 1, gap: 3 }}>
+        <Text
+          style={{
+            fontFamily: fonts.sansSemiBold,
+            fontSize: 15,
+            lineHeight: 19,
+            color: colors.white,
+          }}
+        >
+          {t("sessions.stillClimbing")}
+        </Text>
+        <Text
+          style={{
+            fontFamily: fonts.mono,
+            fontSize: 11,
+            lineHeight: 14,
+            color: "rgba(238,211,248,0.88)",
+          }}
+        >
+          {meta}
+        </Text>
+      </View>
+      <Pressable
+        onPress={wrapUp}
+        accessibilityRole="button"
+        style={press({ ...wrapUpButton, backgroundColor: colors.gold })}
+      >
+        <Text style={{ ...buttonLabel, color: colors.gunmetal }}>{t("sessions.wrapUp")}</Text>
+      </Pressable>
+    </View>
+  );
+}
+
+const wrapUp = (): void => router.push("/session/new?resume=1");
+
+export type LiveSessionCardProps = {
+  stored: StoredSessionDraft;
+  vocabulary: ClimbVocabulary;
+  onEditClimb: (key: string) => void;
+  onDiscard: () => void;
+};
+
+/** The session being climbed right now, pinned above the log until it is wrapped up. */
+export function LiveSessionCard({
+  stored,
+  vocabulary,
+  onEditClimb,
+  onDiscard,
+}: LiveSessionCardProps): React.ReactElement {
+  const now = useMinuteClock();
+  const { draft, savedAt } = stored;
+  const title = draft.name.trim() === "" ? t("sessions.unfinishedSession") : draft.name;
+  const meta = t("sessions.liveMeta", {
+    climbs: t("common.climbCount", { count: draft.climbs.length }),
+    start: draft.startTime,
+  });
+
+  return (
+    <View>
+      {wantsWrapUpReminder(draft, now) && <ReminderBar stored={stored} now={now} />}
+      <View
+        style={{
+          gap: 10,
+          paddingHorizontal: 18,
+          paddingTop: 12,
+          paddingBottom: 14,
+          backgroundColor: "rgba(249,220,92,0.16)",
+          borderBottomWidth: 1,
+          borderBottomColor: colors.lineOnLightSoft,
+        }}
+      >
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+          <Pressable
+            onPress={wrapUp}
+            accessibilityRole="button"
+            accessibilityLabel={`${title}, ${meta}, ${t("sessions.wrapUp")}`}
+            style={pressRow({ flex: 1, flexDirection: "row", alignItems: "center", gap: 12 })}
+          >
+            <DayColumn
+              weekday={formatDate(savedAt, { weekday: "short" })}
+              day={formatDate(savedAt, { day: "numeric" })}
+              marker={
+                <View
+                  style={{
+                    width: 6,
+                    height: 6,
+                    marginTop: 3,
+                    borderRadius: 3,
+                    backgroundColor: colors.watermelonInk,
+                  }}
+                />
+              }
+            />
+            <View style={{ flex: 1, gap: 3 }}>
+              <RowTitle title={title} meta={meta} />
+            </View>
+          </Pressable>
+          <Pressable
+            onPress={wrapUp}
+            accessibilityRole="button"
+            style={press({ ...wrapUpButton, backgroundColor: colors.gunmetal })}
+          >
+            <Text style={{ ...buttonLabel, color: colors.white }}>{t("sessions.wrapUp")}</Text>
+          </Pressable>
+        </View>
+        {draft.climbs.length > 0 && (
+          <View
+            style={{
+              paddingHorizontal: 10,
+              borderRadius: radius.card,
+              borderWidth: 1,
+              borderColor: colors.lineOnLightSoft,
+              backgroundColor: colors.white,
+            }}
+          >
+            {draft.climbs.map((climb) => (
+              <ClimbLedgerRow
+                key={climb.key}
+                climb={climb}
+                project={climb.project ?? vocabulary.isProject(climb.name)}
+                onPress={() => onEditClimb(climb.key)}
+              />
+            ))}
+          </View>
+        )}
+        <Pressable
+          onPress={() => confirmDiscardDraft(stored, onDiscard)}
+          accessibilityRole="button"
+          hitSlop={8}
+          style={press({
+            alignSelf: "flex-start",
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 6,
+          })}
+        >
+          <Icon name="x" size={12} strokeWidth={2.2} color={colors.textFaint} />
+          <Text
+            style={{
+              fontFamily: fonts.monoMedium,
+              fontSize: 10,
+              letterSpacing: 0.8,
+              textTransform: "uppercase",
+              color: colors.textFaint,
+            }}
+          >
+            {t("sessions.discardSession")}
+          </Text>
+        </Pressable>
+      </View>
+    </View>
+  );
+}

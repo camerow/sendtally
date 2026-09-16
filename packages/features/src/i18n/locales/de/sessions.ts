@@ -54,4 +54,17 @@ export const sessions = {
   "sessions.firstSessionLabel": "Erste Session",
   "sessions.firstSessionBody":
     "Name, Ort, die Routen, an denen du warst. Etwa eine Minute, und die Session bewertet sich selbst.",
+  "sessions.logClimb": "Kletterei",
+  "sessions.moreWaysToLog": "Weitere Möglichkeiten zu loggen",
+  "sessions.logAClimb": "Eine Kletterei loggen",
+  "sessions.logAClimbHint": "Eine Kletterei, jetzt gerade",
+  "sessions.logFullSession": "Ganze Session loggen",
+  "sessions.logFullSessionHint": "Für eine Session, die schon vorbei ist",
+  "sessions.journalEntryHint": "Freitext, später an eine Session anhängen",
+  "sessions.liveMeta": "Live · {climbs} · seit {start}",
+  "sessions.wrapUp": "Abschließen",
+  "sessions.stillClimbing": "Noch am Klettern?",
+  "sessions.idleFor": "Seit {duration} nichts geloggt",
+  "sessions.idleSinceYesterday": "Begonnen am {date}",
+  "sessions.discardSession": "Session verwerfen",
 } as const;

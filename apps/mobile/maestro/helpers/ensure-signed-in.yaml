@@ -7,11 +7,11 @@ env:
 ---
 - extendedWaitUntil:
     visible:
-      text: "Sign in|Climbing session"
+      text: "Sign in|Climb"
     timeout: 30000
 - runFlow:
     when:
-      notVisible: "Climbing session"
+      notVisible: "Climb"
     commands:
       - tapOn: "Sign in"
       - tapOn: "you@email.com"
@@ -37,5 +37,5 @@ env:
       - tapOn:
           text: "Sign in|Create account"
 - extendedWaitUntil:
-    visible: "Climbing session"
+    visible: "Climb"
     timeout: 20000

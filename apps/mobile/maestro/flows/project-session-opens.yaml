@@ -7,7 +7,7 @@ name: project-session-opens
 ---
 - runFlow: ../helpers/open-dev-client.yaml
 - runFlow: ../helpers/ensure-signed-in.yaml
-- tapOn: "Climbing session"
+- runFlow: ../helpers/open-log-form.yaml
 - runFlow:
     when:
       visible: "Start fresh"
@@ -73,5 +73,5 @@ name: project-session-opens
     text: "Delete"
     index: 1
 - extendedWaitUntil:
-    visible: "Climbing session"
+    visible: "Climb"
     timeout: 20000

@@ -81,4 +81,9 @@ export const logSession = {
   "logSession.climbNotePlaceholder": "How it went, what to try next",
   "logSession.noteKeptOn": "Kept on {name}, with every other session on it",
   "logSession.noteNeedsName": "Note · climb must have a name to have a note",
+  "logSession.defaultNameMorning": "Morning session, {date}",
+  "logSession.defaultNameAfternoon": "Afternoon session, {date}",
+  "logSession.defaultNameEvening": "Evening session, {date}",
+  "logSession.wrapUpTitle": "Wrap up",
+  "logSession.wrapUpSubtitle": "Times come from your climbs · effort is scored when you save",
 } as const;

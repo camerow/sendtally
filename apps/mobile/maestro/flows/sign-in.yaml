@@ -5,4 +5,4 @@ name: sign-in
 ---
 - runFlow: ../helpers/open-dev-client.yaml
 - runFlow: ../helpers/ensure-signed-in.yaml
-- assertVisible: "Climbing session"
+- assertVisible: "Climb"

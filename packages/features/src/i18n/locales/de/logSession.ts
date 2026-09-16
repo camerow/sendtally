@@ -83,4 +83,10 @@ export const logSession = {
   "logSession.climbNotePlaceholder": "Wie es lief, was du als Nächstes probierst",
   "logSession.noteKeptOn": "Bleibt an {name}, zusammen mit jeder anderen Session daran",
   "logSession.noteNeedsName": "Notiz · die Kletterei braucht einen Namen für eine Notiz",
+  "logSession.defaultNameMorning": "Morgensession, {date}",
+  "logSession.defaultNameAfternoon": "Nachmittagssession, {date}",
+  "logSession.defaultNameEvening": "Abendsession, {date}",
+  "logSession.wrapUpTitle": "Abschließen",
+  "logSession.wrapUpSubtitle":
+    "Zeiten kommen von deinen Kletterversuchen · Effort wird beim Speichern bewertet",
 } as const;

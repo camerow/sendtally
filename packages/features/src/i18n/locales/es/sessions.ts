@@ -55,4 +55,17 @@ export const sessions = {
   "sessions.firstSessionLabel": "Primera sesión",
   "sessions.firstSessionBody":
     "Nombre, lugar, las vías que probaste. Un minuto más o menos, y la sesión se puntúa sola.",
+  "sessions.logClimb": "Vía",
+  "sessions.moreWaysToLog": "Más formas de registrar",
+  "sessions.logAClimb": "Registrar una vía",
+  "sessions.logAClimbHint": "Una vía, ahora mismo",
+  "sessions.logFullSession": "Registrar una sesión completa",
+  "sessions.logFullSessionHint": "Para una sesión que ya pasó",
+  "sessions.journalEntryHint": "Texto libre, para adjuntar a una sesión después",
+  "sessions.liveMeta": "En curso · {climbs} · desde {start}",
+  "sessions.wrapUp": "Cerrar",
+  "sessions.stillClimbing": "¿Sigues escalando?",
+  "sessions.idleFor": "Nada registrado desde hace {duration}",
+  "sessions.idleSinceYesterday": "Empezada el {date}",
+  "sessions.discardSession": "Descartar sesión",
 } as const;

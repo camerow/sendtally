@@ -1,0 +1,36 @@
+appId: com.sendtally.app
+name: quick-log-climb
+# One climb logged from the Log tab starts a live session there: it gets a name from the time
+# of day, its climbs open in the climb editor, and removing the last climb removes the session.
+---
+- runFlow: ../helpers/open-dev-client.yaml
+- runFlow: ../helpers/ensure-signed-in.yaml
+- runFlow:
+    when:
+      visible: "DISCARD SESSION"
+    commands:
+      - tapOn: "DISCARD SESSION"
+      - tapOn: "Discard"
+- tapOn: "Climb"
+- assertVisible: "CLIMB 1 OF 1"
+- tapOn: "Save"
+- assertVisible: "(Morning|Afternoon|Evening) session.*"
+- assertVisible: ".*Live · 1 climb.*"
+- tapOn: "Climb"
+- assertVisible: "CLIMB 2 OF 2"
+- tapOn: "Name (optional)"
+- inputText: "Maestro Arete"
+- pressKey: Enter
+- runFlow: ../helpers/hide-keyboard.yaml
+- tapOn: "Save"
+- assertVisible: ".*Live · 2 climbs.*"
+- tapOn: ".*Maestro Arete.*"
+- assertVisible: "CLIMB 2 OF 2"
+- tapOn: "Remove climb"
+- assertVisible: ".*Live · 1 climb.*"
+- tapOn: "Wrap up"
+- assertVisible: "Wrap up"
+- assertVisible: "1 CLIMB.*"
+- tapOn: "Cancel"
+- tapOn: "Discard"
+- assertNotVisible: ".*Live · .*"

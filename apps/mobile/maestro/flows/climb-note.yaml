@@ -6,7 +6,7 @@ name: climb-note
 ---
 - runFlow: ../helpers/open-dev-client.yaml
 - runFlow: ../helpers/ensure-signed-in.yaml
-- tapOn: "Climbing session"
+- runFlow: ../helpers/open-log-form.yaml
 - scrollUntilVisible:
     element:
       text: "\\+ ADD CLIMB"
