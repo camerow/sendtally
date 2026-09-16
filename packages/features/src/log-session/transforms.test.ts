@@ -444,6 +444,7 @@ function session(overrides: Partial<SessionDetail> = {}): SessionDetail {
     board: null,
     source: "manual",
     location: "indoor",
+    gym_id: null,
     name: "Tuesday board night",
     start_at: "2026-08-26T18:30:00.000Z",
     end_at: "2026-08-26T20:00:00.000Z",

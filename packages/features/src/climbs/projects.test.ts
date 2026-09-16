@@ -27,6 +27,7 @@ const session = (
   board: null,
   source: "manual",
   location: "indoor",
+  gym_id: null,
   name: "Tuesday night session",
   start_at: startIso,
   end_at: startIso,

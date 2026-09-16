@@ -3,6 +3,7 @@ import { auth } from "./auth";
 import { billing } from "./billing";
 import { climbs } from "./climbs";
 import { common } from "./common";
+import { gyms } from "./gyms";
 import { journal } from "./journal";
 import { logSession } from "./logSession";
 import { onboarding } from "./onboarding";
@@ -18,6 +19,7 @@ export const en = {
   ...billing,
   ...climbs,
   ...common,
+  ...gyms,
   ...journal,
   ...logSession,
   ...onboarding,

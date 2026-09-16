@@ -56,7 +56,12 @@ export function withQuickClimb(
   const base = draft ?? liveDraft(now);
   const key = nextClimbKey(base.climbs);
   const previous = base.climbs[base.climbs.length - 1];
-  const climb = newClimb(key, previous?.scale ?? prefs.boulder);
+  const climb = {
+    ...newClimb(key, previous?.scale ?? prefs.boulder),
+    ...(previous?.circuit === undefined
+      ? {}
+      : { circuit: previous.circuit, grade: previous.grade }),
+  };
   return { draft: withClimbTouched({ ...base, climbs: [...base.climbs, climb] }, now), key };
 }
 

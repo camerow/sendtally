@@ -19,6 +19,7 @@ function session(fingerprint: string, tags: SessionTag[]): SessionRow {
     board: null,
     source: "manual",
     location: "indoor",
+    gym_id: null,
     name: fingerprint,
     start_at: "2026-03-01T18:00:00.000Z",
     end_at: "2026-03-01T20:00:00.000Z",
