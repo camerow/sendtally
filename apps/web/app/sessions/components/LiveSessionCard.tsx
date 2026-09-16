@@ -68,10 +68,7 @@ export function LiveSessionCard({
   const [confirming, setConfirming] = React.useState(false);
   const { draft, savedAt } = stored;
   const title = draft.name.trim() === "" ? t("sessions.unfinishedSession") : draft.name;
-  const meta = t("sessions.liveMeta", {
-    climbs: t("common.climbCount", { count: draft.climbs.length }),
-    start: draft.startTime,
-  });
+  const meta = t("sessions.liveMeta", { start: draft.startTime });
 
   return (
     <div className="live-session">
@@ -88,11 +85,13 @@ export function LiveSessionCard({
                 {formatDate(savedAt, { weekday: "short" })}
               </span>
               <span className="session-row-day">{formatDate(savedAt, { day: "numeric" })}</span>
-              <span className="live-session-dot" />
             </span>
             <span className="session-row-main">
               <span className="session-row-title">{title}</span>
-              <span className="session-row-meta">{meta}</span>
+              <span className="session-row-meta live-session-meta">
+                <span className="live-session-dot" />
+                {meta}
+              </span>
             </span>
           </Link>
           <Link to={WRAP_UP} className="live-wrap-up">

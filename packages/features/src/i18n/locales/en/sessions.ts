@@ -61,7 +61,7 @@ export const sessions = {
   "sessions.logFullSession": "Session",
   "sessions.logFullSessionHint":
     "Group climbs into a single session with a name, notes, date, location and RPE.",
-  "sessions.liveMeta": "Live · {climbs} · since {start}",
+  "sessions.liveMeta": "In progress since {start}",
   "sessions.wrapUp": "Wrap up",
   "sessions.stillClimbing": "Still climbing?",
   "sessions.idleFor": "Nothing logged for {duration}",

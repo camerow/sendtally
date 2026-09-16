@@ -118,10 +118,7 @@ export function LiveSessionCard({
   const { draft, savedAt } = stored;
   const title = draft.name.trim() === "" ? t("sessions.unfinishedSession") : draft.name;
   const meta = [
-    t("sessions.liveMeta", {
-      climbs: t("common.climbCount", { count: draft.climbs.length }),
-      start: draft.startTime,
-    }),
+    t("sessions.liveMeta", { start: draft.startTime }),
     ...(gym === null ? [] : [gym.name]),
   ].join(" · ");
 
@@ -149,20 +146,22 @@ export function LiveSessionCard({
             <DayColumn
               weekday={formatDate(savedAt, { weekday: "short" })}
               day={formatDate(savedAt, { day: "numeric" })}
-              marker={
-                <View
-                  style={{
-                    width: 6,
-                    height: 6,
-                    marginTop: 3,
-                    borderRadius: 3,
-                    backgroundColor: colors.watermelonInk,
-                  }}
-                />
-              }
             />
             <View style={{ flex: 1, gap: 3 }}>
-              <RowTitle title={title} meta={meta} />
+              <RowTitle
+                title={title}
+                meta={meta}
+                marker={
+                  <View
+                    style={{
+                      width: 6,
+                      height: 6,
+                      borderRadius: 3,
+                      backgroundColor: colors.watermelonInk,
+                    }}
+                  />
+                }
+              />
             </View>
           </Pressable>
           <Pressable

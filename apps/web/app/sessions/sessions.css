@@ -897,8 +897,14 @@
   color: var(--bs-gunmetal);
 }
 
+.live-session-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
 .live-session-dot {
-  margin-top: 3px;
+  flex-shrink: 0;
   width: 6px;
   height: 6px;
   border-radius: 3px;
