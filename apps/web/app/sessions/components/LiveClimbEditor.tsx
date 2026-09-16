@@ -1,19 +1,18 @@
 import React from "react";
-import type { SendtallyApi } from "@sendtally/api-client";
 import { findClimb, type ClimbVocabulary } from "@sendtally/features/climbs";
 import {
   withClimbDiscipline,
   withClimbName,
   withPickedClimb,
   type ClimbDraft,
+  type GradePrefs,
   type LiveSession,
 } from "@sendtally/features/log-session";
-import { useGradeScalePrefs } from "@sendtally/features/settings";
 import { ClimbEditorSheet } from "../../log-session/components/ClimbEditorSheet";
 
 export type LiveClimbEditorProps = {
-  api: SendtallyApi;
   live: LiveSession;
+  scales: GradePrefs;
   vocabulary: ClimbVocabulary;
   editingKey: string;
   onClose: () => void;
@@ -21,13 +20,12 @@ export type LiveClimbEditorProps = {
 
 /** The form's climb sheet, pointed at the live session in storage. */
 export function LiveClimbEditor({
-  api,
   live,
+  scales,
   vocabulary,
   editingKey,
   onClose,
 }: LiveClimbEditorProps): React.ReactElement | null {
-  const { scales } = useGradeScalePrefs(api);
   const climbs = live.stored?.draft.climbs ?? [];
   const index = climbs.findIndex((c) => c.key === editingKey);
   const climb = index < 0 ? null : climbs[index]!;

@@ -246,8 +246,8 @@ export function LogView({
       <LogMenu variant="fab" onLogClimb={logClimb} />
       {editingClimb !== null && (
         <LiveClimbEditor
-          api={api}
           live={live}
+          scales={scales}
           vocabulary={vocabulary}
           editingKey={editingClimb}
           onClose={() => setEditingClimb(null)}
