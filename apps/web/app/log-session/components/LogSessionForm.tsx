@@ -155,7 +155,6 @@ export function LogSessionForm({
   const vocabulary = useClimbVocabulary(api);
   const narrow = useIsNarrow();
   const [editingKey, setEditingKey] = React.useState<string | null>(null);
-  const [defaultTimes] = React.useState({ start: draft.startTime, end: draft.endTime });
 
   // The preference query resolves after the first render, so a new draft adopts the user's
   // scale once, per discipline and only where no grade has been typed yet. A draft picked
@@ -196,11 +195,6 @@ export function LogSessionForm({
     if (autosave.savedAt === null) void navigate(cancelTo);
     else setConfirmingCancel(true);
   }
-
-  const untouchedTimes =
-    editing === undefined &&
-    draft.startTime === defaultTimes.start &&
-    draft.endTime === defaultTimes.end;
 
   function setDiscipline(key: string, discipline: Discipline): void {
     setDraft((d) => ({
@@ -342,7 +336,6 @@ export function LogSessionForm({
                 className="log-session-control"
                 style={inputStyle}
               />
-              {untouchedTimes && <span style={columnHead}>{t("logSession.whenYouOpened")}</span>}
             </Field>
             <Field label={t("logSession.endTime")}>
               <input
@@ -352,7 +345,6 @@ export function LogSessionForm({
                 className="log-session-control"
                 style={inputStyle}
               />
-              {untouchedTimes && <span style={columnHead}>{t("logSession.startPlusHour")}</span>}
             </Field>
           </div>
           <Field label={t("logSession.location")}>

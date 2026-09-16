@@ -1,5 +1,6 @@
+import { BottomSheetTextInput } from "@gorhom/bottom-sheet";
 import React from "react";
-import { Pressable, Text, TextInput, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import type { ClimbSummary } from "@sendtally/api-client";
 import { climbDraftGrade, projectMetaLabel } from "@sendtally/features/climbs";
 import {
@@ -265,17 +266,18 @@ export function ClimbEditorSheet({
               justifyContent: "space-between",
             }}
           >
-            <Text style={{ ...label, color: colors.watermelonInk }}>
+            <Text style={{ ...label, color: colors.gunmetal }}>
               {t("logSession.climbOf", { n: index + 1, total: count })}
             </Text>
             {count > 1 && (
               <Pressable
                 onPress={onRemove}
-                hitSlop={8}
+                hitSlop={12}
                 accessibilityRole="button"
+                accessibilityLabel={t("logSession.removeClimb")}
                 style={press({})}
               >
-                <Text style={{ ...label, color: colors.textFaint }}>{t("logSession.remove")}</Text>
+                <Icon name="trash" color={colors.watermelon} size={16} strokeWidth={1.8} />
               </Pressable>
             )}
           </View>
@@ -300,11 +302,13 @@ export function ClimbEditorSheet({
 
           <View style={{ gap: 7 }}>
             <Text style={label}>{t("logSession.nameOptional")}</Text>
-            <TextInput
+            <BottomSheetTextInput
+              autoCorrect={false}
+              spellCheck={false}
+              autoComplete="off"
               value={climb.name}
               placeholder={t("logSession.climbNamePlaceholder")}
               placeholderTextColor={colors.textFaint}
-              autoCorrect={false}
               returnKeyType="done"
               onChangeText={onChangeName}
               onFocus={() => setNameFocused(true)}
@@ -438,7 +442,10 @@ export function ClimbEditorSheet({
             </Text>
             {named && (
               <>
-                <TextInput
+                <BottomSheetTextInput
+                  autoCorrect={false}
+                  spellCheck={false}
+                  autoComplete="off"
                   value={climb.note}
                   multiline
                   maxLength={2000}
@@ -472,7 +479,7 @@ export function ClimbEditorSheet({
             })}
           >
             <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 15, color: colors.white }}>
-              {t("common.done")}
+              {t("common.save")}
             </Text>
           </Pressable>
         </View>

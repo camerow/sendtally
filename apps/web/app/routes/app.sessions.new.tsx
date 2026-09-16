@@ -38,18 +38,6 @@ export default function LogSessionRoute(): React.ReactElement {
         >
           {t("common.logASession")}
         </h1>
-        <span
-          style={{
-            fontFamily: "var(--font-mono)",
-            fontWeight: 500,
-            fontSize: 11,
-            letterSpacing: "0.08em",
-            textTransform: "uppercase",
-            color: "rgba(64,63,76,0.72)",
-          }}
-        >
-          {t("logSession.subtitle")}
-        </span>
       </div>
       {/* The session starts on the visitor's clock, so the form waits for their browser. */}
       {hydrated && <LogSessionForm api={api} />}

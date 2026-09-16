@@ -28,6 +28,8 @@ export type DraftAutosave = {
   rebase: (draft: LogSessionDraft) => void;
   resume: () => void;
   startFresh: () => void;
+  /** Write whatever is pending now - the app is about to leave the foreground. */
+  flush: () => void;
   /** Drop the stored draft and stop saving - the session made it to the server. */
   clear: () => void;
 };
@@ -98,13 +100,15 @@ export function useDraftAutosave(
     setDismissed(true);
   }, [storage]);
 
+  const flush = React.useCallback(() => saver?.flush(), [saver]);
+
   const clear = React.useCallback(() => {
     saver?.stop();
     storage?.remove();
     setSavedAt(null);
   }, [saver, storage]);
 
-  return { offered, savedAt, rebase, resume, startFresh, clear };
+  return { offered, savedAt, rebase, resume, startFresh, flush, clear };
 }
 
 export type StoredDraftEntry = { stored: StoredSessionDraft | null; discard: () => void };

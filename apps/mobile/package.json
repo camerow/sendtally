@@ -18,7 +18,9 @@
     "@expo-google-fonts/bricolage-grotesque": "^0.4.1",
     "@expo-google-fonts/ibm-plex-mono": "^0.4.1",
     "@expo-google-fonts/ibm-plex-sans": "^0.4.1",
+    "@gorhom/bottom-sheet": "5.2.14",
     "@posthog/react-native-plugin": "^2.6.0",
+    "@react-native-community/datetimepicker": "9.1.0",
     "@sendtally/api-client": "workspace:*",
     "@sendtally/design": "workspace:*",
     "@sendtally/features": "workspace:*",
@@ -26,7 +28,7 @@
     "expo": "~57.0.23",
     "expo-application": "~57.0.3",
     "expo-auth-session": "~57.0.12",
-    "expo-build-properties": "~57.0.19",
+    "expo-build-properties": "~57.0.20",
     "expo-constants": "~57.0.18",
     "expo-crypto": "~57.0.3",
     "expo-dev-client": "~57.0.19",
@@ -47,10 +49,13 @@
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-native": "0.86.3",
+    "react-native-gesture-handler": "~2.32.0",
     "react-native-purchases": "^10.9.0",
+    "react-native-reanimated": "4.5.1",
     "react-native-safe-area-context": "~5.7.0",
     "react-native-screens": "~4.26.2",
-    "react-native-svg": "~15.15.4"
+    "react-native-svg": "~15.15.4",
+    "react-native-worklets": "0.10.1"
   },
   "devDependencies": {
     "@babel/core": "^7.25.0",

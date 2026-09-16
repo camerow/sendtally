@@ -17,14 +17,16 @@ name: draft-survives-leaving
     element:
       text: "\\+ ADD CLIMB"
     direction: DOWN
+    centerElement: true
 - tapOn: "\\+ ADD CLIMB"
-- tapOn: "Done"
+- tapOn: "Save"
 - scrollUntilVisible:
     element:
       text: "\\+ ADD CLIMB"
     direction: DOWN
+    centerElement: true
 - tapOn: "\\+ ADD CLIMB"
-- tapOn: "Done"
+- tapOn: "Save"
 - scrollUntilVisible:
     element:
       text: "← LOG"

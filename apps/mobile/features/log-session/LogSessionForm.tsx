@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from "expo-router";
 import React from "react";
-import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import { AppState, Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import type { ClimbSummary } from "@sendtally/api-client";
 import { climbDraftGrade, findClimb, useClimbVocabulary } from "@sendtally/features/climbs";
 import {
@@ -31,6 +31,7 @@ import { DraftBanner } from "./DraftBanner";
 import { TagPicker } from "../sessions/TagPicker";
 import { ClimbEditorSheet } from "./ClimbEditorSheet";
 import { ClimbLedgerRow } from "./ClimbLedgerRow";
+import { DateTimeField } from "./DateTimeField";
 import { press } from "../../lib/press";
 
 function LabelText({ children }: { children: React.ReactNode }): React.ReactElement {
@@ -42,22 +43,6 @@ function LabelText({ children }: { children: React.ReactNode }): React.ReactElem
         letterSpacing: 0.8,
         textTransform: "uppercase",
         color: colors.textSecondary,
-      }}
-    >
-      {children}
-    </Text>
-  );
-}
-
-function Caption({ children }: { children: React.ReactNode }): React.ReactElement {
-  return (
-    <Text
-      style={{
-        fontFamily: fonts.monoMedium,
-        fontSize: 9,
-        letterSpacing: 0.7,
-        textTransform: "uppercase",
-        color: colors.textFaint,
       }}
     >
       {children}
@@ -139,7 +124,6 @@ export function LogSessionForm({
   const [editingKey, setEditingKey] = React.useState<string | null>(null);
   const editingIndex = draft.climbs.findIndex((c) => c.key === editingKey);
   const editingClimb = editingIndex < 0 ? null : draft.climbs[editingIndex]!;
-  const [defaultTimes] = React.useState({ start: draft.startTime, end: draft.endTime });
 
   // The preference query resolves after the first render, so a new draft adopts the user's
   // scale once, per discipline and only where no grade has been typed yet. A draft picked
@@ -168,10 +152,14 @@ export function LogSessionForm({
     autosave.rebase(next);
     setDraft(next);
   }, [prefsReady, gradePrefs, draft, autosave]);
-  const untouchedTimes =
-    editing === undefined &&
-    draft.startTime === defaultTimes.start &&
-    draft.endTime === defaultTimes.end;
+  // iOS gives a backgrounded app no unmount, so the pending write goes out as it leaves.
+  const flush = autosave.flush;
+  React.useEffect(() => {
+    const subscription = AppState.addEventListener("change", (state) => {
+      if (state !== "active") flush();
+    });
+    return () => subscription.remove();
+  }, [flush]);
 
   function updateClimb(key: string, patch: (climb: ClimbDraft) => ClimbDraft): void {
     setDraft((d) => ({ ...d, climbs: d.climbs.map((c) => (c.key === key ? patch(c) : c)) }));
@@ -260,6 +248,8 @@ export function LogSessionForm({
   return (
     <View style={{ flex: 1 }}>
       <ScrollView
+        keyboardShouldPersistTaps="handled"
+        automaticallyAdjustKeyboardInsets
         contentContainerStyle={{ paddingHorizontal: 18, paddingTop: 8, paddingBottom: 24, gap: 14 }}
       >
         <Pressable
@@ -289,17 +279,19 @@ export function LogSessionForm({
           >
             {editing === undefined ? t("common.logASession") : t("logSession.editTitle")}
           </Text>
-          <Text
-            style={{
-              fontFamily: fonts.monoMedium,
-              fontSize: 10,
-              letterSpacing: 0.8,
-              textTransform: "uppercase",
-              color: colors.textMuted,
-            }}
-          >
-            {editing === undefined ? t("logSession.subtitleShort") : t("logSession.editSubtitle")}
-          </Text>
+          {editing !== undefined && (
+            <Text
+              style={{
+                fontFamily: fonts.monoMedium,
+                fontSize: 10,
+                letterSpacing: 0.8,
+                textTransform: "uppercase",
+                color: colors.textMuted,
+              }}
+            >
+              {t("logSession.editSubtitle")}
+            </Text>
+          )}
         </View>
 
         {autosave.offered !== null && (
@@ -313,6 +305,9 @@ export function LogSessionForm({
         <View style={{ gap: 7 }}>
           <LabelText>{t("logSession.sessionNameOptional")}</LabelText>
           <TextInput
+            autoCorrect={false}
+            spellCheck={false}
+            autoComplete="off"
             value={draft.name}
             placeholder={t("logSession.sessionNamePlaceholder")}
             placeholderTextColor={colors.textFaint}
@@ -324,35 +319,30 @@ export function LogSessionForm({
         <View style={{ flexDirection: "row", gap: 8 }}>
           <View style={{ flex: 1, gap: 7 }}>
             <LabelText>{t("logSession.date")}</LabelText>
-            <TextInput
+            <DateTimeField
+              mode="date"
               value={draft.date}
-              placeholder="YYYY-MM-DD"
-              placeholderTextColor={colors.textFaint}
-              onChangeText={(date) => setDraft({ ...draft, date })}
-              style={{ ...inputStyle, fontFamily: fonts.mono, fontSize: 13 }}
+              label={t("logSession.date")}
+              onChange={(date) => setDraft({ ...draft, date })}
             />
           </View>
           <View style={{ flex: 1, gap: 7 }}>
             <LabelText>{t("logSession.start")}</LabelText>
-            <TextInput
+            <DateTimeField
+              mode="time"
               value={draft.startTime}
-              placeholder="HH:MM"
-              placeholderTextColor={colors.textFaint}
-              onChangeText={(startTime) => setDraft((d) => withStartTime(d, startTime))}
-              style={{ ...inputStyle, fontFamily: fonts.mono, fontSize: 13 }}
+              label={t("logSession.start")}
+              onChange={(startTime) => setDraft((d) => withStartTime(d, startTime))}
             />
-            {untouchedTimes && <Caption>{t("logSession.whenYouOpenedThis")}</Caption>}
           </View>
           <View style={{ flex: 1, gap: 7 }}>
             <LabelText>{t("logSession.end")}</LabelText>
-            <TextInput
+            <DateTimeField
+              mode="time"
               value={draft.endTime}
-              placeholder="HH:MM"
-              placeholderTextColor={colors.textFaint}
-              onChangeText={(endTime) => setDraft({ ...draft, endTime })}
-              style={{ ...inputStyle, fontFamily: fonts.mono, fontSize: 13 }}
+              label={t("logSession.end")}
+              onChange={(endTime) => setDraft({ ...draft, endTime })}
             />
-            {untouchedTimes && <Caption>{t("logSession.startPlusHour")}</Caption>}
           </View>
         </View>
 
@@ -446,6 +436,9 @@ export function LogSessionForm({
         <View style={{ gap: 7 }}>
           <LabelText>{t("logSession.notesOptional")}</LabelText>
           <TextInput
+            autoCorrect={false}
+            spellCheck={false}
+            autoComplete="off"
             value={draft.notes}
             multiline
             maxLength={SESSION_NOTE_MAX}

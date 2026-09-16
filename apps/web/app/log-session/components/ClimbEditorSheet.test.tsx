@@ -148,7 +148,7 @@ describe("ClimbEditorSheet", () => {
     expect(dialog.textContent).not.toContain("climb must have a name to have a note");
   });
 
-  it("closes from the Done button", () => {
+  it("closes from the Save button", () => {
     const onClose = vi.fn();
     const dialog = mount(onClose);
     pointer(dialog.querySelector(".climb-sheet-done")!, "click");

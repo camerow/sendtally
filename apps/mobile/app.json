@@ -50,7 +50,8 @@
           }
         }
       ],
-      "./plugins/with-android-play-compliance.js"
+      "./plugins/with-android-play-compliance.js",
+      "@react-native-community/datetimepicker"
     ],
     "experiments": {
       "typedRoutes": false

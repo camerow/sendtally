@@ -81,6 +81,7 @@ export default function SessionDetailScreen(): React.ReactElement {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.white }} edges={["top"]}>
       <ScrollView
+        keyboardShouldPersistTaps="handled"
         contentContainerStyle={{ paddingHorizontal: 18, paddingTop: 8, paddingBottom: 24, gap: 12 }}
       >
         <View
