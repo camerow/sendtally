@@ -1,10 +1,14 @@
 import React from "react";
 import { findClimb, type ClimbVocabulary } from "@sendtally/features/climbs";
-import { withClimbName, withPickedClimb, type ClimbDraft } from "@sendtally/features/log-session";
+import {
+  withClimbName,
+  withPickedClimb,
+  type ClimbDraft,
+  type LiveSession,
+} from "@sendtally/features/log-session";
 import { useGradeScalePrefs } from "@sendtally/features/settings";
 import { useApi } from "../../lib/api";
 import { ClimbEditorSheet } from "../log-session/ClimbEditorSheet";
-import type { LiveSession } from "./useLiveSession";
 
 export type LiveClimbEditorProps = {
   live: LiveSession;

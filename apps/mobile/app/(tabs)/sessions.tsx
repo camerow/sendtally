@@ -26,12 +26,13 @@ import { t } from "@sendtally/features/i18n";
 import { colors, fonts } from "@sendtally/design/tokens";
 import { ScreenHeader } from "../../components/ScreenHeader";
 import { useClimbVocabulary } from "@sendtally/features/climbs";
+import { useLiveSession } from "@sendtally/features/log-session";
+import { sessionDraftStorage } from "../../lib/sessionDraftStorage";
 import { useGradeScalePrefs } from "@sendtally/features/settings";
 import { EntryRow, entryRowHeight } from "../../features/journal/EntryRow";
 import { LiveClimbEditor } from "../../features/live-session/LiveClimbEditor";
 import { LiveSessionCard } from "../../features/live-session/LiveSessionCard";
 import { LogFab } from "../../features/live-session/LogFab";
-import { useLiveSession } from "../../features/live-session/useLiveSession";
 import {
   DEFAULT_FILTERS,
   FilterSheet,
@@ -102,7 +103,7 @@ export default function Log(): React.ReactElement {
   // ponytail: a second status() read per mount, to know if Strava is live; a Strava-status context across tabs if it ever matters
   const settings = useSettings(api);
   const { scales } = useGradeScalePrefs(api);
-  const live = useLiveSession();
+  const live = useLiveSession(sessionDraftStorage);
   const vocabulary = useClimbVocabulary(api);
   const [editingClimb, setEditingClimb] = React.useState<string | null>(null);
   const connect = useStravaConnect(api, settings.reload);
