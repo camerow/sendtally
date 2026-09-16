@@ -47,6 +47,32 @@ function session(
   };
 }
 
+describe("circuit grouping", () => {
+  it("breaks a gym's sends down by the circuit each climb was on", () => {
+    const purple = { id: "p", label: "Purple", colour: "purple" as const };
+    const red = { id: "r", label: "Red", colour: "red" as const };
+    const rows = [
+      session("2026-08-01T10:00:00.000Z", [
+        { vGrade: 4, circuit: purple },
+        { vGrade: 4, circuit: purple },
+        { vGrade: 6, circuit: red },
+      ]),
+      session("2026-08-03T10:00:00.000Z", [{ vGrade: 4, circuit: purple }]),
+    ];
+    const vm = trendsVM(rows, "1m", NOW, null, "circuit");
+    expect(vm.details.pyramid.breakdown).toEqual([
+      expect.objectContaining({
+        key: "p",
+        label: "Purple",
+        colour: "purple",
+        value: "3",
+        sessions: 2,
+      }),
+      expect.objectContaining({ key: "r", label: "Red", colour: "red", value: "1", sessions: 1 }),
+    ]);
+  });
+});
+
 const sessions: SessionWithClimbs[] = [
   session("2026-08-01T18:00:00.000Z", [{ vGrade: 4 }, { vGrade: 5, tries: 3 }, { vGrade: 7 }]),
   session("2026-07-20T18:00:00.000Z", [{ vGrade: 5 }, { vGrade: 6, tries: 2 }]),

@@ -30,6 +30,9 @@ export function TrendFilters({
     untaggedCount,
     selectedTags,
     setTags,
+    gyms,
+    gymId,
+    setGym,
   } = feature;
   const [filtersOpen, setFiltersOpen] = React.useState(false);
   const disciplines = state.status === "ready" ? state.data.disciplines : [];
@@ -75,8 +78,11 @@ export function TrendFilters({
               />
             ))}
         </ScrollView>
-        {tagOptions.length > 0 && (
-          <FilterButton active={selectedTags.length > 0} onPress={() => setFiltersOpen(true)} />
+        {(tagOptions.length > 0 || gyms.length > 0) && (
+          <FilterButton
+            active={selectedTags.length > 0 || gymId !== null}
+            onPress={() => setFiltersOpen(true)}
+          />
         )}
       </View>
       <TrendFilterSheet
@@ -84,8 +90,11 @@ export function TrendFilters({
         tagOptions={tagOptions}
         untaggedCount={untaggedCount}
         selectedTags={selectedTags}
-        onApply={(tags) => {
+        gyms={gyms}
+        gymId={gymId}
+        onApply={(tags, gym) => {
           setTags(tags);
+          setGym(gym);
           setFiltersOpen(false);
         }}
         onClose={() => setFiltersOpen(false)}

@@ -58,4 +58,9 @@ export const trends = {
   "trends.tagRowTitle_one": "{label} · {count} sesión",
   "trends.tagRowTitle_other": "{label} · {count} sesiones",
   "trends.range7d": "Últimos 7 días",
+  "trends.byCircuit": "Por circuito",
+  "trends.place": "Lugar",
+  "trends.everywhere": "En todas partes",
+  "trends.placeBody": "Dentro de un rocódromo, el desglose es por circuito.",
+  "trends.byCircuitTitled": "Por circuito · {title}",
 } as const;

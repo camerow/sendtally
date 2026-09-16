@@ -1,4 +1,5 @@
 import type { Discipline } from "@sendtally/core";
+import type { CircuitColour } from "@sendtally/api-client";
 import { t } from "../i18n";
 
 export type { Discipline };
@@ -44,6 +45,7 @@ export const TILE_BREAKDOWN_ROWS = 3;
 export type TrendTagRowVM = {
   key: string;
   label: string;
+  colour?: CircuitColour;
   value: string;
   ratio: number;
   sessions: number;

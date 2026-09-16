@@ -165,7 +165,9 @@ function TrendDetail(): React.ReactElement {
               ))}
             </View>
             <TrendTagBreakdown
-              title={t("trends.byTagTitled", { title: state.data.details[metric].title })}
+              title={t(feature.gymId === null ? "trends.byTagTitled" : "trends.byCircuitTitled", {
+                title: state.data.details[metric].title,
+              })}
               rows={state.data.details[metric].breakdown}
             />
             <Text

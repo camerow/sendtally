@@ -33,6 +33,34 @@ describe("live session", () => {
     expect(second.draft.climbs[1]?.scale).toBe(first.draft.climbs[0]?.scale);
   });
 
+  it("starts at the gym and puts each climb on the previous circuit, or the first", () => {
+    const gym = {
+      id: "g",
+      name: "Barn",
+      scale: "v" as const,
+      walls: [],
+      circuits: [
+        { id: "a", colour: "blue" as const, label: "", low: 0, high: 2 },
+        { id: "b", colour: "red" as const, label: "", low: 4, high: 6 },
+      ],
+    };
+    const first = withQuickClimb(null, EVENING, undefined, gym);
+    expect(first.draft.gymId).toBe("g");
+    expect(first.draft.climbs[0]).toMatchObject({ grade: "V1", circuit: { id: "a" } });
+    const moved = {
+      ...first.draft,
+      climbs: first.draft.climbs.map((c) => ({
+        ...c,
+        grade: "V5",
+        circuit: { id: "b", label: "Red", colour: "red" as const },
+      })),
+    };
+    const second = withQuickClimb(moved, EVENING, undefined, gym);
+    expect(second.draft.climbs[1]).toMatchObject({ grade: "V5", circuit: { id: "b" } });
+    const elsewhere = withQuickClimb(first.draft, EVENING, undefined, { ...gym, id: "other" });
+    expect(elsewhere.draft.climbs[1]).toMatchObject({ grade: "V1", circuit: { id: "a" } });
+  });
+
   it("moves the end time when a climb is revisited the same day only", () => {
     const draft = liveDraft(EVENING);
     expect(withClimbTouched(draft, new Date(2026, 8, 16, 20, 5)).endTime).toBe("20:05");

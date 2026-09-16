@@ -1,5 +1,5 @@
 import { climbDiscipline, climbRank, type Discipline } from "@sendtally/core";
-import type { SessionWithClimbs } from "@sendtally/api-client";
+import type { CircuitColour, SessionWithClimbs } from "@sendtally/api-client";
 import { climbKey } from "../climbs/transforms";
 import { formatDate, formatNumber, t, type MessageKey } from "../i18n";
 import { gradeFormatterFor, type GradeFormatter } from "../sessions/grades";
@@ -186,6 +186,7 @@ const MAX_BREAKDOWN_ROWS = 10;
 type TagStat = {
   key: string;
   label: string;
+  colour?: CircuitColour;
   sessions: number;
   volume: number;
   sends: number;
@@ -207,17 +208,51 @@ const METRIC_PICK: Record<TrendMetric, MetricPick> = {
   avggrade: (t, format) => ({ value: t.avg, label: t.avg === null ? "-" : format.average(t.avg) }),
 };
 
+type StatGroup = { key: string; label: string; colour?: CircuitColour; items: SessionWithClimbs[] };
+
+/** Inside one gym the natural grouping is the circuit: each climb counts under the colour it was on. */
+function circuitGroups(sessions: SessionWithClimbs[]): StatGroup[] {
+  const groups = new Map<string, StatGroup>();
+  for (const session of sessions) {
+    for (const climb of session.climbs) {
+      if (climb.circuit === undefined) continue;
+      const group = groups.get(climb.circuit.id) ?? {
+        key: climb.circuit.id,
+        label: climb.circuit.label,
+        colour: climb.circuit.colour,
+        items: [],
+      };
+      groups.set(climb.circuit.id, group);
+    }
+  }
+  for (const group of groups.values()) {
+    group.items = sessions
+      .map((s) => {
+        const climbs = s.climbs.filter((c) => c.circuit?.id === group.key);
+        return { ...s, climbs, climb_count: climbs.length };
+      })
+      .filter((s) => s.climbs.length > 0);
+  }
+  return [...groups.values()];
+}
+
+export type TrendGrouping = "tag" | "circuit";
+
 function tagStats(
   sessions: SessionWithClimbs[],
   windowStart: number,
-  discipline: Discipline
+  discipline: Discipline,
+  grouping: TrendGrouping
 ): TagStat[] {
-  return sessionTagGroups(sessions).map((group) => {
+  const groups: StatGroup[] =
+    grouping === "circuit" ? circuitGroups(sessions) : sessionTagGroups(sessions);
+  return groups.map((group) => {
     const sent = sends(group.items, discipline).filter((c) => c.time >= windowStart);
     const grades = sent.map((c) => c.grade);
     return {
       key: group.key,
       label: group.label,
+      ...(group.colour === undefined ? {} : { colour: group.colour }),
       sessions: group.items.length,
       volume: group.items.reduce((a, s) => a + s.climb_count, 0),
       sends: sent.length,
@@ -246,6 +281,7 @@ function breakdownFor(
     .map((r) => ({
       key: r.stat.key,
       label: r.stat.label,
+      ...(r.stat.colour === undefined ? {} : { colour: r.stat.colour }),
       value: r.label,
       ratio: max <= 0 ? 0 : r.value / max,
       sessions: r.stat.sessions,
@@ -256,7 +292,8 @@ export function trendsVM(
   sessions: SessionWithClimbs[],
   range: TrendRange = "3m",
   now: Date = new Date(),
-  requestedDiscipline: Discipline | null = null
+  requestedDiscipline: Discipline | null = null,
+  grouping: TrendGrouping = "tag"
 ): TrendsVM {
   const rangeLabel = t(RANGE_KEYS[range]);
   const { discipline, disciplines } = resolveDiscipline(sessions, requestedDiscipline);
@@ -305,7 +342,7 @@ export function trendsVM(
   const totalClimbs = inRange.reduce((a, s) => a + s.climb_count, 0);
   const avgGrade = totalSends > 0 ? rangeSends.reduce((a, s) => a + s.grade, 0) / totalSends : 0;
 
-  const stats = tagStats(inRange, windowStart, discipline);
+  const stats = tagStats(inRange, windowStart, discipline, grouping);
   const axis = thinAxis(buckets);
   const countTick = (v: number): string => String(Math.round(v));
   const gradeTick = (v: number): string => grade(Math.round(v));

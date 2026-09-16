@@ -49,12 +49,15 @@ export function customStart(): Circuit[] {
   return [{ id: circuitId(), colour: "green", label: "", low: 0, high: 1 }];
 }
 
-/** The next circuit continues the ladder in an unused colour. */
+/** The next circuit continues the ladder, in the next colour the standard ladder would use. */
 export function nextCircuit(circuits: readonly Circuit[]): Circuit {
   const last = circuits[circuits.length - 1];
   const low = last === undefined ? 0 : Math.min(MAX_CIRCUIT_GRADE, last.high + 1);
   const used = new Set(circuits.map((c) => c.colour));
-  const colour = CIRCUIT_COLOURS.find((c) => !used.has(c)) ?? "green";
+  const colour =
+    STANDARD.map(([c]) => c).find((c) => !used.has(c)) ??
+    CIRCUIT_COLOURS.find((c) => !used.has(c)) ??
+    "green";
   return { id: circuitId(), colour, label: "", low, high: Math.min(MAX_CIRCUIT_GRADE, low + 1) };
 }
 
