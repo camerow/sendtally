@@ -443,7 +443,11 @@ export function ClimbEditorSheet({
               spellCheck={false}
               autoComplete="off"
               value={climb.name}
-              placeholder={t("logSession.climbNamePlaceholder")}
+              placeholder={
+                gym === null
+                  ? t("logSession.climbNamePlaceholder")
+                  : t("logSession.circuitClimbNamePlaceholder")
+              }
               placeholderTextColor={colors.textFaint}
               returnKeyType="done"
               onChangeText={onChangeName}
