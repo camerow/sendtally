@@ -99,6 +99,13 @@
       "when": 1789447393271,
       "tag": "0018_abnormal_baron_strucker",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "6",
+      "when": 1789590732895,
+      "tag": "0019_demonic_klaw",
+      "breakpoints": true
     }
   ]
 }
