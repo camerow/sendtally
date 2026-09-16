@@ -10,51 +10,15 @@ import {
 } from "@sendtally/features/log-session";
 import { t } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
-import { press } from "../../lib/press";
+import { Icon } from "../../components/Icon";
+import { SelectRow } from "../../components/SelectRow";
+import { pressRow } from "../../lib/press";
 import { bodyText, sectionCard, sectionLabel } from "../../lib/styles";
 
 export type GradeSectionProps = {
   prefs: GradePrefs;
   onChange: (discipline: Discipline, scale: GradeScale) => void;
 };
-
-function Segment({
-  label,
-  active,
-  onPress,
-}: {
-  label: string;
-  active: boolean;
-  onPress: () => void;
-}): React.ReactElement {
-  return (
-    <Pressable
-      onPress={onPress}
-      accessibilityRole="radio"
-      accessibilityState={{ checked: active }}
-      accessibilityLabel={label}
-      style={press({
-        minWidth: 64,
-        height: 36,
-        alignItems: "center",
-        justifyContent: "center",
-        paddingHorizontal: 14,
-        backgroundColor: active ? colors.gold : "transparent",
-      })}
-    >
-      <Text
-        style={{
-          fontFamily: fonts.monoMedium,
-          fontSize: 11,
-          letterSpacing: 0.6,
-          color: active ? colors.gunmetal : "rgba(64,63,76,0.65)",
-        }}
-      >
-        {label}
-      </Text>
-    </Pressable>
-  );
-}
 
 function Row({
   discipline,
@@ -65,38 +29,59 @@ function Row({
   prefs: GradePrefs;
   onChange: (discipline: Discipline, scale: GradeScale) => void;
 }): React.ReactElement {
+  const label = disciplineLabel(discipline);
   return (
-    <View
-      accessibilityRole="radiogroup"
-      style={{
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "space-between",
-        gap: 14,
-        minHeight: 44,
-      }}
-    >
-      <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 13, color: colors.gunmetal }}>
-        {disciplineLabel(discipline)}
-      </Text>
-      <View
-        style={{
-          flexDirection: "row",
-          height: 36,
-          borderRadius: radius.pill,
-          borderWidth: 1,
-          borderColor: "rgba(64,63,76,0.18)",
-          overflow: "hidden",
-        }}
+    <View style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
+      <Text
+        style={{ flex: 1, fontFamily: fonts.sansSemiBold, fontSize: 13, color: colors.gunmetal }}
       >
-        {scaleOptionsFor(discipline).map((scale) => (
-          <Segment
-            key={scale}
-            label={scaleLabel(scale)}
-            active={prefs[discipline] === scale}
-            onPress={() => onChange(discipline, scale)}
-          />
-        ))}
+        {label}
+      </Text>
+      <View style={{ width: 140 }}>
+        <SelectRow
+          label={label}
+          value={scaleLabel(prefs[discipline])}
+          valueFont={fonts.monoSemiBold}
+        >
+          {(close) =>
+            scaleOptionsFor(discipline).map((scale) => {
+              const selected = scale === prefs[discipline];
+              return (
+                <Pressable
+                  key={scale}
+                  accessibilityRole="radio"
+                  accessibilityState={{ checked: selected }}
+                  onPress={() => {
+                    onChange(discipline, scale);
+                    close();
+                  }}
+                  style={pressRow({
+                    height: 48,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    paddingHorizontal: 12,
+                    borderRadius: radius.control,
+                    backgroundColor: selected ? "rgba(249,220,92,0.35)" : "transparent",
+                  })}
+                >
+                  <Text
+                    style={{
+                      fontFamily: selected ? fonts.monoSemiBold : fonts.monoMedium,
+                      fontSize: 15,
+                      color: colors.gunmetal,
+                    }}
+                  >
+                    {scaleLabel(scale)}
+                  </Text>
+                  {selected && (
+                    <Icon name="check" color={colors.gunmetal} size={18} strokeWidth={2.2} />
+                  )}
+                </Pressable>
+              );
+            })
+          }
+        </SelectRow>
       </View>
     </View>
   );
@@ -108,7 +93,6 @@ export function GradeSection({ prefs, onChange }: GradeSectionProps): React.Reac
       <Text style={sectionLabel}>{t("settings.grades")}</Text>
       <Text style={bodyText}>{t("settings.gradesBody")}</Text>
       <Row discipline="boulder" prefs={prefs} onChange={onChange} />
-      <View style={{ borderTopWidth: 1, borderTopColor: colors.lineOnLight }} />
       <Row discipline="route" prefs={prefs} onChange={onChange} />
     </View>
   );
