@@ -4,6 +4,14 @@ import { Pressable, Text, View } from "react-native";
 import type { ClimbSummary } from "@sendtally/api-client";
 import { climbDraftGrade, projectMetaLabel } from "@sendtally/features/climbs";
 import {
+  circuitGrades,
+  circuitLabel,
+  circuitRangeLabel,
+  findCircuit,
+  withCircuit,
+  type Gym,
+} from "@sendtally/features/gyms";
+import {
   disciplineLabel,
   disciplineOf,
   withClimbDiscipline,
@@ -13,7 +21,10 @@ import {
 } from "@sendtally/features/log-session";
 import { t } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
+import { CircuitDot } from "../../components/CircuitDot";
 import { Icon } from "../../components/Icon";
+import { OptionRow } from "../../components/OptionRow";
+import { SelectRow } from "../../components/SelectRow";
 import { Sheet } from "../../components/Sheet";
 import { GradePicker } from "./GradePicker";
 import { ResultPicker } from "./ResultPicker";
@@ -26,6 +37,8 @@ export type ClimbEditorSheetProps = {
   /** The form keeps one climb; a live session may lose its last one. */
   removable?: boolean;
   prefs: GradePrefs;
+  /** With a gym that has circuits, the climb is placed on a circuit instead of graded. */
+  gym?: Gym | null;
   project: boolean;
   known: ClimbSummary | null;
   suggestions: ClimbSummary[];
@@ -229,6 +242,98 @@ function ProjectRow({
   );
 }
 
+/**
+ * Circuit, wall and how it felt, in place of the grade. The felt-like list is only the grades
+ * the circuit spans, with the middle already chosen; nobody is asked to estimate.
+ */
+function CircuitFields({
+  climb,
+  gym,
+  onChange,
+}: {
+  climb: ClimbDraft;
+  gym: Gym;
+  onChange: (climb: ClimbDraft) => void;
+}): React.ReactElement {
+  const current = findCircuit(gym, climb.circuit?.id);
+  const wall = climb.wall ?? "";
+  return (
+    <View style={{ gap: 10 }}>
+      <View style={{ gap: 7 }}>
+        <Text style={label}>{t("gyms.circuit")}</Text>
+        <SelectRow
+          label={t("gyms.circuit")}
+          value={current === null ? t("gyms.circuit") : circuitLabel(current)}
+          valueFont={fonts.sansSemiBold}
+          leading={current === null ? undefined : <CircuitDot colour={current.colour} />}
+        >
+          {(close) =>
+            gym.circuits.map((circuit) => (
+              <OptionRow
+                key={circuit.id}
+                label={circuitLabel(circuit)}
+                detail={circuitRangeLabel(circuit, gym.scale)}
+                mono={false}
+                selected={circuit.id === current?.id}
+                leading={<CircuitDot colour={circuit.colour} />}
+                onPress={() => {
+                  onChange(withCircuit(climb, circuit, gym));
+                  close();
+                }}
+              />
+            ))
+          }
+        </SelectRow>
+      </View>
+      <View style={{ flexDirection: "row", gap: 10 }}>
+        <View style={{ flex: 1, gap: 7 }}>
+          <Text style={label}>{t("gyms.wall")}</Text>
+          <SelectRow label={t("gyms.wall")} value={wall === "" ? t("gyms.noWall") : wall}>
+            {(close) =>
+              ["", ...gym.walls].map((w) => (
+                <OptionRow
+                  key={w === "" ? "-" : w}
+                  label={w === "" ? t("gyms.noWall") : w}
+                  mono={false}
+                  selected={w === wall}
+                  onPress={() => {
+                    onChange({ ...climb, wall: w });
+                    close();
+                  }}
+                />
+              ))
+            }
+          </SelectRow>
+        </View>
+        {current !== null && (
+          <View style={{ width: 120, gap: 7 }}>
+            <Text style={label}>{t("gyms.feltLike")}</Text>
+            <SelectRow
+              label={t("gyms.feltLike")}
+              value={climb.grade}
+              valueFont={fonts.monoSemiBold}
+            >
+              {(close) =>
+                circuitGrades(current, gym.scale).map((grade) => (
+                  <OptionRow
+                    key={grade}
+                    label={grade}
+                    selected={grade === climb.grade}
+                    onPress={() => {
+                      onChange({ ...climb, grade });
+                      close();
+                    }}
+                  />
+                ))
+              }
+            </SelectRow>
+          </View>
+        )}
+      </View>
+    </View>
+  );
+}
+
 /** The climb stays rendered while the sheet slides away, so closing does not empty the panel mid-slide. */
 function useLingering(climb: ClimbDraft | null): ClimbDraft | null {
   const [shown, setShown] = React.useState(climb);
@@ -242,6 +347,7 @@ export function ClimbEditorSheet({
   count,
   removable = count > 1,
   prefs,
+  gym = null,
   project,
   known,
   suggestions,
@@ -285,23 +391,27 @@ export function ClimbEditorSheet({
             )}
           </View>
 
-          <View style={{ gap: 7 }}>
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "space-between",
-                gap: 12,
-              }}
-            >
-              <Text style={label}>{t("common.grade")}</Text>
-              <DisciplineToggle
-                value={disciplineOf(climb.scale)}
-                onChange={(discipline) => onChange(withClimbDiscipline(climb, discipline, prefs))}
-              />
+          {gym === null ? (
+            <View style={{ gap: 7 }}>
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: 12,
+                }}
+              >
+                <Text style={label}>{t("common.grade")}</Text>
+                <DisciplineToggle
+                  value={disciplineOf(climb.scale)}
+                  onChange={(discipline) => onChange(withClimbDiscipline(climb, discipline, prefs))}
+                />
+              </View>
+              <GradePicker climb={climb} onChange={onChange} />
             </View>
-            <GradePicker climb={climb} onChange={onChange} />
-          </View>
+          ) : (
+            <CircuitFields climb={climb} gym={gym} onChange={onChange} />
+          )}
 
           <View style={{ gap: 7 }}>
             <Text style={label}>{t("logSession.nameOptional")}</Text>

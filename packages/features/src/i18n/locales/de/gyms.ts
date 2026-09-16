@@ -50,4 +50,5 @@ export const gyms = {
   "gyms.colour.purple": "Lila",
   "gyms.colour.black": "Schwarz",
   "gyms.colour.white": "Weiß",
+  "gyms.removeWall": "Wand entfernen",
 } as const;

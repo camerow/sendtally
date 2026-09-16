@@ -1,5 +1,6 @@
 import React from "react";
 import { findClimb, type ClimbVocabulary } from "@sendtally/features/climbs";
+import type { Gym } from "@sendtally/features/gyms";
 import {
   withClimbName,
   withPickedClimb,
@@ -13,6 +14,7 @@ import { ClimbEditorSheet } from "../log-session/ClimbEditorSheet";
 export type LiveClimbEditorProps = {
   live: LiveSession;
   vocabulary: ClimbVocabulary;
+  gym: Gym | null;
   editingKey: string | null;
   onClose: () => void;
 };
@@ -21,6 +23,7 @@ export type LiveClimbEditorProps = {
 export function LiveClimbEditor({
   live,
   vocabulary,
+  gym,
   editingKey,
   onClose,
 }: LiveClimbEditorProps): React.ReactElement {
@@ -38,6 +41,7 @@ export function LiveClimbEditor({
       count={climbs.length}
       removable
       prefs={scales}
+      gym={gym}
       project={climb === null ? false : isProject(climb)}
       known={climb === null ? null : (findClimb(vocabulary.climbs, climb.name) ?? null)}
       suggestions={vocabulary.suggestionsFor(climb?.name ?? "")}

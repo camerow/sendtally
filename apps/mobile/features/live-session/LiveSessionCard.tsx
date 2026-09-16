@@ -2,6 +2,7 @@ import { router } from "expo-router";
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import type { ClimbVocabulary } from "@sendtally/features/climbs";
+import type { Gym } from "@sendtally/features/gyms";
 import {
   durationLabel,
   idleMinutes,
@@ -98,7 +99,9 @@ const wrapUp = (): void => router.push("/session/new?resume=1");
 export type LiveSessionCardProps = {
   stored: StoredSessionDraft;
   vocabulary: ClimbVocabulary;
+  gym: Gym | null;
   onEditClimb: (key: string) => void;
+  onChangeTries: (key: string, tries: number) => void;
   onDiscard: () => void;
 };
 
@@ -106,16 +109,21 @@ export type LiveSessionCardProps = {
 export function LiveSessionCard({
   stored,
   vocabulary,
+  gym,
   onEditClimb,
+  onChangeTries,
   onDiscard,
 }: LiveSessionCardProps): React.ReactElement {
   const now = useMinuteClock();
   const { draft, savedAt } = stored;
   const title = draft.name.trim() === "" ? t("sessions.unfinishedSession") : draft.name;
-  const meta = t("sessions.liveMeta", {
-    climbs: t("common.climbCount", { count: draft.climbs.length }),
-    start: draft.startTime,
-  });
+  const meta = [
+    t("sessions.liveMeta", {
+      climbs: t("common.climbCount", { count: draft.climbs.length }),
+      start: draft.startTime,
+    }),
+    ...(gym === null ? [] : [gym.name]),
+  ].join(" · ");
 
   return (
     <View>
@@ -181,6 +189,7 @@ export function LiveSessionCard({
                 climb={climb}
                 project={climb.project ?? vocabulary.isProject(climb.name)}
                 onPress={() => onEditClimb(climb.key)}
+                onChangeTries={(tries) => onChangeTries(climb.key, tries)}
               />
             ))}
           </View>

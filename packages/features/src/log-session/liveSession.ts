@@ -1,6 +1,8 @@
 import type { ClimbSummary } from "@sendtally/api-client";
 import { climbDraftGrade } from "../climbs/transforms";
 import { formatDate, t } from "../i18n";
+import { withCircuit } from "../gyms/draft";
+import type { Gym } from "../gyms/types";
 import { newClimb, nextClimbKey } from "./transforms";
 import {
   DEFAULT_GRADE_PREFS,
@@ -48,20 +50,31 @@ export function liveDraft(now: Date): LogSessionDraft {
   };
 }
 
+/**
+ * A session started from the Log tab is at the gym the climber last used, and each new climb
+ * starts on the previous climb's circuit, or the gym's first one, so most taps change nothing.
+ */
 export function withQuickClimb(
   draft: LogSessionDraft | null,
   now: Date,
-  prefs: GradePrefs = DEFAULT_GRADE_PREFS
+  prefs: GradePrefs = DEFAULT_GRADE_PREFS,
+  gym: Gym | null = null
 ): { draft: LogSessionDraft; key: string } {
-  const base = draft ?? liveDraft(now);
+  const base = draft ?? { ...liveDraft(now), ...(gym === null ? {} : { gymId: gym.id }) };
   const key = nextClimbKey(base.climbs);
   const previous = base.climbs[base.climbs.length - 1];
-  const climb = {
-    ...newClimb(key, previous?.scale ?? prefs.boulder),
-    ...(previous?.circuit === undefined
-      ? {}
-      : { circuit: previous.circuit, grade: previous.grade }),
-  };
+  const fresh = newClimb(key, previous?.scale ?? prefs.boulder);
+  const atGym = gym !== null && gym.id === base.gymId ? gym : null;
+  const circuit =
+    previous?.circuit !== undefined
+      ? (atGym?.circuits.find((c) => c.id === previous.circuit?.id) ?? null)
+      : (atGym?.circuits[0] ?? null);
+  const climb =
+    previous?.circuit !== undefined && circuit === null
+      ? { ...fresh, circuit: previous.circuit, grade: previous.grade }
+      : circuit === null || atGym === null
+        ? fresh
+        : withCircuit(fresh, circuit, atGym);
   return { draft: withClimbTouched({ ...base, climbs: [...base.climbs, climb] }, now), key };
 }
 
