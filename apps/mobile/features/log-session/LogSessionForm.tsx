@@ -305,6 +305,9 @@ export function LogSessionForm({
         <View style={{ gap: 7 }}>
           <LabelText>{t("logSession.sessionNameOptional")}</LabelText>
           <TextInput
+            autoCorrect={false}
+            spellCheck={false}
+            autoComplete="off"
             value={draft.name}
             placeholder={t("logSession.sessionNamePlaceholder")}
             placeholderTextColor={colors.textFaint}
@@ -433,6 +436,9 @@ export function LogSessionForm({
         <View style={{ gap: 7 }}>
           <LabelText>{t("logSession.notesOptional")}</LabelText>
           <TextInput
+            autoCorrect={false}
+            spellCheck={false}
+            autoComplete="off"
             value={draft.notes}
             multiline
             maxLength={SESSION_NOTE_MAX}

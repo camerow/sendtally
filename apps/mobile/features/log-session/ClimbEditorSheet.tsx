@@ -266,7 +266,7 @@ export function ClimbEditorSheet({
               justifyContent: "space-between",
             }}
           >
-            <Text style={{ ...label, color: colors.watermelonInk }}>
+            <Text style={{ ...label, color: colors.gunmetal }}>
               {t("logSession.climbOf", { n: index + 1, total: count })}
             </Text>
             {count > 1 && (
@@ -277,7 +277,7 @@ export function ClimbEditorSheet({
                 accessibilityLabel={t("logSession.removeClimb")}
                 style={press({})}
               >
-                <Icon name="trash" color={colors.textFaint} size={16} strokeWidth={1.8} />
+                <Icon name="trash" color={colors.watermelon} size={16} strokeWidth={1.8} />
               </Pressable>
             )}
           </View>
@@ -303,10 +303,12 @@ export function ClimbEditorSheet({
           <View style={{ gap: 7 }}>
             <Text style={label}>{t("logSession.nameOptional")}</Text>
             <BottomSheetTextInput
+              autoCorrect={false}
+              spellCheck={false}
+              autoComplete="off"
               value={climb.name}
               placeholder={t("logSession.climbNamePlaceholder")}
               placeholderTextColor={colors.textFaint}
-              autoCorrect={false}
               returnKeyType="done"
               onChangeText={onChangeName}
               onFocus={() => setNameFocused(true)}
@@ -441,6 +443,9 @@ export function ClimbEditorSheet({
             {named && (
               <>
                 <BottomSheetTextInput
+                  autoCorrect={false}
+                  spellCheck={false}
+                  autoComplete="off"
                   value={climb.note}
                   multiline
                   maxLength={2000}
