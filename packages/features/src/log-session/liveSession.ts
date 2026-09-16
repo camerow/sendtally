@@ -57,7 +57,7 @@ export function withQuickClimb(
   const key = nextClimbKey(base.climbs);
   const previous = base.climbs[base.climbs.length - 1];
   const climb = newClimb(key, previous?.scale ?? prefs.boulder);
-  return { draft: { ...base, endTime: hhmm(now), climbs: [...base.climbs, climb] }, key };
+  return { draft: withClimbTouched({ ...base, climbs: [...base.climbs, climb] }, now), key };
 }
 
 export function withClimbTouched(draft: LogSessionDraft, now: Date): LogSessionDraft {

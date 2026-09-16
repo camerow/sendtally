@@ -37,6 +37,12 @@ describe("live session", () => {
     const draft = liveDraft(EVENING);
     expect(withClimbTouched(draft, new Date(2026, 8, 16, 20, 5)).endTime).toBe("20:05");
     expect(withClimbTouched(draft, new Date(2026, 8, 17, 8, 0)).endTime).toBe("18:42");
+    const nextDay = withQuickClimb(
+      withQuickClimb(null, EVENING).draft,
+      new Date(2026, 8, 17, 8, 0)
+    );
+    expect(nextDay.draft.endTime).toBe("18:42");
+    expect(nextDay.draft.climbs).toHaveLength(2);
   });
 
   it("reminds after two idle hours, and always on a later day", () => {
