@@ -34,9 +34,6 @@ export function SessionTags({
         display: "flex",
         flexDirection: "column",
         gap: 12,
-        background: "var(--surface-soft)",
-        borderRadius: "var(--radius-card)",
-        padding: "18px 20px",
         marginTop: 22,
       }}
     >
