@@ -48,7 +48,7 @@ export function useQuery<T>(
     return () => {
       cancelled = true;
     };
-  }, [load, tick]);
+  }, [load, tick, cacheKey]);
 
   const reload = React.useCallback(() => {
     if (!cacheKey) setState({ status: "loading" });
