@@ -276,6 +276,36 @@ body:has(.climb-sheet[open]) {
   }
 }
 
+@media (min-width: 768px) {
+  .climb-sheet {
+    inset: 0;
+    margin: auto;
+    width: 440px;
+    height: fit-content;
+    max-height: calc(100dvh - 48px);
+    background: none;
+  }
+
+  .climb-sheet::backdrop {
+    background: rgba(64, 63, 76, 0.45);
+  }
+
+  .climb-sheet-panel {
+    max-height: calc(100dvh - 48px);
+    border-radius: var(--radius-panel);
+    padding-bottom: 18px;
+  }
+
+  .climb-sheet-handle {
+    display: none;
+  }
+
+  .climb-sheet-grip {
+    touch-action: auto;
+    cursor: default;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .climb-sheet,
   .climb-sheet::backdrop {

@@ -65,6 +65,8 @@ export type ClimbEditorSheetProps = {
   count: number;
   scale: GradeScale;
   project: boolean;
+  /** Defaults to "not the last climb"; a live session lets the last one go too. */
+  removable?: boolean;
   suggestions: ClimbSummary[];
   onChange: (climb: ClimbDraft) => void;
   onChangeDiscipline: (discipline: Discipline) => void;
@@ -81,6 +83,7 @@ export function ClimbEditorSheet({
   count,
   scale,
   project,
+  removable = count > 1,
   suggestions,
   onChange,
   onChangeDiscipline,
@@ -126,7 +129,7 @@ export function ClimbEditorSheet({
             <span style={{ ...monoLabel, color: "var(--text-label-accent)" }}>
               {t("logSession.climbOf", { n: index + 1, total: count })}
             </span>
-            {count > 1 && (
+            {removable && (
               <button
                 type="button"
                 onClick={onRemove}
