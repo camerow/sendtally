@@ -18,6 +18,7 @@ name: project-session-opens
     element:
       text: "\\+ ADD CLIMB"
     direction: DOWN
+    centerElement: true
 - tapOn: "\\+ ADD CLIMB"
 - tapOn: "Name (optional)"
 # The climb rolls up by its name, so typing the project's name is what files this session under
@@ -26,7 +27,7 @@ name: project-session-opens
 - inputText: "Maestro Arete"
 - pressKey: Enter
 - runFlow: ../helpers/hide-keyboard.yaml
-- tapOn: "Done"
+- tapOn: "Save"
 - scrollUntilVisible:
     element:
       text: "Log session"
