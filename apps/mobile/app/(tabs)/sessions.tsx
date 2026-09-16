@@ -1,4 +1,4 @@
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import React from "react";
 import {
   RefreshControl,
@@ -109,6 +109,13 @@ export default function Log(): React.ReactElement {
   const [editingClimb, setEditingClimb] = React.useState<string | null>(null);
   const connect = useStravaConnect(api, settings.reload);
   const gyms = useGyms(api);
+  const reloadGyms = gyms.reload;
+  // A gym added from the setup card comes back to this tab, which must stop offering it.
+  useFocusEffect(
+    React.useCallback(() => {
+      reloadGyms();
+    }, [reloadGyms])
+  );
   const gymPrompt = useSetupDismissed("gym");
   const stravaPrompt = useSetupDismissed("strava");
   const liveGym = circuitGym(

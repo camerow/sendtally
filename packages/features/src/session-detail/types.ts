@@ -1,3 +1,4 @@
+import type { CircuitColour } from "@sendtally/api-client";
 import { t } from "../i18n";
 
 export type ClimbResult = "onsight" | "flash" | "sent" | "project";
@@ -5,6 +6,8 @@ export type ClimbResult = "onsight" | "flash" | "sent" | "project";
 export type ClimbVM = {
   n: number;
   name: string;
+  /** A gym climb's circuit colour, drawn as the dot beside its name. */
+  colour?: CircuitColour;
   gradeLabel: string;
   grade: number;
   isTopSend: boolean;

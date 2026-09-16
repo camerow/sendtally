@@ -71,8 +71,10 @@ export function ClimbLedgerRow({
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={t("logSession.ledgerLabel", {
-        grade: climb.grade,
-        name: named ? climb.name : t("logSession.unnamed"),
+        grade: circuit === undefined ? climb.grade : `${circuit.label} ${climb.grade}`,
+        name: [title, ...(climb.wall === undefined || climb.wall === "" ? [] : [climb.wall])].join(
+          " · "
+        ),
         kind: send ? t("logSession.sendLower") : t("logSession.attemptKind"),
         tries: t("logSession.triesCount", { count: climb.tries }),
       })}

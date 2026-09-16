@@ -1,0 +1,71 @@
+appId: com.sendtally.app
+name: gym-circuits
+# A gym with the standard circuits and a wall, added from the Log tab's setup card, saved with
+# an explicit Save, then a climb logged on a circuit from the live session. Cleans up after
+# itself so the account has no gym for the next run.
+---
+- runFlow: ../helpers/open-dev-client.yaml
+- runFlow: ../helpers/ensure-signed-in.yaml
+- runFlow:
+    when:
+      visible: "DISCARD SESSION"
+    commands:
+      - tapOn: "DISCARD SESSION"
+      - tapOn: "Discard"
+- runFlow:
+    when:
+      visible: "Add your gym"
+    commands:
+      - tapOn: "Add gym"
+- runFlow:
+    when:
+      notVisible: "New gym"
+    commands:
+      - tapOn: "Settings, tab, 4 of 4"
+      - scrollUntilVisible:
+          element: "Add gym"
+          direction: DOWN
+      - tapOn: "Add gym"
+- assertVisible: "New gym"
+- assertVisible: "Circuits, Standard circuits"
+- tapOn:
+    id: "gym-name"
+- inputText: "Maestro Barn"
+- pressKey: Enter
+- scrollUntilVisible:
+    element: "Save gym"
+    direction: DOWN
+- tapOn:
+    id: "gym-wall"
+- inputText: "Cave"
+- pressKey: Enter
+- assertVisible: "Remove wall: Cave"
+- tapOn: "Save gym"
+- tapOn: "Log, tab, 1 of 4"
+- assertNotVisible: "Add your gym"
+- tapOn: "Climb"
+- assertVisible: "CLIMB 1 OF 1"
+- assertVisible: "V0"
+- tapOn: "Yellow"
+- assertVisible: "V1–V2"
+- tapOn: "Cave"
+- tapOn: "V2"
+- tapOn: "Save"
+- assertVisible: ".*Live · 1 climb · since .* · Maestro Barn.*"
+- assertVisible: "Yellow V2 Yellow · Cave, send, 1 try"
+- tapOn: "DISCARD SESSION"
+- tapOn: "Discard"
+- tapOn: "Settings, tab, 4 of 4"
+- scrollUntilVisible:
+    element: "Maestro Barn, .*"
+    direction: DOWN
+- tapOn: "Maestro Barn, .*"
+- assertVisible: "Edit gym"
+- scrollUntilVisible:
+    element: "Delete gym"
+    direction: DOWN
+- tapOn: "Delete gym"
+- tapOn:
+    text: "Delete gym"
+    index: 1
+- assertNotVisible: "Maestro Barn, .*"

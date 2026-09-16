@@ -11,3 +11,4 @@ executionOrder:
     - cancel-discards-draft
     - project-opens
     - project-session-opens
+    - gym-circuits

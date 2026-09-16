@@ -65,6 +65,13 @@ function topSendRank(climbs: SessionClimb[]): number {
 // `workedBefore` carries the names the user had already logged before this
 // session, so a one-try send of a long-standing project reads as a send rather
 // than a flash. Without it every first try in the session counts as a flash.
+/** Unnamed gym climbs read as their circuit and wall; anything else unnamed is unknown. */
+function climbName(c: SessionClimb): string {
+  if (c.name !== "") return c.name;
+  if (c.circuit === undefined) return t("sessionDetail.unknownClimb");
+  return c.wall === undefined || c.wall === "" ? c.circuit.label : `${c.circuit.label} · ${c.wall}`;
+}
+
 export function climbVMs(
   climbs: SessionClimb[],
   workedBefore: ReadonlySet<string> = new Set()
@@ -84,7 +91,8 @@ export function climbVMs(
     const result = resultOf(c, firstEncounter);
     return {
       n: i + 1,
-      name: c.name !== "" ? c.name : t("sessionDetail.unknownClimb"),
+      name: climbName(c),
+      ...(c.circuit === undefined ? {} : { colour: c.circuit.colour }),
       gradeLabel: climbGradeLabel(c),
       grade: c.vGrade,
       isTopSend:

@@ -65,13 +65,13 @@ export function GymEditor({
   const [wall, setWall] = React.useState("");
   const [problem, setProblem] = React.useState<string | null>(null);
 
-  const setCircuits = (circuits: Circuit[]): void => setDraft({ ...draft, circuits });
+  const setCircuits = (circuits: Circuit[]): void => setDraft((d) => ({ ...d, circuits }));
   const changeMode = (next: CircuitMode): void => {
     setMode(next);
     setCircuits(next === "standard" ? standardCircuits() : customStart());
   };
   const addWall = (): void => {
-    setDraft({ ...draft, walls: withWall(draft.walls, wall) });
+    setDraft((d) => ({ ...d, walls: withWall(d.walls, wall) }));
     setWall("");
   };
   const save = (): void => {
@@ -113,8 +113,8 @@ export function GymEditor({
             placeholderTextColor={colors.textFaint}
             autoCorrect={false}
             maxLength={80}
-            accessibilityLabel={t("gyms.gymName")}
-            onChangeText={(name) => setDraft({ ...draft, name })}
+            testID="gym-name"
+            onChangeText={(name) => setDraft((d) => ({ ...d, name }))}
             style={input}
           />
         </View>
@@ -154,7 +154,7 @@ export function GymEditor({
                     label={scaleLabel(scale)}
                     selected={scale === draft.scale}
                     onPress={() => {
-                      setDraft({ ...draft, scale });
+                      setDraft((d) => ({ ...d, scale }));
                       close();
                     }}
                   />
@@ -176,12 +176,16 @@ export function GymEditor({
               onChange={(next) =>
                 setCircuits(draft.circuits.map((c) => (c.id === next.id ? next : c)))
               }
-              onRemove={() => setCircuits(draft.circuits.filter((c) => c.id !== circuit.id))}
+              onRemove={() =>
+                setDraft((d) => ({ ...d, circuits: d.circuits.filter((c) => c.id !== circuit.id) }))
+              }
             />
           ))}
         </View>
         <Pressable
-          onPress={() => setCircuits([...draft.circuits, nextCircuit(draft.circuits)])}
+          onPress={() =>
+            setDraft((d) => ({ ...d, circuits: [...d.circuits, nextCircuit(d.circuits)] }))
+          }
           accessibilityRole="button"
           style={press({
             minHeight: 44,
@@ -206,7 +210,7 @@ export function GymEditor({
             {draft.walls.map((w) => (
               <Pressable
                 key={w}
-                onPress={() => setDraft({ ...draft, walls: withoutWall(draft.walls, w) })}
+                onPress={() => setDraft((d) => ({ ...d, walls: withoutWall(d.walls, w) }))}
                 accessibilityRole="button"
                 accessibilityLabel={`${t("gyms.removeWall")}: ${w}`}
                 style={press({
@@ -243,7 +247,7 @@ export function GymEditor({
               autoCorrect={false}
               maxLength={40}
               returnKeyType="done"
-              accessibilityLabel={t("gyms.addWall")}
+              testID="gym-wall"
               onChangeText={setWall}
               onSubmitEditing={addWall}
               style={{ ...input, flex: 1 }}

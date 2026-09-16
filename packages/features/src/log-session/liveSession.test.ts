@@ -59,6 +59,9 @@ describe("live session", () => {
     expect(second.draft.climbs[1]).toMatchObject({ grade: "V5", circuit: { id: "b" } });
     const elsewhere = withQuickClimb(first.draft, EVENING, undefined, { ...gym, id: "other" });
     expect(elsewhere.draft.climbs[1]).toMatchObject({ grade: "V1", circuit: { id: "a" } });
+    const late = withQuickClimb(withQuickClimb(null, EVENING).draft, EVENING, undefined, gym);
+    expect(late.draft.gymId).toBe("g");
+    expect(late.draft.climbs[1]).toMatchObject({ circuit: { id: "a" } });
   });
 
   it("moves the end time when a climb is revisited the same day only", () => {

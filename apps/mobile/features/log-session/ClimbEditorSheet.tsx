@@ -23,8 +23,6 @@ import { t } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { CircuitDot } from "../../components/CircuitDot";
 import { Icon } from "../../components/Icon";
-import { OptionRow } from "../../components/OptionRow";
-import { SelectRow } from "../../components/SelectRow";
 import { Sheet } from "../../components/Sheet";
 import { GradePicker } from "./GradePicker";
 import { ResultPicker } from "./ResultPicker";
@@ -242,9 +240,55 @@ function ProjectRow({
   );
 }
 
+function ChoiceChip({
+  label,
+  active,
+  leading,
+  mono = false,
+  onPress,
+}: {
+  label: string;
+  active: boolean;
+  leading?: React.ReactNode;
+  mono?: boolean;
+  onPress: () => void;
+}): React.ReactElement {
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="radio"
+      accessibilityState={{ checked: active }}
+      accessibilityLabel={label}
+      style={press({
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 7,
+        minHeight: 38,
+        paddingHorizontal: 12,
+        borderRadius: radius.pill,
+        borderWidth: 1,
+        borderColor: active ? colors.gold : "rgba(64,63,76,0.18)",
+        backgroundColor: active ? colors.gold : "transparent",
+      })}
+    >
+      {leading}
+      <Text
+        style={{
+          fontFamily: mono ? fonts.monoSemiBold : fonts.sansSemiBold,
+          fontSize: mono ? 12 : 13,
+          color: active ? colors.gunmetal : "rgba(64,63,76,0.72)",
+        }}
+      >
+        {label}
+      </Text>
+    </Pressable>
+  );
+}
+
 /**
- * Circuit, wall and how it felt, in place of the grade. The felt-like list is only the grades
- * the circuit spans, with the middle already chosen; nobody is asked to estimate.
+ * Circuit, wall and how it felt, in place of the grade, as chip rows: a sheet inside this
+ * sheet would dismiss it. The felt-like row is only the grades the circuit spans, with the
+ * middle already chosen; nobody is asked to estimate.
  */
 function CircuitFields({
   climb,
@@ -258,78 +302,57 @@ function CircuitFields({
   const current = findCircuit(gym, climb.circuit?.id);
   const wall = climb.wall ?? "";
   return (
-    <View style={{ gap: 10 }}>
+    <View style={{ gap: 12 }}>
       <View style={{ gap: 7 }}>
         <Text style={label}>{t("gyms.circuit")}</Text>
-        <SelectRow
-          label={t("gyms.circuit")}
-          value={current === null ? t("gyms.circuit") : circuitLabel(current)}
-          valueFont={fonts.sansSemiBold}
-          leading={current === null ? undefined : <CircuitDot colour={current.colour} />}
-        >
-          {(close) =>
-            gym.circuits.map((circuit) => (
-              <OptionRow
-                key={circuit.id}
-                label={circuitLabel(circuit)}
-                detail={circuitRangeLabel(circuit, gym.scale)}
-                mono={false}
-                selected={circuit.id === current?.id}
-                leading={<CircuitDot colour={circuit.colour} />}
-                onPress={() => {
-                  onChange(withCircuit(climb, circuit, gym));
-                  close();
-                }}
-              />
-            ))
-          }
-        </SelectRow>
-      </View>
-      <View style={{ flexDirection: "row", gap: 10 }}>
-        <View style={{ flex: 1, gap: 7 }}>
-          <Text style={label}>{t("gyms.wall")}</Text>
-          <SelectRow label={t("gyms.wall")} value={wall === "" ? t("gyms.noWall") : wall}>
-            {(close) =>
-              ["", ...gym.walls].map((w) => (
-                <OptionRow
-                  key={w === "" ? "-" : w}
-                  label={w === "" ? t("gyms.noWall") : w}
-                  mono={false}
-                  selected={w === wall}
-                  onPress={() => {
-                    onChange({ ...climb, wall: w });
-                    close();
-                  }}
-                />
-              ))
-            }
-          </SelectRow>
+        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 7 }}>
+          {gym.circuits.map((circuit) => (
+            <ChoiceChip
+              key={circuit.id}
+              label={circuitLabel(circuit)}
+              active={circuit.id === current?.id}
+              leading={<CircuitDot colour={circuit.colour} size={12} />}
+              onPress={() => onChange(withCircuit(climb, circuit, gym))}
+            />
+          ))}
         </View>
         {current !== null && (
-          <View style={{ width: 120, gap: 7 }}>
-            <Text style={label}>{t("gyms.feltLike")}</Text>
-            <SelectRow
-              label={t("gyms.feltLike")}
-              value={climb.grade}
-              valueFont={fonts.monoSemiBold}
-            >
-              {(close) =>
-                circuitGrades(current, gym.scale).map((grade) => (
-                  <OptionRow
-                    key={grade}
-                    label={grade}
-                    selected={grade === climb.grade}
-                    onPress={() => {
-                      onChange({ ...climb, grade });
-                      close();
-                    }}
-                  />
-                ))
-              }
-            </SelectRow>
-          </View>
+          <Text style={{ ...label, color: colors.textMuted }}>
+            {circuitRangeLabel(current, gym.scale)}
+          </Text>
         )}
       </View>
+      {gym.walls.length > 0 && (
+        <View style={{ gap: 7 }}>
+          <Text style={label}>{t("gyms.wall")}</Text>
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 7 }}>
+            {["", ...gym.walls].map((w) => (
+              <ChoiceChip
+                key={w === "" ? "-" : w}
+                label={w === "" ? t("gyms.noWall") : w}
+                active={w === wall}
+                onPress={() => onChange({ ...climb, wall: w })}
+              />
+            ))}
+          </View>
+        </View>
+      )}
+      {current !== null && current.low !== current.high && (
+        <View style={{ gap: 7 }}>
+          <Text style={label}>{t("gyms.feltLike")}</Text>
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 7 }}>
+            {circuitGrades(current, gym.scale).map((grade) => (
+              <ChoiceChip
+                key={grade}
+                label={grade}
+                mono
+                active={grade === climb.grade}
+                onPress={() => onChange({ ...climb, grade })}
+              />
+            ))}
+          </View>
+        </View>
+      )}
     </View>
   );
 }
