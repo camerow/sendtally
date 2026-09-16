@@ -100,21 +100,26 @@ export function OutcomeSelect({
   const current = segments.find((segment) => matches(segment.outcome, outcome)) ?? segments[0]!;
   const fill = fillFor(current.outcome);
   return (
-    <select
-      aria-label={t("common.result")}
-      value={current.key}
-      onChange={(e) => {
-        const picked = segments.find((segment) => segment.key === e.target.value);
-        if (picked !== undefined) onChange(picked.outcome);
-      }}
-      className="climb-result-select"
-      style={{ backgroundColor: fill.background, color: fill.color }}
-    >
-      {segments.map((segment) => (
-        <option key={segment.key} value={segment.key}>
-          {segment.label}
-        </option>
-      ))}
-    </select>
+    <div className="climb-result-field">
+      <span className="climb-result-mark" style={fill} aria-hidden>
+        <Glyph d={current.glyph} size={current.glyph === CHECK ? 12 : 11} width={2.2} />
+      </span>
+      <select
+        name="result"
+        aria-label={t("common.result")}
+        value={current.key}
+        onChange={(e) => {
+          const picked = segments.find((segment) => segment.key === e.target.value);
+          if (picked !== undefined) onChange(picked.outcome);
+        }}
+        className="climb-result-select"
+      >
+        {segments.map((segment) => (
+          <option key={segment.key} value={segment.key}>
+            {segment.label}
+          </option>
+        ))}
+      </select>
+    </div>
   );
 }

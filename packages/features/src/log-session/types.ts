@@ -23,7 +23,7 @@ export type GradePrefs = { boulder: GradeScale; route: GradeScale };
 export const DEFAULT_GRADE_PREFS: GradePrefs = { boulder: "v", route: "yds" };
 
 export function disciplineLabel(discipline: Discipline): string {
-  return t(discipline === "route" ? "logSession.routes" : "logSession.boulders");
+  return t(discipline === "route" ? "common.route" : "common.boulder");
 }
 
 export type ClimbDraft = {

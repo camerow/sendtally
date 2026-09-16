@@ -1,7 +1,5 @@
 export const logSession = {
   "logSession.scaleFrench": "Francesa",
-  "logSession.boulders": "Bloques",
-  "logSession.routes": "Vías",
   "logSession.styleSent": "Hecho",
   "logSession.hintRedpoint": "Hecha tras trabajarla",
   "logSession.hintFlash": "Primer intento, con beta",
