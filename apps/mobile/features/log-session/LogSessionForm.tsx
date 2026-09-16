@@ -381,12 +381,16 @@ export function LogSessionForm({
           </View>
         </View>
 
-        {draft.location === "indoor" && gyms.gyms.length > 0 && (
+        {draft.location === "indoor" && (!gyms.ready || gyms.gyms.length > 0) && (
           <View style={{ gap: 7 }}>
             <LabelText>{t("gyms.gym")}</LabelText>
             <SelectRow
               label={t("gyms.gym")}
-              value={gymOfDraft(gyms.gyms, draft.gymId)?.name ?? t("gyms.noGym")}
+              value={
+                gyms.ready
+                  ? (gymOfDraft(gyms.gyms, draft.gymId)?.name ?? t("gyms.noGym"))
+                  : t("common.loading")
+              }
             >
               {(close) =>
                 [null, ...gyms.gyms].map((g) => (
