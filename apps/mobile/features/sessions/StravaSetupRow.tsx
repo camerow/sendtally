@@ -40,13 +40,12 @@ export function StravaSetupRow({
       <Text style={bodyText}>
         {lapsed ? t("sessions.setupLapsedBody") : t("sessions.setupBody")}
       </Text>
-      <View style={{ flexDirection: "row", alignItems: "center", gap: 14, marginTop: 6 }}>
+      <View style={{ alignItems: "stretch", gap: 4, marginTop: 6 }}>
         <Pressable
           onPress={connect.connect}
           disabled={connect.busy}
           accessibilityRole="button"
           style={press({
-            flex: 1,
             minHeight: 44,
             alignItems: "center",
             justifyContent: "center",
@@ -68,7 +67,7 @@ export function StravaSetupRow({
           onPress={onDismiss}
           accessibilityRole="button"
           hitSlop={8}
-          style={press({ minHeight: 44, justifyContent: "center" })}
+          style={press({ minHeight: 44, alignItems: "center", justifyContent: "center" })}
         >
           <Text
             style={{
