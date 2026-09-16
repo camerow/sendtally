@@ -10,6 +10,7 @@ import {
   type GradeScale,
 } from "@sendtally/features/log-session";
 import { t } from "@sendtally/features/i18n";
+import { Icon } from "../../components/Icon";
 import { ClimbNameField } from "./ClimbNameField";
 import { ClimbNoteField } from "./ClimbNoteField";
 import { DisciplineToggle } from "./DisciplineToggle";
@@ -126,8 +127,13 @@ export function ClimbEditorSheet({
               {t("logSession.climbOf", { n: index + 1, total: count })}
             </span>
             {count > 1 && (
-              <button type="button" onClick={onRemove} className="climb-sheet-remove">
-                {t("logSession.remove")}
+              <button
+                type="button"
+                onClick={onRemove}
+                className="climb-sheet-remove"
+                aria-label={t("logSession.removeClimb")}
+              >
+                <Icon name="trash" size={16} strokeWidth={1.8} />
               </button>
             )}
           </div>
@@ -194,7 +200,7 @@ export function ClimbEditorSheet({
           )}
         </div>
         <button type="button" onClick={onClose} className="climb-sheet-done">
-          {t("common.done")}
+          {t("common.save")}
         </button>
       </div>
     </dialog>

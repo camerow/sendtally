@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from "expo-router";
 import React from "react";
-import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import { AppState, Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import type { ClimbSummary } from "@sendtally/api-client";
 import { climbDraftGrade, findClimb, useClimbVocabulary } from "@sendtally/features/climbs";
 import {
@@ -31,6 +31,7 @@ import { DraftBanner } from "./DraftBanner";
 import { TagPicker } from "../sessions/TagPicker";
 import { ClimbEditorSheet } from "./ClimbEditorSheet";
 import { ClimbLedgerRow } from "./ClimbLedgerRow";
+import { DateTimeField } from "./DateTimeField";
 import { press } from "../../lib/press";
 
 function LabelText({ children }: { children: React.ReactNode }): React.ReactElement {
@@ -168,6 +169,14 @@ export function LogSessionForm({
     autosave.rebase(next);
     setDraft(next);
   }, [prefsReady, gradePrefs, draft, autosave]);
+  // iOS gives a backgrounded app no unmount, so the pending write goes out as it leaves.
+  const flush = autosave.flush;
+  React.useEffect(() => {
+    const subscription = AppState.addEventListener("change", (state) => {
+      if (state !== "active") flush();
+    });
+    return () => subscription.remove();
+  }, [flush]);
   const untouchedTimes =
     editing === undefined &&
     draft.startTime === defaultTimes.start &&
@@ -260,6 +269,7 @@ export function LogSessionForm({
   return (
     <View style={{ flex: 1 }}>
       <ScrollView
+        keyboardShouldPersistTaps="handled"
         contentContainerStyle={{ paddingHorizontal: 18, paddingTop: 8, paddingBottom: 24, gap: 14 }}
       >
         <Pressable
@@ -324,33 +334,30 @@ export function LogSessionForm({
         <View style={{ flexDirection: "row", gap: 8 }}>
           <View style={{ flex: 1, gap: 7 }}>
             <LabelText>{t("logSession.date")}</LabelText>
-            <TextInput
+            <DateTimeField
+              mode="date"
               value={draft.date}
-              placeholder="YYYY-MM-DD"
-              placeholderTextColor={colors.textFaint}
-              onChangeText={(date) => setDraft({ ...draft, date })}
-              style={{ ...inputStyle, fontFamily: fonts.mono, fontSize: 13 }}
+              label={t("logSession.date")}
+              onChange={(date) => setDraft({ ...draft, date })}
             />
           </View>
           <View style={{ flex: 1, gap: 7 }}>
             <LabelText>{t("logSession.start")}</LabelText>
-            <TextInput
+            <DateTimeField
+              mode="time"
               value={draft.startTime}
-              placeholder="HH:MM"
-              placeholderTextColor={colors.textFaint}
-              onChangeText={(startTime) => setDraft((d) => withStartTime(d, startTime))}
-              style={{ ...inputStyle, fontFamily: fonts.mono, fontSize: 13 }}
+              label={t("logSession.start")}
+              onChange={(startTime) => setDraft((d) => withStartTime(d, startTime))}
             />
             {untouchedTimes && <Caption>{t("logSession.whenYouOpenedThis")}</Caption>}
           </View>
           <View style={{ flex: 1, gap: 7 }}>
             <LabelText>{t("logSession.end")}</LabelText>
-            <TextInput
+            <DateTimeField
+              mode="time"
               value={draft.endTime}
-              placeholder="HH:MM"
-              placeholderTextColor={colors.textFaint}
-              onChangeText={(endTime) => setDraft({ ...draft, endTime })}
-              style={{ ...inputStyle, fontFamily: fonts.mono, fontSize: 13 }}
+              label={t("logSession.end")}
+              onChange={(endTime) => setDraft({ ...draft, endTime })}
             />
             {untouchedTimes && <Caption>{t("logSession.startPlusHour")}</Caption>}
           </View>

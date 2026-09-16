@@ -18,13 +18,13 @@ name: draft-survives-leaving
       text: "\\+ ADD CLIMB"
     direction: DOWN
 - tapOn: "\\+ ADD CLIMB"
-- tapOn: "Done"
+- tapOn: "Save"
 - scrollUntilVisible:
     element:
       text: "\\+ ADD CLIMB"
     direction: DOWN
 - tapOn: "\\+ ADD CLIMB"
-- tapOn: "Done"
+- tapOn: "Save"
 - scrollUntilVisible:
     element:
       text: "← LOG"

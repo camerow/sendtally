@@ -18,7 +18,7 @@ name: cancel-discards-draft
       text: "\\+ ADD CLIMB"
     direction: DOWN
 - tapOn: "\\+ ADD CLIMB"
-- tapOn: "Done"
+- tapOn: "Save"
 - tapOn: "Cancel"
 - assertVisible: "Discard this draft.*"
 - tapOn: "Discard"

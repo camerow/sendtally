@@ -46,7 +46,6 @@ export const logSession = {
   "logSession.saveChanges": "Guardar cambios",
   "logSession.closeEditor": "Cerrar el editor",
   "logSession.climbOf": "Escalada {n} de {total}",
-  "logSession.remove": "Quitar",
   "logSession.nameOptional": "Nombre · opcional",
   "logSession.climbNamePlaceholder": "Nombre (opcional)",
   "logSession.candidateProject": "{name}, proyecto",

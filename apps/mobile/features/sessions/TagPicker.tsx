@@ -15,6 +15,41 @@ export type TagPickerProps = {
   onRemove: (name: string) => void;
 };
 
+const caption = {
+  fontFamily: fonts.monoMedium,
+  fontSize: 9,
+  letterSpacing: 0.7,
+  textTransform: "uppercase",
+  color: colors.textMuted,
+} as const;
+
+function DropdownRow({
+  children,
+  onPress,
+}: {
+  children: React.ReactNode;
+  onPress: () => void;
+}): React.ReactElement {
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      style={pressRow({
+        justifyContent: "center",
+        height: 40,
+        paddingHorizontal: 12,
+        borderRadius: radius.sm,
+      })}
+    >
+      {children}
+    </Pressable>
+  );
+}
+
+/**
+ * Typing filters the user's tags into a dropdown, like a climb name does; the most used tags
+ * stay out as pills the whole time, since most sessions reuse one of them.
+ */
 export function TagPicker({
   tags,
   suggestions,
@@ -27,6 +62,8 @@ export function TagPicker({
   const [focused, setFocused] = React.useState(false);
   const inputRef = React.useRef<TextInput>(null);
   const { options, create } = tagMatches(suggestions, entry);
+  const recent = tagMatches(suggestions, "").options;
+  const showDropdown = focused && entry.trim() !== "" && (options.length > 0 || create !== null);
 
   function pick(name: string): void {
     onAdd(name);
@@ -37,8 +74,6 @@ export function TagPicker({
     const first = options[0]?.name ?? create;
     if (first !== null && first !== undefined) pick(first);
   }
-
-  const showStrip = focused && !disabled && (options.length > 0 || create !== null);
 
   return (
     <View style={{ gap: 10 }}>
@@ -103,7 +138,7 @@ export function TagPicker({
           autoCapitalize="words"
           autoCorrect={false}
           returnKeyType="done"
-          blurOnSubmit={false}
+          submitBehavior="submit"
           onChangeText={setEntry}
           onSubmitEditing={submit}
           onFocus={() => setFocused(true)}
@@ -123,42 +158,64 @@ export function TagPicker({
           }}
         />
       </Pressable>
-      {showStrip && (
+      {showDropdown && (
+        <View
+          style={{
+            gap: 2,
+            padding: 6,
+            borderWidth: 1,
+            borderColor: "rgba(64,63,76,0.15)",
+            borderRadius: radius.control,
+          }}
+        >
+          {options.map((option) => (
+            <DropdownRow key={option.slug} onPress={() => pick(option.name)}>
+              <Text
+                style={{
+                  fontFamily: fonts.monoMedium,
+                  fontSize: 11,
+                  letterSpacing: 0.6,
+                  textTransform: "uppercase",
+                  color: colors.gunmetal,
+                }}
+              >
+                {option.name}
+              </Text>
+            </DropdownRow>
+          ))}
+          {create !== null && (
+            <DropdownRow onPress={() => pick(create)}>
+              <Text
+                style={{
+                  fontFamily: fonts.monoMedium,
+                  fontSize: 11,
+                  letterSpacing: 0.6,
+                  color: colors.azureInk,
+                }}
+              >
+                {t("sessions.createTag", { name: create })}
+              </Text>
+            </DropdownRow>
+          )}
+        </View>
+      )}
+      {recent.length > 0 && (
         <ScrollView
           horizontal
           keyboardShouldPersistTaps="always"
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={{ gap: 8, alignItems: "center" }}
         >
-          {entry.trim() === "" && (
-            <Text
-              style={{
-                fontFamily: fonts.monoMedium,
-                fontSize: 9,
-                letterSpacing: 0.7,
-                textTransform: "uppercase",
-                color: colors.textMuted,
-              }}
-            >
-              {t("common.recent")}
-            </Text>
-          )}
-          {options.map((option) => (
+          <Text style={caption}>{t("common.recent")}</Text>
+          {recent.map((option) => (
             <Chip
               key={option.slug}
               label={option.name}
               active={false}
+              disabled={disabled}
               onPress={() => pick(option.name)}
             />
           ))}
-          {create !== null && (
-            <Chip
-              label={t("sessions.createTag", { name: create })}
-              active={false}
-              dashed
-              onPress={() => pick(create)}
-            />
-          )}
         </ScrollView>
       )}
     </View>

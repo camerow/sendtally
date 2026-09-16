@@ -14,7 +14,7 @@ name: log-session-sheet
 - assertVisible: "CLIMB 2 OF 2"
 - tapOn: "Name (optional)"
 - inputText: "Cascade"
-- assertVisible: "Done"
+- assertVisible: "Save"
 - pressKey: Enter
 # On iOS only a bare direction swipe reaches React Native's responder system (coordinate and
 # element swipes go through a press-and-drag that RN never sees). On Android every form works,

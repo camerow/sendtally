@@ -1,5 +1,6 @@
 import React from "react";
-import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import { BottomSheetTextInput } from "@gorhom/bottom-sheet";
+import { Pressable, ScrollView, Text, View } from "react-native";
 import { Sheet } from "../../components/Sheet";
 import type { ClimbSummary, GradeScales, ProjectInput } from "@sendtally/api-client";
 import {
@@ -158,7 +159,7 @@ export function AddProjectSheet({
         {searching && (
           <View style={{ gap: 9 }}>
             <Text style={label}>{t("projects.whichClimb")}</Text>
-            <TextInput
+            <BottomSheetTextInput
               value={name}
               onChangeText={(value) => {
                 setName(value);

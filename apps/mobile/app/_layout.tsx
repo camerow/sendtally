@@ -1,4 +1,5 @@
 import { ClerkProvider, useAuth } from "@clerk/clerk-expo";
+import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { tokenCache } from "@clerk/clerk-expo/token-cache";
 import {
   BricolageGrotesque_700Bold,
@@ -20,6 +21,7 @@ import { Observe, ObserveInteractiveMarker, ObserveRoot } from "expo-observe";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React from "react";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { colors } from "@sendtally/design/tokens";
 import { resolveLocale, setLocale } from "@sendtally/features/i18n";
 import { AnalyticsProvider } from "../features/analytics/AnalyticsProvider";
@@ -48,20 +50,24 @@ function RootLayout(): React.ReactElement | null {
   if (!fontsLoaded) return null;
 
   return (
-    <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY} tokenCache={tokenCache}>
-      <AnalyticsProvider>
-        <BillingProvider>
-          <InteractiveMarker />
-          <StatusBar style="dark" />
-          <Stack
-            screenOptions={{
-              headerShown: false,
-              contentStyle: { backgroundColor: colors.white },
-            }}
-          />
-        </BillingProvider>
-      </AnalyticsProvider>
-    </ClerkProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY} tokenCache={tokenCache}>
+        <AnalyticsProvider>
+          <BillingProvider>
+            <BottomSheetModalProvider>
+              <InteractiveMarker />
+              <StatusBar style="dark" />
+              <Stack
+                screenOptions={{
+                  headerShown: false,
+                  contentStyle: { backgroundColor: colors.white },
+                }}
+              />
+            </BottomSheetModalProvider>
+          </BillingProvider>
+        </AnalyticsProvider>
+      </ClerkProvider>
+    </GestureHandlerRootView>
   );
 }
 
