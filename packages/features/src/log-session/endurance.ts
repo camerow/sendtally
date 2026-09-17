@@ -21,8 +21,25 @@ export function defaultEndurance(): Endurance {
   return { unit: "moves", target: DEFAULT_TARGET.moves, laps: [DEFAULT_TARGET.moves] };
 }
 
-export function enduranceStep(unit: EnduranceUnit): number {
-  return unit === "moves" ? 1 : 15;
+/** Whole minutes, so the unit the label picks from the target never flips mid-tap. */
+export function stepEnduranceTarget(climb: ClimbDraft, direction: 1 | -1): ClimbDraft {
+  const e = enduranceOf(climb);
+  if (e.unit === "moves") return withEnduranceTarget(climb, e.target + direction);
+  const step = e.target >= 60 && !(direction === -1 && e.target === 60) ? 60 : 15;
+  return withEnduranceTarget(climb, e.target + direction * step);
+}
+
+/** Half minutes, so a lap can record coming off at 7:30 of a 12 minute circuit. */
+export function enduranceLapStep(e: Endurance): number {
+  if (e.unit === "moves") return 1;
+  return e.target >= 60 ? 30 : 15;
+}
+
+export function stepLap(climb: ClimbDraft, index: number, direction: 1 | -1): ClimbDraft {
+  const e = enduranceOf(climb);
+  const lap = e.laps[index];
+  if (lap === undefined) return climb;
+  return withLap(climb, index, lap + direction * enduranceLapStep(e));
 }
 
 export function enduranceOf(climb: ClimbDraft): Endurance {
@@ -60,7 +77,7 @@ export function withEnduranceTarget(climb: ClimbDraft, target: number): ClimbDra
   return withEndurance(climb, {
     ...e,
     target: next,
-    laps: e.laps.map((lap) => Math.min(lap, next)),
+    laps: e.laps.map((lap) => (lap === e.target ? next : Math.min(lap, next))),
   });
 }
 

@@ -10,7 +10,9 @@ import {
   enduranceLapCountLabel,
   enduranceLapLabel,
   enduranceProgressLabel,
-  enduranceStep,
+  enduranceLapStep,
+  stepEnduranceTarget,
+  stepLap,
   enduranceTimeUnit,
   enduranceTotals,
   isCleanLap,
@@ -44,9 +46,32 @@ describe("defaults and steppers", () => {
     expect(defaultEndurance()).toEqual({ unit: "moves", target: 20, laps: [20] });
   });
 
-  it("steps moves by one and seconds by fifteen", () => {
-    expect(enduranceStep("moves")).toBe(1);
-    expect(enduranceStep("seconds")).toBe(15);
+  it("steps a time target in whole minutes so the unit never flips mid-tap", () => {
+    const ten = draft({ unit: "seconds", target: 600, laps: [600] });
+    expect(endurance(stepEnduranceTarget(ten, -1)).target).toBe(540);
+    expect(endurance(stepEnduranceTarget(ten, 1)).target).toBe(660);
+
+    const one = draft({ unit: "seconds", target: 60, laps: [60] });
+    expect(endurance(stepEnduranceTarget(one, -1)).target).toBe(45);
+    expect(endurance(stepEnduranceTarget(one, 1)).target).toBe(120);
+
+    const short = draft({ unit: "seconds", target: 45, laps: [45] });
+    expect(endurance(stepEnduranceTarget(short, 1)).target).toBe(60);
+    expect(endurance(stepEnduranceTarget(short, -1)).target).toBe(30);
+  });
+
+  it("steps a moves target by one", () => {
+    const c = draft({ unit: "moves", target: 20, laps: [20] });
+    expect(endurance(stepEnduranceTarget(c, 1)).target).toBe(21);
+    expect(endurance(stepEnduranceTarget(c, -1)).target).toBe(19);
+  });
+
+  it("steps a lap in half minutes so coming off at 7:30 is reachable", () => {
+    const c = draft({ unit: "seconds", target: 720, laps: [720] });
+    expect(enduranceLapStep(endurance(c))).toBe(30);
+    expect(endurance(stepLap(c, 0, -1)).laps).toEqual([690]);
+    expect(enduranceLapStep({ unit: "seconds", target: 45, laps: [45] })).toBe(15);
+    expect(enduranceLapStep({ unit: "moves", target: 32, laps: [32] })).toBe(1);
   });
 
   it("forces send, redpoint and one try, and drops a project flag", () => {
@@ -87,6 +112,14 @@ describe("target and laps", () => {
   it("clamps every lap down to a lowered target", () => {
     const c = draft({ unit: "moves", target: 32, laps: [32, 24, 8] });
     expect(endurance(withEnduranceTarget(c, 16)).laps).toEqual([16, 16, 8]);
+  });
+
+  it("carries a clean lap up to a raised target and leaves a partial one alone", () => {
+    const fresh = draft(defaultEndurance());
+    expect(endurance(withEnduranceTarget(fresh, 32)).laps).toEqual([32]);
+
+    const mixed = draft({ unit: "moves", target: 32, laps: [32, 24] });
+    expect(endurance(withEnduranceTarget(mixed, 40)).laps).toEqual([40, 24]);
   });
 
   it("appends a clean lap and clamps an edited one", () => {
