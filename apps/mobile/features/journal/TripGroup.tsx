@@ -2,7 +2,7 @@ import React from "react";
 import { Pressable, Text, View } from "react-native";
 import type { JournalEntry, SessionRow as SessionRowData } from "@sendtally/api-client";
 import {
-  effortLabelled,
+  entryKindLabel,
   entryTitle,
   spanLabel,
   tripDays,
@@ -22,11 +22,15 @@ import { press } from "../../lib/press";
 import { EntryRow, entryRowHeight } from "./EntryRow";
 import { EntryKindChip } from "./EntryKindChip";
 import { SessionRow, sessionRowHeight } from "../sessions/SessionRow";
+import { ROW_TAGS_HEIGHT, RowTags } from "../sessions/RowTags";
 
 type TripItem = Extract<LogItem, { type: "entry" }>;
 
 const CARD_MARGIN = 10;
+/** Padding, the chip line, the title, the meta and the 3px gaps between them. */
 const HEADER_HEIGHT = 85;
+/** Past this many days the strip is wider than the title it sits beside. */
+const MAX_DOTS = 12;
 const ROW_PADDING = 14;
 const TINT = "rgba(204,121,234,0.13)";
 
@@ -39,6 +43,7 @@ export function tripGroupHeight(item: TripItem): number {
     CARD_MARGIN * 2 +
     3 +
     HEADER_HEIGHT +
+    (item.entry.tags.length > 0 ? ROW_TAGS_HEIGHT : 0) +
     item.inside.reduce((sum, inner) => sum + innerHeight(inner), 0) -
     1
   );
@@ -61,7 +66,7 @@ const entriesOf = (items: LogItem[]): JournalEntry[] =>
 /** The hardest RPE of each day of the trip, a dash of a day nobody climbed. */
 function EffortDots({ trip, inside }: { trip: JournalEntry; inside: LogItem[] }): React.ReactNode {
   const effort = tripEffort(tripDays(trip, sessionsOf(inside), entriesOf(inside)));
-  if (!effortLabelled(effort.length) || !effort.some((rpe) => rpe !== null)) return null;
+  if (effort.length > MAX_DOTS || !effort.some((rpe) => rpe !== null)) return null;
   return (
     <View style={{ flexDirection: "row", alignItems: "flex-end", gap: 3, height: 22 }}>
       {effort.map((rpe, i) => (
@@ -104,6 +109,12 @@ export function TripGroup({
       <Pressable
         onPress={() => onOpen(item)}
         accessibilityRole="button"
+        accessibilityLabel={[
+          entryKindLabel("trip"),
+          entryTitle(item.entry),
+          spanLabel(item.entry.occurred_at, item.entry.ends_at),
+          tripMeta(item.inside),
+        ].join(", ")}
         style={press({
           flexDirection: "row",
           alignItems: "center",
@@ -115,7 +126,7 @@ export function TripGroup({
           backgroundColor: TINT,
         })}
       >
-        <View style={{ flex: 1, gap: 4 }}>
+        <View style={{ flex: 1, gap: 3 }}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
             <EntryKindChip kind="trip" bg={colors.white} />
             <Text
@@ -156,6 +167,7 @@ export function TripGroup({
           >
             {tripMeta(item.inside)}
           </Text>
+          <RowTags tags={item.entry.tags} />
         </View>
         <EffortDots trip={item.entry} inside={item.inside} />
         <Icon name="chevron" size={12} strokeWidth={2} color="rgba(64,63,76,0.35)" />
