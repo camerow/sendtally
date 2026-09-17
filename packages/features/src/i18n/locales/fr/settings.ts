@@ -43,4 +43,8 @@ export const settings = {
     "Importe un historique d'escalade depuis un tableur ou un export Kaya, ou emporte tout ce que tu as enregistré ici.",
   "settings.importCsv": "Importer un CSV",
   "settings.exportCsv": "Exporter en CSV",
+  "settings.exportBodyMobile":
+    "Emporte tout ce que tu as enregistré ici dans un fichier CSV. L'import se fait sur sendtally.com.",
+  "settings.exportSaved": "Enregistré dans le dossier choisi.",
+  "settings.exportFailed": "L'export n'a pas abouti. Réessaie dans un instant.",
 } as const;

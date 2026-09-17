@@ -41,4 +41,8 @@ export const settings = {
     "Bring a climbing history in from a spreadsheet or a Kaya export, or take everything you have logged here with you.",
   "settings.importCsv": "Import CSV",
   "settings.exportCsv": "Export CSV",
+  "settings.exportBodyMobile":
+    "Take everything you have logged here with you as a CSV file. Importing one happens on sendtally.com.",
+  "settings.exportSaved": "Saved to the folder you picked.",
+  "settings.exportFailed": "The export did not go through. Try again in a moment.",
 } as const;

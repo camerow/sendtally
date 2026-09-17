@@ -44,4 +44,8 @@ export const settings = {
     "Hol eine Kletterhistorie aus einer Tabelle oder einem Kaya-Export herein, oder nimm alles mit, was du hier eingetragen hast.",
   "settings.importCsv": "CSV importieren",
   "settings.exportCsv": "CSV exportieren",
+  "settings.exportBodyMobile":
+    "Nimm alles, was du hier eingetragen hast, als CSV-Datei mit. Importieren geht auf sendtally.com.",
+  "settings.exportSaved": "Im gewählten Ordner gespeichert.",
+  "settings.exportFailed": "Der Export hat nicht geklappt. Versuch es gleich noch einmal.",
 } as const;
