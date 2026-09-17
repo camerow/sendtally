@@ -15,6 +15,7 @@ export const settings = {
     "Aus. Jede Sessionseite behält ihren eigenen Button zum Posten auf Strava.",
   "settings.postSince": "Sessions posten ab",
   "settings.postSinceBody": "Alles davor bleibt nur in sendtally.",
+  "settings.postSinceAny": "Jedes Datum",
   "settings.membershipFree": "Eintragen ist kostenlos. Die Mitgliedschaft bringt die Trends.",
   "settings.membershipStore": "{plan}, abgerechnet über {store}.",
   "settings.membershipWeb": "Auf sendtally.com gekauft. Schaltet die Trends auch hier frei.",

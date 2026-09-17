@@ -6,8 +6,8 @@ import React from "react";
 import { Platform, Pressable, Text, View } from "react-native";
 import { formatDate, getLocale, t } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
-import { Sheet } from "../../components/Sheet";
-import { press } from "../../lib/press";
+import { Sheet } from "./Sheet";
+import { press } from "../lib/press";
 
 export type DateTimeFieldProps = {
   mode: "date" | "time";
@@ -15,6 +15,11 @@ export type DateTimeFieldProps = {
   value: string;
   label: string;
   onChange: (value: string) => void;
+  /** Shown when `value` is empty; with `onClear`, the field can go back to empty. */
+  placeholder?: string;
+  onClear?: () => void;
+  disabled?: boolean;
+  testID?: string;
 };
 
 const pad = (n: number): string => String(n).padStart(2, "0");
@@ -46,15 +51,22 @@ export function DateTimeField({
   value,
   label,
   onChange,
+  placeholder,
+  onClear,
+  disabled,
+  testID,
 }: DateTimeFieldProps): React.ReactElement {
   const [open, setOpen] = React.useState(false);
+  const empty = value === "";
   const date = parse(mode, value);
-  const text = formatDate(
-    date,
-    mode === "date"
-      ? { year: "numeric", month: "numeric", day: "numeric" }
-      : { hour: "2-digit", minute: "2-digit" }
-  );
+  const text = empty
+    ? (placeholder ?? "")
+    : formatDate(
+        date,
+        mode === "date"
+          ? { year: "numeric", month: "numeric", day: "numeric" }
+          : { hour: "2-digit", minute: "2-digit" }
+      );
 
   function pick(_: DateTimePickerEvent, picked?: Date): void {
     if (picked !== undefined) onChange(serialize(mode, picked));
@@ -72,12 +84,16 @@ export function DateTimeField({
     <>
       <Pressable
         onPress={openPicker}
+        disabled={disabled}
+        testID={testID}
         accessibilityRole="button"
         accessibilityLabel={label}
         accessibilityValue={{ text }}
         style={press({
           minHeight: 46,
-          justifyContent: "center",
+          flexDirection: "row",
+          alignItems: "center",
+          gap: 8,
           backgroundColor: colors.white,
           borderWidth: 1,
           borderColor: "rgba(64,63,76,0.15)",
@@ -85,7 +101,28 @@ export function DateTimeField({
           paddingHorizontal: 13,
         })}
       >
-        <Text style={{ fontFamily: fonts.mono, fontSize: 13, color: colors.gunmetal }}>{text}</Text>
+        <Text
+          style={{
+            flex: 1,
+            fontFamily: fonts.mono,
+            fontSize: 13,
+            color: empty ? colors.textFaint : colors.gunmetal,
+          }}
+        >
+          {text}
+        </Text>
+        {onClear !== undefined && !empty && (
+          <Pressable
+            onPress={onClear}
+            accessibilityRole="button"
+            accessibilityLabel={t("common.clear")}
+            hitSlop={10}
+          >
+            <Text style={{ fontFamily: fonts.mono, fontSize: 15, color: colors.textSecondary }}>
+              ×
+            </Text>
+          </Pressable>
+        )}
       </Pressable>
       {Platform.OS === "ios" && (
         <Sheet

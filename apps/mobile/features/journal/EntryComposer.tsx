@@ -21,6 +21,7 @@ import {
 import { useTagVocabulary } from "@sendtally/features/sessions";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { BackButton } from "../../components/BackButton";
+import { DateTimeField } from "../../components/DateTimeField";
 import { press } from "../../lib/press";
 import { primaryButton, primaryButtonLabel } from "../../lib/styles";
 import { TagPicker } from "../sessions/TagPicker";
@@ -153,25 +154,26 @@ export function EntryComposer({
         <View style={{ flexDirection: "row", gap: 8 }}>
           <View style={{ flex: 1 }}>
             <Field name={spanning ? t("journal.startDate") : t("journal.date")}>
-              <TextInput
+              <DateTimeField
                 testID="entry-date"
+                mode="date"
                 value={draft.occurredAt}
-                placeholder="YYYY-MM-DD"
-                placeholderTextColor={colors.textFaint}
-                onChangeText={(occurredAt) => setDraft((d) => ({ ...d, occurredAt }))}
-                style={{ ...input, fontFamily: fonts.mono, fontSize: 13 }}
+                label={spanning ? t("journal.startDate") : t("journal.date")}
+                onChange={(occurredAt) => setDraft((d) => ({ ...d, occurredAt }))}
               />
             </Field>
           </View>
           {spanning && (
             <View style={{ flex: 1 }}>
               <Field name={t("journal.endDate")}>
-                <TextInput
+                <DateTimeField
+                  testID="entry-end-date"
+                  mode="date"
                   value={draft.endsAt}
+                  label={t("journal.endDate")}
                   placeholder={t("journal.endDateOpen")}
-                  placeholderTextColor={colors.textFaint}
-                  onChangeText={(endsAt) => setDraft((d) => ({ ...d, endsAt }))}
-                  style={{ ...input, fontFamily: fonts.mono, fontSize: 13 }}
+                  onChange={(endsAt) => setDraft((d) => ({ ...d, endsAt }))}
+                  onClear={() => setDraft((d) => ({ ...d, endsAt: "" }))}
                 />
               </Field>
             </View>

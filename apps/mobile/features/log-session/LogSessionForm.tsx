@@ -48,7 +48,7 @@ import { OptionRow } from "../../components/OptionRow";
 import { SelectRow } from "../../components/SelectRow";
 import { ClimbEditorSheet } from "./ClimbEditorSheet";
 import { ClimbLedgerRow } from "./ClimbLedgerRow";
-import { DateTimeField } from "./DateTimeField";
+import { DateTimeField } from "../../components/DateTimeField";
 import { press } from "../../lib/press";
 
 function LabelText({ children }: { children: React.ReactNode }): React.ReactElement {
