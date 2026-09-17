@@ -23,6 +23,7 @@ export const endurance = {
   "endurance.amountSec": "{value} seg",
   "endurance.amountMinSec": "{min} min {sec} seg",
   "endurance.progress": "{done} de {amount}",
+  "endurance.allClean": "{amount}, todas limpias",
   "endurance.lapShort": "{done}/{amount}",
   "endurance.lapCount_one": "{count} vuelta",
   "endurance.lapCount_other": "{count} vueltas",

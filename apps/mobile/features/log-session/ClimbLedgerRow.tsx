@@ -3,7 +3,7 @@ import { Pressable, Text, View } from "react-native";
 import {
   enduranceLapCountLabel,
   enduranceOf,
-  enduranceProgressLabel,
+  enduranceSummaryLabel,
   type ClimbDraft,
 } from "@sendtally/features/log-session";
 import { t } from "@sendtally/features/i18n";
@@ -66,7 +66,7 @@ function EnduranceLedgerRow({
 }): React.ReactElement {
   const endurance = enduranceOf(climb);
   const named = climb.name.trim() !== "";
-  const meta = `${enduranceLapCountLabel(endurance.laps.length)} · ${enduranceProgressLabel(endurance)}`;
+  const meta = `${enduranceLapCountLabel(endurance.laps.length)} · ${enduranceSummaryLabel(endurance)}`;
   return (
     <Pressable
       onPress={onPress}

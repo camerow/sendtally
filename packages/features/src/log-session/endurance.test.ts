@@ -8,10 +8,12 @@ import {
   enduranceAmountLabel,
   enduranceCleanLabel,
   enduranceLapCountLabel,
+  enduranceLapStep,
   enduranceLapLabel,
   enduranceLapValueLabel,
   enduranceProgressLabel,
   enduranceStep,
+  enduranceSummaryLabel,
   stepEnduranceTarget,
   stepLap,
   enduranceTotals,
@@ -173,6 +175,18 @@ describe("labels", () => {
     expect(enduranceAmountLabel({ unit: "moves", target: 1, laps: [1] }, 1)).toBe("1 move");
     expect(enduranceLapCountLabel(1)).toBe("1 lap");
     expect(enduranceLapCountLabel(3)).toBe("3 laps");
+  });
+
+  it("sums a finished circuit and falls back to the pair once a lap is partial", () => {
+    expect(enduranceSummaryLabel({ unit: "seconds", target: 720, laps: [720, 720, 720] })).toBe(
+      "36 min, all clean"
+    );
+    expect(enduranceSummaryLabel({ unit: "moves", target: 32, laps: [32, 32] })).toBe(
+      "64 moves, all clean"
+    );
+    expect(enduranceSummaryLabel({ unit: "moves", target: 32, laps: [32, 32, 24] })).toBe(
+      "88 of 96 moves"
+    );
   });
 
   it("counts clean laps", () => {

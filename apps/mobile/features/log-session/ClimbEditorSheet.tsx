@@ -392,6 +392,7 @@ export function ClimbEditorSheet({
             <Text style={label}>{t("logSession.climbKind")}</Text>
             <ClimbKindPicker climb={climb} gyms={gyms} prefs={prefs} onChange={onChange} />
           </View>
+          {endurance && <EnduranceFields climb={climb} onChange={onChange} />}
           <View style={{ gap: 7 }}>
             <View
               style={{
@@ -521,9 +522,7 @@ export function ClimbEditorSheet({
             )}
           </View>
 
-          {endurance ? (
-            <EnduranceFields climb={climb} onChange={onChange} />
-          ) : (
+          {!endurance && (
             <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
               <ResultPicker climb={climb} onChange={onChange} />
               <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>

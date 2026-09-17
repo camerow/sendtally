@@ -145,6 +145,13 @@ export function enduranceLapLabel(e: Endurance, index: number): string {
   });
 }
 
+/** A circuit that went the distance reads as what it came to; only a partial lap needs the pair. */
+export function enduranceSummaryLabel(e: Endurance): string {
+  const { done, laps, clean } = enduranceTotals(e);
+  if (clean < laps) return enduranceProgressLabel(e);
+  return t("endurance.allClean", { amount: enduranceAmountLabel(e, done) });
+}
+
 export function enduranceLapCountLabel(laps: number): string {
   return t("endurance.lapCount", { count: laps });
 }

@@ -9,7 +9,7 @@ import {
   type ClimbFilter,
   type ClimbVM,
 } from "@sendtally/features/session-detail";
-import { enduranceLapCountLabel, enduranceProgressLabel } from "@sendtally/features/log-session";
+import { enduranceLapCountLabel, enduranceSummaryLabel } from "@sendtally/features/log-session";
 import { t } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { Chip } from "../../components/Chip";
@@ -372,7 +372,7 @@ export default function SessionDetailScreen(): React.ReactElement {
                                 burns: t("sessions.burns", { count: c.burns }),
                                 rest: c.restLabel,
                               })
-                            : `${enduranceLapCountLabel(c.endurance.laps.length)} · ${enduranceProgressLabel(c.endurance)}`}
+                            : `${enduranceLapCountLabel(c.endurance.laps.length)} · ${enduranceSummaryLabel(c.endurance)}`}
                         </Text>
                       </View>
                       <View style={{ alignItems: "flex-end", gap: 5 }}>
