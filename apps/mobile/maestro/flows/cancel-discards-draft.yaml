@@ -1,6 +1,6 @@
 appId: com.sendtally.app
 name: cancel-discards-draft
-# Cancel walks away from the form, so it must not leave the autosaved draft behind:
+# Discard walks away from the form, so it must not leave the autosaved draft behind:
 # it confirms first, and once discarded neither the session list nor the form offers
 # the draft back.
 ---
@@ -20,7 +20,7 @@ name: cancel-discards-draft
     centerElement: true
 - tapOn: "\\+ ADD CLIMB"
 - tapOn: "Save"
-- tapOn: "Cancel"
+- tapOn: "Discard"
 - assertVisible: "Discard this draft.*"
 - tapOn: "Discard"
 - extendedWaitUntil:

@@ -1,6 +1,6 @@
 appId: com.sendtally.app
 name: gym-circuits
-# A gym with the standard circuits and a wall, added from the Log tab's setup card, saved with
+# A gym with the color circuits and a wall, added from the Log tab's setup card, saved with
 # an explicit Save, then a climb logged on a circuit from the live session. Cleans up after
 # itself so the account has no gym for the next run.
 ---
@@ -27,7 +27,7 @@ name: gym-circuits
           direction: DOWN
       - tapOn: "Add gym"
 - assertVisible: "New gym"
-- assertVisible: "Circuits, Standard circuits"
+- assertVisible: "Circuits, Color circuits"
 - tapOn:
     id: "gym-name"
 - inputText: "Maestro Barn"

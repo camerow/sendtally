@@ -31,6 +31,6 @@ name: quick-log-climb
 - tapOn: "Wrap up"
 - assertVisible: "Wrap up"
 - assertVisible: "1 CLIMB.*"
-- tapOn: "Cancel"
+- tapOn: "Discard"
 - tapOn: "Discard"
 - assertNotVisible: ".*Live · .*"

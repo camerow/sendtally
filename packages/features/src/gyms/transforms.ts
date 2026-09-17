@@ -30,11 +30,11 @@ export const MAX_CIRCUIT_GRADE = 17;
 const STANDARD: ReadonlyArray<readonly [CircuitColour, number, number]> = [
   ["green", 0, 0],
   ["yellow", 1, 2],
-  ["orange", 2, 4],
+  ["orange", 3, 4],
   ["red", 4, 6],
-  ["purple", 5, 7],
-  ["black", 7, 9],
-  ["white", 10, 12],
+  ["purple", 6, 7],
+  ["black", 8, 10],
+  ["white", 11, 12],
 ];
 
 export function circuitId(): string {

@@ -8,7 +8,7 @@ export const gyms = {
   "gyms.walls": "Murs",
   "gyms.addWall": "Ajouter un mur",
   "gyms.wallPlaceholder": "Grotte, dalle, mur de compet",
-  "gyms.standard": "Circuits standard",
+  "gyms.standard": "Circuits couleur",
   "gyms.custom": "Personnalisé",
   "gyms.modeStandard": "L’échelle de couleurs habituelle. Chaque ligne est modifiable.",
   "gyms.modeCustom": "Vos couleurs, noms ou numéros, et plages.",

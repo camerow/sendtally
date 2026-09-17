@@ -94,7 +94,8 @@ function ReminderBar({
   );
 }
 
-const wrapUp = (): void => router.push("/session/new?resume=1");
+const openSession = (): void => router.push("/session/new?resume=1");
+const wrapUp = (): void => router.push("/session/new?resume=1&wrapUp=1");
 
 export type LiveSessionCardProps = {
   stored: StoredSessionDraft;
@@ -136,9 +137,9 @@ export function LiveSessionCard({
       >
         <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
           <Pressable
-            onPress={wrapUp}
+            onPress={openSession}
             accessibilityRole="button"
-            accessibilityLabel={`${title}, ${meta}, ${t("sessions.wrapUp")}`}
+            accessibilityLabel={`${title}, ${meta}`}
             style={pressRow({ flex: 1, flexDirection: "row", alignItems: "center", gap: 12 })}
           >
             <DayColumn

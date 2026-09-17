@@ -8,7 +8,7 @@ export const gyms = {
   "gyms.walls": "Wände",
   "gyms.addWall": "Wand hinzufügen",
   "gyms.wallPlaceholder": "Höhle, Platte, Wettkampfwand",
-  "gyms.standard": "Standard-Zirkel",
+  "gyms.standard": "Farbzirkel",
   "gyms.custom": "Eigene",
   "gyms.modeStandard": "Die übliche Farbleiter. Jede Zeile lässt sich ändern.",
   "gyms.modeCustom": "Deine Farben, Namen oder Nummern und Bereiche.",

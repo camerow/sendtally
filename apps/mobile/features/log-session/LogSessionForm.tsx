@@ -121,7 +121,7 @@ export function LogSessionForm({
   editing?: { fingerprint: string; draft: LogSessionDraft };
 }): React.ReactElement {
   const api = useApi();
-  const { resume } = useLocalSearchParams<{ resume?: string }>();
+  const { resume, wrapUp } = useLocalSearchParams<{ resume?: string; wrapUp?: string }>();
   const { scales: gradePrefs, ready: prefsReady } = useGradeScalePrefs(api);
   // Opened by tapping the draft itself: start on it rather than offering it back.
   const [picked] = React.useState(() => (resume === "1" ? storedDraft(sessionDraftStorage) : null));
@@ -292,9 +292,11 @@ export function LogSessionForm({
           >
             {editing !== undefined
               ? t("logSession.editTitle")
-              : picked !== null
-                ? t("logSession.wrapUpTitle")
-                : t("common.logASession")}
+              : picked === null
+                ? t("common.logASession")
+                : wrapUp === "1"
+                  ? t("logSession.wrapUpTitle")
+                  : draft.name.trim() || t("sessions.unfinishedSession")}
           </Text>
           {(editing !== undefined || picked !== null) && (
             <Text
@@ -648,7 +650,7 @@ export function LogSessionForm({
             <Text
               style={{ fontFamily: fonts.sansSemiBold, fontSize: 15, color: colors.textSecondary }}
             >
-              {t("common.cancel")}
+              {t("common.discard")}
             </Text>
           </Pressable>
           <Pressable
