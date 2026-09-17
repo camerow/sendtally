@@ -7,7 +7,8 @@ import { circuitGrades, findCircuit, type Gym } from "@sendtally/features/gyms";
 import {
   disciplineLabel,
   disciplineOf,
-  withClimbGrading,
+  gymOfCircuit,
+  withClimbKind,
   withTries,
   type ClimbDraft,
   type Discipline,
@@ -17,8 +18,7 @@ import { t } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { Icon } from "../../components/Icon";
 import { Sheet } from "../../components/Sheet";
-import { ClimbKindPicker } from "./ClimbKindPicker";
-import { GradePicker } from "./GradePicker";
+import { ClimbGradePicker, ClimbKindPicker } from "./ClimbKindPicker";
 import { ResultPicker } from "./ResultPicker";
 import { press, pressRow } from "../../lib/press";
 
@@ -29,8 +29,8 @@ export type ClimbEditorSheetProps = {
   /** The form keeps one climb; a live session may lose its last one. */
   removable?: boolean;
   prefs: GradePrefs;
-  /** With a gym that has circuits, the climb is placed on a circuit instead of graded. */
-  gym?: Gym | null;
+  /** Gyms with circuits a climb can be put on instead of graded. */
+  gyms?: readonly Gym[];
   project: boolean;
   known: ClimbSummary | null;
   suggestions: ClimbSummary[];
@@ -342,7 +342,7 @@ export function ClimbEditorSheet({
   count,
   removable = count > 1,
   prefs,
-  gym = null,
+  gyms = [],
   project,
   known,
   suggestions,
@@ -354,6 +354,7 @@ export function ClimbEditorSheet({
   onClose,
 }: ClimbEditorSheetProps): React.ReactElement {
   const climb = useLingering(current);
+  const gym = climb === null ? null : gymOfCircuit(gyms, climb.circuit?.id);
   const [nameFocused, setNameFocused] = React.useState(false);
   const named = climb !== null && climb.name.trim() !== "";
   const showList = nameFocused && suggestions.length > 0;
@@ -385,42 +386,32 @@ export function ClimbEditorSheet({
             )}
           </View>
 
-          {gym === null ? (
+          {gyms.length > 0 && (
             <View style={{ gap: 7 }}>
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  gap: 12,
-                }}
-              >
-                <Text style={label}>{t("common.grade")}</Text>
+              <Text style={label}>{t("logSession.climbKind")}</Text>
+              <ClimbKindPicker climb={climb} gyms={gyms} prefs={prefs} onChange={onChange} />
+            </View>
+          )}
+          <View style={{ gap: 7 }}>
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 12,
+              }}
+            >
+              <Text style={label}>{t("common.grade")}</Text>
+              {gyms.length === 0 && (
                 <DisciplineToggle
                   value={disciplineOf(climb.scale)}
-                  onChange={(discipline) =>
-                    onChange(withClimbGrading(climb, discipline, prefs, gym))
-                  }
+                  onChange={(discipline) => onChange(withClimbKind(climb, discipline, prefs, gyms))}
                 />
-              </View>
-              <GradePicker climb={climb} onChange={onChange} />
-            </View>
-          ) : (
-            <>
-              <View style={{ gap: 7 }}>
-                <Text style={label}>{t("logSession.climbKind")}</Text>
-                <ClimbKindPicker climb={climb} gym={gym} prefs={prefs} onChange={onChange} />
-              </View>
-              {climb.circuit === undefined ? (
-                <View style={{ gap: 7 }}>
-                  <Text style={label}>{t("common.grade")}</Text>
-                  <GradePicker climb={climb} onChange={onChange} />
-                </View>
-              ) : (
-                <CircuitFields climb={climb} gym={gym} onChange={onChange} />
               )}
-            </>
-          )}
+            </View>
+            <ClimbGradePicker climb={climb} gyms={gyms} onChange={onChange} />
+          </View>
+          {gym !== null && <CircuitFields climb={climb} gym={gym} onChange={onChange} />}
 
           <View style={{ gap: 7 }}>
             <Text style={label}>{t("logSession.nameOptional")}</Text>
@@ -430,7 +421,7 @@ export function ClimbEditorSheet({
               autoComplete="off"
               value={climb.name}
               placeholder={
-                gym === null || climb.circuit === undefined
+                gym === null
                   ? t("logSession.climbNamePlaceholder")
                   : t("logSession.circuitClimbNamePlaceholder")
               }

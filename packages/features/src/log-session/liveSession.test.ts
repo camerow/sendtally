@@ -1,6 +1,7 @@
 import type { ClimbSummary } from "@sendtally/api-client";
 import { describe, expect, it } from "vitest";
-import { climbGradingValue, climbKindOf, readClimbKind, withClimbGrading } from "./climbKind";
+import { withCircuit } from "../gyms/draft";
+import { climbKindOf, readClimbKind, withClimbKind } from "./climbKind";
 import type { DraftStorage } from "./draftStore";
 import {
   defaultSessionName,
@@ -48,41 +49,44 @@ describe("live session", () => {
     ],
   };
 
-  it("grades a climb at the gym as a boulder until a circuit has been picked", () => {
-    const first = withQuickClimb(null, EVENING, undefined, gym);
-    expect(first.draft.gymId).toBe("g");
+  it("grades a climb as a boulder until a gym's circuits have been picked", () => {
+    const first = withQuickClimb(null, EVENING, undefined, [gym]);
+    expect(first.draft.gymId).toBeUndefined();
     expect(first.draft.climbs[0]).toMatchObject({ scale: "v", grade: "V3" });
     expect(first.draft.climbs[0]?.circuit).toBeUndefined();
-    const route = withQuickClimb(first.draft, EVENING, undefined, gym, "route");
+    const route = withQuickClimb(first.draft, EVENING, undefined, [gym], "route");
     expect(route.draft.climbs[1]).toMatchObject({ scale: "yds", grade: "5.10b" });
   });
 
-  it("switches a climb between disciplines and circuits", () => {
-    const climb = withQuickClimb(null, EVENING, undefined, gym).draft.climbs[0]!;
-    const onRed = withClimbGrading(climb, "b", DEFAULT_GRADE_PREFS, gym);
-    expect(onRed).toMatchObject({ grade: "V5", circuit: { id: "b" } });
-    expect(climbKindOf(onRed)).toBe("circuit");
-    expect(climbGradingValue(onRed)).toBe("b");
-    const route = withClimbGrading(onRed, "route", DEFAULT_GRADE_PREFS, gym);
+  it("switches a climb between disciplines and a gym's circuits", () => {
+    const climb = withQuickClimb(null, EVENING).draft.climbs[0]!;
+    const onBarn = withClimbKind(climb, "g", DEFAULT_GRADE_PREFS, [gym]);
+    expect(onBarn).toMatchObject({ grade: "V1", circuit: { id: "a" } });
+    expect(climbKindOf(onBarn, [gym])).toBe("g");
+    const onRed = withCircuit(onBarn, gym.circuits[1]!, gym);
+    expect(withClimbKind(onRed, "g", DEFAULT_GRADE_PREFS, [gym]).circuit?.id).toBe("b");
+    const route = withClimbKind(onRed, "route", DEFAULT_GRADE_PREFS, [gym]);
     expect(route.circuit).toBeUndefined();
-    expect(climbGradingValue(route)).toBe("route");
-    expect(withClimbGrading(route, "gone", DEFAULT_GRADE_PREFS, gym)).toBe(route);
+    expect(climbKindOf(route, [gym])).toBe("route");
+    expect(withClimbKind(route, "gone", DEFAULT_GRADE_PREFS, [gym])).toBe(route);
   });
 
-  it("reads the last picked kind, bouldering when there is none", () => {
+  it("reads the last picked kind, bouldering when there is none or its gym is gone", () => {
     const stored = (value: string | null): DraftStorage => ({
       read: () => value,
       write: () => true,
       remove: () => undefined,
       subscribe: () => () => undefined,
     });
-    expect(readClimbKind(stored(null))).toBe("boulder");
-    expect(readClimbKind(stored("nonsense"))).toBe("boulder");
-    expect(readClimbKind(stored("circuit"))).toBe("circuit");
+    expect(readClimbKind(stored(null), [gym])).toBe("boulder");
+    expect(readClimbKind(stored("nonsense"), [gym])).toBe("boulder");
+    expect(readClimbKind(stored("route"), [])).toBe("route");
+    expect(readClimbKind(stored("g"), [gym])).toBe("g");
+    expect(readClimbKind(stored("g"), [])).toBe("boulder");
   });
 
-  it("puts each circuit climb on the previous circuit, or the first", () => {
-    const first = withQuickClimb(null, EVENING, undefined, gym, "circuit");
+  it("puts each circuit climb on the previous circuit, or the first, and adopts the gym", () => {
+    const first = withQuickClimb(null, EVENING, undefined, [gym], "g");
     expect(first.draft.gymId).toBe("g");
     expect(first.draft.climbs[0]).toMatchObject({ grade: "V1", circuit: { id: "a" } });
     const moved = {
@@ -93,22 +97,14 @@ describe("live session", () => {
         circuit: { id: "b", label: "Red", colour: "red" as const },
       })),
     };
-    const second = withQuickClimb(moved, EVENING, undefined, gym, "circuit");
+    const second = withQuickClimb(moved, EVENING, undefined, [gym], "g");
     expect(second.draft.climbs[1]).toMatchObject({ grade: "V5", circuit: { id: "b" } });
-    const elsewhere = withQuickClimb(
-      first.draft,
-      EVENING,
-      undefined,
-      { ...gym, id: "other" },
-      "circuit"
-    );
-    expect(elsewhere.draft.climbs[1]).toMatchObject({ grade: "V1", circuit: { id: "a" } });
     const late = withQuickClimb(
       withQuickClimb(null, EVENING).draft,
       EVENING,
       undefined,
-      gym,
-      "circuit"
+      [gym],
+      "g"
     );
     expect(late.draft.gymId).toBe("g");
     expect(late.draft.climbs[1]).toMatchObject({ circuit: { id: "a" } });

@@ -13,7 +13,12 @@ import {
 } from "@sendtally/features/journal";
 import { useClimbVocabulary } from "@sendtally/features/climbs";
 import { circuitGym, gymOfDraft, useGyms } from "@sendtally/features/gyms";
-import { readClimbKind, useLiveSession, withTries } from "@sendtally/features/log-session";
+import {
+  circuitGyms,
+  readClimbKind,
+  useLiveSession,
+  withTries,
+} from "@sendtally/features/log-session";
 import { useGradeScalePrefs } from "@sendtally/features/settings";
 import { useClientApi } from "../../lib/useClientApi";
 import { climbKindStorage } from "../../lib/climbKindStorage";
@@ -76,8 +81,11 @@ export function LogView({
   const liveGym = circuitGym(
     gymOfDraft(gyms.gyms, live.stored?.draft.gymId) ?? gyms.gyms[0] ?? null
   );
+  const circuitChoices = circuitGyms(gyms.gyms);
   const logClimb = (): void =>
-    setEditingClimb(live.addClimb(scales, liveGym, readClimbKind(climbKindStorage)));
+    setEditingClimb(
+      live.addClimb(scales, circuitChoices, readClimbKind(climbKindStorage, circuitChoices))
+    );
   const stravaConnected = status.strava?.status === "active";
   const stravaLapsed = status.strava !== null && !stravaConnected;
   const gymPrompt = useDismissed("gym");
@@ -283,7 +291,7 @@ export function LogView({
           live={live}
           scales={scales}
           vocabulary={vocabulary}
-          gym={liveGym}
+          gyms={circuitChoices}
           editingKey={editingClimb}
           onClose={() => setEditingClimb(null)}
         />

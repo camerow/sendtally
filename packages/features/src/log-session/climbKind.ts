@@ -1,55 +1,64 @@
 import { withCircuit, withoutCircuit } from "../gyms/draft";
-import type { Gym } from "../gyms/types";
+import type { Circuit, Gym } from "../gyms/types";
 import type { DraftStorage } from "./draftStore";
 import { disciplineOf, newClimb, withClimbDiscipline } from "./transforms";
-import type { ClimbDraft, Discipline, GradePrefs } from "./types";
+import type { ClimbDraft, GradePrefs } from "./types";
 
-/** How a climb is graded: its discipline's scale, or a gym circuit. */
-export type ClimbKind = Discipline | "circuit";
+/** How a climb is graded: "boulder", "route", or the id of a gym whose circuits it is on. */
+export type ClimbKind = string;
 
-export function climbKindOf(climb: ClimbDraft): ClimbKind {
-  return climb.circuit === undefined ? disciplineOf(climb.scale) : "circuit";
+/** The gyms a climb can be put on a circuit at. */
+export function circuitGyms(gyms: readonly Gym[]): Gym[] {
+  return gyms.filter((g) => g.circuits.length > 0);
 }
 
-/** The kind last picked on this device; bouldering until one has been. */
-export function readClimbKind(storage: DraftStorage): ClimbKind {
+export function gymOfCircuit(gyms: readonly Gym[], circuitId: string | undefined): Gym | null {
+  if (circuitId === undefined) return null;
+  return gyms.find((g) => g.circuits.some((c) => c.id === circuitId)) ?? null;
+}
+
+export function climbKindOf(climb: ClimbDraft, gyms: readonly Gym[]): ClimbKind {
+  return gymOfCircuit(gyms, climb.circuit?.id)?.id ?? disciplineOf(climb.scale);
+}
+
+/** The kind last picked on this device; bouldering until one has been, or once its gym is gone. */
+export function readClimbKind(storage: DraftStorage, gyms: readonly Gym[]): ClimbKind {
   const kind = storage.read();
-  return kind === "route" || kind === "circuit" ? kind : "boulder";
+  if (kind === "route") return kind;
+  return kind !== null && gyms.some((g) => g.id === kind && g.circuits.length > 0)
+    ? kind
+    : "boulder";
 }
 
-/** The grading picker's value: a discipline, or the id of the climb's circuit. */
-export function climbGradingValue(climb: ClimbDraft): string {
-  return climb.circuit?.id ?? disciplineOf(climb.scale);
+function circuitFor(gym: Gym, previous: ClimbDraft | undefined): Circuit | undefined {
+  return gym.circuits.find((c) => c.id === previous?.circuit?.id) ?? gym.circuits[0];
 }
 
-export function withClimbGrading(
+/** Moves a climb between disciplines and gyms; onto a gym it keeps its circuit if that gym has it. */
+export function withClimbKind(
   climb: ClimbDraft,
-  value: string,
+  kind: ClimbKind,
   prefs: GradePrefs,
-  gym: Gym | null
+  gyms: readonly Gym[]
 ): ClimbDraft {
-  if (value === "boulder" || value === "route") {
-    return withClimbDiscipline(withoutCircuit(climb), value, prefs);
+  if (kind === "boulder" || kind === "route") {
+    return withClimbDiscipline(withoutCircuit(climb), kind, prefs);
   }
-  const circuit = gym?.circuits.find((c) => c.id === value);
-  return gym === null || circuit === undefined ? climb : withCircuit(climb, circuit, gym);
+  const gym = gyms.find((g) => g.id === kind);
+  const circuit = gym === undefined ? undefined : circuitFor(gym, climb);
+  return gym === undefined || circuit === undefined ? climb : withCircuit(climb, circuit, gym);
 }
 
-/**
- * A new climb of the kind last picked. A circuit climb goes on the previous climb's circuit, or
- * the gym's first; without the gym at hand it keeps the previous circuit as it was.
- */
+/** A new climb of the kind last picked; a circuit climb goes on the previous climb's circuit, or the gym's first. */
 export function newClimbOfKind(
   key: string,
   kind: ClimbKind,
   prefs: GradePrefs,
-  gym: Gym | null,
+  gyms: readonly Gym[],
   previous: ClimbDraft | undefined
 ): ClimbDraft {
   const fresh = newClimb(key, prefs[kind === "route" ? "route" : "boulder"]);
-  if (kind !== "circuit") return fresh;
-  const circuit = gym?.circuits.find((c) => c.id === previous?.circuit?.id) ?? gym?.circuits[0];
-  if (gym !== null && circuit !== undefined) return withCircuit(fresh, circuit, gym);
-  if (previous?.circuit === undefined) return fresh;
-  return { ...fresh, scale: previous.scale, grade: previous.grade, circuit: previous.circuit };
+  const gym = gyms.find((g) => g.id === kind);
+  const circuit = gym === undefined ? undefined : circuitFor(gym, previous);
+  return gym === undefined || circuit === undefined ? fresh : withCircuit(fresh, circuit, gym);
 }

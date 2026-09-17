@@ -2,7 +2,7 @@ import type { ClimbSummary } from "@sendtally/api-client";
 import { climbDraftGrade } from "../climbs/transforms";
 import { formatDate, t } from "../i18n";
 import type { Gym } from "../gyms/types";
-import { newClimbOfKind, type ClimbKind } from "./climbKind";
+import { gymOfCircuit, newClimbOfKind, type ClimbKind } from "./climbKind";
 import { nextClimbKey } from "./transforms";
 import {
   DEFAULT_GRADE_PREFS,
@@ -51,24 +51,22 @@ export function liveDraft(now: Date): LogSessionDraft {
 }
 
 /**
- * A session started from the Log tab is at the gym the climber last used, and each new climb
- * is graded the way the climber last picked, so most taps change nothing.
+ * Each new climb is graded the way the climber last picked, so most taps change nothing. A session
+ * without a gym adopts the gym of the first circuit climb.
  */
 export function withQuickClimb(
   draft: LogSessionDraft | null,
   now: Date,
   prefs: GradePrefs = DEFAULT_GRADE_PREFS,
-  gym: Gym | null = null,
+  gyms: readonly Gym[] = [],
   kind: ClimbKind = "boulder"
 ): { draft: LogSessionDraft; key: string } {
   const started = draft ?? liveDraft(now);
-  // A session that began before the gym list arrived adopts the gym at the next climb.
-  const base =
-    gym === null || started.gymId !== undefined ? started : { ...started, gymId: gym.id };
-  const key = nextClimbKey(base.climbs);
-  const previous = base.climbs[base.climbs.length - 1];
-  const atGym = gym !== null && gym.id === base.gymId ? gym : null;
-  const climb = newClimbOfKind(key, kind, prefs, atGym, previous);
+  const key = nextClimbKey(started.climbs);
+  const previous = started.climbs[started.climbs.length - 1];
+  const climb = newClimbOfKind(key, kind, prefs, gyms, previous);
+  const gymId = started.gymId ?? gymOfCircuit(gyms, climb.circuit?.id)?.id;
+  const base = gymId === undefined ? started : { ...started, gymId };
   return { draft: withClimbTouched({ ...base, climbs: [...base.climbs, climb] }, now), key };
 }
 

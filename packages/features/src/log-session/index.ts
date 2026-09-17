@@ -40,11 +40,12 @@ export {
   withQuickClimb,
 } from "./liveSession";
 export {
-  climbGradingValue,
+  circuitGyms,
   climbKindOf,
+  gymOfCircuit,
   newClimbOfKind,
   readClimbKind,
-  withClimbGrading,
+  withClimbKind,
   type ClimbKind,
 } from "./climbKind";
 export { useLiveSession, type LiveSession } from "./useLiveSession";

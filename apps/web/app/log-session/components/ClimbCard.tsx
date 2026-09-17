@@ -4,17 +4,16 @@ import type { Gym } from "@sendtally/features/gyms";
 import {
   climbOutcome,
   disciplineOf,
-  gradeOptions,
-  withClimbGrading,
+  gymOfCircuit,
+  withClimbKind,
   withClimbOutcome,
   withTries,
   type ClimbDraft,
   type GradePrefs,
-  type GradeScale,
 } from "@sendtally/features/log-session";
 import { t } from "@sendtally/features/i18n";
 import { CircuitFields } from "../../gyms/components/CircuitFields";
-import { ClimbKindSelect } from "./ClimbKindSelect";
+import { ClimbGradeSelect, ClimbKindSelect } from "./ClimbKindSelect";
 import { ClimbNameField } from "./ClimbNameField";
 import { ClimbNoteField } from "./ClimbNoteField";
 import { DisciplineToggle } from "./DisciplineToggle";
@@ -22,12 +21,11 @@ import { Glyph } from "./Glyph";
 import { OutcomeControl } from "./OutcomeControl";
 import { ProjectToggle } from "./ProjectToggle";
 import { TriesStepper } from "./TriesStepper";
-import { CROSS, columnHead, inputStyle, stepperButton } from "./styles";
+import { CROSS, columnHead, stepperButton } from "./styles";
 
 export type ClimbCardProps = {
   climb: ClimbDraft;
-  scale: GradeScale;
-  gym?: Gym | null;
+  gyms?: readonly Gym[];
   prefs: GradePrefs;
   removable: boolean;
   project: boolean;
@@ -41,8 +39,7 @@ export type ClimbCardProps = {
 
 export function ClimbCard({
   climb,
-  scale,
-  gym = null,
+  gyms = [],
   prefs,
   removable,
   project,
@@ -54,40 +51,27 @@ export function ClimbCard({
   onRemove,
 }: ClimbCardProps): React.ReactElement {
   const named = climb.name.trim() !== "";
-  const onCircuit = gym !== null && climb.circuit !== undefined;
+  const gym = gymOfCircuit(gyms, climb.circuit?.id);
   return (
     <div className="climb-card">
-      <div className={onCircuit ? "climb-card-main climb-card-main--circuit" : "climb-card-main"}>
-        {!onCircuit && (
-          <div className="climb-card-cell">
-            <span style={columnHead}>{t("common.grade")}</span>
-            <select
-              value={climb.grade}
-              onChange={(e) => onChange({ ...climb, grade: e.target.value })}
-              className="log-session-control"
-              style={{
-                ...inputStyle,
-                fontFamily: "var(--font-mono)",
-                fontWeight: 600,
-                padding: "11px 8px",
-              }}
-            >
-              {gradeOptions(scale).map((g) => (
-                <option key={g} value={g}>
-                  {g}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
+      <div className="climb-card-main">
+        <div className="climb-card-cell">
+          <span style={columnHead}>{t("common.grade")}</span>
+          <ClimbGradeSelect
+            climb={climb}
+            gyms={gyms}
+            style={{ height: "auto", padding: "11px 8px" }}
+            onChange={onChange}
+          />
+        </div>
         <div className="climb-card-cell">
           <span style={columnHead}>{t("logSession.nameOptional")}</span>
           <ClimbNameField
             value={climb.name}
-            scale={scale}
+            scale={climb.scale}
             suggestions={suggestions}
             placeholder={
-              !onCircuit
+              gym === null
                 ? t("logSession.climbNamePlaceholder")
                 : t("logSession.circuitClimbNamePlaceholder")
             }
@@ -120,12 +104,12 @@ export function ClimbCard({
           <Glyph d={CROSS} width={1.7} />
         </button>
       </div>
-      {gym === null ? (
+      {gyms.length === 0 ? (
         <div className="climb-card-result">
           <span style={columnHead}>{t("common.discipline")}</span>
           <DisciplineToggle
             value={disciplineOf(climb.scale)}
-            onChange={(d) => onChange(withClimbGrading(climb, d, prefs, gym))}
+            onChange={(d) => onChange(withClimbKind(climb, d, prefs, gyms))}
           />
         </div>
       ) : (
@@ -133,14 +117,14 @@ export function ClimbCard({
           <span style={columnHead}>{t("logSession.climbKind")}</span>
           <ClimbKindSelect
             climb={climb}
-            gym={gym}
+            gyms={gyms}
             prefs={prefs}
             style={{ height: 40, padding: "8px 12px" }}
             onChange={onChange}
           />
         </div>
       )}
-      {onCircuit && <CircuitFields climb={climb} gym={gym} onChange={onChange} />}
+      {gym !== null && <CircuitFields climb={climb} gym={gym} onChange={onChange} />}
       <div className="climb-card-result">
         <span style={columnHead}>{t("common.result")}</span>
         <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>

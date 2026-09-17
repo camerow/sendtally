@@ -10,6 +10,7 @@ import {
   disciplineOf,
   emptyDraft,
   storedDraft,
+  circuitGyms,
   newClimbOfKind,
   nextClimbKey,
   readClimbKind,
@@ -139,7 +140,7 @@ export function LogSessionForm({
   const { suggestionsFor } = useTagVocabulary(api);
   const vocabulary = useClimbVocabulary(api);
   const gyms = useGyms(api);
-  const gym = draft.location === "indoor" ? circuitGym(gymOfDraft(gyms.gyms, draft.gymId)) : null;
+  const circuitChoices = draft.location === "indoor" ? circuitGyms(gyms.gyms) : [];
   // Changing the gym re-places every climb: onto the new gym's first circuit, or off circuits.
   const setGym = (next: Gym | null): void => {
     const at = circuitGym(next);
@@ -218,7 +219,13 @@ export function LogSessionForm({
       ...draft,
       climbs: [
         ...draft.climbs,
-        newClimbOfKind(key, readClimbKind(climbKindStorage), gradePrefs, gym, previous),
+        newClimbOfKind(
+          key,
+          readClimbKind(climbKindStorage, circuitChoices),
+          gradePrefs,
+          circuitChoices,
+          previous
+        ),
       ],
     });
     setEditingKey(key);
@@ -585,7 +592,7 @@ export function LogSessionForm({
         index={editingIndex}
         count={draft.climbs.length}
         prefs={gradePrefs}
-        gym={gym}
+        gyms={circuitChoices}
         project={editingClimb === null ? false : isProject(editingClimb)}
         known={
           editingClimb === null ? null : (findClimb(vocabulary.climbs, editingClimb.name) ?? null)

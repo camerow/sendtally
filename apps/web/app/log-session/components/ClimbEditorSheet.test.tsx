@@ -6,7 +6,7 @@ import type { Gym } from "@sendtally/features/gyms";
 import {
   DEFAULT_GRADE_PREFS,
   newClimb,
-  withClimbGrading,
+  withClimbKind,
   type ClimbDraft,
 } from "@sendtally/features/log-session";
 import { ClimbEditorSheet } from "./ClimbEditorSheet";
@@ -31,7 +31,7 @@ function mount(
   onClose: () => void,
   onChange: (climb: ClimbDraft) => void = () => {},
   name = "",
-  gym: Gym | null = null,
+  gyms: Gym[] = [],
   climb: ClimbDraft = newClimb("climb-1", "v")
 ): HTMLDialogElement {
   act(() =>
@@ -40,8 +40,7 @@ function mount(
         climb={{ ...climb, name }}
         index={0}
         count={2}
-        scale={climb.scale}
-        gym={gym}
+        gyms={gyms}
         prefs={DEFAULT_GRADE_PREFS}
         project={false}
         suggestions={[]}
@@ -130,43 +129,54 @@ describe("ClimbEditorSheet", () => {
     expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ kind: "attempt" }));
   });
 
-  describe("at a gym with circuits", () => {
+  describe("with a gym that has circuits", () => {
     const gym: Gym = {
       id: "g",
       name: "Barn",
       scale: "v",
       walls: [],
-      circuits: [{ id: "p", colour: "purple", label: "", low: 3, high: 5 }],
+      circuits: [
+        { id: "p", colour: "purple", label: "", low: 3, high: 5 },
+        { id: "r", colour: "red", label: "", low: 5, high: 6 },
+      ],
     };
 
-    it("grades a climb off the circuits and offers them in the type dropdown", () => {
+    it("grades a climb off the circuits and offers the gym's circuits as a type", () => {
       const onChange = vi.fn();
-      const dialog = mount(() => {}, onChange, "", gym);
+      const dialog = mount(() => {}, onChange, "", [gym]);
       const [kind, grade] = dialog.getElementsByTagName("select");
-      expect([...kind!.options].map((o) => o.value)).toEqual(["boulder", "route", "p"]);
+      expect([...kind!.options].map((o) => o.text)).toEqual(["Boulder", "Route", "Barn circuits"]);
       expect(kind!.value).toBe("boulder");
       expect(grade!.value).toBe("V3");
       act(() => {
-        kind!.value = "p";
+        kind!.value = "g";
         kind!.dispatchEvent(new Event("change", { bubbles: true }));
       });
       expect(onChange).toHaveBeenCalledWith(
         expect.objectContaining({ grade: "V4", circuit: expect.objectContaining({ id: "p" }) })
       );
-      expect(localStorage.getItem("sendtally:climb-kind")).toBe("circuit");
+      expect(localStorage.getItem("sendtally:climb-kind")).toBe("g");
     });
 
-    it("switches a circuit climb back to a boulder grade", () => {
+    it("lists the gym's circuits as grades and switches back to a boulder grade", () => {
       const onChange = vi.fn();
-      const onPurple = withClimbGrading(newClimb("climb-1", "v"), "p", DEFAULT_GRADE_PREFS, gym);
-      const dialog = mount(() => {}, onChange, "", gym, onPurple);
-      const kind = dialog.getElementsByTagName("select")[0]!;
-      expect(kind.value).toBe("p");
+      const onPurple = withClimbKind(newClimb("climb-1", "v"), "g", DEFAULT_GRADE_PREFS, [gym]);
+      const dialog = mount(() => {}, onChange, "", [gym], onPurple);
+      const [kind, grade] = dialog.getElementsByTagName("select");
+      expect(kind!.value).toBe("g");
+      expect([...grade!.options].map((o) => o.text)).toEqual(["Purple · V3–V5", "Red · V5–V6"]);
       act(() => {
-        kind.value = "boulder";
-        kind.dispatchEvent(new Event("change", { bubbles: true }));
+        grade!.value = "r";
+        grade!.dispatchEvent(new Event("change", { bubbles: true }));
       });
-      expect(onChange.mock.calls[0]![0]).not.toHaveProperty("circuit");
+      expect(onChange).toHaveBeenLastCalledWith(
+        expect.objectContaining({ grade: "V5", circuit: expect.objectContaining({ id: "r" }) })
+      );
+      act(() => {
+        kind!.value = "boulder";
+        kind!.dispatchEvent(new Event("change", { bubbles: true }));
+      });
+      expect(onChange.mock.lastCall![0]).not.toHaveProperty("circuit");
       expect(localStorage.getItem("sendtally:climb-kind")).toBe("boulder");
     });
   });

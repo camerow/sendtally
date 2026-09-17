@@ -5,7 +5,6 @@ import type { ClimbSummary, SendtallyApi } from "@sendtally/api-client";
 import { climbDraftGrade, findClimb, useClimbVocabulary } from "@sendtally/features/climbs";
 import {
   circuitGym,
-  gymOfDraft,
   useGyms,
   withCircuit,
   withoutCircuit,
@@ -18,6 +17,7 @@ import {
   emptyDraft,
   storedDraft,
   newClimbOfKind,
+  circuitGyms,
   nextClimbKey,
   readClimbKind,
   toLogSessionInput,
@@ -165,7 +165,7 @@ export function LogSessionForm({
 
   const vocabulary = useClimbVocabulary(api);
   const gyms = useGyms(api);
-  const gym = draft.location === "indoor" ? circuitGym(gymOfDraft(gyms.gyms, draft.gymId)) : null;
+  const circuitChoices = draft.location === "indoor" ? circuitGyms(gyms.gyms) : [];
   const narrow = useIsNarrow();
   const [editingKey, setEditingKey] = React.useState<string | null>(null);
 
@@ -280,9 +280,9 @@ export function LogSessionForm({
         ...draft.climbs,
         newClimbOfKind(
           key,
-          readClimbKind(climbKindStorage),
+          readClimbKind(climbKindStorage, circuitChoices),
           prefs.scales,
-          gym,
+          circuitChoices,
           draft.climbs[draft.climbs.length - 1]
         ),
       ],
@@ -491,8 +491,7 @@ export function LogSessionForm({
                 <ClimbCard
                   key={climb.key}
                   climb={climb}
-                  scale={climb.scale}
-                  gym={gym}
+                  gyms={circuitChoices}
                   prefs={prefs.scales}
                   removable={draft.climbs.length > 1}
                   project={isProject(climb)}
@@ -550,8 +549,7 @@ export function LogSessionForm({
           climb={editingClimb}
           index={editingIndex}
           count={draft.climbs.length}
-          scale={editingClimb.scale}
-          gym={gym}
+          gyms={circuitChoices}
           prefs={prefs.scales}
           project={isProject(editingClimb)}
           suggestions={vocabulary.suggestionsFor(editingClimb.name)}

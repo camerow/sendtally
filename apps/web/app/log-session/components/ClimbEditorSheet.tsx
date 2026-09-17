@@ -4,25 +4,24 @@ import type { Gym } from "@sendtally/features/gyms";
 import {
   climbOutcome,
   disciplineOf,
-  gradeOptions,
-  withClimbGrading,
+  gymOfCircuit,
+  withClimbKind,
   withClimbOutcome,
   withTries,
   type ClimbDraft,
   type GradePrefs,
-  type GradeScale,
 } from "@sendtally/features/log-session";
 import { t } from "@sendtally/features/i18n";
 import { Icon } from "../../components/Icon";
 import { CircuitFields } from "../../gyms/components/CircuitFields";
-import { ClimbKindSelect } from "./ClimbKindSelect";
+import { ClimbGradeSelect, ClimbKindSelect } from "./ClimbKindSelect";
 import { ClimbNameField } from "./ClimbNameField";
 import { ClimbNoteField } from "./ClimbNoteField";
 import { DisciplineToggle } from "./DisciplineToggle";
 import { OutcomeSelect } from "./OutcomeControl";
 import { ProjectToggle } from "./ProjectToggle";
 import { TriesStepper } from "./TriesStepper";
-import { inputStyle, monoLabel } from "./styles";
+import { monoLabel } from "./styles";
 
 const DISMISS_DISTANCE = 80;
 const DISMISS_VELOCITY = 0.6;
@@ -69,9 +68,8 @@ export type ClimbEditorSheetProps = {
   climb: ClimbDraft;
   index: number;
   count: number;
-  scale: GradeScale;
-  /** With a gym that has circuits, a climb can be placed on one of them instead of graded. */
-  gym?: Gym | null;
+  /** Gyms with circuits a climb can be put on instead of graded. */
+  gyms?: readonly Gym[];
   prefs: GradePrefs;
   project: boolean;
   /** Defaults to "not the last climb"; a live session lets the last one go too. */
@@ -89,8 +87,7 @@ export function ClimbEditorSheet({
   climb,
   index,
   count,
-  scale,
-  gym = null,
+  gyms = [],
   prefs,
   project,
   removable = count > 1,
@@ -103,7 +100,7 @@ export function ClimbEditorSheet({
   onClose,
 }: ClimbEditorSheetProps): React.ReactElement {
   const named = climb.name.trim() !== "";
-  const onCircuit = gym !== null && climb.circuit !== undefined;
+  const gym = gymOfCircuit(gyms, climb.circuit?.id);
   const dialog = React.useRef<HTMLDialogElement>(null);
   const panel = React.useRef<HTMLDivElement>(null);
   const pressedBackdrop = React.useRef(false);
@@ -149,7 +146,7 @@ export function ClimbEditorSheet({
             )}
           </div>
         </div>
-        {gym !== null && (
+        {gyms.length > 0 && (
           <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
             <label htmlFor="climb-kind" style={monoLabel}>
               {t("logSession.climbKind")}
@@ -157,40 +154,19 @@ export function ClimbEditorSheet({
             <ClimbKindSelect
               id="climb-kind"
               climb={climb}
-              gym={gym}
+              gyms={gyms}
               prefs={prefs}
               onChange={onChange}
             />
           </div>
         )}
-        {onCircuit ? (
-          <CircuitFields climb={climb} gym={gym} onChange={onChange} />
-        ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
-            <label htmlFor="climb-grade" style={monoLabel}>
-              {t("common.grade")}
-            </label>
-            <select
-              id="climb-grade"
-              name="grade"
-              value={climb.grade}
-              onChange={(e) => onChange({ ...climb, grade: e.target.value })}
-              className="log-session-control"
-              style={{
-                ...inputStyle,
-                fontFamily: "var(--font-mono)",
-                fontWeight: 600,
-                height: 46,
-              }}
-            >
-              {gradeOptions(scale).map((g) => (
-                <option key={g} value={g}>
-                  {g}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
+        <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
+          <label htmlFor="climb-grade" style={monoLabel}>
+            {t("common.grade")}
+          </label>
+          <ClimbGradeSelect id="climb-grade" climb={climb} gyms={gyms} onChange={onChange} />
+        </div>
+        {gym !== null && <CircuitFields climb={climb} gym={gym} onChange={onChange} />}
         <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
           <span style={monoLabel}>
             {t("logSession.name")}{" "}
@@ -198,11 +174,11 @@ export function ClimbEditorSheet({
           </span>
           <ClimbNameField
             value={climb.name}
-            scale={scale}
+            scale={climb.scale}
             suggestions={suggestions}
             inline
             placeholder={
-              !onCircuit
+              gym === null
                 ? t("logSession.climbNamePlaceholder")
                 : t("logSession.circuitClimbNamePlaceholder")
             }
@@ -210,10 +186,10 @@ export function ClimbEditorSheet({
             onPick={onPick}
           />
         </div>
-        {gym === null && (
+        {gyms.length === 0 && (
           <DisciplineToggle
             value={disciplineOf(climb.scale)}
-            onChange={(d) => onChange(withClimbGrading(climb, d, prefs, gym))}
+            onChange={(d) => onChange(withClimbKind(climb, d, prefs, gyms))}
           />
         )}
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>

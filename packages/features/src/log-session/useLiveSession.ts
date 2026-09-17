@@ -8,7 +8,7 @@ import { useStoredDraft, type StoredDraftEntry } from "./useDraftAutosave";
 
 export type LiveSession = StoredDraftEntry & {
   /** Appends a climb, starting the session at it when there is none, and returns its key. */
-  addClimb: (prefs: GradePrefs, gym: Gym | null, kind: ClimbKind) => string;
+  addClimb: (prefs: GradePrefs, gyms: readonly Gym[], kind: ClimbKind) => string;
   updateClimb: (key: string, patch: (climb: ClimbDraft) => ClimbDraft) => void;
   /** Removing the last climb removes the session with it. */
   removeClimb: (key: string) => void;
@@ -25,8 +25,8 @@ export function useLiveSession(storage: DraftStorage): LiveSession {
   );
 
   const addClimb = React.useCallback(
-    (prefs: GradePrefs, gym: Gym | null, kind: ClimbKind): string => {
-      const next = withQuickClimb(storedDraft(storage), new Date(), prefs, gym, kind);
+    (prefs: GradePrefs, gyms: readonly Gym[], kind: ClimbKind): string => {
+      const next = withQuickClimb(storedDraft(storage), new Date(), prefs, gyms, kind);
       write(next.draft);
       return next.key;
     },

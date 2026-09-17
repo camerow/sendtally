@@ -14,7 +14,7 @@ export type LiveClimbEditorProps = {
   live: LiveSession;
   scales: GradePrefs;
   vocabulary: ClimbVocabulary;
-  gym: Gym | null;
+  gyms: readonly Gym[];
   editingKey: string;
   onClose: () => void;
 };
@@ -24,7 +24,7 @@ export function LiveClimbEditor({
   live,
   scales,
   vocabulary,
-  gym,
+  gyms,
   editingKey,
   onClose,
 }: LiveClimbEditorProps): React.ReactElement | null {
@@ -40,8 +40,7 @@ export function LiveClimbEditor({
       climb={climb}
       index={index}
       count={climbs.length}
-      scale={climb.scale}
-      gym={gym}
+      gyms={gyms}
       prefs={scales}
       removable
       project={isProject(climb)}
