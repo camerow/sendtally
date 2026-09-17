@@ -24,6 +24,8 @@ export type SessionRowProps = {
   trailing?: React.ReactNode;
   /** Inside a group that already sets the row in from the screen edge. */
   inset?: boolean;
+  /** The hairline under the row, dropped on the last row of a group that has its own edge. */
+  divider?: boolean;
 };
 
 export function SessionRow({
@@ -32,6 +34,7 @@ export function SessionRow({
   onPress,
   trailing,
   inset = false,
+  divider = true,
 }: SessionRowProps): React.ReactElement {
   const { weekday, day } = sessionDay(session);
   const meta = sessionMetaLabel(session);
@@ -51,7 +54,7 @@ export function SessionRow({
         gap: 12,
         paddingVertical: 11,
         paddingHorizontal: inset ? 0 : 18,
-        borderBottomWidth: 1,
+        borderBottomWidth: divider ? 1 : 0,
         borderBottomColor: colors.lineOnLightSoft,
       })}
     >
