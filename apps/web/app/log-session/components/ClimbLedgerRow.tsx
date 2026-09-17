@@ -1,7 +1,13 @@
 import React from "react";
-import type { ClimbDraft } from "@sendtally/features/log-session";
+import {
+  enduranceLapCountLabel,
+  enduranceOf,
+  enduranceSummaryLabel,
+  type ClimbDraft,
+} from "@sendtally/features/log-session";
 import { t } from "@sendtally/features/i18n";
 import { CircuitDot } from "../../components/CircuitDot";
+import { Icon } from "../../components/Icon";
 import { Glyph } from "./Glyph";
 import { CHECK, CHEVRON, CROSS, FLAG, MINUS, PLUS } from "./styles";
 
@@ -13,12 +19,87 @@ export type ClimbLedgerRowProps = {
   onChangeTries?: (tries: number) => void;
 };
 
+function Row({
+  label,
+  onPress,
+  className,
+  children,
+}: {
+  label?: string;
+  onPress: () => void;
+  className: string;
+  children: React.ReactNode;
+}): React.ReactElement {
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      aria-label={label}
+      onClick={onPress}
+      onKeyDown={(e) => {
+        if (e.target !== e.currentTarget || (e.key !== "Enter" && e.key !== " ")) return;
+        e.preventDefault();
+        onPress();
+      }}
+      className={className}
+    >
+      {children}
+    </div>
+  );
+}
+
+/** A circuit of laps has no result badge and no try count: the laps themselves are the record. */
+function EnduranceLedgerRow({
+  climb,
+  onPress,
+}: {
+  climb: ClimbDraft;
+  onPress: () => void;
+}): React.ReactElement {
+  const endurance = enduranceOf(climb);
+  const named = climb.name.trim() !== "";
+  const title = named ? climb.name : t("endurance.title");
+  const meta = `${enduranceLapCountLabel(endurance.laps.length)} · ${enduranceSummaryLabel(endurance)}`;
+  return (
+    <Row
+      onPress={onPress}
+      label={`${title}, ${climb.grade}, ${meta}`}
+      className="climb-ledger-row climb-ledger-row--endurance"
+    >
+      <span style={{ display: "inline-flex", color: "var(--bs-petal-ink)" }}>
+        <Icon name="endurance" size={16} strokeWidth={2.4} />
+      </span>
+      <span className="climb-ledger-text">
+        <span
+          className="climb-ledger-name"
+          style={named ? {} : { fontWeight: 400, color: "rgba(64,63,76,0.45)" }}
+        >
+          {title}
+        </span>
+        <span className="climb-ledger-meta">{meta}</span>
+      </span>
+      <span
+        style={{
+          fontFamily: "var(--font-mono)",
+          fontWeight: 600,
+          fontSize: 14,
+          color: "var(--bs-gunmetal)",
+        }}
+      >
+        {climb.grade}
+      </span>
+      <Glyph d={CHEVRON} size={14} />
+    </Row>
+  );
+}
+
 export function ClimbLedgerRow({
   climb,
   project,
   onPress,
   onChangeTries,
 }: ClimbLedgerRowProps): React.ReactElement {
+  if (climb.endurance !== undefined) return <EnduranceLedgerRow climb={climb} onPress={onPress} />;
   const named = climb.name.trim() !== "";
   const send = climb.kind === "send";
   const firstGo = send && climb.style !== "redpoint";
@@ -34,17 +115,7 @@ export function ClimbLedgerRow({
     onChangeTries?.(tries);
   };
   return (
-    <div
-      role="button"
-      tabIndex={0}
-      onClick={onPress}
-      onKeyDown={(e) => {
-        if (e.target !== e.currentTarget || (e.key !== "Enter" && e.key !== " ")) return;
-        e.preventDefault();
-        onPress();
-      }}
-      className="climb-ledger-row"
-    >
+    <Row onPress={onPress} className="climb-ledger-row">
       {circuit === undefined ? (
         <span className="climb-ledger-grade">{climb.grade}</span>
       ) : (
@@ -100,6 +171,6 @@ export function ClimbLedgerRow({
         </span>
       )}
       <Glyph d={CHEVRON} size={14} />
-    </div>
+    </Row>
   );
 }

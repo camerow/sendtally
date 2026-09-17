@@ -13,6 +13,7 @@ export type IconName =
   | "check"
   | "trash"
   | "refresh"
+  | "endurance"
   | "x";
 
 const SHAPES: Record<IconName, React.ReactElement> = {
@@ -38,6 +39,9 @@ const SHAPES: Record<IconName, React.ReactElement> = {
   trash: <Path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3" />,
   refresh: (
     <Path d="M20 11a8 8 0 0 0-14.6-4.5M4 4.5V9h4.5M4 13a8 8 0 0 0 14.6 4.5M20 19.5V15h-4.5" />
+  ),
+  endurance: (
+    <Path d="M2 9c2.5-3 5-3 7.5 0S15 12 17.5 9 21 6 22 7M2 17c2.5-3 5-3 7.5 0s5 3 7.5 0 3.5-3 4.5-2" />
   ),
   x: <Path d="M6 6l12 12M18 6L6 18" />,
 };

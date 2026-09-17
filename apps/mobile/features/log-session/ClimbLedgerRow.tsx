@@ -1,6 +1,11 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
-import type { ClimbDraft } from "@sendtally/features/log-session";
+import {
+  enduranceLapCountLabel,
+  enduranceOf,
+  enduranceSummaryLabel,
+  type ClimbDraft,
+} from "@sendtally/features/log-session";
 import { t } from "@sendtally/features/i18n";
 import { colors, fonts } from "@sendtally/design/tokens";
 import { CircuitDot } from "../../components/CircuitDot";
@@ -51,12 +56,72 @@ function Stepper({
   );
 }
 
+/** A circuit of laps has no result badge and no try count: the laps themselves are the record. */
+function EnduranceLedgerRow({
+  climb,
+  onPress,
+}: {
+  climb: ClimbDraft;
+  onPress: () => void;
+}): React.ReactElement {
+  const endurance = enduranceOf(climb);
+  const named = climb.name.trim() !== "";
+  const meta = `${enduranceLapCountLabel(endurance.laps.length)} · ${enduranceSummaryLabel(endurance)}`;
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={`${named ? climb.name : t("endurance.title")}, ${climb.grade}, ${meta}`}
+      style={pressRow({
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 12,
+        minHeight: 58,
+        paddingHorizontal: 4,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.lineOnLightSoft,
+      })}
+    >
+      <Icon name="endurance" color={colors.petalInk} size={16} strokeWidth={2.4} />
+      <View style={{ flex: 1, minWidth: 0, gap: 3 }}>
+        <Text
+          numberOfLines={1}
+          style={{
+            fontFamily: named ? fonts.sansSemiBold : fonts.sans,
+            fontSize: 15,
+            color: named ? colors.gunmetal : colors.textFaint,
+          }}
+        >
+          {named ? climb.name : t("endurance.title")}
+        </Text>
+        <Text
+          numberOfLines={1}
+          style={{
+            fontFamily: fonts.monoMedium,
+            fontSize: 11,
+            letterSpacing: 0.6,
+            textTransform: "uppercase",
+            color: colors.textMuted,
+          }}
+        >
+          {meta}
+        </Text>
+      </View>
+      <Text style={{ fontFamily: fonts.monoSemiBold, fontSize: 14, color: colors.gunmetal }}>
+        {climb.grade}
+      </Text>
+      <Icon name="chevron" color={colors.textFaint} size={16} />
+    </Pressable>
+  );
+}
+
 export function ClimbLedgerRow({
   climb,
   project,
   onPress,
   onChangeTries,
 }: ClimbLedgerRowProps): React.ReactElement {
+  if (climb.endurance !== undefined) return <EnduranceLedgerRow climb={climb} onPress={onPress} />;
   const named = climb.name.trim() !== "";
   const send = climb.kind === "send";
   const circuit = climb.circuit;

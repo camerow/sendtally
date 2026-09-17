@@ -62,4 +62,8 @@ export const trends = {
   "trends.everywhere": "Partout",
   "trends.placeBody": "Dans une salle, la répartition se fait par circuit.",
   "trends.byCircuitTitled": "Par circuit · {title}",
+  "trends.enduranceLapsOverTime": "Tours au fil du temps",
+  "trends.enduranceInsight": "{laps} enregistrés, dont {clean} propres.",
+  "trends.enduranceEmpty": "Les tours d'endurance s'affichent ici.",
+  "trends.specCircuits": "Circuits",
 } as const;

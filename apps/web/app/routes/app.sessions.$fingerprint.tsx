@@ -1,6 +1,7 @@
 import React from "react";
 import type { LinksFunction, LoaderFunctionArgs } from "react-router";
 import { CircuitDot } from "../components/CircuitDot";
+import { Icon } from "../components/Icon";
 import { Link, useLoaderData, useNavigate, useParams } from "react-router";
 import type { SendtallyApi } from "@sendtally/api-client";
 import {
@@ -14,6 +15,7 @@ import { cloudflareContext } from "../lib/cloudflare-context";
 import { requireApi } from "../lib/api.server";
 import { useClientApi } from "../lib/useClientApi";
 import { SessionTags } from "../sessions/components/SessionTags";
+import { EnduranceLaps } from "../session-detail/components/EnduranceLaps";
 import { PostStatusBar } from "../session-detail/components/PostStatusBar";
 import { SessionJournal } from "../session-detail/components/SessionJournal";
 import journalStyles from "../journal/journal.css?url";
@@ -422,6 +424,7 @@ export default function SessionDetailRoute(): React.ReactElement {
           <div style={{ display: "flex", flexDirection: "column" }}>
             {climbs.map((c) => {
               const badge = RESULT_BADGES[c.result]!;
+              const endurance = c.endurance !== undefined;
               return (
                 <div
                   key={c.n}
@@ -446,6 +449,11 @@ export default function SessionDetailRoute(): React.ReactElement {
                   <span style={{ display: "flex", flexDirection: "column", gap: 6, minWidth: 0 }}>
                     <span style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
                       {c.colour !== undefined && <CircuitDot colour={c.colour} size={12} />}
+                      {c.endurance !== undefined && (
+                        <span style={{ display: "inline-flex", color: "var(--bs-petal-ink)" }}>
+                          <Icon name="endurance" size={14} strokeWidth={2.4} />
+                        </span>
+                      )}
                       <span
                         style={{
                           fontWeight: 500,
@@ -472,6 +480,7 @@ export default function SessionDetailRoute(): React.ReactElement {
                         {c.note}
                       </span>
                     )}
+                    {c.endurance !== undefined && <EnduranceLaps endurance={c.endurance} />}
                   </span>
                   <span
                     style={{
@@ -483,50 +492,39 @@ export default function SessionDetailRoute(): React.ReactElement {
                   >
                     {c.gradeLabel}
                   </span>
-                  <span
-                    style={{
-                      fontFamily: "var(--font-mono)",
-                      fontSize: 12,
-                      color: "rgba(64,63,76,0.72)",
-                    }}
-                  >
-                    {c.angleLabel}
-                  </span>
-                  <span
-                    style={{
-                      fontFamily: "var(--font-mono)",
-                      fontSize: 12,
-                      color: "rgba(64,63,76,0.72)",
-                    }}
-                  >
-                    {c.burns}
-                  </span>
-                  <span
-                    style={{
-                      fontFamily: "var(--font-mono)",
-                      fontSize: 12,
-                      color: "rgba(64,63,76,0.72)",
-                    }}
-                  >
-                    {c.restLabel}
-                  </span>
-                  <span
-                    style={{
-                      justifySelf: "start",
-                      fontFamily: "var(--font-mono)",
-                      fontWeight: 500,
-                      fontSize: 10,
-                      letterSpacing: "0.08em",
-                      textTransform: "uppercase",
-                      borderRadius: "var(--radius-pill)",
-                      padding: "3px 9px",
-                      background: badge.bg,
-                      border: `1px solid ${badge.border}`,
-                      color: badge.color,
-                    }}
-                  >
-                    {c.resultLabel}
-                  </span>
+                  {[c.angleLabel, endurance ? "" : String(c.burns), c.restLabel].map((value, i) => (
+                    <span
+                      key={i}
+                      style={{
+                        fontFamily: "var(--font-mono)",
+                        fontSize: 12,
+                        color: "rgba(64,63,76,0.72)",
+                      }}
+                    >
+                      {value}
+                    </span>
+                  ))}
+                  {endurance ? (
+                    <span />
+                  ) : (
+                    <span
+                      style={{
+                        justifySelf: "start",
+                        fontFamily: "var(--font-mono)",
+                        fontWeight: 500,
+                        fontSize: 10,
+                        letterSpacing: "0.08em",
+                        textTransform: "uppercase",
+                        borderRadius: "var(--radius-pill)",
+                        padding: "3px 9px",
+                        background: badge.bg,
+                        border: `1px solid ${badge.border}`,
+                        color: badge.color,
+                      }}
+                    >
+                      {c.resultLabel}
+                    </span>
+                  )}
                 </div>
               );
             })}

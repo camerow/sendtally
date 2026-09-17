@@ -1,4 +1,4 @@
-import { climbDiscipline, climbRank, dominantDiscipline } from "@sendtally/core";
+import { climbDiscipline, climbRank, dominantDiscipline, isEndurance } from "@sendtally/core";
 import type { ConnectionStatus, SessionClimb, SessionDetail } from "@sendtally/api-client";
 import { climbKey } from "../climbs/transforms";
 import { formatDate, t } from "../i18n";
@@ -103,6 +103,7 @@ export function climbVMs(
       result,
       resultLabel: resultLabelOf(c, result),
       note: c.note,
+      ...(c.endurance === undefined ? {} : { endurance: c.endurance }),
     };
   });
 }
@@ -203,9 +204,11 @@ export function sessionDetailVM(
   const start = new Date(session.start_at);
   const sends = climbs.filter((c) => c.result !== "project");
   const flashes = climbs.filter((c) => firstGo(c.result));
+  // A felt-like grade on a circuit of laps is not a top-grade statistic.
+  const scored = session.climbs.filter((c) => !isEndurance(c));
   const discipline = dominantDiscipline(session.climbs);
-  const format = gradeFormatterFor(session.climbs, discipline);
-  const inDiscipline = session.climbs.filter((c) => climbDiscipline(c) === discipline);
+  const format = gradeFormatterFor(scored, discipline);
+  const inDiscipline = scored.filter((c) => climbDiscipline(c) === discipline);
   const graded = inDiscipline.filter((c) => climbRank(c) >= 0);
   const avg =
     graded.length > 0 ? graded.reduce((a, c) => a + climbRank(c), 0) / graded.length : null;

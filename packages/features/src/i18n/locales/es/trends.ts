@@ -63,4 +63,8 @@ export const trends = {
   "trends.everywhere": "En todas partes",
   "trends.placeBody": "Dentro de un rocódromo, el desglose es por circuito.",
   "trends.byCircuitTitled": "Por circuito · {title}",
+  "trends.enduranceLapsOverTime": "Vueltas a lo largo del tiempo",
+  "trends.enduranceInsight": "{laps} registradas, {clean} de ellas limpias.",
+  "trends.enduranceEmpty": "Las vueltas de resistencia se muestran aquí.",
+  "trends.specCircuits": "Circuitos",
 } as const;

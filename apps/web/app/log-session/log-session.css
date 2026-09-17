@@ -584,3 +584,52 @@ body:has(.climb-sheet[open]) {
     flex: 1;
   }
 }
+
+.lap-chip {
+  height: 44px;
+  border-radius: var(--radius-control);
+  background: var(--bs-white);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.lap-add {
+  height: 44px;
+  padding: 0 14px;
+  border: 1px dashed rgba(64, 63, 76, 0.22);
+  border-radius: var(--radius-control);
+  background: transparent;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--bs-gunmetal);
+}
+
+.lap-remove {
+  color: var(--text-on-white-secondary);
+}
+
+.climb-ledger-row--endurance {
+  height: auto;
+  min-height: 62px;
+}
+
+.climb-ledger-meta {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(64, 63, 76, 0.72);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

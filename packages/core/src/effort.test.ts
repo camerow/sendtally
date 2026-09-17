@@ -5,6 +5,8 @@ import {
   defaultEffortConfig,
   dominantDiscipline,
   enduranceEquivalents,
+  enduranceTimeParts,
+  enduranceTotals,
   isEndurance,
   points,
   score,
@@ -342,7 +344,29 @@ describe("endurance", () => {
     );
     expect(res.summary).toContain("✓ V3 Red 40 (3 laps · 88 of 96 moves)");
     expect(res.summary).toContain("✓ 5.10c (3 laps · 36 min of 36 min)");
-    expect(res.summary).toContain("✓ V2 (1 lap · 45 sec of 90 sec)");
+    expect(res.summary).toContain("✓ V2 (1 lap · 45 sec of 1 min 30 sec)");
+  });
+
+  it("reads time in whole minutes and seconds, never a bare count of seconds", () => {
+    expect(enduranceTimeParts(720)).toEqual({ min: 12, sec: 0 });
+    expect(enduranceTimeParts(90)).toEqual({ min: 1, sec: 30 });
+    expect(enduranceTimeParts(45)).toEqual({ min: 0, sec: 45 });
+    const partial = enduranceClimb({ unit: "seconds", target: 720, laps: [720, 720, 450] }, 3);
+    const res = score(
+      { start: at(1, 17, 50), end: at(1, 19, 0), climbs: [partial] },
+      [],
+      defaultEffortConfig()
+    );
+    expect(res.summary).toContain("✓ V3 (3 laps · 31 min 30 sec of 36 min)");
+  });
+
+  it("totals laps, work and clean laps from the one array", () => {
+    expect(enduranceTotals({ unit: "moves", target: 32, laps: [32, 32, 24] })).toEqual({
+      laps: 3,
+      done: 88,
+      total: 96,
+      clean: 2,
+    });
   });
 });
 

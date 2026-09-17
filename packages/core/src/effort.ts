@@ -81,8 +81,24 @@ export function points(vGrade: number): number {
 export const MOVES_PER_EQUIVALENT = 8;
 export const SECONDS_PER_EQUIVALENT = 90;
 
+export type EnduranceTotals = { laps: number; done: number; total: number; clean: number };
+
+export function enduranceTotals(e: Endurance): EnduranceTotals {
+  return {
+    laps: e.laps.length,
+    done: e.laps.reduce((a, b) => a + b, 0),
+    total: e.laps.length * e.target,
+    clean: e.laps.filter((lap) => lap === e.target).length,
+  };
+}
+
+/** Time reads in whole minutes and seconds, so 90 is a minute and a half, never 90 sec. */
+export function enduranceTimeParts(seconds: number): { min: number; sec: number } {
+  return { min: Math.floor(seconds / 60), sec: seconds % 60 };
+}
+
 export function enduranceEquivalents(e: Endurance): number {
-  const done = e.laps.reduce((a, b) => a + b, 0);
+  const done = enduranceTotals(e).done;
   return done / (e.unit === "moves" ? MOVES_PER_EQUIVALENT : SECONDS_PER_EQUIVALENT);
 }
 
@@ -300,15 +316,17 @@ function summary(rpe: number, s: Session): string {
   return lines.join("\n");
 }
 
-function secondsLabel(n: number): string {
-  return n >= 60 && n % 60 === 0 ? `${n / 60} min` : `${n} sec`;
+function enduranceAmount(e: Endurance, value: number): string {
+  if (e.unit === "moves") return plural(value, "move");
+  const { min, sec } = enduranceTimeParts(value);
+  if (min === 0) return `${sec} sec`;
+  return sec === 0 ? `${min} min` : `${min} min ${sec} sec`;
 }
 
 function enduranceProgress(e: Endurance): string {
-  const done = e.laps.reduce((a, b) => a + b, 0);
-  const total = e.laps.length * e.target;
-  if (e.unit === "moves") return `${done} of ${total} moves`;
-  return `${secondsLabel(done)} of ${secondsLabel(total)}`;
+  const { done, total } = enduranceTotals(e);
+  const left = e.unit === "moves" ? String(done) : enduranceAmount(e, done);
+  return `${left} of ${enduranceAmount(e, total)}`;
 }
 
 function climbLine(c: Climb): string {

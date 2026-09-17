@@ -76,6 +76,10 @@ function Option({
   );
 }
 
+function EnduranceMark(): React.ReactElement {
+  return <Icon name="endurance" color={colors.gunmetal} size={17} strokeWidth={2} />;
+}
+
 export type ClimbKindPickerProps = {
   climb: ClimbDraft;
   gyms: readonly Gym[];
@@ -92,27 +96,43 @@ export function ClimbKindPicker({
 }: ClimbKindPickerProps): React.ReactElement {
   const options = [
     ...(["boulder", "route"] as const).map((d) => ({ value: d, label: disciplineLabel(d) })),
+    { value: "endurance", label: t("endurance.title"), hint: t("endurance.kindHint") },
     ...gyms.map((g) => ({ value: g.id, label: t("logSession.gymCircuits", { gym: g.name }) })),
   ];
   const value = climbKindOf(climb, gyms);
+  const firstGym = gyms[0]?.id;
   return (
     <SelectRow
       label={t("logSession.climbKind")}
       value={options.find((o) => o.value === value)?.label ?? ""}
+      leading={value === "endurance" ? <EnduranceMark /> : undefined}
     >
       {(close) =>
         options.map((option) => (
-          <Option
-            key={option.value}
-            label={option.label}
-            selected={option.value === value}
-            onPress={() => {
-              const next = withClimbKind(climb, option.value, prefs, gyms);
-              climbKindStorage.write(climbKindOf(next, gyms));
-              onChange(next);
-              close();
-            }}
-          />
+          <React.Fragment key={option.value}>
+            {option.value === firstGym && (
+              <View
+                style={{
+                  height: 1,
+                  marginVertical: 5,
+                  marginHorizontal: 12,
+                  backgroundColor: colors.lineOnLight,
+                }}
+              />
+            )}
+            <Option
+              label={option.label}
+              hint={"hint" in option ? option.hint : undefined}
+              selected={option.value === value}
+              leading={option.value === "endurance" ? <EnduranceMark /> : undefined}
+              onPress={() => {
+                const next = withClimbKind(climb, option.value, prefs, gyms);
+                climbKindStorage.write(climbKindOf(next, gyms));
+                onChange(next);
+                close();
+              }}
+            />
+          </React.Fragment>
         ))
       }
     </SelectRow>

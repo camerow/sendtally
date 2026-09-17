@@ -697,3 +697,54 @@ describe("nextClimbKey", () => {
     expect(nextClimbKey([])).toBe("climb-1");
   });
 });
+
+describe("endurance climbs", () => {
+  const endurance = { unit: "moves" as const, target: 32, laps: [32, 32, 24] };
+
+  it("sends the circuit as a one-try redpoint send whatever the draft holds", () => {
+    const [first] = toLogSessionInput(
+      draft({
+        climbs: [
+          {
+            key: "a",
+            scale: "v",
+            grade: "V4",
+            name: "",
+            kind: "attempt",
+            style: "flash",
+            tries: 5,
+            note: "",
+            project: true,
+            endurance,
+          },
+        ],
+      })
+    ).climbs;
+    expect(first).toMatchObject({ kind: "send", style: "redpoint", tries: 1, endurance });
+    expect(first?.project).toBeUndefined();
+  });
+
+  it("reads the circuit back off the stored climb", () => {
+    const stored = session({
+      climbs: [
+        {
+          time: "2026-08-26T18:30:00.000Z",
+          name: "Red 40",
+          vGrade: 3,
+          kind: "attempt",
+          tries: 9,
+          angle: null,
+          grade: { scale: "v", value: 3 },
+          note: null,
+          endurance,
+        },
+      ],
+    });
+    expect(draftFromSession(stored).climbs[0]).toMatchObject({
+      kind: "send",
+      style: "redpoint",
+      tries: 1,
+      endurance,
+    });
+  });
+});

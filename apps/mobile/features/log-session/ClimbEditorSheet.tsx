@@ -8,7 +8,7 @@ import {
   disciplineLabel,
   disciplineOf,
   gymOfCircuit,
-  withClimbKind,
+  withClimbDiscipline,
   withTries,
   type ClimbDraft,
   type Discipline,
@@ -19,6 +19,7 @@ import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { Icon } from "../../components/Icon";
 import { Sheet } from "../../components/Sheet";
 import { ClimbGradePicker, ClimbKindPicker } from "./ClimbKindPicker";
+import { EnduranceFields } from "./EnduranceFields";
 import { ResultPicker } from "./ResultPicker";
 import { press, pressRow } from "../../lib/press";
 
@@ -355,6 +356,7 @@ export function ClimbEditorSheet({
 }: ClimbEditorSheetProps): React.ReactElement {
   const climb = useLingering(current);
   const gym = climb === null ? null : gymOfCircuit(gyms, climb.circuit?.id);
+  const endurance = climb?.endurance !== undefined;
   const [nameFocused, setNameFocused] = React.useState(false);
   const named = climb !== null && climb.name.trim() !== "";
   const showList = nameFocused && suggestions.length > 0;
@@ -386,12 +388,11 @@ export function ClimbEditorSheet({
             )}
           </View>
 
-          {gyms.length > 0 && (
-            <View style={{ gap: 7 }}>
-              <Text style={label}>{t("logSession.climbKind")}</Text>
-              <ClimbKindPicker climb={climb} gyms={gyms} prefs={prefs} onChange={onChange} />
-            </View>
-          )}
+          <View style={{ gap: 7 }}>
+            <Text style={label}>{t("logSession.climbKind")}</Text>
+            <ClimbKindPicker climb={climb} gyms={gyms} prefs={prefs} onChange={onChange} />
+          </View>
+          {endurance && <EnduranceFields climb={climb} onChange={onChange} />}
           <View style={{ gap: 7 }}>
             <View
               style={{
@@ -401,11 +402,11 @@ export function ClimbEditorSheet({
                 gap: 12,
               }}
             >
-              <Text style={label}>{t("common.grade")}</Text>
-              {gyms.length === 0 && (
+              <Text style={label}>{endurance ? t("endurance.feltLike") : t("common.grade")}</Text>
+              {(endurance || gyms.length === 0) && (
                 <DisciplineToggle
                   value={disciplineOf(climb.scale)}
-                  onChange={(discipline) => onChange(withClimbKind(climb, discipline, prefs, gyms))}
+                  onChange={(discipline) => onChange(withClimbDiscipline(climb, discipline, prefs))}
                 />
               )}
             </View>
@@ -421,9 +422,11 @@ export function ClimbEditorSheet({
               autoComplete="off"
               value={climb.name}
               placeholder={
-                gym === null
-                  ? t("logSession.climbNamePlaceholder")
-                  : t("logSession.circuitClimbNamePlaceholder")
+                endurance
+                  ? t("endurance.namePlaceholder")
+                  : gym === null
+                    ? t("logSession.climbNamePlaceholder")
+                    : t("logSession.circuitClimbNamePlaceholder")
               }
               placeholderTextColor={colors.textFaint}
               returnKeyType="done"
@@ -519,39 +522,43 @@ export function ClimbEditorSheet({
             )}
           </View>
 
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-            <ResultPicker climb={climb} onChange={onChange} />
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-              <StepButton
-                glyph="−"
-                disabled={climb.tries <= 1}
-                onPress={() => onChange(withTries(climb, climb.tries - 1))}
-              />
-              <Text
-                style={{
-                  width: 24,
-                  textAlign: "center",
-                  fontFamily: fonts.monoSemiBold,
-                  fontSize: 15,
-                  color: colors.gunmetal,
-                }}
-              >
-                {climb.tries}
-              </Text>
-              <StepButton
-                glyph="+"
-                disabled={climb.tries >= 99}
-                onPress={() => onChange(withTries(climb, climb.tries + 1))}
-              />
+          {!endurance && (
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+              <ResultPicker climb={climb} onChange={onChange} />
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                <StepButton
+                  glyph="−"
+                  disabled={climb.tries <= 1}
+                  onPress={() => onChange(withTries(climb, climb.tries - 1))}
+                />
+                <Text
+                  style={{
+                    width: 24,
+                    textAlign: "center",
+                    fontFamily: fonts.monoSemiBold,
+                    fontSize: 15,
+                    color: colors.gunmetal,
+                  }}
+                >
+                  {climb.tries}
+                </Text>
+                <StepButton
+                  glyph="+"
+                  disabled={climb.tries >= 99}
+                  onPress={() => onChange(withTries(climb, climb.tries + 1))}
+                />
+              </View>
             </View>
-          </View>
+          )}
 
-          <ProjectRow
-            on={project}
-            enabled={named}
-            meta={known === null ? null : projectMetaLabel(known)}
-            onPress={onToggleProject}
-          />
+          {!endurance && (
+            <ProjectRow
+              on={project}
+              enabled={named}
+              meta={known === null ? null : projectMetaLabel(known)}
+              onPress={onToggleProject}
+            />
+          )}
 
           <View style={{ gap: 7 }}>
             <Text style={label}>

@@ -5,7 +5,7 @@ import {
   climbOutcome,
   disciplineOf,
   gymOfCircuit,
-  withClimbKind,
+  withClimbDiscipline,
   withClimbOutcome,
   withTries,
   type ClimbDraft,
@@ -13,6 +13,13 @@ import {
 } from "@sendtally/features/log-session";
 import { t } from "@sendtally/features/i18n";
 import { CircuitFields } from "../../gyms/components/CircuitFields";
+import {
+  EnduranceLapOutcome,
+  EnduranceLaps,
+  EnduranceTargetField,
+  EnduranceUnitField,
+  useSelectedLap,
+} from "./EnduranceFields";
 import { ClimbGradeSelect, ClimbKindSelect } from "./ClimbKindSelect";
 import { ClimbNameField } from "./ClimbNameField";
 import { ClimbNoteField } from "./ClimbNoteField";
@@ -22,6 +29,21 @@ import { OutcomeControl } from "./OutcomeControl";
 import { ProjectToggle } from "./ProjectToggle";
 import { TriesStepper } from "./TriesStepper";
 import { CROSS, columnHead, stepperButton } from "./styles";
+
+function LabelRow({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}): React.ReactElement {
+  return (
+    <div className="climb-card-result">
+      <span style={columnHead}>{label}</span>
+      {children}
+    </div>
+  );
+}
 
 export type ClimbCardProps = {
   climb: ClimbDraft;
@@ -51,18 +73,24 @@ export function ClimbCard({
   onRemove,
 }: ClimbCardProps): React.ReactElement {
   const named = climb.name.trim() !== "";
+  const endurance = climb.endurance !== undefined;
   const gym = gymOfCircuit(gyms, climb.circuit?.id);
+  const [selectedLap, selectLap] = useSelectedLap(climb);
   return (
     <div className="climb-card">
       <div className="climb-card-main">
         <div className="climb-card-cell">
-          <span style={columnHead}>{t("common.grade")}</span>
-          <ClimbGradeSelect
-            climb={climb}
-            gyms={gyms}
-            style={{ height: "auto", padding: "11px 8px" }}
-            onChange={onChange}
-          />
+          <span style={columnHead}>{endurance ? t("endurance.oneLapIs") : t("common.grade")}</span>
+          {endurance ? (
+            <EnduranceTargetField climb={climb} onChange={onChange} />
+          ) : (
+            <ClimbGradeSelect
+              climb={climb}
+              gyms={gyms}
+              style={{ height: "auto", padding: "11px 8px" }}
+              onChange={onChange}
+            />
+          )}
         </div>
         <div className="climb-card-cell">
           <span style={columnHead}>{t("logSession.nameOptional")}</span>
@@ -71,20 +99,26 @@ export function ClimbCard({
             scale={climb.scale}
             suggestions={suggestions}
             placeholder={
-              gym === null
-                ? t("logSession.climbNamePlaceholder")
-                : t("logSession.circuitClimbNamePlaceholder")
+              endurance
+                ? t("endurance.namePlaceholder")
+                : gym === null
+                  ? t("logSession.climbNamePlaceholder")
+                  : t("logSession.circuitClimbNamePlaceholder")
             }
             onChange={onChangeName}
             onPick={onPick}
           />
         </div>
         <div className="climb-card-cell">
-          <span style={columnHead}>{t("logSession.tries")}</span>
-          <TriesStepper
-            tries={climb.tries}
-            onChange={(tries) => onChange(withTries(climb, tries))}
-          />
+          <span style={columnHead}>{endurance ? t("endurance.unit") : t("logSession.tries")}</span>
+          {endurance ? (
+            <EnduranceUnitField climb={climb} onChange={onChange} />
+          ) : (
+            <TriesStepper
+              tries={climb.tries}
+              onChange={(tries) => onChange(withTries(climb, tries))}
+            />
+          )}
         </div>
         <button
           type="button"
@@ -104,38 +138,57 @@ export function ClimbCard({
           <Glyph d={CROSS} width={1.7} />
         </button>
       </div>
-      {gyms.length === 0 ? (
-        <div className="climb-card-result">
-          <span style={columnHead}>{t("common.discipline")}</span>
-          <DisciplineToggle
-            value={disciplineOf(climb.scale)}
-            onChange={(d) => onChange(withClimbKind(climb, d, prefs, gyms))}
-          />
-        </div>
-      ) : (
-        <div className="climb-card-result">
-          <span style={columnHead}>{t("logSession.climbKind")}</span>
-          <ClimbKindSelect
-            climb={climb}
-            gyms={gyms}
-            prefs={prefs}
-            style={{ height: 40, padding: "8px 12px" }}
-            onChange={onChange}
-          />
-        </div>
+      <LabelRow label={t("logSession.climbKind")}>
+        <ClimbKindSelect
+          climb={climb}
+          gyms={gyms}
+          prefs={prefs}
+          style={{ height: 40, padding: "8px 12px", maxWidth: 240 }}
+          onChange={onChange}
+        />
+      </LabelRow>
+      {endurance && (
+        <>
+          <LabelRow label={t("endurance.laps")}>
+            <EnduranceLaps
+              climb={climb}
+              selected={selectedLap}
+              onSelect={selectLap}
+              onChange={onChange}
+            />
+          </LabelRow>
+          <LabelRow label={t("endurance.lapNumber", { n: selectedLap + 1 })}>
+            <EnduranceLapOutcome climb={climb} selected={selectedLap} onChange={onChange} />
+          </LabelRow>
+          <LabelRow label={t("endurance.feltLike")}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+              <DisciplineToggle
+                value={disciplineOf(climb.scale)}
+                onChange={(d) => onChange(withClimbDiscipline(climb, d, prefs))}
+              />
+              <ClimbGradeSelect
+                climb={climb}
+                gyms={gyms}
+                style={{ width: 100, height: 40, padding: "0 10px" }}
+                onChange={onChange}
+              />
+            </div>
+          </LabelRow>
+        </>
       )}
       {gym !== null && <CircuitFields climb={climb} gym={gym} onChange={onChange} />}
-      <div className="climb-card-result">
-        <span style={columnHead}>{t("common.result")}</span>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
-          <OutcomeControl
-            discipline={disciplineOf(climb.scale)}
-            outcome={climbOutcome(climb)}
-            onChange={(outcome) => onChange(withClimbOutcome(climb, outcome))}
-          />
-          <ProjectToggle project={project} named={named} onToggle={onToggleProject} />
-        </div>
-      </div>
+      {!endurance && (
+        <LabelRow label={t("common.result")}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+            <OutcomeControl
+              discipline={disciplineOf(climb.scale)}
+              outcome={climbOutcome(climb)}
+              onChange={(outcome) => onChange(withClimbOutcome(climb, outcome))}
+            />
+            <ProjectToggle project={project} named={named} onToggle={onToggleProject} />
+          </div>
+        </LabelRow>
+      )}
       <div className="climb-card-result climb-card-result--note">
         {named ? (
           <>

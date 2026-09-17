@@ -15,6 +15,7 @@ import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { Icon } from "../../components/Icon";
 import { press, pressRow } from "../../lib/press";
 import { ClimbLedgerRow } from "../log-session/ClimbLedgerRow";
+import { LiveEnduranceClimb } from "./LiveEnduranceClimb";
 import { DayColumn, RowTitle } from "../sessions/SessionRowParts";
 
 const wrapUpButton = {
@@ -103,6 +104,7 @@ export type LiveSessionCardProps = {
   gym: Gym | null;
   onEditClimb: (key: string) => void;
   onChangeTries: (key: string, tries: number) => void;
+  onAddLap: (key: string) => void;
 };
 
 /** The session being climbed right now, pinned above the log until it is wrapped up. */
@@ -112,6 +114,7 @@ export function LiveSessionCard({
   gym,
   onEditClimb,
   onChangeTries,
+  onAddLap,
 }: LiveSessionCardProps): React.ReactElement {
   const now = useSecondClock();
   const { draft, savedAt } = stored;
@@ -175,15 +178,24 @@ export function LiveSessionCard({
               backgroundColor: colors.white,
             }}
           >
-            {draft.climbs.map((climb) => (
-              <ClimbLedgerRow
-                key={climb.key}
-                climb={climb}
-                project={climb.project ?? vocabulary.isProject(climb.name)}
-                onPress={() => onEditClimb(climb.key)}
-                onChangeTries={(tries) => onChangeTries(climb.key, tries)}
-              />
-            ))}
+            {draft.climbs.map((climb) =>
+              climb.endurance === undefined ? (
+                <ClimbLedgerRow
+                  key={climb.key}
+                  climb={climb}
+                  project={climb.project ?? vocabulary.isProject(climb.name)}
+                  onPress={() => onEditClimb(climb.key)}
+                  onChangeTries={(tries) => onChangeTries(climb.key, tries)}
+                />
+              ) : (
+                <LiveEnduranceClimb
+                  key={climb.key}
+                  climb={climb}
+                  onPress={() => onEditClimb(climb.key)}
+                  onAddLap={() => onAddLap(climb.key)}
+                />
+              )
+            )}
           </View>
         )}
       </View>
