@@ -61,4 +61,8 @@ export const trends = {
   "trends.everywhere": "Everywhere",
   "trends.placeBody": "Inside one gym, the breakdown is by circuit.",
   "trends.byCircuitTitled": "By circuit · {title}",
+  "trends.enduranceLapsOverTime": "Laps over time",
+  "trends.enduranceInsight": "{laps} logged, {clean} of them clean.",
+  "trends.enduranceEmpty": "Endurance laps chart here.",
+  "trends.specCircuits": "Circuits",
 } as const;

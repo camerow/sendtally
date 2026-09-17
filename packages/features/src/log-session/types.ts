@@ -1,8 +1,14 @@
-import { disciplineOf, type ClimbStyle, type Discipline, type GradeScale } from "@sendtally/core";
+import {
+  disciplineOf,
+  type ClimbStyle,
+  type Discipline,
+  type Endurance,
+  type GradeScale,
+} from "@sendtally/core";
 import type { CircuitRef } from "@sendtally/api-client";
 import { t } from "../i18n";
 
-export type { ClimbStyle, Discipline, GradeScale };
+export type { ClimbStyle, Discipline, Endurance, GradeScale };
 export { disciplineOf };
 
 export type GradeScaleOption = { value: GradeScale; discipline: Discipline };
@@ -39,6 +45,7 @@ export type ClimbDraft = {
   project?: boolean;
   circuit?: CircuitRef;
   wall?: string;
+  endurance?: Endurance;
 };
 
 /**

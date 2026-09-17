@@ -253,15 +253,27 @@ export function draftProblem(draft: LogSessionDraft): string | null {
   return null;
 }
 
+/** An endurance circuit is a send, redpoint, one try, and never a project. */
+function climbOutcomeInput(
+  c: ClimbDraft
+): Pick<LogClimbInput, "kind" | "style" | "tries" | "endurance" | "project"> {
+  if (c.endurance !== undefined) {
+    return { kind: "send", style: "redpoint", tries: 1, endurance: c.endurance };
+  }
+  return {
+    kind: c.kind,
+    ...(c.kind === "send" ? { style: c.style } : {}),
+    tries: c.tries,
+    ...(c.project === undefined ? {} : { project: c.project }),
+  };
+}
+
 export function toLogSessionInput(draft: LogSessionDraft): LogSessionInput {
   const climbs: LogClimbInput[] = draft.climbs.map((c) => ({
     ...(c.name.trim() === "" ? {} : { name: c.name.trim() }),
     grade: draftGrade(c.grade, c.scale) ?? fallbackGrade(c.grade, c.scale),
-    kind: c.kind,
-    ...(c.kind === "send" ? { style: c.style } : {}),
-    tries: c.tries,
+    ...climbOutcomeInput(c),
     ...(c.name.trim() === "" || c.note.trim() === "" ? {} : { note: c.note.trim() }),
-    ...(c.project === undefined ? {} : { project: c.project }),
     ...(c.circuit === undefined ? {} : { circuit: c.circuit }),
     ...(c.wall === undefined || c.wall.trim() === "" ? {} : { wall: c.wall.trim() }),
   }));
@@ -323,12 +335,17 @@ export function draftFromSession(session: SessionDetail): LogSessionDraft {
         scale,
         grade: climbGrade(c, scale),
         name: c.name,
-        kind: c.kind,
-        style: storedStyle(c),
-        tries: c.tries,
         note: c.note ?? "",
         ...(c.circuit === undefined ? {} : { circuit: c.circuit }),
         ...(c.wall === undefined ? {} : { wall: c.wall }),
+        ...(c.endurance === undefined
+          ? { kind: c.kind, style: storedStyle(c), tries: c.tries }
+          : {
+              kind: "send" as const,
+              style: "redpoint" as const,
+              tries: 1,
+              endurance: c.endurance,
+            }),
       };
     }),
   };

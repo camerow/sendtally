@@ -300,3 +300,41 @@ describe("disciplines", () => {
     expect(vm.disciplines).toEqual([]);
   });
 });
+
+describe("endurance", () => {
+  const circuit = {
+    vGrade: 3,
+    endurance: { unit: "moves" as const, target: 32, laps: [32, 32, 24] },
+  };
+
+  it("stays off the tiles for someone with no endurance climbs", () => {
+    const vm = trendsVM([session("2026-08-04T18:00:00.000Z", [{ vGrade: 4 }])], "1m", NOW);
+    expect(vm.tiles.map((t) => t.metric)).not.toContain("endurance");
+  });
+
+  it("totals laps over the range once there are any", () => {
+    const vm = trendsVM(
+      [
+        session("2026-08-04T18:00:00.000Z", [{ vGrade: 4 }, circuit]),
+        session("2026-08-05T18:00:00.000Z", [circuit]),
+      ],
+      "1m",
+      NOW
+    );
+    const tile = vm.tiles.find((t) => t.metric === "endurance");
+    expect(tile?.value).toBe("6 laps");
+    expect(vm.details.endurance.specs.map((s) => s.v)).toEqual(["2", "6", "4"]);
+  });
+
+  it("keeps a felt-like grade out of the grade trends and the discipline toggle", () => {
+    const route = {
+      vGrade: 9,
+      grade: { scale: "yds" as const, value: "5.13a" },
+      endurance: { unit: "seconds" as const, target: 720, laps: [720] },
+    };
+    const vm = trendsVM([session("2026-08-04T18:00:00.000Z", [{ vGrade: 4 }, route])], "1m", NOW);
+    expect(vm.disciplines).toEqual(["boulder"]);
+    expect(vm.tiles.find((t) => t.metric === "hardest")?.value).toBe("V4");
+    expect(vm.tiles.find((t) => t.metric === "endurance")?.value).toBe("1 lap");
+  });
+});

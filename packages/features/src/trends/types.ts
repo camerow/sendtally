@@ -4,7 +4,17 @@ import { t } from "../i18n";
 
 export type { Discipline };
 
-export type TrendMetric = "volume" | "pyramid" | "hardest" | "flash" | "avggrade";
+export type TrendMetric = "volume" | "endurance" | "pyramid" | "hardest" | "flash" | "avggrade";
+
+/** Every metric with a detail screen, so a route parameter can be checked against one list. */
+export const TREND_METRICS: readonly TrendMetric[] = [
+  "volume",
+  "endurance",
+  "pyramid",
+  "hardest",
+  "flash",
+  "avggrade",
+];
 
 export const TREND_DISCIPLINES: readonly Discipline[] = ["boulder", "route"];
 

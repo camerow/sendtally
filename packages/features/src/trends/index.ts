@@ -4,6 +4,7 @@ export {
   PREVIEW_TREND_RANGE,
   TILE_BREAKDOWN_ROWS,
   TREND_DISCIPLINES,
+  TREND_METRICS,
   TREND_RANGES,
   trendRangeLabel,
 } from "./types";

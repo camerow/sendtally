@@ -63,4 +63,8 @@ export const trends = {
   "trends.everywhere": "Überall",
   "trends.placeBody": "In einer Halle ist die Aufschlüsselung nach Zirkel.",
   "trends.byCircuitTitled": "Nach Zirkel · {title}",
+  "trends.enduranceLapsOverTime": "Runden im Zeitverlauf",
+  "trends.enduranceInsight": "{laps} protokolliert, davon {clean} sauber.",
+  "trends.enduranceEmpty": "Ausdauerrunden landen hier im Diagramm.",
+  "trends.specCircuits": "Circuits",
 } as const;

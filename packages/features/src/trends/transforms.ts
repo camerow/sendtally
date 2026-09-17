@@ -1,7 +1,14 @@
-import { climbDiscipline, climbRank, type Discipline } from "@sendtally/core";
+import {
+  climbDiscipline,
+  climbRank,
+  enduranceTotals,
+  isEndurance,
+  type Discipline,
+} from "@sendtally/core";
 import type { CircuitColour, SessionWithClimbs } from "@sendtally/api-client";
 import { climbKey } from "../climbs/transforms";
 import { formatDate, formatNumber, t, type MessageKey } from "../i18n";
+import { enduranceLapCountLabel } from "../log-session/endurance";
 import { gradeFormatterFor, type GradeFormatter } from "../sessions/grades";
 import { sessionTagGroups } from "../sessions/tags";
 import type {
@@ -45,6 +52,7 @@ function sends(sessions: SessionWithClimbs[], discipline: Discipline): Sent[] {
   const seen = new Set<string>();
   const out: Sent[] = [];
   for (const { climb, time } of climbs) {
+    if (isEndurance(climb)) continue;
     const key = climbKey(climb.name);
     const firstEncounter = key === "" || !seen.has(key);
     if (key !== "") seen.add(key);
@@ -56,11 +64,33 @@ function sends(sessions: SessionWithClimbs[], discipline: Discipline): Sent[] {
   return out;
 }
 
+type LapTally = { time: number; laps: number; clean: number };
+
+/**
+ * A felt-like grade is a perceived intensity, not a send grade, so endurance laps
+ * are counted whatever discipline the trends are filtered to.
+ */
+function lapTallies(sessions: SessionWithClimbs[]): LapTally[] {
+  const out: LapTally[] = [];
+  for (const session of sessions) {
+    for (const climb of session.climbs) {
+      if (climb.endurance === undefined) continue;
+      const { laps, clean } = enduranceTotals(climb.endurance);
+      out.push({ time: Date.parse(climb.time), laps, clean });
+    }
+  }
+  return out;
+}
+
+function totalLaps(tallies: LapTally[]): number {
+  return tallies.reduce((a, c) => a + c.laps, 0);
+}
+
 function disciplinesWithSends(sessions: SessionWithClimbs[]): Discipline[] {
   const counts = { boulder: 0, route: 0 };
   for (const s of sessions) {
     for (const c of s.climbs) {
-      if (c.kind === "send" && climbRank(c) >= 0) counts[climbDiscipline(c)]++;
+      if (!isEndurance(c) && c.kind === "send" && climbRank(c) >= 0) counts[climbDiscipline(c)]++;
     }
   }
   const present = (["boulder", "route"] as const).filter((d) => counts[d] > 0);
@@ -193,12 +223,14 @@ type TagStat = {
   hardest: number | null;
   flash: number | null;
   avg: number | null;
+  laps: number | null;
 };
 
 type MetricPick = (t: TagStat, format: GradeFormatter) => { value: number | null; label: string };
 
 const METRIC_PICK: Record<TrendMetric, MetricPick> = {
   volume: (t) => ({ value: t.volume, label: String(t.volume) }),
+  endurance: (t) => ({ value: t.laps, label: t.laps === null ? "-" : String(t.laps) }),
   pyramid: (t) => ({ value: t.sends, label: String(t.sends) }),
   hardest: (t, format) => ({
     value: t.hardest,
@@ -249,6 +281,7 @@ function tagStats(
   return groups.map((group) => {
     const sent = sends(group.items, discipline).filter((c) => c.time >= windowStart);
     const grades = sent.map((c) => c.grade);
+    const laps = totalLaps(lapTallies(group.items).filter((c) => c.time >= windowStart));
     return {
       key: group.key,
       label: group.label,
@@ -262,6 +295,7 @@ function tagStats(
           ? null
           : Math.round((sent.filter((c) => c.flash).length / sent.length) * 100),
       avg: grades.length === 0 ? null : grades.reduce((a, g) => a + g, 0) / grades.length,
+      laps: laps === 0 ? null : laps,
     };
   });
 }
@@ -316,6 +350,10 @@ export function trendsVM(
       .filter((s) => Date.parse(s.start_at) >= b.start && Date.parse(s.start_at) < b.end)
       .reduce((a, s) => a + s.climb_count, 0)
   );
+  const rangeLaps = lapTallies(inRange).filter((c) => c.time >= windowStart);
+  const bucketLaps = buckets.map((b) =>
+    totalLaps(rangeLaps.filter((c) => c.time >= b.start && c.time < b.end))
+  );
   const bucketSends = buckets.map((b) =>
     rangeSends.filter((c) => c.time >= b.start && c.time < b.end)
   );
@@ -353,6 +391,16 @@ export function trendsVM(
     height: h,
     peak: false,
     valueLabel: bucketClimbs[i] === 0 ? "" : String(bucketClimbs[i]),
+    axisLabel: axis(i),
+  }));
+
+  const lapsTotal = totalLaps(rangeLaps);
+  const lapsClean = rangeLaps.reduce((a, c) => a + c.clean, 0);
+  const lapsMax = Math.max(0, ...bucketLaps);
+  const enduranceBars: TrendBarVM[] = normalize(bucketLaps).map((h, i) => ({
+    height: h,
+    peak: false,
+    valueLabel: bucketLaps[i] === 0 ? "" : String(bucketLaps[i]),
     axisLabel: axis(i),
   }));
 
@@ -413,6 +461,18 @@ export function trendsVM(
       bars: volumeBars,
       yTicks: ticks(volumeMax, countTick),
     },
+    ...(rangeLaps.length === 0
+      ? []
+      : [
+          {
+            metric: "endurance" as const,
+            label: t("endurance.title"),
+            value: enduranceLapCountLabel(lapsTotal),
+            caption: `${t("endurance.laps")} · ${rangeLabel}`,
+            bars: enduranceBars,
+            yTicks: ticks(lapsMax, countTick),
+          },
+        ]),
     {
       metric: "pyramid",
       label: t("trends.gradePyramid"),
@@ -471,6 +531,26 @@ export function trendsVM(
               peak: biggestBucket,
             })
           : t("trends.volumeEmpty"),
+    },
+    endurance: {
+      metric: "endurance",
+      title: t("endurance.title"),
+      caption: `${t("trends.enduranceLapsOverTime")} · ${rangeLabel}`,
+      bars: enduranceBars,
+      yTicks: ticks(lapsMax, countTick),
+      specs: [
+        { k: t("trends.specCircuits"), v: String(rangeLaps.length) },
+        { k: t("endurance.laps"), v: String(lapsTotal) },
+        { k: t("endurance.clean"), v: lapsTotal === 0 ? "-" : String(lapsClean) },
+      ],
+      breakdown: breakdownFor("endurance", stats, format),
+      insight:
+        lapsTotal > 0
+          ? t("trends.enduranceInsight", {
+              laps: enduranceLapCountLabel(lapsTotal),
+              clean: lapsClean,
+            })
+          : t("trends.enduranceEmpty"),
     },
     pyramid: {
       metric: "pyramid",
