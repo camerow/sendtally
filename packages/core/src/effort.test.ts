@@ -294,6 +294,20 @@ describe("endurance", () => {
     expect(isEndurance(boulder)).toBe(false);
   });
 
+  it("never lets an endurance grade suppress the volume title", () => {
+    const history = history6(8, 6);
+    const base = mkSession(10, 18, 40, 3);
+    expect(score(base, history, defaultEffortConfig()).title).toContain("volume climbing session");
+
+    const withCircuit: Session = {
+      ...base,
+      climbs: [...base.climbs, enduranceClimb({ unit: "seconds", target: 720, laps: [720] }, 7)],
+    };
+    expect(score(withCircuit, history, defaultEffortConfig()).title).toContain(
+      "volume climbing session"
+    );
+  });
+
   it("never lets an endurance grade count as a personal best", () => {
     const history = history6(10, 4);
     const base = mkSession(10, 18, 10, 4);

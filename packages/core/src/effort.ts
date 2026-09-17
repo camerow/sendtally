@@ -176,7 +176,7 @@ function adjective(rpe: number): string {
 }
 
 function topEffortGrade(s: Session): number {
-  return s.climbs.reduce((hi, c) => (c.vGrade > hi ? c.vGrade : hi), -1);
+  return s.climbs.reduce((hi, c) => (!isEndurance(c) && c.vGrade > hi ? c.vGrade : hi), -1);
 }
 
 export type GradedClimb = {
