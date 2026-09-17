@@ -13,7 +13,7 @@ export const billing = {
   "billing.memberVia": "Suscriptor · {store}",
   "billing.memberWeb": "Suscriptor · web",
   "billing.pointVolume": "Volumen: cuánto escalaste de verdad, semana a semana",
-  "billing.pointRpe": "RPE: lo duras que se han sentido tus sesiones con el tiempo",
+  "billing.pointRpe": "Esfuerzo: lo duras que se han sentido tus sesiones con el tiempo",
   "billing.pointAvgGrade": "Grado medio encadenado: la deriva que un cuaderno nunca te muestra",
   "billing.pointFlashRate": "Porcentaje de flash: lo primero que se mueve cuando mejora tu lectura",
   "billing.period.week": "semana",

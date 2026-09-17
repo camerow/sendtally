@@ -74,10 +74,11 @@ export const journal = {
   "journal.hintTrip": "Résume et regroupe des séances dans un voyage",
   "journal.hintInjury": "Suis une nouvelle blessure et son évolution",
   "journal.tripDaysClimbed": "Jours grimpés",
-  "journal.tripAverageRpe": "RPE moyen",
+  "journal.tripAverageRpe": "Effort moyen",
   "journal.dayByDay": "Jour par jour",
   "journal.effortByDay": "Effort par jour",
-  "journal.effortByDayNote": "RPE le plus élevé de chaque jour. Un jour sans séance est un tiret.",
+  "journal.effortByDayNote":
+    "Effort le plus élevé de chaque jour. Un jour sans séance est un tiret.",
   "journal.alreadyOngoing": "Déjà en cours",
   "journal.carriedInNote":
     "A commencé avant ce voyage, donc reste à sa propre date dans le journal.",

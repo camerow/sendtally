@@ -1,4 +1,6 @@
 export const common = {
+  "common.effort": "Esfuerzo",
+  "common.effortValue": "Esfuerzo {n} de 10",
   "common.route": "Vía",
   "common.boulder": "Bloque",
   "common.sessions": "Sesiones",

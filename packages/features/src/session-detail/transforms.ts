@@ -239,7 +239,7 @@ export function sessionDetailVM(
       accent: false,
     },
     { label: t("sessionDetail.statFlashes"), value: String(flashes.length), accent: false },
-    { label: "RPE", value: `${session.rpe}/10`, accent: false },
+    { label: t("common.effort"), value: `${session.rpe}/10`, accent: false },
     { label: t("sessionDetail.statTop"), value: topLabel, accent: true },
   ];
 
@@ -279,7 +279,7 @@ export function sessionDetailVM(
   return {
     title: `${titleLabel} - ${dateLabel}`,
     startDay: session.start_at.slice(0, 10),
-    meta: `${weekday} ${dateLabel} · ${time} · ${durationLabel(session.start_at, session.end_at)}${location} · RPE ${session.rpe}/10`,
+    meta: `${weekday} ${dateLabel} · ${time} · ${durationLabel(session.start_at, session.end_at)}${location} · ${t("common.effort")} ${session.rpe}/10`,
     editable: session.source === "manual",
     stats,
     bars,

@@ -60,7 +60,7 @@ export const sessions = {
   "sessions.logAClimbHint": "Eine einzelne Kletterei loggen. Startet eine Live-Session",
   "sessions.logFullSession": "Session",
   "sessions.logFullSessionHint":
-    "Fasse Klettereien zu einer Session mit Name, Notizen, Datum, Ort und RPE zusammen.",
+    "Fasse Klettereien zu einer Session mit Name, Notizen, Datum, Ort und Anstrengung zusammen.",
   "sessions.liveMeta": "Läuft seit {elapsed}",
   "sessions.wrapUp": "Abschließen",
   "sessions.stillClimbing": "Noch am Klettern?",

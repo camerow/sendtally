@@ -65,9 +65,9 @@ export const logSession = {
   "logSession.endTime": "Heure de fin",
   "logSession.afterYouSave": "Après l'enregistrement",
   "logSession.afterSaveNew":
-    "sendtally donne un titre à la séance et construit le détail des lignes. Laisse le RPE en auto et il est noté par rapport à tes 8 dernières semaines de séances. Les notes restent dans sendtally et ne sont jamais publiées sur Strava.",
+    "sendtally donne un titre à la séance et construit le détail des lignes. Laisse l’effort en auto et il est noté par rapport à tes 8 dernières semaines de séances. Les notes restent dans sendtally et ne sont jamais publiées sur Strava.",
   "logSession.afterSaveEdit":
-    "sendtally reconstruit le titre et le détail des lignes à partir de ces modifications. Remets le RPE en auto pour qu'il soit de nouveau noté par rapport à tes 8 dernières semaines de séances. Les notes restent dans sendtally et ne sont jamais publiées sur Strava.",
+    "sendtally reconstruit le titre et le détail des lignes à partir de ces modifications. Remets l’effort en auto pour qu'il soit de nouveau noté par rapport à tes 8 dernières semaines de séances. Les notes restent dans sendtally et ne sont jamais publiées sur Strava.",
   "logSession.scalesInSettings": "Les échelles de cotation se règlent dans les réglages",
   "logSession.name": "Nom",
   "logSession.tries": "Essais",

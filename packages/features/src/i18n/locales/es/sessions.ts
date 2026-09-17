@@ -60,7 +60,8 @@ export const sessions = {
   "sessions.logAClimb": "Vía",
   "sessions.logAClimbHint": "Registrar una sola vía. Empieza una sesión en curso",
   "sessions.logFullSession": "Sesión",
-  "sessions.logFullSessionHint": "Agrupa vías en una sesión con nombre, notas, fecha, lugar y RPE.",
+  "sessions.logFullSessionHint":
+    "Agrupa vías en una sesión con nombre, notas, fecha, lugar y esfuerzo.",
   "sessions.liveMeta": "En curso desde hace {elapsed}",
   "sessions.wrapUp": "Cerrar",
   "sessions.stillClimbing": "¿Sigues escalando?",

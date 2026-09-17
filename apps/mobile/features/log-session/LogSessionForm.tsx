@@ -28,7 +28,7 @@ import {
 import { SESSION_NOTE_MAX, useTagVocabulary } from "@sendtally/features/sessions";
 import { useGradeScalePrefs } from "@sendtally/features/settings";
 import { formatDate, t } from "@sendtally/features/i18n";
-import { colors, fonts, radius } from "@sendtally/design/tokens";
+import { colors, effortColor, fonts, radius } from "@sendtally/design/tokens";
 import { useApi } from "../../lib/api";
 import { queries } from "@sendtally/features/query";
 import { climbKindStorage } from "../../lib/climbKindStorage";
@@ -452,7 +452,7 @@ export function LogSessionForm({
             }}
           >
             <View style={{ flexDirection: "row", alignItems: "baseline", gap: 7 }}>
-              <LabelText>RPE</LabelText>
+              <LabelText>{t("common.effort")}</LabelText>
               <Text
                 style={{
                   fontFamily: fonts.monoSemiBold,
@@ -490,12 +490,13 @@ export function LogSessionForm({
               return (
                 <Pressable
                   key={value}
+                  accessibilityLabel={t("common.effortValue", { n: value })}
                   onPress={() => setDraft({ ...draft, rpe: value })}
                   style={{
                     flex: 1,
                     height: 44,
                     borderRadius: 4,
-                    backgroundColor: lit ? colors.azure : colors.dataBarEmpty,
+                    backgroundColor: lit ? effortColor(draft.rpe ?? 1) : colors.dataBarEmpty,
                   }}
                 />
               );

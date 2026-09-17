@@ -49,3 +49,22 @@ export const fonts = {
   monoMedium: "IBMPlexMono_500Medium",
   monoSemiBold: "IBMPlexMono_600SemiBold",
 } as const;
+
+/** One colour per effort level, 1-10: blue for easy through purple to red for all out. */
+export const effortScale = [
+  "#3186FC",
+  "#5482F8",
+  "#7C80F3",
+  "#AE7DED",
+  "#D287D4",
+  "#EBBF89",
+  "#F7CA59",
+  "#F3A358",
+  "#EE7658",
+  "#E94957",
+] as const;
+
+export function effortColor(rpe: number): string {
+  const level = Math.min(10, Math.max(1, Math.round(rpe)));
+  return effortScale[level - 1] ?? effortScale[0];
+}

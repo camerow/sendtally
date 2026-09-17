@@ -10,7 +10,7 @@ export function sessionMetaLabel(session: SessionRow): string {
   return [
     durationLabel(sessionMinutes(session)),
     climbCountLabel(session.climb_count),
-    `RPE ${session.rpe}/10`,
+    `${t("common.effort")} ${session.rpe}/10`,
   ].join(" · ");
 }
 
