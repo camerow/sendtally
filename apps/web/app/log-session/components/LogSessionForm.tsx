@@ -597,7 +597,7 @@ export function LogSessionForm({
               cursor: "pointer",
             }}
           >
-            {t("common.cancel")}
+            {t("common.discard")}
           </button>
           <button
             type="button"

@@ -13,7 +13,8 @@ import { formatDate, t } from "@sendtally/features/i18n";
 import { Icon } from "../../components/Icon";
 import { ClimbLedgerRow } from "../../log-session/components/ClimbLedgerRow";
 
-const WRAP_UP = "/app/sessions/new?resume=1";
+const OPEN_SESSION = "/app/sessions/new?resume=1";
+const WRAP_UP = "/app/sessions/new?resume=1&wrapUp=1";
 
 function useSecondClock(): Date {
   const [now, setNow] = React.useState(() => new Date());
@@ -79,7 +80,7 @@ export function LiveSessionCard({
     <div className="live-session">
       {wantsWrapUpReminder(draft, now) && <ReminderBar stored={stored} now={now} />}
       <div className="live-session-body">
-        <Link to={WRAP_UP} className="live-session-row" aria-label={`${title}, ${meta}`}>
+        <Link to={OPEN_SESSION} className="live-session-row" aria-label={`${title}, ${meta}`}>
           <span className="session-row-date">
             <span className="session-row-weekday">{formatDate(savedAt, { weekday: "short" })}</span>
             <span className="session-row-day">{formatDate(savedAt, { day: "numeric" })}</span>
