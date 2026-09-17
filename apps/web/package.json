@@ -20,6 +20,7 @@
     "@sendtally/api-client": "workspace:*",
     "@sendtally/design": "workspace:*",
     "@sendtally/features": "workspace:*",
+    "@tanstack/react-query": "^5.102.8",
     "isbot": "^5.1.30",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",

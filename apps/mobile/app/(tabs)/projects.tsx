@@ -148,8 +148,7 @@ export default function Projects(): React.ReactElement {
             refreshing={refreshing}
             onRefresh={() => {
               setRefreshing(true);
-              projects.reload();
-              void vocabulary.reload().finally(() => setRefreshing(false));
+              void projects.reload().finally(() => setRefreshing(false));
             }}
             tintColor={colors.gunmetal}
           />
@@ -279,10 +278,7 @@ export default function Projects(): React.ReactElement {
         climbs={vocabulary.climbs}
         scales={scales}
         onClose={() => setAdding(0)}
-        onSave={async (input) => {
-          await projects.save(input);
-          await vocabulary.reload();
-        }}
+        onSave={projects.save}
       />
     </SafeAreaView>
   );

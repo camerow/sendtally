@@ -18,7 +18,6 @@ import { SessionJournal } from "../../features/journal/SessionJournal";
 import { SessionTags } from "../../features/sessions/SessionTags";
 import { useApi } from "../../lib/api";
 import { press } from "../../lib/press";
-import { useReloadOnReturn } from "../../lib/useReloadOnReturn";
 
 const RESULT_BADGES: Record<ClimbVM["result"], { bg: string; border: string; color: string }> = {
   onsight: { bg: colors.petalInk, border: colors.petalInk, color: colors.white },
@@ -56,7 +55,6 @@ export default function SessionDetailScreen(): React.ReactElement {
   const api = useApi();
   const feature = useSessionDetail(api, fingerprint ?? "");
   const { state, filter, setFilter, sort, setSort } = feature;
-  useReloadOnReturn(feature.reload);
   const [deleting, setDeleting] = React.useState(false);
 
   function confirmDelete(): void {

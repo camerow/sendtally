@@ -1,6 +1,6 @@
 import React from "react";
 import type { EntryDetail, SendtallyApi, SessionRow } from "@sendtally/api-client";
-import { useQuery, type QueryState } from "../lib/useQuery";
+import { bothReady, queries, useQuery, type QueryState } from "../query";
 
 export type EntryDetailData = { entry: EntryDetail; sessions: SessionRow[] };
 
@@ -8,19 +8,20 @@ export type EntryDetailData = { entry: EntryDetail; sessions: SessionRow[] };
 export function useEntryDetail(
   api: SendtallyApi,
   id: string
-): { state: QueryState<EntryDetailData>; reload: () => void } {
-  const load = React.useCallback(async (): Promise<EntryDetailData> => {
-    const [{ entry }, { sessions }] = await Promise.all([api.entry(id), api.sessions()]);
-    return { entry, sessions };
-  }, [api, id]);
-  return useQuery(load);
+): { state: QueryState<EntryDetailData>; reload: () => Promise<void> } {
+  const { state: entry, reload: reloadEntry } = useQuery(queries.entry(api, id));
+  const { state: sessions, reload: reloadSessions } = useQuery(queries.sessions(api));
+  const state = React.useMemo(
+    () => bothReady(entry, sessions, (entry, sessions) => ({ entry, sessions })),
+    [entry, sessions]
+  );
+  const reload = React.useCallback(async () => {
+    await Promise.all([reloadEntry(), reloadSessions()]);
+  }, [reloadEntry, reloadSessions]);
+  return { state, reload };
 }
 
 /** What the composer offers to link. */
 export function useSessionRows(api: SendtallyApi): { state: QueryState<SessionRow[]> } {
-  const load = React.useCallback(async (): Promise<SessionRow[]> => {
-    const { sessions } = await api.sessions();
-    return sessions;
-  }, [api]);
-  return { state: useQuery(load).state };
+  return { state: useQuery(queries.sessions(api)).state };
 }

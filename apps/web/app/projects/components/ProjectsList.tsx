@@ -200,10 +200,7 @@ export function ProjectsList({ apiUrl }: ProjectsListProps): React.ReactElement 
           climbs={climbs}
           scales={scales}
           onClose={() => setAdding(false)}
-          onSave={async (input) => {
-            await projects.save(input);
-            await vocabulary.reload();
-          }}
+          onSave={projects.save}
         />
       )}
     </div>

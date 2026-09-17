@@ -1,6 +1,7 @@
 import React from "react";
 import type { GradeScales, SendtallyApi } from "@sendtally/api-client";
 import { t } from "../i18n";
+import { queries, useQuery } from "../query";
 import { DEFAULT_GRADE_SCALES } from "./transforms";
 import type { SettingsVM } from "./types";
 
@@ -47,25 +48,9 @@ export function useGradeScales(
 // Read-only counterpart for the screens that only need to know which scale to
 // show: the project dialog and a new session draft.
 export function useGradeScalePrefs(api: SendtallyApi): { scales: GradeScales; ready: boolean } {
-  const [scales, setScales] = React.useState<GradeScales>(DEFAULT_GRADE_SCALES);
-  const [ready, setReady] = React.useState(false);
-
-  React.useEffect(() => {
-    let live = true;
-    api
-      .status()
-      .then((status) => {
-        if (!live) return;
-        setScales(status.gradeScales ?? DEFAULT_GRADE_SCALES);
-        setReady(true);
-      })
-      .catch(() => {
-        if (live) setReady(true);
-      });
-    return () => {
-      live = false;
-    };
-  }, [api]);
-
-  return { scales, ready };
+  const { state } = useQuery(queries.status(api));
+  return {
+    scales: (state.status === "ready" ? state.data.gradeScales : null) ?? DEFAULT_GRADE_SCALES,
+    ready: state.status !== "loading",
+  };
 }

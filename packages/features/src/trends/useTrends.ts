@@ -1,6 +1,6 @@
 import React from "react";
 import type { Gym, SendtallyApi, SessionWithClimbs } from "@sendtally/api-client";
-import { useQuery, type QueryState } from "../lib/useQuery";
+import { bothReady, queries, useQuery, type QueryState } from "../query";
 import { filterSessionsByTags, sessionTagOptions, type TagOption } from "../sessions/tags";
 import { trendsVM } from "./transforms";
 import { PREVIEW_TREND_RANGE, type Discipline, type TrendRange, type TrendsVM } from "./types";
@@ -12,7 +12,7 @@ export type TrendsOptions = {
 
 export type TrendsFeature = {
   state: QueryState<TrendsVM>;
-  reload: () => void;
+  reload: () => Promise<void>;
   preview: boolean;
   range: TrendRange;
   setRange: (range: TrendRange) => void;
@@ -39,15 +39,19 @@ export function useTrends(
   const [selectedTags, setSelectedTags] = React.useState<string[]>([]);
   const [gymId, setGym] = React.useState<string | null>(null);
 
-  const load = React.useCallback(async (): Promise<{
-    sessions: SessionWithClimbs[];
-    gyms: Gym[];
-  }> => {
-    const [{ sessions }, { gyms }] = await Promise.all([api.sessionsWithClimbs(), api.gyms()]);
-    return { sessions, gyms: gyms.filter((g) => g.circuits.length > 0) };
-  }, [api]);
-
-  const { state: raw, reload } = useQuery(load);
+  const { state: sessions, reload: reloadSessions } = useQuery(queries.sessionsWithClimbs(api));
+  const { state: gyms, reload: reloadGyms } = useQuery(queries.gyms(api));
+  const raw = React.useMemo(
+    () =>
+      bothReady(sessions, gyms, (sessions, gyms) => ({
+        sessions,
+        gyms: gyms.filter((g) => g.circuits.length > 0),
+      })),
+    [sessions, gyms]
+  );
+  const reload = React.useCallback(async () => {
+    await Promise.all([reloadSessions(), reloadGyms()]);
+  }, [reloadSessions, reloadGyms]);
 
   const placed = React.useMemo(
     (): SessionWithClimbs[] =>

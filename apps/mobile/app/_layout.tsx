@@ -27,6 +27,7 @@ import { resolveLocale, setLocale } from "@sendtally/features/i18n";
 import { AnalyticsProvider } from "../features/analytics/AnalyticsProvider";
 import { BillingProvider } from "../features/billing/BillingProvider";
 import { CLERK_PUBLISHABLE_KEY } from "../lib/config";
+import { QueryProvider } from "../lib/QueryProvider";
 
 Observe.configure({ integrations: { "expo-router": true } });
 setLocale(resolveLocale(getLocales()[0]?.languageTag));
@@ -52,20 +53,22 @@ function RootLayout(): React.ReactElement | null {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY} tokenCache={tokenCache}>
-        <AnalyticsProvider>
-          <BillingProvider>
-            <BottomSheetModalProvider>
-              <InteractiveMarker />
-              <StatusBar style="dark" />
-              <Stack
-                screenOptions={{
-                  headerShown: false,
-                  contentStyle: { backgroundColor: colors.white },
-                }}
-              />
-            </BottomSheetModalProvider>
-          </BillingProvider>
-        </AnalyticsProvider>
+        <QueryProvider>
+          <AnalyticsProvider>
+            <BillingProvider>
+              <BottomSheetModalProvider>
+                <InteractiveMarker />
+                <StatusBar style="dark" />
+                <Stack
+                  screenOptions={{
+                    headerShown: false,
+                    contentStyle: { backgroundColor: colors.white },
+                  }}
+                />
+              </BottomSheetModalProvider>
+            </BillingProvider>
+          </AnalyticsProvider>
+        </QueryProvider>
       </ClerkProvider>
     </GestureHandlerRootView>
   );

@@ -1,37 +1,26 @@
+import { useQueryClient } from "@tanstack/react-query";
 import React from "react";
 import type { ClimbSummary, SendtallyApi } from "@sendtally/api-client";
+import { queries, useQuery } from "../query";
 import { findClimb, matchClimbs } from "./transforms";
 
 export type ClimbVocabulary = {
   climbs: ClimbSummary[];
   loaded: boolean;
-  reload: () => Promise<void>;
   suggestionsFor: (query: string) => ClimbSummary[];
   isProject: (name: string) => boolean;
   unmarkProject: (climb: ClimbSummary) => Promise<void>;
 };
 
-export function useClimbVocabulary(api: SendtallyApi): ClimbVocabulary {
-  const [climbs, setClimbs] = React.useState<ClimbSummary[]>([]);
-  const [loaded, setLoaded] = React.useState(false);
+const NO_CLIMBS: ClimbSummary[] = [];
 
+export function useClimbVocabulary(api: SendtallyApi): ClimbVocabulary {
+  const client = useQueryClient();
+  const { state } = useQuery(queries.climbs(api));
   // A failed load still finishes: suggestions go quiet rather than leaving the
   // screen on a spinner that never resolves.
-  const reload = React.useCallback(async (): Promise<void> => {
-    try {
-      const result = await api.climbs();
-      setClimbs(result.climbs);
-    } catch {
-      setClimbs([]);
-    } finally {
-      setLoaded(true);
-    }
-  }, [api]);
-
-  React.useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- reload only sets state after its await
-    void reload();
-  }, [reload]);
+  const climbs = state.status === "ready" ? state.data : NO_CLIMBS;
+  const loaded = state.status !== "loading";
 
   const suggestionsFor = React.useCallback(
     (query: string): ClimbSummary[] => matchClimbs(climbs, query),
@@ -46,15 +35,15 @@ export function useClimbVocabulary(api: SendtallyApi): ClimbVocabulary {
   const unmarkProject = React.useCallback(
     async (climb: ClimbSummary): Promise<void> => {
       await api.unmarkProject(climb.slug);
-      setClimbs((all) =>
-        all.flatMap((c) => {
+      client.setQueryData(queries.climbs(api).queryKey, (all) =>
+        all?.flatMap((c) => {
           if (c.slug !== climb.slug) return [c];
           return c.sessions === 0 ? [] : [{ ...c, project: false }];
         })
       );
     },
-    [api]
+    [api, client]
   );
 
-  return { climbs, loaded, reload, suggestionsFor, isProject, unmarkProject };
+  return { climbs, loaded, suggestionsFor, isProject, unmarkProject };
 }

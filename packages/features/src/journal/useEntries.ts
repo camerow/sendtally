@@ -1,15 +1,6 @@
-import React from "react";
 import type { JournalEntry, SendtallyApi } from "@sendtally/api-client";
-import { useQuery, type QueryState } from "../lib/useQuery";
+import { queries, useQuery, type Query } from "../query";
 
-export function useEntries(api: SendtallyApi): {
-  state: QueryState<JournalEntry[]>;
-  reload: () => void;
-} {
-  const load = React.useCallback(async (): Promise<JournalEntry[]> => {
-    const { entries } = await api.entries();
-    return entries;
-  }, [api]);
-  const { state, reload } = useQuery(load);
-  return { state, reload };
+export function useEntries(api: SendtallyApi): Query<JournalEntry[]> {
+  return useQuery(queries.entries(api));
 }
