@@ -31,9 +31,7 @@ export default function LogSessionRoute(): React.ReactElement {
       ? t("common.logASession")
       : searchParams.get("wrapUp") === "1"
         ? t("logSession.wrapUpTitle")
-        : resumed.name.trim() === ""
-          ? t("sessions.unfinishedSession")
-          : resumed.name;
+        : resumed.name.trim() || t("sessions.unfinishedSession");
 
   return (
     <div>
