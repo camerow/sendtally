@@ -16,7 +16,7 @@ import {
   sessionsIn,
 } from "@sendtally/features/sessions";
 import { t } from "@sendtally/features/i18n";
-import { colors, fonts, radius } from "@sendtally/design/tokens";
+import { colors, fonts } from "@sendtally/design/tokens";
 import { Icon } from "../../components/Icon";
 import { press } from "../../lib/press";
 import { EntryRow, entryRowHeight } from "./EntryRow";
@@ -26,11 +26,15 @@ import { ROW_TAGS_HEIGHT, RowTags } from "../sessions/RowTags";
 
 type TripItem = Extract<LogItem, { type: "entry" }>;
 
-const CARD_MARGIN = 10;
+/** The gap under the group, before the next row of the log. */
+const GROUP_MARGIN = 10;
+/** The rail down the side of a trip - what says the rows below the header belong to it. */
+const RAIL_WIDTH = 4;
 /** Padding, the chip line, the title, the meta and the 3px gaps between them. */
 const HEADER_HEIGHT = 85;
 /** Past this many days the strip is wider than the title it sits beside. */
 const MAX_DOTS = 12;
+/** With the rail, this sets the rows in to the 18px the ungrouped rows use. */
 const ROW_PADDING = 14;
 const TINT = "rgba(204,121,234,0.13)";
 
@@ -38,10 +42,10 @@ const innerHeight = (item: LogItem): number =>
   item.type === "session" ? sessionRowHeight(item.session) : entryRowHeight(item.entry);
 
 export function tripGroupHeight(item: TripItem): number {
-  // Card margins, both borders, the header and its rule, less the last row's dropped hairline.
+  // The margin under the group, the header and its rule, less the last row's dropped hairline.
   return (
-    CARD_MARGIN * 2 +
-    3 +
+    GROUP_MARGIN +
+    1 +
     HEADER_HEIGHT +
     (item.entry.tags.length > 0 ? ROW_TAGS_HEIGHT : 0) +
     item.inside.reduce((sum, inner) => sum + innerHeight(inner), 0) -
@@ -85,7 +89,7 @@ function EffortDots({ trip, inside }: { trip: JournalEntry; inside: LogItem[] })
   );
 }
 
-/** A trip and everything logged inside its dates, held in one card. */
+/** A trip and everything logged inside its dates, held by the rail down its side. */
 export function TripGroup({
   item,
   onOpen,
@@ -97,12 +101,9 @@ export function TripGroup({
   return (
     <View
       style={{
-        marginVertical: CARD_MARGIN,
-        marginHorizontal: 18,
-        borderWidth: 1,
-        borderColor: colors.petalTint,
-        borderRadius: radius.cardLg,
-        overflow: "hidden",
+        marginBottom: GROUP_MARGIN,
+        borderLeftWidth: RAIL_WIDTH,
+        borderLeftColor: colors.petalInk,
         backgroundColor: colors.white,
       }}
     >
