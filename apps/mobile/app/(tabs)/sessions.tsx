@@ -29,6 +29,7 @@ import { useClimbVocabulary } from "@sendtally/features/climbs";
 import { useLiveSession, withTries } from "@sendtally/features/log-session";
 import { sessionDraftStorage } from "../../lib/sessionDraftStorage";
 import { useGradeScalePrefs } from "@sendtally/features/settings";
+import { UpdateReadyCard } from "../../features/app-update/UpdateReadyCard";
 import { EntryRow, entryRowHeight } from "../../features/journal/EntryRow";
 import { LiveClimbEditor } from "../../features/live-session/LiveClimbEditor";
 import { LiveSessionCard } from "../../features/live-session/LiveSessionCard";
@@ -257,6 +258,7 @@ export default function Log(): React.ReactElement {
         contentContainerStyle={{ paddingBottom: 140 }}
         ListHeaderComponent={
           <>
+            <UpdateReadyCard liveSession={live.stored !== null} />
             <SetupStack cards={setupCards} total={2} />
             {live.stored !== null && (
               <LiveSessionCard

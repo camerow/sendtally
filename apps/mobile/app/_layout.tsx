@@ -28,7 +28,8 @@ import { AnalyticsProvider } from "../features/analytics/AnalyticsProvider";
 import { BillingProvider } from "../features/billing/BillingProvider";
 import { CLERK_PUBLISHABLE_KEY } from "../lib/config";
 import { QueryProvider } from "../lib/QueryProvider";
-import { useFreshInstallUpdate } from "../lib/useFreshInstallUpdate";
+import { useFreshInstallUpdate } from "../features/app-update/useFreshInstallUpdate";
+import { useUpdateCheckOnForeground } from "../features/app-update/useUpdateCheckOnForeground";
 
 Observe.configure({ integrations: { "expo-router": true } });
 setLocale(resolveLocale(getLocales()[0]?.languageTag));
@@ -50,6 +51,7 @@ function RootLayout(): React.ReactElement | null {
     IBMPlexMono_600SemiBold,
   });
   const updateSettled = useFreshInstallUpdate();
+  useUpdateCheckOnForeground();
   if (!fontsLoaded || !updateSettled) return null;
 
   return (

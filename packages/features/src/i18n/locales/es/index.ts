@@ -1,4 +1,5 @@
 import { account } from "./account";
+import { appUpdate } from "./appUpdate";
 import { auth } from "./auth";
 import { billing } from "./billing";
 import { climbs } from "./climbs";
@@ -15,6 +16,7 @@ import { trends } from "./trends";
 
 export const es = {
   ...account,
+  ...appUpdate,
   ...auth,
   ...billing,
   ...climbs,
