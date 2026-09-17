@@ -13,9 +13,12 @@ const LOOKS: Record<EntryKind | "status", { bg: string; border: string; color: s
 export function EntryKindChip({
   kind,
   label,
+  bg,
 }: {
   kind: EntryKind | "status";
   label?: string;
+  /** A fill for the chip where the kind's own tint would sit on a tinted surface. */
+  bg?: string;
 }): React.ReactElement {
   const look = LOOKS[kind];
   return (
@@ -31,7 +34,7 @@ export function EntryKindChip({
         borderRadius: radius.pill,
         borderWidth: 1,
         overflow: "hidden",
-        backgroundColor: look.bg,
+        backgroundColor: bg ?? look.bg,
         borderColor: look.border,
         color: look.color,
       }}
