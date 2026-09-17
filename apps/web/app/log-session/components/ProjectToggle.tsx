@@ -7,23 +7,21 @@ export type ProjectToggleProps = {
   project: boolean;
   named: boolean;
   /** A circuit of laps is never a project, so the control is dead rather than waiting on a name. */
-  offered?: boolean;
   onToggle: () => void;
 };
 
 export function ProjectToggle({
   project,
   named,
-  offered = true,
   onToggle,
 }: ProjectToggleProps): React.ReactElement {
-  const on = named && offered;
+  const on = named;
   return (
     <button
       type="button"
       aria-pressed={project}
       disabled={!on}
-      title={offered && !named ? t("logSession.projectHint") : undefined}
+      title={named ? undefined : t("logSession.projectHint")}
       onClick={onToggle}
       className="climb-project"
       style={{

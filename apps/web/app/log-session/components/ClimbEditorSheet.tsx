@@ -247,12 +247,7 @@ export function ClimbEditorSheet({
             />
           </div>
         )}
-        <ProjectToggle
-          project={project}
-          named={named}
-          offered={!endurance}
-          onToggle={onToggleProject}
-        />
+        {!endurance && <ProjectToggle project={project} named={named} onToggle={onToggleProject} />}
         <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
           <span style={monoLabel}>
             {named ? t("logSession.noteOptional") : t("logSession.noteNeedsName")}

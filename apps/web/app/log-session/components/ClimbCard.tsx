@@ -177,23 +177,18 @@ export function ClimbCard({
         </>
       )}
       {gym !== null && <CircuitFields climb={climb} gym={gym} onChange={onChange} />}
-      <LabelRow label={t("common.result")}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
-          {!endurance && (
+      {!endurance && (
+        <LabelRow label={t("common.result")}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
             <OutcomeControl
               discipline={disciplineOf(climb.scale)}
               outcome={climbOutcome(climb)}
               onChange={(outcome) => onChange(withClimbOutcome(climb, outcome))}
             />
-          )}
-          <ProjectToggle
-            project={project}
-            named={named}
-            offered={!endurance}
-            onToggle={onToggleProject}
-          />
-        </div>
-      </LabelRow>
+            <ProjectToggle project={project} named={named} onToggle={onToggleProject} />
+          </div>
+        </LabelRow>
+      )}
       <div className="climb-card-result climb-card-result--note">
         {named ? (
           <>

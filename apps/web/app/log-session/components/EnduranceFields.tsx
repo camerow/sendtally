@@ -5,9 +5,9 @@ import {
   enduranceLapValueLabel,
   enduranceOf,
   enduranceProgressLabel,
-  enduranceLapStep,
   enduranceUnitLabel,
   isCleanLap,
+  FELL_AFTER_START,
   removeLap,
   withEnduranceTarget,
   withEnduranceUnit,
@@ -207,7 +207,6 @@ export function EnduranceLapOutcome({
   const endurance = enduranceOf(climb);
   const clean = isCleanLap(endurance, selected);
   const scale = unitScale(endurance.unit);
-  const step = enduranceLapStep(endurance);
   const lap = endurance.laps[selected] ?? 0;
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
@@ -219,7 +218,7 @@ export function EnduranceLapOutcome({
             withLap(
               climb,
               selected,
-              e.target.value === "clean" ? endurance.target : Math.max(0, endurance.target - step)
+              e.target.value === "clean" ? endurance.target : FELL_AFTER_START
             )
           )
         }

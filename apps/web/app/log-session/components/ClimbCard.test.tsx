@@ -147,7 +147,7 @@ describe("ClimbCard", () => {
     expect([...outcome.options].map((o) => o.text)).toEqual(["Completed", "Fell after"]);
     pick(outcome, "partial");
     expect(onChange).toHaveBeenLastCalledWith(
-      expect.objectContaining({ endurance: { unit: "moves", target: 20, laps: [19] } })
+      expect.objectContaining({ endurance: { unit: "moves", target: 20, laps: [0] } })
     );
 
     const partial = mount({ ...circuit(), endurance: { unit: "moves", target: 20, laps: [19] } });
@@ -165,7 +165,7 @@ describe("ClimbCard", () => {
 
   it("does not offer a circuit of laps as a project", () => {
     const card = mount({ ...circuit(), name: "Red 40" });
-    expect(card.querySelector<HTMLButtonElement>(".climb-project")!.disabled).toBe(true);
+    expect(card.querySelector(".climb-project")).toBeNull();
   });
 
   it("keeps the project toggle live on a named boulder", () => {
