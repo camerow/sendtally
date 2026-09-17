@@ -9,6 +9,7 @@ import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { Icon } from "../../components/Icon";
 import { ScreenHeader } from "../../components/ScreenHeader";
 import { pressRow } from "../../lib/press";
+import { AppUpdateSection } from "../app-update/AppUpdateSection";
 import { BuildInfo } from "./BuildInfo";
 import type { Gym } from "@sendtally/features/gyms";
 import { GradeSection } from "./GradeSection";
@@ -156,6 +157,7 @@ export function SettingsView({
           <Icon name="chevron" color={colors.textFaint} size={16} />
         </Pressable>
 
+        <AppUpdateSection />
         <BuildInfo />
       </ScrollView>
     </SafeAreaView>
