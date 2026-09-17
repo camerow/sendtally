@@ -47,9 +47,12 @@ export const queries = {
     queryOptions({ queryKey: ["tags"], queryFn: async () => (await api.tags()).tags }),
 };
 
-const ROW_ROOTS: readonly unknown[] = ["session", "entry"];
+const NOT_PERSISTED: readonly unknown[] = ["session", "entry", "entitlements"];
 
-/** Lists are what a cold start opens on; single rows are neither needed then nor bounded in number. */
+/**
+ * Lists are what a cold start opens on; single rows are neither needed then nor bounded in number,
+ * and a restored entitlement would unlock member UI after the subscription lapsed.
+ */
 export function worthPersisting(queryKey: QueryKey): boolean {
-  return !ROW_ROOTS.includes(queryKey[0]);
+  return !NOT_PERSISTED.includes(queryKey[0]);
 }
