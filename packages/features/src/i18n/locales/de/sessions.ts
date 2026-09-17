@@ -61,7 +61,7 @@ export const sessions = {
   "sessions.logFullSession": "Session",
   "sessions.logFullSessionHint":
     "Fasse Klettereien zu einer Session mit Name, Notizen, Datum, Ort und RPE zusammen.",
-  "sessions.liveMeta": "Läuft seit {start}",
+  "sessions.liveMeta": "Läuft seit {elapsed}",
   "sessions.wrapUp": "Abschließen",
   "sessions.stillClimbing": "Noch am Klettern?",
   "sessions.idleFor": "Seit {duration} nichts geloggt",

@@ -5,6 +5,7 @@ import type { ClimbVocabulary } from "@sendtally/features/climbs";
 import type { Gym } from "@sendtally/features/gyms";
 import {
   durationLabel,
+  elapsedLabel,
   idleMinutes,
   wantsWrapUpReminder,
   type StoredSessionDraft,
@@ -26,10 +27,10 @@ const wrapUpButton = {
 
 const buttonLabel = { fontFamily: fonts.sansSemiBold, fontSize: 13 } as const;
 
-function useMinuteClock(): Date {
+function useSecondClock(): Date {
   const [now, setNow] = React.useState(() => new Date());
   React.useEffect(() => {
-    const timer = setInterval(() => setNow(new Date()), 60_000);
+    const timer = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
   return now;
@@ -111,11 +112,11 @@ export function LiveSessionCard({
   onEditClimb,
   onChangeTries,
 }: LiveSessionCardProps): React.ReactElement {
-  const now = useMinuteClock();
+  const now = useSecondClock();
   const { draft, savedAt } = stored;
   const title = draft.name.trim() === "" ? t("sessions.unfinishedSession") : draft.name;
   const meta = [
-    t("sessions.liveMeta", { start: draft.startTime }),
+    t("sessions.liveMeta", { elapsed: elapsedLabel(draft, now) }),
     ...(gym === null ? [] : [gym.name]),
   ].join(" · ");
 

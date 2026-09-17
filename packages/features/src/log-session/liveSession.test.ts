@@ -2,6 +2,7 @@ import type { ClimbSummary } from "@sendtally/api-client";
 import { describe, expect, it } from "vitest";
 import {
   defaultSessionName,
+  elapsedLabel,
   idleMinutes,
   liveDraft,
   wantsWrapUpReminder,
@@ -74,6 +75,12 @@ describe("live session", () => {
     );
     expect(nextDay.draft.endTime).toBe("18:42");
     expect(nextDay.draft.climbs).toHaveLength(2);
+  });
+
+  it("counts hh:mm:ss since the start, never below zero", () => {
+    const { draft } = withQuickClimb(null, EVENING);
+    expect(elapsedLabel(draft, new Date(2026, 8, 16, 19, 42, 5))).toBe("01:00:05");
+    expect(elapsedLabel(draft, new Date(2026, 8, 16, 18, 0))).toBe("00:00:00");
   });
 
   it("reminds after two idle hours, and always on a later day", () => {

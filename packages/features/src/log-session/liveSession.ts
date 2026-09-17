@@ -93,6 +93,15 @@ export function idleMinutes(draft: LogSessionDraft, now: Date): number | null {
   return Math.max(0, now.getHours() * 60 + now.getMinutes() - (h * 60 + m));
 }
 
+/** hh:mm:ss since the draft's start, clamped at zero. */
+export function elapsedLabel(draft: LogSessionDraft, now: Date): string {
+  const started = new Date(`${draft.date}T${draft.startTime}:00`);
+  const total = Math.max(0, Math.floor((now.getTime() - started.getTime()) / 1000));
+  if (Number.isNaN(total)) return "00:00:00";
+  const pad = (n: number): string => String(n).padStart(2, "0");
+  return `${pad(Math.floor(total / 3600))}:${pad(Math.floor((total % 3600) / 60))}:${pad(total % 60)}`;
+}
+
 export function wantsWrapUpReminder(draft: LogSessionDraft, now: Date): boolean {
   const idle = idleMinutes(draft, now);
   return draft.climbs.length > 0 && (idle === null || idle >= WRAP_UP_REMINDER_MINUTES);

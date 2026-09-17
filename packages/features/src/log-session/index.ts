@@ -30,6 +30,7 @@ export {
 export {
   WRAP_UP_REMINDER_MINUTES,
   defaultSessionName,
+  elapsedLabel,
   idleMinutes,
   liveDraft,
   wantsWrapUpReminder,
