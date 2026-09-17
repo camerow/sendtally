@@ -87,4 +87,13 @@ export const importCsv = {
   "import.openLog": "Abrir el registro",
   "import.importAnother": "Importar otro archivo",
   "import.showAllRows": "Mostrar las {total} filas",
+  "import.tagSelected": "Etiquetar las sesiones elegidas",
+  "import.tagSelectedHint":
+    "Marca sesiones abajo o elige un nombre y añade etiquetas. Se suman a las que ya trae el archivo.",
+  "import.selectedCount_one": "{count} elegida",
+  "import.selectedCount_other": "{count} elegidas",
+  "import.selectAll": "Elegir todas",
+  "import.selectNone": "Borrar",
+  "import.selectNamed": "Elegir sesiones llamadas…",
+  "import.selectSession": "Elegir {name}, {date}",
 } as const;

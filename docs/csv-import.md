@@ -67,9 +67,12 @@ It lists ascents only, one per row, with a UTC timestamp, so:
 
 The browser parses the file, groups rows into sessions, and validates every row with the same rules as the log-session form.
 Nothing is sent until the user confirms on the review step.
+On that step the user can tick sessions, or pick every session with the same name, and add tags to the selection.
+Those tags are added to any the file already carries, which is how a Kaya export, which has no tags, gets them.
 The Worker then scores each session in date order against the user's history, so a session with no RPE gets the effort score it would have got had it been logged at the time.
 
 Each imported session's fingerprint is derived from its rows (`import-<hash>`), so importing the same file twice skips the sessions that are already there rather than duplicating them.
+Tags are not part of the fingerprint, so tags added to a session that is already there are not applied; tag it from its session page instead.
 Imported sessions are never posted to Strava.
 
 ## The export

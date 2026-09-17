@@ -87,4 +87,13 @@ export const importCsv = {
   "import.openLog": "Ouvrir le journal",
   "import.importAnother": "Importer un autre fichier",
   "import.showAllRows": "Afficher les {total} lignes",
+  "import.tagSelected": "Taguer les séances choisies",
+  "import.tagSelectedHint":
+    "Cochez des séances ci-dessous ou choisissez un nom, puis ajoutez des tags. Ils s'ajoutent à ceux déjà présents dans le fichier.",
+  "import.selectedCount_one": "{count} choisie",
+  "import.selectedCount_other": "{count} choisies",
+  "import.selectAll": "Tout choisir",
+  "import.selectNone": "Effacer",
+  "import.selectNamed": "Choisir les séances nommées…",
+  "import.selectSession": "Choisir {name}, {date}",
 } as const;

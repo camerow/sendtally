@@ -1,5 +1,13 @@
 import React from "react";
-import { planStats, type ImportIssue, type ImportPlan } from "@sendtally/features/import";
+import {
+  planStats,
+  sessionNames,
+  sessionTitle,
+  withAddedTags,
+  type ImportIssue,
+  type ImportPlan,
+} from "@sendtally/features/import";
+import { sameTagName, type TagOption } from "@sendtally/features/sessions";
 import { formatDate, t } from "@sendtally/features/i18n";
 import { Section } from "../../settings/components/Section";
 import {
@@ -9,8 +17,10 @@ import {
   sectionLabel,
   underlineButton,
 } from "../../settings/components/styles";
-import { goldButton, pillMuted, pillOk, td, tdMono, th } from "../styles";
+import { checkbox, goldButton, pillMuted, pillOk, td, tdMono, th } from "../styles";
+import { useIsNarrow } from "../../lib/useIsNarrow";
 import { ConversionPrompt } from "./ConversionPrompt";
+import { SessionTagBar } from "./SessionTagBar";
 import { Stat } from "./Stat";
 
 const PREVIEW_ROWS = 8;
@@ -44,6 +54,10 @@ const dayLabel = (date: string): string =>
 export type ImportReviewProps = {
   fileName: string;
   plan: ImportPlan;
+  added: string[][];
+  suggestionsFor: (applied: string[]) => TagOption[];
+  onAddTag: (indexes: number[], tag: string) => void;
+  onRemoveTag: (indexes: number[], tag: string) => void;
   busy: boolean;
   error: string | null;
   onConfirm: () => void;
@@ -53,6 +67,10 @@ export type ImportReviewProps = {
 export function ImportReview({
   fileName,
   plan,
+  added,
+  suggestionsFor,
+  onAddTag,
+  onRemoveTag,
   busy,
   error,
   onConfirm,
@@ -63,7 +81,24 @@ export function ImportReview({
   const unrecognised = plan.sessions.length === 0;
   const issues = allIssues ? plan.issues : plan.issues.slice(0, ISSUE_ROWS);
   const stats = planStats(plan.sessions);
-  const newestFirst = [...plan.sessions].reverse();
+  const narrow = useIsNarrow();
+  const [selected, setSelected] = React.useState<number[]>([]);
+  const tagged = withAddedTags(plan.sessions, added);
+  const newestFirst = tagged.map((session, index) => ({ session, index })).reverse();
+  const selectedTags = selected
+    .flatMap((i) => added[i] ?? [])
+    .filter((tag, i, all) => all.findIndex((t) => sameTagName(t, tag)) === i);
+  const toggle = (index: number): void =>
+    setSelected((current) =>
+      current.includes(index) ? current.filter((i) => i !== index) : [...current, index]
+    );
+  const selectNamed = (name: string): void =>
+    setSelected((current) => [
+      ...current,
+      ...plan.sessions.flatMap((s, i) =>
+        sessionTitle(s) === name && !current.includes(i) ? [i] : []
+      ),
+    ]);
   const shown = showAll ? newestFirst : newestFirst.slice(0, PREVIEW_ROWS);
   const first = plan.sessions[0];
   const last = plan.sessions[plan.sessions.length - 1];
@@ -74,6 +109,7 @@ export function ImportReview({
         <div
           style={{
             display: "flex",
+            flexWrap: "wrap",
             justifyContent: "space-between",
             alignItems: "center",
             gap: 12,
@@ -195,11 +231,24 @@ export function ImportReview({
               {t("import.showing", { shown: shown.length, total: plan.sessions.length })}
             </span>
           </div>
-          {shown.map((s, i) => {
+          <SessionTagBar
+            names={sessionNames(plan.sessions)}
+            selectedCount={selected.length}
+            total={plan.sessions.length}
+            tags={selectedTags}
+            suggestions={suggestionsFor(selectedTags)}
+            disabled={busy}
+            onSelectNamed={selectNamed}
+            onSelectAll={() => setSelected(plan.sessions.map((_, i) => i))}
+            onClear={() => setSelected([])}
+            onAdd={(tag) => onAddTag(selected, tag)}
+            onRemove={(tag) => onRemoveTag(selected, tag)}
+          />
+          {shown.map(({ session: s, index }, i) => {
             const sends = s.climbs.filter((c) => c.kind === "send").length;
             return (
-              <div
-                key={`${s.date}|${s.name ?? ""}`}
+              <label
+                key={index}
                 style={{
                   display: "flex",
                   alignItems: "center",
@@ -207,10 +256,29 @@ export function ImportReview({
                   padding: "12px 18px",
                   borderBottom:
                     i < shown.length - 1 ? "1px solid var(--line-on-light-soft)" : "none",
+                  background: selected.includes(index) ? "var(--surface-soft)" : "transparent",
+                  cursor: "pointer",
                 }}
               >
+                <input
+                  type="checkbox"
+                  checked={selected.includes(index)}
+                  disabled={busy}
+                  aria-label={t("import.selectSession", {
+                    name: sessionTitle(s) ?? t("common.climbingSession"),
+                    date: dayLabel(s.date),
+                  })}
+                  onChange={() => toggle(index)}
+                  style={checkbox}
+                />
                 <span
-                  style={{ ...monoMuted, fontSize: 11, color: "var(--bs-gunmetal)", width: 92 }}
+                  style={{
+                    ...monoMuted,
+                    fontSize: 11,
+                    color: "var(--bs-gunmetal)",
+                    width: narrow ? 52 : 92,
+                    flexShrink: 0,
+                  }}
                 >
                   {dayLabel(s.date)}
                 </span>
@@ -224,20 +292,25 @@ export function ImportReview({
                   }}
                 >
                   <span style={{ fontWeight: 600 }}>
-                    {s.name ?? s.gym ?? t("common.climbingSession")}
+                    {sessionTitle(s) ?? t("common.climbingSession")}
                   </span>
                   <span style={monoMuted}>
                     {t("common.climbCount", { count: s.climbs.length })} ·{" "}
                     {s.location === "indoor" ? t("common.indoor") : t("common.outdoor")} ·{" "}
                     {t("import.sendCount", { count: sends })} · {planStats([s]).topGrade ?? "–"}
                   </span>
+                  {s.tags !== undefined && (
+                    <span style={{ ...monoMuted, color: "var(--bs-petal-ink)" }}>
+                      {s.tags.join(" · ")}
+                    </span>
+                  )}
                 </span>
                 <span style={pillMuted}>
                   {s.rpe === undefined
                     ? t("import.rpeScored")
                     : t("import.rpeGiven", { rpe: s.rpe })}
                 </span>
-              </div>
+              </label>
             );
           })}
           {!showAll && plan.sessions.length > PREVIEW_ROWS && (

@@ -85,4 +85,13 @@ export const importCsv = {
   "import.openLog": "Open the log",
   "import.importAnother": "Import another file",
   "import.showAllRows": "Show all {total} rows",
+  "import.tagSelected": "Tag selected sessions",
+  "import.tagSelectedHint":
+    "Tick sessions below, or pick a name, then add tags. They go alongside any tags already in the file.",
+  "import.selectedCount_one": "{count} selected",
+  "import.selectedCount_other": "{count} selected",
+  "import.selectAll": "Select all",
+  "import.selectNone": "Clear",
+  "import.selectNamed": "Select sessions named…",
+  "import.selectSession": "Select {name}, {date}",
 } as const;

@@ -1,7 +1,14 @@
 import React from "react";
 import { Link } from "react-router";
 import type { SendtallyApi } from "@sendtally/api-client";
-import { planImport, type ImportPlan, type ImportSession } from "@sendtally/features/import";
+import {
+  planImport,
+  withAddedTags,
+  withTag,
+  type ImportPlan,
+  type ImportSession,
+} from "@sendtally/features/import";
+import { sameTagName, useTagVocabulary } from "@sendtally/features/sessions";
 import { t } from "@sendtally/features/i18n";
 import { BackLink, backLinkStyle } from "../../components/BackLink";
 import { Section } from "../../settings/components/Section";
@@ -17,7 +24,14 @@ const BATCH = 200;
 
 type State =
   | { step: "choose" }
-  | { step: "review"; fileName: string; plan: ImportPlan; busy: boolean; error: string | null }
+  | {
+      step: "review";
+      fileName: string;
+      plan: ImportPlan;
+      added: string[][];
+      busy: boolean;
+      error: string | null;
+    }
   | { step: "done"; imported: number; skipped: number; skippedRows: number };
 
 // Batches go up in date order so each one is scored after the ones before it.
@@ -38,18 +52,33 @@ async function importAll(
 
 export function ImportFlow({ api }: { api: SendtallyApi }): React.ReactElement {
   const [state, setState] = React.useState<State>({ step: "choose" });
+  const { suggestionsFor } = useTagVocabulary(api);
+
+  const retag = (indexes: number[], change: (tags: string[]) => string[]): void =>
+    setState((s) =>
+      s.step === "review"
+        ? { ...s, added: s.added.map((tags, i) => (indexes.includes(i) ? change(tags) : tags)) }
+        : s
+    );
 
   const choose = async (file: File): Promise<void> => {
     const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
     const plan = planImport(await file.text(), timeZone);
-    setState({ step: "review", fileName: file.name, plan, busy: false, error: null });
+    setState({
+      step: "review",
+      fileName: file.name,
+      plan,
+      added: plan.sessions.map(() => []),
+      busy: false,
+      error: null,
+    });
   };
 
   const confirm = async (): Promise<void> => {
     if (state.step !== "review") return;
     setState({ ...state, busy: true, error: null });
     try {
-      const totals = await importAll(api, state.plan.sessions);
+      const totals = await importAll(api, withAddedTags(state.plan.sessions, state.added));
       setState({ step: "done", ...totals, skippedRows: state.plan.issues.length });
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : String(error);
@@ -98,6 +127,12 @@ export function ImportFlow({ api }: { api: SendtallyApi }): React.ReactElement {
         <ImportReview
           fileName={state.fileName}
           plan={state.plan}
+          added={state.added}
+          suggestionsFor={suggestionsFor}
+          onAddTag={(indexes, tag) => retag(indexes, (tags) => withTag(tags, tag))}
+          onRemoveTag={(indexes, tag) =>
+            retag(indexes, (tags) => tags.filter((t) => !sameTagName(t, tag)))
+          }
           busy={state.busy}
           error={state.error}
           onConfirm={() => void confirm()}

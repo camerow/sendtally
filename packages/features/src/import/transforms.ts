@@ -1,5 +1,6 @@
 import { disciplineOf, effortGrade, formatGrade, parseGrade, type Grade } from "@sendtally/core";
 import type { LogClimbInput } from "@sendtally/api-client";
+import { sameTagName } from "../sessions/tags";
 import { parseCsv } from "./csv";
 import type { ImportClimb, ImportFormat, ImportIssue, ImportPlan, ImportSession } from "./types";
 
@@ -319,4 +320,39 @@ export function planStats(sessions: ImportSession[]): PlanStats {
     climbs,
     topGrade: top === undefined ? null : formatGrade(top),
   };
+}
+
+export type SessionNameCount = { name: string; sessions: number };
+
+const MAX_SESSION_TAGS = 12;
+
+export const sessionTitle = (session: ImportSession): string | undefined =>
+  session.name ?? session.gym;
+
+export function sessionNames(sessions: ImportSession[]): SessionNameCount[] {
+  const counts = new Map<string, number>();
+  for (const s of sessions) {
+    const name = sessionTitle(s);
+    if (name !== undefined) counts.set(name, (counts.get(name) ?? 0) + 1);
+  }
+  return [...counts]
+    .map(([name, n]) => ({ name, sessions: n }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+}
+
+export function withTag(tags: string[], tag: string): string[] {
+  const name = tag.trim();
+  return name === "" || tags.some((t) => sameTagName(t, name)) ? tags : [...tags, name];
+}
+
+export function withAddedTags(
+  sessions: ImportSession[],
+  added: ReadonlyArray<string[] | undefined>
+): ImportSession[] {
+  return sessions.map((s, i) => {
+    const extra = added[i] ?? [];
+    if (extra.length === 0) return s;
+    const tags = extra.reduce(withTag, s.tags ?? []);
+    return { ...s, tags: tags.slice(0, MAX_SESSION_TAGS) };
+  });
 }

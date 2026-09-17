@@ -87,4 +87,13 @@ export const importCsv = {
   "import.openLog": "Log öffnen",
   "import.importAnother": "Weitere Datei importieren",
   "import.showAllRows": "Alle {total} Zeilen anzeigen",
+  "import.tagSelected": "Ausgewählte Sessions taggen",
+  "import.tagSelectedHint":
+    "Hake unten Sessions an oder wähle einen Namen, dann füge Tags hinzu. Sie kommen zu den Tags aus der Datei dazu.",
+  "import.selectedCount_one": "{count} ausgewählt",
+  "import.selectedCount_other": "{count} ausgewählt",
+  "import.selectAll": "Alle auswählen",
+  "import.selectNone": "Auswahl aufheben",
+  "import.selectNamed": "Sessions mit Namen auswählen…",
+  "import.selectSession": "{name}, {date} auswählen",
 } as const;

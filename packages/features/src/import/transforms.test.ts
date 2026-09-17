@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { parseCsv, toCsv } from "./csv";
-import { gradeFromText, planImport, planStats } from "./transforms";
+import { gradeFromText, planImport, planStats, sessionNames, withAddedTags } from "./transforms";
 
 const kaya = `date,stiffness,rating,ascent_type,attempts,grade,color,climb_name,gym,location,country
 Fri Nov 05 2021 03:49:59 GMT+0000 (GMT+00:00),0,,Flash,1,5.10c,,Scrum Felcher,,Sun City,United States
@@ -109,6 +109,29 @@ describe("planImport", () => {
       { row: 8, code: "unknownGrade", value: "V?", climb: "Sunny Side" },
     ]);
     expect(planStats(plan.sessions)).toEqual({ sessions: 5, climbs: 7, topGrade: "V9" });
+  });
+
+  it("adds tags chosen at review to the file's own tags", () => {
+    const { sessions } = planImport(sendtally, "UTC");
+    expect(sessionNames(sessions)).toEqual([
+      { name: "Boulder Barn", sessions: 1 },
+      { name: "Chuckawalla", sessions: 1 },
+      { name: "Moe's Valley", sessions: 2 },
+      { name: "Squamish", sessions: 1 },
+    ]);
+    const tagged = withAddedTags(sessions, [
+      ["Trip"],
+      undefined,
+      ["UTAH", " "],
+      ["UTAH", "Projecting"],
+    ]);
+    expect(tagged.map((s) => s.tags)).toEqual([
+      ["Trip"],
+      undefined,
+      ["UTAH"],
+      ["trip", "utah", "Projecting"],
+      undefined,
+    ]);
   });
 
   it("reports a file it cannot read", () => {

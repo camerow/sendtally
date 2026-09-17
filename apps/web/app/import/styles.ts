@@ -114,3 +114,26 @@ export const goldButton: React.CSSProperties = {
   display: "inline-flex",
   alignItems: "center",
 };
+
+export const select: React.CSSProperties = {
+  fontFamily: "var(--font-mono)",
+  fontWeight: 600,
+  fontSize: 12,
+  color: "var(--bs-gunmetal)",
+  background: "var(--bs-white)",
+  border: "1px solid rgba(64,63,76,0.15)",
+  borderRadius: "var(--radius-control)",
+  padding: "8px 12px",
+  minHeight: 38,
+  maxWidth: "100%",
+  cursor: "pointer",
+};
+
+export const checkbox: React.CSSProperties = {
+  width: 16,
+  height: 16,
+  margin: 0,
+  flexShrink: 0,
+  accentColor: "var(--bs-gunmetal)",
+  cursor: "pointer",
+};
