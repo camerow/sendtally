@@ -100,6 +100,11 @@ export function sessionPoints(s: Session, cfg: EffortConfig): number {
   return pts;
 }
 
+/** Laps are the unit of work for density: three circuits of five laps is fifteen goes at the wall. */
+function densityCount(climbs: readonly Climb[]): number {
+  return climbs.reduce((n, c) => n + (c.endurance?.laps.length ?? 1), 0);
+}
+
 export function score(
   target: Session,
   history: Session[],
@@ -126,7 +131,7 @@ export function score(
     const first = target.climbs[0]!;
     const last = target.climbs[target.climbs.length - 1]!;
     const span = Math.max((last.time.getTime() - first.time.getTime()) / HOUR, 0.5);
-    const density = target.climbs.length / span;
+    const density = densityCount(target.climbs) / span;
     if (density >= cfg.densityHigh) nudge++;
     else if (density <= cfg.densityLow) nudge--;
   }

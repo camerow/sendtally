@@ -331,3 +331,34 @@ describe("endurance", () => {
     expect(res.summary).toContain("✓ V2 (1 lap · 45 sec of 90 sec)");
   });
 });
+
+describe("density counts laps, not circuits", () => {
+  function circuits(target: number, laps: number[]): Session {
+    const climbs: Climb[] = [0, 30, 60].map((minute) => ({
+      time: at(1, 18, minute),
+      vGrade: 3,
+      name: "",
+      kind: "send" as const,
+      tries: 1,
+      endurance: { unit: "moves" as const, target, laps },
+    }));
+    return { start: at(1, 17, 50), end: at(1, 19, 10), climbs };
+  }
+
+  const fiveLaps = circuits(32, [32, 32, 32, 32, 32]);
+  const oneLongLap = circuits(160, [160]);
+
+  it("scores the same work identically before the density nudge", () => {
+    const cfg = defaultEffortConfig();
+    expect(sessionPoints(fiveLaps, cfg)).toBe(sessionPoints(oneLongLap, cfg));
+  });
+
+  it("nudges up on fifteen laps and down on three", () => {
+    expect(score(fiveLaps, [], defaultEffortConfig()).rpe).toBe(7);
+    expect(score(oneLongLap, [], defaultEffortConfig()).rpe).toBe(5);
+  });
+
+  it("still calls three circuits three climbs", () => {
+    expect(score(fiveLaps, [], defaultEffortConfig()).title).toContain("3 climbs");
+  });
+});

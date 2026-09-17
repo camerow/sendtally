@@ -85,4 +85,19 @@ describe("endurance round trip", () => {
     expect(rescored.rpe).toBe(6);
     expect(dropped.rpe).not.toBe(rescored.rpe);
   });
+
+  it("counts a circuit as one climb however many laps it holds", () => {
+    const laps = { unit: "moves", target: 32, laps: [32, 32, 32, 32, 32] } as const;
+    const climb = { grade: { scale: "v", value: 3 }, endurance: laps };
+    const threeCircuits = manualSessionBody.parse({
+      date: "2026-09-16",
+      startTime: "18:00",
+      endTime: "19:30",
+      location: "indoor",
+      climbs: [climb, climb, climb],
+    });
+    const input = buildManualSession("manual-1", threeCircuits, []);
+    expect(input.climb_count).toBe(3);
+    expect(input.title).toContain("3 climbs");
+  });
 });
