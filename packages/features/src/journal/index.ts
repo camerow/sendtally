@@ -6,10 +6,12 @@ export {
   type EntryKind,
   type JournalEntry,
   type LogItem,
+  type TripSpan,
 } from "./types";
 export {
   dayLabel,
   daysSince,
+  displayKind,
   draftFromEntry,
   draftIsEmpty,
   emptyDraft,
@@ -20,6 +22,13 @@ export {
   entryHasTitle,
   entryWhen,
   entryTitle,
+  flatLog,
+  groupTrips,
+  inTrip,
+  overlappingTrip,
+  tripEnd,
+  tripOverlapMessage,
+  type TripDates,
   isoDay,
   isThreadUpdate,
   isUpdateDraft,
@@ -38,5 +47,17 @@ export {
   today,
   type SeverityPoint,
 } from "./transforms";
-export { useEntryDetail, useSessionRows, type EntryDetailData } from "./useEntryDetail";
+export {
+  effortDayLabel,
+  effortLabelled,
+  injuriesCarriedIn,
+  tripContents,
+  tripDays,
+  tripEffort,
+  tripStats,
+  type TripContents,
+  type TripDay,
+  type TripStat,
+} from "./trips";
+export { useEntryDetail, useLogRows, type EntryDetailData, type LogRows } from "./useEntryDetail";
 export { useEntryComposer, type EntryComposer } from "./useEntryComposer";

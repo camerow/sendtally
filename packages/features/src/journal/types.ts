@@ -12,11 +12,16 @@ export const ENTRY_BODY_MAX = 10000;
 /**
  * One log holds sessions and entries. `at` is what the list sorts and groups on,
  * and `tags` is lifted to the top so the tag filter works over both without
- * knowing which it is looking at.
+ * knowing which it is looking at. A trip in a grouped log holds what was logged
+ * inside its dates in `inside`; everywhere else it is empty.
  */
 export type LogItem = { key: string; at: string; tags: SessionTag[] } & (
-  { type: "session"; session: SessionRow } | { type: "entry"; entry: JournalEntry }
+  | { type: "session"; session: SessionRow }
+  | { type: "entry"; entry: JournalEntry; inside: LogItem[] }
 );
+
+/** A trip's dates, or a draft's before it is saved: `id` is null until then. */
+export type TripSpan = { id: string | null; occurred_at: string; ends_at: string | null };
 
 /** What a composer holds while it is being filled in. Strings throughout: forms edit strings. */
 export type EntryDraft = {

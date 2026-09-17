@@ -8,10 +8,12 @@ import {
   entryHasTitle,
   entryInput,
   entryTitle,
+  groupTrips,
   linkedSessions,
   logItems,
   logScopeItems,
   openInjuries,
+  overlappingTrip,
   sessionsInSpan,
   sessionsNearPoints,
   severitySeries,
@@ -82,6 +84,82 @@ describe("logItems", () => {
       [entry({ id: "e1", occurred_at: "2026-05-30" })]
     );
     expect(items.map((i) => i.key)).toEqual(["entry:e1", "session:a"]);
+  });
+});
+
+describe("groupTrips", () => {
+  const now = new Date("2026-06-10T12:00:00.000Z");
+  const trip = entry({
+    id: "trip",
+    kind: "trip",
+    occurred_at: "2026-05-22",
+    ends_at: "2026-05-26",
+  });
+
+  it("folds everything logged inside a trip's dates under it", () => {
+    const items = logItems(
+      [
+        session("before", "2026-05-21T18:00:00.000Z"),
+        session("first", "2026-05-22T09:00:00.000Z"),
+        session("last", "2026-05-26T23:00:00.000Z"),
+      ],
+      [
+        trip,
+        entry({ id: "note", occurred_at: "2026-05-24" }),
+        entry({ id: "tip", kind: "injury", occurred_at: "2026-05-24", ends_at: "2026-06-02" }),
+        entry({ id: "a2", kind: "injury", occurred_at: "2026-05-18" }),
+      ]
+    );
+    const grouped = groupTrips(items, now);
+    expect(grouped.map((i) => i.key)).toEqual(["entry:trip", "session:before", "entry:a2"]);
+    const [head] = grouped;
+    expect(head?.type === "entry" ? head.inside.map((i) => i.key) : []).toEqual([
+      "session:last",
+      "entry:note",
+      "entry:tip",
+      "session:first",
+    ]);
+  });
+
+  it("runs a trip with no end date up to today", () => {
+    const away = entry({ id: "away", kind: "trip", occurred_at: "2026-06-08" });
+    const grouped = groupTrips(
+      logItems(
+        [
+          session("today", "2026-06-10T09:00:00.000Z"),
+          session("later", "2026-06-11T09:00:00.000Z"),
+        ],
+        [away]
+      ),
+      now
+    );
+    expect(grouped.map((i) => i.key)).toEqual(["session:later", "entry:away"]);
+  });
+});
+
+describe("overlappingTrip", () => {
+  const easter = entry({
+    id: "easter",
+    kind: "trip",
+    occurred_at: "2026-04-03",
+    ends_at: "2026-04-06",
+  });
+
+  it("finds a trip that shares a day", () => {
+    const span = { id: null, occurred_at: "2026-04-06", ends_at: "2026-04-09" };
+    expect(overlappingTrip([easter], span)?.id).toBe("easter");
+  });
+
+  it("lets a trip start the day after another ends, and ignores itself", () => {
+    const next = { id: null, occurred_at: "2026-04-07", ends_at: null };
+    expect(overlappingTrip([easter], next)).toBeNull();
+    expect(overlappingTrip([easter], { ...easter, ends_at: "2026-04-08" })).toBeNull();
+  });
+
+  it("lets nothing start after a trip that is still going", () => {
+    const away = entry({ id: "away", kind: "trip", occurred_at: "2026-06-01" });
+    const later = { id: null, occurred_at: "2026-09-01", ends_at: "2026-09-03" };
+    expect(overlappingTrip([away], later)?.id).toBe("away");
   });
 });
 

@@ -5,6 +5,7 @@ import { Logo } from "@sendtally/design";
 import { t } from "@sendtally/features/i18n";
 import {
   LOG_SCOPES,
+  groupTrips,
   logItems,
   logScopeItems,
   logScopeLabel,
@@ -120,7 +121,10 @@ export function LogView({
     [inScope, selectedTags]
   );
 
-  const years = React.useMemo(() => logYearGroups(visible), [visible]);
+  const years = React.useMemo(
+    () => logYearGroups(scope === "all" ? groupTrips(visible) : visible),
+    [scope, visible]
+  );
   const tagGroups = React.useMemo(() => sessionTagGroups(visible), [visible]);
   const scopeItems = React.useMemo(
     () => (grouping === "tag" ? tagScopeItems(tagGroups) : monthScopeItems(years)),

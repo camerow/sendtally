@@ -1033,3 +1033,39 @@
     line-height: 1;
   }
 }
+
+/* A trip holds what was logged inside its dates; the rule down its side is the grouping. */
+.log-trip {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-left: 14px;
+  border-left: 3px solid rgba(204, 121, 234, 0.7);
+}
+
+.session-row--trip {
+  background: rgba(204, 121, 234, 0.13);
+}
+
+@media (max-width: 767px) {
+  .log-trip {
+    gap: 0;
+    margin: 8px 0;
+    padding-left: 12px;
+  }
+
+  .session-row--trip {
+    padding: 10px 8px;
+    border-bottom: none;
+    border-radius: 11px;
+    background: rgba(204, 121, 234, 0.13);
+  }
+
+  .session-row--trip .session-row-badge {
+    display: flex;
+  }
+
+  .session-row--trip .session-row-excerpt {
+    display: none;
+  }
+}

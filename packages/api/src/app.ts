@@ -16,7 +16,7 @@ import {
   withClimbNotes,
 } from "./lib/climbs";
 import { decryptSecret, encryptSecret } from "./lib/crypto";
-import { buildEntry, entryBody } from "./lib/entries";
+import { buildEntry, entryBody, overlappingTrip, type EntryWrite } from "./lib/entries";
 import { dedupedWalls, gymBody, gymOf } from "./lib/gyms";
 import { mirrorStoreEntitlements, resolveEntitlements } from "./lib/entitlements";
 import {
@@ -169,6 +169,27 @@ const entryResponse = async (env: Env, userId: string, id: string) => {
   // Oldest first: a thread reads as a story, unlike the log.
   updates.reverse();
   return { ...row, tags, fingerprints, updates };
+};
+
+// A 409 names the trip in the way, so a client can say which one without another read.
+// Only dates being set are checked: trips that overlapped before the rule existed stay editable.
+const tripOverlap = async (
+  env: Env,
+  userId: string,
+  existing: repo.EntryRow | null,
+  entry: EntryWrite
+) => {
+  const unchanged =
+    existing !== null &&
+    existing.kind === entry.kind &&
+    existing.occurred_at === entry.occurred_at &&
+    existing.ends_at === entry.ends_at;
+  if (unchanged) return null;
+  const candidate = { ...entry, id: existing?.id ?? null };
+  const trip = overlappingTrip(await repo.listEntries(env.DB, userId), candidate);
+  return trip === null
+    ? null
+    : { id: trip.id, title: trip.title, occurred_at: trip.occurred_at, ends_at: trip.ends_at };
 };
 
 // Every validated body answers the same way, so the shape a client sees for a
@@ -398,8 +419,11 @@ const app = new Hono<AppEnv>()
     const form = c.req.valid("json");
     const userId = c.get("userId");
     await repo.ensureUser(c.env.DB, userId);
+    const entry = buildEntry(form);
+    const overlap = await tripOverlap(c.env, userId, null, entry);
+    if (overlap !== null) return c.json({ error: "trip dates overlap", trip: overlap }, 409);
     const id = crypto.randomUUID();
-    await repo.insertEntry(c.env.DB, userId, id, buildEntry(form));
+    await repo.insertEntry(c.env.DB, userId, id, entry);
     if (form.tags !== undefined) await repo.setEntryTags(c.env.DB, userId, id, form.tags);
     const linked = await repo.setEntrySessions(c.env.DB, userId, id, form.fingerprints ?? []);
     await captureEvent(c, "journal_entry_created", {
@@ -419,7 +443,12 @@ const app = new Hono<AppEnv>()
     const form = c.req.valid("json");
     const userId = c.get("userId");
     const id = c.req.param("id");
-    const updated = await repo.updateEntry(c.env.DB, userId, id, buildEntry(form));
+    const entry = buildEntry(form);
+    const existing = await repo.getEntry(c.env.DB, userId, id);
+    if (existing === null) return c.json({ error: "not found" }, 404);
+    const overlap = await tripOverlap(c.env, userId, existing, entry);
+    if (overlap !== null) return c.json({ error: "trip dates overlap", trip: overlap }, 409);
+    const updated = await repo.updateEntry(c.env.DB, userId, id, entry);
     if (!updated) return c.json({ error: "not found" }, 404);
     await repo.setEntryTags(c.env.DB, userId, id, form.tags ?? []);
     await repo.setEntrySessions(c.env.DB, userId, id, form.fingerprints ?? []);

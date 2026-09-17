@@ -20,7 +20,7 @@ import {
   logYearGroups,
   tagScopeItems,
 } from "@sendtally/features/sessions";
-import { logItems, logScopeItems, type LogItem } from "@sendtally/features/journal";
+import { groupTrips, logItems, logScopeItems, type LogItem } from "@sendtally/features/journal";
 import { t } from "@sendtally/features/i18n";
 import { queries, useQueryPair } from "@sendtally/features/query";
 import { colors, fonts } from "@sendtally/design/tokens";
@@ -30,6 +30,7 @@ import { useLiveSession, withTries } from "@sendtally/features/log-session";
 import { sessionDraftStorage } from "../../lib/sessionDraftStorage";
 import { useGradeScalePrefs } from "@sendtally/features/settings";
 import { EntryRow, entryRowHeight } from "../../features/journal/EntryRow";
+import { TripGroup, tripGroupHeight } from "../../features/journal/TripGroup";
 import { LiveClimbEditor } from "../../features/live-session/LiveClimbEditor";
 import { LiveSessionCard } from "../../features/live-session/LiveSessionCard";
 import { LogFab } from "../../features/live-session/LogFab";
@@ -50,8 +51,21 @@ import { circuitGym, gymOfDraft, useGyms } from "@sendtally/features/gyms";
 
 type Section = { key: string; title: string; meta: string; data: LogItem[] };
 
-const rowHeight = (item: LogItem): number =>
-  item.type === "session" ? sessionRowHeight(item.session) : entryRowHeight(item.entry);
+const rowHeight = (item: LogItem): number => {
+  if (item.type === "session") return sessionRowHeight(item.session);
+  return item.inside.length > 0 ? tripGroupHeight(item) : entryRowHeight(item.entry);
+};
+
+const openItem = (item: LogItem): void => {
+  if (item.type === "session") {
+    router.push({
+      pathname: "/session/[fingerprint]",
+      params: { fingerprint: item.session.fingerprint },
+    });
+  } else {
+    router.push({ pathname: "/journal/[id]", params: { id: item.entry.id } });
+  }
+};
 
 function itemLayout(
   sections: ReadonlyArray<SectionListData<LogItem, Section>> | null,
@@ -170,7 +184,7 @@ export default function Log(): React.ReactElement {
         scopeItems: tagScopeItems(groups),
       };
     }
-    const years = logYearGroups(visible);
+    const years = logYearGroups(filters.scope === "all" ? groupTrips(visible) : visible);
     return {
       sections: years.flatMap((year) =>
         year.months.map((m): Section => ({
@@ -182,7 +196,7 @@ export default function Log(): React.ReactElement {
       ),
       scopeItems: monthScopeItems(years),
     };
-  }, [filters.grouping, visible]);
+  }, [filters.grouping, filters.scope, visible]);
 
   const sessionCount = sessions?.length;
   React.useEffect(() => {
@@ -313,20 +327,12 @@ export default function Log(): React.ReactElement {
             <SessionRow
               session={item.session}
               title={sessionTitle(item.session)}
-              onPress={() =>
-                router.push({
-                  pathname: "/session/[fingerprint]",
-                  params: { fingerprint: item.session.fingerprint },
-                })
-              }
+              onPress={() => openItem(item)}
             />
+          ) : item.inside.length > 0 ? (
+            <TripGroup item={item} onOpen={openItem} />
           ) : (
-            <EntryRow
-              entry={item.entry}
-              onPress={() =>
-                router.push({ pathname: "/journal/[id]", params: { id: item.entry.id } })
-              }
-            />
+            <EntryRow entry={item.entry} onPress={() => openItem(item)} />
           )
         }
       />

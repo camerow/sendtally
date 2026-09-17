@@ -134,7 +134,101 @@
   gap: 18px;
 }
 
+.trip-preview-row {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: baseline;
+  padding: 9px 0;
+  border-top: 1px solid var(--line-on-light-soft);
+}
+
+.trip-preview-title {
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.trip-section-title {
+  margin: 34px 0 4px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 21px;
+  letter-spacing: -0.02em;
+}
+
+.trip-day {
+  display: grid;
+  grid-template-columns: 92px minmax(0, 1fr);
+  gap: 20px;
+  padding: 18px 0;
+  border-bottom: 1px solid var(--line-on-light);
+}
+
+.trip-day-n {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 18px;
+  letter-spacing: -0.02em;
+}
+
+.trip-effort-bars {
+  display: flex;
+  gap: 6px;
+  height: 132px;
+}
+
+.trip-effort-bars--dense {
+  gap: 2px;
+}
+
+.trip-effort-bars--dense .trip-effort-value {
+  overflow: visible;
+  white-space: nowrap;
+}
+
+.trip-effort-day {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  min-width: 0;
+}
+
+.trip-effort-bar {
+  width: 100%;
+  max-width: 26px;
+  border-radius: 5px 5px 2px 2px;
+  background: var(--bs-azure);
+}
+
+.trip-effort-none {
+  width: 100%;
+  max-width: 26px;
+  height: 3px;
+  border-radius: 2px;
+  background: rgba(64, 63, 76, 0.16);
+}
+
+.trip-effort-value {
+  min-height: 12px;
+  line-height: 12px;
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 10px;
+  color: rgba(64, 63, 76, 0.65);
+}
+
 @media (max-width: 767px) {
+  .trip-day {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 4px;
+  }
+
   .journal-title {
     font-size: 24px;
   }
