@@ -12,7 +12,6 @@ import {
 import { formatDate, t } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { Icon } from "../../components/Icon";
-import { confirmDiscardDraft } from "../../lib/confirmDiscardDraft";
 import { press, pressRow } from "../../lib/press";
 import { ClimbLedgerRow } from "../log-session/ClimbLedgerRow";
 import { DayColumn, RowTitle } from "../sessions/SessionRowParts";
@@ -102,7 +101,6 @@ export type LiveSessionCardProps = {
   gym: Gym | null;
   onEditClimb: (key: string) => void;
   onChangeTries: (key: string, tries: number) => void;
-  onDiscard: () => void;
 };
 
 /** The session being climbed right now, pinned above the log until it is wrapped up. */
@@ -112,7 +110,6 @@ export function LiveSessionCard({
   gym,
   onEditClimb,
   onChangeTries,
-  onDiscard,
 }: LiveSessionCardProps): React.ReactElement {
   const now = useMinuteClock();
   const { draft, savedAt } = stored;
@@ -163,13 +160,7 @@ export function LiveSessionCard({
                 }
               />
             </View>
-          </Pressable>
-          <Pressable
-            onPress={wrapUp}
-            accessibilityRole="button"
-            style={press({ ...wrapUpButton, backgroundColor: colors.gunmetal })}
-          >
-            <Text style={{ ...buttonLabel, color: colors.white }}>{t("sessions.wrapUp")}</Text>
+            <Icon name="chevron" size={12} strokeWidth={2} color="rgba(64,63,76,0.35)" />
           </Pressable>
         </View>
         {draft.climbs.length > 0 && (
@@ -193,30 +184,6 @@ export function LiveSessionCard({
             ))}
           </View>
         )}
-        <Pressable
-          onPress={() => confirmDiscardDraft(stored, onDiscard)}
-          accessibilityRole="button"
-          hitSlop={8}
-          style={press({
-            alignSelf: "flex-start",
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 6,
-          })}
-        >
-          <Icon name="x" size={12} strokeWidth={2.2} color={colors.textFaint} />
-          <Text
-            style={{
-              fontFamily: fonts.monoMedium,
-              fontSize: 10,
-              letterSpacing: 0.8,
-              textTransform: "uppercase",
-              color: colors.textFaint,
-            }}
-          >
-            {t("sessions.discardSession")}
-          </Text>
-        </Pressable>
       </View>
     </View>
   );

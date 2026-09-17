@@ -284,7 +284,6 @@ export default function Log(): React.ReactElement {
                 gym={liveGym}
                 onEditClimb={setEditingClimb}
                 onChangeTries={(key, tries) => live.updateClimb(key, (c) => withTries(c, tries))}
-                onDiscard={live.discard}
               />
             )}
           </>
