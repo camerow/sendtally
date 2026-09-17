@@ -11,6 +11,8 @@ import type {
   GradeScales,
   Gym,
   GymInput,
+  ImportBody,
+  ImportResult,
   LogSessionInput,
   PostOutcome,
   ProjectInput,
@@ -103,6 +105,16 @@ export class SendtallyApi {
     return body(
       this.client.v1.sessions[":fingerprint"].$put({ param: { fingerprint }, json: input })
     );
+  }
+
+  importSessions(input: ImportBody): Promise<ImportResult> {
+    return body(this.client.v1.sessions.import.$post({ json: input }));
+  }
+
+  async exportCsv(): Promise<string> {
+    const response = await this.client.v1["export.csv"].$get();
+    if (!response.ok) throw new ApiError(response.status, `export failed: HTTP ${response.status}`);
+    return response.text();
   }
 
   deleteLoggedSession(fingerprint: string): Promise<{ deleted: boolean }> {

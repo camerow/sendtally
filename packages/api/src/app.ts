@@ -17,7 +17,9 @@ import {
 } from "./lib/climbs";
 import { decryptSecret, encryptSecret } from "./lib/crypto";
 import { buildEntry, entryBody, overlappingTrip, type EntryWrite } from "./lib/entries";
+import { exportCsv } from "./lib/export";
 import { dedupedWalls, gymBody, gymOf } from "./lib/gyms";
+import { importBody, importFingerprint, manualBodyOf } from "./lib/import";
 import { mirrorStoreEntitlements, resolveEntitlements } from "./lib/entitlements";
 import {
   buildManualSession,
@@ -586,6 +588,70 @@ const app = new Hono<AppEnv>()
     return c.json(body, 201);
   })
 
+  // A batch of sessions from a CSV. Scored oldest first so each one sees the
+  // ones before it as history, and skipped when its fingerprint is already
+  // there, so a file imported twice adds nothing. Never posted to Strava.
+  .post("/v1/sessions/import", zValidator("json", importBody, invalidBody), async (c) => {
+    const userId = c.get("userId");
+    await repo.ensureUser(c.env.DB, userId);
+    const gymIdByName = new Map(
+      (await repo.listGyms(c.env.DB, userId)).map((g) => [g.name.toLowerCase(), g.id])
+    );
+    const history = await manualScoringHistory(c.env.DB, userId);
+    const ordered = [...c.req.valid("json").sessions].sort((a, b) => a.date.localeCompare(b.date));
+    let imported = 0;
+    let skipped = 0;
+    for (const session of ordered) {
+      const fingerprint = await importFingerprint(session);
+      if ((await repo.getSession(c.env.DB, userId, fingerprint)) !== null) {
+        skipped++;
+        continue;
+      }
+      const form = manualBodyOf(session, gymIdByName);
+      const input = buildManualSession(fingerprint, form, history);
+      await repo.insertManualSession(c.env.DB, userId, input);
+      await repo.upsertSessionNote(
+        c.env.DB,
+        userId,
+        fingerprint,
+        form.date,
+        normalisedNote(form.notes)
+      );
+      if (form.tags !== undefined)
+        await repo.setSessionTags(c.env.DB, userId, fingerprint, form.tags);
+      await repo.setClimbNotes(c.env.DB, userId, fingerprint, climbNotesOf(form.climbs));
+      const scored = historySession(input);
+      if (scored !== null) history.push(scored);
+      imported++;
+    }
+    await captureEvent(c, "sessions_imported", {
+      imported: String(imported),
+      skipped: String(skipped),
+    });
+    return c.json({ imported, skipped }, 201);
+  })
+
+  // Everything the user logged, one row per climb, in the importer's format.
+  .get("/v1/export.csv", async (c) => {
+    const userId = c.get("userId");
+    const [sessions, tagsBySession, climbNotes, gyms, entries] = await Promise.all([
+      repo.listSessions(c.env.DB, userId, 5000, true),
+      repo.tagsBySession(c.env.DB, userId),
+      repo.listClimbNotes(c.env.DB, userId),
+      repo.listGyms(c.env.DB, userId),
+      entriesResponse(c.env, userId, (e) => e.kind === "journal" && e.parent_id === null),
+    ]);
+    const notesBySession = new Map<string, string>();
+    for (const e of entries) {
+      for (const fp of e.fingerprints) if (!notesBySession.has(fp)) notesBySession.set(fp, e.body);
+    }
+    await captureEvent(c, "sessions_exported", { session_count: String(sessions.length) });
+    return c.body(exportCsv({ sessions, tagsBySession, notesBySession, climbNotes, gyms }), 200, {
+      "Content-Type": "text/csv; charset=utf-8",
+      "Content-Disposition": 'attachment; filename="sendtally-export.csv"',
+    });
+  })
+
   .put(
     "/v1/sessions/:fingerprint",
     zValidator("json", manualSessionBody, invalidBody),
@@ -793,6 +859,7 @@ export type AppType = typeof app;
 export type { ProjectInput } from "./lib/climbs";
 
 export type { LogClimbInput, LogSessionInput } from "./lib/manual";
+export type { ImportBody } from "./lib/import";
 
 export { app };
 
