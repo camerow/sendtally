@@ -17,6 +17,7 @@ export const COPY_ES: LandingCopy = {
     signIn: "Iniciar sesión",
     createAccount: "Crear cuenta",
     openApp: "App →",
+    blog: "Blog",
   },
 
   hero: {
@@ -313,6 +314,7 @@ export const COPY_ES: LandingCopy = {
       "Google Play y el logotipo de Google Play son marcas de Google LLC. Apple y el logotipo de Apple son marcas de Apple Inc.",
     links: [
       { label: "Iniciar sesión", href: "/sign-in" },
+      { label: "Blog", href: "/blog" },
       { label: "Privacidad", href: "/privacy" },
       { label: "Condiciones", href: "/terms" },
       { label: "Soporte", href: "/support" },
