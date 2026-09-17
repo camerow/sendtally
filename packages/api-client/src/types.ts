@@ -1,7 +1,19 @@
 import type { hc, InferResponseType } from "hono/client";
 import type { AppType } from "@sendtally/api/app";
 
-export type { LogClimbInput, LogSessionInput, ProjectInput } from "@sendtally/api/app";
+export type {
+  Circuit,
+  CircuitColour,
+  Gym,
+  GymInput,
+  LogClimbInput,
+  LogSessionInput,
+  ProjectInput,
+} from "@sendtally/api/app";
+
+import type { LogClimbInput as ClimbInput } from "@sendtally/api/app";
+
+export type CircuitRef = NonNullable<ClimbInput["circuit"]>;
 
 type Client = ReturnType<typeof hc<AppType>>;
 

@@ -1,4 +1,4 @@
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import React from "react";
 import {
   RefreshControl,
@@ -26,7 +26,7 @@ import { t } from "@sendtally/features/i18n";
 import { colors, fonts } from "@sendtally/design/tokens";
 import { ScreenHeader } from "../../components/ScreenHeader";
 import { useClimbVocabulary } from "@sendtally/features/climbs";
-import { useLiveSession } from "@sendtally/features/log-session";
+import { useLiveSession, withTries } from "@sendtally/features/log-session";
 import { sessionDraftStorage } from "../../lib/sessionDraftStorage";
 import { useGradeScalePrefs } from "@sendtally/features/settings";
 import { EntryRow, entryRowHeight } from "../../features/journal/EntryRow";
@@ -41,11 +41,12 @@ import {
 import { ScopeBar } from "../../features/sessions/ScopeBar";
 import { SECTION_HEADER_HEIGHT, SectionHeader } from "../../features/sessions/SectionHeader";
 import { SessionRow, sessionRowHeight } from "../../features/sessions/SessionRow";
-import { StravaSetupRow } from "../../features/sessions/StravaSetupRow";
+import { SetupStack, type SetupCard } from "../../features/sessions/SetupStack";
 import { useStravaConnect } from "../../features/settings/useStravaConnect";
 import { useApi } from "../../lib/api";
 import { maybeAskForReview } from "../../lib/review";
-import { useStravaSetupDismissed } from "../../lib/stravaSetupPrompt";
+import { useSetupDismissed } from "../../lib/setupPrompt";
+import { circuitGym, gymOfDraft, useGyms } from "@sendtally/features/gyms";
 
 type Section = { key: string; title: string; meta: string; data: LogItem[] };
 
@@ -107,9 +108,49 @@ export default function Log(): React.ReactElement {
   const vocabulary = useClimbVocabulary(api);
   const [editingClimb, setEditingClimb] = React.useState<string | null>(null);
   const connect = useStravaConnect(api, settings.reload);
-  const stravaPrompt = useStravaSetupDismissed();
-  const showStravaSetup =
-    settings.ready && !settings.vm.stravaActive && stravaPrompt.dismissed === false;
+  const gyms = useGyms(api);
+  const reloadGyms = gyms.reload;
+  // A gym added from the setup card comes back to this tab, which must stop offering it.
+  useFocusEffect(
+    React.useCallback(() => {
+      reloadGyms();
+    }, [reloadGyms])
+  );
+  const gymPrompt = useSetupDismissed("gym");
+  const stravaPrompt = useSetupDismissed("strava");
+  const liveGym = circuitGym(
+    gymOfDraft(gyms.gyms, live.stored?.draft.gymId) ?? gyms.gyms[0] ?? null
+  );
+  const setupCards: SetupCard[] = [];
+  if (gyms.ready && gyms.gyms.length === 0 && gymPrompt.dismissed === false) {
+    setupCards.push({
+      key: "gym",
+      eyebrow: t("gyms.gym"),
+      title: t("gyms.setupTitle"),
+      body: t("gyms.setupBody"),
+      action: t("gyms.setupAction"),
+      onAction: () => router.push({ pathname: "/gym/[id]", params: { id: "new" } }),
+      onDismiss: gymPrompt.dismiss,
+    });
+  }
+  if (settings.ready && !settings.vm.stravaActive && stravaPrompt.dismissed === false) {
+    const lapsed = settings.vm.stravaConnected;
+    setupCards.push({
+      key: "strava",
+      eyebrow: lapsed ? t("sessions.setupEyebrowLapsed") : t("sessions.setupEyebrow"),
+      title: lapsed ? t("sessions.setupLapsedTitle") : t("sessions.setupTitle"),
+      body: lapsed ? t("sessions.setupLapsedBody") : t("sessions.setupBody"),
+      action: connect.busy
+        ? t("settings.openingStrava")
+        : lapsed
+          ? t("settings.relinkStrava")
+          : t("sessions.connectStrava"),
+      busy: connect.busy,
+      error: connect.error,
+      onAction: connect.connect,
+      onDismiss: stravaPrompt.dismiss,
+    });
+  }
 
   const all = React.useMemo(() => logItems(sessions ?? [], entries), [sessions, entries]);
   const inScope = React.useMemo(() => logScopeItems(all, filters.scope), [all, filters.scope]);
@@ -235,19 +276,14 @@ export default function Log(): React.ReactElement {
         contentContainerStyle={{ paddingBottom: 140 }}
         ListHeaderComponent={
           <>
-            {showStravaSetup && (
-              <StravaSetupRow
-                lapsed={settings.vm.stravaConnected}
-                connect={connect}
-                onDismiss={stravaPrompt.dismiss}
-              />
-            )}
+            <SetupStack cards={setupCards} total={2} />
             {live.stored !== null && (
               <LiveSessionCard
                 stored={live.stored}
                 vocabulary={vocabulary}
+                gym={liveGym}
                 onEditClimb={setEditingClimb}
-                onDiscard={live.discard}
+                onChangeTries={(key, tries) => live.updateClimb(key, (c) => withTries(c, tries))}
               />
             )}
           </>
@@ -313,10 +349,11 @@ export default function Log(): React.ReactElement {
           )
         }
       />
-      <LogFab onLogClimb={() => setEditingClimb(live.addClimb(scales))} />
+      <LogFab onLogClimb={() => setEditingClimb(live.addClimb(scales, liveGym))} />
       <LiveClimbEditor
         live={live}
         vocabulary={vocabulary}
+        gym={liveGym}
         editingKey={editingClimb}
         onClose={() => setEditingClimb(null)}
       />

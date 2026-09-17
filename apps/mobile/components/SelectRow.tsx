@@ -1,5 +1,5 @@
 import React from "react";
-import { Pressable, Text, View } from "react-native";
+import { Pressable, Text, View, type ViewStyle } from "react-native";
 import { t } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { Icon } from "./Icon";
@@ -11,6 +11,7 @@ export type SelectRowProps = {
   value: string;
   leading?: React.ReactNode;
   valueFont?: string;
+  style?: ViewStyle;
   children: (close: () => void) => React.ReactNode;
 };
 
@@ -23,6 +24,7 @@ export function SelectRow({
   value,
   leading,
   valueFont = fonts.sansMedium,
+  style,
   children,
 }: SelectRowProps): React.ReactElement {
   const [open, setOpen] = React.useState(false);
@@ -43,6 +45,7 @@ export function SelectRow({
           borderRadius: radius.control,
           borderWidth: 1,
           borderColor: colors.lineOnLightStrong,
+          ...style,
         })}
       >
         <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>

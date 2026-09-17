@@ -43,6 +43,7 @@ export const logSession = {
   "logSession.climbOf": "Climb {n} of {total}",
   "logSession.nameOptional": "Name · optional",
   "logSession.climbNamePlaceholder": "Name (optional)",
+  "logSession.circuitClimbNamePlaceholder": "e.g. sloper start, power boulder, red hold slab climb",
   "logSession.candidateProject": "{name}, project",
   "logSession.attempt": "Attempt",
   "logSession.markAsProject": "Mark as project",

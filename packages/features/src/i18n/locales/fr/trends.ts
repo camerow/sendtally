@@ -57,4 +57,9 @@ export const trends = {
   "trends.tagRowTitle_one": "{label} · {count} séance",
   "trends.tagRowTitle_other": "{label} · {count} séances",
   "trends.range7d": "7 derniers jours",
+  "trends.byCircuit": "Par circuit",
+  "trends.place": "Lieu",
+  "trends.everywhere": "Partout",
+  "trends.placeBody": "Dans une salle, la répartition se fait par circuit.",
+  "trends.byCircuitTitled": "Par circuit · {title}",
 } as const;

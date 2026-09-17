@@ -43,7 +43,15 @@ export function DayColumn({
   );
 }
 
-export function RowTitle({ title, meta }: { title: string; meta: string }): React.ReactElement {
+export function RowTitle({
+  title,
+  meta,
+  marker,
+}: {
+  title: string;
+  meta: string;
+  marker?: React.ReactNode;
+}): React.ReactElement {
   return (
     <>
       <Text
@@ -57,17 +65,21 @@ export function RowTitle({ title, meta }: { title: string; meta: string }): Reac
       >
         {title}
       </Text>
-      <Text
-        numberOfLines={1}
-        style={{
-          fontFamily: fonts.mono,
-          fontSize: 11,
-          lineHeight: 14,
-          color: colors.textSecondary,
-        }}
-      >
-        {meta}
-      </Text>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
+        {marker}
+        <Text
+          numberOfLines={1}
+          style={{
+            flexShrink: 1,
+            fontFamily: fonts.mono,
+            fontSize: 11,
+            lineHeight: 14,
+            color: colors.textSecondary,
+          }}
+        >
+          {meta}
+        </Text>
+      </View>
     </>
   );
 }

@@ -13,6 +13,7 @@ import {
 } from "@sendtally/core";
 import { z } from "zod";
 import type { ManualSessionInput, SessionRow } from "./repo";
+import { CIRCUIT_COLOURS } from "./gyms";
 import { tagNames } from "./tags";
 
 const knownGrade =
@@ -38,10 +39,21 @@ const gradeSchema = z.union([
 
 export const CLIMB_NOTE_MAX = 2000;
 
+// Where a gym climb was: the circuit it is on (a snapshot, so a gym edit never
+// rewrites history) and the wall, both optional and both only meaningful when
+// the session names a gym.
+const circuitRefSchema = z.object({
+  id: z.string().min(1).max(40),
+  label: z.string().max(40),
+  colour: z.enum(CIRCUIT_COLOURS),
+});
+
 const climbSchema = z
   .object({
     name: z.string().max(200).default(""),
     grade: gradeSchema,
+    circuit: circuitRefSchema.optional(),
+    wall: z.string().trim().max(40).optional(),
     kind: z.enum(["send", "attempt"]).default("send"),
     style: z.enum(["redpoint", "flash", "onsight"]).optional(),
     tries: z.number().int().min(1).max(99).default(1),
@@ -92,6 +104,7 @@ export const manualSessionShape = z.object({
     .optional(),
   rpe: z.number().int().min(1).max(10).optional(),
   location: z.enum(["indoor", "outdoor"]),
+  gymId: z.string().min(1).max(40).optional(),
   tags: tagNames.optional(),
   notes: sessionNote,
   climbs: z.array(climbSchema).min(1).max(300),
@@ -159,7 +172,20 @@ export type StoredClimb = {
   tries: number;
   angle: number | null;
   grade?: Grade;
+  circuit?: CircuitRef;
+  wall?: string;
 };
+
+export type CircuitRef = z.infer<typeof circuitRefSchema>;
+
+function placeOf(climb: ManualSessionBody["climbs"][number] | undefined): Partial<StoredClimb> {
+  if (climb === undefined) return {};
+  const wall = climb.wall?.trim() ?? "";
+  return {
+    ...(climb.circuit === undefined ? {} : { circuit: climb.circuit }),
+    ...(wall === "" ? {} : { wall }),
+  };
+}
 
 export function parseClimbs(climbsJson: string | null | undefined): StoredClimb[] {
   return climbsJson == null ? [] : (JSON.parse(climbsJson) as StoredClimb[]);
@@ -196,6 +222,7 @@ export function buildManualSession(
   return {
     fingerprint,
     location: body.location,
+    gym_id: body.gymId ?? null,
     name: body.name ?? null,
     start_at: session.start.toISOString(),
     end_at: session.end.toISOString(),
@@ -208,7 +235,7 @@ export function buildManualSession(
     title: body.name ?? result.title,
     summary: result.summary,
     climbs_json: JSON.stringify(
-      session.climbs.map((c): StoredClimb => ({
+      session.climbs.map((c, i): StoredClimb => ({
         time: c.time.toISOString(),
         name: c.name,
         vGrade: c.vGrade,
@@ -217,6 +244,7 @@ export function buildManualSession(
         tries: c.tries,
         angle: null,
         grade: c.grade,
+        ...placeOf(body.climbs[i]),
       }))
     ),
   };

@@ -58,6 +58,9 @@ export function TrendFilters({
     selectedTags,
     toggleTag,
     clearTags,
+    gyms,
+    gymId,
+    setGym,
   } = feature;
   const disciplines = state.status === "ready" ? state.data.disciplines : [];
   const discipline = state.status === "ready" ? state.data.discipline : null;
@@ -96,6 +99,27 @@ export function TrendFilters({
           );
         })}
       </div>
+      {gyms.length > 0 && (
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }} aria-label={t("trends.place")}>
+          <button
+            onClick={() => setGym(null)}
+            aria-pressed={gymId === null}
+            style={chipStyle(gymId === null)}
+          >
+            {t("trends.everywhere")}
+          </button>
+          {gyms.map((gym) => (
+            <button
+              key={gym.id}
+              onClick={() => setGym(gym.id)}
+              aria-pressed={gymId === gym.id}
+              style={chipStyle(gymId === gym.id, { textTransform: "none", letterSpacing: 0 })}
+            >
+              {gym.name}
+            </button>
+          ))}
+        </div>
+      )}
       {tagOptions.length > 0 && (
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           <button onClick={clearTags} style={chipStyle(selectedTags.length === 0)}>

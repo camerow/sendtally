@@ -43,6 +43,8 @@ export const logSession = {
   "logSession.climbOf": "Ligne {n} sur {total}",
   "logSession.nameOptional": "Nom · optionnel",
   "logSession.climbNamePlaceholder": "Nom (optionnel)",
+  "logSession.circuitClimbNamePlaceholder":
+    "ex. départ sur sloper, bloc de force, dalle prises rouges",
   "logSession.candidateProject": "{name}, projet",
   "logSession.attempt": "Essai",
   "logSession.markAsProject": "Marquer comme projet",

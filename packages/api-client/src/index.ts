@@ -9,6 +9,8 @@ import type {
   ConnectionStatus,
   Entitlements,
   GradeScales,
+  Gym,
+  GymInput,
   LogSessionInput,
   PostOutcome,
   ProjectInput,
@@ -146,6 +148,22 @@ export class SendtallyApi {
 
   unmarkProject(slug: string): Promise<{ deleted: boolean }> {
     return body(this.client.v1.projects[":slug"].$delete({ param: { slug } }));
+  }
+
+  gyms(): Promise<{ gyms: Gym[] }> {
+    return body(this.client.v1.gyms.$get());
+  }
+
+  createGym(input: GymInput): Promise<{ gym: Gym | null }> {
+    return body(this.client.v1.gyms.$post({ json: input }));
+  }
+
+  updateGym(id: string, input: GymInput): Promise<{ gym: Gym | null }> {
+    return body(this.client.v1.gyms[":id"].$put({ param: { id }, json: input }));
+  }
+
+  deleteGym(id: string): Promise<{ deleted: boolean }> {
+    return body(this.client.v1.gyms[":id"].$delete({ param: { id } }));
   }
 
   postSessionToStrava(

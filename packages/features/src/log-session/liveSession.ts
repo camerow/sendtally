@@ -1,6 +1,8 @@
 import type { ClimbSummary } from "@sendtally/api-client";
 import { climbDraftGrade } from "../climbs/transforms";
 import { formatDate, t } from "../i18n";
+import { withCircuit } from "../gyms/draft";
+import type { Gym } from "../gyms/types";
 import { newClimb, nextClimbKey } from "./transforms";
 import {
   DEFAULT_GRADE_PREFS,
@@ -48,15 +50,34 @@ export function liveDraft(now: Date): LogSessionDraft {
   };
 }
 
+/**
+ * A session started from the Log tab is at the gym the climber last used, and each new climb
+ * starts on the previous climb's circuit, or the gym's first one, so most taps change nothing.
+ */
 export function withQuickClimb(
   draft: LogSessionDraft | null,
   now: Date,
-  prefs: GradePrefs = DEFAULT_GRADE_PREFS
+  prefs: GradePrefs = DEFAULT_GRADE_PREFS,
+  gym: Gym | null = null
 ): { draft: LogSessionDraft; key: string } {
-  const base = draft ?? liveDraft(now);
+  const started = draft ?? liveDraft(now);
+  // A session that began before the gym list arrived adopts the gym at the next climb.
+  const base =
+    gym === null || started.gymId !== undefined ? started : { ...started, gymId: gym.id };
   const key = nextClimbKey(base.climbs);
   const previous = base.climbs[base.climbs.length - 1];
-  const climb = newClimb(key, previous?.scale ?? prefs.boulder);
+  const fresh = newClimb(key, previous?.scale ?? prefs.boulder);
+  const atGym = gym !== null && gym.id === base.gymId ? gym : null;
+  const circuit =
+    previous?.circuit !== undefined
+      ? (atGym?.circuits.find((c) => c.id === previous.circuit?.id) ?? null)
+      : (atGym?.circuits[0] ?? null);
+  const climb =
+    previous?.circuit !== undefined && circuit === null
+      ? { ...fresh, circuit: previous.circuit, grade: previous.grade }
+      : circuit === null || atGym === null
+        ? fresh
+        : withCircuit(fresh, circuit, atGym);
   return { draft: withClimbTouched({ ...base, climbs: [...base.climbs, climb] }, now), key };
 }
 
@@ -70,6 +91,15 @@ export function idleMinutes(draft: LogSessionDraft, now: Date): number | null {
   const [h, m] = draft.endTime.split(":").map(Number);
   if (h === undefined || m === undefined || Number.isNaN(h) || Number.isNaN(m)) return null;
   return Math.max(0, now.getHours() * 60 + now.getMinutes() - (h * 60 + m));
+}
+
+/** hh:mm:ss since the draft's start, clamped at zero. */
+export function elapsedLabel(draft: LogSessionDraft, now: Date): string {
+  const started = new Date(`${draft.date}T${draft.startTime}:00`);
+  const total = Math.max(0, Math.floor((now.getTime() - started.getTime()) / 1000));
+  if (Number.isNaN(total)) return "00:00:00";
+  const pad = (n: number): string => String(n).padStart(2, "0");
+  return `${pad(Math.floor(total / 3600))}:${pad(Math.floor((total % 3600) / 60))}:${pad(total % 60)}`;
 }
 
 export function wantsWrapUpReminder(draft: LogSessionDraft, now: Date): boolean {

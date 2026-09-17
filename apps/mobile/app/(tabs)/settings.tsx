@@ -1,6 +1,7 @@
 import { useUser } from "@clerk/clerk-expo";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import React from "react";
+import { useGyms } from "@sendtally/features/gyms";
 import { useGradeScales, useSettings, useStravaPosting } from "@sendtally/features/settings";
 import type { Discipline, GradeScale } from "@sendtally/features/log-session";
 import { useBilling } from "../../features/billing/useBilling";
@@ -17,6 +18,13 @@ export default function Settings(): React.ReactElement {
   const posting = useStravaPosting(api, vm, reload);
   const connect = useStravaConnect(api, reload);
   const scales = useGradeScales(api, vm, reload);
+  const gyms = useGyms(api);
+  const reloadGyms = gyms.reload;
+  useFocusEffect(
+    React.useCallback(() => {
+      reloadGyms();
+    }, [reloadGyms])
+  );
   const onChangeGradePref = React.useCallback(
     (discipline: Discipline, scale: GradeScale) => scales.set({ [discipline]: scale }),
     [scales]
@@ -29,6 +37,7 @@ export default function Settings(): React.ReactElement {
       vm={vm}
       email={user?.primaryEmailAddress?.emailAddress ?? ""}
       gradePrefs={scales.scales}
+      gyms={gyms.gyms}
       billing={
         billing === null ? null : { membership: billing.membership.vm, onOpen: onOpenMembership }
       }

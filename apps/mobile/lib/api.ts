@@ -1,9 +1,20 @@
 import { useAuth } from "@clerk/clerk-expo";
 import React from "react";
-import { SendtallyApi } from "@sendtally/api-client";
+import { SendtallyApi, type TokenProvider } from "@sendtally/api-client";
 import { API_URL } from "./config";
+
+// Clerk hands out a new `getToken` on some renders, and every screen keys its
+// fetch effects on the client, so there is one client and an effect keeps its
+// token getter current. Requests read the getter when they fire, which is
+// always after that effect has run.
+const auth: { getToken: TokenProvider } = { getToken: () => Promise.resolve(null) };
+
+const api = new SendtallyApi(API_URL, () => auth.getToken());
 
 export function useApi(): SendtallyApi {
   const { getToken } = useAuth();
-  return React.useMemo(() => new SendtallyApi(API_URL, () => getToken()), [getToken]);
+  React.useEffect(() => {
+    auth.getToken = getToken;
+  }, [getToken]);
+  return api;
 }

@@ -16,6 +16,7 @@ import {
   climbNotes,
   entrySessions,
   entryTags,
+  gyms,
   journalEntries,
   projects,
   sessions,
@@ -205,6 +206,7 @@ export async function replaceStoreEntitlements(
 export type ManualSessionInput = {
   fingerprint: string;
   location: "indoor" | "outdoor";
+  gym_id: string | null;
   name: string | null;
   start_at: string;
   end_at: string;
@@ -918,6 +920,65 @@ export async function getSession(
   return row ?? null;
 }
 
+export type GymRow = typeof gyms.$inferSelect;
+
+export type GymWrite = {
+  name: string;
+  scale: "v" | "font";
+  circuits_json: string;
+  walls_json: string;
+};
+
+export async function listGyms(db: D1Database, userId: string): Promise<GymRow[]> {
+  return drizzle(db)
+    .select()
+    .from(gyms)
+    .where(eq(gyms.user_id, userId))
+    .orderBy(gyms.created_at)
+    .all();
+}
+
+export async function getGym(db: D1Database, userId: string, id: string): Promise<GymRow | null> {
+  const row = await drizzle(db)
+    .select()
+    .from(gyms)
+    .where(and(eq(gyms.user_id, userId), eq(gyms.id, id)))
+    .get();
+  return row ?? null;
+}
+
+export async function insertGym(
+  db: D1Database,
+  userId: string,
+  id: string,
+  gym: GymWrite
+): Promise<void> {
+  const now = new Date().toISOString();
+  await drizzle(db)
+    .insert(gyms)
+    .values({ id, user_id: userId, ...gym, created_at: now, updated_at: now });
+}
+
+export async function updateGym(
+  db: D1Database,
+  userId: string,
+  id: string,
+  gym: GymWrite
+): Promise<boolean> {
+  const result = await drizzle(db)
+    .update(gyms)
+    .set({ ...gym, updated_at: new Date().toISOString() })
+    .where(and(eq(gyms.user_id, userId), eq(gyms.id, id)));
+  return result.meta.changes > 0;
+}
+
+export async function deleteGym(db: D1Database, userId: string, id: string): Promise<boolean> {
+  const result = await drizzle(db)
+    .delete(gyms)
+    .where(and(eq(gyms.user_id, userId), eq(gyms.id, id)));
+  return result.meta.changes > 0;
+}
+
 export async function deleteUserData(db: D1Database, userId: string): Promise<void> {
   const d = drizzle(db);
   await d.batch([
@@ -928,6 +989,7 @@ export async function deleteUserData(db: D1Database, userId: string): Promise<vo
     d.delete(journalEntries).where(eq(journalEntries.user_id, userId)),
     d.delete(tags).where(eq(tags.user_id, userId)),
     d.delete(projects).where(eq(projects.user_id, userId)),
+    d.delete(gyms).where(eq(gyms.user_id, userId)),
     d.delete(sessions).where(eq(sessions.user_id, userId)),
     d.delete(stravaConnections).where(eq(stravaConnections.user_id, userId)),
     d.delete(storeEntitlements).where(eq(storeEntitlements.user_id, userId)),

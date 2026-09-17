@@ -139,6 +139,15 @@ export function withClimbOutcome(climb: ClimbDraft, outcome: ClimbOutcome): Clim
   return { ...climb, kind: "send", style: outcome.style, tries };
 }
 
+/** A one-try send is a flash and a flash on more tries is not, so the count settles the style. */
+export function withTries(climb: ClimbDraft, tries: number): ClimbDraft {
+  const next = Math.min(99, Math.max(1, tries));
+  if (climb.kind !== "send") return { ...climb, tries: next };
+  if (next === 1)
+    return { ...climb, tries: next, style: climb.style === "onsight" ? "onsight" : "flash" };
+  return { ...climb, tries: next, style: "redpoint" };
+}
+
 /** Onsight is a route idea; a boulder carrying one from an earlier edit falls back to sent. */
 function withClimbScaleStyle(climb: ClimbDraft): ClimbDraft {
   const allowed = sendStylesFor(disciplineOf(climb.scale));
@@ -253,6 +262,8 @@ export function toLogSessionInput(draft: LogSessionDraft): LogSessionInput {
     tries: c.tries,
     ...(c.name.trim() === "" || c.note.trim() === "" ? {} : { note: c.note.trim() }),
     ...(c.project === undefined ? {} : { project: c.project }),
+    ...(c.circuit === undefined ? {} : { circuit: c.circuit }),
+    ...(c.wall === undefined || c.wall.trim() === "" ? {} : { wall: c.wall.trim() }),
   }));
   return {
     ...(draft.name.trim() === "" ? {} : { name: draft.name.trim() }),
@@ -261,6 +272,7 @@ export function toLogSessionInput(draft: LogSessionDraft): LogSessionInput {
     endTime: draft.endTime,
     ...(draft.rpe === null ? {} : { rpe: draft.rpe }),
     location: draft.location,
+    ...(draft.gymId === undefined ? {} : { gymId: draft.gymId }),
     ...(draft.tags.length === 0 ? {} : { tags: draft.tags }),
     ...(draft.notes.trim() === "" ? {} : { notes: draft.notes.trim() }),
     climbs,
@@ -300,6 +312,7 @@ export function draftFromSession(session: SessionDetail): LogSessionDraft {
     startTime: utcTime(session.start_at),
     endTime: utcTime(session.end_at),
     location: session.location ?? "indoor",
+    ...(session.gym_id === null ? {} : { gymId: session.gym_id }),
     tags: session.tags.map((t) => t.name),
     notes: session.notes ?? "",
     rpe: session.rpe,
@@ -314,6 +327,8 @@ export function draftFromSession(session: SessionDetail): LogSessionDraft {
         style: storedStyle(c),
         tries: c.tries,
         note: c.note ?? "",
+        ...(c.circuit === undefined ? {} : { circuit: c.circuit }),
+        ...(c.wall === undefined ? {} : { wall: c.wall }),
       };
     }),
   };

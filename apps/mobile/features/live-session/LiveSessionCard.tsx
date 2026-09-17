@@ -2,8 +2,10 @@ import { router } from "expo-router";
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import type { ClimbVocabulary } from "@sendtally/features/climbs";
+import type { Gym } from "@sendtally/features/gyms";
 import {
   durationLabel,
+  elapsedLabel,
   idleMinutes,
   wantsWrapUpReminder,
   type StoredSessionDraft,
@@ -11,7 +13,6 @@ import {
 import { formatDate, t } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { Icon } from "../../components/Icon";
-import { confirmDiscardDraft } from "../../lib/confirmDiscardDraft";
 import { press, pressRow } from "../../lib/press";
 import { ClimbLedgerRow } from "../log-session/ClimbLedgerRow";
 import { DayColumn, RowTitle } from "../sessions/SessionRowParts";
@@ -26,10 +27,10 @@ const wrapUpButton = {
 
 const buttonLabel = { fontFamily: fonts.sansSemiBold, fontSize: 13 } as const;
 
-function useMinuteClock(): Date {
+function useSecondClock(): Date {
   const [now, setNow] = React.useState(() => new Date());
   React.useEffect(() => {
-    const timer = setInterval(() => setNow(new Date()), 60_000);
+    const timer = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
   return now;
@@ -93,29 +94,32 @@ function ReminderBar({
   );
 }
 
-const wrapUp = (): void => router.push("/session/new?resume=1");
+const openSession = (): void => router.push("/session/new?resume=1");
+const wrapUp = (): void => router.push("/session/new?resume=1&wrapUp=1");
 
 export type LiveSessionCardProps = {
   stored: StoredSessionDraft;
   vocabulary: ClimbVocabulary;
+  gym: Gym | null;
   onEditClimb: (key: string) => void;
-  onDiscard: () => void;
+  onChangeTries: (key: string, tries: number) => void;
 };
 
 /** The session being climbed right now, pinned above the log until it is wrapped up. */
 export function LiveSessionCard({
   stored,
   vocabulary,
+  gym,
   onEditClimb,
-  onDiscard,
+  onChangeTries,
 }: LiveSessionCardProps): React.ReactElement {
-  const now = useMinuteClock();
+  const now = useSecondClock();
   const { draft, savedAt } = stored;
   const title = draft.name.trim() === "" ? t("sessions.unfinishedSession") : draft.name;
-  const meta = t("sessions.liveMeta", {
-    climbs: t("common.climbCount", { count: draft.climbs.length }),
-    start: draft.startTime,
-  });
+  const meta = [
+    t("sessions.liveMeta", { elapsed: elapsedLabel(draft, now) }),
+    ...(gym === null ? [] : [gym.name]),
+  ].join(" · ");
 
   return (
     <View>
@@ -133,36 +137,32 @@ export function LiveSessionCard({
       >
         <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
           <Pressable
-            onPress={wrapUp}
+            onPress={openSession}
             accessibilityRole="button"
-            accessibilityLabel={`${title}, ${meta}, ${t("sessions.wrapUp")}`}
+            accessibilityLabel={`${title}, ${meta}`}
             style={pressRow({ flex: 1, flexDirection: "row", alignItems: "center", gap: 12 })}
           >
             <DayColumn
               weekday={formatDate(savedAt, { weekday: "short" })}
               day={formatDate(savedAt, { day: "numeric" })}
-              marker={
-                <View
-                  style={{
-                    width: 6,
-                    height: 6,
-                    marginTop: 3,
-                    borderRadius: 3,
-                    backgroundColor: colors.watermelonInk,
-                  }}
-                />
-              }
             />
             <View style={{ flex: 1, gap: 3 }}>
-              <RowTitle title={title} meta={meta} />
+              <RowTitle
+                title={title}
+                meta={meta}
+                marker={
+                  <View
+                    style={{
+                      width: 6,
+                      height: 6,
+                      borderRadius: 3,
+                      backgroundColor: colors.watermelonInk,
+                    }}
+                  />
+                }
+              />
             </View>
-          </Pressable>
-          <Pressable
-            onPress={wrapUp}
-            accessibilityRole="button"
-            style={press({ ...wrapUpButton, backgroundColor: colors.gunmetal })}
-          >
-            <Text style={{ ...buttonLabel, color: colors.white }}>{t("sessions.wrapUp")}</Text>
+            <Icon name="chevron" size={12} strokeWidth={2} color="rgba(64,63,76,0.35)" />
           </Pressable>
         </View>
         {draft.climbs.length > 0 && (
@@ -181,34 +181,11 @@ export function LiveSessionCard({
                 climb={climb}
                 project={climb.project ?? vocabulary.isProject(climb.name)}
                 onPress={() => onEditClimb(climb.key)}
+                onChangeTries={(tries) => onChangeTries(climb.key, tries)}
               />
             ))}
           </View>
         )}
-        <Pressable
-          onPress={() => confirmDiscardDraft(stored, onDiscard)}
-          accessibilityRole="button"
-          hitSlop={8}
-          style={press({
-            alignSelf: "flex-start",
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 6,
-          })}
-        >
-          <Icon name="x" size={12} strokeWidth={2.2} color={colors.textFaint} />
-          <Text
-            style={{
-              fontFamily: fonts.monoMedium,
-              fontSize: 10,
-              letterSpacing: 0.8,
-              textTransform: "uppercase",
-              color: colors.textFaint,
-            }}
-          >
-            {t("sessions.discardSession")}
-          </Text>
-        </Pressable>
       </View>
     </View>
   );

@@ -99,7 +99,9 @@ export function TrendDetail({ apiUrl, metric }: TrendDetailProps): React.ReactEl
                 ))}
               </div>
               <TrendTagBreakdown
-                title={t("trends.byTagTitled", { title: detail.title })}
+                title={t(feature.gymId === null ? "trends.byTagTitled" : "trends.byCircuitTitled", {
+                  title: detail.title,
+                })}
                 rows={detail.breakdown}
               />
               <p

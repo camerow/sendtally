@@ -1,5 +1,5 @@
 import React from "react";
-import type { SendtallyApi, SessionWithClimbs } from "@sendtally/api-client";
+import type { Gym, SendtallyApi, SessionWithClimbs } from "@sendtally/api-client";
 import { useQuery, type QueryState } from "../lib/useQuery";
 import { filterSessionsByTags, sessionTagOptions, type TagOption } from "../sessions/tags";
 import { trendsVM } from "./transforms";
@@ -23,6 +23,10 @@ export type TrendsFeature = {
   setTags: (slugs: string[]) => void;
   toggleTag: (slug: string) => void;
   clearTags: () => void;
+  /** Gyms with circuits, offered as a place filter; picking one groups the breakdown by circuit. */
+  gyms: Gym[];
+  gymId: string | null;
+  setGym: (gymId: string | null) => void;
 };
 
 export function useTrends(
@@ -33,31 +37,48 @@ export function useTrends(
   const range = preview ? PREVIEW_TREND_RANGE : chosenRange;
   const [discipline, setDiscipline] = React.useState<Discipline | null>(null);
   const [selectedTags, setSelectedTags] = React.useState<string[]>([]);
+  const [gymId, setGym] = React.useState<string | null>(null);
 
-  const load = React.useCallback(async (): Promise<SessionWithClimbs[]> => {
-    const { sessions } = await api.sessionsWithClimbs();
-    return sessions;
+  const load = React.useCallback(async (): Promise<{
+    sessions: SessionWithClimbs[];
+    gyms: Gym[];
+  }> => {
+    const [{ sessions }, { gyms }] = await Promise.all([api.sessionsWithClimbs(), api.gyms()]);
+    return { sessions, gyms: gyms.filter((g) => g.circuits.length > 0) };
   }, [api]);
 
   const { state: raw, reload } = useQuery(load);
 
-  const tagOptions = React.useMemo(
-    (): TagOption[] => (raw.status === "ready" ? sessionTagOptions(raw.data) : []),
-    [raw]
+  const placed = React.useMemo(
+    (): SessionWithClimbs[] =>
+      raw.status !== "ready"
+        ? []
+        : gymId === null
+          ? raw.data.sessions
+          : raw.data.sessions.filter((s) => s.gym_id === gymId),
+    [raw, gymId]
   );
 
+  const tagOptions = React.useMemo((): TagOption[] => sessionTagOptions(placed), [placed]);
+
   const untaggedCount = React.useMemo(
-    (): number => (raw.status === "ready" ? raw.data.filter((s) => s.tags.length === 0).length : 0),
-    [raw]
+    (): number => placed.filter((s) => s.tags.length === 0).length,
+    [placed]
   );
 
   const state = React.useMemo((): QueryState<TrendsVM> => {
     if (raw.status !== "ready") return raw;
     return {
       status: "ready",
-      data: trendsVM(filterSessionsByTags(raw.data, selectedTags), range, new Date(), discipline),
+      data: trendsVM(
+        filterSessionsByTags(placed, selectedTags),
+        range,
+        new Date(),
+        discipline,
+        gymId === null ? "tag" : "circuit"
+      ),
     };
-  }, [raw, range, selectedTags, discipline]);
+  }, [raw, placed, range, selectedTags, discipline, gymId]);
 
   const toggleTag = React.useCallback((slug: string): void => {
     setSelectedTags((prev) =>
@@ -82,5 +103,8 @@ export function useTrends(
     setTags,
     toggleTag,
     clearTags,
+    gyms: raw.status === "ready" ? raw.data.gyms : [],
+    gymId,
+    setGym,
   };
 }

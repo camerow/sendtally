@@ -109,7 +109,7 @@ export function TrendsList({
             </View>
             <TrendTagBreakdown
               compact
-              title={t("trends.byTag")}
+              title={feature.gymId === null ? t("trends.byTag") : t("trends.byCircuit")}
               rows={state.data.details[tile.metric].breakdown.slice(0, TILE_BREAKDOWN_ROWS)}
             />
           </Pressable>

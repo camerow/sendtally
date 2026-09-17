@@ -1,16 +1,19 @@
 import React from "react";
 import type { ClimbSummary } from "@sendtally/api-client";
+import type { Gym } from "@sendtally/features/gyms";
 import {
   climbOutcome,
   disciplineOf,
   gradeOptions,
   withClimbOutcome,
+  withTries,
   type ClimbDraft,
   type Discipline,
   type GradeScale,
 } from "@sendtally/features/log-session";
 import { t } from "@sendtally/features/i18n";
 import { Icon } from "../../components/Icon";
+import { CircuitFields } from "../../gyms/components/CircuitFields";
 import { ClimbNameField } from "./ClimbNameField";
 import { ClimbNoteField } from "./ClimbNoteField";
 import { DisciplineToggle } from "./DisciplineToggle";
@@ -65,6 +68,8 @@ export type ClimbEditorSheetProps = {
   index: number;
   count: number;
   scale: GradeScale;
+  /** With a gym that has circuits, the climb is placed on a circuit instead of graded. */
+  gym?: Gym | null;
   project: boolean;
   /** Defaults to "not the last climb"; a live session lets the last one go too. */
   removable?: boolean;
@@ -83,6 +88,7 @@ export function ClimbEditorSheet({
   index,
   count,
   scale,
+  gym = null,
   project,
   removable = count > 1,
   suggestions,
@@ -140,30 +146,34 @@ export function ClimbEditorSheet({
             )}
           </div>
         </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
-          <label htmlFor="climb-grade" style={monoLabel}>
-            {t("common.grade")}
-          </label>
-          <select
-            id="climb-grade"
-            name="grade"
-            value={climb.grade}
-            onChange={(e) => onChange({ ...climb, grade: e.target.value })}
-            className="log-session-control"
-            style={{
-              ...inputStyle,
-              fontFamily: "var(--font-mono)",
-              fontWeight: 600,
-              height: 46,
-            }}
-          >
-            {gradeOptions(scale).map((g) => (
-              <option key={g} value={g}>
-                {g}
-              </option>
-            ))}
-          </select>
-        </div>
+        {gym === null ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
+            <label htmlFor="climb-grade" style={monoLabel}>
+              {t("common.grade")}
+            </label>
+            <select
+              id="climb-grade"
+              name="grade"
+              value={climb.grade}
+              onChange={(e) => onChange({ ...climb, grade: e.target.value })}
+              className="log-session-control"
+              style={{
+                ...inputStyle,
+                fontFamily: "var(--font-mono)",
+                fontWeight: 600,
+                height: 46,
+              }}
+            >
+              {gradeOptions(scale).map((g) => (
+                <option key={g} value={g}>
+                  {g}
+                </option>
+              ))}
+            </select>
+          </div>
+        ) : (
+          <CircuitFields climb={climb} gym={gym} onChange={onChange} />
+        )}
         <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
           <span style={monoLabel}>
             {t("logSession.name")}{" "}
@@ -174,11 +184,18 @@ export function ClimbEditorSheet({
             scale={scale}
             suggestions={suggestions}
             inline
+            placeholder={
+              gym === null
+                ? t("logSession.climbNamePlaceholder")
+                : t("logSession.circuitClimbNamePlaceholder")
+            }
             onChange={onChangeName}
             onPick={onPick}
           />
         </div>
-        <DisciplineToggle value={disciplineOf(climb.scale)} onChange={onChangeDiscipline} />
+        {gym === null && (
+          <DisciplineToggle value={disciplineOf(climb.scale)} onChange={onChangeDiscipline} />
+        )}
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <OutcomeSelect
             discipline={disciplineOf(climb.scale)}
@@ -188,8 +205,7 @@ export function ClimbEditorSheet({
           <TriesStepper
             tries={climb.tries}
             size={40}
-            disabled={climb.kind === "send" && climb.style !== "redpoint"}
-            onChange={(tries) => onChange({ ...climb, tries })}
+            onChange={(tries) => onChange(withTries(climb, tries))}
           />
         </div>
         <ProjectToggle project={project} named={named} onToggle={onToggleProject} />

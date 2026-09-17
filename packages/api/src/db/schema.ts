@@ -79,6 +79,7 @@ export const sessions = sqliteTable(
     board: text("board"),
     source: text("source").$type<"board" | "manual">().notNull().default("board"),
     location: text("location").$type<"indoor" | "outdoor">(),
+    gym_id: text("gym_id"),
     name: text("name"),
     start_at: text("start_at").notNull(),
     end_at: text("end_at").notNull(),
@@ -221,6 +222,25 @@ export const climbNotes = sqliteTable(
     primaryKey({ columns: [t.user_id, t.fingerprint, t.climb_slug] }),
     index("idx_climb_notes_user_climb").on(t.user_id, t.climb_slug),
   ]
+);
+
+export const gyms = sqliteTable(
+  "gyms",
+  {
+    id: text("id").primaryKey(),
+    user_id: text("user_id")
+      .notNull()
+      .references(() => users.id),
+    name: text("name").notNull(),
+    scale: text("scale", { enum: ["v", "font"] })
+      .notNull()
+      .default("v"),
+    circuits_json: text("circuits_json").notNull(),
+    walls_json: text("walls_json").notNull(),
+    created_at: text("created_at").notNull(),
+    updated_at: text("updated_at").notNull(),
+  },
+  (t) => [index("idx_gyms_user").on(t.user_id)]
 );
 
 export const projects = sqliteTable(

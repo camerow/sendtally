@@ -24,8 +24,14 @@ export default function LogSessionRoute(): React.ReactElement {
   const api = useClientApi(apiUrl);
   const hydrated = useHydrated();
   const [searchParams] = useSearchParams();
-  const wrapUp =
-    hydrated && searchParams.get("resume") === "1" && storedDraft(sessionDraftStorage) !== null;
+  const resumed =
+    hydrated && searchParams.get("resume") === "1" ? storedDraft(sessionDraftStorage) : null;
+  const title =
+    resumed === null
+      ? t("common.logASession")
+      : searchParams.get("wrapUp") === "1"
+        ? t("logSession.wrapUpTitle")
+        : resumed.name.trim() || t("sessions.unfinishedSession");
 
   return (
     <div>
@@ -41,9 +47,9 @@ export default function LogSessionRoute(): React.ReactElement {
             letterSpacing: "-0.03em",
           }}
         >
-          {wrapUp ? t("logSession.wrapUpTitle") : t("common.logASession")}
+          {title}
         </h1>
-        {wrapUp && (
+        {resumed !== null && (
           <span
             style={{
               fontFamily: "var(--font-mono)",

@@ -12,7 +12,8 @@ import {
   type LogScope,
 } from "@sendtally/features/journal";
 import { useClimbVocabulary } from "@sendtally/features/climbs";
-import { useLiveSession } from "@sendtally/features/log-session";
+import { circuitGym, gymOfDraft, useGyms } from "@sendtally/features/gyms";
+import { useLiveSession, withTries } from "@sendtally/features/log-session";
 import { useGradeScalePrefs } from "@sendtally/features/settings";
 import { useClientApi } from "../../lib/useClientApi";
 import { sessionDraftStorage } from "../../lib/sessionDraftStorage";
@@ -36,7 +37,8 @@ import { SessionFilters } from "./SessionFilters";
 import { SessionFilterSheet } from "./SessionFilterSheet";
 import { SessionTagSection } from "./SessionTagSection";
 import { SessionYearGroup } from "./SessionYearGroup";
-import { StravaSetupRow } from "./StravaSetupRow";
+import { SetupStack, type SetupCard } from "./SetupStack";
+import { useDismissed } from "../../lib/useDismissed";
 import { useVisibleSection } from "../useVisibleSection";
 
 const muted: React.CSSProperties = {
@@ -69,9 +71,38 @@ export function LogView({
   const live = useLiveSession(sessionDraftStorage);
   const vocabulary = useClimbVocabulary(api);
   const [editingClimb, setEditingClimb] = React.useState<string | null>(null);
-  const logClimb = (): void => setEditingClimb(live.addClimb(scales));
+  const gyms = useGyms(api);
+  const liveGym = circuitGym(
+    gymOfDraft(gyms.gyms, live.stored?.draft.gymId) ?? gyms.gyms[0] ?? null
+  );
+  const logClimb = (): void => setEditingClimb(live.addClimb(scales, liveGym));
   const stravaConnected = status.strava?.status === "active";
   const stravaLapsed = status.strava !== null && !stravaConnected;
+  const gymPrompt = useDismissed("gym");
+  const stravaPrompt = useDismissed("strava");
+  const setupCards: SetupCard[] = [];
+  if (gyms.ready && gyms.gyms.length === 0 && gymPrompt.dismissed === false) {
+    setupCards.push({
+      key: "gym",
+      eyebrow: t("gyms.gym"),
+      title: t("gyms.setupTitle"),
+      body: t("gyms.setupBody"),
+      action: t("gyms.setupAction"),
+      to: "/app/settings/gyms/new",
+      onDismiss: gymPrompt.dismiss,
+    });
+  }
+  if (!stravaConnected && stravaPrompt.dismissed === false) {
+    setupCards.push({
+      key: "strava",
+      eyebrow: stravaLapsed ? t("sessions.setupEyebrowLapsed") : t("sessions.setupEyebrow"),
+      title: stravaLapsed ? t("sessions.setupLapsedTitle") : t("sessions.setupTitle"),
+      body: stravaLapsed ? t("sessions.setupLapsedBody") : t("sessions.setupBody"),
+      action: stravaLapsed ? t("settings.relinkStrava") : t("sessions.connectStrava"),
+      to: "/app/setup",
+      onDismiss: stravaPrompt.dismiss,
+    });
+  }
 
   const grouping: SessionGrouping = searchParams.get("group") === "tag" ? "tag" : "month";
   const selectedTags = searchParams.getAll("tag");
@@ -148,13 +179,14 @@ export function LogView({
           <LogMenu variant="header" onLogClimb={logClimb} />
         </span>
       </div>
-      {!stravaConnected && <StravaSetupRow lapsed={stravaLapsed} />}
+      <SetupStack cards={setupCards} total={2} />
       {live.stored !== null && (
         <LiveSessionCard
           stored={live.stored}
           vocabulary={vocabulary}
+          gym={liveGym}
           onEditClimb={setEditingClimb}
-          onDiscard={live.discard}
+          onChangeTries={(key, tries) => live.updateClimb(key, (c) => withTries(c, tries))}
         />
       )}
       <div className="sessions-filters">
@@ -249,6 +281,7 @@ export function LogView({
           live={live}
           scales={scales}
           vocabulary={vocabulary}
+          gym={liveGym}
           editingKey={editingClimb}
           onClose={() => setEditingClimb(null)}
         />

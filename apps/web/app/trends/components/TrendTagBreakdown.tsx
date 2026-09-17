@@ -1,6 +1,7 @@
 import React from "react";
 import type { TrendTagRowVM } from "@sendtally/features/trends";
 import { t } from "@sendtally/features/i18n";
+import { CircuitDot } from "../../components/CircuitDot";
 
 const label: React.CSSProperties = {
   fontFamily: "var(--font-mono)",
@@ -42,20 +43,25 @@ export function TrendTagBreakdown({
               alignItems: "center",
             }}
           >
-            <span
-              style={{
-                fontFamily: "var(--font-mono)",
-                fontSize: compact ? 10 : 11,
-                textTransform: "uppercase",
-                letterSpacing: "0.06em",
-                color: compact ? "rgba(64,63,76,0.72)" : "var(--bs-gunmetal)",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-              }}
-              title={t("trends.tagRowTitle", { label: row.label, count: row.sessions })}
-            >
-              {row.label}
+            <span style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+              {row.colour !== undefined && (
+                <CircuitDot colour={row.colour} size={compact ? 10 : 12} />
+              )}
+              <span
+                style={{
+                  fontFamily: "var(--font-mono)",
+                  fontSize: compact ? 10 : 11,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.06em",
+                  color: compact ? "rgba(64,63,76,0.72)" : "var(--bs-gunmetal)",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                }}
+                title={t("trends.tagRowTitle", { label: row.label, count: row.sessions })}
+              >
+                {row.label}
+              </span>
             </span>
             <span
               style={{

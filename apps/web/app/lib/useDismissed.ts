@@ -1,32 +1,37 @@
+import { useAuth } from "@clerk/react-router";
 import React from "react";
 
-const KEY = "sendtally:strava-setup:dismissed";
-
-const read = (): boolean => {
+const read = (key: string): boolean => {
   try {
-    return localStorage.getItem(KEY) !== null;
+    return localStorage.getItem(key) !== null;
   } catch {
     return false;
   }
 };
 
-/** Per-device "not now" for the Strava setup row. `null` until hydrated, so the server never paints a row the browser then removes. */
-export function useDismissed(): { dismissed: boolean | null; dismiss: () => void } {
+/**
+ * Per-user, per-browser "not now" for a setup card. `null` until hydrated, so the server never
+ * paints a card the browser then removes. Keyed on the user so another account signing in on
+ * the same browser still gets offered it.
+ */
+export function useDismissed(name: string): { dismissed: boolean | null; dismiss: () => void } {
+  const { userId } = useAuth();
+  const key = `sendtally:${userId ?? "anon"}:${name}-setup:dismissed`;
   const [dismissed, setDismissed] = React.useState<boolean | null>(null);
 
   React.useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- localStorage only exists after hydration
-    setDismissed(read());
-  }, []);
+    setDismissed(read(key));
+  }, [key]);
 
   const dismiss = React.useCallback((): void => {
     try {
-      localStorage.setItem(KEY, new Date().toISOString());
+      localStorage.setItem(key, new Date().toISOString());
     } catch {
-      // A storage that refuses the write just shows the row again next visit.
+      // A storage that refuses the write just shows the card again next visit.
     }
     setDismissed(true);
-  }, []);
+  }, [key]);
 
   return { dismissed, dismiss };
 }

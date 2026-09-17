@@ -12,6 +12,7 @@ export type ClimbNameFieldProps = {
   suggestions: ClimbSummary[];
   inline?: boolean;
   autoFocus?: boolean;
+  placeholder?: string;
   onChange: (name: string) => void;
   onPick: (climb: ClimbSummary) => void;
 };
@@ -54,6 +55,7 @@ export function ClimbNameField({
   suggestions,
   inline = false,
   autoFocus = false,
+  placeholder = t("logSession.climbNamePlaceholder"),
   onChange,
   onPick,
 }: ClimbNameFieldProps): React.ReactElement {
@@ -137,7 +139,7 @@ export function ClimbNameField({
     >
       <input
         value={value}
-        placeholder={t("logSession.climbNamePlaceholder")}
+        placeholder={placeholder}
         autoComplete="off"
         autoFocus={autoFocus}
         role="combobox"

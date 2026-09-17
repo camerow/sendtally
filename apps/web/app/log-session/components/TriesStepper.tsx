@@ -6,15 +6,12 @@ import { MINUS, PLUS, stepperButton } from "./styles";
 export type TriesStepperProps = {
   tries: number;
   size?: number;
-  /** A flash or an onsight is one try; there is nothing to step. */
-  disabled?: boolean;
   onChange: (tries: number) => void;
 };
 
 export function TriesStepper({
   tries,
   size = 30,
-  disabled = false,
   onChange,
 }: TriesStepperProps): React.ReactElement {
   const button = { ...stepperButton, width: size, height: size };
@@ -23,9 +20,9 @@ export function TriesStepper({
       <button
         type="button"
         aria-label={t("logSession.fewerTries")}
-        disabled={disabled || tries <= 1}
+        disabled={tries <= 1}
         onClick={() => onChange(tries - 1)}
-        style={{ ...button, opacity: disabled || tries <= 1 ? 0.4 : 1 }}
+        style={{ ...button, opacity: tries <= 1 ? 0.4 : 1 }}
       >
         <Glyph d={MINUS} />
       </button>
@@ -36,7 +33,6 @@ export function TriesStepper({
           fontSize: 15,
           width: 18,
           textAlign: "center",
-          opacity: disabled ? 0.4 : 1,
         }}
       >
         {tries}
@@ -44,9 +40,9 @@ export function TriesStepper({
       <button
         type="button"
         aria-label={t("logSession.moreTries")}
-        disabled={disabled}
-        onClick={() => onChange(Math.min(99, tries + 1))}
-        style={{ ...button, opacity: disabled ? 0.4 : 1 }}
+        disabled={tries >= 99}
+        onClick={() => onChange(tries + 1)}
+        style={{ ...button, opacity: tries >= 99 ? 0.4 : 1 }}
       >
         <Glyph d={PLUS} />
       </button>

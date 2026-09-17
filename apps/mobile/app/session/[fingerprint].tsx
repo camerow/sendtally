@@ -12,6 +12,7 @@ import {
 import { t } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { Chip } from "../../components/Chip";
+import { CircuitDot } from "../../components/CircuitDot";
 import { PostStatusBar } from "../../features/sessions/PostStatusBar";
 import { SessionJournal } from "../../features/journal/SessionJournal";
 import { SessionTags } from "../../features/sessions/SessionTags";
@@ -330,16 +331,20 @@ export default function SessionDetailScreen(): React.ReactElement {
                     }}
                   >
                     <View style={{ flex: 1, gap: 4, minWidth: 0 }}>
-                      <Text
-                        numberOfLines={1}
-                        style={{
-                          fontFamily: fonts.sansMedium,
-                          fontSize: 15,
-                          color: colors.gunmetal,
-                        }}
-                      >
-                        {c.name}
-                      </Text>
+                      <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                        {c.colour !== undefined && <CircuitDot colour={c.colour} size={12} />}
+                        <Text
+                          numberOfLines={1}
+                          style={{
+                            flexShrink: 1,
+                            fontFamily: fonts.sansMedium,
+                            fontSize: 15,
+                            color: colors.gunmetal,
+                          }}
+                        >
+                          {c.name}
+                        </Text>
+                      </View>
                       <Text
                         style={{
                           fontFamily: fonts.mono,

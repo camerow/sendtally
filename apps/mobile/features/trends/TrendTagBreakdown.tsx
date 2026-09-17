@@ -2,6 +2,7 @@ import React from "react";
 import { Text, View } from "react-native";
 import type { TrendTagRowVM } from "@sendtally/features/trends";
 import { colors, fonts } from "@sendtally/design/tokens";
+import { CircuitDot } from "../../components/CircuitDot";
 
 export type TrendTagBreakdownProps = {
   title: string;
@@ -30,10 +31,11 @@ export function TrendTagBreakdown({
       </Text>
       {rows.map((row) => (
         <View key={row.key} style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+          {row.colour !== undefined && <CircuitDot colour={row.colour} size={compact ? 10 : 12} />}
           <Text
             numberOfLines={1}
             style={{
-              width: compact ? 92 : 96,
+              width: (compact ? 92 : 96) - (row.colour === undefined ? 0 : compact ? 20 : 22),
               fontFamily: fonts.mono,
               fontSize: compact ? 10 : 11,
               letterSpacing: 0.5,

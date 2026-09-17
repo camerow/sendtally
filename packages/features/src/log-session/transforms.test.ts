@@ -18,6 +18,7 @@ import {
   withTag,
   withoutTag,
   withClimbOutcome,
+  withTries,
   withStartTime,
 } from "./transforms";
 import { DEFAULT_GRADE_PREFS, sendStyleLabel, sendStylesFor } from "./types";
@@ -245,6 +246,12 @@ describe("send styles", () => {
     expect(withClimbOutcome(boulder(), { kind: "send", style: "redpoint" }).tries).toBe(4);
   });
 
+  it("flashes a send stepped down to one try and unflashes one stepped up", () => {
+    expect(withTries(boulder(), 1).style).toBe("flash");
+    expect(withTries(withTries(boulder(), 1), 2)).toMatchObject({ style: "redpoint", tries: 2 });
+    expect(withTries(withClimbOutcome(boulder(), { kind: "attempt" }), 1).kind).toBe("attempt");
+  });
+
   it("keeps the try count on an attempt", () => {
     const attempt = withClimbOutcome(boulder(), { kind: "attempt" });
     expect(attempt).toMatchObject({ kind: "attempt", tries: 4 });
@@ -444,6 +451,7 @@ function session(overrides: Partial<SessionDetail> = {}): SessionDetail {
     board: null,
     source: "manual",
     location: "indoor",
+    gym_id: null,
     name: "Tuesday board night",
     start_at: "2026-08-26T18:30:00.000Z",
     end_at: "2026-08-26T20:00:00.000Z",

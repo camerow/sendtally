@@ -17,6 +17,7 @@ import {
 } from "./lib/climbs";
 import { decryptSecret, encryptSecret } from "./lib/crypto";
 import { buildEntry, entryBody } from "./lib/entries";
+import { dedupedWalls, gymBody, gymOf } from "./lib/gyms";
 import { mirrorStoreEntitlements, resolveEntitlements } from "./lib/entitlements";
 import {
   buildManualSession,
@@ -478,6 +479,52 @@ const app = new Hono<AppEnv>()
     return c.json({ deleted: true });
   })
 
+  // A gym is the user's own: its circuits (colour, label, grade range) and the
+  // walls they log against. Stored whole, edited whole.
+  .get("/v1/gyms", async (c) => {
+    const rows = await repo.listGyms(c.env.DB, c.get("userId"));
+    return c.json({ gyms: rows.map(gymOf) });
+  })
+
+  .post("/v1/gyms", zValidator("json", gymBody, invalidBody), async (c) => {
+    const form = c.req.valid("json");
+    const userId = c.get("userId");
+    await repo.ensureUser(c.env.DB, userId);
+    const id = crypto.randomUUID();
+    await repo.insertGym(c.env.DB, userId, id, {
+      name: form.name,
+      scale: form.scale,
+      circuits_json: JSON.stringify(form.circuits),
+      walls_json: JSON.stringify(dedupedWalls(form.walls)),
+    });
+    await captureEvent(c, "gym_created", { circuits: String(form.circuits.length) });
+    const row = await repo.getGym(c.env.DB, userId, id);
+    return c.json({ gym: row === null ? null : gymOf(row) }, 201);
+  })
+
+  .put("/v1/gyms/:id", zValidator("json", gymBody, invalidBody), async (c) => {
+    const form = c.req.valid("json");
+    const userId = c.get("userId");
+    const id = c.req.param("id");
+    const updated = await repo.updateGym(c.env.DB, userId, id, {
+      name: form.name,
+      scale: form.scale,
+      circuits_json: JSON.stringify(form.circuits),
+      walls_json: JSON.stringify(dedupedWalls(form.walls)),
+    });
+    if (!updated) return c.json({ error: "not found" }, 404);
+    const row = await repo.getGym(c.env.DB, userId, id);
+    return c.json({ gym: row === null ? null : gymOf(row) });
+  })
+
+  // Sessions logged at the gym keep their circuit snapshots and gym_id; only
+  // the gym record itself goes.
+  .delete("/v1/gyms/:id", async (c) => {
+    const deleted = await repo.deleteGym(c.env.DB, c.get("userId"), c.req.param("id"));
+    if (!deleted) return c.json({ error: "not found" }, 404);
+    return c.json({ deleted: true });
+  })
+
   .get("/v1/sessions/:fingerprint", async (c) => {
     const session = await sessionResponse(c.env, c.get("userId"), c.req.param("fingerprint"));
     if (session === null) return c.json({ error: "not found" }, 404);
@@ -719,3 +766,6 @@ export type { ProjectInput } from "./lib/climbs";
 export type { LogClimbInput, LogSessionInput } from "./lib/manual";
 
 export { app };
+
+export type { Circuit, CircuitColour, Gym, GymInput } from "./lib/gyms";
+export { CIRCUIT_COLOURS, circuitMiddle, circuitRangeLabel } from "./lib/gyms";

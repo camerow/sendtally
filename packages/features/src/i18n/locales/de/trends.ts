@@ -58,4 +58,9 @@ export const trends = {
   "trends.tagRowTitle_one": "{label} · {count} Session",
   "trends.tagRowTitle_other": "{label} · {count} Sessions",
   "trends.range7d": "Letzte 7 Tage",
+  "trends.byCircuit": "Nach Zirkel",
+  "trends.place": "Ort",
+  "trends.everywhere": "Überall",
+  "trends.placeBody": "In einer Halle ist die Aufschlüsselung nach Zirkel.",
+  "trends.byCircuitTitled": "Nach Zirkel · {title}",
 } as const;

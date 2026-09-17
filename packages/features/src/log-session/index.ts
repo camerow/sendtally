@@ -24,11 +24,13 @@ export {
   withClimbScale,
   withStartTime,
   withTag,
+  withTries,
   withoutTag,
 } from "./transforms";
 export {
   WRAP_UP_REMINDER_MINUTES,
   defaultSessionName,
+  elapsedLabel,
   idleMinutes,
   liveDraft,
   wantsWrapUpReminder,

@@ -10,7 +10,9 @@ import { Icon } from "../../components/Icon";
 import { ScreenHeader } from "../../components/ScreenHeader";
 import { pressRow } from "../../lib/press";
 import { BuildInfo } from "./BuildInfo";
+import type { Gym } from "@sendtally/features/gyms";
 import { GradeSection } from "./GradeSection";
+import { GymsSection } from "./GymsSection";
 import { MembershipSection, type MembershipSectionProps } from "./MembershipSection";
 import { StravaPostingSection } from "./StravaPostingSection";
 import { bodyText, messageText, sectionCard, sectionLabel } from "../../lib/styles";
@@ -20,6 +22,7 @@ export type SettingsViewProps = {
   vm: SettingsVM;
   email: string;
   gradePrefs: GradePrefs;
+  gyms: Gym[];
   billing: MembershipSectionProps | null;
   posting: StravaPostingFeature;
   connect: StravaConnectFeature;
@@ -53,6 +56,7 @@ export function SettingsView({
   vm,
   email,
   gradePrefs,
+  gyms,
   billing,
   posting,
   connect,
@@ -71,6 +75,7 @@ export function SettingsView({
         }}
       >
         <GradeSection prefs={gradePrefs} onChange={onChangeGradePref} />
+        <GymsSection gyms={gyms} />
 
         <View style={sectionCard}>
           <View

@@ -31,6 +31,16 @@ import { sessionDraftStorage } from "../../lib/sessionDraftStorage";
 import { confirmDiscardDraft } from "../../lib/confirmDiscardDraft";
 import { DraftBanner } from "./DraftBanner";
 import { TagPicker } from "../sessions/TagPicker";
+import {
+  circuitGym,
+  gymOfDraft,
+  useGyms,
+  withCircuit,
+  withoutCircuit,
+  type Gym,
+} from "@sendtally/features/gyms";
+import { OptionRow } from "../../components/OptionRow";
+import { SelectRow } from "../../components/SelectRow";
 import { ClimbEditorSheet } from "./ClimbEditorSheet";
 import { ClimbLedgerRow } from "./ClimbLedgerRow";
 import { DateTimeField } from "./DateTimeField";
@@ -111,7 +121,7 @@ export function LogSessionForm({
   editing?: { fingerprint: string; draft: LogSessionDraft };
 }): React.ReactElement {
   const api = useApi();
-  const { resume } = useLocalSearchParams<{ resume?: string }>();
+  const { resume, wrapUp } = useLocalSearchParams<{ resume?: string; wrapUp?: string }>();
   const { scales: gradePrefs, ready: prefsReady } = useGradeScalePrefs(api);
   // Opened by tapping the draft itself: start on it rather than offering it back.
   const [picked] = React.useState(() => (resume === "1" ? storedDraft(sessionDraftStorage) : null));
@@ -123,6 +133,22 @@ export function LogSessionForm({
 
   const { suggestionsFor } = useTagVocabulary(api);
   const vocabulary = useClimbVocabulary(api);
+  const gyms = useGyms(api);
+  const gym = draft.location === "indoor" ? circuitGym(gymOfDraft(gyms.gyms, draft.gymId)) : null;
+  // Changing the gym re-places every climb: onto the new gym's first circuit, or off circuits.
+  const setGym = (next: Gym | null): void => {
+    const at = circuitGym(next);
+    const first = at?.circuits[0];
+    setDraft({
+      ...draft,
+      ...(next === null ? { gymId: undefined } : { gymId: next.id }),
+      climbs: draft.climbs.map((c) =>
+        at === null || first === undefined
+          ? withoutCircuit(c)
+          : withCircuit(c, at.circuits.find((x) => x.id === c.circuit?.id) ?? first, at)
+      ),
+    });
+  };
   const [editingKey, setEditingKey] = React.useState<string | null>(null);
   const editingIndex = draft.climbs.findIndex((c) => c.key === editingKey);
   const editingClimb = editingIndex < 0 ? null : draft.climbs[editingIndex]!;
@@ -266,9 +292,11 @@ export function LogSessionForm({
           >
             {editing !== undefined
               ? t("logSession.editTitle")
-              : picked !== null
-                ? t("logSession.wrapUpTitle")
-                : t("common.logASession")}
+              : picked === null
+                ? t("common.logASession")
+                : wrapUp === "1"
+                  ? t("logSession.wrapUpTitle")
+                  : draft.name.trim() || t("sessions.unfinishedSession")}
           </Text>
           {(editing !== undefined || picked !== null) && (
             <Text
@@ -354,6 +382,35 @@ export function LogSessionForm({
             />
           </View>
         </View>
+
+        {draft.location === "indoor" && (!gyms.ready || gyms.gyms.length > 0) && (
+          <View style={{ gap: 7 }}>
+            <LabelText>{t("gyms.gym")}</LabelText>
+            <SelectRow
+              label={t("gyms.gym")}
+              value={
+                gyms.ready
+                  ? (gymOfDraft(gyms.gyms, draft.gymId)?.name ?? t("gyms.noGym"))
+                  : t("common.loading")
+              }
+            >
+              {(close) =>
+                [null, ...gyms.gyms].map((g) => (
+                  <OptionRow
+                    key={g === null ? "-" : g.id}
+                    label={g === null ? t("gyms.noGym") : g.name}
+                    mono={false}
+                    selected={(g?.id ?? undefined) === draft.gymId}
+                    onPress={() => {
+                      setGym(g);
+                      close();
+                    }}
+                  />
+                ))
+              }
+            </SelectRow>
+          </View>
+        )}
 
         <View style={{ gap: 7 }}>
           <LabelText>{t("logSession.tagsOptional")}</LabelText>
@@ -515,6 +572,7 @@ export function LogSessionForm({
         index={editingIndex}
         count={draft.climbs.length}
         prefs={gradePrefs}
+        gym={gym}
         project={editingClimb === null ? false : isProject(editingClimb)}
         known={
           editingClimb === null ? null : (findClimb(vocabulary.climbs, editingClimb.name) ?? null)
@@ -592,7 +650,7 @@ export function LogSessionForm({
             <Text
               style={{ fontFamily: fonts.sansSemiBold, fontSize: 15, color: colors.textSecondary }}
             >
-              {t("common.cancel")}
+              {t("common.discard")}
             </Text>
           </Pressable>
           <Pressable

@@ -1,4 +1,5 @@
 import { disciplineOf, type ClimbStyle, type Discipline, type GradeScale } from "@sendtally/core";
+import type { CircuitRef } from "@sendtally/api-client";
 import { t } from "../i18n";
 
 export type { ClimbStyle, Discipline, GradeScale };
@@ -36,6 +37,8 @@ export type ClimbDraft = {
   tries: number;
   note: string;
   project?: boolean;
+  circuit?: CircuitRef;
+  wall?: string;
 };
 
 /**
@@ -67,6 +70,7 @@ export type LogSessionDraft = {
   startTime: string;
   endTime: string;
   location: "indoor" | "outdoor";
+  gymId?: string;
   tags: string[];
   notes: string;
   rpe: number | null;
