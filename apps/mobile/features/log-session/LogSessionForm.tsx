@@ -10,8 +10,9 @@ import {
   disciplineOf,
   emptyDraft,
   storedDraft,
-  newClimb,
+  newClimbOfKind,
   nextClimbKey,
+  readClimbKind,
   toLogSessionInput,
   useDraftAutosave,
   withClimbName,
@@ -29,6 +30,7 @@ import { formatDate, t } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { useApi } from "../../lib/api";
 import { queries } from "@sendtally/features/query";
+import { climbKindStorage } from "../../lib/climbKindStorage";
 import { sessionDraftStorage } from "../../lib/sessionDraftStorage";
 import { confirmDiscardDraft } from "../../lib/confirmDiscardDraft";
 import { DraftBanner } from "./DraftBanner";
@@ -214,7 +216,10 @@ export function LogSessionForm({
     const previous = draft.climbs[draft.climbs.length - 1];
     setDraft({
       ...draft,
-      climbs: [...draft.climbs, newClimb(key, previous?.scale ?? gradePrefs.boulder)],
+      climbs: [
+        ...draft.climbs,
+        newClimbOfKind(key, readClimbKind(climbKindStorage), gradePrefs, gym, previous),
+      ],
     });
     setEditingKey(key);
   }

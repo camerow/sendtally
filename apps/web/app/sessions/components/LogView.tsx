@@ -13,9 +13,10 @@ import {
 } from "@sendtally/features/journal";
 import { useClimbVocabulary } from "@sendtally/features/climbs";
 import { circuitGym, gymOfDraft, useGyms } from "@sendtally/features/gyms";
-import { useLiveSession, withTries } from "@sendtally/features/log-session";
+import { readClimbKind, useLiveSession, withTries } from "@sendtally/features/log-session";
 import { useGradeScalePrefs } from "@sendtally/features/settings";
 import { useClientApi } from "../../lib/useClientApi";
+import { climbKindStorage } from "../../lib/climbKindStorage";
 import { sessionDraftStorage } from "../../lib/sessionDraftStorage";
 import {
   filterSessionsByTags,
@@ -75,7 +76,8 @@ export function LogView({
   const liveGym = circuitGym(
     gymOfDraft(gyms.gyms, live.stored?.draft.gymId) ?? gyms.gyms[0] ?? null
   );
-  const logClimb = (): void => setEditingClimb(live.addClimb(scales, liveGym));
+  const logClimb = (): void =>
+    setEditingClimb(live.addClimb(scales, liveGym, readClimbKind(climbKindStorage)));
   const stravaConnected = status.strava?.status === "active";
   const stravaLapsed = status.strava !== null && !stravaConnected;
   const gymPrompt = useDismissed("gym");

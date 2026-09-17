@@ -26,7 +26,8 @@ import { queries, useQueryPair } from "@sendtally/features/query";
 import { colors, fonts } from "@sendtally/design/tokens";
 import { ScreenHeader } from "../../components/ScreenHeader";
 import { useClimbVocabulary } from "@sendtally/features/climbs";
-import { useLiveSession, withTries } from "@sendtally/features/log-session";
+import { readClimbKind, useLiveSession, withTries } from "@sendtally/features/log-session";
+import { climbKindStorage } from "../../lib/climbKindStorage";
 import { sessionDraftStorage } from "../../lib/sessionDraftStorage";
 import { useGradeScalePrefs } from "@sendtally/features/settings";
 import { EntryRow, entryRowHeight } from "../../features/journal/EntryRow";
@@ -330,7 +331,11 @@ export default function Log(): React.ReactElement {
           )
         }
       />
-      <LogFab onLogClimb={() => setEditingClimb(live.addClimb(scales, liveGym))} />
+      <LogFab
+        onLogClimb={() =>
+          setEditingClimb(live.addClimb(scales, liveGym, readClimbKind(climbKindStorage)))
+        }
+      />
       <LiveClimbEditor
         live={live}
         vocabulary={vocabulary}

@@ -3,18 +3,11 @@ import React from "react";
 import { Pressable, Text, View } from "react-native";
 import type { ClimbSummary } from "@sendtally/api-client";
 import { climbDraftGrade, projectMetaLabel } from "@sendtally/features/climbs";
-import {
-  circuitGrades,
-  circuitLabel,
-  circuitRangeLabel,
-  findCircuit,
-  withCircuit,
-  type Gym,
-} from "@sendtally/features/gyms";
+import { circuitGrades, findCircuit, type Gym } from "@sendtally/features/gyms";
 import {
   disciplineLabel,
   disciplineOf,
-  withClimbDiscipline,
+  withClimbGrading,
   withTries,
   type ClimbDraft,
   type Discipline,
@@ -22,9 +15,9 @@ import {
 } from "@sendtally/features/log-session";
 import { t } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
-import { CircuitDot } from "../../components/CircuitDot";
 import { Icon } from "../../components/Icon";
 import { Sheet } from "../../components/Sheet";
+import { ClimbKindPicker } from "./ClimbKindPicker";
 import { GradePicker } from "./GradePicker";
 import { ResultPicker } from "./ResultPicker";
 import { press, pressRow } from "../../lib/press";
@@ -244,13 +237,11 @@ function ProjectRow({
 function ChoiceChip({
   label,
   active,
-  leading,
   mono = false,
   onPress,
 }: {
   label: string;
   active: boolean;
-  leading?: React.ReactNode;
   mono?: boolean;
   onPress: () => void;
 }): React.ReactElement {
@@ -272,7 +263,6 @@ function ChoiceChip({
         backgroundColor: active ? colors.gold : "transparent",
       })}
     >
-      {leading}
       <Text
         style={{
           fontFamily: mono ? fonts.monoSemiBold : fonts.sansSemiBold,
@@ -287,8 +277,8 @@ function ChoiceChip({
 }
 
 /**
- * Circuit, wall and how it felt, in place of the grade, as chip rows: a sheet inside this
- * sheet would dismiss it. The felt-like row is only the grades the circuit spans, with the
+ * Wall and how it felt, in place of the grade, as chip rows; the circuit itself is picked in
+ * ClimbKindPicker. The felt-like row is only the grades the circuit spans, with the
  * middle already chosen; nobody is asked to estimate.
  */
 function CircuitFields({
@@ -304,25 +294,6 @@ function CircuitFields({
   const wall = climb.wall ?? "";
   return (
     <View style={{ gap: 12 }}>
-      <View style={{ gap: 7 }}>
-        <Text style={label}>{t("gyms.circuit")}</Text>
-        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 7 }}>
-          {gym.circuits.map((circuit) => (
-            <ChoiceChip
-              key={circuit.id}
-              label={circuitLabel(circuit)}
-              active={circuit.id === current?.id}
-              leading={<CircuitDot colour={circuit.colour} size={12} />}
-              onPress={() => onChange(withCircuit(climb, circuit, gym))}
-            />
-          ))}
-        </View>
-        {current !== null && (
-          <Text style={{ ...label, color: colors.textMuted }}>
-            {circuitRangeLabel(current, gym.scale)}
-          </Text>
-        )}
-      </View>
       {gym.walls.length > 0 && (
         <View style={{ gap: 7 }}>
           <Text style={label}>{t("gyms.wall")}</Text>
@@ -427,13 +398,28 @@ export function ClimbEditorSheet({
                 <Text style={label}>{t("common.grade")}</Text>
                 <DisciplineToggle
                   value={disciplineOf(climb.scale)}
-                  onChange={(discipline) => onChange(withClimbDiscipline(climb, discipline, prefs))}
+                  onChange={(discipline) =>
+                    onChange(withClimbGrading(climb, discipline, prefs, gym))
+                  }
                 />
               </View>
               <GradePicker climb={climb} onChange={onChange} />
             </View>
           ) : (
-            <CircuitFields climb={climb} gym={gym} onChange={onChange} />
+            <>
+              <View style={{ gap: 7 }}>
+                <Text style={label}>{t("logSession.climbKind")}</Text>
+                <ClimbKindPicker climb={climb} gym={gym} prefs={prefs} onChange={onChange} />
+              </View>
+              {climb.circuit === undefined ? (
+                <View style={{ gap: 7 }}>
+                  <Text style={label}>{t("common.grade")}</Text>
+                  <GradePicker climb={climb} onChange={onChange} />
+                </View>
+              ) : (
+                <CircuitFields climb={climb} gym={gym} onChange={onChange} />
+              )}
+            </>
           )}
 
           <View style={{ gap: 7 }}>
@@ -444,7 +430,7 @@ export function ClimbEditorSheet({
               autoComplete="off"
               value={climb.name}
               placeholder={
-                gym === null
+                gym === null || climb.circuit === undefined
                   ? t("logSession.climbNamePlaceholder")
                   : t("logSession.circuitClimbNamePlaceholder")
               }

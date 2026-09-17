@@ -42,6 +42,7 @@ export const logSession = {
   "logSession.closeEditor": "Cerrar el editor",
   "logSession.climbOf": "Escalada {n} de {total}",
   "logSession.nameOptional": "Nombre · opcional",
+  "logSession.climbKind": "Tipo",
   "logSession.climbNamePlaceholder": "Nombre (opcional)",
   "logSession.circuitClimbNamePlaceholder":
     "p. ej. inicio en romos, búlder de potencia, placa presas rojas",

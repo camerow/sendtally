@@ -42,6 +42,7 @@ export const logSession = {
   "logSession.closeEditor": "Editor schließen",
   "logSession.climbOf": "Kletterei {n} von {total}",
   "logSession.nameOptional": "Name · optional",
+  "logSession.climbKind": "Art",
   "logSession.climbNamePlaceholder": "Name (optional)",
   "logSession.circuitClimbNamePlaceholder":
     "z. B. Sloper-Start, Kraftboulder, Platte mit roten Griffen",

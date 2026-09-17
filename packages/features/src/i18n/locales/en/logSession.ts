@@ -42,6 +42,7 @@ export const logSession = {
   "logSession.closeEditor": "Close climb editor",
   "logSession.climbOf": "Climb {n} of {total}",
   "logSession.nameOptional": "Name · optional",
+  "logSession.climbKind": "Type",
   "logSession.climbNamePlaceholder": "Name (optional)",
   "logSession.circuitClimbNamePlaceholder": "e.g. sloper start, power boulder, red hold slab climb",
   "logSession.candidateProject": "{name}, project",

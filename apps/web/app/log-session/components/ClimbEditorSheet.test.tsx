@@ -2,7 +2,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import React from "react";
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { newClimb, type ClimbDraft } from "@sendtally/features/log-session";
+import type { Gym } from "@sendtally/features/gyms";
+import {
+  DEFAULT_GRADE_PREFS,
+  newClimb,
+  withClimbGrading,
+  type ClimbDraft,
+} from "@sendtally/features/log-session";
 import { ClimbEditorSheet } from "./ClimbEditorSheet";
 
 declare global {
@@ -24,19 +30,22 @@ let root: Root;
 function mount(
   onClose: () => void,
   onChange: (climb: ClimbDraft) => void = () => {},
-  name = ""
+  name = "",
+  gym: Gym | null = null,
+  climb: ClimbDraft = newClimb("climb-1", "v")
 ): HTMLDialogElement {
   act(() =>
     root.render(
       <ClimbEditorSheet
-        climb={{ ...newClimb("climb-1", "v"), name }}
+        climb={{ ...climb, name }}
         index={0}
         count={2}
-        scale="v"
+        scale={climb.scale}
+        gym={gym}
+        prefs={DEFAULT_GRADE_PREFS}
         project={false}
         suggestions={[]}
         onChange={onChange}
-        onChangeDiscipline={() => {}}
         onChangeName={() => {}}
         onPick={() => {}}
         onToggleProject={() => {}}
@@ -119,6 +128,47 @@ describe("ClimbEditorSheet", () => {
       select.dispatchEvent(new Event("change", { bubbles: true }));
     });
     expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ kind: "attempt" }));
+  });
+
+  describe("at a gym with circuits", () => {
+    const gym: Gym = {
+      id: "g",
+      name: "Barn",
+      scale: "v",
+      walls: [],
+      circuits: [{ id: "p", colour: "purple", label: "", low: 3, high: 5 }],
+    };
+
+    it("grades a climb off the circuits and offers them in the type dropdown", () => {
+      const onChange = vi.fn();
+      const dialog = mount(() => {}, onChange, "", gym);
+      const [kind, grade] = dialog.getElementsByTagName("select");
+      expect([...kind!.options].map((o) => o.value)).toEqual(["boulder", "route", "p"]);
+      expect(kind!.value).toBe("boulder");
+      expect(grade!.value).toBe("V3");
+      act(() => {
+        kind!.value = "p";
+        kind!.dispatchEvent(new Event("change", { bubbles: true }));
+      });
+      expect(onChange).toHaveBeenCalledWith(
+        expect.objectContaining({ grade: "V4", circuit: expect.objectContaining({ id: "p" }) })
+      );
+      expect(localStorage.getItem("sendtally:climb-kind")).toBe("circuit");
+    });
+
+    it("switches a circuit climb back to a boulder grade", () => {
+      const onChange = vi.fn();
+      const onPurple = withClimbGrading(newClimb("climb-1", "v"), "p", DEFAULT_GRADE_PREFS, gym);
+      const dialog = mount(() => {}, onChange, "", gym, onPurple);
+      const kind = dialog.getElementsByTagName("select")[0]!;
+      expect(kind.value).toBe("p");
+      act(() => {
+        kind.value = "boulder";
+        kind.dispatchEvent(new Event("change", { bubbles: true }));
+      });
+      expect(onChange.mock.calls[0]![0]).not.toHaveProperty("circuit");
+      expect(localStorage.getItem("sendtally:climb-kind")).toBe("boulder");
+    });
   });
 
   it("closes on Escape", () => {

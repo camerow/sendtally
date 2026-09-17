@@ -17,17 +17,16 @@ import {
   disciplineOf,
   emptyDraft,
   storedDraft,
-  newClimb,
+  newClimbOfKind,
   nextClimbKey,
+  readClimbKind,
   toLogSessionInput,
   useDraftAutosave,
-  withClimbDiscipline,
   withClimbScale,
   withStartTime,
   withTag,
   withoutTag,
   type ClimbDraft,
-  type Discipline,
   type LogSessionDraft,
 } from "@sendtally/features/log-session";
 import { SESSION_NOTE_MAX, useTagVocabulary } from "@sendtally/features/sessions";
@@ -37,6 +36,7 @@ import { formatDate, t } from "@sendtally/features/i18n";
 import { DiscardDraftDialog } from "../../components/DiscardDraftDialog";
 import { TagPicker } from "../../components/TagPicker";
 import { useIsNarrow } from "../../lib/useIsNarrow";
+import { climbKindStorage } from "../../lib/climbKindStorage";
 import { sessionDraftStorage } from "../../lib/sessionDraftStorage";
 import { DraftBanner } from "./DraftBanner";
 import { ClimbCard } from "./ClimbCard";
@@ -224,15 +224,6 @@ export function LogSessionForm({
     }));
   }
 
-  function setDiscipline(key: string, discipline: Discipline): void {
-    setDraft((d) => ({
-      ...d,
-      climbs: d.climbs.map((c) =>
-        c.key === key ? withClimbDiscipline(c, discipline, prefs.scales) : c
-      ),
-    }));
-  }
-
   function updateClimb(key: string, climb: ClimbDraft): void {
     setDraft((d) => ({ ...d, climbs: d.climbs.map((c) => (c.key === key ? climb : c)) }));
   }
@@ -285,7 +276,16 @@ export function LogSessionForm({
     const key = nextClimbKey(draft.climbs);
     setDraft({
       ...draft,
-      climbs: [...draft.climbs, newClimb(key, draft.climbs[draft.climbs.length - 1]?.scale ?? "v")],
+      climbs: [
+        ...draft.climbs,
+        newClimbOfKind(
+          key,
+          readClimbKind(climbKindStorage),
+          prefs.scales,
+          gym,
+          draft.climbs[draft.climbs.length - 1]
+        ),
+      ],
     });
     if (narrow) setEditingKey(key);
   }
@@ -493,7 +493,7 @@ export function LogSessionForm({
                   climb={climb}
                   scale={climb.scale}
                   gym={gym}
-                  onChangeDiscipline={(discipline) => setDiscipline(climb.key, discipline)}
+                  prefs={prefs.scales}
                   removable={draft.climbs.length > 1}
                   project={isProject(climb)}
                   suggestions={vocabulary.suggestionsFor(climb.name)}
@@ -552,7 +552,7 @@ export function LogSessionForm({
           count={draft.climbs.length}
           scale={editingClimb.scale}
           gym={gym}
-          onChangeDiscipline={(discipline) => setDiscipline(editingClimb.key, discipline)}
+          prefs={prefs.scales}
           project={isProject(editingClimb)}
           suggestions={vocabulary.suggestionsFor(editingClimb.name)}
           onChange={(c) => updateClimb(editingClimb.key, c)}

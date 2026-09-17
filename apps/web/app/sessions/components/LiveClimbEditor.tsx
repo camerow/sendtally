@@ -2,7 +2,6 @@ import React from "react";
 import { findClimb, type ClimbVocabulary } from "@sendtally/features/climbs";
 import type { Gym } from "@sendtally/features/gyms";
 import {
-  withClimbDiscipline,
   withClimbName,
   withPickedClimb,
   type ClimbDraft,
@@ -43,11 +42,11 @@ export function LiveClimbEditor({
       count={climbs.length}
       scale={climb.scale}
       gym={gym}
+      prefs={scales}
       removable
       project={isProject(climb)}
       suggestions={vocabulary.suggestionsFor(climb.name)}
       onChange={(c) => update(() => c)}
-      onChangeDiscipline={(discipline) => update((c) => withClimbDiscipline(c, discipline, scales))}
       onChangeName={(name) =>
         update((c) => withClimbName(c, name, findClimb(vocabulary.climbs, name)))
       }

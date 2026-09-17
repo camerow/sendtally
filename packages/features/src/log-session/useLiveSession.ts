@@ -1,13 +1,14 @@
 import React from "react";
 import { storedDraft, writeStoredDraft, type DraftStorage } from "./draftStore";
 import type { Gym } from "../gyms/types";
+import type { ClimbKind } from "./climbKind";
 import { withClimbTouched, withQuickClimb } from "./liveSession";
 import type { ClimbDraft, GradePrefs, LogSessionDraft } from "./types";
 import { useStoredDraft, type StoredDraftEntry } from "./useDraftAutosave";
 
 export type LiveSession = StoredDraftEntry & {
   /** Appends a climb, starting the session at it when there is none, and returns its key. */
-  addClimb: (prefs: GradePrefs, gym?: Gym | null) => string;
+  addClimb: (prefs: GradePrefs, gym: Gym | null, kind: ClimbKind) => string;
   updateClimb: (key: string, patch: (climb: ClimbDraft) => ClimbDraft) => void;
   /** Removing the last climb removes the session with it. */
   removeClimb: (key: string) => void;
@@ -24,8 +25,8 @@ export function useLiveSession(storage: DraftStorage): LiveSession {
   );
 
   const addClimb = React.useCallback(
-    (prefs: GradePrefs, gym: Gym | null = null): string => {
-      const next = withQuickClimb(storedDraft(storage), new Date(), prefs, gym);
+    (prefs: GradePrefs, gym: Gym | null, kind: ClimbKind): string => {
+      const next = withQuickClimb(storedDraft(storage), new Date(), prefs, gym, kind);
       write(next.draft);
       return next.key;
     },

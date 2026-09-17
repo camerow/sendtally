@@ -5,15 +5,17 @@ import {
   climbOutcome,
   disciplineOf,
   gradeOptions,
+  withClimbGrading,
   withClimbOutcome,
   withTries,
   type ClimbDraft,
-  type Discipline,
+  type GradePrefs,
   type GradeScale,
 } from "@sendtally/features/log-session";
 import { t } from "@sendtally/features/i18n";
 import { Icon } from "../../components/Icon";
 import { CircuitFields } from "../../gyms/components/CircuitFields";
+import { ClimbKindSelect } from "./ClimbKindSelect";
 import { ClimbNameField } from "./ClimbNameField";
 import { ClimbNoteField } from "./ClimbNoteField";
 import { DisciplineToggle } from "./DisciplineToggle";
@@ -68,14 +70,14 @@ export type ClimbEditorSheetProps = {
   index: number;
   count: number;
   scale: GradeScale;
-  /** With a gym that has circuits, the climb is placed on a circuit instead of graded. */
+  /** With a gym that has circuits, a climb can be placed on one of them instead of graded. */
   gym?: Gym | null;
+  prefs: GradePrefs;
   project: boolean;
   /** Defaults to "not the last climb"; a live session lets the last one go too. */
   removable?: boolean;
   suggestions: ClimbSummary[];
   onChange: (climb: ClimbDraft) => void;
-  onChangeDiscipline: (discipline: Discipline) => void;
   onChangeName: (name: string) => void;
   onPick: (climb: ClimbSummary) => void;
   onToggleProject: () => void;
@@ -89,11 +91,11 @@ export function ClimbEditorSheet({
   count,
   scale,
   gym = null,
+  prefs,
   project,
   removable = count > 1,
   suggestions,
   onChange,
-  onChangeDiscipline,
   onChangeName,
   onPick,
   onToggleProject,
@@ -101,6 +103,7 @@ export function ClimbEditorSheet({
   onClose,
 }: ClimbEditorSheetProps): React.ReactElement {
   const named = climb.name.trim() !== "";
+  const onCircuit = gym !== null && climb.circuit !== undefined;
   const dialog = React.useRef<HTMLDialogElement>(null);
   const panel = React.useRef<HTMLDivElement>(null);
   const pressedBackdrop = React.useRef(false);
@@ -146,7 +149,23 @@ export function ClimbEditorSheet({
             )}
           </div>
         </div>
-        {gym === null ? (
+        {gym !== null && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
+            <label htmlFor="climb-kind" style={monoLabel}>
+              {t("logSession.climbKind")}
+            </label>
+            <ClimbKindSelect
+              id="climb-kind"
+              climb={climb}
+              gym={gym}
+              prefs={prefs}
+              onChange={onChange}
+            />
+          </div>
+        )}
+        {onCircuit ? (
+          <CircuitFields climb={climb} gym={gym} onChange={onChange} />
+        ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
             <label htmlFor="climb-grade" style={monoLabel}>
               {t("common.grade")}
@@ -171,8 +190,6 @@ export function ClimbEditorSheet({
               ))}
             </select>
           </div>
-        ) : (
-          <CircuitFields climb={climb} gym={gym} onChange={onChange} />
         )}
         <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
           <span style={monoLabel}>
@@ -185,7 +202,7 @@ export function ClimbEditorSheet({
             suggestions={suggestions}
             inline
             placeholder={
-              gym === null
+              !onCircuit
                 ? t("logSession.climbNamePlaceholder")
                 : t("logSession.circuitClimbNamePlaceholder")
             }
@@ -194,7 +211,10 @@ export function ClimbEditorSheet({
           />
         </div>
         {gym === null && (
-          <DisciplineToggle value={disciplineOf(climb.scale)} onChange={onChangeDiscipline} />
+          <DisciplineToggle
+            value={disciplineOf(climb.scale)}
+            onChange={(d) => onChange(withClimbGrading(climb, d, prefs, gym))}
+          />
         )}
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <OutcomeSelect
