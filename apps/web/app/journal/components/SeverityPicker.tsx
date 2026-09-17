@@ -1,5 +1,6 @@
 import React from "react";
 import { t } from "@sendtally/features/i18n";
+import { severityColor, severityNoneTint } from "@sendtally/design/tokens";
 
 const label: React.CSSProperties = {
   fontFamily: "var(--font-mono)",
@@ -11,9 +12,15 @@ const label: React.CSSProperties = {
 };
 
 /**
- * The RPE picker's strip, one control lower and in watermelon, so two stacked
- * strips never read as one question. Both carry a label and a number.
+ * The effort picker's strip, one control lower, so two stacked strips never
+ * read as one question. Both carry a label and a number.
  */
+function barColor(severity: number | null, value: number): string {
+  if (value === 0) return severity === 0 ? severityColor(0) : severityNoneTint;
+  if (severity !== null && value <= severity) return severityColor(severity);
+  return "var(--data-bar-empty)";
+}
+
 export function SeverityPicker({
   severity,
   onChange,
@@ -30,7 +37,7 @@ export function SeverityPicker({
             fontFamily: "var(--font-mono)",
             fontWeight: 600,
             fontSize: 17,
-            color: "var(--bs-watermelon-ink)",
+            color: "var(--bs-gunmetal)",
           }}
         >
           {severity === null ? (
@@ -47,8 +54,6 @@ export function SeverityPicker({
       </div>
       <div style={{ display: "flex", gap: 3 }}>
         {Array.from({ length: 11 }, (_, value) => {
-          const lit = severity !== null && value <= severity && value > 0;
-          const zeroPicked = severity === 0 && value === 0;
           return (
             <button
               key={value}
@@ -62,8 +67,7 @@ export function SeverityPicker({
                 borderRadius: 4,
                 border: "none",
                 cursor: "pointer",
-                background:
-                  lit || zeroPicked ? "var(--bs-watermelon-ink)" : "var(--data-bar-empty)",
+                background: barColor(severity, value),
               }}
             />
           );

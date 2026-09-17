@@ -68,3 +68,12 @@ export function effortColor(rpe: number): string {
   const level = Math.min(10, Math.max(1, Math.round(rpe)));
   return effortScale[level - 1] ?? effortScale[0];
 }
+
+/** Nothing-hurts green, the zero end of the severity strip. */
+export const severityNone = "#29AE70";
+export const severityNoneTint = "rgba(41,174,112,0.18)";
+
+/** Severity runs 0-10: green for no pain, then the effort colours. */
+export function severityColor(level: number): string {
+  return level <= 0 ? severityNone : effortColor(level);
+}
