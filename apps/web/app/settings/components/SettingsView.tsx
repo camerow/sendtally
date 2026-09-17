@@ -31,6 +31,7 @@ export type SettingsViewProps = {
   posting: StravaPostingFeature;
   scales: GradeScalesFeature;
   gyms: Gym[];
+  gymsReady: boolean;
 };
 
 export function SettingsView({
@@ -40,6 +41,7 @@ export function SettingsView({
   posting,
   scales,
   gyms,
+  gymsReady,
 }: SettingsViewProps): React.ReactElement {
   return (
     <div style={{ maxWidth: 640, display: "flex", flexDirection: "column", gap: 14 }}>
@@ -51,7 +53,7 @@ export function SettingsView({
       </Section>
 
       <Section>
-        <GymsSection gyms={gyms} />
+        <GymsSection gyms={gyms} ready={gymsReady} />
       </Section>
 
       <Section>

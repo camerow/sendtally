@@ -37,6 +37,7 @@ export default function SettingsRoute(): React.ReactElement {
       posting={posting}
       scales={scales}
       gyms={gyms.gyms}
+      gymsReady={gyms.ready}
     />
   );
 }

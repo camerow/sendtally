@@ -12,11 +12,11 @@ import {
   sectionLabel,
 } from "../../settings/components/styles";
 
-export function GymsSection({ gyms }: { gyms: Gym[] }): React.ReactElement {
+export function GymsSection({ gyms, ready }: { gyms: Gym[]; ready: boolean }): React.ReactElement {
   return (
     <>
       <span style={sectionLabel}>{t("gyms.title")}</span>
-      {gyms.length === 0 ? (
+      {!ready ? null : gyms.length === 0 ? (
         <p style={bodyText}>{t("gyms.none")}</p>
       ) : (
         <div style={{ display: "flex", flexDirection: "column" }}>
