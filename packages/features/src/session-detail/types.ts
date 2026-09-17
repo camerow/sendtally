@@ -1,3 +1,4 @@
+import type { Endurance } from "@sendtally/core";
 import type { CircuitColour } from "@sendtally/api-client";
 import { t } from "../i18n";
 
@@ -19,6 +20,8 @@ export type ClimbVM = {
   resultLabel: string;
   /** What the climber wrote about this climb that session. Named climbs only. */
   note: string | null;
+  /** Present on a circuit of laps, which reads as per-lap bars rather than a result badge. */
+  endurance?: Endurance;
 };
 
 export type StatVM = { label: string; value: string; accent: boolean };

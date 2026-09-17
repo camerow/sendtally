@@ -129,6 +129,15 @@ export function enduranceProgressLabel(e: Endurance): string {
   });
 }
 
+/** A lap chip and a lap bar are narrow: a clean lap reads as the amount, a partial as a bare pair. */
+export function enduranceLapValueLabel(e: Endurance, index: number): string {
+  const lap = e.laps[index] ?? 0;
+  if (lap === e.target) return doneLabel(e, lap);
+  const bare = (value: number): string =>
+    formatNumber(enduranceDisplayValue(e, value), { maximumFractionDigits: 1 });
+  return `${bare(lap)}/${bare(e.target)}`;
+}
+
 export function enduranceLapLabel(e: Endurance, index: number): string {
   return t("endurance.lapShort", {
     done: doneLabel(e, e.laps[index] ?? 0),

@@ -27,6 +27,7 @@ import { colors, fonts } from "@sendtally/design/tokens";
 import { ScreenHeader } from "../../components/ScreenHeader";
 import { useClimbVocabulary } from "@sendtally/features/climbs";
 import {
+  addLap,
   circuitGyms,
   readClimbKind,
   useLiveSession,
@@ -288,6 +289,7 @@ export default function Log(): React.ReactElement {
                 gym={liveGym}
                 onEditClimb={setEditingClimb}
                 onChangeTries={(key, tries) => live.updateClimb(key, (c) => withTries(c, tries))}
+                onAddLap={(key) => live.updateClimb(key, addLap)}
               />
             )}
           </>

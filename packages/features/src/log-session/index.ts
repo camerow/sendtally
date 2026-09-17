@@ -48,6 +48,7 @@ export {
   FELL_AFTER_START,
   enduranceLapCountLabel,
   enduranceLapLabel,
+  enduranceLapValueLabel,
   enduranceOf,
   enduranceProgressLabel,
   enduranceStep,

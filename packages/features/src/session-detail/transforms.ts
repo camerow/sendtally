@@ -103,6 +103,7 @@ export function climbVMs(
       result,
       resultLabel: resultLabelOf(c, result),
       note: c.note,
+      ...(c.endurance === undefined ? {} : { endurance: c.endurance }),
     };
   });
 }

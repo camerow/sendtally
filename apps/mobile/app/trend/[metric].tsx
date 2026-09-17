@@ -2,7 +2,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import React from "react";
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useTrends, type TrendMetric } from "@sendtally/features/trends";
+import { TREND_METRICS, useTrends, type TrendMetric } from "@sendtally/features/trends";
 import { t } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { TrendBars } from "../../features/trends/TrendBars";
@@ -12,8 +12,6 @@ import { useApi } from "../../lib/api";
 import { Paywall } from "../../features/billing/Paywall";
 import { useCanSeeInsights } from "../../features/billing/useBilling";
 import { press } from "../../lib/press";
-
-const METRICS: TrendMetric[] = ["volume", "pyramid", "hardest", "flash", "avggrade"];
 
 export default function TrendDetailScreen(): React.ReactElement | null {
   const canSeeInsights = useCanSeeInsights();
@@ -52,7 +50,7 @@ function TrendDetail(): React.ReactElement {
   const api = useApi();
   const feature = useTrends(api);
   const { state } = feature;
-  const metric = METRICS.includes(metricParam as TrendMetric)
+  const metric = TREND_METRICS.includes(metricParam as TrendMetric)
     ? (metricParam as TrendMetric)
     : "volume";
 

@@ -9,10 +9,13 @@ import {
   type ClimbFilter,
   type ClimbVM,
 } from "@sendtally/features/session-detail";
+import { enduranceLapCountLabel, enduranceProgressLabel } from "@sendtally/features/log-session";
 import { t } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { Chip } from "../../components/Chip";
 import { CircuitDot } from "../../components/CircuitDot";
+import { Icon } from "../../components/Icon";
+import { EnduranceLaps } from "../../features/sessions/EnduranceLaps";
 import { PostStatusBar } from "../../features/sessions/PostStatusBar";
 import { SessionJournal } from "../../features/journal/SessionJournal";
 import { SessionTags } from "../../features/sessions/SessionTags";
@@ -319,73 +322,92 @@ export default function SessionDetailScreen(): React.ReactElement {
                   <View
                     key={c.n}
                     style={{
-                      flexDirection: "row",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      gap: 12,
+                      gap: 8,
                       paddingVertical: 12,
                       borderTopWidth: 1,
                       borderTopColor: colors.lineOnLight,
                     }}
                   >
-                    <View style={{ flex: 1, gap: 4, minWidth: 0 }}>
-                      <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-                        {c.colour !== undefined && <CircuitDot colour={c.colour} size={12} />}
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        gap: 12,
+                      }}
+                    >
+                      <View style={{ flex: 1, gap: 4, minWidth: 0 }}>
+                        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                          {c.colour !== undefined && <CircuitDot colour={c.colour} size={12} />}
+                          {c.endurance !== undefined && (
+                            <Icon
+                              name="endurance"
+                              color={colors.petalInk}
+                              size={14}
+                              strokeWidth={2.4}
+                            />
+                          )}
+                          <Text
+                            numberOfLines={1}
+                            style={{
+                              flexShrink: 1,
+                              fontFamily: fonts.sansMedium,
+                              fontSize: 15,
+                              color: colors.gunmetal,
+                            }}
+                          >
+                            {c.name}
+                          </Text>
+                        </View>
                         <Text
-                          numberOfLines={1}
                           style={{
-                            flexShrink: 1,
-                            fontFamily: fonts.sansMedium,
-                            fontSize: 15,
-                            color: colors.gunmetal,
+                            fontFamily: fonts.mono,
+                            fontSize: 11,
+                            color: "rgba(64,63,76,0.6)",
                           }}
                         >
-                          {c.name}
+                          {c.endurance === undefined
+                            ? t("sessions.climbMeta", {
+                                angle: c.angleLabel,
+                                burns: t("sessions.burns", { count: c.burns }),
+                                rest: c.restLabel,
+                              })
+                            : `${enduranceLapCountLabel(c.endurance.laps.length)} · ${enduranceProgressLabel(c.endurance)}`}
                         </Text>
                       </View>
-                      <Text
-                        style={{
-                          fontFamily: fonts.mono,
-                          fontSize: 11,
-                          color: "rgba(64,63,76,0.6)",
-                        }}
-                      >
-                        {t("sessions.climbMeta", {
-                          angle: c.angleLabel,
-                          burns: t("sessions.burns", { count: c.burns }),
-                          rest: c.restLabel,
-                        })}
-                      </Text>
+                      <View style={{ alignItems: "flex-end", gap: 5 }}>
+                        <Text
+                          style={{
+                            fontFamily: fonts.monoSemiBold,
+                            fontSize: 14,
+                            color: c.isTopSend ? colors.labelAccent : colors.gunmetal,
+                          }}
+                        >
+                          {c.gradeLabel}
+                        </Text>
+                        {c.endurance === undefined && (
+                          <Text
+                            style={{
+                              fontFamily: fonts.monoMedium,
+                              fontSize: 9,
+                              letterSpacing: 0.7,
+                              textTransform: "uppercase",
+                              borderRadius: radius.pill,
+                              paddingHorizontal: 8,
+                              paddingVertical: 3,
+                              overflow: "hidden",
+                              backgroundColor: badge.bg,
+                              borderWidth: 1,
+                              borderColor: badge.border,
+                              color: badge.color,
+                            }}
+                          >
+                            {c.resultLabel}
+                          </Text>
+                        )}
+                      </View>
                     </View>
-                    <View style={{ alignItems: "flex-end", gap: 5 }}>
-                      <Text
-                        style={{
-                          fontFamily: fonts.monoSemiBold,
-                          fontSize: 14,
-                          color: c.isTopSend ? colors.labelAccent : colors.gunmetal,
-                        }}
-                      >
-                        {c.gradeLabel}
-                      </Text>
-                      <Text
-                        style={{
-                          fontFamily: fonts.monoMedium,
-                          fontSize: 9,
-                          letterSpacing: 0.7,
-                          textTransform: "uppercase",
-                          borderRadius: radius.pill,
-                          paddingHorizontal: 8,
-                          paddingVertical: 3,
-                          overflow: "hidden",
-                          backgroundColor: badge.bg,
-                          borderWidth: 1,
-                          borderColor: badge.border,
-                          color: badge.color,
-                        }}
-                      >
-                        {c.resultLabel}
-                      </Text>
-                    </View>
+                    {c.endurance !== undefined && <EnduranceLaps endurance={c.endurance} />}
                   </View>
                 );
               })}
