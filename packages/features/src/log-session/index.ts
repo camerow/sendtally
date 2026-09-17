@@ -39,6 +39,15 @@ export {
   withPickedClimb,
   withQuickClimb,
 } from "./liveSession";
+export {
+  circuitGyms,
+  climbKindOf,
+  gymOfCircuit,
+  newClimbOfKind,
+  readClimbKind,
+  withClimbKind,
+  type ClimbKind,
+} from "./climbKind";
 export { useLiveSession, type LiveSession } from "./useLiveSession";
 export { useSessionDraft, type EditableSession } from "./useSessionDraft";
 export {

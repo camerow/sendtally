@@ -5,7 +5,6 @@ import type { ClimbSummary, SendtallyApi } from "@sendtally/api-client";
 import { climbDraftGrade, findClimb, useClimbVocabulary } from "@sendtally/features/climbs";
 import {
   circuitGym,
-  gymOfDraft,
   useGyms,
   withCircuit,
   withoutCircuit,
@@ -17,17 +16,17 @@ import {
   disciplineOf,
   emptyDraft,
   storedDraft,
-  newClimb,
+  newClimbOfKind,
+  circuitGyms,
   nextClimbKey,
+  readClimbKind,
   toLogSessionInput,
   useDraftAutosave,
-  withClimbDiscipline,
   withClimbScale,
   withStartTime,
   withTag,
   withoutTag,
   type ClimbDraft,
-  type Discipline,
   type LogSessionDraft,
 } from "@sendtally/features/log-session";
 import { SESSION_NOTE_MAX, useTagVocabulary } from "@sendtally/features/sessions";
@@ -37,6 +36,7 @@ import { formatDate, t } from "@sendtally/features/i18n";
 import { DiscardDraftDialog } from "../../components/DiscardDraftDialog";
 import { TagPicker } from "../../components/TagPicker";
 import { useIsNarrow } from "../../lib/useIsNarrow";
+import { climbKindStorage } from "../../lib/climbKindStorage";
 import { sessionDraftStorage } from "../../lib/sessionDraftStorage";
 import { DraftBanner } from "./DraftBanner";
 import { ClimbCard } from "./ClimbCard";
@@ -165,7 +165,7 @@ export function LogSessionForm({
 
   const vocabulary = useClimbVocabulary(api);
   const gyms = useGyms(api);
-  const gym = draft.location === "indoor" ? circuitGym(gymOfDraft(gyms.gyms, draft.gymId)) : null;
+  const circuitChoices = draft.location === "indoor" ? circuitGyms(gyms.gyms) : [];
   const narrow = useIsNarrow();
   const [editingKey, setEditingKey] = React.useState<string | null>(null);
 
@@ -224,15 +224,6 @@ export function LogSessionForm({
     }));
   }
 
-  function setDiscipline(key: string, discipline: Discipline): void {
-    setDraft((d) => ({
-      ...d,
-      climbs: d.climbs.map((c) =>
-        c.key === key ? withClimbDiscipline(c, discipline, prefs.scales) : c
-      ),
-    }));
-  }
-
   function updateClimb(key: string, climb: ClimbDraft): void {
     setDraft((d) => ({ ...d, climbs: d.climbs.map((c) => (c.key === key ? climb : c)) }));
   }
@@ -285,7 +276,16 @@ export function LogSessionForm({
     const key = nextClimbKey(draft.climbs);
     setDraft({
       ...draft,
-      climbs: [...draft.climbs, newClimb(key, draft.climbs[draft.climbs.length - 1]?.scale ?? "v")],
+      climbs: [
+        ...draft.climbs,
+        newClimbOfKind(
+          key,
+          readClimbKind(climbKindStorage, circuitChoices),
+          prefs.scales,
+          circuitChoices,
+          draft.climbs[draft.climbs.length - 1]
+        ),
+      ],
     });
     if (narrow) setEditingKey(key);
   }
@@ -491,9 +491,8 @@ export function LogSessionForm({
                 <ClimbCard
                   key={climb.key}
                   climb={climb}
-                  scale={climb.scale}
-                  gym={gym}
-                  onChangeDiscipline={(discipline) => setDiscipline(climb.key, discipline)}
+                  gyms={circuitChoices}
+                  prefs={prefs.scales}
                   removable={draft.climbs.length > 1}
                   project={isProject(climb)}
                   suggestions={vocabulary.suggestionsFor(climb.name)}
@@ -550,9 +549,8 @@ export function LogSessionForm({
           climb={editingClimb}
           index={editingIndex}
           count={draft.climbs.length}
-          scale={editingClimb.scale}
-          gym={gym}
-          onChangeDiscipline={(discipline) => setDiscipline(editingClimb.key, discipline)}
+          gyms={circuitChoices}
+          prefs={prefs.scales}
           project={isProject(editingClimb)}
           suggestions={vocabulary.suggestionsFor(editingClimb.name)}
           onChange={(c) => updateClimb(editingClimb.key, c)}

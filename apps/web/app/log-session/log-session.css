@@ -35,10 +35,6 @@
   align-items: end;
 }
 
-.climb-card-main--circuit {
-  grid-template-columns: minmax(0, 1fr) 122px 36px;
-}
-
 .climb-card-cell {
   display: flex;
   flex-direction: column;

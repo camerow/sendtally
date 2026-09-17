@@ -10,8 +10,10 @@ import {
   disciplineOf,
   emptyDraft,
   storedDraft,
-  newClimb,
+  circuitGyms,
+  newClimbOfKind,
   nextClimbKey,
+  readClimbKind,
   toLogSessionInput,
   useDraftAutosave,
   withClimbName,
@@ -29,6 +31,7 @@ import { formatDate, t } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { useApi } from "../../lib/api";
 import { queries } from "@sendtally/features/query";
+import { climbKindStorage } from "../../lib/climbKindStorage";
 import { sessionDraftStorage } from "../../lib/sessionDraftStorage";
 import { confirmDiscardDraft } from "../../lib/confirmDiscardDraft";
 import { DraftBanner } from "./DraftBanner";
@@ -137,7 +140,7 @@ export function LogSessionForm({
   const { suggestionsFor } = useTagVocabulary(api);
   const vocabulary = useClimbVocabulary(api);
   const gyms = useGyms(api);
-  const gym = draft.location === "indoor" ? circuitGym(gymOfDraft(gyms.gyms, draft.gymId)) : null;
+  const circuitChoices = draft.location === "indoor" ? circuitGyms(gyms.gyms) : [];
   // Changing the gym re-places every climb: onto the new gym's first circuit, or off circuits.
   const setGym = (next: Gym | null): void => {
     const at = circuitGym(next);
@@ -214,7 +217,16 @@ export function LogSessionForm({
     const previous = draft.climbs[draft.climbs.length - 1];
     setDraft({
       ...draft,
-      climbs: [...draft.climbs, newClimb(key, previous?.scale ?? gradePrefs.boulder)],
+      climbs: [
+        ...draft.climbs,
+        newClimbOfKind(
+          key,
+          readClimbKind(climbKindStorage, circuitChoices),
+          gradePrefs,
+          circuitChoices,
+          previous
+        ),
+      ],
     });
     setEditingKey(key);
   }
@@ -580,7 +592,7 @@ export function LogSessionForm({
         index={editingIndex}
         count={draft.climbs.length}
         prefs={gradePrefs}
-        gym={gym}
+        gyms={circuitChoices}
         project={editingClimb === null ? false : isProject(editingClimb)}
         known={
           editingClimb === null ? null : (findClimb(vocabulary.climbs, editingClimb.name) ?? null)

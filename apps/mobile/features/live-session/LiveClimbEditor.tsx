@@ -14,7 +14,7 @@ import { ClimbEditorSheet } from "../log-session/ClimbEditorSheet";
 export type LiveClimbEditorProps = {
   live: LiveSession;
   vocabulary: ClimbVocabulary;
-  gym: Gym | null;
+  gyms: readonly Gym[];
   editingKey: string | null;
   onClose: () => void;
 };
@@ -23,7 +23,7 @@ export type LiveClimbEditorProps = {
 export function LiveClimbEditor({
   live,
   vocabulary,
-  gym,
+  gyms,
   editingKey,
   onClose,
 }: LiveClimbEditorProps): React.ReactElement {
@@ -41,7 +41,7 @@ export function LiveClimbEditor({
       count={climbs.length}
       removable
       prefs={scales}
-      gym={gym}
+      gyms={gyms}
       project={climb === null ? false : isProject(climb)}
       known={climb === null ? null : (findClimb(vocabulary.climbs, climb.name) ?? null)}
       suggestions={vocabulary.suggestionsFor(climb?.name ?? "")}
