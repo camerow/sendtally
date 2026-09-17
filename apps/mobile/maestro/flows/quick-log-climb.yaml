@@ -5,17 +5,11 @@ name: quick-log-climb
 ---
 - runFlow: ../helpers/open-dev-client.yaml
 - runFlow: ../helpers/ensure-signed-in.yaml
-- runFlow:
-    when:
-      visible: "DISCARD SESSION"
-    commands:
-      - tapOn: "DISCARD SESSION"
-      - tapOn: "Discard"
+- runFlow: ../helpers/discard-live-session.yaml
 - tapOn: "Climb"
 - assertVisible: "CLIMB 1 OF 1"
 - tapOn: "Save"
-- assertVisible: "(Morning|Afternoon|Evening) session.*"
-- assertVisible: ".*Live · 1 climb.*"
+- assertVisible: "(Morning|Afternoon|Evening) session.*In progress for.*"
 - tapOn: "Climb"
 - assertVisible: "CLIMB 2 OF 2"
 - tapOn: "Name (optional)"
@@ -23,14 +17,15 @@ name: quick-log-climb
 - pressKey: Enter
 - runFlow: ../helpers/hide-keyboard.yaml
 - tapOn: "Save"
-- assertVisible: ".*Live · 2 climbs.*"
 - tapOn: ".*Maestro Arete.*"
 - assertVisible: "CLIMB 2 OF 2"
 - tapOn: "Remove climb"
-- assertVisible: ".*Live · 1 climb.*"
-- tapOn: "Wrap up"
-- assertVisible: "Wrap up"
+- assertNotVisible: ".*Maestro Arete.*"
+- tapOn: "(Morning|Afternoon|Evening) session.*In progress for.*"
 - assertVisible: "1 CLIMB.*"
 - tapOn: "Discard"
-- tapOn: "Discard"
-- assertNotVisible: ".*Live · .*"
+- assertVisible: "Discard this draft.*"
+- tapOn:
+    text: "Discard"
+    rightOf: "Cancel"
+- assertNotVisible: ".*In progress for.*"
