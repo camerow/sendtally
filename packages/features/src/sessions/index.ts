@@ -45,7 +45,6 @@ export {
   sessionTotals,
   logYearGroups,
   sessionsIn,
-  entriesIn,
   totalsLabel,
   type SessionGroupTotals,
   type SessionYear,

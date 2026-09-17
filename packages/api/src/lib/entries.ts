@@ -63,6 +63,38 @@ export const entryBody = z
 
 export type EntryBody = z.infer<typeof entryBody>;
 
+type TripDates = {
+  id: string | null;
+  kind: EntryKind;
+  occurred_at: string;
+  ends_at: string | null;
+};
+
+/** A trip with no end is still going, so it runs to today. */
+const tripEnd = (trip: TripDates, today: string): string => {
+  const end = trip.ends_at ?? today;
+  return end < trip.occurred_at ? trip.occurred_at : end;
+};
+
+/** Two trips never share a day, so every day of the log belongs to at most one. */
+export function overlappingTrip<T extends TripDates>(
+  entries: T[],
+  candidate: TripDates,
+  today: string
+): T | null {
+  if (candidate.kind !== "trip") return null;
+  const end = tripEnd(candidate, today);
+  return (
+    entries.find(
+      (e) =>
+        e.kind === "trip" &&
+        e.id !== candidate.id &&
+        e.occurred_at <= end &&
+        tripEnd(e, today) >= candidate.occurred_at
+    ) ?? null
+  );
+}
+
 /** Empty strings are how a cleared optional field arrives from a form. */
 export function trimmedOrNull(value: string | null | undefined): string | null {
   const trimmed = value?.trim() ?? "";

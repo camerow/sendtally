@@ -2,7 +2,11 @@ import { router, useLocalSearchParams } from "expo-router";
 import React from "react";
 import { ActivityIndicator, Alert, Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import type { EntryDetail, SessionRow as SessionRowData } from "@sendtally/api-client";
+import type {
+  EntryDetail,
+  JournalEntry,
+  SessionRow as SessionRowData,
+} from "@sendtally/api-client";
 import { t } from "@sendtally/features/i18n";
 import {
   dayLabel,
@@ -14,7 +18,6 @@ import {
   sessionsInSpan,
   sessionsNearPoints,
   severitySeries,
-  spansDates,
   useEntryDetail,
 } from "@sendtally/features/journal";
 import { sessionTitle } from "@sendtally/features/sessions";
@@ -22,6 +25,7 @@ import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { BackButton } from "../../components/BackButton";
 import { EntryKindChip } from "../../features/journal/EntryKindChip";
 import { SeverityChart } from "../../features/journal/SeverityChart";
+import { TripBody } from "../../features/journal/TripBody";
 import { RowTags } from "../../features/sessions/RowTags";
 import { SessionRow } from "../../features/sessions/SessionRow";
 import { useApi } from "../../lib/api";
@@ -177,7 +181,11 @@ export default function EntryDetailScreen(): React.ReactElement {
           </Text>
         )}
         {state.status === "ready" && (
-          <Loaded entry={state.data.entry} sessions={state.data.sessions} />
+          <Loaded
+            entry={state.data.entry}
+            sessions={state.data.sessions}
+            entries={state.data.entries}
+          />
         )}
       </ScrollView>
     </SafeAreaView>
@@ -187,17 +195,18 @@ export default function EntryDetailScreen(): React.ReactElement {
 function Loaded({
   entry,
   sessions,
+  entries,
 }: {
   entry: EntryDetail;
   sessions: SessionRowData[];
+  entries: JournalEntry[];
 }): React.ReactElement {
-  const spanning = spansDates(entry.kind);
   const linked = linkedSessions(sessions, entry);
-  // A trip is a date range, so sessions inside it are matched rather than linked;
-  // anything already linked is not listed twice.
-  const inSpan = spanning
-    ? sessionsInSpan(sessions, entry).filter((s) => !entry.fingerprints.includes(s.fingerprint))
-    : [];
+  // An injury's dates match sessions rather than linking them; anything linked is not listed twice.
+  const inSpan =
+    entry.kind === "injury"
+      ? sessionsInSpan(sessions, entry).filter((s) => !entry.fingerprints.includes(s.fingerprint))
+      : [];
   const points = severitySeries(entry, entry.updates);
   const sessionsPerPoint = sessionsNearPoints(sessions, points);
   const titled = entryHasTitle(entry);
@@ -241,12 +250,13 @@ function Loaded({
           sessions={linked}
         />
       )}
-      {spanning && inSpan.length > 0 && (
+      {inSpan.length > 0 && (
         <SessionCard
           label={t("journal.sessionsInSpan", { count: inSpan.length })}
           sessions={inSpan}
         />
       )}
+      {entry.kind === "trip" && <TripBody trip={entry} sessions={sessions} entries={entries} />}
 
       {entry.kind === "injury" && (
         <View style={card}>

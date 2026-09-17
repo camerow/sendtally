@@ -26,6 +26,7 @@ import { primaryButton, primaryButtonLabel } from "../../lib/styles";
 import { TagPicker } from "../sessions/TagPicker";
 import { SessionPicker } from "./SessionPicker";
 import { SeverityPicker } from "./SeverityPicker";
+import { TripPreview } from "./TripPreview";
 
 const label = {
   fontFamily: fonts.monoMedium,
@@ -68,12 +69,14 @@ export function EntryComposer({
   editing,
   heading,
   sessions,
+  entries,
 }: {
   api: SendtallyApi;
   initial: EntryDraft;
   editing?: string;
   heading: string;
   sessions: SessionRow[];
+  entries: JournalEntry[];
 }): React.ReactElement {
   // A new entry replaces its composer with its page. An edit or an update was
   // pushed from the page it belongs to, which reloads when it comes back into focus.
@@ -87,8 +90,10 @@ export function EntryComposer({
     },
     [editing]
   );
-  const { draft, setDraft, saving, error, save } = useEntryComposer(api, initial, {
+  const { draft, setDraft, saving, error, trip, overlap, save } = useEntryComposer(api, initial, {
     editing,
+    sessions,
+    entries,
     onSaved,
   });
   const { suggestionsFor } = useTagVocabulary(api);
@@ -172,6 +177,19 @@ export function EntryComposer({
             </View>
           )}
         </View>
+        {overlap !== null && (
+          <Text
+            accessibilityRole="alert"
+            style={{
+              fontFamily: fonts.sans,
+              fontSize: 13,
+              lineHeight: 18,
+              color: colors.watermelonInk,
+            }}
+          >
+            {overlap}
+          </Text>
+        )}
 
         {!update && (
           <Field name={t("journal.entryTitle")}>
@@ -219,16 +237,7 @@ export function EntryComposer({
         )}
 
         {draft.kind === "trip" ? (
-          <Text
-            style={{
-              fontFamily: fonts.sans,
-              fontSize: 13,
-              lineHeight: 18,
-              color: colors.textMuted,
-            }}
-          >
-            {t("journal.tripSessionsNote")}
-          </Text>
+          trip !== null && <TripPreview trip={trip} />
         ) : (
           <SessionPicker
             sessions={sessions}
@@ -246,8 +255,8 @@ export function EntryComposer({
         )}
         <Pressable
           onPress={save}
-          disabled={saving}
-          style={press({ ...primaryButton, opacity: saving ? 0.6 : 1 })}
+          disabled={saving || overlap !== null}
+          style={press({ ...primaryButton, opacity: saving || overlap !== null ? 0.6 : 1 })}
         >
           <Text style={primaryButtonLabel}>
             {saving ? t("common.saving") : t("journal.saveEntry")}

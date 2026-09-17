@@ -96,6 +96,31 @@ describe("journal entries", () => {
     expect(noSpan.status).toBe(400);
   });
 
+  it("refuses a trip that shares a day with another, naming the one in the way", async () => {
+    const easter = await created("u_trips", {
+      kind: "trip",
+      occurred_at: "2026-04-03",
+      ends_at: "2026-04-06",
+      title: "Easter weekend in the Peak",
+    });
+    const clash = await post("u_trips", {
+      kind: "trip",
+      occurred_at: "2026-04-06",
+      ends_at: "2026-04-09",
+    });
+    expect(clash.status).toBe(409);
+    expect(((await clash.json()) as { trip: { id: string } }).trip.id).toBe(easter.id);
+
+    await created("u_trips", { kind: "trip", occurred_at: "2026-04-07", ends_at: "2026-04-09" });
+    await created("u_other_trips", { kind: "trip", occurred_at: "2026-04-04" });
+
+    const moved = await call("u_trips", `/v1/entries/${easter.id}`, {
+      method: "PUT",
+      body: JSON.stringify({ kind: "trip", occurred_at: "2026-04-02", ends_at: "2026-04-06" }),
+    });
+    expect(moved.status).toBe(200);
+  });
+
   it("opens an injury as ongoing without being told to", async () => {
     const injury = await created("u_entries_injury", {
       kind: "injury",

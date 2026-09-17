@@ -34,6 +34,7 @@ export default function EditEntryScreen(): React.ReactElement {
           editing={state.data.entry.id}
           heading={t("journal.editEntry")}
           sessions={state.data.sessions}
+          entries={state.data.entries}
         />
       )}
     </SafeAreaView>

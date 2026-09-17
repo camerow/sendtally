@@ -69,8 +69,22 @@ export const journal = {
   "journal.newTrip": "Nuevo viaje",
   "journal.newInjury": "Nueva lesión",
   "journal.tripSessionsNote":
-    "Todas las sesiones entre la fecha de inicio y la de fin forman parte de este viaje.",
+    "Todo lo registrado entre la fecha de inicio y la de fin forma parte de este viaje.",
   "journal.hintJournal": "Reflexiona sobre tu escalada y tus experiencias",
   "journal.hintTrip": "Resume y agrupa sesiones en un viaje",
   "journal.hintInjury": "Registra una lesión nueva y sigue su evolución",
+  "journal.tripDaysClimbed": "Días escalados",
+  "journal.tripAverageRpe": "RPE medio",
+  "journal.dayByDay": "Día a día",
+  "journal.effortByDay": "Esfuerzo por día",
+  "journal.effortByDayNote": "El RPE más alto de cada día. Un día sin sesión es un guion.",
+  "journal.alreadyOngoing": "Ya en curso",
+  "journal.carriedInNote":
+    "Empezó antes de este viaje, así que se queda en su propia fecha en el registro.",
+  "journal.updateOn": "Actualización de {title}",
+  "journal.tripGroups": "Este viaje agrupa",
+  "journal.tripGroupsNothing":
+    "Aún no hay nada registrado en estas fechas. Todo lo que registres en ellas aparecerá aquí.",
+  "journal.tripOverlap":
+    "Estas fechas se solapan con {title} ({dates}). Un día solo puede pertenecer a un viaje.",
 } as const;

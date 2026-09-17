@@ -1,7 +1,7 @@
 import React from "react";
 import type { LinksFunction, LoaderFunctionArgs } from "react-router";
 import { Link, redirect, useLoaderData, useNavigate } from "react-router";
-import type { EntryDetail, SessionRow } from "@sendtally/api-client";
+import type { EntryDetail, JournalEntry, SessionRow } from "@sendtally/api-client";
 import { t } from "@sendtally/features/i18n";
 import {
   dayLabel,
@@ -14,12 +14,12 @@ import {
   sessionsInSpan,
   sessionsNearPoints,
   severitySeries,
-  spansDates,
 } from "@sendtally/features/journal";
 import { sessionTitle } from "@sendtally/features/sessions";
 import { SessionRowItem } from "../sessions/components/SessionRowItem";
 import { BackLink } from "../components/BackLink";
 import { SeverityChart } from "../journal/components/SeverityChart";
+import { TripDetail } from "../journal/components/TripDetail";
 import journalStyles from "../journal/journal.css?url";
 import sessionsStyles from "../sessions/sessions.css?url";
 import { cloudflareContext } from "../lib/cloudflare-context";
@@ -31,38 +31,44 @@ export const links: LinksFunction = () => [
   { rel: "stylesheet", href: journalStyles },
 ];
 
-export async function loader(
-  args: LoaderFunctionArgs
-): Promise<{ apiUrl: string; entry: EntryDetail; sessions: SessionRow[] }> {
+export async function loader(args: LoaderFunctionArgs): Promise<{
+  apiUrl: string;
+  entry: EntryDetail;
+  sessions: SessionRow[];
+  entries: JournalEntry[];
+}> {
   const api = await requireApi(args);
   const id = args.params["id"] ?? "";
-  const [{ entry }, { sessions }] = await Promise.all([orNotFound(api.entry(id)), api.sessions()]);
+  const [{ entry }, { sessions }, { entries }] = await Promise.all([
+    orNotFound(api.entry(id)),
+    api.sessions(),
+    api.entries(),
+  ]);
   // An update is read on its thread, never on a page of its own.
   if (entry.parent_id !== null) {
     throw redirect(`/app/journal/${encodeURIComponent(entry.parent_id)}`);
   }
-  return { apiUrl: args.context.get(cloudflareContext).env.API_URL, entry, sessions };
+  return { apiUrl: args.context.get(cloudflareContext).env.API_URL, entry, sessions, entries };
 }
 
 export default function EntryDetailRoute(): React.ReactElement {
-  const { apiUrl, entry, sessions } = useLoaderData<typeof loader>();
+  const { apiUrl, entry, sessions, entries } = useLoaderData<typeof loader>();
   const api = useClientApi(apiUrl);
   const navigate = useNavigate();
   const [deleting, setDeleting] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
-  const spanning = spansDates(entry.kind);
   const titled = entryHasTitle(entry);
   const dayCount =
     entry.kind === "injury" && entry.status === "ongoing"
       ? t("journal.dayN", { n: daysSince(entry.occurred_at) })
       : null;
   const linked = linkedSessions(sessions, entry);
-  // A trip is a date range, so sessions inside it are matched rather than linked;
-  // anything already linked is not listed twice.
-  const inSpan = spanning
-    ? sessionsInSpan(sessions, entry).filter((s) => !entry.fingerprints.includes(s.fingerprint))
-    : [];
+  // An injury's dates match sessions rather than linking them; anything linked is not listed twice.
+  const inSpan =
+    entry.kind === "injury"
+      ? sessionsInSpan(sessions, entry).filter((s) => !entry.fingerprints.includes(s.fingerprint))
+      : [];
   const points = severitySeries(entry, entry.updates);
   const sessionsPerPoint = sessionsNearPoints(sessions, points);
 
@@ -137,7 +143,7 @@ export default function EntryDetailRoute(): React.ReactElement {
         </div>
       )}
 
-      {spanning && inSpan.length > 0 && (
+      {inSpan.length > 0 && (
         <div className="journal-card">
           <span className="journal-card-label">
             {t("journal.sessionsInSpan", { count: inSpan.length })}
@@ -153,6 +159,8 @@ export default function EntryDetailRoute(): React.ReactElement {
           </div>
         </div>
       )}
+
+      {entry.kind === "trip" && <TripDetail trip={entry} sessions={sessions} entries={entries} />}
 
       {entry.kind === "injury" && (
         <div className="journal-card">

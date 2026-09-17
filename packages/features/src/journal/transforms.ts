@@ -1,6 +1,12 @@
 import type { EntryInput, JournalEntry, SessionRow } from "@sendtally/api-client";
 import { formatDate, t, type MessageKey } from "../i18n";
-import { SPANNING_KINDS, type EntryDraft, type EntryKind, type LogItem } from "./types";
+import {
+  SPANNING_KINDS,
+  type EntryDraft,
+  type EntryKind,
+  type LogItem,
+  type TripSpan,
+} from "./types";
 
 const KIND_LABELS: Record<EntryKind, MessageKey> = {
   journal: "journal.kindJournal",
@@ -29,6 +35,11 @@ export function spansDates(kind: EntryKind): boolean {
 /** An update belongs to its thread, never to the log. */
 export function isThreadUpdate(entry: JournalEntry): boolean {
   return entry.parent_id !== null;
+}
+
+/** Only injuries have threads, so an update wears its injury's kind. */
+export function displayKind(entry: JournalEntry): EntryKind {
+  return isThreadUpdate(entry) ? "injury" : entry.kind;
 }
 
 export function isoDay(at: string): string {
@@ -82,15 +93,75 @@ export function logItems(sessions: SessionRow[], entries: JournalEntry[]): LogIt
         tags: entry.tags,
         type: "entry",
         entry,
+        inside: [],
       })),
   ];
   return items.sort((a, b) => b.at.localeCompare(a.at));
 }
 
+/** The last day a trip covers. A trip with no end is still going, so it runs to today. */
+export function tripEnd(trip: TripSpan, now: Date = new Date()): string {
+  const end = trip.ends_at ?? today(now);
+  return end < trip.occurred_at ? trip.occurred_at : end;
+}
+
+export function inTrip(day: string, trip: TripSpan, now: Date = new Date()): boolean {
+  return day >= trip.occurred_at && day <= tripEnd(trip, now);
+}
+
+export function logItemDay(item: LogItem): string {
+  return item.type === "session" ? isoDay(item.session.start_at) : item.entry.occurred_at;
+}
+
+/**
+ * A trip takes in everything logged inside its dates, matched on read so editing
+ * the dates regroups. An injury belongs to the trip it started on.
+ */
+export function groupTrips(items: LogItem[], now: Date = new Date()): LogItem[] {
+  const trips = items.filter((i) => i.type === "entry" && i.entry.kind === "trip");
+  const owners = new Map<string, string>();
+  for (const item of items) {
+    if (trips.includes(item)) continue;
+    const day = logItemDay(item);
+    const owner = trips.find((trip) => trip.type === "entry" && inTrip(day, trip.entry, now));
+    if (owner !== undefined) owners.set(item.key, owner.key);
+  }
+  return items
+    .filter((item) => !owners.has(item.key))
+    .map((item) =>
+      trips.includes(item) && item.type === "entry"
+        ? { ...item, inside: items.filter((i) => owners.get(i.key) === item.key) }
+        : item
+    );
+}
+
+/** Every item in a log, including the ones a trip holds. */
+export function flatLog(items: LogItem[]): LogItem[] {
+  return items.flatMap((item) => (item.type === "entry" ? [item, ...item.inside] : [item]));
+}
+
+/** Two trips never share a day, so every day of the log belongs to at most one. */
+export function overlappingTrip(
+  entries: JournalEntry[],
+  span: TripSpan,
+  now: Date = new Date()
+): JournalEntry | null {
+  const end = tripEnd(span, now);
+  return (
+    entries.find(
+      (e) =>
+        e.kind === "trip" &&
+        e.id !== span.id &&
+        e.occurred_at <= end &&
+        tripEnd(e, now) >= span.occurred_at
+    ) ?? null
+  );
+}
+
 /** Trips are date ranges, so the sessions inside one are matched, never attached. */
 export function sessionsInSpan(sessions: SessionRow[], entry: JournalEntry): SessionRow[] {
   const from = entry.occurred_at;
-  const to = entry.ends_at ?? entry.occurred_at;
+  const to = entry.kind === "trip" ? tripEnd(entry) : (entry.ends_at ?? entry.occurred_at);
   return sessions.filter((s) => {
     const day = isoDay(s.start_at);
     return day >= from && day <= to;

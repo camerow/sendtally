@@ -13,6 +13,7 @@ import { useTagVocabulary } from "@sendtally/features/sessions";
 import { TagPicker } from "../../components/TagPicker";
 import { SessionPicker } from "./SessionPicker";
 import { SeverityPicker } from "./SeverityPicker";
+import { TripPreview } from "./TripPreview";
 
 const label: React.CSSProperties = {
   fontFamily: "var(--font-mono)",
@@ -57,12 +58,14 @@ export function EntryComposer({
   editing,
   heading,
   sessions,
+  entries,
 }: {
   api: SendtallyApi;
   initial: EntryDraft;
   editing?: string;
   heading: string;
   sessions: SessionRow[];
+  entries: JournalEntry[];
 }): React.ReactElement {
   const navigate = useNavigate();
   // An update has no page of its own - it is read on the thread it belongs to.
@@ -71,8 +74,10 @@ export function EntryComposer({
       navigate(`/app/journal/${encodeURIComponent(entry.parent_id ?? entry.id)}`),
     [navigate]
   );
-  const { draft, setDraft, saving, error, save } = useEntryComposer(api, initial, {
+  const { draft, setDraft, saving, error, trip, overlap, save } = useEntryComposer(api, initial, {
     editing,
+    sessions,
+    entries,
     onSaved,
   });
   const { suggestionsFor } = useTagVocabulary(api);
@@ -123,6 +128,11 @@ export function EntryComposer({
           </Field>
         )}
       </div>
+      {overlap !== null && (
+        <span role="alert" className="journal-error" style={{ marginTop: -12 }}>
+          {overlap}
+        </span>
+      )}
 
       {!update && (
         <Field name={t("journal.entryTitle")}>
@@ -161,7 +171,7 @@ export function EntryComposer({
       )}
 
       {draft.kind === "trip" ? (
-        <p className="journal-muted">{t("journal.tripSessionsNote")}</p>
+        trip !== null && <TripPreview trip={trip} />
       ) : (
         <SessionPicker
           sessions={sessions}
@@ -179,7 +189,12 @@ export function EntryComposer({
           </span>
         )}
         <div style={{ flex: 1 }} />
-        <button type="button" onClick={save} disabled={saving} className="journal-save">
+        <button
+          type="button"
+          onClick={save}
+          disabled={saving || overlap !== null}
+          className="journal-save"
+        >
           {saving ? t("common.saving") : t("journal.saveEntry")}
         </button>
       </div>

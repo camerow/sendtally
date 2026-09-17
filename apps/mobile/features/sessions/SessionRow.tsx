@@ -22,6 +22,8 @@ export type SessionRowProps = {
   onPress: () => void;
   /** The last cell is the caller's: a chevron in the log, a remove control in the composer. */
   trailing?: React.ReactNode;
+  /** Inside a group that already sets the row in from the screen edge. */
+  inset?: boolean;
 };
 
 export function SessionRow({
@@ -29,6 +31,7 @@ export function SessionRow({
   title,
   onPress,
   trailing,
+  inset = false,
 }: SessionRowProps): React.ReactElement {
   const { weekday, day } = sessionDay(session);
   const meta = sessionMetaLabel(session);
@@ -47,7 +50,7 @@ export function SessionRow({
         alignItems: "center",
         gap: 12,
         paddingVertical: 11,
-        paddingHorizontal: 18,
+        paddingHorizontal: inset ? 0 : 18,
         borderBottomWidth: 1,
         borderBottomColor: colors.lineOnLightSoft,
       })}

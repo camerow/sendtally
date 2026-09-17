@@ -1,5 +1,6 @@
 import type { SessionRow } from "@sendtally/api-client";
 import { t } from "../i18n";
+import { flatLog } from "../journal/transforms";
 import type { LogItem } from "../journal/types";
 import { logMonths, type SessionMonth } from "./months";
 
@@ -30,11 +31,7 @@ function sessionTop(session: SessionRow): { grade: number; label: string | null 
 }
 
 export function sessionsIn(items: LogItem[]): SessionRow[] {
-  return items.flatMap((item) => (item.type === "session" ? [item.session] : []));
-}
-
-export function entriesIn(items: LogItem[]): LogItem[] {
-  return items.filter((item) => item.type === "entry");
+  return flatLog(items).flatMap((item) => (item.type === "session" ? [item.session] : []));
 }
 
 export function sessionTotals(sessions: SessionRow[]): SessionGroupTotals {
@@ -88,7 +85,7 @@ export function countLabel(count: number): string {
  */
 export function logCountLabel(items: LogItem[]): string {
   const sessions = sessionsIn(items).length;
-  const entries = items.length - sessions;
+  const entries = flatLog(items).length - sessions;
   const parts = [
     sessions === 0 && entries > 0 ? null : countLabel(sessions),
     entries === 0 ? null : t("journal.entryCount", { count: entries }),
@@ -99,7 +96,7 @@ export function logCountLabel(items: LogItem[]): string {
 export function logTotalsLabel(items: LogItem[]): string {
   const sessions = sessionsIn(items);
   if (sessions.length === 0) return logCountLabel(items);
-  const entries = items.length - sessions.length;
+  const entries = flatLog(items).length - sessions.length;
   const totals = totalsLabel(sessionTotals(sessions));
   return entries === 0 ? totals : `${totals} · ${t("journal.entryCount", { count: entries })}`;
 }

@@ -2,14 +2,25 @@ import React from "react";
 import { Pressable, Text, View } from "react-native";
 import type { JournalEntry } from "@sendtally/api-client";
 import { formatDate } from "@sendtally/features/i18n";
-import { entryKindLabel, entryTitle, spanLabel, spansDates } from "@sendtally/features/journal";
-import { colors } from "@sendtally/design/tokens";
+import {
+  displayKind,
+  entryKindLabel,
+  entryTitle,
+  spanLabel,
+  spansDates,
+} from "@sendtally/features/journal";
+import { colors, fonts } from "@sendtally/design/tokens";
 import { Icon } from "../../components/Icon";
 import { pressRow } from "../../lib/press";
 import { rowMeta, rowTitle, SESSION_ROW_HEIGHT } from "../sessions/SessionRow";
 import { DayColumn } from "../sessions/SessionRowParts";
 import { ROW_TAGS_HEIGHT, RowTags } from "../sessions/RowTags";
 import { EntryKindChip } from "./EntryKindChip";
+
+export const TRIP_TINT = "rgba(204,121,234,0.13)";
+
+/** A trip heading its group carries what it holds on a second meta line. */
+export const HEADING_DETAIL_HEIGHT = 17;
 
 export function entryRowHeight(entry: JournalEntry): number {
   return SESSION_ROW_HEIGHT + (entry.tags.length > 0 ? ROW_TAGS_HEIGHT : 0);
@@ -19,9 +30,18 @@ export function entryRowHeight(entry: JournalEntry): number {
 export function EntryRow({
   entry,
   onPress,
+  detail,
+  heading = false,
+  inset = false,
 }: {
   entry: JournalEntry;
   onPress: () => void;
+  /** Said after the dates: what a trip holds, or which injury an update is on. */
+  detail?: string;
+  /** A trip heading the group of what was logged inside its dates. */
+  heading?: boolean;
+  /** Inside a group that already sets the row in from the screen edge. */
+  inset?: boolean;
 }): React.ReactElement {
   const at = new Date(`${entry.occurred_at}T00:00:00Z`);
   const weekday = formatDate(at, { weekday: "short", timeZone: "UTC" });
@@ -31,23 +51,27 @@ export function EntryRow({
   const titled = (entry.title?.trim() ?? "") !== "";
   const meta = spansDates(entry.kind)
     ? spanLabel(entry.occurred_at, entry.ends_at)
-    : titled
+    : titled && detail === undefined
       ? (entry.body.trim().split("\n")[0] ?? "")
-      : "";
+      : (detail ?? "");
 
   return (
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel={[entryKindLabel(entry.kind), title, `${weekday} ${day}`].join(", ")}
+      accessibilityLabel={[entryKindLabel(displayKind(entry)), title, `${weekday} ${day}`].join(
+        ", "
+      )}
       style={pressRow({
         flexDirection: "row",
         alignItems: "center",
         gap: 12,
         paddingVertical: 11,
-        paddingHorizontal: 18,
+        paddingHorizontal: heading ? 8 : inset ? 0 : 18,
         borderBottomWidth: 1,
-        borderBottomColor: colors.lineOnLightSoft,
+        borderBottomColor: heading ? "transparent" : colors.lineOnLightSoft,
+        borderRadius: heading ? 11 : 0,
+        backgroundColor: heading ? TRIP_TINT : undefined,
       })}
     >
       <DayColumn weekday={weekday} day={day} />
@@ -58,9 +82,17 @@ export function EntryRow({
         <Text numberOfLines={1} style={rowMeta}>
           {meta}
         </Text>
+        {heading && detail !== undefined && (
+          <Text
+            numberOfLines={1}
+            style={{ ...rowMeta, fontFamily: fonts.monoSemiBold, color: colors.petalInk }}
+          >
+            {detail}
+          </Text>
+        )}
         <RowTags tags={entry.tags} />
       </View>
-      <EntryKindChip kind={entry.kind} />
+      <EntryKindChip kind={displayKind(entry)} />
       <Icon name="chevron" size={12} strokeWidth={2} color="rgba(64,63,76,0.35)" />
     </Pressable>
   );

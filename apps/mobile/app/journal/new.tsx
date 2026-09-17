@@ -8,7 +8,7 @@ import {
   emptyDraft,
   newEntryHeading,
   today,
-  useSessionRows,
+  useLogRows,
   type EntryKind,
 } from "@sendtally/features/journal";
 import { colors } from "@sendtally/design/tokens";
@@ -25,7 +25,7 @@ const kindParam = (value: string | undefined): EntryKind =>
 export default function NewEntryScreen(): React.ReactElement {
   const params = useLocalSearchParams<Params>();
   const api = useApi();
-  const { state } = useSessionRows(api);
+  const { state } = useLogRows(api);
 
   const initial = React.useMemo(
     () => ({
@@ -42,7 +42,13 @@ export default function NewEntryScreen(): React.ReactElement {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.white }} edges={["top", "bottom"]}>
       {state.status === "ready" ? (
-        <EntryComposer api={api} initial={initial} heading={heading} sessions={state.data} />
+        <EntryComposer
+          api={api}
+          initial={initial}
+          heading={heading}
+          sessions={state.data.sessions}
+          entries={state.data.entries}
+        />
       ) : (
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
           <ActivityIndicator color={colors.gunmetal} />
