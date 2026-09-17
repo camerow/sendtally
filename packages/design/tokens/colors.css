@@ -15,6 +15,7 @@
   --bs-petal: #cc79ea; /* hairlines, tints and data only - 3.7:1 under gunmetal, never a text ground */
   --bs-petal-tint: #eed3f8; /* light lavender - text/hairlines on gunmetal */
   --bs-petal-ink: #8c1fb5; /* dark - fills that carry white text (avatar chip) */
+  --bs-fern: #157f52; /* AA-safe green: clean-lap outlines and checks on white */
   --bs-white: #ffffff;
 
   /* Surfaces */
