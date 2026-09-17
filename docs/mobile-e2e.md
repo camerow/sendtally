@@ -54,6 +54,9 @@ eas build:list --platform android --profile e2e --status finished \
 When a finished `e2e` build carries the hash, the job downloads its APK, publishes the branch as an EAS Update, and installs the two together.
 That is the whole saving: the Gradle release build this replaced took sixteen of the job's twenty minutes.
 
+The Gradle fallback is a way to get a run at all, not a trustworthy one: the APK it builds segfaults in Hermes on launch on the emulator, in two of three runs when this was last exercised (17 Sep 2026), which reads as flows failing on "Sign in|Climb" with the device on its home screen.
+So when a branch moves the fingerprint, warm it with `eas build --profile e2e --platform android` from `apps/mobile` before trusting a red run.
+
 The `e2e` build profile exists for this job alone: it extends `preview`, so it is the same staging API and development Clerk instance, but it ships on its own `e2e` channel.
 That channel resolves to the `e2e` update branch, so every run publishes there and nothing the job does can land on a `preview` build someone is holding on a phone.
 The publish is `--branch e2e --environment preview`, and the mismatch is deliberate: the branch is where the update lands, the environment is where the staging keys live, and there is no `e2e` EAS environment holding a second copy of them.
