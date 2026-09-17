@@ -10,6 +10,7 @@ export const endurance = {
   "endurance.completed": "Durchgezogen",
   "endurance.fellAfter": "Abgekommen nach",
   "endurance.addLap": "+ Runde",
+  "endurance.removeLap": "- Runde",
   "endurance.lapDone": "Runde geschafft",
   "endurance.namePlaceholder": "Einfach ein bisschen klettern",
   "endurance.shorterLap": "Kürzere Runde",

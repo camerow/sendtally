@@ -7,10 +7,11 @@ import {
   enduranceLapValueLabel,
   enduranceOf,
   enduranceProgressLabel,
-  enduranceStep,
+  enduranceLapStep,
   enduranceUnitLabel,
   isCleanLap,
-  withEnduranceTarget,
+  removeLap,
+  stepEnduranceTarget,
   withEnduranceUnit,
   withLap,
   type ClimbDraft,
@@ -232,7 +233,8 @@ export function EnduranceFields({ climb, onChange }: EnduranceFieldsProps): Reac
   const endurance = enduranceOf(climb);
   const [picked, setPicked] = React.useState(endurance.laps.length - 1);
   const selected = Math.min(picked, endurance.laps.length - 1);
-  const step = enduranceStep(endurance.unit);
+  const lapStep = enduranceLapStep(endurance);
+  const targetFloor = endurance.unit === "moves" ? 1 : 15;
   const lap = endurance.laps[selected] ?? 0;
   const clean = isCleanLap(endurance, selected);
 
@@ -257,10 +259,10 @@ export function EnduranceFields({ climb, onChange }: EnduranceFieldsProps): Reac
           value={enduranceAmountLabel(endurance, endurance.target)}
           down={t("endurance.shorterLap")}
           up={t("endurance.longerLap")}
-          atFloor={endurance.target <= step}
+          atFloor={endurance.target <= targetFloor}
           atCeiling={endurance.target >= 3600}
-          onDown={() => onChange(withEnduranceTarget(climb, endurance.target - step))}
-          onUp={() => onChange(withEnduranceTarget(climb, endurance.target + step))}
+          onDown={() => onChange(stepEnduranceTarget(climb, -1))}
+          onUp={() => onChange(stepEnduranceTarget(climb, 1))}
         />
       </View>
 
@@ -285,6 +287,38 @@ export function EnduranceFields({ climb, onChange }: EnduranceFieldsProps): Reac
               onPress={() => setPicked(i)}
             />
           ))}
+          {endurance.laps.length > 1 && (
+            <Pressable
+              onPress={() => {
+                setPicked(endurance.laps.length - 2);
+                onChange(removeLap(climb));
+              }}
+              accessibilityRole="button"
+              accessibilityLabel={t("endurance.removeLap")}
+              style={press({
+                width: 74,
+                height: 60,
+                alignItems: "center",
+                justifyContent: "center",
+                borderRadius: radius.control,
+                borderWidth: 1,
+                borderStyle: "dashed",
+                borderColor: colors.lineOnLightStrong,
+              })}
+            >
+              <Text
+                style={{
+                  fontFamily: fonts.monoSemiBold,
+                  fontSize: 11,
+                  letterSpacing: 0.7,
+                  textTransform: "uppercase",
+                  color: colors.textSecondary,
+                }}
+              >
+                {t("endurance.removeLap")}
+              </Text>
+            </Pressable>
+          )}
           <Pressable
             onPress={() => {
               setPicked(endurance.laps.length);
@@ -333,7 +367,7 @@ export function EnduranceFields({ climb, onChange }: EnduranceFieldsProps): Reac
                 accessibilityRole="radio"
                 accessibilityState={{ checked: option === clean }}
                 onPress={() => {
-                  setLap(option ? endurance.target : Math.max(0, endurance.target - step));
+                  setLap(option ? endurance.target : Math.max(0, endurance.target - lapStep));
                   close();
                 }}
                 style={pressRow({
@@ -363,8 +397,8 @@ export function EnduranceFields({ climb, onChange }: EnduranceFieldsProps): Reac
             up={t("endurance.moreOfTheLap")}
             atFloor={lap <= 0}
             atCeiling={lap >= endurance.target}
-            onDown={() => setLap(lap - step)}
-            onUp={() => setLap(lap + step)}
+            onDown={() => setLap(lap - lapStep)}
+            onUp={() => setLap(lap + lapStep)}
           />
         )}
       </View>

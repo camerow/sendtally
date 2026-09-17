@@ -10,6 +10,7 @@ export const endurance = {
   "endurance.completed": "Completada",
   "endurance.fellAfter": "Caída tras",
   "endurance.addLap": "+ Vuelta",
+  "endurance.removeLap": "- Vuelta",
   "endurance.lapDone": "Vuelta hecha",
   "endurance.namePlaceholder": "Solo moviéndome un rato",
   "endurance.shorterLap": "Vuelta más corta",

@@ -10,6 +10,7 @@ export const endurance = {
   "endurance.completed": "Terminé",
   "endurance.fellAfter": "Chute après",
   "endurance.addLap": "+ Tour",
+  "endurance.removeLap": "- Tour",
   "endurance.lapDone": "Tour réalisé",
   "endurance.namePlaceholder": "Juste bouger un peu",
   "endurance.shorterLap": "Tour plus court",
