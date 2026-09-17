@@ -27,6 +27,7 @@ eas update --channel production --environment production --message "<commit subj
 
 That costs no build minutes.
 Installed apps pick it up on the next cold launch, and apply it on the one after - budget up to two launches when verifying by hand.
+The exception is a fresh install, which would otherwise open on the stale bundle embedded in the store build: on that first launch `useFreshInstallUpdate` holds the splash screen (for at most 10 seconds) while the update downloads, then reloads into it.
 
 The workflow then rewrites the body of the newest `mobile-v*` GitHub release, because that release is what the update actually shipped to.
 The body is two ranges of conventional commits: the store build's own notes, from the tag before it up to the tag, then an "Over the air since `mobile-vX.Y.Z`" section from the tag up to `HEAD`, labelled with the runtime fingerprint the update can reach.

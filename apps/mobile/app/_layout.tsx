@@ -28,6 +28,7 @@ import { AnalyticsProvider } from "../features/analytics/AnalyticsProvider";
 import { BillingProvider } from "../features/billing/BillingProvider";
 import { CLERK_PUBLISHABLE_KEY } from "../lib/config";
 import { QueryProvider } from "../lib/QueryProvider";
+import { useFreshInstallUpdate } from "../lib/useFreshInstallUpdate";
 
 Observe.configure({ integrations: { "expo-router": true } });
 setLocale(resolveLocale(getLocales()[0]?.languageTag));
@@ -48,7 +49,8 @@ function RootLayout(): React.ReactElement | null {
     IBMPlexMono_500Medium,
     IBMPlexMono_600SemiBold,
   });
-  if (!fontsLoaded) return null;
+  const updateSettled = useFreshInstallUpdate();
+  if (!fontsLoaded || !updateSettled) return null;
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
