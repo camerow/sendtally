@@ -12,7 +12,7 @@ import {
   type Session,
 } from "@sendtally/core";
 import { z } from "zod";
-import type { ManualSessionInput, SessionRow } from "./repo";
+import type { ManualSessionInput } from "./repo";
 import { CIRCUIT_COLOURS } from "./gyms";
 import { tagNames } from "./tags";
 
@@ -110,11 +110,16 @@ export const manualSessionShape = z.object({
   climbs: z.array(climbSchema).min(1).max(300),
 });
 
-export const manualSessionBody = manualSessionShape.superRefine((body, ctx) => {
+export function sessionTooLong(
+  body: { startTime?: string | undefined; endTime?: string | undefined },
+  ctx: z.RefinementCtx
+): void {
   if (sessionMinutes(body) > 720) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["endTime"], message: "session too long" });
   }
-});
+}
+
+export const manualSessionBody = manualSessionShape.superRefine(sessionTooLong);
 
 export type ManualSessionBody = z.infer<typeof manualSessionShape>;
 
@@ -191,7 +196,11 @@ export function parseClimbs(climbsJson: string | null | undefined): StoredClimb[
   return climbsJson == null ? [] : (JSON.parse(climbsJson) as StoredClimb[]);
 }
 
-export function historySession(row: SessionRow & { climbs_json?: string | null }): Session | null {
+export function historySession(row: {
+  start_at: string;
+  end_at: string;
+  climbs_json?: string | null;
+}): Session | null {
   if (row.climbs_json == null) return null;
   return {
     start: new Date(row.start_at),

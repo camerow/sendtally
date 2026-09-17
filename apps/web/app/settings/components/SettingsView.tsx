@@ -24,6 +24,13 @@ import { Section } from "./Section";
 import { StatusPill } from "./StatusPill";
 import { StravaPostingSection } from "./StravaPostingSection";
 
+const dataButton: React.CSSProperties = {
+  ...secondaryButton,
+  fontSize: 13,
+  padding: "9px 16px",
+  textDecoration: "none",
+};
+
 export type SettingsViewProps = {
   vm: SettingsVM;
   email: string;
@@ -95,6 +102,19 @@ export function SettingsView({
             </Link>
           </>
         )}
+      </Section>
+
+      <Section>
+        <span style={sectionLabel}>{t("settings.yourData")}</span>
+        <p style={bodyText}>{t("settings.yourDataBody")}</p>
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+          <Link to="/app/import" style={dataButton}>
+            {t("settings.importCsv")}
+          </Link>
+          <a href="/app/export.csv" download="sendtally-export.csv" style={dataButton}>
+            {t("settings.exportCsv")}
+          </a>
+        </div>
       </Section>
 
       <Section>

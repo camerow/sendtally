@@ -5,6 +5,7 @@ import { useGyms } from "@sendtally/features/gyms";
 import { useGradeScales, useSettings, useStravaPosting } from "@sendtally/features/settings";
 import type { Discipline, GradeScale } from "@sendtally/features/log-session";
 import { useBilling } from "../../features/billing/useBilling";
+import { useCsvExport } from "../../features/settings/useCsvExport";
 import { SettingsView } from "../../features/settings/SettingsView";
 import { useStravaConnect } from "../../features/settings/useStravaConnect";
 import { useApi } from "../../lib/api";
@@ -19,6 +20,7 @@ export default function Settings(): React.ReactElement {
   const connect = useStravaConnect(api, reload);
   const scales = useGradeScales(api, vm, reload);
   const gyms = useGyms(api);
+  const exporter = useCsvExport(api);
   const onChangeGradePref = React.useCallback(
     (discipline: Discipline, scale: GradeScale) => scales.set({ [discipline]: scale }),
     [scales]
@@ -37,6 +39,7 @@ export default function Settings(): React.ReactElement {
       }
       posting={posting}
       connect={connect}
+      exporter={exporter}
       onChangeGradePref={onChangeGradePref}
       onOpenAccount={onOpenAccount}
     />

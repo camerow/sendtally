@@ -11,6 +11,8 @@ import { ScreenHeader } from "../../components/ScreenHeader";
 import { pressRow } from "../../lib/press";
 import { AppUpdateSection } from "../app-update/AppUpdateSection";
 import { BuildInfo } from "./BuildInfo";
+import { DataSection } from "./DataSection";
+import type { CsvExportFeature } from "./useCsvExport";
 import type { Gym } from "@sendtally/features/gyms";
 import { GradeSection } from "./GradeSection";
 import { GymsSection } from "./GymsSection";
@@ -27,6 +29,7 @@ export type SettingsViewProps = {
   billing: MembershipSectionProps | null;
   posting: StravaPostingFeature;
   connect: StravaConnectFeature;
+  exporter: CsvExportFeature;
   onChangeGradePref: (discipline: Discipline, scale: GradeScale) => void;
   onOpenAccount: () => void;
 };
@@ -61,6 +64,7 @@ export function SettingsView({
   billing,
   posting,
   connect,
+  exporter,
   onChangeGradePref,
   onOpenAccount,
 }: SettingsViewProps): React.ReactElement {
@@ -131,6 +135,8 @@ export function SettingsView({
             <MembershipSection {...billing} />
           </View>
         )}
+
+        <DataSection exporter={exporter} />
 
         <Pressable
           onPress={onOpenAccount}

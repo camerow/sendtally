@@ -6,6 +6,7 @@ export type {
   CircuitColour,
   Gym,
   GymInput,
+  ImportBody,
   LogClimbInput,
   LogSessionInput,
   ProjectInput,
@@ -57,6 +58,8 @@ export type EntryInput = {
   status?: "ongoing" | "resolved" | null;
   tags?: string[];
 };
+
+export type ImportResult = { imported: number; skipped: number };
 
 export type TagSummary = Ok<Client["v1"]["tags"]["$get"]>["tags"][number];
 

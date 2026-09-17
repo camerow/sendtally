@@ -5,6 +5,7 @@ import { billing } from "./billing";
 import { climbs } from "./climbs";
 import { common } from "./common";
 import { gyms } from "./gyms";
+import { importCsv } from "./importCsv";
 import { journal } from "./journal";
 import { logSession } from "./logSession";
 import { onboarding } from "./onboarding";
@@ -22,6 +23,7 @@ export const es = {
   ...climbs,
   ...common,
   ...gyms,
+  ...importCsv,
   ...journal,
   ...logSession,
   ...onboarding,
