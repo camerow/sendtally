@@ -551,12 +551,14 @@ export function ClimbEditorSheet({
             </View>
           )}
 
-          <ProjectRow
-            on={project}
-            enabled={named && !endurance}
-            meta={known === null ? null : projectMetaLabel(known)}
-            onPress={onToggleProject}
-          />
+          {!endurance && (
+            <ProjectRow
+              on={project}
+              enabled={named}
+              meta={known === null ? null : projectMetaLabel(known)}
+              onPress={onToggleProject}
+            />
+          )}
 
           <View style={{ gap: 7 }}>
             <Text style={label}>

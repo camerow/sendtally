@@ -9,13 +9,10 @@ import {
   enduranceCleanLabel,
   enduranceLapCountLabel,
   enduranceLapLabel,
-  enduranceLapStep,
   enduranceLapValueLabel,
   enduranceProgressLabel,
   enduranceStep,
   enduranceSummaryLabel,
-  stepEnduranceTarget,
-  stepLap,
   enduranceTotals,
   isCleanLap,
   removeLap,
@@ -164,13 +161,13 @@ describe("labels", () => {
     expect(enduranceLapLabel(time, 0)).toBe("7 min 30 sec/12 min");
   });
 
-  it("reads a lap chip as the amount when clean and a bare pair when not", () => {
+  it("reads a lap chip as a bare pair for moves and as the amount for time", () => {
     const moves: Endurance = { unit: "moves", target: 32, laps: [32, 24] };
     expect(enduranceLapValueLabel(moves, 0)).toBe("32");
     expect(enduranceLapValueLabel(moves, 1)).toBe("24/32");
     const time: Endurance = { unit: "seconds", target: 720, laps: [720, 450] };
     expect(enduranceLapValueLabel(time, 0)).toBe("12 min");
-    expect(enduranceLapValueLabel(time, 1)).toBe("7.5/12");
+    expect(enduranceLapValueLabel(time, 1)).toBe("7 min 30 sec");
   });
 
   it("singularises one move and one lap", () => {

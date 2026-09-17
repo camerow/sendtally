@@ -133,9 +133,8 @@ export function enduranceProgressLabel(e: Endurance): string {
 export function enduranceLapValueLabel(e: Endurance, index: number): string {
   const lap = e.laps[index] ?? 0;
   if (lap === e.target) return doneLabel(e, lap);
-  const bare = (value: number): string =>
-    formatNumber(enduranceDisplayValue(e, value), { maximumFractionDigits: 1 });
-  return `${bare(lap)}/${bare(e.target)}`;
+  if (e.unit !== "moves") return enduranceAmountLabel(e, lap);
+  return `${formatNumber(lap)}/${formatNumber(e.target)}`;
 }
 
 export function enduranceLapLabel(e: Endurance, index: number): string {

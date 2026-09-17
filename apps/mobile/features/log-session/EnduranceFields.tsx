@@ -7,9 +7,10 @@ import {
   enduranceLapValueLabel,
   enduranceOf,
   enduranceProgressLabel,
-  enduranceLapStep,
+  enduranceStep,
   enduranceUnitLabel,
   isCleanLap,
+  FELL_AFTER_START,
   removeLap,
   stepEnduranceTarget,
   withEnduranceUnit,
@@ -171,7 +172,8 @@ function LapChip({
       accessibilityState={{ checked: selected }}
       accessibilityLabel={`${t("endurance.lapNumber", { n })}, ${clean ? t("endurance.completed") : value}`}
       style={press({
-        width: clean ? 62 : 74,
+        minWidth: clean ? 62 : 74,
+        paddingHorizontal: 10,
         height: 60,
         alignItems: "center",
         justifyContent: "center",
@@ -194,7 +196,10 @@ function LapChip({
       {clean ? (
         <Icon name="check" color={colors.fern} size={17} strokeWidth={2.4} />
       ) : (
-        <Text style={{ fontFamily: fonts.monoSemiBold, fontSize: 14, color: colors.gunmetal }}>
+        <Text
+          numberOfLines={1}
+          style={{ fontFamily: fonts.monoSemiBold, fontSize: 14, color: colors.gunmetal }}
+        >
           {value}
         </Text>
       )}
@@ -233,8 +238,7 @@ export function EnduranceFields({ climb, onChange }: EnduranceFieldsProps): Reac
   const endurance = enduranceOf(climb);
   const [picked, setPicked] = React.useState(endurance.laps.length - 1);
   const selected = Math.min(picked, endurance.laps.length - 1);
-  const lapStep = enduranceLapStep(endurance);
-  const targetFloor = endurance.unit === "moves" ? 1 : 15;
+  const step = enduranceStep(endurance);
   const lap = endurance.laps[selected] ?? 0;
   const clean = isCleanLap(endurance, selected);
 
@@ -259,7 +263,7 @@ export function EnduranceFields({ climb, onChange }: EnduranceFieldsProps): Reac
           value={enduranceAmountLabel(endurance, endurance.target)}
           down={t("endurance.shorterLap")}
           up={t("endurance.longerLap")}
-          atFloor={endurance.target <= targetFloor}
+          atFloor={endurance.target <= step}
           atCeiling={endurance.target >= 3600}
           onDown={() => onChange(stepEnduranceTarget(climb, -1))}
           onUp={() => onChange(stepEnduranceTarget(climb, 1))}
@@ -367,7 +371,7 @@ export function EnduranceFields({ climb, onChange }: EnduranceFieldsProps): Reac
                 accessibilityRole="radio"
                 accessibilityState={{ checked: option === clean }}
                 onPress={() => {
-                  setLap(option ? endurance.target : Math.max(0, endurance.target - lapStep));
+                  setLap(option ? endurance.target : FELL_AFTER_START);
                   close();
                 }}
                 style={pressRow({
@@ -397,8 +401,8 @@ export function EnduranceFields({ climb, onChange }: EnduranceFieldsProps): Reac
             up={t("endurance.moreOfTheLap")}
             atFloor={lap <= 0}
             atCeiling={lap >= endurance.target}
-            onDown={() => setLap(lap - lapStep)}
-            onUp={() => setLap(lap + lapStep)}
+            onDown={() => setLap(lap - step)}
+            onUp={() => setLap(lap + step)}
           />
         )}
       </View>
