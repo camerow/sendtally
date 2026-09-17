@@ -15,6 +15,7 @@
     "./settings": "./src/settings/index.ts",
     "./journal": "./src/journal/index.ts",
     "./i18n": "./src/i18n/index.ts",
+    "./import": "./src/import/index.ts",
     "./query": "./src/query/index.ts"
   },
   "scripts": {
