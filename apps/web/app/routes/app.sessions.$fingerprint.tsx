@@ -1,5 +1,6 @@
 import React from "react";
 import type { LinksFunction, LoaderFunctionArgs } from "react-router";
+import { CircuitDot } from "../components/CircuitDot";
 import { Link, useLoaderData, useNavigate, useParams } from "react-router";
 import type { SendtallyApi } from "@sendtally/api-client";
 import {
@@ -443,16 +444,19 @@ export default function SessionDetailRoute(): React.ReactElement {
                     {c.n}
                   </span>
                   <span style={{ display: "flex", flexDirection: "column", gap: 6, minWidth: 0 }}>
-                    <span
-                      style={{
-                        fontWeight: 500,
-                        fontSize: 15,
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      {c.name}
+                    <span style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+                      {c.colour !== undefined && <CircuitDot colour={c.colour} size={12} />}
+                      <span
+                        style={{
+                          fontWeight: 500,
+                          fontSize: 15,
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {c.name}
+                      </span>
                     </span>
                     {c.note !== null && (
                       <span

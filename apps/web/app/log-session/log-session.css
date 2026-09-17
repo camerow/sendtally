@@ -35,6 +35,10 @@
   align-items: end;
 }
 
+.climb-card-main--circuit {
+  grid-template-columns: minmax(0, 1fr) 122px 36px;
+}
+
 .climb-card-cell {
   display: flex;
   flex-direction: column;
@@ -233,6 +237,57 @@
   justify-content: center;
   color: var(--bs-white);
   flex: none;
+}
+
+.climb-ledger-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.climb-ledger-wall {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(64, 63, 76, 0.55);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.climb-ledger-stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.climb-ledger-stepper button {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: 1px solid rgba(64, 63, 76, 0.18);
+  background: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--bs-gunmetal);
+}
+
+.climb-ledger-stepper button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.climb-ledger-stepper .climb-ledger-tries {
+  width: 30px;
+  text-align: center;
+  font-weight: 600;
+  color: var(--bs-gunmetal);
 }
 
 .climb-ledger-tries {

@@ -6,6 +6,8 @@ import type {
   StravaPostingFeature,
 } from "@sendtally/features/settings";
 import type { MembershipVM } from "@sendtally/features/billing";
+import type { Gym } from "@sendtally/features/gyms";
+import { GymsSection } from "../../gyms/components/GymsSection";
 import {
   bodyText,
   linkAction,
@@ -28,6 +30,7 @@ export type SettingsViewProps = {
   membership: MembershipVM;
   posting: StravaPostingFeature;
   scales: GradeScalesFeature;
+  gyms: Gym[];
 };
 
 export function SettingsView({
@@ -36,6 +39,7 @@ export function SettingsView({
   membership,
   posting,
   scales,
+  gyms,
 }: SettingsViewProps): React.ReactElement {
   return (
     <div style={{ maxWidth: 640, display: "flex", flexDirection: "column", gap: 14 }}>
@@ -44,6 +48,10 @@ export function SettingsView({
       <Section>
         <span style={sectionLabel}>{t("settings.grades")}</span>
         <GradeScaleSection scales={scales} />
+      </Section>
+
+      <Section>
+        <GymsSection gyms={gyms} />
       </Section>
 
       <Section>

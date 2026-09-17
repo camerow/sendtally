@@ -4,6 +4,7 @@ import type { LoaderFunctionArgs } from "react-router";
 import { useLoaderData } from "react-router";
 import type { Membership } from "@sendtally/api-client";
 import { membershipVM } from "@sendtally/features/billing";
+import { useGyms } from "@sendtally/features/gyms";
 import { useGradeScales, useSettings, useStravaPosting } from "@sendtally/features/settings";
 import { cloudflareContext } from "../lib/cloudflare-context";
 import { getMembership } from "../lib/billing.server";
@@ -26,6 +27,7 @@ export default function SettingsRoute(): React.ReactElement {
   const { vm, reload } = useSettings(api);
   const posting = useStravaPosting(api, vm, reload);
   const scales = useGradeScales(api, vm, reload);
+  const gyms = useGyms(api);
 
   return (
     <SettingsView
@@ -34,6 +36,7 @@ export default function SettingsRoute(): React.ReactElement {
       membership={membershipVM({ membership })}
       posting={posting}
       scales={scales}
+      gyms={gyms.gyms}
     />
   );
 }

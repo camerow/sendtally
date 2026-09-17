@@ -3,6 +3,14 @@ import { useNavigate, useSearchParams } from "react-router";
 import type { ClimbSummary, SendtallyApi } from "@sendtally/api-client";
 import { climbDraftGrade, findClimb, useClimbVocabulary } from "@sendtally/features/climbs";
 import {
+  circuitGym,
+  gymOfDraft,
+  useGyms,
+  withCircuit,
+  withoutCircuit,
+  type Gym,
+} from "@sendtally/features/gyms";
+import {
   draftProblem,
   draftSummary,
   disciplineOf,
@@ -153,6 +161,8 @@ export function LogSessionForm({
   const { suggestionsFor } = useTagVocabulary(api);
 
   const vocabulary = useClimbVocabulary(api);
+  const gyms = useGyms(api);
+  const gym = draft.location === "indoor" ? circuitGym(gymOfDraft(gyms.gyms, draft.gymId)) : null;
   const narrow = useIsNarrow();
   const [editingKey, setEditingKey] = React.useState<string | null>(null);
 
@@ -194,6 +204,21 @@ export function LogSessionForm({
   function cancel(): void {
     if (autosave.savedAt === null) void navigate(cancelTo);
     else setConfirmingCancel(true);
+  }
+
+  /** Changing the gym re-places every climb: onto the new gym's first circuit, or off circuits. */
+  function setGym(next: Gym | null): void {
+    const at = circuitGym(next);
+    const first = at?.circuits[0];
+    setDraft((d) => ({
+      ...d,
+      gymId: next?.id,
+      climbs: d.climbs.map((c) =>
+        at === null || first === undefined
+          ? withoutCircuit(c)
+          : withCircuit(c, at.circuits.find((x) => x.id === c.circuit?.id) ?? first, at)
+      ),
+    }));
   }
 
   function setDiscipline(key: string, discipline: Discipline): void {
@@ -362,6 +387,23 @@ export function LogSessionForm({
               ))}
             </div>
           </Field>
+          {draft.location === "indoor" && gyms.ready && gyms.gyms.length > 0 && (
+            <Field label={t("gyms.gym")}>
+              <select
+                value={draft.gymId ?? ""}
+                onChange={(e) => setGym(gyms.gyms.find((g) => g.id === e.target.value) ?? null)}
+                className="log-session-control"
+                style={inputStyle}
+              >
+                <option value="">{t("gyms.noGym")}</option>
+                {gyms.gyms.map((g) => (
+                  <option key={g.id} value={g.id}>
+                    {g.name}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          )}
           <Field
             label={
               <>
@@ -442,6 +484,7 @@ export function LogSessionForm({
                   key={climb.key}
                   climb={climb}
                   scale={climb.scale}
+                  gym={gym}
                   onChangeDiscipline={(discipline) => setDiscipline(climb.key, discipline)}
                   removable={draft.climbs.length > 1}
                   project={isProject(climb)}
@@ -500,6 +543,7 @@ export function LogSessionForm({
           index={editingIndex}
           count={draft.climbs.length}
           scale={editingClimb.scale}
+          gym={gym}
           onChangeDiscipline={(discipline) => setDiscipline(editingClimb.key, discipline)}
           project={isProject(editingClimb)}
           suggestions={vocabulary.suggestionsFor(editingClimb.name)}
