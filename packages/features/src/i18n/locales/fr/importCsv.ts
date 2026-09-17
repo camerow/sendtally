@@ -26,11 +26,6 @@ export const importCsv = {
   "import.colStyle":
     "flash, onsight ou redpoint. Réussites seulement ; onsight pour les voies uniquement.",
   "import.colTriesRpe": "Nombres entiers. RPE de 1 à 10 ; laisse vide et Sendtally note la séance.",
-  "import.convertLabel": "Tu as ton propre tableur ?",
-  "import.convertBody":
-    "Copie un prompt qui convertit n'importe quel tableur d'escalade dans ce format avec un assistant IA.",
-  "import.showPrompt": "Afficher le prompt",
-  "import.hidePrompt": "Masquer le prompt",
   "import.copyPrompt": "Copier le prompt",
   "import.copied": "Copié",
   "import.convertTitle": "Convertir un tableur avec un assistant IA",

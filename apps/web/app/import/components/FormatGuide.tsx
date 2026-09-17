@@ -2,12 +2,7 @@ import React from "react";
 import { TEMPLATE_CSV } from "@sendtally/features/import";
 import { t } from "@sendtally/features/i18n";
 import { Section } from "../../settings/components/Section";
-import {
-  bodyText,
-  linkAction,
-  secondaryButton,
-  sectionLabel,
-} from "../../settings/components/styles";
+import { bodyText, linkAction, sectionLabel } from "../../settings/components/styles";
 import { code, td, tdMono, th } from "../styles";
 import { ConversionPrompt } from "./ConversionPrompt";
 
@@ -37,7 +32,6 @@ const COLUMNS: Column[] = [
 const templateHref = `data:text/csv;charset=utf-8,${encodeURIComponent(TEMPLATE_CSV)}`;
 
 export function FormatGuide(): React.ReactElement {
-  const [showPrompt, setShowPrompt] = React.useState(false);
   return (
     <>
       <Section>
@@ -75,29 +69,7 @@ export function FormatGuide(): React.ReactElement {
           </tbody>
         </table>
       </Section>
-      <Section>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            gap: 12,
-          }}
-        >
-          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-            <span style={sectionLabel}>{t("import.convertLabel")}</span>
-            <p style={bodyText}>{t("import.convertBody")}</p>
-          </div>
-          <button
-            type="button"
-            onClick={() => setShowPrompt((v) => !v)}
-            style={{ ...secondaryButton, fontSize: 13, padding: "9px 16px", whiteSpace: "nowrap" }}
-          >
-            {showPrompt ? t("import.hidePrompt") : t("import.showPrompt")}
-          </button>
-        </div>
-      </Section>
-      {showPrompt && <ConversionPrompt />}
+      <ConversionPrompt />
     </>
   );
 }

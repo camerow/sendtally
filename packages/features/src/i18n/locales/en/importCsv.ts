@@ -24,11 +24,6 @@ export const importCsv = {
   "import.colStyle": "flash, onsight or redpoint. Sends only; onsight is routes only.",
   "import.colTriesRpe":
     "Whole numbers. RPE 1 to 10; leave it blank and Sendtally scores the session.",
-  "import.convertLabel": "Have a spreadsheet of your own?",
-  "import.convertBody":
-    "Copy a prompt that turns any climbing spreadsheet into this format with an AI assistant.",
-  "import.showPrompt": "Show the prompt",
-  "import.hidePrompt": "Hide the prompt",
   "import.copyPrompt": "Copy prompt",
   "import.copied": "Copied",
   "import.convertTitle": "Convert a spreadsheet with an AI assistant",

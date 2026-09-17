@@ -26,11 +26,6 @@ export const importCsv = {
   "import.colStyle": "flash, onsight oder redpoint. Nur bei Sends; onsight nur bei Routen.",
   "import.colTriesRpe":
     "Ganze Zahlen. RPE 1 bis 10; leer lassen und Sendtally bewertet die Session.",
-  "import.convertLabel": "Hast du eine eigene Tabelle?",
-  "import.convertBody":
-    "Kopiere einen Prompt, der mit einem KI-Assistenten jede Klettertabelle in dieses Format bringt.",
-  "import.showPrompt": "Prompt anzeigen",
-  "import.hidePrompt": "Prompt ausblenden",
   "import.copyPrompt": "Prompt kopieren",
   "import.copied": "Kopiert",
   "import.convertTitle": "Tabelle mit einem KI-Assistenten umwandeln",

@@ -8,7 +8,7 @@ export const TEMPLATE_CSV = `date,session,location,gym,start_time,end_time,rpe,t
 2023-01-05,,,Boulder Barn,18:00,19:30,,,,,6A+,send,flash,1,
 `;
 
-export const CONVERSION_PROMPT = `Convert the attached climbing log into a CSV that Sendtally can import. Output only the CSV.
+export const CONVERSION_PROMPT = `Convert the attached climbing log into a CSV that Sendtally can import. Output a CSV file.
 
 Format: one row per climb, header row exactly:
 date,session,location,gym,start_time,end_time,rpe,tags,session_notes,climb,grade,kind,style,tries,climb_notes

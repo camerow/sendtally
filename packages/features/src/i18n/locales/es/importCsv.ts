@@ -26,11 +26,6 @@ export const importCsv = {
   "import.colStyle": "flash, onsight o redpoint. Solo encadenes; onsight solo en vías.",
   "import.colTriesRpe":
     "Números enteros. RPE de 1 a 10; déjalo vacío y Sendtally puntúa la sesión.",
-  "import.convertLabel": "¿Tienes tu propia hoja de cálculo?",
-  "import.convertBody":
-    "Copia un prompt que convierte cualquier hoja de escalada a este formato con un asistente de IA.",
-  "import.showPrompt": "Mostrar el prompt",
-  "import.hidePrompt": "Ocultar el prompt",
   "import.copyPrompt": "Copiar prompt",
   "import.copied": "Copiado",
   "import.convertTitle": "Convertir una hoja de cálculo con un asistente de IA",
