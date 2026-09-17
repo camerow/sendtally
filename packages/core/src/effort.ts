@@ -81,8 +81,33 @@ export function points(vGrade: number): number {
 export const MOVES_PER_EQUIVALENT = 8;
 export const SECONDS_PER_EQUIVALENT = 90;
 
+export type EnduranceTotals = { laps: number; done: number; total: number; clean: number };
+
+export function enduranceTotals(e: Endurance): EnduranceTotals {
+  return {
+    laps: e.laps.length,
+    done: e.laps.reduce((a, b) => a + b, 0),
+    total: e.laps.length * e.target,
+    clean: e.laps.filter((lap) => lap === e.target).length,
+  };
+}
+
+/**
+ * The unit both sides of a time pair render in, decided once from the lap target.
+ * Deciding per value reads "1890 sec of 36 min" the moment a lap comes off early.
+ */
+export function enduranceTimeUnit(target: number): "min" | "sec" {
+  return target >= 60 && target % 60 === 0 ? "min" : "sec";
+}
+
+/** Moves and seconds render as they are; minutes to at most one decimal. */
+export function enduranceDisplayValue(e: Endurance, value: number): number {
+  if (e.unit === "moves" || enduranceTimeUnit(e.target) === "sec") return value;
+  return Math.round((value / 60) * 10) / 10;
+}
+
 export function enduranceEquivalents(e: Endurance): number {
-  const done = e.laps.reduce((a, b) => a + b, 0);
+  const done = enduranceTotals(e).done;
   return done / (e.unit === "moves" ? MOVES_PER_EQUIVALENT : SECONDS_PER_EQUIVALENT);
 }
 
@@ -300,15 +325,16 @@ function summary(rpe: number, s: Session): string {
   return lines.join("\n");
 }
 
-function secondsLabel(n: number): string {
-  return n >= 60 && n % 60 === 0 ? `${n / 60} min` : `${n} sec`;
+function enduranceAmount(e: Endurance, value: number): string {
+  const shown = enduranceDisplayValue(e, value);
+  if (e.unit === "moves") return plural(shown, "move");
+  return `${shown} ${enduranceTimeUnit(e.target)}`;
 }
 
 function enduranceProgress(e: Endurance): string {
-  const done = e.laps.reduce((a, b) => a + b, 0);
-  const total = e.laps.length * e.target;
-  if (e.unit === "moves") return `${done} of ${total} moves`;
-  return `${secondsLabel(done)} of ${secondsLabel(total)}`;
+  const { done, total } = enduranceTotals(e);
+  const left = e.unit === "moves" ? String(done) : enduranceAmount(e, done);
+  return `${left} of ${enduranceAmount(e, total)}`;
 }
 
 function climbLine(c: Climb): string {
