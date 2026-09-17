@@ -13,7 +13,7 @@ export const billing = {
   "billing.memberVia": "Member · {store}",
   "billing.memberWeb": "Member · web",
   "billing.pointVolume": "Volume - how much you actually climbed, week by week",
-  "billing.pointRpe": "RPE - how hard your sessions have been feeling over time",
+  "billing.pointRpe": "Effort - how hard your sessions have been feeling over time",
   "billing.pointAvgGrade": "Average send grade - the drift a logbook can never show you",
   "billing.pointFlashRate": "Flash rate - the first thing to move when your reading improves",
   "billing.period.week": "week",

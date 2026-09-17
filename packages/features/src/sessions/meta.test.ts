@@ -30,8 +30,8 @@ function session(overrides: Partial<SessionRow> = {}): SessionRow {
 }
 
 describe("sessionMetaLabel", () => {
-  it("joins duration, climbs and RPE", () => {
-    expect(sessionMetaLabel(session())).toBe("1h 40m · 14 climbs · RPE 7/10");
+  it("joins duration, climbs and effort", () => {
+    expect(sessionMetaLabel(session())).toBe("1h 40m · 14 climbs · Effort 7/10");
   });
 });
 

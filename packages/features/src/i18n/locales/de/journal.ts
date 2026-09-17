@@ -74,10 +74,10 @@ export const journal = {
   "journal.hintTrip": "Fasse Sessions zu einer Reise zusammen",
   "journal.hintInjury": "Erfasse eine neue Verletzung und verfolge ihren Verlauf",
   "journal.tripDaysClimbed": "Klettertage",
-  "journal.tripAverageRpe": "RPE im Schnitt",
+  "journal.tripAverageRpe": "Anstrengung im Schnitt",
   "journal.dayByDay": "Tag für Tag",
   "journal.effortByDay": "Anstrengung pro Tag",
-  "journal.effortByDayNote": "Höchste RPE pro Tag. Ein Tag ohne Session ist ein Strich.",
+  "journal.effortByDayNote": "Höchste Anstrengung pro Tag. Ein Tag ohne Session ist ein Strich.",
   "journal.alreadyOngoing": "Läuft schon",
   "journal.carriedInNote":
     "Hat vor dieser Reise angefangen und bleibt deshalb an seinem eigenen Datum im Logbuch.",

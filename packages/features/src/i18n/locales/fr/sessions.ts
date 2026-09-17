@@ -61,7 +61,7 @@ export const sessions = {
   "sessions.logAClimbHint": "Consigner une seule voie. Démarre une séance en cours",
   "sessions.logFullSession": "Séance",
   "sessions.logFullSessionHint":
-    "Regroupe des voies dans une séance avec un nom, des notes, une date, un lieu et un RPE.",
+    "Regroupe des voies dans une séance avec un nom, des notes, une date, un lieu et un effort.",
   "sessions.liveMeta": "En cours depuis {elapsed}",
   "sessions.wrapUp": "Conclure",
   "sessions.stillClimbing": "Toujours en train de grimper ?",

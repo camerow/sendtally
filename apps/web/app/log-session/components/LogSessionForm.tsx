@@ -2,6 +2,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import React from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import type { ClimbSummary, SendtallyApi } from "@sendtally/api-client";
+import { effortColor } from "@sendtally/design/tokens";
 import { climbDraftGrade, findClimb, useClimbVocabulary } from "@sendtally/features/climbs";
 import {
   circuitGym,
@@ -75,7 +76,7 @@ function RpePicker({
     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
       <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
         <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
-          <span style={monoLabel}>RPE</span>
+          <span style={monoLabel}>{t("common.effort")}</span>
           <span
             style={{
               fontFamily: "var(--font-mono)",
@@ -122,7 +123,7 @@ function RpePicker({
             <button
               key={value}
               type="button"
-              aria-label={`RPE ${value}`}
+              aria-label={t("common.effortValue", { n: value })}
               onClick={() => onChange(value)}
               className="log-session-rpe"
               style={{
@@ -130,7 +131,7 @@ function RpePicker({
                 borderRadius: 4,
                 border: "none",
                 cursor: "pointer",
-                background: lit ? "var(--data-bar)" : "var(--data-bar-empty)",
+                background: lit ? effortColor(rpe ?? 1) : "var(--data-bar-empty)",
               }}
             />
           );

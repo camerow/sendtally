@@ -13,7 +13,7 @@ export const billing = {
   "billing.memberVia": "Abonné · {store}",
   "billing.memberWeb": "Abonné · web",
   "billing.pointVolume": "Volume - ce que tu as vraiment grimpé, semaine après semaine",
-  "billing.pointRpe": "RPE - la difficulté ressentie de tes séances dans le temps",
+  "billing.pointRpe": "Effort - la difficulté ressentie de tes séances dans le temps",
   "billing.pointAvgGrade": "Cotation moyenne enchaînée - la dérive qu'un carnet ne montre jamais",
   "billing.pointFlashRate":
     "Taux de flash - la première chose qui bouge quand ta lecture progresse",

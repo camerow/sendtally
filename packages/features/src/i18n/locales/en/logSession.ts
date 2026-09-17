@@ -64,9 +64,9 @@ export const logSession = {
   "logSession.endTime": "End time",
   "logSession.afterYouSave": "After you save",
   "logSession.afterSaveNew":
-    "sendtally titles the session and builds the climb log. Leave RPE on auto and it is scored against your last 8 weeks of sessions. Notes stay in sendtally and are never posted to Strava.",
+    "sendtally titles the session and builds the climb log. Leave effort on auto and it is scored against your last 8 weeks of sessions. Notes stay in sendtally and are never posted to Strava.",
   "logSession.afterSaveEdit":
-    "sendtally rebuilds the title and climb log from these edits. Reset RPE to auto to have it scored against your last 8 weeks of sessions again. Notes stay in sendtally and are never posted to Strava.",
+    "sendtally rebuilds the title and climb log from these edits. Reset effort to auto to have it scored against your last 8 weeks of sessions again. Notes stay in sendtally and are never posted to Strava.",
   "logSession.scalesInSettings": "Grade scales live in settings",
   "logSession.name": "Name",
   "logSession.tries": "Tries",

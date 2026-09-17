@@ -65,9 +65,9 @@ export const logSession = {
   "logSession.endTime": "Hora de fin",
   "logSession.afterYouSave": "Después de guardar",
   "logSession.afterSaveNew":
-    "sendtally pone título a la sesión y construye el registro de escaladas. Deja el RPE en auto y se puntúa contra tus últimas 8 semanas de sesiones. Las notas se quedan en sendtally y nunca se publican en Strava.",
+    "sendtally pone título a la sesión y construye el registro de escaladas. Deja el esfuerzo en auto y se puntúa contra tus últimas 8 semanas de sesiones. Las notas se quedan en sendtally y nunca se publican en Strava.",
   "logSession.afterSaveEdit":
-    "sendtally reconstruye el título y el registro de escaladas a partir de estos cambios. Vuelve a poner el RPE en auto para que se puntúe de nuevo contra tus últimas 8 semanas de sesiones. Las notas se quedan en sendtally y nunca se publican en Strava.",
+    "sendtally reconstruye el título y el registro de escaladas a partir de estos cambios. Vuelve a poner el esfuerzo en auto para que se puntúe de nuevo contra tus últimas 8 semanas de sesiones. Las notas se quedan en sendtally y nunca se publican en Strava.",
   "logSession.scalesInSettings": "Las escalas de grados están en ajustes",
   "logSession.name": "Nombre",
   "logSession.tries": "Pegues",

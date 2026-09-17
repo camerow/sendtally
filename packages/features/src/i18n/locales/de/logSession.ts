@@ -65,9 +65,9 @@ export const logSession = {
   "logSession.endTime": "Endzeit",
   "logSession.afterYouSave": "Nach dem Speichern",
   "logSession.afterSaveNew":
-    "sendtally gibt der Session einen Titel und baut das Kletterprotokoll. Lass RPE auf Auto und sie wird an deinen Sessions der letzten 8 Wochen gemessen. Notizen bleiben in sendtally und werden nie auf Strava gepostet.",
+    "sendtally gibt der Session einen Titel und baut das Kletterprotokoll. Lass die Anstrengung auf Auto und sie wird an deinen Sessions der letzten 8 Wochen gemessen. Notizen bleiben in sendtally und werden nie auf Strava gepostet.",
   "logSession.afterSaveEdit":
-    "sendtally baut Titel und Kletterprotokoll aus diesen Änderungen neu. Setz RPE auf Auto zurück, damit sie wieder an deinen Sessions der letzten 8 Wochen gemessen wird. Notizen bleiben in sendtally und werden nie auf Strava gepostet.",
+    "sendtally baut Titel und Kletterprotokoll aus diesen Änderungen neu. Setz die Anstrengung auf Auto zurück, damit sie wieder an deinen Sessions der letzten 8 Wochen gemessen wird. Notizen bleiben in sendtally und werden nie auf Strava gepostet.",
   "logSession.scalesInSettings": "Gradskalen stellst du in den Einstellungen ein",
   "logSession.name": "Name",
   "logSession.tries": "Versuche",

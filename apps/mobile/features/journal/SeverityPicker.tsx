@@ -1,7 +1,7 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { t } from "@sendtally/features/i18n";
-import { colors, fonts } from "@sendtally/design/tokens";
+import { colors, fonts, severityColor, severityNoneTint } from "@sendtally/design/tokens";
 
 const label = {
   fontFamily: fonts.monoMedium,
@@ -12,9 +12,15 @@ const label = {
 } as const;
 
 /**
- * The RPE strip, one control lower and in watermelon, so two stacked strips
- * never read as one question. 0 is a value here, so it gets its own segment.
+ * The effort strip, one control lower, so two stacked strips never read as one
+ * question. 0 is a value here, so it gets its own segment.
  */
+function barColor(severity: number | null, value: number): string {
+  if (value === 0) return severity === 0 ? severityColor(0) : severityNoneTint;
+  if (severity !== null && value <= severity) return severityColor(severity);
+  return colors.dataBarEmpty;
+}
+
 export function SeverityPicker({
   severity,
   onChange,
@@ -33,18 +39,14 @@ export function SeverityPicker({
             {t("journal.severityScale")}
           </Text>
         ) : (
-          <Text
-            style={{ fontFamily: fonts.monoSemiBold, fontSize: 17, color: colors.watermelonInk }}
-          >
+          <Text style={{ fontFamily: fonts.monoSemiBold, fontSize: 17, color: colors.gunmetal }}>
             {severity}
-            <Text style={{ fontSize: 12, color: "rgba(196,48,61,0.6)" }}>/10</Text>
+            <Text style={{ fontSize: 12, color: colors.textMuted }}>/10</Text>
           </Text>
         )}
       </View>
       <View style={{ flexDirection: "row", gap: 3 }}>
         {Array.from({ length: 11 }, (_, value) => {
-          const lit = severity !== null && value <= severity && value > 0;
-          const zeroPicked = severity === 0 && value === 0;
           return (
             <Pressable
               key={value}
@@ -56,7 +58,7 @@ export function SeverityPicker({
                 flex: 1,
                 height: 44,
                 borderRadius: 4,
-                backgroundColor: lit || zeroPicked ? colors.watermelonInk : colors.dataBarEmpty,
+                backgroundColor: barColor(severity, value),
               }}
             />
           );
