@@ -31,7 +31,7 @@ const STANDARD: ReadonlyArray<readonly [CircuitColour, number, number]> = [
   ["green", 0, 0],
   ["yellow", 1, 2],
   ["orange", 3, 4],
-  ["red", 4, 6],
+  ["red", 4, 5],
   ["purple", 6, 7],
   ["black", 8, 10],
   ["white", 11, 12],
