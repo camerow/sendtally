@@ -1,3 +1,4 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { router, useLocalSearchParams } from "expo-router";
 import React from "react";
 import { AppState, Pressable, ScrollView, Text, TextInput, View } from "react-native";
@@ -27,6 +28,7 @@ import { useGradeScalePrefs } from "@sendtally/features/settings";
 import { formatDate, t } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { useApi } from "../../lib/api";
+import { queries } from "@sendtally/features/query";
 import { sessionDraftStorage } from "../../lib/sessionDraftStorage";
 import { confirmDiscardDraft } from "../../lib/confirmDiscardDraft";
 import { DraftBanner } from "./DraftBanner";
@@ -121,6 +123,7 @@ export function LogSessionForm({
   editing?: { fingerprint: string; draft: LogSessionDraft };
 }): React.ReactElement {
   const api = useApi();
+  const client = useQueryClient();
   const { resume, wrapUp } = useLocalSearchParams<{ resume?: string; wrapUp?: string }>();
   const { scales: gradePrefs, ready: prefsReady } = useGradeScalePrefs(api);
   // Opened by tapping the draft itself: start on it rather than offering it back.
@@ -250,6 +253,11 @@ export function LogSessionForm({
         editing === undefined
           ? await api.logSession(input)
           : await api.updateLoggedSession(editing.fingerprint, input);
+      // The response is written before a Strava post starts, so it opens the
+      // page at once but is stored stale for the page to re-read on mount.
+      client.setQueryData(queries.session(api, session.fingerprint).queryKey, session, {
+        updatedAt: 0,
+      });
       autosave.clear();
       router.replace(`/session/${encodeURIComponent(session.fingerprint)}`);
     } catch {

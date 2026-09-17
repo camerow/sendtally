@@ -21,7 +21,7 @@ export function useSessionTags(
   const [tags, setTags] = React.useState<string[]>(() => initial.map((t) => t.name));
   const [saving, setSaving] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
-  const { reload: reloadVocabulary, suggestionsFor } = useTagVocabulary(api);
+  const { suggestionsFor } = useTagVocabulary(api);
 
   const save = React.useCallback(
     async (next: string[], previous: string[]): Promise<void> => {
@@ -31,7 +31,6 @@ export function useSessionTags(
       try {
         const { tags: saved } = await api.setSessionTags(fingerprint, next);
         setTags(saved.map((t) => t.name));
-        await reloadVocabulary();
       } catch {
         setTags(previous);
         setError(t("sessions.tagsSaveFailed"));
@@ -39,7 +38,7 @@ export function useSessionTags(
         setSaving(false);
       }
     },
-    [api, fingerprint, reloadVocabulary]
+    [api, fingerprint]
   );
 
   const add = React.useCallback(

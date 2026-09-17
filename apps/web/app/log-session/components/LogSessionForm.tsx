@@ -1,3 +1,4 @@
+import { useQueryClient } from "@tanstack/react-query";
 import React from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import type { ClimbSummary, SendtallyApi } from "@sendtally/api-client";
@@ -30,6 +31,7 @@ import {
   type LogSessionDraft,
 } from "@sendtally/features/log-session";
 import { SESSION_NOTE_MAX, useTagVocabulary } from "@sendtally/features/sessions";
+import { queries } from "@sendtally/features/query";
 import { useGradeScalePrefs } from "@sendtally/features/settings";
 import { formatDate, t } from "@sendtally/features/i18n";
 import { DiscardDraftDialog } from "../../components/DiscardDraftDialog";
@@ -146,6 +148,7 @@ export function LogSessionForm({
   editing?: { fingerprint: string; draft: LogSessionDraft };
 }): React.ReactElement {
   const navigate = useNavigate();
+  const client = useQueryClient();
   const [searchParams] = useSearchParams();
   const prefs = useGradeScalePrefs(api);
   // Opened by tapping the draft itself: start on it rather than offering it back.
@@ -308,6 +311,11 @@ export function LogSessionForm({
         editing === undefined
           ? await api.logSession(input)
           : await api.updateLoggedSession(editing.fingerprint, input);
+      // The response is written before a Strava post starts, so it opens the
+      // page at once but is stored stale for the page to re-read on mount.
+      client.setQueryData(queries.session(api, session.fingerprint).queryKey, session, {
+        updatedAt: 0,
+      });
       autosave.clear();
       await navigate(`/app/sessions/${encodeURIComponent(session.fingerprint)}`);
     } catch {

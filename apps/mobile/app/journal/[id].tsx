@@ -26,7 +26,6 @@ import { RowTags } from "../../features/sessions/RowTags";
 import { SessionRow } from "../../features/sessions/SessionRow";
 import { useApi } from "../../lib/api";
 import { press } from "../../lib/press";
-import { useReloadOnReturn } from "../../lib/useReloadOnReturn";
 
 const action = {
   fontFamily: fonts.monoMedium,
@@ -108,8 +107,7 @@ export default function EntryDetailScreen(): React.ReactElement {
   const api = useApi();
   const [deleting, setDeleting] = React.useState(false);
 
-  const { state, reload } = useEntryDetail(api, id ?? "");
-  useReloadOnReturn(reload);
+  const { state } = useEntryDetail(api, id ?? "");
 
   // An update is read on its thread, never on a page of its own.
   const parentId = state.status === "ready" ? state.data.entry.parent_id : null;

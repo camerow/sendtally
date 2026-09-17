@@ -1,4 +1,4 @@
-import { router, useFocusEffect } from "expo-router";
+import { router } from "expo-router";
 import React from "react";
 import {
   RefreshControl,
@@ -10,7 +10,6 @@ import {
 } from "react-native";
 import { useSettings } from "@sendtally/features/settings";
 import { SafeAreaView } from "react-native-safe-area-context";
-import type { JournalEntry, SessionRow as SessionRowData } from "@sendtally/api-client";
 import {
   filterSessionsByTags,
   monthScopeItems,
@@ -23,6 +22,7 @@ import {
 } from "@sendtally/features/sessions";
 import { logItems, logScopeItems, type LogItem } from "@sendtally/features/journal";
 import { t } from "@sendtally/features/i18n";
+import { queries, useQueryPair } from "@sendtally/features/query";
 import { colors, fonts } from "@sendtally/design/tokens";
 import { ScreenHeader } from "../../components/ScreenHeader";
 import { useClimbVocabulary } from "@sendtally/features/climbs";
@@ -94,10 +94,10 @@ const emptyBody = {
 export default function Log(): React.ReactElement {
   const api = useApi();
   const list = React.useRef<SectionList<LogItem, Section>>(null);
-  const [sessions, setSessions] = React.useState<SessionRowData[] | null>(null);
-  const [entries, setEntries] = React.useState<JournalEntry[]>([]);
+  const log = useQueryPair(queries.sessions(api), queries.entries(api));
+  const [sessions, entries] = log.state.status === "ready" ? log.state.data : [null, null];
+  const error = log.state.status === "error" || log.refreshFailed ? t("sessions.loadFailed") : null;
   const [refreshing, setRefreshing] = React.useState(false);
-  const [error, setError] = React.useState<string | null>(null);
   const [filters, setFilters] = React.useState<SessionFilters>(DEFAULT_FILTERS);
   const [filtersOpen, setFiltersOpen] = React.useState(false);
   const [currentKey, setCurrentKey] = React.useState<string | null>(null);
@@ -109,13 +109,6 @@ export default function Log(): React.ReactElement {
   const [editingClimb, setEditingClimb] = React.useState<string | null>(null);
   const connect = useStravaConnect(api, settings.reload);
   const gyms = useGyms(api);
-  const reloadGyms = gyms.reload;
-  // A gym added from the setup card comes back to this tab, which must stop offering it.
-  useFocusEffect(
-    React.useCallback(() => {
-      reloadGyms();
-    }, [reloadGyms])
-  );
   const gymPrompt = useSetupDismissed("gym");
   const stravaPrompt = useSetupDismissed("strava");
   const liveGym = circuitGym(
@@ -152,7 +145,7 @@ export default function Log(): React.ReactElement {
     });
   }
 
-  const all = React.useMemo(() => logItems(sessions ?? [], entries), [sessions, entries]);
+  const all = React.useMemo(() => logItems(sessions ?? [], entries ?? []), [sessions, entries]);
   const inScope = React.useMemo(() => logScopeItems(all, filters.scope), [all, filters.scope]);
   const tagOptions = React.useMemo(() => sessionTagOptions(inScope), [inScope]);
   const untaggedCount = React.useMemo(
@@ -191,22 +184,10 @@ export default function Log(): React.ReactElement {
     };
   }, [filters.grouping, visible]);
 
-  const load = React.useCallback(async (): Promise<void> => {
-    try {
-      const [result, journal] = await Promise.all([api.sessions(), api.entries()]);
-      setSessions(result.sessions);
-      setEntries(journal.entries);
-      setError(null);
-      void maybeAskForReview(result.sessions.length);
-    } catch {
-      setError(t("sessions.loadFailed"));
-    }
-  }, [api]);
-
+  const sessionCount = sessions?.length;
   React.useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- load only sets state after its await
-    void load();
-  }, [load]);
+    if (sessionCount !== undefined) void maybeAskForReview(sessionCount);
+  }, [sessionCount]);
 
   const viewability = React.useMemo(
     () => [
@@ -293,7 +274,7 @@ export default function Log(): React.ReactElement {
             refreshing={refreshing}
             onRefresh={() => {
               setRefreshing(true);
-              void load().finally(() => setRefreshing(false));
+              void log.reload().finally(() => setRefreshing(false));
             }}
             tintColor={colors.gunmetal}
           />

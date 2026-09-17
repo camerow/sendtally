@@ -1,6 +1,6 @@
 import React from "react";
 import type { Gym, SendtallyApi, SessionWithClimbs } from "@sendtally/api-client";
-import { useQuery, type QueryState } from "../lib/useQuery";
+import { queries, useQueryPair, type QueryState } from "../query";
 import { filterSessionsByTags, sessionTagOptions, type TagOption } from "../sessions/tags";
 import { trendsVM } from "./transforms";
 import { PREVIEW_TREND_RANGE, type Discipline, type TrendRange, type TrendsVM } from "./types";
@@ -12,7 +12,6 @@ export type TrendsOptions = {
 
 export type TrendsFeature = {
   state: QueryState<TrendsVM>;
-  reload: () => void;
   preview: boolean;
   range: TrendRange;
   setRange: (range: TrendRange) => void;
@@ -29,6 +28,8 @@ export type TrendsFeature = {
   setGym: (gymId: string | null) => void;
 };
 
+const withCircuits = (gyms: Gym[]): Gym[] => gyms.filter((g) => g.circuits.length > 0);
+
 export function useTrends(
   api: SendtallyApi,
   { preview = false }: TrendsOptions = {}
@@ -39,23 +40,18 @@ export function useTrends(
   const [selectedTags, setSelectedTags] = React.useState<string[]>([]);
   const [gymId, setGym] = React.useState<string | null>(null);
 
-  const load = React.useCallback(async (): Promise<{
-    sessions: SessionWithClimbs[];
-    gyms: Gym[];
-  }> => {
-    const [{ sessions }, { gyms }] = await Promise.all([api.sessionsWithClimbs(), api.gyms()]);
-    return { sessions, gyms: gyms.filter((g) => g.circuits.length > 0) };
-  }, [api]);
-
-  const { state: raw, reload } = useQuery(load);
+  const { state: raw } = useQueryPair(queries.sessionsWithClimbs(api), {
+    ...queries.gyms(api),
+    select: withCircuits,
+  });
 
   const placed = React.useMemo(
     (): SessionWithClimbs[] =>
       raw.status !== "ready"
         ? []
         : gymId === null
-          ? raw.data.sessions
-          : raw.data.sessions.filter((s) => s.gym_id === gymId),
+          ? raw.data[0]
+          : raw.data[0].filter((s) => s.gym_id === gymId),
     [raw, gymId]
   );
 
@@ -92,7 +88,6 @@ export function useTrends(
 
   return {
     state,
-    reload,
     preview,
     range,
     setRange,
@@ -103,7 +98,7 @@ export function useTrends(
     setTags,
     toggleTag,
     clearTags,
-    gyms: raw.status === "ready" ? raw.data.gyms : [],
+    gyms: raw.status === "ready" ? raw.data[1] : [],
     gymId,
     setGym,
   };

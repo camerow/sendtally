@@ -1,10 +1,11 @@
+import { useQueryClient } from "@tanstack/react-query";
 import React from "react";
-import type { JournalEntry, SendtallyApi, SessionDetail, SessionTag } from "@sendtally/api-client";
+import type { JournalEntry, SendtallyApi, SessionTag } from "@sendtally/api-client";
 import { climbsWorkedBefore } from "../climbs/transforms";
 import { t } from "../i18n";
-import { useQuery, type QueryState } from "../lib/useQuery";
+import { queries, useQuery, type QueryState } from "../query";
 import { climbVMs, filterAndSortClimbs, postingStatus, sessionDetailVM } from "./transforms";
-import type { ClimbFilter, ClimbSort, ClimbVM, PostingStatus, SessionDetailVM } from "./types";
+import type { ClimbFilter, ClimbSort, ClimbVM, SessionDetailVM } from "./types";
 
 export type PostActionFeature = {
   busy: boolean;
@@ -26,13 +27,6 @@ export type SessionDetailFeature = {
   sort: ClimbSort;
   setSort: (s: ClimbSort) => void;
   post: PostActionFeature;
-  reload: () => void;
-};
-
-type Loaded = {
-  session: SessionDetail;
-  posting: PostingStatus | null;
-  workedBefore: ReadonlySet<string>;
 };
 
 export function useSessionDetail(api: SendtallyApi, fingerprint: string): SessionDetailFeature {
@@ -41,57 +35,48 @@ export function useSessionDetail(api: SendtallyApi, fingerprint: string): Sessio
   const [posting, setPosting] = React.useState(false);
   const [postError, setPostError] = React.useState<string | null>(null);
 
-  const load = React.useCallback(async (): Promise<Loaded> => {
-    // The status call decides whether the footer can offer a post action, so a
-    // failure there degrades to "no action" rather than failing the whole screen.
-    // The catalogue tells a one-try send apart from a redpoint; without it the
-    // screen falls back to treating every first try as a flash.
-    const [{ session }, status, catalogue] = await Promise.all([
-      api.session(fingerprint),
-      api.status().catch(() => null),
-      api.climbs().catch(() => null),
-    ]);
-    return {
-      session,
-      posting: postingStatus(status),
-      workedBefore:
-        catalogue === null
-          ? new Set<string>()
-          : climbsWorkedBefore(catalogue.climbs, session.start_at),
-    };
-  }, [api, fingerprint]);
-
-  const { state: raw, reload } = useQuery(load);
+  const client = useQueryClient();
+  const session = useQuery(queries.session(api, fingerprint));
+  // Status decides whether the footer can offer a post action and the catalogue
+  // tells a one-try send apart from a redpoint. The session never waits on
+  // either: until they land, or if they fail, the screen renders without them.
+  const status = useQuery(queries.status(api)).state;
+  const catalogue = useQuery(queries.climbs(api)).state;
 
   const state = React.useMemo((): SessionDetailFeature["state"] => {
+    const raw = session.state;
     if (raw.status !== "ready") return raw;
-    const all = climbVMs(raw.data.session.climbs, raw.data.workedBefore);
+    const postable = postingStatus(status.status === "ready" ? status.data : null);
+    const workedBefore =
+      catalogue.status === "ready"
+        ? climbsWorkedBefore(catalogue.data, raw.data.start_at)
+        : new Set<string>();
     return {
       status: "ready",
       data: {
-        vm: sessionDetailVM(raw.data.session, raw.data.posting, raw.data.workedBefore),
-        climbs: filterAndSortClimbs(all, filter, sort),
-        tags: raw.data.session.tags,
-        entries: raw.data.session.entries,
-        notes: raw.data.session.notes,
+        vm: sessionDetailVM(raw.data, postable, workedBefore),
+        climbs: filterAndSortClimbs(climbVMs(raw.data.climbs, workedBefore), filter, sort),
+        tags: raw.data.tags,
+        entries: raw.data.entries,
+        notes: raw.data.notes,
       },
     };
-  }, [raw, filter, sort]);
+  }, [session.state, status, catalogue, filter, sort]);
 
   const run = React.useCallback(() => {
     setPosting(true);
     setPostError(null);
     api
       .postSessionToStrava(fingerprint)
-      .then(() => {
+      .then(({ session }) => {
+        client.setQueryData(queries.session(api, fingerprint).queryKey, session);
         setPosting(false);
-        reload();
       })
       .catch((err: unknown) => {
         setPosting(false);
         setPostError(err instanceof Error ? err.message : t("common.somethingWentWrong"));
       });
-  }, [api, fingerprint, reload]);
+  }, [api, client, fingerprint]);
 
   return {
     state,
@@ -100,6 +85,5 @@ export function useSessionDetail(api: SendtallyApi, fingerprint: string): Sessio
     sort,
     setSort,
     post: { busy: posting, error: postError, run },
-    reload,
   };
 }

@@ -1,6 +1,6 @@
 import React from "react";
 import type { EntryDetail, SendtallyApi, SessionRow } from "@sendtally/api-client";
-import { useQuery, type QueryState } from "../lib/useQuery";
+import { queries, useQuery, useQueryPair, type QueryState } from "../query";
 
 export type EntryDetailData = { entry: EntryDetail; sessions: SessionRow[] };
 
@@ -8,19 +8,19 @@ export type EntryDetailData = { entry: EntryDetail; sessions: SessionRow[] };
 export function useEntryDetail(
   api: SendtallyApi,
   id: string
-): { state: QueryState<EntryDetailData>; reload: () => void } {
-  const load = React.useCallback(async (): Promise<EntryDetailData> => {
-    const [{ entry }, { sessions }] = await Promise.all([api.entry(id), api.sessions()]);
-    return { entry, sessions };
-  }, [api, id]);
-  return useQuery(load);
+): { state: QueryState<EntryDetailData> } {
+  const { state: loaded } = useQueryPair(queries.entry(api, id), queries.sessions(api));
+  const state = React.useMemo(
+    (): QueryState<EntryDetailData> =>
+      loaded.status === "ready"
+        ? { status: "ready", data: { entry: loaded.data[0], sessions: loaded.data[1] } }
+        : loaded,
+    [loaded]
+  );
+  return { state };
 }
 
 /** What the composer offers to link. */
 export function useSessionRows(api: SendtallyApi): { state: QueryState<SessionRow[]> } {
-  const load = React.useCallback(async (): Promise<SessionRow[]> => {
-    const { sessions } = await api.sessions();
-    return sessions;
-  }, [api]);
-  return { state: useQuery(load).state };
+  return { state: useQuery(queries.sessions(api)).state };
 }

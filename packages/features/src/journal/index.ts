@@ -38,6 +38,5 @@ export {
   today,
   type SeverityPoint,
 } from "./transforms";
-export { useEntries } from "./useEntries";
 export { useEntryDetail, useSessionRows, type EntryDetailData } from "./useEntryDetail";
 export { useEntryComposer, type EntryComposer } from "./useEntryComposer";

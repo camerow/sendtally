@@ -66,6 +66,9 @@ export async function syncSessionToStrava(
     }
   }
 
+  if (session.strava_activity_id === null) {
+    await repo.markSessionPostPending(env.DB, userId, fingerprint);
+  }
   const client = await clientFor(env, connection);
   try {
     if (session.strava_activity_id !== null) {

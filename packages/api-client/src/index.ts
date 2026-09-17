@@ -25,6 +25,9 @@ export * from "./types";
 
 export type TokenProvider = () => Promise<string | null>;
 
+/** A request that changed something on the server, as the path it hit. */
+export type ApiWrite = { method: string; path: string };
+
 type JsonResponse = { ok: boolean; status: number; json: () => Promise<unknown> };
 
 // hono/client resolves every status, so this is where a non-2xx becomes the
@@ -44,8 +47,18 @@ async function body<T>(pending: Promise<JsonResponse>): Promise<T> {
 export class SendtallyApi {
   private readonly client: ReturnType<typeof hc<AppType>>;
 
-  constructor(baseUrl: string, getToken: TokenProvider) {
+  /** `onWrite` runs after every successful non-GET request, which is how a client cache learns which reads are stale. */
+  constructor(baseUrl: string, getToken: TokenProvider, onWrite?: (write: ApiWrite) => void) {
     this.client = hc<AppType>(baseUrl, {
+      fetch: async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+        const response = await fetch(input, init);
+        const method = init?.method ?? "GET";
+        if (response.ok && method !== "GET") {
+          const url = input instanceof Request ? input.url : input.toString();
+          onWrite?.({ method, path: new URL(url).pathname });
+        }
+        return response;
+      },
       headers: async () => {
         const token = await getToken();
         if (token === null) throw new ApiError(401, "not signed in");

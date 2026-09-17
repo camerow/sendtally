@@ -1,4 +1,5 @@
-import { ClerkProvider, useUser } from "@clerk/react-router";
+import { ClerkProvider, useAuth, useUser } from "@clerk/react-router";
+import { QueryClientProvider } from "@tanstack/react-query";
 import { clerkMiddleware, rootAuthLoader } from "@clerk/react-router/server";
 import React from "react";
 import type { LinksFunction, LoaderFunctionArgs, MiddlewareFunction } from "react-router";
@@ -19,6 +20,7 @@ import type { Locale } from "@sendtally/features/i18n";
 import { ErrorPage } from "./components/ErrorPage";
 import { requestLocale } from "./lib/locale";
 import { identify, resetIdentity } from "./lib/analytics";
+import { createQueryClient, useClearOnUserChange } from "@sendtally/features/query";
 import { cloudflareContext } from "./lib/cloudflare-context";
 
 export const links: LinksFunction = () => [
@@ -144,12 +146,22 @@ function Identify(): null {
   return null;
 }
 
+function ClearQueriesOnSignOut(): null {
+  const { isLoaded, userId } = useAuth();
+  useClearOnUserChange(isLoaded, userId);
+  return null;
+}
+
 export default function App(): React.ReactElement {
   const loaderData = useLoaderData<typeof loader>();
+  const [queryClient] = React.useState(createQueryClient);
   return (
     <ClerkProvider loaderData={loaderData} localization={CLERK_LOCALIZATIONS[loaderData.locale]}>
-      <Identify />
-      <Outlet />
+      <QueryClientProvider client={queryClient}>
+        <Identify />
+        <ClearQueriesOnSignOut />
+        <Outlet />
+      </QueryClientProvider>
     </ClerkProvider>
   );
 }
