@@ -17,9 +17,10 @@
     "mobile:e2e": "pnpm --filter @sendtally/mobile exec maestro test -e DEV_CLIENT=true maestro/",
     "lint": "eslint .",
     "check-types": "turbo check-types",
-    "test": "turbo test",
+    "test": "turbo test && pnpm mobile:test",
     "format": "turbo format --continue -- && prettier --write \"*.{md,json,yaml,yml}\" \"docs/**/*.md\"",
-    "format:check": "turbo format:check --continue -- && prettier --check \"*.{md,json,yaml,yml}\" \"docs/**/*.md\""
+    "format:check": "turbo format:check --continue -- && prettier --check \"*.{md,json,yaml,yml}\" \"docs/**/*.md\"",
+    "mobile:test": "pnpm --filter @sendtally/mobile exec jest"
   },
   "devDependencies": {
     "@commitlint/cli": "^21.2.2",

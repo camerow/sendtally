@@ -3,6 +3,12 @@
 Maestro flows under `apps/mobile/maestro/` drive a development build on an iOS simulator through the screens that only misbehave on a device: sign-in, the climb editor sheet with the keyboard up, drag to dismiss, and the draft surviving a trip out of the form.
 They run locally on an iOS simulator against Metro, and in CI on an Android emulator.
 
+Anything that is not about the device belongs in a component test instead.
+`apps/mobile` runs Jest with `jest-expo` and React Native Testing Library, co-located as `<Component>.test.tsx`, from `pnpm mobile:test` (also part of `pnpm test`).
+Those tests mock `Sheet`, Reanimated and Gorhom, render the real feature components over in-memory storage, and run in about a second, so screen logic such as the live session in `LiveClimbEditor.test.tsx` lives there.
+Keep a Maestro flow only for what a mock hides: gestures, keyboards, nested native sheets, sign-in.
+The test script lives in the root `package.json` for the same fingerprint reason as `mobile:e2e` below.
+
 ## One-time setup
 
 - Install Maestro: `curl -Ls https://get.maestro.mobile.dev | bash` (lands in `~/.maestro/bin`).
