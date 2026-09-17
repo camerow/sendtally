@@ -613,6 +613,10 @@ body:has(.climb-sheet[open]) {
   color: var(--bs-gunmetal);
 }
 
+.lap-remove {
+  color: var(--text-on-white-secondary);
+}
+
 .climb-ledger-row--endurance {
   height: auto;
   min-height: 62px;

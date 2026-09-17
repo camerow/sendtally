@@ -5,9 +5,10 @@ import {
   enduranceLapValueLabel,
   enduranceOf,
   enduranceProgressLabel,
-  enduranceStep,
+  enduranceLapStep,
   enduranceUnitLabel,
   isCleanLap,
+  removeLap,
   withEnduranceTarget,
   withEnduranceUnit,
   withLap,
@@ -178,6 +179,18 @@ export function EnduranceLaps({
       >
         {t("endurance.addLap")}
       </button>
+      {endurance.laps.length > 1 && (
+        <button
+          type="button"
+          onClick={() => {
+            onSelect(endurance.laps.length - 2);
+            onChange(removeLap(climb));
+          }}
+          className="lap-add lap-remove"
+        >
+          {t("endurance.removeLap")}
+        </button>
+      )}
       <span style={{ ...monoLabel, flexGrow: 1, letterSpacing: "0.06em", textAlign: "right" }}>
         {enduranceProgressLabel(endurance)}
       </span>
@@ -194,7 +207,7 @@ export function EnduranceLapOutcome({
   const endurance = enduranceOf(climb);
   const clean = isCleanLap(endurance, selected);
   const scale = unitScale(endurance.unit);
-  const step = enduranceStep(endurance.unit);
+  const step = enduranceLapStep(endurance);
   const lap = endurance.laps[selected] ?? 0;
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>

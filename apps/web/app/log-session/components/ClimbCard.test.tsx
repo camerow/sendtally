@@ -96,12 +96,24 @@ describe("ClimbCard", () => {
     );
   });
 
-  it("types a new lap target and cuts every lap down to it", () => {
+  it("carries a clean lap up to a raised target", () => {
     const onChange = vi.fn();
     const card = mount(circuit(), onChange);
     type(numbers(card)[0]!, "32");
     expect(onChange).toHaveBeenLastCalledWith(
-      expect.objectContaining({ endurance: { unit: "moves", target: 32, laps: [20] } })
+      expect.objectContaining({ endurance: { unit: "moves", target: 32, laps: [32] } })
+    );
+  });
+
+  it("cuts a lap down to a lowered target and leaves a shorter one alone", () => {
+    const onChange = vi.fn();
+    const card = mount(
+      { ...circuit(), endurance: { unit: "moves", target: 32, laps: [32, 8] } },
+      onChange
+    );
+    type(numbers(card)[0]!, "16");
+    expect(onChange).toHaveBeenLastCalledWith(
+      expect.objectContaining({ endurance: { unit: "moves", target: 16, laps: [16, 8] } })
     );
   });
 
