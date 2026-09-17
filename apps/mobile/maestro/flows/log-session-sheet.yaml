@@ -5,6 +5,7 @@ name: log-session-sheet
 ---
 - runFlow: ../helpers/open-dev-client.yaml
 - runFlow: ../helpers/ensure-signed-in.yaml
+- runFlow: ../helpers/discard-live-session.yaml
 - runFlow: ../helpers/open-log-form.yaml
 - scrollUntilVisible:
     element:
@@ -15,8 +16,9 @@ name: log-session-sheet
 - assertVisible: "CLIMB 2 OF 2"
 - tapOn: "Name (optional)"
 - inputText: "Cascade"
-- assertVisible: "Save"
+- assertVisible: "Cascade"
 - pressKey: Enter
+- assertVisible: "Save"
 # On iOS only a bare direction swipe reaches React Native's responder system (coordinate and
 # element swipes go through a press-and-drag that RN never sees). On Android every form works,
 # and a coordinate swipe is the one that starts on the sheet rather than the scrim.
@@ -42,3 +44,4 @@ name: log-session-sheet
       text: "← LOG"
     direction: UP
 - tapOn: "← LOG"
+- runFlow: ../helpers/discard-live-session.yaml

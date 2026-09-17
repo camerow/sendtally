@@ -6,12 +6,7 @@ name: gym-circuits
 ---
 - runFlow: ../helpers/open-dev-client.yaml
 - runFlow: ../helpers/ensure-signed-in.yaml
-- runFlow:
-    when:
-      visible: "DISCARD SESSION"
-    commands:
-      - tapOn: "DISCARD SESSION"
-      - tapOn: "Discard"
+- runFlow: ../helpers/discard-live-session.yaml
 - runFlow:
     when:
       visible: "Add your gym"
@@ -45,16 +40,17 @@ name: gym-circuits
 - assertNotVisible: "Add your gym"
 - tapOn: "Climb"
 - assertVisible: "CLIMB 1 OF 1"
-- assertVisible: "V0"
-- tapOn: "Yellow"
-- assertVisible: "V1–V2"
+- tapOn: "Type, .*"
+- tapOn: "Maestro Barn circuits"
+- tapOn: "Grade, .*"
+- tapOn: "Yellow.*V1–V2"
+- assertVisible: "Grade, Yellow · V1–V2"
 - tapOn: "Cave"
 - tapOn: "V2"
 - tapOn: "Save"
-- assertVisible: ".*Live · 1 climb · since .* · Maestro Barn.*"
+- assertVisible: ".*In progress for .* · Maestro Barn.*"
 - assertVisible: "Yellow V2 Yellow · Cave, send, 1 try"
-- tapOn: "DISCARD SESSION"
-- tapOn: "Discard"
+- runFlow: ../helpers/discard-live-session.yaml
 - tapOn: "Settings, tab, 4 of 4"
 - scrollUntilVisible:
     element: "Maestro Barn, .*"

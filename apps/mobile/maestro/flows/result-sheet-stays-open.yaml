@@ -5,12 +5,7 @@ name: result-sheet-stays-open
 ---
 - runFlow: ../helpers/open-dev-client.yaml
 - runFlow: ../helpers/ensure-signed-in.yaml
-- runFlow:
-    when:
-      visible: "DISCARD SESSION"
-    commands:
-      - tapOn: "DISCARD SESSION"
-      - tapOn: "Discard"
+- runFlow: ../helpers/discard-live-session.yaml
 - tapOn: "Climb"
 - assertVisible: "CLIMB 1 OF 1"
 - repeat:
@@ -35,9 +30,4 @@ name: result-sheet-stays-open
       - assertVisible: "CLIMB 1 OF 1"
 - tapOn: "Save"
 - assertNotVisible: "CLIMB 1 OF 1"
-- runFlow:
-    when:
-      visible: "DISCARD SESSION"
-    commands:
-      - tapOn: "DISCARD SESSION"
-      - tapOn: "Discard"
+- runFlow: ../helpers/discard-live-session.yaml

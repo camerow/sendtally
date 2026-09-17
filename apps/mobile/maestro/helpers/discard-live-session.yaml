@@ -1,0 +1,16 @@
+appId: com.sendtally.app
+# A live session left behind by an earlier flow would take the next climb, so discard it from its form.
+---
+- runFlow:
+    when:
+      visible: ".*In progress for.*"
+    commands:
+      - tapOn: ".*In progress for.*"
+      - tapOn: "Discard"
+      - assertVisible: "Discard this draft.*"
+      - tapOn:
+          text: "Discard"
+          rightOf: "Cancel"
+      - extendedWaitUntil:
+          visible: "Climb"
+          timeout: 15000
