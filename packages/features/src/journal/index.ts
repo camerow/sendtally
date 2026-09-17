@@ -27,6 +27,8 @@ export {
   inTrip,
   overlappingTrip,
   tripEnd,
+  tripOverlapMessage,
+  type TripDates,
   isoDay,
   isThreadUpdate,
   isUpdateDraft,
@@ -46,6 +48,8 @@ export {
   type SeverityPoint,
 } from "./transforms";
 export {
+  effortDayLabel,
+  effortLabelled,
   injuriesCarriedIn,
   tripContents,
   tripDays,

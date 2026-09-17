@@ -172,9 +172,21 @@ const entryResponse = async (env: Env, userId: string, id: string) => {
 };
 
 // A 409 names the trip in the way, so a client can say which one without another read.
-const tripOverlap = async (env: Env, userId: string, id: string | null, entry: EntryWrite) => {
-  const today = new Date().toISOString().slice(0, 10);
-  const trip = overlappingTrip(await repo.listEntries(env.DB, userId), { ...entry, id }, today);
+// Only dates being set are checked: trips that overlapped before the rule existed stay editable.
+const tripOverlap = async (
+  env: Env,
+  userId: string,
+  existing: repo.EntryRow | null,
+  entry: EntryWrite
+) => {
+  const unchanged =
+    existing !== null &&
+    existing.kind === entry.kind &&
+    existing.occurred_at === entry.occurred_at &&
+    existing.ends_at === entry.ends_at;
+  if (unchanged) return null;
+  const candidate = { ...entry, id: existing?.id ?? null };
+  const trip = overlappingTrip(await repo.listEntries(env.DB, userId), candidate);
   return trip === null
     ? null
     : { id: trip.id, title: trip.title, occurred_at: trip.occurred_at, ends_at: trip.ends_at };
@@ -432,7 +444,9 @@ const app = new Hono<AppEnv>()
     const userId = c.get("userId");
     const id = c.req.param("id");
     const entry = buildEntry(form);
-    const overlap = await tripOverlap(c.env, userId, id, entry);
+    const existing = await repo.getEntry(c.env.DB, userId, id);
+    if (existing === null) return c.json({ error: "not found" }, 404);
+    const overlap = await tripOverlap(c.env, userId, existing, entry);
     if (overlap !== null) return c.json({ error: "trip dates overlap", trip: overlap }, 409);
     const updated = await repo.updateEntry(c.env.DB, userId, id, entry);
     if (!updated) return c.json({ error: "not found" }, 404);

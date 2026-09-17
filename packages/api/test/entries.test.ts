@@ -121,6 +121,40 @@ describe("journal entries", () => {
     expect(moved.status).toBe(200);
   });
 
+  it("lets nothing start after a trip that is still going", async () => {
+    await created("u_open_trip", { kind: "trip", occurred_at: "2026-06-01", title: "Van life" });
+    const later = await post("u_open_trip", {
+      kind: "trip",
+      occurred_at: "2026-09-01",
+      ends_at: "2026-09-03",
+    });
+    expect(later.status).toBe(409);
+  });
+
+  it("keeps trips that overlapped before the rule editable while their dates stay put", async () => {
+    const font = await created("u_old_trips", {
+      kind: "trip",
+      occurred_at: "2026-05-22",
+      ends_at: "2026-05-26",
+    });
+    await env.DB.prepare(
+      `INSERT INTO journal_entries (user_id, id, kind, occurred_at, ends_at, title, body, created_at, updated_at)
+       VALUES ('u_old_trips', 'legacy', 'trip', '2026-05-25', NULL, NULL, '', '2026-05-25', '2026-05-25')`
+    ).run();
+
+    const retitled = await call("u_old_trips", "/v1/entries/legacy", {
+      method: "PUT",
+      body: JSON.stringify({ kind: "trip", occurred_at: "2026-05-25", title: "Still away" }),
+    });
+    expect(retitled.status).toBe(200);
+
+    const redated = await call("u_old_trips", `/v1/entries/${font.id}`, {
+      method: "PUT",
+      body: JSON.stringify({ kind: "trip", occurred_at: "2026-05-22", ends_at: "2026-05-27" }),
+    });
+    expect(redated.status).toBe(409);
+  });
+
   it("opens an injury as ongoing without being told to", async () => {
     const injury = await created("u_entries_injury", {
       kind: "injury",

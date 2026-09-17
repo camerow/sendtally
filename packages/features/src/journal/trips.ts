@@ -85,6 +85,19 @@ export function tripEffort(days: TripDay[]): Array<number | null> {
   );
 }
 
+/** Past this many days a bar per day has no room for its own labels. */
+const LABELLED_DAYS = 10;
+
+/** Whether each bar carries its RPE and day number, or only the first and last day are named. */
+export function effortLabelled(days: number): boolean {
+  return days <= LABELLED_DAYS;
+}
+
+/** The day number under a bar, blank between the ends of a long trip. */
+export function effortDayLabel(index: number, days: number): string {
+  return effortLabelled(days) || index === 0 || index === days - 1 ? formatNumber(index + 1) : "";
+}
+
 export function tripStats(days: TripDay[]): TripStat[] {
   const sessions = days.flatMap((d) => d.sessions);
   const climbed = days.filter((d) => d.sessions.length > 0).length;

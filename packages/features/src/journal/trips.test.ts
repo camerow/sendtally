@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 import type { JournalEntry, SessionRow } from "@sendtally/api-client";
-import { injuriesCarriedIn, tripContents, tripDays, tripEffort, tripStats } from "./trips";
+import {
+  effortDayLabel,
+  injuriesCarriedIn,
+  tripContents,
+  tripDays,
+  tripEffort,
+  tripStats,
+} from "./trips";
 
 function entry(overrides: Partial<JournalEntry>): JournalEntry {
   return {
@@ -108,6 +115,13 @@ describe("tripContents", () => {
     const inside = tripContents(draft, sessions, entries, now);
     expect(inside.sessions.map((s) => s.fingerprint)).toEqual(["sat"]);
     expect(inside.entries.map((e) => e.id)).toEqual(["wet"]);
+  });
+});
+
+describe("effortDayLabel", () => {
+  it("names every day of a short trip and only the ends of a long one", () => {
+    expect([0, 1, 2].map((i) => effortDayLabel(i, 3))).toEqual(["1", "2", "3"]);
+    expect([0, 1, 59].map((i) => effortDayLabel(i, 60))).toEqual(["1", "", "60"]);
   });
 });
 

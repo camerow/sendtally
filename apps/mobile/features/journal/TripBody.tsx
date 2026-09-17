@@ -4,6 +4,8 @@ import { Text, View } from "react-native";
 import type { JournalEntry, SessionRow as SessionRowData } from "@sendtally/api-client";
 import { formatNumber, t } from "@sendtally/features/i18n";
 import {
+  effortDayLabel,
+  effortLabelled,
   entryTitle,
   injuriesCarriedIn,
   tripDays,
@@ -52,6 +54,7 @@ export function TripBody({
   const logged = days.filter((d) => d.sessions.length + d.entries.length + d.updates.length > 0);
   const carriedIn = injuriesCarriedIn(trip, entries);
   const effort = tripEffort(days);
+  const labelled = effortLabelled(effort.length);
   const stats = tripStats(days);
   const updateOn = (update: JournalEntry): string => {
     const parent = entries.find((e) => e.id === update.parent_id);
@@ -99,10 +102,17 @@ export function TripBody({
       {effort.some((rpe) => rpe !== null) && (
         <View style={{ ...card, paddingHorizontal: 16 }}>
           <Text style={label}>{t("journal.effortByDay")}</Text>
-          <View style={{ flexDirection: "row", gap: 6, height: 124, alignItems: "flex-end" }}>
+          <View
+            style={{
+              flexDirection: "row",
+              gap: labelled ? 6 : 2,
+              height: 124,
+              alignItems: "flex-end",
+            }}
+          >
             {effort.map((rpe, i) => (
               <View key={i} style={{ flex: 1, alignItems: "center", gap: 6 }}>
-                {rpe !== null && <Text style={label}>{formatNumber(rpe)}</Text>}
+                {labelled && rpe !== null && <Text style={label}>{formatNumber(rpe)}</Text>}
                 <View
                   style={{
                     width: "100%",
@@ -112,7 +122,12 @@ export function TripBody({
                     backgroundColor: rpe === null ? "rgba(64,63,76,0.16)" : colors.azure,
                   }}
                 />
-                <Text style={label}>{formatNumber(i + 1)}</Text>
+                <Text
+                  numberOfLines={1}
+                  style={{ ...label, lineHeight: 12, minHeight: 12, overflow: "visible" }}
+                >
+                  {effortDayLabel(i, effort.length)}
+                </Text>
               </View>
             ))}
           </View>

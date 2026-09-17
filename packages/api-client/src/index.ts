@@ -38,7 +38,8 @@ async function body<T>(pending: Promise<JsonResponse>): Promise<T> {
     const failure = (await response.json().catch(() => null)) as { error?: string } | null;
     throw new ApiError(
       response.status,
-      failure?.error ?? `request failed: HTTP ${response.status}`
+      failure?.error ?? `request failed: HTTP ${response.status}`,
+      failure
     );
   }
   return (await response.json()) as T;

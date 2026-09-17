@@ -81,7 +81,9 @@ export type SessionLocation = NonNullable<SessionRow["location"]>;
 export class ApiError extends Error {
   constructor(
     public readonly status: number,
-    message: string
+    message: string,
+    /** The parsed error body, for a response that says more than its message. */
+    public readonly body: unknown = null
   ) {
     super(message);
   }

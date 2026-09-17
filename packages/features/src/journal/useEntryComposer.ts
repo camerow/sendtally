@@ -1,9 +1,35 @@
 import React from "react";
-import type { EntryDetail, JournalEntry, SendtallyApi, SessionRow } from "@sendtally/api-client";
+import {
+  ApiError,
+  type EntryDetail,
+  type JournalEntry,
+  type SendtallyApi,
+  type SessionRow,
+} from "@sendtally/api-client";
 import { t } from "../i18n";
-import { draftIsEmpty, entryInput, entryTitle, overlappingTrip, spanLabel } from "./transforms";
+import {
+  draftIsEmpty,
+  entryInput,
+  overlappingTrip,
+  tripOverlapMessage,
+  type TripDates,
+} from "./transforms";
 import { tripContents, type TripContents } from "./trips";
 import type { EntryDraft, TripSpan } from "./types";
+
+/** The trip a 409 names, when the one in the way was not in the entries this client holds. */
+function tripIn(body: unknown): TripDates | null {
+  if (typeof body !== "object" || body === null || !("trip" in body)) return null;
+  const trip: unknown = body.trip;
+  if (typeof trip !== "object" || trip === null) return null;
+  const { title, occurred_at, ends_at } = trip as Record<string, unknown>;
+  if (typeof occurred_at !== "string") return null;
+  return {
+    title: typeof title === "string" ? title : null,
+    occurred_at,
+    ends_at: typeof ends_at === "string" ? ends_at : null,
+  };
+}
 
 export type EntryComposer = {
   draft: EntryDraft;
@@ -51,15 +77,16 @@ export function useEntryComposer(
     () => (span === null ? null : tripContents(span, sessions, entries)),
     [span, sessions, entries]
   );
+  // Only dates being set are checked: trips that overlapped before the rule existed stay editable.
+  const datesChanged =
+    editing === undefined ||
+    draft.kind !== initial.kind ||
+    draft.occurredAt !== initial.occurredAt ||
+    draft.endsAt !== initial.endsAt;
   const overlap = React.useMemo(() => {
-    const other = span === null ? null : overlappingTrip(entries, span);
-    return other === null
-      ? null
-      : t("journal.tripOverlap", {
-          title: entryTitle(other),
-          dates: spanLabel(other.occurred_at, other.ends_at),
-        });
-  }, [span, entries]);
+    const other = span === null || !datesChanged ? null : overlappingTrip(entries, span);
+    return other === null ? null : tripOverlapMessage(other);
+  }, [span, entries, datesChanged]);
 
   const save = React.useCallback((): void => {
     if (overlap !== null) return;
@@ -74,7 +101,11 @@ export function useEntryComposer(
       editing === undefined ? api.createEntry(input) : api.updateEntry(editing, input);
     pending
       .then(({ entry }) => onSaved(entry))
-      .catch(() => setError(t("journal.saveFailed")))
+      .catch((failure: unknown) => {
+        const clash =
+          failure instanceof ApiError && failure.status === 409 ? tripIn(failure.body) : null;
+        setError(clash === null ? t("journal.saveFailed") : tripOverlapMessage(clash));
+      })
       .finally(() => setSaving(false));
   }, [api, draft, editing, onSaved, overlap]);
 

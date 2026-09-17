@@ -70,27 +70,19 @@ type TripDates = {
   ends_at: string | null;
 };
 
-/** A trip with no end is still going, so it runs to today. */
-const tripEnd = (trip: TripDates, today: string): string => {
-  const end = trip.ends_at ?? today;
-  return end < trip.occurred_at ? trip.occurred_at : end;
-};
+/** A trip still going has no last day yet, so nothing can start after it. */
+const lastDay = (trip: TripDates): string => trip.ends_at ?? "9999-12-31";
 
 /** Two trips never share a day, so every day of the log belongs to at most one. */
-export function overlappingTrip<T extends TripDates>(
-  entries: T[],
-  candidate: TripDates,
-  today: string
-): T | null {
+export function overlappingTrip<T extends TripDates>(entries: T[], candidate: TripDates): T | null {
   if (candidate.kind !== "trip") return null;
-  const end = tripEnd(candidate, today);
   return (
     entries.find(
       (e) =>
         e.kind === "trip" &&
         e.id !== candidate.id &&
-        e.occurred_at <= end &&
-        tripEnd(e, today) >= candidate.occurred_at
+        e.occurred_at <= lastDay(candidate) &&
+        lastDay(e) >= candidate.occurred_at
     ) ?? null
   );
 }

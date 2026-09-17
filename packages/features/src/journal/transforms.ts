@@ -46,8 +46,9 @@ export function isoDay(at: string): string {
   return at.slice(0, 10);
 }
 
+/** The date on the user's own calendar, which is the date they log sessions under. */
 export function today(now: Date = new Date()): string {
-  return now.toISOString().slice(0, 10);
+  return new Date(now.getTime() - now.getTimezoneOffset() * 60_000).toISOString().slice(0, 10);
 }
 
 /** Which slice of the log is on show. "journal" is what the journal page is. */
@@ -140,22 +141,29 @@ export function flatLog(items: LogItem[]): LogItem[] {
   return items.flatMap((item) => (item.type === "entry" ? [item, ...item.inside] : [item]));
 }
 
+/** A trip still going has no last day yet, so nothing can start after it. */
+const lastDay = (span: TripSpan): string => span.ends_at ?? "9999-12-31";
+
 /** Two trips never share a day, so every day of the log belongs to at most one. */
-export function overlappingTrip(
-  entries: JournalEntry[],
-  span: TripSpan,
-  now: Date = new Date()
-): JournalEntry | null {
-  const end = tripEnd(span, now);
+export function overlappingTrip(entries: JournalEntry[], span: TripSpan): JournalEntry | null {
   return (
     entries.find(
       (e) =>
         e.kind === "trip" &&
         e.id !== span.id &&
-        e.occurred_at <= end &&
-        tripEnd(e, now) >= span.occurred_at
+        e.occurred_at <= lastDay(span) &&
+        lastDay(e) >= span.occurred_at
     ) ?? null
   );
+}
+
+export type TripDates = Pick<JournalEntry, "title" | "occurred_at" | "ends_at">;
+
+export function tripOverlapMessage(trip: TripDates): string {
+  return t("journal.tripOverlap", {
+    title: trip.title?.trim() || entryKindLabel("trip"),
+    dates: spanLabel(trip.occurred_at, trip.ends_at),
+  });
 }
 
 /** Trips are date ranges, so the sessions inside one are matched, never attached. */
