@@ -1,9 +1,13 @@
+import { useAuth } from "@clerk/clerk-expo";
 import * as SecureStore from "expo-secure-store";
 import React from "react";
 
-/** Per-device "not now" for a setup card. `null` until the store has answered. */
+/** Per-user, per-device "not now" for a setup card. `null` until the store has answered.
+ * Keyed on the user: the Keychain outlives sign-out and reinstall, so an unscoped key hides the
+ * card from every account that ever signs in on the device. */
 export function useSetupDismissed(key: string): { dismissed: boolean | null; dismiss: () => void } {
-  const storeKey = `${key}-setup-dismissed`;
+  const { userId } = useAuth();
+  const storeKey = `${userId ?? "anon"}-${key}-setup-dismissed`;
   const [dismissed, setDismissed] = React.useState<boolean | null>(null);
 
   React.useEffect(() => {

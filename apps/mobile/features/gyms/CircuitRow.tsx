@@ -74,11 +74,12 @@ export function CircuitRow({
       }}
     >
       <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-        <View style={{ width: 56 }}>
+        <View style={{ width: 62 }}>
           <SelectRow
             label={t("gyms.colour")}
             value=""
             leading={<CircuitDot colour={circuit.colour} size={18} />}
+            style={{ paddingLeft: 11, paddingRight: 15 }}
           >
             {(close) =>
               CIRCUIT_COLOURS.map((colour) => (

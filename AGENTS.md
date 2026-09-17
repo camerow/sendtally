@@ -179,6 +179,9 @@ Three layers; the tokens file is the contract between platforms.
 3. Native: NativeWind 4 + a small hand-rolled kit in `@sendtally/ui-native` (button, card, list row, stat tile, sheet, input, ...). No pre-built RN component library.
 
 `bg-primary` must mean the same color on both platforms.
+
+Mobile form standard: a focused input always stays visible when the keyboard comes up.
+Wrap the screen's scroll view in `KeyboardAvoidingView` (`behavior="padding"` on iOS) and give the scroll view `keyboardShouldPersistTaps="handled"`; `GymEditor` and `EntryComposer` are the reference.
 Design work (Claude-generated or otherwise) targets the token vocabulary; each platform implements idiomatically.
 
 ## Migration order
