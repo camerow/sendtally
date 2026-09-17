@@ -15,6 +15,7 @@ export const settings = {
     "Désactivé. Chaque page de séance garde son propre bouton Publier sur Strava.",
   "settings.postSince": "Publier les séances enregistrées à partir du",
   "settings.postSinceBody": "Tout ce qui précède reste uniquement dans sendtally.",
+  "settings.postSinceAny": "Toute date",
   "settings.membershipFree": "Enregistrer est gratuit. L'abonnement ajoute les tendances.",
   "settings.membershipStore": "{plan}, facturé via {store}.",
   "settings.membershipWeb": "Acheté sur sendtally.com. Il débloque aussi les tendances ici.",

@@ -18,6 +18,7 @@ export type DateTimeFieldProps = {
   /** Shown when `value` is empty; with `onClear`, the field can go back to empty. */
   placeholder?: string;
   onClear?: () => void;
+  disabled?: boolean;
   testID?: string;
 };
 
@@ -52,6 +53,7 @@ export function DateTimeField({
   onChange,
   placeholder,
   onClear,
+  disabled,
   testID,
 }: DateTimeFieldProps): React.ReactElement {
   const [open, setOpen] = React.useState(false);
@@ -82,6 +84,7 @@ export function DateTimeField({
     <>
       <Pressable
         onPress={openPicker}
+        disabled={disabled}
         testID={testID}
         accessibilityRole="button"
         accessibilityLabel={label}

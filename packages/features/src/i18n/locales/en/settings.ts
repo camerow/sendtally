@@ -13,6 +13,7 @@ export const settings = {
   "settings.postingOffMobile": "Off. Each session page keeps its own Post to Strava button.",
   "settings.postSince": "Post sessions logged from",
   "settings.postSinceBody": "Anything earlier stays in sendtally only.",
+  "settings.postSinceAny": "Any date",
   "settings.membershipFree": "Logging is free. Membership adds the trends.",
   "settings.membershipStore": "{plan}, billed through {store}.",
   "settings.membershipWeb": "Bought on sendtally.com. It unlocks the trends here too.",

@@ -1,8 +1,9 @@
 import React from "react";
-import { Pressable, Text, TextInput, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import type { StravaPostingFeature } from "@sendtally/features/settings";
 import { t } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
+import { DateTimeField } from "../../components/DateTimeField";
 import { bodyText, messageText } from "../../lib/styles";
 import { press } from "../../lib/press";
 
@@ -92,24 +93,14 @@ export function StravaPostingSection({ posting }: StravaPostingSectionProps): Re
           <View style={{ gap: 8 }}>
             <Text style={rowTitle}>{t("settings.postSince")}</Text>
             <Text style={bodyText}>{t("settings.postSinceBody")}</Text>
-            <TextInput
+            <DateTimeField
+              mode="date"
               value={posting.since}
-              placeholder="YYYY-MM-DD"
-              placeholderTextColor={colors.textFaint}
-              editable={!posting.busy}
-              autoCapitalize="none"
-              onChangeText={posting.setSince}
-              style={{
-                fontFamily: fonts.mono,
-                fontSize: 13,
-                color: colors.gunmetal,
-                backgroundColor: colors.white,
-                borderWidth: 1,
-                borderColor: "rgba(64,63,76,0.15)",
-                borderRadius: radius.control,
-                paddingHorizontal: 13,
-                minHeight: 44,
-              }}
+              label={t("settings.postSince")}
+              placeholder={t("settings.postSinceAny")}
+              onChange={posting.setSince}
+              disabled={posting.busy}
+              onClear={() => posting.setSince("")}
             />
           </View>
         </>
