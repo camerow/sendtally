@@ -10,6 +10,7 @@ export type IconName =
   | "plus"
   | "chevron"
   | "trash"
+  | "endurance"
   | "x";
 
 const SHAPES: Record<IconName, React.ReactElement> = {
@@ -33,6 +34,9 @@ const SHAPES: Record<IconName, React.ReactElement> = {
   plus: <path d="M12 5v14M5 12h14" />,
   chevron: <path d="M9.5 5.5 16 12l-6.5 6.5" />,
   trash: <path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3" />,
+  endurance: (
+    <path d="M2 9c2.5-3 5-3 7.5 0S15 12 17.5 9 21 6 22 7M2 17c2.5-3 5-3 7.5 0s5 3 7.5 0 3.5-3 4.5-2" />
+  ),
   x: <path d="M6 6l12 12M18 6L6 18" />,
 };
 

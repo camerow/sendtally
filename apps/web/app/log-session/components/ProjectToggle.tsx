@@ -6,28 +6,32 @@ import { FLAG } from "./styles";
 export type ProjectToggleProps = {
   project: boolean;
   named: boolean;
+  /** A circuit of laps is never a project, so the control is dead rather than waiting on a name. */
+  offered?: boolean;
   onToggle: () => void;
 };
 
 export function ProjectToggle({
   project,
   named,
+  offered = true,
   onToggle,
 }: ProjectToggleProps): React.ReactElement {
+  const on = named && offered;
   return (
     <button
       type="button"
       aria-pressed={project}
-      disabled={!named}
-      title={named ? undefined : t("logSession.projectHint")}
+      disabled={!on}
+      title={offered && !named ? t("logSession.projectHint") : undefined}
       onClick={onToggle}
       className="climb-project"
       style={{
         background: project ? "var(--bs-gold)" : "transparent",
         border: project ? "1px solid var(--bs-gold)" : "1px solid rgba(64,63,76,0.18)",
         color: project ? "var(--bs-gunmetal)" : "rgba(64,63,76,0.65)",
-        opacity: named ? 1 : 0.4,
-        cursor: named ? "pointer" : "default",
+        opacity: on ? 1 : 0.4,
+        cursor: on ? "pointer" : "default",
       }}
     >
       <Glyph d={FLAG} size={13} width={1.7} filled={project} />

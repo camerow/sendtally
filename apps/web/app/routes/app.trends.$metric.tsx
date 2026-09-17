@@ -1,12 +1,10 @@
 import React from "react";
 import type { LoaderFunctionArgs } from "react-router";
 import { useLoaderData, useParams } from "react-router";
-import type { TrendMetric } from "@sendtally/features/trends";
+import { TREND_METRICS, type TrendMetric } from "@sendtally/features/trends";
 import { cloudflareContext } from "../lib/cloudflare-context";
 import { requireMembership } from "../lib/billing.server";
 import { TrendDetail } from "../trends/components/TrendDetail";
-
-const METRICS: TrendMetric[] = ["volume", "pyramid", "hardest", "flash", "avggrade"];
 
 export async function loader(args: LoaderFunctionArgs): Promise<{ apiUrl: string }> {
   await requireMembership(args);
@@ -16,7 +14,7 @@ export async function loader(args: LoaderFunctionArgs): Promise<{ apiUrl: string
 export default function TrendDetailRoute(): React.ReactElement {
   const { apiUrl } = useLoaderData<typeof loader>();
   const params = useParams();
-  const metric = METRICS.includes(params.metric as TrendMetric)
+  const metric = TREND_METRICS.includes(params.metric as TrendMetric)
     ? (params.metric as TrendMetric)
     : "volume";
 

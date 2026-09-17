@@ -2,6 +2,7 @@ export const endurance = {
   "endurance.title": "Endurance",
   "endurance.kindHint": "Moves / Time",
   "endurance.oneLapIs": "One lap is",
+  "endurance.unit": "Unit",
   "endurance.unitMoves": "Moves",
   "endurance.unitTime": "Time",
   "endurance.laps": "Laps",

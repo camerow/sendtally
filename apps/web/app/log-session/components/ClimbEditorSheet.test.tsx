@@ -108,7 +108,7 @@ describe("ClimbEditorSheet", () => {
   it("picks a grade from the dropdown", () => {
     const onChange = vi.fn();
     const dialog = mount(() => {}, onChange);
-    const select = dialog.getElementsByTagName("select")[0]!;
+    const select = dialog.getElementsByTagName("select")[1]!;
     expect(select.options.length).toBeGreaterThan(1);
     act(() => {
       select.value = "V5";
@@ -120,7 +120,7 @@ describe("ClimbEditorSheet", () => {
   it("picks a result from the dropdown", () => {
     const onChange = vi.fn();
     const dialog = mount(() => {}, onChange);
-    const select = dialog.getElementsByTagName("select")[1]!;
+    const select = dialog.getElementsByTagName("select")[2]!;
     expect([...select.options].map((o) => o.value)).toEqual(["redpoint", "flash", "attempt"]);
     act(() => {
       select.value = "attempt";
@@ -145,7 +145,12 @@ describe("ClimbEditorSheet", () => {
       const onChange = vi.fn();
       const dialog = mount(() => {}, onChange, "", [gym]);
       const [kind, grade] = dialog.getElementsByTagName("select");
-      expect([...kind!.options].map((o) => o.text)).toEqual(["Boulder", "Route", "Barn circuits"]);
+      expect([...kind!.options].map((o) => o.text)).toEqual([
+        "Boulder",
+        "Route",
+        "Endurance",
+        "Barn circuits",
+      ]);
       expect(kind!.value).toBe("boulder");
       expect(grade!.value).toBe("V3");
       act(() => {

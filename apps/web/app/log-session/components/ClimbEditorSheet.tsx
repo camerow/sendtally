@@ -5,7 +5,7 @@ import {
   climbOutcome,
   disciplineOf,
   gymOfCircuit,
-  withClimbKind,
+  withClimbDiscipline,
   withClimbOutcome,
   withTries,
   type ClimbDraft,
@@ -14,6 +14,13 @@ import {
 import { t } from "@sendtally/features/i18n";
 import { Icon } from "../../components/Icon";
 import { CircuitFields } from "../../gyms/components/CircuitFields";
+import {
+  EnduranceLapOutcome,
+  EnduranceLaps,
+  EnduranceTargetField,
+  EnduranceUnitField,
+  useSelectedLap,
+} from "./EnduranceFields";
 import { ClimbGradeSelect, ClimbKindSelect } from "./ClimbKindSelect";
 import { ClimbNameField } from "./ClimbNameField";
 import { ClimbNoteField } from "./ClimbNoteField";
@@ -100,7 +107,9 @@ export function ClimbEditorSheet({
   onClose,
 }: ClimbEditorSheetProps): React.ReactElement {
   const named = climb.name.trim() !== "";
+  const endurance = climb.endurance !== undefined;
   const gym = gymOfCircuit(gyms, climb.circuit?.id);
+  const [selectedLap, selectLap] = useSelectedLap(climb);
   const dialog = React.useRef<HTMLDialogElement>(null);
   const panel = React.useRef<HTMLDivElement>(null);
   const pressedBackdrop = React.useRef(false);
@@ -146,24 +155,60 @@ export function ClimbEditorSheet({
             )}
           </div>
         </div>
-        {gyms.length > 0 && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
-            <label htmlFor="climb-kind" style={monoLabel}>
-              {t("logSession.climbKind")}
-            </label>
-            <ClimbKindSelect
-              id="climb-kind"
-              climb={climb}
-              gyms={gyms}
-              prefs={prefs}
-              onChange={onChange}
-            />
-          </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
+          <label htmlFor="climb-kind" style={monoLabel}>
+            {t("logSession.climbKind")}
+          </label>
+          <ClimbKindSelect
+            id="climb-kind"
+            climb={climb}
+            gyms={gyms}
+            prefs={prefs}
+            onChange={onChange}
+          />
+        </div>
+        {endurance && (
+          <>
+            <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
+              <div
+                style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}
+              >
+                <span style={monoLabel}>{t("endurance.oneLapIs")}</span>
+                <EnduranceUnitField
+                  climb={climb}
+                  style={{ width: "auto", flex: "none" }}
+                  onChange={onChange}
+                />
+              </div>
+              <EnduranceTargetField climb={climb} onChange={onChange} />
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
+              <span style={monoLabel}>{t("endurance.laps")}</span>
+              <EnduranceLaps
+                climb={climb}
+                selected={selectedLap}
+                onSelect={selectLap}
+                onChange={onChange}
+              />
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
+              <span style={monoLabel}>{t("endurance.lapNumber", { n: selectedLap + 1 })}</span>
+              <EnduranceLapOutcome climb={climb} selected={selectedLap} onChange={onChange} />
+            </div>
+          </>
         )}
         <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
-          <label htmlFor="climb-grade" style={monoLabel}>
-            {t("common.grade")}
-          </label>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <label htmlFor="climb-grade" style={monoLabel}>
+              {endurance ? t("endurance.feltLike") : t("common.grade")}
+            </label>
+            {endurance && (
+              <DisciplineToggle
+                value={disciplineOf(climb.scale)}
+                onChange={(d) => onChange(withClimbDiscipline(climb, d, prefs))}
+              />
+            )}
+          </div>
           <ClimbGradeSelect id="climb-grade" climb={climb} gyms={gyms} onChange={onChange} />
         </div>
         {gym !== null && <CircuitFields climb={climb} gym={gym} onChange={onChange} />}
@@ -178,33 +223,36 @@ export function ClimbEditorSheet({
             suggestions={suggestions}
             inline
             placeholder={
-              gym === null
-                ? t("logSession.climbNamePlaceholder")
-                : t("logSession.circuitClimbNamePlaceholder")
+              endurance
+                ? t("endurance.namePlaceholder")
+                : gym === null
+                  ? t("logSession.climbNamePlaceholder")
+                  : t("logSession.circuitClimbNamePlaceholder")
             }
             onChange={onChangeName}
             onPick={onPick}
           />
         </div>
-        {gyms.length === 0 && (
-          <DisciplineToggle
-            value={disciplineOf(climb.scale)}
-            onChange={(d) => onChange(withClimbKind(climb, d, prefs, gyms))}
-          />
+        {!endurance && (
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <OutcomeSelect
+              discipline={disciplineOf(climb.scale)}
+              outcome={climbOutcome(climb)}
+              onChange={(outcome) => onChange(withClimbOutcome(climb, outcome))}
+            />
+            <TriesStepper
+              tries={climb.tries}
+              size={40}
+              onChange={(tries) => onChange(withTries(climb, tries))}
+            />
+          </div>
         )}
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <OutcomeSelect
-            discipline={disciplineOf(climb.scale)}
-            outcome={climbOutcome(climb)}
-            onChange={(outcome) => onChange(withClimbOutcome(climb, outcome))}
-          />
-          <TriesStepper
-            tries={climb.tries}
-            size={40}
-            onChange={(tries) => onChange(withTries(climb, tries))}
-          />
-        </div>
-        <ProjectToggle project={project} named={named} onToggle={onToggleProject} />
+        <ProjectToggle
+          project={project}
+          named={named}
+          offered={!endurance}
+          onToggle={onToggleProject}
+        />
         <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
           <span style={monoLabel}>
             {named ? t("logSession.noteOptional") : t("logSession.noteNeedsName")}

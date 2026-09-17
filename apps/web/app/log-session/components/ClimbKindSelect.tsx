@@ -30,7 +30,7 @@ export type ClimbKindSelectProps = {
   onChange: (climb: ClimbDraft) => void;
 };
 
-/** Boulder, route, or a gym's circuits; the pick is remembered for the next climb. */
+/** Boulder, route, endurance, or a gym's circuits; the pick is remembered for the next climb. */
 export function ClimbKindSelect({
   id,
   climb,
@@ -57,6 +57,7 @@ export function ClimbKindSelect({
           {disciplineLabel(d)}
         </option>
       ))}
+      <option value="endurance">{t("endurance.title")}</option>
       {gyms.map((g) => (
         <option key={g.id} value={g.id}>
           {t("logSession.gymCircuits", { gym: g.name })}
