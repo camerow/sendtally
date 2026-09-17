@@ -20,8 +20,8 @@ name: log-session-sheet
 - pressKey: Enter
 - assertVisible: "Save"
 # On iOS only a bare direction swipe reaches React Native's responder system (coordinate and
-# element swipes go through a press-and-drag that RN never sees). On Android every form works,
-# and a coordinate swipe is the one that starts on the sheet rather than the scrim.
+# element swipes go through a press-and-drag that RN never sees). On Android the swipe starts on
+# the sheet's handle, since a fixed point can land on a text input that keeps the gesture.
 - runFlow:
     when:
       platform: iOS
@@ -34,8 +34,8 @@ name: log-session-sheet
       platform: Android
     commands:
       - swipe:
-          start: "50%, 72%"
-          end: "50%, 96%"
+          from: "Bottom sheet handle"
+          direction: DOWN
           duration: 300
 - assertNotVisible: "CLIMB 2 OF 2"
 - assertVisible: "V3 Cascade.*"
