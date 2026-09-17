@@ -1,10 +1,17 @@
 import { describe, expect, it } from "vitest";
 import {
+  MOVES_PER_EQUIVALENT,
+  SECONDS_PER_EQUIVALENT,
   defaultEffortConfig,
+  dominantDiscipline,
+  enduranceEquivalents,
+  isEndurance,
   points,
   score,
   sessionPoints,
+  topGradeLabel,
   type Climb,
+  type Endurance,
   type Session,
 } from "./effort";
 import { effortGrade } from "./grades";
@@ -241,5 +248,131 @@ describe("route grades in titles and summaries", () => {
 
   it("scores routes through their effort equivalent", () => {
     expect(sessionPoints(session([route(0, "5.12a")]), defaultEffortConfig())).toBe(points(4));
+  });
+});
+
+describe("endurance", () => {
+  function enduranceClimb(e: Endurance, vGrade = 3, name = ""): Climb {
+    return { time: at(1, 18, 0), vGrade, name, kind: "send", tries: 1, endurance: e };
+  }
+
+  const cases: Array<[string, Endurance, number]> = [
+    ["a clean moves circuit", { unit: "moves", target: 96, laps: [96] }, 12],
+    ["three clean moves laps", { unit: "moves", target: 32, laps: [32, 32, 32] }, 12],
+    ["a partial moves lap", { unit: "moves", target: 32, laps: [32, 32, 24] }, 11],
+    ["a clean timed circuit", { unit: "seconds", target: 720, laps: [720, 720, 720] }, 24],
+    ["a partial timed lap", { unit: "seconds", target: 720, laps: [720, 360] }, 12],
+  ];
+
+  it.each(cases)("counts equivalents for %s", (_name, e, want) => {
+    expect(enduranceEquivalents(e)).toBe(want);
+  });
+
+  it("divides by the calibration knob for each unit", () => {
+    expect(MOVES_PER_EQUIVALENT).toBe(8);
+    expect(SECONDS_PER_EQUIVALENT).toBe(90);
+  });
+
+  it("scores a partial lap below a clean one and skips the bid weight", () => {
+    const cfg = defaultEffortConfig();
+    const clean = enduranceClimb({ unit: "moves", target: 32, laps: [32, 32, 32] });
+    const partial = enduranceClimb({ unit: "moves", target: 32, laps: [32, 32, 24] });
+    const one = (c: Climb): number =>
+      sessionPoints({ start: at(1, 17, 50), end: at(1, 19, 0), climbs: [c] }, cfg);
+    expect(one(partial)).toBeLessThan(one(clean));
+    expect(one(clean)).toBe(points(3) * 12);
+    expect(one({ ...clean, kind: "attempt" })).toBe(one(clean));
+  });
+
+  it("keeps an endurance grade out of the top grade and the dominant discipline", () => {
+    const boulder: Climb = { time: at(1, 18, 10), vGrade: 4, name: "", kind: "send", tries: 1 };
+    const route = enduranceClimb({ unit: "seconds", target: 720, laps: [720] }, 8);
+    const routeGraded: Climb = { ...route, grade: { scale: "yds", value: "5.13a" } };
+    expect(topGradeLabel([boulder, routeGraded])).toBe("V4");
+    expect(dominantDiscipline([boulder, routeGraded])).toBe("boulder");
+    expect(isEndurance(routeGraded)).toBe(true);
+    expect(isEndurance(boulder)).toBe(false);
+  });
+
+  it("never lets an endurance grade suppress the volume title", () => {
+    const history = history6(8, 6);
+    const base = mkSession(10, 18, 40, 3);
+    expect(score(base, history, defaultEffortConfig()).title).toContain("volume climbing session");
+
+    const withCircuit: Session = {
+      ...base,
+      climbs: [...base.climbs, enduranceClimb({ unit: "seconds", target: 720, laps: [720] }, 7)],
+    };
+    expect(score(withCircuit, history, defaultEffortConfig()).title).toContain(
+      "volume climbing session"
+    );
+  });
+
+  it("never lets an endurance grade count as a personal best", () => {
+    const history = history6(10, 4);
+    const base = mkSession(10, 18, 10, 4);
+    const hard: Climb = { time: at(10, 18, 90), vGrade: 9, name: "", kind: "send", tries: 1 };
+    const rest = base.climbs.slice(0, 9);
+    const asEndurance = score(
+      {
+        ...base,
+        climbs: [...rest, { ...hard, endurance: { unit: "moves", target: 8, laps: [8] } }],
+      },
+      history,
+      defaultEffortConfig()
+    );
+    const asSend = score({ ...base, climbs: [...rest, hard] }, history, defaultEffortConfig());
+    expect(asEndurance.rpe).toBeLessThan(asSend.rpe);
+  });
+
+  it("writes the laps and progress into the Strava climb line", () => {
+    const climbs = [
+      enduranceClimb({ unit: "moves", target: 32, laps: [32, 32, 24] }, 3, "Red 40"),
+      {
+        ...enduranceClimb({ unit: "seconds", target: 720, laps: [720, 720, 720] }, 4),
+        grade: { scale: "yds", value: "5.10c" } as const,
+        time: at(1, 18, 30),
+      },
+      enduranceClimb({ unit: "seconds", target: 90, laps: [45] }, 2),
+    ];
+    const res = score(
+      { start: at(1, 17, 50), end: at(1, 19, 0), climbs },
+      [],
+      defaultEffortConfig()
+    );
+    expect(res.summary).toContain("✓ V3 Red 40 (3 laps · 88 of 96 moves)");
+    expect(res.summary).toContain("✓ 5.10c (3 laps · 36 min of 36 min)");
+    expect(res.summary).toContain("✓ V2 (1 lap · 45 sec of 90 sec)");
+  });
+});
+
+describe("density counts laps, not circuits", () => {
+  function circuits(target: number, laps: number[]): Session {
+    const climbs: Climb[] = [0, 30, 60].map((minute) => ({
+      time: at(1, 18, minute),
+      vGrade: 3,
+      name: "",
+      kind: "send" as const,
+      tries: 1,
+      endurance: { unit: "moves" as const, target, laps },
+    }));
+    return { start: at(1, 17, 50), end: at(1, 19, 10), climbs };
+  }
+
+  const fiveLaps = circuits(32, [32, 32, 32, 32, 32]);
+  const oneLongLap = circuits(160, [160]);
+
+  it("scores the same work identically before the density nudge", () => {
+    const cfg = defaultEffortConfig();
+    expect(sessionPoints(fiveLaps, cfg)).toBe(sessionPoints(oneLongLap, cfg));
+  });
+
+  it("nudges up on fifteen laps and down on three", () => {
+    expect(score(fiveLaps, [], defaultEffortConfig()).rpe).toBe(7);
+    expect(score(oneLongLap, [], defaultEffortConfig()).rpe).toBe(5);
+  });
+
+  it("still calls three circuits three climbs", () => {
+    expect(score(fiveLaps, [], defaultEffortConfig()).title).toContain("3 climbs");
   });
 });

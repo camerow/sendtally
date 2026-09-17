@@ -2,12 +2,14 @@ import {
   defaultEffortConfig,
   disciplineOf,
   effortGrade,
+  isEndurance,
   parseGrade,
   score,
   topGradeLabel,
   type Climb,
   type ClimbKind,
   type ClimbStyle,
+  type Endurance,
   type Grade,
   type Session,
 } from "@sendtally/core";
@@ -59,8 +61,38 @@ const climbSchema = z
     tries: z.number().int().min(1).max(99).default(1),
     project: z.boolean().optional(),
     note: z.string().max(CLIMB_NOTE_MAX).optional(),
+    endurance: z
+      .object({
+        unit: z.enum(["moves", "seconds"]),
+        target: z.number().int().min(1).max(3600),
+        laps: z.array(z.number().int().min(0).max(3600)).min(1).max(60),
+      })
+      .optional(),
   })
   .superRefine((climb, ctx) => {
+    const endurance = climb.endurance;
+    if (endurance !== undefined) {
+      if (endurance.laps.some((lap) => lap > endurance.target)) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["endurance", "laps"],
+          message: "a lap cannot beat its target",
+        });
+      }
+      if (climb.kind !== "send") {
+        ctx.addIssue({ code: "custom", path: ["kind"], message: "an endurance climb is a send" });
+      }
+      if (climb.style !== undefined && climb.style !== "redpoint") {
+        ctx.addIssue({
+          code: "custom",
+          path: ["style"],
+          message: "an endurance climb has no send style",
+        });
+      }
+      if (climb.tries !== 1) {
+        ctx.addIssue({ code: "custom", path: ["tries"], message: "an endurance climb is one try" });
+      }
+    }
     if (climb.style === undefined) return;
     if (climb.kind === "attempt") {
       ctx.addIssue({ code: "custom", path: ["style"], message: "an attempt has no send style" });
@@ -161,6 +193,7 @@ function toSession(body: ManualSessionBody): Session {
       ...(c.style === undefined ? {} : { style: c.style }),
       tries: c.tries,
       grade,
+      ...(c.endurance === undefined ? {} : { endurance: c.endurance }),
     };
   });
   return { start, end, climbs };
@@ -179,6 +212,7 @@ export type StoredClimb = {
   grade?: Grade;
   circuit?: CircuitRef;
   wall?: string;
+  endurance?: Endurance;
 };
 
 export type CircuitRef = z.infer<typeof circuitRefSchema>;
@@ -211,6 +245,7 @@ export function historySession(row: {
       name: c.name,
       kind: c.kind,
       tries: c.tries,
+      ...(c.endurance === undefined ? {} : { endurance: c.endurance }),
     })),
   };
 }
@@ -222,12 +257,13 @@ export function buildManualSession(
 ): ManualSessionInput {
   const session = toSession(body);
   const result = score(session, history, defaultEffortConfig(), body.rpe);
-  const topGrade = session.climbs.reduce((hi, c) => (c.vGrade > hi ? c.vGrade : hi), -1);
-  const topSendGrade = session.climbs.reduce(
+  const graded = session.climbs.filter((c) => !isEndurance(c));
+  const topGrade = graded.reduce((hi, c) => (c.vGrade > hi ? c.vGrade : hi), -1);
+  const topSendGrade = graded.reduce(
     (hi, c) => (c.kind === "send" && c.vGrade > hi ? c.vGrade : hi),
     -1
   );
-  const sends = session.climbs.filter((c) => c.kind === "send");
+  const sends = graded.filter((c) => c.kind === "send");
   return {
     fingerprint,
     location: body.location,
@@ -238,7 +274,7 @@ export function buildManualSession(
     climb_count: session.climbs.length,
     top_grade: topGrade,
     top_send_grade: topSendGrade,
-    top_grade_label: topGradeLabel(session.climbs) ?? null,
+    top_grade_label: topGradeLabel(graded) ?? null,
     top_send_grade_label: topGradeLabel(sends) ?? null,
     rpe: result.rpe,
     title: body.name ?? result.title,
@@ -253,6 +289,7 @@ export function buildManualSession(
         tries: c.tries,
         angle: null,
         grade: c.grade,
+        ...(c.endurance === undefined ? {} : { endurance: c.endurance }),
         ...placeOf(body.climbs[i]),
       }))
     ),

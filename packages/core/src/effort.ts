@@ -15,6 +15,18 @@ export type ClimbKind = "send" | "attempt";
  */
 export type ClimbStyle = "redpoint" | "flash" | "onsight";
 
+export type EnduranceUnit = "moves" | "seconds";
+
+/**
+ * Laps on a circuit of a fixed length. `laps[i] === target` means that lap went
+ * clean, anything less means they came off partway. Time is always seconds.
+ */
+export type Endurance = {
+  unit: EnduranceUnit;
+  target: number;
+  laps: number[];
+};
+
 export type Climb = {
   time: Date;
   vGrade: number;
@@ -24,6 +36,7 @@ export type Climb = {
   style?: ClimbStyle;
   angle?: number;
   grade?: Grade;
+  endurance?: Endurance;
 };
 
 export type Session = {
@@ -63,13 +76,33 @@ export function points(vGrade: number): number {
   return Math.pow(2, grade / 2);
 }
 
+// The two divisors are the calibration knob: how much work counts as one climb's
+// worth of effort. Tune them here and every endurance session re-scores.
+export const MOVES_PER_EQUIVALENT = 8;
+export const SECONDS_PER_EQUIVALENT = 90;
+
+export function enduranceEquivalents(e: Endurance): number {
+  const done = e.laps.reduce((a, b) => a + b, 0);
+  return done / (e.unit === "moves" ? MOVES_PER_EQUIVALENT : SECONDS_PER_EQUIVALENT);
+}
+
+export function isEndurance(c: { endurance?: Endurance | undefined }): boolean {
+  return c.endurance !== undefined;
+}
+
 export function sessionPoints(s: Session, cfg: EffortConfig): number {
   let pts = 0;
   for (const c of s.climbs) {
     const p = points(c.vGrade);
-    pts += c.kind === "attempt" ? p * cfg.bidWeight : p;
+    if (c.endurance !== undefined) pts += p * enduranceEquivalents(c.endurance);
+    else pts += c.kind === "attempt" ? p * cfg.bidWeight : p;
   }
   return pts;
+}
+
+/** Laps are the unit of work for density: three circuits of five laps is fifteen goes at the wall. */
+function densityCount(climbs: readonly Climb[]): number {
+  return climbs.reduce((n, c) => n + (c.endurance?.laps.length ?? 1), 0);
 }
 
 export function score(
@@ -98,7 +131,7 @@ export function score(
     const first = target.climbs[0]!;
     const last = target.climbs[target.climbs.length - 1]!;
     const span = Math.max((last.time.getTime() - first.time.getTime()) / HOUR, 0.5);
-    const density = target.climbs.length / span;
+    const density = densityCount(target.climbs) / span;
     if (density >= cfg.densityHigh) nudge++;
     else if (density <= cfg.densityLow) nudge--;
   }
@@ -106,10 +139,11 @@ export function score(
   let rollingMax = 0;
   for (const h of ref) {
     for (const c of h.climbs) {
-      if (c.kind === "send" && c.vGrade > rollingMax) rollingMax = c.vGrade;
+      if (c.kind === "send" && !isEndurance(c) && c.vGrade > rollingMax) rollingMax = c.vGrade;
     }
   }
-  if (rollingMax > 0 && target.climbs.some((c) => c.vGrade > rollingMax)) nudge++;
+  if (rollingMax > 0 && target.climbs.some((c) => !isEndurance(c) && c.vGrade > rollingMax))
+    nudge++;
 
   const rpe = Math.min(10, Math.max(1, Math.round(rpeOverride ?? base + nudge)));
 
@@ -142,10 +176,14 @@ function adjective(rpe: number): string {
 }
 
 function topEffortGrade(s: Session): number {
-  return s.climbs.reduce((hi, c) => (c.vGrade > hi ? c.vGrade : hi), -1);
+  return s.climbs.reduce((hi, c) => (!isEndurance(c) && c.vGrade > hi ? c.vGrade : hi), -1);
 }
 
-export type GradedClimb = { vGrade: number; grade?: Grade | undefined };
+export type GradedClimb = {
+  vGrade: number;
+  grade?: Grade | undefined;
+  endurance?: Endurance | undefined;
+};
 
 export function climbGrade(c: GradedClimb): Grade {
   return c.grade ?? { scale: "v", value: c.vGrade };
@@ -155,9 +193,12 @@ export function climbDiscipline(c: GradedClimb): Discipline {
   return disciplineOf(climbGrade(c).scale);
 }
 
+// A felt-like grade on an endurance climb is not a top-grade statistic, so every
+// grade readout here drops those climbs.
 export function dominantDiscipline(climbs: readonly GradedClimb[]): Discipline {
-  const routes = climbs.filter((c) => climbDiscipline(c) === "route").length;
-  return routes > climbs.length - routes ? "route" : "boulder";
+  const graded = climbs.filter((c) => !isEndurance(c));
+  const routes = graded.filter((c) => climbDiscipline(c) === "route").length;
+  return routes > graded.length - routes ? "route" : "boulder";
 }
 
 export function climbRank(c: GradedClimb): number {
@@ -175,7 +216,9 @@ type DisciplineStats = {
 };
 
 function disciplineStats(climbs: readonly Climb[], discipline: Discipline): DisciplineStats | null {
-  const graded = climbs.filter((c) => climbDiscipline(c) === discipline && climbRank(c) >= 0);
+  const graded = climbs.filter(
+    (c) => !isEndurance(c) && climbDiscipline(c) === discipline && climbRank(c) >= 0
+  );
   if (graded.length === 0) return null;
   let top = graded[0]!;
   let lo = climbRank(top);
@@ -257,10 +300,25 @@ function summary(rpe: number, s: Session): string {
   return lines.join("\n");
 }
 
+function secondsLabel(n: number): string {
+  return n >= 60 && n % 60 === 0 ? `${n / 60} min` : `${n} sec`;
+}
+
+function enduranceProgress(e: Endurance): string {
+  const done = e.laps.reduce((a, b) => a + b, 0);
+  const total = e.laps.length * e.target;
+  if (e.unit === "moves") return `${done} of ${total} moves`;
+  return `${secondsLabel(done)} of ${secondsLabel(total)}`;
+}
+
 function climbLine(c: Climb): string {
   const mark = c.kind === "attempt" ? "✗" : "✓";
   let line = `${mark} ${formatGrade(climbGrade(c))}`;
   if (c.name !== "") line += ` ${c.name}`;
+  if (c.endurance !== undefined) {
+    const laps = plural(c.endurance.laps.length, "lap");
+    return `${line} (${laps} · ${enduranceProgress(c.endurance)})`;
+  }
   if (c.kind === "send" && (c.style === "flash" || c.style === "onsight")) line += ` (${c.style})`;
   else if (c.tries > 1) line += ` (${c.tries} tries)`;
   return line;

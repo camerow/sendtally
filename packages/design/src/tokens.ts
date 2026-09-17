@@ -17,6 +17,7 @@ export const colors = {
   petal: "#CC79EA",
   petalTint: "#EED3F8",
   petalInk: PETAL_INK,
+  fern: "#157F52",
   white: "#FFFFFF",
   labelAccent: WATERMELON_INK,
   dataBarPeak: PETAL_INK,
