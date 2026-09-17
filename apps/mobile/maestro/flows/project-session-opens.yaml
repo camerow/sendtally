@@ -44,8 +44,13 @@ name: project-session-opens
     timeout: 30000
 - tapOn: ".*, Maestro Arete, .*"
 - extendedWaitUntil:
-    visible: "SESSIONS INVESTED"
+    visible: "ATTEMPTS PER SESSION"
     timeout: 20000
+- scrollUntilVisible:
+    element:
+      text: "(?i)sessions invested"
+    direction: DOWN
+    centerElement: true
 - assertNotVisible: "NOT TRIED YET"
 # The session row is one accessible element too, spoken date-first, so it is matched by the
 # session title in the middle of it.
@@ -54,13 +59,22 @@ name: project-session-opens
     visible: "← LOG"
     timeout: 20000
 - tapOn: "← LOG"
-- assertVisible: "SESSIONS INVESTED"
+- scrollUntilVisible:
+    element:
+      text: "(?i)sessions invested"
+    direction: DOWN
+    centerElement: true
 - tapOn: "Projects(, tab.*)?"
 - assertVisible: "New project"
 - tapOn: ".*, Maestro Arete, .*"
 - extendedWaitUntil:
-    visible: "SESSIONS INVESTED"
+    visible: "ATTEMPTS PER SESSION"
     timeout: 20000
+- scrollUntilVisible:
+    element:
+      text: "(?i)sessions invested"
+    direction: DOWN
+    centerElement: true
 - tapOn: ".*Logged session.*"
 - extendedWaitUntil:
     visible: "Delete"
