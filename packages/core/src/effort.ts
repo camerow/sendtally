@@ -92,18 +92,9 @@ export function enduranceTotals(e: Endurance): EnduranceTotals {
   };
 }
 
-/**
- * The unit both sides of a time pair render in, decided once from the lap target.
- * Deciding per value reads "1890 sec of 36 min" the moment a lap comes off early.
- */
-export function enduranceTimeUnit(target: number): "min" | "sec" {
-  return target >= 60 && target % 60 === 0 ? "min" : "sec";
-}
-
-/** Moves and seconds render as they are; minutes to at most one decimal. */
-export function enduranceDisplayValue(e: Endurance, value: number): number {
-  if (e.unit === "moves" || enduranceTimeUnit(e.target) === "sec") return value;
-  return Math.round((value / 60) * 10) / 10;
+/** Time reads in whole minutes and seconds, so 90 is a minute and a half, never 90 sec. */
+export function enduranceTimeParts(seconds: number): { min: number; sec: number } {
+  return { min: Math.floor(seconds / 60), sec: seconds % 60 };
 }
 
 export function enduranceEquivalents(e: Endurance): number {
@@ -326,9 +317,10 @@ function summary(rpe: number, s: Session): string {
 }
 
 function enduranceAmount(e: Endurance, value: number): string {
-  const shown = enduranceDisplayValue(e, value);
-  if (e.unit === "moves") return plural(shown, "move");
-  return `${shown} ${enduranceTimeUnit(e.target)}`;
+  if (e.unit === "moves") return plural(value, "move");
+  const { min, sec } = enduranceTimeParts(value);
+  if (min === 0) return `${sec} sec`;
+  return sec === 0 ? `${min} min` : `${min} min ${sec} sec`;
 }
 
 function enduranceProgress(e: Endurance): string {

@@ -1,6 +1,5 @@
 import {
-  enduranceDisplayValue,
-  enduranceTimeUnit,
+  enduranceTimeParts,
   enduranceTotals,
   type Endurance,
   type EnduranceTotals,
@@ -9,7 +8,7 @@ import {
 import { formatNumber, t } from "../i18n";
 import type { ClimbDraft } from "./types";
 
-export { enduranceTimeUnit, enduranceTotals };
+export { enduranceTimeParts, enduranceTotals };
 export type { Endurance, EnduranceTotals, EnduranceUnit };
 
 const MAX_TARGET = 3600;
@@ -21,26 +20,24 @@ export function defaultEndurance(): Endurance {
   return { unit: "moves", target: DEFAULT_TARGET.moves, laps: [DEFAULT_TARGET.moves] };
 }
 
-/** Whole minutes, so the unit the label picks from the target never flips mid-tap. */
-export function stepEnduranceTarget(climb: ClimbDraft, direction: 1 | -1): ClimbDraft {
-  const e = enduranceOf(climb);
-  if (e.unit === "moves") return withEnduranceTarget(climb, e.target + direction);
-  const step = e.target >= 60 && !(direction === -1 && e.target === 60) ? 60 : 15;
-  return withEnduranceTarget(climb, e.target + direction * step);
+export function enduranceStep(e: Endurance): number {
+  return e.unit === "moves" ? 1 : 15;
 }
 
-/** Half minutes, so a lap can record coming off at 7:30 of a 12 minute circuit. */
-export function enduranceLapStep(e: Endurance): number {
-  if (e.unit === "moves") return 1;
-  return e.target >= 60 ? 30 : 15;
+export function stepEnduranceTarget(climb: ClimbDraft, direction: 1 | -1): ClimbDraft {
+  const e = enduranceOf(climb);
+  return withEnduranceTarget(climb, e.target + direction * enduranceStep(e));
 }
 
 export function stepLap(climb: ClimbDraft, index: number, direction: 1 | -1): ClimbDraft {
   const e = enduranceOf(climb);
   const lap = e.laps[index];
   if (lap === undefined) return climb;
-  return withLap(climb, index, lap + direction * enduranceLapStep(e));
+  return withLap(climb, index, lap + direction * enduranceStep(e));
 }
+
+/** Coming off starts at the bottom of the series and counts up to where the lap ended. */
+export const FELL_AFTER_START = 0;
 
 export function enduranceOf(climb: ClimbDraft): Endurance {
   return climb.endurance ?? defaultEndurance();
@@ -109,17 +106,19 @@ export function enduranceUnitLabel(unit: EnduranceUnit): string {
 }
 
 export function enduranceAmountLabel(e: Endurance, value: number): string {
-  const shown = enduranceDisplayValue(e, value);
-  const formatted = formatNumber(shown, { maximumFractionDigits: 1 });
-  if (e.unit === "moves") return t("endurance.amountMoves", { count: shown, value: formatted });
-  const key = enduranceTimeUnit(e.target) === "min" ? "endurance.amountMin" : "endurance.amountSec";
-  return t(key, { value: formatted });
+  if (e.unit === "moves") {
+    return t("endurance.amountMoves", { count: value, value: formatNumber(value) });
+  }
+  const { min, sec } = enduranceTimeParts(value);
+  if (min === 0) return t("endurance.amountSec", { value: formatNumber(sec) });
+  if (sec === 0) return t("endurance.amountMin", { value: formatNumber(min) });
+  return t("endurance.amountMinSec", { min: formatNumber(min), sec: formatNumber(sec) });
 }
 
 /** Moves carry the unit once at the end; a time pair carries it on both sides. */
 function doneLabel(e: Endurance, value: number): string {
   if (e.unit !== "moves") return enduranceAmountLabel(e, value);
-  return formatNumber(enduranceDisplayValue(e, value));
+  return formatNumber(value);
 }
 
 export function enduranceProgressLabel(e: Endurance): string {

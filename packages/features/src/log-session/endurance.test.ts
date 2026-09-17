@@ -10,10 +10,9 @@ import {
   enduranceLapCountLabel,
   enduranceLapLabel,
   enduranceProgressLabel,
-  enduranceLapStep,
+  enduranceStep,
   stepEnduranceTarget,
   stepLap,
-  enduranceTimeUnit,
   enduranceTotals,
   isCleanLap,
   removeLap,
@@ -46,32 +45,17 @@ describe("defaults and steppers", () => {
     expect(defaultEndurance()).toEqual({ unit: "moves", target: 20, laps: [20] });
   });
 
-  it("steps a time target in whole minutes so the unit never flips mid-tap", () => {
+  it("steps time by fifteen seconds and moves by one", () => {
     const ten = draft({ unit: "seconds", target: 600, laps: [600] });
-    expect(endurance(stepEnduranceTarget(ten, -1)).target).toBe(540);
-    expect(endurance(stepEnduranceTarget(ten, 1)).target).toBe(660);
+    expect(enduranceStep(endurance(ten))).toBe(15);
+    expect(endurance(stepEnduranceTarget(ten, -1)).target).toBe(585);
+    expect(endurance(stepEnduranceTarget(ten, 1)).target).toBe(615);
+    expect(endurance(stepLap(ten, 0, -1)).laps).toEqual([585]);
 
-    const one = draft({ unit: "seconds", target: 60, laps: [60] });
-    expect(endurance(stepEnduranceTarget(one, -1)).target).toBe(45);
-    expect(endurance(stepEnduranceTarget(one, 1)).target).toBe(120);
-
-    const short = draft({ unit: "seconds", target: 45, laps: [45] });
-    expect(endurance(stepEnduranceTarget(short, 1)).target).toBe(60);
-    expect(endurance(stepEnduranceTarget(short, -1)).target).toBe(30);
-  });
-
-  it("steps a moves target by one", () => {
-    const c = draft({ unit: "moves", target: 20, laps: [20] });
-    expect(endurance(stepEnduranceTarget(c, 1)).target).toBe(21);
-    expect(endurance(stepEnduranceTarget(c, -1)).target).toBe(19);
-  });
-
-  it("steps a lap in half minutes so coming off at 7:30 is reachable", () => {
-    const c = draft({ unit: "seconds", target: 720, laps: [720] });
-    expect(enduranceLapStep(endurance(c))).toBe(30);
-    expect(endurance(stepLap(c, 0, -1)).laps).toEqual([690]);
-    expect(enduranceLapStep({ unit: "seconds", target: 45, laps: [45] })).toBe(15);
-    expect(enduranceLapStep({ unit: "moves", target: 32, laps: [32] })).toBe(1);
+    const moves = draft({ unit: "moves", target: 20, laps: [20] });
+    expect(enduranceStep(endurance(moves))).toBe(1);
+    expect(endurance(stepEnduranceTarget(moves, 1)).target).toBe(21);
+    expect(endurance(stepEnduranceTarget(moves, -1)).target).toBe(19);
   });
 
   it("forces send, redpoint and one try, and drops a project flag", () => {
@@ -150,12 +134,6 @@ describe("target and laps", () => {
 });
 
 describe("labels", () => {
-  it("picks the time unit once from the lap target", () => {
-    expect(enduranceTimeUnit(720)).toBe("min");
-    expect(enduranceTimeUnit(135)).toBe("sec");
-    expect(enduranceTimeUnit(45)).toBe("sec");
-  });
-
   it("reads progress in one unit on both sides", () => {
     expect(enduranceProgressLabel({ unit: "moves", target: 32, laps: [32, 32, 24] })).toBe(
       "88 of 96 moves"
@@ -164,10 +142,13 @@ describe("labels", () => {
       "36 min of 36 min"
     );
     expect(enduranceProgressLabel({ unit: "seconds", target: 720, laps: [720, 720, 450] })).toBe(
-      "31.5 min of 36 min"
+      "31 min 30 sec of 36 min"
     );
     expect(enduranceProgressLabel({ unit: "seconds", target: 135, laps: [120] })).toBe(
-      "120 sec of 135 sec"
+      "2 min of 2 min 15 sec"
+    );
+    expect(enduranceProgressLabel({ unit: "seconds", target: 45, laps: [30] })).toBe(
+      "30 sec of 45 sec"
     );
   });
 
@@ -175,7 +156,7 @@ describe("labels", () => {
     const moves: Endurance = { unit: "moves", target: 32, laps: [32, 24] };
     expect(enduranceLapLabel(moves, 1)).toBe("24/32 moves");
     const time: Endurance = { unit: "seconds", target: 720, laps: [450] };
-    expect(enduranceLapLabel(time, 0)).toBe("7.5 min/12 min");
+    expect(enduranceLapLabel(time, 0)).toBe("7 min 30 sec/12 min");
   });
 
   it("singularises one move and one lap", () => {
@@ -190,10 +171,10 @@ describe("labels", () => {
     );
   });
 
-  it("formats decimals for the reader's locale", () => {
+  it("reads minutes and seconds in the reader's language", () => {
     setLocale("de");
     expect(enduranceProgressLabel({ unit: "seconds", target: 720, laps: [720, 720, 450] })).toBe(
-      "31,5 min von 36 min"
+      "31 Min 30 Sek von 36 Min"
     );
   });
 });
