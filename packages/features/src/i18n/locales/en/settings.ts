@@ -36,4 +36,9 @@ export const settings = {
   "settings.openingStrava": "Opening Strava…",
   "settings.stravaUnreachable": "Could not reach Strava. Try again.",
   "settings.embeddedBundle": "Embedded",
+  "settings.yourData": "Your data",
+  "settings.yourDataBody":
+    "Bring a climbing history in from a spreadsheet or a Kaya export, or take everything you have logged here with you.",
+  "settings.importCsv": "Import CSV",
+  "settings.exportCsv": "Export CSV",
 } as const;

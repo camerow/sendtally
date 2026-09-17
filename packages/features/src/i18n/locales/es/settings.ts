@@ -39,4 +39,9 @@ export const settings = {
   "settings.openingStrava": "Abriendo Strava…",
   "settings.stravaUnreachable": "No se pudo conectar con Strava. Inténtalo de nuevo.",
   "settings.embeddedBundle": "Integrado",
+  "settings.yourData": "Tus datos",
+  "settings.yourDataBody":
+    "Trae un historial de escalada desde una hoja de cálculo o una exportación de Kaya, o llévate todo lo que has registrado aquí.",
+  "settings.importCsv": "Importar CSV",
+  "settings.exportCsv": "Exportar CSV",
 } as const;
