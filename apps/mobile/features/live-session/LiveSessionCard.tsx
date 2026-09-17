@@ -188,13 +188,12 @@ export function LiveSessionCard({
                   onChangeTries={(tries) => onChangeTries(climb.key, tries)}
                 />
               ) : (
-                <View key={climb.key} style={{ paddingVertical: 10 }}>
-                  <LiveEnduranceClimb
-                    climb={climb}
-                    onPress={() => onEditClimb(climb.key)}
-                    onAddLap={() => onAddLap(climb.key)}
-                  />
-                </View>
+                <LiveEnduranceClimb
+                  key={climb.key}
+                  climb={climb}
+                  onPress={() => onEditClimb(climb.key)}
+                  onAddLap={() => onAddLap(climb.key)}
+                />
               )
             )}
           </View>

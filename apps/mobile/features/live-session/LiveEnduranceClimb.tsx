@@ -37,12 +37,10 @@ export function LiveEnduranceClimb({
   return (
     <View
       style={{
-        gap: 13,
-        padding: 14,
-        borderWidth: 1,
-        borderColor: colors.gold,
-        borderRadius: radius.card,
-        backgroundColor: "rgba(249,220,92,0.16)",
+        gap: 12,
+        paddingVertical: 12,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.lineOnLightSoft,
       }}
     >
       <Pressable
