@@ -43,7 +43,8 @@ export const logSession = {
   "logSession.climbOf": "Kletterei {n} von {total}",
   "logSession.nameOptional": "Name · optional",
   "logSession.climbNamePlaceholder": "Name (optional)",
-  "logSession.circuitClimbNamePlaceholder": "z. B. Sloper-Start, Kraftboulder, Platte mit roten Griffen",
+  "logSession.circuitClimbNamePlaceholder":
+    "z. B. Sloper-Start, Kraftboulder, Platte mit roten Griffen",
   "logSession.candidateProject": "{name}, Projekt",
   "logSession.attempt": "Versuch",
   "logSession.markAsProject": "Als Projekt markieren",

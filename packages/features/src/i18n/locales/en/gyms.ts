@@ -8,7 +8,7 @@ export const gyms = {
   "gyms.walls": "Walls",
   "gyms.addWall": "Add a wall",
   "gyms.wallPlaceholder": "Cave, Slab, Comp wall",
-  "gyms.standard": "Standard circuits",
+  "gyms.standard": "Color circuits",
   "gyms.custom": "Custom",
   "gyms.modeStandard": "The usual colour ladder. Edit any row.",
   "gyms.modeCustom": "Your colours, names or numbers, and ranges.",
