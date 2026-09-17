@@ -22,7 +22,7 @@ import {
 } from "@sendtally/features/sessions";
 import { logItems, logScopeItems, type LogItem } from "@sendtally/features/journal";
 import { t } from "@sendtally/features/i18n";
-import { bothReady, queries, useQuery } from "@sendtally/features/query";
+import { queries, useQueryPair } from "@sendtally/features/query";
 import { colors, fonts } from "@sendtally/design/tokens";
 import { ScreenHeader } from "../../components/ScreenHeader";
 import { useClimbVocabulary } from "@sendtally/features/climbs";
@@ -94,18 +94,9 @@ const emptyBody = {
 export default function Log(): React.ReactElement {
   const api = useApi();
   const list = React.useRef<SectionList<LogItem, Section>>(null);
-  const sessionsQuery = useQuery(queries.sessions(api));
-  const entriesQuery = useQuery(queries.entries(api));
-  const log = bothReady(sessionsQuery.state, entriesQuery.state, (sessions, entries) => ({
-    sessions,
-    entries,
-  }));
-  const sessions = log.status === "ready" ? log.data.sessions : null;
-  const entries = log.status === "ready" ? log.data.entries : null;
-  const error =
-    log.status === "error" || sessionsQuery.refreshFailed || entriesQuery.refreshFailed
-      ? t("sessions.loadFailed")
-      : null;
+  const log = useQueryPair(queries.sessions(api), queries.entries(api));
+  const [sessions, entries] = log.state.status === "ready" ? log.state.data : [null, null];
+  const error = log.state.status === "error" || log.refreshFailed ? t("sessions.loadFailed") : null;
   const [refreshing, setRefreshing] = React.useState(false);
   const [filters, setFilters] = React.useState<SessionFilters>(DEFAULT_FILTERS);
   const [filtersOpen, setFiltersOpen] = React.useState(false);
@@ -283,9 +274,7 @@ export default function Log(): React.ReactElement {
             refreshing={refreshing}
             onRefresh={() => {
               setRefreshing(true);
-              void Promise.all([sessionsQuery.reload(), entriesQuery.reload()]).finally(() =>
-                setRefreshing(false)
-              );
+              void log.reload().finally(() => setRefreshing(false));
             }}
             tintColor={colors.gunmetal}
           />

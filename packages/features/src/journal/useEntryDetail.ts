@@ -1,6 +1,6 @@
 import React from "react";
 import type { EntryDetail, SendtallyApi, SessionRow } from "@sendtally/api-client";
-import { bothReady, queries, useQuery, type QueryState } from "../query";
+import { queries, useQuery, useQueryPair, type QueryState } from "../query";
 
 export type EntryDetailData = { entry: EntryDetail; sessions: SessionRow[] };
 
@@ -8,17 +8,16 @@ export type EntryDetailData = { entry: EntryDetail; sessions: SessionRow[] };
 export function useEntryDetail(
   api: SendtallyApi,
   id: string
-): { state: QueryState<EntryDetailData>; reload: () => Promise<void> } {
-  const { state: entry, reload: reloadEntry } = useQuery(queries.entry(api, id));
-  const { state: sessions, reload: reloadSessions } = useQuery(queries.sessions(api));
+): { state: QueryState<EntryDetailData> } {
+  const { state: loaded } = useQueryPair(queries.entry(api, id), queries.sessions(api));
   const state = React.useMemo(
-    () => bothReady(entry, sessions, (entry, sessions) => ({ entry, sessions })),
-    [entry, sessions]
+    (): QueryState<EntryDetailData> =>
+      loaded.status === "ready"
+        ? { status: "ready", data: { entry: loaded.data[0], sessions: loaded.data[1] } }
+        : loaded,
+    [loaded]
   );
-  const reload = React.useCallback(async () => {
-    await Promise.all([reloadEntry(), reloadSessions()]);
-  }, [reloadEntry, reloadSessions]);
-  return { state, reload };
+  return { state };
 }
 
 /** What the composer offers to link. */

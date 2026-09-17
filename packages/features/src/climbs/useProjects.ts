@@ -1,12 +1,7 @@
 import React from "react";
-import type {
-  ClimbSummary,
-  ProjectInput,
-  SendtallyApi,
-  SessionWithClimbs,
-} from "@sendtally/api-client";
+import type { ClimbSummary, ProjectInput, SendtallyApi } from "@sendtally/api-client";
 import { t } from "../i18n";
-import { bothReady, queries, useQuery, type QueryState } from "../query";
+import { queries, useQueryPair, type QueryState } from "../query";
 import {
   projectBars,
   projectDetailVM,
@@ -31,37 +26,28 @@ export type ProjectsFeature = {
   reload: () => Promise<void>;
 };
 
-function useClimbsAndSessions(api: SendtallyApi): {
-  climbs: QueryState<ClimbSummary[]>;
-  sessions: QueryState<SessionWithClimbs[]>;
-  reload: () => Promise<void>;
-} {
-  const { state: climbs, reload: reloadClimbs } = useQuery(queries.climbs(api));
-  const { state: sessions, reload: reloadSessions } = useQuery(queries.sessionsWithClimbs(api));
-  const reload = React.useCallback(async () => {
-    await Promise.all([reloadClimbs(), reloadSessions()]);
-  }, [reloadClimbs, reloadSessions]);
-  return { climbs, sessions, reload };
-}
+const useClimbsAndSessions = (api: SendtallyApi) =>
+  useQueryPair(queries.climbs(api), queries.sessionsWithClimbs(api));
 
 export function useProjects(api: SendtallyApi): ProjectsFeature {
-  const { climbs, sessions, reload } = useClimbsAndSessions(api);
+  const { state: loaded, reload } = useClimbsAndSessions(api);
 
-  const state = React.useMemo(
-    () =>
-      bothReady(climbs, sessions, (climbs, sessions): ProjectsData => {
-        const items = projectsOf(climbs).map((climb) => ({
-          climb,
-          bars: projectBars(climb, sessions),
-        }));
-        return {
-          overview: projectsOverview(climbs),
-          open: items.filter((i) => projectStatus(i.climb) === "open"),
-          sent: items.filter((i) => projectStatus(i.climb) === "sent"),
-        };
-      }),
-    [climbs, sessions]
-  );
+  const state = React.useMemo((): QueryState<ProjectsData> => {
+    if (loaded.status !== "ready") return loaded;
+    const [climbs, sessions] = loaded.data;
+    const items = projectsOf(climbs).map((climb) => ({
+      climb,
+      bars: projectBars(climb, sessions),
+    }));
+    return {
+      status: "ready",
+      data: {
+        overview: projectsOverview(climbs),
+        open: items.filter((i) => projectStatus(i.climb) === "open"),
+        sent: items.filter((i) => projectStatus(i.climb) === "sent"),
+      },
+    };
+  }, [loaded]);
 
   const save = React.useCallback(
     async (input: ProjectInput): Promise<void> => {
@@ -77,21 +63,20 @@ export type ProjectFeature = {
   state: QueryState<ProjectDetailVM>;
   saveNote: (fingerprint: string, note: string) => Promise<void>;
   unmark: () => Promise<void>;
-  reload: () => Promise<void>;
 };
 
 // The detail screen reads the sessions it links to anyway, so the attempts and
 // the notes come from the same fetch rather than a project-specific endpoint.
 export function useProject(api: SendtallyApi, slug: string): ProjectFeature {
-  const { climbs, sessions, reload } = useClimbsAndSessions(api);
+  const { state: loaded } = useClimbsAndSessions(api);
 
   const state = React.useMemo((): QueryState<ProjectDetailVM> => {
-    const joined = bothReady(climbs, sessions, (climbs, sessions) => ({ climbs, sessions }));
-    if (joined.status !== "ready") return joined;
-    const climb = joined.data.climbs.find((c) => c.slug === slug);
+    if (loaded.status !== "ready") return loaded;
+    const [climbs, sessions] = loaded.data;
+    const climb = climbs.find((c) => c.slug === slug);
     if (climb === undefined) return { status: "error", message: t("climbs.projectNotFound") };
-    return { status: "ready", data: projectDetailVM(climb, joined.data.sessions) };
-  }, [climbs, sessions, slug]);
+    return { status: "ready", data: projectDetailVM(climb, sessions) };
+  }, [loaded, slug]);
 
   const saveNote = React.useCallback(
     async (fingerprint: string, note: string): Promise<void> => {
@@ -105,5 +90,5 @@ export function useProject(api: SendtallyApi, slug: string): ProjectFeature {
     await api.unmarkProject(slug);
   }, [api, slug]);
 
-  return { state, saveNote, unmark, reload };
+  return { state, saveNote, unmark };
 }

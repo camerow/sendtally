@@ -1,17 +1,19 @@
 import { useAuth } from "@clerk/clerk-expo";
 import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
-import {
-  defaultShouldDehydrateQuery,
-  focusManager,
-  useIsRestoring,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { defaultShouldDehydrateQuery, focusManager, useIsRestoring } from "@tanstack/react-query";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { File, Paths } from "expo-file-system";
 import * as Updates from "expo-updates";
 import React from "react";
 import { AppState } from "react-native";
-import { QUERY_CACHE_MAX_AGE, createQueryClient, worthPersisting } from "@sendtally/features/query";
+import {
+  QUERY_CACHE_MAX_AGE,
+  createQueryClient,
+  useClearOnUserChange,
+  worthPersisting,
+} from "@sendtally/features/query";
+
+export const queryClient = createQueryClient();
 
 focusManager.setEventListener((setFocused) => {
   const subscription = AppState.addEventListener("change", (state) =>
@@ -40,28 +42,18 @@ const persister = createAsyncStoragePersister({
   },
 });
 
-/** A cache is one person's log: signing out, or in as someone else, drops it. */
 function ClearOnSignOut(): null {
-  const client = useQueryClient();
   const restoring = useIsRestoring();
   const { isLoaded, userId } = useAuth();
-  const owner = React.useRef<string | null>(null);
-
-  React.useEffect(() => {
-    if (restoring || !isLoaded) return;
-    if (userId === null || (owner.current !== null && owner.current !== userId)) client.clear();
-    owner.current = userId ?? null;
-  }, [client, restoring, isLoaded, userId]);
-
+  useClearOnUserChange(isLoaded && !restoring, userId);
   return null;
 }
 
 /** The log opens on the last data it showed, from disk, while it revalidates behind it. */
 export function QueryProvider({ children }: { children: React.ReactNode }): React.ReactElement {
-  const [client] = React.useState(createQueryClient);
   return (
     <PersistQueryClientProvider
-      client={client}
+      client={queryClient}
       persistOptions={{
         persister,
         maxAge: QUERY_CACHE_MAX_AGE,

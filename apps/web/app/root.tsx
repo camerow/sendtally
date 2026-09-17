@@ -1,5 +1,5 @@
 import { ClerkProvider, useAuth, useUser } from "@clerk/react-router";
-import { QueryClientProvider, useQueryClient } from "@tanstack/react-query";
+import { QueryClientProvider } from "@tanstack/react-query";
 import { clerkMiddleware, rootAuthLoader } from "@clerk/react-router/server";
 import React from "react";
 import type { LinksFunction, LoaderFunctionArgs, MiddlewareFunction } from "react-router";
@@ -20,7 +20,7 @@ import type { Locale } from "@sendtally/features/i18n";
 import { ErrorPage } from "./components/ErrorPage";
 import { requestLocale } from "./lib/locale";
 import { identify, resetIdentity } from "./lib/analytics";
-import { createQueryClient } from "@sendtally/features/query";
+import { createQueryClient, useClearOnUserChange } from "@sendtally/features/query";
 import { cloudflareContext } from "./lib/cloudflare-context";
 
 export const links: LinksFunction = () => [
@@ -146,18 +146,9 @@ function Identify(): null {
   return null;
 }
 
-/** A cache is one person's log: signing out, or in as someone else, drops it. */
 function ClearQueriesOnSignOut(): null {
-  const client = useQueryClient();
   const { isLoaded, userId } = useAuth();
-  const owner = React.useRef<string | null>(null);
-
-  React.useEffect(() => {
-    if (!isLoaded) return;
-    if (owner.current !== null && owner.current !== userId) client.clear();
-    owner.current = userId ?? null;
-  }, [client, isLoaded, userId]);
-
+  useClearOnUserChange(isLoaded, userId);
   return null;
 }
 

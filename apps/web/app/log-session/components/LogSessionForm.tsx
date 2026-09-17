@@ -312,10 +312,10 @@ export function LogSessionForm({
           ? await api.logSession(input)
           : await api.updateLoggedSession(editing.fingerprint, input);
       // The response is written before a Strava post starts, so it opens the
-      // page at once but is marked stale for the page to re-read on mount.
-      const { queryKey } = queries.session(api, session.fingerprint);
-      client.setQueryData(queryKey, session);
-      void client.invalidateQueries({ queryKey, refetchType: "none" });
+      // page at once but is stored stale for the page to re-read on mount.
+      client.setQueryData(queries.session(api, session.fingerprint).queryKey, session, {
+        updatedAt: 0,
+      });
       autosave.clear();
       await navigate(`/app/sessions/${encodeURIComponent(session.fingerprint)}`);
     } catch {

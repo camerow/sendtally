@@ -1,24 +1,18 @@
-import React from "react";
-import type { SendtallyApi } from "@sendtally/api-client";
+import type { SendtallyApi, SessionDetail } from "@sendtally/api-client";
 import { queries, useQuery, type QueryState } from "../query";
 import { draftFromSession } from "./transforms";
 import type { LogSessionDraft } from "./types";
 
 export type EditableSession = { editable: boolean; draft: LogSessionDraft };
 
+const editable = (session: SessionDetail): EditableSession => ({
+  editable: session.source === "manual",
+  draft: draftFromSession(session),
+});
+
 export function useSessionDraft(
   api: SendtallyApi,
   fingerprint: string
 ): QueryState<EditableSession> {
-  const { state } = useQuery(queries.session(api, fingerprint));
-  return React.useMemo(
-    () =>
-      state.status === "ready"
-        ? {
-            status: "ready",
-            data: { editable: state.data.source === "manual", draft: draftFromSession(state.data) },
-          }
-        : state,
-    [state]
-  );
+  return useQuery({ ...queries.session(api, fingerprint), select: editable }).state;
 }

@@ -7,7 +7,6 @@ export type GymsFeature = {
   state: QueryState<Gym[]>;
   gyms: Gym[];
   ready: boolean;
-  reload: () => Promise<void>;
   save: (id: string | null, input: GymInput) => Promise<Gym | null>;
   remove: (id: string) => Promise<void>;
 };
@@ -17,7 +16,7 @@ const NO_GYMS: Gym[] = [];
 /** Saves land in the cached list straight away, so a gym picked right after creating it is there. */
 export function useGyms(api: SendtallyApi): GymsFeature {
   const client = useQueryClient();
-  const { state, reload } = useQuery(queries.gyms(api));
+  const { state } = useQuery(queries.gyms(api));
   const gyms = state.status === "ready" ? state.data : NO_GYMS;
 
   const save = React.useCallback(
@@ -43,5 +42,5 @@ export function useGyms(api: SendtallyApi): GymsFeature {
     [api, client]
   );
 
-  return { state, gyms, ready: state.status === "ready", reload, save, remove };
+  return { state, gyms, ready: state.status === "ready", save, remove };
 }
