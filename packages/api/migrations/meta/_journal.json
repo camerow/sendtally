@@ -120,6 +120,13 @@
       "when": 1789755532307,
       "tag": "0021_seed_regions",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "6",
+      "when": 1789757248135,
+      "tag": "0022_daily_terrax",
+      "breakpoints": true
     }
   ]
 }
