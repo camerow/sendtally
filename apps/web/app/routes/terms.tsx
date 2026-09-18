@@ -19,7 +19,7 @@ export default function Terms(): React.ReactElement {
   return (
     <LegalPage
       title="Terms of service"
-      updated="9 SEPTEMBER 2026"
+      updated="18 SEPTEMBER 2026"
       lede="sendtally is a climbing logbook run by one person. These terms say what you can expect from it, what it expects from you, and what happens if either of us walks away."
     >
       <h2>Agreeing to these terms</h2>
@@ -78,6 +78,26 @@ export default function Terms(): React.ReactElement {
       <p>
         You are responsible for what you enter. Do not put anything in your logbook that you do not
         have the right to store, or that is unlawful.
+      </p>
+
+      <h2>Contributions to Areas</h2>
+      <p>
+        Areas is the shared directory of crags, boulders and climbs that everyone on sendtally can
+        read and add to. Unlike your logbook, what you contribute there is public: the areas and
+        climbs you add, the edits you suggest, and the details they carry, such as names,
+        descriptions, grades and coordinates.
+      </p>
+      <p>
+        By submitting a contribution you dedicate it to the public domain under the Creative Commons
+        CC0 1.0 Universal dedication (
+        <a href="https://creativecommons.org/publicdomain/zero/1.0/">CC0 1.0</a>). Anyone, including
+        us, may copy, change and reuse it for any purpose without asking or crediting you. Only
+        contribute what is yours to give: facts you know, and words you wrote.
+      </p>
+      <p>
+        Contributions are reviewed by moderators before they are published, and moderators may edit,
+        merge, reject or remove them. Your sessions stay private when they point at a climb in
+        Areas.
       </p>
 
       <h2>Free use and membership</h2>
@@ -164,6 +184,11 @@ export default function Terms(): React.ReactElement {
         You can delete your account from settings at any time. Deleting removes every session you
         have logged, disconnects and revokes Strava, and closes your sign-in. It happens the same
         day and cannot be undone.
+      </p>
+      <p>
+        Contributions to Areas that moderators have already approved stay in the directory, because
+        other climbers&rsquo; logbooks point at them, but your name is removed from them. Anything
+        still awaiting review is deleted with your account.
       </p>
       <p>
         Activities already posted to Strava stay on Strava. What we hold, for how long, and what
