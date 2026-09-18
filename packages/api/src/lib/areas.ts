@@ -1,6 +1,6 @@
 import { disciplineOf, isLikelyDuplicate, parseGrade } from "@sendtally/core";
 import { z } from "zod";
-import type { AreaClimbEdit, AreaClimbRow, AreaRow, Box, UserRow } from "./repo";
+import type { AreaClimbEdit, AreaClimbRow, AreaRow, Box, RevisionRow, UserRow } from "./repo";
 import { tagSlug } from "./tags";
 
 export type ContentStatus = "pending" | "active";
@@ -209,4 +209,126 @@ export type AreaClimb = Omit<AreaClimbRow, "created_by" | "name_key" | "merged_i
 export function areaClimbOf(row: AreaClimbRow, viewer: Viewer): AreaClimb {
   const { created_by, name_key: _key, merged_into_id: _merged, ...rest } = row;
   return { ...rest, mine: created_by === viewer.id };
+}
+
+export type ContentEntity = "area" | "climb";
+
+export type Fields = Record<string, unknown>;
+
+// What a suggested edit may change, in column names. A draft's base and
+// proposal both use these keys, so a three-way check can compare them directly.
+export const EDITABLE_FIELDS = {
+  area: ["parent_id", "name", "description", "lat", "lon"],
+  climb: [
+    "area_id",
+    "name",
+    "description",
+    "type",
+    "grade_scale",
+    "grade_value",
+    "length_m",
+    "bolts",
+    "first_ascent",
+  ],
+} as const satisfies {
+  area: readonly (keyof AreaRow)[];
+  climb: readonly (keyof AreaClimbRow)[];
+};
+
+export function snapshotOf(type: ContentEntity, row: AreaRow | AreaClimbRow): Fields {
+  const values: Fields = row;
+  return {
+    ...Object.fromEntries(EDITABLE_FIELDS[type].map((f) => [f, values[f] ?? null])),
+    version: row.version,
+  };
+}
+
+export function changesFrom(current: Fields, next: Fields): Fields {
+  return Object.fromEntries(Object.entries(next).filter(([f, v]) => v !== current[f]));
+}
+
+const summary = { changeSummary: optionalText(500) };
+
+export const areaDraftBody = areaFields
+  .partial()
+  .extend({ parentId: z.string().min(1).optional(), ...summary });
+
+export const areaClimbDraftBody = climbFields
+  .partial()
+  .extend({ areaId: z.string().min(1).optional(), ...summary });
+
+const defined = (form: Fields): Fields =>
+  Object.fromEntries(Object.entries(form).filter(([, v]) => v !== undefined));
+
+// A draft is the entity with the sent fields laid over it, checked by the same
+// rules as creation, so a partial edit cannot leave a climb with a V grade on
+// a sport route.
+export function areaDraftOf(row: AreaRow, form: Fields): z.infer<typeof areaBody> | null {
+  const parsed = areaBody.safeParse({
+    parentId: row.parent_id,
+    name: row.name,
+    description: row.description,
+    lat: row.lat,
+    lon: row.lon,
+    ...defined(form),
+  });
+  return parsed.success ? parsed.data : null;
+}
+
+export function areaClimbDraftOf(
+  row: AreaClimbRow,
+  form: Fields
+): z.infer<typeof areaClimbBody> | null {
+  const parsed = areaClimbBody.safeParse({
+    areaId: row.area_id,
+    name: row.name,
+    description: row.description,
+    type: row.type,
+    gradeScale: row.grade_scale,
+    grade: row.grade_value,
+    lengthM: row.length_m,
+    bolts: row.bolts,
+    firstAscent: row.first_ascent,
+    ...defined(form),
+  });
+  return parsed.success ? parsed.data : null;
+}
+
+export function areaFieldsOf(a: z.infer<typeof areaBody>): Fields {
+  return {
+    parent_id: a.parentId,
+    name: a.name,
+    description: a.description || null,
+    lat: a.lat ?? null,
+    lon: a.lon ?? null,
+  };
+}
+
+export function areaClimbFieldsOf(c: z.infer<typeof areaClimbBody>): Fields {
+  const { name_key: _key, ...fields } = climbWrite(c);
+  return { area_id: c.areaId, ...fields };
+}
+
+export type Draft = {
+  id: string;
+  entity_type: ContentEntity;
+  entity_id: string;
+  proposed: Fields;
+  base: Fields;
+  change_summary: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export function draftOf(row: RevisionRow): Draft {
+  return {
+    id: row.id,
+    entity_type: row.entity_type,
+    entity_id: row.entity_id,
+    proposed: JSON.parse(row.proposed_json) as Fields,
+    base: JSON.parse(row.base_json) as Fields,
+    change_summary: row.change_summary,
+    created_at: row.created_at,
+    updated_at: row.updated_at,
+  };
 }
