@@ -4,9 +4,9 @@ import { manualSessionShape, sessionTooLong, type ManualSessionBody } from "./ma
 export const IMPORT_BATCH_MAX = 200;
 
 // The log form's body with the gym as a name: a CSV cannot know our ids, so
-// the Worker matches it against the user's gyms.
+// the Worker matches it against the user's gyms. Areas are not imported.
 const importSessionShape = manualSessionShape
-  .omit({ gymId: true })
+  .omit({ gymId: true, areaId: true })
   .extend({ gym: z.string().trim().min(1).max(80).optional() })
   .superRefine(sessionTooLong);
 

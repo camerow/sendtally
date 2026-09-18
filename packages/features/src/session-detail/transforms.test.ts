@@ -9,6 +9,7 @@ const detail: SessionDetail = {
   location: null,
   gym_id: null,
   area_id: null,
+  area: null,
   name: null,
   start_at: "2026-07-01T17:50:00.000Z",
   end_at: "2026-07-01T19:25:00.000Z",
@@ -35,6 +36,7 @@ const detail: SessionDetail = {
       tries: 1,
       angle: 40,
       note: null,
+      link: null,
     },
     {
       time: "2026-07-01T18:20:00.000Z",
@@ -44,6 +46,7 @@ const detail: SessionDetail = {
       tries: 3,
       angle: 40,
       note: null,
+      link: null,
     },
     {
       time: "2026-07-01T18:50:00.000Z",
@@ -53,6 +56,7 @@ const detail: SessionDetail = {
       tries: 4,
       angle: 45,
       note: null,
+      link: null,
     },
     {
       time: "2026-07-01T19:20:00.000Z",
@@ -62,6 +66,7 @@ const detail: SessionDetail = {
       tries: 1,
       angle: null,
       note: null,
+      link: null,
     },
   ],
 };
@@ -240,6 +245,7 @@ describe("route sessions", () => {
         angle: null,
         grade: { scale: "yds", value: "5.10a" },
         note: null,
+        link: null,
       },
       {
         time: "2026-07-01T18:20:00.000Z",
@@ -250,6 +256,7 @@ describe("route sessions", () => {
         angle: null,
         grade: { scale: "yds", value: "5.11d" },
         note: null,
+        link: null,
       },
       {
         time: "2026-07-01T18:50:00.000Z",
@@ -260,6 +267,7 @@ describe("route sessions", () => {
         angle: null,
         grade: { scale: "yds", value: "5.12a" },
         note: null,
+        link: null,
       },
     ],
   };

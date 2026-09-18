@@ -44,10 +44,12 @@ import { importBody, importFingerprint, manualBodyOf } from "./lib/import";
 import { mirrorStoreEntitlements, resolveEntitlements } from "./lib/entitlements";
 import {
   buildManualSession,
+  climbLinksOf,
   climbNoteBody,
   historySession,
   manualSessionBody,
   normalisedNote,
+  type ManualSessionBody,
   parseClimbs,
 } from "./lib/manual";
 import { allowedOrigin } from "./lib/origins";
@@ -141,10 +143,12 @@ const sessionResponse = async (env: Env, userId: string, fingerprint: string) =>
   const row = await repo.getSession(env.DB, userId, fingerprint);
   if (row === null) return null;
   const { climbs_json, notes: _legacyNotes, ...rest } = row;
-  const [tags, entries, climbNotes] = await Promise.all([
+  const viewer = await repo.getViewer(env.DB, userId);
+  const [tags, entries, climbNotes, links] = await Promise.all([
     repo.getSessionTags(env.DB, userId, fingerprint),
     entriesResponse(env, userId, (e) => e.fingerprints.includes(fingerprint)),
     repo.getSessionClimbNotes(env.DB, userId, fingerprint),
+    repo.getSessionLinks(env.DB, viewer, fingerprint, row.area_id),
   ]);
   // `notes` is the log form's single field, now the session's first note entry.
   // Kept on the response so the session page and the edit form need no change.
@@ -154,8 +158,29 @@ const sessionResponse = async (env: Env, userId: string, fingerprint: string) =>
     notes,
     tags,
     entries,
-    climbs: withClimbNotes(parseClimbs(climbs_json), climbNotes),
+    area: links.area,
+    climbs: withClimbNotes(parseClimbs(climbs_json), climbNotes).map((climb) => ({
+      ...climb,
+      link: links.climbs.get(climbSlug(climb.name.trim())) ?? null,
+    })),
   };
+};
+
+// The crag must be a live, visible area below the regions, and every linked
+// climb live and visible, so nobody links to someone else's pending creation.
+const invalidLinks = async (
+  db: D1Database,
+  userId: string,
+  form: ManualSessionBody
+): Promise<string | null> => {
+  const viewer = await repo.getViewer(db, userId);
+  if (form.areaId !== undefined) {
+    const area = await repo.getArea(db, viewer, form.areaId);
+    if (area === null || isRegion(area) || !isOpen(area)) return "unknown area";
+  }
+  const ids = [...new Set(climbLinksOf(form.climbs).map((l) => l.climb_id))];
+  const found = (await repo.areaClimbsByIds(db, viewer, ids)).filter(isOpen);
+  return found.length === ids.length ? null : "unknown climb";
 };
 
 // One read of the user's entries, tagged, filtered in memory. There are never
@@ -883,10 +908,12 @@ const app = new Hono<AppEnv>()
     const form = c.req.valid("json");
     const userId = c.get("userId");
     await repo.ensureUser(c.env.DB, userId);
+    const invalid = await invalidLinks(c.env.DB, userId, form);
+    if (invalid !== null) return c.json({ error: invalid }, 400);
     const fingerprint = `manual-${crypto.randomUUID()}`;
     const history = await manualScoringHistory(c.env.DB, userId);
     const input = buildManualSession(fingerprint, form, history);
-    await repo.insertManualSession(c.env.DB, userId, input);
+    await repo.insertManualSession(c.env.DB, userId, input, climbLinksOf(form.climbs));
     await repo.upsertSessionNote(
       c.env.DB,
       userId,
@@ -981,9 +1008,11 @@ const app = new Hono<AppEnv>()
       if (existing.source !== "manual") {
         return c.json({ error: "only manually logged sessions can be edited" }, 409);
       }
+      const invalid = await invalidLinks(c.env.DB, userId, form);
+      if (invalid !== null) return c.json({ error: invalid }, 400);
       const history = await manualScoringHistory(c.env.DB, userId, fingerprint);
       const input = buildManualSession(fingerprint, form, history);
-      await repo.updateManualSession(c.env.DB, userId, input);
+      await repo.updateManualSession(c.env.DB, userId, input, climbLinksOf(form.climbs));
       await repo.upsertSessionNote(
         c.env.DB,
         userId,

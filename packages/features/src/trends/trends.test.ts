@@ -54,6 +54,7 @@ function session(
       style: "redpoint",
       angle: null,
       note: null,
+      link: null,
       ...c,
     })),
     ...extra,

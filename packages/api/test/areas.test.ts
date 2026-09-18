@@ -179,3 +179,94 @@ describe("areas", () => {
     expect((await call("mod", "/v1/areas/buttermilks")).status).toBe(200);
   });
 });
+
+describe("session links", () => {
+  const session = (areaId: string, climbId: string): Record<string, unknown> => ({
+    date: "2026-09-12",
+    location: "outdoor",
+    areaId,
+    climbs: [
+      { name: "The Mandala", climbId, grade: { scale: "v", value: 12 } },
+      { name: "Warm up", grade: { scale: "v", value: 3 } },
+    ],
+  });
+
+  type Linked = { area: Row | null; climbs: Array<{ name: string; link: Row | null }> };
+
+  const read = async (user: string, fingerprint: string): Promise<Linked> =>
+    (await call(user, `/v1/sessions/${fingerprint}`)).body["session"] as Linked;
+
+  const linkCount = async (fingerprint: string): Promise<number> =>
+    (
+      await env.DB.prepare("SELECT count(*) AS n FROM session_climb_links WHERE fingerprint = ?")
+        .bind(fingerprint)
+        .first<{ n: number }>()
+    )?.n ?? 0;
+
+  it("links a send on the user's own pending climb and crag", async () => {
+    const area = await createArea("user_a", buttermilks);
+    const climb = await createClimb("user_a", mandala(area.id));
+    const res = await call("user_a", "/v1/sessions", { body: session(area.id, climb.id) });
+    expect(res.status).toBe(201);
+    const fingerprint = (res.body["session"] as { fingerprint: string }).fingerprint;
+
+    const linked = await read("user_a", fingerprint);
+    expect(linked.area).toEqual({ id: area.id, name: "Buttermilks", slug: "buttermilks" });
+    expect(linked.climbs.map((c) => c.link)).toEqual([
+      { id: climb.id, name: "The Mandala", slug: "the-mandala" },
+      null,
+    ]);
+  });
+
+  it("refuses someone else's pending climb, a region, and a crag on an indoor session", async () => {
+    const area = await createArea("user_a", buttermilks);
+    const climb = await createClimb("user_a", mandala(area.id));
+    const other = await createArea("user_b", { ...buttermilks, name: "Happy Boulders" });
+
+    expect(
+      (await call("user_b", "/v1/sessions", { body: session(area.id, climb.id) })).status
+    ).toBe(400);
+    expect(
+      (await call("user_b", "/v1/sessions", { body: session(other.id, climb.id) })).status
+    ).toBe(400);
+    expect(
+      (await call("user_a", "/v1/sessions", { body: session("region-us-ca", climb.id) })).status
+    ).toBe(400);
+    const indoor = { ...session(area.id, climb.id), location: "indoor" };
+    expect((await call("user_a", "/v1/sessions", { body: indoor })).status).toBe(400);
+  });
+
+  it("replaces links on edit and removes them on delete", async () => {
+    const area = await createArea("user_a", buttermilks);
+    const climb = await createClimb("user_a", mandala(area.id));
+    const res = await call("user_a", "/v1/sessions", { body: session(area.id, climb.id) });
+    const fingerprint = (res.body["session"] as { fingerprint: string }).fingerprint;
+
+    const edited = await call("user_a", `/v1/sessions/${fingerprint}`, {
+      method: "PUT",
+      body: {
+        date: "2026-09-12",
+        location: "outdoor",
+        climbs: [{ name: "Mandala", climbId: climb.id, grade: { scale: "v", value: 12 } }],
+      },
+    });
+    expect(edited.status).toBe(200);
+    const linked = await read("user_a", fingerprint);
+    expect(linked.area).toBeNull();
+    expect(linked.climbs.map((c) => c.link?.id)).toEqual([climb.id]);
+    expect(await linkCount(fingerprint)).toBe(1);
+
+    await call("user_a", `/v1/sessions/${fingerprint}`, { method: "DELETE" });
+    expect(await linkCount(fingerprint)).toBe(0);
+  });
+
+  it("rejects one climb name pointing at two climbs", async () => {
+    const area = await createArea("user_a", buttermilks);
+    const a = await createClimb("user_a", mandala(area.id));
+    const b = await createClimb("user_a", { ...mandala(area.id), name: "Stained Glass" });
+    const body = session(area.id, a.id);
+    const climbs = body["climbs"] as Array<Record<string, unknown>>;
+    climbs[1] = { ...climbs[0], climbId: b.id };
+    expect((await call("user_a", "/v1/sessions", { body })).status).toBe(400);
+  });
+});

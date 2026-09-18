@@ -16,7 +16,7 @@ import {
 import { z } from "zod";
 import type { ManualSessionInput } from "./repo";
 import { CIRCUIT_COLOURS } from "./gyms";
-import { tagNames } from "./tags";
+import { tagNames, tagSlug } from "./tags";
 
 const knownGrade =
   (scale: "font" | "yds" | "french") =>
@@ -53,6 +53,7 @@ const circuitRefSchema = z.object({
 const climbSchema = z
   .object({
     name: z.string().max(200).default(""),
+    climbId: z.string().min(1).max(64).optional(),
     grade: gradeSchema,
     circuit: circuitRefSchema.optional(),
     wall: z.string().trim().max(40).optional(),
@@ -137,6 +138,7 @@ export const manualSessionShape = z.object({
   rpe: z.number().int().min(1).max(10).optional(),
   location: z.enum(["indoor", "outdoor"]),
   gymId: z.string().min(1).max(40).optional(),
+  areaId: z.string().min(1).max(64).optional(),
   tags: tagNames.optional(),
   notes: sessionNote,
   climbs: z.array(climbSchema).min(1).max(300),
@@ -151,7 +153,44 @@ export function sessionTooLong(
   }
 }
 
-export const manualSessionBody = manualSessionShape.superRefine(sessionTooLong);
+// A link is keyed by the slug of the logged name, so a linked climb needs a
+// name and two rows with one name cannot point at different climbs.
+function linksConsistent(body: ManualSessionBody, ctx: z.RefinementCtx): void {
+  if (body.areaId !== undefined && body.location !== "outdoor") {
+    ctx.addIssue({
+      code: "custom",
+      path: ["areaId"],
+      message: "only outdoor sessions have a crag",
+    });
+  }
+  const idBySlug = new Map<string, string>();
+  body.climbs.forEach((climb, i) => {
+    if (climb.climbId === undefined) return;
+    const slug = tagSlug(climb.name.trim());
+    const seen = idBySlug.get(slug);
+    if (slug === "" || (seen !== undefined && seen !== climb.climbId)) {
+      ctx.addIssue({ code: "custom", path: ["climbs", i, "climbId"], message: "conflicting link" });
+    }
+    idBySlug.set(slug, climb.climbId);
+  });
+}
+
+export const manualSessionBody = manualSessionShape.superRefine((body, ctx) => {
+  sessionTooLong(body, ctx);
+  linksConsistent(body, ctx);
+});
+
+export type ClimbLink = { climb_slug: string; climb_id: string };
+
+export function climbLinksOf(climbs: ManualSessionBody["climbs"]): ClimbLink[] {
+  const bySlug = new Map<string, ClimbLink>();
+  for (const { name, climbId } of climbs) {
+    if (climbId === undefined) continue;
+    const climb_slug = tagSlug(name.trim());
+    bySlug.set(climb_slug, { climb_slug, climb_id: climbId });
+  }
+  return [...bySlug.values()];
+}
 
 export type ManualSessionBody = z.infer<typeof manualSessionShape>;
 
@@ -268,6 +307,7 @@ export function buildManualSession(
     fingerprint,
     location: body.location,
     gym_id: body.gymId ?? null,
+    area_id: body.areaId ?? null,
     name: body.name ?? null,
     start_at: session.start.toISOString(),
     end_at: session.end.toISOString(),
