@@ -29,6 +29,8 @@ export const colors = {
   lineOnLightSoft: "rgba(64,63,76,0.08)",
   lineOnLightStrong: "rgba(64,63,76,0.22)",
   dataBarEmpty: "rgba(64,63,76,0.14)",
+  dataAzureSoft: "#A9C9FD",
+  dataFernSoft: "#9FCFB8",
 } as const;
 
 export const radius = {

@@ -27,7 +27,7 @@ export default [
     route("projects", "routes/app.projects.tsx"),
     route("projects/:slug", "routes/app.projects.$slug.tsx"),
     route("trends", "routes/app.trends._index.tsx"),
-    route("trends/:metric", "routes/app.trends.$metric.tsx"),
+    route("trends/:page", "routes/app.trends.$page.tsx"),
     route("settings", "routes/app.settings.tsx"),
     route("import", "routes/app.import.tsx"),
     route("export.csv", "routes/app.export-csv.ts"),

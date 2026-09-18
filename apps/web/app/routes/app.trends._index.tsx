@@ -1,9 +1,12 @@
 import React from "react";
-import type { LoaderFunctionArgs } from "react-router";
+import type { LinksFunction, LoaderFunctionArgs } from "react-router";
 import { useLoaderData } from "react-router";
 import { cloudflareContext } from "../lib/cloudflare-context";
 import { getMembership } from "../lib/billing.server";
 import { TrendsOverview } from "../trends/components/TrendsOverview";
+import trendsStyles from "../trends/trends.css?url";
+
+export const links: LinksFunction = () => [{ rel: "stylesheet", href: trendsStyles }];
 
 type LoaderData = { apiUrl: string; canSeeInsights: boolean };
 
