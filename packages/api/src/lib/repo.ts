@@ -5,6 +5,7 @@ import {
   count,
   desc,
   eq,
+  exists,
   getTableColumns,
   gte,
   inArray,
@@ -12,6 +13,7 @@ import {
   like,
   lt,
   lte,
+  not,
   notInArray,
   or,
   sql,
@@ -23,6 +25,7 @@ import {
   areas,
   boardConnections,
   climbNotes,
+  contentReports,
   contentRevisions,
   entrySessions,
   entryTags,
@@ -1213,7 +1216,7 @@ export async function areaSlugTaken(db: D1Database, slug: string): Promise<boole
 
 export async function insertArea(
   db: D1Database,
-  row: Omit<AreaRow, "version" | "merged_into_id" | "region_code">
+  row: Omit<AreaRow, "version" | "merged_into_id" | "region_code" | "review_note">
 ): Promise<void> {
   await drizzle(db).insert(areas).values(row);
 }
@@ -1230,7 +1233,7 @@ export async function updatePendingArea(
 ): Promise<boolean> {
   const result = await drizzle(db)
     .update(areas)
-    .set({ ...edit, updated_at: new Date().toISOString() })
+    .set({ ...edit, version: sql`${areas.version} + 1`, updated_at: new Date().toISOString() })
     .where(and(eq(areas.id, id), eq(areas.created_by, userId), eq(areas.status, "pending")));
   return result.meta.changes > 0;
 }
@@ -1320,7 +1323,7 @@ export async function areaClimbSlugTaken(db: D1Database, slug: string): Promise<
 
 export async function insertAreaClimb(
   db: D1Database,
-  row: Omit<AreaClimbRow, "version" | "merged_into_id">
+  row: Omit<AreaClimbRow, "version" | "merged_into_id" | "review_note">
 ): Promise<void> {
   await drizzle(db).insert(areaClimbs).values(row);
 }
@@ -1333,6 +1336,7 @@ export type AreaClimbEdit = Omit<
   | "status"
   | "merged_into_id"
   | "version"
+  | "review_note"
   | "created_by"
   | "created_at"
   | "updated_at"
@@ -1346,7 +1350,7 @@ export async function updatePendingAreaClimb(
 ): Promise<boolean> {
   const result = await drizzle(db)
     .update(areaClimbs)
-    .set({ ...edit, updated_at: new Date().toISOString() })
+    .set({ ...edit, version: sql`${areaClimbs.version} + 1`, updated_at: new Date().toISOString() })
     .where(
       and(
         eq(areaClimbs.id, id),
@@ -1437,5 +1441,345 @@ export async function deleteDraft(
   const result = await drizzle(db)
     .delete(contentRevisions)
     .where(ownDraft(userId, type, entityId));
+  return result.meta.changes > 0;
+}
+
+export type ContentReportRow = typeof contentReports.$inferSelect;
+
+const stamp = (): string => new Date().toISOString();
+
+export type Page<T> = { count: number; rows: T[] };
+
+const countOf = async (query: Promise<{ n: number }[]>): Promise<number> =>
+  (await query)[0]?.n ?? 0;
+
+export async function pendingAreas(db: D1Database, limit: number): Promise<Page<AreaRow>> {
+  const d = drizzle(db);
+  const pending = eq(areas.status, "pending");
+  const [n, rows] = await Promise.all([
+    countOf(d.select({ n: count() }).from(areas).where(pending)),
+    d.select().from(areas).where(pending).orderBy(asc(areas.created_at)).limit(limit).all(),
+  ]);
+  return { count: n, rows };
+}
+
+export async function pendingAreaClimbs(
+  db: D1Database,
+  limit: number
+): Promise<Page<AreaClimbRow>> {
+  const d = drizzle(db);
+  const pending = eq(areaClimbs.status, "pending");
+  const [n, rows] = await Promise.all([
+    countOf(d.select({ n: count() }).from(areaClimbs).where(pending)),
+    d
+      .select()
+      .from(areaClimbs)
+      .where(pending)
+      .orderBy(asc(areaClimbs.created_at))
+      .limit(limit)
+      .all(),
+  ]);
+  return { count: n, rows };
+}
+
+export async function pendingRevisions(db: D1Database, limit: number): Promise<Page<RevisionRow>> {
+  const d = drizzle(db);
+  const pending = eq(contentRevisions.status, "pending");
+  const [n, rows] = await Promise.all([
+    countOf(d.select({ n: count() }).from(contentRevisions).where(pending)),
+    d
+      .select()
+      .from(contentRevisions)
+      .where(pending)
+      .orderBy(asc(contentRevisions.updated_at))
+      .limit(limit)
+      .all(),
+  ]);
+  return { count: n, rows };
+}
+
+export async function getRevision(db: D1Database, id: string): Promise<RevisionRow | null> {
+  const row = await drizzle(db)
+    .select()
+    .from(contentRevisions)
+    .where(eq(contentRevisions.id, id))
+    .get();
+  return row ?? null;
+}
+
+// An area that can hold approved content: live, and where the caller last saw it.
+const liveArea = (d: Db, id: string, ...extra: (SQL | undefined)[]): SQL =>
+  exists(
+    d
+      .select({ id: areas.id })
+      .from(areas)
+      .where(and(eq(areas.id, id), eq(areas.status, "active"), ...extra))
+  );
+
+// Pending to active, only at the version the moderator reviewed and only once
+// its parent is live, so nothing active ever hangs under something hidden.
+export async function approveArea(
+  db: D1Database,
+  row: { id: string; version: number; parentId: string }
+): Promise<boolean> {
+  const d = drizzle(db);
+  const result = await d
+    .update(areas)
+    .set({ status: "active", version: sql`${areas.version} + 1`, updated_at: stamp() })
+    .where(
+      and(
+        eq(areas.id, row.id),
+        eq(areas.status, "pending"),
+        eq(areas.version, row.version),
+        liveArea(d, row.parentId)
+      )
+    );
+  return result.meta.changes > 0;
+}
+
+export async function approveAreaClimb(
+  db: D1Database,
+  row: { id: string; version: number; areaId: string }
+): Promise<boolean> {
+  const d = drizzle(db);
+  const result = await d
+    .update(areaClimbs)
+    .set({ status: "active", version: sql`${areaClimbs.version} + 1`, updated_at: stamp() })
+    .where(
+      and(
+        eq(areaClimbs.id, row.id),
+        eq(areaClimbs.status, "pending"),
+        eq(areaClimbs.version, row.version),
+        liveArea(d, row.areaId, isNull(areas.region_code))
+      )
+    );
+  return result.meta.changes > 0;
+}
+
+const openStatus = ["active", "pending"] as const;
+
+// Refused while anything open still sits in the area: its children would be
+// left under a deleted parent.
+export async function rejectArea(
+  db: D1Database,
+  id: string,
+  note: string | null
+): Promise<boolean> {
+  const d = drizzle(db);
+  const result = await d
+    .update(areas)
+    .set({ status: "deleted", review_note: note, updated_at: stamp() })
+    .where(
+      and(
+        eq(areas.id, id),
+        eq(areas.status, "pending"),
+        not(
+          exists(
+            d
+              .select({ id: areas.id })
+              .from(areas)
+              .where(and(eq(areas.parent_id, id), inArray(areas.status, openStatus)))
+          )
+        ),
+        not(
+          exists(
+            d
+              .select({ id: areaClimbs.id })
+              .from(areaClimbs)
+              .where(and(eq(areaClimbs.area_id, id), inArray(areaClimbs.status, openStatus)))
+          )
+        )
+      )
+    );
+  return result.meta.changes > 0;
+}
+
+// The creator's sessions keep the free-text climb; only the link goes.
+export async function rejectAreaClimb(
+  db: D1Database,
+  id: string,
+  note: string | null
+): Promise<boolean> {
+  const d = drizzle(db);
+  const [result] = await d.batch([
+    d
+      .update(areaClimbs)
+      .set({ status: "deleted", review_note: note, updated_at: stamp() })
+      .where(and(eq(areaClimbs.id, id), eq(areaClimbs.status, "pending"))),
+    d.delete(sessionClimbLinks).where(
+      and(
+        eq(sessionClimbLinks.climb_id, id),
+        exists(
+          d
+            .select({ id: areaClimbs.id })
+            .from(areaClimbs)
+            .where(and(eq(areaClimbs.id, id), eq(areaClimbs.status, "deleted")))
+        )
+      )
+    ),
+  ]);
+  return result.meta.changes > 0;
+}
+
+export type AreaRevisionWrite = Pick<
+  AreaRow,
+  "parent_id" | "name" | "name_key" | "description" | "lat" | "lon"
+>;
+
+export type AreaClimbRevisionWrite = AreaClimbEdit & { area_id: string };
+
+type Approval = { revisionId: string; reviewerId: string; id: string; version: number };
+
+const revisionIs = (d: Db, id: string, status: RevisionRow["status"]): SQL =>
+  exists(
+    d
+      .select({ id: contentRevisions.id })
+      .from(contentRevisions)
+      .where(and(eq(contentRevisions.id, id), eq(contentRevisions.status, status)))
+  );
+
+const markApproved = (d: Db, a: Approval, guard: SQL | undefined) =>
+  d
+    .update(contentRevisions)
+    .set({
+      status: "approved",
+      reviewed_by: a.reviewerId,
+      reviewed_at: stamp(),
+      updated_at: stamp(),
+    })
+    .where(
+      and(eq(contentRevisions.id, a.revisionId), eq(contentRevisions.status, "pending"), guard)
+    );
+
+// One batch, every statement guarded on the state the moderator reviewed: the
+// revision flips first, only while the entity is still at `version`; the
+// rest only run once it has flipped. Every approval bumps the version, so a
+// competing approval fails all three together and the caller answers 409.
+export async function approveAreaRevision(
+  db: D1Database,
+  a: Approval & {
+    path: string;
+    depth: number;
+    parent: { id: string; path: string; depth: number };
+    write: AreaRevisionWrite;
+  }
+): Promise<boolean> {
+  const d = drizzle(db);
+  const at = exists(
+    d
+      .select({ id: areas.id })
+      .from(areas)
+      .where(and(eq(areas.id, a.id), eq(areas.version, a.version), eq(areas.status, "active")))
+  );
+  const approved = revisionIs(d, a.revisionId, "approved");
+  const flip = markApproved(d, a, and(at, liveArea(d, a.parent.id, eq(areas.path, a.parent.path))));
+  const update = d
+    .update(areas)
+    .set({ ...a.write, version: sql`${areas.version} + 1`, updated_at: stamp() })
+    .where(and(eq(areas.id, a.id), eq(areas.version, a.version), approved));
+  const path = `${a.parent.path}${a.id}/`;
+  if (path === a.path) {
+    const [, result] = await d.batch([flip, update]);
+    return result.meta.changes > 0;
+  }
+  const move = d
+    .update(areas)
+    .set({
+      path: sql`${path} || substr(${areas.path}, ${a.path.length + 1})`,
+      depth: sql`${areas.depth} + ${a.parent.depth + 1 - a.depth}`,
+    })
+    .where(and(gte(areas.path, a.path), lt(areas.path, `${a.path.slice(0, -1)}0`), at, approved));
+  const [, , result] = await d.batch([flip, move, update]);
+  return result.meta.changes > 0;
+}
+
+export async function approveAreaClimbRevision(
+  db: D1Database,
+  a: Approval & { write: AreaClimbRevisionWrite }
+): Promise<boolean> {
+  const d = drizzle(db);
+  const at = exists(
+    d
+      .select({ id: areaClimbs.id })
+      .from(areaClimbs)
+      .where(
+        and(
+          eq(areaClimbs.id, a.id),
+          eq(areaClimbs.version, a.version),
+          eq(areaClimbs.status, "active")
+        )
+      )
+  );
+  const [, result] = await d.batch([
+    markApproved(d, a, and(at, liveArea(d, a.write.area_id, isNull(areas.region_code)))),
+    d
+      .update(areaClimbs)
+      .set({ ...a.write, version: sql`${areaClimbs.version} + 1`, updated_at: stamp() })
+      .where(
+        and(
+          eq(areaClimbs.id, a.id),
+          eq(areaClimbs.version, a.version),
+          revisionIs(d, a.revisionId, "approved")
+        )
+      ),
+  ]);
+  return result.meta.changes > 0;
+}
+
+export async function rejectRevision(
+  db: D1Database,
+  id: string,
+  reviewerId: string,
+  note: string | null
+): Promise<boolean> {
+  const result = await drizzle(db)
+    .update(contentRevisions)
+    .set({
+      status: "rejected",
+      reviewed_by: reviewerId,
+      review_note: note,
+      reviewed_at: stamp(),
+      updated_at: stamp(),
+    })
+    .where(and(eq(contentRevisions.id, id), eq(contentRevisions.status, "pending")));
+  return result.meta.changes > 0;
+}
+
+export async function insertContentReport(
+  db: D1Database,
+  report: Pick<ContentReportRow, "entity_type" | "entity_id" | "reporter_id" | "body">
+): Promise<string> {
+  const id = crypto.randomUUID();
+  await drizzle(db)
+    .insert(contentReports)
+    .values({ id, ...report, status: "open", created_at: stamp() });
+  return id;
+}
+
+export async function openReports(db: D1Database, limit: number): Promise<Page<ContentReportRow>> {
+  const d = drizzle(db);
+  const open = eq(contentReports.status, "open");
+  const [n, rows] = await Promise.all([
+    countOf(d.select({ n: count() }).from(contentReports).where(open)),
+    d
+      .select()
+      .from(contentReports)
+      .where(open)
+      .orderBy(asc(contentReports.created_at))
+      .limit(limit)
+      .all(),
+  ]);
+  return { count: n, rows };
+}
+
+export async function resolveReport(
+  db: D1Database,
+  id: string,
+  reviewerId: string
+): Promise<boolean> {
+  const result = await drizzle(db)
+    .update(contentReports)
+    .set({ status: "resolved", reviewed_by: reviewerId, reviewed_at: stamp() })
+    .where(and(eq(contentReports.id, id), eq(contentReports.status, "open")));
   return result.meta.changes > 0;
 }

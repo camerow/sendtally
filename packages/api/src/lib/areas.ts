@@ -1,6 +1,15 @@
 import { disciplineOf, isLikelyDuplicate, parseGrade } from "@sendtally/core";
 import { z } from "zod";
-import type { AreaClimbEdit, AreaClimbRow, AreaRow, Box, RevisionRow, UserRow } from "./repo";
+import type {
+  AreaClimbEdit,
+  AreaClimbRevisionWrite,
+  AreaClimbRow,
+  AreaRevisionWrite,
+  AreaRow,
+  Box,
+  RevisionRow,
+  UserRow,
+} from "./repo";
 import { tagSlug } from "./tags";
 
 export type ContentStatus = "pending" | "active";
@@ -202,12 +211,15 @@ export function areaOf(row: AreaRow, viewer: Viewer): Area {
   };
 }
 
-export type AreaClimb = Omit<AreaClimbRow, "created_by" | "name_key" | "merged_into_id"> & {
+export type AreaClimb = Omit<
+  AreaClimbRow,
+  "created_by" | "name_key" | "merged_into_id" | "review_note"
+> & {
   mine: boolean;
 };
 
 export function areaClimbOf(row: AreaClimbRow, viewer: Viewer): AreaClimb {
-  const { created_by, name_key: _key, merged_into_id: _merged, ...rest } = row;
+  const { created_by, name_key: _key, merged_into_id: _merged, review_note: _note, ...rest } = row;
   return { ...rest, mine: created_by === viewer.id };
 }
 
@@ -294,7 +306,7 @@ export function areaClimbDraftOf(
   return parsed.success ? parsed.data : null;
 }
 
-export function areaFieldsOf(a: z.infer<typeof areaBody>): Fields {
+export function areaFieldsOf(a: z.infer<typeof areaBody>): Omit<AreaRevisionWrite, "name_key"> {
   return {
     parent_id: a.parentId,
     name: a.name,
@@ -304,7 +316,9 @@ export function areaFieldsOf(a: z.infer<typeof areaBody>): Fields {
   };
 }
 
-export function areaClimbFieldsOf(c: z.infer<typeof areaClimbBody>): Fields {
+export function areaClimbFieldsOf(
+  c: z.infer<typeof areaClimbBody>
+): Omit<AreaClimbRevisionWrite, "name_key"> {
   const { name_key: _key, ...fields } = climbWrite(c);
   return { area_id: c.areaId, ...fields };
 }
@@ -332,3 +346,84 @@ export function draftOf(row: RevisionRow): Draft {
     updated_at: row.updated_at,
   };
 }
+
+export type Conflict = { field: string; base: unknown; proposed: unknown; current: unknown };
+
+// Field by field over what the revision proposes: untouched since the base
+// applies, already equal to the proposal is a no-op, anything else conflicts
+// unless the moderator picked a value for it.
+export function reconcile(
+  base: Fields,
+  proposed: Fields,
+  current: Fields,
+  resolutions: Fields = {}
+): { apply: Fields; conflicts: Conflict[] } {
+  const apply: Fields = {};
+  const conflicts: Conflict[] = [];
+  for (const [field, value] of Object.entries(proposed)) {
+    if (Object.hasOwn(resolutions, field)) apply[field] = resolutions[field];
+    else if (base[field] === current[field]) apply[field] = value;
+    else if (value !== current[field]) {
+      conflicts.push({ field, base: base[field], proposed: value, current: current[field] });
+    }
+  }
+  return { apply, conflicts };
+}
+
+export type Revision = Draft & {
+  slug: string | null;
+  current: Fields | null;
+  conflicts: Conflict[];
+};
+
+export function revisionOf(row: RevisionRow, entity: AreaRow | AreaClimbRow | null): Revision {
+  const draft = draftOf(row);
+  const current = entity === null ? null : snapshotOf(row.entity_type, entity);
+  return {
+    ...draft,
+    slug: entity?.slug ?? null,
+    current,
+    conflicts: current === null ? [] : reconcile(draft.base, draft.proposed, current).conflicts,
+  };
+}
+
+export type ApprovalProblem = {
+  error: string;
+  current?: Fields;
+  conflicts?: Conflict[];
+  version?: number;
+};
+
+// The entity must still be live and at the version the moderator reviewed,
+// and every conflict resolved; what comes back is what to apply.
+export function approvalOf<T extends AreaRow | AreaClimbRow>(
+  entity: T | null,
+  revision: RevisionRow,
+  version: number,
+  resolutions: Fields
+): { problem: ApprovalProblem } | { entity: T; apply: Fields } {
+  if (entity === null || entity.status !== "active")
+    return { problem: { error: "no longer live" } };
+  const { base, proposed } = draftOf(revision);
+  const current = snapshotOf(revision.entity_type, entity);
+  if (entity.version !== version) {
+    return { problem: { error: "changed since you loaded it", current } };
+  }
+  const { apply, conflicts } = reconcile(base, proposed, current, resolutions);
+  if (conflicts.length > 0) return { problem: { error: "conflicts", conflicts, version } };
+  return { entity, apply };
+}
+
+export const versionBody = z.object({ version: z.number().int().min(1) });
+
+export const approveRevisionBody = versionBody.extend({
+  resolutions: z.record(z.string(), z.unknown()).default({}),
+});
+
+export const rejectBody = z.object({ note: optionalText(500) });
+
+export const contentReportBody = z.object({
+  entityType: z.enum(["area", "climb"]),
+  entityId: z.string().min(1),
+  body: z.string().trim().min(1).max(2000),
+});

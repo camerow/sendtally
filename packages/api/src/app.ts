@@ -1,5 +1,5 @@
 import { zValidator } from "@hono/zod-validator";
-import { type Context, Hono } from "hono";
+import { type Context, Hono, type MiddlewareHandler } from "hono";
 import { HTTPException } from "hono/http-exception";
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 import { cors } from "hono/cors";
@@ -28,7 +28,9 @@ import {
   areaOf,
   areaSimilarBody,
   areaSummaryOf,
+  approveRevisionBody,
   boundingBox,
+  contentReportBody,
   climbWrite,
   distanceKm,
   duplicatesOf,
@@ -36,7 +38,11 @@ import {
   isOpen,
   isRegion,
   NEAR_KM,
+  approvalOf,
+  rejectBody,
+  revisionOf,
   uniqueSlug,
+  versionBody,
   type Viewer,
 } from "./lib/areas";
 import {
@@ -332,6 +338,109 @@ const saveDraft = async (
   });
   await captureEvent(c, "area_edit_suggested", { entity_type: type });
   return repo.getDraft(c.env.DB, userId, type, row.id);
+};
+
+const ROLE_RANK = { user: 0, moderator: 1, admin: 2 } as const;
+
+// The one gate for moderation: mounted once on the prefix, so handlers behind
+// it never check the role again.
+const requireRole =
+  (role: Viewer["role"]): MiddlewareHandler<AppEnv> =>
+  async (c, next) => {
+    const viewer = await viewerOf(c);
+    if (ROLE_RANK[viewer.role] < ROLE_RANK[role]) return c.json({ error: "forbidden" }, 403);
+    await next();
+  };
+
+const QUEUE_PAGE = 10;
+// ponytail: one page per queue, add a cursor when a queue outgrows it.
+const MODERATION_LIST_LIMIT = 100;
+
+const byCreated = (a: { created_at: string }, b: { created_at: string }): number =>
+  a.created_at.localeCompare(b.created_at);
+
+// Pending areas and climbs, oldest first, each with what it might duplicate.
+const creationsQueue = async (db: D1Database, viewer: Viewer, limit: number) => {
+  const [areaPage, climbPage] = await Promise.all([
+    repo.pendingAreas(db, limit),
+    repo.pendingAreaClimbs(db, limit),
+  ]);
+  const areaItems = await Promise.all(
+    areaPage.rows.map(async (row) => ({
+      entity_type: "area" as const,
+      created_at: row.created_at,
+      area: areaOf(row, viewer),
+      candidates:
+        row.parent_id === null
+          ? []
+          : (await similarAreas(db, viewer, row.parent_id, row.name, latLonOf(row), row.id)).filter(
+              isOpen
+            ),
+    }))
+  );
+  const climbItems = await Promise.all(
+    climbPage.rows.map(async (row) => {
+      const area = await repo.getArea(db, viewer, row.area_id);
+      return {
+        entity_type: "climb" as const,
+        created_at: row.created_at,
+        climb: areaClimbOf(row, viewer),
+        candidates:
+          area === null
+            ? []
+            : (await similarClimbs(db, viewer, area, row.name, row.id)).filter(isOpen),
+      };
+    })
+  );
+  return {
+    count: areaPage.count + climbPage.count,
+    items: [...areaItems, ...climbItems].sort(byCreated).slice(0, limit),
+  };
+};
+
+const entitiesOf = async (
+  db: D1Database,
+  viewer: Viewer,
+  refs: { entity_type: ContentEntity; entity_id: string }[]
+): Promise<Map<string, repo.AreaRow | repo.AreaClimbRow>> => {
+  const ids = (type: ContentEntity): string[] =>
+    refs.filter((r) => r.entity_type === type).map((r) => r.entity_id);
+  const [areaRows, climbRows] = await Promise.all([
+    repo.areasByIds(db, viewer, ids("area")),
+    repo.areaClimbsByIds(db, viewer, ids("climb")),
+  ]);
+  return new Map([...areaRows, ...climbRows].map((row) => [row.id, row]));
+};
+
+const revisionsQueue = async (db: D1Database, viewer: Viewer, limit: number) => {
+  const page = await repo.pendingRevisions(db, limit);
+  const entities = await entitiesOf(db, viewer, page.rows);
+  return {
+    count: page.count,
+    items: page.rows.map((row) => revisionOf(row, entities.get(row.entity_id) ?? null)),
+  };
+};
+
+const reportsQueue = async (db: D1Database, viewer: Viewer, limit: number) => {
+  const page = await repo.openReports(db, limit);
+  const entities = await entitiesOf(db, viewer, page.rows);
+  return {
+    count: page.count,
+    items: page.rows.map((row) => {
+      const entity = entities.get(row.entity_id);
+      return {
+        id: row.id,
+        entity_type: row.entity_type,
+        entity_id: row.entity_id,
+        entity:
+          entity === undefined
+            ? null
+            : { name: entity.name, slug: entity.slug, status: entity.status },
+        body: row.body,
+        created_at: row.created_at,
+      };
+    }),
+  };
 };
 
 const areaSearchQuery = z.object({
@@ -1013,6 +1122,237 @@ const app = new Hono<AppEnv>()
     if (row === null) return c.json({ error: "not found" }, 404);
     const deleted = await repo.deleteDraft(c.env.DB, viewer.id, "climb", row.id);
     return deleted ? c.json({ ok: true }) : c.json({ error: "not found" }, 404);
+  })
+
+  .post("/v1/areas/reports", zValidator("json", contentReportBody, invalidBody), async (c) => {
+    const form = c.req.valid("json");
+    const viewer = await viewerOf(c);
+    const entity =
+      form.entityType === "area"
+        ? await repo.getArea(c.env.DB, viewer, form.entityId)
+        : await repo.getAreaClimb(c.env.DB, viewer, form.entityId);
+    if (entity === null) return c.json({ error: "not found" }, 404);
+    await repo.ensureUser(c.env.DB, viewer.id);
+    const id = await repo.insertContentReport(c.env.DB, {
+      entity_type: form.entityType,
+      entity_id: entity.id,
+      reporter_id: viewer.id,
+      body: form.body,
+    });
+    await captureEvent(c, "area_issue_reported", { entity_type: form.entityType });
+    return c.json({ report: { id } }, 201);
+  })
+
+  // Moderation: everything below the gate is for moderators and admins only.
+  .use("/v1/moderation/*", requireRole("moderator"))
+
+  .get("/v1/moderation/queue", async (c) => {
+    const viewer = await viewerOf(c);
+    const [creations, revisions, reports] = await Promise.all([
+      creationsQueue(c.env.DB, viewer, QUEUE_PAGE),
+      revisionsQueue(c.env.DB, viewer, QUEUE_PAGE),
+      reportsQueue(c.env.DB, viewer, QUEUE_PAGE),
+    ]);
+    return c.json({ creations, revisions, reports });
+  })
+
+  .get("/v1/moderation/creations", async (c) =>
+    c.json(await creationsQueue(c.env.DB, await viewerOf(c), MODERATION_LIST_LIMIT))
+  )
+
+  .post(
+    "/v1/moderation/areas/:id/approve",
+    zValidator("json", versionBody, invalidBody),
+    async (c) => {
+      const viewer = await viewerOf(c);
+      const row = await repo.getArea(c.env.DB, viewer, c.req.param("id"));
+      if (row === null || row.parent_id === null) return c.json({ error: "not found" }, 404);
+      if (row.status !== "pending") return c.json({ error: "not pending" }, 409);
+      const approved = await repo.approveArea(c.env.DB, {
+        id: row.id,
+        version: c.req.valid("json").version,
+        parentId: row.parent_id,
+      });
+      if (!approved) {
+        return c.json({ error: "changed since you loaded it, or its parent is not live" }, 409);
+      }
+      await captureEvent(c, "moderation_creation_approved", { entity_type: "area" });
+      const updated = await repo.getArea(c.env.DB, viewer, row.id);
+      return c.json({ area: updated === null ? null : areaOf(updated, viewer) });
+    }
+  )
+
+  .post(
+    "/v1/moderation/climbs/:id/approve",
+    zValidator("json", versionBody, invalidBody),
+    async (c) => {
+      const viewer = await viewerOf(c);
+      const row = await repo.getAreaClimb(c.env.DB, viewer, c.req.param("id"));
+      if (row === null) return c.json({ error: "not found" }, 404);
+      if (row.status !== "pending") return c.json({ error: "not pending" }, 409);
+      const approved = await repo.approveAreaClimb(c.env.DB, {
+        id: row.id,
+        version: c.req.valid("json").version,
+        areaId: row.area_id,
+      });
+      if (!approved) {
+        return c.json({ error: "changed since you loaded it, or its area is not live" }, 409);
+      }
+      await captureEvent(c, "moderation_creation_approved", { entity_type: "climb" });
+      const updated = await repo.getAreaClimb(c.env.DB, viewer, row.id);
+      return c.json({ climb: updated === null ? null : areaClimbOf(updated, viewer) });
+    }
+  )
+
+  // A pending area is only rejected once nothing open is left inside it, so
+  // the moderator decides on each child rather than losing them silently.
+  .post(
+    "/v1/moderation/areas/:id/reject",
+    zValidator("json", rejectBody, invalidBody),
+    async (c) => {
+      const viewer = await viewerOf(c);
+      const row = await repo.getArea(c.env.DB, viewer, c.req.param("id"));
+      if (row === null) return c.json({ error: "not found" }, 404);
+      if (row.status !== "pending") return c.json({ error: "not pending" }, 409);
+      if (!(await repo.rejectArea(c.env.DB, row.id, c.req.valid("json").note || null))) {
+        return c.json({ error: "reject or move what is inside it first" }, 409);
+      }
+      await captureEvent(c, "moderation_creation_rejected", { entity_type: "area" });
+      return c.json({ ok: true });
+    }
+  )
+
+  .post(
+    "/v1/moderation/climbs/:id/reject",
+    zValidator("json", rejectBody, invalidBody),
+    async (c) => {
+      const viewer = await viewerOf(c);
+      const row = await repo.getAreaClimb(c.env.DB, viewer, c.req.param("id"));
+      if (row === null) return c.json({ error: "not found" }, 404);
+      if (row.status !== "pending") return c.json({ error: "not pending" }, 409);
+      if (!(await repo.rejectAreaClimb(c.env.DB, row.id, c.req.valid("json").note || null))) {
+        return c.json({ error: "not pending" }, 409);
+      }
+      await captureEvent(c, "moderation_creation_rejected", { entity_type: "climb" });
+      return c.json({ ok: true });
+    }
+  )
+
+  .get("/v1/moderation/revisions", async (c) =>
+    c.json(await revisionsQueue(c.env.DB, await viewerOf(c), MODERATION_LIST_LIMIT))
+  )
+
+  // Applies the three-way result in one guarded batch. A re-parent is placed
+  // by the same rules as creation, checked again now rather than trusted from
+  // when the edit was suggested.
+  .post(
+    "/v1/moderation/revisions/:id/approve",
+    zValidator("json", approveRevisionBody, invalidBody),
+    async (c) => {
+      const { version, resolutions } = c.req.valid("json");
+      const viewer = await viewerOf(c);
+      const revision = await repo.getRevision(c.env.DB, c.req.param("id"));
+      if (revision === null || revision.status !== "pending") {
+        return c.json({ error: "not found" }, 404);
+      }
+      const { proposed } = draftOf(revision);
+      if (Object.keys(resolutions).some((field) => !Object.hasOwn(proposed, field))) {
+        return c.json({ error: "resolutions only apply to proposed fields" }, 400);
+      }
+      const approval = { revisionId: revision.id, reviewerId: viewer.id, version };
+      const resolved = Object.keys(resolutions).length > 0;
+      const placement = { error: "the new place is no longer valid" };
+
+      if (revision.entity_type === "area") {
+        const found = approvalOf(
+          await repo.getArea(c.env.DB, viewer, revision.entity_id),
+          revision,
+          version,
+          resolutions
+        );
+        if ("problem" in found) return c.json(found.problem, 409);
+        const { entity, apply } = found;
+        const next = areaDraftOf({ ...entity, ...apply }, {});
+        if (next === null) return c.json({ error: "invalid request body" }, 400);
+        const parent = await repo.getArea(c.env.DB, viewer, next.parentId);
+        if (
+          parent === null ||
+          parent.status !== "active" ||
+          parent.path.startsWith(entity.path) ||
+          (isRegion(parent) && latLonOf(next) === null)
+        ) {
+          return c.json(placement, 409);
+        }
+        const approved = await repo.approveAreaRevision(c.env.DB, {
+          ...approval,
+          id: entity.id,
+          path: entity.path,
+          depth: entity.depth,
+          parent: { id: parent.id, path: parent.path, depth: parent.depth },
+          write: { ...areaFieldsOf(next), name_key: tagSlug(next.name) },
+        });
+        if (!approved) return c.json({ error: "changed since you loaded it" }, 409);
+        await captureEvent(c, "moderation_revision_approved", { entity_type: "area", resolved });
+        const updated = await repo.getArea(c.env.DB, viewer, entity.id);
+        return c.json({ area: updated === null ? null : areaOf(updated, viewer) });
+      }
+
+      const found = approvalOf(
+        await repo.getAreaClimb(c.env.DB, viewer, revision.entity_id),
+        revision,
+        version,
+        resolutions
+      );
+      if ("problem" in found) return c.json(found.problem, 409);
+      const { entity, apply } = found;
+      const next = areaClimbDraftOf({ ...entity, ...apply }, {});
+      if (next === null) return c.json({ error: "invalid request body" }, 400);
+      const area = await repo.getArea(c.env.DB, viewer, next.areaId);
+      if (area === null || area.status !== "active" || isRegion(area)) {
+        return c.json(placement, 409);
+      }
+      const approved = await repo.approveAreaClimbRevision(c.env.DB, {
+        ...approval,
+        id: entity.id,
+        write: { area_id: area.id, ...climbWrite(next) },
+      });
+      if (!approved) return c.json({ error: "changed since you loaded it" }, 409);
+      await captureEvent(c, "moderation_revision_approved", { entity_type: "climb", resolved });
+      const updated = await repo.getAreaClimb(c.env.DB, viewer, entity.id);
+      return c.json({ climb: updated === null ? null : areaClimbOf(updated, viewer) });
+    }
+  )
+
+  .post(
+    "/v1/moderation/revisions/:id/reject",
+    zValidator("json", rejectBody, invalidBody),
+    async (c) => {
+      const revision = await repo.getRevision(c.env.DB, c.req.param("id"));
+      if (revision === null) return c.json({ error: "not found" }, 404);
+      const rejected = await repo.rejectRevision(
+        c.env.DB,
+        revision.id,
+        c.get("userId"),
+        c.req.valid("json").note || null
+      );
+      if (!rejected) return c.json({ error: "not pending" }, 409);
+      await captureEvent(c, "moderation_revision_rejected", {
+        entity_type: revision.entity_type,
+      });
+      return c.json({ ok: true });
+    }
+  )
+
+  .get("/v1/moderation/reports", async (c) =>
+    c.json(await reportsQueue(c.env.DB, await viewerOf(c), MODERATION_LIST_LIMIT))
+  )
+
+  .post("/v1/moderation/reports/:id/resolve", async (c) => {
+    if (!(await repo.resolveReport(c.env.DB, c.req.param("id"), c.get("userId")))) {
+      return c.json({ error: "not found" }, 404);
+    }
+    await captureEvent(c, "moderation_report_resolved");
+    return c.json({ ok: true });
   })
 
   .get("/v1/sessions/:fingerprint", async (c) => {
