@@ -53,6 +53,7 @@ const session = (
     tries: c.tries ?? 1,
     angle: null,
     note: c.note ?? null,
+    link: null,
   })),
 });
 
