@@ -6,12 +6,20 @@ import {
   desc,
   eq,
   getTableColumns,
+  gte,
   inArray,
   isNull,
+  like,
+  lt,
+  lte,
   notInArray,
+  or,
+  type SQL,
 } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import {
+  areaClimbs,
+  areas,
   boardConnections,
   climbNotes,
   entrySessions,
@@ -27,6 +35,7 @@ import {
   tags,
   users,
 } from "../db/schema";
+import type { Viewer } from "./areas";
 import type { EntryWrite } from "./entries";
 import type { StoreEntitlement } from "./revenuecat";
 import type { NormalizedTag } from "./tags";
@@ -1000,4 +1009,269 @@ export async function deleteUserData(db: D1Database, userId: string): Promise<vo
     d.delete(syncState).where(eq(syncState.user_id, userId)),
     d.delete(users).where(eq(users.id, userId)),
   ]);
+}
+
+export type AreaRow = typeof areas.$inferSelect;
+
+export type AreaClimbRow = typeof areaClimbs.$inferSelect;
+
+export async function getViewer(db: D1Database, id: string): Promise<Viewer> {
+  const row = await drizzle(db)
+    .select({ role: users.role })
+    .from(users)
+    .where(eq(users.id, id))
+    .get();
+  return { id, role: row?.role ?? "user" };
+}
+
+// The one rule for what anyone may read in Areas: live content, their own
+// pending creations, and everything for moderators.
+export function visibleTo(t: typeof areas | typeof areaClimbs, viewer: Viewer): SQL | undefined {
+  if (viewer.role !== "user") return undefined;
+  return or(eq(t.status, "active"), and(eq(t.status, "pending"), eq(t.created_by, viewer.id)));
+}
+
+// A slug read also finds merged rows, so the caller can answer with a redirect.
+const visibleOrMerged = (t: typeof areas | typeof areaClimbs, viewer: Viewer): SQL | undefined => {
+  const visible = visibleTo(t, viewer);
+  return visible === undefined ? undefined : or(visible, eq(t.status, "merged"));
+};
+
+// A word prefix on the slugged name: "mandala" finds "the-mandala".
+const nameMatches = (t: typeof areas | typeof areaClimbs, key: string): SQL | undefined =>
+  or(like(t.name_key, `${key}%`), like(t.name_key, `%-${key}%`));
+
+export type Box = { minLat: number; maxLat: number; minLon: number; maxLon: number };
+
+const inBox = (box: Box): SQL | undefined =>
+  and(
+    gte(areas.lat, box.minLat),
+    lte(areas.lat, box.maxLat),
+    gte(areas.lon, box.minLon),
+    lte(areas.lon, box.maxLon)
+  );
+
+export async function getArea(db: D1Database, viewer: Viewer, id: string): Promise<AreaRow | null> {
+  const row = await drizzle(db)
+    .select()
+    .from(areas)
+    .where(and(eq(areas.id, id), visibleTo(areas, viewer)))
+    .get();
+  return row ?? null;
+}
+
+export async function getAreaBySlug(
+  db: D1Database,
+  viewer: Viewer,
+  slug: string
+): Promise<AreaRow | null> {
+  const row = await drizzle(db)
+    .select()
+    .from(areas)
+    .where(and(eq(areas.slug, slug), visibleOrMerged(areas, viewer)))
+    .get();
+  return row ?? null;
+}
+
+export async function areasByIds(
+  db: D1Database,
+  viewer: Viewer,
+  ids: string[]
+): Promise<AreaRow[]> {
+  if (ids.length === 0) return [];
+  return drizzle(db)
+    .select()
+    .from(areas)
+    .where(and(inArray(areas.id, ids), visibleTo(areas, viewer)))
+    .orderBy(areas.depth)
+    .all();
+}
+
+export async function childAreas(
+  db: D1Database,
+  viewer: Viewer,
+  parentId: string
+): Promise<AreaRow[]> {
+  return drizzle(db)
+    .select()
+    .from(areas)
+    .where(and(eq(areas.parent_id, parentId), visibleTo(areas, viewer)))
+    .orderBy(areas.name_key)
+    .all();
+}
+
+export async function searchAreas(
+  db: D1Database,
+  viewer: Viewer,
+  filter: { key?: string; box?: Box },
+  limit: number
+): Promise<AreaRow[]> {
+  return drizzle(db)
+    .select()
+    .from(areas)
+    .where(
+      and(
+        visibleTo(areas, viewer),
+        filter.key === undefined ? undefined : nameMatches(areas, filter.key),
+        filter.box === undefined ? undefined : inBox(filter.box)
+      )
+    )
+    .orderBy(areas.depth, areas.name_key)
+    .limit(limit)
+    .all();
+}
+
+export async function areaSlugTaken(db: D1Database, slug: string): Promise<boolean> {
+  const row = await drizzle(db)
+    .select({ id: areas.id })
+    .from(areas)
+    .where(eq(areas.slug, slug))
+    .get();
+  return row !== undefined;
+}
+
+export async function insertArea(
+  db: D1Database,
+  row: Omit<AreaRow, "version" | "merged_into_id" | "region_code">
+): Promise<void> {
+  await drizzle(db).insert(areas).values(row);
+}
+
+export type AreaEdit = Pick<AreaRow, "name" | "name_key" | "description" | "lat" | "lon">;
+
+// Only the creator, only while nobody else can see it: once active, a change
+// is a revision for a moderator.
+export async function updatePendingArea(
+  db: D1Database,
+  userId: string,
+  id: string,
+  edit: AreaEdit
+): Promise<boolean> {
+  const result = await drizzle(db)
+    .update(areas)
+    .set({ ...edit, updated_at: new Date().toISOString() })
+    .where(and(eq(areas.id, id), eq(areas.created_by, userId), eq(areas.status, "pending")));
+  return result.meta.changes > 0;
+}
+
+export async function getAreaClimb(
+  db: D1Database,
+  viewer: Viewer,
+  id: string
+): Promise<AreaClimbRow | null> {
+  const row = await drizzle(db)
+    .select()
+    .from(areaClimbs)
+    .where(and(eq(areaClimbs.id, id), visibleTo(areaClimbs, viewer)))
+    .get();
+  return row ?? null;
+}
+
+export async function getAreaClimbBySlug(
+  db: D1Database,
+  viewer: Viewer,
+  slug: string
+): Promise<AreaClimbRow | null> {
+  const row = await drizzle(db)
+    .select()
+    .from(areaClimbs)
+    .where(and(eq(areaClimbs.slug, slug), visibleOrMerged(areaClimbs, viewer)))
+    .get();
+  return row ?? null;
+}
+
+export async function climbsInAreas(
+  db: D1Database,
+  viewer: Viewer,
+  areaIds: string[]
+): Promise<AreaClimbRow[]> {
+  if (areaIds.length === 0) return [];
+  return drizzle(db)
+    .select()
+    .from(areaClimbs)
+    .where(and(inArray(areaClimbs.area_id, areaIds), visibleTo(areaClimbs, viewer)))
+    .orderBy(areaClimbs.name_key)
+    .all();
+}
+
+// `under` is an area path: the range covers exactly its subtree, because the
+// character after "/" is "0".
+export async function searchAreaClimbs(
+  db: D1Database,
+  viewer: Viewer,
+  filter: { key?: string; under?: string },
+  limit: number
+): Promise<AreaClimbRow[]> {
+  const under = filter.under;
+  const subtree =
+    under === undefined
+      ? undefined
+      : inArray(
+          areaClimbs.area_id,
+          drizzle(db)
+            .select({ id: areas.id })
+            .from(areas)
+            .where(and(gte(areas.path, under), lt(areas.path, `${under.slice(0, -1)}0`)))
+        );
+  return drizzle(db)
+    .select()
+    .from(areaClimbs)
+    .where(
+      and(
+        visibleTo(areaClimbs, viewer),
+        filter.key === undefined ? undefined : nameMatches(areaClimbs, filter.key),
+        subtree
+      )
+    )
+    .orderBy(areaClimbs.name_key)
+    .limit(limit)
+    .all();
+}
+
+export async function areaClimbSlugTaken(db: D1Database, slug: string): Promise<boolean> {
+  const row = await drizzle(db)
+    .select({ id: areaClimbs.id })
+    .from(areaClimbs)
+    .where(eq(areaClimbs.slug, slug))
+    .get();
+  return row !== undefined;
+}
+
+export async function insertAreaClimb(
+  db: D1Database,
+  row: Omit<AreaClimbRow, "version" | "merged_into_id">
+): Promise<void> {
+  await drizzle(db).insert(areaClimbs).values(row);
+}
+
+export type AreaClimbEdit = Omit<
+  AreaClimbRow,
+  | "id"
+  | "area_id"
+  | "slug"
+  | "status"
+  | "merged_into_id"
+  | "version"
+  | "created_by"
+  | "created_at"
+  | "updated_at"
+>;
+
+export async function updatePendingAreaClimb(
+  db: D1Database,
+  userId: string,
+  id: string,
+  edit: AreaClimbEdit
+): Promise<boolean> {
+  const result = await drizzle(db)
+    .update(areaClimbs)
+    .set({ ...edit, updated_at: new Date().toISOString() })
+    .where(
+      and(
+        eq(areaClimbs.id, id),
+        eq(areaClimbs.created_by, userId),
+        eq(areaClimbs.status, "pending")
+      )
+    );
+  return result.meta.changes > 0;
 }
