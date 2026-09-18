@@ -295,6 +295,42 @@ export type SessionLinks = {
   climbs: Map<string, { id: string; name: string; slug: string }>;
 };
 
+export type ClimbSessionRow = {
+  fingerprint: string;
+  name: string | null;
+  title: string;
+  start_at: string;
+  climb_slug: string;
+  climbs_json: string | null;
+};
+
+export async function sessionsOnClimb(
+  db: D1Database,
+  userId: string,
+  climbId: string
+): Promise<ClimbSessionRow[]> {
+  return drizzle(db)
+    .select({
+      fingerprint: sessions.fingerprint,
+      name: sessions.name,
+      title: sessions.title,
+      start_at: sessions.start_at,
+      climb_slug: sessionClimbLinks.climb_slug,
+      climbs_json: sessions.climbs_json,
+    })
+    .from(sessionClimbLinks)
+    .innerJoin(
+      sessions,
+      and(
+        eq(sessions.user_id, sessionClimbLinks.user_id),
+        eq(sessions.fingerprint, sessionClimbLinks.fingerprint)
+      )
+    )
+    .where(and(eq(sessionClimbLinks.user_id, userId), eq(sessionClimbLinks.climb_id, climbId)))
+    .orderBy(desc(sessions.start_at))
+    .all();
+}
+
 // Only what the viewer can still see and is still live comes back: a merge
 // repoints links at the survivor, and a rejected climb drops out.
 export async function getSessionLinks(

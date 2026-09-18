@@ -1033,9 +1033,16 @@ const app = new Hono<AppEnv>()
     const area = await repo.getArea(c.env.DB, viewer, row.area_id);
     const ancestors =
       area === null ? [] : await repo.areasByIds(c.env.DB, viewer, areaIdsOnPath(area.path));
+    const logged = await repo.sessionsOnClimb(c.env.DB, viewer.id, row.id);
     return c.json({
       climb: areaClimbOf(row, viewer),
       ancestors: ancestors.map(areaSummaryOf),
+      sessions: logged.map(({ climb_slug, climbs_json, ...session }) => ({
+        ...session,
+        sent: parseClimbs(climbs_json).some(
+          (climb) => climb.kind === "send" && climbSlug(climb.name.trim()) === climb_slug
+        ),
+      })),
     });
   })
 

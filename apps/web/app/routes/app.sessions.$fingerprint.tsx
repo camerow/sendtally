@@ -252,6 +252,20 @@ export default function SessionDetailRoute(): React.ReactElement {
           >
             {vm.meta}
           </span>
+          {vm.area !== null && (
+            <Link
+              to={`/app/areas/${vm.area.slug}`}
+              style={{
+                ...monoLabel,
+                fontSize: 11,
+                letterSpacing: "0.06em",
+                color: "var(--bs-azure-ink)",
+                textDecoration: "none",
+              }}
+            >
+              {vm.area.name} ›
+            </Link>
+          )}
         </div>
         <SessionActions
           api={api}
@@ -463,7 +477,16 @@ export default function SessionDetailRoute(): React.ReactElement {
                           whiteSpace: "nowrap",
                         }}
                       >
-                        {c.name}
+                        {c.climbSlug === null ? (
+                          c.name
+                        ) : (
+                          <Link
+                            to={`/app/climbs/${c.climbSlug}`}
+                            style={{ color: "inherit", textDecorationColor: "rgba(64,63,76,0.3)" }}
+                          >
+                            {c.name}
+                          </Link>
+                        )}
                       </span>
                     </span>
                     {c.note !== null && (

@@ -31,6 +31,16 @@ describe("writeEffect", () => {
     ]);
   });
 
+  it("stales area and climb pages for an Areas write, and not the log", () => {
+    expect(writeEffect({ method: "POST", path: "/v1/area-climbs" })?.stale).toEqual([
+      ["area"],
+      ["areaClimb"],
+    ]);
+    expect(writeEffect({ method: "PUT", path: "/v1/areas/a1/draft" })?.stale).not.toContainEqual([
+      "sessions",
+    ]);
+  });
+
   it("maps settings writes to status and account deletion to nothing", () => {
     expect(writeEffect({ method: "PUT", path: "/v1/preferences/grade-scales" })?.stale).toEqual([
       ["status"],

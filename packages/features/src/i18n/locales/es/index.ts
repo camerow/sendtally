@@ -1,4 +1,5 @@
 import { account } from "./account";
+import { areas } from "./areas";
 import { appUpdate } from "./appUpdate";
 import { auth } from "./auth";
 import { billing } from "./billing";
@@ -18,6 +19,7 @@ import { trends } from "./trends";
 
 export const es = {
   ...account,
+  ...areas,
   ...appUpdate,
   ...auth,
   ...billing,

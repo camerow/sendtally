@@ -26,6 +26,8 @@ export default [
     route("journal/:id/edit", "routes/app.journal.$id.edit.tsx"),
     route("projects", "routes/app.projects.tsx"),
     route("projects/:slug", "routes/app.projects.$slug.tsx"),
+    route("areas/:slug", "routes/app.areas.$slug.tsx"),
+    route("climbs/:slug", "routes/app.climbs.$slug.tsx"),
     route("trends", "routes/app.trends._index.tsx"),
     route("trends/:page", "routes/app.trends.$page.tsx"),
     route("settings", "routes/app.settings.tsx"),

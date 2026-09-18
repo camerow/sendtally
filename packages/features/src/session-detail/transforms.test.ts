@@ -83,6 +83,14 @@ describe("climbVMs", () => {
     expect(vms[2]?.angleLabel).toBe("45°");
   });
 
+  it("carries the Areas link of a linked climb, and the session's crag", () => {
+    const link = { id: "c1", name: "Crimp Reaper", slug: "crimp-reaper" };
+    const climbs = detail.climbs.map((c, i) => (i === 1 ? { ...c, link } : c));
+    expect(climbVMs(climbs).map((c) => c.climbSlug)).toEqual([null, "crimp-reaper", null, null]);
+    const area = { id: "a1", name: "Buttermilks", slug: "buttermilks" };
+    expect(sessionDetailVM({ ...detail, area }).area).toEqual(area);
+  });
+
   it("reads a one-try send of an earlier project as a send, not a flash", () => {
     const vms = climbVMs(detail.climbs, new Set(["jug life"]));
     expect(vms.map((c) => c.result)).toEqual(["sent", "sent", "project", "flash"]);

@@ -1,7 +1,12 @@
-import type { hc, InferResponseType } from "hono/client";
+import type { hc, InferRequestType, InferResponseType } from "hono/client";
 import type { AppType } from "@sendtally/api/app";
 
 export type {
+  Area,
+  AreaClimb,
+  AreaClimbInput,
+  AreaInput,
+  AreaSummary,
   Circuit,
   CircuitColour,
   Gym,
@@ -80,6 +85,27 @@ export type PostState = NonNullable<SessionRow["post_state"]>;
 export type SessionSource = SessionRow["source"];
 
 export type SessionLocation = NonNullable<SessionRow["location"]>;
+
+type Areas = Client["v1"]["areas"];
+type AreaClimbs = Client["v1"]["area-climbs"];
+
+export type AreaRedirect = { redirect: string };
+
+export type AreaPage = Exclude<Ok<Areas[":slug"]["$get"]>, AreaRedirect>;
+
+export type AreaClimbPage = Exclude<Ok<AreaClimbs[":slug"]["$get"]>, AreaRedirect>;
+
+export type AreaClimbSession = AreaClimbPage["sessions"][number];
+
+export type AreaDraft = NonNullable<Ok<Areas[":id"]["draft"]["$get"]>["draft"]>;
+
+export type AreaDraftInput = InferRequestType<Areas[":id"]["draft"]["$put"]>["json"];
+
+export type AreaClimbDraftInput = InferRequestType<AreaClimbs[":id"]["draft"]["$put"]>["json"];
+
+export type AreaSimilarInput = InferRequestType<Areas["similar"]["$post"]>["json"];
+
+export type ContentReportInput = InferRequestType<Areas["reports"]["$post"]>["json"];
 
 export class ApiError extends Error {
   constructor(
