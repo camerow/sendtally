@@ -111,5 +111,5 @@ export function withClimbName(
 }
 
 export function withPickedClimb(climb: ClimbDraft, known: ClimbSummary): ClimbDraft {
-  return withClimbName(climb, known.name, known);
+  return { ...withClimbName(climb, known.name, known), project: known.project || undefined };
 }
