@@ -76,7 +76,6 @@ export function Sheet({
       backdropComponent={renderBackdrop}
       keyboardBehavior="interactive"
       keyboardBlurBehavior="restore"
-      android_keyboardInputMode="adjustResize"
       backgroundStyle={{ borderRadius: radius.panel, backgroundColor: colors.white }}
       handleIndicatorStyle={{ width: 36, height: 4, backgroundColor: "rgba(64,63,76,0.2)" }}
     >
