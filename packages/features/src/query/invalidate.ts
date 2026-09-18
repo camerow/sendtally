@@ -38,7 +38,10 @@ export function writeEffect({ method, path }: ApiWrite): WriteEffect | null {
       };
     case "areas":
     case "area-climbs":
-      return { stale: [["area"], ["areaClimb"]], gone: null };
+      return {
+        stale: [["area"], ["areaClimb"], ["areaSearch"], ["areaClimbSearch"]],
+        gone: null,
+      };
     case "projects":
       return { stale: [["climbs"]], gone: null };
     case "preferences":

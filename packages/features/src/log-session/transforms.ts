@@ -269,6 +269,7 @@ function climbOutcomeInput(
 }
 
 export function toLogSessionInput(draft: LogSessionDraft): LogSessionInput {
+  const outdoor = draft.location === "outdoor";
   const climbs: LogClimbInput[] = draft.climbs.map((c) => ({
     ...(c.name.trim() === "" ? {} : { name: c.name.trim() }),
     grade: draftGrade(c.grade, c.scale) ?? fallbackGrade(c.grade, c.scale),
@@ -276,6 +277,7 @@ export function toLogSessionInput(draft: LogSessionDraft): LogSessionInput {
     ...(c.name.trim() === "" || c.note.trim() === "" ? {} : { note: c.note.trim() }),
     ...(c.circuit === undefined ? {} : { circuit: c.circuit }),
     ...(c.wall === undefined || c.wall.trim() === "" ? {} : { wall: c.wall.trim() }),
+    ...(outdoor && c.climbId !== undefined ? { climbId: c.climbId } : {}),
   }));
   return {
     ...(draft.name.trim() === "" ? {} : { name: draft.name.trim() }),
@@ -285,6 +287,7 @@ export function toLogSessionInput(draft: LogSessionDraft): LogSessionInput {
     ...(draft.rpe === null ? {} : { rpe: draft.rpe }),
     location: draft.location,
     ...(draft.gymId === undefined ? {} : { gymId: draft.gymId }),
+    ...(outdoor && draft.area !== undefined ? { areaId: draft.area.id } : {}),
     ...(draft.tags.length === 0 ? {} : { tags: draft.tags }),
     ...(draft.notes.trim() === "" ? {} : { notes: draft.notes.trim() }),
     climbs,
@@ -325,6 +328,7 @@ export function draftFromSession(session: SessionDetail): LogSessionDraft {
     endTime: utcTime(session.end_at),
     location: session.location ?? "indoor",
     ...(session.gym_id === null ? {} : { gymId: session.gym_id }),
+    ...(session.area ? { area: { id: session.area.id, name: session.area.name } } : {}),
     tags: session.tags.map((t) => t.name),
     notes: session.notes ?? "",
     rpe: session.rpe,
@@ -338,6 +342,7 @@ export function draftFromSession(session: SessionDetail): LogSessionDraft {
         note: c.note ?? "",
         ...(c.circuit === undefined ? {} : { circuit: c.circuit }),
         ...(c.wall === undefined ? {} : { wall: c.wall }),
+        ...(c.link ? { climbId: c.link.id } : {}),
         ...(c.endurance === undefined
           ? { kind: c.kind, style: storedStyle(c), tries: c.tries }
           : {

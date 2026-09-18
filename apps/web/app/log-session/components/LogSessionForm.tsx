@@ -3,6 +3,12 @@ import React from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import type { ClimbSummary, SendtallyApi } from "@sendtally/api-client";
 import { effortColor } from "@sendtally/design/tokens";
+import {
+  climbFormFromDraft,
+  withAreaClimb,
+  withTypedName,
+  type AreaClimb,
+} from "@sendtally/features/areas";
 import { climbDraftGrade, findClimb, useClimbVocabulary } from "@sendtally/features/climbs";
 import {
   circuitGym,
@@ -39,6 +45,11 @@ import { TagPicker } from "../../components/TagPicker";
 import { useIsNarrow } from "../../lib/useIsNarrow";
 import { climbKindStorage } from "../../lib/climbKindStorage";
 import { sessionDraftStorage } from "../../lib/sessionDraftStorage";
+import { AreaFormDialog } from "../../areas/components/AreaFormDialog";
+import { AreaPicker } from "../../areas/components/AreaPicker";
+import { ClimbFormDialog } from "../../areas/components/ClimbFormDialog";
+import { useDeviceLocation } from "../../areas/useDeviceLocation";
+import type { ClimbAreas } from "./AreaClimbNameField";
 import { DraftBanner } from "./DraftBanner";
 import { ClimbCard } from "./ClimbCard";
 import { Icon } from "../../components/Icon";
@@ -172,6 +183,11 @@ export function LogSessionForm({
   const narrow = useIsNarrow();
   const [editingKey, setEditingKey] = React.useState<string | null>(null);
   const [addingGym, setAddingGym] = React.useState(false);
+  const [adding, setAdding] = React.useState<
+    { kind: "crag"; name: string } | { kind: "climb"; key: string } | null
+  >(null);
+  const [near, locate] = useDeviceLocation();
+  const outdoor = draft.location === "outdoor";
 
   // The preference query resolves after the first render, so a new draft adopts the user's
   // scale once, per discipline and only where no grade has been typed yet. A draft picked
@@ -240,8 +256,7 @@ export function LogSessionForm({
         c.key !== key
           ? c
           : {
-              ...c,
-              name,
+              ...withTypedName(c, name),
               project: undefined,
               // A project added from the projects page has no grade yet, so the
               // one the user already picked in the form stands.
@@ -260,8 +275,7 @@ export function LogSessionForm({
         c.key !== key
           ? c
           : {
-              ...c,
-              name: known.name,
+              ...withTypedName(c, known.name),
               project: undefined,
               ...(climbDraftGrade(known, c.scale) === ""
                 ? {}
@@ -270,6 +284,30 @@ export function LogSessionForm({
       ),
     }));
   }
+
+  function pickAreaClimb(key: string, picked: AreaClimb): void {
+    setDraft((d) => ({
+      ...d,
+      climbs: d.climbs.map((c) => (c.key === key ? withAreaClimb(c, picked) : c)),
+    }));
+  }
+
+  function climbAreas(climb: ClimbDraft): ClimbAreas | undefined {
+    if (!outdoor) return undefined;
+    return {
+      api,
+      areaId: draft.area?.id ?? null,
+      onPickArea: (picked) => pickAreaClimb(climb.key, picked),
+      // The sheet is a modal in the top layer, so it steps aside for the add dialog.
+      onAdd: () => {
+        setEditingKey(null);
+        setAdding({ kind: "climb", key: climb.key });
+      },
+    };
+  }
+
+  const addingClimb =
+    adding?.kind === "climb" ? draft.climbs.find((c) => c.key === adding.key) : undefined;
 
   function removeClimb(key: string): void {
     setDraft((d) => ({ ...d, climbs: d.climbs.filter((c) => c.key !== key) }));
@@ -435,6 +473,35 @@ export function LogSessionForm({
               </button>
             </Field>
           )}
+          {outdoor && (
+            <Field
+              label={
+                <>
+                  {t("areas.crag")}{" "}
+                  <span style={{ color: "rgba(64,63,76,0.45)" }}>{t("common.optional")}</span>
+                </>
+              }
+            >
+              <AreaPicker
+                api={api}
+                crags
+                value={draft.area ?? null}
+                near={near}
+                placeholder={t("areas.searchCrags")}
+                className="log-session-control"
+                inputStyle={inputStyle}
+                addLabel={(name) => t("areas.addThisCrag", { name })}
+                onPick={(area) =>
+                  setDraft((d) => ({
+                    ...d,
+                    area: area === null ? undefined : { id: area.id, name: area.name },
+                  }))
+                }
+                onAdd={(name) => setAdding({ kind: "crag", name })}
+                onFocus={locate}
+              />
+            </Field>
+          )}
           <Field
             label={
               <>
@@ -522,6 +589,7 @@ export function LogSessionForm({
                   onChange={(c) => updateClimb(climb.key, c)}
                   onChangeName={(name) => updateClimbName(climb.key, name)}
                   onPick={(known) => pickClimb(climb.key, known)}
+                  areas={climbAreas(climb)}
                   onToggleProject={() => toggleProject(climb)}
                   onRemove={() => removeClimb(climb.key)}
                 />
@@ -583,9 +651,49 @@ export function LogSessionForm({
           onChange={(c) => updateClimb(editingClimb.key, c)}
           onChangeName={(name) => updateClimbName(editingClimb.key, name)}
           onPick={(known) => pickClimb(editingClimb.key, known)}
+          areas={climbAreas(editingClimb)}
           onToggleProject={() => toggleProject(editingClimb)}
           onRemove={() => removeClimb(editingClimb.key)}
           onClose={() => setEditingKey(null)}
+        />
+      )}
+
+      {adding?.kind === "crag" && (
+        <AreaFormDialog
+          mode="create"
+          api={api}
+          parent={null}
+          initial={{
+            name: adding.name,
+            ...(near === null ? {} : { lat: String(near.lat), lon: String(near.lon) }),
+          }}
+          onCreated={(area) => {
+            setDraft((d) => ({ ...d, area: { id: area.id, name: area.name } }));
+            setAdding(null);
+          }}
+          onClose={() => setAdding(null)}
+          onSuggested={() => setAdding(null)}
+        />
+      )}
+
+      {addingClimb !== undefined && (
+        <ClimbFormDialog
+          mode="create"
+          api={api}
+          area={draft.area ?? null}
+          initial={climbFormFromDraft(addingClimb, prefs.scales)}
+          onCreated={(created, area) => {
+            setDraft((d) => ({
+              ...d,
+              area: d.area ?? { id: area.id, name: area.name },
+              climbs: d.climbs.map((c) =>
+                c.key === addingClimb.key ? withAreaClimb(c, created) : c
+              ),
+            }));
+            setAdding(null);
+          }}
+          onClose={() => setAdding(null)}
+          onSuggested={() => setAdding(null)}
         />
       )}
 

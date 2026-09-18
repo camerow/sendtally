@@ -22,7 +22,8 @@ import {
   useSelectedLap,
 } from "./EnduranceFields";
 import { ClimbGradeSelect, ClimbKindSelect } from "./ClimbKindSelect";
-import { ClimbNameField } from "./ClimbNameField";
+import { AreaClimbNameField, type ClimbAreas } from "./AreaClimbNameField";
+import { ClimbNameField, type ClimbNameFieldProps } from "./ClimbNameField";
 import { ClimbNoteField } from "./ClimbNoteField";
 import { DisciplineToggle } from "./DisciplineToggle";
 import { OutcomeSelect } from "./OutcomeControl";
@@ -85,6 +86,8 @@ export type ClimbEditorSheetProps = {
   onChange: (climb: ClimbDraft) => void;
   onChangeName: (name: string) => void;
   onPick: (climb: ClimbSummary) => void;
+  /** Set for an outdoor session, where the name also searches Areas. */
+  areas?: ClimbAreas;
   onToggleProject: () => void;
   onRemove: () => void;
   onClose: () => void;
@@ -102,6 +105,7 @@ export function ClimbEditorSheet({
   onChange,
   onChangeName,
   onPick,
+  areas,
   onToggleProject,
   onRemove,
   onClose,
@@ -119,6 +123,19 @@ export function ClimbEditorSheet({
     if (el !== null && !el.open) el.showModal();
   }, []);
 
+  const nameProps: ClimbNameFieldProps = {
+    value: climb.name,
+    scale: climb.scale,
+    suggestions,
+    inline: true,
+    placeholder: endurance
+      ? t("endurance.namePlaceholder")
+      : gym === null
+        ? t("logSession.climbNamePlaceholder")
+        : t("logSession.circuitClimbNamePlaceholder"),
+    onChange: onChangeName,
+    onPick,
+  };
   return (
     <dialog
       ref={dialog}
@@ -217,21 +234,11 @@ export function ClimbEditorSheet({
             {t("logSession.name")}{" "}
             <span style={{ color: "rgba(64,63,76,0.45)" }}>{t("common.optional")}</span>
           </span>
-          <ClimbNameField
-            value={climb.name}
-            scale={climb.scale}
-            suggestions={suggestions}
-            inline
-            placeholder={
-              endurance
-                ? t("endurance.namePlaceholder")
-                : gym === null
-                  ? t("logSession.climbNamePlaceholder")
-                  : t("logSession.circuitClimbNamePlaceholder")
-            }
-            onChange={onChangeName}
-            onPick={onPick}
-          />
+          {areas === undefined ? (
+            <ClimbNameField {...nameProps} />
+          ) : (
+            <AreaClimbNameField {...nameProps} areas={areas} linkedId={climb.climbId} />
+          )}
         </div>
         {!endurance && (
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>

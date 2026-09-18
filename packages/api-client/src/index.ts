@@ -229,8 +229,20 @@ export class SendtallyApi {
     return body(this.client.v1["area-climbs"][":slug"].$get({ param: { slug } }));
   }
 
-  searchAreaClimbs(q: string): Promise<{ climbs: AreaClimb[] }> {
-    return body(this.client.v1["area-climbs"].$get({ query: { q } }));
+  searchAreas(q: string, near?: { lat: number; lon: number }): Promise<{ areas: AreaSummary[] }> {
+    return body(
+      this.client.v1.areas.$get({
+        query: { q, ...(near === undefined ? {} : { near: `${near.lat},${near.lon}` }) },
+      })
+    );
+  }
+
+  searchAreaClimbs(q: string, areaId?: string): Promise<{ climbs: AreaClimb[] }> {
+    return body(
+      this.client.v1["area-climbs"].$get({
+        query: { q, ...(areaId === undefined ? {} : { areaId }) },
+      })
+    );
   }
 
   similarAreaClimbs(areaId: string, name: string): Promise<{ candidates: AreaClimb[] }> {
