@@ -91,4 +91,6 @@ export const areas = {
   "areas.nearby": "Nearby",
   "areas.inAreas": "Areas",
   "areas.linkedToAreas": "Linked to this climb in Areas",
+  "areas.isItOneOfTheseTapHint": "Tap one if it is the same. If not, save again to add yours.",
+  "areas.closeAddSheet": "Close without adding",
 } as const;
