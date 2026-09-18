@@ -13,13 +13,15 @@ import {
   like,
   lt,
   lte,
+  ne,
   not,
   notInArray,
   or,
   sql,
   type SQL,
 } from "drizzle-orm";
-import { drizzle } from "drizzle-orm/d1";
+import { drizzle, type DrizzleD1Database } from "drizzle-orm/d1";
+import { alias, type SQLiteColumn } from "drizzle-orm/sqlite-core";
 import {
   areaClimbs,
   areas,
@@ -1092,8 +1094,121 @@ export async function deleteUserData(db: D1Database, userId: string): Promise<vo
     // account has to take them too, ahead of the tables being dropped.
     d.delete(boardConnections).where(eq(boardConnections.user_id, userId)),
     d.delete(syncState).where(eq(syncState.user_id, userId)),
+    ...purgeAreaContributions(d, userId),
     d.delete(users).where(eq(users.id, userId)),
   ]);
+}
+
+const unapproved: Array<"pending" | "deleted"> = ["pending", "deleted"];
+
+// Approved Areas content outlives its author: other people's sends link to it.
+// Unapproved content goes, unless something someone else owns hangs off it
+// (a moderator's climb under a pending area, a link, a merge), in which case it
+// stays for moderation like the approved rows, with the author removed. Runs
+// after the user's own session links are deleted.
+function purgeAreaContributions(d: DrizzleD1Database, userId: string) {
+  const sub = alias(areas, "sub");
+  const merged = alias(areaClimbs, "merged");
+  const inSubtree = sql`substr(${sub.path}, 1, length(${areas.path})) = ${areas.path}`;
+  const gone = (table: typeof areas | typeof areaClimbs, id: SQLiteColumn): SQL =>
+    not(exists(d.select({ id: table.id }).from(table).where(eq(table.id, id))));
+  const orphaned = (type: SQLiteColumn, id: SQLiteColumn): SQL | undefined =>
+    or(and(eq(type, "area"), gone(areas, id)), and(eq(type, "climb"), gone(areaClimbs, id)));
+  return [
+    d
+      .delete(contentRevisions)
+      .where(
+        and(eq(contentRevisions.submitted_by, userId), eq(contentRevisions.status, "pending"))
+      ),
+    d.delete(duplicateReports).where(eq(duplicateReports.reporter_id, userId)),
+    d.delete(contentReports).where(eq(contentReports.reporter_id, userId)),
+    d
+      .delete(areaClimbs)
+      .where(
+        and(
+          eq(areaClimbs.created_by, userId),
+          inArray(areaClimbs.status, unapproved),
+          not(
+            exists(
+              d
+                .select({ id: sessionClimbLinks.climb_id })
+                .from(sessionClimbLinks)
+                .where(eq(sessionClimbLinks.climb_id, areaClimbs.id))
+            )
+          ),
+          not(
+            exists(
+              d
+                .select({ id: merged.id })
+                .from(merged)
+                .where(eq(merged.merged_into_id, areaClimbs.id))
+            )
+          )
+        )
+      ),
+    d.delete(areas).where(
+      and(
+        eq(areas.created_by, userId),
+        inArray(areas.status, unapproved),
+        not(
+          exists(
+            d
+              .select({ id: sub.id })
+              .from(sub)
+              .where(
+                and(
+                  inSubtree,
+                  or(
+                    isNull(sub.created_by),
+                    ne(sub.created_by, userId),
+                    notInArray(sub.status, unapproved)
+                  )
+                )
+              )
+          )
+        ),
+        not(
+          exists(
+            d
+              .select({ id: areaClimbs.id })
+              .from(areaClimbs)
+              .innerJoin(sub, eq(areaClimbs.area_id, sub.id))
+              .where(inSubtree)
+          )
+        )
+      )
+    ),
+    d
+      .delete(contentRevisions)
+      .where(orphaned(contentRevisions.entity_type, contentRevisions.entity_id)),
+    d.delete(contentReports).where(orphaned(contentReports.entity_type, contentReports.entity_id)),
+    d
+      .delete(duplicateReports)
+      .where(
+        or(
+          gone(areaClimbs, duplicateReports.keep_climb_id),
+          gone(areaClimbs, duplicateReports.duplicate_climb_id)
+        )
+      ),
+    d.update(areas).set({ created_by: null }).where(eq(areas.created_by, userId)),
+    d.update(areaClimbs).set({ created_by: null }).where(eq(areaClimbs.created_by, userId)),
+    d
+      .update(contentRevisions)
+      .set({ submitted_by: null })
+      .where(eq(contentRevisions.submitted_by, userId)),
+    d
+      .update(contentRevisions)
+      .set({ reviewed_by: null })
+      .where(eq(contentRevisions.reviewed_by, userId)),
+    d
+      .update(duplicateReports)
+      .set({ reviewed_by: null })
+      .where(eq(duplicateReports.reviewed_by, userId)),
+    d
+      .update(contentReports)
+      .set({ reviewed_by: null })
+      .where(eq(contentReports.reviewed_by, userId)),
+  ] as const;
 }
 
 export type AreaRow = typeof areas.$inferSelect;

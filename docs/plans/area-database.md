@@ -259,9 +259,9 @@ The privacy page gets a line saying so, and CLAUDE.md's Security notes gets the 
 
 ### Content licence
 
-Contributions to Areas (area and climb text and data) are published under Creative Commons Attribution-ShareAlike 4.0 (CC BY-SA 4.0): anyone may reuse the data with attribution, and anything built from it stays under the same licence.
-Will chose Creative Commons; BY-SA 4.0 is the recommended variant, to confirm before the terms change ships.
-The terms page gets a contributions clause, and the add and suggest-edit forms say "You're sharing this under CC BY-SA 4.0" beside the submit button.
+Contributions to Areas (area and climb text and data) are dedicated to the public domain under Creative Commons CC0 1.0: anyone may reuse the data for any purpose, with no attribution or share-alike condition.
+Will chose CC0 on 2026-09-18, over the CC BY-SA 4.0 first proposed here; CC0 also sits easily with approved content surviving its author's account deletion without a name attached.
+The terms page gets a contributions clause, and the add and suggest-edit forms say "You're sharing this under CC0" beside the submit button.
 
 ## 5. API
 
@@ -359,7 +359,7 @@ Region seeding from ISO 3166 codes (section 3) is safe and is part of phase 1.
 | ---------------- | ---------------------------------------------------------------------------------------------------------- |
 | Name             | "Areas"                                                                                                    |
 | Mobile scope     | Log-form crag and climb search with "Add this climb" on mobile; area and climb pages and moderation on web |
-| Content licence  | Creative Commons; CC BY-SA 4.0 proposed as the variant (section 4)                                         |
+| Content licence  | CC0 1.0 public domain dedication (section 4)                                                               |
 | Account deletion | Delete pending content, drafts and reports; keep approved content with the author removed                  |
 | Slugs            | Readable, globally unique, parent slug then a number on collision                                          |
 | Climb types      | `boulder`, `sport`, `trad`, `top_rope`; `alpine` dropped                                                   |
