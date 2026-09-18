@@ -10,6 +10,7 @@ function session(fingerprint: string, startAt: string): SessionRow {
     source: "board",
     location: null,
     gym_id: null,
+    area_id: null,
     name: null,
     start_at: startAt,
     end_at: startAt,

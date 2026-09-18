@@ -22,6 +22,7 @@ function session(
     source: "manual",
     location: "indoor",
     gym_id: null,
+    area_id: null,
     name: null,
     start_at: startAt,
     end_at: endAt,

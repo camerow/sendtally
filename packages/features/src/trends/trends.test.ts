@@ -29,6 +29,7 @@ function session(
     source: "manual",
     location: "indoor",
     gym_id: null,
+    area_id: null,
     name: null,
     start_at: startIso,
     end_at: new Date(Date.parse(startIso) + 2 * 3_600_000).toISOString(),
