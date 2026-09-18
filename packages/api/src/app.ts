@@ -10,6 +10,17 @@ import { purgeAccount } from "./lib/account";
 import {
   areaBody,
   areaClimbBody,
+  areaClimbDraftBody,
+  areaClimbDraftOf,
+  areaClimbFieldsOf,
+  areaDraftBody,
+  areaDraftOf,
+  areaFieldsOf,
+  changesFrom,
+  type ContentEntity,
+  draftOf,
+  type Fields,
+  snapshotOf,
   areaClimbEditBody,
   areaClimbOf,
   areaClimbSimilarBody,
@@ -294,6 +305,33 @@ const similarClimbs = async (
       : [area.id, ...(await repo.childAreas(db, viewer, parent.id)).map((a) => a.id)];
   const climbs = await repo.climbsInAreas(db, viewer, pool);
   return duplicatesOf(tagSlug(name), climbs, excludeId).map((row) => areaClimbOf(row, viewer));
+};
+
+// Writes only the fields that differ from the entity as it is now, and
+// refreshes the base to now, so a re-edit after someone else's change diffs
+// against the current state. Null when nothing differs.
+const saveDraft = async (
+  c: Context<AppEnv>,
+  type: ContentEntity,
+  row: repo.AreaRow | repo.AreaClimbRow,
+  next: Fields,
+  changeSummary: string | null | undefined
+): Promise<repo.RevisionRow | null> => {
+  const base = snapshotOf(type, row);
+  const proposed = changesFrom(base, next);
+  if (Object.keys(proposed).length === 0) return null;
+  const userId = c.get("userId");
+  await repo.ensureUser(c.env.DB, userId);
+  await repo.saveDraft(c.env.DB, {
+    submitted_by: userId,
+    entity_type: type,
+    entity_id: row.id,
+    proposed_json: JSON.stringify(proposed),
+    base_json: JSON.stringify(base),
+    change_summary: changeSummary || null,
+  });
+  await captureEvent(c, "area_edit_suggested", { entity_type: type });
+  return repo.getDraft(c.env.DB, userId, type, row.id);
 };
 
 const areaSearchQuery = z.object({
@@ -896,6 +934,85 @@ const app = new Hono<AppEnv>()
     await repo.updatePendingAreaClimb(c.env.DB, viewer.id, id, climbWrite(form));
     const updated = await repo.getAreaClimb(c.env.DB, viewer, id);
     return c.json({ climb: updated === null ? null : areaClimbOf(updated, viewer) });
+  })
+
+  // Suggested edits: a pending revision per user per active entity, never a
+  // write to the entity itself. A pending entity is edited in place instead.
+  .get("/v1/areas/:id/draft", async (c) => {
+    const viewer = await viewerOf(c);
+    const row = await repo.getArea(c.env.DB, viewer, c.req.param("id"));
+    if (row === null) return c.json({ error: "not found" }, 404);
+    const draft = await repo.getDraft(c.env.DB, viewer.id, "area", row.id);
+    return c.json({ draft: draft === null ? null : draftOf(draft) });
+  })
+
+  .put("/v1/areas/:id/draft", zValidator("json", areaDraftBody, invalidBody), async (c) => {
+    const { changeSummary, ...form } = c.req.valid("json");
+    const viewer = await viewerOf(c);
+    const row = await repo.getArea(c.env.DB, viewer, c.req.param("id"));
+    if (row === null) return c.json({ error: "not found" }, 404);
+    if (row.status !== "active" || isRegion(row)) {
+      return c.json({ error: "only an active area takes suggested edits" }, 409);
+    }
+    const next = areaDraftOf(row, form);
+    if (next === null) return c.json({ error: "invalid request body" }, 400);
+    const parent = await repo.getArea(c.env.DB, viewer, next.parentId);
+    if (parent === null || !isOpen(parent) || parent.path.startsWith(row.path)) {
+      return c.json({ error: "parent area not found" }, 400);
+    }
+    if (isRegion(parent) && latLonOf(next) === null) {
+      return c.json({ error: "an area directly under a region needs coordinates" }, 400);
+    }
+    const draft = await saveDraft(c, "area", row, areaFieldsOf(next), changeSummary);
+    if (draft === null) return c.json({ error: "no changes" }, 400);
+    return c.json({ draft: draftOf(draft) });
+  })
+
+  .delete("/v1/areas/:id/draft", async (c) => {
+    const viewer = await viewerOf(c);
+    const row = await repo.getArea(c.env.DB, viewer, c.req.param("id"));
+    if (row === null) return c.json({ error: "not found" }, 404);
+    const deleted = await repo.deleteDraft(c.env.DB, viewer.id, "area", row.id);
+    return deleted ? c.json({ ok: true }) : c.json({ error: "not found" }, 404);
+  })
+
+  .get("/v1/area-climbs/:id/draft", async (c) => {
+    const viewer = await viewerOf(c);
+    const row = await repo.getAreaClimb(c.env.DB, viewer, c.req.param("id"));
+    if (row === null) return c.json({ error: "not found" }, 404);
+    const draft = await repo.getDraft(c.env.DB, viewer.id, "climb", row.id);
+    return c.json({ draft: draft === null ? null : draftOf(draft) });
+  })
+
+  .put(
+    "/v1/area-climbs/:id/draft",
+    zValidator("json", areaClimbDraftBody, invalidBody),
+    async (c) => {
+      const { changeSummary, ...form } = c.req.valid("json");
+      const viewer = await viewerOf(c);
+      const row = await repo.getAreaClimb(c.env.DB, viewer, c.req.param("id"));
+      if (row === null) return c.json({ error: "not found" }, 404);
+      if (row.status !== "active") {
+        return c.json({ error: "only an active climb takes suggested edits" }, 409);
+      }
+      const next = areaClimbDraftOf(row, form);
+      if (next === null) return c.json({ error: "invalid request body" }, 400);
+      const area = await repo.getArea(c.env.DB, viewer, next.areaId);
+      if (area === null || !isOpen(area) || isRegion(area)) {
+        return c.json({ error: "area not found" }, 400);
+      }
+      const draft = await saveDraft(c, "climb", row, areaClimbFieldsOf(next), changeSummary);
+      if (draft === null) return c.json({ error: "no changes" }, 400);
+      return c.json({ draft: draftOf(draft) });
+    }
+  )
+
+  .delete("/v1/area-climbs/:id/draft", async (c) => {
+    const viewer = await viewerOf(c);
+    const row = await repo.getAreaClimb(c.env.DB, viewer, c.req.param("id"));
+    if (row === null) return c.json({ error: "not found" }, 404);
+    const deleted = await repo.deleteDraft(c.env.DB, viewer.id, "climb", row.id);
+    return deleted ? c.json({ ok: true }) : c.json({ error: "not found" }, 404);
   })
 
   .get("/v1/sessions/:fingerprint", async (c) => {

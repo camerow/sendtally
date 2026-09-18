@@ -14,6 +14,7 @@ import {
   lte,
   notInArray,
   or,
+  sql,
   type SQL,
 } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
@@ -22,6 +23,7 @@ import {
   areas,
   boardConnections,
   climbNotes,
+  contentRevisions,
   entrySessions,
   entryTags,
   gyms,
@@ -36,7 +38,7 @@ import {
   tags,
   users,
 } from "../db/schema";
-import type { Viewer } from "./areas";
+import type { ContentEntity, Viewer } from "./areas";
 import type { ClimbLink } from "./manual";
 import type { EntryWrite } from "./entries";
 import type { StoreEntitlement } from "./revenuecat";
@@ -1366,4 +1368,74 @@ export async function areaClimbsByIds(
     .from(areaClimbs)
     .where(and(inArray(areaClimbs.id, ids), visibleTo(areaClimbs, viewer)))
     .all();
+}
+
+export type RevisionRow = typeof contentRevisions.$inferSelect;
+
+const ownDraft = (userId: string, type: ContentEntity, entityId: string): SQL | undefined =>
+  and(
+    eq(contentRevisions.submitted_by, userId),
+    eq(contentRevisions.entity_type, type),
+    eq(contentRevisions.entity_id, entityId),
+    eq(contentRevisions.status, "pending")
+  );
+
+export async function getDraft(
+  db: D1Database,
+  userId: string,
+  type: ContentEntity,
+  entityId: string
+): Promise<RevisionRow | null> {
+  const row = await drizzle(db)
+    .select()
+    .from(contentRevisions)
+    .where(ownDraft(userId, type, entityId))
+    .get();
+  return row ?? null;
+}
+
+export type DraftWrite = Pick<
+  RevisionRow,
+  "submitted_by" | "entity_type" | "entity_id" | "proposed_json" | "base_json" | "change_summary"
+>;
+
+// One pending draft per user per entity, enforced by the partial unique index:
+// saving again replaces it in place.
+export async function saveDraft(db: D1Database, draft: DraftWrite): Promise<void> {
+  const now = new Date().toISOString();
+  await drizzle(db)
+    .insert(contentRevisions)
+    .values({
+      id: crypto.randomUUID(),
+      ...draft,
+      status: "pending",
+      created_at: now,
+      updated_at: now,
+    })
+    .onConflictDoUpdate({
+      target: [
+        contentRevisions.submitted_by,
+        contentRevisions.entity_type,
+        contentRevisions.entity_id,
+      ],
+      targetWhere: sql`${contentRevisions.status} = 'pending'`,
+      set: {
+        proposed_json: draft.proposed_json,
+        base_json: draft.base_json,
+        change_summary: draft.change_summary,
+        updated_at: now,
+      },
+    });
+}
+
+export async function deleteDraft(
+  db: D1Database,
+  userId: string,
+  type: ContentEntity,
+  entityId: string
+): Promise<boolean> {
+  const result = await drizzle(db)
+    .delete(contentRevisions)
+    .where(ownDraft(userId, type, entityId));
+  return result.meta.changes > 0;
 }
