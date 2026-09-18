@@ -55,11 +55,31 @@ export const queries = {
       queryFn: () => api.areaClimb(slug),
       gcTime: ROW_GC_TIME,
     }),
+  areaSearch: (api: SendtallyApi, q: string, near: { lat: number; lon: number } | null) =>
+    queryOptions({
+      queryKey: ["areaSearch", q, near],
+      queryFn: async () => (await api.searchAreas(q, near ?? undefined)).areas,
+      gcTime: ROW_GC_TIME,
+    }),
+  areaClimbSearch: (api: SendtallyApi, q: string, areaId: string | null) =>
+    queryOptions({
+      queryKey: ["areaClimbSearch", q, areaId],
+      queryFn: async () => (await api.searchAreaClimbs(q, areaId ?? undefined)).climbs,
+      gcTime: ROW_GC_TIME,
+    }),
   tags: (api: SendtallyApi) =>
     queryOptions({ queryKey: ["tags"], queryFn: async () => (await api.tags()).tags }),
 };
 
-const NOT_PERSISTED: readonly unknown[] = ["session", "entry", "entitlements", "area", "areaClimb"];
+const NOT_PERSISTED: readonly unknown[] = [
+  "session",
+  "entry",
+  "entitlements",
+  "area",
+  "areaClimb",
+  "areaSearch",
+  "areaClimbSearch",
+];
 
 /**
  * Lists are what a cold start opens on; single rows are neither needed then nor bounded in number,

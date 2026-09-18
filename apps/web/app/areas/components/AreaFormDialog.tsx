@@ -12,6 +12,7 @@ import {
 import { t } from "@sendtally/features/i18n";
 import { inputStyle } from "../styles";
 import { AreaDialog } from "./AreaDialog";
+import { AreaPicker } from "./AreaPicker";
 import { Candidates } from "./Candidates";
 import { Field } from "./Field";
 import { useDraftForm } from "../useDraftForm";
@@ -21,7 +22,17 @@ export type AreaFormDialogProps = {
   onClose: () => void;
   /** A suggested edit stays on the page, which says it is waiting for review. */
   onSuggested: () => void;
-} & ({ mode: "create"; parent: AreaSummary } | { mode: "suggest"; area: Area });
+} & (
+  | {
+      mode: "create";
+      /** Null when adding from the log form, where the dialog asks where the area is. */
+      parent: AreaSummary | null;
+      initial?: Partial<AreaFormValues>;
+      /** Stays on the caller's screen with the new area instead of opening its page. */
+      onCreated?: (area: Area) => void;
+    }
+  | { mode: "suggest"; area: Area }
+);
 
 const EMPTY: AreaFormValues = { name: "", description: "", lat: "", lon: "" };
 
@@ -36,7 +47,7 @@ export function AreaFormDialog(props: AreaFormDialogProps): React.ReactElement {
   const navigate = useNavigate();
   const suggest = props.mode === "suggest";
   const [values, setValues, loaded] = useDraftForm(
-    EMPTY,
+    { ...EMPTY, ...(props.mode === "create" ? props.initial : {}) },
     props.mode === "suggest"
       ? async () => areaFormOf(props.area, (await api.areaDraft(props.area.id)).draft)
       : null
@@ -45,8 +56,16 @@ export function AreaFormDialog(props: AreaFormDialogProps): React.ReactElement {
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [locating, setLocating] = React.useState(false);
+  const [chosenParent, setChosenParent] = React.useState<AreaSummary | null>(null);
+  const parent = props.mode === "create" ? (props.parent ?? chosenParent) : null;
+  const askParent = props.mode === "create" && props.parent === null;
   const needsCoordinates =
-    props.mode === "create" ? props.parent.region_code !== null : props.area.lat !== null;
+    props.mode === "create" ? parent?.region_code !== null : props.area.lat !== null;
+  const typedAt = areaFieldsOf(values);
+  const near =
+    typeof typedAt?.lat === "number" && typeof typedAt.lon === "number"
+      ? { lat: typedAt.lat, lon: typedAt.lon }
+      : null;
   const check = useDuplicateCheck<AreaSummary, Area | null>(
     `${values.name.trim().toLowerCase()}|${values.lat}|${values.lon}`
   );
@@ -76,6 +95,7 @@ export function AreaFormDialog(props: AreaFormDialogProps): React.ReactElement {
     const fields = areaFieldsOf(values);
     if (fields === null) return setError(t("areas.coordinatesInvalid"));
     if (fields.name === "") return setError(t("areas.nameRequired"));
+    if (props.mode === "create" && parent === null) return setError(t("areas.pickWhere"));
     if (needsCoordinates && fields.lat === null) return setError(t("areas.coordinatesRequired"));
     setBusy(true);
     setError(null);
@@ -88,17 +108,18 @@ export function AreaFormDialog(props: AreaFormDialogProps): React.ReactElement {
         onSuggested();
         return;
       }
+      if (parent === null) return;
       const at =
         fields.lat === null || fields.lon === null ? {} : { lat: fields.lat, lon: fields.lon };
       const created = await check.save({
         similar: async () =>
-          (await api.similarAreas({ parentId: props.parent.id, name: fields.name, ...at }))
-            .candidates,
+          (await api.similarAreas({ parentId: parent.id, name: fields.name, ...at })).candidates,
         create: async (confirmedNew) =>
-          (await api.createArea({ ...fields, parentId: props.parent.id, confirmedNew })).area,
+          (await api.createArea({ ...fields, parentId: parent.id, confirmedNew })).area,
       });
-      if (created !== null) void navigate(`/app/areas/${created.slug}`);
-      else setBusy(false);
+      if (created === null) setBusy(false);
+      else if (props.onCreated !== undefined) props.onCreated(created);
+      else void navigate(`/app/areas/${created.slug}`);
     } catch (e: unknown) {
       setBusy(false);
       setError(failure(e));
@@ -107,7 +128,9 @@ export function AreaFormDialog(props: AreaFormDialogProps): React.ReactElement {
 
   const title =
     props.mode === "create"
-      ? t("areas.addAreaIn", { name: props.parent.name })
+      ? props.parent === null
+        ? t("areas.addACrag")
+        : t("areas.addAreaIn", { name: props.parent.name })
       : t("areas.suggestEditsTo", { name: props.area.name });
 
   return (
@@ -138,6 +161,19 @@ export function AreaFormDialog(props: AreaFormDialogProps): React.ReactElement {
           style={inputStyle}
         />
       </Field>
+      {askParent && (
+        <Field id="area-parent" label={t("areas.whereIsIt")}>
+          <AreaPicker
+            api={api}
+            id="area-parent"
+            value={chosenParent}
+            near={near}
+            placeholder={t("areas.searchRegions")}
+            inputStyle={inputStyle}
+            onPick={setChosenParent}
+          />
+        </Field>
+      )}
       {check.confirming && (
         <Candidates
           candidates={check.candidates.map((a) => ({

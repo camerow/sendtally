@@ -46,6 +46,8 @@ export type ClimbDraft = {
   circuit?: CircuitRef;
   wall?: string;
   endurance?: Endurance;
+  /** The Areas climb this row is linked to, set by picking or adding one and cleared by retyping. */
+  climbId?: string;
 };
 
 /**
@@ -78,6 +80,8 @@ export type LogSessionDraft = {
   endTime: string;
   location: "indoor" | "outdoor";
   gymId?: string;
+  /** The crag an outdoor session was at, from Areas. */
+  area?: { id: string; name: string };
   tags: string[];
   notes: string;
   rpe: number | null;
