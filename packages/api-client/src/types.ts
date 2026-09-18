@@ -107,6 +107,22 @@ export type AreaSimilarInput = InferRequestType<Areas["similar"]["$post"]>["json
 
 export type ContentReportInput = InferRequestType<Areas["reports"]["$post"]>["json"];
 
+type Moderation = Client["v1"]["moderation"];
+
+export type ModerationQueue = Ok<Moderation["queue"]["$get"]>;
+
+export type CreationItem = ModerationQueue["creations"]["items"][number];
+
+export type RevisionItem = ModerationQueue["revisions"]["items"][number];
+
+export type RevisionConflict = RevisionItem["conflicts"][number];
+
+export type DuplicateItem = ModerationQueue["duplicates"]["items"][number];
+
+export type ReportItem = ModerationQueue["reports"]["items"][number];
+
+export type Role = ConnectionStatus["role"];
+
 export class ApiError extends Error {
   constructor(
     public readonly status: number,

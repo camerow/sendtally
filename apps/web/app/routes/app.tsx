@@ -1,12 +1,22 @@
 import { useClerk, useUser } from "@clerk/react-router";
 import React from "react";
 import type { LinksFunction, LoaderFunctionArgs } from "react-router";
-import { NavLink, Outlet, useLocation, useNavigate, useRouteError } from "react-router";
+import {
+  NavLink,
+  Outlet,
+  useLocation,
+  useNavigate,
+  useRouteError,
+  useRouteLoaderData,
+} from "react-router";
 import { Logo } from "@sendtally/design";
 import { t, type MessageKey } from "@sendtally/features/i18n";
+import { queries, useQuery } from "@sendtally/features/query";
 import { ErrorPage } from "../components/ErrorPage";
 import { Icon, type IconName } from "../components/Icon";
 import { requireApi } from "../lib/api.server";
+import { cloudflareContext } from "../lib/cloudflare-context";
+import { useClientApi } from "../lib/useClientApi";
 import appShellStyles from "../styles/app-shell.css?url";
 import { pageMeta } from "../lib/seo";
 
@@ -16,9 +26,9 @@ export function meta(): Array<Record<string, string>> {
 
 export const links: LinksFunction = () => [{ rel: "stylesheet", href: appShellStyles }];
 
-export async function loader(args: LoaderFunctionArgs): Promise<null> {
+export async function loader(args: LoaderFunctionArgs): Promise<{ apiUrl: string }> {
   await requireApi(args);
-  return null;
+  return { apiUrl: args.context.get(cloudflareContext).env.API_URL };
 }
 
 type NavItem = { label: MessageKey; to: string; icon: IconName };
@@ -30,6 +40,21 @@ const NAV_ITEMS: NavItem[] = [
   { label: "common.settings", to: "/app/settings", icon: "settings" },
 ];
 
+const MODERATION_ITEM: NavItem = {
+  label: "moderation.title",
+  to: "/app/moderation",
+  icon: "moderation",
+};
+
+/** Moderators see one more entry. Convenience only: the API is what refuses everyone else. */
+function useNavItems(): NavItem[] {
+  const apiUrl = useRouteLoaderData<typeof loader>("routes/app")?.apiUrl ?? "";
+  const api = useClientApi(apiUrl);
+  const { state } = useQuery({ ...queries.status(api), enabled: apiUrl !== "" });
+  const moderator = state.status === "ready" && state.data.role !== "user";
+  return moderator ? [...NAV_ITEMS, MODERATION_ITEM] : NAV_ITEMS;
+}
+
 /** Screens reached by a back link, whose own action bar owns the bottom edge. */
 const FOCUSED_ROUTES = ["/app/sessions/new"];
 
@@ -40,6 +65,7 @@ function Shell({ children }: { children: React.ReactNode }): React.ReactElement 
   const { pathname } = useLocation();
   const email = user?.primaryEmailAddress?.emailAddress ?? "";
   const focused = FOCUSED_ROUTES.includes(pathname);
+  const navItems = useNavItems();
 
   const signOut = (
     <button onClick={() => void clerk.signOut(() => navigate("/"))} className="app-sign-out">
@@ -53,7 +79,7 @@ function Shell({ children }: { children: React.ReactNode }): React.ReactElement 
         <a href="/" className="app-logo-link">
           <Logo tone="on-light" size={24} />
         </a>
-        {NAV_ITEMS.map(({ label, to, icon }) => (
+        {navItems.map(({ label, to, icon }) => (
           <NavLink
             key={label}
             to={to}
@@ -104,7 +130,7 @@ function Shell({ children }: { children: React.ReactNode }): React.ReactElement 
       <div className={focused ? "app-content app-content--focused" : "app-content"}>{children}</div>
       {!focused && (
         <nav className="app-tabbar" aria-label={t("common.sectionsAria")}>
-          {NAV_ITEMS.map(({ label, to, icon }) => (
+          {navItems.map(({ label, to, icon }) => (
             <NavLink key={label} to={to} end className="app-tab">
               <Icon name={icon} />
               {t(label)}
