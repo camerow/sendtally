@@ -270,3 +270,101 @@ describe("session links", () => {
     expect((await call("user_a", "/v1/sessions", { body })).status).toBe(400);
   });
 });
+
+describe("suggested edits", () => {
+  const activate = async (table: "areas" | "area_climbs", id: string): Promise<void> => {
+    await env.DB.prepare(`UPDATE ${table} SET status = 'active' WHERE id = ?`).bind(id).run();
+  };
+
+  const draftCount = async (entityId: string): Promise<number> =>
+    (
+      await env.DB.prepare("SELECT count(*) AS n FROM content_revisions WHERE entity_id = ?")
+        .bind(entityId)
+        .first<{ n: number }>()
+    )?.n ?? 0;
+
+  type Draft = { proposed: Record<string, unknown>; base: Record<string, unknown> };
+
+  const put = (user: string, path: string, body: Record<string, unknown>) =>
+    call(user, `${path}/draft`, { method: "PUT", body });
+
+  const liveClimb = async (): Promise<{ area: Row; climb: Row }> => {
+    const area = await createArea("user_a", buttermilks);
+    const climb = await createClimb("user_a", mandala(area.id));
+    await activate("areas", area.id);
+    await activate("area_climbs", climb.id);
+    return { area, climb };
+  };
+
+  it("keeps one draft per user per entity, holding only what changed", async () => {
+    const { climb } = await liveClimb();
+    const path = `/v1/area-climbs/${climb.id}`;
+    const first = await put("user_b", path, { grade: "V11", name: "The Mandala" });
+    expect(first.status).toBe(200);
+    expect((first.body["draft"] as Draft).proposed).toEqual({ grade_value: "V11" });
+
+    const second = await put("user_b", path, { grade: "V13", changeSummary: "guidebook" });
+    expect((second.body["draft"] as Draft).proposed).toEqual({ grade_value: "V13" });
+    expect(await draftCount(climb.id)).toBe(1);
+
+    await put("user_c", path, { firstAscent: "Chris Sharma, 2000" });
+    expect(await draftCount(climb.id)).toBe(2);
+
+    const read = await call("user_b", `${path}/draft`);
+    expect((read.body["draft"] as Draft).proposed).toEqual({ grade_value: "V13" });
+    expect((await call("user_a", `${path}/draft`)).body["draft"]).toBeNull();
+    const entity = await call("user_a", "/v1/area-climbs/the-mandala");
+    expect(entity.body["climb"]).toMatchObject({ grade_value: "V12", first_ascent: null });
+
+    expect((await call("user_b", `${path}/draft`, { method: "DELETE" })).status).toBe(200);
+    expect((await call("user_b", `${path}/draft`)).body["draft"]).toBeNull();
+    expect((await call("user_b", `${path}/draft`, { method: "DELETE" })).status).toBe(404);
+    expect(await draftCount(climb.id)).toBe(1);
+  });
+
+  it("answers 400 for a draft that changes nothing or breaks the creation rules", async () => {
+    const { area, climb } = await liveClimb();
+    const same = await put("user_b", `/v1/areas/${area.id}`, { name: "Buttermilks" });
+    expect(same).toEqual({ status: 400, body: { error: "no changes" } });
+    const path = `/v1/area-climbs/${climb.id}`;
+    expect((await put("user_b", path, { type: "sport" })).status).toBe(400);
+    expect((await put("user_b", path, { areaId: "region-us-ca" })).status).toBe(400);
+    expect(await draftCount(climb.id)).toBe(0);
+  });
+
+  it("refuses drafts on pending entities, 404 for anyone but the creator", async () => {
+    const area = await createArea("user_a", buttermilks);
+    expect((await put("user_b", `/v1/areas/${area.id}`, { name: "Milks" })).status).toBe(404);
+    expect((await call("user_b", `/v1/areas/${area.id}/draft`)).status).toBe(404);
+    expect((await put("user_a", `/v1/areas/${area.id}`, { name: "Milks" })).status).toBe(409);
+  });
+
+  it("proposes a new parent, but never one inside the area itself", async () => {
+    const { area } = await liveClimb();
+    const sector = await createArea("user_a", { parentId: area.id, name: "Get Carter Boulders" });
+    await activate("areas", sector.id);
+    const bishop = await createArea("user_a", { ...buttermilks, name: "Bishop", lat: 37.5 });
+    await activate("areas", bishop.id);
+
+    const into = (id: string) => put("user_b", `/v1/areas/${area.id}`, { parentId: id });
+    expect((await into(sector.id)).status).toBe(400);
+    expect((await into(area.id)).status).toBe(400);
+    const moved = await into(bishop.id);
+    expect(moved.status).toBe(200);
+    expect((moved.body["draft"] as Draft).proposed).toEqual({ parent_id: bishop.id });
+  });
+
+  it("refreshes the base to the entity as it is now on every save", async () => {
+    const { area } = await liveClimb();
+    const path = `/v1/areas/${area.id}`;
+    const first = await put("user_b", path, { description: "Granite boulders" });
+    expect((first.body["draft"] as Draft).base).toMatchObject({ name: "Buttermilks", version: 1 });
+
+    await env.DB.prepare("UPDATE areas SET name = 'The Milks', version = 2 WHERE id = ?")
+      .bind(area.id)
+      .run();
+    const second = await put("user_b", path, { description: "Granite boulders" });
+    expect((second.body["draft"] as Draft).base).toMatchObject({ name: "The Milks", version: 2 });
+    expect(await draftCount(area.id)).toBe(1);
+  });
+});
