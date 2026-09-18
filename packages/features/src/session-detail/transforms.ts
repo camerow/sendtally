@@ -103,6 +103,7 @@ export function climbVMs(
       result,
       resultLabel: resultLabelOf(c, result),
       note: c.note,
+      climbSlug: c.link?.slug ?? null,
       ...(c.endurance === undefined ? {} : { endurance: c.endurance }),
     };
   });
@@ -284,6 +285,7 @@ export function sessionDetailVM(
     startDay: session.start_at.slice(0, 10),
     meta: `${weekday} ${dateLabel} · ${time} · ${durationLabel(session.start_at, session.end_at)}${location} · ${t("common.effort")} ${session.rpe}/10`,
     editable: session.source === "manual",
+    area: session.area,
     stats,
     bars,
     filterCounts,
