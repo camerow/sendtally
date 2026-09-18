@@ -94,4 +94,7 @@ export const areas = {
   "areas.nearby": "À proximité",
   "areas.inAreas": "Secteurs",
   "areas.linkedToAreas": "Liée à cette ligne dans les secteurs",
+  "areas.isItOneOfTheseTapHint":
+    "Touchez-en un si c'est le même. Sinon, enregistrez à nouveau pour ajouter le vôtre.",
+  "areas.closeAddSheet": "Fermer sans ajouter",
 } as const;

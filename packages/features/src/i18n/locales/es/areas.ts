@@ -93,4 +93,7 @@ export const areas = {
   "areas.nearby": "Cerca",
   "areas.inAreas": "Zonas",
   "areas.linkedToAreas": "Vinculada a esta escalada en Zonas",
+  "areas.isItOneOfTheseTapHint":
+    "Toca uno si es el mismo. Si no, guarda de nuevo para añadir el tuyo.",
+  "areas.closeAddSheet": "Cerrar sin añadir",
 } as const;
