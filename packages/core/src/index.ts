@@ -52,3 +52,4 @@ export {
   type EffortConfig,
   type EffortResult,
 } from "./effort";
+export { DUPLICATE_THRESHOLD, isLikelyDuplicate, nameSimilarity } from "./similarity";
