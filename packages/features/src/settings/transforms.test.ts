@@ -5,6 +5,7 @@ import { DEFAULT_GRADE_SCALES, deleteConfirmationMatches, settingsVM } from "./t
 function status(overrides: Partial<ConnectionStatus> = {}): ConnectionStatus {
   return {
     gradeScales: DEFAULT_GRADE_SCALES,
+    role: "user",
     strava: null,
     ...overrides,
   };

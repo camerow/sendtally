@@ -34,6 +34,7 @@ export default [
     route("import", "routes/app.import.tsx"),
     route("export.csv", "routes/app.export-csv.ts"),
     route("settings/gyms/:id", "routes/app.settings.gyms.$id.tsx"),
+    route("moderation", "routes/app.moderation.tsx"),
     route("account", "routes/app.account.tsx"),
     route("membership", "routes/app.membership.tsx"),
   ]),

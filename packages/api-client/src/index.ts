@@ -27,6 +27,7 @@ import type {
   ImportBody,
   ImportResult,
   LogSessionInput,
+  ModerationQueue,
   PostOutcome,
   ProjectInput,
   SessionDetail,
@@ -272,6 +273,67 @@ export class SendtallyApi {
 
   reportAreaIssue(input: ContentReportInput): Promise<{ report: { id: string } }> {
     return body(this.client.v1.areas.reports.$post({ json: input }));
+  }
+
+  moderationQueue(): Promise<ModerationQueue> {
+    return body(this.client.v1.moderation.queue.$get());
+  }
+
+  approveCreation(type: "area" | "climb", id: string, version: number): Promise<unknown> {
+    const json = { version };
+    return type === "area"
+      ? body(this.client.v1.moderation.areas[":id"].approve.$post({ param: { id }, json }))
+      : body(this.client.v1.moderation.climbs[":id"].approve.$post({ param: { id }, json }));
+  }
+
+  rejectCreation(type: "area" | "climb", id: string, note: string): Promise<unknown> {
+    const json = { note };
+    return type === "area"
+      ? body(this.client.v1.moderation.areas[":id"].reject.$post({ param: { id }, json }))
+      : body(this.client.v1.moderation.climbs[":id"].reject.$post({ param: { id }, json }));
+  }
+
+  mergeClimbInto(id: string, keepId: string): Promise<unknown> {
+    return body(
+      this.client.v1.moderation.climbs[":id"]["merge-into"][":keepId"].$post({
+        param: { id, keepId },
+      })
+    );
+  }
+
+  approveRevision(
+    id: string,
+    version: number,
+    resolutions: Record<string, unknown>
+  ): Promise<unknown> {
+    return body(
+      this.client.v1.moderation.revisions[":id"].approve.$post({
+        param: { id },
+        json: { version, resolutions },
+      })
+    );
+  }
+
+  rejectRevision(id: string, note: string): Promise<unknown> {
+    return body(
+      this.client.v1.moderation.revisions[":id"].reject.$post({ param: { id }, json: { note } })
+    );
+  }
+
+  mergeDuplicate(id: string, swap: boolean): Promise<unknown> {
+    return body(
+      this.client.v1.moderation.duplicates[":id"].merge.$post({ param: { id }, json: { swap } })
+    );
+  }
+
+  dismissDuplicate(id: string, note: string): Promise<unknown> {
+    return body(
+      this.client.v1.moderation.duplicates[":id"].dismiss.$post({ param: { id }, json: { note } })
+    );
+  }
+
+  resolveReport(id: string): Promise<unknown> {
+    return body(this.client.v1.moderation.reports[":id"].resolve.$post({ param: { id } }));
   }
 
   postSessionToStrava(

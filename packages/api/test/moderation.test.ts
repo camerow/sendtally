@@ -104,6 +104,12 @@ describe("moderation authorization", () => {
     expect((await call("mod", "/v1/moderation/queue")).status).toBe(200);
     expect((await call("boss", "/v1/moderation/queue")).status).toBe(200);
   });
+
+  it("tells the client its role, so it can show the moderation entry", async () => {
+    await setRole("mod-status", "moderator");
+    expect((await call("mod-status", "/v1/status")).body["role"]).toBe("moderator");
+    expect((await call("nobody-yet", "/v1/status")).body["role"]).toBe("user");
+  });
 });
 
 describe("moderating creations", () => {
