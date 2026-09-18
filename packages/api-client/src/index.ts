@@ -2,6 +2,19 @@ import { hc } from "hono/client";
 import type { AppType } from "@sendtally/api/app";
 import { ApiError } from "./types";
 import type {
+  Area,
+  AreaClimb,
+  AreaClimbDraftInput,
+  AreaClimbInput,
+  AreaClimbPage,
+  AreaDraft,
+  AreaDraftInput,
+  AreaInput,
+  AreaPage,
+  AreaRedirect,
+  AreaSimilarInput,
+  AreaSummary,
+  ContentReportInput,
   ClimbSummary,
   EntryDetail,
   EntryInput,
@@ -190,6 +203,63 @@ export class SendtallyApi {
 
   deleteGym(id: string): Promise<{ deleted: boolean }> {
     return body(this.client.v1.gyms[":id"].$delete({ param: { id } }));
+  }
+
+  area(slug: string): Promise<AreaPage | AreaRedirect> {
+    return body(this.client.v1.areas[":slug"].$get({ param: { slug } }));
+  }
+
+  similarAreas(input: AreaSimilarInput): Promise<{ candidates: AreaSummary[] }> {
+    return body(this.client.v1.areas.similar.$post({ json: input }));
+  }
+
+  createArea(input: AreaInput): Promise<{ area: Area | null }> {
+    return body(this.client.v1.areas.$post({ json: input }));
+  }
+
+  areaDraft(id: string): Promise<{ draft: AreaDraft | null }> {
+    return body(this.client.v1.areas[":id"].draft.$get({ param: { id } }));
+  }
+
+  saveAreaDraft(id: string, input: AreaDraftInput): Promise<{ draft: AreaDraft }> {
+    return body(this.client.v1.areas[":id"].draft.$put({ param: { id }, json: input }));
+  }
+
+  areaClimb(slug: string): Promise<AreaClimbPage | AreaRedirect> {
+    return body(this.client.v1["area-climbs"][":slug"].$get({ param: { slug } }));
+  }
+
+  searchAreaClimbs(q: string): Promise<{ climbs: AreaClimb[] }> {
+    return body(this.client.v1["area-climbs"].$get({ query: { q } }));
+  }
+
+  similarAreaClimbs(areaId: string, name: string): Promise<{ candidates: AreaClimb[] }> {
+    return body(this.client.v1["area-climbs"].similar.$post({ json: { areaId, name } }));
+  }
+
+  createAreaClimb(input: AreaClimbInput): Promise<{ climb: AreaClimb | null }> {
+    return body(this.client.v1["area-climbs"].$post({ json: input }));
+  }
+
+  areaClimbDraft(id: string): Promise<{ draft: AreaDraft | null }> {
+    return body(this.client.v1["area-climbs"][":id"].draft.$get({ param: { id } }));
+  }
+
+  saveAreaClimbDraft(id: string, input: AreaClimbDraftInput): Promise<{ draft: AreaDraft }> {
+    return body(this.client.v1["area-climbs"][":id"].draft.$put({ param: { id }, json: input }));
+  }
+
+  reportDuplicateClimb(id: string, keepClimbId: string): Promise<{ report: { id: string } }> {
+    return body(
+      this.client.v1["area-climbs"][":id"]["duplicate-reports"].$post({
+        param: { id },
+        json: { keepClimbId },
+      })
+    );
+  }
+
+  reportAreaIssue(input: ContentReportInput): Promise<{ report: { id: string } }> {
+    return body(this.client.v1.areas.reports.$post({ json: input }));
   }
 
   postSessionToStrava(

@@ -260,6 +260,32 @@ describe("session links", () => {
     expect(await linkCount(fingerprint)).toBe(0);
   });
 
+  it("lists only the reader's own sessions on a climb, newest first", async () => {
+    const area = await createArea("user_a", buttermilks);
+    const climb = await createClimb("user_a", mandala(area.id));
+    await env.DB.prepare("UPDATE area_climbs SET status = 'active' WHERE id = ?")
+      .bind(climb.id)
+      .run();
+    const attempt = session(area.id, climb.id);
+    (attempt["climbs"] as Array<Record<string, unknown>>)[0]!["kind"] = "attempt";
+    await call("user_a", "/v1/sessions", { body: attempt });
+    await call("user_a", "/v1/sessions", {
+      body: { ...session(area.id, climb.id), date: "2026-09-14" },
+    });
+
+    const own = await call("user_a", "/v1/area-climbs/the-mandala");
+    expect(
+      (own.body["sessions"] as Array<{ start_at: string; sent: boolean }>).map((s) => [
+        s.start_at.slice(0, 10),
+        s.sent,
+      ])
+    ).toEqual([
+      ["2026-09-14", true],
+      ["2026-09-12", false],
+    ]);
+    expect((await call("user_b", "/v1/area-climbs/the-mandala")).body["sessions"]).toEqual([]);
+  });
+
   it("rejects one climb name pointing at two climbs", async () => {
     const area = await createArea("user_a", buttermilks);
     const a = await createClimb("user_a", mandala(area.id));
