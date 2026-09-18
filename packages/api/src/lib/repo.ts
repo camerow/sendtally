@@ -27,6 +27,7 @@ import {
   gyms,
   journalEntries,
   projects,
+  sessionClimbLinks,
   sessions,
   sessionTags,
   storeEntitlements,
@@ -36,6 +37,7 @@ import {
   users,
 } from "../db/schema";
 import type { Viewer } from "./areas";
+import type { ClimbLink } from "./manual";
 import type { EntryWrite } from "./entries";
 import type { StoreEntitlement } from "./revenuecat";
 import type { NormalizedTag } from "./tags";
@@ -216,6 +218,7 @@ export type ManualSessionInput = {
   fingerprint: string;
   location: "indoor" | "outdoor";
   gym_id: string | null;
+  area_id: string | null;
   name: string | null;
   start_at: string;
   end_at: string;
@@ -230,23 +233,40 @@ export type ManualSessionInput = {
   climbs_json: string;
 };
 
+const insertLinks = (d: Db, userId: string, fingerprint: string, links: ClimbLink[]) =>
+  d.insert(sessionClimbLinks).values(links.map((l) => ({ user_id: userId, fingerprint, ...l })));
+
+const clearLinks = (d: Db, userId: string, fingerprint: string) =>
+  d
+    .delete(sessionClimbLinks)
+    .where(
+      and(eq(sessionClimbLinks.user_id, userId), eq(sessionClimbLinks.fingerprint, fingerprint))
+    );
+
 export async function insertManualSession(
   db: D1Database,
   userId: string,
-  s: ManualSessionInput
+  s: ManualSessionInput,
+  links: ClimbLink[] = []
 ): Promise<void> {
-  await drizzle(db)
+  const d = drizzle(db);
+  const insert = d
     .insert(sessions)
     .values({ user_id: userId, source: "manual", board: null, ...s });
+  if (links.length === 0) await insert;
+  else await d.batch([insert, insertLinks(d, userId, s.fingerprint, links)]);
 }
 
+// The links are replaced whole, like the session's tags and notes.
 export async function updateManualSession(
   db: D1Database,
   userId: string,
-  s: ManualSessionInput
-): Promise<boolean> {
+  s: ManualSessionInput,
+  links: ClimbLink[]
+): Promise<void> {
+  const d = drizzle(db);
   const { fingerprint, ...rest } = s;
-  const result = await drizzle(db)
+  const update = d
     .update(sessions)
     .set(rest)
     .where(
@@ -256,7 +276,64 @@ export async function updateManualSession(
         eq(sessions.source, "manual")
       )
     );
-  return result.meta.changes > 0;
+  const clear = clearLinks(d, userId, fingerprint);
+  await (links.length === 0
+    ? d.batch([update, clear])
+    : d.batch([update, clear, insertLinks(d, userId, fingerprint, links)]));
+}
+
+export type SessionLinks = {
+  area: { id: string; name: string; slug: string } | null;
+  climbs: Map<string, { id: string; name: string; slug: string }>;
+};
+
+// Only what the viewer can still see and is still live comes back: a merge
+// repoints links at the survivor, and a rejected climb drops out.
+export async function getSessionLinks(
+  db: D1Database,
+  viewer: Viewer,
+  fingerprint: string,
+  areaId: string | null
+): Promise<SessionLinks> {
+  const d = drizzle(db);
+  const open = inArray(areaClimbs.status, ["active", "pending"]);
+  const [area, climbs] = await Promise.all([
+    areaId === null
+      ? undefined
+      : d
+          .select({ id: areas.id, name: areas.name, slug: areas.slug })
+          .from(areas)
+          .where(
+            and(
+              eq(areas.id, areaId),
+              inArray(areas.status, ["active", "pending"]),
+              visibleTo(areas, viewer)
+            )
+          )
+          .get(),
+    d
+      .select({
+        climb_slug: sessionClimbLinks.climb_slug,
+        id: areaClimbs.id,
+        name: areaClimbs.name,
+        slug: areaClimbs.slug,
+      })
+      .from(sessionClimbLinks)
+      .innerJoin(areaClimbs, eq(areaClimbs.id, sessionClimbLinks.climb_id))
+      .where(
+        and(
+          eq(sessionClimbLinks.user_id, viewer.id),
+          eq(sessionClimbLinks.fingerprint, fingerprint),
+          open,
+          visibleTo(areaClimbs, viewer)
+        )
+      )
+      .all(),
+  ]);
+  return {
+    area: area ?? null,
+    climbs: new Map(climbs.map(({ climb_slug, ...climb }) => [climb_slug, climb])),
+  };
 }
 
 // Any session the user owns can be deleted, board-sourced history included.
@@ -280,6 +357,7 @@ export async function deleteSession(
     d
       .delete(climbNotes)
       .where(and(eq(climbNotes.user_id, userId), eq(climbNotes.fingerprint, fingerprint))),
+    clearLinks(d, userId, fingerprint),
   ]);
   await pruneUnusedTags(d, userId);
   return true;
@@ -993,6 +1071,7 @@ export async function deleteUserData(db: D1Database, userId: string): Promise<vo
   await d.batch([
     d.delete(sessionTags).where(eq(sessionTags.user_id, userId)),
     d.delete(climbNotes).where(eq(climbNotes.user_id, userId)),
+    d.delete(sessionClimbLinks).where(eq(sessionClimbLinks.user_id, userId)),
     d.delete(entryTags).where(eq(entryTags.user_id, userId)),
     d.delete(entrySessions).where(eq(entrySessions.user_id, userId)),
     d.delete(journalEntries).where(eq(journalEntries.user_id, userId)),
@@ -1274,4 +1353,17 @@ export async function updatePendingAreaClimb(
       )
     );
   return result.meta.changes > 0;
+}
+
+export async function areaClimbsByIds(
+  db: D1Database,
+  viewer: Viewer,
+  ids: string[]
+): Promise<AreaClimbRow[]> {
+  if (ids.length === 0) return [];
+  return drizzle(db)
+    .select()
+    .from(areaClimbs)
+    .where(and(inArray(areaClimbs.id, ids), visibleTo(areaClimbs, viewer)))
+    .all();
 }

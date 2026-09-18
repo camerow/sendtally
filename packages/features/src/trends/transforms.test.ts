@@ -43,6 +43,7 @@ function session(
       tries: 1,
       angle: 40,
       note: null,
+      link: null,
       ...c,
     })),
   };
