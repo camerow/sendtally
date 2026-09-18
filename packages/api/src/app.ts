@@ -33,10 +33,12 @@ import {
   contentReportBody,
   climbWrite,
   distanceKm,
+  duplicateReportBody,
   duplicatesOf,
   initialStatus,
   isOpen,
   isRegion,
+  mergeBody,
   NEAR_KM,
   approvalOf,
   rejectBody,
@@ -441,6 +443,43 @@ const reportsQueue = async (db: D1Database, viewer: Viewer, limit: number) => {
       };
     }),
   };
+};
+
+const duplicatesQueue = async (db: D1Database, viewer: Viewer, limit: number) => {
+  const page = await repo.openDuplicateReports(db, limit);
+  const ids = page.rows.flatMap((r) => [r.keep_climb_id, r.duplicate_climb_id]);
+  const [rows, links] = await Promise.all([
+    repo.areaClimbsByIds(db, viewer, ids),
+    repo.linkCounts(db, ids),
+  ]);
+  const climbs = new Map(rows.map((row) => [row.id, row]));
+  const side = (id: string) => {
+    const row = climbs.get(id);
+    return row === undefined ? null : { ...areaClimbOf(row, viewer), links: links.get(id) ?? 0 };
+  };
+  return {
+    count: page.count,
+    items: page.rows.map((row) => ({
+      id: row.id,
+      keep: side(row.keep_climb_id),
+      duplicate: side(row.duplicate_climb_id),
+      note: row.note,
+      created_at: row.created_at,
+    })),
+  };
+};
+
+const mergeClimbs = async (
+  c: Context<AppEnv>,
+  m: { duplicateId: string; keepId: string },
+  source: "report" | "direct"
+) => {
+  const merged = await repo.mergeAreaClimb(c.env.DB, { ...m, reviewerId: c.get("userId") });
+  if (!merged) return c.json({ error: "one of the climbs changed since you loaded it" }, 409);
+  await captureEvent(c, "moderation_duplicate_merged", { source });
+  const viewer = await viewerOf(c);
+  const survivor = await repo.getAreaClimb(c.env.DB, viewer, m.keepId);
+  return c.json({ climb: survivor === null ? null : areaClimbOf(survivor, viewer) });
 };
 
 const areaSearchQuery = z.object({
@@ -1124,6 +1163,34 @@ const app = new Hono<AppEnv>()
     return deleted ? c.json({ ok: true }) : c.json({ error: "not found" }, 404);
   })
 
+  .post(
+    "/v1/area-climbs/:id/duplicate-reports",
+    zValidator("json", duplicateReportBody, invalidBody),
+    async (c) => {
+      const form = c.req.valid("json");
+      const viewer = await viewerOf(c);
+      const [duplicate, keep] = await Promise.all([
+        repo.getAreaClimb(c.env.DB, viewer, c.req.param("id")),
+        repo.getAreaClimb(c.env.DB, viewer, form.keepClimbId),
+      ]);
+      if (duplicate === null || keep === null || !isOpen(duplicate) || !isOpen(keep)) {
+        return c.json({ error: "not found" }, 404);
+      }
+      if (duplicate.id === keep.id)
+        return c.json({ error: "a climb cannot duplicate itself" }, 400);
+      await repo.ensureUser(c.env.DB, viewer.id);
+      const id = await repo.insertDuplicateReport(c.env.DB, {
+        keep_climb_id: keep.id,
+        duplicate_climb_id: duplicate.id,
+        reporter_id: viewer.id,
+        note: form.note || null,
+      });
+      if (id === null) return c.json({ error: "already reported" }, 409);
+      await captureEvent(c, "area_duplicate_reported");
+      return c.json({ report: { id } }, 201);
+    }
+  )
+
   .post("/v1/areas/reports", zValidator("json", contentReportBody, invalidBody), async (c) => {
     const form = c.req.valid("json");
     const viewer = await viewerOf(c);
@@ -1148,12 +1215,13 @@ const app = new Hono<AppEnv>()
 
   .get("/v1/moderation/queue", async (c) => {
     const viewer = await viewerOf(c);
-    const [creations, revisions, reports] = await Promise.all([
+    const [creations, revisions, duplicates, reports] = await Promise.all([
       creationsQueue(c.env.DB, viewer, QUEUE_PAGE),
       revisionsQueue(c.env.DB, viewer, QUEUE_PAGE),
+      duplicatesQueue(c.env.DB, viewer, QUEUE_PAGE),
       reportsQueue(c.env.DB, viewer, QUEUE_PAGE),
     ]);
-    return c.json({ creations, revisions, reports });
+    return c.json({ creations, revisions, duplicates, reports });
   })
 
   .get("/v1/moderation/creations", async (c) =>
@@ -1342,6 +1410,56 @@ const app = new Hono<AppEnv>()
       return c.json({ ok: true });
     }
   )
+
+  .get("/v1/moderation/duplicates", async (c) =>
+    c.json(await duplicatesQueue(c.env.DB, await viewerOf(c), MODERATION_LIST_LIMIT))
+  )
+
+  .post(
+    "/v1/moderation/duplicates/:id/merge",
+    zValidator("json", mergeBody, invalidBody),
+    async (c) => {
+      const report = await repo.getDuplicateReport(c.env.DB, c.req.param("id"));
+      if (report === null) return c.json({ error: "not found" }, 404);
+      if (report.status !== "open") return c.json({ error: "not open" }, 409);
+      const swap = c.req.valid("json").swap;
+      return mergeClimbs(
+        c,
+        {
+          keepId: swap ? report.duplicate_climb_id : report.keep_climb_id,
+          duplicateId: swap ? report.keep_climb_id : report.duplicate_climb_id,
+        },
+        "report"
+      );
+    }
+  )
+
+  .post(
+    "/v1/moderation/duplicates/:id/dismiss",
+    zValidator("json", rejectBody, invalidBody),
+    async (c) => {
+      const dismissed = await repo.dismissDuplicateReport(
+        c.env.DB,
+        c.req.param("id"),
+        c.get("userId"),
+        c.req.valid("json").note || null
+      );
+      if (!dismissed) return c.json({ error: "not found" }, 404);
+      await captureEvent(c, "moderation_duplicate_dismissed");
+      return c.json({ ok: true });
+    }
+  )
+
+  .post("/v1/moderation/climbs/:id/merge-into/:keepId", async (c) => {
+    const viewer = await viewerOf(c);
+    const [duplicate, keep] = await Promise.all([
+      repo.getAreaClimb(c.env.DB, viewer, c.req.param("id")),
+      repo.getAreaClimb(c.env.DB, viewer, c.req.param("keepId")),
+    ]);
+    if (duplicate === null || keep === null) return c.json({ error: "not found" }, 404);
+    if (duplicate.id === keep.id) return c.json({ error: "a climb cannot duplicate itself" }, 400);
+    return mergeClimbs(c, { duplicateId: duplicate.id, keepId: keep.id }, "direct");
+  })
 
   .get("/v1/moderation/reports", async (c) =>
     c.json(await reportsQueue(c.env.DB, await viewerOf(c), MODERATION_LIST_LIMIT))

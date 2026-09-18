@@ -381,6 +381,204 @@ describe("issue reports", () => {
   });
 });
 
+describe("duplicate climbs", () => {
+  const liveClimbs = async (...names: string[]): Promise<{ area: Row; ids: string[] }> => {
+    await setRole("mod", "moderator");
+    const area = await createArea("user_a", buttermilks);
+    await activate("areas", area.id);
+    const ids: string[] = [];
+    for (const name of names) {
+      const climb = await createClimb("user_a", area.id, name);
+      await activate("area_climbs", climb.id);
+      ids.push(climb.id);
+    }
+    return { area, ids };
+  };
+
+  const logSend = async (user: string, areaId: string, climbId: string): Promise<string> => {
+    const res = await call(user, "/v1/sessions", {
+      body: {
+        date: "2026-09-12",
+        location: "outdoor",
+        areaId,
+        climbs: [{ name: "Mandala", climbId, grade: { scale: "v", value: 12 } }],
+      },
+    });
+    expect(res.status).toBe(201);
+    return (res.body["session"] as { fingerprint: string }).fingerprint;
+  };
+
+  const linkOf = async (user: string, fingerprint: string): Promise<unknown> =>
+    (
+      (await call(user, `/v1/sessions/${fingerprint}`)).body["session"] as {
+        climbs: Array<{ link: unknown }>;
+      }
+    ).climbs[0]?.link;
+
+  const report = (user: string, duplicateId: string, keepClimbId: string) =>
+    call(user, `/v1/area-climbs/${duplicateId}/duplicate-reports`, { body: { keepClimbId } });
+
+  const mergedInto = async (id: string): Promise<string | null | undefined> =>
+    (
+      await env.DB.prepare(
+        "SELECT merged_into_id FROM area_climbs WHERE id = ? AND status = 'merged'"
+      )
+        .bind(id)
+        .first<{ merged_into_id: string | null }>()
+    )?.merged_into_id;
+
+  const reportStatuses = async (): Promise<string[]> =>
+    (
+      await env.DB.prepare("SELECT status FROM duplicate_reports ORDER BY created_at, id").all<{
+        status: string;
+      }>()
+    ).results.map((r) => r.status);
+
+  type Side = { id: string; slug: string; links: number };
+  type Duplicate = { id: string; keep: Side; duplicate: Side };
+
+  const duplicates = async (): Promise<Duplicate[]> =>
+    (await call("mod", "/v1/moderation/duplicates")).body["items"] as Duplicate[];
+
+  const merge = (id: string, body: Record<string, unknown> = {}) =>
+    call("mod", `/v1/moderation/duplicates/${id}/merge`, { body });
+
+  it("takes one open report per reporter per duplicate, on open climbs only", async () => {
+    const {
+      area,
+      ids: [keep = "", dup = ""],
+    } = await liveClimbs("The Mandala", "Mandala");
+    const hidden = await createClimb("user_b", area.id, "Mandala Sit");
+
+    expect((await report("user_b", dup, keep)).status).toBe(201);
+    expect((await report("user_b", dup, keep)).status).toBe(409);
+    expect((await report("user_c", dup, keep)).status).toBe(201);
+    expect((await report("user_b", dup, dup)).status).toBe(400);
+    expect((await report("user_c", hidden.id, keep)).status).toBe(404);
+    expect((await report("user_b", dup, "nope")).status).toBe(404);
+
+    const queue = await call("mod", "/v1/moderation/queue");
+    expect(queue.body["duplicates"]).toMatchObject({ count: 2 });
+  });
+
+  it("moves every user's links to the survivor and closes the paperwork", async () => {
+    const {
+      area,
+      ids: [keep = "", dup = ""],
+    } = await liveClimbs("The Mandala", "Mandala");
+    const first = await logSend("user_a", area.id, dup);
+    const second = await logSend("user_b", area.id, dup);
+    await logSend("user_c", area.id, keep);
+    await call("user_b", `/v1/area-climbs/${dup}/draft`, { method: "PUT", body: { grade: "V13" } });
+    await report("user_b", dup, keep);
+    await report("user_c", dup, keep);
+
+    const [item] = await duplicates();
+    expect(item?.keep).toMatchObject({ id: keep, links: 1 });
+    expect(item?.duplicate).toMatchObject({ id: dup, links: 2 });
+
+    const res = await merge(item?.id ?? "");
+    expect(res.status).toBe(200);
+    expect(res.body["climb"]).toMatchObject({ id: keep, status: "active", version: 1 });
+
+    const survivor = { id: keep, name: "The Mandala", slug: "the-mandala" };
+    expect(await linkOf("user_a", first)).toEqual(survivor);
+    expect(await linkOf("user_b", second)).toEqual(survivor);
+    expect(await mergedInto(dup)).toBe(keep);
+    expect(await revisions()).toEqual([]);
+    expect(await reportStatuses()).toEqual(["merged", "merged"]);
+    expect(await duplicates()).toEqual([]);
+    expect((await call("user_b", "/v1/area-climbs/mandala")).body).toEqual({
+      redirect: "the-mandala",
+    });
+    expect((await merge(item?.id ?? "")).status).toBe(409);
+  });
+
+  it("repoints earlier merges so redirects never chain", async () => {
+    const {
+      area,
+      ids: [a = "", b = "", c = ""],
+    } = await liveClimbs("Mandala", "The Mandala", "Mandala Stand");
+    const send = await logSend("user_b", area.id, a);
+    const into = (dup: string, keep: string) =>
+      call("mod", `/v1/moderation/climbs/${dup}/merge-into/${keep}`, { method: "POST" });
+
+    expect((await into(a, b)).status).toBe(200);
+    expect((await into(b, c)).status).toBe(200);
+    expect(await mergedInto(a)).toBe(c);
+    expect(await mergedInto(b)).toBe(c);
+    expect((await call("user_b", "/v1/area-climbs/mandala")).body).toEqual({
+      redirect: "mandala-stand",
+    });
+    expect(await linkOf("user_b", send)).toMatchObject({ id: c });
+    expect((await into(c, a)).status).toBe(409);
+  });
+
+  it("lets the moderator keep the reported duplicate instead", async () => {
+    const {
+      ids: [keep = "", dup = ""],
+    } = await liveClimbs("The Mandala", "Mandala");
+    await report("user_b", dup, keep);
+    const [item] = await duplicates();
+
+    const res = await merge(item?.id ?? "", { swap: true });
+    expect(res.body["climb"]).toMatchObject({ id: dup });
+    expect(await mergedInto(keep)).toBe(dup);
+    expect(await reportStatuses()).toEqual(["merged"]);
+  });
+
+  it("merges a pending creation into a live climb, keeping the creator's send", async () => {
+    const {
+      area,
+      ids: [keep = ""],
+    } = await liveClimbs("The Mandala");
+    const pending = await createClimb("user_b", area.id, "Mandala");
+    const send = await logSend("user_b", area.id, pending.id);
+
+    const res = await call("mod", `/v1/moderation/climbs/${pending.id}/merge-into/${keep}`, {
+      method: "POST",
+    });
+    expect(res.status).toBe(200);
+    expect(await linkOf("user_b", send)).toMatchObject({ id: keep, slug: "the-mandala" });
+    expect((await call("mod", "/v1/moderation/creations")).body["count"]).toBe(0);
+  });
+
+  it("changes nothing when the survivor was merged away first", async () => {
+    const {
+      area,
+      ids: [keep = "", dup = "", other = ""],
+    } = await liveClimbs("The Mandala", "Mandala", "Mandala Sit");
+    const send = await logSend("user_b", area.id, dup);
+    await report("user_b", dup, keep);
+    await call("mod", `/v1/moderation/climbs/${keep}/merge-into/${other}`, { method: "POST" });
+
+    const stale = { duplicateId: dup, keepId: keep, reviewerId: "mod" };
+    expect(await repo.mergeAreaClimb(env.DB, stale)).toBe(false);
+    expect(await linkOf("user_b", send)).toMatchObject({ id: dup });
+    expect(await mergedInto(dup)).toBeUndefined();
+    expect(await reportStatuses()).toEqual(["open"]);
+
+    const [item] = await duplicates();
+    expect(item?.keep.id).toBe(other);
+    expect((await merge(item?.id ?? "")).status).toBe(200);
+    expect(await linkOf("user_b", send)).toMatchObject({ id: other });
+  });
+
+  it("dismisses a report once", async () => {
+    const {
+      ids: [keep = "", dup = ""],
+    } = await liveClimbs("The Mandala", "Mandala");
+    await report("user_b", dup, keep);
+    const [item] = await duplicates();
+    const dismiss = () =>
+      call("mod", `/v1/moderation/duplicates/${item?.id}/dismiss`, { body: { note: "Different" } });
+    expect((await dismiss()).status).toBe(200);
+    expect((await dismiss()).status).toBe(404);
+    expect(await reportStatuses()).toEqual(["dismissed"]);
+    expect((await report("user_b", dup, keep)).status).toBe(201);
+  });
+});
+
 describe("reconcile", () => {
   const base = { name: "The Mandala", grade_value: "V12", bolts: null };
   const cases: Array<{
