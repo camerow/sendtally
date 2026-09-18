@@ -67,6 +67,8 @@ export const queries = {
       queryFn: async () => (await api.searchAreaClimbs(q, areaId ?? undefined)).climbs,
       gcTime: ROW_GC_TIME,
     }),
+  moderation: (api: SendtallyApi) =>
+    queryOptions({ queryKey: ["moderation"], queryFn: () => api.moderationQueue() }),
   tags: (api: SendtallyApi) =>
     queryOptions({ queryKey: ["tags"], queryFn: async () => (await api.tags()).tags }),
 };
@@ -79,6 +81,7 @@ const NOT_PERSISTED: readonly unknown[] = [
   "areaClimb",
   "areaSearch",
   "areaClimbSearch",
+  "moderation",
 ];
 
 /**

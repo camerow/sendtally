@@ -43,6 +43,16 @@ describe("writeEffect", () => {
     ]);
   });
 
+  it("stales the queue, Areas pages and sessions after a moderation action", () => {
+    const stale = writeEffect({
+      method: "POST",
+      path: "/v1/moderation/duplicates/d1/merge",
+    })?.stale;
+    expect(stale).toContainEqual(["moderation"]);
+    expect(stale).toContainEqual(["areaClimb"]);
+    expect(stale).toContainEqual(["session"]);
+  });
+
   it("maps settings writes to status and account deletion to nothing", () => {
     expect(writeEffect({ method: "PUT", path: "/v1/preferences/grade-scales" })?.stale).toEqual([
       ["status"],

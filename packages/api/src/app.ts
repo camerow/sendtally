@@ -1694,6 +1694,7 @@ const app = new Hono<AppEnv>()
     const scales = repo.gradeScalesOf(user);
     return c.json({
       gradeScales: { boulder: scales.boulder, route: scales.route },
+      role: user?.role ?? "user",
       strava:
         strava === null
           ? null
