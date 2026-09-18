@@ -309,3 +309,4 @@ Run `wt config approvals add` and review what it lists - an agent must never app
 - No third-party passwords ever transit the Worker. Strava is connected via OAuth only.
 - Strava access/refresh tokens are AES-GCM encrypted in D1; the key lives in a Worker secret.
 - Account deletion must revoke the Strava token, delete all D1 rows for the user, and delete the Clerk user.
+  The one exception is approved Areas contributions (areas, climbs and approved revisions), which stay with the author removed (`created_by` / `submitted_by` / `reviewed_by` set to null) because other users' sessions link to them; `repo.deleteUserData` does both in one batch.

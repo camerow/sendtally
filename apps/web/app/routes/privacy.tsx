@@ -19,7 +19,7 @@ export default function Privacy(): React.ReactElement {
   return (
     <LegalPage
       title="Privacy policy"
-      updated="9 SEPTEMBER 2026"
+      updated="18 SEPTEMBER 2026"
       lede="sendtally holds the climbing sessions you type in and almost nothing else. This page lists every piece of data it keeps, who else touches it, and how to get it all deleted."
     >
       <h2>Who this covers</h2>
@@ -44,6 +44,12 @@ export default function Privacy(): React.ReactElement {
         session.
       </p>
       <p>
+        <strong>Your Areas contributions, only if you make any.</strong> The areas and climbs you
+        add to the shared Areas directory, the edits you suggest, and the duplicate and issue
+        reports you send, each recorded against your account identifier so moderators can review
+        them. Approved contributions are public; who made them is not shown.
+      </p>
+      <p>
         <strong>Your Strava connection, only if you make one.</strong> Your Strava athlete
         identifier, the access and refresh tokens, and the identifier of each activity we have
         posted for you.
@@ -55,7 +61,10 @@ export default function Privacy(): React.ReactElement {
         account identifier and email address against that usage, so we can tell how many people are
         using a feature rather than how many browsers are. PostHog also records screen replays of
         app sessions and the errors your browser hits, so we can see what broke. Form fields are
-        masked in those replays, so what you type is not captured.
+        masked in those replays, so what you type is not captured. Adding to Areas and moderating it
+        are recorded as events too, such as an area created, an edit suggested, or a report
+        resolved, carrying only the kind of action and a few labels, such as whether it was an area
+        or a climb, never what you wrote.
       </p>
 
       <h2>What we never collect</h2>
@@ -164,6 +173,13 @@ export default function Privacy(): React.ReactElement {
         copies may persist in encrypted backups for a short period before they roll off. If you
         delete your account from Clerk&rsquo;s own portal instead, a webhook triggers the same purge
         on our side.
+      </p>
+      <p>
+        Contributions to Areas are the one exception. Areas and climbs a moderator has approved, and
+        the approved edits you suggested, stay in the directory because other climbers&rsquo;
+        logbooks point at them, but your account identifier is removed from every one of them, so
+        they no longer link back to you. Contributions and edit suggestions still awaiting review,
+        and the reports you sent, are deleted with the rest.
       </p>
       <p>
         Usage records at PostHog are not part of that purge. They age off on their own after twelve

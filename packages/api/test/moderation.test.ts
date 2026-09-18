@@ -356,6 +356,128 @@ describe("moderating revisions", () => {
   });
 });
 
+describe("account deletion", () => {
+  const count = async (query: string, ...binds: string[]): Promise<number> =>
+    (
+      await env.DB.prepare(`SELECT COUNT(*) AS n FROM ${query}`)
+        .bind(...binds)
+        .first<{ n: number }>()
+    )?.n ?? -1;
+
+  const deleteAccount = async (user: string): Promise<void> => {
+    const res = await testApp().request(
+      "/v1/account",
+      { method: "DELETE", headers: { "x-test-user": user } },
+      env
+    );
+    expect(res.status).toBe(200);
+  };
+
+  it("keeps approved contributions without their author and drops the rest", async () => {
+    await setRole("mod", "moderator");
+    const area = await createArea("user_a", buttermilks);
+    const climb = await createClimb("user_a", area.id, "The Mandala");
+    const approve = (path: string, version: number) =>
+      call("mod", `/v1/moderation/${path}/approve`, { body: { version } });
+    expect((await approve(`areas/${area.id}`, 1)).status).toBe(200);
+    expect((await approve(`climbs/${climb.id}`, 1)).status).toBe(200);
+
+    await call("user_a", `/v1/area-climbs/${climb.id}/draft`, {
+      method: "PUT",
+      body: { grade: "V13" },
+    });
+    const [revision] = await revisions();
+    expect(
+      (
+        await call("mod", `/v1/moderation/revisions/${revision?.id}/approve`, {
+          body: { version: 2 },
+        })
+      ).status
+    ).toBe(200);
+
+    const pending = await createClimb("user_a", area.id, "Mandala Sit");
+    await call("user_a", `/v1/areas/${area.id}/draft`, {
+      method: "PUT",
+      body: { name: "The Buttermilks", lat: 37.327, lon: -118.577 },
+    });
+    expect(
+      (
+        await call("user_a", `/v1/area-climbs/${pending.id}/duplicate-reports`, {
+          body: { keepClimbId: climb.id },
+        })
+      ).status
+    ).toBe(201);
+    expect(
+      (
+        await call("user_a", "/v1/areas/reports", {
+          body: { entityType: "climb", entityId: climb.id, body: "Grade is off" },
+        })
+      ).status
+    ).toBe(201);
+
+    const outer = await createArea("user_a", { ...buttermilks, name: "Happy Boulders" });
+    const inner = await createArea("user_a", { parentId: outer.id, name: "Central Canyon" });
+    const shared = await createArea("user_a", { ...buttermilks, name: "Sad Boulders" });
+    const modClimb = await createClimb("mod", shared.id, "Ketron Classic");
+
+    const logged = await call("user_b", "/v1/sessions", {
+      body: {
+        date: "2026-09-12",
+        location: "outdoor",
+        areaId: area.id,
+        climbs: [{ name: "The Mandala", climbId: climb.id, grade: { scale: "v", value: 12 } }],
+      },
+    });
+    expect(logged.status).toBe(201);
+
+    await deleteAccount("user_a");
+
+    const kept = await env.DB.prepare(
+      `SELECT id, status, created_by FROM areas WHERE id IN (?, ?)
+       UNION ALL SELECT id, status, created_by FROM area_climbs WHERE id IN (?, ?)`
+    )
+      .bind(area.id, shared.id, climb.id, modClimb.id)
+      .all<{ id: string; status: string; created_by: string | null }>();
+    expect(Object.fromEntries(kept.results.map((r) => [r.id, [r.status, r.created_by]]))).toEqual({
+      [area.id]: ["active", null],
+      [shared.id]: ["pending", null],
+      [climb.id]: ["active", null],
+      [modClimb.id]: ["pending", "mod"],
+    });
+    for (const id of [pending.id, outer.id, inner.id]) {
+      expect(
+        await count("(SELECT id FROM areas UNION ALL SELECT id FROM area_climbs) WHERE id = ?", id)
+      ).toBe(0);
+    }
+    expect(
+      await count("session_climb_links WHERE user_id = 'user_b' AND climb_id = ?", climb.id)
+    ).toBe(1);
+    expect(await count("content_revisions WHERE status = 'pending'")).toBe(0);
+    const audit = await env.DB.prepare(
+      "SELECT status, submitted_by, reviewed_by, proposed_json FROM content_revisions WHERE id = ?"
+    )
+      .bind(revision?.id ?? "")
+      .first<{
+        status: string;
+        submitted_by: string | null;
+        reviewed_by: string | null;
+        proposed_json: string;
+      }>();
+    expect(audit).toMatchObject({ status: "approved", submitted_by: null, reviewed_by: "mod" });
+    expect(JSON.parse(audit?.proposed_json ?? "{}")).toMatchObject({ grade_value: "V13" });
+    expect(await count("duplicate_reports")).toBe(0);
+    expect(await count("content_reports")).toBe(0);
+    expect(await count("users WHERE id = 'user_a'")).toBe(0);
+
+    await deleteAccount("mod");
+    expect(
+      await count("content_revisions WHERE reviewed_by IS NULL AND id = ?", revision?.id ?? "")
+    ).toBe(1);
+    expect(await count("area_climbs WHERE id = ?", modClimb.id)).toBe(0);
+    expect(await count("areas WHERE id = ?", shared.id)).toBe(1);
+  });
+});
+
 describe("issue reports", () => {
   it("takes a report on something the user can see and lets a moderator resolve it", async () => {
     await setRole("mod", "moderator");
