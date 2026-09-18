@@ -93,4 +93,7 @@ export const areas = {
   "areas.nearby": "In der Nähe",
   "areas.inAreas": "Gebiete",
   "areas.linkedToAreas": "Mit dieser Route in den Gebieten verknüpft",
+  "areas.isItOneOfTheseTapHint":
+    "Tippe darauf, wenn es derselbe ist. Wenn nicht, speichere erneut, um deinen hinzuzufügen.",
+  "areas.closeAddSheet": "Schließen ohne Hinzufügen",
 } as const;

@@ -3,6 +3,12 @@ import { router, useLocalSearchParams } from "expo-router";
 import React from "react";
 import { AppState, Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import type { ClimbSummary } from "@sendtally/api-client";
+import {
+  climbFormFromDraft,
+  withAreaClimb,
+  withTypedName,
+  type ClimbFormValues,
+} from "@sendtally/features/areas";
 import { findClimb, useClimbVocabulary } from "@sendtally/features/climbs";
 import {
   draftProblem,
@@ -46,6 +52,9 @@ import {
 } from "@sendtally/features/gyms";
 import { OptionRow } from "../../components/OptionRow";
 import { SelectRow } from "../../components/SelectRow";
+import { AddClimbSheet } from "../areas/AddClimbSheet";
+import { AddCragSheet } from "../areas/AddCragSheet";
+import { AreaSearchField } from "../areas/AreaSearchField";
 import { ClimbEditorSheet } from "./ClimbEditorSheet";
 import { NewGymSheet } from "../gyms/NewGymSheet";
 import { Icon } from "../../components/Icon";
@@ -161,6 +170,12 @@ export function LogSessionForm({
   const [editingKey, setEditingKey] = React.useState<string | null>(null);
   const editingIndex = draft.climbs.findIndex((c) => c.key === editingKey);
   const editingClimb = editingIndex < 0 ? null : draft.climbs[editingIndex]!;
+  const outdoor = draft.location === "outdoor";
+  const [addingCrag, setAddingCrag] = React.useState<string | null>(null);
+  const [addingClimb, setAddingClimb] = React.useState<{
+    key: string;
+    initial: ClimbFormValues;
+  } | null>(null);
 
   // The preference query resolves after the first render, so a new draft adopts the user's
   // scale once, per discipline and only where no grade has been typed yet. A draft picked
@@ -203,11 +218,13 @@ export function LogSessionForm({
   }
 
   function updateClimbName(key: string, name: string): void {
-    updateClimb(key, (c) => withClimbName(c, name, findClimb(vocabulary.climbs, name)));
+    updateClimb(key, (c) =>
+      withClimbName(withTypedName(c, name), name, findClimb(vocabulary.climbs, name))
+    );
   }
 
   function pickClimb(key: string, known: ClimbSummary): void {
-    updateClimb(key, (c) => withPickedClimb(c, known));
+    updateClimb(key, (c) => withPickedClimb(withTypedName(c, known.name), known));
   }
 
   function removeClimb(key: string): void {
@@ -405,6 +422,26 @@ export function LogSessionForm({
             />
           </View>
         </View>
+
+        {outdoor && (
+          <View style={{ gap: 7 }}>
+            <LabelText>{`${t("areas.crag")} ${t("common.optional")}`}</LabelText>
+            <AreaSearchField
+              crags
+              value={draft.area ?? null}
+              label={t("areas.crag")}
+              placeholder={t("areas.searchCrags")}
+              addLabel={(name) => t("areas.addThisCrag", { name })}
+              onPick={(area) =>
+                setDraft((d) => ({
+                  ...d,
+                  area: area === null ? undefined : { id: area.id, name: area.name },
+                }))
+              }
+              onAdd={setAddingCrag}
+            />
+          </View>
+        )}
 
         {draft.location === "indoor" && (!gyms.ready || gyms.gyms.length > 0) && (
           <View style={{ gap: 7 }}>
@@ -643,6 +680,20 @@ export function LogSessionForm({
         onPick={(known) => {
           if (editingClimb !== null) pickClimb(editingClimb.key, known);
         }}
+        areas={
+          !outdoor || editingClimb === null
+            ? undefined
+            : {
+                areaId: draft.area?.id ?? null,
+                onPickArea: (picked) =>
+                  updateClimb(editingClimb.key, (c) => withAreaClimb(c, picked)),
+                onAdd: () =>
+                  setAddingClimb({
+                    key: editingClimb.key,
+                    initial: climbFormFromDraft(editingClimb, gradePrefs),
+                  }),
+              }
+        }
         onToggleProject={() => {
           if (editingClimb !== null) toggleProject(editingClimb);
         }}
@@ -650,6 +701,31 @@ export function LogSessionForm({
           if (editingClimb !== null) removeClimb(editingClimb.key);
         }}
         onClose={() => setEditingKey(null)}
+      />
+
+      <AddCragSheet
+        name={addingCrag}
+        onCreated={(area) => {
+          setDraft((d) => ({ ...d, area }));
+          setAddingCrag(null);
+        }}
+        onClose={() => setAddingCrag(null)}
+      />
+
+      <AddClimbSheet
+        initial={addingClimb?.initial ?? null}
+        area={draft.area ?? null}
+        scales={gradePrefs}
+        onCreated={(created, area) => {
+          const key = addingClimb?.key;
+          setDraft((d) => ({
+            ...d,
+            area: d.area ?? area,
+            climbs: d.climbs.map((c) => (c.key === key ? withAreaClimb(c, created) : c)),
+          }));
+          setAddingClimb(null);
+        }}
+        onClose={() => setAddingClimb(null)}
       />
 
       <View
