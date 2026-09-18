@@ -19,6 +19,7 @@ function session(
     source: "board",
     location: null,
     gym_id: null,
+    area_id: null,
     name: null,
     start_at: startIso,
     end_at: startIso,

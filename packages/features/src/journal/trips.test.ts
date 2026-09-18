@@ -39,6 +39,7 @@ function session(
     source: "manual",
     location: "outdoor",
     gym_id: null,
+    area_id: null,
     name: null,
     start_at: startAt,
     end_at: new Date(Date.parse(startAt) + 60 * 60_000).toISOString(),

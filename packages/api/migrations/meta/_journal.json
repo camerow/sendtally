@@ -106,6 +106,20 @@
       "when": 1789590732895,
       "tag": "0019_demonic_klaw",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "6",
+      "when": 1789755502793,
+      "tag": "0020_easy_azazel",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "6",
+      "when": 1789755532307,
+      "tag": "0021_seed_regions",
+      "breakpoints": true
     }
   ]
 }

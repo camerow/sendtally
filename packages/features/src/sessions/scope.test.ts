@@ -12,6 +12,7 @@ function session(fingerprint: string, startAt: string, tags: string[] = []): Ses
     source: "manual",
     location: "indoor",
     gym_id: null,
+    area_id: null,
     name: null,
     start_at: startAt,
     end_at: startAt,
