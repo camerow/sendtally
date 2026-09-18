@@ -31,6 +31,7 @@ import {
   circuitGyms,
   readClimbKind,
   useLiveSession,
+  withClimbOutcome,
   withTries,
 } from "@sendtally/features/log-session";
 import { climbKindStorage } from "../../lib/climbKindStorage";
@@ -289,6 +290,14 @@ export default function Log(): React.ReactElement {
                 gym={liveGym}
                 onEditClimb={setEditingClimb}
                 onChangeTries={(key, tries) => live.updateClimb(key, (c) => withTries(c, tries))}
+                onSent={(key) =>
+                  live.updateClimb(key, (c) =>
+                    withClimbOutcome(c, {
+                      kind: "send",
+                      style: c.tries === 1 ? "flash" : "redpoint",
+                    })
+                  )
+                }
                 onAddLap={(key) => live.updateClimb(key, addLap)}
               />
             )}

@@ -10,6 +10,7 @@ import {
   liveDraft,
   wantsWrapUpReminder,
   withClimbName,
+  withPickedClimb,
   withClimbTouched,
   withQuickClimb,
 } from "./liveSession";
@@ -157,5 +158,7 @@ describe("live session", () => {
       project: undefined,
     });
     expect(withClimbName(climb, known.name, known).grade).toBe("V6");
+    expect(withPickedClimb(climb, known).project).toBe(true);
+    expect(withPickedClimb(climb, { ...known, project: false }).project).toBeUndefined();
   });
 });

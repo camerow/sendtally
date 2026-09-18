@@ -104,6 +104,7 @@ export type LiveSessionCardProps = {
   gym: Gym | null;
   onEditClimb: (key: string) => void;
   onChangeTries: (key: string, tries: number) => void;
+  onSent: (key: string) => void;
   onAddLap: (key: string) => void;
 };
 
@@ -114,10 +115,12 @@ export function LiveSessionCard({
   gym,
   onEditClimb,
   onChangeTries,
+  onSent,
   onAddLap,
 }: LiveSessionCardProps): React.ReactElement {
   const now = useSecondClock();
   const { draft, savedAt } = stored;
+  const last = draft.climbs.at(-1);
   const title = draft.name.trim() === "" ? t("sessions.unfinishedSession") : draft.name;
   const meta = [
     t("sessions.liveMeta", { elapsed: elapsedLabel(draft, now) }),
@@ -195,6 +198,23 @@ export function LiveSessionCard({
                   onAddLap={() => onAddLap(climb.key)}
                 />
               )
+            )}
+            {last !== undefined && last.endurance === undefined && last.kind === "attempt" && (
+              <Pressable
+                onPress={() => onSent(last.key)}
+                accessibilityRole="button"
+                style={press({
+                  ...wrapUpButton,
+                  minHeight: 38,
+                  marginVertical: 10,
+                  flexDirection: "row",
+                  gap: 6,
+                  backgroundColor: colors.azureInk,
+                })}
+              >
+                <Icon name="check" size={14} strokeWidth={2.4} color={colors.white} />
+                <Text style={{ ...buttonLabel, color: colors.white }}>{t("common.sent")}</Text>
+              </Pressable>
             )}
           </View>
         )}

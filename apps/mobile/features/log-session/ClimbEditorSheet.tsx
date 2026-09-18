@@ -389,32 +389,6 @@ export function ClimbEditorSheet({
           </View>
 
           <View style={{ gap: 7 }}>
-            <Text style={label}>{t("logSession.climbKind")}</Text>
-            <ClimbKindPicker climb={climb} gyms={gyms} prefs={prefs} onChange={onChange} />
-          </View>
-          {endurance && <EnduranceFields climb={climb} onChange={onChange} />}
-          <View style={{ gap: 7 }}>
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "space-between",
-                gap: 12,
-              }}
-            >
-              <Text style={label}>{endurance ? t("endurance.feltLike") : t("common.grade")}</Text>
-              {(endurance || gyms.length === 0) && (
-                <DisciplineToggle
-                  value={disciplineOf(climb.scale)}
-                  onChange={(discipline) => onChange(withClimbDiscipline(climb, discipline, prefs))}
-                />
-              )}
-            </View>
-            <ClimbGradePicker climb={climb} gyms={gyms} onChange={onChange} />
-          </View>
-          {gym !== null && <CircuitFields climb={climb} gym={gym} onChange={onChange} />}
-
-          <View style={{ gap: 7 }}>
             <Text style={label}>{t("logSession.nameOptional")}</Text>
             <BottomSheetTextInput
               autoCorrect={false}
@@ -521,6 +495,32 @@ export function ClimbEditorSheet({
               </View>
             )}
           </View>
+
+          <View style={{ gap: 7 }}>
+            <Text style={label}>{t("logSession.climbKind")}</Text>
+            <ClimbKindPicker climb={climb} gyms={gyms} prefs={prefs} onChange={onChange} />
+          </View>
+          {endurance && <EnduranceFields climb={climb} onChange={onChange} />}
+          <View style={{ gap: 7 }}>
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 12,
+              }}
+            >
+              <Text style={label}>{endurance ? t("endurance.feltLike") : t("common.grade")}</Text>
+              {(endurance || gyms.length === 0) && (
+                <DisciplineToggle
+                  value={disciplineOf(climb.scale)}
+                  onChange={(discipline) => onChange(withClimbDiscipline(climb, discipline, prefs))}
+                />
+              )}
+            </View>
+            <ClimbGradePicker climb={climb} gyms={gyms} onChange={onChange} />
+          </View>
+          {gym !== null && <CircuitFields climb={climb} gym={gym} onChange={onChange} />}
 
           {!endurance && (
             <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
