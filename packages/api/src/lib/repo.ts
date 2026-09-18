@@ -27,6 +27,7 @@ import {
   climbNotes,
   contentReports,
   contentRevisions,
+  duplicateReports,
   entrySessions,
   entryTags,
   gyms,
@@ -1781,5 +1782,160 @@ export async function resolveReport(
     .update(contentReports)
     .set({ status: "resolved", reviewed_by: reviewerId, reviewed_at: stamp() })
     .where(and(eq(contentReports.id, id), eq(contentReports.status, "open")));
+  return result.meta.changes > 0;
+}
+
+export type DuplicateReportRow = typeof duplicateReports.$inferSelect;
+
+// One open report per reporter per duplicate, held by the partial unique index.
+export async function insertDuplicateReport(
+  db: D1Database,
+  report: Pick<DuplicateReportRow, "keep_climb_id" | "duplicate_climb_id" | "reporter_id" | "note">
+): Promise<string | null> {
+  const id = crypto.randomUUID();
+  const result = await drizzle(db)
+    .insert(duplicateReports)
+    .values({ id, ...report, status: "open", created_at: stamp() })
+    .onConflictDoNothing();
+  return result.meta.changes > 0 ? id : null;
+}
+
+export async function openDuplicateReports(
+  db: D1Database,
+  limit: number
+): Promise<Page<DuplicateReportRow>> {
+  const d = drizzle(db);
+  const open = eq(duplicateReports.status, "open");
+  const [n, rows] = await Promise.all([
+    countOf(d.select({ n: count() }).from(duplicateReports).where(open)),
+    d
+      .select()
+      .from(duplicateReports)
+      .where(open)
+      .orderBy(asc(duplicateReports.created_at))
+      .limit(limit)
+      .all(),
+  ]);
+  return { count: n, rows };
+}
+
+export async function getDuplicateReport(
+  db: D1Database,
+  id: string
+): Promise<DuplicateReportRow | null> {
+  const row = await drizzle(db)
+    .select()
+    .from(duplicateReports)
+    .where(eq(duplicateReports.id, id))
+    .get();
+  return row ?? null;
+}
+
+export async function dismissDuplicateReport(
+  db: D1Database,
+  id: string,
+  reviewerId: string,
+  note: string | null
+): Promise<boolean> {
+  const result = await drizzle(db)
+    .update(duplicateReports)
+    .set({ status: "dismissed", reviewed_by: reviewerId, review_note: note, reviewed_at: stamp() })
+    .where(and(eq(duplicateReports.id, id), eq(duplicateReports.status, "open")));
+  return result.meta.changes > 0;
+}
+
+export async function linkCounts(db: D1Database, climbIds: string[]): Promise<Map<string, number>> {
+  if (climbIds.length === 0) return new Map();
+  const rows = await drizzle(db)
+    .select({ id: sessionClimbLinks.climb_id, n: count() })
+    .from(sessionClimbLinks)
+    .where(inArray(sessionClimbLinks.climb_id, climbIds))
+    .groupBy(sessionClimbLinks.climb_id)
+    .all();
+  return new Map(rows.map((r) => [r.id, r.n]));
+}
+
+// One batch. The first statement is the guard: the duplicate is open and the
+// survivor is open, so neither is merged. Everything after it only runs once
+// the duplicate points at this survivor, so a lost race changes nothing.
+// Links cannot collide: their key is the logged climb slug, not climb_id.
+export async function mergeAreaClimb(
+  db: D1Database,
+  m: { duplicateId: string; keepId: string; reviewerId: string }
+): Promise<boolean> {
+  const d = drizzle(db);
+  const now = stamp();
+  const open = (id: string): SQL =>
+    exists(
+      d
+        .select({ id: areaClimbs.id })
+        .from(areaClimbs)
+        .where(and(eq(areaClimbs.id, id), inArray(areaClimbs.status, openStatus)))
+    );
+  const merged = exists(
+    d
+      .select({ id: areaClimbs.id })
+      .from(areaClimbs)
+      .where(
+        and(
+          eq(areaClimbs.id, m.duplicateId),
+          eq(areaClimbs.status, "merged"),
+          eq(areaClimbs.merged_into_id, m.keepId)
+        )
+      )
+  );
+  const openReport = eq(duplicateReports.status, "open");
+  const [result] = await d.batch([
+    d
+      .update(areaClimbs)
+      .set({ status: "merged", merged_into_id: m.keepId, updated_at: now })
+      .where(
+        and(
+          eq(areaClimbs.id, m.duplicateId),
+          inArray(areaClimbs.status, openStatus),
+          not(eq(areaClimbs.id, m.keepId)),
+          open(m.keepId)
+        )
+      ),
+    d
+      .update(sessionClimbLinks)
+      .set({ climb_id: m.keepId })
+      .where(and(eq(sessionClimbLinks.climb_id, m.duplicateId), merged)),
+    d
+      .update(areaClimbs)
+      .set({ merged_into_id: m.keepId, updated_at: now })
+      .where(and(eq(areaClimbs.merged_into_id, m.duplicateId), merged)),
+    d
+      .update(contentRevisions)
+      .set({ status: "superseded", updated_at: now })
+      .where(
+        and(
+          eq(contentRevisions.entity_type, "climb"),
+          eq(contentRevisions.entity_id, m.duplicateId),
+          eq(contentRevisions.status, "pending"),
+          merged
+        )
+      ),
+    d
+      .update(duplicateReports)
+      .set({ status: "merged", reviewed_by: m.reviewerId, reviewed_at: now })
+      .where(
+        and(
+          openReport,
+          or(
+            eq(duplicateReports.duplicate_climb_id, m.duplicateId),
+            and(
+              eq(duplicateReports.duplicate_climb_id, m.keepId),
+              eq(duplicateReports.keep_climb_id, m.duplicateId)
+            )
+          ),
+          merged
+        )
+      ),
+    d
+      .update(duplicateReports)
+      .set({ keep_climb_id: m.keepId })
+      .where(and(openReport, eq(duplicateReports.keep_climb_id, m.duplicateId), merged)),
+  ]);
   return result.meta.changes > 0;
 }

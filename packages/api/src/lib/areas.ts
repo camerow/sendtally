@@ -427,3 +427,10 @@ export const contentReportBody = z.object({
   entityId: z.string().min(1),
   body: z.string().trim().min(1).max(2000),
 });
+
+export const duplicateReportBody = z.object({
+  keepClimbId: z.string().min(1),
+  note: optionalText(500),
+});
+
+export const mergeBody = z.object({ swap: z.boolean().default(false) });
