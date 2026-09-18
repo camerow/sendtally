@@ -35,6 +35,8 @@ describe("writeEffect", () => {
     expect(writeEffect({ method: "POST", path: "/v1/area-climbs" })?.stale).toEqual([
       ["area"],
       ["areaClimb"],
+      ["areaSearch"],
+      ["areaClimbSearch"],
     ]);
     expect(writeEffect({ method: "PUT", path: "/v1/areas/a1/draft" })?.stale).not.toContainEqual([
       "sessions",

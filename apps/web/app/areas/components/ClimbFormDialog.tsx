@@ -20,7 +20,9 @@ import { queries, useQuery } from "@sendtally/features/query";
 import { chipStyle } from "../../components/chip";
 import { inputStyle } from "../styles";
 import { useDraftForm } from "../useDraftForm";
+import { useDeviceLocation } from "../useDeviceLocation";
 import { AreaDialog } from "./AreaDialog";
+import { AreaPicker } from "./AreaPicker";
 import { Candidates } from "./Candidates";
 import { Field } from "./Field";
 
@@ -28,7 +30,17 @@ export type ClimbFormDialogProps = {
   api: SendtallyApi;
   onClose: () => void;
   onSuggested: () => void;
-} & ({ mode: "create"; area: AreaSummary } | { mode: "suggest"; climb: AreaClimb });
+} & (
+  | {
+      mode: "create";
+      /** Null when adding from a log form with no crag picked yet; the dialog asks for one. */
+      area: AreaSummary | { id: string; name: string } | null;
+      initial?: ClimbFormValues;
+      /** Stays on the caller's screen with the new climb instead of opening its page. */
+      onCreated?: (climb: AreaClimb, area: AreaSummary | { id: string; name: string }) => void;
+    }
+  | { mode: "suggest"; climb: AreaClimb }
+);
 
 const DEFAULT_SCALES: GradeScales = { boulder: "v", route: "yds" };
 
@@ -48,7 +60,7 @@ export function ClimbFormDialog(props: ClimbFormDialogProps): React.ReactElement
   const { state: status } = useQuery(queries.status(api));
   const scales = status.status === "ready" ? status.data.gradeScales : DEFAULT_SCALES;
   const [values, setValues, loaded] = useDraftForm(
-    props.mode === "suggest" ? climbFormOf(props.climb) : emptyClimbForm(scales),
+    props.mode === "suggest" ? climbFormOf(props.climb) : (props.initial ?? emptyClimbForm(scales)),
     props.mode === "suggest"
       ? async () => climbFormOf(props.climb, (await api.areaClimbDraft(props.climb.id)).draft)
       : null
@@ -56,7 +68,13 @@ export function ClimbFormDialog(props: ClimbFormDialogProps): React.ReactElement
   const [summary, setSummary] = React.useState("");
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
-  const check = useDuplicateCheck<AreaClimb, AreaClimb | null>(values.name.trim().toLowerCase());
+  const [chosenArea, setChosenArea] = React.useState<AreaSummary | null>(null);
+  const [near, locate] = useDeviceLocation();
+  const area = props.mode === "create" ? (props.area ?? chosenArea) : null;
+  const askArea = props.mode === "create" && props.area === null;
+  const check = useDuplicateCheck<AreaClimb, AreaClimb | null>(
+    `${values.name.trim().toLowerCase()}|${area?.id ?? ""}`
+  );
 
   const set =
     (field: keyof ClimbFormValues) =>
@@ -79,14 +97,19 @@ export function ClimbFormDialog(props: ClimbFormDialogProps): React.ReactElement
         onSuggested();
         return;
       }
-      const areaId = props.area.id;
+      if (area === null) {
+        setBusy(false);
+        return setError(t("areas.pickCrag"));
+      }
+      const areaId = area.id;
       const created = await check.save({
         similar: async () => (await api.similarAreaClimbs(areaId, fields.name)).candidates,
         create: async (confirmedNew) =>
           (await api.createAreaClimb({ ...fields, areaId, confirmedNew })).climb,
       });
-      if (created !== null) void navigate(`/app/climbs/${created.slug}`);
-      else setBusy(false);
+      if (created === null) setBusy(false);
+      else if (props.onCreated !== undefined) props.onCreated(created, area);
+      else void navigate(`/app/climbs/${created.slug}`);
     } catch (e: unknown) {
       setBusy(false);
       setError(failure(e));
@@ -95,7 +118,9 @@ export function ClimbFormDialog(props: ClimbFormDialogProps): React.ReactElement
 
   const title =
     props.mode === "create"
-      ? t("areas.addClimbIn", { name: props.area.name })
+      ? area === null || askArea
+        ? t("areas.addAClimb")
+        : t("areas.addClimbIn", { name: area.name })
       : t("areas.suggestEditsTo", { name: props.climb.name });
 
   return (
@@ -126,6 +151,21 @@ export function ClimbFormDialog(props: ClimbFormDialogProps): React.ReactElement
           style={inputStyle}
         />
       </Field>
+      {askArea && (
+        <Field id="climb-area" label={t("areas.crag")}>
+          <AreaPicker
+            api={api}
+            id="climb-area"
+            crags
+            value={chosenArea}
+            near={near}
+            placeholder={t("areas.searchCrags")}
+            inputStyle={inputStyle}
+            onPick={setChosenArea}
+            onFocus={locate}
+          />
+        </Field>
+      )}
       {check.confirming && (
         <Candidates
           candidates={check.candidates.map((c) => ({
