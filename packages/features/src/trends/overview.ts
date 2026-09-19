@@ -46,33 +46,6 @@ function mean(values: number[]): number | null {
   return values.length === 0 ? null : values.reduce((a, b) => a + b, 0) / values.length;
 }
 
-/** Early half against late half of the range, so one big month does not read as a trend. */
-function gradeInsight(slice: Slice, cur: Totals, per: Totals[], gradeText: string | null): string {
-  if (cur.sends === 0 || cur.avg === null) return t("trends.insightNoSends");
-  const half = Math.floor(per.length / 2);
-  const avgOf = (xs: Totals[]): number | null =>
-    mean(xs.flatMap((x) => (x.avg === null ? [] : [x.avg])));
-  const early = avgOf(per.slice(0, half));
-  const late = avgOf(per.slice(half));
-  const avg = slice.ladder.average;
-  const vars = { grade: gradeText ?? "" };
-  if (early === null || late === null || Math.abs(late - early) < 0.15) {
-    return t(gradeText === null ? "trends.insightHolding" : "trends.insightHoldingWithin", {
-      ...vars,
-      avg: avg(cur.avg),
-    });
-  }
-  const key =
-    late > early
-      ? gradeText === null
-        ? "trends.insightClimbed"
-        : "trends.insightClimbedWithin"
-      : gradeText === null
-        ? "trends.insightSlipped"
-        : "trends.insightSlippedWithin";
-  return t(key, { ...vars, from: avg(early), to: avg(late) });
-}
-
 function lifetimeStats(
   cur: Totals,
   life: Totals,
@@ -427,8 +400,8 @@ export function trendsVM(
 
   const avgRpe = cur.rpe === null ? "-" : formatter("decimal", ladder)(cur.rpe);
   const pct = formatter("pct", ladder);
-  const insights: Record<TrendGroupId, () => string> = {
-    grade: () => gradeInsight(slice, cur, per, gradeText),
+  const insights: Record<TrendGroupId, () => string | null> = {
+    grade: () => null,
     volume: () =>
       t("trends.insightVolume", {
         climbs: t("common.climbCount", { count: cur.climbs }),
@@ -452,7 +425,7 @@ export function trendsVM(
     { id: "grade", ids: ["hardest", "avggrade", "pyramid"] },
     {
       id: "volume",
-      ids: all ? ["volume", "days", "effort", "hours"] : ["volume", "days", "effort"],
+      ids: all ? ["days", "volume", "effort", "hours"] : ["days", "volume", "effort"],
     },
     { id: "technique", ids: ["flash", "tries"] },
     { id: "endurance", ids: ["endurance"] },
@@ -462,7 +435,7 @@ export function trendsVM(
       id,
       title: t(`trends.group.${id}`),
       question: t(`trends.question.${id}`),
-      insight: "",
+      insight: null,
       tiles: ids.flatMap((k) => (tiles[k] === undefined ? [] : [tiles[k]])),
     }))
     .filter((g) => g.tiles.length > 0 && (cur.sessions > 0 || g.id !== "endurance"))
@@ -517,7 +490,7 @@ export function trendsVM(
           outside: count(cur.outside),
           hours: formatter("hours", ladder)(cur.hours),
         })
-      : gradeInsight(slice, cur, per, gradeText),
+      : null,
     stats,
     groups,
     grades: bins,

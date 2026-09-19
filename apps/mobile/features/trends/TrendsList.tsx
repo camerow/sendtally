@@ -64,16 +64,18 @@ export function TrendsList({
       >
         {vm.sessionsLine}
       </Text>
-      <Text
-        style={{
-          fontFamily: fonts.sans,
-          fontSize: 15,
-          lineHeight: 22,
-          color: colors.textSecondary,
-        }}
-      >
-        {vm.insight}
-      </Text>
+      {vm.insight !== null && (
+        <Text
+          style={{
+            fontFamily: fonts.sans,
+            fontSize: 15,
+            lineHeight: 22,
+            color: colors.textSecondary,
+          }}
+        >
+          {vm.insight}
+        </Text>
+      )}
       <Segmented
         label={t("common.discipline")}
         segments={[

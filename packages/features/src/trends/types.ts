@@ -133,7 +133,7 @@ export type TrendGroupVM = {
   id: TrendGroupId;
   title: string;
   question: string;
-  insight: string;
+  insight: string | null;
   tiles: TrendTileVM[];
 };
 
@@ -160,7 +160,7 @@ export type TrendsVM = {
   rangeLabel: string;
   sessions: number;
   sessionsLine: string;
-  insight: string;
+  insight: string | null;
   /** Top-level numbers for the All view, each with its lifetime figure. */
   stats: TrendStatVM[] | null;
   groups: TrendGroupVM[];

@@ -1263,3 +1263,41 @@
     transition: none !important;
   }
 }
+
+.trend-tile[data-pressable="true"] {
+  cursor: pointer;
+  transition: background-color 140ms ease-out;
+}
+
+.trend-tile[data-pressable="true"]:hover {
+  background: rgba(64, 63, 76, 0.03);
+}
+
+.trend-tile-link:hover {
+  text-decoration: underline;
+}
+
+.trend-chart-dialog {
+  width: min(1040px, calc(100vw - 36px));
+  box-sizing: border-box;
+  border: none;
+  border-radius: var(--radius-card-lg);
+  padding: 8px 0 0;
+  background: var(--surface-card);
+  box-shadow: var(--shadow-float);
+}
+
+.trend-chart-dialog::backdrop {
+  background: rgba(64, 63, 76, 0.45);
+}
+
+.trend-chart-dialog-close {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+}
+
+.trend-chart-dialog .trend-tile {
+  min-height: 0;
+  padding-right: 96px;
+}

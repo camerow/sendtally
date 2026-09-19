@@ -300,10 +300,7 @@ function linePath(points: TrendPointVM[], col: number, yOf: (v: number) => numbe
   let d = "";
   let pen = false;
   points.forEach((p, i) => {
-    if (p.a === null) {
-      pen = false;
-      return;
-    }
+    if (p.a === null) return;
     d += `${pen ? "L" : "M"}${(i * col + col / 2).toFixed(1)} ${yOf(p.a).toFixed(1)} `;
     pen = true;
   });

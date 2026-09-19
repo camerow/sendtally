@@ -40,7 +40,9 @@ export function TrendsOverview({
               </span>
             )}
           </div>
-          {state.status === "ready" && <p className="trends-insight">{state.data.insight}</p>}
+          {state.status === "ready" && state.data.insight !== null && (
+            <p className="trends-insight">{state.data.insight}</p>
+          )}
         </div>
         {state.status === "ready" && <ScopeControl feature={feature} vm={state.data} />}
       </div>

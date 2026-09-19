@@ -37,16 +37,18 @@ export function TrendSection({
         >
           {group.title}
         </Text>
-        <Text
-          style={{
-            fontFamily: fonts.sans,
-            fontSize: 14,
-            lineHeight: 21,
-            color: colors.textSecondary,
-          }}
-        >
-          {group.insight}
-        </Text>
+        {group.insight !== null && (
+          <Text
+            style={{
+              fontFamily: fonts.sans,
+              fontSize: 14,
+              lineHeight: 21,
+              color: colors.textSecondary,
+            }}
+          >
+            {group.insight}
+          </Text>
+        )}
       </View>
       {group.tiles.map((tile, i) => (
         <View

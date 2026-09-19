@@ -62,12 +62,6 @@ export const trends = {
 
   "trends.insightAll": "{days} à grimper, dont {outside} en extérieur, {hours} au total.",
   "trends.insightNoSends": "Pas encore de croix dans cette sélection.",
-  "trends.insightHolding": "Ta croix moyenne se maintient à {avg}.",
-  "trends.insightHoldingWithin": "Dans {grade}, ta croix moyenne se maintient à {avg}.",
-  "trends.insightClimbed": "Ta croix moyenne est passée de {from} à {to}.",
-  "trends.insightClimbedWithin": "Dans {grade}, ta croix moyenne est passée de {from} à {to}.",
-  "trends.insightSlipped": "Ta croix moyenne a reculé de {from} à {to}.",
-  "trends.insightSlippedWithin": "Dans {grade}, ta croix moyenne a reculé de {from} à {to}.",
   "trends.insightVolume": "{climbs} sur {days}, pour un effort moyen de {rpe}/10.",
   "trends.insightTechnique":
     "{rate} des croix passent du premier coup, et une croix demande {tries} essais en moyenne.",

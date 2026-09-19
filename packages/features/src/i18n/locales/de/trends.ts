@@ -63,15 +63,6 @@ export const trends = {
 
   "trends.insightAll": "{days} an der Wand, {outside} davon draußen, {hours} insgesamt.",
   "trends.insightNoSends": "In dieser Auswahl gibt es noch keine Begehungen.",
-  "trends.insightHolding": "Deine durchschnittliche Begehung hält sich bei {avg}.",
-  "trends.insightHoldingWithin":
-    "Innerhalb von {grade} hält sich deine durchschnittliche Begehung bei {avg}.",
-  "trends.insightClimbed": "Deine durchschnittliche Begehung ist von {from} auf {to} gestiegen.",
-  "trends.insightClimbedWithin":
-    "Innerhalb von {grade} ist deine durchschnittliche Begehung von {from} auf {to} gestiegen.",
-  "trends.insightSlipped": "Deine durchschnittliche Begehung ist von {from} auf {to} gefallen.",
-  "trends.insightSlippedWithin":
-    "Innerhalb von {grade} ist deine durchschnittliche Begehung von {from} auf {to} gefallen.",
   "trends.insightVolume":
     "{climbs} an {days}, bei einer durchschnittlichen Anstrengung von {rpe}/10.",
   "trends.insightTechnique":

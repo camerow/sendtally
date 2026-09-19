@@ -62,12 +62,6 @@ export const trends = {
 
   "trends.insightAll": "{days} escalando, {outside} de ellos en exterior, {hours} en total.",
   "trends.insightNoSends": "Aún no hay encadenes en esta selección.",
-  "trends.insightHolding": "Tu encadene medio se mantiene en {avg}.",
-  "trends.insightHoldingWithin": "Dentro de {grade}, tu encadene medio se mantiene en {avg}.",
-  "trends.insightClimbed": "Tu encadene medio subió de {from} a {to}.",
-  "trends.insightClimbedWithin": "Dentro de {grade}, tu encadene medio subió de {from} a {to}.",
-  "trends.insightSlipped": "Tu encadene medio bajó de {from} a {to}.",
-  "trends.insightSlippedWithin": "Dentro de {grade}, tu encadene medio bajó de {from} a {to}.",
   "trends.insightVolume": "{climbs} en {days}, con un esfuerzo medio de {rpe}/10.",
   "trends.insightTechnique":
     "El {rate} de los encadenes salen al primer pegue, y un encadene lleva {tries} pegues de media.",

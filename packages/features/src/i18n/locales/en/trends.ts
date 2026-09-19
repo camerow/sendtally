@@ -62,12 +62,6 @@ export const trends = {
 
   "trends.insightAll": "{days} on the wall, {outside} of them outside, {hours} in all.",
   "trends.insightNoSends": "No sends in this slice yet.",
-  "trends.insightHolding": "Your average send is holding at {avg}.",
-  "trends.insightHoldingWithin": "Within {grade}, your average send is holding at {avg}.",
-  "trends.insightClimbed": "Your average send climbed from {from} to {to}.",
-  "trends.insightClimbedWithin": "Within {grade}, your average send climbed from {from} to {to}.",
-  "trends.insightSlipped": "Your average send slipped from {from} to {to}.",
-  "trends.insightSlippedWithin": "Within {grade}, your average send slipped from {from} to {to}.",
   "trends.insightVolume": "{climbs} over {days}, at an average effort of {rpe}/10.",
   "trends.insightTechnique":
     "{rate} of sends go first try, and a send takes {tries} goes on average.",

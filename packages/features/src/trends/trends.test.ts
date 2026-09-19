@@ -96,7 +96,7 @@ describe("trendsVM", () => {
   it("groups the tiles and hides a section with nothing in it", () => {
     const vm = trendsVM(rows, [], filter({ range: "1m" }), NOW);
     expect(vm.groups.map((g) => g.id)).toEqual(["grade", "volume", "technique"]);
-    expect(vm.groups[1]!.tiles.map((t) => t.id)).toEqual(["volume", "days", "effort"]);
+    expect(vm.groups[1]!.tiles.map((t) => t.id)).toEqual(["days", "volume", "effort"]);
   });
 
   it("narrows climbs to a grade range and says so in the captions", () => {
@@ -108,7 +108,6 @@ describe("trendsVM", () => {
     );
     expect(tileOf(vm, "volume").total).toBe(3);
     expect(tileOf(vm, "hardest").caption).toContain("V5-V7");
-    expect(vm.insight).toContain("Within V5-V7");
   });
 
   it("offers the range's climbs per grade for the picker, whatever grade is set", () => {
