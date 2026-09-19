@@ -121,7 +121,7 @@ export function newClimb(key: string, scale: GradeScale): ClimbDraft {
     scale,
     grade: DEFAULT_GRADE[scale],
     name: "",
-    kind: "send",
+    kind: "attempt",
     style: "redpoint",
     tries: 1,
     note: "",
