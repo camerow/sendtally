@@ -1,6 +1,14 @@
 appId: com.sendtally.app
 # A live session left behind by an earlier flow would take the next climb, so discard it from its form.
+# Setup cards can push the live card below the fold, so scroll for it first.
 ---
+- scrollUntilVisible:
+    element:
+      text: ".*In progress for.*"
+    direction: DOWN
+    timeout: 5000
+    centerElement: true
+    optional: true
 - runFlow:
     when:
       visible: ".*In progress for.*"

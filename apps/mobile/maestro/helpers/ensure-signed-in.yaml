@@ -39,3 +39,13 @@ env:
 - extendedWaitUntil:
     visible: "Climb"
     timeout: 20000
+# The setup cards sit above everything the flows look at on the log, including the live
+# session card, so dismiss them once. "Not now" keeps them dismissed on the device.
+- repeat:
+    times: 2
+    commands:
+      - runFlow:
+          when:
+            visible: "Not now"
+          commands:
+            - tapOn: "Not now"

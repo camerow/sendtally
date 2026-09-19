@@ -3,6 +3,12 @@
 Maestro flows under `apps/mobile/maestro/` drive a development build on an iOS simulator through the screens that only misbehave on a device: sign-in, the climb editor sheet with the keyboard up, drag to dismiss, and the draft surviving a trip out of the form.
 They run locally on an iOS simulator against Metro, and in CI on an Android emulator.
 
+Anything that is not about the device belongs in a component test instead.
+`apps/mobile` runs Jest with `jest-expo` and React Native Testing Library, co-located as `<Component>.test.tsx`, from `pnpm mobile:test` (also part of `pnpm test`).
+Those tests mock `Sheet`, Reanimated and Gorhom, render the real feature components over in-memory storage, and run in about a second, so screen logic such as the live session in `LiveClimbEditor.test.tsx` lives there.
+Keep a Maestro flow only for what a mock hides: gestures, keyboards, nested native sheets, sign-in.
+The test script lives in the root `package.json` for the same fingerprint reason as `mobile:e2e` below.
+
 ## One-time setup
 
 - Install Maestro: `curl -Ls https://get.maestro.mobile.dev | bash` (lands in `~/.maestro/bin`).
@@ -47,6 +53,9 @@ eas build:list --platform android --profile e2e --status finished \
 
 When a finished `e2e` build carries the hash, the job downloads its APK, publishes the branch as an EAS Update, and installs the two together.
 That is the whole saving: the Gradle release build this replaced took sixteen of the job's twenty minutes.
+
+The Gradle fallback is a way to get a run at all, not a trustworthy one: the APK it builds segfaults in Hermes on launch on the emulator, in two of three runs when this was last exercised (17 Sep 2026), which reads as flows failing on "Sign in|Climb" with the device on its home screen.
+So when a branch moves the fingerprint, warm it with `eas build --profile e2e --platform android` from `apps/mobile` before trusting a red run.
 
 The `e2e` build profile exists for this job alone: it extends `preview`, so it is the same staging API and development Clerk instance, but it ships on its own `e2e` channel.
 That channel resolves to the `e2e` update branch, so every run publishes there and nothing the job does can land on a `preview` build someone is holding on a phone.
