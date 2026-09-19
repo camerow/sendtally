@@ -58,6 +58,8 @@ function QuickLog({ storage }: { storage: DraftStorage }): React.ReactElement {
           gym={null}
           onEditClimb={setEditing}
           onChangeTries={() => {}}
+          onSent={() => {}}
+          onAddLap={() => {}}
         />
       )}
       <Pressable
