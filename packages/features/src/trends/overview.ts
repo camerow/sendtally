@@ -42,10 +42,6 @@ function captioned(what: string, gradeText: string | null, range: string): strin
   return [what, gradeText, range].filter((s): s is string => s !== null).join(" · ");
 }
 
-function mean(values: number[]): number | null {
-  return values.length === 0 ? null : values.reduce((a, b) => a + b, 0) / values.length;
-}
-
 function lifetimeStats(
   cur: Totals,
   life: Totals,
