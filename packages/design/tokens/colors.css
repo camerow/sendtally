@@ -49,4 +49,6 @@
   --data-bar: var(--bs-azure);
   --data-bar-peak: var(--bs-petal-ink);
   --data-bar-empty: rgba(64, 63, 76, 0.14);
+  --data-azure-soft: #a9c9fd; /* second series under azure: sent over not yet */
+  --data-fern-soft: #9fcfb8; /* second series under fern: clean over partial */
 }

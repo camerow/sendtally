@@ -1,49 +1,23 @@
 import React from "react";
-import { Link } from "react-router";
-import { TILE_BREAKDOWN_ROWS, useTrends } from "@sendtally/features/trends";
+import { useTrends } from "@sendtally/features/trends";
 import { t } from "@sendtally/features/i18n";
 import { MEMBERSHIP_PANEL_ID } from "../../billing/components/MembershipPanel";
 import { UpgradePanel } from "../../billing/components/UpgradePanel";
 import { useClientApi } from "../../lib/useClientApi";
-import { TrendBars } from "./TrendBars";
-import { TrendFilters } from "./TrendFilters";
-import { TrendTagBreakdown } from "./TrendTagBreakdown";
+import { FilterRow } from "./FilterRow";
+import { ScopeControl } from "./ScopeControl";
+import { TrendSection } from "./TrendSection";
+import { TrendStats } from "./TrendStats";
 
 export type TrendsOverviewProps = {
   apiUrl: string;
   preview?: boolean;
 };
 
-const monoMuted: React.CSSProperties = {
-  fontFamily: "var(--font-mono)",
-  textTransform: "uppercase",
-  fontWeight: 500,
-  fontSize: 11,
-  letterSpacing: "0.06em",
-  color: "rgba(64,63,76,0.55)",
-};
-
-const tileStyle: React.CSSProperties = {
-  background: "var(--bs-white)",
-  border: "1px solid var(--line-on-light-soft)",
-  borderRadius: "var(--radius-card)",
-  padding: 26,
-  display: "flex",
-  flexDirection: "column",
-  gap: 10,
-  textDecoration: "none",
-  color: "var(--bs-gunmetal)",
-};
-
 const scrollToPanel = (): void => {
   document
     .getElementById(MEMBERSHIP_PANEL_ID)
     ?.scrollIntoView({ behavior: "smooth", block: "start" });
-};
-
-const lockTile = (event: React.MouseEvent): void => {
-  event.preventDefault();
-  scrollToPanel();
 };
 
 export function TrendsOverview({
@@ -55,96 +29,47 @@ export function TrendsOverview({
   const { state } = feature;
 
   return (
-    <div>
-      <div style={{ display: "flex", alignItems: "baseline", gap: 16, flexWrap: "wrap" }}>
-        <h1
-          style={{
-            margin: 0,
-            fontFamily: "var(--font-display)",
-            fontWeight: 700,
-            fontSize: 32,
-            letterSpacing: "-0.03em",
-          }}
-        >
-          {t("common.trends")}
-        </h1>
-        {state.status === "ready" && <span style={monoMuted}>{state.data.caption}</span>}
+    <div className="trends">
+      <div className="trends-head">
+        <div className="trends-title">
+          <div className="trends-title-row">
+            <h1>{t("common.trends")}</h1>
+            {state.status === "ready" && (
+              <span className="trend-mono trend-muted" style={{ fontSize: 11 }}>
+                {state.data.sessionsLine}
+              </span>
+            )}
+          </div>
+          {state.status === "ready" && state.data.insight !== null && (
+            <p className="trends-insight">{state.data.insight}</p>
+          )}
+        </div>
+        {state.status === "ready" && <ScopeControl feature={feature} vm={state.data} />}
       </div>
-      <TrendFilters feature={feature} onLockedRange={scrollToPanel} />
       {state.status === "loading" && (
-        <span style={{ ...monoMuted, display: "block", marginTop: 22 }}>{t("common.loading")}</span>
+        <span className="trend-mono trend-muted" style={{ fontSize: 11, marginTop: 22 }}>
+          {t("common.loading")}
+        </span>
       )}
       {state.status === "error" && (
-        <span style={{ ...monoMuted, textTransform: "none", display: "block", marginTop: 22 }}>
+        <span className="trend-muted" style={{ fontSize: 13, marginTop: 22 }}>
           {t("trends.loadFailed")}
         </span>
       )}
       {state.status === "ready" && (
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
-            gap: 18,
-            marginTop: 24,
-          }}
-        >
-          {state.data.tiles.map((tile) => (
-            <Link
-              key={tile.metric}
-              to={`/app/trends/${tile.metric}`}
-              style={tileStyle}
-              onClick={preview ? lockTile : undefined}
-            >
-              <span
-                style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}
-              >
-                <span
-                  style={{
-                    fontFamily: "var(--font-mono)",
-                    fontWeight: 500,
-                    fontSize: 11,
-                    letterSpacing: "0.08em",
-                    textTransform: "uppercase",
-                    color: "var(--text-label-accent)",
-                  }}
-                >
-                  {tile.label}
-                </span>
-                {!preview && (
-                  <span
-                    style={{
-                      ...monoMuted,
-                      fontSize: 10,
-                      letterSpacing: "0.08em",
-                      color: "rgba(64,63,76,0.72)",
-                    }}
-                  >
-                    {t("trends.details")}
-                  </span>
-                )}
-              </span>
-              <span
-                style={{
-                  fontFamily: "var(--font-display)",
-                  fontWeight: 700,
-                  fontSize: 30,
-                  letterSpacing: "-0.02em",
-                }}
-              >
-                {tile.value}
-              </span>
-              <span style={{ ...monoMuted, color: "rgba(64,63,76,0.72)" }}>{tile.caption}</span>
-              <div style={{ marginTop: 4 }}>
-                <TrendBars bars={tile.bars} height={44} />
-              </div>
-              <TrendTagBreakdown
-                compact
-                title={feature.gymId === null ? t("trends.byTag") : t("trends.byCircuit")}
-                rows={state.data.details[tile.metric].breakdown.slice(0, TILE_BREAKDOWN_ROWS)}
+        <>
+          <FilterRow feature={feature} vm={state.data} onLockedRange={scrollToPanel} />
+          {state.data.stats !== null && <TrendStats stats={state.data.stats} />}
+          <div className="trend-sections">
+            {state.data.groups.map((group) => (
+              <TrendSection
+                key={group.id}
+                group={group}
+                onLockedLink={preview ? scrollToPanel : undefined}
               />
-            </Link>
-          ))}
-        </div>
+            ))}
+          </div>
+        </>
       )}
       {preview && (
         <div style={{ marginTop: 24 }}>

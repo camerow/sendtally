@@ -19,12 +19,8 @@ The test script lives in the root `package.json` for the same fingerprint reason
 ## Running
 
 1. Start the local API from `packages/api` with `npx wrangler dev`.
-2. Start Metro from `apps/mobile` pointed at the local API and the Clerk development instance:
-   ```
-   EXPO_PUBLIC_API_URL=http://localhost:8787 \
-   EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY=<pk_test key from apps/web/.dev.vars> \
-   npx expo start --port 8081 --clear
-   ```
+2. Start Metro from `apps/mobile` with `npx expo start --port 8081 --clear`.
+   A debug bundle defaults to the local API (`localhost:8787`, or `10.0.2.2:8787` on the Android emulator) and the Clerk development instance; `EXPO_PUBLIC_API_URL` and `EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY` still override both, for a physical phone or staging.
    The flows deep-link the development client to `localhost:8081` themselves.
 3. `pnpm run mobile:e2e` from the repo root, or `maestro test maestro/flows/<flow>.yaml` from `apps/mobile` for one flow.
    Metro's port is the `METRO_PORT` Maestro variable, default 8081, so a second worktree's bundler is reachable without editing anything: start Metro on its own port and pass it through, `maestro test -e DEV_CLIENT=true -e METRO_PORT=8082 maestro/`.

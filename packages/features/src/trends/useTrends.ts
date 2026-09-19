@@ -1,9 +1,18 @@
 import React from "react";
 import type { Gym, SendtallyApi, SessionWithClimbs } from "@sendtally/api-client";
 import { queries, useQueryPair, type QueryState } from "../query";
-import { filterSessionsByTags, sessionTagOptions, type TagOption } from "../sessions/tags";
-import { trendsVM } from "./transforms";
-import { PREVIEW_TREND_RANGE, type Discipline, type TrendRange, type TrendsVM } from "./types";
+import { daysVM } from "./days";
+import { enduranceVM } from "./endurance";
+import { trendsVM } from "./overview";
+import {
+  DEFAULT_TREND_FILTER,
+  PREVIEW_TREND_RANGE,
+  type DaysVM,
+  type EnduranceVM,
+  type TrendFilter,
+  type TrendRange,
+  type TrendsVM,
+} from "./types";
 
 export type TrendsOptions = {
   /** Non-member preview: pinned to the last 7 days, every other range reads as locked. */
@@ -13,93 +22,63 @@ export type TrendsOptions = {
 export type TrendsFeature = {
   state: QueryState<TrendsVM>;
   preview: boolean;
-  range: TrendRange;
-  setRange: (range: TrendRange) => void;
-  setDiscipline: (discipline: Discipline) => void;
-  tagOptions: TagOption[];
-  untaggedCount: number;
-  selectedTags: string[];
-  setTags: (slugs: string[]) => void;
-  toggleTag: (slug: string) => void;
-  clearTags: () => void;
-  /** Gyms with circuits, offered as a place filter; picking one groups the breakdown by circuit. */
-  gyms: Gym[];
-  gymId: string | null;
-  setGym: (gymId: string | null) => void;
+  /** What the charts are drawn from; the range is pinned in a preview. */
+  filter: TrendFilter;
+  setFilter: (next: (filter: TrendFilter) => TrendFilter) => void;
 };
 
-const withCircuits = (gyms: Gym[]): Gym[] => gyms.filter((g) => g.circuits.length > 0);
+type Data = [SessionWithClimbs[], Gym[]];
+
+function useTrendData(api: SendtallyApi): QueryState<Data> {
+  return useQueryPair(queries.sessionsWithClimbs(api), queries.gyms(api)).state;
+}
 
 export function useTrends(
   api: SendtallyApi,
   { preview = false }: TrendsOptions = {}
 ): TrendsFeature {
-  const [chosenRange, setRange] = React.useState<TrendRange>("3m");
-  const range = preview ? PREVIEW_TREND_RANGE : chosenRange;
-  const [discipline, setDiscipline] = React.useState<Discipline | null>(null);
-  const [selectedTags, setSelectedTags] = React.useState<string[]>([]);
-  const [gymId, setGym] = React.useState<string | null>(null);
-
-  const { state: raw } = useQueryPair(queries.sessionsWithClimbs(api), {
-    ...queries.gyms(api),
-    select: withCircuits,
-  });
-
-  const placed = React.useMemo(
-    (): SessionWithClimbs[] =>
+  const raw = useTrendData(api);
+  const [chosen, setChosen] = React.useState<TrendFilter>(DEFAULT_TREND_FILTER);
+  const filter = React.useMemo(
+    (): TrendFilter => (preview ? { ...chosen, range: PREVIEW_TREND_RANGE } : chosen),
+    [chosen, preview]
+  );
+  const state = React.useMemo(
+    (): QueryState<TrendsVM> =>
       raw.status !== "ready"
-        ? []
-        : gymId === null
-          ? raw.data[0]
-          : raw.data[0].filter((s) => s.gym_id === gymId),
-    [raw, gymId]
+        ? raw
+        : { status: "ready", data: trendsVM(raw.data[0], raw.data[1], filter) },
+    [raw, filter]
   );
-
-  const tagOptions = React.useMemo((): TagOption[] => sessionTagOptions(placed), [placed]);
-
-  const untaggedCount = React.useMemo(
-    (): number => placed.filter((s) => s.tags.length === 0).length,
-    [placed]
+  const setFilter = React.useCallback(
+    (next: (filter: TrendFilter) => TrendFilter): void => setChosen(next),
+    []
   );
+  return { state, preview, filter, setFilter };
+}
 
-  const state = React.useMemo((): QueryState<TrendsVM> => {
-    if (raw.status !== "ready") return raw;
-    return {
-      status: "ready",
-      data: trendsVM(
-        filterSessionsByTags(placed, selectedTags),
-        range,
-        new Date(),
-        discipline,
-        gymId === null ? "tag" : "circuit"
-      ),
-    };
-  }, [raw, placed, range, selectedTags, discipline, gymId]);
+export type EnduranceFeature = {
+  state: QueryState<EnduranceVM>;
+  range: TrendRange;
+  setRange: (range: TrendRange) => void;
+};
 
-  const toggleTag = React.useCallback((slug: string): void => {
-    setSelectedTags((prev) =>
-      prev.includes(slug) ? prev.filter((s) => s !== slug) : [...prev, slug]
-    );
-  }, []);
+export function useEnduranceTrends(api: SendtallyApi): EnduranceFeature {
+  const raw = useTrendData(api);
+  const [range, setRange] = React.useState<TrendRange>("1y");
+  const state = React.useMemo(
+    (): QueryState<EnduranceVM> =>
+      raw.status !== "ready" ? raw : { status: "ready", data: enduranceVM(raw.data[0], range) },
+    [raw, range]
+  );
+  return { state, range, setRange };
+}
 
-  const clearTags = React.useCallback((): void => setSelectedTags([]), []);
-
-  const setTags = React.useCallback((slugs: string[]): void => setSelectedTags(slugs), []);
-
-  return {
-    state,
-    preview,
-    range,
-    setRange,
-    setDiscipline,
-    tagOptions,
-    untaggedCount,
-    selectedTags,
-    setTags,
-    toggleTag,
-    clearTags,
-    gyms: raw.status === "ready" ? raw.data[1] : [],
-    gymId,
-    setGym,
-  };
+export function useDaysTrends(api: SendtallyApi): QueryState<DaysVM> {
+  const raw = useTrendData(api);
+  return React.useMemo(
+    (): QueryState<DaysVM> =>
+      raw.status !== "ready" ? raw : { status: "ready", data: daysVM(raw.data[0], raw.data[1]) },
+    [raw]
+  );
 }

@@ -1,5 +1,5 @@
 import { t } from "../i18n";
-import type { TrendMetric } from "../trends/types";
+import type { TrendTileId } from "../trends/types";
 
 export function memberPoints(): string[] {
   return [
@@ -11,7 +11,7 @@ export function memberPoints(): string[] {
 }
 
 export type MembershipPanelRow = {
-  metric: TrendMetric;
+  metric: TrendTileId;
   eyebrow: string;
   line: string;
   bars: number[];
