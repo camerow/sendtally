@@ -21,7 +21,7 @@ import { CircuitDot } from "../../components/CircuitDot";
 import { Icon } from "../../components/Icon";
 import { SelectRow } from "../../components/SelectRow";
 import { climbKindStorage } from "../../lib/climbKindStorage";
-import { pressRow } from "../../lib/press";
+import { pressRow, tap } from "../../lib/press";
 import { GradePicker } from "./GradePicker";
 
 function Option({
@@ -41,7 +41,7 @@ function Option({
     <Pressable
       accessibilityRole="radio"
       accessibilityState={{ checked: selected }}
-      onPress={onPress}
+      onPress={tap(onPress)}
       style={pressRow({
         height: 48,
         flexDirection: "row",

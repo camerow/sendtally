@@ -3,7 +3,7 @@ import { Pressable, Text } from "react-native";
 import Svg, { Path, Rect } from "react-native-svg";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
-import { press } from "../lib/press";
+import { press, tap } from "../lib/press";
 
 export type ChipProps = {
   label: string;
@@ -51,7 +51,7 @@ export function Chip({
       : "rgba(64,63,76,0.65)";
   return (
     <Pressable
-      onPress={onPress}
+      onPress={tap(onPress)}
       disabled={disabled}
       accessibilityRole="button"
       accessibilityLabel={locked ? t("common.membersOnly", { label }) : undefined}

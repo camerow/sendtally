@@ -49,7 +49,7 @@ import { SelectRow } from "../../components/SelectRow";
 import { ClimbEditorSheet } from "./ClimbEditorSheet";
 import { ClimbLedgerRow } from "./ClimbLedgerRow";
 import { DateTimeField } from "../../components/DateTimeField";
-import { press } from "../../lib/press";
+import { press, tap } from "../../lib/press";
 
 function LabelText({ children }: { children: React.ReactNode }): React.ReactElement {
   return (
@@ -82,7 +82,7 @@ function Chip({
 }): React.ReactElement {
   return (
     <Pressable
-      onPress={onPress}
+      onPress={tap(onPress)}
       style={press({
         paddingHorizontal: 14,
         minHeight: 40,
@@ -466,7 +466,7 @@ export function LogSessionForm({
             </View>
             {draft.rpe !== null && (
               <Pressable
-                onPress={() => setDraft({ ...draft, rpe: null })}
+                onPress={tap(() => setDraft({ ...draft, rpe: null }))}
                 style={{ minHeight: 32, justifyContent: "center" }}
               >
                 <Text
@@ -491,7 +491,7 @@ export function LogSessionForm({
                 <Pressable
                   key={value}
                   accessibilityLabel={t("common.effortValue", { n: value })}
-                  onPress={() => setDraft({ ...draft, rpe: value })}
+                  onPress={tap(() => setDraft({ ...draft, rpe: value }))}
                   style={{
                     flex: 1,
                     height: 44,

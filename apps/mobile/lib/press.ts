@@ -1,4 +1,4 @@
-import type { StyleProp, ViewStyle } from "react-native";
+import { Keyboard, type StyleProp, type ViewStyle } from "react-native";
 
 type PressState = { pressed: boolean };
 
@@ -12,4 +12,12 @@ export function press(style: StyleProp<ViewStyle>): (state: PressState) => Style
 /** Tints a row while it is held. For list rows and other flat surfaces, where dimming reads as a glitch. */
 export function pressRow(style: StyleProp<ViewStyle>): (state: PressState) => StyleProp<ViewStyle> {
   return ({ pressed }) => (pressed ? [style, { backgroundColor: PRESSED_TINT }] : style);
+}
+
+/** Runs a control's press with the keyboard put away, so nothing it opens or moves is hidden by the keys. */
+export function tap(handler: () => void): () => void {
+  return () => {
+    Keyboard.dismiss();
+    handler();
+  };
 }

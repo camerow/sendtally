@@ -7,7 +7,7 @@ import { Platform, Pressable, Text, View } from "react-native";
 import { formatDate, getLocale, t } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { Sheet } from "./Sheet";
-import { press } from "../lib/press";
+import { press, tap } from "../lib/press";
 
 export type DateTimeFieldProps = {
   mode: "date" | "time";
@@ -83,7 +83,7 @@ export function DateTimeField({
   return (
     <>
       <Pressable
-        onPress={openPicker}
+        onPress={tap(openPicker)}
         disabled={disabled}
         testID={testID}
         accessibilityRole="button"
@@ -113,7 +113,7 @@ export function DateTimeField({
         </Text>
         {onClear !== undefined && !empty && (
           <Pressable
-            onPress={onClear}
+            onPress={tap(onClear)}
             accessibilityRole="button"
             accessibilityLabel={t("common.clear")}
             hitSlop={10}

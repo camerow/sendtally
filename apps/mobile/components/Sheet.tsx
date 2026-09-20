@@ -5,7 +5,7 @@ import {
   type BottomSheetBackdropProps,
 } from "@gorhom/bottom-sheet";
 import React from "react";
-import { useWindowDimensions } from "react-native";
+import { Keyboard, useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors, radius } from "@sendtally/design/tokens";
 
@@ -20,6 +20,7 @@ export type SheetProps = {
  * A bottom sheet sized to its content, dismissed by a drag down, a tap on the scrim or the
  * hardware back button. It rides the keyboard so a focused field stays above the keys; text
  * fields inside it should be `BottomSheetTextInput` for that to hold across focus changes.
+ * Opening dismisses the keyboard, so a sheet opened from a form is never half under the keys.
  *
  * Every open mounts a fresh modal (the `key`): a modal presented again after a dismiss can
  * come back mounted but closed, and dismissing one that was never presented leaves it stuck.
@@ -44,8 +45,10 @@ export function Sheet({
   }
 
   React.useEffect(() => {
-    if (visible) ref.current?.present();
-    else ref.current?.dismiss();
+    if (visible) {
+      Keyboard.dismiss();
+      ref.current?.present();
+    } else ref.current?.dismiss();
   }, [visible, generation]);
 
   const renderBackdrop = React.useCallback(

@@ -10,7 +10,7 @@ import { t } from "@sendtally/features/i18n";
 import { colors, fonts } from "@sendtally/design/tokens";
 import { CircuitDot } from "../../components/CircuitDot";
 import { Icon } from "../../components/Icon";
-import { press, pressRow } from "../../lib/press";
+import { press, pressRow, tap } from "../../lib/press";
 
 export type ClimbLedgerRowProps = {
   climb: ClimbDraft;
@@ -33,7 +33,7 @@ function Stepper({
 }): React.ReactElement {
   return (
     <Pressable
-      onPress={onPress}
+      onPress={tap(onPress)}
       disabled={disabled}
       hitSlop={6}
       accessibilityRole="button"
@@ -69,7 +69,7 @@ function EnduranceLedgerRow({
   const meta = `${enduranceLapCountLabel(endurance.laps.length)} · ${enduranceSummaryLabel(endurance)}`;
   return (
     <Pressable
-      onPress={onPress}
+      onPress={tap(onPress)}
       accessibilityRole="button"
       accessibilityLabel={`${named ? climb.name : t("endurance.title")}, ${climb.grade}, ${meta}`}
       style={pressRow({
@@ -121,7 +121,8 @@ export function ClimbLedgerRow({
   onPress,
   onChangeTries,
 }: ClimbLedgerRowProps): React.ReactElement {
-  if (climb.endurance !== undefined) return <EnduranceLedgerRow climb={climb} onPress={onPress} />;
+  if (climb.endurance !== undefined)
+    return <EnduranceLedgerRow climb={climb} onPress={tap(onPress)} />;
   const named = climb.name.trim() !== "";
   const send = climb.kind === "send";
   const circuit = climb.circuit;
