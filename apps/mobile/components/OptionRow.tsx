@@ -2,7 +2,7 @@ import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { Icon } from "./Icon";
-import { pressRow } from "../lib/press";
+import { pressRow, tap } from "../lib/press";
 
 /** One choice inside a SelectRow sheet: label, optional leading mark, check when selected. */
 export function OptionRow({
@@ -25,7 +25,7 @@ export function OptionRow({
       accessibilityRole="radio"
       accessibilityState={{ checked: selected }}
       accessibilityLabel={detail === undefined ? label : `${label}, ${detail}`}
-      onPress={onPress}
+      onPress={tap(onPress)}
       style={pressRow({
         height: 48,
         flexDirection: "row",

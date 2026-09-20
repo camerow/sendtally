@@ -22,7 +22,7 @@ import { t } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { Icon } from "../../components/Icon";
 import { SelectRow } from "../../components/SelectRow";
-import { press, pressRow } from "../../lib/press";
+import { press, pressRow, tap } from "../../lib/press";
 
 const label = {
   fontFamily: fonts.monoMedium,
@@ -45,7 +45,7 @@ function Stepper({
 }): React.ReactElement {
   return (
     <Pressable
-      onPress={onPress}
+      onPress={tap(onPress)}
       disabled={disabled}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
@@ -120,7 +120,7 @@ function UnitToggle({
         return (
           <Pressable
             key={unit}
-            onPress={() => onChange(unit)}
+            onPress={tap(() => onChange(unit))}
             accessibilityRole="radio"
             accessibilityState={{ checked: active }}
             accessibilityLabel={enduranceUnitLabel(unit)}
@@ -167,7 +167,7 @@ function LapChip({
 }): React.ReactElement {
   return (
     <Pressable
-      onPress={onPress}
+      onPress={tap(onPress)}
       accessibilityRole="radio"
       accessibilityState={{ checked: selected }}
       accessibilityLabel={`${t("endurance.lapNumber", { n })}, ${clean ? t("endurance.completed") : value}`}

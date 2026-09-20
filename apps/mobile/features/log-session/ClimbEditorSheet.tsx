@@ -21,7 +21,7 @@ import { Sheet } from "../../components/Sheet";
 import { ClimbGradePicker, ClimbKindPicker } from "./ClimbKindPicker";
 import { EnduranceFields } from "./EnduranceFields";
 import { ResultPicker } from "./ResultPicker";
-import { press, pressRow } from "../../lib/press";
+import { press, pressRow, tap } from "../../lib/press";
 
 export type ClimbEditorSheetProps = {
   climb: ClimbDraft | null;
@@ -90,7 +90,7 @@ function DisciplineToggle({
         return (
           <Pressable
             key={discipline}
-            onPress={() => onChange(discipline)}
+            onPress={tap(() => onChange(discipline))}
             accessibilityRole="radio"
             accessibilityState={{ checked: active }}
             accessibilityLabel={disciplineLabel(discipline)}
@@ -132,7 +132,7 @@ function StepButton({
 }): React.ReactElement {
   return (
     <Pressable
-      onPress={onPress}
+      onPress={tap(onPress)}
       disabled={disabled}
       style={press({
         width: 40,
@@ -188,7 +188,7 @@ function ProjectRow({
 }): React.ReactElement {
   return (
     <Pressable
-      onPress={onPress}
+      onPress={tap(onPress)}
       disabled={!enabled}
       accessibilityRole="checkbox"
       accessibilityState={{ checked: on, disabled: !enabled }}
@@ -248,7 +248,7 @@ function ChoiceChip({
 }): React.ReactElement {
   return (
     <Pressable
-      onPress={onPress}
+      onPress={tap(onPress)}
       accessibilityRole="radio"
       accessibilityState={{ checked: active }}
       accessibilityLabel={label}
@@ -377,7 +377,7 @@ export function ClimbEditorSheet({
             </Text>
             {removable && (
               <Pressable
-                onPress={onRemove}
+                onPress={tap(onRemove)}
                 hitSlop={12}
                 accessibilityRole="button"
                 accessibilityLabel={t("logSession.removeClimb")}
@@ -556,7 +556,7 @@ export function ClimbEditorSheet({
               on={project}
               enabled={named}
               meta={known === null ? null : projectMetaLabel(known)}
-              onPress={onToggleProject}
+              onPress={tap(onToggleProject)}
             />
           )}
 
