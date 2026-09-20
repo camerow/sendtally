@@ -23,15 +23,31 @@ created on `wrangler deploy` and need the script to exist first, so they stay in
 ```sh
 brew install hashicorp/tap/terraform     # >= 1.9
 cd infra/terraform
+export TF_VAR_cloudflare_api_token=...    # from 1Password, vault "Send Tally"
+export AWS_ACCESS_KEY_ID=...             # R2 API token, same vault
+export AWS_SECRET_ACCESS_KEY=...
 terraform init
-cp terraform.tfvars.example terraform.tfvars
-export TF_VAR_cloudflare_api_token=...   # from 1Password, vault "Send Tally"
 terraform plan
 ```
 
-State is local and gitignored. There is one operator; if that changes, move
-state to an R2 bucket with the `s3` backend before a second person runs
-`apply`.
+State lives in the R2 bucket `sendtally-tfstate` (`versions.tf`), reached
+through R2's S3-compatible API, so it survives the loss of any one machine and
+a second operator can run `apply`. The bucket is created by hand, since state
+cannot live in a bucket this config creates:
+
+```sh
+CLOUDFLARE_ACCOUNT_ID=f3514650e9f74f7fe7db71fdd6577a8f \
+  npx wrangler r2 bucket create sendtally-tfstate
+```
+
+The `AWS_*` variables are an R2 API token ("Object Read & Write" on that
+bucket), created at dash.cloudflare.com under R2 > API. Terraform's `s3`
+backend reads those names; nothing here talks to AWS.
+
+There is no `terraform.tfvars` to copy. DNS records live in the committed
+`dns_records.auto.tfvars`, which Terraform loads automatically - every value in
+it is public, since a DNS lookup returns all of it. The API token is the one
+secret and stays in the environment.
 
 ### API token
 
@@ -51,7 +67,7 @@ Create at dash.cloudflare.com/profile/api-tokens ("Create Custom Token"):
 | Zone    | Dynamic Redirect     | Edit  |
 
 Account resources: **Chalk and Circuits** only. Zone resources: all zones in
-that account. Store it in 1Password; never in tfvars or the repo.
+that account. Store it in 1Password; never in a tfvars file or the repo.
 
 Dynamic Redirect is what lets Terraform manage `redirects.tf`. A token without it
 plans the ruleset happily and then fails the apply with a bare
@@ -59,7 +75,7 @@ plans the ruleset happily and then fails the apply with a bare
 
 ## Day-to-day
 
-- New DNS record: add to `dns_records` in `terraform.tfvars`, `terraform apply`.
+- New DNS record: add to `dns_records.auto.tfvars`, open a pull request, `terraform apply` once it merges.
 - New D1 environment: extend `local.environments` in `d1.tf`, apply,
   then paste the id from `terraform output d1_database_ids` into `wrangler.jsonc`.
 - D1 schema changes stay in Drizzle + `wrangler d1 migrations apply`; Terraform
