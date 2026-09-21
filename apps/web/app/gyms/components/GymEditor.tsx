@@ -46,6 +46,7 @@ export type GymEditorProps = {
   error: string | null;
   onSave: (draft: GymDraft) => void;
   onDelete: (() => void) | null;
+  inDialog?: boolean;
 };
 
 /** One page for a new gym and for editing one; nothing is written until Save. */
@@ -55,6 +56,7 @@ export function GymEditor({
   error,
   onSave,
   onDelete,
+  inDialog = false,
 }: GymEditorProps): React.ReactElement {
   const [draft, setDraft] = React.useState<GymDraft>(initial);
   const [mode, setMode] = React.useState<CircuitMode>("standard");
@@ -79,7 +81,7 @@ export function GymEditor({
 
   return (
     <div style={{ maxWidth: 640, display: "flex", flexDirection: "column", gap: 14 }}>
-      <BackLink to="/app/settings">{t("common.settings")}</BackLink>
+      {!inDialog && <BackLink to="/app/settings">{t("common.settings")}</BackLink>}
       <h1 style={pageTitle}>{initial.id === null ? t("gyms.newGym") : t("gyms.editGym")}</h1>
 
       <Section>

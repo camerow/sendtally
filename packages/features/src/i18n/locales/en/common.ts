@@ -58,6 +58,7 @@ export const common = {
   "common.filters": "Filters",
   "common.clear": "Clear",
   "common.tags": "Tags",
+  "common.close": "Close",
   "common.closeFilters": "Close filters",
   "common.notes": "Notes",
   "common.addATag": "Add a tag",

@@ -41,6 +41,8 @@ import { climbKindStorage } from "../../lib/climbKindStorage";
 import { sessionDraftStorage } from "../../lib/sessionDraftStorage";
 import { DraftBanner } from "./DraftBanner";
 import { ClimbCard } from "./ClimbCard";
+import { Icon } from "../../components/Icon";
+import { NewGymDialog } from "../../gyms/components/NewGymDialog";
 import { ClimbEditorSheet } from "./ClimbEditorSheet";
 import { ClimbLedgerRow } from "./ClimbLedgerRow";
 import { Glyph } from "./Glyph";
@@ -169,6 +171,7 @@ export function LogSessionForm({
   const circuitChoices = draft.location === "indoor" ? circuitGyms(gyms.gyms) : [];
   const narrow = useIsNarrow();
   const [editingKey, setEditingKey] = React.useState<string | null>(null);
+  const [addingGym, setAddingGym] = React.useState(false);
 
   // The preference query resolves after the first render, so a new draft adopts the user's
   // scale once, per discipline and only where no grade has been typed yet. A draft picked
@@ -413,6 +416,25 @@ export function LogSessionForm({
               </select>
             </Field>
           )}
+          {draft.location === "indoor" && gyms.ready && gyms.gyms.length === 0 && (
+            <Field label={t("gyms.gym")}>
+              <button
+                type="button"
+                onClick={() => setAddingGym(true)}
+                className="log-session-chip"
+                style={{
+                  ...chipStyle(false),
+                  alignSelf: "flex-start",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                }}
+              >
+                <Icon name="plus" size={14} strokeWidth={2.2} />
+                {t("gyms.addGym")}
+              </button>
+            </Field>
+          )}
           <Field
             label={
               <>
@@ -543,6 +565,10 @@ export function LogSessionForm({
             void navigate(cancelTo);
           }}
         />
+      )}
+
+      {addingGym && (
+        <NewGymDialog gyms={gyms} onClose={() => setAddingGym(false)} onCreated={setGym} />
       )}
 
       {narrow && editingClimb !== null && (
