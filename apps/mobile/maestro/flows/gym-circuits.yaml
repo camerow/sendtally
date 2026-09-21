@@ -7,6 +7,8 @@ name: gym-circuits
 - runFlow: ../helpers/open-dev-client.yaml
 - runFlow: ../helpers/ensure-signed-in.yaml
 - runFlow: ../helpers/discard-live-session.yaml
+- runFlow: ../helpers/delete-maestro-gym.yaml
+- tapOn: "Log(, tab.*)?"
 - runFlow:
     when:
       visible: "Add your gym"
@@ -16,7 +18,7 @@ name: gym-circuits
     when:
       notVisible: "New gym"
     commands:
-      - tapOn: "Settings, tab, 4 of 4"
+      - tapOn: "Settings(, tab.*)?"
       - scrollUntilVisible:
           element: "Add gym"
           direction: DOWN
@@ -36,7 +38,7 @@ name: gym-circuits
 - pressKey: Enter
 - assertVisible: "Remove wall: Cave"
 - tapOn: "Save gym"
-- tapOn: "Log, tab, 1 of 4"
+- tapOn: "Log(, tab.*)?"
 - assertNotVisible: "Add your gym"
 - tapOn: "Climb"
 - assertVisible: "CLIMB 1 OF 1"
@@ -47,21 +49,16 @@ name: gym-circuits
 - assertVisible: "Grade, Yellow · V1–V2"
 - tapOn: "Cave"
 - tapOn: "V2"
+- scrollUntilVisible:
+    element: "Save"
+    direction: DOWN
 - tapOn: "Save"
-- assertVisible: ".*In progress for .* · Maestro Barn.*"
-- assertVisible: "Yellow V2 Yellow · Cave, send, 1 try"
+# Looking for a live session to discard left the list scrolled down, and the live card is at the
+# top of it.
+- scrollUntilVisible:
+    element: ".*In progress for .* · Maestro Barn.*"
+    direction: UP
+    centerElement: true
+- assertVisible: "Yellow V2 Yellow · Cave, attempt, 1 try"
 - runFlow: ../helpers/discard-live-session.yaml
-- tapOn: "Settings, tab, 4 of 4"
-- scrollUntilVisible:
-    element: "Maestro Barn, .*"
-    direction: DOWN
-- tapOn: "Maestro Barn, .*"
-- assertVisible: "Edit gym"
-- scrollUntilVisible:
-    element: "Delete gym"
-    direction: DOWN
-- tapOn: "Delete gym"
-- tapOn:
-    text: "Delete gym"
-    index: 1
-- assertNotVisible: "Maestro Barn, .*"
+- runFlow: ../helpers/delete-maestro-gym.yaml

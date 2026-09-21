@@ -1,0 +1,24 @@
+appId: com.sendtally.app
+# A gym changes the climb sheet for every flow after it, so one a failed run left behind is
+# deleted before the next run makes another, not only at the end of a run that got that far.
+---
+- tapOn: "Settings(, tab.*)?"
+- scrollUntilVisible:
+    element: "Maestro Barn, .*"
+    direction: DOWN
+    timeout: 5000
+    optional: true
+- runFlow:
+    when:
+      visible: "Maestro Barn, .*"
+    commands:
+      - tapOn: "Maestro Barn, .*"
+      - assertVisible: "Edit gym"
+      - scrollUntilVisible:
+          element: "Delete gym"
+          direction: DOWN
+      - tapOn: "Delete gym"
+      - tapOn:
+          text: "Delete gym"
+          rightOf: "Cancel"
+      - assertNotVisible: "Maestro Barn, .*"
