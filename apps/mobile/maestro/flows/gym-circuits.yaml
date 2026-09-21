@@ -7,6 +7,8 @@ name: gym-circuits
 - runFlow: ../helpers/open-dev-client.yaml
 - runFlow: ../helpers/ensure-signed-in.yaml
 - runFlow: ../helpers/discard-live-session.yaml
+- runFlow: ../helpers/delete-maestro-gym.yaml
+- tapOn: "Log(, tab.*)?"
 - runFlow:
     when:
       visible: "Add your gym"
@@ -47,21 +49,11 @@ name: gym-circuits
 - assertVisible: "Grade, Yellow · V1–V2"
 - tapOn: "Cave"
 - tapOn: "V2"
+- scrollUntilVisible:
+    element: "Save"
+    direction: DOWN
 - tapOn: "Save"
 - assertVisible: ".*In progress for .* · Maestro Barn.*"
-- assertVisible: "Yellow V2 Yellow · Cave, send, 1 try"
+- assertVisible: "Yellow V2 Yellow · Cave, attempt, 1 try"
 - runFlow: ../helpers/discard-live-session.yaml
-- tapOn: "Settings(, tab.*)?"
-- scrollUntilVisible:
-    element: "Maestro Barn, .*"
-    direction: DOWN
-- tapOn: "Maestro Barn, .*"
-- assertVisible: "Edit gym"
-- scrollUntilVisible:
-    element: "Delete gym"
-    direction: DOWN
-- tapOn: "Delete gym"
-- tapOn:
-    text: "Delete gym"
-    rightOf: "Cancel"
-- assertNotVisible: "Maestro Barn, .*"
+- runFlow: ../helpers/delete-maestro-gym.yaml
