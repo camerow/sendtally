@@ -37,8 +37,8 @@ describe("sessionMetaLabel", () => {
   });
 
   it("omits the duration of a session saved without both times", () => {
-    expect(sessionMetaLabel(session({ times: "none" }))).toBe("14 climbs · Effort 7/10");
-    expect(sessionMetaLabel(session({ times: "start" }))).toBe("14 climbs · Effort 7/10");
+    expect(sessionMetaLabel(session({ times: "none" }))).toBe("14 climbs");
+    expect(sessionMetaLabel(session({ times: "start" }))).toBe("14 climbs");
   });
 });
 
