@@ -53,7 +53,12 @@ name: gym-circuits
     element: "Save"
     direction: DOWN
 - tapOn: "Save"
-- assertVisible: ".*In progress for .* · Maestro Barn.*"
+# Looking for a live session to discard left the list scrolled down, and the live card is at the
+# top of it.
+- scrollUntilVisible:
+    element: ".*In progress for .* · Maestro Barn.*"
+    direction: UP
+    centerElement: true
 - assertVisible: "Yellow V2 Yellow · Cave, attempt, 1 try"
 - runFlow: ../helpers/discard-live-session.yaml
 - runFlow: ../helpers/delete-maestro-gym.yaml
