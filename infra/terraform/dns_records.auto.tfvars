@@ -118,8 +118,17 @@ dns_records = {
 
   # Amazon SES via PostHog, for onboarding mail sent from mail.sendtally.com.
   # The subdomain keeps sending reputation off the apex, which Google Workspace
-  # and Clerk use. It has no DMARC record of its own, so it inherits p=reject
-  # from the apex; PostHog asks for p=none there, which would weaken it.
+  # and Clerk use. It would inherit the apex p=reject with no DMARC record of
+  # its own, but PostHog will not mark the domain configured until it can look
+  # one up, and inheritance works by there being nothing to find. So the policy
+  # is published explicitly, at reject rather than the p=none PostHog asks for.
+  ses_dmarc = {
+    name    = "_dmarc.mail"
+    type    = "TXT"
+    content = "\"v=DMARC1; p=reject;\""
+    ttl     = 3600
+    comment = "DMARC for mail.sendtally.com, matching the apex"
+  }
   ses_verify = {
     name    = "_amazonses.mail"
     type    = "TXT"
