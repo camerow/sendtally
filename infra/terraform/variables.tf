@@ -1,5 +1,5 @@
-variable "cloudflare_api_token" {
-  description = "API token scoped to the Chalk and Circuits account (see README for permissions). Supply via TF_VAR_cloudflare_api_token, never in tfvars."
+variable "CLOUDFLARE_API_TOKEN" {
+  description = "API token scoped to the Chalk and Circuits account (see README for permissions). Supply via TF_VAR_CLOUDFLARE_API_TOKEN, never in tfvars."
   type        = string
   sensitive   = true
 }
