@@ -19,6 +19,12 @@ name: gym-circuits
       notVisible: "New gym"
     commands:
       - tapOn: "Settings(, tab.*)?"
+      # Looking for a leftover gym left Settings scrolled to wherever that search ended.
+      - scrollUntilVisible:
+          element: "Add gym"
+          direction: UP
+          timeout: 8000
+          optional: true
       - scrollUntilVisible:
           element: "Add gym"
           direction: DOWN
