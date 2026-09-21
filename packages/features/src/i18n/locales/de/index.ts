@@ -10,7 +10,6 @@ import { gyms } from "./gyms";
 import { importCsv } from "./importCsv";
 import { journal } from "./journal";
 import { logSession } from "./logSession";
-import { moderation } from "./moderation";
 import { onboarding } from "./onboarding";
 import { projects } from "./projects";
 import { sessionDetail } from "./sessionDetail";
@@ -31,7 +30,6 @@ export const de = {
   ...importCsv,
   ...journal,
   ...logSession,
-  ...moderation,
   ...onboarding,
   ...projects,
   ...sessionDetail,

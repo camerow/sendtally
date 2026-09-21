@@ -2,7 +2,6 @@ import React from "react";
 import { Button } from "@sendtally/design";
 import type { DuplicateItem, SendtallyApi } from "@sendtally/api-client";
 import { queuedOn, useModerationAction } from "@sendtally/features/areas";
-import { t } from "@sendtally/features/i18n";
 import { DuplicateSide } from "./DuplicateSide";
 import { ModCard } from "./ModCard";
 import { NoteDialog } from "./NoteDialog";
@@ -21,12 +20,12 @@ export function DuplicateCard({
 
   return (
     <ModCard
-      kicker={`${t("moderation.duplicates")} · ${queuedOn(item.created_at)}`}
+      kicker={`Duplicates · ${queuedOn(item.created_at)}`}
       error={dismissing ? null : error}
       actions={
         <>
           <Button variant="ghostOnLight" size="sm" onClick={() => setDismissing(true)}>
-            {t("moderation.dismiss")}
+            Dismiss
           </Button>
           <Button
             variant="azure"
@@ -34,28 +33,28 @@ export function DuplicateCard({
             disabled={busy || survivor === null || merged === null}
             onClick={() => void run(() => api.mergeDuplicate(item.id, swap))}
           >
-            {t("moderation.merge")}
+            Merge
           </Button>
         </>
       }
     >
       {item.note !== null && <p className="mod-quote">{item.note}</p>}
       <div className="mod-sides">
-        <DuplicateSide label={t("moderation.survives")} climb={survivor} />
+        <DuplicateSide label="Survives" climb={survivor} />
         <button
           type="button"
           className="mod-swap"
           aria-pressed={swap}
           onClick={() => setSwap((s) => !s)}
         >
-          ⇄ {t("moderation.swap")}
+          ⇄ Swap
         </button>
-        <DuplicateSide label={t("moderation.mergedAway")} climb={merged} />
+        <DuplicateSide label="Merged away" climb={merged} />
       </div>
       {dismissing && (
         <NoteDialog
-          title={t("moderation.dismissTitle")}
-          submitLabel={t("moderation.dismiss")}
+          title="Dismiss this duplicate report?"
+          submitLabel="Dismiss"
           busy={busy}
           error={error}
           onClose={() => setDismissing(false)}

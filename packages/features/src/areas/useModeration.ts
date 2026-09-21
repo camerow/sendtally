@@ -1,7 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
 import React from "react";
 import { ApiError, type ModerationQueue, type SendtallyApi } from "@sendtally/api-client";
-import { t } from "../i18n";
 import { queries, useQuery, type Query } from "../query";
 
 export function useModerationQueue(api: SendtallyApi): Query<ModerationQueue> {
@@ -33,8 +32,8 @@ export function useModerationAction(): ModerationAction {
         const conflict = e instanceof ApiError && e.status === 409;
         setError(
           conflict
-            ? (conflictMessage ?? t("moderation.changedWhileReviewing"))
-            : t("common.somethingWentWrongTryAgain")
+            ? (conflictMessage ?? "It changed while you were reviewing. Check the updated version.")
+            : "Something went wrong. Try again."
         );
         if (conflict) await client.invalidateQueries({ queryKey: ["moderation"] });
       } finally {

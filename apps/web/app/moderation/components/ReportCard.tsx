@@ -3,7 +3,6 @@ import { Link } from "react-router";
 import { Button } from "@sendtally/design";
 import type { ReportItem, SendtallyApi } from "@sendtally/api-client";
 import { queuedOn, useModerationAction } from "@sendtally/features/areas";
-import { t } from "@sendtally/features/i18n";
 import { ModCard } from "./ModCard";
 
 export function ReportCard({
@@ -19,7 +18,7 @@ export function ReportCard({
 
   return (
     <ModCard
-      kicker={`${t(item.entity_type === "area" ? "moderation.area" : "moderation.climb")} · ${queuedOn(item.created_at)}`}
+      kicker={`${item.entity_type === "area" ? "Area" : "Climb"} · ${queuedOn(item.created_at)}`}
       error={error}
       actions={
         <Button
@@ -28,12 +27,12 @@ export function ReportCard({
           disabled={busy}
           onClick={() => void run(() => api.resolveReport(item.id))}
         >
-          {t("moderation.resolve")}
+          Resolve
         </Button>
       }
     >
       {entity === null ? (
-        <span className="mod-title">{t("moderation.entityGone")}</span>
+        <span className="mod-title">Deleted or merged</span>
       ) : (
         <Link to={`${base}${entity.slug}`} className="mod-title">
           {entity.name}

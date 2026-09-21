@@ -1,8 +1,9 @@
-import type { RevisionItem } from "@sendtally/api-client";
-import { formatDate, formatNumber, t, type MessageKey } from "../i18n";
+import type { AreaSummary, CreationItem, RevisionItem } from "@sendtally/api-client";
+import { formatDate, formatNumber } from "../i18n";
 import { climbTypeLabel } from "./transforms";
 import type { ClimbType } from "./types";
 
+// Moderation is internal tooling: English only, no i18n.
 export type ModerationTab = "creations" | "revisions" | "duplicates" | "reports";
 
 export const MODERATION_TABS: readonly ModerationTab[] = [
@@ -12,35 +13,34 @@ export const MODERATION_TABS: readonly ModerationTab[] = [
   "reports",
 ];
 
-const TAB_KEYS: Record<ModerationTab, MessageKey> = {
-  creations: "moderation.creations",
-  revisions: "moderation.edits",
-  duplicates: "moderation.duplicates",
-  reports: "moderation.reports",
+const TAB_LABELS: Record<ModerationTab, string> = {
+  creations: "Creations",
+  revisions: "Edits",
+  duplicates: "Duplicates",
+  reports: "Reports",
 };
 
 export function moderationTabLabel(tab: ModerationTab): string {
-  return t(TAB_KEYS[tab]);
+  return TAB_LABELS[tab];
 }
 
-const FIELD_KEYS: Record<string, MessageKey> = {
-  parent_id: "moderation.parentArea",
-  area_id: "areas.crag",
-  name: "areas.name",
-  description: "areas.description",
-  lat: "areas.latitude",
-  lon: "areas.longitude",
-  type: "areas.type",
-  grade_scale: "areas.gradeScale",
-  grade_value: "areas.grade",
-  length_m: "areas.lengthMetres",
-  bolts: "areas.bolts",
-  first_ascent: "areas.firstAscent",
+const FIELD_LABELS: Record<string, string> = {
+  parent_id: "Parent area",
+  area_id: "Crag",
+  name: "Name",
+  description: "Description",
+  lat: "Latitude",
+  lon: "Longitude",
+  type: "Type",
+  grade_scale: "Grade scale",
+  grade_value: "Grade",
+  length_m: "Length (m)",
+  bolts: "Bolts",
+  first_ascent: "First ascent",
 };
 
 export function fieldLabel(field: string): string {
-  const key = FIELD_KEYS[field];
-  return key === undefined ? field : t(key);
+  return FIELD_LABELS[field] ?? field;
 }
 
 export function fieldValue(field: string, value: unknown): string {
@@ -97,4 +97,20 @@ export function revisionVersion(revision: RevisionItem): number | null {
 
 export function queuedOn(iso: string): string {
   return formatDate(new Date(iso), { day: "numeric", month: "short" });
+}
+
+export type CreationGroup = { area: AreaSummary | null; items: CreationItem[] };
+
+/** Creations grouped under the area they add or belong to, oldest group first, the area itself leading. */
+export function groupCreations(items: CreationItem[]): CreationGroup[] {
+  const groups = new Map<string, CreationGroup>();
+  for (const item of items) {
+    const key = item.entity_type === "area" ? item.area.id : item.climb.area_id;
+    const group = groups.get(key) ?? { area: null, items: [] };
+    group.area ??= item.area;
+    if (item.entity_type === "area") group.items.unshift(item);
+    else group.items.push(item);
+    groups.set(key, group);
+  }
+  return [...groups.values()];
 }

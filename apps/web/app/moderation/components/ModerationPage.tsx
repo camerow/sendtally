@@ -1,14 +1,16 @@
 import React from "react";
-import { useSearchParams } from "react-router";
+import { Link, useSearchParams } from "react-router";
 import type { ModerationQueue, SendtallyApi } from "@sendtally/api-client";
 import { Logo } from "@sendtally/design";
 import {
+  groupCreations,
   MODERATION_TABS,
   moderationTabLabel,
   useModerationQueue,
   type ModerationTab,
 } from "@sendtally/features/areas";
-import { formatNumber, t } from "@sendtally/features/i18n";
+import { formatNumber } from "@sendtally/features/i18n";
+import { PendingBadge } from "../../areas/components/PendingBadge";
 import { useClientApi } from "../../lib/useClientApi";
 import { CreationCard } from "./CreationCard";
 import { DuplicateCard } from "./DuplicateCard";
@@ -25,12 +27,22 @@ function itemsOf(
 ): React.ReactElement[] {
   switch (tab) {
     case "creations":
-      return queue.creations.items.map((item) => (
-        <CreationCard
-          key={item.entity_type === "area" ? item.area.id : item.climb.id}
-          api={api}
-          item={item}
-        />
+      return groupCreations(queue.creations.items).map((group, i) => (
+        <section key={group.area?.id ?? i} className="mod-group">
+          {group.area !== null && (
+            <h2 className="mod-group-head">
+              <Link to={`/app/areas/${group.area.slug}`}>{group.area.name}</Link>
+              {group.area.status === "pending" && <PendingBadge />}
+            </h2>
+          )}
+          {group.items.map((item) => (
+            <CreationCard
+              key={item.entity_type === "area" ? item.area.id : item.climb.id}
+              api={api}
+              item={item}
+            />
+          ))}
+        </section>
       ));
     case "revisions":
       return queue.revisions.items.map((item) => (
@@ -59,10 +71,10 @@ export function ModerationPage({ apiUrl }: { apiUrl: string }): React.ReactEleme
         <span className="sessions-head-mark">
           <Logo variant="mark" size={22} />
         </span>
-        <h1 className="sessions-title">{t("moderation.title")}</h1>
+        <h1 className="sessions-title">Moderation</h1>
       </div>
 
-      <div className="mod-tabs" role="tablist" aria-label={t("moderation.queues")}>
+      <div className="mod-tabs" role="tablist" aria-label="Moderation queues">
         {MODERATION_TABS.map((value) => (
           <button
             key={value}
@@ -83,17 +95,17 @@ export function ModerationPage({ apiUrl }: { apiUrl: string }): React.ReactEleme
       </div>
 
       <div role="tabpanel" className="mod-list">
-        {state.status === "loading" && <span className="area-meta">{t("common.loading")}</span>}
+        {state.status === "loading" && <span className="area-meta">Loading…</span>}
         {state.status === "error" && (
-          <span className="area-meta">{t("moderation.loadFailed")}</span>
+          <span className="area-meta">Could not load the moderation queue.</span>
         )}
         {queue !== null && current !== null && (
           <>
-            {current.count === 0 && <p className="area-empty">{t("moderation.empty")}</p>}
+            {current.count === 0 && <p className="area-empty">Nothing waiting here.</p>}
             {itemsOf(api, queue, tab)}
             {current.count > current.items.length && (
               <span className="area-meta">
-                {t("moderation.showing", { shown: current.items.length, count: current.count })}
+                {`Showing ${current.items.length} of ${current.count}`}
               </span>
             )}
           </>

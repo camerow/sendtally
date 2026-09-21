@@ -2,7 +2,6 @@ import React from "react";
 import { Link } from "react-router";
 import type { DuplicateItem } from "@sendtally/api-client";
 import { areaClimbGradeLabel, climbTypeLabel } from "@sendtally/features/areas";
-import { t } from "@sendtally/features/i18n";
 
 export function DuplicateSide({
   label,
@@ -15,7 +14,7 @@ export function DuplicateSide({
     <div className="mod-side">
       <span className="mod-label">{label}</span>
       {climb === null ? (
-        <span className="mod-muted">{t("moderation.noLongerLive")}</span>
+        <span className="mod-muted">No longer live</span>
       ) : (
         <>
           <Link to={`/app/climbs/${climb.slug}`} className="mod-title">
@@ -25,7 +24,7 @@ export function DuplicateSide({
             {`${climbTypeLabel(climb.type)} · ${areaClimbGradeLabel(climb)}`}
           </span>
           <span className="mod-muted">
-            {t("moderation.linkedSessions", { count: climb.links })}
+            {`${climb.links} linked session${climb.links === 1 ? "" : "s"}`}
           </span>
         </>
       )}

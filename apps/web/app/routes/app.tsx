@@ -10,7 +10,7 @@ import {
   useRouteLoaderData,
 } from "react-router";
 import { Logo } from "@sendtally/design";
-import { t, type MessageKey } from "@sendtally/features/i18n";
+import { t } from "@sendtally/features/i18n";
 import { queries, useQuery } from "@sendtally/features/query";
 import { ErrorPage } from "../components/ErrorPage";
 import { Icon, type IconName } from "../components/Icon";
@@ -31,17 +31,17 @@ export async function loader(args: LoaderFunctionArgs): Promise<{ apiUrl: string
   return { apiUrl: args.context.get(cloudflareContext).env.API_URL };
 }
 
-type NavItem = { label: MessageKey; to: string; icon: IconName };
+type NavItem = { label: () => string; to: string; icon: IconName };
 
 const NAV_ITEMS: NavItem[] = [
-  { label: "journal.log", to: "/app", icon: "sessions" },
-  { label: "common.projects", to: "/app/projects", icon: "projects" },
-  { label: "common.trends", to: "/app/trends", icon: "trends" },
-  { label: "common.settings", to: "/app/settings", icon: "settings" },
+  { label: () => t("journal.log"), to: "/app", icon: "sessions" },
+  { label: () => t("common.projects"), to: "/app/projects", icon: "projects" },
+  { label: () => t("common.trends"), to: "/app/trends", icon: "trends" },
+  { label: () => t("common.settings"), to: "/app/settings", icon: "settings" },
 ];
 
 const MODERATION_ITEM: NavItem = {
-  label: "moderation.title",
+  label: () => "Moderation",
   to: "/app/moderation",
   icon: "moderation",
 };
@@ -81,7 +81,7 @@ function Shell({ children }: { children: React.ReactNode }): React.ReactElement 
         </a>
         {navItems.map(({ label, to, icon }) => (
           <NavLink
-            key={label}
+            key={to}
             to={to}
             end
             style={({ isActive }) => ({
@@ -105,7 +105,7 @@ function Shell({ children }: { children: React.ReactNode }): React.ReactElement 
                 <span style={{ display: "flex", color: isActive ? "var(--bs-gold)" : "inherit" }}>
                   <Icon name={icon} strokeWidth={isActive ? 2.3 : 1.7} />
                 </span>
-                {t(label)}
+                {label()}
               </>
             )}
           </NavLink>
@@ -131,9 +131,9 @@ function Shell({ children }: { children: React.ReactNode }): React.ReactElement 
       {!focused && (
         <nav className="app-tabbar" aria-label={t("common.sectionsAria")}>
           {navItems.map(({ label, to, icon }) => (
-            <NavLink key={label} to={to} end className="app-tab">
+            <NavLink key={to} to={to} end className="app-tab">
               <Icon name={icon} />
-              {t(label)}
+              {label()}
             </NavLink>
           ))}
         </nav>

@@ -10,7 +10,6 @@ import {
   useModerationAction,
   type Side,
 } from "@sendtally/features/areas";
-import { t } from "@sendtally/features/i18n";
 import { ModCard } from "./ModCard";
 import { NoteDialog } from "./NoteDialog";
 
@@ -56,36 +55,38 @@ export function RevisionCard({
 
   return (
     <ModCard
-      kicker={`${t(item.entity_type === "area" ? "moderation.area" : "moderation.climb")} · ${queuedOn(item.created_at)}`}
-      error={rejecting ? null : unpicked ? t("moderation.pickEveryConflict") : error}
+      kicker={`${item.entity_type === "area" ? "Area" : "Climb"} · ${queuedOn(item.created_at)}`}
+      error={
+        rejecting ? null : unpicked ? "Pick a value for every highlighted field first." : error
+      }
       actions={
         <>
           <Button variant="ghostOnLight" size="sm" onClick={() => setRejecting(true)}>
-            {t("moderation.reject")}
+            Reject
           </Button>
           <Button variant="azure" size="sm" disabled={busy} onClick={approve}>
-            {t("moderation.approve")}
+            Approve
           </Button>
         </>
       }
     >
       <div className="mod-title-row">
         {href === null ? (
-          <span className="mod-title">{t("moderation.editTo", { name })}</span>
+          <span className="mod-title">{`Edit to ${name}`}</span>
         ) : (
           <Link to={href} className="mod-title">
-            {t("moderation.editTo", { name })}
+            {`Edit to ${name}`}
           </Link>
         )}
-        {item.current === null && <span className="area-meta">{t("moderation.noLongerLive")}</span>}
+        {item.current === null && <span className="area-meta">No longer live</span>}
       </div>
       {item.change_summary !== null && <p className="mod-quote">{item.change_summary}</p>}
       <div className="mod-diff" role="table">
         <div className="mod-diff-row mod-diff-head" role="row">
           <span role="columnheader" className="mod-diff-field" />
-          <span role="columnheader">{t("moderation.before")}</span>
-          <span role="columnheader">{t("moderation.proposed")}</span>
-          <span role="columnheader">{t("moderation.now")}</span>
+          <span role="columnheader">Before</span>
+          <span role="columnheader">Proposed</span>
+          <span role="columnheader">Now</span>
         </div>
         {rows.map((row) => (
           <div
@@ -107,12 +108,12 @@ export function RevisionCard({
         ))}
       </div>
       {item.conflicts.length > 0 && (
-        <span className="mod-muted">{t("moderation.conflictHint")}</span>
+        <span className="mod-muted">Changed since this was suggested. Pick the value to keep.</span>
       )}
       {rejecting && (
         <NoteDialog
-          title={t("moderation.rejectEditTitle", { name })}
-          submitLabel={t("moderation.reject")}
+          title={`Reject this edit to ${name}?`}
+          submitLabel="Reject"
           busy={busy}
           error={error}
           onClose={() => setRejecting(false)}

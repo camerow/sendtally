@@ -8,7 +8,7 @@ import {
   queuedOn,
   useModerationAction,
 } from "@sendtally/features/areas";
-import { formatNumber, t } from "@sendtally/features/i18n";
+import { formatNumber } from "@sendtally/features/i18n";
 import { ModCard } from "./ModCard";
 import { NoteDialog } from "./NoteDialog";
 
@@ -35,12 +35,12 @@ export function CreationCard({
 
   return (
     <ModCard
-      kicker={`${t(item.entity_type === "area" ? "areas.newArea" : "areas.newClimb")} · ${queuedOn(item.created_at)}`}
+      kicker={`${item.entity_type === "area" ? "New area" : "New climb"} · ${queuedOn(item.created_at)}`}
       error={rejecting ? null : error}
       actions={
         <>
           <Button variant="ghostOnLight" size="sm" onClick={() => setRejecting(true)}>
-            {t("moderation.reject")}
+            Reject
           </Button>
           <Button
             variant="azure"
@@ -50,7 +50,7 @@ export function CreationCard({
               void run(() => api.approveCreation(item.entity_type, entity.id, entity.version))
             }
           >
-            {t("moderation.approve")}
+            Approve
           </Button>
         </>
       }
@@ -63,10 +63,8 @@ export function CreationCard({
       </div>
       {entity.description !== null && <p className="mod-quote">{entity.description}</p>}
       <div className="mod-lookalikes">
-        <span className="mod-label">{t("moderation.lookalikes")}</span>
-        {item.candidates.length === 0 && (
-          <span className="mod-muted">{t("moderation.noLookalikes")}</span>
-        )}
+        <span className="mod-label">Look-alikes</span>
+        {item.candidates.length === 0 && <span className="mod-muted">No look-alikes found.</span>}
         {item.candidates.map((candidate) => (
           <div key={candidate.id} className="mod-lookalike">
             <Link
@@ -85,7 +83,7 @@ export function CreationCard({
                 disabled={busy}
                 onClick={() => void run(() => api.mergeClimbInto(entity.id, candidate.id))}
               >
-                {t("moderation.mergeInto")}
+                Merge into this
               </Button>
             )}
           </div>
@@ -93,8 +91,8 @@ export function CreationCard({
       </div>
       {rejecting && (
         <NoteDialog
-          title={t("moderation.rejectTitle", { name: entity.name })}
-          submitLabel={t("moderation.reject")}
+          title={`Reject ${entity.name}?`}
+          submitLabel="Reject"
           busy={busy}
           error={error}
           onClose={() => setRejecting(false)}
@@ -104,7 +102,7 @@ export function CreationCard({
                 await api.rejectCreation(item.entity_type, entity.id, note);
                 setRejecting(false);
               },
-              item.entity_type === "area" ? t("moderation.childrenFirst") : undefined
+              item.entity_type === "area" ? "Reject or approve what is inside it first." : undefined
             )
           }
         />

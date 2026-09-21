@@ -1,12 +1,16 @@
 import React from "react";
-import type { LinksFunction, LoaderFunctionArgs } from "react-router";
+import type { LinksFunction, LoaderFunctionArgs, MetaFunction } from "react-router";
 import { useLoaderData } from "react-router";
 import areasStyles from "../areas/areas.css?url";
 import { cloudflareContext } from "../lib/cloudflare-context";
+import { pageMeta } from "../lib/seo";
 import { ModerationPage } from "../moderation/components/ModerationPage";
 import moderationStyles from "../moderation/moderation.css?url";
 import projectsStyles from "../projects/projects.css?url";
 import sessionsStyles from "../sessions/sessions.css?url";
+
+export const meta: MetaFunction = () =>
+  pageMeta({ title: "Moderation", path: "/app/moderation", noindex: true });
 
 export const links: LinksFunction = () => [
   { rel: "stylesheet", href: sessionsStyles },

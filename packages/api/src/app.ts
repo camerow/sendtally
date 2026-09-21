@@ -387,6 +387,7 @@ const creationsQueue = async (db: D1Database, viewer: Viewer, limit: number) => 
         entity_type: "climb" as const,
         created_at: row.created_at,
         climb: areaClimbOf(row, viewer),
+        area: area === null ? null : areaSummaryOf(area),
         candidates:
           area === null
             ? []
