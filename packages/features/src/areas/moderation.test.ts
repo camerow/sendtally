@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import type { CreationItem, RevisionItem } from "@sendtally/api-client";
-import { diffRows, groupCreations, resolutionsOf, revisionVersion } from "./moderation";
+import type { RevisionItem } from "@sendtally/api-client";
+import { diffRows, resolutionsOf, revisionVersion } from "./moderation";
 
 const revision = {
   id: "r1",
@@ -70,21 +70,5 @@ describe("revisionVersion", () => {
   it("reads the live entity's version", () => {
     expect(revisionVersion(revision)).toBe(4);
     expect(revisionVersion({ ...revision, current: null })).toBeNull();
-  });
-});
-
-describe("groupCreations", () => {
-  const crag = { id: "a1", name: "Crag", status: "pending" };
-  const other = { id: "a2", name: "Other", status: "approved" };
-  const climb = (id: string, area: typeof crag) =>
-    ({ entity_type: "climb", climb: { id, area_id: area.id }, area }) as unknown as CreationItem;
-  const newArea = { entity_type: "area", area: crag } as unknown as CreationItem;
-
-  it("groups climbs under their area, leading with the pending area itself", () => {
-    const items = [climb("c1", crag), climb("c2", other), newArea, climb("c3", crag)];
-    expect(groupCreations(items)).toEqual([
-      { area: crag, items: [newArea, items[0], items[3]] },
-      { area: other, items: [items[1]] },
-    ]);
   });
 });

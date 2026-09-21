@@ -27,6 +27,10 @@ import type {
   ImportBody,
   ImportResult,
   LogSessionInput,
+  BulkCreationsInput,
+  CreationRef,
+  CreationResult,
+  ModerationCreations,
   ModerationQueue,
   PostOutcome,
   ProjectInput,
@@ -277,6 +281,26 @@ export class SendtallyApi {
 
   moderationQueue(): Promise<ModerationQueue> {
     return body(this.client.v1.moderation.queue.$get());
+  }
+
+  moderationCreations(): Promise<ModerationCreations> {
+    return body(this.client.v1.moderation.creations.$get());
+  }
+
+  async decideCreations(input: BulkCreationsInput): Promise<CreationResult[]> {
+    return (
+      await body<{ results: CreationResult[] }>(
+        this.client.v1.moderation.creations.bulk.$post({ json: input })
+      )
+    ).results;
+  }
+
+  async moveCreations(parentId: string, items: CreationRef[]): Promise<CreationResult[]> {
+    return (
+      await body<{ results: CreationResult[] }>(
+        this.client.v1.moderation.creations.move.$post({ json: { parentId, items } })
+      )
+    ).results;
   }
 
   approveCreation(type: "area" | "climb", id: string, version: number): Promise<unknown> {

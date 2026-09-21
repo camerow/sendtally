@@ -1,4 +1,4 @@
-import type { AreaSummary, CreationItem, RevisionItem } from "@sendtally/api-client";
+import type { RevisionItem } from "@sendtally/api-client";
 import { formatDate, formatNumber } from "../i18n";
 import { climbTypeLabel } from "./transforms";
 import type { ClimbType } from "./types";
@@ -97,20 +97,4 @@ export function revisionVersion(revision: RevisionItem): number | null {
 
 export function queuedOn(iso: string): string {
   return formatDate(new Date(iso), { day: "numeric", month: "short" });
-}
-
-export type CreationGroup = { area: AreaSummary | null; items: CreationItem[] };
-
-/** Creations grouped under the area they add or belong to, oldest group first, the area itself leading. */
-export function groupCreations(items: CreationItem[]): CreationGroup[] {
-  const groups = new Map<string, CreationGroup>();
-  for (const item of items) {
-    const key = item.entity_type === "area" ? item.area.id : item.climb.area_id;
-    const group = groups.get(key) ?? { area: null, items: [] };
-    group.area ??= item.area;
-    if (item.entity_type === "area") group.items.unshift(item);
-    else group.items.push(item);
-    groups.set(key, group);
-  }
-  return [...groups.values()];
 }

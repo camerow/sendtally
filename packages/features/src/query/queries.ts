@@ -69,6 +69,11 @@ export const queries = {
     }),
   moderation: (api: SendtallyApi) =>
     queryOptions({ queryKey: ["moderation"], queryFn: () => api.moderationQueue() }),
+  moderationCreations: (api: SendtallyApi) =>
+    queryOptions({
+      queryKey: ["moderation", "creations"],
+      queryFn: () => api.moderationCreations(),
+    }),
   tags: (api: SendtallyApi) =>
     queryOptions({ queryKey: ["tags"], queryFn: async () => (await api.tags()).tags }),
 };
