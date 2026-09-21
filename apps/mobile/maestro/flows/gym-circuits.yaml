@@ -63,5 +63,5 @@ name: gym-circuits
 - tapOn: "Delete gym"
 - tapOn:
     text: "Delete gym"
-    index: 1
+    rightOf: "Cancel"
 - assertNotVisible: "Maestro Barn, .*"

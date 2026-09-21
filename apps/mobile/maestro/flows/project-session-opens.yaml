@@ -85,10 +85,11 @@ name: project-session-opens
 - extendedWaitUntil:
     visible: "Delete session?"
     timeout: 10000
-# The header's Delete is still in the tree under the alert, so the alert's is the second one.
+# iOS keeps the header's Delete in the tree under the alert and Android does not, so the alert's
+# is found by its place beside Cancel.
 - tapOn:
     text: "Delete"
-    index: 1
+    rightOf: "Cancel"
 - extendedWaitUntil:
     visible: "Climb"
     timeout: 20000
