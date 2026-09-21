@@ -306,6 +306,7 @@ describe("send styles", () => {
             angle: null,
             grade: { scale: "v", value: 4 },
             note: null,
+            link: null,
           },
         ],
       })
@@ -452,6 +453,8 @@ function session(overrides: Partial<SessionDetail> = {}): SessionDetail {
     source: "manual",
     location: "indoor",
     gym_id: null,
+    area_id: null,
+    area: null,
     name: "Tuesday board night",
     start_at: "2026-08-26T18:30:00.000Z",
     end_at: "2026-08-26T20:00:00.000Z",
@@ -479,6 +482,7 @@ function session(overrides: Partial<SessionDetail> = {}): SessionDetail {
         angle: null,
         grade: { scale: "v", value: 4 },
         note: null,
+        link: null,
       },
       {
         time: "2026-08-26T20:00:00.000Z",
@@ -489,6 +493,7 @@ function session(overrides: Partial<SessionDetail> = {}): SessionDetail {
         angle: null,
         grade: { scale: "v", value: 6 },
         note: null,
+        link: null,
       },
     ],
     ...overrides,
@@ -736,6 +741,7 @@ describe("endurance climbs", () => {
           angle: null,
           grade: { scale: "v", value: 3 },
           note: null,
+          link: null,
           endurance,
         },
       ],
@@ -746,5 +752,41 @@ describe("endurance climbs", () => {
       tries: 1,
       endurance,
     });
+  });
+});
+
+describe("outdoor crag and climb links", () => {
+  const outdoor = (): LogSessionDraft => {
+    const base = draft({ location: "outdoor", area: { id: "a1", name: "Buttermilks" } });
+    return { ...base, climbs: base.climbs.map((c, i) => (i === 0 ? { ...c, climbId: "c1" } : c)) };
+  };
+
+  it("sends the crag and each linked climb", () => {
+    const input = toLogSessionInput(outdoor());
+    expect(input.areaId).toBe("a1");
+    expect(input.climbs[0]?.climbId).toBe("c1");
+    expect(input.climbs[1]).not.toHaveProperty("climbId");
+  });
+
+  it("leaves them out of an indoor session", () => {
+    const input = toLogSessionInput({ ...outdoor(), location: "indoor" });
+    expect(input).not.toHaveProperty("areaId");
+    expect(input.climbs[0]).not.toHaveProperty("climbId");
+  });
+
+  it("prefills the crag and links when editing", () => {
+    const base = session();
+    const edited = draftFromSession({
+      ...base,
+      location: "outdoor",
+      area_id: "a1",
+      area: { id: "a1", name: "Buttermilks", slug: "buttermilks" },
+      climbs: base.climbs.map((c, i) =>
+        i === 0 ? { ...c, link: { id: "c1", name: "Cave traverse", slug: "cave-traverse" } } : c
+      ),
+    });
+    expect(edited.area).toEqual({ id: "a1", name: "Buttermilks" });
+    expect(edited.climbs[0]?.climbId).toBe("c1");
+    expect(edited.climbs[1]).not.toHaveProperty("climbId");
   });
 });

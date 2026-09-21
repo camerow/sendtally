@@ -8,11 +8,17 @@ import { sessionDraftStorage } from "../lib/sessionDraftStorage";
 import { useHydrated } from "../lib/useHydrated";
 import { storedDraft } from "@sendtally/features/log-session";
 import { LogSessionForm } from "../log-session/components/LogSessionForm";
+import areasStyles from "../areas/areas.css?url";
 import logSessionStyles from "../log-session/log-session.css?url";
+import projectsStyles from "../projects/projects.css?url";
 import { BackLink } from "../components/BackLink";
 import { t } from "@sendtally/features/i18n";
 
-export const links: LinksFunction = () => [{ rel: "stylesheet", href: logSessionStyles }];
+export const links: LinksFunction = () => [
+  { rel: "stylesheet", href: logSessionStyles },
+  { rel: "stylesheet", href: projectsStyles },
+  { rel: "stylesheet", href: areasStyles },
+];
 
 export async function loader(args: LoaderFunctionArgs): Promise<{ apiUrl: string }> {
   await requireApi(args);

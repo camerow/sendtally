@@ -164,7 +164,9 @@ export default function SessionDetailScreen(): React.ReactElement {
                   color: colors.textMuted,
                 }}
               >
-                {state.data.vm.meta}
+                {state.data.vm.area === null
+                  ? state.data.vm.meta
+                  : `${state.data.vm.meta} · ${state.data.vm.area.name}`}
               </Text>
             </View>
 

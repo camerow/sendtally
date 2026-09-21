@@ -28,6 +28,7 @@ const session = (
   source: "manual",
   location: "indoor",
   gym_id: null,
+  area_id: null,
   name: "Tuesday night session",
   start_at: startIso,
   end_at: startIso,
@@ -52,6 +53,7 @@ const session = (
     tries: c.tries ?? 1,
     angle: null,
     note: c.note ?? null,
+    link: null,
   })),
 });
 

@@ -20,6 +20,8 @@ export type ClimbVM = {
   resultLabel: string;
   /** What the climber wrote about this climb that session. Named climbs only. */
   note: string | null;
+  /** The Areas climb this one is linked to, for a link to its page. */
+  climbSlug: string | null;
   /** Present on a circuit of laps, which reads as per-lap bars rather than a result badge. */
   endurance?: Endurance;
 };
@@ -53,6 +55,7 @@ export type SessionDetailVM = {
   startDay: string;
   meta: string;
   editable: boolean;
+  area: { name: string; slug: string } | null;
   stats: StatVM[];
   bars: GradeBarVM[];
   filterCounts: Record<ClimbFilter, number>;

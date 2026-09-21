@@ -9,6 +9,7 @@ function session(overrides: Partial<SessionRow> = {}): SessionRow {
     source: "board",
     location: null,
     gym_id: null,
+    area_id: null,
     name: null,
     start_at: "2026-08-08T18:00:00.000Z",
     end_at: "2026-08-08T19:00:00.000Z",

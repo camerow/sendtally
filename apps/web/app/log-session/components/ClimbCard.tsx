@@ -21,7 +21,8 @@ import {
   useSelectedLap,
 } from "./EnduranceFields";
 import { ClimbGradeSelect, ClimbKindSelect } from "./ClimbKindSelect";
-import { ClimbNameField } from "./ClimbNameField";
+import { AreaClimbNameField, type ClimbAreas } from "./AreaClimbNameField";
+import { ClimbNameField, type ClimbNameFieldProps } from "./ClimbNameField";
 import { ClimbNoteField } from "./ClimbNoteField";
 import { DisciplineToggle } from "./DisciplineToggle";
 import { Glyph } from "./Glyph";
@@ -55,6 +56,8 @@ export type ClimbCardProps = {
   onChange: (climb: ClimbDraft) => void;
   onChangeName: (name: string) => void;
   onPick: (climb: ClimbSummary) => void;
+  /** Set for an outdoor session, where the name also searches Areas. */
+  areas?: ClimbAreas;
   onToggleProject: () => void;
   onRemove: () => void;
 };
@@ -69,6 +72,7 @@ export function ClimbCard({
   onChange,
   onChangeName,
   onPick,
+  areas,
   onToggleProject,
   onRemove,
 }: ClimbCardProps): React.ReactElement {
@@ -76,6 +80,18 @@ export function ClimbCard({
   const endurance = climb.endurance !== undefined;
   const gym = gymOfCircuit(gyms, climb.circuit?.id);
   const [selectedLap, selectLap] = useSelectedLap(climb);
+  const nameProps: ClimbNameFieldProps = {
+    value: climb.name,
+    scale: climb.scale,
+    suggestions,
+    placeholder: endurance
+      ? t("endurance.namePlaceholder")
+      : gym === null
+        ? t("logSession.climbNamePlaceholder")
+        : t("logSession.circuitClimbNamePlaceholder"),
+    onChange: onChangeName,
+    onPick,
+  };
   return (
     <div className="climb-card">
       <div className="climb-card-main">
@@ -94,20 +110,11 @@ export function ClimbCard({
         </div>
         <div className="climb-card-cell">
           <span style={columnHead}>{t("logSession.nameOptional")}</span>
-          <ClimbNameField
-            value={climb.name}
-            scale={climb.scale}
-            suggestions={suggestions}
-            placeholder={
-              endurance
-                ? t("endurance.namePlaceholder")
-                : gym === null
-                  ? t("logSession.climbNamePlaceholder")
-                  : t("logSession.circuitClimbNamePlaceholder")
-            }
-            onChange={onChangeName}
-            onPick={onPick}
-          />
+          {areas === undefined ? (
+            <ClimbNameField {...nameProps} />
+          ) : (
+            <AreaClimbNameField {...nameProps} areas={areas} linkedId={climb.climbId} />
+          )}
         </div>
         <div className="climb-card-cell">
           <span style={columnHead}>{endurance ? t("endurance.unit") : t("logSession.tries")}</span>

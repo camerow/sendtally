@@ -1,0 +1,44 @@
+appId: com.sendtally.app
+name: areas-log-form
+# An outdoor session offers a crag search and Areas climbs in the name field. Each add sheet
+# opens over what launched it, and closing one leaves the climb editor underneath open.
+# Nothing is saved, so the flow leaves no Areas content behind. A tap on the scrim above
+# the sheets closes the top one only.
+---
+- runFlow: ../helpers/open-dev-client.yaml
+- runFlow: ../helpers/ensure-signed-in.yaml
+- runFlow: ../helpers/discard-live-session.yaml
+- runFlow: ../helpers/open-log-form.yaml
+- tapOn: "OUTDOOR"
+- tapOn: "Search crags"
+- inputText: "Qzx never added"
+- tapOn: "\\+ Add “Qzx never added” as a crag"
+- assertVisible: "Add a crag"
+- assertVisible: "You're sharing this under CC0."
+- tapOn:
+    point: "50%,15%"
+- assertNotVisible: "Add a crag"
+- scrollUntilVisible:
+    element:
+      text: "\\+ ADD CLIMB"
+    direction: DOWN
+    centerElement: true
+- tapOn: "\\+ ADD CLIMB"
+- assertVisible: "CLIMB 2 OF 2"
+- tapOn: "Name (optional)"
+- inputText: "Qzx never added"
+- tapOn: "\\+ Add “Qzx never added” to Areas"
+- assertVisible: "Add a climb"
+- assertVisible: "You're sharing this under CC0."
+- tapOn:
+    point: "50%,15%"
+- assertNotVisible: "Add a climb"
+- assertVisible: "CLIMB 2 OF 2"
+- tapOn: "Save"
+- assertNotVisible: "CLIMB 2 OF 2"
+- scrollUntilVisible:
+    element:
+      text: "← LOG"
+    direction: UP
+- tapOn: "← LOG"
+- runFlow: ../helpers/discard-live-session.yaml

@@ -7,7 +7,14 @@ export type WriteEffect = {
   gone: QueryKey | null;
 };
 
-const LOG: QueryKey[] = [["sessions"], ["sessionsWithClimbs"], ["session"], ["climbs"], ["tags"]];
+const LOG: QueryKey[] = [
+  ["sessions"],
+  ["sessionsWithClimbs"],
+  ["session"],
+  ["climbs"],
+  ["tags"],
+  ["areaClimb"],
+];
 
 /** Which cached reads a write can change, by the resource it hit. `null` is a path this map does not know, which stales everything. */
 export function writeEffect({ method, path }: ApiWrite): WriteEffect | null {
@@ -27,6 +34,24 @@ export function writeEffect({ method, path }: ApiWrite): WriteEffect | null {
     case "gyms":
       return {
         stale: [["gyms"], ["sessions"], ["sessionsWithClimbs"], ["session"]],
+        gone: null,
+      };
+    case "areas":
+    case "area-climbs":
+      return {
+        stale: [["area"], ["areaClimb"], ["areaSearch"], ["areaClimbSearch"]],
+        gone: null,
+      };
+    case "moderation":
+      return {
+        stale: [
+          ["moderation"],
+          ["area"],
+          ["areaClimb"],
+          ["areaSearch"],
+          ["areaClimbSearch"],
+          ["session"],
+        ],
         gone: null,
       };
     case "projects":

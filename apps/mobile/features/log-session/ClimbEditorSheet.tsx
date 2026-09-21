@@ -1,7 +1,13 @@
 import { BottomSheetTextInput } from "@gorhom/bottom-sheet";
 import React from "react";
-import { Pressable, Text, View } from "react-native";
+import { Keyboard, Pressable, Text, View } from "react-native";
 import type { ClimbSummary } from "@sendtally/api-client";
+import {
+  areaClimbGradeLabel,
+  climbOptions,
+  useAreaClimbSearch,
+  type AreaClimb,
+} from "@sendtally/features/areas";
 import { climbDraftGrade, projectMetaLabel } from "@sendtally/features/climbs";
 import { circuitGrades, findCircuit, type Gym } from "@sendtally/features/gyms";
 import {
@@ -21,7 +27,15 @@ import { Sheet } from "../../components/Sheet";
 import { ClimbGradePicker, ClimbKindPicker } from "./ClimbKindPicker";
 import { EnduranceFields } from "./EnduranceFields";
 import { ResultPicker } from "./ResultPicker";
+import { useApi } from "../../lib/api";
 import { press, pressRow, tap } from "../../lib/press";
+
+/** Where an outdoor row looks for Areas climbs, and what picking or adding one does. */
+export type ClimbAreas = {
+  areaId: string | null;
+  onPickArea: (climb: AreaClimb) => void;
+  onAdd: () => void;
+};
 
 export type ClimbEditorSheetProps = {
   climb: ClimbDraft | null;
@@ -38,6 +52,8 @@ export type ClimbEditorSheetProps = {
   onChange: (climb: ClimbDraft) => void;
   onChangeName: (name: string) => void;
   onPick: (climb: ClimbSummary) => void;
+  /** Set for an outdoor session, where the name also searches Areas. */
+  areas?: ClimbAreas;
   onToggleProject: () => void;
   onRemove: () => void;
   onClose: () => void;
@@ -350,6 +366,7 @@ export function ClimbEditorSheet({
   onChange,
   onChangeName,
   onPick,
+  areas,
   onToggleProject,
   onRemove,
   onClose,
@@ -359,7 +376,14 @@ export function ClimbEditorSheet({
   const endurance = climb?.endurance !== undefined;
   const [nameFocused, setNameFocused] = React.useState(false);
   const named = climb !== null && climb.name.trim() !== "";
-  const showList = nameFocused && suggestions.length > 0;
+  const search = useAreaClimbSearch(
+    useApi(),
+    climb?.name ?? "",
+    areas?.areaId ?? null,
+    areas !== undefined && nameFocused
+  );
+  const options = climbOptions(suggestions, search.found, climb?.climbId);
+  const showList = nameFocused && (options.length > 0 || search.canAdd);
 
   return (
     <Sheet visible={current !== null} onClose={onClose} closeLabel={t("logSession.closeEditor")}>
@@ -389,7 +413,17 @@ export function ClimbEditorSheet({
           </View>
 
           <View style={{ gap: 7 }}>
-            <Text style={label}>{t("logSession.nameOptional")}</Text>
+            <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+              <Text style={label}>{t("logSession.nameOptional")}</Text>
+              {climb.climbId !== undefined && (
+                <Text
+                  accessibilityLabel={t("areas.linkedToAreas")}
+                  style={{ ...label, color: colors.azureInk }}
+                >
+                  {t("areas.inAreas")}
+                </Text>
+              )}
+            </View>
             <BottomSheetTextInput
               autoCorrect={false}
               spellCheck={false}
@@ -428,70 +462,145 @@ export function ClimbEditorSheet({
                     {t("common.recent")}
                   </Text>
                 )}
-                {suggestions.map((candidate) => (
-                  <Pressable
-                    key={candidate.slug}
-                    onPress={() => onPick(candidate)}
-                    accessibilityRole="button"
-                    accessibilityLabel={
-                      candidate.project
-                        ? t("logSession.candidateProject", { name: candidate.name })
-                        : candidate.name
-                    }
-                    style={pressRow({
-                      flexDirection: "row",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      gap: 8,
-                      height: 40,
-                      paddingHorizontal: 12,
-                      borderRadius: radius.sm,
-                      backgroundColor: candidate.project ? "rgba(249,220,92,0.14)" : "transparent",
-                    })}
-                  >
-                    <View
-                      style={{
+                {options.map((option) =>
+                  option.kind === "areas" ? (
+                    <Pressable
+                      key={`areas-${option.climb.id}`}
+                      onPress={() => areas?.onPickArea(option.climb)}
+                      accessibilityRole="button"
+                      accessibilityLabel={`${option.climb.name}, ${t("areas.inAreas")}`}
+                      style={pressRow({
                         flexDirection: "row",
                         alignItems: "center",
-                        gap: 7,
-                        flexShrink: 1,
-                      }}
+                        justifyContent: "space-between",
+                        gap: 8,
+                        height: 40,
+                        paddingHorizontal: 12,
+                        borderRadius: radius.sm,
+                      })}
                     >
-                      {candidate.project && (
-                        <Icon name="projects" color={colors.gunmetal} size={14} strokeWidth={2.2} />
-                      )}
-                      <MarkedName name={candidate.name} query={climb.name} />
-                      {candidate.project && (
-                        <Text
-                          style={{
-                            fontFamily: fonts.monoSemiBold,
-                            fontSize: 8,
-                            letterSpacing: 0.7,
-                            textTransform: "uppercase",
-                            paddingHorizontal: 6,
-                            paddingVertical: 2,
-                            borderRadius: radius.pill,
-                            overflow: "hidden",
-                            backgroundColor: colors.gold,
-                            color: colors.gunmetal,
-                          }}
-                        >
-                          {t("common.project")}
+                      <View
+                        style={{
+                          flexDirection: "row",
+                          alignItems: "center",
+                          gap: 7,
+                          flexShrink: 1,
+                        }}
+                      >
+                        <MarkedName name={option.climb.name} query={climb.name} />
+                        <Text style={{ ...label, fontSize: 8, color: colors.azureInk }}>
+                          {t("areas.inAreas")}
                         </Text>
-                      )}
-                    </View>
+                      </View>
+                      <Text
+                        style={{
+                          fontFamily: fonts.monoMedium,
+                          fontSize: 11,
+                          letterSpacing: 0.6,
+                          color: colors.textMuted,
+                        }}
+                      >
+                        {areaClimbGradeLabel(option.climb)}
+                      </Text>
+                    </Pressable>
+                  ) : (
+                    <Pressable
+                      key={option.climb.slug}
+                      onPress={() => onPick(option.climb)}
+                      accessibilityRole="button"
+                      accessibilityLabel={
+                        option.climb.project
+                          ? t("logSession.candidateProject", { name: option.climb.name })
+                          : option.climb.name
+                      }
+                      style={pressRow({
+                        flexDirection: "row",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        gap: 8,
+                        height: 40,
+                        paddingHorizontal: 12,
+                        borderRadius: radius.sm,
+                        backgroundColor: option.climb.project
+                          ? "rgba(249,220,92,0.14)"
+                          : "transparent",
+                      })}
+                    >
+                      <View
+                        style={{
+                          flexDirection: "row",
+                          alignItems: "center",
+                          gap: 7,
+                          flexShrink: 1,
+                        }}
+                      >
+                        {option.climb.project && (
+                          <Icon
+                            name="projects"
+                            color={colors.gunmetal}
+                            size={14}
+                            strokeWidth={2.2}
+                          />
+                        )}
+                        <MarkedName name={option.climb.name} query={climb.name} />
+                        {option.climb.project && (
+                          <Text
+                            style={{
+                              fontFamily: fonts.monoSemiBold,
+                              fontSize: 8,
+                              letterSpacing: 0.7,
+                              textTransform: "uppercase",
+                              paddingHorizontal: 6,
+                              paddingVertical: 2,
+                              borderRadius: radius.pill,
+                              overflow: "hidden",
+                              backgroundColor: colors.gold,
+                              color: colors.gunmetal,
+                            }}
+                          >
+                            {t("common.project")}
+                          </Text>
+                        )}
+                      </View>
+                      <Text
+                        style={{
+                          fontFamily: fonts.monoMedium,
+                          fontSize: 11,
+                          letterSpacing: 0.6,
+                          color: colors.textMuted,
+                        }}
+                      >
+                        {climbDraftGrade(option.climb, climb.scale)}
+                      </Text>
+                    </Pressable>
+                  )
+                )}
+                {search.canAdd && areas !== undefined && (
+                  <Pressable
+                    onPress={() => {
+                      Keyboard.dismiss();
+                      areas.onAdd();
+                    }}
+                    accessibilityRole="button"
+                    style={pressRow({
+                      minHeight: 40,
+                      justifyContent: "center",
+                      paddingHorizontal: 12,
+                      borderRadius: radius.sm,
+                    })}
+                  >
                     <Text
+                      numberOfLines={2}
                       style={{
-                        fontFamily: fonts.monoMedium,
-                        fontSize: 11,
-                        letterSpacing: 0.6,
-                        color: colors.textMuted,
+                        fontFamily: fonts.sansSemiBold,
+                        fontSize: 14,
+                        color: colors.azureInk,
                       }}
                     >
-                      {climbDraftGrade(candidate, climb.scale)}
+                      {`+ ${t("areas.addToAreas", { name: climb.name.trim() })}`}
                     </Text>
                   </Pressable>
-                ))}
+                )}
               </View>
             )}
           </View>

@@ -2,6 +2,7 @@ import { describe, expect, it, jest } from "@jest/globals";
 import React from "react";
 import { Pressable, Text } from "react-native";
 import { fireEvent, render, screen } from "@testing-library/react-native";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ClimbVocabulary } from "@sendtally/features/climbs";
 import type * as LogSession from "@sendtally/features/log-session";
 import {
@@ -81,7 +82,11 @@ function QuickLog({ storage }: { storage: DraftStorage }): React.ReactElement {
 
 describe("logging a climb from the Log tab", () => {
   it("starts a live session, adds to it, and removing the last climb ends it", async () => {
-    await render(<QuickLog storage={memoryStorage()} />);
+    await render(
+      <QueryClientProvider client={new QueryClient()}>
+        <QuickLog storage={memoryStorage()} />
+      </QueryClientProvider>
+    );
 
     await fireEvent.press(screen.getByText("Climb"));
     expect(screen.getByText("Climb 1 of 1")).toBeOnTheScreen();

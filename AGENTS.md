@@ -249,6 +249,8 @@ Store listing copy lives in `apps/mobile/store/listing.md` and should match what
 - Never call `t()` at module scope: the locale is set after modules load on mobile and per request on the web Worker (`AsyncLocalStorage` in `entry.server.tsx`), so a module-level constant freezes to English. Keep module-level data as plain values or keys and resolve the text in a function (`trendRangeLabel(range)`, `memberBenefits()`).
 - Locale is the device language on mobile (`expo-localization`) and `Accept-Language` on the web; the marketing landing is additionally served per locale at `/de`, `/fr`, `/es` from `apps/web/app/landing/copy.<locale>.ts` with hreflang alternates.
   Terms, privacy, support, API error bodies, and the Strava activity description stay English.
+- Moderation tooling (`/app/moderation`, `apps/web/app/moderation/`, `packages/features/src/areas/moderation.ts`) is internal and English only: plain string literals, no `t()`, no catalog keys.
+  It is also never indexed or crawled - the route sets `noindex` and `robots.txt` disallows `/app/`.
 
 ### Code organization
 
@@ -309,3 +311,4 @@ Run `wt config approvals add` and review what it lists - an agent must never app
 - No third-party passwords ever transit the Worker. Strava is connected via OAuth only.
 - Strava access/refresh tokens are AES-GCM encrypted in D1; the key lives in a Worker secret.
 - Account deletion must revoke the Strava token, delete all D1 rows for the user, and delete the Clerk user.
+  The one exception is approved Areas contributions (areas, climbs and approved revisions), which stay with the author removed (`created_by` / `submitted_by` / `reviewed_by` set to null) because other users' sessions link to them; `repo.deleteUserData` does both in one batch.

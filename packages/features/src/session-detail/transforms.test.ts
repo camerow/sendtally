@@ -8,6 +8,8 @@ const detail: SessionDetail = {
   source: "board",
   location: null,
   gym_id: null,
+  area_id: null,
+  area: null,
   name: null,
   start_at: "2026-07-01T17:50:00.000Z",
   end_at: "2026-07-01T19:25:00.000Z",
@@ -34,6 +36,7 @@ const detail: SessionDetail = {
       tries: 1,
       angle: 40,
       note: null,
+      link: null,
     },
     {
       time: "2026-07-01T18:20:00.000Z",
@@ -43,6 +46,7 @@ const detail: SessionDetail = {
       tries: 3,
       angle: 40,
       note: null,
+      link: null,
     },
     {
       time: "2026-07-01T18:50:00.000Z",
@@ -52,6 +56,7 @@ const detail: SessionDetail = {
       tries: 4,
       angle: 45,
       note: null,
+      link: null,
     },
     {
       time: "2026-07-01T19:20:00.000Z",
@@ -61,6 +66,7 @@ const detail: SessionDetail = {
       tries: 1,
       angle: null,
       note: null,
+      link: null,
     },
   ],
 };
@@ -75,6 +81,14 @@ describe("climbVMs", () => {
     expect(vms[3]?.name).toBe("Unknown climb");
     expect(vms[3]?.gradeLabel).toBe("V?");
     expect(vms[2]?.angleLabel).toBe("45°");
+  });
+
+  it("carries the Areas link of a linked climb, and the session's crag", () => {
+    const link = { id: "c1", name: "Crimp Reaper", slug: "crimp-reaper" };
+    const climbs = detail.climbs.map((c, i) => (i === 1 ? { ...c, link } : c));
+    expect(climbVMs(climbs).map((c) => c.climbSlug)).toEqual([null, "crimp-reaper", null, null]);
+    const area = { id: "a1", name: "Buttermilks", slug: "buttermilks" };
+    expect(sessionDetailVM({ ...detail, area }).area).toEqual(area);
   });
 
   it("reads a one-try send of an earlier project as a send, not a flash", () => {
@@ -143,6 +157,7 @@ describe("sessionDetailVM", () => {
       name: "Tuesday board night",
       location: "indoor",
       gym_id: null,
+      area_id: null,
       strava_activity_id: null,
       posted_at: null,
       post_state: null,
@@ -238,6 +253,7 @@ describe("route sessions", () => {
         angle: null,
         grade: { scale: "yds", value: "5.10a" },
         note: null,
+        link: null,
       },
       {
         time: "2026-07-01T18:20:00.000Z",
@@ -248,6 +264,7 @@ describe("route sessions", () => {
         angle: null,
         grade: { scale: "yds", value: "5.11d" },
         note: null,
+        link: null,
       },
       {
         time: "2026-07-01T18:50:00.000Z",
@@ -258,6 +275,7 @@ describe("route sessions", () => {
         angle: null,
         grade: { scale: "yds", value: "5.12a" },
         note: null,
+        link: null,
       },
     ],
   };

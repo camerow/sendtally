@@ -1,5 +1,5 @@
 import { zValidator } from "@hono/zod-validator";
-import { type Context, Hono } from "hono";
+import { type Context, Hono, type MiddlewareHandler } from "hono";
 import { HTTPException } from "hono/http-exception";
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 import { cors } from "hono/cors";
@@ -7,6 +7,46 @@ import { z } from "zod";
 import { auth } from "./auth";
 import type { Env } from "./bindings";
 import { purgeAccount } from "./lib/account";
+import {
+  areaBody,
+  areaClimbBody,
+  areaClimbDraftBody,
+  areaClimbDraftOf,
+  areaClimbFieldsOf,
+  areaDraftBody,
+  areaDraftOf,
+  areaFieldsOf,
+  changesFrom,
+  type ContentEntity,
+  draftOf,
+  type Fields,
+  snapshotOf,
+  areaClimbEditBody,
+  areaClimbOf,
+  areaClimbSimilarBody,
+  areaEditBody,
+  areaOf,
+  areaSimilarBody,
+  areaSummaryOf,
+  approveRevisionBody,
+  boundingBox,
+  contentReportBody,
+  climbWrite,
+  distanceKm,
+  duplicateReportBody,
+  duplicatesOf,
+  initialStatus,
+  isOpen,
+  isRegion,
+  mergeBody,
+  NEAR_KM,
+  approvalOf,
+  rejectBody,
+  revisionOf,
+  uniqueSlug,
+  versionBody,
+  type Viewer,
+} from "./lib/areas";
 import {
   applyProjectFlags,
   climbCatalogue,
@@ -23,10 +63,12 @@ import { importBody, importFingerprint, manualBodyOf } from "./lib/import";
 import { mirrorStoreEntitlements, resolveEntitlements } from "./lib/entitlements";
 import {
   buildManualSession,
+  climbLinksOf,
   climbNoteBody,
   historySession,
   manualSessionBody,
   normalisedNote,
+  type ManualSessionBody,
   parseClimbs,
 } from "./lib/manual";
 import { allowedOrigin } from "./lib/origins";
@@ -35,7 +77,7 @@ import { syncSessionToStrava } from "./lib/posting";
 import * as repo from "./lib/repo";
 import { RevenueCatClient, webhookBody, webhookUserIds } from "./lib/revenuecat";
 import { authorizeUrl, exchangeAuthCode, StravaUnauthorizedError } from "./lib/strava";
-import { sessionTagsBody } from "./lib/tags";
+import { sessionTagsBody, tagSlug } from "./lib/tags";
 
 type Vars = { userId: string; hasFeature: (feature: string) => boolean };
 
@@ -120,10 +162,12 @@ const sessionResponse = async (env: Env, userId: string, fingerprint: string) =>
   const row = await repo.getSession(env.DB, userId, fingerprint);
   if (row === null) return null;
   const { climbs_json, notes: _legacyNotes, ...rest } = row;
-  const [tags, entries, climbNotes] = await Promise.all([
+  const viewer = await repo.getViewer(env.DB, userId);
+  const [tags, entries, climbNotes, links] = await Promise.all([
     repo.getSessionTags(env.DB, userId, fingerprint),
     entriesResponse(env, userId, (e) => e.fingerprints.includes(fingerprint)),
     repo.getSessionClimbNotes(env.DB, userId, fingerprint),
+    repo.getSessionLinks(env.DB, viewer, fingerprint, row.area_id),
   ]);
   // `notes` is the log form's single field, now the session's first note entry.
   // Kept on the response so the session page and the edit form need no change.
@@ -133,8 +177,29 @@ const sessionResponse = async (env: Env, userId: string, fingerprint: string) =>
     notes,
     tags,
     entries,
-    climbs: withClimbNotes(parseClimbs(climbs_json), climbNotes),
+    area: links.area,
+    climbs: withClimbNotes(parseClimbs(climbs_json), climbNotes).map((climb) => ({
+      ...climb,
+      link: links.climbs.get(climbSlug(climb.name.trim())) ?? null,
+    })),
   };
+};
+
+// The crag must be a live, visible area below the regions, and every linked
+// climb live and visible, so nobody links to someone else's pending creation.
+const invalidLinks = async (
+  db: D1Database,
+  userId: string,
+  form: ManualSessionBody
+): Promise<string | null> => {
+  const viewer = await repo.getViewer(db, userId);
+  if (form.areaId !== undefined) {
+    const area = await repo.getArea(db, viewer, form.areaId);
+    if (area === null || isRegion(area) || !isOpen(area)) return "unknown area";
+  }
+  const ids = [...new Set(climbLinksOf(form.climbs).map((l) => l.climb_id))];
+  const found = (await repo.areaClimbsByIds(db, viewer, ids)).filter(isOpen);
+  return found.length === ids.length ? null : "unknown climb";
 };
 
 // One read of the user's entries, tagged, filtered in memory. There are never
@@ -198,6 +263,246 @@ const tripOverlap = async (
 // rejected request does not depend on which endpoint rejected it.
 const invalidBody: Parameters<typeof zValidator>[2] = (result, c) =>
   result.success ? undefined : c.json({ error: "invalid request body" }, 400);
+
+const viewerOf = (c: Context<AppEnv>): Promise<Viewer> => repo.getViewer(c.env.DB, c.get("userId"));
+
+type LatLon = { lat: number; lon: number };
+
+const latLonOf = (a: { lat?: number | null; lon?: number | null }): LatLon | null =>
+  a.lat == null || a.lon == null ? null : { lat: a.lat, lon: a.lon };
+
+const areaIdsOnPath = (path: string): string[] => path.split("/").filter((id) => id !== "");
+
+// Visible siblings, plus anything visible within a couple of kilometres: the
+// same crag is often filed under two parents.
+const similarAreas = async (
+  db: D1Database,
+  viewer: Viewer,
+  parentId: string,
+  name: string,
+  at: LatLon | null,
+  excludeId?: string
+) => {
+  const siblings = await repo.childAreas(db, viewer, parentId);
+  const nearby =
+    at === null
+      ? []
+      : (await repo.searchAreas(db, viewer, { box: boundingBox(at, NEAR_KM) }, 200)).filter(
+          (a) =>
+            a.lat !== null &&
+            a.lon !== null &&
+            distanceKm(at, { lat: a.lat, lon: a.lon }) <= NEAR_KM
+        );
+  return duplicatesOf(tagSlug(name), [...siblings, ...nearby], excludeId).map(areaSummaryOf);
+};
+
+// The target area and its sibling sectors, because boulders are often filed
+// under the neighbouring one. Crags directly under a region are not
+// neighbours of each other, so there the search stays in the area.
+const similarClimbs = async (
+  db: D1Database,
+  viewer: Viewer,
+  area: repo.AreaRow,
+  name: string,
+  excludeId?: string
+) => {
+  const parent = area.parent_id === null ? null : await repo.getArea(db, viewer, area.parent_id);
+  const pool =
+    parent === null || isRegion(parent)
+      ? [area.id]
+      : [area.id, ...(await repo.childAreas(db, viewer, parent.id)).map((a) => a.id)];
+  const climbs = await repo.climbsInAreas(db, viewer, pool);
+  return duplicatesOf(tagSlug(name), climbs, excludeId).map((row) => areaClimbOf(row, viewer));
+};
+
+// Writes only the fields that differ from the entity as it is now, and
+// refreshes the base to now, so a re-edit after someone else's change diffs
+// against the current state. Null when nothing differs.
+const saveDraft = async (
+  c: Context<AppEnv>,
+  type: ContentEntity,
+  row: repo.AreaRow | repo.AreaClimbRow,
+  next: Fields,
+  changeSummary: string | null | undefined
+): Promise<repo.RevisionRow | null> => {
+  const base = snapshotOf(type, row);
+  const proposed = changesFrom(base, next);
+  if (Object.keys(proposed).length === 0) return null;
+  const userId = c.get("userId");
+  await repo.ensureUser(c.env.DB, userId);
+  await repo.saveDraft(c.env.DB, {
+    submitted_by: userId,
+    entity_type: type,
+    entity_id: row.id,
+    proposed_json: JSON.stringify(proposed),
+    base_json: JSON.stringify(base),
+    change_summary: changeSummary || null,
+  });
+  await captureEvent(c, "area_edit_suggested", { entity_type: type });
+  return repo.getDraft(c.env.DB, userId, type, row.id);
+};
+
+const ROLE_RANK = { user: 0, moderator: 1, admin: 2 } as const;
+
+// The one gate for moderation: mounted once on the prefix, so handlers behind
+// it never check the role again.
+const requireRole =
+  (role: Viewer["role"]): MiddlewareHandler<AppEnv> =>
+  async (c, next) => {
+    const viewer = await viewerOf(c);
+    if (ROLE_RANK[viewer.role] < ROLE_RANK[role]) return c.json({ error: "forbidden" }, 403);
+    await next();
+  };
+
+const QUEUE_PAGE = 10;
+// ponytail: one page per queue, add a cursor when a queue outgrows it.
+const MODERATION_LIST_LIMIT = 100;
+
+const byCreated = (a: { created_at: string }, b: { created_at: string }): number =>
+  a.created_at.localeCompare(b.created_at);
+
+// Pending areas and climbs, oldest first, each with what it might duplicate.
+const creationsQueue = async (db: D1Database, viewer: Viewer, limit: number) => {
+  const [areaPage, climbPage] = await Promise.all([
+    repo.pendingAreas(db, limit),
+    repo.pendingAreaClimbs(db, limit),
+  ]);
+  const areaItems = await Promise.all(
+    areaPage.rows.map(async (row) => ({
+      entity_type: "area" as const,
+      created_at: row.created_at,
+      area: areaOf(row, viewer),
+      candidates:
+        row.parent_id === null
+          ? []
+          : (await similarAreas(db, viewer, row.parent_id, row.name, latLonOf(row), row.id)).filter(
+              isOpen
+            ),
+    }))
+  );
+  const climbItems = await Promise.all(
+    climbPage.rows.map(async (row) => {
+      const area = await repo.getArea(db, viewer, row.area_id);
+      return {
+        entity_type: "climb" as const,
+        created_at: row.created_at,
+        climb: areaClimbOf(row, viewer),
+        area: area === null ? null : areaSummaryOf(area),
+        candidates:
+          area === null
+            ? []
+            : (await similarClimbs(db, viewer, area, row.name, row.id)).filter(isOpen),
+      };
+    })
+  );
+  return {
+    count: areaPage.count + climbPage.count,
+    items: [...areaItems, ...climbItems].sort(byCreated).slice(0, limit),
+  };
+};
+
+const entitiesOf = async (
+  db: D1Database,
+  viewer: Viewer,
+  refs: { entity_type: ContentEntity; entity_id: string }[]
+): Promise<Map<string, repo.AreaRow | repo.AreaClimbRow>> => {
+  const ids = (type: ContentEntity): string[] =>
+    refs.filter((r) => r.entity_type === type).map((r) => r.entity_id);
+  const [areaRows, climbRows] = await Promise.all([
+    repo.areasByIds(db, viewer, ids("area")),
+    repo.areaClimbsByIds(db, viewer, ids("climb")),
+  ]);
+  return new Map([...areaRows, ...climbRows].map((row) => [row.id, row]));
+};
+
+const revisionsQueue = async (db: D1Database, viewer: Viewer, limit: number) => {
+  const page = await repo.pendingRevisions(db, limit);
+  const entities = await entitiesOf(db, viewer, page.rows);
+  return {
+    count: page.count,
+    items: page.rows.map((row) => revisionOf(row, entities.get(row.entity_id) ?? null)),
+  };
+};
+
+const reportsQueue = async (db: D1Database, viewer: Viewer, limit: number) => {
+  const page = await repo.openReports(db, limit);
+  const entities = await entitiesOf(db, viewer, page.rows);
+  return {
+    count: page.count,
+    items: page.rows.map((row) => {
+      const entity = entities.get(row.entity_id);
+      return {
+        id: row.id,
+        entity_type: row.entity_type,
+        entity_id: row.entity_id,
+        entity:
+          entity === undefined
+            ? null
+            : { name: entity.name, slug: entity.slug, status: entity.status },
+        body: row.body,
+        created_at: row.created_at,
+      };
+    }),
+  };
+};
+
+const duplicatesQueue = async (db: D1Database, viewer: Viewer, limit: number) => {
+  const page = await repo.openDuplicateReports(db, limit);
+  const ids = page.rows.flatMap((r) => [r.keep_climb_id, r.duplicate_climb_id]);
+  const [rows, links] = await Promise.all([
+    repo.areaClimbsByIds(db, viewer, ids),
+    repo.linkCounts(db, ids),
+  ]);
+  const climbs = new Map(rows.map((row) => [row.id, row]));
+  const side = (id: string) => {
+    const row = climbs.get(id);
+    return row === undefined ? null : { ...areaClimbOf(row, viewer), links: links.get(id) ?? 0 };
+  };
+  return {
+    count: page.count,
+    items: page.rows.map((row) => ({
+      id: row.id,
+      keep: side(row.keep_climb_id),
+      duplicate: side(row.duplicate_climb_id),
+      note: row.note,
+      created_at: row.created_at,
+    })),
+  };
+};
+
+const mergeClimbs = async (
+  c: Context<AppEnv>,
+  m: { duplicateId: string; keepId: string },
+  source: "report" | "direct"
+) => {
+  const merged = await repo.mergeAreaClimb(c.env.DB, { ...m, reviewerId: c.get("userId") });
+  if (!merged) return c.json({ error: "one of the climbs changed since you loaded it" }, 409);
+  await captureEvent(c, "moderation_duplicate_merged", { source });
+  const viewer = await viewerOf(c);
+  const survivor = await repo.getAreaClimb(c.env.DB, viewer, m.keepId);
+  return c.json({ climb: survivor === null ? null : areaClimbOf(survivor, viewer) });
+};
+
+const areaSearchQuery = z.object({
+  q: z.string().trim().max(80).optional(),
+  near: z
+    .string()
+    .regex(/^-?\d+(\.\d+)?,-?\d+(\.\d+)?$/)
+    .transform((s) => {
+      const [lat, lon] = s.split(",").map(Number);
+      return { lat: lat ?? 0, lon: lon ?? 0 };
+    })
+    .refine((p) => Math.abs(p.lat) <= 90 && Math.abs(p.lon) <= 180)
+    .optional(),
+});
+
+const areaClimbSearchQuery = z.object({
+  q: z.string().trim().max(80).optional(),
+  areaId: z.string().min(1).optional(),
+});
+
+const AREA_SEARCH_LIMIT = 20;
+const AREA_NEARBY_KM = 50;
 
 const gradeScalesBody = z.object({
   boulder: z.enum(["v", "font"]).optional(),
@@ -556,6 +861,626 @@ const app = new Hono<AppEnv>()
     return c.json({ deleted: true });
   })
 
+  // Areas: the shared tree of regions, crags and sectors, and the climbs in
+  // them. Everything a user creates starts pending and is visible only to them
+  // (and moderators) until approved.
+  .get("/v1/areas", zValidator("query", areaSearchQuery, invalidBody), async (c) => {
+    const { q, near } = c.req.valid("query");
+    const key = q === undefined ? "" : tagSlug(q);
+    if (key === "" && near === undefined) return c.json({ areas: [] });
+    const viewer = await viewerOf(c);
+    const rows = await repo.searchAreas(
+      c.env.DB,
+      viewer,
+      key === "" ? { box: boundingBox(near ?? { lat: 0, lon: 0 }, AREA_NEARBY_KM) } : { key },
+      near === undefined ? AREA_SEARCH_LIMIT : 200
+    );
+    const distance = (a: repo.AreaRow): number =>
+      near === undefined || a.lat === null || a.lon === null
+        ? Infinity
+        : distanceKm(near, { lat: a.lat, lon: a.lon });
+    const ranked = near === undefined ? rows : rows.sort((a, b) => distance(a) - distance(b));
+    return c.json({ areas: ranked.slice(0, AREA_SEARCH_LIMIT).map(areaSummaryOf) });
+  })
+
+  .post("/v1/areas/similar", zValidator("json", areaSimilarBody, invalidBody), async (c) => {
+    const form = c.req.valid("json");
+    const viewer = await viewerOf(c);
+    return c.json({
+      candidates: await similarAreas(c.env.DB, viewer, form.parentId, form.name, latLonOf(form)),
+    });
+  })
+
+  .get("/v1/areas/:slug", async (c) => {
+    const viewer = await viewerOf(c);
+    const row = await repo.getAreaBySlug(c.env.DB, viewer, c.req.param("slug"));
+    if (row === null) return c.json({ error: "not found" }, 404);
+    if (row.status === "merged") {
+      const target =
+        row.merged_into_id === null
+          ? null
+          : await repo.getArea(c.env.DB, viewer, row.merged_into_id);
+      if (target === null) return c.json({ error: "not found" }, 404);
+      return c.json({ redirect: target.slug });
+    }
+    const [ancestors, children, climbs] = await Promise.all([
+      repo.areasByIds(
+        c.env.DB,
+        viewer,
+        areaIdsOnPath(row.path).filter((id) => id !== row.id)
+      ),
+      repo.childAreas(c.env.DB, viewer, row.id),
+      repo.climbsInAreas(c.env.DB, viewer, [row.id]),
+    ]);
+    return c.json({
+      area: areaOf(row, viewer),
+      ancestors: ancestors.map(areaSummaryOf),
+      children: children.map(areaSummaryOf),
+      climbs: climbs.map((climb) => areaClimbOf(climb, viewer)),
+    });
+  })
+
+  // Regions are seeded, never created here: every created area has a parent,
+  // and one directly under a region has to say where it is.
+  .post("/v1/areas", zValidator("json", areaBody, invalidBody), async (c) => {
+    const form = c.req.valid("json");
+    const userId = c.get("userId");
+    await repo.ensureUser(c.env.DB, userId);
+    const viewer = await viewerOf(c);
+    const parent = await repo.getArea(c.env.DB, viewer, form.parentId);
+    if (parent === null || !isOpen(parent)) {
+      return c.json({ error: "parent area not found" }, 400);
+    }
+    const at = latLonOf(form);
+    if (isRegion(parent) && at === null) {
+      return c.json({ error: "an area directly under a region needs coordinates" }, 400);
+    }
+    if (!form.confirmedNew) {
+      const candidates = await similarAreas(c.env.DB, viewer, parent.id, form.name, at);
+      if (candidates.length > 0) return c.json({ error: "possible duplicates", candidates }, 409);
+    }
+    const id = crypto.randomUUID();
+    const now = new Date().toISOString();
+    await repo.insertArea(c.env.DB, {
+      id,
+      parent_id: parent.id,
+      path: `${parent.path}${id}/`,
+      depth: parent.depth + 1,
+      name: form.name,
+      name_key: tagSlug(form.name),
+      slug: await uniqueSlug(form.name, parent.slug, (slug) => repo.areaSlugTaken(c.env.DB, slug)),
+      description: form.description || null,
+      lat: at?.lat ?? null,
+      lon: at?.lon ?? null,
+      status: initialStatus(viewer),
+      created_by: userId,
+      created_at: now,
+      updated_at: now,
+    });
+    await captureEvent(c, "area_created", { under_region: isRegion(parent) });
+    const row = await repo.getArea(c.env.DB, viewer, id);
+    return c.json({ area: row === null ? null : areaOf(row, viewer) }, 201);
+  })
+
+  .put("/v1/areas/:id", zValidator("json", areaEditBody, invalidBody), async (c) => {
+    const form = c.req.valid("json");
+    const viewer = await viewerOf(c);
+    const id = c.req.param("id");
+    const row = await repo.getArea(c.env.DB, viewer, id);
+    if (row === null) return c.json({ error: "not found" }, 404);
+    if (row.status !== "pending" || row.created_by !== viewer.id) {
+      return c.json({ error: "only your own pending area can be edited directly" }, 403);
+    }
+    const parent =
+      row.parent_id === null ? null : await repo.getArea(c.env.DB, viewer, row.parent_id);
+    const at = latLonOf(form);
+    if (parent !== null && isRegion(parent) && at === null) {
+      return c.json({ error: "an area directly under a region needs coordinates" }, 400);
+    }
+    await repo.updatePendingArea(c.env.DB, viewer.id, id, {
+      name: form.name,
+      name_key: tagSlug(form.name),
+      description: form.description || null,
+      lat: at?.lat ?? null,
+      lon: at?.lon ?? null,
+    });
+    const updated = await repo.getArea(c.env.DB, viewer, id);
+    return c.json({ area: updated === null ? null : areaOf(updated, viewer) });
+  })
+
+  .get("/v1/area-climbs", zValidator("query", areaClimbSearchQuery, invalidBody), async (c) => {
+    const { q, areaId } = c.req.valid("query");
+    const key = q === undefined ? "" : tagSlug(q);
+    if (key === "" && areaId === undefined) return c.json({ climbs: [] });
+    const viewer = await viewerOf(c);
+    const area = areaId === undefined ? null : await repo.getArea(c.env.DB, viewer, areaId);
+    if (areaId !== undefined && area === null) return c.json({ error: "not found" }, 404);
+    const rows = await repo.searchAreaClimbs(
+      c.env.DB,
+      viewer,
+      {
+        ...(key === "" ? {} : { key }),
+        ...(area === null ? {} : { under: area.path }),
+      },
+      50
+    );
+    return c.json({ climbs: rows.map((row) => areaClimbOf(row, viewer)) });
+  })
+
+  .post(
+    "/v1/area-climbs/similar",
+    zValidator("json", areaClimbSimilarBody, invalidBody),
+    async (c) => {
+      const form = c.req.valid("json");
+      const viewer = await viewerOf(c);
+      const area = await repo.getArea(c.env.DB, viewer, form.areaId);
+      if (area === null) return c.json({ error: "not found" }, 404);
+      return c.json({ candidates: await similarClimbs(c.env.DB, viewer, area, form.name) });
+    }
+  )
+
+  .get("/v1/area-climbs/:slug", async (c) => {
+    const viewer = await viewerOf(c);
+    const row = await repo.getAreaClimbBySlug(c.env.DB, viewer, c.req.param("slug"));
+    if (row === null) return c.json({ error: "not found" }, 404);
+    if (row.status === "merged") {
+      const target =
+        row.merged_into_id === null
+          ? null
+          : await repo.getAreaClimb(c.env.DB, viewer, row.merged_into_id);
+      if (target === null) return c.json({ error: "not found" }, 404);
+      return c.json({ redirect: target.slug });
+    }
+    const area = await repo.getArea(c.env.DB, viewer, row.area_id);
+    const ancestors =
+      area === null ? [] : await repo.areasByIds(c.env.DB, viewer, areaIdsOnPath(area.path));
+    const logged = await repo.sessionsOnClimb(c.env.DB, viewer.id, row.id);
+    return c.json({
+      climb: areaClimbOf(row, viewer),
+      ancestors: ancestors.map(areaSummaryOf),
+      sessions: logged.map(({ climb_slug, climbs_json, ...session }) => ({
+        ...session,
+        sent: parseClimbs(climbs_json).some(
+          (climb) => climb.kind === "send" && climbSlug(climb.name.trim()) === climb_slug
+        ),
+      })),
+    });
+  })
+
+  .post("/v1/area-climbs", zValidator("json", areaClimbBody, invalidBody), async (c) => {
+    const form = c.req.valid("json");
+    const userId = c.get("userId");
+    await repo.ensureUser(c.env.DB, userId);
+    const viewer = await viewerOf(c);
+    const area = await repo.getArea(c.env.DB, viewer, form.areaId);
+    if (area === null || !isOpen(area)) return c.json({ error: "area not found" }, 400);
+    if (isRegion(area)) return c.json({ error: "a climb cannot sit directly in a region" }, 400);
+    if (!form.confirmedNew) {
+      const candidates = await similarClimbs(c.env.DB, viewer, area, form.name);
+      if (candidates.length > 0) return c.json({ error: "possible duplicates", candidates }, 409);
+    }
+    const id = crypto.randomUUID();
+    const now = new Date().toISOString();
+    await repo.insertAreaClimb(c.env.DB, {
+      id,
+      area_id: area.id,
+      ...climbWrite(form),
+      slug: await uniqueSlug(form.name, area.slug, (slug) =>
+        repo.areaClimbSlugTaken(c.env.DB, slug)
+      ),
+      status: initialStatus(viewer),
+      created_by: userId,
+      created_at: now,
+      updated_at: now,
+    });
+    await captureEvent(c, "area_climb_created", { type: form.type });
+    const row = await repo.getAreaClimb(c.env.DB, viewer, id);
+    return c.json({ climb: row === null ? null : areaClimbOf(row, viewer) }, 201);
+  })
+
+  .put("/v1/area-climbs/:id", zValidator("json", areaClimbEditBody, invalidBody), async (c) => {
+    const form = c.req.valid("json");
+    const viewer = await viewerOf(c);
+    const id = c.req.param("id");
+    const row = await repo.getAreaClimb(c.env.DB, viewer, id);
+    if (row === null) return c.json({ error: "not found" }, 404);
+    if (row.status !== "pending" || row.created_by !== viewer.id) {
+      return c.json({ error: "only your own pending climb can be edited directly" }, 403);
+    }
+    await repo.updatePendingAreaClimb(c.env.DB, viewer.id, id, climbWrite(form));
+    const updated = await repo.getAreaClimb(c.env.DB, viewer, id);
+    return c.json({ climb: updated === null ? null : areaClimbOf(updated, viewer) });
+  })
+
+  // Suggested edits: a pending revision per user per active entity, never a
+  // write to the entity itself. A pending entity is edited in place instead.
+  .get("/v1/areas/:id/draft", async (c) => {
+    const viewer = await viewerOf(c);
+    const row = await repo.getArea(c.env.DB, viewer, c.req.param("id"));
+    if (row === null) return c.json({ error: "not found" }, 404);
+    const draft = await repo.getDraft(c.env.DB, viewer.id, "area", row.id);
+    return c.json({ draft: draft === null ? null : draftOf(draft) });
+  })
+
+  .put("/v1/areas/:id/draft", zValidator("json", areaDraftBody, invalidBody), async (c) => {
+    const { changeSummary, ...form } = c.req.valid("json");
+    const viewer = await viewerOf(c);
+    const row = await repo.getArea(c.env.DB, viewer, c.req.param("id"));
+    if (row === null) return c.json({ error: "not found" }, 404);
+    if (row.status !== "active" || isRegion(row)) {
+      return c.json({ error: "only an active area takes suggested edits" }, 409);
+    }
+    const next = areaDraftOf(row, form);
+    if (next === null) return c.json({ error: "invalid request body" }, 400);
+    const parent = await repo.getArea(c.env.DB, viewer, next.parentId);
+    if (parent === null || !isOpen(parent) || parent.path.startsWith(row.path)) {
+      return c.json({ error: "parent area not found" }, 400);
+    }
+    if (isRegion(parent) && latLonOf(next) === null) {
+      return c.json({ error: "an area directly under a region needs coordinates" }, 400);
+    }
+    const draft = await saveDraft(c, "area", row, areaFieldsOf(next), changeSummary);
+    if (draft === null) return c.json({ error: "no changes" }, 400);
+    return c.json({ draft: draftOf(draft) });
+  })
+
+  .delete("/v1/areas/:id/draft", async (c) => {
+    const viewer = await viewerOf(c);
+    const row = await repo.getArea(c.env.DB, viewer, c.req.param("id"));
+    if (row === null) return c.json({ error: "not found" }, 404);
+    const deleted = await repo.deleteDraft(c.env.DB, viewer.id, "area", row.id);
+    return deleted ? c.json({ ok: true }) : c.json({ error: "not found" }, 404);
+  })
+
+  .get("/v1/area-climbs/:id/draft", async (c) => {
+    const viewer = await viewerOf(c);
+    const row = await repo.getAreaClimb(c.env.DB, viewer, c.req.param("id"));
+    if (row === null) return c.json({ error: "not found" }, 404);
+    const draft = await repo.getDraft(c.env.DB, viewer.id, "climb", row.id);
+    return c.json({ draft: draft === null ? null : draftOf(draft) });
+  })
+
+  .put(
+    "/v1/area-climbs/:id/draft",
+    zValidator("json", areaClimbDraftBody, invalidBody),
+    async (c) => {
+      const { changeSummary, ...form } = c.req.valid("json");
+      const viewer = await viewerOf(c);
+      const row = await repo.getAreaClimb(c.env.DB, viewer, c.req.param("id"));
+      if (row === null) return c.json({ error: "not found" }, 404);
+      if (row.status !== "active") {
+        return c.json({ error: "only an active climb takes suggested edits" }, 409);
+      }
+      const next = areaClimbDraftOf(row, form);
+      if (next === null) return c.json({ error: "invalid request body" }, 400);
+      const area = await repo.getArea(c.env.DB, viewer, next.areaId);
+      if (area === null || !isOpen(area) || isRegion(area)) {
+        return c.json({ error: "area not found" }, 400);
+      }
+      const draft = await saveDraft(c, "climb", row, areaClimbFieldsOf(next), changeSummary);
+      if (draft === null) return c.json({ error: "no changes" }, 400);
+      return c.json({ draft: draftOf(draft) });
+    }
+  )
+
+  .delete("/v1/area-climbs/:id/draft", async (c) => {
+    const viewer = await viewerOf(c);
+    const row = await repo.getAreaClimb(c.env.DB, viewer, c.req.param("id"));
+    if (row === null) return c.json({ error: "not found" }, 404);
+    const deleted = await repo.deleteDraft(c.env.DB, viewer.id, "climb", row.id);
+    return deleted ? c.json({ ok: true }) : c.json({ error: "not found" }, 404);
+  })
+
+  .post(
+    "/v1/area-climbs/:id/duplicate-reports",
+    zValidator("json", duplicateReportBody, invalidBody),
+    async (c) => {
+      const form = c.req.valid("json");
+      const viewer = await viewerOf(c);
+      const [duplicate, keep] = await Promise.all([
+        repo.getAreaClimb(c.env.DB, viewer, c.req.param("id")),
+        repo.getAreaClimb(c.env.DB, viewer, form.keepClimbId),
+      ]);
+      if (duplicate === null || keep === null || !isOpen(duplicate) || !isOpen(keep)) {
+        return c.json({ error: "not found" }, 404);
+      }
+      if (duplicate.id === keep.id)
+        return c.json({ error: "a climb cannot duplicate itself" }, 400);
+      await repo.ensureUser(c.env.DB, viewer.id);
+      const id = await repo.insertDuplicateReport(c.env.DB, {
+        keep_climb_id: keep.id,
+        duplicate_climb_id: duplicate.id,
+        reporter_id: viewer.id,
+        note: form.note || null,
+      });
+      if (id === null) return c.json({ error: "already reported" }, 409);
+      await captureEvent(c, "area_duplicate_reported");
+      return c.json({ report: { id } }, 201);
+    }
+  )
+
+  .post("/v1/areas/reports", zValidator("json", contentReportBody, invalidBody), async (c) => {
+    const form = c.req.valid("json");
+    const viewer = await viewerOf(c);
+    const entity =
+      form.entityType === "area"
+        ? await repo.getArea(c.env.DB, viewer, form.entityId)
+        : await repo.getAreaClimb(c.env.DB, viewer, form.entityId);
+    if (entity === null) return c.json({ error: "not found" }, 404);
+    await repo.ensureUser(c.env.DB, viewer.id);
+    const id = await repo.insertContentReport(c.env.DB, {
+      entity_type: form.entityType,
+      entity_id: entity.id,
+      reporter_id: viewer.id,
+      body: form.body,
+    });
+    await captureEvent(c, "area_issue_reported", { entity_type: form.entityType });
+    return c.json({ report: { id } }, 201);
+  })
+
+  // Moderation: everything below the gate is for moderators and admins only.
+  .use("/v1/moderation/*", requireRole("moderator"))
+
+  .get("/v1/moderation/queue", async (c) => {
+    const viewer = await viewerOf(c);
+    const [creations, revisions, duplicates, reports] = await Promise.all([
+      creationsQueue(c.env.DB, viewer, QUEUE_PAGE),
+      revisionsQueue(c.env.DB, viewer, QUEUE_PAGE),
+      duplicatesQueue(c.env.DB, viewer, QUEUE_PAGE),
+      reportsQueue(c.env.DB, viewer, QUEUE_PAGE),
+    ]);
+    return c.json({ creations, revisions, duplicates, reports });
+  })
+
+  .get("/v1/moderation/creations", async (c) =>
+    c.json(await creationsQueue(c.env.DB, await viewerOf(c), MODERATION_LIST_LIMIT))
+  )
+
+  .post(
+    "/v1/moderation/areas/:id/approve",
+    zValidator("json", versionBody, invalidBody),
+    async (c) => {
+      const viewer = await viewerOf(c);
+      const row = await repo.getArea(c.env.DB, viewer, c.req.param("id"));
+      if (row === null || row.parent_id === null) return c.json({ error: "not found" }, 404);
+      if (row.status !== "pending") return c.json({ error: "not pending" }, 409);
+      const approved = await repo.approveArea(c.env.DB, {
+        id: row.id,
+        version: c.req.valid("json").version,
+        parentId: row.parent_id,
+      });
+      if (!approved) {
+        return c.json({ error: "changed since you loaded it, or its parent is not live" }, 409);
+      }
+      await captureEvent(c, "moderation_creation_approved", { entity_type: "area" });
+      const updated = await repo.getArea(c.env.DB, viewer, row.id);
+      return c.json({ area: updated === null ? null : areaOf(updated, viewer) });
+    }
+  )
+
+  .post(
+    "/v1/moderation/climbs/:id/approve",
+    zValidator("json", versionBody, invalidBody),
+    async (c) => {
+      const viewer = await viewerOf(c);
+      const row = await repo.getAreaClimb(c.env.DB, viewer, c.req.param("id"));
+      if (row === null) return c.json({ error: "not found" }, 404);
+      if (row.status !== "pending") return c.json({ error: "not pending" }, 409);
+      const approved = await repo.approveAreaClimb(c.env.DB, {
+        id: row.id,
+        version: c.req.valid("json").version,
+        areaId: row.area_id,
+      });
+      if (!approved) {
+        return c.json({ error: "changed since you loaded it, or its area is not live" }, 409);
+      }
+      await captureEvent(c, "moderation_creation_approved", { entity_type: "climb" });
+      const updated = await repo.getAreaClimb(c.env.DB, viewer, row.id);
+      return c.json({ climb: updated === null ? null : areaClimbOf(updated, viewer) });
+    }
+  )
+
+  // A pending area is only rejected once nothing open is left inside it, so
+  // the moderator decides on each child rather than losing them silently.
+  .post(
+    "/v1/moderation/areas/:id/reject",
+    zValidator("json", rejectBody, invalidBody),
+    async (c) => {
+      const viewer = await viewerOf(c);
+      const row = await repo.getArea(c.env.DB, viewer, c.req.param("id"));
+      if (row === null) return c.json({ error: "not found" }, 404);
+      if (row.status !== "pending") return c.json({ error: "not pending" }, 409);
+      if (!(await repo.rejectArea(c.env.DB, row.id, c.req.valid("json").note || null))) {
+        return c.json({ error: "reject or move what is inside it first" }, 409);
+      }
+      await captureEvent(c, "moderation_creation_rejected", { entity_type: "area" });
+      return c.json({ ok: true });
+    }
+  )
+
+  .post(
+    "/v1/moderation/climbs/:id/reject",
+    zValidator("json", rejectBody, invalidBody),
+    async (c) => {
+      const viewer = await viewerOf(c);
+      const row = await repo.getAreaClimb(c.env.DB, viewer, c.req.param("id"));
+      if (row === null) return c.json({ error: "not found" }, 404);
+      if (row.status !== "pending") return c.json({ error: "not pending" }, 409);
+      if (!(await repo.rejectAreaClimb(c.env.DB, row.id, c.req.valid("json").note || null))) {
+        return c.json({ error: "not pending" }, 409);
+      }
+      await captureEvent(c, "moderation_creation_rejected", { entity_type: "climb" });
+      return c.json({ ok: true });
+    }
+  )
+
+  .get("/v1/moderation/revisions", async (c) =>
+    c.json(await revisionsQueue(c.env.DB, await viewerOf(c), MODERATION_LIST_LIMIT))
+  )
+
+  // Applies the three-way result in one guarded batch. A re-parent is placed
+  // by the same rules as creation, checked again now rather than trusted from
+  // when the edit was suggested.
+  .post(
+    "/v1/moderation/revisions/:id/approve",
+    zValidator("json", approveRevisionBody, invalidBody),
+    async (c) => {
+      const { version, resolutions } = c.req.valid("json");
+      const viewer = await viewerOf(c);
+      const revision = await repo.getRevision(c.env.DB, c.req.param("id"));
+      if (revision === null || revision.status !== "pending") {
+        return c.json({ error: "not found" }, 404);
+      }
+      const { proposed } = draftOf(revision);
+      if (Object.keys(resolutions).some((field) => !Object.hasOwn(proposed, field))) {
+        return c.json({ error: "resolutions only apply to proposed fields" }, 400);
+      }
+      const approval = { revisionId: revision.id, reviewerId: viewer.id, version };
+      const resolved = Object.keys(resolutions).length > 0;
+      const placement = { error: "the new place is no longer valid" };
+
+      if (revision.entity_type === "area") {
+        const found = approvalOf(
+          await repo.getArea(c.env.DB, viewer, revision.entity_id),
+          revision,
+          version,
+          resolutions
+        );
+        if ("problem" in found) return c.json(found.problem, 409);
+        const { entity, apply } = found;
+        const next = areaDraftOf({ ...entity, ...apply }, {});
+        if (next === null) return c.json({ error: "invalid request body" }, 400);
+        const parent = await repo.getArea(c.env.DB, viewer, next.parentId);
+        if (
+          parent === null ||
+          parent.status !== "active" ||
+          parent.path.startsWith(entity.path) ||
+          (isRegion(parent) && latLonOf(next) === null)
+        ) {
+          return c.json(placement, 409);
+        }
+        const approved = await repo.approveAreaRevision(c.env.DB, {
+          ...approval,
+          id: entity.id,
+          path: entity.path,
+          depth: entity.depth,
+          parent: { id: parent.id, path: parent.path, depth: parent.depth },
+          write: { ...areaFieldsOf(next), name_key: tagSlug(next.name) },
+        });
+        if (!approved) return c.json({ error: "changed since you loaded it" }, 409);
+        await captureEvent(c, "moderation_revision_approved", { entity_type: "area", resolved });
+        const updated = await repo.getArea(c.env.DB, viewer, entity.id);
+        return c.json({ area: updated === null ? null : areaOf(updated, viewer) });
+      }
+
+      const found = approvalOf(
+        await repo.getAreaClimb(c.env.DB, viewer, revision.entity_id),
+        revision,
+        version,
+        resolutions
+      );
+      if ("problem" in found) return c.json(found.problem, 409);
+      const { entity, apply } = found;
+      const next = areaClimbDraftOf({ ...entity, ...apply }, {});
+      if (next === null) return c.json({ error: "invalid request body" }, 400);
+      const area = await repo.getArea(c.env.DB, viewer, next.areaId);
+      if (area === null || area.status !== "active" || isRegion(area)) {
+        return c.json(placement, 409);
+      }
+      const approved = await repo.approveAreaClimbRevision(c.env.DB, {
+        ...approval,
+        id: entity.id,
+        write: { area_id: area.id, ...climbWrite(next) },
+      });
+      if (!approved) return c.json({ error: "changed since you loaded it" }, 409);
+      await captureEvent(c, "moderation_revision_approved", { entity_type: "climb", resolved });
+      const updated = await repo.getAreaClimb(c.env.DB, viewer, entity.id);
+      return c.json({ climb: updated === null ? null : areaClimbOf(updated, viewer) });
+    }
+  )
+
+  .post(
+    "/v1/moderation/revisions/:id/reject",
+    zValidator("json", rejectBody, invalidBody),
+    async (c) => {
+      const revision = await repo.getRevision(c.env.DB, c.req.param("id"));
+      if (revision === null) return c.json({ error: "not found" }, 404);
+      const rejected = await repo.rejectRevision(
+        c.env.DB,
+        revision.id,
+        c.get("userId"),
+        c.req.valid("json").note || null
+      );
+      if (!rejected) return c.json({ error: "not pending" }, 409);
+      await captureEvent(c, "moderation_revision_rejected", {
+        entity_type: revision.entity_type,
+      });
+      return c.json({ ok: true });
+    }
+  )
+
+  .get("/v1/moderation/duplicates", async (c) =>
+    c.json(await duplicatesQueue(c.env.DB, await viewerOf(c), MODERATION_LIST_LIMIT))
+  )
+
+  .post(
+    "/v1/moderation/duplicates/:id/merge",
+    zValidator("json", mergeBody, invalidBody),
+    async (c) => {
+      const report = await repo.getDuplicateReport(c.env.DB, c.req.param("id"));
+      if (report === null) return c.json({ error: "not found" }, 404);
+      if (report.status !== "open") return c.json({ error: "not open" }, 409);
+      const swap = c.req.valid("json").swap;
+      return mergeClimbs(
+        c,
+        {
+          keepId: swap ? report.duplicate_climb_id : report.keep_climb_id,
+          duplicateId: swap ? report.keep_climb_id : report.duplicate_climb_id,
+        },
+        "report"
+      );
+    }
+  )
+
+  .post(
+    "/v1/moderation/duplicates/:id/dismiss",
+    zValidator("json", rejectBody, invalidBody),
+    async (c) => {
+      const dismissed = await repo.dismissDuplicateReport(
+        c.env.DB,
+        c.req.param("id"),
+        c.get("userId"),
+        c.req.valid("json").note || null
+      );
+      if (!dismissed) return c.json({ error: "not found" }, 404);
+      await captureEvent(c, "moderation_duplicate_dismissed");
+      return c.json({ ok: true });
+    }
+  )
+
+  .post("/v1/moderation/climbs/:id/merge-into/:keepId", async (c) => {
+    const viewer = await viewerOf(c);
+    const [duplicate, keep] = await Promise.all([
+      repo.getAreaClimb(c.env.DB, viewer, c.req.param("id")),
+      repo.getAreaClimb(c.env.DB, viewer, c.req.param("keepId")),
+    ]);
+    if (duplicate === null || keep === null) return c.json({ error: "not found" }, 404);
+    if (duplicate.id === keep.id) return c.json({ error: "a climb cannot duplicate itself" }, 400);
+    return mergeClimbs(c, { duplicateId: duplicate.id, keepId: keep.id }, "direct");
+  })
+
+  .get("/v1/moderation/reports", async (c) =>
+    c.json(await reportsQueue(c.env.DB, await viewerOf(c), MODERATION_LIST_LIMIT))
+  )
+
+  .post("/v1/moderation/reports/:id/resolve", async (c) => {
+    if (!(await repo.resolveReport(c.env.DB, c.req.param("id"), c.get("userId")))) {
+      return c.json({ error: "not found" }, 404);
+    }
+    await captureEvent(c, "moderation_report_resolved");
+    return c.json({ ok: true });
+  })
+
   .get("/v1/sessions/:fingerprint", async (c) => {
     const session = await sessionResponse(c.env, c.get("userId"), c.req.param("fingerprint"));
     if (session === null) return c.json({ error: "not found" }, 404);
@@ -566,10 +1491,12 @@ const app = new Hono<AppEnv>()
     const form = c.req.valid("json");
     const userId = c.get("userId");
     await repo.ensureUser(c.env.DB, userId);
+    const invalid = await invalidLinks(c.env.DB, userId, form);
+    if (invalid !== null) return c.json({ error: invalid }, 400);
     const fingerprint = `manual-${crypto.randomUUID()}`;
     const history = await manualScoringHistory(c.env.DB, userId);
     const input = buildManualSession(fingerprint, form, history);
-    await repo.insertManualSession(c.env.DB, userId, input);
+    await repo.insertManualSession(c.env.DB, userId, input, climbLinksOf(form.climbs));
     await repo.upsertSessionNote(
       c.env.DB,
       userId,
@@ -664,9 +1591,11 @@ const app = new Hono<AppEnv>()
       if (existing.source !== "manual") {
         return c.json({ error: "only manually logged sessions can be edited" }, 409);
       }
+      const invalid = await invalidLinks(c.env.DB, userId, form);
+      if (invalid !== null) return c.json({ error: invalid }, 400);
       const history = await manualScoringHistory(c.env.DB, userId, fingerprint);
       const input = buildManualSession(fingerprint, form, history);
-      await repo.updateManualSession(c.env.DB, userId, input);
+      await repo.updateManualSession(c.env.DB, userId, input, climbLinksOf(form.climbs));
       await repo.upsertSessionNote(
         c.env.DB,
         userId,
@@ -766,6 +1695,7 @@ const app = new Hono<AppEnv>()
     const scales = repo.gradeScalesOf(user);
     return c.json({
       gradeScales: { boulder: scales.boulder, route: scales.route },
+      role: user?.role ?? "user",
       strava:
         strava === null
           ? null
@@ -864,4 +1794,5 @@ export type { ImportBody } from "./lib/import";
 export { app };
 
 export type { Circuit, CircuitColour, Gym, GymInput } from "./lib/gyms";
+export type { Area, AreaClimb, AreaClimbInput, AreaInput, AreaSummary } from "./lib/areas";
 export { CIRCUIT_COLOURS, circuitMiddle, circuitRangeLabel } from "./lib/gyms";

@@ -5,20 +5,37 @@ import {
   count,
   desc,
   eq,
+  exists,
   getTableColumns,
+  gte,
   inArray,
   isNull,
+  like,
+  lt,
+  lte,
+  ne,
+  not,
   notInArray,
+  or,
+  sql,
+  type SQL,
 } from "drizzle-orm";
-import { drizzle } from "drizzle-orm/d1";
+import { drizzle, type DrizzleD1Database } from "drizzle-orm/d1";
+import { alias, type SQLiteColumn } from "drizzle-orm/sqlite-core";
 import {
+  areaClimbs,
+  areas,
   boardConnections,
   climbNotes,
+  contentReports,
+  contentRevisions,
+  duplicateReports,
   entrySessions,
   entryTags,
   gyms,
   journalEntries,
   projects,
+  sessionClimbLinks,
   sessions,
   sessionTags,
   storeEntitlements,
@@ -27,6 +44,8 @@ import {
   tags,
   users,
 } from "../db/schema";
+import type { ContentEntity, Viewer } from "./areas";
+import type { ClimbLink } from "./manual";
 import type { EntryWrite } from "./entries";
 import type { StoreEntitlement } from "./revenuecat";
 import type { NormalizedTag } from "./tags";
@@ -207,6 +226,7 @@ export type ManualSessionInput = {
   fingerprint: string;
   location: "indoor" | "outdoor";
   gym_id: string | null;
+  area_id: string | null;
   name: string | null;
   start_at: string;
   end_at: string;
@@ -221,23 +241,40 @@ export type ManualSessionInput = {
   climbs_json: string;
 };
 
+const insertLinks = (d: Db, userId: string, fingerprint: string, links: ClimbLink[]) =>
+  d.insert(sessionClimbLinks).values(links.map((l) => ({ user_id: userId, fingerprint, ...l })));
+
+const clearLinks = (d: Db, userId: string, fingerprint: string) =>
+  d
+    .delete(sessionClimbLinks)
+    .where(
+      and(eq(sessionClimbLinks.user_id, userId), eq(sessionClimbLinks.fingerprint, fingerprint))
+    );
+
 export async function insertManualSession(
   db: D1Database,
   userId: string,
-  s: ManualSessionInput
+  s: ManualSessionInput,
+  links: ClimbLink[] = []
 ): Promise<void> {
-  await drizzle(db)
+  const d = drizzle(db);
+  const insert = d
     .insert(sessions)
     .values({ user_id: userId, source: "manual", board: null, ...s });
+  if (links.length === 0) await insert;
+  else await d.batch([insert, insertLinks(d, userId, s.fingerprint, links)]);
 }
 
+// The links are replaced whole, like the session's tags and notes.
 export async function updateManualSession(
   db: D1Database,
   userId: string,
-  s: ManualSessionInput
-): Promise<boolean> {
+  s: ManualSessionInput,
+  links: ClimbLink[]
+): Promise<void> {
+  const d = drizzle(db);
   const { fingerprint, ...rest } = s;
-  const result = await drizzle(db)
+  const update = d
     .update(sessions)
     .set(rest)
     .where(
@@ -247,7 +284,100 @@ export async function updateManualSession(
         eq(sessions.source, "manual")
       )
     );
-  return result.meta.changes > 0;
+  const clear = clearLinks(d, userId, fingerprint);
+  await (links.length === 0
+    ? d.batch([update, clear])
+    : d.batch([update, clear, insertLinks(d, userId, fingerprint, links)]));
+}
+
+export type SessionLinks = {
+  area: { id: string; name: string; slug: string } | null;
+  climbs: Map<string, { id: string; name: string; slug: string }>;
+};
+
+export type ClimbSessionRow = {
+  fingerprint: string;
+  name: string | null;
+  title: string;
+  start_at: string;
+  climb_slug: string;
+  climbs_json: string | null;
+};
+
+export async function sessionsOnClimb(
+  db: D1Database,
+  userId: string,
+  climbId: string
+): Promise<ClimbSessionRow[]> {
+  return drizzle(db)
+    .select({
+      fingerprint: sessions.fingerprint,
+      name: sessions.name,
+      title: sessions.title,
+      start_at: sessions.start_at,
+      climb_slug: sessionClimbLinks.climb_slug,
+      climbs_json: sessions.climbs_json,
+    })
+    .from(sessionClimbLinks)
+    .innerJoin(
+      sessions,
+      and(
+        eq(sessions.user_id, sessionClimbLinks.user_id),
+        eq(sessions.fingerprint, sessionClimbLinks.fingerprint)
+      )
+    )
+    .where(and(eq(sessionClimbLinks.user_id, userId), eq(sessionClimbLinks.climb_id, climbId)))
+    .orderBy(desc(sessions.start_at))
+    .all();
+}
+
+// Only what the viewer can still see and is still live comes back: a merge
+// repoints links at the survivor, and a rejected climb drops out.
+export async function getSessionLinks(
+  db: D1Database,
+  viewer: Viewer,
+  fingerprint: string,
+  areaId: string | null
+): Promise<SessionLinks> {
+  const d = drizzle(db);
+  const open = inArray(areaClimbs.status, ["active", "pending"]);
+  const [area, climbs] = await Promise.all([
+    areaId === null
+      ? undefined
+      : d
+          .select({ id: areas.id, name: areas.name, slug: areas.slug })
+          .from(areas)
+          .where(
+            and(
+              eq(areas.id, areaId),
+              inArray(areas.status, ["active", "pending"]),
+              visibleTo(areas, viewer)
+            )
+          )
+          .get(),
+    d
+      .select({
+        climb_slug: sessionClimbLinks.climb_slug,
+        id: areaClimbs.id,
+        name: areaClimbs.name,
+        slug: areaClimbs.slug,
+      })
+      .from(sessionClimbLinks)
+      .innerJoin(areaClimbs, eq(areaClimbs.id, sessionClimbLinks.climb_id))
+      .where(
+        and(
+          eq(sessionClimbLinks.user_id, viewer.id),
+          eq(sessionClimbLinks.fingerprint, fingerprint),
+          open,
+          visibleTo(areaClimbs, viewer)
+        )
+      )
+      .all(),
+  ]);
+  return {
+    area: area ?? null,
+    climbs: new Map(climbs.map(({ climb_slug, ...climb }) => [climb_slug, climb])),
+  };
 }
 
 // Any session the user owns can be deleted, board-sourced history included.
@@ -271,6 +401,7 @@ export async function deleteSession(
     d
       .delete(climbNotes)
       .where(and(eq(climbNotes.user_id, userId), eq(climbNotes.fingerprint, fingerprint))),
+    clearLinks(d, userId, fingerprint),
   ]);
   await pruneUnusedTags(d, userId);
   return true;
@@ -984,6 +1115,7 @@ export async function deleteUserData(db: D1Database, userId: string): Promise<vo
   await d.batch([
     d.delete(sessionTags).where(eq(sessionTags.user_id, userId)),
     d.delete(climbNotes).where(eq(climbNotes.user_id, userId)),
+    d.delete(sessionClimbLinks).where(eq(sessionClimbLinks.user_id, userId)),
     d.delete(entryTags).where(eq(entryTags.user_id, userId)),
     d.delete(entrySessions).where(eq(entrySessions.user_id, userId)),
     d.delete(journalEntries).where(eq(journalEntries.user_id, userId)),
@@ -998,6 +1130,963 @@ export async function deleteUserData(db: D1Database, userId: string): Promise<vo
     // account has to take them too, ahead of the tables being dropped.
     d.delete(boardConnections).where(eq(boardConnections.user_id, userId)),
     d.delete(syncState).where(eq(syncState.user_id, userId)),
+    ...purgeAreaContributions(d, userId),
     d.delete(users).where(eq(users.id, userId)),
   ]);
+}
+
+const unapproved: Array<"pending" | "deleted"> = ["pending", "deleted"];
+
+// Approved Areas content outlives its author: other people's sends link to it.
+// Unapproved content goes, unless something someone else owns hangs off it
+// (a moderator's climb under a pending area, a link, a merge), in which case it
+// stays for moderation like the approved rows, with the author removed. Runs
+// after the user's own session links are deleted.
+function purgeAreaContributions(d: DrizzleD1Database, userId: string) {
+  const sub = alias(areas, "sub");
+  const merged = alias(areaClimbs, "merged");
+  const inSubtree = sql`substr(${sub.path}, 1, length(${areas.path})) = ${areas.path}`;
+  const gone = (table: typeof areas | typeof areaClimbs, id: SQLiteColumn): SQL =>
+    not(exists(d.select({ id: table.id }).from(table).where(eq(table.id, id))));
+  const orphaned = (type: SQLiteColumn, id: SQLiteColumn): SQL | undefined =>
+    or(and(eq(type, "area"), gone(areas, id)), and(eq(type, "climb"), gone(areaClimbs, id)));
+  return [
+    d
+      .delete(contentRevisions)
+      .where(
+        and(eq(contentRevisions.submitted_by, userId), eq(contentRevisions.status, "pending"))
+      ),
+    d.delete(duplicateReports).where(eq(duplicateReports.reporter_id, userId)),
+    d.delete(contentReports).where(eq(contentReports.reporter_id, userId)),
+    d
+      .delete(areaClimbs)
+      .where(
+        and(
+          eq(areaClimbs.created_by, userId),
+          inArray(areaClimbs.status, unapproved),
+          not(
+            exists(
+              d
+                .select({ id: sessionClimbLinks.climb_id })
+                .from(sessionClimbLinks)
+                .where(eq(sessionClimbLinks.climb_id, areaClimbs.id))
+            )
+          ),
+          not(
+            exists(
+              d
+                .select({ id: merged.id })
+                .from(merged)
+                .where(eq(merged.merged_into_id, areaClimbs.id))
+            )
+          )
+        )
+      ),
+    d.delete(areas).where(
+      and(
+        eq(areas.created_by, userId),
+        inArray(areas.status, unapproved),
+        not(
+          exists(
+            d
+              .select({ id: sub.id })
+              .from(sub)
+              .where(
+                and(
+                  inSubtree,
+                  or(
+                    isNull(sub.created_by),
+                    ne(sub.created_by, userId),
+                    notInArray(sub.status, unapproved)
+                  )
+                )
+              )
+          )
+        ),
+        not(
+          exists(
+            d
+              .select({ id: areaClimbs.id })
+              .from(areaClimbs)
+              .innerJoin(sub, eq(areaClimbs.area_id, sub.id))
+              .where(inSubtree)
+          )
+        )
+      )
+    ),
+    d
+      .delete(contentRevisions)
+      .where(orphaned(contentRevisions.entity_type, contentRevisions.entity_id)),
+    d.delete(contentReports).where(orphaned(contentReports.entity_type, contentReports.entity_id)),
+    d
+      .delete(duplicateReports)
+      .where(
+        or(
+          gone(areaClimbs, duplicateReports.keep_climb_id),
+          gone(areaClimbs, duplicateReports.duplicate_climb_id)
+        )
+      ),
+    d.update(areas).set({ created_by: null }).where(eq(areas.created_by, userId)),
+    d.update(areaClimbs).set({ created_by: null }).where(eq(areaClimbs.created_by, userId)),
+    d
+      .update(contentRevisions)
+      .set({ submitted_by: null })
+      .where(eq(contentRevisions.submitted_by, userId)),
+    d
+      .update(contentRevisions)
+      .set({ reviewed_by: null })
+      .where(eq(contentRevisions.reviewed_by, userId)),
+    d
+      .update(duplicateReports)
+      .set({ reviewed_by: null })
+      .where(eq(duplicateReports.reviewed_by, userId)),
+    d
+      .update(contentReports)
+      .set({ reviewed_by: null })
+      .where(eq(contentReports.reviewed_by, userId)),
+  ] as const;
+}
+
+export type AreaRow = typeof areas.$inferSelect;
+
+export type AreaClimbRow = typeof areaClimbs.$inferSelect;
+
+export async function getViewer(db: D1Database, id: string): Promise<Viewer> {
+  const row = await drizzle(db)
+    .select({ role: users.role })
+    .from(users)
+    .where(eq(users.id, id))
+    .get();
+  return { id, role: row?.role ?? "user" };
+}
+
+// The one rule for what anyone may read in Areas: live content, their own
+// pending creations, and everything for moderators.
+export function visibleTo(t: typeof areas | typeof areaClimbs, viewer: Viewer): SQL | undefined {
+  if (viewer.role !== "user") return undefined;
+  return or(eq(t.status, "active"), and(eq(t.status, "pending"), eq(t.created_by, viewer.id)));
+}
+
+// A slug read also finds merged rows, so the caller can answer with a redirect.
+const visibleOrMerged = (t: typeof areas | typeof areaClimbs, viewer: Viewer): SQL | undefined => {
+  const visible = visibleTo(t, viewer);
+  return visible === undefined ? undefined : or(visible, eq(t.status, "merged"));
+};
+
+// A word prefix on the slugged name: "mandala" finds "the-mandala".
+const nameMatches = (t: typeof areas | typeof areaClimbs, key: string): SQL | undefined =>
+  or(like(t.name_key, `${key}%`), like(t.name_key, `%-${key}%`));
+
+export type Box = { minLat: number; maxLat: number; minLon: number; maxLon: number };
+
+const inBox = (box: Box): SQL | undefined =>
+  and(
+    gte(areas.lat, box.minLat),
+    lte(areas.lat, box.maxLat),
+    gte(areas.lon, box.minLon),
+    lte(areas.lon, box.maxLon)
+  );
+
+export async function getArea(db: D1Database, viewer: Viewer, id: string): Promise<AreaRow | null> {
+  const row = await drizzle(db)
+    .select()
+    .from(areas)
+    .where(and(eq(areas.id, id), visibleTo(areas, viewer)))
+    .get();
+  return row ?? null;
+}
+
+export async function getAreaBySlug(
+  db: D1Database,
+  viewer: Viewer,
+  slug: string
+): Promise<AreaRow | null> {
+  const row = await drizzle(db)
+    .select()
+    .from(areas)
+    .where(and(eq(areas.slug, slug), visibleOrMerged(areas, viewer)))
+    .get();
+  return row ?? null;
+}
+
+export async function areasByIds(
+  db: D1Database,
+  viewer: Viewer,
+  ids: string[]
+): Promise<AreaRow[]> {
+  if (ids.length === 0) return [];
+  return drizzle(db)
+    .select()
+    .from(areas)
+    .where(and(inArray(areas.id, ids), visibleTo(areas, viewer)))
+    .orderBy(areas.depth)
+    .all();
+}
+
+export async function childAreas(
+  db: D1Database,
+  viewer: Viewer,
+  parentId: string
+): Promise<AreaRow[]> {
+  return drizzle(db)
+    .select()
+    .from(areas)
+    .where(and(eq(areas.parent_id, parentId), visibleTo(areas, viewer)))
+    .orderBy(areas.name_key)
+    .all();
+}
+
+export async function searchAreas(
+  db: D1Database,
+  viewer: Viewer,
+  filter: { key?: string; box?: Box },
+  limit: number
+): Promise<AreaRow[]> {
+  return drizzle(db)
+    .select()
+    .from(areas)
+    .where(
+      and(
+        visibleTo(areas, viewer),
+        filter.key === undefined ? undefined : nameMatches(areas, filter.key),
+        filter.box === undefined ? undefined : inBox(filter.box)
+      )
+    )
+    .orderBy(areas.depth, areas.name_key)
+    .limit(limit)
+    .all();
+}
+
+export async function areaSlugTaken(db: D1Database, slug: string): Promise<boolean> {
+  const row = await drizzle(db)
+    .select({ id: areas.id })
+    .from(areas)
+    .where(eq(areas.slug, slug))
+    .get();
+  return row !== undefined;
+}
+
+export async function insertArea(
+  db: D1Database,
+  row: Omit<AreaRow, "version" | "merged_into_id" | "region_code" | "review_note">
+): Promise<void> {
+  await drizzle(db).insert(areas).values(row);
+}
+
+export type AreaEdit = Pick<AreaRow, "name" | "name_key" | "description" | "lat" | "lon">;
+
+// Only the creator, only while nobody else can see it: once active, a change
+// is a revision for a moderator.
+export async function updatePendingArea(
+  db: D1Database,
+  userId: string,
+  id: string,
+  edit: AreaEdit
+): Promise<boolean> {
+  const result = await drizzle(db)
+    .update(areas)
+    .set({ ...edit, version: sql`${areas.version} + 1`, updated_at: new Date().toISOString() })
+    .where(and(eq(areas.id, id), eq(areas.created_by, userId), eq(areas.status, "pending")));
+  return result.meta.changes > 0;
+}
+
+export async function getAreaClimb(
+  db: D1Database,
+  viewer: Viewer,
+  id: string
+): Promise<AreaClimbRow | null> {
+  const row = await drizzle(db)
+    .select()
+    .from(areaClimbs)
+    .where(and(eq(areaClimbs.id, id), visibleTo(areaClimbs, viewer)))
+    .get();
+  return row ?? null;
+}
+
+export async function getAreaClimbBySlug(
+  db: D1Database,
+  viewer: Viewer,
+  slug: string
+): Promise<AreaClimbRow | null> {
+  const row = await drizzle(db)
+    .select()
+    .from(areaClimbs)
+    .where(and(eq(areaClimbs.slug, slug), visibleOrMerged(areaClimbs, viewer)))
+    .get();
+  return row ?? null;
+}
+
+export async function climbsInAreas(
+  db: D1Database,
+  viewer: Viewer,
+  areaIds: string[]
+): Promise<AreaClimbRow[]> {
+  if (areaIds.length === 0) return [];
+  return drizzle(db)
+    .select()
+    .from(areaClimbs)
+    .where(and(inArray(areaClimbs.area_id, areaIds), visibleTo(areaClimbs, viewer)))
+    .orderBy(areaClimbs.name_key)
+    .all();
+}
+
+// `under` is an area path: the range covers exactly its subtree, because the
+// character after "/" is "0".
+export async function searchAreaClimbs(
+  db: D1Database,
+  viewer: Viewer,
+  filter: { key?: string; under?: string },
+  limit: number
+): Promise<AreaClimbRow[]> {
+  const under = filter.under;
+  const subtree =
+    under === undefined
+      ? undefined
+      : inArray(
+          areaClimbs.area_id,
+          drizzle(db)
+            .select({ id: areas.id })
+            .from(areas)
+            .where(and(gte(areas.path, under), lt(areas.path, `${under.slice(0, -1)}0`)))
+        );
+  return drizzle(db)
+    .select()
+    .from(areaClimbs)
+    .where(
+      and(
+        visibleTo(areaClimbs, viewer),
+        filter.key === undefined ? undefined : nameMatches(areaClimbs, filter.key),
+        subtree
+      )
+    )
+    .orderBy(areaClimbs.name_key)
+    .limit(limit)
+    .all();
+}
+
+export async function areaClimbSlugTaken(db: D1Database, slug: string): Promise<boolean> {
+  const row = await drizzle(db)
+    .select({ id: areaClimbs.id })
+    .from(areaClimbs)
+    .where(eq(areaClimbs.slug, slug))
+    .get();
+  return row !== undefined;
+}
+
+export async function insertAreaClimb(
+  db: D1Database,
+  row: Omit<AreaClimbRow, "version" | "merged_into_id" | "review_note">
+): Promise<void> {
+  await drizzle(db).insert(areaClimbs).values(row);
+}
+
+export type AreaClimbEdit = Omit<
+  AreaClimbRow,
+  | "id"
+  | "area_id"
+  | "slug"
+  | "status"
+  | "merged_into_id"
+  | "version"
+  | "review_note"
+  | "created_by"
+  | "created_at"
+  | "updated_at"
+>;
+
+export async function updatePendingAreaClimb(
+  db: D1Database,
+  userId: string,
+  id: string,
+  edit: AreaClimbEdit
+): Promise<boolean> {
+  const result = await drizzle(db)
+    .update(areaClimbs)
+    .set({ ...edit, version: sql`${areaClimbs.version} + 1`, updated_at: new Date().toISOString() })
+    .where(
+      and(
+        eq(areaClimbs.id, id),
+        eq(areaClimbs.created_by, userId),
+        eq(areaClimbs.status, "pending")
+      )
+    );
+  return result.meta.changes > 0;
+}
+
+export async function areaClimbsByIds(
+  db: D1Database,
+  viewer: Viewer,
+  ids: string[]
+): Promise<AreaClimbRow[]> {
+  if (ids.length === 0) return [];
+  return drizzle(db)
+    .select()
+    .from(areaClimbs)
+    .where(and(inArray(areaClimbs.id, ids), visibleTo(areaClimbs, viewer)))
+    .all();
+}
+
+export type RevisionRow = typeof contentRevisions.$inferSelect;
+
+const ownDraft = (userId: string, type: ContentEntity, entityId: string): SQL | undefined =>
+  and(
+    eq(contentRevisions.submitted_by, userId),
+    eq(contentRevisions.entity_type, type),
+    eq(contentRevisions.entity_id, entityId),
+    eq(contentRevisions.status, "pending")
+  );
+
+export async function getDraft(
+  db: D1Database,
+  userId: string,
+  type: ContentEntity,
+  entityId: string
+): Promise<RevisionRow | null> {
+  const row = await drizzle(db)
+    .select()
+    .from(contentRevisions)
+    .where(ownDraft(userId, type, entityId))
+    .get();
+  return row ?? null;
+}
+
+export type DraftWrite = Pick<
+  RevisionRow,
+  "submitted_by" | "entity_type" | "entity_id" | "proposed_json" | "base_json" | "change_summary"
+>;
+
+// One pending draft per user per entity, enforced by the partial unique index:
+// saving again replaces it in place.
+export async function saveDraft(db: D1Database, draft: DraftWrite): Promise<void> {
+  const now = new Date().toISOString();
+  await drizzle(db)
+    .insert(contentRevisions)
+    .values({
+      id: crypto.randomUUID(),
+      ...draft,
+      status: "pending",
+      created_at: now,
+      updated_at: now,
+    })
+    .onConflictDoUpdate({
+      target: [
+        contentRevisions.submitted_by,
+        contentRevisions.entity_type,
+        contentRevisions.entity_id,
+      ],
+      targetWhere: sql`${contentRevisions.status} = 'pending'`,
+      set: {
+        proposed_json: draft.proposed_json,
+        base_json: draft.base_json,
+        change_summary: draft.change_summary,
+        updated_at: now,
+      },
+    });
+}
+
+export async function deleteDraft(
+  db: D1Database,
+  userId: string,
+  type: ContentEntity,
+  entityId: string
+): Promise<boolean> {
+  const result = await drizzle(db)
+    .delete(contentRevisions)
+    .where(ownDraft(userId, type, entityId));
+  return result.meta.changes > 0;
+}
+
+export type ContentReportRow = typeof contentReports.$inferSelect;
+
+const stamp = (): string => new Date().toISOString();
+
+export type Page<T> = { count: number; rows: T[] };
+
+const countOf = async (query: Promise<{ n: number }[]>): Promise<number> =>
+  (await query)[0]?.n ?? 0;
+
+export async function pendingAreas(db: D1Database, limit: number): Promise<Page<AreaRow>> {
+  const d = drizzle(db);
+  const pending = eq(areas.status, "pending");
+  const [n, rows] = await Promise.all([
+    countOf(d.select({ n: count() }).from(areas).where(pending)),
+    d.select().from(areas).where(pending).orderBy(asc(areas.created_at)).limit(limit).all(),
+  ]);
+  return { count: n, rows };
+}
+
+export async function pendingAreaClimbs(
+  db: D1Database,
+  limit: number
+): Promise<Page<AreaClimbRow>> {
+  const d = drizzle(db);
+  const pending = eq(areaClimbs.status, "pending");
+  const [n, rows] = await Promise.all([
+    countOf(d.select({ n: count() }).from(areaClimbs).where(pending)),
+    d
+      .select()
+      .from(areaClimbs)
+      .where(pending)
+      .orderBy(asc(areaClimbs.created_at))
+      .limit(limit)
+      .all(),
+  ]);
+  return { count: n, rows };
+}
+
+export async function pendingRevisions(db: D1Database, limit: number): Promise<Page<RevisionRow>> {
+  const d = drizzle(db);
+  const pending = eq(contentRevisions.status, "pending");
+  const [n, rows] = await Promise.all([
+    countOf(d.select({ n: count() }).from(contentRevisions).where(pending)),
+    d
+      .select()
+      .from(contentRevisions)
+      .where(pending)
+      .orderBy(asc(contentRevisions.updated_at))
+      .limit(limit)
+      .all(),
+  ]);
+  return { count: n, rows };
+}
+
+export async function getRevision(db: D1Database, id: string): Promise<RevisionRow | null> {
+  const row = await drizzle(db)
+    .select()
+    .from(contentRevisions)
+    .where(eq(contentRevisions.id, id))
+    .get();
+  return row ?? null;
+}
+
+// An area that can hold approved content: live, and where the caller last saw it.
+const liveArea = (d: Db, id: string, ...extra: (SQL | undefined)[]): SQL =>
+  exists(
+    d
+      .select({ id: areas.id })
+      .from(areas)
+      .where(and(eq(areas.id, id), eq(areas.status, "active"), ...extra))
+  );
+
+// Pending to active, only at the version the moderator reviewed and only once
+// its parent is live, so nothing active ever hangs under something hidden.
+export async function approveArea(
+  db: D1Database,
+  row: { id: string; version: number; parentId: string }
+): Promise<boolean> {
+  const d = drizzle(db);
+  const result = await d
+    .update(areas)
+    .set({ status: "active", version: sql`${areas.version} + 1`, updated_at: stamp() })
+    .where(
+      and(
+        eq(areas.id, row.id),
+        eq(areas.status, "pending"),
+        eq(areas.version, row.version),
+        liveArea(d, row.parentId)
+      )
+    );
+  return result.meta.changes > 0;
+}
+
+export async function approveAreaClimb(
+  db: D1Database,
+  row: { id: string; version: number; areaId: string }
+): Promise<boolean> {
+  const d = drizzle(db);
+  const result = await d
+    .update(areaClimbs)
+    .set({ status: "active", version: sql`${areaClimbs.version} + 1`, updated_at: stamp() })
+    .where(
+      and(
+        eq(areaClimbs.id, row.id),
+        eq(areaClimbs.status, "pending"),
+        eq(areaClimbs.version, row.version),
+        liveArea(d, row.areaId, isNull(areas.region_code))
+      )
+    );
+  return result.meta.changes > 0;
+}
+
+const openStatus = ["active", "pending"] as const;
+
+// Refused while anything open still sits in the area: its children would be
+// left under a deleted parent.
+export async function rejectArea(
+  db: D1Database,
+  id: string,
+  note: string | null
+): Promise<boolean> {
+  const d = drizzle(db);
+  const result = await d
+    .update(areas)
+    .set({ status: "deleted", review_note: note, updated_at: stamp() })
+    .where(
+      and(
+        eq(areas.id, id),
+        eq(areas.status, "pending"),
+        not(
+          exists(
+            d
+              .select({ id: areas.id })
+              .from(areas)
+              .where(and(eq(areas.parent_id, id), inArray(areas.status, openStatus)))
+          )
+        ),
+        not(
+          exists(
+            d
+              .select({ id: areaClimbs.id })
+              .from(areaClimbs)
+              .where(and(eq(areaClimbs.area_id, id), inArray(areaClimbs.status, openStatus)))
+          )
+        )
+      )
+    );
+  return result.meta.changes > 0;
+}
+
+// The creator's sessions keep the free-text climb; only the link goes.
+export async function rejectAreaClimb(
+  db: D1Database,
+  id: string,
+  note: string | null
+): Promise<boolean> {
+  const d = drizzle(db);
+  const [result] = await d.batch([
+    d
+      .update(areaClimbs)
+      .set({ status: "deleted", review_note: note, updated_at: stamp() })
+      .where(and(eq(areaClimbs.id, id), eq(areaClimbs.status, "pending"))),
+    d.delete(sessionClimbLinks).where(
+      and(
+        eq(sessionClimbLinks.climb_id, id),
+        exists(
+          d
+            .select({ id: areaClimbs.id })
+            .from(areaClimbs)
+            .where(and(eq(areaClimbs.id, id), eq(areaClimbs.status, "deleted")))
+        )
+      )
+    ),
+  ]);
+  return result.meta.changes > 0;
+}
+
+export type AreaRevisionWrite = Pick<
+  AreaRow,
+  "parent_id" | "name" | "name_key" | "description" | "lat" | "lon"
+>;
+
+export type AreaClimbRevisionWrite = AreaClimbEdit & { area_id: string };
+
+type Approval = { revisionId: string; reviewerId: string; id: string; version: number };
+
+const revisionIs = (d: Db, id: string, status: RevisionRow["status"]): SQL =>
+  exists(
+    d
+      .select({ id: contentRevisions.id })
+      .from(contentRevisions)
+      .where(and(eq(contentRevisions.id, id), eq(contentRevisions.status, status)))
+  );
+
+const markApproved = (d: Db, a: Approval, guard: SQL | undefined) =>
+  d
+    .update(contentRevisions)
+    .set({
+      status: "approved",
+      reviewed_by: a.reviewerId,
+      reviewed_at: stamp(),
+      updated_at: stamp(),
+    })
+    .where(
+      and(eq(contentRevisions.id, a.revisionId), eq(contentRevisions.status, "pending"), guard)
+    );
+
+// One batch, every statement guarded on the state the moderator reviewed: the
+// revision flips first, only while the entity is still at `version`; the
+// rest only run once it has flipped. Every approval bumps the version, so a
+// competing approval fails all three together and the caller answers 409.
+export async function approveAreaRevision(
+  db: D1Database,
+  a: Approval & {
+    path: string;
+    depth: number;
+    parent: { id: string; path: string; depth: number };
+    write: AreaRevisionWrite;
+  }
+): Promise<boolean> {
+  const d = drizzle(db);
+  const at = exists(
+    d
+      .select({ id: areas.id })
+      .from(areas)
+      .where(and(eq(areas.id, a.id), eq(areas.version, a.version), eq(areas.status, "active")))
+  );
+  const approved = revisionIs(d, a.revisionId, "approved");
+  const flip = markApproved(d, a, and(at, liveArea(d, a.parent.id, eq(areas.path, a.parent.path))));
+  const update = d
+    .update(areas)
+    .set({ ...a.write, version: sql`${areas.version} + 1`, updated_at: stamp() })
+    .where(and(eq(areas.id, a.id), eq(areas.version, a.version), approved));
+  const path = `${a.parent.path}${a.id}/`;
+  if (path === a.path) {
+    const [, result] = await d.batch([flip, update]);
+    return result.meta.changes > 0;
+  }
+  const move = d
+    .update(areas)
+    .set({
+      path: sql`${path} || substr(${areas.path}, ${a.path.length + 1})`,
+      depth: sql`${areas.depth} + ${a.parent.depth + 1 - a.depth}`,
+    })
+    .where(and(gte(areas.path, a.path), lt(areas.path, `${a.path.slice(0, -1)}0`), at, approved));
+  const [, , result] = await d.batch([flip, move, update]);
+  return result.meta.changes > 0;
+}
+
+export async function approveAreaClimbRevision(
+  db: D1Database,
+  a: Approval & { write: AreaClimbRevisionWrite }
+): Promise<boolean> {
+  const d = drizzle(db);
+  const at = exists(
+    d
+      .select({ id: areaClimbs.id })
+      .from(areaClimbs)
+      .where(
+        and(
+          eq(areaClimbs.id, a.id),
+          eq(areaClimbs.version, a.version),
+          eq(areaClimbs.status, "active")
+        )
+      )
+  );
+  const [, result] = await d.batch([
+    markApproved(d, a, and(at, liveArea(d, a.write.area_id, isNull(areas.region_code)))),
+    d
+      .update(areaClimbs)
+      .set({ ...a.write, version: sql`${areaClimbs.version} + 1`, updated_at: stamp() })
+      .where(
+        and(
+          eq(areaClimbs.id, a.id),
+          eq(areaClimbs.version, a.version),
+          revisionIs(d, a.revisionId, "approved")
+        )
+      ),
+  ]);
+  return result.meta.changes > 0;
+}
+
+export async function rejectRevision(
+  db: D1Database,
+  id: string,
+  reviewerId: string,
+  note: string | null
+): Promise<boolean> {
+  const result = await drizzle(db)
+    .update(contentRevisions)
+    .set({
+      status: "rejected",
+      reviewed_by: reviewerId,
+      review_note: note,
+      reviewed_at: stamp(),
+      updated_at: stamp(),
+    })
+    .where(and(eq(contentRevisions.id, id), eq(contentRevisions.status, "pending")));
+  return result.meta.changes > 0;
+}
+
+export async function insertContentReport(
+  db: D1Database,
+  report: Pick<ContentReportRow, "entity_type" | "entity_id" | "reporter_id" | "body">
+): Promise<string> {
+  const id = crypto.randomUUID();
+  await drizzle(db)
+    .insert(contentReports)
+    .values({ id, ...report, status: "open", created_at: stamp() });
+  return id;
+}
+
+export async function openReports(db: D1Database, limit: number): Promise<Page<ContentReportRow>> {
+  const d = drizzle(db);
+  const open = eq(contentReports.status, "open");
+  const [n, rows] = await Promise.all([
+    countOf(d.select({ n: count() }).from(contentReports).where(open)),
+    d
+      .select()
+      .from(contentReports)
+      .where(open)
+      .orderBy(asc(contentReports.created_at))
+      .limit(limit)
+      .all(),
+  ]);
+  return { count: n, rows };
+}
+
+export async function resolveReport(
+  db: D1Database,
+  id: string,
+  reviewerId: string
+): Promise<boolean> {
+  const result = await drizzle(db)
+    .update(contentReports)
+    .set({ status: "resolved", reviewed_by: reviewerId, reviewed_at: stamp() })
+    .where(and(eq(contentReports.id, id), eq(contentReports.status, "open")));
+  return result.meta.changes > 0;
+}
+
+export type DuplicateReportRow = typeof duplicateReports.$inferSelect;
+
+// One open report per reporter per duplicate, held by the partial unique index.
+export async function insertDuplicateReport(
+  db: D1Database,
+  report: Pick<DuplicateReportRow, "keep_climb_id" | "duplicate_climb_id" | "reporter_id" | "note">
+): Promise<string | null> {
+  const id = crypto.randomUUID();
+  const result = await drizzle(db)
+    .insert(duplicateReports)
+    .values({ id, ...report, status: "open", created_at: stamp() })
+    .onConflictDoNothing();
+  return result.meta.changes > 0 ? id : null;
+}
+
+export async function openDuplicateReports(
+  db: D1Database,
+  limit: number
+): Promise<Page<DuplicateReportRow>> {
+  const d = drizzle(db);
+  const open = eq(duplicateReports.status, "open");
+  const [n, rows] = await Promise.all([
+    countOf(d.select({ n: count() }).from(duplicateReports).where(open)),
+    d
+      .select()
+      .from(duplicateReports)
+      .where(open)
+      .orderBy(asc(duplicateReports.created_at))
+      .limit(limit)
+      .all(),
+  ]);
+  return { count: n, rows };
+}
+
+export async function getDuplicateReport(
+  db: D1Database,
+  id: string
+): Promise<DuplicateReportRow | null> {
+  const row = await drizzle(db)
+    .select()
+    .from(duplicateReports)
+    .where(eq(duplicateReports.id, id))
+    .get();
+  return row ?? null;
+}
+
+export async function dismissDuplicateReport(
+  db: D1Database,
+  id: string,
+  reviewerId: string,
+  note: string | null
+): Promise<boolean> {
+  const result = await drizzle(db)
+    .update(duplicateReports)
+    .set({ status: "dismissed", reviewed_by: reviewerId, review_note: note, reviewed_at: stamp() })
+    .where(and(eq(duplicateReports.id, id), eq(duplicateReports.status, "open")));
+  return result.meta.changes > 0;
+}
+
+export async function linkCounts(db: D1Database, climbIds: string[]): Promise<Map<string, number>> {
+  if (climbIds.length === 0) return new Map();
+  const rows = await drizzle(db)
+    .select({ id: sessionClimbLinks.climb_id, n: count() })
+    .from(sessionClimbLinks)
+    .where(inArray(sessionClimbLinks.climb_id, climbIds))
+    .groupBy(sessionClimbLinks.climb_id)
+    .all();
+  return new Map(rows.map((r) => [r.id, r.n]));
+}
+
+// One batch. The first statement is the guard: the duplicate is open and the
+// survivor is open, so neither is merged. Everything after it only runs once
+// the duplicate points at this survivor, so a lost race changes nothing.
+// Links cannot collide: their key is the logged climb slug, not climb_id.
+export async function mergeAreaClimb(
+  db: D1Database,
+  m: { duplicateId: string; keepId: string; reviewerId: string }
+): Promise<boolean> {
+  const d = drizzle(db);
+  const now = stamp();
+  const open = (id: string): SQL =>
+    exists(
+      d
+        .select({ id: areaClimbs.id })
+        .from(areaClimbs)
+        .where(and(eq(areaClimbs.id, id), inArray(areaClimbs.status, openStatus)))
+    );
+  const merged = exists(
+    d
+      .select({ id: areaClimbs.id })
+      .from(areaClimbs)
+      .where(
+        and(
+          eq(areaClimbs.id, m.duplicateId),
+          eq(areaClimbs.status, "merged"),
+          eq(areaClimbs.merged_into_id, m.keepId)
+        )
+      )
+  );
+  const openReport = eq(duplicateReports.status, "open");
+  const [result] = await d.batch([
+    d
+      .update(areaClimbs)
+      .set({ status: "merged", merged_into_id: m.keepId, updated_at: now })
+      .where(
+        and(
+          eq(areaClimbs.id, m.duplicateId),
+          inArray(areaClimbs.status, openStatus),
+          not(eq(areaClimbs.id, m.keepId)),
+          open(m.keepId)
+        )
+      ),
+    d
+      .update(sessionClimbLinks)
+      .set({ climb_id: m.keepId })
+      .where(and(eq(sessionClimbLinks.climb_id, m.duplicateId), merged)),
+    d
+      .update(areaClimbs)
+      .set({ merged_into_id: m.keepId, updated_at: now })
+      .where(and(eq(areaClimbs.merged_into_id, m.duplicateId), merged)),
+    d
+      .update(contentRevisions)
+      .set({ status: "superseded", updated_at: now })
+      .where(
+        and(
+          eq(contentRevisions.entity_type, "climb"),
+          eq(contentRevisions.entity_id, m.duplicateId),
+          eq(contentRevisions.status, "pending"),
+          merged
+        )
+      ),
+    d
+      .update(duplicateReports)
+      .set({ status: "merged", reviewed_by: m.reviewerId, reviewed_at: now })
+      .where(
+        and(
+          openReport,
+          or(
+            eq(duplicateReports.duplicate_climb_id, m.duplicateId),
+            and(
+              eq(duplicateReports.duplicate_climb_id, m.keepId),
+              eq(duplicateReports.keep_climb_id, m.duplicateId)
+            )
+          ),
+          merged
+        )
+      ),
+    d
+      .update(duplicateReports)
+      .set({ keep_climb_id: m.keepId })
+      .where(and(openReport, eq(duplicateReports.keep_climb_id, m.duplicateId), merged)),
+  ]);
+  return result.meta.changes > 0;
 }

@@ -1,8 +1,10 @@
 import React from "react";
 import type { ClimbSummary } from "@sendtally/api-client";
+import { areaClimbGradeLabel, climbOptions, type AreaClimb } from "@sendtally/features/areas";
 import { climbDraftGrade } from "@sendtally/features/climbs";
 import type { GradeScale } from "@sendtally/features/log-session";
 import { t } from "@sendtally/features/i18n";
+import { ComboField, type ComboItem } from "../../components/ComboField";
 import { Glyph } from "./Glyph";
 import { FLAG, columnHead, inputStyle } from "./styles";
 
@@ -15,24 +17,14 @@ export type ClimbNameFieldProps = {
   placeholder?: string;
   onChange: (name: string) => void;
   onPick: (climb: ClimbSummary) => void;
+  /** Areas climbs matching the name; picking one links the row. */
+  found?: AreaClimb[];
+  linkedId?: string;
+  onPickArea?: (climb: AreaClimb) => void;
+  /** Offers adding the typed name to Areas as the last row. */
+  onAdd?: () => void;
+  onFocus?: () => void;
 };
-
-const rowStyle = (active: boolean): React.CSSProperties => ({
-  fontFamily: "var(--font-mono)",
-  fontWeight: 500,
-  fontSize: 11,
-  letterSpacing: "0.06em",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "space-between",
-  gap: 8,
-  height: 36,
-  padding: "0 10px",
-  borderRadius: "var(--radius-sm)",
-  background: active ? "var(--surface-soft)" : "transparent",
-  color: "var(--bs-gunmetal)",
-  cursor: "pointer",
-});
 
 function MarkedName({ name, query }: { name: string; query: string }): React.ReactElement {
   const needle = query.trim();
@@ -58,108 +50,73 @@ export function ClimbNameField({
   placeholder = t("logSession.climbNamePlaceholder"),
   onChange,
   onPick,
+  found = [],
+  linkedId,
+  onPickArea,
+  onAdd,
+  onFocus,
 }: ClimbNameFieldProps): React.ReactElement {
-  const [open, setOpen] = React.useState(false);
-  const [active, setActive] = React.useState(0);
-  const highlighted = Math.min(active, Math.max(suggestions.length - 1, 0));
-  const showList = open && suggestions.length > 0;
-
-  function pick(climb: ClimbSummary): void {
-    onPick(climb);
-    setOpen(false);
-    setActive(0);
-  }
-
-  function onKeyDown(e: React.KeyboardEvent<HTMLInputElement>): void {
-    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
-      e.preventDefault();
-      setOpen(true);
-      setActive((i) =>
-        e.key === "ArrowDown" ? Math.min(i + 1, suggestions.length - 1) : Math.max(i - 1, 0)
-      );
-      return;
-    }
-    if (e.key === "Enter" && showList) {
-      const choice = suggestions[highlighted];
-      if (choice === undefined) return;
-      e.preventDefault();
-      pick(choice);
-      return;
-    }
-    if (e.key === "Escape") setOpen(false);
-  }
-
-  const list = showList && (
-    <div
-      role="listbox"
-      onMouseDown={(e) => e.preventDefault()}
-      className={inline ? "climb-name-list climb-name-list--inline" : "climb-name-list"}
-    >
-      {value.trim() === "" && (
-        <span style={{ ...columnHead, padding: "6px 10px 4px" }}>{t("common.recent")}</span>
-      )}
-      {suggestions.map((climb, i) => (
-        <div
-          key={climb.slug}
-          role="option"
-          aria-selected={i === highlighted}
-          onMouseEnter={() => setActive(i)}
-          onClick={() => pick(climb)}
-          style={rowStyle(i === highlighted)}
-        >
-          <span
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 7,
-              minWidth: 0,
-              textTransform: "uppercase",
-            }}
-          >
-            {climb.project && <Glyph d={FLAG} size={11} width={1.8} filled />}
-            <MarkedName name={climb.name} query={value} />
-          </span>
-          <span style={{ color: "rgba(64,63,76,0.55)", flex: "none" }}>
-            {climbDraftGrade(climb, scale)}
-          </span>
-        </div>
-      ))}
-    </div>
+  const browsing = value.trim() === "";
+  const items: ComboItem[] = climbOptions(suggestions, found, linkedId).map((option) =>
+    option.kind === "mine"
+      ? {
+          key: `mine-${option.climb.slug}`,
+          label: (
+            <>
+              {option.climb.project && <Glyph d={FLAG} size={11} width={1.8} filled />}
+              <MarkedName name={option.climb.name} query={value} />
+            </>
+          ),
+          meta: climbDraftGrade(option.climb, scale),
+          section: browsing ? t("common.recent") : undefined,
+          onPick: () => onPick(option.climb),
+        }
+      : {
+          key: `areas-${option.climb.id}`,
+          label: (
+            <>
+              {option.project && <Glyph d={FLAG} size={11} width={1.8} filled />}
+              <MarkedName name={option.climb.name} query={value} />
+              <span style={{ ...columnHead, fontSize: 9, color: "var(--bs-azure-ink)" }}>
+                {t("areas.inAreas")}
+              </span>
+            </>
+          ),
+          meta: areaClimbGradeLabel(option.climb),
+          section: browsing ? t(option.logged ? "common.recent" : "areas.inAreas") : undefined,
+          onPick: () => onPickArea?.(option.climb),
+        }
   );
+  if (onAdd !== undefined) {
+    items.push({
+      key: "add",
+      label: t("areas.addToAreas", { name: value.trim() }),
+      action: true,
+      onPick: onAdd,
+    });
+  }
 
   return (
-    <div
-      style={{
-        position: "relative",
-        minWidth: 0,
-        display: "flex",
-        flexDirection: "column",
-        gap: 8,
-      }}
-    >
-      <input
-        value={value}
-        placeholder={placeholder}
-        autoComplete="off"
-        autoFocus={autoFocus}
-        role="combobox"
-        aria-expanded={showList}
-        aria-autocomplete="list"
-        onChange={(e) => {
-          onChange(e.target.value);
-          setOpen(true);
-          setActive(0);
-        }}
-        onFocus={() => setOpen(true)}
-        onBlur={() => setOpen(false)}
-        onKeyDown={onKeyDown}
-        className="log-session-control"
-        style={{
-          ...inputStyle,
-          ...(open ? { borderColor: "var(--bs-azure)", boxShadow: "var(--focus-ring-azure)" } : {}),
-        }}
-      />
-      {list}
-    </div>
+    <ComboField
+      value={value}
+      items={items}
+      inline={inline}
+      autoFocus={autoFocus}
+      placeholder={placeholder}
+      className="log-session-control"
+      inputStyle={inputStyle}
+      trailing={
+        linkedId === undefined ? undefined : (
+          <span
+            title={t("areas.linkedToAreas")}
+            style={{ ...columnHead, fontSize: 9, color: "var(--bs-azure-ink)" }}
+          >
+            {t("areas.inAreas")}
+          </span>
+        )
+      }
+      onChange={onChange}
+      onFocus={onFocus}
+    />
   );
 }

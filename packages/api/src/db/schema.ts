@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import {
   index,
   integer,
@@ -19,6 +20,9 @@ export const users = sqliteTable("users", {
   route_scale: text("route_scale", { enum: ["yds", "french"] })
     .notNull()
     .default("yds"),
+  role: text("role", { enum: ["user", "moderator", "admin"] })
+    .notNull()
+    .default("user"),
 });
 
 export const boardConnections = sqliteTable(
@@ -80,6 +84,7 @@ export const sessions = sqliteTable(
     source: text("source").$type<"board" | "manual">().notNull().default("board"),
     location: text("location").$type<"indoor" | "outdoor">(),
     gym_id: text("gym_id"),
+    area_id: text("area_id"),
     name: text("name"),
     start_at: text("start_at").notNull(),
     end_at: text("end_at").notNull(),
@@ -298,3 +303,155 @@ export const syncState = sqliteTable("sync_state", {
   last_synced_at: text("last_synced_at"),
   last_error: text("last_error"),
 });
+
+const contentStatus = ["pending", "active", "merged", "deleted"] as const;
+
+// The shared climbing tree. `path` holds the ids of every ancestor and the row
+// itself, `/<region>/<area>/<self>/`, so a subtree is one indexed range scan.
+export const areas = sqliteTable(
+  "areas",
+  {
+    id: text("id").primaryKey(),
+    parent_id: text("parent_id"),
+    path: text("path").notNull(),
+    depth: integer("depth").notNull(),
+    name: text("name").notNull(),
+    name_key: text("name_key").notNull(),
+    slug: text("slug").notNull().unique(),
+    description: text("description"),
+    lat: real("lat"),
+    lon: real("lon"),
+    region_code: text("region_code").unique(),
+    status: text("status", { enum: contentStatus }).notNull(),
+    merged_into_id: text("merged_into_id"),
+    version: integer("version").notNull().default(1),
+    review_note: text("review_note"),
+    created_by: text("created_by"),
+    created_at: text("created_at").notNull(),
+    updated_at: text("updated_at").notNull(),
+  },
+  (t) => [
+    index("idx_areas_parent").on(t.parent_id),
+    index("idx_areas_path").on(t.path),
+    index("idx_areas_name_key").on(t.name_key),
+    index("idx_areas_status").on(t.status),
+    index("idx_areas_lat").on(t.lat),
+  ]
+);
+
+export const areaClimbs = sqliteTable(
+  "area_climbs",
+  {
+    id: text("id").primaryKey(),
+    area_id: text("area_id").notNull(),
+    name: text("name").notNull(),
+    name_key: text("name_key").notNull(),
+    slug: text("slug").notNull().unique(),
+    description: text("description"),
+    type: text("type", { enum: ["boulder", "sport", "trad", "top_rope"] }).notNull(),
+    grade_scale: text("grade_scale", { enum: ["v", "font", "yds", "french"] }).notNull(),
+    grade_value: text("grade_value"),
+    length_m: integer("length_m"),
+    bolts: integer("bolts"),
+    first_ascent: text("first_ascent"),
+    status: text("status", { enum: contentStatus }).notNull(),
+    merged_into_id: text("merged_into_id"),
+    version: integer("version").notNull().default(1),
+    review_note: text("review_note"),
+    created_by: text("created_by"),
+    created_at: text("created_at").notNull(),
+    updated_at: text("updated_at").notNull(),
+  },
+  (t) => [
+    index("idx_area_climbs_area").on(t.area_id),
+    index("idx_area_climbs_name_key").on(t.name_key),
+    index("idx_area_climbs_status").on(t.status),
+    index("idx_area_climbs_merged_into").on(t.merged_into_id),
+  ]
+);
+
+// A logged climb, keyed the way climb_notes is, pointing at the area climb it
+// is. climbs_json stays untouched.
+export const sessionClimbLinks = sqliteTable(
+  "session_climb_links",
+  {
+    user_id: text("user_id")
+      .notNull()
+      .references(() => users.id),
+    fingerprint: text("fingerprint").notNull(),
+    climb_slug: text("climb_slug").notNull(),
+    climb_id: text("climb_id").notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.user_id, t.fingerprint, t.climb_slug] }),
+    index("idx_session_climb_links_climb").on(t.climb_id),
+  ]
+);
+
+const contentEntity = ["area", "climb"] as const;
+
+export const contentRevisions = sqliteTable(
+  "content_revisions",
+  {
+    id: text("id").primaryKey(),
+    entity_type: text("entity_type", { enum: contentEntity }).notNull(),
+    entity_id: text("entity_id").notNull(),
+    proposed_json: text("proposed_json").notNull(),
+    base_json: text("base_json").notNull(),
+    change_summary: text("change_summary"),
+    status: text("status", {
+      enum: ["pending", "approved", "rejected", "superseded"],
+    }).notNull(),
+    submitted_by: text("submitted_by"),
+    reviewed_by: text("reviewed_by"),
+    review_note: text("review_note"),
+    reviewed_at: text("reviewed_at"),
+    created_at: text("created_at").notNull(),
+    updated_at: text("updated_at").notNull(),
+  },
+  (t) => [
+    index("idx_content_revisions_entity").on(t.entity_type, t.entity_id),
+    index("idx_content_revisions_status").on(t.status),
+    uniqueIndex("idx_content_revisions_one_draft")
+      .on(t.submitted_by, t.entity_type, t.entity_id)
+      .where(sql`${t.status} = 'pending'`),
+  ]
+);
+
+export const duplicateReports = sqliteTable(
+  "duplicate_reports",
+  {
+    id: text("id").primaryKey(),
+    keep_climb_id: text("keep_climb_id").notNull(),
+    duplicate_climb_id: text("duplicate_climb_id").notNull(),
+    reporter_id: text("reporter_id"),
+    note: text("note"),
+    status: text("status", { enum: ["open", "merged", "dismissed"] }).notNull(),
+    reviewed_by: text("reviewed_by"),
+    review_note: text("review_note"),
+    created_at: text("created_at").notNull(),
+    reviewed_at: text("reviewed_at"),
+  },
+  (t) => [
+    index("idx_duplicate_reports_status").on(t.status),
+    uniqueIndex("idx_duplicate_reports_open")
+      .on(t.duplicate_climb_id, t.reporter_id)
+      .where(sql`${t.status} = 'open'`),
+  ]
+);
+
+export const contentReports = sqliteTable(
+  "content_reports",
+  {
+    id: text("id").primaryKey(),
+    entity_type: text("entity_type", { enum: contentEntity }).notNull(),
+    entity_id: text("entity_id").notNull(),
+    reporter_id: text("reporter_id"),
+    body: text("body").notNull(),
+    status: text("status", { enum: ["open", "resolved"] }).notNull(),
+    reviewed_by: text("reviewed_by"),
+    reviewed_at: text("reviewed_at"),
+    created_at: text("created_at").notNull(),
+  },
+  (t) => [index("idx_content_reports_status").on(t.status)]
+);
