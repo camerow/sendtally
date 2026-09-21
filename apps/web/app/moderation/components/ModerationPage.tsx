@@ -1,18 +1,16 @@
 import React from "react";
-import { Link, useSearchParams } from "react-router";
+import { useSearchParams } from "react-router";
 import type { ModerationQueue, SendtallyApi } from "@sendtally/api-client";
 import { Logo } from "@sendtally/design";
 import {
-  groupCreations,
   MODERATION_TABS,
   moderationTabLabel,
   useModerationQueue,
   type ModerationTab,
 } from "@sendtally/features/areas";
 import { formatNumber } from "@sendtally/features/i18n";
-import { PendingBadge } from "../../areas/components/PendingBadge";
 import { useClientApi } from "../../lib/useClientApi";
-import { CreationCard } from "./CreationCard";
+import { CreationsPanel } from "./CreationsPanel";
 import { DuplicateCard } from "./DuplicateCard";
 import { ReportCard } from "./ReportCard";
 import { RevisionCard } from "./RevisionCard";
@@ -27,23 +25,7 @@ function itemsOf(
 ): React.ReactElement[] {
   switch (tab) {
     case "creations":
-      return groupCreations(queue.creations.items).map((group, i) => (
-        <section key={group.area?.id ?? i} className="mod-group">
-          {group.area !== null && (
-            <h2 className="mod-group-head">
-              <Link to={`/app/areas/${group.area.slug}`}>{group.area.name}</Link>
-              {group.area.status === "pending" && <PendingBadge />}
-            </h2>
-          )}
-          {group.items.map((item) => (
-            <CreationCard
-              key={item.entity_type === "area" ? item.area.id : item.climb.id}
-              api={api}
-              item={item}
-            />
-          ))}
-        </section>
-      ));
+      return [<CreationsPanel key="creations" api={api} />];
     case "revisions":
       return queue.revisions.items.map((item) => (
         <RevisionCard key={item.id} api={api} item={item} />
@@ -94,16 +76,18 @@ export function ModerationPage({ apiUrl }: { apiUrl: string }): React.ReactEleme
         ))}
       </div>
 
-      <div role="tabpanel" className="mod-list">
+      <div role="tabpanel" className="mod-list" data-tab={tab}>
         {state.status === "loading" && <span className="area-meta">Loading…</span>}
         {state.status === "error" && (
           <span className="area-meta">Could not load the moderation queue.</span>
         )}
         {queue !== null && current !== null && (
           <>
-            {current.count === 0 && <p className="area-empty">Nothing waiting here.</p>}
+            {current.count === 0 && tab !== "creations" && (
+              <p className="area-empty">Nothing waiting here.</p>
+            )}
             {itemsOf(api, queue, tab)}
-            {current.count > current.items.length && (
+            {tab !== "creations" && current.count > current.items.length && (
               <span className="area-meta">
                 {`Showing ${current.items.length} of ${current.count}`}
               </span>

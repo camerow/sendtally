@@ -1,10 +1,36 @@
 import { useQueryClient } from "@tanstack/react-query";
 import React from "react";
-import { ApiError, type ModerationQueue, type SendtallyApi } from "@sendtally/api-client";
+import {
+  ApiError,
+  type CreationRef,
+  type CreationResult,
+  type ModerationCreations,
+  type ModerationQueue,
+  type SendtallyApi,
+} from "@sendtally/api-client";
 import { queries, useQuery, type Query } from "../query";
 
 export function useModerationQueue(api: SendtallyApi): Query<ModerationQueue> {
   return useQuery(queries.moderation(api));
+}
+
+export function useModerationCreations(api: SendtallyApi): Query<ModerationCreations> {
+  return useQuery(queries.moderationCreations(api));
+}
+
+// The API takes this many at once, so a bigger selection goes as several requests, in order.
+const BULK_CHUNK = 20;
+
+/** Runs `send` over the refs a chunk at a time and gathers every item's own result. */
+export async function inChunks(
+  refs: CreationRef[],
+  send: (chunk: CreationRef[]) => Promise<CreationResult[]>
+): Promise<CreationResult[]> {
+  const results: CreationResult[] = [];
+  for (let at = 0; at < refs.length; at += BULK_CHUNK) {
+    results.push(...(await send(refs.slice(at, at + BULK_CHUNK))));
+  }
+  return results;
 }
 
 export type ModerationAction = {

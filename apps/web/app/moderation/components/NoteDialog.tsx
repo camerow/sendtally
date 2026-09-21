@@ -8,6 +8,9 @@ export type NoteDialogProps = {
   submitLabel: string;
   busy: boolean;
   error: string | null;
+  /** One-click notes for the usual reasons. */
+  reasons?: readonly string[];
+  hint?: string | undefined;
   onClose: () => void;
   onSubmit: (note: string) => void;
 };
@@ -17,6 +20,8 @@ export function NoteDialog({
   submitLabel,
   busy,
   error,
+  reasons = [],
+  hint,
   onClose,
   onSubmit,
 }: NoteDialogProps): React.ReactElement {
@@ -31,6 +36,16 @@ export function NoteDialog({
       onClose={onClose}
       onSubmit={() => onSubmit(note.trim())}
     >
+      {hint !== undefined && <p className="mod-muted">{hint}</p>}
+      {reasons.length > 0 && (
+        <div className="mod-reasons">
+          {reasons.map((reason) => (
+            <button key={reason} type="button" className="mod-pill" onClick={() => setNote(reason)}>
+              {reason}
+            </button>
+          ))}
+        </div>
+      )}
       <Field id="moderation-note" label="Note" optional>
         <textarea
           id="moderation-note"

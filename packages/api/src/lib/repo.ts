@@ -1605,6 +1605,40 @@ export type Page<T> = { count: number; rows: T[] };
 const countOf = async (query: Promise<{ n: number }[]>): Promise<number> =>
   (await query)[0]?.n ?? 0;
 
+export type ContributionRecord = { approved: number; rejected: number };
+
+// How each contributor's earlier areas and climbs were decided, for the moderator's eye.
+export async function contributionRecords(
+  db: D1Database,
+  userIds: string[]
+): Promise<Map<string, ContributionRecord>> {
+  const records = new Map<string, ContributionRecord>();
+  if (userIds.length === 0) return records;
+  const d = drizzle(db);
+  const decided = ["active", "deleted"] as const;
+  const [areaRows, climbRows] = await Promise.all([
+    d
+      .select({ user: areas.created_by, status: areas.status, n: count() })
+      .from(areas)
+      .where(and(inArray(areas.created_by, userIds), inArray(areas.status, decided)))
+      .groupBy(areas.created_by, areas.status)
+      .all(),
+    d
+      .select({ user: areaClimbs.created_by, status: areaClimbs.status, n: count() })
+      .from(areaClimbs)
+      .where(and(inArray(areaClimbs.created_by, userIds), inArray(areaClimbs.status, decided)))
+      .groupBy(areaClimbs.created_by, areaClimbs.status)
+      .all(),
+  ]);
+  for (const row of [...areaRows, ...climbRows]) {
+    if (row.user === null) continue;
+    const record = records.get(row.user) ?? { approved: 0, rejected: 0 };
+    record[row.status === "active" ? "approved" : "rejected"] += row.n;
+    records.set(row.user, record);
+  }
+  return records;
+}
+
 export async function pendingAreas(db: D1Database, limit: number): Promise<Page<AreaRow>> {
   const d = drizzle(db);
   const pending = eq(areas.status, "pending");
@@ -1709,6 +1743,76 @@ export async function approveAreaClimb(
 }
 
 const openStatus = ["active", "pending"] as const;
+
+// Somewhere a pending creation can be put: still open, and where the moderator saw it.
+const openArea = (d: Db, id: string, ...extra: (SQL | undefined)[]): SQL =>
+  exists(
+    d
+      .select({ id: areas.id })
+      .from(areas)
+      .where(and(eq(areas.id, id), inArray(areas.status, openStatus), ...extra))
+  );
+
+// A pending area moves with everything inside it, at the version the moderator
+// reviewed. Both statements carry the parent guard so neither runs alone.
+export async function movePendingArea(
+  db: D1Database,
+  a: {
+    id: string;
+    version: number;
+    path: string;
+    depth: number;
+    parent: { id: string; path: string; depth: number };
+  }
+): Promise<boolean> {
+  const d = drizzle(db);
+  const parent = openArea(d, a.parent.id, eq(areas.path, a.parent.path));
+  const at = exists(
+    d
+      .select({ id: areas.id })
+      .from(areas)
+      .where(and(eq(areas.id, a.id), eq(areas.version, a.version), eq(areas.status, "pending")))
+  );
+  const subtree = d
+    .update(areas)
+    .set({
+      path: sql`${`${a.parent.path}${a.id}/`} || substr(${areas.path}, ${a.path.length + 1})`,
+      depth: sql`${areas.depth} + ${a.parent.depth + 1 - a.depth}`,
+    })
+    .where(and(gte(areas.path, a.path), lt(areas.path, `${a.path.slice(0, -1)}0`), at, parent));
+  const self = d
+    .update(areas)
+    .set({ parent_id: a.parent.id, version: sql`${areas.version} + 1`, updated_at: stamp() })
+    .where(
+      and(
+        eq(areas.id, a.id),
+        eq(areas.version, a.version),
+        eq(areas.status, "pending"),
+        eq(areas.path, `${a.parent.path}${a.id}/`)
+      )
+    );
+  const [, result] = await d.batch([subtree, self]);
+  return result.meta.changes > 0;
+}
+
+export async function movePendingAreaClimb(
+  db: D1Database,
+  row: { id: string; version: number; areaId: string }
+): Promise<boolean> {
+  const d = drizzle(db);
+  const result = await d
+    .update(areaClimbs)
+    .set({ area_id: row.areaId, version: sql`${areaClimbs.version} + 1`, updated_at: stamp() })
+    .where(
+      and(
+        eq(areaClimbs.id, row.id),
+        eq(areaClimbs.status, "pending"),
+        eq(areaClimbs.version, row.version),
+        openArea(d, row.areaId, isNull(areas.region_code))
+      )
+    );
+  return result.meta.changes > 0;
+}
 
 // Refused while anything open still sits in the area: its children would be
 // left under a deleted parent.

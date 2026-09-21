@@ -422,6 +422,27 @@ export const approveRevisionBody = versionBody.extend({
 
 export const rejectBody = z.object({ note: optionalText(500) });
 
+export const creationRef = z.object({
+  entity_type: z.enum(["area", "climb"]),
+  id: z.string().min(1),
+  version: z.number().int().min(1),
+});
+
+// A reject touches two statements per climb and the free D1 plan allows 50
+// queries an invocation, so a larger selection arrives as several requests.
+export const BULK_CREATIONS_MAX = 20;
+
+export const bulkCreationsBody = z.object({
+  action: z.enum(["approve", "reject"]),
+  note: optionalText(500),
+  items: z.array(creationRef).min(1).max(BULK_CREATIONS_MAX),
+});
+
+export const moveCreationsBody = z.object({
+  parentId: z.string().min(1),
+  items: z.array(creationRef).min(1).max(BULK_CREATIONS_MAX),
+});
+
 export const contentReportBody = z.object({
   entityType: z.enum(["area", "climb"]),
   entityId: z.string().min(1),

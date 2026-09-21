@@ -113,6 +113,17 @@ export type ModerationQueue = Ok<Moderation["queue"]["$get"]>;
 
 export type CreationItem = ModerationQueue["creations"]["items"][number];
 
+export type ModerationCreations = ModerationQueue["creations"];
+
+export type BulkCreationsInput = InferRequestType<Moderation["creations"]["bulk"]["$post"]>["json"];
+
+export type CreationRef = BulkCreationsInput["items"][number];
+
+export type CreationResult = Extract<
+  Ok<Moderation["creations"]["bulk"]["$post"]>,
+  { results: unknown }
+>["results"][number];
+
 export type RevisionItem = ModerationQueue["revisions"]["items"][number];
 
 export type RevisionConflict = RevisionItem["conflicts"][number];

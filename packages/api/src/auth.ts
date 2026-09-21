@@ -29,6 +29,28 @@ export async function deleteClerkUser(userId: string, env: Env): Promise<void> {
   await createClerkClient({ secretKey: env.CLERK_SECRET_KEY }).users.deleteUser(userId);
 }
 
+// What a moderator sees next to a contribution. Best effort: the queue still
+// loads when Clerk does not answer.
+export async function clerkUserNames(userIds: string[], env: Env): Promise<Map<string, string>> {
+  if (userIds.length === 0) return new Map();
+  try {
+    const { data } = await createClerkClient({ secretKey: env.CLERK_SECRET_KEY }).users.getUserList(
+      { userId: userIds, limit: userIds.length }
+    );
+    return new Map(
+      data.map((user) => [
+        user.id,
+        user.username ??
+          ([user.firstName, user.lastName].filter(Boolean).join(" ") ||
+            (user.primaryEmailAddress?.emailAddress.split("@")[0] ?? user.id)),
+      ])
+    );
+  } catch (err) {
+    console.error(`clerk user list failed: ${err instanceof Error ? err.message : String(err)}`);
+    return new Map();
+  }
+}
+
 export type AuthWebhookEvent = { type: string; userId: string | null; email: string | null };
 
 const clerkUser = z.object({
@@ -63,4 +85,5 @@ export const auth = {
   verifyUser: verifyClerkUser,
   deleteUser: deleteClerkUser,
   verifyWebhook: verifyClerkWebhook,
+  userNames: clerkUserNames,
 };

@@ -151,6 +151,116 @@ describe("moderating creations", () => {
     ).toBe(409);
   });
 
+  it("bulk approves a nested chain in tree order and skips what changed", async () => {
+    await setRole("mod", "moderator");
+    const area = await createArea("user_a", buttermilks);
+    const zone = await createArea("user_a", { parentId: area.id, name: "Peabody Boulders" });
+    const climb = await createClimb("user_a", zone.id, "Evilution");
+    const stale = await createClimb("user_a", area.id, "The Mandala");
+
+    const res = await call("mod", "/v1/moderation/creations/bulk", {
+      body: {
+        action: "approve",
+        items: [
+          { entity_type: "climb", id: climb.id, version: 1 },
+          { entity_type: "climb", id: stale.id, version: 7 },
+          { entity_type: "area", id: zone.id, version: 1 },
+          { entity_type: "area", id: area.id, version: 1 },
+          { entity_type: "area", id: climb.id, version: 1 },
+        ],
+      },
+    });
+    expect(res.status).toBe(200);
+    const results = res.body["results"] as Array<{ id: string; error: string | null }>;
+    expect(results.filter((r) => r.error === null).map((r) => r.id)).toEqual([
+      area.id,
+      zone.id,
+      climb.id,
+    ]);
+    expect(results.filter((r) => r.error !== null)).toHaveLength(2);
+    expect((await areaRow(zone.id))?.status).toBe("active");
+    expect((await call("user_b", "/v1/area-climbs/evilution")).status).toBe(200);
+    expect((await call("user_b", "/v1/area-climbs/the-mandala")).status).toBe(404);
+  });
+
+  it("bulk rejects climbs before the area that holds them, with one note", async () => {
+    await setRole("mod", "moderator");
+    const area = await createArea("user_a", buttermilks);
+    const climb = await createClimb("user_a", area.id, "The Mandala");
+
+    const res = await call("mod", "/v1/moderation/creations/bulk", {
+      body: {
+        action: "reject",
+        note: "Already exists",
+        items: [
+          { entity_type: "area", id: area.id, version: 1 },
+          { entity_type: "climb", id: climb.id, version: 1 },
+        ],
+      },
+    });
+    const results = res.body["results"] as Array<{ id: string; error: string | null }>;
+    expect(results).toEqual([
+      { id: climb.id, entity_type: "climb", error: null },
+      { id: area.id, entity_type: "area", error: null },
+    ]);
+    expect((await areaRow(area.id))?.status).toBe("deleted");
+    const note = await env.DB.prepare("SELECT review_note FROM areas WHERE id = ?")
+      .bind(area.id)
+      .first<{ review_note: string }>();
+    expect(note?.review_note).toBe("Already exists");
+  });
+
+  it("moves a pending area with what is inside it, and a pending climb", async () => {
+    await setRole("mod", "moderator");
+    const area = await createArea("user_a", buttermilks);
+    const zone = await createArea("user_a", { parentId: area.id, name: "Peabody Boulders" });
+    const stray = await createArea("user_a", { parentId: area.id, name: "Grandpa Peabody" });
+    const inside = await createArea("user_a", { parentId: stray.id, name: "South Face" });
+    const climb = await createClimb("user_a", area.id, "Evilution");
+
+    const res = await call("mod", "/v1/moderation/creations/move", {
+      body: {
+        parentId: zone.id,
+        items: [
+          { entity_type: "area", id: stray.id, version: 1 },
+          { entity_type: "climb", id: climb.id, version: 1 },
+          { entity_type: "area", id: zone.id, version: 1 },
+        ],
+      },
+    });
+    const results = res.body["results"] as Array<{ error: string | null }>;
+    expect(results.map((r) => r.error === null)).toEqual([true, true, false]);
+
+    const zonePath = (await areaRow(zone.id))?.path ?? "";
+    expect(await areaRow(stray.id)).toMatchObject({
+      path: `${zonePath}${stray.id}/`,
+      depth: 4,
+      version: 2,
+      status: "pending",
+    });
+    expect(await areaRow(inside.id)).toMatchObject({
+      path: `${zonePath}${stray.id}/${inside.id}/`,
+      depth: 5,
+    });
+    const moved = await env.DB.prepare("SELECT area_id FROM area_climbs WHERE id = ?")
+      .bind(climb.id)
+      .first<{ area_id: string }>();
+    expect(moved?.area_id).toBe(zone.id);
+
+    const toRegion = await call("mod", "/v1/moderation/creations/move", {
+      body: {
+        parentId: "region-us-ca",
+        items: [
+          { entity_type: "area", id: stray.id, version: 2 },
+          { entity_type: "climb", id: climb.id, version: 2 },
+        ],
+      },
+    });
+    expect(
+      (toRegion.body["results"] as Array<{ error: string | null }>).every((r) => r.error !== null)
+    ).toBe(true);
+  });
+
   it("lists pending creations with their duplicate candidates", async () => {
     await setRole("mod", "moderator");
     const area = await createArea("user_a", buttermilks);
@@ -163,6 +273,30 @@ describe("moderating creations", () => {
     const items = res.body["items"] as Array<{ climb?: Row; candidates: Row[] }>;
     expect(items.map((i) => i.climb?.id)).toEqual([dup.id]);
     expect(items[0]?.candidates.map((c) => c.id)).toEqual([live.id]);
+  });
+
+  it("shows where a creation sits and how its contributor has done before", async () => {
+    await setRole("mod", "moderator");
+    const area = await createArea("user_a", buttermilks);
+    await activate("areas", area.id);
+    const zone = await createArea("user_a", { parentId: area.id, name: "Peabody Boulders" });
+    const climb = await createClimb("user_a", zone.id, "Evilution");
+
+    const res = await call("mod", "/v1/moderation/creations");
+    const items = res.body["items"] as Array<{
+      entity_type: string;
+      trail: Array<{ name: string }>;
+      submitter: { id: string; name: string | null; approved: number; rejected: number };
+    }>;
+    expect(items.map((i) => i.trail.map((t) => t.name))).toEqual([
+      ["United States", "California", "Buttermilks"],
+      ["United States", "California", "Buttermilks"],
+    ]);
+    expect(items[0]?.submitter).toEqual({ id: "user_a", name: null, approved: 1, rejected: 0 });
+
+    await call("mod", `/v1/moderation/climbs/${climb.id}/reject`, { body: {} });
+    const after = (await call("mod", "/v1/moderation/creations")).body["items"] as typeof items;
+    expect(after[0]?.submitter).toMatchObject({ approved: 1, rejected: 1 });
   });
 
   it("rejects a climb, dropping its session links, and an area only once it is empty", async () => {

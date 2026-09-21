@@ -13,7 +13,9 @@ export const offlineFetch = makeFakeFetch([
   },
 ]).fetchImpl;
 
-export type AuthOverrides = Partial<Pick<typeof auth, "deleteUser" | "verifyWebhook">>;
+export type AuthOverrides = Partial<
+  Pick<typeof auth, "deleteUser" | "verifyWebhook" | "userNames">
+>;
 
 // A test picks its case by naming the signed-in user in a header and swapping
 // the calls that leave the Worker, not by constructing a different app.
@@ -29,6 +31,7 @@ export function testApp(
     return { userId, hasFeature: (feature) => features.includes(feature) };
   };
   auth.deleteUser = overrides.deleteUser ?? (async () => undefined);
+  auth.userNames = overrides.userNames ?? (async () => new Map());
   auth.verifyWebhook =
     overrides.verifyWebhook ??
     (async () => {

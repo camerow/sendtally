@@ -28,7 +28,7 @@ export function getPostHog(env: Env): PostHog | null {
 export async function identifyUser(
   env: Env,
   distinctId: string,
-  properties: Record<string, string | boolean>
+  properties: Record<string, string | number | boolean>
 ): Promise<void> {
   const posthog = getPostHog(env);
   if (posthog === null) return;
@@ -40,7 +40,7 @@ export async function captureUserEvent(
   env: Env,
   distinctId: string,
   event: string,
-  properties: Record<string, string | boolean> = {}
+  properties: Record<string, string | number | boolean> = {}
 ): Promise<void> {
   const posthog = getPostHog(env);
   if (posthog === null) return;
