@@ -16,7 +16,7 @@ name: gym-circuits
     when:
       notVisible: "New gym"
     commands:
-      - tapOn: "Settings, tab, 4 of 4"
+      - tapOn: "Settings(, tab.*)?"
       - scrollUntilVisible:
           element: "Add gym"
           direction: DOWN
@@ -36,7 +36,7 @@ name: gym-circuits
 - pressKey: Enter
 - assertVisible: "Remove wall: Cave"
 - tapOn: "Save gym"
-- tapOn: "Log, tab, 1 of 4"
+- tapOn: "Log(, tab.*)?"
 - assertNotVisible: "Add your gym"
 - tapOn: "Climb"
 - assertVisible: "CLIMB 1 OF 1"
@@ -51,7 +51,7 @@ name: gym-circuits
 - assertVisible: ".*In progress for .* · Maestro Barn.*"
 - assertVisible: "Yellow V2 Yellow · Cave, send, 1 try"
 - runFlow: ../helpers/discard-live-session.yaml
-- tapOn: "Settings, tab, 4 of 4"
+- tapOn: "Settings(, tab.*)?"
 - scrollUntilVisible:
     element: "Maestro Barn, .*"
     direction: DOWN
