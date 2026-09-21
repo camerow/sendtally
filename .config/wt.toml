@@ -11,7 +11,7 @@
 # them the web app finds no Clerk keys, falls back to keyless mode, and every
 # signed-in request fails a JWKS kid check against a throwaway instance.
 # The allowlist is deliberate: copying every ignored path would also duplicate
-# infra/terraform state, which is local and single-operator.
+# build output and caches such as node_modules and infra/terraform/.terraform.
 pre-start = [
   "wt step copy-ignored --require-include",
   "pnpm install --frozen-lockfile",

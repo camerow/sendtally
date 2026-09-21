@@ -3,8 +3,7 @@
 # request fails a JWKS kid check against a throwaway instance.
 #
 # Deliberately an allowlist: copying every ignored path also drags in
-# infra/terraform state, which is local and single-operator, and must not be
-# duplicated per worktree.
+# build output and caches such as node_modules and infra/terraform/.terraform.
 .env
 apps/web/.dev.vars
 packages/api/.dev.vars

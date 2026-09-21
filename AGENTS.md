@@ -96,7 +96,7 @@ The product was briefly named boardsync; that name was dropped because `boardsyn
 
 - Wrangler environments `staging` and `production` for `api` and `web`: separate D1 databases, secrets via `wrangler secret`. There is a single Clerk instance shared by both.
 - **The Cloudflare account is pinned as `account_id` in both `wrangler.jsonc` files** (`f3514650...`, the "Chalk and Circuits" account that owns the `sendtally.com` zone and everything else). The login also sees the older personal account (`7b398a51...`) that sendtally was migrated out of in September 2026; without the pin wrangler can resolve to it - deploys and `secret bulk` then silently land on a shadow Worker in an account with no zone and no D1, while `tail` watches nothing and the live site never changes. Never remove the pin.
-- **Account-level resources are Terraform-managed** in `infra/terraform/` (zone, zone settings, non-Worker DNS records, D1 databases). Wrangler owns Worker scripts, bindings, secrets, and Worker custom domains. Create a D1 database in Terraform, then pin its id in `wrangler.jsonc`; never create them in the dashboard. State is local (single operator); the API token comes from `TF_VAR_CLOUDFLARE_API_TOKEN`. Migration runbook: `docs/cloudflare-account-migration.md`.
+- **Account-level resources are Terraform-managed** in `infra/terraform/` (zone, zone settings, non-Worker DNS records, D1 databases). Wrangler owns Worker scripts, bindings, secrets, and Worker custom domains. Create a D1 database in Terraform, then pin its id in `wrangler.jsonc`; never create them in the dashboard. State lives in the R2 bucket `sendtally-tfstate` (S3 backend, credentials from `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY`); the API token comes from `TF_VAR_CLOUDFLARE_API_TOKEN`. Migration runbook: `docs/cloudflare-account-migration.md`.
 - `main` is the only long-lived branch and is production. All work branches off `main` and PRs target `main`; merging a PR triggers the production deploy and D1 migrations. There is no `staging` branch: the staging environment is the pull request preview sandbox, described below.
 - D1 migrations: `wrangler d1 migrations apply`, additive and forward-only. Never delete or rewrite prior migrations.
 - Schema source of truth is Drizzle (`packages/api/src/db/schema.ts`).
@@ -292,7 +292,7 @@ Never hand-roll `git worktree add`.
 
 A new worktree gets the gitignored local secrets and an install from the `pre-start` hook, which blocks before any dev server starts.
 `.worktreeinclude` at the repo root is the allowlist of files that travel - currently `.env` and the two `.dev.vars`.
-It is an allowlist rather than "copy everything ignored" because the latter also duplicates `infra/terraform` state, which is local and single-operator.
+It is an allowlist rather than "copy everything ignored" because the latter also duplicates build output and caches such as `node_modules` and `infra/terraform/.terraform`.
 Add a file there when a new gitignored thing turns out to be needed per worktree; without the Clerk keys the web app starts in keyless mode and every signed-in request fails a JWKS key-id check against a throwaway instance.
 
 `post-remove` kills the dev servers a removed worktree left behind (`infra/scripts/kill-worktree-servers.sh`).
