@@ -21,6 +21,7 @@ export type AreaSearchFieldProps = {
   addLabel?: (typed: string) => string;
   onPick: (area: AreaSummary | null) => void;
   onAdd?: (typed: string) => void;
+  onFocus?: () => void;
 };
 
 /**
@@ -36,6 +37,7 @@ export function AreaSearchField({
   addLabel,
   onPick,
   onAdd,
+  onFocus,
 }: AreaSearchFieldProps): React.ReactElement {
   const api = useApi();
   const [typed, setTyped] = React.useState<string | null>(null);
@@ -62,7 +64,10 @@ export function AreaSearchField({
           setTyped(next);
           if (value !== null) onPick(null);
         }}
-        onFocus={() => setFocused(true)}
+        onFocus={() => {
+          setFocused(true);
+          onFocus?.();
+        }}
         onBlur={() => setFocused(false)}
         style={{ ...fieldInput, ...(focused ? { borderColor: colors.azure } : {}) }}
       />

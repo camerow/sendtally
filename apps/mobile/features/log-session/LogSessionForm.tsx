@@ -1,7 +1,17 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { router, useLocalSearchParams } from "expo-router";
 import React from "react";
-import { AppState, Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import {
+  AppState,
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 import type { ClimbSummary } from "@sendtally/api-client";
 import {
   climbFormFromDraft,
@@ -181,6 +191,8 @@ export function LogSessionForm({
   // scale once, per discipline and only where no grade has been typed yet. A draft picked
   // back up, and anything already graded, keeps the scale it was written in.
   const adopted = React.useRef(editing !== undefined || picked !== null);
+  const scroll = React.useRef<ScrollView>(null);
+  const cragY = React.useRef(0);
   const resumeDraft = React.useCallback((resumed: LogSessionDraft) => {
     adopted.current = true;
     setDraft(resumed);
@@ -298,9 +310,22 @@ export function LogSessionForm({
     }
   }
 
+  function showCragResults(): void {
+    const reveal = (): void => scroll.current?.scrollTo({ y: cragY.current - 12 });
+    reveal();
+    const shown = Keyboard.addListener("keyboardDidShow", () => {
+      shown.remove();
+      reveal();
+    });
+  }
+
   return (
-    <View style={{ flex: 1 }}>
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "android" ? "padding" : undefined}
+    >
       <ScrollView
+        ref={scroll}
         keyboardShouldPersistTaps="handled"
         automaticallyAdjustKeyboardInsets
         contentContainerStyle={{ paddingHorizontal: 18, paddingTop: 8, paddingBottom: 24, gap: 14 }}
@@ -424,7 +449,12 @@ export function LogSessionForm({
         </View>
 
         {outdoor && (
-          <View style={{ gap: 7 }}>
+          <View
+            style={{ gap: 7 }}
+            onLayout={(e) => {
+              cragY.current = e.nativeEvent.layout.y;
+            }}
+          >
             <LabelText>{`${t("areas.crag")} ${t("common.optional")}`}</LabelText>
             <AreaSearchField
               crags
@@ -439,6 +469,7 @@ export function LogSessionForm({
                 }))
               }
               onAdd={setAddingCrag}
+              onFocus={showCragResults}
             />
           </View>
         )}
@@ -810,6 +841,6 @@ export function LogSessionForm({
           </Pressable>
         </View>
       </View>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
