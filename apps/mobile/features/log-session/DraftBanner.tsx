@@ -1,6 +1,6 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
-import type { StoredSessionDraft } from "@sendtally/features/log-session";
+import { draftTimesSuffix, type StoredSessionDraft } from "@sendtally/features/log-session";
 import { formatDate, t } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { press } from "../../lib/press";
@@ -77,8 +77,7 @@ export function DraftBanner({
         >
           {t("logSession.draftMetaShort", {
             climbs,
-            start: draft.startTime,
-            end: draft.endTime,
+            times: draftTimesSuffix(draft),
           })}
         </Text>
       </View>

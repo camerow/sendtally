@@ -230,6 +230,7 @@ export type ManualSessionInput = {
   name: string | null;
   start_at: string;
   end_at: string;
+  times: "both" | "start" | "end" | "none";
   climb_count: number;
   top_grade: number;
   top_send_grade: number;

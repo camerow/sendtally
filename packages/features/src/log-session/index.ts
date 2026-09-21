@@ -23,6 +23,7 @@ export {
   withClimbOutcome,
   withClimbScale,
   withStartTime,
+  draftTimesSuffix,
   withTag,
   withTries,
   withoutTag,

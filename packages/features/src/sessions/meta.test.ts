@@ -13,6 +13,7 @@ function session(overrides: Partial<SessionRow> = {}): SessionRow {
     name: null,
     start_at: "2026-09-07T18:00:00.000Z",
     end_at: "2026-09-07T19:40:00.000Z",
+    times: "both",
     climb_count: 14,
     top_grade: 7,
     top_send_grade: 6,
@@ -33,6 +34,11 @@ function session(overrides: Partial<SessionRow> = {}): SessionRow {
 describe("sessionMetaLabel", () => {
   it("joins duration, climbs and effort", () => {
     expect(sessionMetaLabel(session())).toBe("1h 40m · 14 climbs");
+  });
+
+  it("omits the duration of a session saved without both times", () => {
+    expect(sessionMetaLabel(session({ times: "none" }))).toBe("14 climbs");
+    expect(sessionMetaLabel(session({ times: "start" }))).toBe("14 climbs");
   });
 });
 

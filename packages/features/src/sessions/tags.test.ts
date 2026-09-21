@@ -24,6 +24,7 @@ function session(fingerprint: string, tags: SessionTag[]): SessionRow {
     name: fingerprint,
     start_at: "2026-03-01T18:00:00.000Z",
     end_at: "2026-03-01T20:00:00.000Z",
+    times: "both",
     climb_count: 10,
     top_grade: 6,
     top_send_grade: 5,

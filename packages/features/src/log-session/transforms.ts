@@ -17,7 +17,7 @@ import type {
 } from "@sendtally/api-client";
 import { t } from "../i18n";
 import { sameTagName } from "../sessions/tags";
-import { durationLabel as lowerDurationLabel } from "../sessions/years";
+import { durationLabel as lowerDurationLabel, hasEnd, hasStart } from "../sessions/years";
 import {
   DEFAULT_GRADE_PREFS,
   GRADE_SCALE_OPTIONS,
@@ -91,18 +91,12 @@ function pad(n: number): string {
   return String(n).padStart(2, "0");
 }
 
-function hhmm(d: Date): string {
-  return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
-}
-
 export function emptyDraft(now: Date, prefs: GradePrefs = DEFAULT_GRADE_PREFS): LogSessionDraft {
-  const start = new Date(Math.floor(now.getTime() / (5 * 60_000)) * 5 * 60_000);
-  const end = new Date(start.getTime() + 60 * 60_000);
   return {
     name: "",
-    date: `${start.getFullYear()}-${pad(start.getMonth() + 1)}-${pad(start.getDate())}`,
-    startTime: hhmm(start),
-    endTime: hhmm(end),
+    date: `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`,
+    startTime: "",
+    endTime: "",
     location: "indoor",
     tags: [],
     notes: "",
@@ -224,6 +218,12 @@ function topDraftGrade(draft: LogSessionDraft): Grade | undefined {
   return top;
 }
 
+export function draftTimesSuffix(draft: LogSessionDraft): string {
+  return durationMinutes(draft.startTime, draft.endTime) === undefined
+    ? ""
+    : ` · ${draft.startTime}–${draft.endTime}`;
+}
+
 export function draftSummary(draft: LogSessionDraft): string {
   const sends = draft.climbs.filter((c) => c.kind === "send").length;
   const attempts = draft.climbs.length - sends;
@@ -240,12 +240,11 @@ export function draftSummary(draft: LogSessionDraft): string {
 
 export function draftProblem(draft: LogSessionDraft): string | null {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(draft.date)) return t("logSession.pickDate");
-  if (!TIME.test(draft.startTime) || !TIME.test(draft.endTime)) {
-    return t("logSession.setTimes");
+  if (TIME.test(draft.startTime) && TIME.test(draft.endTime)) {
+    const minutes = durationMinutes(draft.startTime, draft.endTime);
+    if (minutes === undefined) return t("logSession.endBeforeStart");
+    if (minutes > MAX_SESSION_MINUTES) return t("logSession.tooLong");
   }
-  const minutes = durationMinutes(draft.startTime, draft.endTime);
-  if (minutes === undefined) return t("logSession.endBeforeStart");
-  if (minutes > MAX_SESSION_MINUTES) return t("logSession.tooLong");
   if (draft.climbs.length === 0) return t("logSession.needClimb");
   if (draft.climbs.some((c) => draftGrade(c.grade, c.scale) === undefined)) {
     return t("logSession.needGrade");
@@ -282,8 +281,8 @@ export function toLogSessionInput(draft: LogSessionDraft): LogSessionInput {
   return {
     ...(draft.name.trim() === "" ? {} : { name: draft.name.trim() }),
     date: draft.date,
-    startTime: draft.startTime,
-    endTime: draft.endTime,
+    ...(TIME.test(draft.startTime) ? { startTime: draft.startTime } : {}),
+    ...(TIME.test(draft.endTime) ? { endTime: draft.endTime } : {}),
     ...(draft.rpe === null ? {} : { rpe: draft.rpe }),
     location: draft.location,
     ...(draft.gymId === undefined ? {} : { gymId: draft.gymId }),
@@ -324,8 +323,8 @@ export function draftFromSession(session: SessionDetail): LogSessionDraft {
   return {
     name: session.name ?? "",
     date: utcDate(session.start_at),
-    startTime: utcTime(session.start_at),
-    endTime: utcTime(session.end_at),
+    startTime: hasStart(session) ? utcTime(session.start_at) : "",
+    endTime: hasEnd(session) ? utcTime(session.end_at) : "",
     location: session.location ?? "indoor",
     ...(session.gym_id === null ? {} : { gymId: session.gym_id }),
     ...(session.area ? { area: { id: session.area.id, name: session.area.name } } : {}),

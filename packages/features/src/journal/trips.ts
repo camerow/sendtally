@@ -115,7 +115,7 @@ export function tripStats(days: TripDay[]): TripStat[] {
       value: `${formatNumber(climbed)}/${formatNumber(days.length)}`,
     },
     { label: t("common.sessions"), value: formatNumber(sessions.length) },
-    { label: t("sessionDetail.statTime"), value: durationLabel(minutes) },
+    { label: t("sessionDetail.statTime"), value: minutes === 0 ? "-" : durationLabel(minutes) },
     { label: t("common.climbs"), value: formatNumber(climbs) },
     {
       label: t("trends.hardestSend"),

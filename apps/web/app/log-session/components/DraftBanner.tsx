@@ -1,5 +1,5 @@
 import React from "react";
-import type { StoredSessionDraft } from "@sendtally/features/log-session";
+import { draftTimesSuffix, type StoredSessionDraft } from "@sendtally/features/log-session";
 import { formatDate, t } from "@sendtally/features/i18n";
 import { DiscardDraftDialog } from "../../components/DiscardDraftDialog";
 
@@ -29,8 +29,7 @@ export function DraftBanner({
           <span className="draft-banner-meta">
             {t("logSession.draftMeta", {
               count: draft.climbs.length,
-              start: draft.startTime,
-              end: draft.endTime,
+              times: draftTimesSuffix(draft),
             })}
           </span>
         </div>

@@ -205,8 +205,8 @@ function sessionMinutes(body: {
   startTime?: string | undefined;
   endTime?: string | undefined;
 }): number {
-  if (body.endTime === undefined) return DEFAULT_DURATION_MINUTES;
-  const diff = minutesOf(body.endTime) - minutesOf(body.startTime ?? DEFAULT_START);
+  if (body.startTime === undefined || body.endTime === undefined) return DEFAULT_DURATION_MINUTES;
+  const diff = minutesOf(body.endTime) - minutesOf(body.startTime);
   return diff > 0 ? diff : diff + 24 * 60;
 }
 
@@ -217,9 +217,22 @@ function normalisedGrade(grade: ManualGrade): Grade {
   return parseGrade(grade.scale, grade.value) ?? grade;
 }
 
+function timesOf(body: ManualSessionBody): ManualSessionInput["times"] {
+  if (body.startTime !== undefined) return body.endTime === undefined ? "start" : "both";
+  return body.endTime === undefined ? "none" : "end";
+}
+
 function toSession(body: ManualSessionBody): Session {
-  const start = new Date(`${body.date}T${body.startTime ?? DEFAULT_START}:00Z`);
   const durationMs = sessionMinutes(body) * 60_000;
+  const start =
+    body.startTime === undefined && body.endTime !== undefined
+      ? new Date(
+          Math.max(
+            Date.parse(`${body.date}T${body.endTime}:00Z`) - durationMs,
+            Date.parse(`${body.date}T00:00:00Z`)
+          )
+        )
+      : new Date(`${body.date}T${body.startTime ?? DEFAULT_START}:00Z`);
   const end = new Date(start.getTime() + durationMs);
   const step = durationMs / Math.max(body.climbs.length - 1, 1);
   const climbs: Climb[] = body.climbs.map((c, i) => {
@@ -311,6 +324,7 @@ export function buildManualSession(
     name: body.name ?? null,
     start_at: session.start.toISOString(),
     end_at: session.end.toISOString(),
+    times: timesOf(body),
     climb_count: session.climbs.length,
     top_grade: topGrade,
     top_send_grade: topSendGrade,

@@ -4,7 +4,7 @@ import { climbKey } from "../climbs/transforms";
 import { formatDate, t } from "../i18n";
 import { sendStyleLabel } from "../log-session/types";
 import { climbGradeLabel, gradeFormatterFor } from "../sessions/grades";
-import { durationLabel as minutesLabel } from "../sessions/years";
+import { durationLabel as minutesLabel, hasStart } from "../sessions/years";
 import type {
   ClimbFilter,
   ClimbResult,
@@ -223,12 +223,17 @@ export function sessionDetailVM(
   const weekday = formatDate(start, { weekday: "short", timeZone: "UTC" });
   const time = formatDate(start, { hour: "numeric", minute: "2-digit", timeZone: "UTC" });
 
+  const timed = session.times === "both";
   const stats: StatVM[] = [
-    {
-      label: t("sessionDetail.statTime"),
-      value: durationLabel(session.start_at, session.end_at),
-      accent: false,
-    },
+    ...(timed
+      ? [
+          {
+            label: t("sessionDetail.statTime"),
+            value: durationLabel(session.start_at, session.end_at),
+            accent: false,
+          },
+        ]
+      : []),
     { label: t("common.climbs"), value: String(climbs.length), accent: false },
     { label: t("sessionDetail.statSends"), value: String(sends.length), accent: false },
     {
@@ -277,7 +282,13 @@ export function sessionDetailVM(
   return {
     title: `${titleLabel} - ${dateLabel}`,
     startDay: session.start_at.slice(0, 10),
-    meta: `${weekday} ${dateLabel} · ${time} · ${durationLabel(session.start_at, session.end_at)}${location} · ${t("common.effort")} ${session.rpe}/10`,
+    meta: [
+      `${weekday} ${dateLabel}`,
+      ...(hasStart(session) ? [time] : []),
+      ...(timed ? [durationLabel(session.start_at, session.end_at)] : []),
+    ]
+      .join(" · ")
+      .concat(`${location} · ${t("common.effort")} ${session.rpe}/10`),
     editable: session.source === "manual",
     area: session.area,
     stats,

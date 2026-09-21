@@ -18,7 +18,18 @@ export type SessionYear = {
   totals: SessionGroupTotals;
 };
 
+type Timed = Pick<SessionRow, "times">;
+
+export function hasStart(session: Timed): boolean {
+  return session.times === "both" || session.times === "start";
+}
+
+export function hasEnd(session: Timed): boolean {
+  return session.times === "both" || session.times === "end";
+}
+
 export function sessionMinutes(session: SessionRow): number {
+  if (session.times !== "both") return 0;
   const ms = Date.parse(session.end_at) - Date.parse(session.start_at);
   return Number.isFinite(ms) ? Math.max(0, Math.round(ms / 60_000)) : 0;
 }
@@ -102,7 +113,8 @@ export function logTotalsLabel(items: LogItem[]): string {
 }
 
 export function totalsLabel(totals: SessionGroupTotals): string {
-  const parts = [countLabel(totals.count), durationLabel(totals.minutes)];
+  const parts = [countLabel(totals.count)];
+  if (totals.minutes > 0) parts.push(durationLabel(totals.minutes));
   if (totals.topGrade >= 0) {
     parts.push(t("sessions.topGrade", { grade: totals.topGradeLabel ?? `V${totals.topGrade}` }));
   }

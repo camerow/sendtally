@@ -438,6 +438,7 @@ describe("app", () => {
       name: string | null;
       start_at: string;
       end_at: string;
+      times: "both" | "start" | "end" | "none";
       climb_count: number;
       top_grade: number;
       top_send_grade: number;
@@ -1043,6 +1044,44 @@ describe("app", () => {
     expect(after.title).toContain("climbing session");
     expect(after.climb_count).toBe(1);
     expect(after.top_grade).toBe(6);
+  });
+
+  it("logs a session without times and lets an edit add or clear them", async () => {
+    const userId = "user_manual_untimed";
+    const put = async (fingerprint: string, body: unknown): Promise<ManualSessionResponse> => {
+      const res = await testApp().request(
+        `/v1/sessions/${fingerprint}`,
+        {
+          method: "PUT",
+          headers: { "x-test-user": userId, "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        },
+        env
+      );
+      expect(res.status).toBe(200);
+      return (await res.json()) as ManualSessionResponse;
+    };
+    const created = await postSession(
+      userId,
+      logBody({ startTime: undefined, endTime: undefined })
+    );
+    expect(created.status).toBe(201);
+    const { session } = (await created.json()) as ManualSessionResponse;
+    expect(session.times).toBe("none");
+    expect(session.start_at.slice(0, 10)).toBe(logBody().date);
+
+    const timed = await put(session.fingerprint, logBody({ startTime: "18:00", endTime: "19:30" }));
+    expect(timed.session.times).toBe("both");
+    expect(timed.session.start_at.slice(11, 16)).toBe("18:00");
+
+    const startOnly = await put(session.fingerprint, logBody({ endTime: undefined }));
+    expect(startOnly.session.times).toBe("start");
+
+    const cleared = await put(
+      session.fingerprint,
+      logBody({ startTime: undefined, endTime: undefined })
+    );
+    expect(cleared.session.times).toBe("none");
   });
 
   // The edit screen loads a session and PUTs its own climbs back. Anything the

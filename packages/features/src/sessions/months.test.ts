@@ -14,6 +14,7 @@ function session(fingerprint: string, startAt: string): SessionRow {
     name: null,
     start_at: startAt,
     end_at: startAt,
+    times: "both",
     climb_count: 3,
     top_grade: 6,
     top_send_grade: 6,

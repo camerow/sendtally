@@ -88,6 +88,7 @@ export const sessions = sqliteTable(
     name: text("name"),
     start_at: text("start_at").notNull(),
     end_at: text("end_at").notNull(),
+    times: text("times").$type<"both" | "start" | "end" | "none">().notNull().default("both"),
     climb_count: integer("climb_count").notNull(),
     top_grade: integer("top_grade").notNull(),
     top_send_grade: integer("top_send_grade").notNull().default(-1),

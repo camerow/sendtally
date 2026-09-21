@@ -77,6 +77,7 @@ export function DateTimeField({
       DateTimePickerAndroid.open({ value: date, mode, onChange: pick });
       return;
     }
+    if (empty) onChange(serialize(mode, date));
     setOpen(true);
   }
 

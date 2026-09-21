@@ -332,11 +332,11 @@ describe("durationMinutes", () => {
 });
 
 describe("emptyDraft", () => {
-  it("starts now and runs an hour", () => {
+  it("starts on today with no times", () => {
     const d = emptyDraft(new Date(2026, 7, 26, 20, 2));
     expect(d.date).toBe("2026-08-26");
-    expect(d.startTime).toBe("20:00");
-    expect(d.endTime).toBe("21:00");
+    expect(d.startTime).toBe("");
+    expect(d.endTime).toBe("");
     expect(d.climbs).toHaveLength(1);
     expect(d.rpe).toBeNull();
   });
@@ -375,7 +375,12 @@ describe("draftProblem", () => {
 
   it("flags missing climbs, bad times, and over-long sessions", () => {
     expect(draftProblem(draft({ climbs: [] }))).toContain("climb");
-    expect(draftProblem(draft({ endTime: "" }))).toContain("time");
+    expect(draftProblem(draft({ endTime: "" }))).toBeNull();
+    expect(draftProblem(draft({ startTime: "", endTime: "" }))).toBeNull();
+    expect(toLogSessionInput(draft({ startTime: "", endTime: "" }))).not.toHaveProperty(
+      "startTime"
+    );
+    expect(toLogSessionInput(draft({ startTime: "", endTime: "" }))).not.toHaveProperty("endTime");
     expect(draftProblem(draft({ startTime: "06:00", endTime: "23:00" }))).toContain("12 hours");
   });
 
@@ -458,6 +463,7 @@ function session(overrides: Partial<SessionDetail> = {}): SessionDetail {
     name: "Tuesday board night",
     start_at: "2026-08-26T18:30:00.000Z",
     end_at: "2026-08-26T20:00:00.000Z",
+    times: "both",
     climb_count: 2,
     top_grade: 6,
     top_send_grade: 4,

@@ -100,14 +100,12 @@ describe("import", () => {
     );
     expect(lines).toHaveLength(5);
     expect(lines[1]).toMatch(
-      /^2022-11-20,Moe's Valley,outdoor,,12:00,13:30,\d+,,,Linders Roof,V9,attempt,,10,,,,/
+      /^2022-11-20,Moe's Valley,outdoor,,,,\d+,,,Linders Roof,V9,attempt,,10,,,,/
     );
     expect(lines[2]).toBe(
-      `2022-11-22,Moe's Valley,outdoor,,12:00,13:30,8,trip,Last day of the trip,Lindners Roof,V9,send,redpoint,30,,Foot swap,,Moe's Valley,manual,${rows[1]!.fingerprint}`
+      `2022-11-22,Moe's Valley,outdoor,,,,8,trip,Last day of the trip,Lindners Roof,V9,send,redpoint,30,,Foot swap,,Moe's Valley,manual,${rows[1]!.fingerprint}`
     );
-    expect(lines[4]).toMatch(
-      /^2023-01-05,,indoor,Boulder Barn,12:00,13:30,\d+,,,,6A\+,send,flash,1,,,,/
-    );
+    expect(lines[4]).toMatch(/^2023-01-05,,indoor,Boulder Barn,,,\d+,,,,6A\+,send,flash,1,,,,/);
   });
 
   it("rejects a session the log form would reject", async () => {
