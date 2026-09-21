@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { SessionDetail } from "@sendtally/api-client";
-import { climbVMs, filterAndSortClimbs, sessionDetailVM } from "./transforms";
+import { climbMetaLabel, climbVMs, filterAndSortClimbs, sessionDetailVM } from "./transforms";
 
 const detail: SessionDetail = {
   fingerprint: "42-1",
@@ -72,15 +72,20 @@ const detail: SessionDetail = {
 };
 
 describe("climbVMs", () => {
-  it("derives result, rest, and top-send flags in climb order", () => {
+  it("derives result and top-send flags in climb order", () => {
     const vms = climbVMs(detail.climbs);
     expect(vms.map((c) => c.result)).toEqual(["flash", "sent", "project", "flash"]);
-    expect(vms.map((c) => c.restLabel)).toEqual(["-", "20m", "30m", "30m"]);
     expect(vms[1]?.isTopSend).toBe(true);
     expect(vms[2]?.isTopSend).toBe(false);
     expect(vms[3]?.name).toBe("Unknown climb");
     expect(vms[3]?.gradeLabel).toBe("V?");
     expect(vms[2]?.angleLabel).toBe("45°");
+    expect(vms[3]?.angleLabel).toBeNull();
+  });
+
+  it("leaves the angle out of a climb's meta when there is none", () => {
+    expect(climbMetaLabel({ angleLabel: "40°", attempts: 7 })).toBe("40° · 7 attempts");
+    expect(climbMetaLabel({ angleLabel: null, attempts: 1 })).toBe("1 attempt");
   });
 
   it("carries the Areas link of a linked climb, and the session's crag", () => {
@@ -107,7 +112,7 @@ describe("filterAndSortClimbs", () => {
       "V4",
       "V?",
     ]);
-    expect(filterAndSortClimbs(vms, "all", "burns")[0]?.burns).toBe(4);
+    expect(filterAndSortClimbs(vms, "all", "attempts")[0]?.attempts).toBe(4);
   });
 });
 

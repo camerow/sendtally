@@ -7,11 +7,7 @@ export function climbCountLabel(count: number): string {
 }
 
 export function sessionMetaLabel(session: SessionRow): string {
-  return [
-    durationLabel(sessionMinutes(session)),
-    climbCountLabel(session.climb_count),
-    `${t("common.effort")} ${session.rpe}/10`,
-  ].join(" · ");
+  return [durationLabel(sessionMinutes(session)), climbCountLabel(session.climb_count)].join(" · ");
 }
 
 export type SessionDay = { weekday: string; day: number };

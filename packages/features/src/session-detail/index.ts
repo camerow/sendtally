@@ -4,6 +4,7 @@ export {
   type SessionDetailFeature,
 } from "./useSessionDetail";
 export {
+  climbMetaLabel,
   climbVMs,
   durationLabel,
   filterAndSortClimbs,

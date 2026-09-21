@@ -12,19 +12,7 @@ export function DayColumn({
   marker?: React.ReactNode;
 }): React.ReactElement {
   return (
-    <View style={{ width: 34 }}>
-      <Text
-        style={{
-          fontFamily: fonts.monoMedium,
-          fontSize: 9,
-          lineHeight: 11,
-          letterSpacing: 0.72,
-          textTransform: "uppercase",
-          color: colors.textMuted,
-        }}
-      >
-        {weekday}
-      </Text>
+    <View style={{ width: 34, alignSelf: "flex-start" }}>
       <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 3 }}>
         <Text
           style={{
@@ -39,6 +27,18 @@ export function DayColumn({
         </Text>
         {marker}
       </View>
+      <Text
+        style={{
+          fontFamily: fonts.monoMedium,
+          fontSize: 9,
+          lineHeight: 11,
+          letterSpacing: 0.72,
+          textTransform: "uppercase",
+          color: colors.textMuted,
+        }}
+      >
+        {weekday}
+      </Text>
     </View>
   );
 }

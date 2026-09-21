@@ -46,13 +46,6 @@ function firstGo(result: ClimbResult): boolean {
   return result === "flash" || result === "onsight";
 }
 
-function restLabel(minutes: number | null): string {
-  if (minutes === null || minutes <= 0) return "-";
-  const m = `${minutes % 60}${t("sessions.minutesShort")}`;
-  if (minutes >= 60) return `${Math.floor(minutes / 60)}${t("sessions.hoursShort")} ${m}`;
-  return m;
-}
-
 function topSendRank(climbs: SessionClimb[]): number {
   let hi = -1;
   for (const c of climbs) {
@@ -81,9 +74,6 @@ export function climbVMs(
   const discipline = dominantDiscipline(ordered);
   const top = topSendRank(ordered.filter((c) => climbDiscipline(c) === discipline));
   return ordered.map((c, i) => {
-    const prev = ordered[i - 1];
-    const rest =
-      prev === undefined ? null : Math.round((Date.parse(c.time) - Date.parse(prev.time)) / 60_000);
     const rank = climbRank(c);
     const key = climbKey(c.name);
     const firstEncounter = key === "" || !seen.has(key);
@@ -97,9 +87,8 @@ export function climbVMs(
       grade: c.vGrade,
       isTopSend:
         c.kind === "send" && rank >= 0 && climbDiscipline(c) === discipline && rank === top,
-      angleLabel: c.angle !== null ? `${c.angle}°` : "-",
-      burns: c.tries,
-      restLabel: restLabel(rest),
+      angleLabel: c.angle !== null ? `${c.angle}°` : null,
+      attempts: c.tries,
       result,
       resultLabel: resultLabelOf(c, result),
       note: c.note,
@@ -107,6 +96,11 @@ export function climbVMs(
       ...(c.endurance === undefined ? {} : { endurance: c.endurance }),
     };
   });
+}
+
+export function climbMetaLabel(c: Pick<ClimbVM, "angleLabel" | "attempts">): string {
+  const attempts = t("logSession.attemptCount", { count: c.attempts });
+  return c.angleLabel === null ? attempts : `${c.angleLabel} · ${attempts}`;
 }
 
 const FILTERS: Record<ClimbFilter, (c: ClimbVM) => boolean> = {
@@ -120,7 +114,7 @@ const SORTS: Record<ClimbSort, (a: ClimbVM, b: ClimbVM) => number> = {
   order: (a, b) => a.n - b.n,
   gradeDesc: (a, b) => b.grade - a.grade || a.n - b.n,
   gradeAsc: (a, b) => a.grade - b.grade || a.n - b.n,
-  burns: (a, b) => b.burns - a.burns || a.n - b.n,
+  attempts: (a, b) => b.attempts - a.attempts || a.n - b.n,
 };
 
 export function filterAndSortClimbs(

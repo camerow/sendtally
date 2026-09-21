@@ -12,9 +12,8 @@ export type ClimbVM = {
   gradeLabel: string;
   grade: number;
   isTopSend: boolean;
-  angleLabel: string;
-  burns: number;
-  restLabel: string;
+  angleLabel: string | null;
+  attempts: number;
   result: ClimbResult;
   /** A send reads in its own discipline's words: boulders are SENT, routes REDPOINT. */
   resultLabel: string;
@@ -32,7 +31,7 @@ export type GradeBarVM = { gradeLabel: string; count: number; height: number; pe
 
 export type ClimbFilter = "all" | "sent" | "flash" | "project";
 
-export type ClimbSort = "order" | "gradeDesc" | "gradeAsc" | "burns";
+export type ClimbSort = "order" | "gradeDesc" | "gradeAsc" | "attempts";
 
 export type PostStatusKind = "posted" | "pending" | "failed" | "before-start" | "off" | "legacy";
 
@@ -63,13 +62,13 @@ export type SessionDetailVM = {
   stravaUrl: string | null;
 };
 
-export const CLIMB_SORTS: readonly ClimbSort[] = ["order", "gradeDesc", "gradeAsc", "burns"];
+export const CLIMB_SORTS: readonly ClimbSort[] = ["order", "gradeDesc", "gradeAsc", "attempts"];
 
 const CLIMB_SORT_KEYS = {
   order: "sessionDetail.sortOrder",
   gradeDesc: "sessionDetail.sortGradeDesc",
   gradeAsc: "sessionDetail.sortGradeAsc",
-  burns: "sessionDetail.sortBurns",
+  attempts: "sessionDetail.sortAttempts",
 } as const;
 
 export function climbSortLabel(sort: ClimbSort): string {

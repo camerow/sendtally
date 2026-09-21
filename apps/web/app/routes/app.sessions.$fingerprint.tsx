@@ -80,7 +80,7 @@ const RESULT_BADGES: Record<ClimbVM["result"], { bg: string; border: string; col
   },
 };
 
-const GRID = "34px 1.9fr 62px 62px 62px 70px 92px";
+const GRID = "34px 1.9fr 62px 62px 70px 92px";
 
 const actionButton: React.CSSProperties = {
   fontFamily: "var(--font-sans)",
@@ -411,7 +411,7 @@ export default function SessionDetailRoute(): React.ReactElement {
       </div>
 
       <div style={{ overflowX: "auto" }}>
-        <div style={{ minWidth: 640 }}>
+        <div style={{ minWidth: 560 }}>
           <div
             style={{
               display: "grid",
@@ -426,8 +426,7 @@ export default function SessionDetailRoute(): React.ReactElement {
               t("sessionDetail.colClimb"),
               t("common.grade"),
               t("sessionDetail.colAngle"),
-              t("sessionDetail.colBurns"),
-              t("sessionDetail.colRest"),
+              t("sessionDetail.colAttempts"),
               t("common.result"),
             ].map((h) => (
               <span key={h} style={monoLabel}>
@@ -515,7 +514,7 @@ export default function SessionDetailRoute(): React.ReactElement {
                   >
                     {c.gradeLabel}
                   </span>
-                  {[c.angleLabel, endurance ? "" : String(c.burns), c.restLabel].map((value, i) => (
+                  {[c.angleLabel ?? "", endurance ? "" : String(c.attempts)].map((value, i) => (
                     <span
                       key={i}
                       style={{

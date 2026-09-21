@@ -8,6 +8,7 @@ import {
   useSessionDetail,
   type ClimbFilter,
   type ClimbVM,
+  climbMetaLabel,
 } from "@sendtally/features/session-detail";
 import { enduranceLapCountLabel, enduranceSummaryLabel } from "@sendtally/features/log-session";
 import { t } from "@sendtally/features/i18n";
@@ -369,11 +370,7 @@ export default function SessionDetailScreen(): React.ReactElement {
                           }}
                         >
                           {c.endurance === undefined
-                            ? t("sessions.climbMeta", {
-                                angle: c.angleLabel,
-                                burns: t("sessions.burns", { count: c.burns }),
-                                rest: c.restLabel,
-                              })
+                            ? climbMetaLabel(c)
                             : `${enduranceLapCountLabel(c.endurance.laps.length)} · ${enduranceSummaryLabel(c.endurance)}`}
                         </Text>
                       </View>

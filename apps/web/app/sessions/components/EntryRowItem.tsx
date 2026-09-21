@@ -45,11 +45,11 @@ export function EntryRowItem({
       aria-label={[entryKindLabel(kind), title, `${weekday} ${month} ${day}`].join(", ")}
     >
       <span className="session-row-date">
-        <span className="session-row-weekday">{weekday}</span>
         <span className="session-row-day">
           <span className="session-row-month">{month} </span>
           {day}
         </span>
+        <span className="session-row-weekday">{weekday}</span>
       </span>
       <span className="session-row-main">
         <span className="session-row-title">{title}</span>
