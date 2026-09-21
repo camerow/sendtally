@@ -12,6 +12,7 @@ import {
   withClimbName,
   withPickedClimb,
   withClimbTouched,
+  withGymAdopted,
   withQuickClimb,
 } from "./liveSession";
 import { DEFAULT_GRADE_PREFS } from "./types";
@@ -57,6 +58,16 @@ describe("live session", () => {
     expect(first.draft.climbs[0]?.circuit).toBeUndefined();
     const route = withQuickClimb(first.draft, EVENING, undefined, [gym], "route");
     expect(route.draft.climbs[1]).toMatchObject({ scale: "yds", grade: "5.10b" });
+  });
+
+  it("adopts the gym of a climb moved onto its circuits, and keeps a gym already picked", () => {
+    const { draft } = withQuickClimb(null, EVENING, undefined, [gym]);
+    const onBarn = withClimbKind(draft.climbs[0]!, "g", DEFAULT_GRADE_PREFS, [gym]);
+    expect(withGymAdopted({ ...draft, climbs: [onBarn] }, [gym]).gymId).toBe("g");
+    expect(withGymAdopted({ ...draft, climbs: [onBarn], gymId: "other" }, [gym]).gymId).toBe(
+      "other"
+    );
+    expect(withGymAdopted(draft, [gym])).toBe(draft);
   });
 
   it("switches a climb between disciplines and a gym's circuits", () => {
