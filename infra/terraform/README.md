@@ -23,8 +23,8 @@ created on `wrangler deploy` and need the script to exist first, so they stay in
 ```sh
 brew install hashicorp/tap/terraform     # >= 1.9
 cd infra/terraform
-export TF_VAR_cloudflare_api_token=...    # from 1Password, vault "Send Tally"
-export AWS_ACCESS_KEY_ID=...             # R2 API token, same vault
+export TF_VAR_CLOUDFLARE_API_TOKEN=...
+export AWS_ACCESS_KEY_ID=...             # R2 API token
 export AWS_SECRET_ACCESS_KEY=...
 terraform init
 terraform plan
@@ -67,7 +67,7 @@ Create at dash.cloudflare.com/profile/api-tokens ("Create Custom Token"):
 | Zone    | Dynamic Redirect     | Edit  |
 
 Account resources: **Chalk and Circuits** only. Zone resources: all zones in
-that account. Store it in 1Password; never in a tfvars file or the repo.
+that account. Never put it in a tfvars file or the repo.
 
 Dynamic Redirect is what lets Terraform manage `redirects.tf`. A token without it
 plans the ruleset happily and then fails the apply with a bare

@@ -3,7 +3,7 @@
 #
 # Everything in this file is public - a DNS lookup returns all of it - so it is
 # committed and reviewed like any other change. The API token is the one secret
-# and comes from TF_VAR_cloudflare_api_token.
+# and comes from TF_VAR_CLOUDFLARE_API_TOKEN.
 #
 # TXT content keeps the quotes Cloudflare stores it with, otherwise every plan
 # rewrites the record. A value past 255 characters is stored as two quoted

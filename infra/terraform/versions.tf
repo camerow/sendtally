@@ -4,8 +4,7 @@ terraform {
   # State lives in the R2 bucket sendtally-tfstate, through R2's S3-compatible
   # API. The bucket is created by hand (`wrangler r2 bucket create`) because
   # state cannot live in a bucket this config creates. Credentials come from
-  # AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY, an R2 API token kept in
-  # 1Password, vault "Send Tally".
+  # AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY, an R2 API token.
   backend "s3" {
     bucket = "sendtally-tfstate"
     key    = "sendtally.tfstate"
@@ -32,5 +31,5 @@ terraform {
 }
 
 provider "cloudflare" {
-  api_token = var.cloudflare_api_token
+  api_token = var.CLOUDFLARE_API_TOKEN
 }
