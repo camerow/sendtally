@@ -56,7 +56,7 @@ import { useStravaConnect } from "../../features/settings/useStravaConnect";
 import { useApi } from "../../lib/api";
 import { maybeAskForReview } from "../../lib/review";
 import { useSetupDismissed } from "../../lib/setupPrompt";
-import { circuitGym, gymOfDraft, useGyms } from "@sendtally/features/gyms";
+import { liveGymOfDraft, useGyms } from "@sendtally/features/gyms";
 
 type Section = { key: string; title: string; meta: string; data: LogItem[] };
 
@@ -135,9 +135,7 @@ export default function Log(): React.ReactElement {
   const gymPrompt = useSetupDismissed("gym");
   const stravaPrompt = useSetupDismissed("strava");
   const circuitChoices = circuitGyms(gyms.gyms);
-  const liveGym = circuitGym(
-    gymOfDraft(gyms.gyms, live.stored?.draft.gymId) ?? gyms.gyms[0] ?? null
-  );
+  const liveGym = liveGymOfDraft(gyms.gyms, live.stored?.draft.gymId);
   const setupCards: SetupCard[] = [];
   if (gyms.ready && gyms.gyms.length === 0 && gymPrompt.dismissed === false) {
     setupCards.push({

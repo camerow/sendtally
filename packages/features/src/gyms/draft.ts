@@ -23,6 +23,11 @@ export function gymOfDraft(gyms: readonly Gym[], gymId: string | undefined): Gym
   return gyms.find((g) => g.id === gymId) ?? null;
 }
 
+/** The gym a live session shows and logs circuits against: the one picked on the draft, never a default. */
+export function liveGymOfDraft(gyms: readonly Gym[], gymId: string | undefined): Gym | null {
+  return circuitGym(gymOfDraft(gyms, gymId));
+}
+
 /** Circuit logging needs a gym with circuits; a gym without any behaves like no gym. */
 export function circuitGym(gym: Gym | null): Gym | null {
   return gym !== null && gym.circuits.length > 0 ? gym : null;

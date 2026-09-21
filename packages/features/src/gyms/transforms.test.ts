@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Gym } from "./types";
-import { withCircuit } from "./draft";
+import { liveGymOfDraft, withCircuit } from "./draft";
 import {
   circuitGrades,
   circuitLabel,
@@ -70,5 +70,20 @@ describe("circuits", () => {
       grade: "6B",
       circuit: { id: "p", label: "Purple", colour: "purple" },
     });
+  });
+});
+
+describe("liveGymOfDraft", () => {
+  const gym = (id: string): Gym => ({
+    id,
+    name: id,
+    scale: "v",
+    walls: [],
+    circuits: [purple],
+  });
+
+  it("is no gym until the draft picks one, however many are saved", () => {
+    expect(liveGymOfDraft([gym("a"), gym("b")], undefined)).toBeNull();
+    expect(liveGymOfDraft([gym("a"), gym("b")], "b")?.id).toBe("b");
   });
 });
