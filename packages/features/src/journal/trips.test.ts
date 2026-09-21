@@ -43,6 +43,7 @@ function session(
     name: null,
     start_at: startAt,
     end_at: new Date(Date.parse(startAt) + 60 * 60_000).toISOString(),
+    times: "both",
     climb_count: 10,
     top_grade: 7,
     top_send_grade: 5,

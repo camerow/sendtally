@@ -7,7 +7,10 @@ export function climbCountLabel(count: number): string {
 }
 
 export function sessionMetaLabel(session: SessionRow): string {
-  return [durationLabel(sessionMinutes(session)), climbCountLabel(session.climb_count)].join(" · ");
+  return [
+    ...(session.times === "both" ? [durationLabel(sessionMinutes(session))] : []),
+    climbCountLabel(session.climb_count),
+  ].join(" · ");
 }
 
 export type SessionDay = { weekday: string; day: number };

@@ -32,6 +32,7 @@ const session = (
   name: "Tuesday night session",
   start_at: startIso,
   end_at: startIso,
+  times: "both",
   climb_count: climbs.length,
   top_grade: 7,
   top_send_grade: -1,

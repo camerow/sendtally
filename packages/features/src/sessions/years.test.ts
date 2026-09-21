@@ -26,6 +26,7 @@ function session(
     name: null,
     start_at: startAt,
     end_at: endAt,
+    times: "both",
     climb_count: 3,
     top_grade: grades.top,
     top_send_grade: grades.send,

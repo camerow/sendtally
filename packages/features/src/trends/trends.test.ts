@@ -33,6 +33,7 @@ function session(
     name: null,
     start_at: startIso,
     end_at: new Date(Date.parse(startIso) + 2 * 3_600_000).toISOString(),
+    times: "both",
     climb_count: climbs.length,
     top_grade: 0,
     top_send_grade: 0,

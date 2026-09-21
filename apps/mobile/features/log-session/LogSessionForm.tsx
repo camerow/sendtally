@@ -145,6 +145,8 @@ export function LogSessionForm({
   const [draft, setDraft] = React.useState<LogSessionDraft>(
     () => editing?.draft ?? picked ?? emptyDraft(new Date(), gradePrefs)
   );
+  const [addingTimes, setAddingTimes] = React.useState(false);
+  const timesOpen = addingTimes || draft.startTime !== "" || draft.endTime !== "";
   const [saving, setSaving] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
@@ -385,24 +387,6 @@ export function LogSessionForm({
               value={draft.date}
               label={t("logSession.date")}
               onChange={(date) => setDraft({ ...draft, date })}
-            />
-          </View>
-          <View style={{ flex: 1, gap: 7 }}>
-            <LabelText>{t("logSession.start")}</LabelText>
-            <DateTimeField
-              mode="time"
-              value={draft.startTime}
-              label={t("logSession.start")}
-              onChange={(startTime) => setDraft((d) => withStartTime(d, startTime))}
-            />
-          </View>
-          <View style={{ flex: 1, gap: 7 }}>
-            <LabelText>{t("logSession.end")}</LabelText>
-            <DateTimeField
-              mode="time"
-              value={draft.endTime}
-              label={t("logSession.end")}
-              onChange={(endTime) => setDraft({ ...draft, endTime })}
             />
           </View>
         </View>
@@ -767,6 +751,47 @@ export function LogSessionForm({
             })}
           </Text>
         )}
+        {timesOpen ? (
+          <View style={{ gap: 7 }}>
+            <View style={{ flexDirection: "row", gap: 8 }}>
+              <View style={{ flex: 1, gap: 7 }}>
+                <LabelText>{t("logSession.start")}</LabelText>
+                <DateTimeField
+                  mode="time"
+                  value={draft.startTime}
+                  label={t("logSession.start")}
+                  placeholder="-"
+                  onChange={(startTime) => setDraft((d) => withStartTime(d, startTime))}
+                  onClear={() => setDraft((d) => ({ ...d, startTime: "" }))}
+                />
+              </View>
+              <View style={{ flex: 1, gap: 7 }}>
+                <LabelText>{t("logSession.end")}</LabelText>
+                <DateTimeField
+                  mode="time"
+                  value={draft.endTime}
+                  label={t("logSession.end")}
+                  placeholder="-"
+                  onChange={(endTime) => setDraft((d) => ({ ...d, endTime }))}
+                  onClear={() => setDraft((d) => ({ ...d, endTime: "" }))}
+                />
+              </View>
+            </View>
+            <Text style={{ fontFamily: fonts.mono, fontSize: 11, color: colors.textMuted }}>
+              {t("logSession.timesHint")}
+            </Text>
+          </View>
+        ) : (
+          <Pressable
+            onPress={() => setAddingTimes(true)}
+            accessibilityRole="button"
+            style={press({ minHeight: 44, justifyContent: "center", alignSelf: "flex-start" })}
+          >
+            <Text style={{ fontFamily: fonts.monoMedium, fontSize: 12, color: colors.azureInk }}>
+              {t("logSession.addTimes")}
+            </Text>
+          </Pressable>
+        )}
         <View style={{ flexDirection: "row", gap: 10 }}>
           <Pressable
             onPress={cancel}
@@ -804,7 +829,7 @@ export function LogSessionForm({
               {saving
                 ? t("common.saving")
                 : editing === undefined
-                  ? t("logSession.logSession")
+                  ? t("common.done")
                   : t("logSession.saveChanges")}
             </Text>
           </Pressable>

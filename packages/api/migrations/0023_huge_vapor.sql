@@ -1,0 +1,1 @@
+ALTER TABLE `sessions` ADD `times` text DEFAULT 'both' NOT NULL;

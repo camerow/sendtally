@@ -59,7 +59,8 @@ export function rowsOf(sessions: SessionWithClimbs[]): Row[] {
         session,
         time,
         outdoor: session.location === "outdoor",
-        hours: Math.max(0, Date.parse(session.end_at) - time) / 3_600_000,
+        hours:
+          session.times === "both" ? Math.max(0, Date.parse(session.end_at) - time) / 3_600_000 : 0,
         graded: session.climbs.flatMap((c) => {
           const rec = firstTry.get(c);
           return rec === undefined ? [] : [rec];

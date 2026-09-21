@@ -172,6 +172,8 @@ export function LogSessionForm({
   const [draft, setDraft] = React.useState<LogSessionDraft>(
     () => editing?.draft ?? picked ?? emptyDraft(new Date(), prefs.scales)
   );
+  const [addingTimes, setAddingTimes] = React.useState(false);
+  const timesOpen = addingTimes || draft.startTime !== "" || draft.endTime !== "";
   const [saving, setSaving] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [confirmingCancel, setConfirmingCancel] = React.useState(false);
@@ -402,26 +404,6 @@ export function LogSessionForm({
               style={inputStyle}
             />
           </Field>
-          <div className="log-session-times">
-            <Field label={t("logSession.startTime")}>
-              <input
-                type="time"
-                value={draft.startTime}
-                onChange={(e) => setDraft((d) => withStartTime(d, e.target.value))}
-                className="log-session-control"
-                style={inputStyle}
-              />
-            </Field>
-            <Field label={t("logSession.endTime")}>
-              <input
-                type="time"
-                value={draft.endTime}
-                onChange={(e) => setDraft({ ...draft, endTime: e.target.value })}
-                className="log-session-control"
-                style={inputStyle}
-              />
-            </Field>
-          </div>
           <Field label={t("logSession.location")}>
             <div style={{ display: "flex", gap: 8 }}>
               {(["indoor", "outdoor"] as const).map((loc) => (
@@ -697,6 +679,42 @@ export function LogSessionForm({
         />
       )}
 
+      {timesOpen ? (
+        <div className="log-session-times-block">
+          <div className="log-session-times">
+            <Field label={t("logSession.startTime")}>
+              <input
+                type="time"
+                value={draft.startTime}
+                onChange={(e) => setDraft((d) => withStartTime(d, e.target.value))}
+                className="log-session-control"
+                style={inputStyle}
+              />
+            </Field>
+            <Field label={t("logSession.endTime")}>
+              <input
+                type="time"
+                value={draft.endTime}
+                onChange={(e) => setDraft({ ...draft, endTime: e.target.value })}
+                className="log-session-control"
+                style={inputStyle}
+              />
+            </Field>
+          </div>
+          <span style={{ ...monoLabel, textTransform: "none", letterSpacing: 0 }}>
+            {t("logSession.timesHint")}
+          </span>
+        </div>
+      ) : (
+        <button
+          type="button"
+          className="log-session-add-times"
+          onClick={() => setAddingTimes(true)}
+        >
+          {t("logSession.addTimes")}
+        </button>
+      )}
+
       <div className="log-session-actions">
         <div className="log-session-status">
           <span style={monoLabel}>{draftSummary(draft)}</span>
@@ -760,7 +778,7 @@ export function LogSessionForm({
             {saving
               ? t("common.saving")
               : editing === undefined
-                ? t("logSession.logSession")
+                ? t("common.done")
                 : t("logSession.saveChanges")}
           </button>
         </div>

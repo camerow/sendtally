@@ -119,7 +119,10 @@ export function projectSessions(
       weekday: day.weekday,
       dateLabel: dateLabel(session.start_at),
       title: sessionTitle(session),
-      metaLabel: `${t("common.effort")} ${session.rpe} · ${durationLabel(sessionMinutes(session))}`,
+      metaLabel: [
+        `${t("common.effort")} ${session.rpe}`,
+        ...(session.times === "both" ? [durationLabel(sessionMinutes(session))] : []),
+      ].join(" · "),
       attempts: rows.reduce((n, c) => n + c.tries, 0),
       sent: rows.some((c) => c.kind === "send"),
       note: rows.find((c) => c.note !== null)?.note ?? null,
