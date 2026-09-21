@@ -76,6 +76,7 @@ sendtally/
 - **Package manager:** `pnpm`. Never `npm` or `yarn`.
 - **Build system:** Turborepo. Tasks run from the repo root: `pnpm dev`, `pnpm build`, `pnpm check-types`, `pnpm test`, `pnpm format`.
   `pnpm lint` is ESLint, run once at the root rather than per package; the flat config is `eslint.config.js`.
+  Agents running checks wrap them in RTK (`rtk err pnpm check-types`, `rtk test pnpm test`): its hook does not rewrite pnpm scripts, and the filters keep only errors and failing tests, with the full output recoverable through `rtk recall`.
 - **Toolchain versions:** pinned in `.prototools` (proto manages Node and Go here; this repo does not use asdf).
 - **Local iOS builds** additionally need Xcode, CocoaPods, and Homebrew `gmp`, which the rbenv ruby CocoaPods runs under links against; a missing `libgmp.10.dylib` kills every `pod` call.
 - **Package scope:** every workspace package is `@sendtally/*` (e.g. `@sendtally/core`, `@sendtally/api`). Never introduce another scope.
