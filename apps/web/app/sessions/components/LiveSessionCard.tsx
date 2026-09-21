@@ -82,8 +82,8 @@ export function LiveSessionCard({
       <div className="live-session-body">
         <Link to={OPEN_SESSION} className="live-session-row" aria-label={`${title}, ${meta}`}>
           <span className="session-row-date">
-            <span className="session-row-weekday">{formatDate(savedAt, { weekday: "short" })}</span>
             <span className="session-row-day">{formatDate(savedAt, { day: "numeric" })}</span>
+            <span className="session-row-weekday">{formatDate(savedAt, { weekday: "short" })}</span>
           </span>
           <span className="session-row-main">
             <span className="session-row-title">{title}</span>

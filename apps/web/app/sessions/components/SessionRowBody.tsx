@@ -22,11 +22,11 @@ export function SessionRowBody({
   return (
     <>
       <span className="session-row-date">
-        <span className="session-row-weekday">{weekday}</span>
         <span className="session-row-day">
           <span className="session-row-month">{month} </span>
           {day}
         </span>
+        <span className="session-row-weekday">{weekday}</span>
       </span>
       <span className="session-row-main">
         <span className="session-row-title">

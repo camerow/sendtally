@@ -13,7 +13,7 @@ import {
   type LogScope,
 } from "@sendtally/features/journal";
 import { useClimbVocabulary } from "@sendtally/features/climbs";
-import { circuitGym, gymOfDraft, useGyms } from "@sendtally/features/gyms";
+import { liveGymOfDraft, useGyms } from "@sendtally/features/gyms";
 import {
   circuitGyms,
   readClimbKind,
@@ -79,9 +79,7 @@ export function LogView({
   const vocabulary = useClimbVocabulary(api);
   const [editingClimb, setEditingClimb] = React.useState<string | null>(null);
   const gyms = useGyms(api);
-  const liveGym = circuitGym(
-    gymOfDraft(gyms.gyms, live.stored?.draft.gymId) ?? gyms.gyms[0] ?? null
-  );
+  const liveGym = liveGymOfDraft(gyms.gyms, live.stored?.draft.gymId);
   const circuitChoices = circuitGyms(gyms.gyms);
   const logClimb = (): void =>
     setEditingClimb(

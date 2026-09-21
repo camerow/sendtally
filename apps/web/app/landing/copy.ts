@@ -265,7 +265,7 @@ export const COPY = {
 
   session: {
     title: "Every session, climb by climb.",
-    blurb: "Grades, burns and results - kept for every climb over time.",
+    blurb: "Grades, attempts and results - kept for every climb over time.",
     footnote: "6 OF 12 CLIMBS SHOWN · FILTER BY SENT, FLASHED OR PROJECT IN THE APP",
     sample: {
       title: "Tuesday night - Jul 30",
@@ -279,9 +279,9 @@ export const COPY = {
         attempts: "ATTEMPTS",
         top: "TOP",
       },
-      headings: ["#", "CLIMB", "GRADE", "BURNS", "RESULT"],
-      burn: " burn",
-      burns: " burns",
+      headings: ["#", "CLIMB", "GRADE", "ATTEMPTS", "RESULT"],
+      burn: " attempt",
+      burns: " attempts",
       results: { FLASH: "FLASH", SENT: "SENT", PROJECT: "PROJECT" },
       climbs: [
         "Static Cling",
