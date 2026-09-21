@@ -58,6 +58,7 @@ export const common = {
   "common.filters": "Filter",
   "common.clear": "Zurücksetzen",
   "common.tags": "Tags",
+  "common.close": "Schließen",
   "common.closeFilters": "Filter schließen",
   "common.notes": "Notizen",
   "common.addATag": "Tag hinzufügen",

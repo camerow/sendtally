@@ -1,3 +1,4 @@
+import { BottomSheetTextInput } from "@gorhom/bottom-sheet";
 import React from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
 import {
@@ -58,12 +59,15 @@ export function CircuitRow({
   scale,
   onChange,
   onRemove,
+  inSheet = false,
 }: {
   circuit: Circuit;
   scale: GymScale;
   onChange: (circuit: Circuit) => void;
   onRemove: () => void;
+  inSheet?: boolean;
 }): React.ReactElement {
+  const Input = inSheet ? BottomSheetTextInput : TextInput;
   return (
     <View
       style={{
@@ -98,7 +102,7 @@ export function CircuitRow({
             }
           </SelectRow>
         </View>
-        <TextInput
+        <Input
           value={circuit.label}
           placeholder={colourName(circuit.colour)}
           placeholderTextColor={colors.textFaint}

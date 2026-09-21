@@ -47,6 +47,8 @@ import {
 import { OptionRow } from "../../components/OptionRow";
 import { SelectRow } from "../../components/SelectRow";
 import { ClimbEditorSheet } from "./ClimbEditorSheet";
+import { NewGymSheet } from "../gyms/NewGymSheet";
+import { Icon } from "../../components/Icon";
 import { ClimbLedgerRow } from "./ClimbLedgerRow";
 import { DateTimeField } from "../../components/DateTimeField";
 import { press, tap } from "../../lib/press";
@@ -155,6 +157,7 @@ export function LogSessionForm({
       ),
     });
   };
+  const [addingGym, setAddingGym] = React.useState(false);
   const [editingKey, setEditingKey] = React.useState<string | null>(null);
   const editingIndex = draft.climbs.findIndex((c) => c.key === editingKey);
   const editingClimb = editingIndex < 0 ? null : draft.climbs[editingIndex]!;
@@ -432,6 +435,34 @@ export function LogSessionForm({
           </View>
         )}
 
+        {draft.location === "indoor" && gyms.ready && gyms.gyms.length === 0 && (
+          <View style={{ gap: 7 }}>
+            <LabelText>{t("gyms.gym")}</LabelText>
+            <Pressable
+              onPress={() => setAddingGym(true)}
+              accessibilityRole="button"
+              testID="log-session-add-gym"
+              style={press({
+                minHeight: 44,
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 8,
+                borderRadius: radius.control,
+                borderWidth: 1,
+                borderColor: colors.lineOnLightStrong,
+              })}
+            >
+              <Icon name="plus" color={colors.gunmetal} size={16} strokeWidth={2.2} />
+              <Text
+                style={{ fontFamily: fonts.sansSemiBold, fontSize: 14, color: colors.gunmetal }}
+              >
+                {t("gyms.addGym")}
+              </Text>
+            </Pressable>
+          </View>
+        )}
+
         <View style={{ gap: 7 }}>
           <LabelText>{t("logSession.tagsOptional")}</LabelText>
           <TagPicker
@@ -588,6 +619,12 @@ export function LogSessionForm({
         )}
       </ScrollView>
 
+      <NewGymSheet
+        visible={addingGym}
+        gyms={gyms}
+        onClose={() => setAddingGym(false)}
+        onCreated={setGym}
+      />
       <ClimbEditorSheet
         climb={editingClimb}
         index={editingIndex}
