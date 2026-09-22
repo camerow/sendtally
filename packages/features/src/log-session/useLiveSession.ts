@@ -2,14 +2,19 @@ import React from "react";
 import { storedDraft, writeStoredDraft, type DraftStorage } from "./draftStore";
 import type { Gym } from "../gyms/types";
 import type { ClimbKind } from "./climbKind";
-import { withClimbTouched, withQuickClimb } from "./liveSession";
+import { withClimbTouched, withGymAdopted, withQuickClimb } from "./liveSession";
 import type { ClimbDraft, GradePrefs, LogSessionDraft } from "./types";
 import { useStoredDraft, type StoredDraftEntry } from "./useDraftAutosave";
 
 export type LiveSession = StoredDraftEntry & {
   /** Appends a climb, starting the session at it when there is none, and returns its key. */
   addClimb: (prefs: GradePrefs, gyms: readonly Gym[], kind: ClimbKind) => string;
-  updateClimb: (key: string, patch: (climb: ClimbDraft) => ClimbDraft) => void;
+  /** Pass the gyms when the patch can put the climb on a circuit, so the session adopts its gym. */
+  updateClimb: (
+    key: string,
+    patch: (climb: ClimbDraft) => ClimbDraft,
+    gyms?: readonly Gym[]
+  ) => void;
   /** Removing the last climb removes the session with it. */
   removeClimb: (key: string) => void;
 };
@@ -34,15 +39,11 @@ export function useLiveSession(storage: DraftStorage): LiveSession {
   );
 
   const updateClimb = React.useCallback(
-    (key: string, patch: (climb: ClimbDraft) => ClimbDraft): void => {
+    (key: string, patch: (climb: ClimbDraft) => ClimbDraft, gyms: readonly Gym[] = []): void => {
       const draft = storedDraft(storage);
       if (draft === null) return;
-      write(
-        withClimbTouched(
-          { ...draft, climbs: draft.climbs.map((c) => (c.key === key ? patch(c) : c)) },
-          new Date()
-        )
-      );
+      const climbs = draft.climbs.map((c) => (c.key === key ? patch(c) : c));
+      write(withClimbTouched(withGymAdopted({ ...draft, climbs }, gyms), new Date()));
     },
     [storage, write]
   );

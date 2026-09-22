@@ -31,9 +31,9 @@ name: project-session-opens
 - tapOn: "Save"
 - scrollUntilVisible:
     element:
-      text: "Log session"
+      text: "Done"
     direction: DOWN
-- tapOn: "Log session"
+- tapOn: "Done"
 - extendedWaitUntil:
     visible: "← LOG"
     timeout: 30000

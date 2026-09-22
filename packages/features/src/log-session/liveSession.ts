@@ -65,9 +65,17 @@ export function withQuickClimb(
   const key = nextClimbKey(started.climbs);
   const previous = started.climbs[started.climbs.length - 1];
   const climb = newClimbOfKind(key, kind, prefs, gyms, previous);
-  const gymId = started.gymId ?? gymOfCircuit(gyms, climb.circuit?.id)?.id;
-  const base = gymId === undefined ? started : { ...started, gymId };
-  return { draft: withClimbTouched({ ...base, climbs: [...base.climbs, climb] }, now), key };
+  const next = withGymAdopted({ ...started, climbs: [...started.climbs, climb] }, gyms);
+  return { draft: withClimbTouched(next, now), key };
+}
+
+/** A session without a gym adopts the gym of its first circuit climb, however that climb got its circuit. */
+export function withGymAdopted(draft: LogSessionDraft, gyms: readonly Gym[]): LogSessionDraft {
+  if (draft.gymId !== undefined) return draft;
+  const gymId = draft.climbs
+    .map((c) => gymOfCircuit(gyms, c.circuit?.id)?.id)
+    .find((id) => id !== undefined);
+  return gymId === undefined ? draft : { ...draft, gymId };
 }
 
 export function withClimbTouched(draft: LogSessionDraft, now: Date): LogSessionDraft {

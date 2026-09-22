@@ -45,7 +45,7 @@ export function LiveClimbEditor({
       project={climb === null ? false : isProject(climb)}
       known={climb === null ? null : (findClimb(vocabulary.climbs, climb.name) ?? null)}
       suggestions={vocabulary.suggestionsFor(climb?.name ?? "")}
-      onChange={(c) => live.updateClimb(c.key, () => c)}
+      onChange={(c) => live.updateClimb(c.key, () => c, gyms)}
       onChangeName={(name) => {
         if (climb === null) return;
         live.updateClimb(climb.key, (c) =>

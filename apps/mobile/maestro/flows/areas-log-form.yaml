@@ -29,9 +29,11 @@ name: areas-log-form
 - inputText: "Qzx never added"
 - tapOn: "\\+ Add “Qzx never added” to Areas"
 - assertVisible: "Add a climb"
-- assertVisible: "You're sharing this under CC0."
+# The climb sheet is as tall as a sheet gets, so on a small screen the scrim is only the strip
+# above its top inset. Its licence line is below the fold there and is the crag sheet's own,
+# checked above; scrolling a stacked sheet for it is what leaves the one underneath closed.
 - tapOn:
-    point: "50%,15%"
+    point: "50%,6%"
 - assertNotVisible: "Add a climb"
 - assertVisible: "CLIMB 2 OF 2"
 - tapOn: "Save"

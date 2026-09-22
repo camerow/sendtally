@@ -33,7 +33,8 @@ export function LiveClimbEditor({
   const climb = index < 0 ? null : climbs[index]!;
   if (climb === null) return null;
   const isProject = (c: ClimbDraft): boolean => c.project ?? vocabulary.isProject(c.name);
-  const update = (patch: (c: ClimbDraft) => ClimbDraft): void => live.updateClimb(climb.key, patch);
+  const update = (patch: (c: ClimbDraft) => ClimbDraft): void =>
+    live.updateClimb(climb.key, patch, gyms);
 
   return (
     <ClimbEditorSheet
