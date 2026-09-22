@@ -2,9 +2,9 @@ import React from "react";
 import type { LinksFunction, LoaderFunctionArgs, MetaFunction } from "react-router";
 import { useLoaderData } from "react-router";
 import blogStyles from "../blog/blog.css?url";
+import { MembershipCta } from "../blog/components/MembershipCta";
 import { PostRow } from "../blog/components/PostRow";
 import { findPost, formatPublished, POSTS } from "../blog/posts";
-import { AccountCta } from "../landing/components/AccountCta";
 import { Footer } from "../landing/components/Footer";
 import { Nav } from "../landing/components/Nav";
 import landingStyles from "../landing/landing.css?url";
@@ -63,19 +63,19 @@ export default function BlogPost(): React.ReactElement {
           </div>
           <h1 className="b-article-title">{post.title}</h1>
           <p className="b-article-lede">{post.description}</p>
+          {post.hero !== undefined && (
+            <img
+              className="b-article-hero"
+              src={post.hero.src}
+              alt={post.hero.alt}
+              loading="eager"
+            />
+          )}
           <div className="b-prose">
             <post.Body />
           </div>
         </article>
-        <aside className="b-cta">
-          <div>
-            <h2 className="b-cta-title">See your own number</h2>
-            <p className="b-cta-copy">
-              Log a session and sendtally scores it against your own history. Free to use.
-            </p>
-          </div>
-          <AccountCta label="Create account" />
-        </aside>
+        <MembershipCta />
         {others.length > 0 && (
           <section className="b-list" aria-labelledby="b-more">
             <h2 id="b-more" className="b-list-heading">

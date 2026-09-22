@@ -11,6 +11,10 @@ export const POSTS: readonly BlogPost[] = [
     topic: "Effort",
     published: "2026-09-16",
     readMinutes: 5,
+    hero: {
+      src: "/images/landing/hero.jpg",
+      alt: "A climber pulling through a steep boulder roof on red rock",
+    },
     Body: HowEffortIsScored,
   },
   {
@@ -21,6 +25,10 @@ export const POSTS: readonly BlogPost[] = [
     topic: "Grades",
     published: "2026-09-09",
     readMinutes: 4,
+    hero: {
+      src: "/images/landing/band.jpg",
+      alt: "A climber small against a sweeping wall of red sandstone in a desert canyon",
+    },
     Body: RoutesAndBoulders,
   },
 ];
