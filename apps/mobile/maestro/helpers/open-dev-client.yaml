@@ -25,4 +25,4 @@ appId: com.sendtally.app
           when:
             visible: "This is the developer menu.*"
           commands:
-            - tapOn: "Close"
+            - tapOn: "Close|Continue"
