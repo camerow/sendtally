@@ -1,4 +1,4 @@
-import { describe, expect, it, jest } from "@jest/globals";
+import { afterEach, describe, expect, it, jest } from "@jest/globals";
 import React from "react";
 import { Pressable, Text } from "react-native";
 import { fireEvent, render, screen } from "@testing-library/react-native";
@@ -80,10 +80,14 @@ function QuickLog({ storage }: { storage: DraftStorage }): React.ReactElement {
   );
 }
 
+const queryClient = new QueryClient();
+
+afterEach(() => queryClient.clear());
+
 describe("logging a climb from the Log tab", () => {
   it("starts a live session, adds to it, and removing the last climb ends it", async () => {
     await render(
-      <QueryClientProvider client={new QueryClient()}>
+      <QueryClientProvider client={queryClient}>
         <QuickLog storage={memoryStorage()} />
       </QueryClientProvider>
     );
