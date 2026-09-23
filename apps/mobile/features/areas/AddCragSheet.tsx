@@ -176,6 +176,10 @@ function CragForm({
             </Text>
           </Pressable>
         </View>
+        <View style={{ flexDirection: "row", gap: 8 }}>
+          {coordinate("lat", t("areas.latitude"))}
+          {coordinate("lon", t("areas.longitude"))}
+        </View>
         <LocationMap
           value={spot}
           near={null}
@@ -192,10 +196,6 @@ function CragForm({
         >
           {t("areas.mapHint")}
         </Text>
-        <View style={{ flexDirection: "row", gap: 8 }}>
-          {coordinate("lat", t("areas.latitude"))}
-          {coordinate("lon", t("areas.longitude"))}
-        </View>
       </View>
       {check.confirming && (
         <Candidates

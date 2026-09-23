@@ -223,16 +223,6 @@ export function AreaFormDialog(props: AreaFormDialogProps): React.ReactElement {
             {locating ? t("areas.locating") : t("areas.useMyLocation")}
           </button>
         </div>
-        <LocationMap
-          value={near}
-          near={props.mode === "create" && props.parent !== null ? latLonOf(props.parent) : null}
-          around={around}
-          onMove={(at) => {
-            const spot = roundedSpot(at);
-            setValues({ ...values, lat: String(spot.lat), lon: String(spot.lon) });
-          }}
-        />
-        <span className="area-form-hint">{t("areas.mapHint")}</span>
         <div className="area-form-row">
           <input
             aria-label={t("areas.latitude")}
@@ -251,6 +241,16 @@ export function AreaFormDialog(props: AreaFormDialogProps): React.ReactElement {
             style={inputStyle}
           />
         </div>
+        <LocationMap
+          value={near}
+          near={props.mode === "create" && props.parent !== null ? latLonOf(props.parent) : null}
+          around={around}
+          onMove={(at) => {
+            const spot = roundedSpot(at);
+            setValues({ ...values, lat: String(spot.lat), lon: String(spot.lon) });
+          }}
+        />
+        <span className="area-form-hint">{t("areas.mapHint")}</span>
       </div>
       <Field id="area-description" label={t("areas.description")} optional>
         <textarea
