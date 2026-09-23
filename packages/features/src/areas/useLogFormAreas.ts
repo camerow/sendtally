@@ -3,7 +3,7 @@ import React from "react";
 import type { SendtallyApi } from "@sendtally/api-client";
 import { queries, useQuery } from "../query";
 import { canAddToAreas, cragsOf } from "./logForm";
-import type { AreaClimb, AreaSummary } from "./types";
+import type { AreaClimb, AreaHit } from "./types";
 
 export type LatLon = { lat: number; lon: number };
 
@@ -18,17 +18,25 @@ export function useDebounced<T>(value: T, ms = SEARCH_DELAY_MS): T {
   return settled;
 }
 
-/** Areas by name, nearest first when the device location is known, or just nearby when nothing is typed. */
+/**
+ * Areas by name, nearest first when the device location is known, or just nearby when nothing
+ * is typed. With `within`, what is inside that area comes first, and its children when nothing
+ * is typed.
+ */
 export function useAreaSearch(
   api: SendtallyApi,
   query: string,
   near: LatLon | null,
-  { crags = false, enabled = true }: { crags?: boolean; enabled?: boolean } = {}
-): AreaSummary[] {
+  {
+    crags = false,
+    enabled = true,
+    within = null,
+  }: { crags?: boolean; enabled?: boolean; within?: string | null } = {}
+): AreaHit[] {
   const q = useDebounced(query.trim());
   const { state } = useQuery({
-    ...queries.areaSearch(api, q, near),
-    enabled: enabled && (q !== "" || near !== null),
+    ...queries.areaSearch(api, q, near, within),
+    enabled: enabled && (q !== "" || near !== null || within !== null),
     placeholderData: keepPreviousData,
   });
   const found = state.status === "ready" ? state.data : [];

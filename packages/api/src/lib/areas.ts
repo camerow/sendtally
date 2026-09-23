@@ -178,6 +178,9 @@ export type AreaSummary = {
   status: AreaRow["status"];
 };
 
+/** A search result: the area with the areas above it, root first. */
+export type AreaHit = AreaSummary & { ancestors: AreaSummary[] };
+
 export type Area = AreaSummary & {
   description: string | null;
   version: number;

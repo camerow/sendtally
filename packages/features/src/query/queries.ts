@@ -55,10 +55,15 @@ export const queries = {
       queryFn: () => api.areaClimb(slug),
       gcTime: ROW_GC_TIME,
     }),
-  areaSearch: (api: SendtallyApi, q: string, near: { lat: number; lon: number } | null) =>
+  areaSearch: (
+    api: SendtallyApi,
+    q: string,
+    near: { lat: number; lon: number } | null,
+    within: string | null = null
+  ) =>
     queryOptions({
-      queryKey: ["areaSearch", q, near],
-      queryFn: async () => (await api.searchAreas(q, near ?? undefined)).areas,
+      queryKey: ["areaSearch", q, near, within],
+      queryFn: async () => (await api.searchAreas(q, near ?? undefined, within ?? undefined)).areas,
       gcTime: ROW_GC_TIME,
     }),
   areaClimbSearch: (api: SendtallyApi, q: string, areaId: string | null) =>

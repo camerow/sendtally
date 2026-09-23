@@ -592,6 +592,7 @@ const mergeClimbs = async (
 
 const areaSearchQuery = z.object({
   q: z.string().trim().max(80).optional(),
+  within: z.string().min(1).max(80).optional(),
   near: z
     .string()
     .regex(/^-?\d+(\.\d+)?,-?\d+(\.\d+)?$/)
@@ -971,23 +972,57 @@ const app = new Hono<AppEnv>()
   // Areas: the shared tree of regions, crags and sectors, and the climbs in
   // them. Everything a user creates starts pending and is visible only to them
   // (and moderators) until approved.
+  // `within` is the area already picked: what is inside it comes first, so the
+  // next level down is one keystroke away, and the rest of the tree follows.
+  // Every hit carries its ancestors, which is what draws it as a path.
   .get("/v1/areas", zValidator("query", areaSearchQuery, invalidBody), async (c) => {
-    const { q, near } = c.req.valid("query");
+    const { q, near, within } = c.req.valid("query");
     const key = q === undefined ? "" : tagSlug(q);
-    if (key === "" && near === undefined) return c.json({ areas: [] });
     const viewer = await viewerOf(c);
-    const rows = await repo.searchAreas(
-      c.env.DB,
-      viewer,
-      key === "" ? { box: boundingBox(near ?? { lat: 0, lon: 0 }, AREA_NEARBY_KM) } : { key },
-      near === undefined ? AREA_SEARCH_LIMIT : 200
-    );
+    const inside = within === undefined ? null : await repo.getArea(c.env.DB, viewer, within);
+    if (key === "" && near === undefined && inside === null) return c.json({ areas: [] });
+    const [insideRows, rows] = await Promise.all([
+      inside === null
+        ? []
+        : repo.searchAreas(
+            c.env.DB,
+            viewer,
+            { ...(key === "" ? {} : { key }), under: inside.path },
+            AREA_SEARCH_LIMIT
+          ),
+      key === "" && near === undefined
+        ? []
+        : repo.searchAreas(
+            c.env.DB,
+            viewer,
+            key === "" ? { box: boundingBox(near ?? { lat: 0, lon: 0 }, AREA_NEARBY_KM) } : { key },
+            near === undefined ? AREA_SEARCH_LIMIT : 200
+          ),
+    ]);
     const distance = (a: repo.AreaRow): number =>
       near === undefined || a.lat === null || a.lon === null
         ? Infinity
         : distanceKm(near, { lat: a.lat, lon: a.lon });
     const ranked = near === undefined ? rows : rows.sort((a, b) => distance(a) - distance(b));
-    return c.json({ areas: ranked.slice(0, AREA_SEARCH_LIMIT).map(areaSummaryOf) });
+    const seen = new Set<string>(insideRows.map((a) => a.id));
+    const hits = [...insideRows, ...ranked.filter((a) => !seen.has(a.id) && seen.add(a.id))].slice(
+      0,
+      AREA_SEARCH_LIMIT
+    );
+    const ancestorIds = [
+      ...new Set(hits.flatMap((a) => areaIdsOnPath(a.path).filter((id) => id !== a.id))),
+    ];
+    const ancestors = new Map(
+      (await repo.areasByIds(c.env.DB, viewer, ancestorIds)).map((a) => [a.id, areaSummaryOf(a)])
+    );
+    return c.json({
+      areas: hits.map((a) => ({
+        ...areaSummaryOf(a),
+        ancestors: areaIdsOnPath(a.path)
+          .filter((id) => id !== a.id)
+          .flatMap((id) => ancestors.get(id) ?? []),
+      })),
+    });
   })
 
   .post("/v1/areas/similar", zValidator("json", areaSimilarBody, invalidBody), async (c) => {
@@ -1948,5 +1983,5 @@ export type { ImportBody } from "./lib/import";
 export { app };
 
 export type { Circuit, CircuitColour, Gym, GymInput } from "./lib/gyms";
-export type { Area, AreaClimb, AreaClimbInput, AreaInput, AreaSummary } from "./lib/areas";
+export type { Area, AreaClimb, AreaClimbInput, AreaHit, AreaInput, AreaSummary } from "./lib/areas";
 export { CIRCUIT_COLOURS, circuitMiddle, circuitRangeLabel } from "./lib/gyms";

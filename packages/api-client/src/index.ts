@@ -13,6 +13,7 @@ import type {
   AreaPage,
   AreaRedirect,
   AreaSimilarInput,
+  AreaHit,
   AreaSummary,
   ContentReportInput,
   ClimbSummary,
@@ -234,10 +235,18 @@ export class SendtallyApi {
     return body(this.client.v1["area-climbs"][":slug"].$get({ param: { slug } }));
   }
 
-  searchAreas(q: string, near?: { lat: number; lon: number }): Promise<{ areas: AreaSummary[] }> {
+  searchAreas(
+    q: string,
+    near?: { lat: number; lon: number },
+    within?: string
+  ): Promise<{ areas: AreaHit[] }> {
     return body(
       this.client.v1.areas.$get({
-        query: { q, ...(near === undefined ? {} : { near: `${near.lat},${near.lon}` }) },
+        query: {
+          q,
+          ...(near === undefined ? {} : { near: `${near.lat},${near.lon}` }),
+          ...(within === undefined ? {} : { within }),
+        },
       })
     );
   }

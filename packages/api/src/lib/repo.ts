@@ -1340,7 +1340,7 @@ export async function childAreas(
 export async function searchAreas(
   db: D1Database,
   viewer: Viewer,
-  filter: { key?: string; box?: Box },
+  filter: { key?: string; box?: Box; under?: string },
   limit: number
 ): Promise<AreaRow[]> {
   return drizzle(db)
@@ -1350,7 +1350,14 @@ export async function searchAreas(
       and(
         visibleTo(areas, viewer),
         filter.key === undefined ? undefined : nameMatches(areas, filter.key),
-        filter.box === undefined ? undefined : inBox(filter.box)
+        filter.box === undefined ? undefined : inBox(filter.box),
+        // A path is longer than D1's LIKE pattern allows, so the prefix is compared by length.
+        filter.under === undefined
+          ? undefined
+          : and(
+              sql`substr(${areas.path}, 1, ${filter.under.length}) = ${filter.under}`,
+              ne(areas.path, filter.under)
+            )
       )
     )
     .orderBy(areas.depth, areas.name_key)

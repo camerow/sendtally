@@ -3,7 +3,7 @@ import { MAX_CLIMB_SUGGESTIONS, sameClimbName } from "../climbs/transforms";
 import { convertGrade, disciplineOf, draftGrade, withClimbScale } from "../log-session/transforms";
 import type { ClimbDraft } from "../log-session/types";
 import { emptyClimbForm } from "./transforms";
-import type { AreaClimb, AreaSummary, ClimbFormValues } from "./types";
+import type { AreaClimb, AreaHit, AreaSummary, ClimbFormValues } from "./types";
 
 /** A row in the climb name dropdown: a name from the user's own history, or a climb in Areas. */
 export type ClimbOption =
@@ -38,8 +38,13 @@ export function canAddToAreas(query: string, found: AreaClimb[]): boolean {
 }
 
 /** A crag is somewhere to climb, so a region is never offered as one. */
-export function cragsOf(found: AreaSummary[]): AreaSummary[] {
+export function cragsOf<T extends AreaSummary>(found: T[]): T[] {
   return found.filter((a) => a.region_code === null);
+}
+
+/** The path a picked area is drawn as: its ancestors below the region, then itself. */
+export function areaTrail(hit: AreaHit): AreaSummary[] {
+  return [...hit.ancestors.filter((a) => a.region_code === null), hit];
 }
 
 /** Picking an Areas climb links the row and takes its grade, in the row's scale when it can. */
