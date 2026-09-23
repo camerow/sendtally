@@ -24,6 +24,14 @@ export type {
 
 export type ClimbType = AreaClimb["type"];
 
+export type AreaCrumb = { id: string; name: string };
+
+/**
+ * An area as a picker holds it: its name, the areas above it below the region, and whether it
+ * is a region itself. A draft saved before trails existed has neither, and reads as one crumb.
+ */
+export type PickedArea = AreaCrumb & { region?: boolean; trail?: AreaCrumb[] };
+
 export type ClimbFact = { label: string; value: string };
 
 export type ClimbSessionVM = {

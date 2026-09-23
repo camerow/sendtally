@@ -241,7 +241,12 @@ describe("session links", () => {
     const fingerprint = (res.body["session"] as { fingerprint: string }).fingerprint;
 
     const linked = await read("user_a", fingerprint);
-    expect(linked.area).toEqual({ id: area.id, name: "Buttermilks", slug: "buttermilks" });
+    expect(linked.area).toEqual({
+      id: area.id,
+      name: "Buttermilks",
+      slug: "buttermilks",
+      trail: [],
+    });
     expect(linked.climbs.map((c) => c.link)).toEqual([
       { id: climb.id, name: "The Mandala", slug: "the-mandala" },
       null,

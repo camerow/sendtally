@@ -8,6 +8,8 @@ export type ComboItem = {
   action?: boolean;
   /** A heading drawn above this row when it differs from the previous row's. */
   section?: string;
+  /** A second, quieter line under the label, such as where the row is. */
+  detail?: string;
   onPick: () => void;
 };
 
@@ -22,6 +24,10 @@ export type ComboFieldProps = {
   className?: string;
   inputStyle: React.CSSProperties;
   trailing?: React.ReactNode;
+  /** Drawn inside the field before the text, such as the chips of a picked path. */
+  leading?: React.ReactNode;
+  /** Backspace in an empty field, for taking back the last of the leading chips. */
+  onEmptyBackspace?: () => void;
   onChange: (value: string) => void;
   onFocus?: () => void;
 };
@@ -72,6 +78,8 @@ export function ComboField({
   className,
   inputStyle,
   trailing,
+  leading,
+  onEmptyBackspace,
   onChange,
   onFocus,
 }: ComboFieldProps): React.ReactElement {
@@ -102,8 +110,20 @@ export function ComboField({
       pick(choice);
       return;
     }
+    if (e.key === "Backspace" && value === "" && onEmptyBackspace !== undefined) {
+      e.preventDefault();
+      onEmptyBackspace();
+      return;
+    }
     if (e.key === "Escape") setOpen(false);
   }
+
+  const frame: React.CSSProperties = {
+    ...inputStyle,
+    paddingRight: trailing === undefined ? edgePadding(inputStyle) : 72,
+    borderColor: open ? "var(--bs-azure)" : "rgba(64,63,76,0.15)",
+    boxShadow: open ? "var(--focus-ring-azure)" : "none",
+  };
 
   return (
     <div
@@ -115,7 +135,24 @@ export function ComboField({
         gap: 8,
       }}
     >
-      <div style={{ position: "relative" }}>
+      <div
+        style={
+          leading === undefined
+            ? { position: "relative" }
+            : {
+                ...frame,
+                position: "relative",
+                display: "flex",
+                flexWrap: "wrap",
+                alignItems: "center",
+                gap: 6,
+                paddingTop: 7,
+                paddingBottom: 7,
+                paddingLeft: 8,
+              }
+        }
+      >
+        {leading}
         <input
           id={id}
           value={value}
@@ -137,13 +174,22 @@ export function ComboField({
           }}
           onBlur={() => setOpen(false)}
           onKeyDown={onKeyDown}
-          className={className}
-          style={{
-            ...inputStyle,
-            paddingRight: trailing === undefined ? edgePadding(inputStyle) : 72,
-            borderColor: open ? "var(--bs-azure)" : "rgba(64,63,76,0.15)",
-            boxShadow: open ? "var(--focus-ring-azure)" : "none",
-          }}
+          className={leading === undefined ? className : undefined}
+          style={
+            leading === undefined
+              ? frame
+              : {
+                  flex: "1 1 80px",
+                  minWidth: 80,
+                  border: "none",
+                  outline: "none",
+                  padding: "4px 2px",
+                  background: "transparent",
+                  font: "inherit",
+                  fontSize: inputStyle.fontSize,
+                  color: "var(--bs-gunmetal)",
+                }
+          }
         />
         {trailing !== undefined && (
           <span
@@ -189,7 +235,18 @@ export function ComboField({
                     padding: "8px 0",
                   }}
                 >
-                  {item.label}
+                  {item.detail === undefined ? (
+                    item.label
+                  ) : (
+                    <span style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 7 }}>
+                        {item.label}
+                      </span>
+                      <span style={{ color: "rgba(64,63,76,0.62)", fontWeight: 400 }}>
+                        {item.detail}
+                      </span>
+                    </span>
+                  )}
                 </span>
                 {item.meta !== undefined && (
                   <span

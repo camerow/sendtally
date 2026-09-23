@@ -10,7 +10,6 @@ import {
   useDuplicateCheck,
   withType,
   type AreaClimb,
-  type AreaSummary,
   type ClimbFormValues,
 } from "@sendtally/features/areas";
 import { t } from "@sendtally/features/i18n";
@@ -48,7 +47,7 @@ function ClimbForm({
 }): React.ReactElement {
   const api = useApi();
   const [values, setValues] = React.useState(initial);
-  const [chosenArea, setChosenArea] = React.useState<AreaSummary | null>(null);
+  const [chosenArea, setChosenArea] = React.useState<PickedArea | null>(null);
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const area = sessionArea ?? chosenArea;
@@ -60,7 +59,7 @@ function ClimbForm({
     const fields = climbFieldsOf(values);
     if (fields.name === "") return setError(t("areas.nameRequired"));
     if (area === null) return setError(t("areas.pickCrag"));
-    const at = { id: area.id, name: area.name };
+    const at = area;
     setBusy(true);
     setError(null);
     try {
@@ -159,8 +158,7 @@ function ClimbForm({
           }))}
           onPick={(id) => {
             const same = check.candidates.find((c) => c.id === id);
-            if (same !== undefined && area !== null)
-              onCreated(same, { id: area.id, name: area.name });
+            if (same !== undefined && area !== null) onCreated(same, area);
           }}
         />
       )}

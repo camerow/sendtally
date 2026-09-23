@@ -18,6 +18,7 @@ import {
   withAreaClimb,
   withTypedName,
   type ClimbFormValues,
+  type PickedArea,
 } from "@sendtally/features/areas";
 import { findClimb, useClimbVocabulary } from "@sendtally/features/climbs";
 import {
@@ -183,7 +184,10 @@ export function LogSessionForm({
   const editingIndex = draft.climbs.findIndex((c) => c.key === editingKey);
   const editingClimb = editingIndex < 0 ? null : draft.climbs[editingIndex]!;
   const outdoor = draft.location === "outdoor";
-  const [addingCrag, setAddingCrag] = React.useState<string | null>(null);
+  const [addingCrag, setAddingCrag] = React.useState<{
+    name: string;
+    parent: PickedArea | null;
+  } | null>(null);
   const [addingClimb, setAddingClimb] = React.useState<{
     key: string;
     initial: ClimbFormValues;
@@ -446,13 +450,8 @@ export function LogSessionForm({
               label={t("areas.crag")}
               placeholder={t("areas.searchCrags")}
               addLabel={(name) => t("areas.addThisCrag", { name })}
-              onPick={(area) =>
-                setDraft((d) => ({
-                  ...d,
-                  area: area === null ? undefined : { id: area.id, name: area.name },
-                }))
-              }
-              onAdd={setAddingCrag}
+              onPick={(area) => setDraft((d) => ({ ...d, area: area ?? undefined }))}
+              onAdd={(name, parent) => setAddingCrag({ name, parent })}
               onFocus={showCragResults}
             />
           </View>
@@ -719,7 +718,8 @@ export function LogSessionForm({
       />
 
       <AddCragSheet
-        name={addingCrag}
+        name={addingCrag?.name ?? null}
+        parent={addingCrag?.parent ?? null}
         onCreated={(area) => {
           setDraft((d) => ({ ...d, area }));
           setAddingCrag(null);

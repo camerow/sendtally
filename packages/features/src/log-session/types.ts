@@ -6,6 +6,7 @@ import {
   type GradeScale,
 } from "@sendtally/core";
 import type { CircuitRef } from "@sendtally/api-client";
+import type { PickedArea } from "../areas/types";
 import { t } from "../i18n";
 
 export type { ClimbStyle, Discipline, Endurance, GradeScale };
@@ -80,8 +81,8 @@ export type LogSessionDraft = {
   endTime: string;
   location: "indoor" | "outdoor";
   gymId?: string;
-  /** The crag an outdoor session was at, from Areas. */
-  area?: { id: string; name: string };
+  /** The crag an outdoor session was at, from Areas, with the areas above it. */
+  area?: PickedArea;
   tags: string[];
   notes: string;
   rpe: number | null;

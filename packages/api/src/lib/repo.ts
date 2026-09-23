@@ -292,7 +292,7 @@ export async function updateManualSession(
 }
 
 export type SessionLinks = {
-  area: { id: string; name: string; slug: string } | null;
+  area: { id: string; name: string; slug: string; path: string } | null;
   climbs: Map<string, { id: string; name: string; slug: string }>;
 };
 
@@ -346,7 +346,7 @@ export async function getSessionLinks(
     areaId === null
       ? undefined
       : d
-          .select({ id: areas.id, name: areas.name, slug: areas.slug })
+          .select({ id: areas.id, name: areas.name, slug: areas.slug, path: areas.path })
           .from(areas)
           .where(
             and(

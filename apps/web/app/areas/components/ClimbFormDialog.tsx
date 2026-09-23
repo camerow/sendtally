@@ -11,7 +11,7 @@ import {
   useDuplicateCheck,
   withType,
   type AreaClimb,
-  type AreaSummary,
+  type PickedArea,
   type ClimbFormValues,
 } from "@sendtally/features/areas";
 import { t } from "@sendtally/features/i18n";
@@ -34,10 +34,10 @@ export type ClimbFormDialogProps = {
   | {
       mode: "create";
       /** Null when adding from a log form with no crag picked yet; the dialog asks for one. */
-      area: AreaSummary | { id: string; name: string } | null;
+      area: PickedArea | null;
       initial?: ClimbFormValues;
       /** Stays on the caller's screen with the new climb instead of opening its page. */
-      onCreated?: (climb: AreaClimb, area: AreaSummary | { id: string; name: string }) => void;
+      onCreated?: (climb: AreaClimb, area: PickedArea) => void;
     }
   | { mode: "suggest"; climb: AreaClimb }
 );
@@ -68,7 +68,7 @@ export function ClimbFormDialog(props: ClimbFormDialogProps): React.ReactElement
   const [summary, setSummary] = React.useState("");
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
-  const [chosenArea, setChosenArea] = React.useState<AreaSummary | null>(null);
+  const [chosenArea, setChosenArea] = React.useState<PickedArea | null>(null);
   const [near, locate] = useDeviceLocation();
   const area = props.mode === "create" ? (props.area ?? chosenArea) : null;
   const askArea = props.mode === "create" && props.area === null;

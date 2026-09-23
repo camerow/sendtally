@@ -160,6 +160,25 @@ const postAfterResponse = (c: Context<AppEnv>, userId: string, fingerprint: stri
   );
 };
 
+// The session's crag with the areas above it, regions left out, so the edit
+// form can draw it as a path without another request.
+const withTrail = async (
+  db: D1Database,
+  viewer: Viewer,
+  area: { id: string; name: string; slug: string; path: string }
+): Promise<{ id: string; name: string; slug: string; trail: { id: string; name: string }[] }> => {
+  const { path, ...rest } = area;
+  const above = await repo.areasByIds(
+    db,
+    viewer,
+    areaIdsOnPath(path).filter((id) => id !== area.id)
+  );
+  return {
+    ...rest,
+    trail: above.filter((a) => a.region_code === null).map((a) => ({ id: a.id, name: a.name })),
+  };
+};
+
 const sessionResponse = async (env: Env, userId: string, fingerprint: string) => {
   const row = await repo.getSession(env.DB, userId, fingerprint);
   if (row === null) return null;
@@ -179,7 +198,7 @@ const sessionResponse = async (env: Env, userId: string, fingerprint: string) =>
     notes,
     tags,
     entries,
-    area: links.area,
+    area: links.area === null ? null : await withTrail(env.DB, viewer, links.area),
     climbs: withClimbNotes(parseClimbs(climbs_json), climbNotes).map((climb) => ({
       ...climb,
       link: links.climbs.get(climbSlug(climb.name.trim())) ?? null,

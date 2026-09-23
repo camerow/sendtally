@@ -19,7 +19,7 @@ export default function Privacy(): React.ReactElement {
   return (
     <LegalPage
       title="Privacy policy"
-      updated="18 SEPTEMBER 2026"
+      updated="23 SEPTEMBER 2026"
       lede="sendtally holds the climbing sessions you type in and almost nothing else. This page lists every piece of data it keeps, who else touches it, and how to get it all deleted."
     >
       <h2>Who this covers</h2>
@@ -99,8 +99,7 @@ export default function Privacy(): React.ReactElement {
 
       <h2>Who else touches it</h2>
       <p>
-        Five processors, each handling only what it needs, and each processing data on our
-        instructions.
+        These services each handle only what they need, and each processes data on our instructions.
       </p>
       <ul>
         <li>
@@ -131,6 +130,13 @@ export default function Privacy(): React.ReactElement {
           <strong>PostHog</strong> - product analytics, session replay and error reports, including
           your account identifier and email address once you are signed in. Your logbook is not sent
           to PostHog.
+        </li>
+        <li>
+          <strong>OpenFreeMap</strong> - the map shown when you add a crag. Your browser or app
+          fetches map tiles from it, so it sees your IP address and the part of the map you are
+          looking at, and nothing about your account. Your device location is only read when you ask
+          for it there, to centre the map, and is never stored unless you save it as the
+          crag&rsquo;s coordinates.
         </li>
       </ul>
       <p>

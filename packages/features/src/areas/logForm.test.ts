@@ -5,11 +5,16 @@ import {
   canAddToAreas,
   climbFormFromDraft,
   climbOptions,
+  atCrumb,
   cragsOf,
+  isInside,
+  pickedArea,
+  pickedInside,
+  stepUp,
   withAreaClimb,
   withTypedName,
 } from "./logForm";
-import type { AreaClimb, AreaSummary } from "./types";
+import type { AreaClimb, AreaHit, AreaSummary } from "./types";
 
 const own = (name: string, project = false): ClimbSummary =>
   ({ name, slug: name.toLowerCase(), project, grade: null }) as ClimbSummary;
@@ -114,5 +119,59 @@ describe("climbFormFromDraft", () => {
       gradeScale: "french",
       grade: "7a",
     });
+  });
+});
+
+const summary = (id: string, name: string, region = false): AreaSummary =>
+  ({ id, name, region_code: region ? id.toUpperCase() : null }) as AreaSummary;
+
+describe("picked area paths", () => {
+  const hit: AreaHit = {
+    ...summary("pb", "Peabody Boulders"),
+    ancestors: [
+      summary("us", "United States", true),
+      summary("bishop", "Bishop"),
+      summary("bm", "Buttermilks"),
+    ],
+  };
+
+  it("keeps regions out of the trail", () => {
+    expect(pickedArea(hit)).toEqual({
+      id: "pb",
+      name: "Peabody Boulders",
+      region: false,
+      trail: [
+        { id: "bishop", name: "Bishop" },
+        { id: "bm", name: "Buttermilks" },
+      ],
+    });
+  });
+
+  it("steps up one chip at a time and stops at the top", () => {
+    const up = stepUp(pickedArea(hit));
+    expect(up).toEqual({
+      id: "bm",
+      name: "Buttermilks",
+      region: false,
+      trail: [{ id: "bishop", name: "Bishop" }],
+    });
+    expect(stepUp(atCrumb(pickedArea(hit), 0))).toBeNull();
+    expect(stepUp({ id: "legacy", name: "Old draft" })).toBeNull();
+  });
+
+  it("places a new area under the one it was added inside, never under a region", () => {
+    expect(pickedInside(pickedArea(hit), { id: "gp", name: "Grandpa Peabody" }).trail).toEqual([
+      { id: "bishop", name: "Bishop" },
+      { id: "bm", name: "Buttermilks" },
+      { id: "pb", name: "Peabody Boulders" },
+    ]);
+    const region = { id: "us-ca", name: "California", region: true };
+    expect(pickedInside(region, { id: "bishop", name: "Bishop" }).trail).toEqual([]);
+  });
+
+  it("knows a hit inside the picked area", () => {
+    expect(isInside(hit, { id: "bm", name: "Buttermilks" })).toBe(true);
+    expect(isInside(hit, { id: "sq", name: "Squamish" })).toBe(false);
+    expect(isInside(hit, null)).toBe(false);
   });
 });

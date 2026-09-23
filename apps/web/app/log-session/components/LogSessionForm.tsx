@@ -5,9 +5,11 @@ import type { ClimbSummary, SendtallyApi } from "@sendtally/api-client";
 import { effortColor } from "@sendtally/design/tokens";
 import {
   climbFormFromDraft,
+  pickedInside,
   withAreaClimb,
   withTypedName,
   type AreaClimb,
+  type PickedArea,
 } from "@sendtally/features/areas";
 import { climbDraftGrade, findClimb, useClimbVocabulary } from "@sendtally/features/climbs";
 import {
@@ -186,7 +188,9 @@ export function LogSessionForm({
   const [editingKey, setEditingKey] = React.useState<string | null>(null);
   const [addingGym, setAddingGym] = React.useState(false);
   const [adding, setAdding] = React.useState<
-    { kind: "crag"; name: string } | { kind: "climb"; key: string } | null
+    | { kind: "crag"; name: string; parent: PickedArea | null }
+    | { kind: "climb"; key: string }
+    | null
   >(null);
   const [near, locate] = useDeviceLocation();
   const outdoor = draft.location === "outdoor";
@@ -473,13 +477,8 @@ export function LogSessionForm({
                 className="log-session-control"
                 inputStyle={inputStyle}
                 addLabel={(name) => t("areas.addThisCrag", { name })}
-                onPick={(area) =>
-                  setDraft((d) => ({
-                    ...d,
-                    area: area === null ? undefined : { id: area.id, name: area.name },
-                  }))
-                }
-                onAdd={(name) => setAdding({ kind: "crag", name })}
+                onPick={(area) => setDraft((d) => ({ ...d, area: area ?? undefined }))}
+                onAdd={(name, parent) => setAdding({ kind: "crag", name, parent })}
                 onFocus={locate}
               />
             </Field>
@@ -645,12 +644,13 @@ export function LogSessionForm({
           mode="create"
           api={api}
           parent={null}
+          initialParent={adding.parent}
           initial={{
             name: adding.name,
             ...(near === null ? {} : { lat: String(near.lat), lon: String(near.lon) }),
           }}
-          onCreated={(area) => {
-            setDraft((d) => ({ ...d, area: { id: area.id, name: area.name } }));
+          onCreated={(area, parent) => {
+            setDraft((d) => ({ ...d, area: pickedInside(parent, area) }));
             setAdding(null);
           }}
           onClose={() => setAdding(null)}
@@ -667,7 +667,7 @@ export function LogSessionForm({
           onCreated={(created, area) => {
             setDraft((d) => ({
               ...d,
-              area: d.area ?? { id: area.id, name: area.name },
+              area: d.area ?? area,
               climbs: d.climbs.map((c) =>
                 c.key === addingClimb.key ? withAreaClimb(c, created) : c
               ),

@@ -59,3 +59,10 @@ export const actionText: TextStyle = {
   fontSize: 14,
   color: colors.azureInk,
 };
+
+export const resultPath: TextStyle = {
+  fontFamily: fonts.mono,
+  fontSize: 11,
+  letterSpacing: 0.3,
+  color: colors.textSecondary,
+};

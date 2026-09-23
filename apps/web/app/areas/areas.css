@@ -358,3 +358,57 @@
     font-size: 15px;
   }
 }
+
+.location-map {
+  position: relative;
+  height: 240px;
+  border: 1px solid var(--line-on-light-strong);
+  border-radius: var(--radius-control);
+  overflow: hidden;
+  background: #eef0ea;
+}
+
+.location-map-canvas {
+  position: absolute;
+  inset: 0;
+}
+
+.location-map-pin {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -100%);
+  pointer-events: none;
+  line-height: 0;
+}
+
+.location-map-around {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  color: var(--bs-gunmetal);
+  padding-left: 12px;
+  position: relative;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.location-map-around::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  margin-top: -4px;
+  border-radius: 50%;
+  background: var(--bs-gunmetal);
+  opacity: 0.55;
+}
+
+.area-form-hint {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-on-white-secondary);
+}

@@ -96,4 +96,11 @@ export const areas = {
   "areas.isItOneOfTheseTapHint":
     "Tippe darauf, wenn es derselbe ist. Wenn nicht, speichere erneut, um deinen hinzuzufügen.",
   "areas.closeAddSheet": "Schließen ohne Hinzufügen",
+  "areas.addInside": "„{name}“ in {parent} hinzufügen",
+  "areas.insideArea": "In {name}",
+  "areas.elsewhere": "Anderswo",
+  "areas.backTo": "Zurück zu {name}",
+  "areas.mapHint":
+    "Verschieb die Karte, bis die Nadel auf der Stelle sitzt, oder gib die Koordinaten ein.",
+  "areas.mapLabel": "Karte. Verschieben, um die Nadel zu setzen.",
 } as const;

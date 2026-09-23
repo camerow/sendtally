@@ -96,4 +96,10 @@ export const areas = {
   "areas.isItOneOfTheseTapHint":
     "Toca uno si es el mismo. Si no, guarda de nuevo para añadir el tuyo.",
   "areas.closeAddSheet": "Cerrar sin añadir",
+  "areas.addInside": "Añadir «{name}» dentro de {parent}",
+  "areas.insideArea": "En {name}",
+  "areas.elsewhere": "En otros sitios",
+  "areas.backTo": "Volver a {name}",
+  "areas.mapHint": "Mueve el mapa para poner la chincheta en el sitio, o escribe las coordenadas.",
+  "areas.mapLabel": "Mapa. Arrástralo para mover la chincheta.",
 } as const;
