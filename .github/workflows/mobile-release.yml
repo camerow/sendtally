@@ -201,6 +201,14 @@ jobs:
           ASC_API_KEY_PATH: ./asc-api-key.p8
           ASC_API_KEY_ID: ${{ secrets.ASC_API_KEY_ID }}
           ASC_API_KEY_ISSUER_ID: ${{ secrets.ASC_API_KEY_ISSUER_ID }}
+          # Apple access at build time lets EAS sync entitlements such as Sign in
+          # with Apple onto the bundle id and regenerate the provisioning profile;
+          # without it a new capability fails signing.
+          EXPO_ASC_API_KEY_PATH: ./asc-api-key.p8
+          EXPO_ASC_KEY_ID: ${{ secrets.ASC_API_KEY_ID }}
+          EXPO_ASC_ISSUER_ID: ${{ secrets.ASC_API_KEY_ISSUER_ID }}
+          EXPO_APPLE_TEAM_ID: GUMXLRF3B6
+          EXPO_APPLE_TEAM_TYPE: COMPANY_OR_ORGANIZATION
         run: >
           eas build
           --platform ${{ vars.MOBILE_PLATFORMS || 'android' }}
