@@ -34,9 +34,37 @@ import { useUpdateCheckOnForeground } from "../features/app-update/useUpdateChec
 Observe.configure({ integrations: { "expo-router": true } });
 setLocale(resolveLocale(getLocales()[0]?.languageTag));
 
+const SIGNED_IN_SCREENS = [
+  "session/new",
+  "session/[fingerprint]",
+  "session/[fingerprint]/edit",
+  "journal/new",
+  "journal/[id]",
+  "journal/[id]/edit",
+  "project/[slug]",
+  "trend/[page]",
+  "gym/[id]",
+  "account",
+  "membership",
+];
+
 function InteractiveMarker(): React.ReactElement | null {
   const { isLoaded } = useAuth();
   return isLoaded ? <ObserveInteractiveMarker /> : null;
+}
+
+function AppStack(): React.ReactElement | null {
+  const { isLoaded, isSignedIn } = useAuth();
+  if (!isLoaded) return null;
+  return (
+    <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.white } }}>
+      <Stack.Protected guard={isSignedIn}>
+        {SIGNED_IN_SCREENS.map((name) => (
+          <Stack.Screen key={name} name={name} />
+        ))}
+      </Stack.Protected>
+    </Stack>
+  );
 }
 
 function RootLayout(): React.ReactElement | null {
@@ -63,12 +91,7 @@ function RootLayout(): React.ReactElement | null {
               <BottomSheetModalProvider>
                 <InteractiveMarker />
                 <StatusBar style="dark" />
-                <Stack
-                  screenOptions={{
-                    headerShown: false,
-                    contentStyle: { backgroundColor: colors.white },
-                  }}
-                />
+                <AppStack />
               </BottomSheetModalProvider>
             </BillingProvider>
           </AnalyticsProvider>
