@@ -111,6 +111,10 @@ Screenshot order puts Strava second: only the first two are visible without swip
 
 Screenshot captions, in order: "Every session, in about a minute.", "Your climbing on Strava", "Log it right after you climb.", "See the whole night, climb by climb.", "Watch six months add up."
 
+September set, synced from the "Store set · September" canvas pages and built on real simulator captures (`screens/`, rendered to `out/ios-set2/` at 1290x2796 and `out/android-set2/` at 1080x1920), captions in order: "The ultimate climbing journal." (hero, with the icon and name), the projects pair "All of your projects in one place" and "Keep notes, attempts, and time invested", "Log the colours your gym actually sets.", the trends pair "A year from now, you will want to know what changed." and "Members get deep trend insights for analyzing their climbing.", "Log your session while you remember it.", "Every lap of the 4x4, written down.", "Don't see your crag? Add it".
+Each pair reads as one image across two frames.
+The Android frames swap the iOS status bar for an Android one; Google Play takes at most 8 phone screenshots, so one of the nine has to go there.
+
 iPad screenshots are not needed: `supportsTablet` is false.
 Nor is a 6.5" set: App Store Connect accepts the 1290x2796 images as the one required iPhone size and scales them down for smaller devices.
 
