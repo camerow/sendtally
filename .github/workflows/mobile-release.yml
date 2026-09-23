@@ -161,7 +161,12 @@ jobs:
           previous=$(git tag --list 'mobile-v*' --sort=-v:refname | head -1)
           range=${previous:+$previous..}HEAD
           version=$(jq -r .expo.version apps/mobile/app.json)
-          read -r next bump < <(.github/scripts/next-version.sh "$version" "$range")
+          if [ -n "$previous" ] && [ "$previous" != "mobile-v$version" ]; then
+            # A failed release already pushed its bump; finish that version.
+            next=$version bump=retry
+          else
+            read -r next bump < <(.github/scripts/next-version.sh "$version" "$range")
+          fi
           echo "Releasing $version -> $next ($bump) since ${previous:-the first commit}"
           echo "version=$next" >> "$GITHUB_OUTPUT"
           .github/scripts/release-notes.sh "$range" . ':!apps/web' > "$RUNNER_TEMP/notes.md"
@@ -175,6 +180,7 @@ jobs:
           jq --arg v "$VERSION" '.expo.version = $v' apps/mobile/app.json > app.json.tmp
           mv app.json.tmp apps/mobile/app.json
           pnpm exec prettier --write apps/mobile/app.json
+          git diff --quiet apps/mobile/app.json && exit 0
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git commit -am "chore(mobile): release v$VERSION"
