@@ -409,6 +409,12 @@ These are store-side and cost nothing, but none of them live in this repo.
 - No advertising SDK.
 - Data in transit is encrypted; account deletion is available in the app under Settings.
 
+## App Store privacy
+
+Every data type is "Used for tracking: No".
+Tracking in Apple's sense means linking our data with other companies' data for advertising, or handing it to a data broker, and we do neither: PostHog is our own product analytics and the app carries no advertising SDK.
+Answering "yes" for any type obliges the app to show the App Tracking Transparency prompt, which is what got build 20 rejected under 5.1.2(i).
+
 ## App Review notes
 
 Membership is an auto-renewing subscription sold in the app through the store's billing (a monthly product and a yearly one, in a single subscription group), and also on sendtally.com.
@@ -416,3 +422,8 @@ The trends screens are gated on it; the paywall on the Trends tab carries both p
 The yearly card headlines the per-month equivalent and states the billed-yearly total underneath it, which is what the store returns for the annual package.
 Reviewers need the demo account so the trends screens in the screenshots are reachable without buying.
 The demo account signs in with a password; every other account signs in with an emailed one-time code, which is why the form gets a username and password plus that one sentence under "Any other information required to access your app".
+The sign-in screen tells everyone else there is no password, so the sentence has to walk the reviewer past it:
+
+```
+Enter the demo email and tap "Email me a code". This account has a password, so the next screen asks for the password instead of a code. Sign in with Apple and Google are also available on the same screen.
+```
