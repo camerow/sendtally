@@ -1,0 +1,19 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["GUMXLRF3B6.com.sendtally.app"],
+        "components": [
+          { "/": "/app/import*", "exclude": true },
+          { "/": "/app/export.csv", "exclude": true },
+          { "/": "/app/setup", "exclude": true },
+          { "/": "/app/areas/*", "exclude": true },
+          { "/": "/app/climbs/*", "exclude": true },
+          { "/": "/app/moderation*", "exclude": true },
+          { "/": "/app" },
+          { "/": "/app/*" }
+        ]
+      }
+    ]
+  }
+}

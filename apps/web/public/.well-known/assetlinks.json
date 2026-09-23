@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.sendtally.app",
+      "sha256_cert_fingerprints": [
+        "58:49:3B:81:57:2B:CF:B2:04:63:59:C5:91:19:EB:E3:92:34:E0:F9:DD:35:DD:6A:8D:E2:E2:77:5E:4D:0C:59"
+      ]
+    }
+  }
+]

@@ -17,14 +17,64 @@
         "CFBundleDevelopmentRegion": "en",
         "CFBundleLocalizations": ["en", "de", "fr", "es"]
       },
-      "usesAppleSignIn": true
+      "usesAppleSignIn": true,
+      "associatedDomains": ["applinks:sendtally.com"]
     },
     "android": {
       "package": "com.sendtally.app",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#f9dc5c"
-      }
+      },
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "category": ["BROWSABLE", "DEFAULT"],
+          "data": [
+            {
+              "scheme": "https",
+              "host": "sendtally.com",
+              "path": "/app"
+            },
+            {
+              "scheme": "https",
+              "host": "sendtally.com",
+              "pathPrefix": "/app/sessions"
+            },
+            {
+              "scheme": "https",
+              "host": "sendtally.com",
+              "pathPrefix": "/app/journal"
+            },
+            {
+              "scheme": "https",
+              "host": "sendtally.com",
+              "pathPrefix": "/app/projects"
+            },
+            {
+              "scheme": "https",
+              "host": "sendtally.com",
+              "pathPrefix": "/app/trends"
+            },
+            {
+              "scheme": "https",
+              "host": "sendtally.com",
+              "pathPrefix": "/app/settings"
+            },
+            {
+              "scheme": "https",
+              "host": "sendtally.com",
+              "pathPrefix": "/app/account"
+            },
+            {
+              "scheme": "https",
+              "host": "sendtally.com",
+              "pathPrefix": "/app/membership"
+            }
+          ]
+        }
+      ]
     },
     "plugins": [
       "expo-router",
