@@ -3,11 +3,10 @@ export const auth = {
   "auth.signInSwapLabel": "Créer un compte",
   "auth.signUpSwapPrompt": "Déjà un compte ?",
   "auth.signInHeading": "Content de te revoir.",
-  "auth.signInBody":
-    "Pas de mot de passe. Saisis l'e-mail de ton inscription et on t'envoie un code unique.",
+  "auth.signInBody": "Saisis l'e-mail avec lequel tu t'es inscrit.",
   "auth.signUpHeading": "Crée ton compte.",
   "auth.signUpBody":
-    "Pas de mot de passe. On t'envoie un code unique par e-mail. Enregistrer tes séances et les publier sur Strava est gratuit.",
+    "Saisis ton e-mail pour commencer. Enregistrer tes séances et les publier sur Strava, c'est gratuit.",
   "auth.googleIncomplete": "La connexion Google n'a pas abouti. Réessaie.",
   "auth.invalidEmail": "Saisis une adresse e-mail valide.",
   "auth.emailCodeDisabled": "La connexion par code e-mail n'est pas activée pour ce compte.",
@@ -24,6 +23,8 @@ export const auth = {
   "auth.codeSentBody": "On a envoyé un code à six chiffres à {email}.",
   "auth.passwordBody": "Saisis le mot de passe de {email}.",
   "auth.emailMeACode": "M'envoyer un code",
+  "auth.login": "Se connecter",
+  "auth.continue": "Continuer",
   "auth.back": "Retour",
   "auth.passwordLabel": "Mot de passe",
   "auth.continueWithGoogle": "Continuer avec Google",

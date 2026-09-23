@@ -1,5 +1,5 @@
 export const onboarding = {
-  "onboarding.footer": "Free to log · one-time code sign-in · no password",
+  "onboarding.footer": "Free to log · no card on file",
   "onboarding.featureOf": "Feature {n} of {total}",
   "onboarding.log.eyebrow": "Log",
   "onboarding.log.title": "A session takes a minute to log.",

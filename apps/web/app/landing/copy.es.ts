@@ -134,7 +134,7 @@ export const COPY_ES: LandingCopy = {
         short: "Escala V o Font",
       },
     ],
-    footnote: "Registro gratis · acceso con código de un solo uso · sin tarjeta",
+    footnote: "Registro gratis · sin tarjeta",
     cta: "Empieza a registrar gratis →",
   },
 

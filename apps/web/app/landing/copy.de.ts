@@ -135,7 +135,7 @@ export const COPY_DE: LandingCopy = {
         short: "V-Skala oder Font",
       },
     ],
-    footnote: "Kostenlos loggen · Anmeldung per Einmalcode · keine Karte hinterlegt",
+    footnote: "Kostenlos loggen · keine Karte hinterlegt",
     cta: "Kostenlos loslegen →",
   },
 

@@ -52,9 +52,9 @@ export default function Terms(): React.ReactElement {
 
       <h2>Your account</h2>
       <p>
-        Accounts are created and secured through our authentication provider, Clerk, using a
-        one-time code sent to your email address. There is no sendtally password, so keeping your
-        email account secure is what keeps your logbook secure.
+        Accounts are created and secured through our authentication provider, Clerk, using your
+        email address or a Google or Apple account. Keeping that account secure is what keeps your
+        logbook secure.
       </p>
       <p>
         You must be at least 16 years old to hold an account. One account is for one person: do not
