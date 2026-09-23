@@ -15,6 +15,27 @@ const CHROME_CANDIDATES = [
   "/usr/bin/chromium",
 ];
 
+// The September set, synced from the "Store set · September" canvas pages and built
+// on real simulator captures in store/screens/. Each a/b pair is one image split at
+// the seam, so the two line up side by side in the store.
+const septemberSet = [
+  "01-hero-sessions",
+  "02a-projects",
+  "02b-projects",
+  "03-gym-circuits",
+  "04a-trends",
+  "04b-trends",
+  "05-log-session",
+  "06-endurance",
+  "07-crags",
+].flatMap((slug) =>
+  ["ios", "android"].map((platform) => ({
+    board: `${platform}-set2-${slug}`,
+    to: `store/out/${platform}-set2/${slug}.png`,
+    alpha: false,
+  }))
+);
+
 // `alpha: false` flattens the alpha channel away: App Store Connect rejects an
 // app icon that carries one, and the stores want opaque screenshots.
 const targets = [
@@ -38,6 +59,7 @@ const targets = [
   // supports, so it is rendered at 430x932 logical, the 6.7" phone.
   { board: "iap-promo-1024", to: "store/out/ios/iap-promo-1024.png", alpha: false },
   { board: "iap-review-shot", to: "store/out/ios/iap-review-shot.png", alpha: false },
+  ...septemberSet,
 ];
 
 function chromePath() {
