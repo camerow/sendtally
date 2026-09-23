@@ -155,6 +155,11 @@ The id is public anyway - it is the number in the App Store URL.
    Clerk's dashboard cannot comp a paid plan, so the entitlement is a RevenueCat promotional grant: `POST /v1/subscribers/<clerk user id>/entitlements/sendtally_member/promotional` with `{"duration":"lifetime"}` and the secret key (run it under `doppler run`). The Worker mirrors it like any store entitlement on the next webhook or refresh.
    The mobile sign-in screen reads `supportedFirstFactors` after `signIn.create`; Clerk lists `password` only for accounts that have one, so only this user ever sees the password field.
    Put the email and password in the store's sign-in-details form (Play: App content, App access) and in 1Password, nowhere else.
+5. **Sign in with Apple.** App Review guideline 4.8 requires it on iOS because the app offers Google.
+   The app uses the native sheet (`expo-apple-authentication` through Clerk's `useSignInWithApple`), which hands Clerk an identity token rather than an OAuth redirect, so no Services ID or signing key is needed.
+   `ios.usesAppleSignIn` in `app.json` adds the entitlement, and EAS Build turns the capability on for `com.sendtally.app` when it signs.
+   In each Clerk instance (development for simulators, production for the store): Configure, SSO connections, add **Apple**, and under Configure, Native applications, register the iOS app with Team ID `GUMXLRF3B6` and bundle id `com.sendtally.app`.
+   The button is iOS only; Android keeps Google and email.
 
 ## Performance monitoring
 

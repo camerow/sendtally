@@ -1,4 +1,5 @@
-import { useClerk, useSSO, useSignIn, useSignUp } from "@clerk/clerk-expo";
+import { useClerk, useSSO, useSignIn, useSignInWithApple, useSignUp } from "@clerk/clerk-expo";
+import * as AppleAuthentication from "expo-apple-authentication";
 import { makeRedirectUri } from "expo-auth-session";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
@@ -84,6 +85,7 @@ export default function SignIn(): React.ReactElement | null {
   const { signUp, isLoaded: signUpLoaded } = useSignUp();
   const clerk = useClerk();
   const { startSSOFlow } = useSSO();
+  const { startAppleAuthenticationFlow } = useSignInWithApple();
   const router = useRouter();
   const [email, setEmail] = React.useState("");
   const [code, setCode] = React.useState("");
@@ -125,6 +127,22 @@ export default function SignIn(): React.ReactElement | null {
       setError(t("auth.googleIncomplete"));
     } catch (err) {
       if (errorCode(err) === "session_exists" && (await adoptExistingSession())) return;
+      setError(errorMessage(err));
+    }
+    setBusy(false);
+  }
+
+  async function continueWithApple(): Promise<void> {
+    setError(null);
+    setBusy(true);
+    try {
+      const result = await startAppleAuthenticationFlow();
+      if (result.createdSessionId !== null && result.setActive !== undefined) {
+        await result.setActive({ session: result.createdSessionId });
+        router.replace("/(tabs)/sessions");
+        return;
+      }
+    } catch (err) {
       setError(errorMessage(err));
     }
     setBusy(false);
@@ -462,6 +480,15 @@ export default function SignIn(): React.ReactElement | null {
             )}
             {phase.name === "email" && (
               <>
+                {Platform.OS === "ios" && (
+                  <AppleAuthentication.AppleAuthenticationButton
+                    buttonType={AppleAuthentication.AppleAuthenticationButtonType.CONTINUE}
+                    buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
+                    cornerRadius={radius.control}
+                    onPress={() => void (busy ? undefined : continueWithApple())}
+                    style={{ height: 48, opacity: busy ? 0.45 : 1 }}
+                  />
+                )}
                 <Pressable
                   onPress={() => void continueWithGoogle()}
                   disabled={busy}
