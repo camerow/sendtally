@@ -1,5 +1,5 @@
 export const onboarding = {
-  "onboarding.footer": "Gratuit · connexion par code unique · sans mot de passe",
+  "onboarding.footer": "Gratuit · aucune carte enregistrée",
   "onboarding.featureOf": "Fonctionnalité {n} sur {total}",
   "onboarding.log.eyebrow": "Carnet",
   "onboarding.log.title": "Une séance s'enregistre en une minute.",

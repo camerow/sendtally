@@ -1,5 +1,5 @@
 export const onboarding = {
-  "onboarding.footer": "Eintragen kostenlos · Anmeldung per Einmalcode · kein Passwort",
+  "onboarding.footer": "Eintragen kostenlos · keine Karte hinterlegt",
   "onboarding.featureOf": "Feature {n} von {total}",
   "onboarding.log.eyebrow": "Eintragen",
   "onboarding.log.title": "Eine Session ist in einer Minute eingetragen.",

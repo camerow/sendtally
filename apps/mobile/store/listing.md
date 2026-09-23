@@ -422,8 +422,8 @@ The trends screens are gated on it; the paywall on the Trends tab carries both p
 The yearly card headlines the per-month equivalent and states the billed-yearly total underneath it, which is what the store returns for the annual package.
 Reviewers need the demo account so the trends screens in the screenshots are reachable without buying.
 The demo account signs in with a password; every other account signs in with an emailed one-time code, which is why the form gets a username and password plus that one sentence under "Any other information required to access your app".
-The sign-in screen tells everyone else there is no password, so the sentence has to walk the reviewer past it:
+The sentence tells the reviewer where the password field appears:
 
 ```
-Enter the demo email and tap "Email me a code". This account has a password, so the next screen asks for the password instead of a code. Sign in with Apple and Google are also available on the same screen.
+Enter the demo email and tap "Login". The next screen asks for the password. Sign in with Apple and Google are also available on the same screen.
 ```

@@ -30,9 +30,9 @@ export default function Support(): React.ReactElement {
 
       <h2>Signing in</h2>
       <p>
-        Sign-in uses a one-time code sent to your email rather than a password. If the code does not
-        arrive, check the spam folder and confirm you used the same address you signed up with. Ask
-        for a new code rather than reusing an old one, since each code expires.
+        Sign in with your email, or with Google or Apple. If a sign-in code does not arrive, check
+        the spam folder and confirm you used the same address you signed up with. Ask for a new code
+        rather than reusing an old one, since each code expires.
       </p>
 
       <h2>Strava</h2>

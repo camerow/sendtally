@@ -134,7 +134,7 @@ export const COPY_FR: LandingCopy = {
         short: "Échelle V ou Font",
       },
     ],
-    footnote: "Gratuit · connexion par code à usage unique · aucune carte enregistrée",
+    footnote: "Gratuit · aucune carte enregistrée",
     cta: "Commencer gratuitement →",
   },
 

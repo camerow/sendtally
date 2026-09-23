@@ -365,7 +365,9 @@ export default function SignIn(): React.ReactElement | null {
       : t("common.signIn")
     : inPasswordPhase
       ? t("common.signIn")
-      : t("auth.emailMeACode");
+      : intent === "sign-in"
+        ? t("auth.login")
+        : t("auth.continue");
   const submit = inCodePhase ? verifyCode : inPasswordPhase ? signInWithPassword : sendCode;
   const fieldStyle = {
     fontFamily: fonts.sans,

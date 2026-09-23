@@ -1,5 +1,5 @@
 export const onboarding = {
-  "onboarding.footer": "Registro gratis · acceso con código de un solo uso · sin contraseña",
+  "onboarding.footer": "Registro gratis · sin tarjeta",
   "onboarding.featureOf": "Función {n} de {total}",
   "onboarding.log.eyebrow": "Registro",
   "onboarding.log.title": "Registrar una sesión lleva un minuto.",

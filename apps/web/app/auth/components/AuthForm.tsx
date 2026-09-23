@@ -602,7 +602,7 @@ export function AuthForm({ intent }: { intent: AuthIntent }): React.ReactElement
             disabled={busy}
             style={{ ...azureButton, opacity: busy ? 0.45 : 1 }}
           >
-            {t("auth.emailMeACode")}
+            {intent === "sign-in" ? t("auth.login") : t("auth.continue")}
           </button>
           <div id="clerk-captcha" />
         </div>

@@ -205,7 +205,7 @@ export const COPY = {
         short: "V-scale or Font",
       },
     ] satisfies FreeFeatureCopy[],
-    footnote: "Free to log · one-time code sign-in · no card on file",
+    footnote: "Free to log · no card on file",
     cta: "Start logging for free →",
   },
 
