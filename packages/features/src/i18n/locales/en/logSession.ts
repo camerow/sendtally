@@ -89,4 +89,9 @@ export const logSession = {
   "logSession.wrapUpSubtitle": "Times come from your climbs · effort is scored when you save",
   "logSession.noSendsYet": "No sends yet",
   "logSession.sendStyle": "Style",
+  "logSession.removeClimbTitle": "Remove this climb?",
+  "logSession.removeClimbBody": "{name} · {grade} will be taken off this session.",
+  "logSession.remove": "Remove",
+  "logSession.sentTapToAttempt": "Sent, tap to mark as attempt",
+  "logSession.attemptTapToSent": "Attempt, tap to mark as sent",
 } as const;

@@ -91,4 +91,9 @@ export const logSession = {
     "Zeiten kommen von deinen Kletterversuchen · Effort wird beim Speichern bewertet",
   "logSession.noSendsYet": "Noch keine Begehungen",
   "logSession.sendStyle": "Stil",
+  "logSession.removeClimbTitle": "Diese Kletterei entfernen?",
+  "logSession.removeClimbBody": "{name} · {grade} wird aus dieser Session entfernt.",
+  "logSession.remove": "Entfernen",
+  "logSession.sentTapToAttempt": "Geschafft, tippen um als Versuch zu markieren",
+  "logSession.attemptTapToSent": "Versuch, tippen um als geschafft zu markieren",
 } as const;

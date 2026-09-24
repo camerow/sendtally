@@ -91,4 +91,9 @@ export const logSession = {
     "Les horaires viennent de vos voies · l'effort est noté à l'enregistrement",
   "logSession.noSendsYet": "Pas encore de croix",
   "logSession.sendStyle": "Style",
+  "logSession.removeClimbTitle": "Retirer cette ligne ?",
+  "logSession.removeClimbBody": "{name} · {grade} sera retirée de cette séance.",
+  "logSession.remove": "Retirer",
+  "logSession.sentTapToAttempt": "Enchaînée, touchez pour marquer comme essai",
+  "logSession.attemptTapToSent": "Essai, touchez pour marquer comme enchaînée",
 } as const;

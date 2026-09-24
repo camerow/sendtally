@@ -90,4 +90,9 @@ export const logSession = {
   "logSession.wrapUpSubtitle": "Los horarios salen de tus vías · el esfuerzo se puntúa al guardar",
   "logSession.noSendsYet": "Aún sin encadenes",
   "logSession.sendStyle": "Estilo",
+  "logSession.removeClimbTitle": "¿Quitar esta vía?",
+  "logSession.removeClimbBody": "{name} · {grade} se quitará de esta sesión.",
+  "logSession.remove": "Quitar",
+  "logSession.sentTapToAttempt": "Encadenada, toca para marcar como intento",
+  "logSession.attemptTapToSent": "Intento, toca para marcar como encadenada",
 } as const;

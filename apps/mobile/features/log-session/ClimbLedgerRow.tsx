@@ -18,6 +18,8 @@ export type ClimbLedgerRowProps = {
   onPress: () => void;
   /** Given by the live card: tries change in place, without opening the editor. */
   onChangeTries?: (tries: number) => void;
+  /** Given by the live card: the mark flips sent and attempt without opening the editor. */
+  onToggleSent?: () => void;
 };
 
 function Stepper({
@@ -53,6 +55,28 @@ function Stepper({
         {glyph}
       </Text>
     </Pressable>
+  );
+}
+
+function ResultMark({ send, firstGo }: { send: boolean; firstGo: boolean }): React.ReactElement {
+  return (
+    <View
+      style={{
+        width: 22,
+        height: 22,
+        flexShrink: 0,
+        borderRadius: 11,
+        backgroundColor: firstGo ? colors.gold : send ? colors.azureInk : colors.gunmetal,
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <Text
+        style={{ fontSize: 12, fontWeight: "600", color: firstGo ? colors.gunmetal : colors.white }}
+      >
+        {send ? "✓" : "✗"}
+      </Text>
+    </View>
   );
 }
 
@@ -120,6 +144,7 @@ export function ClimbLedgerRow({
   project,
   onPress,
   onChangeTries,
+  onToggleSent,
 }: ClimbLedgerRowProps): React.ReactElement {
   if (climb.endurance !== undefined)
     return <EnduranceLedgerRow climb={climb} onPress={tap(onPress)} />;
@@ -203,27 +228,21 @@ export function ClimbLedgerRow({
           )}
         </View>
       </View>
-      <View
-        style={{
-          width: 22,
-          height: 22,
-          flexShrink: 0,
-          borderRadius: 11,
-          backgroundColor: firstGo ? colors.gold : send ? colors.azureInk : colors.gunmetal,
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <Text
-          style={{
-            fontSize: 12,
-            fontWeight: "600",
-            color: firstGo ? colors.gunmetal : colors.white,
-          }}
+      {onToggleSent === undefined ? (
+        <ResultMark send={send} firstGo={firstGo} />
+      ) : (
+        <Pressable
+          onPress={tap(onToggleSent)}
+          hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel={
+            send ? t("logSession.sentTapToAttempt") : t("logSession.attemptTapToSent")
+          }
+          style={press({ flexShrink: 0 })}
         >
-          {send ? "✓" : "✗"}
-        </Text>
-      </View>
+          <ResultMark send={send} firstGo={firstGo} />
+        </Pressable>
+      )}
       {onChangeTries === undefined ? (
         <Text
           style={{

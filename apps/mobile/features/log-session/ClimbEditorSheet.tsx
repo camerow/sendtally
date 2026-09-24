@@ -1,6 +1,6 @@
 import { BottomSheetTextInput } from "@gorhom/bottom-sheet";
 import React from "react";
-import { Keyboard, Pressable, Text, View } from "react-native";
+import { Alert, Keyboard, Pressable, Text, View } from "react-native";
 import type { ClimbSummary } from "@sendtally/api-client";
 import {
   areaClimbGradeLabel,
@@ -15,7 +15,6 @@ import {
   disciplineOf,
   gymOfCircuit,
   withClimbDiscipline,
-  withTries,
   type ClimbDraft,
   type Discipline,
   type GradePrefs,
@@ -26,9 +25,10 @@ import { Icon } from "../../components/Icon";
 import { Sheet } from "../../components/Sheet";
 import { ClimbGradePicker, ClimbKindPicker } from "./ClimbKindPicker";
 import { EnduranceFields } from "./EnduranceFields";
-import { ResultPicker } from "./ResultPicker";
+import { ResultFields } from "./ResultFields";
 import { useApi } from "../../lib/api";
 import { press, pressRow, tap } from "../../lib/press";
+import { primaryButton, primaryButtonLabel } from "../../lib/styles";
 
 /** Where an outdoor row looks for Areas climbs, and what picking or adding one does. */
 export type ClimbAreas = {
@@ -134,37 +134,6 @@ function DisciplineToggle({
         );
       })}
     </View>
-  );
-}
-
-function StepButton({
-  glyph,
-  disabled = false,
-  onPress,
-}: {
-  glyph: string;
-  disabled?: boolean;
-  onPress: () => void;
-}): React.ReactElement {
-  return (
-    <Pressable
-      onPress={tap(onPress)}
-      disabled={disabled}
-      style={press({
-        width: 40,
-        height: 40,
-        borderRadius: 8,
-        borderWidth: 1,
-        borderColor: "rgba(64,63,76,0.18)",
-        alignItems: "center",
-        justifyContent: "center",
-        opacity: disabled ? 0.4 : 1,
-      })}
-    >
-      <Text style={{ fontFamily: fonts.monoMedium, fontSize: 16, color: colors.gunmetal }}>
-        {glyph}
-      </Text>
-    </Pressable>
   );
 }
 
@@ -346,6 +315,15 @@ function CircuitFields({
   );
 }
 
+function confirmRemoveClimb(climb: ClimbDraft, onRemove: () => void): void {
+  const name = climb.name.trim() === "" ? t("logSession.unnamed") : climb.name.trim();
+  const grade = climb.circuit === undefined ? climb.grade : climb.circuit.label;
+  Alert.alert(t("logSession.removeClimbTitle"), t("logSession.removeClimbBody", { name, grade }), [
+    { text: t("common.cancel"), style: "cancel" },
+    { text: t("logSession.remove"), style: "destructive", onPress: onRemove },
+  ]);
+}
+
 /** The climb stays rendered while the sheet slides away, so closing does not empty the panel mid-slide. */
 function useLingering(climb: ClimbDraft | null): ClimbDraft | null {
   const [shown, setShown] = React.useState(climb);
@@ -386,7 +364,44 @@ export function ClimbEditorSheet({
   const showList = nameFocused && (options.length > 0 || search.canAdd);
 
   return (
-    <Sheet visible={current !== null} onClose={onClose} closeLabel={t("logSession.closeEditor")}>
+    <Sheet
+      visible={current !== null}
+      onClose={onClose}
+      closeLabel={t("logSession.closeEditor")}
+      footer={
+        climb !== null && (
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+            {removable && (
+              <Pressable
+                onPress={tap(() => confirmRemoveClimb(climb, onRemove))}
+                accessibilityRole="button"
+                accessibilityLabel={t("logSession.removeClimb")}
+                style={press({
+                  width: 48,
+                  height: 48,
+                  borderRadius: radius.control,
+                  borderWidth: 1,
+                  borderColor: colors.lineOnLightStrong,
+                  alignItems: "center",
+                  justifyContent: "center",
+                })}
+              >
+                <Icon name="trash" color={colors.watermelon} size={18} strokeWidth={1.8} />
+              </Pressable>
+            )}
+            <Pressable
+              onPress={onClose}
+              accessibilityRole="button"
+              style={press({ ...primaryButton, flex: 1, backgroundColor: colors.gold })}
+            >
+              <Text style={{ ...primaryButtonLabel, color: colors.gunmetal }}>
+                {t("common.save")}
+              </Text>
+            </Pressable>
+          </View>
+        )
+      }
+    >
       {climb !== null && (
         <View style={{ gap: 14, paddingTop: 2, paddingHorizontal: 18, paddingBottom: 4 }}>
           <View
@@ -399,17 +414,6 @@ export function ClimbEditorSheet({
             <Text style={{ ...label, color: colors.gunmetal }}>
               {t("logSession.climbOf", { n: index + 1, total: count })}
             </Text>
-            {removable && (
-              <Pressable
-                onPress={tap(onRemove)}
-                hitSlop={12}
-                accessibilityRole="button"
-                accessibilityLabel={t("logSession.removeClimb")}
-                style={press({})}
-              >
-                <Icon name="trash" color={colors.watermelon} size={16} strokeWidth={1.8} />
-              </Pressable>
-            )}
           </View>
 
           <View style={{ gap: 7 }}>
@@ -632,32 +636,7 @@ export function ClimbEditorSheet({
           {gym !== null && <CircuitFields climb={climb} gym={gym} onChange={onChange} />}
 
           {!endurance && (
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-              <ResultPicker climb={climb} onChange={onChange} />
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-                <StepButton
-                  glyph="−"
-                  disabled={climb.tries <= 1}
-                  onPress={() => onChange(withTries(climb, climb.tries - 1))}
-                />
-                <Text
-                  style={{
-                    width: 24,
-                    textAlign: "center",
-                    fontFamily: fonts.monoSemiBold,
-                    fontSize: 15,
-                    color: colors.gunmetal,
-                  }}
-                >
-                  {climb.tries}
-                </Text>
-                <StepButton
-                  glyph="+"
-                  disabled={climb.tries >= 99}
-                  onPress={() => onChange(withTries(climb, climb.tries + 1))}
-                />
-              </View>
-            </View>
+            <ResultFields key={climb.key} climb={climb} known={known} onChange={onChange} />
           )}
 
           {!endurance && (
@@ -699,22 +678,6 @@ export function ClimbEditorSheet({
               </>
             )}
           </View>
-
-          <Pressable
-            onPress={onClose}
-            accessibilityRole="button"
-            style={press({
-              minHeight: 50,
-              alignItems: "center",
-              justifyContent: "center",
-              borderRadius: radius.control,
-              backgroundColor: colors.azureInk,
-            })}
-          >
-            <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 15, color: colors.white }}>
-              {t("common.save")}
-            </Text>
-          </Pressable>
         </View>
       )}
     </Sheet>
