@@ -25,7 +25,7 @@ import {
 import { useGradeScalePrefs } from "@sendtally/features/settings";
 import { useClientApi } from "../../lib/useClientApi";
 import { climbKindStorage } from "../../lib/climbKindStorage";
-import { sessionDraftStorage } from "../../lib/sessionDraftStorage";
+import { liveSessionStorage } from "../../lib/liveSessionStorage";
 import {
   filterSessionsByTags,
   logYearGroups,
@@ -77,8 +77,8 @@ export function LogView({
   const [filtersOpen, setFiltersOpen] = React.useState(false);
   const api = useClientApi(apiUrl);
   const { scales } = useGradeScalePrefs(api);
-  const liveSync = useLiveSync(api, sessionDraftStorage);
-  const live = useLiveSession(sessionDraftStorage, liveSync.sync);
+  const liveSync = useLiveSync(api, liveSessionStorage);
+  const live = useLiveSession(liveSessionStorage, liveSync.sync);
   const vocabulary = useClimbVocabulary(api);
   const [editingClimb, setEditingClimb] = React.useState<string | null>(null);
   const gyms = useGyms(api);

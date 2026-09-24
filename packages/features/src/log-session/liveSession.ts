@@ -1,7 +1,12 @@
 import type { ClimbSummary } from "@sendtally/api-client";
 import { climbDraftGrade } from "../climbs/transforms";
 import { formatDate, t } from "../i18n";
-import { parseStoredDraft, type DraftStorage, type StoredSessionDraft } from "./draftStore";
+import {
+  parseStoredDraft,
+  writeStoredDraft,
+  type DraftStorage,
+  type StoredSessionDraft,
+} from "./draftStore";
 import type { Gym } from "../gyms/types";
 import { gymOfCircuit, newClimbOfKind, type ClimbKind } from "./climbKind";
 import { nextClimbKey } from "./transforms";
@@ -74,16 +79,41 @@ export function withGymAdopted(draft: LogSessionDraft, gyms: readonly Gym[]): Lo
   return gymId === undefined ? draft : { ...draft, gymId };
 }
 
+/** A session climbed past midnight stays live while its climbs keep coming. */
+export const LIVE_IDLE_MS = 6 * 60 * 60 * 1000;
+
 /**
- * The draft being climbed today. An older draft the server already has is dropped from the
- * file, since its row is in the log; an older one it does not have stays for the form to offer.
+ * Whether the draft is still the session being climbed. One the server does not have yet stays
+ * live until it lands, however old: it is the only copy of those climbs.
  */
+export function isLive(entry: StoredSessionDraft, now: Date): boolean {
+  if (entry.fingerprint === undefined) return true;
+  return (
+    entry.draft.date === localDate(now) || now.getTime() - entry.savedAt.getTime() < LIVE_IDLE_MS
+  );
+}
+
+/** The live draft; one that has gone quiet and is already on the server is dropped from the file. */
 export function liveStoredDraft(storage: DraftStorage, now: Date): StoredSessionDraft | null {
   const entry = parseStoredDraft(storage.read(), now);
   if (entry === null) return null;
-  if (entry.draft.date === localDate(now)) return entry;
-  if (entry.fingerprint !== undefined) storage.remove();
+  if (isLive(entry, now)) return entry;
+  storage.remove();
   return null;
+}
+
+/**
+ * The full form saved the live session: the draft takes what was saved, so the next climb
+ * logged from the card carries the times, effort and venue instead of wiping them.
+ */
+export function adoptSavedDetails(
+  storage: DraftStorage,
+  fingerprint: string,
+  draft: LogSessionDraft,
+  now: Date
+): void {
+  if (parseStoredDraft(storage.read(), now)?.fingerprint !== fingerprint) return;
+  writeStoredDraft(storage, draft, now, { fingerprint, detailed: true });
 }
 
 /**

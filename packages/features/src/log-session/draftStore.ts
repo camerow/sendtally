@@ -19,8 +19,18 @@ export type DraftStorageIo = {
 
 export const DRAFT_TTL_MS = 5 * 24 * 60 * 60 * 1000;
 
-/** `fingerprint` is the server session a live draft is mirrored to, once its first save landed. */
-export type StoredSessionDraft = { draft: LogSessionDraft; savedAt: Date; fingerprint?: string };
+/**
+ * `fingerprint` is the server session a live draft is mirrored to, once its first save landed.
+ * `detailed` is a live draft the full form has since saved with its times, effort and venue.
+ */
+export type StoredSessionDraft = {
+  draft: LogSessionDraft;
+  savedAt: Date;
+  fingerprint?: string;
+  detailed?: boolean;
+};
+
+export type LiveDraftMeta = Pick<StoredSessionDraft, "fingerprint" | "detailed">;
 
 /** A storage with no quota, no permission and no other tab is not one worth failing over. */
 export function draftStorage(io: DraftStorageIo): DraftStorage {
@@ -80,7 +90,7 @@ export function parseStoredDraft(raw: string | null, now: Date): StoredSessionDr
   }
   if (typeof parsed !== "object" || parsed === null) return null;
 
-  const { draft, savedAt, fingerprint } = parsed as Record<string, unknown>;
+  const { draft, savedAt, fingerprint, detailed } = parsed as Record<string, unknown>;
   const at = typeof savedAt === "string" ? new Date(savedAt) : new Date(Number.NaN);
   if (!isDraft(draft) || Number.isNaN(at.getTime())) return null;
   if (now.getTime() - at.getTime() > DRAFT_TTL_MS) return null;
@@ -91,6 +101,7 @@ export function parseStoredDraft(raw: string | null, now: Date): StoredSessionDr
     draft: { ...draft, climbs },
     savedAt: at,
     ...(typeof fingerprint === "string" ? { fingerprint } : {}),
+    ...(detailed === true ? { detailed } : {}),
   };
 }
 
@@ -103,8 +114,8 @@ export function writeStoredDraft(
   storage: DraftStorage,
   draft: LogSessionDraft,
   now: Date,
-  fingerprint?: string
+  { fingerprint, detailed }: LiveDraftMeta = {}
 ): Date | null {
-  const value = JSON.stringify({ draft, savedAt: now.toISOString(), fingerprint });
+  const value = JSON.stringify({ draft, savedAt: now.toISOString(), fingerprint, detailed });
   return storage.write(value) ? now : null;
 }

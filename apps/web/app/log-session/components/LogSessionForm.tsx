@@ -18,6 +18,7 @@ import {
   type Gym,
 } from "@sendtally/features/gyms";
 import {
+  adoptSavedDetails,
   draftProblem,
   draftSummary,
   disciplineOf,
@@ -44,6 +45,7 @@ import { DiscardDraftDialog } from "../../components/DiscardDraftDialog";
 import { TagPicker } from "../../components/TagPicker";
 import { useIsNarrow } from "../../lib/useIsNarrow";
 import { climbKindStorage } from "../../lib/climbKindStorage";
+import { liveSessionStorage } from "../../lib/liveSessionStorage";
 import { sessionDraftStorage } from "../../lib/sessionDraftStorage";
 import { AreaFormDialog } from "../../areas/components/AreaFormDialog";
 import { AreaPicker } from "../../areas/components/AreaPicker";
@@ -361,6 +363,9 @@ export function LogSessionForm({
         updatedAt: 0,
       });
       autosave.clear();
+      if (editing !== undefined) {
+        adoptSavedDetails(liveSessionStorage, editing.fingerprint, draft, new Date());
+      }
       await navigate(`/app/sessions/${encodeURIComponent(session.fingerprint)}`);
     } catch {
       setError(t("logSession.saveFailed"));

@@ -36,7 +36,7 @@ import {
   withTries,
 } from "@sendtally/features/log-session";
 import { climbKindStorage } from "../../lib/climbKindStorage";
-import { sessionDraftStorage } from "../../lib/sessionDraftStorage";
+import { liveSessionStorage } from "../../lib/liveSessionStorage";
 import { useGradeScalePrefs } from "@sendtally/features/settings";
 import { UpdateReadyCard } from "../../features/app-update/UpdateReadyCard";
 import { EntryRow, entryRowHeight } from "../../features/journal/EntryRow";
@@ -128,8 +128,8 @@ export default function Log(): React.ReactElement {
   // ponytail: a second status() read per mount, to know if Strava is live; a Strava-status context across tabs if it ever matters
   const settings = useSettings(api);
   const { scales } = useGradeScalePrefs(api);
-  const liveSync = useLiveSync(api, sessionDraftStorage);
-  const live = useLiveSession(sessionDraftStorage, liveSync.sync);
+  const liveSync = useLiveSync(api, liveSessionStorage);
+  const live = useLiveSession(liveSessionStorage, liveSync.sync);
   const vocabulary = useClimbVocabulary(api);
   const [editingClimb, setEditingClimb] = React.useState<string | null>(null);
   const connect = useStravaConnect(api, settings.reload);

@@ -1,8 +1,8 @@
 import React from "react";
-import { writeStoredDraft, type DraftStorage } from "./draftStore";
+import { writeStoredDraft, type DraftStorage, type LiveDraftMeta } from "./draftStore";
 import type { Gym } from "../gyms/types";
 import type { ClimbKind } from "./climbKind";
-import { liveStoredDraft, localDate, withGymAdopted, withQuickClimb } from "./liveSession";
+import { isLive, liveStoredDraft, withGymAdopted, withQuickClimb } from "./liveSession";
 import type { LiveSync } from "./liveSync";
 import type { ClimbDraft, GradePrefs, LogSessionDraft } from "./types";
 import { useStoredDraft, type StoredDraftEntry } from "./useDraftAutosave";
@@ -22,24 +22,27 @@ export type LiveSession = StoredDraftEntry & {
 
 /**
  * The device-local draft, edited one climb at a time from the log. Writes land at once and,
- * with a `sync`, follow on to the server. Only today's draft is live: an older one the server
- * already has is dropped from the file, and an older one it does not have is left for the
- * form to offer.
+ * with a `sync`, follow on to the server. A draft the server already has stops being live once
+ * it goes quiet on another day, and is dropped from the file; one it does not have stays live
+ * until it lands.
  */
 export function useLiveSession(storage: DraftStorage, sync?: LiveSync): LiveSession {
   const { stored, discard } = useStoredDraft(storage);
-  const today = stored !== null && stored.draft.date === localDate(new Date());
-  const synced = stored?.fingerprint !== undefined;
+  const live = stored !== null && isLive(stored, new Date());
 
   React.useEffect(() => {
-    if (stored !== null && !today && synced) discard();
-  }, [stored, today, synced, discard]);
+    if (stored !== null && !live) discard();
+  }, [stored, live, discard]);
+
+  React.useEffect(() => {
+    if (liveStoredDraft(storage, new Date()) !== null) sync?.changed();
+  }, [storage, sync]);
 
   const current = React.useCallback(() => liveStoredDraft(storage, new Date()), [storage]);
 
   const write = React.useCallback(
-    (draft: LogSessionDraft, fingerprint: string | undefined): void => {
-      writeStoredDraft(storage, draft, new Date(), fingerprint);
+    (draft: LogSessionDraft, meta: LiveDraftMeta | undefined): void => {
+      writeStoredDraft(storage, draft, new Date(), meta);
       sync?.changed();
     },
     [storage, sync]
@@ -49,7 +52,7 @@ export function useLiveSession(storage: DraftStorage, sync?: LiveSync): LiveSess
     (prefs: GradePrefs, gyms: readonly Gym[], kind: ClimbKind): string => {
       const entry = current();
       const next = withQuickClimb(entry?.draft ?? null, new Date(), prefs, gyms, kind);
-      write(next.draft, entry?.fingerprint);
+      write(next.draft, entry ?? undefined);
       return next.key;
     },
     [current, write]
@@ -60,7 +63,7 @@ export function useLiveSession(storage: DraftStorage, sync?: LiveSync): LiveSess
       const entry = current();
       if (entry === null) return;
       const climbs = entry.draft.climbs.map((c) => (c.key === key ? patch(c) : c));
-      write(withGymAdopted({ ...entry.draft, climbs }, gyms), entry.fingerprint);
+      write(withGymAdopted({ ...entry.draft, climbs }, gyms), entry);
     },
     [current, write]
   );
@@ -71,7 +74,7 @@ export function useLiveSession(storage: DraftStorage, sync?: LiveSync): LiveSess
       if (entry === null) return;
       const climbs = entry.draft.climbs.filter((c) => c.key !== key);
       if (climbs.length > 0) {
-        write({ ...entry.draft, climbs }, entry.fingerprint);
+        write({ ...entry.draft, climbs }, entry);
         return;
       }
       if (entry.fingerprint !== undefined) sync?.remove(entry.fingerprint);
@@ -80,5 +83,5 @@ export function useLiveSession(storage: DraftStorage, sync?: LiveSync): LiveSess
     [current, write, discard, sync]
   );
 
-  return { stored: today ? stored : null, discard, addClimb, updateClimb, removeClimb };
+  return { stored: live ? stored : null, discard, addClimb, updateClimb, removeClimb };
 }

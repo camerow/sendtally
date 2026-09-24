@@ -30,7 +30,9 @@ export {
   withoutTag,
 } from "./transforms";
 export {
+  adoptSavedDetails,
   defaultSessionName,
+  isLive,
   liveDraft,
   liveStoredDraft,
   localDate,

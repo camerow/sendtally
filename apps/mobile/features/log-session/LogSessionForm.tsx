@@ -21,6 +21,7 @@ import {
 } from "@sendtally/features/areas";
 import { findClimb, useClimbVocabulary } from "@sendtally/features/climbs";
 import {
+  adoptSavedDetails,
   draftProblem,
   draftSummary,
   disciplineOf,
@@ -48,6 +49,7 @@ import { colors, effortColor, fonts, radius } from "@sendtally/design/tokens";
 import { useApi } from "../../lib/api";
 import { queries } from "@sendtally/features/query";
 import { climbKindStorage } from "../../lib/climbKindStorage";
+import { liveSessionStorage } from "../../lib/liveSessionStorage";
 import { sessionDraftStorage } from "../../lib/sessionDraftStorage";
 import { confirmDiscardDraft } from "../../lib/confirmDiscardDraft";
 import { DraftBanner } from "./DraftBanner";
@@ -305,6 +307,9 @@ export function LogSessionForm({
         updatedAt: 0,
       });
       autosave.clear();
+      if (editing !== undefined) {
+        adoptSavedDetails(liveSessionStorage, editing.fingerprint, draft, new Date());
+      }
       router.replace(`/session/${encodeURIComponent(session.fingerprint)}`);
     } catch {
       setError(t("logSession.saveFailed"));

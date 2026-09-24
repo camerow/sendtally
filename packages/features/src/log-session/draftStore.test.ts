@@ -35,7 +35,7 @@ describe("session draft store", () => {
   it("carries the server fingerprint of a live draft, and reads a file written without one", () => {
     const storage = memory();
     const draft = emptyDraft(NOW);
-    writeStoredDraft(storage, draft, NOW, "manual-7");
+    writeStoredDraft(storage, draft, NOW, { fingerprint: "manual-7" });
     expect(parseStoredDraft(storage.read(), NOW)).toEqual({
       draft,
       savedAt: NOW,

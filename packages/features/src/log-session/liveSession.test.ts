@@ -4,6 +4,7 @@ import { withCircuit } from "../gyms/draft";
 import { climbKindOf, readClimbKind, withClimbKind } from "./climbKind";
 import { draftStorage, parseStoredDraft, writeStoredDraft, type DraftStorage } from "./draftStore";
 import {
+  adoptSavedDetails,
   defaultSessionName,
   liveStoredDraft,
   withClimbName,
@@ -116,9 +117,9 @@ describe("live session", () => {
     expect(late.draft.climbs[1]).toMatchObject({ circuit: { id: "a" } });
   });
 
-  it("shows only today's draft, dropping an older one the server already has", () => {
+  function memoryStorage(): DraftStorage {
     let value: string | null = null;
-    const storage = draftStorage({
+    return draftStorage({
       read: () => value,
       write: (next) => {
         value = next;
@@ -127,16 +128,41 @@ describe("live session", () => {
         value = null;
       },
     });
-    const draft = withQuickClimb(null, EVENING).draft;
-    writeStoredDraft(storage, draft, EVENING, "manual-1");
-    expect(liveStoredDraft(storage, EVENING)?.fingerprint).toBe("manual-1");
-    const tomorrow = new Date(2026, 8, 17, 7, 0);
-    expect(liveStoredDraft(storage, tomorrow)).toBeNull();
-    expect(storage.read()).toBeNull();
+  }
 
+  it("keeps a saved session live past midnight until it goes quiet, then drops it", () => {
+    const storage = memoryStorage();
+    const lateNight = new Date(2026, 8, 16, 23, 50);
+    const draft = withQuickClimb(null, lateNight).draft;
+    writeStoredDraft(storage, draft, lateNight, { fingerprint: "manual-1" });
+    const afterMidnight = new Date(2026, 8, 17, 0, 20);
+    expect(liveStoredDraft(storage, afterMidnight)?.fingerprint).toBe("manual-1");
+    const nextMorning = new Date(2026, 8, 17, 9, 0);
+    expect(liveStoredDraft(storage, nextMorning)).toBeNull();
+    expect(storage.read()).toBeNull();
+  });
+
+  it("keeps a session the server does not have yet live, however old", () => {
+    const storage = memoryStorage();
+    const draft = withQuickClimb(null, EVENING).draft;
     writeStoredDraft(storage, draft, EVENING);
-    expect(liveStoredDraft(storage, tomorrow)).toBeNull();
-    expect(parseStoredDraft(storage.read(), tomorrow)?.draft).toEqual(draft);
+    const days = new Date(2026, 8, 19, 9, 0);
+    expect(liveStoredDraft(storage, days)?.draft).toEqual(draft);
+  });
+
+  it("takes the details the form saved for the live session, and only for it", () => {
+    const storage = memoryStorage();
+    const draft = withQuickClimb(null, EVENING).draft;
+    writeStoredDraft(storage, draft, EVENING, { fingerprint: "manual-1" });
+    const detailed = { ...draft, startTime: "18:00", endTime: "20:00", rpe: 7, notes: "Good" };
+    adoptSavedDetails(storage, "manual-2", detailed, EVENING);
+    expect(parseStoredDraft(storage.read(), EVENING)?.draft).toEqual(draft);
+    adoptSavedDetails(storage, "manual-1", detailed, EVENING);
+    expect(parseStoredDraft(storage.read(), EVENING)).toMatchObject({
+      draft: detailed,
+      fingerprint: "manual-1",
+      detailed: true,
+    });
   });
 
   it("adopts a known climb's grade on a typed name and keeps it otherwise", () => {

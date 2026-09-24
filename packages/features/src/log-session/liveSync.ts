@@ -2,7 +2,7 @@ import { focusManager } from "@tanstack/react-query";
 import React from "react";
 import type { LogSessionInput, SessionDetail } from "@sendtally/api-client";
 import { parseStoredDraft, writeStoredDraft, type DraftStorage } from "./draftStore";
-import { toLiveSessionInput } from "./transforms";
+import { toLiveSessionInput, toLogSessionInput } from "./transforms";
 
 export type LiveSyncApi = {
   logSession: (input: LogSessionInput) => Promise<{ session: SessionDetail }>;
@@ -22,7 +22,8 @@ export type LiveSync = {
   retry: () => void;
   /** The last climb went, and the server session with it. */
   remove: (fingerprint: string) => void;
-  stop: () => void;
+  /** The screen is going away: push a change still waiting out the debounce now. */
+  flush: () => void;
 };
 
 export const LIVE_SYNC_DEBOUNCE_MS = 600;
@@ -41,13 +42,12 @@ export function createLiveSync(
   let chain = Promise.resolve();
   let queued = false;
   let failed = false;
-  let stopped = false;
   let pushed: string | null = null;
   let timer: ReturnType<typeof setTimeout> | null = null;
 
   const status = (next: LiveSyncStatus): void => {
     failed = next === "failed";
-    if (!stopped) onStatus(next);
+    onStatus(next);
   };
 
   const push = async (): Promise<void> => {
@@ -56,7 +56,9 @@ export function createLiveSync(
     const serialized = JSON.stringify(stored.draft);
     if (serialized === pushed) return;
     status("saving");
-    const input = toLiveSessionInput(stored.draft);
+    const input = stored.detailed
+      ? toLogSessionInput(stored.draft)
+      : toLiveSessionInput(stored.draft);
     if (stored.fingerprint === undefined) {
       const { session } = await api.logSession(input);
       const current = parseStoredDraft(storage.read(), new Date());
@@ -66,7 +68,7 @@ export function createLiveSync(
         status("idle");
         return;
       }
-      writeStoredDraft(storage, current.draft, new Date(), session.fingerprint);
+      writeStoredDraft(storage, current.draft, new Date(), { fingerprint: session.fingerprint });
     } else {
       await api.updateLoggedSession(stored.fingerprint, input);
     }
@@ -94,21 +96,21 @@ export function createLiveSync(
 
   return {
     changed: () => {
-      if (stopped) return;
       cancel();
       timer = setTimeout(schedulePush, debounceMs);
     },
     retry: () => {
-      if (!stopped && failed) schedulePush();
+      if (failed) schedulePush();
     },
     remove: (fingerprint) => {
       cancel();
       pushed = null;
       enqueue(() => api.deleteLoggedSession(fingerprint).then(() => status("idle")));
     },
-    stop: () => {
-      stopped = true;
+    flush: () => {
+      if (timer === null) return;
       cancel();
+      schedulePush();
     },
   };
 }
@@ -125,7 +127,7 @@ export function useLiveSync(api: LiveSyncApi, storage: DraftStorage): LiveSyncSt
     });
     return () => {
       unsubscribe();
-      sync.stop();
+      sync.flush();
     };
   }, [sync]);
   return { sync, status };

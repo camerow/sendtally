@@ -87,7 +87,7 @@ function setup(): {
     let draft = parseStoredDraft(storage.read(), NOW)?.draft ?? null;
     for (let i = 0; i < count; i += 1) draft = withQuickClimb(draft, NOW).draft;
     if (draft !== null)
-      writeStoredDraft(storage, draft, NOW, parseStoredDraft(storage.read(), NOW)?.fingerprint);
+      writeStoredDraft(storage, draft, NOW, parseStoredDraft(storage.read(), NOW) ?? undefined);
     sync.changed();
   };
   return { api, storage, statuses, sync, log };
@@ -116,6 +116,33 @@ describe("live sync", () => {
     expect(spy.mock.calls[0]?.[0]).toMatchObject({ unscored: true, date: localDate(NOW) });
     expect(spy.mock.calls[0]?.[0]).not.toHaveProperty("startTime");
     expect(spy.mock.calls[0]?.[0]).not.toHaveProperty("location");
+  });
+
+  it("sends the full, scored body once the form has added details", async () => {
+    const api = fakeApi();
+    const spy = vi.spyOn(api, "updateLoggedSession");
+    const storage = memory();
+    const sync = createLiveSync(api, storage, () => {}, 0);
+    const draft = { ...withQuickClimb(null, NOW).draft, startTime: "18:00", rpe: 7 };
+    writeStoredDraft(storage, draft, NOW, { fingerprint: "manual-1", detailed: true });
+    sync.changed();
+    await settle();
+    expect(spy.mock.calls[0]?.[1]).toMatchObject({ startTime: "18:00", rpe: 7 });
+    expect(spy.mock.calls[0]?.[1]).not.toHaveProperty("unscored");
+  });
+
+  it("pushes a waiting change when flushed, and keeps syncing after", async () => {
+    const api = fakeApi();
+    const storage = memory();
+    const sync = createLiveSync(api, storage, () => {}, 60_000);
+    writeStoredDraft(storage, withQuickClimb(null, NOW).draft, NOW);
+    sync.changed();
+    sync.flush();
+    await settle();
+    expect(api.calls).toEqual(["POST 1"]);
+    sync.flush();
+    await settle();
+    expect(api.calls).toEqual(["POST 1"]);
   });
 
   it("coalesces edits made during a request into one more request", async () => {
