@@ -623,7 +623,7 @@ export function ClimbEditorSheet({
               }}
             >
               <Text style={label}>{endurance ? t("endurance.feltLike") : t("common.grade")}</Text>
-              {(endurance || gyms.length === 0) && (
+              {endurance && (
                 <DisciplineToggle
                   value={disciplineOf(climb.scale)}
                   onChange={(discipline) => onChange(withClimbDiscipline(climb, discipline, prefs))}
@@ -638,43 +638,57 @@ export function ClimbEditorSheet({
             <ResultFields key={climb.key} climb={climb} known={known} onChange={onChange} />
           )}
 
-          {!endurance && (
-            <ProjectRow
-              on={project}
-              enabled={named}
-              meta={known === null ? null : projectMetaLabel(known)}
-              onPress={tap(onToggleProject)}
+          <View style={{ gap: 9 }}>
+            <Text style={label}>{t("logSession.noteOptional")}</Text>
+            <BottomSheetTextInput
+              autoCorrect={false}
+              spellCheck={false}
+              autoComplete="off"
+              value={climb.note}
+              editable={named}
+              multiline
+              maxLength={2000}
+              placeholder={t("logSession.climbNotePlaceholder")}
+              placeholderTextColor={colors.textFaint}
+              onChangeText={(note) => onChange({ ...climb, note })}
+              accessibilityState={{ disabled: !named }}
+              style={{
+                ...input,
+                lineHeight: 22,
+                paddingVertical: 11,
+                minHeight: 72,
+                textAlignVertical: "top",
+                opacity: named ? 1 : 0.45,
+              }}
             />
-          )}
-
-          <View style={{ gap: 7 }}>
-            <Text style={label}>
-              {named ? t("logSession.noteOptional") : t("logSession.noteNeedsName")}
-            </Text>
             {named && (
-              <>
-                <BottomSheetTextInput
-                  autoCorrect={false}
-                  spellCheck={false}
-                  autoComplete="off"
-                  value={climb.note}
-                  multiline
-                  maxLength={2000}
-                  placeholder={t("logSession.climbNotePlaceholder")}
-                  placeholderTextColor={colors.textFaint}
-                  onChangeText={(note) => onChange({ ...climb, note })}
+              <Text style={{ fontFamily: fonts.sans, fontSize: 12, color: colors.textSecondary }}>
+                {t("logSession.noteKeptOn", { name: climb.name.trim() })}
+              </Text>
+            )}
+            {!endurance && (
+              <ProjectRow
+                on={project}
+                enabled={named}
+                meta={known === null ? null : projectMetaLabel(known)}
+                onPress={tap(onToggleProject)}
+              />
+            )}
+            {!named && (
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 7 }}>
+                <Icon name="lock" color={colors.textSecondary} size={14} strokeWidth={1.8} />
+                <Text
                   style={{
-                    ...input,
-                    lineHeight: 22,
-                    paddingVertical: 11,
-                    minHeight: 72,
-                    textAlignVertical: "top",
+                    flex: 1,
+                    fontFamily: fonts.sans,
+                    fontSize: 12,
+                    lineHeight: 17,
+                    color: colors.textSecondary,
                   }}
-                />
-                <Text style={{ fontFamily: fonts.sans, fontSize: 12, color: colors.textSecondary }}>
-                  {t("logSession.noteKeptOn", { name: climb.name.trim() })}
+                >
+                  {endurance ? t("logSession.noteNeedsName") : t("logSession.nameUnlocksNote")}
                 </Text>
-              </>
+              </View>
             )}
           </View>
         </View>

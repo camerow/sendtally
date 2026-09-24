@@ -19,7 +19,6 @@ export const logSession = {
   "logSession.needGrade": "Chaque ligne doit avoir une cotation.",
   "logSession.backToSession": "← Séance",
   "logSession.editTitle": "Modifier la séance",
-  "logSession.editSubtitle": "L'effort est recalculé à l'enregistrement",
   "logSession.sessionNameOptional": "Nom de la séance · optionnel",
   "logSession.sessionNamePlaceholder": "Séance du mardi soir",
   "logSession.date": "Date",
@@ -82,7 +81,9 @@ export const logSession = {
   "logSession.noteOptional": "Note · optionnel",
   "logSession.climbNotePlaceholder": "Comment ça s'est passé, ce que tu essaieras ensuite",
   "logSession.noteKeptOn": "Conservée sur {name}, avec toutes les autres séances dessus",
-  "logSession.noteNeedsName": "Note · la ligne doit avoir un nom pour porter une note",
+  "logSession.noteNeedsName": "Une ligne doit avoir un nom pour porter une note",
+  "logSession.nameUnlocksNote":
+    "Une ligne doit avoir un nom pour porter une note ou être marquée comme projet",
   "logSession.defaultNameMorning": "Séance du matin, {date}",
   "logSession.defaultNameAfternoon": "Séance de l'après-midi, {date}",
   "logSession.defaultNameEvening": "Séance du soir, {date}",

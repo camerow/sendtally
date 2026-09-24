@@ -528,6 +528,31 @@ body:has(.climb-sheet[open]) {
   color: rgba(64, 63, 76, 0.55);
 }
 
+.climb-sheet-note {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 9px;
+}
+
+.climb-sheet-note > div {
+  align-self: stretch;
+}
+
+.climb-sheet-locked {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.4;
+  color: rgba(64, 63, 76, 0.6);
+}
+
+.climb-sheet-locked svg {
+  flex: none;
+}
+
 .climb-sheet-actions {
   display: flex;
   gap: 10px;

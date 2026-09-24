@@ -159,9 +159,12 @@ function RpePicker({
 export function LogSessionForm({
   api,
   editing,
+  header,
 }: {
   api: SendtallyApi;
   editing?: { fingerprint: string; draft: LogSessionDraft };
+  /** Given by the edit page: its heading, with the live climb summary under the title. */
+  header?: (summary: string) => React.ReactNode;
 }): React.ReactElement {
   const navigate = useNavigate();
   const client = useQueryClient();
@@ -375,6 +378,7 @@ export function LogSessionForm({
 
   return (
     <div className="log-session">
+      {header?.(draftSummary(draft))}
       {autosave.offered !== null && (
         <DraftBanner
           stored={autosave.offered}
@@ -722,7 +726,7 @@ export function LogSessionForm({
 
       <div className="log-session-actions">
         <div className="log-session-status">
-          <span style={monoLabel}>{draftSummary(draft)}</span>
+          {header === undefined && <span style={monoLabel}>{draftSummary(draft)}</span>}
           {autosave.savedAt !== null && (
             <span
               style={{

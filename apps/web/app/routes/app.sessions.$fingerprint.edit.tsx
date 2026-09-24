@@ -32,6 +32,34 @@ const monoLabel: React.CSSProperties = {
   color: "rgba(64,63,76,0.72)",
 };
 
+/** Inside the form (with a summary) the form's own gap spaces it; before it loads, the margin does. */
+function EditHeader({ summary }: { summary?: string }): React.ReactElement {
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: 6,
+        margin: summary === undefined ? "14px 0 26px" : "14px 0 0",
+      }}
+    >
+      <h1
+        style={{
+          margin: 0,
+          fontFamily: "var(--font-display)",
+          fontWeight: 700,
+          fontSize: 36,
+          lineHeight: 1.05,
+          letterSpacing: "-0.03em",
+        }}
+      >
+        {t("logSession.editTitle")}
+      </h1>
+      {summary !== undefined && <span style={monoLabel}>{summary}</span>}
+    </div>
+  );
+}
+
 export default function EditSessionRoute(): React.ReactElement {
   const { apiUrl } = useLoaderData<typeof loader>();
   const fingerprint = useParams().fingerprint ?? "";
@@ -42,21 +70,7 @@ export default function EditSessionRoute(): React.ReactElement {
   return (
     <div>
       <BackLink to={backTo}>{t("sessionDetail.backSession")}</BackLink>
-      <div style={{ display: "flex", flexDirection: "column", gap: 6, margin: "14px 0 26px" }}>
-        <h1
-          style={{
-            margin: 0,
-            fontFamily: "var(--font-display)",
-            fontWeight: 700,
-            fontSize: 36,
-            lineHeight: 1.05,
-            letterSpacing: "-0.03em",
-          }}
-        >
-          {t("logSession.editTitle")}
-        </h1>
-        <span style={monoLabel}>{t("logSession.editSubtitle")}</span>
-      </div>
+      {!(state.status === "ready" && state.data.editable) && <EditHeader />}
       {state.status === "loading" && <span style={monoLabel}>{t("common.loading")}</span>}
       {state.status === "error" && (
         <span style={{ ...monoLabel, textTransform: "none", color: "var(--text-label-accent)" }}>
@@ -66,7 +80,11 @@ export default function EditSessionRoute(): React.ReactElement {
       )}
       {state.status === "ready" &&
         (state.data.editable ? (
-          <LogSessionForm api={api} editing={{ fingerprint, draft: state.data.draft }} />
+          <LogSessionForm
+            api={api}
+            editing={{ fingerprint, draft: state.data.draft }}
+            header={(summary) => <EditHeader summary={summary} />}
+          />
         ) : (
           <span style={{ ...monoLabel, color: "var(--text-label-accent)" }}>
             {t("sessions.readOnlyBoard")}{" "}

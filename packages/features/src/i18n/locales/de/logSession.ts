@@ -19,7 +19,6 @@ export const logSession = {
   "logSession.needGrade": "Jede Kletterei braucht einen Grad.",
   "logSession.backToSession": "← Session",
   "logSession.editTitle": "Session bearbeiten",
-  "logSession.editSubtitle": "Die Anstrengung wird beim Speichern neu bewertet",
   "logSession.sessionNameOptional": "Sessionname · optional",
   "logSession.sessionNamePlaceholder": "Dienstagabend-Session",
   "logSession.date": "Datum",
@@ -82,7 +81,9 @@ export const logSession = {
   "logSession.noteOptional": "Notiz · optional",
   "logSession.climbNotePlaceholder": "Wie es lief, was du als Nächstes probierst",
   "logSession.noteKeptOn": "Bleibt an {name}, zusammen mit jeder anderen Session daran",
-  "logSession.noteNeedsName": "Notiz · die Kletterei braucht einen Namen für eine Notiz",
+  "logSession.noteNeedsName": "Eine Kletterei braucht einen Namen, um eine Notiz zu haben",
+  "logSession.nameUnlocksNote":
+    "Eine Kletterei braucht einen Namen, um eine Notiz zu haben oder als Projekt markiert zu werden",
   "logSession.defaultNameMorning": "Morgensession, {date}",
   "logSession.defaultNameAfternoon": "Nachmittagssession, {date}",
   "logSession.defaultNameEvening": "Abendsession, {date}",

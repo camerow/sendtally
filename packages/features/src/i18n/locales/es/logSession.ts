@@ -19,7 +19,6 @@ export const logSession = {
   "logSession.needGrade": "Cada vía o bloque necesita un grado.",
   "logSession.backToSession": "← Sesión",
   "logSession.editTitle": "Editar sesión",
-  "logSession.editSubtitle": "El esfuerzo se vuelve a puntuar al guardar",
   "logSession.sessionNameOptional": "Nombre de la sesión · opcional",
   "logSession.sessionNamePlaceholder": "Sesión del martes por la noche",
   "logSession.date": "Fecha",
@@ -82,7 +81,9 @@ export const logSession = {
   "logSession.noteOptional": "Nota · opcional",
   "logSession.climbNotePlaceholder": "Cómo fue, qué probar la próxima vez",
   "logSession.noteKeptOn": "Se guarda en {name}, junto a todas las demás sesiones en ella",
-  "logSession.noteNeedsName": "Nota · la vía necesita un nombre para llevar una nota",
+  "logSession.noteNeedsName": "Una vía necesita un nombre para llevar una nota",
+  "logSession.nameUnlocksNote":
+    "Una vía necesita un nombre para llevar una nota o marcarse como proyecto",
   "logSession.defaultNameMorning": "Sesión de mañana, {date}",
   "logSession.defaultNameAfternoon": "Sesión de tarde, {date}",
   "logSession.defaultNameEvening": "Sesión de noche, {date}",

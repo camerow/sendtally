@@ -238,17 +238,25 @@ export function ClimbEditorSheet({
             onChange={onChange}
           />
         )}
-        {!endurance && <ProjectToggle project={project} named={named} onToggle={onToggleProject} />}
-        <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
-          <span style={monoLabel}>
-            {named ? t("logSession.noteOptional") : t("logSession.noteNeedsName")}
-          </span>
-          {named && (
-            <ClimbNoteField
-              note={climb.note}
-              name={climb.name}
-              onChange={(note) => onChange({ ...climb, note })}
-            />
+        <div className="climb-sheet-note">
+          <label htmlFor="climb-note" style={monoLabel}>
+            {t("logSession.noteOptional")}
+          </label>
+          <ClimbNoteField
+            id="climb-note"
+            note={climb.note}
+            name={climb.name}
+            disabled={!named}
+            onChange={(note) => onChange({ ...climb, note })}
+          />
+          {!endurance && (
+            <ProjectToggle project={project} named={named} onToggle={onToggleProject} />
+          )}
+          {!named && (
+            <p className="climb-sheet-locked">
+              <Icon name="lock" size={14} strokeWidth={1.8} />
+              {endurance ? t("logSession.noteNeedsName") : t("logSession.nameUnlocksNote")}
+            </p>
           )}
         </div>
         <div className="climb-sheet-actions">

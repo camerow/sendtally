@@ -196,10 +196,13 @@ describe("ClimbEditorSheet", () => {
 
   // A note needs a climb name to roll up under, so there is nothing to type into
   // until the climb has one - the label says why instead of a dead field.
-  it("offers no note field until the climb is named", () => {
+  it("locks the note and project until the climb is named", () => {
     const dialog = mount(() => {});
-    expect(dialog.querySelector("textarea")).toBeNull();
-    expect(dialog.textContent).toContain("climb must have a name to have a note");
+    expect(dialog.querySelector("textarea")?.disabled).toBe(true);
+    expect(dialog.querySelector<HTMLButtonElement>("button[aria-pressed]")?.disabled).toBe(true);
+    expect(dialog.textContent).toContain(
+      "A climb must have a name to have a note or be marked as a project"
+    );
   });
 
   it("offers the note field once the climb is named", () => {
@@ -208,8 +211,8 @@ describe("ClimbEditorSheet", () => {
       () => {},
       "Cave problem"
     );
-    expect(dialog.querySelector("textarea")).not.toBeNull();
-    expect(dialog.textContent).not.toContain("climb must have a name to have a note");
+    expect(dialog.querySelector("textarea")?.disabled).toBe(false);
+    expect(dialog.textContent).not.toContain("must have a name");
   });
 
   it("closes from the Save button", () => {

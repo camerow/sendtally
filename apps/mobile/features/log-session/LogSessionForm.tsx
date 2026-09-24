@@ -380,9 +380,7 @@ export function LogSessionForm({
                 color: colors.textMuted,
               }}
             >
-              {editing !== undefined
-                ? t("logSession.editSubtitle")
-                : t("logSession.wrapUpSubtitle")}
+              {editing !== undefined ? draftSummary(draft) : t("logSession.wrapUpSubtitle")}
             </Text>
           )}
         </View>
@@ -759,18 +757,20 @@ export function LogSessionForm({
           backgroundColor: colors.white,
         }}
       >
-        <Text
-          style={{
-            fontFamily: fonts.monoMedium,
-            fontSize: 10,
-            letterSpacing: 0.8,
-            textTransform: "uppercase",
-            color: colors.textMuted,
-            textAlign: "center",
-          }}
-        >
-          {draftSummary(draft)}
-        </Text>
+        {editing === undefined && (
+          <Text
+            style={{
+              fontFamily: fonts.monoMedium,
+              fontSize: 10,
+              letterSpacing: 0.8,
+              textTransform: "uppercase",
+              color: colors.textMuted,
+              textAlign: "center",
+            }}
+          >
+            {draftSummary(draft)}
+          </Text>
+        )}
         {autosave.savedAt !== null && (
           <Text
             style={{

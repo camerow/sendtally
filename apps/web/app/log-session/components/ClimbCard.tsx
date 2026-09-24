@@ -208,7 +208,7 @@ export function ClimbCard({
           </>
         ) : (
           <span style={{ ...columnHead, gridColumn: "1 / -1" }}>
-            {t("logSession.noteNeedsName")}
+            {endurance ? t("logSession.noteNeedsName") : t("logSession.nameUnlocksNote")}
           </span>
         )}
       </div>
