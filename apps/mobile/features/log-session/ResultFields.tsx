@@ -1,5 +1,5 @@
 import React from "react";
-import { Pressable, Switch, Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import type { ClimbSummary } from "@sendtally/api-client";
 import {
   climbOutcome,
@@ -19,6 +19,7 @@ import {
 import { t } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { Icon } from "../../components/Icon";
+import { SwitchTrack } from "../../components/SwitchTrack";
 import { press, pressRow, tap } from "../../lib/press";
 
 const STYLE_FILL: Record<ClimbStyle, { fill: string; ink: string }> = {
@@ -197,13 +198,7 @@ export function ResultFields({ climb, known, onChange }: ResultFieldsProps): Rea
           </Text>
         </View>
         <Text style={label}>{t("common.sent")}</Text>
-        <Switch
-          value={sent}
-          onValueChange={(value) => apply(climb, value, firstGo)}
-          trackColor={{ true: colors.azureInk, false: "rgba(64,63,76,0.22)" }}
-          accessibilityElementsHidden
-          importantForAccessibility="no-hide-descendants"
-        />
+        <SwitchTrack checked={sent} />
       </Pressable>
 
       <View style={{ ...row, minHeight: 56, paddingLeft: 52, gap: 6 }}>
