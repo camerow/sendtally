@@ -101,22 +101,23 @@ It becomes editable from the second version onward.
 
 Screenshot order puts Strava second: only the first two are visible without swiping, and Strava is the strongest hook for a climber who already has the app.
 
-| Asset                          | Size                | File                                                |
-| ------------------------------ | ------------------- | --------------------------------------------------- |
-| iOS screenshots, 6.9" and 6.7" | 1290x2796           | `out/ios/1-sessions.png` through `5-trends.png`     |
-| Play phone screenshots         | 1080x1920           | `out/android/1-sessions.png` through `5-trends.png` |
-| Play feature graphic           | 1024x500            | `out/feature-graphic.png`                           |
-| Play icon                      | 512x512             | `out/play-icon-512.png`                             |
-| iOS icon                       | 1024x1024, no alpha | `../assets/icon.png`, shipped in the build          |
+| Asset                  | Size                | File                                                |
+| ---------------------- | ------------------- | --------------------------------------------------- |
+| iOS screenshots, 6.5"  | 1284x2778           | `out/ios/1-sessions.png` through `5-trends.png`     |
+| Play phone screenshots | 1080x1920           | `out/android/1-sessions.png` through `5-trends.png` |
+| Play feature graphic   | 1024x500            | `out/feature-graphic.png`                           |
+| Play icon              | 512x512             | `out/play-icon-512.png`                             |
+| iOS icon               | 1024x1024, no alpha | `../assets/icon.png`, shipped in the build          |
 
 Screenshot captions, in order: "Every session, in about a minute.", "Your climbing on Strava", "Log it right after you climb.", "See the whole night, climb by climb.", "Watch six months add up."
 
-September set, synced from the "Store set · September" canvas pages and built on real simulator captures (`screens/`, rendered to `out/ios-set2/` at 1290x2796 and `out/android-set2/` at 1080x1920), captions in order: "The ultimate climbing journal." (hero, with the icon and name), the projects pair "All of your projects in one place" and "Keep notes, attempts, and time invested", "Log the colours your gym actually sets.", the trends pair "A year from now, you will want to know what changed." and "Members get deep trend insights for analyzing their climbing.", "Log your session while you remember it.", "Every lap of the 4x4, written down.", "Don't see your crag? Add it".
+September set, synced from the "Store set · September" canvas pages and built on real simulator captures (`screens/`, rendered to `out/ios-set2/` at 1284x2778 and `out/android-set2/` at 1080x1920), captions in order: "The ultimate climbing journal." (hero, with the icon and name), the projects pair "All of your projects in one place" and "Keep notes, attempts, and time invested", "Log the colours your gym actually sets.", the trends pair "A year from now, you will want to know what changed." and "Members get deep trend insights for analyzing their climbing.", "Log your session while you remember it.", "Every lap of the 4x4, written down.", "Don't see your crag? Add it".
 Each pair reads as one image across two frames.
 The Android frames swap the iOS status bar for an Android one; Google Play takes at most 8 phone screenshots, so one of the nine has to go there.
 
 iPad screenshots are not needed: `supportsTablet` is false.
-Nor is a 6.5" set: App Store Connect accepts the 1290x2796 images as the one required iPhone size and scales them down for smaller devices.
+The iPhone set is 1284x2778, the 6.5" size: App Store Connect accepts 1242x2688, 2688x1242, 1284x2778 or 2778x1284 there and scales the set for other iPhones.
+The artboards keep their 1290x2796 layout inside a scaled wrapper, so a canvas sync only needs the root size and wrapper kept.
 
 ## Localizations
 
