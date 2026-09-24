@@ -2,100 +2,87 @@ import React from "react";
 import { Link } from "react-router";
 import type { ClimbVocabulary } from "@sendtally/features/climbs";
 import type { Gym } from "@sendtally/features/gyms";
-import {
-  durationLabel,
-  elapsedLabel,
-  idleMinutes,
-  wantsWrapUpReminder,
-  type StoredSessionDraft,
-} from "@sendtally/features/log-session";
+import type { LiveSyncStatus, StoredSessionDraft } from "@sendtally/features/log-session";
 import { formatDate, t } from "@sendtally/features/i18n";
 import { Icon } from "../../components/Icon";
 import { ClimbLedgerRow } from "../../log-session/components/ClimbLedgerRow";
 
-const OPEN_SESSION = "/app/sessions/new?resume=1";
-const WRAP_UP = "/app/sessions/new?resume=1&wrapUp=1";
-
-function useSecondClock(): Date {
-  const [now, setNow] = React.useState(() => new Date());
-  React.useEffect(() => {
-    const timer = setInterval(() => setNow(new Date()), 1000);
-    return () => clearInterval(timer);
-  }, []);
-  return now;
-}
-
-function ReminderBar({
-  stored,
-  now,
-}: {
-  stored: StoredSessionDraft;
-  now: Date;
-}): React.ReactElement {
-  const idle = idleMinutes(stored.draft, now);
-  const meta =
-    idle === null
-      ? t("sessions.idleSinceYesterday", {
-          date: formatDate(stored.savedAt, { weekday: "long", day: "numeric", month: "short" }),
-        })
-      : t("sessions.idleFor", { duration: durationLabel(idle) });
-  return (
-    <div className="live-reminder">
-      <span className="live-reminder-text">
-        <span className="live-reminder-title">{t("sessions.stillClimbing")}</span>
-        <span className="live-reminder-meta">{meta}</span>
-      </span>
-      <Link to={WRAP_UP} className="live-wrap-up">
-        {t("sessions.wrapUp")}
-      </Link>
-    </div>
-  );
+function syncLabel(status: LiveSyncStatus): string {
+  if (status === "saving") return t("sessions.saving");
+  if (status === "failed") return t("sessions.notSavedYet");
+  return t("sessions.savedAsYouGo");
 }
 
 export type LiveSessionCardProps = {
   stored: StoredSessionDraft;
+  status: LiveSyncStatus;
   vocabulary: ClimbVocabulary;
   gym: Gym | null;
   onEditClimb: (key: string) => void;
   onChangeTries: (key: string, tries: number) => void;
+  onToggleSent: (key: string) => void;
 };
 
-/** The session being climbed right now, pinned above the log until it is wrapped up. */
+/** The session being climbed right now, pinned above the log while it is saved as it goes. */
 export function LiveSessionCard({
   stored,
+  status,
   vocabulary,
   gym,
   onEditClimb,
   onChangeTries,
+  onToggleSent,
 }: LiveSessionCardProps): React.ReactElement {
-  const now = useSecondClock();
-  const { draft, savedAt } = stored;
+  const { draft, savedAt, fingerprint } = stored;
   const title = draft.name.trim() === "" ? t("sessions.unfinishedSession") : draft.name;
-  const meta = [
-    t("sessions.liveMeta", { elapsed: elapsedLabel(draft, now) }),
-    ...(gym === null ? [] : [gym.name]),
-  ].join(" · ");
+  const meta = [syncLabel(status), ...(gym === null ? [] : [gym.name])].join(" · ");
+  const label = `${title}, ${meta}`;
+  const header = (
+    <>
+      <span className="session-row-date">
+        <span className="session-row-day">{formatDate(savedAt, { day: "numeric" })}</span>
+        <span className="session-row-weekday">{formatDate(savedAt, { weekday: "short" })}</span>
+      </span>
+      <span className="session-row-main">
+        <span className="session-row-title">{title}</span>
+        <span className="session-row-meta live-session-meta">
+          <span className="live-session-dot" />
+          <span className="live-session-meta-text">{meta}</span>
+        </span>
+      </span>
+      <span className="live-session-chevron">
+        <Icon name="chevron" size={14} strokeWidth={2} />
+      </span>
+    </>
+  );
 
   return (
     <div className="live-session">
-      {wantsWrapUpReminder(draft, now) && <ReminderBar stored={stored} now={now} />}
       <div className="live-session-body">
-        <Link to={OPEN_SESSION} className="live-session-row" aria-label={`${title}, ${meta}`}>
-          <span className="session-row-date">
-            <span className="session-row-day">{formatDate(savedAt, { day: "numeric" })}</span>
-            <span className="session-row-weekday">{formatDate(savedAt, { weekday: "short" })}</span>
-          </span>
-          <span className="session-row-main">
-            <span className="session-row-title">{title}</span>
-            <span className="session-row-meta live-session-meta">
-              <span className="live-session-dot" />
-              <span className="live-session-meta-text">{meta}</span>
+        <div className="live-session-head">
+          {fingerprint === undefined ? (
+            <span className="live-session-row" aria-label={label}>
+              {header}
             </span>
-          </span>
-          <span className="live-session-chevron">
-            <Icon name="chevron" size={14} strokeWidth={2} />
-          </span>
-        </Link>
+          ) : (
+            <Link
+              to={`/app/sessions/${fingerprint}`}
+              className="live-session-row"
+              aria-label={label}
+            >
+              {header}
+            </Link>
+          )}
+          {fingerprint === undefined ? (
+            <button type="button" className="live-add-details" disabled>
+              {t("sessions.addDetails")}
+            </button>
+          ) : (
+            <Link to={`/app/sessions/${fingerprint}/edit`} className="live-add-details">
+              {t("sessions.addDetails")}
+            </Link>
+          )}
+        </div>
         {draft.climbs.length > 0 && (
           <div className="live-session-ledger">
             {draft.climbs.map((climb) => (
@@ -105,6 +92,7 @@ export function LiveSessionCard({
                 project={climb.project ?? vocabulary.isProject(climb.name)}
                 onPress={() => onEditClimb(climb.key)}
                 onChangeTries={(tries) => onChangeTries(climb.key, tries)}
+                onToggleSent={() => onToggleSent(climb.key)}
               />
             ))}
           </div>

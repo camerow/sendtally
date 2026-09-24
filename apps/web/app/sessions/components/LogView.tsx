@@ -18,6 +18,8 @@ import {
   circuitGyms,
   readClimbKind,
   useLiveSession,
+  useLiveSync,
+  withClimbOutcome,
   withTries,
 } from "@sendtally/features/log-session";
 import { useGradeScalePrefs } from "@sendtally/features/settings";
@@ -75,7 +77,8 @@ export function LogView({
   const [filtersOpen, setFiltersOpen] = React.useState(false);
   const api = useClientApi(apiUrl);
   const { scales } = useGradeScalePrefs(api);
-  const live = useLiveSession(sessionDraftStorage);
+  const liveSync = useLiveSync(api, sessionDraftStorage);
+  const live = useLiveSession(sessionDraftStorage, liveSync.sync);
   const vocabulary = useClimbVocabulary(api);
   const [editingClimb, setEditingClimb] = React.useState<string | null>(null);
   const gyms = useGyms(api);
@@ -195,10 +198,21 @@ export function LogView({
       {live.stored !== null && (
         <LiveSessionCard
           stored={live.stored}
+          status={liveSync.status}
           vocabulary={vocabulary}
           gym={liveGym}
           onEditClimb={setEditingClimb}
           onChangeTries={(key, tries) => live.updateClimb(key, (c) => withTries(c, tries))}
+          onToggleSent={(key) =>
+            live.updateClimb(key, (c) =>
+              withClimbOutcome(
+                c,
+                c.kind === "send"
+                  ? { kind: "attempt" }
+                  : { kind: "send", style: c.tries === 1 ? "flash" : "redpoint" }
+              )
+            )
+          }
         />
       )}
       <div className="sessions-filters">

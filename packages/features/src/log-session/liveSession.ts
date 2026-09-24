@@ -12,16 +12,10 @@ import {
   type LogSessionDraft,
 } from "./types";
 
-/** Climbs logged one at a time, as they happen; the session is wrapped up afterwards. */
-
-export const WRAP_UP_REMINDER_MINUTES = 120;
+/** Climbs logged one at a time, as they happen; details are added afterwards. */
 
 function pad(n: number): string {
   return String(n).padStart(2, "0");
-}
-
-function hhmm(d: Date): string {
-  return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
 /** The device-local calendar date, as a draft stores it. */
@@ -37,13 +31,13 @@ export function defaultSessionName(now: Date): string {
   return t("logSession.defaultNameEvening", { date });
 }
 
-/** Starts at the first climb and, until wrap-up, ends at the latest one. */
+/** Starts at the first climb; times are the climber's to add later. */
 export function liveDraft(now: Date): LogSessionDraft {
   return {
     name: defaultSessionName(now),
     date: localDate(now),
-    startTime: hhmm(now),
-    endTime: hhmm(now),
+    startTime: "",
+    endTime: "",
     location: "indoor",
     tags: [],
     notes: "",
@@ -68,7 +62,7 @@ export function withQuickClimb(
   const previous = started.climbs[started.climbs.length - 1];
   const climb = newClimbOfKind(key, kind, prefs, gyms, previous);
   const next = withGymAdopted({ ...started, climbs: [...started.climbs, climb] }, gyms);
-  return { draft: withClimbTouched(next, now), key };
+  return { draft: next, key };
 }
 
 /** A session without a gym adopts the gym of its first circuit climb, however that climb got its circuit. */
@@ -90,32 +84,6 @@ export function liveStoredDraft(storage: DraftStorage, now: Date): StoredSession
   if (entry.draft.date === localDate(now)) return entry;
   if (entry.fingerprint !== undefined) storage.remove();
   return null;
-}
-
-export function withClimbTouched(draft: LogSessionDraft, now: Date): LogSessionDraft {
-  return draft.date === localDate(now) ? { ...draft, endTime: hhmm(now) } : draft;
-}
-
-/** Minutes since the last climb was logged, or null once the session is on another day. */
-export function idleMinutes(draft: LogSessionDraft, now: Date): number | null {
-  if (draft.date !== localDate(now)) return null;
-  const [h, m] = draft.endTime.split(":").map(Number);
-  if (h === undefined || m === undefined || Number.isNaN(h) || Number.isNaN(m)) return null;
-  return Math.max(0, now.getHours() * 60 + now.getMinutes() - (h * 60 + m));
-}
-
-/** hh:mm:ss since the draft's start, clamped at zero. */
-export function elapsedLabel(draft: LogSessionDraft, now: Date): string {
-  const started = new Date(`${draft.date}T${draft.startTime}:00`);
-  const total = Math.max(0, Math.floor((now.getTime() - started.getTime()) / 1000));
-  if (Number.isNaN(total)) return "00:00:00";
-  const pad = (n: number): string => String(n).padStart(2, "0");
-  return `${pad(Math.floor(total / 3600))}:${pad(Math.floor((total % 3600) / 60))}:${pad(total % 60)}`;
-}
-
-export function wantsWrapUpReminder(draft: LogSessionDraft, now: Date): boolean {
-  const idle = idleMinutes(draft, now);
-  return draft.climbs.length > 0 && (idle === null || idle >= WRAP_UP_REMINDER_MINUTES);
 }
 
 /**

@@ -318,6 +318,12 @@
   flex: none;
 }
 
+.climb-ledger-result--toggle {
+  padding: 0;
+  border: 0;
+  cursor: pointer;
+}
+
 .climb-ledger-text {
   flex: 1;
   min-width: 0;

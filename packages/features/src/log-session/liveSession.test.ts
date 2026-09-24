@@ -5,14 +5,9 @@ import { climbKindOf, readClimbKind, withClimbKind } from "./climbKind";
 import { draftStorage, parseStoredDraft, writeStoredDraft, type DraftStorage } from "./draftStore";
 import {
   defaultSessionName,
-  elapsedLabel,
-  idleMinutes,
-  liveDraft,
   liveStoredDraft,
-  wantsWrapUpReminder,
   withClimbName,
   withPickedClimb,
-  withClimbTouched,
   withGymAdopted,
   withQuickClimb,
 } from "./liveSession";
@@ -27,17 +22,15 @@ describe("live session", () => {
     expect(defaultSessionName(EVENING)).toBe("Evening session, 9/16/26");
   });
 
-  it("starts a session at the first climb and ends it at the latest", () => {
+  it("starts a session at the first climb, leaving its times to add later", () => {
     const first = withQuickClimb(null, EVENING);
     expect(first.key).toBe("climb-1");
-    expect(first.draft.startTime).toBe("18:42");
-    expect(first.draft.endTime).toBe("18:42");
+    expect(first.draft.startTime).toBe("");
+    expect(first.draft.endTime).toBe("");
     expect(first.draft.climbs).toHaveLength(1);
 
     const second = withQuickClimb(first.draft, new Date(2026, 8, 16, 19, 31));
     expect(second.key).toBe("climb-2");
-    expect(second.draft.startTime).toBe("18:42");
-    expect(second.draft.endTime).toBe("19:31");
     expect(second.draft.climbs[1]?.scale).toBe(first.draft.climbs[0]?.scale);
   });
 
@@ -121,33 +114,6 @@ describe("live session", () => {
     );
     expect(late.draft.gymId).toBe("g");
     expect(late.draft.climbs[1]).toMatchObject({ circuit: { id: "a" } });
-  });
-
-  it("moves the end time when a climb is revisited the same day only", () => {
-    const draft = liveDraft(EVENING);
-    expect(withClimbTouched(draft, new Date(2026, 8, 16, 20, 5)).endTime).toBe("20:05");
-    expect(withClimbTouched(draft, new Date(2026, 8, 17, 8, 0)).endTime).toBe("18:42");
-    const nextDay = withQuickClimb(
-      withQuickClimb(null, EVENING).draft,
-      new Date(2026, 8, 17, 8, 0)
-    );
-    expect(nextDay.draft.endTime).toBe("18:42");
-    expect(nextDay.draft.climbs).toHaveLength(2);
-  });
-
-  it("counts hh:mm:ss since the start, never below zero", () => {
-    const { draft } = withQuickClimb(null, EVENING);
-    expect(elapsedLabel(draft, new Date(2026, 8, 16, 19, 42, 5))).toBe("01:00:05");
-    expect(elapsedLabel(draft, new Date(2026, 8, 16, 18, 0))).toBe("00:00:00");
-  });
-
-  it("reminds after two idle hours, and always on a later day", () => {
-    const { draft } = withQuickClimb(null, EVENING);
-    expect(idleMinutes(draft, new Date(2026, 8, 16, 19, 42))).toBe(60);
-    expect(wantsWrapUpReminder(draft, new Date(2026, 8, 16, 19, 42))).toBe(false);
-    expect(wantsWrapUpReminder(draft, new Date(2026, 8, 16, 20, 42))).toBe(true);
-    expect(wantsWrapUpReminder(draft, new Date(2026, 8, 17, 7, 0))).toBe(true);
-    expect(wantsWrapUpReminder(liveDraft(EVENING), new Date(2026, 8, 17, 7, 0))).toBe(false);
   });
 
   it("shows only today's draft, dropping an older one the server already has", () => {

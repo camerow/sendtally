@@ -17,6 +17,8 @@ export type ClimbLedgerRowProps = {
   onPress: () => void;
   /** Given by the live card: tries change in place, without opening the editor. */
   onChangeTries?: (tries: number) => void;
+  /** Given by the live card: the mark toggles between sent and attempt. */
+  onToggleSent?: () => void;
 };
 
 function Row({
@@ -98,6 +100,7 @@ export function ClimbLedgerRow({
   project,
   onPress,
   onChangeTries,
+  onToggleSent,
 }: ClimbLedgerRowProps): React.ReactElement {
   if (climb.endurance !== undefined) return <EnduranceLedgerRow climb={climb} onPress={onPress} />;
   const named = climb.name.trim() !== "";
@@ -114,6 +117,11 @@ export function ClimbLedgerRow({
     e.stopPropagation();
     onChangeTries?.(tries);
   };
+  const resultStyle: React.CSSProperties = {
+    background: firstGo ? "var(--bs-gold)" : send ? "var(--bs-azure-ink)" : "var(--bs-gunmetal)",
+    color: firstGo ? "var(--bs-gunmetal)" : "var(--bs-white)",
+  };
+  const mark = <Glyph d={send ? CHECK : CROSS} size={send ? 12 : 11} width={2.2} />;
   return (
     <Row onPress={onPress} className="climb-ledger-row">
       {circuit === undefined ? (
@@ -133,20 +141,28 @@ export function ClimbLedgerRow({
         </span>
         {wall !== "" && <span className="climb-ledger-wall">{wall}</span>}
       </span>
-      <span
-        className="climb-ledger-result"
-        style={{
-          background: firstGo
-            ? "var(--bs-gold)"
-            : send
-              ? "var(--bs-azure-ink)"
-              : "var(--bs-gunmetal)",
-          color: firstGo ? "var(--bs-gunmetal)" : "var(--bs-white)",
-        }}
-        aria-label={send ? t("logSession.send") : t("logSession.attempt")}
-      >
-        <Glyph d={send ? CHECK : CROSS} size={send ? 12 : 11} width={2.2} />
-      </span>
+      {onToggleSent === undefined ? (
+        <span
+          className="climb-ledger-result"
+          style={resultStyle}
+          aria-label={send ? t("logSession.send") : t("logSession.attempt")}
+        >
+          {mark}
+        </span>
+      ) : (
+        <button
+          type="button"
+          className="climb-ledger-result climb-ledger-result--toggle"
+          style={resultStyle}
+          aria-label={send ? t("logSession.sentTapToAttempt") : t("logSession.attemptTapToSent")}
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleSent();
+          }}
+        >
+          {mark}
+        </button>
+      )}
       {onChangeTries === undefined ? (
         <span className="climb-ledger-tries">×{climb.tries}</span>
       ) : (

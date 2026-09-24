@@ -60,11 +60,6 @@ export const sessions = {
   "sessions.logFullSession": "Sesión",
   "sessions.logFullSessionHint":
     "Agrupa vías en una sesión con nombre, notas, fecha, lugar y esfuerzo.",
-  "sessions.liveMeta": "En curso desde hace {elapsed}",
-  "sessions.wrapUp": "Cerrar",
-  "sessions.stillClimbing": "¿Sigues escalando?",
-  "sessions.idleFor": "Nada registrado desde hace {duration}",
-  "sessions.idleSinceYesterday": "Empezada el {date}",
   "sessions.discardSession": "Descartar sesión",
   "sessions.savedAsYouGo": "Se guarda sobre la marcha",
   "sessions.saving": "Guardando…",

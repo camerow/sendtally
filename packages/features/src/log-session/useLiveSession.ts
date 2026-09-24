@@ -2,13 +2,7 @@ import React from "react";
 import { writeStoredDraft, type DraftStorage } from "./draftStore";
 import type { Gym } from "../gyms/types";
 import type { ClimbKind } from "./climbKind";
-import {
-  liveStoredDraft,
-  localDate,
-  withClimbTouched,
-  withGymAdopted,
-  withQuickClimb,
-} from "./liveSession";
+import { liveStoredDraft, localDate, withGymAdopted, withQuickClimb } from "./liveSession";
 import type { LiveSync } from "./liveSync";
 import type { ClimbDraft, GradePrefs, LogSessionDraft } from "./types";
 import { useStoredDraft, type StoredDraftEntry } from "./useDraftAutosave";
@@ -66,8 +60,7 @@ export function useLiveSession(storage: DraftStorage, sync?: LiveSync): LiveSess
       const entry = current();
       if (entry === null) return;
       const climbs = entry.draft.climbs.map((c) => (c.key === key ? patch(c) : c));
-      const draft = withClimbTouched(withGymAdopted({ ...entry.draft, climbs }, gyms), new Date());
-      write(draft, entry.fingerprint);
+      write(withGymAdopted({ ...entry.draft, climbs }, gyms), entry.fingerprint);
     },
     [current, write]
   );
