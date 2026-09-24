@@ -58,7 +58,7 @@ export function exportCsv(input: ExportInput): string {
       s.gym_id === null ? "" : (gymName.get(s.gym_id) ?? ""),
       s.times === "both" || s.times === "start" ? hhmm(s.start_at) : "",
       s.times === "both" || s.times === "end" ? hhmm(s.end_at) : "",
-      s.rpe,
+      s.rpe_source === "none" ? "" : s.rpe,
       (input.tagsBySession.get(s.fingerprint) ?? []).map((t) => t.name).join("; "),
       input.notesBySession.get(s.fingerprint) ?? "",
     ];

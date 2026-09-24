@@ -472,6 +472,7 @@ function session(overrides: Partial<SessionDetail> = {}): SessionDetail {
     notes: null,
     entries: [],
     rpe: 7,
+    rpe_source: "computed",
     title: "Tuesday board night",
     strava_activity_id: null,
     posted_at: null,
@@ -507,6 +508,10 @@ function session(overrides: Partial<SessionDetail> = {}): SessionDetail {
 }
 
 describe("draftFromSession", () => {
+  it("opens an unscored session on Auto", () => {
+    expect(draftFromSession(session({ rpe_source: "none" })).rpe).toBeNull();
+  });
+
   it("rebuilds the draft a session was logged from", () => {
     expect(draftFromSession(session())).toEqual({
       name: "Tuesday board night",

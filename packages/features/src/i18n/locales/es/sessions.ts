@@ -1,4 +1,5 @@
 export const sessions = {
+  "sessions.unscored": "sin puntuar",
   "sessions.back": "← Registro",
   "sessions.onStrava": "En Strava",
   "sessions.loadFailed": "No se pudo conectar con sendtally. Desliza para reintentar.",

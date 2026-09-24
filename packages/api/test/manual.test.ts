@@ -101,3 +101,41 @@ describe("endurance round trip", () => {
     expect(input.title).toContain("3 climbs");
   });
 });
+
+describe("unscored sessions", () => {
+  const climbs = [{ grade: { scale: "v", value: 3 } }];
+
+  it("accepts a body with no location and no times", () => {
+    expect(
+      manualSessionBody.safeParse({ date: "2026-09-16", unscored: true, climbs }).success
+    ).toBe(true);
+    expect(
+      manualSessionBody.safeParse({ date: "2026-09-16", areaId: "crag", climbs }).success
+    ).toBe(true);
+    expect(
+      manualSessionBody.safeParse({
+        date: "2026-09-16",
+        location: "indoor",
+        areaId: "crag",
+        climbs,
+      }).success
+    ).toBe(false);
+  });
+
+  it.each([
+    [{}, "computed", null],
+    [{ rpe: 7 }, "user", null],
+    [{ unscored: true, rpe: 7 }, "none", null],
+    [{ unscored: true, gymId: "gym" }, "none", "indoor"],
+    [{ areaId: "crag" }, "computed", "outdoor"],
+    [{ location: "indoor", areaId: undefined }, "computed", "indoor"],
+  ] as const)(
+    "records the rpe source and derives the location for %j",
+    (extra, source, location) => {
+      const parsed = manualSessionBody.parse({ date: "2026-09-16", climbs, ...extra });
+      const input = buildManualSession("manual-1", parsed, []);
+      expect(input.rpe_source).toBe(source);
+      expect(input.location).toBe(location);
+    }
+  );
+});

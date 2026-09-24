@@ -16,6 +16,7 @@ import type {
   SessionDetail,
 } from "@sendtally/api-client";
 import { t } from "../i18n";
+import { isUnscored } from "../sessions/meta";
 import { sameTagName } from "../sessions/tags";
 import { durationLabel as lowerDurationLabel, hasEnd, hasStart } from "../sessions/years";
 import {
@@ -330,7 +331,7 @@ export function draftFromSession(session: SessionDetail): LogSessionDraft {
     ...(session.area ? { area: { id: session.area.id, name: session.area.name } } : {}),
     tags: session.tags.map((t) => t.name),
     notes: session.notes ?? "",
-    rpe: session.rpe,
+    rpe: isUnscored(session) ? null : session.rpe,
     climbs: climbs.map((c, i) => {
       const scale = c.grade?.scale ?? "v";
       return {

@@ -1,4 +1,5 @@
 export const sessions = {
+  "sessions.unscored": "ohne Bewertung",
   "sessions.back": "← Logbuch",
   "sessions.onStrava": "Auf Strava",
   "sessions.loadFailed": "sendtally ist nicht erreichbar. Zum Neuladen ziehen.",

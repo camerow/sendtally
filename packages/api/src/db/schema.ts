@@ -95,6 +95,10 @@ export const sessions = sqliteTable(
     top_grade_label: text("top_grade_label"),
     top_send_grade_label: text("top_send_grade_label"),
     rpe: integer("rpe").notNull(),
+    rpe_source: text("rpe_source")
+      .$type<"user" | "computed" | "none">()
+      .notNull()
+      .default("computed"),
     title: text("title").notNull(),
     summary: text("summary").notNull(),
     climbs_json: text("climbs_json"),
