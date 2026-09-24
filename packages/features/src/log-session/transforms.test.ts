@@ -11,6 +11,7 @@ import {
   gradeOptions,
   newClimb,
   nextClimbKey,
+  toLiveSessionInput,
   toLogSessionInput,
   vGradeOf,
   withClimbDiscipline,
@@ -131,6 +132,15 @@ describe("route drafts", () => {
       { scale: "french", value: "7b" },
       { scale: "french", value: "7c" },
     ]);
+  });
+
+  it("sends a live draft unscored, without its times, effort or venue", () => {
+    const input = toLiveSessionInput({ ...draft(), startTime: "18:42", endTime: "19:30", rpe: 7 });
+    expect(input).toMatchObject({ unscored: true, date: draft().date });
+    expect(Object.keys(input)).not.toEqual(
+      expect.arrayContaining(["startTime", "endTime", "rpe", "location"])
+    );
+    expect(input.climbs).toHaveLength(draft().climbs.length);
   });
 
   it("rebuilds a route session draft in the scale it was logged in", () => {

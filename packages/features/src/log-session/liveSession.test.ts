@@ -2,12 +2,13 @@ import type { ClimbSummary } from "@sendtally/api-client";
 import { describe, expect, it } from "vitest";
 import { withCircuit } from "../gyms/draft";
 import { climbKindOf, readClimbKind, withClimbKind } from "./climbKind";
-import type { DraftStorage } from "./draftStore";
+import { draftStorage, parseStoredDraft, writeStoredDraft, type DraftStorage } from "./draftStore";
 import {
   defaultSessionName,
   elapsedLabel,
   idleMinutes,
   liveDraft,
+  liveStoredDraft,
   wantsWrapUpReminder,
   withClimbName,
   withPickedClimb,
@@ -147,6 +148,29 @@ describe("live session", () => {
     expect(wantsWrapUpReminder(draft, new Date(2026, 8, 16, 20, 42))).toBe(true);
     expect(wantsWrapUpReminder(draft, new Date(2026, 8, 17, 7, 0))).toBe(true);
     expect(wantsWrapUpReminder(liveDraft(EVENING), new Date(2026, 8, 17, 7, 0))).toBe(false);
+  });
+
+  it("shows only today's draft, dropping an older one the server already has", () => {
+    let value: string | null = null;
+    const storage = draftStorage({
+      read: () => value,
+      write: (next) => {
+        value = next;
+      },
+      remove: () => {
+        value = null;
+      },
+    });
+    const draft = withQuickClimb(null, EVENING).draft;
+    writeStoredDraft(storage, draft, EVENING, "manual-1");
+    expect(liveStoredDraft(storage, EVENING)?.fingerprint).toBe("manual-1");
+    const tomorrow = new Date(2026, 8, 17, 7, 0);
+    expect(liveStoredDraft(storage, tomorrow)).toBeNull();
+    expect(storage.read()).toBeNull();
+
+    writeStoredDraft(storage, draft, EVENING);
+    expect(liveStoredDraft(storage, tomorrow)).toBeNull();
+    expect(parseStoredDraft(storage.read(), tomorrow)?.draft).toEqual(draft);
   });
 
   it("adopts a known climb's grade on a typed name and keeps it otherwise", () => {

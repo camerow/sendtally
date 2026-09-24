@@ -1,6 +1,7 @@
 import type { ClimbSummary } from "@sendtally/api-client";
 import { climbDraftGrade } from "../climbs/transforms";
 import { formatDate, t } from "../i18n";
+import { parseStoredDraft, type DraftStorage, type StoredSessionDraft } from "./draftStore";
 import type { Gym } from "../gyms/types";
 import { gymOfCircuit, newClimbOfKind, type ClimbKind } from "./climbKind";
 import { nextClimbKey } from "./transforms";
@@ -23,7 +24,8 @@ function hhmm(d: Date): string {
   return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
-function ymd(d: Date): string {
+/** The device-local calendar date, as a draft stores it. */
+export function localDate(d: Date): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
@@ -39,7 +41,7 @@ export function defaultSessionName(now: Date): string {
 export function liveDraft(now: Date): LogSessionDraft {
   return {
     name: defaultSessionName(now),
-    date: ymd(now),
+    date: localDate(now),
     startTime: hhmm(now),
     endTime: hhmm(now),
     location: "indoor",
@@ -78,13 +80,25 @@ export function withGymAdopted(draft: LogSessionDraft, gyms: readonly Gym[]): Lo
   return gymId === undefined ? draft : { ...draft, gymId };
 }
 
+/**
+ * The draft being climbed today. An older draft the server already has is dropped from the
+ * file, since its row is in the log; an older one it does not have stays for the form to offer.
+ */
+export function liveStoredDraft(storage: DraftStorage, now: Date): StoredSessionDraft | null {
+  const entry = parseStoredDraft(storage.read(), now);
+  if (entry === null) return null;
+  if (entry.draft.date === localDate(now)) return entry;
+  if (entry.fingerprint !== undefined) storage.remove();
+  return null;
+}
+
 export function withClimbTouched(draft: LogSessionDraft, now: Date): LogSessionDraft {
-  return draft.date === ymd(now) ? { ...draft, endTime: hhmm(now) } : draft;
+  return draft.date === localDate(now) ? { ...draft, endTime: hhmm(now) } : draft;
 }
 
 /** Minutes since the last climb was logged, or null once the session is on another day. */
 export function idleMinutes(draft: LogSessionDraft, now: Date): number | null {
-  if (draft.date !== ymd(now)) return null;
+  if (draft.date !== localDate(now)) return null;
   const [h, m] = draft.endTime.split(":").map(Number);
   if (h === undefined || m === undefined || Number.isNaN(h) || Number.isNaN(m)) return null;
   return Math.max(0, now.getHours() * 60 + now.getMinutes() - (h * 60 + m));

@@ -19,7 +19,8 @@ export type DraftStorageIo = {
 
 export const DRAFT_TTL_MS = 5 * 24 * 60 * 60 * 1000;
 
-export type StoredSessionDraft = { draft: LogSessionDraft; savedAt: Date };
+/** `fingerprint` is the server session a live draft is mirrored to, once its first save landed. */
+export type StoredSessionDraft = { draft: LogSessionDraft; savedAt: Date; fingerprint?: string };
 
 /** A storage with no quota, no permission and no other tab is not one worth failing over. */
 export function draftStorage(io: DraftStorageIo): DraftStorage {
@@ -79,14 +80,18 @@ export function parseStoredDraft(raw: string | null, now: Date): StoredSessionDr
   }
   if (typeof parsed !== "object" || parsed === null) return null;
 
-  const { draft, savedAt } = parsed as Record<string, unknown>;
+  const { draft, savedAt, fingerprint } = parsed as Record<string, unknown>;
   const at = typeof savedAt === "string" ? new Date(savedAt) : new Date(Number.NaN);
   if (!isDraft(draft) || Number.isNaN(at.getTime())) return null;
   if (now.getTime() - at.getTime() > DRAFT_TTL_MS) return null;
   // A draft outlives the build that wrote it, so a climb field added since then
   // is missing here and the form would edit `undefined`.
   const climbs = draft.climbs.map((climb) => ({ ...climb, note: climb.note ?? "" }));
-  return { draft: { ...draft, climbs }, savedAt: at };
+  return {
+    draft: { ...draft, climbs },
+    savedAt: at,
+    ...(typeof fingerprint === "string" ? { fingerprint } : {}),
+  };
 }
 
 /** The draft on disk, for a form opened to pick it up rather than to offer it. */
@@ -97,7 +102,9 @@ export function storedDraft(storage: DraftStorage): LogSessionDraft | null {
 export function writeStoredDraft(
   storage: DraftStorage,
   draft: LogSessionDraft,
-  now: Date
+  now: Date,
+  fingerprint?: string
 ): Date | null {
-  return storage.write(JSON.stringify({ draft, savedAt: now.toISOString() })) ? now : null;
+  const value = JSON.stringify({ draft, savedAt: now.toISOString(), fingerprint });
+  return storage.write(value) ? now : null;
 }

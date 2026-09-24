@@ -17,6 +17,7 @@ export {
   newClimb,
   nextClimbKey,
   scaleOptionsFor,
+  toLiveSessionInput,
   toLogSessionInput,
   vGradeOf,
   withClimbDiscipline,
@@ -34,6 +35,8 @@ export {
   elapsedLabel,
   idleMinutes,
   liveDraft,
+  liveStoredDraft,
+  localDate,
   wantsWrapUpReminder,
   withClimbName,
   withClimbTouched,
@@ -79,6 +82,15 @@ export {
   type ClimbKind,
 } from "./climbKind";
 export { useLiveSession, type LiveSession } from "./useLiveSession";
+export {
+  LIVE_SYNC_DEBOUNCE_MS,
+  createLiveSync,
+  useLiveSync,
+  type LiveSync,
+  type LiveSyncApi,
+  type LiveSyncState,
+  type LiveSyncStatus,
+} from "./liveSync";
 export { useSessionDraft, type EditableSession } from "./useSessionDraft";
 export {
   useDraftAutosave,

@@ -65,4 +65,8 @@ export const sessions = {
   "sessions.idleFor": "Nothing logged for {duration}",
   "sessions.idleSinceYesterday": "Started on {date}",
   "sessions.discardSession": "Discard session",
+  "sessions.savedAsYouGo": "Saved as you go",
+  "sessions.saving": "Saving…",
+  "sessions.notSavedYet": "Not saved yet, will retry",
+  "sessions.addDetails": "Add details",
 } as const;

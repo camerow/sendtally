@@ -294,6 +294,12 @@ export function toLogSessionInput(draft: LogSessionDraft): LogSessionInput {
   };
 }
 
+/** A session logged as it happens has no times, effort or venue yet; the server keeps it unscored. */
+export function toLiveSessionInput(draft: LogSessionDraft): LogSessionInput {
+  const { startTime: _s, endTime: _e, rpe: _r, location: _l, ...rest } = toLogSessionInput(draft);
+  return { ...rest, unscored: true };
+}
+
 function fallbackGrade(grade: string, scale: GradeScale): Grade {
   return scale === "v" ? { scale, value: 0 } : { scale, value: grade };
 }

@@ -66,4 +66,8 @@ export const sessions = {
   "sessions.idleFor": "Nada registrado desde hace {duration}",
   "sessions.idleSinceYesterday": "Empezada el {date}",
   "sessions.discardSession": "Descartar sesión",
+  "sessions.savedAsYouGo": "Se guarda sobre la marcha",
+  "sessions.saving": "Guardando…",
+  "sessions.notSavedYet": "Aún sin guardar, se reintentará",
+  "sessions.addDetails": "Añadir detalles",
 } as const;

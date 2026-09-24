@@ -45,7 +45,8 @@ export type DraftAutosave = {
  * typed anyway, and what they are typing now is the session worth keeping.
  *
  * `autoResume` is the form opened by tapping the draft itself: the form starts on that draft
- * (see `storedDraft`), so there is nothing to offer - the user already chose it.
+ * (see `storedDraft`), so there is nothing to offer - the user already chose it. A draft with
+ * a fingerprint is already a server session, so resuming it here would log it twice.
  */
 export function useDraftAutosave(
   storage: DraftStorage | null,
@@ -77,7 +78,10 @@ export function useDraftAutosave(
    * mount time made it a race, and the previous form's flush lands whenever React unmounts
    * it - sometimes after the next form is already up, which silently swallowed the offer.
    */
-  const offered = dismissed || saved || autoResume || stored === null ? null : stored;
+  const offered =
+    dismissed || saved || autoResume || stored === null || stored.fingerprint !== undefined
+      ? null
+      : stored;
 
   React.useEffect(() => {
     saver?.update(draft);

@@ -1,8 +1,15 @@
 import React from "react";
-import { storedDraft, writeStoredDraft, type DraftStorage } from "./draftStore";
+import { writeStoredDraft, type DraftStorage } from "./draftStore";
 import type { Gym } from "../gyms/types";
 import type { ClimbKind } from "./climbKind";
-import { withClimbTouched, withGymAdopted, withQuickClimb } from "./liveSession";
+import {
+  liveStoredDraft,
+  localDate,
+  withClimbTouched,
+  withGymAdopted,
+  withQuickClimb,
+} from "./liveSession";
+import type { LiveSync } from "./liveSync";
 import type { ClimbDraft, GradePrefs, LogSessionDraft } from "./types";
 import { useStoredDraft, type StoredDraftEntry } from "./useDraftAutosave";
 
@@ -19,45 +26,66 @@ export type LiveSession = StoredDraftEntry & {
   removeClimb: (key: string) => void;
 };
 
-/** The device-local draft, edited one climb at a time from the log. Writes land at once. */
-export function useLiveSession(storage: DraftStorage): LiveSession {
+/**
+ * The device-local draft, edited one climb at a time from the log. Writes land at once and,
+ * with a `sync`, follow on to the server. Only today's draft is live: an older one the server
+ * already has is dropped from the file, and an older one it does not have is left for the
+ * form to offer.
+ */
+export function useLiveSession(storage: DraftStorage, sync?: LiveSync): LiveSession {
   const { stored, discard } = useStoredDraft(storage);
+  const today = stored !== null && stored.draft.date === localDate(new Date());
+  const synced = stored?.fingerprint !== undefined;
+
+  React.useEffect(() => {
+    if (stored !== null && !today && synced) discard();
+  }, [stored, today, synced, discard]);
+
+  const current = React.useCallback(() => liveStoredDraft(storage, new Date()), [storage]);
+
   const write = React.useCallback(
-    (draft: LogSessionDraft): void => {
-      writeStoredDraft(storage, draft, new Date());
+    (draft: LogSessionDraft, fingerprint: string | undefined): void => {
+      writeStoredDraft(storage, draft, new Date(), fingerprint);
+      sync?.changed();
     },
-    [storage]
+    [storage, sync]
   );
 
   const addClimb = React.useCallback(
     (prefs: GradePrefs, gyms: readonly Gym[], kind: ClimbKind): string => {
-      const next = withQuickClimb(storedDraft(storage), new Date(), prefs, gyms, kind);
-      write(next.draft);
+      const entry = current();
+      const next = withQuickClimb(entry?.draft ?? null, new Date(), prefs, gyms, kind);
+      write(next.draft, entry?.fingerprint);
       return next.key;
     },
-    [storage, write]
+    [current, write]
   );
 
   const updateClimb = React.useCallback(
     (key: string, patch: (climb: ClimbDraft) => ClimbDraft, gyms: readonly Gym[] = []): void => {
-      const draft = storedDraft(storage);
-      if (draft === null) return;
-      const climbs = draft.climbs.map((c) => (c.key === key ? patch(c) : c));
-      write(withClimbTouched(withGymAdopted({ ...draft, climbs }, gyms), new Date()));
+      const entry = current();
+      if (entry === null) return;
+      const climbs = entry.draft.climbs.map((c) => (c.key === key ? patch(c) : c));
+      const draft = withClimbTouched(withGymAdopted({ ...entry.draft, climbs }, gyms), new Date());
+      write(draft, entry.fingerprint);
     },
-    [storage, write]
+    [current, write]
   );
 
   const removeClimb = React.useCallback(
     (key: string): void => {
-      const draft = storedDraft(storage);
-      if (draft === null) return;
-      const climbs = draft.climbs.filter((c) => c.key !== key);
-      if (climbs.length === 0) discard();
-      else write({ ...draft, climbs });
+      const entry = current();
+      if (entry === null) return;
+      const climbs = entry.draft.climbs.filter((c) => c.key !== key);
+      if (climbs.length > 0) {
+        write({ ...entry.draft, climbs }, entry.fingerprint);
+        return;
+      }
+      if (entry.fingerprint !== undefined) sync?.remove(entry.fingerprint);
+      discard();
     },
-    [storage, write, discard]
+    [current, write, discard, sync]
   );
 
-  return { stored, discard, addClimb, updateClimb, removeClimb };
+  return { stored: today ? stored : null, discard, addClimb, updateClimb, removeClimb };
 }
