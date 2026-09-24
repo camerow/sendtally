@@ -26,11 +26,15 @@ import { colors } from "@sendtally/design/tokens";
 import { resolveLocale, setLocale } from "@sendtally/features/i18n";
 import { AnalyticsProvider } from "../features/analytics/AnalyticsProvider";
 import { BillingProvider } from "../features/billing/BillingProvider";
-import { CLERK_PUBLISHABLE_KEY } from "../lib/config";
+import { LogBox } from "react-native";
+import { CLERK_PUBLISHABLE_KEY, IS_E2E } from "../lib/config";
 import { QueryProvider } from "../lib/QueryProvider";
 import { useFreshInstallUpdate } from "../features/app-update/useFreshInstallUpdate";
 import { useUpdateCheckOnForeground } from "../features/app-update/useUpdateCheckOnForeground";
 
+// RevenueCat logs an error on every emulator without Play billing, and a dev build's LogBox
+// popup for it covers the screen a flow is driving.
+if (IS_E2E) LogBox.ignoreAllLogs();
 Observe.configure({ integrations: { "expo-router": true } });
 setLocale(resolveLocale(getLocales()[0]?.languageTag));
 

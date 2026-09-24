@@ -20,7 +20,9 @@ export type SheetProps = {
  * A bottom sheet sized to its content, dismissed by a drag down, a tap on the scrim or the
  * hardware back button. It rides the keyboard so a focused field stays above the keys; text
  * fields inside it should be `BottomSheetTextInput` for that to hold across focus changes.
- * Opening dismisses the keyboard, so a sheet opened from a form is never half under the keys.
+ * Opening dismisses the keyboard and presents once it is gone, so a sheet opened from a form is
+ * never half under the keys. Presenting while the keys are still leaving strands a sheet open
+ * underneath off screen, where it never dismisses and its opener cannot reopen it.
  *
  * Every open mounts a fresh modal (the `key`): a modal presented again after a dismiss can
  * come back mounted but closed, and dismissing one that was never presented leaves it stuck.
@@ -45,10 +47,20 @@ export function Sheet({
   }
 
   React.useEffect(() => {
-    if (visible) {
-      Keyboard.dismiss();
+    if (!visible) {
+      ref.current?.dismiss();
+      return;
+    }
+    if (!Keyboard.isVisible()) {
       ref.current?.present();
-    } else ref.current?.dismiss();
+      return;
+    }
+    const hidden = Keyboard.addListener("keyboardDidHide", () => {
+      hidden.remove();
+      ref.current?.present();
+    });
+    Keyboard.dismiss();
+    return () => hidden.remove();
   }, [visible, generation]);
 
   const renderBackdrop = React.useCallback(

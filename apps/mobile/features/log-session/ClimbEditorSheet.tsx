@@ -1,6 +1,6 @@
 import { BottomSheetTextInput } from "@gorhom/bottom-sheet";
 import React from "react";
-import { Keyboard, Pressable, Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import type { ClimbSummary } from "@sendtally/api-client";
 import {
   areaClimbGradeLabel,
@@ -577,10 +577,7 @@ export function ClimbEditorSheet({
                 )}
                 {search.canAdd && areas !== undefined && (
                   <Pressable
-                    onPress={() => {
-                      Keyboard.dismiss();
-                      areas.onAdd();
-                    }}
+                    onPress={areas.onAdd}
                     accessibilityRole="button"
                     style={pressRow({
                       minHeight: 40,
