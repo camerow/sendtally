@@ -106,27 +106,27 @@ describe("logging a climb from the Log tab", () => {
     );
 
     await fireEvent.press(screen.getByText("Climb"));
-    expect(screen.getByText("Climb 1 of 1")).toBeOnTheScreen();
+    expect(screen.getByText("1 of 1")).toBeOnTheScreen();
     await fireEvent.press(screen.getByText("Save"));
-    expect(screen.queryByText("Climb 1 of 1")).not.toBeOnTheScreen();
+    expect(screen.queryByText("1 of 1")).not.toBeOnTheScreen();
     expect(
       screen.getByLabelText(/(Morning|Afternoon|Evening) session, .*Saved as you go/)
     ).toBeOnTheScreen();
 
     await fireEvent.press(screen.getByText("Climb"));
-    expect(screen.getByText("Climb 2 of 2")).toBeOnTheScreen();
+    expect(screen.getByText("2 of 2")).toBeOnTheScreen();
     await fireEvent.changeText(screen.getByPlaceholderText("Name (optional)"), "Maestro Arete");
     await fireEvent.press(screen.getByText("Save"));
     expect(screen.getByText(/Maestro Arete/)).toBeOnTheScreen();
 
     await fireEvent.press(screen.getByText(/Maestro Arete/));
-    expect(screen.getByText("Climb 2 of 2")).toBeOnTheScreen();
+    expect(screen.getByText("2 of 2")).toBeOnTheScreen();
     await fireEvent.press(screen.getByLabelText("Remove climb"));
     expect(screen.queryByText(/Maestro Arete/)).not.toBeOnTheScreen();
     expect(screen.getByLabelText(/Saved as you go/)).toBeOnTheScreen();
 
     await fireEvent.press(screen.getByLabelText(/^V3 Unnamed/));
-    expect(screen.getByText("Climb 1 of 1")).toBeOnTheScreen();
+    expect(screen.getByText("1 of 1")).toBeOnTheScreen();
     await fireEvent.press(screen.getByLabelText("Remove climb"));
     expect(screen.queryByLabelText(/In progress for/)).not.toBeOnTheScreen();
   });
