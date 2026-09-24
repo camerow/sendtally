@@ -370,7 +370,7 @@ export function ClimbEditorSheet({
       closeLabel={t("logSession.closeEditor")}
       footer={
         climb !== null && (
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+          <View style={{ flexDirection: "row", alignItems: "stretch", gap: 10 }}>
             {removable && (
               <Pressable
                 onPress={tap(() => confirmRemoveClimb(climb, onRemove))}
@@ -378,15 +378,14 @@ export function ClimbEditorSheet({
                 accessibilityLabel={t("logSession.removeClimb")}
                 style={press({
                   width: 48,
-                  height: 48,
                   borderRadius: radius.control,
                   borderWidth: 1,
-                  borderColor: colors.lineOnLightStrong,
+                  borderColor: colors.watermelonInk,
                   alignItems: "center",
                   justifyContent: "center",
                 })}
               >
-                <Icon name="trash" color={colors.watermelon} size={18} strokeWidth={1.8} />
+                <Icon name="trash" color={colors.watermelonInk} size={18} strokeWidth={1.8} />
               </Pressable>
             )}
             <Pressable
@@ -404,14 +403,14 @@ export function ClimbEditorSheet({
     >
       {climb !== null && (
         <View style={{ gap: 14, paddingTop: 2, paddingHorizontal: 18, paddingBottom: 4 }}>
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "space-between",
-            }}
-          >
-            <Text style={{ ...label, color: colors.gunmetal }}>
+          <View style={{ gap: 3 }}>
+            <Text
+              accessibilityRole="header"
+              style={{ fontFamily: fonts.sansSemiBold, fontSize: 18, color: colors.gunmetal }}
+            >
+              {t("logSession.addClimb")}
+            </Text>
+            <Text style={{ ...label, color: colors.textMuted }}>
               {t("logSession.climbOf", { n: index + 1, total: count })}
             </Text>
           </View>

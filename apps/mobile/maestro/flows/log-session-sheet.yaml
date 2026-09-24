@@ -13,7 +13,7 @@ name: log-session-sheet
     direction: DOWN
     centerElement: true
 - tapOn: "\\+ ADD CLIMB"
-- assertVisible: "CLIMB 2 OF 2"
+- assertVisible: "2 OF 2"
 - tapOn: "Name (optional)"
 - inputText: "Cascade"
 - assertVisible: "Cascade"
@@ -37,7 +37,7 @@ name: log-session-sheet
           from: "Bottom sheet handle"
           direction: DOWN
           duration: 300
-- assertNotVisible: "CLIMB 2 OF 2"
+- assertNotVisible: "2 OF 2"
 - assertVisible: "V3 Cascade.*"
 - scrollUntilVisible:
     element:

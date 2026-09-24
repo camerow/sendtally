@@ -1,6 +1,7 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import {
+  climbOutcome,
   enduranceLapCountLabel,
   enduranceOf,
   enduranceSummaryLabel,
@@ -11,6 +12,7 @@ import { colors, fonts } from "@sendtally/design/tokens";
 import { CircuitDot } from "../../components/CircuitDot";
 import { Icon } from "../../components/Icon";
 import { press, pressRow, tap } from "../../lib/press";
+import { outcomeFill } from "./ResultFields";
 
 export type ClimbLedgerRowProps = {
   climb: ClimbDraft;
@@ -58,7 +60,9 @@ function Stepper({
   );
 }
 
-function ResultMark({ send, firstGo }: { send: boolean; firstGo: boolean }): React.ReactElement {
+function ResultMark({ climb }: { climb: ClimbDraft }): React.ReactElement {
+  const outcome = climbOutcome(climb);
+  const { fill, ink } = outcomeFill(outcome);
   return (
     <View
       style={{
@@ -66,15 +70,13 @@ function ResultMark({ send, firstGo }: { send: boolean; firstGo: boolean }): Rea
         height: 22,
         flexShrink: 0,
         borderRadius: 11,
-        backgroundColor: firstGo ? colors.gold : send ? colors.azureInk : colors.gunmetal,
+        backgroundColor: fill,
         alignItems: "center",
         justifyContent: "center",
       }}
     >
-      <Text
-        style={{ fontSize: 12, fontWeight: "600", color: firstGo ? colors.gunmetal : colors.white }}
-      >
-        {send ? "✓" : "✗"}
+      <Text style={{ fontSize: 12, fontWeight: "600", color: ink }}>
+        {outcome.kind === "send" ? "✓" : "✗"}
       </Text>
     </View>
   );
@@ -156,7 +158,6 @@ export function ClimbLedgerRow({
     : circuit === undefined
       ? t("logSession.unnamed")
       : circuit.label;
-  const firstGo = send && climb.style !== "redpoint";
   return (
     <Pressable
       onPress={onPress}
@@ -229,7 +230,7 @@ export function ClimbLedgerRow({
         </View>
       </View>
       {onToggleSent === undefined ? (
-        <ResultMark send={send} firstGo={firstGo} />
+        <ResultMark climb={climb} />
       ) : (
         <Pressable
           onPress={tap(onToggleSent)}
@@ -240,7 +241,7 @@ export function ClimbLedgerRow({
           }
           style={press({ flexShrink: 0 })}
         >
-          <ResultMark send={send} firstGo={firstGo} />
+          <ResultMark climb={climb} />
         </Pressable>
       )}
       {onChangeTries === undefined ? (

@@ -47,7 +47,7 @@ name: gym-circuits
 - tapOn: "Log(, tab.*)?"
 - assertNotVisible: "Add your gym"
 - tapOn: "Climb"
-- assertVisible: "CLIMB 1 OF 1"
+- assertVisible: "1 OF 1"
 - tapOn: "Type, .*"
 - tapOn: "Maestro Barn circuits"
 - tapOn: "Grade, .*"

@@ -38,7 +38,7 @@ export const logSession = {
   "logSession.saveFailed": "Could not save the session. Try again.",
   "logSession.saveChanges": "Save changes",
   "logSession.closeEditor": "Close climb editor",
-  "logSession.climbOf": "Climb {n} of {total}",
+  "logSession.climbOf": "{n} of {total}",
   "logSession.nameOptional": "Name · optional",
   "logSession.gymCircuits": "{gym} circuits",
   "logSession.climbKind": "Type",

@@ -38,7 +38,7 @@ export const logSession = {
   "logSession.saveFailed": "Impossible d'enregistrer la séance. Réessaie.",
   "logSession.saveChanges": "Enregistrer les modifications",
   "logSession.closeEditor": "Fermer l'éditeur de ligne",
-  "logSession.climbOf": "Ligne {n} sur {total}",
+  "logSession.climbOf": "{n} sur {total}",
   "logSession.nameOptional": "Nom · optionnel",
   "logSession.gymCircuits": "Circuits {gym}",
   "logSession.climbKind": "Type",

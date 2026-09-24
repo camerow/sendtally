@@ -38,7 +38,7 @@ export const logSession = {
   "logSession.saveFailed": "Die Session konnte nicht gespeichert werden. Versuch es noch einmal.",
   "logSession.saveChanges": "Speichern",
   "logSession.closeEditor": "Editor schließen",
-  "logSession.climbOf": "Kletterei {n} von {total}",
+  "logSession.climbOf": "{n} von {total}",
   "logSession.nameOptional": "Name · optional",
   "logSession.gymCircuits": "{gym} Circuits",
   "logSession.climbKind": "Art",

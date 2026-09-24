@@ -77,7 +77,7 @@ describe("ClimbEditorSheet", () => {
   it("opens as a modal dialog", () => {
     const dialog = mount(() => {});
     expect(dialog.open).toBe(true);
-    expect(dialog.getAttribute("aria-label")).toBe("Climb 1 of 2");
+    expect(dialog.getAttribute("aria-label")).toBe("Add climb");
   });
 
   it("closes on a tap that starts and ends on the backdrop", () => {

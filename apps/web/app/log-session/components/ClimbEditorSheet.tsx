@@ -136,7 +136,7 @@ export function ClimbEditorSheet({
     <dialog
       ref={dialog}
       className="climb-sheet"
-      aria-label={t("logSession.climbOf", { n: index + 1, total: count })}
+      aria-label={t("logSession.addClimb")}
       onCancel={(e) => {
         e.preventDefault();
         onClose();
@@ -154,19 +154,23 @@ export function ClimbEditorSheet({
           onPointerDown={(e) => startDrag(e, panel.current, onClose)}
         >
           <div className="climb-sheet-handle" />
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <span style={monoLabel}>{t("logSession.climbOf", { n: index + 1, total: count })}</span>
-            {removable && (
-              <button
-                type="button"
-                onClick={onRemove}
-                className="climb-sheet-remove"
-                aria-label={t("logSession.removeClimb")}
-              >
-                <Icon name="trash" size={18} strokeWidth={1.8} />
-              </button>
-            )}
+          <div className="climb-sheet-heading">
+            <h2 className="climb-sheet-title">{t("logSession.addClimb")}</h2>
+            <span className="climb-sheet-count">
+              {t("logSession.climbOf", { n: index + 1, total: count })}
+            </span>
           </div>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
+          <span style={monoLabel}>
+            {t("logSession.name")}{" "}
+            <span style={{ color: "rgba(64,63,76,0.45)" }}>{t("common.optional")}</span>
+          </span>
+          {areas === undefined ? (
+            <ClimbNameField {...nameProps} />
+          ) : (
+            <AreaClimbNameField {...nameProps} areas={areas} linkedId={climb.climbId} />
+          )}
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
           <label htmlFor="climb-kind" style={monoLabel}>
@@ -225,17 +229,6 @@ export function ClimbEditorSheet({
           <ClimbGradeSelect id="climb-grade" climb={climb} gyms={gyms} onChange={onChange} />
         </div>
         {gym !== null && <CircuitFields climb={climb} gym={gym} onChange={onChange} />}
-        <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
-          <span style={monoLabel}>
-            {t("logSession.name")}{" "}
-            <span style={{ color: "rgba(64,63,76,0.45)" }}>{t("common.optional")}</span>
-          </span>
-          {areas === undefined ? (
-            <ClimbNameField {...nameProps} />
-          ) : (
-            <AreaClimbNameField {...nameProps} areas={areas} linkedId={climb.climbId} />
-          )}
-        </div>
         {!endurance && (
           <SentResultControl
             climb={climb}
@@ -258,9 +251,21 @@ export function ClimbEditorSheet({
             />
           )}
         </div>
-        <button type="button" onClick={onClose} className="climb-sheet-done">
-          {t("common.save")}
-        </button>
+        <div className="climb-sheet-actions">
+          {removable && (
+            <button
+              type="button"
+              onClick={onRemove}
+              className="climb-sheet-remove"
+              aria-label={t("logSession.removeClimb")}
+            >
+              <Icon name="trash" size={18} strokeWidth={1.8} />
+            </button>
+          )}
+          <button type="button" onClick={onClose} className="climb-sheet-done">
+            {t("common.save")}
+          </button>
+        </div>
       </div>
     </dialog>
   );

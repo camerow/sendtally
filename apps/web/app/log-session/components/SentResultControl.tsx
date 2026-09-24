@@ -79,22 +79,34 @@ export function SentResultControl({
         />
       </div>
       {discipline === "route" && sent && climb.tries === 1 && (
-        <div className="climb-sent-row" role="radiogroup" aria-label={t("logSession.sendStyle")}>
-          {FIRST_GO_STYLES.map((style) => (
-            <label key={style} className="climb-style-option">
-              <input
-                type="radio"
-                name="first-go-style"
-                value={style}
-                checked={outcome.kind === "send" && outcome.style === style}
-                onChange={() => {
-                  setFirstGo(style);
-                  apply(climb, true, style);
-                }}
-              />
-              <span>{sendStyleLabel(discipline, style)}</span>
-            </label>
-          ))}
+        <div
+          className="climb-sent-row climb-style-row"
+          role="radiogroup"
+          aria-label={t("logSession.sendStyle")}
+        >
+          {FIRST_GO_STYLES.map((style) => {
+            const checked = outcome.kind === "send" && outcome.style === style;
+            const { background, color } = outcomeFill({ kind: "send", style });
+            return (
+              <label
+                key={style}
+                className="climb-style-option"
+                style={checked ? { background, color, borderColor: background } : undefined}
+              >
+                <input
+                  type="radio"
+                  name="first-go-style"
+                  value={style}
+                  checked={checked}
+                  onChange={() => {
+                    setFirstGo(style);
+                    apply(climb, true, style);
+                  }}
+                />
+                <span>{sendStyleLabel(discipline, style)}</span>
+              </label>
+            );
+          })}
         </div>
       )}
     </div>

@@ -226,10 +226,22 @@
   color: rgba(64, 63, 76, 0.65);
 }
 
+.climb-style-row {
+  justify-content: flex-start;
+  gap: 0;
+}
+
+.climb-style-option:first-child {
+  border-radius: 18px 0 0 18px;
+}
+
+.climb-style-option:last-child {
+  margin-left: -1px;
+  border-radius: 0 18px 18px 0;
+}
+
 .climb-style-option:has(input:checked) {
-  background: var(--bs-gold);
-  border-color: var(--bs-gold);
-  color: var(--bs-gunmetal);
+  z-index: 1;
 }
 
 .climb-style-option:has(input:focus-visible) {
@@ -493,17 +505,50 @@ body:has(.climb-sheet[open]) {
   background: rgba(64, 63, 76, 0.2);
 }
 
+.climb-sheet-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.climb-sheet-title {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 18px;
+  line-height: 1.25;
+  color: var(--bs-gunmetal);
+}
+
+.climb-sheet-count {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(64, 63, 76, 0.55);
+}
+
+.climb-sheet-actions {
+  display: flex;
+  gap: 10px;
+}
+
 .climb-sheet-remove {
   display: inline-flex;
-  color: var(--bs-watermelon-ink);
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 50px;
+  height: 50px;
+  border: 1px solid var(--bs-watermelon-ink);
+  border-radius: var(--radius-control);
   background: none;
-  border: none;
-  padding: 4px;
-  margin: -4px;
+  color: var(--bs-watermelon-ink);
   cursor: pointer;
 }
 
 .climb-sheet-remove:hover {
+  border-color: var(--bs-watermelon-ink-press);
   color: var(--bs-watermelon-ink-press);
 }
 
@@ -516,6 +561,7 @@ body:has(.climb-sheet[open]) {
 }
 
 .climb-sheet-done {
+  flex: 1;
   height: 50px;
   border: none;
   border-radius: var(--radius-control);

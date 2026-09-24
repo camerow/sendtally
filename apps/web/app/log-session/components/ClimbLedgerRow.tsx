@@ -1,5 +1,6 @@
 import React from "react";
 import {
+  climbOutcome,
   enduranceLapCountLabel,
   enduranceOf,
   enduranceSummaryLabel,
@@ -9,6 +10,7 @@ import { t } from "@sendtally/features/i18n";
 import { CircuitDot } from "../../components/CircuitDot";
 import { Icon } from "../../components/Icon";
 import { Glyph } from "./Glyph";
+import { outcomeFill } from "./OutcomeControl";
 import { CHECK, CHEVRON, CROSS, FLAG, MINUS, PLUS } from "./styles";
 
 export type ClimbLedgerRowProps = {
@@ -105,7 +107,6 @@ export function ClimbLedgerRow({
   if (climb.endurance !== undefined) return <EnduranceLedgerRow climb={climb} onPress={onPress} />;
   const named = climb.name.trim() !== "";
   const send = climb.kind === "send";
-  const firstGo = send && climb.style !== "redpoint";
   const circuit = climb.circuit;
   const wall = climb.wall ?? "";
   const title = named
@@ -117,10 +118,7 @@ export function ClimbLedgerRow({
     e.stopPropagation();
     onChangeTries?.(tries);
   };
-  const resultStyle: React.CSSProperties = {
-    background: firstGo ? "var(--bs-gold)" : send ? "var(--bs-azure-ink)" : "var(--bs-gunmetal)",
-    color: firstGo ? "var(--bs-gunmetal)" : "var(--bs-white)",
-  };
+  const resultStyle: React.CSSProperties = outcomeFill(climbOutcome(climb));
   const mark = <Glyph d={send ? CHECK : CROSS} size={send ? 12 : 11} width={2.2} />;
   return (
     <Row onPress={onPress} className="climb-ledger-row">
