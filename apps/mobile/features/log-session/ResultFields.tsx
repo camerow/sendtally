@@ -47,7 +47,7 @@ const row = {
   borderTopColor: colors.lineOnLightSoft,
 } as const;
 
-function outcomeFill(outcome: ClimbOutcome): { fill: string; ink: string } {
+export function outcomeFill(outcome: ClimbOutcome): { fill: string; ink: string } {
   return outcome.kind === "send" ? STYLE_FILL[outcome.style] : ATTEMPT_FILL;
 }
 
@@ -158,7 +158,7 @@ export function ResultFields({ climb, known, onChange }: ResultFieldsProps): Rea
   const [firstGo, setFirstGo] = React.useState<FirstGoStyle>(() => firstGoStyleOf(climb));
   const outcome = climbOutcome(climb);
   const sent = outcome.kind === "send";
-  const sends = (known?.sends ?? 0) + (sent ? 1 : 0);
+  const sends = known?.sends ?? 0;
 
   const apply = (next: ClimbDraft, isSent: boolean, style: FirstGoStyle): void => {
     onChange(withClimbOutcome(next, resultOutcome(discipline, isSent, next.tries, style)));

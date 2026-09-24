@@ -108,8 +108,13 @@ describe("ResultFields", () => {
 
   it.each([
     { name: "no history, attempt", known: null, sent: false, line: "No sends yet" },
-    { name: "no history, sent", known: null, sent: true, line: "1 send" },
-    { name: "two prior sends, sent now", known: { sends: 2 }, sent: true, line: "3 sends" },
+    { name: "no history, sent", known: null, sent: true, line: "No sends yet" },
+    {
+      name: "the server's count, this climb included",
+      known: { sends: 2 },
+      sent: true,
+      line: "2 sends",
+    },
   ])("counts sends: $name", async ({ known, sent, line }) => {
     await render(
       <Harness
