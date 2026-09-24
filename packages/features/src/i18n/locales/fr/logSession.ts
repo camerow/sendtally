@@ -89,4 +89,6 @@ export const logSession = {
   "logSession.wrapUpTitle": "Conclure",
   "logSession.wrapUpSubtitle":
     "Les horaires viennent de vos voies · l'effort est noté à l'enregistrement",
+  "logSession.noSendsYet": "Pas encore de croix",
+  "logSession.sendStyle": "Style",
 } as const;

@@ -91,7 +91,7 @@ describe("ClimbEditorSheet", () => {
   it("stays open when a drag starts inside the panel and ends on the backdrop", () => {
     const onClose = vi.fn();
     const dialog = mount(onClose);
-    pointer(dialog.querySelector(".climb-result-select")!, "pointerdown");
+    pointer(dialog.querySelector(".climb-switch")!, "pointerdown");
     pointer(dialog, "click");
     expect(onClose).not.toHaveBeenCalled();
   });
@@ -117,16 +117,15 @@ describe("ClimbEditorSheet", () => {
     expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ grade: "V5" }));
   });
 
-  it("picks a result from the dropdown", () => {
+  it("marks an attempt as sent from the Sent switch", () => {
     const onChange = vi.fn();
     const dialog = mount(() => {}, onChange);
-    const select = dialog.getElementsByTagName("select")[2]!;
-    expect([...select.options].map((o) => o.value)).toEqual(["redpoint", "flash", "attempt"]);
-    act(() => {
-      select.value = "attempt";
-      select.dispatchEvent(new Event("change", { bubbles: true }));
-    });
-    expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ kind: "attempt" }));
+    const toggle = dialog.querySelector<HTMLInputElement>(".climb-switch")!;
+    expect(toggle.checked).toBe(false);
+    act(() => toggle.click());
+    expect(onChange).toHaveBeenCalledWith(
+      expect.objectContaining({ kind: "send", style: "flash", tries: 1 })
+    );
   });
 
   describe("with a gym that has circuits", () => {

@@ -87,4 +87,6 @@ export const logSession = {
   "logSession.defaultNameEvening": "Evening session, {date}",
   "logSession.wrapUpTitle": "Wrap up",
   "logSession.wrapUpSubtitle": "Times come from your climbs · effort is scored when you save",
+  "logSession.noSendsYet": "No sends yet",
+  "logSession.sendStyle": "Style",
 } as const;

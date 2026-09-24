@@ -2,12 +2,9 @@ import React from "react";
 import type { ClimbSummary } from "@sendtally/api-client";
 import type { Gym } from "@sendtally/features/gyms";
 import {
-  climbOutcome,
   disciplineOf,
   gymOfCircuit,
   withClimbDiscipline,
-  withClimbOutcome,
-  withTries,
   type ClimbDraft,
   type GradePrefs,
 } from "@sendtally/features/log-session";
@@ -26,9 +23,8 @@ import { AreaClimbNameField, type ClimbAreas } from "./AreaClimbNameField";
 import { ClimbNameField, type ClimbNameFieldProps } from "./ClimbNameField";
 import { ClimbNoteField } from "./ClimbNoteField";
 import { DisciplineToggle } from "./DisciplineToggle";
-import { OutcomeSelect } from "./OutcomeControl";
 import { ProjectToggle } from "./ProjectToggle";
-import { TriesStepper } from "./TriesStepper";
+import { SentResultControl } from "./SentResultControl";
 import { monoLabel } from "./styles";
 
 const DISMISS_DISTANCE = 80;
@@ -241,18 +237,13 @@ export function ClimbEditorSheet({
           )}
         </div>
         {!endurance && (
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <OutcomeSelect
-              discipline={disciplineOf(climb.scale)}
-              outcome={climbOutcome(climb)}
-              onChange={(outcome) => onChange(withClimbOutcome(climb, outcome))}
-            />
-            <TriesStepper
-              tries={climb.tries}
-              size={40}
-              onChange={(tries) => onChange(withTries(climb, tries))}
-            />
-          </div>
+          <SentResultControl
+            climb={climb}
+            summary={suggestions.find(
+              (s) => s.name.toLowerCase() === climb.name.trim().toLowerCase()
+            )}
+            onChange={onChange}
+          />
         )}
         {!endurance && <ProjectToggle project={project} named={named} onToggle={onToggleProject} />}
         <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>

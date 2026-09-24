@@ -88,4 +88,6 @@ export const logSession = {
   "logSession.defaultNameEvening": "Sesión de noche, {date}",
   "logSession.wrapUpTitle": "Cerrar sesión",
   "logSession.wrapUpSubtitle": "Los horarios salen de tus vías · el esfuerzo se puntúa al guardar",
+  "logSession.noSendsYet": "Aún sin encadenes",
+  "logSession.sendStyle": "Estilo",
 } as const;
