@@ -5,6 +5,7 @@ export type {
   Area,
   AreaClimb,
   AreaClimbInput,
+  AreaHit,
   AreaInput,
   AreaSummary,
   Circuit,

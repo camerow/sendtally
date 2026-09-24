@@ -74,7 +74,8 @@
             }
           ]
         }
-      ]
+      ],
+      "blockedPermissions": ["android.permission.ACCESS_BACKGROUND_LOCATION"]
     },
     "plugins": [
       "expo-router",
@@ -103,7 +104,17 @@
         }
       ],
       "./plugins/with-android-play-compliance.js",
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      "@maplibre/maplibre-react-native",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "sendtally uses your location to place a new crag on the map. It is only read while you add one.",
+          "isIosBackgroundLocationEnabled": false,
+          "isAndroidBackgroundLocationEnabled": false,
+          "isAndroidForegroundServiceEnabled": false
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": false

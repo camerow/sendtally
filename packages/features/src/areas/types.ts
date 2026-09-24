@@ -4,6 +4,7 @@ import type {
   AreaClimbPage,
   AreaClimbSession,
   AreaDraft,
+  AreaHit,
   AreaPage,
   AreaRedirect,
   AreaSummary,
@@ -15,12 +16,24 @@ export type {
   AreaClimbPage,
   AreaClimbSession,
   AreaDraft,
+  AreaHit,
   AreaPage,
   AreaRedirect,
   AreaSummary,
 };
 
 export type ClimbType = AreaClimb["type"];
+
+export type AreaCrumb = { id: string; name: string };
+
+export type LatLon = { lat: number; lon: number };
+
+/**
+ * An area as a picker holds it: its name, the areas above it below the region, and whether it
+ * is a region itself, and where it is when that is known. A draft saved before trails existed has
+ * neither, and reads as one crumb.
+ */
+export type PickedArea = AreaCrumb & { region?: boolean; trail?: AreaCrumb[]; at?: LatLon };
 
 export type ClimbFact = { label: string; value: string };
 

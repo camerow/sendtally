@@ -3,7 +3,15 @@ import { MAX_CLIMB_SUGGESTIONS, sameClimbName } from "../climbs/transforms";
 import { convertGrade, disciplineOf, draftGrade, withClimbScale } from "../log-session/transforms";
 import type { ClimbDraft } from "../log-session/types";
 import { emptyClimbForm } from "./transforms";
-import type { AreaClimb, AreaSummary, ClimbFormValues } from "./types";
+import type {
+  AreaClimb,
+  AreaCrumb,
+  AreaHit,
+  AreaSummary,
+  ClimbFormValues,
+  LatLon,
+  PickedArea,
+} from "./types";
 
 /** A row in the climb name dropdown: a name from the user's own history, or a climb in Areas. */
 export type ClimbOption =
@@ -38,8 +46,71 @@ export function canAddToAreas(query: string, found: AreaClimb[]): boolean {
 }
 
 /** A crag is somewhere to climb, so a region is never offered as one. */
-export function cragsOf(found: AreaSummary[]): AreaSummary[] {
+export function cragsOf<T extends AreaSummary>(found: T[]): T[] {
   return found.filter((a) => a.region_code === null);
+}
+
+const crumb = (area: AreaCrumb): AreaCrumb => ({ id: area.id, name: area.name });
+
+type Placed = { lat?: number | null; lon?: number | null };
+
+const placed = (area: Placed): { at?: LatLon } =>
+  typeof area.lat === "number" && typeof area.lon === "number"
+    ? { at: { lat: area.lat, lon: area.lon } }
+    : {};
+
+/** A search hit as the picker holds it. Regions stay out of the trail: nobody climbs at "California". */
+export function pickedArea(hit: AreaHit): PickedArea {
+  return {
+    ...crumb(hit),
+    region: hit.region_code !== null,
+    trail: hit.ancestors.filter((a) => a.region_code === null).map(crumb),
+    ...placed(hit),
+  };
+}
+
+/** An area known only as a summary, such as the page a dialog was opened from. */
+export function pickedSummary(area: AreaSummary): PickedArea {
+  return { ...crumb(area), region: area.region_code !== null, trail: [], ...placed(area) };
+}
+
+/** Root first, the area itself last: what the picker draws as chips. */
+export function areaPath(area: PickedArea): AreaCrumb[] {
+  return [...(area.trail ?? []), crumb(area)];
+}
+
+/** The chip at `index`, as a pick of its own. A chip is never a region. */
+export function atCrumb(area: PickedArea, index: number): PickedArea {
+  const path = areaPath(area);
+  const at = path[index] ?? crumb(area);
+  const self = index === path.length - 1;
+  return {
+    ...at,
+    region: self && area.region === true,
+    trail: path.slice(0, index),
+    ...(self && area.at !== undefined ? { at: area.at } : {}),
+  };
+}
+
+/** One level up, or nothing when the area is the top of its trail. */
+export function stepUp(area: PickedArea): PickedArea | null {
+  const path = areaPath(area);
+  return path.length > 1 ? atCrumb(area, path.length - 2) : null;
+}
+
+/** A just-created area, placed under the one it was added inside. */
+export function pickedInside(parent: PickedArea | null, created: AreaCrumb & Placed): PickedArea {
+  return {
+    ...crumb(created),
+    region: false,
+    trail: parent === null || parent.region === true ? [] : areaPath(parent),
+    ...placed(created),
+  };
+}
+
+/** The hit is inside the picked area, so it is listed under it rather than elsewhere. */
+export function isInside(hit: AreaHit, area: PickedArea | null): boolean {
+  return area !== null && hit.ancestors.some((a) => a.id === area.id);
 }
 
 /** Picking an Areas climb links the row and takes its grade, in the row's scale when it can. */

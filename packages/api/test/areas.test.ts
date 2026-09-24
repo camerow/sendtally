@@ -84,6 +84,36 @@ describe("areas", () => {
     expect((climbs.body["climbs"] as Row[]).map((c) => c.id)).toEqual([climb.id]);
   });
 
+  it("searches inside a picked area first and carries each hit's ancestors", async () => {
+    const crag = await createArea("user_a", buttermilks);
+    const sector = await createArea("user_a", {
+      parentId: crag.id,
+      name: "Peabody Boulders",
+      confirmedNew: true,
+    });
+    const elsewhere = await createArea("user_a", {
+      parentId: "region-us-ca",
+      name: "Peabody Ridge",
+      lat: 38.1,
+      lon: -119.2,
+      confirmedNew: true,
+    });
+
+    const children = await call("user_a", `/v1/areas?within=${crag.id}`);
+    expect((children.body["areas"] as Row[]).map((a) => a.id)).toEqual([sector.id]);
+
+    const found = await call("user_a", `/v1/areas?q=peab&within=${crag.id}`);
+    const hits = found.body["areas"] as Array<Row & { ancestors: Row[] }>;
+    expect(hits.map((a) => a.id)).toEqual([sector.id, elsewhere.id]);
+    expect(hits[0]?.ancestors.map((a) => a.slug)).toEqual([
+      "united-states",
+      "california",
+      "buttermilks",
+    ]);
+
+    expect((await call("user_b", `/v1/areas?within=${crag.id}`)).body["areas"]).toEqual([]);
+  });
+
   it("lets only the creator edit a pending area, keeping its slug", async () => {
     const area = await createArea("user_a", buttermilks);
     const edit = { name: "The Buttermilks", lat: 37.33, lon: -118.58 };
@@ -211,7 +241,12 @@ describe("session links", () => {
     const fingerprint = (res.body["session"] as { fingerprint: string }).fingerprint;
 
     const linked = await read("user_a", fingerprint);
-    expect(linked.area).toEqual({ id: area.id, name: "Buttermilks", slug: "buttermilks" });
+    expect(linked.area).toEqual({
+      id: area.id,
+      name: "Buttermilks",
+      slug: "buttermilks",
+      trail: [],
+    });
     expect(linked.climbs.map((c) => c.link)).toEqual([
       { id: climb.id, name: "The Mandala", slug: "the-mandala" },
       null,

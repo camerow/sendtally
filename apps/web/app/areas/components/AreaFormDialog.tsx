@@ -4,10 +4,15 @@ import type { SendtallyApi } from "@sendtally/api-client";
 import {
   areaFieldsOf,
   areaFormOf,
+  mappedAreas,
+  pickedSummary,
+  roundedSpot,
+  useAreaSearch,
   useDuplicateCheck,
   type Area,
   type AreaFormValues,
   type AreaSummary,
+  type PickedArea,
 } from "@sendtally/features/areas";
 import { t } from "@sendtally/features/i18n";
 import { inputStyle } from "../styles";
@@ -15,6 +20,7 @@ import { AreaDialog } from "./AreaDialog";
 import { AreaPicker } from "./AreaPicker";
 import { Candidates } from "./Candidates";
 import { Field } from "./Field";
+import { LocationMap } from "./LocationMap";
 import { useDraftForm } from "../useDraftForm";
 
 export type AreaFormDialogProps = {
@@ -27,9 +33,11 @@ export type AreaFormDialogProps = {
       mode: "create";
       /** Null when adding from the log form, where the dialog asks where the area is. */
       parent: AreaSummary | null;
+      /** Where the dialog's own picker starts when `parent` is null, still changeable. */
+      initialParent?: PickedArea | null;
       initial?: Partial<AreaFormValues>;
       /** Stays on the caller's screen with the new area instead of opening its page. */
-      onCreated?: (area: Area) => void;
+      onCreated?: (area: Area, parent: PickedArea) => void;
     }
   | { mode: "suggest"; area: Area }
 );
@@ -56,16 +64,28 @@ export function AreaFormDialog(props: AreaFormDialogProps): React.ReactElement {
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [locating, setLocating] = React.useState(false);
-  const [chosenParent, setChosenParent] = React.useState<AreaSummary | null>(null);
-  const parent = props.mode === "create" ? (props.parent ?? chosenParent) : null;
+  const [chosenParent, setChosenParent] = React.useState<PickedArea | null>(
+    props.mode === "create" ? (props.initialParent ?? null) : null
+  );
+  const parent =
+    props.mode !== "create"
+      ? null
+      : props.parent === null
+        ? chosenParent
+        : pickedSummary(props.parent);
   const askParent = props.mode === "create" && props.parent === null;
   const needsCoordinates =
-    props.mode === "create" ? parent?.region_code !== null : props.area.lat !== null;
+    props.mode === "create" ? parent === null || parent.region === true : props.area.lat !== null;
   const typedAt = areaFieldsOf(values);
   const near =
     typeof typedAt?.lat === "number" && typeof typedAt.lon === "number"
       ? { lat: typedAt.lat, lon: typedAt.lon }
       : null;
+  const around = mappedAreas(
+    useAreaSearch(api, "", near, { crags: true, enabled: near !== null }).filter(
+      (a) => props.mode !== "suggest" || a.id !== props.area.id
+    )
+  );
   const check = useDuplicateCheck<AreaSummary, Area | null>(
     `${values.name.trim().toLowerCase()}|${values.lat}|${values.lon}`
   );
@@ -118,7 +138,7 @@ export function AreaFormDialog(props: AreaFormDialogProps): React.ReactElement {
           (await api.createArea({ ...fields, parentId: parent.id, confirmedNew })).area,
       });
       if (created === null) setBusy(false);
-      else if (props.onCreated !== undefined) props.onCreated(created);
+      else if (props.onCreated !== undefined) props.onCreated(created, parent);
       else void navigate(`/app/areas/${created.slug}`);
     } catch (e: unknown) {
       setBusy(false);
@@ -128,9 +148,9 @@ export function AreaFormDialog(props: AreaFormDialogProps): React.ReactElement {
 
   const title =
     props.mode === "create"
-      ? props.parent === null
+      ? parent === null || parent.region === true
         ? t("areas.addACrag")
-        : t("areas.addAreaIn", { name: props.parent.name })
+        : t("areas.addAreaIn", { name: parent.name })
       : t("areas.suggestEditsTo", { name: props.area.name });
 
   return (
@@ -217,6 +237,16 @@ export function AreaFormDialog(props: AreaFormDialogProps): React.ReactElement {
             style={inputStyle}
           />
         </div>
+        <LocationMap
+          value={near}
+          near={parent?.at ?? null}
+          around={around}
+          onMove={(at) => {
+            const spot = roundedSpot(at);
+            setValues({ ...values, lat: String(spot.lat), lon: String(spot.lon) });
+          }}
+        />
+        <span className="area-form-hint">{t("areas.mapHint")}</span>
       </div>
       <Field id="area-description" label={t("areas.description")} optional>
         <textarea

@@ -93,7 +93,7 @@ describe("climbVMs", () => {
     const link = { id: "c1", name: "Crimp Reaper", slug: "crimp-reaper" };
     const climbs = detail.climbs.map((c, i) => (i === 1 ? { ...c, link } : c));
     expect(climbVMs(climbs).map((c) => c.climbSlug)).toEqual([null, "crimp-reaper", null, null]);
-    const area = { id: "a1", name: "Buttermilks", slug: "buttermilks" };
+    const area = { id: "a1", name: "Buttermilks", slug: "buttermilks", trail: [] };
     expect(sessionDetailVM({ ...detail, area }).area).toEqual(area);
   });
 

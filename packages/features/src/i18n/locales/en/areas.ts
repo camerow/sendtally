@@ -93,4 +93,10 @@ export const areas = {
   "areas.linkedToAreas": "Linked to this climb in Areas",
   "areas.isItOneOfTheseTapHint": "Tap one if it is the same. If not, save again to add yours.",
   "areas.closeAddSheet": "Close without adding",
+  "areas.addInside": "Add “{name}” inside {parent}",
+  "areas.insideArea": "In {name}",
+  "areas.elsewhere": "Elsewhere",
+  "areas.backTo": "Back to {name}",
+  "areas.mapHint": "Drag the map to put the pin on the spot, or type the coordinates.",
+  "areas.mapLabel": "Map. Drag it to move the pin.",
 } as const;

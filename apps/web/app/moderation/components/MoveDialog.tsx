@@ -1,6 +1,6 @@
 import React from "react";
 import type { SendtallyApi } from "@sendtally/api-client";
-import type { AreaSummary } from "@sendtally/features/areas";
+import type { PickedArea } from "@sendtally/features/areas";
 import { AreaDialog } from "../../areas/components/AreaDialog";
 import { AreaPicker } from "../../areas/components/AreaPicker";
 import { Field } from "../../areas/components/Field";
@@ -12,7 +12,7 @@ export type MoveDialogProps = {
   busy: boolean;
   error: string | null;
   onClose: () => void;
-  onSubmit: (parent: AreaSummary) => void;
+  onSubmit: (parent: PickedArea) => void;
 };
 
 /** Re-parents pending creations before they are decided; they stay pending afterwards. */
@@ -24,7 +24,7 @@ export function MoveDialog({
   onClose,
   onSubmit,
 }: MoveDialogProps): React.ReactElement {
-  const [parent, setParent] = React.useState<AreaSummary | null>(null);
+  const [parent, setParent] = React.useState<PickedArea | null>(null);
   const [missing, setMissing] = React.useState(false);
   return (
     <AreaDialog

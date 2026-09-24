@@ -786,12 +786,21 @@ describe("outdoor crag and climb links", () => {
       ...base,
       location: "outdoor",
       area_id: "a1",
-      area: { id: "a1", name: "Buttermilks", slug: "buttermilks" },
+      area: {
+        id: "a1",
+        name: "Buttermilks",
+        slug: "buttermilks",
+        trail: [{ id: "b1", name: "Bishop" }],
+      },
       climbs: base.climbs.map((c, i) =>
         i === 0 ? { ...c, link: { id: "c1", name: "Cave traverse", slug: "cave-traverse" } } : c
       ),
     });
-    expect(edited.area).toEqual({ id: "a1", name: "Buttermilks" });
+    expect(edited.area).toEqual({
+      id: "a1",
+      name: "Buttermilks",
+      trail: [{ id: "b1", name: "Bishop" }],
+    });
     expect(edited.climbs[0]?.climbId).toBe("c1");
     expect(edited.climbs[1]).not.toHaveProperty("climbId");
   });

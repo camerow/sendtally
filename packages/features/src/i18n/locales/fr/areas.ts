@@ -97,4 +97,11 @@ export const areas = {
   "areas.isItOneOfTheseTapHint":
     "Touchez-en un si c'est le même. Sinon, enregistrez à nouveau pour ajouter le vôtre.",
   "areas.closeAddSheet": "Fermer sans ajouter",
+  "areas.addInside": "Ajouter « {name} » dans {parent}",
+  "areas.insideArea": "Dans {name}",
+  "areas.elsewhere": "Ailleurs",
+  "areas.backTo": "Revenir à {name}",
+  "areas.mapHint":
+    "Déplace la carte pour mettre l’épingle au bon endroit, ou saisis les coordonnées.",
+  "areas.mapLabel": "Carte. Fais-la glisser pour déplacer l’épingle.",
 } as const;

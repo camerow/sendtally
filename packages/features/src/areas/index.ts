@@ -7,3 +7,4 @@ export * from "./useLogFormAreas";
 export * from "./creations";
 export * from "./moderation";
 export * from "./useModeration";
+export * from "./map";

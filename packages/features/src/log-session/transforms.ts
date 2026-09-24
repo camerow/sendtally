@@ -327,7 +327,9 @@ export function draftFromSession(session: SessionDetail): LogSessionDraft {
     endTime: hasEnd(session) ? utcTime(session.end_at) : "",
     location: session.location ?? "indoor",
     ...(session.gym_id === null ? {} : { gymId: session.gym_id }),
-    ...(session.area ? { area: { id: session.area.id, name: session.area.name } } : {}),
+    ...(session.area
+      ? { area: { id: session.area.id, name: session.area.name, trail: session.area.trail } }
+      : {}),
     tags: session.tags.map((t) => t.name),
     notes: session.notes ?? "",
     rpe: session.rpe,

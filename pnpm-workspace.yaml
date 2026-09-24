@@ -18,6 +18,7 @@ minimumReleaseAgeExclude:
   - "expo-*"
   - "@expo/*"
   - babel-preset-expo
+  - maplibre-gl@6.11.1
 overrides:
   react: "19.2.3"
   react-dom: "19.2.3"
