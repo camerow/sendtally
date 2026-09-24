@@ -51,8 +51,12 @@ export function LocationMap({ value, near, around, onMove }: LocationMapProps): 
 
   React.useEffect(() => {
     let cancelled = false;
-    void import("maplibre-gl").then(({ Map: MapLibre }) => {
+    void Promise.all([
+      import("maplibre-gl"),
+      import("maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url"),
+    ]).then(([{ Map: MapLibre, setWorkerUrl }, worker]) => {
       if (cancelled || container.current === null) return;
+      setWorkerUrl(worker.default);
       const created = new MapLibre({
         container: container.current,
         style: MAP_STYLE_URL,

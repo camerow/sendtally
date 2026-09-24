@@ -182,7 +182,7 @@ function CragForm({
         </View>
         <LocationMap
           value={spot}
-          near={null}
+          near={parent?.at ?? null}
           around={around}
           onMove={(at) => place(roundedSpot(at))}
         />

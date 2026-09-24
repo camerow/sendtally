@@ -9,6 +9,7 @@ import type {
   AreaHit,
   AreaSummary,
   ClimbFormValues,
+  LatLon,
   PickedArea,
 } from "./types";
 
@@ -51,18 +52,26 @@ export function cragsOf<T extends AreaSummary>(found: T[]): T[] {
 
 const crumb = (area: AreaCrumb): AreaCrumb => ({ id: area.id, name: area.name });
 
+type Placed = { lat?: number | null; lon?: number | null };
+
+const placed = (area: Placed): { at?: LatLon } =>
+  typeof area.lat === "number" && typeof area.lon === "number"
+    ? { at: { lat: area.lat, lon: area.lon } }
+    : {};
+
 /** A search hit as the picker holds it. Regions stay out of the trail: nobody climbs at "California". */
 export function pickedArea(hit: AreaHit): PickedArea {
   return {
     ...crumb(hit),
     region: hit.region_code !== null,
     trail: hit.ancestors.filter((a) => a.region_code === null).map(crumb),
+    ...placed(hit),
   };
 }
 
 /** An area known only as a summary, such as the page a dialog was opened from. */
 export function pickedSummary(area: AreaSummary): PickedArea {
-  return { ...crumb(area), region: area.region_code !== null, trail: [] };
+  return { ...crumb(area), region: area.region_code !== null, trail: [], ...placed(area) };
 }
 
 /** Root first, the area itself last: what the picker draws as chips. */
@@ -74,10 +83,12 @@ export function areaPath(area: PickedArea): AreaCrumb[] {
 export function atCrumb(area: PickedArea, index: number): PickedArea {
   const path = areaPath(area);
   const at = path[index] ?? crumb(area);
+  const self = index === path.length - 1;
   return {
     ...at,
-    region: index === path.length - 1 && area.region === true,
+    region: self && area.region === true,
     trail: path.slice(0, index),
+    ...(self && area.at !== undefined ? { at: area.at } : {}),
   };
 }
 
@@ -88,11 +99,12 @@ export function stepUp(area: PickedArea): PickedArea | null {
 }
 
 /** A just-created area, placed under the one it was added inside. */
-export function pickedInside(parent: PickedArea | null, created: AreaCrumb): PickedArea {
+export function pickedInside(parent: PickedArea | null, created: AreaCrumb & Placed): PickedArea {
   return {
     ...crumb(created),
     region: false,
     trail: parent === null || parent.region === true ? [] : areaPath(parent),
+    ...placed(created),
   };
 }
 

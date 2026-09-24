@@ -3,9 +3,7 @@ import React from "react";
 import type { SendtallyApi } from "@sendtally/api-client";
 import { queries, useQuery } from "../query";
 import { canAddToAreas, cragsOf } from "./logForm";
-import type { AreaClimb, AreaHit } from "./types";
-
-export type LatLon = { lat: number; lon: number };
+import type { AreaClimb, AreaHit, LatLon } from "./types";
 
 const SEARCH_DELAY_MS = 250;
 

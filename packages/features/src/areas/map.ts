@@ -1,4 +1,4 @@
-import type { LatLon } from "./useLogFormAreas";
+import type { LatLon } from "./types";
 import type { AreaSummary } from "./types";
 
 /** Vector tiles with no key and no account, the same on web and mobile. */

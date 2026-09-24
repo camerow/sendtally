@@ -66,6 +66,12 @@ function edgePadding(style: React.CSSProperties): string | number | undefined {
   return parts[1] ?? parts[0];
 }
 
+/** Padding that keeps a frame of chips as tall as the plain input, whose text line is 8px taller than a chip row. */
+function chipRowPadding(style: React.CSSProperties): number {
+  const top = typeof style.padding === "string" ? parseFloat(style.padding) : (style.padding ?? 0);
+  return Math.max(top - 4, 0);
+}
+
 /** A text field with a dropdown of picks under it; typing stays free text until a row is picked. */
 export function ComboField({
   value,
@@ -84,6 +90,7 @@ export function ComboField({
   onFocus,
 }: ComboFieldProps): React.ReactElement {
   const [open, setOpen] = React.useState(false);
+  const [focused, setFocused] = React.useState(false);
   const [active, setActive] = React.useState(0);
   const highlighted = Math.min(active, Math.max(items.length - 1, 0));
   const showList = open && items.length > 0;
@@ -121,8 +128,8 @@ export function ComboField({
   const frame: React.CSSProperties = {
     ...inputStyle,
     paddingRight: trailing === undefined ? edgePadding(inputStyle) : 72,
-    borderColor: open ? "var(--bs-azure)" : "rgba(64,63,76,0.15)",
-    boxShadow: open ? "var(--focus-ring-azure)" : "none",
+    borderColor: focused ? "var(--bs-azure)" : "rgba(64,63,76,0.15)",
+    boxShadow: focused ? "var(--focus-ring-azure)" : "none",
   };
 
   return (
@@ -146,8 +153,8 @@ export function ComboField({
                 flexWrap: "wrap",
                 alignItems: "center",
                 gap: 6,
-                paddingTop: 7,
-                paddingBottom: 7,
+                paddingTop: chipRowPadding(inputStyle),
+                paddingBottom: chipRowPadding(inputStyle),
                 paddingLeft: 8,
               }
         }
@@ -169,10 +176,14 @@ export function ComboField({
             setActive(0);
           }}
           onFocus={() => {
+            setFocused(true);
             setOpen(true);
             onFocus?.();
           }}
-          onBlur={() => setOpen(false)}
+          onBlur={() => {
+            setFocused(false);
+            setOpen(false);
+          }}
           onKeyDown={onKeyDown}
           className={leading === undefined ? className : undefined}
           style={

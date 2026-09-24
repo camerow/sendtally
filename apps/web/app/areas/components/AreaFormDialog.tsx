@@ -12,7 +12,6 @@ import {
   type Area,
   type AreaFormValues,
   type AreaSummary,
-  type LatLon,
   type PickedArea,
 } from "@sendtally/features/areas";
 import { t } from "@sendtally/features/i18n";
@@ -50,9 +49,6 @@ function failure(error: unknown): string {
     ? t("areas.noChanges")
     : t("common.somethingWentWrongTryAgain");
 }
-
-const latLonOf = (area: AreaSummary): LatLon | null =>
-  area.lat === null || area.lon === null ? null : { lat: area.lat, lon: area.lon };
 
 export function AreaFormDialog(props: AreaFormDialogProps): React.ReactElement {
   const { api, onClose, onSuggested } = props;
@@ -243,7 +239,7 @@ export function AreaFormDialog(props: AreaFormDialogProps): React.ReactElement {
         </div>
         <LocationMap
           value={near}
-          near={props.mode === "create" && props.parent !== null ? latLonOf(props.parent) : null}
+          near={parent?.at ?? null}
           around={around}
           onMove={(at) => {
             const spot = roundedSpot(at);

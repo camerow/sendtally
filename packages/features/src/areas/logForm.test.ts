@@ -169,6 +169,17 @@ describe("picked area paths", () => {
     expect(pickedInside(region, { id: "bishop", name: "Bishop" }).trail).toEqual([]);
   });
 
+  it("keeps where an area is, but never hands it to the chip above", () => {
+    const placedHit = { ...hit, lat: 37.33, lon: -118.58 };
+    expect(pickedArea(placedHit).at).toEqual({ lat: 37.33, lon: -118.58 });
+    expect(stepUp(pickedArea(placedHit))?.at).toBeUndefined();
+    expect(pickedInside(null, { id: "gp", name: "GP", lat: 1, lon: 2 }).at).toEqual({
+      lat: 1,
+      lon: 2,
+    });
+    expect(pickedArea(hit).at).toBeUndefined();
+  });
+
   it("knows a hit inside the picked area", () => {
     expect(isInside(hit, { id: "bm", name: "Buttermilks" })).toBe(true);
     expect(isInside(hit, { id: "sq", name: "Squamish" })).toBe(false);

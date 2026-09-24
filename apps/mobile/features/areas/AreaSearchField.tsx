@@ -75,6 +75,11 @@ export function AreaSearchField({
   const api = useApi();
   const [query, setQuery] = React.useState("");
   const [focused, setFocused] = React.useState(false);
+  const [shownFor, setShownFor] = React.useState(value);
+  if (value !== shownFor) {
+    setShownFor(value);
+    setQuery("");
+  }
   const found = useAreaSearch(api, query, null, {
     crags,
     enabled: focused,

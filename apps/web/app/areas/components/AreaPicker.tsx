@@ -37,7 +37,8 @@ const chipStyle: React.CSSProperties = {
   height: 26,
   padding: "0 9px",
   borderRadius: "var(--radius-pill)",
-  border: "1px solid var(--line-on-light)",
+  borderWidth: 1,
+  borderStyle: "solid",
   background: "var(--surface-soft)",
   fontFamily: "var(--font-sans)",
   fontSize: 13,
@@ -73,6 +74,11 @@ export function AreaPicker({
 }: AreaPickerProps): React.ReactElement {
   const [query, setQuery] = React.useState("");
   const [focused, setFocused] = React.useState(false);
+  const [shownFor, setShownFor] = React.useState(value);
+  if (value !== shownFor) {
+    setShownFor(value);
+    setQuery("");
+  }
   const found = useAreaSearch(api, query, near, {
     crags,
     enabled: focused,
@@ -145,7 +151,8 @@ export function AreaPicker({
               onClick={() => pick(atCrumb(value, i))}
               style={{
                 ...chipStyle,
-                ...(i === path.length - 1 ? { borderColor: "var(--line-on-light-strong)" } : {}),
+                borderColor:
+                  i === path.length - 1 ? "var(--line-on-light-strong)" : "var(--line-on-light)",
               }}
             >
               {crumb.name}
