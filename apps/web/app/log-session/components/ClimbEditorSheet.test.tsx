@@ -77,7 +77,7 @@ describe("ClimbEditorSheet", () => {
   it("opens as a modal dialog", () => {
     const dialog = mount(() => {});
     expect(dialog.open).toBe(true);
-    expect(dialog.getAttribute("aria-label")).toBe("Climb 1 of 2");
+    expect(dialog.getAttribute("aria-label")).toBe("Add climb");
   });
 
   it("closes on a tap that starts and ends on the backdrop", () => {
@@ -91,7 +91,7 @@ describe("ClimbEditorSheet", () => {
   it("stays open when a drag starts inside the panel and ends on the backdrop", () => {
     const onClose = vi.fn();
     const dialog = mount(onClose);
-    pointer(dialog.querySelector(".climb-result-select")!, "pointerdown");
+    pointer(dialog.querySelector(".climb-switch")!, "pointerdown");
     pointer(dialog, "click");
     expect(onClose).not.toHaveBeenCalled();
   });
@@ -117,16 +117,15 @@ describe("ClimbEditorSheet", () => {
     expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ grade: "V5" }));
   });
 
-  it("picks a result from the dropdown", () => {
+  it("marks an attempt as sent from the Sent switch", () => {
     const onChange = vi.fn();
     const dialog = mount(() => {}, onChange);
-    const select = dialog.getElementsByTagName("select")[2]!;
-    expect([...select.options].map((o) => o.value)).toEqual(["redpoint", "flash", "attempt"]);
-    act(() => {
-      select.value = "attempt";
-      select.dispatchEvent(new Event("change", { bubbles: true }));
-    });
-    expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ kind: "attempt" }));
+    const toggle = dialog.querySelector<HTMLInputElement>(".climb-switch")!;
+    expect(toggle.checked).toBe(false);
+    act(() => toggle.click());
+    expect(onChange).toHaveBeenCalledWith(
+      expect.objectContaining({ kind: "send", style: "flash", tries: 1 })
+    );
   });
 
   describe("with a gym that has circuits", () => {
@@ -197,10 +196,13 @@ describe("ClimbEditorSheet", () => {
 
   // A note needs a climb name to roll up under, so there is nothing to type into
   // until the climb has one - the label says why instead of a dead field.
-  it("offers no note field until the climb is named", () => {
+  it("locks the note and project until the climb is named", () => {
     const dialog = mount(() => {});
-    expect(dialog.querySelector("textarea")).toBeNull();
-    expect(dialog.textContent).toContain("climb must have a name to have a note");
+    expect(dialog.querySelector("textarea")?.disabled).toBe(true);
+    expect(dialog.querySelector<HTMLButtonElement>("button[aria-pressed]")?.disabled).toBe(true);
+    expect(dialog.textContent).toContain(
+      "A climb must have a name to have a note or be marked as a project"
+    );
   });
 
   it("offers the note field once the climb is named", () => {
@@ -209,8 +211,8 @@ describe("ClimbEditorSheet", () => {
       () => {},
       "Cave problem"
     );
-    expect(dialog.querySelector("textarea")).not.toBeNull();
-    expect(dialog.textContent).not.toContain("climb must have a name to have a note");
+    expect(dialog.querySelector("textarea")?.disabled).toBe(false);
+    expect(dialog.textContent).not.toContain("must have a name");
   });
 
   it("closes from the Save button", () => {

@@ -1,6 +1,12 @@
 import type { ClimbSummary } from "@sendtally/api-client";
 import { climbDraftGrade } from "../climbs/transforms";
 import { formatDate, t } from "../i18n";
+import {
+  parseStoredDraft,
+  writeStoredDraft,
+  type DraftStorage,
+  type StoredSessionDraft,
+} from "./draftStore";
 import type { Gym } from "../gyms/types";
 import { gymOfCircuit, newClimbOfKind, type ClimbKind } from "./climbKind";
 import { nextClimbKey } from "./transforms";
@@ -11,19 +17,14 @@ import {
   type LogSessionDraft,
 } from "./types";
 
-/** Climbs logged one at a time, as they happen; the session is wrapped up afterwards. */
-
-export const WRAP_UP_REMINDER_MINUTES = 120;
+/** Climbs logged one at a time, as they happen; details are added afterwards. */
 
 function pad(n: number): string {
   return String(n).padStart(2, "0");
 }
 
-function hhmm(d: Date): string {
-  return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
-}
-
-function ymd(d: Date): string {
+/** The device-local calendar date, as a draft stores it. */
+export function localDate(d: Date): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
@@ -35,13 +36,13 @@ export function defaultSessionName(now: Date): string {
   return t("logSession.defaultNameEvening", { date });
 }
 
-/** Starts at the first climb and, until wrap-up, ends at the latest one. */
+/** Starts at the first climb; times are the climber's to add later. */
 export function liveDraft(now: Date): LogSessionDraft {
   return {
     name: defaultSessionName(now),
-    date: ymd(now),
-    startTime: hhmm(now),
-    endTime: hhmm(now),
+    date: localDate(now),
+    startTime: "",
+    endTime: "",
     location: "indoor",
     tags: [],
     notes: "",
@@ -66,7 +67,7 @@ export function withQuickClimb(
   const previous = started.climbs[started.climbs.length - 1];
   const climb = newClimbOfKind(key, kind, prefs, gyms, previous);
   const next = withGymAdopted({ ...started, climbs: [...started.climbs, climb] }, gyms);
-  return { draft: withClimbTouched(next, now), key };
+  return { draft: next, key };
 }
 
 /** A session without a gym adopts the gym of its first circuit climb, however that climb got its circuit. */
@@ -78,30 +79,41 @@ export function withGymAdopted(draft: LogSessionDraft, gyms: readonly Gym[]): Lo
   return gymId === undefined ? draft : { ...draft, gymId };
 }
 
-export function withClimbTouched(draft: LogSessionDraft, now: Date): LogSessionDraft {
-  return draft.date === ymd(now) ? { ...draft, endTime: hhmm(now) } : draft;
+/** A session climbed past midnight stays live while its climbs keep coming. */
+export const LIVE_IDLE_MS = 6 * 60 * 60 * 1000;
+
+/**
+ * Whether the draft is still the session being climbed. One the server does not have yet stays
+ * live until it lands, however old: it is the only copy of those climbs.
+ */
+export function isLive(entry: StoredSessionDraft, now: Date): boolean {
+  if (entry.fingerprint === undefined) return true;
+  return (
+    entry.draft.date === localDate(now) || now.getTime() - entry.savedAt.getTime() < LIVE_IDLE_MS
+  );
 }
 
-/** Minutes since the last climb was logged, or null once the session is on another day. */
-export function idleMinutes(draft: LogSessionDraft, now: Date): number | null {
-  if (draft.date !== ymd(now)) return null;
-  const [h, m] = draft.endTime.split(":").map(Number);
-  if (h === undefined || m === undefined || Number.isNaN(h) || Number.isNaN(m)) return null;
-  return Math.max(0, now.getHours() * 60 + now.getMinutes() - (h * 60 + m));
+/** The live draft; one that has gone quiet and is already on the server is dropped from the file. */
+export function liveStoredDraft(storage: DraftStorage, now: Date): StoredSessionDraft | null {
+  const entry = parseStoredDraft(storage.read(), now);
+  if (entry === null) return null;
+  if (isLive(entry, now)) return entry;
+  storage.remove();
+  return null;
 }
 
-/** hh:mm:ss since the draft's start, clamped at zero. */
-export function elapsedLabel(draft: LogSessionDraft, now: Date): string {
-  const started = new Date(`${draft.date}T${draft.startTime}:00`);
-  const total = Math.max(0, Math.floor((now.getTime() - started.getTime()) / 1000));
-  if (Number.isNaN(total)) return "00:00:00";
-  const pad = (n: number): string => String(n).padStart(2, "0");
-  return `${pad(Math.floor(total / 3600))}:${pad(Math.floor((total % 3600) / 60))}:${pad(total % 60)}`;
-}
-
-export function wantsWrapUpReminder(draft: LogSessionDraft, now: Date): boolean {
-  const idle = idleMinutes(draft, now);
-  return draft.climbs.length > 0 && (idle === null || idle >= WRAP_UP_REMINDER_MINUTES);
+/**
+ * The full form saved the live session: the draft takes what was saved, so the next climb
+ * logged from the card carries the times, effort and venue instead of wiping them.
+ */
+export function adoptSavedDetails(
+  storage: DraftStorage,
+  fingerprint: string,
+  draft: LogSessionDraft,
+  now: Date
+): void {
+  if (parseStoredDraft(storage.read(), now)?.fingerprint !== fingerprint) return;
+  writeStoredDraft(storage, draft, now, { fingerprint, detailed: true });
 }
 
 /**

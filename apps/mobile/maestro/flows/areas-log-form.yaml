@@ -24,7 +24,7 @@ name: areas-log-form
     direction: DOWN
     centerElement: true
 - tapOn: "\\+ ADD CLIMB"
-- assertVisible: "CLIMB 2 OF 2"
+- assertVisible: "2 OF 2"
 - tapOn: "Name (optional)"
 - inputText: "Qzx never added"
 - tapOn: "\\+ Add “Qzx never added” to Areas"
@@ -35,9 +35,9 @@ name: areas-log-form
 - tapOn:
     point: "50%,6%"
 - assertNotVisible: "Add a climb"
-- assertVisible: "CLIMB 2 OF 2"
+- assertVisible: "2 OF 2"
 - tapOn: "Save"
-- assertNotVisible: "CLIMB 2 OF 2"
+- assertNotVisible: "2 OF 2"
 - scrollUntilVisible:
     element:
       text: "← LOG"

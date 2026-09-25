@@ -2,12 +2,9 @@ import React from "react";
 import type { ClimbSummary } from "@sendtally/api-client";
 import type { Gym } from "@sendtally/features/gyms";
 import {
-  climbOutcome,
   disciplineOf,
   gymOfCircuit,
   withClimbDiscipline,
-  withClimbOutcome,
-  withTries,
   type ClimbDraft,
   type GradePrefs,
 } from "@sendtally/features/log-session";
@@ -26,9 +23,8 @@ import { AreaClimbNameField, type ClimbAreas } from "./AreaClimbNameField";
 import { ClimbNameField, type ClimbNameFieldProps } from "./ClimbNameField";
 import { ClimbNoteField } from "./ClimbNoteField";
 import { DisciplineToggle } from "./DisciplineToggle";
-import { OutcomeSelect } from "./OutcomeControl";
 import { ProjectToggle } from "./ProjectToggle";
-import { TriesStepper } from "./TriesStepper";
+import { SentResultControl } from "./SentResultControl";
 import { monoLabel } from "./styles";
 
 const DISMISS_DISTANCE = 80;
@@ -140,7 +136,7 @@ export function ClimbEditorSheet({
     <dialog
       ref={dialog}
       className="climb-sheet"
-      aria-label={t("logSession.climbOf", { n: index + 1, total: count })}
+      aria-label={t("logSession.addClimb")}
       onCancel={(e) => {
         e.preventDefault();
         onClose();
@@ -158,19 +154,23 @@ export function ClimbEditorSheet({
           onPointerDown={(e) => startDrag(e, panel.current, onClose)}
         >
           <div className="climb-sheet-handle" />
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <span style={monoLabel}>{t("logSession.climbOf", { n: index + 1, total: count })}</span>
-            {removable && (
-              <button
-                type="button"
-                onClick={onRemove}
-                className="climb-sheet-remove"
-                aria-label={t("logSession.removeClimb")}
-              >
-                <Icon name="trash" size={18} strokeWidth={1.8} />
-              </button>
-            )}
+          <div className="climb-sheet-heading">
+            <h2 className="climb-sheet-title">{t("logSession.addClimb")}</h2>
+            <span className="climb-sheet-count">
+              {t("logSession.climbOf", { n: index + 1, total: count })}
+            </span>
           </div>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
+          <span style={monoLabel}>
+            {t("logSession.name")}{" "}
+            <span style={{ color: "rgba(64,63,76,0.45)" }}>{t("common.optional")}</span>
+          </span>
+          {areas === undefined ? (
+            <ClimbNameField {...nameProps} />
+          ) : (
+            <AreaClimbNameField {...nameProps} areas={areas} linkedId={climb.climbId} />
+          )}
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
           <label htmlFor="climb-kind" style={monoLabel}>
@@ -229,47 +229,51 @@ export function ClimbEditorSheet({
           <ClimbGradeSelect id="climb-grade" climb={climb} gyms={gyms} onChange={onChange} />
         </div>
         {gym !== null && <CircuitFields climb={climb} gym={gym} onChange={onChange} />}
-        <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
-          <span style={monoLabel}>
-            {t("logSession.name")}{" "}
-            <span style={{ color: "rgba(64,63,76,0.45)" }}>{t("common.optional")}</span>
-          </span>
-          {areas === undefined ? (
-            <ClimbNameField {...nameProps} />
-          ) : (
-            <AreaClimbNameField {...nameProps} areas={areas} linkedId={climb.climbId} />
-          )}
-        </div>
         {!endurance && (
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <OutcomeSelect
-              discipline={disciplineOf(climb.scale)}
-              outcome={climbOutcome(climb)}
-              onChange={(outcome) => onChange(withClimbOutcome(climb, outcome))}
-            />
-            <TriesStepper
-              tries={climb.tries}
-              size={40}
-              onChange={(tries) => onChange(withTries(climb, tries))}
-            />
-          </div>
+          <SentResultControl
+            climb={climb}
+            summary={suggestions.find(
+              (s) => s.name.toLowerCase() === climb.name.trim().toLowerCase()
+            )}
+            onChange={onChange}
+          />
         )}
-        {!endurance && <ProjectToggle project={project} named={named} onToggle={onToggleProject} />}
-        <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
-          <span style={monoLabel}>
-            {named ? t("logSession.noteOptional") : t("logSession.noteNeedsName")}
-          </span>
-          {named && (
-            <ClimbNoteField
-              note={climb.note}
-              name={climb.name}
-              onChange={(note) => onChange({ ...climb, note })}
-            />
+        <div className="climb-sheet-note">
+          <label htmlFor="climb-note" style={monoLabel}>
+            {t("logSession.noteOptional")}
+          </label>
+          <ClimbNoteField
+            id="climb-note"
+            note={climb.note}
+            name={climb.name}
+            disabled={!named}
+            onChange={(note) => onChange({ ...climb, note })}
+          />
+          {!endurance && (
+            <ProjectToggle project={project} named={named} onToggle={onToggleProject} />
+          )}
+          {!named && (
+            <p className="climb-sheet-locked">
+              <Icon name="lock" size={14} strokeWidth={1.8} />
+              {endurance ? t("logSession.noteNeedsName") : t("logSession.nameUnlocksNote")}
+            </p>
           )}
         </div>
-        <button type="button" onClick={onClose} className="climb-sheet-done">
-          {t("common.save")}
-        </button>
+        <div className="climb-sheet-actions">
+          {removable && (
+            <button
+              type="button"
+              onClick={onRemove}
+              className="climb-sheet-remove"
+              aria-label={t("logSession.removeClimb")}
+            >
+              <Icon name="trash" size={18} strokeWidth={1.8} />
+            </button>
+          )}
+          <button type="button" onClick={onClose} className="climb-sheet-done">
+            {t("common.save")}
+          </button>
+        </div>
       </div>
     </dialog>
   );

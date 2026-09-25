@@ -21,6 +21,7 @@ function session(overrides: Partial<SessionRow> = {}): SessionRow {
     top_send_grade_label: null,
     notes: null,
     rpe: 7,
+    rpe_source: "computed",
     title: "T",
     strava_activity_id: null,
     posted_at: null,
@@ -34,6 +35,10 @@ function session(overrides: Partial<SessionRow> = {}): SessionRow {
 describe("sessionMetaLabel", () => {
   it("joins duration, climbs and effort", () => {
     expect(sessionMetaLabel(session())).toBe("1h 40m · 14 climbs");
+  });
+
+  it("says when a session has no score yet", () => {
+    expect(sessionMetaLabel(session({ rpe_source: "none" }))).toBe("1h 40m · 14 climbs · unscored");
   });
 
   it("omits the duration of a session saved without both times", () => {

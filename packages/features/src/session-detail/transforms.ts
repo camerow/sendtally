@@ -4,6 +4,7 @@ import { climbKey } from "../climbs/transforms";
 import { formatDate, t } from "../i18n";
 import { sendStyleLabel } from "../log-session/types";
 import { climbGradeLabel, gradeFormatterFor } from "../sessions/grades";
+import { isUnscored } from "../sessions/meta";
 import { durationLabel as minutesLabel, hasStart } from "../sessions/years";
 import type {
   ClimbFilter,
@@ -242,7 +243,9 @@ export function sessionDetailVM(
       accent: false,
     },
     { label: t("sessionDetail.statFlashes"), value: String(flashes.length), accent: false },
-    { label: t("common.effort"), value: `${session.rpe}/10`, accent: false },
+    ...(isUnscored(session)
+      ? []
+      : [{ label: t("common.effort"), value: `${session.rpe}/10`, accent: false }]),
     { label: t("sessionDetail.statTop"), value: topLabel, accent: true },
   ];
 
@@ -288,7 +291,7 @@ export function sessionDetailVM(
       ...(timed ? [durationLabel(session.start_at, session.end_at)] : []),
     ]
       .join(" · ")
-      .concat(`${location} · ${t("common.effort")} ${session.rpe}/10`),
+      .concat(location, isUnscored(session) ? "" : ` · ${t("common.effort")} ${session.rpe}/10`),
     editable: session.source === "manual",
     area: session.area,
     stats,

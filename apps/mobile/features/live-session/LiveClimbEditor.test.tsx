@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, jest } from "@jest/globals";
 import React from "react";
-import { Pressable, Text } from "react-native";
+import { Alert, Pressable, Text } from "react-native";
 import { fireEvent, render, screen } from "@testing-library/react-native";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ClimbVocabulary } from "@sendtally/features/climbs";
@@ -24,9 +24,20 @@ jest.mock("@sendtally/features/settings", () => ({
   }),
 }));
 jest.mock("../../components/Sheet", () => ({
-  Sheet: ({ visible, children }: { visible: boolean; children: React.ReactNode }) =>
-    visible ? children : null,
+  Sheet: ({
+    visible,
+    children,
+    footer,
+  }: {
+    visible: boolean;
+    children: React.ReactNode;
+    footer?: React.ReactNode;
+  }) => (visible ? [children, footer] : null),
 }));
+
+jest.spyOn(Alert, "alert").mockImplementation((_title, _body, buttons) => {
+  buttons?.find((b) => b.style === "destructive")?.onPress?.();
+});
 
 const vocabulary: ClimbVocabulary = {
   climbs: [],
@@ -55,6 +66,8 @@ function QuickLog({ storage }: { storage: DraftStorage }): React.ReactElement {
       {live.stored !== null && (
         <LiveSessionCard
           stored={live.stored}
+          status="idle"
+          onToggleSent={() => {}}
           vocabulary={vocabulary}
           gym={null}
           onEditClimb={setEditing}
@@ -93,27 +106,27 @@ describe("logging a climb from the Log tab", () => {
     );
 
     await fireEvent.press(screen.getByText("Climb"));
-    expect(screen.getByText("Climb 1 of 1")).toBeOnTheScreen();
+    expect(screen.getByText("1 of 1")).toBeOnTheScreen();
     await fireEvent.press(screen.getByText("Save"));
-    expect(screen.queryByText("Climb 1 of 1")).not.toBeOnTheScreen();
+    expect(screen.queryByText("1 of 1")).not.toBeOnTheScreen();
     expect(
-      screen.getByLabelText(/(Morning|Afternoon|Evening) session, .*In progress for/)
+      screen.getByLabelText(/(Morning|Afternoon|Evening) session, .*Saved as you go/)
     ).toBeOnTheScreen();
 
     await fireEvent.press(screen.getByText("Climb"));
-    expect(screen.getByText("Climb 2 of 2")).toBeOnTheScreen();
+    expect(screen.getByText("2 of 2")).toBeOnTheScreen();
     await fireEvent.changeText(screen.getByPlaceholderText("Name (optional)"), "Maestro Arete");
     await fireEvent.press(screen.getByText("Save"));
     expect(screen.getByText(/Maestro Arete/)).toBeOnTheScreen();
 
     await fireEvent.press(screen.getByText(/Maestro Arete/));
-    expect(screen.getByText("Climb 2 of 2")).toBeOnTheScreen();
+    expect(screen.getByText("2 of 2")).toBeOnTheScreen();
     await fireEvent.press(screen.getByLabelText("Remove climb"));
     expect(screen.queryByText(/Maestro Arete/)).not.toBeOnTheScreen();
-    expect(screen.getByLabelText(/In progress for/)).toBeOnTheScreen();
+    expect(screen.getByLabelText(/Saved as you go/)).toBeOnTheScreen();
 
     await fireEvent.press(screen.getByLabelText(/^V3 Unnamed/));
-    expect(screen.getByText("Climb 1 of 1")).toBeOnTheScreen();
+    expect(screen.getByText("1 of 1")).toBeOnTheScreen();
     await fireEvent.press(screen.getByLabelText("Remove climb"));
     expect(screen.queryByLabelText(/In progress for/)).not.toBeOnTheScreen();
   });

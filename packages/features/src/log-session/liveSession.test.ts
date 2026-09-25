@@ -2,16 +2,13 @@ import type { ClimbSummary } from "@sendtally/api-client";
 import { describe, expect, it } from "vitest";
 import { withCircuit } from "../gyms/draft";
 import { climbKindOf, readClimbKind, withClimbKind } from "./climbKind";
-import type { DraftStorage } from "./draftStore";
+import { draftStorage, parseStoredDraft, writeStoredDraft, type DraftStorage } from "./draftStore";
 import {
+  adoptSavedDetails,
   defaultSessionName,
-  elapsedLabel,
-  idleMinutes,
-  liveDraft,
-  wantsWrapUpReminder,
+  liveStoredDraft,
   withClimbName,
   withPickedClimb,
-  withClimbTouched,
   withGymAdopted,
   withQuickClimb,
 } from "./liveSession";
@@ -26,17 +23,15 @@ describe("live session", () => {
     expect(defaultSessionName(EVENING)).toBe("Evening session, 9/16/26");
   });
 
-  it("starts a session at the first climb and ends it at the latest", () => {
+  it("starts a session at the first climb, leaving its times to add later", () => {
     const first = withQuickClimb(null, EVENING);
     expect(first.key).toBe("climb-1");
-    expect(first.draft.startTime).toBe("18:42");
-    expect(first.draft.endTime).toBe("18:42");
+    expect(first.draft.startTime).toBe("");
+    expect(first.draft.endTime).toBe("");
     expect(first.draft.climbs).toHaveLength(1);
 
     const second = withQuickClimb(first.draft, new Date(2026, 8, 16, 19, 31));
     expect(second.key).toBe("climb-2");
-    expect(second.draft.startTime).toBe("18:42");
-    expect(second.draft.endTime).toBe("19:31");
     expect(second.draft.climbs[1]?.scale).toBe(first.draft.climbs[0]?.scale);
   });
 
@@ -122,31 +117,52 @@ describe("live session", () => {
     expect(late.draft.climbs[1]).toMatchObject({ circuit: { id: "a" } });
   });
 
-  it("moves the end time when a climb is revisited the same day only", () => {
-    const draft = liveDraft(EVENING);
-    expect(withClimbTouched(draft, new Date(2026, 8, 16, 20, 5)).endTime).toBe("20:05");
-    expect(withClimbTouched(draft, new Date(2026, 8, 17, 8, 0)).endTime).toBe("18:42");
-    const nextDay = withQuickClimb(
-      withQuickClimb(null, EVENING).draft,
-      new Date(2026, 8, 17, 8, 0)
-    );
-    expect(nextDay.draft.endTime).toBe("18:42");
-    expect(nextDay.draft.climbs).toHaveLength(2);
+  function memoryStorage(): DraftStorage {
+    let value: string | null = null;
+    return draftStorage({
+      read: () => value,
+      write: (next) => {
+        value = next;
+      },
+      remove: () => {
+        value = null;
+      },
+    });
+  }
+
+  it("keeps a saved session live past midnight until it goes quiet, then drops it", () => {
+    const storage = memoryStorage();
+    const lateNight = new Date(2026, 8, 16, 23, 50);
+    const draft = withQuickClimb(null, lateNight).draft;
+    writeStoredDraft(storage, draft, lateNight, { fingerprint: "manual-1" });
+    const afterMidnight = new Date(2026, 8, 17, 0, 20);
+    expect(liveStoredDraft(storage, afterMidnight)?.fingerprint).toBe("manual-1");
+    const nextMorning = new Date(2026, 8, 17, 9, 0);
+    expect(liveStoredDraft(storage, nextMorning)).toBeNull();
+    expect(storage.read()).toBeNull();
   });
 
-  it("counts hh:mm:ss since the start, never below zero", () => {
-    const { draft } = withQuickClimb(null, EVENING);
-    expect(elapsedLabel(draft, new Date(2026, 8, 16, 19, 42, 5))).toBe("01:00:05");
-    expect(elapsedLabel(draft, new Date(2026, 8, 16, 18, 0))).toBe("00:00:00");
+  it("keeps a session the server does not have yet live, however old", () => {
+    const storage = memoryStorage();
+    const draft = withQuickClimb(null, EVENING).draft;
+    writeStoredDraft(storage, draft, EVENING);
+    const days = new Date(2026, 8, 19, 9, 0);
+    expect(liveStoredDraft(storage, days)?.draft).toEqual(draft);
   });
 
-  it("reminds after two idle hours, and always on a later day", () => {
-    const { draft } = withQuickClimb(null, EVENING);
-    expect(idleMinutes(draft, new Date(2026, 8, 16, 19, 42))).toBe(60);
-    expect(wantsWrapUpReminder(draft, new Date(2026, 8, 16, 19, 42))).toBe(false);
-    expect(wantsWrapUpReminder(draft, new Date(2026, 8, 16, 20, 42))).toBe(true);
-    expect(wantsWrapUpReminder(draft, new Date(2026, 8, 17, 7, 0))).toBe(true);
-    expect(wantsWrapUpReminder(liveDraft(EVENING), new Date(2026, 8, 17, 7, 0))).toBe(false);
+  it("takes the details the form saved for the live session, and only for it", () => {
+    const storage = memoryStorage();
+    const draft = withQuickClimb(null, EVENING).draft;
+    writeStoredDraft(storage, draft, EVENING, { fingerprint: "manual-1" });
+    const detailed = { ...draft, startTime: "18:00", endTime: "20:00", rpe: 7, notes: "Good" };
+    adoptSavedDetails(storage, "manual-2", detailed, EVENING);
+    expect(parseStoredDraft(storage.read(), EVENING)?.draft).toEqual(draft);
+    adoptSavedDetails(storage, "manual-1", detailed, EVENING);
+    expect(parseStoredDraft(storage.read(), EVENING)).toMatchObject({
+      draft: detailed,
+      fingerprint: "manual-1",
+      detailed: true,
+    });
   });
 
   it("adopts a known climb's grade on a typed name and keeps it otherwise", () => {

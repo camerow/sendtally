@@ -1,4 +1,5 @@
 export const sessions = {
+  "sessions.unscored": "ohne Bewertung",
   "sessions.back": "← Logbuch",
   "sessions.onStrava": "Auf Strava",
   "sessions.loadFailed": "sendtally ist nicht erreichbar. Zum Neuladen ziehen.",
@@ -58,10 +59,9 @@ export const sessions = {
   "sessions.logFullSession": "Session",
   "sessions.logFullSessionHint":
     "Fasse Klettereien zu einer Session mit Name, Notizen, Datum, Ort und Anstrengung zusammen.",
-  "sessions.liveMeta": "Läuft seit {elapsed}",
-  "sessions.wrapUp": "Abschließen",
-  "sessions.stillClimbing": "Noch am Klettern?",
-  "sessions.idleFor": "Seit {duration} nichts geloggt",
-  "sessions.idleSinceYesterday": "Begonnen am {date}",
   "sessions.discardSession": "Session verwerfen",
+  "sessions.savedAsYouGo": "Wird laufend gespeichert",
+  "sessions.saving": "Speichern…",
+  "sessions.notSavedYet": "Noch nicht gespeichert, wird wiederholt",
+  "sessions.addDetails": "Details hinzufügen",
 } as const;

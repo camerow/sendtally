@@ -41,6 +41,7 @@ function session(
     top_send_grade_label: null,
     notes: null,
     rpe: 6,
+    rpe_source: "computed",
     title: "",
     strava_activity_id: null,
     posted_at: null,
@@ -83,6 +84,7 @@ describe("trendsVM", () => {
       location: "outdoor",
       tags: [tag("Bishop")],
       rpe: 8,
+      rpe_source: "computed",
     }),
     session("2026-07-21T18:00:00.000Z", [{ vGrade: 10, grade: yds("5.11a") }]),
   ];
@@ -131,6 +133,17 @@ describe("trendsVM", () => {
     const tagged = trendsVM(rows, [], filter({ range: "1m", tags: ["bishop"] }), NOW);
     expect(tileOf(tagged, "days").total).toBe(1);
     expect(tileOf(tagged, "effort").total).toBe(8);
+  });
+
+  it("leaves unscored sessions out of the effort mean", () => {
+    const unscored = session("2026-08-02T18:00:00.000Z", [{ vGrade: 4 }], {
+      rpe: 10,
+      rpe_source: "none",
+    });
+    const scored = trendsVM(rows, [], filter({ range: "1m" }), NOW);
+    const vm = trendsVM([...rows, unscored], [], filter({ range: "1m" }), NOW);
+    expect(tileOf(vm, "effort").total).toBe(tileOf(scored, "effort").total);
+    expect(tileOf(vm, "volume").total).toBe((tileOf(scored, "volume").total ?? 0) + 1);
   });
 
   it("splits days inside and outside", () => {

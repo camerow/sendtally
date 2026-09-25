@@ -13,7 +13,7 @@ name: climb-note
     direction: DOWN
     centerElement: true
 - tapOn: "\\+ ADD CLIMB"
-- assertVisible: "CLIMB 2 OF 2"
+- assertVisible: "2 OF 2"
 - assertVisible: "NOTE · CLIMB MUST HAVE A NAME TO HAVE A NOTE"
 - assertNotVisible: "How it went, what to try next"
 - tapOn: "Name (optional)"

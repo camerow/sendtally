@@ -6,10 +6,15 @@ export function climbCountLabel(count: number): string {
   return t("common.climbCount", { count });
 }
 
+export function isUnscored(session: Pick<SessionRow, "rpe_source">): boolean {
+  return session.rpe_source === "none";
+}
+
 export function sessionMetaLabel(session: SessionRow): string {
   return [
     ...(session.times === "both" ? [durationLabel(sessionMinutes(session))] : []),
     climbCountLabel(session.climb_count),
+    ...(isUnscored(session) ? [t("sessions.unscored")] : []),
   ].join(" · ");
 }
 

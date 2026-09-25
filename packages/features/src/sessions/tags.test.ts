@@ -32,6 +32,7 @@ function session(fingerprint: string, tags: SessionTag[]): SessionRow {
     top_send_grade_label: null,
     notes: null,
     rpe: 6,
+    rpe_source: "computed",
     title: fingerprint,
     strava_activity_id: null,
     posted_at: null,

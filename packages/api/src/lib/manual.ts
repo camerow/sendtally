@@ -136,7 +136,8 @@ export const manualSessionShape = z.object({
     .regex(/^([01]\d|2[0-3]):[0-5]\d$/)
     .optional(),
   rpe: z.number().int().min(1).max(10).optional(),
-  location: z.enum(["indoor", "outdoor"]),
+  location: z.enum(["indoor", "outdoor"]).optional(),
+  unscored: z.boolean().optional(),
   gymId: z.string().min(1).max(40).optional(),
   areaId: z.string().min(1).max(64).optional(),
   tags: tagNames.optional(),
@@ -156,7 +157,7 @@ export function sessionTooLong(
 // A link is keyed by the slug of the logged name, so a linked climb needs a
 // name and two rows with one name cannot point at different climbs.
 function linksConsistent(body: ManualSessionBody, ctx: z.RefinementCtx): void {
-  if (body.areaId !== undefined && body.location !== "outdoor") {
+  if (body.areaId !== undefined && body.location === "indoor") {
     ctx.addIssue({
       code: "custom",
       path: ["areaId"],
@@ -220,6 +221,17 @@ function normalisedGrade(grade: ManualGrade): Grade {
 function timesOf(body: ManualSessionBody): ManualSessionInput["times"] {
   if (body.startTime !== undefined) return body.endTime === undefined ? "start" : "both";
   return body.endTime === undefined ? "none" : "end";
+}
+
+function locationOf(body: ManualSessionBody): ManualSessionInput["location"] {
+  if (body.location !== undefined) return body.location;
+  if (body.areaId !== undefined) return "outdoor";
+  return body.gymId === undefined ? null : "indoor";
+}
+
+function rpeSourceOf(body: ManualSessionBody): ManualSessionInput["rpe_source"] {
+  if (body.unscored === true) return "none";
+  return body.rpe === undefined ? "computed" : "user";
 }
 
 function toSession(body: ManualSessionBody): Session {
@@ -318,7 +330,7 @@ export function buildManualSession(
   const sends = graded.filter((c) => c.kind === "send");
   return {
     fingerprint,
-    location: body.location,
+    location: locationOf(body),
     gym_id: body.gymId ?? null,
     area_id: body.areaId ?? null,
     name: body.name ?? null,
@@ -331,6 +343,7 @@ export function buildManualSession(
     top_grade_label: topGradeLabel(graded) ?? null,
     top_send_grade_label: topGradeLabel(sends) ?? null,
     rpe: result.rpe,
+    rpe_source: rpeSourceOf(body),
     title: body.name ?? result.title,
     summary: result.summary,
     climbs_json: JSON.stringify(

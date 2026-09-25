@@ -31,11 +31,12 @@ import {
   circuitGyms,
   readClimbKind,
   useLiveSession,
+  useLiveSync,
   withClimbOutcome,
   withTries,
 } from "@sendtally/features/log-session";
 import { climbKindStorage } from "../../lib/climbKindStorage";
-import { sessionDraftStorage } from "../../lib/sessionDraftStorage";
+import { liveSessionStorage } from "../../lib/liveSessionStorage";
 import { useGradeScalePrefs } from "@sendtally/features/settings";
 import { UpdateReadyCard } from "../../features/app-update/UpdateReadyCard";
 import { EntryRow, entryRowHeight } from "../../features/journal/EntryRow";
@@ -127,7 +128,8 @@ export default function Log(): React.ReactElement {
   // ponytail: a second status() read per mount, to know if Strava is live; a Strava-status context across tabs if it ever matters
   const settings = useSettings(api);
   const { scales } = useGradeScalePrefs(api);
-  const live = useLiveSession(sessionDraftStorage);
+  const liveSync = useLiveSync(api, liveSessionStorage);
+  const live = useLiveSession(liveSessionStorage, liveSync.sync);
   const vocabulary = useClimbVocabulary(api);
   const [editingClimb, setEditingClimb] = React.useState<string | null>(null);
   const connect = useStravaConnect(api, settings.reload);
@@ -284,6 +286,7 @@ export default function Log(): React.ReactElement {
             {live.stored !== null && (
               <LiveSessionCard
                 stored={live.stored}
+                status={liveSync.status}
                 vocabulary={vocabulary}
                 gym={liveGym}
                 onEditClimb={setEditingClimb}
@@ -294,6 +297,16 @@ export default function Log(): React.ReactElement {
                       kind: "send",
                       style: c.tries === 1 ? "flash" : "redpoint",
                     })
+                  )
+                }
+                onToggleSent={(key) =>
+                  live.updateClimb(key, (c) =>
+                    withClimbOutcome(
+                      c,
+                      c.kind === "send"
+                        ? { kind: "attempt" }
+                        : { kind: "send", style: c.tries === 1 ? "flash" : "redpoint" }
+                    )
                   )
                 }
                 onAddLap={(key) => live.updateClimb(key, addLap)}
