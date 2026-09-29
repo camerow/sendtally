@@ -8,7 +8,9 @@ import type * as LogSession from "@sendtally/features/log-session";
 import {
   DEFAULT_GRADE_PREFS,
   draftStorage,
+  useClimbEditor,
   useLiveSession,
+  type DayClimbApi,
   type DraftStorage,
 } from "@sendtally/features/log-session";
 import { LiveClimbEditor } from "./LiveClimbEditor";
@@ -23,17 +25,32 @@ jest.mock("@sendtally/features/settings", () => ({
     ready: true,
   }),
 }));
-jest.mock("../../components/Sheet", () => ({
-  Sheet: ({
-    visible,
-    children,
-    footer,
-  }: {
-    visible: boolean;
-    children: React.ReactNode;
-    footer?: React.ReactNode;
-  }) => (visible ? [children, footer] : null),
-}));
+// Like the real sheet, dismissing calls the onClose it held while open, not the latest one.
+jest.mock("../../components/Sheet", () => {
+  const { useEffect, useRef } = jest.requireActual<typeof React>("react");
+  return {
+    Sheet: function Sheet({
+      visible,
+      children,
+      footer,
+      onClose,
+    }: {
+      visible: boolean;
+      children: React.ReactNode;
+      footer?: React.ReactNode;
+      onClose: () => void;
+    }) {
+      const shown = useRef(visible);
+      const closeWhileShown = useRef(onClose);
+      useEffect(() => {
+        if (shown.current && !visible) closeWhileShown.current();
+        if (visible) closeWhileShown.current = onClose;
+        shown.current = visible;
+      });
+      return visible ? [children, footer] : null;
+    },
+  };
+});
 
 jest.spyOn(Alert, "alert").mockImplementation((_title, _body, buttons) => {
   buttons?.find((b) => b.style === "destructive")?.onPress?.();
@@ -58,9 +75,15 @@ function memoryStorage(): DraftStorage {
   });
 }
 
-function QuickLog({ storage }: { storage: DraftStorage }): React.ReactElement {
+function QuickLog({
+  storage,
+  api = {} as DayClimbApi,
+}: {
+  storage: DraftStorage;
+  api?: DayClimbApi;
+}): React.ReactElement {
   const live = useLiveSession(storage);
-  const [editing, setEditing] = React.useState<string | null>(null);
+  const editor = useClimbEditor(live, api, []);
   return (
     <>
       {live.stored !== null && (
@@ -70,7 +93,7 @@ function QuickLog({ storage }: { storage: DraftStorage }): React.ReactElement {
           onToggleSent={() => {}}
           vocabulary={vocabulary}
           gym={null}
-          onEditClimb={setEditing}
+          onEditClimb={editor.open}
           onChangeTries={() => {}}
           onSent={() => {}}
           onAddLap={() => {}}
@@ -78,17 +101,11 @@ function QuickLog({ storage }: { storage: DraftStorage }): React.ReactElement {
       )}
       <Pressable
         accessibilityRole="button"
-        onPress={() => setEditing(live.addClimb(DEFAULT_GRADE_PREFS, [], "boulder"))}
+        onPress={() => editor.openNew(DEFAULT_GRADE_PREFS, "boulder")}
       >
         <Text>Climb</Text>
       </Pressable>
-      <LiveClimbEditor
-        live={live}
-        vocabulary={vocabulary}
-        gyms={[]}
-        editingKey={editing}
-        onClose={() => setEditing(null)}
-      />
+      <LiveClimbEditor editor={editor} vocabulary={vocabulary} gyms={[]} />
     </>
   );
 }

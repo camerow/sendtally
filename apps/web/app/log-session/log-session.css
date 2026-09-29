@@ -553,6 +553,18 @@ body:has(.climb-sheet[open]) {
   flex: none;
 }
 
+.climb-sheet-error {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--text-label-accent);
+}
+
+.climb-sheet-done:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
 .climb-sheet-actions {
   display: flex;
   gap: 10px;

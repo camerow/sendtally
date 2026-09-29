@@ -96,4 +96,6 @@ export const logSession = {
   "logSession.remove": "Quitar",
   "logSession.sentTapToAttempt": "Encadenada, toca para marcar como intento",
   "logSession.attemptTapToSent": "Intento, toca para marcar como encadenada",
+  "logSession.joinsThatDay": "Se suma a la sesión de ese día",
+  "logSession.climbSaveFailed": "No se pudo guardar la escalada. Inténtalo de nuevo.",
 } as const;

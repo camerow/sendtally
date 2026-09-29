@@ -25,7 +25,7 @@ import { ClimbNoteField } from "./ClimbNoteField";
 import { DisciplineToggle } from "./DisciplineToggle";
 import { ProjectToggle } from "./ProjectToggle";
 import { SentResultControl } from "./SentResultControl";
-import { monoLabel } from "./styles";
+import { inputStyle, monoLabel } from "./styles";
 
 const DISMISS_DISTANCE = 80;
 const DISMISS_VELOCITY = 0.6;
@@ -87,6 +87,10 @@ export type ClimbEditorSheetProps = {
   onToggleProject: () => void;
   onRemove: () => void;
   onClose: () => void;
+  /** Set for a climb logged from the log, which may belong to another day. */
+  date?: { value: string; max: string; onChange: (date: string) => void };
+  saving?: boolean;
+  error?: string | null;
 };
 
 export function ClimbEditorSheet({
@@ -105,6 +109,9 @@ export function ClimbEditorSheet({
   onToggleProject,
   onRemove,
   onClose,
+  date,
+  saving = false,
+  error = null,
 }: ClimbEditorSheetProps): React.ReactElement {
   const named = climb.name.trim() !== "";
   const endurance = climb.endurance !== undefined;
@@ -157,10 +164,31 @@ export function ClimbEditorSheet({
           <div className="climb-sheet-heading">
             <h2 className="climb-sheet-title">{t("logSession.addClimb")}</h2>
             <span className="climb-sheet-count">
-              {t("logSession.climbOf", { n: index + 1, total: count })}
+              {count > 0
+                ? t("logSession.climbOf", { n: index + 1, total: count })
+                : t("logSession.joinsThatDay")}
             </span>
           </div>
         </div>
+        {date !== undefined && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
+            <label htmlFor="climb-date" style={monoLabel}>
+              {t("logSession.date")}
+            </label>
+            <input
+              id="climb-date"
+              type="date"
+              value={date.value}
+              max={date.max}
+              required
+              onChange={(e) => {
+                if (e.target.value !== "") date.onChange(e.target.value);
+              }}
+              className="log-session-control"
+              style={inputStyle}
+            />
+          </div>
+        )}
         <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
           <span style={monoLabel}>
             {t("logSession.name")}{" "}
@@ -259,6 +287,11 @@ export function ClimbEditorSheet({
             </p>
           )}
         </div>
+        {error !== null && (
+          <p role="alert" className="climb-sheet-error">
+            {error}
+          </p>
+        )}
         <div className="climb-sheet-actions">
           {removable && (
             <button
@@ -270,8 +303,8 @@ export function ClimbEditorSheet({
               <Icon name="trash" size={18} strokeWidth={1.8} />
             </button>
           )}
-          <button type="button" onClick={onClose} className="climb-sheet-done">
-            {t("common.save")}
+          <button type="button" onClick={onClose} disabled={saving} className="climb-sheet-done">
+            {saving ? t("common.saving") : t("common.save")}
           </button>
         </div>
       </div>

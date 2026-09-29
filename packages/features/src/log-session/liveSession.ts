@@ -102,6 +102,11 @@ export function liveStoredDraft(storage: DraftStorage, now: Date): StoredSession
   return null;
 }
 
+/** A session deleted from its own page, or anywhere else, takes the live draft mirrored to it along. */
+export function forgetLiveSession(storage: DraftStorage, fingerprint: string): void {
+  if (parseStoredDraft(storage.read(), new Date())?.fingerprint === fingerprint) storage.remove();
+}
+
 /**
  * The full form saved the live session: the draft takes what was saved, so the next climb
  * logged from the card carries the times, effort and venue instead of wiping them.

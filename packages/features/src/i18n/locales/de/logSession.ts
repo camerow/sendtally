@@ -97,4 +97,7 @@ export const logSession = {
   "logSession.remove": "Entfernen",
   "logSession.sentTapToAttempt": "Geschafft, tippen um als Versuch zu markieren",
   "logSession.attemptTapToSent": "Versuch, tippen um als geschafft zu markieren",
+  "logSession.joinsThatDay": "Kommt zur Session an diesem Tag",
+  "logSession.climbSaveFailed":
+    "Die Kletterei konnte nicht gespeichert werden. Versuch es noch einmal.",
 } as const;

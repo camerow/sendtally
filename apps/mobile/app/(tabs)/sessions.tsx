@@ -30,6 +30,7 @@ import {
   addLap,
   circuitGyms,
   readClimbKind,
+  useClimbEditor,
   useLiveSession,
   useLiveSync,
   withClimbOutcome,
@@ -131,12 +132,12 @@ export default function Log(): React.ReactElement {
   const liveSync = useLiveSync(api, liveSessionStorage);
   const live = useLiveSession(liveSessionStorage, liveSync.sync);
   const vocabulary = useClimbVocabulary(api);
-  const [editingClimb, setEditingClimb] = React.useState<string | null>(null);
   const connect = useStravaConnect(api, settings.reload);
   const gyms = useGyms(api);
   const gymPrompt = useSetupDismissed("gym");
   const stravaPrompt = useSetupDismissed("strava");
   const circuitChoices = circuitGyms(gyms.gyms);
+  const climbEditor = useClimbEditor(live, api, circuitChoices);
   const liveGym = liveGymOfDraft(gyms.gyms, live.stored?.draft.gymId);
   const setupCards: SetupCard[] = [];
   if (gyms.ready && gyms.gyms.length === 0 && gymPrompt.dismissed === false) {
@@ -289,7 +290,7 @@ export default function Log(): React.ReactElement {
                 status={liveSync.status}
                 vocabulary={vocabulary}
                 gym={liveGym}
-                onEditClimb={setEditingClimb}
+                onEditClimb={climbEditor.open}
                 onChangeTries={(key, tries) => live.updateClimb(key, (c) => withTries(c, tries))}
                 onSent={(key) =>
                   live.updateClimb(key, (c) =>
@@ -369,18 +370,10 @@ export default function Log(): React.ReactElement {
       />
       <LogFab
         onLogClimb={() =>
-          setEditingClimb(
-            live.addClimb(scales, circuitChoices, readClimbKind(climbKindStorage, circuitChoices))
-          )
+          climbEditor.openNew(scales, readClimbKind(climbKindStorage, circuitChoices))
         }
       />
-      <LiveClimbEditor
-        live={live}
-        vocabulary={vocabulary}
-        gyms={circuitChoices}
-        editingKey={editingClimb}
-        onClose={() => setEditingClimb(null)}
-      />
+      <LiveClimbEditor editor={climbEditor} vocabulary={vocabulary} gyms={circuitChoices} />
       <FilterSheet
         visible={filtersOpen}
         items={all}

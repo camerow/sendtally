@@ -94,4 +94,6 @@ export const logSession = {
   "logSession.remove": "Remove",
   "logSession.sentTapToAttempt": "Sent, tap to mark as attempt",
   "logSession.attemptTapToSent": "Attempt, tap to mark as sent",
+  "logSession.joinsThatDay": "Joins that day's session",
+  "logSession.climbSaveFailed": "Could not save the climb. Try again.",
 } as const;

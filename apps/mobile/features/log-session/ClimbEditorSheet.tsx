@@ -22,6 +22,7 @@ import {
 import { t } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { Icon } from "../../components/Icon";
+import { DateTimeField } from "../../components/DateTimeField";
 import { Sheet } from "../../components/Sheet";
 import { ClimbGradePicker, ClimbKindPicker } from "./ClimbKindPicker";
 import { EnduranceFields } from "./EnduranceFields";
@@ -57,6 +58,9 @@ export type ClimbEditorSheetProps = {
   onToggleProject: () => void;
   onRemove: () => void;
   onClose: () => void;
+  /** Set for a climb logged from the log, which may belong to another day. */
+  date?: { value: string; max: string; onChange: (date: string) => void };
+  saving?: boolean;
 };
 
 const label = {
@@ -348,6 +352,8 @@ export function ClimbEditorSheet({
   onToggleProject,
   onRemove,
   onClose,
+  date,
+  saving = false,
 }: ClimbEditorSheetProps): React.ReactElement {
   const climb = useLingering(current);
   const gym = climb === null ? null : gymOfCircuit(gyms, climb.circuit?.id);
@@ -390,11 +396,18 @@ export function ClimbEditorSheet({
             )}
             <Pressable
               onPress={onClose}
+              disabled={saving}
               accessibilityRole="button"
-              style={press({ ...primaryButton, flex: 1, backgroundColor: colors.gold })}
+              accessibilityState={{ disabled: saving }}
+              style={press({
+                ...primaryButton,
+                flex: 1,
+                backgroundColor: colors.gold,
+                opacity: saving ? 0.6 : 1,
+              })}
             >
               <Text style={{ ...primaryButtonLabel, color: colors.gunmetal }}>
-                {t("common.save")}
+                {saving ? t("common.saving") : t("common.save")}
               </Text>
             </Pressable>
           </View>
@@ -411,9 +424,24 @@ export function ClimbEditorSheet({
               {t("logSession.addClimb")}
             </Text>
             <Text style={{ ...label, color: colors.textMuted }}>
-              {t("logSession.climbOf", { n: index + 1, total: count })}
+              {count > 0
+                ? t("logSession.climbOf", { n: index + 1, total: count })
+                : t("logSession.joinsThatDay")}
             </Text>
           </View>
+
+          {date !== undefined && (
+            <View style={{ gap: 7 }}>
+              <Text style={label}>{t("logSession.date")}</Text>
+              <DateTimeField
+                mode="date"
+                value={date.value}
+                max={date.max}
+                label={t("logSession.date")}
+                onChange={date.onChange}
+              />
+            </View>
+          )}
 
           <View style={{ gap: 7 }}>
             <View style={{ flexDirection: "row", justifyContent: "space-between" }}>

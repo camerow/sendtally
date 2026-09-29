@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import { ApiError } from "@sendtally/api-client";
 import { draftStorage, parseStoredDraft, writeStoredDraft, type DraftStorage } from "./draftStore";
 import { localDate, withQuickClimb } from "./liveSession";
 import { createLiveSync, type LiveSyncApi, type LiveSyncStatus } from "./liveSync";
@@ -94,6 +95,29 @@ function setup(): {
 }
 
 describe("live sync", () => {
+  it("drops the live draft when its session was deleted elsewhere", async () => {
+    const { api, storage, statuses, log } = setup();
+    log(1);
+    await settle();
+    api.updateLoggedSession = async () => {
+      throw new ApiError(404, "not found");
+    };
+    log(1);
+    await settle();
+    expect(storage.read()).toBeNull();
+    expect(statuses.at(-1)).toBe("idle");
+  });
+
+  it("takes a 404 on removing the last climb as already done", async () => {
+    const { api, statuses, sync } = setup();
+    api.deleteLoggedSession = async () => {
+      throw new ApiError(404, "not found");
+    };
+    sync.remove("manual-gone");
+    await settle();
+    expect(statuses).toEqual(["idle"]);
+  });
+
   it("posts the first save and puts the rest, keeping the fingerprint in the file", async () => {
     const { api, storage, statuses, log } = setup();
     log(1);

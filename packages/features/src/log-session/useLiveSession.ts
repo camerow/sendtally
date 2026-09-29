@@ -1,15 +1,14 @@
 import React from "react";
 import { writeStoredDraft, type DraftStorage, type LiveDraftMeta } from "./draftStore";
 import type { Gym } from "../gyms/types";
-import type { ClimbKind } from "./climbKind";
-import { isLive, liveStoredDraft, withGymAdopted, withQuickClimb } from "./liveSession";
+import { isLive, liveDraft, liveStoredDraft, withGymAdopted } from "./liveSession";
 import type { LiveSync } from "./liveSync";
-import type { ClimbDraft, GradePrefs, LogSessionDraft } from "./types";
+import type { ClimbDraft, LogSessionDraft } from "./types";
 import { useStoredDraft, type StoredDraftEntry } from "./useDraftAutosave";
 
 export type LiveSession = StoredDraftEntry & {
-  /** Appends a climb, starting the session at it when there is none, and returns its key. */
-  addClimb: (prefs: GradePrefs, gyms: readonly Gym[], kind: ClimbKind) => string;
+  /** Replaces the climb with its key, or appends it, starting the session at it when there is none. */
+  putClimb: (climb: ClimbDraft, gyms: readonly Gym[]) => void;
   /** Pass the gyms when the patch can put the climb on a circuit, so the session adopts its gym. */
   updateClimb: (
     key: string,
@@ -48,12 +47,14 @@ export function useLiveSession(storage: DraftStorage, sync?: LiveSync): LiveSess
     [storage, sync]
   );
 
-  const addClimb = React.useCallback(
-    (prefs: GradePrefs, gyms: readonly Gym[], kind: ClimbKind): string => {
+  const putClimb = React.useCallback(
+    (climb: ClimbDraft, gyms: readonly Gym[]): void => {
       const entry = current();
-      const next = withQuickClimb(entry?.draft ?? null, new Date(), prefs, gyms, kind);
-      write(next.draft, entry ?? undefined);
-      return next.key;
+      const draft = entry?.draft ?? liveDraft(new Date());
+      const climbs = draft.climbs.some((c) => c.key === climb.key)
+        ? draft.climbs.map((c) => (c.key === climb.key ? climb : c))
+        : [...draft.climbs, climb];
+      write(withGymAdopted({ ...draft, climbs }, gyms), entry ?? undefined);
     },
     [current, write]
   );
@@ -83,5 +84,5 @@ export function useLiveSession(storage: DraftStorage, sync?: LiveSync): LiveSess
     [current, write, discard, sync]
   );
 
-  return { stored: live ? stored : null, discard, addClimb, updateClimb, removeClimb };
+  return { stored: live ? stored : null, discard, putClimb, updateClimb, removeClimb };
 }

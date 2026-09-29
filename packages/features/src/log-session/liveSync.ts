@@ -1,7 +1,8 @@
 import { focusManager } from "@tanstack/react-query";
 import React from "react";
-import type { LogSessionInput, SessionDetail } from "@sendtally/api-client";
+import { ApiError, type LogSessionInput, type SessionDetail } from "@sendtally/api-client";
 import { parseStoredDraft, writeStoredDraft, type DraftStorage } from "./draftStore";
+import { forgetLiveSession } from "./liveSession";
 import { toLiveSessionInput, toLogSessionInput } from "./transforms";
 
 export type LiveSyncApi = {
@@ -28,9 +29,11 @@ export type LiveSync = {
 
 export const LIVE_SYNC_DEBOUNCE_MS = 600;
 
+const gone = (error: unknown): boolean => error instanceof ApiError && error.status === 404;
+
 /**
  * Mirrors the stored live draft to the server: a POST until the file carries a fingerprint,
- * a PUT after. Requests run one at a time; a change during one queues exactly one more, which
+ * a PUT after. A session deleted elsewhere answers 404, and its live draft goes with it. Requests run one at a time; a change during one queues exactly one more, which
  * reads the file afresh and so carries every edit made meanwhile.
  */
 export function createLiveSync(
@@ -70,7 +73,15 @@ export function createLiveSync(
       }
       writeStoredDraft(storage, current.draft, new Date(), { fingerprint: session.fingerprint });
     } else {
-      await api.updateLoggedSession(stored.fingerprint, input);
+      try {
+        await api.updateLoggedSession(stored.fingerprint, input);
+      } catch (error) {
+        if (!gone(error)) throw error;
+        forgetLiveSession(storage, stored.fingerprint);
+        pushed = null;
+        status("idle");
+        return;
+      }
     }
     pushed = serialized;
     status("idle");
@@ -105,7 +116,15 @@ export function createLiveSync(
     remove: (fingerprint) => {
       cancel();
       pushed = null;
-      enqueue(() => api.deleteLoggedSession(fingerprint).then(() => status("idle")));
+      enqueue(() =>
+        api.deleteLoggedSession(fingerprint).then(
+          () => status("idle"),
+          (error: unknown) => {
+            if (!gone(error)) throw error;
+            status("idle");
+          }
+        )
+      );
     },
     flush: () => {
       if (timer === null) return;

@@ -97,4 +97,6 @@ export const logSession = {
   "logSession.remove": "Retirer",
   "logSession.sentTapToAttempt": "Enchaînée, touchez pour marquer comme essai",
   "logSession.attemptTapToSent": "Essai, touchez pour marquer comme enchaînée",
+  "logSession.joinsThatDay": "Rejoint la séance de ce jour-là",
+  "logSession.climbSaveFailed": "Impossible d'enregistrer la ligne. Réessaie.",
 } as const;

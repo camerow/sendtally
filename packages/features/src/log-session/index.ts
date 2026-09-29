@@ -32,6 +32,7 @@ export {
 export {
   adoptSavedDetails,
   defaultSessionName,
+  forgetLiveSession,
   isLive,
   liveDraft,
   liveStoredDraft,
@@ -79,6 +80,8 @@ export {
   type ClimbKind,
 } from "./climbKind";
 export { useLiveSession, type LiveSession } from "./useLiveSession";
+export { useClimbEditor, type ClimbEditing, type ClimbEditor } from "./useClimbEditor";
+export { logClimbOnDay, sessionOnDay, type DayClimbApi } from "./dayClimb";
 export {
   LIVE_SYNC_DEBOUNCE_MS,
   createLiveSync,

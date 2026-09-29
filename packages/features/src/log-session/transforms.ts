@@ -309,7 +309,7 @@ function utcTime(iso: string): string {
   return `${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}`;
 }
 
-function utcDate(iso: string): string {
+export function utcDate(iso: string): string {
   const d = new Date(iso);
   return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`;
 }
