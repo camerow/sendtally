@@ -1,4 +1,5 @@
-import type { EntryInput, JournalEntry, SessionRow } from "@sendtally/api-client";
+import type { EntryInput, HangHistoryRow, JournalEntry, SessionRow } from "@sendtally/api-client";
+import { hangAt } from "../sessions/hang";
 import { formatDate, t, type MessageKey } from "../i18n";
 import {
   SPANNING_KINDS,
@@ -70,13 +71,17 @@ export function logScopeLabel(scope: LogScope): string {
 
 export function logScopeItems(items: LogItem[], scope: LogScope): LogItem[] {
   if (scope === "all") return items;
-  if (scope === "sessions") return items.filter((i) => i.type === "session");
+  if (scope === "sessions") return items.filter((i) => i.type !== "entry");
   if (scope === "journal") return items.filter((i) => i.type === "entry");
   const kind: EntryKind = scope === "trips" ? "trip" : "injury";
   return items.filter((i) => i.type === "entry" && i.entry.kind === kind);
 }
 
-export function logItems(sessions: SessionRow[], entries: JournalEntry[]): LogItem[] {
+export function logItems(
+  sessions: SessionRow[],
+  entries: JournalEntry[],
+  hangSessions: HangHistoryRow[] = []
+): LogItem[] {
   const items: LogItem[] = [
     ...sessions.map((session): LogItem => ({
       key: `session:${session.fingerprint}`,
@@ -84,6 +89,13 @@ export function logItems(sessions: SessionRow[], entries: JournalEntry[]): LogIt
       tags: session.tags,
       type: "session",
       session,
+    })),
+    ...hangSessions.map((hang): LogItem => ({
+      key: `hang:${hang.id}`,
+      at: hangAt(hang),
+      tags: [],
+      type: "hang",
+      hang,
     })),
     ...entries
       .filter((e) => !isThreadUpdate(e))
@@ -111,7 +123,8 @@ export function inTrip(day: string, trip: TripSpan, now: Date = new Date()): boo
 }
 
 export function logItemDay(item: LogItem): string {
-  return item.type === "session" ? isoDay(item.session.start_at) : item.entry.occurred_at;
+  if (item.type === "session") return isoDay(item.session.start_at);
+  return item.type === "hang" ? item.hang.date : item.entry.occurred_at;
 }
 
 /**

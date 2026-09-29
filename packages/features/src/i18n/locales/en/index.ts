@@ -7,6 +7,7 @@ import { climbs } from "./climbs";
 import { common } from "./common";
 import { endurance } from "./endurance";
 import { gyms } from "./gyms";
+import { hang } from "./hang";
 import { importCsv } from "./importCsv";
 import { journal } from "./journal";
 import { logSession } from "./logSession";
@@ -27,6 +28,7 @@ export const en = {
   ...common,
   ...endurance,
   ...gyms,
+  ...hang,
   ...importCsv,
   ...journal,
   ...logSession,

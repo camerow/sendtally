@@ -14,15 +14,9 @@ export const queries = {
   entitlements: (api: SendtallyApi) =>
     queryOptions({ queryKey: ["entitlements"], queryFn: () => api.entitlements() }),
   sessions: (api: SendtallyApi) =>
-    queryOptions({
-      queryKey: ["sessions"],
-      queryFn: async () => (await api.sessions()).sessions,
-    }),
+    queryOptions({ queryKey: ["sessions"], queryFn: () => api.sessions() }),
   sessionsWithClimbs: (api: SendtallyApi) =>
-    queryOptions({
-      queryKey: ["sessionsWithClimbs"],
-      queryFn: async () => (await api.sessionsWithClimbs()).sessions,
-    }),
+    queryOptions({ queryKey: ["sessionsWithClimbs"], queryFn: () => api.sessionsWithClimbs() }),
   session: (api: SendtallyApi, fingerprint: string) =>
     queryOptions({
       queryKey: ["session", fingerprint],
@@ -74,6 +68,7 @@ export const queries = {
       queryKey: ["moderation", "creations"],
       queryFn: () => api.moderationCreations(),
     }),
+  hang: (api: SendtallyApi) => queryOptions({ queryKey: ["hang"], queryFn: () => api.hang() }),
   tags: (api: SendtallyApi) =>
     queryOptions({ queryKey: ["tags"], queryFn: async () => (await api.tags()).tags }),
 };

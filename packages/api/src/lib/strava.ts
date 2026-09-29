@@ -13,9 +13,12 @@ export type StravaTokens = {
   expiresAt: number;
 };
 
+export type StravaSportType = "RockClimbing" | "Workout";
+
 export type StravaActivity = {
   name: string;
   description: string;
+  sportType: StravaSportType;
   startDateLocal: Date;
   elapsedSeconds: number;
 };
@@ -125,7 +128,7 @@ export class StravaClient {
     await this.ensureFresh();
     const form = new URLSearchParams({
       name: a.name,
-      sport_type: "RockClimbing",
+      sport_type: a.sportType,
       start_date_local: toWallClockString(a.startDateLocal),
       elapsed_time: String(a.elapsedSeconds),
       description: a.description,

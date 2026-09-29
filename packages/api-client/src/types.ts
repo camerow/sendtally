@@ -11,13 +11,31 @@ export type {
   CircuitColour,
   Gym,
   GymInput,
+  CalendarDate,
+  Grip,
+  HangData,
+  HangHistoryRow,
+  HangKind,
+  HangPostState,
+  HangSession,
+  HangSessionRecord,
+  HangSettings,
   ImportBody,
+  Loads,
+  Protocol,
+  Schedule,
+  ThemeName,
+  TimeUnit,
+  TimeUnits,
+  WeightUnit,
+  Weekday,
+  Workout,
   LogClimbInput,
   LogSessionInput,
   ProjectInput,
 } from "@sendtally/api/app";
 
-import type { LogClimbInput as ClimbInput } from "@sendtally/api/app";
+import type { HangHistoryRow, LogClimbInput as ClimbInput } from "@sendtally/api/app";
 
 export type CircuitRef = NonNullable<ClimbInput["circuit"]>;
 
@@ -42,6 +60,14 @@ export type SessionRow = Omit<Ok<Client["v1"]["sessions"]["$get"]>["sessions"][n
 export type SessionClimb = SessionDetail["climbs"][number];
 
 export type SessionWithClimbs = SessionRow & { climbs: SessionClimb[] };
+
+/** The log: climbing sessions, and hangtally sessions beside them but never as them. */
+export type SessionLog = { sessions: SessionRow[]; hangSessions: HangHistoryRow[] };
+
+export type SessionLogWithClimbs = {
+  sessions: SessionWithClimbs[];
+  hangSessions: HangHistoryRow[];
+};
 
 export type SessionTag = SessionDetail["tags"][number];
 

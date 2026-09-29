@@ -1,4 +1,4 @@
-import type { Gym, SessionWithClimbs } from "@sendtally/api-client";
+import type { Gym, HangHistoryRow, SessionWithClimbs } from "@sendtally/api-client";
 import { circuitRangeLabel } from "../gyms/transforms";
 import { formatNumber, t } from "../i18n";
 import { disciplineLabel } from "../log-session/types";
@@ -6,6 +6,7 @@ import { UNTAGGED_KEY, untaggedLabel } from "../sessions/tags";
 import { bucketsFor, rangeLabel, windowOf } from "./buckets";
 import {
   climbsIn,
+  hangEffortsOf,
   ladderFor,
   placeMatches,
   rowsOf,
@@ -164,15 +165,17 @@ export function trendsVM(
   sessions: SessionWithClimbs[],
   gyms: Gym[],
   filter: TrendFilter,
-  now: Date = new Date()
+  now: Date = new Date(),
+  hang: HangHistoryRow[] = []
 ): TrendsVM {
   const rows = rowsOf(sessions);
-  const slice = sliceOf(filter, rows, gyms);
+  const slice = sliceOf(filter, rows, gyms, hangEffortsOf(hang));
   const { ladder } = slice;
   const scope = ladder.scope;
   const all = scope === "all";
   const range = rangeLabel(filter.range);
-  const buckets = bucketsFor(filter.range, now, rows[0]?.time ?? null);
+  const first = Math.min(rows[0]?.time ?? Infinity, ...slice.hang.map((h) => h.time));
+  const buckets = bucketsFor(filter.range, now, Number.isFinite(first) ? first : null);
   const { start, end } = windowOf(buckets);
   const cur = totals(slice, start, end);
   const prior = filter.range === "all" ? null : totals(slice, start - (end - start), start);

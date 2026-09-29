@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import type { Gym, SessionClimb, SessionTag, SessionWithClimbs } from "@sendtally/api-client";
+import type {
+  Gym,
+  HangHistoryRow,
+  SessionClimb,
+  SessionTag,
+  SessionWithClimbs,
+} from "@sendtally/api-client";
 import { bucketsFor } from "./buckets";
 import { daysVM } from "./days";
 import { enduranceVM } from "./endurance";
@@ -60,6 +66,34 @@ function session(
       ...c,
     })),
     ...extra,
+  };
+}
+
+function hangRow(id: string, date: string, rpe: number | null): HangHistoryRow {
+  return {
+    id,
+    workoutId: "rep73",
+    gripId: "half",
+    gripName: null,
+    date,
+    loadKg: 4,
+    pct: 100,
+    misses: 0,
+    rpe,
+    protocol: {
+      name: "Repeaters 7:3",
+      kind: "hang",
+      hangS: 7,
+      restS: 3,
+      reps: 6,
+      sets: 6,
+      setRestS: 180,
+      edgeMm: 20,
+    },
+    stravaActivityId: null,
+    postState: null,
+    postError: null,
+    updatedAt: `${date}T19:00:00.000Z`,
   };
 }
 
@@ -144,6 +178,15 @@ describe("trendsVM", () => {
     const vm = trendsVM([...rows, unscored], [], filter({ range: "1m" }), NOW);
     expect(tileOf(vm, "effort").total).toBe(tileOf(scored, "effort").total);
     expect(tileOf(vm, "volume").total).toBe((tileOf(scored, "volume").total ?? 0) + 1);
+  });
+
+  it("averages hangboard effort into the effort tile until a filter narrows to climbing", () => {
+    const hang = [hangRow("h1", "2026-07-25", 10), hangRow("h2", "2026-07-26", null)];
+    const vm = trendsVM(rows, [], filter({ range: "1m" }), NOW, hang);
+    expect(tileOf(vm, "effort").total).toBe(8);
+    expect(tileOf(vm, "days").total).toBe(2);
+    const tagged = trendsVM(rows, [], filter({ range: "1m", tags: ["bishop"] }), NOW, hang);
+    expect(tileOf(tagged, "effort").total).toBe(8);
   });
 
   it("splits days inside and outside", () => {

@@ -90,13 +90,17 @@ export function countLabel(count: number): string {
   return t("sessions.sessionCount", { count });
 }
 
+/** Journal entries only: a hangboard session counts as a session. */
+const entryCount = (items: LogItem[]): number =>
+  flatLog(items).filter((item) => item.type === "entry").length;
+
 /**
  * What a log group carries, saying only what is actually in it: a month of
  * writing should not announce "0 sessions".
  */
 export function logCountLabel(items: LogItem[]): string {
-  const sessions = sessionsIn(items).length;
-  const entries = flatLog(items).length - sessions;
+  const entries = entryCount(items);
+  const sessions = flatLog(items).length - entries;
   const parts = [
     sessions === 0 && entries > 0 ? null : countLabel(sessions),
     entries === 0 ? null : t("journal.entryCount", { count: entries }),
@@ -107,8 +111,10 @@ export function logCountLabel(items: LogItem[]): string {
 export function logTotalsLabel(items: LogItem[]): string {
   const sessions = sessionsIn(items);
   if (sessions.length === 0) return logCountLabel(items);
-  const entries = flatLog(items).length - sessions.length;
-  const totals = totalsLabel(sessionTotals(sessions));
+  const entries = entryCount(items);
+  const hang = flatLog(items).length - entries - sessions.length;
+  const all = sessionTotals(sessions);
+  const totals = totalsLabel({ ...all, count: all.count + hang });
   return entries === 0 ? totals : `${totals} · ${t("journal.entryCount", { count: entries })}`;
 }
 

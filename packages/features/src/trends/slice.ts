@@ -1,10 +1,12 @@
 import { climbDiscipline, climbRank, enduranceTotals, type Discipline } from "@sendtally/core";
-import type { Gym, SessionClimb, SessionWithClimbs } from "@sendtally/api-client";
+import type { Gym, HangHistoryRow, SessionClimb, SessionWithClimbs } from "@sendtally/api-client";
+import { hangAt } from "../sessions/hang";
 import { climbKey } from "../climbs/transforms";
 import { circuitLabel } from "../gyms/transforms";
 import { isUnscored } from "../sessions/meta";
 import { UNTAGGED_KEY } from "../sessions/tags";
 import { gradeFormatterFor } from "../sessions/grades";
+import { isRefined } from "./filter";
 import type { GradeRange, TrendFilter, TrendScope, TrendSetting } from "./types";
 
 /** A logged climb with what trends need from its history: when, and whether it went first try. */
@@ -166,21 +168,37 @@ export function ladderFor(filter: TrendFilter, rows: Row[], gyms: Gym[]): Ladder
   return disciplineLadder(discipline, rows);
 }
 
+/** A hangtally session's effort: it has no climbs, place or tags, only the RPE the user gave it. */
+export type HangEffort = { time: number; rpe: number };
+
+export function hangEffortsOf(hang: HangHistoryRow[]): HangEffort[] {
+  return hang.flatMap((h) => (h.rpe === null ? [] : [{ time: Date.parse(hangAt(h)), rpe: h.rpe }]));
+}
+
 export type Slice = {
   rows: Row[];
   ladder: Ladder;
   grade: GradeRange | null;
+  /** Counted in effort only while no grade, place or tag narrows the slice: a hang session has none. */
+  hang: HangEffort[];
 };
 
 /** Place and tags narrow the sessions; scope and grade narrow the climbs inside them. */
-export function sliceOf(filter: TrendFilter, rows: Row[], gyms: Gym[]): Slice {
+export function sliceOf(
+  filter: TrendFilter,
+  rows: Row[],
+  gyms: Gym[],
+  hang: HangEffort[] = []
+): Slice {
   const ladder = ladderFor(filter, rows, gyms);
+  const unrefined = !isRefined(filter) && filter.gymId === null;
   return {
     rows: rows.filter(
       (r) => placeMatches(r, filter.setting, filter.gymId) && tagsMatch(r, filter.tags)
     ),
     ladder,
     grade: ladder.scope === "all" ? null : filter.grade,
+    hang: unrefined ? hang : [],
   };
 }
 
@@ -273,7 +291,10 @@ export function totals(slice: Slice, start: number, end: number): Totals {
     avg: mean(sendRanks.map((s) => s.rank)),
     flashRate: sent.length === 0 ? null : (firstTry / sent.length) * 100,
     tries: mean(sent.map((r) => r.climb.tries)),
-    rpe: mean(sessions.filter((r) => !isUnscored(r.session)).map((r) => r.session.rpe)),
+    rpe: mean([
+      ...sessions.filter((r) => !isUnscored(r.session)).map((r) => r.session.rpe),
+      ...slice.hang.filter((h) => h.time >= start && h.time < end).map((h) => h.rpe),
+    ]),
     sessions: sessions.length,
     days: days.size,
     inside: days.size - outside,

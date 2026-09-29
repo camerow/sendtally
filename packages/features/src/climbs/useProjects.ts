@@ -37,7 +37,7 @@ export function useProjects(api: SendtallyApi): ProjectsFeature {
 
   const state = React.useMemo((): QueryState<ProjectsData> => {
     if (loaded.status !== "ready") return loaded;
-    const [climbs, sessions] = loaded.data;
+    const [climbs, { sessions }] = loaded.data;
     const items = projectsOf(climbs).map((climb) => ({
       climb,
       bars: projectBars(climb, sessions),
@@ -77,7 +77,7 @@ export function useProject(api: SendtallyApi, slug: string): ProjectFeature {
 
   const state = React.useMemo((): QueryState<ProjectDetailVM> => {
     if (loaded.status !== "ready") return loaded;
-    const [climbs, sessions] = loaded.data;
+    const [climbs, { sessions }] = loaded.data;
     const climb = climbs.find((c) => c.slug === slug);
     if (climb === undefined) return { status: "error", message: t("climbs.projectNotFound") };
     return { status: "ready", data: projectDetailVM(climb, sessions) };
