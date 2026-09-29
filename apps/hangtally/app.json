@@ -6,10 +6,7 @@
     "scheme": "hangtally",
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
-    "platforms": [
-      "ios",
-      "android"
-    ],
+    "platforms": ["ios", "android"],
     "icon": "./assets/icon.png",
     "primaryColor": "#2f3a35",
     "backgroundColor": "#2f3a35",
@@ -19,12 +16,7 @@
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "CFBundleDevelopmentRegion": "en",
-        "CFBundleLocalizations": [
-          "en",
-          "de",
-          "fr",
-          "es"
-        ]
+        "CFBundleLocalizations": ["en", "de", "fr", "es"]
       },
       "usesAppleSignIn": true
     },
