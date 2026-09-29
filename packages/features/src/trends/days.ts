@@ -1,5 +1,6 @@
 import type { Gym, SessionWithClimbs } from "@sendtally/api-client";
 import { formatDate, formatNumber, t } from "../i18n";
+import { isUnscored } from "../sessions/meta";
 import { DAY_MS, bucketsFor, dayStart } from "./buckets";
 import { ALL_LADDER } from "./slice";
 import { formatter, tile } from "./tile";
@@ -23,7 +24,7 @@ function weekdayName(index: number, width: "short" | "long"): string {
 function dayDetail(day: Day | undefined, gyms: Map<string, string>): string {
   if (day === undefined) return t("trends.restDay");
   const climbs = day.sessions.reduce((a, s) => a + s.climb_count, 0);
-  const rpe = Math.max(...day.sessions.map((s) => s.rpe));
+  const scored = day.sessions.filter((s) => !isUnscored(s));
   const place = day.outdoor
     ? [
         t("trends.outside"),
@@ -36,7 +37,11 @@ function dayDetail(day: Day | undefined, gyms: Map<string, string>): string {
     : [...new Set(day.sessions.map((s) => (s.gym_id === null ? null : gyms.get(s.gym_id))))]
         .filter((n): n is string => n !== null && n !== undefined)
         .join(", ") || t("trends.inside");
-  return [place, t("common.climbCount", { count: climbs }), `RPE ${rpe}`].join(" · ");
+  return [
+    place,
+    t("common.climbCount", { count: climbs }),
+    ...(scored.length === 0 ? [] : [`RPE ${Math.max(...scored.map((s) => s.rpe))}`]),
+  ].join(" · ");
 }
 
 /** The last 52 weeks of climbing days, whatever the filters say: a calendar is the whole picture. */

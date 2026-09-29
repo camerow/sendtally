@@ -1,6 +1,7 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import {
+  climbOutcome,
   enduranceLapCountLabel,
   enduranceOf,
   enduranceSummaryLabel,
@@ -11,6 +12,7 @@ import { colors, fonts } from "@sendtally/design/tokens";
 import { CircuitDot } from "../../components/CircuitDot";
 import { Icon } from "../../components/Icon";
 import { press, pressRow, tap } from "../../lib/press";
+import { outcomeFill } from "./ResultFields";
 
 export type ClimbLedgerRowProps = {
   climb: ClimbDraft;
@@ -18,6 +20,8 @@ export type ClimbLedgerRowProps = {
   onPress: () => void;
   /** Given by the live card: tries change in place, without opening the editor. */
   onChangeTries?: (tries: number) => void;
+  /** Given by the live card: the mark flips sent and attempt without opening the editor. */
+  onToggleSent?: () => void;
 };
 
 function Stepper({
@@ -53,6 +57,28 @@ function Stepper({
         {glyph}
       </Text>
     </Pressable>
+  );
+}
+
+function ResultMark({ climb }: { climb: ClimbDraft }): React.ReactElement {
+  const outcome = climbOutcome(climb);
+  const { fill, ink } = outcomeFill(outcome);
+  return (
+    <View
+      style={{
+        width: 22,
+        height: 22,
+        flexShrink: 0,
+        borderRadius: 11,
+        backgroundColor: fill,
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <Text style={{ fontSize: 12, fontWeight: "600", color: ink }}>
+        {outcome.kind === "send" ? "✓" : "✗"}
+      </Text>
+    </View>
   );
 }
 
@@ -120,6 +146,7 @@ export function ClimbLedgerRow({
   project,
   onPress,
   onChangeTries,
+  onToggleSent,
 }: ClimbLedgerRowProps): React.ReactElement {
   if (climb.endurance !== undefined)
     return <EnduranceLedgerRow climb={climb} onPress={tap(onPress)} />;
@@ -131,7 +158,6 @@ export function ClimbLedgerRow({
     : circuit === undefined
       ? t("logSession.unnamed")
       : circuit.label;
-  const firstGo = send && climb.style !== "redpoint";
   return (
     <Pressable
       onPress={onPress}
@@ -203,27 +229,21 @@ export function ClimbLedgerRow({
           )}
         </View>
       </View>
-      <View
-        style={{
-          width: 22,
-          height: 22,
-          flexShrink: 0,
-          borderRadius: 11,
-          backgroundColor: firstGo ? colors.gold : send ? colors.azureInk : colors.gunmetal,
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <Text
-          style={{
-            fontSize: 12,
-            fontWeight: "600",
-            color: firstGo ? colors.gunmetal : colors.white,
-          }}
+      {onToggleSent === undefined ? (
+        <ResultMark climb={climb} />
+      ) : (
+        <Pressable
+          onPress={tap(onToggleSent)}
+          hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel={
+            send ? t("logSession.sentTapToAttempt") : t("logSession.attemptTapToSent")
+          }
+          style={press({ flexShrink: 0 })}
         >
-          {send ? "✓" : "✗"}
-        </Text>
-      </View>
+          <ResultMark climb={climb} />
+        </Pressable>
+      )}
       {onChangeTries === undefined ? (
         <Text
           style={{

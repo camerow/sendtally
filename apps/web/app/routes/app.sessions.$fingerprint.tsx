@@ -13,6 +13,7 @@ import {
 } from "@sendtally/features/session-detail";
 import { cloudflareContext } from "../lib/cloudflare-context";
 import { requireApi } from "../lib/api.server";
+import { liveSessionStorage } from "../lib/liveSessionStorage";
 import { useClientApi } from "../lib/useClientApi";
 import { SessionTags } from "../sessions/components/SessionTags";
 import { EnduranceLaps } from "../session-detail/components/EnduranceLaps";
@@ -21,6 +22,7 @@ import { SessionJournal } from "../session-detail/components/SessionJournal";
 import journalStyles from "../journal/journal.css?url";
 import { BackLink } from "../components/BackLink";
 import { t } from "@sendtally/features/i18n";
+import { forgetLiveSession } from "@sendtally/features/log-session";
 
 import sessionsStyles from "../sessions/sessions.css?url";
 
@@ -117,6 +119,7 @@ function SessionActions({
     setError(null);
     try {
       await api.deleteLoggedSession(fingerprint);
+      forgetLiveSession(liveSessionStorage, fingerprint);
       await navigate("/app");
     } catch {
       setError(t("sessionDetail.deleteFailed"));

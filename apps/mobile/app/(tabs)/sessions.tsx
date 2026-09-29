@@ -30,12 +30,14 @@ import {
   addLap,
   circuitGyms,
   readClimbKind,
+  useClimbEditor,
   useLiveSession,
+  useLiveSync,
   withClimbOutcome,
   withTries,
 } from "@sendtally/features/log-session";
 import { climbKindStorage } from "../../lib/climbKindStorage";
-import { sessionDraftStorage } from "../../lib/sessionDraftStorage";
+import { liveSessionStorage } from "../../lib/liveSessionStorage";
 import { useGradeScalePrefs } from "@sendtally/features/settings";
 import { UpdateReadyCard } from "../../features/app-update/UpdateReadyCard";
 import { EntryRow, entryRowHeight } from "../../features/journal/EntryRow";
@@ -127,14 +129,15 @@ export default function Log(): React.ReactElement {
   // ponytail: a second status() read per mount, to know if Strava is live; a Strava-status context across tabs if it ever matters
   const settings = useSettings(api);
   const { scales } = useGradeScalePrefs(api);
-  const live = useLiveSession(sessionDraftStorage);
+  const liveSync = useLiveSync(api, liveSessionStorage);
+  const live = useLiveSession(liveSessionStorage, liveSync.sync);
   const vocabulary = useClimbVocabulary(api);
-  const [editingClimb, setEditingClimb] = React.useState<string | null>(null);
   const connect = useStravaConnect(api, settings.reload);
   const gyms = useGyms(api);
   const gymPrompt = useSetupDismissed("gym");
   const stravaPrompt = useSetupDismissed("strava");
   const circuitChoices = circuitGyms(gyms.gyms);
+  const climbEditor = useClimbEditor(live, api, circuitChoices);
   const liveGym = liveGymOfDraft(gyms.gyms, live.stored?.draft.gymId);
   const setupCards: SetupCard[] = [];
   if (gyms.ready && gyms.gyms.length === 0 && gymPrompt.dismissed === false) {
@@ -284,9 +287,10 @@ export default function Log(): React.ReactElement {
             {live.stored !== null && (
               <LiveSessionCard
                 stored={live.stored}
+                status={liveSync.status}
                 vocabulary={vocabulary}
                 gym={liveGym}
-                onEditClimb={setEditingClimb}
+                onEditClimb={climbEditor.open}
                 onChangeTries={(key, tries) => live.updateClimb(key, (c) => withTries(c, tries))}
                 onSent={(key) =>
                   live.updateClimb(key, (c) =>
@@ -294,6 +298,16 @@ export default function Log(): React.ReactElement {
                       kind: "send",
                       style: c.tries === 1 ? "flash" : "redpoint",
                     })
+                  )
+                }
+                onToggleSent={(key) =>
+                  live.updateClimb(key, (c) =>
+                    withClimbOutcome(
+                      c,
+                      c.kind === "send"
+                        ? { kind: "attempt" }
+                        : { kind: "send", style: c.tries === 1 ? "flash" : "redpoint" }
+                    )
                   )
                 }
                 onAddLap={(key) => live.updateClimb(key, addLap)}
@@ -356,18 +370,10 @@ export default function Log(): React.ReactElement {
       />
       <LogFab
         onLogClimb={() =>
-          setEditingClimb(
-            live.addClimb(scales, circuitChoices, readClimbKind(climbKindStorage, circuitChoices))
-          )
+          climbEditor.openNew(scales, readClimbKind(climbKindStorage, circuitChoices))
         }
       />
-      <LiveClimbEditor
-        live={live}
-        vocabulary={vocabulary}
-        gyms={circuitChoices}
-        editingKey={editingClimb}
-        onClose={() => setEditingClimb(null)}
-      />
+      <LiveClimbEditor editor={climbEditor} vocabulary={vocabulary} gyms={circuitChoices} />
       <FilterSheet
         visible={filtersOpen}
         items={all}

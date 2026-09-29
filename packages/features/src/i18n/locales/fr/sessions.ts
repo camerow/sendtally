@@ -1,4 +1,5 @@
 export const sessions = {
+  "sessions.unscored": "non évaluée",
   "sessions.back": "← Journal de bord",
   "sessions.onStrava": "Sur Strava",
   "sessions.loadFailed": "Impossible de joindre sendtally. Tire pour réessayer.",
@@ -59,10 +60,9 @@ export const sessions = {
   "sessions.logFullSession": "Séance",
   "sessions.logFullSessionHint":
     "Regroupe des voies dans une séance avec un nom, des notes, une date, un lieu et un effort.",
-  "sessions.liveMeta": "En cours depuis {elapsed}",
-  "sessions.wrapUp": "Conclure",
-  "sessions.stillClimbing": "Toujours en train de grimper ?",
-  "sessions.idleFor": "Rien consigné depuis {duration}",
-  "sessions.idleSinceYesterday": "Commencée le {date}",
   "sessions.discardSession": "Abandonner la séance",
+  "sessions.savedAsYouGo": "Enregistrée au fil de l'eau",
+  "sessions.saving": "Enregistrement…",
+  "sessions.notSavedYet": "Pas encore enregistrée, nouvel essai à venir",
+  "sessions.addDetails": "Ajouter des détails",
 } as const;

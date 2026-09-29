@@ -224,7 +224,7 @@ export async function replaceStoreEntitlements(
 
 export type ManualSessionInput = {
   fingerprint: string;
-  location: "indoor" | "outdoor";
+  location: "indoor" | "outdoor" | null;
   gym_id: string | null;
   area_id: string | null;
   name: string | null;
@@ -237,6 +237,7 @@ export type ManualSessionInput = {
   top_grade_label: string | null;
   top_send_grade_label: string | null;
   rpe: number;
+  rpe_source: "user" | "computed" | "none";
   title: string;
   summary: string;
   climbs_json: string;
@@ -941,6 +942,7 @@ export type PostableSessionRow = {
   start_at: string;
   end_at: string;
   rpe: number;
+  rpe_source: "user" | "computed" | "none";
   title: string;
   summary: string;
   strava_activity_id: number | null;
@@ -960,6 +962,7 @@ export async function getSessionForPosting(
       start_at: sessions.start_at,
       end_at: sessions.end_at,
       rpe: sessions.rpe,
+      rpe_source: sessions.rpe_source,
       title: sessions.title,
       summary: sessions.summary,
       strava_activity_id: sessions.strava_activity_id,

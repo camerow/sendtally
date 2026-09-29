@@ -2,6 +2,7 @@ import { climbDiscipline, climbRank, enduranceTotals, type Discipline } from "@s
 import type { Gym, SessionClimb, SessionWithClimbs } from "@sendtally/api-client";
 import { climbKey } from "../climbs/transforms";
 import { circuitLabel } from "../gyms/transforms";
+import { isUnscored } from "../sessions/meta";
 import { UNTAGGED_KEY } from "../sessions/tags";
 import { gradeFormatterFor } from "../sessions/grades";
 import type { GradeRange, TrendFilter, TrendScope, TrendSetting } from "./types";
@@ -272,7 +273,7 @@ export function totals(slice: Slice, start: number, end: number): Totals {
     avg: mean(sendRanks.map((s) => s.rank)),
     flashRate: sent.length === 0 ? null : (firstTry / sent.length) * 100,
     tries: mean(sent.map((r) => r.climb.tries)),
-    rpe: mean(sessions.map((r) => r.session.rpe)),
+    rpe: mean(sessions.filter((r) => !isUnscored(r.session)).map((r) => r.session.rpe)),
     sessions: sessions.length,
     days: days.size,
     inside: days.size - outside,

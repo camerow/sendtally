@@ -16,6 +16,7 @@ import type {
   SessionDetail,
 } from "@sendtally/api-client";
 import { t } from "../i18n";
+import { isUnscored } from "../sessions/meta";
 import { sameTagName } from "../sessions/tags";
 import { durationLabel as lowerDurationLabel, hasEnd, hasStart } from "../sessions/years";
 import {
@@ -293,6 +294,12 @@ export function toLogSessionInput(draft: LogSessionDraft): LogSessionInput {
   };
 }
 
+/** A session logged as it happens has no times, effort or venue yet; the server keeps it unscored. */
+export function toLiveSessionInput(draft: LogSessionDraft): LogSessionInput {
+  const { startTime: _s, endTime: _e, rpe: _r, location: _l, ...rest } = toLogSessionInput(draft);
+  return { ...rest, unscored: true };
+}
+
 function fallbackGrade(grade: string, scale: GradeScale): Grade {
   return scale === "v" ? { scale, value: 0 } : { scale, value: grade };
 }
@@ -302,7 +309,7 @@ function utcTime(iso: string): string {
   return `${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}`;
 }
 
-function utcDate(iso: string): string {
+export function utcDate(iso: string): string {
   const d = new Date(iso);
   return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`;
 }
@@ -330,7 +337,7 @@ export function draftFromSession(session: SessionDetail): LogSessionDraft {
     ...(session.area ? { area: { id: session.area.id, name: session.area.name } } : {}),
     tags: session.tags.map((t) => t.name),
     notes: session.notes ?? "",
-    rpe: session.rpe,
+    rpe: isUnscored(session) ? null : session.rpe,
     climbs: climbs.map((c, i) => {
       const scale = c.grade?.scale ?? "v";
       return {

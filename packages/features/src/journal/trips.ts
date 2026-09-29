@@ -1,5 +1,6 @@
 import type { JournalEntry, SessionRow } from "@sendtally/api-client";
 import { formatNumber, t } from "../i18n";
+import { isUnscored } from "../sessions/meta";
 import { durationLabel, sessionMinutes } from "../sessions/years";
 import { inTrip, isoDay, tripEnd } from "./transforms";
 import type { TripSpan } from "./types";
@@ -80,9 +81,10 @@ export function injuriesCarriedIn(trip: TripSpan, entries: JournalEntry[]): Jour
 
 /** The hardest RPE of each day, null on a day with no session. */
 export function tripEffort(days: TripDay[]): Array<number | null> {
-  return days.map((d) =>
-    d.sessions.length === 0 ? null : Math.max(...d.sessions.map((s) => s.rpe))
-  );
+  return days.map((d) => {
+    const scored = d.sessions.filter((s) => !isUnscored(s));
+    return scored.length === 0 ? null : Math.max(...scored.map((s) => s.rpe));
+  });
 }
 
 /** Past this many days a bar per day has no room for its own labels. */
@@ -107,8 +109,9 @@ export function tripStats(days: TripDay[]): TripStat[] {
     (best, s) => (s.top_send_grade > (best?.top_send_grade ?? -1) ? s : best),
     null
   );
+  const scored = sessions.filter((s) => !isUnscored(s));
   const rpe =
-    sessions.length === 0 ? null : sessions.reduce((sum, s) => sum + s.rpe, 0) / sessions.length;
+    scored.length === 0 ? null : scored.reduce((sum, s) => sum + s.rpe, 0) / scored.length;
   return [
     {
       label: t("journal.tripDaysClimbed"),

@@ -1,0 +1,1 @@
+ALTER TABLE `sessions` ADD `rpe_source` text DEFAULT 'computed' NOT NULL;

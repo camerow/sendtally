@@ -1,5 +1,5 @@
 import React from "react";
-import { Link, useSearchParams } from "react-router";
+import { Link, useRevalidator, useSearchParams } from "react-router";
 import type { ConnectionStatus, JournalEntry, SessionRow } from "@sendtally/api-client";
 import { Logo } from "@sendtally/design";
 import { t } from "@sendtally/features/i18n";
@@ -17,13 +17,16 @@ import { liveGymOfDraft, useGyms } from "@sendtally/features/gyms";
 import {
   circuitGyms,
   readClimbKind,
+  useClimbEditor,
   useLiveSession,
+  useLiveSync,
+  withClimbOutcome,
   withTries,
 } from "@sendtally/features/log-session";
 import { useGradeScalePrefs } from "@sendtally/features/settings";
 import { useClientApi } from "../../lib/useClientApi";
 import { climbKindStorage } from "../../lib/climbKindStorage";
-import { sessionDraftStorage } from "../../lib/sessionDraftStorage";
+import { liveSessionStorage } from "../../lib/liveSessionStorage";
 import {
   filterSessionsByTags,
   logYearGroups,
@@ -75,16 +78,16 @@ export function LogView({
   const [filtersOpen, setFiltersOpen] = React.useState(false);
   const api = useClientApi(apiUrl);
   const { scales } = useGradeScalePrefs(api);
-  const live = useLiveSession(sessionDraftStorage);
+  const liveSync = useLiveSync(api, liveSessionStorage);
+  const live = useLiveSession(liveSessionStorage, liveSync.sync);
   const vocabulary = useClimbVocabulary(api);
-  const [editingClimb, setEditingClimb] = React.useState<string | null>(null);
   const gyms = useGyms(api);
   const liveGym = liveGymOfDraft(gyms.gyms, live.stored?.draft.gymId);
   const circuitChoices = circuitGyms(gyms.gyms);
+  const { revalidate } = useRevalidator();
+  const climbEditor = useClimbEditor(live, api, circuitChoices, () => void revalidate());
   const logClimb = (): void =>
-    setEditingClimb(
-      live.addClimb(scales, circuitChoices, readClimbKind(climbKindStorage, circuitChoices))
-    );
+    climbEditor.openNew(scales, readClimbKind(climbKindStorage, circuitChoices));
   const stravaConnected = status.strava?.status === "active";
   const stravaLapsed = status.strava !== null && !stravaConnected;
   const gymPrompt = useDismissed("gym");
@@ -195,10 +198,21 @@ export function LogView({
       {live.stored !== null && (
         <LiveSessionCard
           stored={live.stored}
+          status={liveSync.status}
           vocabulary={vocabulary}
           gym={liveGym}
-          onEditClimb={setEditingClimb}
+          onEditClimb={climbEditor.open}
           onChangeTries={(key, tries) => live.updateClimb(key, (c) => withTries(c, tries))}
+          onToggleSent={(key) =>
+            live.updateClimb(key, (c) =>
+              withClimbOutcome(
+                c,
+                c.kind === "send"
+                  ? { kind: "attempt" }
+                  : { kind: "send", style: c.tries === 1 ? "flash" : "redpoint" }
+              )
+            )
+          }
         />
       )}
       <div className="sessions-filters">
@@ -288,16 +302,12 @@ export function LogView({
         </div>
       )}
       <LogMenu variant="fab" onLogClimb={logClimb} />
-      {editingClimb !== null && (
-        <LiveClimbEditor
-          live={live}
-          scales={scales}
-          vocabulary={vocabulary}
-          gyms={circuitChoices}
-          editingKey={editingClimb}
-          onClose={() => setEditingClimb(null)}
-        />
-      )}
+      <LiveClimbEditor
+        editor={climbEditor}
+        scales={scales}
+        vocabulary={vocabulary}
+        gyms={circuitChoices}
+      />
       {filtersOpen && (
         <SessionFilterSheet
           onClose={() => setFiltersOpen(false)}

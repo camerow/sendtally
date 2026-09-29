@@ -168,6 +168,16 @@ describe("strava posting", () => {
     expect((await postRow(userId, fingerprint))?.strava_activity_id).toBeNull();
   });
 
+  it("does not post an unscored session until it is scored", async () => {
+    const userId = "user_post_unscored";
+    await connectStrava(userId);
+    const { fetchImpl, calls } = stravaRoutes();
+    const fingerprint = await createSession(userId, fetchImpl, { ...sessionBody, unscored: true });
+
+    expect(calls).toHaveLength(0);
+    expect((await postRow(userId, fingerprint))?.post_state).toBeNull();
+  });
+
   it("does not post when Strava is not connected", async () => {
     const userId = "user_post_unconnected";
     const { fetchImpl, calls } = stravaRoutes();

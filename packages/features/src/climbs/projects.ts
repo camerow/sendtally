@@ -1,7 +1,7 @@
 import { formatGrade, routeIndexOf, vFromFont, type Grade } from "@sendtally/core";
 import type { ClimbSummary, SessionWithClimbs } from "@sendtally/api-client";
 import { t } from "../i18n";
-import { sessionDay } from "../sessions/meta";
+import { isUnscored, sessionDay } from "../sessions/meta";
 import { monthShortName } from "../sessions/months";
 import { sessionTitle } from "../sessions/title";
 import { durationLabel, sessionMinutes } from "../sessions/years";
@@ -120,7 +120,7 @@ export function projectSessions(
       dateLabel: dateLabel(session.start_at),
       title: sessionTitle(session),
       metaLabel: [
-        `${t("common.effort")} ${session.rpe}`,
+        ...(isUnscored(session) ? [] : [`${t("common.effort")} ${session.rpe}`]),
         ...(session.times === "both" ? [durationLabel(sessionMinutes(session))] : []),
       ].join(" · "),
       attempts: rows.reduce((n, c) => n + c.tries, 0),

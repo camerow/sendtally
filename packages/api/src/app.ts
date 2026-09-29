@@ -128,7 +128,7 @@ const manualScoringHistory = async (
 ) => {
   const rows = await repo.listSessions(db, userId, 200, true);
   return rows
-    .filter((r) => r.fingerprint !== excludeFingerprint)
+    .filter((r) => r.fingerprint !== excludeFingerprint && r.rpe_source !== "none")
     .map(historySession)
     .filter((s): s is NonNullable<typeof s> => s !== null);
 };

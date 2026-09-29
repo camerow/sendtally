@@ -5,6 +5,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useSessionDraft } from "@sendtally/features/log-session";
 import { t } from "@sendtally/features/i18n";
 import { colors, fonts } from "@sendtally/design/tokens";
+import { BackButton } from "../../../components/BackButton";
 import { LogSessionForm } from "../../../features/log-session/LogSessionForm";
 import { useApi } from "../../../lib/api";
 
@@ -21,18 +22,25 @@ export default function EditSessionScreen(): React.ReactElement {
         </View>
       )}
       {(state.status === "error" || (state.status === "ready" && !state.data.editable)) && (
-        <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 24 }}>
-          <Text
-            style={{
-              fontFamily: fonts.mono,
-              fontSize: 12,
-              color: colors.watermelonInk,
-              textAlign: "center",
-            }}
-          >
-            {state.status === "error" ? t("sessionDetail.loadFailed") : t("sessions.readOnlyBoard")}
-          </Text>
-        </View>
+        <>
+          <View style={{ paddingHorizontal: 18 }}>
+            <BackButton />
+          </View>
+          <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 24 }}>
+            <Text
+              style={{
+                fontFamily: fonts.mono,
+                fontSize: 12,
+                color: colors.watermelonInk,
+                textAlign: "center",
+              }}
+            >
+              {state.status === "error"
+                ? t("sessionDetail.loadFailed")
+                : t("sessions.readOnlyBoard")}
+            </Text>
+          </View>
+        </>
       )}
       {state.status === "ready" && state.data.editable && (
         <LogSessionForm editing={{ fingerprint: fingerprint ?? "", draft: state.data.draft }} />

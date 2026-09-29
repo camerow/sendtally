@@ -1,4 +1,5 @@
 export const sessions = {
+  "sessions.unscored": "unscored",
   "sessions.back": "← Log",
   "sessions.onStrava": "On Strava",
   "sessions.loadFailed": "Could not reach sendtally. Pull to retry.",
@@ -58,10 +59,9 @@ export const sessions = {
   "sessions.logFullSession": "Session",
   "sessions.logFullSessionHint":
     "Group climbs into a single session with a name, notes, date, location and effort.",
-  "sessions.liveMeta": "In progress for {elapsed}",
-  "sessions.wrapUp": "Wrap up",
-  "sessions.stillClimbing": "Still climbing?",
-  "sessions.idleFor": "Nothing logged for {duration}",
-  "sessions.idleSinceYesterday": "Started on {date}",
   "sessions.discardSession": "Discard session",
+  "sessions.savedAsYouGo": "Saved as you go",
+  "sessions.saving": "Saving…",
+  "sessions.notSavedYet": "Not saved yet, will retry",
+  "sessions.addDetails": "Add details",
 } as const;

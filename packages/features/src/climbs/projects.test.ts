@@ -39,6 +39,7 @@ const session = (
   top_grade_label: null,
   top_send_grade_label: null,
   rpe: 7,
+  rpe_source: "computed",
   title: "",
   notes,
   strava_activity_id: null,

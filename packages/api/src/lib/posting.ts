@@ -53,6 +53,9 @@ export async function syncSessionToStrava(
   const session = await repo.getSessionForPosting(env.DB, userId, fingerprint);
   if (session === null) return { outcome: "skipped", reason: "session not found" };
   if (session.source !== "manual") return { outcome: "skipped", reason: "not a manual session" };
+  if (session.rpe_source === "none" && !explicit) {
+    return { outcome: "skipped", reason: "session is unscored" };
+  }
 
   const connection = await repo.getStravaConnection(env.DB, userId);
   if (connection === null) return { outcome: "skipped", reason: "strava not connected" };

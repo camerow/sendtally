@@ -38,7 +38,7 @@ function segmentsFor(discipline: Discipline): Segment[] {
   ];
 }
 
-function fillFor(outcome: ClimbOutcome): { background: string; color: string } {
+export function outcomeFill(outcome: ClimbOutcome): { background: string; color: string } {
   return outcome.kind === "attempt" ? ATTEMPT_FILL : STYLE_FILL[outcome.style];
 }
 
@@ -60,7 +60,7 @@ export function OutcomeControl({
     <div role="radiogroup" aria-label={t("common.result")} className="climb-result">
       {segmentsFor(discipline).map((segment) => {
         const active = matches(segment.outcome, outcome);
-        const fill = fillFor(segment.outcome);
+        const fill = outcomeFill(segment.outcome);
         return (
           <button
             key={segment.key}
@@ -79,47 +79,6 @@ export function OutcomeControl({
           </button>
         );
       })}
-    </div>
-  );
-}
-
-/**
- * The same choices as a dropdown. Four segments (REDPOINT · FLASH · ONSIGHT · ATTEMPT) do not
- * fit side by side at phone width, and a native select is the phone's own picker.
- */
-export function OutcomeSelect({
-  discipline,
-  outcome,
-  onChange,
-}: {
-  discipline: Discipline;
-  outcome: ClimbOutcome;
-  onChange: (outcome: ClimbOutcome) => void;
-}): React.ReactElement {
-  const segments = segmentsFor(discipline);
-  const current = segments.find((segment) => matches(segment.outcome, outcome)) ?? segments[0]!;
-  const fill = fillFor(current.outcome);
-  return (
-    <div className="climb-result-field">
-      <span className="climb-result-mark" style={fill} aria-hidden>
-        <Glyph d={current.glyph} size={current.glyph === CHECK ? 12 : 11} width={2.2} />
-      </span>
-      <select
-        name="result"
-        aria-label={t("common.result")}
-        value={current.key}
-        onChange={(e) => {
-          const picked = segments.find((segment) => segment.key === e.target.value);
-          if (picked !== undefined) onChange(picked.outcome);
-        }}
-        className="climb-result-select"
-      >
-        {segments.map((segment) => (
-          <option key={segment.key} value={segment.key}>
-            {segment.label}
-          </option>
-        ))}
-      </select>
     </div>
   );
 }

@@ -998,6 +998,23 @@ describe("app", () => {
     expect(row?.summary).toContain("RPE 9/10");
   });
 
+  it("keeps unscored sessions out of the scoring history", async () => {
+    const hard = Array.from({ length: 12 }, () => ({ grade: { scale: "v", value: 10 } }));
+    const unscored = await postSession(
+      "user_history_unscored",
+      logBody({ date: "2026-08-10", location: undefined, unscored: true, climbs: hard })
+    );
+    expect(unscored.status).toBe(201);
+    const { session: draft } = (await unscored.json()) as ManualSessionResponse;
+    expect(draft.location).toBeNull();
+
+    const shaped = await postSession("user_history_unscored", logBody());
+    const alone = await postSession("user_history_alone", logBody());
+    const { session: a } = (await shaped.json()) as ManualSessionResponse;
+    const { session: b } = (await alone.json()) as ManualSessionResponse;
+    expect(a.rpe).toBe(b.rpe);
+  });
+
   it("wraps an end time past midnight into the next day", async () => {
     const res = await postSession(
       "user_manual_midnight",

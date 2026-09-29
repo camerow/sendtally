@@ -19,6 +19,8 @@ export type DateTimeFieldProps = {
   placeholder?: string;
   onClear?: () => void;
   disabled?: boolean;
+  /** The latest date the picker offers, `YYYY-MM-DD`. */
+  max?: string;
   testID?: string;
 };
 
@@ -54,11 +56,13 @@ export function DateTimeField({
   placeholder,
   onClear,
   disabled,
+  max,
   testID,
 }: DateTimeFieldProps): React.ReactElement {
   const [open, setOpen] = React.useState(false);
   const empty = value === "";
   const date = parse(mode, value);
+  const maximumDate = max === undefined ? undefined : parse("date", max);
   const text = empty
     ? (placeholder ?? "")
     : formatDate(
@@ -74,7 +78,7 @@ export function DateTimeField({
 
   function openPicker(): void {
     if (Platform.OS === "android") {
-      DateTimePickerAndroid.open({ value: date, mode, onChange: pick });
+      DateTimePickerAndroid.open({ value: date, mode, maximumDate, onChange: pick });
       return;
     }
     if (empty) onChange(serialize(mode, date));
@@ -146,6 +150,7 @@ export function DateTimeField({
             <DateTimePicker
               value={date}
               mode={mode}
+              maximumDate={maximumDate}
               display={mode === "date" ? "inline" : "spinner"}
               onChange={pick}
               locale={getLocale()}

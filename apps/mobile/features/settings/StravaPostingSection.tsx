@@ -2,8 +2,9 @@ import React from "react";
 import { Pressable, Text, View } from "react-native";
 import type { StravaPostingFeature } from "@sendtally/features/settings";
 import { t } from "@sendtally/features/i18n";
-import { colors, fonts, radius } from "@sendtally/design/tokens";
+import { colors, fonts } from "@sendtally/design/tokens";
 import { DateTimeField } from "../../components/DateTimeField";
+import { SwitchTrack } from "../../components/SwitchTrack";
 import { bodyText, messageText } from "../../lib/styles";
 import { press } from "../../lib/press";
 
@@ -36,25 +37,9 @@ function Switch({
       disabled={disabled}
       onPress={() => onChange(!checked)}
       hitSlop={10}
-      style={press({
-        width: 46,
-        height: 28,
-        borderRadius: radius.pill,
-        padding: 3,
-        justifyContent: "center",
-        backgroundColor: checked ? colors.azureInk : "rgba(64,63,76,0.22)",
-        opacity: disabled ? 0.55 : 1,
-      })}
+      style={press({})}
     >
-      <View
-        style={{
-          width: 22,
-          height: 22,
-          borderRadius: radius.pill,
-          backgroundColor: colors.white,
-          marginLeft: checked ? 18 : 0,
-        }}
-      />
+      <SwitchTrack checked={checked} disabled={disabled} />
     </Pressable>
   );
 }

@@ -32,6 +32,19 @@ describe("session draft store", () => {
     expect(parseStoredDraft(storage.read(), NOW)).toEqual({ draft, savedAt: NOW });
   });
 
+  it("carries the server fingerprint of a live draft, and reads a file written without one", () => {
+    const storage = memory();
+    const draft = emptyDraft(NOW);
+    writeStoredDraft(storage, draft, NOW, { fingerprint: "manual-7" });
+    expect(parseStoredDraft(storage.read(), NOW)).toEqual({
+      draft,
+      savedAt: NOW,
+      fingerprint: "manual-7",
+    });
+    const legacy = JSON.stringify({ draft, savedAt: NOW.toISOString() });
+    expect(parseStoredDraft(legacy, NOW)).toEqual({ draft, savedAt: NOW });
+  });
+
   it("reads nothing when the device has no draft", () => {
     expect(parseStoredDraft(memory().read(), NOW)).toBeNull();
   });
