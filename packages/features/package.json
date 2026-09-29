@@ -18,7 +18,8 @@
     "./journal": "./src/journal/index.ts",
     "./i18n": "./src/i18n/index.ts",
     "./import": "./src/import/index.ts",
-    "./query": "./src/query/index.ts"
+    "./query": "./src/query/index.ts",
+    "./hang": "./src/hang/index.ts"
   },
   "scripts": {
     "test": "vitest run",

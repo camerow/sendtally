@@ -60,6 +60,32 @@ describe("writeEffect", () => {
     expect(writeEffect({ method: "DELETE", path: "/v1/account" })?.stale).toEqual([]);
   });
 
+  it("stales sendtally's log and trends for a hang session write, never the hang cache", () => {
+    for (const write of [
+      { method: "PUT", path: "/v1/hang/sessions/h1" },
+      { method: "DELETE", path: "/v1/hang/sessions/h1" },
+      { method: "POST", path: "/v1/hang/sessions/h1/strava" },
+      { method: "PUT", path: "/v1/hang/grips/g1" },
+    ]) {
+      expect(writeEffect(write)).toEqual({
+        stale: [["sessions"], ["sessionsWithClimbs"]],
+        gone: null,
+      });
+    }
+  });
+
+  it("stales nothing for the rest of hangtally's writes", () => {
+    for (const path of [
+      "/v1/hang/workouts/w1",
+      "/v1/hang/loads",
+      "/v1/hang/schedules/s1",
+      "/v1/hang/default-grips/rep73",
+      "/v1/hang/settings",
+    ]) {
+      expect(writeEffect({ method: "PUT", path })).toEqual({ stale: [], gone: null });
+    }
+  });
+
   it("does not guess at a path it does not know", () => {
     expect(writeEffect({ method: "POST", path: "/v1/something-new" })).toBeNull();
     expect(writeEffect({ method: "POST", path: "/webhooks/clerk" })).toBeNull();

@@ -19,11 +19,17 @@ import type {
   EntryDetail,
   EntryInput,
   JournalEntry,
+  Loads,
   ConnectionStatus,
   Entitlements,
   GradeScales,
   Gym,
   GymInput,
+  Grip,
+  HangData,
+  HangSession,
+  HangSessionRecord,
+  HangSettings,
   ImportBody,
   ImportResult,
   LogSessionInput,
@@ -34,11 +40,13 @@ import type {
   ModerationQueue,
   PostOutcome,
   ProjectInput,
+  Schedule,
   SessionDetail,
-  SessionRow,
+  SessionLog,
+  SessionLogWithClimbs,
   SessionTag,
-  SessionWithClimbs,
   TagSummary,
+  Workout,
 } from "./types";
 
 export * from "./types";
@@ -100,11 +108,11 @@ export class SendtallyApi {
     return body(this.client.v1.entitlements.refresh.$post());
   }
 
-  sessions(): Promise<{ sessions: SessionRow[] }> {
+  sessions(): Promise<SessionLog> {
     return body(this.client.v1.sessions.$get());
   }
 
-  sessionsWithClimbs(): Promise<{ sessions: SessionWithClimbs[] }> {
+  sessionsWithClimbs(): Promise<SessionLogWithClimbs> {
     return body(this.client.v1.sessions.$get({ query: { include: "climbs" } }));
   }
 
@@ -377,6 +385,61 @@ export class SendtallyApi {
 
   stravaAuthorizeUrl(returnTo: "web" | "app" = "web"): Promise<{ url: string }> {
     return body(this.client.v1.connect.strava.start.$get({ query: { return: returnTo } }));
+  }
+
+  hang(): Promise<HangData> {
+    return body(this.client.v1.hang.$get());
+  }
+
+  saveHangGrip(id: string, name: string): Promise<{ grip: Grip }> {
+    return body(this.client.v1.hang.grips[":id"].$put({ param: { id }, json: { name } }));
+  }
+
+  saveHangWorkout(
+    id: string,
+    workout: Omit<Workout, "id" | "source">
+  ): Promise<{ workout: Workout }> {
+    return body(this.client.v1.hang.workouts[":id"].$put({ param: { id }, json: workout }));
+  }
+
+  setHangDefaultGrip(
+    workoutId: string,
+    gripId: string
+  ): Promise<{ workoutId: string; gripId: string }> {
+    return body(
+      this.client.v1.hang["default-grips"][":workoutId"].$put({
+        param: { workoutId },
+        json: { gripId },
+      })
+    );
+  }
+
+  setHangLoads(loads: Loads): Promise<{ loads: Loads }> {
+    return body(this.client.v1.hang.loads.$put({ json: { loads } }));
+  }
+
+  saveHangSchedule({ id, ...schedule }: Schedule): Promise<{ schedule: Schedule }> {
+    return body(this.client.v1.hang.schedules[":id"].$put({ param: { id }, json: schedule }));
+  }
+
+  deleteHangSchedule(id: string): Promise<{ deleted: boolean }> {
+    return body(this.client.v1.hang.schedules[":id"].$delete({ param: { id } }));
+  }
+
+  saveHangSession({ id, ...session }: HangSession): Promise<{ session: HangSessionRecord }> {
+    return body(this.client.v1.hang.sessions[":id"].$put({ param: { id }, json: session }));
+  }
+
+  deleteHangSession(id: string): Promise<{ deleted: boolean }> {
+    return body(this.client.v1.hang.sessions[":id"].$delete({ param: { id } }));
+  }
+
+  postHangSession(id: string): Promise<{ session: HangSessionRecord }> {
+    return body(this.client.v1.hang.sessions[":id"].strava.$post({ param: { id } }));
+  }
+
+  saveHangSettings(settings: Partial<HangSettings>): Promise<{ settings: HangSettings }> {
+    return body(this.client.v1.hang.settings.$put({ json: settings }));
   }
 
   deleteAccount(): Promise<{ deleted: boolean }> {

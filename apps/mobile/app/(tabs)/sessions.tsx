@@ -52,6 +52,7 @@ import {
 } from "../../features/sessions/FilterSheet";
 import { ScopeBar } from "../../features/sessions/ScopeBar";
 import { SECTION_HEADER_HEIGHT, SectionHeader } from "../../features/sessions/SectionHeader";
+import { HANG_ROW_HEIGHT, HangRow } from "../../features/sessions/HangRow";
 import { SessionRow, sessionRowHeight } from "../../features/sessions/SessionRow";
 import { SetupStack, type SetupCard } from "../../features/sessions/SetupStack";
 import { useStravaConnect } from "../../features/settings/useStravaConnect";
@@ -64,6 +65,7 @@ type Section = { key: string; title: string; meta: string; data: LogItem[] };
 
 const rowHeight = (item: LogItem): number => {
   if (item.type === "session") return sessionRowHeight(item.session);
+  if (item.type === "hang") return HANG_ROW_HEIGHT;
   return item.inside.length > 0 ? tripGroupHeight(item) : entryRowHeight(item.entry);
 };
 
@@ -73,7 +75,7 @@ const openItem = (item: LogItem): void => {
       pathname: "/session/[fingerprint]",
       params: { fingerprint: item.session.fingerprint },
     });
-  } else {
+  } else if (item.type === "entry") {
     router.push({ pathname: "/journal/[id]", params: { id: item.entry.id } });
   }
 };
@@ -120,7 +122,9 @@ export default function Log(): React.ReactElement {
   const api = useApi();
   const list = React.useRef<SectionList<LogItem, Section>>(null);
   const log = useQueryPair(queries.sessions(api), queries.entries(api));
-  const [sessions, entries] = log.state.status === "ready" ? log.state.data : [null, null];
+  const [sessionLog, entries] = log.state.status === "ready" ? log.state.data : [null, null];
+  const sessions = sessionLog?.sessions ?? null;
+  const hangSessions = sessionLog?.hangSessions ?? null;
   const error = log.state.status === "error" || log.refreshFailed ? t("sessions.loadFailed") : null;
   const [refreshing, setRefreshing] = React.useState(false);
   const [filters, setFilters] = React.useState<SessionFilters>(DEFAULT_FILTERS);
@@ -170,7 +174,10 @@ export default function Log(): React.ReactElement {
     });
   }
 
-  const all = React.useMemo(() => logItems(sessions ?? [], entries ?? []), [sessions, entries]);
+  const all = React.useMemo(
+    () => logItems(sessions ?? [], entries ?? [], hangSessions ?? []),
+    [sessions, entries, hangSessions]
+  );
   const inScope = React.useMemo(() => logScopeItems(all, filters.scope), [all, filters.scope]);
   const tagOptions = React.useMemo(() => sessionTagOptions(inScope), [inScope]);
   const untaggedCount = React.useMemo(
@@ -361,6 +368,8 @@ export default function Log(): React.ReactElement {
               title={sessionTitle(item.session)}
               onPress={() => openItem(item)}
             />
+          ) : item.type === "hang" ? (
+            <HangRow hang={item.hang} />
           ) : item.inside.length > 0 ? (
             <TripGroup item={item} onOpen={openItem} />
           ) : (

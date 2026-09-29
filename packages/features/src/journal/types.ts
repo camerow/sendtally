@@ -1,4 +1,10 @@
-import type { EntryKind, JournalEntry, SessionRow, SessionTag } from "@sendtally/api-client";
+import type {
+  EntryKind,
+  HangHistoryRow,
+  JournalEntry,
+  SessionRow,
+  SessionTag,
+} from "@sendtally/api-client";
 
 export type { EntryKind, JournalEntry };
 
@@ -17,6 +23,7 @@ export const ENTRY_BODY_MAX = 10000;
  */
 export type LogItem = { key: string; at: string; tags: SessionTag[] } & (
   | { type: "session"; session: SessionRow }
+  | { type: "hang"; hang: HangHistoryRow }
   | { type: "entry"; entry: JournalEntry; inside: LogItem[] }
 );
 

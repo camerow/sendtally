@@ -2,12 +2,14 @@ import React from "react";
 import { logCountLabel, sessionTitle } from "@sendtally/features/sessions";
 import type { LogItem } from "@sendtally/features/journal";
 import { EntryRowItem } from "./EntryRowItem";
+import { HangRowItem } from "./HangRowItem";
 import { SessionRowItem } from "./SessionRowItem";
 
 export function LogRowItem({ item }: { item: LogItem }): React.ReactElement {
   if (item.type === "session") {
     return <SessionRowItem session={item.session} title={sessionTitle(item.session)} />;
   }
+  if (item.type === "hang") return <HangRowItem hang={item.hang} />;
   if (item.inside.length === 0) return <EntryRowItem entry={item.entry} />;
   return (
     <div className="log-trip">
