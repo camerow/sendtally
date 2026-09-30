@@ -24,14 +24,18 @@ jobs:
       # a transitive native dependency pulled to a version the SDK does not
       # support, which is how a build passes CI and then crashes on launch.
       - name: Expo config matches the installed SDK
-        run: pnpm --filter @sendtally/mobile exec expo-doctor
+        run: |
+          pnpm --filter @sendtally/mobile exec expo-doctor
+          pnpm --filter @sendtally/hangtally exec expo-doctor
         env:
           EXPO_DOCTOR_SKIP_DEPENDENCY_VERSION_CHECK: "1"
       # Versions are compared against Expo's live list, so a new SDK patch
       # turns every branch red without a change; expo-deps.yml bumps them.
       - name: Expo dependency versions match the latest SDK patch
         continue-on-error: true
-        run: pnpm --filter @sendtally/mobile exec expo-doctor
+        run: |
+          pnpm --filter @sendtally/mobile exec expo-doctor
+          pnpm --filter @sendtally/hangtally exec expo-doctor
       - name: Test (one retry for the vitest-pool-workers isolated-storage flake)
         run: pnpm test || pnpm test
       - run: pnpm format:check

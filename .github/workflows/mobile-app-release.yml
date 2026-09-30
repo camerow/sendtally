@@ -120,7 +120,10 @@ jobs:
           tag=$(git tag --list "$APP-v*" --sort=-v:refname | head -1)
           if [ -z "$tag" ]; then echo "No $APP-v* tag yet, nothing to edit"; exit 0; fi
           previous=$(git tag --list "$APP-v*" --sort=-v:refname | sed -n 2p)
-          .github/scripts/release-notes.sh "${previous:+$previous..}$tag" . ':!apps/web' ":!apps/$OTHER" \
+          # The first release counts from the first commit, where only the
+          # app's own directory is its history.
+          if [ -n "$previous" ]; then paths=(. ':!apps/web' ":!apps/$OTHER"); else paths=("apps/$APP"); fi
+          .github/scripts/release-notes.sh "${previous:+$previous..}$tag" "${paths[@]}" \
             > "$RUNNER_TEMP/notes.md"
           # A chore or test commit also triggers this workflow and produces no
           # notes, so the heading only goes in when there is something under it.
@@ -184,8 +187,8 @@ jobs:
           fi
           echo "Releasing $version -> $next ($bump) since ${previous:-the first commit}"
           echo "version=$next" >> "$GITHUB_OUTPUT"
-          .github/scripts/release-notes.sh "$range" . ':!apps/web' ":!apps/$OTHER" \
-            > "$RUNNER_TEMP/notes.md"
+          echo "range=$range" >> "$GITHUB_OUTPUT"
+          echo "bump=$bump" >> "$GITHUB_OUTPUT"
 
       # eas.json sets requireCommit, so the bump has to land before the build.
       - name: Commit the version bump
@@ -205,6 +208,21 @@ jobs:
           # The other app's release can push to main while this one runs.
           git pull --rebase origin main
           git push origin HEAD:main
+
+      # After the bump's rebase, so a commit that landed on main meanwhile is
+      # in the notes of the build that ships it rather than in no notes at all.
+      # The first release counts from the first commit, where only the app's
+      # own directory is its history.
+      - name: Write the release notes
+        env:
+          RANGE: ${{ steps.version.outputs.range }}
+          BUMP: ${{ steps.version.outputs.bump }}
+          APP: ${{ inputs.app }}
+          OTHER: ${{ inputs.other-app }}
+        run: |
+          set -euo pipefail
+          if [ "$BUMP" = first ]; then paths=("apps/$APP"); else paths=(. ':!apps/web' ":!apps/$OTHER"); fi
+          .github/scripts/release-notes.sh "$RANGE" "${paths[@]}" > "$RUNNER_TEMP/notes.md"
 
       - name: Write store credentials
         working-directory: apps/${{ inputs.app }}
