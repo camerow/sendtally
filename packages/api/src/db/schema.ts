@@ -473,6 +473,7 @@ export const hangGrips = sqliteTable(
     id: text("id").notNull(),
     name: text("name").notNull(),
     name_key: text("name_key").notNull(),
+    hidden: integer("hidden", { mode: "boolean" }).notNull().default(false),
     created_at: text("created_at").notNull(),
   },
   (t) => [

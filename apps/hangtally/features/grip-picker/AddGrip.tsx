@@ -9,7 +9,10 @@ import { useTheme } from "../../theme/ThemeContext";
 import { type } from "../../theme/type";
 import { useHangData } from "../data/HangDataContext";
 
-/** "Add your own": a new name makes a custom grip; a name that exists, ignoring case, picks that one. */
+/**
+ * "Add your own": a new name makes a custom grip; a name that exists, ignoring
+ * case, picks that one, bringing it back if it had been deleted.
+ */
 export function AddGrip({ onAdded }: { onAdded: (gripId: string) => void }): React.ReactElement {
   const c = useTheme();
   const { model, actions } = useHangData();
@@ -20,7 +23,9 @@ export function AddGrip({ onAdded }: { onAdded: (gripId: string) => void }): Rea
     if (trimmed === "") return;
     const existing = findGrip(model.grips, trimmed);
     const id = existing?.id ?? newId();
-    if (existing === undefined) void actions.saveGrip({ id, name: trimmed, custom: true });
+    if (existing === undefined)
+      void actions.saveGrip({ id, name: trimmed, custom: true, hidden: false });
+    else if (existing.hidden) void actions.saveGrip({ ...existing, hidden: false });
     setName("");
     onAdded(id);
   };

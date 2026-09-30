@@ -203,6 +203,12 @@ export const hang = {
   "hang.newGripName": "New grip name",
   "hang.newGripPlaceholder": "Add your own, e.g. Front 3",
   "hang.add": "Add",
+  "hang.editGrip": "Edit grip",
+  "hang.editGripAria": "Edit {grip}",
+  "hang.deleteGrip": "Delete grip",
+  "hang.deleteGripTitle": "Delete {grip}?",
+  "hang.deleteGripBody": "It leaves your grip lists. Sessions logged on it, and its trend, stay.",
+  "hang.gripNameTaken": "You already have a grip called {name}.",
 
   "hang.end": "End",
   "hang.mute": "Mute",

@@ -3,7 +3,7 @@ import { Pressable } from "react-native";
 import { press } from "../lib/press";
 import { Icon, type IconName } from "./Icon";
 
-const THIN: readonly IconName[] = ["restart", "skip", "sound", "muted"];
+const THIN: readonly IconName[] = ["restart", "skip", "sound", "muted", "edit"];
 
 export type IconButtonProps = {
   icon: IconName;

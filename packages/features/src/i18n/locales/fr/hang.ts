@@ -204,6 +204,13 @@ export const hang = {
   "hang.newGripName": "Nom de la nouvelle prise",
   "hang.newGripPlaceholder": "Ajoute la tienne, ex. 3 doigts avant",
   "hang.add": "Ajouter",
+  "hang.editGrip": "Modifier la prise",
+  "hang.editGripAria": "Modifier {grip}",
+  "hang.deleteGrip": "Supprimer la prise",
+  "hang.deleteGripTitle": "Supprimer {grip} ?",
+  "hang.deleteGripBody":
+    "Elle disparaît de tes listes de prises. Les séances faites avec, et sa tendance, restent.",
+  "hang.gripNameTaken": "Tu as déjà une prise appelée {name}.",
 
   "hang.end": "Terminer",
   "hang.mute": "Couper le son",

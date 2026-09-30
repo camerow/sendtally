@@ -13,6 +13,7 @@ import { queries } from "../query";
 
 export type HangActions = {
   saveGrip: (grip: Grip) => Promise<void>;
+  deleteGrip: (id: string) => Promise<void>;
   saveWorkout: (workout: Workout) => Promise<void>;
   setDefaultGrip: (workoutId: string, gripId: string) => Promise<void>;
   setLoads: (loads: Loads) => Promise<void>;
@@ -72,6 +73,17 @@ export function useHangActions(api: SendtallyApi, onError: (error: unknown) => v
         write(
           (d) => ({ ...d, grips: upsert(d.grips, grip) }),
           () => api.saveHangGrip(grip.id, grip.name)
+        ),
+      deleteGrip: (id) =>
+        write(
+          (d) => ({
+            ...d,
+            grips: d.grips.map((g) => (g.id === id ? { ...g, hidden: true } : g)),
+            defaultGrips: Object.fromEntries(
+              Object.entries(d.defaultGrips).filter(([, gripId]) => gripId !== id)
+            ),
+          }),
+          () => api.deleteHangGrip(id)
         ),
       saveWorkout: (workout) =>
         write(

@@ -422,6 +422,10 @@ export class SendtallyApi {
     return body(this.client.v1.hang.schedules[":id"].$put({ param: { id }, json: schedule }));
   }
 
+  deleteHangGrip(id: string): Promise<{ deleted: boolean }> {
+    return body(this.client.v1.hang.grips[":id"].$delete({ param: { id } }));
+  }
+
   deleteHangSchedule(id: string): Promise<{ deleted: boolean }> {
     return body(this.client.v1.hang.schedules[":id"].$delete({ param: { id } }));
   }

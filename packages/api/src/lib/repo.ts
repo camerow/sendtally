@@ -2313,12 +2313,53 @@ export async function saveHangGrip(
       id: grip.id,
       name: grip.name,
       name_key: grip.nameKey,
+      hidden: false,
       created_at: new Date().toISOString(),
     })
     .onConflictDoUpdate({
       target: [hangGrips.user_id, hangGrips.id],
-      set: { name: grip.name, name_key: grip.nameKey },
+      set: { name: grip.name, name_key: grip.nameKey, hidden: false },
     });
+}
+
+export async function showHangGrip(db: D1Database, userId: string, id: string): Promise<void> {
+  await drizzle(db)
+    .update(hangGrips)
+    .set({ hidden: false })
+    .where(and(eq(hangGrips.user_id, userId), eq(hangGrips.id, id)));
+}
+
+/**
+ * Frees a deleted grip's name for a rename. A gripKey never holds a newline, so
+ * the new key can never match a name again; the grip keeps its name for history.
+ */
+export async function releaseHangGripName(
+  db: D1Database,
+  userId: string,
+  grip: HangGripRow
+): Promise<void> {
+  await drizzle(db)
+    .update(hangGrips)
+    .set({ name_key: `${grip.name_key}\n${grip.id}` })
+    .where(and(eq(hangGrips.user_id, userId), eq(hangGrips.id, grip.id)));
+}
+
+/**
+ * Hides a custom grip from the pickers and drops its explicit default choices.
+ * A workout created with it still names it as `grip`; the app's model skips it.
+ * Sessions, schedules and loads keep pointing at it, so history keeps its name.
+ */
+export async function hideHangGrip(db: D1Database, userId: string, id: string): Promise<void> {
+  const d = drizzle(db);
+  await d.batch([
+    d
+      .update(hangGrips)
+      .set({ hidden: true })
+      .where(and(eq(hangGrips.user_id, userId), eq(hangGrips.id, id))),
+    d
+      .delete(hangDefaultGrips)
+      .where(and(eq(hangDefaultGrips.user_id, userId), eq(hangDefaultGrips.grip_id, id))),
+  ]);
 }
 
 export async function saveHangWorkout(
