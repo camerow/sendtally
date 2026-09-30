@@ -72,8 +72,13 @@ export function DateTimeField({
           : { hour: "2-digit", minute: "2-digit" }
       );
 
-  function pick(_: DateTimePickerEvent, picked?: Date): void {
-    if (picked !== undefined) onChange(serialize(mode, picked));
+  function pick(event: DateTimePickerEvent, picked?: Date): void {
+    if (event.type === "set" && picked !== undefined) onChange(serialize(mode, picked));
+  }
+
+  function done(): void {
+    if (empty) onChange(serialize(mode, date));
+    setOpen(false);
   }
 
   function openPicker(): void {
@@ -81,7 +86,6 @@ export function DateTimeField({
       DateTimePickerAndroid.open({ value: date, mode, maximumDate, onChange: pick });
       return;
     }
-    if (empty) onChange(serialize(mode, date));
     setOpen(true);
   }
 
@@ -159,7 +163,7 @@ export function DateTimeField({
               style={{ alignSelf: "center" }}
             />
             <Pressable
-              onPress={() => setOpen(false)}
+              onPress={done}
               accessibilityRole="button"
               style={press({
                 minHeight: 50,
