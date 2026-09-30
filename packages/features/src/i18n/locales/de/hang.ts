@@ -206,6 +206,13 @@ export const hang = {
   "hang.newGripName": "Name des neuen Griffs",
   "hang.newGripPlaceholder": "Eigenen hinzufügen, z. B. Front 3",
   "hang.add": "Hinzufügen",
+  "hang.editGrip": "Griff bearbeiten",
+  "hang.editGripAria": "{grip} bearbeiten",
+  "hang.deleteGrip": "Griff löschen",
+  "hang.deleteGripTitle": "{grip} löschen?",
+  "hang.deleteGripBody":
+    "Er verschwindet aus deinen Grifflisten. Sessions damit und sein Trend bleiben.",
+  "hang.gripNameTaken": "Du hast schon einen Griff namens {name}.",
 
   "hang.end": "Beenden",
   "hang.mute": "Stumm",

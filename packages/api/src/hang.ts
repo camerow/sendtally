@@ -47,8 +47,10 @@ export const hang = new Hono<AppEnv>()
     return c.json(data);
   })
 
-  // A name another grip already has, built in or custom, in any case, answers
-  // with that grip instead of making a second one.
+  // Adding a grip by a name that already exists, built in or custom, in any
+  // case, answers with that grip (showing it again if it was deleted) instead
+  // of making a second one. Renaming onto a name in use is a conflict, unless
+  // only a deleted grip holds it: that one gives the name up and keeps its own.
   .put(
     "/grips/:id",
     zValidator("param", hangIdParam, invalidBody),
@@ -57,17 +59,37 @@ export const hang = new Hono<AppEnv>()
       const { id } = c.req.valid("param");
       if (isBuiltInGrip(id)) return c.json({ error: "built-in grips cannot be changed" }, 400);
       const { name } = c.req.valid("json");
-      const builtIn = builtInGripNamed(name);
-      if (builtIn !== null) return c.json({ grip: builtIn });
       const userId = c.get("userId");
       const nameKey = gripKey(name);
-      const taken = await repo.findHangGripByKey(c.env.DB, userId, nameKey);
-      if (taken !== null && taken.id !== id) return c.json({ grip: gripOf(taken) });
+      const builtIn = builtInGripNamed(name);
+      const [existing, taken] = await Promise.all([
+        repo.getHangGrip(c.env.DB, userId, id),
+        repo.findHangGripByKey(c.env.DB, userId, nameKey),
+      ]);
+      const clash = builtIn ?? (taken !== null && taken.id !== id ? gripOf(taken) : null);
+      if (existing !== null && taken !== null && clash?.id === taken.id && taken.hidden) {
+        await repo.releaseHangGripName(c.env.DB, userId, taken);
+      } else if (clash !== null && existing !== null) {
+        return c.json({ error: "grip name taken" }, 409);
+      } else if (clash !== null) {
+        if (clash.hidden) await repo.showHangGrip(c.env.DB, userId, clash.id);
+        return c.json({ grip: { ...clash, hidden: false } });
+      }
       await repo.ensureUser(c.env.DB, userId);
       await repo.saveHangGrip(c.env.DB, userId, { id, name, nameKey });
-      return c.json({ grip: { id, name, custom: true } });
+      return c.json({ grip: { id, name, custom: true, hidden: false } });
     }
   )
+
+  .delete("/grips/:id", zValidator("param", hangIdParam, invalidBody), async (c) => {
+    const { id } = c.req.valid("param");
+    if (isBuiltInGrip(id)) return c.json({ error: "built-in grips cannot be changed" }, 400);
+    const userId = c.get("userId");
+    const existing = await repo.getHangGrip(c.env.DB, userId, id);
+    if (existing === null) return c.json({ deleted: false });
+    await repo.hideHangGrip(c.env.DB, userId, id);
+    return c.json({ deleted: true });
+  })
 
   .put(
     "/workouts/:id",

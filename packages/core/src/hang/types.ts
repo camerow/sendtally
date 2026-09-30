@@ -27,7 +27,8 @@ export type TimeField = "hangS" | "restS" | "setRestS";
 
 export type TimeUnits = Record<TimeField, TimeUnit>;
 
-export type Grip = { id: string; name: string; custom: boolean };
+/** A deleted custom grip is hidden, not removed: its sessions and trend keep its name. */
+export type Grip = { id: string; name: string; custom: boolean; hidden: boolean };
 
 export type Workout = Protocol & {
   id: string;

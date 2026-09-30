@@ -15,7 +15,8 @@ export type IconName =
   | "restart"
   | "skip"
   | "sound"
-  | "muted";
+  | "muted"
+  | "edit";
 
 const SCHEDULE =
   "M5 6h14a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2zM3 11h18M8 3v5M16 3v5";
@@ -33,6 +34,7 @@ const PATHS: Record<Exclude<IconName, "workouts" | "play">, string> = {
   skip: "M6 5l9 7-9 7zM18 5v14",
   sound: "M4 9h4l5-4v14l-5-4H4zM17 8.5a5 5 0 0 1 0 7M19.5 6a8.5 8.5 0 0 1 0 12",
   muted: "M4 9h4l5-4v14l-5-4H4zM17 9l4 6M21 9l-4 6",
+  edit: "M4 20h4L19 9l-4-4L4 16v4zM13.5 6.5l4 4",
 };
 
 export type IconProps = { name: IconName; color: string; size?: number; strokeWidth?: number };

@@ -35,6 +35,7 @@ export function mockActions(): MockActions {
   const done = (): Promise<void> => Promise.resolve();
   return {
     saveGrip: jest.fn(done),
+    deleteGrip: jest.fn(done),
     saveWorkout: jest.fn(done),
     setDefaultGrip: jest.fn(done),
     setLoads: jest.fn(done),

@@ -148,10 +148,17 @@ export const gripKey = (name: string): string => name.trim().replace(/\s+/g, " "
 
 export function builtInGripNamed(name: string): Grip | null {
   const id = BUILT_IN_GRIPS.find((g) => gripKey(BUILT_IN_GRIP_NAMES[g]) === gripKey(name));
-  return id === undefined ? null : { id, name: BUILT_IN_GRIP_NAMES[id], custom: false };
+  return id === undefined
+    ? null
+    : { id, name: BUILT_IN_GRIP_NAMES[id], custom: false, hidden: false };
 }
 
-export const gripOf = (row: HangGripRow): Grip => ({ id: row.id, name: row.name, custom: true });
+export const gripOf = (row: HangGripRow): Grip => ({
+  id: row.id,
+  name: row.name,
+  custom: true,
+  hidden: row.hidden,
+});
 
 export function workoutOf(row: HangWorkoutRow): Workout {
   return {

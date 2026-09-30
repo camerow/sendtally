@@ -1,6 +1,6 @@
 import React from "react";
 import { Text, View } from "react-native";
-import { byDate, hasLoad, type Workout } from "@sendtally/core/hang";
+import { byDate, hasLoad, type Grip, type Workout } from "@sendtally/core/hang";
 import { loadLabel, shortDate } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import { Sheet } from "../../components/Sheet";
@@ -9,6 +9,7 @@ import { useTheme } from "../../theme/ThemeContext";
 import { type } from "../../theme/type";
 import { useHangData } from "../data/HangDataContext";
 import { AddGrip } from "./AddGrip";
+import { GripEditSheet } from "./GripEditSheet";
 import { GripRow } from "./GripRow";
 
 export type GripPickerSheetProps = {
@@ -31,7 +32,9 @@ export function GripPickerSheet({
 }: GripPickerSheetProps): React.ReactElement | null {
   const c = useTheme();
   const { model } = useHangData();
+  const [editing, setEditing] = React.useState<Grip | null>(null);
   const unit = model.settings.units;
+  const shown = model.grips.filter((g) => !g.hidden || selected.includes(g.id));
 
   const pick = (id: string): void => {
     onPick(id);
@@ -39,6 +42,9 @@ export function GripPickerSheet({
   };
   const choose = (id: string): void => {
     if (!multi || !selected.includes(id)) pick(id);
+  };
+  const deleted = (id: string): void => {
+    if (multi && selected.includes(id)) onPick(id);
   };
 
   return (
@@ -58,7 +64,7 @@ export function GripPickerSheet({
         {multi ? t("hang.gripPickerMulti") : t("hang.gripPickerSingle")}
       </Text>
       <View style={{ gap: 8 }}>
-        {model.grips.map((g) => {
+        {shown.map((g) => {
           const logs = model.sessions
             .filter((s) => s.workoutId === workout.id && s.gripId === g.id)
             .sort(byDate);
@@ -82,11 +88,20 @@ export function GripPickerSheet({
               on={selected.includes(g.id)}
               multi={multi}
               onPress={() => pick(g.id)}
+              onEdit={g.custom ? () => setEditing(g) : undefined}
             />
           );
         })}
       </View>
       <AddGrip onAdded={choose} />
+      {editing !== null && (
+        <GripEditSheet
+          key={editing.id}
+          grip={editing}
+          onClose={() => setEditing(null)}
+          onDeleted={deleted}
+        />
+      )}
     </Sheet>
   );
 }

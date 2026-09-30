@@ -204,6 +204,13 @@ export const hang = {
   "hang.newGripName": "Nombre del nuevo agarre",
   "hang.newGripPlaceholder": "Añade el tuyo, p. ej. 3 dedos delante",
   "hang.add": "Añadir",
+  "hang.editGrip": "Editar agarre",
+  "hang.editGripAria": "Editar {grip}",
+  "hang.deleteGrip": "Borrar agarre",
+  "hang.deleteGripTitle": "¿Borrar {grip}?",
+  "hang.deleteGripBody":
+    "Sale de tus listas de agarres. Las sesiones hechas con él y su tendencia se quedan.",
+  "hang.gripNameTaken": "Ya tienes un agarre llamado {name}.",
 
   "hang.end": "Terminar",
   "hang.mute": "Silenciar",
