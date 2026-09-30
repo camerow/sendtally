@@ -21,3 +21,11 @@ minimumReleaseAgeExclude:
 overrides:
   react: "19.2.3"
   react-dom: "19.2.3"
+  # An optional peer of ws that allowBuilds never builds; present in one
+  # app's tree only, it split react-native into a variant per app.
+  utf-8-validate: "-"
+# One install of each native module per version across both Expo apps and
+# @sendtally/auth-native: without dedupePeers, optional peers nested a level
+# down give every importer its own react-native and expo variant, and Metro
+# bundles each of them (expo-doctor's duplicate check).
+dedupePeers: true
