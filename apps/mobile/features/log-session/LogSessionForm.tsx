@@ -419,6 +419,50 @@ export function LogSessionForm({
           </View>
         </View>
 
+        {timesOpen ? (
+          <View style={{ gap: 7 }}>
+            <View style={{ flexDirection: "row", gap: 8 }}>
+              <View style={{ flex: 1, gap: 7 }}>
+                <LabelText>{t("logSession.start")}</LabelText>
+                <DateTimeField
+                  mode="time"
+                  value={draft.startTime}
+                  label={t("logSession.start")}
+                  placeholder="-"
+                  testID="start-time"
+                  onChange={(startTime) => setDraft((d) => withStartTime(d, startTime))}
+                  onClear={() => setDraft((d) => ({ ...d, startTime: "" }))}
+                />
+              </View>
+              <View style={{ flex: 1, gap: 7 }}>
+                <LabelText>{t("logSession.end")}</LabelText>
+                <DateTimeField
+                  mode="time"
+                  value={draft.endTime}
+                  label={t("logSession.end")}
+                  placeholder="-"
+                  testID="end-time"
+                  onChange={(endTime) => setDraft((d) => ({ ...d, endTime }))}
+                  onClear={() => setDraft((d) => ({ ...d, endTime: "" }))}
+                />
+              </View>
+            </View>
+            <Text style={{ fontFamily: fonts.mono, fontSize: 11, color: colors.textMuted }}>
+              {t("logSession.timesHint")}
+            </Text>
+          </View>
+        ) : (
+          <Pressable
+            onPress={() => setAddingTimes(true)}
+            accessibilityRole="button"
+            style={press({ minHeight: 44, justifyContent: "center", alignSelf: "flex-start" })}
+          >
+            <Text style={{ fontFamily: fonts.monoMedium, fontSize: 12, color: colors.azureInk }}>
+              {t("logSession.addTimes")}
+            </Text>
+          </Pressable>
+        )}
+
         <View style={{ gap: 7 }}>
           <LabelText>{t("logSession.location")}</LabelText>
           <View style={{ flexDirection: "row", gap: 7 }}>
@@ -786,47 +830,6 @@ export function LogSessionForm({
               time: formatDate(autosave.savedAt, { hour: "2-digit", minute: "2-digit" }),
             })}
           </Text>
-        )}
-        {timesOpen ? (
-          <View style={{ gap: 7 }}>
-            <View style={{ flexDirection: "row", gap: 8 }}>
-              <View style={{ flex: 1, gap: 7 }}>
-                <LabelText>{t("logSession.start")}</LabelText>
-                <DateTimeField
-                  mode="time"
-                  value={draft.startTime}
-                  label={t("logSession.start")}
-                  placeholder="-"
-                  onChange={(startTime) => setDraft((d) => withStartTime(d, startTime))}
-                  onClear={() => setDraft((d) => ({ ...d, startTime: "" }))}
-                />
-              </View>
-              <View style={{ flex: 1, gap: 7 }}>
-                <LabelText>{t("logSession.end")}</LabelText>
-                <DateTimeField
-                  mode="time"
-                  value={draft.endTime}
-                  label={t("logSession.end")}
-                  placeholder="-"
-                  onChange={(endTime) => setDraft((d) => ({ ...d, endTime }))}
-                  onClear={() => setDraft((d) => ({ ...d, endTime: "" }))}
-                />
-              </View>
-            </View>
-            <Text style={{ fontFamily: fonts.mono, fontSize: 11, color: colors.textMuted }}>
-              {t("logSession.timesHint")}
-            </Text>
-          </View>
-        ) : (
-          <Pressable
-            onPress={() => setAddingTimes(true)}
-            accessibilityRole="button"
-            style={press({ minHeight: 44, justifyContent: "center", alignSelf: "flex-start" })}
-          >
-            <Text style={{ fontFamily: fonts.monoMedium, fontSize: 12, color: colors.azureInk }}>
-              {t("logSession.addTimes")}
-            </Text>
-          </Pressable>
         )}
         <View style={{ flexDirection: "row", gap: 10 }}>
           <Pressable

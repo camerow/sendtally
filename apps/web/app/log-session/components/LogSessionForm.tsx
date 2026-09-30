@@ -413,6 +413,41 @@ export function LogSessionForm({
               style={inputStyle}
             />
           </Field>
+          {timesOpen ? (
+            <div className="log-session-times-block">
+              <div className="log-session-times">
+                <Field label={t("logSession.startTime")}>
+                  <input
+                    type="time"
+                    value={draft.startTime}
+                    onChange={(e) => setDraft((d) => withStartTime(d, e.target.value))}
+                    className="log-session-control"
+                    style={inputStyle}
+                  />
+                </Field>
+                <Field label={t("logSession.endTime")}>
+                  <input
+                    type="time"
+                    value={draft.endTime}
+                    onChange={(e) => setDraft({ ...draft, endTime: e.target.value })}
+                    className="log-session-control"
+                    style={inputStyle}
+                  />
+                </Field>
+              </div>
+              <span style={{ ...monoLabel, textTransform: "none", letterSpacing: 0 }}>
+                {t("logSession.timesHint")}
+              </span>
+            </div>
+          ) : (
+            <button
+              type="button"
+              className="log-session-add-times"
+              onClick={() => setAddingTimes(true)}
+            >
+              {t("logSession.addTimes")}
+            </button>
+          )}
           <Field label={t("logSession.location")}>
             <div style={{ display: "flex", gap: 8 }}>
               {(["indoor", "outdoor"] as const).map((loc) => (
@@ -686,42 +721,6 @@ export function LogSessionForm({
           onClose={() => setAdding(null)}
           onSuggested={() => setAdding(null)}
         />
-      )}
-
-      {timesOpen ? (
-        <div className="log-session-times-block">
-          <div className="log-session-times">
-            <Field label={t("logSession.startTime")}>
-              <input
-                type="time"
-                value={draft.startTime}
-                onChange={(e) => setDraft((d) => withStartTime(d, e.target.value))}
-                className="log-session-control"
-                style={inputStyle}
-              />
-            </Field>
-            <Field label={t("logSession.endTime")}>
-              <input
-                type="time"
-                value={draft.endTime}
-                onChange={(e) => setDraft({ ...draft, endTime: e.target.value })}
-                className="log-session-control"
-                style={inputStyle}
-              />
-            </Field>
-          </div>
-          <span style={{ ...monoLabel, textTransform: "none", letterSpacing: 0 }}>
-            {t("logSession.timesHint")}
-          </span>
-        </div>
-      ) : (
-        <button
-          type="button"
-          className="log-session-add-times"
-          onClick={() => setAddingTimes(true)}
-        >
-          {t("logSession.addTimes")}
-        </button>
       )}
 
       <div className="log-session-actions">
