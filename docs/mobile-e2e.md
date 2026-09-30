@@ -32,6 +32,7 @@ Failures leave screenshots and the UI hierarchy under `~/.maestro/tests/<timesta
 ## In CI
 
 `.github/workflows/mobile-e2e.yml` runs the same flows on merges to `main` that touch the app or a package it bundles.
+It is paused on merges for now, while `areas-log-form` fails on CI's emulator; run it by hand with `workflow_dispatch` until it is green and the push trigger is back.
 It is a health signal, not a merge gate: twenty minutes in front of every pull request bought too little to be worth the wait.
 Before merging something risky, run the flows locally as above, or fire the workflow by hand from the Actions tab.
 Android only: the emulator runs on a Linux runner with KVM at the 1x minute rate, where an iOS simulator would need a macOS runner at 10x.
