@@ -6,6 +6,7 @@ How a commit on `main` becomes a build in TestFlight and Play internal testing, 
 
 Most commits never produce a build.
 `.github/workflows/mobile-release.yml` runs on a push to `main` that touches `apps/mobile/**`, any package the app consumes, or `pnpm-lock.yaml`, and on `workflow_dispatch`.
+Both Expo apps share this pipeline, which lives in `.github/workflows/mobile-app-release.yml`; each app's workflow only sets the paths that trigger it (see "hangtally" below).
 It reuses `checks.yml`, so nothing ships past failing types, tests, or formatting.
 Then it takes one of two paths, decided by the fingerprint.
 
@@ -79,6 +80,21 @@ A release builds every platform in that variable, even when only one of them dri
 
 The pipeline stops at TestFlight and the Play internal track.
 Promoting to App Store review or Play production stays a manual decision in each console.
+
+## hangtally
+
+`apps/hangtally` ships through the same pipeline from `.github/workflows/hangtally-release.yml`, triggered by `apps/hangtally/**` and the same shared packages.
+Everything above holds with `hangtally` in place of `mobile`: its tags are `hangtally-vX.Y.Z`, its release commits are `chore(hangtally): release vX.Y.Z`, and its version lives in `apps/hangtally/app.json`.
+Release notes and version bumps leave out commits that only touch the other app, so a sendtally-only change never bumps hangtally and the reverse.
+A commit to a shared package reaches both apps and appears in both changelogs.
+
+The first release has no tag to count from, so it ships the version `app.json` already names instead of bumping it.
+hangtally builds iOS only, because it has an App Store Connect app (`6817507406`) and no Play listing yet.
+Set the repository variable `HANGTALLY_PLATFORMS` to `all` once the Play listing exists.
+Its EAS project is `hangtally` under `chalk-and-circuits`, and `apps/hangtally/fingerprint.config.js` keeps the version out of the fingerprint for the same reason as sendtally's.
+
+Pull request previews cover both apps: `mobile-preview` in `ci.yml` runs one leg per app and keeps one comment per app, told apart by its heading.
+A hangtally preview needs a hangtally development build on the phone, built with `eas build --profile development --platform android` from `apps/hangtally`.
 
 ## Previewing a pull request on a phone
 

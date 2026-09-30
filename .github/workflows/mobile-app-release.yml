@@ -1,0 +1,258 @@
+name: Mobile app release
+
+# The release pipeline for one Expo app under apps/, called by each app's own
+# workflow (mobile-release.yml, hangtally-release.yml) with its path filter.
+# Every push publishes an EAS Update, which costs no build minutes. A store
+# build only happens when the fingerprint moved - meaning the native layer
+# changed and no installed build can receive the update - or when the calling
+# workflow is dispatched by hand.
+#
+# `app` names the directory under apps/ and doubles as the tag prefix
+# (<app>-vX.Y.Z) and the scope of the release commit. `other-app` is left out
+# of the release notes and the version bump, so a commit that only touches the
+# other app never shows up in this one's changelog.
+
+on:
+  workflow_call:
+    inputs:
+      app:
+        type: string
+        required: true
+      title:
+        type: string
+        required: true
+      other-app:
+        type: string
+        required: true
+      platforms:
+        type: string
+        required: true
+
+jobs:
+  checks:
+    uses: ./.github/workflows/checks.yml
+
+  update:
+    needs: checks
+    # The release job pushes its version bump to main. A GITHUB_TOKEN push does
+    # not trigger workflows, so that commit does not arrive back here - but
+    # swap in a personal access token or a GitHub App (the usual fix when
+    # branch protection blocks the bot) and it would, and every pass would bump,
+    # build and push again until the build quota was gone. Skipping the release
+    # commit by name makes that safe whichever token does the push.
+    if: "!startsWith(github.event.head_commit.message, format('chore({0}): release v', inputs.app))"
+    runs-on: ubuntu-latest
+    # gh release edit writes to the release the update landed on.
+    permissions:
+      contents: write
+    outputs:
+      needs-build: ${{ steps.fingerprint.outputs.needs-build }}
+    steps:
+      # Full history: the release body is rebuilt from the <app>-v* tags.
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+      - run: pnpm install --frozen-lockfile
+
+      # The runtime version is the fingerprint, so a production build with a
+      # matching fingerprint hash is exactly the set of installs that can run
+      # an update published from this commit.
+      - name: Does a production build match this fingerprint?
+        id: fingerprint
+        working-directory: apps/${{ inputs.app }}
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          PLATFORMS: ${{ inputs.platforms }}
+        run: |
+          set -euo pipefail
+          platforms=${PLATFORMS/all/android ios}
+          needs_build=false
+          hashes=
+          for platform in $platforms; do
+            hash=$(eas fingerprint:generate --platform "$platform" \
+              --build-profile production --json --non-interactive | jq -r .hash)
+            matches=$(eas build:list --platform "$platform" --channel production \
+              --status finished --fingerprint-hash "$hash" --limit 1 \
+              --json --non-interactive | jq length)
+            echo "$platform fingerprint $hash matches $matches production build(s)"
+            hashes="${hashes:+$hashes, }$platform \`$hash\`"
+            if [ "$matches" = 0 ]; then needs_build=true; fi
+          done
+          echo "needs-build=$needs_build" >> "$GITHUB_OUTPUT"
+          echo "hashes=$hashes" >> "$GITHUB_OUTPUT"
+
+      - name: Publish update
+        if: steps.fingerprint.outputs.needs-build == 'false' && github.event_name == 'push'
+        working-directory: apps/${{ inputs.app }}
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          # Not github.event.head_commit.message: pull requests land here as
+          # merge commits, so that is "Merge pull request #126 from ...". The
+          # newest non-merge ancestor is the conventional commit that the
+          # release notes quote, which is what the dashboard entry should say.
+          eas update --channel production --environment production --non-interactive \
+            --message "$(git log -1 --no-merges --format='%h %s')"
+
+      # An update ships to the installs running the latest store release, so it
+      # belongs in that release's notes rather than in the next one's. The body
+      # is rebuilt from the tags each time instead of appended to, so a re-run
+      # cannot double up and a release that is edited by hand is not clobbered
+      # into nonsense.
+      - name: Fold the update into the live release
+        if: steps.fingerprint.outputs.needs-build == 'false' && github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HASHES: ${{ steps.fingerprint.outputs.hashes }}
+          APP: ${{ inputs.app }}
+          OTHER: ${{ inputs.other-app }}
+        run: |
+          set -euo pipefail
+          tag=$(git tag --list "$APP-v*" --sort=-v:refname | head -1)
+          if [ -z "$tag" ]; then echo "No $APP-v* tag yet, nothing to edit"; exit 0; fi
+          previous=$(git tag --list "$APP-v*" --sort=-v:refname | sed -n 2p)
+          .github/scripts/release-notes.sh "${previous:+$previous..}$tag" . ':!apps/web' ":!apps/$OTHER" \
+            > "$RUNNER_TEMP/notes.md"
+          # A chore or test commit also triggers this workflow and produces no
+          # notes, so the heading only goes in when there is something under it.
+          ota=$(.github/scripts/release-notes.sh "$tag..HEAD" . ':!apps/web' ":!apps/$OTHER")
+          if [ -n "$ota" ]; then
+            printf '## Over the air since %s\n\nDelivered to installs whose runtime fingerprint is %s.\n\n%s\n' \
+              "$tag" "$HASHES" "$ota" >> "$RUNNER_TEMP/notes.md"
+          fi
+          gh release edit "$tag" --notes-file "$RUNNER_TEMP/notes.md"
+
+      - name: Explain why a build is needed
+        if: steps.fingerprint.outputs.needs-build == 'true'
+        run: |
+          echo "### Native change detected" >> "$GITHUB_STEP_SUMMARY"
+          echo "No production build carries this fingerprint, so an update" \
+            "would reach nobody. Building and submitting instead." >> "$GITHUB_STEP_SUMMARY"
+
+  release:
+    needs: update
+    if: needs.update.outputs.needs-build == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+      - run: pnpm install --frozen-lockfile
+
+      # eas.json sets appVersionSource "remote", so EAS owns the build number.
+      # The semver in app.json is the only part we choose, and conventional
+      # commits since the last release choose it.
+      - name: Derive the next version
+        id: version
+        env:
+          APP: ${{ inputs.app }}
+          OTHER: ${{ inputs.other-app }}
+        run: |
+          set -euo pipefail
+          previous=$(git tag --list "$APP-v*" --sort=-v:refname | head -1)
+          range=${previous:+$previous..}HEAD
+          version=$(jq -r .expo.version "apps/$APP/app.json")
+          if [ -z "$previous" ]; then
+            # The first release ships the version app.json already names.
+            next=$version bump=first
+          elif [ "$previous" != "$APP-v$version" ]; then
+            # A failed release already pushed its bump; finish that version.
+            next=$version bump=retry
+          else
+            read -r next bump < <(.github/scripts/next-version.sh "$version" "$range" \
+              . ':!apps/web' ":!apps/$OTHER")
+          fi
+          echo "Releasing $version -> $next ($bump) since ${previous:-the first commit}"
+          echo "version=$next" >> "$GITHUB_OUTPUT"
+          .github/scripts/release-notes.sh "$range" . ':!apps/web' ":!apps/$OTHER" \
+            > "$RUNNER_TEMP/notes.md"
+
+      # eas.json sets requireCommit, so the bump has to land before the build.
+      - name: Commit the version bump
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          APP: ${{ inputs.app }}
+        run: |
+          set -euo pipefail
+          config="apps/$APP/app.json"
+          jq --arg v "$VERSION" '.expo.version = $v' "$config" > app.json.tmp
+          mv app.json.tmp "$config"
+          pnpm exec prettier --write "$config"
+          git diff --quiet "$config" && exit 0
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -am "chore($APP): release v$VERSION"
+          # The other app's release can push to main while this one runs.
+          git pull --rebase origin main
+          git push origin HEAD:main
+
+      - name: Write store credentials
+        working-directory: apps/${{ inputs.app }}
+        env:
+          GOOGLE_SERVICE_ACCOUNT_KEY: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_KEY }}
+          ASC_API_KEY: ${{ secrets.ASC_API_KEY }}
+        run: |
+          umask 077
+          printf '%s' "$GOOGLE_SERVICE_ACCOUNT_KEY" > google-service-account.json
+          printf '%s' "$ASC_API_KEY" > asc-api-key.p8
+
+      # No --no-wait: the job holds until EAS finishes so a failed build or a
+      # rejected upload fails the run instead of passing silently.
+      - name: Build and submit
+        working-directory: apps/${{ inputs.app }}
+        timeout-minutes: 90
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          GOOGLE_SERVICE_ACCOUNT_KEY_PATH: ./google-service-account.json
+          ASC_API_KEY_PATH: ./asc-api-key.p8
+          ASC_API_KEY_ID: ${{ secrets.ASC_API_KEY_ID }}
+          ASC_API_KEY_ISSUER_ID: ${{ secrets.ASC_API_KEY_ISSUER_ID }}
+          # Apple access at build time lets EAS sync entitlements such as Sign in
+          # with Apple onto the bundle id and regenerate the provisioning profile;
+          # without it a new capability fails signing.
+          EXPO_ASC_API_KEY_PATH: ./asc-api-key.p8
+          EXPO_ASC_KEY_ID: ${{ secrets.ASC_API_KEY_ID }}
+          EXPO_ASC_ISSUER_ID: ${{ secrets.ASC_API_KEY_ISSUER_ID }}
+          EXPO_APPLE_TEAM_ID: GUMXLRF3B6
+          EXPO_APPLE_TEAM_TYPE: COMPANY_OR_ORGANIZATION
+        run: >
+          eas build
+          --platform ${{ inputs.platforms }}
+          --profile production
+          --message "v${{ steps.version.outputs.version }}"
+          --auto-submit
+          --non-interactive
+
+      # Tagged only once the stores have the build, so a tag always names
+      # something that shipped.
+      - name: Create the GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+          APP: ${{ inputs.app }}
+          TITLE: ${{ inputs.title }}
+        run: >
+          gh release create "$APP-v$VERSION"
+          --title "$TITLE v$VERSION"
+          --target "$(git rev-parse HEAD)"
+          --notes-file "$RUNNER_TEMP/notes.md"
