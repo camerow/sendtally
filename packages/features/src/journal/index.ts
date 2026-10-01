@@ -9,6 +9,7 @@ export {
   type TripSpan,
 } from "./types";
 export {
+  bodyPlaceholder,
   dayLabel,
   daysSince,
   displayKind,

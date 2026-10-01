@@ -16,6 +16,7 @@ export const journal = {
   "journal.entryTitlePlaceholder": "Añade un título",
   "journal.body": "Entrada",
   "journal.bodyPlaceholder": "Reflexiona sobre tu escalada",
+  "journal.bodyPlaceholderInjury": "Resume cómo va tu lesión hoy.",
   "journal.recent": "Recientes",
   "journal.saveEntry": "Guardar entrada",
   "journal.saveFailed": "No se pudo guardar esta entrada. Inténtalo otra vez.",

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { JournalEntry, SessionRow } from "@sendtally/api-client";
 import {
+  bodyPlaceholder,
   daysSince,
   draftFromEntry,
   draftIsEmpty,
@@ -343,5 +344,14 @@ describe("entryHasTitle", () => {
   it("ignores whitespace", () => {
     expect(entryHasTitle(entry({ title: "  " }))).toBe(false);
     expect(entryHasTitle(entry({ title: "Pulley" }))).toBe(true);
+  });
+});
+
+describe("bodyPlaceholder", () => {
+  it("asks an injury about the injury and a journal entry about climbing", () => {
+    expect(bodyPlaceholder(emptyDraft("injury", "2026-05-30"))).toBe(
+      "Summarize how your injury is doing today."
+    );
+    expect(bodyPlaceholder(emptyDraft("journal", "2026-05-30"))).toBe("Reflect on your climbing");
   });
 });

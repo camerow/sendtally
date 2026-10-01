@@ -245,6 +245,11 @@ export function isUpdateDraft(draft: EntryDraft): boolean {
   return draft.parentId !== "";
 }
 
+export function bodyPlaceholder(draft: EntryDraft): string {
+  if (isUpdateDraft(draft)) return t("journal.updatePlaceholder");
+  return t(draft.kind === "injury" ? "journal.bodyPlaceholderInjury" : "journal.bodyPlaceholder");
+}
+
 export function entryHasTitle(entry: JournalEntry): boolean {
   return (entry.title?.trim() ?? "") !== "";
 }
