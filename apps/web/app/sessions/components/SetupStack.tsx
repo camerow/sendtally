@@ -26,23 +26,25 @@ export function SetupStack({
       <span className="sessions-setup-eyebrow">
         {t("gyms.setupProgress", { done: total - cards.length, total })}
       </span>
-      {cards.map((card) => (
-        <div key={card.key} className="sessions-setup">
-          <span className="sessions-setup-text">
-            <span className="sessions-setup-eyebrow">{card.eyebrow}</span>
-            <span className="sessions-setup-title">{card.title}</span>
-            <span className="sessions-setup-body">{card.body}</span>
-          </span>
-          <span className="sessions-setup-actions">
-            <Link to={card.to} className="sessions-setup-connect">
-              {card.action}
-            </Link>
-            <button type="button" onClick={card.onDismiss} className="sessions-setup-later">
-              {t("sessions.notNow")}
-            </button>
-          </span>
-        </div>
-      ))}
+      <div className="sessions-setup-track">
+        {cards.map((card) => (
+          <div key={card.key} className="sessions-setup">
+            <span className="sessions-setup-text">
+              <span className="sessions-setup-eyebrow">{card.eyebrow}</span>
+              <span className="sessions-setup-title">{card.title}</span>
+              <span className="sessions-setup-body">{card.body}</span>
+            </span>
+            <span className="sessions-setup-actions">
+              <Link to={card.to} className="sessions-setup-connect">
+                {card.action}
+              </Link>
+              <button type="button" onClick={card.onDismiss} className="sessions-setup-later">
+                {t("sessions.notNow")}
+              </button>
+            </span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

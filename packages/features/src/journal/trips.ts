@@ -99,7 +99,9 @@ export function tripPyramid(days: Array<TripDay<SessionWithClimbs>>): TrendTileV
     { scope: null, range: "all", grade: null, setting: "all", gymId: null, tags: [] }
   );
   const tile = groups.flatMap((g) => g.tiles).find((x) => x.id === "pyramid");
-  return tile === undefined || tile.points.length === 0 ? null : tile;
+  return tile === undefined || tile.points.length === 0
+    ? null
+    : { ...tile, caption: t("trends.sendsByGrade") };
 }
 
 export function tripStats(days: TripDay[]): TripStat[] {

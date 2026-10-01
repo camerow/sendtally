@@ -40,7 +40,7 @@ export function TripDetail({
         <StatStrip stats={tripStats(days)} />
       </div>
       {pyramid !== null && (
-        <div className="journal-card">
+        <div className="trends trip-pyramid">
           <TrendTile tile={pyramid} />
         </div>
       )}
