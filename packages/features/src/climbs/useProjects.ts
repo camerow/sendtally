@@ -93,14 +93,16 @@ export function useProject(api: SendtallyApi, slug: string): ProjectFeature {
 
   const addNote = React.useCallback(
     async (day: string, note: string): Promise<void> => {
-      if (state.status !== "ready" || loaded.status !== "ready") return;
+      if (state.status !== "ready" || loaded.status !== "ready")
+        throw new Error("project not loaded");
       const onDay = state.data.sessions.find((s) => s.day === day);
       if (onDay !== undefined) {
         await api.setClimbNote(onDay.fingerprint, slug, joinNotes(onDay.note, note));
         return;
       }
       const climb = loaded.data[0].find((c) => c.slug === slug);
-      if (climb !== undefined) await logClimbOnDay(api, noteAttempt(climb, note), day, []);
+      if (climb === undefined) throw new Error("project not found");
+      await logClimbOnDay(api, noteAttempt(climb, note), day, []);
     },
     [api, slug, state, loaded]
   );
