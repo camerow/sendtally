@@ -249,10 +249,9 @@ export function projectsOverview(
 }
 
 /** A day with no session of this project yet logs one attempt, which is what carries the note. */
-export function noteAttempt(climb: ClimbSummary, note: string): ClimbDraft {
+export function noteAttempt(climb: ClimbSummary, note: string): Omit<ClimbDraft, "key"> {
   const scale = climb.grade?.scale ?? (climb.discipline === "route" ? "yds" : "v");
   return {
-    key: "climb-1",
     scale,
     grade: climbDraftGrade(climb, scale),
     name: climb.name,

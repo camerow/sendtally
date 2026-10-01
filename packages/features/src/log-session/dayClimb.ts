@@ -42,7 +42,7 @@ function dayInput(session: SessionDetail, draft: LogSessionDraft): LogSessionInp
  */
 export async function logClimbOnDay(
   api: DayClimbApi,
-  climb: ClimbDraft,
+  climb: Omit<ClimbDraft, "key">,
   date: string,
   gyms: readonly Gym[]
 ): Promise<void> {
