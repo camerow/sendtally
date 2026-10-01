@@ -1,20 +1,20 @@
 import { router } from "expo-router";
 import React from "react";
 import { Text, View } from "react-native";
-import type { JournalEntry, SessionRow as SessionRowData } from "@sendtally/api-client";
-import { formatNumber, t } from "@sendtally/features/i18n";
+import type { JournalEntry, SessionWithClimbs } from "@sendtally/api-client";
+import { t } from "@sendtally/features/i18n";
 import {
-  effortDayLabel,
-  effortLabelled,
   entryTitle,
   injuriesCarriedIn,
   tripDays,
-  tripEffort,
+  tripPyramid,
   tripStats,
 } from "@sendtally/features/journal";
 import { sessionTitle } from "@sendtally/features/sessions";
+import { climbMetaLabel, climbVMs } from "@sendtally/features/session-detail";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { SessionRow } from "../sessions/SessionRow";
+import { TrendTile } from "../trends/TrendTile";
 import { EntryRow } from "./EntryRow";
 
 const label = {
@@ -37,7 +37,7 @@ const card = {
 const openEntry = (entry: JournalEntry): void =>
   router.push({ pathname: "/journal/[id]", params: { id: entry.parent_id ?? entry.id } });
 
-const openSession = (session: SessionRowData): void =>
+const openSession = (session: SessionWithClimbs): void =>
   router.push({ pathname: "/session/[fingerprint]", params: { fingerprint: session.fingerprint } });
 
 /** Everything logged inside a trip's dates, a day at a time. */
@@ -47,14 +47,13 @@ export function TripBody({
   entries,
 }: {
   trip: JournalEntry;
-  sessions: SessionRowData[];
+  sessions: SessionWithClimbs[];
   entries: JournalEntry[];
 }): React.ReactElement {
   const days = React.useMemo(() => tripDays(trip, sessions, entries), [trip, sessions, entries]);
   const logged = days.filter((d) => d.sessions.length + d.entries.length + d.updates.length > 0);
   const carriedIn = injuriesCarriedIn(trip, entries);
-  const effort = tripEffort(days);
-  const labelled = effortLabelled(effort.length);
+  const pyramid = tripPyramid(days);
   const stats = tripStats(days);
   const updateOn = (update: JournalEntry): string => {
     const parent = entries.find((e) => e.id === update.parent_id);
@@ -99,50 +98,7 @@ export function TripBody({
         ))}
       </View>
 
-      {effort.some((rpe) => rpe !== null) && (
-        <View style={{ ...card, paddingHorizontal: 16 }}>
-          <Text style={label}>{t("journal.effortByDay")}</Text>
-          <View
-            style={{
-              flexDirection: "row",
-              gap: labelled ? 6 : 2,
-              height: 124,
-              alignItems: "flex-end",
-            }}
-          >
-            {effort.map((rpe, i) => (
-              <View key={i} style={{ flex: 1, alignItems: "center", gap: 6 }}>
-                {labelled && rpe !== null && <Text style={label}>{formatNumber(rpe)}</Text>}
-                <View
-                  style={{
-                    width: "100%",
-                    maxWidth: 26,
-                    height: rpe === null ? 3 : rpe * 8,
-                    borderRadius: rpe === null ? 2 : 4,
-                    backgroundColor: rpe === null ? "rgba(64,63,76,0.16)" : colors.azure,
-                  }}
-                />
-                <Text
-                  numberOfLines={1}
-                  style={{ ...label, lineHeight: 12, minHeight: 12, overflow: "visible" }}
-                >
-                  {effortDayLabel(i, effort.length)}
-                </Text>
-              </View>
-            ))}
-          </View>
-          <Text
-            style={{
-              fontFamily: fonts.sans,
-              fontSize: 13,
-              lineHeight: 18,
-              color: colors.textMuted,
-            }}
-          >
-            {t("journal.effortByDayNote")}
-          </Text>
-        </View>
-      )}
+      {pyramid !== null && <TrendTile tile={pyramid} />}
 
       {carriedIn.length > 0 && (
         <View style={card}>
@@ -210,12 +166,46 @@ export function TripBody({
             <EntryRow key={entry.id} entry={entry} onPress={() => openEntry(entry)} />
           ))}
           {day.sessions.map((session) => (
-            <SessionRow
-              key={session.fingerprint}
-              session={session}
-              title={sessionTitle(session)}
-              onPress={() => openSession(session)}
-            />
+            <React.Fragment key={session.fingerprint}>
+              <SessionRow
+                session={session}
+                title={sessionTitle(session)}
+                onPress={() => openSession(session)}
+              />
+              {climbVMs(session.climbs).map((c) => (
+                <View
+                  key={c.n}
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "baseline",
+                    gap: 10,
+                    paddingVertical: 5,
+                    paddingLeft: 30,
+                    paddingRight: 18,
+                  }}
+                >
+                  <Text
+                    numberOfLines={1}
+                    style={{
+                      flex: 1,
+                      fontFamily: fonts.sansMedium,
+                      fontSize: 14,
+                      color: colors.gunmetal,
+                    }}
+                  >
+                    {c.name}
+                  </Text>
+                  {c.endurance === undefined && (
+                    <Text style={{ ...label, textTransform: "none" }}>{climbMetaLabel(c)}</Text>
+                  )}
+                  <Text
+                    style={{ fontFamily: fonts.monoSemiBold, fontSize: 13, color: colors.gunmetal }}
+                  >
+                    {c.gradeLabel}
+                  </Text>
+                </View>
+              ))}
+            </React.Fragment>
           ))}
           {day.updates.map((update) => (
             <EntryRow

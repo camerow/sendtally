@@ -1,7 +1,7 @@
 import React from "react";
 import type { LinksFunction, LoaderFunctionArgs } from "react-router";
 import { Link, redirect, useLoaderData, useNavigate } from "react-router";
-import type { EntryDetail, JournalEntry, SessionRow } from "@sendtally/api-client";
+import type { EntryDetail, JournalEntry, SessionWithClimbs } from "@sendtally/api-client";
 import { t } from "@sendtally/features/i18n";
 import {
   dayLabel,
@@ -22,6 +22,7 @@ import { SeverityChart } from "../journal/components/SeverityChart";
 import { TripDetail } from "../journal/components/TripDetail";
 import journalStyles from "../journal/journal.css?url";
 import sessionsStyles from "../sessions/sessions.css?url";
+import trendsStyles from "../trends/trends.css?url";
 import { cloudflareContext } from "../lib/cloudflare-context";
 import { orNotFound, requireApi } from "../lib/api.server";
 import { useClientApi } from "../lib/useClientApi";
@@ -29,19 +30,20 @@ import { useClientApi } from "../lib/useClientApi";
 export const links: LinksFunction = () => [
   { rel: "stylesheet", href: sessionsStyles },
   { rel: "stylesheet", href: journalStyles },
+  { rel: "stylesheet", href: trendsStyles },
 ];
 
 export async function loader(args: LoaderFunctionArgs): Promise<{
   apiUrl: string;
   entry: EntryDetail;
-  sessions: SessionRow[];
+  sessions: SessionWithClimbs[];
   entries: JournalEntry[];
 }> {
   const api = await requireApi(args);
   const id = args.params["id"] ?? "";
   const [{ entry }, { sessions }, { entries }] = await Promise.all([
     orNotFound(api.entry(id)),
-    api.sessions(),
+    api.sessionsWithClimbs(),
     api.entries(),
   ]);
   // An update is read on its thread, never on a page of its own.

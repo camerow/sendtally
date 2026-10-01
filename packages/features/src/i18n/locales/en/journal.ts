@@ -76,8 +76,6 @@ export const journal = {
   "journal.tripDaysClimbed": "Days climbed",
   "journal.tripAverageRpe": "Avg effort",
   "journal.dayByDay": "Day by day",
-  "journal.effortByDay": "Effort by day",
-  "journal.effortByDayNote": "Hardest effort each day. A day with no session is a dash.",
   "journal.alreadyOngoing": "Already ongoing",
   "journal.carriedInNote": "Started before this trip, so it stays on its own date in the log.",
   "journal.updateOn": "Update on {title}",

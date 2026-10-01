@@ -76,8 +76,6 @@ export const journal = {
   "journal.tripDaysClimbed": "Días escalados",
   "journal.tripAverageRpe": "Esfuerzo medio",
   "journal.dayByDay": "Día a día",
-  "journal.effortByDay": "Esfuerzo por día",
-  "journal.effortByDayNote": "El esfuerzo más alto de cada día. Un día sin sesión es un guion.",
   "journal.alreadyOngoing": "Ya en curso",
   "journal.carriedInNote":
     "Empezó antes de este viaje, así que se queda en su propia fecha en el registro.",
