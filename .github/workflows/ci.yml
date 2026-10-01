@@ -14,7 +14,7 @@ jobs:
   checks:
     uses: ./.github/workflows/checks.yml
 
-  # The mobile release derives its semantic version from the commit subjects
+  # The mobile releases derive their semantic versions from the commit subjects
   # since the last tag, so an unconventional commit does not just read badly -
   # it silently downgrades a release to a patch bump.
   commits:
@@ -76,7 +76,8 @@ jobs:
   # so a pull request that only moves JavaScript can be published as an update
   # and loaded by the development build already on the phone. When the
   # fingerprint moves, no installed build can run it and the job says so
-  # instead of publishing something unreachable.
+  # instead of publishing something unreachable. One leg per app, each with
+  # its own comment, found again by its heading on the next push.
   mobile-preview:
     needs: checks
     if: github.actor != 'dependabot[bot]'
@@ -84,6 +85,16 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - app: mobile
+            title: Mobile
+            project: sendtally
+          - app: hangtally
+            title: hangtally
+            project: hangtally
     steps:
       - uses: actions/checkout@v4
         with:
@@ -94,11 +105,12 @@ jobs:
         env:
           BASE: ${{ github.event.pull_request.base.sha }}
           HEAD: ${{ github.event.pull_request.head.sha }}
+          APP: ${{ matrix.app }}
         run: |
           set -euo pipefail
           changed=$(git diff --name-only "$BASE" "$HEAD" -- \
-            apps/mobile packages/core packages/design packages/features \
-            packages/api-client pnpm-lock.yaml)
+            "apps/$APP" packages/api-client packages/auth-native packages/core \
+            packages/design packages/features pnpm-lock.yaml)
           if [ -n "$changed" ]; then echo "yes=true"; else echo "yes=false"; fi >> "$GITHUB_OUTPUT"
 
       - uses: pnpm/action-setup@v4
@@ -119,7 +131,7 @@ jobs:
       - name: Can an installed development build run this?
         id: fingerprint
         if: steps.touched.outputs.yes == 'true'
-        working-directory: apps/mobile
+        working-directory: apps/${{ matrix.app }}
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
         run: |
@@ -138,7 +150,7 @@ jobs:
       - name: Publish the update
         id: update
         if: steps.fingerprint.outputs.reachable == 'true'
-        working-directory: apps/mobile
+        working-directory: apps/${{ matrix.app }}
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
           TITLE: ${{ github.event.pull_request.title }}
@@ -161,11 +173,24 @@ jobs:
           BRANCH: ${{ github.event.pull_request.head.ref }}
           GROUP: ${{ steps.update.outputs.group }}
           HASH: ${{ steps.fingerprint.outputs.hash }}
+          APP: ${{ matrix.app }}
+          TITLE: ${{ matrix.title }}
+          PROJECT: ${{ matrix.project }}
         run: |
           set -euo pipefail
+          heading="### $TITLE preview"
           if [ -n "${GROUP:-}" ]; then
-            body=$(printf '### Mobile preview\n\n**[Open this pull request in the app](https://expo.dev/accounts/chalk-and-circuits/projects/sendtally/updates/%s)** - the page hands off to the development build on the phone you open it from.\n\nOr open the app and pick `%s` under Extensions, EAS Update, which lists every open branch.\n\nIt runs against `api-staging.sendtally.com` on the dev Clerk instance, so it is a separate sign-in from the store app and a separate, empty logbook.\n' "$GROUP" "$BRANCH")
+            body=$(printf '%s\n\n**[Open this pull request in the app](https://expo.dev/accounts/chalk-and-circuits/projects/%s/updates/%s)** - the page hands off to the development build on the phone you open it from.\n\nOr open the app and pick `%s` under Extensions, EAS Update, which lists every open branch.\n\nIt runs against `api-staging.sendtally.com` on the dev Clerk instance, so it is a separate sign-in from the store app and a separate, empty logbook.\n' "$heading" "$PROJECT" "$GROUP" "$BRANCH")
           else
-            body=$(printf '### Mobile preview\n\nNo update published: the native fingerprint moved to `%s`, and no finished development build carries it, so an update would reach nothing.\n\nRun `eas build --profile development --platform android` from `apps/mobile` and install the result to preview this branch.\n' "$HASH")
+            body=$(printf '%s\n\nNo update published: the native fingerprint moved to `%s`, and no finished development build carries it, so an update would reach nothing.\n\nRun `eas build --profile development --platform android` from `apps/%s` and install the result to preview this branch.\n' "$heading" "$HASH" "$APP")
           fi
-          printf '%s' "$body" | gh pr comment "$PR" --body-file - --edit-last --create-if-none
+          # Both legs comment as the same bot, so --edit-last would have each
+          # overwrite the other's. The heading tells them apart instead.
+          id=$(gh api "repos/$GITHUB_REPOSITORY/issues/$PR/comments" --paginate \
+            --jq ".[] | select(.user.login == \"github-actions[bot]\" and (.body | startswith(\"$heading\n\"))) | .id" \
+            | tail -1)
+          if [ -n "$id" ]; then
+            gh api --method PATCH "repos/$GITHUB_REPOSITORY/issues/comments/$id" -f body="$body" > /dev/null
+          else
+            gh pr comment "$PR" --body "$body"
+          fi

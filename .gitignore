@@ -22,3 +22,5 @@ apps/mobile/expo-env.d.ts
 apps/hangtally/expo-env.d.ts
 apps/hangtally/ios/
 apps/hangtally/android/
+apps/hangtally/google-service-account.json
+apps/hangtally/asc-api-key.p8

@@ -22,6 +22,8 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm exec expo install --fix
         working-directory: apps/mobile
+      - run: pnpm exec expo install --fix
+        working-directory: apps/hangtally
       - name: Open pull request
         env:
           GH_TOKEN: ${{ github.token }}
@@ -35,4 +37,4 @@ jobs:
           git push -f origin "$BRANCH"
           gh pr view "$BRANCH" --json state -q .state 2>/dev/null | grep -q OPEN ||
             gh pr create --head "$BRANCH" --title "fix(mobile): bump Expo SDK patch versions" \
-              --body "Weekly \`expo install --fix\` in \`apps/mobile\` so expo-doctor stays green."
+              --body "Weekly \`expo install --fix\` in \`apps/mobile\` and \`apps/hangtally\` so expo-doctor stays green."

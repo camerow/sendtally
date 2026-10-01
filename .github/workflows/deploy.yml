@@ -96,14 +96,14 @@ jobs:
           set -euo pipefail
           previous=$(git tag --list 'web-v*' --sort=-v:refname | head -1)
           range=${previous:+$previous..}HEAD
-          # Mobile-only commits deploy nothing here, so they release nothing.
-          .github/scripts/release-notes.sh "$range" . ':!apps/mobile' > notes.md
+          # App-only commits deploy nothing here, so they release nothing.
+          .github/scripts/release-notes.sh "$range" . ':!apps/mobile' ':!apps/hangtally' > notes.md
           if [ ! -s notes.md ]; then
             echo "Nothing user-facing since ${previous:-the first commit}; no release."
             echo "skip=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          read -r next bump < <(.github/scripts/next-version.sh "${previous#web-v}" "$range" . ':!apps/mobile')
+          read -r next bump < <(.github/scripts/next-version.sh "${previous#web-v}" "$range" . ':!apps/mobile' ':!apps/hangtally')
           echo "Releasing web-v$next ($bump) since ${previous:-the first commit}"
           echo "version=$next" >> "$GITHUB_OUTPUT"
 
