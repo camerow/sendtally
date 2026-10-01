@@ -98,7 +98,11 @@ export function TripBody({
         ))}
       </View>
 
-      {pyramid !== null && <TrendTile tile={pyramid} />}
+      {pyramid !== null && (
+        <View style={{ ...card, paddingVertical: 0, gap: 0 }}>
+          <TrendTile tile={pyramid} />
+        </View>
+      )}
 
       {carriedIn.length > 0 && (
         <View style={card}>
