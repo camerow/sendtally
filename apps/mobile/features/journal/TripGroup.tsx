@@ -21,6 +21,7 @@ import { Icon } from "../../components/Icon";
 import { press } from "../../lib/press";
 import { EntryRow, entryRowHeight } from "./EntryRow";
 import { EntryKindChip } from "./EntryKindChip";
+import { HANG_ROW_HEIGHT, HangRow } from "../sessions/HangRow";
 import { SessionRow, sessionRowHeight } from "../sessions/SessionRow";
 import { ROW_TAGS_HEIGHT, RowTags } from "../sessions/RowTags";
 
@@ -38,8 +39,10 @@ const MAX_DOTS = 12;
 const ROW_PADDING = 14;
 const TINT = "rgba(204,121,234,0.13)";
 
-const innerHeight = (item: LogItem): number =>
-  item.type === "session" ? sessionRowHeight(item.session) : entryRowHeight(item.entry);
+const innerHeight = (item: LogItem): number => {
+  if (item.type === "session") return sessionRowHeight(item.session);
+  return item.type === "hang" ? HANG_ROW_HEIGHT : entryRowHeight(item.entry);
+};
 
 export function tripGroupHeight(item: TripItem): number {
   // The margin under the group, the header and its rule, less the last row's dropped hairline.
@@ -183,6 +186,8 @@ export function TripGroup({
               divider={n < last}
               onPress={() => onOpen(inner)}
             />
+          ) : inner.type === "hang" ? (
+            <HangRow hang={inner.hang} inset divider={n < last} />
           ) : (
             <EntryRow entry={inner.entry} inset divider={n < last} onPress={() => onOpen(inner)} />
           )}

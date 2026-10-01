@@ -17,7 +17,7 @@ export function useLogRows(api: SendtallyApi): { state: QueryState<LogRows> } {
   const state = React.useMemo(
     (): QueryState<LogRows> =>
       loaded.status === "ready"
-        ? { status: "ready", data: { sessions: loaded.data[0], entries: loaded.data[1] } }
+        ? { status: "ready", data: { sessions: loaded.data[0].sessions, entries: loaded.data[1] } }
         : loaded,
     [loaded]
   );

@@ -1,0 +1,80 @@
+{
+  "expo": {
+    "name": "hangtally",
+    "slug": "hangtally",
+    "version": "0.1.0",
+    "scheme": "hangtally",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "platforms": ["ios", "android"],
+    "icon": "./assets/icon.png",
+    "primaryColor": "#2f3a35",
+    "backgroundColor": "#2f3a35",
+    "ios": {
+      "bundleIdentifier": "com.sendtally.hangtally",
+      "supportsTablet": false,
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
+        "CFBundleDevelopmentRegion": "en",
+        "CFBundleLocalizations": ["en", "de", "fr", "es"]
+      },
+      "usesAppleSignIn": true
+    },
+    "android": {
+      "package": "com.sendtally.hangtally",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#cdee6a"
+      },
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS",
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"
+      ]
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      "expo-font",
+      "expo-web-browser",
+      "expo-apple-authentication",
+      "expo-localization",
+      "expo-audio",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#2f3a35"
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-mark.png",
+          "imageWidth": 160,
+          "resizeMode": "contain",
+          "backgroundColor": "#2f3a35"
+        }
+      ],
+      "@react-native-community/datetimepicker",
+      "expo-asset"
+    ],
+    "experiments": {
+      "typedRoutes": false
+    },
+    "owner": "chalk-and-circuits",
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "3b7571be-d7ad-49a3-8ed9-79156d24d7ab"
+      }
+    },
+    "runtimeVersion": {
+      "policy": "fingerprint"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/3b7571be-d7ad-49a3-8ed9-79156d24d7ab"
+    }
+  }
+}

@@ -6,6 +6,8 @@ import { cors } from "hono/cors";
 import { z } from "zod";
 import { auth } from "./auth";
 import type { Env } from "./bindings";
+import { type AppEnv, captureEvent, invalidBody, postAfterResponse } from "./context";
+import { hang } from "./hang";
 import { purgeAccount } from "./lib/account";
 import {
   areaBody,
@@ -60,6 +62,7 @@ import {
 import { decryptSecret, encryptSecret } from "./lib/crypto";
 import { buildEntry, entryBody, overlappingTrip, type EntryWrite } from "./lib/entries";
 import { exportCsv } from "./lib/export";
+import { hangHistoryOf } from "./lib/hang";
 import { dedupedWalls, gymBody, gymOf } from "./lib/gyms";
 import { importBody, importFingerprint, manualBodyOf } from "./lib/import";
 import { mirrorStoreEntitlements, resolveEntitlements } from "./lib/entitlements";
@@ -74,16 +77,12 @@ import {
   parseClimbs,
 } from "./lib/manual";
 import { allowedOrigin } from "./lib/origins";
-import { captureUserEvent, getPostHog, identifyUser } from "./lib/posthog";
+import { getPostHog, identifyUser } from "./lib/posthog";
 import { syncSessionToStrava } from "./lib/posting";
 import * as repo from "./lib/repo";
 import { RevenueCatClient, webhookBody, webhookUserIds } from "./lib/revenuecat";
 import { authorizeUrl, exchangeAuthCode, StravaUnauthorizedError } from "./lib/strava";
 import { sessionTagsBody, tagSlug } from "./lib/tags";
-
-type Vars = { userId: string; hasFeature: (feature: string) => boolean };
-
-type AppEnv = { Bindings: Env; Variables: Vars };
 
 const OAUTH_STATE_TTL_MS = 15 * 60 * 1000;
 const APP_SCHEME = "sendtally";
@@ -108,19 +107,6 @@ function sameSecret(presented: string | undefined, expected: string): boolean {
 const revenuecat = (env: Env): RevenueCatClient =>
   new RevenueCatClient(env.REVENUECAT_SECRET_API_KEY);
 
-// Without a distinct id posthog-node invents a random one per call, so every
-// event lands on its own anonymous person. The signed-in user id is the same
-// key the browser identifies with, which is what joins the two streams.
-const captureEvent = async (
-  c: Context<AppEnv>,
-  event: string,
-  properties: Record<string, string | number | boolean> = {},
-  distinctId: string | undefined = c.get("userId")
-): Promise<void> => {
-  if (distinctId === undefined) return;
-  await captureUserEvent(c.env, distinctId, event, properties);
-};
-
 const manualScoringHistory = async (
   db: D1Database,
   userId: string,
@@ -131,33 +117,6 @@ const manualScoringHistory = async (
     .filter((r) => r.fingerprint !== excludeFingerprint && r.rpe_source !== "none")
     .map(historySession)
     .filter((s): s is NonNullable<typeof s> => s !== null);
-};
-
-// Posting is two Strava calls plus a possible token refresh, so it runs after the
-// response rather than making the user wait for it. Failures land in post_state,
-// which the retry endpoint reads.
-const postAfterResponse = (c: Context<AppEnv>, userId: string, fingerprint: string): void => {
-  let ctx: Context<AppEnv>["executionCtx"];
-  try {
-    ctx = c.executionCtx;
-  } catch {
-    // No execution context means no background work: never start a promise that
-    // would outlive the request and write after it.
-    return;
-  }
-  ctx.waitUntil(
-    syncSessionToStrava(c.env, userId, fingerprint).then(
-      (result) => {
-        if (result.outcome === "failed") {
-          console.error(`strava post failed for ${fingerprint}: ${result.reason}`);
-        }
-      },
-      (err: unknown) => {
-        const message = err instanceof Error ? err.message : String(err);
-        console.error(`strava post threw for ${fingerprint}: ${message}`);
-      }
-    )
-  );
 };
 
 const sessionResponse = async (env: Env, userId: string, fingerprint: string) => {
@@ -260,11 +219,6 @@ const tripOverlap = async (
     ? null
     : { id: trip.id, title: trip.title, occurred_at: trip.occurred_at, ends_at: trip.ends_at };
 };
-
-// Every validated body answers the same way, so the shape a client sees for a
-// rejected request does not depend on which endpoint rejected it.
-const invalidBody: Parameters<typeof zValidator>[2] = (result, c) =>
-  result.success ? undefined : c.json({ error: "invalid request body" }, 400);
 
 const viewerOf = (c: Context<AppEnv>): Promise<Viewer> => repo.getViewer(c.env.DB, c.get("userId"));
 
@@ -804,10 +758,12 @@ const app = new Hono<AppEnv>()
   .get("/v1/sessions", async (c) => {
     const userId = c.get("userId");
     const includeClimbs = c.req.query("include") === "climbs";
-    const [rows, tagsBySession, notes] = await Promise.all([
+    const [rows, tagsBySession, notes, hangRows, hangGrips] = await Promise.all([
       repo.listSessions(c.env.DB, userId, 200, includeClimbs),
       repo.tagsBySession(c.env.DB, userId),
       includeClimbs ? repo.listClimbNotes(c.env.DB, userId) : [],
+      repo.listHangSessions(c.env.DB, userId, 200),
+      repo.listHangGrips(c.env.DB, userId),
     ]);
     const notesBySession = new Map<string, repo.ClimbNoteRow[]>();
     for (const note of notes) {
@@ -822,7 +778,10 @@ const app = new Hono<AppEnv>()
         ? withClimbNotes(parseClimbs(climbs_json), notesBySession.get(rest.fingerprint) ?? [])
         : undefined,
     }));
-    return c.json({ sessions });
+    // hangtally sessions live in their own table and are listed beside the
+    // climbing ones, never as them: they carry the effort the user entered.
+    const hangSessions = hangRows.map((row) => hangHistoryOf(row, hangGrips));
+    return c.json({ sessions, hangSessions });
   })
 
   .get("/v1/entries", async (c) => {
@@ -1665,7 +1624,7 @@ const app = new Hono<AppEnv>()
     await repo.setClimbNotes(c.env.DB, userId, fingerprint, climbNotesOf(form.climbs));
     await captureEvent(c, "manual_session_created", { session_source: "manual" });
     const body = { session: await sessionResponse(c.env, userId, fingerprint) };
-    postAfterResponse(c, userId, fingerprint);
+    postAfterResponse(c, fingerprint, () => syncSessionToStrava(c.env, userId, fingerprint));
     return c.json(body, 201);
   })
 
@@ -1763,7 +1722,7 @@ const app = new Hono<AppEnv>()
       await captureEvent(c, "manual_session_updated", { session_source: "manual" });
       const body = { session: await sessionResponse(c.env, userId, fingerprint) };
       // Already posted sessions get the activity patched, never a second one.
-      postAfterResponse(c, userId, fingerprint);
+      postAfterResponse(c, fingerprint, () => syncSessionToStrava(c.env, userId, fingerprint));
       return c.json(body);
     }
   )
@@ -1917,7 +1876,9 @@ const app = new Hono<AppEnv>()
       return c.json({ error: "account data deleted but sign-in could not be removed" }, 502);
     }
     return c.json({ deleted: true });
-  });
+  })
+
+  .route("/v1/hang", hang);
 
 app.onError(async (error, c) => {
   // zValidator throws this for a body it cannot parse at all. Without this the
@@ -1941,6 +1902,23 @@ app.onError(async (error, c) => {
 export type AppType = typeof app;
 
 export type { ProjectInput } from "./lib/climbs";
+export type { HangData, HangHistoryRow, HangPostState, HangSessionRecord } from "./lib/hang";
+export type {
+  CalendarDate,
+  Grip,
+  HangKind,
+  HangSession,
+  HangSettings,
+  Loads,
+  Protocol,
+  Schedule,
+  ThemeName,
+  TimeUnit,
+  TimeUnits,
+  WeightUnit,
+  Weekday,
+  Workout,
+} from "@sendtally/core/hang";
 
 export type { LogClimbInput, LogSessionInput } from "./lib/manual";
 export type { ImportBody } from "./lib/import";

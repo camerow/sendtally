@@ -19,6 +19,7 @@ import {
   sessionsNearPoints,
   severitySeries,
 } from "./transforms";
+import { logCountLabel } from "../sessions/years";
 
 function entry(overrides: Partial<JournalEntry> = {}): JournalEntry {
   return {
@@ -88,6 +89,60 @@ describe("logItems", () => {
       [entry({ id: "e1", occurred_at: "2026-05-30" })]
     );
     expect(items.map((i) => i.key)).toEqual(["entry:e1", "session:a"]);
+  });
+});
+
+describe("hang sessions in the log", () => {
+  const hang = {
+    id: "h1",
+    workoutId: "rep73",
+    gripId: "half",
+    gripName: null,
+    date: "2026-05-28",
+    loadKg: 4,
+    pct: 100,
+    misses: 0,
+    rpe: 7,
+    protocol: {
+      name: "Repeaters 7:3",
+      kind: "hang" as const,
+      hangS: 7,
+      restS: 3,
+      reps: 6,
+      sets: 6,
+      setRestS: 180,
+      edgeMm: 20,
+    },
+    stravaActivityId: null,
+    postState: null,
+    postError: null,
+    updatedAt: "2026-05-28T19:00:00.000Z",
+  };
+
+  it("lists them among the sessions, in date order, and under the sessions scope", () => {
+    const items = logItems(
+      [session("a", "2026-05-26T18:00:00.000Z"), session("b", "2026-05-30T18:00:00.000Z")],
+      [entry({ id: "e1", occurred_at: "2026-05-27" })],
+      [hang]
+    );
+    expect(items.map((i) => i.key)).toEqual(["session:b", "hang:h1", "entry:e1", "session:a"]);
+    expect(logScopeItems(items, "sessions").map((i) => i.key)).toEqual([
+      "session:b",
+      "hang:h1",
+      "session:a",
+    ]);
+    expect(logCountLabel(items)).toBe("3 sessions · 1 entry");
+  });
+
+  it("folds one inside a trip's dates", () => {
+    const trip = entry({
+      id: "t1",
+      kind: "trip",
+      occurred_at: "2026-05-27",
+      ends_at: "2026-05-29",
+    });
+    const [grouped] = groupTrips(logItems([], [trip], [hang]));
+    expect(grouped?.type === "entry" ? grouped.inside.map((i) => i.key) : []).toEqual(["hang:h1"]);
   });
 });
 

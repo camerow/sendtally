@@ -16,6 +16,17 @@ const LOG: QueryKey[] = [
   ["areaClimb"],
 ];
 
+/**
+ * hangtally owns its own cache and updates it optimistically, so its writes
+ * stale only what sendtally reads from them: the log and the trends list hang
+ * sessions and name custom grips.
+ */
+function hangWriteStales(resource: string | undefined): QueryKey[] {
+  return resource === "sessions" || resource === "grips"
+    ? [["sessions"], ["sessionsWithClimbs"]]
+    : [];
+}
+
 /** Which cached reads a write can change, by the resource it hit. `null` is a path this map does not know, which stales everything. */
 export function writeEffect({ method, path }: ApiWrite): WriteEffect | null {
   const [, version, resource, id, child] = path.split("/");
@@ -63,6 +74,8 @@ export function writeEffect({ method, path }: ApiWrite): WriteEffect | null {
       return { stale: [["entitlements"]], gone: null };
     case "account":
       return { stale: [], gone: null };
+    case "hang":
+      return { stale: hangWriteStales(id), gone: null };
     default:
       return null;
   }
