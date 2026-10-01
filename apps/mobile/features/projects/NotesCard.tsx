@@ -2,10 +2,9 @@ import React from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
 import type { ProjectNoteVM, ProjectSessionVM } from "@sendtally/features/climbs";
 import { t } from "@sendtally/features/i18n";
-import { localDate } from "@sendtally/features/log-session";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
-import { DateTimeField } from "../../components/DateTimeField";
 import { Icon } from "../../components/Icon";
+import { AddNoteSheet } from "./AddNoteSheet";
 
 export type NotesCardProps = {
   notes: ProjectNoteVM[];
@@ -35,23 +34,14 @@ const bodyText = {
   color: colors.gunmetal,
 } as const;
 
-const NEW = "new";
-
 // The notes are the beta: the newest one is what the climber knows now, and the
 // ones under it are how they got there, each tied to the session it came from.
 export function NotesCard({ notes, sessions, onSave, onAdd }: NotesCardProps): React.ReactElement {
   const [editing, setEditing] = React.useState<string | null>(null);
-  const [day, setDay] = React.useState(() => localDate(new Date()));
+  const [adding, setAdding] = React.useState(false);
   const [draft, setDraft] = React.useState("");
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
-
-  const openNew = (): void => {
-    setEditing(NEW);
-    setDay(localDate(new Date()));
-    setDraft("");
-    setError(null);
-  };
 
   const open = (fingerprint: string, note: string): void => {
     setEditing(fingerprint);
@@ -63,7 +53,7 @@ export function NotesCard({ notes, sessions, onSave, onAdd }: NotesCardProps): R
     setBusy(true);
     setError(null);
     try {
-      await (fingerprint === NEW ? onAdd(day, draft.trim()) : onSave(fingerprint, draft.trim()));
+      await onSave(fingerprint, draft.trim());
       setBusy(false);
       setEditing(null);
     } catch {
@@ -76,22 +66,6 @@ export function NotesCard({ notes, sessions, onSave, onAdd }: NotesCardProps): R
 
   const editor = (fingerprint: string): React.ReactElement => (
     <View style={{ gap: 10 }}>
-      {fingerprint === NEW && (
-        <>
-          <DateTimeField
-            mode="date"
-            value={day}
-            max={localDate(new Date())}
-            label={t("climbs.noteDate")}
-            onChange={setDay}
-          />
-          {!sessions.some((s) => s.day === day) && (
-            <Text style={{ ...action, textTransform: "none", color: colors.textMuted }}>
-              {t("climbs.noteNewDayHint")}
-            </Text>
-          )}
-        </>
-      )}
       <TextInput
         value={draft}
         autoFocus
@@ -144,7 +118,7 @@ export function NotesCard({ notes, sessions, onSave, onAdd }: NotesCardProps): R
       <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
         <Text style={{ ...heading, color: colors.watermelonInk }}>{t("climbs.notes")}</Text>
         <Pressable
-          onPress={openNew}
+          onPress={() => setAdding(true)}
           accessibilityRole="button"
           accessibilityLabel={t("climbs.addNote")}
           hitSlop={8}
@@ -162,8 +136,6 @@ export function NotesCard({ notes, sessions, onSave, onAdd }: NotesCardProps): R
         </Pressable>
       </View>
 
-      {editing === NEW && editor(NEW)}
-
       {latest !== undefined &&
         (editing === latest.fingerprint ? (
           editor(latest.fingerprint)
@@ -180,7 +152,7 @@ export function NotesCard({ notes, sessions, onSave, onAdd }: NotesCardProps): R
           </Pressable>
         ))}
 
-      {notes.length === 0 && editing !== NEW && (
+      {notes.length === 0 && (
         <Text style={{ ...bodyText, color: colors.textFaint }}>{t("climbs.noNotes")}</Text>
       )}
 
@@ -213,6 +185,12 @@ export function NotesCard({ notes, sessions, onSave, onAdd }: NotesCardProps): R
           )}
         </View>
       ))}
+      <AddNoteSheet
+        visible={adding}
+        sessions={sessions}
+        onSave={onAdd}
+        onClose={() => setAdding(false)}
+      />
     </View>
   );
 }
