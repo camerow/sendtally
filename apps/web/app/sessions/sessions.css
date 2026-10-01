@@ -800,10 +800,6 @@
   cursor: pointer;
 }
 
-.log-menu-item.is-highlighted {
-  background: rgba(249, 220, 92, 0.16);
-}
-
 .log-menu-item:hover,
 .log-menu-item:focus-visible {
   background: var(--surface-soft);
