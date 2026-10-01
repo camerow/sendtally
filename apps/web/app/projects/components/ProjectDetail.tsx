@@ -142,8 +142,9 @@ export function ProjectDetail({ apiUrl, slug }: ProjectDetailProps): React.React
 
         <NotesCard
           notes={vm.notes}
-          latestSession={vm.sessions[0]}
+          sessions={vm.sessions}
           onSave={(fingerprint, note) => project.saveNote(fingerprint, note)}
+          onAdd={(day, note) => project.addNote(day, note)}
         />
       </div>
 
