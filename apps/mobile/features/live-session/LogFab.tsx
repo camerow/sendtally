@@ -22,13 +22,11 @@ function MenuRow({
   icon,
   title,
   hint,
-  highlighted = false,
   onPress,
 }: {
   icon: IconName | EntryKind;
   title: string;
   hint: string;
-  highlighted?: boolean;
   onPress: () => void;
 }): React.ReactElement {
   return (
@@ -42,7 +40,6 @@ function MenuRow({
         minHeight: 64,
         paddingHorizontal: 14,
         borderRadius: radius.card,
-        backgroundColor: highlighted ? "rgba(249,220,92,0.16)" : "transparent",
       })}
     >
       <View
@@ -150,7 +147,6 @@ export function LogFab({ onLogClimb }: LogFabProps): React.ReactElement {
             icon="plus"
             title={t("sessions.logAClimb")}
             hint={t("sessions.logAClimbHint")}
-            highlighted
             onPress={() => {
               setMenuOpen(false);
               onLogClimb();

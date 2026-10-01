@@ -20,18 +20,16 @@ function Row({
   icon,
   title,
   hint,
-  highlighted = false,
   to,
   onClick,
 }: {
   icon: IconName | EntryKind;
   title: string;
   hint: string;
-  highlighted?: boolean;
   to?: string;
   onClick: () => void;
 }): React.ReactElement {
-  const className = highlighted ? "log-menu-item is-highlighted" : "log-menu-item";
+  const className = "log-menu-item";
   const body = (
     <>
       <span className="log-menu-icon">
@@ -72,7 +70,6 @@ function Choices({
         icon="plus"
         title={t("sessions.logAClimb")}
         hint={t("sessions.logAClimbHint")}
-        highlighted
         onClick={() => {
           onPick();
           onLogClimb();

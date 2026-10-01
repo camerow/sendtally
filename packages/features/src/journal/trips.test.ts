@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
-import type { JournalEntry, SessionRow } from "@sendtally/api-client";
+import type { JournalEntry, SessionWithClimbs } from "@sendtally/api-client";
 import {
-  effortDayLabel,
   injuriesCarriedIn,
   tripContents,
   tripDays,
   tripEffort,
+  tripPyramid,
   tripStats,
 } from "./trips";
 
@@ -31,8 +31,8 @@ function entry(overrides: Partial<JournalEntry>): JournalEntry {
 function session(
   fingerprint: string,
   startAt: string,
-  overrides: Partial<SessionRow> = {}
-): SessionRow {
+  overrides: Partial<SessionWithClimbs> = {}
+): SessionWithClimbs {
   return {
     fingerprint,
     board: null,
@@ -58,6 +58,7 @@ function session(
     post_state: null,
     post_error: null,
     tags: [],
+    climbs: [],
     ...overrides,
   };
 }
@@ -104,7 +105,6 @@ describe("tripDays", () => {
     expect(tripStats(tripDays(trip, sessions, entries, now)).map((s) => s.value)).toEqual([
       "2/3",
       "2",
-      "2h",
       "20",
       "7A",
       "6.0",
@@ -121,10 +121,32 @@ describe("tripContents", () => {
   });
 });
 
-describe("effortDayLabel", () => {
-  it("names every day of a short trip and only the ends of a long one", () => {
-    expect([0, 1, 2].map((i) => effortDayLabel(i, 3))).toEqual(["1", "2", "3"]);
-    expect([0, 1, 59].map((i) => effortDayLabel(i, 60))).toEqual(["1", "", "60"]);
+describe("tripPyramid", () => {
+  it("bins only the sends inside the trip by grade", () => {
+    const sends = (vGrade: number) => ({
+      time: "2026-05-23T09:00:00.000Z",
+      name: "",
+      kind: "send" as const,
+      tries: 1,
+      style: "flash" as const,
+      angle: null,
+      note: null,
+      link: null,
+      vGrade,
+    });
+    const climbed = [
+      session("sat", "2026-05-23T09:00:00.000Z", { climbs: [sends(3), sends(3), sends(4)] }),
+      session("after", "2026-05-25T09:00:00.000Z", { climbs: [sends(8)] }),
+    ];
+    const days = tripDays(trip, climbed, entries, now);
+    expect(tripPyramid(days)?.points.map((p) => [p.axis, p.b])).toEqual([
+      ["V3", 2],
+      ["V4", 1],
+    ]);
+  });
+
+  it("is absent when nothing was sent", () => {
+    expect(tripPyramid(tripDays(trip, sessions, entries, now))).toBeNull();
   });
 });
 

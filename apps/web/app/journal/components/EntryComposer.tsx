@@ -3,6 +3,7 @@ import { useNavigate } from "react-router";
 import type { JournalEntry, SendtallyApi, SessionRow } from "@sendtally/api-client";
 import { t } from "@sendtally/features/i18n";
 import {
+  bodyPlaceholder,
   ENTRY_BODY_MAX,
   isUpdateDraft,
   spansDates,
@@ -152,7 +153,7 @@ export function EntryComposer({
           value={draft.body}
           rows={update ? 4 : 10}
           maxLength={ENTRY_BODY_MAX}
-          placeholder={update ? t("journal.updatePlaceholder") : t("journal.bodyPlaceholder")}
+          placeholder={bodyPlaceholder(draft)}
           onChange={(e) => setDraft((d) => ({ ...d, body: e.target.value }))}
           className="log-session-control"
           style={{ ...input, lineHeight: 1.6, resize: "vertical" }}

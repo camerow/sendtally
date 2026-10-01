@@ -6,6 +6,7 @@ import type {
   EntryDetail,
   JournalEntry,
   SessionRow as SessionRowData,
+  SessionWithClimbs,
 } from "@sendtally/api-client";
 import { t } from "@sendtally/features/i18n";
 import {
@@ -198,7 +199,7 @@ function Loaded({
   entries,
 }: {
   entry: EntryDetail;
-  sessions: SessionRowData[];
+  sessions: SessionWithClimbs[];
   entries: JournalEntry[];
 }): React.ReactElement {
   const linked = linkedSessions(sessions, entry);

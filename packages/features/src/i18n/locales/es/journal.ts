@@ -16,6 +16,7 @@ export const journal = {
   "journal.entryTitlePlaceholder": "Añade un título",
   "journal.body": "Entrada",
   "journal.bodyPlaceholder": "Reflexiona sobre tu escalada",
+  "journal.bodyPlaceholderInjury": "Resume cómo va tu lesión hoy.",
   "journal.recent": "Recientes",
   "journal.saveEntry": "Guardar entrada",
   "journal.saveFailed": "No se pudo guardar esta entrada. Inténtalo otra vez.",
@@ -76,8 +77,6 @@ export const journal = {
   "journal.tripDaysClimbed": "Días escalados",
   "journal.tripAverageRpe": "Esfuerzo medio",
   "journal.dayByDay": "Día a día",
-  "journal.effortByDay": "Esfuerzo por día",
-  "journal.effortByDayNote": "El esfuerzo más alto de cada día. Un día sin sesión es un guion.",
   "journal.alreadyOngoing": "Ya en curso",
   "journal.carriedInNote":
     "Empezó antes de este viaje, así que se queda en su propia fecha en el registro.",

@@ -11,7 +11,10 @@ export const climbs = {
   "climbs.notes": "Notes",
   "climbs.noteLatest": "Latest · {date}",
   "climbs.noNotes": "No notes yet. Write one after a session and they stack up here.",
-  "climbs.addNoteFor": "Add a note for {date}",
+  "climbs.addNote": "Add a note",
+  "climbs.noteDate": "Date",
+  "climbs.noteNewDayHint":
+    "No session of this climb on that day yet. Saving logs one attempt there.",
   "climbs.notePlaceholder": "What happened, what to try next",
   "climbs.noteSaveFailed": "Could not save the note. Try again.",
 } as const;

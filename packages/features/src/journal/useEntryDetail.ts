@@ -1,14 +1,19 @@
 import React from "react";
-import type { EntryDetail, JournalEntry, SendtallyApi, SessionRow } from "@sendtally/api-client";
+import type {
+  EntryDetail,
+  JournalEntry,
+  SendtallyApi,
+  SessionWithClimbs,
+} from "@sendtally/api-client";
 import { queries, useQuery, useQueryPair, type QueryState } from "../query";
 
-export type LogRows = { sessions: SessionRow[]; entries: JournalEntry[] };
+export type LogRows = { sessions: SessionWithClimbs[]; entries: JournalEntry[] };
 
 export type EntryDetailData = LogRows & { entry: EntryDetail };
 
 /** The whole log: what an entry links, and what a trip's dates take in. */
 export function useLogRows(api: SendtallyApi): { state: QueryState<LogRows> } {
-  const { state: loaded } = useQueryPair(queries.sessions(api), queries.entries(api));
+  const { state: loaded } = useQueryPair(queries.sessionsWithClimbs(api), queries.entries(api));
   const state = React.useMemo(
     (): QueryState<LogRows> =>
       loaded.status === "ready"

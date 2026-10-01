@@ -12,6 +12,7 @@ import {
 import type { JournalEntry, SendtallyApi, SessionRow } from "@sendtally/api-client";
 import { t } from "@sendtally/features/i18n";
 import {
+  bodyPlaceholder,
   ENTRY_BODY_MAX,
   isUpdateDraft,
   spansDates,
@@ -213,7 +214,7 @@ export function EntryComposer({
             value={draft.body}
             multiline
             maxLength={ENTRY_BODY_MAX}
-            placeholder={update ? t("journal.updatePlaceholder") : t("journal.bodyPlaceholder")}
+            placeholder={bodyPlaceholder(draft)}
             placeholderTextColor={colors.textFaint}
             onChangeText={(body) => setDraft((d) => ({ ...d, body }))}
             style={{

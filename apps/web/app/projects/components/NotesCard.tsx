@@ -1,11 +1,14 @@
 import React from "react";
 import type { ProjectNoteVM, ProjectSessionVM } from "@sendtally/features/climbs";
 import { t } from "@sendtally/features/i18n";
+import { Icon } from "../../components/Icon";
+import { AddNoteSheet } from "./AddNoteSheet";
 
 export type NotesCardProps = {
   notes: ProjectNoteVM[];
-  latestSession: ProjectSessionVM | undefined;
+  sessions: ProjectSessionVM[];
   onSave: (fingerprint: string, note: string) => Promise<void>;
+  onAdd: (day: string, note: string) => Promise<void>;
 };
 
 const label: React.CSSProperties = {
@@ -37,8 +40,9 @@ const linkButton: React.CSSProperties = {
 
 // The notes are the beta: the newest one is what the climber knows now, and the
 // ones under it are how they got there, each tied to the session it came from.
-export function NotesCard({ notes, latestSession, onSave }: NotesCardProps): React.ReactElement {
+export function NotesCard({ notes, sessions, onSave, onAdd }: NotesCardProps): React.ReactElement {
   const [editing, setEditing] = React.useState<string | null>(null);
+  const [adding, setAdding] = React.useState(false);
   const [draft, setDraft] = React.useState("");
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
@@ -63,8 +67,6 @@ export function NotesCard({ notes, latestSession, onSave }: NotesCardProps): Rea
   }
 
   const [latest, ...older] = notes;
-  const addTarget =
-    latestSession !== undefined && latestSession.note === null ? latestSession : undefined;
 
   const editor = (fingerprint: string): React.ReactElement => (
     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -115,7 +117,17 @@ export function NotesCard({ notes, latestSession, onSave }: NotesCardProps): Rea
 
   return (
     <div className="project-card">
-      <span style={label}>{t("climbs.notes")}</span>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <span style={label}>{t("climbs.notes")}</span>
+        <button
+          type="button"
+          className="climb-note-add"
+          aria-label={t("climbs.addNote")}
+          onClick={() => setAdding(true)}
+        >
+          <Icon name="plus" size={14} strokeWidth={2.4} />
+        </button>
+      </div>
 
       {latest !== undefined &&
         (editing === latest.fingerprint ? (
@@ -135,20 +147,7 @@ export function NotesCard({ notes, latestSession, onSave }: NotesCardProps): Rea
           </button>
         ))}
 
-      {addTarget !== undefined &&
-        (editing === addTarget.fingerprint ? (
-          editor(addTarget.fingerprint)
-        ) : (
-          <button
-            type="button"
-            className="climb-note-add"
-            onClick={() => open(addTarget.fingerprint, "")}
-          >
-            {t("climbs.addNoteFor", { date: addTarget.dateLabel })}
-          </button>
-        ))}
-
-      {notes.length === 0 && addTarget === undefined && (
+      {notes.length === 0 && (
         <span style={{ fontSize: 14, lineHeight: 1.6, color: "rgba(64,63,76,0.45)" }}>
           {t("climbs.noNotes")}
         </span>
@@ -181,6 +180,9 @@ export function NotesCard({ notes, latestSession, onSave }: NotesCardProps): Rea
             </span>
           </button>
         )
+      )}
+      {adding && (
+        <AddNoteSheet sessions={sessions} onSave={onAdd} onClose={() => setAdding(false)} />
       )}
     </div>
   );

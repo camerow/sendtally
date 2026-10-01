@@ -33,8 +33,11 @@ export function TrendTile({
   const y = (v: number): number => ((v - lo) / (hi - lo || 1)) * PLOT;
   const n = Math.max(1, tile.points.length);
   const col = width / n;
-  const every = Math.max(1, Math.ceil(tile.points.length / 4));
-  const axis = tile.points.map((_, i) => i % every === 0 || i === tile.points.length - 1);
+  const last = tile.points.length - 1;
+  const every = tile.points.length <= 8 ? 1 : Math.ceil(tile.points.length / 4);
+  const axis = tile.points.map(
+    (_, i) => i % every === 0 || (i === last && (last - 1) % every !== 0)
+  );
   const [first, second] = tile.series;
   const colourA = SERIES_COLOUR[first?.key ?? "primary"];
   const colourB = SERIES_COLOUR[second?.key ?? "primary"];

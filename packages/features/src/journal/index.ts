@@ -9,6 +9,7 @@ export {
   type TripSpan,
 } from "./types";
 export {
+  bodyPlaceholder,
   dayLabel,
   daysSince,
   displayKind,
@@ -48,12 +49,11 @@ export {
   type SeverityPoint,
 } from "./transforms";
 export {
-  effortDayLabel,
-  effortLabelled,
   injuriesCarriedIn,
   tripContents,
   tripDays,
   tripEffort,
+  tripPyramid,
   tripStats,
   type TripContents,
   type TripDay,

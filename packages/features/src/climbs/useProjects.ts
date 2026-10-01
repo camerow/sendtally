@@ -4,12 +4,15 @@ import { t } from "../i18n";
 import { queries, useQueryPair, type QueryState } from "../query";
 import {
   projectBars,
+  joinNotes,
+  noteAttempt,
   projectDetailVM,
   projectsOverview,
   type ProjectBar,
   type ProjectDetailVM,
   type ProjectsOverviewVM,
 } from "./projects";
+import { logClimbOnDay } from "../log-session/dayClimb";
 import { projectStatus, projectsOf } from "./transforms";
 
 export type ProjectListItem = { climb: ClimbSummary; bars: ProjectBar[] };
@@ -62,6 +65,8 @@ export function useProjects(api: SendtallyApi): ProjectsFeature {
 export type ProjectFeature = {
   state: QueryState<ProjectDetailVM>;
   saveNote: (fingerprint: string, note: string) => Promise<void>;
+  /** A note dated to a day: on that day's session of this project, or on a new attempt there. */
+  addNote: (day: string, note: string) => Promise<void>;
   unmark: () => Promise<void>;
 };
 
@@ -86,9 +91,25 @@ export function useProject(api: SendtallyApi, slug: string): ProjectFeature {
     [api, state]
   );
 
+  const addNote = React.useCallback(
+    async (day: string, note: string): Promise<void> => {
+      if (state.status !== "ready" || loaded.status !== "ready")
+        throw new Error("project not loaded");
+      const onDay = state.data.sessions.find((s) => s.day === day);
+      if (onDay !== undefined) {
+        await api.setClimbNote(onDay.fingerprint, slug, joinNotes(onDay.note, note));
+        return;
+      }
+      const climb = loaded.data[0].find((c) => c.slug === slug);
+      if (climb === undefined) throw new Error("project not found");
+      await logClimbOnDay(api, noteAttempt(climb, note), day, []);
+    },
+    [api, slug, state, loaded]
+  );
+
   const unmark = React.useCallback(async (): Promise<void> => {
     await api.unmarkProject(slug);
   }, [api, slug]);
 
-  return { state, saveNote, unmark };
+  return { state, saveNote, addNote, unmark };
 }

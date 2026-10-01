@@ -17,6 +17,8 @@ export {
   dateLabel,
   disciplineLabel,
   gradeRank,
+  joinNotes,
+  noteAttempt,
   projectBars,
   projectDetailVM,
   projectSessions,

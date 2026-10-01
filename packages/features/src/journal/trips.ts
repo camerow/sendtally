@@ -1,21 +1,25 @@
-import type { JournalEntry, SessionRow } from "@sendtally/api-client";
+import type { JournalEntry, SessionRow, SessionWithClimbs } from "@sendtally/api-client";
 import { formatNumber, t } from "../i18n";
 import { isUnscored } from "../sessions/meta";
-import { durationLabel, sessionMinutes } from "../sessions/years";
+import { trendsVM } from "../trends/overview";
+import type { TrendTileVM } from "../trends/types";
 import { inTrip, isoDay, tripEnd } from "./transforms";
 import type { TripSpan } from "./types";
 
-export type TripDay = {
+export type TripDay<S extends SessionRow = SessionRow> = {
   day: string;
   n: number;
-  sessions: SessionRow[];
+  sessions: S[];
   entries: JournalEntry[];
   updates: JournalEntry[];
 };
 
 export type TripStat = { label: string; value: string };
 
-export type TripContents = { sessions: SessionRow[]; entries: JournalEntry[] };
+export type TripContents<S extends SessionRow = SessionRow> = {
+  sessions: S[];
+  entries: JournalEntry[];
+};
 
 const nextDay = (day: string): string => {
   const d = new Date(`${day}T00:00:00Z`);
@@ -27,12 +31,12 @@ const isTripOwnEntry = (entry: JournalEntry, span: TripSpan): boolean =>
   entry.kind === "trip" || entry.id === span.id;
 
 /** What a trip holds: the sessions and top-level entries dated inside it. */
-export function tripContents(
+export function tripContents<S extends SessionRow>(
   span: TripSpan,
-  sessions: SessionRow[],
+  sessions: S[],
   entries: JournalEntry[],
   now: Date = new Date()
-): TripContents {
+): TripContents<S> {
   return {
     sessions: sessions
       .filter((s) => inTrip(isoDay(s.start_at), span, now))
@@ -46,16 +50,16 @@ export function tripContents(
 }
 
 /** Every day of a trip, oldest first, with injury updates alongside what they happened next to. */
-export function tripDays(
+export function tripDays<S extends SessionRow>(
   trip: TripSpan,
-  sessions: SessionRow[],
+  sessions: S[],
   entries: JournalEntry[],
   now: Date = new Date()
-): TripDay[] {
+): Array<TripDay<S>> {
   const inside = tripContents(trip, sessions, entries, now);
   const updates = entries.filter((e) => e.parent_id !== null && inTrip(e.occurred_at, trip, now));
   const end = tripEnd(trip, now);
-  const days: TripDay[] = [];
+  const days: Array<TripDay<S>> = [];
   for (let day = trip.occurred_at, n = 1; day <= end; day = nextDay(day), n++) {
     days.push({
       day,
@@ -87,23 +91,22 @@ export function tripEffort(days: TripDay[]): Array<number | null> {
   });
 }
 
-/** Past this many days a bar per day has no room for its own labels. */
-const LABELLED_DAYS = 10;
-
-/** Whether each bar carries its RPE and day number, or only the first and last day are named. */
-export function effortLabelled(days: number): boolean {
-  return days <= LABELLED_DAYS;
-}
-
-/** The day number under a bar, blank between the ends of a long trip. */
-export function effortDayLabel(index: number, days: number): string {
-  return effortLabelled(days) || index === 0 || index === days - 1 ? formatNumber(index + 1) : "";
+/** The trends grade pyramid, over only the sends logged inside the trip. */
+export function tripPyramid(days: Array<TripDay<SessionWithClimbs>>): TrendTileVM | null {
+  const { groups } = trendsVM(
+    days.flatMap((d) => d.sessions),
+    [],
+    { scope: null, range: "all", grade: null, setting: "all", gymId: null, tags: [] }
+  );
+  const tile = groups.flatMap((g) => g.tiles).find((x) => x.id === "pyramid");
+  return tile === undefined || tile.points.length === 0
+    ? null
+    : { ...tile, caption: t("trends.sendsByGrade") };
 }
 
 export function tripStats(days: TripDay[]): TripStat[] {
   const sessions = days.flatMap((d) => d.sessions);
   const climbed = days.filter((d) => d.sessions.length > 0).length;
-  const minutes = sessions.reduce((sum, s) => sum + sessionMinutes(s), 0);
   const climbs = sessions.reduce((sum, s) => sum + s.climb_count, 0);
   const top = sessions.reduce<SessionRow | null>(
     (best, s) => (s.top_send_grade > (best?.top_send_grade ?? -1) ? s : best),
@@ -118,7 +121,6 @@ export function tripStats(days: TripDay[]): TripStat[] {
       value: `${formatNumber(climbed)}/${formatNumber(days.length)}`,
     },
     { label: t("common.sessions"), value: formatNumber(sessions.length) },
-    { label: t("sessionDetail.statTime"), value: minutes === 0 ? "-" : durationLabel(minutes) },
     { label: t("common.climbs"), value: formatNumber(climbs) },
     {
       label: t("trends.hardestSend"),

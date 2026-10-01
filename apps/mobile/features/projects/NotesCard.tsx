@@ -3,11 +3,14 @@ import { Pressable, Text, TextInput, View } from "react-native";
 import type { ProjectNoteVM, ProjectSessionVM } from "@sendtally/features/climbs";
 import { t } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
+import { Icon } from "../../components/Icon";
+import { AddNoteSheet } from "./AddNoteSheet";
 
 export type NotesCardProps = {
   notes: ProjectNoteVM[];
-  latestSession: ProjectSessionVM | undefined;
+  sessions: ProjectSessionVM[];
   onSave: (fingerprint: string, note: string) => Promise<void>;
+  onAdd: (day: string, note: string) => Promise<void>;
 };
 
 const heading = {
@@ -33,8 +36,9 @@ const bodyText = {
 
 // The notes are the beta: the newest one is what the climber knows now, and the
 // ones under it are how they got there, each tied to the session it came from.
-export function NotesCard({ notes, latestSession, onSave }: NotesCardProps): React.ReactElement {
+export function NotesCard({ notes, sessions, onSave, onAdd }: NotesCardProps): React.ReactElement {
   const [editing, setEditing] = React.useState<string | null>(null);
+  const [adding, setAdding] = React.useState(false);
   const [draft, setDraft] = React.useState("");
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
@@ -59,8 +63,6 @@ export function NotesCard({ notes, latestSession, onSave }: NotesCardProps): Rea
   };
 
   const [latest, ...older] = notes;
-  const addTarget =
-    latestSession !== undefined && latestSession.note === null ? latestSession : undefined;
 
   const editor = (fingerprint: string): React.ReactElement => (
     <View style={{ gap: 10 }}>
@@ -113,7 +115,26 @@ export function NotesCard({ notes, latestSession, onSave }: NotesCardProps): Rea
         padding: 16,
       }}
     >
-      <Text style={{ ...heading, color: colors.watermelonInk }}>{t("climbs.notes")}</Text>
+      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+        <Text style={{ ...heading, color: colors.watermelonInk }}>{t("climbs.notes")}</Text>
+        <Pressable
+          onPress={() => setAdding(true)}
+          accessibilityRole="button"
+          accessibilityLabel={t("climbs.addNote")}
+          hitSlop={8}
+          style={{
+            width: 32,
+            height: 32,
+            borderRadius: 16,
+            alignItems: "center",
+            justifyContent: "center",
+            borderWidth: 1,
+            borderColor: colors.lineOnLightStrong,
+          }}
+        >
+          <Icon name="plus" size={14} strokeWidth={2.4} color={colors.azureInk} />
+        </Pressable>
+      </View>
 
       {latest !== undefined &&
         (editing === latest.fingerprint ? (
@@ -122,12 +143,7 @@ export function NotesCard({ notes, latestSession, onSave }: NotesCardProps): Rea
           <Pressable
             onPress={() => open(latest.fingerprint, latest.note)}
             accessibilityRole="button"
-            style={{
-              gap: 8,
-              padding: 14,
-              borderRadius: radius.control,
-              backgroundColor: colors.gold,
-            }}
+            style={{ gap: 8 }}
           >
             <Text style={{ ...action, fontSize: 10, color: colors.textSecondary }}>
               {t("climbs.noteLatest", { date: latest.dateLabel })}
@@ -136,31 +152,7 @@ export function NotesCard({ notes, latestSession, onSave }: NotesCardProps): Rea
           </Pressable>
         ))}
 
-      {addTarget !== undefined &&
-        (editing === addTarget.fingerprint ? (
-          editor(addTarget.fingerprint)
-        ) : (
-          <Pressable
-            onPress={() => open(addTarget.fingerprint, "")}
-            accessibilityRole="button"
-            style={{
-              alignSelf: "flex-start",
-              minHeight: 44,
-              justifyContent: "center",
-              paddingHorizontal: 14,
-              borderRadius: radius.pill,
-              borderWidth: 1,
-              borderStyle: "dashed",
-              borderColor: colors.lineOnLightStrong,
-            }}
-          >
-            <Text style={{ ...action, fontSize: 10, color: colors.textSecondary }}>
-              {t("climbs.addNoteFor", { date: addTarget.dateLabel })}
-            </Text>
-          </Pressable>
-        ))}
-
-      {notes.length === 0 && addTarget === undefined && (
+      {notes.length === 0 && (
         <Text style={{ ...bodyText, color: colors.textFaint }}>{t("climbs.noNotes")}</Text>
       )}
 
@@ -193,6 +185,12 @@ export function NotesCard({ notes, latestSession, onSave }: NotesCardProps): Rea
           )}
         </View>
       ))}
+      <AddNoteSheet
+        visible={adding}
+        sessions={sessions}
+        onSave={onAdd}
+        onClose={() => setAdding(false)}
+      />
     </View>
   );
 }

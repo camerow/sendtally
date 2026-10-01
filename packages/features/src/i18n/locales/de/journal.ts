@@ -16,6 +16,7 @@ export const journal = {
   "journal.entryTitlePlaceholder": "Titel hinzufügen",
   "journal.body": "Eintrag",
   "journal.bodyPlaceholder": "Denk über dein Klettern nach",
+  "journal.bodyPlaceholderInjury": "Fasse zusammen, wie es deiner Verletzung heute geht.",
   "journal.recent": "Zuletzt",
   "journal.saveEntry": "Eintrag speichern",
   "journal.saveFailed": "Eintrag konnte nicht gespeichert werden. Versuch es nochmal.",
@@ -76,8 +77,6 @@ export const journal = {
   "journal.tripDaysClimbed": "Klettertage",
   "journal.tripAverageRpe": "Anstrengung im Schnitt",
   "journal.dayByDay": "Tag für Tag",
-  "journal.effortByDay": "Anstrengung pro Tag",
-  "journal.effortByDayNote": "Höchste Anstrengung pro Tag. Ein Tag ohne Session ist ein Strich.",
   "journal.alreadyOngoing": "Läuft schon",
   "journal.carriedInNote":
     "Hat vor dieser Reise angefangen und bleibt deshalb an seinem eigenen Datum im Logbuch.",

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { ClimbSummary, SessionWithClimbs } from "@sendtally/api-client";
-import { projectDetailVM, projectsOverview } from "./projects";
+import { joinNotes, noteAttempt, projectDetailVM, projectsOverview } from "./projects";
 
 const NOW = new Date("2026-09-11T12:00:00.000Z");
 
@@ -176,5 +176,24 @@ describe("projectsOverview", () => {
       mostSessions: null,
       hardestSentLabel: null,
     });
+  });
+});
+
+describe("noteAttempt", () => {
+  it("carries the note on one attempt at the project", () => {
+    expect(noteAttempt(climb({}), "heel hook")).toMatchObject({
+      name: "Moonraker",
+      scale: "v",
+      grade: "V7",
+      kind: "attempt",
+      tries: 1,
+      note: "heel hook",
+      project: true,
+    });
+  });
+
+  it("keeps a second note after the first", () => {
+    expect(joinNotes(null, "a")).toBe("a");
+    expect(joinNotes("a", "b")).toBe("a\n\nb");
   });
 });

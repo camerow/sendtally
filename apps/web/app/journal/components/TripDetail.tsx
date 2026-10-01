@@ -1,18 +1,19 @@
 import React from "react";
-import type { JournalEntry, SessionRow } from "@sendtally/api-client";
+import type { JournalEntry, SessionWithClimbs } from "@sendtally/api-client";
 import { StatStrip } from "@sendtally/design";
 import { t } from "@sendtally/features/i18n";
 import {
   entryTitle,
   injuriesCarriedIn,
   tripDays,
-  tripEffort,
+  tripPyramid,
   tripStats,
 } from "@sendtally/features/journal";
 import { sessionTitle } from "@sendtally/features/sessions";
 import { EntryRowItem } from "../../sessions/components/EntryRowItem";
 import { SessionRowItem } from "../../sessions/components/SessionRowItem";
-import { TripEffort } from "./TripEffort";
+import { TrendTile } from "../../trends/components/TrendTile";
+import { TripClimbs } from "./TripClimbs";
 
 /** Everything logged inside a trip's dates, a day at a time. */
 export function TripDetail({
@@ -21,12 +22,13 @@ export function TripDetail({
   entries,
 }: {
   trip: JournalEntry;
-  sessions: SessionRow[];
+  sessions: SessionWithClimbs[];
   entries: JournalEntry[];
 }): React.ReactElement {
   const days = React.useMemo(() => tripDays(trip, sessions, entries), [trip, sessions, entries]);
   const logged = days.filter((d) => d.sessions.length + d.entries.length + d.updates.length > 0);
   const carriedIn = injuriesCarriedIn(trip, entries);
+  const pyramid = tripPyramid(days);
   const parentTitle = (update: JournalEntry): string => {
     const parent = entries.find((e) => e.id === update.parent_id);
     return t("journal.updateOn", { title: parent === undefined ? "" : entryTitle(parent) });
@@ -37,7 +39,11 @@ export function TripDetail({
       <div style={{ marginTop: 24 }}>
         <StatStrip stats={tripStats(days)} />
       </div>
-      {days.some((d) => d.sessions.length > 0) && <TripEffort effort={tripEffort(days)} />}
+      {pyramid !== null && (
+        <div className="trends trip-pyramid">
+          <TrendTile tile={pyramid} />
+        </div>
+      )}
       {carriedIn.length > 0 && (
         <div className="journal-card">
           <span className="journal-card-label">{t("journal.alreadyOngoing")}</span>
@@ -59,11 +65,10 @@ export function TripDetail({
               <EntryRowItem key={entry.id} entry={entry} />
             ))}
             {day.sessions.map((session) => (
-              <SessionRowItem
-                key={session.fingerprint}
-                session={session}
-                title={sessionTitle(session)}
-              />
+              <React.Fragment key={session.fingerprint}>
+                <SessionRowItem session={session} title={sessionTitle(session)} />
+                <TripClimbs climbs={session.climbs} />
+              </React.Fragment>
             ))}
             {day.updates.map((update) => (
               <EntryRowItem key={update.id} entry={update} detail={parentTitle(update)} />
