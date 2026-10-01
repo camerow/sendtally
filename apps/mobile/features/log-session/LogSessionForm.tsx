@@ -801,36 +801,6 @@ export function LogSessionForm({
           backgroundColor: colors.white,
         }}
       >
-        {editing === undefined && (
-          <Text
-            style={{
-              fontFamily: fonts.monoMedium,
-              fontSize: 10,
-              letterSpacing: 0.8,
-              textTransform: "uppercase",
-              color: colors.textMuted,
-              textAlign: "center",
-            }}
-          >
-            {draftSummary(draft)}
-          </Text>
-        )}
-        {autosave.savedAt !== null && (
-          <Text
-            style={{
-              fontFamily: fonts.monoMedium,
-              fontSize: 10,
-              letterSpacing: 0.8,
-              textTransform: "uppercase",
-              color: colors.textFaint,
-              textAlign: "center",
-            }}
-          >
-            {t("logSession.draftSaved", {
-              time: formatDate(autosave.savedAt, { hour: "2-digit", minute: "2-digit" }),
-            })}
-          </Text>
-        )}
         <View style={{ flexDirection: "row", gap: 10 }}>
           <Pressable
             onPress={cancel}
@@ -873,6 +843,22 @@ export function LogSessionForm({
             </Text>
           </Pressable>
         </View>
+        {autosave.savedAt !== null && (
+          <Text
+            style={{
+              fontFamily: fonts.monoMedium,
+              fontSize: 10,
+              letterSpacing: 0.8,
+              textTransform: "uppercase",
+              color: colors.textFaint,
+              textAlign: "right",
+            }}
+          >
+            {t("logSession.draftSaved", {
+              time: formatDate(autosave.savedAt, { hour: "2-digit", minute: "2-digit" }),
+            })}
+          </Text>
+        )}
       </View>
     </KeyboardAvoidingView>
   );

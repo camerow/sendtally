@@ -724,30 +724,6 @@ export function LogSessionForm({
       )}
 
       <div className="log-session-actions">
-        <div className="log-session-status">
-          {header === undefined && <span style={monoLabel}>{draftSummary(draft)}</span>}
-          {autosave.savedAt !== null && (
-            <span
-              style={{
-                ...monoLabel,
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 7,
-                color: "rgba(64,63,76,0.55)",
-              }}
-            >
-              <Glyph d={CHECK} />
-              {t("logSession.draftSaved", { time: hhmm(autosave.savedAt) })}
-            </span>
-          )}
-          {error !== null && (
-            <span
-              style={{ ...monoLabel, textTransform: "none", color: "var(--text-label-accent)" }}
-            >
-              {error}
-            </span>
-          )}
-        </div>
         <div className="log-session-buttons">
           <button
             type="button"
@@ -789,6 +765,29 @@ export function LogSessionForm({
                 ? t("common.done")
                 : t("logSession.saveChanges")}
           </button>
+        </div>
+        <div className="log-session-status">
+          {autosave.savedAt !== null && (
+            <span
+              style={{
+                ...monoLabel,
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 7,
+                color: "rgba(64,63,76,0.55)",
+              }}
+            >
+              <Glyph d={CHECK} />
+              {t("logSession.draftSaved", { time: hhmm(autosave.savedAt) })}
+            </span>
+          )}
+          {error !== null && (
+            <span
+              style={{ ...monoLabel, textTransform: "none", color: "var(--text-label-accent)" }}
+            >
+              {error}
+            </span>
+          )}
         </div>
       </div>
     </div>
