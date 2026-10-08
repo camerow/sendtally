@@ -225,6 +225,31 @@ describe("trendsVM", () => {
   });
 });
 
+describe("grade axis ticks", () => {
+  const gradeTiles = (vm: TrendsVM): TrendTileVM[] =>
+    vm.groups.flatMap((g) => g.tiles).filter((t) => t.id === "hardest" || t.id === "avggrade");
+
+  it("labels an empty grade chart with three different grades", () => {
+    const vm = trendsVM([], [], filter({ range: "7d" }), NOW);
+    expect(tileOf(vm, "hardest").ticks).toEqual(["V2", "V1", "V0"]);
+  });
+
+  it("puts the middle tick on a whole grade", () => {
+    const vm = trendsVM(
+      [session("2026-08-04T18:00:00.000Z", [{ vGrade: 3 }, { vGrade: 4 }])],
+      [],
+      filter({ range: "7d" }),
+      NOW
+    );
+    expect(gradeTiles(vm)).toHaveLength(2);
+    for (const t of gradeTiles(vm)) {
+      const [hi, lo] = t.domain;
+      expect((hi + lo) % 2).toBe(0);
+      expect(new Set(t.ticks).size).toBe(3);
+    }
+  });
+});
+
 describe("filter helpers", () => {
   it("builds a range from two taps", () => {
     const first = gradeTap(null, 6);
