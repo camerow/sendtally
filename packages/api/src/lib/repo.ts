@@ -33,6 +33,13 @@ import {
   entrySessions,
   entryTags,
   gyms,
+  hangDefaultGrips,
+  hangGrips,
+  hangLoads,
+  hangSchedules,
+  hangSessions,
+  hangSettings,
+  hangWorkouts,
   journalEntries,
   projects,
   sessionClimbLinks,
@@ -44,6 +51,14 @@ import {
   tags,
   users,
 } from "../db/schema";
+import {
+  loadKey,
+  type HangSession,
+  type HangSettings,
+  type Loads,
+  type Schedule,
+  type Workout,
+} from "@sendtally/core/hang";
 import type { ContentEntity, Viewer } from "./areas";
 import type { ClimbLink } from "./manual";
 import type { EntryWrite } from "./entries";
@@ -1126,6 +1141,13 @@ export async function deleteUserData(db: D1Database, userId: string): Promise<vo
     d.delete(tags).where(eq(tags.user_id, userId)),
     d.delete(projects).where(eq(projects.user_id, userId)),
     d.delete(gyms).where(eq(gyms.user_id, userId)),
+    d.delete(hangGrips).where(eq(hangGrips.user_id, userId)),
+    d.delete(hangWorkouts).where(eq(hangWorkouts.user_id, userId)),
+    d.delete(hangDefaultGrips).where(eq(hangDefaultGrips.user_id, userId)),
+    d.delete(hangLoads).where(eq(hangLoads.user_id, userId)),
+    d.delete(hangSchedules).where(eq(hangSchedules.user_id, userId)),
+    d.delete(hangSessions).where(eq(hangSessions.user_id, userId)),
+    d.delete(hangSettings).where(eq(hangSettings.user_id, userId)),
     d.delete(sessions).where(eq(sessions.user_id, userId)),
     d.delete(stravaConnections).where(eq(stravaConnections.user_id, userId)),
     d.delete(storeEntitlements).where(eq(storeEntitlements.user_id, userId)),
@@ -2197,4 +2219,381 @@ export async function mergeAreaClimb(
       .where(and(openReport, eq(duplicateReports.keep_climb_id, m.duplicateId), merged)),
   ]);
   return result.meta.changes > 0;
+}
+
+export type HangGripRow = typeof hangGrips.$inferSelect;
+export type HangWorkoutRow = typeof hangWorkouts.$inferSelect;
+export type HangScheduleRow = typeof hangSchedules.$inferSelect;
+export type HangSessionRow = typeof hangSessions.$inferSelect;
+export type HangSettingsRow = typeof hangSettings.$inferSelect;
+
+export type HangRows = {
+  grips: HangGripRow[];
+  workouts: HangWorkoutRow[];
+  defaultGrips: Array<typeof hangDefaultGrips.$inferSelect>;
+  loads: Loads;
+  schedules: HangScheduleRow[];
+  sessions: HangSessionRow[];
+  settings: HangSettingsRow | null;
+};
+
+const loadsOf = (rows: Array<typeof hangLoads.$inferSelect>): Loads =>
+  Object.fromEntries(rows.map((r) => [loadKey(r.workout_id, r.grip_id), r.kg]));
+
+// Everything hangtally reads, in one round trip.
+export async function hangRows(db: D1Database, userId: string): Promise<HangRows> {
+  const d = drizzle(db);
+  const [grips, workouts, defaultGrips, loads, schedules, hang, settings] = await d.batch([
+    d.select().from(hangGrips).where(eq(hangGrips.user_id, userId)).orderBy(hangGrips.created_at),
+    d
+      .select()
+      .from(hangWorkouts)
+      .where(eq(hangWorkouts.user_id, userId))
+      .orderBy(hangWorkouts.created_at),
+    d.select().from(hangDefaultGrips).where(eq(hangDefaultGrips.user_id, userId)),
+    d.select().from(hangLoads).where(eq(hangLoads.user_id, userId)),
+    d.select().from(hangSchedules).where(eq(hangSchedules.user_id, userId)),
+    d
+      .select()
+      .from(hangSessions)
+      .where(eq(hangSessions.user_id, userId))
+      .orderBy(desc(hangSessions.date), desc(hangSessions.created_at)),
+    d.select().from(hangSettings).where(eq(hangSettings.user_id, userId)),
+  ]);
+  return {
+    grips,
+    workouts,
+    defaultGrips,
+    loads: loadsOf(loads),
+    schedules,
+    sessions: hang,
+    settings: settings[0] ?? null,
+  };
+}
+
+export async function listHangGrips(db: D1Database, userId: string): Promise<HangGripRow[]> {
+  return drizzle(db).select().from(hangGrips).where(eq(hangGrips.user_id, userId)).all();
+}
+
+export async function findHangGripByKey(
+  db: D1Database,
+  userId: string,
+  nameKey: string
+): Promise<HangGripRow | null> {
+  const row = await drizzle(db)
+    .select()
+    .from(hangGrips)
+    .where(and(eq(hangGrips.user_id, userId), eq(hangGrips.name_key, nameKey)))
+    .get();
+  return row ?? null;
+}
+
+export async function getHangGrip(
+  db: D1Database,
+  userId: string,
+  id: string
+): Promise<HangGripRow | null> {
+  const row = await drizzle(db)
+    .select()
+    .from(hangGrips)
+    .where(and(eq(hangGrips.user_id, userId), eq(hangGrips.id, id)))
+    .get();
+  return row ?? null;
+}
+
+export async function saveHangGrip(
+  db: D1Database,
+  userId: string,
+  grip: { id: string; name: string; nameKey: string }
+): Promise<void> {
+  await drizzle(db)
+    .insert(hangGrips)
+    .values({
+      user_id: userId,
+      id: grip.id,
+      name: grip.name,
+      name_key: grip.nameKey,
+      hidden: false,
+      created_at: new Date().toISOString(),
+    })
+    .onConflictDoUpdate({
+      target: [hangGrips.user_id, hangGrips.id],
+      set: { name: grip.name, name_key: grip.nameKey, hidden: false },
+    });
+}
+
+export async function showHangGrip(db: D1Database, userId: string, id: string): Promise<void> {
+  await drizzle(db)
+    .update(hangGrips)
+    .set({ hidden: false })
+    .where(and(eq(hangGrips.user_id, userId), eq(hangGrips.id, id)));
+}
+
+/**
+ * Frees a deleted grip's name for a rename. A gripKey never holds a newline, so
+ * the new key can never match a name again; the grip keeps its name for history.
+ */
+export async function releaseHangGripName(
+  db: D1Database,
+  userId: string,
+  grip: HangGripRow
+): Promise<void> {
+  await drizzle(db)
+    .update(hangGrips)
+    .set({ name_key: `${grip.name_key}\n${grip.id}` })
+    .where(and(eq(hangGrips.user_id, userId), eq(hangGrips.id, grip.id)));
+}
+
+/**
+ * Hides a custom grip from the pickers and drops its explicit default choices.
+ * A workout created with it still names it as `grip`; the app's model skips it.
+ * Sessions, schedules and loads keep pointing at it, so history keeps its name.
+ */
+export async function hideHangGrip(db: D1Database, userId: string, id: string): Promise<void> {
+  const d = drizzle(db);
+  await d.batch([
+    d
+      .update(hangGrips)
+      .set({ hidden: true })
+      .where(and(eq(hangGrips.user_id, userId), eq(hangGrips.id, id))),
+    d
+      .delete(hangDefaultGrips)
+      .where(and(eq(hangDefaultGrips.user_id, userId), eq(hangDefaultGrips.grip_id, id))),
+  ]);
+}
+
+export async function saveHangWorkout(
+  db: D1Database,
+  userId: string,
+  id: string,
+  w: Omit<Workout, "id" | "source">
+): Promise<HangWorkoutRow> {
+  const now = new Date().toISOString();
+  const fields = {
+    name: w.name,
+    kind: w.kind,
+    grip: w.grip,
+    edge_mm: w.edgeMm,
+    hang_s: w.hangS,
+    rest_s: w.restS,
+    reps: w.reps,
+    sets: w.sets,
+    set_rest_s: w.setRestS,
+    time_units_json: JSON.stringify(w.timeUnits),
+    updated_at: now,
+  };
+  return drizzle(db)
+    .insert(hangWorkouts)
+    .values({ user_id: userId, id, ...fields, created_at: now })
+    .onConflictDoUpdate({ target: [hangWorkouts.user_id, hangWorkouts.id], set: fields })
+    .returning()
+    .get();
+}
+
+export async function setHangDefaultGrip(
+  db: D1Database,
+  userId: string,
+  workoutId: string,
+  gripId: string
+): Promise<void> {
+  await drizzle(db)
+    .insert(hangDefaultGrips)
+    .values({ user_id: userId, workout_id: workoutId, grip_id: gripId })
+    .onConflictDoUpdate({
+      target: [hangDefaultGrips.user_id, hangDefaultGrips.workout_id],
+      set: { grip_id: gripId },
+    });
+}
+
+// D1 binds at most 100 parameters per statement, four per load.
+const LOADS_PER_STATEMENT = 25;
+
+export async function mergeHangLoads(db: D1Database, userId: string, loads: Loads): Promise<Loads> {
+  const d = drizzle(db);
+  const rows = Object.entries(loads).map(([key, kg]) => {
+    const [workoutId = "", gripId = ""] = key.split(":");
+    return { user_id: userId, workout_id: workoutId, grip_id: gripId, kg };
+  });
+  for (let i = 0; i < rows.length; i += LOADS_PER_STATEMENT) {
+    await d
+      .insert(hangLoads)
+      .values(rows.slice(i, i + LOADS_PER_STATEMENT))
+      .onConflictDoUpdate({
+        target: [hangLoads.user_id, hangLoads.workout_id, hangLoads.grip_id],
+        set: { kg: sql`excluded.kg` },
+      });
+  }
+  return loadsOf(await d.select().from(hangLoads).where(eq(hangLoads.user_id, userId)).all());
+}
+
+export async function saveHangSchedule(
+  db: D1Database,
+  userId: string,
+  s: Schedule
+): Promise<HangScheduleRow> {
+  const fields = {
+    workout_id: s.workoutId,
+    grip_id: s.gripId,
+    days_json: JSON.stringify(s.days),
+    start: s.start,
+    end: s.end,
+    skip_json: JSON.stringify([...new Set(s.skip)].sort()),
+    updated_at: new Date().toISOString(),
+  };
+  return drizzle(db)
+    .insert(hangSchedules)
+    .values({ user_id: userId, id: s.id, ...fields })
+    .onConflictDoUpdate({ target: [hangSchedules.user_id, hangSchedules.id], set: fields })
+    .returning()
+    .get();
+}
+
+export async function deleteHangSchedule(
+  db: D1Database,
+  userId: string,
+  id: string
+): Promise<boolean> {
+  const result = await drizzle(db)
+    .delete(hangSchedules)
+    .where(and(eq(hangSchedules.user_id, userId), eq(hangSchedules.id, id)));
+  return result.meta.changes > 0;
+}
+
+export async function getHangSession(
+  db: D1Database,
+  userId: string,
+  id: string
+): Promise<HangSessionRow | null> {
+  const row = await drizzle(db)
+    .select()
+    .from(hangSessions)
+    .where(and(eq(hangSessions.user_id, userId), eq(hangSessions.id, id)))
+    .get();
+  return row ?? null;
+}
+
+export async function listHangSessions(
+  db: D1Database,
+  userId: string,
+  limit: number
+): Promise<HangSessionRow[]> {
+  return drizzle(db)
+    .select()
+    .from(hangSessions)
+    .where(eq(hangSessions.user_id, userId))
+    .orderBy(desc(hangSessions.date), desc(hangSessions.created_at))
+    .limit(limit)
+    .all();
+}
+
+// The Strava columns are left alone: an edit keeps the activity it was posted as.
+export async function saveHangSession(
+  db: D1Database,
+  userId: string,
+  s: HangSession
+): Promise<HangSessionRow> {
+  const now = new Date().toISOString();
+  const fields = {
+    workout_id: s.workoutId,
+    grip_id: s.gripId,
+    date: s.date,
+    load_kg: s.loadKg,
+    pct: s.pct,
+    misses: s.misses,
+    rpe: s.rpe,
+    protocol_json: JSON.stringify(s.protocol),
+    updated_at: now,
+  };
+  return drizzle(db)
+    .insert(hangSessions)
+    .values({ user_id: userId, id: s.id, ...fields, created_at: now })
+    .onConflictDoUpdate({ target: [hangSessions.user_id, hangSessions.id], set: fields })
+    .returning()
+    .get();
+}
+
+export async function deleteHangSession(
+  db: D1Database,
+  userId: string,
+  id: string
+): Promise<boolean> {
+  const result = await drizzle(db)
+    .delete(hangSessions)
+    .where(and(eq(hangSessions.user_id, userId), eq(hangSessions.id, id)));
+  return result.meta.changes > 0;
+}
+
+const hangSession = (userId: string, id: string): SQL | undefined =>
+  and(eq(hangSessions.user_id, userId), eq(hangSessions.id, id));
+
+export async function markHangPostPending(
+  db: D1Database,
+  userId: string,
+  id: string
+): Promise<void> {
+  await drizzle(db)
+    .update(hangSessions)
+    .set({ post_state: "pending", post_error: null })
+    .where(hangSession(userId, id));
+}
+
+export async function markHangPosted(
+  db: D1Database,
+  userId: string,
+  id: string,
+  activityId: number
+): Promise<void> {
+  await drizzle(db)
+    .update(hangSessions)
+    .set({
+      strava_activity_id: activityId,
+      posted_at: new Date().toISOString(),
+      post_state: "posted",
+      post_error: null,
+    })
+    .where(hangSession(userId, id));
+}
+
+export async function markHangPostFailed(
+  db: D1Database,
+  userId: string,
+  id: string,
+  error: string
+): Promise<void> {
+  await drizzle(db)
+    .update(hangSessions)
+    .set({ post_state: "failed", post_error: error })
+    .where(hangSession(userId, id));
+}
+
+export async function getHangSettings(
+  db: D1Database,
+  userId: string
+): Promise<HangSettingsRow | null> {
+  const row = await drizzle(db)
+    .select()
+    .from(hangSettings)
+    .where(eq(hangSettings.user_id, userId))
+    .get();
+  return row ?? null;
+}
+
+export async function saveHangSettings(
+  db: D1Database,
+  userId: string,
+  s: HangSettings
+): Promise<void> {
+  const fields = {
+    units: s.units,
+    theme: s.theme,
+    reminders: s.reminders,
+    reminder_time: s.reminderTime,
+    post_to_strava: s.postToStrava,
+    reminder_prompt_seen: s.reminderPromptSeen,
+    updated_at: new Date().toISOString(),
+  };
+  await drizzle(db)
+    .insert(hangSettings)
+    .values({ user_id: userId, ...fields })
+    .onConflictDoUpdate({ target: hangSettings.user_id, set: fields });
 }

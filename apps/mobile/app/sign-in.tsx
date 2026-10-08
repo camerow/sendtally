@@ -1,374 +1,25 @@
-import { useClerk, useSSO, useSignIn, useSignInWithApple, useSignUp } from "@clerk/clerk-expo";
 import * as AppleAuthentication from "expo-apple-authentication";
-import { makeRedirectUri } from "expo-auth-session";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import * as WebBrowser from "expo-web-browser";
 import React from "react";
 import { KeyboardAvoidingView, Platform, Pressable, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Svg, { Path } from "react-native-svg";
+import { GoogleMark, useSignInFlow } from "@sendtally/auth-native";
 import { t } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { Logo } from "../components/Logo";
 import { SignedOutOnly } from "../features/auth/SignedOutOnly";
 import { press } from "../lib/press";
 
-WebBrowser.maybeCompleteAuthSession();
-
-type Intent = "sign-in" | "sign-up";
-
-function GoogleMark(): React.ReactElement {
-  return (
-    <Svg width={17} height={17} viewBox="0 0 48 48">
-      <Path
-        fill="#4285F4"
-        d="M45.12 24.55c0-1.64-.15-3.22-.42-4.73H24v8.95h11.83c-.51 2.75-2.06 5.08-4.39 6.64v5.52h7.11c4.16-3.83 6.57-9.47 6.57-16.38z"
-      />
-      <Path
-        fill="#34A853"
-        d="M24 46c5.94 0 10.92-1.97 14.56-5.33l-7.11-5.52c-1.97 1.32-4.49 2.1-7.45 2.1-5.73 0-10.58-3.87-12.31-9.07H4.34v5.7C7.96 41.07 15.4 46 24 46z"
-      />
-      <Path
-        fill="#FBBC05"
-        d="M11.69 28.18c-.44-1.32-.69-2.73-.69-4.18s.25-2.86.69-4.18v-5.7H4.34A21.99 21.99 0 0 0 2 24c0 3.55.85 6.91 2.34 9.88l7.35-5.7z"
-      />
-      <Path
-        fill="#EA4335"
-        d="M24 10.75c3.23 0 6.13 1.11 8.41 3.29l6.31-6.31C34.91 4.18 29.93 2 24 2 15.4 2 7.96 6.93 4.34 14.12l7.35 5.7c1.73-5.2 6.58-9.07 12.31-9.07z"
-      />
-    </Svg>
-  );
-}
-
-// The password phase appears for any account that carries a password, which Clerk reports
-// per user. It offers the code as an escape hatch, because an account that grew a password
-// otherwise loses email codes entirely. Clerk's Device Trust then challenges that password
-// from an unrecognised device and emails a code, which is the "second-factor" code mode.
-type CodeMode = Intent | "second-factor";
-type Phase = { name: "email" } | { name: "code"; mode: CodeMode } | { name: "password" };
-
-type SecondFactor = { strategy: string; emailAddressId?: string };
-
-function swapFor(intent: Intent): { to: Intent; prompt: string; label: string } {
-  return intent === "sign-in"
-    ? {
-        to: "sign-up",
-        prompt: t("auth.signInSwapPrompt"),
-        label: t("auth.signInSwapLabel"),
-      }
-    : {
-        to: "sign-in",
-        prompt: t("auth.signUpSwapPrompt"),
-        label: t("common.signIn"),
-      };
-}
-
-function copyFor(intent: Intent): { title: string; body: string } {
-  return intent === "sign-in"
-    ? { title: t("auth.signInHeading"), body: t("auth.signInBody") }
-    : { title: t("auth.signUpHeading"), body: t("auth.signUpBody") };
-}
-
-function errorMessage(err: unknown): string {
-  const first = (err as { errors?: Array<{ longMessage?: string; message?: string }> }).errors?.[0];
-  return first?.longMessage ?? first?.message ?? t("common.somethingWentWrongTryAgain");
-}
-
-function errorCode(err: unknown): string | undefined {
-  return (err as { errors?: Array<{ code?: string }> }).errors?.[0]?.code;
-}
-
 export default function SignIn(): React.ReactElement | null {
   const params = useLocalSearchParams<{ intent?: string }>();
-  const intent: Intent = params.intent === "sign-up" ? "sign-up" : "sign-in";
-  const { signIn, isLoaded: signInLoaded, setActive } = useSignIn();
-  const { signUp, isLoaded: signUpLoaded } = useSignUp();
-  const clerk = useClerk();
-  const { startSSOFlow } = useSSO();
-  const { startAppleAuthenticationFlow } = useSignInWithApple();
   const router = useRouter();
-  const [email, setEmail] = React.useState("");
-  const [code, setCode] = React.useState("");
-  const [password, setPassword] = React.useState("");
-  const [phase, setPhase] = React.useState<Phase>({ name: "email" });
-  const [error, setError] = React.useState<string | null>(null);
-  const [busy, setBusy] = React.useState(false);
-
-  // Clerk creates the session server-side before the browser sheet hands back to the
-  // app, so a dropped hand-off (iOS in particular) leaves the client signed in while the
-  // screen still shows the form. The next tap then fails with "already signed in".
-  // Adopting whatever session the client already carries turns both into a sign-in.
-  async function adoptExistingSession(): Promise<boolean> {
-    await clerk.client.reload();
-    const session = clerk.client.signedInSessions[0];
-    if (session === undefined) return false;
-    await clerk.setActive({ session: session.id });
-    router.replace("/(tabs)/sessions");
-    return true;
-  }
-
-  async function continueWithGoogle(): Promise<void> {
-    setError(null);
-    setBusy(true);
-    try {
-      // The redirect needs a path. A bare "sendtally://" is not hierarchical, so Clerk's
-      // callback comes back as "sendtally:?...&rotating_token_nonce=<nonce>%23" and the
-      // nonce parses with a trailing "#", which Clerk rejects as signed out.
-      const result = await startSSOFlow({
-        strategy: "oauth_google",
-        redirectUrl: makeRedirectUri({ path: "sso-callback" }),
-      });
-      if (result.createdSessionId !== null && result.setActive !== undefined) {
-        await result.setActive({ session: result.createdSessionId });
-        router.replace("/(tabs)/sessions");
-        return;
-      }
-      if (await adoptExistingSession()) return;
-      setError(t("auth.googleIncomplete"));
-    } catch (err) {
-      if (errorCode(err) === "session_exists" && (await adoptExistingSession())) return;
-      setError(errorMessage(err));
-    }
-    setBusy(false);
-  }
-
-  async function continueWithApple(): Promise<void> {
-    setError(null);
-    setBusy(true);
-    try {
-      const result = await startAppleAuthenticationFlow();
-      if (result.createdSessionId !== null && result.setActive !== undefined) {
-        await result.setActive({ session: result.createdSessionId });
-        router.replace("/(tabs)/sessions");
-        return;
-      }
-    } catch (err) {
-      setError(errorMessage(err));
-    }
-    setBusy(false);
-  }
-
-  // Clerk answers a challenged credential with "needs_second_factor" instead of throwing,
-  // so treating every non-complete status as a bad credential told store reviewers their
-  // correct password was wrong. Device Trust raises this on any unrecognised device.
-  async function startSecondFactor(factors: SecondFactor[] | null): Promise<boolean> {
-    const factor = factors?.find((f) => f.strategy === "email_code");
-    if (!signInLoaded || factor?.emailAddressId === undefined) return false;
-    await signIn.prepareSecondFactor({
-      strategy: "email_code",
-      emailAddressId: factor.emailAddressId,
-    });
-    setPhase({ name: "code", mode: "second-factor" });
-    return true;
-  }
-
-  function emailCodeFactor(): { emailAddressId: string } | undefined {
-    if (!signInLoaded) return undefined;
-    const factor = signIn.supportedFirstFactors?.find((f) => f.strategy === "email_code");
-    return factor !== undefined && "emailAddressId" in factor ? factor : undefined;
-  }
-
-  async function prepareEmailCode(): Promise<boolean> {
-    const factor = emailCodeFactor();
-    if (!signInLoaded || factor === undefined) return false;
-    await signIn.prepareFirstFactor({
-      strategy: "email_code",
-      emailAddressId: factor.emailAddressId,
-    });
-    setPhase({ name: "code", mode: "sign-in" });
-    return true;
-  }
-
-  async function sendEmailCodeInstead(): Promise<void> {
-    setError(null);
-    setBusy(true);
-    try {
-      if (!(await prepareEmailCode())) setError(t("auth.emailCodeDisabled"));
-    } catch (err) {
-      setError(errorMessage(err));
-    }
-    setBusy(false);
-  }
-
-  async function sendCode(): Promise<void> {
-    if (!signInLoaded || !signUpLoaded) return;
-    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
-      setError(t("auth.invalidEmail"));
-      return;
-    }
-    setError(null);
-    setBusy(true);
-    try {
-      const attempt = await signIn.create({ identifier: email });
-      if (attempt.supportedFirstFactors?.some((f) => f.strategy === "password")) {
-        setPhase({ name: "password" });
-        setBusy(false);
-        return;
-      }
-      if (!(await prepareEmailCode())) {
-        setError(t("auth.emailCodeDisabled"));
-        setBusy(false);
-        return;
-      }
-    } catch (signInErr) {
-      if (errorCode(signInErr) === "session_exists" && (await adoptExistingSession())) return;
-      if (errorCode(signInErr) !== "form_identifier_not_found") {
-        setError(errorMessage(signInErr));
-        setBusy(false);
-        return;
-      }
-      if (intent === "sign-in") {
-        setError(t("auth.noAccount"));
-        setBusy(false);
-        return;
-      }
-      try {
-        await signUp.create({ emailAddress: email });
-        await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
-        setPhase({ name: "code", mode: "sign-up" });
-      } catch (signUpErr) {
-        setError(errorMessage(signUpErr));
-      }
-    }
-    setBusy(false);
-  }
-
-  async function verifyCode(): Promise<void> {
-    if (!signInLoaded || !signUpLoaded || phase.name !== "code") return;
-    if (!/^\d{6}$/.test(code.trim())) {
-      setError(t("auth.invalidCode"));
-      return;
-    }
-    setError(null);
-    setBusy(true);
-    try {
-      if (phase.mode === "second-factor") {
-        const result = await signIn.attemptSecondFactor({
-          strategy: "email_code",
-          code: code.trim(),
-        });
-        if (result.status === "complete" && setActive !== undefined) {
-          await setActive({ session: result.createdSessionId });
-          router.replace("/(tabs)/sessions");
-          return;
-        }
-      } else if (phase.mode === "sign-in") {
-        const result = await signIn.attemptFirstFactor({
-          strategy: "email_code",
-          code: code.trim(),
-        });
-        if (result.status === "complete" && setActive !== undefined) {
-          await setActive({ session: result.createdSessionId });
-          router.replace("/(tabs)/sessions");
-          return;
-        }
-        if (
-          result.status === "needs_second_factor" &&
-          (await startSecondFactor(result.supportedSecondFactors))
-        ) {
-          setCode("");
-          setBusy(false);
-          return;
-        }
-      } else {
-        const result = await signUp.attemptEmailAddressVerification({ code: code.trim() });
-        if (result.status === "complete" && result.createdSessionId !== null) {
-          await clerk.setActive({ session: result.createdSessionId });
-          router.replace("/(tabs)/sessions");
-          return;
-        }
-      }
-      setError(t("auth.codeFailed"));
-    } catch (err) {
-      setError(errorMessage(err));
-    }
-    setBusy(false);
-  }
-
-  async function signInWithPassword(): Promise<void> {
-    if (!signInLoaded || phase.name !== "password") return;
-    if (password === "") {
-      setError(t("auth.enterPassword"));
-      return;
-    }
-    setError(null);
-    setBusy(true);
-    try {
-      const result = await signIn.attemptFirstFactor({ strategy: "password", password });
-      if (result.status === "complete" && setActive !== undefined) {
-        await setActive({ session: result.createdSessionId });
-        router.replace("/(tabs)/sessions");
-        return;
-      }
-      if (
-        result.status === "needs_second_factor" &&
-        (await startSecondFactor(result.supportedSecondFactors))
-      ) {
-        setBusy(false);
-        return;
-      }
-      setError(t("auth.wrongPassword"));
-    } catch (err) {
-      setError(errorMessage(err));
-    }
-    setBusy(false);
-  }
-
-  // Resending a second-factor code re-prepares that factor. Falling back to sendCode would
-  // restart from the identifier and drop the reviewer back on the password form.
-  async function resendCode(): Promise<void> {
-    if (phase.name !== "code" || phase.mode === "sign-up") {
-      await sendCode();
-      return;
-    }
-    if (!signInLoaded) return;
-    setError(null);
-    setBusy(true);
-    try {
-      const resent =
-        phase.mode === "second-factor"
-          ? await startSecondFactor(signIn.supportedSecondFactors)
-          : await prepareEmailCode();
-      if (!resent) setError(t("auth.resendFailed"));
-    } catch (err) {
-      setError(errorMessage(err));
-    }
-    setBusy(false);
-  }
-
-  function backToEmail(): void {
-    setPhase({ name: "email" });
-    setCode("");
-    setPassword("");
-    setError(null);
-  }
-
+  const flow = useSignInFlow({
+    intent: params.intent === "sign-up" ? "sign-up" : "sign-in",
+    onSignedIn: () => router.replace("/(tabs)/sessions"),
+  });
+  const { phase, busy, error, copy, swap } = flow;
   const inCodePhase = phase.name === "code";
   const inPasswordPhase = phase.name === "password";
-  const copy = copyFor(intent);
-  const swap = swapFor(intent);
-  const title = inCodePhase
-    ? t("auth.checkInbox")
-    : inPasswordPhase
-      ? t("auth.signInHeading")
-      : copy.title;
-  const body = inCodePhase
-    ? phase.name === "code" && phase.mode === "second-factor"
-      ? t("auth.secondFactorBody", { email })
-      : t("auth.codeSentBody", { email })
-    : inPasswordPhase
-      ? t("auth.passwordBody", { email })
-      : copy.body;
-  const buttonLabel = inCodePhase
-    ? phase.name === "code" && phase.mode === "sign-up"
-      ? t("common.createAccount")
-      : t("common.signIn")
-    : inPasswordPhase
-      ? t("common.signIn")
-      : intent === "sign-in"
-        ? t("auth.login")
-        : t("auth.continue");
-  const submit = inCodePhase ? verifyCode : inPasswordPhase ? signInWithPassword : sendCode;
   const fieldStyle = {
     fontFamily: fonts.sans,
     fontSize: 16,
@@ -423,7 +74,7 @@ export default function SignIn(): React.ReactElement | null {
                 marginTop: 6,
               }}
             >
-              {title}
+              {copy.title}
             </Text>
             <Text
               style={{
@@ -433,15 +84,12 @@ export default function SignIn(): React.ReactElement | null {
                 color: colors.textSecondary,
               }}
             >
-              {body}
+              {copy.body}
             </Text>
             {inPasswordPhase && (
               <TextInput
-                value={password}
-                onChangeText={(t) => {
-                  setPassword(t);
-                  setError(null);
-                }}
+                value={flow.password}
+                onChangeText={flow.setPassword}
                 placeholder={t("auth.passwordLabel")}
                 placeholderTextColor={colors.textFaint}
                 secureTextEntry
@@ -449,17 +97,14 @@ export default function SignIn(): React.ReactElement | null {
                 autoCapitalize="none"
                 autoCorrect={false}
                 autoFocus
-                onSubmitEditing={() => void signInWithPassword()}
+                onSubmitEditing={() => void flow.signInWithPassword()}
                 style={fieldStyle}
               />
             )}
             {inCodePhase && (
               <TextInput
-                value={code}
-                onChangeText={(t) => {
-                  setCode(t);
-                  setError(null);
-                }}
+                value={flow.code}
+                onChangeText={flow.setCode}
                 placeholder="123456"
                 placeholderTextColor={colors.textFaint}
                 keyboardType="number-pad"
@@ -487,12 +132,12 @@ export default function SignIn(): React.ReactElement | null {
                     buttonType={AppleAuthentication.AppleAuthenticationButtonType.CONTINUE}
                     buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
                     cornerRadius={radius.control}
-                    onPress={() => void (busy ? undefined : continueWithApple())}
+                    onPress={() => void (busy ? undefined : flow.continueWithApple())}
                     style={{ height: 48, opacity: busy ? 0.45 : 1 }}
                   />
                 )}
                 <Pressable
-                  onPress={() => void continueWithGoogle()}
+                  onPress={() => void flow.continueWithGoogle()}
                   disabled={busy}
                   style={{
                     flexDirection: "row",
@@ -534,11 +179,8 @@ export default function SignIn(): React.ReactElement | null {
             )}
             {phase.name === "email" && (
               <TextInput
-                value={email}
-                onChangeText={(t) => {
-                  setEmail(t);
-                  setError(null);
-                }}
+                value={flow.email}
+                onChangeText={flow.setEmail}
                 placeholder="you@email.com"
                 placeholderTextColor={colors.textFaint}
                 keyboardType="email-address"
@@ -553,7 +195,7 @@ export default function SignIn(): React.ReactElement | null {
               </Text>
             )}
             <Pressable
-              onPress={() => void submit()}
+              onPress={() => void flow.submit()}
               disabled={busy}
               style={{
                 backgroundColor: colors.azureInk,
@@ -566,28 +208,28 @@ export default function SignIn(): React.ReactElement | null {
               }}
             >
               <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 16, color: colors.white }}>
-                {buttonLabel}
+                {copy.submitLabel}
               </Text>
             </Pressable>
             {phase.name !== "email" && (
               <View style={{ flexDirection: "row", gap: 22 }}>
                 <Pressable
-                  onPress={backToEmail}
+                  onPress={flow.backToEmail}
                   style={press({ minHeight: 44, justifyContent: "center" })}
                 >
                   <Text style={secondaryLink}>{t("auth.differentEmail")}</Text>
                 </Pressable>
                 {inCodePhase && (
                   <Pressable
-                    onPress={() => void resendCode()}
+                    onPress={() => void flow.resendCode()}
                     style={{ minHeight: 44, justifyContent: "center" }}
                   >
                     <Text style={secondaryLink}>{t("auth.resend")}</Text>
                   </Pressable>
                 )}
-                {inPasswordPhase && emailCodeFactor() !== undefined && (
+                {flow.canSendEmailCodeInstead && (
                   <Pressable
-                    onPress={() => void sendEmailCodeInstead()}
+                    onPress={() => void flow.sendEmailCodeInstead()}
                     disabled={busy}
                     style={{ minHeight: 44, justifyContent: "center" }}
                   >

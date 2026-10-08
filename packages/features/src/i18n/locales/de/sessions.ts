@@ -2,6 +2,7 @@ export const sessions = {
   "sessions.unscored": "ohne Bewertung",
   "sessions.back": "← Logbuch",
   "sessions.onStrava": "Auf Strava",
+  "sessions.hangboardSession": "Hangboard-Session",
   "sessions.loadFailed": "sendtally ist nicht erreichbar. Zum Neuladen ziehen.",
   "sessions.noneForTags": "Keine Sessions mit diesen Tags.",
   "sessions.monthMeta": "{year} · {sessions}",
