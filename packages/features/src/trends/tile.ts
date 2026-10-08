@@ -83,8 +83,10 @@ function domainOf(
     .map((p) => (p.a === null && p.b === null ? null : (p.a ?? 0) + (p.b ?? 0)))
     .filter((v): v is number => v !== null);
   if (isGradeKind(kind)) {
-    if (values.length === 0) return [0, 1];
-    return [Math.max(0, Math.floor(Math.min(...values)) - 1), Math.ceil(Math.max(...values)) + 1];
+    if (values.length === 0) return [0, 2];
+    const lo = Math.max(0, Math.floor(Math.min(...values)) - 1);
+    const hi = Math.ceil(Math.max(...values)) + 1;
+    return [lo, hi + ((hi - lo) % 2)];
   }
   const max = Math.max(0, ...values);
   return [0, Math.max(1, chart === "line" ? max * 1.15 : max)];
