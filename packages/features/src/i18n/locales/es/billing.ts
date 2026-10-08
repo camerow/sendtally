@@ -26,10 +26,9 @@ export const billing = {
   "billing.plan.monthly": "Mensual",
   "billing.plan.yearly": "Anual",
   "billing.priceOnce": "{price} una vez",
-  "billing.perMonth": "al mes",
   "billing.perPeriod": "por {period}",
   "billing.onePayment": "pago único",
-  "billing.billedYearly": "Se cobran {price} al año",
+  "billing.monthlyEquivalent": "Equivale a {price} al mes",
   "billing.bestValue": "Mejor precio",
   "billing.purchaseFailed":
     "No se pudo completar la compra. No se ha cobrado nada; inténtalo de nuevo en un momento.",
@@ -62,7 +61,7 @@ export const billing = {
   "billing.panelTitle": "Hazte miembro para ver tus tendencias a largo plazo.",
   "billing.panelPageTitle": "Todo lo que tus sesiones han ido sumando.",
   "billing.panelBody":
-    "Dos dólares al mes, facturados anualmente, abren en cada pantalla todos los rangos, de un mes a todo el historial - a partir de las sesiones que ya registraste.",
+    "La suscripción abre en cada pantalla todos los rangos, de un mes a todo el historial - a partir de las sesiones que ya registraste.",
   "billing.panelFootnote":
     "2 $/mes facturados anualmente · o 3 $ mes a mes · cancela cuando quieras",
   "billing.panelVolume": "Cuánto escalaste, semana a semana",

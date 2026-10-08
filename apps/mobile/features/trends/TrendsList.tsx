@@ -27,11 +27,13 @@ import { TrendStats } from "./TrendStats";
 export type TrendsListProps = {
   preview?: boolean;
   onLockedRange?: () => void;
+  onPaywallLayout?: (y: number) => void;
 };
 
 export function TrendsList({
   preview = false,
   onLockedRange,
+  onPaywallLayout,
 }: TrendsListProps): React.ReactElement {
   const api = useApi();
   const feature = useTrends(api, { preview });
@@ -170,7 +172,11 @@ export function TrendsList({
       {vm.groups.map((g) => (
         <TrendSection key={g.id} group={g} locked={preview} onLocked={onLockedRange} />
       ))}
-      {preview && <Paywall />}
+      {preview && (
+        <View onLayout={(e) => onPaywallLayout?.(e.nativeEvent.layout.y)}>
+          <Paywall />
+        </View>
+      )}
       <RefineSheet
         visible={sheet === "refine"}
         feature={feature}

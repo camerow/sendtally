@@ -7,11 +7,17 @@ import { ScreenHeader } from "../../components/ScreenHeader";
 import { useCanSeeInsights } from "../../features/billing/useBilling";
 import { TrendsList } from "../../features/trends/TrendsList";
 
+const GAP = 14;
+
 export default function Trends(): React.ReactElement {
   const canSeeInsights = useCanSeeInsights();
   const scroll = React.useRef<ScrollView>(null);
+  const panelY = React.useRef(0);
+  const viewportHeight = React.useRef(0);
+  const contentHeight = React.useRef(0);
   const scrollToPanel = React.useCallback((): void => {
-    scroll.current?.scrollToEnd({ animated: true });
+    const end = Math.max(0, contentHeight.current - viewportHeight.current);
+    scroll.current?.scrollTo({ y: Math.min(panelY.current - GAP, end), animated: true });
   }, []);
 
   return (
@@ -19,18 +25,24 @@ export default function Trends(): React.ReactElement {
       <ScreenHeader title={t("common.trends")} />
       <ScrollView
         ref={scroll}
+        onLayout={(e) => (viewportHeight.current = e.nativeEvent.layout.height)}
+        onContentSizeChange={(_, height) => (contentHeight.current = height)}
         contentContainerStyle={{
           paddingHorizontal: 18,
           paddingTop: 4,
           paddingBottom: 24,
-          gap: 14,
+          gap: GAP,
         }}
       >
         {canSeeInsights === null && (
           <ActivityIndicator color={colors.gunmetal} style={{ alignSelf: "flex-start" }} />
         )}
         {canSeeInsights !== null && (
-          <TrendsList preview={!canSeeInsights} onLockedRange={scrollToPanel} />
+          <TrendsList
+            preview={!canSeeInsights}
+            onLockedRange={scrollToPanel}
+            onPaywallLayout={(y) => (panelY.current = y)}
+          />
         )}
       </ScrollView>
     </SafeAreaView>
