@@ -1,0 +1,37 @@
+name: hangtally release
+
+# The hangboard app. The pipeline lives in mobile-app-release.yml; this file
+# only decides which pushes reach it. iOS only until hangtally has a Play
+# listing: set the HANGTALLY_PLATFORMS variable to "all" once it does.
+# Runbook: docs/mobile-release.md.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/hangtally/**"
+      - "packages/api-client/**"
+      - "packages/auth-native/**"
+      - "packages/core/**"
+      - "packages/design/**"
+      - "packages/features/**"
+      - "pnpm-lock.yaml"
+      - ".github/workflows/hangtally-release.yml"
+      - ".github/workflows/mobile-app-release.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: hangtally-release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    uses: ./.github/workflows/mobile-app-release.yml
+    secrets: inherit
+    permissions:
+      contents: write
+    with:
+      app: hangtally
+      title: hangtally
+      other-app: mobile
+      platforms: ${{ vars.HANGTALLY_PLATFORMS || 'ios' }}
