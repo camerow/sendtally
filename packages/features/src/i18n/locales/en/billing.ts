@@ -26,10 +26,9 @@ export const billing = {
   "billing.plan.monthly": "Monthly",
   "billing.plan.yearly": "Yearly",
   "billing.priceOnce": "{price} once",
-  "billing.perMonth": "per month",
   "billing.perPeriod": "per {period}",
   "billing.onePayment": "one payment",
-  "billing.billedYearly": "Billed {price} a year",
+  "billing.monthlyEquivalent": "Works out to {price} a month",
   "billing.bestValue": "Best value",
   "billing.purchaseFailed":
     "The purchase could not be completed. Nothing was charged; try again in a moment.",
@@ -62,7 +61,7 @@ export const billing = {
   "billing.panelTitle": "Join to see your long-term trends.",
   "billing.panelPageTitle": "Everything your sessions have been adding up to.",
   "billing.panelBody":
-    "Two dollars a month, billed yearly, opens every range from a month to all-time on every screen here - built from the sessions you already logged.",
+    "Membership opens every range from a month to all-time on every screen here - built from the sessions you already logged.",
   "billing.panelFootnote": "$2/mo billed yearly · or $3 month to month · cancel any time",
   "billing.panelVolume": "How much you climbed, week by week",
   "billing.panelPyramid": "Where your sends actually sit",

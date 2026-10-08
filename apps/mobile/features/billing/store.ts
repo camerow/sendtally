@@ -120,9 +120,9 @@ export function planCardOf(pkg: PurchasesPackage): PlanCard {
   if (pkg.packageType === PACKAGE_TYPE.ANNUAL && pricePerMonthString !== null) {
     return {
       ...base,
-      price: pricePerMonthString,
-      cadence: t("billing.perMonth"),
-      equivalent: t("billing.billedYearly", { price: priceString }),
+      price: priceString,
+      cadence: t("billing.perPeriod", { period: t("billing.period.year") }),
+      equivalent: t("billing.monthlyEquivalent", { price: pricePerMonthString }),
       bestValue: true,
     };
   }
