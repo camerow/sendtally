@@ -263,15 +263,21 @@ The ids match the RevenueCat test-store products, so one name means one thing ev
 
 Pricing is not free-form: Apple sells from a fixed ladder of price points, and $23.88 - the figure that would have made the yearly card read exactly $1.99 a month - is not on it.
 $23.99 is, and it divides to $2.00, which is also what Play charges.
-That matters because the annual plan card headlines `pricePerMonthString` rather than the yearly total, with the total on the line beneath it.
+
+The annual plan card headlines the yearly total and puts `pricePerMonthString` on a small line beneath it.
+Keep it that way round: App Review rejected a build under guideline 3.1.2(c) when the card headlined the monthly equivalent, because the amount actually billed has to be the most prominent price on the screen.
 
 The price point ids returned by `GET /v1/subscriptions/<id>/pricePoints` are per subscription and per territory, and `customerPrice` is a bare-decimal string (`"3.0"`, not `"3.00"`), so compare it as a number.
 Setting the monthly price through `POST /v1/subscriptionPrices` worked and equalized itself across 175 territories; the same call for the yearly product returned `409 ENTITY_ERROR.RELATIONSHIP.INVALID` against a price point id that decodes to exactly that subscription, and it was set in the console instead.
 
-Each product also carries two assets that the app screenshot set does not cover, both rendered from artboards by `store:render`:
+Each product also carries two assets that the app screenshot set does not cover:
 
-- a 1024x1024 promotional image (`subscriptionImages`), flattened RGB with square corners, used if the purchase is ever promoted on the product page or redeemed through an offer code
-- a review-only screenshot (`appStoreReviewScreenshot`) at 1290x2796, which mirrors the real paywall so a reviewer sees what the app renders
+- a 1024x1024 promotional image (`subscriptionImages`), flattened RGB with square corners, used if the purchase is ever promoted on the product page or redeemed through an offer code; rendered from its artboard by `store:render`
+- a review-only screenshot (`appStoreReviewScreenshot`) at 1290x2796, captured from the real membership screen by `apps/mobile/store/capture-review-shot.sh`
+
+The review screenshot used to be an artboard too, and it drifted from the app until it showed a panel colour and copy the app no longer had.
+The capture script runs the Maestro flow `maestro/store/iap-review-shot.yaml` on a 6.7" simulator (iPhone 15 Pro Max is exactly 1290x2796) against the local API and Metro, after pinning the status bar to 9:41 and hiding the development build's floating tools button.
+Its prices come from the RevenueCat test store the development build uses, so the monthly equivalent can read a cent off what the App Store shows.
 
 A subscription sitting at `MISSING_METADATA` once it has a localization, a price and a review screenshot is usually not missing metadata at all - it is the Paid Applications Agreement. Both products flipped to `READY_TO_SUBMIT` the moment that agreement went active.
 

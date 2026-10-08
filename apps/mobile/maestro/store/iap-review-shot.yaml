@@ -1,0 +1,11 @@
+appId: com.sendtally.app
+# Captures the App Store review screenshot for the subscription products from the real
+# membership screen. Run through store/capture-review-shot.sh, which sets up the simulator.
+---
+- runFlow: ../helpers/open-dev-client.yaml
+- runFlow: ../helpers/ensure-signed-in.yaml
+- openLink: "com.sendtally.app://membership"
+- extendedWaitUntil:
+    visible: "Become a member.*"
+    timeout: 30000
+- waitForAnimationToEnd

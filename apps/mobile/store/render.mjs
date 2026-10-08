@@ -54,11 +54,9 @@ const targets = [
   { board: "android-log-session", to: "store/out/android/3-log-session.png", alpha: false },
   { board: "android-session-detail", to: "store/out/android/4-session-detail.png", alpha: false },
   { board: "android-trends", to: "store/out/android/5-trends.png", alpha: false },
-  // In-app purchase assets. Apple wants the promotional image flattened with no
-  // rounded corners, and the review screenshot at one of the sizes the app
-  // supports, so it is rendered at 430x932 logical, the 6.7" phone.
+  // Apple wants the in-app purchase promotional image flattened with no rounded
+  // corners. The review screenshot comes from the app: store/capture-review-shot.sh.
   { board: "iap-promo-1024", to: "store/out/ios/iap-promo-1024.png", alpha: false },
-  { board: "iap-review-shot", to: "store/out/ios/iap-review-shot.png", alpha: false },
   ...septemberSet,
 ];
 
