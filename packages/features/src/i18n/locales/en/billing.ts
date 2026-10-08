@@ -34,14 +34,14 @@ export const billing = {
     "The purchase could not be completed. Nothing was charged; try again in a moment.",
   "billing.notEntitledAfterPurchase":
     "{store} confirmed the purchase but membership has not arrived yet. Reopen the app in a minute.",
-  "billing.nothingToRestore": "No membership was found for this {store} account.",
+  "billing.nothingToRestore": "No membership was found on {store} for this account.",
   "billing.restoreFailed": "Restoring did not go through. Try again in a moment.",
   "billing.plansUnavailable":
     "Plans could not be loaded from {store} right now. Check your connection and reopen the app to try again.",
   "billing.becomeAMember": "Become a member",
   "billing.becomeAMemberPlan": "Become a member · {plan}",
   "billing.renewalNote":
-    "Billed through {store}. Renews automatically until you cancel, which you can do any time from your {store} subscriptions.",
+    "Billed through {store}. Renews automatically until you cancel, which you can do any time in {store} subscription settings.",
   "billing.restoring": "Restoring…",
   "billing.restorePurchases": "Restore purchases",
   "billing.terms": "Terms",
