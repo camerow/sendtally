@@ -52,13 +52,9 @@
   "submit": {
     "production": {
       "ios": {
-        "ascAppId": "6810779919",
-        "ascApiKeyPath": "$ASC_API_KEY_PATH",
-        "ascApiKeyId": "$ASC_API_KEY_ID",
-        "ascApiKeyIssuerId": "$ASC_API_KEY_ISSUER_ID"
+        "ascAppId": "6810779919"
       },
       "android": {
-        "serviceAccountKeyPath": "$GOOGLE_SERVICE_ACCOUNT_KEY_PATH",
         "track": "internal",
         "releaseStatus": "completed"
       }

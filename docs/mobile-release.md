@@ -119,20 +119,20 @@ When the fingerprint moves, the job publishes nothing and says so on the pull re
 
 GitHub repo secrets:
 
-| Name                         | Where it comes from                                       |
-| ---------------------------- | --------------------------------------------------------- |
-| `EXPO_TOKEN`                 | expo.dev, Account settings, Access tokens                 |
-| `GOOGLE_SERVICE_ACCOUNT_KEY` | Play Console service account JSON, whole file contents    |
-| `ASC_API_KEY`                | App Store Connect API key `.p8` file, whole file contents |
-| `ASC_API_KEY_ID`             | App Store Connect, Users and Access, Integrations         |
-| `ASC_API_KEY_ISSUER_ID`      | Same page as the key id                                   |
+| Name                    | Where it comes from                                       |
+| ----------------------- | --------------------------------------------------------- |
+| `EXPO_TOKEN`            | expo.dev, Account settings, Access tokens                 |
+| `ASC_API_KEY`           | App Store Connect API key `.p8` file, whole file contents |
+| `ASC_API_KEY_ID`        | App Store Connect, Users and Access, Integrations         |
+| `ASC_API_KEY_ISSUER_ID` | Same page as the key id                                   |
 
 Repo variable: `MOBILE_PLATFORMS`, one of `android`, `ios`, `all`.
 
 The release job needs `contents: write` on `GITHUB_TOKEN` to push the version bump and cut the release; that is granted in the workflow, not in repo settings.
 
-The workflow writes the two file-shaped credentials to disk in `apps/mobile` because EAS Submit reads them from a path.
-Both paths are gitignored, and the runner is discarded after the job.
+The submission credentials live on EAS, not in `eas.json`: the App Store Connect API key and the Play service account key are uploaded once with `eas credentials` (iOS: "App Store Connect: Manage your API Key", set it up for EAS Submit; Android: "Google Service Account", set it up for submissions).
+`eas.json` must not reference them through `$VAR` fields, because a build triggered from GitHub on expo.dev runs without our environment, the variables interpolate to empty strings, and EAS rejects the whole file with "ascApiKeyPath is not allowed to be empty" before building anything.
+The workflow still writes the `.p8` to disk in `apps/mobile` for the `EXPO_ASC_*` build-time Apple access; that path is gitignored, and the runner is discarded after the job.
 
 The App Store Connect app id is inline in `eas.json` rather than an environment variable.
 EAS validates `ascAppId` against a digits-only pattern before it interpolates `$VAR`, so a variable there fails the submit with "Invalid Apple App Store Connect App ID" even when the variable is set.
