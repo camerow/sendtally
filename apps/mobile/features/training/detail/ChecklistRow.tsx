@@ -5,6 +5,7 @@ import type { ChecklistItem } from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
 import { IconButton } from "../components/IconButton";
 import { DetailTextInput } from "./DetailTextInput";
+import { MoveButtons } from "./MoveButtons";
 import { Tick } from "./Tick";
 
 export type ChecklistRowProps = {
@@ -71,28 +72,7 @@ export function ChecklistRow({
           style={{ fontSize: 14 }}
         />
       </View>
-      <View>
-        {first ? (
-          <View style={{ width: 44, height: 44 }} />
-        ) : (
-          <IconButton
-            icon="up"
-            label={t("activities.moveUp")}
-            onPress={() => onMove(-1)}
-            color={colors.textSecondary}
-          />
-        )}
-        {last ? (
-          <View style={{ width: 44, height: 44 }} />
-        ) : (
-          <IconButton
-            icon="down"
-            label={t("activities.moveDown")}
-            onPress={() => onMove(1)}
-            color={colors.textSecondary}
-          />
-        )}
-      </View>
+      <MoveButtons first={first} last={last} onMove={onMove} />
       <IconButton
         icon="x"
         label={t("activities.removeItem")}

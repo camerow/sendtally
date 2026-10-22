@@ -3,12 +3,13 @@ import { Text, View } from "react-native";
 import type { ActivityDetail, ActivityKind, PlanTemplate } from "@sendtally/api-client";
 import type { WeightUnit } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
-import { emptyDetail } from "@sendtally/features/activities";
+import { emptyDetail, type IntervalsDetail } from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
 import { Button } from "../components/Button";
 import { SheetSection } from "../components/SheetSection";
 import { type } from "../type";
 import { ChecklistEditor } from "./ChecklistEditor";
+import { IntervalsEditor } from "./IntervalsEditor";
 import { SetsEditor } from "./SetsEditor";
 
 export type DetailSectionProps = {
@@ -20,10 +21,12 @@ export type DetailSectionProps = {
   /** Editing what a plan prescribes: no ticks, and nothing counts as done. */
   template: boolean;
   inSheet: boolean;
+  /** Runs intervals in the timer; absent where they cannot be run from here. */
+  onStart?: (value: IntervalsDetail) => void;
   onChange: (value: ActivityDetail | null) => void;
 };
 
-/** The optional body: sets, a checklist, or neither. */
+/** The optional body: sets, a checklist, intervals, or none. */
 export function DetailSection({
   value,
   kind,
@@ -31,6 +34,7 @@ export function DetailSection({
   targets,
   template,
   inSheet,
+  onStart,
   onChange,
 }: DetailSectionProps): React.ReactElement {
   const remove =
@@ -61,6 +65,12 @@ export function DetailSection({
             variant="outline"
             onPress={() => onChange(emptyDetail("checklist", kind))}
           />
+          <Button
+            label={t("activities.addIntervals")}
+            icon="plus"
+            variant="outline"
+            onPress={() => onChange(emptyDetail("intervals", kind))}
+          />
         </View>
       ) : value.kind === "sets" ? (
         <SetsEditor
@@ -70,6 +80,14 @@ export function DetailSection({
           unit={unit}
           template={template}
           inSheet={inSheet}
+          onChange={onChange}
+        />
+      ) : value.kind === "intervals" ? (
+        <IntervalsEditor
+          value={value}
+          unit={unit}
+          inSheet={inSheet}
+          onStart={onStart === undefined ? undefined : () => onStart(value)}
           onChange={onChange}
         />
       ) : (

@@ -4,19 +4,13 @@ import { newChecklistItem, type ChecklistDetail } from "@sendtally/features/acti
 import { t } from "@sendtally/features/i18n";
 import { Button } from "../components/Button";
 import { ChecklistRow } from "./ChecklistRow";
+import { moved } from "./moved";
 
 export type ChecklistEditorProps = {
   value: ChecklistDetail;
   template: boolean;
   inSheet: boolean;
   onChange: (value: ChecklistDetail) => void;
-};
-
-const moved = <T,>(list: readonly T[], from: number, to: number): T[] => {
-  const next = [...list];
-  const [item] = next.splice(from, 1);
-  if (item !== undefined) next.splice(to, 0, item);
-  return next;
 };
 
 /** Checklist lines to tick off, add, remove and put in order. */
