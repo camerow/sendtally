@@ -55,7 +55,7 @@ export type Schedule = {
   blockId?: string | null;
 };
 
-export type BlockPhase = "build" | "deload" | "test";
+export type BlockPhase = "load" | "deload" | "test" | "perform";
 
 /** A week of a block: its load as a percent of the block's base, and an optional phase tag. */
 export type WeekLoad = { load: number; phase?: BlockPhase };

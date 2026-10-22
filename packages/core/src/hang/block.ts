@@ -2,7 +2,12 @@ import { addDays, daysBetween } from "./calendar";
 import { clamp } from "./parse";
 import type { BlockPhase, CalendarDate, TrainingBlock, WeekLoad } from "./types";
 
-export const BLOCK_PHASES = ["build", "deload", "test"] as const satisfies readonly BlockPhase[];
+export const BLOCK_PHASES = [
+  "load",
+  "deload",
+  "test",
+  "perform",
+] as const satisfies readonly BlockPhase[];
 
 type Dated = Pick<TrainingBlock, "start" | "weeks" | "endedOn">;
 

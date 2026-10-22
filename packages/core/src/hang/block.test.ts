@@ -81,9 +81,10 @@ describe("training blocks", () => {
   });
 
   it("cycles a week from no phase through each phase and back", () => {
-    expect(nextPhase(undefined)).toBe("build");
-    expect(nextPhase("build")).toBe("deload");
+    expect(nextPhase(undefined)).toBe("load");
+    expect(nextPhase("load")).toBe("deload");
     expect(nextPhase("deload")).toBe("test");
-    expect(nextPhase("test")).toBeUndefined();
+    expect(nextPhase("test")).toBe("perform");
+    expect(nextPhase("perform")).toBeUndefined();
   });
 });

@@ -410,6 +410,31 @@ describe("training blocks", () => {
     ]);
   });
 
+  it("reads a week tagged build as load", async () => {
+    const userId = "user_block_build";
+    await call(userId, "PUT", "/v1/training-blocks/b1", blockBody);
+    await env.DB.prepare("UPDATE training_blocks SET phases_json = ? WHERE user_id = ?")
+      .bind(
+        JSON.stringify([
+          { load: 110, phase: "build" },
+          { load: 100 },
+          { load: 120, phase: "perform" },
+          { load: 60, phase: "deload" },
+        ]),
+        userId
+      )
+      .run();
+    const { blocks } = await json<{ blocks: { loads: unknown }[] }>(
+      await call(userId, "GET", "/v1/training-blocks")
+    );
+    expect(blocks[0]?.loads).toEqual([
+      { load: 110, phase: "load" },
+      { load: 100 },
+      { load: 120, phase: "perform" },
+      { load: 60, phase: "deload" },
+    ]);
+  });
+
   it("rejects another user's block and a block out of shape", async () => {
     await call("user_block_owner", "PUT", "/v1/training-blocks/b1", blockBody);
     const userId = "user_block_other";

@@ -13,12 +13,14 @@ import { t } from "@sendtally/features/i18n";
 
 export function phaseLabel(phase: BlockPhase): string {
   switch (phase) {
-    case "build":
-      return t("plan.phaseBuild");
+    case "load":
+      return t("plan.phaseLoad");
     case "deload":
       return t("plan.phaseDeload");
     case "test":
       return t("plan.phaseTest");
+    case "perform":
+      return t("plan.phasePerform");
   }
 }
 

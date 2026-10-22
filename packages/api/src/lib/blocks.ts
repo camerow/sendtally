@@ -18,12 +18,22 @@ const weekLoad = z.object({
   phase: z.enum(BLOCK_PHASES).optional(),
 });
 
+const LEGACY_PHASES = ["build", "deload", "test"] as const;
+
+/** "build" was renamed "load"; loads saved with it read under the new name. */
+const storedWeekLoad = weekLoad.extend({
+  phase: z
+    .enum([...BLOCK_PHASES, "build"])
+    .transform((phase) => (phase === "build" ? "load" : phase))
+    .optional(),
+});
+
 /** Rows saved before loads hold one phase per week, build being the untagged default. */
 const storedLoads = z.array(
   z.union([
-    weekLoad,
+    storedWeekLoad,
     z
-      .enum(BLOCK_PHASES)
+      .enum(LEGACY_PHASES)
       .transform((phase) =>
         phase === "build" ? { load: BASE_WEEK_LOAD } : { load: BASE_WEEK_LOAD, phase }
       ),
