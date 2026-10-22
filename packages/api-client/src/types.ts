@@ -2,6 +2,9 @@ import type { hc, InferRequestType, InferResponseType } from "hono/client";
 import type { AppType } from "@sendtally/api/app";
 
 export type {
+  Activity,
+  ActivityInput,
+  ActivityKind,
   Area,
   AreaClimb,
   AreaClimbInput,
@@ -32,10 +35,13 @@ export type {
   Workout,
   LogClimbInput,
   LogSessionInput,
+  PlanItem,
+  PlanItemInput,
+  PlanKind,
   ProjectInput,
 } from "@sendtally/api/app";
 
-import type { HangHistoryRow, LogClimbInput as ClimbInput } from "@sendtally/api/app";
+import type { Activity, HangHistoryRow, LogClimbInput as ClimbInput } from "@sendtally/api/app";
 
 export type CircuitRef = NonNullable<ClimbInput["circuit"]>;
 
@@ -61,12 +67,17 @@ export type SessionClimb = SessionDetail["climbs"][number];
 
 export type SessionWithClimbs = SessionRow & { climbs: SessionClimb[] };
 
-/** The log: climbing sessions, and hangtally sessions beside them but never as them. */
-export type SessionLog = { sessions: SessionRow[]; hangSessions: HangHistoryRow[] };
+/** The log: climbing sessions, and hangtally sessions and other training beside them but never as them. */
+export type SessionLog = {
+  sessions: SessionRow[];
+  hangSessions: HangHistoryRow[];
+  activities: Activity[];
+};
 
 export type SessionLogWithClimbs = {
   sessions: SessionWithClimbs[];
   hangSessions: HangHistoryRow[];
+  activities: Activity[];
 };
 
 export type SessionTag = SessionDetail["tags"][number];
