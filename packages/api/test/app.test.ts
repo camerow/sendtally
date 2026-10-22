@@ -540,6 +540,31 @@ describe("app", () => {
     expect(sessions[0]?.tags.map((t) => t.slug)).toEqual(["endurance", "home"]);
   });
 
+  it("keeps the plan a session ran, and an edit that does not send one keeps the link", async () => {
+    const userId = "user_session_plan";
+    const plan = { membershipId: "m1", week: 2, variation: 1 };
+    const res = await postSession(userId, logBody(plan));
+    expect(res.status).toBe(201);
+    const { session } = (await res.json()) as { session: { fingerprint: string } };
+    expect(session).toMatchObject({ membership_id: "m1", week: 2, variation: 1 });
+    const edited = await testApp().request(
+      `/v1/sessions/${session.fingerprint}`,
+      {
+        method: "PUT",
+        headers: { "x-test-user": userId, "Content-Type": "application/json" },
+        body: JSON.stringify(logBody({ name: "Edited" })),
+      },
+      env
+    );
+    expect(await edited.json()).toMatchObject({
+      session: { name: "Edited", membership_id: "m1", week: 2, variation: 1 },
+    });
+    const logged = await postSession(userId, logBody());
+    expect(await logged.json()).toMatchObject({
+      session: { membership_id: null, week: null, variation: null },
+    });
+  });
+
   it("reuses one tag row across sessions that spell it differently", async () => {
     const first = await postSession("user_tags_reuse", logBody({ tags: ["Bishop"] }));
     const second = await postSession("user_tags_reuse", logBody({ tags: ["bishop"] }));

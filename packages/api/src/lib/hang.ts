@@ -2,7 +2,6 @@ import {
   BUILT_IN_GRIP_NAMES,
   BUILT_IN_GRIPS,
   isCalendarDate,
-  LIBRARY,
   defaultSetup,
   protocolOf,
   type Grip,
@@ -10,18 +9,10 @@ import {
   type HangSettings,
   type Loads,
   type Protocol,
-  type Schedule,
-  type TimeUnits,
-  type Workout,
 } from "@sendtally/core/hang";
 import { z } from "zod";
-import type {
-  HangGripRow,
-  HangScheduleRow,
-  HangSessionRow,
-  HangSettingsRow,
-  HangWorkoutRow,
-} from "./repo";
+import { doneBody, doneOf, planLinkShape } from "./plan";
+import type { HangGripRow, HangSessionRow, HangSettingsRow } from "./repo";
 
 const hangId = z.string().regex(/^[A-Za-z0-9_-]{1,64}$/);
 
@@ -60,17 +51,7 @@ const protocolShape = {
 
 const protocolSchema = z.object(protocolShape).refine(fitsKind, "outside the protocol's ranges");
 
-const timeUnit = z.enum(["s", "min"]);
-
 export const hangGripBody = z.object({ name: z.string().trim().min(1).max(40) });
-
-export const hangWorkoutBody = z
-  .object({
-    ...protocolShape,
-    grip: hangId,
-    timeUnits: z.object({ hangS: timeUnit, restS: timeUnit, setRestS: timeUnit }),
-  })
-  .refine(fitsKind, "outside the protocol's ranges");
 
 export const hangDefaultGripBody = z.object({ gripId: hangId });
 
@@ -79,24 +60,6 @@ export const hangLoadsBody = z.object({
     .record(z.string().regex(/^[A-Za-z0-9_-]{1,64}:[A-Za-z0-9_-]{1,64}$/), kg)
     .refine((loads) => Object.keys(loads).length <= 200, "too many loads"),
 });
-
-export const hangScheduleBody = z
-  .object({
-    workoutId: hangId,
-    gripId: hangId,
-    days: z
-      .array(z.literal([0, 1, 2, 3, 4, 5, 6]))
-      .min(1)
-      .refine((days) => new Set(days).size === days.length, "repeated weekday"),
-    start: calendarDate,
-    end: calendarDate.nullable(),
-    skip: z.array(calendarDate).max(1000),
-    targetRpe: z.number().int().min(1).max(10).nullable().optional(),
-    blockId: hangId.nullable().optional(),
-    edgeMm: edgeMm.nullable().optional(),
-    loadKg: kg.nullable().optional(),
-  })
-  .refine((s) => s.end === null || s.end > s.start, "end is not after start");
 
 // App builds before setups send the edge inside the protocol instead.
 export const hangSessionBody = z
@@ -110,6 +73,8 @@ export const hangSessionBody = z
     misses: z.number().int().min(0).max(10_000),
     rpe: z.number().int().min(1).max(10).nullable(),
     protocol: protocolSchema,
+    ...planLinkShape,
+    done: doneBody.default([]),
   })
   .transform(({ edgeMm: mm, protocol, ...rest }) => ({
     ...rest,
@@ -150,21 +115,14 @@ export type HangSessionRecord = HangSession & {
 /** A hang session as sendtally's history lists it. `gripName` is set for the user's own grips only: the apps name a built-in in their language. */
 export type HangHistoryRow = HangSessionRecord & { gripName: string | null };
 
-/** `edgeMm` is the workout's legacy default edge, still read by app builds before setups. */
-export type HangWorkoutRecord = Workout & { edgeMm?: number };
-
 export type HangData = {
   grips: Grip[];
-  workouts: HangWorkoutRecord[];
   defaultGrips: Record<string, string>;
   loads: Loads;
-  schedules: Schedule[];
   sessions: HangSessionRecord[];
   settings: HangSettings;
   strava: { connected: boolean };
 };
-
-export const isLibraryWorkout = (id: string): boolean => LIBRARY.some((w) => w.id === id);
 
 /** The one spelling two grip names share when they differ only in case or spacing. */
 export const gripKey = (name: string): string => name.trim().replace(/\s+/g, " ").toLowerCase();
@@ -182,39 +140,6 @@ export const gripOf = (row: HangGripRow): Grip => ({
   custom: true,
   hidden: row.hidden,
 });
-
-export function workoutOf(row: HangWorkoutRow): HangWorkoutRecord {
-  return {
-    id: row.id,
-    source: "mine",
-    name: row.name,
-    kind: row.kind,
-    grip: row.grip,
-    edgeMm: row.edge_mm,
-    hangS: row.hang_s,
-    restS: row.rest_s,
-    reps: row.reps,
-    sets: row.sets,
-    setRestS: row.set_rest_s,
-    timeUnits: JSON.parse(row.time_units_json) as TimeUnits,
-  };
-}
-
-export function scheduleOf(row: HangScheduleRow): Schedule {
-  return {
-    id: row.id,
-    workoutId: row.workout_id,
-    gripId: row.grip_id,
-    days: JSON.parse(row.days_json) as Schedule["days"],
-    start: row.start,
-    end: row.end,
-    skip: JSON.parse(row.skip_json) as string[],
-    targetRpe: row.target_rpe,
-    blockId: row.block_id,
-    edgeMm: row.edge_mm,
-    loadKg: row.load_kg,
-  };
-}
 
 // App builds before setups read the edge from the protocol snapshot.
 const legacyProtocol = (row: HangSessionRow): Protocol & { edgeMm: number } => ({
@@ -234,6 +159,10 @@ export function hangSessionOf(row: HangSessionRow): HangSessionRecord {
     rpe: row.rpe,
     edgeMm: row.edge_mm,
     protocol: legacyProtocol(row),
+    membershipId: row.membership_id,
+    week: row.week,
+    variation: row.variation,
+    done: doneOf(row.done_json),
     stravaActivityId: row.strava_activity_id === null ? null : String(row.strava_activity_id),
     postState: row.post_state,
     postError: row.post_error,

@@ -10,19 +10,13 @@ import {
   hangGripBody,
   hangIdParam,
   hangLoadsBody,
-  hangScheduleBody,
   hangSessionBody,
   hangSessionOf,
   hangSettingsBody,
-  hangWorkoutBody,
   hangWorkoutParam,
-  isLibraryWorkout,
-  scheduleOf,
   settingsOf,
-  workoutOf,
   type HangData,
 } from "./lib/hang";
-import { inBlock } from "./lib/blocks";
 import { syncHangSessionToStrava } from "./lib/posting";
 import * as repo from "./lib/repo";
 
@@ -37,10 +31,8 @@ export const hang = new Hono<AppEnv>()
     ]);
     const data: HangData = {
       grips: rows.grips.map(gripOf),
-      workouts: rows.workouts.map(workoutOf),
       defaultGrips: Object.fromEntries(rows.defaultGrips.map((r) => [r.workout_id, r.grip_id])),
       loads: rows.loads,
-      schedules: rows.schedules.map(scheduleOf),
       sessions: rows.sessions.map(hangSessionOf),
       settings: settingsOf(rows.settings),
       strava: { connected: strava?.status === "active" },
@@ -93,27 +85,6 @@ export const hang = new Hono<AppEnv>()
   })
 
   .put(
-    "/workouts/:id",
-    zValidator("param", hangIdParam, invalidBody),
-    zValidator("json", hangWorkoutBody, invalidBody),
-    async (c) => {
-      const { id } = c.req.valid("param");
-      if (isLibraryWorkout(id)) return c.json({ error: "library workouts cannot be changed" }, 400);
-      const userId = c.get("userId");
-      await repo.ensureUser(c.env.DB, userId);
-      const row = await repo.saveHangWorkout(c.env.DB, userId, id, c.req.valid("json"));
-      return c.json({ workout: workoutOf(row) });
-    }
-  )
-
-  // Its plans go with it; its sessions stay, each with the protocol it ran.
-  .delete("/workouts/:id", zValidator("param", hangIdParam, invalidBody), async (c) => {
-    const { id } = c.req.valid("param");
-    if (isLibraryWorkout(id)) return c.json({ error: "library workouts cannot be changed" }, 400);
-    return c.json({ deleted: await repo.deleteHangWorkout(c.env.DB, c.get("userId"), id) });
-  })
-
-  .put(
     "/default-grips/:workoutId",
     zValidator("param", hangWorkoutParam, invalidBody),
     zValidator("json", hangDefaultGripBody, invalidBody),
@@ -133,27 +104,6 @@ export const hang = new Hono<AppEnv>()
     return c.json({
       loads: await repo.mergeHangLoads(c.env.DB, userId, c.req.valid("json").loads),
     });
-  })
-
-  .put(
-    "/schedules/:id",
-    zValidator("param", hangIdParam, invalidBody),
-    zValidator("json", hangScheduleBody, invalidBody),
-    async (c) => {
-      const { id } = c.req.valid("param");
-      const userId = c.get("userId");
-      const schedule = await inBlock(c.env.DB, userId, { id, ...c.req.valid("json") });
-      if (schedule === null) return c.json({ error: "no such block" }, 400);
-      await repo.ensureUser(c.env.DB, userId);
-      const row = await repo.saveHangSchedule(c.env.DB, userId, schedule);
-      return c.json({ schedule: scheduleOf(row) });
-    }
-  )
-
-  // The schedule goes; the sessions logged against it stay.
-  .delete("/schedules/:id", zValidator("param", hangIdParam, invalidBody), async (c) => {
-    const { id } = c.req.valid("param");
-    return c.json({ deleted: await repo.deleteHangSchedule(c.env.DB, c.get("userId"), id) });
   })
 
   // Creates or edits. A new session posts to Strava when the user turned that

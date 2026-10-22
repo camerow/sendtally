@@ -1,5 +1,5 @@
 import { createExecutionContext, env, waitOnExecutionContext } from "cloudflare:test";
-import { LIBRARY, protocolOf } from "@sendtally/core/hang";
+import type { Protocol } from "@sendtally/core/hang";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { HangData, HangSessionRecord } from "../src/lib/hang";
 import { encryptSecret } from "../src/lib/crypto";
@@ -8,7 +8,15 @@ import { testApp } from "./harness";
 
 afterEach(() => vi.unstubAllGlobals());
 
-const repeaters = protocolOf(LIBRARY.find((w) => w.id === "rep73")!);
+const repeaters: Protocol = {
+  name: "Repeaters 7:3",
+  kind: "hang",
+  hangS: 7,
+  restS: 3,
+  reps: 6,
+  sets: 6,
+  setRestS: 180,
+};
 
 const sessionBody = {
   workoutId: "rep73",
@@ -20,27 +28,10 @@ const sessionBody = {
   misses: 2,
   rpe: 7,
   protocol: repeaters,
-};
-
-const scheduleBody = {
-  workoutId: "rep73",
-  gripId: "half",
-  days: [0],
-  start: "2026-09-28",
-  end: null,
-  skip: [],
-};
-
-const workoutBody = {
-  name: "Short repeaters",
-  kind: "hang",
-  grip: "open",
-  hangS: 7,
-  restS: 3,
-  reps: 4,
-  sets: 3,
-  setRestS: 120,
-  timeUnits: { hangS: "s", restS: "s", setRestS: "min" },
+  membershipId: null,
+  week: null,
+  variation: null,
+  done: [],
 };
 
 async function call(
@@ -106,10 +97,8 @@ describe("hangboard", () => {
   it("reads defaults for a user with nothing stored", async () => {
     expect(await read("user_hang_fresh")).toEqual({
       grips: [],
-      workouts: [],
       defaultGrips: {},
       loads: {},
-      schedules: [],
       sessions: [],
       settings: {
         units: "kg",
@@ -128,30 +117,12 @@ describe("hangboard", () => {
     expect(await (await call(userId, "PUT", "/grips/g1", { name: " Wide pinch " })).json()).toEqual(
       { grip: { id: "g1", name: "Wide pinch", custom: true, hidden: false } }
     );
-    const workout = await call(userId, "PUT", "/workouts/w1", workoutBody);
-    expect(await workout.json()).toEqual({
-      workout: { id: "w1", source: "mine", ...workoutBody, edgeMm: 20 },
-    });
-    await call(userId, "PUT", "/workouts/w1", { ...workoutBody, sets: 4 });
     expect(
       await (await call(userId, "PUT", "/default-grips/rep73", { gripId: "g1" })).json()
     ).toEqual({ workoutId: "rep73", gripId: "g1" });
     await call(userId, "PUT", "/loads", { loads: { "rep73:half": 4, "w1:g1": -7.5 } });
     const loads = await call(userId, "PUT", "/loads", { loads: { "rep73:half": 5.5 } });
     expect(await loads.json()).toEqual({ loads: { "rep73:half": 5.5, "w1:g1": -7.5 } });
-    const schedule = {
-      workoutId: "rep73",
-      gripId: "half",
-      days: [0, 4],
-      start: "2026-09-28",
-      end: "2026-10-26",
-      skip: ["2026-10-02"],
-      edgeMm: 15,
-      loadKg: -2.5,
-    };
-    expect(await (await call(userId, "PUT", "/schedules/s1", schedule)).json()).toEqual({
-      schedule: { id: "s1", ...schedule, targetRpe: null, blockId: null },
-    });
     const logged = await call(userId, "PUT", "/sessions/h1", sessionBody);
     const { session } = (await logged.json()) as { session: HangSessionRecord };
     expect(session).toMatchObject({ id: "h1", ...sessionBody, stravaActivityId: null });
@@ -167,11 +138,7 @@ describe("hangboard", () => {
 
     const data = await read(userId);
     expect(data.grips).toEqual([{ id: "g1", name: "Wide pinch", custom: true, hidden: false }]);
-    expect(data.workouts).toEqual([
-      { id: "w1", source: "mine", ...workoutBody, sets: 4, edgeMm: 20 },
-    ]);
     expect(data.defaultGrips).toEqual({ rep73: "g1" });
-    expect(data.schedules).toHaveLength(1);
     expect(data.sessions).toHaveLength(1);
     expect(data.sessions[0]).toMatchObject({
       edgeMm: 20,
@@ -180,32 +147,9 @@ describe("hangboard", () => {
       protocol: repeaters,
     });
 
-    expect(await (await call(userId, "DELETE", "/schedules/s1")).json()).toEqual({ deleted: true });
-    expect(await (await call(userId, "DELETE", "/schedules/s1")).json()).toEqual({
-      deleted: false,
-    });
     expect(await (await call(userId, "DELETE", "/sessions/h1")).json()).toEqual({ deleted: true });
     const after = await read(userId);
-    expect(after.schedules).toEqual([]);
     expect(after.sessions).toEqual([]);
-  });
-
-  it("deletes a workout of the user's own with its plans, keeping its sessions", async () => {
-    const userId = "user_hang_workout_delete";
-    await call(userId, "PUT", "/workouts/w1", workoutBody);
-    await call(userId, "PUT", "/default-grips/w1", { gripId: "open" });
-    const plan = { gripId: "open", days: [0], start: "2026-09-28", end: null, skip: [] };
-    await call(userId, "PUT", "/schedules/s1", { ...plan, workoutId: "w1" });
-    await call(userId, "PUT", "/schedules/s2", { ...plan, workoutId: "rep73" });
-    await call(userId, "PUT", "/sessions/h1", { ...sessionBody, workoutId: "w1" });
-    expect((await call(userId, "DELETE", "/workouts/rep73")).status).toBe(400);
-    expect(await (await call(userId, "DELETE", "/workouts/w1")).json()).toEqual({ deleted: true });
-    expect(await (await call(userId, "DELETE", "/workouts/w1")).json()).toEqual({ deleted: false });
-    const data = await read(userId);
-    expect(data.workouts).toEqual([]);
-    expect(data.defaultGrips).toEqual({});
-    expect(data.schedules.map((s) => s.id)).toEqual(["s2"]);
-    expect(data.sessions.map((s) => [s.id, s.workoutId])).toEqual([["h1", "w1"]]);
   });
 
   it("keeps a grip name unique across built-ins and case", async () => {
@@ -273,36 +217,8 @@ describe("hangboard", () => {
   it.each([
     ["/grips/half", { name: "Crimpy" }],
     ["/grips/g1", { name: "x".repeat(41) }],
-    ["/workouts/rep73", workoutBody],
-    ["/workouts/w1", { ...workoutBody, hangS: 0 }],
-    ["/workouts/w1", { ...workoutBody, edgeMm: 3 }],
-    ["/workouts/w1", { ...workoutBody, reps: 51 }],
-    ["/workouts/w1", { ...workoutBody, restS: 3601 }],
-    ["/workouts/w1", { ...workoutBody, name: " " }],
-    ["/workouts/w1", { ...workoutBody, timeUnits: { hangS: "h", restS: "s", setRestS: "s" } }],
-    ["/workouts/w:1", workoutBody],
     ["/loads", { loads: { "rep73:half": 600 } }],
     ["/loads", { loads: { rep73: 4 } }],
-    [
-      "/schedules/s1",
-      { workoutId: "a", gripId: "b", days: [], start: "2026-09-28", end: null, skip: [] },
-    ],
-    [
-      "/schedules/s1",
-      { workoutId: "a", gripId: "b", days: [0, 0], start: "2026-09-28", end: null, skip: [] },
-    ],
-    [
-      "/schedules/s1",
-      { workoutId: "a", gripId: "b", days: [7], start: "2026-09-28", end: null, skip: [] },
-    ],
-    [
-      "/schedules/s1",
-      { workoutId: "a", gripId: "b", days: [0], start: "2026-09-28", end: "2026-09-28", skip: [] },
-    ],
-    [
-      "/schedules/s1",
-      { workoutId: "a", gripId: "b", days: [0], start: "2026-02-30", end: null, skip: [] },
-    ],
     ["/sessions/h1", { ...sessionBody, rpe: 11 }],
     ["/sessions/h1", { ...sessionBody, pct: 101 }],
     ["/sessions/h1", { ...sessionBody, misses: -1 }],
@@ -310,8 +226,8 @@ describe("hangboard", () => {
     ["/sessions/h1", { ...sessionBody, protocol: { ...repeaters, hangS: 0 } }],
     ["/sessions/h1", { ...sessionBody, edgeMm: 3 }],
     ["/sessions/h1", { ...sessionBody, edgeMm: 0 }],
-    ["/schedules/s1", { ...scheduleBody, edgeMm: 61 }],
-    ["/schedules/s1", { ...scheduleBody, loadKg: 600 }],
+    ["/sessions/h1", { ...sessionBody, week: 0 }],
+    ["/sessions/h1", { ...sessionBody, done: [{ item: 0, exercise: "", sets: [] }] }],
     ["/settings", { reminderTime: "25:00" }],
     ["/settings", { units: "stone" }],
   ])("rejects PUT %s with an invalid body", async (path, body) => {
@@ -319,21 +235,38 @@ describe("hangboard", () => {
     expect(res.status).toBe(400);
   });
 
-  it("keeps the edge and weight off the workout, on the schedule and the session", async () => {
+  it("keeps the edge on the session", async () => {
     const userId = "user_hang_setup";
-    await call(userId, "PUT", "/workouts/w1", { ...workoutBody, edgeMm: 18 });
-    await call(userId, "PUT", "/workouts/w1", { ...workoutBody, sets: 5 });
-    expect((await read(userId)).workouts[0]).toMatchObject({ sets: 5, edgeMm: 18 });
-
-    await call(userId, "PUT", "/schedules/s1", { ...scheduleBody, edgeMm: 12, loadKg: 3 });
-    await call(userId, "PUT", "/schedules/s1", { ...scheduleBody, days: [2] });
-    expect((await read(userId)).schedules[0]).toMatchObject({ days: [2], edgeMm: 12, loadKg: 3 });
-    await call(userId, "PUT", "/schedules/s1", { ...scheduleBody, edgeMm: null, loadKg: null });
-    expect((await read(userId)).schedules[0]).toMatchObject({ edgeMm: null, loadKg: null });
-
     await call(userId, "PUT", "/sessions/h1", { ...sessionBody, edgeMm: 14 });
     const [session] = (await read(userId)).sessions;
     expect(session).toMatchObject({ edgeMm: 14, protocol: { ...repeaters, edgeMm: 14 } });
+  });
+
+  it("round trips the plan a session ran and what it did", async () => {
+    const userId = "user_hang_plan";
+    const planned = {
+      ...sessionBody,
+      membershipId: "m1",
+      week: 3,
+      variation: 1,
+      done: [{ item: 0, exercise: "half", sets: [{ reps: 6, onS: 7, offS: 3, edgeMm: 20 }] }],
+    };
+    await call(userId, "PUT", "/sessions/h1", planned);
+    const { membershipId, week, variation, done, ...older } = planned;
+    await call(userId, "PUT", "/sessions/h2", older);
+    const sessions = (await read(userId)).sessions;
+    expect(sessions.find((s) => s.id === "h1")).toMatchObject({
+      membershipId,
+      week,
+      variation,
+      done,
+    });
+    expect(sessions.find((s) => s.id === "h2")).toMatchObject({
+      membershipId: null,
+      week: null,
+      variation: null,
+      done: [],
+    });
   });
 
   it("reads the edge of a session from an app build that kept it in the protocol", async () => {
@@ -350,8 +283,12 @@ describe("hangboard", () => {
   });
 
   it("accepts a ground pull with no edge and more than 50 lifts", async () => {
-    const pull = { ...workoutBody, kind: "pull", edgeMm: 0, hangS: 0, restS: 0, reps: 80 };
-    const res = await call("user_hang_pull", "PUT", "/workouts/p1", pull);
+    const protocol = { ...repeaters, kind: "pull", hangS: 0, restS: 0, reps: 80 };
+    const res = await call("user_hang_pull", "PUT", "/sessions/h1", {
+      ...sessionBody,
+      edgeMm: 0,
+      protocol,
+    });
     expect(res.status).toBe(200);
   });
 
@@ -378,17 +315,8 @@ describe("hangboard", () => {
   it("deletes every hang row with the account", async () => {
     const userId = "user_hang_purge";
     await call(userId, "PUT", "/grips/g1", { name: "Wide pinch" });
-    await call(userId, "PUT", "/workouts/w1", workoutBody);
     await call(userId, "PUT", "/default-grips/w1", { gripId: "g1" });
     await call(userId, "PUT", "/loads", { loads: { "w1:g1": 3 } });
-    await call(userId, "PUT", "/schedules/s1", {
-      workoutId: "w1",
-      gripId: "g1",
-      days: [2],
-      start: "2026-09-28",
-      end: null,
-      skip: [],
-    });
     await call(userId, "PUT", "/sessions/h1", sessionBody);
     await call(userId, "PUT", "/settings", { theme: "gunmetal" });
 
@@ -400,10 +328,8 @@ describe("hangboard", () => {
     expect(res.status).toBe(200);
     for (const table of [
       "hang_grips",
-      "hang_workouts",
       "hang_default_grips",
       "hang_loads",
-      "hang_schedules",
       "hang_sessions",
       "hang_settings",
     ]) {

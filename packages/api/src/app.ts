@@ -8,7 +8,7 @@ import { auth } from "./auth";
 import type { Env } from "./bindings";
 import { type AppEnv, captureEvent, invalidBody, postAfterResponse } from "./context";
 import { hang } from "./hang";
-import { activities, planItems, trainingBlocks, workouts } from "./training";
+import { activities, blocks, memberships, plan, workouts } from "./training";
 import { purgeAccount } from "./lib/account";
 import {
   areaBody,
@@ -1942,8 +1942,9 @@ const app = new Hono<AppEnv>()
 
   .route("/v1/hang", hang)
   .route("/v1/activities", activities)
-  .route("/v1/plan-items", planItems)
-  .route("/v1/training-blocks", trainingBlocks)
+  .route("/v1/plan", plan)
+  .route("/v1/blocks", blocks)
+  .route("/v1/memberships", memberships)
   .route("/v1/workouts", workouts);
 
 app.onError(async (error, c) => {
@@ -1970,45 +1971,46 @@ export type AppType = typeof app;
 export type { ProjectInput } from "./lib/climbs";
 export type {
   Activity,
-  ActivityDetail,
   ActivityInput,
   ActivityKind,
   ActivityPostState,
   ActivityRecord,
-  PlanItem,
-  PlanItemInput,
-  PlanKind,
-  PlanTemplate,
-  SetMeasure,
 } from "./lib/activities";
 export type { HangData, HangHistoryRow, HangPostState, HangSessionRecord } from "./lib/hang";
 export type {
-  BlockPhase,
+  Block,
   CalendarDate,
+  Dose,
   Grip,
   HangKind,
   HangSession,
   HangSettings,
+  HangWorkout,
+  Item,
+  ItemDone,
   Loads,
+  Membership,
+  PlanLink,
   Protocol,
-  Schedule,
+  SetDone,
   ThemeName,
   TimeUnit,
   TimeUnits,
-  TrainingBlock,
-  WeekLoad,
+  Variation,
+  WeekChange,
   WeightUnit,
   Weekday,
   Workout,
+  WorkoutKind,
 } from "@sendtally/core/hang";
-
 export type {
-  ClimbFocus,
-  ClimbWorkoutBody,
-  UserWorkout,
-  UserWorkoutInput,
-  WorkoutBody,
-} from "./lib/workouts";
+  BlockInput,
+  MembershipInput,
+  Plan,
+  WeekChangeInput,
+  WorkoutInput,
+  WorkoutRecord,
+} from "./lib/plan";
 export type { LogClimbInput, LogSessionInput } from "./lib/manual";
 export type { ImportBody } from "./lib/import";
 

@@ -1,19 +1,21 @@
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { type AppEnv, invalidBody, postAfterResponse } from "./context";
+import { activitiesQuery, activityBody, activityOf } from "./lib/activities";
 import {
-  activitiesQuery,
-  activityBody,
-  activityOf,
-  planItemBody,
-  planItemOf,
-  planItemSkipBody,
+  blockBody,
+  blockOf,
+  membershipBody,
+  membershipOf,
   trainingIdParam,
-} from "./lib/activities";
-import { inBlock, trainingBlockBody, trainingBlockOf } from "./lib/blocks";
+  weekChangeBody,
+  weekChangeOf,
+  workoutBody,
+  workoutOf,
+  type Plan,
+} from "./lib/plan";
 import { syncActivityToStrava } from "./lib/posting";
 import * as repo from "./lib/repo";
-import { userWorkoutOf, workoutBody, workoutIdParam } from "./lib/workouts";
 
 const ACTIVITY_LIST_LIMIT = 1000;
 
@@ -70,99 +72,101 @@ export const activities = new Hono<AppEnv>()
     return c.json({ outcome: result.outcome, reason: result.reason, activity: activityOf(row) });
   });
 
-export const planItems = new Hono<AppEnv>()
-  .get("/", async (c) => {
-    const rows = await repo.listPlanItems(c.env.DB, c.get("userId"));
-    return c.json({ planItems: rows.map(planItemOf) });
-  })
+// Blocks, memberships and their week changes, in one read.
+export const plan = new Hono<AppEnv>().get("/", async (c) => {
+  const rows = await repo.planRows(c.env.DB, c.get("userId"));
+  const body: Plan = {
+    blocks: rows.blocks.map(blockOf),
+    memberships: rows.memberships.map(membershipOf),
+    weekChanges: rows.weekChanges.map(weekChangeOf),
+  };
+  return c.json(body);
+});
 
+export const blocks = new Hono<AppEnv>()
   .put(
     "/:id",
     zValidator("param", trainingIdParam, invalidBody),
-    zValidator("json", planItemBody, invalidBody),
-    async (c) => {
-      const { id } = c.req.valid("param");
-      const userId = c.get("userId");
-      const item = await inBlock(c.env.DB, userId, { id, ...c.req.valid("json") });
-      if (item === null) return c.json({ error: "no such block" }, 400);
-      await repo.ensureUser(c.env.DB, userId);
-      const row = await repo.savePlanItem(c.env.DB, userId, item);
-      return c.json({ planItem: planItemOf(row) });
-    }
-  )
-
-  // Skips or restores one date without the app resending the whole item.
-  .put(
-    "/:id/skip",
-    zValidator("param", trainingIdParam, invalidBody),
-    zValidator("json", planItemSkipBody, invalidBody),
-    async (c) => {
-      const { id } = c.req.valid("param");
-      const { date, skipped } = c.req.valid("json");
-      const userId = c.get("userId");
-      const row = await repo.getPlanItem(c.env.DB, userId, id);
-      if (row === null) return c.json({ error: "not found" }, 404);
-      const item = planItemOf(row);
-      const skip = skipped ? [...item.skip, date] : item.skip.filter((d) => d !== date);
-      const saved = await repo.savePlanItem(c.env.DB, userId, { ...item, skip });
-      return c.json({ planItem: planItemOf(saved) });
-    }
-  )
-
-  // The item goes; activities logged against it stay.
-  .delete("/:id", zValidator("param", trainingIdParam, invalidBody), async (c) => {
-    const { id } = c.req.valid("param");
-    return c.json({ deleted: await repo.deletePlanItem(c.env.DB, c.get("userId"), id) });
-  });
-
-// Saving a block moves its members onto its dates; setting endedOn ends them
-// there. Deleting one leaves its members planned on their own.
-export const trainingBlocks = new Hono<AppEnv>()
-  .get("/", async (c) => {
-    const rows = await repo.listTrainingBlocks(c.env.DB, c.get("userId"));
-    return c.json({ blocks: rows.map(trainingBlockOf) });
-  })
-
-  .put(
-    "/:id",
-    zValidator("param", trainingIdParam, invalidBody),
-    zValidator("json", trainingBlockBody, invalidBody),
+    zValidator("json", blockBody, invalidBody),
     async (c) => {
       const { id } = c.req.valid("param");
       const userId = c.get("userId");
       await repo.ensureUser(c.env.DB, userId);
-      const row = await repo.saveTrainingBlock(c.env.DB, userId, { id, ...c.req.valid("json") });
-      return c.json({ block: trainingBlockOf(row) });
+      const row = await repo.saveBlock(c.env.DB, userId, { id, ...c.req.valid("json") });
+      return c.json({ block: blockOf(row) });
     }
   )
 
+  // Its memberships go with it; sessions logged against them keep what was done.
   .delete("/:id", zValidator("param", trainingIdParam, invalidBody), async (c) => {
     const { id } = c.req.valid("param");
-    return c.json({ deleted: await repo.deleteTrainingBlock(c.env.DB, c.get("userId"), id) });
+    return c.json({ deleted: await repo.deleteBlock(c.env.DB, c.get("userId"), id) });
   });
 
-// The user's own library workouts other than hangboard ones. Built-in workouts
-// live in the apps; a customised one is a copy saved here under a new id.
+export const memberships = new Hono<AppEnv>()
+  .put(
+    "/:id",
+    zValidator("param", trainingIdParam, invalidBody),
+    zValidator("json", membershipBody, invalidBody),
+    async (c) => {
+      const { id } = c.req.valid("param");
+      const userId = c.get("userId");
+      const body = c.req.valid("json");
+      if (body.blockId !== null && (await repo.getBlock(c.env.DB, userId, body.blockId)) === null) {
+        return c.json({ error: "no such block" }, 400);
+      }
+      await repo.ensureUser(c.env.DB, userId);
+      const row = await repo.saveMembership(c.env.DB, userId, { id, ...body });
+      return c.json({ membership: membershipOf(row) });
+    }
+  )
+
+  // Its week changes go with it; sessions logged against it keep what was done.
+  .delete("/:id", zValidator("param", trainingIdParam, invalidBody), async (c) => {
+    const { id } = c.req.valid("param");
+    return c.json({ deleted: await repo.deleteMembership(c.env.DB, c.get("userId"), id) });
+  })
+
+  // Sets what one week changes about one item. An empty change is the item as written.
+  .put(
+    "/:id/changes",
+    zValidator("param", trainingIdParam, invalidBody),
+    zValidator("json", weekChangeBody, invalidBody),
+    async (c) => {
+      const { id } = c.req.valid("param");
+      const userId = c.get("userId");
+      if ((await repo.getMembership(c.env.DB, userId, id)) === null) {
+        return c.json({ error: "not found" }, 404);
+      }
+      const weekChange = { membershipId: id, ...c.req.valid("json") };
+      await repo.saveWeekChange(c.env.DB, userId, weekChange);
+      return c.json({ weekChange });
+    }
+  );
+
+// The user's own library workouts of every kind. Built-in workouts live in the
+// apps; a customised one is a copy saved here under a new id.
 export const workouts = new Hono<AppEnv>()
   .get("/", async (c) => {
     const rows = await repo.listWorkouts(c.env.DB, c.get("userId"));
-    return c.json({ workouts: rows.map(userWorkoutOf) });
+    return c.json({ workouts: rows.map(workoutOf) });
   })
 
   .put(
     "/:id",
-    zValidator("param", workoutIdParam, invalidBody),
+    zValidator("param", trainingIdParam, invalidBody),
     zValidator("json", workoutBody, invalidBody),
     async (c) => {
       const { id } = c.req.valid("param");
       const userId = c.get("userId");
       await repo.ensureUser(c.env.DB, userId);
-      const row = await repo.saveWorkout(c.env.DB, userId, id, c.req.valid("json"));
-      return c.json({ workout: userWorkoutOf(row) });
+      const row = await repo.saveWorkout(c.env.DB, userId, { id, ...c.req.valid("json") });
+      return c.json({ workout: workoutOf(row) });
     }
   )
 
-  .delete("/:id", zValidator("param", workoutIdParam, invalidBody), async (c) => {
+  // It leaves every block; sessions that ran it keep what was done and lose only the link.
+  .delete("/:id", zValidator("param", trainingIdParam, invalidBody), async (c) => {
     const { id } = c.req.valid("param");
     return c.json({ deleted: await repo.deleteWorkout(c.env.DB, c.get("userId"), id) });
   });

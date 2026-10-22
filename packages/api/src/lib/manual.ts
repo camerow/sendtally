@@ -16,6 +16,7 @@ import {
 import { z } from "zod";
 import type { ManualSessionInput } from "./repo";
 import { CIRCUIT_COLOURS } from "./gyms";
+import { id, MAX_BLOCK_WEEKS } from "./plan";
 import { tagNames, tagSlug } from "./tags";
 
 const knownGrade =
@@ -143,6 +144,10 @@ export const manualSessionShape = z.object({
   tags: tagNames.optional(),
   notes: sessionNote,
   climbs: z.array(climbSchema).min(1).max(300),
+  // The plan the session ran; absent on an edit keeps the link it had.
+  membershipId: id.nullable().optional(),
+  week: z.number().int().min(1).max(MAX_BLOCK_WEEKS).nullable().optional(),
+  variation: z.number().int().min(0).max(9).nullable().optional(),
 });
 
 export function sessionTooLong(
@@ -314,6 +319,18 @@ export function historySession(row: {
   };
 }
 
+function planLinkOf(
+  body: ManualSessionBody
+): Pick<ManualSessionInput, "membership_id" | "week" | "variation"> {
+  return body.membershipId === undefined
+    ? {}
+    : {
+        membership_id: body.membershipId,
+        week: body.week ?? null,
+        variation: body.variation ?? null,
+      };
+}
+
 export function buildManualSession(
   fingerprint: string,
   body: ManualSessionBody,
@@ -346,6 +363,7 @@ export function buildManualSession(
     rpe_source: rpeSourceOf(body),
     title: body.name ?? result.title,
     summary: result.summary,
+    ...planLinkOf(body),
     climbs_json: JSON.stringify(
       session.climbs.map((c, i): StoredClimb => ({
         time: c.time.toISOString(),

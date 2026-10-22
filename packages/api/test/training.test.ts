@@ -1,6 +1,7 @@
 import { createExecutionContext, env, waitOnExecutionContext } from "cloudflare:test";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { Activity, ActivityRecord, PlanItem } from "../src/lib/activities";
+import type { Activity, ActivityRecord } from "../src/lib/activities";
+import type { Plan, WorkoutRecord } from "../src/lib/plan";
 import { encryptSecret } from "../src/lib/crypto";
 import { jsonResponse, makeFakeFetch } from "./fakes";
 import { testApp } from "./harness";
@@ -15,59 +16,51 @@ const activityBody = {
   minutes: 50,
   rpe: 7,
   notes: null,
-  planItemId: "p1",
   workoutId: null,
-  detail: null,
+  membershipId: null,
+  week: null,
+  variation: null,
+  done: [],
 };
 
-const planBody = {
+const squatDone = [
+  {
+    item: 0,
+    exercise: "Back squat",
+    sets: [
+      { reps: 5, weightKg: 100 },
+      { reps: 4, weightKg: 100 },
+    ],
+  },
+  { item: 1, exercise: "Copenhagen plank", sets: [{ onS: 30 }] },
+];
+
+const squatWorkout = {
   kind: "strength",
-  title: "Gym, legs",
-  days: [1, 3],
-  perWeek: null,
-  start: "2026-09-28",
-  end: null,
-  skip: [],
-  minutes: 60,
-  targetRpe: 7,
-  projectId: null,
-  template: null,
-};
-
-const setsDetail = {
-  kind: "sets",
-  exercises: [
+  name: "Back squat",
+  description: "Alternate five sets of five with three sets of ten.",
+  minutes: 45,
+  targetRpe: 8,
+  variations: [
     {
-      name: "Back squat",
-      measures: ["reps", "loadKg"],
-      sets: [
-        { reps: 5, loadKg: 100, done: true },
-        { reps: 4, loadKg: 100, done: false },
-      ],
+      label: "5×5",
+      items: [{ exercise: "Back squat", dose: { sets: 5, reps: 5, weightKg: 100 } }],
     },
     {
-      name: "Copenhagen plank",
-      measures: ["seconds", "side"],
-      sets: [{ seconds: 30, side: "L", done: true }],
+      label: "3×10",
+      items: [{ exercise: "Back squat", dose: { sets: 3, reps: 10, weightKg: 75 } }],
     },
   ],
+  pattern: [0, 0, 1],
 };
 
-const intervalsTemplate = {
-  kind: "intervals",
-  rounds: 2,
-  steps: [
-    { label: "Couch stretch", measure: "time", seconds: 45, side: "each", restAfter: 10 },
-    { label: "Swing", measure: "count", count: 15, loadKg: 24, restAfter: 30, cue: "Hips" },
-  ],
-};
+const blockBody = { name: "Winter base", start: "2026-11-02", weeks: 6 };
 
-const checklistTemplate = {
-  kind: "checklist",
-  items: [
-    { text: "Cat-cow", dose: "× 10" },
-    { text: "Deep squat hold", dose: "2 min" },
-  ],
+const membershipBody = {
+  workoutId: "w1",
+  blockId: "b1",
+  weekdays: [4, 1],
+  start: "2026-11-02",
 };
 
 async function call(
@@ -88,6 +81,9 @@ async function call(
 }
 
 const json = async <T>(res: Response): Promise<T> => (await res.json()) as T;
+
+const plan = async (userId: string): Promise<Plan> =>
+  json<Plan>(await call(userId, "GET", "/v1/plan"));
 
 describe("activities", () => {
   it("round trips an activity and replays the same PUT as an edit", async () => {
@@ -126,59 +122,49 @@ describe("activities", () => {
     expect(activities.map((a) => a.id)).toEqual(["a3", "a2"]);
   });
 
-  it("round trips a sets, checklist or intervals body", async () => {
-    const userId = "user_activity_detail";
-    const checklist = {
-      kind: "checklist",
-      items: [{ text: "Cat-cow", dose: "× 10", done: true }],
+  it("round trips what was done and the plan it ran", async () => {
+    const userId = "user_activity_done";
+    const body = {
+      ...activityBody,
+      workoutId: "w1",
+      membershipId: "m1",
+      week: 4,
+      variation: 1,
+      done: squatDone,
     };
-    const intervals = {
-      ...intervalsTemplate,
-      stepsDone: [
-        { round: 0, step: 0, side: "L" },
-        { round: 0, step: 0, side: "R", heldSeconds: 20 },
-      ],
-    };
-    for (const detail of [setsDetail, intervals, checklist]) {
-      const res = await call(userId, "PUT", "/v1/activities/a1", { ...activityBody, detail });
-      expect(await json(res)).toMatchObject({ activity: { id: "a1", ...activityBody, detail } });
-    }
-    const row = await env.DB.prepare("SELECT detail_kind FROM activities WHERE user_id = ?")
-      .bind(userId)
-      .first<{ detail_kind: string }>();
-    expect(row?.detail_kind).toBe("checklist");
+    const res = await call(userId, "PUT", "/v1/activities/a1", body);
+    expect(await json(res)).toMatchObject({ activity: { id: "a1", ...body } });
   });
 
-  it("rejects a kind, rpe or date outside the shape", async () => {
+  it("reads an older client's body, with no plan and nothing done, as logged on its own", async () => {
+    const userId = "user_activity_older";
+    const {
+      workoutId: _,
+      membershipId: __,
+      week: ___,
+      variation: ____,
+      done: _____,
+      ...older
+    } = activityBody;
+    const res = await call(userId, "PUT", "/v1/activities/a1", older);
+    expect(await json(res)).toMatchObject({
+      activity: { workoutId: null, membershipId: null, week: null, variation: null, done: [] },
+    });
+  });
+
+  it("rejects a kind, rpe, date or done outside the shape", async () => {
     const userId = "user_activity_invalid";
     for (const body of [
       { ...activityBody, kind: "climb" },
+      { ...activityBody, kind: "run" },
       { ...activityBody, rpe: 11 },
       { ...activityBody, date: "2026-02-30" },
       { ...activityBody, minutes: 0 },
-      { ...activityBody, detail: { kind: "sets" } },
-      { ...activityBody, detail: { kind: "sets", exercises: [] } },
-      {
-        ...activityBody,
-        detail: { ...setsDetail, exercises: [{ name: " ", measures: ["reps"], sets: [] }] },
-      },
-      {
-        ...activityBody,
-        detail: {
-          ...setsDetail,
-          exercises: [{ name: "Squat", measures: ["reps", "reps"], sets: [] }],
-        },
-      },
-      { ...activityBody, detail: { kind: "checklist", items: [{ text: "Cat-cow", dose: "" }] } },
-      { ...activityBody, detail: intervalsTemplate },
-      {
-        ...activityBody,
-        detail: {
-          ...intervalsTemplate,
-          stepsDone: [],
-          steps: [{ label: "Plank", measure: "time", count: 10, restAfter: 0 }],
-        },
-      },
+      { ...activityBody, week: 0 },
+      { ...activityBody, variation: 10 },
+      { ...activityBody, done: [{ item: 0, exercise: " ", sets: [] }] },
+      { ...activityBody, done: [{ item: -1, exercise: "Squat", sets: [] }] },
+      { ...activityBody, done: [{ item: 0, exercise: "Squat", sets: [{ reps: -1 }] }] },
     ]) {
       expect((await call(userId, "PUT", "/v1/activities/a1", body)).status).toBe(400);
     }
@@ -205,357 +191,277 @@ describe("activities", () => {
   });
 });
 
-describe("plan items", () => {
-  it("round trips a plan item, sorting days and deduplicating skips", async () => {
-    const userId = "user_plan_roundtrip";
-    const res = await call(userId, "PUT", "/v1/plan-items/p1", {
-      ...planBody,
-      days: [3, 1],
-      skip: ["2026-10-01", "2026-09-29", "2026-10-01"],
-    });
-    expect(res.status).toBe(200);
-    const { planItems } = await json<{ planItems: PlanItem[] }>(
-      await call(userId, "GET", "/v1/plan-items")
-    );
-    expect(planItems).toEqual([
-      { id: "p1", ...planBody, skip: ["2026-09-29", "2026-10-01"], blockId: null, workoutId: null },
-    ]);
-  });
-
-  it("takes a weekly goal instead of weekdays, and a project only on a climb", async () => {
-    const userId = "user_plan_shapes";
-    const weekly = { ...planBody, kind: "climb", days: [], perWeek: 3, projectId: "the-mandala" };
-    expect((await call(userId, "PUT", "/v1/plan-items/p1", weekly)).status).toBe(200);
-    for (const body of [
-      { ...planBody, perWeek: 2 },
-      { ...planBody, days: [] },
-      { ...planBody, projectId: "the-mandala" },
-      { ...planBody, end: "2026-09-28" },
-      { ...planBody, days: [1, 1] },
-    ]) {
-      expect((await call(userId, "PUT", "/v1/plan-items/p2", body)).status).toBe(400);
-    }
-  });
-
-  it("keeps a template, takes none on a climb, and reads an older client's body as none", async () => {
-    const userId = "user_plan_template";
-    const withTemplate = { ...planBody, template: checklistTemplate };
-    const saved = await call(userId, "PUT", "/v1/plan-items/p1", withTemplate);
-    expect(await json(saved)).toEqual({
-      planItem: { id: "p1", ...withTemplate, blockId: null, workoutId: null },
-    });
-    const skipped = await call(userId, "PUT", "/v1/plan-items/p1/skip", {
-      date: "2026-09-29",
-      skipped: true,
-    });
-    expect((await json<{ planItem: PlanItem }>(skipped)).planItem.template).toEqual(
-      checklistTemplate
-    );
-    const intervals = { ...planBody, kind: "mobility", template: intervalsTemplate };
-    const timed = await call(userId, "PUT", "/v1/plan-items/p3", intervals);
-    expect(await json(timed)).toEqual({
-      planItem: { id: "p3", ...intervals, blockId: null, workoutId: null },
-    });
-    const { template: _, ...older } = planBody;
-    const legacy = await call(userId, "PUT", "/v1/plan-items/p2", older);
-    expect((await json<{ planItem: PlanItem }>(legacy)).planItem.template).toBeNull();
-    for (const body of [
-      { ...withTemplate, kind: "climb" },
-      { ...planBody, template: { kind: "checklist", items: [] } },
-    ]) {
-      expect((await call(userId, "PUT", "/v1/plan-items/p3", body)).status).toBe(400);
-    }
-  });
-
-  it("skips and restores one date", async () => {
-    const userId = "user_plan_skip";
-    await call(userId, "PUT", "/v1/plan-items/p1", planBody);
-    const skipped = await call(userId, "PUT", "/v1/plan-items/p1/skip", {
-      date: "2026-10-01",
-      skipped: true,
-    });
-    expect((await json<{ planItem: PlanItem }>(skipped)).planItem.skip).toEqual(["2026-10-01"]);
-    const restored = await call(userId, "PUT", "/v1/plan-items/p1/skip", {
-      date: "2026-10-01",
-      skipped: false,
-    });
-    expect((await json<{ planItem: PlanItem }>(restored)).planItem.skip).toEqual([]);
-    const missing = await call(userId, "PUT", "/v1/plan-items/nope/skip", {
-      date: "2026-10-01",
-      skipped: true,
-    });
-    expect(missing.status).toBe(404);
-  });
-
-  it("deletes a plan item and keeps the activities logged against it", async () => {
-    const userId = "user_plan_delete";
-    await call(userId, "PUT", "/v1/plan-items/p1", planBody);
-    await call(userId, "PUT", "/v1/activities/a1", activityBody);
-    expect(await json(await call(userId, "DELETE", "/v1/plan-items/p1"))).toEqual({
-      deleted: true,
-    });
-    const { activities } = await json<{ activities: Activity[] }>(
-      await call(userId, "GET", "/v1/activities")
-    );
-    expect(activities.map((a) => [a.id, a.planItemId])).toEqual([["a1", "p1"]]);
-  });
-
-  it("deletes every training row with the account", async () => {
-    const userId = "user_training_purge";
-    await call(userId, "PUT", "/v1/plan-items/p1", planBody);
-    await call(userId, "PUT", "/v1/activities/a1", activityBody);
-    await call(userId, "PUT", "/v1/workouts/w1", strengthWorkout);
-    expect((await call(userId, "DELETE", "/v1/account")).status).toBe(200);
-    for (const table of ["activities", "plan_items", "workouts"]) {
-      const row = await env.DB.prepare(`SELECT COUNT(*) AS n FROM ${table} WHERE user_id = ?`)
-        .bind(userId)
-        .first<{ n: number }>();
-      expect(`${table}:${row?.n}`).toBe(`${table}:0`);
-    }
-  });
-});
-
-const strengthWorkout = {
-  name: "Gym legs",
-  category: "strength",
-  description: "Heavy and slow.",
-  tags: ["legs", "gym"],
-  minutes: 50,
-  targetRpe: 8,
-  body: {
-    kind: "sets",
-    exercises: [{ name: "Back squat", measures: ["reps", "loadKg"], sets: [{ reps: 5 }] }],
-  },
-};
-
-const climbWorkout = {
-  name: "Project burns",
-  category: "climb",
-  description: null,
-  tags: [],
-  minutes: 90,
-  targetRpe: 9,
-  body: { kind: "climb", focus: "project", projectId: "the-roof" },
-};
-
 describe("workouts", () => {
-  it("round trips each body, edits in place and lists oldest first", async () => {
+  it("round trips variations and a pattern, edits in place and lists oldest first", async () => {
     const userId = "user_workouts_roundtrip";
-    const bodies = [
-      strengthWorkout,
-      climbWorkout,
-      { ...strengthWorkout, category: "mobility", body: checklistTemplate },
-      { ...strengthWorkout, category: "run", body: intervalsTemplate },
-      { ...strengthWorkout, category: "other", body: null, minutes: null, targetRpe: null },
-    ];
-    for (const [i, body] of bodies.entries()) {
-      const res = await call(userId, "PUT", `/v1/workouts/w${i}`, body);
-      expect(await json<{ workout: unknown }>(res)).toMatchObject({
-        workout: { id: `w${i}`, ...body },
-      });
-    }
-    await call(userId, "PUT", "/v1/workouts/w0", { ...strengthWorkout, name: "Gym legs, heavier" });
-    const { workouts } = await json<{ workouts: { id: string; name: string }[] }>(
+    await call(userId, "PUT", "/v1/workouts/w1", squatWorkout);
+    await call(userId, "PUT", "/v1/workouts/w2", {
+      ...squatWorkout,
+      kind: "hangboard",
+      name: "Repeaters",
+      variations: [
+        {
+          label: "",
+          items: [{ exercise: "half", dose: { sets: 3, reps: 6, onS: 7, offS: 3, edgeMm: 20 } }],
+        },
+      ],
+      pattern: [0],
+    });
+    await call(userId, "PUT", "/v1/workouts/w1", { ...squatWorkout, name: "Squat" });
+    const { workouts } = await json<{ workouts: WorkoutRecord[] }>(
       await call(userId, "GET", "/v1/workouts")
     );
-    expect(workouts.map((w) => w.id)).toEqual(["w0", "w1", "w2", "w3", "w4"]);
-    expect(workouts[0]?.name).toBe("Gym legs, heavier");
-    expect(await json(await call("user_workouts_someone_else", "GET", "/v1/workouts"))).toEqual({
-      workouts: [],
-    });
+    expect(workouts.map((w) => [w.id, w.kind, w.name])).toEqual([
+      ["w1", "strength", "Squat"],
+      ["w2", "hangboard", "Repeaters"],
+    ]);
+    expect(workouts[0]).toMatchObject({ ...squatWorkout, name: "Squat" });
   });
 
-  it("rejects a body that does not fit its category", async () => {
+  it("takes every variation in turn when no pattern is sent", async () => {
+    const userId = "user_workouts_pattern";
+    const { pattern: _, ...noPattern } = squatWorkout;
+    const res = await call(userId, "PUT", "/v1/workouts/w1", noPattern);
+    expect(await json(res)).toMatchObject({ workout: { pattern: [0, 1] } });
+  });
+
+  it("keeps an empty description and a climbing workout with no items", async () => {
+    const userId = "user_workouts_climb";
+    const climb = {
+      kind: "climbing",
+      name: "Limit bouldering",
+      description: "",
+      minutes: 90,
+      targetRpe: 9,
+      variations: [{ label: "", items: [] }],
+    };
+    const res = await call(userId, "PUT", "/v1/workouts/w1", climb);
+    expect(await json(res)).toMatchObject({ workout: { ...climb, pattern: [0] } });
+  });
+
+  it("rejects a workout out of shape", async () => {
     const userId = "user_workouts_invalid";
     for (const body of [
-      { ...strengthWorkout, category: "climb" },
-      { ...climbWorkout, category: "strength" },
-      { ...climbWorkout, body: { kind: "climb", focus: "limit", projectId: "x" } },
-      { ...strengthWorkout, category: "hang" },
-      { ...strengthWorkout, tags: ["a", "a"] },
-      { ...strengthWorkout, name: " " },
+      { ...squatWorkout, kind: "run" },
+      { ...squatWorkout, name: " " },
+      { ...squatWorkout, variations: [] },
+      { ...squatWorkout, pattern: [] },
+      { ...squatWorkout, pattern: [0, 2] },
+      { ...squatWorkout, targetRpe: 11 },
+      {
+        ...squatWorkout,
+        variations: [{ label: "", items: [{ exercise: "Squat", dose: { sets: 0 } }] }],
+        pattern: [0],
+      },
+      {
+        ...squatWorkout,
+        variations: [{ label: "", items: [{ exercise: "Squat", dose: { reps: 5 } }] }],
+        pattern: [0],
+      },
     ]) {
       expect((await call(userId, "PUT", "/v1/workouts/w1", body)).status).toBe(400);
     }
   });
 
-  it("links plan items and activities to a workout, and unlinks plans when it goes", async () => {
-    const userId = "user_workouts_links";
-    await call(userId, "PUT", "/v1/workouts/w1", strengthWorkout);
-    const linked = { ...planBody, workoutId: "w1" };
-    expect(
-      (await json<{ planItem: PlanItem }>(await call(userId, "PUT", "/v1/plan-items/p1", linked)))
-        .planItem.workoutId
-    ).toBe("w1");
-    const { workoutId: _, ...older } = linked;
-    const kept = await call(userId, "PUT", "/v1/plan-items/p1", { ...older, title: "Renamed" });
-    expect((await json<{ planItem: PlanItem }>(kept)).planItem.workoutId).toBe("w1");
-    const climb = { ...planBody, kind: "climb", workoutId: "w2", template: null };
-    expect((await call(userId, "PUT", "/v1/plan-items/p2", climb)).status).toBe(200);
-    const ran = { ...activityBody, workoutId: "w1" };
-    const logged = await call(userId, "PUT", "/v1/activities/a1", ran);
-    expect((await json<{ activity: Activity }>(logged)).activity.workoutId).toBe("w1");
+  it("leaves every block when deleted, and its sessions keep what was done", async () => {
+    const userId = "user_workouts_delete";
+    await call(userId, "PUT", "/v1/workouts/w1", squatWorkout);
+    await call(userId, "PUT", "/v1/blocks/b1", blockBody);
+    await call(userId, "PUT", "/v1/memberships/m1", membershipBody);
+    await call(userId, "PUT", "/v1/memberships/m2", { ...membershipBody, blockId: null });
+    await call(userId, "PUT", "/v1/memberships/m3", { ...membershipBody, workoutId: "other" });
+    await call(userId, "PUT", "/v1/memberships/m1/changes", {
+      week: 4,
+      variation: 0,
+      item: 0,
+      change: { sets: 3 },
+    });
+    await call(userId, "PUT", "/v1/activities/a1", {
+      ...activityBody,
+      workoutId: "w1",
+      membershipId: "m1",
+      week: 4,
+      variation: 0,
+      done: squatDone,
+    });
 
-    expect(await json(await call(userId, "DELETE", "/v1/workouts/w1"))).toEqual({ deleted: true });
-    expect(await json(await call(userId, "DELETE", "/v1/workouts/w1"))).toEqual({ deleted: false });
-    const { planItems } = await json<{ planItems: PlanItem[] }>(
-      await call(userId, "GET", "/v1/plan-items")
-    );
-    expect(planItems.map((p) => [p.id, p.workoutId])).toEqual([
-      ["p1", null],
-      ["p2", "w2"],
-    ]);
+    expect(await json(await call(userId, "DELETE", "/v1/workouts/w1"))).toEqual({
+      deleted: true,
+    });
+    const after = await plan(userId);
+    expect(after.memberships.map((m) => m.id)).toEqual(["m3"]);
+    expect(after.weekChanges).toEqual([]);
+    expect(after.blocks.map((b) => b.id)).toEqual(["b1"]);
     const { activities } = await json<{ activities: Activity[] }>(
       await call(userId, "GET", "/v1/activities")
     );
-    expect(activities.map((a) => a.workoutId)).toEqual(["w1"]);
+    expect(activities[0]).toMatchObject({
+      workoutId: "w1",
+      membershipId: null,
+      week: null,
+      variation: null,
+      done: squatDone,
+    });
+  });
+
+  it("takes a planned built-in out of every block, though it has no row", async () => {
+    const userId = "user_workouts_builtin";
+    await call(userId, "PUT", "/v1/memberships/m1", {
+      ...membershipBody,
+      workoutId: "rep73",
+      blockId: null,
+    });
+    expect(await json(await call(userId, "DELETE", "/v1/workouts/rep73"))).toEqual({
+      deleted: false,
+    });
+    expect((await plan(userId)).memberships).toEqual([]);
   });
 });
 
-describe("training blocks", () => {
-  const blockBody = {
-    name: "Autumn finger block",
-    start: "2026-09-28",
-    weeks: 4,
-    loads: [{ load: 100 }, { load: 110 }, { load: 120, phase: "test" }, { load: 70 }],
-    notes: null,
-    endedOn: null,
-  };
-  const scheduleBody = {
-    workoutId: "rep73",
-    gripId: "half",
-    days: [0, 4],
-    start: "2026-01-01",
-    end: null,
-    skip: [],
-  };
-
-  const members = async (
-    userId: string
-  ): Promise<{ item: PlanItem | undefined; schedule: Record<string, unknown> | undefined }> => {
-    const { planItems } = await json<{ planItems: PlanItem[] }>(
-      await call(userId, "GET", "/v1/plan-items")
-    );
-    const { schedules } = await json<{ schedules: Record<string, unknown>[] }>(
-      await call(userId, "GET", "/v1/hang")
-    );
-    return { item: planItems[0], schedule: schedules[0] };
-  };
-
-  it("plans members on the block's dates and moves them with it", async () => {
-    const userId = "user_block_dates";
-    const saved = await call(userId, "PUT", "/v1/training-blocks/b1", blockBody);
-    expect(await json(saved)).toEqual({ block: { id: "b1", ...blockBody } });
-    await call(userId, "PUT", "/v1/plan-items/p1", { ...planBody, blockId: "b1" });
-    await call(userId, "PUT", "/v1/hang/schedules/s1", {
-      ...scheduleBody,
-      targetRpe: 8,
-      blockId: "b1",
+describe("blocks and memberships", () => {
+  it("reads the whole plan, sorting weekdays", async () => {
+    const userId = "user_plan_roundtrip";
+    await call(userId, "PUT", "/v1/blocks/b1", blockBody);
+    const saved = await call(userId, "PUT", "/v1/memberships/m1", membershipBody);
+    expect(await json(saved)).toEqual({
+      membership: { id: "m1", ...membershipBody, weekdays: [1, 4] },
     });
-    let m = await members(userId);
-    expect(m.item).toMatchObject({ start: "2026-09-28", end: "2026-10-26", blockId: "b1" });
-    expect(m.schedule).toMatchObject({
-      start: "2026-09-28",
-      end: "2026-10-26",
-      targetRpe: 8,
-      blockId: "b1",
-    });
-
-    await call(userId, "PUT", "/v1/training-blocks/b1", {
-      ...blockBody,
+    await call(userId, "PUT", "/v1/memberships/m2", {
+      ...membershipBody,
+      blockId: null,
       start: "2026-10-05",
-      weeks: 5,
-      loads: [...blockBody.loads, { load: 70 }],
     });
-    m = await members(userId);
-    expect(m.item).toMatchObject({ start: "2026-10-05", end: "2026-11-09" });
-    expect(m.schedule).toMatchObject({ start: "2026-10-05", end: "2026-11-09" });
-
-    await call(userId, "PUT", "/v1/plan-items/p1", { ...planBody, targetRpe: 6 });
-    expect((await members(userId)).item).toMatchObject({ blockId: "b1", targetRpe: 6 });
+    expect(await plan(userId)).toEqual({
+      blocks: [{ id: "b1", ...blockBody }],
+      memberships: [
+        { id: "m2", ...membershipBody, blockId: null, start: "2026-10-05", weekdays: [1, 4] },
+        { id: "m1", ...membershipBody, weekdays: [1, 4] },
+      ],
+      weekChanges: [],
+    });
   });
 
-  it("ends members with the block, and leaves them planned when it is deleted", async () => {
-    const userId = "user_block_end";
-    await call(userId, "PUT", "/v1/training-blocks/b1", blockBody);
-    await call(userId, "PUT", "/v1/plan-items/p1", { ...planBody, blockId: "b1" });
-    await call(userId, "PUT", "/v1/hang/schedules/s1", { ...scheduleBody, blockId: "b1" });
-    await call(userId, "PUT", "/v1/training-blocks/b1", { ...blockBody, endedOn: "2026-10-10" });
-    let m = await members(userId);
-    expect(m.item).toMatchObject({ end: "2026-10-10" });
-    expect(m.schedule).toMatchObject({ end: "2026-10-10" });
-
-    const res = await call(userId, "DELETE", "/v1/training-blocks/b1");
-    expect(await json(res)).toEqual({ deleted: true });
-    m = await members(userId);
-    expect(m.item).toMatchObject({ blockId: null, start: "2026-09-28", end: "2026-10-10" });
-    expect(m.schedule).toMatchObject({ blockId: null, end: "2026-10-10" });
-    const { blocks } = await json<{ blocks: unknown[] }>(
-      await call(userId, "GET", "/v1/training-blocks")
-    );
-    expect(blocks).toEqual([]);
-  });
-
-  it("reads a block saved before loads as base-load weeks keeping their tags", async () => {
-    const userId = "user_block_legacy";
-    await call(userId, "PUT", "/v1/training-blocks/b1", blockBody);
-    await env.DB.prepare("UPDATE training_blocks SET phases_json = ? WHERE user_id = ?")
-      .bind(JSON.stringify(["build", "build", "test", "deload"]), userId)
-      .run();
-    const { blocks } = await json<{ blocks: { loads: unknown }[] }>(
-      await call(userId, "GET", "/v1/training-blocks")
-    );
-    expect(blocks[0]?.loads).toEqual([
-      { load: 100 },
-      { load: 100 },
-      { load: 100, phase: "test" },
-      { load: 100, phase: "deload" },
-    ]);
-  });
-
-  it("reads a week tagged build as load", async () => {
-    const userId = "user_block_build";
-    await call(userId, "PUT", "/v1/training-blocks/b1", blockBody);
-    await env.DB.prepare("UPDATE training_blocks SET phases_json = ? WHERE user_id = ?")
-      .bind(
-        JSON.stringify([
-          { load: 110, phase: "build" },
-          { load: 100 },
-          { load: 120, phase: "perform" },
-          { load: 60, phase: "deload" },
-        ]),
-        userId
-      )
-      .run();
-    const { blocks } = await json<{ blocks: { loads: unknown }[] }>(
-      await call(userId, "GET", "/v1/training-blocks")
-    );
-    expect(blocks[0]?.loads).toEqual([
-      { load: 110, phase: "load" },
-      { load: 100 },
-      { load: 120, phase: "perform" },
-      { load: 60, phase: "deload" },
-    ]);
-  });
-
-  it("rejects another user's block and a block out of shape", async () => {
-    await call("user_block_owner", "PUT", "/v1/training-blocks/b1", blockBody);
-    const userId = "user_block_other";
-    for (const [path, body] of [
-      ["/v1/plan-items/p1", { ...planBody, blockId: "b1" }],
-      ["/v1/hang/schedules/s1", { ...scheduleBody, blockId: "b1" }],
-    ] as const) {
-      expect((await call(userId, "PUT", path, body)).status).toBe(400);
+  it("rejects another user's block and plans out of shape", async () => {
+    await call("user_plan_owner", "PUT", "/v1/blocks/b1", blockBody);
+    const userId = "user_plan_invalid";
+    expect((await call(userId, "PUT", "/v1/memberships/m1", membershipBody)).status).toBe(400);
+    for (const body of [
+      { ...membershipBody, blockId: null, weekdays: [1, 1] },
+      { ...membershipBody, blockId: null, weekdays: [7] },
+      { ...membershipBody, blockId: null, start: "2026-02-30" },
+    ]) {
+      expect((await call(userId, "PUT", "/v1/memberships/m1", body)).status).toBe(400);
     }
     for (const body of [
-      { ...blockBody, loads: [{ load: 100 }] },
-      { ...blockBody, loads: [...blockBody.loads.slice(0, 3), { load: 100, phase: "peak" }] },
-      { ...blockBody, loads: [...blockBody.loads.slice(0, 3), { load: 200 }] },
-      { ...blockBody, weeks: 0, loads: [] },
-      { ...blockBody, endedOn: "2026-09-28" },
-      { ...blockBody, name: " " },
+      { ...blockBody, weeks: 0 },
+      { ...blockBody, weeks: 17 },
+      { ...blockBody, name: "" },
     ]) {
-      expect((await call(userId, "PUT", "/v1/training-blocks/b2", body)).status).toBe(400);
+      expect((await call(userId, "PUT", "/v1/blocks/b1", body)).status).toBe(400);
+    }
+  });
+
+  it("keeps a one-off as a membership with no weekdays", async () => {
+    const userId = "user_plan_once";
+    const once = { workoutId: "rep73", blockId: null, weekdays: [], start: "2026-11-05" };
+    const res = await call(userId, "PUT", "/v1/memberships/m1", once);
+    expect(await json(res)).toEqual({ membership: { id: "m1", ...once } });
+  });
+
+  it("keeps only what a week changes, and an empty change puts it back as written", async () => {
+    const userId = "user_plan_weeks";
+    await call(userId, "PUT", "/v1/blocks/b1", blockBody);
+    await call(userId, "PUT", "/v1/memberships/m1", membershipBody);
+    const change = { week: 4, variation: 0, item: 0, change: { sets: 3, weightKg: 95 } };
+    const res = await call(userId, "PUT", "/v1/memberships/m1/changes", change);
+    expect(await json(res)).toEqual({ weekChange: { membershipId: "m1", ...change } });
+    await call(userId, "PUT", "/v1/memberships/m1/changes", { ...change, change: { sets: 2 } });
+    await call(userId, "PUT", "/v1/memberships/m1/changes", { ...change, week: 5 });
+    expect((await plan(userId)).weekChanges).toEqual([
+      { membershipId: "m1", ...change, change: { sets: 2 } },
+      { membershipId: "m1", ...change, week: 5 },
+    ]);
+    await call(userId, "PUT", "/v1/memberships/m1/changes", { ...change, change: {} });
+    expect((await plan(userId)).weekChanges.map((c) => c.week)).toEqual([5]);
+  });
+
+  it("404s a week change for a membership that does not exist, and rejects one out of shape", async () => {
+    const userId = "user_plan_weeks_invalid";
+    const change = { week: 1, variation: 0, item: 0, change: { sets: 3 } };
+    expect((await call(userId, "PUT", "/v1/memberships/m1/changes", change)).status).toBe(404);
+    await call(userId, "PUT", "/v1/memberships/m1", { ...membershipBody, blockId: null });
+    for (const body of [
+      { ...change, week: 0 },
+      { ...change, week: 17 },
+      { ...change, variation: -1 },
+      { ...change, change: { sets: 0 } },
+    ]) {
+      expect((await call(userId, "PUT", "/v1/memberships/m1/changes", body)).status).toBe(400);
+    }
+  });
+
+  it("deletes a membership with its week changes and unlinks its sessions", async () => {
+    const userId = "user_plan_delete";
+    await call(userId, "PUT", "/v1/memberships/m1", { ...membershipBody, blockId: null });
+    await call(userId, "PUT", "/v1/memberships/m1/changes", {
+      week: 1,
+      variation: 0,
+      item: 0,
+      change: { sets: 3 },
+    });
+    await call(userId, "PUT", "/v1/activities/a1", { ...activityBody, membershipId: "m1" });
+    expect(await json(await call(userId, "DELETE", "/v1/memberships/m1"))).toEqual({
+      deleted: true,
+    });
+    expect(await plan(userId)).toEqual({ blocks: [], memberships: [], weekChanges: [] });
+    const { activities } = await json<{ activities: Activity[] }>(
+      await call(userId, "GET", "/v1/activities")
+    );
+    expect(activities.map((a) => [a.id, a.membershipId])).toEqual([["a1", null]]);
+  });
+
+  it("deletes a block with its memberships, leaving those outside it", async () => {
+    const userId = "user_plan_block_delete";
+    await call(userId, "PUT", "/v1/blocks/b1", blockBody);
+    await call(userId, "PUT", "/v1/memberships/m1", membershipBody);
+    await call(userId, "PUT", "/v1/memberships/m2", { ...membershipBody, blockId: null });
+    await call(userId, "PUT", "/v1/memberships/m1/changes", {
+      week: 1,
+      variation: 0,
+      item: 0,
+      change: { sets: 3 },
+    });
+    expect(await json(await call(userId, "DELETE", "/v1/blocks/b1"))).toEqual({ deleted: true });
+    const after = await plan(userId);
+    expect(after.blocks).toEqual([]);
+    expect(after.memberships.map((m) => m.id)).toEqual(["m2"]);
+    expect(after.weekChanges).toEqual([]);
+  });
+
+  it("deletes every training row with the account", async () => {
+    const userId = "user_training_purge";
+    await call(userId, "PUT", "/v1/blocks/b1", blockBody);
+    await call(userId, "PUT", "/v1/memberships/m1", membershipBody);
+    await call(userId, "PUT", "/v1/memberships/m1/changes", {
+      week: 1,
+      variation: 0,
+      item: 0,
+      change: { sets: 3 },
+    });
+    await call(userId, "PUT", "/v1/activities/a1", activityBody);
+    await call(userId, "PUT", "/v1/workouts/w1", squatWorkout);
+    expect((await call(userId, "DELETE", "/v1/account")).status).toBe(200);
+    for (const table of [
+      "activities",
+      "memberships",
+      "week_changes",
+      "training_blocks",
+      "workouts",
+    ]) {
+      const row = await env.DB.prepare(`SELECT COUNT(*) AS n FROM ${table} WHERE user_id = ?`)
+        .bind(userId)
+        .first<{ n: number }>();
+      expect(`${table}:${row?.n}`).toBe(`${table}:0`);
     }
   });
 });
@@ -627,13 +533,7 @@ describe("activity strava posting", () => {
     await connectStrava(userId, true);
     const { fetchImpl, calls } = stravaRoutes();
 
-    await send(
-      userId,
-      "PUT",
-      "/v1/activities/a1",
-      { ...activityBody, detail: setsDetail },
-      fetchImpl
-    );
+    await send(userId, "PUT", "/v1/activities/a1", { ...activityBody, done: squatDone }, fetchImpl);
 
     const creates = calls.filter((c) => c.method === "POST");
     expect(creates).toHaveLength(1);
@@ -646,8 +546,8 @@ describe("activity strava posting", () => {
       [
         "RPE 7/10",
         "created by https://sendtally.com",
-        "Back squat 5×100 kg",
-        "Copenhagen plank 30s L",
+        "Back squat 5×100 kg, 4×100 kg",
+        "Copenhagen plank 30s",
       ].join("\n")
     );
     expect(await firstActivity(userId)).toMatchObject({
@@ -661,21 +561,18 @@ describe("activity strava posting", () => {
     const userId = "user_activity_kinds";
     await connectStrava(userId, true);
     const { fetchImpl, calls } = stravaRoutes();
-    const checklist = {
-      kind: "checklist",
-      items: [
-        { text: "Cat-cow", dose: "× 10", done: true },
-        { text: "Deep squat hold", dose: "", done: true },
-        { text: "Pigeon", dose: "1 min", done: false },
-      ],
-    };
-    const kinds = { yoga: "Yoga", run: "Run", mobility: "Workout", other: "Workout" };
+    const done = [
+      { item: 0, exercise: "Cat-cow", sets: [{ reps: 10 }] },
+      { item: 1, exercise: "Deep squat hold", sets: [{}] },
+      { item: 2, exercise: "Pigeon", sets: [] },
+    ];
+    const kinds = { mobility: "Workout", other: "Workout", strength: "WeightTraining" };
     for (const kind of Object.keys(kinds)) {
       await send(
         userId,
         "PUT",
         `/v1/activities/${kind}`,
-        { ...activityBody, kind, startTime: null, rpe: null, detail: checklist },
+        { ...activityBody, kind, startTime: null, rpe: null, done },
         fetchImpl
       );
     }
@@ -683,35 +580,7 @@ describe("activity strava posting", () => {
     expect(forms.map((f) => f.get("sport_type"))).toEqual(Object.values(kinds));
     expect(forms[0]?.get("start_date_local")).toBe("2026-10-01T12:00:00Z");
     expect(forms[0]?.get("description")).toBe(
-      ["created by https://sendtally.com", "✓ Cat-cow × 10", "✓ Deep squat hold"].join("\n")
-    );
-  });
-
-  it("describes an intervals run by each step's dose and the turns done", async () => {
-    const userId = "user_activity_intervals_strava";
-    await connectStrava(userId, true);
-    const { fetchImpl, calls } = stravaRoutes();
-    const detail = {
-      ...intervalsTemplate,
-      stepsDone: [
-        { round: 0, step: 0, side: "L" },
-        { round: 0, step: 0, side: "R", heldSeconds: 20 },
-        { round: 0, step: 1 },
-      ],
-    };
-    await send(
-      userId,
-      "PUT",
-      "/v1/activities/a1",
-      { ...activityBody, kind: "mobility", rpe: null, detail },
-      fetchImpl
-    );
-    expect(new URLSearchParams(calls[0]?.body).get("description")).toBe(
-      [
-        "created by https://sendtally.com",
-        "Couch stretch 45s each 2/4",
-        "Swing 15× 24 kg 1/2",
-      ].join("\n")
+      ["created by https://sendtally.com", "Cat-cow 10", "✓ Deep squat hold"].join("\n")
     );
   });
 

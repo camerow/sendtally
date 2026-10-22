@@ -37,12 +37,10 @@ import {
   hangDefaultGrips,
   hangGrips,
   hangLoads,
-  hangSchedules,
   hangSessions,
   hangSettings,
-  hangWorkouts,
   journalEntries,
-  planItems,
+  memberships,
   projects,
   sessionClimbLinks,
   sessions,
@@ -53,21 +51,20 @@ import {
   tags,
   trainingBlocks,
   users,
+  weekChanges,
   workouts,
 } from "../db/schema";
 import {
-  blockEnd,
-  defaultSetup,
   loadKey,
+  type Block,
   type HangSession,
   type HangSettings,
   type Loads,
-  type Schedule,
-  type TrainingBlock,
+  type Membership,
+  type WeekChange,
   type Workout,
 } from "@sendtally/core/hang";
-import type { ActivityInput, PlanItem } from "./activities";
-import type { UserWorkoutInput } from "./workouts";
+import type { ActivityInput } from "./activities";
 import type { ContentEntity, Viewer } from "./areas";
 import type { ClimbLink } from "./manual";
 import type { EntryWrite } from "./entries";
@@ -283,6 +280,10 @@ export async function replaceStoreEntitlements(
 
 export type ManualSessionInput = {
   fingerprint: string;
+  /** Absent leaves the plan link as it was. */
+  membership_id?: string | null;
+  week?: number | null;
+  variation?: number | null;
   location: "indoor" | "outdoor" | null;
   gym_id: string | null;
   area_id: string | null;
@@ -1197,14 +1198,13 @@ export async function deleteUserData(db: D1Database, userId: string): Promise<vo
     d.delete(projects).where(eq(projects.user_id, userId)),
     d.delete(gyms).where(eq(gyms.user_id, userId)),
     d.delete(hangGrips).where(eq(hangGrips.user_id, userId)),
-    d.delete(hangWorkouts).where(eq(hangWorkouts.user_id, userId)),
     d.delete(hangDefaultGrips).where(eq(hangDefaultGrips.user_id, userId)),
     d.delete(hangLoads).where(eq(hangLoads.user_id, userId)),
-    d.delete(hangSchedules).where(eq(hangSchedules.user_id, userId)),
     d.delete(hangSessions).where(eq(hangSessions.user_id, userId)),
     d.delete(hangSettings).where(eq(hangSettings.user_id, userId)),
     d.delete(activities).where(eq(activities.user_id, userId)),
-    d.delete(planItems).where(eq(planItems.user_id, userId)),
+    d.delete(memberships).where(eq(memberships.user_id, userId)),
+    d.delete(weekChanges).where(eq(weekChanges.user_id, userId)),
     d.delete(trainingBlocks).where(eq(trainingBlocks.user_id, userId)),
     d.delete(workouts).where(eq(workouts.user_id, userId)),
     d.delete(sessions).where(eq(sessions.user_id, userId)),
@@ -2281,17 +2281,13 @@ export async function mergeAreaClimb(
 }
 
 export type HangGripRow = typeof hangGrips.$inferSelect;
-export type HangWorkoutRow = typeof hangWorkouts.$inferSelect;
-export type HangScheduleRow = typeof hangSchedules.$inferSelect;
 export type HangSessionRow = typeof hangSessions.$inferSelect;
 export type HangSettingsRow = typeof hangSettings.$inferSelect;
 
 export type HangRows = {
   grips: HangGripRow[];
-  workouts: HangWorkoutRow[];
   defaultGrips: Array<typeof hangDefaultGrips.$inferSelect>;
   loads: Loads;
-  schedules: HangScheduleRow[];
   sessions: HangSessionRow[];
   settings: HangSettingsRow | null;
 };
@@ -2302,16 +2298,10 @@ const loadsOf = (rows: Array<typeof hangLoads.$inferSelect>): Loads =>
 // Everything the hangboard feature reads, in one round trip.
 export async function hangRows(db: D1Database, userId: string): Promise<HangRows> {
   const d = drizzle(db);
-  const [grips, workouts, defaultGrips, loads, schedules, hang, settings] = await d.batch([
+  const [grips, defaultGrips, loads, hang, settings] = await d.batch([
     d.select().from(hangGrips).where(eq(hangGrips.user_id, userId)).orderBy(hangGrips.created_at),
-    d
-      .select()
-      .from(hangWorkouts)
-      .where(eq(hangWorkouts.user_id, userId))
-      .orderBy(hangWorkouts.created_at),
     d.select().from(hangDefaultGrips).where(eq(hangDefaultGrips.user_id, userId)),
     d.select().from(hangLoads).where(eq(hangLoads.user_id, userId)),
-    d.select().from(hangSchedules).where(eq(hangSchedules.user_id, userId)),
     d
       .select()
       .from(hangSessions)
@@ -2321,10 +2311,8 @@ export async function hangRows(db: D1Database, userId: string): Promise<HangRows
   ]);
   return {
     grips,
-    workouts,
     defaultGrips,
     loads: loadsOf(loads),
-    schedules,
     sessions: hang,
     settings: settings[0] ?? null,
   };
@@ -2421,59 +2409,6 @@ export async function hideHangGrip(db: D1Database, userId: string, id: string): 
   ]);
 }
 
-export async function saveHangWorkout(
-  db: D1Database,
-  userId: string,
-  id: string,
-  w: Omit<Workout, "id" | "source"> & { edgeMm?: number }
-): Promise<HangWorkoutRow> {
-  const now = new Date().toISOString();
-  const fields = {
-    name: w.name,
-    kind: w.kind,
-    grip: w.grip,
-    ...(w.edgeMm === undefined ? {} : { edge_mm: w.edgeMm }),
-    hang_s: w.hangS,
-    rest_s: w.restS,
-    reps: w.reps,
-    sets: w.sets,
-    set_rest_s: w.setRestS,
-    time_units_json: JSON.stringify(w.timeUnits),
-    updated_at: now,
-  };
-  return drizzle(db)
-    .insert(hangWorkouts)
-    .values({
-      user_id: userId,
-      id,
-      edge_mm: defaultSetup(w.kind).edgeMm,
-      ...fields,
-      created_at: now,
-    })
-    .onConflictDoUpdate({ target: [hangWorkouts.user_id, hangWorkouts.id], set: fields })
-    .returning()
-    .get();
-}
-
-/** The workout goes with its plans and default grip; sessions keep the protocol they ran. */
-export async function deleteHangWorkout(
-  db: D1Database,
-  userId: string,
-  id: string
-): Promise<boolean> {
-  const d = drizzle(db);
-  const [, , deleted] = await d.batch([
-    d
-      .delete(hangSchedules)
-      .where(and(eq(hangSchedules.user_id, userId), eq(hangSchedules.workout_id, id))),
-    d
-      .delete(hangDefaultGrips)
-      .where(and(eq(hangDefaultGrips.user_id, userId), eq(hangDefaultGrips.workout_id, id))),
-    d.delete(hangWorkouts).where(and(eq(hangWorkouts.user_id, userId), eq(hangWorkouts.id, id))),
-  ]);
-  return deleted.meta.changes > 0;
-}
-
 export async function setHangDefaultGrip(
   db: D1Database,
   userId: string,
@@ -2508,43 +2443,6 @@ export async function mergeHangLoads(db: D1Database, userId: string, loads: Load
       });
   }
   return loadsOf(await d.select().from(hangLoads).where(eq(hangLoads.user_id, userId)).all());
-}
-
-export async function saveHangSchedule(
-  db: D1Database,
-  userId: string,
-  s: Schedule
-): Promise<HangScheduleRow> {
-  const fields = {
-    workout_id: s.workoutId,
-    grip_id: s.gripId,
-    days_json: JSON.stringify(s.days),
-    start: s.start,
-    end: s.end,
-    skip_json: JSON.stringify([...new Set(s.skip)].sort()),
-    ...(s.targetRpe === undefined ? {} : { target_rpe: s.targetRpe }),
-    ...(s.blockId === undefined ? {} : { block_id: s.blockId }),
-    ...(s.edgeMm === undefined ? {} : { edge_mm: s.edgeMm }),
-    ...(s.loadKg === undefined ? {} : { load_kg: s.loadKg }),
-    updated_at: new Date().toISOString(),
-  };
-  return drizzle(db)
-    .insert(hangSchedules)
-    .values({ user_id: userId, id: s.id, ...fields })
-    .onConflictDoUpdate({ target: [hangSchedules.user_id, hangSchedules.id], set: fields })
-    .returning()
-    .get();
-}
-
-export async function deleteHangSchedule(
-  db: D1Database,
-  userId: string,
-  id: string
-): Promise<boolean> {
-  const result = await drizzle(db)
-    .delete(hangSchedules)
-    .where(and(eq(hangSchedules.user_id, userId), eq(hangSchedules.id, id)));
-  return result.meta.changes > 0;
 }
 
 export async function getHangSession(
@@ -2591,6 +2489,10 @@ export async function saveHangSession(
     misses: s.misses,
     rpe: s.rpe,
     protocol_json: JSON.stringify(s.protocol),
+    membership_id: s.membershipId,
+    week: s.week,
+    variation: s.variation,
+    done_json: JSON.stringify(s.done),
     updated_at: now,
   };
   return drizzle(db)
@@ -2688,7 +2590,6 @@ export async function saveHangSettings(
 }
 
 export type ActivityRow = typeof activities.$inferSelect;
-export type PlanItemRow = typeof planItems.$inferSelect;
 
 export async function listActivities(
   db: D1Database,
@@ -2726,10 +2627,11 @@ export async function saveActivity(
     minutes: a.minutes,
     rpe: a.rpe,
     notes: a.notes,
-    plan_item_id: a.planItemId,
     workout_id: a.workoutId,
-    detail_kind: a.detail?.kind ?? null,
-    detail_json: a.detail === null ? null : JSON.stringify(a.detail),
+    membership_id: a.membershipId,
+    week: a.week,
+    variation: a.variation,
+    done_json: JSON.stringify(a.done),
     updated_at: now,
   };
   return drizzle(db)
@@ -2799,85 +2701,49 @@ export async function deleteActivity(db: D1Database, userId: string, id: string)
   return result.meta.changes > 0;
 }
 
-export async function listPlanItems(db: D1Database, userId: string): Promise<PlanItemRow[]> {
-  return drizzle(db)
-    .select()
-    .from(planItems)
-    .where(eq(planItems.user_id, userId))
-    .orderBy(planItems.start, planItems.id)
-    .all();
+export type BlockRow = typeof trainingBlocks.$inferSelect;
+export type MembershipRow = typeof memberships.$inferSelect;
+export type WeekChangeRow = typeof weekChanges.$inferSelect;
+
+export type PlanRows = {
+  blocks: BlockRow[];
+  memberships: MembershipRow[];
+  weekChanges: WeekChangeRow[];
+};
+
+// Everything the plan reads, in one round trip.
+export async function planRows(db: D1Database, userId: string): Promise<PlanRows> {
+  const d = drizzle(db);
+  const [blocks, members, changes] = await d.batch([
+    d
+      .select()
+      .from(trainingBlocks)
+      .where(eq(trainingBlocks.user_id, userId))
+      .orderBy(desc(trainingBlocks.start), trainingBlocks.id),
+    d
+      .select()
+      .from(memberships)
+      .where(eq(memberships.user_id, userId))
+      .orderBy(memberships.start, memberships.id),
+    d
+      .select()
+      .from(weekChanges)
+      .where(eq(weekChanges.user_id, userId))
+      .orderBy(
+        weekChanges.membership_id,
+        weekChanges.week,
+        weekChanges.variation,
+        weekChanges.item
+      ),
+  ]);
+  return { blocks, memberships: members, weekChanges: changes };
 }
 
-export async function getPlanItem(
+export async function getBlock(
   db: D1Database,
   userId: string,
   id: string
-): Promise<PlanItemRow | null> {
-  const row = await drizzle(db)
-    .select()
-    .from(planItems)
-    .where(and(eq(planItems.user_id, userId), eq(planItems.id, id)))
-    .get();
-  return row ?? null;
-}
-
-export async function savePlanItem(
-  db: D1Database,
-  userId: string,
-  p: PlanItem
-): Promise<PlanItemRow> {
-  const fields = {
-    kind: p.kind,
-    title: p.title,
-    days_json: JSON.stringify([...p.days].sort()),
-    per_week: p.perWeek,
-    start: p.start,
-    end: p.end,
-    skip_json: JSON.stringify([...new Set(p.skip)].sort()),
-    minutes: p.minutes,
-    target_rpe: p.targetRpe,
-    project_id: p.projectId,
-    template_kind: p.template?.kind ?? null,
-    template_json: p.template === null ? null : JSON.stringify(p.template),
-    ...(p.blockId === undefined ? {} : { block_id: p.blockId }),
-    ...(p.workoutId === undefined ? {} : { workout_id: p.workoutId }),
-    updated_at: new Date().toISOString(),
-  };
-  return drizzle(db)
-    .insert(planItems)
-    .values({ user_id: userId, id: p.id, ...fields })
-    .onConflictDoUpdate({ target: [planItems.user_id, planItems.id], set: fields })
-    .returning()
-    .get();
-}
-
-// The plan item goes; activities logged against it keep its id as history.
-export async function deletePlanItem(db: D1Database, userId: string, id: string): Promise<boolean> {
-  const result = await drizzle(db)
-    .delete(planItems)
-    .where(and(eq(planItems.user_id, userId), eq(planItems.id, id)));
-  return result.meta.changes > 0;
-}
-
-export type TrainingBlockRow = typeof trainingBlocks.$inferSelect;
-
-export async function listTrainingBlocks(
-  db: D1Database,
-  userId: string
-): Promise<TrainingBlockRow[]> {
-  return drizzle(db)
-    .select()
-    .from(trainingBlocks)
-    .where(eq(trainingBlocks.user_id, userId))
-    .orderBy(desc(trainingBlocks.start), trainingBlocks.id)
-    .all();
-}
-
-export async function getTrainingBlock(
-  db: D1Database,
-  userId: string,
-  id: string
-): Promise<TrainingBlockRow | null> {
+): Promise<BlockRow | null> {
   const row = await drizzle(db)
     .select()
     .from(trainingBlocks)
@@ -2886,66 +2752,141 @@ export async function getTrainingBlock(
   return row ?? null;
 }
 
-/** Saves the block and moves every member onto its dates, in one batch. */
-export async function saveTrainingBlock(
-  db: D1Database,
-  userId: string,
-  b: TrainingBlock
-): Promise<TrainingBlockRow> {
-  const d = drizzle(db);
-  const now = new Date().toISOString();
+export async function saveBlock(db: D1Database, userId: string, b: Block): Promise<BlockRow> {
   const fields = {
     name: b.name,
     start: b.start,
     weeks: b.weeks,
-    phases_json: JSON.stringify(b.loads),
-    notes: b.notes,
-    ended_on: b.endedOn,
-    updated_at: now,
+    updated_at: new Date().toISOString(),
   };
-  const dates = { start: b.start, end: blockEnd(b), updated_at: now };
-  const [row] = await d.batch([
-    d
-      .insert(trainingBlocks)
-      .values({ user_id: userId, id: b.id, ...fields })
-      .onConflictDoUpdate({ target: [trainingBlocks.user_id, trainingBlocks.id], set: fields })
-      .returning(),
-    d
-      .update(planItems)
-      .set(dates)
-      .where(and(eq(planItems.user_id, userId), eq(planItems.block_id, b.id))),
-    d
-      .update(hangSchedules)
-      .set(dates)
-      .where(and(eq(hangSchedules.user_id, userId), eq(hangSchedules.block_id, b.id))),
-  ]);
-  const saved = row[0];
-  if (saved === undefined) throw new Error("training block upsert returned no row");
-  return saved;
+  return drizzle(db)
+    .insert(trainingBlocks)
+    .values({ user_id: userId, id: b.id, ...fields })
+    .onConflictDoUpdate({ target: [trainingBlocks.user_id, trainingBlocks.id], set: fields })
+    .returning()
+    .get();
 }
 
-/** The block goes; its members stay planned on their own, dates unchanged. */
-export async function deleteTrainingBlock(
+const UNLINKED = { membership_id: null, week: null, variation: null };
+
+/**
+ * Takes out the memberships `where` picks, with their week changes. Sessions logged
+ * against them keep what was done and lose only the link.
+ */
+function removeMemberships(d: DrizzleD1Database, userId: string, where: SQL | undefined) {
+  const ids = d.select({ id: memberships.id }).from(memberships).where(where);
+  const linked = <T extends typeof activities | typeof hangSessions | typeof sessions>(
+    table: T
+  ): SQL | undefined => and(eq(table.user_id, userId), inArray(table.membership_id, ids));
+  return [
+    d.update(activities).set(UNLINKED).where(linked(activities)),
+    d.update(hangSessions).set(UNLINKED).where(linked(hangSessions)),
+    d.update(sessions).set(UNLINKED).where(linked(sessions)),
+    d
+      .delete(weekChanges)
+      .where(and(eq(weekChanges.user_id, userId), inArray(weekChanges.membership_id, ids))),
+    d.delete(memberships).where(where),
+  ] as const;
+}
+
+/** The block goes with its memberships. */
+export async function deleteBlock(db: D1Database, userId: string, id: string): Promise<boolean> {
+  const d = drizzle(db);
+  const results = await d.batch([
+    ...removeMemberships(
+      d,
+      userId,
+      and(eq(memberships.user_id, userId), eq(memberships.block_id, id))
+    ),
+    d
+      .delete(trainingBlocks)
+      .where(and(eq(trainingBlocks.user_id, userId), eq(trainingBlocks.id, id))),
+  ]);
+  return results[5].meta.changes > 0;
+}
+
+export async function getMembership(
+  db: D1Database,
+  userId: string,
+  id: string
+): Promise<MembershipRow | null> {
+  const row = await drizzle(db)
+    .select()
+    .from(memberships)
+    .where(and(eq(memberships.user_id, userId), eq(memberships.id, id)))
+    .get();
+  return row ?? null;
+}
+
+export async function saveMembership(
+  db: D1Database,
+  userId: string,
+  m: Membership
+): Promise<MembershipRow> {
+  const fields = {
+    workout_id: m.workoutId,
+    block_id: m.blockId,
+    weekdays_json: JSON.stringify([...new Set(m.weekdays)].sort()),
+    start: m.start,
+    updated_at: new Date().toISOString(),
+  };
+  return drizzle(db)
+    .insert(memberships)
+    .values({ user_id: userId, id: m.id, ...fields })
+    .onConflictDoUpdate({ target: [memberships.user_id, memberships.id], set: fields })
+    .returning()
+    .get();
+}
+
+export async function deleteMembership(
   db: D1Database,
   userId: string,
   id: string
 ): Promise<boolean> {
   const d = drizzle(db);
-  const now = new Date().toISOString();
-  const [, , deleted] = await d.batch([
-    d
-      .update(planItems)
-      .set({ block_id: null, updated_at: now })
-      .where(and(eq(planItems.user_id, userId), eq(planItems.block_id, id))),
-    d
-      .update(hangSchedules)
-      .set({ block_id: null, updated_at: now })
-      .where(and(eq(hangSchedules.user_id, userId), eq(hangSchedules.block_id, id))),
-    d
-      .delete(trainingBlocks)
-      .where(and(eq(trainingBlocks.user_id, userId), eq(trainingBlocks.id, id))),
-  ]);
-  return deleted.meta.changes > 0;
+  const results = await d.batch(
+    removeMemberships(d, userId, and(eq(memberships.user_id, userId), eq(memberships.id, id)))
+  );
+  return results[4].meta.changes > 0;
+}
+
+const weekChangeKey = (userId: string, c: Omit<WeekChange, "change">): SQL | undefined =>
+  and(
+    eq(weekChanges.user_id, userId),
+    eq(weekChanges.membership_id, c.membershipId),
+    eq(weekChanges.week, c.week),
+    eq(weekChanges.variation, c.variation),
+    eq(weekChanges.item, c.item)
+  );
+
+/** Sets what one week changes about one item; an empty change puts it back as written. */
+export async function saveWeekChange(db: D1Database, userId: string, c: WeekChange): Promise<void> {
+  const d = drizzle(db);
+  if (Object.keys(c.change).length === 0) {
+    await d.delete(weekChanges).where(weekChangeKey(userId, c));
+    return;
+  }
+  const change_json = JSON.stringify(c.change);
+  await d
+    .insert(weekChanges)
+    .values({
+      user_id: userId,
+      membership_id: c.membershipId,
+      week: c.week,
+      variation: c.variation,
+      item: c.item,
+      change_json,
+    })
+    .onConflictDoUpdate({
+      target: [
+        weekChanges.user_id,
+        weekChanges.membership_id,
+        weekChanges.week,
+        weekChanges.variation,
+        weekChanges.item,
+      ],
+      set: { change_json },
+    });
 }
 
 export type WorkoutRow = typeof workouts.$inferSelect;
@@ -2959,41 +2900,39 @@ export async function listWorkouts(db: D1Database, userId: string): Promise<Work
     .all();
 }
 
-export async function saveWorkout(
-  db: D1Database,
-  userId: string,
-  id: string,
-  w: UserWorkoutInput
-): Promise<WorkoutRow> {
+export async function saveWorkout(db: D1Database, userId: string, w: Workout): Promise<WorkoutRow> {
   const now = new Date().toISOString();
   const fields = {
+    kind: w.kind,
     name: w.name,
-    category: w.category,
-    description: w.description,
-    tags_json: JSON.stringify(w.tags),
+    description: w.description === "" ? null : w.description,
     minutes: w.minutes,
     target_rpe: w.targetRpe,
-    body_kind: w.body?.kind ?? null,
-    body_json: w.body === null ? null : JSON.stringify(w.body),
+    variations_json: JSON.stringify(w.variations),
+    pattern_json: JSON.stringify(w.pattern),
     updated_at: now,
   };
   return drizzle(db)
     .insert(workouts)
-    .values({ user_id: userId, id, ...fields, created_at: now })
+    .values({ user_id: userId, id: w.id, ...fields, created_at: now })
     .onConflictDoUpdate({ target: [workouts.user_id, workouts.id], set: fields })
     .returning()
     .get();
 }
 
-/** Plans that ran it keep their own template; activities keep its id as history. */
+/**
+ * The workout leaves every block: its memberships go with it. Works for a built-in
+ * too, which has no row of its own but can be planned.
+ */
 export async function deleteWorkout(db: D1Database, userId: string, id: string): Promise<boolean> {
   const d = drizzle(db);
-  const [, deleted] = await d.batch([
-    d
-      .update(planItems)
-      .set({ workout_id: null, updated_at: new Date().toISOString() })
-      .where(and(eq(planItems.user_id, userId), eq(planItems.workout_id, id))),
+  const results = await d.batch([
+    ...removeMemberships(
+      d,
+      userId,
+      and(eq(memberships.user_id, userId), eq(memberships.workout_id, id))
+    ),
     d.delete(workouts).where(and(eq(workouts.user_id, userId), eq(workouts.id, id))),
   ]);
-  return deleted.meta.changes > 0;
+  return results[5].meta.changes > 0;
 }
