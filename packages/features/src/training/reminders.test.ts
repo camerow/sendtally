@@ -29,6 +29,7 @@ const plan: PlanItem = {
   minutes: 60,
   targetRpe: null,
   projectId: null,
+  template: null,
 };
 
 const hang = (date: string): HangSessionRecord => ({
