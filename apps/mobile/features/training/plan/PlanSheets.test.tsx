@@ -121,7 +121,7 @@ describe("Plan training", () => {
     await fireEvent.press(screen.getByLabelText("Week 2, 100% load"));
     await fireEvent.press(screen.getByLabelText("5% heavier"));
     await fireEvent.press(screen.getByLabelText("Week 2 tag, No tag. Change it"));
-    await fireEvent.press(screen.getByLabelText("Week 2 tag, Build. Change it"));
+    await fireEvent.press(screen.getByLabelText("Week 2 tag, Load. Change it"));
     await fireEvent.press(screen.getByText("Create block"));
     expect(mockSaveBlock).toHaveBeenCalledWith({
       id: "new-id",
