@@ -498,6 +498,7 @@ export const hangWorkouts = sqliteTable(
     name: text("name").notNull(),
     kind: text("kind", { enum: ["hang", "pull"] }).notNull(),
     grip: text("grip").notNull(),
+    // Legacy: edge depth moved to schedules and sessions. Kept for app builds that still read it.
     edge_mm: integer("edge_mm").notNull(),
     hang_s: integer("hang_s").notNull(),
     rest_s: integer("rest_s").notNull(),
@@ -523,6 +524,7 @@ export const hangDefaultGrips = sqliteTable(
   (t) => [primaryKey({ columns: [t.user_id, t.workout_id] })]
 );
 
+// Legacy: per workout and grip loads, written by app builds before setups. Read as a last-used fallback.
 export const hangLoads = sqliteTable(
   "hang_loads",
   {
@@ -552,6 +554,9 @@ export const hangSchedules = sqliteTable(
     skip_json: text("skip_json").notNull(),
     target_rpe: integer("target_rpe"),
     block_id: text("block_id"),
+    // The planned setup; null leaves it to the last session of the workout and grip.
+    edge_mm: integer("edge_mm"),
+    load_kg: real("load_kg"),
     updated_at: text("updated_at").notNull(),
   },
   (t) => [primaryKey({ columns: [t.user_id, t.id] })]
@@ -567,6 +572,7 @@ export const hangSessions = sqliteTable(
     workout_id: text("workout_id").notNull(),
     grip_id: text("grip_id").notNull(),
     date: text("date").notNull(),
+    edge_mm: integer("edge_mm").notNull().default(0),
     load_kg: real("load_kg").notNull(),
     pct: integer("pct").notNull(),
     misses: integer("misses").notNull(),
