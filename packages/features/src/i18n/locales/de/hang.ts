@@ -253,4 +253,11 @@ export const hang = {
   "hang.loadFailed": "Dein Training konnte nicht geladen werden.",
   "hang.retry": "Noch einmal",
   "hang.saveFailed": "Speichern fehlgeschlagen. Prüf deine Verbindung und versuch es noch einmal.",
+  "hang.fieldHang": "Hang",
+  "hang.fieldRest": "Pause zwischen Hangs",
+  "hang.fieldReps": "Hangs pro Satz",
+  "hang.fieldSets": "Sätze",
+  "hang.fieldSetRest": "Pause zwischen Sätzen",
+  "hang.decrease": "{field} verringern",
+  "hang.increase": "{field} erhöhen",
 } as const;

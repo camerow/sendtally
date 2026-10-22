@@ -100,7 +100,8 @@ export function AddPlanScreen({ flow }: AddPlanScreenProps): React.ReactElement 
       )}
       {state.status !== "ready" && <LoadState state={state} onRetry={() => void reload()} />}
       {shelves !== null && shelf(t("workouts.mine"), shelves.mine)}
-      {shelves !== null && shelf(t("workouts.builtIn"), shelves.builtIn)}
+      {shelves !== null &&
+        shelf(t("workouts.builtInCount", { n: shelves.builtIn.length }), shelves.builtIn)}
       <KindSheet
         visible={choosing}
         kicker={kicker}

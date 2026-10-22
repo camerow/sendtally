@@ -61,7 +61,7 @@ describe("adding to the plan", () => {
     await fireEvent.press(screen.getByText("Strength"));
     expect(screen.queryByText("What kind?")).toBeNull();
     expect(screen.getByText("For Thu, Oct 1")).toBeTruthy();
-    expect(screen.getByText("Built in")).toBeTruthy();
+    expect(screen.getByText(/^Built in · \d+$/)).toBeTruthy();
     expect(screen.queryByText("Climber's yoga")).toBeNull();
     await fireEvent.press(screen.getByText("Gym, legs"));
     expect(router.push).toHaveBeenCalledWith({

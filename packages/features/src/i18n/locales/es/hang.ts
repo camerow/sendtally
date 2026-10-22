@@ -252,4 +252,11 @@ export const hang = {
   "hang.loadFailed": "No se pudo cargar tu entrenamiento.",
   "hang.retry": "Reintentar",
   "hang.saveFailed": "No se pudo guardar. Revisa tu conexión e inténtalo de nuevo.",
+  "hang.fieldHang": "Suspensión",
+  "hang.fieldRest": "Descanso entre suspensiones",
+  "hang.fieldReps": "Suspensiones por serie",
+  "hang.fieldSets": "Series",
+  "hang.fieldSetRest": "Descanso entre series",
+  "hang.decrease": "Reducir {field}",
+  "hang.increase": "Aumentar {field}",
 } as const;
