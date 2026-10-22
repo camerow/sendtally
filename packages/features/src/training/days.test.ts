@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { HangSessionRecord, SessionRow } from "@sendtally/api-client";
+import type { Activity, HangSessionRecord, SessionRow } from "@sendtally/api-client";
 import { LIBRARY, type Schedule } from "@sendtally/core/hang";
 import { trainingDay, trainingWeek, weekStats, type TrainingLog } from "./days";
 
@@ -69,6 +69,7 @@ const schedule: Schedule = {
 const log = (overrides: Partial<TrainingLog> = {}): TrainingLog => ({
   climbs: [],
   hangs: [],
+  activities: [],
   schedules: [schedule],
   ...overrides,
 });
@@ -132,6 +133,26 @@ describe("weekStats", () => {
       TODAY
     );
     expect(stats).toEqual({ done: 3, planned: 4, effort: 7.5, streak: 2 });
+  });
+
+  it("counts other training toward the week, its effort and the streak", () => {
+    const activity = (date: string, rpe: number | null): Activity => ({
+      id: `a-${date}`,
+      kind: "strength",
+      title: "Gym",
+      date,
+      startTime: null,
+      minutes: 50,
+      rpe,
+      notes: null,
+      planItemId: null,
+      detail: null,
+    });
+    const stats = weekStats(
+      log({ schedules: [], activities: [activity("2026-09-29", 5), activity("2026-09-21", null)] }),
+      TODAY
+    );
+    expect(stats).toEqual({ done: 1, planned: 1, effort: 5, streak: 2 });
   });
 
   it("has no effort without a scored session", () => {

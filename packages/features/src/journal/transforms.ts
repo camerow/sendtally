@@ -1,4 +1,11 @@
-import type { EntryInput, HangHistoryRow, JournalEntry, SessionRow } from "@sendtally/api-client";
+import type {
+  Activity,
+  EntryInput,
+  HangHistoryRow,
+  JournalEntry,
+  SessionRow,
+} from "@sendtally/api-client";
+import { activityAt } from "../activities/format";
 import { hangAt } from "../sessions/hang";
 import { formatDate, t, type MessageKey } from "../i18n";
 import {
@@ -80,7 +87,8 @@ export function logScopeItems(items: LogItem[], scope: LogScope): LogItem[] {
 export function logItems(
   sessions: SessionRow[],
   entries: JournalEntry[],
-  hangSessions: HangHistoryRow[] = []
+  hangSessions: HangHistoryRow[] = [],
+  activities: Activity[] = []
 ): LogItem[] {
   const items: LogItem[] = [
     ...sessions.map((session): LogItem => ({
@@ -96,6 +104,13 @@ export function logItems(
       tags: [],
       type: "hang",
       hang,
+    })),
+    ...activities.map((activity): LogItem => ({
+      key: `activity:${activity.id}`,
+      at: activityAt(activity),
+      tags: [],
+      type: "activity",
+      activity,
     })),
     ...entries
       .filter((e) => !isThreadUpdate(e))
@@ -124,6 +139,7 @@ export function inTrip(day: string, trip: TripSpan, now: Date = new Date()): boo
 
 export function logItemDay(item: LogItem): string {
   if (item.type === "session") return isoDay(item.session.start_at);
+  if (item.type === "activity") return item.activity.date;
   return item.type === "hang" ? item.hang.date : item.entry.occurred_at;
 }
 

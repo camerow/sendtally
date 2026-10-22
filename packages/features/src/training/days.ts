@@ -1,4 +1,4 @@
-import type { HangSessionRecord, SessionRow } from "@sendtally/api-client";
+import type { Activity, HangSessionRecord, SessionRow } from "@sendtally/api-client";
 import {
   addDays,
   isDoneOn,
@@ -15,6 +15,7 @@ import { isUnscored } from "../sessions/meta";
 export type DayItem =
   | { kind: "climb"; status: "logged"; session: SessionRow }
   | { kind: "hang"; status: "logged"; session: HangSessionRecord }
+  | { kind: "activity"; status: "logged"; activity: Activity }
   | { kind: "hang"; status: "planned"; schedule: Schedule };
 
 export type DayItemKind = DayItem["kind"];
@@ -35,6 +36,7 @@ export type TrainingDay = {
 export type TrainingLog = {
   climbs: readonly SessionRow[];
   hangs: readonly HangSessionRecord[];
+  activities: readonly Activity[];
   schedules: readonly Schedule[];
 };
 
@@ -58,6 +60,9 @@ export function trainingDay(
       ...log.hangs
         .filter((s) => s.date === date)
         .map((session): LoggedItem => ({ kind: "hang", status: "logged", session })),
+      ...log.activities
+        .filter((a) => a.date === date)
+        .map((activity): LoggedItem => ({ kind: "activity", status: "logged", activity })),
     ],
     planned: scheduledOn(log.schedules, date)
       .filter((s) => !isDoneOn(log.hangs, s, date))
@@ -75,6 +80,7 @@ export function trainingWeek(
 }
 
 export function itemEffort(item: LoggedItem): number | null {
+  if (item.kind === "activity") return item.activity.rpe;
   if (item.kind === "hang") return item.session.rpe;
   return isUnscored(item.session) ? null : item.session.rpe;
 }
@@ -87,7 +93,11 @@ export function weekStats(log: TrainingLog, today: CalendarDate): WeekStats {
   const logged = days.flatMap((d) => d.logged);
   const open = days.reduce((n, d) => n + d.planned.length, 0);
   const efforts = logged.map(itemEffort).filter((e) => e !== null);
-  const dates = [...log.climbs.map((s) => ({ date: climbDate(s) })), ...log.hangs];
+  const dates = [
+    ...log.climbs.map((s) => ({ date: climbDate(s) })),
+    ...log.hangs,
+    ...log.activities,
+  ];
   return {
     done: logged.length,
     planned: logged.length + open,

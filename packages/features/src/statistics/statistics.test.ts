@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { HangHistoryRow, SessionLog } from "@sendtally/api-client";
+import type { Activity as Logged, HangHistoryRow, SessionLog } from "@sendtally/api-client";
 import { summariseActivity, type Activity } from "./activity";
 import { overviewVM } from "./overview";
 
@@ -162,7 +162,13 @@ describe("overviewVM", () => {
     expect(vm.sessions).toBe(5);
     expect(vm.perWeek).toBe("0.4");
     expect(vm.perWeekCaption).toBe("a week, 5 sessions");
-    expect(vm.weeks[11]?.sessions).toEqual({ climbing: 2, hangboard: 1 });
+    expect(vm.weeks[11]?.sessions).toEqual({
+      climbing: 2,
+      hangboard: 1,
+      strength: 0,
+      mobility: 0,
+      other: 0,
+    });
     expect(vm.weeks[11]?.effort).toBe(8);
     expect(vm.mostInAWeek).toBe(3);
     expect(vm.effortNow).toBe("8.0");
@@ -197,6 +203,51 @@ describe("overviewVM", () => {
     expect(vm.kinds.map((k) => [k.kind, k.time])).toEqual([
       ["climbing", "4h 30m"],
       ["hangboard", "31m"],
+      ["strength", "0m"],
+      ["mobility", "0m"],
+      ["other", "0m"],
     ]);
+  });
+});
+
+describe("overviewVM with other training", () => {
+  const logged = (kind: Logged["kind"], date: string, minutes: number): Logged => ({
+    id: `${kind}-${date}`,
+    kind,
+    title: kind,
+    date,
+    startTime: null,
+    minutes,
+    rpe: 6,
+    notes: null,
+    planItemId: null,
+    detail: null,
+  });
+  const vm = overviewVM(
+    {
+      sessions: [],
+      hangSessions: [],
+      activities: [
+        logged("strength", TODAY, 50),
+        logged("yoga", "2026-10-20", 30),
+        logged("mobility", "2026-10-13", 20),
+        logged("run", "2026-10-14", 40),
+        logged("other", "2026-10-14", 15),
+      ],
+    },
+    TODAY
+  );
+
+  it("counts yoga as mobility and folds the smaller kinds into other", () => {
+    expect(vm.sessions).toBe(5);
+    expect(vm.kinds.map((k) => [k.kind, k.minutes])).toEqual([
+      ["climbing", 0],
+      ["hangboard", 0],
+      ["strength", 50],
+      ["mobility", 50],
+      ["other", 55],
+    ]);
+    expect(vm.weeks[11]?.label).toBe("Week of Oct 19: Strength 1, Mobility 1");
+    expect(vm.stats[1]).toEqual({ label: "Week streak", value: "2" });
   });
 });
