@@ -16,7 +16,9 @@ import { IconButton } from "./IconButton";
 import { Label } from "./Label";
 
 export type MonthCalendarProps = {
+  /** The date it opens on, marked as picked unless `picked` lists several. */
   selected: CalendarDate;
+  picked?: readonly CalendarDate[];
   min: CalendarDate | null;
   max?: CalendarDate;
   today: CalendarDate;
@@ -32,6 +34,7 @@ const dayOf = (month: CalendarDate, day: number): CalendarDate => {
 /** An inline month grid, Monday first, opening on the selected date's month. */
 export function MonthCalendar({
   selected,
+  picked,
   min,
   max,
   today,
@@ -94,7 +97,7 @@ export function MonthCalendar({
         {cells.map((d, i) => {
           if (d === null) return <View key={`lead-${i}`} style={{ width: `${100 / 7}%` }} />;
           const off = (min !== null && d < min) || (max !== undefined && d > max);
-          const on = d === selected;
+          const on = picked === undefined ? d === selected : picked.includes(d);
           const inBlock = !off && shaded(d);
           return (
             <Pressable

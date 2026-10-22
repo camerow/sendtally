@@ -3,8 +3,10 @@ import { Pressable, Text, View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
 import { pressRow } from "../../../lib/press";
 import { type } from "../type";
+import type { HangIconName } from "./HangIcon";
 import { IconButton } from "./IconButton";
 import { Label } from "./Label";
+import { GOLD_TINT } from "./tints";
 
 export type PlanRowProps = {
   tag: string;
@@ -16,6 +18,10 @@ export type PlanRowProps = {
   onRemove: () => void;
   removeLabel: string;
   mark?: React.ReactNode;
+  /** The trailing button's icon: × by default. */
+  actionIcon?: HangIconName;
+  /** Just added: drawn on gold. */
+  lit?: boolean;
 };
 
 /** A planned workout: tap to open, × to remove. */
@@ -28,6 +34,8 @@ export function PlanRow({
   onRemove,
   removeLabel,
   mark,
+  actionIcon = "x",
+  lit = false,
 }: PlanRowProps): React.ReactElement {
   return (
     <View
@@ -39,7 +47,8 @@ export function PlanRow({
         paddingRight: 6,
         borderRadius: 14,
         borderWidth: 1,
-        borderColor: colors.lineOnLight,
+        borderColor: lit ? colors.gold : colors.lineOnLight,
+        backgroundColor: lit ? GOLD_TINT : undefined,
         overflow: "hidden",
       }}
     >
@@ -58,7 +67,12 @@ export function PlanRow({
         )}
         <Text style={[type.mono, { fontSize: 12, color: colors.textSecondary }]}>{meta}</Text>
       </Pressable>
-      <IconButton icon="x" label={removeLabel} onPress={onRemove} color={colors.textSecondary} />
+      <IconButton
+        icon={actionIcon}
+        label={removeLabel}
+        onPress={onRemove}
+        color={colors.textSecondary}
+      />
     </View>
   );
 }
