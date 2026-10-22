@@ -71,7 +71,7 @@ export type SessionClimb = SessionDetail["climbs"][number];
 
 export type SessionWithClimbs = SessionRow & { climbs: SessionClimb[] };
 
-/** The log: climbing sessions, and hangtally sessions and other training beside them but never as them. */
+/** The log: climbing sessions, and hangboard sessions and other training beside them but never as them. */
 export type SessionLog = {
   sessions: SessionRow[];
   hangSessions: HangHistoryRow[];

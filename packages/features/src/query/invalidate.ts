@@ -17,8 +17,8 @@ const LOG: QueryKey[] = [
 ];
 
 /**
- * hangtally owns its own cache and updates it optimistically, so its writes
- * stale only what sendtally reads from them: the log and the trends list hang
+ * The hangboard feature owns its own cache and updates it optimistically, so
+ * its writes stale only what the rest of sendtally reads from them: the log and the trends list hang
  * sessions and name custom grips.
  */
 function hangWriteStales(resource: string | undefined): QueryKey[] {

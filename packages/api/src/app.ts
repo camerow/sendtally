@@ -792,7 +792,7 @@ const app = new Hono<AppEnv>()
         ? withClimbNotes(parseClimbs(climbs_json), notesBySession.get(rest.fingerprint) ?? [])
         : undefined,
     }));
-    // hangtally sessions and other training live in their own tables and are
+    // Hangboard sessions and other training live in their own tables and are
     // listed beside the climbing ones, never as them: they carry the effort
     // the user entered.
     const hangSessions = hangRows.map((row) => hangHistoryOf(row, hangGrips));

@@ -74,7 +74,7 @@ describe("writeEffect", () => {
     }
   });
 
-  it("stales nothing for the rest of hangtally's writes", () => {
+  it("stales nothing for the rest of the hangboard writes", () => {
     for (const path of [
       "/v1/hang/workouts/w1",
       "/v1/hang/loads",
