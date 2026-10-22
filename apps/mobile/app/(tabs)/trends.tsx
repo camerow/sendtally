@@ -11,6 +11,7 @@ import { useCanSeeInsights } from "../../features/billing/useBilling";
 import { StatisticsOverview } from "../../features/training/statistics/StatisticsOverview";
 import type { StatisticsView } from "../../features/training/statistics/types";
 import { useStatisticsView } from "../../features/training/statistics/useStatisticsView";
+import { ExerciseTrends } from "../../features/training/exercises/ExerciseTrends";
 import { HangboardTrends } from "../../features/training/trends/HangboardTrends";
 import { TrendsList } from "../../features/trends/TrendsList";
 import { useApi } from "../../lib/api";
@@ -21,6 +22,7 @@ const VIEWS: Record<StatisticsView, MessageKey> = {
   overview: "statistics.overview",
   climbing: "statistics.climbing",
   hangboard: "statistics.hangboard",
+  exercises: "statistics.exercises",
 };
 
 export default function Trends(): React.ReactElement {
@@ -70,6 +72,7 @@ export default function Trends(): React.ReactElement {
         {view === "hangboard" && (
           <HangboardTrends workoutId={statistics.workoutId} gripId={statistics.gripId} />
         )}
+        {view === "exercises" && <ExerciseTrends />}
         {view === "climbing" && canSeeInsights === null && (
           <ActivityIndicator color={colors.gunmetal} style={{ alignSelf: "flex-start" }} />
         )}

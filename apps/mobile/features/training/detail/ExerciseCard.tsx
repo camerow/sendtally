@@ -1,3 +1,4 @@
+import { router } from "expo-router";
 import React from "react";
 import { Text, View } from "react-native";
 import type { PlanTemplate } from "@sendtally/api-client";
@@ -47,6 +48,8 @@ export function ExerciseCard({
   const targetOf = (i: number): SetTarget | null =>
     template ? null : setTargetFor(targets, exercise.name, i);
   const showTarget = sets.some((_, i) => targetOf(i) !== null);
+  const key = exercise.name.trim().toLowerCase();
+  const logged = !template && key !== "" && names.some((n) => n.toLowerCase() === key);
   return (
     <View
       style={{
@@ -120,6 +123,16 @@ export function ExerciseCard({
           disabled={sets.length === 0}
           onPress={() => onChange({ ...exercise, sets: sets.slice(0, -1) })}
         />
+        {logged && (
+          <Button
+            label={t("activities.seeTrend")}
+            variant="link"
+            height={44}
+            onPress={() =>
+              router.push({ pathname: "/exercise/[name]", params: { name: exercise.name.trim() } })
+            }
+          />
+        )}
       </View>
     </View>
   );
