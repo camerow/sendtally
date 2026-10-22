@@ -17,6 +17,8 @@ export type IconName =
   | "endurance"
   | "today"
   | "train"
+  | "climb"
+  | "hang"
   | "x";
 
 const SHAPES: Record<IconName, React.ReactElement> = {
@@ -56,6 +58,22 @@ const SHAPES: Record<IconName, React.ReactElement> = {
     <Path d="M5 6.5h14a1 1 0 0 1 1 1V19a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7.5a1 1 0 0 1 1-1zM4 10.5h16M8.5 4v4M15.5 4v4" />
   ),
   train: <Path d="M3.5 5h17v5.5h-17zM7 7.75h3M14 7.75h3M9 10.5V20M15 10.5V20" />,
+  climb: (
+    <>
+      <Path d="M7 17 17 7" />
+      <Circle cx={7} cy={17} r={2.2} />
+      <Circle cx={12} cy={12} r={2.2} />
+      <Circle cx={17} cy={7} r={2.2} />
+    </>
+  ),
+  hang: (
+    <>
+      <Path d="M4 5h16M8 5v4M12 5v6M16 5v8" />
+      <Circle cx={8} cy={11} r={2} />
+      <Circle cx={12} cy={13} r={2} />
+      <Circle cx={16} cy={15} r={2} />
+    </>
+  ),
   x: <Path d="M6 6l12 12M18 6L6 18" />,
 };
 

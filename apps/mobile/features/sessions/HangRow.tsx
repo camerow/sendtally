@@ -1,5 +1,5 @@
 import React from "react";
-import { Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import type { HangHistoryRow } from "@sendtally/api-client";
 import {
   hangAt,
@@ -10,29 +10,29 @@ import {
 } from "@sendtally/features/sessions";
 import { t } from "@sendtally/features/i18n";
 import { colors, fonts } from "@sendtally/design/tokens";
+import { Icon } from "../../components/Icon";
 import { StravaMark } from "../../components/StravaMark";
+import { pressRow } from "../../lib/press";
 import { SESSION_ROW_HEIGHT, rowMeta, rowTitle } from "./SessionRow";
 import { DayColumn } from "./SessionRowParts";
-
-/** Where a session row's chevron sits, so the effort lines up with the grades above it. */
-const CHEVRON_WIDTH = 12;
 
 /** A hang session carries no tags, so it is always one plain row tall. */
 export const HANG_ROW_HEIGHT = SESSION_ROW_HEIGHT;
 
-/**
- * A hangtally session in the log, laid out like a session row. It has no
- * press: hangtally is where it is edited, and sendtally has no page for it.
- */
-export function HangRow({
-  hang,
-  inset = false,
-  divider = true,
-}: {
+export type HangRowProps = {
   hang: HangHistoryRow;
+  onPress: () => void;
   inset?: boolean;
   divider?: boolean;
-}): React.ReactElement {
+};
+
+/** A hangboard session in the log, laid out like a session row. */
+export function HangRow({
+  hang,
+  onPress,
+  inset = false,
+  divider = true,
+}: HangRowProps): React.ReactElement {
   const { weekday, day } = sessionDay({ start_at: hangAt(hang) });
   const title = hangTitle(hang);
   const meta = hangMetaLabel(hang);
@@ -49,10 +49,11 @@ export function HangRow({
     .join(", ");
 
   return (
-    <View
-      accessible
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
       accessibilityLabel={spoken}
-      style={{
+      style={pressRow({
         flexDirection: "row",
         alignItems: "center",
         gap: 12,
@@ -60,7 +61,7 @@ export function HangRow({
         paddingHorizontal: inset ? 0 : 18,
         borderBottomWidth: divider ? 1 : 0,
         borderBottomColor: colors.lineOnLightSoft,
-      }}
+      })}
     >
       <DayColumn weekday={weekday} day={day} />
       <View style={{ flex: 1, gap: 3 }}>
@@ -87,7 +88,7 @@ export function HangRow({
           {effort}
         </Text>
       )}
-      <View style={{ width: CHEVRON_WIDTH }} />
-    </View>
+      <Icon name="chevron" size={12} strokeWidth={2} color="rgba(64,63,76,0.35)" />
+    </Pressable>
   );
 }

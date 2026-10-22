@@ -11,6 +11,10 @@ export const training = {
   "training.journalEntryBody": "Une note, un voyage ou une blessure.",
   "training.account": "Compte et réglages",
   "training.logView": "Vue du carnet",
-  "training.todayEmpty": "Rien de prévu pour aujourd'hui.",
-  "training.trainEmpty": "Tes séances apparaîtront ici.",
+  "training.climbing": "Escalade",
+  "training.hangboard": "Poutre",
+  "training.addToPlan": "Ajouter au plan",
+  "training.statDone": "Fait",
+  "training.doneOf": "{done} sur {planned}",
+  "training.dayAria": "{day} : {logged} enregistrées, {planned} prévues",
 } as const;

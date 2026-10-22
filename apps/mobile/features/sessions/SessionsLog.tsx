@@ -49,6 +49,8 @@ import { LogFab } from "../live-session/LogFab";
 import { DEFAULT_FILTERS, FilterSheet, type SessionFilters } from "./FilterSheet";
 import { ScopeBar } from "./ScopeBar";
 import { SECTION_HEADER_HEIGHT, SectionHeader } from "./SectionHeader";
+import { HangDataProvider } from "../training/data/HangDataProvider";
+import { SessionEditorSheet } from "../training/session-editor/SessionEditorSheet";
 import { HANG_ROW_HEIGHT, HangRow } from "./HangRow";
 import { SessionRow, sessionRowHeight } from "./SessionRow";
 import { SetupStack, type SetupCard } from "./SetupStack";
@@ -66,7 +68,7 @@ const rowHeight = (item: LogItem): number => {
   return item.inside.length > 0 ? tripGroupHeight(item) : entryRowHeight(item.entry);
 };
 
-const openItem = (item: LogItem): void => {
+const openItem = (item: LogItem, editHang: (id: string) => void): void => {
   if (item.type === "session") {
     router.push({
       pathname: "/session/[fingerprint]",
@@ -74,6 +76,8 @@ const openItem = (item: LogItem): void => {
     });
   } else if (item.type === "entry") {
     router.push({ pathname: "/journal/[id]", params: { id: item.entry.id } });
+  } else {
+    editHang(item.hang.id);
   }
 };
 
@@ -131,6 +135,8 @@ export function SessionsLog({ segments }: SessionsLogProps): React.ReactElement 
   const [filters, setFilters] = React.useState<SessionFilters>(DEFAULT_FILTERS);
   const [filtersOpen, setFiltersOpen] = React.useState(false);
   const [currentKey, setCurrentKey] = React.useState<string | null>(null);
+  const [editingHang, setEditingHang] = React.useState<string | null>(null);
+  const open = (item: LogItem): void => openItem(item, setEditingHang);
   // ponytail: a second status() read per mount, to know if Strava is live; a Strava-status context across tabs if it ever matters
   const settings = useSettings(api);
   const { scales } = useGradeScalePrefs(api);
@@ -368,14 +374,14 @@ export function SessionsLog({ segments }: SessionsLogProps): React.ReactElement 
             <SessionRow
               session={item.session}
               title={sessionTitle(item.session)}
-              onPress={() => openItem(item)}
+              onPress={() => open(item)}
             />
           ) : item.type === "hang" ? (
-            <HangRow hang={item.hang} />
+            <HangRow hang={item.hang} onPress={() => open(item)} />
           ) : item.inside.length > 0 ? (
-            <TripGroup item={item} onOpen={openItem} />
+            <TripGroup item={item} onOpen={open} />
           ) : (
-            <EntryRow entry={item.entry} onPress={() => openItem(item)} />
+            <EntryRow entry={item.entry} onPress={() => open(item)} />
           )
         }
       />
@@ -385,6 +391,11 @@ export function SessionsLog({ segments }: SessionsLogProps): React.ReactElement 
         }
       />
       <LiveClimbEditor editor={climbEditor} vocabulary={vocabulary} gyms={circuitChoices} />
+      {editingHang !== null && (
+        <HangDataProvider fallback={null}>
+          <SessionEditorSheet sessionId={editingHang} onClose={() => setEditingHang(null)} />
+        </HangDataProvider>
+      )}
       <FilterSheet
         visible={filtersOpen}
         items={all}
