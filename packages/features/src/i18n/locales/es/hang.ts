@@ -34,7 +34,7 @@ export const hang = {
     "Muchos tirones ligeros, casi todos los días de la semana. Riego para los tendones, no un entreno duro.",
   "hang.workout.mineBlurb": "Tu entreno.",
   "hang.untitledWorkout": "Entreno sin nombre",
-  "hang.mineCopy": "{name} (mío)",
+  "hang.copyName": "{name} (copia)",
 
   "hang.grip.half": "Semiarqueo",
   "hang.grip.full": "Arqueo",

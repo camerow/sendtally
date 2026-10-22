@@ -34,7 +34,7 @@ export const hang = {
     "Many light lifts, most days of the week. Blood flow for tendons, not a hard workout.",
   "hang.workout.mineBlurb": "Your workout.",
   "hang.untitledWorkout": "Untitled workout",
-  "hang.mineCopy": "{name} (mine)",
+  "hang.copyName": "{name} (copy)",
 
   "hang.grip.half": "Half crimp",
   "hang.grip.full": "Full crimp",

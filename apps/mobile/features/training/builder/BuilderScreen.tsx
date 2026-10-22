@@ -43,7 +43,7 @@ export function BuilderScreen({ id, from, plan }: BuilderScreenProps): React.Rea
     const base = editing ?? (from === undefined ? undefined : model.workout(from));
     if (base === undefined) return NEW_WORKOUT;
     const fields = { ...protocolOf(base), grip: base.grip, timeUnits: base.timeUnits };
-    return editing ? fields : { ...fields, name: t("hang.mineCopy", { name: base.name }) };
+    return editing ? fields : { ...fields, name: t("hang.copyName", { name: base.name }) };
   });
   const update = (patch: Partial<Draft>): void => setDraft((d) => ({ ...d, ...patch }));
   const setNumber = (key: NumberKey, value: number): void =>

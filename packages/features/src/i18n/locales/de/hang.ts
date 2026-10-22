@@ -34,7 +34,7 @@ export const hang = {
     "Viele leichte Züge an den meisten Tagen der Woche. Durchblutung für die Sehnen, kein hartes Training.",
   "hang.workout.mineBlurb": "Dein Workout.",
   "hang.untitledWorkout": "Workout ohne Namen",
-  "hang.mineCopy": "{name} (meins)",
+  "hang.copyName": "{name} (Kopie)",
 
   "hang.grip.half": "Half Crimp",
   "hang.grip.full": "Full Crimp",

@@ -34,7 +34,7 @@ export const hang = {
     "Beaucoup de tirages légers, la plupart des jours de la semaine. De la circulation pour les tendons, pas une séance dure.",
   "hang.workout.mineBlurb": "Ton exercice.",
   "hang.untitledWorkout": "Exercice sans nom",
-  "hang.mineCopy": "{name} (le mien)",
+  "hang.copyName": "{name} (copie)",
 
   "hang.grip.half": "Semi-arqué",
   "hang.grip.full": "Arqué",
