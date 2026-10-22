@@ -11,11 +11,13 @@ import {
   type LoggedItem,
   type TrainingDay,
 } from "@sendtally/features/training";
+import { planTemplateOf } from "@sendtally/features/workouts";
 import { Button } from "../components/Button";
 import { DashedPanel } from "../components/DashedPanel";
 import { Label } from "../components/Label";
 import { Title } from "../components/Title";
 import { useHangData } from "../data/HangDataContext";
+import { useLibrary } from "../library/useLibrary";
 import { GoalRow } from "./GoalRow";
 import { LoggedRow } from "./LoggedRow";
 import { loggedRowText } from "./loggedRowText";
@@ -63,6 +65,8 @@ export function DaySection({
   onAdd,
 }: DaySectionProps): React.ReactElement {
   const { model, today } = useHangData();
+  const library = useLibrary().state;
+  const workouts = library.status === "ready" ? library.data.workouts : [];
   const current = weekStart(day.date) === weekStart(today);
   const empty =
     day.logged.length === 0 &&
@@ -117,7 +121,7 @@ export function DaySection({
             item={entry.plan}
             onEdit={() => onEditItem(entry.plan)}
             onLog={() => logPlanItem(entry.plan, day.date)}
-            onStart={startPlanItem(entry.plan, day.date)}
+            onStart={startPlanItem(entry.plan, planTemplateOf(entry.plan, workouts), day.date)}
           />
         ) : (
           <PlanItemRow

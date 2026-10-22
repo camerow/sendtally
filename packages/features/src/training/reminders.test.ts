@@ -59,6 +59,7 @@ const activity = (date: string): Activity => ({
   rpe: null,
   notes: null,
   planItemId: null,
+  workoutId: null,
   detail: null,
 });
 

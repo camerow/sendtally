@@ -27,6 +27,7 @@ const workout: IntervalsRun = {
   date: "2026-10-22",
   planItemId: "p1",
   activityId: null,
+  workoutId: null,
   body: {
     kind: "intervals",
     rounds: 1,
@@ -91,6 +92,7 @@ describe("Intervals player", () => {
       rpe: 6,
       notes: null,
       planItemId: "p1",
+      workoutId: null,
       detail: {
         ...workout.body,
         stepsDone: [

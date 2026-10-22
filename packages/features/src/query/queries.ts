@@ -88,6 +88,11 @@ export const queries = {
       queryKey: ["trainingBlocks"],
       queryFn: async () => (await api.trainingBlocks()).blocks,
     }),
+  workouts: (api: SendtallyApi) =>
+    queryOptions({
+      queryKey: ["workouts"],
+      queryFn: async () => (await api.workouts()).workouts,
+    }),
   tags: (api: SendtallyApi) =>
     queryOptions({ queryKey: ["tags"], queryFn: async () => (await api.tags()).tags }),
 };

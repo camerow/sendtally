@@ -102,6 +102,7 @@ const activity = (date: string, overrides: Partial<Activity> = {}): Activity => 
   rpe: null,
   notes: null,
   planItemId: null,
+  workoutId: null,
   detail: null,
   ...overrides,
 });
@@ -178,6 +179,7 @@ describe("weekStats", () => {
       rpe,
       notes: null,
       planItemId: null,
+      workoutId: null,
       detail: null,
     });
     const stats = weekStats(

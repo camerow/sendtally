@@ -106,6 +106,13 @@ export const hang = new Hono<AppEnv>()
     }
   )
 
+  // Its plans go with it; its sessions stay, each with the protocol it ran.
+  .delete("/workouts/:id", zValidator("param", hangIdParam, invalidBody), async (c) => {
+    const { id } = c.req.valid("param");
+    if (isLibraryWorkout(id)) return c.json({ error: "library workouts cannot be changed" }, 400);
+    return c.json({ deleted: await repo.deleteHangWorkout(c.env.DB, c.get("userId"), id) });
+  })
+
   .put(
     "/default-grips/:workoutId",
     zValidator("param", hangWorkoutParam, invalidBody),

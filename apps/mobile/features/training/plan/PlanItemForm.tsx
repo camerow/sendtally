@@ -12,6 +12,7 @@ import { PlannerFooter } from "../planner/PlannerFooter";
 import { StartSection } from "../planner/StartSection";
 import { MinutesField } from "./MinutesField";
 import { PastTemplateChoice } from "./PastTemplateChoice";
+import { PlanWorkoutChoice } from "./PlanWorkoutChoice";
 import { ProjectChoice } from "./ProjectChoice";
 import { ScheduleChoice } from "./ScheduleChoice";
 import { TargetEffort } from "./TargetEffort";
@@ -49,6 +50,7 @@ export function PlanItemForm({ request, onClose }: PlanItemFormProps): React.Rea
           onAction={close}
         />
         <TitleField value={draft.title} onChange={(title) => update({ title })} />
+        <PlanWorkoutChoice form={form} />
         {draft.kind === "climb" && (
           <ProjectChoice value={draft.projectId} onChange={(projectId) => update({ projectId })} />
         )}
@@ -63,10 +65,10 @@ export function PlanItemForm({ request, onClose }: PlanItemFormProps): React.Rea
           <BlockDates block={form.block} />
         )}
         <MinutesField value={draft.minutes} onChange={(minutes) => update({ minutes })} />
-        {draft.kind !== "climb" && draft.template === null && (
+        {draft.kind !== "climb" && draft.workoutId === null && draft.template === null && (
           <PastTemplateChoice kind={draft.kind} onPick={(template) => update({ template })} />
         )}
-        {draft.kind !== "climb" && (
+        {draft.kind !== "climb" && draft.workoutId === null && (
           <DetailSection
             value={draft.template}
             kind={draft.kind}

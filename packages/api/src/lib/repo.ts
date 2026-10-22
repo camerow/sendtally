@@ -53,6 +53,7 @@ import {
   tags,
   trainingBlocks,
   users,
+  workouts,
 } from "../db/schema";
 import {
   blockEnd,
@@ -66,6 +67,7 @@ import {
   type Workout,
 } from "@sendtally/core/hang";
 import type { ActivityInput, PlanItem } from "./activities";
+import type { UserWorkoutInput } from "./workouts";
 import type { ContentEntity, Viewer } from "./areas";
 import type { ClimbLink } from "./manual";
 import type { EntryWrite } from "./entries";
@@ -1204,6 +1206,7 @@ export async function deleteUserData(db: D1Database, userId: string): Promise<vo
     d.delete(activities).where(eq(activities.user_id, userId)),
     d.delete(planItems).where(eq(planItems.user_id, userId)),
     d.delete(trainingBlocks).where(eq(trainingBlocks.user_id, userId)),
+    d.delete(workouts).where(eq(workouts.user_id, userId)),
     d.delete(sessions).where(eq(sessions.user_id, userId)),
     d.delete(stravaConnections).where(eq(stravaConnections.user_id, userId)),
     d.delete(storeEntitlements).where(eq(storeEntitlements.user_id, userId)),
@@ -2452,6 +2455,25 @@ export async function saveHangWorkout(
     .get();
 }
 
+/** The workout goes with its plans and default grip; sessions keep the protocol they ran. */
+export async function deleteHangWorkout(
+  db: D1Database,
+  userId: string,
+  id: string
+): Promise<boolean> {
+  const d = drizzle(db);
+  const [, , deleted] = await d.batch([
+    d
+      .delete(hangSchedules)
+      .where(and(eq(hangSchedules.user_id, userId), eq(hangSchedules.workout_id, id))),
+    d
+      .delete(hangDefaultGrips)
+      .where(and(eq(hangDefaultGrips.user_id, userId), eq(hangDefaultGrips.workout_id, id))),
+    d.delete(hangWorkouts).where(and(eq(hangWorkouts.user_id, userId), eq(hangWorkouts.id, id))),
+  ]);
+  return deleted.meta.changes > 0;
+}
+
 export async function setHangDefaultGrip(
   db: D1Database,
   userId: string,
@@ -2705,6 +2727,7 @@ export async function saveActivity(
     rpe: a.rpe,
     notes: a.notes,
     plan_item_id: a.planItemId,
+    workout_id: a.workoutId,
     detail_kind: a.detail?.kind ?? null,
     detail_json: a.detail === null ? null : JSON.stringify(a.detail),
     updated_at: now,
@@ -2817,6 +2840,7 @@ export async function savePlanItem(
     template_kind: p.template?.kind ?? null,
     template_json: p.template === null ? null : JSON.stringify(p.template),
     ...(p.blockId === undefined ? {} : { block_id: p.blockId }),
+    ...(p.workoutId === undefined ? {} : { workout_id: p.workoutId }),
     updated_at: new Date().toISOString(),
   };
   return drizzle(db)
@@ -2920,6 +2944,56 @@ export async function deleteTrainingBlock(
     d
       .delete(trainingBlocks)
       .where(and(eq(trainingBlocks.user_id, userId), eq(trainingBlocks.id, id))),
+  ]);
+  return deleted.meta.changes > 0;
+}
+
+export type WorkoutRow = typeof workouts.$inferSelect;
+
+export async function listWorkouts(db: D1Database, userId: string): Promise<WorkoutRow[]> {
+  return drizzle(db)
+    .select()
+    .from(workouts)
+    .where(eq(workouts.user_id, userId))
+    .orderBy(workouts.created_at, workouts.id)
+    .all();
+}
+
+export async function saveWorkout(
+  db: D1Database,
+  userId: string,
+  id: string,
+  w: UserWorkoutInput
+): Promise<WorkoutRow> {
+  const now = new Date().toISOString();
+  const fields = {
+    name: w.name,
+    category: w.category,
+    description: w.description,
+    tags_json: JSON.stringify(w.tags),
+    minutes: w.minutes,
+    target_rpe: w.targetRpe,
+    body_kind: w.body?.kind ?? null,
+    body_json: w.body === null ? null : JSON.stringify(w.body),
+    updated_at: now,
+  };
+  return drizzle(db)
+    .insert(workouts)
+    .values({ user_id: userId, id, ...fields, created_at: now })
+    .onConflictDoUpdate({ target: [workouts.user_id, workouts.id], set: fields })
+    .returning()
+    .get();
+}
+
+/** Plans that ran it keep their own template; activities keep its id as history. */
+export async function deleteWorkout(db: D1Database, userId: string, id: string): Promise<boolean> {
+  const d = drizzle(db);
+  const [, deleted] = await d.batch([
+    d
+      .update(planItems)
+      .set({ workout_id: null, updated_at: new Date().toISOString() })
+      .where(and(eq(planItems.user_id, userId), eq(planItems.workout_id, id))),
+    d.delete(workouts).where(and(eq(workouts.user_id, userId), eq(workouts.id, id))),
   ]);
   return deleted.meta.changes > 0;
 }

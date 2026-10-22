@@ -49,6 +49,8 @@ import type {
   SessionTag,
   TagSummary,
   TrainingBlock,
+  UserWorkout,
+  UserWorkoutInput,
   TrainingReminderSettings,
   Workout,
 } from "./types";
@@ -436,6 +438,10 @@ export class SendtallyApi {
     return body(this.client.v1.hang.schedules[":id"].$put({ param: { id }, json: schedule }));
   }
 
+  deleteHangWorkout(id: string): Promise<{ deleted: boolean }> {
+    return body(this.client.v1.hang.workouts[":id"].$delete({ param: { id } }));
+  }
+
   deleteHangGrip(id: string): Promise<{ deleted: boolean }> {
     return body(this.client.v1.hang.grips[":id"].$delete({ param: { id } }));
   }
@@ -509,6 +515,19 @@ export class SendtallyApi {
   /** Its members stay planned, on their own. */
   deleteTrainingBlock(id: string): Promise<{ deleted: boolean }> {
     return body(this.client.v1["training-blocks"][":id"].$delete({ param: { id } }));
+  }
+
+  workouts(): Promise<{ workouts: UserWorkout[] }> {
+    return body(this.client.v1.workouts.$get());
+  }
+
+  saveWorkout(id: string, workout: UserWorkoutInput): Promise<{ workout: UserWorkout }> {
+    return body(this.client.v1.workouts[":id"].$put({ param: { id }, json: workout }));
+  }
+
+  /** Plans that ran it keep their own template. */
+  deleteWorkout(id: string): Promise<{ deleted: boolean }> {
+    return body(this.client.v1.workouts[":id"].$delete({ param: { id } }));
   }
 
   deleteAccount(): Promise<{ deleted: boolean }> {

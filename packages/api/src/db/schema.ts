@@ -623,6 +623,7 @@ export const activities = sqliteTable(
     rpe: integer("rpe"),
     notes: text("notes"),
     plan_item_id: text("plan_item_id"),
+    workout_id: text("workout_id"),
     detail_kind: text("detail_kind"),
     detail_json: text("detail_json"),
     strava_activity_id: integer("strava_activity_id"),
@@ -663,6 +664,8 @@ export const planItems = sqliteTable(
     // What logging it prefills, shaped like an activity's detail without `done`.
     template_kind: text("template_kind"),
     template_json: text("template_json"),
+    // A library workout it runs, whose body wins over the template while the workout exists.
+    workout_id: text("workout_id"),
     block_id: text("block_id"),
     updated_at: text("updated_at").notNull(),
   },
@@ -686,6 +689,31 @@ export const trainingBlocks = sqliteTable(
     notes: text("notes"),
     // Exclusive; set when the block was ended before its last week ran out.
     ended_on: text("ended_on"),
+    updated_at: text("updated_at").notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.user_id, t.id] })]
+);
+
+// The user's own library workouts other than hangboard ones, which keep hang_workouts.
+// `body_kind` names the shape of `body_json`: a plan template's, or a climbing focus.
+export const workouts = sqliteTable(
+  "workouts",
+  {
+    user_id: text("user_id")
+      .notNull()
+      .references(() => users.id),
+    id: text("id").notNull(),
+    name: text("name").notNull(),
+    category: text("category", {
+      enum: ["climb", "strength", "mobility", "run", "yoga", "other"],
+    }).notNull(),
+    description: text("description"),
+    tags_json: text("tags_json").notNull(),
+    minutes: integer("minutes"),
+    target_rpe: integer("target_rpe"),
+    body_kind: text("body_kind"),
+    body_json: text("body_json"),
+    created_at: text("created_at").notNull(),
     updated_at: text("updated_at").notNull(),
   },
   (t) => [primaryKey({ columns: [t.user_id, t.id] })]

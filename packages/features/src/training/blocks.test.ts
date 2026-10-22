@@ -56,6 +56,7 @@ const activity = (date: string, minutes: number, rpe: number | null): Activity =
   rpe,
   notes: null,
   planItemId: null,
+  workoutId: null,
   detail: null,
 });
 

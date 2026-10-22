@@ -23,7 +23,9 @@ jest.mock("@sendtally/features/query", () => ({
       data:
         queryKey[0] === "planItems"
           ? mockPlanItems
-          : queryKey[0] === "trainingBlocks"
+          : queryKey[0] === "trainingBlocks" ||
+              queryKey[0] === "workouts" ||
+              queryKey[0] === "activities"
             ? []
             : { sessions: [], hangSessions: [], activities: [] },
     },

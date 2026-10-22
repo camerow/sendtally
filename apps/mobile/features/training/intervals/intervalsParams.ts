@@ -11,6 +11,8 @@ export type IntervalsRun = {
   planItemId: string | null;
   /** The activity a run from the activity form becomes; null logs a new one. */
   activityId: string | null;
+  /** The library workout it runs, if any. */
+  workoutId: string | null;
   body: IntervalsTemplate;
 };
 
@@ -28,6 +30,7 @@ export function intervalsPath(r: IntervalsRun): Href {
       body: JSON.stringify(r.body),
       ...(r.planItemId === null ? {} : { planItemId: r.planItemId }),
       ...(r.activityId === null ? {} : { activityId: r.activityId }),
+      ...(r.workoutId === null ? {} : { workoutId: r.workoutId }),
     },
   };
 }
@@ -59,6 +62,7 @@ export function readIntervalsParams(p: RawParams): IntervalsRun | null {
     date: str(p.date),
     planItemId: str(p.planItemId) || null,
     activityId: str(p.activityId) || null,
+    workoutId: str(p.workoutId) || null,
     body,
   };
 }

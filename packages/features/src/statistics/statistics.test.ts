@@ -221,6 +221,7 @@ describe("overviewVM with other training", () => {
     rpe: 6,
     notes: null,
     planItemId: null,
+    workoutId: null,
     detail: null,
   });
   const vm = overviewVM(

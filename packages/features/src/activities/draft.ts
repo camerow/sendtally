@@ -14,6 +14,7 @@ export type ActivityDraft = {
   rpe: number | null;
   notes: string;
   planItemId: string | null;
+  workoutId: string | null;
   detail: ActivityDetail | null;
 };
 
@@ -23,6 +24,7 @@ export type ActivityPrefill = {
   title?: string;
   date?: string;
   planItemId?: string;
+  workoutId?: string;
   minutes?: string;
 };
 
@@ -32,7 +34,7 @@ const DEFAULT_MINUTES = 60;
 
 const clampMinutes = (n: number): number => Math.min(1440, Math.max(1, Math.round(n)));
 
-/** `template` is the plan item's, whose sets and items the activity starts from. */
+/** `template` is the plan item's or the workout's, whose sets and items the activity starts from. */
 export function newActivityDraft(
   prefill: ActivityPrefill,
   today: string,
@@ -47,6 +49,7 @@ export function newActivityDraft(
     rpe: null,
     notes: "",
     planItemId: prefill.planItemId ?? null,
+    workoutId: prefill.workoutId ?? null,
     detail: detailFromTemplate(template),
   };
 }
@@ -61,6 +64,7 @@ export function draftFromActivity(a: Activity): ActivityDraft {
     rpe: a.rpe,
     notes: a.notes ?? "",
     planItemId: a.planItemId,
+    workoutId: a.workoutId,
     detail: a.detail,
   };
 }
@@ -79,6 +83,7 @@ export function activityFromDraft(id: string, d: ActivityDraft): Activity {
     rpe: d.rpe,
     notes: notes === "" ? null : notes,
     planItemId: d.planItemId,
+    workoutId: d.workoutId,
     detail: cleanDetail(d.detail),
   };
 }

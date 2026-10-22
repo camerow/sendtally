@@ -37,6 +37,7 @@ export function mockActions(): MockActions {
     saveGrip: jest.fn(done),
     deleteGrip: jest.fn(done),
     saveWorkout: jest.fn(done),
+    deleteWorkout: jest.fn(done),
     setDefaultGrip: jest.fn(done),
     saveSchedules: jest.fn(done),
     deleteSchedule: jest.fn(done),

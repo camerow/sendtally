@@ -79,12 +79,6 @@ export const hang = {
   "hang.skipDay": "Saltar {workout} ({grip}), {date}",
   "hang.editPlanAria": "{workout}, {grip}, {load}. Cambiar agarre, carga o fechas",
   "hang.statStreak": "Semanas seguidas",
-  "hang.library": "Biblioteca",
-  "hang.myWorkouts": "Mis entrenos · {n}",
-  "hang.loggedTimes": "Hecho {n} veces",
-  "hang.newBadge": "Nuevo",
-  "hang.noMine":
-    "Aún no tienes entrenos propios. Personaliza uno de la biblioteca o crea uno nuevo.",
 
   "hang.edit": "Editar",
   "hang.customise": "Personalizar",

@@ -14,9 +14,12 @@ import { ActivityForm } from "./ActivityForm";
 
 const mockActions = { saveActivity: jest.fn(), deleteActivity: jest.fn() };
 const mockPost = { busy: false, error: null, run: jest.fn() };
+const mockWorkouts = { saveWorkout: jest.fn(), deleteWorkout: jest.fn() };
 
 jest.mock("../../../components/Sheet", () => ({ Sheet: () => null }));
-jest.mock("expo-router", () => ({ router: { back: jest.fn() } }));
+jest.mock("expo-router", () => ({ router: { back: jest.fn(), push: jest.fn() } }));
+jest.mock("expo-crypto", () => ({ randomUUID: () => "w-new" }));
+jest.mock("@sendtally/features/workouts", () => ({ useWorkoutActions: () => mockWorkouts }));
 jest.mock("../../../lib/api", () => ({ useApi: () => undefined }));
 jest.mock("@sendtally/features/activities", () => {
   const actual = jest.requireActual<typeof Activities>("@sendtally/features/activities");
@@ -65,9 +68,43 @@ describe("Log activity", () => {
       rpe: 7,
       notes: null,
       planItemId: null,
+      workoutId: null,
       detail: null,
     });
     expect(router.back).toHaveBeenCalled();
+  });
+
+  it("saves a logged session's body as a library workout of its kind", async () => {
+    const initial = {
+      ...newActivityDraft({ kind: "mobility", title: "Hip flow" }, "2026-10-22"),
+      rpe: 3,
+      detail: {
+        kind: "checklist" as const,
+        items: [{ text: "Pigeon", dose: "1 min", done: true }],
+      },
+    };
+    await render(<ActivityForm id="a1" initial={initial} logged={logged()} />);
+    await fireEvent.press(screen.getByText("Save as workout"));
+    expect(mockWorkouts.saveWorkout).toHaveBeenCalledWith("w-new", {
+      name: "Hip flow",
+      category: "mobility",
+      description: null,
+      tags: [],
+      minutes: 60,
+      targetRpe: 3,
+      body: { kind: "checklist", items: [{ text: "Pigeon", dose: "1 min" }] },
+    });
+    expect(router.push).toHaveBeenCalledWith({
+      pathname: "/workout/[id]",
+      params: { id: "w-new" },
+    });
+  });
+
+  it("offers no Save as workout without a body", async () => {
+    await render(
+      <ActivityForm id="a1" initial={newActivityDraft({}, "2026-10-22")} logged={logged()} />
+    );
+    expect(screen.queryByText("Save as workout")).toBeNull();
   });
 
   it("logs sets against a plan's targets, suggesting exercises already logged", async () => {

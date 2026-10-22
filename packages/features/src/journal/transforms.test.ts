@@ -157,6 +157,7 @@ describe("other training in the log", () => {
     rpe: 7,
     notes: null,
     planItemId: null,
+    workoutId: null,
     detail: null,
   };
 

@@ -3,6 +3,7 @@ import { fireEvent, screen } from "@testing-library/react-native";
 import { router } from "expo-router";
 import React from "react";
 import type * as ReactNative from "react-native";
+import type * as Workouts from "@sendtally/features/workouts";
 import { renderWithHang, TODAY } from "../data/renderWithHang";
 import { PlanSheets } from "./PlanSheets";
 import type { PlanRequest } from "./types";
@@ -41,6 +42,28 @@ jest.mock("expo-crypto", () => ({ randomUUID: () => "new-id" }));
 jest.mock("expo-router", () => ({ router: { push: jest.fn() } }));
 const mockSave = jest.fn(() => Promise.resolve());
 const mockSaveBlock = jest.fn(() => Promise.resolve());
+const mockSaveWorkout = jest.fn(() => Promise.resolve());
+jest.mock("../library/useLibrary", () => {
+  const { libraryOf } = jest.requireActual<typeof Workouts>("@sendtally/features/workouts");
+  const workouts = libraryOf([], []);
+  return {
+    useLibrary: () => ({
+      state: {
+        status: "ready",
+        data: {
+          workouts,
+          usage: new Map(),
+          workout: (id: string) => workouts.find((w) => w.id === id),
+        },
+      },
+      reload: () => Promise.resolve(),
+    }),
+  };
+});
+jest.mock("@sendtally/features/workouts", () => ({
+  ...jest.requireActual<typeof Workouts>("@sendtally/features/workouts"),
+  useWorkoutActions: () => ({ saveWorkout: mockSaveWorkout, deleteWorkout: jest.fn() }),
+}));
 jest.mock("./usePlanActions", () => ({
   usePlanActions: () => ({
     savePlanItem: mockSave,
@@ -79,7 +102,46 @@ describe("Plan training", () => {
       targetRpe: 7,
       projectId: null,
       template: null,
+      workoutId: null,
       blockId: null,
+    });
+  });
+
+  it("plans a workout picked from the library, running it", async () => {
+    await renderWithHang(<Host />);
+    await fireEvent.press(screen.getByText("From the workout library"));
+    await fireEvent.changeText(screen.getByLabelText("Search workouts"), "bench");
+    expect(screen.queryByText("Hip mobility flow")).toBeNull();
+    await fireEvent.press(screen.getByText("5x5 strength"));
+    expect(screen.getByDisplayValue("5x5 strength")).toBeTruthy();
+    await fireEvent.press(screen.getByText("Add to plan"));
+    expect(mockSave).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        kind: "strength",
+        title: "5x5 strength",
+        days: [1],
+        minutes: 45,
+        targetRpe: 8,
+        workoutId: "strength-5x5",
+        template: expect.objectContaining({ kind: "sets" }),
+      })
+    );
+  });
+
+  it("saves a plan's own template as a library workout and runs it", async () => {
+    await renderWithHang(<Host />);
+    await fireEvent.press(screen.getByText("Mobility"));
+    await fireEvent.press(screen.getByText("Add checklist"));
+    await fireEvent.changeText(screen.getByPlaceholderText("Deep squat hold"), "Pigeon");
+    await fireEvent.press(screen.getByText("Save as workout"));
+    expect(mockSaveWorkout).toHaveBeenCalledWith("new-id", {
+      name: "Mobility",
+      category: "mobility",
+      description: null,
+      tags: [],
+      minutes: null,
+      targetRpe: null,
+      body: { kind: "checklist", items: [{ text: "Pigeon", dose: "" }] },
     });
   });
 
