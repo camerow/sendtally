@@ -6,6 +6,7 @@ function status(overrides: Partial<ConnectionStatus> = {}): ConnectionStatus {
   return {
     gradeScales: DEFAULT_GRADE_SCALES,
     role: "user",
+    trainingMode: false,
     strava: null,
     ...overrides,
   };
