@@ -675,7 +675,7 @@ export const trainingBlocks = sqliteTable(
     name: text("name").notNull(),
     start: text("start").notNull(),
     weeks: integer("weeks").notNull(),
-    // One phase per week: build, deload or test.
+    // One { load, phase? } per week; rows saved before loads hold one phase string per week.
     phases_json: text("phases_json").notNull(),
     notes: text("notes"),
     // Exclusive; set when the block was ended before its last week ran out.

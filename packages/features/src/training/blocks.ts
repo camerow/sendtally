@@ -1,6 +1,7 @@
 import type { PlanItem } from "@sendtally/api-client";
 import {
   addDays,
+  BASE_WEEK_LOAD,
   blockEnd,
   occursOn,
   totalSeconds,
@@ -18,7 +19,9 @@ import { climbDate, type TrainingLog } from "./days";
 export type BlockWeek = {
   week: number;
   start: CalendarDate;
-  phase: BlockPhase;
+  phase: BlockPhase | null;
+  /** Percent of the block's base load. */
+  load: number;
   planned: number;
   actual: number;
   /** Not started yet, so nothing logged counts against it. */
@@ -74,7 +77,7 @@ function actualIn(dates: ReadonlySet<CalendarDate>, log: TrainingLog): number {
 
 /**
  * Each week of the block, planned against actual. Planned counts members with both
- * minutes and a target effort; actual counts everything logged that week, inside the
+ * minutes and a target effort, scaled by the week's load; actual counts everything logged that week, inside the
  * block or not, since a block plans the whole week.
  */
 export function blockWeeks(
@@ -85,7 +88,7 @@ export function blockWeeks(
   today: CalendarDate
 ): BlockWeek[] {
   const end = blockEnd(block);
-  return block.phases.flatMap((phase, i): BlockWeek[] => {
+  return block.loads.flatMap(({ load, phase }, i): BlockWeek[] => {
     const start = addDays(block.start, i * 7);
     if (start >= end) return [];
     const dates = Array.from({ length: 7 }, (_, d) => addDays(start, d)).filter((d) => d < end);
@@ -93,8 +96,9 @@ export function blockWeeks(
       {
         week: i + 1,
         start,
-        phase,
-        planned: Math.round(plannedIn(dates, members, workoutMinutes)),
+        phase: phase ?? null,
+        load,
+        planned: Math.round((plannedIn(dates, members, workoutMinutes) * load) / BASE_WEEK_LOAD),
         actual: Math.round(actualIn(new Set(dates), log)),
         ahead: start > today,
       },

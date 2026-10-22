@@ -314,7 +314,7 @@ describe("training blocks", () => {
     name: "Autumn finger block",
     start: "2026-09-28",
     weeks: 4,
-    phases: ["build", "build", "build", "deload"],
+    loads: [{ load: 100 }, { load: 110 }, { load: 120, phase: "test" }, { load: 70 }],
     notes: null,
     endedOn: null,
   };
@@ -362,7 +362,7 @@ describe("training blocks", () => {
       ...blockBody,
       start: "2026-10-05",
       weeks: 5,
-      phases: [...blockBody.phases, "test"],
+      loads: [...blockBody.loads, { load: 70 }],
     });
     m = await members(userId);
     expect(m.item).toMatchObject({ start: "2026-10-05", end: "2026-11-09" });
@@ -393,6 +393,23 @@ describe("training blocks", () => {
     expect(blocks).toEqual([]);
   });
 
+  it("reads a block saved before loads as base-load weeks keeping their tags", async () => {
+    const userId = "user_block_legacy";
+    await call(userId, "PUT", "/v1/training-blocks/b1", blockBody);
+    await env.DB.prepare("UPDATE training_blocks SET phases_json = ? WHERE user_id = ?")
+      .bind(JSON.stringify(["build", "build", "test", "deload"]), userId)
+      .run();
+    const { blocks } = await json<{ blocks: { loads: unknown }[] }>(
+      await call(userId, "GET", "/v1/training-blocks")
+    );
+    expect(blocks[0]?.loads).toEqual([
+      { load: 100 },
+      { load: 100 },
+      { load: 100, phase: "test" },
+      { load: 100, phase: "deload" },
+    ]);
+  });
+
   it("rejects another user's block and a block out of shape", async () => {
     await call("user_block_owner", "PUT", "/v1/training-blocks/b1", blockBody);
     const userId = "user_block_other";
@@ -403,9 +420,10 @@ describe("training blocks", () => {
       expect((await call(userId, "PUT", path, body)).status).toBe(400);
     }
     for (const body of [
-      { ...blockBody, phases: ["build"] },
-      { ...blockBody, phases: ["build", "build", "build", "peak"] },
-      { ...blockBody, weeks: 0, phases: [] },
+      { ...blockBody, loads: [{ load: 100 }] },
+      { ...blockBody, loads: [...blockBody.loads.slice(0, 3), { load: 100, phase: "peak" }] },
+      { ...blockBody, loads: [...blockBody.loads.slice(0, 3), { load: 200 }] },
+      { ...blockBody, weeks: 0, loads: [] },
       { ...blockBody, endedOn: "2026-09-28" },
       { ...blockBody, name: " " },
     ]) {

@@ -35,6 +35,7 @@ export type {
   TimeUnit,
   TimeUnits,
   TrainingBlock,
+  WeekLoad,
   WeightUnit,
   Weekday,
   Workout,

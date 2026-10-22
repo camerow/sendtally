@@ -9,20 +9,20 @@ const block: TrainingBlock = {
   name: "Autumn finger block",
   start: "2026-09-28",
   weeks: 4,
-  phases: ["build", "build", "test", "deload"],
+  loads: [{ load: 100 }, { load: 110 }, { load: 120, phase: "test" }, { load: 70 }],
   notes: "Max hangs, then a test",
   endedOn: null,
 };
 
 describe("block drafts", () => {
-  it("starts a new block today, four weeks with a closing deload", () => {
+  it("starts a new block today, four even weeks with no phase", () => {
     const draft = blockDraft(null, TODAY);
     expect(blockOf(draft, "n1", null)).toEqual({
       id: "n1",
       name: "Finger block",
       start: TODAY,
       weeks: 4,
-      phases: ["build", "build", "build", "deload"],
+      loads: [{ load: 100 }, { load: 100 }, { load: 100 }, { load: 100 }],
       notes: null,
       endedOn: null,
     });
@@ -34,10 +34,10 @@ describe("block drafts", () => {
     expect(blockOf(draft, "b1", null)).toEqual(block);
   });
 
-  it("keeps each week's phase as weeks come and go, within range", () => {
+  it("keeps each week as weeks come and go, new ones at the last load, within range", () => {
     const draft = blockDraft(block, TODAY);
-    expect(withWeeks(draft, 5)?.phases).toEqual(["build", "build", "test", "deload", "build"]);
-    expect(withWeeks(draft, 2)?.phases).toEqual(["build", "build"]);
+    expect(withWeeks(draft, 5)?.loads).toEqual([...block.loads, { load: 70 }]);
+    expect(withWeeks(draft, 2)?.loads).toEqual(block.loads.slice(0, 2));
     expect(withWeeks(draft, 0)).toBeNull();
     expect(withWeeks(draft, 17)).toBeNull();
   });
@@ -47,7 +47,7 @@ describe("block drafts", () => {
     const draft = blockDraft(block, TODAY);
     expect(blockOf(draft, "b1", "2026-10-10")?.endedOn).toBe("2026-10-10");
     expect(
-      blockOf({ ...draft, weeks: 1, phases: ["build"] }, "b1", "2026-10-10")?.endedOn
+      blockOf({ ...draft, weeks: 1, loads: [{ load: 100 }] }, "b1", "2026-10-10")?.endedOn
     ).toBeNull();
   });
 });

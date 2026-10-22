@@ -47,7 +47,7 @@ describe("plan item drafts", () => {
       name: "Autumn finger block",
       start: "2026-10-05",
       weeks: 4,
-      phases: ["build", "build", "build", "deload"] as const,
+      loads: [{ load: 100 }, { load: 100 }, { load: 100 }, { load: 100 }],
       notes: null,
       endedOn: null,
     };
@@ -55,7 +55,7 @@ describe("plan item drafts", () => {
       { mode: "new", kind: "strength", days: [3], start: TODAY, blockId: "b1" },
       TODAY
     );
-    expect(planItemOf(draft, "n1", [], { ...block, phases: [...block.phases] })).toMatchObject({
+    expect(planItemOf(draft, "n1", [], block)).toMatchObject({
       start: "2026-10-05",
       end: "2026-11-02",
       blockId: "b1",

@@ -9,7 +9,7 @@ const block: TrainingBlock = {
   name: "Autumn finger block",
   start: "2026-09-28",
   weeks: 3,
-  phases: ["build", "build", "deload"],
+  loads: [{ load: 100 }, { load: 120, phase: "test" }, { load: 50, phase: "deload" }],
   notes: null,
   endedOn: null,
 };
@@ -106,15 +106,15 @@ describe("blockWeeks", () => {
     expect(members.schedules.map((s) => s.id)).toEqual(["s1"]);
   });
 
-  it("plans minutes times target effort for each occurrence, weekly goals by their count", () => {
+  it("plans minutes times target effort for each occurrence scaled by the week's load", () => {
     const weeks = blockWeeks(block, members, log({}), () => 20, "2026-10-01");
     const gym = 60 * 7;
     const goal = 2 * 30 * 5;
     const hangboard = 20 * 8;
-    expect(weeks.map((w) => [w.week, w.phase, w.planned, w.ahead])).toEqual([
-      [1, "build", 2 * gym + goal + hangboard, false],
-      [2, "build", gym + goal + hangboard, true],
-      [3, "deload", 2 * gym + goal + hangboard, true],
+    expect(weeks.map((w) => [w.week, w.phase, w.load, w.planned, w.ahead])).toEqual([
+      [1, null, 100, 2 * gym + goal + hangboard, false],
+      [2, "test", 120, (gym + goal + hangboard) * 1.2, true],
+      [3, "deload", 50, (2 * gym + goal + hangboard) / 2, true],
     ]);
   });
 
@@ -151,7 +151,7 @@ describe("blockWeeks", () => {
     const weeks = blockWeeks(ended, members, log({}), () => 20, "2026-10-01");
     expect(weeks.map((w) => [w.week, w.planned])).toEqual([
       [1, 2 * 420 + 300 + 160],
-      [2, 420 + 300 + 160],
+      [2, (420 + 300 + 160) * 1.2],
     ]);
   });
 });
