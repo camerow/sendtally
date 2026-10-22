@@ -1,32 +1,56 @@
 import { randomUUID } from "expo-crypto";
 import { router } from "expo-router";
 import React from "react";
-import { Alert, KeyboardAvoidingView, Platform, ScrollView, TextInput, View } from "react-native";
+import { Alert, KeyboardAvoidingView, Platform, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import type { WorkoutKind } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { kindLabel } from "@sendtally/features/activities";
+import { hangWorkoutFromItem } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import {
   copyName,
   draftOf,
   newWorkoutDraft,
   useWorkoutActions,
+  type WorkoutDraft,
   type WorkoutLibrary,
 } from "@sendtally/features/workouts";
+import { Switch } from "../../../components/Switch";
+import { TextInput } from "../../../components/TextInput";
 import { useApi } from "../../../lib/api";
 import { Button } from "../components/Button";
 import { Label } from "../components/Label";
+import { useHangData } from "../data/HangDataContext";
 import { LoadState } from "../data/LoadState";
-import { BodyPreview } from "../library-detail/BodyPreview";
+import { GripPickerSheet } from "../grip-picker/GripPickerSheet";
 import { useLibrary } from "../library/useLibrary";
 import { MinutesField } from "../plan/MinutesField";
 import { TargetEffort } from "../plan/TargetEffort";
+import { KIND_LOOK } from "../today/kindLook";
 import { type } from "../type";
 import { EditorTextField } from "./EditorTextField";
-import { draftOfEditor, editorStateOf } from "./editorState";
-import type { WorkoutEditorState } from "./types";
-import { useHangData } from "../data/HangDataContext";
+import {
+  draftOfEditor,
+  letterOf,
+  MAX_VARIATIONS,
+  newItem,
+  startingDraft,
+  withAlternates,
+  withItem,
+  withItemAdded,
+  withLabel,
+  withoutItem,
+  withoutStep,
+  withoutVariation,
+  withStepAdded,
+  withStepCycled,
+  withVariationAdded,
+  type ItemAt,
+} from "./editorState";
+import { ItemList, type ItemListProps } from "./ItemList";
+import { PatternRow } from "./PatternRow";
+import { VariationCard } from "./VariationCard";
 
 export type WorkoutEditorScreenProps = {
   /** Edit this workout of the user's own. */
@@ -39,15 +63,16 @@ export type WorkoutEditorScreenProps = {
 
 const reportFailure = (): void => Alert.alert(t("workouts.saveFailed"));
 
-function initialState(
+function initialDraft(
   library: WorkoutLibrary,
   { id, from, kind }: WorkoutEditorScreenProps
-): WorkoutEditorState | null {
+): WorkoutDraft | null {
   const base = library.workout(id ?? from ?? "");
-  const draft = base === undefined ? null : draftOf(base);
-  if (draft !== null)
-    return editorStateOf(id === undefined ? { ...draft, name: copyName(draft.name) } : draft);
-  return kind === undefined ? null : editorStateOf(newWorkoutDraft(kind));
+  if (base !== undefined) {
+    const draft = draftOf(base);
+    return id === undefined ? { ...draft, name: copyName(draft.name) } : draft;
+  }
+  return kind === undefined ? null : startingDraft(newWorkoutDraft(kind));
 }
 
 function Editor({
@@ -55,20 +80,31 @@ function Editor({
   initial,
 }: {
   id: string | undefined;
-  initial: WorkoutEditorState;
+  initial: WorkoutDraft;
 }): React.ReactElement {
   const actions = useWorkoutActions(useApi(), reportFailure);
   const { model } = useHangData();
   const [state, setState] = React.useState(initial);
-  const update = (patch: Partial<WorkoutEditorState>): void =>
-    setState((s) => ({ ...s, ...patch }));
+  const [gripFor, setGripFor] = React.useState<ItemAt | null>(null);
+  const alternating = state.variations.length > 1;
 
   const save = (): void => {
-    const workoutId = id ?? randomUUID();
-    void actions.saveWorkout(workoutId, draftOfEditor(state));
-    if (id !== undefined) router.back();
-    else router.replace({ pathname: "/workout/[id]", params: { id: workoutId } });
+    void actions.saveWorkout(id ?? randomUUID(), draftOfEditor(state));
+    router.back();
   };
+
+  const listOf = (variation: number): Omit<ItemListProps, "items"> => ({
+    kind: state.kind,
+    unit: model.settings.units,
+    gripName: model.gripName,
+    onItem: (item, next) => setState((s) => withItem(s, { variation, item }, next)),
+    onRemoveItem: (item) => setState((s) => withoutItem(s, { variation, item })),
+    onAddItem: () => setState((s) => withItemAdded(s, variation)),
+    onPickGrip: (item) => setGripFor({ variation, item }),
+  });
+
+  const picking =
+    gripFor === null ? undefined : state.variations[gripFor.variation]?.items[gripFor.item];
 
   return (
     <SafeAreaView edges={["top", "bottom"]} style={{ flex: 1, backgroundColor: colors.white }}>
@@ -77,15 +113,15 @@ function Editor({
           flexDirection: "row",
           justifyContent: "space-between",
           alignItems: "center",
-          paddingHorizontal: 18,
-          paddingVertical: 6,
+          paddingHorizontal: 8,
+          paddingVertical: 4,
         }}
       >
         <Button label={t("hang.cancel")} onPress={() => router.back()} variant="link" height={44} />
-        <Label color={colors.textSecondary}>
-          {`${kindLabel(state.kind)} · ${id === undefined ? t("workouts.newWorkout") : t("hang.editWorkout")}`}
-        </Label>
-        <Button label={t("hang.save")} onPress={save} variant="primary" height={44} />
+        <Text style={[type.bodyBold, { fontSize: 15, color: colors.gunmetal }]}>
+          {id === undefined ? t("workouts.newWorkout") : t("hang.editWorkout")}
+        </Text>
+        <Button label={t("hang.save")} onPress={save} variant="link" height={44} />
       </View>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -94,35 +130,22 @@ function Editor({
         <ScrollView
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={{
-            gap: 20,
-            paddingTop: 8,
+            gap: 18,
+            paddingTop: 6,
             paddingHorizontal: 18,
             paddingBottom: 28,
           }}
         >
-          <View style={{ gap: 6 }}>
-            <Label small color={colors.textSecondary}>
-              {t("hang.name")}
-            </Label>
+          <View style={{ gap: 4 }}>
+            <Label color={KIND_LOOK[state.kind].ink}>{kindLabel(state.kind)}</Label>
             <TextInput
               value={state.name}
-              onChangeText={(name) => update({ name })}
+              onChangeText={(name) => setState((s) => ({ ...s, name }))}
               placeholder={t("workouts.namePlaceholder")}
-              placeholderTextColor={colors.textMuted}
+              placeholderTextColor={colors.textFaint}
               accessibilityLabel={t("hang.name")}
               maxLength={80}
-              style={[
-                type.display,
-                {
-                  height: 52,
-                  paddingHorizontal: 14,
-                  borderRadius: 12,
-                  fontSize: 22,
-                  color: colors.gunmetal,
-                  borderWidth: 1,
-                  borderColor: colors.lineOnLightStrong,
-                },
-              ]}
+              style={[type.display, { fontSize: 30, paddingVertical: 4, color: colors.gunmetal }]}
             />
           </View>
           <EditorTextField
@@ -131,31 +154,98 @@ function Editor({
             placeholder={t("workouts.descriptionPlaceholder")}
             maxLength={2000}
             multiline
-            onChange={(description) => update({ description })}
+            onChange={(description) => setState((s) => ({ ...s, description }))}
           />
+          <View
+            style={{
+              minHeight: 52,
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              borderBottomWidth: 1,
+              borderBottomColor: colors.lineOnLightSoft,
+            }}
+          >
+            <Text style={[type.bodyBold, { fontSize: 16, color: colors.gunmetal }]}>
+              {t("workouts.alternates")}
+            </Text>
+            <Switch
+              checked={alternating}
+              onChange={(on) => setState((s) => withAlternates(s, on))}
+              disabled={false}
+              label={t("workouts.alternates")}
+            />
+          </View>
+          {alternating ? (
+            <>
+              {state.variations.map((v, i) => (
+                <VariationCard
+                  key={i}
+                  index={i}
+                  variation={v}
+                  onLabel={(label) => setState((s) => withLabel(s, i, label))}
+                  onRemove={
+                    state.variations.length > 2
+                      ? () => setState((s) => withoutVariation(s, i))
+                      : undefined
+                  }
+                  {...listOf(i)}
+                />
+              ))}
+              {state.variations.length < MAX_VARIATIONS && (
+                <Button
+                  label={t("workouts.addVariation", { letter: letterOf(state.variations.length) })}
+                  onPress={() => setState(withVariationAdded)}
+                  variant="link"
+                  icon="plus"
+                  height={44}
+                  style={{ alignSelf: "flex-start", paddingHorizontal: 0 }}
+                />
+              )}
+              <PatternRow
+                pattern={state.pattern}
+                onCycle={(step) => setState((s) => withStepCycled(s, step))}
+                onRemove={(step) => setState((s) => withoutStep(s, step))}
+                onAdd={() => setState(withStepAdded)}
+              />
+            </>
+          ) : (
+            <ItemList items={state.variations[0]?.items ?? []} {...listOf(0)} />
+          )}
           <MinutesField
             value={state.minutes}
-            onChange={(minutes) => update({ minutes })}
-            inSheet={false}
+            onChange={(minutes) => setState((s) => ({ ...s, minutes }))}
           />
-          <TargetEffort value={state.targetRpe} onChange={(targetRpe) => update({ targetRpe })} />
-          <BodyPreview
-            workout={{ ...state, id: id ?? "", source: "mine" }}
-            unit={model.settings.units}
+          <TargetEffort
+            value={state.targetRpe}
+            onChange={(targetRpe) => setState((s) => ({ ...s, targetRpe }))}
           />
         </ScrollView>
       </KeyboardAvoidingView>
+      {state.kind === "hangboard" && (
+        <GripPickerSheet
+          visible={picking !== undefined}
+          workout={hangWorkoutFromItem(
+            { id: id ?? "", source: "mine", name: state.name },
+            picking ?? newItem("hangboard")
+          )}
+          multi={false}
+          selected={picking === undefined ? [] : [picking.exercise]}
+          onPick={(exercise) => {
+            if (gripFor !== null && picking !== undefined)
+              setState((s) => withItem(s, gripFor, { ...picking, exercise }));
+          }}
+          onClose={() => setGripFor(null)}
+        />
+      )}
     </SafeAreaView>
   );
 }
 
-/**
- * Make, edit or customise a workout other than a hangboard one, which has its own builder.
- * What it holds shows read only.
- */
+/** Make, edit or customise a workout of any kind: what it holds, and whether it alternates. */
 export function WorkoutEditorScreen(props: WorkoutEditorScreenProps): React.ReactElement | null {
   const { state, reload } = useLibrary();
   if (state.status !== "ready") return <LoadState state={state} onRetry={() => void reload()} />;
-  const initial = initialState(state.data, props);
+  const initial = initialDraft(state.data, props);
   return initial === null ? null : <Editor id={props.id} initial={initial} />;
 }

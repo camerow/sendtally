@@ -1,6 +1,6 @@
-import { BottomSheetTextInput } from "@gorhom/bottom-sheet";
 import React from "react";
 import { Alert, Text, View } from "react-native";
+import { TextInput } from "../../../components/TextInput";
 import { colors } from "@sendtally/design/tokens";
 import type { Grip } from "@sendtally/core/hang";
 import { renameClash } from "@sendtally/features/hang";
@@ -60,7 +60,7 @@ export function GripEditSheet({
           onAction={() => setOpen(false)}
         />
         <SheetSection label={t("hang.name")}>
-          <BottomSheetTextInput
+          <TextInput
             value={name}
             onChangeText={setName}
             onSubmitEditing={save}

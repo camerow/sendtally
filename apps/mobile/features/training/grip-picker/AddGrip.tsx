@@ -1,7 +1,7 @@
-import { BottomSheetTextInput } from "@gorhom/bottom-sheet";
 import { randomUUID } from "expo-crypto";
 import React from "react";
 import { View } from "react-native";
+import { TextInput } from "../../../components/TextInput";
 import { colors } from "@sendtally/design/tokens";
 import { findGrip } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
@@ -40,7 +40,7 @@ export function AddGrip({ onAdded }: { onAdded: (gripId: string) => void }): Rea
         borderTopColor: colors.lineOnLight,
       }}
     >
-      <BottomSheetTextInput
+      <TextInput
         value={name}
         onChangeText={setName}
         onSubmitEditing={add}

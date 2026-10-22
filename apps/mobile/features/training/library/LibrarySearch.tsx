@@ -1,24 +1,16 @@
-import { BottomSheetTextInput } from "@gorhom/bottom-sheet";
 import React from "react";
-import { TextInput } from "react-native";
+import { TextInput } from "../../../components/TextInput";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
 
 export type LibrarySearchProps = {
   value: string;
-  /** Inside a sheet the input has to be the sheet's own, so it rides the keyboard. */
-  inSheet: boolean;
   onChange: (text: string) => void;
 };
 
-export function LibrarySearch({
-  value,
-  inSheet,
-  onChange,
-}: LibrarySearchProps): React.ReactElement {
-  const Input = inSheet ? BottomSheetTextInput : TextInput;
+export function LibrarySearch({ value, onChange }: LibrarySearchProps): React.ReactElement {
   return (
-    <Input
+    <TextInput
       value={value}
       onChangeText={onChange}
       placeholder={t("workouts.search")}

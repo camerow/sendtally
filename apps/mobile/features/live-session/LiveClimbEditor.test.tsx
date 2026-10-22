@@ -27,7 +27,7 @@ jest.mock("@sendtally/features/settings", () => ({
 }));
 // Like the real sheet, dismissing calls the onClose it held while open, not the latest one.
 jest.mock("../../components/Sheet", () => {
-  const { useEffect, useRef } = jest.requireActual<typeof React>("react");
+  const { createElement, Fragment, useEffect, useRef } = jest.requireActual<typeof React>("react");
   return {
     Sheet: function Sheet({
       visible,
@@ -47,7 +47,7 @@ jest.mock("../../components/Sheet", () => {
         if (visible) closeWhileShown.current = onClose;
         shown.current = visible;
       });
-      return visible ? [children, footer] : null;
+      return visible ? createElement(Fragment, null, children, footer) : null;
     },
   };
 });

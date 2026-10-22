@@ -24,7 +24,7 @@ function Library(): React.ReactElement {
       {state.status === "ready" ? (
         <LibraryBrowser
           library={state.data}
-          onPick={(w) => router.push({ pathname: "/workout/[id]", params: { id: w.id } })}
+          onPick={(w) => router.push({ pathname: "/workout/preview", params: { id: w.id } })}
         />
       ) : (
         <LoadState state={state} onRetry={() => void reload()} />

@@ -98,7 +98,7 @@ function Editor({
           />
         </SheetSection>
         {kind === "hang" && (
-          <EdgeField edgeMm={draft.edgeMm} onChange={(edgeMm) => update({ edgeMm })} inSheet />
+          <EdgeField edgeMm={draft.edgeMm} onChange={(edgeMm) => update({ edgeMm })} />
         )}
         <SheetSection label={t("hang.load")} aside={<UnitSwitch />}>
           <Stepper
@@ -110,7 +110,6 @@ function Editor({
             increaseLabel={t("hang.moreWeight")}
             surface="plain"
             keyboard="numbers-and-punctuation"
-            inSheet
           />
         </SheetSection>
         <SheetSection label={t("hang.completion")}>
@@ -126,7 +125,6 @@ function Editor({
             increaseLabel={t("hang.moreCompletion")}
             surface="plain"
             keyboard="number-pad"
-            inSheet
           />
         </SheetSection>
         <EffortField value={draft.rpe} onChange={(rpe) => update({ rpe })} />

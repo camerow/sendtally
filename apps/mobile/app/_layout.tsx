@@ -49,7 +49,6 @@ const SIGNED_IN_SCREENS = [
   "profile",
   "membership",
   "workout/[id]",
-  "workout/builder",
   "workout/edit",
   "workout/preview",
   "plan/add",

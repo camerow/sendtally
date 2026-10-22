@@ -4,9 +4,9 @@ import { SheetSection } from "../components/SheetSection";
 import { Stepper } from "../components/Stepper";
 import { edgeControl } from "./edgeControl";
 
-export type EdgeFieldProps = { edgeMm: number; onChange: (mm: number) => void; inSheet?: boolean };
+export type EdgeFieldProps = { edgeMm: number; onChange: (mm: number) => void };
 
-export function EdgeField({ edgeMm, onChange, inSheet }: EdgeFieldProps): React.ReactElement {
+export function EdgeField({ edgeMm, onChange }: EdgeFieldProps): React.ReactElement {
   const edge = edgeControl(edgeMm, onChange);
   return (
     <SheetSection label={t("hang.edgeDepth")}>
@@ -19,7 +19,6 @@ export function EdgeField({ edgeMm, onChange, inSheet }: EdgeFieldProps): React.
         increaseLabel={t("hang.deeperEdge")}
         surface="plain"
         keyboard="number-pad"
-        inSheet={inSheet}
       />
     </SheetSection>
   );
