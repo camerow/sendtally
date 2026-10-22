@@ -10,3 +10,15 @@ jest.mock("expo-notifications", () => ({
   AndroidImportance: { DEFAULT: 3 },
   SchedulableTriggerInputTypes: { DATE: "date" },
 }));
+// Importing the real Clerk SDK holds a handle open, so a lone test file's run never exits.
+jest.mock("@clerk/clerk-expo", () => ({
+  ClerkProvider: ({ children }: { children: unknown }) => children,
+  useAuth: () => ({
+    isLoaded: true,
+    isSignedIn: true,
+    userId: "user_test",
+    getToken: () => Promise.resolve(null),
+  }),
+  useUser: () => ({ isLoaded: true, user: null }),
+  useClerk: () => ({ signOut: () => Promise.resolve() }),
+}));
