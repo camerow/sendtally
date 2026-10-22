@@ -52,4 +52,6 @@ export const settings = {
   "settings.trainingMode": "Modo entrenamiento",
   "settings.trainingModeBody":
     "Añade Hoy, Entrenar y Estadísticas para planificar y hacer multipresa y otros entrenamientos junto a tu escalada.",
+  "settings.trainingModeWebHint":
+    "El entrenamiento está en la app de sendtally para iOS y Android. Actívalo aquí y estará listo la próxima vez que abras la app.",
 } as const;

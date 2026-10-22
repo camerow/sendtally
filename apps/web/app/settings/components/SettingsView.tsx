@@ -4,6 +4,7 @@ import type {
   GradeScalesFeature,
   SettingsVM,
   StravaPostingFeature,
+  TrainingModeFeature,
 } from "@sendtally/features/settings";
 import type { MembershipVM } from "@sendtally/features/billing";
 import type { Gym } from "@sendtally/features/gyms";
@@ -23,6 +24,7 @@ import { MembershipSection } from "./MembershipSection";
 import { Section } from "./Section";
 import { StatusPill } from "./StatusPill";
 import { StravaPostingSection } from "./StravaPostingSection";
+import { TrainingModeSection } from "./TrainingModeSection";
 
 const dataButton: React.CSSProperties = {
   ...secondaryButton,
@@ -37,6 +39,7 @@ export type SettingsViewProps = {
   membership: MembershipVM;
   posting: StravaPostingFeature;
   scales: GradeScalesFeature;
+  trainingMode: TrainingModeFeature;
   gyms: Gym[];
   gymsReady: boolean;
 };
@@ -47,12 +50,17 @@ export function SettingsView({
   membership,
   posting,
   scales,
+  trainingMode,
   gyms,
   gymsReady,
 }: SettingsViewProps): React.ReactElement {
   return (
     <div style={{ maxWidth: 640, display: "flex", flexDirection: "column", gap: 14 }}>
       <h1 style={pageTitle}>{t("common.settings")}</h1>
+
+      <Section>
+        <TrainingModeSection trainingMode={trainingMode} />
+      </Section>
 
       <Section>
         <span style={sectionLabel}>{t("settings.grades")}</span>

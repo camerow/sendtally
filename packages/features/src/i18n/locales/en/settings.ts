@@ -49,4 +49,6 @@ export const settings = {
   "settings.trainingMode": "Training mode",
   "settings.trainingModeBody":
     "Adds Today, Train and Statistics, so you can plan and run hangboard and other training next to your climbing.",
+  "settings.trainingModeWebHint":
+    "Training lives in the sendtally app on iOS and Android. Turn it on here and it is waiting the next time you open the app.",
 } as const;
