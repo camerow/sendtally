@@ -3,7 +3,6 @@ export const workouts = {
   "workouts.saveFailed":
     "Das Workout wurde nicht gespeichert. Prüf deine Verbindung und versuch es noch mal.",
   "workouts.search": "Workouts suchen",
-  "workouts.builtIn": "Vorgegeben",
   "workouts.mine": "Meine",
   "workouts.noResultsTitle": "Keine Treffer",
   "workouts.noResults": "Kein Workout passt zu dieser Suche und diesen Filtern.",
@@ -115,5 +114,5 @@ export const workouts = {
   "workouts.exercise": "Übung",
   "workouts.exercisePlaceholder": "Kniebeuge",
   "workouts.removeExercise": "{name} entfernen",
-  "workouts.builtInCount": "Vorgegeben · {count}",
+  "workouts.builtInCount": "Vorgegeben · {n}",
 } as const;

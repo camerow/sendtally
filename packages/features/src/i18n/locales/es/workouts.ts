@@ -2,7 +2,6 @@ export const workouts = {
   "workouts.saveAsWorkout": "Guardar como entreno",
   "workouts.saveFailed": "El entreno no se guardó. Revisa tu conexión y vuelve a intentarlo.",
   "workouts.search": "Buscar entrenos",
-  "workouts.builtIn": "Incluidos",
   "workouts.mine": "Míos",
   "workouts.noResultsTitle": "Sin resultados",
   "workouts.noResults": "Ningún entreno coincide con esa búsqueda y esos filtros.",
@@ -116,5 +115,5 @@ export const workouts = {
   "workouts.exercise": "Ejercicio",
   "workouts.exercisePlaceholder": "Sentadilla",
   "workouts.removeExercise": "Quitar {name}",
-  "workouts.builtInCount": "Incluidos · {count}",
+  "workouts.builtInCount": "Incluidos · {n}",
 } as const;

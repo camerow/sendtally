@@ -2,7 +2,6 @@ export const workouts = {
   "workouts.saveAsWorkout": "Save as workout",
   "workouts.saveFailed": "That workout did not save. Check your connection and try again.",
   "workouts.search": "Search workouts",
-  "workouts.builtIn": "Built in",
   "workouts.mine": "Mine",
   "workouts.noResultsTitle": "Nothing matches",
   "workouts.noResults": "No workout matches that search and those filters.",
@@ -113,5 +112,5 @@ export const workouts = {
   "workouts.exercise": "Exercise",
   "workouts.exercisePlaceholder": "Back squat",
   "workouts.removeExercise": "Remove {name}",
-  "workouts.builtInCount": "Built in · {count}",
+  "workouts.builtInCount": "Built in · {n}",
 } as const;

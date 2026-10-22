@@ -2,7 +2,6 @@ export const workouts = {
   "workouts.saveAsWorkout": "Enregistrer comme séance",
   "workouts.saveFailed": "La séance n'a pas été enregistrée. Vérifie ta connexion et réessaie.",
   "workouts.search": "Chercher une séance",
-  "workouts.builtIn": "Intégrées",
   "workouts.mine": "Les miennes",
   "workouts.noResultsTitle": "Aucun résultat",
   "workouts.noResults": "Aucune séance ne correspond à cette recherche et à ces filtres.",
@@ -117,5 +116,5 @@ export const workouts = {
   "workouts.exercise": "Exercice",
   "workouts.exercisePlaceholder": "Squat",
   "workouts.removeExercise": "Retirer {name}",
-  "workouts.builtInCount": "Intégrées · {count}",
+  "workouts.builtInCount": "Intégrées · {n}",
 } as const;
