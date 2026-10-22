@@ -79,7 +79,7 @@ function Detail({
           label={mine ? t("hang.edit") : t("hang.customise")}
           onPress={() =>
             router.push({
-              pathname: "/workout/builder",
+              pathname: "/workout/edit",
               params: mine ? { id: workout.id } : { from: workout.id },
             })
           }

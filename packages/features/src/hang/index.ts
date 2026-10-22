@@ -5,7 +5,6 @@ export {
   hangWorkoutFromItem,
   hangWorkoutOf,
   renameClash,
-  withHangWorkout,
   type HangModel,
 } from "./model";
 export { builtInGripName, effortWord, gripName } from "./names";

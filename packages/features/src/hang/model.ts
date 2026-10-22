@@ -5,7 +5,6 @@ import {
   doseProtocol,
   lastSession,
   loadKey,
-  protocolDose,
   resolveSetup,
   timeUnitsOf,
   type Dose,
@@ -16,7 +15,7 @@ import {
   type Item,
   type SetupLayer,
 } from "@sendtally/core/hang";
-import type { LibraryWorkout, WorkoutDraft } from "../workouts/types";
+import type { LibraryWorkout } from "../workouts/types";
 import { builtInGripName } from "./names";
 
 /** Everything the hang timer reads, with built-in names in the user's language. */
@@ -67,30 +66,6 @@ export function hangWorkoutOf(
 ): HangWorkout | null {
   const found = w.kind === "hangboard" ? w.variations[variation]?.items[item] : undefined;
   return found === undefined ? null : hangWorkoutFromItem(w, found);
-}
-
-/**
- * A workout with its first item set to what the hangboard builder made: its grip and
- * protocol, keeping the edge and weight the item already had.
- */
-export function withHangWorkout(base: WorkoutDraft, h: HangWorkout): WorkoutDraft {
-  const [first, ...rest] = base.variations;
-  const kept = first?.items[0]?.dose;
-  const dose: Dose = {
-    ...protocolDose(h),
-    ...(kept?.edgeMm === undefined ? {} : { edgeMm: kept.edgeMm }),
-    ...(kept?.weightKg === undefined ? {} : { weightKg: kept.weightKg }),
-  };
-  const item = { exercise: h.grip, dose };
-  return {
-    ...base,
-    kind: "hangboard",
-    name: h.name,
-    variations: [
-      { label: first?.label ?? "", items: [item, ...(first?.items.slice(1) ?? [])] },
-      ...rest,
-    ],
-  };
 }
 
 export function hangModel(data: HangData, library: readonly LibraryWorkout[]): HangModel {

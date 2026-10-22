@@ -3,7 +3,7 @@ import type { HangData } from "@sendtally/api-client";
 import { setLocale } from "../i18n";
 import { libraryOf } from "../workouts/library";
 import type { LibraryWorkout } from "../workouts/types";
-import { hangModel, hangWorkoutOf, renameClash, withHangWorkout } from "./model";
+import { hangModel, hangWorkoutOf, renameClash } from "./model";
 
 afterEach(() => setLocale("en"));
 
@@ -100,23 +100,6 @@ describe("hang workouts", () => {
     expect(fingers === undefined ? null : hangWorkoutOf(fingers, 2)).toBeNull();
   });
 
-  it("saves what the builder made as the first item, keeping its edge and the other variations", () => {
-    const built = { ...model().workout("w1")!, name: "Short repeaters", grip: "g2", reps: 4 };
-    const {
-      id: _,
-      source: __,
-      ...draft
-    } = { ...mine, variations: [...mine.variations, { label: "B", items: [] }] };
-    expect(withHangWorkout(draft, built)).toMatchObject({
-      name: "Short repeaters",
-      variations: [
-        {
-          items: [{ exercise: "g2", dose: { sets: 3, reps: 4, onS: 7, offS: 3, edgeMm: 18 } }],
-        },
-        { label: "B", items: [] },
-      ],
-    });
-  });
 });
 
 describe("defaultGrip", () => {

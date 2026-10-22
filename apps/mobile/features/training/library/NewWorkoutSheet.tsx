@@ -1,3 +1,4 @@
+import { router } from "expo-router";
 import React from "react";
 import { View } from "react-native";
 import { WORKOUT_KINDS, type WorkoutKind } from "@sendtally/core/hang";
@@ -7,7 +8,6 @@ import { Sheet } from "../../../components/Sheet";
 import { SheetHeader } from "../components/SheetHeader";
 import { SheetSection } from "../components/SheetSection";
 import { PlanChoiceRow } from "../plan/PlanChoiceRow";
-import { openEditor } from "./openEditor";
 
 export type NewWorkoutSheetProps = { onClose: () => void };
 
@@ -24,7 +24,8 @@ export function NewWorkoutSheet({ onClose }: NewWorkoutSheetProps): React.ReactE
       visible={open}
       onClose={() => {
         onClose();
-        if (picked.current !== null) openEditor(picked.current);
+        if (picked.current !== null)
+          router.push({ pathname: "/workout/edit", params: { kind: picked.current } });
       }}
       closeLabel={t("plan.close")}
     >

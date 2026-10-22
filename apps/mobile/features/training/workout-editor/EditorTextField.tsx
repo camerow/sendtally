@@ -1,5 +1,5 @@
 import React from "react";
-import { TextInput } from "react-native";
+import { TextInput } from "../../../components/TextInput";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { SheetSection } from "../components/SheetSection";
 
