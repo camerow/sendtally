@@ -21,7 +21,8 @@
     "./import": "./src/import/index.ts",
     "./query": "./src/query/index.ts",
     "./hang": "./src/hang/index.ts",
-    "./training": "./src/training/index.ts"
+    "./training": "./src/training/index.ts",
+    "./activities": "./src/activities/index.ts"
   },
   "scripts": {
     "test": "vitest run",

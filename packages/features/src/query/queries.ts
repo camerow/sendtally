@@ -69,6 +69,16 @@ export const queries = {
       queryFn: () => api.moderationCreations(),
     }),
   hang: (api: SendtallyApi) => queryOptions({ queryKey: ["hang"], queryFn: () => api.hang() }),
+  activities: (api: SendtallyApi) =>
+    queryOptions({
+      queryKey: ["activities"],
+      queryFn: async () => (await api.activities()).activities,
+    }),
+  planItems: (api: SendtallyApi) =>
+    queryOptions({
+      queryKey: ["planItems"],
+      queryFn: async () => (await api.planItems()).planItems,
+    }),
   tags: (api: SendtallyApi) =>
     queryOptions({ queryKey: ["tags"], queryFn: async () => (await api.tags()).tags }),
 };

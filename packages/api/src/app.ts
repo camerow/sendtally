@@ -8,6 +8,7 @@ import { auth } from "./auth";
 import type { Env } from "./bindings";
 import { type AppEnv, captureEvent, invalidBody, postAfterResponse } from "./context";
 import { hang } from "./hang";
+import { activities, planItems } from "./training";
 import { purgeAccount } from "./lib/account";
 import {
   areaBody,
@@ -62,6 +63,7 @@ import {
 import { decryptSecret, encryptSecret } from "./lib/crypto";
 import { buildEntry, entryBody, overlappingTrip, type EntryWrite } from "./lib/entries";
 import { exportCsv } from "./lib/export";
+import { activityOf } from "./lib/activities";
 import { hangHistoryOf } from "./lib/hang";
 import { dedupedWalls, gymBody, gymOf } from "./lib/gyms";
 import { importBody, importFingerprint, manualBodyOf } from "./lib/import";
@@ -760,12 +762,13 @@ const app = new Hono<AppEnv>()
   .get("/v1/sessions", async (c) => {
     const userId = c.get("userId");
     const includeClimbs = c.req.query("include") === "climbs";
-    const [rows, tagsBySession, notes, hangRows, hangGrips] = await Promise.all([
+    const [rows, tagsBySession, notes, hangRows, hangGrips, activityRows] = await Promise.all([
       repo.listSessions(c.env.DB, userId, 200, includeClimbs),
       repo.tagsBySession(c.env.DB, userId),
       includeClimbs ? repo.listClimbNotes(c.env.DB, userId) : [],
       repo.listHangSessions(c.env.DB, userId, 200),
       repo.listHangGrips(c.env.DB, userId),
+      repo.listActivities(c.env.DB, userId, {}, 200),
     ]);
     const notesBySession = new Map<string, repo.ClimbNoteRow[]>();
     for (const note of notes) {
@@ -780,10 +783,11 @@ const app = new Hono<AppEnv>()
         ? withClimbNotes(parseClimbs(climbs_json), notesBySession.get(rest.fingerprint) ?? [])
         : undefined,
     }));
-    // hangtally sessions live in their own table and are listed beside the
-    // climbing ones, never as them: they carry the effort the user entered.
+    // hangtally sessions and other training live in their own tables and are
+    // listed beside the climbing ones, never as them: they carry the effort
+    // the user entered.
     const hangSessions = hangRows.map((row) => hangHistoryOf(row, hangGrips));
-    return c.json({ sessions, hangSessions });
+    return c.json({ sessions, hangSessions, activities: activityRows.map(activityOf) });
   })
 
   .get("/v1/entries", async (c) => {
@@ -1894,7 +1898,9 @@ const app = new Hono<AppEnv>()
     return c.json({ deleted: true });
   })
 
-  .route("/v1/hang", hang);
+  .route("/v1/hang", hang)
+  .route("/v1/activities", activities)
+  .route("/v1/plan-items", planItems);
 
 app.onError(async (error, c) => {
   // zValidator throws this for a body it cannot parse at all. Without this the
@@ -1918,6 +1924,14 @@ app.onError(async (error, c) => {
 export type AppType = typeof app;
 
 export type { ProjectInput } from "./lib/climbs";
+export type {
+  Activity,
+  ActivityInput,
+  ActivityKind,
+  PlanItem,
+  PlanItemInput,
+  PlanKind,
+} from "./lib/activities";
 export type { HangData, HangHistoryRow, HangPostState, HangSessionRecord } from "./lib/hang";
 export type {
   CalendarDate,

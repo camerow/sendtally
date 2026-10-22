@@ -2,6 +2,8 @@ import { hc } from "hono/client";
 import type { AppType } from "@sendtally/api/app";
 import { ApiError } from "./types";
 import type {
+  Activity,
+  ActivityInput,
   Area,
   AreaClimb,
   AreaClimbDraftInput,
@@ -38,6 +40,7 @@ import type {
   CreationResult,
   ModerationCreations,
   ModerationQueue,
+  PlanItem,
   PostOutcome,
   ProjectInput,
   Schedule,
@@ -448,6 +451,37 @@ export class SendtallyApi {
 
   saveHangSettings(settings: Partial<HangSettings>): Promise<{ settings: HangSettings }> {
     return body(this.client.v1.hang.settings.$put({ json: settings }));
+  }
+
+  /** Both dates inclusive; without them, the newest 1000. */
+  activities(range: { from?: string; to?: string } = {}): Promise<{ activities: Activity[] }> {
+    return body(this.client.v1.activities.$get({ query: range }));
+  }
+
+  saveActivity(id: string, activity: ActivityInput): Promise<{ activity: Activity }> {
+    return body(this.client.v1.activities[":id"].$put({ param: { id }, json: activity }));
+  }
+
+  deleteActivity(id: string): Promise<{ deleted: boolean }> {
+    return body(this.client.v1.activities[":id"].$delete({ param: { id } }));
+  }
+
+  planItems(): Promise<{ planItems: PlanItem[] }> {
+    return body(this.client.v1["plan-items"].$get());
+  }
+
+  savePlanItem({ id, ...item }: PlanItem): Promise<{ planItem: PlanItem }> {
+    return body(this.client.v1["plan-items"][":id"].$put({ param: { id }, json: item }));
+  }
+
+  skipPlanItem(id: string, date: string, skipped: boolean): Promise<{ planItem: PlanItem }> {
+    return body(
+      this.client.v1["plan-items"][":id"].skip.$put({ param: { id }, json: { date, skipped } })
+    );
+  }
+
+  deletePlanItem(id: string): Promise<{ deleted: boolean }> {
+    return body(this.client.v1["plan-items"][":id"].$delete({ param: { id } }));
   }
 
   deleteAccount(): Promise<{ deleted: boolean }> {

@@ -23,6 +23,7 @@ import {
 import { drizzle, type DrizzleD1Database } from "drizzle-orm/d1";
 import { alias, type SQLiteColumn } from "drizzle-orm/sqlite-core";
 import {
+  activities,
   areaClimbs,
   areas,
   boardConnections,
@@ -41,6 +42,7 @@ import {
   hangSettings,
   hangWorkouts,
   journalEntries,
+  planItems,
   projects,
   sessionClimbLinks,
   sessions,
@@ -59,6 +61,7 @@ import {
   type Schedule,
   type Workout,
 } from "@sendtally/core/hang";
+import type { ActivityInput, PlanItem } from "./activities";
 import type { ContentEntity, Viewer } from "./areas";
 import type { ClimbLink } from "./manual";
 import type { EntryWrite } from "./entries";
@@ -1155,6 +1158,8 @@ export async function deleteUserData(db: D1Database, userId: string): Promise<vo
     d.delete(hangSchedules).where(eq(hangSchedules.user_id, userId)),
     d.delete(hangSessions).where(eq(hangSessions.user_id, userId)),
     d.delete(hangSettings).where(eq(hangSettings.user_id, userId)),
+    d.delete(activities).where(eq(activities.user_id, userId)),
+    d.delete(planItems).where(eq(planItems.user_id, userId)),
     d.delete(sessions).where(eq(sessions.user_id, userId)),
     d.delete(stravaConnections).where(eq(stravaConnections.user_id, userId)),
     d.delete(storeEntitlements).where(eq(storeEntitlements.user_id, userId)),
@@ -2603,4 +2608,119 @@ export async function saveHangSettings(
     .insert(hangSettings)
     .values({ user_id: userId, ...fields })
     .onConflictDoUpdate({ target: hangSettings.user_id, set: fields });
+}
+
+export type ActivityRow = typeof activities.$inferSelect;
+export type PlanItemRow = typeof planItems.$inferSelect;
+
+export async function listActivities(
+  db: D1Database,
+  userId: string,
+  range: { from?: string; to?: string },
+  limit: number
+): Promise<ActivityRow[]> {
+  return drizzle(db)
+    .select()
+    .from(activities)
+    .where(
+      and(
+        eq(activities.user_id, userId),
+        range.from === undefined ? undefined : gte(activities.date, range.from),
+        range.to === undefined ? undefined : lte(activities.date, range.to)
+      )
+    )
+    .orderBy(desc(activities.date), desc(activities.start_time), desc(activities.created_at))
+    .limit(limit)
+    .all();
+}
+
+export async function saveActivity(
+  db: D1Database,
+  userId: string,
+  id: string,
+  a: ActivityInput
+): Promise<ActivityRow> {
+  const now = new Date().toISOString();
+  const fields = {
+    kind: a.kind,
+    title: a.title,
+    date: a.date,
+    start_time: a.startTime,
+    minutes: a.minutes,
+    rpe: a.rpe,
+    notes: a.notes,
+    plan_item_id: a.planItemId,
+    detail_kind: null,
+    detail_json: null,
+    updated_at: now,
+  };
+  return drizzle(db)
+    .insert(activities)
+    .values({ user_id: userId, id, ...fields, created_at: now })
+    .onConflictDoUpdate({ target: [activities.user_id, activities.id], set: fields })
+    .returning()
+    .get();
+}
+
+export async function deleteActivity(db: D1Database, userId: string, id: string): Promise<boolean> {
+  const result = await drizzle(db)
+    .delete(activities)
+    .where(and(eq(activities.user_id, userId), eq(activities.id, id)));
+  return result.meta.changes > 0;
+}
+
+export async function listPlanItems(db: D1Database, userId: string): Promise<PlanItemRow[]> {
+  return drizzle(db)
+    .select()
+    .from(planItems)
+    .where(eq(planItems.user_id, userId))
+    .orderBy(planItems.start, planItems.id)
+    .all();
+}
+
+export async function getPlanItem(
+  db: D1Database,
+  userId: string,
+  id: string
+): Promise<PlanItemRow | null> {
+  const row = await drizzle(db)
+    .select()
+    .from(planItems)
+    .where(and(eq(planItems.user_id, userId), eq(planItems.id, id)))
+    .get();
+  return row ?? null;
+}
+
+export async function savePlanItem(
+  db: D1Database,
+  userId: string,
+  p: PlanItem
+): Promise<PlanItemRow> {
+  const fields = {
+    kind: p.kind,
+    title: p.title,
+    days_json: JSON.stringify([...p.days].sort()),
+    per_week: p.perWeek,
+    start: p.start,
+    end: p.end,
+    skip_json: JSON.stringify([...new Set(p.skip)].sort()),
+    minutes: p.minutes,
+    target_rpe: p.targetRpe,
+    project_id: p.projectId,
+    updated_at: new Date().toISOString(),
+  };
+  return drizzle(db)
+    .insert(planItems)
+    .values({ user_id: userId, id: p.id, ...fields })
+    .onConflictDoUpdate({ target: [planItems.user_id, planItems.id], set: fields })
+    .returning()
+    .get();
+}
+
+// The plan item goes; activities logged against it keep its id as history.
+export async function deletePlanItem(db: D1Database, userId: string, id: string): Promise<boolean> {
+  const result = await drizzle(db)
+    .delete(planItems)
+    .where(and(eq(planItems.user_id, userId), eq(planItems.id, id)));
+  return result.meta.changes > 0;
 }

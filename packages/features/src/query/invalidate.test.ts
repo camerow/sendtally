@@ -86,6 +86,18 @@ describe("writeEffect", () => {
     }
   });
 
+  it("stales the log for an activity write and nothing for a plan item, never their caches", () => {
+    for (const method of ["PUT", "DELETE"]) {
+      expect(writeEffect({ method, path: "/v1/activities/a1" })).toEqual({
+        stale: [["sessions"], ["sessionsWithClimbs"]],
+        gone: null,
+      });
+    }
+    for (const path of ["/v1/plan-items/p1", "/v1/plan-items/p1/skip"]) {
+      expect(writeEffect({ method: "PUT", path })).toEqual({ stale: [], gone: null });
+    }
+  });
+
   it("does not guess at a path it does not know", () => {
     expect(writeEffect({ method: "POST", path: "/v1/something-new" })).toBeNull();
     expect(writeEffect({ method: "POST", path: "/webhooks/clerk" })).toBeNull();
