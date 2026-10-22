@@ -49,4 +49,7 @@ export const settings = {
     "Llévate todo lo que has registrado aquí en un archivo CSV. La importación se hace en sendtally.com.",
   "settings.exportSaved": "Guardado en la carpeta que elegiste.",
   "settings.exportFailed": "La exportación no salió bien. Inténtalo de nuevo en un momento.",
+  "settings.trainingMode": "Modo entrenamiento",
+  "settings.trainingModeBody":
+    "Añade Hoy, Entrenar y Estadísticas para planificar y hacer multipresa y otros entrenamientos junto a tu escalada.",
 } as const;

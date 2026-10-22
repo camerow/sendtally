@@ -1,0 +1,16 @@
+export const training = {
+  "training.today": "Hoy",
+  "training.train": "Entrenar",
+  "training.statistics": "Estadísticas",
+  "training.add": "Añadir",
+  "training.closeAdd": "Cerrar el menú",
+  "training.logSession": "Registrar una sesión de escalada",
+  "training.logSessionBody": "Vías, grados, encadenes e intentos.",
+  "training.startWorkout": "Empezar un entrenamiento",
+  "training.startWorkoutBody": "Multipresa y otros entrenamientos.",
+  "training.journalEntryBody": "Una nota, un viaje o una lesión.",
+  "training.account": "Cuenta y ajustes",
+  "training.logView": "Vista del registro",
+  "training.todayEmpty": "Todavía no hay nada planeado para hoy.",
+  "training.trainEmpty": "Tus entrenamientos aparecerán aquí.",
+} as const;

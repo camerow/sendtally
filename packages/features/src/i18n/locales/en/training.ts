@@ -1,0 +1,16 @@
+export const training = {
+  "training.today": "Today",
+  "training.train": "Train",
+  "training.statistics": "Statistics",
+  "training.add": "Add",
+  "training.closeAdd": "Close add menu",
+  "training.logSession": "Log a climbing session",
+  "training.logSessionBody": "Climbs, grades, sends and attempts.",
+  "training.startWorkout": "Start a workout",
+  "training.startWorkoutBody": "Hangboard and other training.",
+  "training.journalEntryBody": "A note, a trip or an injury.",
+  "training.account": "Account and settings",
+  "training.logView": "Log view",
+  "training.todayEmpty": "Nothing planned for today yet.",
+  "training.trainEmpty": "Your workouts will show up here.",
+} as const;

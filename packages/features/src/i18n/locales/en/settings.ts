@@ -46,4 +46,7 @@ export const settings = {
     "Take everything you have logged here with you as a CSV file. Importing one happens on sendtally.com.",
   "settings.exportSaved": "Saved to the folder you picked.",
   "settings.exportFailed": "The export did not go through. Try again in a moment.",
+  "settings.trainingMode": "Training mode",
+  "settings.trainingModeBody":
+    "Adds Today, Train and Statistics, so you can plan and run hangboard and other training next to your climbing.",
 } as const;

@@ -48,4 +48,7 @@ export const settings = {
     "Emporte tout ce que tu as enregistré ici dans un fichier CSV. L'import se fait sur sendtally.com.",
   "settings.exportSaved": "Enregistré dans le dossier choisi.",
   "settings.exportFailed": "L'export n'a pas abouti. Réessaie dans un instant.",
+  "settings.trainingMode": "Mode entraînement",
+  "settings.trainingModeBody":
+    "Ajoute Aujourd'hui, Entraînement et Statistiques pour planifier et faire ta poutre et tes autres entraînements à côté de ta grimpe.",
 } as const;

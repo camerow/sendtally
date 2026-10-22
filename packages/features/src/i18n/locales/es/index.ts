@@ -17,6 +17,7 @@ import { sessionDetail } from "./sessionDetail";
 import { sessions } from "./sessions";
 import { settings } from "./settings";
 import { trends } from "./trends";
+import { training } from "./training";
 
 export const es = {
   ...account,
@@ -38,4 +39,5 @@ export const es = {
   ...sessions,
   ...settings,
   ...trends,
+  ...training,
 } as const;

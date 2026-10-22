@@ -49,4 +49,7 @@ export const settings = {
     "Nimm alles, was du hier eingetragen hast, als CSV-Datei mit. Importieren geht auf sendtally.com.",
   "settings.exportSaved": "Im gewählten Ordner gespeichert.",
   "settings.exportFailed": "Der Export hat nicht geklappt. Versuch es gleich noch einmal.",
+  "settings.trainingMode": "Trainingsmodus",
+  "settings.trainingModeBody":
+    "Fügt Heute, Training und Statistik hinzu, damit du Hangboard und anderes Training neben deinem Klettern planen und durchführen kannst.",
 } as const;
