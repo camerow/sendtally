@@ -1,6 +1,6 @@
 import { useQueryClient, type QueryKey } from "@tanstack/react-query";
 import React from "react";
-import type { Activity, PlanItem, SendtallyApi } from "@sendtally/api-client";
+import type { Activity, PlanItem, SendtallyApi, TrainingBlock } from "@sendtally/api-client";
 import { queries } from "../query";
 
 export type ActivityActions = {
@@ -9,6 +9,8 @@ export type ActivityActions = {
   savePlanItem: (item: PlanItem) => Promise<void>;
   deletePlanItem: (id: string) => Promise<void>;
   setPlanItemSkip: (id: string, date: string, skipped: boolean) => Promise<void>;
+  saveBlock: (block: TrainingBlock) => Promise<void>;
+  deleteBlock: (id: string) => Promise<void>;
 };
 
 const upsert = <T extends { id: string }>(list: readonly T[], item: T): T[] =>
@@ -53,6 +55,7 @@ export function useActivityActions(
     };
     const activities = queries.activities(api).queryKey;
     const plan = queries.planItems(api).queryKey;
+    const blocks = queries.trainingBlocks(api).queryKey;
     const skipped = (item: PlanItem, date: string, skip: boolean): PlanItem => ({
       ...item,
       skip: skip ? [...new Set([...item.skip, date])].sort() : item.skip.filter((d) => d !== date),
@@ -91,6 +94,18 @@ export function useActivityActions(
           plan,
           (list) => list.map((p) => (p.id === id ? skipped(p, date, skip) : p)),
           () => api.skipPlanItem(id, date, skip)
+        ),
+      saveBlock: (block) =>
+        write<TrainingBlock[]>(
+          blocks,
+          (list) => upsert(list, block),
+          () => api.saveTrainingBlock(block)
+        ),
+      deleteBlock: (id) =>
+        write<TrainingBlock[]>(
+          blocks,
+          (list) => list.filter((b) => b.id !== id),
+          () => api.deleteTrainingBlock(id)
         ),
     };
   }, [api, client, onError]);

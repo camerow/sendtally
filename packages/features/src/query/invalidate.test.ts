@@ -98,6 +98,15 @@ describe("writeEffect", () => {
     }
   });
 
+  it("stales the members a training block write moves, never the blocks' own cache", () => {
+    for (const method of ["PUT", "DELETE"]) {
+      expect(writeEffect({ method, path: "/v1/training-blocks/b1" })).toEqual({
+        stale: [["planItems"], ["hang"]],
+        gone: null,
+      });
+    }
+  });
+
   it("does not guess at a path it does not know", () => {
     expect(writeEffect({ method: "POST", path: "/v1/something-new" })).toBeNull();
     expect(writeEffect({ method: "POST", path: "/webhooks/clerk" })).toBeNull();

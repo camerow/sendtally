@@ -17,6 +17,7 @@ export {
   type TrainingLog,
   type WeekStats,
 } from "./days";
+export { blockMembers, blockWeeks, type BlockMembers, type BlockWeek } from "./blocks";
 export {
   REMINDER_DAYS,
   reminderMoment,

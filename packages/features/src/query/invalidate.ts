@@ -81,6 +81,9 @@ export function writeEffect({ method, path }: ApiWrite): WriteEffect | null {
       return { stale: [["sessions"], ["sessionsWithClimbs"]], gone: null };
     case "plan-items":
       return { stale: [], gone: null };
+    // A block moves, ends or releases its members on the server.
+    case "training-blocks":
+      return { stale: [["planItems"], ["hang"]], gone: null };
     default:
       return null;
   }

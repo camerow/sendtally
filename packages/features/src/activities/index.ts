@@ -15,7 +15,7 @@ export {
   type PlanCalendar,
   type WeekGoal,
 } from "./plan";
-export { useActivities, usePlanItems } from "./useActivities";
+export { useActivities, usePlanItems, useTrainingBlocks } from "./useActivities";
 export { useActivityActions, type ActivityActions } from "./useActivityActions";
 export {
   MINUTES_STEP,

@@ -79,6 +79,11 @@ export const queries = {
       queryKey: ["planItems"],
       queryFn: async () => (await api.planItems()).planItems,
     }),
+  trainingBlocks: (api: SendtallyApi) =>
+    queryOptions({
+      queryKey: ["trainingBlocks"],
+      queryFn: async () => (await api.trainingBlocks()).blocks,
+    }),
   tags: (api: SendtallyApi) =>
     queryOptions({ queryKey: ["tags"], queryFn: async () => (await api.tags()).tags }),
 };
