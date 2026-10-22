@@ -31,7 +31,7 @@ import { startWorkout } from "../timer/startWorkout";
 import { DaySection } from "./DaySection";
 import { WeekStrip } from "./WeekStrip";
 
-/** The training-mode home: this week's climbing and hangboard, logged and planned, day by day. */
+/** The training-mode home: this week's climbing, hangboard and other training, logged and planned, day by day. */
 export function TodayScreen(): React.ReactElement {
   const api = useApi();
   const navigation = useNavigation();
@@ -52,13 +52,15 @@ export function TodayScreen(): React.ReactElement {
   );
 
   const climbs = sessions.status === "ready" ? sessions.data.sessions : null;
+  const activities = sessions.status === "ready" ? sessions.data.activities : null;
   const log = React.useMemo(
     (): TrainingLog => ({
       climbs: climbs ?? [],
       hangs: model.sessions,
+      activities: activities ?? [],
       schedules: model.data.schedules,
     }),
-    [climbs, model]
+    [climbs, activities, model]
   );
   const monday = addDays(weekStart(today), offset * 7);
   const days = trainingWeek(log, monday, today);
@@ -71,6 +73,8 @@ export function TodayScreen(): React.ReactElement {
   };
   const open = (item: LoggedItem): void => {
     if (item.kind === "hang") setEditing(item.session.id);
+    else if (item.kind === "activity")
+      router.push({ pathname: "/activity/[id]", params: { id: item.activity.id } });
     else
       router.push({
         pathname: "/session/[fingerprint]",

@@ -1,6 +1,7 @@
 import type { SessionRow } from "@sendtally/api-client";
 import type { HangModel } from "@sendtally/features/hang";
 import { sessionMetaLabel, sessionTitle } from "@sendtally/features/sessions";
+import { activityMetaLabel } from "@sendtally/features/activities";
 import { itemEffort, type LoggedItem } from "@sendtally/features/training";
 import { sessionText } from "../sessions/sessionText";
 import { kindName } from "./kindLook";
@@ -12,6 +13,9 @@ const topSend = (s: SessionRow): string =>
 
 export function loggedRowText(item: LoggedItem, model: HangModel): LoggedRowText {
   const rpe = itemEffort(item);
+  if (item.kind === "activity") {
+    return { name: item.activity.title, meta: activityMetaLabel(item.activity), right: "", rpe };
+  }
   if (item.kind === "climb") {
     return {
       name: sessionTitle(item.session),

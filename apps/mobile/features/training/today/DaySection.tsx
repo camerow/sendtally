@@ -24,6 +24,11 @@ export type DaySectionProps = {
   onAdd: () => void;
 };
 
+const loggedKey = (item: LoggedItem): string => {
+  if (item.kind === "activity") return item.activity.id;
+  return item.kind === "climb" ? item.session.fingerprint : item.session.id;
+};
+
 function subtitle(day: TrainingDay): string {
   const logged = t("hang.loggedCount", { n: day.logged.length });
   if (day.isPast) return logged;
@@ -58,7 +63,7 @@ export function DaySection({
       </View>
       {day.logged.map((item) => (
         <LoggedRow
-          key={item.kind === "climb" ? item.session.fingerprint : item.session.id}
+          key={loggedKey(item)}
           kind={item.kind}
           text={loggedRowText(item, model)}
           onPress={() => onOpen(item)}

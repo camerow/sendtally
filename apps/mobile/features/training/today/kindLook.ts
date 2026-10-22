@@ -11,7 +11,7 @@ export type KindLook = {
   icon: IconName;
 };
 
-/** Climbing reads azure and round, hangboard petal and square, wherever a day's items show. */
+/** Climbing reads azure and round, hangboard petal and square, other training fern, wherever a day's items show. */
 export const KIND_LOOK: Record<DayItemKind, KindLook> = {
   climb: {
     ink: colors.azureInk,
@@ -27,8 +27,16 @@ export const KIND_LOOK: Record<DayItemKind, KindLook> = {
     round: false,
     icon: "hang",
   },
+  activity: {
+    ink: colors.fern,
+    tint: "rgba(21,127,82,0.1)",
+    onDark: colors.dataFernSoft,
+    round: false,
+    icon: "train",
+  },
 };
 
 export function kindName(kind: DayItemKind): string {
+  if (kind === "activity") return t("training.otherTraining");
   return kind === "climb" ? t("training.climbing") : t("training.hangboard");
 }
