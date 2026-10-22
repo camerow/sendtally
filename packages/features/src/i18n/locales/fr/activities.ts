@@ -59,4 +59,5 @@ export const activities = {
   "activities.exerciseCount_other": "{count} exercices",
   "activities.setCount_one": "{count} série",
   "activities.setCount_other": "{count} séries",
+  "activities.seeTrend": "Voir la tendance",
 } as const;
