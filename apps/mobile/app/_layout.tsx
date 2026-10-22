@@ -46,7 +46,12 @@ const SIGNED_IN_SCREENS = [
   "gym/[id]",
   "account",
   "membership",
+  "workout/[id]",
+  "workout/builder",
+  "workout/trends",
 ];
+
+const FOCUS_SCREENS = ["workout/timer", "workout/done"];
 
 function InteractiveMarker(): React.ReactElement | null {
   const { isLoaded } = useAuth();
@@ -61,6 +66,13 @@ function AppStack(): React.ReactElement | null {
       <Stack.Protected guard={isSignedIn}>
         {SIGNED_IN_SCREENS.map((name) => (
           <Stack.Screen key={name} name={name} />
+        ))}
+        {FOCUS_SCREENS.map((name) => (
+          <Stack.Screen
+            key={name}
+            name={name}
+            options={{ gestureEnabled: false, animation: "fade" }}
+          />
         ))}
       </Stack.Protected>
     </Stack>
