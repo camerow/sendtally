@@ -392,6 +392,9 @@ importers:
       '@sendtally/auth-native':
         specifier: workspace:*
         version: link:../../packages/auth-native
+      '@sendtally/core':
+        specifier: workspace:*
+        version: link:../../packages/core
       '@sendtally/design':
         specifier: workspace:*
         version: link:../../packages/design
@@ -419,6 +422,12 @@ importers:
       expo-application:
         specifier: ~57.0.3
         version: 57.0.3(expo@57.0.26)
+      expo-asset:
+        specifier: ~57.0.18
+        version: 57.0.18(expo@57.0.26)(react-native@0.86.3)(react@19.2.3)(supports-color@10.2.2)(typescript@6.0.3)
+      expo-audio:
+        specifier: ~57.0.5
+        version: 57.0.5(expo-asset@57.0.18)(expo@57.0.26)(react-native@0.86.3)(react@19.2.3)
       expo-auth-session:
         specifier: ~57.0.13
         version: 57.0.13(expo@57.0.26)(react-native@0.86.3)(react@19.2.3)(supports-color@10.2.2)
@@ -443,6 +452,9 @@ importers:
       expo-font:
         specifier: ~57.0.4
         version: 57.0.4(expo@57.0.26)(react-native@0.86.3)(react@19.2.3)
+      expo-keep-awake:
+        specifier: ~57.0.2
+        version: 57.0.2(expo@57.0.26)(react@19.2.3)
       expo-linking:
         specifier: ~57.0.11
         version: 57.0.11(expo@57.0.26)(react-native@0.86.3)(react@19.2.3)(supports-color@10.2.2)
