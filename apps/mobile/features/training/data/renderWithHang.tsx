@@ -2,8 +2,9 @@ import { jest } from "@jest/globals";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, type RenderResult } from "@testing-library/react-native";
 import React from "react";
-import type { HangData as ApiHangData } from "@sendtally/api-client";
+import type { HangData as ApiHangData, Plan, WorkoutRecord } from "@sendtally/api-client";
 import { hangModel, type HangActions } from "@sendtally/features/hang";
+import { libraryOf } from "@sendtally/features/workouts";
 import { HangDataContext } from "./HangDataContext";
 
 export const TODAY = "2026-09-29";
@@ -11,10 +12,8 @@ export const TODAY = "2026-09-29";
 export function hangData(overrides: Partial<ApiHangData> = {}): ApiHangData {
   return {
     grips: [],
-    workouts: [],
     defaultGrips: {},
     loads: {},
-    schedules: [],
     sessions: [],
     settings: {
       units: "kg",
@@ -36,27 +35,41 @@ export function mockActions(): MockActions {
   return {
     saveGrip: jest.fn(done),
     deleteGrip: jest.fn(done),
-    saveWorkout: jest.fn(done),
-    deleteWorkout: jest.fn(done),
     setDefaultGrip: jest.fn(done),
-    saveSchedules: jest.fn(done),
-    deleteSchedule: jest.fn(done),
     saveSession: jest.fn(done),
     deleteSession: jest.fn(done),
     saveSettings: jest.fn(done),
   };
 }
 
-/** Renders a screen over fixed training data, with actions a test can inspect. Other reads find nothing. */
+export type HangWorld = {
+  actions?: MockActions;
+  /** The user's own workouts. */
+  workouts?: readonly WorkoutRecord[];
+  plan?: Plan;
+};
+
+/**
+ * Renders a screen over fixed training data, the user's own workouts and their plan,
+ * with actions a test can inspect. The cache holds them so nothing is fetched; other
+ * reads find nothing.
+ */
 export async function renderWithHang(
   ui: React.ReactElement,
   data: ApiHangData = hangData(),
-  actions: MockActions = mockActions()
+  world: HangWorld = {}
 ): Promise<RenderResult & { actions: MockActions }> {
-  const value = { model: hangModel(data), actions, today: TODAY };
+  const actions = world.actions ?? mockActions();
+  const workouts = world.workouts ?? [];
+  const value = { model: hangModel(data, libraryOf(workouts)), actions, today: TODAY };
   const client = new QueryClient({
-    defaultOptions: { queries: { retry: false, gcTime: Infinity } },
+    defaultOptions: { queries: { retry: false, gcTime: Infinity, staleTime: Infinity } },
   });
+  client.setQueryData(["hang"], data);
+  client.setQueryData(["workouts"], workouts);
+  client.setQueryData(["plan"], world.plan ?? { blocks: [], memberships: [], weekChanges: [] });
+  client.setQueryData(["activities"], []);
+  client.setQueryData(["sessions"], { sessions: [], hangSessions: [], activities: [] });
   const result = await render(
     <QueryClientProvider client={client}>
       <HangDataContext.Provider value={value}>{ui}</HangDataContext.Provider>

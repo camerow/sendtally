@@ -14,10 +14,11 @@ const partial = {
   edgeMm: 20,
   loadKg: 4,
   result: { ended: true, setsDone: 2, pct: 30, work: 76, misses: 2, seconds: 312 },
+  link: { membershipId: "m1", week: 3, variation: 0 },
 };
 
 describe("Session done", () => {
-  it("explains a partial and logs it with effort and a protocol snapshot", async () => {
+  it("explains a partial and logs it with effort, a protocol snapshot and the sets done", async () => {
     const { actions } = await renderWithHang(<DoneScreen params={partial} />);
     expect(screen.getByText("Ended early · Half crimp")).toBeTruthy();
     expect(screen.getByText("5:12")).toBeTruthy();
@@ -40,6 +41,23 @@ describe("Session done", () => {
       misses: 2,
       rpe: 8,
       protocol: expect.objectContaining({ name: "Repeaters 7:3", hangS: 7, sets: 6 }),
+      membershipId: "m1",
+      week: 3,
+      variation: 0,
+      done: [
+        {
+          item: 0,
+          exercise: "half",
+          sets: Array.from({ length: 2 }, () => ({
+            reps: 6,
+            onS: 7,
+            offS: 3,
+            setRestS: 180,
+            edgeMm: 19,
+            weightKg: 5,
+          })),
+        },
+      ],
     });
     expect(router.dismissTo).toHaveBeenCalledWith({
       pathname: "/(tabs)/trends",

@@ -1,88 +1,49 @@
 import React from "react";
 import { View } from "react-native";
+import type { WorkoutKind } from "@sendtally/core/hang";
+import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
 import {
   browseLibrary,
-  DEFAULT_FILTER,
-  isFiltered,
-  WORKOUT_CATEGORIES,
-  type LibraryFilter,
-  type LibrarySource,
   type LibraryWorkout,
-  type WorkoutCategory,
   type WorkoutLibrary,
 } from "@sendtally/features/workouts";
-import { Button } from "../components/Button";
 import { DashedPanel } from "../components/DashedPanel";
-import { Segmented } from "../components/Segmented";
-import { CategoryChips } from "./CategoryChips";
+import { Label } from "../components/Label";
 import { LibraryCard } from "./LibraryCard";
 import { LibrarySearch } from "./LibrarySearch";
-import { SortChips } from "./SortChips";
 
 export type LibraryBrowserProps = {
   library: WorkoutLibrary;
-  /** The categories it offers; all of them by default. */
-  categories?: readonly WorkoutCategory[];
+  /** The kinds it offers; all of them by default. */
+  kinds?: readonly WorkoutKind[];
   inSheet?: boolean;
   onPick: (workout: LibraryWorkout) => void;
 };
 
-/** Search, filter and sort the library, as a plain column of cards for the host's scroll view. */
+/** Search the library: the user's own by last use, then the built-ins, as a plain column of cards. */
 export function LibraryBrowser({
   library,
-  categories = WORKOUT_CATEGORIES,
+  kinds,
   inSheet = false,
   onPick,
 }: LibraryBrowserProps): React.ReactElement {
-  const [filter, setFilter] = React.useState<LibraryFilter>(DEFAULT_FILTER);
-  const update = (patch: Partial<LibraryFilter>): void => setFilter((f) => ({ ...f, ...patch }));
-  const offered = library.workouts.filter((w) => categories.includes(w.category));
-  const shown = browseLibrary(offered, filter, library.usage);
-  const mineOnly = filter.source === "mine" && !isFiltered({ ...filter, source: "all" });
+  const [text, setText] = React.useState("");
+  const { mine, builtIn } = browseLibrary(library.workouts, { text, kinds }, library.usage);
+  const card = (w: LibraryWorkout): React.ReactElement => (
+    <LibraryCard key={w.id} workout={w} use={library.usage.get(w.id)} onPress={() => onPick(w)} />
+  );
 
   return (
     <View style={{ gap: 12 }}>
-      <LibrarySearch value={filter.text} inSheet={inSheet} onChange={(text) => update({ text })} />
-      {categories.length > 1 && (
-        <CategoryChips
-          offered={categories}
-          value={filter.categories}
-          onChange={(c) => update({ categories: c })}
-        />
+      <LibrarySearch value={text} inSheet={inSheet} onChange={setText} />
+      {mine.length === 0 && builtIn.length === 0 && (
+        <DashedPanel title={t("workouts.noResultsTitle")} body={t("workouts.noResults")} />
       )}
-      <Segmented<LibrarySource | "all">
-        value={filter.source}
-        onChange={(source) => update({ source })}
-        options={[
-          { value: "all", label: t("workouts.all") },
-          { value: "library", label: t("workouts.builtIn") },
-          { value: "mine", label: t("workouts.mine") },
-        ]}
-      />
-      <SortChips value={filter.sort} onChange={(sort) => update({ sort })} />
-      {shown.length === 0 &&
-        (mineOnly ? (
-          <DashedPanel body={t("workouts.noMine")} />
-        ) : (
-          <View style={{ gap: 8 }}>
-            <DashedPanel title={t("workouts.noResultsTitle")} body={t("workouts.noResults")} />
-            <Button
-              label={t("workouts.clearFilters")}
-              onPress={() => setFilter({ ...DEFAULT_FILTER, sort: filter.sort })}
-              variant="link"
-              height={44}
-            />
-          </View>
-        ))}
-      {shown.map((w) => (
-        <LibraryCard
-          key={w.id}
-          workout={w}
-          use={library.usage.get(w.id)}
-          onPress={() => onPick(w)}
-        />
-      ))}
+      {mine.length > 0 && <Label color={colors.textSecondary}>{t("workouts.mine")}</Label>}
+      {mine.map(card)}
+      {builtIn.length > 0 && <Label color={colors.textSecondary}>{t("workouts.builtIn")}</Label>}
+      {builtIn.map(card)}
     </View>
   );
 }

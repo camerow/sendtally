@@ -1,7 +1,7 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
-import { liveSchedules, type HangSetup, type Workout } from "@sendtally/core/hang";
+import type { HangSetup, HangWorkout } from "@sendtally/core/hang";
 import { setupLabel } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import { Icon } from "../../../components/Icon";
@@ -10,26 +10,19 @@ import { Label } from "../components/Label";
 import { useHangData } from "../data/HangDataContext";
 import { type } from "../type";
 
-export type GripSetupCardProps = { workout: Workout; gripId: string; onChooseGrip: () => void };
+export type GripSetupCardProps = { workout: HangWorkout; gripId: string; onChooseGrip: () => void };
 
-/** The chosen grip, with the edge and weight planned for it and last used on it. */
+/** The chosen grip, with the edge and weight last used on it. */
 export function GripSetupCard({
   workout,
   gripId,
   onChooseGrip,
 }: GripSetupCardProps): React.ReactElement {
-  const { model, today } = useHangData();
+  const { model } = useHangData();
   const grip = model.gripName(gripId);
-  const schedule = liveSchedules(model.data.schedules, today, workout.id).find(
-    (s) => s.gripId === gripId
-  );
   const last = model.lastUsed(workout, gripId);
-  const rows: Array<{ label: string; setup: HangSetup }> = [
-    ...(schedule === undefined
-      ? []
-      : [{ label: t("hang.plannedSetup"), setup: model.setup(workout, gripId, { schedule }) }]),
-    ...(last === null ? [] : [{ label: t("hang.lastUsed"), setup: last }]),
-  ];
+  const rows: Array<{ label: string; setup: HangSetup }> =
+    last === null ? [] : [{ label: t("hang.lastUsed"), setup: last }];
 
   return (
     <View style={{ borderRadius: 16, overflow: "hidden", backgroundColor: colors.surfaceSoft }}>

@@ -2,11 +2,24 @@ import { describe, expect, it, jest } from "@jest/globals";
 import { fireEvent, screen } from "@testing-library/react-native";
 import React from "react";
 import type { HangSessionRecord } from "@sendtally/api-client";
-import { LIBRARY, protocolOf } from "@sendtally/core/hang";
+import type { Protocol } from "@sendtally/core/hang";
 import { hangData, renderWithHang } from "../data/renderWithHang";
 import { HangboardTrends } from "./HangboardTrends";
 
 jest.mock("../../../lib/api", () => ({ useApi: () => undefined }));
+
+const PROTOCOLS: Record<string, Protocol> = {
+  rep73: {
+    name: "Repeaters 7:3",
+    kind: "hang",
+    hangS: 7,
+    restS: 3,
+    reps: 6,
+    sets: 6,
+    setRestS: 180,
+  },
+  max10: { name: "Max hangs", kind: "hang", hangS: 10, restS: 0, reps: 1, sets: 5, setRestS: 180 },
+};
 
 const session = (
   id: string,
@@ -25,7 +38,11 @@ const session = (
   misses: 0,
   rpe: 7,
   edgeMm,
-  protocol: protocolOf(LIBRARY.find((w) => w.id === workoutId)!),
+  protocol: PROTOCOLS[workoutId]!,
+  membershipId: null,
+  week: null,
+  variation: null,
+  done: [],
   stravaActivityId: null,
   postState: null,
   postError: null,

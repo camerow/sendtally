@@ -35,7 +35,7 @@ export function exerciseInsight(
   summary: ExerciseSummary,
   unit: WeightUnit
 ): string {
-  const first = series.sessions.find((s) => !s.attempted);
+  const [first] = series.sessions;
   if (first === undefined || summary.best === null)
     return t("statistics.insightAttempted", { set: setText(summary.latest.best, unit) });
   const exercise = series.name;
@@ -55,15 +55,7 @@ export function exerciseInsight(
     summary.e1rmKg === null
       ? ""
       : t("statistics.insightE1rm", { value: loadText(summary.e1rmKg, unit) });
-  const sides = series.sessions.filter((s) => s.sides !== null).at(-1)?.sides;
-  const split =
-    sides?.L === undefined || sides.R === undefined
-      ? ""
-      : t("statistics.insightSides", {
-          left: metricText(sides.L, series.metric, unit),
-          right: metricText(sides.R, series.metric, unit),
-        });
-  return [line, e1rm, split].filter((p) => p !== "").join(" ");
+  return [line, e1rm].filter((p) => p !== "").join(" ");
 }
 
 export function exerciseStats(

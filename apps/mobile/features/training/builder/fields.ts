@@ -1,4 +1,4 @@
-import type { HangKind, TimeField, Workout } from "@sendtally/core/hang";
+import type { HangKind, TimeField, HangWorkout } from "@sendtally/core/hang";
 import type { MessageKey } from "@sendtally/features/i18n";
 
 export type NumberKey = TimeField | "reps" | "sets";
@@ -7,7 +7,7 @@ type Spec = {
   label: MessageKey;
   min: number;
   max: number;
-  hint?: (w: Pick<Workout, "reps">) => MessageKey | null;
+  hint?: (w: Pick<HangWorkout, "reps">) => MessageKey | null;
 };
 
 export type FieldSpec =

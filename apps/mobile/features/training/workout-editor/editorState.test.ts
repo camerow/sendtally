@@ -1,47 +1,24 @@
 import { describe, expect, it } from "@jest/globals";
-import { newWorkoutDraft, type WorkoutDraft } from "@sendtally/features/workouts";
+import type { WorkoutDraft } from "@sendtally/features/workouts";
 import { draftOfEditor, editorStateOf } from "./editorState";
 
-const sets: WorkoutDraft = {
+const legs: WorkoutDraft = {
+  kind: "strength",
   name: "Leg day",
-  category: "strength",
   description: "Heavy",
-  tags: ["legs", "gym"],
   minutes: 50,
   targetRpe: 8,
-  body: {
-    kind: "sets",
-    exercises: [{ name: "Back squat", measures: ["reps"], sets: [{ reps: 5 }] }],
-  },
+  variations: [{ label: "", items: [{ exercise: "Back squat", dose: { sets: 5, reps: 5 } }] }],
+  pattern: [0],
 };
 
 describe("workout editor state", () => {
   it("round trips a workout through the editor unchanged", () => {
-    expect(draftOfEditor(editorStateOf(sets))).toEqual(sets);
+    expect(draftOfEditor(editorStateOf(legs))).toEqual(legs);
   });
 
-  it("saves trimmed text, parsed tags, and an untitled name", () => {
-    const state = { ...editorStateOf(sets), name: "  ", description: " ", tags: "a, b, a" };
-    expect(draftOfEditor(state)).toMatchObject({
-      name: "Untitled workout",
-      description: null,
-      tags: ["a", "b"],
-    });
-  });
-
-  it("drops empty exercises, and a project unless the focus is one", () => {
-    const empty = editorStateOf({ ...sets, body: null });
-    expect(draftOfEditor({ ...empty, detail: { kind: "checklist", items: [] } }).body).toBeNull();
-    const climb = editorStateOf(newWorkoutDraft("climb"));
-    expect(draftOfEditor({ ...climb, projectId: "roof" }).body).toEqual({
-      kind: "climb",
-      focus: "limit",
-      projectId: null,
-    });
-    expect(draftOfEditor({ ...climb, focus: "project", projectId: "roof" }).body).toEqual({
-      kind: "climb",
-      focus: "project",
-      projectId: "roof",
-    });
+  it("saves trimmed text and an untitled name", () => {
+    const state = { ...editorStateOf(legs), name: "  ", description: " Slow " };
+    expect(draftOfEditor(state)).toMatchObject({ name: "Untitled workout", description: "Slow" });
   });
 });

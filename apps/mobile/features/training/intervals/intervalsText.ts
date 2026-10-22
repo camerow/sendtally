@@ -3,10 +3,11 @@ import {
   currentPhase,
   toUnit,
   type IntervalPhase,
+  type Intervals,
   type Run,
   type WeightUnit,
 } from "@sendtally/core/hang";
-import { sideLabel, stepDose, type IntervalsTemplate } from "@sendtally/features/activities";
+import { stepDose } from "@sendtally/features/activities";
 import { formatNumber, t } from "@sendtally/features/i18n";
 
 export type StepText = {
@@ -27,7 +28,7 @@ const sideText = (side: IntervalPhase["side"]): string =>
 /** The words on the current step's card: what it is, its side, the countdown and the cue. */
 export function stepText(
   run: Run<IntervalPhase>,
-  body: IntervalsTemplate,
+  body: Intervals,
   secondsLeft: number,
   unit: WeightUnit
 ): StepText {
@@ -72,13 +73,16 @@ export function stepText(
 }
 
 /** The next few phases after this one, each side and rest its own row. */
-export function upNext(run: Run<IntervalPhase>, body: IntervalsTemplate): UpNextItem[] {
+export function upNext(run: Run<IntervalPhase>, body: Intervals): UpNextItem[] {
   return run.phases.slice(run.index + 1, run.index + 1 + UP_NEXT).map((phase, i) => {
     const step = body.steps[phase.step];
     const rest = phase.kind === "rest" || phase.kind === "setrest";
     return {
       index: run.index + 1 + i,
-      side: phase.side === undefined ? "" : sideLabel(phase.side),
+      side:
+        phase.side === undefined
+          ? ""
+          : t(phase.side === "L" ? "activities.sideLeft" : "activities.sideRight"),
       name: rest ? t("hang.phaseRest") : (step?.label ?? ""),
       dose: phase.taps > 0 ? `× ${formatNumber(step?.count ?? 0)}` : clock(phase.seconds, true),
       rest,

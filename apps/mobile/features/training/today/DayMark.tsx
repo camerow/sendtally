@@ -1,9 +1,9 @@
 import React from "react";
 import { View } from "react-native";
-import type { MarkKind } from "@sendtally/features/training";
+import type { WorkoutKind } from "@sendtally/core/hang";
 import { KIND_LOOK } from "./kindLook";
 
-export type DayMarkProps = { kind: MarkKind; filled: boolean; onDark?: boolean; scale?: number };
+export type DayMarkProps = { kind: WorkoutKind; filled: boolean; onDark?: boolean; scale?: number };
 
 /** A day item as its kind's mark: filled once it happened, outlined while planned. */
 export function DayMark({

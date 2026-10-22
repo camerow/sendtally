@@ -1,64 +1,48 @@
+import { router } from "expo-router";
 import React from "react";
 import { View } from "react-native";
-import type { PlanItem } from "@sendtally/api-client";
-import { planStatus, type CalendarDate, type Schedule } from "@sendtally/core/hang";
+import type { Plan } from "@sendtally/api-client";
+import type { Membership } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
-import { planStatusLabel } from "@sendtally/features/hang";
+import { kindLabel } from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
+import { blockOfMembership, type WorkoutLookup } from "@sendtally/features/training";
 import { PlanRow } from "../components/PlanRow";
 import { useHangData } from "../data/HangDataContext";
-import { planText } from "../plans/planText";
+import { membershipTag, membershipWhen } from "../plans/planText";
 import { DayMark } from "../today/DayMark";
-import { KIND_LOOK, kindName } from "../today/kindLook";
-import { planItemWhen } from "./planItemText";
-import type { PlanRequest } from "./types";
+import { KIND_LOOK } from "../today/kindLook";
 import { usePlanActions } from "./usePlanActions";
 
-const tagColor = (start: CalendarDate, today: CalendarDate, ink: string): string =>
-  start <= today ? colors.labelAccent : ink;
-
 export type PlanRowsProps = {
-  schedules: readonly Schedule[];
-  items: readonly PlanItem[];
-  onPlan: (request: PlanRequest) => void;
+  plan: Plan;
+  members: readonly Membership[];
+  workout: WorkoutLookup;
 };
 
-/** A row per plan, hangboard workouts first: tap to edit, × to remove. */
-export function PlanRows({ schedules, items, onPlan }: PlanRowsProps): React.ReactElement {
-  const { model, actions, today } = useHangData();
-  const planActions = usePlanActions();
+/** A row per membership: tap to open its workout, × to take it out of the plan. */
+export function PlanRows({ plan, members, workout }: PlanRowsProps): React.ReactElement {
+  const { today } = useHangData();
+  const actions = usePlanActions();
   return (
     <View style={{ gap: 8 }}>
-      {schedules.map((s) => {
-        const text = planText(s, model, today);
-        if (text === null) return null;
+      {members.map((m) => {
+        const w = workout(m.workoutId);
+        if (w === undefined) return null;
         return (
           <PlanRow
-            key={s.id}
-            mark={<DayMark kind="hang" filled />}
-            tag={text.tag}
-            tagColor={tagColor(s.start, today, KIND_LOOK.hang.ink)}
-            name={text.name}
-            meta={text.meta}
-            onOpen={() => onPlan({ mode: "hang", request: { mode: "edit", schedule: s } })}
-            onRemove={() => void actions.deleteSchedule(s.id)}
-            removeLabel={text.removeLabel}
+            key={m.id}
+            mark={<DayMark kind={w.kind} filled />}
+            tag={membershipTag(m, blockOfMembership(plan, m), today)}
+            tagColor={m.start <= today ? colors.labelAccent : KIND_LOOK[w.kind].ink}
+            name={w.name}
+            meta={`${kindLabel(w.kind)} · ${membershipWhen(m)}`}
+            onOpen={() => router.push({ pathname: "/workout/[id]", params: { id: w.id } })}
+            onRemove={() => void actions.deleteMembership(m.id)}
+            removeLabel={t("plan.remove", { title: w.name })}
           />
         );
       })}
-      {items.map((item) => (
-        <PlanRow
-          key={item.id}
-          mark={<DayMark kind={item.kind} filled />}
-          tag={planStatusLabel(planStatus(item, today))}
-          tagColor={tagColor(item.start, today, KIND_LOOK[item.kind].ink)}
-          name={item.title}
-          meta={`${kindName(item.kind)} · ${planItemWhen(item)}`}
-          onOpen={() => onPlan({ mode: "item", request: { mode: "edit", item } })}
-          onRemove={() => void planActions.deletePlanItem(item.id)}
-          removeLabel={t("plan.remove", { title: item.title })}
-        />
-      ))}
     </View>
   );
 }

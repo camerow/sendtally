@@ -1,13 +1,16 @@
 import React from "react";
 import { Text, View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
-import type { Workout } from "@sendtally/core/hang";
-import { kindLabel, workoutBlurb } from "@sendtally/features/hang";
+import type { HangWorkout } from "@sendtally/core/hang";
+import { kindLabel } from "@sendtally/features/hang";
+import { t } from "@sendtally/features/i18n";
 import { Label } from "../components/Label";
 import { Title } from "../components/Title";
 import { type } from "../type";
 
-export function WorkoutIntro({ workout }: { workout: Workout }): React.ReactElement {
+export type WorkoutIntroProps = { workout: HangWorkout; description: string };
+
+export function WorkoutIntro({ workout, description }: WorkoutIntroProps): React.ReactElement {
   return (
     <View style={{ gap: 6 }}>
       <Label color={colors.petalInk}>{kindLabel(workout.kind)}</Label>
@@ -18,7 +21,7 @@ export function WorkoutIntro({ workout }: { workout: Workout }): React.ReactElem
           { paddingTop: 4, fontSize: 15, lineHeight: 22, color: colors.textSecondary },
         ]}
       >
-        {workoutBlurb(workout)}
+        {description === "" ? t("hang.workout.mineBlurb") : description}
       </Text>
     </View>
   );

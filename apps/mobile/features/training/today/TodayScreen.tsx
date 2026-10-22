@@ -1,49 +1,32 @@
 import { router, useNavigation } from "expo-router";
 import React from "react";
 import { View } from "react-native";
-import {
-  addDays,
-  maxDate,
-  weekStart,
-  weekday,
-  type CalendarDate,
-  type Schedule,
-} from "@sendtally/core/hang";
+import { addDays, weekStart, weekday, type CalendarDate } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { longDate } from "@sendtally/features/hang";
-import { usePlanItems } from "@sendtally/features/activities";
 import { formatNumber, t } from "@sendtally/features/i18n";
-import { queries, useQuery } from "@sendtally/features/query";
 import {
   trainingDay,
   trainingWeek,
+  useTrainingLog,
   weekStats,
   type LoggedItem,
-  type TrainingLog,
 } from "@sendtally/features/training";
 import { useApi } from "../../../lib/api";
 import { Label } from "../components/Label";
 import { StatGrid } from "../components/StatGrid";
 import { useHangData } from "../data/HangDataContext";
-import { PlanSheets } from "../plan/PlanSheets";
-import type { PlanRequest } from "../plan/types";
-import { usePlanActions } from "../plan/usePlanActions";
 import { SessionEditorSheet } from "../session-editor/SessionEditorSheet";
-import { startWorkout } from "../timer/startWorkout";
 import { DaySection } from "./DaySection";
 import { WeekStrip } from "./WeekStrip";
 
 /** The training-mode home: this week's training, logged and planned, day by day. */
 export function TodayScreen(): React.ReactElement {
-  const api = useApi();
   const navigation = useNavigation();
-  const { model, actions, today } = useHangData();
-  const sessions = useQuery(queries.sessions(api)).state;
-  const planItems = usePlanItems(api).state;
-  const planActions = usePlanActions();
+  const { today } = useHangData();
+  const { log } = useTrainingLog(useApi());
   const [offset, setOffset] = React.useState(0);
   const [selected, setSelected] = React.useState<CalendarDate>(today);
-  const [plan, setPlan] = React.useState<PlanRequest | null>(null);
   const [editing, setEditing] = React.useState<string | null>(null);
 
   React.useEffect(
@@ -55,19 +38,6 @@ export function TodayScreen(): React.ReactElement {
     [navigation, today]
   );
 
-  const climbs = sessions.status === "ready" ? sessions.data.sessions : null;
-  const activities = sessions.status === "ready" ? sessions.data.activities : null;
-  const items = planItems.status === "ready" ? planItems.data : null;
-  const log = React.useMemo(
-    (): TrainingLog => ({
-      climbs: climbs ?? [],
-      hangs: model.sessions,
-      activities: activities ?? [],
-      schedules: model.data.schedules,
-      planItems: items ?? [],
-    }),
-    [climbs, activities, model, items]
-  );
   const monday = addDays(weekStart(today), offset * 7);
   const days = trainingWeek(log, monday, today);
   const day = trainingDay(log, selected, today);
@@ -87,8 +57,6 @@ export function TodayScreen(): React.ReactElement {
         params: { fingerprint: item.session.fingerprint },
       });
   };
-  const skip = (s: Schedule): void =>
-    void actions.saveSchedules([{ ...s, skip: [...s.skip, selected] }]);
 
   return (
     <View style={{ gap: 16 }}>
@@ -100,18 +68,7 @@ export function TodayScreen(): React.ReactElement {
         onSelect={setSelected}
         onOffset={changeWeek}
       />
-      <DaySection
-        day={day}
-        onOpen={open}
-        onEditPlan={(schedule) => setPlan({ mode: "hang", request: { mode: "edit", schedule } })}
-        onStart={(s) => startWorkout(s.workoutId, s.gripId)}
-        onSkip={skip}
-        onEditItem={(item) => setPlan({ mode: "item", request: { mode: "edit", item } })}
-        onSkipItem={(item) => void planActions.setPlanItemSkip(item.id, selected, true)}
-        onAdd={() =>
-          setPlan({ mode: "choose", days: [weekday(selected)], start: maxDate(selected, today) })
-        }
-      />
+      <DaySection day={day} onOpen={open} />
       <StatGrid
         columns={3}
         stats={[
@@ -132,7 +89,6 @@ export function TodayScreen(): React.ReactElement {
           { label: t("hang.statStreak"), value: formatNumber(stats.streak) },
         ]}
       />
-      <PlanSheets request={plan} onChange={setPlan} />
       <SessionEditorSheet sessionId={editing} onClose={() => setEditing(null)} />
     </View>
   );

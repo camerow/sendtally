@@ -1,45 +1,38 @@
 import React from "react";
 import { Text, View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
-import { liveSchedules, type Schedule } from "@sendtally/core/hang";
+import { t } from "@sendtally/features/i18n";
+import { blockOfMembership, usePlan } from "@sendtally/features/training";
+import { useApi } from "../../../lib/api";
 import { PlanRow } from "../components/PlanRow";
 import { useHangData } from "../data/HangDataContext";
+import { usePlanActions } from "../plan/usePlanActions";
 import { type } from "../type";
-import { planText } from "./planText";
+import { membershipTag, membershipWhen } from "./planText";
 
-export type PlanListProps = {
-  workoutId?: string;
-  empty: string;
-  showName: boolean;
-  onOpen: (s: Schedule) => void;
-};
+export type PlanListProps = { workoutId: string; name: string; empty: string };
 
-/** Live scheduled workouts, by start date: tap to edit, × to remove. */
-export function PlanList({
-  workoutId,
-  empty,
-  showName,
-  onOpen,
-}: PlanListProps): React.ReactElement {
-  const { model, actions, today } = useHangData();
-  const plans = liveSchedules(model.data.schedules, today, workoutId);
-  if (plans.length === 0)
+/** Where a workout is planned, by start date: × takes it out. */
+export function PlanList({ workoutId, name, empty }: PlanListProps): React.ReactElement {
+  const { today } = useHangData();
+  const { state } = usePlan(useApi());
+  const actions = usePlanActions();
+  const plan = state.status === "ready" ? state.data : null;
+  const members = plan?.memberships.filter((m) => m.workoutId === workoutId) ?? [];
+  if (plan === null || members.length === 0)
     return <Text style={[type.body, { fontSize: 14, color: colors.textSecondary }]}>{empty}</Text>;
   return (
     <View style={{ gap: 8 }}>
-      {plans.map((s) => {
-        const text = planText(s, model, today);
-        if (text === null) return null;
+      {members.map((m) => {
+        const block = blockOfMembership(plan, m);
         return (
           <PlanRow
-            key={s.id}
-            tag={text.tag}
-            tagColor={text.started ? colors.labelAccent : colors.petalInk}
-            name={showName ? text.name : undefined}
-            meta={text.meta}
-            onOpen={() => onOpen(s)}
-            onRemove={() => void actions.deleteSchedule(s.id)}
-            removeLabel={text.removeLabel}
+            key={m.id}
+            tag={membershipTag(m, block, today)}
+            tagColor={m.start <= today ? colors.labelAccent : colors.petalInk}
+            meta={[block?.name, membershipWhen(m)].filter((p) => p !== undefined).join(" · ")}
+            onRemove={() => void actions.deleteMembership(m.id)}
+            removeLabel={t("plan.remove", { title: name })}
           />
         );
       })}

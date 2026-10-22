@@ -8,11 +8,10 @@ const run: IntervalsRun = {
   kind: "strength",
   title: "Kettlebell EMOM",
   date: "2026-10-22",
-  planItemId: null,
   activityId: "a1",
   workoutId: null,
+  link: { membershipId: "m1", week: null, variation: 0 },
   body: {
-    kind: "intervals",
     rounds: 10,
     steps: [{ label: "Swing", measure: "count", count: 15, loadKg: 24, restAfter: 45 }],
   },
@@ -29,7 +28,7 @@ describe("intervals route params", () => {
     expect(readIntervalsParams({ kind: "strength", body: "{" })).toBeNull();
     expect(readIntervalsParams({ kind: "climb", body: JSON.stringify(run.body) })).toBeNull();
     expect(
-      readIntervalsParams({ kind: "run", body: JSON.stringify({ ...run.body, steps: [] }) })
+      readIntervalsParams({ kind: "other", body: JSON.stringify({ ...run.body, steps: [] }) })
     ).toBeNull();
   });
 });

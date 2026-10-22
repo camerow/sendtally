@@ -8,12 +8,14 @@ import {
   resultOf,
   startRun,
   type HangSetup,
-  type Workout,
+  type HangWorkout,
+  type PlanLink,
 } from "@sendtally/core/hang";
 import { loadLabel, setupLabel } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import { ON_DARK_SOFT } from "../components/onDark";
 import { useHangData } from "../data/HangDataContext";
+import { usePlannedRun } from "./usePlannedRun";
 import { donePath } from "../done/doneParams";
 import { type } from "../type";
 import { phaseLook } from "./phaseLook";
@@ -28,10 +30,12 @@ function Timer({
   workout,
   gripId,
   setup,
+  link,
 }: {
-  workout: Workout;
+  workout: HangWorkout;
   gripId: string;
   setup: HangSetup;
+  link: PlanLink;
 }): React.ReactElement {
   const { edgeMm, loadKg } = setup;
   const { model } = useHangData();
@@ -47,9 +51,9 @@ function Timer({
   React.useEffect(() => {
     if (run.finished !== null)
       router.replace(
-        donePath({ workoutId: workout.id, gripId, edgeMm, loadKg, result: resultOf(run) })
+        donePath({ workoutId: workout.id, gripId, edgeMm, loadKg, result: resultOf(run), link })
       );
-  }, [run, workout.id, gripId, edgeMm, loadKg]);
+  }, [run, workout.id, gripId, edgeMm, loadKg, link]);
 
   const lift = (ok: boolean): void => {
     timer.play(ok ? "lift" : "miss");
@@ -98,21 +102,26 @@ function Timer({
   );
 }
 
-export type TimerScreenProps = { workoutId: string; gripId: string };
+export type TimerScreenProps = { workoutId: string; gripId: string; link: PlanLink };
 
-export function TimerScreen({ workoutId, gripId }: TimerScreenProps): React.ReactElement | null {
-  const { model, today } = useHangData();
-  const workout = model.workout(workoutId);
+export function TimerScreen({
+  workoutId,
+  gripId,
+  link,
+}: TimerScreenProps): React.ReactElement | null {
+  const { model } = useHangData();
+  const planned = usePlannedRun(workoutId, link);
   const [setup, setSetup] = React.useState<HangSetup | null>(null);
-  if (workout === undefined) return null;
+  if (planned === undefined) return null;
+  const { workout, dose } = planned;
   return setup === null ? (
     <SetupStep
       workout={workout}
       gripId={gripId}
-      initial={model.setup(workout, gripId, { date: today })}
+      initial={model.setup(workout, gripId, dose)}
       onStart={setSetup}
     />
   ) : (
-    <Timer workout={workout} gripId={gripId} setup={setup} />
+    <Timer workout={workout} gripId={gripId} setup={setup} link={link} />
   );
 }

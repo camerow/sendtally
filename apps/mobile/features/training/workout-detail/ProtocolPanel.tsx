@@ -1,7 +1,7 @@
 import React from "react";
 import { Text, View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
-import { timeOnEdge, totalSeconds, type Workout } from "@sendtally/core/hang";
+import { timeOnEdge, totalSeconds, type HangWorkout } from "@sendtally/core/hang";
 import { humanDuration, protocolSummary } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import { Label } from "../components/Label";
@@ -11,7 +11,7 @@ import { type } from "../type";
 import { Swatch } from "./Swatch";
 
 /** The phase bar with its legend, the summary line, and the headline numbers. */
-export function ProtocolPanel({ workout }: { workout: Workout }): React.ReactElement {
+export function ProtocolPanel({ workout }: { workout: HangWorkout }): React.ReactElement {
   const hang = workout.kind === "hang";
   return (
     <>

@@ -11,13 +11,14 @@ export type PlanRowProps = {
   tagColor: string;
   name?: string;
   meta: string;
-  onOpen: () => void;
+  /** Without it the row only shows the plan. */
+  onOpen?: () => void;
   onRemove: () => void;
   removeLabel: string;
   mark?: React.ReactNode;
 };
 
-/** A scheduled workout: tap to edit, × to remove. */
+/** A planned workout: tap to open, × to remove. */
 export function PlanRow({
   tag,
   tagColor,
@@ -45,7 +46,8 @@ export function PlanRow({
       {mark}
       <Pressable
         onPress={onOpen}
-        accessibilityRole="button"
+        disabled={onOpen === undefined}
+        accessibilityRole={onOpen === undefined ? undefined : "button"}
         style={pressRow({ flex: 1, gap: 3, paddingVertical: 12 })}
       >
         <Label small color={tagColor}>

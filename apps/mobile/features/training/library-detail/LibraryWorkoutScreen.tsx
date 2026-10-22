@@ -16,9 +16,7 @@ import { BackButton } from "../../../components/BackButton";
 import { useApi } from "../../../lib/api";
 import { Button } from "../components/Button";
 import { useHangData } from "../data/HangDataContext";
-import { planFromWorkout } from "../plan/planFromWorkout";
-import { PlanSheets } from "../plan/PlanSheets";
-import type { PlanRequest } from "../plan/types";
+import { PlanList } from "../plans/PlanList";
 import { BodyPreview } from "./BodyPreview";
 import { confirmDeleteWorkout } from "./confirmDeleteWorkout";
 import { LibraryIntro } from "./LibraryIntro";
@@ -28,19 +26,17 @@ export type LibraryWorkoutScreenProps = { workout: LibraryWorkout; use: WorkoutU
 
 const reportFailure = (): void => Alert.alert(t("workouts.saveFailed"));
 
-/** A workout other than a hangboard one: what it holds, and starting, planning or changing it. */
+/** A workout other than a hangboard one: what it holds, where it is planned, and starting or changing it. */
 export function LibraryWorkoutScreen({
   workout,
   use,
 }: LibraryWorkoutScreenProps): React.ReactElement {
   const { model, today } = useHangData();
   const actions = useWorkoutActions(useApi(), reportFailure);
-  const [plan, setPlan] = React.useState<PlanRequest | null>(null);
   const mine = workout.source === "mine";
 
   const duplicate = (): void => {
     const draft = draftOf(workout);
-    if (draft === null) return;
     const id = randomUUID();
     void actions.saveWorkout(id, { ...draft, name: copyName(draft.name) });
     router.push({ pathname: "/workout/[id]", params: { id } });
@@ -80,14 +76,8 @@ export function LibraryWorkoutScreen({
       >
         <LibraryIntro workout={workout} use={use} />
         <BodyPreview workout={workout} unit={model.settings.units} />
+        <PlanList workoutId={workout.id} name={workout.name} empty={t("hang.notScheduled")} />
         <View style={{ gap: 8 }}>
-          <Button
-            label={t("workouts.plan")}
-            onPress={() => setPlan(planFromWorkout(workout, { days: [], start: today }))}
-            variant="outline"
-            icon="schedule"
-            height={50}
-          />
           <Button
             label={t("workouts.duplicate")}
             onPress={duplicate}
@@ -116,7 +106,6 @@ export function LibraryWorkoutScreen({
           icon="play"
         />
       </View>
-      <PlanSheets request={plan} onChange={setPlan} />
     </SafeAreaView>
   );
 }

@@ -1,13 +1,13 @@
 import React from "react";
 import { Pressable, Text } from "react-native";
 import { colors } from "@sendtally/design/tokens";
-import type { MarkKind } from "@sendtally/features/training";
+import type { WorkoutKind } from "@sendtally/core/hang";
 import { Icon } from "../../../components/Icon";
 import { pressRow } from "../../../lib/press";
 import { CategoryMark } from "../library/CategoryMark";
 import { type } from "../type";
 
-export type PlanChoiceRowProps = { kind: MarkKind; title: string; onPress: () => void };
+export type PlanChoiceRowProps = { kind: WorkoutKind; title: string; onPress: () => void };
 
 export function PlanChoiceRow({ kind, title, onPress }: PlanChoiceRowProps): React.ReactElement {
   return (
@@ -23,7 +23,7 @@ export function PlanChoiceRow({ kind, title, onPress }: PlanChoiceRowProps): Rea
         borderRadius: 14,
       })}
     >
-      <CategoryMark category={kind} />
+      <CategoryMark kind={kind} />
       <Text style={[type.bodyBold, { flex: 1, fontSize: 15, color: colors.gunmetal }]}>
         {title}
       </Text>

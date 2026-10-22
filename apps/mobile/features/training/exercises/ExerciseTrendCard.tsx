@@ -66,7 +66,7 @@ export function ExerciseTrendCard({
       {first !== undefined && latest !== undefined && (
         <SeriesChart
           values={points.map((p) => shown(p.value))}
-          hollow={points.map((p) => p.session.attempted)}
+          hollow={points.map(() => false)}
           air={load ? (unit === "lb" ? 4 : 2) : AIR[series.metric]}
           edge={(v) => text(fromShown(v))}
           label={t("statistics.exerciseChart", {
@@ -87,9 +87,6 @@ export function ExerciseTrendCard({
       </View>
       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 14 }}>
         <Legend ring={false} label={t("statistics.legendDone")} />
-        {points.some((p) => p.session.attempted) && (
-          <Legend ring label={t("statistics.legendAttempted")} />
-        )}
       </View>
     </View>
   );

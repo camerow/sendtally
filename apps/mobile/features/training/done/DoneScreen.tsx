@@ -4,7 +4,13 @@ import React from "react";
 import { ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors } from "@sendtally/design/tokens";
-import { protocolOf, type Workout } from "@sendtally/core/hang";
+import {
+  protocolDose,
+  protocolOf,
+  type HangSetup,
+  type HangWorkout,
+  type SetDone,
+} from "@sendtally/core/hang";
 import { loadLabel } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import { Button } from "../components/Button";
@@ -13,13 +19,31 @@ import { Label } from "../components/Label";
 import { StatGrid } from "../components/StatGrid";
 import { Title } from "../components/Title";
 import { useHangData } from "../data/HangDataContext";
+import { usePlannedRun } from "../timer/usePlannedRun";
 import { SetupFields } from "../setup/SetupFields";
 import { openTrends } from "../trends/openTrends";
 import { type } from "../type";
 import type { DoneParams } from "./doneParams";
 import { doneStats, doneStatus, partialNote } from "./doneText";
 
-function Done({ workout, params }: { workout: Workout; params: DoneParams }): React.ReactElement {
+/** The sets a run finished, each as the protocol ran it on the edge and weight it used. */
+function setsDone(w: HangWorkout, setup: HangSetup, count: number): SetDone[] {
+  const { sets: _, ...set } = protocolDose(w);
+  const done = {
+    ...set,
+    ...(w.kind === "hang" ? { edgeMm: setup.edgeMm } : {}),
+    weightKg: setup.loadKg,
+  };
+  return Array.from({ length: count }, () => ({ ...done }));
+}
+
+function Done({
+  workout,
+  params,
+}: {
+  workout: HangWorkout;
+  params: DoneParams;
+}): React.ReactElement {
   const { model, actions, today } = useHangData();
   const [rpe, setRpe] = React.useState<number | null>(null);
   const { result, gripId } = params;
@@ -38,6 +62,8 @@ function Done({ workout, params }: { workout: Workout; params: DoneParams }): Re
       misses: result.misses,
       rpe,
       protocol: protocolOf(workout),
+      ...params.link,
+      done: [{ item: 0, exercise: gripId, sets: setsDone(workout, setup, result.setsDone) }],
     });
     openTrends(workout.id, gripId);
   };
@@ -78,7 +104,6 @@ function Done({ workout, params }: { workout: Workout; params: DoneParams }): Re
 }
 
 export function DoneScreen({ params }: { params: DoneParams }): React.ReactElement | null {
-  const { model } = useHangData();
-  const workout = model.workout(params.workoutId);
-  return workout === undefined ? null : <Done workout={workout} params={params} />;
+  const planned = usePlannedRun(params.workoutId, params.link);
+  return planned === undefined ? null : <Done workout={planned.workout} params={params} />;
 }

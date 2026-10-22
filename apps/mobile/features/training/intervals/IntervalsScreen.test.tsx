@@ -25,11 +25,10 @@ const workout: IntervalsRun = {
   kind: "mobility",
   title: "Hip mobility flow",
   date: "2026-10-22",
-  planItemId: "p1",
   activityId: null,
-  workoutId: null,
+  workoutId: "w1",
+  link: { membershipId: "m1", week: 2, variation: 1 },
   body: {
-    kind: "intervals",
     rounds: 1,
     steps: [
       {
@@ -91,16 +90,14 @@ describe("Intervals player", () => {
       minutes: 1,
       rpe: 6,
       notes: null,
-      planItemId: "p1",
-      workoutId: null,
-      detail: {
-        ...workout.body,
-        stepsDone: [
-          { round: 0, step: 0, side: "L" },
-          { round: 0, step: 0, side: "R", heldSeconds: 20 },
-          { round: 0, step: 1 },
-        ],
-      },
+      workoutId: "w1",
+      membershipId: "m1",
+      week: 2,
+      variation: 1,
+      done: [
+        { item: 0, exercise: "Couch stretch", sets: [{ onS: 45 }, { onS: 20 }] },
+        { item: 1, exercise: "Swing", sets: [{ reps: 15, weightKg: 24 }] },
+      ],
     });
     expect(router.dismissAll).toHaveBeenCalled();
   });

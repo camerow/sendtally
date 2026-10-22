@@ -1,7 +1,7 @@
 import React from "react";
 import { Text, View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
-import { byDate, type Grip, type Workout } from "@sendtally/core/hang";
+import { byDate, type Grip, type HangWorkout } from "@sendtally/core/hang";
 import { setupLabel, shortDate } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import { SheetHeader } from "../components/SheetHeader";
@@ -14,7 +14,7 @@ import { GripRow } from "./GripRow";
 
 export type GripPickerSheetProps = {
   visible: boolean;
-  workout: Workout;
+  workout: HangWorkout;
   multi: boolean;
   selected: readonly string[];
   onPick: (gripId: string) => void;

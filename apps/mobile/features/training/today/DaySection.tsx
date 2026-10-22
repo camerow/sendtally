@@ -1,42 +1,27 @@
 import React from "react";
 import { View } from "react-native";
-import type { PlanItem } from "@sendtally/api-client";
-import { weekStart, type Schedule } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { dayTitle } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import {
   dayMarks,
-  markKind,
+  loggedKind,
   type LoggedItem,
   type TrainingDay,
 } from "@sendtally/features/training";
-import { planTemplateOf } from "@sendtally/features/workouts";
-import { Button } from "../components/Button";
 import { DashedPanel } from "../components/DashedPanel";
 import { Label } from "../components/Label";
 import { Title } from "../components/Title";
 import { useHangData } from "../data/HangDataContext";
 import { useLibrary } from "../library/useLibrary";
-import { GoalRow } from "./GoalRow";
 import { LoggedRow } from "./LoggedRow";
 import { loggedRowText } from "./loggedRowText";
-import { logPlanItem } from "./logPlanItem";
-import { PlanItemCard } from "./PlanItemCard";
-import { PlanItemRow } from "./PlanItemRow";
-import { PlannedRow } from "./PlannedRow";
-import { startPlanItem } from "./startPlanItem";
-import { UpTodayCard } from "./UpTodayCard";
+import { OccurrenceCard } from "./OccurrenceCard";
+import { OccurrenceRow } from "./OccurrenceRow";
 
 export type DaySectionProps = {
   day: TrainingDay;
   onOpen: (item: LoggedItem) => void;
-  onEditPlan: (schedule: Schedule) => void;
-  onStart: (schedule: Schedule) => void;
-  onSkip: (schedule: Schedule) => void;
-  onEditItem: (item: PlanItem) => void;
-  onSkipItem: (item: PlanItem) => void;
-  onAdd: () => void;
 };
 
 const loggedKey = (item: LoggedItem): string => {
@@ -53,26 +38,13 @@ function subtitle(day: TrainingDay): string {
   return open === marks.length ? planned : `${planned} · ${logged}`;
 }
 
-/** The selected day: what was logged, what is still planned, and a way to plan more. */
-export function DaySection({
-  day,
-  onOpen,
-  onEditPlan,
-  onStart,
-  onSkip,
-  onEditItem,
-  onSkipItem,
-  onAdd,
-}: DaySectionProps): React.ReactElement {
-  const { model, today } = useHangData();
+/** The selected day: what was logged, and what is planned on it, done, missed or still to come. */
+export function DaySection({ day, onOpen }: DaySectionProps): React.ReactElement {
+  const { model } = useHangData();
   const library = useLibrary().state;
-  const workouts = library.status === "ready" ? library.data.workouts : [];
-  const current = weekStart(day.date) === weekStart(today);
-  const empty =
-    day.logged.length === 0 &&
-    day.planned.length === 0 &&
-    day.plans.length === 0 &&
-    day.goals.length === 0;
+  const workout = (id: string) =>
+    library.status === "ready" ? library.data.workout(id) : undefined;
+  const empty = day.logged.length === 0 && day.plans.length === 0;
   return (
     <View style={{ gap: 12 }}>
       <View
@@ -90,75 +62,26 @@ export function DaySection({
       {day.logged.map((item) => (
         <LoggedRow
           key={loggedKey(item)}
-          kind={markKind(item)}
+          kind={loggedKind(item)}
           text={loggedRowText(item, model)}
           onPress={() => onOpen(item)}
         />
       ))}
-      {day.planned.map(({ schedule }) =>
-        day.isToday ? (
-          <UpTodayCard
-            key={schedule.id}
-            schedule={schedule}
-            onEdit={() => onEditPlan(schedule)}
-            onStart={() => onStart(schedule)}
-          />
+      {day.plans.map((o) => {
+        const w = workout(o.membership.workoutId);
+        if (w === undefined) return null;
+        return day.isToday && o.status === "planned" ? (
+          <OccurrenceCard key={o.membership.id} occurrence={o} workout={w} />
         ) : (
-          <PlannedRow
-            key={schedule.id}
-            schedule={schedule}
-            date={day.date}
-            missed={day.isPast}
-            onOpen={() => onEditPlan(schedule)}
-            onSkip={() => onSkip(schedule)}
-          />
-        )
-      )}
-      {day.plans.map((entry) =>
-        day.isToday && entry.status === "planned" ? (
-          <PlanItemCard
-            key={entry.plan.id}
-            item={entry.plan}
-            onEdit={() => onEditItem(entry.plan)}
-            onLog={() => logPlanItem(entry.plan, day.date)}
-            onStart={startPlanItem(entry.plan, planTemplateOf(entry.plan, workouts), day.date)}
-          />
-        ) : (
-          <PlanItemRow
-            key={entry.plan.id}
-            entry={entry}
-            date={day.date}
-            onOpen={() => onEditItem(entry.plan)}
-            onSkip={() => onSkipItem(entry.plan)}
-          />
-        )
-      )}
-      {day.goals.map((goal) => (
-        <GoalRow
-          key={goal.item.id}
-          goal={goal}
-          current={current}
-          onOpen={() => onEditItem(goal.item)}
-          onLog={
-            day.isToday && goal.status === "planned"
-              ? () => logPlanItem(goal.item, day.date)
-              : undefined
-          }
-        />
-      ))}
+          <OccurrenceRow key={o.membership.id} occurrence={o} workout={w} />
+        );
+      })}
       {empty && (
         <DashedPanel
           title={t("hang.restDay")}
           body={day.isPast ? t("hang.restDayPast") : t("hang.restDayFuture")}
         />
       )}
-      <Button
-        label={t("training.addToPlan")}
-        onPress={onAdd}
-        variant="dashed"
-        height={50}
-        icon="plus"
-      />
     </View>
   );
 }

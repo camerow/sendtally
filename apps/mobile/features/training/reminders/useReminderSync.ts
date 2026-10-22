@@ -1,10 +1,6 @@
 import React from "react";
 import { AppState } from "react-native";
-import {
-  trainingReminders,
-  type ReminderNames,
-  type TrainingLog,
-} from "@sendtally/features/training";
+import { trainingReminders, type TrainingLog } from "@sendtally/features/training";
 import { useToday } from "../data/useToday";
 import { cancelReminders, notificationsAllowed, replaceReminders } from "./notifications";
 
@@ -15,7 +11,6 @@ export type ReminderSource = {
   time: string;
   /** Null until everything the reminders read has loaded, which leaves the phone as it is. */
   log: TrainingLog | null;
-  names: ReminderNames;
 };
 
 /** Counts returns to the foreground, so the window rolls on even when nothing else changed. */
@@ -32,7 +27,7 @@ function useForegrounds(): number {
 }
 
 /** Keeps the phone's scheduled reminders in step with the plan, the log and the setting. */
-export function useReminderSync({ on, time, log, names }: ReminderSource): void {
+export function useReminderSync({ on, time, log }: ReminderSource): void {
   const today = useToday();
   const foregrounds = useForegrounds();
 
@@ -43,9 +38,9 @@ export function useReminderSync({ on, time, log, names }: ReminderSource): void 
     const timer = setTimeout(() => {
       void (async () => {
         if (!on || log === null || !(await notificationsAllowed())) return cancelReminders();
-        await replaceReminders(trainingReminders(log, names, today, time, new Date()));
+        await replaceReminders(trainingReminders(log, today, time, new Date()));
       })();
     }, SETTLE_MS);
     return () => clearTimeout(timer);
-  }, [on, time, log, names, today, foregrounds]);
+  }, [on, time, log, today, foregrounds]);
 }

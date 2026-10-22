@@ -45,11 +45,6 @@ export function RecentSessions({ sessions, unit }: RecentSessionsProps): React.R
             <Text style={[type.monoBold, { flex: 1, fontSize: 15, color: colors.gunmetal }]}>
               {setText(s.best, unit)}
             </Text>
-            {s.attempted && (
-              <Label small color={colors.textSecondary}>
-                {t("statistics.attempted")}
-              </Label>
-            )}
           </Pressable>
         ))}
     </View>

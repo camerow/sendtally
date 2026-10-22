@@ -1,47 +1,37 @@
-import type { PlanItem } from "@sendtally/api-client";
-import type { Schedule } from "@sendtally/core/hang";
-import { setupLabel, type HangModel } from "@sendtally/features/hang";
-import type { MarkKind } from "@sendtally/features/training";
-import { planItemMeta, scheduleText } from "./planItemText";
+import type { Plan } from "@sendtally/api-client";
+import type { Membership, WorkoutKind } from "@sendtally/core/hang";
+import { kindLabel } from "@sendtally/features/activities";
+import type { WorkoutLookup } from "@sendtally/features/training";
+import { bodySummary } from "@sendtally/features/workouts";
 
 export type PlanGridRow = {
   key: string;
-  kind: MarkKind;
+  kind: WorkoutKind;
   name: string;
   sub: string;
   days: readonly number[];
 };
 
-/** One row per live plan for the week grid: hangboard workouts first, then the rest. */
+/** One row per membership for the week grid, with what its workout holds. */
 export function planGridRows(
-  schedules: readonly Schedule[],
-  items: readonly PlanItem[],
-  model: HangModel
+  members: readonly Membership[],
+  workout: WorkoutLookup
 ): PlanGridRow[] {
-  const hangs = schedules.flatMap((s): PlanGridRow[] => {
-    const w = model.workout(s.workoutId);
+  return members.flatMap((m): PlanGridRow[] => {
+    const w = workout(m.workoutId);
     if (w === undefined) return [];
-    const load = setupLabel(
-      w.kind,
-      model.setup(w, s.gripId, { schedule: s }),
-      model.settings.units
-    );
     return [
       {
-        key: s.id,
-        kind: "hang",
+        key: m.id,
+        kind: w.kind,
         name: w.name,
-        sub: `${model.gripName(s.gripId)} · ${load}`,
-        days: s.days,
+        sub: bodySummary(w) ?? kindLabel(w.kind),
+        days: m.weekdays,
       },
     ];
   });
-  const rest = items.map((i): PlanGridRow => ({
-    key: i.id,
-    kind: i.kind,
-    name: i.title,
-    sub: i.perWeek === null ? planItemMeta(i) : scheduleText(i),
-    days: i.days,
-  }));
-  return [...hangs, ...rest];
 }
+
+/** The memberships still to come: weekly ones, and one-offs from today. */
+export const liveMembers = (plan: Plan, today: string): Membership[] =>
+  plan.memberships.filter((m) => m.weekdays.length > 0 || m.start >= today);

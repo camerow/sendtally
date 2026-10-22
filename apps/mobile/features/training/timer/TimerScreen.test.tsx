@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals
 import { act, fireEvent, screen } from "@testing-library/react-native";
 import { router } from "expo-router";
 import React from "react";
+import { NO_PLAN } from "../data/planLinkParams";
 import { hangData, renderWithHang, TODAY } from "../data/renderWithHang";
 import { TimerScreen } from "./TimerScreen";
 
@@ -27,7 +28,7 @@ describe("Timer", () => {
   });
 
   it("counts down Get ready into the first hang, then credits a hang cut short", async () => {
-    await renderWithHang(<TimerScreen workoutId="rep73" gripId="half" />);
+    await renderWithHang(<TimerScreen workoutId="rep73" gripId="half" link={NO_PLAN} />);
     await fireEvent.press(screen.getByText("Start"));
     expect(screen.getByText("Get ready")).toBeTruthy();
     expect(screen.getByText("6 sets ahead")).toBeTruthy();
@@ -57,7 +58,7 @@ describe("Timer", () => {
   });
 
   it("pauses the clock from the primary button", async () => {
-    await renderWithHang(<TimerScreen workoutId="max10" gripId="half" />);
+    await renderWithHang(<TimerScreen workoutId="max10" gripId="half" link={NO_PLAN} />);
     await fireEvent.press(screen.getByText("Start"));
     await advance(5000);
     await fireEvent.press(screen.getByText("Pause"));
@@ -69,17 +70,15 @@ describe("Timer", () => {
     expect(screen.getByText("6")).toBeTruthy();
   });
 
-  it("sets up the run from today's plan, and carries the setup to the done screen", async () => {
-    const schedule = {
-      id: "s1",
-      workoutId: "max10",
-      gripId: "half",
-      days: [1 as const],
-      start: TODAY,
-      end: null,
-      skip: [],
-      edgeMm: 15,
-      loadKg: null,
+  it("runs the week's prescription, and carries the setup and plan to the done screen", async () => {
+    const plan = {
+      blocks: [{ id: "b1", name: "Winter base", start: TODAY, weeks: 4 }],
+      memberships: [
+        { id: "m1", workoutId: "max10", blockId: "b1", weekdays: [1 as const], start: TODAY },
+      ],
+      weekChanges: [
+        { membershipId: "m1", week: 1, variation: 0, item: 0, change: { sets: 3, edgeMm: 15 } },
+      ],
     };
     const session = {
       id: "h1",
@@ -91,6 +90,10 @@ describe("Timer", () => {
       pct: 100,
       misses: 0,
       rpe: null,
+      membershipId: null,
+      week: null,
+      variation: null,
+      done: [],
       protocol: {
         name: "Max hangs",
         kind: "hang" as const,
@@ -106,18 +109,32 @@ describe("Timer", () => {
       updatedAt: "t",
     };
     await renderWithHang(
-      <TimerScreen workoutId="max10" gripId="half" />,
-      hangData({ schedules: [schedule], sessions: [session] })
+      <TimerScreen
+        workoutId="max10"
+        gripId="half"
+        link={{ membershipId: "m1", week: 1, variation: 0 }}
+      />,
+      hangData({ sessions: [session] }),
+      { plan }
     );
     expect(screen.getByDisplayValue("15")).toBeTruthy();
     expect(screen.getByDisplayValue("8")).toBeTruthy();
     await fireEvent.press(screen.getByLabelText("Deeper edge"));
     await fireEvent.press(screen.getByText("Start"));
     expect(screen.getByText("Half crimp · 16 mm · +8 kg")).toBeTruthy();
+    expect(screen.getByText("3 sets ahead")).toBeTruthy();
     await fireEvent.press(screen.getByText("End"));
     await advance(200);
     expect(router.replace).toHaveBeenCalledWith(
-      expect.objectContaining({ params: expect.objectContaining({ edgeMm: "16", loadKg: "8" }) })
+      expect.objectContaining({
+        params: expect.objectContaining({
+          edgeMm: "16",
+          loadKg: "8",
+          membershipId: "m1",
+          week: "1",
+          variation: "0",
+        }),
+      })
     );
   });
 });

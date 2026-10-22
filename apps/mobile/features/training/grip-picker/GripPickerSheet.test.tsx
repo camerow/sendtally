@@ -3,7 +3,7 @@ import { fireEvent, screen } from "@testing-library/react-native";
 import React from "react";
 import { Alert, type AlertButton } from "react-native";
 import type * as ReactNative from "react-native";
-import { LIBRARY, type Grip } from "@sendtally/core/hang";
+import { NEW_WORKOUT, type Grip } from "@sendtally/core/hang";
 import { hangData, renderWithHang } from "../data/renderWithHang";
 import { GripPickerSheet } from "./GripPickerSheet";
 
@@ -16,7 +16,12 @@ jest.mock("@gorhom/bottom-sheet", () => ({
 }));
 jest.mock("expo-crypto", () => ({ randomUUID: () => "new-grip" }));
 
-const repeaters = LIBRARY[0]!;
+const repeaters = {
+  ...NEW_WORKOUT,
+  id: "rep73",
+  source: "library" as const,
+  name: "Repeaters 7:3",
+};
 const mono: Grip = { id: "g1", name: "Mono", custom: true, hidden: false };
 const gone: Grip = { id: "g2", name: "Front 3", custom: true, hidden: true };
 

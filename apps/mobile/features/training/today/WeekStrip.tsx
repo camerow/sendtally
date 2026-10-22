@@ -3,7 +3,8 @@ import { Text, View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
 import { weekRange, weekTitle } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
-import { dayMarks, type MarkKind, type TrainingDay } from "@sendtally/features/training";
+import type { WorkoutKind } from "@sendtally/core/hang";
+import { dayMarks, type TrainingDay } from "@sendtally/features/training";
 import type { CalendarDate } from "@sendtally/core/hang";
 import { IconButton } from "../components/IconButton";
 import { Label } from "../components/Label";
@@ -28,7 +29,11 @@ export function WeekStrip({
 }: WeekStripProps): React.ReactElement {
   const monday = days[0]?.date ?? selected;
   const kinds = [
-    ...new Set<MarkKind>(["climb", "hang", ...days.flatMap(dayMarks).map((m) => m.kind)]),
+    ...new Set<WorkoutKind>([
+      "climbing",
+      "hangboard",
+      ...days.flatMap(dayMarks).map((m) => m.kind),
+    ]),
   ];
   return (
     <View

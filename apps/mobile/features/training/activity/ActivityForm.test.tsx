@@ -3,7 +3,7 @@ import { fireEvent, render, screen } from "@testing-library/react-native";
 import { router } from "expo-router";
 import { Alert } from "react-native";
 import React from "react";
-import type { ActivityRecord, PlanTemplate } from "@sendtally/api-client";
+import type { ActivityRecord } from "@sendtally/api-client";
 import type * as Activities from "@sendtally/features/activities";
 import {
   activityFromDraft,
@@ -26,8 +26,6 @@ jest.mock("@sendtally/features/activities", () => {
   return {
     ...actual,
     useActivityActions: () => mockActions,
-    useExerciseNames: () => ["Back squat", "Deadlift"],
-    usePlanTemplate: () => mockTemplate,
     useWeightUnit: () => "kg",
     useActivityPost: (_api: unknown, activity: ActivityRecord): ActivityPostFeature => ({
       vm: actual.activityPostVM(activity, { connected: true, active: true, since: null }),
@@ -44,8 +42,6 @@ const logged = (post: Partial<ActivityRecord> = {}): ActivityRecord => ({
   postError: null,
   ...post,
 });
-
-let mockTemplate: PlanTemplate | null = null;
 
 describe("Log activity", () => {
   it("saves an untitled activity under its kind's name with its effort and load", async () => {
@@ -67,32 +63,60 @@ describe("Log activity", () => {
       minutes: 55,
       rpe: 7,
       notes: null,
-      planItemId: null,
       workoutId: null,
-      detail: null,
+      membershipId: null,
+      week: null,
+      variation: null,
+      done: [],
     });
     expect(router.back).toHaveBeenCalled();
   });
 
-  it("saves a logged session's body as a library workout of its kind", async () => {
+  it("logs what a planned workout prescribes, and saves it with the plan it ran", async () => {
+    const initial = newActivityDraft(
+      { kind: "strength", membershipId: "m1", week: "2", variation: "1", workoutId: "w1" },
+      "2026-10-22",
+      [{ exercise: "Back squat", dose: { sets: 2, reps: 5, weightKg: 100 } }]
+    );
+    await render(<ActivityForm id="a1" initial={initial} logged={null} />);
+    expect(screen.getByText("5 × 100 kg  /  5 × 100 kg")).toBeTruthy();
+    await fireEvent.press(screen.getByText("Save"));
+    expect(mockActions.saveActivity).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        workoutId: "w1",
+        membershipId: "m1",
+        week: 2,
+        variation: 1,
+        done: [
+          {
+            item: 0,
+            exercise: "Back squat",
+            sets: [
+              { reps: 5, weightKg: 100 },
+              { reps: 5, weightKg: 100 },
+            ],
+          },
+        ],
+      })
+    );
+  });
+
+  it("saves what a logged session did as a library workout of its kind", async () => {
     const initial = {
       ...newActivityDraft({ kind: "mobility", title: "Hip flow" }, "2026-10-22"),
       rpe: 3,
-      detail: {
-        kind: "checklist" as const,
-        items: [{ text: "Pigeon", dose: "1 min", done: true }],
-      },
+      done: [{ item: 0, exercise: "Pigeon", sets: [{ onS: 60 }] }],
     };
     await render(<ActivityForm id="a1" initial={initial} logged={logged()} />);
     await fireEvent.press(screen.getByText("Save as workout"));
     expect(mockWorkouts.saveWorkout).toHaveBeenCalledWith("w-new", {
+      kind: "mobility",
       name: "Hip flow",
-      category: "mobility",
-      description: null,
-      tags: [],
+      description: "",
       minutes: 60,
       targetRpe: 3,
-      body: { kind: "checklist", items: [{ text: "Pigeon", dose: "1 min" }] },
+      variations: [{ label: "", items: [{ exercise: "Pigeon", dose: { sets: 1, onS: 60 } }] }],
+      pattern: [0],
     });
     expect(router.push).toHaveBeenCalledWith({
       pathname: "/workout/[id]",
@@ -100,80 +124,11 @@ describe("Log activity", () => {
     });
   });
 
-  it("offers no Save as workout without a body", async () => {
+  it("offers no Save as workout with nothing done", async () => {
     await render(
       <ActivityForm id="a1" initial={newActivityDraft({}, "2026-10-22")} logged={logged()} />
     );
     expect(screen.queryByText("Save as workout")).toBeNull();
-  });
-
-  it("logs sets against a plan's targets, suggesting exercises already logged", async () => {
-    mockTemplate = {
-      kind: "sets",
-      exercises: [
-        { name: "Back squat", measures: ["reps", "loadKg"], sets: [{ reps: 5, loadKg: 100 }] },
-      ],
-    };
-    const initial = newActivityDraft({ planItemId: "p1" }, "2026-10-22", mockTemplate);
-    await render(<ActivityForm id="a1" initial={initial} logged={null} />);
-    expect(screen.getByText("5 × 100 kg")).toBeTruthy();
-    await fireEvent.press(screen.getByLabelText("Set 1 done"));
-    await fireEvent.press(screen.getByText("Add set"));
-    await fireEvent.press(screen.getByText("Add exercise"));
-    const names = screen.getAllByLabelText("Exercise");
-    await fireEvent(names[1]!, "focus");
-    await fireEvent.press(screen.getByText("Deadlift"));
-    await fireEvent.press(screen.getByText("Save"));
-
-    expect(mockActions.saveActivity).toHaveBeenLastCalledWith(
-      expect.objectContaining({
-        planItemId: "p1",
-        detail: {
-          kind: "sets",
-          exercises: [
-            {
-              name: "Back squat",
-              measures: ["reps", "loadKg"],
-              sets: [
-                { reps: 5, loadKg: 100, done: true },
-                { reps: 5, loadKg: 100, done: false },
-              ],
-            },
-            { name: "Deadlift", measures: ["reps", "loadKg"], sets: [{ done: false }] },
-          ],
-        },
-      })
-    );
-    mockTemplate = null;
-  });
-
-  it("ticks, orders and saves a checklist", async () => {
-    await render(
-      <ActivityForm id="a1" initial={newActivityDraft({}, "2026-10-22")} logged={null} />
-    );
-    await fireEvent.press(screen.getByText("Add checklist"));
-    await fireEvent.changeText(screen.getByPlaceholderText("Deep squat hold"), "Cat-cow");
-    await fireEvent.changeText(screen.getByLabelText("Dose"), "× 10");
-    await fireEvent.press(screen.getByText("Add item"));
-    await fireEvent.changeText(
-      screen.getAllByPlaceholderText("Deep squat hold")[1]!,
-      "Deep squat hold"
-    );
-    await fireEvent.press(screen.getByLabelText("Move up"));
-    await fireEvent.press(screen.getByLabelText("Deep squat hold"));
-    await fireEvent.press(screen.getByText("Save"));
-
-    expect(mockActions.saveActivity).toHaveBeenLastCalledWith(
-      expect.objectContaining({
-        detail: {
-          kind: "checklist",
-          items: [
-            { text: "Deep squat hold", dose: "", done: true },
-            { text: "Cat-cow", dose: "× 10", done: false },
-          ],
-        },
-      })
-    );
   });
 
   it("deletes an existing activity only once confirmed", async () => {

@@ -1,5 +1,6 @@
 import type { Href } from "expo-router";
-import type { RunResult } from "@sendtally/core/hang";
+import type { PlanLink, RunResult } from "@sendtally/core/hang";
+import { planLinkParams, readPlanLink } from "../data/planLinkParams";
 
 export type DoneParams = {
   workoutId: string;
@@ -7,12 +8,13 @@ export type DoneParams = {
   edgeMm: number;
   loadKg: number;
   result: RunResult;
+  link: PlanLink;
 };
 
 type RawParams = Partial<Record<string, string | string[]>>;
 
 /** The finished run, carried to the Session done screen in its route params. */
-export function donePath({ workoutId, gripId, edgeMm, loadKg, result }: DoneParams): Href {
+export function donePath({ workoutId, gripId, edgeMm, loadKg, result, link }: DoneParams): Href {
   return {
     pathname: "/workout/done",
     params: {
@@ -26,6 +28,7 @@ export function donePath({ workoutId, gripId, edgeMm, loadKg, result }: DonePara
       work: String(result.work),
       misses: String(result.misses),
       seconds: String(result.seconds),
+      ...planLinkParams(link),
     },
   };
 }
@@ -47,5 +50,6 @@ export function readDoneParams(p: RawParams): DoneParams {
       misses: num(p.misses),
       seconds: num(p.seconds),
     },
+    link: readPlanLink(p),
   };
 }

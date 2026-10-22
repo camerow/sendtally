@@ -1,7 +1,5 @@
+import type { WorkoutKind } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
-import { kindLabel } from "@sendtally/features/activities";
-import { t } from "@sendtally/features/i18n";
-import type { MarkKind } from "@sendtally/features/training";
 import { ON_DARK, ON_DARK_SOFT } from "../components/onDark";
 
 export type KindLook = {
@@ -19,14 +17,14 @@ const corners = (tl: number, tr: number, br: number, bl: number): { radii: numbe
 });
 
 /** One colour and mark shape per discipline, wherever a day's items show. */
-export const KIND_LOOK: Record<MarkKind, KindLook> = {
-  climb: {
+export const KIND_LOOK: Record<WorkoutKind, KindLook> = {
+  climbing: {
     ink: colors.azureInk,
     tint: "rgba(27,98,206,0.1)",
     onDark: colors.dataAzureSoft,
     shape: { width: 8, height: 8, ...corners(4, 4, 4, 4) },
   },
-  hang: {
+  hangboard: {
     ink: colors.petalInk,
     tint: "rgba(140,31,181,0.1)",
     onDark: colors.petal,
@@ -44,18 +42,6 @@ export const KIND_LOOK: Record<MarkKind, KindLook> = {
     onDark: ON_DARK,
     shape: { width: 8, height: 8, ...corners(4, 0, 4, 0) },
   },
-  run: {
-    ink: colors.watermelonInk,
-    tint: "rgba(196,48,61,0.1)",
-    onDark: colors.watermelon,
-    shape: { width: 11, height: 5, ...corners(2.5, 2.5, 2.5, 2.5) },
-  },
-  yoga: {
-    ink: colors.azure,
-    tint: "rgba(49,133,252,0.1)",
-    onDark: colors.azure,
-    shape: { width: 8, height: 8, ...corners(0, 4, 0, 4) },
-  },
   other: {
     ink: colors.textSecondary,
     tint: "rgba(64,63,76,0.06)",
@@ -63,7 +49,3 @@ export const KIND_LOOK: Record<MarkKind, KindLook> = {
     shape: { width: 6, height: 6, ...corners(1, 1, 1, 1) },
   },
 };
-
-export function kindName(kind: MarkKind): string {
-  return kind === "hang" ? t("training.hangboard") : kindLabel(kind);
-}

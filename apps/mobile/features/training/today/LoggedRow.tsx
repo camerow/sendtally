@@ -1,7 +1,7 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { colors, effortColor } from "@sendtally/design/tokens";
-import type { MarkKind } from "@sendtally/features/training";
+import type { WorkoutKind } from "@sendtally/core/hang";
 import { t } from "@sendtally/features/i18n";
 import { Icon } from "../../../components/Icon";
 import { pressRow } from "../../../lib/press";
@@ -11,7 +11,7 @@ import { DayMark } from "./DayMark";
 import { KIND_LOOK } from "./kindLook";
 import type { LoggedRowText } from "./loggedRowText";
 
-export type LoggedRowProps = { kind: MarkKind; text: LoggedRowText; onPress: () => void };
+export type LoggedRowProps = { kind: WorkoutKind; text: LoggedRowText; onPress: () => void };
 
 /** A session or activity logged on the selected day, with its effort. */
 export function LoggedRow({ kind, text, onPress }: LoggedRowProps): React.ReactElement {
@@ -42,8 +42,13 @@ export function LoggedRow({ kind, text, onPress }: LoggedRowProps): React.ReactE
           backgroundColor: look.tint,
         }}
       >
-        {kind === "climb" || kind === "hang" ? (
-          <Icon name={kind} color={look.ink} size={20} strokeWidth={1.9} />
+        {kind === "climbing" || kind === "hangboard" ? (
+          <Icon
+            name={kind === "climbing" ? "climb" : "hang"}
+            color={look.ink}
+            size={20}
+            strokeWidth={1.9}
+          />
         ) : (
           <DayMark kind={kind} filled scale={1.5} />
         )}

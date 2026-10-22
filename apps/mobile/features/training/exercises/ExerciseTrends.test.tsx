@@ -20,7 +20,7 @@ jest.mock("@sendtally/features/statistics", () => {
   };
 });
 
-const logged = (id: string, date: string, name: string, loadKg: number, done = true): Activity => ({
+const logged = (id: string, date: string, name: string, weightKg: number): Activity => ({
   id,
   kind: "strength",
   title: "Gym",
@@ -29,12 +29,11 @@ const logged = (id: string, date: string, name: string, loadKg: number, done = t
   minutes: 60,
   rpe: null,
   notes: null,
-  planItemId: null,
   workoutId: null,
-  detail: {
-    kind: "sets",
-    exercises: [{ name, measures: ["reps", "loadKg"], sets: [{ reps: 5, loadKg, done }] }],
-  },
+  membershipId: null,
+  week: null,
+  variation: null,
+  done: [{ item: 0, exercise: name, sets: [{ reps: 5, weightKg }] }],
 });
 
 let mockActivities: Activity[] = [];
@@ -51,13 +50,12 @@ describe("Exercise trends", () => {
       logged("a", "2026-09-01", "Squat", 90),
       logged("b", "2026-09-15", "Squat", 100),
       logged("c", "2026-09-20", "Deadlift", 140),
-      logged("d", "2026-09-22", "deadlift", 160, false),
+      logged("d", "2026-09-22", "deadlift", 140),
     ];
     expect(exerciseSeries(mockActivities)).toHaveLength(2);
     await render(<ExerciseTrends exercise=" squat" />);
     expect(screen.getByText(/Squat is up 10 kg since/)).toBeTruthy();
     await fireEvent.press(screen.getByText("deadlift"));
     expect(screen.getByText(/deadlift has held at 140 kg since/)).toBeTruthy();
-    expect(screen.getAllByText("Attempted")).toHaveLength(2);
   });
 });

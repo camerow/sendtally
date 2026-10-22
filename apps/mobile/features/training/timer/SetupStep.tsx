@@ -2,7 +2,7 @@ import React from "react";
 import { KeyboardAvoidingView, Platform, ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors } from "@sendtally/design/tokens";
-import type { HangSetup, Workout } from "@sendtally/core/hang";
+import type { HangSetup, HangWorkout } from "@sendtally/core/hang";
 import { t } from "@sendtally/features/i18n";
 import { BackButton } from "../../../components/BackButton";
 import { Button } from "../components/Button";
@@ -12,7 +12,7 @@ import { useHangData } from "../data/HangDataContext";
 import { SetupFields } from "../setup/SetupFields";
 
 export type SetupStepProps = {
-  workout: Workout;
+  workout: HangWorkout;
   gripId: string;
   initial: HangSetup;
   onStart: (setup: HangSetup) => void;

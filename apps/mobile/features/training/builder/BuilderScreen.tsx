@@ -1,24 +1,30 @@
 import { randomUUID } from "expo-crypto";
 import { router } from "expo-router";
 import React from "react";
-import { KeyboardAvoidingView, Platform, ScrollView, TextInput, View } from "react-native";
+import { Alert, KeyboardAvoidingView, Platform, ScrollView, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors } from "@sendtally/design/tokens";
-import { NEW_WORKOUT, protocolOf, type HangKind, type Workout } from "@sendtally/core/hang";
+import { NEW_WORKOUT, protocolOf, type HangKind, type HangWorkout } from "@sendtally/core/hang";
+import { withHangWorkout } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
-import { copyName } from "@sendtally/features/workouts";
+import {
+  copyName,
+  draftOf,
+  newWorkoutDraft,
+  useWorkoutActions,
+} from "@sendtally/features/workouts";
+import { useApi } from "../../../lib/api";
 import { Button } from "../components/Button";
 import { Label } from "../components/Label";
 import { Segmented } from "../components/Segmented";
 import { useHangData } from "../data/HangDataContext";
-import { PlannerSheet } from "../planner/PlannerSheet";
-import type { PlannerRequest } from "../planner/types";
+import { useLibrary } from "../library/useLibrary";
 import { type } from "../type";
 import { BuilderField } from "./BuilderField";
 import { BuilderPreview } from "./BuilderPreview";
 import { FIELDS, type NumberKey } from "./fields";
 
-type Draft = Omit<Workout, "id" | "source">;
+type Draft = Omit<HangWorkout, "id" | "source">;
 
 const MAX_PULL_REPS_ON_SWITCH = 12;
 
@@ -27,18 +33,15 @@ export type BuilderScreenProps = {
   id?: string;
   /** Customise: start from a copy of this library workout. */
   from?: string;
-  /** Opened from planning: saving hands the workout to the planner, then goes back. */
-  plan?: BuilderPlan;
 };
 
-export type BuilderPlan = Pick<
-  Extract<PlannerRequest, { mode: "new" }>,
-  "days" | "start" | "blockId"
->;
+const reportFailure = (): void => Alert.alert(t("workouts.saveFailed"));
 
-export function BuilderScreen({ id, from, plan }: BuilderScreenProps): React.ReactElement {
-  const { model, actions, today } = useHangData();
-  const [planning, setPlanning] = React.useState<PlannerRequest | null>(null);
+/** The hangboard builder: one protocol on one grip, saved as the workout's first item. */
+export function BuilderScreen({ id, from }: BuilderScreenProps): React.ReactElement {
+  const { model } = useHangData();
+  const library = useLibrary().state;
+  const actions = useWorkoutActions(useApi(), reportFailure);
   const editing = id === undefined ? undefined : model.workout(id);
   const [draft, setDraft] = React.useState<Draft>(() => {
     const base = editing ?? (from === undefined ? undefined : model.workout(from));
@@ -52,19 +55,15 @@ export function BuilderScreen({ id, from, plan }: BuilderScreenProps): React.Rea
   const setKind = (kind: HangKind): void =>
     update(kind === "pull" && draft.reps > MAX_PULL_REPS_ON_SWITCH ? { kind, reps: 5 } : { kind });
 
-  const store = (): string => {
+  const save = (): void => {
     const workoutId = editing?.id ?? randomUUID();
     const name = draft.name.trim() || t("hang.untitledWorkout");
-    void actions.saveWorkout({ ...draft, name, id: workoutId, source: "mine" });
-    return workoutId;
-  };
-  const saveAndPlan = (): void => {
-    const to = plan ?? { days: [], start: today };
-    setPlanning({ mode: "new", workoutId: store(), gripId: null, ...to });
-  };
-  const save = (): void => {
-    if (plan !== undefined) return saveAndPlan();
-    const workoutId = store();
+    const base = library.status === "ready" ? library.data.workout(id ?? from ?? "") : undefined;
+    const start = base === undefined ? newWorkoutDraft("hangboard") : draftOf(base);
+    void actions.saveWorkout(
+      workoutId,
+      withHangWorkout(start, { ...draft, name, id: workoutId, source: "mine" })
+    );
     if (editing) router.back();
     else router.replace({ pathname: "/workout/[id]", params: { id: workoutId } });
   };
@@ -85,12 +84,7 @@ export function BuilderScreen({ id, from, plan }: BuilderScreenProps): React.Rea
         <Label color={colors.textSecondary}>
           {editing ? t("hang.editWorkout") : t("hang.newWorkout")}
         </Label>
-        <Button
-          label={plan === undefined ? t("hang.save") : t("plan.saveAndPlan")}
-          onPress={save}
-          variant="primary"
-          height={40}
-        />
+        <Button label={t("hang.save")} onPress={save} variant="primary" height={40} />
       </View>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -155,18 +149,8 @@ export function BuilderScreen({ id, from, plan }: BuilderScreenProps): React.Rea
             })}
           </View>
           <BuilderPreview protocol={draft} units={draft.timeUnits} />
-          {plan === undefined && (
-            <Button
-              label={t("plan.saveAndPlan")}
-              onPress={saveAndPlan}
-              variant="outline"
-              icon="schedule"
-              height={50}
-            />
-          )}
         </ScrollView>
       </KeyboardAvoidingView>
-      <PlannerSheet request={planning} onClose={() => router.back()} />
     </SafeAreaView>
   );
 }

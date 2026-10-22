@@ -12,6 +12,6 @@ export function WorkoutScreen({ id, grip }: WorkoutScreenProps): React.ReactElem
   if (state.status !== "ready") return <LoadState state={state} onRetry={() => void reload()} />;
   const workout = state.data.workout(id);
   if (workout === undefined) return null;
-  if (workout.category === "hang") return <WorkoutDetailScreen id={id} grip={grip} />;
+  if (workout.kind === "hangboard") return <WorkoutDetailScreen id={id} grip={grip} />;
   return <LibraryWorkoutScreen workout={workout} use={state.data.usage.get(id)} />;
 }

@@ -1,24 +1,17 @@
 import { describe, expect, it } from "@jest/globals";
-import type { TrainingBlock } from "@sendtally/api-client";
-import { blockTag } from "./blockText";
+import type { Block } from "@sendtally/core/hang";
+import { blockDates, blockTag } from "./blockText";
 
-const block: TrainingBlock = {
-  id: "b1",
-  name: "Autumn finger block",
-  start: "2026-09-28",
-  weeks: 3,
-  loads: [{ load: 100 }, { load: 110 }, { load: 60, phase: "deload" }],
-  notes: null,
-  endedOn: null,
-};
+const block: Block = { id: "b1", name: "Autumn finger block", start: "2026-09-28", weeks: 3 };
 
-describe("block tags", () => {
-  it("names the week, then its phase and its load when not the base", () => {
+describe("block text", () => {
+  it("names the week a date falls in, and nothing outside the block", () => {
     expect(blockTag("Hangboard", block, "2026-09-30")).toBe("Hangboard · week 1 of 3");
-    expect(blockTag("Hangboard", block, "2026-10-06")).toBe("Hangboard · week 2 of 3 · 110% load");
-    expect(blockTag("Hangboard", block, "2026-10-13")).toBe(
-      "Hangboard · week 3 of 3 · Deload · 60% load"
-    );
+    expect(blockTag("Hangboard", block, "2026-10-13")).toBe("Hangboard · week 3 of 3");
     expect(blockTag("Hangboard", block, "2026-10-19")).toBeNull();
+  });
+
+  it("gives the first and last day", () => {
+    expect(blockDates(block)).toBe("Mon, Sep 28 to Sun, Oct 18");
   });
 });

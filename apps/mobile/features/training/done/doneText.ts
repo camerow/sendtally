@@ -1,4 +1,4 @@
-import { clock, plannedWork, type RunResult, type Workout } from "@sendtally/core/hang";
+import { clock, plannedWork, type RunResult, type HangWorkout } from "@sendtally/core/hang";
 import { humanDuration } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import type { Stat } from "../components/types";
@@ -8,7 +8,7 @@ export function doneStatus(result: RunResult): string {
   return result.pct < 100 ? t("hang.finishedPartial") : t("hang.sessionComplete");
 }
 
-export function doneStats(w: Workout, result: RunResult, load: string): Stat[] {
+export function doneStats(w: HangWorkout, result: RunResult, load: string): Stat[] {
   const hang = w.kind === "hang";
   const planned = plannedWork(w);
   return [
@@ -25,7 +25,7 @@ export function doneStats(w: Workout, result: RunResult, load: string): Stat[] {
 }
 
 /** Why a partial is partial, and what it means for the trend. */
-export function partialNote(w: Workout, result: RunResult, load: string): string {
+export function partialNote(w: HangWorkout, result: RunResult, load: string): string {
   const why = [
     result.misses > 0
       ? w.kind === "hang"

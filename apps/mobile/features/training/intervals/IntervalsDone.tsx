@@ -12,7 +12,7 @@ import {
   type Run,
 } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
-import { kindLabel, useActivityActions } from "@sendtally/features/activities";
+import { doneOfRun, kindLabel, useActivityActions } from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
 import { useApi } from "../../../lib/api";
 import { Button } from "../components/Button";
@@ -46,9 +46,9 @@ export function IntervalsDone({ workout, run }: IntervalsDoneProps): React.React
       minutes: Math.max(1, Math.round(seconds / 60)),
       rpe,
       notes: null,
-      planItemId: workout.planItemId,
       workoutId: workout.workoutId,
-      detail: { ...workout.body, stepsDone: done },
+      ...workout.link,
+      done: doneOfRun(workout.body, done),
     });
     router.dismissAll();
   };

@@ -1,11 +1,12 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
+import { doseProtocol, intervalsOf } from "@sendtally/core/hang";
+import { kindLabel } from "@sendtally/features/activities";
 import { durationLabel } from "@sendtally/features/sessions";
 import { t } from "@sendtally/features/i18n";
 import {
   bodySummary,
-  categoryLabel,
   workoutMinutes,
   type LibraryWorkout,
   type WorkoutUse,
@@ -26,17 +27,17 @@ export type LibraryCardProps = {
   onPress: () => void;
 };
 
-/** A workout in the library: its category, name, length, what it holds, and how much it ran. */
+/** A workout in the library: its kind, name, length, what it holds, and how much it ran. */
 export function LibraryCard({ workout, use, onPress }: LibraryCardProps): React.ReactElement {
   const minutes = workoutMinutes(workout);
   const summary = bodySummary(workout);
-  const body = workout.body;
-  const foot = [
-    ...workout.tags,
+  const items = workout.variations[0]?.items ?? [];
+  const [first] = items;
+  const timed = items.length > 0 && items.every((i) => i.dose.onS !== undefined);
+  const foot =
     use === undefined || use.count === 0
       ? t("workouts.notUsed")
-      : t("workouts.usedTimes", { count: use.count }),
-  ].join(" · ");
+      : t("workouts.usedTimes", { count: use.count });
   return (
     <Pressable
       onPress={onPress}
@@ -50,9 +51,9 @@ export function LibraryCard({ workout, use, onPress }: LibraryCardProps): React.
       })}
     >
       <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-        <CategoryMark category={workout.category} size={28} />
-        <Label color={KIND_LOOK[workout.category].ink} style={{ flex: 1 }}>
-          {categoryLabel(workout.category)}
+        <CategoryMark kind={workout.kind} size={28} />
+        <Label color={KIND_LOOK[workout.kind].ink} style={{ flex: 1 }}>
+          {kindLabel(workout.kind)}
         </Label>
         {workout.source === "mine" && <MineBadge />}
         {minutes !== null && <Label color={colors.textSecondary}>{durationLabel(minutes)}</Label>}
@@ -63,14 +64,14 @@ export function LibraryCard({ workout, use, onPress }: LibraryCardProps): React.
           {summary}
         </Text>
       )}
-      {body?.kind === "hang" && (
+      {workout.kind === "hangboard" && first !== undefined && (
         <View style={{ flexDirection: "row" }}>
-          <PhaseBar protocol={body.workout} height={12} />
+          <PhaseBar protocol={doseProtocol(workout.name, first.dose)} height={12} />
         </View>
       )}
-      {body?.kind === "intervals" && (
+      {workout.kind !== "hangboard" && timed && (
         <View style={{ flexDirection: "row" }}>
-          <IntervalsBar intervals={body} height={12} />
+          <IntervalsBar intervals={intervalsOf(items)} height={12} />
         </View>
       )}
       <Text numberOfLines={1} style={[type.mono, { fontSize: 12, color: colors.textSecondary }]}>

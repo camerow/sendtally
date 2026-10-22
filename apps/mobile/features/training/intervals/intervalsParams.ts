@@ -1,19 +1,20 @@
 import { router, type Href } from "expo-router";
 import type { ActivityKind } from "@sendtally/api-client";
-import type { CalendarDate } from "@sendtally/core/hang";
-import { ACTIVITY_KINDS, type IntervalsTemplate } from "@sendtally/features/activities";
+import type { CalendarDate, Intervals, PlanLink } from "@sendtally/core/hang";
+import { ACTIVITY_KINDS } from "@sendtally/features/activities";
+import { planLinkParams, readPlanLink } from "../data/planLinkParams";
 
 /** What the intervals player runs, and what the activity it logs is filed under. */
 export type IntervalsRun = {
   kind: ActivityKind;
   title: string;
   date: CalendarDate;
-  planItemId: string | null;
   /** The activity a run from the activity form becomes; null logs a new one. */
   activityId: string | null;
   /** The library workout it runs, if any. */
   workoutId: string | null;
-  body: IntervalsTemplate;
+  link: PlanLink;
+  body: Intervals;
 };
 
 type RawParams = Partial<Record<string, string | string[]>>;
@@ -28,9 +29,9 @@ export function intervalsPath(r: IntervalsRun): Href {
       title: r.title,
       date: r.date,
       body: JSON.stringify(r.body),
-      ...(r.planItemId === null ? {} : { planItemId: r.planItemId }),
       ...(r.activityId === null ? {} : { activityId: r.activityId }),
       ...(r.workoutId === null ? {} : { workoutId: r.workoutId }),
+      ...planLinkParams(r.link),
     },
   };
 }
@@ -39,13 +40,13 @@ export function startIntervals(r: IntervalsRun): void {
   router.push(intervalsPath(r));
 }
 
-const parseBody = (text: string): IntervalsTemplate | null => {
+const parseBody = (text: string): Intervals | null => {
   try {
     const body: unknown = JSON.parse(text);
     if (typeof body !== "object" || body === null) return null;
-    const { kind, rounds, steps } = body as Partial<IntervalsTemplate>;
-    if (kind !== "intervals" || typeof rounds !== "number" || !Array.isArray(steps)) return null;
-    return steps.length === 0 ? null : (body as IntervalsTemplate);
+    const { rounds, steps } = body as Partial<Intervals>;
+    if (typeof rounds !== "number" || !Array.isArray(steps)) return null;
+    return steps.length === 0 ? null : (body as Intervals);
   } catch {
     return null;
   }
@@ -60,9 +61,9 @@ export function readIntervalsParams(p: RawParams): IntervalsRun | null {
     kind,
     title: str(p.title),
     date: str(p.date),
-    planItemId: str(p.planItemId) || null,
     activityId: str(p.activityId) || null,
     workoutId: str(p.workoutId) || null,
+    link: readPlanLink(p),
     body,
   };
 }

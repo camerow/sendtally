@@ -3,11 +3,11 @@ import { router } from "expo-router";
 import React from "react";
 import { Alert, KeyboardAvoidingView, Platform, ScrollView, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import type { PlanKind } from "@sendtally/api-client";
+import type { WorkoutKind } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
+import { kindLabel } from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
 import {
-  categoryLabel,
   copyName,
   draftOf,
   newWorkoutDraft,
@@ -17,39 +17,37 @@ import {
 import { useApi } from "../../../lib/api";
 import { Button } from "../components/Button";
 import { Label } from "../components/Label";
-import { useHangData } from "../data/HangDataContext";
 import { LoadState } from "../data/LoadState";
-import { DetailSection } from "../detail/DetailSection";
+import { BodyPreview } from "../library-detail/BodyPreview";
 import { useLibrary } from "../library/useLibrary";
 import { MinutesField } from "../plan/MinutesField";
-import { ProjectChoice } from "../plan/ProjectChoice";
 import { TargetEffort } from "../plan/TargetEffort";
 import { type } from "../type";
 import { EditorTextField } from "./EditorTextField";
 import { draftOfEditor, editorStateOf } from "./editorState";
-import { FocusChoice } from "./FocusChoice";
 import type { WorkoutEditorState } from "./types";
+import { useHangData } from "../data/HangDataContext";
 
 export type WorkoutEditorScreenProps = {
   /** Edit this workout of the user's own. */
   id?: string;
   /** Start from a copy of this workout, built in or the user's own. */
   from?: string;
-  /** A new workout of this category. */
-  category?: PlanKind;
+  /** A new workout of this kind. */
+  kind?: WorkoutKind;
 };
 
 const reportFailure = (): void => Alert.alert(t("workouts.saveFailed"));
 
 function initialState(
   library: WorkoutLibrary,
-  { id, from, category }: WorkoutEditorScreenProps
+  { id, from, kind }: WorkoutEditorScreenProps
 ): WorkoutEditorState | null {
   const base = library.workout(id ?? from ?? "");
   const draft = base === undefined ? null : draftOf(base);
   if (draft !== null)
     return editorStateOf(id === undefined ? { ...draft, name: copyName(draft.name) } : draft);
-  return category === undefined ? null : editorStateOf(newWorkoutDraft(category));
+  return kind === undefined ? null : editorStateOf(newWorkoutDraft(kind));
 }
 
 function Editor({
@@ -64,7 +62,6 @@ function Editor({
   const [state, setState] = React.useState(initial);
   const update = (patch: Partial<WorkoutEditorState>): void =>
     setState((s) => ({ ...s, ...patch }));
-  const { category } = state;
 
   const save = (): void => {
     const workoutId = id ?? randomUUID();
@@ -86,7 +83,7 @@ function Editor({
       >
         <Button label={t("hang.cancel")} onPress={() => router.back()} variant="link" height={44} />
         <Label color={colors.textSecondary}>
-          {`${categoryLabel(category)} · ${id === undefined ? t("workouts.newWorkout") : t("hang.editWorkout")}`}
+          {`${kindLabel(state.kind)} · ${id === undefined ? t("workouts.newWorkout") : t("hang.editWorkout")}`}
         </Label>
         <Button label={t("hang.save")} onPress={save} variant="primary" height={44} />
       </View>
@@ -136,43 +133,22 @@ function Editor({
             multiline
             onChange={(description) => update({ description })}
           />
-          <EditorTextField
-            label={t("workouts.tags")}
-            value={state.tags}
-            placeholder={t("workouts.tagsPlaceholder")}
-            maxLength={200}
-            onChange={(tags) => update({ tags })}
-          />
           <MinutesField value={state.minutes} onChange={(minutes) => update({ minutes })} />
           <TargetEffort value={state.targetRpe} onChange={(targetRpe) => update({ targetRpe })} />
-          {category === "climb" ? (
-            <>
-              <FocusChoice value={state.focus} onChange={(focus) => update({ focus })} />
-              {state.focus === "project" && (
-                <ProjectChoice
-                  value={state.projectId}
-                  onChange={(projectId) => update({ projectId })}
-                />
-              )}
-            </>
-          ) : (
-            <DetailSection
-              value={state.detail}
-              kind={category}
-              unit={model.settings.units}
-              targets={null}
-              template
-              inSheet={false}
-              onChange={(detail) => update({ detail })}
-            />
-          )}
+          <BodyPreview
+            workout={{ ...state, id: id ?? "", source: "mine" }}
+            unit={model.settings.units}
+          />
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
-/** Make, edit or customise a workout other than a hangboard one, which has its own builder. */
+/**
+ * Make, edit or customise a workout other than a hangboard one, which has its own builder.
+ * What it holds shows read only.
+ */
 export function WorkoutEditorScreen(props: WorkoutEditorScreenProps): React.ReactElement | null {
   const { state, reload } = useLibrary();
   if (state.status !== "ready") return <LoadState state={state} onRetry={() => void reload()} />;

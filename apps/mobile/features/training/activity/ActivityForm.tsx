@@ -12,19 +12,18 @@ import {
 } from "react-native";
 import type { ActivityRecord } from "@sendtally/api-client";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
+import type { ItemDone } from "@sendtally/core/hang";
 import {
   activityFromDraft,
   kindLabel,
   parseMinutes,
+  setText,
   stepMinutes,
-  templateOf,
   trainingLoadLabel,
   useActivityActions,
-  usePlanTemplate,
   useWeightUnit,
   type ActivityDraft,
 } from "@sendtally/features/activities";
-import type { ActivityDetail } from "@sendtally/api-client";
 import { t } from "@sendtally/features/i18n";
 import { useWorkoutActions } from "@sendtally/features/workouts";
 import { DateTimeField } from "../../../components/DateTimeField";
@@ -34,8 +33,7 @@ import { EffortField } from "../components/EffortField";
 import { SheetSection } from "../components/SheetSection";
 import { Stepper } from "../components/Stepper";
 import { Title } from "../components/Title";
-import { DetailSection } from "../detail/DetailSection";
-import { startIntervals } from "../intervals/intervalsParams";
+import { PreviewRow } from "../library-detail/PreviewRow";
 import { type } from "../type";
 import { ActivityPostBar } from "./ActivityPostBar";
 import { KindChips } from "./KindChips";
@@ -61,6 +59,12 @@ const input = {
 
 const reportFailure = (): void => Alert.alert(t("activities.saveFailed"));
 
+/** What was done as a workout to run again: each item's first set, as many times as it was done. */
+const itemsOf = (done: readonly ItemDone[]) =>
+  done
+    .filter((d) => d.sets.length > 0)
+    .map((d) => ({ exercise: d.exercise, dose: { ...d.sets[0], sets: d.sets.length } }));
+
 /** Log or edit one activity: kind, title, when, how long, how hard, its sets or checklist, and its training load. */
 export function ActivityForm({ id, initial, logged }: ActivityFormProps): React.ReactElement {
   const api = useApi();
@@ -69,38 +73,22 @@ export function ActivityForm({ id, initial, logged }: ActivityFormProps): React.
   const update = (patch: Partial<ActivityDraft>): void => setDraft((d) => ({ ...d, ...patch }));
   const load = trainingLoadLabel(draft);
   const unit = useWeightUnit(api);
-  const targets = usePlanTemplate(api, draft.planItemId) ?? null;
   const workouts = useWorkoutActions(api, reportFailure);
-  const body = templateOf(draft.detail);
+  const items = itemsOf(draft.done);
 
   const saveAsWorkout = (): void => {
-    if (body === null) return;
+    if (items.length === 0) return;
     const workoutId = randomUUID();
     void workouts.saveWorkout(workoutId, {
+      kind: draft.kind,
       name: draft.title.trim() || kindLabel(draft.kind),
-      category: draft.kind,
-      description: null,
-      tags: [],
+      description: "",
       minutes: draft.minutes,
       targetRpe: draft.rpe,
-      body,
+      variations: [{ label: "", items }],
+      pattern: [0],
     });
     router.push({ pathname: "/workout/[id]", params: { id: workoutId } });
-  };
-
-  const start = (detail: ActivityDetail): void => {
-    const body = templateOf(detail);
-    if (body?.kind !== "intervals") return;
-    const { kind, title, date, planItemId, workoutId } = draft;
-    startIntervals({
-      kind,
-      title,
-      date,
-      planItemId,
-      workoutId,
-      activityId: logged === null ? id : null,
-      body,
-    });
   };
   const save = (): void => {
     void actions.saveActivity(activityFromDraft(id, draft));
@@ -208,16 +196,17 @@ export function ActivityForm({ id, initial, logged }: ActivityFormProps): React.
 
         <EffortField value={draft.rpe} onChange={(rpe) => update({ rpe })} />
 
-        <DetailSection
-          value={draft.detail}
-          kind={draft.kind}
-          unit={unit}
-          targets={targets}
-          template={false}
-          inSheet={false}
-          onStart={start}
-          onChange={(detail) => update({ detail })}
-        />
+        {items.length > 0 && (
+          <SheetSection label={t("activities.details")}>
+            {draft.done.map((d) => (
+              <PreviewRow
+                key={d.item}
+                title={d.exercise}
+                detail={d.sets.map((set) => setText(set, unit) || "✓").join("  /  ")}
+              />
+            ))}
+          </SheetSection>
+        )}
 
         <SheetSection label={t("common.notes")}>
           <TextInput
@@ -264,7 +253,7 @@ export function ActivityForm({ id, initial, logged }: ActivityFormProps): React.
 
         <View style={{ gap: 6 }}>
           <Button label={t("common.save")} onPress={save} variant="primary" height={54} />
-          {logged !== null && body !== null && (
+          {logged !== null && items.length > 0 && (
             <Button label={t("workouts.saveAsWorkout")} onPress={saveAsWorkout} variant="link" />
           )}
           {logged !== null && (
