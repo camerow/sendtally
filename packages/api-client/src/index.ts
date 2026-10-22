@@ -181,6 +181,10 @@ export class SendtallyApi {
     return body(this.client.v1.preferences["grade-scales"].$put({ json: scales }));
   }
 
+  setTrainingMode(enabled: boolean): Promise<{ trainingMode: boolean }> {
+    return body(this.client.v1.preferences["training-mode"].$put({ json: { enabled } }));
+  }
+
   climbs(): Promise<{ climbs: ClimbSummary[] }> {
     return body(this.client.v1.climbs.$get());
   }

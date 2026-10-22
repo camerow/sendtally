@@ -23,6 +23,7 @@ export const users = sqliteTable("users", {
   role: text("role", { enum: ["user", "moderator", "admin"] })
     .notNull()
     .default("user"),
+  training_mode: integer("training_mode").notNull().default(0),
 });
 
 export const boardConnections = sqliteTable(

@@ -395,6 +395,31 @@ describe("app", () => {
     expect(rejected.status).toBe(400);
   });
 
+  it("defaults training mode off and remembers a change", async () => {
+    const headers = { "x-test-user": "user_training", "Content-Type": "application/json" };
+
+    const before = await testApp().request("/v1/status", { headers }, env);
+    expect(await before.json()).toMatchObject({ trainingMode: false });
+
+    const saved = await testApp().request(
+      "/v1/preferences/training-mode",
+      { method: "PUT", headers, body: JSON.stringify({ enabled: true }) },
+      env
+    );
+    expect(saved.status).toBe(200);
+    expect(await saved.json()).toEqual({ trainingMode: true });
+
+    const after = await testApp().request("/v1/status", { headers }, env);
+    expect(await after.json()).toMatchObject({ trainingMode: true });
+
+    const rejected = await testApp().request(
+      "/v1/preferences/training-mode",
+      { method: "PUT", headers, body: JSON.stringify({ enabled: "yes" }) },
+      env
+    );
+    expect(rejected.status).toBe(400);
+  });
+
   it("keeps the grade a project was added with", async () => {
     const headers = { "x-test-user": "user_gradedproject", "Content-Type": "application/json" };
     const created = await testApp().request(

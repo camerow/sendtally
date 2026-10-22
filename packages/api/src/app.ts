@@ -570,6 +570,8 @@ const gradeScalesBody = z.object({
   route: z.enum(["yds", "french"]).optional(),
 });
 
+const trainingModeBody = z.object({ enabled: z.boolean() });
+
 const stravaPostingBody = z.object({
   enabled: z.boolean(),
   since: z
@@ -1809,6 +1811,7 @@ const app = new Hono<AppEnv>()
     return c.json({
       gradeScales: { boulder: scales.boulder, route: scales.route },
       role: user?.role ?? "user",
+      trainingMode: user?.training_mode === 1,
       strava:
         strava === null
           ? null
@@ -1845,6 +1848,19 @@ const app = new Hono<AppEnv>()
       const scales = repo.gradeScalesOf(await repo.getUser(c.env.DB, userId));
       await captureEvent(c, "grade_scales_updated", scales);
       return c.json({ gradeScales: scales });
+    }
+  )
+
+  .put(
+    "/v1/preferences/training-mode",
+    zValidator("json", trainingModeBody, invalidBody),
+    async (c) => {
+      const userId = c.get("userId");
+      const { enabled } = c.req.valid("json");
+      await repo.ensureUser(c.env.DB, userId);
+      await repo.setTrainingMode(c.env.DB, userId, enabled);
+      await captureEvent(c, "training_mode_updated", { enabled: String(enabled) });
+      return c.json({ trainingMode: enabled });
     }
   )
 
