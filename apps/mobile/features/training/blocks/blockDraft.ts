@@ -2,9 +2,9 @@ import type { TrainingBlock } from "@sendtally/api-client";
 import {
   addDays,
   blockEnd,
-  defaultPhases,
+  evenWeekLoads,
   minDate,
-  resizePhases,
+  resizeWeekLoads,
   type CalendarDate,
 } from "@sendtally/core/hang";
 import { t } from "@sendtally/features/i18n";
@@ -25,15 +25,15 @@ export function blockDraft(block: TrainingBlock | null, today: CalendarDate): Bl
     endMode: "weeks",
     weeks,
     last: addDays(start, weeks * 7 - 1),
-    phases: block?.phases ?? defaultPhases(weeks),
+    loads: block?.loads ?? evenWeekLoads(weeks),
     notes: block?.notes ?? "",
   };
 }
 
-/** A new week count, keeping each week's phase; null when out of range. */
+/** A new week count, keeping each week's load and phase; null when out of range. */
 export function withWeeks(draft: BlockDraft, weeks: number): Partial<BlockDraft> | null {
   if (!Number.isInteger(weeks) || weeks < 1 || weeks > MAX_BLOCK_WEEKS) return null;
-  return { weeks, phases: resizePhases(draft.phases, weeks) };
+  return { weeks, loads: resizeWeekLoads(draft.loads, weeks) };
 }
 
 /** The block a draft saves as, or null while it has no name. An ended block stays ended. */
@@ -50,7 +50,7 @@ export function blockOf(
     name,
     start: draft.start,
     weeks: draft.weeks,
-    phases: draft.phases,
+    loads: draft.loads,
     notes: notes === "" ? null : notes,
     endedOn: null,
   };

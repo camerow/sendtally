@@ -117,14 +117,18 @@ describe("Plan training", () => {
 
   it("creates a block, then goes straight on to adding to it", async () => {
     await renderWithHang(<Host first={{ mode: "block", block: null }} />);
-    await fireEvent.press(screen.getByLabelText("Week 2, Build. Change the phase"));
+    await fireEvent.press(screen.getByText("Ramp up"));
+    await fireEvent.press(screen.getByLabelText("Week 2, 100% load"));
+    await fireEvent.press(screen.getByLabelText("5% heavier"));
+    await fireEvent.press(screen.getByLabelText("Week 2 tag, No tag. Change it"));
+    await fireEvent.press(screen.getByLabelText("Week 2 tag, Build. Change it"));
     await fireEvent.press(screen.getByText("Create block"));
     expect(mockSaveBlock).toHaveBeenCalledWith({
       id: "new-id",
       name: "Finger block",
       start: TODAY,
       weeks: 4,
-      phases: ["build", "deload", "build", "deload"],
+      loads: [{ load: 90 }, { load: 105, phase: "deload" }, { load: 110 }, { load: 120 }],
       notes: null,
       endedOn: null,
     });

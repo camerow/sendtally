@@ -6,8 +6,8 @@ import { useBlocks } from "../blocks/useBlocks";
 type Tagged = Pick<Schedule, "start" | "end" | "blockId">;
 
 /**
- * "Hangboard · week 1 of 4" for a plan with an end, with its block's phase when that is
- * not a build week; just the label for an ongoing one.
+ * "Hangboard · week 1 of 4" for a plan with an end, with its block week's phase and load
+ * when they are set; just the label for an ongoing one.
  */
 export function usePlanTag(): (label: string, plan: Tagged, date: CalendarDate) => string {
   const blocks = useBlocks();

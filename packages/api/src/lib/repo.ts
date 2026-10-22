@@ -2864,7 +2864,7 @@ export async function saveTrainingBlock(
     name: b.name,
     start: b.start,
     weeks: b.weeks,
-    phases_json: JSON.stringify(b.phases),
+    phases_json: JSON.stringify(b.loads),
     notes: b.notes,
     ended_on: b.endedOn,
     updated_at: now,

@@ -1,6 +1,7 @@
 import React from "react";
 import { Text, View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
+import { MAX_WEEK_LOAD } from "@sendtally/core/hang";
 import { formatNumber, t } from "@sendtally/features/i18n";
 import type { BlockWeek } from "@sendtally/features/training";
 import { Label } from "../components/Label";
@@ -12,9 +13,22 @@ const TALLEST = 64;
 const height = (value: number, top: number): number =>
   top === 0 ? 0 : Math.max(value > 0 ? 3 : 0, Math.round((value / top) * TALLEST));
 
+function effortLabel(w: BlockWeek): string {
+  const label = t("plan.effortWeek", {
+    n: w.week,
+    load: w.load,
+    planned: formatNumber(w.planned),
+    actual: w.ahead ? "–" : formatNumber(w.actual),
+  });
+  return w.phase === null ? label : t("plan.withPhase", { label, phase: phaseLabel(w.phase) });
+}
+
 export type BlockEffortProps = { weeks: readonly BlockWeek[] };
 
-/** Per week, a dashed bar for planned effort beside a filled one for what was logged. */
+/**
+ * Per week, a dashed bar for planned effort beside a filled one for what was logged, in
+ * front of a band for the week's planned load.
+ */
 export function BlockEffort({ weeks }: BlockEffortProps): React.ReactElement {
   const top = Math.max(1, ...weeks.flatMap((w) => [w.planned, w.actual]));
   return (
@@ -30,12 +44,7 @@ export function BlockEffort({ weeks }: BlockEffortProps): React.ReactElement {
           <View
             key={w.week}
             accessible
-            accessibilityLabel={t("plan.effortWeek", {
-              n: w.week,
-              phase: phaseLabel(w.phase),
-              planned: formatNumber(w.planned),
-              actual: w.ahead ? "–" : formatNumber(w.actual),
-            })}
+            accessibilityLabel={effortLabel(w)}
             style={{ flex: 1, alignItems: "center", gap: 4 }}
           >
             <View
@@ -47,6 +56,18 @@ export function BlockEffort({ weeks }: BlockEffortProps): React.ReactElement {
                 height: TALLEST,
               }}
             >
+              <View
+                style={{
+                  position: "absolute",
+                  left: -3,
+                  right: -3,
+                  bottom: 0,
+                  height: Math.round((w.load / MAX_WEEK_LOAD) * TALLEST),
+                  borderTopLeftRadius: 6,
+                  borderTopRightRadius: 6,
+                  backgroundColor: colors.white,
+                }}
+              />
               <View
                 style={{
                   flex: 1,
@@ -70,7 +91,7 @@ export function BlockEffort({ weeks }: BlockEffortProps): React.ReactElement {
               numberOfLines={1}
               style={[type.mono, { fontSize: 10, color: colors.textSecondary }]}
             >
-              {w.phase === "build" ? t("plan.weekShort", { n: w.week }) : phaseLabel(w.phase)}
+              {w.phase === null ? t("plan.weekShort", { n: w.week }) : phaseLabel(w.phase)}
             </Text>
           </View>
         ))}

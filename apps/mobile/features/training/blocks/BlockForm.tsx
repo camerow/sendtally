@@ -12,7 +12,7 @@ import { DetailTextInput } from "../detail/DetailTextInput";
 import { TitleField } from "../plan/TitleField";
 import { PlannerFooter } from "../planner/PlannerFooter";
 import { StartSection } from "../planner/StartSection";
-import { PhaseWeeks } from "./PhaseWeeks";
+import { LoadWeeks } from "./LoadWeeks";
 import { useBlockForm } from "./useBlockForm";
 
 export type BlockFormProps = {
@@ -20,7 +20,7 @@ export type BlockFormProps = {
   onClose: (created: TrainingBlock | null) => void;
 };
 
-/** New block, or Edit block: name, dates, a phase per week and notes. */
+/** New block, or Edit block: name, dates, a load per week and notes. */
 export function BlockForm({ block, onClose }: BlockFormProps): React.ReactElement {
   const [open, setOpen] = React.useState(true);
   const [calendar, setCalendar] = React.useState(false);
@@ -64,7 +64,7 @@ export function BlockForm({ block, onClose }: BlockFormProps): React.ReactElemen
             inSheet
           />
         </SheetSection>
-        <PhaseWeeks phases={draft.phases} onChange={(phases) => update({ phases })} />
+        <LoadWeeks loads={draft.loads} onChange={(loads) => update({ loads })} />
         <SheetSection label={t("plan.notes")}>
           <DetailTextInput
             value={draft.notes}

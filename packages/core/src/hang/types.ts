@@ -57,6 +57,9 @@ export type Schedule = {
 
 export type BlockPhase = "build" | "deload" | "test";
 
+/** A week of a block: its load as a percent of the block's base, and an optional phase tag. */
+export type WeekLoad = { load: number; phase?: BlockPhase };
+
 /** A multi-week block. Its members share its dates. */
 export type TrainingBlock = {
   id: string;
@@ -64,7 +67,7 @@ export type TrainingBlock = {
   start: CalendarDate;
   weeks: number;
   /** One per week. */
-  phases: BlockPhase[];
+  loads: WeekLoad[];
   notes: string | null;
   /** Exclusive; set when the block was ended early. */
   endedOn: CalendarDate | null;
