@@ -1,3 +1,4 @@
+import { useRouter } from "expo-router";
 import React from "react";
 import { Text, View } from "react-native";
 import type { TrainingModeFeature } from "@sendtally/features/settings";
@@ -13,6 +14,7 @@ export function TrainingModeSection({
   trainingMode,
 }: TrainingModeSectionProps): React.ReactElement {
   const [error, setError] = React.useState<string | null>(null);
+  const router = useRouter();
   const onChange = React.useCallback(
     (next: boolean) => {
       setError(null);
@@ -21,8 +23,9 @@ export function TrainingModeSection({
         .catch((err: unknown) =>
           setError(err instanceof Error ? err.message : t("common.somethingWentWrong"))
         );
+      router.replace(next ? "/(tabs)/today" : "/(tabs)/settings");
     },
-    [trainingMode]
+    [trainingMode, router]
   );
 
   return (
