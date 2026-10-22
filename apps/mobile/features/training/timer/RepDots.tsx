@@ -1,9 +1,8 @@
 import React from "react";
 import { View } from "react-native";
 import Animated, { ZoomIn } from "react-native-reanimated";
-import { colors } from "@sendtally/design/tokens";
 import type { RepMark } from "@sendtally/core/hang";
-import { ON_DARK_TRACK } from "../components/onDark";
+import { HANG_ON_DARK, ON_DARK_MUTED, ON_DARK_TRACK } from "../components/onDark";
 
 export type RepDotsProps = { reps: number; marks: readonly RepMark[]; working: boolean };
 
@@ -29,14 +28,14 @@ export function RepDots({ reps, marks, working }: RepDotsProps): React.ReactElem
             <Animated.View
               key={i}
               entering={ZoomIn.springify()}
-              style={[dot, { backgroundColor: colors.gold }]}
+              style={[dot, { backgroundColor: HANG_ON_DARK }]}
             />
           );
         if (mark === "miss")
           return (
             <View
               key={i}
-              style={[dot, { borderWidth: 2, borderStyle: "dashed", borderColor: colors.petal }]}
+              style={[dot, { borderWidth: 2, borderStyle: "dashed", borderColor: ON_DARK_MUTED }]}
             />
           );
         const current = working && i === marks.length;
@@ -46,7 +45,7 @@ export function RepDots({ reps, marks, working }: RepDotsProps): React.ReactElem
             style={[
               dot,
               current
-                ? { borderWidth: 2, borderColor: colors.gold }
+                ? { borderWidth: 2, borderColor: HANG_ON_DARK }
                 : { backgroundColor: ON_DARK_TRACK },
             ]}
           />

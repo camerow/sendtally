@@ -24,6 +24,7 @@ const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 export type TimerRingProps = {
   progress: SharedValue<number>;
   color: string;
+  labelColor: string;
   phaseKey: number;
   label: string;
   big: string;
@@ -39,6 +40,7 @@ export type TimerRingProps = {
 export function TimerRing({
   progress,
   color,
+  labelColor,
   phaseKey,
   label,
   big,
@@ -47,13 +49,14 @@ export function TimerRing({
   onPress,
 }: TimerRingProps): React.ReactElement {
   const stroke = useAnimatedColor(color);
+  const ink = useAnimatedColor(labelColor);
   const pressed = useSharedValue(1);
 
   const arc = useAnimatedProps(() => ({
     strokeDashoffset: CIRCUMFERENCE * (1 - progress.value),
     stroke: stroke.value,
   }));
-  const labelColor = useAnimatedStyle(() => ({ color: stroke.value }));
+  const labelStyle = useAnimatedStyle(() => ({ color: ink.value }));
   const scale = useAnimatedStyle(() => ({ transform: [{ scale: pressed.value }] }));
 
   return (
@@ -87,7 +90,7 @@ export function TimerRing({
           />
         </Svg>
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center", gap: 4 }}>
-          <Animated.Text style={[type.label, { fontSize: 14, letterSpacing: 2.24 }, labelColor]}>
+          <Animated.Text style={[type.label, { fontSize: 14, letterSpacing: 2.24 }, labelStyle]}>
             {label}
           </Animated.Text>
           <Animated.Text

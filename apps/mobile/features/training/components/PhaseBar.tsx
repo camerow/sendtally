@@ -5,7 +5,7 @@ import { isWork, phasesFor, type Protocol } from "@sendtally/core/hang";
 
 export type PhaseBarProps = { protocol: Protocol; height: number };
 
-/** Work as tall ink segments, rest as short petal ones, widths by duration. */
+/** Work as tall blue segments, rest as short green ones, widths by duration. */
 export function PhaseBar({ protocol, height }: PhaseBarProps): React.ReactElement {
   const phases = phasesFor(protocol).slice(1);
   return (
@@ -23,7 +23,7 @@ export function PhaseBar({ protocol, height }: PhaseBarProps): React.ReactElemen
             minWidth: 1,
             borderRadius: 1,
             height: isWork(p.kind) ? height : Math.round(height * 0.42),
-            backgroundColor: isWork(p.kind) ? colors.gunmetal : colors.petal,
+            backgroundColor: isWork(p.kind) ? colors.azure : colors.fern,
           }}
         />
       ))}

@@ -8,9 +8,9 @@ import {
   type Run,
   type WeightUnit,
 } from "@sendtally/core/hang";
-import { colors } from "@sendtally/design/tokens";
 import { kindLabel } from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
+import { phaseLook } from "../timer/phaseLook";
 import { TimerFrame } from "../timer/TimerFrame";
 import { useTimer } from "../timer/useTimer";
 import type { IntervalsRun } from "./intervalsParams";
@@ -37,7 +37,7 @@ export function IntervalsPlayer({
   const tapped = phase.taps > 0;
   const working = isWork(phase.kind);
   const paused = run.pausedAt !== null;
-  const color = working ? colors.gold : phase.kind === "ready" ? colors.petalTint : colors.petal;
+  const look = phaseLook(working, phase.kind === "ready");
 
   React.useEffect(() => {
     if (run.finished !== null) onFinish(run);
@@ -58,7 +58,7 @@ export function IntervalsPlayer({
       name={workout.title}
       meta={`${kindLabel(workout.kind)} · ${t("activities.roundOf", { round: phase.set, rounds: body.rounds })}`}
       controls={{
-        color,
+        color: look.fill,
         primary: primaryLabel,
         next: null,
         fail: working && !tapped && !paused ? t("activities.stoppedEarly", { n: held }) : null,
@@ -69,7 +69,7 @@ export function IntervalsPlayer({
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ gap: 18 }}>
         <StepCard
           text={stepText(run, body, secondsLeft, unit)}
-          color={color}
+          color={look.fill}
           accessibilityLabel={primaryLabel}
           onPress={primary}
         />

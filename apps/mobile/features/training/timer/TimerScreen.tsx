@@ -1,7 +1,6 @@
 import { router } from "expo-router";
 import React from "react";
 import { Text, View } from "react-native";
-import { colors } from "@sendtally/design/tokens";
 import {
   currentPhase,
   isWork,
@@ -17,6 +16,7 @@ import { ON_DARK_SOFT } from "../components/onDark";
 import { useHangData } from "../data/HangDataContext";
 import { donePath } from "../done/doneParams";
 import { type } from "../type";
+import { phaseLook } from "./phaseLook";
 import { RepDots } from "./RepDots";
 import { SetupStep } from "./SetupStep";
 import { TimerFrame } from "./TimerFrame";
@@ -42,7 +42,7 @@ function Timer({
   const working = isWork(phase.kind);
   const load = loadLabel(workout.kind, loadKg, model.settings.units);
   const text = timerText(run, secondsLeft, load);
-  const color = working ? colors.gold : phase.kind === "ready" ? colors.petalTint : colors.petal;
+  const look = phaseLook(working, phase.kind === "ready");
 
   React.useEffect(() => {
     if (run.finished !== null)
@@ -63,7 +63,7 @@ function Timer({
       name={workout.name}
       meta={`${model.gripName(gripId)} · ${setupLabel(workout.kind, setup, model.settings.units)}`}
       controls={{
-        color,
+        color: look.fill,
         primary: pull
           ? t("hang.lifted")
           : run.pausedAt === null
@@ -78,7 +78,8 @@ function Timer({
       <View style={{ flex: 1, alignItems: "center", justifyContent: "center", gap: 22 }}>
         <TimerRing
           progress={progress}
-          color={color}
+          color={look.mark}
+          labelColor={look.fill}
           phaseKey={run.index}
           label={text.label}
           big={text.big}

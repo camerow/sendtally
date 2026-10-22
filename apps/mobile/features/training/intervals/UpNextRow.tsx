@@ -1,12 +1,16 @@
 import React from "react";
 import { Text, View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
-import { ON_DARK, ON_DARK_MUTED, ON_DARK_SOFT, ON_DARK_TRACK } from "../components/onDark";
+import {
+  HANG_TRACK,
+  ON_DARK,
+  ON_DARK_MUTED,
+  ON_DARK_SOFT,
+  ON_DARK_TRACK,
+  REST_TRACK,
+} from "../components/onDark";
 import { type } from "../type";
 import type { UpNextItem } from "./intervalsText";
-
-const WORK_BADGE = "rgba(249,220,92,0.18)";
-const REST_BADGE = "rgba(204,121,234,0.2)";
 
 /** One coming phase: a side badge, the step or Rest, and how long or how many. */
 export function UpNextRow({ item }: { item: UpNextItem }): React.ReactElement {
@@ -28,13 +32,13 @@ export function UpNextRow({ item }: { item: UpNextItem }): React.ReactElement {
           borderRadius: 13,
           alignItems: "center",
           justifyContent: "center",
-          backgroundColor: item.rest ? REST_BADGE : WORK_BADGE,
+          backgroundColor: item.rest ? REST_TRACK : HANG_TRACK,
         }}
       >
         <Text
           style={[
             type.monoBold,
-            { fontSize: 11, color: item.rest ? colors.petalTint : colors.gold },
+            { fontSize: 11, color: item.rest ? colors.dataFernSoft : colors.dataAzureSoft },
           ]}
         >
           {item.side}
