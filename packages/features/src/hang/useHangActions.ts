@@ -38,7 +38,7 @@ const pendingRecord = (session: HangSession, previous?: HangSessionRecord): Hang
   updatedAt: new Date().toISOString(),
 });
 
-// ponytail: one chain for every hangtally write, so two quick taps on a load
+// ponytail: one chain for every hangboard write, so two quick taps on a load
 // reach the server in the order they were made. Per-key queues if it ever lags.
 let chain: Promise<unknown> = Promise.resolve();
 

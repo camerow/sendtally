@@ -54,4 +54,10 @@ export const settings = {
     "Fügt Heute, Training und Statistik hinzu, damit du Hangboard und anderes Training neben deinem Klettern planen und durchführen kannst.",
   "settings.trainingModeWebHint":
     "Training findest du in der sendtally-App für iOS und Android. Schalte es hier ein, dann ist es beim nächsten Öffnen der App da.",
+  "settings.postClimbing": "Klettersessions posten",
+  "settings.postHangboard": "Hangboard-Sessions posten",
+  "settings.postHangboardBody": "Jede Hangboard-Session wird als Workout gepostet.",
+  "settings.postTraining": "Anderes Training posten",
+  "settings.postTrainingBody":
+    "Kraft, Läufe, Yoga und Mobility werden als eigene Aktivitäten gepostet.",
 } as const;

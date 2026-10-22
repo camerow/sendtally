@@ -13,7 +13,7 @@ export type StravaTokens = {
   expiresAt: number;
 };
 
-export type StravaSportType = "RockClimbing" | "Workout";
+export type StravaSportType = "RockClimbing" | "Workout" | "WeightTraining" | "Yoga" | "Run";
 
 export type StravaActivity = {
   name: string;

@@ -17,3 +17,14 @@ export {
   type StatisticsOverviewVM,
 } from "./overview";
 export { useStatisticsOverview } from "./useStatisticsOverview";
+export {
+  epley,
+  exerciseKey,
+  exerciseSeries,
+  exerciseSummary,
+  type ExerciseMetric,
+  type ExerciseSeries,
+  type ExerciseSession,
+  type ExerciseSummary,
+} from "./exercises";
+export { useExerciseSeries } from "./useExerciseSeries";

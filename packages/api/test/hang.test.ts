@@ -93,7 +93,7 @@ function stravaRoutes(activityId = 515151) {
   ]);
 }
 
-describe("hangtally", () => {
+describe("hangboard", () => {
   it("reads defaults for a user with nothing stored", async () => {
     expect(await read("user_hang_fresh")).toEqual({
       grips: [],
@@ -343,7 +343,7 @@ describe("hangtally", () => {
   });
 });
 
-describe("hangtally strava posting", () => {
+describe("hangboard strava posting", () => {
   it("posts a new session as a Workout when the user turned posting on", async () => {
     const userId = "user_hang_post";
     await connectStrava(userId);

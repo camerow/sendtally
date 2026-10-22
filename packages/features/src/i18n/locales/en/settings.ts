@@ -51,4 +51,9 @@ export const settings = {
     "Adds Today, Train and Statistics, so you can plan and run hangboard and other training next to your climbing.",
   "settings.trainingModeWebHint":
     "Training lives in the sendtally app on iOS and Android. Turn it on here and it is waiting the next time you open the app.",
+  "settings.postClimbing": "Post climbing sessions",
+  "settings.postHangboard": "Post hangboard sessions",
+  "settings.postHangboardBody": "Each hangboard session posts as a Workout.",
+  "settings.postTraining": "Post other training",
+  "settings.postTrainingBody": "Strength, runs, yoga and mobility post as their own activities.",
 } as const;

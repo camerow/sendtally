@@ -128,11 +128,20 @@ export type Activity = z.infer<typeof activityBody> & { id: string };
 
 export type ActivityInput = Omit<Activity, "id">;
 
+export type ActivityPostState = "pending" | "posted" | "failed";
+
+export type ActivityRecord = Activity & {
+  stravaActivityId: string | null;
+  postedAt: string | null;
+  postState: ActivityPostState | null;
+  postError: string | null;
+};
+
 export type PlanItem = z.infer<typeof planItemBody> & { id: string };
 
 export type PlanItemInput = Omit<PlanItem, "id">;
 
-export function activityOf(row: ActivityRow): Activity {
+export function activityOf(row: ActivityRow): ActivityRecord {
   return {
     id: row.id,
     kind: row.kind,
@@ -144,6 +153,10 @@ export function activityOf(row: ActivityRow): Activity {
     notes: row.notes,
     planItemId: row.plan_item_id,
     detail: row.detail_json === null ? null : (JSON.parse(row.detail_json) as ActivityDetail),
+    stravaActivityId: row.strava_activity_id === null ? null : String(row.strava_activity_id),
+    postedAt: row.posted_at,
+    postState: row.post_state,
+    postError: row.post_error,
   };
 }
 

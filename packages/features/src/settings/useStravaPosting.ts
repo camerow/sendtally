@@ -6,10 +6,13 @@ import type { SettingsVM } from "./types";
 export type StravaPostingFeature = {
   enabled: boolean;
   since: string;
+  /** Whether training other than climbing and hangboarding posts on its own. */
+  training: boolean;
   busy: boolean;
   error: string | null;
   setEnabled: (value: boolean) => void;
   setSince: (value: string) => void;
+  setTraining: (value: boolean) => void;
 };
 
 export function useStravaPosting(
@@ -19,6 +22,7 @@ export function useStravaPosting(
 ): StravaPostingFeature {
   const [enabled, setEnabledLocal] = React.useState(vm.postingEnabled);
   const [since, setSinceLocal] = React.useState(vm.postSince);
+  const [training, setTrainingLocal] = React.useState(vm.postTraining);
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
@@ -29,14 +33,14 @@ export function useStravaPosting(
     setAdopted(true);
     setEnabledLocal(vm.postingEnabled);
     setSinceLocal(vm.postSince);
+    setTrainingLocal(vm.postTraining);
   }
 
-  const save = React.useCallback(
-    (nextEnabled: boolean, nextSince: string) => {
+  const send = React.useCallback(
+    (request: () => Promise<unknown>) => {
       setBusy(true);
       setError(null);
-      api
-        .setStravaPosting(nextEnabled, nextSince === "" ? null : nextSince)
+      request()
         .then(() => {
           setBusy(false);
           onSaved();
@@ -46,7 +50,21 @@ export function useStravaPosting(
           setError(err instanceof Error ? err.message : t("common.somethingWentWrong"));
         });
     },
-    [api, onSaved]
+    [onSaved]
+  );
+
+  const save = React.useCallback(
+    (nextEnabled: boolean, nextSince: string) =>
+      send(() => api.setStravaPosting(nextEnabled, nextSince === "" ? null : nextSince)),
+    [api, send]
+  );
+
+  const setTraining = React.useCallback(
+    (value: boolean) => {
+      setTrainingLocal(value);
+      send(() => api.setTrainingPosting(value));
+    },
+    [api, send]
   );
 
   const setEnabled = React.useCallback(
@@ -67,5 +85,5 @@ export function useStravaPosting(
     [save, enabled]
   );
 
-  return { enabled, since, busy, error, setEnabled, setSince };
+  return { enabled, since, training, busy, error, setEnabled, setSince, setTraining };
 }

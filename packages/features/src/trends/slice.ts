@@ -168,7 +168,7 @@ export function ladderFor(filter: TrendFilter, rows: Row[], gyms: Gym[]): Ladder
   return disciplineLadder(discipline, rows);
 }
 
-/** A hangtally session's effort: it has no climbs, place or tags, only the RPE the user gave it. */
+/** A hangboard session's effort: it has no climbs, place or tags, only the RPE the user gave it. */
 export type HangEffort = { time: number; rpe: number };
 
 export function hangEffortsOf(hang: HangHistoryRow[]): HangEffort[] {

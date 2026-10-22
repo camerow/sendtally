@@ -2,8 +2,8 @@ import { hc } from "hono/client";
 import type { AppType } from "@sendtally/api/app";
 import { ApiError } from "./types";
 import type {
-  Activity,
   ActivityInput,
+  ActivityRecord,
   Area,
   AreaClimb,
   AreaClimbDraftInput,
@@ -50,6 +50,7 @@ import type {
   SessionTag,
   TagSummary,
   TrainingBlock,
+  TrainingReminderSettings,
   Workout,
 } from "./types";
 
@@ -187,6 +188,12 @@ export class SendtallyApi {
 
   setTrainingMode(enabled: boolean): Promise<{ trainingMode: boolean }> {
     return body(this.client.v1.preferences["training-mode"].$put({ json: { enabled } }));
+  }
+
+  setTrainingReminders(
+    settings: Partial<TrainingReminderSettings>
+  ): Promise<{ trainingReminders: TrainingReminderSettings }> {
+    return body(this.client.v1.preferences["training-reminders"].$put({ json: settings }));
   }
 
   climbs(): Promise<{ climbs: ClimbSummary[] }> {
@@ -391,6 +398,10 @@ export class SendtallyApi {
     );
   }
 
+  setTrainingPosting(enabled: boolean): Promise<{ postTraining: boolean }> {
+    return body(this.client.v1.connections.strava["training-posting"].$put({ json: { enabled } }));
+  }
+
   stravaAuthorizeUrl(returnTo: "web" | "app" = "web"): Promise<{ url: string }> {
     return body(this.client.v1.connect.strava.start.$get({ query: { return: returnTo } }));
   }
@@ -455,12 +466,18 @@ export class SendtallyApi {
   }
 
   /** Both dates inclusive; without them, the newest 1000. */
-  activities(range: { from?: string; to?: string } = {}): Promise<{ activities: Activity[] }> {
+  activities(
+    range: { from?: string; to?: string } = {}
+  ): Promise<{ activities: ActivityRecord[] }> {
     return body(this.client.v1.activities.$get({ query: range }));
   }
 
-  saveActivity(id: string, activity: ActivityInput): Promise<{ activity: Activity }> {
+  saveActivity(id: string, activity: ActivityInput): Promise<{ activity: ActivityRecord }> {
     return body(this.client.v1.activities[":id"].$put({ param: { id }, json: activity }));
+  }
+
+  postActivityToStrava(id: string): Promise<{ activity: ActivityRecord }> {
+    return body(this.client.v1.activities[":id"].strava.$post({ param: { id } }));
   }
 
   deleteActivity(id: string): Promise<{ deleted: boolean }> {

@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "e7bdb60e-084c-4233-b960-a5f795c5b816",
+  "id": "bf159112-5da3-4a31-bd3f-7945470cca46",
   "prevId": "2c45ed7c-3b02-40cd-8c67-3d8fa2b83931",
   "tables": {
     "activities": {
@@ -1455,20 +1455,6 @@
           "notNull": true,
           "autoincrement": false
         },
-        "target_rpe": {
-          "name": "target_rpe",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "block_id": {
-          "name": "block_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
         "updated_at": {
           "name": "updated_at",
           "type": "text",
@@ -2056,13 +2042,6 @@
         },
         "template_json": {
           "name": "template_json",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "block_id": {
-          "name": "block_id",
           "type": "text",
           "primaryKey": false,
           "notNull": false,
@@ -2760,94 +2739,6 @@
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
-    "training_blocks": {
-      "name": "training_blocks",
-      "columns": {
-        "user_id": {
-          "name": "user_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "id": {
-          "name": "id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "name": {
-          "name": "name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "start": {
-          "name": "start",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "weeks": {
-          "name": "weeks",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "phases_json": {
-          "name": "phases_json",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "notes": {
-          "name": "notes",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "ended_on": {
-          "name": "ended_on",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "training_blocks_user_id_users_id_fk": {
-          "name": "training_blocks_user_id_users_id_fk",
-          "tableFrom": "training_blocks",
-          "tableTo": "users",
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {
-        "training_blocks_user_id_id_pk": {
-          "columns": ["user_id", "id"],
-          "name": "training_blocks_user_id_id_pk"
-        }
-      },
-      "uniqueConstraints": {},
-      "checkConstraints": {}
-    },
     "users": {
       "name": "users",
       "columns": {
@@ -2907,6 +2798,30 @@
         },
         "training_mode": {
           "name": "training_mode",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "training_reminders": {
+          "name": "training_reminders",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "training_reminder_time": {
+          "name": "training_reminder_time",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'08:00'"
+        },
+        "training_reminder_prompt_seen": {
+          "name": "training_reminder_prompt_seen",
           "type": "integer",
           "primaryKey": false,
           "notNull": true,

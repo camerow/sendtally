@@ -73,6 +73,10 @@ export const queries = {
     queryOptions({
       queryKey: ["activities"],
       queryFn: async () => (await api.activities()).activities,
+      refetchInterval: (query) =>
+        query.state.data?.some((a) => a.postState === "pending") === true
+          ? POST_POLL_INTERVAL
+          : false,
     }),
   planItems: (api: SendtallyApi) =>
     queryOptions({

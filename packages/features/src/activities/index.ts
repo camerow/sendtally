@@ -57,3 +57,5 @@ export {
 export { useExerciseNames } from "./useExerciseNames";
 export { usePlanTemplate } from "./usePlanTemplate";
 export { useWeightUnit } from "./useWeightUnit";
+export { activityPostVM } from "./post";
+export { useActivityPost, type ActivityPostFeature } from "./useActivityPost";

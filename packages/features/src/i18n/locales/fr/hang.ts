@@ -1,10 +1,4 @@
 export const hang = {
-  "hang.appName": "hangtally",
-  "hang.tabSchedule": "Planning",
-  "hang.tabWorkouts": "Exercices",
-  "hang.tabTrends": "Tendances",
-  "hang.openSettings": "Compte et réglages",
-
   "hang.kindHang": "Suspension",
   "hang.kindPull": "Tirage au sol",
   "hang.bodyweight": "Poids du corps",
@@ -60,10 +54,6 @@ export const hang = {
   "hang.weeksAhead_other": "Dans {count} semaines",
   "hang.previousWeek": "Semaine précédente",
   "hang.nextWeek": "Semaine suivante",
-  "hang.dayTrained": "{day}, entraîné",
-  "hang.dayMissed": "{day}, manqué",
-  "hang.dayPlanned": "{day}, prévu",
-  "hang.today": "Aujourd'hui",
   "hang.plannedCount": "Prévus : {n}",
   "hang.loggedCount": "Enregistrés : {n}",
   "hang.upToday": "Aujourd'hui · {kind}",
@@ -79,8 +69,6 @@ export const hang = {
   "hang.restDayFuture": "Rien de prévu. Les tendons s'adaptent entre les séances, pas pendant.",
   "hang.restDayPast": "Rien d'enregistré ce jour-là.",
   "hang.addToSchedule": "Ajouter au planning",
-  "hang.plans": "Plans",
-  "hang.noPlans": "Rien de prévu. Choisis un exercice, les jours et le nombre de semaines.",
   "hang.statusStarts": "Commence le {date}",
   "hang.statusOngoing": "En cours",
   "hang.statusWeek": "Semaine {at} sur {of}",
@@ -91,19 +79,13 @@ export const hang = {
   "hang.skipDay": "Sauter {workout} ({grip}), {date}",
   "hang.editPlanAria": "{workout}, {grip}, {load}. Modifier la prise, la charge ou les dates",
   "hang.statStreak": "Semaines d'affilée",
-  "hang.statThisWeek": "Cette semaine",
-  "hang.statHangTime": "Temps suspendu · {month}",
-  "hang.recentSessions": "Séances récentes",
-
   "hang.library": "Bibliothèque",
   "hang.myWorkouts": "Mes exercices · {n}",
-  "hang.new": "Nouveau",
   "hang.loggedTimes": "Fait {n} fois",
   "hang.newBadge": "Nouveau",
   "hang.noMine":
     "Pas encore d'exercice perso. Personnalise-en un de la bibliothèque, ou crée-en un nouveau.",
 
-  "hang.backToWorkouts": "Retour aux exercices",
   "hang.edit": "Modifier",
   "hang.customise": "Personnaliser",
   "hang.gripTapToChange": "Prise · touche pour changer",
@@ -251,7 +233,6 @@ export const hang = {
   "hang.statLoad": "Charge",
   "hang.statWeight": "Poids",
   "hang.statCompletion": "Réalisé",
-  "hang.partialTitle": "{pct} % du travail prévu",
   "hang.cameOffOn_one": "Lâché trop tôt sur {count} suspension.",
   "hang.cameOffOn_other": "Lâché trop tôt sur {count} suspensions.",
   "hang.missedLifts_one": "{count} tirage raté.",
@@ -259,7 +240,6 @@ export const hang = {
   "hang.endedAfter": "Arrêtée après {done} séries sur {sets}.",
   "hang.partialNote":
     "{why} Elle est quand même enregistrée à {load}, en point creux sur ta courbe. Seules les séances terminées fixent ton record ; une séance partielle à une charge plus élevée devient ta meilleure tentative.",
-  "hang.effortNotSet": "Non renseigné",
   "hang.clear": "Effacer",
   "hang.effortHint": "C'est l'effort qui donne du sens à la courbe de charge.",
   "hang.effort1": "À peine un effort",
@@ -285,12 +265,8 @@ export const hang = {
   "hang.deleteFromLogStrava":
     "Elle est retirée de ton carnet. Strava ne permet pas aux applications de supprimer des activités, l'activité Strava reste donc en place.",
   "hang.deleteConfirmTitle": "Supprimer cette séance ?",
-  "hang.deleteConfirm": "Elle est retirée de hangtally et de sendtally.",
-  "hang.deleteConfirmStrava":
-    "Elle est retirée de hangtally et de sendtally. Strava ne permet pas aux applis de supprimer des activités, donc l'activité Strava reste.",
   "hang.delete": "Supprimer",
 
-  "hang.trendsTitle": "Tendances",
   "hang.addedLoadCompleted": "Lest · réalisé",
   "hang.weightCompleted": "Poids tiré · réalisé",
   "hang.delta": "{arrow} {value} {unit}",
@@ -324,38 +300,14 @@ export const hang = {
   "hang.weeksActive": "{n} semaines actives sur 16",
   "hang.consistencyAria": "Séances par semaine, 16 dernières semaines",
 
-  "hang.settings": "Réglages",
-  "hang.closeSettings": "Fermer les réglages",
-  "hang.theme": "Thème",
-  "hang.themeMoss": "Mousse",
-  "hang.themeDusk": "Crépuscule",
-  "hang.themeGunmetal": "Acier",
-  "hang.weightUnits": "Unité de poids",
-  "hang.kilograms": "Kilogrammes (kg)",
-  "hang.pounds": "Livres (lb)",
   "hang.showKg": "Afficher en kilogrammes",
   "hang.showLb": "Afficher en livres",
-  "hang.unitsNote":
-    "Chaque charge, ligne d'historique et courbe s'affiche dans cette unité. Changer d'unité convertit ce que tu as enregistré ; rien n'est perdu.",
-  "hang.reminders": "Rappels d'entraînement",
-  "hang.remindersNote": "Un rappel les jours où un exercice est prévu.",
   "hang.reminderTime": "Heure du rappel",
-  "hang.remindersBlocked":
-    "Les notifications sont désactivées pour hangtally. Active-les dans les réglages de ton téléphone.",
-  "hang.postToStrava": "Publier sur Strava",
-  "hang.postToStravaNote":
-    "Chaque séance enregistrée est publiée sur le compte Strava que tu as lié dans sendtally.",
-
   "hang.reminderPromptTitle": "Un rappel les jours d'entraînement ?",
-  "hang.reminderPromptBody":
-    "Une notification à {time} les jours où un exercice est prévu. Modifiable à tout moment dans les réglages.",
   "hang.remindMe": "Me le rappeler",
   "hang.notNow": "Pas maintenant",
   "hang.reminderTitle": "Entraînement aujourd'hui",
 
-  "hang.signInTitle": "Suspends, compte, recommence.",
-  "hang.signInBody":
-    "Un seul compte pour hangtally et sendtally. Tes séances apparaissent dans les deux.",
   "hang.loadFailed": "Impossible de charger ton entraînement.",
   "hang.retry": "Réessayer",
   "hang.saveFailed": "Impossible d'enregistrer. Vérifie ta connexion et réessaie.",

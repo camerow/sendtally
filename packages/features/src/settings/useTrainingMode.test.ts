@@ -9,6 +9,7 @@ const status: ConnectionStatus = {
   gradeScales: DEFAULT_GRADE_SCALES,
   role: "user",
   trainingMode: false,
+  trainingReminders: { enabled: false, time: "08:00", promptSeen: false },
   strava: null,
 };
 
