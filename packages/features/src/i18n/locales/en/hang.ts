@@ -1,10 +1,4 @@
 export const hang = {
-  "hang.appName": "hangtally",
-  "hang.tabSchedule": "Schedule",
-  "hang.tabWorkouts": "Workouts",
-  "hang.tabTrends": "Trends",
-  "hang.openSettings": "Account and settings",
-
   "hang.kindHang": "Hang",
   "hang.kindPull": "Ground pull",
   "hang.bodyweight": "Bodyweight",
@@ -60,10 +54,6 @@ export const hang = {
   "hang.weeksAhead_other": "{count} weeks ahead",
   "hang.previousWeek": "Previous week",
   "hang.nextWeek": "Next week",
-  "hang.dayTrained": "{day}, trained",
-  "hang.dayMissed": "{day}, missed",
-  "hang.dayPlanned": "{day}, planned",
-  "hang.today": "Today",
   "hang.plannedCount": "{n} planned",
   "hang.loggedCount": "{n} logged",
   "hang.upToday": "Up today · {kind}",
@@ -79,8 +69,6 @@ export const hang = {
   "hang.restDayFuture": "Nothing planned. Tendons adapt between sessions, not during them.",
   "hang.restDayPast": "Nothing logged on this day.",
   "hang.addToSchedule": "Add to schedule",
-  "hang.plans": "Plans",
-  "hang.noPlans": "Nothing scheduled. Pick a workout, the days, and how many weeks.",
   "hang.statusStarts": "Starts {date}",
   "hang.statusOngoing": "Ongoing",
   "hang.statusWeek": "Week {at} of {of}",
@@ -91,18 +79,12 @@ export const hang = {
   "hang.skipDay": "Skip {workout} on {grip}, {date}",
   "hang.editPlanAria": "{workout}, {grip}, {load}. Change grip, load or dates",
   "hang.statStreak": "Week streak",
-  "hang.statThisWeek": "This week",
-  "hang.statHangTime": "Hang time · {month}",
-  "hang.recentSessions": "Recent sessions",
-
   "hang.library": "Library",
   "hang.myWorkouts": "My workouts · {n}",
-  "hang.new": "New",
   "hang.loggedTimes": "{n} logged",
   "hang.newBadge": "New",
   "hang.noMine": "No workouts of your own yet. Customise one from the library, or make a new one.",
 
-  "hang.backToWorkouts": "Back to workouts",
   "hang.edit": "Edit",
   "hang.customise": "Customise",
   "hang.gripTapToChange": "Grip · tap to change",
@@ -249,7 +231,6 @@ export const hang = {
   "hang.statLoad": "Load",
   "hang.statWeight": "Weight",
   "hang.statCompletion": "Completion",
-  "hang.partialTitle": "{pct}% of the prescribed work",
   "hang.cameOffOn_one": "Came off early on {count} hang.",
   "hang.cameOffOn_other": "Came off early on {count} hangs.",
   "hang.missedLifts_one": "Missed {count} lift.",
@@ -257,7 +238,6 @@ export const hang = {
   "hang.endedAfter": "Ended after {done} of {sets} sets.",
   "hang.partialNote":
     "{why} It still logs at {load}, as a hollow point on your trend. Only complete sessions set your best; a partial at a higher load becomes your top attempt.",
-  "hang.effortNotSet": "Not set",
   "hang.clear": "Clear",
   "hang.effortHint": "Effort is what makes the load trend meaningful.",
   "hang.effort1": "Barely working",
@@ -283,12 +263,8 @@ export const hang = {
   "hang.deleteFromLogStrava":
     "It is removed from your log. Strava does not let apps delete activities, so the Strava activity stays.",
   "hang.deleteConfirmTitle": "Delete this session?",
-  "hang.deleteConfirm": "It is removed from hangtally and sendtally.",
-  "hang.deleteConfirmStrava":
-    "It is removed from hangtally and sendtally. Strava does not let apps delete activities, so the Strava activity stays.",
   "hang.delete": "Delete",
 
-  "hang.trendsTitle": "Trends",
   "hang.addedLoadCompleted": "Added load · completed",
   "hang.weightCompleted": "Weight lifted · completed",
   "hang.delta": "{arrow} {value} {unit}",
@@ -322,37 +298,14 @@ export const hang = {
   "hang.weeksActive": "{n} of 16 weeks active",
   "hang.consistencyAria": "Sessions per week, last 16 weeks",
 
-  "hang.settings": "Settings",
-  "hang.closeSettings": "Close settings",
-  "hang.theme": "Theme",
-  "hang.themeMoss": "Moss",
-  "hang.themeDusk": "Dusk",
-  "hang.themeGunmetal": "Gunmetal",
-  "hang.weightUnits": "Weight units",
-  "hang.kilograms": "Kilograms (kg)",
-  "hang.pounds": "Pounds (lb)",
   "hang.showKg": "Show kilograms",
   "hang.showLb": "Show pounds",
-  "hang.unitsNote":
-    "Every load, history row and trend shows in this unit. Switching converts what you have logged; nothing is lost.",
-  "hang.reminders": "Workout reminders",
-  "hang.remindersNote": "One reminder on days with scheduled workouts.",
   "hang.reminderTime": "Reminder time",
-  "hang.remindersBlocked":
-    "Notifications are off for hangtally. Turn them on in your phone's settings.",
-  "hang.postToStrava": "Post to Strava",
-  "hang.postToStravaNote":
-    "Each logged session posts to the Strava account you connected in sendtally.",
-
   "hang.reminderPromptTitle": "Remind you on training days?",
-  "hang.reminderPromptBody":
-    "One notification at {time} on days with a scheduled workout. Change it any time in Settings.",
   "hang.remindMe": "Remind me",
   "hang.notNow": "Not now",
   "hang.reminderTitle": "Training today",
 
-  "hang.signInTitle": "Hang, count, repeat.",
-  "hang.signInBody": "One account for hangtally and sendtally. Your sessions show up in both.",
   "hang.loadFailed": "Could not load your training.",
   "hang.retry": "Try again",
   "hang.saveFailed": "Could not save. Check your connection and try again.",

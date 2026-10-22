@@ -148,7 +148,7 @@ async function gripName(db: D1Database, userId: string, gripId: string): Promise
   return (await repo.getHangGrip(db, userId, gripId))?.name ?? "Custom grip";
 }
 
-// hangtally's postToStrava setting only decides whether a new session posts on
+// The hangboard postToStrava setting only decides whether a new session posts on
 // its own. An activity already on Strava always follows its session's edits.
 export async function syncHangSessionToStrava(
   env: Env,

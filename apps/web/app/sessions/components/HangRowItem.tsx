@@ -10,7 +10,7 @@ import {
 } from "@sendtally/features/sessions";
 import { StravaMark } from "../../components/StravaMark";
 
-/** A hangtally session in the log. It opens nowhere: hangtally is where it is edited. */
+/** A hangboard session in the log. It opens nowhere: the mobile app is where it is edited. */
 export function HangRowItem({ hang }: { hang: HangHistoryRow }): React.ReactElement {
   const at = hangAt(hang);
   const { weekday, day } = sessionDay({ start_at: at });

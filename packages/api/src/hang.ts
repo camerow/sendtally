@@ -25,7 +25,7 @@ import {
 import { syncHangSessionToStrava } from "./lib/posting";
 import * as repo from "./lib/repo";
 
-// hangtally: hangboard and ground-pull training. The app generates every id,
+// Hangboard and ground-pull training. The app generates every id,
 // so each write is an idempotent PUT it can retry or replay offline.
 export const hang = new Hono<AppEnv>()
   .get("/", async (c) => {

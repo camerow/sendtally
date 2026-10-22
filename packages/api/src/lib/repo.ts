@@ -2280,7 +2280,7 @@ export type HangRows = {
 const loadsOf = (rows: Array<typeof hangLoads.$inferSelect>): Loads =>
   Object.fromEntries(rows.map((r) => [loadKey(r.workout_id, r.grip_id), r.kg]));
 
-// Everything hangtally reads, in one round trip.
+// Everything the hangboard feature reads, in one round trip.
 export async function hangRows(db: D1Database, userId: string): Promise<HangRows> {
   const d = drizzle(db);
   const [grips, workouts, defaultGrips, loads, schedules, hang, settings] = await d.batch([
