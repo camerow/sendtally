@@ -46,6 +46,9 @@ function climbing(
     posted_at: null,
     post_state: null,
     post_error: null,
+    membership_id: null,
+    week: null,
+    variation: null,
     tags: [],
     ...extra,
   };
@@ -73,6 +76,10 @@ function hang(date: string, rpe: number | null, pct = 100): HangHistoryRow {
       setRestS: 180,
     },
     stravaActivityId: null,
+    membershipId: null,
+    week: null,
+    variation: null,
+    done: [],
     postState: null,
     postError: null,
     updatedAt: `${date}T19:00:00.000Z`,
@@ -220,9 +227,11 @@ describe("overviewVM with other training", () => {
     minutes,
     rpe: 6,
     notes: null,
-    planItemId: null,
     workoutId: null,
-    detail: null,
+    membershipId: null,
+    week: null,
+    variation: null,
+    done: [],
   });
   const vm = overviewVM(
     {
@@ -230,16 +239,16 @@ describe("overviewVM with other training", () => {
       hangSessions: [],
       activities: [
         logged("strength", TODAY, 50),
-        logged("yoga", "2026-10-20", 30),
+        logged("mobility", "2026-10-20", 30),
         logged("mobility", "2026-10-13", 20),
-        logged("run", "2026-10-14", 40),
+        logged("other", "2026-10-14", 40),
         logged("other", "2026-10-14", 15),
       ],
     },
     TODAY
   );
 
-  it("counts yoga as mobility and folds the smaller kinds into other", () => {
+  it("counts each activity under its own kind", () => {
     expect(vm.sessions).toBe(5);
     expect(vm.kinds.map((k) => [k.kind, k.minutes])).toEqual([
       ["climbing", 0],

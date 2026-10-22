@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import type { Activity, HangSessionRecord, PlanItem, SessionRow } from "@sendtally/api-client";
-import { LIBRARY, type Schedule } from "@sendtally/core/hang";
+import type { Activity, HangSessionRecord, Plan, SessionRow } from "@sendtally/api-client";
+import type { Protocol, Workout } from "@sendtally/core/hang";
 import { dayMarks, trainingDay, trainingWeek, weekStats, type TrainingLog } from "./days";
 
 const TODAY = "2026-10-01";
@@ -30,18 +30,29 @@ function climb(start_at: string, overrides: Partial<SessionRow> = {}): SessionRo
     posted_at: null,
     post_state: null,
     post_error: null,
+    membership_id: null,
+    week: null,
+    variation: null,
     tags: [],
     ...overrides,
   };
 }
 
-const protocol = LIBRARY[0]!;
+const protocol: Protocol = {
+  name: "Repeaters",
+  kind: "hang",
+  hangS: 7,
+  restS: 3,
+  reps: 6,
+  sets: 6,
+  setRestS: 180,
+};
 
 function hang(date: string, overrides: Partial<HangSessionRecord> = {}): HangSessionRecord {
   return {
     id: `h-${date}`,
-    workoutId: "w1",
-    gripId: "half-crimp",
+    workoutId: "rep73",
+    gripId: "half",
     date,
     loadKg: 4,
     pct: 100,
@@ -49,6 +60,10 @@ function hang(date: string, overrides: Partial<HangSessionRecord> = {}): HangSes
     rpe: 6,
     edgeMm: 20,
     protocol,
+    membershipId: null,
+    week: null,
+    variation: null,
+    done: [],
     stravaActivityId: null,
     postState: null,
     postError: null,
@@ -56,41 +71,6 @@ function hang(date: string, overrides: Partial<HangSessionRecord> = {}): HangSes
     ...overrides,
   };
 }
-
-const schedule: Schedule = {
-  id: "s1",
-  workoutId: "w1",
-  gripId: "half-crimp",
-  days: [0, 3, 4],
-  start: "2026-09-28",
-  end: null,
-  skip: ["2026-10-02"],
-};
-
-const log = (overrides: Partial<TrainingLog> = {}): TrainingLog => ({
-  climbs: [],
-  hangs: [],
-  activities: [],
-  schedules: [schedule],
-  planItems: [],
-  ...overrides,
-});
-
-const plan = (overrides: Partial<PlanItem> = {}): PlanItem => ({
-  id: "p1",
-  kind: "strength",
-  title: "Gym, legs",
-  days: [1, 3],
-  perWeek: null,
-  start: "2026-09-28",
-  end: null,
-  skip: [],
-  minutes: 60,
-  targetRpe: null,
-  projectId: null,
-  template: null,
-  ...overrides,
-});
 
 const activity = (date: string, overrides: Partial<Activity> = {}): Activity => ({
   id: `a-${date}`,
@@ -101,11 +81,68 @@ const activity = (date: string, overrides: Partial<Activity> = {}): Activity => 
   minutes: 50,
   rpe: null,
   notes: null,
-  planItemId: null,
   workoutId: null,
-  detail: null,
+  membershipId: null,
+  week: null,
+  variation: null,
+  done: [],
   ...overrides,
 });
+
+const workouts: Workout[] = [
+  {
+    id: "rep73",
+    kind: "hangboard",
+    name: "Repeaters",
+    description: "",
+    minutes: null,
+    targetRpe: null,
+    variations: [{ label: "", items: [{ exercise: "half", dose: { sets: 6, reps: 6, onS: 7 } }] }],
+    pattern: [0],
+  },
+  {
+    id: "legs",
+    kind: "strength",
+    name: "Gym, legs",
+    description: "",
+    minutes: 60,
+    targetRpe: null,
+    variations: [{ label: "", items: [] }],
+    pattern: [0],
+  },
+  {
+    id: "limit",
+    kind: "climbing",
+    name: "Limit boulders",
+    description: "",
+    minutes: 90,
+    targetRpe: null,
+    variations: [{ label: "", items: [] }],
+    pattern: [0],
+  },
+];
+
+// Hangboard Mondays and Thursdays, legs Tuesdays and Thursdays, limit Wednesdays.
+const plan: Plan = {
+  blocks: [],
+  memberships: [
+    { id: "h1", workoutId: "rep73", blockId: null, weekdays: [0, 3], start: "2026-09-28" },
+    { id: "p1", workoutId: "legs", blockId: null, weekdays: [1, 3], start: "2026-09-28" },
+    { id: "c1", workoutId: "limit", blockId: null, weekdays: [2], start: "2026-09-28" },
+  ],
+  weekChanges: [],
+};
+
+const log = (overrides: Partial<TrainingLog> = {}): TrainingLog => ({
+  climbs: [],
+  hangs: [],
+  activities: [],
+  plan,
+  workout: (id) => workouts.find((w) => w.id === id),
+  ...overrides,
+});
+
+const nothingPlanned: Plan = { blocks: [], memberships: [], weekChanges: [] };
 
 describe("trainingDay", () => {
   it("dates a climbing session by its wall-clock start", () => {
@@ -117,21 +154,23 @@ describe("trainingDay", () => {
     expect(day.logged.map((i) => i.kind)).toEqual(["climb"]);
   });
 
-  it("drops a planned workout once that workout and grip is logged that day", () => {
-    const day = trainingDay(log({ hangs: [hang("2026-09-28")] }), "2026-09-28", TODAY);
+  it("marks a plan done by a session logged against it", () => {
+    const day = trainingDay(
+      log({ hangs: [hang("2026-09-28", { membershipId: "h1", variation: 0 })] }),
+      "2026-09-28",
+      TODAY
+    );
     expect(day.logged.map((i) => i.kind)).toEqual(["hang"]);
-    expect(day.planned).toEqual([]);
+    expect(day.plans.map((p) => [p.membership.id, p.status])).toEqual([["h1", "done"]]);
   });
 
-  it("keeps a workout planned when a different grip was logged", () => {
-    const day = trainingDay(log({ hangs: [hang(TODAY, { gripId: "open-hand" })] }), TODAY, TODAY);
-    expect(day.logged).toHaveLength(1);
-    expect(day.planned.map((i) => i.schedule.id)).toEqual(["s1"]);
+  it("keeps today's plans open until something is logged", () => {
+    const day = trainingDay(log(), TODAY, TODAY);
     expect(day.isToday).toBe(true);
-  });
-
-  it("leaves a skipped date empty", () => {
-    expect(trainingDay(log(), "2026-10-02", TODAY).planned).toEqual([]);
+    expect(day.plans.map((p) => [p.membership.id, p.status])).toEqual([
+      ["h1", "planned"],
+      ["p1", "planned"],
+    ]);
   });
 });
 
@@ -148,7 +187,7 @@ describe("trainingWeek", () => {
       "2026-10-04",
     ]);
     expect(week.map((d) => d.isPast)).toEqual([true, true, true, false, false, false, false]);
-    expect(week.map((d) => d.planned.length)).toEqual([1, 0, 0, 1, 0, 0, 0]);
+    expect(week.map((d) => d.plans.length)).toEqual([1, 1, 1, 2, 0, 0, 0]);
   });
 });
 
@@ -161,36 +200,27 @@ describe("weekStats", () => {
           climb("2026-09-29T18:00:00.000Z", { rpe_source: "none", rpe: 1 }),
           climb("2026-09-22T18:00:00.000Z"),
         ],
-        hangs: [hang("2026-09-28", { rpe: 7 })],
+        hangs: [hang("2026-09-28", { rpe: 7, membershipId: "h1", variation: 0 })],
       }),
       TODAY
     );
-    expect(stats).toEqual({ done: 3, planned: 4, effort: 7.5, streak: 2 });
+    // Logged: two climbs and a hang. Open: legs Tuesday (missed), hangs and legs Thursday.
+    expect(stats).toEqual({ done: 3, planned: 6, effort: 7.5, streak: 2 });
   });
 
   it("counts other training toward the week, its effort and the streak", () => {
-    const activity = (date: string, rpe: number | null): Activity => ({
-      id: `a-${date}`,
-      kind: "strength",
-      title: "Gym",
-      date,
-      startTime: null,
-      minutes: 50,
-      rpe,
-      notes: null,
-      planItemId: null,
-      workoutId: null,
-      detail: null,
-    });
     const stats = weekStats(
-      log({ schedules: [], activities: [activity("2026-09-29", 5), activity("2026-09-21", null)] }),
+      log({
+        plan: nothingPlanned,
+        activities: [activity("2026-09-29", { rpe: 5 }), activity("2026-09-21")],
+      }),
       TODAY
     );
     expect(stats).toEqual({ done: 1, planned: 1, effort: 5, streak: 2 });
   });
 
   it("has no effort without a scored session", () => {
-    expect(weekStats(log({ schedules: [] }), TODAY)).toEqual({
+    expect(weekStats(log({ plan: nothingPlanned }), TODAY)).toEqual({
       done: 0,
       planned: 0,
       effort: null,
@@ -199,40 +229,36 @@ describe("weekStats", () => {
   });
 });
 
-describe("plan items on a day", () => {
-  const plans = log({
-    schedules: [],
-    planItems: [
-      plan(),
-      plan({ id: "c1", kind: "climb", title: "Limit boulders", days: [2] }),
-      plan({ id: "g1", kind: "mobility", days: [], perWeek: 3 }),
-    ],
+describe("plans on a day", () => {
+  const busy = log({
     climbs: [climb("2026-09-30T18:00:00.000Z")],
     activities: [activity("2026-09-29"), activity("2026-09-28", { kind: "mobility" })],
   });
 
-  it("lists a day's occurrences with their status and the week's goals", () => {
-    const week = trainingWeek(plans, "2026-09-28", TODAY);
-    expect(week.map((d) => d.plans.map((p) => `${p.plan.id}:${p.status}`))).toEqual([
-      [],
+  it("lists each day's memberships with their status", () => {
+    const week = trainingWeek(busy, "2026-09-28", TODAY);
+    expect(week.map((d) => d.plans.map((p) => `${p.membership.id}:${p.status}`))).toEqual([
+      ["h1:missed"],
       ["p1:done"],
       ["c1:done"],
-      ["p1:planned"],
+      ["h1:planned", "p1:planned"],
       [],
       [],
       [],
     ]);
-    expect(week[0]?.goals.map((g) => [g.item.id, g.done, g.target])).toEqual([["g1", 1, 3]]);
   });
 
-  it("fills a mark for what happened, once for a logged session or activity, not again for the plan it did", () => {
-    const [, tuesday, wednesday, thursday] = trainingWeek(plans, "2026-09-28", TODAY);
+  it("fills a mark for what happened, once for a logged session, not again for the plan it did", () => {
+    const [monday, tuesday, wednesday, thursday] = trainingWeek(busy, "2026-09-28", TODAY);
+    expect(dayMarks(monday!)).toEqual([
+      { kind: "mobility", filled: true },
+      { kind: "hangboard", filled: false },
+    ]);
     expect(dayMarks(tuesday!)).toEqual([{ kind: "strength", filled: true }]);
-    expect(dayMarks(wednesday!)).toEqual([{ kind: "climb", filled: true }]);
-    expect(dayMarks(thursday!)).toEqual([{ kind: "strength", filled: false }]);
-  });
-
-  it("counts plan days and weekly goals in the week's stats", () => {
-    expect(weekStats(plans, TODAY)).toMatchObject({ done: 3, planned: 6 });
+    expect(dayMarks(wednesday!)).toEqual([{ kind: "climbing", filled: true }]);
+    expect(dayMarks(thursday!)).toEqual([
+      { kind: "hangboard", filled: false },
+      { kind: "strength", filled: false },
+    ]);
   });
 });

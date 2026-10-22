@@ -1,8 +1,8 @@
-import type { Activity, ActivityDetail, ActivityKind, PlanTemplate } from "@sendtally/api-client";
+import type { Activity, ActivityKind } from "@sendtally/api-client";
+import { doneAsPrescribed, type Item, type ItemDone } from "@sendtally/core/hang";
 import { formatNumber, t } from "../i18n";
-import { cleanDetail, detailFromTemplate } from "./detail";
-import { ACTIVITY_KINDS, kindLabel } from "./format";
-import { trainingLoad } from "./plan";
+import { cleanDone } from "./done";
+import { ACTIVITY_KINDS, kindLabel, trainingLoad } from "./format";
 
 /** The activity form's state. Strings where the form edits text, `""` for an empty start time. */
 export type ActivityDraft = {
@@ -13,9 +13,11 @@ export type ActivityDraft = {
   minutes: number;
   rpe: number | null;
   notes: string;
-  planItemId: string | null;
   workoutId: string | null;
-  detail: ActivityDetail | null;
+  membershipId: string | null;
+  week: number | null;
+  variation: number | null;
+  done: ItemDone[];
 };
 
 /** What a doorway into the form may already know, straight from the route's query. */
@@ -23,8 +25,10 @@ export type ActivityPrefill = {
   kind?: string;
   title?: string;
   date?: string;
-  planItemId?: string;
   workoutId?: string;
+  membershipId?: string;
+  week?: string;
+  variation?: string;
   minutes?: string;
 };
 
@@ -34,11 +38,16 @@ const DEFAULT_MINUTES = 60;
 
 const clampMinutes = (n: number): number => Math.min(1440, Math.max(1, Math.round(n)));
 
-/** `template` is the plan item's or the workout's, whose sets and items the activity starts from. */
+const wholeNumber = (text: string | undefined): number | null => {
+  const n = Number(text);
+  return text === undefined || text === "" || !Number.isInteger(n) ? null : n;
+};
+
+/** `prescribed` is what the workout asks of this session, which the activity starts as done. */
 export function newActivityDraft(
   prefill: ActivityPrefill,
   today: string,
-  template: PlanTemplate | null = null
+  prescribed: readonly Item[] = []
 ): ActivityDraft {
   return {
     kind: ACTIVITY_KINDS.find((k) => k === prefill.kind) ?? "strength",
@@ -48,9 +57,11 @@ export function newActivityDraft(
     minutes: parseMinutes(prefill.minutes ?? "") ?? DEFAULT_MINUTES,
     rpe: null,
     notes: "",
-    planItemId: prefill.planItemId ?? null,
     workoutId: prefill.workoutId ?? null,
-    detail: detailFromTemplate(template),
+    membershipId: prefill.membershipId ?? null,
+    week: wholeNumber(prefill.week),
+    variation: wholeNumber(prefill.variation),
+    done: doneAsPrescribed(prescribed),
   };
 }
 
@@ -63,9 +74,11 @@ export function draftFromActivity(a: Activity): ActivityDraft {
     minutes: a.minutes,
     rpe: a.rpe,
     notes: a.notes ?? "",
-    planItemId: a.planItemId,
     workoutId: a.workoutId,
-    detail: a.detail,
+    membershipId: a.membershipId,
+    week: a.week,
+    variation: a.variation,
+    done: a.done,
   };
 }
 
@@ -82,9 +95,11 @@ export function activityFromDraft(id: string, d: ActivityDraft): Activity {
     minutes: clampMinutes(d.minutes),
     rpe: d.rpe,
     notes: notes === "" ? null : notes,
-    planItemId: d.planItemId,
     workoutId: d.workoutId,
-    detail: cleanDetail(d.detail),
+    membershipId: d.membershipId,
+    week: d.week,
+    variation: d.variation,
+    done: cleanDone(d.done),
   };
 }
 

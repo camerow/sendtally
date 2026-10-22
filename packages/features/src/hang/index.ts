@@ -1,5 +1,13 @@
 export * from "./format";
-export { findGrip, hangModel, renameClash, type HangModel } from "./model";
-export { builtInGripName, effortWord, gripName, workoutBlurb, workoutName } from "./names";
+export {
+  findGrip,
+  hangModel,
+  hangWorkoutFromItem,
+  hangWorkoutOf,
+  renameClash,
+  withHangWorkout,
+  type HangModel,
+} from "./model";
+export { builtInGripName, effortWord, gripName } from "./names";
 export { useHang, type HangFeature } from "./useHang";
 export { useHangActions, type HangActions } from "./useHangActions";

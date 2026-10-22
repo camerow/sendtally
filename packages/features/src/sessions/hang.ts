@@ -1,19 +1,16 @@
 import type { HangHistoryRow } from "@sendtally/api-client";
-import { isBuiltInGrip, LIBRARY } from "@sendtally/core/hang";
+import { isBuiltInGrip } from "@sendtally/core/hang";
 import { setupLabel } from "../hang/format";
-import { builtInGripName, workoutName } from "../hang/names";
+import { builtInGripName } from "../hang/names";
 import { t } from "../i18n";
+import { builtInWorkouts } from "../workouts/builtIns";
 
 /** A hang session has a date and no clock time, so it sits at midday in the log. */
 export const hangAt = (row: Pick<HangHistoryRow, "date">): string => `${row.date}T12:00:00Z`;
 
+/** A built-in's name in the user's language, else the name the session ran under. */
 export function hangTitle(row: Pick<HangHistoryRow, "workoutId" | "protocol">): string {
-  const library = LIBRARY.some((w) => w.id === row.workoutId);
-  return workoutName({
-    id: row.workoutId,
-    source: library ? "library" : "mine",
-    name: row.protocol.name,
-  });
+  return builtInWorkouts().find((w) => w.id === row.workoutId)?.name ?? row.protocol.name;
 }
 
 export function hangGripLabel(row: Pick<HangHistoryRow, "gripId" | "gripName">): string | null {

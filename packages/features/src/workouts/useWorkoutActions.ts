@@ -1,11 +1,13 @@
 import { useQueryClient } from "@tanstack/react-query";
 import React from "react";
-import type { PlanItem, SendtallyApi, UserWorkout } from "@sendtally/api-client";
+import type { Plan, SendtallyApi, WorkoutRecord } from "@sendtally/api-client";
 import { queries } from "../query";
+import { withoutWorkout } from "../training/plan";
 import type { WorkoutDraft } from "./types";
 
 export type WorkoutActions = {
   saveWorkout: (id: string, workout: WorkoutDraft) => Promise<void>;
+  /** It leaves every block; sessions that ran it keep what was done. */
   deleteWorkout: (id: string) => Promise<void>;
 };
 
@@ -20,18 +22,21 @@ export function useWorkoutActions(
   const client = useQueryClient();
   return React.useMemo((): WorkoutActions => {
     const key = queries.workouts(api).queryKey;
-    const plan = queries.planItems(api).queryKey;
+    const plan = queries.plan(api).queryKey;
     const write = async (
-      patch: (list: UserWorkout[]) => UserWorkout[],
+      patch: (list: WorkoutRecord[]) => WorkoutRecord[],
       request: () => Promise<unknown>
     ): Promise<void> => {
       await client.cancelQueries({ queryKey: key });
-      client.setQueryData<UserWorkout[]>(key, (list) => (list === undefined ? list : patch(list)));
+      client.setQueryData<WorkoutRecord[]>(key, (list) =>
+        list === undefined ? list : patch(list)
+      );
       try {
         await request();
       } catch (error) {
         onError(error);
         await client.invalidateQueries({ queryKey: key });
+        await client.invalidateQueries({ queryKey: plan });
       }
     };
     return {
@@ -46,9 +51,7 @@ export function useWorkoutActions(
           () => api.saveWorkout(id, workout)
         ),
       deleteWorkout: (id) => {
-        client.setQueryData<PlanItem[]>(plan, (items) =>
-          items?.map((p) => (p.workoutId === id ? { ...p, workoutId: null } : p))
-        );
+        client.setQueryData<Plan>(plan, (p) => (p === undefined ? p : withoutWorkout(p, id)));
         return write(
           (list) => list.filter((w) => w.id !== id),
           () => api.deleteWorkout(id)

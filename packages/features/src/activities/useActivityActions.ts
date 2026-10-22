@@ -4,20 +4,13 @@ import type {
   Activity,
   ActivityRecord,
   ConnectionStatus,
-  PlanItem,
   SendtallyApi,
-  TrainingBlock,
 } from "@sendtally/api-client";
 import { queries } from "../query";
 
 export type ActivityActions = {
   saveActivity: (activity: Activity) => Promise<void>;
   deleteActivity: (id: string) => Promise<void>;
-  savePlanItem: (item: PlanItem) => Promise<void>;
-  deletePlanItem: (id: string) => Promise<void>;
-  setPlanItemSkip: (id: string, date: string, skipped: boolean) => Promise<void>;
-  saveBlock: (block: TrainingBlock) => Promise<void>;
-  deleteBlock: (id: string) => Promise<void>;
 };
 
 const upsert = <T extends { id: string }>(list: readonly T[], item: T): T[] =>
@@ -76,12 +69,6 @@ export function useActivityActions(
       }
     };
     const activities = queries.activities(api).queryKey;
-    const plan = queries.planItems(api).queryKey;
-    const blocks = queries.trainingBlocks(api).queryKey;
-    const skipped = (item: PlanItem, date: string, skip: boolean): PlanItem => ({
-      ...item,
-      skip: skip ? [...new Set([...item.skip, date])].sort() : item.skip.filter((d) => d !== date),
-    });
 
     return {
       saveActivity: (activity) =>
@@ -102,36 +89,6 @@ export function useActivityActions(
           activities,
           (list) => list.filter((a) => a.id !== id),
           () => api.deleteActivity(id)
-        ),
-      savePlanItem: (item) =>
-        write<PlanItem[]>(
-          plan,
-          (list) => upsert(list, item),
-          () => api.savePlanItem(item)
-        ),
-      deletePlanItem: (id) =>
-        write<PlanItem[]>(
-          plan,
-          (list) => list.filter((p) => p.id !== id),
-          () => api.deletePlanItem(id)
-        ),
-      setPlanItemSkip: (id, date, skip) =>
-        write<PlanItem[]>(
-          plan,
-          (list) => list.map((p) => (p.id === id ? skipped(p, date, skip) : p)),
-          () => api.skipPlanItem(id, date, skip)
-        ),
-      saveBlock: (block) =>
-        write<TrainingBlock[]>(
-          blocks,
-          (list) => upsert(list, block),
-          () => api.saveTrainingBlock(block)
-        ),
-      deleteBlock: (id) =>
-        write<TrainingBlock[]>(
-          blocks,
-          (list) => list.filter((b) => b.id !== id),
-          () => api.deleteTrainingBlock(id)
         ),
     };
   }, [api, client, onError]);

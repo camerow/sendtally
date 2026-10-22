@@ -78,16 +78,7 @@ export const queries = {
           ? POST_POLL_INTERVAL
           : false,
     }),
-  planItems: (api: SendtallyApi) =>
-    queryOptions({
-      queryKey: ["planItems"],
-      queryFn: async () => (await api.planItems()).planItems,
-    }),
-  trainingBlocks: (api: SendtallyApi) =>
-    queryOptions({
-      queryKey: ["trainingBlocks"],
-      queryFn: async () => (await api.trainingBlocks()).blocks,
-    }),
+  plan: (api: SendtallyApi) => queryOptions({ queryKey: ["plan"], queryFn: () => api.plan() }),
   workouts: (api: SendtallyApi) =>
     queryOptions({
       queryKey: ["workouts"],

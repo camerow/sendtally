@@ -3,23 +3,19 @@ import { activityAt, activityEffortLabel, activityMetaLabel, kindLabel } from ".
 
 describe("activity labels", () => {
   it("names the kind and the time spent", () => {
-    expect(kindLabel("climb")).toBe("Climbing");
-    expect(activityMetaLabel({ kind: "strength", minutes: 50, detail: null })).toBe(
-      "Strength · 50m"
-    );
-    expect(activityMetaLabel({ kind: "run", minutes: 90, detail: null })).toBe("Run · 1h 30m");
+    expect(kindLabel("climbing")).toBe("Climbing");
+    expect(kindLabel("hangboard")).toBe("Hangboard");
+    expect(activityMetaLabel({ kind: "strength", minutes: 50, done: [] })).toBe("Strength · 50m");
+    expect(activityMetaLabel({ kind: "other", minutes: 90, done: [] })).toBe("Other · 1h 30m");
   });
 
-  it("adds its body's summary", () => {
-    const checklist = {
-      kind: "checklist" as const,
-      items: [
-        { text: "Cat-cow", dose: "× 10", done: true },
-        { text: "Deep squat hold", dose: "2 min", done: false },
-      ],
-    };
-    expect(activityMetaLabel({ kind: "mobility", minutes: 15, detail: checklist })).toBe(
-      "Mobility · 15m · 1 of 2 done"
+  it("adds what was done", () => {
+    const done = [
+      { item: 0, exercise: "Cat-cow", sets: [{ reps: 10 }, { reps: 10 }] },
+      { item: 1, exercise: "Deep squat hold", sets: [] },
+    ];
+    expect(activityMetaLabel({ kind: "mobility", minutes: 15, done })).toBe(
+      "Mobility · 15m · 1 exercise · 2 sets"
     );
   });
 

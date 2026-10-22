@@ -10,34 +10,41 @@ import {
 
 describe("activity drafts", () => {
   it("takes what the route knows and ignores a kind it does not", () => {
-    expect(newActivityDraft({ kind: "run", planItemId: "p1" }, "2026-10-22")).toMatchObject({
-      kind: "run",
+    expect(
+      newActivityDraft(
+        { kind: "other", membershipId: "m1", week: "2", variation: "1", workoutId: "w1" },
+        "2026-10-22"
+      )
+    ).toMatchObject({
+      kind: "other",
       date: "2026-10-22",
-      planItemId: "p1",
+      membershipId: "m1",
+      week: 2,
+      variation: 1,
+      workoutId: "w1",
     });
+    expect(newActivityDraft({ week: "soon" }, "2026-10-22").week).toBeNull();
     expect(newActivityDraft({ kind: "climb" }, "2026-10-22").kind).toBe("strength");
     expect(newActivityDraft({ minutes: "45" }, "2026-10-22").minutes).toBe(45);
     expect(newActivityDraft({ minutes: "soon" }, "2026-10-22").minutes).toBe(60);
   });
 
   it("names an untitled activity after its kind and drops empty text", () => {
-    const draft = { ...newActivityDraft({ kind: "yoga" }, "2026-10-22"), notes: "  " };
+    const draft = { ...newActivityDraft({ kind: "mobility" }, "2026-10-22"), notes: "  " };
     const activity = activityFromDraft("a1", draft);
-    expect(activity).toMatchObject({ id: "a1", title: "Yoga", startTime: null, notes: null });
-    expect(draftFromActivity(activity)).toEqual({ ...draft, title: "Yoga", notes: "" });
+    expect(activity).toMatchObject({ id: "a1", title: "Mobility", startTime: null, notes: null });
+    expect(draftFromActivity(activity)).toEqual({ ...draft, title: "Mobility", notes: "" });
   });
 
-  it("starts from a plan's template and saves only what was filled in", () => {
-    const draft = newActivityDraft({ kind: "mobility" }, "2026-10-22", {
-      kind: "checklist",
-      items: [{ text: "Cat-cow", dose: "× 10" }],
-    });
-    expect(draft.detail).toEqual({
-      kind: "checklist",
-      items: [{ text: "Cat-cow", dose: "× 10", done: false }],
-    });
-    const blank = { ...draft, detail: { kind: "checklist" as const, items: [] } };
-    expect(activityFromDraft("a1", blank).detail).toBeNull();
+  it("starts as done what the workout prescribes, and saves only named items", () => {
+    const draft = newActivityDraft({ kind: "mobility" }, "2026-10-22", [
+      { exercise: "Cat-cow", dose: { sets: 2, reps: 10 } },
+    ]);
+    expect(draft.done).toEqual([
+      { item: 0, exercise: "Cat-cow", sets: [{ reps: 10 }, { reps: 10 }] },
+    ]);
+    const blank = { ...draft, done: [{ item: 0, exercise: " ", sets: [] }] };
+    expect(activityFromDraft("a1", blank).done).toEqual([]);
   });
 
   it("steps minutes to the next multiple of five and keeps them in range", () => {

@@ -38,6 +38,9 @@ function session(fingerprint: string, tags: SessionTag[]): SessionRow {
     posted_at: null,
     post_state: null,
     post_error: null,
+    membership_id: null,
+    week: null,
+    variation: null,
     tags,
   };
 }

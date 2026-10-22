@@ -75,44 +75,45 @@ describe("writeEffect", () => {
   });
 
   it("stales nothing for the rest of the hangboard writes", () => {
-    for (const path of [
-      "/v1/hang/workouts/w1",
-      "/v1/hang/loads",
-      "/v1/hang/schedules/s1",
-      "/v1/hang/default-grips/rep73",
-      "/v1/hang/settings",
-    ]) {
+    for (const path of ["/v1/hang/loads", "/v1/hang/default-grips/rep73", "/v1/hang/settings"]) {
       expect(writeEffect({ method: "PUT", path })).toEqual({ stale: [], gone: null });
     }
   });
 
-  it("stales the log for an activity write and nothing for a plan item, never their caches", () => {
+  it("stales the log for an activity write, never the activities' own cache", () => {
     for (const method of ["PUT", "DELETE"]) {
       expect(writeEffect({ method, path: "/v1/activities/a1" })).toEqual({
         stale: [["sessions"], ["sessionsWithClimbs"]],
         gone: null,
       });
     }
-    for (const path of ["/v1/plan-items/p1", "/v1/plan-items/p1/skip"]) {
+  });
+
+  it("stales nothing for a plan or workout edit, which own their caches", () => {
+    for (const path of [
+      "/v1/workouts/w1",
+      "/v1/blocks/b1",
+      "/v1/memberships/m1",
+      "/v1/memberships/m1/changes",
+    ]) {
       expect(writeEffect({ method: "PUT", path })).toEqual({ stale: [], gone: null });
     }
   });
 
-  it("stales the plans a deleted workout unlinks, never the workouts' own cache", () => {
-    expect(writeEffect({ method: "PUT", path: "/v1/workouts/w1" })).toEqual({
-      stale: [],
-      gone: null,
-    });
-    expect(writeEffect({ method: "DELETE", path: "/v1/workouts/w1" })).toEqual({
-      stale: [["planItems"]],
-      gone: null,
-    });
-  });
-
-  it("stales the members a training block write moves, never the blocks' own cache", () => {
-    for (const method of ["PUT", "DELETE"]) {
-      expect(writeEffect({ method, path: "/v1/training-blocks/b1" })).toEqual({
-        stale: [["planItems"], ["hang"]],
+  it("stales whatever logged against a deleted workout, block or membership", () => {
+    for (const path of ["/v1/workouts/w1", "/v1/blocks/b1", "/v1/memberships/m1"]) {
+      expect(writeEffect({ method: "DELETE", path })).toEqual({
+        stale: [
+          ["sessions"],
+          ["sessionsWithClimbs"],
+          ["session"],
+          ["climbs"],
+          ["tags"],
+          ["areaClimb"],
+          ["activities"],
+          ["hang"],
+          ["plan"],
+        ],
         gone: null,
       });
     }

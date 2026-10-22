@@ -1,8 +1,9 @@
 import { afterEach, describe, expect, it } from "vitest";
 import type { HangData } from "@sendtally/api-client";
-import { LIBRARY } from "@sendtally/core/hang";
 import { setLocale } from "../i18n";
-import { hangModel, renameClash } from "./model";
+import { libraryOf } from "../workouts/library";
+import type { LibraryWorkout } from "../workouts/types";
+import { hangModel, hangWorkoutOf, renameClash, withHangWorkout } from "./model";
 
 afterEach(() => setLocale("en"));
 
@@ -11,10 +12,8 @@ const data = (overrides: Partial<HangData> = {}): HangData => ({
     { id: "g1", name: "Mono", custom: true, hidden: true },
     { id: "g2", name: "Mono 2", custom: true, hidden: false },
   ],
-  workouts: [],
   defaultGrips: {},
   loads: {},
-  schedules: [],
   sessions: [],
   settings: {
     units: "kg",
@@ -28,20 +27,40 @@ const data = (overrides: Partial<HangData> = {}): HangData => ({
   ...overrides,
 });
 
+const mine: LibraryWorkout = {
+  id: "w1",
+  source: "mine",
+  kind: "hangboard",
+  name: "Garage repeaters",
+  description: "",
+  minutes: null,
+  targetRpe: null,
+  variations: [
+    {
+      label: "",
+      items: [{ exercise: "g1", dose: { sets: 3, reps: 6, onS: 7, offS: 3, edgeMm: 18 } }],
+    },
+  ],
+  pattern: [0],
+};
+
+const model = (overrides: Partial<HangData> = {}) =>
+  hangModel(data(overrides), [...libraryOf([]), mine]);
+
 describe("renameClash", () => {
   it("lets a rename take a deleted grip's name", () => {
-    expect(renameClash(hangModel(data()).grips, "g2", "mono")).toBeUndefined();
+    expect(renameClash(model().grips, "g2", "mono")).toBeUndefined();
   });
 
   it("blocks a visible grip's name, but not the grip's own", () => {
-    const { grips } = hangModel(data());
+    const { grips } = model();
     expect(renameClash(grips, "g1", "MONO 2")?.id).toBe("g2");
     expect(renameClash(grips, "g2", "mono 2")).toBeUndefined();
   });
 
   it("blocks a built-in under its shown name and its English one", () => {
     setLocale("de");
-    const { grips } = hangModel(data());
+    const { grips } = model();
     expect(renameClash(grips, "g2", "offene hand")?.id).toBe("open");
     expect(renameClash(grips, "g2", "Open hand")).toMatchObject({
       id: "open",
@@ -50,29 +69,66 @@ describe("renameClash", () => {
   });
 });
 
+describe("hang workouts", () => {
+  it("runs every hangboard workout in the library by its first item, and nothing else", () => {
+    const { workouts } = model();
+    expect(workouts.map((w) => w.id)).toContain("rep73");
+    expect(workouts.map((w) => w.id)).toContain("w1");
+    expect(workouts.map((w) => w.id)).not.toContain("strength-5x5");
+    expect(model().workout("w1")).toEqual({
+      id: "w1",
+      source: "mine",
+      name: "Garage repeaters",
+      kind: "hang",
+      grip: "g1",
+      hangS: 7,
+      restS: 3,
+      reps: 6,
+      sets: 3,
+      setRestS: 0,
+      timeUnits: { hangS: "s", restS: "s", setRestS: "s" },
+    });
+  });
+
+  it("runs any variation and item a session takes", () => {
+    const fingers = libraryOf([]).find((w) => w.id === "fingers-ab");
+    expect(fingers === undefined ? null : hangWorkoutOf(fingers, 1)).toMatchObject({
+      reps: 6,
+      hangS: 7,
+      sets: 3,
+    });
+    expect(fingers === undefined ? null : hangWorkoutOf(fingers, 2)).toBeNull();
+  });
+
+  it("saves what the builder made as the first item, keeping its edge and the other variations", () => {
+    const built = { ...model().workout("w1")!, name: "Short repeaters", grip: "g2", reps: 4 };
+    const {
+      id: _,
+      source: __,
+      ...draft
+    } = { ...mine, variations: [...mine.variations, { label: "B", items: [] }] };
+    expect(withHangWorkout(draft, built)).toMatchObject({
+      name: "Short repeaters",
+      variations: [
+        {
+          items: [{ exercise: "g2", dose: { sets: 3, reps: 4, onS: 7, offS: 3, edgeMm: 18 } }],
+        },
+        { label: "B", items: [] },
+      ],
+    });
+  });
+});
+
 describe("defaultGrip", () => {
   it("skips a deleted grip a workout was created with", () => {
-    const workout = { ...LIBRARY[0]!, id: "w1", source: "mine" as const, grip: "g1" };
-    const model = hangModel(data({ workouts: [workout] }));
-    expect(model.defaultGrip(workout)).toBe("half");
-    expect(model.defaultGrip({ ...workout, grip: "g2" })).toBe("g2");
+    const m = model();
+    const workout = m.workout("w1")!;
+    expect(m.defaultGrip(workout)).toBe("half");
+    expect(m.defaultGrip({ ...workout, grip: "g2" })).toBe("g2");
   });
 });
 
 describe("setup", () => {
-  const rep73 = LIBRARY[0]!;
-  const mine = { ...rep73, id: "w1", source: "mine" as const, edgeMm: 18 };
-  const schedule = {
-    id: "s1",
-    workoutId: "rep73",
-    gripId: "half",
-    days: [0 as const],
-    start: "2026-10-05",
-    end: null,
-    skip: [],
-    edgeMm: 15,
-    loadKg: null,
-  };
   const session = {
     id: "h1",
     workoutId: "rep73",
@@ -83,26 +139,41 @@ describe("setup", () => {
     pct: 100,
     misses: 0,
     rpe: null,
-    protocol: rep73,
+    protocol: {
+      name: "R",
+      kind: "hang" as const,
+      hangS: 7,
+      restS: 3,
+      reps: 6,
+      sets: 6,
+      setRestS: 0,
+    },
+    membershipId: null,
+    week: null,
+    variation: null,
+    done: [],
     stravaActivityId: null,
     postState: null,
     postError: null,
     updatedAt: "t",
   };
 
-  it("plans from the schedule landing on the day, filling gaps from the last session", () => {
-    const model = hangModel(data({ schedules: [schedule], sessions: [session] }));
-    expect(model.setup(rep73, "half", { date: "2026-10-05" })).toEqual({ edgeMm: 15, loadKg: 6 });
-    expect(model.setup(rep73, "half", { date: "2026-10-06" })).toEqual({ edgeMm: 20, loadKg: 6 });
-    expect(model.setup(rep73, "half", { schedule })).toEqual({ edgeMm: 15, loadKg: 6 });
+  it("takes what the plan prescribes, filling gaps from the last session", () => {
+    const m = model({ sessions: [session] });
+    const rep73 = m.workout("rep73")!;
+    expect(m.setup(rep73, "half", { edgeMm: 15 })).toEqual({ edgeMm: 15, loadKg: 6 });
+    expect(m.setup(rep73, "half", { weightKg: 2.5 })).toEqual({ edgeMm: 20, loadKg: 2.5 });
+    expect(m.setup(rep73, "half")).toEqual({ edgeMm: 20, loadKg: 6 });
   });
 
-  it("falls back to what the workout held before setups, then the default", () => {
-    const model = hangModel(data({ workouts: [mine], loads: { "w1:open": -4 } }));
-    expect(model.setup(mine, "open")).toEqual({ edgeMm: 18, loadKg: -4 });
-    expect(model.setup(rep73, "open")).toEqual({ edgeMm: 20, loadKg: 0 });
-    expect(model.lastUsed(rep73, "open")).toBeNull();
-    expect(model.lastUsed(mine, "open")).toEqual({ edgeMm: 18, loadKg: -4 });
-    expect(model.lastUsed(mine, "half")).toBeNull();
+  it("falls back to a legacy load, then the default", () => {
+    const m = model({ loads: { "w1:open": -4 } });
+    const w1 = m.workout("w1")!;
+    const rep73 = m.workout("rep73")!;
+    expect(m.setup(w1, "open")).toEqual({ edgeMm: 20, loadKg: -4 });
+    expect(m.setup(rep73, "open")).toEqual({ edgeMm: 20, loadKg: 0 });
+    expect(m.lastUsed(rep73, "open")).toBeNull();
+    expect(m.lastUsed(w1, "open")).toEqual({ edgeMm: 20, loadKg: -4 });
+    expect(m.lastUsed(w1, "half")).toBeNull();
   });
 });

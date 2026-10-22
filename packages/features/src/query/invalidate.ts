@@ -79,14 +79,12 @@ export function writeEffect({ method, path }: ApiWrite): WriteEffect | null {
     // Like hang, these own their caches; an activity also shows in the log.
     case "activities":
       return { stale: [["sessions"], ["sessionsWithClimbs"]], gone: null };
-    case "plan-items":
-      return { stale: [], gone: null };
-    // Deleting one unlinks the plans that ran it on the server.
+    // These own their caches. Deleting a workout, block or membership unlinks the
+    // sessions logged against it on the server.
+    case "blocks":
+    case "memberships":
     case "workouts":
-      return { stale: deleted ? [["planItems"]] : [], gone: null };
-    // A block moves, ends or releases its members on the server.
-    case "training-blocks":
-      return { stale: [["planItems"], ["hang"]], gone: null };
+      return { stale: deleted ? [...LOG, ["activities"], ["hang"], ["plan"]] : [], gone: null };
     default:
       return null;
   }

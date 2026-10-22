@@ -46,6 +46,9 @@ const session = (
   posted_at: null,
   post_state: null,
   post_error: null,
+  membership_id: null,
+  week: null,
+  variation: null,
   tags: [],
   climbs: climbs.map((c) => ({
     time: startIso,

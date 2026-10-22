@@ -7,9 +7,7 @@ import {
   type CalendarDate,
   type HangKind,
   type HangSetup,
-  type PlanStatus,
   type Protocol,
-  type Schedule,
   type TimeUnit,
   type TimeUnits,
   type WeightUnit,
@@ -116,25 +114,6 @@ export function protocolSummary(p: Protocol, units: TimeUnits): string {
 
 export function kindLabel(kind: HangKind): string {
   return kind === "hang" ? t("hang.kindHang") : t("hang.kindPull");
-}
-
-export function planStatusLabel(status: PlanStatus): string {
-  switch (status.kind) {
-    case "starts":
-      return t("hang.statusStarts", { date: shortDate(status.date) });
-    case "ongoing":
-      return t("hang.statusOngoing");
-    case "week":
-      return t("hang.statusWeek", { at: status.at, of: status.of });
-    case "final":
-      return t("hang.statusFinal", { of: status.of });
-  }
-}
-
-export function planRange(s: Pick<Schedule, "start" | "end">): string {
-  return s.end === null
-    ? t("hang.rangeFrom", { date: dayMonth(s.start) })
-    : t("hang.rangeTo", { from: dayMonth(s.start), to: dayMonth(addDays(s.end, -1)) });
 }
 
 export function daysList(days: readonly number[]): string {

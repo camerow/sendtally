@@ -10,7 +10,6 @@ export const training = {
   "training.logView": "Vue du carnet",
   "training.climbing": "Escalade",
   "training.hangboard": "Poutre",
-  "training.addToPlan": "Ajouter au plan",
   "training.statDone": "Fait",
   "training.doneOf": "{done} sur {planned}",
   "training.dayAria": "{day} : {logged} enregistrées, {planned} prévues",

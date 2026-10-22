@@ -1,68 +1,33 @@
-import type { PlanItem } from "@sendtally/api-client";
+import type { Plan } from "@sendtally/api-client";
 import {
   addDays,
-  BASE_WEEK_LOAD,
   blockEnd,
-  occursOn,
   totalSeconds,
-  type BlockPhase,
+  type Block,
   type CalendarDate,
-  type Schedule,
-  type TrainingBlock,
+  type Membership,
 } from "@sendtally/core/hang";
-import { trainingLoad } from "../activities/plan";
+import { trainingLoad } from "../activities/format";
 import { isUnscored } from "../sessions/meta";
 import { sessionMinutes } from "../sessions/years";
 import { climbDate, type TrainingLog } from "./days";
 
-/** One week of a block: effort as minutes times RPE, planned from targets and logged from sessions. */
+/** One week of a block with the effort logged in it, as minutes times RPE. */
 export type BlockWeek = {
   week: number;
   start: CalendarDate;
-  phase: BlockPhase | null;
-  /** Percent of the block's base load. */
-  load: number;
-  planned: number;
   actual: number;
   /** Not started yet, so nothing logged counts against it. */
   ahead: boolean;
 };
 
-export type BlockMembers = { items: PlanItem[]; schedules: Schedule[] };
-
-export function blockMembers(
-  block: Pick<TrainingBlock, "id">,
-  items: readonly PlanItem[],
-  schedules: readonly Schedule[]
-): BlockMembers {
-  return {
-    items: items.filter((i) => i.blockId === block.id),
-    schedules: schedules.filter((s) => s.blockId === block.id),
-  };
-}
+export const blockMembers = (plan: Plan, block: Pick<Block, "id">): Membership[] =>
+  plan.memberships.filter((m) => m.blockId === block.id);
 
 const effort = (minutes: number | null, rpe: number | null | undefined): number =>
   minutes === null || rpe === null || rpe === undefined ? 0 : minutes * rpe;
 
-function plannedIn(
-  dates: readonly CalendarDate[],
-  members: BlockMembers,
-  workoutMinutes: (id: string) => number | null
-): number {
-  const items = members.items.reduce((sum, item) => {
-    const times = item.perWeek ?? dates.filter((d) => occursOn(item, d)).length;
-    return sum + times * effort(item.minutes, item.targetRpe);
-  }, 0);
-  const hangs = members.schedules.reduce(
-    (sum, s) =>
-      sum +
-      dates.filter((d) => occursOn(s, d)).length * effort(workoutMinutes(s.workoutId), s.targetRpe),
-    0
-  );
-  return items + hangs;
-}
-
-function actualIn(dates: ReadonlySet<CalendarDate>, log: TrainingLog): number {
+function actualIn(dates: ReadonlySet<CalendarDate>, log: Omit<TrainingLog, "plan" | "workout">) {
   const activities = log.activities
     .filter((a) => dates.has(a.date))
     .reduce((sum, a) => sum + (trainingLoad(a) ?? 0), 0);
@@ -76,32 +41,23 @@ function actualIn(dates: ReadonlySet<CalendarDate>, log: TrainingLog): number {
 }
 
 /**
- * Each week of the block, planned against actual. Planned counts members with both
- * minutes and a target effort, scaled by the week's load; actual counts everything logged that week, inside the
- * block or not, since a block plans the whole week.
+ * Each week of the block with everything logged in it, inside the block or not,
+ * since a block plans the whole week.
  */
 export function blockWeeks(
-  block: TrainingBlock,
-  members: BlockMembers,
-  log: TrainingLog,
-  workoutMinutes: (id: string) => number | null,
+  block: Block,
+  log: Omit<TrainingLog, "plan" | "workout">,
   today: CalendarDate
 ): BlockWeek[] {
   const end = blockEnd(block);
-  return block.loads.flatMap(({ load, phase }, i): BlockWeek[] => {
+  return Array.from({ length: block.weeks }, (_, i): BlockWeek => {
     const start = addDays(block.start, i * 7);
-    if (start >= end) return [];
     const dates = Array.from({ length: 7 }, (_, d) => addDays(start, d)).filter((d) => d < end);
-    return [
-      {
-        week: i + 1,
-        start,
-        phase: phase ?? null,
-        load,
-        planned: Math.round((plannedIn(dates, members, workoutMinutes) * load) / BASE_WEEK_LOAD),
-        actual: Math.round(actualIn(new Set(dates), log)),
-        ahead: start > today,
-      },
-    ];
+    return {
+      week: i + 1,
+      start,
+      actual: Math.round(actualIn(new Set(dates), log)),
+      ahead: start > today,
+    };
   });
 }

@@ -33,7 +33,6 @@ export const statistics = {
   "statistics.repsValue_other": "{count} Wdh.",
   "statistics.exerciseChart": "{exercise}: {from} bis {to}",
   "statistics.legendDone": "Geschafft",
-  "statistics.legendAttempted": "Versucht",
   "statistics.exerciseSessions_one": "{count} Session · neueste",
   "statistics.exerciseSessions_other": "Alle {count} Sessions · neueste",
   "statistics.insightUp": "{exercise} ist seit {date} um {change} gestiegen.",
@@ -42,10 +41,8 @@ export const statistics = {
   "statistics.insightAttempted":
     "Noch nichts ist als geschafft markiert; dein bester Versuch ist {set}.",
   "statistics.insightE1rm": "Dein geschätztes Ein-Wiederholungs-Maximum liegt bei {value}.",
-  "statistics.insightSides": "Bestwert links {left}, rechts {right}.",
   "statistics.best": "Bestwert",
   "statistics.latest": "Zuletzt",
   "statistics.volumeThisMonth": "Volumen diesen Monat",
   "statistics.lastSessions": "Letzte Sessions",
-  "statistics.attempted": "Versucht",
 } as const;

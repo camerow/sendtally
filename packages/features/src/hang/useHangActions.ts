@@ -1,18 +1,13 @@
 import { useQueryClient } from "@tanstack/react-query";
 import React from "react";
 import type { HangData, HangSessionRecord, SendtallyApi } from "@sendtally/api-client";
-import type { Grip, HangSession, HangSettings, Schedule, Workout } from "@sendtally/core/hang";
+import type { Grip, HangSession, HangSettings } from "@sendtally/core/hang";
 import { queries } from "../query";
 
 export type HangActions = {
   saveGrip: (grip: Grip) => Promise<void>;
   deleteGrip: (id: string) => Promise<void>;
-  saveWorkout: (workout: Workout) => Promise<void>;
-  /** Its plans go with it; its sessions stay. */
-  deleteWorkout: (id: string) => Promise<void>;
   setDefaultGrip: (workoutId: string, gripId: string) => Promise<void>;
-  saveSchedules: (schedules: Schedule[]) => Promise<void>;
-  deleteSchedule: (id: string) => Promise<void>;
   saveSession: (session: HangSession) => Promise<void>;
   deleteSession: (id: string) => Promise<void>;
   saveSettings: (settings: Partial<HangSettings>) => Promise<void>;
@@ -79,40 +74,10 @@ export function useHangActions(api: SendtallyApi, onError: (error: unknown) => v
           }),
           () => api.deleteHangGrip(id)
         ),
-      saveWorkout: (workout) =>
-        write(
-          (d) => ({ ...d, workouts: upsert(d.workouts, workout) }),
-          () => {
-            const { id, source: _source, ...fields } = workout;
-            return api.saveHangWorkout(id, fields);
-          }
-        ),
-      deleteWorkout: (id) =>
-        write(
-          (d) => ({
-            ...d,
-            workouts: d.workouts.filter((w) => w.id !== id),
-            schedules: d.schedules.filter((s) => s.workoutId !== id),
-            defaultGrips: Object.fromEntries(
-              Object.entries(d.defaultGrips).filter(([workoutId]) => workoutId !== id)
-            ),
-          }),
-          () => api.deleteHangWorkout(id)
-        ),
       setDefaultGrip: (workoutId, gripId) =>
         write(
           (d) => ({ ...d, defaultGrips: { ...d.defaultGrips, [workoutId]: gripId } }),
           () => api.setHangDefaultGrip(workoutId, gripId)
-        ),
-      saveSchedules: (schedules) =>
-        write(
-          (d) => ({ ...d, schedules: schedules.reduce(upsert, d.schedules) }),
-          () => Promise.all(schedules.map((s) => api.saveHangSchedule(s)))
-        ),
-      deleteSchedule: (id) =>
-        write(
-          (d) => ({ ...d, schedules: d.schedules.filter((s) => s.id !== id) }),
-          () => api.deleteHangSchedule(id)
         ),
       saveSession: (session) =>
         write(

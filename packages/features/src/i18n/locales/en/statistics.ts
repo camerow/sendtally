@@ -33,7 +33,6 @@ export const statistics = {
   "statistics.repsValue_other": "{count} reps",
   "statistics.exerciseChart": "{exercise}: {from} to {to}",
   "statistics.legendDone": "Done",
-  "statistics.legendAttempted": "Attempted",
   "statistics.exerciseSessions_one": "{count} session · latest",
   "statistics.exerciseSessions_other": "All {count} sessions · latest",
   "statistics.insightUp": "{exercise} is up {change} since {date}.",
@@ -41,10 +40,8 @@ export const statistics = {
   "statistics.insightHeld": "{exercise} has held at {value} since {date}.",
   "statistics.insightAttempted": "Nothing is ticked done yet; your best try is {set}.",
   "statistics.insightE1rm": "Your estimated one-rep max is {value}.",
-  "statistics.insightSides": "Best left {left}, right {right}.",
   "statistics.best": "Best",
   "statistics.latest": "Latest",
   "statistics.volumeThisMonth": "Volume this month",
   "statistics.lastSessions": "Last sessions",
-  "statistics.attempted": "Attempted",
 } as const;

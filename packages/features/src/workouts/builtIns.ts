@@ -1,270 +1,277 @@
-import type { PlanTemplate, SetMeasure } from "@sendtally/api-client";
+import {
+  defaultPattern,
+  type BuiltInGrip,
+  type Dose,
+  type Item,
+  type WorkoutKind,
+} from "@sendtally/core/hang";
 import { t, type MessageKey } from "../i18n";
-import type { LibraryBody, LibraryWorkout, WorkoutCategory } from "./types";
+import type { LibraryWorkout } from "./types";
 
-type SetsSpec = {
-  name: MessageKey;
-  measures: SetMeasure[];
-  sets: number;
-  reps?: number;
-  seconds?: number;
-};
+/** A hangboard item names its grip by id; every other item names its exercise. */
+type ItemSpec = { exercise: MessageKey; dose: Dose } | { grip: BuiltInGrip; dose: Dose };
 
-type ChecklistSpec = { text: MessageKey; dose: string };
-
-type StepSpec = {
-  label: MessageKey;
-  seconds?: number;
-  count?: number;
-  restAfter: number;
-};
-
-type BodySpec =
-  | { kind: "sets"; exercises: SetsSpec[] }
-  | { kind: "checklist"; items: ChecklistSpec[] }
-  | { kind: "intervals"; rounds: number; steps: StepSpec[] }
-  | Extract<LibraryBody, { kind: "climb" }>;
+type VariationSpec = { label: MessageKey | null; items: ItemSpec[] };
 
 type BuiltIn = {
   id: string;
-  category: Exclude<WorkoutCategory, "hang">;
+  kind: WorkoutKind;
   name: MessageKey;
-  blurb: MessageKey;
-  tags: MessageKey[];
-  minutes: number;
-  targetRpe: number;
-  body: BodySpec;
+  description: MessageKey;
+  minutes: number | null;
+  targetRpe: number | null;
+  variations: VariationSpec[];
+  pattern?: number[];
 };
 
-const fiveByFive = (name: MessageKey): SetsSpec => ({
-  name,
-  measures: ["reps", "loadKg"],
-  sets: 5,
-  reps: 5,
-});
+const one = (...items: ItemSpec[]): VariationSpec[] => [{ label: null, items }];
 
-/** The curated workouts beside the hangboard library. An id is never reused. */
+const hang = (grip: BuiltInGrip, dose: Dose): ItemSpec => ({ grip, dose });
+
+const lift = (exercise: MessageKey, dose: Dose): ItemSpec => ({ exercise, dose });
+
+/**
+ * The curated starter library. An id is never reused: sessions and memberships
+ * reference it. Edge depth and added weight are chosen per use, so hangboard
+ * built-ins carry neither.
+ */
 const BUILT_INS: readonly BuiltIn[] = [
   {
-    id: "strength-5x5",
-    category: "strength",
-    name: "workouts.builtIn.fiveByFive.name",
-    blurb: "workouts.builtIn.fiveByFive.blurb",
-    tags: ["workouts.tag.strength"],
-    minutes: 45,
+    id: "rep73",
+    kind: "hangboard",
+    name: "hang.workout.rep73.name",
+    description: "hang.workout.rep73.blurb",
+    minutes: null,
+    targetRpe: null,
+    variations: one(hang("half", { sets: 6, reps: 6, onS: 7, offS: 3, setRestS: 180 })),
+  },
+  {
+    id: "max10",
+    kind: "hangboard",
+    name: "hang.workout.max10.name",
+    description: "hang.workout.max10.blurb",
+    minutes: null,
+    targetRpe: null,
+    variations: one(hang("half", { sets: 5, reps: 1, onS: 10, setRestS: 180 })),
+  },
+  {
+    id: "fingers-ab",
+    kind: "hangboard",
+    name: "workouts.builtIn.fingersAb.name",
+    description: "workouts.builtIn.fingersAb.blurb",
+    minutes: 35,
     targetRpe: 8,
-    body: {
-      kind: "sets",
-      exercises: [
-        fiveByFive("workouts.exercise.backSquat"),
-        fiveByFive("workouts.exercise.benchPress"),
-        fiveByFive("workouts.exercise.barbellRow"),
-      ],
-    },
+    variations: [
+      {
+        label: "workouts.variation.maxHangs",
+        items: [hang("half", { sets: 6, reps: 1, onS: 10, setRestS: 180 })],
+      },
+      {
+        label: "workouts.variation.repeaters",
+        items: [hang("half", { sets: 3, reps: 6, onS: 7, offS: 3, setRestS: 180 })],
+      },
+    ],
   },
   {
-    id: "strength-antagonist",
-    category: "strength",
-    name: "workouts.builtIn.antagonist.name",
-    blurb: "workouts.builtIn.antagonist.blurb",
-    tags: ["workouts.tag.antagonist"],
-    minutes: 30,
-    targetRpe: 6,
-    body: {
-      kind: "sets",
-      exercises: [
-        { name: "workouts.exercise.pushUps", measures: ["reps"], sets: 3, reps: 15 },
-        { name: "workouts.exercise.overheadPress", measures: ["reps", "loadKg"], sets: 3, reps: 8 },
-        { name: "workouts.exercise.dips", measures: ["reps"], sets: 3, reps: 10 },
-        {
-          name: "workouts.exercise.externalRotation",
-          measures: ["reps", "side"],
-          sets: 4,
-          reps: 15,
-        },
-      ],
-    },
+    id: "block",
+    kind: "hangboard",
+    name: "hang.workout.block.name",
+    description: "hang.workout.block.blurb",
+    minutes: null,
+    targetRpe: null,
+    variations: one(hang("pinch", { sets: 5, reps: 5, setRestS: 120 })),
   },
   {
-    id: "strength-extensors",
-    category: "strength",
-    name: "workouts.builtIn.extensors.name",
-    blurb: "workouts.builtIn.extensors.blurb",
-    tags: ["workouts.tag.prehab", "workouts.tag.fingers"],
-    minutes: 15,
-    targetRpe: 4,
-    body: {
-      kind: "sets",
-      exercises: [
-        { name: "workouts.exercise.bandExtensions", measures: ["reps"], sets: 3, reps: 20 },
-        {
-          name: "workouts.exercise.reverseWristCurls",
-          measures: ["reps", "loadKg"],
-          sets: 3,
-          reps: 15,
-        },
-        { name: "workouts.exercise.riceBucket", measures: ["seconds"], sets: 3, seconds: 60 },
-      ],
-    },
+    id: "density",
+    kind: "hangboard",
+    name: "hang.workout.density.name",
+    description: "hang.workout.density.blurb",
+    minutes: null,
+    targetRpe: null,
+    variations: one(hang("open", { sets: 4, reps: 1, onS: 30, setRestS: 60 })),
   },
   {
-    id: "mobility-hips",
-    category: "mobility",
-    name: "workouts.builtIn.hips.name",
-    blurb: "workouts.builtIn.hips.blurb",
-    tags: ["workouts.tag.stretching"],
-    minutes: 20,
-    targetRpe: 3,
-    body: {
-      kind: "checklist",
-      items: [
-        { text: "workouts.item.ninetyNinety", dose: "× 10" },
-        { text: "workouts.item.couchStretch", dose: "1 min" },
-        { text: "workouts.item.frogStretch", dose: "90s" },
-        { text: "workouts.item.pigeon", dose: "1 min" },
-        { text: "workouts.item.hipFlexorLunge", dose: "1 min" },
-        { text: "workouts.item.deepSquat", dose: "2 min" },
-      ],
-    },
+    id: "assist",
+    kind: "hangboard",
+    name: "hang.workout.assist.name",
+    description: "hang.workout.assist.blurb",
+    minutes: null,
+    targetRpe: null,
+    variations: one(hang("half", { sets: 6, reps: 1, onS: 10, setRestS: 120 })),
   },
   {
-    id: "yoga-climbers",
-    category: "yoga",
-    name: "workouts.builtIn.yoga.name",
-    blurb: "workouts.builtIn.yoga.blurb",
-    tags: ["workouts.tag.stretching", "workouts.tag.recovery"],
-    minutes: 25,
-    targetRpe: 2,
-    body: {
-      kind: "checklist",
-      items: [
-        { text: "workouts.item.sunSalutation", dose: "× 5" },
-        { text: "workouts.item.downwardDog", dose: "1 min" },
-        { text: "workouts.item.threadNeedle", dose: "1 min" },
-        { text: "workouts.item.lizard", dose: "1 min" },
-        { text: "workouts.item.childsPose", dose: "2 min" },
-      ],
-    },
-  },
-  {
-    id: "run-tempo",
-    category: "run",
-    name: "workouts.builtIn.tempo.name",
-    blurb: "workouts.builtIn.tempo.blurb",
-    tags: ["workouts.tag.aerobic"],
-    minutes: 25,
-    targetRpe: 7,
-    body: {
-      kind: "intervals",
-      rounds: 5,
-      steps: [
-        { label: "workouts.step.hard", seconds: 180, restAfter: 0 },
-        { label: "workouts.step.easy", seconds: 120, restAfter: 0 },
-      ],
-    },
-  },
-  {
-    id: "other-core",
-    category: "other",
-    name: "workouts.builtIn.core.name",
-    blurb: "workouts.builtIn.core.blurb",
-    tags: ["workouts.tag.core"],
-    minutes: 15,
-    targetRpe: 6,
-    body: {
-      kind: "intervals",
-      rounds: 3,
-      steps: [
-        { label: "workouts.step.plank", seconds: 45, restAfter: 15 },
-        { label: "workouts.step.hollowHold", seconds: 30, restAfter: 15 },
-        { label: "workouts.step.kneeRaises", count: 10, restAfter: 60 },
-      ],
-    },
+    id: "lowpull",
+    kind: "hangboard",
+    name: "hang.workout.lowpull.name",
+    description: "hang.workout.lowpull.blurb",
+    minutes: null,
+    targetRpe: null,
+    variations: one(hang("open", { sets: 3, reps: 10, setRestS: 90 })),
   },
   {
     id: "climb-limit",
-    category: "climb",
+    kind: "climbing",
     name: "workouts.builtIn.limit.name",
-    blurb: "workouts.builtIn.limit.blurb",
-    tags: ["workouts.tag.power"],
+    description: "workouts.builtIn.limit.blurb",
     minutes: 90,
     targetRpe: 9,
-    body: { kind: "climb", focus: "limit", projectId: null },
+    variations: one(),
   },
   {
     id: "climb-4x4",
-    category: "climb",
+    kind: "climbing",
     name: "workouts.builtIn.fourByFour.name",
-    blurb: "workouts.builtIn.fourByFour.blurb",
-    tags: ["workouts.tag.powerEndurance"],
+    description: "workouts.builtIn.fourByFour.blurb",
     minutes: 60,
     targetRpe: 8,
-    body: { kind: "climb", focus: "endurance", projectId: null },
+    variations: one(),
   },
   {
     id: "climb-arc",
-    category: "climb",
+    kind: "climbing",
     name: "workouts.builtIn.arc.name",
-    blurb: "workouts.builtIn.arc.blurb",
-    tags: ["workouts.tag.aerobic"],
+    description: "workouts.builtIn.arc.blurb",
     minutes: 45,
     targetRpe: 4,
-    body: { kind: "climb", focus: "endurance", projectId: null },
+    variations: one(),
+  },
+  {
+    id: "strength-squat",
+    kind: "strength",
+    name: "workouts.builtIn.squat.name",
+    description: "workouts.builtIn.squat.blurb",
+    minutes: 45,
+    targetRpe: 8,
+    variations: [
+      {
+        label: "workouts.variation.fiveByFive",
+        items: [lift("workouts.exercise.backSquat", { sets: 5, reps: 5 })],
+      },
+      {
+        label: "workouts.variation.threeByTen",
+        items: [lift("workouts.exercise.backSquat", { sets: 3, reps: 10 })],
+      },
+    ],
+  },
+  {
+    id: "strength-5x5",
+    kind: "strength",
+    name: "workouts.builtIn.fiveByFive.name",
+    description: "workouts.builtIn.fiveByFive.blurb",
+    minutes: 45,
+    targetRpe: 8,
+    variations: one(
+      lift("workouts.exercise.backSquat", { sets: 5, reps: 5 }),
+      lift("workouts.exercise.benchPress", { sets: 5, reps: 5 }),
+      lift("workouts.exercise.barbellRow", { sets: 5, reps: 5 })
+    ),
+  },
+  {
+    id: "strength-antagonist",
+    kind: "strength",
+    name: "workouts.builtIn.antagonist.name",
+    description: "workouts.builtIn.antagonist.blurb",
+    minutes: 30,
+    targetRpe: 6,
+    variations: one(
+      lift("workouts.exercise.pushUps", { sets: 3, reps: 15 }),
+      lift("workouts.exercise.overheadPress", { sets: 3, reps: 8 }),
+      lift("workouts.exercise.dips", { sets: 3, reps: 10 }),
+      lift("workouts.exercise.externalRotation", { sets: 4, reps: 15 })
+    ),
+  },
+  {
+    id: "strength-extensors",
+    kind: "strength",
+    name: "workouts.builtIn.extensors.name",
+    description: "workouts.builtIn.extensors.blurb",
+    minutes: 15,
+    targetRpe: 4,
+    variations: one(
+      lift("workouts.exercise.bandExtensions", { sets: 3, reps: 20 }),
+      lift("workouts.exercise.reverseWristCurls", { sets: 3, reps: 15 }),
+      lift("workouts.exercise.riceBucket", { sets: 3, onS: 60 })
+    ),
+  },
+  {
+    id: "mobility-hips",
+    kind: "mobility",
+    name: "workouts.builtIn.hips.name",
+    description: "workouts.builtIn.hips.blurb",
+    minutes: 20,
+    targetRpe: 3,
+    variations: one(
+      lift("workouts.item.ninetyNinety", { sets: 1, reps: 10 }),
+      lift("workouts.item.couchStretch", { sets: 1, onS: 60 }),
+      lift("workouts.item.frogStretch", { sets: 1, onS: 90 }),
+      lift("workouts.item.pigeon", { sets: 1, onS: 60 }),
+      lift("workouts.item.hipFlexorLunge", { sets: 1, onS: 60 }),
+      lift("workouts.item.deepSquat", { sets: 1, onS: 120 })
+    ),
+  },
+  {
+    id: "yoga-climbers",
+    kind: "mobility",
+    name: "workouts.builtIn.yoga.name",
+    description: "workouts.builtIn.yoga.blurb",
+    minutes: 25,
+    targetRpe: 2,
+    variations: one(
+      lift("workouts.item.sunSalutation", { sets: 1, reps: 5 }),
+      lift("workouts.item.downwardDog", { sets: 1, onS: 60 }),
+      lift("workouts.item.threadNeedle", { sets: 1, onS: 60 }),
+      lift("workouts.item.lizard", { sets: 1, onS: 60 }),
+      lift("workouts.item.childsPose", { sets: 1, onS: 120 })
+    ),
+  },
+  {
+    id: "run-tempo",
+    kind: "other",
+    name: "workouts.builtIn.tempo.name",
+    description: "workouts.builtIn.tempo.blurb",
+    minutes: 25,
+    targetRpe: 7,
+    variations: one(
+      lift("workouts.step.hard", { sets: 5, onS: 180 }),
+      lift("workouts.step.easy", { sets: 5, onS: 120 })
+    ),
+  },
+  {
+    id: "other-core",
+    kind: "other",
+    name: "workouts.builtIn.core.name",
+    description: "workouts.builtIn.core.blurb",
+    minutes: 15,
+    targetRpe: 6,
+    variations: one(
+      lift("workouts.step.plank", { sets: 3, onS: 45, offS: 15 }),
+      lift("workouts.step.hollowHold", { sets: 3, onS: 30, offS: 15 }),
+      lift("workouts.step.kneeRaises", { sets: 3, reps: 10, offS: 60 })
+    ),
   },
 ];
 
-function bodyOf(spec: BodySpec): Exclude<LibraryBody, { kind: "hang" }> {
-  switch (spec.kind) {
-    case "sets":
-      return {
-        kind: "sets",
-        exercises: spec.exercises.map((e) => ({
-          name: t(e.name),
-          measures: e.measures,
-          sets: Array.from({ length: e.sets }, (_, i) => ({
-            ...(e.reps === undefined ? {} : { reps: e.reps }),
-            ...(e.seconds === undefined ? {} : { seconds: e.seconds }),
-            ...(e.measures.includes("side")
-              ? { side: i % 2 === 0 ? ("L" as const) : ("R" as const) }
-              : {}),
-          })),
-        })),
-      } satisfies PlanTemplate;
-    case "checklist":
-      return {
-        kind: "checklist",
-        items: spec.items.map((i) => ({ text: t(i.text), dose: i.dose })),
-      };
-    case "intervals":
-      return {
-        kind: "intervals",
-        rounds: spec.rounds,
-        steps: spec.steps.map((s) => ({
-          label: t(s.label),
-          restAfter: s.restAfter,
-          ...(s.count === undefined
-            ? { measure: "time" as const, seconds: s.seconds }
-            : { measure: "count" as const, count: s.count }),
-        })),
-      };
-    case "climb":
-      return spec;
-  }
-}
+const itemOf = (spec: ItemSpec): Item =>
+  "grip" in spec
+    ? { exercise: spec.grip, dose: spec.dose }
+    : { exercise: t(spec.exercise), dose: spec.dose };
 
 export const BUILT_IN_WORKOUT_IDS: readonly string[] = BUILT_INS.map((w) => w.id);
 
-/** The curated workouts other than hangboard ones, in the user's language. */
+/** The curated workouts, in the user's language. */
 export function builtInWorkouts(): LibraryWorkout[] {
   return BUILT_INS.map((w) => ({
     id: w.id,
     source: "library",
-    category: w.category,
+    kind: w.kind,
     name: t(w.name),
-    description: t(w.blurb),
-    tags: w.tags.map((tag) => t(tag)),
+    description: t(w.description),
     minutes: w.minutes,
     targetRpe: w.targetRpe,
-    body: bodyOf(w.body),
+    variations: w.variations.map((v) => ({
+      label: v.label === null ? "" : t(v.label),
+      items: v.items.map(itemOf),
+    })),
+    pattern: w.pattern ?? defaultPattern(w.variations.length),
   }));
 }

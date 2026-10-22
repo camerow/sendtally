@@ -3,7 +3,6 @@ import type { AppType } from "@sendtally/api/app";
 
 export type {
   Activity,
-  ActivityDetail,
   ActivityInput,
   ActivityKind,
   ActivityPostState,
@@ -13,9 +12,11 @@ export type {
   AreaClimbInput,
   AreaInput,
   AreaSummary,
-  BlockPhase,
+  Block,
+  BlockInput,
   Circuit,
   CircuitColour,
+  Dose,
   Gym,
   GymInput,
   CalendarDate,
@@ -27,31 +28,32 @@ export type {
   HangSession,
   HangSessionRecord,
   HangSettings,
+  HangWorkout,
   ImportBody,
+  Item,
+  ItemDone,
   Loads,
+  LogClimbInput,
+  LogSessionInput,
+  Membership,
+  MembershipInput,
+  Plan,
+  PlanLink,
+  ProjectInput,
   Protocol,
-  Schedule,
+  SetDone,
   ThemeName,
   TimeUnit,
   TimeUnits,
-  TrainingBlock,
-  WeekLoad,
+  Variation,
+  WeekChange,
+  WeekChangeInput,
   WeightUnit,
   Weekday,
   Workout,
-  LogClimbInput,
-  LogSessionInput,
-  PlanItem,
-  PlanItemInput,
-  PlanKind,
-  PlanTemplate,
-  ProjectInput,
-  SetMeasure,
-  ClimbFocus,
-  ClimbWorkoutBody,
-  UserWorkout,
-  UserWorkoutInput,
-  WorkoutBody,
+  WorkoutInput,
+  WorkoutKind,
+  WorkoutRecord,
 } from "@sendtally/api/app";
 
 import type { Activity, HangHistoryRow, LogClimbInput as ClimbInput } from "@sendtally/api/app";
@@ -69,9 +71,9 @@ export type TrainingReminderSettings = ConnectionStatus["trainingReminders"];
 
 export type Entitlements = Ok<Client["v1"]["entitlements"]["$get"]>;
 
-export type Membership = Entitlements["membership"];
+export type MembershipStatus = Entitlements["membership"];
 
-export type StoreMembership = NonNullable<Membership["store"]>;
+export type StoreMembership = NonNullable<MembershipStatus["store"]>;
 
 export type SessionDetail = Ok<Client["v1"]["sessions"][":fingerprint"]["$get"]>["session"];
 

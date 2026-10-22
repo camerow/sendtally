@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 import type { Activity } from "@sendtally/api-client";
-import type { Exercise } from "../activities/detail";
+import type { ItemDone, SetDone } from "@sendtally/core/hang";
 import { epley, exerciseSeries, exerciseSummary } from "./exercises";
 
 const TODAY = "2026-10-22";
 
-function logged(id: string, date: string, exercises: Exercise[]): Activity {
+function logged(id: string, date: string, done: ItemDone[]): Activity {
   return {
     id,
     kind: "strength",
@@ -15,77 +15,59 @@ function logged(id: string, date: string, exercises: Exercise[]): Activity {
     minutes: 60,
     rpe: null,
     notes: null,
-    planItemId: null,
     workoutId: null,
-    detail: { kind: "sets", exercises },
+    membershipId: null,
+    week: null,
+    variation: null,
+    done,
   };
 }
 
-const squat = (sets: Exercise["sets"], name = "Squat"): Exercise => ({
-  name,
-  measures: ["reps", "loadKg"],
-  sets,
-});
+const item = (exercise: string, sets: SetDone[]): ItemDone => ({ item: 0, exercise, sets });
+
+const squat = (sets: SetDone[], name = "Squat"): ItemDone => item(name, sets);
 
 describe("exerciseSeries", () => {
   it("matches names trimmed and case-insensitively, oldest session first, newest spelling", () => {
     const [series] = exerciseSeries([
-      logged("b", "2026-10-08", [squat([{ reps: 5, loadKg: 100, done: true }], " squat ")]),
-      logged("a", "2026-10-01", [squat([{ reps: 5, loadKg: 90, done: true }])]),
+      logged("b", "2026-10-08", [squat([{ reps: 5, weightKg: 100 }], " squat ")]),
+      logged("a", "2026-10-01", [squat([{ reps: 5, weightKg: 90 }])]),
     ]);
     expect(series?.name).toBe("squat");
     expect(series?.sessions.map((s) => s.activityId)).toEqual(["a", "b"]);
   });
 
-  it("takes the heaviest done set with its reps, e1RM and volume, ignoring undone sets", () => {
+  it("takes the heaviest set with its reps, e1RM and volume", () => {
     const [series] = exerciseSeries([
       logged("a", "2026-10-01", [
         squat([
-          { reps: 5, loadKg: 100, done: true },
-          { reps: 8, loadKg: 100, done: true },
-          { reps: 3, loadKg: 120, done: false },
+          { reps: 5, weightKg: 100 },
+          { reps: 8, weightKg: 100 },
         ]),
       ]),
     ]);
     const session = series?.sessions[0];
-    expect(session?.best).toEqual({ reps: 8, loadKg: 100 });
-    expect(session?.attempted).toBe(false);
+    expect(session?.best).toEqual({ reps: 8, weightKg: 100 });
     expect(session?.e1rmKg).toBeCloseTo(100 * (1 + 8 / 30));
     expect(session?.volumeKg).toBe(1300);
   });
 
-  it("keeps a session with nothing done as an attempt at its best try", () => {
-    const [series] = exerciseSeries([
-      logged("a", "2026-10-01", [squat([{ reps: 3, loadKg: 120, done: false }])]),
-    ]);
-    expect(series?.sessions[0]).toMatchObject({ value: 120, attempted: true, volumeKg: 0 });
+  it("leaves out an item with no sets done", () => {
+    expect(exerciseSeries([logged("a", "2026-10-01", [squat([])])])).toEqual([]);
   });
 
-  it("judges holds on seconds and splits sides", () => {
+  it("judges holds on seconds", () => {
     const [series] = exerciseSeries([
-      logged("a", "2026-10-01", [
-        {
-          name: "Side plank",
-          measures: ["seconds", "side"],
-          sets: [
-            { seconds: 40, side: "L", done: true },
-            { seconds: 30, side: "R", done: true },
-          ],
-        },
-      ]),
+      logged("a", "2026-10-01", [item("Side plank", [{ onS: 40 }, { onS: 30 }])]),
     ]);
     expect(series?.metric).toBe("seconds");
-    expect(series?.sessions[0]).toMatchObject({ value: 40, sides: { L: 40, R: 30 } });
+    expect(series?.sessions[0]).toMatchObject({ value: 40 });
   });
 
   it("orders exercises by how often they were logged", () => {
-    const pullUps: Exercise = {
-      name: "Pull-ups",
-      measures: ["reps"],
-      sets: [{ reps: 10, done: true }],
-    };
+    const pullUps = item("Pull-ups", [{ reps: 10 }]);
     const series = exerciseSeries([
-      logged("a", "2026-10-01", [squat([{ reps: 5, loadKg: 90, done: true }]), pullUps]),
+      logged("a", "2026-10-01", [squat([{ reps: 5, weightKg: 90 }]), pullUps]),
       logged("b", "2026-10-08", [pullUps]),
     ]);
     expect(series.map((s) => [s.name, s.metric])).toEqual([
@@ -96,12 +78,11 @@ describe("exerciseSeries", () => {
 });
 
 describe("exerciseSummary", () => {
-  it("counts done sessions, the best, the change and this month's volume", () => {
+  it("counts sessions, the best, the change and this month's volume", () => {
     const [series] = exerciseSeries([
-      logged("a", "2026-09-10", [squat([{ reps: 5, loadKg: 90, done: true }])]),
-      logged("b", "2026-10-01", [squat([{ reps: 5, loadKg: 105, done: true }])]),
-      logged("c", "2026-10-08", [squat([{ reps: 5, loadKg: 100, done: true }])]),
-      logged("d", "2026-10-15", [squat([{ reps: 1, loadKg: 130, done: false }])]),
+      logged("a", "2026-09-10", [squat([{ reps: 5, weightKg: 90 }])]),
+      logged("b", "2026-10-01", [squat([{ reps: 5, weightKg: 105 }])]),
+      logged("c", "2026-10-08", [squat([{ reps: 5, weightKg: 100 }])]),
     ]);
     const summary = series === undefined ? null : exerciseSummary(series, TODAY);
     expect(summary).toMatchObject({
@@ -112,6 +93,6 @@ describe("exerciseSummary", () => {
       e1rmKg: epley(105, 5),
     });
     expect(summary?.best?.activityId).toBe("b");
-    expect(summary?.latest.activityId).toBe("d");
+    expect(summary?.latest.activityId).toBe("c");
   });
 });

@@ -65,6 +65,9 @@ function session(fingerprint: string, startAt: string): SessionRow {
     posted_at: null,
     post_state: null,
     post_error: null,
+    membership_id: null,
+    week: null,
+    variation: null,
     tags: [],
   };
 }
@@ -114,6 +117,10 @@ describe("hang sessions in the log", () => {
       setRestS: 180,
     },
     stravaActivityId: null,
+    membershipId: null,
+    week: null,
+    variation: null,
+    done: [],
     postState: null,
     postError: null,
     updatedAt: "2026-05-28T19:00:00.000Z",
@@ -156,9 +163,11 @@ describe("other training in the log", () => {
     minutes: 50,
     rpe: 7,
     notes: null,
-    planItemId: null,
     workoutId: null,
-    detail: null,
+    membershipId: null,
+    week: null,
+    variation: null,
+    done: [],
   };
 
   it("sorts at its start time, counts as a session and folds inside a trip", () => {

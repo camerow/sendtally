@@ -1,77 +1,71 @@
-import type {
-  Activity,
-  HangSessionRecord,
-  PlanItem,
-  PlanKind,
-  SessionRow,
-} from "@sendtally/api-client";
+import type { Activity, HangSessionRecord, Plan, SessionRow } from "@sendtally/api-client";
 import {
   addDays,
-  isDoneOn,
-  scheduledOn,
   weekStart,
   weekStreak,
   type CalendarDate,
-  type Schedule,
+  type WorkoutKind,
 } from "@sendtally/core/hang";
-import { planOccurrences, type OccurrenceStatus, type WeekGoal } from "../activities/plan";
 import { utcDate } from "../log-session/transforms";
 import { isUnscored } from "../sessions/meta";
+import { occurrencesOn, type LoggedSession, type Occurrence, type WorkoutLookup } from "./plan";
 
-/** One thing on a training day. `kind` names the discipline, `status` whether it happened. */
-export type DayItem =
-  | { kind: "climb"; status: "logged"; session: SessionRow }
-  | { kind: "hang"; status: "logged"; session: HangSessionRecord }
-  | { kind: "activity"; status: "logged"; activity: Activity }
-  | { kind: "hang"; status: "planned"; schedule: Schedule }
-  | PlanDayItem;
-
-/** A plan item's occurrence on one day, done, missed or still planned. */
-export type PlanDayItem = { kind: PlanKind; status: OccurrenceStatus; plan: PlanItem };
-
-export type DayItemKind = DayItem["kind"];
-
-export type LoggedItem = Extract<DayItem, { status: "logged" }>;
-
-export type PlannedItem = Extract<DayItem, { status: "planned" }>;
+/** Something logged on a training day. */
+export type LoggedItem =
+  | { kind: "climb"; session: SessionRow }
+  | { kind: "hang"; session: HangSessionRecord }
+  | { kind: "activity"; activity: Activity };
 
 export type TrainingDay = {
   date: CalendarDate;
   isToday: boolean;
   isPast: boolean;
   logged: LoggedItem[];
-  /** Planned for the day and not logged yet: due today or later, missed before. */
-  planned: PlannedItem[];
-  plans: PlanDayItem[];
-  /** The weekly goals of the day's week, counted rather than marked on a day. */
-  goals: WeekGoal[];
+  /** Every membership landing on the day: done, missed or still planned. */
+  plans: Occurrence[];
 };
 
 export type TrainingLog = {
   climbs: readonly SessionRow[];
   hangs: readonly HangSessionRecord[];
   activities: readonly Activity[];
-  schedules: readonly Schedule[];
-  planItems: readonly PlanItem[];
+  plan: Plan;
+  workout: WorkoutLookup;
 };
 
 /** A climbing session's calendar day: its wall-clock start is stored as UTC. */
 export const climbDate = (session: Pick<SessionRow, "start_at">): CalendarDate =>
   utcDate(session.start_at);
 
+/** Everything logged, as the plan reads it. */
+export function loggedSessions(log: Omit<TrainingLog, "plan" | "workout">): LoggedSession[] {
+  return [
+    ...log.climbs.map((s) => ({
+      kind: "climbing" as const,
+      date: climbDate(s),
+      membershipId: s.membership_id,
+      variation: s.variation,
+    })),
+    ...log.hangs.map((s) => ({
+      kind: "hangboard" as const,
+      date: s.date,
+      membershipId: s.membershipId,
+      variation: s.variation,
+    })),
+    ...log.activities.map((a) => ({
+      kind: a.kind,
+      date: a.date,
+      membershipId: a.membershipId,
+      variation: a.variation,
+    })),
+  ];
+}
+
 export function trainingDay(
   log: TrainingLog,
   date: CalendarDate,
   today: CalendarDate
 ): TrainingDay {
-  const monday = weekStart(date);
-  const calendar = planOccurrences(
-    log.planItems,
-    log.activities,
-    log.climbs.map(climbDate),
-    { start: monday, end: addDays(monday, 7) },
-    today
-  );
   return {
     date,
     isToday: date === today,
@@ -79,21 +73,15 @@ export function trainingDay(
     logged: [
       ...log.climbs
         .filter((s) => climbDate(s) === date)
-        .map((session): LoggedItem => ({ kind: "climb", status: "logged", session })),
+        .map((session): LoggedItem => ({ kind: "climb", session })),
       ...log.hangs
         .filter((s) => s.date === date)
-        .map((session): LoggedItem => ({ kind: "hang", status: "logged", session })),
+        .map((session): LoggedItem => ({ kind: "hang", session })),
       ...log.activities
         .filter((a) => a.date === date)
-        .map((activity): LoggedItem => ({ kind: "activity", status: "logged", activity })),
+        .map((activity): LoggedItem => ({ kind: "activity", activity })),
     ],
-    planned: scheduledOn(log.schedules, date)
-      .filter((s) => !isDoneOn(log.hangs, s, date))
-      .map((schedule) => ({ kind: "hang", status: "planned", schedule })),
-    plans: calendar.days
-      .filter((o) => o.date === date)
-      .map((o) => ({ kind: o.item.kind, status: o.status, plan: o.item })),
-    goals: calendar.weeks,
+    plans: occurrencesOn(log.plan, log.workout, loggedSessions(log), date, today),
   };
 }
 
@@ -112,40 +100,32 @@ export function itemEffort(item: LoggedItem): number | null {
   return isUnscored(item.session) ? null : item.session.rpe;
 }
 
-/** What a mark looks like: a discipline, with logged activities and plans by their own kind. */
-export type MarkKind = "hang" | PlanKind;
+/** The kind of training a logged item is. */
+export const loggedKind = (item: LoggedItem): WorkoutKind =>
+  item.kind === "activity" ? item.activity.kind : item.kind === "hang" ? "hangboard" : "climbing";
 
-export const markKind = (item: LoggedItem | PlannedItem): MarkKind =>
-  item.kind === "activity" ? item.activity.kind : item.kind;
-
-export type DayMarkSpec = { kind: MarkKind; filled: boolean };
+export type DayMarkSpec = { kind: WorkoutKind; filled: boolean };
 
 /**
  * One mark per thing on the day: filled for what was logged, outlined while open. A plan
- * done adds none, since the session or activity that did it is already logged.
+ * done adds none, since the session that did it is already logged.
  */
 export function dayMarks(day: TrainingDay): DayMarkSpec[] {
   return [
-    ...day.logged.map((i) => ({ kind: markKind(i), filled: true })),
-    ...day.planned.map((i) => ({ kind: markKind(i), filled: false })),
-    ...day.plans.filter((p) => p.status !== "done").map((p) => ({ kind: p.kind, filled: false })),
+    ...day.logged.map((i) => ({ kind: loggedKind(i), filled: true })),
+    ...day.plans
+      .filter((p) => p.status !== "done")
+      .flatMap((p) => (p.workout === undefined ? [] : [{ kind: p.workout.kind, filled: false }])),
   ];
 }
 
 export type WeekStats = { done: number; planned: number; effort: number | null; streak: number };
 
-/**
- * This week so far: what was logged against that plus everything still open, the mean
- * effort, and the week streak. A weekly goal adds what is left of its target.
- */
+/** This week so far: what was logged plus everything still open, the mean effort, and the week streak. */
 export function weekStats(log: TrainingLog, today: CalendarDate): WeekStats {
   const days = trainingWeek(log, weekStart(today), today);
   const marks = days.flatMap(dayMarks);
-  const goals = days[0]?.goals ?? [];
   const done = marks.filter((m) => m.filled).length;
-  const open =
-    marks.filter((m) => !m.filled).length +
-    goals.reduce((n, g) => n + g.target - Math.min(g.done, g.target), 0);
   const efforts = days
     .flatMap((d) => d.logged)
     .map(itemEffort)
@@ -157,7 +137,7 @@ export function weekStats(log: TrainingLog, today: CalendarDate): WeekStats {
   ];
   return {
     done,
-    planned: done + open,
+    planned: marks.length,
     effort: efforts.length === 0 ? null : efforts.reduce((a, b) => a + b, 0) / efforts.length,
     streak: weekStreak(dates, today),
   };

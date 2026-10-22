@@ -28,6 +28,9 @@ const detail: SessionDetail = {
   posted_at: "2026-07-02T00:00:00.000Z",
   post_state: "posted",
   post_error: null,
+  membership_id: null,
+  week: null,
+  variation: null,
   tags: [],
   climbs: [
     {
@@ -145,6 +148,9 @@ describe("sessionDetailVM", () => {
       posted_at: null,
       post_state: null,
       post_error: null,
+      membership_id: null,
+      week: null,
+      variation: null,
     });
     expect(vm.post.kind).toBe("legacy");
     expect(vm.post.label).toBe("Tension Board · read-only history");
@@ -169,6 +175,9 @@ describe("sessionDetailVM", () => {
       posted_at: null,
       post_state: null,
       post_error: null,
+      membership_id: null,
+      week: null,
+      variation: null,
     });
     expect(vm.title).toContain("Tuesday board night");
     expect(vm.meta).toContain("· Indoor ·");
@@ -183,6 +192,9 @@ describe("sessionDetailVM", () => {
     posted_at: null,
     post_state: null,
     post_error: null,
+    membership_id: null,
+    week: null,
+    variation: null,
   };
   const connected = { connected: true, active: true, since: null };
 

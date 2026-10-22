@@ -1,8 +1,4 @@
-import type {
-  ActivityKind as TrainingKind,
-  HangHistoryRow,
-  SessionLog,
-} from "@sendtally/api-client";
+import type { HangHistoryRow, SessionLog } from "@sendtally/api-client";
 import { timeOnEdge, totalSeconds, type CalendarDate } from "@sendtally/core/hang";
 import { dayMonth } from "../hang/format";
 import { formatNumber, t, type MessageKey } from "../i18n";
@@ -21,17 +17,6 @@ const KIND_NAMES: Record<ActivityKind, MessageKey> = {
   mobility: "activities.kindMobility",
   other: "activities.kindOther",
 };
-
-const TRAINING_KINDS: Record<TrainingKind, ActivityKind> = {
-  strength: "strength",
-  mobility: "mobility",
-  yoga: "mobility",
-  run: "other",
-  other: "other",
-};
-
-/** Where a logged activity counts in the overview: yoga with mobility, the smaller kinds as other. */
-export const overviewKind = (kind: TrainingKind): ActivityKind => TRAINING_KINDS[kind];
 
 const AXIS_EVERY = 4;
 
@@ -76,7 +61,7 @@ export function activitiesOf(log: SessionLog): Activity<ActivityKind>[] {
       rpe: h.rpe,
     })),
     ...log.activities.map((a): Activity<ActivityKind> => ({
-      kind: overviewKind(a.kind),
+      kind: a.kind,
       date: a.date,
       minutes: a.minutes,
       rpe: a.rpe,

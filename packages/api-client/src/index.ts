@@ -5,6 +5,7 @@ import type {
   ActivityInput,
   ActivityRecord,
   Area,
+  Block,
   AreaClimb,
   AreaClimbDraftInput,
   AreaClimbInput,
@@ -34,25 +35,24 @@ import type {
   ImportBody,
   ImportResult,
   LogSessionInput,
+  Membership,
+  Plan,
   BulkCreationsInput,
   CreationRef,
   CreationResult,
   ModerationCreations,
   ModerationQueue,
-  PlanItem,
   PostOutcome,
   ProjectInput,
-  Schedule,
   SessionDetail,
   SessionLog,
   SessionLogWithClimbs,
   SessionTag,
   TagSummary,
-  TrainingBlock,
-  UserWorkout,
-  UserWorkoutInput,
   TrainingReminderSettings,
-  Workout,
+  WeekChange,
+  WorkoutInput,
+  WorkoutRecord,
 } from "./types";
 
 export * from "./types";
@@ -415,13 +415,6 @@ export class SendtallyApi {
     return body(this.client.v1.hang.grips[":id"].$put({ param: { id }, json: { name } }));
   }
 
-  saveHangWorkout(
-    id: string,
-    workout: Omit<Workout, "id" | "source">
-  ): Promise<{ workout: Workout }> {
-    return body(this.client.v1.hang.workouts[":id"].$put({ param: { id }, json: workout }));
-  }
-
   setHangDefaultGrip(
     workoutId: string,
     gripId: string
@@ -434,20 +427,8 @@ export class SendtallyApi {
     );
   }
 
-  saveHangSchedule({ id, ...schedule }: Schedule): Promise<{ schedule: Schedule }> {
-    return body(this.client.v1.hang.schedules[":id"].$put({ param: { id }, json: schedule }));
-  }
-
-  deleteHangWorkout(id: string): Promise<{ deleted: boolean }> {
-    return body(this.client.v1.hang.workouts[":id"].$delete({ param: { id } }));
-  }
-
   deleteHangGrip(id: string): Promise<{ deleted: boolean }> {
     return body(this.client.v1.hang.grips[":id"].$delete({ param: { id } }));
-  }
-
-  deleteHangSchedule(id: string): Promise<{ deleted: boolean }> {
-    return body(this.client.v1.hang.schedules[":id"].$delete({ param: { id } }));
   }
 
   saveHangSession({ id, ...session }: HangSession): Promise<{ session: HangSessionRecord }> {
@@ -485,47 +466,45 @@ export class SendtallyApi {
     return body(this.client.v1.activities[":id"].$delete({ param: { id } }));
   }
 
-  planItems(): Promise<{ planItems: PlanItem[] }> {
-    return body(this.client.v1["plan-items"].$get());
+  /** Blocks, memberships and their week changes. */
+  plan(): Promise<Plan> {
+    return body(this.client.v1.plan.$get());
   }
 
-  savePlanItem({ id, ...item }: PlanItem): Promise<{ planItem: PlanItem }> {
-    return body(this.client.v1["plan-items"][":id"].$put({ param: { id }, json: item }));
+  saveBlock({ id, ...block }: Block): Promise<{ block: Block }> {
+    return body(this.client.v1.blocks[":id"].$put({ param: { id }, json: block }));
   }
 
-  skipPlanItem(id: string, date: string, skipped: boolean): Promise<{ planItem: PlanItem }> {
+  /** Its memberships go with it. */
+  deleteBlock(id: string): Promise<{ deleted: boolean }> {
+    return body(this.client.v1.blocks[":id"].$delete({ param: { id } }));
+  }
+
+  saveMembership({ id, ...membership }: Membership): Promise<{ membership: Membership }> {
+    return body(this.client.v1.memberships[":id"].$put({ param: { id }, json: membership }));
+  }
+
+  /** Its week changes go with it; sessions logged against it lose only the link. */
+  deleteMembership(id: string): Promise<{ deleted: boolean }> {
+    return body(this.client.v1.memberships[":id"].$delete({ param: { id } }));
+  }
+
+  /** An empty change puts the item back as written for that week. */
+  saveWeekChange({ membershipId, ...change }: WeekChange): Promise<{ weekChange: WeekChange }> {
     return body(
-      this.client.v1["plan-items"][":id"].skip.$put({ param: { id }, json: { date, skipped } })
+      this.client.v1.memberships[":id"].changes.$put({ param: { id: membershipId }, json: change })
     );
   }
 
-  deletePlanItem(id: string): Promise<{ deleted: boolean }> {
-    return body(this.client.v1["plan-items"][":id"].$delete({ param: { id } }));
-  }
-
-  trainingBlocks(): Promise<{ blocks: TrainingBlock[] }> {
-    return body(this.client.v1["training-blocks"].$get());
-  }
-
-  /** Moves its members onto its dates; an `endedOn` ends them there. */
-  saveTrainingBlock({ id, ...block }: TrainingBlock): Promise<{ block: TrainingBlock }> {
-    return body(this.client.v1["training-blocks"][":id"].$put({ param: { id }, json: block }));
-  }
-
-  /** Its members stay planned, on their own. */
-  deleteTrainingBlock(id: string): Promise<{ deleted: boolean }> {
-    return body(this.client.v1["training-blocks"][":id"].$delete({ param: { id } }));
-  }
-
-  workouts(): Promise<{ workouts: UserWorkout[] }> {
+  workouts(): Promise<{ workouts: WorkoutRecord[] }> {
     return body(this.client.v1.workouts.$get());
   }
 
-  saveWorkout(id: string, workout: UserWorkoutInput): Promise<{ workout: UserWorkout }> {
+  saveWorkout(id: string, workout: WorkoutInput): Promise<{ workout: WorkoutRecord }> {
     return body(this.client.v1.workouts[":id"].$put({ param: { id }, json: workout }));
   }
 
-  /** Plans that ran it keep their own template. */
+  /** It leaves every block; sessions that ran it keep what was done. */
   deleteWorkout(id: string): Promise<{ deleted: boolean }> {
     return body(this.client.v1.workouts[":id"].$delete({ param: { id } }));
   }
