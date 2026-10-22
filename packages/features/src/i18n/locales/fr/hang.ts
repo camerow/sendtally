@@ -34,7 +34,6 @@ export const hang = {
     "Beaucoup de tirages légers, la plupart des jours de la semaine. De la circulation pour les tendons, pas une séance dure.",
   "hang.workout.mineBlurb": "Ton exercice.",
   "hang.untitledWorkout": "Exercice sans nom",
-  "hang.mineCopy": "{name} (le mien)",
 
   "hang.grip.half": "Semi-arqué",
   "hang.grip.full": "Arqué",
@@ -79,12 +78,6 @@ export const hang = {
   "hang.skipDay": "Sauter {workout} ({grip}), {date}",
   "hang.editPlanAria": "{workout}, {grip}, {load}. Modifier la prise, la charge ou les dates",
   "hang.statStreak": "Semaines d'affilée",
-  "hang.library": "Bibliothèque",
-  "hang.myWorkouts": "Mes exercices · {n}",
-  "hang.loggedTimes": "Fait {n} fois",
-  "hang.newBadge": "Nouveau",
-  "hang.noMine":
-    "Pas encore d'exercice perso. Personnalise-en un de la bibliothèque, ou crée-en un nouveau.",
 
   "hang.edit": "Modifier",
   "hang.customise": "Personnaliser",

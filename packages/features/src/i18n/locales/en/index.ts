@@ -21,6 +21,7 @@ import { settings } from "./settings";
 import { statistics } from "./statistics";
 import { trends } from "./trends";
 import { training } from "./training";
+import { workouts } from "./workouts";
 
 export const en = {
   ...account,
@@ -46,4 +47,5 @@ export const en = {
   ...statistics,
   ...trends,
   ...training,
+  ...workouts,
 } as const;

@@ -1,3 +1,4 @@
+import { randomUUID } from "expo-crypto";
 import { router } from "expo-router";
 import React from "react";
 import { ScrollView, View } from "react-native";
@@ -8,8 +9,10 @@ import { t } from "@sendtally/features/i18n";
 import { BackButton } from "../../../components/BackButton";
 import { Button } from "../components/Button";
 import { Label } from "../components/Label";
+import { copyName } from "@sendtally/features/workouts";
 import { useHangData } from "../data/HangDataContext";
 import { GripPickerSheet } from "../grip-picker/GripPickerSheet";
+import { confirmDeleteWorkout } from "../library-detail/confirmDeleteWorkout";
 import { PlanList } from "../plans/PlanList";
 import { PlannerSheet } from "../planner/PlannerSheet";
 import type { PlannerRequest } from "../planner/types";
@@ -34,6 +37,17 @@ function Detail({
   const [planner, setPlanner] = React.useState<PlannerRequest | null>(null);
   const [editing, setEditing] = React.useState<string | null>(null);
   const mine = workout.source === "mine";
+
+  const duplicate = (): void => {
+    const id = randomUUID();
+    void actions.saveWorkout({ ...workout, id, source: "mine", name: copyName(workout.name) });
+    router.push({ pathname: "/workout/[id]", params: { id } });
+  };
+  const remove = (): void =>
+    confirmDeleteWorkout(workout.name, t("workouts.deleteHangBody"), () => {
+      router.back();
+      void actions.deleteWorkout(workout.id);
+    });
 
   const chooseGrip = (id: string): void => {
     setGripId(id);
@@ -93,6 +107,17 @@ function Detail({
           onOpen={setEditing}
           onTrends={() => openTrends(workout.id, gripId)}
         />
+        <View style={{ gap: 8 }}>
+          <Button
+            label={t("workouts.duplicate")}
+            onPress={duplicate}
+            variant="outline"
+            height={50}
+          />
+          {mine && (
+            <Button label={t("workouts.delete")} onPress={remove} variant="danger" height={50} />
+          )}
+        </View>
       </ScrollView>
       <View
         style={{

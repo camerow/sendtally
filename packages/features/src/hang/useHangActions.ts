@@ -15,6 +15,8 @@ export type HangActions = {
   saveGrip: (grip: Grip) => Promise<void>;
   deleteGrip: (id: string) => Promise<void>;
   saveWorkout: (workout: Workout) => Promise<void>;
+  /** Its plans go with it; its sessions stay. */
+  deleteWorkout: (id: string) => Promise<void>;
   setDefaultGrip: (workoutId: string, gripId: string) => Promise<void>;
   setLoads: (loads: Loads) => Promise<void>;
   saveSchedules: (schedules: Schedule[]) => Promise<void>;
@@ -92,6 +94,18 @@ export function useHangActions(api: SendtallyApi, onError: (error: unknown) => v
             const { id, source: _source, ...fields } = workout;
             return api.saveHangWorkout(id, fields);
           }
+        ),
+      deleteWorkout: (id) =>
+        write(
+          (d) => ({
+            ...d,
+            workouts: d.workouts.filter((w) => w.id !== id),
+            schedules: d.schedules.filter((s) => s.workoutId !== id),
+            defaultGrips: Object.fromEntries(
+              Object.entries(d.defaultGrips).filter(([workoutId]) => workoutId !== id)
+            ),
+          }),
+          () => api.deleteHangWorkout(id)
         ),
       setDefaultGrip: (workoutId, gripId) =>
         write(

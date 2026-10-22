@@ -1,8 +1,11 @@
 import React from "react";
 import { emptyDetail } from "@sendtally/features/activities";
+import { t } from "@sendtally/features/i18n";
 import { BlockSheet } from "../blocks/BlockSheet";
+import { LibraryPickerSheet } from "../library/LibraryPickerSheet";
 import { PlannerSheet } from "../planner/PlannerSheet";
 import { openBuilderToPlan } from "./openBuilder";
+import { planFromWorkout } from "./planFromWorkout";
 import { PlanChooserSheet } from "./PlanChooserSheet";
 import { PlanItemSheet } from "./PlanItemSheet";
 import type { PlanChoice, PlanRequest } from "./types";
@@ -17,6 +20,8 @@ type Choose = Extract<PlanRequest, { mode: "choose" }>;
 function next(from: Choose, choice: PlanChoice): PlanRequest | null {
   const { days, start, blockId } = from;
   switch (choice) {
+    case "library":
+      return { mode: "library", days, start, blockId };
     case "hang":
       return {
         mode: "hang",
@@ -53,6 +58,13 @@ export function PlanSheets({ request, onChange }: PlanSheetsProps): React.ReactE
       return <PlanItemSheet request={request.request} onClose={close} />;
     case "block":
       return <BlockSheet block={request.block} onClose={(after) => onChange(after)} />;
+    case "library":
+      return (
+        <LibraryPickerSheet
+          title={t("workouts.chooseWorkout")}
+          onClose={(w) => onChange(w === null ? null : planFromWorkout(w, request))}
+        />
+      );
     case "choose":
       return (
         <PlanChooserSheet

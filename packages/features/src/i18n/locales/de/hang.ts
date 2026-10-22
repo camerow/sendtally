@@ -34,7 +34,6 @@ export const hang = {
     "Viele leichte Züge an den meisten Tagen der Woche. Durchblutung für die Sehnen, kein hartes Training.",
   "hang.workout.mineBlurb": "Dein Workout.",
   "hang.untitledWorkout": "Workout ohne Namen",
-  "hang.mineCopy": "{name} (meins)",
 
   "hang.grip.half": "Half Crimp",
   "hang.grip.full": "Full Crimp",
@@ -80,12 +79,6 @@ export const hang = {
   "hang.skipDay": "{workout} ({grip}) überspringen, {date}",
   "hang.editPlanAria": "{workout}, {grip}, {load}. Griff, Last oder Termine ändern",
   "hang.statStreak": "Wochen am Stück",
-  "hang.library": "Bibliothek",
-  "hang.myWorkouts": "Meine Workouts · {n}",
-  "hang.loggedTimes": "{n} eingetragen",
-  "hang.newBadge": "Neu",
-  "hang.noMine":
-    "Noch keine eigenen Workouts. Pass eins aus der Bibliothek an oder erstell ein neues.",
 
   "hang.edit": "Bearbeiten",
   "hang.customise": "Anpassen",

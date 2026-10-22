@@ -6,6 +6,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { colors } from "@sendtally/design/tokens";
 import { NEW_WORKOUT, type HangKind, type Workout } from "@sendtally/core/hang";
 import { t } from "@sendtally/features/i18n";
+import { copyName } from "@sendtally/features/workouts";
 import { Button } from "../components/Button";
 import { Label } from "../components/Label";
 import { Segmented } from "../components/Segmented";
@@ -43,7 +44,7 @@ export function BuilderScreen({ id, from, plan }: BuilderScreenProps): React.Rea
     const base = editing ?? (from === undefined ? undefined : model.workout(from));
     if (base === undefined) return NEW_WORKOUT;
     const { id: _id, source: _source, ...fields } = base;
-    return editing ? fields : { ...fields, name: t("hang.mineCopy", { name: base.name }) };
+    return editing ? fields : { ...fields, name: copyName(base.name) };
   });
   const update = (patch: Partial<Draft>): void => setDraft((d) => ({ ...d, ...patch }));
   const setNumber = (key: NumberKey, value: number): void =>

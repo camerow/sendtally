@@ -10,6 +10,7 @@ const run: IntervalsRun = {
   date: "2026-10-22",
   planItemId: null,
   activityId: "a1",
+  workoutId: null,
   body: {
     kind: "intervals",
     rounds: 10,

@@ -47,6 +47,7 @@ export function IntervalsDone({ workout, run }: IntervalsDoneProps): React.React
       rpe,
       notes: null,
       planItemId: workout.planItemId,
+      workoutId: workout.workoutId,
       detail: { ...workout.body, stepsDone: done },
     });
     router.dismissAll();

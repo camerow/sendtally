@@ -12,6 +12,7 @@ const activity: ActivityRecord = {
   rpe: 7,
   notes: null,
   planItemId: null,
+  workoutId: null,
   detail: null,
   stravaActivityId: null,
   postedAt: null,

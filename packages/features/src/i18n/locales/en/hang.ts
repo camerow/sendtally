@@ -34,7 +34,6 @@ export const hang = {
     "Many light lifts, most days of the week. Blood flow for tendons, not a hard workout.",
   "hang.workout.mineBlurb": "Your workout.",
   "hang.untitledWorkout": "Untitled workout",
-  "hang.mineCopy": "{name} (mine)",
 
   "hang.grip.half": "Half crimp",
   "hang.grip.full": "Full crimp",
@@ -79,11 +78,6 @@ export const hang = {
   "hang.skipDay": "Skip {workout} on {grip}, {date}",
   "hang.editPlanAria": "{workout}, {grip}, {load}. Change grip, load or dates",
   "hang.statStreak": "Week streak",
-  "hang.library": "Library",
-  "hang.myWorkouts": "My workouts · {n}",
-  "hang.loggedTimes": "{n} logged",
-  "hang.newBadge": "New",
-  "hang.noMine": "No workouts of your own yet. Customise one from the library, or make a new one.",
 
   "hang.edit": "Edit",
   "hang.customise": "Customise",

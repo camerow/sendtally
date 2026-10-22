@@ -30,6 +30,7 @@ const logged = (id: string, date: string, name: string, loadKg: number, done = t
   rpe: null,
   notes: null,
   planItemId: null,
+  workoutId: null,
   detail: {
     kind: "sets",
     exercises: [{ name, measures: ["reps", "loadKg"], sets: [{ reps: 5, loadKg, done }] }],

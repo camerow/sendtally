@@ -10,6 +10,7 @@ import {
   type Weekday,
 } from "@sendtally/core/hang";
 import { detailFromTemplate, templateOf } from "@sendtally/features/activities";
+import { templateOfWorkout, type LibraryWorkout } from "@sendtally/features/workouts";
 import { t } from "@sendtally/features/i18n";
 import { DEFAULT_WEEKS, endChoice } from "../planner/scheduleDraft";
 import { defaultTitle, planItemWhen } from "./planItemText";
@@ -17,9 +18,21 @@ import type { PlanItemDraft, PlanItemRequest } from "./types";
 
 const DEFAULT_PER_WEEK = 3;
 
+/** What picking a workout changes on a plan: its name, length, effort, project and body. */
+export function withWorkout(w: LibraryWorkout): Partial<PlanItemDraft> {
+  return {
+    title: w.name,
+    minutes: w.minutes,
+    targetRpe: w.targetRpe,
+    projectId: w.body?.kind === "climb" ? w.body.projectId : null,
+    template: detailFromTemplate(templateOfWorkout(w)),
+    workoutId: w.id,
+  };
+}
+
 export function planItemDraft(request: PlanItemRequest, today: CalendarDate): PlanItemDraft {
   if (request.mode === "new") {
-    return {
+    const draft: PlanItemDraft = {
       kind: request.kind,
       title: defaultTitle(request.kind),
       mode: "days",
@@ -34,8 +47,10 @@ export function planItemDraft(request: PlanItemRequest, today: CalendarDate): Pl
       targetRpe: null,
       projectId: null,
       template: request.template ?? null,
+      workoutId: null,
       blockId: request.blockId ?? null,
     };
+    return request.workout === undefined ? draft : { ...draft, ...withWorkout(request.workout) };
   }
   const { item } = request;
   const end = endChoiceOf(item);
@@ -54,6 +69,7 @@ export function planItemDraft(request: PlanItemRequest, today: CalendarDate): Pl
     targetRpe: item.targetRpe,
     projectId: item.projectId,
     template: detailFromTemplate(item.template),
+    workoutId: item.workoutId ?? null,
     blockId: item.blockId ?? null,
   };
 }
@@ -84,6 +100,7 @@ export function planItemOf(
     targetRpe: draft.targetRpe,
     projectId: draft.kind === "climb" ? draft.projectId : null,
     template: draft.kind === "climb" ? null : templateOf(draft.template),
+    workoutId: draft.workoutId,
     blockId: draft.blockId,
   };
 }

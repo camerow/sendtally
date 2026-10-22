@@ -35,6 +35,13 @@ export function PlanChooserSheet({ inBlock, onClose }: PlanChooserSheetProps): R
           action={t("hang.cancel")}
           onAction={() => setOpen(false)}
         />
+        <SheetSection label={t("workouts.library")} gap={2}>
+          <PlanChoiceRow
+            kind="other"
+            title={t("workouts.fromLibrary")}
+            onPress={() => pick("library")}
+          />
+        </SheetSection>
         <SheetSection label={t("plan.whatToPlan")} gap={2}>
           {choices.map((c) => (
             <PlanChoiceRow

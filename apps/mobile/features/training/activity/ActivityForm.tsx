@@ -1,3 +1,4 @@
+import { randomUUID } from "expo-crypto";
 import { router } from "expo-router";
 import React from "react";
 import {
@@ -25,6 +26,7 @@ import {
 } from "@sendtally/features/activities";
 import type { ActivityDetail } from "@sendtally/api-client";
 import { t } from "@sendtally/features/i18n";
+import { useWorkoutActions } from "@sendtally/features/workouts";
 import { DateTimeField } from "../../../components/DateTimeField";
 import { useApi } from "../../../lib/api";
 import { Button } from "../components/Button";
@@ -68,16 +70,34 @@ export function ActivityForm({ id, initial, logged }: ActivityFormProps): React.
   const load = trainingLoadLabel(draft);
   const unit = useWeightUnit(api);
   const targets = usePlanTemplate(api, draft.planItemId) ?? null;
+  const workouts = useWorkoutActions(api, reportFailure);
+  const body = templateOf(draft.detail);
+
+  const saveAsWorkout = (): void => {
+    if (body === null) return;
+    const workoutId = randomUUID();
+    void workouts.saveWorkout(workoutId, {
+      name: draft.title.trim() || kindLabel(draft.kind),
+      category: draft.kind,
+      description: null,
+      tags: [],
+      minutes: draft.minutes,
+      targetRpe: draft.rpe,
+      body,
+    });
+    router.push({ pathname: "/workout/[id]", params: { id: workoutId } });
+  };
 
   const start = (detail: ActivityDetail): void => {
     const body = templateOf(detail);
     if (body?.kind !== "intervals") return;
-    const { kind, title, date, planItemId } = draft;
+    const { kind, title, date, planItemId, workoutId } = draft;
     startIntervals({
       kind,
       title,
       date,
       planItemId,
+      workoutId,
       activityId: logged === null ? id : null,
       body,
     });
@@ -244,6 +264,9 @@ export function ActivityForm({ id, initial, logged }: ActivityFormProps): React.
 
         <View style={{ gap: 6 }}>
           <Button label={t("common.save")} onPress={save} variant="primary" height={54} />
+          {logged !== null && body !== null && (
+            <Button label={t("workouts.saveAsWorkout")} onPress={saveAsWorkout} variant="link" />
+          )}
           {logged !== null && (
             <Button label={t("activities.deleteActivity")} onPress={remove} variant="danger" />
           )}

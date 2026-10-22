@@ -28,6 +28,7 @@ const logged = (over: Partial<Activity> = {}): Activity => ({
   rpe: null,
   notes: null,
   planItemId: null,
+  workoutId: null,
   detail: null,
   ...over,
 });

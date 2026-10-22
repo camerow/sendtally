@@ -16,6 +16,7 @@ function logged(id: string, date: string, exercises: Exercise[]): Activity {
     rpe: null,
     notes: null,
     planItemId: null,
+    workoutId: null,
     detail: { kind: "sets", exercises },
   };
 }

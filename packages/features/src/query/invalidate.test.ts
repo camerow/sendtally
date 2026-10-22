@@ -98,6 +98,17 @@ describe("writeEffect", () => {
     }
   });
 
+  it("stales the plans a deleted workout unlinks, never the workouts' own cache", () => {
+    expect(writeEffect({ method: "PUT", path: "/v1/workouts/w1" })).toEqual({
+      stale: [],
+      gone: null,
+    });
+    expect(writeEffect({ method: "DELETE", path: "/v1/workouts/w1" })).toEqual({
+      stale: [["planItems"]],
+      gone: null,
+    });
+  });
+
   it("stales the members a training block write moves, never the blocks' own cache", () => {
     for (const method of ["PUT", "DELETE"]) {
       expect(writeEffect({ method, path: "/v1/training-blocks/b1" })).toEqual({
