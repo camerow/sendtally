@@ -10,6 +10,7 @@ import {
   planItemSkipBody,
   trainingIdParam,
 } from "./lib/activities";
+import { inBlock, trainingBlockBody, trainingBlockOf } from "./lib/blocks";
 import * as repo from "./lib/repo";
 
 const ACTIVITY_LIST_LIMIT = 1000;
@@ -60,8 +61,10 @@ export const planItems = new Hono<AppEnv>()
     async (c) => {
       const { id } = c.req.valid("param");
       const userId = c.get("userId");
+      const item = await inBlock(c.env.DB, userId, { id, ...c.req.valid("json") });
+      if (item === null) return c.json({ error: "no such block" }, 400);
       await repo.ensureUser(c.env.DB, userId);
-      const row = await repo.savePlanItem(c.env.DB, userId, { id, ...c.req.valid("json") });
+      const row = await repo.savePlanItem(c.env.DB, userId, item);
       return c.json({ planItem: planItemOf(row) });
     }
   )
@@ -88,4 +91,30 @@ export const planItems = new Hono<AppEnv>()
   .delete("/:id", zValidator("param", trainingIdParam, invalidBody), async (c) => {
     const { id } = c.req.valid("param");
     return c.json({ deleted: await repo.deletePlanItem(c.env.DB, c.get("userId"), id) });
+  });
+
+// Saving a block moves its members onto its dates; setting endedOn ends them
+// there. Deleting one leaves its members planned on their own.
+export const trainingBlocks = new Hono<AppEnv>()
+  .get("/", async (c) => {
+    const rows = await repo.listTrainingBlocks(c.env.DB, c.get("userId"));
+    return c.json({ blocks: rows.map(trainingBlockOf) });
+  })
+
+  .put(
+    "/:id",
+    zValidator("param", trainingIdParam, invalidBody),
+    zValidator("json", trainingBlockBody, invalidBody),
+    async (c) => {
+      const { id } = c.req.valid("param");
+      const userId = c.get("userId");
+      await repo.ensureUser(c.env.DB, userId);
+      const row = await repo.saveTrainingBlock(c.env.DB, userId, { id, ...c.req.valid("json") });
+      return c.json({ block: trainingBlockOf(row) });
+    }
+  )
+
+  .delete("/:id", zValidator("param", trainingIdParam, invalidBody), async (c) => {
+    const { id } = c.req.valid("param");
+    return c.json({ deleted: await repo.deleteTrainingBlock(c.env.DB, c.get("userId"), id) });
   });

@@ -51,14 +51,17 @@ import {
   stravaConnections,
   syncState,
   tags,
+  trainingBlocks,
   users,
 } from "../db/schema";
 import {
+  blockEnd,
   loadKey,
   type HangSession,
   type HangSettings,
   type Loads,
   type Schedule,
+  type TrainingBlock,
   type Workout,
 } from "@sendtally/core/hang";
 import type { ActivityInput, PlanItem } from "./activities";
@@ -1160,6 +1163,7 @@ export async function deleteUserData(db: D1Database, userId: string): Promise<vo
     d.delete(hangSettings).where(eq(hangSettings.user_id, userId)),
     d.delete(activities).where(eq(activities.user_id, userId)),
     d.delete(planItems).where(eq(planItems.user_id, userId)),
+    d.delete(trainingBlocks).where(eq(trainingBlocks.user_id, userId)),
     d.delete(sessions).where(eq(sessions.user_id, userId)),
     d.delete(stravaConnections).where(eq(stravaConnections.user_id, userId)),
     d.delete(storeEntitlements).where(eq(storeEntitlements.user_id, userId)),
@@ -2450,6 +2454,8 @@ export async function saveHangSchedule(
     start: s.start,
     end: s.end,
     skip_json: JSON.stringify([...new Set(s.skip)].sort()),
+    ...(s.targetRpe === undefined ? {} : { target_rpe: s.targetRpe }),
+    ...(s.blockId === undefined ? {} : { block_id: s.blockId }),
     updated_at: new Date().toISOString(),
   };
   return drizzle(db)
@@ -2709,6 +2715,7 @@ export async function savePlanItem(
     project_id: p.projectId,
     template_kind: p.template?.kind ?? null,
     template_json: p.template === null ? null : JSON.stringify(p.template),
+    ...(p.blockId === undefined ? {} : { block_id: p.blockId }),
     updated_at: new Date().toISOString(),
   };
   return drizzle(db)
@@ -2725,4 +2732,93 @@ export async function deletePlanItem(db: D1Database, userId: string, id: string)
     .delete(planItems)
     .where(and(eq(planItems.user_id, userId), eq(planItems.id, id)));
   return result.meta.changes > 0;
+}
+
+export type TrainingBlockRow = typeof trainingBlocks.$inferSelect;
+
+export async function listTrainingBlocks(
+  db: D1Database,
+  userId: string
+): Promise<TrainingBlockRow[]> {
+  return drizzle(db)
+    .select()
+    .from(trainingBlocks)
+    .where(eq(trainingBlocks.user_id, userId))
+    .orderBy(desc(trainingBlocks.start), trainingBlocks.id)
+    .all();
+}
+
+export async function getTrainingBlock(
+  db: D1Database,
+  userId: string,
+  id: string
+): Promise<TrainingBlockRow | null> {
+  const row = await drizzle(db)
+    .select()
+    .from(trainingBlocks)
+    .where(and(eq(trainingBlocks.user_id, userId), eq(trainingBlocks.id, id)))
+    .get();
+  return row ?? null;
+}
+
+/** Saves the block and moves every member onto its dates, in one batch. */
+export async function saveTrainingBlock(
+  db: D1Database,
+  userId: string,
+  b: TrainingBlock
+): Promise<TrainingBlockRow> {
+  const d = drizzle(db);
+  const now = new Date().toISOString();
+  const fields = {
+    name: b.name,
+    start: b.start,
+    weeks: b.weeks,
+    phases_json: JSON.stringify(b.phases),
+    notes: b.notes,
+    ended_on: b.endedOn,
+    updated_at: now,
+  };
+  const dates = { start: b.start, end: blockEnd(b), updated_at: now };
+  const [row] = await d.batch([
+    d
+      .insert(trainingBlocks)
+      .values({ user_id: userId, id: b.id, ...fields })
+      .onConflictDoUpdate({ target: [trainingBlocks.user_id, trainingBlocks.id], set: fields })
+      .returning(),
+    d
+      .update(planItems)
+      .set(dates)
+      .where(and(eq(planItems.user_id, userId), eq(planItems.block_id, b.id))),
+    d
+      .update(hangSchedules)
+      .set(dates)
+      .where(and(eq(hangSchedules.user_id, userId), eq(hangSchedules.block_id, b.id))),
+  ]);
+  const saved = row[0];
+  if (saved === undefined) throw new Error("training block upsert returned no row");
+  return saved;
+}
+
+/** The block goes; its members stay planned on their own, dates unchanged. */
+export async function deleteTrainingBlock(
+  db: D1Database,
+  userId: string,
+  id: string
+): Promise<boolean> {
+  const d = drizzle(db);
+  const now = new Date().toISOString();
+  const [, , deleted] = await d.batch([
+    d
+      .update(planItems)
+      .set({ block_id: null, updated_at: now })
+      .where(and(eq(planItems.user_id, userId), eq(planItems.block_id, id))),
+    d
+      .update(hangSchedules)
+      .set({ block_id: null, updated_at: now })
+      .where(and(eq(hangSchedules.user_id, userId), eq(hangSchedules.block_id, id))),
+    d
+      .delete(trainingBlocks)
+      .where(and(eq(trainingBlocks.user_id, userId), eq(trainingBlocks.id, id))),
+  ]);
+  return deleted.meta.changes > 0;
 }

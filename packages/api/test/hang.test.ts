@@ -137,7 +137,7 @@ describe("hangtally", () => {
       skip: ["2026-10-02"],
     };
     expect(await (await call(userId, "PUT", "/schedules/s1", schedule)).json()).toEqual({
-      schedule: { id: "s1", ...schedule },
+      schedule: { id: "s1", ...schedule, targetRpe: null, blockId: null },
     });
     const logged = await call(userId, "PUT", "/sessions/h1", sessionBody);
     const { session } = (await logged.json()) as { session: HangSessionRecord };

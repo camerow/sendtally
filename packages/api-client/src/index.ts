@@ -49,6 +49,7 @@ import type {
   SessionLogWithClimbs,
   SessionTag,
   TagSummary,
+  TrainingBlock,
   Workout,
 } from "./types";
 
@@ -482,6 +483,20 @@ export class SendtallyApi {
 
   deletePlanItem(id: string): Promise<{ deleted: boolean }> {
     return body(this.client.v1["plan-items"][":id"].$delete({ param: { id } }));
+  }
+
+  trainingBlocks(): Promise<{ blocks: TrainingBlock[] }> {
+    return body(this.client.v1["training-blocks"].$get());
+  }
+
+  /** Moves its members onto its dates; an `endedOn` ends them there. */
+  saveTrainingBlock({ id, ...block }: TrainingBlock): Promise<{ block: TrainingBlock }> {
+    return body(this.client.v1["training-blocks"][":id"].$put({ param: { id }, json: block }));
+  }
+
+  /** Its members stay planned, on their own. */
+  deleteTrainingBlock(id: string): Promise<{ deleted: boolean }> {
+    return body(this.client.v1["training-blocks"][":id"].$delete({ param: { id } }));
   }
 
   deleteAccount(): Promise<{ deleted: boolean }> {

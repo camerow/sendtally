@@ -181,7 +181,9 @@ describe("plan items", () => {
     const { planItems } = await json<{ planItems: PlanItem[] }>(
       await call(userId, "GET", "/v1/plan-items")
     );
-    expect(planItems).toEqual([{ id: "p1", ...planBody, skip: ["2026-09-29", "2026-10-01"] }]);
+    expect(planItems).toEqual([
+      { id: "p1", ...planBody, skip: ["2026-09-29", "2026-10-01"], blockId: null },
+    ]);
   });
 
   it("takes a weekly goal instead of weekdays, and a project only on a climb", async () => {
@@ -203,7 +205,7 @@ describe("plan items", () => {
     const userId = "user_plan_template";
     const withTemplate = { ...planBody, template: checklistTemplate };
     const saved = await call(userId, "PUT", "/v1/plan-items/p1", withTemplate);
-    expect(await json(saved)).toEqual({ planItem: { id: "p1", ...withTemplate } });
+    expect(await json(saved)).toEqual({ planItem: { id: "p1", ...withTemplate, blockId: null } });
     const skipped = await call(userId, "PUT", "/v1/plan-items/p1/skip", {
       date: "2026-09-29",
       skipped: true,
@@ -265,6 +267,111 @@ describe("plan items", () => {
         .bind(userId)
         .first<{ n: number }>();
       expect(`${table}:${row?.n}`).toBe(`${table}:0`);
+    }
+  });
+});
+
+describe("training blocks", () => {
+  const blockBody = {
+    name: "Autumn finger block",
+    start: "2026-09-28",
+    weeks: 4,
+    phases: ["build", "build", "build", "deload"],
+    notes: null,
+    endedOn: null,
+  };
+  const scheduleBody = {
+    workoutId: "rep73",
+    gripId: "half",
+    days: [0, 4],
+    start: "2026-01-01",
+    end: null,
+    skip: [],
+  };
+
+  const members = async (
+    userId: string
+  ): Promise<{ item: PlanItem | undefined; schedule: Record<string, unknown> | undefined }> => {
+    const { planItems } = await json<{ planItems: PlanItem[] }>(
+      await call(userId, "GET", "/v1/plan-items")
+    );
+    const { schedules } = await json<{ schedules: Record<string, unknown>[] }>(
+      await call(userId, "GET", "/v1/hang")
+    );
+    return { item: planItems[0], schedule: schedules[0] };
+  };
+
+  it("plans members on the block's dates and moves them with it", async () => {
+    const userId = "user_block_dates";
+    const saved = await call(userId, "PUT", "/v1/training-blocks/b1", blockBody);
+    expect(await json(saved)).toEqual({ block: { id: "b1", ...blockBody } });
+    await call(userId, "PUT", "/v1/plan-items/p1", { ...planBody, blockId: "b1" });
+    await call(userId, "PUT", "/v1/hang/schedules/s1", {
+      ...scheduleBody,
+      targetRpe: 8,
+      blockId: "b1",
+    });
+    let m = await members(userId);
+    expect(m.item).toMatchObject({ start: "2026-09-28", end: "2026-10-26", blockId: "b1" });
+    expect(m.schedule).toMatchObject({
+      start: "2026-09-28",
+      end: "2026-10-26",
+      targetRpe: 8,
+      blockId: "b1",
+    });
+
+    await call(userId, "PUT", "/v1/training-blocks/b1", {
+      ...blockBody,
+      start: "2026-10-05",
+      weeks: 5,
+      phases: [...blockBody.phases, "test"],
+    });
+    m = await members(userId);
+    expect(m.item).toMatchObject({ start: "2026-10-05", end: "2026-11-09" });
+    expect(m.schedule).toMatchObject({ start: "2026-10-05", end: "2026-11-09" });
+
+    await call(userId, "PUT", "/v1/plan-items/p1", { ...planBody, targetRpe: 6 });
+    expect((await members(userId)).item).toMatchObject({ blockId: "b1", targetRpe: 6 });
+  });
+
+  it("ends members with the block, and leaves them planned when it is deleted", async () => {
+    const userId = "user_block_end";
+    await call(userId, "PUT", "/v1/training-blocks/b1", blockBody);
+    await call(userId, "PUT", "/v1/plan-items/p1", { ...planBody, blockId: "b1" });
+    await call(userId, "PUT", "/v1/hang/schedules/s1", { ...scheduleBody, blockId: "b1" });
+    await call(userId, "PUT", "/v1/training-blocks/b1", { ...blockBody, endedOn: "2026-10-10" });
+    let m = await members(userId);
+    expect(m.item).toMatchObject({ end: "2026-10-10" });
+    expect(m.schedule).toMatchObject({ end: "2026-10-10" });
+
+    const res = await call(userId, "DELETE", "/v1/training-blocks/b1");
+    expect(await json(res)).toEqual({ deleted: true });
+    m = await members(userId);
+    expect(m.item).toMatchObject({ blockId: null, start: "2026-09-28", end: "2026-10-10" });
+    expect(m.schedule).toMatchObject({ blockId: null, end: "2026-10-10" });
+    const { blocks } = await json<{ blocks: unknown[] }>(
+      await call(userId, "GET", "/v1/training-blocks")
+    );
+    expect(blocks).toEqual([]);
+  });
+
+  it("rejects another user's block and a block out of shape", async () => {
+    await call("user_block_owner", "PUT", "/v1/training-blocks/b1", blockBody);
+    const userId = "user_block_other";
+    for (const [path, body] of [
+      ["/v1/plan-items/p1", { ...planBody, blockId: "b1" }],
+      ["/v1/hang/schedules/s1", { ...scheduleBody, blockId: "b1" }],
+    ] as const) {
+      expect((await call(userId, "PUT", path, body)).status).toBe(400);
+    }
+    for (const body of [
+      { ...blockBody, phases: ["build"] },
+      { ...blockBody, phases: ["build", "build", "build", "peak"] },
+      { ...blockBody, weeks: 0, phases: [] },
+      { ...blockBody, endedOn: "2026-09-28" },
+      { ...blockBody, name: " " },
+    ]) {
+      expect((await call(userId, "PUT", "/v1/training-blocks/b2", body)).status).toBe(400);
     }
   });
 });
