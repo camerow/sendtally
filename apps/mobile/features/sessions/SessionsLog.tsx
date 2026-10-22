@@ -1,4 +1,4 @@
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import React from "react";
 import {
   RefreshControl,
@@ -117,9 +117,10 @@ const emptyBody = {
 
 export type SessionsLogProps = {
   segments: React.ReactNode;
+  quickAdd: boolean;
 };
 
-export function SessionsLog({ segments }: SessionsLogProps): React.ReactElement {
+export function SessionsLog({ segments, quickAdd }: SessionsLogProps): React.ReactElement {
   const api = useApi();
   const list = React.useRef<SectionList<LogItem, Section>>(null);
   const log = useQueryPair(queries.sessions(api), queries.entries(api));
@@ -255,6 +256,15 @@ export function SessionsLog({ segments }: SessionsLogProps): React.ReactElement 
     filters.tags.length > 0 || filters.grouping === "tag" || filters.scope !== "all";
   const caption = sessions === null ? t("common.loading") : logCountLabel(visible);
 
+  const openClimb = (): void =>
+    climbEditor.openNew(scales, readClimbKind(climbKindStorage, circuitChoices));
+  const { add } = useLocalSearchParams<{ add?: string }>();
+  React.useEffect(() => {
+    if (add !== "climb") return;
+    router.setParams({ add: undefined });
+    openClimb();
+  });
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.white }} edges={["top"]}>
       <ScreenHeader title={t("journal.log")} caption={caption} right={<AccountButton />} />
@@ -379,11 +389,7 @@ export function SessionsLog({ segments }: SessionsLogProps): React.ReactElement 
           )
         }
       />
-      <LogFab
-        onLogClimb={() =>
-          climbEditor.openNew(scales, readClimbKind(climbKindStorage, circuitChoices))
-        }
-      />
+      {quickAdd && <LogFab onLogClimb={openClimb} />}
       <LiveClimbEditor editor={climbEditor} vocabulary={vocabulary} gyms={circuitChoices} />
       <FilterSheet
         visible={filtersOpen}

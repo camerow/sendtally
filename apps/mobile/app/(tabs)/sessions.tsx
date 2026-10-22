@@ -1,3 +1,4 @@
+import { useLocalSearchParams } from "expo-router";
 import React from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTrainingMode } from "@sendtally/features/settings";
@@ -14,9 +15,16 @@ export default function Log(): React.ReactElement {
   const api = useApi();
   const { enabled } = useTrainingMode(api);
   const [segment, setSegment] = React.useState<LogSegment>("sessions");
+  const { add } = useLocalSearchParams<{ add?: string }>();
+  const [seenAdd, setSeenAdd] = React.useState(add);
+  if (add !== seenAdd) {
+    setSeenAdd(add);
+    if (add === "climb") setSegment("sessions");
+  }
   const segments = enabled ? <LogSegments value={segment} onChange={setSegment} /> : null;
 
-  if (!enabled || segment === "sessions") return <SessionsLog segments={segments} />;
+  if (!enabled || segment === "sessions")
+    return <SessionsLog segments={segments} quickAdd={!enabled} />;
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.white }} edges={["top"]}>
       <ScreenHeader title={t("journal.log")} right={<AccountButton />} />

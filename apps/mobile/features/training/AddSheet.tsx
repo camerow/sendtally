@@ -2,7 +2,7 @@ import { router, type Href } from "expo-router";
 import React from "react";
 import { View } from "react-native";
 import { t } from "@sendtally/features/i18n";
-import { today } from "@sendtally/features/journal";
+import { ENTRY_KINDS, entryKindLabel, today, type EntryKind } from "@sendtally/features/journal";
 import { Sheet } from "../../components/Sheet";
 import { MenuRow, type MenuRowProps } from "../live-session/MenuRow";
 
@@ -13,12 +13,28 @@ export type AddSheetProps = {
 
 type AddRow = Pick<MenuRowProps, "icon" | "title" | "hint"> & { key: string; href: () => Href };
 
+const ENTRY_HINTS: Record<
+  EntryKind,
+  "journal.hintJournal" | "journal.hintTrip" | "journal.hintInjury"
+> = {
+  journal: "journal.hintJournal",
+  trip: "journal.hintTrip",
+  injury: "journal.hintInjury",
+};
+
 const rows = (): AddRow[] => [
+  {
+    key: "climb",
+    icon: "plus",
+    title: t("sessions.logAClimb"),
+    hint: t("sessions.logAClimbHint"),
+    href: () => ({ pathname: "/(tabs)/sessions", params: { add: "climb" } }),
+  },
   {
     key: "session",
     icon: "sessions",
-    title: t("training.logSession"),
-    hint: t("training.logSessionBody"),
+    title: t("sessions.logFullSession"),
+    hint: t("sessions.logFullSessionHint"),
     href: () => "/session/new",
   },
   {
@@ -28,13 +44,13 @@ const rows = (): AddRow[] => [
     hint: t("training.startWorkoutBody"),
     href: () => "/(tabs)/train",
   },
-  {
-    key: "journal",
-    icon: "journal",
-    title: t("journal.journalEntry"),
-    hint: t("training.journalEntryBody"),
-    href: () => ({ pathname: "/journal/new", params: { kind: "journal", date: today() } }),
-  },
+  ...ENTRY_KINDS.map((kind): AddRow => ({
+    key: kind,
+    icon: kind,
+    title: entryKindLabel(kind),
+    hint: t(ENTRY_HINTS[kind]),
+    href: () => ({ pathname: "/journal/new", params: { kind, date: today() } }),
+  })),
 ];
 
 export function AddSheet({ visible, onClose }: AddSheetProps): React.ReactElement {
