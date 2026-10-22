@@ -4,6 +4,7 @@ import { areas } from "./areas";
 import { appUpdate } from "./appUpdate";
 import { auth } from "./auth";
 import { billing } from "./billing";
+import { calendar } from "./calendar";
 import { climbs } from "./climbs";
 import { common } from "./common";
 import { endurance } from "./endurance";
@@ -30,6 +31,7 @@ export const fr = {
   ...appUpdate,
   ...auth,
   ...billing,
+  ...calendar,
   ...climbs,
   ...common,
   ...endurance,

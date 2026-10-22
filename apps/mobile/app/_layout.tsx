@@ -61,6 +61,8 @@ const SIGNED_IN_SCREENS = [
   "activity/new",
   "activity/[id]",
   "exercise/[name]",
+  "plan/calendar",
+  "plan/day",
 ];
 
 const FOCUS_SCREENS = ["workout/timer", "workout/done", "workout/intervals"];
