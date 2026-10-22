@@ -1,6 +1,8 @@
 import React from "react";
 import { randomUUID } from "expo-crypto";
+import type { TrainingBlock } from "@sendtally/api-client";
 import type { CalendarDate, Weekday } from "@sendtally/core/hang";
+import { useBlocks } from "../blocks/useBlocks";
 import { useHangData } from "../data/HangDataContext";
 import { useReminderPrompt } from "../reminders/ReminderPromptProvider";
 import { planItemDraft, planItemOf, planItemShades, planItemSummary } from "./planItemDraft";
@@ -10,6 +12,7 @@ import { usePlanActions } from "./usePlanActions";
 export type PlanItemForm = {
   isEdit: boolean;
   draft: PlanItemDraft;
+  block: TrainingBlock | undefined;
   summary: string;
   ready: boolean;
   shaded: (d: CalendarDate) => boolean;
@@ -26,13 +29,15 @@ export function usePlanItemForm(request: PlanItemRequest, onDone: () => void): P
   const prompt = useReminderPrompt();
   const [draft, setDraft] = React.useState(() => planItemDraft(request, today));
   const existing = request.mode === "edit" ? request.item : null;
-  const item = planItemOf(draft, existing?.id ?? "", existing?.skip ?? []);
+  const block = useBlocks().find((b) => b.id === draft.blockId);
+  const item = planItemOf(draft, existing?.id ?? "", existing?.skip ?? [], block);
   const update = (patch: Partial<PlanItemDraft>): void => setDraft((d) => ({ ...d, ...patch }));
 
   return {
     isEdit: existing !== null,
     draft,
-    summary: planItemSummary(draft),
+    block,
+    summary: planItemSummary(draft, block),
     ready: item !== null,
     shaded: (d) => planItemShades(draft, d),
     update,

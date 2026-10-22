@@ -49,6 +49,25 @@ export type Schedule = {
   /** Exclusive; null means ongoing. */
   end: CalendarDate | null;
   skip: CalendarDate[];
+  /** Absent from app builds before blocks. */
+  targetRpe?: number | null;
+  /** The training block it belongs to; absent from app builds before blocks. */
+  blockId?: string | null;
+};
+
+export type BlockPhase = "build" | "deload" | "test";
+
+/** A multi-week block. Its members share its dates. */
+export type TrainingBlock = {
+  id: string;
+  name: string;
+  start: CalendarDate;
+  weeks: number;
+  /** One per week. */
+  phases: BlockPhase[];
+  notes: string | null;
+  /** Exclusive; set when the block was ended early. */
+  endedOn: CalendarDate | null;
 };
 
 export type HangSession = {

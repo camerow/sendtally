@@ -10,11 +10,11 @@ export type ActivityKind = (typeof ACTIVITY_KINDS)[number];
 
 export type PlanKind = (typeof PLAN_KINDS)[number];
 
-const id = z.string().regex(/^[A-Za-z0-9_-]{1,64}$/);
+export const id = z.string().regex(/^[A-Za-z0-9_-]{1,64}$/);
 
 export const trainingIdParam = z.object({ id });
 
-const calendarDate = z.string().refine(isCalendarDate, "not a calendar date");
+export const calendarDate = z.string().refine(isCalendarDate, "not a calendar date");
 
 const title = z.string().trim().min(1).max(80);
 
@@ -144,6 +144,8 @@ export const planItemBody = z
     projectId: z.string().min(1).max(200).nullable(),
     // App builds from before templates send none.
     template: planTemplate.default(null),
+    // Absent keeps the block an item is in, so older builds never detach one.
+    blockId: id.nullable().optional(),
   })
   .refine((p) => p.days.length > 0 !== (p.perWeek !== null), "set days or perWeek, not both")
   .refine((p) => p.end === null || p.end > p.start, "end is not after start")
@@ -160,11 +162,20 @@ export type Activity = z.infer<typeof activityBody> & { id: string };
 
 export type ActivityInput = Omit<Activity, "id">;
 
+export type ActivityPostState = "pending" | "posted" | "failed";
+
+export type ActivityRecord = Activity & {
+  stravaActivityId: string | null;
+  postedAt: string | null;
+  postState: ActivityPostState | null;
+  postError: string | null;
+};
+
 export type PlanItem = z.infer<typeof planItemBody> & { id: string };
 
 export type PlanItemInput = Omit<PlanItem, "id">;
 
-export function activityOf(row: ActivityRow): Activity {
+export function activityOf(row: ActivityRow): ActivityRecord {
   return {
     id: row.id,
     kind: row.kind,
@@ -176,6 +187,10 @@ export function activityOf(row: ActivityRow): Activity {
     notes: row.notes,
     planItemId: row.plan_item_id,
     detail: row.detail_json === null ? null : (JSON.parse(row.detail_json) as ActivityDetail),
+    stravaActivityId: row.strava_activity_id === null ? null : String(row.strava_activity_id),
+    postedAt: row.posted_at,
+    postState: row.post_state,
+    postError: row.post_error,
   };
 }
 
@@ -193,5 +208,6 @@ export function planItemOf(row: PlanItemRow): PlanItem {
     targetRpe: row.target_rpe,
     projectId: row.project_id,
     template: row.template_json === null ? null : (JSON.parse(row.template_json) as PlanTemplate),
+    blockId: row.block_id,
   };
 }

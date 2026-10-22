@@ -1,6 +1,7 @@
-import type { PlanItem } from "@sendtally/api-client";
+import type { PlanItem, TrainingBlock } from "@sendtally/api-client";
 import {
   addDays,
+  blockEnd,
   endChoiceOf,
   endOf,
   minDate,
@@ -32,7 +33,8 @@ export function planItemDraft(request: PlanItemRequest, today: CalendarDate): Pl
       minutes: null,
       targetRpe: null,
       projectId: null,
-      template: null,
+      template: request.template ?? null,
+      blockId: request.blockId ?? null,
     };
   }
   const { item } = request;
@@ -52,45 +54,49 @@ export function planItemDraft(request: PlanItemRequest, today: CalendarDate): Pl
     targetRpe: item.targetRpe,
     projectId: item.projectId,
     template: detailFromTemplate(item.template),
+    blockId: item.blockId ?? null,
   };
 }
 
-/** The plan item a draft saves as, or null while it is not one yet. */
+/** The plan item a draft saves as, on its block's dates when it has one, or null while it is not one yet. */
 export function planItemOf(
   draft: PlanItemDraft,
   id: string,
-  skip: readonly CalendarDate[]
+  skip: readonly CalendarDate[],
+  block?: TrainingBlock
 ): PlanItem | null {
   const title = draft.title.trim();
   const days = draft.mode === "days" ? draft.days : [];
-  const end = endOf(draft.start, endChoice(draft));
+  const start = block?.start ?? draft.start;
+  const end = block === undefined ? endOf(draft.start, endChoice(draft)) : blockEnd(block);
   if (title === "" || (draft.mode === "days" && days.length === 0)) return null;
-  if (end !== null && end <= draft.start) return null;
+  if (end !== null && end <= start) return null;
   return {
     id,
     kind: draft.kind,
     title,
     days,
     perWeek: draft.mode === "perWeek" ? draft.perWeek : null,
-    start: draft.start,
+    start,
     end,
     skip: [...skip],
     minutes: draft.minutes,
     targetRpe: draft.targetRpe,
     projectId: draft.kind === "climb" ? draft.projectId : null,
     template: draft.kind === "climb" ? null : templateOf(draft.template),
+    blockId: draft.blockId,
   };
 }
 
 /** The form's one-line summary: what is still missing, else when it lands. */
-export function planItemSummary(draft: PlanItemDraft): string {
+export function planItemSummary(draft: PlanItemDraft, block?: TrainingBlock): string {
   if (draft.title.trim() === "") return t("plan.summaryName");
   if (draft.mode === "days" && draft.days.length === 0) return t("hang.summaryPickDay");
-  const item = planItemOf(draft, "", []);
+  const item = planItemOf(draft, "", [], block);
   return item === null ? t("hang.summaryNoDates") : planItemWhen(item);
 }
 
-/** Whether a date falls inside the draft's plan, for the calendars to shade. */
+/** Whether a date falls inside the draft's own dates, for the calendars to shade. */
 export function planItemShades(draft: PlanItemDraft, d: CalendarDate): boolean {
   const end = endOf(draft.start, endChoice(draft));
   const days: Weekday[] = draft.mode === "days" ? draft.days : [0, 1, 2, 3, 4, 5, 6];

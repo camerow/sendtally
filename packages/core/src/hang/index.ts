@@ -1,3 +1,4 @@
+export * from "./block";
 export * from "./calendar";
 export * from "./intervals";
 export * from "./library";

@@ -74,7 +74,7 @@ describe("writeEffect", () => {
     }
   });
 
-  it("stales nothing for the rest of hangtally's writes", () => {
+  it("stales nothing for the rest of the hangboard writes", () => {
     for (const path of [
       "/v1/hang/workouts/w1",
       "/v1/hang/loads",
@@ -95,6 +95,15 @@ describe("writeEffect", () => {
     }
     for (const path of ["/v1/plan-items/p1", "/v1/plan-items/p1/skip"]) {
       expect(writeEffect({ method: "PUT", path })).toEqual({ stale: [], gone: null });
+    }
+  });
+
+  it("stales the members a training block write moves, never the blocks' own cache", () => {
+    for (const method of ["PUT", "DELETE"]) {
+      expect(writeEffect({ method, path: "/v1/training-blocks/b1" })).toEqual({
+        stale: [["planItems"], ["hang"]],
+        gone: null,
+      });
     }
   });
 

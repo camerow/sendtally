@@ -91,4 +91,7 @@ export const activities = {
   "activities.nextStep": "Next: {step}",
   "activities.statSteps": "Steps done",
   "activities.saveRun": "Save activity",
+  "activities.seeTrend": "See trend",
+  "activities.deleteBodyStrava":
+    "It comes out of your log and your statistics. Strava does not let apps delete activities, so the Strava activity stays.",
 } as const;

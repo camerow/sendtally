@@ -11,7 +11,7 @@ import { useHangData } from "../data/HangDataContext";
 import { type } from "../type";
 import { DayMark } from "./DayMark";
 import { KIND_LOOK, kindName } from "./kindLook";
-import { planTag } from "./planTag";
+import { usePlanTag } from "./usePlanTag";
 
 export type UpTodayCardProps = { schedule: Schedule; onEdit: () => void; onStart: () => void };
 
@@ -21,6 +21,7 @@ export function UpTodayCard({
   onEdit,
   onStart,
 }: UpTodayCardProps): React.ReactElement | null {
+  const planTag = usePlanTag();
   const { model, today } = useHangData();
   const w = model.workout(schedule.workoutId);
   if (w === undefined) return null;

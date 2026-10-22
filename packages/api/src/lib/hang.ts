@@ -84,6 +84,8 @@ export const hangScheduleBody = z
     start: calendarDate,
     end: calendarDate.nullable(),
     skip: z.array(calendarDate).max(1000),
+    targetRpe: z.number().int().min(1).max(10).nullable().optional(),
+    blockId: hangId.nullable().optional(),
   })
   .refine((s) => s.end === null || s.end > s.start, "end is not after start");
 
@@ -186,6 +188,8 @@ export function scheduleOf(row: HangScheduleRow): Schedule {
     start: row.start,
     end: row.end,
     skip: JSON.parse(row.skip_json) as string[],
+    targetRpe: row.target_rpe,
+    blockId: row.block_id,
   };
 }
 

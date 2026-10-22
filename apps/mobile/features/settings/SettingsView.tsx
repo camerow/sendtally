@@ -115,7 +115,7 @@ export function SettingsView({
                 : t("settings.stravaNotConnectedMobile")}
           </Text>
           {vm.stravaActive ? (
-            <StravaPostingSection posting={posting} />
+            <StravaPostingSection posting={posting} training={trainingMode.enabled} />
           ) : (
             <>
               <Pressable

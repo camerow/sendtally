@@ -73,11 +73,20 @@ export const queries = {
     queryOptions({
       queryKey: ["activities"],
       queryFn: async () => (await api.activities()).activities,
+      refetchInterval: (query) =>
+        query.state.data?.some((a) => a.postState === "pending") === true
+          ? POST_POLL_INTERVAL
+          : false,
     }),
   planItems: (api: SendtallyApi) =>
     queryOptions({
       queryKey: ["planItems"],
       queryFn: async () => (await api.planItems()).planItems,
+    }),
+  trainingBlocks: (api: SendtallyApi) =>
+    queryOptions({
+      queryKey: ["trainingBlocks"],
+      queryFn: async () => (await api.trainingBlocks()).blocks,
     }),
   tags: (api: SendtallyApi) =>
     queryOptions({ queryKey: ["tags"], queryFn: async () => (await api.tags()).tags }),

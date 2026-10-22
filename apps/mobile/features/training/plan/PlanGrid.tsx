@@ -35,17 +35,25 @@ function Cell({ row, day }: { row: PlanGridRow; day: number }): React.ReactEleme
   );
 }
 
+export type PlanGridProps = {
+  rows: readonly PlanGridRow[];
+  /** Off inside a card that already draws the frame. */
+  framed?: boolean;
+};
+
 /** The week at a glance: a row per plan, a column per weekday, marked where it lands. */
-export function PlanGrid({ rows }: { rows: readonly PlanGridRow[] }): React.ReactElement {
+export function PlanGrid({ rows, framed = true }: PlanGridProps): React.ReactElement {
   return (
     <View
-      style={{
-        gap: 8,
-        padding: 18,
-        borderRadius: 18,
-        borderWidth: 1,
-        borderColor: colors.lineOnLightStrong,
-      }}
+      style={[
+        { gap: 8 },
+        framed && {
+          padding: 18,
+          borderRadius: 18,
+          borderWidth: 1,
+          borderColor: colors.lineOnLightStrong,
+        },
+      ]}
     >
       <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
         <Label color={colors.labelAccent} style={{ flex: 1 }}>

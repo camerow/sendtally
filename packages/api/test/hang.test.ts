@@ -93,7 +93,7 @@ function stravaRoutes(activityId = 515151) {
   ]);
 }
 
-describe("hangtally", () => {
+describe("hangboard", () => {
   it("reads defaults for a user with nothing stored", async () => {
     expect(await read("user_hang_fresh")).toEqual({
       grips: [],
@@ -137,7 +137,7 @@ describe("hangtally", () => {
       skip: ["2026-10-02"],
     };
     expect(await (await call(userId, "PUT", "/schedules/s1", schedule)).json()).toEqual({
-      schedule: { id: "s1", ...schedule },
+      schedule: { id: "s1", ...schedule, targetRpe: null, blockId: null },
     });
     const logged = await call(userId, "PUT", "/sessions/h1", sessionBody);
     const { session } = (await logged.json()) as { session: HangSessionRecord };
@@ -343,7 +343,7 @@ describe("hangtally", () => {
   });
 });
 
-describe("hangtally strava posting", () => {
+describe("hangboard strava posting", () => {
   it("posts a new session as a Workout when the user turned posting on", async () => {
     const userId = "user_hang_post";
     await connectStrava(userId);

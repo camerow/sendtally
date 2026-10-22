@@ -10,6 +10,8 @@ import { Button } from "../components/Button";
 import { Label } from "../components/Label";
 import { Segmented } from "../components/Segmented";
 import { useHangData } from "../data/HangDataContext";
+import { PlannerSheet } from "../planner/PlannerSheet";
+import type { PlannerRequest } from "../planner/types";
 import { type } from "../type";
 import { BuilderField } from "./BuilderField";
 import { BuilderPreview } from "./BuilderPreview";
@@ -24,10 +26,18 @@ export type BuilderScreenProps = {
   id?: string;
   /** Customise: start from a copy of this library workout. */
   from?: string;
+  /** Opened from planning: saving hands the workout to the planner, then goes back. */
+  plan?: BuilderPlan;
 };
 
-export function BuilderScreen({ id, from }: BuilderScreenProps): React.ReactElement {
-  const { model, actions } = useHangData();
+export type BuilderPlan = Pick<
+  Extract<PlannerRequest, { mode: "new" }>,
+  "days" | "start" | "blockId"
+>;
+
+export function BuilderScreen({ id, from, plan }: BuilderScreenProps): React.ReactElement {
+  const { model, actions, today } = useHangData();
+  const [planning, setPlanning] = React.useState<PlannerRequest | null>(null);
   const editing = id === undefined ? undefined : model.workout(id);
   const [draft, setDraft] = React.useState<Draft>(() => {
     const base = editing ?? (from === undefined ? undefined : model.workout(from));
@@ -41,10 +51,19 @@ export function BuilderScreen({ id, from }: BuilderScreenProps): React.ReactElem
   const setKind = (kind: HangKind): void =>
     update(kind === "pull" && draft.reps > MAX_PULL_REPS_ON_SWITCH ? { kind, reps: 5 } : { kind });
 
-  const save = (): void => {
+  const store = (): string => {
     const workoutId = editing?.id ?? randomUUID();
     const name = draft.name.trim() || t("hang.untitledWorkout");
     void actions.saveWorkout({ ...draft, name, id: workoutId, source: "mine" });
+    return workoutId;
+  };
+  const saveAndPlan = (): void => {
+    const to = plan ?? { days: [], start: today };
+    setPlanning({ mode: "new", workoutId: store(), gripId: null, ...to });
+  };
+  const save = (): void => {
+    if (plan !== undefined) return saveAndPlan();
+    const workoutId = store();
     if (editing) router.back();
     else router.replace({ pathname: "/workout/[id]", params: { id: workoutId } });
   };
@@ -65,7 +84,12 @@ export function BuilderScreen({ id, from }: BuilderScreenProps): React.ReactElem
         <Label color={colors.textSecondary}>
           {editing ? t("hang.editWorkout") : t("hang.newWorkout")}
         </Label>
-        <Button label={t("hang.save")} onPress={save} variant="primary" height={40} />
+        <Button
+          label={plan === undefined ? t("hang.save") : t("plan.saveAndPlan")}
+          onPress={save}
+          variant="primary"
+          height={40}
+        />
       </View>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -130,8 +154,18 @@ export function BuilderScreen({ id, from }: BuilderScreenProps): React.ReactElem
             })}
           </View>
           <BuilderPreview protocol={draft} units={draft.timeUnits} />
+          {plan === undefined && (
+            <Button
+              label={t("plan.saveAndPlan")}
+              onPress={saveAndPlan}
+              variant="outline"
+              icon="schedule"
+              height={50}
+            />
+          )}
         </ScrollView>
       </KeyboardAvoidingView>
+      <PlannerSheet request={planning} onClose={() => router.back()} />
     </SafeAreaView>
   );
 }

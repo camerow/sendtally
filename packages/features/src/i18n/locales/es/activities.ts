@@ -91,4 +91,7 @@ export const activities = {
   "activities.nextStep": "Después: {step}",
   "activities.statSteps": "Pasos hechos",
   "activities.saveRun": "Guardar actividad",
+  "activities.seeTrend": "Ver tendencia",
+  "activities.deleteBodyStrava":
+    "Desaparece de tu registro y de tus estadísticas. Strava no permite a las apps eliminar actividades, así que la actividad de Strava se queda.",
 } as const;

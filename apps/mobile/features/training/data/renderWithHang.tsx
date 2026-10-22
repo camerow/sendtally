@@ -1,4 +1,5 @@
 import { jest } from "@jest/globals";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, type RenderResult } from "@testing-library/react-native";
 import React from "react";
 import type { HangData as ApiHangData } from "@sendtally/api-client";
@@ -46,15 +47,20 @@ export function mockActions(): MockActions {
   };
 }
 
-/** Renders a screen over fixed training data, with actions a test can inspect. */
+/** Renders a screen over fixed training data, with actions a test can inspect. Other reads find nothing. */
 export async function renderWithHang(
   ui: React.ReactElement,
   data: ApiHangData = hangData(),
   actions: MockActions = mockActions()
 ): Promise<RenderResult & { actions: MockActions }> {
   const value = { model: hangModel(data), actions, today: TODAY };
+  const client = new QueryClient({
+    defaultOptions: { queries: { retry: false, gcTime: Infinity } },
+  });
   const result = await render(
-    <HangDataContext.Provider value={value}>{ui}</HangDataContext.Provider>
+    <QueryClientProvider client={client}>
+      <HangDataContext.Provider value={value}>{ui}</HangDataContext.Provider>
+    </QueryClientProvider>
   );
   return { ...result, actions };
 }

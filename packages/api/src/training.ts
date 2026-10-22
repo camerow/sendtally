@@ -1,6 +1,6 @@
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
-import { type AppEnv, invalidBody } from "./context";
+import { type AppEnv, invalidBody, postAfterResponse } from "./context";
 import {
   activitiesQuery,
   activityBody,
@@ -10,6 +10,8 @@ import {
   planItemSkipBody,
   trainingIdParam,
 } from "./lib/activities";
+import { inBlock, trainingBlockBody, trainingBlockOf } from "./lib/blocks";
+import { syncActivityToStrava } from "./lib/posting";
 import * as repo from "./lib/repo";
 
 const ACTIVITY_LIST_LIMIT = 1000;
@@ -27,8 +29,8 @@ export const activities = new Hono<AppEnv>()
     return c.json({ activities: rows.map(activityOf) });
   })
 
-  // Strava posting is not built for activities yet. When it is, it hooks in
-  // here the way hang sessions do: postAfterResponse on create, patch on edit.
+  // Creates or edits. A new activity posts to Strava when the user turned that
+  // on; an edit of a posted one patches its activity, never posts a second.
   .put(
     "/:id",
     zValidator("param", trainingIdParam, invalidBody),
@@ -37,14 +39,34 @@ export const activities = new Hono<AppEnv>()
       const { id } = c.req.valid("param");
       const userId = c.get("userId");
       await repo.ensureUser(c.env.DB, userId);
+      const existing = await repo.getActivity(c.env.DB, userId, id);
       const row = await repo.saveActivity(c.env.DB, userId, id, c.req.valid("json"));
+      if (existing === null || existing.strava_activity_id !== null) {
+        postAfterResponse(c, id, () => syncActivityToStrava(c.env, userId, id));
+      }
       return c.json({ activity: activityOf(row) });
     }
   )
 
+  // Its Strava activity, if any, stays on Strava.
   .delete("/:id", zValidator("param", trainingIdParam, invalidBody), async (c) => {
     const { id } = c.req.valid("param");
     return c.json({ deleted: await repo.deleteActivity(c.env.DB, c.get("userId"), id) });
+  })
+
+  .post("/:id/strava", zValidator("param", trainingIdParam, invalidBody), async (c) => {
+    const { id } = c.req.valid("param");
+    const userId = c.get("userId");
+    if ((await repo.getActivity(c.env.DB, userId, id)) === null) {
+      return c.json({ error: "not found" }, 404);
+    }
+    const result = await syncActivityToStrava(c.env, userId, id, true);
+    if (result.outcome === "failed") {
+      return c.json({ outcome: result.outcome, reason: result.reason }, 502);
+    }
+    const row = await repo.getActivity(c.env.DB, userId, id);
+    if (row === null) return c.json({ error: "not found" }, 404);
+    return c.json({ outcome: result.outcome, reason: result.reason, activity: activityOf(row) });
   });
 
 export const planItems = new Hono<AppEnv>()
@@ -60,8 +82,10 @@ export const planItems = new Hono<AppEnv>()
     async (c) => {
       const { id } = c.req.valid("param");
       const userId = c.get("userId");
+      const item = await inBlock(c.env.DB, userId, { id, ...c.req.valid("json") });
+      if (item === null) return c.json({ error: "no such block" }, 400);
       await repo.ensureUser(c.env.DB, userId);
-      const row = await repo.savePlanItem(c.env.DB, userId, { id, ...c.req.valid("json") });
+      const row = await repo.savePlanItem(c.env.DB, userId, item);
       return c.json({ planItem: planItemOf(row) });
     }
   )
@@ -88,4 +112,30 @@ export const planItems = new Hono<AppEnv>()
   .delete("/:id", zValidator("param", trainingIdParam, invalidBody), async (c) => {
     const { id } = c.req.valid("param");
     return c.json({ deleted: await repo.deletePlanItem(c.env.DB, c.get("userId"), id) });
+  });
+
+// Saving a block moves its members onto its dates; setting endedOn ends them
+// there. Deleting one leaves its members planned on their own.
+export const trainingBlocks = new Hono<AppEnv>()
+  .get("/", async (c) => {
+    const rows = await repo.listTrainingBlocks(c.env.DB, c.get("userId"));
+    return c.json({ blocks: rows.map(trainingBlockOf) });
+  })
+
+  .put(
+    "/:id",
+    zValidator("param", trainingIdParam, invalidBody),
+    zValidator("json", trainingBlockBody, invalidBody),
+    async (c) => {
+      const { id } = c.req.valid("param");
+      const userId = c.get("userId");
+      await repo.ensureUser(c.env.DB, userId);
+      const row = await repo.saveTrainingBlock(c.env.DB, userId, { id, ...c.req.valid("json") });
+      return c.json({ block: trainingBlockOf(row) });
+    }
+  )
+
+  .delete("/:id", zValidator("param", trainingIdParam, invalidBody), async (c) => {
+    const { id } = c.req.valid("param");
+    return c.json({ deleted: await repo.deleteTrainingBlock(c.env.DB, c.get("userId"), id) });
   });

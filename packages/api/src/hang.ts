@@ -22,10 +22,11 @@ import {
   workoutOf,
   type HangData,
 } from "./lib/hang";
+import { inBlock } from "./lib/blocks";
 import { syncHangSessionToStrava } from "./lib/posting";
 import * as repo from "./lib/repo";
 
-// hangtally: hangboard and ground-pull training. The app generates every id,
+// Hangboard and ground-pull training. The app generates every id,
 // so each write is an idempotent PUT it can retry or replay offline.
 export const hang = new Hono<AppEnv>()
   .get("/", async (c) => {
@@ -134,8 +135,10 @@ export const hang = new Hono<AppEnv>()
     async (c) => {
       const { id } = c.req.valid("param");
       const userId = c.get("userId");
+      const schedule = await inBlock(c.env.DB, userId, { id, ...c.req.valid("json") });
+      if (schedule === null) return c.json({ error: "no such block" }, 400);
       await repo.ensureUser(c.env.DB, userId);
-      const row = await repo.saveHangSchedule(c.env.DB, userId, { id, ...c.req.valid("json") });
+      const row = await repo.saveHangSchedule(c.env.DB, userId, schedule);
       return c.json({ schedule: scheduleOf(row) });
     }
   )

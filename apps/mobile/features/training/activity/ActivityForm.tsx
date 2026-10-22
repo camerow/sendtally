@@ -9,6 +9,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import type { ActivityRecord } from "@sendtally/api-client";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import {
   activityFromDraft,
@@ -34,13 +35,14 @@ import { Title } from "../components/Title";
 import { DetailSection } from "../detail/DetailSection";
 import { startIntervals } from "../intervals/intervalsParams";
 import { type } from "../type";
+import { ActivityPostBar } from "./ActivityPostBar";
 import { KindChips } from "./KindChips";
 
 export type ActivityFormProps = {
   id: string;
   initial: ActivityDraft;
-  /** Editing an activity already logged, which can also be deleted. */
-  editing: boolean;
+  /** The activity as logged, which can be deleted and posted to Strava; null while logging a new one. */
+  logged: ActivityRecord | null;
 };
 
 const input = {
@@ -58,7 +60,7 @@ const input = {
 const reportFailure = (): void => Alert.alert(t("activities.saveFailed"));
 
 /** Log or edit one activity: kind, title, when, how long, how hard, its sets or checklist, and its training load. */
-export function ActivityForm({ id, initial, editing }: ActivityFormProps): React.ReactElement {
+export function ActivityForm({ id, initial, logged }: ActivityFormProps): React.ReactElement {
   const api = useApi();
   const actions = useActivityActions(api, reportFailure);
   const [draft, setDraft] = React.useState(initial);
@@ -71,24 +73,37 @@ export function ActivityForm({ id, initial, editing }: ActivityFormProps): React
     const body = templateOf(detail);
     if (body?.kind !== "intervals") return;
     const { kind, title, date, planItemId } = draft;
-    startIntervals({ kind, title, date, planItemId, activityId: editing ? null : id, body });
+    startIntervals({
+      kind,
+      title,
+      date,
+      planItemId,
+      activityId: logged === null ? id : null,
+      body,
+    });
   };
   const save = (): void => {
     void actions.saveActivity(activityFromDraft(id, draft));
     router.back();
   };
   const remove = (): void =>
-    Alert.alert(t("activities.deleteTitle"), t("activities.deleteBody"), [
-      { text: t("common.cancel"), style: "cancel" },
-      {
-        text: t("common.delete"),
-        style: "destructive",
-        onPress: () => {
-          router.back();
-          void actions.deleteActivity(id);
+    Alert.alert(
+      t("activities.deleteTitle"),
+      logged === null || logged.stravaActivityId === null
+        ? t("activities.deleteBody")
+        : t("activities.deleteBodyStrava"),
+      [
+        { text: t("common.cancel"), style: "cancel" },
+        {
+          text: t("common.delete"),
+          style: "destructive",
+          onPress: () => {
+            router.back();
+            void actions.deleteActivity(id);
+          },
         },
-      },
-    ]);
+      ]
+    );
 
   return (
     <KeyboardAvoidingView
@@ -108,7 +123,7 @@ export function ActivityForm({ id, initial, editing }: ActivityFormProps): React
           style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}
         >
           <Title size={28}>
-            {editing ? t("activities.editActivity") : t("activities.logActivity")}
+            {logged !== null ? t("activities.editActivity") : t("activities.logActivity")}
           </Title>
           <Button label={t("common.cancel")} onPress={() => router.back()} variant="link" />
         </View>
@@ -225,9 +240,11 @@ export function ActivityForm({ id, initial, editing }: ActivityFormProps): React
           </Text>
         </View>
 
+        {logged !== null && <ActivityPostBar activity={logged} />}
+
         <View style={{ gap: 6 }}>
           <Button label={t("common.save")} onPress={save} variant="primary" height={54} />
-          {editing && (
+          {logged !== null && (
             <Button label={t("activities.deleteActivity")} onPress={remove} variant="danger" />
           )}
         </View>

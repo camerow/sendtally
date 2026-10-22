@@ -2,6 +2,7 @@ import React from "react";
 import { View } from "react-native";
 import { kindLabel } from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
+import { BlockDates } from "../blocks/BlockDates";
 import { SheetHeader } from "../components/SheetHeader";
 import { useHangData } from "../data/HangDataContext";
 import { HangSheet } from "../data/HangSheet";
@@ -10,6 +11,7 @@ import { EndSection } from "../planner/EndSection";
 import { PlannerFooter } from "../planner/PlannerFooter";
 import { StartSection } from "../planner/StartSection";
 import { MinutesField } from "./MinutesField";
+import { PastTemplateChoice } from "./PastTemplateChoice";
 import { ProjectChoice } from "./ProjectChoice";
 import { ScheduleChoice } from "./ScheduleChoice";
 import { TargetEffort } from "./TargetEffort";
@@ -52,9 +54,18 @@ export function PlanItemForm({ request, onClose }: PlanItemFormProps): React.Rea
         )}
         <TargetEffort value={draft.targetRpe} onChange={(targetRpe) => update({ targetRpe })} />
         <ScheduleChoice form={form} />
-        <StartSection planner={form} open={calendar === "start"} onToggle={toggle("start")} />
-        <EndSection planner={form} open={calendar === "end"} onToggle={toggle("end")} />
+        {form.block === undefined ? (
+          <>
+            <StartSection planner={form} open={calendar === "start"} onToggle={toggle("start")} />
+            <EndSection planner={form} open={calendar === "end"} onToggle={toggle("end")} />
+          </>
+        ) : (
+          <BlockDates block={form.block} />
+        )}
         <MinutesField value={draft.minutes} onChange={(minutes) => update({ minutes })} />
+        {draft.kind !== "climb" && draft.template === null && (
+          <PastTemplateChoice kind={draft.kind} onPick={(template) => update({ template })} />
+        )}
         {draft.kind !== "climb" && (
           <DetailSection
             value={draft.template}

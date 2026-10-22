@@ -6,11 +6,14 @@ export type {
   ActivityDetail,
   ActivityInput,
   ActivityKind,
+  ActivityPostState,
+  ActivityRecord,
   Area,
   AreaClimb,
   AreaClimbInput,
   AreaInput,
   AreaSummary,
+  BlockPhase,
   Circuit,
   CircuitColour,
   Gym,
@@ -31,6 +34,7 @@ export type {
   ThemeName,
   TimeUnit,
   TimeUnits,
+  TrainingBlock,
   WeightUnit,
   Weekday,
   Workout,
@@ -55,6 +59,7 @@ type Ok<T> = InferResponseType<T, 200>;
 export type ConnectionStatus = Ok<Client["v1"]["status"]["$get"]>;
 
 export type GradeScales = ConnectionStatus["gradeScales"];
+export type TrainingReminderSettings = ConnectionStatus["trainingReminders"];
 
 export type Entitlements = Ok<Client["v1"]["entitlements"]["$get"]>;
 
@@ -70,7 +75,7 @@ export type SessionClimb = SessionDetail["climbs"][number];
 
 export type SessionWithClimbs = SessionRow & { climbs: SessionClimb[] };
 
-/** The log: climbing sessions, and hangtally sessions and other training beside them but never as them. */
+/** The log: climbing sessions, and hangboard sessions and other training beside them but never as them. */
 export type SessionLog = {
   sessions: SessionRow[];
   hangSessions: HangHistoryRow[];

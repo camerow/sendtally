@@ -1,7 +1,7 @@
 import React from "react";
 import { Alert, Text, View } from "react-native";
-import { useHang, useHangActions } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
+import { useTrainingReminders } from "@sendtally/features/settings";
 import { colors, fonts } from "@sendtally/design/tokens";
 import { DateTimeField } from "../../components/DateTimeField";
 import { Switch } from "../../components/Switch";
@@ -13,19 +13,16 @@ const reportFailure = (): void => Alert.alert(t("hang.saveFailed"));
 
 const rowTitle = { fontFamily: fonts.sansSemiBold, fontSize: 13, color: colors.gunmetal } as const;
 
-/** One notification on training days, stored with the rest of the training settings. */
+/** One notification on training days, stored with the account's other preferences. */
 export function TrainingRemindersSection(): React.ReactElement {
-  const api = useApi();
-  const hang = useHang(api).state;
-  const actions = useHangActions(api, reportFailure);
+  const { settings, save } = useTrainingReminders(useApi());
   const [blocked, setBlocked] = React.useState(false);
-  const settings = hang.status === "ready" ? hang.data.settings : null;
-  const on = settings?.reminders === true;
+  const on = settings?.enabled === true;
 
   const toggle = async (next: boolean): Promise<void> => {
     const allowed = !next || (await requestNotifications());
     setBlocked(!allowed);
-    await actions.saveSettings({ reminders: next && allowed, reminderPromptSeen: true });
+    await save({ enabled: next && allowed, promptSeen: true }).catch(reportFailure);
   };
 
   return (
@@ -49,9 +46,9 @@ export function TrainingRemindersSection(): React.ReactElement {
             <Text style={rowTitle}>{t("hang.reminderTime")}</Text>
             <DateTimeField
               mode="time"
-              value={settings.reminderTime}
+              value={settings.time}
               label={t("hang.reminderTime")}
-              onChange={(time) => void actions.saveSettings({ reminderTime: time })}
+              onChange={(time) => void save({ time }).catch(reportFailure)}
             />
           </View>
         </>

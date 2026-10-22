@@ -8,7 +8,7 @@ import { auth } from "./auth";
 import type { Env } from "./bindings";
 import { type AppEnv, captureEvent, invalidBody, postAfterResponse } from "./context";
 import { hang } from "./hang";
-import { activities, planItems } from "./training";
+import { activities, planItems, trainingBlocks } from "./training";
 import { purgeAccount } from "./lib/account";
 import {
   areaBody,
@@ -574,6 +574,15 @@ const gradeScalesBody = z.object({
 
 const trainingModeBody = z.object({ enabled: z.boolean() });
 
+const trainingRemindersBody = z.object({
+  enabled: z.boolean().optional(),
+  time: z
+    .string()
+    .regex(/^([01]\d|2[0-3]):[0-5]\d$/)
+    .optional(),
+  promptSeen: z.boolean().optional(),
+});
+
 const stravaPostingBody = z.object({
   enabled: z.boolean(),
   since: z
@@ -783,7 +792,7 @@ const app = new Hono<AppEnv>()
         ? withClimbNotes(parseClimbs(climbs_json), notesBySession.get(rest.fingerprint) ?? [])
         : undefined,
     }));
-    // hangtally sessions and other training live in their own tables and are
+    // Hangboard sessions and other training live in their own tables and are
     // listed beside the climbing ones, never as them: they carry the effort
     // the user entered.
     const hangSessions = hangRows.map((row) => hangHistoryOf(row, hangGrips));
@@ -1816,6 +1825,7 @@ const app = new Hono<AppEnv>()
       gradeScales: { boulder: scales.boulder, route: scales.route },
       role: user?.role ?? "user",
       trainingMode: user?.training_mode === 1,
+      trainingReminders: repo.trainingRemindersOf(user),
       strava:
         strava === null
           ? null
@@ -1824,6 +1834,7 @@ const app = new Hono<AppEnv>()
               status: strava.status,
               postingEnabled: strava.posting_enabled === 1,
               postSince: strava.post_since,
+              postTraining: strava.post_training,
             },
     });
   })
@@ -1869,6 +1880,22 @@ const app = new Hono<AppEnv>()
   )
 
   .put(
+    "/v1/preferences/training-reminders",
+    zValidator("json", trainingRemindersBody, invalidBody),
+    async (c) => {
+      const userId = c.get("userId");
+      await repo.ensureUser(c.env.DB, userId);
+      await repo.setTrainingReminders(c.env.DB, userId, c.req.valid("json"));
+      const reminders = repo.trainingRemindersOf(await repo.getUser(c.env.DB, userId));
+      await captureEvent(c, "training_reminders_updated", {
+        enabled: String(reminders.enabled),
+        time: reminders.time,
+      });
+      return c.json({ trainingReminders: reminders });
+    }
+  )
+
+  .put(
     "/v1/connections/strava/posting",
     zValidator("json", stravaPostingBody, invalidBody),
     async (c) => {
@@ -1881,6 +1908,21 @@ const app = new Hono<AppEnv>()
       await repo.setStravaPosting(c.env.DB, userId, form.enabled, since);
       await captureEvent(c, "strava_posting_updated", { enabled: form.enabled });
       return c.json({ postingEnabled: form.enabled, postSince: since });
+    }
+  )
+
+  .put(
+    "/v1/connections/strava/training-posting",
+    zValidator("json", trainingModeBody, invalidBody),
+    async (c) => {
+      const { enabled } = c.req.valid("json");
+      const userId = c.get("userId");
+      if ((await repo.getStravaConnection(c.env.DB, userId)) === null) {
+        return c.json({ error: "strava not connected" }, 409);
+      }
+      await repo.setTrainingPosting(c.env.DB, userId, enabled);
+      await captureEvent(c, "strava_training_posting_updated", { enabled });
+      return c.json({ postTraining: enabled });
     }
   )
 
@@ -1900,7 +1942,8 @@ const app = new Hono<AppEnv>()
 
   .route("/v1/hang", hang)
   .route("/v1/activities", activities)
-  .route("/v1/plan-items", planItems);
+  .route("/v1/plan-items", planItems)
+  .route("/v1/training-blocks", trainingBlocks);
 
 app.onError(async (error, c) => {
   // zValidator throws this for a body it cannot parse at all. Without this the
@@ -1929,6 +1972,8 @@ export type {
   ActivityDetail,
   ActivityInput,
   ActivityKind,
+  ActivityPostState,
+  ActivityRecord,
   PlanItem,
   PlanItemInput,
   PlanKind,
@@ -1937,6 +1982,7 @@ export type {
 } from "./lib/activities";
 export type { HangData, HangHistoryRow, HangPostState, HangSessionRecord } from "./lib/hang";
 export type {
+  BlockPhase,
   CalendarDate,
   Grip,
   HangKind,
@@ -1948,6 +1994,7 @@ export type {
   ThemeName,
   TimeUnit,
   TimeUnits,
+  TrainingBlock,
   WeightUnit,
   Weekday,
   Workout,

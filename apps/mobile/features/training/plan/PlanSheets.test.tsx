@@ -1,5 +1,6 @@
 import { describe, expect, it, jest } from "@jest/globals";
 import { fireEvent, screen } from "@testing-library/react-native";
+import { router } from "expo-router";
 import React from "react";
 import type * as ReactNative from "react-native";
 import { renderWithHang, TODAY } from "../data/renderWithHang";
@@ -37,17 +38,23 @@ jest.mock("@gorhom/bottom-sheet", () => ({
 }));
 jest.mock("../../../lib/api", () => ({ useApi: () => undefined }));
 jest.mock("expo-crypto", () => ({ randomUUID: () => "new-id" }));
+jest.mock("expo-router", () => ({ router: { push: jest.fn() } }));
 const mockSave = jest.fn(() => Promise.resolve());
+const mockSaveBlock = jest.fn(() => Promise.resolve());
 jest.mock("./usePlanActions", () => ({
-  usePlanActions: () => ({ savePlanItem: mockSave, deletePlanItem: jest.fn() }),
+  usePlanActions: () => ({
+    savePlanItem: mockSave,
+    deletePlanItem: jest.fn(),
+    saveBlock: mockSaveBlock,
+  }),
 }));
 
-function Host(): React.ReactElement {
-  const [request, setRequest] = React.useState<PlanRequest | null>({
-    mode: "choose",
-    days: [1],
-    start: TODAY,
-  });
+function Host({
+  first = { mode: "choose", days: [1], start: TODAY },
+}: {
+  first?: PlanRequest;
+}): React.ReactElement {
+  const [request, setRequest] = React.useState<PlanRequest | null>(first);
   return <PlanSheets request={request} onChange={setRequest} />;
 }
 
@@ -72,6 +79,7 @@ describe("Plan training", () => {
       targetRpe: 7,
       projectId: null,
       template: null,
+      blockId: null,
     });
   });
 
@@ -89,6 +97,38 @@ describe("Plan training", () => {
         template: { kind: "checklist", items: [{ text: "Cat-cow", dose: "× 10" }] },
       })
     );
+  });
+
+  it("starts a new session template as a strength plan with sets to fill in", async () => {
+    await renderWithHang(<Host />);
+    await fireEvent.press(screen.getByText("New session template"));
+    expect(screen.getByDisplayValue("Strength session")).toBeTruthy();
+    expect(screen.getByText("Remove details")).toBeTruthy();
+  });
+
+  it("sends a new hangboard workout to the builder, to come back to the planner", async () => {
+    await renderWithHang(<Host />);
+    await fireEvent.press(screen.getByText("New hangboard workout"));
+    expect(router.push).toHaveBeenCalledWith({
+      pathname: "/workout/builder",
+      params: { plan: "1", start: TODAY, days: "1" },
+    });
+  });
+
+  it("creates a block, then goes straight on to adding to it", async () => {
+    await renderWithHang(<Host first={{ mode: "block", block: null }} />);
+    await fireEvent.press(screen.getByLabelText("Week 2, Build. Change the phase"));
+    await fireEvent.press(screen.getByText("Create block"));
+    expect(mockSaveBlock).toHaveBeenCalledWith({
+      id: "new-id",
+      name: "Finger block",
+      start: TODAY,
+      weeks: 4,
+      phases: ["build", "deload", "build", "deload"],
+      notes: null,
+      endedOn: null,
+    });
+    expect(screen.getByText("Add to block")).toBeTruthy();
   });
 
   it("opens the hangboard planner for a hangboard workout", async () => {

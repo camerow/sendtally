@@ -1,6 +1,13 @@
 import { useQueryClient, type QueryKey } from "@tanstack/react-query";
 import React from "react";
-import type { Activity, PlanItem, SendtallyApi } from "@sendtally/api-client";
+import type {
+  Activity,
+  ActivityRecord,
+  ConnectionStatus,
+  PlanItem,
+  SendtallyApi,
+  TrainingBlock,
+} from "@sendtally/api-client";
 import { queries } from "../query";
 
 export type ActivityActions = {
@@ -9,12 +16,29 @@ export type ActivityActions = {
   savePlanItem: (item: PlanItem) => Promise<void>;
   deletePlanItem: (id: string) => Promise<void>;
   setPlanItemSkip: (id: string, date: string, skipped: boolean) => Promise<void>;
+  saveBlock: (block: TrainingBlock) => Promise<void>;
+  deleteBlock: (id: string) => Promise<void>;
 };
 
 const upsert = <T extends { id: string }>(list: readonly T[], item: T): T[] =>
   list.some((x) => x.id === item.id)
     ? list.map((x) => (x.id === item.id ? item : x))
     : [item, ...list];
+
+// A new activity shows as posting when the server is about to post it, so the
+// screen polls for the outcome instead of offering a second post meanwhile.
+const record = (
+  activity: Activity,
+  previous: ActivityRecord | undefined,
+  status: ConnectionStatus | undefined
+): ActivityRecord => ({
+  stravaActivityId: null,
+  postedAt: null,
+  postState: status?.strava?.status === "active" && status.strava.postTraining ? "pending" : null,
+  postError: null,
+  ...previous,
+  ...activity,
+});
 
 const byNewest = (a: Activity, b: Activity): number =>
   b.date.localeCompare(a.date) || (b.startTime ?? "").localeCompare(a.startTime ?? "");
@@ -53,6 +77,7 @@ export function useActivityActions(
     };
     const activities = queries.activities(api).queryKey;
     const plan = queries.planItems(api).queryKey;
+    const blocks = queries.trainingBlocks(api).queryKey;
     const skipped = (item: PlanItem, date: string, skip: boolean): PlanItem => ({
       ...item,
       skip: skip ? [...new Set([...item.skip, date])].sort() : item.skip.filter((d) => d !== date),
@@ -60,16 +85,20 @@ export function useActivityActions(
 
     return {
       saveActivity: (activity) =>
-        write<Activity[]>(
+        write<ActivityRecord[]>(
           activities,
-          (list) => upsert(list, activity).sort(byNewest),
+          (list) => {
+            const previous = list.find((a) => a.id === activity.id);
+            const status = client.getQueryData(queries.status(api).queryKey);
+            return upsert(list, record(activity, previous, status)).sort(byNewest);
+          },
           () => {
             const { id, ...input } = activity;
             return api.saveActivity(id, input);
           }
         ),
       deleteActivity: (id) =>
-        write<Activity[]>(
+        write<ActivityRecord[]>(
           activities,
           (list) => list.filter((a) => a.id !== id),
           () => api.deleteActivity(id)
@@ -91,6 +120,18 @@ export function useActivityActions(
           plan,
           (list) => list.map((p) => (p.id === id ? skipped(p, date, skip) : p)),
           () => api.skipPlanItem(id, date, skip)
+        ),
+      saveBlock: (block) =>
+        write<TrainingBlock[]>(
+          blocks,
+          (list) => upsert(list, block),
+          () => api.saveTrainingBlock(block)
+        ),
+      deleteBlock: (id) =>
+        write<TrainingBlock[]>(
+          blocks,
+          (list) => list.filter((b) => b.id !== id),
+          () => api.deleteTrainingBlock(id)
         ),
     };
   }, [api, client, onError]);

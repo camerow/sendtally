@@ -91,4 +91,7 @@ export const activities = {
   "activities.nextStep": "Ensuite : {step}",
   "activities.statSteps": "Étapes faites",
   "activities.saveRun": "Enregistrer l’activité",
+  "activities.seeTrend": "Voir la tendance",
+  "activities.deleteBodyStrava":
+    "Elle disparaît de ton carnet et de tes statistiques. Strava ne permet pas aux applications de supprimer des activités, l’activité Strava reste donc en place.",
 } as const;

@@ -18,8 +18,6 @@ export default tseslint.config(
       "**/.expo/**",
       "apps/mobile/ios/**",
       "apps/mobile/android/**",
-      "apps/hangtally/ios/**",
-      "apps/hangtally/android/**",
       "apps/mobile/store/out/**",
       "tools/**",
     ],

@@ -17,8 +17,8 @@ const LOG: QueryKey[] = [
 ];
 
 /**
- * hangtally owns its own cache and updates it optimistically, so its writes
- * stale only what sendtally reads from them: the log and the trends list hang
+ * The hangboard feature owns its own cache and updates it optimistically, so
+ * its writes stale only what the rest of sendtally reads from them: the log and the trends list hang
  * sessions and name custom grips.
  */
 function hangWriteStales(resource: string | undefined): QueryKey[] {
@@ -81,6 +81,9 @@ export function writeEffect({ method, path }: ApiWrite): WriteEffect | null {
       return { stale: [["sessions"], ["sessionsWithClimbs"]], gone: null };
     case "plan-items":
       return { stale: [], gone: null };
+    // A block moves, ends or releases its members on the server.
+    case "training-blocks":
+      return { stale: [["planItems"], ["hang"]], gone: null };
     default:
       return null;
   }

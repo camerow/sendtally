@@ -51,14 +51,17 @@ import {
   stravaConnections,
   syncState,
   tags,
+  trainingBlocks,
   users,
 } from "../db/schema";
 import {
+  blockEnd,
   loadKey,
   type HangSession,
   type HangSettings,
   type Loads,
   type Schedule,
+  type TrainingBlock,
   type Workout,
 } from "@sendtally/core/hang";
 import type { ActivityInput, PlanItem } from "./activities";
@@ -135,6 +138,34 @@ export async function setTrainingMode(db: D1Database, id: string, enabled: boole
   await drizzle(db)
     .update(users)
     .set({ training_mode: enabled ? 1 : 0 })
+    .where(eq(users.id, id));
+}
+
+export type TrainingReminderSettings = { enabled: boolean; time: string; promptSeen: boolean };
+
+export function trainingRemindersOf(user: UserRow | null): TrainingReminderSettings {
+  return {
+    enabled: user?.training_reminders === 1,
+    time: user?.training_reminder_time ?? "08:00",
+    promptSeen: user?.training_reminder_prompt_seen === 1,
+  };
+}
+
+export async function setTrainingReminders(
+  db: D1Database,
+  id: string,
+  settings: Partial<TrainingReminderSettings>
+): Promise<void> {
+  const flag = (value: boolean): number => (value ? 1 : 0);
+  await drizzle(db)
+    .update(users)
+    .set({
+      ...(settings.enabled === undefined ? {} : { training_reminders: flag(settings.enabled) }),
+      ...(settings.time === undefined ? {} : { training_reminder_time: settings.time }),
+      ...(settings.promptSeen === undefined
+        ? {}
+        : { training_reminder_prompt_seen: flag(settings.promptSeen) }),
+    })
     .where(eq(users.id, id));
 }
 
@@ -1050,6 +1081,17 @@ export async function setStravaPosting(
     .where(eq(stravaConnections.user_id, userId));
 }
 
+export async function setTrainingPosting(
+  db: D1Database,
+  userId: string,
+  enabled: boolean
+): Promise<void> {
+  await drizzle(db)
+    .update(stravaConnections)
+    .set({ post_training: enabled })
+    .where(eq(stravaConnections.user_id, userId));
+}
+
 export async function listSessions(
   db: D1Database,
   userId: string,
@@ -1160,6 +1202,7 @@ export async function deleteUserData(db: D1Database, userId: string): Promise<vo
     d.delete(hangSettings).where(eq(hangSettings.user_id, userId)),
     d.delete(activities).where(eq(activities.user_id, userId)),
     d.delete(planItems).where(eq(planItems.user_id, userId)),
+    d.delete(trainingBlocks).where(eq(trainingBlocks.user_id, userId)),
     d.delete(sessions).where(eq(sessions.user_id, userId)),
     d.delete(stravaConnections).where(eq(stravaConnections.user_id, userId)),
     d.delete(storeEntitlements).where(eq(storeEntitlements.user_id, userId)),
@@ -2252,7 +2295,7 @@ export type HangRows = {
 const loadsOf = (rows: Array<typeof hangLoads.$inferSelect>): Loads =>
   Object.fromEntries(rows.map((r) => [loadKey(r.workout_id, r.grip_id), r.kg]));
 
-// Everything hangtally reads, in one round trip.
+// Everything the hangboard feature reads, in one round trip.
 export async function hangRows(db: D1Database, userId: string): Promise<HangRows> {
   const d = drizzle(db);
   const [grips, workouts, defaultGrips, loads, schedules, hang, settings] = await d.batch([
@@ -2450,6 +2493,8 @@ export async function saveHangSchedule(
     start: s.start,
     end: s.end,
     skip_json: JSON.stringify([...new Set(s.skip)].sort()),
+    ...(s.targetRpe === undefined ? {} : { target_rpe: s.targetRpe }),
+    ...(s.blockId === undefined ? {} : { block_id: s.blockId }),
     updated_at: new Date().toISOString(),
   };
   return drizzle(db)
@@ -2662,6 +2707,58 @@ export async function saveActivity(
     .get();
 }
 
+const activity = (userId: string, id: string): SQL | undefined =>
+  and(eq(activities.user_id, userId), eq(activities.id, id));
+
+export async function getActivity(
+  db: D1Database,
+  userId: string,
+  id: string
+): Promise<ActivityRow | null> {
+  const row = await drizzle(db).select().from(activities).where(activity(userId, id)).get();
+  return row ?? null;
+}
+
+export async function markActivityPostPending(
+  db: D1Database,
+  userId: string,
+  id: string
+): Promise<void> {
+  await drizzle(db)
+    .update(activities)
+    .set({ post_state: "pending", post_error: null })
+    .where(activity(userId, id));
+}
+
+export async function markActivityPosted(
+  db: D1Database,
+  userId: string,
+  id: string,
+  activityId: number
+): Promise<void> {
+  await drizzle(db)
+    .update(activities)
+    .set({
+      strava_activity_id: activityId,
+      posted_at: new Date().toISOString(),
+      post_state: "posted",
+      post_error: null,
+    })
+    .where(activity(userId, id));
+}
+
+export async function markActivityPostFailed(
+  db: D1Database,
+  userId: string,
+  id: string,
+  error: string
+): Promise<void> {
+  await drizzle(db)
+    .update(activities)
+    .set({ post_state: "failed", post_error: error })
+    .where(activity(userId, id));
+}
+
 export async function deleteActivity(db: D1Database, userId: string, id: string): Promise<boolean> {
   const result = await drizzle(db)
     .delete(activities)
@@ -2709,6 +2806,7 @@ export async function savePlanItem(
     project_id: p.projectId,
     template_kind: p.template?.kind ?? null,
     template_json: p.template === null ? null : JSON.stringify(p.template),
+    ...(p.blockId === undefined ? {} : { block_id: p.blockId }),
     updated_at: new Date().toISOString(),
   };
   return drizzle(db)
@@ -2725,4 +2823,93 @@ export async function deletePlanItem(db: D1Database, userId: string, id: string)
     .delete(planItems)
     .where(and(eq(planItems.user_id, userId), eq(planItems.id, id)));
   return result.meta.changes > 0;
+}
+
+export type TrainingBlockRow = typeof trainingBlocks.$inferSelect;
+
+export async function listTrainingBlocks(
+  db: D1Database,
+  userId: string
+): Promise<TrainingBlockRow[]> {
+  return drizzle(db)
+    .select()
+    .from(trainingBlocks)
+    .where(eq(trainingBlocks.user_id, userId))
+    .orderBy(desc(trainingBlocks.start), trainingBlocks.id)
+    .all();
+}
+
+export async function getTrainingBlock(
+  db: D1Database,
+  userId: string,
+  id: string
+): Promise<TrainingBlockRow | null> {
+  const row = await drizzle(db)
+    .select()
+    .from(trainingBlocks)
+    .where(and(eq(trainingBlocks.user_id, userId), eq(trainingBlocks.id, id)))
+    .get();
+  return row ?? null;
+}
+
+/** Saves the block and moves every member onto its dates, in one batch. */
+export async function saveTrainingBlock(
+  db: D1Database,
+  userId: string,
+  b: TrainingBlock
+): Promise<TrainingBlockRow> {
+  const d = drizzle(db);
+  const now = new Date().toISOString();
+  const fields = {
+    name: b.name,
+    start: b.start,
+    weeks: b.weeks,
+    phases_json: JSON.stringify(b.phases),
+    notes: b.notes,
+    ended_on: b.endedOn,
+    updated_at: now,
+  };
+  const dates = { start: b.start, end: blockEnd(b), updated_at: now };
+  const [row] = await d.batch([
+    d
+      .insert(trainingBlocks)
+      .values({ user_id: userId, id: b.id, ...fields })
+      .onConflictDoUpdate({ target: [trainingBlocks.user_id, trainingBlocks.id], set: fields })
+      .returning(),
+    d
+      .update(planItems)
+      .set(dates)
+      .where(and(eq(planItems.user_id, userId), eq(planItems.block_id, b.id))),
+    d
+      .update(hangSchedules)
+      .set(dates)
+      .where(and(eq(hangSchedules.user_id, userId), eq(hangSchedules.block_id, b.id))),
+  ]);
+  const saved = row[0];
+  if (saved === undefined) throw new Error("training block upsert returned no row");
+  return saved;
+}
+
+/** The block goes; its members stay planned on their own, dates unchanged. */
+export async function deleteTrainingBlock(
+  db: D1Database,
+  userId: string,
+  id: string
+): Promise<boolean> {
+  const d = drizzle(db);
+  const now = new Date().toISOString();
+  const [, , deleted] = await d.batch([
+    d
+      .update(planItems)
+      .set({ block_id: null, updated_at: now })
+      .where(and(eq(planItems.user_id, userId), eq(planItems.block_id, id))),
+    d
+      .update(hangSchedules)
+      .set({ block_id: null, updated_at: now })
+      .where(and(eq(hangSchedules.user_id, userId), eq(hangSchedules.block_id, id))),
+    d
+      .delete(trainingBlocks)
+      .where(and(eq(trainingBlocks.user_id, userId), eq(trainingBlocks.id, id))),
+  ]);
+  return deleted.meta.changes > 0;
 }

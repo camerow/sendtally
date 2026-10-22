@@ -1,6 +1,8 @@
 import React from "react";
+import type { TrainingBlock } from "@sendtally/api-client";
 import {
   addDays,
+  blockEnd,
   endChoiceOf,
   endOf,
   loadKey,
@@ -14,6 +16,7 @@ import {
   type Workout,
 } from "@sendtally/core/hang";
 import { randomUUID } from "expo-crypto";
+import { useBlocks } from "../blocks/useBlocks";
 import { useHangData } from "../data/HangDataContext";
 import { useReminderPrompt } from "../reminders/ReminderPromptProvider";
 import { plannerSummary } from "./plannerSummary";
@@ -31,6 +34,8 @@ export type PlannerDraft = {
   endMode: EndMode;
   weeks: number;
   last: CalendarDate;
+  targetRpe: number | null;
+  blockId: string | null;
 };
 
 function draftFor(
@@ -52,6 +57,8 @@ function draftFor(
       endMode: end.mode,
       weeks: end.mode === "weeks" ? end.weeks : DEFAULT_WEEKS,
       last: end.mode === "date" ? end.last : addDays(s.start, DEFAULT_WEEKS * 7 - 1),
+      targetRpe: s.targetRpe ?? null,
+      blockId: s.blockId ?? null,
     };
   }
   const grip = request.gripId ?? (request.workoutId === null ? null : gripOf(request.workoutId));
@@ -66,6 +73,8 @@ function draftFor(
     endMode: "weeks",
     weeks: DEFAULT_WEEKS,
     last: addDays(request.start, DEFAULT_WEEKS * 7 - 1),
+    targetRpe: null,
+    blockId: request.blockId ?? null,
   };
 }
 
@@ -73,6 +82,7 @@ export type Planner = {
   isEdit: boolean;
   draft: PlannerDraft;
   workout: Workout | undefined;
+  block: TrainingBlock | undefined;
   end: CalendarDate | null;
   summary: string;
   ready: boolean;
@@ -100,10 +110,11 @@ export function usePlanner(request: PlannerRequest, onDone: () => void): Planner
   const isEdit = request.mode === "edit";
   const workout =
     draft.workoutId === null || draft.picking ? undefined : model.workout(draft.workoutId);
-  const end = endOf(draft.start, endChoice(draft));
-  const block = { start: draft.start, end, days: draft.days, skip: [] };
-  const dates =
-    workout !== undefined && (end === null || end > draft.start) ? occurrences(block) : [];
+  const block = useBlocks().find((b) => b.id === draft.blockId);
+  const start = block?.start ?? draft.start;
+  const end = block === undefined ? endOf(draft.start, endChoice(draft)) : blockEnd(block);
+  const span = { start, end, days: draft.days, skip: [] };
+  const dates = workout !== undefined && (end === null || end > start) ? occurrences(span) : [];
   const update = (patch: Partial<PlannerDraft>): void => setDraft((d) => ({ ...d, ...patch }));
   const loadFor = (gripId: string): number =>
     workout === undefined
@@ -112,7 +123,14 @@ export function usePlanner(request: PlannerRequest, onDone: () => void): Planner
 
   const save = (): void => {
     if (workout === undefined || draft.grips.length === 0 || dates.length === 0) return;
-    const fields = { workoutId: workout.id, days: draft.days, start: draft.start, end };
+    const fields = {
+      workoutId: workout.id,
+      days: draft.days,
+      start,
+      end,
+      targetRpe: draft.targetRpe,
+      blockId: draft.blockId,
+    };
     const schedules: Schedule[] =
       request.mode === "edit"
         ? [{ ...request.schedule, ...fields, gripId: draft.grips[0] ?? request.schedule.gripId }]
@@ -127,6 +145,7 @@ export function usePlanner(request: PlannerRequest, onDone: () => void): Planner
     isEdit,
     draft,
     workout,
+    block,
     end,
     summary: plannerSummary({
       workout,
@@ -136,7 +155,7 @@ export function usePlanner(request: PlannerRequest, onDone: () => void): Planner
       ongoing: end === null,
     }),
     ready: workout !== undefined && draft.grips.length > 0 && dates.length > 0,
-    shaded: (d) => occursOn(block, d),
+    shaded: (d) => occursOn(span, d),
     update,
     pickWorkout: (w) =>
       update({

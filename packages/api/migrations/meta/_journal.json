@@ -176,6 +176,27 @@
       "when": 1792687710829,
       "tag": "0029_salty_fat_cobra",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "6",
+      "when": 1792692645586,
+      "tag": "0030_fantastic_klaw",
+      "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "6",
+      "when": 1792693313237,
+      "tag": "0031_mature_speed_demon",
+      "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "6",
+      "when": 1792693955284,
+      "tag": "0032_cloudy_firelord",
+      "breakpoints": true
     }
   ]
 }
