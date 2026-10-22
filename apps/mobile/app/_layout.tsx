@@ -26,6 +26,7 @@ import { colors } from "@sendtally/design/tokens";
 import { resolveLocale, setLocale } from "@sendtally/features/i18n";
 import { AnalyticsProvider } from "../features/analytics/AnalyticsProvider";
 import { BillingProvider } from "../features/billing/BillingProvider";
+import { ReminderPromptProvider } from "../features/training/reminders/ReminderPromptProvider";
 import { CLERK_PUBLISHABLE_KEY } from "../lib/config";
 import { QueryProvider } from "../lib/QueryProvider";
 import { useFreshInstallUpdate } from "../features/app-update/useFreshInstallUpdate";
@@ -64,20 +65,24 @@ function AppStack(): React.ReactElement | null {
   const { isLoaded, isSignedIn } = useAuth();
   if (!isLoaded) return null;
   return (
-    <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.white } }}>
-      <Stack.Protected guard={isSignedIn}>
-        {SIGNED_IN_SCREENS.map((name) => (
-          <Stack.Screen key={name} name={name} />
-        ))}
-        {FOCUS_SCREENS.map((name) => (
-          <Stack.Screen
-            key={name}
-            name={name}
-            options={{ gestureEnabled: false, animation: "fade" }}
-          />
-        ))}
-      </Stack.Protected>
-    </Stack>
+    <ReminderPromptProvider>
+      <Stack
+        screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.white } }}
+      >
+        <Stack.Protected guard={isSignedIn}>
+          {SIGNED_IN_SCREENS.map((name) => (
+            <Stack.Screen key={name} name={name} />
+          ))}
+          {FOCUS_SCREENS.map((name) => (
+            <Stack.Screen
+              key={name}
+              name={name}
+              options={{ gestureEnabled: false, animation: "fade" }}
+            />
+          ))}
+        </Stack.Protected>
+      </Stack>
+    </ReminderPromptProvider>
   );
 }
 

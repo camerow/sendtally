@@ -15,6 +15,7 @@ import {
 } from "@sendtally/core/hang";
 import { randomUUID } from "expo-crypto";
 import { useHangData } from "../data/HangDataContext";
+import { useReminderPrompt } from "../reminders/ReminderPromptProvider";
 import { plannerSummary } from "./plannerSummary";
 import { DEFAULT_WEEKS, endChoice } from "./scheduleDraft";
 import type { EndMode, PlannerRequest } from "./types";
@@ -89,6 +90,7 @@ export type Planner = {
 /** The Plan a block / Edit schedule sheet's state, and what saving it writes. */
 export function usePlanner(request: PlannerRequest, onDone: () => void): Planner {
   const { model, actions, today } = useHangData();
+  const prompt = useReminderPrompt();
   const [draft, setDraft] = React.useState(() =>
     draftFor(request, today, (id) => {
       const w = model.workout(id);
@@ -118,6 +120,7 @@ export function usePlanner(request: PlannerRequest, onDone: () => void): Planner
     if (Object.keys(draft.loads).length > 0) void actions.setLoads(draft.loads);
     void actions.saveSchedules(schedules);
     onDone();
+    if (!isEdit) prompt();
   };
 
   return {

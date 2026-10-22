@@ -461,6 +461,9 @@ importers:
       expo-localization:
         specifier: ~57.0.2
         version: 57.0.2(expo@57.0.26)(react@19.2.3)
+      expo-notifications:
+        specifier: ~57.0.21
+        version: 57.0.24(expo@57.0.26)(react-native@0.86.3)(react@19.2.3)(supports-color@10.2.2)(typescript@6.0.3)
       expo-observe:
         specifier: ~57.0.24
         version: 57.0.24(expo-router@57.0.24)(expo@57.0.26)(react-native@0.86.3)(react@19.2.3)

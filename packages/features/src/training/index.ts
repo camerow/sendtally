@@ -17,3 +17,10 @@ export {
   type TrainingLog,
   type WeekStats,
 } from "./days";
+export {
+  REMINDER_DAYS,
+  reminderMoment,
+  trainingReminders,
+  type ReminderNames,
+  type TrainingReminder,
+} from "./reminders";

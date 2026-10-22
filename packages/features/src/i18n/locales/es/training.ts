@@ -16,4 +16,10 @@ export const training = {
   "training.dayAria": "{day}: {logged} registradas, {planned} previstas",
   "training.logTraining": "Registrar entrenamiento",
   "training.logTrainingBody": "Fuerza, movilidad, carrera y más.",
+  "training.reminders": "Recordatorios de entreno",
+  "training.remindersNote": "Una notificación los días con algo previsto, con todo lo que toca.",
+  "training.remindersBlocked":
+    "Las notificaciones de sendtally están desactivadas. Actívalas en los ajustes del móvil.",
+  "training.reminderPromptBody":
+    "Una notificación a las {time} los días con algo previsto. Cámbialo cuando quieras en Ajustes.",
 } as const;
