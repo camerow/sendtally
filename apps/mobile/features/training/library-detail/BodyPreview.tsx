@@ -3,6 +3,7 @@ import { View } from "react-native";
 import { intervalsOf, type WeightUnit } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
+import { variationName } from "@sendtally/features/training";
 import {
   bodySummary,
   doseSummary,
@@ -27,7 +28,7 @@ export function BodyPreview({ workout, unit }: BodyPreviewProps): React.ReactEle
         const timed = v.items.length > 0 && v.items.every((item) => item.dose.onS !== undefined);
         return (
           <View key={i} style={{ gap: 4 }}>
-            <Label color={colors.gunmetal}>{rotates ? v.label : summary}</Label>
+            <Label color={colors.gunmetal}>{rotates ? variationName(v.label, i) : summary}</Label>
             {timed && workout.kind !== "hangboard" && (
               <View style={{ flexDirection: "row", paddingVertical: 8 }}>
                 <IntervalsBar intervals={intervalsOf(v.items)} height={14} />
