@@ -5,7 +5,7 @@ import React from "react";
 import { renderWithHang, TODAY } from "../data/renderWithHang";
 import { DoneScreen } from "./DoneScreen";
 
-jest.mock("expo-router", () => ({ router: { replace: jest.fn() } }));
+jest.mock("expo-router", () => ({ router: { dismissTo: jest.fn() } }));
 jest.mock("expo-crypto", () => ({ randomUUID: () => "session-1" }));
 
 const partial = {
@@ -37,9 +37,9 @@ describe("Session done", () => {
       rpe: 8,
       protocol: expect.objectContaining({ name: "Repeaters 7:3", hangS: 7, sets: 6 }),
     });
-    expect(router.replace).toHaveBeenCalledWith({
-      pathname: "/workout/trends",
-      params: { workout: "rep73", grip: "half" },
+    expect(router.dismissTo).toHaveBeenCalledWith({
+      pathname: "/(tabs)/trends",
+      params: { view: "hangboard", workout: "rep73", grip: "half" },
     });
   });
 });

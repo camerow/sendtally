@@ -14,6 +14,7 @@
     "./session-detail": "./src/session-detail/index.ts",
     "./sessions": "./src/sessions/index.ts",
     "./trends": "./src/trends/index.ts",
+    "./statistics": "./src/statistics/index.ts",
     "./settings": "./src/settings/index.ts",
     "./journal": "./src/journal/index.ts",
     "./i18n": "./src/i18n/index.ts",

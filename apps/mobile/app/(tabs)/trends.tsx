@@ -1,21 +1,34 @@
 import React from "react";
 import { ActivityIndicator, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { t } from "@sendtally/features/i18n";
+import { t, type MessageKey } from "@sendtally/features/i18n";
 import { colors } from "@sendtally/design/tokens";
 import { useTrainingMode } from "@sendtally/features/settings";
 import { AccountButton } from "../../components/AccountButton";
 import { ScreenHeader } from "../../components/ScreenHeader";
+import { Segmented } from "../../components/Segmented";
 import { useCanSeeInsights } from "../../features/billing/useBilling";
+import { StatisticsOverview } from "../../features/training/statistics/StatisticsOverview";
+import type { StatisticsView } from "../../features/training/statistics/types";
+import { useStatisticsView } from "../../features/training/statistics/useStatisticsView";
+import { HangboardTrends } from "../../features/training/trends/HangboardTrends";
 import { TrendsList } from "../../features/trends/TrendsList";
 import { useApi } from "../../lib/api";
 
 const GAP = 14;
 
+const VIEWS: Record<StatisticsView, MessageKey> = {
+  overview: "statistics.overview",
+  climbing: "statistics.climbing",
+  hangboard: "statistics.hangboard",
+};
+
 export default function Trends(): React.ReactElement {
   const canSeeInsights = useCanSeeInsights();
   const api = useApi();
   const training = useTrainingMode(api);
+  const statistics = useStatisticsView();
+  const view = training.enabled ? statistics.view : "climbing";
   const scroll = React.useRef<ScrollView>(null);
   const panelY = React.useRef(0);
   const viewportHeight = React.useRef(0);
@@ -42,10 +55,25 @@ export default function Trends(): React.ReactElement {
           gap: GAP,
         }}
       >
-        {canSeeInsights === null && (
+        {training.enabled && (
+          <Segmented
+            label={t("statistics.label")}
+            segments={(Object.keys(VIEWS) as StatisticsView[]).map((v) => ({
+              key: v,
+              label: t(VIEWS[v]),
+              on: v === view,
+              onPress: () => statistics.setView(v),
+            }))}
+          />
+        )}
+        {view === "overview" && <StatisticsOverview />}
+        {view === "hangboard" && (
+          <HangboardTrends workoutId={statistics.workoutId} gripId={statistics.gripId} />
+        )}
+        {view === "climbing" && canSeeInsights === null && (
           <ActivityIndicator color={colors.gunmetal} style={{ alignSelf: "flex-start" }} />
         )}
-        {canSeeInsights !== null && (
+        {view === "climbing" && canSeeInsights !== null && (
           <TrendsList
             preview={!canSeeInsights}
             onLockedRange={scrollToPanel}

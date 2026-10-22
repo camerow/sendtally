@@ -37,7 +37,7 @@ function Done({ workout, params }: { workout: Workout; params: DoneParams }): Re
       rpe,
       protocol: protocolOf(workout),
     });
-    openTrends(workout.id, gripId, true);
+    openTrends(workout.id, gripId);
   };
 
   return (

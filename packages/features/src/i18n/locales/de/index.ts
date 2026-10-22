@@ -16,6 +16,7 @@ import { projects } from "./projects";
 import { sessionDetail } from "./sessionDetail";
 import { sessions } from "./sessions";
 import { settings } from "./settings";
+import { statistics } from "./statistics";
 import { trends } from "./trends";
 import { training } from "./training";
 
@@ -38,6 +39,7 @@ export const de = {
   ...sessionDetail,
   ...sessions,
   ...settings,
+  ...statistics,
   ...trends,
   ...training,
 } as const;
