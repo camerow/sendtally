@@ -1,14 +1,14 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
-import type { DayItemKind } from "@sendtally/features/training";
+import type { MarkKind } from "@sendtally/features/training";
 import { Icon } from "../../../components/Icon";
 import { pressRow } from "../../../lib/press";
 import { DayMark } from "../today/DayMark";
 import { KIND_LOOK } from "../today/kindLook";
 import { type } from "../type";
 
-export type PlanChoiceRowProps = { kind: DayItemKind; title: string; onPress: () => void };
+export type PlanChoiceRowProps = { kind: MarkKind; title: string; onPress: () => void };
 
 export function PlanChoiceRow({ kind, title, onPress }: PlanChoiceRowProps): React.ReactElement {
   return (

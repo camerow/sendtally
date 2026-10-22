@@ -22,6 +22,7 @@ import { isUnscored } from "../sessions/meta";
 export type DayItem =
   | { kind: "climb"; status: "logged"; session: SessionRow }
   | { kind: "hang"; status: "logged"; session: HangSessionRecord }
+  | { kind: "activity"; status: "logged"; activity: Activity }
   | { kind: "hang"; status: "planned"; schedule: Schedule }
   | PlanDayItem;
 
@@ -49,8 +50,8 @@ export type TrainingDay = {
 export type TrainingLog = {
   climbs: readonly SessionRow[];
   hangs: readonly HangSessionRecord[];
-  schedules: readonly Schedule[];
   activities: readonly Activity[];
+  schedules: readonly Schedule[];
   planItems: readonly PlanItem[];
 };
 
@@ -82,6 +83,9 @@ export function trainingDay(
       ...log.hangs
         .filter((s) => s.date === date)
         .map((session): LoggedItem => ({ kind: "hang", status: "logged", session })),
+      ...log.activities
+        .filter((a) => a.date === date)
+        .map((activity): LoggedItem => ({ kind: "activity", status: "logged", activity })),
     ],
     planned: scheduledOn(log.schedules, date)
       .filter((s) => !isDoneOn(log.hangs, s, date))
@@ -103,50 +107,54 @@ export function trainingWeek(
 }
 
 export function itemEffort(item: LoggedItem): number | null {
+  if (item.kind === "activity") return item.activity.rpe;
   if (item.kind === "hang") return item.session.rpe;
   return isUnscored(item.session) ? null : item.session.rpe;
 }
 
-export type DayMarkSpec = { kind: DayItemKind; filled: boolean };
+/** What a mark looks like: a discipline, with logged activities and plans by their own kind. */
+export type MarkKind = "hang" | PlanKind;
+
+export const markKind = (item: LoggedItem | PlannedItem): MarkKind =>
+  item.kind === "activity" ? item.activity.kind : item.kind;
+
+export type DayMarkSpec = { kind: MarkKind; filled: boolean };
 
 /**
- * One mark per thing on the day: filled once it happened, outlined while open. A climb
- * plan done adds none, since the climbing session that did it is already logged.
+ * One mark per thing on the day: filled for what was logged, outlined while open. A plan
+ * done adds none, since the session or activity that did it is already logged.
  */
 export function dayMarks(day: TrainingDay): DayMarkSpec[] {
-  const plans = (status: (s: OccurrenceStatus) => boolean): DayMarkSpec[] =>
-    day.plans
-      .filter((p) => status(p.status) && !(p.status === "done" && p.kind === "climb"))
-      .map((p) => ({ kind: p.kind, filled: p.status === "done" }));
   return [
-    ...day.logged.map((i) => ({ kind: i.kind, filled: true })),
-    ...plans((s) => s === "done"),
-    ...day.planned.map((i) => ({ kind: i.kind, filled: false })),
-    ...plans((s) => s !== "done"),
+    ...day.logged.map((i) => ({ kind: markKind(i), filled: true })),
+    ...day.planned.map((i) => ({ kind: markKind(i), filled: false })),
+    ...day.plans.filter((p) => p.status !== "done").map((p) => ({ kind: p.kind, filled: false })),
   ];
 }
 
 export type WeekStats = { done: number; planned: number; effort: number | null; streak: number };
 
 /**
- * This week so far: what happened against everything planned or done, the mean effort, and
- * the week streak. A weekly goal counts its target; climbing toward one is already logged.
+ * This week so far: what was logged against that plus everything still open, the mean
+ * effort, and the week streak. A weekly goal adds what is left of its target.
  */
 export function weekStats(log: TrainingLog, today: CalendarDate): WeekStats {
   const days = trainingWeek(log, weekStart(today), today);
   const marks = days.flatMap(dayMarks);
   const goals = days[0]?.goals ?? [];
-  const met = (g: WeekGoal): number => Math.min(g.done, g.target);
-  const done =
-    marks.filter((m) => m.filled).length +
-    goals.filter((g) => g.item.kind !== "climb").reduce((n, g) => n + met(g), 0);
+  const done = marks.filter((m) => m.filled).length;
   const open =
-    marks.filter((m) => !m.filled).length + goals.reduce((n, g) => n + g.target - met(g), 0);
+    marks.filter((m) => !m.filled).length +
+    goals.reduce((n, g) => n + g.target - Math.min(g.done, g.target), 0);
   const efforts = days
     .flatMap((d) => d.logged)
     .map(itemEffort)
     .filter((e) => e !== null);
-  const dates = [...log.climbs.map((s) => ({ date: climbDate(s) })), ...log.hangs];
+  const dates = [
+    ...log.climbs.map((s) => ({ date: climbDate(s) })),
+    ...log.hangs,
+    ...log.activities,
+  ];
   return {
     done,
     planned: done + open,

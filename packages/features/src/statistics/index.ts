@@ -8,6 +8,7 @@ export {
 export {
   ACTIVITY_KINDS,
   activitiesOf,
+  overviewKind,
   overviewVM,
   type ActivityKind,
   type OverviewKindVM,

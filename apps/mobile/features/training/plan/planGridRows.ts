@@ -1,12 +1,12 @@
 import type { PlanItem } from "@sendtally/api-client";
 import type { Schedule } from "@sendtally/core/hang";
 import { loadLabel, type HangModel } from "@sendtally/features/hang";
-import type { DayItemKind } from "@sendtally/features/training";
+import type { MarkKind } from "@sendtally/features/training";
 import { planItemMeta, scheduleText } from "./planItemText";
 
 export type PlanGridRow = {
   key: string;
-  kind: DayItemKind;
+  kind: MarkKind;
   name: string;
   sub: string;
   days: readonly number[];

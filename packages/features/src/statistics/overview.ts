@@ -1,4 +1,8 @@
-import type { HangHistoryRow, SessionLog } from "@sendtally/api-client";
+import type {
+  ActivityKind as TrainingKind,
+  HangHistoryRow,
+  SessionLog,
+} from "@sendtally/api-client";
 import { timeOnEdge, totalSeconds, type CalendarDate } from "@sendtally/core/hang";
 import { dayMonth } from "../hang/format";
 import { formatNumber, t, type MessageKey } from "../i18n";
@@ -6,14 +10,28 @@ import { isUnscored } from "../sessions/meta";
 import { durationLabel, sessionMinutes } from "../sessions/years";
 import { OVERVIEW_WEEKS, summariseActivity, type Activity } from "./activity";
 
-export const ACTIVITY_KINDS = ["climbing", "hangboard"] as const;
+export const ACTIVITY_KINDS = ["climbing", "hangboard", "strength", "mobility", "other"] as const;
 
 export type ActivityKind = (typeof ACTIVITY_KINDS)[number];
 
 const KIND_NAMES: Record<ActivityKind, MessageKey> = {
   climbing: "statistics.climbing",
   hangboard: "statistics.hangboard",
+  strength: "activities.kindStrength",
+  mobility: "activities.kindMobility",
+  other: "activities.kindOther",
 };
+
+const TRAINING_KINDS: Record<TrainingKind, ActivityKind> = {
+  strength: "strength",
+  mobility: "mobility",
+  yoga: "mobility",
+  run: "other",
+  other: "other",
+};
+
+/** Where a logged activity counts in the overview: yoga with mobility, the smaller kinds as other. */
+export const overviewKind = (kind: TrainingKind): ActivityKind => TRAINING_KINDS[kind];
 
 const AXIS_EVERY = 4;
 
@@ -57,10 +75,22 @@ export function activitiesOf(log: SessionLog): Activity<ActivityKind>[] {
       minutes: (totalSeconds(h.protocol) * share(h)) / 60,
       rpe: h.rpe,
     })),
+    ...log.activities.map((a): Activity<ActivityKind> => ({
+      kind: overviewKind(a.kind),
+      date: a.date,
+      minutes: a.minutes,
+      rpe: a.rpe,
+    })),
   ];
 }
 
 const kindName = (kind: ActivityKind): string => t(KIND_NAMES[kind]);
+
+/** The kinds a week holds, or climbing alone to say an empty week is empty. */
+const weekKinds = (sessions: Record<ActivityKind, number>): ActivityKind[] => {
+  const held = ACTIVITY_KINDS.filter((k) => sessions[k] > 0);
+  return held.length > 0 ? held : ["climbing"];
+};
 
 const oneDecimal = (n: number): string =>
   formatNumber(n, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
@@ -91,7 +121,9 @@ export function overviewVM(log: SessionLog, today: CalendarDate): StatisticsOver
     axis: i === last ? t("statistics.now") : i % AXIS_EVERY === 0 ? dayMonth(w.start) : "",
     label: t("statistics.weekSummary", {
       date: dayMonth(w.start),
-      sessions: ACTIVITY_KINDS.map((k) => `${kindName(k)} ${w.sessions[k]}`).join(", "),
+      sessions: weekKinds(w.sessions)
+        .map((k) => `${kindName(k)} ${w.sessions[k]}`)
+        .join(", "),
     }),
   }));
   const from = summary.weeks[0]?.start ?? today;

@@ -23,9 +23,7 @@ jest.mock("@sendtally/features/query", () => ({
       data:
         queryKey[0] === "planItems"
           ? mockPlanItems
-          : queryKey[0] === "activities"
-            ? []
-            : { sessions: [], hangSessions: [] },
+          : { sessions: [], hangSessions: [], activities: [] },
     },
     refreshFailed: false,
     reload: () => Promise.resolve(),
@@ -93,7 +91,13 @@ describe("Today", () => {
     await fireEvent.press(screen.getByText("Log it"));
     expect(router.push).toHaveBeenCalledWith({
       pathname: "/activity/new",
-      params: { kind: "strength", title: "Gym, legs", date: "2026-09-29", planItemId: "p1" },
+      params: {
+        kind: "strength",
+        title: "Gym, legs",
+        date: "2026-09-29",
+        planItemId: "p1",
+        minutes: "50",
+      },
     });
     await fireEvent.press(screen.getByText("Log session"));
     expect(router.push).toHaveBeenCalledWith("/session/new");

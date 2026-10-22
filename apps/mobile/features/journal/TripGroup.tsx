@@ -21,6 +21,7 @@ import { Icon } from "../../components/Icon";
 import { press } from "../../lib/press";
 import { EntryRow, entryRowHeight } from "./EntryRow";
 import { EntryKindChip } from "./EntryKindChip";
+import { ACTIVITY_ROW_HEIGHT, ActivityRow } from "../sessions/ActivityRow";
 import { HANG_ROW_HEIGHT, HangRow } from "../sessions/HangRow";
 import { SessionRow, sessionRowHeight } from "../sessions/SessionRow";
 import { ROW_TAGS_HEIGHT, RowTags } from "../sessions/RowTags";
@@ -41,6 +42,7 @@ const TINT = "rgba(204,121,234,0.13)";
 
 const innerHeight = (item: LogItem): number => {
   if (item.type === "session") return sessionRowHeight(item.session);
+  if (item.type === "activity") return ACTIVITY_ROW_HEIGHT;
   return item.type === "hang" ? HANG_ROW_HEIGHT : entryRowHeight(item.entry);
 };
 
@@ -188,6 +190,13 @@ export function TripGroup({
             />
           ) : inner.type === "hang" ? (
             <HangRow hang={inner.hang} inset divider={n < last} onPress={() => onOpen(inner)} />
+          ) : inner.type === "activity" ? (
+            <ActivityRow
+              activity={inner.activity}
+              inset
+              divider={n < last}
+              onPress={() => onOpen(inner)}
+            />
           ) : (
             <EntryRow entry={inner.entry} inset divider={n < last} onPress={() => onOpen(inner)} />
           )}

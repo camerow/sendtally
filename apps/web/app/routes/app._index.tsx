@@ -3,6 +3,7 @@ import type { LinksFunction, LoaderFunctionArgs } from "react-router";
 import { useLoaderData, useSearchParams } from "react-router";
 import type {
   ConnectionStatus,
+  Activity,
   HangHistoryRow,
   JournalEntry,
   SessionRow,
@@ -20,6 +21,7 @@ type LoaderData = {
   status: ConnectionStatus;
   sessions: SessionRow[];
   hangSessions: HangHistoryRow[];
+  activities: Activity[];
   entries: JournalEntry[];
 };
 
@@ -41,12 +43,14 @@ export async function loader(args: LoaderFunctionArgs): Promise<LoaderData> {
     status,
     sessions: sessions.sessions,
     hangSessions: sessions.hangSessions,
+    activities: sessions.activities,
     entries: entries.entries,
   };
 }
 
 export default function Log(): React.ReactElement {
-  const { apiUrl, status, sessions, hangSessions, entries } = useLoaderData<typeof loader>();
+  const { apiUrl, status, sessions, hangSessions, activities, entries } =
+    useLoaderData<typeof loader>();
   const [searchParams] = useSearchParams();
   const show = searchParams.get("show");
   const scope: LogScope = LOG_SCOPES.find((value) => value === show) ?? "all";
@@ -56,6 +60,7 @@ export default function Log(): React.ReactElement {
       status={status}
       sessions={sessions}
       hangSessions={hangSessions}
+      activities={activities}
       entries={entries}
       scope={scope}
       basePath="/app"

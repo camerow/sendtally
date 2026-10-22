@@ -14,4 +14,6 @@ export const training = {
   "training.statDone": "Erledigt",
   "training.doneOf": "{done} von {planned}",
   "training.dayAria": "{day}: {logged} eingetragen, {planned} geplant",
+  "training.logTraining": "Training eintragen",
+  "training.logTrainingBody": "Kraft, Mobilität, Laufen und mehr.",
 } as const;

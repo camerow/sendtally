@@ -3,6 +3,7 @@ import type { LinksFunction, LoaderFunctionArgs } from "react-router";
 import { useLoaderData } from "react-router";
 import type {
   ConnectionStatus,
+  Activity,
   HangHistoryRow,
   JournalEntry,
   SessionRow,
@@ -19,6 +20,7 @@ type LoaderData = {
   status: ConnectionStatus;
   sessions: SessionRow[];
   hangSessions: HangHistoryRow[];
+  activities: Activity[];
   entries: JournalEntry[];
 };
 
@@ -40,6 +42,7 @@ export async function loader(args: LoaderFunctionArgs): Promise<LoaderData> {
     status,
     sessions: sessions.sessions,
     hangSessions: sessions.hangSessions,
+    activities: sessions.activities,
     entries: entries.entries,
   };
 }
@@ -47,13 +50,15 @@ export async function loader(args: LoaderFunctionArgs): Promise<LoaderData> {
 // The journal is the log with one filter applied - the same list, the same month
 // headers and jump rail, at a URL worth pointing someone at.
 export default function Journal(): React.ReactElement {
-  const { apiUrl, status, sessions, hangSessions, entries } = useLoaderData<typeof loader>();
+  const { apiUrl, status, sessions, hangSessions, activities, entries } =
+    useLoaderData<typeof loader>();
   return (
     <LogView
       apiUrl={apiUrl}
       status={status}
       sessions={sessions}
       hangSessions={hangSessions}
+      activities={activities}
       entries={entries}
       scope="journal"
       basePath="/app/journal"

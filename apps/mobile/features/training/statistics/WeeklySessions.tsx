@@ -101,19 +101,23 @@ export function WeeklySessions({ vm }: { vm: StatisticsOverviewVM }): React.Reac
         ))}
       </View>
       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 16 }}>
-        {vm.kinds.map((k) => (
-          <View key={k.kind} style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-            <View
-              style={{
-                width: 10,
-                height: 10,
-                borderRadius: 3,
-                backgroundColor: KIND_COLORS[k.kind],
-              }}
-            />
-            <Text style={[type.body, { fontSize: 12, color: colors.textSecondary }]}>{k.name}</Text>
-          </View>
-        ))}
+        {vm.kinds
+          .filter((k) => k.minutes > 0)
+          .map((k) => (
+            <View key={k.kind} style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+              <View
+                style={{
+                  width: 10,
+                  height: 10,
+                  borderRadius: 3,
+                  backgroundColor: KIND_COLORS[k.kind],
+                }}
+              />
+              <Text style={[type.body, { fontSize: 12, color: colors.textSecondary }]}>
+                {k.name}
+              </Text>
+            </View>
+          ))}
       </View>
     </View>
   );

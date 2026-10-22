@@ -1,4 +1,5 @@
 import type {
+  Activity,
   EntryKind,
   HangHistoryRow,
   JournalEntry,
@@ -16,7 +17,7 @@ export const SPANNING_KINDS: EntryKind[] = ["trip", "injury"];
 export const ENTRY_BODY_MAX = 10000;
 
 /**
- * One log holds sessions and entries. `at` is what the list sorts and groups on,
+ * One log holds sessions, other training and entries. `at` is what the list sorts and groups on,
  * and `tags` is lifted to the top so the tag filter works over both without
  * knowing which it is looking at. A trip in a grouped log holds what was logged
  * inside its dates in `inside`; everywhere else it is empty.
@@ -24,6 +25,7 @@ export const ENTRY_BODY_MAX = 10000;
 export type LogItem = { key: string; at: string; tags: SessionTag[] } & (
   | { type: "session"; session: SessionRow }
   | { type: "hang"; hang: HangHistoryRow }
+  | { type: "activity"; activity: Activity }
   | { type: "entry"; entry: JournalEntry; inside: LogItem[] }
 );
 

@@ -69,8 +69,8 @@ const schedule: Schedule = {
 const log = (overrides: Partial<TrainingLog> = {}): TrainingLog => ({
   climbs: [],
   hangs: [],
-  schedules: [schedule],
   activities: [],
+  schedules: [schedule],
   planItems: [],
   ...overrides,
 });
@@ -165,6 +165,26 @@ describe("weekStats", () => {
     expect(stats).toEqual({ done: 3, planned: 4, effort: 7.5, streak: 2 });
   });
 
+  it("counts other training toward the week, its effort and the streak", () => {
+    const activity = (date: string, rpe: number | null): Activity => ({
+      id: `a-${date}`,
+      kind: "strength",
+      title: "Gym",
+      date,
+      startTime: null,
+      minutes: 50,
+      rpe,
+      notes: null,
+      planItemId: null,
+      detail: null,
+    });
+    const stats = weekStats(
+      log({ schedules: [], activities: [activity("2026-09-29", 5), activity("2026-09-21", null)] }),
+      TODAY
+    );
+    expect(stats).toEqual({ done: 1, planned: 1, effort: 5, streak: 2 });
+  });
+
   it("has no effort without a scored session", () => {
     expect(weekStats(log({ schedules: [] }), TODAY)).toEqual({
       done: 0,
@@ -201,7 +221,7 @@ describe("plan items on a day", () => {
     expect(week[0]?.goals.map((g) => [g.item.id, g.done, g.target])).toEqual([["g1", 1, 3]]);
   });
 
-  it("fills a mark for what happened, but never twice for one climbing session", () => {
+  it("fills a mark for what happened, once for a logged session or activity, not again for the plan it did", () => {
     const [, tuesday, wednesday, thursday] = trainingWeek(plans, "2026-09-28", TODAY);
     expect(dayMarks(tuesday!)).toEqual([{ kind: "strength", filled: true }]);
     expect(dayMarks(wednesday!)).toEqual([{ kind: "climb", filled: true }]);

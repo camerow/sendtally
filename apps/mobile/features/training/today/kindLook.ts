@@ -1,7 +1,7 @@
 import { colors } from "@sendtally/design/tokens";
 import { kindLabel } from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
-import type { DayItemKind } from "@sendtally/features/training";
+import type { MarkKind } from "@sendtally/features/training";
 import { ON_DARK, ON_DARK_SOFT } from "../components/onDark";
 
 export type KindLook = {
@@ -19,7 +19,7 @@ const corners = (tl: number, tr: number, br: number, bl: number): { radii: numbe
 });
 
 /** One colour and mark shape per discipline, wherever a day's items show. */
-export const KIND_LOOK: Record<DayItemKind, KindLook> = {
+export const KIND_LOOK: Record<MarkKind, KindLook> = {
   climb: {
     ink: colors.azureInk,
     tint: "rgba(27,98,206,0.1)",
@@ -64,6 +64,6 @@ export const KIND_LOOK: Record<DayItemKind, KindLook> = {
   },
 };
 
-export function kindName(kind: DayItemKind): string {
+export function kindName(kind: MarkKind): string {
   return kind === "hang" ? t("training.hangboard") : kindLabel(kind);
 }

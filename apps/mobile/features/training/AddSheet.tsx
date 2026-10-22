@@ -39,10 +39,17 @@ const rows = (): AddRow[] => [
   },
   {
     key: "workout",
-    icon: "train",
+    icon: "hang",
     title: t("training.startWorkout"),
     hint: t("training.startWorkoutBody"),
     href: () => "/(tabs)/train",
+  },
+  {
+    key: "activity",
+    icon: "train",
+    title: t("training.logTraining"),
+    hint: t("training.logTrainingBody"),
+    href: () => ({ pathname: "/activity/new", params: { date: today() } }),
   },
   ...ENTRY_KINDS.map((kind): AddRow => ({
     key: kind,

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { JournalEntry, SessionRow } from "@sendtally/api-client";
+import type { Activity, JournalEntry, SessionRow } from "@sendtally/api-client";
 import {
   bodyPlaceholder,
   daysSince,
@@ -143,6 +143,43 @@ describe("hang sessions in the log", () => {
     });
     const [grouped] = groupTrips(logItems([], [trip], [hang]));
     expect(grouped?.type === "entry" ? grouped.inside.map((i) => i.key) : []).toEqual(["hang:h1"]);
+  });
+});
+
+describe("other training in the log", () => {
+  const activity: Activity = {
+    id: "a1",
+    kind: "strength",
+    title: "Leg day",
+    date: "2026-05-28",
+    startTime: "18:30",
+    minutes: 50,
+    rpe: 7,
+    notes: null,
+    planItemId: null,
+    detail: null,
+  };
+
+  it("sorts at its start time, counts as a session and folds inside a trip", () => {
+    const items = logItems(
+      [session("a", "2026-05-28T12:00:00.000Z")],
+      [],
+      [],
+      [activity, { ...activity, id: "a2", startTime: null, date: "2026-05-29" }]
+    );
+    expect(items.map((i) => i.key)).toEqual(["activity:a2", "activity:a1", "session:a"]);
+    expect(logScopeItems(items, "sessions")).toHaveLength(3);
+    expect(logCountLabel(items)).toBe("3 sessions");
+    const trip = entry({
+      id: "t1",
+      kind: "trip",
+      occurred_at: "2026-05-28",
+      ends_at: "2026-05-28",
+    });
+    const [grouped] = groupTrips(logItems([], [trip], [], [activity]));
+    expect(grouped?.type === "entry" ? grouped.inside.map((i) => i.key) : []).toEqual([
+      "activity:a1",
+    ]);
   });
 });
 

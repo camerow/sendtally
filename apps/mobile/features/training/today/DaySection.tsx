@@ -5,7 +5,12 @@ import { weekStart, type Schedule } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { dayTitle } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
-import { dayMarks, type LoggedItem, type TrainingDay } from "@sendtally/features/training";
+import {
+  dayMarks,
+  markKind,
+  type LoggedItem,
+  type TrainingDay,
+} from "@sendtally/features/training";
 import { Button } from "../components/Button";
 import { DashedPanel } from "../components/DashedPanel";
 import { Label } from "../components/Label";
@@ -29,6 +34,11 @@ export type DaySectionProps = {
   onEditItem: (item: PlanItem) => void;
   onSkipItem: (item: PlanItem) => void;
   onAdd: () => void;
+};
+
+const loggedKey = (item: LoggedItem): string => {
+  if (item.kind === "activity") return item.activity.id;
+  return item.kind === "climb" ? item.session.fingerprint : item.session.id;
 };
 
 function subtitle(day: TrainingDay): string {
@@ -74,8 +84,8 @@ export function DaySection({
       </View>
       {day.logged.map((item) => (
         <LoggedRow
-          key={item.kind === "climb" ? item.session.fingerprint : item.session.id}
-          kind={item.kind}
+          key={loggedKey(item)}
+          kind={markKind(item)}
           text={loggedRowText(item, model)}
           onPress={() => onOpen(item)}
         />

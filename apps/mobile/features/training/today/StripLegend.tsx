@@ -2,7 +2,7 @@ import React from "react";
 import { Text, View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
-import type { DayItemKind } from "@sendtally/features/training";
+import type { MarkKind } from "@sendtally/features/training";
 import { type } from "../type";
 import { DayMark } from "./DayMark";
 import { kindName } from "./kindLook";
@@ -13,7 +13,7 @@ const plannedMark = (
   />
 );
 
-export type StripLegendProps = { kinds: readonly DayItemKind[] };
+export type StripLegendProps = { kinds: readonly MarkKind[] };
 
 /** What the marks under each day mean. Each cell speaks its own counts, so this stays silent. */
 export function StripLegend({ kinds }: StripLegendProps): React.ReactElement {

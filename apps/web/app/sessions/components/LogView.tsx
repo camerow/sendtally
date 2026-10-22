@@ -2,6 +2,7 @@ import React from "react";
 import { Link, useRevalidator, useSearchParams } from "react-router";
 import type {
   ConnectionStatus,
+  Activity,
   HangHistoryRow,
   JournalEntry,
   SessionRow,
@@ -69,6 +70,7 @@ export function LogView({
   status,
   sessions,
   hangSessions,
+  activities,
   entries,
   scope,
   basePath,
@@ -77,6 +79,7 @@ export function LogView({
   status: ConnectionStatus;
   sessions: SessionRow[];
   hangSessions: HangHistoryRow[];
+  activities: Activity[];
   entries: JournalEntry[];
   scope: LogScope;
   basePath: string;
@@ -127,8 +130,8 @@ export function LogView({
   const selectedTags = searchParams.getAll("tag");
 
   const all = React.useMemo(
-    () => logItems(sessions, entries, hangSessions),
-    [sessions, entries, hangSessions]
+    () => logItems(sessions, entries, hangSessions, activities),
+    [sessions, entries, hangSessions, activities]
   );
   const inScope = React.useMemo(() => logScopeItems(all, scope), [all, scope]);
 

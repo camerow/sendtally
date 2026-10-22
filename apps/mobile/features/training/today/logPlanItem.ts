@@ -8,6 +8,12 @@ export function logPlanItem(item: PlanItem, date: CalendarDate): void {
   else
     router.push({
       pathname: "/activity/new",
-      params: { kind: item.kind, title: item.title, date, planItemId: item.id },
+      params: {
+        kind: item.kind,
+        title: item.title,
+        date,
+        planItemId: item.id,
+        ...(item.minutes === null ? {} : { minutes: String(item.minutes) }),
+      },
     });
 }

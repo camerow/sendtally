@@ -51,6 +51,7 @@ import { ScopeBar } from "./ScopeBar";
 import { SECTION_HEADER_HEIGHT, SectionHeader } from "./SectionHeader";
 import { HangDataProvider } from "../training/data/HangDataProvider";
 import { SessionEditorSheet } from "../training/session-editor/SessionEditorSheet";
+import { ACTIVITY_ROW_HEIGHT, ActivityRow } from "./ActivityRow";
 import { HANG_ROW_HEIGHT, HangRow } from "./HangRow";
 import { SessionRow, sessionRowHeight } from "./SessionRow";
 import { SetupStack, type SetupCard } from "./SetupStack";
@@ -65,6 +66,7 @@ type Section = { key: string; title: string; meta: string; data: LogItem[] };
 const rowHeight = (item: LogItem): number => {
   if (item.type === "session") return sessionRowHeight(item.session);
   if (item.type === "hang") return HANG_ROW_HEIGHT;
+  if (item.type === "activity") return ACTIVITY_ROW_HEIGHT;
   return item.inside.length > 0 ? tripGroupHeight(item) : entryRowHeight(item.entry);
 };
 
@@ -76,6 +78,8 @@ const openItem = (item: LogItem, editHang: (id: string) => void): void => {
     });
   } else if (item.type === "entry") {
     router.push({ pathname: "/journal/[id]", params: { id: item.entry.id } });
+  } else if (item.type === "activity") {
+    router.push({ pathname: "/activity/[id]", params: { id: item.activity.id } });
   } else {
     editHang(item.hang.id);
   }
@@ -131,6 +135,7 @@ export function SessionsLog({ segments, quickAdd }: SessionsLogProps): React.Rea
   const [sessionLog, entries] = log.state.status === "ready" ? log.state.data : [null, null];
   const sessions = sessionLog?.sessions ?? null;
   const hangSessions = sessionLog?.hangSessions ?? null;
+  const activities = sessionLog?.activities ?? null;
   const error = log.state.status === "error" || log.refreshFailed ? t("sessions.loadFailed") : null;
   const [refreshing, setRefreshing] = React.useState(false);
   const [filters, setFilters] = React.useState<SessionFilters>(DEFAULT_FILTERS);
@@ -183,8 +188,8 @@ export function SessionsLog({ segments, quickAdd }: SessionsLogProps): React.Rea
   }
 
   const all = React.useMemo(
-    () => logItems(sessions ?? [], entries ?? [], hangSessions ?? []),
-    [sessions, entries, hangSessions]
+    () => logItems(sessions ?? [], entries ?? [], hangSessions ?? [], activities ?? []),
+    [sessions, entries, hangSessions, activities]
   );
   const inScope = React.useMemo(() => logScopeItems(all, filters.scope), [all, filters.scope]);
   const tagOptions = React.useMemo(() => sessionTagOptions(inScope), [inScope]);
@@ -388,6 +393,8 @@ export function SessionsLog({ segments, quickAdd }: SessionsLogProps): React.Rea
             />
           ) : item.type === "hang" ? (
             <HangRow hang={item.hang} onPress={() => open(item)} />
+          ) : item.type === "activity" ? (
+            <ActivityRow activity={item.activity} onPress={() => open(item)} />
           ) : item.inside.length > 0 ? (
             <TripGroup item={item} onOpen={open} />
           ) : (
