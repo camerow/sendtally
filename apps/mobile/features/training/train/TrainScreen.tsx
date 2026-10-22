@@ -1,3 +1,4 @@
+import { useLocalSearchParams } from "expo-router";
 import React from "react";
 import { View } from "react-native";
 import { t } from "@sendtally/features/i18n";
@@ -10,7 +11,14 @@ type TrainView = "plan" | "workouts";
 
 /** The Train tab: your plan, or the workout library. */
 export function TrainScreen(): React.ReactElement {
-  const [view, setView] = React.useState<TrainView>("plan");
+  const asked = useLocalSearchParams<{ view?: string; at?: string }>();
+  const request = asked.view === "workouts" ? `${asked.view}:${asked.at ?? ""}` : null;
+  const [view, setView] = React.useState<TrainView>(request === null ? "plan" : "workouts");
+  const [seen, setSeen] = React.useState(request);
+  if (request !== seen) {
+    setSeen(request);
+    if (request !== null) setView("workouts");
+  }
   return (
     <View style={{ gap: 16 }}>
       <Segmented<TrainView>

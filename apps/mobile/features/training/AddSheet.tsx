@@ -42,7 +42,10 @@ const rows = (): AddRow[] => [
     icon: "hang",
     title: t("training.startWorkout"),
     hint: t("training.startWorkoutBody"),
-    href: () => "/(tabs)/train",
+    href: () => ({
+      pathname: "/(tabs)/train",
+      params: { view: "workouts", at: String(Date.now()) },
+    }),
   },
   {
     key: "activity",
