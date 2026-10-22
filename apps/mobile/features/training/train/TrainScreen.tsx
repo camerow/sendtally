@@ -1,7 +1,9 @@
-import { useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import React from "react";
 import { View } from "react-native";
+import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
+import { IconButton } from "../components/IconButton";
 import { Segmented } from "../components/Segmented";
 import { HangDataProvider } from "../data/HangDataProvider";
 import { WorkoutLibrary } from "../library/WorkoutLibrary";
@@ -21,14 +23,28 @@ export function TrainScreen(): React.ReactElement {
   }
   return (
     <View style={{ gap: 16 }}>
-      <Segmented<TrainView>
-        value={view}
-        onChange={setView}
-        options={[
-          { value: "plan", label: t("plan.tabPlan") },
-          { value: "workouts", label: t("plan.tabWorkouts") },
-        ]}
-      />
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+        <View style={{ flex: 1 }}>
+          <Segmented<TrainView>
+            value={view}
+            onChange={setView}
+            options={[
+              { value: "plan", label: t("plan.tabPlan") },
+              { value: "workouts", label: t("plan.tabWorkouts") },
+            ]}
+          />
+        </View>
+        {view === "plan" && (
+          <IconButton
+            icon="schedule"
+            label={t("calendar.open")}
+            onPress={() => router.push("/plan/calendar")}
+            color={colors.gunmetal}
+            border={colors.lineOnLightStrong}
+            iconSize={20}
+          />
+        )}
+      </View>
       {view === "plan" ? (
         <HangDataProvider>
           <PlanOverview />
