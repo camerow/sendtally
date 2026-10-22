@@ -22,9 +22,57 @@ const minutes = z.number().int().min(1).max(1440);
 
 const rpe = z.number().int().min(1).max(10);
 
-// A typed body joins as a discriminated union on `kind` ("sets", "checklist"),
-// stored as detail_kind plus detail_json, so rows written before it stay valid.
-const activityDetail = z.null();
+export const SET_MEASURES = ["reps", "loadKg", "seconds", "side"] as const;
+
+export type SetMeasure = (typeof SET_MEASURES)[number];
+
+const setTarget = z.object({
+  reps: z.number().int().min(0).max(1000).optional(),
+  loadKg: z.number().min(-200).max(1000).optional(),
+  seconds: z.number().int().min(0).max(86400).optional(),
+  side: z.enum(["L", "R"]).optional(),
+});
+
+const exercise = <S extends z.ZodType>(set: S) =>
+  z.object({
+    name: z.string().trim().min(1).max(80),
+    measures: z
+      .array(z.enum(SET_MEASURES))
+      .min(1)
+      .refine((m) => new Set(m).size === m.length, "repeated measure"),
+    sets: z.array(set).max(50),
+  });
+
+const checklistItem = z.object({
+  text: z.string().trim().min(1).max(80),
+  dose: z.string().trim().max(40),
+});
+
+const exercises = <S extends z.ZodType>(set: S) => z.array(exercise(set)).min(1).max(30);
+
+const checklistItems = <I extends z.ZodType>(item: I) => z.array(item).min(1).max(50);
+
+// Stored as detail_kind plus detail_json, so rows written before a body existed stay valid.
+const activityDetail = z
+  .discriminatedUnion("kind", [
+    z.object({
+      kind: z.literal("sets"),
+      exercises: exercises(setTarget.extend({ done: z.boolean() })),
+    }),
+    z.object({
+      kind: z.literal("checklist"),
+      items: checklistItems(checklistItem.extend({ done: z.boolean() })),
+    }),
+  ])
+  .nullable();
+
+// What a plan item prescribes: the same bodies, without what was done.
+const planTemplate = z
+  .discriminatedUnion("kind", [
+    z.object({ kind: z.literal("sets"), exercises: exercises(setTarget) }),
+    z.object({ kind: z.literal("checklist"), items: checklistItems(checklistItem) }),
+  ])
+  .nullable();
 
 export const activityBody = z.object({
   kind: z.enum(ACTIVITY_KINDS),
@@ -60,12 +108,19 @@ export const planItemBody = z
     minutes: minutes.nullable(),
     targetRpe: rpe.nullable(),
     projectId: z.string().min(1).max(200).nullable(),
+    // App builds from before templates send none.
+    template: planTemplate.default(null),
   })
   .refine((p) => p.days.length > 0 !== (p.perWeek !== null), "set days or perWeek, not both")
   .refine((p) => p.end === null || p.end > p.start, "end is not after start")
-  .refine((p) => p.projectId === null || p.kind === "climb", "only a climb has a project");
+  .refine((p) => p.projectId === null || p.kind === "climb", "only a climb has a project")
+  .refine((p) => p.template === null || p.kind !== "climb", "a climb has no template");
 
 export const planItemSkipBody = z.object({ date: calendarDate, skipped: z.boolean() });
+
+export type ActivityDetail = NonNullable<z.infer<typeof activityDetail>>;
+
+export type PlanTemplate = NonNullable<z.infer<typeof planTemplate>>;
 
 export type Activity = z.infer<typeof activityBody> & { id: string };
 
@@ -86,7 +141,7 @@ export function activityOf(row: ActivityRow): Activity {
     rpe: row.rpe,
     notes: row.notes,
     planItemId: row.plan_item_id,
-    detail: null,
+    detail: row.detail_json === null ? null : (JSON.parse(row.detail_json) as ActivityDetail),
   };
 }
 
@@ -103,5 +158,6 @@ export function planItemOf(row: PlanItemRow): PlanItem {
     minutes: row.minutes,
     targetRpe: row.target_rpe,
     projectId: row.project_id,
+    template: row.template_json === null ? null : (JSON.parse(row.template_json) as PlanTemplate),
   };
 }

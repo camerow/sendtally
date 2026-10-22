@@ -4,8 +4,23 @@ import { activityAt, activityEffortLabel, activityMetaLabel, kindLabel } from ".
 describe("activity labels", () => {
   it("names the kind and the time spent", () => {
     expect(kindLabel("climb")).toBe("Climbing");
-    expect(activityMetaLabel({ kind: "strength", minutes: 50 })).toBe("Strength · 50m");
-    expect(activityMetaLabel({ kind: "run", minutes: 90 })).toBe("Run · 1h 30m");
+    expect(activityMetaLabel({ kind: "strength", minutes: 50, detail: null })).toBe(
+      "Strength · 50m"
+    );
+    expect(activityMetaLabel({ kind: "run", minutes: 90, detail: null })).toBe("Run · 1h 30m");
+  });
+
+  it("adds its body's summary", () => {
+    const checklist = {
+      kind: "checklist" as const,
+      items: [
+        { text: "Cat-cow", dose: "× 10", done: true },
+        { text: "Deep squat hold", dose: "2 min", done: false },
+      ],
+    };
+    expect(activityMetaLabel({ kind: "mobility", minutes: 15, detail: checklist })).toBe(
+      "Mobility · 15m · 1 of 2 done"
+    );
   });
 
   it("sorts at the start time, or midday without one", () => {

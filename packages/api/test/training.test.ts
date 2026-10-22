@@ -28,6 +28,34 @@ const planBody = {
   minutes: 60,
   targetRpe: 7,
   projectId: null,
+  template: null,
+};
+
+const setsDetail = {
+  kind: "sets",
+  exercises: [
+    {
+      name: "Back squat",
+      measures: ["reps", "loadKg"],
+      sets: [
+        { reps: 5, loadKg: 100, done: true },
+        { reps: 4, loadKg: 100, done: false },
+      ],
+    },
+    {
+      name: "Copenhagen plank",
+      measures: ["seconds", "side"],
+      sets: [{ seconds: 30, side: "L", done: true }],
+    },
+  ],
+};
+
+const checklistTemplate = {
+  kind: "checklist",
+  items: [
+    { text: "Cat-cow", dose: "× 10" },
+    { text: "Deep squat hold", dose: "2 min" },
+  ],
 };
 
 async function call(
@@ -78,6 +106,22 @@ describe("activities", () => {
     expect(activities.map((a) => a.id)).toEqual(["a3", "a2"]);
   });
 
+  it("round trips a sets or checklist body", async () => {
+    const userId = "user_activity_detail";
+    const checklist = {
+      kind: "checklist",
+      items: [{ text: "Cat-cow", dose: "× 10", done: true }],
+    };
+    for (const detail of [setsDetail, checklist]) {
+      const res = await call(userId, "PUT", "/v1/activities/a1", { ...activityBody, detail });
+      expect(await json(res)).toEqual({ activity: { id: "a1", ...activityBody, detail } });
+    }
+    const row = await env.DB.prepare("SELECT detail_kind FROM activities WHERE user_id = ?")
+      .bind(userId)
+      .first<{ detail_kind: string }>();
+    expect(row?.detail_kind).toBe("checklist");
+  });
+
   it("rejects a kind, rpe or date outside the shape", async () => {
     const userId = "user_activity_invalid";
     for (const body of [
@@ -86,6 +130,19 @@ describe("activities", () => {
       { ...activityBody, date: "2026-02-30" },
       { ...activityBody, minutes: 0 },
       { ...activityBody, detail: { kind: "sets" } },
+      { ...activityBody, detail: { kind: "sets", exercises: [] } },
+      {
+        ...activityBody,
+        detail: { ...setsDetail, exercises: [{ name: " ", measures: ["reps"], sets: [] }] },
+      },
+      {
+        ...activityBody,
+        detail: {
+          ...setsDetail,
+          exercises: [{ name: "Squat", measures: ["reps", "reps"], sets: [] }],
+        },
+      },
+      { ...activityBody, detail: { kind: "checklist", items: [{ text: "Cat-cow", dose: "" }] } },
     ]) {
       expect((await call(userId, "PUT", "/v1/activities/a1", body)).status).toBe(400);
     }
@@ -139,6 +196,29 @@ describe("plan items", () => {
       { ...planBody, days: [1, 1] },
     ]) {
       expect((await call(userId, "PUT", "/v1/plan-items/p2", body)).status).toBe(400);
+    }
+  });
+
+  it("keeps a template, takes none on a climb, and reads an older client's body as none", async () => {
+    const userId = "user_plan_template";
+    const withTemplate = { ...planBody, template: checklistTemplate };
+    const saved = await call(userId, "PUT", "/v1/plan-items/p1", withTemplate);
+    expect(await json(saved)).toEqual({ planItem: { id: "p1", ...withTemplate } });
+    const skipped = await call(userId, "PUT", "/v1/plan-items/p1/skip", {
+      date: "2026-09-29",
+      skipped: true,
+    });
+    expect((await json<{ planItem: PlanItem }>(skipped)).planItem.template).toEqual(
+      checklistTemplate
+    );
+    const { template: _, ...older } = planBody;
+    const legacy = await call(userId, "PUT", "/v1/plan-items/p2", older);
+    expect((await json<{ planItem: PlanItem }>(legacy)).planItem.template).toBeNull();
+    for (const body of [
+      { ...withTemplate, kind: "climb" },
+      { ...planBody, template: { kind: "checklist", items: [] } },
+    ]) {
+      expect((await call(userId, "PUT", "/v1/plan-items/p3", body)).status).toBe(400);
     }
   });
 

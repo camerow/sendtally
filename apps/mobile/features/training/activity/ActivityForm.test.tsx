@@ -3,6 +3,7 @@ import { fireEvent, render, screen } from "@testing-library/react-native";
 import { router } from "expo-router";
 import { Alert } from "react-native";
 import React from "react";
+import type { PlanTemplate } from "@sendtally/api-client";
 import { newActivityDraft } from "@sendtally/features/activities";
 import { ActivityForm } from "./ActivityForm";
 
@@ -14,7 +15,12 @@ jest.mock("../../../lib/api", () => ({ useApi: () => undefined }));
 jest.mock("@sendtally/features/activities", () => ({
   ...jest.requireActual<object>("@sendtally/features/activities"),
   useActivityActions: () => mockActions,
+  useExerciseNames: () => ["Back squat", "Deadlift"],
+  usePlanTemplate: () => mockTemplate,
+  useWeightUnit: () => "kg",
 }));
+
+let mockTemplate: PlanTemplate | null = null;
 
 describe("Log activity", () => {
   it("saves an untitled activity under its kind's name with its effort and load", async () => {
@@ -40,6 +46,75 @@ describe("Log activity", () => {
       detail: null,
     });
     expect(router.back).toHaveBeenCalled();
+  });
+
+  it("logs sets against a plan's targets, suggesting exercises already logged", async () => {
+    mockTemplate = {
+      kind: "sets",
+      exercises: [
+        { name: "Back squat", measures: ["reps", "loadKg"], sets: [{ reps: 5, loadKg: 100 }] },
+      ],
+    };
+    const initial = newActivityDraft({ planItemId: "p1" }, "2026-10-22", mockTemplate);
+    await render(<ActivityForm id="a1" initial={initial} editing={false} />);
+    expect(screen.getByText("5 × 100 kg")).toBeTruthy();
+    await fireEvent.press(screen.getByLabelText("Set 1 done"));
+    await fireEvent.press(screen.getByText("Add set"));
+    await fireEvent.press(screen.getByText("Add exercise"));
+    const names = screen.getAllByLabelText("Exercise");
+    await fireEvent(names[1]!, "focus");
+    await fireEvent.press(screen.getByText("Deadlift"));
+    await fireEvent.press(screen.getByText("Save"));
+
+    expect(mockActions.saveActivity).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        planItemId: "p1",
+        detail: {
+          kind: "sets",
+          exercises: [
+            {
+              name: "Back squat",
+              measures: ["reps", "loadKg"],
+              sets: [
+                { reps: 5, loadKg: 100, done: true },
+                { reps: 5, loadKg: 100, done: false },
+              ],
+            },
+            { name: "Deadlift", measures: ["reps", "loadKg"], sets: [{ done: false }] },
+          ],
+        },
+      })
+    );
+    mockTemplate = null;
+  });
+
+  it("ticks, orders and saves a checklist", async () => {
+    await render(
+      <ActivityForm id="a1" initial={newActivityDraft({}, "2026-10-22")} editing={false} />
+    );
+    await fireEvent.press(screen.getByText("Add checklist"));
+    await fireEvent.changeText(screen.getByPlaceholderText("Deep squat hold"), "Cat-cow");
+    await fireEvent.changeText(screen.getByLabelText("Dose"), "× 10");
+    await fireEvent.press(screen.getByText("Add item"));
+    await fireEvent.changeText(
+      screen.getAllByPlaceholderText("Deep squat hold")[1]!,
+      "Deep squat hold"
+    );
+    await fireEvent.press(screen.getByLabelText("Move up"));
+    await fireEvent.press(screen.getByLabelText("Deep squat hold"));
+    await fireEvent.press(screen.getByText("Save"));
+
+    expect(mockActions.saveActivity).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        detail: {
+          kind: "checklist",
+          items: [
+            { text: "Deep squat hold", dose: "", done: true },
+            { text: "Cat-cow", dose: "× 10", done: false },
+          ],
+        },
+      })
+    );
   });
 
   it("deletes an existing activity only once confirmed", async () => {

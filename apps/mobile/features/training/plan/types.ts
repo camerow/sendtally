@@ -1,4 +1,4 @@
-import type { PlanItem, PlanKind } from "@sendtally/api-client";
+import type { ActivityDetail, PlanItem, PlanKind } from "@sendtally/api-client";
 import type { CalendarDate, Weekday } from "@sendtally/core/hang";
 import type { PlannerRequest, ScheduleDraft } from "../planner/types";
 
@@ -26,4 +26,6 @@ export type PlanItemDraft = ScheduleDraft & {
   minutes: number | null;
   targetRpe: number | null;
   projectId: string | null;
+  /** Edited as a body, so it shares the activity form's editors; saved without `done`. */
+  template: ActivityDetail | null;
 };

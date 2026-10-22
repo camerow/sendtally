@@ -27,6 +27,19 @@ describe("activity drafts", () => {
     expect(draftFromActivity(activity)).toEqual({ ...draft, title: "Yoga", notes: "" });
   });
 
+  it("starts from a plan's template and saves only what was filled in", () => {
+    const draft = newActivityDraft({ kind: "mobility" }, "2026-10-22", {
+      kind: "checklist",
+      items: [{ text: "Cat-cow", dose: "× 10" }],
+    });
+    expect(draft.detail).toEqual({
+      kind: "checklist",
+      items: [{ text: "Cat-cow", dose: "× 10", done: false }],
+    });
+    const blank = { ...draft, detail: { kind: "checklist" as const, items: [] } };
+    expect(activityFromDraft("a1", blank).detail).toBeNull();
+  });
+
   it("steps minutes to the next multiple of five and keeps them in range", () => {
     expect(stepMinutes(52, 1)).toBe(55);
     expect(stepMinutes(52, -1)).toBe(50);

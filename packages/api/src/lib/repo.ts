@@ -2650,8 +2650,8 @@ export async function saveActivity(
     rpe: a.rpe,
     notes: a.notes,
     plan_item_id: a.planItemId,
-    detail_kind: null,
-    detail_json: null,
+    detail_kind: a.detail?.kind ?? null,
+    detail_json: a.detail === null ? null : JSON.stringify(a.detail),
     updated_at: now,
   };
   return drizzle(db)
@@ -2707,6 +2707,8 @@ export async function savePlanItem(
     minutes: p.minutes,
     target_rpe: p.targetRpe,
     project_id: p.projectId,
+    template_kind: p.template?.kind ?? null,
+    template_json: p.template === null ? null : JSON.stringify(p.template),
     updated_at: new Date().toISOString(),
   };
   return drizzle(db)

@@ -8,6 +8,7 @@ import {
   type CalendarDate,
   type Weekday,
 } from "@sendtally/core/hang";
+import { detailFromTemplate, templateOf } from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
 import { DEFAULT_WEEKS, endChoice } from "../planner/scheduleDraft";
 import { defaultTitle, planItemWhen } from "./planItemText";
@@ -31,6 +32,7 @@ export function planItemDraft(request: PlanItemRequest, today: CalendarDate): Pl
       minutes: null,
       targetRpe: null,
       projectId: null,
+      template: null,
     };
   }
   const { item } = request;
@@ -49,6 +51,7 @@ export function planItemDraft(request: PlanItemRequest, today: CalendarDate): Pl
     minutes: item.minutes,
     targetRpe: item.targetRpe,
     projectId: item.projectId,
+    template: detailFromTemplate(item.template),
   };
 }
 
@@ -75,6 +78,7 @@ export function planItemOf(
     minutes: draft.minutes,
     targetRpe: draft.targetRpe,
     projectId: draft.kind === "climb" ? draft.projectId : null,
+    template: draft.kind === "climb" ? null : templateOf(draft.template),
   };
 }
 

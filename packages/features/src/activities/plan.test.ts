@@ -14,6 +14,7 @@ const item = (over: Partial<PlanItem> = {}): PlanItem => ({
   minutes: 60,
   targetRpe: null,
   projectId: null,
+  template: null,
   ...over,
 });
 

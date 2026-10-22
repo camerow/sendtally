@@ -17,6 +17,8 @@ import {
   stepMinutes,
   trainingLoadLabel,
   useActivityActions,
+  usePlanTemplate,
+  useWeightUnit,
   type ActivityDraft,
 } from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
@@ -27,6 +29,7 @@ import { EffortField } from "../components/EffortField";
 import { SheetSection } from "../components/SheetSection";
 import { Stepper } from "../components/Stepper";
 import { Title } from "../components/Title";
+import { DetailSection } from "../detail/DetailSection";
 import { type } from "../type";
 import { KindChips } from "./KindChips";
 
@@ -51,13 +54,15 @@ const input = {
 
 const reportFailure = (): void => Alert.alert(t("activities.saveFailed"));
 
-/** Log or edit one activity: kind, title, when, how long, how hard, and its training load. */
+/** Log or edit one activity: kind, title, when, how long, how hard, its sets or checklist, and its training load. */
 export function ActivityForm({ id, initial, editing }: ActivityFormProps): React.ReactElement {
   const api = useApi();
   const actions = useActivityActions(api, reportFailure);
   const [draft, setDraft] = React.useState(initial);
   const update = (patch: Partial<ActivityDraft>): void => setDraft((d) => ({ ...d, ...patch }));
   const load = trainingLoadLabel(draft);
+  const unit = useWeightUnit(api);
+  const targets = usePlanTemplate(api, draft.planItemId) ?? null;
 
   const save = (): void => {
     void actions.saveActivity(activityFromDraft(id, draft));
@@ -158,6 +163,16 @@ export function ActivityForm({ id, initial, editing }: ActivityFormProps): React
         </SheetSection>
 
         <EffortField value={draft.rpe} onChange={(rpe) => update({ rpe })} />
+
+        <DetailSection
+          value={draft.detail}
+          kind={draft.kind}
+          unit={unit}
+          targets={targets}
+          template={false}
+          inSheet={false}
+          onChange={(detail) => update({ detail })}
+        />
 
         <SheetSection label={t("common.notes")}>
           <TextInput
