@@ -24,6 +24,9 @@ export const users = sqliteTable("users", {
     .notNull()
     .default("user"),
   training_mode: integer("training_mode").notNull().default(0),
+  training_reminders: integer("training_reminders").notNull().default(0),
+  training_reminder_time: text("training_reminder_time").notNull().default("08:00"),
+  training_reminder_prompt_seen: integer("training_reminder_prompt_seen").notNull().default(0),
 });
 
 export const boardConnections = sqliteTable(
