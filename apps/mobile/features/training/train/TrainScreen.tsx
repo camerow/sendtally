@@ -11,13 +11,15 @@ type TrainView = "plan" | "workouts";
 
 /** The Train tab: your plan, or the workout library. */
 export function TrainScreen(): React.ReactElement {
-  const asked = useLocalSearchParams<{ view?: string; at?: string }>();
-  const request = asked.view === "workouts" ? `${asked.view}:${asked.at ?? ""}` : null;
-  const [view, setView] = React.useState<TrainView>(request === null ? "plan" : "workouts");
+  const asked = useLocalSearchParams<{ view?: string; at?: string; highlight?: string }>();
+  const wanted: TrainView | null =
+    asked.view === "workouts" || asked.view === "plan" ? asked.view : null;
+  const request = wanted === null ? null : `${wanted}:${asked.at ?? ""}`;
+  const [view, setView] = React.useState<TrainView>(wanted ?? "plan");
   const [seen, setSeen] = React.useState(request);
   if (request !== seen) {
     setSeen(request);
-    if (request !== null) setView("workouts");
+    if (wanted !== null) setView(wanted);
   }
   return (
     <View style={{ gap: 16 }}>
@@ -31,7 +33,7 @@ export function TrainScreen(): React.ReactElement {
       />
       {view === "plan" ? (
         <HangDataProvider>
-          <PlanOverview />
+          <PlanOverview key={request ?? ""} highlight={asked.highlight ?? null} />
         </HangDataProvider>
       ) : (
         <WorkoutLibrary />

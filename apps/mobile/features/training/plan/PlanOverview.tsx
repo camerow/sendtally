@@ -1,3 +1,4 @@
+import { router } from "expo-router";
 import React from "react";
 import { View } from "react-native";
 import { blockEnd } from "@sendtally/core/hang";
@@ -6,6 +7,7 @@ import { t } from "@sendtally/features/i18n";
 import { blockMembers, blockWeeks, useTrainingLog } from "@sendtally/features/training";
 import { useApi } from "../../../lib/api";
 import { BlockCard } from "../blocks/BlockCard";
+import { Button } from "../components/Button";
 import { DashedPanel } from "../components/DashedPanel";
 import { Label } from "../components/Label";
 import { useHangData } from "../data/HangDataContext";
@@ -13,8 +15,23 @@ import { PlanGrid } from "./PlanGrid";
 import { liveMembers, planGridRows } from "./planGridRows";
 import { PlanRows } from "./PlanRows";
 
-/** Train > Plan: live training blocks as cards, then every other plan as a week grid and a list. */
-export function PlanOverview(): React.ReactElement {
+const LIT_MS = 2500;
+
+export type PlanOverviewProps = {
+  /** A plan just added, lit for a moment. */
+  highlight: string | null;
+};
+
+/**
+ * Train > Plan: adding to it, live training blocks as cards, then every other plan as a
+ * week grid and a list.
+ */
+export function PlanOverview({ highlight }: PlanOverviewProps): React.ReactElement {
+  const [lit, setLit] = React.useState(highlight);
+  React.useEffect(() => {
+    const timer = setTimeout(() => setLit(null), LIT_MS);
+    return () => clearTimeout(timer);
+  }, []);
   const { today } = useHangData();
   const { log } = useTrainingLog(useApi());
   const { plan, workout } = log;
@@ -25,6 +42,23 @@ export function PlanOverview(): React.ReactElement {
 
   return (
     <View style={{ gap: 16 }}>
+      <View style={{ flexDirection: "row", gap: 8 }}>
+        <Button
+          label={t("plan.addToPlan")}
+          onPress={() => router.push("/plan/add")}
+          variant="primary"
+          icon="plus"
+          height={46}
+          style={{ flex: 1 }}
+        />
+        <Button
+          label={t("plan.newBlock")}
+          onPress={() => router.push("/plan/block/new")}
+          variant="outline"
+          height={46}
+          style={{ flex: 1 }}
+        />
+      </View>
       {blocks.map((block) => (
         <BlockCard
           key={block.id}
@@ -33,6 +67,7 @@ export function PlanOverview(): React.ReactElement {
           members={blockMembers(plan, block)}
           workout={workout}
           weeks={blockWeeks(block, log, today)}
+          highlight={lit}
         />
       ))}
       {nothing && <DashedPanel body={t("plan.empty")} />}
@@ -42,7 +77,7 @@ export function PlanOverview(): React.ReactElement {
             <Label color={colors.textSecondary}>{t("plan.outsideBlocks")}</Label>
           )}
           <PlanGrid rows={rows} />
-          <PlanRows plan={plan} members={outside} workout={workout} />
+          <PlanRows plan={plan} members={outside} workout={workout} highlight={lit} />
         </View>
       )}
     </View>

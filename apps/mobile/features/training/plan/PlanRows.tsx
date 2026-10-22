@@ -18,10 +18,15 @@ export type PlanRowsProps = {
   plan: Plan;
   members: readonly Membership[];
   workout: WorkoutLookup;
+  /** A plan just added, lit for a moment. */
+  highlight?: string | null;
 };
 
-/** A row per membership: tap to open its workout, × to take it out of the plan. */
-export function PlanRows({ plan, members, workout }: PlanRowsProps): React.ReactElement {
+/**
+ * A row per membership, × to take it out of the plan. Tap opens its weeks inside a
+ * block, its workout outside one.
+ */
+export function PlanRows({ plan, members, workout, highlight }: PlanRowsProps): React.ReactElement {
   const { today } = useHangData();
   const actions = usePlanActions();
   return (
@@ -37,7 +42,12 @@ export function PlanRows({ plan, members, workout }: PlanRowsProps): React.React
             tagColor={m.start <= today ? colors.labelAccent : KIND_LOOK[w.kind].ink}
             name={w.name}
             meta={`${kindLabel(w.kind)} · ${membershipWhen(m)}`}
-            onOpen={() => router.push({ pathname: "/workout/[id]", params: { id: w.id } })}
+            onOpen={() =>
+              m.blockId === null
+                ? router.push({ pathname: "/workout/[id]", params: { id: w.id } })
+                : router.push({ pathname: "/plan/membership/[id]", params: { id: m.id } })
+            }
+            lit={m.id === highlight}
             onRemove={() => void actions.deleteMembership(m.id)}
             removeLabel={t("plan.remove", { title: w.name })}
           />
