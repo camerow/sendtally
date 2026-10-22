@@ -148,6 +148,7 @@ describe("summariseActivity", () => {
 
 describe("overviewVM", () => {
   const log: SessionLog = {
+    activities: [],
     sessions: [
       climbing("2026-10-20T18:00:00Z", "2026-10-20T20:30:00Z", 7),
       climbing("2026-09-01T18:00:00Z", "2026-09-01T19:00:00Z", 5),
