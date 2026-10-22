@@ -16,6 +16,7 @@ const item: PlanItem = {
   minutes: 90,
   targetRpe: 9,
   projectId: "grey-arete",
+  template: null,
 };
 
 describe("plan item drafts", () => {
@@ -33,6 +34,7 @@ describe("plan item drafts", () => {
       minutes: null,
       targetRpe: null,
       projectId: null,
+      template: null,
     });
     expect(planItemSummary(draft)).toBe("Thu · from Oct 1");
   });

@@ -3,7 +3,9 @@ import { View } from "react-native";
 import { kindLabel } from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
 import { SheetHeader } from "../components/SheetHeader";
+import { useHangData } from "../data/HangDataContext";
 import { HangSheet } from "../data/HangSheet";
+import { DetailSection } from "../detail/DetailSection";
 import { EndSection } from "../planner/EndSection";
 import { PlannerFooter } from "../planner/PlannerFooter";
 import { StartSection } from "../planner/StartSection";
@@ -19,7 +21,7 @@ type Calendar = "start" | "end" | null;
 
 export type PlanItemFormProps = { request: PlanItemRequest; onClose: () => void };
 
-/** Plan training, or Edit plan, for anything that is not a hangboard workout. */
+/** Plan training, or Edit plan, for anything that is not a hangboard workout, with what logging it starts from. */
 export function PlanItemForm({ request, onClose }: PlanItemFormProps): React.ReactElement {
   const [open, setOpen] = React.useState(true);
   const close = (): void => setOpen(false);
@@ -28,6 +30,7 @@ export function PlanItemForm({ request, onClose }: PlanItemFormProps): React.Rea
   const toggle = (which: Exclude<Calendar, null>) => (isOpen: boolean) =>
     setCalendar(isOpen ? which : null);
   const { draft, update } = form;
+  const { model } = useHangData();
 
   return (
     <HangSheet
@@ -52,6 +55,17 @@ export function PlanItemForm({ request, onClose }: PlanItemFormProps): React.Rea
         <StartSection planner={form} open={calendar === "start"} onToggle={toggle("start")} />
         <EndSection planner={form} open={calendar === "end"} onToggle={toggle("end")} />
         <MinutesField value={draft.minutes} onChange={(minutes) => update({ minutes })} />
+        {draft.kind !== "climb" && (
+          <DetailSection
+            value={draft.template}
+            kind={draft.kind}
+            unit={model.settings.units}
+            targets={null}
+            template
+            inSheet
+            onChange={(template) => update({ template })}
+          />
+        )}
       </View>
     </HangSheet>
   );

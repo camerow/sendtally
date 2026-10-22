@@ -71,7 +71,24 @@ describe("Plan training", () => {
       minutes: null,
       targetRpe: 7,
       projectId: null,
+      template: null,
     });
+  });
+
+  it("keeps a checklist template, with nothing to tick", async () => {
+    await renderWithHang(<Host />);
+    await fireEvent.press(screen.getByText("Mobility"));
+    await fireEvent.press(screen.getByText("Add checklist"));
+    expect(screen.queryByRole("checkbox", { name: "Item" })).toBeNull();
+    await fireEvent.changeText(screen.getByPlaceholderText("Deep squat hold"), "Cat-cow");
+    await fireEvent.changeText(screen.getByLabelText("Dose"), "× 10");
+    await fireEvent.press(screen.getByText("Add to plan"));
+    expect(mockSave).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        kind: "mobility",
+        template: { kind: "checklist", items: [{ text: "Cat-cow", dose: "× 10" }] },
+      })
+    );
   });
 
   it("opens the hangboard planner for a hangboard workout", async () => {
