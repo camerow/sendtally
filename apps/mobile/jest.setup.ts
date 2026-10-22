@@ -19,7 +19,7 @@ jest.mock("@gorhom/bottom-sheet", () => {
   const insideSheet = (Base: MockSheet): MockSheet =>
     class extends Base {
       render(): MockReact.ReactNode {
-        return React.createElement(Inside.Provider, { value: true }, super.render());
+        return React.createElement(Inside.Provider, { value: true, children: super.render() });
       }
     };
   return {

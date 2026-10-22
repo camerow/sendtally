@@ -99,7 +99,6 @@ describe("hang workouts", () => {
     });
     expect(fingers === undefined ? null : hangWorkoutOf(fingers, 2)).toBeNull();
   });
-
 });
 
 describe("defaultGrip", () => {
