@@ -148,6 +148,7 @@ export const hang = {
   "hang.increase": "Augmenter {field}",
   "hang.unitSec": "s",
   "hang.unitMin": "min",
+  "hang.protocol": "Protocole",
   "hang.preview": "Aperçu",
 
   "hang.planBlock": "Planifier un cycle",
@@ -280,6 +281,9 @@ export const hang = {
   "hang.lessCompletion": "Moins réalisé",
   "hang.moreCompletion": "Plus réalisé",
   "hang.deleteSession": "Supprimer la séance",
+  "hang.deleteFromLog": "Elle est retirée de ton carnet.",
+  "hang.deleteFromLogStrava":
+    "Elle est retirée de ton carnet. Strava ne permet pas aux applications de supprimer des activités, l'activité Strava reste donc en place.",
   "hang.deleteConfirmTitle": "Supprimer cette séance ?",
   "hang.deleteConfirm": "Elle est retirée de hangtally et de sendtally.",
   "hang.deleteConfirmStrava":
