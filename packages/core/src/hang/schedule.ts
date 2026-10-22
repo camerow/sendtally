@@ -69,7 +69,7 @@ export type PlanStatus =
   | { kind: "week"; at: number; of: number }
   | { kind: "final"; of: number };
 
-export function planStatus(s: Schedule, today: CalendarDate): PlanStatus {
+export function planStatus(s: Pick<Schedule, "start" | "end">, today: CalendarDate): PlanStatus {
   if (s.start > today) return { kind: "starts", date: s.start };
   const of = blockWeeks(s);
   if (of === null) return { kind: "ongoing" };

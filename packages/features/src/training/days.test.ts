@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import type { HangSessionRecord, SessionRow } from "@sendtally/api-client";
+import type { Activity, HangSessionRecord, PlanItem, SessionRow } from "@sendtally/api-client";
 import { LIBRARY, type Schedule } from "@sendtally/core/hang";
-import { trainingDay, trainingWeek, weekStats, type TrainingLog } from "./days";
+import { dayMarks, trainingDay, trainingWeek, weekStats, type TrainingLog } from "./days";
 
 const TODAY = "2026-10-01";
 
@@ -70,6 +70,37 @@ const log = (overrides: Partial<TrainingLog> = {}): TrainingLog => ({
   climbs: [],
   hangs: [],
   schedules: [schedule],
+  activities: [],
+  planItems: [],
+  ...overrides,
+});
+
+const plan = (overrides: Partial<PlanItem> = {}): PlanItem => ({
+  id: "p1",
+  kind: "strength",
+  title: "Gym, legs",
+  days: [1, 3],
+  perWeek: null,
+  start: "2026-09-28",
+  end: null,
+  skip: [],
+  minutes: 60,
+  targetRpe: null,
+  projectId: null,
+  ...overrides,
+});
+
+const activity = (date: string, overrides: Partial<Activity> = {}): Activity => ({
+  id: `a-${date}`,
+  kind: "strength",
+  title: "Gym",
+  date,
+  startTime: null,
+  minutes: 50,
+  rpe: null,
+  notes: null,
+  planItemId: null,
+  detail: null,
   ...overrides,
 });
 
@@ -141,5 +172,43 @@ describe("weekStats", () => {
       effort: null,
       streak: 0,
     });
+  });
+});
+
+describe("plan items on a day", () => {
+  const plans = log({
+    schedules: [],
+    planItems: [
+      plan(),
+      plan({ id: "c1", kind: "climb", title: "Limit boulders", days: [2] }),
+      plan({ id: "g1", kind: "mobility", days: [], perWeek: 3 }),
+    ],
+    climbs: [climb("2026-09-30T18:00:00.000Z")],
+    activities: [activity("2026-09-29"), activity("2026-09-28", { kind: "mobility" })],
+  });
+
+  it("lists a day's occurrences with their status and the week's goals", () => {
+    const week = trainingWeek(plans, "2026-09-28", TODAY);
+    expect(week.map((d) => d.plans.map((p) => `${p.plan.id}:${p.status}`))).toEqual([
+      [],
+      ["p1:done"],
+      ["c1:done"],
+      ["p1:planned"],
+      [],
+      [],
+      [],
+    ]);
+    expect(week[0]?.goals.map((g) => [g.item.id, g.done, g.target])).toEqual([["g1", 1, 3]]);
+  });
+
+  it("fills a mark for what happened, but never twice for one climbing session", () => {
+    const [, tuesday, wednesday, thursday] = trainingWeek(plans, "2026-09-28", TODAY);
+    expect(dayMarks(tuesday!)).toEqual([{ kind: "strength", filled: true }]);
+    expect(dayMarks(wednesday!)).toEqual([{ kind: "climb", filled: true }]);
+    expect(dayMarks(thursday!)).toEqual([{ kind: "strength", filled: false }]);
+  });
+
+  it("counts plan days and weekly goals in the week's stats", () => {
+    expect(weekStats(plans, TODAY)).toMatchObject({ done: 3, planned: 6 });
   });
 });
