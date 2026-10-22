@@ -14,10 +14,21 @@ import { DayMark } from "./DayMark";
 import { KIND_LOOK, kindName } from "./kindLook";
 import { planTag } from "./planTag";
 
-export type PlanItemCardProps = { item: PlanItem; onEdit: () => void; onLog: () => void };
+export type PlanItemCardProps = {
+  item: PlanItem;
+  onEdit: () => void;
+  onLog: () => void;
+  /** Runs its intervals in the timer; null when it has none. */
+  onStart: (() => void) | null;
+};
 
-/** A plan item due today: the card opens the plan, the button logs it. */
-export function PlanItemCard({ item, onEdit, onLog }: PlanItemCardProps): React.ReactElement {
+/** A plan item due today: the card opens the plan, the buttons run or log it. */
+export function PlanItemCard({
+  item,
+  onEdit,
+  onLog,
+  onStart,
+}: PlanItemCardProps): React.ReactElement {
   const { today } = useHangData();
   const climb = item.kind === "climb";
   return (
@@ -53,13 +64,34 @@ export function PlanItemCard({ item, onEdit, onLog }: PlanItemCardProps): React.
           </Text>
         </View>
       </Pressable>
-      <Button
-        label={climb ? t("plan.logSession") : t("plan.logIt")}
-        onPress={onLog}
-        variant={climb ? "gold" : "primary"}
-        height={50}
-        icon="plus"
-      />
+      {onStart === null ? (
+        <Button
+          label={climb ? t("plan.logSession") : t("plan.logIt")}
+          onPress={onLog}
+          variant={climb ? "gold" : "primary"}
+          height={50}
+          icon="plus"
+        />
+      ) : (
+        <View style={{ flexDirection: "row", gap: 10 }}>
+          <Button
+            label={t("hang.start")}
+            onPress={onStart}
+            variant="primary"
+            height={50}
+            icon="play"
+            style={{ flex: 1 }}
+          />
+          <Button
+            label={t("plan.logIt")}
+            onPress={onLog}
+            variant="outline"
+            height={50}
+            icon="plus"
+            style={{ flex: 1 }}
+          />
+        </View>
+      )}
     </View>
   );
 }

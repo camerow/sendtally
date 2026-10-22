@@ -54,7 +54,7 @@ const SIGNED_IN_SCREENS = [
   "activity/[id]",
 ];
 
-const FOCUS_SCREENS = ["workout/timer", "workout/done"];
+const FOCUS_SCREENS = ["workout/timer", "workout/done", "workout/intervals"];
 
 function InteractiveMarker(): React.ReactElement | null {
   const { isLoaded } = useAuth();

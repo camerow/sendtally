@@ -23,6 +23,7 @@ import { logPlanItem } from "./logPlanItem";
 import { PlanItemCard } from "./PlanItemCard";
 import { PlanItemRow } from "./PlanItemRow";
 import { PlannedRow } from "./PlannedRow";
+import { startPlanItem } from "./startPlanItem";
 import { UpTodayCard } from "./UpTodayCard";
 
 export type DaySectionProps = {
@@ -116,6 +117,7 @@ export function DaySection({
             item={entry.plan}
             onEdit={() => onEditItem(entry.plan)}
             onLog={() => logPlanItem(entry.plan, day.date)}
+            onStart={startPlanItem(entry.plan, day.date)}
           />
         ) : (
           <PlanItemRow

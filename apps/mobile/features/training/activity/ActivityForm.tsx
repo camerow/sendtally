@@ -15,12 +15,14 @@ import {
   kindLabel,
   parseMinutes,
   stepMinutes,
+  templateOf,
   trainingLoadLabel,
   useActivityActions,
   usePlanTemplate,
   useWeightUnit,
   type ActivityDraft,
 } from "@sendtally/features/activities";
+import type { ActivityDetail } from "@sendtally/api-client";
 import { t } from "@sendtally/features/i18n";
 import { DateTimeField } from "../../../components/DateTimeField";
 import { useApi } from "../../../lib/api";
@@ -30,6 +32,7 @@ import { SheetSection } from "../components/SheetSection";
 import { Stepper } from "../components/Stepper";
 import { Title } from "../components/Title";
 import { DetailSection } from "../detail/DetailSection";
+import { startIntervals } from "../intervals/intervalsParams";
 import { type } from "../type";
 import { KindChips } from "./KindChips";
 
@@ -64,6 +67,12 @@ export function ActivityForm({ id, initial, editing }: ActivityFormProps): React
   const unit = useWeightUnit(api);
   const targets = usePlanTemplate(api, draft.planItemId) ?? null;
 
+  const start = (detail: ActivityDetail): void => {
+    const body = templateOf(detail);
+    if (body?.kind !== "intervals") return;
+    const { kind, title, date, planItemId } = draft;
+    startIntervals({ kind, title, date, planItemId, activityId: editing ? null : id, body });
+  };
   const save = (): void => {
     void actions.saveActivity(activityFromDraft(id, draft));
     router.back();
@@ -171,6 +180,7 @@ export function ActivityForm({ id, initial, editing }: ActivityFormProps): React
           targets={targets}
           template={false}
           inSheet={false}
+          onStart={start}
           onChange={(detail) => update({ detail })}
         />
 
