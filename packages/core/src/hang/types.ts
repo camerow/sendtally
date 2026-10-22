@@ -1,3 +1,5 @@
+import type { ItemDone, PlanLink } from "./plan";
+
 export type HangKind = "hang" | "pull";
 
 export type TimeUnit = "s" | "min";
@@ -29,7 +31,8 @@ export type TimeUnits = Record<TimeField, TimeUnit>;
 /** A deleted custom grip is hidden, not removed: its sessions and trend keep its name. */
 export type Grip = { id: string; name: string; custom: boolean; hidden: boolean };
 
-export type Workout = Protocol & {
+/** One hangboard item as the hang timer runs it: a protocol on a grip. */
+export type HangWorkout = Protocol & {
   id: string;
   source: "library" | "mine";
   grip: string;
@@ -38,42 +41,6 @@ export type Workout = Protocol & {
 
 /** Load in kg per workout × grip, keyed `${workoutId}:${gripId}`. */
 export type Loads = Record<string, number>;
-
-export type Schedule = {
-  id: string;
-  workoutId: string;
-  gripId: string;
-  days: Weekday[];
-  start: CalendarDate;
-  /** Exclusive; null means ongoing. */
-  end: CalendarDate | null;
-  skip: CalendarDate[];
-  /** Absent from app builds before blocks. */
-  targetRpe?: number | null;
-  /** The training block it belongs to; absent from app builds before blocks. */
-  blockId?: string | null;
-  /** The planned edge and added weight; null leaves them to the last session. Absent from app builds before setups. */
-  edgeMm?: number | null;
-  loadKg?: number | null;
-};
-
-export type BlockPhase = "load" | "deload" | "test" | "perform";
-
-/** A week of a block: its load as a percent of the block's base, and an optional phase tag. */
-export type WeekLoad = { load: number; phase?: BlockPhase };
-
-/** A multi-week block. Its members share its dates. */
-export type TrainingBlock = {
-  id: string;
-  name: string;
-  start: CalendarDate;
-  weeks: number;
-  /** One per week. */
-  loads: WeekLoad[];
-  notes: string | null;
-  /** Exclusive; set when the block was ended early. */
-  endedOn: CalendarDate | null;
-};
 
 export type HangSession = {
   id: string;
@@ -87,7 +54,9 @@ export type HangSession = {
   misses: number;
   rpe: number | null;
   protocol: Protocol;
-};
+} & PlanLink & {
+    done: ItemDone[];
+  };
 
 export type HangSettings = {
   units: WeightUnit;

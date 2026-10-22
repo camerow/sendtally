@@ -1,21 +1,14 @@
 import { describe, expect, it } from "vitest";
 import {
-  LIBRARY,
   addDays,
   addMonths,
-  blockWeeks,
   bumpLoad,
   cameOffEarly,
-  dayState,
-  endChoiceOf,
-  endOf,
   endRun,
   logLift,
-  occurrences,
   parseNumber,
   parseSeconds,
   phasesFor,
-  planStatus,
   resultOf,
   skip,
   startRun,
@@ -29,14 +22,28 @@ import {
   weekStreak,
   weekday,
   weeklyCounts,
-  weekOfBlock,
   type HangSession,
   type Protocol,
-  type Schedule,
 } from ".";
 
-const repeaters = LIBRARY.find((w) => w.id === "rep73")!;
-const blockPulls = LIBRARY.find((w) => w.id === "block")!;
+const repeaters: Protocol = {
+  name: "Repeaters 7:3",
+  kind: "hang",
+  hangS: 7,
+  restS: 3,
+  reps: 6,
+  sets: 6,
+  setRestS: 180,
+};
+const blockPulls: Protocol = {
+  name: "Block pulls",
+  kind: "pull",
+  hangS: 0,
+  restS: 0,
+  reps: 5,
+  sets: 5,
+  setRestS: 120,
+};
 
 const session = (over: Partial<HangSession>): HangSession => ({
   id: over.date ?? "s",
@@ -49,6 +56,10 @@ const session = (over: Partial<HangSession>): HangSession => ({
   misses: 0,
   rpe: 7,
   protocol: repeaters,
+  membershipId: null,
+  week: null,
+  variation: null,
+  done: [],
   ...over,
 });
 
@@ -106,55 +117,6 @@ describe("parsing", () => {
     expect(parseNumber("−3")).toBe(-3);
     expect(parseNumber("2,5")).toBe(2.5);
     expect(parseNumber("")).toBeNull();
-  });
-});
-
-describe("schedule", () => {
-  const plan: Schedule = {
-    id: "p",
-    workoutId: "rep73",
-    gripId: "half",
-    days: [0, 4],
-    start: "2026-09-28",
-    end: endOf("2026-09-28", { mode: "weeks", weeks: 4 }),
-    skip: [],
-  };
-
-  it("lands on the chosen weekdays until the exclusive end", () => {
-    const dates = occurrences(plan);
-    expect(dates).toHaveLength(8);
-    expect(dates[0]).toBe("2026-09-28");
-    expect(dates.at(-1)).toBe("2026-10-23");
-    expect(occurrences({ ...plan, skip: ["2026-10-02"] })).toHaveLength(7);
-  });
-
-  it("counts block weeks and recovers the end choice", () => {
-    expect(blockWeeks(plan)).toBe(4);
-    expect(weekOfBlock(plan, "2026-10-09")).toBe(2);
-    expect(endChoiceOf(plan)).toEqual({ mode: "weeks", weeks: 4 });
-    const onDate = { ...plan, end: endOf(plan.start, { mode: "date", last: "2026-10-20" }) };
-    expect(endChoiceOf(onDate)).toEqual({ mode: "date", last: "2026-10-20" });
-  });
-
-  it("labels the plan status", () => {
-    expect(planStatus(plan, "2026-09-25")).toEqual({ kind: "starts", date: "2026-09-28" });
-    expect(planStatus(plan, "2026-10-06")).toEqual({ kind: "week", at: 2, of: 4 });
-    expect(planStatus(plan, "2026-10-20")).toEqual({ kind: "final", of: 4 });
-    expect(planStatus({ ...plan, end: null }, "2026-10-20")).toEqual({ kind: "ongoing" });
-  });
-
-  it("marks a past planned day without its session as missed", () => {
-    const logged = [session({ date: "2026-09-28" })];
-    expect(dayState([plan], logged, "2026-09-28", "2026-10-05").missed).toBe(false);
-    expect(dayState([plan], logged, "2026-10-02", "2026-10-05").missed).toBe(true);
-    expect(
-      dayState(
-        [plan],
-        [session({ date: "2026-09-28", gripId: "open" })],
-        "2026-09-28",
-        "2026-10-05"
-      ).missed
-    ).toBe(true);
   });
 });
 

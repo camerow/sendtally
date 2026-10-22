@@ -1,4 +1,4 @@
-import type { HangKind, Loads, Workout, WeightUnit } from "./types";
+import type { HangKind, HangWorkout, Loads, WeightUnit } from "./types";
 
 export const LB_PER_KG = 2.20462;
 
@@ -8,7 +8,7 @@ export const loadKey = (workoutId: string, gripId: string): string => `${workout
 
 export function loadOf(
   loads: Loads,
-  workout: Pick<Workout, "id" | "kind">,
+  workout: Pick<HangWorkout, "id" | "kind">,
   gripId: string
 ): number {
   return loads[loadKey(workout.id, gripId)] ?? (workout.kind === "pull" ? DEFAULT_PULL_KG : 0);

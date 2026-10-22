@@ -1,4 +1,4 @@
-import type { Protocol, TimeUnits, Workout } from "./types";
+import type { HangWorkout, Protocol, TimeUnits } from "./types";
 
 /** Built-in grip ids. Stable forever: sessions and loads reference them. */
 export const BUILT_IN_GRIPS = [
@@ -31,76 +31,7 @@ export const isBuiltInGrip = (id: string): id is BuiltInGrip =>
 
 export const DEFAULT_TIME_UNITS: TimeUnits = { hangS: "s", restS: "s", setRestS: "min" };
 
-const library = (id: string, grip: BuiltInGrip, protocol: Protocol): Workout => ({
-  ...protocol,
-  id,
-  grip,
-  source: "library",
-  timeUnits: DEFAULT_TIME_UNITS,
-});
-
-/**
- * The curated workout library, versioned with the app. An id is never reused;
- * sessions carry a protocol snapshot, so editing an entry never rewrites history.
- */
-export const LIBRARY: readonly Workout[] = [
-  library("rep73", "half", {
-    name: "Repeaters 7:3",
-    kind: "hang",
-    hangS: 7,
-    restS: 3,
-    reps: 6,
-    sets: 6,
-    setRestS: 180,
-  }),
-  library("max10", "half", {
-    name: "Max hangs",
-    kind: "hang",
-    hangS: 10,
-    restS: 0,
-    reps: 1,
-    sets: 5,
-    setRestS: 180,
-  }),
-  library("block", "pinch", {
-    name: "Block pulls",
-    kind: "pull",
-    hangS: 0,
-    restS: 0,
-    reps: 5,
-    sets: 5,
-    setRestS: 120,
-  }),
-  library("density", "open", {
-    name: "Density hangs",
-    kind: "hang",
-    hangS: 30,
-    restS: 0,
-    reps: 1,
-    sets: 4,
-    setRestS: 60,
-  }),
-  library("assist", "half", {
-    name: "Assisted one-arm",
-    kind: "hang",
-    hangS: 10,
-    restS: 0,
-    reps: 1,
-    sets: 6,
-    setRestS: 120,
-  }),
-  library("lowpull", "open", {
-    name: "Light daily lifts",
-    kind: "pull",
-    hangS: 0,
-    restS: 0,
-    reps: 10,
-    sets: 3,
-    setRestS: 90,
-  }),
-];
-
-export const NEW_WORKOUT: Omit<Workout, "id"> = {
+export const NEW_WORKOUT: Omit<HangWorkout, "id"> = {
   name: "",
   source: "mine",
   kind: "hang",
