@@ -48,6 +48,38 @@ const checklistItem = z.object({
   dose: z.string().trim().max(40),
 });
 
+const seconds = z.number().int().min(0).max(86400);
+
+const intervalStep = z
+  .object({
+    label: z.string().trim().min(1).max(80),
+    measure: z.enum(["time", "count"]),
+    seconds: seconds.min(1).optional(),
+    count: z.number().int().min(1).max(1000).optional(),
+    loadKg: z.number().min(-200).max(1000).optional(),
+    side: z.enum(["L", "R", "each"]).optional(),
+    restAfter: seconds,
+    cue: z.string().trim().min(1).max(200).optional(),
+  })
+  .refine(
+    (s) => (s.measure === "time" ? s.seconds !== undefined : s.count !== undefined),
+    "a step needs its seconds or its count"
+  );
+
+const intervals = {
+  kind: z.literal("intervals"),
+  rounds: z.number().int().min(1).max(50),
+  steps: z.array(intervalStep).min(1).max(30),
+};
+
+// What a run got through: 0-based round and step, and the seconds held when cut short.
+const stepDone = z.object({
+  round: z.number().int().min(0).max(49),
+  step: z.number().int().min(0).max(29),
+  side: z.enum(["L", "R"]).optional(),
+  heldSeconds: seconds.optional(),
+});
+
 const exercises = <S extends z.ZodType>(set: S) => z.array(exercise(set)).min(1).max(30);
 
 const checklistItems = <I extends z.ZodType>(item: I) => z.array(item).min(1).max(50);
@@ -63,6 +95,7 @@ const activityDetail = z
       kind: z.literal("checklist"),
       items: checklistItems(checklistItem.extend({ done: z.boolean() })),
     }),
+    z.object({ ...intervals, stepsDone: z.array(stepDone).max(3000) }),
   ])
   .nullable();
 
@@ -71,6 +104,7 @@ const planTemplate = z
   .discriminatedUnion("kind", [
     z.object({ kind: z.literal("sets"), exercises: exercises(setTarget) }),
     z.object({ kind: z.literal("checklist"), items: checklistItems(checklistItem) }),
+    z.object(intervals),
   ])
   .nullable();
 

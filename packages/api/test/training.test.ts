@@ -50,6 +50,15 @@ const setsDetail = {
   ],
 };
 
+const intervalsTemplate = {
+  kind: "intervals",
+  rounds: 2,
+  steps: [
+    { label: "Couch stretch", measure: "time", seconds: 45, side: "each", restAfter: 10 },
+    { label: "Swing", measure: "count", count: 15, loadKg: 24, restAfter: 30, cue: "Hips" },
+  ],
+};
+
 const checklistTemplate = {
   kind: "checklist",
   items: [
@@ -106,13 +115,20 @@ describe("activities", () => {
     expect(activities.map((a) => a.id)).toEqual(["a3", "a2"]);
   });
 
-  it("round trips a sets or checklist body", async () => {
+  it("round trips a sets, checklist or intervals body", async () => {
     const userId = "user_activity_detail";
     const checklist = {
       kind: "checklist",
       items: [{ text: "Cat-cow", dose: "× 10", done: true }],
     };
-    for (const detail of [setsDetail, checklist]) {
+    const intervals = {
+      ...intervalsTemplate,
+      stepsDone: [
+        { round: 0, step: 0, side: "L" },
+        { round: 0, step: 0, side: "R", heldSeconds: 20 },
+      ],
+    };
+    for (const detail of [setsDetail, intervals, checklist]) {
       const res = await call(userId, "PUT", "/v1/activities/a1", { ...activityBody, detail });
       expect(await json(res)).toEqual({ activity: { id: "a1", ...activityBody, detail } });
     }
@@ -143,6 +159,15 @@ describe("activities", () => {
         },
       },
       { ...activityBody, detail: { kind: "checklist", items: [{ text: "Cat-cow", dose: "" }] } },
+      { ...activityBody, detail: intervalsTemplate },
+      {
+        ...activityBody,
+        detail: {
+          ...intervalsTemplate,
+          stepsDone: [],
+          steps: [{ label: "Plank", measure: "time", count: 10, restAfter: 0 }],
+        },
+      },
     ]) {
       expect((await call(userId, "PUT", "/v1/activities/a1", body)).status).toBe(400);
     }
@@ -211,6 +236,9 @@ describe("plan items", () => {
     expect((await json<{ planItem: PlanItem }>(skipped)).planItem.template).toEqual(
       checklistTemplate
     );
+    const intervals = { ...planBody, kind: "mobility", template: intervalsTemplate };
+    const timed = await call(userId, "PUT", "/v1/plan-items/p3", intervals);
+    expect(await json(timed)).toEqual({ planItem: { id: "p3", ...intervals } });
     const { template: _, ...older } = planBody;
     const legacy = await call(userId, "PUT", "/v1/plan-items/p2", older);
     expect((await json<{ planItem: PlanItem }>(legacy)).planItem.template).toBeNull();
