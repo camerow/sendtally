@@ -15,6 +15,8 @@ export type IconName =
   | "lock"
   | "refresh"
   | "endurance"
+  | "today"
+  | "train"
   | "x";
 
 const SHAPES: Record<IconName, React.ReactElement> = {
@@ -50,6 +52,10 @@ const SHAPES: Record<IconName, React.ReactElement> = {
   endurance: (
     <Path d="M2 9c2.5-3 5-3 7.5 0S15 12 17.5 9 21 6 22 7M2 17c2.5-3 5-3 7.5 0s5 3 7.5 0 3.5-3 4.5-2" />
   ),
+  today: (
+    <Path d="M5 6.5h14a1 1 0 0 1 1 1V19a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7.5a1 1 0 0 1 1-1zM4 10.5h16M8.5 4v4M15.5 4v4" />
+  ),
+  train: <Path d="M3.5 5h17v5.5h-17zM7 7.75h3M14 7.75h3M9 10.5V20M15 10.5V20" />,
   x: <Path d="M6 6l12 12M18 6L6 18" />,
 };
 

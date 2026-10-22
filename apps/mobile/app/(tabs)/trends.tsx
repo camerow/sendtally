@@ -3,14 +3,19 @@ import { ActivityIndicator, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { t } from "@sendtally/features/i18n";
 import { colors } from "@sendtally/design/tokens";
+import { useTrainingMode } from "@sendtally/features/settings";
+import { AccountButton } from "../../components/AccountButton";
 import { ScreenHeader } from "../../components/ScreenHeader";
 import { useCanSeeInsights } from "../../features/billing/useBilling";
 import { TrendsList } from "../../features/trends/TrendsList";
+import { useApi } from "../../lib/api";
 
 const GAP = 14;
 
 export default function Trends(): React.ReactElement {
   const canSeeInsights = useCanSeeInsights();
+  const api = useApi();
+  const training = useTrainingMode(api);
   const scroll = React.useRef<ScrollView>(null);
   const panelY = React.useRef(0);
   const viewportHeight = React.useRef(0);
@@ -22,7 +27,10 @@ export default function Trends(): React.ReactElement {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.white }} edges={["top"]}>
-      <ScreenHeader title={t("common.trends")} />
+      <ScreenHeader
+        title={training.enabled ? t("training.statistics") : t("common.trends")}
+        right={<AccountButton />}
+      />
       <ScrollView
         ref={scroll}
         onLayout={(e) => (viewportHeight.current = e.nativeEvent.layout.height)}

@@ -1,7 +1,11 @@
 import React from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import type { SettingsVM, StravaPostingFeature } from "@sendtally/features/settings";
+import type {
+  SettingsVM,
+  StravaPostingFeature,
+  TrainingModeFeature,
+} from "@sendtally/features/settings";
 import type { StravaConnectFeature } from "./useStravaConnect";
 import type { Discipline, GradePrefs, GradeScale } from "@sendtally/features/log-session";
 import { t } from "@sendtally/features/i18n";
@@ -18,6 +22,8 @@ import { GradeSection } from "./GradeSection";
 import { GymsSection } from "./GymsSection";
 import { MembershipSection, type MembershipSectionProps } from "./MembershipSection";
 import { StravaPostingSection } from "./StravaPostingSection";
+import { TrainingModeSection } from "./TrainingModeSection";
+import { BackButton } from "../../components/BackButton";
 import { bodyText, messageText, sectionCard, sectionLabel } from "../../lib/styles";
 import { press } from "../../lib/press";
 
@@ -28,6 +34,8 @@ export type SettingsViewProps = {
   gyms: Gym[];
   billing: MembershipSectionProps | null;
   posting: StravaPostingFeature;
+  trainingMode: TrainingModeFeature;
+  pushed: boolean;
   connect: StravaConnectFeature;
   exporter: CsvExportFeature;
   onChangeGradePref: (discipline: Discipline, scale: GradeScale) => void;
@@ -63,6 +71,8 @@ export function SettingsView({
   gyms,
   billing,
   posting,
+  trainingMode,
+  pushed,
   connect,
   exporter,
   onChangeGradePref,
@@ -70,6 +80,11 @@ export function SettingsView({
 }: SettingsViewProps): React.ReactElement {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.white }} edges={["top"]}>
+      {pushed && (
+        <View style={{ paddingHorizontal: 18 }}>
+          <BackButton />
+        </View>
+      )}
       <ScreenHeader title={t("common.settings")} />
       <ScrollView
         contentContainerStyle={{
@@ -79,6 +94,7 @@ export function SettingsView({
           gap: 14,
         }}
       >
+        <TrainingModeSection trainingMode={trainingMode} />
         <GradeSection prefs={gradePrefs} onChange={onChangeGradePref} />
         <GymsSection gyms={gyms} />
 

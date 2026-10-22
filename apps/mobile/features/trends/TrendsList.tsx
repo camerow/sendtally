@@ -20,7 +20,7 @@ import { press } from "../../lib/press";
 import { Paywall } from "../billing/Paywall";
 import { RefineSheet } from "./RefineSheet";
 import { ScaleGymSheet } from "./ScaleGymSheet";
-import { Segmented } from "./Segmented";
+import { Segmented } from "../../components/Segmented";
 import { TrendSection } from "./TrendSection";
 import { TrendStats } from "./TrendStats";
 

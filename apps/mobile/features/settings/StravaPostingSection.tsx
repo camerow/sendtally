@@ -1,12 +1,11 @@
 import React from "react";
-import { Pressable, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import type { StravaPostingFeature } from "@sendtally/features/settings";
 import { t } from "@sendtally/features/i18n";
 import { colors, fonts } from "@sendtally/design/tokens";
 import { DateTimeField } from "../../components/DateTimeField";
-import { SwitchTrack } from "../../components/SwitchTrack";
+import { Switch } from "../../components/Switch";
 import { bodyText, messageText } from "../../lib/styles";
-import { press } from "../../lib/press";
 
 export type StravaPostingSectionProps = {
   posting: StravaPostingFeature;
@@ -17,32 +16,6 @@ const rowTitle = {
   fontSize: 13,
   color: colors.gunmetal,
 } as const;
-
-function Switch({
-  checked,
-  onChange,
-  disabled,
-  label,
-}: {
-  checked: boolean;
-  onChange: (value: boolean) => void;
-  disabled: boolean;
-  label: string;
-}): React.ReactElement {
-  return (
-    <Pressable
-      accessibilityRole="switch"
-      accessibilityState={{ checked, disabled }}
-      accessibilityLabel={label}
-      disabled={disabled}
-      onPress={() => onChange(!checked)}
-      hitSlop={10}
-      style={press({})}
-    >
-      <SwitchTrack checked={checked} disabled={disabled} />
-    </Pressable>
-  );
-}
 
 export function StravaPostingSection({ posting }: StravaPostingSectionProps): React.ReactElement {
   return (

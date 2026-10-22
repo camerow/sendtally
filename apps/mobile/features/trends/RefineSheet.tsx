@@ -14,7 +14,7 @@ import {
 } from "@sendtally/features/trends";
 import { Sheet } from "../../components/Sheet";
 import { press, pressRow } from "../../lib/press";
-import { Segmented } from "./Segmented";
+import { Segmented } from "../../components/Segmented";
 import { monoLabel } from "./styles";
 
 const BAR_MAX = 70;

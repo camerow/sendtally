@@ -45,6 +45,7 @@ const SIGNED_IN_SCREENS = [
   "trend/[page]",
   "gym/[id]",
   "account",
+  "profile",
   "membership",
 ];
 

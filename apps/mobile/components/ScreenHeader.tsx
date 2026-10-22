@@ -8,9 +8,14 @@ export const SCREEN_HEADER_HEIGHT = 44;
 export type ScreenHeaderProps = {
   title: string;
   caption?: string | null;
+  right?: React.ReactNode;
 };
 
-export function ScreenHeader({ title, caption = null }: ScreenHeaderProps): React.ReactElement {
+export function ScreenHeader({
+  title,
+  caption = null,
+  right = null,
+}: ScreenHeaderProps): React.ReactElement {
   return (
     <View
       style={{
@@ -46,6 +51,7 @@ export function ScreenHeader({ title, caption = null }: ScreenHeaderProps): Reac
           {caption}
         </Text>
       )}
+      {right}
     </View>
   );
 }
