@@ -59,4 +59,6 @@ export const activities = {
   "activities.setCount_one": "{count} set",
   "activities.setCount_other": "{count} sets",
   "activities.seeTrend": "See trend",
+  "activities.deleteBodyStrava":
+    "It comes out of your log and your statistics. Strava does not let apps delete activities, so the Strava activity stays.",
 } as const;

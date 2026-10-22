@@ -1078,6 +1078,17 @@ export async function setStravaPosting(
     .where(eq(stravaConnections.user_id, userId));
 }
 
+export async function setTrainingPosting(
+  db: D1Database,
+  userId: string,
+  enabled: boolean
+): Promise<void> {
+  await drizzle(db)
+    .update(stravaConnections)
+    .set({ post_training: enabled })
+    .where(eq(stravaConnections.user_id, userId));
+}
+
 export async function listSessions(
   db: D1Database,
   userId: string,
@@ -2688,6 +2699,58 @@ export async function saveActivity(
     .onConflictDoUpdate({ target: [activities.user_id, activities.id], set: fields })
     .returning()
     .get();
+}
+
+const activity = (userId: string, id: string): SQL | undefined =>
+  and(eq(activities.user_id, userId), eq(activities.id, id));
+
+export async function getActivity(
+  db: D1Database,
+  userId: string,
+  id: string
+): Promise<ActivityRow | null> {
+  const row = await drizzle(db).select().from(activities).where(activity(userId, id)).get();
+  return row ?? null;
+}
+
+export async function markActivityPostPending(
+  db: D1Database,
+  userId: string,
+  id: string
+): Promise<void> {
+  await drizzle(db)
+    .update(activities)
+    .set({ post_state: "pending", post_error: null })
+    .where(activity(userId, id));
+}
+
+export async function markActivityPosted(
+  db: D1Database,
+  userId: string,
+  id: string,
+  activityId: number
+): Promise<void> {
+  await drizzle(db)
+    .update(activities)
+    .set({
+      strava_activity_id: activityId,
+      posted_at: new Date().toISOString(),
+      post_state: "posted",
+      post_error: null,
+    })
+    .where(activity(userId, id));
+}
+
+export async function markActivityPostFailed(
+  db: D1Database,
+  userId: string,
+  id: string,
+  error: string
+): Promise<void> {
+  await drizzle(db)
+    .update(activities)
+    .set({ post_state: "failed", post_error: error })
+    .where(activity(userId, id));
 }
 
 export async function deleteActivity(db: D1Database, userId: string, id: string): Promise<boolean> {

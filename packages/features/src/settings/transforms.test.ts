@@ -22,6 +22,7 @@ describe("settingsVM", () => {
       stravaStatusLabel: "Not connected",
       postingEnabled: false,
       postSince: "",
+      postTraining: false,
     });
     expect(settingsVM(status()).stravaConnected).toBe(false);
   });
@@ -29,7 +30,13 @@ describe("settingsVM", () => {
   it("labels an active Strava connection", () => {
     const vm = settingsVM(
       status({
-        strava: { athleteId: 42, status: "active", postingEnabled: false, postSince: null },
+        strava: {
+          athleteId: 42,
+          status: "active",
+          postingEnabled: false,
+          postSince: null,
+          postTraining: false,
+        },
       })
     );
     expect(vm.stravaConnected).toBe(true);
@@ -45,16 +52,26 @@ describe("settingsVM", () => {
           status: "active",
           postingEnabled: true,
           postSince: "2026-03-01T00:00:00Z",
+          postTraining: true,
         },
       })
     );
     expect(vm.postingEnabled).toBe(true);
     expect(vm.postSince).toBe("2026-03-01");
+    expect(vm.postTraining).toBe(true);
   });
 
   it("flags a dead Strava connection as connected but inactive", () => {
     const vm = settingsVM(
-      status({ strava: { athleteId: 42, status: "dead", postingEnabled: false, postSince: null } })
+      status({
+        strava: {
+          athleteId: 42,
+          status: "dead",
+          postingEnabled: false,
+          postSince: null,
+          postTraining: false,
+        },
+      })
     );
     expect(vm.stravaConnected).toBe(true);
     expect(vm.stravaActive).toBe(false);

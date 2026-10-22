@@ -59,6 +59,8 @@ export const stravaConnections = sqliteTable("strava_connections", {
   connected_at: text("connected_at").notNull(),
   posting_enabled: integer("posting_enabled").notNull().default(0),
   post_since: text("post_since"),
+  // Whether activities other than climbing and hangboarding post on their own.
+  post_training: integer("post_training", { mode: "boolean" }).notNull().default(false),
 });
 
 export const storeEntitlements = sqliteTable(
@@ -615,6 +617,10 @@ export const activities = sqliteTable(
     plan_item_id: text("plan_item_id"),
     detail_kind: text("detail_kind"),
     detail_json: text("detail_json"),
+    strava_activity_id: integer("strava_activity_id"),
+    posted_at: text("posted_at"),
+    post_state: text("post_state").$type<"pending" | "posted" | "failed">(),
+    post_error: text("post_error"),
     created_at: text("created_at").notNull(),
     updated_at: text("updated_at").notNull(),
   },

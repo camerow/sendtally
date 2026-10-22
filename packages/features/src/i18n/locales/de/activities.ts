@@ -60,4 +60,6 @@ export const activities = {
   "activities.setCount_one": "{count} Satz",
   "activities.setCount_other": "{count} Sätze",
   "activities.seeTrend": "Verlauf ansehen",
+  "activities.deleteBodyStrava":
+    "Sie verschwindet aus deinem Logbuch und deiner Statistik. Strava lässt Apps keine Aktivitäten löschen, die Strava-Aktivität bleibt also bestehen.",
 } as const;

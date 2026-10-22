@@ -60,4 +60,6 @@ export const activities = {
   "activities.setCount_one": "{count} série",
   "activities.setCount_other": "{count} séries",
   "activities.seeTrend": "Voir la tendance",
+  "activities.deleteBodyStrava":
+    "Elle disparaît de ton carnet et de tes statistiques. Strava ne permet pas aux applications de supprimer des activités, l’activité Strava reste donc en place.",
 } as const;

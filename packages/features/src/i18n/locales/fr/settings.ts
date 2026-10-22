@@ -53,4 +53,10 @@ export const settings = {
     "Ajoute Aujourd'hui, Entraînement et Statistiques pour planifier et faire ta poutre et tes autres entraînements à côté de ta grimpe.",
   "settings.trainingModeWebHint":
     "L'entraînement se trouve dans l'app sendtally sur iOS et Android. Active-le ici et il t'attend à la prochaine ouverture de l'app.",
+  "settings.postClimbing": "Publier les séances d’escalade",
+  "settings.postHangboard": "Publier les séances de poutre",
+  "settings.postHangboardBody": "Chaque séance de poutre est publiée comme Workout.",
+  "settings.postTraining": "Publier les autres entraînements",
+  "settings.postTrainingBody":
+    "Renfo, course, yoga et mobilité sont publiés comme activités à part.",
 } as const;

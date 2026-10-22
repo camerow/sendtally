@@ -2,7 +2,7 @@ import { useLocalSearchParams } from "expo-router";
 import React from "react";
 import { ActivityIndicator, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import type { Activity } from "@sendtally/api-client";
+import type { ActivityRecord } from "@sendtally/api-client";
 import { colors, fonts } from "@sendtally/design/tokens";
 import { draftFromActivity, useActivities } from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
@@ -15,13 +15,13 @@ export default function EditActivityScreen(): React.ReactElement {
   const { state } = useActivities(useApi());
   const found = state.status === "ready" ? state.data.find((a) => a.id === id) : undefined;
   // Held from the first read, so a delete can leave the screen without it flashing "not found".
-  const [kept, setKept] = React.useState<Activity | null>(null);
+  const [kept, setKept] = React.useState<ActivityRecord | null>(null);
   if (kept === null && found !== undefined) setKept(found);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.white }} edges={["top", "bottom"]}>
       {kept !== null ? (
-        <ActivityForm id={kept.id} initial={draftFromActivity(kept)} editing />
+        <ActivityForm id={kept.id} initial={draftFromActivity(kept)} logged={found ?? kept} />
       ) : state.status === "loading" ? (
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
           <ActivityIndicator color={colors.gunmetal} />

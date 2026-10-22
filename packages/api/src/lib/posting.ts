@@ -1,9 +1,11 @@
 import { BUILT_IN_GRIP_NAMES, isBuiltInGrip } from "@sendtally/core/hang";
 import type { Env } from "../bindings";
+import { activityOf } from "./activities";
 import { decryptSecret, encryptSecret } from "./crypto";
 import { hangSessionOf, settingsOf } from "./hang";
 import { hangActivity } from "./hang-activity";
 import * as repo from "./repo";
+import { trainingActivity } from "./training-activity";
 import {
   StravaClient,
   StravaRateLimitedError,
@@ -176,5 +178,32 @@ export async function syncHangSessionToStrava(
     markPending: () => repo.markHangPostPending(env.DB, userId, id),
     markPosted: (activityId) => repo.markHangPosted(env.DB, userId, id, activityId),
     markFailed: (error) => repo.markHangPostFailed(env.DB, userId, id, error),
+  });
+}
+
+// post_training only decides whether a new activity posts on its own. One
+// already on Strava always follows its activity's edits.
+export async function syncActivityToStrava(
+  env: Env,
+  userId: string,
+  id: string,
+  explicit = false
+): Promise<PostResult> {
+  const row = await repo.getActivity(env.DB, userId, id);
+  if (row === null) return skipped("activity not found");
+
+  const connection = await postableConnection(env, userId);
+  if (typeof connection === "string") return skipped(connection);
+  if (!explicit && row.strava_activity_id === null && !connection.post_training) {
+    return skipped("posting is off");
+  }
+
+  const { units } = settingsOf(await repo.getHangSettings(env.DB, userId));
+  return post(env, connection, {
+    activityId: row.strava_activity_id,
+    activity: trainingActivity(activityOf(row), units),
+    markPending: () => repo.markActivityPostPending(env.DB, userId, id),
+    markPosted: (activityId) => repo.markActivityPosted(env.DB, userId, id, activityId),
+    markFailed: (error) => repo.markActivityPostFailed(env.DB, userId, id, error),
   });
 }

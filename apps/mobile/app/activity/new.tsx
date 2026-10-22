@@ -31,7 +31,7 @@ export default function NewActivityScreen(): React.ReactElement {
           <ActivityIndicator color={colors.gunmetal} />
         </View>
       ) : (
-        <ActivityForm id={id} initial={initial} editing={false} />
+        <ActivityForm id={id} initial={initial} logged={null} />
       )}
     </SafeAreaView>
   );
