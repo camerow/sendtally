@@ -2,7 +2,6 @@ import { describe, expect, it, jest } from "@jest/globals";
 import { fireEvent, screen } from "@testing-library/react-native";
 import React from "react";
 import { Alert, type AlertButton } from "react-native";
-import type * as ReactNative from "react-native";
 import { NEW_WORKOUT, type Grip } from "@sendtally/core/hang";
 import { hangData, renderWithHang } from "../data/renderWithHang";
 import { GripPickerSheet } from "./GripPickerSheet";
@@ -10,9 +9,6 @@ import { GripPickerSheet } from "./GripPickerSheet";
 jest.mock("../../../components/Sheet", () => ({
   Sheet: ({ visible, children }: { visible: boolean; children: React.ReactNode }) =>
     visible ? children : null,
-}));
-jest.mock("@gorhom/bottom-sheet", () => ({
-  BottomSheetTextInput: jest.requireActual<typeof ReactNative>("react-native").TextInput,
 }));
 jest.mock("expo-crypto", () => ({ randomUUID: () => "new-grip" }));
 

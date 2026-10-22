@@ -15,16 +15,10 @@ export type SetupFieldsProps = {
   kind: HangKind;
   setup: HangSetup;
   onChange: (setup: HangSetup) => void;
-  inSheet?: boolean;
 };
 
 /** The edge a hang is on and the weight added to it, or a ground pull's weight. */
-export function SetupFields({
-  kind,
-  setup,
-  onChange,
-  inSheet,
-}: SetupFieldsProps): React.ReactElement {
+export function SetupFields({ kind, setup, onChange }: SetupFieldsProps): React.ReactElement {
   const { model } = useHangData();
   const load = loadControl(kind, setup.loadKg, model.settings.units, (loadKg) =>
     onChange({ ...setup, loadKg })
@@ -33,11 +27,7 @@ export function SetupFields({
   return (
     <View style={{ gap: 20 }}>
       {kind === "hang" && (
-        <EdgeField
-          edgeMm={setup.edgeMm}
-          onChange={(edgeMm) => onChange({ ...setup, edgeMm })}
-          inSheet={inSheet}
-        />
+        <EdgeField edgeMm={setup.edgeMm} onChange={(edgeMm) => onChange({ ...setup, edgeMm })} />
       )}
       <SheetSection label={label} aside={<UnitSwitch />}>
         <Stepper
@@ -49,7 +39,6 @@ export function SetupFields({
           increaseLabel={t("hang.moreWeight")}
           surface="plain"
           keyboard="numbers-and-punctuation"
-          inSheet={inSheet}
         />
         {kind === "hang" && (
           <Text style={[type.body, { fontSize: 13, lineHeight: 19, color: colors.textSecondary }]}>

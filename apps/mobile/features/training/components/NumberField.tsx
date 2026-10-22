@@ -1,6 +1,6 @@
-import { BottomSheetTextInput } from "@gorhom/bottom-sheet";
 import React from "react";
-import { TextInput, type KeyboardTypeOptions, type StyleProp, type TextStyle } from "react-native";
+import { type KeyboardTypeOptions, type StyleProp, type TextStyle } from "react-native";
+import { TextInput } from "../../../components/TextInput";
 import { colors } from "@sendtally/design/tokens";
 import { type } from "../type";
 
@@ -10,7 +10,6 @@ export type NumberFieldProps = {
   label: string;
   placeholder?: string;
   keyboard?: KeyboardTypeOptions;
-  inSheet?: boolean;
   style?: StyleProp<TextStyle>;
 };
 
@@ -25,7 +24,6 @@ export function NumberField({
   label,
   placeholder,
   keyboard = "decimal-pad",
-  inSheet,
   style,
 }: NumberFieldProps): React.ReactElement {
   const [draft, setDraft] = React.useState<string | null>(null);
@@ -33,9 +31,8 @@ export function NumberField({
     if (draft !== null) onCommit(draft);
     setDraft(null);
   };
-  const Input = inSheet ? BottomSheetTextInput : TextInput;
   return (
-    <Input
+    <TextInput
       value={draft ?? value}
       onFocus={() => setDraft(value)}
       onChangeText={setDraft}

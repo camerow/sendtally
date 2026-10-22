@@ -17,7 +17,6 @@ export type LibraryBrowserProps = {
   library: WorkoutLibrary;
   /** The kinds it offers; all of them by default. */
   kinds?: readonly WorkoutKind[];
-  inSheet?: boolean;
   onPick: (workout: LibraryWorkout) => void;
 };
 
@@ -25,7 +24,6 @@ export type LibraryBrowserProps = {
 export function LibraryBrowser({
   library,
   kinds,
-  inSheet = false,
   onPick,
 }: LibraryBrowserProps): React.ReactElement {
   const [text, setText] = React.useState("");
@@ -36,7 +34,7 @@ export function LibraryBrowser({
 
   return (
     <View style={{ gap: 12 }}>
-      <LibrarySearch value={text} inSheet={inSheet} onChange={setText} />
+      <LibrarySearch value={text} onChange={setText} />
       {mine.length === 0 && builtIn.length === 0 && (
         <DashedPanel title={t("workouts.noResultsTitle")} body={t("workouts.noResults")} />
       )}

@@ -1,6 +1,6 @@
-import { BottomSheetTextInput } from "@gorhom/bottom-sheet";
 import React from "react";
 import { Text, View } from "react-native";
+import { TextInput } from "../../components/TextInput";
 import type { GradeScales } from "@sendtally/api-client";
 import {
   CLIMB_TYPES,
@@ -86,7 +86,7 @@ function ClimbForm({
       </Text>
       <View style={{ gap: 7 }}>
         <Text style={fieldLabel}>{t("areas.name")}</Text>
-        <BottomSheetTextInput
+        <TextInput
           accessibilityLabel={t("areas.name")}
           autoCorrect={false}
           autoComplete="off"
@@ -101,7 +101,6 @@ function ClimbForm({
         <View style={{ gap: 7 }}>
           <Text style={fieldLabel}>{t("areas.crag")}</Text>
           <AreaSearchField
-            inSheet
             crags
             value={chosenArea}
             label={t("areas.crag")}

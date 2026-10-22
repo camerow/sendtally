@@ -19,7 +19,6 @@ export type StepperProps = {
   inputWidth?: number;
   fontSize?: number;
   keyboard?: KeyboardTypeOptions;
-  inSheet?: boolean;
 };
 
 /** − / typed number / +. Buttons apply at once; typing commits on blur or return. */
@@ -36,7 +35,6 @@ export function Stepper({
   inputWidth,
   fontSize = 17,
   keyboard,
-  inSheet,
 }: StepperProps): React.ReactElement {
   const fill = surface === "card" ? colors.white : colors.surfaceSoft;
   const step = (direction: 1 | -1, a11y: string, glyph: string): React.ReactElement => (
@@ -71,7 +69,6 @@ export function Stepper({
         label={label}
         placeholder={placeholder}
         keyboard={keyboard}
-        inSheet={inSheet}
         style={{
           width: inputWidth,
           flex: inputWidth === undefined ? 1 : undefined,

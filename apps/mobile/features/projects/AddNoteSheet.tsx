@@ -1,6 +1,6 @@
 import React from "react";
-import { BottomSheetTextInput } from "@gorhom/bottom-sheet";
 import { Pressable, Text, View } from "react-native";
+import { TextInput } from "../../components/TextInput";
 import type { ProjectSessionVM } from "@sendtally/features/climbs";
 import { t } from "@sendtally/features/i18n";
 import { localDate } from "@sendtally/features/log-session";
@@ -91,7 +91,7 @@ export function AddNoteSheet({
           )}
         </View>
 
-        <BottomSheetTextInput
+        <TextInput
           value={draft}
           multiline
           maxLength={2000}

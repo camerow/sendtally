@@ -11,11 +11,10 @@ const FIRST = 60;
 export type MinutesFieldProps = {
   value: number | null;
   onChange: (minutes: number | null) => void;
-  inSheet: boolean;
 };
 
 /** How long it usually takes, optional: empty until set, cleared by stepping below five. */
-export function MinutesField({ value, onChange, inSheet }: MinutesFieldProps): React.ReactElement {
+export function MinutesField({ value, onChange }: MinutesFieldProps): React.ReactElement {
   const set = (n: number): void => onChange(n < STEP ? null : clamp(Math.round(n), STEP, MAX));
   return (
     <SheetSection label={t("plan.minutes")}>
@@ -33,7 +32,6 @@ export function MinutesField({ value, onChange, inSheet }: MinutesFieldProps): R
         surface="plain"
         inputWidth={72}
         keyboard="number-pad"
-        inSheet={inSheet}
       />
     </SheetSection>
   );

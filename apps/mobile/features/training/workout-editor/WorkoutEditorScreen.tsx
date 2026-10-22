@@ -133,11 +133,7 @@ function Editor({
             multiline
             onChange={(description) => update({ description })}
           />
-          <MinutesField
-            value={state.minutes}
-            onChange={(minutes) => update({ minutes })}
-            inSheet={false}
-          />
+          <MinutesField value={state.minutes} onChange={(minutes) => update({ minutes })} />
           <TargetEffort value={state.targetRpe} onChange={(targetRpe) => update({ targetRpe })} />
           <BodyPreview
             workout={{ ...state, id: id ?? "", source: "mine" }}
