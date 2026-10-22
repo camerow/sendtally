@@ -28,3 +28,32 @@ export {
   type ActivityDraft,
   type ActivityPrefill,
 } from "./draft";
+export {
+  SET_MEASURES,
+  cleanDetail,
+  detailFromTemplate,
+  detailSummary,
+  emptyDetail,
+  exerciseNames,
+  exerciseSuggestions,
+  measureLabel,
+  newChecklistItem,
+  newExercise,
+  nextSet,
+  setTargetFor,
+  setText,
+  sideLabel,
+  templateOf,
+  toggleMeasure,
+  type ChecklistDetail,
+  type ChecklistItem,
+  type DetailKind,
+  type Exercise,
+  type ExerciseSet,
+  type SetTarget,
+  type SetsDetail,
+  type Side,
+} from "./detail";
+export { useExerciseNames } from "./useExerciseNames";
+export { usePlanTemplate } from "./usePlanTemplate";
+export { useWeightUnit } from "./useWeightUnit";

@@ -1,5 +1,6 @@
-import type { Activity, ActivityKind } from "@sendtally/api-client";
+import type { Activity, ActivityDetail, ActivityKind, PlanTemplate } from "@sendtally/api-client";
 import { formatNumber, t } from "../i18n";
+import { cleanDetail, detailFromTemplate } from "./detail";
 import { ACTIVITY_KINDS, kindLabel } from "./format";
 import { trainingLoad } from "./plan";
 
@@ -13,6 +14,7 @@ export type ActivityDraft = {
   rpe: number | null;
   notes: string;
   planItemId: string | null;
+  detail: ActivityDetail | null;
 };
 
 /** What a doorway into the form may already know, straight from the route's query. */
@@ -30,7 +32,12 @@ const DEFAULT_MINUTES = 60;
 
 const clampMinutes = (n: number): number => Math.min(1440, Math.max(1, Math.round(n)));
 
-export function newActivityDraft(prefill: ActivityPrefill, today: string): ActivityDraft {
+/** `template` is the plan item's, whose sets and items the activity starts from. */
+export function newActivityDraft(
+  prefill: ActivityPrefill,
+  today: string,
+  template: PlanTemplate | null = null
+): ActivityDraft {
   return {
     kind: ACTIVITY_KINDS.find((k) => k === prefill.kind) ?? "strength",
     title: prefill.title ?? "",
@@ -40,6 +47,7 @@ export function newActivityDraft(prefill: ActivityPrefill, today: string): Activ
     rpe: null,
     notes: "",
     planItemId: prefill.planItemId ?? null,
+    detail: detailFromTemplate(template),
   };
 }
 
@@ -53,6 +61,7 @@ export function draftFromActivity(a: Activity): ActivityDraft {
     rpe: a.rpe,
     notes: a.notes ?? "",
     planItemId: a.planItemId,
+    detail: a.detail,
   };
 }
 
@@ -70,7 +79,7 @@ export function activityFromDraft(id: string, d: ActivityDraft): Activity {
     rpe: d.rpe,
     notes: notes === "" ? null : notes,
     planItemId: d.planItemId,
-    detail: null,
+    detail: cleanDetail(d.detail),
   };
 }
 
