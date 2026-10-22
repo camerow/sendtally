@@ -170,6 +170,24 @@ describe("hangboard", () => {
     expect(after.sessions).toEqual([]);
   });
 
+  it("deletes a workout of the user's own with its plans, keeping its sessions", async () => {
+    const userId = "user_hang_workout_delete";
+    await call(userId, "PUT", "/workouts/w1", workoutBody);
+    await call(userId, "PUT", "/default-grips/w1", { gripId: "open" });
+    const plan = { gripId: "open", days: [0], start: "2026-09-28", end: null, skip: [] };
+    await call(userId, "PUT", "/schedules/s1", { ...plan, workoutId: "w1" });
+    await call(userId, "PUT", "/schedules/s2", { ...plan, workoutId: "rep73" });
+    await call(userId, "PUT", "/sessions/h1", { ...sessionBody, workoutId: "w1" });
+    expect((await call(userId, "DELETE", "/workouts/rep73")).status).toBe(400);
+    expect(await (await call(userId, "DELETE", "/workouts/w1")).json()).toEqual({ deleted: true });
+    expect(await (await call(userId, "DELETE", "/workouts/w1")).json()).toEqual({ deleted: false });
+    const data = await read(userId);
+    expect(data.workouts).toEqual([]);
+    expect(data.defaultGrips).toEqual({});
+    expect(data.schedules.map((s) => s.id)).toEqual(["s2"]);
+    expect(data.sessions.map((s) => [s.id, s.workoutId])).toEqual([["h1", "w1"]]);
+  });
+
   it("keeps a grip name unique across built-ins and case", async () => {
     const userId = "user_hang_grips";
     expect(await (await call(userId, "PUT", "/grips/g1", { name: "HALF crimp" })).json()).toEqual({

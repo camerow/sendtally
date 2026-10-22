@@ -47,6 +47,11 @@ export type {
   PlanTemplate,
   ProjectInput,
   SetMeasure,
+  ClimbFocus,
+  ClimbWorkoutBody,
+  UserWorkout,
+  UserWorkoutInput,
+  WorkoutBody,
 } from "@sendtally/api/app";
 
 import type { Activity, HangHistoryRow, LogClimbInput as ClimbInput } from "@sendtally/api/app";

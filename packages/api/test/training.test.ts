@@ -16,6 +16,7 @@ const activityBody = {
   rpe: 7,
   notes: null,
   planItemId: "p1",
+  workoutId: null,
   detail: null,
 };
 
@@ -217,7 +218,7 @@ describe("plan items", () => {
       await call(userId, "GET", "/v1/plan-items")
     );
     expect(planItems).toEqual([
-      { id: "p1", ...planBody, skip: ["2026-09-29", "2026-10-01"], blockId: null },
+      { id: "p1", ...planBody, skip: ["2026-09-29", "2026-10-01"], blockId: null, workoutId: null },
     ]);
   });
 
@@ -240,7 +241,9 @@ describe("plan items", () => {
     const userId = "user_plan_template";
     const withTemplate = { ...planBody, template: checklistTemplate };
     const saved = await call(userId, "PUT", "/v1/plan-items/p1", withTemplate);
-    expect(await json(saved)).toEqual({ planItem: { id: "p1", ...withTemplate, blockId: null } });
+    expect(await json(saved)).toEqual({
+      planItem: { id: "p1", ...withTemplate, blockId: null, workoutId: null },
+    });
     const skipped = await call(userId, "PUT", "/v1/plan-items/p1/skip", {
       date: "2026-09-29",
       skipped: true,
@@ -250,7 +253,9 @@ describe("plan items", () => {
     );
     const intervals = { ...planBody, kind: "mobility", template: intervalsTemplate };
     const timed = await call(userId, "PUT", "/v1/plan-items/p3", intervals);
-    expect(await json(timed)).toEqual({ planItem: { id: "p3", ...intervals, blockId: null } });
+    expect(await json(timed)).toEqual({
+      planItem: { id: "p3", ...intervals, blockId: null, workoutId: null },
+    });
     const { template: _, ...older } = planBody;
     const legacy = await call(userId, "PUT", "/v1/plan-items/p2", older);
     expect((await json<{ planItem: PlanItem }>(legacy)).planItem.template).toBeNull();
@@ -299,13 +304,111 @@ describe("plan items", () => {
     const userId = "user_training_purge";
     await call(userId, "PUT", "/v1/plan-items/p1", planBody);
     await call(userId, "PUT", "/v1/activities/a1", activityBody);
+    await call(userId, "PUT", "/v1/workouts/w1", strengthWorkout);
     expect((await call(userId, "DELETE", "/v1/account")).status).toBe(200);
-    for (const table of ["activities", "plan_items"]) {
+    for (const table of ["activities", "plan_items", "workouts"]) {
       const row = await env.DB.prepare(`SELECT COUNT(*) AS n FROM ${table} WHERE user_id = ?`)
         .bind(userId)
         .first<{ n: number }>();
       expect(`${table}:${row?.n}`).toBe(`${table}:0`);
     }
+  });
+});
+
+const strengthWorkout = {
+  name: "Gym legs",
+  category: "strength",
+  description: "Heavy and slow.",
+  tags: ["legs", "gym"],
+  minutes: 50,
+  targetRpe: 8,
+  body: {
+    kind: "sets",
+    exercises: [{ name: "Back squat", measures: ["reps", "loadKg"], sets: [{ reps: 5 }] }],
+  },
+};
+
+const climbWorkout = {
+  name: "Project burns",
+  category: "climb",
+  description: null,
+  tags: [],
+  minutes: 90,
+  targetRpe: 9,
+  body: { kind: "climb", focus: "project", projectId: "the-roof" },
+};
+
+describe("workouts", () => {
+  it("round trips each body, edits in place and lists oldest first", async () => {
+    const userId = "user_workouts_roundtrip";
+    const bodies = [
+      strengthWorkout,
+      climbWorkout,
+      { ...strengthWorkout, category: "mobility", body: checklistTemplate },
+      { ...strengthWorkout, category: "run", body: intervalsTemplate },
+      { ...strengthWorkout, category: "other", body: null, minutes: null, targetRpe: null },
+    ];
+    for (const [i, body] of bodies.entries()) {
+      const res = await call(userId, "PUT", `/v1/workouts/w${i}`, body);
+      expect(await json<{ workout: unknown }>(res)).toMatchObject({
+        workout: { id: `w${i}`, ...body },
+      });
+    }
+    await call(userId, "PUT", "/v1/workouts/w0", { ...strengthWorkout, name: "Gym legs, heavier" });
+    const { workouts } = await json<{ workouts: { id: string; name: string }[] }>(
+      await call(userId, "GET", "/v1/workouts")
+    );
+    expect(workouts.map((w) => w.id)).toEqual(["w0", "w1", "w2", "w3", "w4"]);
+    expect(workouts[0]?.name).toBe("Gym legs, heavier");
+    expect(await json(await call("user_workouts_someone_else", "GET", "/v1/workouts"))).toEqual({
+      workouts: [],
+    });
+  });
+
+  it("rejects a body that does not fit its category", async () => {
+    const userId = "user_workouts_invalid";
+    for (const body of [
+      { ...strengthWorkout, category: "climb" },
+      { ...climbWorkout, category: "strength" },
+      { ...climbWorkout, body: { kind: "climb", focus: "limit", projectId: "x" } },
+      { ...strengthWorkout, category: "hang" },
+      { ...strengthWorkout, tags: ["a", "a"] },
+      { ...strengthWorkout, name: " " },
+    ]) {
+      expect((await call(userId, "PUT", "/v1/workouts/w1", body)).status).toBe(400);
+    }
+  });
+
+  it("links plan items and activities to a workout, and unlinks plans when it goes", async () => {
+    const userId = "user_workouts_links";
+    await call(userId, "PUT", "/v1/workouts/w1", strengthWorkout);
+    const linked = { ...planBody, workoutId: "w1" };
+    expect(
+      (await json<{ planItem: PlanItem }>(await call(userId, "PUT", "/v1/plan-items/p1", linked)))
+        .planItem.workoutId
+    ).toBe("w1");
+    const { workoutId: _, ...older } = linked;
+    const kept = await call(userId, "PUT", "/v1/plan-items/p1", { ...older, title: "Renamed" });
+    expect((await json<{ planItem: PlanItem }>(kept)).planItem.workoutId).toBe("w1");
+    const climb = { ...planBody, kind: "climb", workoutId: "w2", template: null };
+    expect((await call(userId, "PUT", "/v1/plan-items/p2", climb)).status).toBe(200);
+    const ran = { ...activityBody, workoutId: "w1" };
+    const logged = await call(userId, "PUT", "/v1/activities/a1", ran);
+    expect((await json<{ activity: Activity }>(logged)).activity.workoutId).toBe("w1");
+
+    expect(await json(await call(userId, "DELETE", "/v1/workouts/w1"))).toEqual({ deleted: true });
+    expect(await json(await call(userId, "DELETE", "/v1/workouts/w1"))).toEqual({ deleted: false });
+    const { planItems } = await json<{ planItems: PlanItem[] }>(
+      await call(userId, "GET", "/v1/plan-items")
+    );
+    expect(planItems.map((p) => [p.id, p.workoutId])).toEqual([
+      ["p1", null],
+      ["p2", "w2"],
+    ]);
+    const { activities } = await json<{ activities: Activity[] }>(
+      await call(userId, "GET", "/v1/activities")
+    );
+    expect(activities.map((a) => a.workoutId)).toEqual(["w1"]);
   });
 });
 

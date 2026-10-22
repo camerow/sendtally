@@ -16,11 +16,11 @@ export const trainingIdParam = z.object({ id });
 
 export const calendarDate = z.string().refine(isCalendarDate, "not a calendar date");
 
-const title = z.string().trim().min(1).max(80);
+export const title = z.string().trim().min(1).max(80);
 
-const minutes = z.number().int().min(1).max(1440);
+export const minutes = z.number().int().min(1).max(1440);
 
-const rpe = z.number().int().min(1).max(10);
+export const rpe = z.number().int().min(1).max(10);
 
 export const SET_MEASURES = ["reps", "loadKg", "seconds", "side"] as const;
 
@@ -100,7 +100,7 @@ const activityDetail = z
   .nullable();
 
 // What a plan item prescribes: the same bodies, without what was done.
-const planTemplate = z
+export const planTemplate = z
   .discriminatedUnion("kind", [
     z.object({ kind: z.literal("sets"), exercises: exercises(setTarget) }),
     z.object({ kind: z.literal("checklist"), items: checklistItems(checklistItem) }),
@@ -120,6 +120,8 @@ export const activityBody = z.object({
   rpe: rpe.nullable(),
   notes: z.string().trim().max(2000).nullable(),
   planItemId: id.nullable(),
+  // The library workout it ran; app builds from before the library send none.
+  workoutId: id.nullable().default(null),
   detail: activityDetail,
 });
 
@@ -146,6 +148,8 @@ export const planItemBody = z
     template: planTemplate.default(null),
     // Absent keeps the block an item is in, so older builds never detach one.
     blockId: id.nullable().optional(),
+    // Absent keeps the workout an item runs, for the same reason.
+    workoutId: id.nullable().optional(),
   })
   .refine((p) => p.days.length > 0 !== (p.perWeek !== null), "set days or perWeek, not both")
   .refine((p) => p.end === null || p.end > p.start, "end is not after start")
@@ -186,6 +190,7 @@ export function activityOf(row: ActivityRow): ActivityRecord {
     rpe: row.rpe,
     notes: row.notes,
     planItemId: row.plan_item_id,
+    workoutId: row.workout_id,
     detail: row.detail_json === null ? null : (JSON.parse(row.detail_json) as ActivityDetail),
     stravaActivityId: row.strava_activity_id === null ? null : String(row.strava_activity_id),
     postedAt: row.posted_at,
@@ -209,5 +214,6 @@ export function planItemOf(row: PlanItemRow): PlanItem {
     projectId: row.project_id,
     template: row.template_json === null ? null : (JSON.parse(row.template_json) as PlanTemplate),
     blockId: row.block_id,
+    workoutId: row.workout_id,
   };
 }

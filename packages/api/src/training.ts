@@ -13,6 +13,7 @@ import {
 import { inBlock, trainingBlockBody, trainingBlockOf } from "./lib/blocks";
 import { syncActivityToStrava } from "./lib/posting";
 import * as repo from "./lib/repo";
+import { userWorkoutOf, workoutBody, workoutIdParam } from "./lib/workouts";
 
 const ACTIVITY_LIST_LIMIT = 1000;
 
@@ -138,4 +139,30 @@ export const trainingBlocks = new Hono<AppEnv>()
   .delete("/:id", zValidator("param", trainingIdParam, invalidBody), async (c) => {
     const { id } = c.req.valid("param");
     return c.json({ deleted: await repo.deleteTrainingBlock(c.env.DB, c.get("userId"), id) });
+  });
+
+// The user's own library workouts other than hangboard ones. Built-in workouts
+// live in the apps; a customised one is a copy saved here under a new id.
+export const workouts = new Hono<AppEnv>()
+  .get("/", async (c) => {
+    const rows = await repo.listWorkouts(c.env.DB, c.get("userId"));
+    return c.json({ workouts: rows.map(userWorkoutOf) });
+  })
+
+  .put(
+    "/:id",
+    zValidator("param", workoutIdParam, invalidBody),
+    zValidator("json", workoutBody, invalidBody),
+    async (c) => {
+      const { id } = c.req.valid("param");
+      const userId = c.get("userId");
+      await repo.ensureUser(c.env.DB, userId);
+      const row = await repo.saveWorkout(c.env.DB, userId, id, c.req.valid("json"));
+      return c.json({ workout: userWorkoutOf(row) });
+    }
+  )
+
+  .delete("/:id", zValidator("param", workoutIdParam, invalidBody), async (c) => {
+    const { id } = c.req.valid("param");
+    return c.json({ deleted: await repo.deleteWorkout(c.env.DB, c.get("userId"), id) });
   });

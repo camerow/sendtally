@@ -8,7 +8,7 @@ import { auth } from "./auth";
 import type { Env } from "./bindings";
 import { type AppEnv, captureEvent, invalidBody, postAfterResponse } from "./context";
 import { hang } from "./hang";
-import { activities, planItems, trainingBlocks } from "./training";
+import { activities, planItems, trainingBlocks, workouts } from "./training";
 import { purgeAccount } from "./lib/account";
 import {
   areaBody,
@@ -1943,7 +1943,8 @@ const app = new Hono<AppEnv>()
   .route("/v1/hang", hang)
   .route("/v1/activities", activities)
   .route("/v1/plan-items", planItems)
-  .route("/v1/training-blocks", trainingBlocks);
+  .route("/v1/training-blocks", trainingBlocks)
+  .route("/v1/workouts", workouts);
 
 app.onError(async (error, c) => {
   // zValidator throws this for a body it cannot parse at all. Without this the
@@ -2001,6 +2002,13 @@ export type {
   Workout,
 } from "@sendtally/core/hang";
 
+export type {
+  ClimbFocus,
+  ClimbWorkoutBody,
+  UserWorkout,
+  UserWorkoutInput,
+  WorkoutBody,
+} from "./lib/workouts";
 export type { LogClimbInput, LogSessionInput } from "./lib/manual";
 export type { ImportBody } from "./lib/import";
 
