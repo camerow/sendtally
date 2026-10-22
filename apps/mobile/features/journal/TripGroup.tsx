@@ -187,7 +187,7 @@ export function TripGroup({
               onPress={() => onOpen(inner)}
             />
           ) : inner.type === "hang" ? (
-            <HangRow hang={inner.hang} inset divider={n < last} />
+            <HangRow hang={inner.hang} inset divider={n < last} onPress={() => onOpen(inner)} />
           ) : (
             <EntryRow entry={inner.entry} inset divider={n < last} onPress={() => onOpen(inner)} />
           )}

@@ -8,6 +8,10 @@ export const training = {
   "training.startWorkoutBody": "Hangboard and other training.",
   "training.account": "Account and settings",
   "training.logView": "Log view",
-  "training.todayEmpty": "Nothing planned for today yet.",
-  "training.trainEmpty": "Your workouts will show up here.",
+  "training.climbing": "Climbing",
+  "training.hangboard": "Hangboard",
+  "training.addToPlan": "Add to plan",
+  "training.statDone": "Done",
+  "training.doneOf": "{done} of {planned}",
+  "training.dayAria": "{day}: {logged} logged, {planned} planned",
 } as const;

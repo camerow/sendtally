@@ -53,7 +53,10 @@ export function summarise(
 }
 
 /** Consecutive weeks, counting back from this one, with at least one session. */
-export function weekStreak(sessions: readonly HangSession[], today: CalendarDate): number {
+export function weekStreak(
+  sessions: readonly Pick<HangSession, "date">[],
+  today: CalendarDate
+): number {
   const weeks = new Set(sessions.map((s) => weekStart(s.date)));
   let streak = 0;
   while (weeks.has(addDays(weekStart(today), -7 * streak))) streak++;
