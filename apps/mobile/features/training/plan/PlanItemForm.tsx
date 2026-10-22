@@ -64,7 +64,7 @@ export function PlanItemForm({ request, onClose }: PlanItemFormProps): React.Rea
         ) : (
           <BlockDates block={form.block} />
         )}
-        <MinutesField value={draft.minutes} onChange={(minutes) => update({ minutes })} />
+        <MinutesField value={draft.minutes} onChange={(minutes) => update({ minutes })} inSheet />
         {draft.kind !== "climb" && draft.workoutId === null && draft.template === null && (
           <PastTemplateChoice kind={draft.kind} onPick={(template) => update({ template })} />
         )}

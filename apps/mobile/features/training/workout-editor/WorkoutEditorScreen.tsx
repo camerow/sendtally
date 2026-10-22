@@ -143,7 +143,11 @@ function Editor({
             maxLength={200}
             onChange={(tags) => update({ tags })}
           />
-          <MinutesField value={state.minutes} onChange={(minutes) => update({ minutes })} />
+          <MinutesField
+            value={state.minutes}
+            onChange={(minutes) => update({ minutes })}
+            inSheet={false}
+          />
           <TargetEffort value={state.targetRpe} onChange={(targetRpe) => update({ targetRpe })} />
           {category === "climb" ? (
             <>
