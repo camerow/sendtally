@@ -1,6 +1,12 @@
 import { useQueryClient, type QueryKey } from "@tanstack/react-query";
 import React from "react";
-import type { Activity, PlanItem, SendtallyApi } from "@sendtally/api-client";
+import type {
+  Activity,
+  ActivityRecord,
+  ConnectionStatus,
+  PlanItem,
+  SendtallyApi,
+} from "@sendtally/api-client";
 import { queries } from "../query";
 
 export type ActivityActions = {
@@ -15,6 +21,21 @@ const upsert = <T extends { id: string }>(list: readonly T[], item: T): T[] =>
   list.some((x) => x.id === item.id)
     ? list.map((x) => (x.id === item.id ? item : x))
     : [item, ...list];
+
+// A new activity shows as posting when the server is about to post it, so the
+// screen polls for the outcome instead of offering a second post meanwhile.
+const record = (
+  activity: Activity,
+  previous: ActivityRecord | undefined,
+  status: ConnectionStatus | undefined
+): ActivityRecord => ({
+  stravaActivityId: null,
+  postedAt: null,
+  postState: status?.strava?.status === "active" && status.strava.postTraining ? "pending" : null,
+  postError: null,
+  ...previous,
+  ...activity,
+});
 
 const byNewest = (a: Activity, b: Activity): number =>
   b.date.localeCompare(a.date) || (b.startTime ?? "").localeCompare(a.startTime ?? "");
@@ -60,16 +81,20 @@ export function useActivityActions(
 
     return {
       saveActivity: (activity) =>
-        write<Activity[]>(
+        write<ActivityRecord[]>(
           activities,
-          (list) => upsert(list, activity).sort(byNewest),
+          (list) => {
+            const previous = list.find((a) => a.id === activity.id);
+            const status = client.getQueryData(queries.status(api).queryKey);
+            return upsert(list, record(activity, previous, status)).sort(byNewest);
+          },
           () => {
             const { id, ...input } = activity;
             return api.saveActivity(id, input);
           }
         ),
       deleteActivity: (id) =>
-        write<Activity[]>(
+        write<ActivityRecord[]>(
           activities,
           (list) => list.filter((a) => a.id !== id),
           () => api.deleteActivity(id)

@@ -54,4 +54,10 @@ export const settings = {
     "Añade Hoy, Entrenar y Estadísticas para planificar y hacer multipresa y otros entrenamientos junto a tu escalada.",
   "settings.trainingModeWebHint":
     "El entrenamiento está en la app de sendtally para iOS y Android. Actívalo aquí y estará listo la próxima vez que abras la app.",
+  "settings.postClimbing": "Publicar sesiones de escalada",
+  "settings.postHangboard": "Publicar sesiones de multipresa",
+  "settings.postHangboardBody": "Cada sesión de multipresa se publica como Workout.",
+  "settings.postTraining": "Publicar otros entrenamientos",
+  "settings.postTrainingBody":
+    "Fuerza, carrera, yoga y movilidad se publican como actividades propias.",
 } as const;
