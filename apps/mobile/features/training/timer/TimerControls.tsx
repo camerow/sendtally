@@ -13,7 +13,8 @@ import { useAnimatedColor } from "./useAnimatedColor";
 export type TimerControlsProps = {
   color: string;
   primary: string;
-  next: string;
+  /** What comes after this phase; null leaves the line out. */
+  next: string | null;
   fail: string | null;
   onPrimary: () => void;
   onFail: () => void;
@@ -37,17 +38,19 @@ export function TimerControls({
   return (
     <View style={{ gap: 18 }}>
       {fail !== null && <Button label={fail} onPress={onFail} variant="outlineDark" height={48} />}
-      <View
-        style={{
-          flexDirection: "row",
-          justifyContent: "space-between",
-          alignItems: "baseline",
-          paddingHorizontal: 2,
-        }}
-      >
-        <Label color={ON_DARK_MUTED}>{t("hang.next")}</Label>
-        <Text style={[type.body, { fontSize: 14, color: ON_DARK_SOFT }]}>{next}</Text>
-      </View>
+      {next !== null && (
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "baseline",
+            paddingHorizontal: 2,
+          }}
+        >
+          <Label color={ON_DARK_MUTED}>{t("hang.next")}</Label>
+          <Text style={[type.body, { fontSize: 14, color: ON_DARK_SOFT }]}>{next}</Text>
+        </View>
+      )}
       <View style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
         <IconButton
           icon="restart"

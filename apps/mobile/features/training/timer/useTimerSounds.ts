@@ -52,9 +52,9 @@ export function useTimerSounds(run: Run, secondsLeft: number, muted: boolean): (
   }, [run.finished, play]);
 
   React.useEffect(() => {
-    if (!paused && phase.kind !== "pull" && secondsLeft > 0 && secondsLeft <= COUNTDOWN_FROM)
+    if (!paused && phase.taps === 0 && secondsLeft > 0 && secondsLeft <= COUNTDOWN_FROM)
       play("tick");
-  }, [secondsLeft, paused, phase.kind, play]);
+  }, [secondsLeft, paused, phase.taps, play]);
 
   return play;
 }

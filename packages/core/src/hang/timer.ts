@@ -141,8 +141,7 @@ export function cameOffEarly<P extends Phase>(run: Run<P>, now: number): Run<P> 
 export function logLift<P extends Phase>(run: Run<P>, ok: boolean, now: number): Run<P> {
   const mark: RepMark = ok ? "ok" : "miss";
   const work = ok ? 1 : 0;
-  if (run.taps + 1 >= currentPhase(run).taps)
-    return advance(run, now, { work, mark, held: "all" });
+  if (run.taps + 1 >= currentPhase(run).taps) return advance(run, now, { work, mark, held: "all" });
   return {
     ...run,
     taps: run.taps + 1,

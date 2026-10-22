@@ -1,11 +1,15 @@
 import { router } from "expo-router";
-import { useKeepAwake } from "expo-keep-awake";
-import { StatusBar } from "expo-status-bar";
 import React from "react";
 import { Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { colors } from "@sendtally/design/tokens";
-import { currentPhase, isWork, protocolOf, resultOf, type Workout } from "@sendtally/core/hang";
+import {
+  currentPhase,
+  isWork,
+  protocolOf,
+  resultOf,
+  startRun,
+  type Workout,
+} from "@sendtally/core/hang";
 import { loadLabel } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import { ON_DARK_SOFT } from "../components/onDark";
@@ -13,14 +17,10 @@ import { useHangData } from "../data/HangDataContext";
 import { donePath } from "../done/doneParams";
 import { type } from "../type";
 import { RepDots } from "./RepDots";
-import { RunProgressBar } from "./RunProgressBar";
-import { TimerControls } from "./TimerControls";
-import { TimerHeader } from "./TimerHeader";
+import { TimerFrame } from "./TimerFrame";
 import { TimerRing } from "./TimerRing";
 import { timerText } from "./timerText";
-import { usePhaseProgress } from "./usePhaseProgress";
-import { useRun } from "./useRun";
-import { useTimerSounds } from "./useTimerSounds";
+import { useTimer } from "./useTimer";
 
 function Timer({
   workout,
@@ -31,13 +31,9 @@ function Timer({
   gripId: string;
   loadKg: number;
 }): React.ReactElement {
-  useKeepAwake();
   const { model } = useHangData();
-  const [muted, setMuted] = React.useState(false);
-  const controls = useRun(protocolOf(workout));
-  const { run, secondsLeft } = controls;
-  const progress = usePhaseProgress(run);
-  const play = useTimerSounds(run, secondsLeft, muted);
+  const timer = useTimer((now) => startRun(protocolOf(workout), now));
+  const { run, secondsLeft, progress } = timer;
   const phase = currentPhase(run);
   const pull = phase.kind === "pull";
   const working = isWork(phase.kind);
@@ -51,55 +47,48 @@ function Timer({
   }, [run, workout.id, gripId, loadKg]);
 
   const lift = (ok: boolean): void => {
-    play(ok ? "lift" : "miss");
-    controls.logLift(ok);
+    timer.play(ok ? "lift" : "miss");
+    timer.logLift(ok);
   };
-  const primary = pull ? () => lift(true) : controls.togglePause;
+  const primary = pull ? () => lift(true) : timer.togglePause;
 
   return (
-    <SafeAreaView edges={["top", "bottom"]} style={{ flex: 1, backgroundColor: colors.gunmetal }}>
-      <StatusBar style="light" />
-      <View style={{ flex: 1, gap: 18, paddingHorizontal: 18, paddingTop: 16, paddingBottom: 10 }}>
-        <TimerHeader
-          name={workout.name}
-          meta={`${model.gripName(gripId)} · ${load}`}
-          muted={muted}
-          onEnd={controls.end}
-          onToggleMute={() => setMuted(!muted)}
-        />
-        <RunProgressBar run={run} progress={progress} />
-        <View style={{ flex: 1, alignItems: "center", justifyContent: "center", gap: 22 }}>
-          <TimerRing
-            progress={progress}
-            color={color}
-            phaseKey={run.index}
-            label={text.label}
-            big={text.big}
-            hint={text.hint}
-            accessibilityLabel={
-              pull ? t("hang.logLift") : run.pausedAt === null ? t("hang.pause") : t("hang.resume")
-            }
-            onPress={primary}
-          />
-          <View style={{ alignItems: "center", gap: 10 }}>
-            <Text style={[type.label, { color: ON_DARK_SOFT }]}>{text.setLine}</Text>
-            <RepDots reps={workout.reps} marks={run.marks} working={working} />
-          </View>
-        </View>
-        <TimerControls
+    <TimerFrame
+      timer={timer}
+      name={workout.name}
+      meta={`${model.gripName(gripId)} · ${load}`}
+      controls={{
+        color,
+        primary: pull
+          ? t("hang.lifted")
+          : run.pausedAt === null
+            ? t("hang.pause")
+            : t("hang.resume"),
+        next: text.next,
+        fail: working && run.pausedAt === null ? text.fail : null,
+        onPrimary: primary,
+        onFail: pull ? () => lift(false) : timer.cameOffEarly,
+      }}
+    >
+      <View style={{ flex: 1, alignItems: "center", justifyContent: "center", gap: 22 }}>
+        <TimerRing
+          progress={progress}
           color={color}
-          primary={
-            pull ? t("hang.lifted") : run.pausedAt === null ? t("hang.pause") : t("hang.resume")
+          phaseKey={run.index}
+          label={text.label}
+          big={text.big}
+          hint={text.hint}
+          accessibilityLabel={
+            pull ? t("hang.logLift") : run.pausedAt === null ? t("hang.pause") : t("hang.resume")
           }
-          next={text.next}
-          fail={working && run.pausedAt === null ? text.fail : null}
-          onPrimary={primary}
-          onFail={pull ? () => lift(false) : controls.cameOffEarly}
-          onRestart={controls.restart}
-          onSkip={controls.skip}
+          onPress={primary}
         />
+        <View style={{ alignItems: "center", gap: 10 }}>
+          <Text style={[type.label, { color: ON_DARK_SOFT }]}>{text.setLine}</Text>
+          <RepDots reps={workout.reps} marks={run.marks} working={working} />
+        </View>
       </View>
-    </SafeAreaView>
+    </TimerFrame>
   );
 }
 

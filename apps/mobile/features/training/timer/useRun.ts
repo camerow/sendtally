@@ -7,17 +7,16 @@ import {
   remainingInPhase,
   restartPhase,
   skip,
-  startRun,
   tick,
   togglePause,
-  type Protocol,
+  type Phase,
   type Run,
 } from "@sendtally/core/hang";
 
 const TICK_MS = 100;
 
-export type RunControls = {
-  run: Run;
+export type RunControls<P extends Phase = Phase> = {
+  run: Run<P>;
   /** Whole seconds left in a timed phase, as the countdown shows it. */
   secondsLeft: number;
   togglePause: () => void;
@@ -32,13 +31,13 @@ export type RunControls = {
  * Drives a run from the wall clock. The screen re-renders only on a phase
  * change or a new countdown second; the smooth parts animate on the UI thread.
  */
-export function useRun(protocol: Protocol): RunControls {
-  const [initial] = React.useState(() => startRun(protocol, Date.now()));
+export function useRun<P extends Phase>(start: (now: number) => Run<P>): RunControls<P> {
+  const [initial] = React.useState(() => start(Date.now()));
   const current = React.useRef(initial);
   const [run, setRun] = React.useState(initial);
   const [secondsLeft, setSecondsLeft] = React.useState(() => currentPhase(initial).seconds);
 
-  const apply = React.useCallback((step: (r: Run, now: number) => Run) => {
+  const apply = React.useCallback((step: (r: Run<P>, now: number) => Run<P>) => {
     const now = Date.now();
     const next = step(current.current, now);
     current.current = next;
@@ -47,18 +46,18 @@ export function useRun(protocol: Protocol): RunControls {
   }, []);
 
   React.useEffect(() => {
-    const timer = setInterval(() => apply(tick), TICK_MS);
+    const timer = setInterval(() => apply((r, now) => tick(r, now)), TICK_MS);
     return () => clearInterval(timer);
   }, [apply]);
 
   return {
     run,
     secondsLeft,
-    togglePause: () => apply(togglePause),
-    cameOffEarly: () => apply(cameOffEarly),
+    togglePause: () => apply((r, now) => togglePause(r, now)),
+    cameOffEarly: () => apply((r, now) => cameOffEarly(r, now)),
     logLift: (ok) => apply((r, now) => logLift(r, ok, now)),
-    skip: () => apply(skip),
-    restart: () => apply(restartPhase),
-    end: () => apply(endRun),
+    skip: () => apply((r, now) => skip(r, now)),
+    restart: () => apply((r, now) => restartPhase(r, now)),
+    end: () => apply((r, now) => endRun(r, now)),
   };
 }
