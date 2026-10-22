@@ -1,7 +1,7 @@
 import type { HangKind, TimeField, Workout } from "@sendtally/core/hang";
 import type { MessageKey } from "@sendtally/features/i18n";
 
-export type NumberKey = TimeField | "reps" | "sets" | "edgeMm";
+export type NumberKey = TimeField | "reps" | "sets";
 
 type Spec = {
   label: MessageKey;
@@ -35,7 +35,6 @@ export const FIELDS: Record<HangKind, readonly FieldSpec[]> = {
     { key: "reps", label: "hang.fieldReps", min: 1, max: 50, time: false },
     SETS,
     time("setRestS", "hang.fieldSetRest", 0),
-    { key: "edgeMm", label: "hang.fieldEdge", min: 4, max: 60, time: false },
   ],
   pull: [
     { key: "reps", label: "hang.fieldLifts", min: 1, max: 100, time: false },

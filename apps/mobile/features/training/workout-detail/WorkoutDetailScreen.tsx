@@ -16,7 +16,7 @@ import type { PlannerRequest } from "../planner/types";
 import { SessionEditorSheet } from "../session-editor/SessionEditorSheet";
 import { startWorkout } from "../timer/startWorkout";
 import { openTrends } from "../trends/openTrends";
-import { GripLoadCard } from "./GripLoadCard";
+import { GripSetupCard } from "./GripSetupCard";
 import { ProtocolPanel } from "./ProtocolPanel";
 import { WorkoutHistory } from "./WorkoutHistory";
 import { WorkoutIntro } from "./WorkoutIntro";
@@ -68,7 +68,7 @@ function Detail({
         contentContainerStyle={{ gap: 18, paddingTop: 8, paddingHorizontal: 18, paddingBottom: 24 }}
       >
         <WorkoutIntro workout={workout} />
-        <GripLoadCard workout={workout} gripId={gripId} onChooseGrip={() => setPicker(true)} />
+        <GripSetupCard workout={workout} gripId={gripId} onChooseGrip={() => setPicker(true)} />
         <ProtocolPanel workout={workout} />
         <View style={{ gap: 8 }}>
           <Label color={colors.gunmetal}>{t("hang.schedule")}</Label>

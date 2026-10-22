@@ -41,6 +41,7 @@ const hang = (date: string): HangSessionRecord => ({
   pct: 100,
   misses: 0,
   rpe: null,
+  edgeMm: 20,
   protocol: LIBRARY[0]!,
   stravaActivityId: null,
   postState: null,

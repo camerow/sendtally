@@ -2,7 +2,7 @@ import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { totalSeconds, type CalendarDate, type Schedule } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
-import { dayTitle, humanDuration, loadLabel } from "@sendtally/features/hang";
+import { dayTitle, humanDuration, setupLabel } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import { pressRow } from "../../../lib/press";
 import { IconButton } from "../components/IconButton";
@@ -34,7 +34,11 @@ export function PlannedRow({
   const w = model.workout(schedule.workoutId);
   if (w === undefined) return null;
   const grip = model.gripName(schedule.gripId);
-  const load = loadLabel(w.kind, model.load(w, schedule.gripId), model.settings.units);
+  const load = setupLabel(
+    w.kind,
+    model.setup(w, schedule.gripId, { schedule }),
+    model.settings.units
+  );
   return (
     <View
       style={{

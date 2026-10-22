@@ -1,6 +1,6 @@
 import type { HangHistoryRow } from "@sendtally/api-client";
 import { isBuiltInGrip, LIBRARY } from "@sendtally/core/hang";
-import { loadLabel } from "../hang/format";
+import { setupLabel } from "../hang/format";
 import { builtInGripName, workoutName } from "../hang/names";
 import { t } from "../i18n";
 
@@ -21,12 +21,12 @@ export function hangGripLabel(row: Pick<HangHistoryRow, "gripId" | "gripName">):
   return isBuiltInGrip(row.gripId) ? builtInGripName(row.gripId) : null;
 }
 
-/** "Hangboard session · Half crimp · +4 kg". Loads read in kg: sendtally has no unit setting. */
+/** "Hangboard session · Half crimp · 20 mm · +4 kg". Loads read in kg: sendtally has no unit setting. */
 export function hangMetaLabel(row: HangHistoryRow): string {
   return [
     t("sessions.hangboardSession"),
     hangGripLabel(row),
-    loadLabel(row.protocol.kind, row.loadKg, "kg"),
+    setupLabel(row.protocol.kind, row, "kg"),
   ]
     .filter((part) => part !== null)
     .join(" · ");

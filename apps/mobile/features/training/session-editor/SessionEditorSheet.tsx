@@ -17,6 +17,7 @@ import { useHangData } from "../data/HangDataContext";
 import { HangSheet } from "../data/HangSheet";
 import { GripPickerSheet } from "../grip-picker/GripPickerSheet";
 import { loadControl } from "../loads/loadControl";
+import { EdgeField } from "../setup/EdgeField";
 import { confirmDelete } from "./confirmDelete";
 
 const PCT_STEP = 5;
@@ -96,6 +97,9 @@ function Editor({
             onPress={() => setPicker(true)}
           />
         </SheetSection>
+        {kind === "hang" && (
+          <EdgeField edgeMm={draft.edgeMm} onChange={(edgeMm) => update({ edgeMm })} inSheet />
+        )}
         <SheetSection label={t("hang.load")} aside={<UnitSwitch />}>
           <Stepper
             value={load.text}

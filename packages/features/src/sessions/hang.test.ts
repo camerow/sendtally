@@ -12,6 +12,7 @@ const row = (over: Partial<HangHistoryRow> = {}): HangHistoryRow => ({
   pct: 83,
   misses: 2,
   rpe: 7,
+  edgeMm: 20,
   protocol: {
     name: "Repeaters 7:3",
     kind: "hang",
@@ -20,7 +21,6 @@ const row = (over: Partial<HangHistoryRow> = {}): HangHistoryRow => ({
     reps: 6,
     sets: 6,
     setRestS: 180,
-    edgeMm: 20,
   },
   stravaActivityId: null,
   postState: null,
@@ -32,7 +32,7 @@ const row = (over: Partial<HangHistoryRow> = {}): HangHistoryRow => ({
 describe("hang history rows", () => {
   it("labels a library workout on a built-in grip", () => {
     expect(hangTitle(row())).toBe("Repeaters 7:3");
-    expect(hangMetaLabel(row())).toBe("Hangboard session · Half crimp · +4 kg");
+    expect(hangMetaLabel(row())).toBe("Hangboard session · Half crimp · 20 mm · +4 kg");
     expect(hangEffortLabel(row())).toBe("RPE 7");
   });
 
@@ -52,7 +52,7 @@ describe("hang history rows", () => {
 
   it("reads a bodyweight hang and leaves out a grip it cannot name", () => {
     expect(hangMetaLabel(row({ loadKg: 0, gripId: "gone" }))).toBe(
-      "Hangboard session · Bodyweight"
+      "Hangboard session · 20 mm · Bodyweight"
     );
   });
 });

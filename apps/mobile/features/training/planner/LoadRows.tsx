@@ -11,7 +11,7 @@ import { useHangData } from "../data/HangDataContext";
 import { loadControl } from "../loads/loadControl";
 import type { Planner } from "./usePlanner";
 
-/** One load per chosen grip, saved onto the workout's per-grip loads. */
+/** One weight per chosen grip, planned onto each grip's schedule. */
 export function LoadRows({ planner }: { planner: Planner }): React.ReactElement | null {
   const { model } = useHangData();
   const { workout, draft } = planner;
@@ -25,7 +25,7 @@ export function LoadRows({ planner }: { planner: Planner }): React.ReactElement 
     >
       {draft.grips.map((gripId) => {
         const grip = model.gripName(gripId);
-        const load = loadControl(workout.kind, planner.loadFor(gripId), unit, (kg) =>
+        const load = loadControl(workout.kind, planner.setupFor(gripId).loadKg, unit, (kg) =>
           planner.setLoad(gripId, kg)
         );
         return (

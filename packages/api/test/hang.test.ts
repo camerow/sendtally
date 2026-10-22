@@ -14,6 +14,7 @@ const sessionBody = {
   workoutId: "rep73",
   gripId: "half",
   date: "2026-09-28",
+  edgeMm: 20,
   loadKg: 4,
   pct: 83,
   misses: 2,
@@ -21,11 +22,19 @@ const sessionBody = {
   protocol: repeaters,
 };
 
+const scheduleBody = {
+  workoutId: "rep73",
+  gripId: "half",
+  days: [0],
+  start: "2026-09-28",
+  end: null,
+  skip: [],
+};
+
 const workoutBody = {
   name: "Short repeaters",
   kind: "hang",
   grip: "open",
-  edgeMm: 18,
   hangS: 7,
   restS: 3,
   reps: 4,
@@ -120,7 +129,9 @@ describe("hangboard", () => {
       { grip: { id: "g1", name: "Wide pinch", custom: true, hidden: false } }
     );
     const workout = await call(userId, "PUT", "/workouts/w1", workoutBody);
-    expect(await workout.json()).toEqual({ workout: { id: "w1", source: "mine", ...workoutBody } });
+    expect(await workout.json()).toEqual({
+      workout: { id: "w1", source: "mine", ...workoutBody, edgeMm: 20 },
+    });
     await call(userId, "PUT", "/workouts/w1", { ...workoutBody, sets: 4 });
     expect(
       await (await call(userId, "PUT", "/default-grips/rep73", { gripId: "g1" })).json()
@@ -135,6 +146,8 @@ describe("hangboard", () => {
       start: "2026-09-28",
       end: "2026-10-26",
       skip: ["2026-10-02"],
+      edgeMm: 15,
+      loadKg: -2.5,
     };
     expect(await (await call(userId, "PUT", "/schedules/s1", schedule)).json()).toEqual({
       schedule: { id: "s1", ...schedule, targetRpe: null, blockId: null },
@@ -154,11 +167,18 @@ describe("hangboard", () => {
 
     const data = await read(userId);
     expect(data.grips).toEqual([{ id: "g1", name: "Wide pinch", custom: true, hidden: false }]);
-    expect(data.workouts).toEqual([{ id: "w1", source: "mine", ...workoutBody, sets: 4 }]);
+    expect(data.workouts).toEqual([
+      { id: "w1", source: "mine", ...workoutBody, sets: 4, edgeMm: 20 },
+    ]);
     expect(data.defaultGrips).toEqual({ rep73: "g1" });
     expect(data.schedules).toHaveLength(1);
     expect(data.sessions).toHaveLength(1);
-    expect(data.sessions[0]).toMatchObject({ loadKg: 6, rpe: null, protocol: repeaters });
+    expect(data.sessions[0]).toMatchObject({
+      edgeMm: 20,
+      loadKg: 6,
+      rpe: null,
+      protocol: repeaters,
+    });
 
     expect(await (await call(userId, "DELETE", "/schedules/s1")).json()).toEqual({ deleted: true });
     expect(await (await call(userId, "DELETE", "/schedules/s1")).json()).toEqual({
@@ -270,11 +290,45 @@ describe("hangboard", () => {
     ["/sessions/h1", { ...sessionBody, misses: -1 }],
     ["/sessions/h1", { ...sessionBody, date: "28/09/2026" }],
     ["/sessions/h1", { ...sessionBody, protocol: { ...repeaters, hangS: 0 } }],
+    ["/sessions/h1", { ...sessionBody, edgeMm: 3 }],
+    ["/sessions/h1", { ...sessionBody, edgeMm: 0 }],
+    ["/schedules/s1", { ...scheduleBody, edgeMm: 61 }],
+    ["/schedules/s1", { ...scheduleBody, loadKg: 600 }],
     ["/settings", { reminderTime: "25:00" }],
     ["/settings", { units: "stone" }],
   ])("rejects PUT %s with an invalid body", async (path, body) => {
     const res = await call("user_hang_invalid", "PUT", path, body);
     expect(res.status).toBe(400);
+  });
+
+  it("keeps the edge and weight off the workout, on the schedule and the session", async () => {
+    const userId = "user_hang_setup";
+    await call(userId, "PUT", "/workouts/w1", { ...workoutBody, edgeMm: 18 });
+    await call(userId, "PUT", "/workouts/w1", { ...workoutBody, sets: 5 });
+    expect((await read(userId)).workouts[0]).toMatchObject({ sets: 5, edgeMm: 18 });
+
+    await call(userId, "PUT", "/schedules/s1", { ...scheduleBody, edgeMm: 12, loadKg: 3 });
+    await call(userId, "PUT", "/schedules/s1", { ...scheduleBody, days: [2] });
+    expect((await read(userId)).schedules[0]).toMatchObject({ days: [2], edgeMm: 12, loadKg: 3 });
+    await call(userId, "PUT", "/schedules/s1", { ...scheduleBody, edgeMm: null, loadKg: null });
+    expect((await read(userId)).schedules[0]).toMatchObject({ edgeMm: null, loadKg: null });
+
+    await call(userId, "PUT", "/sessions/h1", { ...sessionBody, edgeMm: 14 });
+    const [session] = (await read(userId)).sessions;
+    expect(session).toMatchObject({ edgeMm: 14, protocol: { ...repeaters, edgeMm: 14 } });
+  });
+
+  it("reads the edge of a session from an app build that kept it in the protocol", async () => {
+    const userId = "user_hang_old_build";
+    const { edgeMm: _edge, ...old } = sessionBody;
+    await call(userId, "PUT", "/sessions/h1", { ...old, protocol: { ...repeaters, edgeMm: 25 } });
+    await call(userId, "PUT", "/sessions/h2", { ...old, protocol: { ...repeaters, edgeMm: 0 } });
+    expect((await call(userId, "PUT", "/sessions/h3", old)).status).toBe(200);
+    const sessions = (await read(userId)).sessions;
+    expect(Object.fromEntries(sessions.map((s) => [s.id, s.edgeMm]))).toEqual({
+      h1: 25,
+      h3: 20,
+    });
   });
 
   it("accepts a ground pull with no edge and more than 50 lifts", async () => {

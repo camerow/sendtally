@@ -13,7 +13,8 @@ const session = (
   workoutId: string,
   date: string,
   loadKg: number,
-  pct: number
+  pct: number,
+  edgeMm = 20
 ): HangSessionRecord => ({
   id,
   workoutId,
@@ -23,6 +24,7 @@ const session = (
   pct,
   misses: 0,
   rpe: 7,
+  edgeMm,
   protocol: protocolOf(LIBRARY.find((w) => w.id === workoutId)!),
   stravaActivityId: null,
   postState: null,
@@ -51,5 +53,18 @@ describe("Hangboard trends", () => {
     await renderWithHang(<HangboardTrends workoutId="rep73" />, hangData({ sessions }));
     await fireEvent.press(screen.getByText("Max hangs"));
     expect(screen.getByText(/Completed load has held at \+10 kg/)).toBeTruthy();
+  });
+
+  it("filters a series by edge depth when it was hung on more than one", async () => {
+    const mixed = [...sessions, session("e", "rep73", "2026-09-29", 12, 100, 15)];
+    await renderWithHang(
+      <HangboardTrends workoutId="rep73" gripId="half" />,
+      hangData({ sessions: mixed })
+    );
+    expect(screen.getByText("All edges")).toBeTruthy();
+    await fireEvent.press(screen.getByText("15 mm"));
+    expect(screen.getByText(/Completed load has held at \+12 kg/)).toBeTruthy();
+    await fireEvent.press(screen.getByText("20 mm"));
+    expect(screen.getByText(/up 2 kg over 4 weeks/)).toBeTruthy();
   });
 });

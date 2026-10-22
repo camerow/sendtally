@@ -1,7 +1,7 @@
 import { planStatus, type CalendarDate, type Schedule } from "@sendtally/core/hang";
 import {
   daysList,
-  loadLabel,
+  setupLabel,
   planRange,
   planStatusLabel,
   type HangModel,
@@ -21,7 +21,7 @@ export function planText(s: Schedule, model: HangModel, today: CalendarDate): Pl
   const w = model.workout(s.workoutId);
   if (w === undefined) return null;
   const grip = model.gripName(s.gripId);
-  const load = loadLabel(w.kind, model.load(w, s.gripId), model.settings.units);
+  const load = setupLabel(w.kind, model.setup(w, s.gripId, { schedule: s }), model.settings.units);
   return {
     tag: planStatusLabel(planStatus(s, today)),
     started: s.start <= today,

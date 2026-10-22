@@ -4,6 +4,7 @@ import type { RunResult } from "@sendtally/core/hang";
 export type DoneParams = {
   workoutId: string;
   gripId: string;
+  edgeMm: number;
   loadKg: number;
   result: RunResult;
 };
@@ -11,12 +12,13 @@ export type DoneParams = {
 type RawParams = Partial<Record<string, string | string[]>>;
 
 /** The finished run, carried to the Session done screen in its route params. */
-export function donePath({ workoutId, gripId, loadKg, result }: DoneParams): Href {
+export function donePath({ workoutId, gripId, edgeMm, loadKg, result }: DoneParams): Href {
   return {
     pathname: "/workout/done",
     params: {
       workoutId,
       gripId,
+      edgeMm: String(edgeMm),
       loadKg: String(loadKg),
       ended: result.ended ? "1" : "0",
       setsDone: String(result.setsDone),
@@ -35,6 +37,7 @@ export function readDoneParams(p: RawParams): DoneParams {
   return {
     workoutId: str(p.workoutId),
     gripId: str(p.gripId),
+    edgeMm: num(p.edgeMm),
     loadKg: num(p.loadKg),
     result: {
       ended: str(p.ended) === "1",

@@ -1,6 +1,6 @@
 import type { PlanItem } from "@sendtally/api-client";
 import type { Schedule } from "@sendtally/core/hang";
-import { loadLabel, type HangModel } from "@sendtally/features/hang";
+import { setupLabel, type HangModel } from "@sendtally/features/hang";
 import type { MarkKind } from "@sendtally/features/training";
 import { planItemMeta, scheduleText } from "./planItemText";
 
@@ -21,7 +21,11 @@ export function planGridRows(
   const hangs = schedules.flatMap((s): PlanGridRow[] => {
     const w = model.workout(s.workoutId);
     if (w === undefined) return [];
-    const load = loadLabel(w.kind, model.load(w, s.gripId), model.settings.units);
+    const load = setupLabel(
+      w.kind,
+      model.setup(w, s.gripId, { schedule: s }),
+      model.settings.units
+    );
     return [
       {
         key: s.id,

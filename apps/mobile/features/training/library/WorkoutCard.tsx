@@ -2,7 +2,7 @@ import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
 import { totalSeconds, type Workout } from "@sendtally/core/hang";
-import { humanDuration, kindLabel, loadLabel, protocolSummary } from "@sendtally/features/hang";
+import { humanDuration, kindLabel, protocolSummary, setupLabel } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import { pressRow } from "../../../lib/press";
 import { KindTag } from "../components/KindTag";
@@ -22,13 +22,11 @@ export function WorkoutCard({
   const { model } = useHangData();
   const grip = model.defaultGrip(workout);
   const logged = model.sessions.filter((s) => s.workoutId === workout.id).length;
-  const tag =
-    workout.kind === "hang"
-      ? `${kindLabel(workout.kind)} · ${t("hang.edgeMm", { n: workout.edgeMm })}`
-      : kindLabel(workout.kind);
+  const tag = kindLabel(workout.kind);
+  const used = model.lastUsed(workout, grip);
   const foot = [
     model.gripName(grip),
-    loadLabel(workout.kind, model.load(workout, grip), model.settings.units),
+    ...(used === null ? [] : [setupLabel(workout.kind, used, model.settings.units)]),
     logged > 0 ? t("hang.loggedTimes", { n: logged }) : t("hang.newBadge"),
   ].join(" · ");
   return (

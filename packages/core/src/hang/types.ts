@@ -20,7 +20,6 @@ export type Protocol = {
   reps: number;
   sets: number;
   setRestS: number;
-  edgeMm: number;
 };
 
 export type TimeField = "hangS" | "restS" | "setRestS";
@@ -53,6 +52,9 @@ export type Schedule = {
   targetRpe?: number | null;
   /** The training block it belongs to; absent from app builds before blocks. */
   blockId?: string | null;
+  /** The planned edge and added weight; null leaves them to the last session. Absent from app builds before setups. */
+  edgeMm?: number | null;
+  loadKg?: number | null;
 };
 
 export type BlockPhase = "load" | "deload" | "test" | "perform";
@@ -78,6 +80,8 @@ export type HangSession = {
   workoutId: string;
   gripId: string;
   date: CalendarDate;
+  /** Zero for a ground pull off the floor. */
+  edgeMm: number;
   loadKg: number;
   pct: number;
   misses: number;

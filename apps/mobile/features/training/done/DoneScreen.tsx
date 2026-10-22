@@ -13,6 +13,7 @@ import { Label } from "../components/Label";
 import { StatGrid } from "../components/StatGrid";
 import { Title } from "../components/Title";
 import { useHangData } from "../data/HangDataContext";
+import { SetupFields } from "../setup/SetupFields";
 import { openTrends } from "../trends/openTrends";
 import { type } from "../type";
 import type { DoneParams } from "./doneParams";
@@ -21,8 +22,9 @@ import { doneStats, doneStatus, partialNote } from "./doneText";
 function Done({ workout, params }: { workout: Workout; params: DoneParams }): React.ReactElement {
   const { model, actions, today } = useHangData();
   const [rpe, setRpe] = React.useState<number | null>(null);
-  const { result, gripId, loadKg } = params;
-  const load = loadLabel(workout.kind, loadKg, model.settings.units);
+  const { result, gripId } = params;
+  const [setup, setSetup] = React.useState({ edgeMm: params.edgeMm, loadKg: params.loadKg });
+  const load = loadLabel(workout.kind, setup.loadKg, model.settings.units);
   const partial = result.pct < 100;
 
   const log = (): void => {
@@ -31,7 +33,7 @@ function Done({ workout, params }: { workout: Workout; params: DoneParams }): Re
       workoutId: workout.id,
       gripId,
       date: today,
-      loadKg,
+      ...setup,
       pct: result.pct,
       misses: result.misses,
       rpe,
@@ -63,6 +65,7 @@ function Done({ workout, params }: { workout: Workout; params: DoneParams }): Re
             {partialNote(workout, result, load)}
           </Text>
         )}
+        <SetupFields kind={workout.kind} setup={setup} onChange={setSetup} />
         <EffortField value={rpe} onChange={setRpe} />
         <View style={{ flex: 1 }} />
         <View style={{ gap: 6 }}>

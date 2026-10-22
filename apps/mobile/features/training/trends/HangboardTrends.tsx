@@ -1,7 +1,7 @@
 import React from "react";
 import { ScrollView, Text, View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
-import { byDate, seriesFor, summarise } from "@sendtally/core/hang";
+import { byDate, edgesOf, seriesFor, summarise } from "@sendtally/core/hang";
 import { t } from "@sendtally/features/i18n";
 import { Chip } from "../../../components/Chip";
 import { DashedPanel } from "../components/DashedPanel";
@@ -19,7 +19,7 @@ export type HangboardTrendsProps = {
   gripId?: string;
 };
 
-type Picked = { workout?: string; grip?: string };
+type Picked = { workout?: string; grip?: string; edge?: number };
 
 function Trends({ workoutId, gripId: requestedGrip }: HangboardTrendsProps): React.ReactElement {
   const { model, today } = useHangData();
@@ -43,10 +43,14 @@ function Trends({ workoutId, gripId: requestedGrip }: HangboardTrendsProps): Rea
   const gripId = grips.includes(picked.grip ?? "")
     ? picked.grip
     : logged[logged.length - 1]?.gripId;
-  const series =
+  const onGrip =
     workout === undefined || gripId === undefined
       ? []
       : seriesFor(model.sessions, workout.id, gripId);
+  const edges = workout?.kind === "hang" ? edgesOf(onGrip) : [];
+  const edge = edges.find((mm) => mm === picked.edge);
+  const series = edge === undefined ? onGrip : onGrip.filter((s) => s.edgeMm === edge);
+  const shownEdge = edge ?? (edges.length === 1 ? edges[0] : undefined);
   const summary = summarise(series, today);
   const unit = model.settings.units;
   const ctx =
@@ -88,11 +92,28 @@ function Trends({ workoutId, gripId: requestedGrip }: HangboardTrendsProps): Rea
           ))}
         </View>
       )}
+      {edges.length > 1 && (
+        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+          {[undefined, ...edges].map((mm) => (
+            <Chip
+              key={mm ?? "all"}
+              label={mm === undefined ? t("hang.allEdges") : t("hang.edgeMm", { n: mm })}
+              active={mm === edge}
+              uppercase={false}
+              onPress={() => setPicked({ workout: workout?.id, grip: gripId, edge: mm })}
+            />
+          ))}
+        </View>
+      )}
       {summary !== null && ctx !== null && workout !== undefined && (
         <>
           <TrendCard
             workout={workout.name}
-            grip={ctx.grip}
+            grip={
+              shownEdge === undefined
+                ? ctx.grip
+                : `${ctx.grip} · ${t("hang.edgeMm", { n: shownEdge })}`
+            }
             series={series}
             summary={summary}
             kind={workout.kind}
@@ -111,7 +132,7 @@ function Trends({ workoutId, gripId: requestedGrip }: HangboardTrendsProps): Rea
 }
 
 /**
- * Hangboard trends: workout and grip chips, the load chart with hollow partials, the
+ * Hangboard trends: workout, grip and edge chips, the load chart with hollow partials, the
  * insight, stats and sixteen weeks of consistency. A plain column for the host screen's
  * own scroll view, padded 18 at the sides like the app's screens; it loads its own data.
  */

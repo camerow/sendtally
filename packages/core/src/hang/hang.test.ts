@@ -43,6 +43,7 @@ const session = (over: Partial<HangSession>): HangSession => ({
   workoutId: "rep73",
   gripId: "half",
   date: "2026-09-01",
+  edgeMm: 20,
   loadKg: 0,
   pct: 100,
   misses: 0,

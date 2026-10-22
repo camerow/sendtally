@@ -17,7 +17,7 @@ function duration(seconds: number): string {
   return sec === 0 ? `${min} min` : `${min} min ${sec} s`;
 }
 
-function protocolLine(p: Protocol): string {
+function protocolLine(p: Protocol, edgeMm: number): string {
   const parts =
     p.kind === "pull"
       ? [`${plural(p.sets, "set")} × ${plural(p.reps, "lift")}`]
@@ -28,7 +28,7 @@ function protocolLine(p: Protocol): string {
             : `${duration(p.hangS)} on`,
         ];
   if (p.sets > 1 && p.setRestS > 0) parts.push(`${duration(p.setRestS)} between sets`);
-  if (p.edgeMm > 0) parts.push(`${p.edgeMm} mm edge`);
+  if (edgeMm > 0) parts.push(`${edgeMm} mm edge`);
   return parts.join(" · ");
 }
 
@@ -55,7 +55,7 @@ export function hangDescription(s: HangSession, unit: WeightUnit): string {
   return [
     result.join(" · "),
     "created by https://sendtally.com",
-    protocolLine(s.protocol),
+    protocolLine(s.protocol, s.edgeMm),
     `Load ${loadLabel(s.protocol.kind, s.loadKg, unit)}`,
   ].join("\n");
 }

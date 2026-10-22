@@ -6,6 +6,7 @@ import {
   weekday,
   type CalendarDate,
   type HangKind,
+  type HangSetup,
   type PlanStatus,
   type Protocol,
   type Schedule,
@@ -82,6 +83,12 @@ export function loadLabel(kind: HangKind, kg: number, unit: WeightUnit): string 
   return v > 0
     ? t("hang.loadPlus", { value: formatNumber(v), unit })
     : t("hang.loadMinus", { value: formatNumber(-v), unit });
+}
+
+/** "20 mm · +4 kg" on a hang; a ground pull's weight alone. */
+export function setupLabel(kind: HangKind, setup: HangSetup, unit: WeightUnit): string {
+  const load = loadLabel(kind, setup.loadKg, unit);
+  return kind === "hang" ? `${t("hang.edgeMm", { n: setup.edgeMm })} · ${load}` : load;
 }
 
 /** "7s", or "29 min" from a minute up. */

@@ -80,6 +80,7 @@ function hangRow(id: string, date: string, rpe: number | null): HangHistoryRow {
     pct: 100,
     misses: 0,
     rpe,
+    edgeMm: 20,
     protocol: {
       name: "Repeaters 7:3",
       kind: "hang",
@@ -88,7 +89,6 @@ function hangRow(id: string, date: string, rpe: number | null): HangHistoryRow {
       reps: 6,
       sets: 6,
       setRestS: 180,
-      edgeMm: 20,
     },
     stravaActivityId: null,
     postState: null,

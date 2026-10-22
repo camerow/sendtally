@@ -11,6 +11,7 @@ jest.mock("expo-crypto", () => ({ randomUUID: () => "session-1" }));
 const partial = {
   workoutId: "rep73",
   gripId: "half",
+  edgeMm: 20,
   loadKg: 4,
   result: { ended: true, setsDone: 2, pct: 30, work: 76, misses: 2, seconds: 312 },
 };
@@ -22,6 +23,8 @@ describe("Session done", () => {
     expect(screen.getByText("5:12")).toBeTruthy();
     expect(screen.getByText(/Came off early on 2 hangs\. Ended after 2 of 6 sets\./)).toBeTruthy();
 
+    await fireEvent.press(screen.getByLabelText("Shallower edge"));
+    await fireEvent.press(screen.getByLabelText("More weight"));
     await fireEvent.press(screen.getByLabelText("Effort 8 of 10"));
     expect(screen.getByText("Very hard")).toBeTruthy();
     await fireEvent.press(screen.getByText("Log session"));
@@ -31,7 +34,8 @@ describe("Session done", () => {
       workoutId: "rep73",
       gripId: "half",
       date: TODAY,
-      loadKg: 4,
+      edgeMm: 19,
+      loadKg: 5,
       pct: 30,
       misses: 2,
       rpe: 8,

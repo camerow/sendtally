@@ -1,8 +1,8 @@
 import React from "react";
 import { Text, View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
-import { byDate, hasLoad, type Grip, type Workout } from "@sendtally/core/hang";
-import { loadLabel, shortDate } from "@sendtally/features/hang";
+import { byDate, type Grip, type Workout } from "@sendtally/core/hang";
+import { setupLabel, shortDate } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import { SheetHeader } from "../components/SheetHeader";
 import { useHangData } from "../data/HangDataContext";
@@ -74,6 +74,7 @@ export function GripPickerSheet({
             .filter((s) => s.workoutId === workout.id && s.gripId === g.id)
             .sort(byDate);
           const last = logs[logs.length - 1];
+          const used = model.lastUsed(workout, g.id);
           const meta =
             last !== undefined
               ? t("hang.gripUsed", { count: logs.length, date: shortDate(last.date) })
@@ -85,11 +86,7 @@ export function GripPickerSheet({
               key={g.id}
               name={g.name}
               meta={meta}
-              load={
-                hasLoad(model.data.loads, workout.id, g.id)
-                  ? loadLabel(workout.kind, model.load(workout, g.id), unit)
-                  : ""
-              }
+              load={used === null ? "" : setupLabel(workout.kind, used, unit)}
               on={selected.includes(g.id)}
               multi={multi}
               onPress={() => pick(g.id)}

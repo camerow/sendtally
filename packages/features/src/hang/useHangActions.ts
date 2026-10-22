@@ -1,14 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import React from "react";
 import type { HangData, HangSessionRecord, SendtallyApi } from "@sendtally/api-client";
-import type {
-  Grip,
-  HangSession,
-  HangSettings,
-  Loads,
-  Schedule,
-  Workout,
-} from "@sendtally/core/hang";
+import type { Grip, HangSession, HangSettings, Schedule, Workout } from "@sendtally/core/hang";
 import { queries } from "../query";
 
 export type HangActions = {
@@ -16,7 +9,6 @@ export type HangActions = {
   deleteGrip: (id: string) => Promise<void>;
   saveWorkout: (workout: Workout) => Promise<void>;
   setDefaultGrip: (workoutId: string, gripId: string) => Promise<void>;
-  setLoads: (loads: Loads) => Promise<void>;
   saveSchedules: (schedules: Schedule[]) => Promise<void>;
   deleteSchedule: (id: string) => Promise<void>;
   saveSession: (session: HangSession) => Promise<void>;
@@ -97,11 +89,6 @@ export function useHangActions(api: SendtallyApi, onError: (error: unknown) => v
         write(
           (d) => ({ ...d, defaultGrips: { ...d.defaultGrips, [workoutId]: gripId } }),
           () => api.setHangDefaultGrip(workoutId, gripId)
-        ),
-      setLoads: (loads) =>
-        write(
-          (d) => ({ ...d, loads: { ...d.loads, ...loads } }),
-          () => api.setHangLoads(loads)
         ),
       saveSchedules: (schedules) =>
         write(

@@ -5,12 +5,11 @@ import {
   blockEnd,
   endChoiceOf,
   endOf,
-  loadKey,
   minDate,
   occurrences,
   occursOn,
   type CalendarDate,
-  type Loads,
+  type HangSetup,
   type Schedule,
   type Weekday,
   type Workout,
@@ -27,7 +26,10 @@ export type PlannerDraft = {
   workoutId: string | null;
   picking: boolean;
   grips: string[];
-  loads: Loads;
+  /** Null until changed: the plan keeps what the workout was last used with. */
+  edgeMm: number | null;
+  /** Weight per grip id, once changed. */
+  loads: Record<string, number>;
   days: Weekday[];
   start: CalendarDate;
   minStart: CalendarDate;
@@ -50,6 +52,7 @@ function draftFor(
       workoutId: s.workoutId,
       picking: false,
       grips: [s.gripId],
+      edgeMm: null,
       loads: {},
       days: s.days,
       start: s.start,
@@ -66,6 +69,7 @@ function draftFor(
     workoutId: request.workoutId,
     picking: request.workoutId === null,
     grips: grip === null ? [] : [grip],
+    edgeMm: null,
     loads: {},
     days: request.days,
     start: request.start,
@@ -92,7 +96,10 @@ export type Planner = {
   toggleGrip: (id: string) => void;
   toggleDay: (day: Weekday) => void;
   setLoad: (gripId: string, kg: number) => void;
-  loadFor: (gripId: string) => number;
+  setEdge: (mm: number) => void;
+  /** The edge every chosen grip is planned on. */
+  edgeMm: number;
+  setupFor: (gripId: string) => HangSetup;
   save: () => void;
   remove: () => void;
 };
@@ -116,10 +123,21 @@ export function usePlanner(request: PlannerRequest, onDone: () => void): Planner
   const span = { start, end, days: draft.days, skip: [] };
   const dates = workout !== undefined && (end === null || end > start) ? occurrences(span) : [];
   const update = (patch: Partial<PlannerDraft>): void => setDraft((d) => ({ ...d, ...patch }));
-  const loadFor = (gripId: string): number =>
+  const planned = (gripId: string): HangSetup =>
     workout === undefined
-      ? 0
-      : (draft.loads[loadKey(workout.id, gripId)] ?? model.load(workout, gripId));
+      ? { edgeMm: 0, loadKg: 0 }
+      : model.setup(
+          workout,
+          gripId,
+          request.mode === "edit" && request.schedule.workoutId === workout.id
+            ? { schedule: request.schedule }
+            : {}
+        );
+  const edgeMm = draft.edgeMm ?? planned(draft.grips[0] ?? workout?.grip ?? "").edgeMm;
+  const setupFor = (gripId: string): HangSetup => ({
+    edgeMm,
+    loadKg: draft.loads[gripId] ?? planned(gripId).loadKg,
+  });
 
   const save = (): void => {
     if (workout === undefined || draft.grips.length === 0 || dates.length === 0) return;
@@ -135,8 +153,7 @@ export function usePlanner(request: PlannerRequest, onDone: () => void): Planner
       request.mode === "edit"
         ? [{ ...request.schedule, ...fields, gripId: draft.grips[0] ?? request.schedule.gripId }]
         : draft.grips.map((gripId) => ({ id: randomUUID(), gripId, skip: [], ...fields }));
-    if (Object.keys(draft.loads).length > 0) void actions.setLoads(draft.loads);
-    void actions.saveSchedules(schedules);
+    void actions.saveSchedules(schedules.map((s) => ({ ...s, ...setupFor(s.gripId) })));
     onDone();
     if (!isEdit) prompt();
   };
@@ -178,11 +195,10 @@ export function usePlanner(request: PlannerRequest, onDone: () => void): Planner
           ? draft.days.filter((d) => d !== day)
           : [...draft.days, day].sort(),
       }),
-    setLoad: (gripId, kg) => {
-      if (workout !== undefined)
-        update({ loads: { ...draft.loads, [loadKey(workout.id, gripId)]: kg } });
-    },
-    loadFor,
+    setLoad: (gripId, kg) => update({ loads: { ...draft.loads, [gripId]: kg } }),
+    setEdge: (mm) => update({ edgeMm: mm }),
+    edgeMm,
+    setupFor,
     save,
     remove: () => {
       if (request.mode === "edit") void actions.deleteSchedule(request.schedule.id);

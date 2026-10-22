@@ -3,9 +3,16 @@ import {
   BUILT_IN_GRIP_NAMES,
   BUILT_IN_GRIPS,
   LIBRARY,
-  loadOf,
+  lastSession,
+  loadKey,
+  resolveSetup,
+  scheduledOn,
+  type CalendarDate,
   type Grip,
   type HangSettings,
+  type HangSetup,
+  type Schedule,
+  type SetupLayer,
   type Workout,
 } from "@sendtally/core/hang";
 import { builtInGripName, workoutName } from "./names";
@@ -20,7 +27,18 @@ export type HangModel = {
   workout: (id: string) => Workout | undefined;
   gripName: (id: string) => string;
   defaultGrip: (w: Workout) => string;
-  load: (w: Pick<Workout, "id" | "kind">, gripId: string) => number;
+  /**
+   * The edge and weight a use starts from: the schedule's plan (given, or the one
+   * landing on `date`), else the last session of this workout and grip, else what
+   * the workout held before setups, else the kind's default.
+   */
+  setup: (
+    w: Pick<Workout, "id" | "kind">,
+    gripId: string,
+    plan?: { schedule?: Schedule; date?: CalendarDate }
+  ) => HangSetup;
+  /** The last session's setup on this grip, or what it held before setups; null when never set. */
+  lastUsed: (w: Pick<Workout, "id" | "kind">, gripId: string) => HangSetup | null;
 };
 
 export function hangModel(data: HangData): HangModel {
@@ -49,8 +67,33 @@ export function hangModel(data: HangData): HangModel {
       const id = data.defaultGrips[w.id] ?? w.grip;
       return hidden.has(id) ? BUILT_IN_GRIPS[0] : id;
     },
-    load: (w, gripId) => loadOf(data.loads, w, gripId),
+    setup: (w, gripId, plan = {}) => {
+      const schedule =
+        plan.schedule ??
+        (plan.date === undefined
+          ? undefined
+          : scheduledOn(data.schedules, plan.date).find(
+              (s) => s.workoutId === w.id && s.gripId === gripId
+            ));
+      return resolveSetup(w.kind, [schedule, ...usedLayers(w.id, gripId)]);
+    },
+    lastUsed: (w, gripId) => {
+      const used =
+        lastSession(data.sessions, w.id, gripId) !== undefined ||
+        loadKey(w.id, gripId) in data.loads;
+      return used ? resolveSetup(w.kind, usedLayers(w.id, gripId)) : null;
+    },
   };
+
+  function usedLayers(workoutId: string, gripId: string): SetupLayer[] {
+    return [
+      lastSession(data.sessions, workoutId, gripId),
+      {
+        edgeMm: data.workouts.find((w) => w.id === workoutId)?.edgeMm,
+        loadKg: data.loads[loadKey(workoutId, gripId)],
+      },
+    ];
+  }
 }
 
 const nameKey = (name: string): string => name.trim().replace(/\s+/g, " ").toLowerCase();

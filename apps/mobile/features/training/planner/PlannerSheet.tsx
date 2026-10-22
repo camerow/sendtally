@@ -10,6 +10,7 @@ import { HangDataProvider } from "../data/HangDataProvider";
 import { HangSheet } from "../data/HangSheet";
 import { GripPickerSheet } from "../grip-picker/GripPickerSheet";
 import { openBuilderToPlan } from "../plan/openBuilder";
+import { EdgeField } from "../setup/EdgeField";
 import { TargetEffort } from "../plan/TargetEffort";
 import { DayToggles } from "./DayToggles";
 import { EndSection } from "./EndSection";
@@ -80,6 +81,9 @@ function PlannerBody({
                 onPress={() => setPicker(true)}
               />
             </SheetSection>
+            {workout.kind === "hang" && draft.grips.length > 0 && (
+              <EdgeField edgeMm={planner.edgeMm} onChange={planner.setEdge} inSheet />
+            )}
             <LoadRows planner={planner} />
             <TargetEffort
               value={draft.targetRpe}

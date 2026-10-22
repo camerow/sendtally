@@ -47,7 +47,6 @@ export const LIBRARY: readonly Workout[] = [
   library("rep73", "half", {
     name: "Repeaters 7:3",
     kind: "hang",
-    edgeMm: 20,
     hangS: 7,
     restS: 3,
     reps: 6,
@@ -57,7 +56,6 @@ export const LIBRARY: readonly Workout[] = [
   library("max10", "half", {
     name: "Max hangs",
     kind: "hang",
-    edgeMm: 20,
     hangS: 10,
     restS: 0,
     reps: 1,
@@ -67,7 +65,6 @@ export const LIBRARY: readonly Workout[] = [
   library("block", "pinch", {
     name: "Block pulls",
     kind: "pull",
-    edgeMm: 0,
     hangS: 0,
     restS: 0,
     reps: 5,
@@ -77,7 +74,6 @@ export const LIBRARY: readonly Workout[] = [
   library("density", "open", {
     name: "Density hangs",
     kind: "hang",
-    edgeMm: 20,
     hangS: 30,
     restS: 0,
     reps: 1,
@@ -87,7 +83,6 @@ export const LIBRARY: readonly Workout[] = [
   library("assist", "half", {
     name: "Assisted one-arm",
     kind: "hang",
-    edgeMm: 20,
     hangS: 10,
     restS: 0,
     reps: 1,
@@ -97,7 +92,6 @@ export const LIBRARY: readonly Workout[] = [
   library("lowpull", "open", {
     name: "Light daily lifts",
     kind: "pull",
-    edgeMm: 0,
     hangS: 0,
     restS: 0,
     reps: 10,
@@ -111,7 +105,6 @@ export const NEW_WORKOUT: Omit<Workout, "id"> = {
   source: "mine",
   kind: "hang",
   grip: "half",
-  edgeMm: 20,
   hangS: 7,
   restS: 3,
   reps: 6,
@@ -121,6 +114,6 @@ export const NEW_WORKOUT: Omit<Workout, "id"> = {
 };
 
 export function protocolOf(w: Protocol): Protocol {
-  const { name, kind, hangS, restS, reps, sets, setRestS, edgeMm } = w;
-  return { name, kind, hangS, restS, reps, sets, setRestS, edgeMm };
+  const { name, kind, hangS, restS, reps, sets, setRestS } = w;
+  return { name, kind, hangS, restS, reps, sets, setRestS };
 }

@@ -4,7 +4,7 @@ import React from "react";
 import { KeyboardAvoidingView, Platform, ScrollView, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors } from "@sendtally/design/tokens";
-import { NEW_WORKOUT, type HangKind, type Workout } from "@sendtally/core/hang";
+import { NEW_WORKOUT, protocolOf, type HangKind, type Workout } from "@sendtally/core/hang";
 import { t } from "@sendtally/features/i18n";
 import { Button } from "../components/Button";
 import { Label } from "../components/Label";
@@ -42,7 +42,7 @@ export function BuilderScreen({ id, from, plan }: BuilderScreenProps): React.Rea
   const [draft, setDraft] = React.useState<Draft>(() => {
     const base = editing ?? (from === undefined ? undefined : model.workout(from));
     if (base === undefined) return NEW_WORKOUT;
-    const { id: _id, source: _source, ...fields } = base;
+    const fields = { ...protocolOf(base), grip: base.grip, timeUnits: base.timeUnits };
     return editing ? fields : { ...fields, name: t("hang.mineCopy", { name: base.name }) };
   });
   const update = (patch: Partial<Draft>): void => setDraft((d) => ({ ...d, ...patch }));

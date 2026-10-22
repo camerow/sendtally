@@ -47,6 +47,7 @@ function hang(date: string, overrides: Partial<HangSessionRecord> = {}): HangSes
     pct: 100,
     misses: 0,
     rpe: 6,
+    edgeMm: 20,
     protocol,
     stravaActivityId: null,
     postState: null,

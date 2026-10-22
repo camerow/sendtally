@@ -8,15 +8,17 @@ import {
   protocolOf,
   resultOf,
   startRun,
+  type HangSetup,
   type Workout,
 } from "@sendtally/core/hang";
-import { loadLabel } from "@sendtally/features/hang";
+import { loadLabel, setupLabel } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import { ON_DARK_SOFT } from "../components/onDark";
 import { useHangData } from "../data/HangDataContext";
 import { donePath } from "../done/doneParams";
 import { type } from "../type";
 import { RepDots } from "./RepDots";
+import { SetupStep } from "./SetupStep";
 import { TimerFrame } from "./TimerFrame";
 import { TimerRing } from "./TimerRing";
 import { timerText } from "./timerText";
@@ -25,12 +27,13 @@ import { useTimer } from "./useTimer";
 function Timer({
   workout,
   gripId,
-  loadKg,
+  setup,
 }: {
   workout: Workout;
   gripId: string;
-  loadKg: number;
+  setup: HangSetup;
 }): React.ReactElement {
+  const { edgeMm, loadKg } = setup;
   const { model } = useHangData();
   const timer = useTimer((now) => startRun(protocolOf(workout), now));
   const { run, secondsLeft, progress } = timer;
@@ -43,8 +46,10 @@ function Timer({
 
   React.useEffect(() => {
     if (run.finished !== null)
-      router.replace(donePath({ workoutId: workout.id, gripId, loadKg, result: resultOf(run) }));
-  }, [run, workout.id, gripId, loadKg]);
+      router.replace(
+        donePath({ workoutId: workout.id, gripId, edgeMm, loadKg, result: resultOf(run) })
+      );
+  }, [run, workout.id, gripId, edgeMm, loadKg]);
 
   const lift = (ok: boolean): void => {
     timer.play(ok ? "lift" : "miss");
@@ -56,7 +61,7 @@ function Timer({
     <TimerFrame
       timer={timer}
       name={workout.name}
-      meta={`${model.gripName(gripId)} · ${load}`}
+      meta={`${model.gripName(gripId)} · ${setupLabel(workout.kind, setup, model.settings.units)}`}
       controls={{
         color,
         primary: pull
@@ -95,8 +100,18 @@ function Timer({
 export type TimerScreenProps = { workoutId: string; gripId: string };
 
 export function TimerScreen({ workoutId, gripId }: TimerScreenProps): React.ReactElement | null {
-  const { model } = useHangData();
+  const { model, today } = useHangData();
   const workout = model.workout(workoutId);
-  const [loadKg] = React.useState(() => (workout === undefined ? 0 : model.load(workout, gripId)));
-  return workout === undefined ? null : <Timer workout={workout} gripId={gripId} loadKg={loadKg} />;
+  const [setup, setSetup] = React.useState<HangSetup | null>(null);
+  if (workout === undefined) return null;
+  return setup === null ? (
+    <SetupStep
+      workout={workout}
+      gripId={gripId}
+      initial={model.setup(workout, gripId, { date: today })}
+      onStart={setSetup}
+    />
+  ) : (
+    <Timer workout={workout} gripId={gripId} setup={setup} />
+  );
 }

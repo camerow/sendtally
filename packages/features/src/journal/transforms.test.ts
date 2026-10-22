@@ -103,6 +103,7 @@ describe("hang sessions in the log", () => {
     pct: 100,
     misses: 0,
     rpe: 7,
+    edgeMm: 20,
     protocol: {
       name: "Repeaters 7:3",
       kind: "hang" as const,
@@ -111,7 +112,6 @@ describe("hang sessions in the log", () => {
       reps: 6,
       sets: 6,
       setRestS: 180,
-      edgeMm: 20,
     },
     stravaActivityId: null,
     postState: null,

@@ -21,7 +21,6 @@ import type {
   EntryDetail,
   EntryInput,
   JournalEntry,
-  Loads,
   ConnectionStatus,
   Entitlements,
   GradeScales,
@@ -431,10 +430,6 @@ export class SendtallyApi {
         json: { gripId },
       })
     );
-  }
-
-  setHangLoads(loads: Loads): Promise<{ loads: Loads }> {
-    return body(this.client.v1.hang.loads.$put({ json: { loads } }));
   }
 
   saveHangSchedule({ id, ...schedule }: Schedule): Promise<{ schedule: Schedule }> {

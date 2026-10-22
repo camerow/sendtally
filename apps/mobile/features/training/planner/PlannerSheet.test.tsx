@@ -42,12 +42,18 @@ describe("Plan a block", () => {
     await fireEvent.press(screen.getByText("Open hand"));
     await fireEvent.press(screen.getByLabelText("Friday"));
     expect(screen.getByText(/2 workouts · 8 sessions each/)).toBeTruthy();
+    await fireEvent.press(screen.getByLabelText("Shallower edge"));
+    await fireEvent.press(screen.getByLabelText("More weight on Open hand"));
 
     await fireEvent.press(screen.getAllByText("Add to schedule").at(-1)!);
     const [saved] = actions.saveSchedules.mock.calls[0]!;
     expect(saved.map((s) => s.gripId)).toEqual(["half", "open"]);
     expect(saved.every((s) => s.start === TODAY && s.end === "2026-10-27")).toBe(true);
     expect(saved.every((s) => s.days.join() === "1,4")).toBe(true);
+    expect(saved.map((s) => [s.edgeMm, s.loadKg])).toEqual([
+      [19, 0],
+      [19, 1],
+    ]);
   });
 
   it("changes exactly one scheduled workout in edit mode", async () => {
@@ -59,6 +65,8 @@ describe("Plan a block", () => {
       start: TODAY,
       end: null,
       skip: [],
+      edgeMm: 15,
+      loadKg: -5,
     };
     const { actions } = await renderWithHang(
       <PlannerSheet request={{ mode: "edit", schedule }} onClose={() => undefined} />,

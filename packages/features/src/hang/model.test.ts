@@ -58,3 +58,51 @@ describe("defaultGrip", () => {
     expect(model.defaultGrip({ ...workout, grip: "g2" })).toBe("g2");
   });
 });
+
+describe("setup", () => {
+  const rep73 = LIBRARY[0]!;
+  const mine = { ...rep73, id: "w1", source: "mine" as const, edgeMm: 18 };
+  const schedule = {
+    id: "s1",
+    workoutId: "rep73",
+    gripId: "half",
+    days: [0 as const],
+    start: "2026-10-05",
+    end: null,
+    skip: [],
+    edgeMm: 15,
+    loadKg: null,
+  };
+  const session = {
+    id: "h1",
+    workoutId: "rep73",
+    gripId: "half",
+    date: "2026-10-01",
+    edgeMm: 20,
+    loadKg: 6,
+    pct: 100,
+    misses: 0,
+    rpe: null,
+    protocol: rep73,
+    stravaActivityId: null,
+    postState: null,
+    postError: null,
+    updatedAt: "t",
+  };
+
+  it("plans from the schedule landing on the day, filling gaps from the last session", () => {
+    const model = hangModel(data({ schedules: [schedule], sessions: [session] }));
+    expect(model.setup(rep73, "half", { date: "2026-10-05" })).toEqual({ edgeMm: 15, loadKg: 6 });
+    expect(model.setup(rep73, "half", { date: "2026-10-06" })).toEqual({ edgeMm: 20, loadKg: 6 });
+    expect(model.setup(rep73, "half", { schedule })).toEqual({ edgeMm: 15, loadKg: 6 });
+  });
+
+  it("falls back to what the workout held before setups, then the default", () => {
+    const model = hangModel(data({ workouts: [mine], loads: { "w1:open": -4 } }));
+    expect(model.setup(mine, "open")).toEqual({ edgeMm: 18, loadKg: -4 });
+    expect(model.setup(rep73, "open")).toEqual({ edgeMm: 20, loadKg: 0 });
+    expect(model.lastUsed(rep73, "open")).toBeNull();
+    expect(model.lastUsed(mine, "open")).toEqual({ edgeMm: 18, loadKg: -4 });
+    expect(model.lastUsed(mine, "half")).toBeNull();
+  });
+});

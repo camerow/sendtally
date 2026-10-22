@@ -56,6 +56,7 @@ import {
 } from "../db/schema";
 import {
   blockEnd,
+  defaultSetup,
   loadKey,
   type HangSession,
   type HangSettings,
@@ -2421,14 +2422,14 @@ export async function saveHangWorkout(
   db: D1Database,
   userId: string,
   id: string,
-  w: Omit<Workout, "id" | "source">
+  w: Omit<Workout, "id" | "source"> & { edgeMm?: number }
 ): Promise<HangWorkoutRow> {
   const now = new Date().toISOString();
   const fields = {
     name: w.name,
     kind: w.kind,
     grip: w.grip,
-    edge_mm: w.edgeMm,
+    ...(w.edgeMm === undefined ? {} : { edge_mm: w.edgeMm }),
     hang_s: w.hangS,
     rest_s: w.restS,
     reps: w.reps,
@@ -2439,7 +2440,13 @@ export async function saveHangWorkout(
   };
   return drizzle(db)
     .insert(hangWorkouts)
-    .values({ user_id: userId, id, ...fields, created_at: now })
+    .values({
+      user_id: userId,
+      id,
+      edge_mm: defaultSetup(w.kind).edgeMm,
+      ...fields,
+      created_at: now,
+    })
     .onConflictDoUpdate({ target: [hangWorkouts.user_id, hangWorkouts.id], set: fields })
     .returning()
     .get();
@@ -2495,6 +2502,8 @@ export async function saveHangSchedule(
     skip_json: JSON.stringify([...new Set(s.skip)].sort()),
     ...(s.targetRpe === undefined ? {} : { target_rpe: s.targetRpe }),
     ...(s.blockId === undefined ? {} : { block_id: s.blockId }),
+    ...(s.edgeMm === undefined ? {} : { edge_mm: s.edgeMm }),
+    ...(s.loadKg === undefined ? {} : { load_kg: s.loadKg }),
     updated_at: new Date().toISOString(),
   };
   return drizzle(db)
@@ -2554,6 +2563,7 @@ export async function saveHangSession(
     workout_id: s.workoutId,
     grip_id: s.gripId,
     date: s.date,
+    edge_mm: s.edgeMm,
     load_kg: s.loadKg,
     pct: s.pct,
     misses: s.misses,
