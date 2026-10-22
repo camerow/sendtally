@@ -1,7 +1,7 @@
 import React from "react";
 import { View } from "react-native";
 import type { SharedValue } from "react-native-reanimated";
-import { isWork, phaseWeight, runPercent, type Run } from "@sendtally/core/hang";
+import { isWork, runPercent, type Run } from "@sendtally/core/hang";
 import { t } from "@sendtally/features/i18n";
 import { useTheme } from "../../theme/ThemeContext";
 import { rgba } from "../../theme/themes";
@@ -31,7 +31,7 @@ export function RunProgressBar({ run, progress }: RunProgressBarProps): React.Re
           <View
             key={i}
             style={{
-              flexGrow: phaseWeight(phase, run.protocol),
+              flexGrow: phase.seconds,
               flexBasis: 0,
               minWidth: 2,
               height: work ? 28 : 13,

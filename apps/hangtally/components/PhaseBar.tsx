@@ -1,6 +1,6 @@
 import React from "react";
 import { View } from "react-native";
-import { isWork, phasesFor, phaseWeight, type Protocol } from "@sendtally/core/hang";
+import { isWork, phasesFor, type Protocol } from "@sendtally/core/hang";
 import { useTheme } from "../theme/ThemeContext";
 
 export type PhaseBarProps = { protocol: Protocol; height: number };
@@ -19,7 +19,7 @@ export function PhaseBar({ protocol, height }: PhaseBarProps): React.ReactElemen
         <View
           key={i}
           style={{
-            flexGrow: phaseWeight(p, protocol),
+            flexGrow: p.seconds,
             flexBasis: 0,
             minWidth: 2,
             borderRadius: 2,

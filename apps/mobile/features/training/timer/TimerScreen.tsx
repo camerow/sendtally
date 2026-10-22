@@ -83,7 +83,7 @@ function Timer({
           />
           <View style={{ alignItems: "center", gap: 10 }}>
             <Text style={[type.label, { color: ON_DARK_SOFT }]}>{text.setLine}</Text>
-            <RepDots reps={run.protocol.reps} marks={run.marks} working={working} />
+            <RepDots reps={workout.reps} marks={run.marks} working={working} />
           </View>
         </View>
         <TimerControls

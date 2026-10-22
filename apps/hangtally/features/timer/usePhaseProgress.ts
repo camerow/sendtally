@@ -17,15 +17,14 @@ const LIFT_MS = 260;
  */
 export function usePhaseProgress(run: Run): SharedValue<number> {
   const progress = useSharedValue(0);
-  const { kind, seconds } = currentPhase(run);
+  const { kind, seconds, taps: needed } = currentPhase(run);
   const { index, phaseStartedAt, pausedAt, taps } = run;
-  const reps = run.protocol.reps;
 
   React.useEffect(() => {
     cancelAnimation(progress);
-    if (kind === "pull") {
+    if (needed > 0) {
       progress.set(
-        withTiming(taps / reps, { duration: LIFT_MS, easing: Easing.out(Easing.cubic) })
+        withTiming(taps / needed, { duration: LIFT_MS, easing: Easing.out(Easing.cubic) })
       );
       return;
     }
@@ -34,7 +33,7 @@ export function usePhaseProgress(run: Run): SharedValue<number> {
     progress.set(from);
     if (pausedAt === null && from < 1)
       progress.set(withTiming(1, { duration: (seconds - elapsed) * 1000, easing: Easing.linear }));
-  }, [progress, index, kind, seconds, phaseStartedAt, pausedAt, taps, reps]);
+  }, [progress, index, kind, seconds, phaseStartedAt, pausedAt, taps, needed]);
 
   return progress;
 }

@@ -22,25 +22,25 @@ export type TimerText = {
 export function timerText(run: Run, secondsLeft: number, loadText: string): TimerText {
   const phase = currentPhase(run);
   const paused = run.pausedAt !== null;
-  const { reps, sets } = run.protocol;
+  const { sets } = run;
   const next = run.phases[run.index + 1];
   const pull = phase.kind === "pull";
   return {
     label: paused ? t("hang.paused") : t(PHASE_LABELS[phase.kind]),
-    big: pull ? `${run.taps}/${reps}` : clock(secondsLeft),
+    big: pull ? `${run.taps}/${phase.taps}` : clock(secondsLeft),
     hint: pull ? t("hang.tapAfterLift") : paused ? t("hang.tapToResume") : t("hang.tapToPause"),
     setLine:
       phase.kind === "ready"
         ? t("hang.setsAhead", { count: sets })
         : t("hang.setOf", { set: phase.set, sets }),
-    next: nextText(next, reps, loadText),
+    next: nextText(next, loadText),
     fail: pull
       ? t("hang.missedLift")
       : t("hang.cameOffEarly", { n: Math.max(0, phase.seconds - secondsLeft) }),
   };
 }
 
-function nextText(next: Phase | undefined, reps: number, loadText: string): string {
+function nextText(next: Phase | undefined, loadText: string): string {
   if (next === undefined) return t("hang.nextFinish");
   switch (next.kind) {
     case "hang":
@@ -50,7 +50,7 @@ function nextText(next: Phase | undefined, reps: number, loadText: string): stri
     case "setrest":
       return t("hang.nextSetRest", { time: clock(next.seconds) });
     case "pull":
-      return t("hang.nextLift", { reps, load: loadText });
+      return t("hang.nextLift", { reps: next.taps, load: loadText });
     case "ready":
       return "";
   }
