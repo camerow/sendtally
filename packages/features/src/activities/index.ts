@@ -54,6 +54,18 @@ export {
   type SetsDetail,
   type Side,
 } from "./detail";
+export {
+  INTERVAL_SIDES,
+  intervalsSummary,
+  newIntervalStep,
+  stepDose,
+  withMeasure,
+  type IntervalSide,
+  type IntervalStep,
+  type IntervalsDetail,
+  type IntervalsTemplate,
+  type StepDone,
+} from "./intervals";
 export { useExerciseNames } from "./useExerciseNames";
 export { usePlanTemplate } from "./usePlanTemplate";
 export { useWeightUnit } from "./useWeightUnit";

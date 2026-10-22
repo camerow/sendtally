@@ -7,6 +7,7 @@ import type {
 } from "@sendtally/api-client";
 import { toUnit, type WeightUnit } from "@sendtally/core/hang";
 import { formatNumber, t, type MessageKey } from "../i18n";
+import { cleanIntervals, emptyIntervals, intervalsSummary } from "./intervals";
 
 export type SetsDetail = Extract<ActivityDetail, { kind: "sets" }>;
 
@@ -44,9 +45,14 @@ export function newExercise(kind: ActivityKind): Exercise {
 export const newChecklistItem = (): ChecklistItem => ({ text: "", dose: "", done: false });
 
 export function emptyDetail(kind: DetailKind, activityKind: ActivityKind): ActivityDetail {
-  return kind === "sets"
-    ? { kind, exercises: [newExercise(activityKind)] }
-    : { kind, items: [newChecklistItem()] };
+  switch (kind) {
+    case "sets":
+      return { kind, exercises: [newExercise(activityKind)] };
+    case "checklist":
+      return { kind, items: [newChecklistItem()] };
+    case "intervals":
+      return emptyIntervals();
+  }
 }
 
 /** A new set repeats the last one, on the other side when it has one, not yet done. */
@@ -74,9 +80,10 @@ export function toggleMeasure(exercise: Exercise, measure: SetMeasure): Exercise
   return { ...exercise, measures, sets: exercise.sets.map((s) => onlyMeasured(s, measures)) };
 }
 
-/** What saves: named exercises and items only, trimmed, or null when nothing is left. */
+/** What saves: named exercises, items and steps only, trimmed, or null when nothing is left. */
 export function cleanDetail(detail: ActivityDetail | null): ActivityDetail | null {
   if (detail === null) return null;
+  if (detail.kind === "intervals") return cleanIntervals(detail);
   if (detail.kind === "sets") {
     const exercises = detail.exercises
       .map((e) => ({
@@ -99,31 +106,44 @@ const withoutDone = <T extends { done: boolean }>({ done: _, ...rest }: T): Omit
 export function templateOf(detail: ActivityDetail | null): PlanTemplate | null {
   const clean = cleanDetail(detail);
   if (clean === null) return null;
-  return clean.kind === "sets"
-    ? {
+  switch (clean.kind) {
+    case "sets":
+      return {
         kind: "sets",
         exercises: clean.exercises.map((e) => ({ ...e, sets: e.sets.map(withoutDone) })),
-      }
-    : { kind: "checklist", items: clean.items.map(withoutDone) };
+      };
+    case "checklist":
+      return { kind: "checklist", items: clean.items.map(withoutDone) };
+    case "intervals": {
+      const { stepsDone: _, ...template } = clean;
+      return template;
+    }
+  }
 }
 
 /** A plan's template as a body to log against: every set and item still to do. */
 export function detailFromTemplate(template: PlanTemplate | null): ActivityDetail | null {
   if (template === null) return null;
-  return template.kind === "sets"
-    ? {
+  switch (template.kind) {
+    case "sets":
+      return {
         kind: "sets",
         exercises: template.exercises.map((e) => ({
           ...e,
           sets: e.sets.map((s) => ({ ...s, done: false })),
         })),
-      }
-    : { kind: "checklist", items: template.items.map((i) => ({ ...i, done: false })) };
+      };
+    case "checklist":
+      return { kind: "checklist", items: template.items.map((i) => ({ ...i, done: false })) };
+    case "intervals":
+      return { ...template, stepsDone: [] };
+  }
 }
 
-/** "3 exercises · 9 sets" or "4 of 6 done". */
+/** "3 exercises · 9 sets", "4 of 6 done" or "2 rounds · 7 steps · 18 min". */
 export function detailSummary(detail: ActivityDetail | null): string | null {
   if (detail === null) return null;
+  if (detail.kind === "intervals") return intervalsSummary(detail);
   if (detail.kind === "checklist") {
     return t("activities.checklistDone", {
       done: detail.items.filter((i) => i.done).length,
