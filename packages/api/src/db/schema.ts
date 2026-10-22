@@ -545,6 +545,8 @@ export const hangSchedules = sqliteTable(
     // Exclusive; null is ongoing.
     end: text("end"),
     skip_json: text("skip_json").notNull(),
+    target_rpe: integer("target_rpe"),
+    block_id: text("block_id"),
     updated_at: text("updated_at").notNull(),
   },
   (t) => [primaryKey({ columns: [t.user_id, t.id] })]
@@ -646,6 +648,29 @@ export const planItems = sqliteTable(
     // What logging it prefills, shaped like an activity's detail without `done`.
     template_kind: text("template_kind"),
     template_json: text("template_json"),
+    block_id: text("block_id"),
+    updated_at: text("updated_at").notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.user_id, t.id] })]
+);
+
+// A multi-week block grouping plan items and hang schedules by their block_id.
+// Its members share its dates: start, to start plus weeks, or to ended_on.
+export const trainingBlocks = sqliteTable(
+  "training_blocks",
+  {
+    user_id: text("user_id")
+      .notNull()
+      .references(() => users.id),
+    id: text("id").notNull(),
+    name: text("name").notNull(),
+    start: text("start").notNull(),
+    weeks: integer("weeks").notNull(),
+    // One phase per week: build, deload or test.
+    phases_json: text("phases_json").notNull(),
+    notes: text("notes"),
+    // Exclusive; set when the block was ended before its last week ran out.
+    ended_on: text("ended_on"),
     updated_at: text("updated_at").notNull(),
   },
   (t) => [primaryKey({ columns: [t.user_id, t.id] })]
