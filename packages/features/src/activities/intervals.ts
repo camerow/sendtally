@@ -53,8 +53,8 @@ const cleanStep = ({ seconds, count, cue, ...step }: IntervalStep): IntervalStep
     ...step,
     label: step.label.trim(),
     ...(step.measure === "time"
-      ? { seconds: seconds ?? DEFAULT_SECONDS }
-      : { count: count ?? DEFAULT_COUNT }),
+      ? { seconds: Math.max(1, seconds ?? DEFAULT_SECONDS) }
+      : { count: Math.max(1, count ?? DEFAULT_COUNT) }),
     ...(trimmed === "" ? {} : { cue: trimmed }),
   };
 };
