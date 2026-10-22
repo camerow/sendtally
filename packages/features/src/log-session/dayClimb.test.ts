@@ -51,7 +51,11 @@ function fakeApi(sessions: SessionDetail[]): DayClimbApi & { sent: unknown[] } {
   const byId = new Map(sessions.map((s) => [s.fingerprint, s]));
   return {
     sent,
-    sessions: vi.fn(async () => ({ sessions: sessions as SessionRow[], hangSessions: [] })),
+    sessions: vi.fn(async () => ({
+      sessions: sessions as SessionRow[],
+      hangSessions: [],
+      activities: [],
+    })),
     session: vi.fn(async (fp: string) => ({ session: byId.get(fp)! })),
     logSession: vi.fn(async (input: LogSessionInput) => {
       sent.push(["POST", input]);

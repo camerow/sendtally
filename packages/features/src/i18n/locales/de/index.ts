@@ -1,4 +1,5 @@
 import { account } from "./account";
+import { activities } from "./activities";
 import { areas } from "./areas";
 import { appUpdate } from "./appUpdate";
 import { auth } from "./auth";
@@ -21,6 +22,7 @@ import { training } from "./training";
 
 export const de = {
   ...account,
+  ...activities,
   ...areas,
   ...appUpdate,
   ...auth,
