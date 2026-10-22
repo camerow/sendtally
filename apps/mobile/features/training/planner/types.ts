@@ -7,6 +7,7 @@ export type PlannerRequest =
       gripId: string | null;
       days: Weekday[];
       start: CalendarDate;
+      blockId?: string;
     }
   | { mode: "edit"; schedule: Schedule };
 

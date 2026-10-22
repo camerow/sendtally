@@ -12,12 +12,13 @@ import { planItemMeta } from "../plan/planItemText";
 import { type } from "../type";
 import { DayMark } from "./DayMark";
 import { KIND_LOOK, kindName } from "./kindLook";
-import { planTag } from "./planTag";
+import { usePlanTag } from "./usePlanTag";
 
 export type PlanItemCardProps = { item: PlanItem; onEdit: () => void; onLog: () => void };
 
 /** A plan item due today: the card opens the plan, the button logs it. */
 export function PlanItemCard({ item, onEdit, onLog }: PlanItemCardProps): React.ReactElement {
+  const planTag = usePlanTag();
   const { today } = useHangData();
   const climb = item.kind === "climb";
   return (

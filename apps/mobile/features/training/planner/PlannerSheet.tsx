@@ -1,6 +1,7 @@
 import React from "react";
 import { View } from "react-native";
 import { t } from "@sendtally/features/i18n";
+import { BlockDates } from "../blocks/BlockDates";
 import { SelectField } from "../components/SelectField";
 import { SheetHeader } from "../components/SheetHeader";
 import { SheetSection } from "../components/SheetSection";
@@ -8,6 +9,8 @@ import { useHangData } from "../data/HangDataContext";
 import { HangDataProvider } from "../data/HangDataProvider";
 import { HangSheet } from "../data/HangSheet";
 import { GripPickerSheet } from "../grip-picker/GripPickerSheet";
+import { openBuilderToPlan } from "../plan/openBuilder";
+import { TargetEffort } from "../plan/TargetEffort";
 import { DayToggles } from "./DayToggles";
 import { EndSection } from "./EndSection";
 import { LoadRows } from "./LoadRows";
@@ -32,7 +35,8 @@ function PlannerBody({
   const planner = usePlanner(request, close);
   const [calendar, setCalendar] = React.useState<Calendar>(null);
   const [picker, setPicker] = React.useState(false);
-  const { workout, draft, isEdit } = planner;
+  const building = React.useRef(false);
+  const { workout, draft, isEdit, block } = planner;
   const grips = draft.grips.map(model.gripName).join(", ");
   const toggle = (which: Exclude<Calendar, null>) => (isOpen: boolean) =>
     setCalendar(isOpen ? which : null);
@@ -40,7 +44,15 @@ function PlannerBody({
   return (
     <HangSheet
       visible={open}
-      onClose={onClose}
+      onClose={() => {
+        onClose();
+        if (building.current)
+          openBuilderToPlan({
+            days: draft.days,
+            start: draft.start,
+            blockId: draft.blockId ?? undefined,
+          });
+      }}
       closeLabel={t("hang.closeScheduler")}
       footer={<PlannerFooter planner={planner} />}
     >
@@ -51,7 +63,13 @@ function PlannerBody({
           action={t("hang.cancel")}
           onAction={close}
         />
-        <WorkoutChoice planner={planner} />
+        <WorkoutChoice
+          planner={planner}
+          onNew={() => {
+            building.current = true;
+            close();
+          }}
+        />
         {workout !== undefined && (
           <>
             <SheetSection label={isEdit ? t("hang.grip") : t("hang.grips")}>
@@ -63,13 +81,23 @@ function PlannerBody({
               />
             </SheetSection>
             <LoadRows planner={planner} />
-            <DayToggles days={draft.days} onToggle={planner.toggleDay} />
-            <StartSection
-              planner={planner}
-              open={calendar === "start"}
-              onToggle={toggle("start")}
+            <TargetEffort
+              value={draft.targetRpe}
+              onChange={(targetRpe) => planner.update({ targetRpe })}
             />
-            <EndSection planner={planner} open={calendar === "end"} onToggle={toggle("end")} />
+            <DayToggles days={draft.days} onToggle={planner.toggleDay} />
+            {block === undefined ? (
+              <>
+                <StartSection
+                  planner={planner}
+                  open={calendar === "start"}
+                  onToggle={toggle("start")}
+                />
+                <EndSection planner={planner} open={calendar === "end"} onToggle={toggle("end")} />
+              </>
+            ) : (
+              <BlockDates block={block} />
+            )}
           </>
         )}
       </View>

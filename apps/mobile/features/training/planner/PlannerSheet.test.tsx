@@ -66,6 +66,8 @@ describe("Plan a block", () => {
     );
     await fireEvent.press(screen.getByText("After"));
     await fireEvent.press(screen.getByText("Save changes"));
-    expect(actions.saveSchedules).toHaveBeenCalledWith([{ ...schedule, end: "2026-10-27" }]);
+    expect(actions.saveSchedules).toHaveBeenCalledWith([
+      { ...schedule, end: "2026-10-27", targetRpe: null, blockId: null },
+    ]);
   });
 });

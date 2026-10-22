@@ -17,6 +17,7 @@ const item: PlanItem = {
   targetRpe: 9,
   projectId: "grey-arete",
   template: null,
+  blockId: null,
 };
 
 describe("plan item drafts", () => {
@@ -35,8 +36,30 @@ describe("plan item drafts", () => {
       targetRpe: null,
       projectId: null,
       template: null,
+      blockId: null,
     });
     expect(planItemSummary(draft)).toBe("Thu · from Oct 1");
+  });
+
+  it("plans a block's member on the block's dates, whatever its own say", () => {
+    const block = {
+      id: "b1",
+      name: "Autumn finger block",
+      start: "2026-10-05",
+      weeks: 4,
+      phases: ["build", "build", "build", "deload"] as const,
+      notes: null,
+      endedOn: null,
+    };
+    const draft = planItemDraft(
+      { mode: "new", kind: "strength", days: [3], start: TODAY, blockId: "b1" },
+      TODAY
+    );
+    expect(planItemOf(draft, "n1", [], { ...block, phases: [...block.phases] })).toMatchObject({
+      start: "2026-10-05",
+      end: "2026-11-02",
+      blockId: "b1",
+    });
   });
 
   it("saves an edited plan unchanged, skips and all", () => {

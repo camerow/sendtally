@@ -13,7 +13,10 @@ import type { Planner } from "./usePlanner";
 const mineFirst = (a: Workout, b: Workout): number =>
   a.source === b.source ? 0 : a.source === "mine" ? -1 : 1;
 
-export function WorkoutChoice({ planner }: { planner: Planner }): React.ReactElement {
+export type WorkoutChoiceProps = { planner: Planner; onNew: () => void };
+
+/** The workout to plan: all of them while picking, mine first, and a way to build a new one. */
+export function WorkoutChoice({ planner, onNew }: WorkoutChoiceProps): React.ReactElement {
   const { model } = useHangData();
   const { workout, isEdit } = planner;
   const rows = workout === undefined ? [...model.workouts].sort(mineFirst) : [workout];
@@ -89,6 +92,15 @@ export function WorkoutChoice({ planner }: { planner: Planner }): React.ReactEle
           </Pressable>
         );
       })}
+      {workout === undefined && (
+        <Button
+          label={t("plan.newWorkout")}
+          onPress={onNew}
+          variant="dashed"
+          icon="plus"
+          height={50}
+        />
+      )}
     </SheetSection>
   );
 }

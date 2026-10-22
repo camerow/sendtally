@@ -12,7 +12,7 @@ import { planItemMeta } from "../plan/planItemText";
 import { type } from "../type";
 import { DayMark } from "./DayMark";
 import { KIND_LOOK } from "./kindLook";
-import { planTag } from "./planTag";
+import { usePlanTag } from "./usePlanTag";
 
 export type PlanItemRowProps = {
   entry: PlanDayItem;
@@ -23,6 +23,7 @@ export type PlanItemRowProps = {
 
 /** A plan item on a day that is not today's to start: done, missed, or still to come. */
 export function PlanItemRow({ entry, date, onOpen, onSkip }: PlanItemRowProps): React.ReactElement {
+  const planTag = usePlanTag();
   const { plan, status, kind } = entry;
   const done = status === "done";
   const tag =

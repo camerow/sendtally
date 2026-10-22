@@ -11,7 +11,7 @@ import { useHangData } from "../data/HangDataContext";
 import { type } from "../type";
 import { DayMark } from "./DayMark";
 import { KIND_LOOK } from "./kindLook";
-import { planTag } from "./planTag";
+import { usePlanTag } from "./usePlanTag";
 
 export type PlannedRowProps = {
   schedule: Schedule;
@@ -29,6 +29,7 @@ export function PlannedRow({
   onOpen,
   onSkip,
 }: PlannedRowProps): React.ReactElement | null {
+  const planTag = usePlanTag();
   const { model } = useHangData();
   const w = model.workout(schedule.workoutId);
   if (w === undefined) return null;
