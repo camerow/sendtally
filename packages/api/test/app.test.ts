@@ -420,6 +420,39 @@ describe("app", () => {
     expect(rejected.status).toBe(400);
   });
 
+  it("defaults training reminders off and saves partial changes", async () => {
+    const headers = { "x-test-user": "user_reminders", "Content-Type": "application/json" };
+    const put = async (json: unknown): Promise<Response> =>
+      testApp().request(
+        "/v1/preferences/training-reminders",
+        { method: "PUT", headers, body: JSON.stringify(json) },
+        env
+      );
+
+    const before = await testApp().request("/v1/status", { headers }, env);
+    expect(await before.json()).toMatchObject({
+      trainingReminders: { enabled: false, time: "08:00", promptSeen: false },
+    });
+
+    const saved = await put({ enabled: true, promptSeen: true });
+    expect(saved.status).toBe(200);
+    expect(await saved.json()).toEqual({
+      trainingReminders: { enabled: true, time: "08:00", promptSeen: true },
+    });
+
+    expect(await (await put({ time: "18:30" })).json()).toEqual({
+      trainingReminders: { enabled: true, time: "18:30", promptSeen: true },
+    });
+
+    const after = await testApp().request("/v1/status", { headers }, env);
+    expect(await after.json()).toMatchObject({
+      trainingReminders: { enabled: true, time: "18:30", promptSeen: true },
+    });
+
+    expect((await put({ time: "24:00" })).status).toBe(400);
+    expect((await put({ enabled: "yes" })).status).toBe(400);
+  });
+
   it("keeps the grade a project was added with", async () => {
     const headers = { "x-test-user": "user_gradedproject", "Content-Type": "application/json" };
     const created = await testApp().request(

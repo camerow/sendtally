@@ -138,6 +138,34 @@ export async function setTrainingMode(db: D1Database, id: string, enabled: boole
     .where(eq(users.id, id));
 }
 
+export type TrainingReminderSettings = { enabled: boolean; time: string; promptSeen: boolean };
+
+export function trainingRemindersOf(user: UserRow | null): TrainingReminderSettings {
+  return {
+    enabled: user?.training_reminders === 1,
+    time: user?.training_reminder_time ?? "08:00",
+    promptSeen: user?.training_reminder_prompt_seen === 1,
+  };
+}
+
+export async function setTrainingReminders(
+  db: D1Database,
+  id: string,
+  settings: Partial<TrainingReminderSettings>
+): Promise<void> {
+  const flag = (value: boolean): number => (value ? 1 : 0);
+  await drizzle(db)
+    .update(users)
+    .set({
+      ...(settings.enabled === undefined ? {} : { training_reminders: flag(settings.enabled) }),
+      ...(settings.time === undefined ? {} : { training_reminder_time: settings.time }),
+      ...(settings.promptSeen === undefined
+        ? {}
+        : { training_reminder_prompt_seen: flag(settings.promptSeen) }),
+    })
+    .where(eq(users.id, id));
+}
+
 export type StravaConnectionInput = {
   user_id: string;
   athlete_id: number;

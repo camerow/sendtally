@@ -10,4 +10,5 @@ export { useDeleteAccount, type DeleteAccountFeature } from "./useDeleteAccount"
 export { useStravaPosting, type StravaPostingFeature } from "./useStravaPosting";
 export { useGradeScales, useGradeScalePrefs, type GradeScalesFeature } from "./useGradeScales";
 export { useTrainingMode, type TrainingModeFeature } from "./useTrainingMode";
+export { useTrainingReminders, type TrainingRemindersFeature } from "./useTrainingReminders";
 export type { DeleteAccountStatus, SettingsVM } from "./types";

@@ -49,6 +49,7 @@ import type {
   SessionLogWithClimbs,
   SessionTag,
   TagSummary,
+  TrainingReminderSettings,
   Workout,
 } from "./types";
 
@@ -186,6 +187,12 @@ export class SendtallyApi {
 
   setTrainingMode(enabled: boolean): Promise<{ trainingMode: boolean }> {
     return body(this.client.v1.preferences["training-mode"].$put({ json: { enabled } }));
+  }
+
+  setTrainingReminders(
+    settings: Partial<TrainingReminderSettings>
+  ): Promise<{ trainingReminders: TrainingReminderSettings }> {
+    return body(this.client.v1.preferences["training-reminders"].$put({ json: settings }));
   }
 
   climbs(): Promise<{ climbs: ClimbSummary[] }> {

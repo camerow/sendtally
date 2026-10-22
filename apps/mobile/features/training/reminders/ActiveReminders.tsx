@@ -1,9 +1,10 @@
 import React from "react";
 import { Alert } from "react-native";
 import { usePlanItems } from "@sendtally/features/activities";
-import { useHang, useHangActions } from "@sendtally/features/hang";
+import { useHang } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import { queries, useQuery } from "@sendtally/features/query";
+import { useTrainingReminders } from "@sendtally/features/settings";
 import type { ReminderNames, TrainingLog } from "@sendtally/features/training";
 import { useApi } from "../../../lib/api";
 import { requestNotifications } from "./notifications";
@@ -24,11 +25,10 @@ export type ActiveRemindersProps = {
 export function ActiveReminders({ asked, onAnswered }: ActiveRemindersProps): React.ReactElement {
   const api = useApi();
   const hang = useHang(api).state;
-  const actions = useHangActions(api, reportFailure);
+  const { settings, save } = useTrainingReminders(api);
   const sessions = useQuery(queries.sessions(api)).state;
   const planItems = usePlanItems(api).state;
   const model = hang.status === "ready" ? hang.data : null;
-  const settings = model?.settings ?? null;
 
   const log = React.useMemo(
     (): TrainingLog | null =>
@@ -45,24 +45,24 @@ export function ActiveReminders({ asked, onAnswered }: ActiveRemindersProps): Re
   );
 
   useReminderSync({
-    on: settings?.reminders === true,
-    time: settings?.reminderTime ?? "08:00",
+    on: settings?.enabled === true,
+    time: settings?.time ?? "08:00",
     log,
     names: model ?? NO_NAMES,
   });
 
-  const open = asked && settings !== null && !settings.reminderPromptSeen;
+  const open = asked && settings !== null && !settings.promptSeen;
   const answer = async (remind: boolean): Promise<void> => {
     if (!open) return;
     onAnswered();
     const granted = remind && (await requestNotifications());
-    await actions.saveSettings({ reminderPromptSeen: true, reminders: granted });
+    await save({ promptSeen: true, enabled: granted }).catch(reportFailure);
   };
 
   return (
     <ReminderPromptSheet
       visible={open}
-      time={settings?.reminderTime ?? "08:00"}
+      time={settings?.time ?? "08:00"}
       onAnswer={(remind) => void answer(remind)}
     />
   );

@@ -574,6 +574,15 @@ const gradeScalesBody = z.object({
 
 const trainingModeBody = z.object({ enabled: z.boolean() });
 
+const trainingRemindersBody = z.object({
+  enabled: z.boolean().optional(),
+  time: z
+    .string()
+    .regex(/^([01]\d|2[0-3]):[0-5]\d$/)
+    .optional(),
+  promptSeen: z.boolean().optional(),
+});
+
 const stravaPostingBody = z.object({
   enabled: z.boolean(),
   since: z
@@ -1816,6 +1825,7 @@ const app = new Hono<AppEnv>()
       gradeScales: { boulder: scales.boulder, route: scales.route },
       role: user?.role ?? "user",
       trainingMode: user?.training_mode === 1,
+      trainingReminders: repo.trainingRemindersOf(user),
       strava:
         strava === null
           ? null
@@ -1865,6 +1875,22 @@ const app = new Hono<AppEnv>()
       await repo.setTrainingMode(c.env.DB, userId, enabled);
       await captureEvent(c, "training_mode_updated", { enabled: String(enabled) });
       return c.json({ trainingMode: enabled });
+    }
+  )
+
+  .put(
+    "/v1/preferences/training-reminders",
+    zValidator("json", trainingRemindersBody, invalidBody),
+    async (c) => {
+      const userId = c.get("userId");
+      await repo.ensureUser(c.env.DB, userId);
+      await repo.setTrainingReminders(c.env.DB, userId, c.req.valid("json"));
+      const reminders = repo.trainingRemindersOf(await repo.getUser(c.env.DB, userId));
+      await captureEvent(c, "training_reminders_updated", {
+        enabled: String(reminders.enabled),
+        time: reminders.time,
+      });
+      return c.json({ trainingReminders: reminders });
     }
   )
 

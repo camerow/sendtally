@@ -55,6 +55,7 @@ type Ok<T> = InferResponseType<T, 200>;
 export type ConnectionStatus = Ok<Client["v1"]["status"]["$get"]>;
 
 export type GradeScales = ConnectionStatus["gradeScales"];
+export type TrainingReminderSettings = ConnectionStatus["trainingReminders"];
 
 export type Entitlements = Ok<Client["v1"]["entitlements"]["$get"]>;
 
