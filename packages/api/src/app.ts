@@ -1926,11 +1926,14 @@ export type AppType = typeof app;
 export type { ProjectInput } from "./lib/climbs";
 export type {
   Activity,
+  ActivityDetail,
   ActivityInput,
   ActivityKind,
   PlanItem,
   PlanItemInput,
   PlanKind,
+  PlanTemplate,
+  SetMeasure,
 } from "./lib/activities";
 export type { HangData, HangHistoryRow, HangPostState, HangSessionRecord } from "./lib/hang";
 export type {

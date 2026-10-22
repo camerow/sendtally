@@ -53,6 +53,7 @@ const gym: PlanItem = {
   minutes: 50,
   targetRpe: null,
   projectId: null,
+  template: null,
 };
 
 describe("Today", () => {

@@ -3,6 +3,7 @@ import type { AppType } from "@sendtally/api/app";
 
 export type {
   Activity,
+  ActivityDetail,
   ActivityInput,
   ActivityKind,
   Area,
@@ -38,7 +39,9 @@ export type {
   PlanItem,
   PlanItemInput,
   PlanKind,
+  PlanTemplate,
   ProjectInput,
+  SetMeasure,
 } from "@sendtally/api/app";
 
 import type { Activity, HangHistoryRow, LogClimbInput as ClimbInput } from "@sendtally/api/app";
