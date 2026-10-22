@@ -5,7 +5,7 @@ import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
 import { AccountButton } from "../../components/AccountButton";
 import { ScreenHeader } from "../../components/ScreenHeader";
-import { WorkoutLibrary } from "../../features/training/library/WorkoutLibrary";
+import { TrainScreen } from "../../features/training/train/TrainScreen";
 
 export default function Train(): React.ReactElement {
   return (
@@ -14,7 +14,7 @@ export default function Train(): React.ReactElement {
       <ScrollView
         contentContainerStyle={{ paddingHorizontal: 18, paddingTop: 4, paddingBottom: 32 }}
       >
-        <WorkoutLibrary />
+        <TrainScreen />
       </ScrollView>
     </SafeAreaView>
   );

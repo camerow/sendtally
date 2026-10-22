@@ -1,12 +1,14 @@
 import { BottomSheetTextInput } from "@gorhom/bottom-sheet";
 import React from "react";
 import { TextInput, type KeyboardTypeOptions, type StyleProp, type TextStyle } from "react-native";
+import { colors } from "@sendtally/design/tokens";
 import { type } from "../type";
 
 export type NumberFieldProps = {
   value: string;
   onCommit: (text: string) => void;
   label: string;
+  placeholder?: string;
   keyboard?: KeyboardTypeOptions;
   inSheet?: boolean;
   style?: StyleProp<TextStyle>;
@@ -21,6 +23,7 @@ export function NumberField({
   value,
   onCommit,
   label,
+  placeholder,
   keyboard = "decimal-pad",
   inSheet,
   style,
@@ -42,6 +45,8 @@ export function NumberField({
       returnKeyType="done"
       selectTextOnFocus
       accessibilityLabel={label}
+      placeholder={placeholder}
+      placeholderTextColor={colors.textMuted}
       style={[type.monoBold, { textAlign: "center", paddingHorizontal: 6 }, style]}
     />
   );

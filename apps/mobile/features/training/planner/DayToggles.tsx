@@ -6,19 +6,19 @@ import { weekdayLetters, weekdayLong } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import { SheetSection } from "../components/SheetSection";
 import { type } from "../type";
-import type { Planner } from "./usePlanner";
+export type DayTogglesProps = { days: readonly Weekday[]; onToggle: (day: Weekday) => void };
 
-export function DayToggles({ planner }: { planner: Planner }): React.ReactElement {
+export function DayToggles({ days, onToggle }: DayTogglesProps): React.ReactElement {
   return (
     <SheetSection label={t("hang.days")}>
       <View style={{ flexDirection: "row", gap: 5 }}>
         {weekdayLetters().map((letter, i) => {
           const day = i as Weekday;
-          const on = planner.draft.days.includes(day);
+          const on = days.includes(day);
           return (
             <Pressable
               key={i}
-              onPress={() => planner.toggleDay(day)}
+              onPress={() => onToggle(day)}
               accessibilityRole="checkbox"
               accessibilityLabel={weekdayLong(i)}
               accessibilityState={{ checked: on }}

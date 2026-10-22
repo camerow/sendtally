@@ -4,12 +4,10 @@ import {
   endChoiceOf,
   endOf,
   loadKey,
-  maxDate,
   minDate,
   occurrences,
   occursOn,
   type CalendarDate,
-  type EndChoice,
   type Loads,
   type Schedule,
   type Weekday,
@@ -18,9 +16,8 @@ import {
 import { randomUUID } from "expo-crypto";
 import { useHangData } from "../data/HangDataContext";
 import { plannerSummary } from "./plannerSummary";
-import type { PlannerRequest } from "./types";
-
-export type EndMode = EndChoice["mode"];
+import { DEFAULT_WEEKS, endChoice } from "./scheduleDraft";
+import type { EndMode, PlannerRequest } from "./types";
 
 export type PlannerDraft = {
   workoutId: string | null;
@@ -34,8 +31,6 @@ export type PlannerDraft = {
   weeks: number;
   last: CalendarDate;
 };
-
-const DEFAULT_WEEKS = 4;
 
 function draftFor(
   request: PlannerRequest,
@@ -72,13 +67,6 @@ function draftFor(
     last: addDays(request.start, DEFAULT_WEEKS * 7 - 1),
   };
 }
-
-const endChoice = (d: PlannerDraft): EndChoice =>
-  d.endMode === "never"
-    ? { mode: "never" }
-    : d.endMode === "weeks"
-      ? { mode: "weeks", weeks: d.weeks }
-      : { mode: "date", last: d.last };
 
 export type Planner = {
   isEdit: boolean;
@@ -180,8 +168,3 @@ export function usePlanner(request: PlannerRequest, onDone: () => void): Planner
     },
   };
 }
-
-export const pickStart = (d: PlannerDraft, start: CalendarDate): Partial<PlannerDraft> => ({
-  start,
-  last: maxDate(d.last, start),
-});

@@ -5,10 +5,11 @@ import { DateField } from "../components/DateField";
 import { MonthCalendar } from "../components/MonthCalendar";
 import { SheetSection } from "../components/SheetSection";
 import { useHangData } from "../data/HangDataContext";
-import { pickStart, type Planner } from "./usePlanner";
+import type { ScheduleForm } from "./types";
+import { pickStart } from "./scheduleDraft";
 
 export type StartSectionProps = {
-  planner: Planner;
+  planner: ScheduleForm;
   open: boolean;
   onToggle: (open: boolean) => void;
 };

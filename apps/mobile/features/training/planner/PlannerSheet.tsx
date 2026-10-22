@@ -63,7 +63,7 @@ function PlannerBody({
               />
             </SheetSection>
             <LoadRows planner={planner} />
-            <DayToggles planner={planner} />
+            <DayToggles days={draft.days} onToggle={planner.toggleDay} />
             <StartSection
               planner={planner}
               open={calendar === "start"}

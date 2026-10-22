@@ -10,6 +10,7 @@ export type StepperProps = {
   onCommit: (text: string) => void;
   onStep: (direction: 1 | -1) => void;
   label: string;
+  placeholder?: string;
   decreaseLabel: string;
   increaseLabel: string;
   /** "card" sits on a soft panel, so its controls are white; "plain" sits on white. */
@@ -27,6 +28,7 @@ export function Stepper({
   onCommit,
   onStep,
   label,
+  placeholder,
   decreaseLabel,
   increaseLabel,
   surface,
@@ -67,6 +69,7 @@ export function Stepper({
         value={value}
         onCommit={onCommit}
         label={label}
+        placeholder={placeholder}
         keyboard={keyboard}
         inSheet={inSheet}
         style={{

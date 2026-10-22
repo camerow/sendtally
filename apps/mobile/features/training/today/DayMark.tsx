@@ -3,18 +3,27 @@ import { View } from "react-native";
 import type { DayItemKind } from "@sendtally/features/training";
 import { KIND_LOOK } from "./kindLook";
 
-export type DayMarkProps = { kind: DayItemKind; filled: boolean; onDark?: boolean };
+export type DayMarkProps = { kind: DayItemKind; filled: boolean; onDark?: boolean; scale?: number };
 
-/** A day item as a dot: filled once logged, outlined while planned. */
-export function DayMark({ kind, filled, onDark = false }: DayMarkProps): React.ReactElement {
+/** A day item as its kind's mark: filled once it happened, outlined while planned. */
+export function DayMark({
+  kind,
+  filled,
+  onDark = false,
+  scale = 1,
+}: DayMarkProps): React.ReactElement {
   const look = KIND_LOOK[kind];
   const color = onDark ? look.onDark : look.ink;
+  const [tl = 0, tr = 0, br = 0, bl = 0] = look.shape.radii.map((r) => r * scale);
   return (
     <View
       style={{
-        width: 8,
-        height: 8,
-        borderRadius: look.round ? 4 : 2,
+        width: look.shape.width * scale,
+        height: look.shape.height * scale,
+        borderTopLeftRadius: tl,
+        borderTopRightRadius: tr,
+        borderBottomRightRadius: br,
+        borderBottomLeftRadius: bl,
         ...(filled ? { backgroundColor: color } : { borderWidth: 1.5, borderColor: color }),
       }}
     />

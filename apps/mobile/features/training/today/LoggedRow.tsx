@@ -1,7 +1,7 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { colors, effortColor } from "@sendtally/design/tokens";
-import type { DayItemKind } from "@sendtally/features/training";
+import type { LoggedItem } from "@sendtally/features/training";
 import { t } from "@sendtally/features/i18n";
 import { Icon } from "../../../components/Icon";
 import { pressRow } from "../../../lib/press";
@@ -10,7 +10,7 @@ import { type } from "../type";
 import { KIND_LOOK } from "./kindLook";
 import type { LoggedRowText } from "./loggedRowText";
 
-export type LoggedRowProps = { kind: DayItemKind; text: LoggedRowText; onPress: () => void };
+export type LoggedRowProps = { kind: LoggedItem["kind"]; text: LoggedRowText; onPress: () => void };
 
 /** A session logged on the selected day, climbing or hangboard, with its effort. */
 export function LoggedRow({ kind, text, onPress }: LoggedRowProps): React.ReactElement {
@@ -41,7 +41,7 @@ export function LoggedRow({ kind, text, onPress }: LoggedRowProps): React.ReactE
           backgroundColor: look.tint,
         }}
       >
-        <Icon name={look.icon} color={look.ink} size={20} strokeWidth={1.9} />
+        <Icon name={kind} color={look.ink} size={20} strokeWidth={1.9} />
       </View>
       <View style={{ flex: 1, gap: 3 }}>
         <Text numberOfLines={1} style={[type.bodyBold, { fontSize: 15, color: colors.gunmetal }]}>

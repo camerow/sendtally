@@ -2,6 +2,7 @@ import React from "react";
 import { Text, View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
+import type { DayItemKind } from "@sendtally/features/training";
 import { type } from "../type";
 import { DayMark } from "./DayMark";
 import { kindName } from "./kindLook";
@@ -12,18 +13,29 @@ const plannedMark = (
   />
 );
 
+export type StripLegendProps = { kinds: readonly DayItemKind[] };
+
 /** What the marks under each day mean. Each cell speaks its own counts, so this stays silent. */
-export function StripLegend(): React.ReactElement {
+export function StripLegend({ kinds }: StripLegendProps): React.ReactElement {
   const entries = [
-    { key: "climb", mark: <DayMark kind="climb" filled />, label: kindName("climb") },
-    { key: "hang", mark: <DayMark kind="hang" filled />, label: kindName("hang") },
+    ...kinds.map((kind) => ({
+      key: kind,
+      mark: <DayMark kind={kind} filled />,
+      label: kindName(kind),
+    })),
     { key: "planned", mark: plannedMark, label: t("hang.planned") },
   ];
   return (
     <View
       accessibilityElementsHidden
       importantForAccessibility="no-hide-descendants"
-      style={{ flexDirection: "row", gap: 14, paddingHorizontal: 6 }}
+      style={{
+        flexDirection: "row",
+        flexWrap: "wrap",
+        columnGap: 14,
+        rowGap: 6,
+        paddingHorizontal: 6,
+      }}
     >
       {entries.map((e) => (
         <View key={e.key} style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>

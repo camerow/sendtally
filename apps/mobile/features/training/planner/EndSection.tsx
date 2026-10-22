@@ -11,12 +11,12 @@ import { SheetSection } from "../components/SheetSection";
 import { Stepper } from "../components/Stepper";
 import { type } from "../type";
 import { useHangData } from "../data/HangDataContext";
-import type { EndMode, Planner } from "./usePlanner";
+import type { EndMode, ScheduleForm } from "./types";
 
 const MAX_WEEKS = 52;
 
 export type EndSectionProps = {
-  planner: Planner;
+  planner: ScheduleForm;
   open: boolean;
   onToggle: (open: boolean) => void;
 };

@@ -11,6 +11,7 @@ import {
 } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { longDate } from "@sendtally/features/hang";
+import { useActivities, usePlanItems } from "@sendtally/features/activities";
 import { formatNumber, t } from "@sendtally/features/i18n";
 import { queries, useQuery } from "@sendtally/features/query";
 import {
@@ -24,22 +25,26 @@ import { useApi } from "../../../lib/api";
 import { Label } from "../components/Label";
 import { StatGrid } from "../components/StatGrid";
 import { useHangData } from "../data/HangDataContext";
-import { PlannerSheet } from "../planner/PlannerSheet";
-import type { PlannerRequest } from "../planner/types";
+import { PlanSheets } from "../plan/PlanSheets";
+import type { PlanRequest } from "../plan/types";
+import { usePlanActions } from "../plan/usePlanActions";
 import { SessionEditorSheet } from "../session-editor/SessionEditorSheet";
 import { startWorkout } from "../timer/startWorkout";
 import { DaySection } from "./DaySection";
 import { WeekStrip } from "./WeekStrip";
 
-/** The training-mode home: this week's climbing and hangboard, logged and planned, day by day. */
+/** The training-mode home: this week's training, logged and planned, day by day. */
 export function TodayScreen(): React.ReactElement {
   const api = useApi();
   const navigation = useNavigation();
   const { model, actions, today } = useHangData();
   const sessions = useQuery(queries.sessions(api)).state;
+  const planItems = usePlanItems(api).state;
+  const activities = useActivities(api).state;
+  const planActions = usePlanActions();
   const [offset, setOffset] = React.useState(0);
   const [selected, setSelected] = React.useState<CalendarDate>(today);
-  const [planner, setPlanner] = React.useState<PlannerRequest | null>(null);
+  const [plan, setPlan] = React.useState<PlanRequest | null>(null);
   const [editing, setEditing] = React.useState<string | null>(null);
 
   React.useEffect(
@@ -52,13 +57,17 @@ export function TodayScreen(): React.ReactElement {
   );
 
   const climbs = sessions.status === "ready" ? sessions.data.sessions : null;
+  const items = planItems.status === "ready" ? planItems.data : null;
+  const logged = activities.status === "ready" ? activities.data : null;
   const log = React.useMemo(
     (): TrainingLog => ({
       climbs: climbs ?? [],
       hangs: model.sessions,
       schedules: model.data.schedules,
+      activities: logged ?? [],
+      planItems: items ?? [],
     }),
-    [climbs, model]
+    [climbs, model, logged, items]
   );
   const monday = addDays(weekStart(today), offset * 7);
   const days = trainingWeek(log, monday, today);
@@ -93,17 +102,13 @@ export function TodayScreen(): React.ReactElement {
       <DaySection
         day={day}
         onOpen={open}
-        onEditPlan={(schedule) => setPlanner({ mode: "edit", schedule })}
+        onEditPlan={(schedule) => setPlan({ mode: "hang", request: { mode: "edit", schedule } })}
         onStart={(s) => startWorkout(s.workoutId, s.gripId)}
         onSkip={skip}
+        onEditItem={(item) => setPlan({ mode: "item", request: { mode: "edit", item } })}
+        onSkipItem={(item) => void planActions.setPlanItemSkip(item.id, selected, true)}
         onAdd={() =>
-          setPlanner({
-            mode: "new",
-            workoutId: null,
-            gripId: null,
-            days: [weekday(selected)],
-            start: maxDate(selected, today),
-          })
+          setPlan({ mode: "choose", days: [weekday(selected)], start: maxDate(selected, today) })
         }
       />
       <StatGrid
@@ -126,7 +131,7 @@ export function TodayScreen(): React.ReactElement {
           { label: t("hang.statStreak"), value: formatNumber(stats.streak) },
         ]}
       />
-      <PlannerSheet request={planner} onClose={() => setPlanner(null)} />
+      <PlanSheets request={plan} onChange={setPlan} />
       <SessionEditorSheet sessionId={editing} onClose={() => setEditing(null)} />
     </View>
   );

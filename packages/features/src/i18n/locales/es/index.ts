@@ -13,6 +13,7 @@ import { importCsv } from "./importCsv";
 import { journal } from "./journal";
 import { logSession } from "./logSession";
 import { onboarding } from "./onboarding";
+import { plan } from "./plan";
 import { projects } from "./projects";
 import { sessionDetail } from "./sessionDetail";
 import { sessions } from "./sessions";
@@ -37,6 +38,7 @@ export const es = {
   ...journal,
   ...logSession,
   ...onboarding,
+  ...plan,
   ...projects,
   ...sessionDetail,
   ...sessions,

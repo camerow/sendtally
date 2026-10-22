@@ -6,8 +6,13 @@ import { Button } from "../components/Button";
 import { type } from "../type";
 import type { Planner } from "./usePlanner";
 
+export type PlannerFooterProps = {
+  planner: Pick<Planner, "summary" | "isEdit" | "ready" | "save" | "remove">;
+  addLabel?: string;
+};
+
 /** The summary and actions, pinned under the scrolling planner. */
-export function PlannerFooter({ planner }: { planner: Planner }): React.ReactElement {
+export function PlannerFooter({ planner, addLabel }: PlannerFooterProps): React.ReactElement {
   return (
     <View style={{ gap: 10 }}>
       <View
@@ -27,7 +32,7 @@ export function PlannerFooter({ planner }: { planner: Planner }): React.ReactEle
           <Button label={t("hang.remove")} onPress={planner.remove} variant="outline" height={54} />
         )}
         <Button
-          label={planner.isEdit ? t("hang.saveChanges") : t("hang.addToSchedule")}
+          label={planner.isEdit ? t("hang.saveChanges") : (addLabel ?? t("hang.addToSchedule"))}
           onPress={planner.save}
           variant="primary"
           height={54}

@@ -6,7 +6,8 @@ import { type } from "../type";
 import { HangIcon, type HangIconName } from "./HangIcon";
 import { ON_DARK, ON_DARK_LINE } from "./onDark";
 
-export type ButtonVariant = "primary" | "outline" | "dashed" | "danger" | "link" | "outlineDark";
+export type ButtonVariant =
+  "primary" | "gold" | "outline" | "dashed" | "danger" | "link" | "outlineDark";
 
 export type ButtonProps = {
   label: string;
@@ -21,6 +22,7 @@ export type ButtonProps = {
 
 const LOOKS: Record<ButtonVariant, { box: ViewStyle; ink: string }> = {
   primary: { box: { backgroundColor: colors.gunmetal }, ink: colors.white },
+  gold: { box: { backgroundColor: colors.gold }, ink: colors.gunmetal },
   outline: { box: { borderWidth: 1, borderColor: colors.lineOnLightStrong }, ink: colors.gunmetal },
   dashed: {
     box: { borderWidth: 1.5, borderStyle: "dashed", borderColor: colors.gunmetal },

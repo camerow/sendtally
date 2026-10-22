@@ -4,7 +4,7 @@ import { weekday } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { dayTitle, weekdayShort } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
-import type { TrainingDay } from "@sendtally/features/training";
+import { dayMarks, type TrainingDay } from "@sendtally/features/training";
 import { press } from "../../../lib/press";
 import { Label } from "../components/Label";
 import { ON_DARK_SOFT } from "../components/onDark";
@@ -16,6 +16,7 @@ export type DayCellProps = { day: TrainingDay; selected: boolean; onPress: () =>
 export function DayCell({ day, selected, onPress }: DayCellProps): React.ReactElement {
   const ground = selected ? colors.gunmetal : day.isToday ? colors.gold : "transparent";
   const ink = selected ? colors.white : colors.gunmetal;
+  const marks = dayMarks(day);
   const labelInk = selected
     ? day.isToday
       ? colors.gold
@@ -30,8 +31,8 @@ export function DayCell({ day, selected, onPress }: DayCellProps): React.ReactEl
       accessibilityState={{ selected }}
       accessibilityLabel={t("training.dayAria", {
         day: dayTitle(day.date),
-        logged: day.logged.length,
-        planned: day.planned.length,
+        logged: marks.filter((m) => m.filled).length,
+        planned: marks.filter((m) => !m.filled).length,
       })}
       style={press({
         flex: 1,
@@ -50,11 +51,8 @@ export function DayCell({ day, selected, onPress }: DayCellProps): React.ReactEl
         {Number(day.date.slice(8))}
       </Text>
       <View style={{ height: 8, flexDirection: "row", alignItems: "center", gap: 3 }}>
-        {day.logged.map((item, i) => (
-          <DayMark key={`l${i}`} kind={item.kind} filled onDark={selected} />
-        ))}
-        {day.planned.map((item, i) => (
-          <DayMark key={`p${i}`} kind={item.kind} filled={false} onDark={selected} />
+        {marks.map((m, i) => (
+          <DayMark key={i} kind={m.kind} filled={m.filled} onDark={selected} />
         ))}
       </View>
     </Pressable>

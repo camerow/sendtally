@@ -14,6 +14,7 @@ export type PlanRowProps = {
   onOpen: () => void;
   onRemove: () => void;
   removeLabel: string;
+  mark?: React.ReactNode;
 };
 
 /** A scheduled workout: tap to edit, × to remove. */
@@ -25,6 +26,7 @@ export function PlanRow({
   onOpen,
   onRemove,
   removeLabel,
+  mark,
 }: PlanRowProps): React.ReactElement {
   return (
     <View
@@ -40,6 +42,7 @@ export function PlanRow({
         overflow: "hidden",
       }}
     >
+      {mark}
       <Pressable
         onPress={onOpen}
         accessibilityRole="button"
