@@ -1824,6 +1824,7 @@ const app = new Hono<AppEnv>()
               status: strava.status,
               postingEnabled: strava.posting_enabled === 1,
               postSince: strava.post_since,
+              postTraining: strava.post_training,
             },
     });
   })
@@ -1884,6 +1885,21 @@ const app = new Hono<AppEnv>()
     }
   )
 
+  .put(
+    "/v1/connections/strava/training-posting",
+    zValidator("json", trainingModeBody, invalidBody),
+    async (c) => {
+      const { enabled } = c.req.valid("json");
+      const userId = c.get("userId");
+      if ((await repo.getStravaConnection(c.env.DB, userId)) === null) {
+        return c.json({ error: "strava not connected" }, 409);
+      }
+      await repo.setTrainingPosting(c.env.DB, userId, enabled);
+      await captureEvent(c, "strava_training_posting_updated", { enabled });
+      return c.json({ postTraining: enabled });
+    }
+  )
+
   .delete("/v1/account", async (c) => {
     const userId = c.get("userId");
     await purgeAccount(c.env, userId);
@@ -1929,6 +1945,8 @@ export type {
   ActivityDetail,
   ActivityInput,
   ActivityKind,
+  ActivityPostState,
+  ActivityRecord,
   PlanItem,
   PlanItemInput,
   PlanKind,

@@ -6,6 +6,8 @@ export type {
   ActivityDetail,
   ActivityInput,
   ActivityKind,
+  ActivityPostState,
+  ActivityRecord,
   Area,
   AreaClimb,
   AreaClimbInput,

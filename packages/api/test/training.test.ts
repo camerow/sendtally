@@ -1,6 +1,8 @@
-import { env } from "cloudflare:test";
+import { createExecutionContext, env, waitOnExecutionContext } from "cloudflare:test";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { Activity, PlanItem } from "../src/lib/activities";
+import type { Activity, ActivityRecord, PlanItem } from "../src/lib/activities";
+import { encryptSecret } from "../src/lib/crypto";
+import { jsonResponse, makeFakeFetch } from "./fakes";
 import { testApp } from "./harness";
 
 afterEach(() => vi.unstubAllGlobals());
@@ -83,7 +85,15 @@ describe("activities", () => {
     expect((await call(userId, "PUT", "/v1/activities/a1", activityBody)).status).toBe(200);
     const edited = await call(userId, "PUT", "/v1/activities/a1", { ...activityBody, rpe: 8 });
     expect(await json<{ activity: Activity }>(edited)).toEqual({
-      activity: { id: "a1", ...activityBody, rpe: 8 },
+      activity: {
+        id: "a1",
+        ...activityBody,
+        rpe: 8,
+        stravaActivityId: null,
+        postedAt: null,
+        postState: null,
+        postError: null,
+      },
     });
     const list = await json<{ activities: Activity[] }>(
       await call(userId, "GET", "/v1/activities")
@@ -114,7 +124,7 @@ describe("activities", () => {
     };
     for (const detail of [setsDetail, checklist]) {
       const res = await call(userId, "PUT", "/v1/activities/a1", { ...activityBody, detail });
-      expect(await json(res)).toEqual({ activity: { id: "a1", ...activityBody, detail } });
+      expect(await json(res)).toMatchObject({ activity: { id: "a1", ...activityBody, detail } });
     }
     const row = await env.DB.prepare("SELECT detail_kind FROM activities WHERE user_id = ?")
       .bind(userId)
@@ -266,5 +276,217 @@ describe("plan items", () => {
         .first<{ n: number }>();
       expect(`${table}:${row?.n}`).toBe(`${table}:0`);
     }
+  });
+});
+
+async function send(
+  userId: string,
+  method: string,
+  path: string,
+  body: unknown,
+  fetchImpl: typeof fetch
+): Promise<Response> {
+  const ctx = createExecutionContext();
+  const res = await testApp(fetchImpl).request(
+    path,
+    {
+      method,
+      headers: { "x-test-user": userId, "Content-Type": "application/json" },
+      ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+    },
+    env,
+    ctx
+  );
+  await waitOnExecutionContext(ctx);
+  return res;
+}
+
+async function connectStrava(userId: string, postTraining: boolean): Promise<void> {
+  await env.DB.prepare(
+    `INSERT OR IGNORE INTO users (id, timezone, created_at) VALUES (?, 'UTC', '')`
+  )
+    .bind(userId)
+    .run();
+  await env.DB.prepare(
+    `INSERT INTO strava_connections
+       (user_id, athlete_id, access_token_ciphertext, refresh_token_ciphertext, expires_at,
+        status, connected_at, posting_enabled, post_training)
+     VALUES (?, 999, ?, ?, ?, 'active', '', 1, ?)`
+  )
+    .bind(
+      userId,
+      await encryptSecret("access-tok", env.TOKEN_KEY),
+      await encryptSecret("refresh-tok", env.TOKEN_KEY),
+      Math.floor(Date.now() / 1000) + 86_400,
+      postTraining ? 1 : 0
+    )
+    .run();
+}
+
+function stravaRoutes(activityId = 616161) {
+  return makeFakeFetch([
+    {
+      match: (url, method) => url.endsWith("/api/v3/activities") && method === "POST",
+      respond: () => jsonResponse(201, { id: activityId }),
+    },
+    {
+      match: (url, method) => url.endsWith(`/api/v3/activities/${activityId}`) && method === "PUT",
+      respond: () => jsonResponse(200, { id: activityId }),
+    },
+  ]);
+}
+
+const firstActivity = async (userId: string): Promise<ActivityRecord | undefined> =>
+  (await json<{ activities: ActivityRecord[] }>(await call(userId, "GET", "/v1/activities")))
+    .activities[0];
+
+describe("activity strava posting", () => {
+  it("posts a new strength activity as WeightTraining with what was done", async () => {
+    const userId = "user_activity_post";
+    await connectStrava(userId, true);
+    const { fetchImpl, calls } = stravaRoutes();
+
+    await send(
+      userId,
+      "PUT",
+      "/v1/activities/a1",
+      { ...activityBody, detail: setsDetail },
+      fetchImpl
+    );
+
+    const creates = calls.filter((c) => c.method === "POST");
+    expect(creates).toHaveLength(1);
+    const form = new URLSearchParams(creates[0]?.body ?? "");
+    expect(form.get("sport_type")).toBe("WeightTraining");
+    expect(form.get("name")).toBe("Leg day");
+    expect(form.get("start_date_local")).toBe("2026-10-01T18:30:00Z");
+    expect(form.get("elapsed_time")).toBe("3000");
+    expect(form.get("description")).toBe(
+      [
+        "RPE 7/10",
+        "created by https://sendtally.com",
+        "Back squat 5×100 kg",
+        "Copenhagen plank 30s L",
+      ].join("\n")
+    );
+    expect(await firstActivity(userId)).toMatchObject({
+      stravaActivityId: "616161",
+      postState: "posted",
+      postError: null,
+    });
+  });
+
+  it("maps kinds to sport types and lands an untimed activity at noon", async () => {
+    const userId = "user_activity_kinds";
+    await connectStrava(userId, true);
+    const { fetchImpl, calls } = stravaRoutes();
+    const checklist = {
+      kind: "checklist",
+      items: [
+        { text: "Cat-cow", dose: "× 10", done: true },
+        { text: "Deep squat hold", dose: "", done: true },
+        { text: "Pigeon", dose: "1 min", done: false },
+      ],
+    };
+    const kinds = { yoga: "Yoga", run: "Run", mobility: "Workout", other: "Workout" };
+    for (const kind of Object.keys(kinds)) {
+      await send(
+        userId,
+        "PUT",
+        `/v1/activities/${kind}`,
+        { ...activityBody, kind, startTime: null, rpe: null, detail: checklist },
+        fetchImpl
+      );
+    }
+    const forms = calls.map((c) => new URLSearchParams(c.body));
+    expect(forms.map((f) => f.get("sport_type"))).toEqual(Object.values(kinds));
+    expect(forms[0]?.get("start_date_local")).toBe("2026-10-01T12:00:00Z");
+    expect(forms[0]?.get("description")).toBe(
+      ["created by https://sendtally.com", "✓ Cat-cow × 10", "✓ Deep squat hold"].join("\n")
+    );
+  });
+
+  it("patches the activity on edit, never posts a second, and leaves it on delete", async () => {
+    const userId = "user_activity_edit";
+    await connectStrava(userId, true);
+    const { fetchImpl, calls } = stravaRoutes();
+
+    await send(userId, "PUT", "/v1/activities/a1", activityBody, fetchImpl);
+    await send(userId, "PUT", "/v1/activities/a1", { ...activityBody, title: "Legs" }, fetchImpl);
+
+    expect(calls.filter((c) => c.method === "POST")).toHaveLength(1);
+    const updates = calls.filter((c) => c.method === "PUT");
+    expect(updates).toHaveLength(1);
+    expect(new URLSearchParams(updates[0]?.body ?? "").get("name")).toBe("Legs");
+
+    await send(userId, "DELETE", "/v1/activities/a1", undefined, fetchImpl);
+    expect(calls.filter((c) => c.method === "DELETE")).toHaveLength(0);
+  });
+
+  it("does not post when training posting is off, until asked for one activity", async () => {
+    const userId = "user_activity_off";
+    await connectStrava(userId, false);
+    const { fetchImpl, calls } = stravaRoutes();
+
+    await send(userId, "PUT", "/v1/activities/a1", activityBody, fetchImpl);
+    await send(userId, "PUT", "/v1/activities/a1", { ...activityBody, rpe: 8 }, fetchImpl);
+    expect(calls).toHaveLength(0);
+
+    const res = await send(userId, "POST", "/v1/activities/a1/strava", undefined, fetchImpl);
+    expect(res.status).toBe(200);
+    const { activity } = await json<{ activity: ActivityRecord }>(res);
+    expect(activity).toMatchObject({ stravaActivityId: "616161", postState: "posted", rpe: 8 });
+
+    await send(userId, "POST", "/v1/activities/a1/strava", undefined, fetchImpl);
+    expect(calls.filter((c) => c.method === "POST")).toHaveLength(1);
+  });
+
+  it("records a rate limit as a failed post that a retry can finish", async () => {
+    const userId = "user_activity_rate";
+    await connectStrava(userId, true);
+    const limited = makeFakeFetch([
+      { match: () => true, respond: () => jsonResponse(429, { message: "Rate Limit Exceeded" }) },
+    ]);
+
+    await send(userId, "PUT", "/v1/activities/a1", activityBody, limited.fetchImpl);
+    expect(await firstActivity(userId)).toMatchObject({
+      postState: "failed",
+      postError: "strava rate limit hit, not posted yet",
+      stravaActivityId: null,
+    });
+
+    const { fetchImpl } = stravaRoutes();
+    const res = await send(userId, "POST", "/v1/activities/a1/strava", undefined, fetchImpl);
+    expect(res.status).toBe(200);
+    expect(await firstActivity(userId)).toMatchObject({ postState: "posted" });
+  });
+
+  it("404s a post for an activity that does not exist", async () => {
+    const res = await call("user_activity_missing", "POST", "/v1/activities/nope/strava");
+    expect(res.status).toBe(404);
+  });
+
+  it("turns training posting on and reports it from status", async () => {
+    const userId = "user_activity_toggle";
+    await connectStrava(userId, false);
+    const res = await call(userId, "PUT", "/v1/connections/strava/training-posting", {
+      enabled: true,
+    });
+    expect(await json<unknown>(res)).toEqual({ postTraining: true });
+    expect(await json<unknown>(await call(userId, "GET", "/v1/status"))).toMatchObject({
+      strava: { postTraining: true },
+    });
+  });
+
+  it("409s the training preference without a Strava connection", async () => {
+    const res = await call(
+      "user_activity_nostrava",
+      "PUT",
+      "/v1/connections/strava/training-posting",
+      {
+        enabled: true,
+      }
+    );
+    expect(res.status).toBe(409);
   });
 });
