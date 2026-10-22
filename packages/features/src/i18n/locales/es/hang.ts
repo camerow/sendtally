@@ -148,6 +148,7 @@ export const hang = {
   "hang.increase": "Aumentar {field}",
   "hang.unitSec": "s",
   "hang.unitMin": "min",
+  "hang.protocol": "Protocolo",
   "hang.preview": "Vista previa",
 
   "hang.planBlock": "Planificar un bloque",
@@ -280,6 +281,9 @@ export const hang = {
   "hang.lessCompletion": "Menos completado",
   "hang.moreCompletion": "Más completado",
   "hang.deleteSession": "Eliminar sesión",
+  "hang.deleteFromLog": "Se elimina de tu registro.",
+  "hang.deleteFromLogStrava":
+    "Se elimina de tu registro. Strava no permite a las apps eliminar actividades, así que la actividad de Strava se queda.",
   "hang.deleteConfirmTitle": "¿Eliminar esta sesión?",
   "hang.deleteConfirm": "Se elimina de hangtally y sendtally.",
   "hang.deleteConfirmStrava":
