@@ -14,6 +14,8 @@ export default [
   route("privacy", "routes/privacy.tsx"),
   route("terms", "routes/terms.tsx"),
   route("support", "routes/support.tsx"),
+  route("blog", "routes/blog._index.tsx"),
+  route("blog/:slug", "routes/blog.$slug.tsx"),
   route("app", "routes/app.tsx", [
     index("routes/app._index.tsx"),
     route("setup", "routes/app.setup.tsx"),

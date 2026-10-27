@@ -21,6 +21,9 @@ export function Nav({ sections = true }: NavProps): React.ReactElement {
               {section.label}
             </a>
           ))}
+        <a href="/blog" className="l-nav-anchor">
+          {copy.nav.blog}
+        </a>
         <div className="l-nav-actions">
           {!signedIn && (
             <Button variant="ghostOnLight" size="sm" href="/sign-in">
