@@ -67,7 +67,7 @@ export function AddPlanScreen({ flow }: AddPlanScreenProps): React.ReactElement 
     >
       {kind !== null && (
         <View style={{ gap: 4 }}>
-          <Label color={colors.labelAccent}>{kicker}</Label>
+          <Label color={colors.gunmetal}>{kicker}</Label>
           <Title size={34}>{kindLabel(kind)}</Title>
         </View>
       )}
