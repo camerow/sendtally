@@ -117,6 +117,7 @@ describe("Log activity", () => {
       targetRpe: 3,
       variations: [{ label: "", items: [{ exercise: "Pigeon", dose: { sets: 1, onS: 60 } }] }],
       pattern: [0],
+      exerciseRestS: 180,
     });
     expect(router.push).toHaveBeenCalledWith({
       pathname: "/workout/[id]",

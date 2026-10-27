@@ -38,6 +38,7 @@ const legs: WorkoutRecord = {
     { label: "Light", items: [{ exercise: "Back squat", dose: { sets: 3, reps: 8 } }] },
   ],
   pattern: [0, 1],
+  exerciseRestS: 180,
   updatedAt: "t",
 };
 

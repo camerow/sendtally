@@ -155,6 +155,7 @@ export const hang = {
   "hang.nextHang": "Hang {n}s · set {set}",
   "hang.nextRest": "Rest {n}s",
   "hang.nextSetRest": "Set rest {time}",
+  "hang.nextExerciseRest": "Rest {time}, then the next exercise",
   "hang.nextLift": "Lift {reps} × {load}",
   "hang.restartInterval": "Restart this interval",
   "hang.skipInterval": "Skip to next interval",

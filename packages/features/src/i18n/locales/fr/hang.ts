@@ -156,6 +156,7 @@ export const hang = {
   "hang.nextHang": "Suspension {n} s · série {set}",
   "hang.nextRest": "Repos {n} s",
   "hang.nextSetRest": "Repos série {time}",
+  "hang.nextExerciseRest": "Repos {time}, puis l'exercice suivant",
   "hang.nextLift": "Tirage {reps} × {load}",
   "hang.restartInterval": "Recommencer cet intervalle",
   "hang.skipInterval": "Passer à l'intervalle suivant",

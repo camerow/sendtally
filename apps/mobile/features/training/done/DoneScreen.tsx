@@ -5,6 +5,7 @@ import { ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors } from "@sendtally/design/tokens";
 import {
+  plannedWork,
   protocolDose,
   protocolOf,
   type HangSetup,
@@ -19,7 +20,7 @@ import { Label } from "../components/Label";
 import { StatGrid } from "../components/StatGrid";
 import { Title } from "../components/Title";
 import { useHangData } from "../data/HangDataContext";
-import { usePlannedRun } from "../timer/usePlannedRun";
+import { usePlannedRun, type PlannedItem } from "../timer/usePlannedRun";
 import { SetupFields } from "../setup/SetupFields";
 import { openTrends } from "../trends/openTrends";
 import { type } from "../type";
@@ -38,12 +39,13 @@ function setsDone(w: HangWorkout, setup: HangSetup, count: number): SetDone[] {
 }
 
 function Done({
-  workout,
+  items,
   params,
 }: {
-  workout: HangWorkout;
+  items: readonly [PlannedItem, ...PlannedItem[]];
   params: DoneParams;
 }): React.ReactElement {
+  const workout = items[0].workout;
   const { model, actions, today } = useHangData();
   const [rpe, setRpe] = React.useState<number | null>(null);
   const { result, gripId } = params;
@@ -63,7 +65,15 @@ function Done({
       rpe,
       protocol: protocolOf(workout),
       ...params.link,
-      done: [{ item: 0, exercise: gripId, sets: setsDone(workout, setup, result.setsDone) }],
+      done: [
+        { item: 0, exercise: gripId, sets: setsDone(workout, setup, result.setsDone) },
+        ...params.more.flatMap((m, k) => {
+          const next = items[k + 1]?.workout;
+          return next === undefined
+            ? []
+            : [{ item: k + 1, exercise: next.grip, sets: setsDone(next, m, m.setsDone) }];
+        }),
+      ],
     });
     openTrends(workout.id, gripId);
   };
@@ -85,7 +95,16 @@ function Done({
           </Label>
           <Title size={40}>{workout.name}</Title>
         </View>
-        <StatGrid columns={2} valueSize={22} stats={doneStats(workout, result, load)} />
+        <StatGrid
+          columns={2}
+          valueSize={22}
+          stats={doneStats(
+            workout,
+            result,
+            load,
+            items.reduce((sum, i) => sum + plannedWork(i.workout), 0)
+          )}
+        />
         {partial && (
           <Text style={[type.body, { fontSize: 14, lineHeight: 21, color: colors.textSecondary }]}>
             {partialNote(workout, result, load)}
@@ -105,5 +124,5 @@ function Done({
 
 export function DoneScreen({ params }: { params: DoneParams }): React.ReactElement | null {
   const planned = usePlannedRun(params.workoutId, params.link);
-  return planned === undefined ? null : <Done workout={planned.workout} params={params} />;
+  return planned === undefined ? null : <Done items={planned.items} params={params} />;
 }

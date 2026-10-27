@@ -6,16 +6,16 @@ import {
   isWork,
   protocolOf,
   resultOf,
-  startRun,
+  setsDoneByItem,
+  startWorkoutRun,
   type HangSetup,
-  type HangWorkout,
   type PlanLink,
 } from "@sendtally/core/hang";
 import { loadLabel, setupLabel } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import { ON_DARK_SOFT } from "../components/onDark";
 import { useHangData } from "../data/HangDataContext";
-import { usePlannedRun } from "./usePlannedRun";
+import { usePlannedRun, type PlannedRun } from "./usePlannedRun";
 import { donePath } from "../done/doneParams";
 import { type } from "../type";
 import { phaseLook } from "./phaseLook";
@@ -27,33 +27,57 @@ import { timerText } from "./timerText";
 import { useTimer } from "./useTimer";
 
 function Timer({
-  workout,
-  gripId,
-  setup,
+  planned,
+  grips,
+  setups,
   link,
 }: {
-  workout: HangWorkout;
-  gripId: string;
-  setup: HangSetup;
+  planned: PlannedRun;
+  grips: readonly string[];
+  setups: readonly HangSetup[];
   link: PlanLink;
 }): React.ReactElement {
-  const { edgeMm, loadKg } = setup;
   const { model } = useHangData();
-  const timer = useTimer((now) => startRun(protocolOf(workout), now));
+  const { items, exerciseRestS } = planned;
+  const workout = items[0].workout;
+  const timer = useTimer((now) =>
+    startWorkoutRun(
+      items.map((i) => protocolOf(i.workout)),
+      exerciseRestS,
+      now
+    )
+  );
   const { run, secondsLeft, progress } = timer;
   const phase = currentPhase(run);
+  const current = (items[phase.item] ?? items[0]).workout;
+  const setup = setups[phase.item] ?? { edgeMm: 0, loadKg: 0 };
+  const gripId = grips[phase.item] ?? current.grip;
   const pull = phase.kind === "pull";
   const working = isWork(phase.kind);
-  const load = loadLabel(workout.kind, loadKg, model.settings.units);
-  const text = timerText(run, secondsLeft, load);
-  const look = phaseLook(working, phase.kind === "ready");
+  const load = loadLabel(current.kind, setup.loadKg, model.settings.units);
+  const text = timerText(run, secondsLeft, load, current.sets);
+  const look = phaseLook(working, phase.kind === "ready" && run.index === 0);
 
+  const sent = React.useRef(false);
   React.useEffect(() => {
-    if (run.finished !== null)
-      router.replace(
-        donePath({ workoutId: workout.id, gripId, edgeMm, loadKg, result: resultOf(run), link })
-      );
-  }, [run, workout.id, gripId, edgeMm, loadKg, link]);
+    if (run.finished === null || sent.current) return;
+    sent.current = true;
+    const [first = 0, ...rest] = setsDoneByItem(
+      run,
+      items.map((i) => i.workout.sets)
+    );
+    const [setup0 = { edgeMm: 0, loadKg: 0 }, ...more] = setups;
+    router.replace(
+      donePath({
+        workoutId: workout.id,
+        gripId: grips[0] ?? workout.grip,
+        ...setup0,
+        result: { ...resultOf(run), setsDone: first },
+        link,
+        more: more.map((s, k) => ({ ...s, setsDone: rest[k] ?? 0 })),
+      })
+    );
+  }, [run, items, workout, grips, setups, link]);
 
   const lift = (ok: boolean): void => {
     timer.play(ok ? "lift" : "miss");
@@ -65,7 +89,7 @@ function Timer({
     <TimerFrame
       timer={timer}
       name={workout.name}
-      meta={`${model.gripName(gripId)} · ${setupLabel(workout.kind, setup, model.settings.units)}`}
+      meta={`${model.gripName(gripId)} · ${setupLabel(current.kind, setup, model.settings.units)}`}
       controls={{
         color: look.fill,
         primary: pull
@@ -95,7 +119,7 @@ function Timer({
         />
         <View style={{ alignItems: "center", gap: 10 }}>
           <Text style={[type.label, { color: ON_DARK_SOFT }]}>{text.setLine}</Text>
-          <RepDots reps={workout.reps} marks={run.marks} working={working} />
+          <RepDots reps={current.reps} marks={run.marks} working={working} />
         </View>
       </View>
     </TimerFrame>
@@ -111,17 +135,19 @@ export function TimerScreen({
 }: TimerScreenProps): React.ReactElement | null {
   const { model } = useHangData();
   const planned = usePlannedRun(workoutId, link);
-  const [setup, setSetup] = React.useState<HangSetup | null>(null);
+  const [setups, setSetups] = React.useState<HangSetup[] | null>(null);
   if (planned === undefined) return null;
-  const { workout, dose } = planned;
-  return setup === null ? (
+  const grips = planned.items.map((item, i) => (i === 0 ? gripId : item.workout.grip));
+  return setups === null ? (
     <SetupStep
-      workout={workout}
-      gripId={gripId}
-      initial={model.setup(workout, gripId, dose)}
-      onStart={setSetup}
+      name={planned.items[0].workout.name}
+      entries={planned.items.map(({ workout, dose }, i) => {
+        const grip = i === 0 ? gripId : workout.grip;
+        return { gripId: grip, kind: workout.kind, initial: model.setup(workout, grip, dose) };
+      })}
+      onStart={setSetups}
     />
   ) : (
-    <Timer workout={workout} gripId={gripId} setup={setup} link={link} />
+    <Timer planned={planned} grips={grips} setups={setups} link={link} />
   );
 }

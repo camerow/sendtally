@@ -8,7 +8,7 @@ import {
   text,
   uniqueIndex,
 } from "drizzle-orm/sqlite-core";
-import { WORKOUT_KINDS } from "@sendtally/core/hang";
+import { DEFAULT_EXERCISE_REST_S, WORKOUT_KINDS } from "@sendtally/core/hang";
 
 export const users = sqliteTable("users", {
   id: text("id").primaryKey(),
@@ -631,6 +631,7 @@ export const workouts = sqliteTable(
     kind: text("kind", { enum: WORKOUT_KINDS }).notNull().default("other"),
     variations_json: text("variations_json").notNull().default('[{"label":"","items":[]}]'),
     pattern_json: text("pattern_json").notNull().default("[0]"),
+    exercise_rest_s: integer("exercise_rest_s").notNull().default(DEFAULT_EXERCISE_REST_S),
     created_at: text("created_at").notNull(),
     updated_at: text("updated_at").notNull(),
   },

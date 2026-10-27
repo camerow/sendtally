@@ -28,6 +28,7 @@ const record = (
   targetRpe: null,
   variations: [{ label: "", items: [] }],
   pattern: [0],
+  exerciseRestS: 180,
   updatedAt: "2026-10-01T00:00:00Z",
   ...over,
 });
@@ -114,6 +115,7 @@ describe("libraryOf", () => {
       targetRpe: null,
       variations: [{ label: "", items: [] }],
       pattern: [0],
+      exerciseRestS: 180,
     });
   });
 });
@@ -231,8 +233,22 @@ describe("summaries", () => {
   it("takes a timed workout's length from its first variation when it has no minutes", () => {
     expect(workoutMinutes(byId("run-tempo"))).toBe(25);
     expect(workoutMinutes({ ...byId("run-tempo"), minutes: null })).toBe(25);
-    expect(workoutMinutes(byId("rep73"))).toBe(21);
     expect(workoutMinutes(byId("w-legs"))).toBe(50);
     expect(workoutMinutes({ ...byId("w-legs"), minutes: null })).toBeNull();
+  });
+
+  it("counts a hangboard workout's length from its items and the rest between them", () => {
+    // 6 sets × 6 hangs × (7s + 3s) + 6 × 3:00 set rest = 24 minutes.
+    expect(workoutMinutes(byId("rep73"))).toBe(24);
+    const rep73 = byId("rep73");
+    const [first] = rep73.variations;
+    const twice = {
+      ...rep73,
+      minutes: 90,
+      exerciseRestS: 120,
+      variations: [{ label: "", items: [...(first?.items ?? []), ...(first?.items ?? [])] }],
+    };
+    expect(workoutMinutes(twice)).toBe(50);
+    expect(workoutMinutes({ ...twice, variations: [{ label: "", items: [] }] })).toBeNull();
   });
 });

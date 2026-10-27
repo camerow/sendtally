@@ -1,4 +1,5 @@
 import {
+  DEFAULT_EXERCISE_REST_S,
   defaultPattern,
   isCalendarDate,
   WORKOUT_KINDS,
@@ -74,6 +75,8 @@ export const workoutBody = z
     targetRpe: rpe.nullable(),
     variations: z.array(variation).min(1).max(MAX_VARIATIONS),
     pattern: z.array(variationIndex).min(1).max(20).optional(),
+    // Older app builds send none.
+    exerciseRestS: seconds.default(DEFAULT_EXERCISE_REST_S),
   })
   .transform(({ pattern, ...w }) => ({
     ...w,
@@ -147,6 +150,7 @@ export const workoutOf = (row: WorkoutRow): WorkoutRecord => ({
   targetRpe: row.target_rpe,
   variations: JSON.parse(row.variations_json) as Variation[],
   pattern: JSON.parse(row.pattern_json) as number[],
+  exerciseRestS: row.exercise_rest_s,
   updatedAt: row.updated_at,
 });
 

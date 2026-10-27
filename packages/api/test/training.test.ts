@@ -202,10 +202,14 @@ describe("workouts", () => {
       variations: [
         {
           label: "",
-          items: [{ exercise: "half", dose: { sets: 3, reps: 6, onS: 7, offS: 3, edgeMm: 20 } }],
+          items: [
+            { exercise: "half", dose: { sets: 3, reps: 6, onS: 7, offS: 3, edgeMm: 20 } },
+            { exercise: "open", dose: { sets: 3, reps: 1, onS: 10, setRestS: 120 } },
+          ],
         },
       ],
       pattern: [0],
+      exerciseRestS: 240,
     });
     await call(userId, "PUT", "/v1/workouts/w1", { ...squatWorkout, name: "Squat" });
     const { workouts } = await json<{ workouts: WorkoutRecord[] }>(
@@ -216,6 +220,13 @@ describe("workouts", () => {
       ["w2", "hangboard", "Repeaters"],
     ]);
     expect(workouts[0]).toMatchObject({ ...squatWorkout, name: "Squat" });
+    expect(workouts[1]?.exerciseRestS).toBe(240);
+  });
+
+  it("rests three minutes between exercises when an older app sends no rest", async () => {
+    const userId = "user_workouts_exercise_rest";
+    const res = await call(userId, "PUT", "/v1/workouts/w1", squatWorkout);
+    expect(await json(res)).toMatchObject({ workout: { exerciseRestS: 180 } });
   });
 
   it("takes every variation in turn when no pattern is sent", async () => {
@@ -248,6 +259,7 @@ describe("workouts", () => {
       { ...squatWorkout, pattern: [] },
       { ...squatWorkout, pattern: [0, 2] },
       { ...squatWorkout, targetRpe: 11 },
+      { ...squatWorkout, exerciseRestS: -1 },
       {
         ...squatWorkout,
         variations: [{ label: "", items: [{ exercise: "Squat", dose: { sets: 0 } }] }],

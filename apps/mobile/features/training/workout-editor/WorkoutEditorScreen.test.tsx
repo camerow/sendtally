@@ -52,6 +52,7 @@ describe("Workout editor", () => {
         { label: "3×10", items: [{ exercise: "Back squat", dose: { sets: 3, reps: 10 } }] },
       ],
       pattern: [0, 0, 1],
+      exerciseRestS: 180,
     });
     expect(router.back).toHaveBeenCalled();
   });
@@ -63,7 +64,13 @@ describe("Workout editor", () => {
 
     await fireEvent.press(screen.getByLabelText("Choose a grip: Half crimp"));
     await fireEvent.press(screen.getByText("Open hand"));
-    await type("Hang", "12");
+    await type("Hang time", "12");
+    expect(screen.queryByText("Minutes")).toBeNull();
+    expect(screen.getByText("16m")).toBeTruthy();
+    await fireEvent.press(screen.getByText("Add grip"));
+    expect(screen.getByText("35m")).toBeTruthy();
+    await type("Rest between exercises", "2:00");
+    expect(screen.getByText("34m")).toBeTruthy();
     await fireEvent.press(screen.getByText("Save"));
 
     expect(mockWorkouts.saveWorkout).toHaveBeenCalledWith(
@@ -71,10 +78,15 @@ describe("Workout editor", () => {
       expect.objectContaining({
         kind: "hangboard",
         name: "Max hangs (copy)",
+        minutes: null,
+        exerciseRestS: 120,
         variations: [
           {
             label: "",
-            items: [{ exercise: "open", dose: { sets: 5, reps: 1, onS: 12, setRestS: 180 } }],
+            items: [
+              { exercise: "open", dose: { sets: 5, reps: 1, onS: 12, setRestS: 180 } },
+              { exercise: "open", dose: { sets: 5, reps: 1, onS: 12, setRestS: 180 } },
+            ],
           },
         ],
       })

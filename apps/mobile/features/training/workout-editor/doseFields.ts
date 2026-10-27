@@ -22,8 +22,8 @@ const time = (key: DoseKey, label: MessageKey): DoseField => ({ key, label, meas
 export const DOSE_FIELDS_OF: Record<WorkoutKind, readonly DoseField[]> = {
   hangboard: [
     count("reps", "workouts.dose.hangs"),
-    time("onS", "workouts.dose.hang"),
-    time("offS", "workouts.dose.rest"),
+    time("onS", "workouts.dose.hangTime"),
+    time("offS", "workouts.dose.restTime"),
     count("sets", "workouts.dose.sets"),
     time("setRestS", "workouts.dose.setRest"),
   ],

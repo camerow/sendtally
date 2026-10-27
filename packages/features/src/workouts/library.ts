@@ -1,6 +1,8 @@
 import type { ActivityKind, WorkoutRecord } from "@sendtally/api-client";
 import {
+  DEFAULT_EXERCISE_REST_S,
   doseProtocol,
+  hangboardSeconds,
   isBuiltInGrip,
   itemsSeconds,
   timeUnitsOf,
@@ -53,15 +55,25 @@ export function newWorkoutDraft(kind: WorkoutKind): WorkoutDraft {
     targetRpe: null,
     variations: [{ label: "", items: [] }],
     pattern: [0],
+    exerciseRestS: DEFAULT_EXERCISE_REST_S,
   };
 }
 
-/** Minutes, or for timed work without them the time its first variation takes. */
-export function workoutMinutes(w: Pick<Workout, "kind" | "minutes" | "variations">): number | null {
-  if (w.minutes !== null) return w.minutes;
+const roundMinutes = (seconds: number): number => Math.max(1, Math.round(seconds / 60));
+
+/**
+ * How long the first variation takes: for hangboard always counted from its items,
+ * otherwise the minutes set, or for timed work without them the time its items take.
+ */
+export function workoutMinutes(
+  w: Pick<Workout, "kind" | "minutes" | "variations" | "exerciseRestS">
+): number | null {
   const items = w.variations[0]?.items ?? [];
-  const timed = w.kind === "hangboard" || items.some((i) => i.dose.onS !== undefined);
-  return timed && items.length > 0 ? Math.max(1, Math.round(itemsSeconds(items) / 60)) : null;
+  if (w.kind === "hangboard")
+    return items.length > 0 ? roundMinutes(hangboardSeconds(items, w.exerciseRestS)) : null;
+  if (w.minutes !== null) return w.minutes;
+  const timed = items.some((i) => i.dose.onS !== undefined);
+  return timed ? roundMinutes(itemsSeconds(items)) : null;
 }
 
 /** An item's exercise as the user reads it: a built-in grip in their language. */

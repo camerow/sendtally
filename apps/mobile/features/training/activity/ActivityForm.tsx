@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import type { ActivityRecord } from "@sendtally/api-client";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
-import type { ItemDone } from "@sendtally/core/hang";
+import { DEFAULT_EXERCISE_REST_S, type ItemDone } from "@sendtally/core/hang";
 import {
   activityFromDraft,
   kindLabel,
@@ -87,6 +87,7 @@ export function ActivityForm({ id, initial, logged }: ActivityFormProps): React.
       targetRpe: draft.rpe,
       variations: [{ label: "", items }],
       pattern: [0],
+      exerciseRestS: DEFAULT_EXERCISE_REST_S,
     });
     router.push({ pathname: "/workout/[id]", params: { id: workoutId } });
   };

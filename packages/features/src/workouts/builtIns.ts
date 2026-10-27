@@ -1,4 +1,5 @@
 import {
+  DEFAULT_EXERCISE_REST_S,
   defaultPattern,
   type BuiltInGrip,
   type Dose,
@@ -22,6 +23,7 @@ type BuiltIn = {
   targetRpe: number | null;
   variations: VariationSpec[];
   pattern?: number[];
+  exerciseRestS?: number;
 };
 
 const one = (...items: ItemSpec[]): VariationSpec[] => [{ label: null, items }];
@@ -59,7 +61,7 @@ const BUILT_INS: readonly BuiltIn[] = [
     kind: "hangboard",
     name: "workouts.builtIn.fingersAb.name",
     description: "workouts.builtIn.fingersAb.blurb",
-    minutes: 35,
+    minutes: null,
     targetRpe: 8,
     variations: [
       {
@@ -273,5 +275,6 @@ export function builtInWorkouts(): LibraryWorkout[] {
       items: v.items.map(itemOf),
     })),
     pattern: w.pattern ?? defaultPattern(w.variations.length),
+    exerciseRestS: w.exerciseRestS ?? DEFAULT_EXERCISE_REST_S,
   }));
 }
