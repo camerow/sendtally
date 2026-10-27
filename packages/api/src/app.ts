@@ -57,7 +57,10 @@ import {
   climbCatalogue,
   climbNotesOf,
   climbSlug,
+  missingClimbs,
   projectBody,
+  renameBody,
+  restampedSessions,
   withClimbNotes,
 } from "./lib/climbs";
 import { decryptSecret, encryptSecret } from "./lib/crypto";
@@ -858,16 +861,57 @@ const app = new Hono<AppEnv>()
     return c.json({ tags: await repo.listTags(c.env.DB, c.get("userId")) });
   })
 
-  // Every named climb the user has logged, with a project flag. Stats come
-  // from the session rows on read, so edits and deletions never leave a
-  // project count stale.
   .get("/v1/climbs", async (c) => {
     const userId = c.get("userId");
-    const [rows, projects] = await Promise.all([
-      repo.listSessions(c.env.DB, userId, 5000, true),
-      repo.listProjects(c.env.DB, userId),
+    const db = c.env.DB;
+    const [rows, known, links, viewer] = await Promise.all([
+      repo.listSessions(db, userId, 5000, true),
+      repo.listUserClimbs(db, userId),
+      repo.listSessionClimbLinks(db, userId),
+      repo.getViewer(db, userId),
     ]);
-    return c.json({ climbs: climbCatalogue(rows, projects) });
+    const missing = missingClimbs(rows, known, links);
+    if (missing.create.length > 0 || missing.link.length > 0) {
+      await repo.ensureUser(db, userId);
+      await repo.insertUserClimbs(db, userId, missing.create);
+      await repo.linkUserClimbs(db, userId, missing.link);
+    }
+    const records =
+      missing.create.length > 0 || missing.link.length > 0
+        ? await repo.listUserClimbs(db, userId)
+        : known;
+    const areaIds = [...new Set(rows.flatMap((r) => (r.area_id === null ? [] : [r.area_id])))];
+    const areaNames = new Map(
+      (await repo.areasByIds(db, viewer, areaIds)).map((a) => [a.id, a.name])
+    );
+    return c.json({ climbs: climbCatalogue(rows, records, areaNames) });
+  })
+
+  .patch("/v1/climbs/:id", zValidator("json", renameBody, invalidBody), async (c) => {
+    const userId = c.get("userId");
+    const db = c.env.DB;
+    const form = c.req.valid("json");
+    const records = await repo.listUserClimbs(db, userId);
+    const climb = records.find((r) => r.id === c.req.param("id"));
+    if (climb === undefined) return c.json({ error: "not found" }, 404);
+    if (form.working !== undefined) {
+      await repo.setUserClimbWorking(db, userId, climb.id, form.working);
+    }
+    if (form.name === undefined) return c.json({ id: climb.id });
+    const nameKey = climbSlug(form.name);
+    if (nameKey === "") return c.json({ error: "invalid request body" }, 400);
+    const into = records.find((r) => r.name_key === nameKey && r.id !== climb.id) ?? null;
+    const target = into?.id ?? climb.id;
+    const rows = await repo.listSessions(db, userId, 5000, true);
+    await repo.renameUserClimb(db, userId, {
+      climb: { ...climb, working: form.working ?? climb.working },
+      name: form.name,
+      nameKey,
+      into,
+      sessions: restampedSessions(rows, records, climb, target),
+    });
+    await captureEvent(c, into === null ? "climb_renamed" : "climb_merged", {});
+    return c.json({ id: target });
   })
 
   // Marking a project from the projects page rather than the log form: the
@@ -879,8 +923,8 @@ const app = new Hono<AppEnv>()
     if (slug === "") return c.json({ error: "invalid request body" }, 400);
     const userId = c.get("userId");
     await repo.ensureUser(c.env.DB, userId);
-    await repo.upsertProject(c.env.DB, userId, {
-      slug,
+    await repo.markWorking(c.env.DB, userId, {
+      name_key: slug,
       name,
       ...(form.discipline === undefined ? {} : { discipline: form.discipline }),
       ...(form.grade === undefined ? {} : { grade: form.grade }),
@@ -890,7 +934,7 @@ const app = new Hono<AppEnv>()
   })
 
   .delete("/v1/projects/:slug", async (c) => {
-    const deleted = await repo.deleteProject(c.env.DB, c.get("userId"), c.req.param("slug"));
+    const deleted = await repo.stopWorking(c.env.DB, c.get("userId"), c.req.param("slug"));
     if (!deleted) return c.json({ error: "not found" }, 404);
     await captureEvent(c, "project_unmarked", {});
     return c.json({ deleted: true });

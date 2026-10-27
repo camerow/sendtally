@@ -67,6 +67,8 @@ export function writeEffect({ method, path }: ApiWrite): WriteEffect | null {
       };
     case "projects":
       return { stale: [["climbs"]], gone: null };
+    case "climbs":
+      return { stale: LOG, gone: null };
     case "preferences":
     case "connections":
       return { stale: [["status"]], gone: null };

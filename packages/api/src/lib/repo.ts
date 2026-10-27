@@ -43,7 +43,6 @@ import {
   hangSettings,
   journalEntries,
   memberships,
-  projects,
   sessionClimbLinks,
   sessions,
   sessionTags,
@@ -52,6 +51,7 @@ import {
   syncState,
   tags,
   trainingBlocks,
+  userClimbs,
   users,
   weekChanges,
   workouts,
@@ -299,6 +299,7 @@ export type ManualSessionInput = {
   end_at: string;
   times: "both" | "start" | "end" | "none";
   climb_count: number;
+  send_count: number;
   top_grade: number;
   top_send_grade: number;
   top_grade_label: string | null;
@@ -663,6 +664,17 @@ export async function setSessionTags(
   return linked;
 }
 
+export async function listSessionClimbLinks(
+  db: D1Database,
+  userId: string
+): Promise<Array<{ climb_slug: string; climb_id: string }>> {
+  return drizzle(db)
+    .select({ climb_slug: sessionClimbLinks.climb_slug, climb_id: sessionClimbLinks.climb_id })
+    .from(sessionClimbLinks)
+    .where(eq(sessionClimbLinks.user_id, userId))
+    .all();
+}
+
 export type ClimbNoteRow = typeof climbNotes.$inferSelect;
 
 export type ClimbNoteInput = { climb_slug: string; note: string };
@@ -950,57 +962,172 @@ export type Discipline = "boulder" | "route";
 export type ClimbGrade =
   { scale: "v"; value: number } | { scale: "font" | "yds" | "french"; value: string };
 
-export type ProjectRow = typeof projects.$inferSelect;
+export type UserClimbRow = typeof userClimbs.$inferSelect;
 
-export async function listProjects(db: D1Database, userId: string): Promise<ProjectRow[]> {
-  return drizzle(db).select().from(projects).where(eq(projects.user_id, userId)).all();
+export async function listUserClimbs(db: D1Database, userId: string): Promise<UserClimbRow[]> {
+  return drizzle(db).select().from(userClimbs).where(eq(userClimbs.user_id, userId)).all();
 }
 
-export type ProjectInput = {
-  slug: string;
+export type UserClimbInput = {
+  name: string;
+  name_key: string;
+  discipline: Discipline;
+  grade_json: string | null;
+  area_climb_id: string | null;
+};
+
+export async function insertUserClimbs(
+  db: D1Database,
+  userId: string,
+  climbs: UserClimbInput[]
+): Promise<void> {
+  if (climbs.length === 0) return;
+  const now = new Date().toISOString();
+  const d = drizzle(db);
+  const inserts = climbs.map((c) =>
+    d
+      .insert(userClimbs)
+      .values({ user_id: userId, id: crypto.randomUUID(), ...c, created_at: now, updated_at: now })
+      .onConflictDoNothing()
+  );
+  const [first, ...rest] = inserts;
+  if (first !== undefined) await d.batch([first, ...rest]);
+}
+
+export async function linkUserClimbs(
+  db: D1Database,
+  userId: string,
+  links: Array<{ id: string; area_climb_id: string }>
+): Promise<void> {
+  const d = drizzle(db);
+  const updates = links.map((l) =>
+    d
+      .update(userClimbs)
+      .set({ area_climb_id: l.area_climb_id })
+      .where(and(eq(userClimbs.user_id, userId), eq(userClimbs.id, l.id)))
+  );
+  const [first, ...rest] = updates;
+  if (first !== undefined) await d.batch([first, ...rest]);
+}
+
+export type WorkingInput = {
+  name_key: string;
   name: string;
   grade?: ClimbGrade;
   discipline?: Discipline;
 };
 
-// A project row carries only what the caller supplied: the log form knows the
-// grade and the projects page knows the discipline, and neither overwrites
-// what the other wrote.
-export async function upsertProject(
+// The log form knows the grade and the Climbs tab knows the discipline, and
+// neither overwrites what the other wrote.
+export async function markWorking(
   db: D1Database,
   userId: string,
-  project: ProjectInput
+  climb: WorkingInput
 ): Promise<void> {
   const now = new Date().toISOString();
-  const grade_json = project.grade === undefined ? null : JSON.stringify(project.grade);
+  const grade_json = climb.grade === undefined ? null : JSON.stringify(climb.grade);
   const discipline =
-    project.discipline ??
-    (project.grade === undefined ? "boulder" : disciplineOf(project.grade.scale));
-  const set: Partial<typeof projects.$inferInsert> = { name: project.name };
+    climb.discipline ?? (climb.grade === undefined ? "boulder" : disciplineOf(climb.grade.scale));
+  const set: Partial<typeof userClimbs.$inferInsert> = {
+    name: climb.name,
+    working: true,
+    updated_at: now,
+  };
   if (grade_json !== null) set.grade_json = grade_json;
-  if (project.discipline !== undefined || project.grade !== undefined) set.discipline = discipline;
+  if (climb.discipline !== undefined || climb.grade !== undefined) set.discipline = discipline;
   await drizzle(db)
-    .insert(projects)
+    .insert(userClimbs)
     .values({
       user_id: userId,
-      slug: project.slug,
-      name: project.name,
+      id: crypto.randomUUID(),
+      name: climb.name,
+      name_key: climb.name_key,
       grade_json,
       discipline,
+      area_climb_id: null,
+      working: true,
       created_at: now,
+      updated_at: now,
     })
-    .onConflictDoUpdate({ target: [projects.user_id, projects.slug], set });
+    .onConflictDoUpdate({ target: [userClimbs.user_id, userClimbs.name_key], set });
 }
 
-export async function deleteProject(
+export async function stopWorking(
   db: D1Database,
   userId: string,
-  slug: string
+  nameKey: string
 ): Promise<boolean> {
   const result = await drizzle(db)
-    .delete(projects)
-    .where(and(eq(projects.user_id, userId), eq(projects.slug, slug)));
+    .update(userClimbs)
+    .set({ working: false, updated_at: new Date().toISOString() })
+    .where(
+      and(
+        eq(userClimbs.user_id, userId),
+        eq(userClimbs.name_key, nameKey),
+        eq(userClimbs.working, true)
+      )
+    );
   return result.meta.changes > 0;
+}
+
+export async function setUserClimbWorking(
+  db: D1Database,
+  userId: string,
+  id: string,
+  working: boolean
+): Promise<void> {
+  await drizzle(db)
+    .update(userClimbs)
+    .set({ working, updated_at: new Date().toISOString() })
+    .where(and(eq(userClimbs.user_id, userId), eq(userClimbs.id, id)));
+}
+
+export type ClimbRename = {
+  climb: UserClimbRow;
+  name: string;
+  nameKey: string;
+  /** Another of the user's climbs already under the new name, which this one merges into. */
+  into: UserClimbRow | null;
+  /** Manual sessions whose climbs now carry the surviving id. */
+  sessions: Array<{ fingerprint: string; climbs_json: string }>;
+};
+
+export async function renameUserClimb(
+  db: D1Database,
+  userId: string,
+  r: ClimbRename
+): Promise<void> {
+  const d = drizzle(db);
+  const now = new Date().toISOString();
+  const mine = (id: string): SQL | undefined =>
+    and(eq(userClimbs.user_id, userId), eq(userClimbs.id, id));
+  const record =
+    r.into === null
+      ? d
+          .update(userClimbs)
+          .set({ name: r.name, name_key: r.nameKey, updated_at: now })
+          .where(mine(r.climb.id))
+      : d.delete(userClimbs).where(mine(r.climb.id));
+  const survivor =
+    r.into === null
+      ? []
+      : [
+          d
+            .update(userClimbs)
+            .set({
+              working: r.into.working || r.climb.working,
+              area_climb_id: r.into.area_climb_id ?? r.climb.area_climb_id,
+              updated_at: now,
+            })
+            .where(mine(r.into.id)),
+        ];
+  const stamped = r.sessions.map((s) =>
+    d
+      .update(sessions)
+      .set({ climbs_json: s.climbs_json })
+      .where(and(eq(sessions.user_id, userId), eq(sessions.fingerprint, s.fingerprint)))
+  );
+  await d.batch([record, ...survivor, ...stamped]);
 }
 
 export type PostableSessionRow = {
@@ -1202,7 +1329,7 @@ export async function deleteUserData(db: D1Database, userId: string): Promise<vo
     d.delete(entrySessions).where(eq(entrySessions.user_id, userId)),
     d.delete(journalEntries).where(eq(journalEntries.user_id, userId)),
     d.delete(tags).where(eq(tags.user_id, userId)),
-    d.delete(projects).where(eq(projects.user_id, userId)),
+    d.delete(userClimbs).where(eq(userClimbs.user_id, userId)),
     d.delete(gyms).where(eq(gyms.user_id, userId)),
     d.delete(hangGrips).where(eq(hangGrips.user_id, userId)),
     d.delete(hangDefaultGrips).where(eq(hangDefaultGrips.user_id, userId)),

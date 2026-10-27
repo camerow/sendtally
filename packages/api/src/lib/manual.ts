@@ -55,6 +55,7 @@ const climbSchema = z
   .object({
     name: z.string().max(200).default(""),
     climbId: z.string().min(1).max(64).optional(),
+    userClimbId: z.string().min(1).max(64).optional(),
     grade: gradeSchema,
     circuit: circuitRefSchema.optional(),
     wall: z.string().trim().max(40).optional(),
@@ -282,6 +283,7 @@ export type StoredClimb = {
   circuit?: CircuitRef;
   wall?: string;
   endurance?: Endurance;
+  userClimbId?: string;
 };
 
 export type CircuitRef = z.infer<typeof circuitRefSchema>;
@@ -292,6 +294,7 @@ function placeOf(climb: ManualSessionBody["climbs"][number] | undefined): Partia
   return {
     ...(climb.circuit === undefined ? {} : { circuit: climb.circuit }),
     ...(wall === "" ? {} : { wall }),
+    ...(climb.userClimbId === undefined ? {} : { userClimbId: climb.userClimbId }),
   };
 }
 
@@ -355,6 +358,7 @@ export function buildManualSession(
     end_at: session.end.toISOString(),
     times: timesOf(body),
     climb_count: session.climbs.length,
+    send_count: sends.length,
     top_grade: topGrade,
     top_send_grade: topSendGrade,
     top_grade_label: topGradeLabel(graded) ?? null,

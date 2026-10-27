@@ -212,6 +212,10 @@ export class SendtallyApi {
     );
   }
 
+  updateClimb(id: string, change: { name?: string; working?: boolean }): Promise<{ id: string }> {
+    return body(this.client.v1.climbs[":id"].$patch({ param: { id }, json: change }));
+  }
+
   saveProject(project: ProjectInput): Promise<{ slug: string }> {
     return body(this.client.v1.projects.$post({ json: project }));
   }

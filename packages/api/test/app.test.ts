@@ -258,28 +258,36 @@ describe("app", () => {
     const { climbs } = (await listed.json()) as { climbs: Array<Record<string, unknown>> };
     expect(climbs).toEqual([
       {
+        id: expect.any(String),
         slug: "cave-problem",
         name: "Cave Problem",
         grade: { scale: "v", value: 4 },
         discipline: "boulder",
         project: true,
+        area_climb_id: null,
+        area: null,
         sessions: 2,
         attempts: 7,
         sends: 1,
         first_at: "2026-08-20T18:00:00.000Z",
         last_at: "2026-08-22T18:00:00.000Z",
+        sent_at: "2026-08-20T18:00:00.000Z",
       },
       {
+        id: expect.any(String),
         slug: "warm-up",
         name: "Warm up",
         grade: { scale: "v", value: 1 },
         discipline: "boulder",
         project: false,
+        area_climb_id: null,
+        area: null,
         sessions: 1,
         attempts: 1,
         sends: 1,
         first_at: "2026-08-22T18:00:00.000Z",
         last_at: "2026-08-22T18:00:00.000Z",
+        sent_at: "2026-08-22T18:00:00.000Z",
       },
     ]);
 
@@ -315,6 +323,49 @@ describe("app", () => {
       env
     );
     expect(gone.status).toBe(404);
+  });
+
+  it("renames a climb, and merges it into one already under the new name", async () => {
+    const headers = { "x-test-user": "user_rename", "Content-Type": "application/json" };
+    await postSession(
+      "user_rename",
+      logBody({
+        climbs: [
+          { name: "Pinch", grade: { scale: "v", value: 7 }, kind: "attempt", tries: 3 },
+          { name: "Roof", grade: { scale: "v", value: 5 }, kind: "send", tries: 1 },
+        ],
+      })
+    );
+    const list = async () =>
+      (
+        (await (await testApp().request("/v1/climbs", { headers }, env)).json()) as {
+          climbs: Array<{ id: string; name: string; attempts: number; project: boolean }>;
+        }
+      ).climbs;
+    const before = await list();
+    const pinch = before.find((c) => c.name === "Pinch")!;
+    const roof = before.find((c) => c.name === "Roof")!;
+
+    const patch = (id: string, json: unknown) =>
+      testApp().request(
+        `/v1/climbs/${id}`,
+        { method: "PATCH", headers, body: JSON.stringify(json) },
+        env
+      );
+    expect(await (await patch(pinch.id, { name: "The Pinch", working: true })).json()).toEqual({
+      id: pinch.id,
+    });
+    expect((await list()).find((c) => c.id === pinch.id)).toMatchObject({
+      name: "The Pinch",
+      attempts: 3,
+      project: true,
+    });
+
+    expect(await (await patch(roof.id, { name: "the pinch" })).json()).toEqual({ id: pinch.id });
+    const merged = await list();
+    expect(merged).toHaveLength(1);
+    expect(merged[0]).toMatchObject({ id: pinch.id, name: "The Pinch", attempts: 4 });
+    expect((await patch("nope", { name: "x" })).status).toBe(404);
   });
 
   it("adds a project with no grade and keeps it on a re-post", async () => {
