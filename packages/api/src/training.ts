@@ -1,10 +1,14 @@
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
+import { z } from "zod";
 import { type AppEnv, invalidBody, postAfterResponse } from "./context";
 import { activitiesQuery, activityBody, activityOf } from "./lib/activities";
+import { exerciseBody, exerciseOf, mergeBody } from "./lib/exercises";
 import {
   blockBody,
   blockOf,
+  calendarDate,
+  id,
   membershipBody,
   membershipOf,
   trainingIdParam,
@@ -101,7 +105,27 @@ export const blocks = new Hono<AppEnv>()
   .delete("/:id", zValidator("param", trainingIdParam, invalidBody), async (c) => {
     const { id } = c.req.valid("param");
     return c.json({ deleted: await repo.deleteBlock(c.env.DB, c.get("userId"), id) });
-  });
+  })
+
+  // Plans the block again from another start, under the id the app chose. A replay
+  // finds that block already there and copies nothing twice.
+  .post(
+    "/:id/copy",
+    zValidator("param", trainingIdParam, invalidBody),
+    zValidator("json", z.object({ id, start: calendarDate }), invalidBody),
+    async (c) => {
+      const userId = c.get("userId");
+      const { id: from } = c.req.valid("param");
+      const { id: to, start } = c.req.valid("json");
+      const source = await repo.getBlock(c.env.DB, userId, from);
+      if (source === null) return c.json({ error: "not found" }, 404);
+      const existing = await repo.getBlock(c.env.DB, userId, to);
+      if (existing !== null) return c.json({ block: blockOf(existing) });
+      const block = { id: to, name: source.name, start, weeks: source.weeks };
+      await repo.copyBlock(c.env.DB, userId, source, block);
+      return c.json({ block });
+    }
+  );
 
 export const memberships = new Hono<AppEnv>()
   .put(
@@ -170,3 +194,55 @@ export const workouts = new Hono<AppEnv>()
     const { id } = c.req.valid("param");
     return c.json({ deleted: await repo.deleteWorkout(c.env.DB, c.get("userId"), id) });
   });
+
+// The user's exercises: every name their strength, mobility and other workouts and
+// logs use. Renaming or merging one rewrites those names everywhere.
+export const exercises = new Hono<AppEnv>()
+  .get("/", async (c) => {
+    const rows = await repo.listExercises(c.env.DB, c.get("userId"));
+    return c.json({ exercises: rows.map(exerciseOf) });
+  })
+
+  // Creates, or renames everywhere. A name another exercise has is a 409 naming it,
+  // so the app can offer to merge instead.
+  .put(
+    "/:id",
+    zValidator("param", trainingIdParam, invalidBody),
+    zValidator("json", exerciseBody, invalidBody),
+    async (c) => {
+      const { id } = c.req.valid("param");
+      const userId = c.get("userId");
+      const body = c.req.valid("json");
+      const taken = await repo.findExerciseByName(c.env.DB, userId, body.name);
+      if (taken !== null && taken.id !== id) {
+        return c.json({ error: "name taken", exercise: exerciseOf(taken) }, 409);
+      }
+      await repo.ensureUser(c.env.DB, userId);
+      const row = await repo.getExercise(c.env.DB, userId, id);
+      const saved =
+        row === null
+          ? await repo.createExercise(c.env.DB, userId, id, body)
+          : await repo.renameExercise(c.env.DB, userId, row, body);
+      return c.json({ exercise: exerciseOf(saved) });
+    }
+  )
+
+  // Every workout and log naming this one takes the other's name, and this one goes.
+  .post(
+    "/:id/merge",
+    zValidator("param", trainingIdParam, invalidBody),
+    zValidator("json", mergeBody, invalidBody),
+    async (c) => {
+      const { id } = c.req.valid("param");
+      const userId = c.get("userId");
+      const { into } = c.req.valid("json");
+      if (into === id) return c.json({ error: "cannot merge into itself" }, 400);
+      const [from, target] = await Promise.all([
+        repo.getExercise(c.env.DB, userId, id),
+        repo.getExercise(c.env.DB, userId, into),
+      ]);
+      if (from === null || target === null) return c.json({ error: "not found" }, 404);
+      await repo.mergeExercise(c.env.DB, userId, from, target);
+      return c.json({ exercise: exerciseOf(target) });
+    }
+  );

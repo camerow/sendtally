@@ -469,11 +469,132 @@ describe("blocks and memberships", () => {
       "week_changes",
       "training_blocks",
       "workouts",
+      "exercises",
     ]) {
       const row = await env.DB.prepare(`SELECT COUNT(*) AS n FROM ${table} WHERE user_id = ?`)
         .bind(userId)
         .first<{ n: number }>();
       expect(`${table}:${row?.n}`).toBe(`${table}:0`);
+    }
+  });
+
+  it("plans a block again from a new start, with its plans and week changes", async () => {
+    const userId = "user_plan_again";
+    await call(userId, "PUT", "/v1/blocks/b1", blockBody);
+    await call(userId, "PUT", "/v1/memberships/m1", { ...membershipBody, start: "2026-11-04" });
+    await call(userId, "PUT", "/v1/memberships/m2", { ...membershipBody, blockId: null });
+    await call(userId, "PUT", "/v1/memberships/m1/changes", {
+      week: 2,
+      variation: 0,
+      item: 0,
+      change: { sets: 3 },
+    });
+    const copy = { id: "b2", start: "2027-01-04" };
+    const res = await call(userId, "POST", "/v1/blocks/b1/copy", copy);
+    expect(await json(res)).toEqual({ block: { ...blockBody, ...copy } });
+    expect((await call(userId, "POST", "/v1/blocks/b1/copy", copy)).status).toBe(200);
+    const after = await plan(userId);
+    const copied = after.memberships.filter((m) => m.blockId === "b2");
+    expect(copied.map((m) => [m.workoutId, m.start, m.weekdays])).toEqual([
+      ["w1", "2027-01-06", [1, 4]],
+    ]);
+    expect(after.weekChanges.filter((c) => c.membershipId === copied[0]?.id)).toEqual([
+      { membershipId: copied[0]?.id, week: 2, variation: 0, item: 0, change: { sets: 3 } },
+    ]);
+    expect((await call(userId, "POST", "/v1/blocks/nope/copy", copy)).status).toBe(404);
+  });
+});
+
+type ExerciseList = { exercises: { id: string; name: string; kind: string }[] };
+
+const exerciseNames = async (userId: string): Promise<string[]> =>
+  (await json<ExerciseList>(await call(userId, "GET", "/v1/exercises"))).exercises.map(
+    (e) => e.name
+  );
+
+describe("exercises", () => {
+  it("lists every name a workout or activity writes once, leaving grips out", async () => {
+    const userId = "user_exercises_upsert";
+    await call(userId, "PUT", "/v1/workouts/w1", squatWorkout);
+    await call(userId, "PUT", "/v1/activities/a1", { ...activityBody, done: squatDone });
+    await call(userId, "PUT", "/v1/activities/a2", {
+      ...activityBody,
+      done: [{ item: 0, exercise: "back SQUAT", sets: [] }],
+    });
+    await call(userId, "PUT", "/v1/workouts/w2", {
+      ...squatWorkout,
+      kind: "hangboard",
+      variations: [{ label: "", items: [{ exercise: "half-crimp", dose: { sets: 1 } }] }],
+    });
+    expect(await exerciseNames(userId)).toEqual(["Back squat", "Copenhagen plank"]);
+  });
+
+  it("renames an exercise in every workout and activity naming it", async () => {
+    const userId = "user_exercises_rename";
+    await call(userId, "PUT", "/v1/workouts/w1", squatWorkout);
+    await call(userId, "PUT", "/v1/activities/a1", { ...activityBody, done: squatDone });
+    const { exercises } = await json<ExerciseList>(await call(userId, "GET", "/v1/exercises"));
+    const squat = exercises.find((e) => e.name === "Back squat");
+    const plank = exercises.find((e) => e.name === "Copenhagen plank");
+    const res = await call(userId, "PUT", `/v1/exercises/${squat?.id}`, {
+      name: "High-bar squat",
+      kind: "strength",
+    });
+    expect(await json(res)).toEqual({
+      exercise: { id: squat?.id, name: "High-bar squat", kind: "strength" },
+    });
+    const { workouts } = await json<{ workouts: WorkoutRecord[] }>(
+      await call(userId, "GET", "/v1/workouts")
+    );
+    expect(workouts[0]?.variations.map((v) => v.items[0]?.exercise)).toEqual([
+      "High-bar squat",
+      "High-bar squat",
+    ]);
+    const { activities } = await json<{ activities: ActivityRecord[] }>(
+      await call(userId, "GET", "/v1/activities")
+    );
+    expect(activities[0]?.done.map((d) => d.exercise)).toEqual([
+      "High-bar squat",
+      "Copenhagen plank",
+    ]);
+    const taken = await call(userId, "PUT", `/v1/exercises/${squat?.id}`, {
+      name: "copenhagen plank",
+      kind: "strength",
+    });
+    expect(taken.status).toBe(409);
+    expect(await json(taken)).toMatchObject({ exercise: { id: plank?.id } });
+  });
+
+  it("merges one exercise into another everywhere and drops it", async () => {
+    const userId = "user_exercises_merge";
+    await call(userId, "PUT", "/v1/activities/a1", { ...activityBody, done: squatDone });
+    await call(userId, "PUT", "/v1/exercises/e1", { name: "Squat", kind: "strength" });
+    const { exercises } = await json<ExerciseList>(await call(userId, "GET", "/v1/exercises"));
+    const squat = exercises.find((e) => e.name === "Back squat");
+    expect(
+      (await call(userId, "POST", `/v1/exercises/${squat?.id}/merge`, { into: "e1" })).status
+    ).toBe(200);
+    expect(await exerciseNames(userId)).toEqual(["Copenhagen plank", "Squat"]);
+    const { activities } = await json<{ activities: ActivityRecord[] }>(
+      await call(userId, "GET", "/v1/activities")
+    );
+    expect(activities[0]?.done.map((d) => d.exercise)).toEqual(["Squat", "Copenhagen plank"]);
+    expect((await call(userId, "POST", "/v1/exercises/e1/merge", { into: "e1" })).status).toBe(400);
+    expect((await call(userId, "POST", "/v1/exercises/e9/merge", { into: "e1" })).status).toBe(404);
+  });
+
+  it("backfills the names saved before the table existed, once", async () => {
+    const userId = "user_exercises_backfill";
+    await call(userId, "PUT", "/v1/workouts/w1", squatWorkout);
+    await call(userId, "PUT", "/v1/activities/a1", { ...activityBody, done: squatDone });
+    await env.DB.prepare("DELETE FROM exercises WHERE user_id = ?").bind(userId).run();
+    const backfill = env.TEST_MIGRATIONS.find((m) => m.name.includes("backfill_exercises"));
+    expect(backfill).toBeDefined();
+    for (const run of [1, 2]) {
+      for (const query of backfill?.queries ?? []) await env.DB.prepare(query).run();
+      expect(`${run}:${(await exerciseNames(userId)).join()}`).toBe(
+        `${run}:Back squat,Copenhagen plank`
+      );
     }
   });
 });

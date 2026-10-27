@@ -20,6 +20,7 @@ import {
   sql,
   type SQL,
 } from "drizzle-orm";
+import type { BatchItem } from "drizzle-orm/batch";
 import { drizzle, type DrizzleD1Database } from "drizzle-orm/d1";
 import { alias, type SQLiteColumn } from "drizzle-orm/sqlite-core";
 import {
@@ -33,6 +34,7 @@ import {
   duplicateReports,
   entrySessions,
   entryTags,
+  exercises,
   gyms,
   hangDefaultGrips,
   hangGrips,
@@ -55,16 +57,21 @@ import {
   workouts,
 } from "../db/schema";
 import {
+  addDays,
+  daysBetween,
   loadKey,
   type Block,
   type HangSession,
   type HangSettings,
+  type ItemDone,
   type Loads,
   type Membership,
+  type Variation,
   type WeekChange,
   type Workout,
 } from "@sendtally/core/hang";
 import type { ActivityInput } from "./activities";
+import { exerciseKindOf, exerciseNameKey, workoutExercises, type ExerciseInput } from "./exercises";
 import type { ContentEntity, Viewer } from "./areas";
 import type { ClimbLink } from "./manual";
 import type { EntryWrite } from "./entries";
@@ -1207,6 +1214,7 @@ export async function deleteUserData(db: D1Database, userId: string): Promise<vo
     d.delete(weekChanges).where(eq(weekChanges.user_id, userId)),
     d.delete(trainingBlocks).where(eq(trainingBlocks.user_id, userId)),
     d.delete(workouts).where(eq(workouts.user_id, userId)),
+    d.delete(exercises).where(eq(exercises.user_id, userId)),
     d.delete(sessions).where(eq(sessions.user_id, userId)),
     d.delete(stravaConnections).where(eq(stravaConnections.user_id, userId)),
     d.delete(storeEntitlements).where(eq(storeEntitlements.user_id, userId)),
@@ -2634,12 +2642,20 @@ export async function saveActivity(
     done_json: JSON.stringify(a.done),
     updated_at: now,
   };
-  return drizzle(db)
-    .insert(activities)
-    .values({ user_id: userId, id, ...fields, created_at: now })
-    .onConflictDoUpdate({ target: [activities.user_id, activities.id], set: fields })
-    .returning()
-    .get();
+  const d = drizzle(db);
+  const [rows] = await d.batch([
+    d
+      .insert(activities)
+      .values({ user_id: userId, id, ...fields, created_at: now })
+      .onConflictDoUpdate({ target: [activities.user_id, activities.id], set: fields })
+      .returning(),
+    ...addExercises(
+      d,
+      userId,
+      a.done.map((e) => ({ name: e.exercise, kind: a.kind }))
+    ),
+  ]);
+  return only(rows);
 }
 
 const activity = (userId: string, id: string): SQL | undefined =>
@@ -2913,12 +2929,16 @@ export async function saveWorkout(db: D1Database, userId: string, w: Workout): P
     exercise_rest_s: w.exerciseRestS,
     updated_at: now,
   };
-  return drizzle(db)
-    .insert(workouts)
-    .values({ user_id: userId, id: w.id, ...fields, created_at: now })
-    .onConflictDoUpdate({ target: [workouts.user_id, workouts.id], set: fields })
-    .returning()
-    .get();
+  const d = drizzle(db);
+  const [rows] = await d.batch([
+    d
+      .insert(workouts)
+      .values({ user_id: userId, id: w.id, ...fields, created_at: now })
+      .onConflictDoUpdate({ target: [workouts.user_id, workouts.id], set: fields })
+      .returning(),
+    ...addExercises(d, userId, workoutExercises(w)),
+  ]);
+  return only(rows);
 }
 
 /**
@@ -2936,4 +2956,249 @@ export async function deleteWorkout(db: D1Database, userId: string, id: string):
     d.delete(workouts).where(and(eq(workouts.user_id, userId), eq(workouts.id, id))),
   ]);
   return results[5].meta.changes > 0;
+}
+
+function only<T>(rows: readonly T[]): T {
+  const [row] = rows;
+  if (row === undefined) throw new Error("expected a returned row");
+  return row;
+}
+
+/**
+ * Plans the block again from `copy.start`: a new block of the same name and length
+ * with every membership and week change of the old one, shifted by the same days.
+ */
+export async function copyBlock(
+  db: D1Database,
+  userId: string,
+  source: BlockRow,
+  copy: Block
+): Promise<void> {
+  const d = drizzle(db);
+  const [members, changes] = await d.batch([
+    d
+      .select()
+      .from(memberships)
+      .where(and(eq(memberships.user_id, userId), eq(memberships.block_id, source.id))),
+    d
+      .select()
+      .from(weekChanges)
+      .where(
+        and(
+          eq(weekChanges.user_id, userId),
+          inArray(
+            weekChanges.membership_id,
+            d
+              .select({ id: memberships.id })
+              .from(memberships)
+              .where(and(eq(memberships.user_id, userId), eq(memberships.block_id, source.id)))
+          )
+        )
+      ),
+  ]);
+  const now = new Date().toISOString();
+  const shift = daysBetween(source.start, copy.start);
+  const ids = new Map(members.map((m) => [m.id, crypto.randomUUID()]));
+  await d.batch([
+    d.insert(trainingBlocks).values({ user_id: userId, ...copy, updated_at: now }),
+    ...members.map((m) =>
+      d.insert(memberships).values({
+        ...m,
+        id: ids.get(m.id) ?? m.id,
+        block_id: copy.id,
+        start: addDays(m.start, shift),
+        updated_at: now,
+      })
+    ),
+    ...changes.map((c) =>
+      d
+        .insert(weekChanges)
+        .values({ ...c, membership_id: ids.get(c.membership_id) ?? c.membership_id })
+    ),
+  ]);
+}
+
+export type ExerciseRow = typeof exercises.$inferSelect;
+
+export async function listExercises(db: D1Database, userId: string): Promise<ExerciseRow[]> {
+  return drizzle(db)
+    .select()
+    .from(exercises)
+    .where(eq(exercises.user_id, userId))
+    .orderBy(exercises.name_key)
+    .all();
+}
+
+export async function getExercise(
+  db: D1Database,
+  userId: string,
+  id: string
+): Promise<ExerciseRow | null> {
+  const row = await drizzle(db)
+    .select()
+    .from(exercises)
+    .where(and(eq(exercises.user_id, userId), eq(exercises.id, id)))
+    .get();
+  return row ?? null;
+}
+
+export async function findExerciseByName(
+  db: D1Database,
+  userId: string,
+  name: string
+): Promise<ExerciseRow | null> {
+  const row = await drizzle(db)
+    .select()
+    .from(exercises)
+    .where(and(eq(exercises.user_id, userId), eq(exercises.name_key, exerciseNameKey(name))))
+    .get();
+  return row ?? null;
+}
+
+// D1 binds at most 100 parameters a statement, and an exercise row takes 7.
+const EXERCISES_PER_INSERT = 14;
+
+/** Adds the names not yet listed; a name already there, in any case, keeps its row. */
+function addExercises(d: DrizzleD1Database, userId: string, list: readonly ExerciseInput[]) {
+  const now = new Date().toISOString();
+  const rows = [
+    ...new Map(
+      list
+        .filter((e) => e.name.trim() !== "")
+        .map((e) => [
+          exerciseNameKey(e.name),
+          {
+            user_id: userId,
+            id: crypto.randomUUID(),
+            name: e.name.trim(),
+            name_key: exerciseNameKey(e.name),
+            kind: e.kind,
+            created_at: now,
+            updated_at: now,
+          },
+        ])
+    ).values(),
+  ];
+  return Array.from({ length: Math.ceil(rows.length / EXERCISES_PER_INSERT) }, (_, i) =>
+    d
+      .insert(exercises)
+      .values(rows.slice(i * EXERCISES_PER_INSERT, (i + 1) * EXERCISES_PER_INSERT))
+      .onConflictDoNothing()
+  );
+}
+
+export async function createExercise(
+  db: D1Database,
+  userId: string,
+  id: string,
+  e: ExerciseInput
+): Promise<ExerciseRow> {
+  const now = new Date().toISOString();
+  return drizzle(db)
+    .insert(exercises)
+    .values({
+      user_id: userId,
+      id,
+      name: e.name,
+      name_key: exerciseNameKey(e.name),
+      kind: e.kind,
+      created_at: now,
+      updated_at: now,
+    })
+    .returning()
+    .get();
+}
+
+/**
+ * Writes `name` over every item and logged exercise named `from` in any case, in the
+ * user's workouts and activities, in one batch with `then`.
+ */
+async function renameEverywhere(
+  d: DrizzleD1Database,
+  userId: string,
+  from: string,
+  name: string,
+  then: BatchItem<"sqlite">
+): Promise<void> {
+  const key = exerciseNameKey(from);
+  const hit = (x: { exercise: string }): boolean => exerciseNameKey(x.exercise) === key;
+  const renamed = <T extends { exercise: string }>(x: T): T =>
+    hit(x) ? { ...x, exercise: name } : x;
+  const [ws, as] = await d.batch([
+    d
+      .select({ id: workouts.id, kind: workouts.kind, json: workouts.variations_json })
+      .from(workouts)
+      .where(eq(workouts.user_id, userId)),
+    d
+      .select({ id: activities.id, json: activities.done_json })
+      .from(activities)
+      .where(eq(activities.user_id, userId)),
+  ]);
+  const now = new Date().toISOString();
+  const workoutWrites = ws.flatMap((w) => {
+    const variations = JSON.parse(w.json) as Variation[];
+    if (exerciseKindOf(w.kind) === null || !variations.some((v) => v.items.some(hit))) return [];
+    const json = JSON.stringify(variations.map((v) => ({ ...v, items: v.items.map(renamed) })));
+    return [
+      d
+        .update(workouts)
+        .set({ variations_json: json, updated_at: now })
+        .where(and(eq(workouts.user_id, userId), eq(workouts.id, w.id))),
+    ];
+  });
+  const activityWrites = as.flatMap((a) => {
+    const done = JSON.parse(a.json) as ItemDone[];
+    if (!done.some(hit)) return [];
+    return [
+      d
+        .update(activities)
+        .set({ done_json: JSON.stringify(done.map(renamed)), updated_at: now })
+        .where(and(eq(activities.user_id, userId), eq(activities.id, a.id))),
+    ];
+  });
+  await d.batch([then, ...workoutWrites, ...activityWrites]);
+}
+
+/** Renames the exercise and every workout and log that names it. */
+export async function renameExercise(
+  db: D1Database,
+  userId: string,
+  row: ExerciseRow,
+  e: ExerciseInput
+): Promise<ExerciseRow> {
+  const d = drizzle(db);
+  const where = and(eq(exercises.user_id, userId), eq(exercises.id, row.id));
+  await renameEverywhere(
+    d,
+    userId,
+    row.name,
+    e.name,
+    d
+      .update(exercises)
+      .set({
+        name: e.name,
+        name_key: exerciseNameKey(e.name),
+        kind: e.kind,
+        updated_at: new Date().toISOString(),
+      })
+      .where(where)
+  );
+  return { ...row, ...e, name_key: exerciseNameKey(e.name) };
+}
+
+/** Folds `from` into `into`: every workout and log naming it takes `into`'s name. */
+export async function mergeExercise(
+  db: D1Database,
+  userId: string,
+  from: ExerciseRow,
+  into: ExerciseRow
+): Promise<void> {
+  const d = drizzle(db);
+  await renameEverywhere(
+    d,
+    userId,
+    from.name,
+    into.name,
+    d.delete(exercises).where(and(eq(exercises.user_id, userId), eq(exercises.id, from.id)))
+  );
 }

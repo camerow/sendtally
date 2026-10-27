@@ -8,7 +8,7 @@ import { auth } from "./auth";
 import type { Env } from "./bindings";
 import { type AppEnv, captureEvent, invalidBody, postAfterResponse } from "./context";
 import { hang } from "./hang";
-import { activities, blocks, memberships, plan, workouts } from "./training";
+import { activities, blocks, exercises, memberships, plan, workouts } from "./training";
 import { purgeAccount } from "./lib/account";
 import {
   areaBody,
@@ -1945,7 +1945,8 @@ const app = new Hono<AppEnv>()
   .route("/v1/plan", plan)
   .route("/v1/blocks", blocks)
   .route("/v1/memberships", memberships)
-  .route("/v1/workouts", workouts);
+  .route("/v1/workouts", workouts)
+  .route("/v1/exercises", exercises);
 
 app.onError(async (error, c) => {
   // zValidator throws this for a body it cannot parse at all. Without this the
@@ -1976,6 +1977,7 @@ export type {
   ActivityPostState,
   ActivityRecord,
 } from "./lib/activities";
+export type { Exercise, ExerciseInput } from "./lib/exercises";
 export type { HangData, HangHistoryRow, HangPostState, HangSessionRecord } from "./lib/hang";
 export type {
   Block,
