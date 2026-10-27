@@ -18,14 +18,13 @@ import { PhaseBar } from "../components/PhaseBar";
 import { Title } from "../components/Title";
 import { KIND_LOOK } from "../today/kindLook";
 import { type } from "../type";
-import { CategoryMark } from "./CategoryMark";
 import { MineBadge } from "./MineBadge";
 
 export type LibraryCardProps = {
   workout: LibraryWorkout;
   use: WorkoutUse | undefined;
   onPress: () => void;
-  /** Its category's name beside its mark; off where the screen already names it. */
+  /** Its category's name; off where the screen already names it. */
   showKind?: boolean;
   /** Set on a shelf, where cards sit side by side; otherwise it fills the column. */
   width?: number;
@@ -62,7 +61,6 @@ export function LibraryCard({
       })}
     >
       <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-        <CategoryMark kind={workout.kind} size={28} />
         {showKind ? (
           <Label color={KIND_LOOK[workout.kind].ink} style={{ flex: 1 }}>
             {kindLabel(workout.kind)}
