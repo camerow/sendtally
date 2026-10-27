@@ -352,7 +352,9 @@ export function SessionsLog({ segments, quickAdd }: SessionsLogProps): React.Rea
           )
         }
       />
-      {quickAdd && <LogFab live={live.stored !== null} onStart={() => startLiveSession()} />}
+      {(quickAdd || live.stored !== null) && (
+        <LogFab live={live.stored !== null} onStart={() => startLiveSession()} />
+      )}
       {editingHang !== null && (
         <HangDataProvider fallback={null}>
           <SessionEditorSheet sessionId={editingHang} onClose={() => setEditingHang(null)} />
