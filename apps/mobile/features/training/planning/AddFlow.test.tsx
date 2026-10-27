@@ -159,6 +159,7 @@ describe("adding to the plan", () => {
   it("saves a one-off per picked date", async () => {
     await renderWithHang(<ScheduleScreen workoutId="legs" flow={flow} />, hangData(), {
       workouts: [legs],
+      plan: winter,
     });
     await fireEvent.press(screen.getByText("On specific days"));
     expect(screen.getByText("Add on Thu, Oct 1")).toBeTruthy();
