@@ -22,9 +22,6 @@ export const plan = {
   "plan.blockEmpty":
     "Nada en este bloque todavía. Añade multipresa, escalada y el resto del entrenamiento para el que es.",
   "plan.outsideBlocks": "Fuera de un bloque",
-  "plan.effort": "Esfuerzo semanal",
-  "plan.effortLogged": "Registrado",
-  "plan.effortLoggedWeek": "Semana {n}: {actual} registrado",
   "plan.addToPlan": "Añadir al plan",
   "plan.whatKind": "¿Qué tipo?",
   "plan.kindMobilityHint": "También yoga y estiramientos",

@@ -13,7 +13,7 @@ export {
   type TrainingLog,
   type WeekStats,
 } from "./days";
-export { blockMembers, blockWeeks, type BlockWeek } from "./blocks";
+export { blockMembers } from "./blocks";
 export {
   blockOfMembership,
   nextOccurrence,

@@ -22,9 +22,6 @@ export const plan = {
   "plan.blockEmpty":
     "Rien dans ce bloc pour l’instant. Ajoute la poutre, l’escalade et le reste de l’entraînement prévu.",
   "plan.outsideBlocks": "Hors bloc",
-  "plan.effort": "Effort par semaine",
-  "plan.effortLogged": "Enregistré",
-  "plan.effortLoggedWeek": "Semaine {n} : {actual} enregistré",
   "plan.addToPlan": "Ajouter au plan",
   "plan.whatKind": "Quel type ?",
   "plan.kindMobilityHint": "Yoga et étirements aussi",

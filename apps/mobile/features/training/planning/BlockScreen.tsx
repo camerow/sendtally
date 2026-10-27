@@ -4,9 +4,8 @@ import { Alert, Text, View } from "react-native";
 import { blockWeekOn } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
-import { blockMembers, blockWeeks, movedTo, useTrainingLog } from "@sendtally/features/training";
+import { blockMembers, movedTo, useTrainingLog } from "@sendtally/features/training";
 import { useApi } from "../../../lib/api";
-import { BlockEffort } from "../blocks/BlockEffort";
 import { blockDates } from "../blocks/blockText";
 import { Button } from "../components/Button";
 import { DashedPanel } from "../components/DashedPanel";
@@ -23,7 +22,7 @@ import { ScreenFrame } from "./ScreenFrame";
 
 export type BlockScreenProps = { id: string };
 
-/** One block: its workouts, adding and moving plans in, and the effort logged by week. */
+/** One block: its workouts, and adding and moving plans in. */
 export function BlockScreen({ id }: BlockScreenProps): React.ReactElement | null {
   const { today } = useHangData();
   const { log } = useTrainingLog(useApi());
@@ -82,7 +81,6 @@ export function BlockScreen({ id }: BlockScreenProps): React.ReactElement | null
         icon="plus"
         height={50}
       />
-      {members.length > 0 && <BlockEffort weeks={blockWeeks(block, log, today)} />}
       {movable.length > 0 && (
         <View style={{ gap: 8 }}>
           <Label color={colors.textSecondary}>{t("plan.moveIn")}</Label>

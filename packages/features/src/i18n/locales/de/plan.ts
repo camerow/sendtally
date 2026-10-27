@@ -22,9 +22,6 @@ export const plan = {
   "plan.blockEmpty":
     "Noch nichts in diesem Block. Füge Hangboard-Workouts, Klettern und das übrige Training hinzu, für das er gedacht ist.",
   "plan.outsideBlocks": "Außerhalb eines Blocks",
-  "plan.effort": "Wöchentliche Belastung",
-  "plan.effortLogged": "Eingetragen",
-  "plan.effortLoggedWeek": "Woche {n}: {actual} eingetragen",
   "plan.addToPlan": "Zum Plan hinzufügen",
   "plan.whatKind": "Welche Art?",
   "plan.kindMobilityHint": "Auch Yoga und Dehnen",

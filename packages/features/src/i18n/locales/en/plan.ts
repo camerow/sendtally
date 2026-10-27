@@ -22,9 +22,6 @@ export const plan = {
   "plan.blockEmpty":
     "Nothing in this block yet. Add hangboard workouts, climbing and the rest of the training it is for.",
   "plan.outsideBlocks": "Outside a block",
-  "plan.effort": "Weekly effort",
-  "plan.effortLogged": "Logged",
-  "plan.effortLoggedWeek": "Week {n}: {actual} logged",
   "plan.addToPlan": "Add to plan",
   "plan.whatKind": "What kind?",
   "plan.kindMobilityHint": "Yoga and stretching too",

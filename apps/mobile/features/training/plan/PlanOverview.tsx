@@ -4,7 +4,7 @@ import { View } from "react-native";
 import { blockEnd } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
-import { blockMembers, blockWeeks, useTrainingLog } from "@sendtally/features/training";
+import { blockMembers, useTrainingLog } from "@sendtally/features/training";
 import { useApi } from "../../../lib/api";
 import { BlockCard } from "../blocks/BlockCard";
 import { Button } from "../components/Button";
@@ -64,7 +64,6 @@ export function PlanOverview({ highlight }: PlanOverviewProps): React.ReactEleme
           block={block}
           members={blockMembers(plan, block)}
           workout={workout}
-          weeks={blockWeeks(block, log, today)}
           highlight={lit}
         />
       ))}
