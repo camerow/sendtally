@@ -246,6 +246,20 @@
       "when": 1793114397945,
       "tag": "0039_youthful_surge",
       "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "6",
+      "when": 1793128846717,
+      "tag": "0040_shocking_the_order",
+      "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "6",
+      "when": 1793128853716,
+      "tag": "0041_backfill_exercises",
+      "breakpoints": true
     }
   ]
 }

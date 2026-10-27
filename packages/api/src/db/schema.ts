@@ -672,3 +672,25 @@ export const weekChanges = sqliteTable(
   },
   (t) => [primaryKey({ columns: [t.user_id, t.membership_id, t.week, t.variation, t.item] })]
 );
+
+// Every exercise name the user's workouts and logs use, so one can be renamed or
+// merged everywhere at once. `name_key` is SQLite's lower(name), which folds ASCII
+// only, so the backfill migration and the Worker agree on it.
+export const exercises = sqliteTable(
+  "exercises",
+  {
+    user_id: text("user_id")
+      .notNull()
+      .references(() => users.id),
+    id: text("id").notNull(),
+    name: text("name").notNull(),
+    name_key: text("name_key").notNull(),
+    kind: text("kind", { enum: ["strength", "mobility", "other"] }).notNull(),
+    created_at: text("created_at").notNull(),
+    updated_at: text("updated_at").notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.user_id, t.id] }),
+    uniqueIndex("idx_exercises_user_name").on(t.user_id, t.name_key),
+  ]
+);
