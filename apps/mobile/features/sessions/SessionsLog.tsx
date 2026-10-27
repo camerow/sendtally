@@ -26,26 +26,13 @@ import { queries, useQueryPair } from "@sendtally/features/query";
 import { colors, fonts } from "@sendtally/design/tokens";
 import { AccountButton } from "../../components/AccountButton";
 import { ScreenHeader } from "../../components/ScreenHeader";
-import { useClimbVocabulary } from "@sendtally/features/climbs";
-import {
-  addLap,
-  circuitGyms,
-  readClimbKind,
-  useClimbEditor,
-  useLiveSession,
-  useLiveSync,
-  withClimbOutcome,
-  withTries,
-} from "@sendtally/features/log-session";
-import { climbKindStorage } from "../../lib/climbKindStorage";
+import { useLiveSession } from "@sendtally/features/log-session";
 import { liveSessionStorage } from "../../lib/liveSessionStorage";
-import { useGradeScalePrefs } from "@sendtally/features/settings";
 import { UpdateReadyCard } from "../app-update/UpdateReadyCard";
 import { EntryRow, entryRowHeight } from "../journal/EntryRow";
 import { TripGroup, tripGroupHeight } from "../journal/TripGroup";
-import { LiveClimbEditor } from "../live-session/LiveClimbEditor";
-import { LiveSessionCard } from "../live-session/LiveSessionCard";
 import { LogFab } from "../live-session/LogFab";
+import { startLiveSession } from "../live-session/startLiveSession";
 import { DEFAULT_FILTERS, FilterSheet, type SessionFilters } from "./FilterSheet";
 import { ScopeBar } from "./ScopeBar";
 import { SECTION_HEADER_HEIGHT, SectionHeader } from "./SectionHeader";
@@ -59,7 +46,7 @@ import { useStravaConnect } from "../settings/useStravaConnect";
 import { useApi } from "../../lib/api";
 import { maybeAskForReview } from "../../lib/review";
 import { useSetupDismissed } from "../../lib/setupPrompt";
-import { liveGymOfDraft, useGyms } from "@sendtally/features/gyms";
+import { useGyms } from "@sendtally/features/gyms";
 
 type Section = { key: string; title: string; meta: string; data: LogItem[] };
 
@@ -145,17 +132,11 @@ export function SessionsLog({ segments, quickAdd }: SessionsLogProps): React.Rea
   const open = (item: LogItem): void => openItem(item, setEditingHang);
   // ponytail: a second status() read per mount, to know if Strava is live; a Strava-status context across tabs if it ever matters
   const settings = useSettings(api);
-  const { scales } = useGradeScalePrefs(api);
-  const liveSync = useLiveSync(api, liveSessionStorage);
-  const live = useLiveSession(liveSessionStorage, liveSync.sync);
-  const vocabulary = useClimbVocabulary(api);
+  const live = useLiveSession(liveSessionStorage);
   const connect = useStravaConnect(api, settings.reload);
   const gyms = useGyms(api);
   const gymPrompt = useSetupDismissed("gym");
   const stravaPrompt = useSetupDismissed("strava");
-  const circuitChoices = circuitGyms(gyms.gyms);
-  const climbEditor = useClimbEditor(live, api, circuitChoices);
-  const liveGym = liveGymOfDraft(gyms.gyms, live.stored?.draft.gymId);
   const setupCards: SetupCard[] = [];
   if (gyms.ready && gyms.gyms.length === 0 && gymPrompt.dismissed === false) {
     setupCards.push({
@@ -267,13 +248,11 @@ export function SessionsLog({ segments, quickAdd }: SessionsLogProps): React.Rea
     filters.tags.length > 0 || filters.grouping === "tag" || filters.scope !== "all";
   const caption = sessions === null ? t("common.loading") : logCountLabel(visible);
 
-  const openClimb = (): void =>
-    climbEditor.openNew(scales, readClimbKind(climbKindStorage, circuitChoices));
   const { add } = useLocalSearchParams<{ add?: string }>();
   React.useEffect(() => {
     if (add !== "climb") return;
     router.setParams({ add: undefined });
-    openClimb();
+    startLiveSession();
   });
 
   return (
@@ -314,35 +293,6 @@ export function SessionsLog({ segments, quickAdd }: SessionsLogProps): React.Rea
           <>
             <UpdateReadyCard liveSession={live.stored !== null} />
             <SetupStack cards={setupCards} total={2} />
-            {live.stored !== null && (
-              <LiveSessionCard
-                stored={live.stored}
-                status={liveSync.status}
-                vocabulary={vocabulary}
-                gym={liveGym}
-                onEditClimb={climbEditor.open}
-                onChangeTries={(key, tries) => live.updateClimb(key, (c) => withTries(c, tries))}
-                onSent={(key) =>
-                  live.updateClimb(key, (c) =>
-                    withClimbOutcome(c, {
-                      kind: "send",
-                      style: c.tries === 1 ? "flash" : "redpoint",
-                    })
-                  )
-                }
-                onToggleSent={(key) =>
-                  live.updateClimb(key, (c) =>
-                    withClimbOutcome(
-                      c,
-                      c.kind === "send"
-                        ? { kind: "attempt" }
-                        : { kind: "send", style: c.tries === 1 ? "flash" : "redpoint" }
-                    )
-                  )
-                }
-                onAddLap={(key) => live.updateClimb(key, addLap)}
-              />
-            )}
           </>
         }
         refreshControl={
@@ -402,8 +352,7 @@ export function SessionsLog({ segments, quickAdd }: SessionsLogProps): React.Rea
           )
         }
       />
-      {quickAdd && <LogFab onLogClimb={openClimb} />}
-      <LiveClimbEditor editor={climbEditor} vocabulary={vocabulary} gyms={circuitChoices} />
+      {quickAdd && <LogFab live={live.stored !== null} onStart={() => startLiveSession()} />}
       {editingHang !== null && (
         <HangDataProvider fallback={null}>
           <SessionEditorSheet sessionId={editingHang} onClose={() => setEditingHang(null)} />

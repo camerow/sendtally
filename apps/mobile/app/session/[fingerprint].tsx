@@ -21,6 +21,8 @@ import { Chip } from "../../components/Chip";
 import { CircuitDot } from "../../components/CircuitDot";
 import { Icon } from "../../components/Icon";
 import { EnduranceLaps } from "../../features/sessions/EnduranceLaps";
+import { Pyramid } from "../../components/Pyramid";
+import { PyramidLegend } from "../../components/PyramidLegend";
 import { PostStatusBar } from "../../features/sessions/PostStatusBar";
 import { SessionJournal } from "../../features/journal/SessionJournal";
 import { SessionTags } from "../../features/sessions/SessionTags";
@@ -179,6 +181,45 @@ export default function SessionDetailScreen(): React.ReactElement {
               </Text>
             </View>
 
+            {state.data.vm.pyramid.length > 0 && (
+              <View
+                style={{
+                  gap: 8,
+                  padding: 14,
+                  borderRadius: radius.cardLg,
+                  borderWidth: 1,
+                  borderColor: "rgba(64,63,76,0.12)",
+                }}
+              >
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontFamily: fonts.monoMedium,
+                      fontSize: 11,
+                      letterSpacing: 0.9,
+                      textTransform: "uppercase",
+                      color: colors.gunmetal,
+                    }}
+                  >
+                    {t("sessionDetail.byGrade")}
+                  </Text>
+                  <PyramidLegend inner={t("common.sent")} outer={t("sessionDetail.notYet")} />
+                </View>
+                <Pyramid
+                  rows={state.data.vm.pyramid}
+                  label={state.data.vm.pyramid
+                    .map((r) => `${r.gradeLabel}: ${r.countLabel}`)
+                    .join(". ")}
+                />
+              </View>
+            )}
+
             <SessionTags api={api} fingerprint={fingerprint ?? ""} initial={state.data.tags} />
 
             <View
@@ -232,60 +273,6 @@ export default function SessionDetailScreen(): React.ReactElement {
               date={state.data.vm.startDay}
               entries={state.data.entries}
             />
-
-            {state.data.vm.bars.length > 0 && (
-              <View
-                style={{
-                  backgroundColor: colors.white,
-                  borderWidth: 1,
-                  borderColor: colors.lineOnLightSoft,
-                  borderRadius: radius.card,
-                  padding: 16,
-                  gap: 10,
-                }}
-              >
-                <Text
-                  style={{
-                    fontFamily: fonts.monoMedium,
-                    fontSize: 10,
-                    letterSpacing: 0.7,
-                    textTransform: "uppercase",
-                    color: colors.gunmetal,
-                  }}
-                >
-                  {t("trends.sendsByGrade")}
-                </Text>
-                <View style={{ flexDirection: "row", alignItems: "flex-end", gap: 5 }}>
-                  {state.data.vm.bars.map((b) => (
-                    <View key={b.gradeLabel} style={{ flex: 1, alignItems: "center", gap: 5 }}>
-                      <View
-                        style={{
-                          width: "100%",
-                          height: b.height === 0 ? 4 : Math.max(9, Math.round(b.height * 56)),
-                          backgroundColor:
-                            b.height === 0
-                              ? colors.dataBarEmpty
-                              : b.peak
-                                ? colors.dataBarPeak
-                                : colors.azure,
-                          borderTopLeftRadius: 3,
-                          borderTopRightRadius: 3,
-                        }}
-                      />
-                      <Text
-                        style={{
-                          fontFamily: fonts.monoMedium,
-                          fontSize: 10,
-                          color: colors.textSecondary,
-                        }}
-                      >
-                        {b.gradeLabel}
-                      </Text>
-                    </View>
-                  ))}
-                </View>
-              </View>
-            )}
 
             <ScrollView
               horizontal

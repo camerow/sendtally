@@ -18,13 +18,17 @@ const ENTRY_HINTS: Record<
   injury: "journal.hintInjury",
 };
 
-export type LogFabProps = { onLogClimb: () => void };
+export type LogFabProps = {
+  /** A session is running, so the wide half goes back to it. */
+  live: boolean;
+  onStart: () => void;
+};
 
 /**
- * One climb is the frequent action, so it gets the wide half. The chevron half holds the
- * slower paths: the full form and the journal entry kinds.
+ * The live session is the frequent action, so it gets the wide half. The chevron half holds the
+ * slower paths: a climb outside, the full form and the journal entry kinds.
  */
-export function LogFab({ onLogClimb }: LogFabProps): React.ReactElement {
+export function LogFab({ live, onStart }: LogFabProps): React.ReactElement {
   const [menuOpen, setMenuOpen] = React.useState(false);
   const pickEntry = (kind: EntryKind): void => {
     setMenuOpen(false);
@@ -51,7 +55,7 @@ export function LogFab({ onLogClimb }: LogFabProps): React.ReactElement {
         }}
       >
         <Pressable
-          onPress={onLogClimb}
+          onPress={onStart}
           accessibilityRole="button"
           style={press({
             flexDirection: "row",
@@ -63,7 +67,7 @@ export function LogFab({ onLogClimb }: LogFabProps): React.ReactElement {
         >
           <Icon name="plus" size={17} strokeWidth={3} color={colors.white} />
           <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 15, color: colors.white }}>
-            {t("sessions.logClimb")}
+            {live ? t("tally.backToSession") : t("tally.startSession")}
           </Text>
         </Pressable>
         <View style={{ width: 1, marginVertical: 10, backgroundColor: "rgba(255,255,255,0.28)" }} />
@@ -83,11 +87,20 @@ export function LogFab({ onLogClimb }: LogFabProps): React.ReactElement {
         <View style={{ gap: 4, paddingTop: 4, paddingHorizontal: 12, paddingBottom: 4 }}>
           <MenuRow
             icon="plus"
-            title={t("sessions.logAClimb")}
-            hint={t("sessions.logAClimbHint")}
+            title={live ? t("tally.backToSession") : t("tally.startSession")}
+            hint={t("tally.startSessionHint")}
             onPress={() => {
               setMenuOpen(false);
-              onLogClimb();
+              onStart();
+            }}
+          />
+          <MenuRow
+            icon="climb"
+            title={t("climbs.logAClimb")}
+            hint={t("climbs.logAClimbHint")}
+            onPress={() => {
+              setMenuOpen(false);
+              router.push("/climb/log");
             }}
           />
           <MenuRow

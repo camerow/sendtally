@@ -4,6 +4,7 @@ import { activityKindOf, type LibraryWorkout } from "@sendtally/features/workout
 import { NO_PLAN } from "../data/planLinkParams";
 import { activityFormPath, runPath, type RunPlayer } from "../data/workoutRunParams";
 import { startIntervals } from "../intervals/intervalsParams";
+import { startLiveSession } from "../../live-session/startLiveSession";
 import { startWorkout } from "../timer/startWorkout";
 
 /** A run of a workout planned on a day: the plan it is in, and what that day prescribes. */
@@ -20,7 +21,7 @@ const playerOf = (items: readonly Item[]): RunPlayer =>
 /**
  * Runs a workout in the player its items call for: hangboard in the timer, all timed in
  * the intervals player, reps or weight in the sets table, anything else as a checklist.
- * Climbing opens the session form, and a workout with no items the activity form.
+ * Climbing opens the live session, and a workout with no items the activity form.
  */
 export function startLibraryWorkout(
   w: LibraryWorkout,
@@ -36,8 +37,7 @@ export function startLibraryWorkout(
     return;
   }
   if (kind === null) {
-    // ponytail: the session form does not take a plan link yet; the day still counts as done.
-    router.push("/session/new");
+    startLiveSession(link.membershipId === null ? undefined : link);
     return;
   }
   const run = { kind, title: w.name, date, workoutId: w.id, link, minutes: w.minutes };

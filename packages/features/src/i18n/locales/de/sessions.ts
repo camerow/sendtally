@@ -56,7 +56,7 @@ export const sessions = {
   "sessions.logClimb": "Kletterei",
   "sessions.moreWaysToLog": "Weitere Möglichkeiten zu loggen",
   "sessions.logAClimb": "Kletterei",
-  "sessions.logAClimbHint": "Eine einzelne Kletterei loggen. Startet eine Live-Session",
+  "sessions.logAClimbHint": "Eine Live-Session starten, Kletterei für Kletterei",
   "sessions.logFullSession": "Session",
   "sessions.logFullSessionHint":
     "Fasse Klettereien zu einer Session mit Name, Notizen, Datum, Ort und Anstrengung zusammen.",

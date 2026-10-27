@@ -103,9 +103,12 @@ describe("Today", () => {
     });
   });
 
-  it("logs a planned climbing day in the session form", async () => {
+  it("starts a planned climbing day as a live session linked to the plan", async () => {
     await renderWithHang(<TodayScreen />, hangData(), { plan: plan("climb-limit") });
     await fireEvent.press(screen.getByText("Log session"));
-    expect(router.push).toHaveBeenCalledWith("/session/new");
+    expect(router.push).toHaveBeenCalledWith({
+      pathname: "/session/live",
+      params: expect.objectContaining({ membershipId: "m1" }),
+    });
   });
 });

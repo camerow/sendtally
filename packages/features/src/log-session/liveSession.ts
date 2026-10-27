@@ -87,7 +87,7 @@ export const LIVE_IDLE_MS = 6 * 60 * 60 * 1000;
  * live until it lands, however old: it is the only copy of those climbs.
  */
 export function isLive(entry: StoredSessionDraft, now: Date): boolean {
-  if (entry.fingerprint === undefined) return true;
+  if (entry.fingerprint === undefined && entry.draft.climbs.length > 0) return true;
   return (
     entry.draft.date === localDate(now) || now.getTime() - entry.savedAt.getTime() < LIVE_IDLE_MS
   );

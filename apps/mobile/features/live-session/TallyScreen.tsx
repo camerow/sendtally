@@ -1,0 +1,478 @@
+import { router, useLocalSearchParams } from "expo-router";
+import { StatusBar } from "expo-status-bar";
+import React from "react";
+import { Alert, Pressable, ScrollView, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { typicalGradeIndex, useClimbVocabulary } from "@sendtally/features/climbs";
+import {
+  CIRCUIT_HEX,
+  circuitLabel,
+  gymOfDraft,
+  liveGymOfDraft,
+  useGyms,
+} from "@sendtally/features/gyms";
+import { t } from "@sendtally/features/i18n";
+import {
+  disciplineLabel,
+  disciplineOf,
+  durationLabel,
+  finishLiveSession,
+  gradeOptions,
+  newTallyClimb,
+  readClimbKind,
+  tallyClock,
+  tallyDraft,
+  tallyElapsedMinutes,
+  tallySummary,
+  useLiveSession,
+  useLiveSync,
+  vGradeOf,
+  withTallyGo,
+  type ClimbDraft,
+  type Discipline,
+  type LogSessionDraft,
+  type TallyChoice,
+  type TallyGo,
+} from "@sendtally/features/log-session";
+import { queries, useQuery } from "@sendtally/features/query";
+import { useGradeScalePrefs } from "@sendtally/features/settings";
+import { colors, fonts } from "@sendtally/design/tokens";
+import { Icon } from "../../components/Icon";
+import { useApi } from "../../lib/api";
+import { climbKindStorage } from "../../lib/climbKindStorage";
+import { liveSessionStorage } from "../../lib/liveSessionStorage";
+import { press } from "../../lib/press";
+import { readPlanLink } from "../training/data/planLinkParams";
+import { FinishSheet } from "./FinishSheet";
+import { GradeChips, type GradeChip } from "./GradeChips";
+import { GymSheet } from "./GymSheet";
+import { LiveClimbEditor } from "./LiveClimbEditor";
+import { TallyRow } from "./TallyRow";
+import { UndoSnackbar } from "./UndoSnackbar";
+
+type Selection = { kind: "row"; key: string } | { kind: "pending"; chip: string } | null;
+
+type Snack = { id: number; message: string; draft: LogSessionDraft; selection: Selection };
+
+const gradeOf = (climb: ClimbDraft): string =>
+  climb.circuit === undefined ? climb.grade : circuitLabel(climb.circuit);
+
+function finishSummary(draft: LogSessionDraft, minutes: number): string {
+  const sends = draft.climbs.filter((c) => c.kind === "send");
+  const top = [...sends].sort(
+    (a, b) => (vGradeOf(b.grade, b.scale) ?? -1) - (vGradeOf(a.grade, a.scale) ?? -1)
+  )[0];
+  return [
+    durationLabel(minutes),
+    t("tally.sentCount", { count: sends.length }),
+    ...(top === undefined ? [] : [t("sessions.topSend", { grade: gradeOf(top) })]),
+  ].join(" · ");
+}
+
+function useMinuteClock(): Date {
+  const [now, setNow] = React.useState(() => new Date());
+  React.useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 15_000);
+    return () => clearInterval(timer);
+  }, []);
+  return now;
+}
+
+/** The gym session as it happens: a grade starts a climb, then Fell or Sent for each go. */
+export function TallyScreen(): React.ReactElement {
+  const api = useApi();
+  const plan = readPlanLink(useLocalSearchParams());
+  const { sync } = useLiveSync(api, liveSessionStorage);
+  const live = useLiveSession(liveSessionStorage, sync);
+  const gyms = useGyms(api);
+  const vocabulary = useClimbVocabulary(api);
+  const { scales } = useGradeScalePrefs(api);
+  const sessions = useQuery(queries.sessions(api)).state;
+  const now = useMinuteClock();
+  const [selection, setSelection] = React.useState<Selection>(null);
+  const [snack, setSnack] = React.useState<Snack | null>(null);
+  const [editing, setEditing] = React.useState<string | null>(null);
+  const [picking, setPicking] = React.useState(false);
+  const [finishing, setFinishing] = React.useState(false);
+  const [saving, setSaving] = React.useState(false);
+  const [failed, setFailed] = React.useState(false);
+  const [discipline, setDiscipline] = React.useState<Discipline>(() =>
+    readClimbKind(climbKindStorage, []) === "route" ? "route" : "boulder"
+  );
+
+  const started = React.useRef(false);
+  const settled = sessions.status !== "loading" && gyms.state.status !== "loading";
+  const draft = live.stored?.draft ?? null;
+  React.useEffect(() => {
+    if (started.current || !settled) return;
+    started.current = true;
+    if (draft !== null) {
+      if (draft.plan === undefined && plan.membershipId !== null) live.replace({ ...draft, plan });
+      return;
+    }
+    const lastGym =
+      sessions.status === "ready"
+        ? sessions.data.sessions.find((s) => s.gym_id !== null)?.gym_id
+        : undefined;
+    const gymId = gyms.gyms.some((g) => g.id === lastGym) ? (lastGym ?? undefined) : undefined;
+    live.start(tallyDraft(new Date(), { gymId, plan }));
+  }, [settled, draft, live, plan, sessions, gyms.gyms]);
+
+  const leave = (): void => {
+    if (router.canGoBack()) router.back();
+    else router.replace("/(tabs)/sessions");
+  };
+
+  if (draft === null) {
+    return <SafeAreaView style={{ flex: 1, backgroundColor: colors.gunmetal }} />;
+  }
+
+  const gym = gymOfDraft(gyms.gyms, draft.gymId);
+  const circuitGym = liveGymOfDraft(gyms.gyms, draft.gymId);
+  const scale = scales[discipline];
+  const chips: GradeChip[] =
+    circuitGym === null
+      ? gradeOptions(scale).map((g) => ({ key: g, label: g }))
+      : circuitGym.circuits.map((c) => ({
+          key: c.id,
+          label: circuitLabel(c),
+          colour: CIRCUIT_HEX[c.colour],
+        }));
+  const showDiscipline =
+    circuitGym === null &&
+    (vocabulary.climbs.some((c) => c.discipline === "route") ||
+      draft.climbs.some((c) => disciplineOf(c.scale) === "route") ||
+      (gym?.walls.length ?? 0) > 0);
+
+  const choiceOf = (chip: string): TallyChoice | null => {
+    if (circuitGym === null) return { kind: "grade", scale, grade: chip };
+    const circuit = circuitGym.circuits.find((c) => c.id === chip);
+    return circuit === undefined ? null : { kind: "circuit", gym: circuitGym, circuit };
+  };
+
+  const go = (g: TallyGo): void => {
+    let climb: ClimbDraft | undefined;
+    if (selection?.kind === "pending") {
+      const choice = choiceOf(selection.chip);
+      if (choice === null) return;
+      const next = newTallyClimb(draft, choice, g);
+      live.replace(next.draft);
+      climb = next.draft.climbs.find((c) => c.key === next.key);
+      setSelection(g === "fell" ? { kind: "row", key: next.key } : null);
+    } else if (selection?.kind === "row") {
+      climb = draft.climbs.find((c) => c.key === selection.key);
+      if (climb === undefined) return;
+      live.updateClimb(selection.key, (c) => withTallyGo(c, g));
+      if (g === "sent") setSelection(null);
+    }
+    if (climb === undefined) return;
+    const grade = gradeOf(climb);
+    setSnack({
+      id: (snack?.id ?? 0) + 1,
+      message: g === "fell" ? t("tally.fellOn", { grade }) : t("tally.sentGrade", { grade }),
+      draft,
+      selection,
+    });
+  };
+
+  const undo = (): void => {
+    if (snack === null) return;
+    live.replace(snack.draft);
+    setSelection(snack.selection);
+    setSnack(null);
+  };
+
+  const pickGym = (gymId: string | undefined): void => {
+    const { gymId: _gym, ...rest } = draft;
+    live.replace(gymId === undefined ? rest : { ...rest, gymId });
+    setSelection(null);
+    setPicking(false);
+  };
+
+  const pickDiscipline = (next: Discipline): void => {
+    setDiscipline(next);
+    climbKindStorage.write(next);
+    setSelection(null);
+  };
+
+  const save = (rpe: number | null): void => {
+    setSaving(true);
+    setFailed(false);
+    finishLiveSession(api, liveSessionStorage, sync, rpe).then(
+      (fingerprint) => {
+        setFinishing(false);
+        if (fingerprint === null) leave();
+        else router.replace({ pathname: "/session/[fingerprint]", params: { fingerprint } });
+      },
+      () => {
+        setSaving(false);
+        setFailed(true);
+      }
+    );
+  };
+
+  const discard = (): void => {
+    Alert.alert(t("tally.discardTitle"), t("tally.discardBody"), [
+      { text: t("common.cancel"), style: "cancel" },
+      {
+        text: t("common.discard"),
+        style: "destructive",
+        onPress: () => {
+          const fingerprint = live.stored?.fingerprint;
+          if (fingerprint !== undefined) sync.remove(fingerprint);
+          live.discard();
+          setFinishing(false);
+          leave();
+        },
+      },
+    ]);
+  };
+
+  const minutes = tallyElapsedMinutes(draft, now);
+  const editingClimb = draft.climbs.find((c) => c.key === editing) ?? null;
+  const active = selection?.kind === "pending" ? selection.chip : null;
+  const off = selection === null;
+
+  return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.gunmetal }} edges={["top", "bottom"]}>
+      <StatusBar style="light" />
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+          paddingTop: 6,
+          paddingHorizontal: 8,
+        }}
+      >
+        <Pressable
+          onPress={leave}
+          accessibilityRole="button"
+          accessibilityLabel={t("tally.minimise")}
+          style={press({ width: 60, height: 44, alignItems: "center", justifyContent: "center" })}
+        >
+          <View style={{ transform: [{ rotate: "90deg" }] }}>
+            <Icon name="chevron" color={colors.white} size={22} strokeWidth={2.2} />
+          </View>
+        </Pressable>
+        <Pressable
+          onPress={() => setPicking(true)}
+          accessibilityRole="button"
+          accessibilityLabel={`${t("gyms.gym")}, ${gym?.name ?? t("gyms.noGym")}`}
+          style={press({ height: 44, flexDirection: "row", alignItems: "center", gap: 4 })}
+        >
+          <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 15, color: colors.white }}>
+            {gym?.name ?? t("gyms.noGym")}
+          </Text>
+          <View style={{ transform: [{ rotate: "90deg" }] }}>
+            <Icon name="chevron" color={colors.white} size={14} strokeWidth={2.2} />
+          </View>
+        </Pressable>
+        <Pressable
+          onPress={() => setFinishing(true)}
+          accessibilityRole="button"
+          style={press({
+            width: 76,
+            height: 44,
+            alignItems: "flex-end",
+            justifyContent: "center",
+            paddingRight: 10,
+          })}
+        >
+          <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 15, color: colors.gold }}>
+            {t("tally.finish")}
+          </Text>
+        </Pressable>
+      </View>
+
+      <View style={{ alignItems: "center", gap: 2, paddingTop: 4, paddingBottom: 12 }}>
+        <Text
+          accessibilityLabel={durationLabel(minutes)}
+          style={{
+            fontFamily: fonts.displayHeavy,
+            fontSize: 44,
+            lineHeight: 50,
+            letterSpacing: -1.3,
+            color: colors.white,
+          }}
+        >
+          {tallyClock(minutes)}
+        </Text>
+        <Text style={{ fontFamily: fonts.mono, fontSize: 13, color: "rgba(255,255,255,0.75)" }}>
+          {tallySummary(draft)}
+        </Text>
+      </View>
+
+      <View style={{ flex: 1 }}>
+        {draft.climbs.length === 0 ? (
+          <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 18 }}>
+            <Text style={{ fontFamily: fonts.sans, fontSize: 16, color: "rgba(255,255,255,0.72)" }}>
+              {t("tally.pickGrade")}
+            </Text>
+          </View>
+        ) : (
+          <ScrollView
+            style={{ flex: 1 }}
+            contentContainerStyle={{ gap: 6, paddingHorizontal: 18, paddingBottom: 72 }}
+          >
+            {[...draft.climbs].reverse().map((climb) => (
+              <TallyRow
+                key={climb.key}
+                climb={climb}
+                selected={selection?.kind === "row" && selection.key === climb.key}
+                onPress={() =>
+                  setSelection((s) =>
+                    s?.kind === "row" && s.key === climb.key
+                      ? null
+                      : { kind: "row", key: climb.key }
+                  )
+                }
+                onEdit={() => setEditing(climb.key)}
+              />
+            ))}
+          </ScrollView>
+        )}
+        {snack !== null && (
+          <UndoSnackbar
+            id={snack.id}
+            message={snack.message}
+            bottom={12}
+            onUndo={undo}
+            onExpire={() => setSnack(null)}
+          />
+        )}
+      </View>
+
+      <View
+        style={{
+          gap: 10,
+          paddingTop: 12,
+          paddingBottom: 10,
+          borderTopWidth: 1,
+          borderTopColor: "rgba(255,255,255,0.12)",
+        }}
+      >
+        {showDiscipline && (
+          <View
+            accessibilityRole="radiogroup"
+            style={{
+              alignSelf: "center",
+              width: 200,
+              flexDirection: "row",
+              padding: 3,
+              borderRadius: 10,
+              backgroundColor: "rgba(255,255,255,0.1)",
+            }}
+          >
+            {(["boulder", "route"] as const).map((d) => (
+              <Pressable
+                key={d}
+                onPress={() => pickDiscipline(d)}
+                accessibilityRole="radio"
+                accessibilityState={{ checked: d === discipline }}
+                style={{
+                  flex: 1,
+                  height: 30,
+                  borderRadius: 8,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  backgroundColor: d === discipline ? colors.white : "transparent",
+                }}
+              >
+                <Text
+                  style={{
+                    fontFamily: fonts.sansSemiBold,
+                    fontSize: 13,
+                    color: d === discipline ? colors.gunmetal : "rgba(255,255,255,0.75)",
+                  }}
+                >
+                  {disciplineLabel(d)}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+        )}
+        <GradeChips
+          chips={chips}
+          active={active}
+          startIndex={circuitGym === null ? typicalGradeIndex(vocabulary.climbs, scale) : 0}
+          onPick={(chip) => setSelection({ kind: "pending", chip })}
+        />
+        <View style={{ flexDirection: "row", gap: 10, paddingHorizontal: 18 }}>
+          <Pressable
+            onPress={() => go("fell")}
+            disabled={off}
+            accessibilityRole="button"
+            accessibilityState={{ disabled: off }}
+            style={press({
+              flex: 1,
+              height: 72,
+              borderRadius: 16,
+              borderWidth: 2,
+              borderColor: "rgba(255,255,255,0.5)",
+              alignItems: "center",
+              justifyContent: "center",
+              opacity: off ? 0.35 : 1,
+            })}
+          >
+            <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 18, color: colors.white }}>
+              {t("tally.fell")}
+            </Text>
+          </Pressable>
+          <Pressable
+            onPress={() => go("sent")}
+            disabled={off}
+            accessibilityRole="button"
+            accessibilityState={{ disabled: off }}
+            style={press({
+              flex: 1,
+              height: 72,
+              borderRadius: 16,
+              backgroundColor: colors.gold,
+              alignItems: "center",
+              justifyContent: "center",
+              opacity: off ? 0.35 : 1,
+            })}
+          >
+            <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 18, color: colors.gunmetal }}>
+              {t("common.sent")}
+            </Text>
+          </Pressable>
+        </View>
+      </View>
+
+      <LiveClimbEditor
+        climb={editingClimb}
+        index={editingClimb === null ? 0 : draft.climbs.indexOf(editingClimb)}
+        count={draft.climbs.length}
+        prefs={scales}
+        vocabulary={vocabulary}
+        gyms={circuitGym === null ? [] : [circuitGym]}
+        onChange={(c) => live.updateClimb(c.key, () => c, gyms.gyms)}
+        onRemove={() => {
+          if (editing !== null)
+            live.replace({ ...draft, climbs: draft.climbs.filter((c) => c.key !== editing) });
+          setSelection(null);
+          setEditing(null);
+        }}
+        onClose={() => setEditing(null)}
+      />
+      <GymSheet
+        visible={picking}
+        gyms={gyms.gyms}
+        gymId={draft.gymId}
+        onPick={pickGym}
+        onClose={() => setPicking(false)}
+      />
+      <FinishSheet
+        visible={finishing}
+        summary={finishSummary(draft, minutes)}
+        saving={saving}
+        failed={failed}
+        onSave={save}
+        onDiscard={discard}
+        onClose={() => setFinishing(false)}
+      />
+    </SafeAreaView>
+  );
+}

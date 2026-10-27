@@ -67,6 +67,7 @@ import { SelectRow } from "../../components/SelectRow";
 import { AddClimbSheet } from "../areas/AddClimbSheet";
 import { AddCragSheet } from "../areas/AddCragSheet";
 import { AreaSearchField } from "../areas/AreaSearchField";
+import { readPlanLink } from "../training/data/planLinkParams";
 import { ClimbEditorSheet } from "./ClimbEditorSheet";
 import { NewGymSheet } from "../gyms/NewGymSheet";
 import { Icon } from "../../components/Icon";
@@ -150,12 +151,19 @@ export function LogSessionForm({
 }): React.ReactElement {
   const api = useApi();
   const client = useQueryClient();
-  const { resume, wrapUp } = useLocalSearchParams<{ resume?: string; wrapUp?: string }>();
+  const params = useLocalSearchParams<{ resume?: string; wrapUp?: string }>();
+  const { resume, wrapUp } = params;
+  const [plan] = React.useState(() => readPlanLink(params));
   const { scales: gradePrefs, ready: prefsReady } = useGradeScalePrefs(api);
   // Opened by tapping the draft itself: start on it rather than offering it back.
   const [picked] = React.useState(() => (resume === "1" ? storedDraft(sessionDraftStorage) : null));
   const [draft, setDraft] = React.useState<LogSessionDraft>(
-    () => editing?.draft ?? picked ?? emptyDraft(new Date(), gradePrefs)
+    () =>
+      editing?.draft ??
+      picked ?? {
+        ...emptyDraft(new Date(), gradePrefs),
+        ...(plan.membershipId === null ? {} : { plan }),
+      }
   );
   const [addingTimes, setAddingTimes] = React.useState(false);
   const timesOpen = addingTimes || draft.startTime !== "" || draft.endTime !== "";

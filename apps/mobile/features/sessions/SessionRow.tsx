@@ -1,7 +1,7 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import type { SessionRow as SessionRowData } from "@sendtally/api-client";
-import { sessionDay, sessionGradeLabels, sessionMetaLabel } from "@sendtally/features/sessions";
+import { sessionDay, sessionTallyLabel } from "@sendtally/features/sessions";
 import { t } from "@sendtally/features/i18n";
 import { colors, fonts } from "@sendtally/design/tokens";
 import { Icon } from "../../components/Icon";
@@ -37,7 +37,7 @@ export function SessionRow({
   divider = true,
 }: SessionRowProps): React.ReactElement {
   const { weekday, day } = sessionDay(session);
-  const meta = sessionMetaLabel(session);
+  const meta = sessionTallyLabel(session);
   const onStrava = session.strava_activity_id !== null;
   const spoken = [title, `${weekday} ${day}`, meta, onStrava ? t("sessions.postedToStrava") : null]
     .filter((part) => part !== null)
@@ -70,22 +70,6 @@ export function SessionRow({
           {meta}
         </Text>
         <RowTags tags={session.tags} />
-      </View>
-      <View style={{ alignItems: "flex-end", gap: 2 }}>
-        {sessionGradeLabels(session).map((g) => (
-          <Text
-            key={g.kind}
-            style={{
-              fontFamily: g.kind === "sent" ? fonts.monoSemiBold : fonts.monoMedium,
-              fontSize: 11,
-              lineHeight: 13,
-              letterSpacing: 0.44,
-              color: g.kind === "sent" ? colors.gunmetal : colors.textMuted,
-            }}
-          >
-            {g.label}
-          </Text>
-        ))}
       </View>
       {trailing ?? <Icon name="chevron" size={12} strokeWidth={2} color="rgba(64,63,76,0.35)" />}
     </Pressable>

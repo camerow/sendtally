@@ -56,7 +56,7 @@ export const sessions = {
   "sessions.logClimb": "Climb",
   "sessions.moreWaysToLog": "More ways to log",
   "sessions.logAClimb": "Climb",
-  "sessions.logAClimbHint": "Log a single climb. Starts a live session",
+  "sessions.logAClimbHint": "Start a live session, climb by climb",
   "sessions.logFullSession": "Session",
   "sessions.logFullSessionHint":
     "Group climbs into a single session with a name, notes, date, location and effort.",
