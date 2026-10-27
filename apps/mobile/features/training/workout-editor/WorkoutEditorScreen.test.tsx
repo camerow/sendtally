@@ -32,6 +32,11 @@ describe("Workout editor", () => {
     await fireEvent.changeText(screen.getByLabelText("Name"), "Leg day");
     await fireEvent.changeText(screen.getByLabelText("Exercise"), "Back squat");
     await type("Reps", "5");
+    await fireEvent.press(screen.getByText("Save"));
+    expect(mockWorkouts.saveWorkout).not.toHaveBeenCalled();
+    expect(screen.getByText("Add a weight to save. Use 0 for bodyweight.")).toBeTruthy();
+    await type("Weight (kg)", "100");
+    expect(screen.queryByText("Add a weight to save. Use 0 for bodyweight.")).toBeNull();
 
     await fireEvent.press(screen.getByLabelText("Alternates"));
     await fireEvent.changeText(screen.getByLabelText("Variation A"), "5×5");
@@ -48,8 +53,14 @@ describe("Workout editor", () => {
       minutes: null,
       targetRpe: null,
       variations: [
-        { label: "5×5", items: [{ exercise: "Back squat", dose: { sets: 3, reps: 5 } }] },
-        { label: "3×10", items: [{ exercise: "Back squat", dose: { sets: 3, reps: 10 } }] },
+        {
+          label: "5×5",
+          items: [{ exercise: "Back squat", dose: { sets: 3, reps: 5, weightKg: 100 } }],
+        },
+        {
+          label: "3×10",
+          items: [{ exercise: "Back squat", dose: { sets: 3, reps: 10, weightKg: 100 } }],
+        },
       ],
       pattern: [0, 0, 1],
       exerciseRestS: 180,

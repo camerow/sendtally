@@ -66,7 +66,9 @@ export function SetsCard({
         <SetRow
           key={i}
           n={i + 1}
-          target={target}
+          target={
+            lifting ? { ...target, weightKg: target.weightKg ?? previous[i]?.weightKg } : target
+          }
           done={set}
           previous={previous[i]}
           lifting={lifting}

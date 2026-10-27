@@ -100,6 +100,7 @@ export const workouts = {
   "workouts.dose.work": "Belastung",
   "workouts.dose.rounds": "Runden",
   "workouts.dose.weight": "Gewicht ({unit})",
+  "workouts.weightNeeded": "Gib ein Gewicht an, um zu speichern. 0 für Körpergewicht.",
   "workouts.alternates": "Im Wechsel",
   "workouts.totalTime": "Gesamtzeit",
   "workouts.exerciseRest": "Pause zwischen Übungen",

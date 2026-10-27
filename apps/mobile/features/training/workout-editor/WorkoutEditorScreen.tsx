@@ -33,6 +33,7 @@ import { type } from "../type";
 import { EditorTextField } from "./EditorTextField";
 import { HangboardTiming } from "./HangboardTiming";
 import {
+  canSave,
   draftOfEditor,
   letterOf,
   MAX_VARIATIONS,
@@ -123,7 +124,13 @@ function Editor({
         <Text style={[type.bodyBold, { fontSize: 15, color: colors.gunmetal }]}>
           {id === undefined ? t("workouts.newWorkout") : t("hang.editWorkout")}
         </Text>
-        <Button label={t("hang.save")} onPress={save} variant="link" height={44} />
+        <Button
+          label={t("hang.save")}
+          onPress={save}
+          disabled={!canSave(state)}
+          variant="link"
+          height={44}
+        />
       </View>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : undefined}

@@ -61,6 +61,7 @@ describe("Sets player", () => {
     expect(screen.getByText("30s")).toBeTruthy();
     expect(screen.getByText("Last 5 × 97.5 kg")).toBeTruthy();
     expect(screen.getByText("Last 8 × 60 kg")).toBeTruthy();
+    expect(screen.getByText("8 × 60 kg")).toBeTruthy();
     await fireEvent.press(screen.getByLabelText("Back squat, set 1"));
     expect(screen.queryByText(/^Rest/)).toBeNull();
     await advance(30_000);

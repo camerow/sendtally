@@ -10,6 +10,7 @@ import { IconButton } from "../components/IconButton";
 import { type } from "../type";
 import { DoseTile } from "./DoseTile";
 import { DOSE_FIELDS_OF, fieldText, withField } from "./doseFields";
+import { needsWeight } from "./editorState";
 
 export type ItemEditorProps = {
   kind: WorkoutKind;
@@ -38,6 +39,7 @@ export function ItemEditor({
   onPickGrip,
 }: ItemEditorProps): React.ReactElement {
   const name = kind === "hangboard" ? gripName(item.exercise) : item.exercise;
+  const missing = needsWeight(kind, item);
   return (
     <View style={{ gap: 8 }}>
       <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
@@ -93,6 +95,7 @@ export function ItemEditor({
             label={t(field.label, { unit })}
             value={fieldText(field, item.dose, unit)}
             keyboard={KEYBOARD[field.measure]}
+            required={missing && field.key === "weightKg"}
             onCommit={(text) => {
               const dose = withField(item.dose, field, text, unit);
               if (dose !== null) onChange({ ...item, dose });
@@ -100,6 +103,11 @@ export function ItemEditor({
           />
         ))}
       </View>
+      {missing && (
+        <Text style={[type.body, { fontSize: 13, color: colors.watermelonInk }]}>
+          {t("workouts.weightNeeded")}
+        </Text>
+      )}
     </View>
   );
 }

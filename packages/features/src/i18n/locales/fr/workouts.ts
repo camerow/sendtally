@@ -102,6 +102,7 @@ export const workouts = {
   "workouts.dose.work": "Effort",
   "workouts.dose.rounds": "Tours",
   "workouts.dose.weight": "Poids ({unit})",
+  "workouts.weightNeeded": "Indique un poids pour enregistrer. 0 pour le poids du corps.",
   "workouts.alternates": "En alternance",
   "workouts.totalTime": "Durée totale",
   "workouts.exerciseRest": "Repos entre exercices",

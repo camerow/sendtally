@@ -98,6 +98,7 @@ export const workouts = {
   "workouts.dose.work": "Work",
   "workouts.dose.rounds": "Rounds",
   "workouts.dose.weight": "Weight ({unit})",
+  "workouts.weightNeeded": "Add a weight to save. Use 0 for bodyweight.",
   "workouts.alternates": "Alternates",
   "workouts.totalTime": "Total time",
   "workouts.exerciseRest": "Rest between exercises",
