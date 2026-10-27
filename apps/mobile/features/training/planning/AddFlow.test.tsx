@@ -55,14 +55,17 @@ beforeEach(() => {
 });
 
 describe("adding to the plan", () => {
-  it("asks the kind, then lists that kind's workouts, the user's own first", async () => {
+  it("asks the kind, then lists that kind's workouts in one list, the user's own first and labelled", async () => {
     await renderWithHang(<AddPlanScreen flow={flow} />, hangData(), { workouts: [legs] });
     expect(screen.getByText("What kind?")).toBeTruthy();
     await fireEvent.press(screen.getByText("Strength"));
     expect(screen.queryByText("What kind?")).toBeNull();
     expect(screen.getByText("For Thu, Oct 1")).toBeTruthy();
-    expect(screen.getByText(/^Built in · \d+$/)).toBeTruthy();
+    expect(screen.getByText("Mine")).toBeTruthy();
+    expect(screen.getByText("5x5 strength")).toBeTruthy();
     expect(screen.queryByText("Climber's yoga")).toBeNull();
+    await fireEvent.changeText(screen.getByLabelText("Search workouts"), "legs");
+    expect(screen.queryByText("5x5 strength")).toBeNull();
     await fireEvent.press(screen.getByText("Gym, legs"));
     expect(router.push).toHaveBeenCalledWith({
       pathname: "/workout/preview",

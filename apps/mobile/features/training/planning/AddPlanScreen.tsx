@@ -7,13 +7,13 @@ import { kindLabel } from "@sendtally/features/activities";
 import { shortDate } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import { usePlan } from "@sendtally/features/training";
-import { browseLibrary, type LibraryWorkout } from "@sendtally/features/workouts";
+import type { LibraryWorkout } from "@sendtally/features/workouts";
 import { useApi } from "../../../lib/api";
 import { Button } from "../components/Button";
 import { Label } from "../components/Label";
 import { Title } from "../components/Title";
 import { LoadState } from "../data/LoadState";
-import { LibraryCard } from "../library/LibraryCard";
+import { LibraryBrowser } from "../library/LibraryBrowser";
 import { useLibrary } from "../library/useLibrary";
 import { addFlowParams, type AddFlow } from "./flowParams";
 import { KindSheet } from "./KindSheet";
@@ -22,8 +22,8 @@ import { ScreenFrame } from "./ScreenFrame";
 export type AddPlanScreenProps = { flow: AddFlow };
 
 /**
- * Adding to the plan: what kind in the one sheet, then the library of that kind, the
- * user's own first, to preview one or make a new one.
+ * Adding to the plan: what kind in the one sheet, then the library of that kind in one
+ * searchable list, the user's own first, to preview one or make a new one.
  */
 export function AddPlanScreen({ flow }: AddPlanScreenProps): React.ReactElement {
   const { state, reload } = useLibrary();
@@ -46,29 +46,11 @@ export function AddPlanScreen({ flow }: AddPlanScreenProps): React.ReactElement 
         ? t("plan.forDate", { date: shortDate(flow.date) })
         : t("plan.addToPlan");
   const library = state.status === "ready" ? state.data : null;
-  const shelves =
-    library === null || kind === null
-      ? null
-      : browseLibrary(library.workouts, { text: "", kinds: [kind] }, library.usage);
   const preview = (w: LibraryWorkout): void =>
     router.push({
       pathname: "/workout/preview",
       params: { id: w.id, add: "1", ...addFlowParams(flow) },
     });
-  const shelf = (label: string, workouts: readonly LibraryWorkout[]): React.ReactNode =>
-    workouts.length > 0 && (
-      <View style={{ gap: 10 }}>
-        <Label color={colors.textSecondary}>{label}</Label>
-        {workouts.map((w) => (
-          <LibraryCard
-            key={w.id}
-            workout={w}
-            use={library?.usage.get(w.id)}
-            onPress={() => preview(w)}
-          />
-        ))}
-      </View>
-    );
 
   return (
     <ScreenFrame
@@ -99,9 +81,9 @@ export function AddPlanScreen({ flow }: AddPlanScreenProps): React.ReactElement 
         />
       )}
       {state.status !== "ready" && <LoadState state={state} onRetry={() => void reload()} />}
-      {shelves !== null && shelf(t("workouts.mine"), shelves.mine)}
-      {shelves !== null &&
-        shelf(t("workouts.builtInCount", { n: shelves.builtIn.length }), shelves.builtIn)}
+      {library !== null && kind !== null && (
+        <LibraryBrowser key={kind} library={library} kinds={[kind]} onPick={preview} />
+      )}
       <KindSheet
         visible={choosing}
         kicker={kicker}
