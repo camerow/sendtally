@@ -25,10 +25,20 @@ export type LibraryCardProps = {
   workout: LibraryWorkout;
   use: WorkoutUse | undefined;
   onPress: () => void;
+  /** Its category's name beside its mark; off where the screen already names it. */
+  showKind?: boolean;
+  /** Set on a shelf, where cards sit side by side; otherwise it fills the column. */
+  width?: number;
 };
 
 /** A workout in the library: its kind, name, length, what it holds, and how much it ran. */
-export function LibraryCard({ workout, use, onPress }: LibraryCardProps): React.ReactElement {
+export function LibraryCard({
+  workout,
+  use,
+  onPress,
+  showKind = true,
+  width,
+}: LibraryCardProps): React.ReactElement {
   const minutes = workoutMinutes(workout);
   const summary = bodySummary(workout);
   const items = workout.variations[0]?.items ?? [];
@@ -48,13 +58,18 @@ export function LibraryCard({ workout, use, onPress }: LibraryCardProps): React.
         gap: 10,
         borderWidth: 1,
         borderColor: colors.lineOnLight,
+        width,
       })}
     >
       <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
         <CategoryMark kind={workout.kind} size={28} />
-        <Label color={KIND_LOOK[workout.kind].ink} style={{ flex: 1 }}>
-          {kindLabel(workout.kind)}
-        </Label>
+        {showKind ? (
+          <Label color={KIND_LOOK[workout.kind].ink} style={{ flex: 1 }}>
+            {kindLabel(workout.kind)}
+          </Label>
+        ) : (
+          <View style={{ flex: 1 }} />
+        )}
         {workout.source === "mine" && <MineBadge />}
         {minutes !== null && <Label color={colors.textSecondary}>{durationLabel(minutes)}</Label>}
       </View>
@@ -74,7 +89,10 @@ export function LibraryCard({ workout, use, onPress }: LibraryCardProps): React.
           <IntervalsBar intervals={intervalsOf(items)} height={12} />
         </View>
       )}
-      <Text numberOfLines={1} style={[type.mono, { fontSize: 12, color: colors.textSecondary }]}>
+      <Text
+        numberOfLines={1}
+        style={[type.mono, { marginTop: "auto", fontSize: 12, color: colors.textSecondary }]}
+      >
         {foot}
       </Text>
     </Pressable>

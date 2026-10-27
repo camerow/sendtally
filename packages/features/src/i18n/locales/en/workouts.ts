@@ -112,5 +112,6 @@ export const workouts = {
   "workouts.exercise": "Exercise",
   "workouts.exercisePlaceholder": "Back squat",
   "workouts.removeExercise": "Remove {name}",
-  "workouts.builtInCount": "Built in · {n}",
+  "workouts.seeAll": "See all",
+  "workouts.seeAllOf": "See all {kind}",
 } as const;

@@ -10,11 +10,12 @@ import {
   doseSummary,
   draftOf,
   libraryOf,
+  libraryShelves,
   newWorkoutDraft,
   workoutMinutes,
   workoutUsage,
 } from "./library";
-import type { LibraryShelves, LibraryWorkout } from "./types";
+import type { LibraryWorkout } from "./types";
 
 afterEach(() => setLocale("en"));
 
@@ -61,10 +62,9 @@ const stretch = record({
 
 const library = (): LibraryWorkout[] => libraryOf([garage, legs, stretch]);
 
-const ids = (shelves: LibraryShelves): { mine: string[]; builtIn: string[] } => ({
-  mine: shelves.mine.map((w) => w.id),
-  builtIn: shelves.builtIn.map((w) => w.id),
-});
+const ids = (workouts: readonly LibraryWorkout[]): string[] => workouts.map((w) => w.id);
+const builtInIds = (workouts: readonly LibraryWorkout[]): string[] =>
+  ids(workouts.filter((w) => w.source === "library"));
 
 describe("libraryOf", () => {
   it("puts the built-ins and the user's own workouts of every kind in one list", () => {
@@ -147,32 +147,59 @@ describe("browseLibrary", () => {
     []
   );
 
-  it("puts the user's own first by last use, then name, and the built-ins below", () => {
-    const shelves = ids(browseLibrary(library(), { text: "" }, usage));
-    expect(shelves.mine).toEqual(["w-stretch", "h-mine", "w-legs"]);
-    expect(shelves.builtIn).toEqual(BUILT_IN_WORKOUT_IDS);
+  it("puts the user's own first by last use, then name, and the built-ins after", () => {
+    expect(ids(browseLibrary(library(), { text: "" }, usage))).toEqual([
+      "w-stretch",
+      "h-mine",
+      "w-legs",
+      ...BUILT_IN_WORKOUT_IDS,
+    ]);
   });
 
   it("searches names, descriptions, kinds, labels and exercises, ignoring case and accents", () => {
-    const search = (text: string): { mine: string[]; builtIn: string[] } =>
-      ids(browseLibrary(library(), { text }, usage));
-    expect(search("garage").mine).toEqual(["h-mine"]);
-    expect(search("HEAVY leg").mine).toEqual(["w-legs"]);
-    expect(search("goblet").mine).toEqual(["w-legs"]);
-    expect(search("pancake").mine).toEqual(["w-stretch"]);
-    expect(search("half crimp").mine).toEqual(["h-mine"]);
-    expect(search("3×10").builtIn).toEqual(["strength-squat"]);
-    expect(search("nothing like this")).toEqual({ mine: [], builtIn: [] });
+    const search = (text: string): string[] => ids(browseLibrary(library(), { text }, usage));
+    expect(search("garage")).toEqual(["h-mine"]);
+    expect(search("HEAVY leg")).toEqual(["w-legs"]);
+    expect(search("goblet")).toEqual(["w-legs"]);
+    expect(search("pancake")).toEqual(["w-stretch"]);
+    expect(search("half crimp")[0]).toBe("h-mine");
+    expect(search("3×10")).toEqual(["strength-squat"]);
+    expect(search("nothing like this")).toEqual([]);
     setLocale("fr");
-    expect(ids(browseLibrary(libraryOf([]), { text: "developpe" }, usage)).builtIn).toContain(
+    expect(builtInIds(browseLibrary(libraryOf([]), { text: "developpe" }, usage))).toContain(
       "strength-5x5"
     );
   });
 
   it("narrows to some kinds", () => {
-    const shelves = browseLibrary(library(), { text: "", kinds: ["hangboard"] }, usage);
-    expect(ids(shelves).mine).toEqual(["h-mine"]);
-    expect(shelves.builtIn.every((w) => w.kind === "hangboard")).toBe(true);
+    const found = browseLibrary(library(), { text: "", kinds: ["hangboard"] }, usage);
+    expect(found[0]?.id).toBe("h-mine");
+    expect(found.every((w) => w.kind === "hangboard")).toBe(true);
+  });
+});
+
+describe("libraryShelves", () => {
+  it("makes one shelf per category in order, the user's own mixed in first", () => {
+    const usage = workoutUsage([{ workoutId: "w-legs", date: "2026-10-06" }], []);
+    const shelves = libraryShelves(library(), usage);
+    expect(shelves.map((s) => s.kind)).toEqual(WORKOUT_KINDS);
+    const strength = shelves.find((s) => s.kind === "strength")?.workouts ?? [];
+    expect(strength[0]?.id).toBe("w-legs");
+    expect(builtInIds(strength)).toEqual(
+      builtInWorkouts()
+        .filter((w) => w.kind === "strength")
+        .map((w) => w.id)
+    );
+    expect(shelves.every((s) => s.workouts.every((w) => w.kind === s.kind))).toBe(true);
+  });
+
+  it("leaves out a category with nothing in it", () => {
+    const mine = library().filter((w) => w.source === "mine");
+    expect(libraryShelves(mine, new Map()).map((s) => s.kind)).toEqual([
+      "hangboard",
+      "strength",
+      "mobility",
+    ]);
   });
 });
 

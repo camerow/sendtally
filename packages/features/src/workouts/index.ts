@@ -8,12 +8,13 @@ export {
   draftOf,
   exerciseName,
   libraryOf,
+  libraryShelves,
   newWorkoutDraft,
   workoutMinutes,
   workoutUsage,
 } from "./library";
 export type {
-  LibraryShelves,
+  LibraryShelf,
   LibrarySource,
   LibraryWorkout,
   WorkoutDraft,

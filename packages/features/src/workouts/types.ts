@@ -1,5 +1,5 @@
 import type { WorkoutInput } from "@sendtally/api-client";
-import type { CalendarDate, Workout } from "@sendtally/core/hang";
+import type { CalendarDate, Workout, WorkoutKind } from "@sendtally/core/hang";
 
 export type LibrarySource = "library" | "mine";
 
@@ -11,5 +11,5 @@ export type WorkoutDraft = WorkoutInput;
 
 export type WorkoutUse = { count: number; last: CalendarDate | null };
 
-/** The library as one list shows it: the user's own by last use, the built-ins below. */
-export type LibraryShelves = { mine: LibraryWorkout[]; builtIn: LibraryWorkout[] };
+/** One category's row in the library. */
+export type LibraryShelf = { kind: WorkoutKind; workouts: LibraryWorkout[] };

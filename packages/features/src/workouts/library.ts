@@ -11,13 +11,14 @@ import {
   type WeightUnit,
   type Workout,
   type WorkoutKind,
+  WORKOUT_KINDS,
 } from "@sendtally/core/hang";
 import { ACTIVITY_KINDS, kindLabel } from "../activities/format";
 import { humanDuration, protocolSummary } from "../hang/format";
 import { builtInGripName } from "../hang/names";
 import { formatNumber, t } from "../i18n";
 import { builtInWorkouts } from "./builtIns";
-import type { LibraryShelves, LibraryWorkout, WorkoutDraft, WorkoutUse } from "./types";
+import type { LibraryShelf, LibraryWorkout, WorkoutDraft, WorkoutUse } from "./types";
 
 /** The activity kind a workout logs as, or null for hangboard and climbing ones. */
 export function activityKindOf(kind: WorkoutKind): ActivityKind | null {
@@ -150,22 +151,33 @@ function matches(w: LibraryWorkout, text: string): boolean {
 const UNUSED: WorkoutUse = { count: 0, last: null };
 
 /**
- * The workouts a search lets through, optionally of some kinds only: the user's own
- * first, last used first then by name, and the built-ins below in their curated order.
+ * The workouts a search lets through, optionally of some kinds only, in one list: the
+ * user's own first, last used first then by name, then the built-ins in their curated order.
  */
 export function browseLibrary(
   library: readonly LibraryWorkout[],
   search: { text: string; kinds?: readonly WorkoutKind[] },
   usage: ReadonlyMap<string, WorkoutUse>
-): LibraryShelves {
+): LibraryWorkout[] {
   const found = library.filter(
     (w) => (search.kinds === undefined || search.kinds.includes(w.kind)) && matches(w, search.text)
   );
   const last = (w: LibraryWorkout): string => (usage.get(w.id) ?? UNUSED).last ?? "";
-  return {
-    mine: found
+  return [
+    ...found
       .filter((w) => w.source === "mine")
       .sort((a, b) => last(b).localeCompare(last(a)) || a.name.localeCompare(b.name)),
-    builtIn: found.filter((w) => w.source === "library"),
-  };
+    ...found.filter((w) => w.source === "library"),
+  ];
+}
+
+/** One shelf per category that has a workout, in category order, each as `browseLibrary` orders it. */
+export function libraryShelves(
+  library: readonly LibraryWorkout[],
+  usage: ReadonlyMap<string, WorkoutUse>
+): LibraryShelf[] {
+  return WORKOUT_KINDS.map((kind) => ({
+    kind,
+    workouts: browseLibrary(library, { text: "", kinds: [kind] }, usage),
+  })).filter((s) => s.workouts.length > 0);
 }
