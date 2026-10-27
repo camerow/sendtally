@@ -80,7 +80,7 @@ export function SessionRow({
               fontSize: 11,
               lineHeight: 13,
               letterSpacing: 0.44,
-              color: g.kind === "sent" ? colors.labelAccent : colors.textMuted,
+              color: g.kind === "sent" ? colors.gunmetal : colors.textMuted,
             }}
           >
             {g.label}

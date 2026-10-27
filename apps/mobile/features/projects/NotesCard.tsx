@@ -116,7 +116,7 @@ export function NotesCard({ notes, sessions, onSave, onAdd }: NotesCardProps): R
       }}
     >
       <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-        <Text style={{ ...heading, color: colors.watermelonInk }}>{t("climbs.notes")}</Text>
+        <Text style={{ ...heading, color: colors.gunmetal }}>{t("climbs.notes")}</Text>
         <Pressable
           onPress={() => setAdding(true)}
           accessibilityRole="button"

@@ -37,7 +37,7 @@ export function SessionJournal({
       }}
     >
       <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-        <Text style={{ ...heading, color: colors.watermelonInk }}>{t("journal.title")}</Text>
+        <Text style={{ ...heading, color: colors.gunmetal }}>{t("journal.title")}</Text>
         <Pressable
           onPress={() =>
             router.push({

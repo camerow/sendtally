@@ -50,7 +50,7 @@ function HeaderAction({
           fontSize: 12,
           letterSpacing: 0.5,
           textTransform: "uppercase",
-          color: colors.labelAccent,
+          color: colors.gunmetal,
         }}
       >
         {label}
@@ -113,7 +113,7 @@ export default function SessionDetailScreen(): React.ReactElement {
                 fontSize: 12,
                 letterSpacing: 0.5,
                 textTransform: "uppercase",
-                color: colors.labelAccent,
+                color: colors.gunmetal,
               }}
             >
               {t("sessions.back")}
@@ -218,7 +218,7 @@ export default function SessionDetailScreen(): React.ReactElement {
                     style={{
                       fontFamily: fonts.monoSemiBold,
                       fontSize: 16,
-                      color: st.accent ? colors.labelAccent : colors.gunmetal,
+                      color: colors.gunmetal,
                     }}
                   >
                     {st.value}
@@ -250,7 +250,7 @@ export default function SessionDetailScreen(): React.ReactElement {
                     fontSize: 10,
                     letterSpacing: 0.7,
                     textTransform: "uppercase",
-                    color: colors.labelAccent,
+                    color: colors.gunmetal,
                   }}
                 >
                   {t("trends.sendsByGrade")}
@@ -387,7 +387,7 @@ export default function SessionDetailScreen(): React.ReactElement {
                           style={{
                             fontFamily: fonts.monoSemiBold,
                             fontSize: 14,
-                            color: c.isTopSend ? colors.labelAccent : colors.gunmetal,
+                            color: colors.gunmetal,
                           }}
                         >
                           {c.gradeLabel}

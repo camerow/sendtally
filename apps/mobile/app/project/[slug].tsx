@@ -195,7 +195,7 @@ export default function ProjectDetailScreen(): React.ReactElement {
                 fontSize: 11,
                 letterSpacing: 0.8,
                 textTransform: "uppercase",
-                color: colors.labelAccent,
+                color: colors.gunmetal,
               }}
             >
               {t("projects.attemptsPerSession")}
@@ -338,9 +338,7 @@ export default function ProjectDetailScreen(): React.ReactElement {
             borderColor: "rgba(64,63,76,0.25)",
           }}
         >
-          <Text
-            style={{ fontFamily: fonts.sansSemiBold, fontSize: 15, color: colors.watermelonInk }}
-          >
+          <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 15, color: colors.gunmetal }}>
             {t("projects.unmarkProject")}
           </Text>
         </Pressable>

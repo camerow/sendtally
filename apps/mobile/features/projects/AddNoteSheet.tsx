@@ -69,7 +69,7 @@ export function AddNoteSheet({
             fontSize: 11,
             letterSpacing: 0.88,
             textTransform: "uppercase",
-            color: colors.labelAccent,
+            color: colors.gunmetal,
           }}
         >
           {t("climbs.addNote")}
