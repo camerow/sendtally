@@ -49,4 +49,12 @@ export const activities = {
   "activities.saveRun": "Aktivität speichern",
   "activities.deleteBodyStrava":
     "Sie verschwindet aus deinem Logbuch und deiner Statistik. Strava lässt Apps keine Aktivitäten löschen, die Strava-Aktivität bleibt also bestehen.",
+  "activities.colSet": "Satz",
+  "activities.colTarget": "Ziel",
+  "activities.colDone": "Gemacht",
+  "activities.restFor": "Pause {time}",
+  "activities.finish": "Beenden",
+  "activities.setOf": "{exercise}, Satz {n}",
+  "activities.doneForToday": "Für heute fertig",
+  "activities.partialCounts": "Hak ab, was du gemacht hast. Halbe Tage zählen auch.",
 } as const;

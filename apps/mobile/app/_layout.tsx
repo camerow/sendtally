@@ -52,6 +52,7 @@ const SIGNED_IN_SCREENS = [
   "workout/edit",
   "workout/preview",
   "workout/category",
+  "workout/checklist",
   "plan/add",
   "plan/schedule",
   "plan/block/new",
@@ -65,7 +66,7 @@ const SIGNED_IN_SCREENS = [
   "plan/day",
 ];
 
-const FOCUS_SCREENS = ["workout/timer", "workout/done", "workout/intervals"];
+const FOCUS_SCREENS = ["workout/timer", "workout/done", "workout/intervals", "workout/sets"];
 
 function InteractiveMarker(): React.ReactElement | null {
   const { isLoaded } = useAuth();
