@@ -60,18 +60,18 @@ export function LibraryCard({
         width,
       })}
     >
-      <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-        {showKind ? (
-          <Label color={KIND_LOOK[workout.kind].ink} style={{ flex: 1 }}>
-            {kindLabel(workout.kind)}
-          </Label>
-        ) : (
-          <View style={{ flex: 1 }} />
+      {showKind && <Label color={KIND_LOOK[workout.kind].ink}>{kindLabel(workout.kind)}</Label>}
+      <View style={{ gap: 6 }}>
+        <Title size={22}>{workout.name}</Title>
+        {(workout.source === "mine" || minutes !== null) && (
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+            {workout.source === "mine" && <MineBadge />}
+            {minutes !== null && (
+              <Label color={colors.textSecondary}>{durationLabel(minutes)}</Label>
+            )}
+          </View>
         )}
-        {workout.source === "mine" && <MineBadge />}
-        {minutes !== null && <Label color={colors.textSecondary}>{durationLabel(minutes)}</Label>}
       </View>
-      <Title size={22}>{workout.name}</Title>
       {summary !== null && (
         <Text style={[type.body, { fontSize: 14, lineHeight: 20, color: colors.textSecondary }]}>
           {summary}
