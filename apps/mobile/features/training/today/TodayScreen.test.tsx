@@ -54,19 +54,22 @@ describe("Today", () => {
     expect(screen.getByText("0 of 2")).toBeTruthy();
   });
 
-  it("logs today's workout through the activity form with what it prescribes", async () => {
+  it("starts today's lifting workout in the sets player with what it prescribes", async () => {
     await renderWithHang(<TodayScreen />, hangData(), { plan: plan("legs"), workouts: [legs] });
     expect(screen.getByText("Up today · Strength")).toBeTruthy();
     expect(screen.getByText("5 × 5")).toBeTruthy();
-    await fireEvent.press(screen.getByText("Log it"));
+    expect(screen.queryByText("Log it")).toBeNull();
+    await fireEvent.press(screen.getByText("Start"));
     expect(router.push).toHaveBeenCalledWith({
-      pathname: "/activity/new",
+      pathname: "/workout/sets",
       params: {
         kind: "strength",
         title: "Gym, legs",
         date: "2026-09-29",
         workoutId: "legs",
         minutes: "50",
+        exerciseRestS: "180",
+        items: JSON.stringify([{ exercise: "Back squat", dose: { sets: 5, reps: 5 } }]),
         membershipId: "m1",
         variation: "0",
       },

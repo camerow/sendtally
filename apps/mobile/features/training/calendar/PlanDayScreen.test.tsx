@@ -36,20 +36,22 @@ describe("Plan day", () => {
     jest.mocked(router.push).mockClear();
   });
 
-  it("lists today's workout with its block week, and logs it against the plan", async () => {
+  it("lists today's workout with its block week, and starts it against the plan", async () => {
     await renderWithHang(<PlanDayScreen date="2026-09-29" />, hangData(), world);
     expect(screen.getByText("Autumn power · week 1 of 4")).toBeTruthy();
     expect(screen.getByText("Gym, legs")).toBeTruthy();
     expect(screen.getByText("Planned")).toBeTruthy();
-    await fireEvent.press(screen.getByText("Log it"));
+    await fireEvent.press(screen.getByText("Start"));
     expect(router.push).toHaveBeenCalledWith({
-      pathname: "/activity/new",
+      pathname: "/workout/sets",
       params: {
         kind: "strength",
         title: "Gym, legs",
         date: "2026-09-29",
         workoutId: "legs",
         minutes: "50",
+        exerciseRestS: "180",
+        items: JSON.stringify([{ exercise: "Back squat", dose: { sets: 5, reps: 5 } }]),
         membershipId: "m1",
         variation: "0",
         week: "1",

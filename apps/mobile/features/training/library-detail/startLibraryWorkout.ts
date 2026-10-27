@@ -1,7 +1,8 @@
 import { router } from "expo-router";
 import { intervalsOf, type CalendarDate, type Item, type PlanLink } from "@sendtally/core/hang";
 import { activityKindOf, type LibraryWorkout } from "@sendtally/features/workouts";
-import { NO_PLAN, planLinkParams } from "../data/planLinkParams";
+import { NO_PLAN } from "../data/planLinkParams";
+import { activityFormPath, runPath, type RunPlayer } from "../data/workoutRunParams";
 import { startIntervals } from "../intervals/intervalsParams";
 import { startWorkout } from "../timer/startWorkout";
 
@@ -11,34 +12,15 @@ export type PlannedItems = { link: PlanLink; items: readonly Item[] };
 const itemsOf = (w: LibraryWorkout, planned: PlannedItems | undefined): readonly Item[] =>
   planned?.items ?? w.variations[planned?.link.variation ?? 0]?.items ?? [];
 
-/** Logs a workout without running it: the session form for climbing, the activity form otherwise. */
-export function logLibraryWorkout(
-  w: LibraryWorkout,
-  date: CalendarDate,
-  link: PlanLink = NO_PLAN
-): void {
-  const kind = activityKindOf(w.kind);
-  if (kind === null) {
-    // ponytail: the session form does not take a plan link yet; the day still counts as done.
-    router.push("/session/new");
-    return;
-  }
-  router.push({
-    pathname: "/activity/new",
-    params: {
-      kind,
-      title: w.name,
-      date,
-      workoutId: w.id,
-      ...(w.minutes === null ? {} : { minutes: String(w.minutes) }),
-      ...planLinkParams(link),
-    },
-  });
-}
+const playerOf = (items: readonly Item[]): RunPlayer =>
+  items.some((i) => i.dose.reps !== undefined || i.dose.weightKg !== undefined)
+    ? "/workout/sets"
+    : "/workout/checklist";
 
 /**
- * Runs a workout: hangboard in the timer, timed items in the intervals player, and anything
- * else in the form that logs it, with what it prescribes filled in.
+ * Runs a workout in the player its items call for: hangboard in the timer, all timed in
+ * the intervals player, reps or weight in the sets table, anything else as a checklist.
+ * Climbing opens the session form, and a workout with no items the activity form.
  */
 export function startLibraryWorkout(
   w: LibraryWorkout,
@@ -53,23 +35,21 @@ export function startLibraryWorkout(
     startWorkout(w.id, first.exercise, link);
     return;
   }
-  if (kind !== null && first !== undefined && items.every((i) => i.dose.onS !== undefined)) {
-    startIntervals({
-      kind,
-      title: w.name,
-      date,
-      activityId: null,
-      workoutId: w.id,
-      link,
-      body: intervalsOf(items),
-    });
+  if (kind === null) {
+    // ponytail: the session form does not take a plan link yet; the day still counts as done.
+    router.push("/session/new");
     return;
   }
-  logLibraryWorkout(w, date, link);
+  const run = { kind, title: w.name, date, workoutId: w.id, link, minutes: w.minutes };
+  if (first === undefined) {
+    router.push(activityFormPath(run));
+    return;
+  }
+  if (items.every((i) => i.dose.onS !== undefined)) {
+    startIntervals({ ...run, activityId: null, body: intervalsOf(items) });
+    return;
+  }
+  router.push(
+    runPath(playerOf(items), { ...run, exerciseRestS: w.exerciseRestS, items: [...items] })
+  );
 }
-
-/** Whether starting runs a clock rather than opening a form. */
-export const runsTimed = (w: LibraryWorkout, items: readonly Item[]): boolean =>
-  items.length > 0 &&
-  (w.kind === "hangboard" ||
-    (activityKindOf(w.kind) !== null && items.every((i) => i.dose.onS !== undefined)));

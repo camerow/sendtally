@@ -5,14 +5,9 @@ import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
 import type { Occurrence } from "@sendtally/features/training";
 import type { LibraryWorkout } from "@sendtally/features/workouts";
-import { Button } from "../components/Button";
 import { Label } from "../components/Label";
 import { useHangData } from "../data/HangDataContext";
-import {
-  logLibraryWorkout,
-  runsTimed,
-  startLibraryWorkout,
-} from "../library-detail/startLibraryWorkout";
+import { StartButton } from "../library-detail/StartButton";
 import { membershipWhen } from "../plans/planText";
 import { DayMark } from "../today/DayMark";
 import { occurrenceMeta } from "../today/occurrenceText";
@@ -26,13 +21,11 @@ const STATUS = {
   planned: () => t("hang.planned"),
 };
 
-/** A workout planned on the day: what it asks for, whether it happened, and Start or Log when it is due. */
+/** A workout planned on the day: what it asks for, whether it happened, and Start when it is due. */
 export function DayPlanRow({ occurrence: o, workout, today }: DayPlanRowProps): React.ReactElement {
   const { model } = useHangData();
   const link = { membershipId: o.membership.id, week: o.week, variation: o.variation };
-  const log = (): void => logLibraryWorkout(workout, o.date, link);
   const due = (today && o.status === "planned") || o.status === "missed";
-  const logLabel = workout.kind === "climbing" ? t("plan.logSession") : t("plan.logIt");
   return (
     <View
       style={{
@@ -72,26 +65,12 @@ export function DayPlanRow({ occurrence: o, workout, today }: DayPlanRowProps): 
         </Label>
       </Pressable>
       {due && (
-        <View style={{ flexDirection: "row", gap: 10 }}>
-          {today && runsTimed(workout, o.items) && (
-            <Button
-              label={t("hang.start")}
-              onPress={() => startLibraryWorkout(workout, o.date, { link, items: o.items })}
-              variant="primary"
-              height={44}
-              icon="play"
-              style={{ flex: 1 }}
-            />
-          )}
-          <Button
-            label={logLabel}
-            onPress={log}
-            variant="outline"
-            height={44}
-            icon="plus"
-            style={{ flex: 1 }}
-          />
-        </View>
+        <StartButton
+          workout={workout}
+          date={o.date}
+          planned={{ link, items: o.items }}
+          height={44}
+        />
       )}
     </View>
   );

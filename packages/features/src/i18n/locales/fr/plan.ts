@@ -6,7 +6,6 @@ export const plan = {
   "plan.targetEffort": "Effort visé",
   "plan.targetValue": "Effort visé {n}",
   "plan.logSession": "Noter la séance",
-  "plan.logIt": "Noter",
   "plan.done": "Fait",
   "plan.remove": "Retirer {title} de ton plan",
   "plan.tabPlan": "Plan",

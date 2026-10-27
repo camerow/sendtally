@@ -9,7 +9,7 @@ import { useHangData } from "../data/HangDataContext";
 import { LoadState } from "../data/LoadState";
 import { BodyPreview } from "../library-detail/BodyPreview";
 import { LibraryIntro } from "../library-detail/LibraryIntro";
-import { startLibraryWorkout } from "../library-detail/startLibraryWorkout";
+import { StartButton } from "../library-detail/StartButton";
 import { useLibrary } from "../library/useLibrary";
 import { type } from "../type";
 import { addFlowParams, type AddFlow } from "./flowParams";
@@ -52,13 +52,7 @@ export function WorkoutPreviewScreen({
       }
       footer={
         adding === null ? (
-          <Button
-            label={t("hang.start")}
-            onPress={() => startLibraryWorkout(workout, today)}
-            variant="primary"
-            height={54}
-            icon="play"
-          />
+          <StartButton workout={workout} date={today} height={54} />
         ) : (
           <Button
             label={t("plan.addToPlan")}

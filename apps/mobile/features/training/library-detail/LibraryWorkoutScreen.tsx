@@ -20,7 +20,7 @@ import { PlanList } from "../plans/PlanList";
 import { BodyPreview } from "./BodyPreview";
 import { confirmDeleteWorkout } from "./confirmDeleteWorkout";
 import { LibraryIntro } from "./LibraryIntro";
-import { startLibraryWorkout } from "./startLibraryWorkout";
+import { StartButton } from "./StartButton";
 
 export type LibraryWorkoutScreenProps = { workout: LibraryWorkout; use: WorkoutUse | undefined };
 
@@ -98,13 +98,7 @@ export function LibraryWorkoutScreen({
           borderTopColor: colors.lineOnLight,
         }}
       >
-        <Button
-          label={t("hang.start")}
-          onPress={() => startLibraryWorkout(workout, today)}
-          variant="primary"
-          height={54}
-          icon="play"
-        />
+        <StartButton workout={workout} date={today} height={54} />
       </View>
     </SafeAreaView>
   );

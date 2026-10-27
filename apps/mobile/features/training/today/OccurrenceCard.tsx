@@ -7,15 +7,10 @@ import { t } from "@sendtally/features/i18n";
 import { durationLabel } from "@sendtally/features/sessions";
 import type { Occurrence } from "@sendtally/features/training";
 import { workoutMinutes, type LibraryWorkout } from "@sendtally/features/workouts";
-import { Button } from "../components/Button";
 import { Label } from "../components/Label";
 import { Title } from "../components/Title";
 import { useHangData } from "../data/HangDataContext";
-import {
-  logLibraryWorkout,
-  runsTimed,
-  startLibraryWorkout,
-} from "../library-detail/startLibraryWorkout";
+import { StartButton } from "../library-detail/StartButton";
 import { type } from "../type";
 import { DayMark } from "./DayMark";
 import { KIND_LOOK } from "./kindLook";
@@ -23,13 +18,12 @@ import { occurrenceMeta, occurrenceTag } from "./occurrenceText";
 
 export type OccurrenceCardProps = { occurrence: Occurrence; workout: LibraryWorkout };
 
-/** A workout due today: the card opens the workout, the buttons run or log what it prescribes. */
+/** A workout due today: the card opens the workout, Start runs what it prescribes. */
 export function OccurrenceCard({ occurrence, workout }: OccurrenceCardProps): React.ReactElement {
   const { model } = useHangData();
   const o = occurrence;
   const link = { membershipId: o.membership.id, week: o.week, variation: o.variation };
   const minutes = workoutMinutes(workout);
-  const log = (): void => logLibraryWorkout(workout, o.date, link);
   return (
     <View
       style={{
@@ -60,34 +54,7 @@ export function OccurrenceCard({ occurrence, workout }: OccurrenceCardProps): Re
           </Text>
         </View>
       </Pressable>
-      {runsTimed(workout, o.items) ? (
-        <View style={{ flexDirection: "row", gap: 10 }}>
-          <Button
-            label={t("hang.start")}
-            onPress={() => startLibraryWorkout(workout, o.date, { link, items: o.items })}
-            variant="primary"
-            height={50}
-            icon="play"
-            style={{ flex: 1 }}
-          />
-          <Button
-            label={t("plan.logIt")}
-            onPress={log}
-            variant="outline"
-            height={50}
-            icon="plus"
-            style={{ flex: 1 }}
-          />
-        </View>
-      ) : (
-        <Button
-          label={workout.kind === "climbing" ? t("plan.logSession") : t("plan.logIt")}
-          onPress={log}
-          variant={workout.kind === "climbing" ? "gold" : "primary"}
-          height={50}
-          icon="plus"
-        />
-      )}
+      <StartButton workout={workout} date={o.date} planned={{ link, items: o.items }} height={50} />
     </View>
   );
 }
