@@ -50,6 +50,7 @@ export const activities = {
     "Elle disparaît de ton carnet et de tes statistiques. Strava ne permet pas aux applications de supprimer des activités, l’activité Strava reste donc en place.",
   "activities.colSet": "Série",
   "activities.colTarget": "Objectif",
+  "activities.previousSet": "Dernier {set}",
   "activities.colDone": "Fait",
   "activities.finish": "Terminer",
   "activities.setOf": "{exercise}, série {n}",

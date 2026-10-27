@@ -53,3 +53,17 @@ export function exerciseSuggestions(names: readonly string[], typed: string): st
     .filter((n) => n.toLowerCase().includes(query) && n.toLowerCase() !== query)
     .slice(0, MAX_SUGGESTIONS);
 }
+
+/** The sets of an exercise from the newest activity that ran the workout and did it; empty when none did. */
+export function previousSets(
+  activities: readonly Pick<Activity, "workoutId" | "done">[],
+  workoutId: string,
+  exercise: string
+): SetDone[] {
+  for (const a of activities) {
+    if (a.workoutId !== workoutId) continue;
+    const sets = a.done.find((d) => d.exercise === exercise && d.sets.length > 0)?.sets;
+    if (sets !== undefined) return sets;
+  }
+  return [];
+}

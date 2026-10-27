@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cleanDone, doneSummary, exerciseNames, setText } from "./done";
+import { cleanDone, doneSummary, exerciseNames, previousSets, setText } from "./done";
 
 describe("done", () => {
   it("counts the items and sets done, or nothing when none were", () => {
@@ -37,5 +37,26 @@ describe("done", () => {
         },
       ])
     ).toEqual(["Squat", "Dips"]);
+  });
+
+  it("takes an exercise's sets from the newest run of the same workout that did it", () => {
+    const run = (workoutId: string | null, sets: { reps: number; weightKg: number }[]) => ({
+      workoutId,
+      done: [{ item: 0, exercise: "Squat", sets }],
+    });
+    const newestFirst = [
+      run("other", [{ reps: 3, weightKg: 140 }]),
+      run("w1", []),
+      run("w1", [
+        { reps: 5, weightKg: 100 },
+        { reps: 4, weightKg: 100 },
+      ]),
+      run("w1", [{ reps: 5, weightKg: 95 }]),
+    ];
+    expect(previousSets(newestFirst, "w1", "Squat")).toEqual([
+      { reps: 5, weightKg: 100 },
+      { reps: 4, weightKg: 100 },
+    ]);
+    expect(previousSets(newestFirst, "w1", "Bench")).toEqual([]);
   });
 });

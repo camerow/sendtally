@@ -3,7 +3,7 @@ import { Pressable, Text, View } from "react-native";
 import type { SetDone, WeightUnit } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { setText } from "@sendtally/features/activities";
-import { formatNumber } from "@sendtally/features/i18n";
+import { formatNumber, t } from "@sendtally/features/i18n";
 import { press } from "../../../lib/press";
 import { CheckBox } from "../components/CheckBox";
 import { type } from "../type";
@@ -14,6 +14,8 @@ export type SetRowProps = {
   n: number;
   target: SetDone;
   done: SetDone;
+  previous: SetDone | undefined;
+  lifting: boolean;
   ticked: boolean;
   current: boolean;
   unit: WeightUnit;
@@ -22,11 +24,13 @@ export type SetRowProps = {
   onToggle: () => void;
 };
 
-/** One set: its number, what it asks, what was done, and its tick. */
+/** One set: its number, what it asks and did last time, what was done, and its tick. */
 export function SetRow({
   n,
   target,
   done,
+  previous,
+  lifting,
   ticked,
   current,
   unit,
@@ -50,12 +54,25 @@ export function SetRow({
       <Text style={[type.monoBold, SET_COLUMNS.set, { fontSize: 14, color: colors.gunmetal }]}>
         {formatNumber(n)}
       </Text>
-      <Text style={[type.mono, SET_COLUMNS.target, { fontSize: 14, color: colors.textSecondary }]}>
-        {setText(target, unit) || "-"}
-      </Text>
+      <View style={[SET_COLUMNS.target, { gap: 2 }]}>
+        <Text style={[type.mono, { fontSize: 14, color: colors.textSecondary }]}>
+          {setText(target, unit) || "-"}
+        </Text>
+        {previous !== undefined && setText(previous, unit) !== "" && (
+          <Text style={[type.mono, { fontSize: 11, color: colors.textMuted }]}>
+            {t("activities.previousSet", { set: setText(previous, unit) })}
+          </Text>
+        )}
+      </View>
       <View style={SET_COLUMNS.done}>
         {ticked || current ? (
-          <SetDoneFields set={done} unit={unit} label={label} onChange={onChange} />
+          <SetDoneFields
+            set={done}
+            lifting={lifting}
+            unit={unit}
+            label={label}
+            onChange={onChange}
+          />
         ) : (
           <Text style={[type.monoBold, { fontSize: 14, color: colors.textMuted }]}>-</Text>
         )}

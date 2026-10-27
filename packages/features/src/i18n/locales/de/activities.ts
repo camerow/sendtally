@@ -51,6 +51,7 @@ export const activities = {
     "Sie verschwindet aus deinem Logbuch und deiner Statistik. Strava lässt Apps keine Aktivitäten löschen, die Strava-Aktivität bleibt also bestehen.",
   "activities.colSet": "Satz",
   "activities.colTarget": "Ziel",
+  "activities.previousSet": "Zuletzt {set}",
   "activities.colDone": "Gemacht",
   "activities.finish": "Beenden",
   "activities.setOf": "{exercise}, Satz {n}",

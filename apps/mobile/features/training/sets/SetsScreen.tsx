@@ -3,22 +3,31 @@ import { KeyboardAvoidingView, Platform, ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { doneAsPrescribed, type ItemDone, type SetDone } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
-import { useWeightUnit } from "@sendtally/features/activities";
+import { previousSets, useActivities, useWeightUnit } from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
 import { useApi } from "../../../lib/api";
 import { Button } from "../components/Button";
 import { PlayerHeader } from "../components/PlayerHeader";
 import { logRun, type WorkoutRun } from "../data/workoutRunParams";
 import { SetsCard } from "./SetsCard";
-import { allSets, setKey, tickedDone, type SetAt } from "./setsRun";
+import { allSets, isLifting, setKey, tickedDone, withPrevious, type SetAt } from "./setsRun";
+
+const minutesSince = (start: number): number =>
+  Math.max(1, Math.round((Date.now() - start) / 60_000));
 
 /** A lifting workout as a set table: tick each set as it is done, then log what was done. */
 export function SetsScreen({ run }: { run: WorkoutRun }): React.ReactElement {
-  const unit = useWeightUnit(useApi());
+  const api = useApi();
+  const unit = useWeightUnit(api);
+  const { state: activities } = useActivities(api);
   const [startedAt] = React.useState(Date.now);
   const [done, setDone] = React.useState<ItemDone[]>(() => doneAsPrescribed(run.items));
   const [ticked, setTicked] = React.useState<ReadonlySet<string>>(new Set());
   const sets = allSets(run.items);
+  const previous = (exercise: string): SetDone[] =>
+    activities.status === "ready" ? previousSets(activities.data, run.workoutId, exercise) : [];
+  const lifting = (item: number): boolean => isLifting(run.kind, run.items[item]);
+  const shown = withPrevious(done, lifting, previous);
   const current = sets.find((at) => !ticked.has(setKey(at))) ?? null;
 
   const toggle = (at: SetAt): void => {
@@ -33,12 +42,7 @@ export function SetsScreen({ run }: { run: WorkoutRun }): React.ReactElement {
         d.item === item ? { ...d, sets: d.sets.map((s, i) => (i === set ? value : s)) } : d
       )
     );
-  const finish = (): void =>
-    logRun(
-      run,
-      tickedDone(done, ticked),
-      Math.max(1, Math.round((Date.now() - startedAt) / 60_000))
-    );
+  const finish = (): void => logRun(run, tickedDone(shown, ticked), minutesSince(startedAt));
 
   return (
     <SafeAreaView edges={["top", "bottom"]} style={{ flex: 1, backgroundColor: colors.white }}>
@@ -52,12 +56,14 @@ export function SetsScreen({ run }: { run: WorkoutRun }): React.ReactElement {
         >
           <PlayerHeader kind={run.kind} title={run.title} minutes={run.minutes} />
           {run.items.map((item, i) => {
-            const d = done[i];
+            const d = shown[i];
             return d === undefined ? null : (
               <SetsCard
                 key={i}
                 item={item}
                 done={d}
+                previous={previous(d.exercise)}
+                lifting={lifting(i)}
                 ticked={ticked}
                 current={current}
                 unit={unit}

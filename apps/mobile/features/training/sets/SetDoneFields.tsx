@@ -8,6 +8,8 @@ import { type } from "../type";
 
 export type SetDoneFieldsProps = {
   set: SetDone;
+  /** Always asks reps and weight, even before either is set. */
+  lifting?: boolean;
   unit: WeightUnit;
   /** Names the set for screen readers, ahead of each field's own name. */
   label: string;
@@ -30,9 +32,10 @@ const parsed = (text: string): number | null => {
   return text.trim() === "" || !Number.isFinite(n) || n < 0 ? null : n;
 };
 
-/** What one set did, editable: its reps, weight and seconds, whichever the set has. */
+/** What one set did, editable: its reps, weight and seconds, whichever the set has or lifting asks. */
 export function SetDoneFields({
   set,
+  lifting = false,
   unit,
   label,
   onChange,
@@ -43,22 +46,24 @@ export function SetDoneFields({
       const n = parsed(text);
       if (n !== null) onChange({ ...set, [key]: toKg ? fromUnit(n, unit) : Math.round(n) });
     };
+  const reps = lifting || set.reps !== undefined;
+  const weight = lifting || set.weightKg !== undefined;
   return (
     <View style={{ flexDirection: "row", alignItems: "center", gap: 4, flexWrap: "wrap" }}>
-      {set.reps !== undefined && (
+      {reps && (
         <NumberField
-          value={formatNumber(set.reps)}
+          value={set.reps === undefined ? "" : formatNumber(set.reps)}
           onCommit={commit("reps")}
           label={`${label} · ${t("workouts.dose.reps")}`}
           keyboard="number-pad"
           style={[field, { width: 40 }]}
         />
       )}
-      {set.reps !== undefined && set.weightKg !== undefined && <Text style={unitText}>×</Text>}
-      {set.weightKg !== undefined && (
+      {reps && weight && <Text style={unitText}>×</Text>}
+      {weight && (
         <>
           <NumberField
-            value={formatNumber(toUnit(set.weightKg, unit))}
+            value={set.weightKg === undefined ? "" : formatNumber(toUnit(set.weightKg, unit))}
             onCommit={commit("weightKg", true)}
             label={`${label} · ${t("hang.weight")}`}
             style={[field, { width: 52 }]}

@@ -19,7 +19,14 @@ export {
   type ActivityDraft,
   type ActivityPrefill,
 } from "./draft";
-export { cleanDone, doneSummary, exerciseNames, exerciseSuggestions, setText } from "./done";
+export {
+  cleanDone,
+  doneSummary,
+  exerciseNames,
+  exerciseSuggestions,
+  previousSets,
+  setText,
+} from "./done";
 export { doneOfRun, intervalsSummary, stepDose } from "./intervals";
 export { useExerciseNames } from "./useExerciseNames";
 export { useWeightUnit } from "./useWeightUnit";

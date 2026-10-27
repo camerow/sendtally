@@ -13,6 +13,9 @@ import { setKey, type SetAt } from "./setsRun";
 export type SetsCardProps = {
   item: Item;
   done: ItemDone;
+  /** Each set as the last run of this workout did it. */
+  previous: readonly SetDone[];
+  lifting: boolean;
   ticked: ReadonlySet<string>;
   current: SetAt | null;
   unit: WeightUnit;
@@ -24,6 +27,8 @@ export type SetsCardProps = {
 export function SetsCard({
   item,
   done,
+  previous,
+  lifting,
   ticked,
   current,
   unit,
@@ -63,6 +68,8 @@ export function SetsCard({
           n={i + 1}
           target={target}
           done={set}
+          previous={previous[i]}
+          lifting={lifting}
           ticked={ticked.has(setKey({ item: done.item, set: i }))}
           current={current?.item === done.item && current.set === i}
           unit={unit}

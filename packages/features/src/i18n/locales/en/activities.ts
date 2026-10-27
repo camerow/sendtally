@@ -50,6 +50,7 @@ export const activities = {
     "It comes out of your log and your statistics. Strava does not let apps delete activities, so the Strava activity stays.",
   "activities.colSet": "Set",
   "activities.colTarget": "Target",
+  "activities.previousSet": "Last {set}",
   "activities.colDone": "Done",
   "activities.finish": "Finish",
   "activities.setOf": "{exercise}, set {n}",
