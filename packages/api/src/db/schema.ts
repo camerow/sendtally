@@ -97,6 +97,7 @@ export const sessions = sqliteTable(
     end_at: text("end_at").notNull(),
     times: text("times").$type<"both" | "start" | "end" | "none">().notNull().default("both"),
     climb_count: integer("climb_count").notNull(),
+    send_count: integer("send_count").notNull().default(0),
     top_grade: integer("top_grade").notNull(),
     top_send_grade: integer("top_send_grade").notNull().default(-1),
     top_grade_label: text("top_grade_label"),
@@ -263,21 +264,28 @@ export const gyms = sqliteTable(
   (t) => [index("idx_gyms_user").on(t.user_id)]
 );
 
-export const projects = sqliteTable(
-  "projects",
+export const userClimbs = sqliteTable(
+  "user_climbs",
   {
     user_id: text("user_id")
       .notNull()
       .references(() => users.id),
-    slug: text("slug").notNull(),
+    id: text("id").notNull(),
     name: text("name").notNull(),
-    grade_json: text("grade_json"),
+    name_key: text("name_key").notNull(),
     discipline: text("discipline", { enum: ["boulder", "route"] })
       .notNull()
       .default("boulder"),
+    grade_json: text("grade_json"),
+    area_climb_id: text("area_climb_id"),
+    working: integer("working", { mode: "boolean" }).notNull().default(false),
     created_at: text("created_at").notNull(),
+    updated_at: text("updated_at").notNull(),
   },
-  (t) => [primaryKey({ columns: [t.user_id, t.slug] })]
+  (t) => [
+    primaryKey({ columns: [t.user_id, t.id] }),
+    uniqueIndex("idx_user_climbs_user_name").on(t.user_id, t.name_key),
+  ]
 );
 
 export const boardClimbNames = sqliteTable(

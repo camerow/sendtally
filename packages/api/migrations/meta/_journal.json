@@ -260,6 +260,27 @@
       "when": 1793128853716,
       "tag": "0041_backfill_exercises",
       "breakpoints": true
+    },
+    {
+      "idx": 42,
+      "version": "6",
+      "when": 1793130692016,
+      "tag": "0042_sudden_silver_samurai",
+      "breakpoints": true
+    },
+    {
+      "idx": 43,
+      "version": "6",
+      "when": 1793130692474,
+      "tag": "0043_backfill_user_climbs",
+      "breakpoints": true
+    },
+    {
+      "idx": 44,
+      "version": "6",
+      "when": 1793130697991,
+      "tag": "0044_drop_projects",
+      "breakpoints": true
     }
   ]
 }
