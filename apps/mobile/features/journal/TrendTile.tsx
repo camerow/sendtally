@@ -1,12 +1,9 @@
-import { router } from "expo-router";
 import React from "react";
 import { Pressable, Text, View, type LayoutChangeEvent } from "react-native";
 import Svg, { Path } from "react-native-svg";
 import { colors, fonts } from "@sendtally/design/tokens";
-import { t } from "@sendtally/features/i18n";
 import { useTween, type TrendPointVM, type TrendTileVM } from "@sendtally/features/trends";
 import { SERIES_COLOUR } from "./series";
-import { monoLabel } from "./styles";
 
 const PLOT = 128;
 const TOP = 18;
@@ -16,15 +13,7 @@ const totalOf = (p: TrendPointVM): number | null =>
   p.a === null && p.b === null ? null : (p.a ?? 0) + (p.b ?? 0);
 
 /** Touch a column to read it: the rest dims and the headline counts to its value. */
-export function TrendTile({
-  tile,
-  locked = false,
-  onLocked,
-}: {
-  tile: TrendTileVM;
-  locked?: boolean;
-  onLocked?: () => void;
-}): React.ReactElement {
+export function TrendTile({ tile }: { tile: TrendTileVM }): React.ReactElement {
   const [hit, setHit] = React.useState<number | null>(null);
   const [width, setWidth] = React.useState(0);
   const point = hit === null ? null : (tile.points[hit] ?? null);
@@ -46,22 +35,9 @@ export function TrendTile({
 
   return (
     <View style={{ paddingVertical: 18, paddingHorizontal: 18, gap: 6 }}>
-      <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-        <Text style={{ ...monoLabel, fontSize: 13, letterSpacing: 1, color: colors.labelAccent }}>
-          {tile.title}
-        </Text>
-        {tile.link !== null && (
-          <Pressable
-            hitSlop={10}
-            accessibilityRole="link"
-            onPress={() => (locked ? onLocked?.() : router.push(`/trend/${tile.link}`))}
-          >
-            <Text style={{ ...monoLabel, fontSize: 10, color: colors.azureInk }}>
-              {t("trends.details")}
-            </Text>
-          </Pressable>
-        )}
-      </View>
+      <Text style={{ ...monoLabel, fontSize: 13, letterSpacing: 1, color: colors.labelAccent }}>
+        {tile.title}
+      </Text>
       <View
         style={{
           flexDirection: "row",
@@ -296,6 +272,14 @@ export function TrendTile({
     </View>
   );
 }
+
+const monoLabel = {
+  fontFamily: fonts.monoMedium,
+  fontSize: 10,
+  letterSpacing: 0.8,
+  textTransform: "uppercase",
+  color: colors.textSecondary,
+} as const;
 
 const absoluteFill = { position: "absolute", left: 0, right: 0, top: 0, bottom: 0 } as const;
 

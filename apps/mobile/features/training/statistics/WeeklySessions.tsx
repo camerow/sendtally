@@ -2,16 +2,12 @@ import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
-import {
-  ACTIVITY_KINDS,
-  OVERVIEW_WEEKS,
-  type StatisticsOverviewVM,
-} from "@sendtally/features/statistics";
+import { ACTIVITY_KINDS, type StatisticsOverviewVM } from "@sendtally/features/statistics";
 import { Label } from "../components/Label";
 import { Title } from "../components/Title";
 import { type } from "../type";
 import { KIND_COLORS } from "./kindColors";
-import { WEEK_GAP } from "./weekColumns";
+import { weekGap } from "./weekColumns";
 
 const HEIGHT = 116;
 const SEGMENT_GAP = 2;
@@ -21,6 +17,7 @@ export function WeeklySessions({ vm }: { vm: StatisticsOverviewVM }): React.Reac
   const [picked, setPicked] = React.useState<number | null>(null);
   const unit = (HEIGHT - SEGMENT_GAP * (ACTIVITY_KINDS.length - 1)) / vm.mostInAWeek;
   const week = picked === null ? undefined : vm.weeks[picked];
+  const gap = weekGap(vm.weeks.length);
   return (
     <View
       style={{
@@ -31,19 +28,14 @@ export function WeeklySessions({ vm }: { vm: StatisticsOverviewVM }): React.Reac
         borderColor: colors.lineOnLight,
       }}
     >
-      <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-        <Label color={colors.gunmetal}>{t("statistics.sessionsPerWeek")}</Label>
-        <Text style={[type.mono, { fontSize: 12, color: colors.textSecondary }]}>
-          {t("statistics.lastWeeks", { n: OVERVIEW_WEEKS })}
-        </Text>
-      </View>
+      <Label color={colors.gunmetal}>{t("statistics.sessionsPerWeek")}</Label>
       <View style={{ flexDirection: "row", alignItems: "baseline", gap: 8 }}>
         <Title size={40}>{vm.perWeek}</Title>
         <Text style={[type.body, { flexShrink: 1, fontSize: 14, color: colors.textSecondary }]}>
           {week?.label ?? vm.perWeekCaption}
         </Text>
       </View>
-      <View style={{ flexDirection: "row", gap: WEEK_GAP, height: HEIGHT }}>
+      <View style={{ flexDirection: "row", gap, height: HEIGHT }}>
         {vm.weeks.map((w, i) => (
           <Pressable
             key={w.start}
@@ -73,7 +65,7 @@ export function WeeklySessions({ vm }: { vm: StatisticsOverviewVM }): React.Reac
           </Pressable>
         ))}
       </View>
-      <View style={{ flexDirection: "row", gap: WEEK_GAP }}>
+      <View style={{ flexDirection: "row", gap }}>
         {vm.weeks.map((w, i) => (
           <View
             key={w.start}
@@ -100,10 +92,9 @@ export function WeeklySessions({ vm }: { vm: StatisticsOverviewVM }): React.Reac
           </View>
         ))}
       </View>
-      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 16 }}>
-        {vm.kinds
-          .filter((k) => k.minutes > 0)
-          .map((k) => (
+      {vm.kinds.length > 1 && (
+        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 16 }}>
+          {vm.kinds.map((k) => (
             <View key={k.kind} style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
               <View
                 style={{
@@ -118,7 +109,8 @@ export function WeeklySessions({ vm }: { vm: StatisticsOverviewVM }): React.Reac
               </Text>
             </View>
           ))}
-      </View>
+        </View>
+      )}
     </View>
   );
 }

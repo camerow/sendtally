@@ -1,8 +1,5 @@
 export const trends = {
-  "trends.backToTrends": "← Trends",
   "trends.loadFailed": "Could not load trends. Refresh to retry.",
-  "trends.loadFailedMobile": "Could not load trends.",
-  "trends.loadFailedPull": "Could not load trends. Pull to retry.",
   "trends.details": "Details →",
   "trends.range7d": "Last 7 days",
   "trends.range1m": "Last month",

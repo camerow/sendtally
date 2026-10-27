@@ -43,7 +43,6 @@ const SIGNED_IN_SCREENS = [
   "journal/[id]",
   "journal/[id]/edit",
   "project/[slug]",
-  "trend/[page]",
   "gym/[id]",
   "account",
   "profile",

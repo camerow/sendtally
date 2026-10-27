@@ -1,5 +1,4 @@
 export {
-  OVERVIEW_WEEKS,
   summariseActivity,
   type Activity,
   type ActivitySummary,
@@ -7,14 +6,17 @@ export {
 } from "./activity";
 export {
   ACTIVITY_KINDS,
+  STATISTICS_RANGES,
   activitiesOf,
   overviewVM,
+  statisticsRangeLabel,
   type ActivityKind,
   type OverviewKindVM,
-  type OverviewStatVM,
   type OverviewWeekVM,
   type StatisticsOverviewVM,
+  type StatisticsRange,
 } from "./overview";
+export { topSendVM, type TopSendVM, type TopSendWeekVM } from "./topSend";
 export { useStatisticsOverview } from "./useStatisticsOverview";
 export {
   epley,

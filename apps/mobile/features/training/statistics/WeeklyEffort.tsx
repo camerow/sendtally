@@ -37,12 +37,7 @@ export function WeeklyEffort({ vm }: { vm: StatisticsOverviewVM }): React.ReactE
         borderColor: colors.lineOnLight,
       }}
     >
-      <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-        <Label color={colors.gunmetal}>{t("statistics.averageEffort")}</Label>
-        <Text style={[type.mono, { fontSize: 12, color: colors.textSecondary }]}>
-          {t("statistics.everyKind")}
-        </Text>
-      </View>
+      <Label color={colors.gunmetal}>{t("statistics.averageEffort")}</Label>
       {vm.effortNow === null ? (
         <Text style={[type.body, { fontSize: 14, color: colors.textSecondary }]}>
           {t("statistics.noEffort")}

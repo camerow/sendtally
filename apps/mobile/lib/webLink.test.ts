@@ -8,7 +8,7 @@ test.each([
   ["https://sendtally.com/app/sessions/new", "/session/new"],
   ["https://sendtally.com/app/projects", "/(tabs)/projects"],
   ["https://sendtally.com/app/projects/the-slug/", "/project/the-slug"],
-  ["https://sendtally.com/app/trends/days", "/trend/days"],
+  ["https://sendtally.com/app/trends/days", "/(tabs)/trends"],
   ["https://sendtally.com/app/settings/gyms/7", "/gym/7"],
   ["https://sendtally.com/app/journal/12/edit", "/journal/12/edit"],
   ["https://sendtally.com/app/journal", "/"],

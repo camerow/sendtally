@@ -1,27 +1,32 @@
 import { describe, expect, it } from "vitest";
-import type { Activity as Logged, HangHistoryRow, SessionLog } from "@sendtally/api-client";
+import type {
+  Activity as Logged,
+  HangHistoryRow,
+  SessionClimb,
+  SessionWithClimbs,
+} from "@sendtally/api-client";
 import { summariseActivity, type Activity } from "./activity";
 import { overviewVM } from "./overview";
+import { topSendVM } from "./topSend";
 
 type Kind = "climb" | "hang" | "strength";
 const KINDS: readonly Kind[] = ["climb", "hang", "strength"];
 const TODAY = "2026-10-22";
 
-const act = (kind: Kind, date: string, minutes = 60, rpe: number | null = 6): Activity<Kind> => ({
+const act = (kind: Kind, date: string, rpe: number | null = 6): Activity<Kind> => ({
   kind,
   date,
-  minutes,
   rpe,
 });
 
-type SessionRow = SessionLog["sessions"][number];
+type ClimbSpec = Partial<SessionClimb> & { vGrade: number };
 
 function climbing(
   start: string,
-  end: string,
   rpe: number,
-  extra: Partial<SessionRow> = {}
-): SessionRow {
+  climbs: ClimbSpec[] = [],
+  extra: Partial<SessionWithClimbs> = {}
+): SessionWithClimbs {
   return {
     fingerprint: `fp-${start}`,
     board: null,
@@ -31,9 +36,9 @@ function climbing(
     area_id: null,
     name: null,
     start_at: start,
-    end_at: end,
+    end_at: start,
     times: "both",
-    climb_count: 3,
+    climb_count: climbs.length,
     top_grade: 0,
     top_send_grade: 0,
     top_grade_label: null,
@@ -50,11 +55,22 @@ function climbing(
     week: null,
     variation: null,
     tags: [],
+    climbs: climbs.map((c, i) => ({
+      time: start,
+      name: `c-${start}-${i}`,
+      kind: "send",
+      tries: 1,
+      style: "redpoint",
+      angle: null,
+      note: null,
+      link: null,
+      ...c,
+    })),
     ...extra,
   };
 }
 
-function hang(date: string, rpe: number | null, pct = 100): HangHistoryRow {
+function hang(date: string, rpe: number | null): HangHistoryRow {
   return {
     id: `h-${date}`,
     workoutId: "rep73",
@@ -62,7 +78,7 @@ function hang(date: string, rpe: number | null, pct = 100): HangHistoryRow {
     gripName: null,
     date,
     loadKg: 4,
-    pct,
+    pct: 100,
     misses: 0,
     rpe,
     edgeMm: 20,
@@ -87,17 +103,18 @@ function hang(date: string, rpe: number | null, pct = 100): HangHistoryRow {
 }
 
 describe("summariseActivity", () => {
-  it("buckets twelve Monday weeks ending with this one, per kind", () => {
+  it("buckets Monday weeks ending with this one, per kind", () => {
     const s = summariseActivity(
       [
         act("climb", "2026-10-19"),
-        act("hang", "2026-10-22", 20),
-        act("strength", "2026-10-18", 30),
+        act("hang", "2026-10-22"),
+        act("strength", "2026-10-18"),
         act("climb", "2026-08-03"),
         act("climb", "2026-08-02"),
       ],
       KINDS,
-      TODAY
+      TODAY,
+      12
     );
     expect(s.weeks).toHaveLength(12);
     expect(s.weeks[0]?.start).toBe("2026-08-03");
@@ -106,64 +123,41 @@ describe("summariseActivity", () => {
     expect(s.weeks[10]?.sessions).toEqual({ climb: 0, hang: 0, strength: 1 });
     expect(s.weeks[0]?.sessions.climb).toBe(1);
     expect(s.sessions).toBe(4);
-    expect(s.minutes).toEqual({ climb: 120, hang: 20, strength: 30 });
   });
 
   it("averages effort across kinds and skips unscored sessions", () => {
     const s = summariseActivity(
-      [
-        act("climb", "2026-10-20", 60, 8),
-        act("hang", "2026-10-21", 20, 5),
-        act("hang", TODAY, 20, null),
-      ],
+      [act("climb", "2026-10-20", 8), act("hang", "2026-10-21", 5), act("hang", TODAY, null)],
       KINDS,
-      TODAY
+      TODAY,
+      12
     );
     expect(s.weeks[11]?.effort).toBe(6.5);
     expect(s.weeks[10]?.effort).toBeNull();
-  });
-
-  it("counts the streak back from last week while this one is still empty", () => {
-    const weeks = ["2026-10-14", "2026-10-07", "2026-09-30", "2026-09-16"];
-    expect(
-      summariseActivity(
-        weeks.map((d) => act("climb", d)),
-        KINDS,
-        TODAY
-      ).streak
-    ).toBe(3);
-    expect(
-      summariseActivity(
-        [...weeks, TODAY].map((d) => act("hang", d)),
-        KINDS,
-        TODAY
-      ).streak
-    ).toBe(4);
-    expect(summariseActivity([act("climb", "2026-10-01")], KINDS, TODAY).streak).toBe(0);
   });
 
   it("leaves out sessions outside the window and kinds it was not asked for", () => {
     const s = summariseActivity(
       [act("climb", "2026-08-02"), act("climb", "2026-10-26"), act("strength", TODAY)],
       ["climb", "hang"],
-      TODAY
+      TODAY,
+      12
     );
     expect(s.sessions).toBe(0);
-    expect(s.minutes).toEqual({ climb: 0, hang: 0 });
   });
 });
 
 describe("overviewVM", () => {
-  const log: SessionLog = {
+  const log = {
     activities: [],
     sessions: [
-      climbing("2026-10-20T18:00:00Z", "2026-10-20T20:30:00Z", 7),
-      climbing("2026-09-01T18:00:00Z", "2026-09-01T19:00:00Z", 5),
-      climbing("2026-10-21T18:00:00Z", "2026-10-21T19:00:00Z", 6, { rpe_source: "none" }),
+      climbing("2026-10-20T18:00:00Z", 7),
+      climbing("2026-09-01T18:00:00Z", 5),
+      climbing("2026-10-21T18:00:00Z", 6, [], { rpe_source: "none" }),
     ],
-    hangSessions: [hang("2026-10-22", 9), hang("2026-10-15", null, 50)],
+    hangSessions: [hang("2026-10-22", 9), hang("2026-10-15", null)],
   };
-  const vm = overviewVM(log, TODAY);
+  const vm = overviewVM(log, TODAY, "12w");
 
   it("splits sessions by kind and reads unscored climbing as no effort", () => {
     expect(vm.sessions).toBe(5);
@@ -180,6 +174,7 @@ describe("overviewVM", () => {
     expect(vm.mostInAWeek).toBe(3);
     expect(vm.effortNow).toBe("8.0");
     expect(vm.effortChange).toBe("▲ 3.0 since Aug 31");
+    expect(vm.kinds.map((k) => k.kind)).toEqual(["climbing", "hangboard"]);
   });
 
   it("labels every fourth week and this one", () => {
@@ -200,31 +195,29 @@ describe("overviewVM", () => {
     expect(vm.weeks[11]?.label).toBe("Week of Oct 19: Climbing 2, Hangboard 1");
   });
 
-  it("totals climbing time, time on the edge and where the time went", () => {
-    expect(vm.stats).toEqual([
-      { label: "Sessions", value: "5" },
-      { label: "Week streak", value: "2" },
-      { label: "Climbing time", value: "4h 30m" },
-      { label: "On the edge", value: "6m" },
-    ]);
-    expect(vm.kinds.map((k) => [k.kind, k.time])).toEqual([
-      ["climbing", "4h 30m"],
-      ["hangboard", "31m"],
-      ["strength", "0m"],
-      ["mobility", "0m"],
-      ["other", "0m"],
-    ]);
+  it("reads a year as 52 weeks", () => {
+    const year = overviewVM(log, TODAY, "1y");
+    expect(year.weeks).toHaveLength(52);
+    expect(year.perWeek).toBe("0.1");
+  });
+
+  it("shows climbing alone when asked", () => {
+    const climbingOnly = overviewVM(log, TODAY, "12w", ["climbing"]);
+    expect(climbingOnly.sessions).toBe(3);
+    expect(climbingOnly.weeks[11]?.effort).toBe(7);
+    expect(climbingOnly.kinds.map((k) => k.kind)).toEqual(["climbing"]);
+    expect(climbingOnly.weeks[10]?.label).toBe("Week of Oct 12: Climbing 0");
   });
 });
 
 describe("overviewVM with other training", () => {
-  const logged = (kind: Logged["kind"], date: string, minutes: number): Logged => ({
+  const logged = (kind: Logged["kind"], date: string): Logged => ({
     id: `${kind}-${date}`,
     kind,
     title: kind,
     date,
     startTime: null,
-    minutes,
+    minutes: 30,
     rpe: 6,
     notes: null,
     workoutId: null,
@@ -238,26 +231,58 @@ describe("overviewVM with other training", () => {
       sessions: [],
       hangSessions: [],
       activities: [
-        logged("strength", TODAY, 50),
-        logged("mobility", "2026-10-20", 30),
-        logged("mobility", "2026-10-13", 20),
-        logged("other", "2026-10-14", 40),
-        logged("other", "2026-10-14", 15),
+        logged("strength", TODAY),
+        logged("mobility", "2026-10-20"),
+        logged("mobility", "2026-10-13"),
+        logged("other", "2026-10-14"),
+        logged("other", "2026-10-14"),
       ],
     },
-    TODAY
+    TODAY,
+    "12w"
   );
 
   it("counts each activity under its own kind", () => {
     expect(vm.sessions).toBe(5);
-    expect(vm.kinds.map((k) => [k.kind, k.minutes])).toEqual([
-      ["climbing", 0],
-      ["hangboard", 0],
-      ["strength", 50],
-      ["mobility", 50],
-      ["other", 55],
-    ]);
+    expect(vm.kinds.map((k) => k.kind)).toEqual(["strength", "mobility", "other"]);
     expect(vm.weeks[11]?.label).toBe("Week of Oct 19: Strength 1, Mobility 1");
-    expect(vm.stats[1]).toEqual({ label: "Week streak", value: "2" });
+  });
+});
+
+describe("topSendVM", () => {
+  const FIRST = "2026-10-05";
+  const purple = { id: "p", label: "", colour: "purple" } as const;
+
+  it("takes the hardest indoor send of each week and skips outdoor, attempts and laps", () => {
+    const vm = topSendVM(
+      [
+        climbing("2026-10-06T18:00:00Z", 6, [
+          { vGrade: 3 },
+          { vGrade: 5 },
+          { vGrade: 9, kind: "attempt" },
+        ]),
+        climbing("2026-10-08T18:00:00Z", 6, [{ vGrade: 8 }], { location: "outdoor" }),
+        climbing("2026-10-20T18:00:00Z", 6, [
+          { vGrade: 6, circuit: purple },
+          { vGrade: 7, endurance: { unit: "moves", target: 20, laps: [20] } },
+        ]),
+      ],
+      FIRST,
+      3
+    );
+    expect(vm.weeks).toEqual([
+      { rank: 5, label: "V5", circuit: null },
+      null,
+      { rank: 6, label: "Purple", circuit: "purple" },
+    ]);
+    expect(vm.now).toBe("Purple");
+    expect(vm.from).toBe("from V5");
+  });
+
+  it("is empty with no indoor send", () => {
+    const vm = topSendVM([], FIRST, 3);
+    expect(vm.weeks).toEqual([null, null, null]);
+    expect(vm.now).toBeNull();
+    expect(vm.from).toBeNull();
   });
 });
