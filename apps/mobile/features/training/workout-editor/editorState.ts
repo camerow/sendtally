@@ -99,10 +99,14 @@ export function withStepAdded(s: WorkoutDraft): WorkoutDraft {
 export const withoutStep = (s: WorkoutDraft, step: number): WorkoutDraft =>
   s.pattern.length < 2 ? s : { ...s, pattern: s.pattern.filter((_, i) => i !== step) };
 
-/** What saving writes: trimmed text, an untitled workout named, and unnamed exercises left out. */
+/**
+ * What saving writes: trimmed text, an untitled workout named, and unnamed exercises left
+ * out. Hangboard keeps no minutes: its time is counted from its items.
+ */
 export function draftOfEditor(s: WorkoutDraft): WorkoutDraft {
   return {
     ...s,
+    minutes: s.kind === "hangboard" ? null : s.minutes,
     name: s.name.trim().slice(0, 80) || t("hang.untitledWorkout"),
     description: s.description.trim(),
     variations: s.variations.map((v) => ({

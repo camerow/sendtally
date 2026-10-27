@@ -17,6 +17,7 @@ const legs: WorkoutRecord = {
   targetRpe: null,
   variations: [{ label: "", items: [{ exercise: "Back squat", dose: { sets: 5, reps: 5 } }] }],
   pattern: [0],
+  exerciseRestS: 180,
   updatedAt: "t",
 };
 

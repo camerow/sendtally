@@ -18,15 +18,25 @@ export type TimerText = {
   fail: string;
 };
 
-/** Every word the timer shows for where the run is now. */
-export function timerText(run: Run, secondsLeft: number, loadText: string): TimerText {
+const label = (run: Run, phase: Phase): MessageKey =>
+  phase.kind === "ready" && run.index > 0 ? "hang.phaseRest" : PHASE_LABELS[phase.kind];
+
+/**
+ * Every word the timer shows for where the run is now. `sets` is the current item's;
+ * a Get ready after the first item is the rest between exercises.
+ */
+export function timerText(
+  run: Run,
+  secondsLeft: number,
+  loadText: string,
+  sets = run.sets
+): TimerText {
   const phase = currentPhase(run);
   const paused = run.pausedAt !== null;
-  const { sets } = run;
   const next = run.phases[run.index + 1];
   const pull = phase.kind === "pull";
   return {
-    label: paused ? t("hang.paused") : t(PHASE_LABELS[phase.kind]),
+    label: paused ? t("hang.paused") : t(label(run, phase)),
     big: pull ? `${run.taps}/${phase.taps}` : clock(secondsLeft),
     hint: pull ? t("hang.tapAfterLift") : paused ? t("hang.tapToResume") : t("hang.tapToPause"),
     setLine:
@@ -52,6 +62,6 @@ function nextText(next: Phase | undefined, loadText: string): string {
     case "pull":
       return t("hang.nextLift", { reps: next.taps, load: loadText });
     case "ready":
-      return "";
+      return t("hang.nextExerciseRest", { time: clock(next.seconds) });
   }
 }

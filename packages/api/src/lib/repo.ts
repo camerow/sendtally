@@ -2910,6 +2910,7 @@ export async function saveWorkout(db: D1Database, userId: string, w: Workout): P
     target_rpe: w.targetRpe,
     variations_json: JSON.stringify(w.variations),
     pattern_json: JSON.stringify(w.pattern),
+    exercise_rest_s: w.exerciseRestS,
     updated_at: now,
   };
   return drizzle(db)

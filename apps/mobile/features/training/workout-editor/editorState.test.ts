@@ -19,6 +19,7 @@ const legs: WorkoutDraft = {
   targetRpe: 8,
   variations: [{ label: "", items: [squat] }],
   pattern: [0],
+  exerciseRestS: 180,
 };
 
 describe("workout editor state", () => {

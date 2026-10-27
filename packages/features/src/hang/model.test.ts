@@ -42,6 +42,7 @@ const mine: LibraryWorkout = {
     },
   ],
   pattern: [0],
+  exerciseRestS: 180,
 };
 
 const model = (overrides: Partial<HangData> = {}) =>

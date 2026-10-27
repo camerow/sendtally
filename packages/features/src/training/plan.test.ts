@@ -30,6 +30,7 @@ const squat: Workout = {
     },
   ],
   pattern: [0, 1],
+  exerciseRestS: 180,
 };
 
 const climbing: Workout = {

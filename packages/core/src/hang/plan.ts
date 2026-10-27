@@ -1,6 +1,6 @@
 import { addDays, daysBetween, weekday } from "./calendar";
 import type { Intervals } from "./intervals";
-import { totalSeconds } from "./protocol";
+import { SECONDS_PER_LIFT, totalSeconds } from "./protocol";
 import type { CalendarDate, HangKind, Protocol, TimeUnit, TimeUnits, Weekday } from "./types";
 
 export const WORKOUT_KINDS = ["hangboard", "climbing", "strength", "mobility", "other"] as const;
@@ -49,11 +49,17 @@ export type Workout = {
   kind: WorkoutKind;
   name: string;
   description: string;
+  /** Ignored for hangboard, whose duration is counted from its items. */
   minutes: number | null;
   targetRpe: number | null;
   variations: Variation[];
   pattern: number[];
+  /** Hangboard: the rest between one item and the next. */
+  exerciseRestS: number;
 };
+
+/** What a hangboard workout rests between exercises unless it says otherwise. */
+export const DEFAULT_EXERCISE_REST_S = 180;
 
 /** A run of weeks from a start date. */
 export type Block = { id: string; name: string; start: CalendarDate; weeks: number };
@@ -296,6 +302,21 @@ export function intervalsOf(items: readonly Item[]): Intervals {
 /** Rough seconds a variation takes, timed as the hang timer would run each item. */
 export const itemsSeconds = (items: readonly Item[]): number =>
   items.reduce((sum, i) => sum + totalSeconds(doseProtocol(i.exercise, i.dose)), 0);
+
+/**
+ * Seconds one hangboard item takes: sets × hangs × (hang time + rest time) + sets × set rest.
+ * A ground pull has no hang time, so each lift counts as SECONDS_PER_LIFT.
+ */
+export function hangItemSeconds(dose: Dose): number {
+  const p = doseProtocol("", dose);
+  const work = p.kind === "hang" ? p.hangS : SECONDS_PER_LIFT;
+  return p.sets * p.reps * (work + p.restS) + p.sets * p.setRestS;
+}
+
+/** Seconds a hangboard variation takes: every item, with the rest between exercises between them. */
+export const hangboardSeconds = (items: readonly Item[], exerciseRestS: number): number =>
+  items.reduce((sum, i) => sum + hangItemSeconds(i.dose), 0) +
+  Math.max(0, items.length - 1) * exerciseRestS;
 
 /** Every set of every item done as prescribed. */
 export function doneAsPrescribed(items: readonly Item[]): ItemDone[] {

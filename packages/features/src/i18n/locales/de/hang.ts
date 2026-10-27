@@ -160,6 +160,7 @@ export const hang = {
   "hang.nextHang": "{n} s hängen · Satz {set}",
   "hang.nextRest": "{n} s Pause",
   "hang.nextSetRest": "Satzpause {time}",
+  "hang.nextExerciseRest": "Pause {time}, dann die nächste Übung",
   "hang.nextLift": "{reps} × {load} ziehen",
   "hang.restartInterval": "Intervall neu starten",
   "hang.skipInterval": "Zum nächsten Intervall springen",

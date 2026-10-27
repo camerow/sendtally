@@ -14,6 +14,7 @@ const workouts = libraryOf([
     targetRpe: null,
     variations: [{ label: "", items: [] }],
     pattern: [0],
+    exerciseRestS: 180,
     updatedAt: "2026-10-01T00:00:00Z",
   },
 ]);

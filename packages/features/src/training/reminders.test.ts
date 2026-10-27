@@ -16,6 +16,7 @@ const workout = (id: string, kind: Workout["kind"], name: string): Workout => ({
   targetRpe: null,
   variations: [{ label: "", items: [] }],
   pattern: [0],
+  exerciseRestS: 180,
 });
 
 const workouts = [

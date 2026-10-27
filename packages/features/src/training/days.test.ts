@@ -99,6 +99,7 @@ const workouts: Workout[] = [
     targetRpe: null,
     variations: [{ label: "", items: [{ exercise: "half", dose: { sets: 6, reps: 6, onS: 7 } }] }],
     pattern: [0],
+    exerciseRestS: 180,
   },
   {
     id: "legs",
@@ -109,6 +110,7 @@ const workouts: Workout[] = [
     targetRpe: null,
     variations: [{ label: "", items: [] }],
     pattern: [0],
+    exerciseRestS: 180,
   },
   {
     id: "limit",
@@ -119,6 +121,7 @@ const workouts: Workout[] = [
     targetRpe: null,
     variations: [{ label: "", items: [] }],
     pattern: [0],
+    exerciseRestS: 180,
   },
 ];
 

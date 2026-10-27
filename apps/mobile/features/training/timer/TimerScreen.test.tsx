@@ -137,4 +137,58 @@ describe("Timer", () => {
       })
     );
   });
+
+  it("rests between exercises, runs the next grip, and carries every item to the done screen", async () => {
+    const twoGrips = {
+      id: "w-two",
+      kind: "hangboard" as const,
+      name: "Two grips",
+      description: "",
+      minutes: null,
+      targetRpe: null,
+      variations: [
+        {
+          label: "",
+          items: [
+            { exercise: "half", dose: { sets: 1, reps: 1, onS: 10 } },
+            { exercise: "open", dose: { sets: 1, reps: 1, onS: 10 } },
+          ],
+        },
+      ],
+      pattern: [0],
+      exerciseRestS: 120,
+      updatedAt: "t",
+    };
+    await renderWithHang(
+      <TimerScreen workoutId="w-two" gripId="half" link={NO_PLAN} />,
+      hangData(),
+      { workouts: [twoGrips] }
+    );
+    expect(screen.getByText("Set up · Half crimp · Open hand")).toBeTruthy();
+    await fireEvent.press(screen.getByText("Start"));
+    await advance(5000);
+    expect(screen.getByText("Rest 2:00, then the next exercise")).toBeTruthy();
+    await advance(10_000);
+    expect(screen.getByText("Rest")).toBeTruthy();
+    expect(screen.getByText("2:00")).toBeTruthy();
+    expect(screen.getByText(/^Open hand · /)).toBeTruthy();
+    await advance(119_000);
+    expect(screen.getByText("Rest")).toBeTruthy();
+    await advance(1000);
+    expect(screen.getByText("Hang")).toBeTruthy();
+    await advance(10_100);
+    expect(router.replace).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        pathname: "/workout/done",
+        params: expect.objectContaining({
+          workoutId: "w-two",
+          gripId: "half",
+          ended: "0",
+          pct: "100",
+          setsDone: "1",
+          more: expect.stringMatching(/^\d+:\d+:1$/),
+        }),
+      })
+    );
+  });
 });

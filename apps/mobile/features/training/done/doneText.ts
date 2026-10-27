@@ -8,9 +8,14 @@ export function doneStatus(result: RunResult): string {
   return result.pct < 100 ? t("hang.finishedPartial") : t("hang.sessionComplete");
 }
 
-export function doneStats(w: HangWorkout, result: RunResult, load: string): Stat[] {
+/** `planned` is the work of every item the run held, the first one's alone by default. */
+export function doneStats(
+  w: HangWorkout,
+  result: RunResult,
+  load: string,
+  planned = plannedWork(w)
+): Stat[] {
   const hang = w.kind === "hang";
-  const planned = plannedWork(w);
   return [
     { label: t("hang.statDuration"), value: clock(result.seconds, true) },
     { label: hang ? t("hang.statLoad") : t("hang.statWeight"), value: load },

@@ -13,6 +13,7 @@ import {
   draftOf,
   newWorkoutDraft,
   useWorkoutActions,
+  workoutMinutes,
   type WorkoutDraft,
   type WorkoutLibrary,
 } from "@sendtally/features/workouts";
@@ -30,6 +31,7 @@ import { TargetEffort } from "../plan/TargetEffort";
 import { KIND_LOOK } from "../today/kindLook";
 import { type } from "../type";
 import { EditorTextField } from "./EditorTextField";
+import { HangboardTiming } from "./HangboardTiming";
 import {
   draftOfEditor,
   letterOf,
@@ -212,10 +214,18 @@ function Editor({
           ) : (
             <ItemList items={state.variations[0]?.items ?? []} {...listOf(0)} />
           )}
-          <MinutesField
-            value={state.minutes}
-            onChange={(minutes) => setState((s) => ({ ...s, minutes }))}
-          />
+          {state.kind === "hangboard" ? (
+            <HangboardTiming
+              exerciseRestS={state.exerciseRestS}
+              minutes={workoutMinutes(state)}
+              onExerciseRest={(exerciseRestS) => setState((s) => ({ ...s, exerciseRestS }))}
+            />
+          ) : (
+            <MinutesField
+              value={state.minutes}
+              onChange={(minutes) => setState((s) => ({ ...s, minutes }))}
+            />
+          )}
           <TargetEffort
             value={state.targetRpe}
             onChange={(targetRpe) => setState((s) => ({ ...s, targetRpe }))}
