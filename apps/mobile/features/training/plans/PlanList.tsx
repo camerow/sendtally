@@ -29,7 +29,7 @@ export function PlanList({ workoutId, name, empty }: PlanListProps): React.React
           <PlanRow
             key={m.id}
             tag={membershipTag(m, block, today)}
-            tagColor={m.start <= today ? colors.labelAccent : colors.petalInk}
+            tagColor={m.start <= today ? colors.gunmetal : colors.petalInk}
             meta={[block?.name, membershipWhen(m)].filter((p) => p !== undefined).join(" · ")}
             onRemove={() => void actions.deleteMembership(m.id)}
             removeLabel={t("plan.remove", { title: name })}

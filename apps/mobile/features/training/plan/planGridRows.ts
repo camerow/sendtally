@@ -3,6 +3,7 @@ import type { Membership, WorkoutKind } from "@sendtally/core/hang";
 import { kindLabel } from "@sendtally/features/activities";
 import type { WorkoutLookup } from "@sendtally/features/training";
 import { bodySummary } from "@sendtally/features/workouts";
+import { openMembership } from "./openMembership";
 
 export type PlanGridRow = {
   key: string;
@@ -10,9 +11,10 @@ export type PlanGridRow = {
   name: string;
   sub: string;
   days: readonly number[];
+  open: () => void;
 };
 
-/** One row per membership for the week grid, with what its workout holds. */
+/** One row per membership for the week grid, with what its workout holds and where it opens. */
 export function planGridRows(
   members: readonly Membership[],
   workout: WorkoutLookup
@@ -27,6 +29,7 @@ export function planGridRows(
         name: w.name,
         sub: bodySummary(w) ?? kindLabel(w.kind),
         days: m.weekdays,
+        open: () => openMembership(m),
       },
     ];
   });

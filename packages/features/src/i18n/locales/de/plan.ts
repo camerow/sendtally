@@ -25,8 +25,6 @@ export const plan = {
   "plan.effort": "Wöchentliche Belastung",
   "plan.effortLogged": "Eingetragen",
   "plan.effortLoggedWeek": "Woche {n}: {actual} eingetragen",
-  "plan.effortLoggedHint":
-    "Minuten mal Anstrengung, für alles, was du in jeder Woche des Blocks eingetragen hast.",
   "plan.addToPlan": "Zum Plan hinzufügen",
   "plan.whatKind": "Welche Art?",
   "plan.kindMobilityHint": "Auch Yoga und Dehnen",
@@ -59,6 +57,7 @@ export const plan = {
   "plan.moveIn": "In diesen Block verschieben",
   "plan.moveInAria": "{title} in diesen Block verschieben",
   "plan.takeOut": "Aus dem Block nehmen",
+  "plan.removeFromPlan": "Aus dem Plan entfernen",
   "plan.asWritten": "Wie geschrieben",
   "plan.ladderHint":
     "Jede Woche beginnt so, wie das Workout geschrieben ist. Ändere nur die Wochen, die abweichen.",

@@ -121,11 +121,8 @@ export const hang = {
   "hang.closeGripPicker": "Griffauswahl schließen",
   "hang.gripPickerMulti":
     "Wähl einen oder mehrere. Jeder Griff bekommt sein eigenes Workout für deinen Trainingsblock.",
-  "hang.gripPickerSingle": "Jeder Griff behält seine eigene Last und seine eigene Trendlinie.",
   "hang.gripUsed_one": "{count} Session · zuletzt {date}",
   "hang.gripUsed_other": "{count} Sessions · zuletzt {date}",
-  "hang.gripNotTried": "Noch nicht probiert",
-  "hang.gripYoursNotTried": "Dein Griff · noch nicht probiert",
   "hang.newGripName": "Name des neuen Griffs",
   "hang.newGripPlaceholder": "Eigenen hinzufügen, z. B. Front 3",
   "hang.add": "Hinzufügen",

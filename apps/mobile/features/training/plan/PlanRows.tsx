@@ -1,4 +1,3 @@
-import { router } from "expo-router";
 import React from "react";
 import { View } from "react-native";
 import type { Plan } from "@sendtally/api-client";
@@ -12,6 +11,7 @@ import { useHangData } from "../data/HangDataContext";
 import { membershipTag, membershipWhen } from "../plans/planText";
 import { DayMark } from "../today/DayMark";
 import { KIND_LOOK } from "../today/kindLook";
+import { openMembership } from "./openMembership";
 import { usePlanActions } from "./usePlanActions";
 
 export type PlanRowsProps = {
@@ -39,14 +39,10 @@ export function PlanRows({ plan, members, workout, highlight }: PlanRowsProps): 
             key={m.id}
             mark={<DayMark kind={w.kind} filled />}
             tag={membershipTag(m, blockOfMembership(plan, m), today)}
-            tagColor={m.start <= today ? colors.labelAccent : KIND_LOOK[w.kind].ink}
+            tagColor={m.start <= today ? colors.gunmetal : KIND_LOOK[w.kind].ink}
             name={w.name}
             meta={`${kindLabel(w.kind)} · ${membershipWhen(m)}`}
-            onOpen={() =>
-              m.blockId === null
-                ? router.push({ pathname: "/workout/[id]", params: { id: w.id } })
-                : router.push({ pathname: "/plan/membership/[id]", params: { id: m.id } })
-            }
+            onOpen={() => openMembership(m)}
             lit={m.id === highlight}
             onRemove={() => void actions.deleteMembership(m.id)}
             removeLabel={t("plan.remove", { title: w.name })}

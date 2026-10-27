@@ -53,9 +53,6 @@ export function BlockEffort({ weeks }: BlockEffortProps): React.ReactElement {
           </View>
         ))}
       </View>
-      <Text style={[type.body, { fontSize: 12, lineHeight: 17, color: colors.textSecondary }]}>
-        {t("plan.effortLoggedHint")}
-      </Text>
     </View>
   );
 }

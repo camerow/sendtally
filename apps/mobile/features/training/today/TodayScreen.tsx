@@ -60,7 +60,7 @@ export function TodayScreen(): React.ReactElement {
 
   return (
     <View style={{ gap: 16 }}>
-      <Label color={colors.labelAccent}>{longDate(today)}</Label>
+      <Label color={colors.gunmetal}>{longDate(today)}</Label>
       <WeekStrip
         offset={offset}
         days={days}

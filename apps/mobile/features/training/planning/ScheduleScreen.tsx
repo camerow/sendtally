@@ -84,7 +84,7 @@ export function ScheduleScreen({
       }
     >
       <View style={{ gap: 4 }}>
-        <Label color={colors.labelAccent}>{workout.name}</Label>
+        <Label color={colors.gunmetal}>{workout.name}</Label>
         <Title size={34}>{t("plan.howOften")}</Title>
       </View>
       <Segmented<ScheduleMode>

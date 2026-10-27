@@ -54,21 +54,17 @@ export function GripPickerSheet({
         action={t("hang.done")}
         onAction={onClose}
       />
-      <Text
-        style={[
-          type.body,
-          {
-            fontSize: 14,
-            lineHeight: 21,
-            color: colors.textSecondary,
-            paddingTop: 8,
-            paddingBottom: 14,
-          },
-        ]}
-      >
-        {multi ? t("hang.gripPickerMulti") : t("hang.gripPickerSingle")}
-      </Text>
-      <View style={{ gap: 8 }}>
+      {multi && (
+        <Text
+          style={[
+            type.body,
+            { fontSize: 14, lineHeight: 21, color: colors.textSecondary, paddingTop: 8 },
+          ]}
+        >
+          {t("hang.gripPickerMulti")}
+        </Text>
+      )}
+      <View style={{ gap: 8, paddingTop: 14 }}>
         {shown.map((g) => {
           const logs = model.sessions
             .filter((s) => s.workoutId === workout.id && s.gripId === g.id)
@@ -76,11 +72,9 @@ export function GripPickerSheet({
           const last = logs[logs.length - 1];
           const used = model.lastUsed(workout, g.id);
           const meta =
-            last !== undefined
-              ? t("hang.gripUsed", { count: logs.length, date: shortDate(last.date) })
-              : g.custom
-                ? t("hang.gripYoursNotTried")
-                : t("hang.gripNotTried");
+            last === undefined
+              ? ""
+              : t("hang.gripUsed", { count: logs.length, date: shortDate(last.date) });
           return (
             <GripRow
               key={g.id}

@@ -65,7 +65,7 @@ export function IntervalsDone({ workout, run }: IntervalsDoneProps): React.React
         }}
       >
         <View style={{ gap: 6 }}>
-          <Label color={colors.labelAccent}>
+          <Label color={colors.gunmetal}>
             {`${kindLabel(workout.kind)} · ${
               run.finished?.ended === false ? t("hang.sessionComplete") : t("hang.endedEarly")
             }`}

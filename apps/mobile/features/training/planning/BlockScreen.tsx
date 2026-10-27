@@ -7,7 +7,7 @@ import { t } from "@sendtally/features/i18n";
 import { blockMembers, blockWeeks, movedTo, useTrainingLog } from "@sendtally/features/training";
 import { useApi } from "../../../lib/api";
 import { BlockEffort } from "../blocks/BlockEffort";
-import { blockDates, blockKicker } from "../blocks/blockText";
+import { blockDates } from "../blocks/blockText";
 import { Button } from "../components/Button";
 import { DashedPanel } from "../components/DashedPanel";
 import { Label } from "../components/Label";
@@ -65,7 +65,6 @@ export function BlockScreen({ id }: BlockScreenProps): React.ReactElement | null
       }
     >
       <View style={{ gap: 4 }}>
-        <Label color={colors.labelAccent}>{blockKicker(block, today)}</Label>
         <Title size={34}>{block.name}</Title>
         <Text style={[type.mono, { fontSize: 12, color: colors.textSecondary }]}>
           {blockDates(block)}

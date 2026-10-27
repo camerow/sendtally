@@ -80,9 +80,11 @@ export function GripRow({
         </View>
         <View style={{ flex: 1, gap: 2 }}>
           <Text style={[type.bodyBold, { fontSize: 15, color: colors.gunmetal }]}>{name}</Text>
-          <Label small color={colors.textSecondary}>
-            {meta}
-          </Label>
+          {meta !== "" && (
+            <Label small color={colors.textSecondary}>
+              {meta}
+            </Label>
+          )}
         </View>
         {load !== "" && (
           <Text style={[type.monoBold, { fontSize: 14, color: colors.gunmetal }]}>{load}</Text>

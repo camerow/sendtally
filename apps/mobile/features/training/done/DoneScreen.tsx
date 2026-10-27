@@ -80,7 +80,7 @@ function Done({
         }}
       >
         <View style={{ gap: 6 }}>
-          <Label color={colors.labelAccent}>
+          <Label color={colors.gunmetal}>
             {t("hang.kicker", { status: doneStatus(result), grip: model.gripName(gripId) })}
           </Label>
           <Title size={40}>{workout.name}</Title>

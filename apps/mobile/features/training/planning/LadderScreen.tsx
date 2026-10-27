@@ -57,11 +57,15 @@ export function LadderScreen({ id }: LadderScreenProps): React.ReactElement | nu
     void actions.saveMembership(movedTo(m, null, block, today));
     router.back();
   };
+  const remove = (): void => {
+    void actions.deleteMembership(m.id);
+    router.back();
+  };
 
   return (
     <ScreenFrame>
       <View style={{ gap: 4 }}>
-        <Label color={colors.labelAccent}>
+        <Label color={colors.gunmetal}>
           {[block.name, kindLabel(w.kind), membershipWhen(m)].join(" · ")}
         </Label>
         <Title size={34}>{w.name}</Title>
@@ -110,6 +114,7 @@ export function LadderScreen({ id }: LadderScreenProps): React.ReactElement | nu
         ))}
       </View>
       <Button label={t("plan.takeOut")} onPress={takeOut} variant="outline" height={50} />
+      <Button label={t("plan.removeFromPlan")} onPress={remove} variant="danger" height={50} />
     </ScreenFrame>
   );
 }

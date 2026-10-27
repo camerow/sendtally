@@ -46,7 +46,7 @@ export function SetupStep({
           }}
         >
           <View style={{ gap: 6 }}>
-            <Label color={colors.labelAccent}>
+            <Label color={colors.gunmetal}>
               {t("hang.setupKicker", { grip: model.gripName(gripId) })}
             </Label>
             <Title size={34}>{workout.name}</Title>

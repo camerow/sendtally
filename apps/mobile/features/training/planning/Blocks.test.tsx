@@ -4,6 +4,8 @@ import { router } from "expo-router";
 import React from "react";
 import type { Plan, WorkoutRecord } from "@sendtally/api-client";
 import { hangData, renderWithHang } from "../data/renderWithHang";
+import { PlanGrid } from "../plan/PlanGrid";
+import { planGridRows } from "../plan/planGridRows";
 import { BlockFormScreen } from "./BlockFormScreen";
 import { BlockScreen } from "./BlockScreen";
 import { LadderScreen } from "./LadderScreen";
@@ -109,6 +111,31 @@ describe("block weeks", () => {
       variation: 0,
       item: 0,
       change: { sets: 4, weightKg: 105 },
+    });
+  });
+
+  it("takes a workout out of the plan from its weeks", async () => {
+    await renderWithHang(<LadderScreen id="m1" />, hangData(), { workouts: [squat], plan });
+    await fireEvent.press(screen.getByText("Remove from plan"));
+    expect(mockPlan.deleteMembership).toHaveBeenCalledWith("m1");
+    expect(router.back).toHaveBeenCalled();
+  });
+});
+
+describe("week grid", () => {
+  it("opens a plan's weeks inside a block and its workout outside one", async () => {
+    const workout = (id: string): WorkoutRecord | undefined => (id === "squat" ? squat : undefined);
+    await renderWithHang(<PlanGrid rows={planGridRows(plan.memberships, workout)} />);
+    const [inBlock, outside] = screen.getAllByLabelText("Back squat");
+    await fireEvent.press(inBlock!);
+    expect(router.push).toHaveBeenLastCalledWith({
+      pathname: "/plan/membership/[id]",
+      params: { id: "m1" },
+    });
+    await fireEvent.press(outside!);
+    expect(router.push).toHaveBeenLastCalledWith({
+      pathname: "/workout/[id]",
+      params: { id: "squat" },
     });
   });
 });

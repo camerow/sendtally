@@ -1,9 +1,11 @@
 import React from "react";
-import { Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
 import { weekdayLetters } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
+import { pressRow } from "../../../lib/press";
 import { Label } from "../components/Label";
+import { GOLD_TINT } from "../components/tints";
 import { DayMark } from "../today/DayMark";
 import { KIND_LOOK } from "../today/kindLook";
 import { type } from "../type";
@@ -39,10 +41,12 @@ export type PlanGridProps = {
   rows: readonly PlanGridRow[];
   /** Off inside a card that already draws the frame. */
   framed?: boolean;
+  /** A plan just added, lit for a moment. */
+  highlight?: string | null;
 };
 
-/** The week at a glance: a row per plan, a column per weekday, marked where it lands. */
-export function PlanGrid({ rows, framed = true }: PlanGridProps): React.ReactElement {
+/** The week at a glance: a row per plan, a column per weekday, marked where it lands. Tap a row to open it. */
+export function PlanGrid({ rows, framed = true, highlight }: PlanGridProps): React.ReactElement {
   return (
     <View
       style={[
@@ -56,7 +60,7 @@ export function PlanGrid({ rows, framed = true }: PlanGridProps): React.ReactEle
       ]}
     >
       <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
-        <Label color={colors.labelAccent} style={{ flex: 1 }}>
+        <Label color={colors.gunmetal} style={{ flex: 1 }}>
           {t("plan.week")}
         </Label>
         {weekdayLetters().map((letter, i) => (
@@ -71,16 +75,20 @@ export function PlanGrid({ rows, framed = true }: PlanGridProps): React.ReactEle
         ))}
       </View>
       {rows.map((row) => (
-        <View
+        <Pressable
           key={row.key}
-          style={{
+          onPress={row.open}
+          accessibilityRole="button"
+          accessibilityLabel={row.name}
+          style={pressRow({
             flexDirection: "row",
             alignItems: "center",
             gap: 5,
             paddingVertical: 7,
             borderTopWidth: 1,
             borderTopColor: colors.lineOnLightSoft,
-          }}
+            backgroundColor: row.key === highlight ? GOLD_TINT : undefined,
+          })}
         >
           <View style={{ flex: 1, minWidth: 0, gap: 1 }}>
             <Text
@@ -99,7 +107,7 @@ export function PlanGrid({ rows, framed = true }: PlanGridProps): React.ReactEle
           {[0, 1, 2, 3, 4, 5, 6].map((day) => (
             <Cell key={day} row={row} day={day} />
           ))}
-        </View>
+        </Pressable>
       ))}
     </View>
   );

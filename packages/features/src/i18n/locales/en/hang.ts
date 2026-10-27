@@ -120,11 +120,8 @@ export const hang = {
   "hang.closeGripPicker": "Close grip picker",
   "hang.gripPickerMulti":
     "Pick one or more. Each grip gets its own workout for your training block.",
-  "hang.gripPickerSingle": "Every grip keeps its own load and its own trend line.",
   "hang.gripUsed_one": "{count} session · last {date}",
   "hang.gripUsed_other": "{count} sessions · last {date}",
-  "hang.gripNotTried": "Not tried yet",
-  "hang.gripYoursNotTried": "Your grip · not tried yet",
   "hang.newGripName": "New grip name",
   "hang.newGripPlaceholder": "Add your own, e.g. Front 3",
   "hang.add": "Add",

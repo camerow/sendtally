@@ -13,7 +13,6 @@ import { Label } from "../components/Label";
 import { useHangData } from "../data/HangDataContext";
 import { PlanGrid } from "./PlanGrid";
 import { liveMembers, planGridRows } from "./planGridRows";
-import { PlanRows } from "./PlanRows";
 
 const LIT_MS = 2500;
 
@@ -24,7 +23,7 @@ export type PlanOverviewProps = {
 
 /**
  * Train > Plan: adding to it, live training blocks as cards, then every other plan as a
- * week grid and a list.
+ * week grid.
  */
 export function PlanOverview({ highlight }: PlanOverviewProps): React.ReactElement {
   const [lit, setLit] = React.useState(highlight);
@@ -63,7 +62,6 @@ export function PlanOverview({ highlight }: PlanOverviewProps): React.ReactEleme
         <BlockCard
           key={block.id}
           block={block}
-          plan={plan}
           members={blockMembers(plan, block)}
           workout={workout}
           weeks={blockWeeks(block, log, today)}
@@ -76,8 +74,7 @@ export function PlanOverview({ highlight }: PlanOverviewProps): React.ReactEleme
           {blocks.length > 0 && (
             <Label color={colors.textSecondary}>{t("plan.outsideBlocks")}</Label>
           )}
-          <PlanGrid rows={rows} />
-          <PlanRows plan={plan} members={outside} workout={workout} highlight={lit} />
+          <PlanGrid rows={rows} highlight={lit} />
         </View>
       )}
     </View>

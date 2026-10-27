@@ -120,11 +120,8 @@ export const hang = {
   "hang.closeGripPicker": "Fermer le choix de prise",
   "hang.gripPickerMulti":
     "Choisis-en une ou plusieurs. Chaque prise a son propre exercice dans ton cycle d'entraînement.",
-  "hang.gripPickerSingle": "Chaque prise garde sa propre charge et sa propre courbe.",
   "hang.gripUsed_one": "{count} séance · dernière le {date}",
   "hang.gripUsed_other": "{count} séances · dernière le {date}",
-  "hang.gripNotTried": "Pas encore essayée",
-  "hang.gripYoursNotTried": "Ta prise · pas encore essayée",
   "hang.newGripName": "Nom de la nouvelle prise",
   "hang.newGripPlaceholder": "Ajoute la tienne, ex. 3 doigts avant",
   "hang.add": "Ajouter",

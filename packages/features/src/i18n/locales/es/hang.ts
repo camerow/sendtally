@@ -120,11 +120,8 @@ export const hang = {
   "hang.closeGripPicker": "Cerrar selector de agarre",
   "hang.gripPickerMulti":
     "Elige uno o varios. Cada agarre tiene su propio entreno en tu bloque de entrenamiento.",
-  "hang.gripPickerSingle": "Cada agarre conserva su propia carga y su propia línea de tendencia.",
   "hang.gripUsed_one": "{count} sesión · última el {date}",
   "hang.gripUsed_other": "{count} sesiones · última el {date}",
-  "hang.gripNotTried": "Sin probar",
-  "hang.gripYoursNotTried": "Tu agarre · sin probar",
   "hang.newGripName": "Nombre del nuevo agarre",
   "hang.newGripPlaceholder": "Añade el tuyo, p. ej. 3 dedos delante",
   "hang.add": "Añadir",
