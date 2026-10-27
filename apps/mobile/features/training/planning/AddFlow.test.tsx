@@ -162,6 +162,7 @@ describe("adding to the plan", () => {
     });
     await fireEvent.press(screen.getByText("On specific days"));
     expect(screen.getByText("Add on Thu, Oct 1")).toBeTruthy();
+    expect(screen.getByText("Winter base · 1/6")).toBeTruthy();
     await fireEvent.press(screen.getByLabelText("Saturday Oct 3"));
     await fireEvent.press(screen.getByText("Add on 2 days"));
     expect(mockPlan.saveMembership.mock.calls.map(([m]) => m)).toEqual([

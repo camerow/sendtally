@@ -111,6 +111,7 @@ export function ScheduleScreen({
           max={block === null ? undefined : addDays(blockEnd(block), -1)}
           today={today}
           shaded={() => false}
+          blocks={blocks}
           onPick={(d) => update({ dates: toggled(draft.dates, d) })}
         />
       )}
