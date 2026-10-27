@@ -14,6 +14,8 @@ export type PlanActions = {
   deleteMembership: (id: string) => Promise<void>;
   /** An empty change puts the item back as written for that week. */
   saveWeekChange: (change: WeekChange) => Promise<void>;
+  /** Plans `from` again as block `to` from `start`, with its plans; false when it failed. */
+  copyBlock: (from: string, to: string, start: string) => Promise<boolean>;
 };
 
 const upsert = <T extends { id: string }>(list: readonly T[], item: T): T[] =>
@@ -84,6 +86,16 @@ export function usePlanActions(api: SendtallyApi, onError: (error: unknown) => v
           (p) => withChange(p, change),
           () => api.saveWeekChange(change)
         ),
+      copyBlock: async (from, to, start) => {
+        try {
+          await api.copyBlock(from, to, start);
+          await client.invalidateQueries({ queryKey: key });
+          return true;
+        } catch (error) {
+          onError(error);
+          return false;
+        }
+      },
     };
   }, [api, client, onError]);
 }

@@ -1,0 +1,116 @@
+import { beforeEach, describe, expect, it, jest } from "@jest/globals";
+import { act, fireEvent, screen } from "@testing-library/react-native";
+import { router } from "expo-router";
+import React from "react";
+import { Alert, type AlertButton } from "react-native";
+import { ApiError, type ActivityRecord, type WorkoutRecord } from "@sendtally/api-client";
+import { renderWithHang, hangData } from "../data/renderWithHang";
+import { ExerciseScreen } from "./ExerciseScreen";
+
+const mockApi = {
+  saveExercise: jest.fn<(...args: unknown[]) => Promise<unknown>>(),
+  mergeExercise: jest.fn<(...args: unknown[]) => Promise<unknown>>(),
+};
+
+jest.mock("../../../lib/api", () => ({ useApi: () => mockApi }));
+jest.mock("@sendtally/features/activities", () => ({
+  ...jest.requireActual<object>("@sendtally/features/activities"),
+  useWeightUnit: () => "kg",
+}));
+jest.mock("../../../components/Sheet", () => ({
+  Sheet: ({ visible, children }: { visible: boolean; children: React.ReactNode }) =>
+    visible ? children : null,
+}));
+jest.mock("expo-router", () => ({ router: { push: jest.fn(), replace: jest.fn() } }));
+
+const exercises = [
+  { id: "e1", name: "Back squat", kind: "strength" as const },
+  { id: "e2", name: "Squat", kind: "strength" as const },
+];
+
+const legs: WorkoutRecord = {
+  id: "legs",
+  kind: "strength",
+  name: "Gym, legs",
+  description: "",
+  minutes: 50,
+  targetRpe: null,
+  variations: [{ label: "", items: [{ exercise: "back squat", dose: { sets: 5, reps: 5 } }] }],
+  pattern: [0],
+  exerciseRestS: 180,
+  updatedAt: "t",
+};
+
+const squatted: ActivityRecord = {
+  id: "a1",
+  kind: "strength",
+  title: "Legs",
+  date: "2026-09-22",
+  startTime: null,
+  minutes: 50,
+  rpe: 7,
+  notes: null,
+  workoutId: "legs",
+  membershipId: null,
+  week: null,
+  variation: null,
+  done: [{ item: 0, exercise: "Back squat", sets: [{ reps: 5, weightKg: 100 }] }],
+  stravaActivityId: null,
+  postedAt: null,
+  postState: null,
+  postError: null,
+};
+
+const world = { exercises, workouts: [legs], activities: [squatted] };
+
+const press = async (title: string): Promise<void> => {
+  const calls = jest.mocked(Alert.alert).mock.calls;
+  const buttons = (calls[calls.length - 1]?.[2] ?? []) as AlertButton[];
+  const button = buttons.find((b) => b.text === title);
+  expect(button).toBeDefined();
+  await act(async () => button?.onPress?.());
+};
+
+beforeEach(() => {
+  jest.clearAllMocks();
+  jest.spyOn(Alert, "alert").mockImplementation(() => undefined);
+});
+
+describe("exercise screen", () => {
+  it("shows its best set and the workouts that use it", async () => {
+    await renderWithHang(<ExerciseScreen id="e1" />, hangData(), world);
+    expect(screen.getByText("Heaviest set done")).toBeTruthy();
+    expect(screen.getByText("Used in")).toBeTruthy();
+    await fireEvent.press(screen.getByText("Gym, legs"));
+    expect(router.push).toHaveBeenCalledWith({
+      pathname: "/workout/[id]",
+      params: { id: "legs" },
+    });
+  });
+
+  it("offers to merge when a rename takes another exercise's name", async () => {
+    mockApi.saveExercise.mockRejectedValue(
+      new ApiError(409, "name taken", { exercise: exercises[1] })
+    );
+    mockApi.mergeExercise.mockResolvedValue({ exercise: exercises[1] });
+    await renderWithHang(<ExerciseScreen id="e1" />, hangData(), world);
+    await fireEvent.press(screen.getByLabelText("More for this exercise"));
+    await press("Rename");
+    await fireEvent.changeText(screen.getByLabelText("Name"), "squat");
+    await fireEvent.press(screen.getByText("Save changes"));
+    expect(mockApi.saveExercise).toHaveBeenCalledWith("e1", { name: "squat", kind: "strength" });
+    await act(async () => undefined);
+    expect(Alert.alert).toHaveBeenLastCalledWith(
+      "Merge Back squat into Squat?",
+      "Every workout and log that names Back squat will name Squat instead.",
+      expect.anything()
+    );
+    await press("Merge");
+    await act(async () => undefined);
+    expect(mockApi.mergeExercise).toHaveBeenCalledWith("e1", "e2");
+    expect(router.replace).toHaveBeenCalledWith({
+      pathname: "/exercise/[id]",
+      params: { id: "e2" },
+    });
+  });
+});

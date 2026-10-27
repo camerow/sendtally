@@ -2,7 +2,13 @@ import { jest } from "@jest/globals";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, type RenderResult } from "@testing-library/react-native";
 import React from "react";
-import type { HangData as ApiHangData, Plan, WorkoutRecord } from "@sendtally/api-client";
+import type {
+  ActivityRecord,
+  Exercise,
+  HangData as ApiHangData,
+  Plan,
+  WorkoutRecord,
+} from "@sendtally/api-client";
 import { hangModel, type HangActions } from "@sendtally/features/hang";
 import { libraryOf } from "@sendtally/features/workouts";
 import { HangDataContext } from "./HangDataContext";
@@ -47,6 +53,8 @@ export type HangWorld = {
   /** The user's own workouts. */
   workouts?: readonly WorkoutRecord[];
   plan?: Plan;
+  exercises?: readonly Exercise[];
+  activities?: readonly ActivityRecord[];
 };
 
 /**
@@ -68,7 +76,8 @@ export async function renderWithHang(
   client.setQueryData(["hang"], data);
   client.setQueryData(["workouts"], workouts);
   client.setQueryData(["plan"], world.plan ?? { blocks: [], memberships: [], weekChanges: [] });
-  client.setQueryData(["activities"], []);
+  client.setQueryData(["activities"], world.activities ?? []);
+  client.setQueryData(["exercises"], world.exercises ?? []);
   client.setQueryData(["sessions"], { sessions: [], hangSessions: [], activities: [] });
   const result = await render(
     <QueryClientProvider client={client}>

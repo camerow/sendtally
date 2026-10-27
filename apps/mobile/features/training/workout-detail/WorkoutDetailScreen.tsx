@@ -4,7 +4,7 @@ import React from "react";
 import { Alert, ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors } from "@sendtally/design/tokens";
-import type { HangWorkout } from "@sendtally/core/hang";
+import { seriesFor, summarise, type HangWorkout } from "@sendtally/core/hang";
 import { t } from "@sendtally/features/i18n";
 import {
   copyName,
@@ -23,11 +23,12 @@ import { useLibrary } from "../library/useLibrary";
 import { PlanList } from "../plans/PlanList";
 import { SessionEditorSheet } from "../session-editor/SessionEditorSheet";
 import { startWorkout } from "../timer/startWorkout";
-import { openTrends } from "../trends/openTrends";
+import { TrendCard } from "../trends/TrendCard";
 import { GripSetupCard } from "./GripSetupCard";
 import { ProtocolPanel } from "./ProtocolPanel";
 import { WorkoutHistory } from "./WorkoutHistory";
 import { WorkoutIntro } from "./WorkoutIntro";
+import { AddToPlanFooter } from "../library-detail/AddToPlanFooter";
 
 const reportFailure = (): void => Alert.alert(t("workouts.saveFailed"));
 
@@ -40,12 +41,14 @@ function Detail({
   library: LibraryWorkout;
   initialGrip?: string;
 }): React.ReactElement {
-  const { model, actions } = useHangData();
+  const { model, actions, today } = useHangData();
   const workouts = useWorkoutActions(useApi(), reportFailure);
   const [gripId, setGripId] = React.useState(initialGrip ?? model.defaultGrip(workout));
   const [picker, setPicker] = React.useState(false);
   const [editing, setEditing] = React.useState<string | null>(null);
   const mine = workout.source === "mine";
+  const series = seriesFor(model.sessions, workout.id, gripId);
+  const summary = summarise(series, today);
 
   const duplicate = (): void => {
     const id = randomUUID();
@@ -97,11 +100,17 @@ function Detail({
           <Label color={colors.gunmetal}>{t("hang.schedule")}</Label>
           <PlanList workoutId={workout.id} name={workout.name} empty={t("hang.notScheduled")} />
         </View>
-        <WorkoutHistory
-          workoutId={workout.id}
-          onOpen={setEditing}
-          onTrends={() => openTrends(workout.id, gripId)}
-        />
+        {summary !== null && (
+          <TrendCard
+            workout={workout.name}
+            grip={model.gripName(gripId)}
+            series={series}
+            summary={summary}
+            kind={workout.kind}
+            unit={model.settings.units}
+          />
+        )}
+        <WorkoutHistory workoutId={workout.id} onOpen={setEditing} />
         <View style={{ gap: 8 }}>
           <Button
             label={t("workouts.duplicate")}
@@ -123,13 +132,16 @@ function Detail({
           borderTopColor: colors.lineOnLight,
         }}
       >
-        <Button
-          label={t("hang.start")}
-          onPress={() => startWorkout(workout.id, gripId)}
-          variant="primary"
-          height={54}
-          icon="play"
-        />
+        <AddToPlanFooter workoutId={workout.id}>
+          <Button
+            label={t("hang.start")}
+            onPress={() => startWorkout(workout.id, gripId)}
+            variant="primary"
+            height={54}
+            icon="play"
+            style={{ flex: 1 }}
+          />
+        </AddToPlanFooter>
       </View>
       <GripPickerSheet
         visible={picker}

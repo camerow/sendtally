@@ -1,5 +1,5 @@
 import React from "react";
-import { Pressable, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
 import { byDate } from "@sendtally/core/hang";
 import { t } from "@sendtally/features/i18n";
@@ -14,14 +14,9 @@ const SHOWN = 5;
 export type WorkoutHistoryProps = {
   workoutId: string;
   onOpen: (sessionId: string) => void;
-  onTrends: () => void;
 };
 
-export function WorkoutHistory({
-  workoutId,
-  onOpen,
-  onTrends,
-}: WorkoutHistoryProps): React.ReactElement {
+export function WorkoutHistory({ workoutId, onOpen }: WorkoutHistoryProps): React.ReactElement {
   const { model } = useHangData();
   const [all, setAll] = React.useState(false);
   const sessions = model.sessions
@@ -42,11 +37,6 @@ export function WorkoutHistory({
         <Label color={colors.gunmetal}>
           {t("hang.history", { count: t("hang.sessionCount", { count: sessions.length }) })}
         </Label>
-        {sessions.length > 0 && (
-          <Pressable onPress={onTrends} accessibilityRole="link" hitSlop={14}>
-            <Label color={colors.azureInk}>{t("hang.seeTrends")}</Label>
-          </Pressable>
-        )}
       </View>
       {sessions.length === 0 && (
         <Text

@@ -1,14 +1,6 @@
 import { describe, expect, it } from "@jest/globals";
 import type { Block } from "@sendtally/core/hang";
-import {
-  addOnDayHref,
-  bandOn,
-  blockOn,
-  monthWeeks,
-  newBlockHref,
-  pickWeek,
-  spanOf,
-} from "./calendarGrid";
+import { addOnDayHref, bandOn, blockOn, monthWeeks } from "./calendarGrid";
 
 const autumn: Block = { id: "b1", name: "Autumn power", start: "2026-09-28", weeks: 4 };
 
@@ -43,31 +35,8 @@ describe("calendar grid", () => {
     expect(blockOn([autumn], "2026-10-26")).toBeNull();
   });
 
-  it("picks the first week, then the last, then starts over", () => {
-    const first = pickWeek(null, "2026-11-05");
-    expect(first).toEqual({ first: "2026-11-05", last: null });
-    const both = pickWeek(first, "2026-12-10");
-    expect(both).toEqual({ first: "2026-11-05", last: "2026-12-10" });
-    expect(pickWeek(both, "2026-11-20")).toEqual({ first: "2026-11-20", last: null });
-  });
-
-  it("snaps picked days to whole weeks in either order", () => {
-    expect(spanOf({ first: "2026-11-05", last: "2026-12-10" })).toEqual({
-      start: "2026-11-02",
-      weeks: 6,
-    });
-    expect(spanOf({ first: "2026-12-10", last: "2026-11-05" })).toEqual({
-      start: "2026-11-02",
-      weeks: 6,
-    });
-    expect(spanOf({ first: "2026-11-08", last: null })).toEqual({ start: "2026-11-02", weeks: 1 });
-  });
-
-  it("links to adding on a day and naming a block", () => {
+  it("links to adding on a day", () => {
     expect(addOnDayHref("2026-11-05", null)).toBe("/plan/add?date=2026-11-05");
     expect(addOnDayHref("2026-10-20", autumn)).toBe("/plan/add?date=2026-10-20&blockId=b1");
-    expect(newBlockHref({ start: "2026-11-02", weeks: 6 })).toBe(
-      "/plan/block/new?start=2026-11-02&weeks=6"
-    );
   });
 });

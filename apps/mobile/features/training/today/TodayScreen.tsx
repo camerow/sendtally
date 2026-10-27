@@ -1,33 +1,56 @@
-import { router, useNavigation } from "expo-router";
+import { router, useLocalSearchParams, useNavigation } from "expo-router";
 import React from "react";
 import { View } from "react-native";
-import { addDays, weekStart, weekday, type CalendarDate } from "@sendtally/core/hang";
+import {
+  addDays,
+  blockWeekOn,
+  daysBetween,
+  isCalendarDate,
+  weekStart,
+  weekday,
+  type CalendarDate,
+} from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { longDate } from "@sendtally/features/hang";
-import { formatNumber, t } from "@sendtally/features/i18n";
+import { t } from "@sendtally/features/i18n";
 import {
   trainingDay,
   trainingWeek,
   useTrainingLog,
-  weekStats,
+  weekDone,
   type LoggedItem,
 } from "@sendtally/features/training";
 import { useApi } from "../../../lib/api";
+import { blockOn } from "../calendar/calendarGrid";
 import { Label } from "../components/Label";
-import { StatGrid } from "../components/StatGrid";
 import { useHangData } from "../data/HangDataContext";
 import { SessionEditorSheet } from "../session-editor/SessionEditorSheet";
+import { BlockRow } from "../train/BlockRow";
 import { DaySection } from "./DaySection";
 import { WeekStrip } from "./WeekStrip";
+
+const weekOffset = (today: CalendarDate, date: CalendarDate): number =>
+  daysBetween(weekStart(today), weekStart(date)) / 7;
 
 /** The training-mode home: this week's training, logged and planned, day by day. */
 export function TodayScreen(): React.ReactElement {
   const navigation = useNavigation();
+  const asked = useLocalSearchParams<{ date?: string; at?: string }>();
   const { today } = useHangData();
   const { log } = useTrainingLog(useApi());
   const [offset, setOffset] = React.useState(0);
   const [selected, setSelected] = React.useState<CalendarDate>(today);
   const [editing, setEditing] = React.useState<string | null>(null);
+  const request = asked.date !== undefined && isCalendarDate(asked.date) ? asked.date : null;
+  const [seen, setSeen] = React.useState<string | null>(null);
+  const requestKey = request === null ? null : `${request}:${asked.at ?? ""}`;
+  if (requestKey !== seen) {
+    setSeen(requestKey);
+    if (request !== null) {
+      setOffset(weekOffset(today, request));
+      setSelected(request);
+    }
+  }
 
   React.useEffect(
     () =>
@@ -41,7 +64,8 @@ export function TodayScreen(): React.ReactElement {
   const monday = addDays(weekStart(today), offset * 7);
   const days = trainingWeek(log, monday, today);
   const day = trainingDay(log, selected, today);
-  const stats = weekStats(log, today);
+  const block = blockOn(log.plan.blocks, selected);
+  const at = block === null ? null : blockWeekOn(block, selected);
 
   const changeWeek = (next: number): void => {
     setOffset(next);
@@ -61,34 +85,23 @@ export function TodayScreen(): React.ReactElement {
   return (
     <View style={{ gap: 16 }}>
       <Label color={colors.gunmetal}>{longDate(today)}</Label>
-      <WeekStrip
-        offset={offset}
-        days={days}
-        selected={selected}
-        onSelect={setSelected}
-        onOffset={changeWeek}
-      />
+      <View>
+        <WeekStrip
+          offset={offset}
+          days={days}
+          done={t("plan.doneOf", weekDone(days))}
+          selected={selected}
+          onSelect={setSelected}
+          onOffset={changeWeek}
+        />
+        {block !== null && at !== null && (
+          <BlockRow
+            id={block.id}
+            name={t("hang.blockWeek", { label: block.name, at, of: block.weeks })}
+          />
+        )}
+      </View>
       <DaySection day={day} onOpen={open} />
-      <StatGrid
-        columns={3}
-        stats={[
-          {
-            label: t("training.statDone"),
-            value: t("training.doneOf", { done: stats.done, planned: stats.planned }),
-          },
-          {
-            label: t("hang.statAvgEffort"),
-            value:
-              stats.effort === null
-                ? "–"
-                : formatNumber(stats.effort, {
-                    minimumFractionDigits: 1,
-                    maximumFractionDigits: 1,
-                  }),
-          },
-          { label: t("hang.statStreak"), value: formatNumber(stats.streak) },
-        ]}
-      />
       <SessionEditorSheet sessionId={editing} onClose={() => setEditing(null)} />
     </View>
   );

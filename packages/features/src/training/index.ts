@@ -6,14 +6,13 @@ export {
   loggedSessions,
   trainingDay,
   trainingWeek,
-  weekStats,
+  weekDone,
   type DayMarkSpec,
   type LoggedItem,
   type TrainingDay,
   type TrainingLog,
-  type WeekStats,
 } from "./days";
-export { blockMembers } from "./blocks";
+export { blockDone, blockGroups, blockMembers, type BlockGroups } from "./blocks";
 export {
   blockOfMembership,
   nextOccurrence,

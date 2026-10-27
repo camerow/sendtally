@@ -8,6 +8,7 @@ import { PlanGrid } from "../plan/PlanGrid";
 import { planGridRows } from "../plan/planGridRows";
 import { BlockFormScreen } from "./BlockFormScreen";
 import { BlockScreen } from "./BlockScreen";
+import { BlocksList } from "../train/BlocksList";
 import { LadderScreen } from "./LadderScreen";
 
 const mockPlan = {
@@ -16,9 +17,14 @@ const mockPlan = {
   saveMembership: jest.fn(),
   deleteMembership: jest.fn(),
   saveWeekChange: jest.fn(),
+  copyBlock: jest.fn(async () => true),
 };
 
 jest.mock("../plan/usePlanActions", () => ({ usePlanActions: () => mockPlan }));
+jest.mock("../../../components/Sheet", () => ({
+  Sheet: ({ visible, children }: { visible: boolean; children: React.ReactNode }) =>
+    visible ? children : null,
+}));
 jest.mock("expo-router", () => ({
   router: { push: jest.fn(), back: jest.fn(), replace: jest.fn() },
 }));
@@ -53,8 +59,8 @@ beforeEach(() => {
 });
 
 describe("blocks", () => {
-  it("makes a new block from a start and a number of weeks, then opens it", async () => {
-    await renderWithHang(<BlockFormScreen start="2026-10-05" weeks="6" />);
+  it("makes a new block from today for four weeks, then opens it", async () => {
+    await renderWithHang(<BlockFormScreen />);
     expect(screen.getByText("New block")).toBeTruthy();
     await fireEvent.changeText(screen.getByLabelText("Name"), " Winter base ");
     await fireEvent.press(screen.getByLabelText("Increase Weeks"));
@@ -62,8 +68,8 @@ describe("blocks", () => {
     expect(mockPlan.saveBlock).toHaveBeenCalledWith({
       id: "b-new",
       name: "Winter base",
-      start: "2026-10-05",
-      weeks: 7,
+      start: "2026-09-29",
+      weeks: 5,
     });
     expect(router.replace).toHaveBeenCalledWith({
       pathname: "/plan/block/[id]",
@@ -83,6 +89,46 @@ describe("blocks", () => {
       weekdays: [2],
       start: "2026-10-05",
     });
+  });
+});
+
+describe("plan again", () => {
+  const past: Plan = {
+    ...plan,
+    blocks: [...plan.blocks, { id: "b0", name: "Summer base", start: "2026-08-03", weeks: 4 }],
+    memberships: [
+      ...plan.memberships,
+      { id: "m3", workoutId: "squat", blockId: "b0", weekdays: [0], start: "2026-08-03" },
+    ],
+  };
+
+  it("lists the blocks: plans with no block, then upcoming and past", async () => {
+    await renderWithHang(<BlocksList />, hangData(), { workouts: [squat], plan: past });
+    expect(screen.getByText("Ongoing")).toBeTruthy();
+    expect(screen.getByText("Starts Mon, Oct 5 · 4 weeks")).toBeTruthy();
+    expect(screen.getByText("4 weeks · 0 of 4 done")).toBeTruthy();
+    await fireEvent.press(screen.getByLabelText("Open Summer base"));
+    expect(router.push).toHaveBeenCalledWith({
+      pathname: "/plan/block/[id]",
+      params: { id: "b0" },
+    });
+  });
+
+  it("copies a past block from the week picked, then opens the copy", async () => {
+    await renderWithHang(<BlockScreen id="b0" />, hangData(), { workouts: [squat], plan: past });
+    await fireEvent.press(screen.getByText("Plan again"));
+    const buttons = screen.getAllByText("Plan again");
+    await fireEvent.press(buttons[buttons.length - 1]!);
+    expect(mockPlan.copyBlock).toHaveBeenCalledWith("b0", "b-new", "2026-09-28");
+    expect(router.replace).toHaveBeenCalledWith({
+      pathname: "/plan/block/[id]",
+      params: { id: "b-new" },
+    });
+  });
+
+  it("offers it only once the block is over", async () => {
+    await renderWithHang(<BlockScreen id="b1" />, hangData(), { workouts: [squat], plan });
+    expect(screen.queryByText("Plan again")).toBeNull();
   });
 });
 

@@ -121,4 +121,16 @@ export const workouts = {
   "workouts.removeExercise": "Quitar {name}",
   "workouts.seeAll": "Ver todo",
   "workouts.seeAllOf": "Ver todo: {kind}",
+  "workouts.exerciseBest": "Mejor {value}",
+  "workouts.exerciseLast": "Último {value}",
+  "workouts.usedIn": "Se usa en",
+  "workouts.renameExercise": "Renombrar",
+  "workouts.mergeExercise": "Fusionar con…",
+  "workouts.mergeExerciseTitle": "¿Fusionar {from} con {into}?",
+  "workouts.mergeExerciseBody":
+    "Cada entreno y registro que nombra {from} pasará a nombrar {into}.",
+  "workouts.merge": "Fusionar",
+  "workouts.exerciseMore": "Más de este ejercicio",
+  "workouts.exerciseNothingLogged":
+    "Aún no hay nada registrado. Tus series aparecen aquí en cuanto las registres.",
 } as const;

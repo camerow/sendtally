@@ -71,7 +71,6 @@ export const hang = {
   "hang.restDayPast": "An diesem Tag nichts eingetragen.",
   "hang.statusStarts": "Beginnt {date}",
   "hang.statusOngoing": "Laufend",
-  "hang.statStreak": "Wochen am Stück",
 
   "hang.edit": "Bearbeiten",
   "hang.customise": "Anpassen",
@@ -99,7 +98,6 @@ export const hang = {
   "hang.history": "Verlauf · {count}",
   "hang.sessionCount_one": "{count} Session",
   "hang.sessionCount_other": "{count} Sessions",
-  "hang.seeTrends": "Trends ansehen",
   "hang.noHistory": "Noch keine Sessions. Deine erste taucht hier auf.",
   "hang.showAll": "Alle {n} anzeigen",
   "hang.showFewer": "Weniger anzeigen",

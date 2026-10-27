@@ -1,7 +1,7 @@
 import { router } from "expo-router";
 import React from "react";
 import { Alert, Text, View } from "react-native";
-import { blockWeekOn } from "@sendtally/core/hang";
+import { blockEnd, blockWeekOn } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
 import { blockMembers, movedTo, useTrainingLog } from "@sendtally/features/training";
@@ -18,12 +18,25 @@ import { usePlanActions } from "../plan/usePlanActions";
 import { membershipWhen } from "../plans/planText";
 import { DayMark } from "../today/DayMark";
 import { type } from "../type";
+import { PlanAgainSheet } from "./PlanAgainSheet";
 import { ScreenFrame } from "./ScreenFrame";
 
-export type BlockScreenProps = { id: string };
+const LIT_MS = 2500;
 
-/** One block: its workouts, and adding and moving plans in. */
-export function BlockScreen({ id }: BlockScreenProps): React.ReactElement | null {
+export type BlockScreenProps = {
+  id: string;
+  /** A plan just added, lit for a moment. */
+  highlight?: string;
+};
+
+/** One block: its workouts, adding and moving plans in, and planning it again once over. */
+export function BlockScreen({ id, highlight }: BlockScreenProps): React.ReactElement | null {
+  const [lit, setLit] = React.useState(highlight);
+  const [again, setAgain] = React.useState(false);
+  React.useEffect(() => {
+    const timer = setTimeout(() => setLit(undefined), LIT_MS);
+    return () => clearTimeout(timer);
+  }, []);
   const { today } = useHangData();
   const { log } = useTrainingLog(useApi());
   const actions = usePlanActions();
@@ -72,7 +85,7 @@ export function BlockScreen({ id }: BlockScreenProps): React.ReactElement | null
       {members.length === 0 ? (
         <DashedPanel body={t("plan.blockEmpty")} />
       ) : (
-        <PlanRows plan={plan} members={members} workout={workout} />
+        <PlanRows plan={plan} members={members} workout={workout} highlight={lit} />
       )}
       <Button
         label={t("plan.addWorkout")}
@@ -103,7 +116,16 @@ export function BlockScreen({ id }: BlockScreenProps): React.ReactElement | null
           })}
         </View>
       )}
+      {blockEnd(block) <= today && (
+        <Button
+          label={t("plan.planAgain")}
+          onPress={() => setAgain(true)}
+          variant="outline"
+          height={50}
+        />
+      )}
       <Button label={t("plan.deleteBlock")} onPress={remove} variant="danger" height={50} />
+      {again && <PlanAgainSheet block={block} onClose={() => setAgain(false)} />}
     </ScreenFrame>
   );
 }

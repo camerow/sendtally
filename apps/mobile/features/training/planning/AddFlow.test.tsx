@@ -119,7 +119,7 @@ describe("adding to the plan", () => {
     });
   });
 
-  it("saves a weekly plan from the day's weekday and returns to the plan with it lit", async () => {
+  it("saves a weekly plan from the day's weekday and returns to Today on its start", async () => {
     await renderWithHang(<ScheduleScreen workoutId="legs" flow={flow} />, hangData(), {
       workouts: [legs],
     });
@@ -133,8 +133,8 @@ describe("adding to the plan", () => {
       start: "2026-10-01",
     });
     expect(router.dismissTo).toHaveBeenCalledWith({
-      pathname: "/(tabs)/train",
-      params: expect.objectContaining({ view: "plan", highlight: "m-new" }),
+      pathname: "/(tabs)/today",
+      params: expect.objectContaining({ date: "2026-10-01" }),
     });
   });
 
@@ -153,6 +153,10 @@ describe("adding to the plan", () => {
       blockId: "b1",
       weekdays: [1],
       start: "2026-10-05",
+    });
+    expect(router.dismissTo).toHaveBeenCalledWith({
+      pathname: "/plan/block/[id]",
+      params: { id: "b1", highlight: "m-new" },
     });
   });
 

@@ -1,5 +1,4 @@
 import {
-  addDays,
   clock,
   toLocalDate,
   toUnit,
@@ -67,10 +66,6 @@ export function weekTitle(offset: number): string {
   if (offset === 1) return t("hang.weekNext");
   const count = Math.abs(offset);
   return offset < 0 ? t("hang.weeksAgo", { count }) : t("hang.weeksAhead", { count });
-}
-
-export function weekRange(start: CalendarDate): string {
-  return `${dayMonth(start)} – ${dayMonth(addDays(start, 6))}`;
 }
 
 /** "Bodyweight", "+4 kg", "−15 kg" for hangs; "30 kg" for ground pulls. */

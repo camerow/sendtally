@@ -7,8 +7,11 @@ import { renderWithHang, hangData } from "../data/renderWithHang";
 import { TodayScreen } from "./TodayScreen";
 
 jest.mock("../../../components/Sheet", () => ({ Sheet: () => null }));
+let mockParams: Record<string, string> = {};
+
 jest.mock("expo-router", () => ({
   router: { push: jest.fn() },
+  useLocalSearchParams: () => mockParams,
   useNavigation: () => ({ addListener: () => () => undefined }),
 }));
 
@@ -51,7 +54,32 @@ describe("Today", () => {
 
   it("counts the week as done of planned", async () => {
     await renderWithHang(<TodayScreen />, hangData(), { plan: plan("max10") });
-    expect(screen.getByText("0 of 2")).toBeTruthy();
+    expect(screen.getByText("0 of 2 done")).toBeTruthy();
+  });
+
+  it("opens the block the day is in, by its week", async () => {
+    const inBlock: Plan = {
+      ...plan("max10"),
+      blocks: [{ id: "b1", name: "Winter base", start: "2026-09-21", weeks: 4 }],
+    };
+    await renderWithHang(<TodayScreen />, hangData(), { plan: inBlock });
+    await fireEvent.press(screen.getByText("Winter base · week 2 of 4"));
+    expect(router.push).toHaveBeenCalledWith({
+      pathname: "/plan/block/[id]",
+      params: { id: "b1" },
+    });
+  });
+
+  it("shows no block row outside a block", async () => {
+    await renderWithHang(<TodayScreen />, hangData(), { plan: plan("max10") });
+    expect(screen.queryByText(/ · week /)).toBeNull();
+  });
+
+  it("opens on the day it was sent back to", async () => {
+    mockParams = { date: "2026-10-06", at: "1" };
+    await renderWithHang(<TodayScreen />, hangData(), { plan: plan("max10") });
+    mockParams = {};
+    expect(screen.getByText("Next week")).toBeTruthy();
   });
 
   it("starts today's lifting workout in the sets player with what it prescribes", async () => {

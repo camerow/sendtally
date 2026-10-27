@@ -15,10 +15,15 @@ import { IntervalsBar } from "../components/IntervalsBar";
 import { Label } from "../components/Label";
 import { PreviewRow } from "./PreviewRow";
 
-export type BodyPreviewProps = { workout: LibraryWorkout; unit: WeightUnit };
+export type BodyPreviewProps = {
+  workout: LibraryWorkout;
+  unit: WeightUnit;
+  /** Where tapping an item goes: its exercise, when it has a screen. */
+  openExercise?: (name: string) => (() => void) | undefined;
+};
 
 /** What the workout holds, read only: each variation's items and what each asks for. */
-export function BodyPreview({ workout, unit }: BodyPreviewProps): React.ReactElement {
+export function BodyPreview({ workout, unit, openExercise }: BodyPreviewProps): React.ReactElement {
   const summary = bodySummary(workout);
   if (summary === null) return <DashedPanel body={t("workouts.noBody")} />;
   const rotates = workout.variations.length > 1;
@@ -39,6 +44,7 @@ export function BodyPreview({ workout, unit }: BodyPreviewProps): React.ReactEle
                 key={j}
                 title={exerciseName(item.exercise)}
                 detail={doseSummary(workout.kind, item.dose, unit)}
+                onPress={openExercise?.(item.exercise)}
               />
             ))}
           </View>

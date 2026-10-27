@@ -18,16 +18,10 @@ export type BlockCardProps = {
   block: Block;
   members: readonly Membership[];
   workout: WorkoutLookup;
-  highlight?: string | null;
 };
 
 /** A training block: where it is and what is in it. Tap to open it. */
-export function BlockCard({
-  block,
-  members,
-  workout,
-  highlight,
-}: BlockCardProps): React.ReactElement {
+export function BlockCard({ block, members, workout }: BlockCardProps): React.ReactElement {
   const rows = planGridRows(members, workout);
   return (
     <View
@@ -63,7 +57,7 @@ export function BlockCard({
       {rows.length === 0 ? (
         <DashedPanel body={t("plan.blockEmpty")} />
       ) : (
-        <PlanGrid rows={rows} framed={false} highlight={highlight} />
+        <PlanGrid rows={rows} framed={false} />
       )}
     </View>
   );

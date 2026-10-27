@@ -1,23 +1,23 @@
-import { router, useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams } from "expo-router";
 import React from "react";
 import { View } from "react-native";
-import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
-import { IconButton } from "../components/IconButton";
 import { Segmented } from "../components/Segmented";
 import { HangDataProvider } from "../data/HangDataProvider";
 import { WorkoutLibrary } from "../library/WorkoutLibrary";
-import { PlanOverview } from "../plan/PlanOverview";
+import { BlocksList } from "./BlocksList";
+import { ExerciseShelves } from "./ExerciseShelves";
 
-type TrainView = "plan" | "workouts";
+const VIEWS = ["blocks", "workouts", "exercises"] as const;
 
-/** The Train tab: your plan, or the workout library. */
+type TrainView = (typeof VIEWS)[number];
+
+/** The Train tab: blocks, the workout library, and exercises. */
 export function TrainScreen(): React.ReactElement {
-  const asked = useLocalSearchParams<{ view?: string; at?: string; highlight?: string }>();
-  const wanted: TrainView | null =
-    asked.view === "workouts" || asked.view === "plan" ? asked.view : null;
+  const asked = useLocalSearchParams<{ view?: string; at?: string }>();
+  const wanted = VIEWS.find((v) => v === asked.view) ?? null;
   const request = wanted === null ? null : `${wanted}:${asked.at ?? ""}`;
-  const [view, setView] = React.useState<TrainView>(wanted ?? "plan");
+  const [view, setView] = React.useState<TrainView>(wanted ?? "blocks");
   const [seen, setSeen] = React.useState(request);
   if (request !== seen) {
     setSeen(request);
@@ -25,34 +25,21 @@ export function TrainScreen(): React.ReactElement {
   }
   return (
     <View style={{ gap: 16 }}>
-      <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-        <View style={{ flex: 1 }}>
-          <Segmented<TrainView>
-            value={view}
-            onChange={setView}
-            options={[
-              { value: "plan", label: t("plan.tabPlan") },
-              { value: "workouts", label: t("plan.tabWorkouts") },
-            ]}
-          />
-        </View>
-        {view === "plan" && (
-          <IconButton
-            icon="schedule"
-            label={t("calendar.open")}
-            onPress={() => router.push("/plan/calendar")}
-            color={colors.gunmetal}
-            border={colors.lineOnLightStrong}
-            iconSize={20}
-          />
-        )}
-      </View>
-      {view === "plan" ? (
-        <HangDataProvider>
-          <PlanOverview key={request ?? ""} highlight={asked.highlight ?? null} />
-        </HangDataProvider>
-      ) : (
+      <Segmented<TrainView>
+        value={view}
+        onChange={setView}
+        options={[
+          { value: "blocks", label: t("plan.tabBlocks") },
+          { value: "workouts", label: t("plan.tabWorkouts") },
+          { value: "exercises", label: t("plan.tabExercises") },
+        ]}
+      />
+      {view === "workouts" ? (
         <WorkoutLibrary />
+      ) : (
+        <HangDataProvider>
+          {view === "blocks" ? <BlocksList /> : <ExerciseShelves />}
+        </HangDataProvider>
       )}
     </View>
   );

@@ -122,4 +122,16 @@ export const workouts = {
   "workouts.removeExercise": "Retirer {name}",
   "workouts.seeAll": "Tout voir",
   "workouts.seeAllOf": "Tout voir : {kind}",
+  "workouts.exerciseBest": "Meilleur {value}",
+  "workouts.exerciseLast": "Dernier {value}",
+  "workouts.usedIn": "Utilisé dans",
+  "workouts.renameExercise": "Renommer",
+  "workouts.mergeExercise": "Fusionner avec…",
+  "workouts.mergeExerciseTitle": "Fusionner {from} avec {into} ?",
+  "workouts.mergeExerciseBody":
+    "Chaque séance et chaque entrée qui nomme {from} nommera {into} à la place.",
+  "workouts.merge": "Fusionner",
+  "workouts.exerciseMore": "Plus pour cet exercice",
+  "workouts.exerciseNothingLogged":
+    "Rien d'enregistré pour l'instant. Tes séries apparaîtront ici dès que tu les notes.",
 } as const;

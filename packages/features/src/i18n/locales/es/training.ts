@@ -10,8 +10,6 @@ export const training = {
   "training.logView": "Vista del registro",
   "training.climbing": "Escalada",
   "training.hangboard": "Multipresa",
-  "training.statDone": "Hecho",
-  "training.doneOf": "{done} de {planned}",
   "training.dayAria": "{day}: {logged} registradas, {planned} previstas",
   "training.logTraining": "Registrar entrenamiento",
   "training.logTrainingBody": "Fuerza, movilidad, carrera y más.",

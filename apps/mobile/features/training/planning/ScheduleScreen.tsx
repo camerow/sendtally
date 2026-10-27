@@ -68,7 +68,8 @@ export function ScheduleScreen({
   const save = (): void => {
     const memberships = scheduledMemberships(draft, workoutId, block, randomUUID);
     memberships.forEach((m) => void actions.saveMembership(m));
-    backToPlan(memberships[0]?.id ?? null);
+    const [first] = memberships;
+    if (first !== undefined) backToPlan(block?.id ?? null, first.start, first.id);
   };
 
   return (

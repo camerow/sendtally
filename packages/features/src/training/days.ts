@@ -1,11 +1,5 @@
 import type { Activity, HangSessionRecord, Plan, SessionRow } from "@sendtally/api-client";
-import {
-  addDays,
-  weekStart,
-  weekStreak,
-  type CalendarDate,
-  type WorkoutKind,
-} from "@sendtally/core/hang";
+import { addDays, type CalendarDate, type WorkoutKind } from "@sendtally/core/hang";
 import { utcDate } from "../log-session/transforms";
 import { isUnscored } from "../sessions/meta";
 import { occurrencesOn, type LoggedSession, type Occurrence, type WorkoutLookup } from "./plan";
@@ -119,26 +113,8 @@ export function dayMarks(day: TrainingDay): DayMarkSpec[] {
   ];
 }
 
-export type WeekStats = { done: number; planned: number; effort: number | null; streak: number };
-
-/** This week so far: what was logged plus everything still open, the mean effort, and the week streak. */
-export function weekStats(log: TrainingLog, today: CalendarDate): WeekStats {
-  const days = trainingWeek(log, weekStart(today), today);
+/** The week's logged marks out of every mark: what was logged plus everything still open. */
+export function weekDone(days: readonly TrainingDay[]): { done: number; planned: number } {
   const marks = days.flatMap(dayMarks);
-  const done = marks.filter((m) => m.filled).length;
-  const efforts = days
-    .flatMap((d) => d.logged)
-    .map(itemEffort)
-    .filter((e) => e !== null);
-  const dates = [
-    ...log.climbs.map((s) => ({ date: climbDate(s) })),
-    ...log.hangs,
-    ...log.activities,
-  ];
-  return {
-    done,
-    planned: marks.length,
-    effort: efforts.length === 0 ? null : efforts.reduce((a, b) => a + b, 0) / efforts.length,
-    streak: weekStreak(dates, today),
-  };
+  return { done: marks.filter((m) => m.filled).length, planned: marks.length };
 }

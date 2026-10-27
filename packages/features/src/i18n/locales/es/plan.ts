@@ -8,7 +8,6 @@ export const plan = {
   "plan.logSession": "Registrar sesión",
   "plan.done": "Hecho",
   "plan.remove": "Quitar {title} de tu plan",
-  "plan.tabPlan": "Plan",
   "plan.tabWorkouts": "Entrenos",
   "plan.empty":
     "Aún no hay nada planificado. Pon la escalada, la multipresa y el resto de tu entrenamiento en tu semana.",
@@ -75,4 +74,13 @@ export const plan = {
   "plan.chipRest": "{value} de descanso",
   "plan.chipEdge": "regleta de {edge}",
   "plan.chipSetRest": "{value} entre series",
+  "plan.tabBlocks": "Bloques",
+  "plan.tabExercises": "Ejercicios",
+  "plan.ongoing": "En curso",
+  "plan.upcoming": "Próximos",
+  "plan.past": "Anteriores",
+  "plan.startsOn": "Empieza el {date}",
+  "plan.doneOf": "{done} de {planned} hechos",
+  "plan.planAgain": "Planificar de nuevo",
+  "plan.planAgainStart": "¿Qué semana empieza?",
 } as const;

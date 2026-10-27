@@ -44,14 +44,13 @@ describe("Calendar", () => {
     expect(screen.getByText("September 2026")).toBeTruthy();
   });
 
-  it("picks a new block's first and last week, then names it", async () => {
+  it("opens a tapped day, and makes no block from the calendar", async () => {
     await renderWithHang(<CalendarScreen />, hangData(), { plan });
-    await fireEvent.press(screen.getByText("New block"));
-    await fireEvent.press(screen.getByLabelText("Wednesday Sep 2: 0 planned"));
+    expect(screen.queryByText("New block")).toBeNull();
     await fireEvent.press(screen.getByLabelText("Thursday Sep 17: 0 planned"));
-    expect(screen.getByText("3 weeks")).toBeTruthy();
-    expect(screen.getByText("New block · 3/3")).toBeTruthy();
-    await fireEvent.press(screen.getByText("Next"));
-    expect(router.push).toHaveBeenCalledWith("/plan/block/new?start=2026-08-31&weeks=3");
+    expect(router.push).toHaveBeenCalledWith({
+      pathname: "/plan/day",
+      params: { date: "2026-09-17" },
+    });
   });
 });

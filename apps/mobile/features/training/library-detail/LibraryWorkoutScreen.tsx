@@ -5,6 +5,7 @@ import { Alert, ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
+import { exerciseKey, useExercises } from "@sendtally/features/statistics";
 import {
   copyName,
   draftOf,
@@ -20,7 +21,9 @@ import { PlanList } from "../plans/PlanList";
 import { BodyPreview } from "./BodyPreview";
 import { confirmDeleteWorkout } from "./confirmDeleteWorkout";
 import { LibraryIntro } from "./LibraryIntro";
+import { AddToPlanFooter } from "./AddToPlanFooter";
 import { StartButton } from "./StartButton";
+import { WorkoutRuns } from "./WorkoutRuns";
 
 export type LibraryWorkoutScreenProps = { workout: LibraryWorkout; use: WorkoutUse | undefined };
 
@@ -32,8 +35,19 @@ export function LibraryWorkoutScreen({
   use,
 }: LibraryWorkoutScreenProps): React.ReactElement {
   const { model, today } = useHangData();
-  const actions = useWorkoutActions(useApi(), reportFailure);
+  const api = useApi();
+  const actions = useWorkoutActions(api, reportFailure);
+  const exercises = useExercises(api).state;
   const mine = workout.source === "mine";
+  const openExercise = (name: string): (() => void) | undefined => {
+    const found =
+      exercises.status === "ready"
+        ? exercises.data.find((e) => exerciseKey(e.name) === exerciseKey(name))
+        : undefined;
+    return found === undefined
+      ? undefined
+      : () => router.push({ pathname: "/exercise/[id]", params: { id: found.id } });
+  };
 
   const duplicate = (): void => {
     const draft = draftOf(workout);
@@ -75,7 +89,8 @@ export function LibraryWorkoutScreen({
         contentContainerStyle={{ gap: 20, paddingTop: 8, paddingHorizontal: 18, paddingBottom: 24 }}
       >
         <LibraryIntro workout={workout} use={use} />
-        <BodyPreview workout={workout} unit={model.settings.units} />
+        <BodyPreview workout={workout} unit={model.settings.units} openExercise={openExercise} />
+        <WorkoutRuns workout={workout} />
         <PlanList workoutId={workout.id} name={workout.name} empty={t("hang.notScheduled")} />
         <View style={{ gap: 8 }}>
           <Button
@@ -98,7 +113,9 @@ export function LibraryWorkoutScreen({
           borderTopColor: colors.lineOnLight,
         }}
       >
-        <StartButton workout={workout} date={today} height={54} />
+        <AddToPlanFooter workoutId={workout.id}>
+          <StartButton workout={workout} date={today} height={54} style={{ flex: 1 }} />
+        </AddToPlanFooter>
       </View>
     </SafeAreaView>
   );

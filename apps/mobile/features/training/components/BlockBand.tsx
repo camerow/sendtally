@@ -3,12 +3,12 @@ import { View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
 import { Label } from "./Label";
 
-export const BLOCK_TINT = "rgba(249,220,92,0.28)";
+const BLOCK_TINT = "rgba(249,220,92,0.28)";
 
-export type BlockBandProps = { label: string | null; strong?: boolean };
+export type BlockBandProps = { label: string | null };
 
 /** The strip over a calendar week naming the block it is in, empty when it is in none. */
-export function BlockBand({ label, strong = false }: BlockBandProps): React.ReactElement {
+export function BlockBand({ label }: BlockBandProps): React.ReactElement {
   return (
     <View
       style={{
@@ -18,7 +18,7 @@ export function BlockBand({ label, strong = false }: BlockBandProps): React.Reac
         paddingHorizontal: 6,
         borderRadius: 5,
         justifyContent: "center",
-        backgroundColor: label === null ? undefined : strong ? colors.gold : BLOCK_TINT,
+        backgroundColor: label === null ? undefined : BLOCK_TINT,
       }}
     >
       {label !== null && (

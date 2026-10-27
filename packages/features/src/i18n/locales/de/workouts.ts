@@ -120,4 +120,15 @@ export const workouts = {
   "workouts.removeExercise": "{name} entfernen",
   "workouts.seeAll": "Alle anzeigen",
   "workouts.seeAllOf": "Alle anzeigen: {kind}",
+  "workouts.exerciseBest": "Bestwert {value}",
+  "workouts.exerciseLast": "Zuletzt {value}",
+  "workouts.usedIn": "Verwendet in",
+  "workouts.renameExercise": "Umbenennen",
+  "workouts.mergeExercise": "Zusammenführen mit…",
+  "workouts.mergeExerciseTitle": "{from} mit {into} zusammenführen?",
+  "workouts.mergeExerciseBody": "Jedes Workout und jeder Eintrag mit {from} heißt dann {into}.",
+  "workouts.merge": "Zusammenführen",
+  "workouts.exerciseMore": "Mehr zu dieser Übung",
+  "workouts.exerciseNothingLogged":
+    "Noch nichts eingetragen. Deine Sätze erscheinen hier, sobald du sie einträgst.",
 } as const;

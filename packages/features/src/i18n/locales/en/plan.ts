@@ -8,7 +8,6 @@ export const plan = {
   "plan.logSession": "Log session",
   "plan.done": "Done",
   "plan.remove": "Remove {title} from your plan",
-  "plan.tabPlan": "Plan",
   "plan.tabWorkouts": "Workouts",
   "plan.empty":
     "Nothing planned yet. Put climbing, hangboard and the rest of your training on your week.",
@@ -75,4 +74,13 @@ export const plan = {
   "plan.chipRest": "{value} rest",
   "plan.chipEdge": "{edge} edge",
   "plan.chipSetRest": "{value} between sets",
+  "plan.tabBlocks": "Blocks",
+  "plan.tabExercises": "Exercises",
+  "plan.ongoing": "Ongoing",
+  "plan.upcoming": "Upcoming",
+  "plan.past": "Past",
+  "plan.startsOn": "Starts {date}",
+  "plan.doneOf": "{done} of {planned} done",
+  "plan.planAgain": "Plan again",
+  "plan.planAgainStart": "Which week does it start?",
 } as const;
