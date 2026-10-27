@@ -4,7 +4,7 @@ import { weekday } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { dayTitle, weekdayShort } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
-import { dayMarks, type TrainingDay } from "@sendtally/features/training";
+import { dayMarks, type DayMarkSpec, type TrainingDay } from "@sendtally/features/training";
 import { press } from "../../../lib/press";
 import { Label } from "../components/Label";
 import { ON_DARK_SOFT } from "../components/onDark";
@@ -12,6 +12,12 @@ import { type } from "../type";
 import { DayMark } from "./DayMark";
 
 export type DayCellProps = { day: TrainingDay; selected: boolean; onPress: () => void };
+
+const oncePerKind = (marks: readonly DayMarkSpec[]): DayMarkSpec[] =>
+  [...new Set(marks.map((m) => m.kind))].map((kind) => ({
+    kind,
+    filled: marks.some((m) => m.kind === kind && m.filled),
+  }));
 
 export function DayCell({ day, selected, onPress }: DayCellProps): React.ReactElement {
   const ground = selected ? colors.gunmetal : day.isToday ? colors.gold : "transparent";
@@ -51,7 +57,7 @@ export function DayCell({ day, selected, onPress }: DayCellProps): React.ReactEl
         {Number(day.date.slice(8))}
       </Text>
       <View style={{ height: 8, flexDirection: "row", alignItems: "center", gap: 3 }}>
-        {marks.map((m, i) => (
+        {oncePerKind(marks).map((m, i) => (
           <DayMark key={i} kind={m.kind} filled={m.filled} onDark={selected} />
         ))}
       </View>
