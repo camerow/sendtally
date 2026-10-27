@@ -20,6 +20,7 @@ export default tseslint.config(
       "apps/mobile/android/**",
       "apps/mobile/store/out/**",
       "tools/**",
+      ".claude/**",
     ],
   },
   js.configs.recommended,
