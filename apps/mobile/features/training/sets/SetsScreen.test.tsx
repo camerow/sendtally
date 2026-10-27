@@ -19,7 +19,6 @@ const run: WorkoutRun = {
   workoutId: "w1",
   link: { membershipId: "m1", week: 2, variation: 0 },
   minutes: 45,
-  exerciseRestS: 120,
   items: [
     { exercise: "Back squat", dose: { sets: 2, reps: 5, weightKg: 100, setRestS: 90 } },
     { exercise: "Plank", dose: { sets: 1, onS: 30 } },
@@ -40,26 +39,21 @@ describe("Sets player", () => {
     jest.useRealTimers();
   });
 
-  it("rests after each ticked set and hands what was done to the activity form", async () => {
+  it("ticks sets without a rest clock and hands what was done to the activity form", async () => {
     await render(<SetsScreen run={run} />);
     expect(screen.getByText("Strength · 45m")).toBeTruthy();
     expect(screen.getAllByText("5 × 100 kg")).toHaveLength(2);
     expect(screen.getByText("30s")).toBeTruthy();
-    expect(screen.queryByText(/^Rest/)).toBeNull();
-
     await fireEvent.press(screen.getByLabelText("Back squat, set 1"));
-    expect(screen.getByText("Rest 1:30")).toBeTruthy();
+    expect(screen.queryByText(/^Rest/)).toBeNull();
     await advance(30_000);
-    expect(screen.getByText("Rest 1:00")).toBeTruthy();
 
     const reps = screen.getByLabelText("Back squat, set 2 · Reps");
     await fireEvent(reps, "focus");
     await fireEvent.changeText(reps, "4");
     await fireEvent(reps, "blur");
     await fireEvent.press(screen.getByLabelText("Back squat, set 2"));
-    expect(screen.getByText("Rest 2:00")).toBeTruthy();
     await advance(120_000);
-    expect(screen.queryByText(/^Rest/)).toBeNull();
 
     await fireEvent.press(screen.getByText("Finish"));
     expect(router.replace).toHaveBeenCalledWith({

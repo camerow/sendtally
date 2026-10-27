@@ -68,7 +68,6 @@ describe("Today", () => {
         date: "2026-09-29",
         workoutId: "legs",
         minutes: "50",
-        exerciseRestS: "180",
         items: JSON.stringify([{ exercise: "Back squat", dose: { sets: 5, reps: 5 } }]),
         membershipId: "m1",
         variation: "0",

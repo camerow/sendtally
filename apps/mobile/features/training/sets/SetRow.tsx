@@ -22,7 +22,7 @@ export type SetRowProps = {
   onToggle: () => void;
 };
 
-/** One set: its number, what it asks, what was done, and the tick that starts the rest. */
+/** One set: its number, what it asks, what was done, and its tick. */
 export function SetRow({
   n,
   target,

@@ -52,7 +52,6 @@ export const activities = {
   "activities.colSet": "Satz",
   "activities.colTarget": "Ziel",
   "activities.colDone": "Gemacht",
-  "activities.restFor": "Pause {time}",
   "activities.finish": "Beenden",
   "activities.setOf": "{exercise}, Satz {n}",
   "activities.doneForToday": "Für heute fertig",

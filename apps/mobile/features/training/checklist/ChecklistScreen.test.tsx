@@ -19,7 +19,6 @@ const run: WorkoutRun = {
   workoutId: "w2",
   link: { membershipId: null, week: null, variation: null },
   minutes: 12,
-  exerciseRestS: 180,
   items: [
     { exercise: "Cat-cow", dose: { sets: 2 } },
     { exercise: "Wrist circles", dose: { sets: 1 } },

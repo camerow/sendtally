@@ -51,7 +51,6 @@ export const activities = {
   "activities.colSet": "Série",
   "activities.colTarget": "Objectif",
   "activities.colDone": "Fait",
-  "activities.restFor": "Repos {time}",
   "activities.finish": "Terminer",
   "activities.setOf": "{exercise}, série {n}",
   "activities.doneForToday": "Fini pour aujourd’hui",

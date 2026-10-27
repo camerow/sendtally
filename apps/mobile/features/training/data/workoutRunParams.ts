@@ -13,8 +13,6 @@ export type WorkoutRun = {
   link: PlanLink;
   /** What the workout says it takes, if it says. */
   minutes: number | null;
-  /** The rest between one exercise and the next. */
-  exerciseRestS: number;
   items: Item[];
 };
 
@@ -35,7 +33,6 @@ export function runPath(player: RunPlayer, r: WorkoutRun): Href {
       title: r.title,
       date: r.date,
       workoutId: r.workoutId,
-      exerciseRestS: String(r.exerciseRestS),
       items: JSON.stringify(r.items),
       ...minutesParam(r.minutes),
       ...planLinkParams(r.link),
@@ -75,16 +72,12 @@ export function readWorkoutRun(p: RawParams): WorkoutRun | null {
     workoutId: str(p.workoutId),
     link: readPlanLink(p),
     minutes: count(str(p.minutes)),
-    exerciseRestS: count(str(p.exerciseRestS)) ?? 0,
     items,
   };
 }
 
 /** The activity form for a workout, with what was done in place of what it prescribes when given. */
-export function activityFormPath(
-  r: Omit<WorkoutRun, "items" | "exerciseRestS">,
-  done?: readonly ItemDone[]
-): Href {
+export function activityFormPath(r: Omit<WorkoutRun, "items">, done?: readonly ItemDone[]): Href {
   return {
     pathname: "/activity/new",
     params: {
