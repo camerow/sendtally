@@ -98,7 +98,7 @@ export function PlanGrid({ rows, framed = true, highlight }: PlanGridProps): Rea
               {row.name}
             </Text>
             <Text
-              numberOfLines={1}
+              numberOfLines={2}
               style={[type.mono, { fontSize: 11, color: KIND_LOOK[row.kind].ink }]}
             >
               {row.sub}
