@@ -30,6 +30,8 @@ export type ActivityPrefill = {
   week?: string;
   variation?: string;
   minutes?: string;
+  /** What a player ran, as JSON, in place of what the workout prescribes. */
+  done?: string;
 };
 
 export const MINUTES_STEP = 5;
@@ -41,6 +43,27 @@ const clampMinutes = (n: number): number => Math.min(1440, Math.max(1, Math.roun
 const wholeNumber = (text: string | undefined): number | null => {
   const n = Number(text);
   return text === undefined || text === "" || !Number.isInteger(n) ? null : n;
+};
+
+const isItemDone = (v: unknown): v is ItemDone => {
+  if (typeof v !== "object" || v === null) return false;
+  const { item, exercise, sets } = v as Partial<ItemDone>;
+  return (
+    typeof item === "number" &&
+    typeof exercise === "string" &&
+    Array.isArray(sets) &&
+    sets.every((s: unknown) => typeof s === "object" && s !== null)
+  );
+};
+
+const parseDone = (text: string | undefined): ItemDone[] | null => {
+  if (text === undefined) return null;
+  try {
+    const done: unknown = JSON.parse(text);
+    return Array.isArray(done) && done.every(isItemDone) ? done : null;
+  } catch {
+    return null;
+  }
 };
 
 /** `prescribed` is what the workout asks of this session, which the activity starts as done. */
@@ -61,7 +84,7 @@ export function newActivityDraft(
     membershipId: prefill.membershipId ?? null,
     week: wholeNumber(prefill.week),
     variation: wholeNumber(prefill.variation),
-    done: doneAsPrescribed(prescribed),
+    done: parseDone(prefill.done) ?? doneAsPrescribed(prescribed),
   };
 }
 

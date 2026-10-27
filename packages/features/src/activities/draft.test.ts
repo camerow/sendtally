@@ -36,13 +36,22 @@ describe("activity drafts", () => {
     expect(draftFromActivity(activity)).toEqual({ ...draft, title: "Mobility", notes: "" });
   });
 
-  it("starts as done what the workout prescribes, and saves only named items", () => {
+  it("starts as done what a player ran or else what the workout prescribes, and saves only named items", () => {
     const draft = newActivityDraft({ kind: "mobility" }, "2026-10-22", [
       { exercise: "Cat-cow", dose: { sets: 2, reps: 10 } },
     ]);
     expect(draft.done).toEqual([
       { item: 0, exercise: "Cat-cow", sets: [{ reps: 10 }, { reps: 10 }] },
     ]);
+    const ran = [{ item: 0, exercise: "Cat-cow", sets: [{ reps: 8 }] }];
+    const prescribed = [{ exercise: "Cat-cow", dose: { sets: 2, reps: 10 } }];
+    expect(newActivityDraft({ done: JSON.stringify(ran) }, "2026-10-22", prescribed).done).toEqual(
+      ran
+    );
+    expect(newActivityDraft({ done: "[{" }, "2026-10-22", prescribed).done).toHaveLength(1);
+    expect(newActivityDraft({ done: "[1]" }, "2026-10-22", prescribed).done[0]?.sets).toHaveLength(
+      2
+    );
     const blank = { ...draft, done: [{ item: 0, exercise: " ", sets: [] }] };
     expect(activityFromDraft("a1", blank).done).toEqual([]);
   });
