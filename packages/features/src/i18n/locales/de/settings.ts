@@ -52,6 +52,8 @@ export const settings = {
   "settings.trainingMode": "Trainingsmodus",
   "settings.trainingModeBody":
     "Fügt Heute, Training und Statistik hinzu, damit du Hangboard und anderes Training neben deinem Klettern planen und durchführen kannst.",
+  "settings.weightUnit": "Gewichtseinheit",
+  "settings.weightUnitBody": "Zusatzgewichte und Lasten werden in dieser Einheit angezeigt.",
   "settings.trainingModeWebHint":
     "Training findest du in der sendtally-App für iOS und Android. Schalte es hier ein, dann ist es beim nächsten Öffnen der App da.",
   "settings.postClimbing": "Klettersessions posten",

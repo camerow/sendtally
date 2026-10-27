@@ -5,7 +5,6 @@ import type { HangKind, HangSetup } from "@sendtally/core/hang";
 import { t } from "@sendtally/features/i18n";
 import { SheetSection } from "../components/SheetSection";
 import { Stepper } from "../components/Stepper";
-import { UnitSwitch } from "../components/UnitSwitch";
 import { useHangData } from "../data/HangDataContext";
 import { loadControl } from "../loads/loadControl";
 import { type } from "../type";
@@ -29,7 +28,7 @@ export function SetupFields({ kind, setup, onChange }: SetupFieldsProps): React.
       {kind === "hang" && (
         <EdgeField edgeMm={setup.edgeMm} onChange={(edgeMm) => onChange({ ...setup, edgeMm })} />
       )}
-      <SheetSection label={label} aside={<UnitSwitch />}>
+      <SheetSection label={label}>
         <Stepper
           value={load.text}
           onCommit={load.commit}

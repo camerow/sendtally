@@ -24,6 +24,7 @@ import { MembershipSection, type MembershipSectionProps } from "./MembershipSect
 import { StravaPostingSection } from "./StravaPostingSection";
 import { TrainingModeSection } from "./TrainingModeSection";
 import { TrainingRemindersSection } from "./TrainingRemindersSection";
+import { WeightUnitSection } from "./WeightUnitSection";
 import { BackButton } from "../../components/BackButton";
 import { bodyText, messageText, sectionCard, sectionLabel } from "../../lib/styles";
 import { press } from "../../lib/press";
@@ -97,6 +98,7 @@ export function SettingsView({
       >
         <TrainingModeSection trainingMode={trainingMode} />
         {trainingMode.enabled && <TrainingRemindersSection />}
+        {trainingMode.enabled && <WeightUnitSection />}
         <GradeSection prefs={gradePrefs} onChange={onChangeGradePref} />
         <GymsSection gyms={gyms} />
 

@@ -51,6 +51,8 @@ export const settings = {
   "settings.trainingMode": "Mode entraînement",
   "settings.trainingModeBody":
     "Ajoute Aujourd'hui, Entraînement et Statistiques pour planifier et faire ta poutre et tes autres entraînements à côté de ta grimpe.",
+  "settings.weightUnit": "Unité de poids",
+  "settings.weightUnitBody": "Les charges s'affichent dans cette unité.",
   "settings.trainingModeWebHint":
     "L'entraînement se trouve dans l'app sendtally sur iOS et Android. Active-le ici et il t'attend à la prochaine ouverture de l'app.",
   "settings.postClimbing": "Publier les séances d’escalade",

@@ -95,7 +95,7 @@ export const hangSettingsBody = z
   .partial();
 
 export const DEFAULT_HANG_SETTINGS: HangSettings = {
-  units: "kg",
+  units: "lb",
   theme: "moss",
   reminders: false,
   reminderTime: "08:00",

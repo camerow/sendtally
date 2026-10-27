@@ -12,7 +12,6 @@ import { SelectField } from "../components/SelectField";
 import { SheetHeader } from "../components/SheetHeader";
 import { SheetSection } from "../components/SheetSection";
 import { Stepper } from "../components/Stepper";
-import { UnitSwitch } from "../components/UnitSwitch";
 import { useHangData } from "../data/HangDataContext";
 import { HangSheet } from "../data/HangSheet";
 import { GripPickerSheet } from "../grip-picker/GripPickerSheet";
@@ -100,7 +99,7 @@ function Editor({
         {kind === "hang" && (
           <EdgeField edgeMm={draft.edgeMm} onChange={(edgeMm) => update({ edgeMm })} />
         )}
-        <SheetSection label={t("hang.load")} aside={<UnitSwitch />}>
+        <SheetSection label={t("hang.load")}>
           <Stepper
             value={load.text}
             onCommit={load.commit}

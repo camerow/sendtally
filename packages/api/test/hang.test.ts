@@ -101,7 +101,7 @@ describe("hangboard", () => {
       loads: {},
       sessions: [],
       settings: {
-        units: "kg",
+        units: "lb",
         theme: "moss",
         reminders: false,
         reminderTime: "08:00",
@@ -345,7 +345,7 @@ describe("hangboard strava posting", () => {
   it("posts a new session as a Workout when the user turned posting on", async () => {
     const userId = "user_hang_post";
     await connectStrava(userId);
-    await call(userId, "PUT", "/settings", { postToStrava: true });
+    await call(userId, "PUT", "/settings", { postToStrava: true, units: "kg" });
     const { fetchImpl, calls } = stravaRoutes();
 
     await call(userId, "PUT", "/sessions/h1", sessionBody, fetchImpl);

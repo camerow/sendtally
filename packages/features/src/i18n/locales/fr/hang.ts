@@ -239,8 +239,6 @@ export const hang = {
   "hang.weeksActive": "{n} semaines actives sur 16",
   "hang.consistencyAria": "Séances par semaine, 16 dernières semaines",
 
-  "hang.showKg": "Afficher en kilogrammes",
-  "hang.showLb": "Afficher en livres",
   "hang.reminderTime": "Heure du rappel",
   "hang.reminderPromptTitle": "Un rappel les jours d'entraînement ?",
   "hang.remindMe": "Me le rappeler",
