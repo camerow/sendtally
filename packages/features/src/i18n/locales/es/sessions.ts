@@ -66,4 +66,5 @@ export const sessions = {
   "sessions.saving": "Guardando…",
   "sessions.notSavedYet": "Aún sin guardar, se reintentará",
   "sessions.addDetails": "Añadir detalles",
+  "sessions.topSend": "máx. {grade}",
 } as const;

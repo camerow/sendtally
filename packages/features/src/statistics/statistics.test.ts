@@ -39,6 +39,7 @@ function climbing(
     end_at: start,
     times: "both",
     climb_count: climbs.length,
+    send_count: 0,
     top_grade: 0,
     top_send_grade: 0,
     top_grade_label: null,

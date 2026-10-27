@@ -15,6 +15,7 @@ const detail: SessionDetail = {
   end_at: "2026-07-01T19:25:00.000Z",
   times: "both",
   climb_count: 4,
+  send_count: 0,
   top_grade: 7,
   top_send_grade: 7,
   top_grade_label: null,

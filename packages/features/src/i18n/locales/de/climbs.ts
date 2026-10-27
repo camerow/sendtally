@@ -18,4 +18,9 @@ export const climbs = {
     "An diesem Tag gibt es noch keine Session mit dieser Route. Beim Speichern wird dort ein Versuch geloggt.",
   "climbs.notePlaceholder": "Was passiert ist, was du als Nächstes probierst",
   "climbs.noteSaveFailed": "Die Notiz konnte nicht gespeichert werden. Versuch es noch einmal.",
+  "climbs.dayCount_one": "{count} Tag",
+  "climbs.dayCount_other": "{count} Tage",
+  "climbs.sentOn": "Geschafft am {date}",
+  "climbs.working": "In Arbeit",
+  "climbs.notFound": "Kletterei nicht gefunden.",
 } as const;

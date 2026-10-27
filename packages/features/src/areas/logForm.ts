@@ -44,8 +44,9 @@ export function cragsOf(found: AreaSummary[]): AreaSummary[] {
 
 /** Picking an Areas climb links the row and takes its grade, in the row's scale when it can. */
 export function withAreaClimb(climb: ClimbDraft, picked: AreaClimb): ClimbDraft {
+  const { userClimbId: _other, ...rest } = climb;
   const linked: ClimbDraft = {
-    ...climb,
+    ...rest,
     name: picked.name,
     climbId: picked.id,
     project: undefined,
@@ -62,7 +63,7 @@ export function withAreaClimb(climb: ClimbDraft, picked: AreaClimb): ClimbDraft 
 
 /** Retyping the name means it is no longer the climb that was picked. */
 export function withTypedName(climb: ClimbDraft, name: string): ClimbDraft {
-  const { climbId: _unlinked, ...rest } = climb;
+  const { climbId: _unlinked, userClimbId: _retyped, ...rest } = climb;
   return { ...rest, name };
 }
 

@@ -4,6 +4,7 @@ import { ApiError, type LogSessionInput, type SessionDetail } from "@sendtally/a
 import { parseStoredDraft, writeStoredDraft, type DraftStorage } from "./draftStore";
 import { forgetLiveSession } from "./liveSession";
 import { toLiveSessionInput, toLogSessionInput } from "./transforms";
+import { clockTime } from "./tally";
 
 export type LiveSyncApi = {
   logSession: (input: LogSessionInput) => Promise<{ session: SessionDetail }>;
@@ -25,6 +26,8 @@ export type LiveSync = {
   remove: (fingerprint: string) => void;
   /** The screen is going away: push a change still waiting out the debounce now. */
   flush: () => void;
+  /** Pushes whatever is waiting and resolves once every request so far has finished. */
+  settle: () => Promise<void>;
 };
 
 export const LIVE_SYNC_DEBOUNCE_MS = 600;
@@ -58,6 +61,18 @@ export function createLiveSync(
     if (stored === null) return;
     const serialized = JSON.stringify(stored.draft);
     if (serialized === pushed) return;
+    if (stored.draft.climbs.length === 0) {
+      if (stored.fingerprint === undefined) return;
+      status("saving");
+      await api.deleteLoggedSession(stored.fingerprint).catch((error: unknown) => {
+        if (!gone(error)) throw error;
+      });
+      const current = parseStoredDraft(storage.read(), new Date());
+      if (current !== null) writeStoredDraft(storage, current.draft, new Date());
+      pushed = null;
+      status("idle");
+      return;
+    }
     status("saving");
     const input = stored.detailed
       ? toLogSessionInput(stored.draft)
@@ -131,7 +146,43 @@ export function createLiveSync(
       cancel();
       schedulePush();
     },
+    settle: () => {
+      if (timer !== null) {
+        cancel();
+        schedulePush();
+      }
+      return chain;
+    },
   };
+}
+
+/**
+ * Ends the live session: it is saved with its end time and the effort given, or scored by the
+ * server when none was, and the device copy goes. A session with no climbs is simply dropped.
+ * Resolves to the saved session's fingerprint, or null when there was nothing to save.
+ */
+export async function finishLiveSession(
+  api: LiveSyncApi,
+  storage: DraftStorage,
+  sync: LiveSync,
+  rpe: number | null,
+  now: Date = new Date()
+): Promise<string | null> {
+  await sync.settle();
+  const stored = parseStoredDraft(storage.read(), now);
+  if (stored === null) return null;
+  if (stored.draft.climbs.length === 0) {
+    if (stored.fingerprint !== undefined) sync.remove(stored.fingerprint);
+    storage.remove();
+    return null;
+  }
+  const input = toLogSessionInput({ ...stored.draft, endTime: clockTime(now), rpe });
+  const { session } =
+    stored.fingerprint === undefined
+      ? await api.logSession(input)
+      : await api.updateLoggedSession(stored.fingerprint, input);
+  storage.remove();
+  return session.fingerprint;
 }
 
 export type LiveSyncState = { sync: LiveSync; status: LiveSyncStatus };

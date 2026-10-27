@@ -9,7 +9,14 @@ export {
   type RouteScale,
   type SessionGradeLabel,
 } from "./grades";
-export { climbCountLabel, isUnscored, sessionDay, sessionMetaLabel, type SessionDay } from "./meta";
+export {
+  climbCountLabel,
+  isUnscored,
+  sessionDay,
+  sessionMetaLabel,
+  sessionTallyLabel,
+  type SessionDay,
+} from "./meta";
 export {
   monthShortName,
   monthKey,

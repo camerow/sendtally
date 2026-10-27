@@ -17,6 +17,10 @@ export type LiveSession = StoredDraftEntry & {
   ) => void;
   /** Removing the last climb removes the session with it. */
   removeClimb: (key: string) => void;
+  /** Writes the whole draft back, as an undo does; an empty one keeps the session started. */
+  replace: (draft: LogSessionDraft) => void;
+  /** Starts a session with no climbs yet, unless one is already live. */
+  start: (draft: LogSessionDraft) => void;
 };
 
 /**
@@ -84,5 +88,25 @@ export function useLiveSession(storage: DraftStorage, sync?: LiveSync): LiveSess
     [current, write, discard, sync]
   );
 
-  return { stored: live ? stored : null, discard, putClimb, updateClimb, removeClimb };
+  const replace = React.useCallback(
+    (draft: LogSessionDraft): void => write(draft, current() ?? undefined),
+    [current, write]
+  );
+
+  const start = React.useCallback(
+    (draft: LogSessionDraft): void => {
+      if (current() === null) write(draft, undefined);
+    },
+    [current, write]
+  );
+
+  return {
+    stored: live ? stored : null,
+    discard,
+    putClimb,
+    updateClimb,
+    removeClimb,
+    replace,
+    start,
+  };
 }

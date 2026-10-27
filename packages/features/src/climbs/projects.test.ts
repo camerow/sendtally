@@ -5,6 +5,7 @@ import { joinNotes, noteAttempt, projectDetailVM, projectsOverview } from "./pro
 const NOW = new Date("2026-09-11T12:00:00.000Z");
 
 const climb = (overrides: Partial<ClimbSummary>): ClimbSummary => ({
+  id: "moonraker",
   slug: "moonraker",
   name: "Moonraker",
   grade: { scale: "v", value: 7 },
@@ -15,6 +16,9 @@ const climb = (overrides: Partial<ClimbSummary>): ClimbSummary => ({
   sends: 0,
   first_at: "2026-06-03T18:00:00.000Z",
   last_at: "2026-09-04T18:00:00.000Z",
+  area_climb_id: null,
+  area: null,
+  sent_at: null,
   ...overrides,
 });
 
@@ -34,6 +38,7 @@ const session = (
   end_at: startIso,
   times: "both",
   climb_count: climbs.length,
+  send_count: 0,
   top_grade: 7,
   top_send_grade: -1,
   top_grade_label: null,

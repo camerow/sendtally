@@ -16,4 +16,9 @@ export const climbs = {
   "climbs.noteNewDayHint": "Aucune séance de cette voie ce jour-là. Enregistrer y ajoute un essai.",
   "climbs.notePlaceholder": "Ce qui s'est passé, ce que tu essaieras ensuite",
   "climbs.noteSaveFailed": "Impossible d'enregistrer la note. Réessaie.",
+  "climbs.dayCount_one": "{count} jour",
+  "climbs.dayCount_other": "{count} jours",
+  "climbs.sentOn": "Enchaîné le {date}",
+  "climbs.working": "En cours",
+  "climbs.notFound": "Ligne introuvable.",
 } as const;

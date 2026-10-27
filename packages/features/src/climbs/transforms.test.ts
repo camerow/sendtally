@@ -12,6 +12,7 @@ import {
 } from "./transforms";
 
 const climb = (overrides: Partial<ClimbSummary>): ClimbSummary => ({
+  id: "moonraker",
   slug: "moonraker",
   name: "Moonraker",
   grade: { scale: "v", value: 6 },
@@ -22,6 +23,9 @@ const climb = (overrides: Partial<ClimbSummary>): ClimbSummary => ({
   sends: 0,
   first_at: "2026-08-01T18:00:00Z",
   last_at: "2026-09-01T18:00:00Z",
+  area_climb_id: null,
+  area: null,
+  sent_at: null,
   ...overrides,
 });
 

@@ -278,6 +278,7 @@ export function toLogSessionInput(draft: LogSessionDraft): LogSessionInput {
     ...(c.circuit === undefined ? {} : { circuit: c.circuit }),
     ...(c.wall === undefined || c.wall.trim() === "" ? {} : { wall: c.wall.trim() }),
     ...(outdoor && c.climbId !== undefined ? { climbId: c.climbId } : {}),
+    ...(c.userClimbId === undefined ? {} : { userClimbId: c.userClimbId }),
   }));
   return {
     ...(draft.name.trim() === "" ? {} : { name: draft.name.trim() }),
@@ -290,6 +291,13 @@ export function toLogSessionInput(draft: LogSessionDraft): LogSessionInput {
     ...(outdoor && draft.area !== undefined ? { areaId: draft.area.id } : {}),
     ...(draft.tags.length === 0 ? {} : { tags: draft.tags }),
     ...(draft.notes.trim() === "" ? {} : { notes: draft.notes.trim() }),
+    ...(draft.plan === undefined || draft.plan.membershipId === null
+      ? {}
+      : {
+          membershipId: draft.plan.membershipId,
+          week: draft.plan.week,
+          variation: draft.plan.variation,
+        }),
     climbs,
   };
 }
@@ -349,6 +357,7 @@ export function draftFromSession(session: SessionDetail): LogSessionDraft {
         ...(c.circuit === undefined ? {} : { circuit: c.circuit }),
         ...(c.wall === undefined ? {} : { wall: c.wall }),
         ...(c.link ? { climbId: c.link.id } : {}),
+        ...(c.userClimbId === undefined ? {} : { userClimbId: c.userClimbId }),
         ...(c.endurance === undefined
           ? { kind: c.kind, style: storedStyle(c), tries: c.tries }
           : {

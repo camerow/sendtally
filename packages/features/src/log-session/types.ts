@@ -5,7 +5,7 @@ import {
   type Endurance,
   type GradeScale,
 } from "@sendtally/core";
-import type { CircuitRef } from "@sendtally/api-client";
+import type { CircuitRef, PlanLink } from "@sendtally/api-client";
 import { t } from "../i18n";
 
 export type { ClimbStyle, Discipline, Endurance, GradeScale };
@@ -48,6 +48,8 @@ export type ClimbDraft = {
   endurance?: Endurance;
   /** The Areas climb this row is linked to, set by picking or adding one and cleared by retyping. */
   climbId?: string;
+  /** The user's own climb record this row is, once known; cleared by retyping the name. */
+  userClimbId?: string;
 };
 
 /**
@@ -86,4 +88,6 @@ export type LogSessionDraft = {
   notes: string;
   rpe: number | null;
   climbs: ClimbDraft[];
+  /** The planned day this session was started from. */
+  plan?: PlanLink;
 };

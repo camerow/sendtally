@@ -16,6 +16,7 @@ const row = (over: Partial<SessionDetail>): SessionDetail => ({
   end_at: "2026-09-27T19:30:00.000Z",
   times: "both",
   climb_count: 1,
+  send_count: 0,
   top_grade: 4,
   top_send_grade: 4,
   top_grade_label: "V4",
@@ -119,5 +120,31 @@ describe("logClimbOnDay", () => {
     expect((bare.sent[0] as [string, string, LogSessionInput])[2]).toMatchObject({
       unscored: true,
     });
+  });
+
+  it("joins only a session at the same crag, and starts one outdoors there otherwise", async () => {
+    const crag = { id: "a1", name: "Buttermilks" };
+    const sessions = [
+      row({ fingerprint: "gym", start_at: "2026-09-27T20:00:00.000Z" }),
+      row({ fingerprint: "crag", location: "outdoor", area_id: "a1" }),
+    ];
+    const there = fakeApi(sessions);
+    await logClimbOnDay(there, climb, "2026-09-27", [], { area: crag });
+    expect((there.sent[0] as [string, string])[1]).toBe("crag");
+
+    const elsewhere = fakeApi([sessions[0]!]);
+    await logClimbOnDay(elsewhere, climb, "2026-09-27", [], { area: crag });
+    const [[method, input]] = elsewhere.sent as [[string, LogSessionInput]];
+    expect(method).toBe("POST");
+    expect(input).toMatchObject({ areaId: "a1", unscored: true });
+  });
+
+  it("with no crag, joins only a session with no location", async () => {
+    const api = fakeApi([
+      row({ fingerprint: "gym" }),
+      row({ fingerprint: "bare", location: null }),
+    ]);
+    await logClimbOnDay(api, climb, "2026-09-27", [], { area: null });
+    expect((api.sent[0] as [string, string])[1]).toBe("bare");
   });
 });

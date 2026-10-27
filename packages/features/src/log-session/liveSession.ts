@@ -132,7 +132,14 @@ export function withClimbName(
   known: ClimbSummary | undefined
 ): ClimbDraft {
   const grade = known === undefined ? "" : climbDraftGrade(known, climb.scale);
-  return { ...climb, name, project: undefined, ...(grade === "" ? {} : { grade }) };
+  const { userClimbId: _retyped, ...rest } = climb;
+  return {
+    ...rest,
+    name,
+    project: undefined,
+    ...(known === undefined ? {} : { userClimbId: known.id }),
+    ...(grade === "" ? {} : { grade }),
+  };
 }
 
 export function withPickedClimb(climb: ClimbDraft, known: ClimbSummary): ClimbDraft {

@@ -17,4 +17,9 @@ export const climbs = {
     "No session of this climb on that day yet. Saving logs one attempt there.",
   "climbs.notePlaceholder": "What happened, what to try next",
   "climbs.noteSaveFailed": "Could not save the note. Try again.",
+  "climbs.dayCount_one": "{count} day",
+  "climbs.dayCount_other": "{count} days",
+  "climbs.sentOn": "Sent {date}",
+  "climbs.working": "Working",
+  "climbs.notFound": "Climb not found.",
 } as const;

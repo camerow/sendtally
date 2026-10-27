@@ -18,6 +18,7 @@ import { plan } from "./plan";
 import { projects } from "./projects";
 import { sessionDetail } from "./sessionDetail";
 import { sessions } from "./sessions";
+import { tally } from "./tally";
 import { settings } from "./settings";
 import { statistics } from "./statistics";
 import { trends } from "./trends";
@@ -45,6 +46,7 @@ export const en = {
   ...projects,
   ...sessionDetail,
   ...sessions,
+  ...tally,
   ...settings,
   ...statistics,
   ...trends,

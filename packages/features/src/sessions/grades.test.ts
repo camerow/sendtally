@@ -15,6 +15,7 @@ function session(overrides: Partial<SessionRow> = {}): SessionRow {
     end_at: "2026-08-08T19:00:00.000Z",
     times: "both",
     climb_count: 3,
+    send_count: 0,
     top_grade: 6,
     top_send_grade: 6,
     top_grade_label: null,

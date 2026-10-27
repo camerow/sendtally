@@ -18,6 +18,7 @@ function climb(start_at: string, overrides: Partial<SessionRow> = {}): SessionRo
     end_at: start_at,
     times: "both",
     climb_count: 10,
+    send_count: 0,
     top_grade: 6,
     top_send_grade: 6,
     top_grade_label: null,

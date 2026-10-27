@@ -1,5 +1,6 @@
 import { climbDiscipline, climbRank, dominantDiscipline, isEndurance } from "@sendtally/core";
 import type { ConnectionStatus, SessionClimb, SessionDetail } from "@sendtally/api-client";
+import { sessionPyramid } from "../climbs/pyramid";
 import { climbKey } from "../climbs/transforms";
 import { formatDate, t } from "../i18n";
 import { sendStyleLabel } from "../log-session/types";
@@ -296,6 +297,7 @@ export function sessionDetailVM(
     area: session.area,
     stats,
     bars,
+    pyramid: sessionPyramid(session.climbs),
     filterCounts,
     post: postStatusVM(session, posting, start),
     stravaUrl:

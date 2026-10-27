@@ -28,6 +28,7 @@ function session(
     end_at: endAt,
     times: "both",
     climb_count: 3,
+    send_count: 0,
     top_grade: grades.top,
     top_send_grade: grades.send,
     top_grade_label: null,

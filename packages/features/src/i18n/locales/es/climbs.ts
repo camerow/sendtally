@@ -18,4 +18,9 @@ export const climbs = {
     "Aún no hay sesión de esta vía ese día. Al guardar se registra un intento.",
   "climbs.notePlaceholder": "Qué pasó, qué probar la próxima vez",
   "climbs.noteSaveFailed": "No se pudo guardar la nota. Inténtalo de nuevo.",
+  "climbs.dayCount_one": "{count} día",
+  "climbs.dayCount_other": "{count} días",
+  "climbs.sentOn": "Encadenado el {date}",
+  "climbs.working": "En proceso",
+  "climbs.notFound": "Escalada no encontrada.",
 } as const;

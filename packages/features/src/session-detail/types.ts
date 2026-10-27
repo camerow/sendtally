@@ -1,5 +1,6 @@
 import type { Endurance } from "@sendtally/core";
 import type { CircuitColour } from "@sendtally/api-client";
+import type { PyramidRow } from "../climbs/pyramid";
 import { t } from "../i18n";
 
 export type ClimbResult = "onsight" | "flash" | "sent" | "project";
@@ -57,6 +58,7 @@ export type SessionDetailVM = {
   area: { name: string; slug: string } | null;
   stats: StatVM[];
   bars: GradeBarVM[];
+  pyramid: PyramidRow[];
   filterCounts: Record<ClimbFilter, number>;
   post: PostStatusVM;
   stravaUrl: string | null;
