@@ -1,6 +1,6 @@
 const ROUTES: [RegExp, string][] = [
   [/^\/sessions\/(.+)$/, "/session/$1"],
-  [/^\/projects\/(.+)$/, "/project/$1"],
+  [/^\/projects\/(.+)$/, "/climb/$1"],
   [/^\/trends\/.+$/, "/(tabs)/trends"],
   [/^\/settings\/gyms\/(.+)$/, "/gym/$1"],
   [/^\/(projects|trends|settings)$/, "/(tabs)/$1"],
