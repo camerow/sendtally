@@ -1,5 +1,5 @@
 import type { Activity } from "@sendtally/api-client";
-import { daysBetween, type CalendarDate, type SetDone } from "@sendtally/core/hang";
+import { daysBetween, type CalendarDate, type SetDone, type Workout } from "@sendtally/core/hang";
 
 /** What an exercise's best set is judged on: the heaviest load, the longest hold, or the most reps. */
 export type ExerciseMetric = "load" | "seconds" | "reps";
@@ -40,6 +40,19 @@ export type ExerciseSummary = {
 };
 
 export const exerciseKey = (name: string): string => name.trim().toLowerCase();
+
+/** The workouts with an item of this exercise, in any case; a hangboard item names a grip. */
+export function workoutsUsing<W extends Pick<Workout, "kind" | "variations">>(
+  workouts: readonly W[],
+  name: string
+): W[] {
+  const key = exerciseKey(name);
+  return workouts.filter(
+    (w) =>
+      w.kind !== "hangboard" &&
+      w.variations.some((v) => v.items.some((i) => exerciseKey(i.exercise) === key))
+  );
+}
 
 export function epley(loadKg: number, reps: number): number {
   return reps === 1 ? loadKg : loadKg * (1 + reps / 30);

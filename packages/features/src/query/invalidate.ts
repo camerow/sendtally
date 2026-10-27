@@ -76,15 +76,21 @@ export function writeEffect({ method, path }: ApiWrite): WriteEffect | null {
       return { stale: [], gone: null };
     case "hang":
       return { stale: hangWriteStales(id), gone: null };
-    // Like hang, these own their caches; an activity also shows in the log.
+    // Like hang, these own their caches; an activity also shows in the log, and
+    // its exercise names join the exercises list.
     case "activities":
-      return { stale: [["sessions"], ["sessionsWithClimbs"]], gone: null };
+      return { stale: [["sessions"], ["sessionsWithClimbs"], ["exercises"]], gone: null };
     // These own their caches. Deleting a workout, block or membership unlinks the
-    // sessions logged against it on the server.
+    // sessions logged against it on the server; a copied block is new to the plan.
     case "blocks":
     case "memberships":
     case "workouts":
-      return { stale: deleted ? [...LOG, ["activities"], ["hang"], ["plan"]] : [], gone: null };
+      if (deleted) return { stale: [...LOG, ["activities"], ["hang"], ["plan"]], gone: null };
+      if (child === "copy") return { stale: [["plan"]], gone: null };
+      return { stale: resource === "workouts" ? [["exercises"]] : [], gone: null };
+    // Renaming or merging one rewrites the workouts and activities naming it.
+    case "exercises":
+      return { stale: [["exercises"], ["workouts"], ["activities"]], gone: null };
     default:
       return null;
   }

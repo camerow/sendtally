@@ -83,21 +83,34 @@ describe("writeEffect", () => {
   it("stales the log for an activity write, never the activities' own cache", () => {
     for (const method of ["PUT", "DELETE"]) {
       expect(writeEffect({ method, path: "/v1/activities/a1" })).toEqual({
-        stale: [["sessions"], ["sessionsWithClimbs"]],
+        stale: [["sessions"], ["sessionsWithClimbs"], ["exercises"]],
         gone: null,
       });
     }
   });
 
-  it("stales nothing for a plan or workout edit, which own their caches", () => {
-    for (const path of [
-      "/v1/workouts/w1",
-      "/v1/blocks/b1",
-      "/v1/memberships/m1",
-      "/v1/memberships/m1/changes",
-    ]) {
+  it("stales nothing for a plan edit, which owns its cache", () => {
+    for (const path of ["/v1/blocks/b1", "/v1/memberships/m1", "/v1/memberships/m1/changes"]) {
       expect(writeEffect({ method: "PUT", path })).toEqual({ stale: [], gone: null });
     }
+  });
+
+  it("stales the exercises for a workout edit, and the plan for a copied block", () => {
+    expect(writeEffect({ method: "PUT", path: "/v1/workouts/w1" })).toEqual({
+      stale: [["exercises"]],
+      gone: null,
+    });
+    expect(writeEffect({ method: "POST", path: "/v1/blocks/b1/copy" })).toEqual({
+      stale: [["plan"]],
+      gone: null,
+    });
+  });
+
+  it("stales the workouts and activities an exercise rename rewrites", () => {
+    expect(writeEffect({ method: "POST", path: "/v1/exercises/e1/merge" })).toEqual({
+      stale: [["exercises"], ["workouts"], ["activities"]],
+      gone: null,
+    });
   });
 
   it("stales whatever logged against a deleted workout, block or membership", () => {

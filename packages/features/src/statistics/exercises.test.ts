@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { Activity } from "@sendtally/api-client";
 import type { ItemDone, SetDone } from "@sendtally/core/hang";
-import { epley, exerciseSeries, exerciseSummary } from "./exercises";
+import { epley, exerciseSeries, exerciseSummary, workoutsUsing } from "./exercises";
 
 const TODAY = "2026-10-22";
 
@@ -94,5 +94,18 @@ describe("exerciseSummary", () => {
     });
     expect(summary?.best?.activityId).toBe("b");
     expect(summary?.latest.activityId).toBe("c");
+  });
+});
+
+describe("workoutsUsing", () => {
+  it("finds the workouts naming the exercise in any case, never by a grip id", () => {
+    const w = (kind: "strength" | "hangboard", exercise: string) => ({
+      kind,
+      variations: [{ label: "", items: [{ exercise, dose: { sets: 1 } }] }],
+    });
+    const legs = w("strength", " back Squat");
+    expect(
+      workoutsUsing([legs, w("strength", "Plank"), w("hangboard", "back squat")], "Back squat")
+    ).toEqual([legs]);
   });
 });

@@ -23,9 +23,11 @@ export {
   exerciseKey,
   exerciseSeries,
   exerciseSummary,
+  workoutsUsing,
   type ExerciseMetric,
   type ExerciseSeries,
   type ExerciseSession,
   type ExerciseSummary,
 } from "./exercises";
 export { useExerciseSeries } from "./useExerciseSeries";
+export { useExercises } from "./useExercises";

@@ -24,6 +24,8 @@ import type {
   JournalEntry,
   ConnectionStatus,
   Entitlements,
+  Exercise,
+  ExerciseInput,
   GradeScales,
   Gym,
   GymInput,
@@ -478,6 +480,27 @@ export class SendtallyApi {
   /** Its memberships go with it. */
   deleteBlock(id: string): Promise<{ deleted: boolean }> {
     return body(this.client.v1.blocks[":id"].$delete({ param: { id } }));
+  }
+
+  /** The block planned again as block `to` from `start`, with its plans and week changes. */
+  copyBlock(id: string, to: string, start: string): Promise<{ block: Block }> {
+    return body(
+      this.client.v1.blocks[":id"].copy.$post({ param: { id }, json: { id: to, start } })
+    );
+  }
+
+  exercises(): Promise<{ exercises: Exercise[] }> {
+    return body(this.client.v1.exercises.$get());
+  }
+
+  /** Creates or renames everywhere; a name another exercise has fails with 409 naming it. */
+  saveExercise(id: string, exercise: ExerciseInput): Promise<{ exercise: Exercise }> {
+    return body(this.client.v1.exercises[":id"].$put({ param: { id }, json: exercise }));
+  }
+
+  /** Every workout and log naming `id` takes `into`'s name, and `id` goes. */
+  mergeExercise(id: string, into: string): Promise<{ exercise: Exercise }> {
+    return body(this.client.v1.exercises[":id"].merge.$post({ param: { id }, json: { into } }));
   }
 
   saveMembership({ id, ...membership }: Membership): Promise<{ membership: Membership }> {

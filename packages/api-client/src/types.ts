@@ -17,6 +17,8 @@ export type {
   Circuit,
   CircuitColour,
   Dose,
+  Exercise,
+  ExerciseInput,
   Gym,
   GymInput,
   CalendarDate,
