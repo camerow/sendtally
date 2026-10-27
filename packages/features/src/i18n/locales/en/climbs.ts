@@ -23,7 +23,6 @@ export const climbs = {
   "climbs.working": "Working",
   "climbs.notFound": "Climb not found.",
   "climbs.logAClimb": "Log a climb",
-  "climbs.logAClimbHint": "A climb outside, saved into that day’s session",
   "climbs.title": "Climbs",
   "climbs.loadFailed": "Could not load your climbs. Pull to try again.",
   "climbs.daysOutside": "Days outside",

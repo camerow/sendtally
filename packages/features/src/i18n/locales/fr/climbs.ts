@@ -22,7 +22,6 @@ export const climbs = {
   "climbs.working": "En cours",
   "climbs.notFound": "Ligne introuvable.",
   "climbs.logAClimb": "Noter une ligne",
-  "climbs.logAClimbHint": "Une ligne en extérieur, ajoutée à la séance du jour",
   "climbs.title": "Lignes",
   "climbs.loadFailed": "Impossible de charger tes lignes. Tire pour réessayer.",
   "climbs.daysOutside": "Jours dehors",

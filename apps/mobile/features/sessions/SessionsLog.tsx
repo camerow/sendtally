@@ -1,4 +1,4 @@
-import { router, useLocalSearchParams } from "expo-router";
+import { router } from "expo-router";
 import React from "react";
 import {
   RefreshControl,
@@ -8,7 +8,9 @@ import {
   type SectionListData,
   type ViewToken,
 } from "react-native";
-import { useSettings } from "@sendtally/features/settings";
+import { useSettings, useTrainingMode } from "@sendtally/features/settings";
+import { todayIn } from "@sendtally/core/hang";
+import { monthSummaryVM, shownKinds } from "@sendtally/features/statistics";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
   filterSessionsByTags,
@@ -32,10 +34,10 @@ import { UpdateReadyCard } from "../app-update/UpdateReadyCard";
 import { EntryRow, entryRowHeight } from "../journal/EntryRow";
 import { TripGroup, tripGroupHeight } from "../journal/TripGroup";
 import { LogFab } from "../live-session/LogFab";
-import { startLiveSession } from "../live-session/startLiveSession";
 import { DEFAULT_FILTERS, FilterSheet, type SessionFilters } from "./FilterSheet";
 import { ScopeBar } from "./ScopeBar";
 import { SECTION_HEADER_HEIGHT, SectionHeader } from "./SectionHeader";
+import { LogSummary } from "./LogSummary";
 import { HangDataProvider } from "../training/data/HangDataProvider";
 import { SessionEditorSheet } from "../training/session-editor/SessionEditorSheet";
 import { ACTIVITY_ROW_HEIGHT, ActivityRow } from "./ActivityRow";
@@ -110,12 +112,7 @@ const emptyBody = {
   color: colors.textSecondary,
 } as const;
 
-export type SessionsLogProps = {
-  segments: React.ReactNode;
-  quickAdd: boolean;
-};
-
-export function SessionsLog({ segments, quickAdd }: SessionsLogProps): React.ReactElement {
+export function SessionsLog(): React.ReactElement {
   const api = useApi();
   const list = React.useRef<SectionList<LogItem, Section>>(null);
   const log = useQueryPair(queries.sessions(api), queries.entries(api));
@@ -132,6 +129,12 @@ export function SessionsLog({ segments, quickAdd }: SessionsLogProps): React.Rea
   const open = (item: LogItem): void => openItem(item, setEditingHang);
   // ponytail: a second status() read per mount, to know if Strava is live; a Strava-status context across tabs if it ever matters
   const settings = useSettings(api);
+  const training = useTrainingMode(api).enabled;
+  const summary = React.useMemo(
+    () =>
+      sessionLog === null ? null : monthSummaryVM(sessionLog, todayIn(), shownKinds(training)),
+    [sessionLog, training]
+  );
   const live = useLiveSession(liveSessionStorage);
   const connect = useStravaConnect(api, settings.reload);
   const gyms = useGyms(api);
@@ -248,17 +251,10 @@ export function SessionsLog({ segments, quickAdd }: SessionsLogProps): React.Rea
     filters.tags.length > 0 || filters.grouping === "tag" || filters.scope !== "all";
   const caption = sessions === null ? t("common.loading") : logCountLabel(visible);
 
-  const { add } = useLocalSearchParams<{ add?: string }>();
-  React.useEffect(() => {
-    if (add !== "climb") return;
-    router.setParams({ add: undefined });
-    startLiveSession();
-  });
-
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.white }} edges={["top"]}>
       <ScreenHeader title={t("journal.log")} caption={caption} right={<AccountButton />} />
-      {segments}
+      {summary !== null && <LogSummary vm={summary} />}
       {sections.length > 0 && (
         <ScopeBar
           items={scopeItems}
@@ -352,9 +348,7 @@ export function SessionsLog({ segments, quickAdd }: SessionsLogProps): React.Rea
           )
         }
       />
-      {(quickAdd || live.stored !== null) && (
-        <LogFab live={live.stored !== null} onStart={() => startLiveSession()} />
-      )}
+      <LogFab live={live.stored !== null} />
       {editingHang !== null && (
         <HangDataProvider fallback={null}>
           <SessionEditorSheet sessionId={editingHang} onClose={() => setEditingHang(null)} />

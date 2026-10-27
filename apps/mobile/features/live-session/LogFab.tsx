@@ -1,13 +1,12 @@
-import { router } from "expo-router";
+import { router, type Href } from "expo-router";
 import React from "react";
-import { Pressable, Text, View } from "react-native";
+import { View } from "react-native";
 import { t } from "@sendtally/features/i18n";
-import { colors, fonts } from "@sendtally/design/tokens";
 import { ENTRY_KINDS, entryKindLabel, today, type EntryKind } from "@sendtally/features/journal";
-import { Icon } from "../../components/Icon";
+import { Fab } from "../../components/Fab";
 import { Sheet } from "../../components/Sheet";
-import { press } from "../../lib/press";
-import { MenuRow } from "./MenuRow";
+import { MenuRow, type MenuRowProps } from "./MenuRow";
+import { startLiveSession } from "./startLiveSession";
 
 const ENTRY_HINTS: Record<
   EntryKind,
@@ -18,107 +17,59 @@ const ENTRY_HINTS: Record<
   injury: "journal.hintInjury",
 };
 
+type Row = Pick<MenuRowProps, "icon" | "title" | "hint"> & { key: string; href: Href };
+
+const rows = (): Row[] => [
+  {
+    key: "session",
+    icon: "sessions",
+    title: t("sessions.pastSession"),
+    hint: t("sessions.logFullSessionHint"),
+    href: "/session/new",
+  },
+  {
+    key: "activity",
+    icon: "train",
+    title: t("training.logTraining"),
+    hint: t("training.logTrainingBody"),
+    href: { pathname: "/activity/new", params: { date: today() } },
+  },
+  ...ENTRY_KINDS.map((kind): Row => ({
+    key: kind,
+    icon: kind,
+    title: entryKindLabel(kind),
+    hint: t(ENTRY_HINTS[kind]),
+    href: { pathname: "/journal/new", params: { kind, date: today() } },
+  })),
+];
+
 export type LogFabProps = {
-  /** A session is running, so the wide half goes back to it. */
+  /** A session is running, so the button goes back to it. */
   live: boolean;
-  onStart: () => void;
 };
 
-/**
- * The live session is the frequent action, so it gets the wide half. The chevron half holds the
- * slower paths: a climb outside, the full form and the journal entry kinds.
- */
-export function LogFab({ live, onStart }: LogFabProps): React.ReactElement {
+/** The live session is the frequent action; the arrow holds the slower ways to log. */
+export function LogFab({ live }: LogFabProps): React.ReactElement {
   const [menuOpen, setMenuOpen] = React.useState(false);
-  const pickEntry = (kind: EntryKind): void => {
-    setMenuOpen(false);
-    router.push({ pathname: "/journal/new", params: { kind, date: today() } });
-  };
-
   return (
     <>
-      <View
-        style={{
-          position: "absolute",
-          right: 18,
-          bottom: 16,
-          flexDirection: "row",
-          height: 52,
-          borderRadius: 26,
-          overflow: "hidden",
-          backgroundColor: colors.azureInk,
-          shadowColor: "#14131A",
-          shadowOpacity: 0.28,
-          shadowRadius: 12,
-          shadowOffset: { width: 0, height: 8 },
-          elevation: 6,
-        }}
-      >
-        <Pressable
-          onPress={onStart}
-          accessibilityRole="button"
-          style={press({
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 9,
-            paddingLeft: 22,
-            paddingRight: 18,
-          })}
-        >
-          <Icon name="plus" size={17} strokeWidth={3} color={colors.white} />
-          <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 15, color: colors.white }}>
-            {live ? t("tally.backToSession") : t("tally.startSession")}
-          </Text>
-        </Pressable>
-        <View style={{ width: 1, marginVertical: 10, backgroundColor: "rgba(255,255,255,0.28)" }} />
-        <Pressable
-          onPress={() => setMenuOpen(true)}
-          accessibilityRole="button"
-          accessibilityLabel={t("sessions.moreWaysToLog")}
-          style={press({ width: 48, alignItems: "center", justifyContent: "center" })}
-        >
-          <View style={{ transform: [{ rotate: "-90deg" }] }}>
-            <Icon name="chevron" size={14} strokeWidth={2.4} color={colors.white} />
-          </View>
-        </Pressable>
-      </View>
-
+      <Fab
+        label={live ? t("tally.backToSession") : t("tally.startSession")}
+        onPress={() => startLiveSession()}
+        menu={{ label: t("sessions.moreWaysToLog"), onPress: () => setMenuOpen(true) }}
+      />
       <Sheet visible={menuOpen} onClose={() => setMenuOpen(false)} closeLabel={t("common.cancel")}>
         <View style={{ gap: 4, paddingTop: 4, paddingHorizontal: 12, paddingBottom: 4 }}>
-          <MenuRow
-            icon="plus"
-            title={live ? t("tally.backToSession") : t("tally.startSession")}
-            hint={t("tally.startSessionHint")}
-            onPress={() => {
-              setMenuOpen(false);
-              onStart();
-            }}
-          />
-          <MenuRow
-            icon="climb"
-            title={t("climbs.logAClimb")}
-            hint={t("climbs.logAClimbHint")}
-            onPress={() => {
-              setMenuOpen(false);
-              router.push("/climb/log");
-            }}
-          />
-          <MenuRow
-            icon="sessions"
-            title={t("sessions.logFullSession")}
-            hint={t("sessions.logFullSessionHint")}
-            onPress={() => {
-              setMenuOpen(false);
-              router.push("/session/new");
-            }}
-          />
-          {ENTRY_KINDS.map((kind) => (
+          {rows().map((row) => (
             <MenuRow
-              key={kind}
-              icon={kind}
-              title={entryKindLabel(kind)}
-              hint={t(ENTRY_HINTS[kind])}
-              onPress={() => pickEntry(kind)}
+              key={row.key}
+              icon={row.icon}
+              title={row.title}
+              hint={row.hint}
+              onPress={() => {
+                setMenuOpen(false);
+                router.push(row.href);
+              }}
             />
           ))}
         </View>

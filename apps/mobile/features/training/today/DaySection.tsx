@@ -1,4 +1,3 @@
-import { router } from "expo-router";
 import React from "react";
 import { View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
@@ -10,7 +9,6 @@ import {
   type LoggedItem,
   type TrainingDay,
 } from "@sendtally/features/training";
-import { Button } from "../components/Button";
 import { DashedPanel } from "../components/DashedPanel";
 import { Label } from "../components/Label";
 import { Title } from "../components/Title";
@@ -40,7 +38,7 @@ function subtitle(day: TrainingDay): string {
   return open === marks.length ? planned : `${planned} · ${logged}`;
 }
 
-/** The selected day: what was logged, what is planned on it, done, missed or still to come, and adding to it. */
+/** The selected day: what was logged, what is planned on it, done, missed or still to come. */
 export function DaySection({ day, onOpen }: DaySectionProps): React.ReactElement {
   const { model } = useHangData();
   const library = useLibrary().state;
@@ -84,13 +82,6 @@ export function DaySection({ day, onOpen }: DaySectionProps): React.ReactElement
           body={day.isPast ? t("hang.restDayPast") : t("hang.restDayFuture")}
         />
       )}
-      <Button
-        label={t("plan.addToPlan")}
-        onPress={() => router.push({ pathname: "/plan/add", params: { date: day.date } })}
-        variant="dashed"
-        height={50}
-        icon="plus"
-      />
     </View>
   );
 }

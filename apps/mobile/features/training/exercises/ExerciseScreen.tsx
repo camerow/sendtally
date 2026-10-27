@@ -2,7 +2,7 @@ import { router } from "expo-router";
 import React from "react";
 import { Alert, ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { ApiError, type Exercise } from "@sendtally/api-client";
+import type { Exercise } from "@sendtally/api-client";
 import { colors } from "@sendtally/design/tokens";
 import { kindLabel, useWeightUnit } from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
@@ -26,13 +26,9 @@ import { ExerciseTrendCard } from "./ExerciseTrendCard";
 import { MergeExerciseSheet } from "./MergeExerciseSheet";
 import { RecentSessions } from "./RecentSessions";
 import { RenameExerciseSheet } from "./RenameExerciseSheet";
+import { takenBy } from "./takenBy";
 
 const failed = (): void => Alert.alert(t("workouts.saveFailed"));
-
-const takenBy = (error: unknown): Exercise | undefined =>
-  error instanceof ApiError && error.status === 409
-    ? (error.body as { exercise?: Exercise } | null)?.exercise
-    : undefined;
 
 export type ExerciseScreenProps = { id: string };
 

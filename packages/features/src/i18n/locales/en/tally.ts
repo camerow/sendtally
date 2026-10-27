@@ -22,5 +22,4 @@ export const tally = {
   "tally.discardBody": "Every climb in it goes too.",
   "tally.startSession": "Start session",
   "tally.backToSession": "Back to session",
-  "tally.startSessionHint": "Tally a gym session climb by climb",
 } as const;

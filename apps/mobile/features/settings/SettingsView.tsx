@@ -37,7 +37,6 @@ export type SettingsViewProps = {
   billing: MembershipSectionProps | null;
   posting: StravaPostingFeature;
   trainingMode: TrainingModeFeature;
-  pushed: boolean;
   connect: StravaConnectFeature;
   exporter: CsvExportFeature;
   onChangeGradePref: (discipline: Discipline, scale: GradeScale) => void;
@@ -74,7 +73,6 @@ export function SettingsView({
   billing,
   posting,
   trainingMode,
-  pushed,
   connect,
   exporter,
   onChangeGradePref,
@@ -82,11 +80,9 @@ export function SettingsView({
 }: SettingsViewProps): React.ReactElement {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.white }} edges={["top"]}>
-      {pushed && (
-        <View style={{ paddingHorizontal: 18 }}>
-          <BackButton />
-        </View>
-      )}
+      <View style={{ paddingHorizontal: 18 }}>
+        <BackButton />
+      </View>
       <ScreenHeader title={t("common.settings")} />
       <ScrollView
         contentContainerStyle={{

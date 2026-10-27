@@ -1,14 +1,11 @@
 import { router } from "expo-router";
 import React from "react";
 import { View } from "react-native";
-import { t } from "@sendtally/features/i18n";
 import { libraryShelves, type LibraryWorkout } from "@sendtally/features/workouts";
-import { Button } from "../components/Button";
 import { HangDataProvider } from "../data/HangDataProvider";
 import { LoadState } from "../data/LoadState";
 import { LibraryBrowser } from "./LibraryBrowser";
 import { LibraryShelf } from "./LibraryShelf";
-import { NewWorkoutSheet } from "./NewWorkoutSheet";
 import { useLibrary } from "./useLibrary";
 
 const preview = (w: LibraryWorkout): void =>
@@ -16,16 +13,8 @@ const preview = (w: LibraryWorkout): void =>
 
 function Library(): React.ReactElement {
   const { state, reload } = useLibrary();
-  const [adding, setAdding] = React.useState(false);
   return (
     <View style={{ gap: 14 }}>
-      <Button
-        label={t("workouts.newWorkout")}
-        onPress={() => setAdding(true)}
-        variant="dashed"
-        icon="plus"
-        height={50}
-      />
       {state.status === "ready" ? (
         <LibraryBrowser library={state.data} onPick={preview}>
           {libraryShelves(state.data.workouts, state.data.usage).map((shelf) => (
@@ -44,7 +33,6 @@ function Library(): React.ReactElement {
       ) : (
         <LoadState state={state} onRetry={() => void reload()} />
       )}
-      {adding && <NewWorkoutSheet onClose={() => setAdding(false)} />}
     </View>
   );
 }

@@ -5,8 +5,8 @@ import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
 import { useTrainingMode } from "@sendtally/features/settings";
 import {
-  ACTIVITY_KINDS,
   STATISTICS_RANGES,
+  shownKinds,
   statisticsRangeLabel,
   useStatisticsOverview,
   type ActivityKind,
@@ -24,7 +24,6 @@ import { WeeklySessions } from "./WeeklySessions";
 
 const GAP = 14;
 const FREE_RANGE: StatisticsRange = "12w";
-const CLIMBING_ONLY: readonly ActivityKind[] = ["climbing"];
 
 function Charts({
   range,
@@ -106,7 +105,7 @@ export function StatisticsScreen({ header }: { header: React.ReactNode }): React
             </View>
             <Charts
               range={range}
-              kinds={training.enabled ? ACTIVITY_KINDS : CLIMBING_ONLY}
+              kinds={shownKinds(training.enabled)}
               member={member}
               onLocked={toPaywall}
             />

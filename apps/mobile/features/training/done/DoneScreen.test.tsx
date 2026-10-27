@@ -5,7 +5,7 @@ import React from "react";
 import { hangData, renderWithHang, TODAY } from "../data/renderWithHang";
 import { DoneScreen } from "./DoneScreen";
 
-jest.mock("expo-router", () => ({ router: { dismissTo: jest.fn() } }));
+jest.mock("expo-router", () => ({ router: { dismissTo: jest.fn(), push: jest.fn() } }));
 jest.mock("expo-crypto", () => ({ randomUUID: () => "session-1" }));
 
 const partial = {
@@ -60,10 +60,8 @@ describe("Session done", () => {
         },
       ],
     });
-    expect(router.dismissTo).toHaveBeenCalledWith({
-      pathname: "/(tabs)/trends",
-      params: { view: "hangboard", workout: "rep73", grip: "half" },
-    });
+    expect(router.dismissTo).toHaveBeenCalledWith("/(tabs)/sessions");
+    expect(router.push).toHaveBeenCalledWith("/statistics");
   });
 
   it("logs every item of a workout with more than one, each with its own setup", async () => {

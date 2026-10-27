@@ -33,7 +33,6 @@ export const settings = {
     "Off. Sessions stay in sendtally, and each one keeps a Post to Strava action on its own page.",
   "settings.membershipPitch": "A membership unlocks trends and insights in your climbing habits.",
   "settings.billedThrough": "Billed through {store}. Manage it there.",
-  "settings.tab": "Settings",
   "settings.openingStrava": "Opening Strava…",
   "settings.stravaUnreachable": "Could not reach Strava. Try again.",
   "settings.embeddedBundle": "Embedded",

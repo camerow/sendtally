@@ -70,6 +70,17 @@ describe("Today", () => {
     });
   });
 
+  it("adds to the day picked, naming it", async () => {
+    await renderWithHang(<TodayScreen />, hangData(), { plan: plan("max10") });
+    expect(screen.getByText("Add to today")).toBeTruthy();
+    await fireEvent.press(screen.getByLabelText(/^Monday/));
+    await fireEvent.press(screen.getByText("Add to Mon"));
+    expect(router.push).toHaveBeenCalledWith({
+      pathname: "/plan/add",
+      params: { date: "2026-09-28" },
+    });
+  });
+
   it("shows no block row outside a block", async () => {
     await renderWithHang(<TodayScreen />, hangData(), { plan: plan("max10") });
     expect(screen.queryByText(/ · week /)).toBeNull();

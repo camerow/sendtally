@@ -47,6 +47,7 @@ const SIGNED_IN_SCREENS = [
   "gym/[id]",
   "account",
   "profile",
+  "statistics",
   "membership",
   "workout/[id]",
   "workout/edit",

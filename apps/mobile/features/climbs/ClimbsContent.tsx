@@ -1,16 +1,15 @@
 import { router } from "expo-router";
 import React from "react";
-import { Pressable, RefreshControl, ScrollView, Text, View } from "react-native";
+import { RefreshControl, ScrollView, Text, View } from "react-native";
 import { climbsOverview, useClimbs, type ClimbRowVM } from "@sendtally/features/climbs";
 import { disciplineLabel, type Discipline } from "@sendtally/features/log-session";
 import { t } from "@sendtally/features/i18n";
 import { colors, fonts } from "@sendtally/design/tokens";
-import { Icon } from "../../components/Icon";
+import { Fab } from "../../components/Fab";
 import { Pyramid } from "../../components/Pyramid";
 import { PyramidLegend } from "../../components/PyramidLegend";
 import { Segmented } from "../../components/Segmented";
 import { useApi } from "../../lib/api";
-import { press } from "../../lib/press";
 import { useCanSeeInsights } from "../billing/useBilling";
 import { ClimbListRow } from "./ClimbListRow";
 import { StatTile } from "./StatTile";
@@ -193,33 +192,7 @@ export function ClimbsContent({ header }: ClimbsContentProps): React.ReactElemen
         )}
       </ScrollView>
 
-      <Pressable
-        onPress={() => router.push("/climb/log")}
-        accessibilityRole="button"
-        style={press({
-          position: "absolute",
-          right: 16,
-          bottom: 16,
-          height: 52,
-          flexDirection: "row",
-          alignItems: "center",
-          gap: 8,
-          paddingLeft: 16,
-          paddingRight: 20,
-          borderRadius: 26,
-          backgroundColor: colors.gunmetal,
-          shadowColor: "#35343F",
-          shadowOpacity: 0.3,
-          shadowRadius: 10,
-          shadowOffset: { width: 0, height: 8 },
-          elevation: 6,
-        })}
-      >
-        <Icon name="plus" size={18} strokeWidth={2.6} color={colors.gold} />
-        <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 15, color: colors.white }}>
-          {t("climbs.logAClimb")}
-        </Text>
-      </Pressable>
+      <Fab label={t("climbs.logAClimb")} onPress={() => router.push("/climb/log")} />
     </View>
   );
 }

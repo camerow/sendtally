@@ -1,4 +1,4 @@
-import type { SessionLogWithClimbs } from "@sendtally/api-client";
+import type { SessionLog, SessionLogWithClimbs } from "@sendtally/api-client";
 import type { CalendarDate } from "@sendtally/core/hang";
 import { dayMonth } from "../hang/format";
 import { formatNumber, t, type MessageKey } from "../i18n";
@@ -9,6 +9,12 @@ import { topSendVM, type TopSendVM } from "./topSend";
 export const ACTIVITY_KINDS = ["climbing", "hangboard", "strength", "mobility", "other"] as const;
 
 export type ActivityKind = (typeof ACTIVITY_KINDS)[number];
+
+const CLIMBING_ONLY: readonly ActivityKind[] = ["climbing"];
+
+/** Every kind with training on; climbing alone with it off. */
+export const shownKinds = (training: boolean): readonly ActivityKind[] =>
+  training ? ACTIVITY_KINDS : CLIMBING_ONLY;
 
 export const STATISTICS_RANGES = ["12w", "1y"] as const;
 
@@ -53,7 +59,7 @@ export type StatisticsOverviewVM = {
   topSend: TopSendVM;
 };
 
-export function activitiesOf(log: SessionLogWithClimbs): Activity<ActivityKind>[] {
+export function activitiesOf(log: SessionLog): Activity<ActivityKind>[] {
   return [
     ...log.sessions.map((s): Activity<ActivityKind> => ({
       kind: "climbing",
@@ -87,7 +93,7 @@ const weekKinds = (
   return held.length > 0 ? held : kinds.slice(0, 1);
 };
 
-const oneDecimal = (n: number): string =>
+export const oneDecimal = (n: number): string =>
   formatNumber(n, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 
 function effortChange(weeks: readonly OverviewWeekVM[]): string | null {

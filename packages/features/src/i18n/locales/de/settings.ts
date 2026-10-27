@@ -36,7 +36,6 @@ export const settings = {
   "settings.membershipPitch":
     "Die Mitgliedschaft schaltet Trends und Einblicke in deine Klettergewohnheiten frei.",
   "settings.billedThrough": "Abrechnung über {store}. Verwalte sie dort.",
-  "settings.tab": "Mehr",
   "settings.openingStrava": "Strava wird geöffnet…",
   "settings.stravaUnreachable": "Strava ist nicht erreichbar. Versuch es noch einmal.",
   "settings.embeddedBundle": "Eingebettet",

@@ -35,7 +35,6 @@ export const settings = {
   "settings.membershipPitch":
     "L'abonnement débloque les tendances et des analyses de tes habitudes d'escalade.",
   "settings.billedThrough": "Facturé via {store}. Gère-le là-bas.",
-  "settings.tab": "Réglages",
   "settings.openingStrava": "Ouverture de Strava…",
   "settings.stravaUnreachable": "Impossible de joindre Strava. Réessaie.",
   "settings.embeddedBundle": "Intégré",

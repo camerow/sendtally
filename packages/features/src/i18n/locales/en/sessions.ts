@@ -66,4 +66,5 @@ export const sessions = {
   "sessions.notSavedYet": "Not saved yet, will retry",
   "sessions.addDetails": "Add details",
   "sessions.topSend": "top {grade}",
+  "sessions.pastSession": "Past session",
 } as const;

@@ -131,4 +131,5 @@ export const workouts = {
   "workouts.exerciseMore": "Mehr zu dieser Übung",
   "workouts.exerciseNothingLogged":
     "Noch nichts eingetragen. Deine Sätze erscheinen hier, sobald du sie einträgst.",
+  "workouts.newExercise": "Neue Übung",
 } as const;

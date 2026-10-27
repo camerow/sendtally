@@ -134,4 +134,5 @@ export const workouts = {
   "workouts.exerciseMore": "Plus pour cet exercice",
   "workouts.exerciseNothingLogged":
     "Rien d'enregistré pour l'instant. Tes séries apparaîtront ici dès que tu les notes.",
+  "workouts.newExercise": "Nouvel exercice",
 } as const;

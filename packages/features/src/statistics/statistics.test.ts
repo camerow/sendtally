@@ -6,6 +6,7 @@ import type {
   SessionWithClimbs,
 } from "@sendtally/api-client";
 import { summariseActivity, type Activity } from "./activity";
+import { monthSummaryVM } from "./month";
 import { overviewVM } from "./overview";
 import { topSendVM } from "./topSend";
 
@@ -285,5 +286,30 @@ describe("topSendVM", () => {
     expect(vm.weeks).toEqual([null, null, null]);
     expect(vm.now).toBeNull();
     expect(vm.from).toBeNull();
+  });
+});
+
+describe("monthSummaryVM", () => {
+  const log = {
+    activities: [],
+    sessions: [
+      climbing("2026-10-20T18:00:00Z", 7),
+      climbing("2026-09-30T18:00:00Z", 5),
+      climbing("2026-10-21T18:00:00Z", 6, [], { rpe_source: "none" }),
+    ],
+    hangSessions: [hang("2026-10-22", 8), hang("2026-10-01", null)],
+  };
+
+  it("counts this month's sessions and averages the scored ones", () => {
+    const vm = monthSummaryVM(log, TODAY);
+    expect(vm.month).toBe("October");
+    expect(vm.line).toBe("4 sessions · effort 7.5");
+    expect(vm.weeks).toHaveLength(8);
+    expect(vm.weeks.at(-1)).toBe(3);
+  });
+
+  it("keeps to the kinds asked for, and says only the count with nothing scored", () => {
+    expect(monthSummaryVM(log, TODAY, ["climbing"]).line).toBe("2 sessions · effort 7.0");
+    expect(monthSummaryVM({ ...log, sessions: [] }, TODAY, ["climbing"]).line).toBe("0 sessions");
   });
 });

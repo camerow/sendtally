@@ -9,6 +9,7 @@ export {
   STATISTICS_RANGES,
   activitiesOf,
   overviewVM,
+  shownKinds,
   statisticsRangeLabel,
   type ActivityKind,
   type OverviewKindVM,
@@ -16,6 +17,7 @@ export {
   type StatisticsOverviewVM,
   type StatisticsRange,
 } from "./overview";
+export { monthSummaryVM, type MonthSummaryVM } from "./month";
 export { topSendVM, type TopSendVM, type TopSendWeekVM } from "./topSend";
 export { useStatisticsOverview } from "./useStatisticsOverview";
 export {

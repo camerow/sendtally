@@ -7,7 +7,7 @@ import { CategoryScreen } from "../../features/training/library/CategoryScreen";
 export default function WorkoutCategoryRoute(): React.ReactElement {
   const { kind } = useLocalSearchParams<{ kind?: string }>();
   const known = WORKOUT_KINDS.find((k) => k === kind);
-  if (known === undefined) return <Redirect href="/train?view=workouts" />;
+  if (known === undefined) return <Redirect href="/(tabs)/train" />;
   return (
     <HangDataProvider>
       <CategoryScreen kind={known} />

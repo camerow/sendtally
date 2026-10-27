@@ -43,4 +43,5 @@ export const statistics = {
   "statistics.latest": "Dernier",
   "statistics.volumeThisMonth": "Volume ce mois-ci",
   "statistics.lastSessions": "Dernières séances",
+  "statistics.monthLine": "{sessions} · effort {effort}",
 } as const;

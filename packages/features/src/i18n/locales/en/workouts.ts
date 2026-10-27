@@ -128,4 +128,5 @@ export const workouts = {
   "workouts.merge": "Merge",
   "workouts.exerciseMore": "More for this exercise",
   "workouts.exerciseNothingLogged": "Nothing logged yet. Its sets show here once you log them.",
+  "workouts.newExercise": "New exercise",
 } as const;

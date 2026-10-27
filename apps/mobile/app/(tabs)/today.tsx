@@ -1,6 +1,5 @@
 import { router } from "expo-router";
 import React from "react";
-import { ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
@@ -28,13 +27,9 @@ export default function Today(): React.ReactElement {
           </>
         }
       />
-      <ScrollView
-        contentContainerStyle={{ paddingHorizontal: 18, paddingTop: 4, paddingBottom: 32 }}
-      >
-        <HangDataProvider>
-          <TodayScreen />
-        </HangDataProvider>
-      </ScrollView>
+      <HangDataProvider>
+        <TodayScreen />
+      </HangDataProvider>
     </SafeAreaView>
   );
 }

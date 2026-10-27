@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams, useNavigation } from "expo-router";
 import React from "react";
-import { View } from "react-native";
+import { ScrollView, View } from "react-native";
 import {
   addDays,
   blockWeekOn,
@@ -11,7 +11,7 @@ import {
   type CalendarDate,
 } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
-import { longDate } from "@sendtally/features/hang";
+import { longDate, weekdayShort } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import {
   trainingDay,
@@ -20,6 +20,7 @@ import {
   weekDone,
   type LoggedItem,
 } from "@sendtally/features/training";
+import { Fab } from "../../../components/Fab";
 import { useApi } from "../../../lib/api";
 import { blockOn } from "../calendar/calendarGrid";
 import { Label } from "../components/Label";
@@ -82,26 +83,39 @@ export function TodayScreen(): React.ReactElement {
       });
   };
 
+  const addLabel =
+    selected === today
+      ? t("plan.addToToday")
+      : t("plan.addToDay", { day: weekdayShort(weekday(selected)) });
+
   return (
-    <View style={{ gap: 16 }}>
-      <Label color={colors.gunmetal}>{longDate(today)}</Label>
-      <View>
-        <WeekStrip
-          offset={offset}
-          days={days}
-          done={t("plan.doneOf", weekDone(days))}
-          selected={selected}
-          onSelect={setSelected}
-          onOffset={changeWeek}
-        />
-        {block !== null && at !== null && (
-          <BlockRow
-            id={block.id}
-            name={t("hang.blockWeek", { label: block.name, at, of: block.weeks })}
+    <View style={{ flex: 1 }}>
+      <ScrollView
+        contentContainerStyle={{ gap: 16, paddingHorizontal: 18, paddingTop: 4, paddingBottom: 96 }}
+      >
+        <Label color={colors.gunmetal}>{longDate(today)}</Label>
+        <View>
+          <WeekStrip
+            offset={offset}
+            days={days}
+            done={t("plan.doneOf", weekDone(days))}
+            selected={selected}
+            onSelect={setSelected}
+            onOffset={changeWeek}
           />
-        )}
-      </View>
-      <DaySection day={day} onOpen={open} />
+          {block !== null && at !== null && (
+            <BlockRow
+              id={block.id}
+              name={t("hang.blockWeek", { label: block.name, at, of: block.weeks })}
+            />
+          )}
+        </View>
+        <DaySection day={day} onOpen={open} />
+      </ScrollView>
+      <Fab
+        label={addLabel}
+        onPress={() => router.push({ pathname: "/plan/add", params: { date: selected } })}
+      />
       <SessionEditorSheet sessionId={editing} onClose={() => setEditing(null)} />
     </View>
   );

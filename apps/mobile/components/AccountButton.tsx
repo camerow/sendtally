@@ -2,18 +2,13 @@ import { useUser } from "@clerk/clerk-expo";
 import { router } from "expo-router";
 import React from "react";
 import { Pressable, Text, View } from "react-native";
-import { useTrainingMode } from "@sendtally/features/settings";
 import { t } from "@sendtally/features/i18n";
 import { colors, fonts } from "@sendtally/design/tokens";
-import { useApi } from "../lib/api";
 import { press } from "../lib/press";
 
-/** The way to settings once training mode takes the Settings tab away; renders nothing otherwise. */
-export function AccountButton(): React.ReactElement | null {
-  const api = useApi();
-  const { enabled } = useTrainingMode(api);
+/** The way to Settings, from every tab's header. */
+export function AccountButton(): React.ReactElement {
   const { user } = useUser();
-  if (!enabled) return null;
   const name = user?.firstName ?? user?.primaryEmailAddress?.emailAddress ?? "";
   return (
     <Pressable

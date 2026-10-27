@@ -24,7 +24,6 @@ export const climbs = {
   "climbs.working": "En proceso",
   "climbs.notFound": "Escalada no encontrada.",
   "climbs.logAClimb": "Registrar una escalada",
-  "climbs.logAClimbHint": "Una escalada al aire libre, guardada en la sesión de ese día",
   "climbs.title": "Escaladas",
   "climbs.loadFailed": "No se pudieron cargar tus escaladas. Desliza para reintentar.",
   "climbs.daysOutside": "Días fuera",

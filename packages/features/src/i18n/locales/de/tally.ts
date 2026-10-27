@@ -22,5 +22,4 @@ export const tally = {
   "tally.discardBody": "Alle Klettereien darin gehen mit.",
   "tally.startSession": "Session starten",
   "tally.backToSession": "Zurück zur Session",
-  "tally.startSessionHint": "Eine Hallensession Kletterei für Kletterei zählen",
 } as const;

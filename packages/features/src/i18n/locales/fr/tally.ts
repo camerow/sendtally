@@ -22,5 +22,4 @@ export const tally = {
   "tally.discardBody": "Toutes ses lignes disparaissent aussi.",
   "tally.startSession": "Commencer une séance",
   "tally.backToSession": "Retour à la séance",
-  "tally.startSessionHint": "Compter une séance en salle ligne par ligne",
 } as const;

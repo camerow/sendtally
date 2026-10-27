@@ -23,7 +23,7 @@ export function TrainingModeSection({
         .catch((err: unknown) =>
           setError(err instanceof Error ? err.message : t("common.somethingWentWrong"))
         );
-      router.replace(next ? "/(tabs)/today" : "/(tabs)/settings");
+      router.dismissTo(next ? "/(tabs)/today" : "/(tabs)/sessions");
     },
     [trainingMode, router]
   );

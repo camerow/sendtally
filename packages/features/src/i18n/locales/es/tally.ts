@@ -22,5 +22,4 @@ export const tally = {
   "tally.discardBody": "Todas sus escaladas se van también.",
   "tally.startSession": "Empezar sesión",
   "tally.backToSession": "Volver a la sesión",
-  "tally.startSessionHint": "Contar una sesión de rocódromo escalada a escalada",
 } as const;

@@ -83,4 +83,6 @@ export const plan = {
   "plan.doneOf": "{done} of {planned} done",
   "plan.planAgain": "Plan again",
   "plan.planAgainStart": "Which week does it start?",
+  "plan.addToToday": "Add to today",
+  "plan.addToDay": "Add to {day}",
 } as const;

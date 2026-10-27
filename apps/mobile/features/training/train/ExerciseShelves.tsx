@@ -26,7 +26,7 @@ import { type } from "../type";
 
 type Card = { key: string; name: string; meta: string; open: () => void };
 
-const SHELVES = ["strength", "mobility", "other"] as const;
+export const EXERCISE_SHELVES = ["strength", "mobility", "other"] as const;
 
 function Shelf({ kind, cards }: { kind: WorkoutKind; cards: Card[] }): React.ReactElement {
   return (
@@ -118,7 +118,7 @@ export function ExerciseShelves(): React.ReactElement {
     });
   const shelves = [
     { kind: "hangboard" as const, cards: grips },
-    ...SHELVES.map((kind) => ({
+    ...EXERCISE_SHELVES.map((kind) => ({
       kind,
       cards: list
         .filter((e) => e.kind === kind)

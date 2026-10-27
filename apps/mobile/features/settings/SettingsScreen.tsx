@@ -15,7 +15,7 @@ import { SettingsView } from "./SettingsView";
 import { useStravaConnect } from "./useStravaConnect";
 import { useApi } from "../../lib/api";
 
-export function SettingsScreen({ pushed }: { pushed: boolean }): React.ReactElement {
+export function SettingsScreen(): React.ReactElement {
   const api = useApi();
   const { user } = useUser();
   const router = useRouter();
@@ -45,7 +45,6 @@ export function SettingsScreen({ pushed }: { pushed: boolean }): React.ReactElem
       }
       posting={posting}
       trainingMode={trainingMode}
-      pushed={pushed}
       connect={connect}
       exporter={exporter}
       onChangeGradePref={onChangeGradePref}

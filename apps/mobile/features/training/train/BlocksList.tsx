@@ -1,4 +1,3 @@
-import { router } from "expo-router";
 import React from "react";
 import { View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
@@ -7,7 +6,6 @@ import { t } from "@sendtally/features/i18n";
 import { blockDone, blockGroups, blockMembers, useTrainingLog } from "@sendtally/features/training";
 import { useApi } from "../../../lib/api";
 import { BlockCard } from "../blocks/BlockCard";
-import { Button } from "../components/Button";
 import { DashedPanel } from "../components/DashedPanel";
 import { Label } from "../components/Label";
 import { useHangData } from "../data/HangDataContext";
@@ -80,13 +78,6 @@ export function BlocksList(): React.ReactElement {
           })}
         </Group>
       )}
-      <Button
-        label={t("plan.newBlock")}
-        onPress={() => router.push("/plan/block/new")}
-        variant="dashed"
-        icon="plus"
-        height={50}
-      />
     </View>
   );
 }

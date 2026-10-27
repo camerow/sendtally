@@ -24,7 +24,6 @@ export const climbs = {
   "climbs.working": "In Arbeit",
   "climbs.notFound": "Kletterei nicht gefunden.",
   "climbs.logAClimb": "Kletterei eintragen",
-  "climbs.logAClimbHint": "Eine Kletterei draußen, in der Session des Tages gespeichert",
   "climbs.title": "Klettereien",
   "climbs.loadFailed": "Deine Klettereien konnten nicht geladen werden. Zum Aktualisieren ziehen.",
   "climbs.daysOutside": "Tage draußen",
