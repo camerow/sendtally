@@ -2,6 +2,7 @@ import type { HangData, HangSessionRecord } from "@sendtally/api-client";
 import {
   BUILT_IN_GRIP_NAMES,
   BUILT_IN_GRIPS,
+  doseIndex,
   doseProtocol,
   lastSession,
   loadKey,
@@ -58,12 +59,16 @@ export function hangWorkoutFromItem(
   };
 }
 
-/** The first item of a hangboard workout as the timer runs it, or null when it has none. */
+/**
+ * The first item of a hangboard workout as session `session` of it runs, the first by
+ * default, or null when it has none.
+ */
 export function hangWorkoutOf(
-  w: Pick<LibraryWorkout, "id" | "source" | "kind" | "name" | "items">
+  w: Pick<LibraryWorkout, "id" | "source" | "kind" | "name" | "items">,
+  session = 0
 ): HangWorkout | null {
   const [first] = w.kind === "hangboard" ? w.items : [];
-  const dose = first?.doses[0];
+  const dose = first?.doses[doseIndex(first, session)];
   return first === undefined || dose === undefined
     ? null
     : hangWorkoutFromItem(w, { exercise: first.exercise, dose });

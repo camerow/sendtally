@@ -5,6 +5,7 @@ import { Alert, ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors } from "@sendtally/design/tokens";
 import { seriesFor, summarise, type HangWorkout } from "@sendtally/core/hang";
+import { hangWorkoutOf } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import {
   copyName,
@@ -43,6 +44,7 @@ function Detail({
 }): React.ReactElement {
   const { model, actions, today } = useHangData();
   const session = useNextSession(workout.id);
+  const next = hangWorkoutOf(library, session) ?? workout;
   const workouts = useWorkoutActions(useApi(), reportFailure);
   const [gripId, setGripId] = React.useState(initialGrip ?? model.defaultGrip(workout));
   const [picker, setPicker] = React.useState(false);
@@ -100,8 +102,8 @@ function Detail({
         contentContainerStyle={{ gap: 18, paddingTop: 8, paddingHorizontal: 18, paddingBottom: 24 }}
       >
         <WorkoutIntro workout={workout} description={library.description} />
-        <GripSetupCard workout={workout} gripId={gripId} onChooseGrip={() => setPicker(true)} />
-        <ProtocolPanel workout={workout} />
+        <GripSetupCard workout={next} gripId={gripId} onChooseGrip={() => setPicker(true)} />
+        <ProtocolPanel workout={next} />
         <View style={{ gap: 8 }}>
           <Label color={colors.gunmetal}>{t("hang.schedule")}</Label>
           <PlanList workoutId={workout.id} name={workout.name} empty={t("hang.notScheduled")} />

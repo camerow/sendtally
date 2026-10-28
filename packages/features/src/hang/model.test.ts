@@ -94,6 +94,14 @@ describe("hang workouts", () => {
     });
     expect(hangWorkoutOf({ ...mine, items: [] })).toBeNull();
   });
+
+  it("runs the dose a later session takes, in turn", () => {
+    const fingers = libraryOf([]).find((w) => w.id === "fingers-ab");
+    const at = (session: number): unknown =>
+      fingers === undefined ? null : hangWorkoutOf(fingers, session);
+    expect(at(1)).toMatchObject({ reps: 6, hangS: 7, restS: 3, sets: 3 });
+    expect(at(2)).toMatchObject({ reps: 1, hangS: 10, sets: 6 });
+  });
 });
 
 describe("defaultGrip", () => {
