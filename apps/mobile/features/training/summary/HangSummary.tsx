@@ -2,13 +2,20 @@ import React from "react";
 import type { HangSessionRecord } from "@sendtally/api-client";
 import { clock, totalSeconds } from "@sendtally/core/hang";
 import { gripSessions, hangGrid, pastSessions, previousHang } from "@sendtally/features/activities";
-import { loadLabel, shortDate, type HangActions, type HangModel } from "@sendtally/features/hang";
+import {
+  loadLabel,
+  newBestOf,
+  shortDate,
+  type HangActions,
+  type HangModel,
+} from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import { hangTitle } from "@sendtally/features/sessions";
 import type { TrainingLog } from "@sendtally/features/training";
 import { KIND_LOOK } from "../today/kindLook";
 import { GripTrend } from "./GripTrend";
 import { HangResultCard } from "./HangResultCard";
+import { NewBestCard } from "./NewBestCard";
 import { PastSessions } from "./PastSessions";
 import { SummaryFrame } from "./SummaryFrame";
 import { effortTile, kickerText } from "./summaryText";
@@ -20,7 +27,7 @@ export type HangSummaryProps = {
   actions: HangActions;
 };
 
-/** A finished hangboard session: its hangs set by set, the weight on the grip, its past sessions. */
+/** A finished hangboard session: a new best when it set one, its hangs set by set, the weight on the grip, its past sessions. */
 export function HangSummary({
   session,
   model,
@@ -31,6 +38,7 @@ export function HangSummary({
   const all = model.sessions;
   const grid = hangGrid(session);
   const kind = session.protocol.kind;
+  const best = newBestOf(session, all, model.gripName(session.gripId), unit);
   return (
     <SummaryFrame
       kicker={kickerText("hangboard", session.date, session, log.plan)}
@@ -46,6 +54,7 @@ export function HangSummary({
       rpe={session.rpe}
       onDelete={() => void actions.deleteSession(session.id)}
     >
+      {best !== null && <NewBestCard best={best} />}
       <HangResultCard
         session={session}
         previous={previousHang(session, all)}

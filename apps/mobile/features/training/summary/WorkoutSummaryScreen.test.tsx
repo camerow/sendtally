@@ -10,7 +10,7 @@ import type {
   Plan,
   WorkoutRecord,
 } from "@sendtally/api-client";
-import { hangData, renderWithHang } from "../data/renderWithHang";
+import { aHang, hangData, renderWithHang } from "../data/renderWithHang";
 import { WorkoutSummaryScreen } from "./WorkoutSummaryScreen";
 
 type Strava = { status: "active" | "dead" } | null;
@@ -239,6 +239,18 @@ describe("A finished workout's summary", () => {
     expect(screen.getByText("+12 kg · 3 sets of 6 · 1 hang let go")).toBeTruthy();
     expect(screen.getByText("Added weight on this grip")).toBeTruthy();
     expect(screen.getByText("+10 kg · 18 of 18 hangs")).toBeTruthy();
+    expect(screen.queryByText("New best")).toBeNull();
+  });
+
+  it("celebrates a completed hang that beats the grip's best on its setup", async () => {
+    await show(
+      "h2",
+      [],
+      [aHang({ id: "h1", loadKg: 10 }), aHang({ id: "h2", date: "2026-10-27", loadKg: 12 })]
+    );
+    expect(screen.getByText("New best")).toBeTruthy();
+    expect(screen.getByText("Half crimp +12 kg")).toBeTruthy();
+    expect(screen.getByText("20 mm · 10s · up 2 kg on your last best")).toBeTruthy();
   });
 });
 

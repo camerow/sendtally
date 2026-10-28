@@ -35,7 +35,8 @@ export function BlockRecapView({ recap, workout }: BlockRecapViewProps): React.R
         {recap.workouts.map((r) => {
           const w = workout(r.workoutId);
           if (w === undefined) return null;
-          const change = r.change === null ? "-" : changeText(r.change, model.settings.units);
+          const moved = r.change === null ? [] : [changeText(r.change, model.settings.units)];
+          const change = [...moved, ...(r.best ? ["★"] : [])].join(" ") || "-";
           return (
             <PlanRow
               key={r.membershipId}
