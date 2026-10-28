@@ -11,6 +11,7 @@ jest.mock("../../../lib/api", () => ({ useApi: () => undefined }));
 jest.mock("@sendtally/features/activities", () => ({
   ...jest.requireActual<object>("@sendtally/features/activities"),
   useWeightUnit: () => "kg",
+  useActivities: () => ({ state: { status: "ready", data: mockActivities } }),
 }));
 jest.mock("@sendtally/features/statistics", () => {
   const actual = jest.requireActual<typeof Statistics>("@sendtally/features/statistics");

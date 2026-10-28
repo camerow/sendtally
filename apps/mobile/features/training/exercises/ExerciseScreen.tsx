@@ -24,7 +24,7 @@ import { CategoryMark } from "../library/CategoryMark";
 import { useLibrary } from "../library/useLibrary";
 import { ExerciseTrendCard } from "./ExerciseTrendCard";
 import { MergeExerciseSheet } from "./MergeExerciseSheet";
-import { RecentSessions } from "./RecentSessions";
+import { ExerciseHistory } from "./ExerciseHistory";
 import { useMergeExercise } from "./useMergeExercise";
 
 const failed = (): void => Alert.alert(t("workouts.saveFailed"));
@@ -99,7 +99,7 @@ export function ExerciseScreen({ id }: ExerciseScreenProps): React.ReactElement 
       ) : (
         <>
           <ExerciseTrendCard series={logged} chart="best" unit={unit} />
-          <RecentSessions sessions={logged.sessions} unit={unit} />
+          <ExerciseHistory series={logged} unit={unit} />
         </>
       )}
       {usedIn.length > 0 && (

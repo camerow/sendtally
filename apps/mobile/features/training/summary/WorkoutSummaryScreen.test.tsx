@@ -149,8 +149,8 @@ describe("A finished workout's summary", () => {
 
   it("lists the workout's past sessions with this one marked, each opening its summary", async () => {
     await show("a1", [today, before]);
-    expect(screen.getByText("Past sessions")).toBeTruthy();
-    expect(screen.getByText("Wed, Oct 28 · this session")).toBeTruthy();
+    expect(screen.getByText("History · 2 sessions")).toBeTruthy();
+    expect(screen.getByText("This session")).toBeTruthy();
     await fireEvent.press(screen.getByText("Back squat 5 × 80 kg · 41 min"));
     expect(router.push).toHaveBeenCalledWith({ pathname: "/activity/[id]", params: { id: "a0" } });
   });
@@ -158,7 +158,7 @@ describe("A finished workout's summary", () => {
   it("has no past sessions for a log with no workout, and still shows each exercise over time", async () => {
     const loose = { ...today, workoutId: null, membershipId: null, week: null };
     await show("a1", [loose, { ...before, workoutId: null }]);
-    expect(screen.queryByText("Past sessions")).toBeNull();
+    expect(screen.queryByText(/^History/)).toBeNull();
     expect(screen.getByText("Over time")).toBeTruthy();
     expect(screen.getByText("effort")).toBeTruthy();
   });

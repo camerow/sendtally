@@ -7,10 +7,11 @@ import { colors, fonts } from "@sendtally/design/tokens";
 import { Icon } from "../../components/Icon";
 import { ScreenFrame } from "../../components/ScreenFrame";
 import { useApi } from "../../lib/api";
-import { press, pressRow } from "../../lib/press";
+import { press } from "../../lib/press";
 import { Button } from "../training/components/Button";
 import { DetailActions } from "../training/components/DetailActions";
 import { LoadState } from "../training/data/LoadState";
+import { HistoryList } from "../training/history/HistoryList";
 import { SummaryTiles } from "../training/summary/SummaryTiles";
 import { AddNoteSheet } from "./AddNoteSheet";
 import { ClimbingHero } from "./ClimbingHero";
@@ -105,55 +106,19 @@ export function ClimbDetailScreen({ id }: { id: string }): React.ReactElement {
           { value: vm.best, label: t("statistics.best") },
         ]}
       />
-      <View>
-        {vm.sessions.map((s) => (
-          <Pressable
-            key={s.fingerprint}
-            onPress={() =>
-              router.push({
-                pathname: "/session/[fingerprint]",
-                params: { fingerprint: s.fingerprint },
-              })
-            }
-            accessibilityRole="button"
-            style={pressRow({
-              minHeight: 60,
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 12,
-              paddingVertical: 10,
-              borderBottomWidth: 1,
-              borderBottomColor: colors.lineOnLightSoft,
-            })}
-          >
-            <View style={{ flex: 1, gap: 3 }}>
-              <Text
-                style={{ fontFamily: fonts.sansSemiBold, fontSize: 15, color: colors.gunmetal }}
-              >
-                {s.dateLabel}
-              </Text>
-              <Text style={{ fontFamily: fonts.sans, fontSize: 12.5, color: colors.textSecondary }}>
-                {s.meta}
-              </Text>
-              {s.note !== null && (
-                <Text
-                  style={{
-                    fontFamily: fonts.sans,
-                    fontSize: 14,
-                    lineHeight: 20,
-                    color: colors.gunmetal,
-                  }}
-                >
-                  {s.note}
-                </Text>
-              )}
-            </View>
-            <Text style={{ fontFamily: fonts.mono, fontSize: 13, color: colors.gunmetal }}>
-              {s.triesLabel}
-            </Text>
-          </Pressable>
-        ))}
-      </View>
+      <HistoryList
+        items={vm.sessions.map((s) => ({
+          id: s.fingerprint,
+          date: s.dateLabel,
+          name: s.name,
+          meta: `${s.meta} · ${s.triesLabel}`,
+          rpe: s.rpe,
+          note: s.note,
+        }))}
+        onOpen={(fingerprint) =>
+          router.push({ pathname: "/session/[fingerprint]", params: { fingerprint } })
+        }
+      />
       <AddNoteSheet
         visible={noting}
         sessions={vm.sessions}

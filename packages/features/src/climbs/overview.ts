@@ -2,6 +2,8 @@ import type { ClimbSummary, SessionWithClimbs } from "@sendtally/api-client";
 import { t } from "../i18n";
 import type { ClimbStyle } from "../log-session/types";
 import { utcDate } from "../log-session/transforms";
+import { isUnscored } from "../sessions/meta";
+import { sessionTitle } from "../sessions/title";
 import { dateLabel } from "./projects";
 import { climbGradeLabel, climbKey } from "./transforms";
 
@@ -36,6 +38,8 @@ export function sendStyleText(style: ClimbStyle): string {
 export type ClimbSessionRowVM = {
   fingerprint: string;
   day: string;
+  name: string;
+  rpe: number | null;
   dateLabel: string;
   meta: string;
   note: string | null;
@@ -71,6 +75,8 @@ export function climbSessions(
         {
           fingerprint: s.fingerprint,
           day: utcDate(s.start_at),
+          name: sessionTitle(s),
+          rpe: isUnscored(s) ? null : s.rpe,
           dateLabel: dateLabel(s.start_at),
           meta: [climb.area?.name, sent ? t("common.sent") : t("sessionDetail.notYet")]
             .filter((p) => p !== undefined)

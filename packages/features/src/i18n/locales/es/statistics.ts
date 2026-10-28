@@ -27,7 +27,6 @@ export const statistics = {
   "statistics.best": "Mejor",
   "statistics.latest": "Última",
   "statistics.volumeThisMonth": "Volumen este mes",
-  "statistics.lastSessions": "Últimas sesiones",
   "statistics.effortIs": "Esfuerzo {effort}",
   "statistics.effortUp": "Esfuerzo {effort}, sube {change}",
   "statistics.effortDown": "Esfuerzo {effort}, baja {change}",

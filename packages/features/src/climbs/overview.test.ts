@@ -25,7 +25,16 @@ const session = (
   location: "indoor" | "outdoor",
   climbs: SessionClimb[]
 ): SessionWithClimbs =>
-  ({ fingerprint: start_at, start_at, location, climbs }) as unknown as SessionWithClimbs;
+  ({
+    fingerprint: start_at,
+    start_at,
+    location,
+    climbs,
+    name: "Tuesday night session",
+    source: "manual",
+    rpe: 7,
+    rpe_source: "computed",
+  }) as unknown as SessionWithClimbs;
 
 const climb = (over: Partial<ClimbSummary>): ClimbSummary => ({
   id: "c1",
@@ -59,9 +68,11 @@ describe("climbDetailVM", () => {
     expect(vm.kicker).toBe("Boulder · V7");
     expect(vm.meta).toBe("Buttermilks · first tried 26 Sep");
     expect([vm.project, vm.days, vm.tries, vm.best]).toEqual([true, "3", "23", "-"]);
-    expect(vm.sessions.map((v) => [v.dateLabel, v.meta, v.triesLabel, v.note])).toEqual([
-      ["24 Oct", "Buttermilks · Not yet", "8 tries", null],
-      ["26 Sep", "Buttermilks · Not yet", "6 tries", "First look."],
+    expect(
+      vm.sessions.map((v) => [v.dateLabel, v.name, v.meta, v.triesLabel, v.note, v.rpe])
+    ).toEqual([
+      ["24 Oct", "Tuesday night session", "Buttermilks · Not yet", "8 tries", null, 7],
+      ["26 Sep", "Tuesday night session", "Buttermilks · Not yet", "6 tries", "First look.", 7],
     ]);
   });
 

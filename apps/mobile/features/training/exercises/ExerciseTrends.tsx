@@ -11,7 +11,7 @@ import { DashedPanel } from "../components/DashedPanel";
 import { StatGrid } from "../components/StatGrid";
 import { type } from "../type";
 import { ExerciseTrendCard } from "./ExerciseTrendCard";
-import { RecentSessions } from "./RecentSessions";
+import { ExerciseHistory } from "./ExerciseHistory";
 import { exerciseInsight, exerciseStats } from "./exerciseText";
 import type { ExerciseChartMetric } from "./types";
 
@@ -91,7 +91,7 @@ export function ExerciseTrends({ exercise }: ExerciseTrendsProps): React.ReactEl
         {exerciseInsight(series, summary, unit)}
       </Text>
       <StatGrid columns={2} stats={exerciseStats(series, summary, unit)} />
-      <RecentSessions sessions={series.sessions} unit={unit} />
+      <ExerciseHistory series={series} unit={unit} />
     </View>
   );
 }

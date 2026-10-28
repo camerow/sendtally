@@ -1,23 +1,22 @@
+import { router } from "expo-router";
 import React from "react";
 import type { ActivityRecord } from "@sendtally/api-client";
 import { colors } from "@sendtally/design/tokens";
 import {
-  bestSet,
   exerciseResults,
   pastSessions,
-  setText,
   type ActivityActions,
 } from "@sendtally/features/activities";
-import { shortDate } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import { exerciseKey, type ExerciseSeries } from "@sendtally/features/statistics";
 import type { TrainingLog } from "@sendtally/features/training";
 import type { WeightUnit } from "@sendtally/core/hang";
 import { Label } from "../components/Label";
+import { HistoryList } from "../history/HistoryList";
+import { activityItem } from "../history/historyItems";
 import { KIND_LOOK } from "../today/kindLook";
 import { ExerciseResultCard } from "./ExerciseResultCard";
 import { OverTime } from "./OverTime";
-import { PastSessions, type PastSessionRow } from "./PastSessions";
 import { SummaryFrame } from "./SummaryFrame";
 import { effortTile, kickerText } from "./summaryText";
 
@@ -29,20 +28,6 @@ export type ActivitySummaryProps = {
   unit: WeightUnit;
   actions: ActivityActions;
 };
-
-function pastRow(a: ActivityRecord, current: string, unit: WeightUnit): PastSessionRow {
-  const first = a.done.find((d) => d.sets.length > 0);
-  const best = first === undefined ? undefined : bestSet(first.sets);
-  const lead =
-    first === undefined || best === undefined ? [] : [`${first.exercise} ${setText(best, unit)}`];
-  return {
-    id: a.id,
-    date: shortDate(a.date),
-    meta: [...lead, t("hang.minutes", { n: a.minutes })].join(" · "),
-    effort: a.rpe === null ? null : `RPE ${a.rpe}`,
-    current: a.id === current,
-  };
-}
 
 /** A finished strength, mobility or other workout: each exercise, over time, and its past sessions. */
 export function ActivitySummary({
@@ -82,8 +67,9 @@ export function ActivitySummary({
         <ExerciseResultCard key={r.exercise} result={r} unit={unit} />
       ))}
       <OverTime series={trends} activityId={activity.id} done={activity.done} unit={unit} />
-      <PastSessions
-        rows={pastSessions(activity, activities).map((a) => pastRow(a, activity.id, unit))}
+      <HistoryList
+        items={pastSessions(activity, activities).map((a) => activityItem(a, unit, activity.id))}
+        onOpen={(id) => router.push({ pathname: "/activity/[id]", params: { id } })}
       />
     </SummaryFrame>
   );

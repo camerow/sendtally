@@ -1,11 +1,10 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
-import { colors, effortColor } from "@sendtally/design/tokens";
+import { colors } from "@sendtally/design/tokens";
 import type { WorkoutKind } from "@sendtally/core/hang";
-import { t } from "@sendtally/features/i18n";
 import { Icon } from "../../../components/Icon";
 import { pressRow } from "../../../lib/press";
-import { Label } from "../components/Label";
+import { EffortMark } from "../components/EffortMark";
 import { type } from "../type";
 import { DayMark } from "./DayMark";
 import { KIND_LOOK } from "./kindLook";
@@ -67,21 +66,7 @@ export function LoggedRow({ kind, text, onPress }: LoggedRowProps): React.ReactE
             {text.right}
           </Text>
         )}
-        {text.rpe !== null && (
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
-            <View
-              style={{
-                width: 8,
-                height: 8,
-                borderRadius: 4,
-                backgroundColor: effortColor(text.rpe),
-              }}
-            />
-            <Label small color={colors.gunmetal}>
-              {t("hang.rpeValue", { value: text.rpe })}
-            </Label>
-          </View>
-        )}
+        {text.rpe !== null && <EffortMark rpe={text.rpe} />}
       </View>
     </Pressable>
   );
