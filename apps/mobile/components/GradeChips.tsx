@@ -1,7 +1,7 @@
 import React from "react";
 import { Pressable, ScrollView, Text } from "react-native";
 import { colors, fonts } from "@sendtally/design/tokens";
-import { press } from "../../lib/press";
+import { press } from "../lib/press";
 
 export type GradeChip = { key: string; label: string; colour?: string };
 
@@ -10,6 +10,8 @@ export type GradeChipsProps = {
   active: string | null;
   /** The chip the row opens at, so the user's range is in view. */
   startIndex: number;
+  /** Grey chips on white, for a form; the tally's own are on its dark ground. */
+  light?: boolean;
   onPick: (key: string) => void;
 };
 
@@ -20,6 +22,7 @@ export function GradeChips({
   chips,
   active,
   startIndex,
+  light = false,
   onPick,
 }: GradeChipsProps): React.ReactElement {
   const scroller = React.useRef<ScrollView>(null);
@@ -32,10 +35,12 @@ export function GradeChips({
       ref={scroller}
       horizontal
       showsHorizontalScrollIndicator={false}
+      keyboardShouldPersistTaps="handled"
       contentContainerStyle={{ gap: GAP, paddingHorizontal: 18 }}
     >
       {chips.map((chip) => {
         const on = chip.key === active;
+        const plain = chip.colour === undefined;
         return (
           <Pressable
             key={chip.key}
@@ -45,22 +50,28 @@ export function GradeChips({
             accessibilityLabel={chip.label}
             style={press({
               minWidth: CHIP,
-              height: CHIP,
-              paddingHorizontal: chip.colour === undefined ? 10 : 0,
-              borderRadius: 14,
+              height: light ? 44 : CHIP,
+              paddingHorizontal: plain ? 10 : 0,
+              borderRadius: light ? 12 : 14,
               alignItems: "center",
               justifyContent: "center",
-              backgroundColor: chip.colour ?? "rgba(255,255,255,0.1)",
-              borderWidth: 2,
-              borderColor: on
-                ? colors.gold
-                : chip.colour === undefined
-                  ? "transparent"
-                  : "rgba(255,255,255,0.25)",
+              backgroundColor: light
+                ? on
+                  ? colors.gunmetal
+                  : colors.surfaceSoft
+                : (chip.colour ?? "rgba(255,255,255,0.1)"),
+              borderWidth: light ? 0 : 2,
+              borderColor: on ? colors.gold : plain ? "transparent" : "rgba(255,255,255,0.25)",
             })}
           >
-            {chip.colour === undefined && (
-              <Text style={{ fontFamily: fonts.monoSemiBold, fontSize: 16, color: colors.white }}>
+            {plain && (
+              <Text
+                style={{
+                  fontFamily: fonts.monoSemiBold,
+                  fontSize: light ? 14 : 16,
+                  color: light && !on ? colors.gunmetal : colors.white,
+                }}
+              >
                 {chip.label}
               </Text>
             )}

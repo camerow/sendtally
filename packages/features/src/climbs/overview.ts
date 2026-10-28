@@ -1,35 +1,9 @@
-import { climbRank, type Discipline } from "@sendtally/core";
 import type { ClimbSummary, SessionWithClimbs } from "@sendtally/api-client";
 import { t } from "../i18n";
 import { utcDate } from "../log-session/transforms";
 import { monthShortName } from "../sessions/months";
-import { gradeFormatterFor } from "../sessions/grades";
 import { dateLabel } from "./projects";
-import { outdoorPyramid, outdoorSends, type PyramidRow } from "./pyramid";
 import { climbGradeLabel, climbKey } from "./transforms";
-
-export type ClimbRowVM = { id: string; gradeLabel: string; name: string; meta: string };
-
-export type ClimbsOverviewVM = {
-  daysOutside: number;
-  daysOutsideLastYear: number;
-  hardest: { gradeLabel: string; dateLabel: string } | null;
-  /** Both only once there are outdoor sends in each; otherwise the one there is. */
-  disciplines: Discipline[];
-  pyramid: PyramidRow[];
-  working: ClimbRowVM[];
-  sent: ClimbRowVM[];
-};
-
-const yearOf = (iso: string): number => new Date(iso).getUTCFullYear();
-
-function daysOutsideIn(sessions: readonly SessionWithClimbs[], year: number): number {
-  return new Set(
-    sessions
-      .filter((s) => s.location === "outdoor" && yearOf(s.start_at) === year)
-      .map((s) => utcDate(s.start_at))
-  ).size;
-}
 
 export function dayCountLabel(climb: ClimbSummary): string {
   return `${t("climbs.dayCount", { count: climb.sessions })} · ${t("tally.tryCount", { count: climb.attempts })}`;
@@ -40,54 +14,6 @@ export function climbProgressLabel(climb: ClimbSummary): string {
   return climb.sent_at === null
     ? dayCountLabel(climb)
     : t("climbs.sentOn", { date: dateLabel(climb.sent_at) });
-}
-
-const withCrag = (climb: ClimbSummary, meta: string): string =>
-  climb.area === null ? meta : `${climb.area.name} · ${meta}`;
-
-export function climbRow(climb: ClimbSummary): ClimbRowVM {
-  return {
-    id: climb.id,
-    gradeLabel: climbGradeLabel(climb),
-    name: climb.name,
-    meta: withCrag(climb, climbProgressLabel(climb)),
-  };
-}
-
-export function climbsOverview(
-  climbs: readonly ClimbSummary[],
-  sessions: readonly SessionWithClimbs[],
-  discipline: Discipline,
-  allTime: boolean,
-  now: Date = new Date()
-): ClimbsOverviewVM {
-  const year = now.getUTCFullYear();
-  const disciplines = (["boulder", "route"] as const).filter(
-    (d) => outdoorSends(sessions, d).length > 0
-  );
-  const sends = outdoorSends(sessions, discipline);
-  const format = gradeFormatterFor(sends, discipline);
-  const hardest = [...sends].sort(
-    (a, b) => climbRank(b) - climbRank(a) || a.at.localeCompare(b.at)
-  )[0];
-  return {
-    daysOutside: daysOutsideIn(sessions, year),
-    daysOutsideLastYear: daysOutsideIn(sessions, year - 1),
-    hardest:
-      hardest === undefined
-        ? null
-        : { gradeLabel: format.label(climbRank(hardest)), dateLabel: dateLabel(hardest.at) },
-    disciplines,
-    pyramid: outdoorPyramid(sessions, discipline, year, allTime),
-    working: climbs
-      .filter((c) => c.project && c.sent_at === null)
-      .sort((a, b) => b.last_at.localeCompare(a.last_at))
-      .map(climbRow),
-    sent: climbs
-      .filter((c) => c.sent_at !== null)
-      .sort((a, b) => (b.sent_at ?? "").localeCompare(a.sent_at ?? ""))
-      .map(climbRow),
-  };
 }
 
 export type ClimbVisitVM = {

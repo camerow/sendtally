@@ -52,17 +52,28 @@ export {
 export {
   climbDetailVM,
   climbProgressLabel,
-  climbRow,
   climbVisits,
-  climbsOverview,
   dayCountLabel,
   isThisClimb,
   type ClimbDetailVM,
-  type ClimbRowVM,
   type ClimbVisitVM,
-  type ClimbsOverviewVM,
 } from "./overview";
-export { outdoorPyramid, outdoorSends, sessionPyramid, type PyramidRow } from "./pyramid";
+export { sessionPyramid, type PyramidRow } from "./pyramid";
+export {
+  CLIMB_STATUSES,
+  climbLog,
+  climbStatus,
+  gradeFilterLabel,
+  inGradeRange,
+  matchesClimbSearch,
+  type ClimbLogGroupVM,
+  type ClimbLogQuery,
+  type ClimbLogRowVM,
+  type ClimbLogVM,
+  type ClimbPillKind,
+  type ClimbStatusFilter,
+  type GradeFilter,
+} from "./log";
 export {
   climbLogDraft,
   logClimb,

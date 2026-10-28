@@ -41,7 +41,7 @@ import { liveSessionStorage } from "../../lib/liveSessionStorage";
 import { press } from "../../lib/press";
 import { readPlanLink } from "../training/data/planLinkParams";
 import { FinishSheet } from "./FinishSheet";
-import { GradeChips, type GradeChip } from "./GradeChips";
+import { GradeChips, type GradeChip } from "../../components/GradeChips";
 import { GymSheet } from "./GymSheet";
 import { LiveClimbEditor } from "./LiveClimbEditor";
 import { LiveClock } from "../../components/LiveClock";

@@ -3,10 +3,8 @@ import {
   climbRank,
   dominantDiscipline,
   isEndurance,
-  type Discipline,
   type GradedClimb,
 } from "@sendtally/core";
-import type { SessionWithClimbs } from "@sendtally/api-client";
 import { gradeFormatterFor } from "../sessions/grades";
 
 /** One grade of a centred bar: `inner` drawn dark in the middle, `outer` split either side. */
@@ -51,39 +49,5 @@ export function sessionPyramid(
     mine.map((c) => ({ rank: climbRank(c), inner: c.kind === "send" })),
     format.label,
     (sent, all) => `${sent}/${all}`
-  );
-}
-
-const yearOf = (iso: string): number => new Date(iso).getUTCFullYear();
-
-export function outdoorSends(
-  sessions: readonly SessionWithClimbs[],
-  discipline: Discipline
-): Array<GradedClimb & { at: string }> {
-  return sessions
-    .filter((s) => s.location === "outdoor")
-    .flatMap((s) =>
-      graded(s.climbs)
-        .filter((c) => c.kind === "send" && climbDiscipline(c) === discipline)
-        .map((c) => ({ ...c, at: s.start_at }))
-    );
-}
-
-/**
- * Outdoor sends by grade: this year in the middle, earlier years either side, with the all-time
- * count at the end. Without the earlier years, only this year is drawn and counted.
- */
-export function outdoorPyramid(
-  sessions: readonly SessionWithClimbs[],
-  discipline: Discipline,
-  year: number,
-  allTime: boolean
-): PyramidRow[] {
-  const sends = outdoorSends(sessions, discipline).filter((c) => allTime || yearOf(c.at) === year);
-  const format = gradeFormatterFor(sends, discipline);
-  return rowsOf(
-    sends.map((c) => ({ rank: climbRank(c), inner: yearOf(c.at) === year })),
-    format.label,
-    (_inner, all) => String(all)
   );
 }
