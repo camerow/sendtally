@@ -1,10 +1,12 @@
 import {
   defaultExerciseRestS,
+  FOCI,
   foldVariations,
   isCalendarDate,
   WORKOUT_KINDS,
   type Block,
   type Dose,
+  type Focus,
   type ItemDone,
   type Item,
   type Membership,
@@ -66,6 +68,14 @@ const itemIndex = z
 
 const blockWeek = z.number().int().min(1).max(MAX_BLOCK_WEEKS);
 
+/** Older app builds send none, which leaves the focus saved alone; null clears it. */
+export const focus = z.enum(FOCI).nullable().optional();
+
+/** A row as saved, where a missing focus keeps the one it had. */
+export type FocusOptional<T extends { focus: Focus | null }> = Omit<T, "focus"> & {
+  focus?: Focus | null | undefined;
+};
+
 const workoutFields = {
   kind: z.enum(WORKOUT_KINDS),
   name: title,
@@ -74,6 +84,7 @@ const workoutFields = {
   targetRpe: rpe.nullable(),
   // Older app builds send none.
   exerciseRestS: seconds.optional(),
+  focus,
 };
 
 // Older app builds send whole variations, which fold into items where their exercises line
@@ -97,7 +108,7 @@ export const workoutBody = z
     z.object({ ...workoutFields, items: z.array(item).max(MAX_ITEMS) }),
     z.object({ ...workoutFields, variations: legacyItems }),
   ])
-  .transform(({ kind, name, description, minutes, targetRpe, exerciseRestS, ...body }) => ({
+  .transform(({ kind, name, description, minutes, targetRpe, exerciseRestS, focus, ...body }) => ({
     kind,
     name,
     description,
@@ -105,12 +116,14 @@ export const workoutBody = z
     targetRpe,
     items: "items" in body ? body.items : body.variations,
     exerciseRestS: exerciseRestS ?? defaultExerciseRestS(kind),
+    focus,
   }));
 
 export const blockBody = z.object({
   name: title,
   start: calendarDate,
   weeks: z.number().int().min(1).max(MAX_BLOCK_WEEKS),
+  focus,
 });
 
 export const membershipBody = z.object({
@@ -148,6 +161,7 @@ export const doneBody = z
 export const planLinkShape = {
   membershipId: id.nullable().default(null),
   week: blockWeek.nullable().default(null),
+  focus,
 };
 
 export type WorkoutInput = z.infer<typeof workoutBody>;
@@ -172,6 +186,7 @@ export const workoutOf = (row: WorkoutRow): WorkoutRecord => ({
   targetRpe: row.target_rpe,
   items: JSON.parse(row.items_json) as Item[],
   exerciseRestS: row.exercise_rest_s,
+  focus: row.focus,
   updatedAt: row.updated_at,
 });
 
@@ -180,6 +195,7 @@ export const blockOf = (row: BlockRow): Block => ({
   name: row.name,
   start: row.start,
   weeks: row.weeks,
+  focus: row.focus,
 });
 
 export const membershipOf = (row: MembershipRow): Membership => ({

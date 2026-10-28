@@ -58,6 +58,7 @@ const session = (over: Partial<HangSession>): HangSession => ({
   protocol: repeaters,
   membershipId: null,
   week: null,
+  focus: null,
   done: [],
   ...over,
 });

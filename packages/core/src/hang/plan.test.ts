@@ -5,6 +5,7 @@ import {
   changeFrom,
   doneAsPrescribed,
   doseProtocol,
+  focusOf,
   hangboardSeconds,
   hangItemSeconds,
   foldVariations,
@@ -24,7 +25,7 @@ import {
   type Workout,
 } from ".";
 
-const block: Block = { id: "b", name: "Winter base", start: "2026-11-02", weeks: 6 };
+const block: Block = { id: "b", name: "Winter base", start: "2026-11-02", weeks: 6, focus: null };
 
 const squat: Workout = {
   id: "squat",
@@ -43,6 +44,7 @@ const squat: Workout = {
     },
   ],
   exerciseRestS: 0,
+  focus: null,
 };
 
 const change = (over: Partial<WeekChange> & Pick<WeekChange, "change">): WeekChange => ({
@@ -330,5 +332,14 @@ describe("doneAsPrescribed", () => {
         sets: Array.from({ length: 5 }, () => ({ reps: 5, weightKg: 100 })),
       },
     ]);
+  });
+});
+
+describe("focusOf", () => {
+  it("takes the workout's own, else the block's, else none", () => {
+    const power = { focus: "power" as const };
+    expect(focusOf({ focus: "strength" }, power)).toBe("strength");
+    expect(focusOf({ focus: null }, power)).toBe("power");
+    expect(focusOf(undefined, null)).toBeNull();
   });
 });

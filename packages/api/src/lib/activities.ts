@@ -54,6 +54,7 @@ export function activityOf(row: ActivityRow): ActivityRecord {
     workoutId: row.workout_id,
     membershipId: row.membership_id,
     week: row.week,
+    focus: row.focus,
     done: doneOf(row.done_json),
     stravaActivityId: row.strava_activity_id === null ? null : String(row.strava_activity_id),
     postedAt: row.posted_at,

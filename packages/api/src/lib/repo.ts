@@ -63,6 +63,7 @@ import {
   loadKey,
   measureOf,
   type Block,
+  type Focus,
   type HangSession,
   type HangSettings,
   type Item,
@@ -76,6 +77,7 @@ import type { ActivityInput } from "./activities";
 import { exerciseKindOf, exerciseNameKey, workoutExercises, type ExerciseInput } from "./exercises";
 import type { ContentEntity, Viewer } from "./areas";
 import type { ClimbLink } from "./manual";
+import type { FocusOptional } from "./plan";
 import type { EntryWrite } from "./entries";
 import type { StoreEntitlement } from "./revenuecat";
 import type { NormalizedTag } from "./tags";
@@ -292,6 +294,7 @@ export type ManualSessionInput = {
   /** Absent leaves the plan link as it was. */
   membership_id?: string | null;
   week?: number | null;
+  focus?: Focus | null;
   location: "indoor" | "outdoor" | null;
   gym_id: string | null;
   area_id: string | null;
@@ -2615,7 +2618,7 @@ export async function listHangSessions(
 export async function saveHangSession(
   db: D1Database,
   userId: string,
-  s: HangSession
+  s: FocusOptional<HangSession>
 ): Promise<HangSessionRow> {
   const now = new Date().toISOString();
   const fields = {
@@ -2630,6 +2633,7 @@ export async function saveHangSession(
     protocol_json: JSON.stringify(s.protocol),
     membership_id: s.membershipId,
     week: s.week,
+    focus: s.focus,
     done_json: JSON.stringify(s.done),
     updated_at: now,
   };
@@ -2768,6 +2772,7 @@ export async function saveActivity(
     workout_id: a.workoutId,
     membership_id: a.membershipId,
     week: a.week,
+    focus: a.focus,
     done_json: JSON.stringify(a.done),
     updated_at: now,
   };
@@ -2892,11 +2897,16 @@ export async function getBlock(
   return row ?? null;
 }
 
-export async function saveBlock(db: D1Database, userId: string, b: Block): Promise<BlockRow> {
+export async function saveBlock(
+  db: D1Database,
+  userId: string,
+  b: FocusOptional<Block>
+): Promise<BlockRow> {
   const fields = {
     name: b.name,
     start: b.start,
     weeks: b.weeks,
+    focus: b.focus,
     updated_at: new Date().toISOString(),
   };
   return drizzle(db)
@@ -3040,7 +3050,11 @@ export async function listWorkouts(db: D1Database, userId: string): Promise<Work
     .all();
 }
 
-export async function saveWorkout(db: D1Database, userId: string, w: Workout): Promise<WorkoutRow> {
+export async function saveWorkout(
+  db: D1Database,
+  userId: string,
+  w: FocusOptional<Workout>
+): Promise<WorkoutRow> {
   const now = new Date().toISOString();
   const fields = {
     kind: w.kind,
@@ -3050,6 +3064,7 @@ export async function saveWorkout(db: D1Database, userId: string, w: Workout): P
     target_rpe: w.targetRpe,
     items_json: JSON.stringify(w.items),
     exercise_rest_s: w.exerciseRestS,
+    focus: w.focus,
     updated_at: now,
   };
   const d = drizzle(db);

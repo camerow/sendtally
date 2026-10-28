@@ -591,13 +591,13 @@ describe("app", () => {
     expect(sessions[0]?.tags.map((t) => t.slug)).toEqual(["endurance", "home"]);
   });
 
-  it("keeps the plan a session ran, and an edit that does not send one keeps the link", async () => {
+  it("keeps the plan and focus a session ran, and an edit that sends neither keeps them", async () => {
     const userId = "user_session_plan";
-    const plan = { membershipId: "m1", week: 2 };
+    const plan = { membershipId: "m1", week: 2, focus: "power" };
     const res = await postSession(userId, logBody(plan));
     expect(res.status).toBe(201);
     const { session } = (await res.json()) as { session: { fingerprint: string } };
-    expect(session).toMatchObject({ membership_id: "m1", week: 2 });
+    expect(session).toMatchObject({ membership_id: "m1", week: 2, focus: "power" });
     const edited = await testApp().request(
       `/v1/sessions/${session.fingerprint}`,
       {
@@ -608,11 +608,11 @@ describe("app", () => {
       env
     );
     expect(await edited.json()).toMatchObject({
-      session: { name: "Edited", membership_id: "m1", week: 2 },
+      session: { name: "Edited", membership_id: "m1", week: 2, focus: "power" },
     });
     const logged = await postSession(userId, logBody());
     expect(await logged.json()).toMatchObject({
-      session: { membership_id: null, week: null },
+      session: { membership_id: null, week: null, focus: null },
     });
   });
 

@@ -19,6 +19,7 @@ const activityBody = {
   workoutId: null,
   membershipId: null,
   week: null,
+  focus: null,
   done: [],
 };
 
@@ -52,7 +53,7 @@ const squatWorkout = {
   exerciseRestS: 120,
 };
 
-const blockBody = { name: "Winter base", start: "2026-11-02", weeks: 6 };
+const blockBody = { name: "Winter base", start: "2026-11-02", weeks: 6, focus: null };
 
 const membershipBody = {
   workoutId: "w1",
@@ -133,6 +134,14 @@ describe("activities", () => {
     expect(await json(res)).toMatchObject({ activity: { id: "a1", ...body } });
   });
 
+  it("records a focus, and keeps it when an older app edits without one", async () => {
+    const userId = "user_activity_focus";
+    await call(userId, "PUT", "/v1/activities/a1", { ...activityBody, focus: "power" });
+    const { focus: _, ...older } = activityBody;
+    const res = await call(userId, "PUT", "/v1/activities/a1", { ...older, rpe: 8 });
+    expect(await json(res)).toMatchObject({ activity: { rpe: 8, focus: "power" } });
+  });
+
   it("reads an older client's body, with no plan and nothing done, as logged on its own", async () => {
     const userId = "user_activity_older";
     const { workoutId: _, membershipId: __, week: ___, done: ____, ...older } = activityBody;
@@ -204,6 +213,18 @@ describe("workouts", () => {
     ]);
     expect(workouts[0]).toMatchObject({ ...squatWorkout, name: "Squat" });
     expect(workouts[1]?.exerciseRestS).toBe(240);
+  });
+
+  it("saves a focus, and keeps it when an older app sends none", async () => {
+    const userId = "user_workouts_focus";
+    await call(userId, "PUT", "/v1/workouts/w1", { ...squatWorkout, focus: "strength" });
+    const { focus: _, ...older } = { ...squatWorkout, focus: null };
+    const kept = await call(userId, "PUT", "/v1/workouts/w1", { ...older, name: "Squat" });
+    expect(await json(kept)).toMatchObject({ workout: { name: "Squat", focus: "strength" } });
+    const cleared = await call(userId, "PUT", "/v1/workouts/w1", { ...squatWorkout, focus: null });
+    expect(await json(cleared)).toMatchObject({ workout: { focus: null } });
+    const bad = await call(userId, "PUT", "/v1/workouts/w1", { ...squatWorkout, focus: "speed" });
+    expect(bad.status).toBe(400);
   });
 
   it("keeps a dose's name, trimmed, and never asks for one", async () => {
@@ -489,7 +510,7 @@ describe("blocks and memberships", () => {
 
   it("plans a block again from a new start, with its plans and week changes", async () => {
     const userId = "user_plan_again";
-    await call(userId, "PUT", "/v1/blocks/b1", blockBody);
+    await call(userId, "PUT", "/v1/blocks/b1", { ...blockBody, focus: "power" });
     await call(userId, "PUT", "/v1/memberships/m1", { ...membershipBody, start: "2026-11-04" });
     await call(userId, "PUT", "/v1/memberships/m2", { ...membershipBody, blockId: null });
     await call(userId, "PUT", "/v1/memberships/m1/changes", {
@@ -500,7 +521,7 @@ describe("blocks and memberships", () => {
     });
     const copy = { id: "b2", start: "2027-01-04" };
     const res = await call(userId, "POST", "/v1/blocks/b1/copy", copy);
-    expect(await json(res)).toEqual({ block: { ...blockBody, ...copy } });
+    expect(await json(res)).toEqual({ block: { ...blockBody, focus: "power", ...copy } });
     expect((await call(userId, "POST", "/v1/blocks/b1/copy", copy)).status).toBe(200);
     const after = await plan(userId);
     const copied = after.memberships.filter((m) => m.blockId === "b2");

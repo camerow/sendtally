@@ -16,7 +16,7 @@ import {
 import { z } from "zod";
 import type { ManualSessionInput } from "./repo";
 import { CIRCUIT_COLOURS } from "./gyms";
-import { id, MAX_BLOCK_WEEKS } from "./plan";
+import { focus, id, MAX_BLOCK_WEEKS } from "./plan";
 import { tagNames, tagSlug } from "./tags";
 
 const knownGrade =
@@ -148,6 +148,8 @@ export const manualSessionShape = z.object({
   // The plan the session ran; absent on an edit keeps the link it had.
   membershipId: id.nullable().optional(),
   week: z.number().int().min(1).max(MAX_BLOCK_WEEKS).nullable().optional(),
+  // Absent on an edit keeps the focus it had.
+  focus,
 });
 
 export function sessionTooLong(
@@ -321,13 +323,15 @@ export function historySession(row: {
   };
 }
 
-function planLinkOf(body: ManualSessionBody): Pick<ManualSessionInput, "membership_id" | "week"> {
-  return body.membershipId === undefined
-    ? {}
-    : {
-        membership_id: body.membershipId,
-        week: body.week ?? null,
-      };
+function planLinkOf(
+  body: ManualSessionBody
+): Pick<ManualSessionInput, "membership_id" | "week" | "focus"> {
+  return {
+    ...(body.membershipId === undefined
+      ? {}
+      : { membership_id: body.membershipId, week: body.week ?? null }),
+    ...(body.focus === undefined ? {} : { focus: body.focus }),
+  };
 }
 
 export function buildManualSession(

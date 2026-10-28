@@ -7,6 +7,19 @@ export const WORKOUT_KINDS = ["hangboard", "climbing", "strength", "mobility", "
 
 export type WorkoutKind = (typeof WORKOUT_KINDS)[number];
 
+/** What a workout trains for, in the order a season runs. Unset reads as General. */
+export const FOCI = [
+  "strength",
+  "power",
+  "power_endurance",
+  "endurance",
+  "conditioning",
+  "skill",
+  "recovery",
+] as const;
+
+export type Focus = (typeof FOCI)[number];
+
 /**
  * One prescription for any kind of training. Strength: sets, reps, weightKg.
  * Hangboard: reps are hangs of onS with offS between, on edgeMm; no onS is a
@@ -58,6 +71,7 @@ export type Workout = {
   items: Item[];
   /** The rest between one item and the next; none at zero. */
   exerciseRestS: number;
+  focus: Focus | null;
 };
 
 /** What a hangboard workout rests between exercises unless it says otherwise. */
@@ -68,7 +82,14 @@ export const defaultExerciseRestS = (kind: WorkoutKind): number =>
   kind === "hangboard" ? DEFAULT_EXERCISE_REST_S : 0;
 
 /** A run of weeks from a start date. */
-export type Block = { id: string; name: string; start: CalendarDate; weeks: number };
+export type Block = {
+  id: string;
+  name: string;
+  start: CalendarDate;
+  weeks: number;
+  /** What its workouts train for unless they say. */
+  focus: Focus | null;
+};
 
 /**
  * A library workout planned on weekdays: inside a block for its weeks, or with
@@ -95,11 +116,21 @@ export type WeekChange = {
 /** One item of a logged session: the sets done, named so history never needs the workout. */
 export type ItemDone = { item: number; exercise: string; sets: SetDone[] };
 
-/** The plan a logged session ran, all null when it was logged on its own. */
+/**
+ * The plan a logged session ran, all null when it was logged on its own, and the focus
+ * it recorded when it started, which later changes to the workout or block leave alone.
+ */
 export type PlanLink = {
   membershipId: string | null;
   week: number | null;
+  focus: Focus | null;
 };
+
+/** The focus a session records: its workout's own, else its block's, else none. */
+export const focusOf = (
+  workout: Pick<Workout, "focus"> | undefined,
+  block: Pick<Block, "focus"> | null | undefined
+): Focus | null => workout?.focus ?? block?.focus ?? null;
 
 /** The dose session `n` of a workout takes from an item: its doses in turn. */
 export const doseIndex = (item: Pick<Item, "doses">, n: number): number =>

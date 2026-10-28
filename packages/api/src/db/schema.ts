@@ -12,6 +12,7 @@ import {
   DEFAULT_EXERCISE_REST_S,
   EXERCISE_KINDS,
   EXERCISE_MEASURES,
+  FOCI,
   WORKOUT_KINDS,
 } from "@sendtally/core/hang";
 
@@ -122,6 +123,7 @@ export const sessions = sqliteTable(
     post_error: text("post_error"),
     membership_id: text("membership_id"),
     week: integer("week"),
+    focus: text("focus", { enum: FOCI }),
   },
   (t) => [
     primaryKey({ columns: [t.user_id, t.fingerprint] }),
@@ -549,6 +551,7 @@ export const hangSessions = sqliteTable(
     protocol_json: text("protocol_json").notNull(),
     membership_id: text("membership_id"),
     week: integer("week"),
+    focus: text("focus", { enum: FOCI }),
     done_json: text("done_json").notNull().default("[]"),
     strava_activity_id: integer("strava_activity_id"),
     posted_at: text("posted_at"),
@@ -595,6 +598,7 @@ export const activities = sqliteTable(
     workout_id: text("workout_id"),
     membership_id: text("membership_id"),
     week: integer("week"),
+    focus: text("focus", { enum: FOCI }),
     done_json: text("done_json").notNull().default("[]"),
     strava_activity_id: integer("strava_activity_id"),
     posted_at: text("posted_at"),
@@ -620,6 +624,7 @@ export const trainingBlocks = sqliteTable(
     name: text("name").notNull(),
     start: text("start").notNull(),
     weeks: integer("weeks").notNull(),
+    focus: text("focus", { enum: FOCI }),
     updated_at: text("updated_at").notNull(),
   },
   (t) => [primaryKey({ columns: [t.user_id, t.id] })]
@@ -641,6 +646,7 @@ export const workouts = sqliteTable(
     kind: text("kind", { enum: WORKOUT_KINDS }).notNull().default("other"),
     items_json: text("items_json").notNull().default("[]"),
     exercise_rest_s: integer("exercise_rest_s").notNull().default(DEFAULT_EXERCISE_REST_S),
+    focus: text("focus", { enum: FOCI }),
     created_at: text("created_at").notNull(),
     updated_at: text("updated_at").notNull(),
   },
