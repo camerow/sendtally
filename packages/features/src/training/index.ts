@@ -13,7 +13,16 @@ export {
   type TrainingDay,
   type TrainingLog,
 } from "./days";
-export { blockDone, blockGroups, blockMembers, type BlockGroups } from "./blocks";
+export { blockGroups, blockMembers, type BlockGroups } from "./blocks";
+export {
+  blockDone,
+  blockRecap,
+  blockTagOf,
+  type BlockRecap,
+  type BlockWeek,
+  type BlockWorkout,
+  type DoneCount,
+} from "./recap";
 export {
   blockOfMembership,
   nextOccurrence,

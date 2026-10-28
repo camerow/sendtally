@@ -1,8 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { Plan } from "@sendtally/api-client";
 import type { Block } from "@sendtally/core/hang";
-import { blockDone, blockGroups, blockMembers } from "./blocks";
-import type { TrainingLog } from "./days";
+import { blockGroups, blockMembers } from "./blocks";
 
 const block: Block = {
   id: "b1",
@@ -51,50 +50,5 @@ describe("blockGroups", () => {
       upcoming: groups.upcoming.map((b) => b.id),
       past: groups.past.map((b) => b.id),
     }).toEqual({ current: ["now"], upcoming: ["next", "later"], past: ["last", "old"] });
-  });
-});
-
-describe("blockDone", () => {
-  it("counts the block's sessions done out of planned over all its days", () => {
-    const log: TrainingLog = {
-      climbs: [],
-      hangs: [],
-      activities: [
-        {
-          id: "a1",
-          kind: "strength",
-          title: "Legs",
-          date: "2026-09-28",
-          startTime: null,
-          minutes: 40,
-          rpe: 7,
-          notes: null,
-          workoutId: "w1",
-          membershipId: "m1",
-          week: 1,
-          done: [],
-        },
-      ],
-      plan: {
-        blocks: [block],
-        memberships: [
-          { id: "m1", workoutId: "w1", blockId: "b1", weekdays: [0], start: block.start },
-          { id: "m2", workoutId: "w1", blockId: null, weekdays: [0], start: block.start },
-        ],
-        weekChanges: [],
-      },
-      workout: () => ({
-        id: "w1",
-        kind: "strength",
-        name: "Legs",
-        description: "",
-        minutes: 40,
-        targetRpe: null,
-        items: [],
-        exerciseRestS: 180,
-        focus: null,
-      }),
-    };
-    expect(blockDone(log, block, "2026-10-30")).toEqual({ done: 1, planned: 3 });
   });
 });
