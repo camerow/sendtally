@@ -20,9 +20,8 @@ export const workouts = {
   "workouts.duplicate": "Duplizieren",
   "workouts.delete": "Workout löschen",
   "workouts.deleteTitle": "{name} löschen?",
-  "workouts.deleteBody":
-    "Pläne damit behalten, was es jetzt enthält. Was du eingetragen hast, bleibt.",
-  "workouts.deleteHangBody": "Seine Pläne gehen mit. Deine eingetragenen Einheiten bleiben.",
+  "workouts.deleteBody": "Seine Pläne gehen mit. Deine eingetragenen Einheiten bleiben.",
+  "workouts.discardChangesTitle": "Änderungen verwerfen?",
 
   "workouts.builtIn.fiveByFive.name": "5x5 Kraft",
   "workouts.builtIn.fiveByFive.blurb":

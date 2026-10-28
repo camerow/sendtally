@@ -17,7 +17,7 @@ import { HangSheet } from "../data/HangSheet";
 import { GripPickerSheet } from "../grip-picker/GripPickerSheet";
 import { loadControl } from "../loads/loadControl";
 import { EdgeField } from "../setup/EdgeField";
-import { confirmDelete } from "./confirmDelete";
+import { confirmDestructive } from "../../../lib/confirmDestructive";
 
 const PCT_STEP = 5;
 
@@ -53,9 +53,15 @@ function Editor({
     setOpen(false);
   };
   const remove = (): void =>
-    confirmDelete(session.stravaActivityId !== null, () => {
-      void actions.deleteSession(session.id);
-      setOpen(false);
+    confirmDestructive({
+      title: t("hang.deleteConfirmTitle"),
+      body:
+        session.stravaActivityId !== null ? t("hang.deleteFromLogStrava") : t("hang.deleteFromLog"),
+      action: t("common.delete"),
+      onConfirm: () => {
+        void actions.deleteSession(session.id);
+        setOpen(false);
+      },
     });
 
   return (

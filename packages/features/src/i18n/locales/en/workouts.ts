@@ -19,8 +19,8 @@ export const workouts = {
   "workouts.duplicate": "Duplicate",
   "workouts.delete": "Delete workout",
   "workouts.deleteTitle": "Delete {name}?",
-  "workouts.deleteBody": "Plans that run it keep what it holds now. What you logged stays.",
-  "workouts.deleteHangBody": "Its plans go with it. The sessions you logged stay.",
+  "workouts.deleteBody": "Its plans go with it. The sessions you logged stay.",
+  "workouts.discardChangesTitle": "Discard your changes?",
 
   "workouts.builtIn.fiveByFive.name": "5x5 strength",
   "workouts.builtIn.fiveByFive.blurb":

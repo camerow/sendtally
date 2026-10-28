@@ -19,6 +19,7 @@ import { membershipWhen } from "../plans/planText";
 import { type } from "../type";
 import { ScreenFrame } from "./ScreenFrame";
 import { WeekRung } from "./WeekRung";
+import { confirmDestructive } from "../../../lib/confirmDestructive";
 
 export type LadderScreenProps = { id: string };
 
@@ -48,10 +49,16 @@ export function LadderScreen({ id }: LadderScreenProps): React.ReactElement | nu
             c.membershipId === id && c.week === week && c.variation === variation && c.item === item
         )?.change ?? {}
     );
-  const remove = (): void => {
-    void actions.deleteMembership(m.id);
-    router.back();
-  };
+  const remove = (): void =>
+    confirmDestructive({
+      title: t("plan.removeTitle", { title: w.name }),
+      body: t("plan.removeBody"),
+      action: t("plan.removeAction"),
+      onConfirm: () => {
+        void actions.deleteMembership(m.id);
+        router.back();
+      },
+    });
 
   return (
     <ScreenFrame>

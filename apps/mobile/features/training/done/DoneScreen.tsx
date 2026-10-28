@@ -26,6 +26,7 @@ import { openStatistics } from "../statistics/openStatistics";
 import { type } from "../type";
 import type { DoneParams } from "./doneParams";
 import { doneStats, doneStatus, partialNote } from "./doneText";
+import { confirmDestructive } from "../../../lib/confirmDestructive";
 
 /** The sets a run finished, each as the protocol ran it on the edge and weight it used. */
 function setsDone(w: HangWorkout, setup: HangSetup, count: number): SetDone[] {
@@ -115,7 +116,18 @@ function Done({
         <View style={{ flex: 1 }} />
         <View style={{ gap: 6 }}>
           <Button label={t("hang.logSession")} onPress={log} variant="primary" height={54} />
-          <Button label={t("hang.discard")} onPress={() => router.back()} variant="danger" />
+          <Button
+            label={t("hang.discard")}
+            onPress={() =>
+              confirmDestructive({
+                title: t("hang.discardRunTitle"),
+                body: t("hang.discardRunBody"),
+                action: t("hang.discard"),
+                onConfirm: () => router.back(),
+              })
+            }
+            variant="danger"
+          />
         </View>
       </ScrollView>
     </SafeAreaView>

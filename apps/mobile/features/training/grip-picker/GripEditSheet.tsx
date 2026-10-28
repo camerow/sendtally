@@ -1,5 +1,5 @@
 import React from "react";
-import { Alert, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import { TextInput } from "../../../components/TextInput";
 import { colors } from "@sendtally/design/tokens";
 import type { Grip } from "@sendtally/core/hang";
@@ -11,6 +11,7 @@ import { SheetSection } from "../components/SheetSection";
 import { useHangData } from "../data/HangDataContext";
 import { HangSheet } from "../data/HangSheet";
 import { type } from "../type";
+import { confirmDestructive } from "../../../lib/confirmDestructive";
 
 export type GripEditSheetProps = {
   grip: Grip;
@@ -37,18 +38,16 @@ export function GripEditSheet({
     setOpen(false);
   };
   const remove = (): void =>
-    Alert.alert(t("hang.deleteGripTitle", { grip: grip.name }), t("hang.deleteGripBody"), [
-      { text: t("hang.cancel"), style: "cancel" },
-      {
-        text: t("hang.delete"),
-        style: "destructive",
-        onPress: () => {
-          void actions.deleteGrip(grip.id);
-          onDeleted(grip.id);
-          setOpen(false);
-        },
+    confirmDestructive({
+      title: t("hang.deleteGripTitle", { grip: grip.name }),
+      body: t("hang.deleteGripBody"),
+      action: t("common.delete"),
+      onConfirm: () => {
+        void actions.deleteGrip(grip.id);
+        onDeleted(grip.id);
+        setOpen(false);
       },
-    ]);
+    });
 
   return (
     <HangSheet visible={open} onClose={onClose} closeLabel={t("hang.cancel")}>

@@ -27,6 +27,7 @@ import { MergeExerciseSheet } from "./MergeExerciseSheet";
 import { RecentSessions } from "./RecentSessions";
 import { RenameExerciseSheet } from "./RenameExerciseSheet";
 import { takenBy } from "./takenBy";
+import { confirmDestructive } from "../../../lib/confirmDestructive";
 
 const failed = (): void => Alert.alert(t("workouts.saveFailed"));
 
@@ -53,23 +54,18 @@ export function ExerciseScreen({ id }: ExerciseScreenProps): React.ReactElement 
     library.status === "ready" ? workoutsUsing(library.data.workouts, exercise.name) : [];
 
   const merge = (into: Exercise): void =>
-    Alert.alert(
-      t("workouts.mergeExerciseTitle", { from: exercise.name, into: into.name }),
-      t("workouts.mergeExerciseBody", { from: exercise.name, into: into.name }),
-      [
-        { text: t("common.cancel"), style: "cancel" },
-        {
-          text: t("workouts.merge"),
-          onPress: () =>
-            void api
-              .mergeExercise(exercise.id, into.id)
-              .then(
-                () => router.replace({ pathname: "/exercise/[id]", params: { id: into.id } }),
-                failed
-              ),
-        },
-      ]
-    );
+    confirmDestructive({
+      title: t("workouts.mergeExerciseTitle", { from: exercise.name, into: into.name }),
+      body: t("workouts.mergeExerciseBody", { from: exercise.name, into: into.name }),
+      action: t("workouts.merge"),
+      onConfirm: () =>
+        void api
+          .mergeExercise(exercise.id, into.id)
+          .then(
+            () => router.replace({ pathname: "/exercise/[id]", params: { id: into.id } }),
+            failed
+          ),
+    });
   const rename = (name: string): void =>
     void api.saveExercise(exercise.id, { name, kind: exercise.kind }).catch((error: unknown) => {
       const taken = takenBy(error);

@@ -9,6 +9,7 @@ import { useHangData } from "../data/HangDataContext";
 import { usePlanActions } from "../plan/usePlanActions";
 import { type } from "../type";
 import { membershipTag, membershipWhen } from "./planText";
+import { confirmDestructive } from "../../../lib/confirmDestructive";
 
 export type PlanListProps = { workoutId: string; name: string; empty: string };
 
@@ -31,7 +32,14 @@ export function PlanList({ workoutId, name, empty }: PlanListProps): React.React
             tag={membershipTag(m, block, today)}
             tagColor={m.start <= today ? colors.gunmetal : colors.petalInk}
             meta={[block?.name, membershipWhen(m)].filter((p) => p !== undefined).join(" · ")}
-            onRemove={() => void actions.deleteMembership(m.id)}
+            onRemove={() =>
+              confirmDestructive({
+                title: t("plan.removeTitle", { title: name }),
+                body: t("plan.removeBody"),
+                action: t("plan.removeAction"),
+                onConfirm: () => void actions.deleteMembership(m.id),
+              })
+            }
             removeLabel={t("plan.remove", { title: name })}
           />
         );

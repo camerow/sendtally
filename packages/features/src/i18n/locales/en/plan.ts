@@ -8,6 +8,9 @@ export const plan = {
   "plan.logSession": "Log session",
   "plan.done": "Done",
   "plan.remove": "Remove {title} from your plan",
+  "plan.removeTitle": "Remove {title} from your plan?",
+  "plan.removeBody": "Its weekly changes go with it. The sessions you logged stay.",
+  "plan.removeAction": "Remove",
   "plan.tabWorkouts": "Workouts",
   "plan.empty":
     "Nothing planned yet. Put climbing, hangboard and the rest of your training on your week.",

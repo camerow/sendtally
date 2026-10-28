@@ -18,7 +18,6 @@ import { Button } from "../components/Button";
 import { Label } from "../components/Label";
 import { useHangData } from "../data/HangDataContext";
 import { GripPickerSheet } from "../grip-picker/GripPickerSheet";
-import { confirmDeleteWorkout } from "../library-detail/confirmDeleteWorkout";
 import { useLibrary } from "../library/useLibrary";
 import { PlanList } from "../plans/PlanList";
 import { SessionEditorSheet } from "../session-editor/SessionEditorSheet";
@@ -29,6 +28,7 @@ import { ProtocolPanel } from "./ProtocolPanel";
 import { WorkoutHistory } from "./WorkoutHistory";
 import { WorkoutIntro } from "./WorkoutIntro";
 import { AddToPlanFooter } from "../library-detail/AddToPlanFooter";
+import { confirmDestructive } from "../../../lib/confirmDestructive";
 
 const reportFailure = (): void => Alert.alert(t("workouts.saveFailed"));
 
@@ -56,9 +56,14 @@ function Detail({
     router.push({ pathname: "/workout/[id]", params: { id } });
   };
   const remove = (): void =>
-    confirmDeleteWorkout(workout.name, t("workouts.deleteHangBody"), () => {
-      router.back();
-      void workouts.deleteWorkout(workout.id);
+    confirmDestructive({
+      title: t("workouts.deleteTitle", { name: workout.name }),
+      body: t("workouts.deleteBody"),
+      action: t("common.delete"),
+      onConfirm: () => {
+        router.back();
+        void workouts.deleteWorkout(workout.id);
+      },
     });
 
   const chooseGrip = (id: string): void => {

@@ -19,9 +19,8 @@ export const workouts = {
   "workouts.duplicate": "Duplicar",
   "workouts.delete": "Borrar entreno",
   "workouts.deleteTitle": "¿Borrar {name}?",
-  "workouts.deleteBody":
-    "Los planes que lo usan conservan lo que tiene ahora. Lo que registraste se queda.",
-  "workouts.deleteHangBody": "Sus planes se van con él. Las sesiones registradas se quedan.",
+  "workouts.deleteBody": "Sus planes se van con él. Las sesiones registradas se quedan.",
+  "workouts.discardChangesTitle": "¿Descartar los cambios?",
 
   "workouts.builtIn.fiveByFive.name": "Fuerza 5x5",
   "workouts.builtIn.fiveByFive.blurb":

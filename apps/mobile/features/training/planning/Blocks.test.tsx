@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { fireEvent, screen } from "@testing-library/react-native";
 import { router } from "expo-router";
 import React from "react";
+import { Alert, type AlertButton } from "react-native";
 import type { Plan, WorkoutRecord } from "@sendtally/api-client";
 import { hangData, renderWithHang } from "../data/renderWithHang";
 import { PlanGrid } from "../plan/PlanGrid";
@@ -161,9 +162,13 @@ describe("block weeks", () => {
     });
   });
 
-  it("takes a workout out of its block from its weeks", async () => {
+  it("takes a workout out of its block from its weeks, once confirmed", async () => {
+    const alert = jest.spyOn(Alert, "alert").mockImplementation(() => undefined);
     await renderWithHang(<LadderScreen id="m1" />, hangData(), { workouts: [squat], plan });
     await fireEvent.press(screen.getByText("Remove from block"));
+    expect(mockPlan.deleteMembership).not.toHaveBeenCalled();
+    const buttons = alert.mock.calls[0]?.[2] as AlertButton[];
+    buttons.find((b) => b.style === "destructive")?.onPress?.();
     expect(mockPlan.deleteMembership).toHaveBeenCalledWith("m1");
     expect(router.back).toHaveBeenCalled();
   });

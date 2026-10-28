@@ -8,6 +8,10 @@ export const plan = {
   "plan.logSession": "Session eintragen",
   "plan.done": "Erledigt",
   "plan.remove": "{title} aus deinem Plan entfernen",
+  "plan.removeTitle": "{title} aus deinem Plan entfernen?",
+  "plan.removeBody":
+    "Seine wöchentlichen Änderungen gehen mit. Deine eingetragenen Einheiten bleiben.",
+  "plan.removeAction": "Entfernen",
   "plan.tabWorkouts": "Workouts",
   "plan.empty":
     "Noch nichts geplant. Plane Klettern, Hangboard und den Rest deines Trainings in deine Woche.",

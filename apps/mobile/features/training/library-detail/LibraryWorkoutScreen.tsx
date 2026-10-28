@@ -19,11 +19,11 @@ import { Button } from "../components/Button";
 import { useHangData } from "../data/HangDataContext";
 import { PlanList } from "../plans/PlanList";
 import { BodyPreview } from "./BodyPreview";
-import { confirmDeleteWorkout } from "./confirmDeleteWorkout";
 import { LibraryIntro } from "./LibraryIntro";
 import { AddToPlanFooter } from "./AddToPlanFooter";
 import { StartButton } from "./StartButton";
 import { WorkoutRuns } from "./WorkoutRuns";
+import { confirmDestructive } from "../../../lib/confirmDestructive";
 
 export type LibraryWorkoutScreenProps = { workout: LibraryWorkout; use: WorkoutUse | undefined };
 
@@ -56,9 +56,14 @@ export function LibraryWorkoutScreen({
     router.push({ pathname: "/workout/[id]", params: { id } });
   };
   const remove = (): void =>
-    confirmDeleteWorkout(workout.name, t("workouts.deleteBody"), () => {
-      router.back();
-      void actions.deleteWorkout(workout.id);
+    confirmDestructive({
+      title: t("workouts.deleteTitle", { name: workout.name }),
+      body: t("workouts.deleteBody"),
+      action: t("common.delete"),
+      onConfirm: () => {
+        router.back();
+        void actions.deleteWorkout(workout.id);
+      },
     });
 
   return (

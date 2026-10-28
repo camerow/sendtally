@@ -1,6 +1,6 @@
 import { router } from "expo-router";
 import React from "react";
-import { Alert, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import { blockEnd, blockWeekOn } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
@@ -20,6 +20,7 @@ import { DayMark } from "../today/DayMark";
 import { type } from "../type";
 import { PlanAgainSheet } from "./PlanAgainSheet";
 import { ScreenFrame } from "./ScreenFrame";
+import { confirmDestructive } from "../../../lib/confirmDestructive";
 
 const LIT_MS = 2500;
 
@@ -53,17 +54,15 @@ export function BlockScreen({ id, highlight }: BlockScreenProps): React.ReactEle
   );
 
   const remove = (): void =>
-    Alert.alert(t("plan.deleteBlockTitle", { name: block.name }), t("plan.deleteBlockBody"), [
-      { text: t("common.cancel"), style: "cancel" },
-      {
-        text: t("common.delete"),
-        style: "destructive",
-        onPress: () => {
-          router.back();
-          void actions.deleteBlock(block.id);
-        },
+    confirmDestructive({
+      title: t("plan.deleteBlockTitle", { name: block.name }),
+      body: t("plan.deleteBlockBody"),
+      action: t("common.delete"),
+      onConfirm: () => {
+        router.back();
+        void actions.deleteBlock(block.id);
       },
-    ]);
+    });
 
   return (
     <ScreenFrame

@@ -8,6 +8,9 @@ export const plan = {
   "plan.logSession": "Noter la séance",
   "plan.done": "Fait",
   "plan.remove": "Retirer {title} de ton plan",
+  "plan.removeTitle": "Retirer {title} de ton plan ?",
+  "plan.removeBody": "Ses changements par semaine partent avec. Les séances notées restent.",
+  "plan.removeAction": "Retirer",
   "plan.tabWorkouts": "Séances",
   "plan.empty":
     "Rien de planifié pour l'instant. Place l'escalade, la poutre et le reste de ton entraînement dans ta semaine.",

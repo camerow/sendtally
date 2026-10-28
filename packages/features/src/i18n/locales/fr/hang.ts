@@ -191,6 +191,8 @@ export const hang = {
   "hang.effort10": "Effort max",
   "hang.logSession": "Enregistrer la séance",
   "hang.discard": "Abandonner",
+  "hang.discardRunTitle": "Abandonner cette séance ?",
+  "hang.discardRunBody": "Rien n'en sera noté.",
 
   "hang.date": "Date",
   "hang.load": "Charge",
@@ -202,7 +204,6 @@ export const hang = {
   "hang.deleteFromLogStrava":
     "Elle est retirée de ton carnet. Strava ne permet pas aux applications de supprimer des activités, l'activité Strava reste donc en place.",
   "hang.deleteConfirmTitle": "Supprimer cette séance ?",
-  "hang.delete": "Supprimer",
 
   "hang.addedLoadCompleted": "Lest · réalisé",
   "hang.weightCompleted": "Poids tiré · réalisé",

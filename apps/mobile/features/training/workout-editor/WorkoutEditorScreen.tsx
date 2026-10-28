@@ -53,6 +53,7 @@ import {
 import { ItemList, type ItemListProps } from "./ItemList";
 import { PatternRow } from "./PatternRow";
 import { VariationCard } from "./VariationCard";
+import { confirmDestructive } from "../../../lib/confirmDestructive";
 
 export type WorkoutEditorScreenProps = {
   /** Edit this workout of the user's own. */
@@ -87,12 +88,23 @@ function Editor({
   const actions = useWorkoutActions(useApi(), reportFailure);
   const { model } = useHangData();
   const [state, setState] = React.useState(initial);
+  const [untouched] = React.useState(initial);
   const [gripFor, setGripFor] = React.useState<ItemAt | null>(null);
   const alternating = state.variations.length > 1;
 
   const save = (): void => {
     void actions.saveWorkout(id ?? randomUUID(), draftOfEditor(state));
     router.back();
+  };
+
+  const cancel = (): void => {
+    if (state === untouched) router.back();
+    else
+      confirmDestructive({
+        title: t("workouts.discardChangesTitle"),
+        action: t("common.discard"),
+        onConfirm: () => router.back(),
+      });
   };
 
   const listOf = (variation: number): Omit<ItemListProps, "items"> => ({
@@ -119,7 +131,7 @@ function Editor({
           paddingVertical: 4,
         }}
       >
-        <Button label={t("hang.cancel")} onPress={() => router.back()} variant="link" height={44} />
+        <Button label={t("hang.cancel")} onPress={cancel} variant="link" height={44} />
         <Text style={[type.bodyBold, { fontSize: 15, color: colors.gunmetal }]}>
           {id === undefined ? t("workouts.newWorkout") : t("hang.editWorkout")}
         </Text>

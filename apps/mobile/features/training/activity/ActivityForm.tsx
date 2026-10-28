@@ -37,6 +37,7 @@ import { PreviewRow } from "../library-detail/PreviewRow";
 import { type } from "../type";
 import { ActivityPostBar } from "./ActivityPostBar";
 import { KindChips } from "./KindChips";
+import { confirmDestructive } from "../../../lib/confirmDestructive";
 
 export type ActivityFormProps = {
   id: string;
@@ -96,23 +97,18 @@ export function ActivityForm({ id, initial, logged }: ActivityFormProps): React.
     router.back();
   };
   const remove = (): void =>
-    Alert.alert(
-      t("activities.deleteTitle"),
-      logged === null || logged.stravaActivityId === null
-        ? t("activities.deleteBody")
-        : t("activities.deleteBodyStrava"),
-      [
-        { text: t("common.cancel"), style: "cancel" },
-        {
-          text: t("common.delete"),
-          style: "destructive",
-          onPress: () => {
-            router.back();
-            void actions.deleteActivity(id);
-          },
-        },
-      ]
-    );
+    confirmDestructive({
+      title: t("activities.deleteTitle"),
+      body:
+        logged === null || logged.stravaActivityId === null
+          ? t("activities.deleteBody")
+          : t("activities.deleteBodyStrava"),
+      action: t("common.delete"),
+      onConfirm: () => {
+        router.back();
+        void actions.deleteActivity(id);
+      },
+    });
 
   return (
     <KeyboardAvoidingView

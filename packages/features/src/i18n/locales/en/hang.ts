@@ -190,6 +190,8 @@ export const hang = {
   "hang.effort10": "Max effort",
   "hang.logSession": "Log session",
   "hang.discard": "Discard",
+  "hang.discardRunTitle": "Discard this workout?",
+  "hang.discardRunBody": "Nothing from it is logged.",
 
   "hang.date": "Date",
   "hang.load": "Load",
@@ -201,7 +203,6 @@ export const hang = {
   "hang.deleteFromLogStrava":
     "It is removed from your log. Strava does not let apps delete activities, so the Strava activity stays.",
   "hang.deleteConfirmTitle": "Delete this session?",
-  "hang.delete": "Delete",
 
   "hang.addedLoadCompleted": "Added load · completed",
   "hang.weightCompleted": "Weight lifted · completed",

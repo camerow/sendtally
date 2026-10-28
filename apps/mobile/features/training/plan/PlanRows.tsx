@@ -13,6 +13,7 @@ import { DayMark } from "../today/DayMark";
 import { KIND_LOOK } from "../today/kindLook";
 import { openMembership } from "./openMembership";
 import { usePlanActions } from "./usePlanActions";
+import { confirmDestructive } from "../../../lib/confirmDestructive";
 
 export type PlanRowsProps = {
   plan: Plan;
@@ -44,7 +45,14 @@ export function PlanRows({ plan, members, workout, highlight }: PlanRowsProps): 
             meta={`${kindLabel(w.kind)} · ${membershipWhen(m)}`}
             onOpen={() => openMembership(m)}
             lit={m.id === highlight}
-            onRemove={() => void actions.deleteMembership(m.id)}
+            onRemove={() =>
+              confirmDestructive({
+                title: t("plan.removeTitle", { title: w.name }),
+                body: t("plan.removeBody"),
+                action: t("plan.removeAction"),
+                onConfirm: () => void actions.deleteMembership(m.id),
+              })
+            }
             removeLabel={t("plan.remove", { title: w.name })}
           />
         );

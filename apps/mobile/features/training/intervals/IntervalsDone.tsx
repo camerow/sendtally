@@ -22,6 +22,7 @@ import { StatGrid } from "../components/StatGrid";
 import { Title } from "../components/Title";
 import type { IntervalsRun } from "./intervalsParams";
 import { startTimeOf } from "./intervalsText";
+import { confirmDestructive } from "../../../lib/confirmDestructive";
 
 export type IntervalsDoneProps = { workout: IntervalsRun; run: Run<IntervalPhase> };
 
@@ -84,7 +85,18 @@ export function IntervalsDone({ workout, run }: IntervalsDoneProps): React.React
         <View style={{ flex: 1 }} />
         <View style={{ gap: 6 }}>
           <Button label={t("activities.saveRun")} onPress={save} variant="primary" height={54} />
-          <Button label={t("hang.discard")} onPress={() => router.back()} variant="danger" />
+          <Button
+            label={t("hang.discard")}
+            onPress={() =>
+              confirmDestructive({
+                title: t("hang.discardRunTitle"),
+                body: t("hang.discardRunBody"),
+                action: t("hang.discard"),
+                onConfirm: () => router.back(),
+              })
+            }
+            variant="danger"
+          />
         </View>
       </ScrollView>
     </SafeAreaView>
