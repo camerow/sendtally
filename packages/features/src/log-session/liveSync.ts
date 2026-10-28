@@ -4,7 +4,6 @@ import { ApiError, type LogSessionInput, type SessionDetail } from "@sendtally/a
 import { parseStoredDraft, writeStoredDraft, type DraftStorage } from "./draftStore";
 import { forgetLiveSession } from "./liveSession";
 import { toLiveSessionInput, toLogSessionInput } from "./transforms";
-import { clockTime } from "./tally";
 
 export type LiveSyncApi = {
   logSession: (input: LogSessionInput) => Promise<{ session: SessionDetail }>;
@@ -154,35 +153,6 @@ export function createLiveSync(
       return chain;
     },
   };
-}
-
-/**
- * Ends the live session: it is saved with its end time and the effort given, or scored by the
- * server when none was, and the device copy goes. A session with no climbs is simply dropped.
- * Resolves to the saved session's fingerprint, or null when there was nothing to save.
- */
-export async function finishLiveSession(
-  api: LiveSyncApi,
-  storage: DraftStorage,
-  sync: LiveSync,
-  rpe: number | null,
-  now: Date = new Date()
-): Promise<string | null> {
-  await sync.settle();
-  const stored = parseStoredDraft(storage.read(), now);
-  if (stored === null) return null;
-  if (stored.draft.climbs.length === 0) {
-    if (stored.fingerprint !== undefined) sync.remove(stored.fingerprint);
-    storage.remove();
-    return null;
-  }
-  const input = toLogSessionInput({ ...stored.draft, endTime: clockTime(now), rpe });
-  const { session } =
-    stored.fingerprint === undefined
-      ? await api.logSession(input)
-      : await api.updateLoggedSession(stored.fingerprint, input);
-  storage.remove();
-  return session.fingerprint;
 }
 
 export type LiveSyncState = { sync: LiveSync; status: LiveSyncStatus };

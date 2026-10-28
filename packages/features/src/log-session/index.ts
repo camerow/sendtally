@@ -84,19 +84,21 @@ export { useClimbEditor, type ClimbEditing, type ClimbEditor } from "./useClimbE
 export { logClimbOnDay, sessionOnDay, type ClimbPlace, type DayClimbApi } from "./dayClimb";
 export {
   clockTime,
+  finishLiveSession,
   newTallyClimb,
   tallyClock,
   tallyDraft,
-  tallyElapsedMinutes,
+  tallyElapsedSeconds,
   tallySummary,
   withTallyGo,
+  type FinishApi,
   type TallyChoice,
   type TallyGo,
+  type TallyStart,
 } from "./tally";
 export {
   LIVE_SYNC_DEBOUNCE_MS,
   createLiveSync,
-  finishLiveSession,
   useLiveSync,
   type LiveSync,
   type LiveSyncApi,

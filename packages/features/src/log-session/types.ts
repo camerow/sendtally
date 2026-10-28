@@ -80,6 +80,8 @@ export type LogSessionDraft = {
   date: string;
   startTime: string;
   endTime: string;
+  /** When a live session started, to the second, for its running clock. */
+  startedAt?: string;
   location: "indoor" | "outdoor";
   gymId?: string;
   /** The crag an outdoor session was at, from Areas. */

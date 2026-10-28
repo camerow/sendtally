@@ -14,18 +14,15 @@ import {
 import { t } from "@sendtally/features/i18n";
 import {
   disciplineLabel,
-  disciplineOf,
   durationLabel,
   finishLiveSession,
   gradeOptions,
   newTallyClimb,
   readClimbKind,
-  tallyClock,
   tallyDraft,
-  tallyElapsedMinutes,
+  tallyElapsedSeconds,
   tallySummary,
   useLiveSession,
-  useLiveSync,
   vGradeOf,
   withTallyGo,
   type ClimbDraft,
@@ -47,10 +44,13 @@ import { FinishSheet } from "./FinishSheet";
 import { GradeChips, type GradeChip } from "./GradeChips";
 import { GymSheet } from "./GymSheet";
 import { LiveClimbEditor } from "./LiveClimbEditor";
+import { LiveClock } from "./LiveClock";
 import { TallyRow } from "./TallyRow";
 import { UndoSnackbar } from "./UndoSnackbar";
 
 type Selection = { kind: "row"; key: string } | { kind: "pending"; chip: string } | null;
+
+type Segment = Discipline | "circuit";
 
 type Snack = { id: number; message: string; draft: LogSessionDraft; selection: Selection };
 
@@ -69,36 +69,27 @@ function finishSummary(draft: LogSessionDraft, minutes: number): string {
   ].join(" · ");
 }
 
-function useMinuteClock(): Date {
-  const [now, setNow] = React.useState(() => new Date());
-  React.useEffect(() => {
-    const timer = setInterval(() => setNow(new Date()), 15_000);
-    return () => clearInterval(timer);
-  }, []);
-  return now;
-}
-
 /** The gym session as it happens: a grade starts a climb, then Fell or Sent for each go. */
 export function TallyScreen(): React.ReactElement {
   const api = useApi();
-  const plan = readPlanLink(useLocalSearchParams());
-  const { sync } = useLiveSync(api, liveSessionStorage);
-  const live = useLiveSession(liveSessionStorage, sync);
+  const params = useLocalSearchParams();
+  const plan = readPlanLink(params);
+  const live = useLiveSession(liveSessionStorage);
   const gyms = useGyms(api);
   const vocabulary = useClimbVocabulary(api);
   const { scales } = useGradeScalePrefs(api);
   const sessions = useQuery(queries.sessions(api)).state;
-  const now = useMinuteClock();
   const [selection, setSelection] = React.useState<Selection>(null);
   const [snack, setSnack] = React.useState<Snack | null>(null);
   const [editing, setEditing] = React.useState<string | null>(null);
   const [picking, setPicking] = React.useState(false);
-  const [finishing, setFinishing] = React.useState(false);
+  const [finishing, setFinishing] = React.useState(params.finish === "1");
   const [saving, setSaving] = React.useState(false);
   const [failed, setFailed] = React.useState(false);
   const [discipline, setDiscipline] = React.useState<Discipline>(() =>
     readClimbKind(climbKindStorage, []) === "route" ? "route" : "boulder"
   );
+  const [onCircuit, setOnCircuit] = React.useState(true);
 
   const started = React.useRef(false);
   const settled = sessions.status !== "loading" && gyms.state.status !== "loading";
@@ -106,17 +97,15 @@ export function TallyScreen(): React.ReactElement {
   React.useEffect(() => {
     if (started.current || !settled) return;
     started.current = true;
-    if (draft !== null) {
-      if (draft.plan === undefined && plan.membershipId !== null) live.replace({ ...draft, plan });
-      return;
-    }
+    if (draft !== null) return;
     const lastGym =
       sessions.status === "ready"
         ? sessions.data.sessions.find((s) => s.gym_id !== null)?.gym_id
         : undefined;
     const gymId = gyms.gyms.some((g) => g.id === lastGym) ? (lastGym ?? undefined) : undefined;
-    live.start(tallyDraft(new Date(), { gymId, plan }));
-  }, [settled, draft, live, plan, sessions, gyms.gyms]);
+    const name = typeof params.name === "string" ? params.name : undefined;
+    live.start(tallyDraft(new Date(), { gymId, plan, name }));
+  }, [settled, draft, live, plan, params.name, sessions, gyms.gyms]);
 
   const leave = (): void => {
     if (router.canGoBack()) router.back();
@@ -130,22 +119,20 @@ export function TallyScreen(): React.ReactElement {
   const gym = gymOfDraft(gyms.gyms, draft.gymId);
   const circuitGym = liveGymOfDraft(gyms.gyms, draft.gymId);
   const scale = scales[discipline];
+  const segment: Segment = circuitGym !== null && onCircuit ? "circuit" : discipline;
+  const segments: Segment[] =
+    circuitGym === null ? ["boulder", "route"] : ["boulder", "route", "circuit"];
   const chips: GradeChip[] =
-    circuitGym === null
-      ? gradeOptions(scale).map((g) => ({ key: g, label: g }))
-      : circuitGym.circuits.map((c) => ({
+    segment === "circuit" && circuitGym !== null
+      ? circuitGym.circuits.map((c) => ({
           key: c.id,
           label: circuitLabel(c),
           colour: CIRCUIT_HEX[c.colour],
-        }));
-  const showDiscipline =
-    circuitGym === null &&
-    (vocabulary.climbs.some((c) => c.discipline === "route") ||
-      draft.climbs.some((c) => disciplineOf(c.scale) === "route") ||
-      (gym?.walls.length ?? 0) > 0);
+        }))
+      : gradeOptions(scale).map((g) => ({ key: g, label: g }));
 
   const choiceOf = (chip: string): TallyChoice | null => {
-    if (circuitGym === null) return { kind: "grade", scale, grade: chip };
+    if (segment !== "circuit" || circuitGym === null) return { kind: "grade", scale, grade: chip };
     const circuit = circuitGym.circuits.find((c) => c.id === chip);
     return circuit === undefined ? null : { kind: "circuit", gym: circuitGym, circuit };
   };
@@ -185,20 +172,24 @@ export function TallyScreen(): React.ReactElement {
   const pickGym = (gymId: string | undefined): void => {
     const { gymId: _gym, ...rest } = draft;
     live.replace(gymId === undefined ? rest : { ...rest, gymId });
+    setOnCircuit(true);
     setSelection(null);
     setPicking(false);
   };
 
-  const pickDiscipline = (next: Discipline): void => {
-    setDiscipline(next);
-    climbKindStorage.write(next);
+  const pickSegment = (next: Segment): void => {
+    setOnCircuit(next === "circuit");
+    if (next !== "circuit") {
+      setDiscipline(next);
+      climbKindStorage.write(next);
+    }
     setSelection(null);
   };
 
   const save = (rpe: number | null): void => {
     setSaving(true);
     setFailed(false);
-    finishLiveSession(api, liveSessionStorage, sync, rpe).then(
+    finishLiveSession(api, liveSessionStorage, rpe).then(
       (fingerprint) => {
         setFinishing(false);
         if (fingerprint === null) leave();
@@ -218,8 +209,6 @@ export function TallyScreen(): React.ReactElement {
         text: t("common.discard"),
         style: "destructive",
         onPress: () => {
-          const fingerprint = live.stored?.fingerprint;
-          if (fingerprint !== undefined) sync.remove(fingerprint);
           live.discard();
           setFinishing(false);
           leave();
@@ -228,7 +217,7 @@ export function TallyScreen(): React.ReactElement {
     ]);
   };
 
-  const minutes = tallyElapsedMinutes(draft, now);
+  const minutes = Math.floor(tallyElapsedSeconds(draft, new Date()) / 60);
   const editingClimb = draft.climbs.find((c) => c.key === editing) ?? null;
   const active = selection?.kind === "pending" ? selection.chip : null;
   const off = selection === null;
@@ -286,8 +275,8 @@ export function TallyScreen(): React.ReactElement {
       </View>
 
       <View style={{ alignItems: "center", gap: 2, paddingTop: 4, paddingBottom: 12 }}>
-        <Text
-          accessibilityLabel={durationLabel(minutes)}
+        <LiveClock
+          draft={draft}
           style={{
             fontFamily: fonts.displayHeavy,
             fontSize: 44,
@@ -295,9 +284,7 @@ export function TallyScreen(): React.ReactElement {
             letterSpacing: -1.3,
             color: colors.white,
           }}
-        >
-          {tallyClock(minutes)}
-        </Text>
+        />
         <Text style={{ fontFamily: fonts.mono, fontSize: 13, color: "rgba(255,255,255,0.75)" }}>
           {tallySummary(draft)}
         </Text>
@@ -352,50 +339,48 @@ export function TallyScreen(): React.ReactElement {
           borderTopColor: "rgba(255,255,255,0.12)",
         }}
       >
-        {showDiscipline && (
-          <View
-            accessibilityRole="radiogroup"
-            style={{
-              alignSelf: "center",
-              width: 200,
-              flexDirection: "row",
-              padding: 3,
-              borderRadius: 10,
-              backgroundColor: "rgba(255,255,255,0.1)",
-            }}
-          >
-            {(["boulder", "route"] as const).map((d) => (
-              <Pressable
-                key={d}
-                onPress={() => pickDiscipline(d)}
-                accessibilityRole="radio"
-                accessibilityState={{ checked: d === discipline }}
+        <View
+          accessibilityRole="radiogroup"
+          style={{
+            alignSelf: "center",
+            width: segments.length * 96,
+            flexDirection: "row",
+            padding: 3,
+            borderRadius: 10,
+            backgroundColor: "rgba(255,255,255,0.1)",
+          }}
+        >
+          {segments.map((d) => (
+            <Pressable
+              key={d}
+              onPress={() => pickSegment(d)}
+              accessibilityRole="radio"
+              accessibilityState={{ checked: d === segment }}
+              style={{
+                flex: 1,
+                height: 30,
+                borderRadius: 8,
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: d === segment ? colors.white : "transparent",
+              }}
+            >
+              <Text
                 style={{
-                  flex: 1,
-                  height: 30,
-                  borderRadius: 8,
-                  alignItems: "center",
-                  justifyContent: "center",
-                  backgroundColor: d === discipline ? colors.white : "transparent",
+                  fontFamily: fonts.sansSemiBold,
+                  fontSize: 13,
+                  color: d === segment ? colors.gunmetal : "rgba(255,255,255,0.75)",
                 }}
               >
-                <Text
-                  style={{
-                    fontFamily: fonts.sansSemiBold,
-                    fontSize: 13,
-                    color: d === discipline ? colors.gunmetal : "rgba(255,255,255,0.75)",
-                  }}
-                >
-                  {disciplineLabel(d)}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
-        )}
+                {d === "circuit" ? t("gyms.circuit") : disciplineLabel(d)}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
         <GradeChips
           chips={chips}
           active={active}
-          startIndex={circuitGym === null ? typicalGradeIndex(vocabulary.climbs, scale) : 0}
+          startIndex={segment === "circuit" ? 0 : typicalGradeIndex(vocabulary.climbs, scale)}
           onPick={(chip) => setSelection({ kind: "pending", chip })}
         />
         <View style={{ flexDirection: "row", gap: 10, paddingHorizontal: 18 }}>

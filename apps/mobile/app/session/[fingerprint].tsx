@@ -10,11 +10,7 @@ import {
   type ClimbVM,
   climbMetaLabel,
 } from "@sendtally/features/session-detail";
-import {
-  enduranceLapCountLabel,
-  enduranceSummaryLabel,
-  forgetLiveSession,
-} from "@sendtally/features/log-session";
+import { enduranceLapCountLabel, enduranceSummaryLabel } from "@sendtally/features/log-session";
 import { t } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { Chip } from "../../components/Chip";
@@ -27,7 +23,6 @@ import { PostStatusBar } from "../../features/sessions/PostStatusBar";
 import { SessionJournal } from "../../features/journal/SessionJournal";
 import { SessionTags } from "../../features/sessions/SessionTags";
 import { useApi } from "../../lib/api";
-import { liveSessionStorage } from "../../lib/liveSessionStorage";
 import { press } from "../../lib/press";
 
 const RESULT_BADGES: Record<ClimbVM["result"], { bg: string; border: string; color: string }> = {
@@ -79,7 +74,6 @@ export default function SessionDetailScreen(): React.ReactElement {
           api
             .deleteLoggedSession(fingerprint ?? "")
             .then(() => {
-              forgetLiveSession(liveSessionStorage, fingerprint ?? "");
               router.replace("/(tabs)/sessions");
             })
             .catch(() => {

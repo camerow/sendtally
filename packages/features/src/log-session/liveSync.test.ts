@@ -2,12 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { ApiError } from "@sendtally/api-client";
 import { draftStorage, parseStoredDraft, writeStoredDraft, type DraftStorage } from "./draftStore";
 import { localDate, withQuickClimb } from "./liveSession";
-import {
-  createLiveSync,
-  finishLiveSession,
-  type LiveSyncApi,
-  type LiveSyncStatus,
-} from "./liveSync";
+import { createLiveSync, type LiveSyncApi, type LiveSyncStatus } from "./liveSync";
 
 const NOW = new Date();
 
@@ -236,24 +231,5 @@ describe("live sync", () => {
     expect(api.calls).toEqual(["POST 1", "DELETE manual-1"]);
     expect(parseStoredDraft(storage.read(), NOW)).toMatchObject({ draft: { climbs: [] } });
     expect(parseStoredDraft(storage.read(), NOW)?.fingerprint).toBeUndefined();
-  });
-
-  it("finishes with the end time and effort, and drops the device copy", async () => {
-    const { api, storage, sync, log } = setup();
-    const spy = vi.spyOn(api, "updateLoggedSession");
-    log(2);
-    const done = await finishLiveSession(api, storage, sync, 7, new Date(2026, 9, 27, 20, 5));
-    expect(done).toBe("manual-1");
-    expect(spy.mock.calls.at(-1)?.[1]).toMatchObject({ endTime: "20:05", rpe: 7 });
-    expect(spy.mock.calls.at(-1)?.[1]).not.toHaveProperty("unscored");
-    expect(storage.read()).toBeNull();
-  });
-
-  it("finishes an empty session by dropping it", async () => {
-    const { api, storage, sync } = setup();
-    writeStoredDraft(storage, { ...withQuickClimb(null, NOW).draft, climbs: [] }, NOW);
-    expect(await finishLiveSession(api, storage, sync, null)).toBeNull();
-    expect(api.calls).toEqual([]);
-    expect(storage.read()).toBeNull();
   });
 });
