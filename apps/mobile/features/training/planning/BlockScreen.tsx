@@ -18,6 +18,7 @@ import { usePlanActions } from "../plan/usePlanActions";
 import { membershipWhen } from "../plans/planText";
 import { DayMark } from "../today/DayMark";
 import { type } from "../type";
+import { AddKindSheet } from "./AddKindSheet";
 import { PlanAgainSheet } from "./PlanAgainSheet";
 import { ScreenFrame } from "./ScreenFrame";
 import { confirmDestructive } from "../../../lib/confirmDestructive";
@@ -34,6 +35,7 @@ export type BlockScreenProps = {
 export function BlockScreen({ id, highlight }: BlockScreenProps): React.ReactElement | null {
   const [lit, setLit] = React.useState(highlight);
   const [again, setAgain] = React.useState(false);
+  const [adding, setAdding] = React.useState(false);
   React.useEffect(() => {
     const timer = setTimeout(() => setLit(undefined), LIT_MS);
     return () => clearTimeout(timer);
@@ -88,7 +90,7 @@ export function BlockScreen({ id, highlight }: BlockScreenProps): React.ReactEle
       )}
       <Button
         label={t("plan.addWorkout")}
-        onPress={() => router.push({ pathname: "/plan/add", params: { blockId: id } })}
+        onPress={() => setAdding(true)}
         variant="dashed"
         icon="plus"
         height={50}
@@ -125,6 +127,11 @@ export function BlockScreen({ id, highlight }: BlockScreenProps): React.ReactEle
       )}
       <Button label={t("plan.deleteBlock")} onPress={remove} variant="danger" height={50} />
       {again && <PlanAgainSheet block={block} onClose={() => setAgain(false)} />}
+      <AddKindSheet
+        flow={{ date: null, blockId: id }}
+        visible={adding}
+        onClose={() => setAdding(false)}
+      />
     </ScreenFrame>
   );
 }

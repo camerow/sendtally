@@ -6,6 +6,10 @@ import type { Plan, WorkoutRecord } from "@sendtally/api-client";
 import { hangData, renderWithHang } from "../data/renderWithHang";
 import { PlanDayScreen } from "./PlanDayScreen";
 
+jest.mock("../../../components/Sheet", () => ({
+  Sheet: ({ visible, children }: { visible: boolean; children: React.ReactNode }) =>
+    visible ? children : null,
+}));
 jest.mock("expo-router", () => ({ router: { push: jest.fn(), back: jest.fn() } }));
 
 const legs: WorkoutRecord = {
@@ -71,6 +75,10 @@ describe("Plan day", () => {
     await renderWithHang(<PlanDayScreen date="2026-09-30" />, hangData(), world);
     expect(screen.getByText("Nothing planned on this day.")).toBeTruthy();
     await fireEvent.press(screen.getByText("Add on this day"));
-    expect(router.push).toHaveBeenCalledWith("/plan/add?date=2026-09-30&blockId=b1");
+    await fireEvent.press(screen.getByText("Mobility"));
+    expect(router.push).toHaveBeenCalledWith({
+      pathname: "/plan/add",
+      params: { date: "2026-09-30", blockId: "b1", kind: "mobility" },
+    });
   });
 });

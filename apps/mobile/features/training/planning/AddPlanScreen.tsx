@@ -4,7 +4,6 @@ import { View } from "react-native";
 import type { WorkoutKind } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { kindLabel } from "@sendtally/features/activities";
-import { shortDate } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import { usePlan } from "@sendtally/features/training";
 import type { LibraryWorkout } from "@sendtally/features/workouts";
@@ -15,36 +14,30 @@ import { Title } from "../components/Title";
 import { LoadState } from "../data/LoadState";
 import { LibraryBrowser } from "../library/LibraryBrowser";
 import { useLibrary } from "../library/useLibrary";
-import { addFlowParams, type AddFlow } from "./flowParams";
+import { addFlowParams, addKicker, type AddFlow } from "./flowParams";
 import { KindSheet } from "./KindSheet";
 import { ScreenFrame } from "./ScreenFrame";
 
-export type AddPlanScreenProps = { flow: AddFlow };
+export type AddPlanScreenProps = { flow: AddFlow; initialKind?: WorkoutKind | null };
 
 /**
  * Adding to the plan: what kind in the one sheet, then the library of that kind in one
  * searchable list, the user's own first, to preview one or make a new one.
  */
-export function AddPlanScreen({ flow }: AddPlanScreenProps): React.ReactElement {
+export function AddPlanScreen({
+  flow,
+  initialKind = null,
+}: AddPlanScreenProps): React.ReactElement {
   const { state, reload } = useLibrary();
   const plan = usePlan(useApi()).state;
-  const [kind, setKind] = React.useState<WorkoutKind | null>(null);
-  const [choosing, setChoosing] = React.useState(true);
+  const [kind, setKind] = React.useState<WorkoutKind | null>(initialKind);
+  const [choosing, setChoosing] = React.useState(initialKind === null);
 
   React.useEffect(() => {
     if (!choosing && kind === null) router.back();
   }, [choosing, kind]);
 
-  const block =
-    plan.status === "ready" && flow.blockId !== null
-      ? plan.data.blocks.find((b) => b.id === flow.blockId)
-      : undefined;
-  const kicker =
-    block !== undefined
-      ? t("plan.addToBlock", { name: block.name })
-      : flow.date !== null
-        ? t("plan.forDate", { date: shortDate(flow.date) })
-        : t("plan.addToPlan");
+  const kicker = addKicker(flow, plan.status === "ready" ? plan.data.blocks : []);
   const library = state.status === "ready" ? state.data : null;
   const preview = (w: LibraryWorkout): void =>
     router.push({

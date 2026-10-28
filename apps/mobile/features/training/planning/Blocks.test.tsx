@@ -78,7 +78,11 @@ describe("blocks", () => {
   it("adds to the block, and moves a plan outside it in", async () => {
     await renderWithHang(<BlockScreen id="b1" />, hangData(), { workouts: [squat], plan });
     await fireEvent.press(screen.getByText("Add a workout"));
-    expect(router.push).toHaveBeenCalledWith({ pathname: "/plan/add", params: { blockId: "b1" } });
+    await fireEvent.press(screen.getByText("Strength"));
+    expect(router.push).toHaveBeenCalledWith({
+      pathname: "/plan/add",
+      params: { blockId: "b1", kind: "strength" },
+    });
     await fireEvent.press(screen.getByLabelText("Move Back squat into this block"));
     expect(mockPlan.saveMembership).toHaveBeenCalledWith({
       id: "m2",

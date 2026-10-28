@@ -32,8 +32,3 @@ export function bandOn(blocks: readonly Block[], monday: CalendarDate): Band | n
 /** The block a day falls in, if any. */
 export const blockOn = (blocks: readonly Block[], date: CalendarDate): Block | null =>
   blocks.find((b) => blockWeekOn(b, date) !== null) ?? null;
-
-/** Where "Add on this day" goes: the day, and the block it falls in. */
-export function addOnDayHref(date: CalendarDate, block: Block | null): string {
-  return `/plan/add?date=${date}${block === null ? "" : `&blockId=${encodeURIComponent(block.id)}`}`;
-}

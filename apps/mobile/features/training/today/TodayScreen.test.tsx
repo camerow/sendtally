@@ -6,7 +6,10 @@ import type { Plan, WorkoutRecord } from "@sendtally/api-client";
 import { renderWithHang, hangData } from "../data/renderWithHang";
 import { TodayScreen } from "./TodayScreen";
 
-jest.mock("../../../components/Sheet", () => ({ Sheet: () => null }));
+jest.mock("../../../components/Sheet", () => ({
+  Sheet: ({ visible, children }: { visible: boolean; children: React.ReactNode }) =>
+    visible ? children : null,
+}));
 let mockParams: Record<string, string> = {};
 
 jest.mock("expo-router", () => ({
@@ -74,9 +77,14 @@ describe("Today", () => {
     expect(screen.getByText("Add to today")).toBeTruthy();
     await fireEvent.press(screen.getByLabelText(/^Monday/));
     await fireEvent.press(screen.getByText("Add to Mon"));
+    expect(screen.getByText("What kind?")).toBeTruthy();
+    expect(router.push).not.toHaveBeenCalledWith(
+      expect.objectContaining({ pathname: "/plan/add" })
+    );
+    await fireEvent.press(screen.getByText("Mobility"));
     expect(router.push).toHaveBeenCalledWith({
       pathname: "/plan/add",
-      params: { date: "2026-09-28" },
+      params: { date: "2026-09-28", kind: "mobility" },
     });
   });
 

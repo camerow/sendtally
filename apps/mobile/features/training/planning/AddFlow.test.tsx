@@ -86,6 +86,14 @@ describe("adding to the plan", () => {
     });
   });
 
+  it("opens on the kind already picked, with no sheet", async () => {
+    await renderWithHang(<AddPlanScreen flow={flow} initialKind="strength" />, hangData(), {
+      workouts: [legs],
+    });
+    expect(screen.queryByText("What kind?")).toBeNull();
+    expect(screen.getByText("Strength")).toBeTruthy();
+  });
+
   it("goes back when the sheet closes with no kind picked", async () => {
     await renderWithHang(<AddPlanScreen flow={flow} />, hangData());
     await fireEvent.press(screen.getByText("Cancel"));

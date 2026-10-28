@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@jest/globals";
 import type { Block } from "@sendtally/core/hang";
-import { addOnDayHref, bandOn, blockOn, monthWeeks } from "./calendarGrid";
+import { bandOn, blockOn, monthWeeks } from "./calendarGrid";
 
 const autumn: Block = { id: "b1", name: "Autumn power", start: "2026-09-28", weeks: 4 };
 
@@ -33,10 +33,5 @@ describe("calendar grid", () => {
   it("finds the block a day falls in", () => {
     expect(blockOn([autumn], "2026-10-25")?.id).toBe("b1");
     expect(blockOn([autumn], "2026-10-26")).toBeNull();
-  });
-
-  it("links to adding on a day", () => {
-    expect(addOnDayHref("2026-11-05", null)).toBe("/plan/add?date=2026-11-05");
-    expect(addOnDayHref("2026-10-20", autumn)).toBe("/plan/add?date=2026-10-20&blockId=b1");
   });
 });

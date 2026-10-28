@@ -1,4 +1,3 @@
-import { router } from "expo-router";
 import React from "react";
 import { View } from "react-native";
 import type { CalendarDate } from "@sendtally/core/hang";
@@ -15,7 +14,8 @@ import { Label } from "../components/Label";
 import { Title } from "../components/Title";
 import { useHangData } from "../data/HangDataContext";
 import { useLibrary } from "../library/useLibrary";
-import { addOnDayHref, blockOn } from "./calendarGrid";
+import { AddKindSheet } from "../planning/AddKindSheet";
+import { blockOn } from "./calendarGrid";
 import { DayPlanRow } from "./DayPlanRow";
 
 export type PlanDayScreenProps = { date: CalendarDate };
@@ -30,6 +30,7 @@ export function PlanDayScreen({ date }: PlanDayScreenProps): React.ReactElement 
   const day = trainingDay(log, date, today);
   const block = blockOn(log.plan.blocks, date);
   const kicker = block === null ? null : blockTag(block.name, block, date);
+  const [adding, setAdding] = React.useState(false);
   return (
     <View style={{ gap: 16 }}>
       <BackButton />
@@ -46,9 +47,14 @@ export function PlanDayScreen({ date }: PlanDayScreenProps): React.ReactElement 
       {day.plans.length === 0 && <DashedPanel body={t("calendar.nothingPlanned")} />}
       <Button
         label={t("calendar.addOnDay")}
-        onPress={() => router.push(addOnDayHref(date, block))}
+        onPress={() => setAdding(true)}
         variant="dashed"
         icon="plus"
+      />
+      <AddKindSheet
+        flow={{ date, blockId: block?.id ?? null }}
+        visible={adding}
+        onClose={() => setAdding(false)}
       />
     </View>
   );

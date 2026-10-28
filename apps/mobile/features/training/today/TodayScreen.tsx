@@ -25,6 +25,7 @@ import { useApi } from "../../../lib/api";
 import { blockOn } from "../calendar/calendarGrid";
 import { Label } from "../components/Label";
 import { useHangData } from "../data/HangDataContext";
+import { AddKindSheet } from "../planning/AddKindSheet";
 import { SessionEditorSheet } from "../session-editor/SessionEditorSheet";
 import { BlockRow } from "../train/BlockRow";
 import { DaySection } from "./DaySection";
@@ -42,6 +43,7 @@ export function TodayScreen(): React.ReactElement {
   const [offset, setOffset] = React.useState(0);
   const [selected, setSelected] = React.useState<CalendarDate>(today);
   const [editing, setEditing] = React.useState<string | null>(null);
+  const [adding, setAdding] = React.useState(false);
   const request = asked.date !== undefined && isCalendarDate(asked.date) ? asked.date : null;
   const [seen, setSeen] = React.useState<string | null>(null);
   const requestKey = request === null ? null : `${request}:${asked.at ?? ""}`;
@@ -112,9 +114,11 @@ export function TodayScreen(): React.ReactElement {
         </View>
         <DaySection day={day} onOpen={open} />
       </ScrollView>
-      <Fab
-        label={addLabel}
-        onPress={() => router.push({ pathname: "/plan/add", params: { date: selected } })}
+      <Fab label={addLabel} onPress={() => setAdding(true)} />
+      <AddKindSheet
+        flow={{ date: selected, blockId: null }}
+        visible={adding}
+        onClose={() => setAdding(false)}
       />
       <SessionEditorSheet sessionId={editing} onClose={() => setEditing(null)} />
     </View>
