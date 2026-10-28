@@ -66,17 +66,37 @@ describe("Today", () => {
     expect(screen.getByText("0 of 2 done")).toBeTruthy();
   });
 
-  it("opens the block the day is in, by its week", async () => {
+  it("lists every block in progress with its workouts, leaving out a finished one", async () => {
+    const inBlocks: Plan = {
+      ...plan("max10"),
+      blocks: [
+        { id: "b1", name: "Winter base", start: "2026-09-21", weeks: 4, focus: null },
+        { id: "b2", name: "Power phase", start: "2026-09-28", weeks: 2, focus: null },
+        { id: "b0", name: "Summer base", start: "2026-08-03", weeks: 4, focus: null },
+      ],
+      memberships: [
+        { id: "m1", workoutId: "max10", blockId: "b1", weekdays: [0, 1], start: "2026-09-21" },
+      ],
+    };
+    await renderWithHang(<TodayScreen />, hangData(), { plan: inBlocks });
+    expect(screen.getByText("Blocks in progress")).toBeTruthy();
+    expect(screen.getByText("1 workout")).toBeTruthy();
+    expect(screen.getByText("0 workouts")).toBeTruthy();
+    expect(screen.queryByText("Summer base")).toBeNull();
+    await fireEvent.press(screen.getByText("Winter base"));
+    expect(router.push).toHaveBeenCalledWith({
+      pathname: "/plan/block/[id]",
+      params: { id: "b1" },
+    });
+  });
+
+  it("names a single running block in the singular", async () => {
     const inBlock: Plan = {
       ...plan("max10"),
       blocks: [{ id: "b1", name: "Winter base", start: "2026-09-21", weeks: 4, focus: null }],
     };
     await renderWithHang(<TodayScreen />, hangData(), { plan: inBlock });
-    await fireEvent.press(screen.getByText("Winter base · week 2 of 4"));
-    expect(router.push).toHaveBeenCalledWith({
-      pathname: "/plan/block/[id]",
-      params: { id: "b1" },
-    });
+    expect(screen.getByText("Block in progress")).toBeTruthy();
   });
 
   it("adds to the day picked, naming it", async () => {
@@ -95,9 +115,9 @@ describe("Today", () => {
     });
   });
 
-  it("shows no block row outside a block", async () => {
+  it("shows no blocks when none is running", async () => {
     await renderWithHang(<TodayScreen />, hangData(), { plan: plan("max10") });
-    expect(screen.queryByText(/ · week /)).toBeNull();
+    expect(screen.queryByText(/in progress$/)).toBeNull();
   });
 
   it("opens on the day it was sent back to", async () => {

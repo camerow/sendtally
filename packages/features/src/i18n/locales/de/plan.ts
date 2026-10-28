@@ -89,4 +89,13 @@ export const plan = {
   "plan.planAgainStart": "In welcher Woche beginnt er?",
   "plan.addToToday": "Zu heute hinzufügen",
   "plan.addToDay": "Zu {day} hinzufügen",
+  "plan.blocksInProgress_one": "Laufender Block",
+  "plan.blocksInProgress_other": "Laufende Blöcke",
+  "plan.workoutCount_one": "{count} Workout",
+  "plan.workoutCount_other": "{count} Workouts",
+  "plan.soFar": "Bisher",
+  "plan.doneOfShort": "{done} von {planned}",
+  "plan.finished": "Abgeschlossen",
+  "plan.blockFinished": "Block abgeschlossen",
+  "plan.workoutChangesSave": "Änderungen an Workouts werden sofort gespeichert.",
 } as const;

@@ -3,7 +3,6 @@ import React from "react";
 import { ScrollView, View } from "react-native";
 import {
   addDays,
-  blockWeekOn,
   daysBetween,
   isCalendarDate,
   weekStart,
@@ -14,6 +13,8 @@ import { colors } from "@sendtally/design/tokens";
 import { longDate, weekdayShort } from "@sendtally/features/hang";
 import { formatNumber, t } from "@sendtally/features/i18n";
 import {
+  blockGroups,
+  blockMembers,
   focusCounts,
   focusLabel,
   trainingDay,
@@ -24,7 +25,6 @@ import {
 } from "@sendtally/features/training";
 import { Fab } from "../../../components/Fab";
 import { useApi } from "../../../lib/api";
-import { blockOn } from "../calendar/calendarGrid";
 import { KindTag } from "../components/KindTag";
 import { Label } from "../components/Label";
 import { useHangData } from "../data/HangDataContext";
@@ -69,8 +69,7 @@ export function TodayScreen(): React.ReactElement {
   const days = trainingWeek(log, monday, today);
   const day = trainingDay(log, selected, today);
   const foci = focusCounts(days);
-  const block = blockOn(log.plan.blocks, selected);
-  const at = block === null ? null : blockWeekOn(block, selected);
+  const running = blockGroups(log.plan.blocks, today).current;
 
   const changeWeek = (next: number): void => {
     setOffset(next);
@@ -99,22 +98,29 @@ export function TodayScreen(): React.ReactElement {
         contentContainerStyle={{ gap: 16, paddingHorizontal: 18, paddingTop: 4, paddingBottom: 96 }}
       >
         <Label color={colors.gunmetal}>{longDate(today)}</Label>
-        <View>
-          <WeekStrip
-            offset={offset}
-            days={days}
-            done={t("plan.doneOf", weekDone(days))}
-            selected={selected}
-            onSelect={setSelected}
-            onOffset={changeWeek}
-          />
-          {block !== null && at !== null && (
-            <BlockRow
-              id={block.id}
-              name={t("hang.blockWeek", { label: block.name, at, of: block.weeks })}
-            />
-          )}
-        </View>
+        <WeekStrip
+          offset={offset}
+          days={days}
+          done={t("plan.doneOf", weekDone(days))}
+          selected={selected}
+          onSelect={setSelected}
+          onOffset={changeWeek}
+        />
+        {running.length > 0 && (
+          <View>
+            <Label color={colors.textSecondary}>
+              {t("plan.blocksInProgress", { count: running.length })}
+            </Label>
+            {running.map((b) => (
+              <BlockRow
+                key={b.id}
+                id={b.id}
+                name={b.name}
+                meta={t("plan.workoutCount", { count: blockMembers(log.plan, b).length })}
+              />
+            ))}
+          </View>
+        )}
         {foci.length > 0 && (
           <View
             accessible
