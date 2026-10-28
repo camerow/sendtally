@@ -10,6 +10,7 @@ import { ExerciseScreen } from "./ExerciseScreen";
 const mockApi = {
   saveExercise: jest.fn<(...args: unknown[]) => Promise<unknown>>(),
   mergeExercise: jest.fn<(...args: unknown[]) => Promise<unknown>>(),
+  removeExercise: jest.fn<(...args: unknown[]) => Promise<unknown>>(),
 };
 
 jest.mock("../../../lib/api", () => ({ useApi: () => mockApi }));
@@ -21,7 +22,9 @@ jest.mock("../../../components/Sheet", () => ({
   Sheet: ({ visible, children }: { visible: boolean; children: React.ReactNode }) =>
     visible ? children : null,
 }));
-jest.mock("expo-router", () => ({ router: { push: jest.fn(), replace: jest.fn() } }));
+jest.mock("expo-router", () => ({
+  router: { push: jest.fn(), replace: jest.fn(), back: jest.fn() },
+}));
 
 const exercises = [
   anExercise("e1", "Back squat", "strength"),
@@ -138,5 +141,29 @@ describe("exercise screen", () => {
       measure: "seconds",
       eachSide: true,
     });
+  });
+
+  it("archives an exercise in use and deletes one nothing uses, asking first", async () => {
+    mockApi.removeExercise.mockResolvedValue({ removed: "archived" });
+    await renderWithHang(<ExerciseScreen id="e1" />, hangData(), world);
+    await fireEvent.press(screen.getByLabelText("More for this exercise"));
+    await press("Archive");
+    expect(Alert.alert).toHaveBeenLastCalledWith(
+      "Archive Back squat?",
+      "It leaves the picker and Exercises but keeps its history. Making it again brings it back.",
+      expect.anything()
+    );
+    await press("Archive");
+    expect(mockApi.removeExercise).toHaveBeenCalledWith("e1");
+    expect(router.back).toHaveBeenCalled();
+
+    await renderWithHang(<ExerciseScreen id="e2" />, hangData(), world);
+    await fireEvent.press(screen.getByLabelText("More for this exercise"));
+    await press("Delete");
+    expect(Alert.alert).toHaveBeenLastCalledWith(
+      "Delete Squat?",
+      "Nothing uses it, so it goes for good.",
+      expect.anything()
+    );
   });
 });

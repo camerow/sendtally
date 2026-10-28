@@ -161,4 +161,10 @@ export const workouts = {
   "workouts.noExerciseCalled": "Keine Übung namens {name}",
   "workouts.newShort": "Neu",
   "workouts.swapExercise": "Übung tauschen",
+  "workouts.deleteExerciseTitle": "{name} löschen?",
+  "workouts.deleteExerciseBody": "Nichts nutzt sie, also ist sie dann ganz weg.",
+  "workouts.archiveExercise": "Archivieren",
+  "workouts.archiveExerciseTitle": "{name} archivieren?",
+  "workouts.archiveExerciseBody":
+    "Sie verschwindet aus der Auswahl und den Übungen, ihr Verlauf bleibt. Legst du sie neu an, ist sie wieder da.",
 } as const;

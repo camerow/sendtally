@@ -162,4 +162,10 @@ export const workouts = {
   "workouts.noExerciseCalled": "Ningún ejercicio llamado {name}",
   "workouts.newShort": "Nuevo",
   "workouts.swapExercise": "Cambiar ejercicio",
+  "workouts.deleteExerciseTitle": "¿Eliminar {name}?",
+  "workouts.deleteExerciseBody": "Nada lo usa, así que desaparece del todo.",
+  "workouts.archiveExercise": "Archivar",
+  "workouts.archiveExerciseTitle": "¿Archivar {name}?",
+  "workouts.archiveExerciseBody":
+    "Sale del selector y de Ejercicios, pero conserva su historial. Crearlo de nuevo lo recupera.",
 } as const;

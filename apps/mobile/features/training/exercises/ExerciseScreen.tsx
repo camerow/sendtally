@@ -82,10 +82,33 @@ export function ExerciseScreen({ id }: ExerciseScreenProps): React.ReactElement 
         if (taken === undefined) failed();
         else merge(taken);
       });
+  const inUse = usedIn.length > 0 || logged !== undefined;
+  const name = exerciseLabel(exercise);
+  const remove = (): void =>
+    confirmDestructive({
+      title: inUse
+        ? t("workouts.archiveExerciseTitle", { name })
+        : t("workouts.deleteExerciseTitle", { name }),
+      body: inUse ? t("workouts.archiveExerciseBody") : t("workouts.deleteExerciseBody"),
+      action: inUse ? t("workouts.archiveExercise") : t("common.delete"),
+      onConfirm: () => {
+        router.back();
+        void api.removeExercise(exercise.id).catch(failed);
+      },
+    });
   const more = (): void =>
-    Alert.alert(exercise.name, undefined, [
+    Alert.alert(name, undefined, [
       { text: t("common.edit"), onPress: () => setSheet("edit") },
       { text: t("workouts.mergeExercise"), onPress: () => setSheet("merge") },
+      ...(exercise.archived
+        ? []
+        : [
+            {
+              text: inUse ? t("workouts.archiveExercise") : t("common.delete"),
+              style: "destructive" as const,
+              onPress: remove,
+            },
+          ]),
       { text: t("common.cancel"), style: "cancel" },
     ]);
 
@@ -117,7 +140,7 @@ export function ExerciseScreen({ id }: ExerciseScreenProps): React.ReactElement 
             <CategoryMark kind={exercise.kind} size={28} />
             <Label color={colors.textSecondary}>{kindLabel(exercise.kind)}</Label>
           </View>
-          <Title size={38}>{exerciseLabel(exercise)}</Title>
+          <Title size={38}>{name}</Title>
         </View>
         {logged === undefined ? (
           <DashedPanel body={t("workouts.exerciseNothingLogged")} />

@@ -158,4 +158,10 @@ export const workouts = {
   "workouts.noExerciseCalled": "No exercise called {name}",
   "workouts.newShort": "New",
   "workouts.swapExercise": "Swap exercise",
+  "workouts.deleteExerciseTitle": "Delete {name}?",
+  "workouts.deleteExerciseBody": "Nothing uses it, so it goes for good.",
+  "workouts.archiveExercise": "Archive",
+  "workouts.archiveExerciseTitle": "Archive {name}?",
+  "workouts.archiveExerciseBody":
+    "It leaves the picker and Exercises but keeps its history. Making it again brings it back.",
 } as const;
