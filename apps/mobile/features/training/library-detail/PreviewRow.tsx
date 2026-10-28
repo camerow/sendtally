@@ -36,7 +36,12 @@ export function PreviewRow({
       })}
     >
       <View style={{ flexDirection: "row", alignItems: "baseline", gap: 10 }}>
-        <Text style={[type.bodyBold, { flex: 1, fontSize: 15, color: colors.gunmetal }]}>
+        <Text
+          style={[
+            type.bodyBold,
+            { flexGrow: 1, flexShrink: 1, fontSize: 15, color: colors.gunmetal },
+          ]}
+        >
           {title}
         </Text>
         {detail !== "" && (
