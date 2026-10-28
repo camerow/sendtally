@@ -489,13 +489,13 @@ export function LogSessionForm({
               cragY.current = e.nativeEvent.layout.y;
             }}
           >
-            <LabelText>{`${t("areas.crag")} ${t("common.optional")}`}</LabelText>
+            <LabelText>{`${t("areas.area")} ${t("common.optional")}`}</LabelText>
             <AreaSearchField
               crags
               value={draft.area ?? null}
-              label={t("areas.crag")}
-              placeholder={t("areas.searchCrags")}
-              addLabel={(name) => t("areas.addThisCrag", { name })}
+              label={t("areas.area")}
+              placeholder={t("areas.searchAreas")}
+              addLabel={(name) => t("areas.addThisArea", { name })}
               onPick={(area) =>
                 setDraft((d) => ({
                   ...d,

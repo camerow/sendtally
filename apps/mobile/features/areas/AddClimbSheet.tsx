@@ -59,7 +59,7 @@ function ClimbForm({
   async function submit(): Promise<void> {
     const fields = climbFieldsOf(values);
     if (fields.name === "") return setError(t("areas.nameRequired"));
-    if (area === null) return setError(t("areas.pickCrag"));
+    if (area === null) return setError(t("areas.pickArea"));
     const at = { id: area.id, name: area.name };
     setBusy(true);
     setError(null);
@@ -99,12 +99,12 @@ function ClimbForm({
       </View>
       {sessionArea === null && (
         <View style={{ gap: 7 }}>
-          <Text style={fieldLabel}>{t("areas.crag")}</Text>
+          <Text style={fieldLabel}>{t("areas.area")}</Text>
           <AreaSearchField
             crags
             value={chosenArea}
-            label={t("areas.crag")}
-            placeholder={t("areas.searchCrags")}
+            label={t("areas.area")}
+            placeholder={t("areas.searchAreas")}
             onPick={setChosenArea}
           />
         </View>

@@ -87,7 +87,7 @@ function CragForm({
   return (
     <View style={{ gap: 14, paddingHorizontal: 18, paddingTop: 2, paddingBottom: 4 }}>
       <Text style={{ fontFamily: fonts.display, fontSize: 24, color: colors.gunmetal }}>
-        {t("areas.addACrag")}
+        {t("areas.addAnArea")}
       </Text>
       <View style={{ gap: 7 }}>
         <Text style={fieldLabel}>{t("areas.name")}</Text>

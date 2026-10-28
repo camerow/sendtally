@@ -46,7 +46,7 @@ export const climbs = {
   "climbs.hardestOn": "La plus dure · {date}",
   "climbs.gradeRange": "{from} à {to}",
   "climbs.today": "aujourd’hui",
-  "climbs.search": "Chercher des voies, sites ou cotations",
+  "climbs.search": "Chercher des voies, secteurs ou cotations",
   "climbs.statusAll": "Toutes {n}",
   "climbs.statusProjects": "Projets {n}",
   "climbs.statusSent": "Réussies {n}",
