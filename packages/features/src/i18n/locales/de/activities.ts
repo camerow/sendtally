@@ -63,4 +63,12 @@ export const activities = {
   "activities.setsDoneOf_other": "{done} von {count} Sätzen",
   "activities.doneForToday": "Für heute fertig",
   "activities.partialCounts": "Hak ab, was du gemacht hast. Halbe Tage zählen auch.",
+  "activities.colRepsWeight": "Wdh. × Gewicht",
+  "activities.addSet": "Satz hinzufügen",
+  "activities.copiesSet": "kopiert Satz {n}",
+  "activities.removeSet": "Satz {n} entfernen",
+  "activities.removeLastSetTitle": "{exercise} entfernen?",
+  "activities.removeLastSetBody":
+    "Das ist ihr letzter Satz, also fällt die Übung aus diesem Eintrag.",
+  "activities.editSets": "{exercise} bearbeiten",
 } as const;

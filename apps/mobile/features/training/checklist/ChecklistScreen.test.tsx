@@ -28,7 +28,7 @@ const run: WorkoutRun = {
 };
 
 describe("Checklist player", () => {
-  it("ticks lines off, rests before the next, and logs the ticked ones on the clock", async () => {
+  it("ticks lines off, rests before the next, and logs the ticked ones on the clock, the rest unticked", async () => {
     jest.useFakeTimers({ now: new Date(2026, 9, 22, 7) });
     await renderWithHang(<ChecklistScreen run={run} />);
     expect(screen.getByText("Mobility · 12m")).toBeTruthy();
@@ -52,8 +52,12 @@ describe("Checklist player", () => {
         date: "2026-10-22",
         workoutId: "w2",
         minutes: "4",
-        done: JSON.stringify([{ item: 0, exercise: "Cat-cow", sets: [{}, {}] }]),
+        done: JSON.stringify([
+          { item: 0, exercise: "Cat-cow", sets: [{}, {}] },
+          { item: 1, exercise: "Wrist circles", sets: [{}] },
+        ]),
         startTime: "07:00",
+        skipped: "[1]",
       },
     });
     jest.useRealTimers();

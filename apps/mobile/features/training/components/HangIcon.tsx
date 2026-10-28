@@ -16,7 +16,8 @@ export type HangIconName =
   | "muted"
   | "edit"
   | "schedule"
-  | "more";
+  | "more"
+  | "remove";
 
 const PATHS: Record<Exclude<HangIconName, "play">, string> = {
   back: "M15 5l-7 7 7 7",
@@ -34,6 +35,7 @@ const PATHS: Record<Exclude<HangIconName, "play">, string> = {
   schedule:
     "M5 6h14a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2zM3 11h18M8 3v5M16 3v5",
   more: "M5 12a1 1 0 1 0 2 0a1 1 0 1 0-2 0M11 12a1 1 0 1 0 2 0a1 1 0 1 0-2 0M17 12a1 1 0 1 0 2 0a1 1 0 1 0-2 0",
+  remove: "M3 12a9 9 0 1 0 18 0a9 9 0 1 0-18 0M8 12h8",
 };
 
 export type HangIconProps = {

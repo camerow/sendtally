@@ -3,7 +3,12 @@ import { KeyboardAvoidingView, Platform, ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { doneAsPrescribed, type ItemDone, type SetDone } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
-import { previousSets, useActivities, useWeightUnit } from "@sendtally/features/activities";
+import {
+  changeSet,
+  previousSets,
+  useActivities,
+  useWeightUnit,
+} from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
 import { exerciseName } from "@sendtally/features/workouts";
 import { useApi } from "../../../lib/api";
@@ -59,11 +64,7 @@ export function SetsScreen({ run }: { run: WorkoutRun }): React.ReactElement {
     else rest.tick(after.at, after.seconds, after.next === null ? undefined : nameOf(after.next));
   };
   const change = (item: number, set: number, value: SetDone): void =>
-    setDone((all) =>
-      all.map((d) =>
-        d.item === item ? { ...d, sets: d.sets.map((s, i) => (i === set ? value : s)) } : d
-      )
-    );
+    setDone((all) => changeSet(all, item, set, value));
   const restAt = (key: string): React.ReactNode =>
     rest.rest?.at === key && (
       <RestRow rest={rest.rest} left={rest.left} onMore={rest.more} onSkip={rest.skip} />

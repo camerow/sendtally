@@ -29,6 +29,53 @@ export function setText(set: SetDone, unit: WeightUnit): string {
     .join(" · ");
 }
 
+/** A set as a chip under its exercise, whose unit the card states once: "5 × 180", "8", "60s". */
+export function setChip(set: SetDone, unit: WeightUnit): string {
+  const weight = set.weightKg ? formatNumber(toUnit(set.weightKg, unit)) : undefined;
+  const work = [set.reps === undefined ? undefined : formatNumber(set.reps), weight]
+    .filter((p) => p !== undefined)
+    .join(" × ");
+  return [work, set.onS === undefined ? "" : t("hang.seconds", { n: set.onS })]
+    .filter((p) => p !== "")
+    .join(" · ");
+}
+
+/** An item's sets in one line: "2 × 60s" when they match, else each in turn. */
+export function setsLine(sets: readonly SetDone[], unit: WeightUnit): string {
+  const chips = sets.map((s) => setChip(s, unit)).filter((c) => c !== "");
+  const [first = ""] = chips;
+  if (chips.length !== sets.length || chips.some((c) => c !== first)) return chips.join(", ");
+  return chips.length === 1 ? first : `${formatNumber(chips.length)} × ${first}`;
+}
+
+/** What was done only ticks off: nothing has reps or a weight. */
+export const isChecklist = (done: readonly ItemDone[]): boolean =>
+  done.every((d) => d.sets.every((s) => s.reps === undefined && s.weightKg === undefined));
+
+const withSets = (
+  done: readonly ItemDone[],
+  item: number,
+  edit: (sets: SetDone[]) => SetDone[]
+): ItemDone[] => done.map((d) => (d.item === item ? { ...d, sets: edit(d.sets) } : d));
+
+export const changeSet = (
+  done: readonly ItemDone[],
+  item: number,
+  set: number,
+  value: SetDone
+): ItemDone[] => withSets(done, item, (sets) => sets.map((s, i) => (i === set ? value : s)));
+
+/** Another set like the last one. */
+export const addSet = (done: readonly ItemDone[], item: number): ItemDone[] =>
+  withSets(done, item, (sets) => [...sets, { ...sets[sets.length - 1] }]);
+
+/** Removing an item's last set removes the item. */
+export function removeSet(done: readonly ItemDone[], item: number, set: number): ItemDone[] {
+  return withSets(done, item, (sets) => sets.filter((_, i) => i !== set)).filter(
+    (d) => d.item !== item || d.sets.length > 0
+  );
+}
+
 /** What saves: named items only, trimmed. */
 export function cleanDone(done: readonly ItemDone[]): ItemDone[] {
   return done.map((d) => ({ ...d, exercise: d.exercise.trim() })).filter((d) => d.exercise !== "");

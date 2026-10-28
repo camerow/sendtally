@@ -82,11 +82,15 @@ export function readWorkoutRun(p: RawParams): WorkoutRun | null {
   };
 }
 
-/** The activity form for a workout, with what was done in place of what it prescribes when given. */
+/**
+ * The activity form for a workout, with what was done in place of what it prescribes when given,
+ * and the items of it a checklist left unticked.
+ */
 export function activityFormPath(
   r: Omit<WorkoutRun, "items" | "exerciseRestS">,
   done?: readonly ItemDone[],
-  startTime?: string
+  startTime?: string,
+  skipped: readonly number[] = []
 ): Href {
   return {
     pathname: "/activity/new",
@@ -99,6 +103,7 @@ export function activityFormPath(
       ...planLinkParams(r.link),
       ...(done === undefined ? {} : { done: JSON.stringify(done) }),
       ...(startTime === undefined ? {} : { startTime }),
+      ...(skipped.length === 0 ? {} : { skipped: JSON.stringify(skipped) }),
     },
   };
 }
@@ -107,8 +112,13 @@ export function activityFormPath(
  * Hands a finished run to the activity form, in place of the player, to take an effort and
  * save, timed by the player's clock from its start.
  */
-export function logRun(r: WorkoutRun, done: readonly ItemDone[], startedAt: number): void {
+export function logRun(
+  r: WorkoutRun,
+  done: readonly ItemDone[],
+  startedAt: number,
+  skipped: readonly number[] = []
+): void {
   const minutes = Math.max(1, Math.round((Date.now() - startedAt) / 60_000));
   const date = today(new Date(startedAt));
-  router.replace(activityFormPath({ ...r, date, minutes }, done, startTimeOf(startedAt)));
+  router.replace(activityFormPath({ ...r, date, minutes }, done, startTimeOf(startedAt), skipped));
 }

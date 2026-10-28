@@ -17,7 +17,6 @@ import {
   activityFromDraft,
   kindLabel,
   parseMinutes,
-  setText,
   stepMinutes,
   trainingLoadLabel,
   useActivityActions,
@@ -33,9 +32,9 @@ import { EffortField } from "../components/EffortField";
 import { SheetSection } from "../components/SheetSection";
 import { Stepper } from "../components/Stepper";
 import { Title } from "../components/Title";
-import { PreviewRow } from "../library-detail/PreviewRow";
 import { type } from "../type";
 import { ActivityPostBar } from "./ActivityPostBar";
+import { DoneDetails } from "./DoneDetails";
 import { KindChips } from "./KindChips";
 import { confirmDestructive } from "../../../lib/confirmDestructive";
 
@@ -146,18 +145,22 @@ export function ActivityForm({
           <KindChips value={draft.kind} onChange={(kind) => update({ kind })} />
         )}
 
-        <SheetSection label={t("activities.title")}>
-          <TextInput
-            testID="activity-title"
-            value={draft.title}
-            maxLength={80}
-            placeholder={kindLabel(draft.kind)}
-            placeholderTextColor={colors.textFaint}
-            accessibilityLabel={t("activities.title")}
-            onChangeText={(title) => update({ title })}
-            style={input}
-          />
-        </SheetSection>
+        {draft.workoutId !== null ? (
+          <Title size={28}>{draft.title.trim() || kindLabel(draft.kind)}</Title>
+        ) : (
+          <SheetSection label={t("activities.title")}>
+            <TextInput
+              testID="activity-title"
+              value={draft.title}
+              maxLength={80}
+              placeholder={kindLabel(draft.kind)}
+              placeholderTextColor={colors.textFaint}
+              accessibilityLabel={t("activities.title")}
+              onChangeText={(title) => update({ title })}
+              style={input}
+            />
+          </SheetSection>
+        )}
 
         <View style={{ flexDirection: "row", gap: 10 }}>
           <View style={{ flex: 1 }}>
@@ -208,16 +211,14 @@ export function ActivityForm({
 
         <EffortField value={draft.rpe} onChange={(rpe) => update({ rpe })} />
 
-        {items.length > 0 && (
-          <SheetSection label={t("activities.details")}>
-            {draft.done.map((d) => (
-              <PreviewRow
-                key={d.item}
-                title={d.exercise}
-                detail={d.sets.map((set) => setText(set, unit) || "✓").join("  /  ")}
-              />
-            ))}
-          </SheetSection>
+        {draft.done.length > 0 && (
+          <DoneDetails
+            done={draft.done}
+            skipped={draft.skipped}
+            unit={unit}
+            onChange={(done) => update({ done })}
+            onSkip={(skipped) => update({ skipped })}
+          />
         )}
 
         <SheetSection label={t("common.notes")}>

@@ -20,7 +20,13 @@ export {
   type ActivityPrefill,
 } from "./draft";
 export {
+  addSet,
+  changeSet,
   cleanDone,
+  isChecklist,
+  removeSet,
+  setChip,
+  setsLine,
   doneSummary,
   exerciseNames,
   exerciseSuggestions,

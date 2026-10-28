@@ -17,6 +17,8 @@ export type ActivityDraft = {
   membershipId: string | null;
   week: number | null;
   done: ItemDone[];
+  /** Items of `done` unticked before saving, which do not save. */
+  skipped: number[];
 };
 
 /** What a doorway into the form may already know, straight from the route's query. */
@@ -32,6 +34,8 @@ export type ActivityPrefill = {
   startTime?: string;
   /** What a player ran, as JSON, in place of what the workout prescribes. */
   done?: string;
+  /** The items of `done` a checklist left unticked, as JSON. */
+  skipped?: string;
 };
 
 export const MINUTES_STEP = 5;
@@ -66,6 +70,15 @@ const parseDone = (text: string | undefined): ItemDone[] | null => {
   }
 };
 
+const parseSkipped = (text: string | undefined): number[] => {
+  try {
+    const skipped: unknown = JSON.parse(text ?? "[]");
+    return Array.isArray(skipped) ? skipped.filter((n): n is number => Number.isInteger(n)) : [];
+  } catch {
+    return [];
+  }
+};
+
 /** `prescribed` is what the workout asks of this session, which the activity starts as done. */
 export function newActivityDraft(
   prefill: ActivityPrefill,
@@ -84,6 +97,7 @@ export function newActivityDraft(
     membershipId: prefill.membershipId ?? null,
     week: wholeNumber(prefill.week),
     done: parseDone(prefill.done) ?? doneAsPrescribed(prescribed),
+    skipped: parseSkipped(prefill.skipped),
   };
 }
 
@@ -100,10 +114,11 @@ export function draftFromActivity(a: Activity): ActivityDraft {
     membershipId: a.membershipId,
     week: a.week,
     done: a.done,
+    skipped: [],
   };
 }
 
-/** An untitled activity takes its kind's name. */
+/** An untitled activity takes its kind's name, and an unticked item does not save. */
 export function activityFromDraft(id: string, d: ActivityDraft): Activity {
   const title = d.title.trim();
   const notes = d.notes.trim();
@@ -119,7 +134,7 @@ export function activityFromDraft(id: string, d: ActivityDraft): Activity {
     workoutId: d.workoutId,
     membershipId: d.membershipId,
     week: d.week,
-    done: cleanDone(d.done),
+    done: cleanDone(d.done.filter((x) => !d.skipped.includes(x.item))),
   };
 }
 

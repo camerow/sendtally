@@ -55,6 +55,17 @@ describe("activity drafts", () => {
     expect(activityFromDraft("a1", blank).done).toEqual([]);
   });
 
+  it("leaves out the items a checklist left unticked", () => {
+    const done = [
+      { item: 0, exercise: "Cat-cow", sets: [{}] },
+      { item: 1, exercise: "Pigeon", sets: [{ onS: 60 }] },
+    ];
+    const draft = newActivityDraft({ done: JSON.stringify(done), skipped: "[1]" }, "2026-10-22");
+    expect(draft.skipped).toEqual([1]);
+    expect(activityFromDraft("a1", draft).done).toEqual([done[0]]);
+    expect(newActivityDraft({ skipped: "[" }, "2026-10-22").skipped).toEqual([]);
+  });
+
   it("steps minutes to the next multiple of five and keeps them in range", () => {
     expect(stepMinutes(52, 1)).toBe(55);
     expect(stepMinutes(52, -1)).toBe(50);

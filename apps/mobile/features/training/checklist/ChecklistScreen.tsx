@@ -18,7 +18,7 @@ import { ChecklistRow } from "./ChecklistRow";
 
 /**
  * A routine to tick off line by line on a clock from Start, resting between lines; whatever is
- * ticked is what gets logged.
+ * ticked is what gets logged, and the form can still tick the rest.
  */
 export function ChecklistScreen({ run }: { run: WorkoutRun }): React.ReactElement {
   const unit = useWeightUnit(useApi());
@@ -38,8 +38,9 @@ export function ChecklistScreen({ run }: { run: WorkoutRun }): React.ReactElemen
   const finish = (): void =>
     logRun(
       run,
-      doneAsPrescribed(run.items).filter((d) => ticked.has(d.item)),
-      startedAt
+      doneAsPrescribed(run.items),
+      startedAt,
+      run.items.flatMap((_, i) => (ticked.has(i) ? [] : [i]))
     );
 
   return (

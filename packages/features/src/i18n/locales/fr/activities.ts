@@ -62,4 +62,11 @@ export const activities = {
   "activities.setsDoneOf_other": "{done} séries sur {count}",
   "activities.doneForToday": "Fini pour aujourd’hui",
   "activities.partialCounts": "Coche ce que tu as fait. Les jours partiels comptent aussi.",
+  "activities.colRepsWeight": "Reps × charge",
+  "activities.addSet": "Ajouter une série",
+  "activities.copiesSet": "copie la série {n}",
+  "activities.removeSet": "Retirer la série {n}",
+  "activities.removeLastSetTitle": "Retirer {exercise} ?",
+  "activities.removeLastSetBody": "C’est sa dernière série, l’exercice sort donc de cette séance.",
+  "activities.editSets": "Modifier {exercise}",
 } as const;

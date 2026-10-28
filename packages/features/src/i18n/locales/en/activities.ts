@@ -62,4 +62,11 @@ export const activities = {
   "activities.setsDoneOf_other": "{done} of {count} sets",
   "activities.doneForToday": "Done for today",
   "activities.partialCounts": "Tick what you did. Partial days still count.",
+  "activities.colRepsWeight": "Reps × weight",
+  "activities.addSet": "Add set",
+  "activities.copiesSet": "copies set {n}",
+  "activities.removeSet": "Remove set {n}",
+  "activities.removeLastSetTitle": "Remove {exercise}?",
+  "activities.removeLastSetBody": "That is its last set, so the exercise comes out of this log.",
+  "activities.editSets": "Edit {exercise}",
 } as const;
