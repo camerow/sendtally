@@ -5,30 +5,40 @@ import React from "react";
 import { Alert } from "react-native";
 import type * as Workouts from "@sendtally/features/workouts";
 import { anExercise, hangData, renderWithHang } from "../data/renderWithHang";
+import { ExerciseEditorScreen } from "../exercises/ExerciseEditorScreen";
 import { WorkoutEditorScreen } from "./WorkoutEditorScreen";
 
 const mockWorkouts = { saveWorkout: jest.fn(), deleteWorkout: jest.fn() };
 const mockApi = { saveExercise: jest.fn<(...args: unknown[]) => Promise<unknown>>() };
 
 jest.mock("../../../lib/api", () => ({ useApi: () => mockApi }));
-jest.mock("../../../components/Sheet", () => ({
-  Sheet: ({
-    visible,
-    children,
-    footer,
-  }: {
-    visible: boolean;
-    children: React.ReactNode;
-    footer?: React.ReactNode;
-  }) =>
-    visible ? (
-      <>
-        {children}
-        {footer}
-      </>
-    ) : null,
-}));
-jest.mock("expo-router", () => ({ router: { back: jest.fn() } }));
+jest.mock("../../../components/Sheet", () => {
+  const { useEffect } = jest.requireActual<typeof React>("react");
+  return {
+    Sheet: function MockSheet({
+      visible,
+      onClose,
+      children,
+      footer,
+    }: {
+      visible: boolean;
+      onClose: () => void;
+      children: React.ReactNode;
+      footer?: React.ReactNode;
+    }) {
+      useEffect(() => {
+        if (!visible) onClose();
+      }, [visible, onClose]);
+      return visible ? (
+        <>
+          {children}
+          {footer}
+        </>
+      ) : null;
+    },
+  };
+});
+jest.mock("expo-router", () => ({ router: { back: jest.fn(), push: jest.fn() } }));
 jest.mock("expo-crypto", () => ({ randomUUID: () => "w-new" }));
 jest.mock("@sendtally/features/workouts", () => ({
   ...jest.requireActual<typeof Workouts>("@sendtally/features/workouts"),
@@ -70,6 +80,13 @@ describe("Workout editor", () => {
     await fireEvent.press(screen.getByText("Save"));
     const [, saved] = mockWorkouts.saveWorkout.mock.calls[0] as [string, Workouts.WorkoutDraft];
     expect(saved.focus).toBe("power_endurance");
+  });
+
+  it("starts on the focus of the shelf it was made from", async () => {
+    await renderWithHang(<WorkoutEditorScreen kind="strength" focus="power" />, hangData(), world);
+    expect(screen.getByRole("radio", { name: "Power" }).props.accessibilityState).toEqual({
+      checked: true,
+    });
   });
 
   it("makes a strength workout whose squat alternates a named A and B, resting between sets", async () => {
@@ -189,21 +206,54 @@ describe("Workout editor", () => {
     expect(saved.items.map((i) => i.exercise)).toEqual(["Bench press", "Back squat"]);
   });
 
-  it("makes a new exercise from what was searched and adds it once saved", async () => {
+  it("makes a new exercise from what was searched in its editor and adds it once saved", async () => {
     mockApi.saveExercise.mockResolvedValue({
       exercise: anExercise("new-id", "Nordic curl", "strength", { measure: "reps" }),
     });
-    await renderWithHang(<WorkoutEditorScreen kind="strength" />, hangData(), world);
+    const editor = await renderWithHang(<WorkoutEditorScreen kind="strength" />, hangData(), world);
     await fireEvent.press(screen.getByText("Add exercises"));
     await fireEvent.changeText(screen.getByLabelText("Search exercises"), "Nordic curl");
     expect(screen.getByText("No exercise called Nordic curl")).toBeTruthy();
     await fireEvent.press(screen.getAllByText("New")[1]!);
-    expect(screen.getAllByDisplayValue("Nordic curl")).toHaveLength(2);
-    await fireEvent.press(screen.getAllByText("Save").at(-1)!);
+    expect(editor.queryByLabelText("Search exercises")).toBeNull();
+    const [[route]] = jest.mocked(router.push).mock.calls as unknown as [
+      [{ pathname: string; params: { kind: "strength"; name: string; ret: string } }],
+    ];
+    expect(route.pathname).toBe("/exercise/edit");
+    expect(route.params).toMatchObject({ kind: "strength", name: "Nordic curl" });
+
+    const exercise = await renderWithHang(<ExerciseEditorScreen {...route.params} />);
+    expect(exercise.getByDisplayValue("Nordic curl")).toBeTruthy();
+    await fireEvent.press(exercise.getByRole("radio", { name: "Reps" }));
+    await fireEvent.press(exercise.getByText("Save"));
     await act(async () => undefined);
 
-    expect(screen.getByText("Nordic curl")).toBeTruthy();
-    expect(screen.getByLabelText("Reps")).toBeTruthy();
-    expect(screen.queryByLabelText("Weight (kg)")).toBeNull();
+    expect(mockApi.saveExercise).toHaveBeenCalledWith("w-new", {
+      name: "Nordic curl",
+      kind: "strength",
+      measure: "reps",
+      eachSide: false,
+      builtIn: null,
+    });
+    expect(editor.getByText("Nordic curl")).toBeTruthy();
+    expect(editor.getByLabelText("Reps")).toBeTruthy();
+    expect(editor.queryByLabelText("Weight (kg)")).toBeNull();
+  });
+
+  it("asks which category a new exercise is in when the picker shows all of them", async () => {
+    await renderWithHang(<WorkoutEditorScreen kind="strength" />, hangData(), world);
+    await fireEvent.press(screen.getByText("Add exercises"));
+    await fireEvent.press(screen.getByRole("radio", { name: "All" }));
+    await fireEvent.press(screen.getByText("New"));
+    expect(screen.getByText("What kind of exercise?")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Fingers" })).toBeNull();
+    await fireEvent.press(screen.getByRole("button", { name: "Mobility" }));
+    await act(async () => undefined);
+    expect(router.push).toHaveBeenCalledWith({
+      pathname: "/exercise/edit",
+      params: { kind: "mobility", ret: expect.any(String) },
+    });
+    expect(screen.queryByText("What kind of exercise?")).toBeNull();
+    expect(screen.queryByLabelText("Search exercises")).toBeNull();
   });
 });

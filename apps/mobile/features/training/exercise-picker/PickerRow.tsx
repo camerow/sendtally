@@ -6,6 +6,7 @@ import { t } from "@sendtally/features/i18n";
 import { pressRow } from "../../../lib/press";
 import { CheckBox } from "../components/CheckBox";
 import { Label } from "../components/Label";
+import { MineBadge } from "../library/MineBadge";
 import { type } from "../type";
 
 export type PickerRowProps = {
@@ -13,7 +14,10 @@ export type PickerRowProps = {
   ticked: boolean;
   /** Ticks in a multi-select picker; picks at once otherwise. */
   multi: boolean;
-  onPress: () => void;
+  /** Badged as the user's own, where the list mixes in the starter library. */
+  mine?: boolean;
+  /** Left out where the row has nothing to open. */
+  onPress?: () => void;
 };
 
 function metaOf(entry: PickerEntry): string {
@@ -25,11 +29,18 @@ function metaOf(entry: PickerEntry): string {
 }
 
 /** One exercise the picker offers: how often it was used, and whether the workout already has it. */
-export function PickerRow({ entry, ticked, multi, onPress }: PickerRowProps): React.ReactElement {
+export function PickerRow({
+  entry,
+  ticked,
+  multi,
+  mine = false,
+  onPress,
+}: PickerRowProps): React.ReactElement {
   const meta = metaOf(entry);
   return (
     <Pressable
       onPress={onPress}
+      disabled={onPress === undefined}
       accessibilityRole={multi ? "checkbox" : "button"}
       accessibilityState={multi ? { checked: ticked } : undefined}
       accessibilityLabel={entry.name}
@@ -44,7 +55,12 @@ export function PickerRow({ entry, ticked, multi, onPress }: PickerRowProps): Re
     >
       {multi && <CheckBox checked={ticked} color={colors.gunmetal} />}
       <View style={{ flex: 1, gap: 2, paddingVertical: 8 }}>
-        <Text style={[type.bodyBold, { fontSize: 15, color: colors.gunmetal }]}>{entry.name}</Text>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+          <Text style={[type.bodyBold, { flexShrink: 1, fontSize: 15, color: colors.gunmetal }]}>
+            {entry.name}
+          </Text>
+          {mine && <MineBadge />}
+        </View>
         {meta !== "" && (
           <Text style={[type.mono, { fontSize: 12, color: colors.textSecondary }]}>{meta}</Text>
         )}

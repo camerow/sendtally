@@ -3,11 +3,9 @@ import { Pressable, ScrollView, Text, View } from "react-native";
 import type { WorkoutKind } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { kindLabel } from "@sendtally/features/activities";
-import { formatNumber, t } from "@sendtally/features/i18n";
+import { t } from "@sendtally/features/i18n";
 import { pressRow } from "../../../lib/press";
-import { IconButton } from "../components/IconButton";
-import { Title } from "../components/Title";
-import { CategoryMark } from "../library/CategoryMark";
+import { ShelfHeader } from "../components/ShelfHeader";
 import { type } from "../type";
 import type { ShelfCard } from "./types";
 
@@ -15,6 +13,7 @@ export type ExerciseShelfProps = {
   kind: WorkoutKind;
   cards: readonly ShelfCard[];
   onAdd: () => void;
+  onSeeAll: () => void;
 };
 
 const card = {
@@ -27,26 +26,23 @@ const card = {
   borderColor: colors.lineOnLight,
 } as const;
 
-/** One category: its heading, count and plus, then its exercises, or a hint when it has none. */
-export function ExerciseShelf({ kind, cards, onAdd }: ExerciseShelfProps): React.ReactElement {
+/** One category: its heading and plus, then its exercises, or a hint when it has none. */
+export function ExerciseShelf({
+  kind,
+  cards,
+  onAdd,
+  onSeeAll,
+}: ExerciseShelfProps): React.ReactElement {
   const label = kindLabel(kind);
   return (
     <View style={{ gap: 10 }}>
-      <View style={{ minHeight: 44, flexDirection: "row", alignItems: "center", gap: 10 }}>
-        <CategoryMark kind={kind} size={28} />
-        <Title size={26}>{label}</Title>
-        <Text style={[type.mono, { flex: 1, fontSize: 13, color: colors.textSecondary }]}>
-          {formatNumber(cards.length)}
-        </Text>
-        <IconButton
-          icon="plus"
-          label={t("workouts.newExerciseIn", { category: label })}
-          onPress={onAdd}
-          color={colors.gunmetal}
-          border={colors.lineOnLightStrong}
-          size={36}
-        />
-      </View>
+      <ShelfHeader
+        title={label}
+        kind={kind}
+        onSeeAll={cards.length === 0 ? undefined : onSeeAll}
+        addLabel={t("workouts.newExerciseIn", { category: label })}
+        onAdd={onAdd}
+      />
       {cards.length === 0 ? (
         <View
           style={{

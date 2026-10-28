@@ -5,6 +5,7 @@ import React from "react";
 import { Alert, type AlertButton } from "react-native";
 import { ApiError, type ActivityRecord, type WorkoutRecord } from "@sendtally/api-client";
 import { anExercise, renderWithHang, hangData } from "../data/renderWithHang";
+import { ExerciseEditorScreen } from "./ExerciseEditorScreen";
 import { ExerciseScreen } from "./ExerciseScreen";
 
 const mockApi = {
@@ -74,6 +75,15 @@ const press = async (title: string): Promise<void> => {
   await act(async () => button?.onPress?.());
 };
 
+const edit = async (): Promise<void> => {
+  await press("Edit");
+  expect(router.push).toHaveBeenLastCalledWith({
+    pathname: "/exercise/edit",
+    params: { id: "e1", kind: "strength" },
+  });
+  await renderWithHang(<ExerciseEditorScreen kind="strength" id="e1" />, hangData(), world);
+};
+
 beforeEach(() => {
   jest.clearAllMocks();
   jest.spyOn(Alert, "alert").mockImplementation(() => undefined);
@@ -98,7 +108,7 @@ describe("exercise screen", () => {
     mockApi.mergeExercise.mockResolvedValue({ exercise: exercises[1] });
     await renderWithHang(<ExerciseScreen id="e1" />, hangData(), world);
     await fireEvent.press(screen.getByLabelText("More for this exercise"));
-    await press("Edit");
+    await edit();
     await fireEvent.changeText(screen.getByLabelText("Name"), "squat");
     await fireEvent.press(screen.getByText("Save"));
     expect(mockApi.saveExercise).toHaveBeenCalledWith("e1", {
@@ -126,7 +136,7 @@ describe("exercise screen", () => {
     mockApi.saveExercise.mockResolvedValue({ exercise: exercises[0] });
     await renderWithHang(<ExerciseScreen id="e1" />, hangData(), world);
     await fireEvent.press(screen.getByLabelText("More for this exercise"));
-    await press("Edit");
+    await edit();
     await fireEvent.press(screen.getByText("Seconds"));
     await fireEvent.press(screen.getByLabelText("Each side"));
     await fireEvent.press(screen.getByText("Save"));

@@ -1,11 +1,10 @@
 import { randomUUID } from "expo-crypto";
 import { router } from "expo-router";
 import React from "react";
-import { Alert, KeyboardAvoidingView, Platform, ScrollView, Text, View } from "react-native";
+import { Alert, KeyboardAvoidingView, Platform, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import type { WorkoutKind } from "@sendtally/core/hang";
+import type { Focus, WorkoutKind } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
-import { kindLabel } from "@sendtally/features/activities";
 import { exerciseLabel } from "@sendtally/features/exercises";
 import { t } from "@sendtally/features/i18n";
 import { exerciseKey, useExercises } from "@sendtally/features/statistics";
@@ -18,19 +17,17 @@ import {
   type WorkoutDraft,
   type WorkoutLibrary,
 } from "@sendtally/features/workouts";
-import { TextInput } from "../../../components/TextInput";
 import { useApi } from "../../../lib/api";
 import { Button } from "../components/Button";
+import { EditorHeader } from "../components/EditorHeader";
 import { FocusField } from "../components/FocusField";
-import { Label } from "../components/Label";
+import { KindNameField } from "../components/KindNameField";
 import { useHangData } from "../data/HangDataContext";
 import { LoadState } from "../data/LoadState";
 import { ExercisePickerSheet } from "../exercise-picker/ExercisePickerSheet";
 import { useLibrary } from "../library/useLibrary";
 import { MinutesField } from "../plan/MinutesField";
 import { TargetEffort } from "../plan/TargetEffort";
-import { KIND_LOOK } from "../today/kindLook";
-import { type } from "../type";
 import { EditorTextField } from "./EditorTextField";
 import { HangboardTiming } from "./HangboardTiming";
 import {
@@ -53,20 +50,22 @@ export type WorkoutEditorScreenProps = {
   from?: string;
   /** A new workout of this kind. */
   kind?: WorkoutKind;
+  /** A new workout's focus, from the shelf it was made on; General by default. */
+  focus?: Focus | null;
 };
 
 const reportFailure = (): void => Alert.alert(t("workouts.saveFailed"));
 
 function initialDraft(
   library: WorkoutLibrary,
-  { id, from, kind }: WorkoutEditorScreenProps
+  { id, from, kind, focus = null }: WorkoutEditorScreenProps
 ): WorkoutDraft | null {
   const base = library.workout(id ?? from ?? "");
   if (base !== undefined) {
     const draft = draftOf(base);
     return id === undefined ? { ...draft, name: copyName(draft.name) } : draft;
   }
-  return kind === undefined ? null : startingDraft(newWorkoutDraft(kind));
+  return kind === undefined ? null : startingDraft({ ...newWorkoutDraft(kind), focus });
 }
 
 function Editor({
@@ -110,21 +109,11 @@ function Editor({
 
   return (
     <SafeAreaView edges={["top", "bottom"]} style={{ flex: 1, backgroundColor: colors.white }}>
-      <View
-        style={{
-          flexDirection: "row",
-          justifyContent: "space-between",
-          alignItems: "center",
-          paddingHorizontal: 8,
-          paddingVertical: 4,
-        }}
-      >
-        <Button label={t("hang.cancel")} onPress={cancel} variant="link" height={44} />
-        <Text style={[type.bodyBold, { fontSize: 15, color: colors.gunmetal }]}>
-          {id === undefined ? t("workouts.newWorkout") : t("hang.editWorkout")}
-        </Text>
-        <Button label={t("hang.save")} onPress={save} variant="link" height={44} />
-      </View>
+      <EditorHeader
+        title={id === undefined ? t("workouts.newWorkout") : t("hang.editWorkout")}
+        onCancel={cancel}
+        onSave={save}
+      />
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : undefined}
         style={{ flex: 1 }}
@@ -138,18 +127,13 @@ function Editor({
             paddingBottom: 28,
           }}
         >
-          <View style={{ gap: 4 }}>
-            <Label color={KIND_LOOK[state.kind].ink}>{kindLabel(state.kind)}</Label>
-            <TextInput
-              value={state.name}
-              onChangeText={(name) => setState((s) => ({ ...s, name }))}
-              placeholder={t("workouts.namePlaceholder")}
-              placeholderTextColor={colors.textFaint}
-              accessibilityLabel={t("hang.name")}
-              maxLength={80}
-              style={[type.display, { fontSize: 30, paddingVertical: 4, color: colors.gunmetal }]}
-            />
-          </View>
+          <KindNameField
+            kind={state.kind}
+            value={state.name}
+            onChange={(name) => setState((s) => ({ ...s, name }))}
+            placeholder={t("workouts.namePlaceholder")}
+            maxLength={80}
+          />
           <EditorTextField
             label={t("workouts.description")}
             value={state.description}

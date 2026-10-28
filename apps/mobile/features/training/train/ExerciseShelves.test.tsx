@@ -33,7 +33,7 @@ const plank: ActivityRecord = {
 
 describe("exercise shelves", () => {
   it("shelves exercises by kind with their best, and opens one", async () => {
-    await renderWithHang(<ExerciseShelves onAdd={jest.fn()} />, hangData(), {
+    await renderWithHang(<ExerciseShelves />, hangData(), {
       exercises: [anExercise("e1", "Plank", "strength"), anExercise("e2", "Pigeon", "mobility")],
       activities: [plank],
     });
@@ -44,9 +44,8 @@ describe("exercise shelves", () => {
     expect(router.push).toHaveBeenCalledWith({ pathname: "/exercise/[id]", params: { id: "e2" } });
   });
 
-  it("shows every category with its count, a hint when empty, and a plus for each", async () => {
-    const onAdd = jest.fn();
-    await renderWithHang(<ExerciseShelves onAdd={onAdd} />, hangData(), {
+  it("shows every category with a hint when empty, See all when not, and a plus for each", async () => {
+    await renderWithHang(<ExerciseShelves />, hangData(), {
       exercises: [
         anExercise("e1", "Plank", "strength"),
         anExercise("e2", "Pigeon", "mobility", { archived: true }),
@@ -56,7 +55,20 @@ describe("exercise shelves", () => {
       expect(screen.getByText(kind)).toBeTruthy();
     expect(screen.queryByText("Pigeon")).toBeNull();
     expect(screen.getByText("A stretch or a hold, like Pancake.")).toBeTruthy();
+    expect(screen.queryByText("1")).toBeNull();
+    expect(screen.getByLabelText("See all Strength")).toBeTruthy();
+    expect(screen.queryByLabelText("See all Climbing")).toBeNull();
+    expect(screen.queryByLabelText("See all Mobility")).toBeNull();
+
+    await fireEvent.press(screen.getByLabelText("See all Strength"));
+    expect(router.push).toHaveBeenLastCalledWith({
+      pathname: "/exercise/category",
+      params: { kind: "strength" },
+    });
     await fireEvent.press(screen.getByLabelText("New exercise in Climbing"));
-    expect(onAdd).toHaveBeenCalledWith("climbing");
+    expect(router.push).toHaveBeenLastCalledWith({
+      pathname: "/exercise/edit",
+      params: { kind: "climbing" },
+    });
   });
 });

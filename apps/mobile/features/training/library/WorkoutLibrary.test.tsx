@@ -1,5 +1,5 @@
 import { describe, expect, it, jest } from "@jest/globals";
-import { fireEvent, screen } from "@testing-library/react-native";
+import { act, fireEvent, screen } from "@testing-library/react-native";
 import { router } from "expo-router";
 import React from "react";
 import type { WorkoutRecord } from "@sendtally/api-client";
@@ -8,6 +8,25 @@ import { CategoryScreen } from "./CategoryScreen";
 import { WorkoutLibrary } from "./WorkoutLibrary";
 
 jest.mock("expo-router", () => ({ router: { push: jest.fn(), back: jest.fn() } }));
+jest.mock("../../../components/Sheet", () => {
+  const { useEffect } = jest.requireActual<typeof React>("react");
+  return {
+    Sheet: function MockSheet({
+      visible,
+      onClose,
+      children,
+    }: {
+      visible: boolean;
+      onClose: () => void;
+      children: React.ReactNode;
+    }) {
+      useEffect(() => {
+        if (!visible) onClose();
+      }, [visible, onClose]);
+      return visible ? children : null;
+    },
+  };
+});
 const legs: WorkoutRecord = {
   id: "w1",
   kind: "strength",
@@ -66,6 +85,19 @@ describe("Workout library", () => {
       pathname: "/workout/preview",
       params: { id: "w1" },
     });
+  });
+
+  it("makes a new workout in a shelf's focus, its category asked first", async () => {
+    await show(<WorkoutLibrary />);
+    await fireEvent.press(screen.getByLabelText("New workout in Power"));
+    expect(screen.getByText("What kind of workout?")).toBeTruthy();
+    await fireEvent.press(screen.getByRole("button", { name: "Climbing" }));
+    await act(async () => undefined);
+    expect(router.push).toHaveBeenLastCalledWith({
+      pathname: "/workout/edit",
+      params: { kind: "climbing", focus: "power" },
+    });
+    expect(screen.queryByText("What kind of workout?")).toBeNull();
   });
 
   it("lists the matches in place of the shelves while a search is typed", async () => {

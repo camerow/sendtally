@@ -2,10 +2,9 @@ import { router } from "expo-router";
 import React from "react";
 import { Alert, ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import type { Exercise } from "@sendtally/api-client";
 import { colors } from "@sendtally/design/tokens";
 import { kindLabel, useWeightUnit } from "@sendtally/features/activities";
-import { exerciseKindOf, exerciseLabel } from "@sendtally/features/exercises";
+import { exerciseLabel } from "@sendtally/features/exercises";
 import { t } from "@sendtally/features/i18n";
 import {
   exerciseKey,
@@ -26,9 +25,7 @@ import { useLibrary } from "../library/useLibrary";
 import { ExerciseTrendCard } from "./ExerciseTrendCard";
 import { MergeExerciseSheet } from "./MergeExerciseSheet";
 import { RecentSessions } from "./RecentSessions";
-import { ExerciseSheet } from "./ExerciseSheet";
-import { takenBy } from "./takenBy";
-import type { ExerciseForm } from "./types";
+import { useMergeExercise } from "./useMergeExercise";
 import { confirmDestructive } from "../../../lib/confirmDestructive";
 
 const failed = (): void => Alert.alert(t("workouts.saveFailed"));
@@ -42,7 +39,8 @@ export function ExerciseScreen({ id }: ExerciseScreenProps): React.ReactElement 
   const series = useExerciseSeries(api);
   const library = useLibrary().state;
   const unit = useWeightUnit(api);
-  const [sheet, setSheet] = React.useState<"edit" | "merge" | null>(null);
+  const [merging, setMerging] = React.useState(false);
+  const merge = useMergeExercise();
   if (exercises.state.status !== "ready")
     return <LoadState state={exercises.state} onRetry={() => void exercises.reload()} />;
   const all = exercises.state.data;
@@ -55,32 +53,6 @@ export function ExerciseScreen({ id }: ExerciseScreenProps): React.ReactElement 
   const usedIn =
     library.status === "ready" ? workoutsUsing(library.data.workouts, exercise.name) : [];
 
-  const merge = (into: Exercise): void =>
-    confirmDestructive({
-      title: t("workouts.mergeExerciseTitle", { from: exercise.name, into: into.name }),
-      body: t("workouts.mergeExerciseBody", { from: exercise.name, into: into.name }),
-      action: t("workouts.merge"),
-      onConfirm: () =>
-        void api
-          .mergeExercise(exercise.id, into.id)
-          .then(
-            () => router.replace({ pathname: "/exercise/[id]", params: { id: into.id } }),
-            failed
-          ),
-    });
-  const save = ({ name, kind, measure, eachSide }: ExerciseForm): void =>
-    void api
-      .saveExercise(exercise.id, {
-        name,
-        kind: exerciseKindOf(kind) ?? exercise.kind,
-        measure,
-        eachSide,
-      })
-      .catch((error: unknown) => {
-        const taken = takenBy(error);
-        if (taken === undefined) failed();
-        else merge(taken);
-      });
   const inUse = usedIn.length > 0 || logged !== undefined;
   const name = exerciseLabel(exercise);
   const remove = (): void =>
@@ -97,8 +69,15 @@ export function ExerciseScreen({ id }: ExerciseScreenProps): React.ReactElement 
     });
   const more = (): void =>
     Alert.alert(name, undefined, [
-      { text: t("common.edit"), onPress: () => setSheet("edit") },
-      { text: t("workouts.mergeExercise"), onPress: () => setSheet("merge") },
+      {
+        text: t("common.edit"),
+        onPress: () =>
+          router.push({
+            pathname: "/exercise/edit",
+            params: { id: exercise.id, kind: exercise.kind },
+          }),
+      },
+      { text: t("workouts.mergeExercise"), onPress: () => setMerging(true) },
       ...(exercise.archived
         ? []
         : [
@@ -162,26 +141,12 @@ export function ExerciseScreen({ id }: ExerciseScreenProps): React.ReactElement 
           </View>
         )}
       </ScrollView>
-      {sheet === "edit" && (
-        <ExerciseSheet
-          initial={{
-            kind: exercise.kind,
-            name: exercise.name,
-            measure: exercise.measure,
-            eachSide: exercise.eachSide,
-          }}
-          editing={{ logged: logged !== undefined }}
-          kinds={[exercise.kind]}
-          onSave={save}
-          onClose={() => setSheet(null)}
-        />
-      )}
-      {sheet === "merge" && (
+      {merging && (
         <MergeExerciseSheet
           exercise={exercise}
           others={all.filter((e) => e.id !== exercise.id)}
-          onPick={merge}
-          onClose={() => setSheet(null)}
+          onPick={(into) => merge(exercise, into)}
+          onClose={() => setMerging(false)}
         />
       )}
     </SafeAreaView>

@@ -1,7 +1,7 @@
 import { router } from "expo-router";
 import React from "react";
 import { View } from "react-native";
-import { byDate, summarise, type WorkoutKind } from "@sendtally/core/hang";
+import { byDate, summarise } from "@sendtally/core/hang";
 import { setText, useWeightUnit } from "@sendtally/features/activities";
 import { categoryShelves, exerciseLabel } from "@sendtally/features/exercises";
 import { loadLabel } from "@sendtally/features/hang";
@@ -17,17 +17,18 @@ import { doseSummary } from "@sendtally/features/workouts";
 import { useApi } from "../../../lib/api";
 import { useHangData } from "../data/HangDataContext";
 import { LoadState } from "../data/LoadState";
+import { openExerciseEditor } from "../exercises/openExerciseEditor";
 import { useLibrary } from "../library/useLibrary";
 import { ExerciseShelf } from "./ExerciseShelf";
+import { openGrip } from "./openGrip";
 import type { ShelfCard } from "./types";
-
-export type ExerciseShelvesProps = { onAdd: (kind: WorkoutKind) => void };
 
 /**
  * Train > Exercises: every category, each exercise with its best result or its last dose.
- * Fingers holds the user's own grips and the built-in ones they have hung on.
+ * Fingers holds the user's own grips and the built-in ones they have hung on. A plus makes
+ * one in its category, See all opens the category whole.
  */
-export function ExerciseShelves({ onAdd }: ExerciseShelvesProps): React.ReactElement {
+export function ExerciseShelves(): React.ReactElement {
   const api = useApi();
   const { model, today } = useHangData();
   const exercises = useExercises(api);
@@ -67,14 +68,7 @@ export function ExerciseShelves({ onAdd }: ExerciseShelvesProps): React.ReactEle
             : t("workouts.exerciseBest", {
                 value: loadLabel(last.protocol.kind, summary.best, model.settings.units),
               }),
-        open:
-          last === undefined
-            ? undefined
-            : () =>
-                router.push({
-                  pathname: "/workout/[id]",
-                  params: { id: last.workoutId, grip: g.id },
-                }),
+        open: openGrip(onGrip, g.id),
       };
     });
   const mine = exercises.state.data
@@ -90,7 +84,13 @@ export function ExerciseShelves({ onAdd }: ExerciseShelvesProps): React.ReactEle
   return (
     <View style={{ gap: 20 }}>
       {categoryShelves([...grips, ...mine]).map((s) => (
-        <ExerciseShelf key={s.kind} kind={s.kind} cards={s.entries} onAdd={() => onAdd(s.kind)} />
+        <ExerciseShelf
+          key={s.kind}
+          kind={s.kind}
+          cards={s.entries}
+          onAdd={() => openExerciseEditor(s.kind)}
+          onSeeAll={() => router.push({ pathname: "/exercise/category", params: { kind: s.kind } })}
+        />
       ))}
     </View>
   );

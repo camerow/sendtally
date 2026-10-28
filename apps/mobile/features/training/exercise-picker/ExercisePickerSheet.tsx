@@ -3,29 +3,24 @@ import { Text, View } from "react-native";
 import { WORKOUT_KINDS, type Item, type WorkoutKind } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { kindLabel } from "@sendtally/features/activities";
-import {
-  entryNamed,
-  pickerEntries,
-  type PickerEntry,
-  type PickerWorld,
-} from "@sendtally/features/exercises";
+import { entryNamed, pickerEntries, type PickerEntry } from "@sendtally/features/exercises";
 import { t } from "@sendtally/features/i18n";
-import { useExerciseSeries, useExercises } from "@sendtally/features/statistics";
 import { TextInput } from "../../../components/TextInput";
-import { useApi } from "../../../lib/api";
 import { Button } from "../components/Button";
 import { ChipRow } from "../components/ChipRow";
 import { Label } from "../components/Label";
 import { Title } from "../components/Title";
-import { useHangData } from "../data/HangDataContext";
 import { HangSheet } from "../data/HangSheet";
-import { ExerciseSheet } from "../exercises/ExerciseSheet";
+import { openExerciseEditor } from "../exercises/openExerciseEditor";
+import type { ExerciseForm } from "../exercises/types";
 import { useMakeExercise } from "../exercises/useMakeExercise";
 import { KIND_COLORS } from "../insights/kindColors";
+import { NewWorkoutSheet } from "../library/NewWorkoutSheet";
 import { type } from "../type";
 import { PickerRow } from "./PickerRow";
 import type { Picked } from "./types";
 import { pickedOf, usePick } from "./usePick";
+import { usePickerWorld } from "./usePickerWorld";
 
 export type ExercisePickerSheetProps = {
   /** The workout's kind: the category the picker starts on. */
@@ -44,8 +39,9 @@ const NOT_FINGERS = WORKOUT_KINDS.filter((k) => k !== "hangboard");
 
 /**
  * The exercise library, to build a workout from: search, a category or all, the most used
- * first. Ticked exercises are added in the order they were ticked; New makes one from
- * what was typed and adds it once saved. A Fingers workout picks grips, any other the rest.
+ * first. Ticked exercises are added in the order they were ticked; New adds them, then opens
+ * the exercise editor on what was typed in the category in view, asking which one under All,
+ * and adds the exercise once saved. A Fingers workout picks grips, any other the rest.
  */
 export function ExercisePickerSheet({
   kind,
@@ -54,35 +50,24 @@ export function ExercisePickerSheet({
   onPick,
   onClose,
 }: ExercisePickerSheetProps): React.ReactElement {
-  const api = useApi();
-  const { model } = useHangData();
-  const exercises = useExercises(api).state;
-  const series = useExerciseSeries(api);
   const pick = usePick();
   const make = useMakeExercise();
   const fingers = kind === "hangboard";
   const [text, setText] = React.useState("");
   const [category, setCategory] = React.useState<Category>(kind);
   const [ticked, setTicked] = React.useState<PickerEntry[]>([]);
-  const [making, setMaking] = React.useState(false);
-
-  const uses = new Map<string, number>();
-  if (series.status === "ready") for (const s of series.data) uses.set(s.key, s.sessions.length);
-  for (const s of model.sessions) uses.set(s.gripId, (uses.get(s.gripId) ?? 0) + 1);
-  const world: PickerWorld = {
-    mine: exercises.status === "ready" ? exercises.data : [],
-    grips: model.grips.filter((g) => !g.hidden),
-    uses,
-    inWorkout: items.map((i) => i.exercise),
-    fingers,
-  };
+  const [choosing, setChoosing] = React.useState(false);
+  const world = usePickerWorld(
+    items.map((i) => i.exercise),
+    fingers
+  );
   const entries = pickerEntries(world, { category, text });
   const typed = text.trim();
 
-  const finish = async (more: Picked[] = []): Promise<void> => {
+  const finish = async (): Promise<void> => {
     onClose();
     const picked = await Promise.all(ticked.map((e) => pick(e.source)));
-    onPick([...picked.filter((p) => p !== null), ...more]);
+    onPick(picked.filter((p) => p !== null));
   };
   const press = (entry: PickerEntry): void => {
     if (!multi) {
@@ -96,23 +81,25 @@ export function ExercisePickerSheet({
         : [...list, entry]
     );
   };
-  const made = async (form: Parameters<typeof make>[0]): Promise<void> => {
-    const existing = entryNamed(world, form.name);
-    const one =
-      existing === undefined
-        ? await make(form).then((m) => (m === null ? null : pickedOf(m)))
-        : await pick(existing.source);
-    if (one === null) return;
-    if (multi) await finish(ticked.some((e) => e.key === existing?.key) ? [] : [one]);
-    else {
-      onClose();
-      onPick([one]);
-    }
+  const startNew = (made: WorkoutKind): void => {
+    const added = ticked.map((e) => e.key);
+    const add = async (form: ExerciseForm): Promise<void> => {
+      const existing = entryNamed(world, form.name);
+      if (existing !== undefined && added.includes(existing.key)) return;
+      const one =
+        existing === undefined
+          ? await make(form).then((m) => (m === null ? null : pickedOf(m)))
+          : await pick(existing.source);
+      if (one !== null) onPick([one]);
+    };
+    if (multi) void finish();
+    else onClose();
+    openExerciseEditor(made, typed, (form) => void add(form));
   };
   const newButton = (
     <Button
       label={t("workouts.newShort")}
-      onPress={() => setMaking(true)}
+      onPress={() => (category === "all" ? setChoosing(true) : startNew(category))}
       variant="outline"
       icon="plus"
       height={44}
@@ -211,12 +198,12 @@ export function ExercisePickerSheet({
           )}
         </View>
       </HangSheet>
-      {making && (
-        <ExerciseSheet
-          initial={{ kind: category === "all" ? kind : category, name: typed }}
-          kinds={fingers ? ["hangboard"] : category === "all" ? NOT_FINGERS : [category]}
-          onSave={(form) => void made(form)}
-          onClose={() => setMaking(false)}
+      {choosing && (
+        <NewWorkoutSheet
+          making="exercise"
+          kinds={NOT_FINGERS}
+          onPick={startNew}
+          onClose={() => setChoosing(false)}
         />
       )}
     </>

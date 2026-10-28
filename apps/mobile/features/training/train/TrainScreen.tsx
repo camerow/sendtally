@@ -1,7 +1,6 @@
 import { router } from "expo-router";
 import React from "react";
 import { ScrollView, View } from "react-native";
-import type { WorkoutKind } from "@sendtally/core/hang";
 import { t } from "@sendtally/features/i18n";
 import { Fab } from "../../../components/Fab";
 import type { IconName } from "../../../components/Icon";
@@ -9,7 +8,7 @@ import { Sheet } from "../../../components/Sheet";
 import { MenuRow } from "../../live-session/MenuRow";
 import { Segmented } from "../components/Segmented";
 import { HangDataProvider } from "../data/HangDataProvider";
-import { NewExerciseSheet } from "../exercises/NewExerciseSheet";
+import { openExerciseEditor } from "../exercises/openExerciseEditor";
 import { NewWorkoutSheet } from "../library/NewWorkoutSheet";
 import { WorkoutLibrary } from "../library/WorkoutLibrary";
 import { BlocksList } from "./BlocksList";
@@ -39,24 +38,18 @@ const hint = (v: TrainView): string =>
       ? t("workouts.newWorkoutHint")
       : t("workouts.newExerciseHint");
 
-/** The Train tab: blocks, the workout library, and exercises; New makes the one in view, its menu any of them. */
+/**
+ * The Train tab: blocks, the workout library, and exercises. New makes the one in view, its
+ * menu any of them; a workout or an exercise asks its category first.
+ */
 export function TrainScreen(): React.ReactElement {
   const [view, setView] = React.useState<TrainView>("blocks");
-  const [adding, setAdding] = React.useState<TrainView | null>(null);
-  const [category, setCategory] = React.useState<WorkoutKind | undefined>(undefined);
+  const [adding, setAdding] = React.useState<"workout" | "exercise" | null>(null);
   const [menuOpen, setMenuOpen] = React.useState(false);
   const picked = React.useRef<TrainView | null>(null);
   const create = (v: TrainView): void => {
     if (v === "blocks") router.push("/plan/block/new");
-    else setAdding(v);
-  };
-  const addExercise = (kind: WorkoutKind): void => {
-    setCategory(kind);
-    setAdding("exercises");
-  };
-  const closeAdding = (): void => {
-    setAdding(null);
-    setCategory(undefined);
+    else setAdding(v === "workouts" ? "workout" : "exercise");
   };
   return (
     <View style={{ flex: 1 }}>
@@ -76,7 +69,7 @@ export function TrainScreen(): React.ReactElement {
           <WorkoutLibrary />
         ) : (
           <HangDataProvider>
-            {view === "blocks" ? <BlocksList /> : <ExerciseShelves onAdd={addExercise} />}
+            {view === "blocks" ? <BlocksList /> : <ExerciseShelves />}
           </HangDataProvider>
         )}
       </ScrollView>
@@ -109,11 +102,16 @@ export function TrainScreen(): React.ReactElement {
           ))}
         </View>
       </Sheet>
-      {adding === "workouts" && <NewWorkoutSheet onClose={closeAdding} />}
-      {adding === "exercises" && (
-        <HangDataProvider fallback={null}>
-          <NewExerciseSheet kind={category} onClose={closeAdding} />
-        </HangDataProvider>
+      {adding !== null && (
+        <NewWorkoutSheet
+          making={adding}
+          onPick={(kind) =>
+            adding === "workout"
+              ? router.push({ pathname: "/workout/edit", params: { kind } })
+              : openExerciseEditor(kind)
+          }
+          onClose={() => setAdding(null)}
+        />
       )}
     </View>
   );
