@@ -62,7 +62,7 @@ export const climbs = {
     "Cada vía que añades llega aquí, la más reciente primero. Añade una para empezar.",
   "climbs.yoursShort": "Tuya",
   "climbs.new": "Nueva",
-  "climbs.newCrag": "Aún no está en Zonas. Se añade al guardar.",
+  "climbs.newArea": "Aún no está en Zonas. Se añade al guardar.",
   "climbs.projectHint": "Fijada arriba hasta que la encadenes",
   "climbs.notesPlaceholder": "Notas: beta, condiciones, cómo te sentiste",
   "climbs.days": "Días",

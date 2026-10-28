@@ -63,7 +63,7 @@ export const climbs = {
     "Jede Kletterei, die du hinzufügst, landet hier, die neueste zuerst. Füg eine hinzu, um anzufangen.",
   "climbs.yoursShort": "Deine",
   "climbs.new": "Neu",
-  "climbs.newCrag": "Noch nicht in den Gebieten. Er wird beim Speichern hinzugefügt.",
+  "climbs.newArea": "Noch nicht in den Gebieten. Es wird beim Speichern hinzugefügt.",
   "climbs.projectHint": "Oben angeheftet, bis du sie schaffst",
   "climbs.notesPlaceholder": "Notizen: Beta, Bedingungen, wie es sich anfühlte",
   "climbs.days": "Tage",

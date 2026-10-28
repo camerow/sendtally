@@ -60,7 +60,7 @@ export const climbs = {
     "Chaque voie que tu ajoutes arrive ici, la plus récente d’abord. Ajoutes-en une pour commencer.",
   "climbs.yoursShort": "À toi",
   "climbs.new": "Nouvelle",
-  "climbs.newCrag": "Pas encore dans Secteurs. Il est ajouté quand tu enregistres.",
+  "climbs.newArea": "Pas encore dans Secteurs. Il est ajouté quand tu enregistres.",
   "climbs.projectHint": "Épinglée en haut jusqu’à ce que tu la réussisses",
   "climbs.notesPlaceholder": "Notes : méthode, conditions, ressenti",
   "climbs.days": "Jours",

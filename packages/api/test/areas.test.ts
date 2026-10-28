@@ -146,11 +146,31 @@ describe("areas", () => {
     expect([first.slug, second.slug]).toEqual(["the-mandala", "the-mandala-buttermilks-france"]);
   });
 
-  it("never lets a user create a region or an uncoordinated top-level area", async () => {
-    const noParent = await call("user_a", "/v1/areas", {
-      body: { name: "Atlantis", lat: 0, lon: 0 },
+  it("adds a typed area at the top level, pending and without coordinates", async () => {
+    const area = await createArea("user_a", { name: "Burbage Valley North" });
+    expect(area).toMatchObject({ slug: "burbage-valley-north", status: "pending", mine: true });
+    const row = await env.DB.prepare(
+      "SELECT parent_id, path, depth, region_code FROM areas WHERE id = ?"
+    )
+      .bind(area.id)
+      .first();
+    expect(row).toEqual({ parent_id: null, path: `/${area.id}/`, depth: 0, region_code: null });
+    expect((await call("user_b", "/v1/areas/burbage-valley-north")).status).toBe(404);
+
+    const again = await call("user_a", "/v1/areas", { body: { name: "burbage valley north" } });
+    expect(again.status).toBe(409);
+    const second = await createArea("user_a", { name: "Burbage Valley North", confirmedNew: true });
+    expect(second.slug).toBe("burbage-valley-north-2");
+
+    const climb = await createClimb("user_a", mandala(area.id));
+    expect(climb).toMatchObject({ status: "pending" });
+  });
+
+  it("never lets a user create a region or an uncoordinated area in one", async () => {
+    const unknownParent = await call("user_a", "/v1/areas", {
+      body: { parentId: "nowhere", name: "Atlantis", lat: 0, lon: 0 },
     });
-    expect(noParent.status).toBe(400);
+    expect(unknownParent.status).toBe(400);
     const noCoords = await call("user_a", "/v1/areas", {
       body: { parentId: "region-us-ca", name: "Buttermilks" },
     });

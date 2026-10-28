@@ -41,11 +41,12 @@ export {
   type ClimbingInsightsVM,
 } from "./insights";
 export {
+  areaChoice,
   climbSuggestions,
-  cragChoice,
   isNewClimb,
+  placeOf,
+  type AreaChoice,
   type ClimbSuggestion,
-  type CragChoice,
 } from "./addClimb";
 export { useClimbVocabulary, type ClimbVocabulary } from "./useClimbVocabulary";
 export {

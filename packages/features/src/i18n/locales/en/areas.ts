@@ -84,6 +84,8 @@ export const areas = {
   "areas.addToAreas": "Add “{name}” to Areas",
   "areas.crag": "Crag",
   "areas.searchCrags": "Search crags",
+  "areas.area": "Area",
+  "areas.searchAreas": "Search areas",
   "areas.searchRegions": "Search regions and areas",
   "areas.whereIsIt": "Where is it",
   "areas.pickWhere": "Pick the region or area it is in.",

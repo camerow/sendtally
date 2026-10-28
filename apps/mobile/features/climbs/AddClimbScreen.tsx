@@ -10,10 +10,11 @@ import {
   withTypedName,
 } from "@sendtally/features/areas";
 import {
+  areaChoice,
   climbSuggestions,
-  cragChoice,
   findClimb,
   isNewClimb,
+  placeOf,
   typicalGradeIndex,
   useClimbs,
 } from "@sendtally/features/climbs";
@@ -40,7 +41,6 @@ import { Switch } from "../../components/Switch";
 import { TextInput } from "../../components/TextInput";
 import { useApi } from "../../lib/api";
 import { press } from "../../lib/press";
-import { AddCragSheet } from "../areas/AddCragSheet";
 import { ResultFields } from "../log-session/ResultFields";
 import { SuggestField } from "./SuggestField";
 
@@ -69,8 +69,8 @@ const knownOf = (climbs: readonly ClimbSummary[], climb: ClimbDraft): ClimbSumma
   climbs.find((c) => c.id === climb.userClimbId) ?? findClimb([...climbs], climb.name);
 
 /**
- * One screen for a climb: its name and crag autocomplete, and anything not found is created.
- * It saves into that day's session at the crag, or starts one there.
+ * One screen for a climb: its name and area autocomplete, and anything not found is created.
+ * It saves into that day's session at the area, or starts one there.
  */
 export function AddClimbScreen(): React.ReactElement {
   const api = useApi();
@@ -84,18 +84,17 @@ export function AddClimbScreen(): React.ReactElement {
   }));
   const [project, setProject] = React.useState(true);
   const [date, setDate] = React.useState(localDate(new Date()));
-  const [cragText, setCragText] = React.useState("");
+  const [areaText, setAreaText] = React.useState("");
   const [area, setArea] = React.useState<Area | null>(null);
-  const [addingCrag, setAddingCrag] = React.useState<string | null>(null);
   const [saving, setSaving] = React.useState(false);
   const [failed, setFailed] = React.useState(false);
 
   const areaClimbs = useAreaClimbSearch(api, climb.name, area?.id ?? null, true).found;
-  const crags = useAreaSearch(api, area === null ? cragText : "", null, {
+  const areas = useAreaSearch(api, area === null ? areaText : "", null, {
     crags: true,
     enabled: area === null,
   });
-  const crag = cragChoice(cragText, area, crags);
+  const choice = areaChoice(areaText, area, areas);
   const suggestions = climbSuggestions(climb.name, mine, areaClimbs, area?.name ?? null);
 
   const pickMine = (c: ClimbSummary): void => {
@@ -103,7 +102,7 @@ export function AddClimbScreen(): React.ReactElement {
     setClimb(c.area_climb_id === null ? picked : { ...picked, climbId: c.area_climb_id });
     if (area === null && c.area !== null) {
       setArea(c.area);
-      setCragText(c.area.name);
+      setAreaText(c.area.name);
     }
   };
 
@@ -120,29 +119,28 @@ export function AddClimbScreen(): React.ReactElement {
   const valid = climb.name.trim() !== "" && draftGrade(climb.grade, climb.scale) !== undefined;
   const sent = climb.kind === "send";
 
-  const save = (place: Area | null): void => {
+  const submit = (): void => {
+    if (!valid || saving) return;
     setSaving(true);
     setFailed(false);
     const { key: _key, ...draft } = climb;
-    logClimbOnDay(
-      api,
-      { ...draft, name: draft.name.trim(), project: sent ? undefined : project },
-      date,
-      [],
-      { area: place }
-    ).then(
-      () => router.back(),
-      () => {
-        setSaving(false);
-        setFailed(true);
-      }
-    );
-  };
-
-  const submit = (): void => {
-    if (!valid || saving) return;
-    if (crag?.kind === "new") setAddingCrag(crag.name);
-    else save(crag?.area ?? null);
+    placeOf(api, choice)
+      .then((place) =>
+        logClimbOnDay(
+          api,
+          { ...draft, name: draft.name.trim(), project: sent ? undefined : project },
+          date,
+          [],
+          { area: place }
+        )
+      )
+      .then(
+        () => router.back(),
+        () => {
+          setSaving(false);
+          setFailed(true);
+        }
+      );
   };
 
   return (
@@ -222,21 +220,21 @@ export function AddClimbScreen(): React.ReactElement {
             }}
           />
           <SuggestField
-            label={t("areas.crag")}
-            value={cragText}
-            placeholder={t("areas.searchCrags")}
-            suggestions={crags.map((a) => ({ key: a.id, name: a.name, meta: "" }))}
-            isNew={crag?.kind === "new"}
-            hint={crag?.kind === "new" ? t("climbs.newCrag") : null}
+            label={t("areas.area")}
+            value={areaText}
+            placeholder={t("areas.searchAreas")}
+            suggestions={areas.map((a) => ({ key: a.id, name: a.name, meta: "" }))}
+            isNew={choice?.kind === "new"}
+            hint={choice?.kind === "new" ? t("climbs.newArea") : null}
             onChangeText={(text) => {
-              setCragText(text);
+              setAreaText(text);
               setArea(null);
             }}
             onPick={(id) => {
-              const picked = crags.find((a) => a.id === id);
+              const picked = areas.find((a) => a.id === id);
               if (picked === undefined) return;
               setArea({ id: picked.id, name: picked.name });
-              setCragText(picked.name);
+              setAreaText(picked.name);
             }}
           />
           <View style={{ gap: 8 }}>
@@ -330,16 +328,6 @@ export function AddClimbScreen(): React.ReactElement {
           />
         </ScrollView>
       </KeyboardAvoidingView>
-      <AddCragSheet
-        name={addingCrag}
-        onCreated={(created) => {
-          setAddingCrag(null);
-          setArea(created);
-          setCragText(created.name);
-          save(created);
-        }}
-        onClose={() => setAddingCrag(null)}
-      />
     </SafeAreaView>
   );
 }

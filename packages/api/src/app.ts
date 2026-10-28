@@ -239,7 +239,7 @@ const areaIdsOnPath = (path: string): string[] => path.split("/").filter((id) =>
 const similarAreas = async (
   db: D1Database,
   viewer: Viewer,
-  parentId: string,
+  parentId: string | null,
   name: string,
   at: LatLon | null,
   excludeId?: string
@@ -366,12 +366,9 @@ const creationsQueue = async (db: D1Database, env: Env, viewer: Viewer, limit: n
       area: areaOf(row, viewer),
       trail: trailOf(row),
       submitter: submitterOf(row.created_by),
-      candidates:
-        row.parent_id === null
-          ? []
-          : (await similarAreas(db, viewer, row.parent_id, row.name, latLonOf(row), row.id)).filter(
-              isOpen
-            ),
+      candidates: (
+        await similarAreas(db, viewer, row.parent_id, row.name, latLonOf(row), row.id)
+      ).filter(isOpen),
     }))
   );
   const climbItems = await Promise.all(
@@ -428,7 +425,6 @@ const approveCreation = async (
       ? null
       : { status: 409, error: "changed since you loaded it, or its area is not live" };
   }
-  if (row.parent_id === null) return missing;
   return (await repo.approveArea(db, { id: row.id, version, parentId: row.parent_id }))
     ? null
     : { status: 409, error: "changed since you loaded it, or its parent is not live" };
@@ -1045,35 +1041,39 @@ const app = new Hono<AppEnv>()
     });
   })
 
-  // Regions are seeded, never created here: every created area has a parent,
-  // and one directly under a region has to say where it is.
+  // Regions are seeded, never created here. An area with no parent is a
+  // top-level one typed by name; one directly under a region has to say
+  // where it is.
   .post("/v1/areas", zValidator("json", areaBody, invalidBody), async (c) => {
     const form = c.req.valid("json");
     const userId = c.get("userId");
     await repo.ensureUser(c.env.DB, userId);
     const viewer = await viewerOf(c);
-    const parent = await repo.getArea(c.env.DB, viewer, form.parentId);
-    if (parent === null || !isOpen(parent)) {
+    const parent =
+      form.parentId === undefined ? null : await repo.getArea(c.env.DB, viewer, form.parentId);
+    if (form.parentId !== undefined && (parent === null || !isOpen(parent))) {
       return c.json({ error: "parent area not found" }, 400);
     }
     const at = latLonOf(form);
-    if (isRegion(parent) && at === null) {
+    if (parent !== null && isRegion(parent) && at === null) {
       return c.json({ error: "an area directly under a region needs coordinates" }, 400);
     }
     if (!form.confirmedNew) {
-      const candidates = await similarAreas(c.env.DB, viewer, parent.id, form.name, at);
+      const candidates = await similarAreas(c.env.DB, viewer, parent?.id ?? null, form.name, at);
       if (candidates.length > 0) return c.json({ error: "possible duplicates", candidates }, 409);
     }
     const id = crypto.randomUUID();
     const now = new Date().toISOString();
     await repo.insertArea(c.env.DB, {
       id,
-      parent_id: parent.id,
-      path: `${parent.path}${id}/`,
-      depth: parent.depth + 1,
+      parent_id: parent?.id ?? null,
+      path: `${parent?.path ?? "/"}${id}/`,
+      depth: parent === null ? 0 : parent.depth + 1,
       name: form.name,
       name_key: tagSlug(form.name),
-      slug: await uniqueSlug(form.name, parent.slug, (slug) => repo.areaSlugTaken(c.env.DB, slug)),
+      slug: await uniqueSlug(form.name, parent?.slug ?? null, (slug) =>
+        repo.areaSlugTaken(c.env.DB, slug)
+      ),
       description: form.description || null,
       lat: at?.lat ?? null,
       lon: at?.lon ?? null,
@@ -1082,7 +1082,7 @@ const app = new Hono<AppEnv>()
       created_at: now,
       updated_at: now,
     });
-    await captureEvent(c, "area_created", { under_region: isRegion(parent) });
+    await captureEvent(c, "area_created", { under_region: parent !== null && isRegion(parent) });
     const row = await repo.getArea(c.env.DB, viewer, id);
     return c.json({ area: row === null ? null : areaOf(row, viewer) }, 201);
   })
@@ -1237,11 +1237,15 @@ const app = new Hono<AppEnv>()
     }
     const next = areaDraftOf(row, form);
     if (next === null) return c.json({ error: "invalid request body" }, 400);
-    const parent = await repo.getArea(c.env.DB, viewer, next.parentId);
-    if (parent === null || !isOpen(parent) || parent.path.startsWith(row.path)) {
+    const parent =
+      next.parentId === undefined ? null : await repo.getArea(c.env.DB, viewer, next.parentId);
+    if (
+      next.parentId !== undefined &&
+      (parent === null || !isOpen(parent) || parent.path.startsWith(row.path))
+    ) {
       return c.json({ error: "parent area not found" }, 400);
     }
-    if (isRegion(parent) && latLonOf(next) === null) {
+    if (parent !== null && isRegion(parent) && latLonOf(next) === null) {
       return c.json({ error: "an area directly under a region needs coordinates" }, 400);
     }
     const draft = await saveDraft(c, "area", row, areaFieldsOf(next), changeSummary);
@@ -1522,12 +1526,14 @@ const app = new Hono<AppEnv>()
         const { entity, apply } = found;
         const next = areaDraftOf({ ...entity, ...apply }, {});
         if (next === null) return c.json({ error: "invalid request body" }, 400);
-        const parent = await repo.getArea(c.env.DB, viewer, next.parentId);
+        const parent =
+          next.parentId === undefined ? null : await repo.getArea(c.env.DB, viewer, next.parentId);
         if (
-          parent === null ||
-          parent.status !== "active" ||
-          parent.path.startsWith(entity.path) ||
-          (isRegion(parent) && latLonOf(next) === null)
+          next.parentId !== undefined &&
+          (parent === null ||
+            parent.status !== "active" ||
+            parent.path.startsWith(entity.path) ||
+            (isRegion(parent) && latLonOf(next) === null))
         ) {
           return c.json(placement, 409);
         }
@@ -1536,7 +1542,8 @@ const app = new Hono<AppEnv>()
           id: entity.id,
           path: entity.path,
           depth: entity.depth,
-          parent: { id: parent.id, path: parent.path, depth: parent.depth },
+          parent:
+            parent === null ? null : { id: parent.id, path: parent.path, depth: parent.depth },
           write: { ...areaFieldsOf(next), name_key: tagSlug(next.name) },
         });
         if (!approved) return c.json({ error: "changed since you loaded it" }, 409);

@@ -60,7 +60,7 @@ export const climbs = {
   "climbs.empty": "Every climb you add lands here, newest first. Add one to start.",
   "climbs.yoursShort": "Yours",
   "climbs.new": "New",
-  "climbs.newCrag": "Not in Areas yet. It is added when you save.",
+  "climbs.newArea": "Not in Areas yet. It is added when you save.",
   "climbs.projectHint": "Pinned to the top until you send it",
   "climbs.notesPlaceholder": "Notes: beta, conditions, how it felt",
   "climbs.days": "Days",

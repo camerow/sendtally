@@ -49,7 +49,7 @@ const bothOrNeither = (a: { lat?: number | null; lon?: number | null }): boolean
 export const areaEditBody = areaFields.refine(bothOrNeither, "lat and lon go together");
 
 export const areaBody = areaFields
-  .extend({ parentId: z.string().min(1), confirmedNew: z.boolean().default(false) })
+  .extend({ parentId: z.string().min(1).optional(), confirmedNew: z.boolean().default(false) })
   .refine(bothOrNeither, "lat and lon go together");
 
 export const areaSimilarBody = z
@@ -115,12 +115,12 @@ export function climbWrite(c: ClimbFields): AreaClimbEdit {
 // a rename never changes it.
 export async function uniqueSlug(
   name: string,
-  parentSlug: string,
+  parentSlug: string | null,
   taken: (slug: string) => Promise<boolean>
 ): Promise<string> {
   const base = tagSlug(name);
   if (!(await taken(base))) return base;
-  const qualified = `${base}-${parentSlug}`;
+  const qualified = parentSlug === null ? base : `${base}-${parentSlug}`;
   if (!(await taken(qualified))) return qualified;
   for (let n = 2; ; n++) {
     const slug = `${qualified}-${n}`;
@@ -277,7 +277,7 @@ const defined = (form: Fields): Fields =>
 // a sport route.
 export function areaDraftOf(row: AreaRow, form: Fields): z.infer<typeof areaBody> | null {
   const parsed = areaBody.safeParse({
-    parentId: row.parent_id,
+    parentId: row.parent_id ?? undefined,
     name: row.name,
     description: row.description,
     lat: row.lat,
@@ -308,7 +308,7 @@ export function areaClimbDraftOf(
 
 export function areaFieldsOf(a: z.infer<typeof areaBody>): Omit<AreaRevisionWrite, "name_key"> {
   return {
-    parent_id: a.parentId,
+    parent_id: a.parentId ?? null,
     name: a.name,
     description: a.description || null,
     lat: a.lat ?? null,

@@ -1,8 +1,8 @@
-import type { AreaClimb, AreaSummary, ClimbSummary } from "@sendtally/api-client";
+import type { AreaClimb, AreaSummary, ClimbSummary, SendtallyApi } from "@sendtally/api-client";
 import { t } from "../i18n";
 import { MAX_CLIMB_SUGGESTIONS, climbKey, sameClimbName } from "./transforms";
 
-/** A name under the climb field: the crag's own from Areas first, then the user's. */
+/** A name under the climb field: the area's own from Areas first, then the user's. */
 export type ClimbSuggestion =
   | { kind: "areas"; key: string; name: string; meta: string; climb: AreaClimb }
   | { kind: "mine"; key: string; name: string; meta: string; climb: ClimbSummary };
@@ -13,7 +13,7 @@ export function climbSuggestions(
   query: string,
   mine: readonly ClimbSummary[],
   found: readonly AreaClimb[],
-  crag: string | null
+  area: string | null
 ): ClimbSuggestion[] {
   const q = climbKey(query);
   if (q === "") return [];
@@ -24,7 +24,7 @@ export function climbSuggestions(
       kind: "areas",
       key: `areas:${climb.id}`,
       name: climb.name,
-      meta: [climb.grade_value, crag].filter((p) => p !== null).join(" · "),
+      meta: [climb.grade_value, area].filter((p) => p !== null).join(" · "),
       climb,
     }));
   const own = mine
@@ -53,19 +53,34 @@ export function isNewClimb(
   );
 }
 
-/** The crag a log saves at: the one picked, one Areas has under the typed name, or a new one. */
-export type CragChoice =
-  { kind: "area"; area: { id: string; name: string } } | { kind: "new"; name: string } | null;
+type Place = { id: string; name: string };
 
-export function cragChoice(
+/** The area a log saves at: the one picked, one Areas has under the typed name, or a new one. */
+export type AreaChoice = { kind: "area"; area: Place } | { kind: "new"; name: string } | null;
+
+export function areaChoice(
   typed: string,
-  picked: { id: string; name: string } | null,
+  picked: Place | null,
   found: readonly AreaSummary[]
-): CragChoice {
+): AreaChoice {
   if (picked !== null) return { kind: "area", area: picked };
   if (climbKey(typed) === "") return null;
   const same = found.find((a) => sameClimbName(a.name, typed));
   return same === undefined
     ? { kind: "new", name: typed.trim() }
     : { kind: "area", area: { id: same.id, name: same.name } };
+}
+
+/**
+ * The area to save at, adding a new one to Areas as typed: top level, pending review, and
+ * without asking where it is, since the name was already searched for.
+ */
+export async function placeOf(
+  api: Pick<SendtallyApi, "createArea">,
+  choice: AreaChoice
+): Promise<Place | null> {
+  if (choice?.kind !== "new") return choice?.area ?? null;
+  const { area } = await api.createArea({ name: choice.name, confirmedNew: true });
+  if (area === null) throw new Error("area not created");
+  return { id: area.id, name: area.name };
 }

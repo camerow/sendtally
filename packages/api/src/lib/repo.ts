@@ -1545,12 +1545,13 @@ export async function areasByIds(
 export async function childAreas(
   db: D1Database,
   viewer: Viewer,
-  parentId: string
+  parentId: string | null
 ): Promise<AreaRow[]> {
+  const under = parentId === null ? isNull(areas.parent_id) : eq(areas.parent_id, parentId);
   return drizzle(db)
     .select()
     .from(areas)
-    .where(and(eq(areas.parent_id, parentId), visibleTo(areas, viewer)))
+    .where(and(under, visibleTo(areas, viewer)))
     .orderBy(areas.name_key)
     .all();
 }
@@ -1925,7 +1926,7 @@ const liveArea = (d: Db, id: string, ...extra: (SQL | undefined)[]): SQL =>
 // its parent is live, so nothing active ever hangs under something hidden.
 export async function approveArea(
   db: D1Database,
-  row: { id: string; version: number; parentId: string }
+  row: { id: string; version: number; parentId: string | null }
 ): Promise<boolean> {
   const d = drizzle(db);
   const result = await d
@@ -1936,7 +1937,7 @@ export async function approveArea(
         eq(areas.id, row.id),
         eq(areas.status, "pending"),
         eq(areas.version, row.version),
-        liveArea(d, row.parentId)
+        row.parentId === null ? undefined : liveArea(d, row.parentId)
       )
     );
   return result.meta.changes > 0;
@@ -1996,7 +1997,7 @@ export async function movePendingArea(
     .update(areas)
     .set({
       path: sql`${`${a.parent.path}${a.id}/`} || substr(${areas.path}, ${a.path.length + 1})`,
-      depth: sql`${areas.depth} + ${a.parent.depth + 1 - a.depth}`,
+      depth: sql`${areas.depth} + ${(a.parent?.depth ?? -1) + 1 - a.depth}`,
     })
     .where(and(gte(areas.path, a.path), lt(areas.path, `${a.path.slice(0, -1)}0`), at, parent));
   const self = d
@@ -2135,7 +2136,7 @@ export async function approveAreaRevision(
   a: Approval & {
     path: string;
     depth: number;
-    parent: { id: string; path: string; depth: number };
+    parent: { id: string; path: string; depth: number } | null;
     write: AreaRevisionWrite;
   }
 ): Promise<boolean> {
@@ -2147,12 +2148,14 @@ export async function approveAreaRevision(
       .where(and(eq(areas.id, a.id), eq(areas.version, a.version), eq(areas.status, "active")))
   );
   const approved = revisionIs(d, a.revisionId, "approved");
-  const flip = markApproved(d, a, and(at, liveArea(d, a.parent.id, eq(areas.path, a.parent.path))));
+  const placed =
+    a.parent === null ? undefined : liveArea(d, a.parent.id, eq(areas.path, a.parent.path));
+  const flip = markApproved(d, a, and(at, placed));
   const update = d
     .update(areas)
     .set({ ...a.write, version: sql`${areas.version} + 1`, updated_at: stamp() })
     .where(and(eq(areas.id, a.id), eq(areas.version, a.version), approved));
-  const path = `${a.parent.path}${a.id}/`;
+  const path = `${a.parent?.path ?? "/"}${a.id}/`;
   if (path === a.path) {
     const [, result] = await d.batch([flip, update]);
     return result.meta.changes > 0;
@@ -2161,7 +2164,7 @@ export async function approveAreaRevision(
     .update(areas)
     .set({
       path: sql`${path} || substr(${areas.path}, ${a.path.length + 1})`,
-      depth: sql`${areas.depth} + ${a.parent.depth + 1 - a.depth}`,
+      depth: sql`${areas.depth} + ${(a.parent?.depth ?? -1) + 1 - a.depth}`,
     })
     .where(and(gte(areas.path, a.path), lt(areas.path, `${a.path.slice(0, -1)}0`), at, approved));
   const [, , result] = await d.batch([flip, move, update]);
