@@ -9,10 +9,18 @@ export type LoadChartProps = {
   kind: HangKind;
   unit: WeightUnit;
   label: string;
+  /** The point drawn in gold: the best. */
+  marked: number;
 };
 
-/** Load over time: filled dots for complete sessions, hollow ones for partials, the latest in gold. */
-export function LoadChart({ series, kind, unit, label }: LoadChartProps): React.ReactElement {
+/** Load over time: filled dots for complete sessions, hollow ones for partials, the best in gold. */
+export function LoadChart({
+  series,
+  kind,
+  unit,
+  label,
+  marked,
+}: LoadChartProps): React.ReactElement {
   return (
     <SeriesChart
       values={series.map((s) => toUnit(s.loadKg, unit))}
@@ -21,6 +29,7 @@ export function LoadChart({ series, kind, unit, label }: LoadChartProps): React.
       edge={(value) => loadLabel(kind, fromUnit(value, unit), unit)}
       label={label}
       seriesKey={series[0]?.id ?? ""}
+      marked={marked}
     />
   );
 }

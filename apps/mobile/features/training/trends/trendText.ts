@@ -1,4 +1,3 @@
-import type { HangSessionRecord } from "@sendtally/api-client";
 import {
   bumpLoad,
   toUnit,
@@ -6,9 +5,8 @@ import {
   type TrendSummary,
   type WeightUnit,
 } from "@sendtally/core/hang";
-import { humanDuration, loadLabel, shortDate } from "@sendtally/features/hang";
+import { loadLabel, shortDate } from "@sendtally/features/hang";
 import { formatNumber, t } from "@sendtally/features/i18n";
-import type { Stat } from "../components/types";
 
 export type TrendContext = {
   workout: string;
@@ -52,40 +50,4 @@ export function insight(summary: TrendSummary, ctx: TrendContext): string {
   return attempt === null
     ? line
     : `${line} ${t("hang.insightAttempt", { load: load(attempt.loadKg), date: shortDate(attempt.date), pct: attempt.pct })}`;
-}
-
-export function trendStats(
-  series: readonly HangSessionRecord[],
-  summary: TrendSummary,
-  ctx: TrendContext
-): Stat[] {
-  const load = (kg: number): string => loadLabel(ctx.kind, kg, ctx.unit);
-  const attempt = summary.topAttempt;
-  return [
-    { label: t("hang.statSessions"), value: String(series.length) },
-    { label: t("hang.statBest"), value: load(summary.best) },
-    {
-      label: t("hang.statTopAttempt"),
-      value:
-        attempt === null
-          ? "–"
-          : t("hang.attemptValue", { load: load(attempt.loadKg), pct: attempt.pct }),
-    },
-    { label: t("hang.statAvgCompletion"), value: `${summary.avgPct}%` },
-    {
-      label: t("hang.statAvgEffort"),
-      value:
-        summary.avgRpe === null
-          ? "–"
-          : t("hang.effortOutOf", {
-              value: formatNumber(summary.avgRpe, {
-                maximumFractionDigits: 1,
-                minimumFractionDigits: 1,
-              }),
-            }),
-    },
-    ctx.kind === "hang"
-      ? { label: t("hang.statTimeOnEdge"), value: humanDuration(summary.work) }
-      : { label: t("hang.lifts"), value: String(summary.work) },
-  ];
 }

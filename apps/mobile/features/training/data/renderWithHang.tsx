@@ -7,6 +7,7 @@ import type {
   ConnectionStatus,
   Exercise,
   HangData as ApiHangData,
+  HangSessionRecord,
   Plan,
   SendtallyApi,
   WorkoutRecord,
@@ -55,6 +56,37 @@ export const anExercise = (
   builtIn: null,
   archived: false,
   ...more,
+});
+
+/** A completed 6 × 10s max hang on a 20 mm half crimp, at bodyweight unless told. */
+export const aHang = (over: Partial<HangSessionRecord> = {}): HangSessionRecord => ({
+  id: `h-${over.gripId ?? "half"}-${over.date ?? "2026-09-20"}`,
+  workoutId: "fingers-ab",
+  gripId: "half",
+  date: "2026-09-20",
+  edgeMm: 20,
+  loadKg: 0,
+  pct: 100,
+  misses: 0,
+  rpe: null,
+  membershipId: null,
+  week: null,
+  focus: null,
+  done: [],
+  protocol: {
+    name: "Max hangs",
+    kind: "hang",
+    hangS: 10,
+    restS: 0,
+    reps: 1,
+    sets: 6,
+    setRestS: 180,
+  },
+  stravaActivityId: null,
+  postState: null,
+  postError: null,
+  updatedAt: "t",
+  ...over,
 });
 
 export type MockActions = { [K in keyof HangActions]: jest.Mock<HangActions[K]> };

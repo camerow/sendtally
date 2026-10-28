@@ -1,5 +1,6 @@
 import { describe, expect, it, jest } from "@jest/globals";
-import { screen } from "@testing-library/react-native";
+import { fireEvent, screen } from "@testing-library/react-native";
+import { router } from "expo-router";
 import React from "react";
 import { hangData, renderWithHang } from "../data/renderWithHang";
 import { WorkoutDetailScreen } from "./WorkoutDetailScreen";
@@ -48,5 +49,13 @@ describe("Hangboard workout detail", () => {
     await renderWithHang(<WorkoutDetailScreen id="fingers-ab" />, hangData({ sessions: [logged] }));
     expect(screen.getByText("3 × 6")).toBeTruthy();
     expect(screen.queryByText("6 × 1")).toBeNull();
+  });
+
+  it("links to its grip's progress once the grip has a session", async () => {
+    await renderWithHang(<WorkoutDetailScreen id="fingers-ab" />);
+    expect(screen.queryByText("Half crimp progress")).toBeNull();
+    await renderWithHang(<WorkoutDetailScreen id="fingers-ab" />, hangData({ sessions: [logged] }));
+    await fireEvent.press(screen.getByText("Half crimp progress"));
+    expect(router.push).toHaveBeenCalledWith({ pathname: "/grip/[id]", params: { id: "half" } });
   });
 });

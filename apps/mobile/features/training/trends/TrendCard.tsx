@@ -3,7 +3,7 @@ import { Text, View } from "react-native";
 import type { HangSessionRecord } from "@sendtally/api-client";
 import { colors } from "@sendtally/design/tokens";
 import type { HangKind, TrendSummary, WeightUnit } from "@sendtally/core/hang";
-import { loadLabel, shortDate } from "@sendtally/features/hang";
+import { bestIndex, loadLabel, shortDate } from "@sendtally/features/hang";
 import { formatNumber, t } from "@sendtally/features/i18n";
 import { Label } from "../components/Label";
 import { Title } from "../components/Title";
@@ -14,17 +14,20 @@ import { LoadChart } from "./LoadChart";
 import { changeOf } from "./trendText";
 
 export type TrendCardProps = {
-  workout: string;
-  grip: string;
+  /** What the chart is read out as. */
+  name: string;
+  /** Top right: the setup the series ran on. */
+  caption: string;
   series: readonly HangSessionRecord[];
   summary: TrendSummary;
   kind: HangKind;
   unit: WeightUnit;
 };
 
+/** Completed load over a series: the latest and its change, partials as rings, the best in gold. */
 export function TrendCard({
-  workout,
-  grip,
+  name,
+  caption,
   series,
   summary,
   kind,
@@ -47,7 +50,7 @@ export function TrendCard({
         <Label color={colors.gunmetal}>
           {kind === "hang" ? t("hang.addedLoadCompleted") : t("hang.weightCompleted")}
         </Label>
-        <Text style={[type.mono, { fontSize: 12, color: colors.textSecondary }]}>{grip}</Text>
+        <Text style={[type.mono, { fontSize: 12, color: colors.textSecondary }]}>{caption}</Text>
       </View>
       <View style={{ flexDirection: "row", alignItems: "baseline", gap: 10 }}>
         <Title size={40}>{load(summary.last)}</Title>
@@ -72,7 +75,12 @@ export function TrendCard({
         series={series}
         kind={kind}
         unit={unit}
-        label={t("hang.chartAria", { workout, from: load(summary.first), to: load(summary.last) })}
+        marked={bestIndex(series, summary)}
+        label={t("hang.chartAria", {
+          workout: name,
+          from: load(summary.first),
+          to: load(summary.last),
+        })}
       />
       <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
         <Label small color={colors.textSecondary}>

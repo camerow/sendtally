@@ -83,7 +83,6 @@ export const hang = {
   "hang.setupKicker": "Preparación · {grip}",
   "hang.lastUsed": "Última vez",
   "hang.setupEachTime": "Eliges la regleta y el peso cada vez que empiezas.",
-  "hang.allEdges": "Todas las regletas",
   "hang.lessWeight": "Menos peso",
   "hang.moreWeight": "Más peso",
   "hang.lifts": "Tirones",
@@ -216,21 +215,12 @@ export const hang = {
     "La carga completada se mantiene en {load}. Si el esfuerzo sigue por debajo de 7, prueba {next} la próxima vez.",
   "hang.insightAttempt":
     "Tu mejor intento es {load} el {date}, al {pct} % completado. Sigue siendo un intento hasta que termines todas las series con esa carga.",
-  "hang.statSessions": "Sesiones",
   "hang.statBest": "Mejor completada",
   "hang.statTopAttempt": "Mejor intento",
-  "hang.statAvgCompletion": "Completado medio",
   "hang.statAvgEffort": "Esfuerzo medio",
-  "hang.statTimeOnEdge": "Tiempo en regleta",
-  "hang.attemptValue": "{load} · {pct} %",
   "hang.effortOutOf": "{value}/10",
-  "hang.trendEmpty":
-    "Aún no hay sesiones de este entreno. Termina una y su carga y esfuerzo empezarán a aparecer aquí.",
   "hang.trendsNone":
     "Aún no hay nada que mostrar. Termina un entreno y su carga y esfuerzo empezarán a aparecer aquí.",
-  "hang.consistency": "Constancia · 16 semanas",
-  "hang.weeksActive": "{n} de 16 semanas activas",
-  "hang.consistencyAria": "Sesiones por semana, últimas 16 semanas",
 
   "hang.reminderTime": "Hora del recordatorio",
   "hang.reminderPromptTitle": "¿Te avisamos los días de entreno?",

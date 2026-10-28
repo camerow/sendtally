@@ -65,6 +65,8 @@ const SIGNED_IN_SCREENS = [
   "exercise/[id]",
   "exercise/edit",
   "exercise/category",
+  "grip/[id]",
+  "grip/compare",
   "plan/calendar",
   "plan/day",
 ];

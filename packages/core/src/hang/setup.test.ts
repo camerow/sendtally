@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { clampEdge, edgesOf, lastSession, resolveSetup, type HangSession } from ".";
+import { clampEdge, lastSession, resolveSetup, type HangSession } from ".";
 
 const session = (over: Partial<HangSession>): HangSession => ({
   id: over.date ?? "s",
@@ -47,9 +47,5 @@ describe("setup", () => {
 
   it("keeps an edge within the board's range", () => {
     expect([clampEdge(2), clampEdge(14.6), clampEdge(80)]).toEqual([4, 15, 60]);
-  });
-
-  it("lists a series' edges once each, shallowest first", () => {
-    expect(edgesOf([{ edgeMm: 20 }, { edgeMm: 15 }, { edgeMm: 20 }])).toEqual([15, 20]);
   });
 });

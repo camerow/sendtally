@@ -51,7 +51,9 @@ export function ExerciseTrendRow({
         <Text numberOfLines={1} style={[type.bodyBold, { fontSize: 14, color: colors.gunmetal }]}>
           {row.name}
         </Text>
-        <Text style={[type.mono, { fontSize: 11, color: colors.textMuted }]}>{count}</Text>
+        <Text numberOfLines={1} style={[type.mono, { fontSize: 11, color: colors.textMuted }]}>
+          {row.meta ?? count}
+        </Text>
       </View>
       <View style={{ flexDirection: "row", alignItems: "flex-end", gap: 2, height: SPARK_HEIGHT }}>
         {values.map((v, i) => (

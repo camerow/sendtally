@@ -83,7 +83,6 @@ export const hang = {
   "hang.setupKicker": "Préparation · {grip}",
   "hang.lastUsed": "Dernière fois",
   "hang.setupEachTime": "Tu choisis la réglette et le poids à chaque départ.",
-  "hang.allEdges": "Toutes les réglettes",
   "hang.lessWeight": "Moins de poids",
   "hang.moreWeight": "Plus de poids",
   "hang.lifts": "Tirages",
@@ -216,21 +215,12 @@ export const hang = {
     "La charge réalisée reste à {load}. Si l'effort reste sous 7, essaie {next} la prochaine fois.",
   "hang.insightAttempt":
     "Ta meilleure tentative est {load} le {date}, à {pct} % réalisée. Elle reste une tentative tant que tu ne termines pas toutes les séries à cette charge.",
-  "hang.statSessions": "Séances",
   "hang.statBest": "Meilleure réalisée",
   "hang.statTopAttempt": "Meilleure tentative",
-  "hang.statAvgCompletion": "Réalisé moyen",
   "hang.statAvgEffort": "Effort moyen",
-  "hang.statTimeOnEdge": "Temps sur réglette",
-  "hang.attemptValue": "{load} · {pct} %",
   "hang.effortOutOf": "{value}/10",
-  "hang.trendEmpty":
-    "Aucune séance enregistrée pour cet exercice. Termines-en une et sa charge et son effort s'affichent ici.",
   "hang.trendsNone":
     "Rien à afficher pour l'instant. Termine un exercice et sa charge et son effort s'affichent ici.",
-  "hang.consistency": "Régularité · 16 semaines",
-  "hang.weeksActive": "{n} semaines actives sur 16",
-  "hang.consistencyAria": "Séances par semaine, 16 dernières semaines",
 
   "hang.reminderTime": "Heure du rappel",
   "hang.reminderPromptTitle": "Un rappel les jours d'entraînement ?",

@@ -84,7 +84,6 @@ export const hang = {
   "hang.setupKicker": "Vorbereiten · {grip}",
   "hang.lastUsed": "Zuletzt",
   "hang.setupEachTime": "Leiste und Gewicht wählst du bei jedem Start.",
-  "hang.allEdges": "Alle Leisten",
   "hang.lessWeight": "Weniger Gewicht",
   "hang.moreWeight": "Mehr Gewicht",
   "hang.lifts": "Züge",
@@ -217,21 +216,12 @@ export const hang = {
     "Die geschaffte Last liegt konstant bei {load}. Wenn die Anstrengung weiter unter 7 bleibt, probier nächstes Mal {next}.",
   "hang.insightAttempt":
     "Dein Top-Versuch ist {load} am {date}, zu {pct}% geschafft. Er bleibt ein Versuch, bis du jeden Satz mit dieser Last durchziehst.",
-  "hang.statSessions": "Sessions",
   "hang.statBest": "Beste geschafft",
   "hang.statTopAttempt": "Top-Versuch",
-  "hang.statAvgCompletion": "Ø erledigt",
   "hang.statAvgEffort": "Ø Anstrengung",
-  "hang.statTimeOnEdge": "Zeit an der Leiste",
-  "hang.attemptValue": "{load} · {pct}%",
   "hang.effortOutOf": "{value}/10",
-  "hang.trendEmpty":
-    "Für dieses Workout noch keine Sessions. Schließ eine ab, dann erscheinen hier Last und Anstrengung.",
   "hang.trendsNone":
     "Noch nichts darzustellen. Schließ ein Workout ab, dann erscheinen hier Last und Anstrengung.",
-  "hang.consistency": "Regelmäßigkeit · 16 Wochen",
-  "hang.weeksActive": "{n} von 16 Wochen aktiv",
-  "hang.consistencyAria": "Sessions pro Woche, letzte 16 Wochen",
 
   "hang.reminderTime": "Uhrzeit der Erinnerung",
   "hang.reminderPromptTitle": "An Trainingstagen erinnern?",

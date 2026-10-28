@@ -35,7 +35,3 @@ export function lastSession<T extends HangSession>(
 }
 
 export const clampEdge = (mm: number): number => clamp(Math.round(mm), MIN_EDGE_MM, MAX_EDGE_MM);
-
-/** The edge depths a series was run on, shallowest first. */
-export const edgesOf = (sessions: readonly Pick<HangSession, "edgeMm">[]): number[] =>
-  [...new Set(sessions.map((s) => s.edgeMm))].sort((a, b) => a - b);

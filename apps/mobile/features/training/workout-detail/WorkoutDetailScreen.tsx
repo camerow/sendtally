@@ -4,7 +4,7 @@ import React from "react";
 import { Alert, ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors } from "@sendtally/design/tokens";
-import { seriesFor, summarise, type HangWorkout } from "@sendtally/core/hang";
+import type { HangWorkout } from "@sendtally/core/hang";
 import { hangWorkoutOf } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import {
@@ -14,6 +14,7 @@ import {
   type LibraryWorkout,
 } from "@sendtally/features/workouts";
 import { BackButton } from "../../../components/BackButton";
+import { LinkRow } from "../../../components/LinkRow";
 import { useApi } from "../../../lib/api";
 import { Button } from "../components/Button";
 import { Label } from "../components/Label";
@@ -22,7 +23,6 @@ import { GripPickerSheet } from "../grip-picker/GripPickerSheet";
 import { useLibrary, useNextSession } from "../library/useLibrary";
 import { PlanList } from "../plans/PlanList";
 import { startWorkout } from "../timer/startWorkout";
-import { TrendCard } from "../trends/TrendCard";
 import { GripSetupCard } from "./GripSetupCard";
 import { ProtocolPanel } from "./ProtocolPanel";
 import { WorkoutHistory } from "./WorkoutHistory";
@@ -41,15 +41,14 @@ function Detail({
   library: LibraryWorkout;
   initialGrip?: string;
 }): React.ReactElement {
-  const { model, actions, today } = useHangData();
+  const { model, actions } = useHangData();
   const session = useNextSession(workout.id);
   const next = hangWorkoutOf(library, session) ?? workout;
   const workouts = useWorkoutActions(useApi(), reportFailure);
   const [gripId, setGripId] = React.useState(initialGrip ?? model.defaultGrip(workout));
   const [picker, setPicker] = React.useState(false);
   const mine = workout.source === "mine";
-  const series = seriesFor(model.sessions, workout.id, gripId);
-  const summary = summarise(series, today);
+  const onGrip = model.sessions.some((s) => s.gripId === gripId);
 
   const duplicate = (): void => {
     const id = randomUUID();
@@ -106,14 +105,10 @@ function Detail({
           <Label color={colors.gunmetal}>{t("hang.schedule")}</Label>
           <PlanList workoutId={workout.id} name={workout.name} empty={t("hang.notScheduled")} />
         </View>
-        {summary !== null && (
-          <TrendCard
-            workout={workout.name}
-            grip={model.gripName(gripId)}
-            series={series}
-            summary={summary}
-            kind={workout.kind}
-            unit={model.settings.units}
+        {onGrip && (
+          <LinkRow
+            label={t("hang.gripProgress", { grip: model.gripName(gripId) })}
+            onPress={() => router.push({ pathname: "/grip/[id]", params: { id: gripId } })}
           />
         )}
         <WorkoutHistory

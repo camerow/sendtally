@@ -19,9 +19,7 @@ import {
   fromUnit,
   isCalendarDate,
   totalSeconds,
-  weekStreak,
   weekday,
-  weeklyCounts,
   type HangSession,
   type Protocol,
 } from ".";
@@ -182,16 +180,6 @@ describe("trends", () => {
     expect(summary.last).toBe(4);
     expect(summary.topAttempt?.loadKg).toBe(6);
     expect(summary.avgPct).toBe(93);
-  });
-
-  it("counts streak weeks back from this one and caps the window", () => {
-    const logged = [
-      session({ date: "2026-09-29" }),
-      session({ date: "2026-09-22" }),
-      session({ date: "2026-09-08" }),
-    ];
-    expect(weekStreak(logged, "2026-09-30")).toBe(2);
-    expect(weeklyCounts(logged, "2026-09-30").slice(-4)).toEqual([1, 0, 1, 1]);
   });
 });
 

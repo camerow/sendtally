@@ -13,39 +13,20 @@ jest.mock("@sendtally/features/activities", () => ({
   useWeightUnit: () => "kg",
 }));
 
-const hang = {
-  id: "h1",
-  workoutId: "fingers-ab",
-  gripId: "half",
-  date: "2026-09-20",
-  edgeMm: 20,
-  loadKg: 4,
-  pct: 100,
-  misses: 0,
-  rpe: null,
-  membershipId: null,
-  week: null,
-  focus: null,
-  done: [],
-  protocol: {
-    name: "Fingers A/B",
-    kind: "hang" as const,
-    hangS: 10,
-    restS: 0,
-    reps: 1,
-    sets: 6,
-    setRestS: 180,
-  },
-  stravaActivityId: null,
-  postState: null,
-  postError: null,
-  updatedAt: "t",
-};
-
 const groups: ExerciseGroupVM[] = [
   {
     kind: "hangboard",
-    rows: [{ key: "half", name: "Half crimp", count: 1, values: [4], change: 0, metric: "load" }],
+    rows: [
+      {
+        key: "half",
+        name: "Half crimp",
+        count: 1,
+        values: [4],
+        change: 0,
+        metric: "load",
+        meta: "20 mm · 10s · 1 time",
+      },
+    ],
   },
   {
     kind: "strength",
@@ -57,8 +38,8 @@ const groups: ExerciseGroupVM[] = [
 ];
 
 describe("exercise trends", () => {
-  it("opens an exercise's trend over time, a grip's on its workout", async () => {
-    await renderWithHang(<ExerciseGroups groups={groups} />, hangData({ sessions: [hang] }), {
+  it("opens an exercise's trend over time, a grip on its own screen", async () => {
+    await renderWithHang(<ExerciseGroups groups={groups} />, hangData(), {
       exercises: [anExercise("e1", "Pull-up", "strength")],
     });
     const pullUp = screen.getByLabelText("Pull-up, 2 times, +5 kg");
@@ -66,11 +47,15 @@ describe("exercise trends", () => {
     await fireEvent.press(pullUp);
     expect(router.push).toHaveBeenCalledWith({ pathname: "/exercise/[id]", params: { id: "e1" } });
 
+    expect(screen.getByText("20 mm · 10s · 1 time")).toBeTruthy();
     await fireEvent.press(screen.getByLabelText(/^Half crimp/));
-    expect(router.push).toHaveBeenCalledWith({
-      pathname: "/workout/[id]",
-      params: { id: "fingers-ab", grip: "half" },
-    });
+    expect(router.push).toHaveBeenCalledWith({ pathname: "/grip/[id]", params: { id: "half" } });
+  });
+
+  it("compares grips from the hangboard heading", async () => {
+    await renderWithHang(<ExerciseGroups groups={groups} />);
+    await fireEvent.press(screen.getByText("Compare grips"));
+    expect(router.push).toHaveBeenCalledWith("/grip/compare");
   });
 
   it("leaves a row with nowhere to go as a plain row", async () => {

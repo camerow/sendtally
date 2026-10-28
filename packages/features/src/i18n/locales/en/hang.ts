@@ -83,7 +83,6 @@ export const hang = {
   "hang.setupKicker": "Set up · {grip}",
   "hang.lastUsed": "Last used",
   "hang.setupEachTime": "You choose the edge and weight each time you start.",
-  "hang.allEdges": "All edges",
   "hang.lessWeight": "Less weight",
   "hang.moreWeight": "More weight",
   "hang.lifts": "Lifts",
@@ -215,21 +214,12 @@ export const hang = {
     "Completed load has held at {load}. If effort keeps sitting below 7, try {next} next time.",
   "hang.insightAttempt":
     "Your top attempt is {load} on {date}, at {pct}% complete. It stays an attempt until you finish every set at that load.",
-  "hang.statSessions": "Sessions",
   "hang.statBest": "Best completed",
   "hang.statTopAttempt": "Top attempt",
-  "hang.statAvgCompletion": "Avg completion",
   "hang.statAvgEffort": "Avg effort",
-  "hang.statTimeOnEdge": "Time on edge",
-  "hang.attemptValue": "{load} · {pct}%",
   "hang.effortOutOf": "{value}/10",
-  "hang.trendEmpty":
-    "No sessions logged for this workout yet. Finish one and its load and effort start charting here.",
   "hang.trendsNone":
     "Nothing to chart yet. Finish a workout and its load and effort start charting here.",
-  "hang.consistency": "Consistency · 16 weeks",
-  "hang.weeksActive": "{n} of 16 weeks active",
-  "hang.consistencyAria": "Sessions per week, last 16 weeks",
 
   "hang.reminderTime": "Reminder time",
   "hang.reminderPromptTitle": "Remind you on training days?",
