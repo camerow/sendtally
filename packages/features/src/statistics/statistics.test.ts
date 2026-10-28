@@ -161,12 +161,41 @@ describe("trainingInsightsVM", () => {
   it("groups exercises by kind with their change on their own metric", () => {
     const vm = trainingInsightsVM(log, "1m", ACTIVITY_KINDS, grip, NOW);
     expect(vm.exercises.map((g) => g.kind)).toEqual(["hangboard", "strength"]);
-    expect(vm.exercises[0]?.rows[0]).toMatchObject({ name: "Half crimp", count: 2, change: 4 });
+    expect(vm.exercises[0]?.rows[0]).toMatchObject({
+      name: "Half crimp",
+      count: 2,
+      change: 4,
+      meta: "20 mm · 7s · 2 times",
+    });
     expect(vm.exercises[1]?.rows[0]).toMatchObject({
       name: "Back squat",
       metric: "load",
       values: [100, 110],
       change: 10,
+    });
+  });
+
+  it("trends a grip on its most used setup, completed loads only", () => {
+    const vm = trainingInsightsVM(
+      {
+        ...log,
+        hangSessions: [
+          hang("2026-10-10", 7, 2),
+          { ...hang("2026-10-12", 7, 20), edgeMm: 15 },
+          { ...hang("2026-10-14", 7, 9), pct: 60 },
+          hang("2026-10-16", 7, 5),
+        ],
+      },
+      "1m",
+      ACTIVITY_KINDS,
+      grip,
+      NOW
+    );
+    expect(vm.exercises[0]?.rows[0]).toMatchObject({
+      count: 4,
+      values: [2, 5],
+      change: 3,
+      meta: "20 mm · 7s · 4 times",
     });
   });
 

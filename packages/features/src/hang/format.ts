@@ -1,9 +1,11 @@
 import {
   clock,
+  isPullSetup,
   toLocalDate,
   toUnit,
   weekday,
   type CalendarDate,
+  type GripSetup,
   type HangKind,
   type HangSetup,
   type Protocol,
@@ -82,6 +84,13 @@ export function loadLabel(kind: HangKind, kg: number, unit: WeightUnit): string 
 export function setupLabel(kind: HangKind, setup: HangSetup, unit: WeightUnit): string {
   const load = loadLabel(kind, setup.loadKg, unit);
   return kind === "hang" ? `${t("hang.edgeMm", { n: setup.edgeMm })} · ${load}` : load;
+}
+
+/** "20 mm · 10s" for a hang setup; "Ground pull" for the one setup pulls have. */
+export function gripSetupLabel(setup: GripSetup): string {
+  return isPullSetup(setup)
+    ? t("hang.kindPull")
+    : `${t("hang.edgeMm", { n: setup.edgeMm })} · ${t("hang.seconds", { n: setup.hangS })}`;
 }
 
 /** "7s", or "29 min" from a minute up. */

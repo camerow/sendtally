@@ -1,5 +1,6 @@
 import type { SessionLogWithClimbs } from "@sendtally/api-client";
-import { FOCI, totalSeconds, type Focus } from "@sendtally/core/hang";
+import { FOCI, gripSeries, setupsOf, totalSeconds, type Focus } from "@sendtally/core/hang";
+import { gripSetupLabel } from "../hang/format";
 import { t } from "../i18n";
 import { durationLabel } from "../log-session/transforms";
 import { focusLabel } from "../training/focus";
@@ -40,6 +41,8 @@ export type ExerciseTrendVM = {
   /** Latest minus first, on the metric. */
   change: number;
   metric: ExerciseMetric;
+  /** Said under the name in place of the count: a grip's setup and count. */
+  meta?: string;
 };
 
 export type ExerciseGroupKind = "hangboard" | "strength" | "mobility" | "other";
@@ -119,18 +122,30 @@ function trend(
   };
 }
 
+/** Each grip on its most used setup: its completed loads there, oldest first, and their change. */
 function hangTrends(
   log: SessionLogWithClimbs,
   within: (ms: number) => boolean,
   gripName: (id: string) => string
 ): ExerciseTrendVM[] {
-  const byGrip = new Map<string, number[]>();
-  for (const h of [...log.hangSessions].sort((a, b) => a.date.localeCompare(b.date))) {
-    if (!within(Date.parse(h.date))) continue;
-    byGrip.set(h.gripId, [...(byGrip.get(h.gripId) ?? []), h.loadKg]);
-  }
-  return [...byGrip]
-    .map(([id, loads]) => trend(id, gripName(id), "load", loads))
+  const shown = log.hangSessions.filter((h) => within(Date.parse(h.date)));
+  return [...new Set(shown.map((h) => h.gripId))]
+    .flatMap((id) => {
+      const [setup] = setupsOf(shown, id);
+      if (setup === undefined) return [];
+      const loads = gripSeries(shown, id, setup)
+        .filter((h) => h.pct >= 100)
+        .map((h) => h.loadKg);
+      const count = shown.filter((h) => h.gripId === id).length;
+      const times = t("statistics.timesCount", { count });
+      return [
+        {
+          ...trend(id, gripName(id), "load", loads),
+          count,
+          meta: `${gripSetupLabel(setup)} · ${times}`,
+        },
+      ];
+    })
     .sort((a, b) => b.count - a.count);
 }
 

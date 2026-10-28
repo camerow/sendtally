@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { Activity } from "@sendtally/api-client";
+import type { Activity, HangSessionRecord } from "@sendtally/api-client";
 import type { Block, Workout } from "@sendtally/core/hang";
 import type { TrainingLog } from "./days";
 import { blockDone, blockRecap, blockTagOf } from "./recap";
@@ -97,6 +97,7 @@ describe("blockRecap", () => {
       done: 3,
       planned: 4,
       change: { metric: "load", by: 2.5 },
+      best: false,
     });
     const once = blockRecap(
       log([activity("2026-09-28", { done: squat(100) })]),
@@ -104,6 +105,74 @@ describe("blockRecap", () => {
       "2026-10-30"
     );
     expect(once.workouts[0]?.change).toBeNull();
+  });
+});
+
+describe("blockRecap on a hangboard workout", () => {
+  const maxHangs: Workout = { ...legs, id: "w2", kind: "hangboard", name: "Max hangs" };
+  const hang = (date: string, loadKg: number, over: Partial<HangSessionRecord> = {}) => ({
+    id: `h-${date}`,
+    workoutId: "w2",
+    gripId: "half",
+    date,
+    edgeMm: 20,
+    loadKg,
+    pct: 100,
+    misses: 0,
+    rpe: null,
+    membershipId: "m3",
+    week: 1,
+    focus: null,
+    done: [],
+    protocol: {
+      name: "Max hangs",
+      kind: "hang" as const,
+      hangS: 10,
+      restS: 0,
+      reps: 1,
+      sets: 6,
+      setRestS: 180,
+    },
+    stravaActivityId: null,
+    postState: null,
+    postError: null,
+    updatedAt: "t",
+    ...over,
+  });
+  const hangLog = (hangs: HangSessionRecord[]): TrainingLog => ({
+    ...log([]),
+    hangs,
+    plan: {
+      blocks: [block],
+      memberships: [
+        { id: "m3", workoutId: "w2", blockId: "b1", weekdays: [1], start: block.start },
+      ],
+      weekChanges: [],
+    },
+    workout: (id) => (id === "w2" ? maxHangs : undefined),
+  });
+
+  it("moves by the completed load on its grip and setup, starring a best set in the block", () => {
+    const [w] = blockRecap(
+      hangLog([
+        hang("2026-09-20", 6, { membershipId: null }),
+        hang("2026-09-29", 4),
+        hang("2026-10-01", 9, { pct: 70 }),
+        hang("2026-10-06", 8),
+      ]),
+      block,
+      "2026-10-30"
+    ).workouts;
+    expect(w).toMatchObject({ change: { metric: "load", by: 4 }, best: true });
+  });
+
+  it("stars nothing when no session beat the best before it", () => {
+    const [w] = blockRecap(
+      hangLog([hang("2026-09-20", 10, { membershipId: null }), hang("2026-09-29", 4)]),
+      block,
+      "2026-10-30"
+    ).workouts;
+    expect(w).toMatchObject({ change: null, best: false });
   });
 });
 
