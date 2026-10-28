@@ -10,7 +10,9 @@ const mockApi = {
 };
 const mockReload = jest.fn(async () => undefined);
 let mockState: unknown;
-let mockStravaUrl: string | null = null;
+let mockStrava: unknown = null;
+const mockRun = jest.fn();
+const mockConnect = jest.fn();
 
 jest.mock("expo-router", () => ({
   router: { push: jest.fn(), back: jest.fn(), replace: jest.fn() },
@@ -25,7 +27,9 @@ jest.mock("../../components/Sheet", () => ({
     visible ? children : null,
 }));
 jest.mock("./SessionTags", () => ({ SessionTags: () => null }));
-jest.mock("./PostStatusBar", () => ({ PostStatusBar: () => null }));
+jest.mock("../settings/useStravaConnect", () => ({
+  useStravaConnect: () => ({ connect: mockConnect, busy: false, error: null }),
+}));
 jest.mock("../journal/SessionJournal", () => ({ SessionJournal: () => null }));
 jest.mock("@sendtally/features/session-detail", () => ({
   ...jest.requireActual<object>("@sendtally/features/session-detail"),
@@ -35,7 +39,7 @@ jest.mock("@sendtally/features/session-detail", () => ({
     setFilter: jest.fn(),
     sort: "order",
     setSort: jest.fn(),
-    post: { busy: false, error: null, run: jest.fn() },
+    post: { busy: false, error: null, run: mockRun, refresh: jest.fn() },
     reload: mockReload,
   }),
 }));
@@ -44,27 +48,27 @@ const ready = (): unknown => ({
   status: "ready",
   data: {
     vm: {
-      title: "Tuesday night session",
-      meta: "Tue 21 Oct",
-      area: null,
+      name: "Tuesday night session",
+      place: "Indoor · The Depot",
+      when: "Tue 21 Oct · 19:00 · 2h",
+      length: "2h",
+      rpe: 7,
       pyramid: [],
-      stats: [],
       editable: true,
-      stravaUrl: mockStravaUrl,
-      post: null,
       startDay: "2026-10-21",
-      filterCounts: { all: 0, sent: 0, flash: 0, project: 0 },
+      filterCounts: { all: 14, sent: 9, flash: 2, project: 5 },
     },
     climbs: [],
     tags: [],
     entries: [],
     notes: null,
+    strava: mockStrava,
   },
 });
 
 beforeEach(() => {
   jest.clearAllMocks();
-  mockStravaUrl = null;
+  mockStrava = null;
   mockState = ready();
 });
 
@@ -79,6 +83,49 @@ describe("Climbing session detail", () => {
     expect(mockReload).toHaveBeenCalled();
   });
 
+  it("introduces itself as climbing, then reads its length, effort and sends as tiles", async () => {
+    await render(<SessionDetailScreen />);
+    expect(screen.getByText("Climbing")).toBeTruthy();
+    expect(screen.getByText("· Indoor · The Depot")).toBeTruthy();
+    expect(screen.getByText("Tuesday night session")).toBeTruthy();
+    expect(screen.getByText("Tue 21 Oct · 19:00 · 2h")).toBeTruthy();
+    for (const [value, label] of [
+      ["2h", "length"],
+      ["7", "effort"],
+      ["9", "Sent"],
+    ]) {
+      expect(screen.getByText(value ?? "")).toBeTruthy();
+      expect(screen.getByText(label ?? "")).toBeTruthy();
+    }
+    expect(screen.queryByText("On Strava")).toBeNull();
+  });
+
+  it("shows where it stands with Strava under the tiles", async () => {
+    mockStrava = { kind: "posted", url: "https://www.strava.com/activities/9", postedAt: null };
+    mockState = ready();
+    await render(<SessionDetailScreen />);
+    expect(screen.getByText("On Strava")).toBeTruthy();
+  });
+
+  it("retries a failed post from the menu and says why it failed", async () => {
+    mockStrava = { kind: "failed", reason: "Rate limited" };
+    mockState = ready();
+    await render(<SessionDetailScreen />);
+    expect(screen.getByText("Rate limited")).toBeTruthy();
+    await fireEvent.press(screen.getByLabelText("More"));
+    await fireEvent.press(screen.getByText("Try posting again"));
+    expect(mockRun).toHaveBeenCalled();
+  });
+
+  it("connects Strava from the menu when it is not connected", async () => {
+    mockStrava = { kind: "connect" };
+    mockState = ready();
+    await render(<SessionDetailScreen />);
+    await fireEvent.press(screen.getByLabelText("More"));
+    await fireEvent.press(screen.getByText("Connect Strava"));
+    expect(mockConnect).toHaveBeenCalled();
+  });
+
   it("edits from the bar", async () => {
     await render(<SessionDetailScreen />);
     await fireEvent.press(screen.getByText("Edit"));
@@ -86,7 +133,7 @@ describe("Climbing session detail", () => {
   });
 
   it("views a posted session on Strava from the menu, and says the activity stays there", async () => {
-    mockStravaUrl = "https://www.strava.com/activities/9";
+    mockStrava = { kind: "posted", url: "https://www.strava.com/activities/9", postedAt: null };
     mockState = ready();
     const open = jest.spyOn(Linking, "openURL").mockResolvedValue(true);
     await render(<SessionDetailScreen />);

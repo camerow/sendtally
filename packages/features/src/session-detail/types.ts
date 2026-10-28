@@ -51,6 +51,14 @@ export type PostingStatus = { connected: boolean; active: boolean; since: string
 
 export type SessionDetailVM = {
   title: string;
+  /** The title without its date, for a screen that dates it in its meta line. */
+  name: string;
+  /** Indoor or Outdoor, then the gym or area; empty when the session says neither. */
+  place: string;
+  /** Day, start time and length. */
+  when: string;
+  length: string | null;
+  rpe: number | null;
   /** The session's UTC day, for anything that opens dated to it. */
   startDay: string;
   meta: string;

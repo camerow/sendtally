@@ -185,6 +185,19 @@ describe("sessionDetailVM", () => {
     expect(vm.post.label).toBe("Logged manually");
   });
 
+  it("names it without its date, places it in its gym and dates it on its own line", () => {
+    const vm = sessionDetailVM(
+      { ...detail, name: "Tuesday night session", location: "indoor", gym_id: "g1" },
+      null,
+      new Set(),
+      "The Depot"
+    );
+    expect(vm.name).toBe("Tuesday night session");
+    expect(vm.place).toBe("Indoor · The Depot");
+    expect(vm.when).toMatch(/^Wed Jul 1 · \S.* · 1h 35m$/);
+    expect([vm.length, vm.rpe]).toEqual(["1h 35m", 7]);
+  });
+
   const unposted = {
     ...detail,
     source: "manual" as const,
