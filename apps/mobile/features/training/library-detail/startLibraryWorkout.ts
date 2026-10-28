@@ -37,7 +37,7 @@ export function startLibraryWorkout(
     return;
   }
   if (kind === null) {
-    startLiveSession(link.membershipId === null ? undefined : link);
+    startLiveSession(link.membershipId === null ? undefined : link, w.name);
     return;
   }
   const run = { kind, title: w.name, date, workoutId: w.id, link, minutes: w.minutes };
