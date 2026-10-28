@@ -8,14 +8,14 @@ export const MAX_DOSES = 10;
 
 /**
  * New items for what was picked, in order: a grip takes the doses of the grip before it,
- * anything else its measure's starting dose.
+ * anything else the dose its built-in starts at, else its measure's starting dose.
  */
 export function withItemsAdded(s: WorkoutDraft, picked: readonly Picked[]): WorkoutDraft {
   const last = s.items[s.items.length - 1];
-  const items = picked.map(({ exercise, measure }): Item =>
+  const items = picked.map(({ exercise, measure, dose }): Item =>
     s.kind === "hangboard" && last !== undefined
       ? { exercise, doses: last.doses.map((d) => ({ ...d })) }
-      : { exercise, doses: [newDoseFor(s.kind, measure)] }
+      : { exercise, doses: [dose === undefined ? newDoseFor(s.kind, measure) : { ...dose }] }
   );
   return { ...s, items: [...s.items, ...items] };
 }

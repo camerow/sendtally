@@ -214,7 +214,7 @@ export function ExercisePickerSheet({
       {making && (
         <ExerciseSheet
           initial={{ kind: category === "all" ? kind : category, name: typed }}
-          kinds={fingers ? ["hangboard"] : NOT_FINGERS}
+          kinds={fingers ? ["hangboard"] : category === "all" ? NOT_FINGERS : [category]}
           onSave={(form) => void made(form)}
           onClose={() => setMaking(false)}
         />

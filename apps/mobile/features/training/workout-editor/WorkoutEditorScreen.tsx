@@ -41,6 +41,7 @@ import {
   withItemsAdded,
   withoutItem,
 } from "./editorState";
+import { doseMeasureOf } from "./doseFields";
 import { ItemEditor } from "./ItemEditor";
 import { RestField } from "./RestField";
 import { confirmDestructive } from "../../../lib/confirmDestructive";
@@ -167,7 +168,7 @@ function Editor({
               kind={state.kind}
               item={item}
               name={nameOf(item.exercise)}
-              measure={exerciseNamed(item.exercise)?.measure}
+              measure={doseMeasureOf(exerciseNamed(item.exercise))}
               unit={model.settings.units}
               onChange={(next) => setState((s) => withItem(s, i, next))}
               onRemove={() => setState((s) => withoutItem(s, i))}

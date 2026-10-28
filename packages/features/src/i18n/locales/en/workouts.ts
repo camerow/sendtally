@@ -164,4 +164,11 @@ export const workouts = {
   "workouts.archiveExerciseTitle": "Archive {name}?",
   "workouts.archiveExerciseBody":
     "It leaves the picker and Exercises but keeps its history. Making it again brings it back.",
+  "workouts.measure.climbs": "Climbs",
+  "workouts.measure.wallTime": "Time on the wall",
+  "workouts.measuredInHintClimbing":
+    "Logged on the session tally: tap a grade, then Fell or Sent. A set can end after a number of climbs or a length of time.",
+  "workouts.dose.climbs": "Climbs",
+  "workouts.dose.time": "Time",
+  "workouts.dose.anyClimbs": "Any",
 } as const;

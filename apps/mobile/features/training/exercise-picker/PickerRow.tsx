@@ -19,7 +19,9 @@ export type PickerRowProps = {
 function metaOf(entry: PickerEntry): string {
   if (entry.uses > 0) return t("workouts.timesUsed", { count: entry.uses });
   if (entry.library) return t("workouts.fromLibrary");
-  return "exercise" in entry.source ? measureLabel(entry.source.exercise.measure) : "";
+  if (!("exercise" in entry.source)) return "";
+  const { measure, kind } = entry.source.exercise;
+  return measureLabel(measure, kind);
 }
 
 /** One exercise the picker offers: how often it was used, and whether the workout already has it. */

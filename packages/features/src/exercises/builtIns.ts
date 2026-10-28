@@ -1,21 +1,34 @@
-import type { ExerciseKind, ExerciseMeasure } from "@sendtally/core/hang";
+import type { Dose, ExerciseKind, ExerciseMeasure } from "@sendtally/core/hang";
 import { t, type MessageKey } from "../i18n";
 import type { BuiltInExercise } from "./types";
 
-type Spec = { id: string; name: MessageKey; kind: ExerciseKind; measure: ExerciseMeasure };
+type Spec = {
+  id: string;
+  name: MessageKey;
+  kind: ExerciseKind;
+  measure: ExerciseMeasure;
+  /** What a workout item of it starts at, where its measure's start does not fit. */
+  dose?: Dose;
+};
 
-const spec = (kind: ExerciseKind, measure: ExerciseMeasure, name: MessageKey): Spec => ({
+const spec = (
+  kind: ExerciseKind,
+  measure: ExerciseMeasure,
+  name: MessageKey,
+  dose?: Dose
+): Spec => ({
   id: name.slice(name.lastIndexOf(".") + 1),
   name,
   kind,
   measure,
+  ...(dose === undefined ? {} : { dose }),
 });
 
 /** The starter exercises the picker offers. An id is never reused: the user's own exercises link to it. */
 const BUILT_IN_EXERCISES: readonly Spec[] = [
-  spec("climbing", "rounds", "workouts.exercise.fourByFours"),
-  spec("climbing", "rounds", "workouts.exercise.limitBouldering"),
-  spec("climbing", "rounds", "workouts.exercise.campusLadders"),
+  spec("climbing", "reps", "workouts.exercise.fourByFours"),
+  spec("climbing", "reps", "workouts.exercise.limitBouldering", { sets: 1 }),
+  spec("climbing", "reps", "workouts.exercise.campusLadders"),
   spec("climbing", "seconds", "workouts.exercise.arc"),
   spec("strength", "repsWeight", "workouts.exercise.backSquat"),
   spec("strength", "repsWeight", "workouts.exercise.benchPress"),
@@ -46,6 +59,10 @@ const BUILT_IN_EXERCISES: readonly Spec[] = [
 /** The starter exercises, in the user's language. */
 export const builtInExercises = (): BuiltInExercise[] =>
   BUILT_IN_EXERCISES.map((e) => ({ ...e, name: t(e.name) }));
+
+/** What a workout item of an exercise picked from the built-ins starts at, when it says. */
+export const builtInDose = (builtIn: string | null): Dose | undefined =>
+  BUILT_IN_EXERCISES.find((b) => b.id === builtIn)?.dose;
 
 /** An exercise as the user reads it: one picked from the built-ins in their language. */
 export function exerciseLabel(e: { name: string; builtIn: string | null }): string {

@@ -5,7 +5,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import type { Exercise } from "@sendtally/api-client";
 import { colors } from "@sendtally/design/tokens";
 import { kindLabel, useWeightUnit } from "@sendtally/features/activities";
-import { EXERCISE_KINDS } from "@sendtally/core/hang";
 import { exerciseKindOf, exerciseLabel } from "@sendtally/features/exercises";
 import { t } from "@sendtally/features/i18n";
 import {
@@ -172,7 +171,7 @@ export function ExerciseScreen({ id }: ExerciseScreenProps): React.ReactElement 
             eachSide: exercise.eachSide,
           }}
           editing={{ logged: logged !== undefined }}
-          kinds={EXERCISE_KINDS}
+          kinds={[exercise.kind]}
           onSave={save}
           onClose={() => setSheet(null)}
         />

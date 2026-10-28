@@ -5,20 +5,18 @@ import { ExerciseSheet } from "./ExerciseSheet";
 import { useMakeExercise } from "./useMakeExercise";
 
 export type NewExerciseSheetProps = {
-  /** The category it starts in. */
+  /** The category it is made in, from a shelf; without one it is asked. */
   kind?: WorkoutKind;
   onClose: () => void;
 };
 
 /** New exercise from Train: opened once saved, or the one already holding its name. */
-export function NewExerciseSheet({
-  kind = "strength",
-  onClose,
-}: NewExerciseSheetProps): React.ReactElement {
+export function NewExerciseSheet({ kind, onClose }: NewExerciseSheetProps): React.ReactElement {
   const make = useMakeExercise();
   return (
     <ExerciseSheet
-      initial={{ kind, name: "" }}
+      initial={{ kind: kind ?? "strength", name: "" }}
+      kinds={kind === undefined ? undefined : [kind]}
       onClose={onClose}
       onSave={(form) =>
         void make(form).then((made) => {

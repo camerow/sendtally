@@ -25,8 +25,9 @@ beforeEach(() => {
 describe("new exercise", () => {
   it("starts on its category's measure, follows the category until one is picked, and opens once saved", async () => {
     mockApi.saveExercise.mockResolvedValue({ exercise: anExercise("new-id", "Dips", "strength") });
-    await renderWithHang(<NewExerciseSheet kind="mobility" onClose={jest.fn()} />);
-    expect(checked("Mobility")).toBe(true);
+    await renderWithHang(<NewExerciseSheet onClose={jest.fn()} />);
+    expect(checked("Strength")).toBe(true);
+    await fireEvent.press(screen.getByRole("radio", { name: "Mobility" }));
     expect(checked("Seconds")).toBe(true);
     await fireEvent.press(screen.getByRole("radio", { name: "Strength" }));
     expect(checked("Reps × weight")).toBe(true);
@@ -44,6 +45,27 @@ describe("new exercise", () => {
     expect(router.push).toHaveBeenCalledWith({
       pathname: "/exercise/[id]",
       params: { id: "new-id" },
+    });
+  });
+
+  it("names a known category instead of asking, and measures climbing in climbs or time on the wall", async () => {
+    mockApi.saveExercise.mockResolvedValue({ exercise: anExercise("new-id", "4x4s", "climbing") });
+    await renderWithHang(<NewExerciseSheet kind="climbing" onClose={jest.fn()} />);
+    expect(screen.queryByRole("radio", { name: "Climbing" })).toBeNull();
+    expect(screen.getByText("Climbing")).toBeTruthy();
+    expect(checked("Climbs")).toBe(true);
+    expect(screen.getByRole("radio", { name: "Time on the wall" })).toBeTruthy();
+    expect(screen.queryByRole("radio", { name: "Rounds" })).toBeNull();
+    expect(screen.queryByLabelText("Each side")).toBeNull();
+    await fireEvent.changeText(screen.getByLabelText("Name"), "4x4s");
+    await fireEvent.press(screen.getByText("Save"));
+    await act(async () => undefined);
+    expect(mockApi.saveExercise).toHaveBeenCalledWith("new-id", {
+      name: "4x4s",
+      kind: "climbing",
+      measure: "reps",
+      eachSide: false,
+      builtIn: null,
     });
   });
 

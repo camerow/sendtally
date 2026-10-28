@@ -168,4 +168,11 @@ export const workouts = {
   "workouts.archiveExerciseTitle": "¿Archivar {name}?",
   "workouts.archiveExerciseBody":
     "Sale del selector y de Ejercicios, pero conserva su historial. Crearlo de nuevo lo recupera.",
+  "workouts.measure.climbs": "Escaladas",
+  "workouts.measure.wallTime": "Tiempo en la pared",
+  "workouts.measuredInHintClimbing":
+    "Se registra como una sesión en directo: toca un grado y luego Caída o Encadenado. Una serie termina tras un número de escaladas o un tiempo.",
+  "workouts.dose.climbs": "Escaladas",
+  "workouts.dose.time": "Tiempo",
+  "workouts.dose.anyClimbs": "Libre",
 } as const;

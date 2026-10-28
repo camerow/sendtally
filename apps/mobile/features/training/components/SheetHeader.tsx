@@ -7,6 +7,7 @@ import { Title } from "./Title";
 
 export type SheetHeaderProps = {
   kicker: string;
+  kickerColor?: string;
   title: string;
   action: string;
   onAction: () => void;
@@ -14,6 +15,7 @@ export type SheetHeaderProps = {
 
 export function SheetHeader({
   kicker,
+  kickerColor = colors.textSecondary,
   title,
   action,
   onAction,
@@ -29,7 +31,7 @@ export function SheetHeader({
       }}
     >
       <View style={{ flex: 1, gap: 4 }}>
-        <Label color={colors.textSecondary}>{kicker}</Label>
+        <Label color={kickerColor}>{kicker}</Label>
         <Title size={26}>{title}</Title>
       </View>
       <Button label={action} onPress={onAction} variant="link" height={44} />

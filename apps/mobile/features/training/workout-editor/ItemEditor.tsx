@@ -1,12 +1,6 @@
 import React from "react";
 import { Alert, Text, View } from "react-native";
-import {
-  letterOf,
-  type ExerciseMeasure,
-  type Item,
-  type WeightUnit,
-  type WorkoutKind,
-} from "@sendtally/core/hang";
+import { letterOf, type Item, type WeightUnit, type WorkoutKind } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
 import { Switch } from "../../../components/Switch";
@@ -14,7 +8,7 @@ import { IconButton } from "../components/IconButton";
 import { type } from "../type";
 import { DoseNameTile } from "./DoseNameTile";
 import { DoseTile } from "./DoseTile";
-import { doseFieldsFor, fieldText, withField } from "./doseFields";
+import { doseFieldsFor, fieldText, withField, type DoseMeasure } from "./doseFields";
 import {
   MAX_DOSES,
   withAlternates,
@@ -33,7 +27,7 @@ export type ItemEditorProps = {
   /** Its exercise or grip as the user reads it. */
   name: string;
   /** How its exercise is measured, when it is one of the user's own. */
-  measure?: ExerciseMeasure;
+  measure?: DoseMeasure;
   unit: WeightUnit;
   onChange: (item: Item) => void;
   onRemove: () => void;
@@ -149,7 +143,13 @@ export function ItemEditor({
                   accessibilityLabel={alternating ? `${label} ${letterOf(d)}` : label}
                   value={fieldText(field, dose, unit)}
                   keyboard={KEYBOARD[field.measure]}
-                  placeholder={field.measure === "weight" ? t("hang.bodyweight") : undefined}
+                  placeholder={
+                    field.measure === "weight"
+                      ? t("hang.bodyweight")
+                      : field.placeholder === undefined
+                        ? undefined
+                        : t(field.placeholder)
+                  }
                   onCommit={(text) => {
                     const typed = withField(dose, field, text, unit);
                     if (typed !== null) onChange(withDose(item, d, typed));

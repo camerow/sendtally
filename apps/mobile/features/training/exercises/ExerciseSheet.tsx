@@ -2,7 +2,7 @@ import React from "react";
 import { Text, View } from "react-native";
 import {
   defaultMeasure,
-  EXERCISE_MEASURES,
+  measuresFor,
   WORKOUT_KINDS,
   type ExerciseMeasure,
   type WorkoutKind,
@@ -24,6 +24,7 @@ import { SheetHeader } from "../components/SheetHeader";
 import { SheetSection } from "../components/SheetSection";
 import { HangSheet } from "../data/HangSheet";
 import { KIND_COLORS } from "../insights/kindColors";
+import { KIND_LOOK } from "../today/kindLook";
 import { type } from "../type";
 import type { ExerciseForm } from "./types";
 
@@ -32,7 +33,7 @@ export type ExerciseSheetProps = {
   initial: Pick<ExerciseForm, "kind" | "name"> & Partial<ExerciseForm>;
   /** Editing one of the user's exercises: a logged one warns before its measure changes. */
   editing?: { logged: boolean };
-  /** The categories it can be; all five unless a workout or an edit limits them. */
+  /** The categories it can be; all five unless a workout or an edit limits them. One is known, and not asked. */
   kinds?: readonly WorkoutKind[];
   onSave: (form: ExerciseForm) => void;
   onClose: () => void;
@@ -42,8 +43,9 @@ const measureOrDefault = (kind: WorkoutKind): ExerciseMeasure =>
   defaultMeasure(exerciseKindOf(kind) ?? "other");
 
 /**
- * New exercise, or one edited: its category, its name, what its sets are measured in and
- * whether it is done on each side. Fingers is fixed to hang time and added weight on an edge.
+ * New exercise, or one edited: its category unless it is known, its name, what its sets are
+ * measured in and whether it is done on each side. Fingers is fixed to hang time and added
+ * weight on an edge; climbing logs on the session tally, in climbs or time on the wall.
  */
 export function ExerciseSheet({
   initial,
@@ -60,9 +62,18 @@ export function ExerciseSheet({
   const [measureTouched, setMeasureTouched] = React.useState(initial.measure !== undefined);
   const trimmed = form.name.trim();
   const fingers = form.kind === "hangboard";
+  const climbing = form.kind === "climbing";
+  const known = kinds.length === 1;
 
   const setKind = (kind: WorkoutKind): void =>
-    setForm((f) => ({ ...f, kind, measure: measureTouched ? f.measure : measureOrDefault(kind) }));
+    setForm((f) => ({
+      ...f,
+      kind,
+      measure:
+        measureTouched && measuresFor(kind).includes(f.measure)
+          ? f.measure
+          : measureOrDefault(kind),
+    }));
   const save = (): void => {
     if (trimmed === "") return;
     const saved = { ...form, name: trimmed };
@@ -90,18 +101,21 @@ export function ExerciseSheet({
     <HangSheet visible onClose={onClose} closeLabel={t("common.cancel")}>
       <View style={{ gap: 20, paddingBottom: 12 }}>
         <SheetHeader
-          kicker={t("plan.tabExercises")}
+          kicker={known ? kindLabel(form.kind) : t("plan.tabExercises")}
+          kickerColor={known ? KIND_LOOK[form.kind].ink : undefined}
           title={editing === undefined ? t("workouts.newExercise") : t("workouts.editExercise")}
           action={t("common.cancel")}
           onAction={onClose}
         />
-        <SheetSection label={t("workouts.category")}>
-          <ChipRow<WorkoutKind>
-            value={form.kind}
-            onChange={setKind}
-            options={kinds.map((k) => ({ value: k, label: kindLabel(k), mark: KIND_COLORS[k] }))}
-          />
-        </SheetSection>
+        {!known && (
+          <SheetSection label={t("workouts.category")}>
+            <ChipRow<WorkoutKind>
+              value={form.kind}
+              onChange={setKind}
+              options={kinds.map((k) => ({ value: k, label: kindLabel(k), mark: KIND_COLORS[k] }))}
+            />
+          </SheetSection>
+        )}
         <SheetSection label={t("hang.name")}>
           <TextInput
             value={form.name}
@@ -138,15 +152,18 @@ export function ExerciseSheet({
                   setMeasureTouched(true);
                   setForm((f) => ({ ...f, measure }));
                 }}
-                options={EXERCISE_MEASURES.map((m) => ({ value: m, label: measureLabel(m) }))}
+                options={measuresFor(form.kind).map((m) => ({
+                  value: m,
+                  label: measureLabel(m, form.kind),
+                }))}
               />
               <Text style={[type.body, { fontSize: 12.5, color: colors.textSecondary }]}>
-                {t("workouts.measuredInHint")}
+                {climbing ? t("workouts.measuredInHintClimbing") : t("workouts.measuredInHint")}
               </Text>
             </>
           )}
         </SheetSection>
-        {!fingers && (
+        {!fingers && !climbing && (
           <View
             style={{
               minHeight: 52,
