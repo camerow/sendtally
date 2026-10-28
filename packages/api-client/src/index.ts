@@ -473,8 +473,9 @@ export class SendtallyApi {
     return body(this.client.v1.plan.$get());
   }
 
-  saveBlock({ id, ...block }: Block): Promise<{ block: Block }> {
-    return body(this.client.v1.blocks[":id"].$put({ param: { id }, json: block }));
+  /** A block's focus is no longer the app's to write, so the one saved stays. */
+  saveBlock({ id, name, start, weeks }: Block): Promise<{ block: Block }> {
+    return body(this.client.v1.blocks[":id"].$put({ param: { id }, json: { name, start, weeks } }));
   }
 
   /** Its memberships go with it. */

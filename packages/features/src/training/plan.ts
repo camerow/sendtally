@@ -49,7 +49,7 @@ export type WorkoutLookup = (id: string) => Workout | undefined;
 export const occurrenceLink = (o: Occurrence): PlanLink => ({
   membershipId: o.membership.id,
   week: o.week,
-  focus: focusOf(o.workout, o.block),
+  focus: focusOf(o.workout),
 });
 
 export const blockOfMembership = (plan: Plan, m: Pick<Membership, "blockId">): Block | null =>

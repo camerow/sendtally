@@ -12,7 +12,6 @@ import { useHangData } from "../data/HangDataContext";
 import { PlanGrid } from "../plan/PlanGrid";
 import { liveMembers, planGridRows } from "../plan/planGridRows";
 import { BlockRow } from "./BlockRow";
-import { SeasonStrip } from "./SeasonStrip";
 
 function Group({
   label,
@@ -44,7 +43,6 @@ export function BlocksList(): React.ReactElement {
 
   return (
     <View style={{ gap: 20 }}>
-      <SeasonStrip blocks={plan.blocks} today={today} />
       {current.map((block) => (
         <BlockCard
           key={block.id}
@@ -66,7 +64,6 @@ export function BlocksList(): React.ReactElement {
               key={b.id}
               id={b.id}
               name={b.name}
-              focus={b.focus}
               meta={`${t("plan.startsOn", { date: shortDate(b.start) })} · ${weeks(b.weeks)}`}
             />
           ))}
@@ -77,15 +74,7 @@ export function BlocksList(): React.ReactElement {
           {past.map((b) => {
             const done = blockDone(log, b, today);
             const meta = [weeks(b.weeks), ...(done.planned > 0 ? [t("plan.doneOf", done)] : [])];
-            return (
-              <BlockRow
-                key={b.id}
-                id={b.id}
-                name={b.name}
-                focus={b.focus}
-                meta={meta.join(" · ")}
-              />
-            );
+            return <BlockRow key={b.id} id={b.id} name={b.name} meta={meta.join(" · ")} />;
           })}
         </Group>
       )}

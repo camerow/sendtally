@@ -8,7 +8,6 @@ import type { WorkoutLookup } from "@sendtally/features/training";
 import { pressRow } from "../../../lib/press";
 import { Button } from "../components/Button";
 import { DashedPanel } from "../components/DashedPanel";
-import { FocusTag } from "../components/FocusTag";
 import { Title } from "../components/Title";
 import { AddKindSheet } from "../planning/AddKindSheet";
 import { PlanGrid } from "../plan/PlanGrid";
@@ -44,12 +43,9 @@ export function BlockCard({ block, members, workout }: BlockCardProps): React.Re
           style={pressRow({ flex: 1, gap: 4 })}
         >
           <Title size={26}>{block.name}</Title>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-            <Text style={[type.mono, { fontSize: 12, color: colors.textSecondary }]}>
-              {blockDates(block)}
-            </Text>
-            <FocusTag focus={block.focus} small />
-          </View>
+          <Text style={[type.mono, { fontSize: 12, color: colors.textSecondary }]}>
+            {blockDates(block)}
+          </Text>
         </Pressable>
         <Button
           label={t("hang.add")}

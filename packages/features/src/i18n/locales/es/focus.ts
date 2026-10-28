@@ -17,12 +17,7 @@ export const focus = {
   "focus.conditioningMeaning": "Forma física más allá de escalar: correr, bici, circuitos.",
   "focus.skillMeaning": "Movimiento y técnica, muy por debajo de tu límite.",
   "focus.recoveryMeaning": "Descargas, días suaves y movilidad, a propósito.",
-  "focus.blockNote":
-    "Los entrenos añadidos a este bloque toman este enfoque salvo que tengan el suyo.",
-  "focus.sessionNote": "Solo cambia esta sesión. El entreno y el bloque mantienen el suyo.",
-  "focus.keepsOwn": "Mantiene su propio enfoque: {focus}",
-  "focus.takesBlock": "Toma el enfoque del bloque: {focus}",
+  "focus.sessionNote": "Solo cambia esta sesión. El entreno mantiene el suyo.",
   "focus.search": "Buscar en {focus}",
-  "focus.season": "Esta temporada",
   "focus.thisWeek": "Esta semana por enfoque",
 } as const;

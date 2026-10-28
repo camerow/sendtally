@@ -8,7 +8,6 @@ import { formatNumber, t } from "@sendtally/features/i18n";
 import { usePlan } from "@sendtally/features/training";
 import { useApi } from "../../../lib/api";
 import { Button } from "../components/Button";
-import { FocusField } from "../components/FocusField";
 import { Label } from "../components/Label";
 import { SheetSection } from "../components/SheetSection";
 import { Stepper } from "../components/Stepper";
@@ -28,7 +27,7 @@ export type BlockFormProps = {
   initial: Block;
 };
 
-/** A block's name, first day, number of weeks and focus. A new one opens on its own screen once saved. */
+/** A block's name, first day and number of weeks. A new one opens on its own screen once saved. */
 export function BlockForm({ initial }: BlockFormProps): React.ReactElement {
   const { today } = useHangData();
   const plan = usePlan(useApi()).state;
@@ -108,11 +107,6 @@ export function BlockForm({ initial }: BlockFormProps): React.ReactElement {
           keyboard="number-pad"
         />
       </SheetSection>
-      <FocusField
-        value={block.focus}
-        onChange={(focus) => update({ focus })}
-        note={t("focus.blockNote")}
-      />
     </ScreenFrame>
   );
 }

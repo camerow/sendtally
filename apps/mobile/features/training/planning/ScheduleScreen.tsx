@@ -1,12 +1,11 @@
 import { randomUUID } from "expo-crypto";
 import React from "react";
-import { Text, View } from "react-native";
+import { View } from "react-native";
 import { addDays, blockEnd, maxDate, type Block } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { daysList, shortDate } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import {
-  focusLabel,
   newSchedule,
   scheduledMemberships,
   scheduleReady,
@@ -30,7 +29,6 @@ import { backToPlan } from "./backToPlan";
 import { BlockChoice } from "./BlockChoice";
 import type { AddFlow } from "./flowParams";
 import { ScreenFrame } from "./ScreenFrame";
-import { type } from "../type";
 import { StartField } from "./StartField";
 import { WeekdayChips } from "./WeekdayChips";
 
@@ -121,15 +119,6 @@ export function ScheduleScreen({
       {blocks.length > 0 && (
         <SheetSection label={t("plan.block")}>
           <BlockChoice blocks={blocks} value={block?.id ?? null} onChange={setBlockId} />
-          {block !== null && (
-            <Text
-              style={[type.body, { fontSize: 13, lineHeight: 18, color: colors.textSecondary }]}
-            >
-              {workout.focus === null
-                ? t("focus.takesBlock", { focus: focusLabel(block.focus) })
-                : t("focus.keepsOwn", { focus: focusLabel(workout.focus) })}
-            </Text>
-          )}
         </SheetSection>
       )}
       {block === null && draft.mode === "repeat" && (

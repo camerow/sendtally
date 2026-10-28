@@ -87,15 +87,11 @@ const parseSkipped = (text: string | undefined): number[] => {
   }
 };
 
-/**
- * `prescribed` is what the workout asks of this session, which the activity starts as done.
- * With no workout, it takes the focus of `dayFocus`, the block running that day.
- */
+/** `prescribed` is what the workout asks of this session, which the activity starts as done. */
 export function newActivityDraft(
   prefill: ActivityPrefill,
   today: string,
-  prescribed: readonly SessionItem[] = [],
-  dayFocus: Focus | null = null
+  prescribed: readonly SessionItem[] = []
 ): ActivityDraft {
   return {
     kind: ACTIVITY_KINDS.find((k) => k === prefill.kind) ?? "strength",
@@ -108,7 +104,7 @@ export function newActivityDraft(
     workoutId: prefill.workoutId ?? null,
     membershipId: prefill.membershipId ?? null,
     week: wholeNumber(prefill.week),
-    focus: readFocus(prefill.focus) ?? (prefill.workoutId === undefined ? dayFocus : null),
+    focus: readFocus(prefill.focus) ?? null,
     done: parseDone(prefill.done) ?? doneAsPrescribed(prescribed),
     skipped: parseSkipped(prefill.skipped),
   };

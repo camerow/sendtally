@@ -87,7 +87,7 @@ export type Block = {
   name: string;
   start: CalendarDate;
   weeks: number;
-  /** What its workouts train for unless they say. */
+  /** Kept by the API for older app builds; the apps neither read nor write it. */
   focus: Focus | null;
 };
 
@@ -126,11 +126,9 @@ export type PlanLink = {
   focus: Focus | null;
 };
 
-/** The focus a session records: its workout's own, else its block's, else none. */
-export const focusOf = (
-  workout: Pick<Workout, "focus"> | undefined,
-  block: Pick<Block, "focus"> | null | undefined
-): Focus | null => workout?.focus ?? block?.focus ?? null;
+/** The focus a session records: its workout's own, else none, which is general. */
+export const focusOf = (workout: Pick<Workout, "focus"> | undefined): Focus | null =>
+  workout?.focus ?? null;
 
 /** The dose session `n` of a workout takes from an item: its doses in turn. */
 export const doseIndex = (item: Pick<Item, "doses">, n: number): number =>

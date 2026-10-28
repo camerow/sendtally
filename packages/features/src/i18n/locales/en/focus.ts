@@ -16,11 +16,7 @@ export const focus = {
   "focus.conditioningMeaning": "Fitness beyond climbing: running, cycling, circuits.",
   "focus.skillMeaning": "Movement and technique, well within your limit.",
   "focus.recoveryMeaning": "Deloads, easy days and mobility, on purpose.",
-  "focus.blockNote": "Workouts added to this block take this focus unless they have their own.",
-  "focus.sessionNote": "Changes this session only. The workout and block keep theirs.",
-  "focus.keepsOwn": "Keeps its own focus: {focus}",
-  "focus.takesBlock": "Takes the block's focus: {focus}",
+  "focus.sessionNote": "Changes this session only. The workout keeps its own.",
   "focus.search": "Search {focus}",
-  "focus.season": "This season",
   "focus.thisWeek": "This week by focus",
 } as const;

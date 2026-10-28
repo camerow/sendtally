@@ -336,10 +336,9 @@ describe("doneAsPrescribed", () => {
 });
 
 describe("focusOf", () => {
-  it("takes the workout's own, else the block's, else none", () => {
-    const power = { focus: "power" as const };
-    expect(focusOf({ focus: "strength" }, power)).toBe("strength");
-    expect(focusOf({ focus: null }, power)).toBe("power");
-    expect(focusOf(undefined, null)).toBeNull();
+  it("takes the workout's own, else none", () => {
+    expect(focusOf({ focus: "strength" })).toBe("strength");
+    expect(focusOf({ focus: null })).toBeNull();
+    expect(focusOf(undefined)).toBeNull();
   });
 });
