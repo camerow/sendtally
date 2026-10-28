@@ -3,11 +3,12 @@ import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
-import type { Occurrence } from "@sendtally/features/training";
+import { occurrenceLink, type Occurrence } from "@sendtally/features/training";
 import type { LibraryWorkout } from "@sendtally/features/workouts";
 import { pressRow } from "../../../lib/press";
 import { Label } from "../components/Label";
 import { useHangData } from "../data/HangDataContext";
+import { StartButton } from "../library-detail/StartButton";
 import { type } from "../type";
 import { DayMark } from "./DayMark";
 import { KIND_LOOK } from "./kindLook";
@@ -15,7 +16,7 @@ import { occurrenceMeta, occurrenceTag } from "./occurrenceText";
 
 export type OccurrenceRowProps = { occurrence: Occurrence; workout: LibraryWorkout };
 
-/** A planned workout on a day that is not today's to start: done, missed, or still to come. */
+/** A planned workout on a day that is not today's to start: done, missed with Start to catch it up, or still to come. */
 export function OccurrenceRow({ occurrence, workout }: OccurrenceRowProps): React.ReactElement {
   const { model } = useHangData();
   const { status } = occurrence;
@@ -59,6 +60,18 @@ export function OccurrenceRow({ occurrence, workout }: OccurrenceRowProps): Reac
           {occurrenceMeta(occurrence, model.settings.units)}
         </Text>
       </Pressable>
+      {status === "missed" && (
+        <StartButton
+          workout={workout}
+          date={occurrence.date}
+          planned={{
+            link: occurrenceLink(occurrence),
+            items: occurrence.items,
+            session: occurrence.session,
+          }}
+          height={36}
+        />
+      )}
     </View>
   );
 }

@@ -55,10 +55,11 @@ describe("Today", () => {
     });
   });
 
-  it("shows a past planned day as missed", async () => {
+  it("shows a past planned day as missed, with Start to catch it up", async () => {
     await renderWithHang(<TodayScreen />, hangData(), { plan: plan("max10") });
     await fireEvent.press(screen.getByLabelText(/^Monday.*0 logged, 1 planned$/));
     expect(screen.getByText("Missed")).toBeTruthy();
+    expect(screen.getByText("Start")).toBeTruthy();
   });
 
   it("counts the week as done of planned", async () => {

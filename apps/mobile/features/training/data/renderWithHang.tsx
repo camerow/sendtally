@@ -135,7 +135,11 @@ export async function renderWithHang(
   client.setQueryData(["plan"], world.plan ?? { blocks: [], memberships: [], weekChanges: [] });
   client.setQueryData(["activities"], world.activities ?? []);
   client.setQueryData(EXERCISES_KEY, [...(world.exercises ?? [])]);
-  client.setQueryData(["sessions"], { sessions: [], hangSessions: [], activities: [] });
+  client.setQueryData(["sessions"], {
+    sessions: [],
+    hangSessions: [],
+    activities: world.activities ?? [],
+  });
   if (world.status !== undefined) client.setQueryData(["status"], world.status);
   const result = await render(
     <QueryClientProvider client={client}>

@@ -4,6 +4,4 @@ export const calendar = {
   "calendar.weeks_other": "{count} Wochen",
   "calendar.band": "{name} · {at}/{of}",
   "calendar.dayAria": "{day}: {n} geplant",
-  "calendar.addOnDay": "An diesem Tag hinzufügen",
-  "calendar.nothingPlanned": "An diesem Tag ist nichts geplant.",
 } as const;

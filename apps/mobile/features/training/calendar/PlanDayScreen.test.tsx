@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { fireEvent, screen } from "@testing-library/react-native";
 import { router } from "expo-router";
 import React from "react";
-import type { Plan, WorkoutRecord } from "@sendtally/api-client";
+import type { ActivityRecord, Plan, WorkoutRecord } from "@sendtally/api-client";
 import { hangData, renderWithHang } from "../data/renderWithHang";
 import { PlanDayScreen } from "./PlanDayScreen";
 
@@ -33,7 +33,27 @@ const plan: Plan = {
   ],
   weekChanges: [],
 };
-const world = { plan, workouts: [legs] };
+const stretched: ActivityRecord = {
+  id: "a1",
+  kind: "mobility",
+  title: "Hip opener flow",
+  date: "2026-09-30",
+  startTime: null,
+  minutes: 15,
+  rpe: 3,
+  notes: null,
+  workoutId: null,
+  membershipId: null,
+  week: null,
+  focus: null,
+  done: [],
+  stravaActivityId: null,
+  postedAt: null,
+  postState: null,
+  postError: null,
+};
+
+const world = { plan, workouts: [legs], activities: [stretched] };
 
 describe("Plan day", () => {
   beforeEach(() => {
@@ -44,7 +64,7 @@ describe("Plan day", () => {
     await renderWithHang(<PlanDayScreen date="2026-09-29" />, hangData(), world);
     expect(screen.getByText("Autumn power · week 1 of 4")).toBeTruthy();
     expect(screen.getByText("Gym, legs")).toBeTruthy();
-    expect(screen.getByText("Planned")).toBeTruthy();
+    expect(screen.getByText(/^Up today/)).toBeTruthy();
     await fireEvent.press(screen.getByText("Start"));
     expect(router.push).toHaveBeenCalledWith({
       pathname: "/workout/sets",
@@ -62,20 +82,38 @@ describe("Plan day", () => {
     });
   });
 
-  it("shows a past day's workout as missed and opens its preview", async () => {
+  it("shows a past day's workout as missed with Start, and opens the workout", async () => {
     await renderWithHang(<PlanDayScreen date="2026-09-28" />, hangData(), world);
+    expect(screen.getByText("Monday")).toBeTruthy();
     expect(screen.getByText("Missed")).toBeTruthy();
+    expect(screen.getByText("Start")).toBeTruthy();
     await fireEvent.press(screen.getByText("Gym, legs"));
     expect(router.push).toHaveBeenCalledWith({
-      pathname: "/workout/preview",
+      pathname: "/workout/[id]",
       params: { id: "legs" },
     });
   });
 
-  it("adds on the day inside its block", async () => {
+  it("leaves Start off a workout still to come", async () => {
+    await renderWithHang(<PlanDayScreen date="2026-10-05" />, hangData(), world);
+    expect(screen.getByText("Gym, legs")).toBeTruthy();
+    expect(screen.queryByText("Start")).toBeNull();
+  });
+
+  it("shows what was logged on the day and opens it", async () => {
     await renderWithHang(<PlanDayScreen date="2026-09-30" />, hangData(), world);
-    expect(screen.getByText("Nothing planned on this day.")).toBeTruthy();
-    await fireEvent.press(screen.getByText("Add on this day"));
+    expect(screen.getByText("Wednesday")).toBeTruthy();
+    expect(screen.getByText("Sep 30 · 0 planned · 1 logged")).toBeTruthy();
+    await fireEvent.press(screen.getByText("Hip opener flow"));
+    expect(router.push).toHaveBeenCalledWith({
+      pathname: "/activity/[id]",
+      params: { id: "a1" },
+    });
+  });
+
+  it("adds on the day inside its block from the footer", async () => {
+    await renderWithHang(<PlanDayScreen date="2026-09-30" />, hangData(), world);
+    await fireEvent.press(screen.getByText("Add to Wed"));
     await fireEvent.press(screen.getByText("Mobility"));
     expect(router.push).toHaveBeenCalledWith({
       pathname: "/plan/add",

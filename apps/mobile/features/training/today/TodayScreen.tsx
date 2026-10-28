@@ -1,4 +1,4 @@
-import { router, useLocalSearchParams, useNavigation } from "expo-router";
+import { useLocalSearchParams, useNavigation } from "expo-router";
 import React from "react";
 import { ScrollView, View } from "react-native";
 import {
@@ -10,7 +10,7 @@ import {
   type CalendarDate,
 } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
-import { longDate, weekdayShort } from "@sendtally/features/hang";
+import { longDate } from "@sendtally/features/hang";
 import { formatNumber, t } from "@sendtally/features/i18n";
 import {
   blockGroups,
@@ -21,7 +21,6 @@ import {
   trainingWeek,
   useTrainingLog,
   weekDone,
-  type LoggedItem,
 } from "@sendtally/features/training";
 import { Fab } from "../../../components/Fab";
 import { useApi } from "../../../lib/api";
@@ -30,7 +29,9 @@ import { Label } from "../components/Label";
 import { useHangData } from "../data/HangDataContext";
 import { AddKindSheet } from "../planning/AddKindSheet";
 import { BlockRow } from "../train/BlockRow";
+import { addOnDayLabel } from "./addOnDay";
 import { DaySection } from "./DaySection";
+import { openLogged } from "./openLogged";
 import { WeekStrip } from "./WeekStrip";
 
 const weekOffset = (today: CalendarDate, date: CalendarDate): number =>
@@ -75,23 +76,6 @@ export function TodayScreen(): React.ReactElement {
     setOffset(next);
     setSelected(addDays(addDays(weekStart(today), next * 7), weekday(selected)));
   };
-  const open = (item: LoggedItem): void => {
-    if (item.kind === "hang")
-      router.push({ pathname: "/activity/[id]", params: { id: item.session.id } });
-    else if (item.kind === "activity")
-      router.push({ pathname: "/activity/[id]", params: { id: item.activity.id } });
-    else
-      router.push({
-        pathname: "/session/[fingerprint]",
-        params: { fingerprint: item.session.fingerprint },
-      });
-  };
-
-  const addLabel =
-    selected === today
-      ? t("plan.addToToday")
-      : t("plan.addToDay", { day: weekdayShort(weekday(selected)) });
-
   return (
     <View style={{ flex: 1 }}>
       <ScrollView
@@ -139,9 +123,9 @@ export function TodayScreen(): React.ReactElement {
             ))}
           </View>
         )}
-        <DaySection day={day} onOpen={open} />
+        <DaySection day={day} onOpen={openLogged} />
       </ScrollView>
-      <Fab label={addLabel} onPress={() => setAdding(true)} />
+      <Fab label={addOnDayLabel(selected, today)} onPress={() => setAdding(true)} />
       <AddKindSheet
         flow={{ date: selected, blockId: null }}
         visible={adding}
