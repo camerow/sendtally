@@ -18,16 +18,6 @@ export function newItem(kind: WorkoutKind, previous?: Item): Item {
   return { exercise: kind === "hangboard" ? BUILT_IN_GRIPS[0] : "", dose: { ...NEW_DOSE[kind] } };
 }
 
-/** A named lift, counted in reps, with no weight yet: saving waits for one, 0 for bodyweight. */
-export const needsWeight = (kind: WorkoutKind, item: Item): boolean =>
-  kind === "strength" &&
-  item.exercise.trim() !== "" &&
-  item.dose.onS === undefined &&
-  item.dose.weightKg === undefined;
-
-export const canSave = (s: WorkoutDraft): boolean =>
-  !s.variations.some((v) => v.items.some((i) => needsWeight(s.kind, i)));
-
 /** A new workout of the kind starts with one item, except climbing, which often has none. */
 export function startingDraft(draft: WorkoutDraft): WorkoutDraft {
   const empty = draft.variations.every((v) => v.items.length === 0);

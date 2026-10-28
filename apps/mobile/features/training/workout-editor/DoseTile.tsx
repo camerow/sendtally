@@ -9,8 +9,8 @@ export type DoseTileProps = {
   value: string;
   keyboard: "number-pad" | "numbers-and-punctuation" | "decimal-pad";
   onCommit: (text: string) => void;
-  /** Empty, and saving waits for it. */
-  required?: boolean;
+  /** What an empty field reads as. */
+  placeholder?: string;
 };
 
 /** One dose number on a soft tile: its label over what is typed. */
@@ -19,7 +19,7 @@ export function DoseTile({
   value,
   keyboard,
   onCommit,
-  required = false,
+  placeholder = "–",
 }: DoseTileProps): React.ReactElement {
   return (
     <View
@@ -32,18 +32,16 @@ export function DoseTile({
         paddingTop: 6,
         borderRadius: 10,
         backgroundColor: colors.surfaceSoft,
-        borderWidth: 1.5,
-        borderColor: required ? colors.watermelonInk : "transparent",
       }}
     >
-      <Label small color={required ? colors.watermelonInk : colors.textSecondary}>
+      <Label small color={colors.textSecondary}>
         {label}
       </Label>
       <NumberField
         value={value}
         onCommit={onCommit}
         label={label}
-        placeholder="–"
+        placeholder={placeholder}
         keyboard={keyboard}
         style={{
           textAlign: "left",

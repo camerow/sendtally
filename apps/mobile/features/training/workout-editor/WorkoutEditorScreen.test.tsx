@@ -32,11 +32,7 @@ describe("Workout editor", () => {
     await fireEvent.changeText(screen.getByLabelText("Name"), "Leg day");
     await fireEvent.changeText(screen.getByLabelText("Exercise"), "Back squat");
     await type("Reps", "5");
-    await fireEvent.press(screen.getByText("Save"));
-    expect(mockWorkouts.saveWorkout).not.toHaveBeenCalled();
-    expect(screen.getByText("Add a weight to save. Use 0 for bodyweight.")).toBeTruthy();
     await type("Weight (kg)", "100");
-    expect(screen.queryByText("Add a weight to save. Use 0 for bodyweight.")).toBeNull();
 
     await fireEvent.press(screen.getByLabelText("Alternates"));
     await fireEvent.changeText(screen.getByLabelText("Variation A"), "5×5");
