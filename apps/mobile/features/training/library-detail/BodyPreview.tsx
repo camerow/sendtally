@@ -4,7 +4,6 @@ import {
   clock,
   doseIndex,
   intervalsOf,
-  letterOf,
   sessionItems,
   turnsOf,
   type WeightUnit,
@@ -15,6 +14,8 @@ import {
   bodySummary,
   doseSummary,
   exerciseName,
+  letterName,
+  turnName,
   type LibraryWorkout,
 } from "@sendtally/features/workouts";
 import { DashedPanel } from "../components/DashedPanel";
@@ -62,7 +63,7 @@ export function BodyPreview({
     return dose === undefined
       ? undefined
       : t("workouts.alternatesWith", {
-          letter: letterOf(next),
+          letter: letterName(next, dose.name),
           dose: doseSummary(workout.kind, dose, unit),
         });
   };
@@ -75,7 +76,14 @@ export function BodyPreview({
           </Label>
           <LetterBadge dose={session % turns} size={26} />
           <Text style={[type.body, { fontSize: 13, color: colors.textSecondary }]}>
-            {t("workouts.thenLetter", { letter: letterOf((session + 1) % turns) })}
+            {[
+              turnName(workout.items, session),
+              t("workouts.thenLetter", {
+                letter: letterName((session + 1) % turns, turnName(workout.items, session + 1)),
+              }),
+            ]
+              .filter((x) => x !== undefined)
+              .join(" ")}
           </Text>
         </View>
       ) : (

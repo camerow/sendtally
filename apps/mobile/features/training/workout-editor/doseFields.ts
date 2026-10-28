@@ -11,7 +11,7 @@ import {
 } from "@sendtally/core/hang";
 import type { MessageKey } from "@sendtally/features/i18n";
 
-export type DoseKey = Exclude<keyof Dose, "edgeMm">;
+export type DoseKey = Exclude<keyof Dose, "edgeMm" | "name">;
 
 export type DoseField = { key: DoseKey; label: MessageKey; measure: "count" | "time" | "weight" };
 

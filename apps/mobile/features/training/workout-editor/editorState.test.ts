@@ -4,6 +4,7 @@ import {
   draftOfEditor,
   withAlternates,
   withDoseAdded,
+  withDoseName,
   withoutLastDose,
   withSetRest,
 } from "./editorState";
@@ -32,6 +33,18 @@ describe("workout editor state", () => {
       description: "Slow",
       items: [squat],
     });
+  });
+
+  it("names doses, never copies a name, and saves them trimmed or not at all", () => {
+    const ab = withDoseName(withAlternates(squat, true), 0, " Heavy ");
+    const named = withDoseAdded(withDoseName(ab, 1, "Light"));
+    expect(named.doses.map((d) => d.name)).toEqual([" Heavy ", "Light", undefined]);
+    expect(withAlternates(ab, false).doses).toEqual(squat.doses);
+    const blank = withDoseName(ab, 1, "  ");
+    expect(draftOfEditor({ ...legs, items: [blank] }).items[0]?.doses).toEqual([
+      { sets: 5, reps: 5, name: "Heavy" },
+      { sets: 5, reps: 5 },
+    ]);
   });
 
   it("alternates A and B from a copy of A, and keeps only A when switched off", () => {

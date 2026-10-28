@@ -98,6 +98,8 @@ export const workouts = {
   "workouts.alternates": "Einheiten im Wechsel",
   "workouts.addDose": "{letter} hinzufügen",
   "workouts.removeDose": "{letter} entfernen",
+  "workouts.doseName": "Name",
+  "workouts.doseNameHint": "Optional",
   "workouts.nextSession": "Nächste Einheit",
   "workouts.thenLetter": "dann {letter}",
   "workouts.alternatesWith": "Im Wechsel: {letter} ist {dose}",

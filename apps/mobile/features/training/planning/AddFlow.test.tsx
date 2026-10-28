@@ -122,6 +122,26 @@ describe("adding to the plan", () => {
     });
   });
 
+  it("names each dose next to its letter when it has a name", async () => {
+    const named = {
+      ...legs,
+      items: [
+        {
+          exercise: "Back squat",
+          doses: [
+            { sets: 5, reps: 5, name: "Heavy" },
+            { sets: 3, reps: 8, name: "Light" },
+          ],
+        },
+      ],
+    };
+    await renderWithHang(<WorkoutPreviewScreen id="legs" adding={flow} />, hangData(), {
+      workouts: [named],
+    });
+    expect(screen.getByText("Heavy then B Light")).toBeTruthy();
+    expect(screen.getByText("Alternates: B Light is 3 × 8")).toBeTruthy();
+  });
+
   it("previewed from the library, starts or edits it instead", async () => {
     await renderWithHang(<WorkoutPreviewScreen id="legs" adding={null} />, hangData(), {
       workouts: [legs],

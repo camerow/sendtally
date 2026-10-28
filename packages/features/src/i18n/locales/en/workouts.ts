@@ -97,6 +97,8 @@ export const workouts = {
   "workouts.alternates": "Alternate sessions",
   "workouts.addDose": "Add {letter}",
   "workouts.removeDose": "Remove {letter}",
+  "workouts.doseName": "Name",
+  "workouts.doseNameHint": "Optional",
   "workouts.nextSession": "Next session",
   "workouts.thenLetter": "then {letter}",
   "workouts.alternatesWith": "Alternates: {letter} is {dose}",

@@ -206,6 +206,18 @@ describe("workouts", () => {
     expect(workouts[1]?.exerciseRestS).toBe(240);
   });
 
+  it("keeps a dose's name, trimmed, and never asks for one", async () => {
+    const userId = "user_workouts_dose_names";
+    const named = {
+      ...squatWorkout,
+      items: [{ exercise: "Back squat", doses: [{ sets: 5, name: " Heavy " }, { sets: 3 }] }],
+    };
+    const res = await call(userId, "PUT", "/v1/workouts/w1", named);
+    expect(await json(res)).toMatchObject({
+      workout: { items: [{ doses: [{ sets: 5, name: "Heavy" }, { sets: 3 }] }] },
+    });
+  });
+
   it("rests between exercises on the hangboard only when an older app sends no rest", async () => {
     const userId = "user_workouts_exercise_rest";
     const { exerciseRestS: _, ...noRest } = squatWorkout;
@@ -264,6 +276,11 @@ describe("workouts", () => {
       { ...squatWorkout, exerciseRestS: -1 },
       { ...squatWorkout, items: [{ exercise: "Squat", doses: [{ sets: 0 }] }] },
       { ...squatWorkout, items: [{ exercise: "Squat", doses: [{ reps: 5 }] }] },
+      { ...squatWorkout, items: [{ exercise: "Squat", doses: [{ sets: 5, name: " " }] }] },
+      {
+        ...squatWorkout,
+        items: [{ exercise: "Squat", doses: [{ sets: 5, name: "x".repeat(25) }] }],
+      },
     ]) {
       expect((await call(userId, "PUT", "/v1/workouts/w1", body)).status).toBe(400);
     }

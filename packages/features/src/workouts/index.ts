@@ -9,7 +9,9 @@ export {
   exerciseName,
   libraryOf,
   libraryShelves,
+  letterName,
   newWorkoutDraft,
+  turnName,
   workoutMinutes,
   workoutUsage,
 } from "./library";

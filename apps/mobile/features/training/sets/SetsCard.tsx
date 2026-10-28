@@ -45,7 +45,7 @@ export function SetsCard({
   restUnder,
 }: SetsCardProps): React.ReactElement {
   const name = exerciseName(item.exercise);
-  const { sets: _, ...target } = item.dose;
+  const { sets: _, name: _name, ...target } = item.dose;
   return (
     <View
       style={{

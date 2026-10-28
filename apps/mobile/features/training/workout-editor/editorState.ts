@@ -40,18 +40,33 @@ export const withDose = (item: Item, at: number, dose: Dose): Item => ({
   doses: item.doses.map((d, i) => (i === at ? dose : d)),
 });
 
-/** On: B starts as a copy of A. Off: only A is kept. */
+/** A dose's numbers without its name: a copy, or a dose no longer taking turns. */
+const unnamed = ({ name: _, ...dose }: Dose): Dose => dose;
+
+/** On: B starts as a copy of A. Off: only A is kept, unnamed. */
 export function withAlternates(item: Item, on: boolean): Item {
   const [first = { sets: 1 }] = item.doses;
-  if (!on) return { ...item, doses: [first] };
-  return item.doses.length > 1 ? item : { ...item, doses: [first, { ...first }] };
+  if (!on) return { ...item, doses: [unnamed(first)] };
+  return item.doses.length > 1 ? item : { ...item, doses: [first, unnamed(first)] };
 }
 
 /** One more dose, a copy of the last, taking its turn after the others. */
 export function withDoseAdded(item: Item): Item {
   const last = item.doses[item.doses.length - 1];
   if (last === undefined || item.doses.length >= MAX_DOSES) return item;
-  return { ...item, doses: [...item.doses, { ...last }] };
+  return { ...item, doses: [...item.doses, unnamed(last)] };
+}
+
+/** A dose's name, as typed; saving trims it. */
+export const withDoseName = (item: Item, at: number, name: string): Item => {
+  const dose = item.doses[at];
+  return dose === undefined ? item : withDose(item, at, { ...unnamed(dose), name });
+};
+
+/** A dose's name trimmed, and none when that leaves nothing. */
+function savedName(dose: Dose): Dose {
+  const name = dose.name?.trim() ?? "";
+  return name === "" ? unnamed(dose) : { ...dose, name };
 }
 
 /** The last dose dropped, while two are left to take turns. */
@@ -67,8 +82,8 @@ export const withSetRest = (item: Item, seconds: number): Item => ({
 });
 
 /**
- * What saving writes: trimmed text, an untitled workout named, and unnamed exercises left
- * out. Hangboard keeps no minutes: its time is counted from its items.
+ * What saving writes: trimmed text, an untitled workout named, blank dose names dropped,
+ * and unnamed exercises left out. Hangboard keeps no minutes: its time is counted from its items.
  */
 export function draftOfEditor(s: WorkoutDraft): WorkoutDraft {
   return {
@@ -77,7 +92,7 @@ export function draftOfEditor(s: WorkoutDraft): WorkoutDraft {
     name: s.name.trim().slice(0, 80) || t("hang.untitledWorkout"),
     description: s.description.trim(),
     items: s.items
-      .map((i) => ({ ...i, exercise: i.exercise.trim() }))
+      .map((i) => ({ ...i, exercise: i.exercise.trim(), doses: i.doses.map(savedName) }))
       .filter((i) => i.exercise !== ""),
   };
 }

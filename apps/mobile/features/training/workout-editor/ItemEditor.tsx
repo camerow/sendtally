@@ -9,6 +9,7 @@ import { press } from "../../../lib/press";
 import { HangIcon } from "../components/HangIcon";
 import { IconButton } from "../components/IconButton";
 import { type } from "../type";
+import { DoseNameTile } from "./DoseNameTile";
 import { DoseTile } from "./DoseTile";
 import { DOSE_FIELDS_OF, fieldText, withField } from "./doseFields";
 import {
@@ -16,6 +17,7 @@ import {
   withAlternates,
   withDose,
   withDoseAdded,
+  withDoseName,
   withoutLastDose,
   withSetRest,
 } from "./editorState";
@@ -160,6 +162,13 @@ export function ItemEditor({
                 />
               );
             })}
+            {alternating && (
+              <DoseNameTile
+                name={dose.name ?? ""}
+                accessibilityLabel={`${t("workouts.doseName")} ${letterOf(d)}`}
+                onChange={(text) => onChange(withDoseName(item, d, text))}
+              />
+            )}
           </View>
         </View>
       ))}

@@ -300,6 +300,11 @@ describe("intervalsOf", () => {
 });
 
 describe("doneAsPrescribed", () => {
+  it("leaves a dose's name out of the sets it logs", () => {
+    const named = { exercise: "Squat", doses: [{ sets: 1, reps: 5, name: "Heavy" }, { sets: 2 }] };
+    expect(doneAsPrescribed(sessionItems([named], 0))[0]?.sets).toEqual([{ reps: 5 }]);
+  });
+
   it("logs every set of every item", () => {
     expect(doneAsPrescribed(sessionItems(squat.items, 0))).toEqual([
       {

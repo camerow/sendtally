@@ -10,8 +10,10 @@ import {
   doseSummary,
   draftOf,
   libraryOf,
+  letterName,
   libraryShelves,
   newWorkoutDraft,
+  turnName,
   workoutMinutes,
   workoutUsage,
 } from "./library";
@@ -195,6 +197,29 @@ describe("libraryShelves", () => {
       "strength",
       "mobility",
     ]);
+  });
+});
+
+describe("dose names", () => {
+  const squat = {
+    doses: [
+      { sets: 5, name: "Heavy" },
+      { sets: 3, name: "Light" },
+    ],
+  };
+  const row = { doses: [{ sets: 1 }, { sets: 2 }, { sets: 3, name: "Pump" }] };
+
+  it("puts a dose's name after its letter, when it has one", () => {
+    expect(letterName(1, "Light")).toBe("B Light");
+    expect(letterName(2)).toBe("C");
+  });
+
+  it("names a session after the first item that takes as many turns and names that dose", () => {
+    expect(turnName([squat], 0)).toBe("Heavy");
+    expect(turnName([squat], 3)).toBe("Light");
+    expect(turnName([squat, row], 1)).toBeUndefined();
+    expect(turnName([squat, row], 2)).toBe("Pump");
+    expect(turnName([{ doses: [{ sets: 1, name: "Solo" }] }], 0)).toBeUndefined();
   });
 });
 

@@ -5,11 +5,14 @@ import {
   hangboardSeconds,
   isBuiltInGrip,
   itemsSeconds,
+  letterOf,
   sessionItems,
   timeUnitsOf,
   toUnit,
+  turnsOf,
   type CalendarDate,
   type Dose,
+  type Item,
   type Membership,
   type WeightUnit,
   type Workout,
@@ -105,6 +108,23 @@ export function doseSummary(kind: WorkoutKind, dose: Dose, unit: WeightUnit): st
       ? t("activities.setCount", { count: dose.sets })
       : `${formatNumber(dose.sets)} × ${work.join(" · ")}`;
   return [main, weight, edge].filter((x) => x !== null).join(" · ");
+}
+
+/** "B Light": a dose's letter, with its name when it has one. */
+export const letterName = (turn: number, name?: string): string =>
+  name === undefined ? letterOf(turn) : `${letterOf(turn)} ${name}`;
+
+/**
+ * What session `n` of a workout that takes turns is called, such as Heavy: the name its
+ * turn's dose has on the first item that takes as many turns as the workout and names it.
+ */
+export function turnName(items: readonly Pick<Item, "doses">[], n: number): string | undefined {
+  const turns = turnsOf(items);
+  const turn = n % turns;
+  if (turns === 1) return undefined;
+  return items.find((i) => i.doses.length === turns && i.doses[turn]?.name !== undefined)?.doses[
+    turn
+  ]?.name;
 }
 
 /** "6 × 7s on, 3s off" for a one-item hangboard workout, "3 exercises", or null with none. */

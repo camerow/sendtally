@@ -46,7 +46,11 @@ export const dose = z.object({
 
 const exercise = z.string().trim().min(1).max(80);
 
-const item = z.object({ exercise, doses: z.array(dose).min(1).max(MAX_DOSES) });
+const MAX_DOSE_NAME = 24;
+
+const namedDose = dose.extend({ name: z.string().trim().min(1).max(MAX_DOSE_NAME).optional() });
+
+const item = z.object({ exercise, doses: z.array(namedDose).min(1).max(MAX_DOSES) });
 
 const doseIndex = z
   .number()

@@ -20,6 +20,8 @@ export type Dose = {
   offS?: number;
   edgeMm?: number;
   setRestS?: number;
+  /** What an alternating dose is called next to its letter, such as Heavy. */
+  name?: string;
 };
 
 export const DOSE_FIELDS = [
@@ -33,7 +35,7 @@ export const DOSE_FIELDS = [
 ] as const satisfies readonly (keyof Dose)[];
 
 /** One set as it was done. */
-export type SetDone = Omit<Dose, "sets">;
+export type SetDone = Omit<Dose, "sets" | "name">;
 
 /**
  * One exercise of a workout. One dose is the same every session; with more, sessions
@@ -306,7 +308,7 @@ export const hangboardSeconds = (items: readonly SessionItem[], exerciseRestS: n
 
 /** Every set of every item done as prescribed. */
 export function doneAsPrescribed(items: readonly SessionItem[]): ItemDone[] {
-  return items.map(({ exercise, dose: { sets, ...set } }, item) => ({
+  return items.map(({ exercise, dose: { sets, name: _, ...set } }, item) => ({
     item,
     exercise,
     sets: Array.from({ length: sets }, () => ({ ...set })),

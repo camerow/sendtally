@@ -9,7 +9,7 @@ import {
 import { humanDuration } from "../hang/format";
 import { formatNumber, t } from "../i18n";
 
-export type DoseField = keyof Dose;
+export type DoseField = (typeof DOSE_FIELDS)[number];
 
 /** Timed work outside hangboarding: rounds of work and rest. */
 const timed = (kind: WorkoutKind, dose: Dose): boolean =>

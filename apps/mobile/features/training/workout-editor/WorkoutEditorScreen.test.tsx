@@ -27,7 +27,7 @@ async function type(label: string, text: string, index = 0): Promise<void> {
 }
 
 describe("Workout editor", () => {
-  it("makes a strength workout whose squat alternates A and B, resting between sets", async () => {
+  it("makes a strength workout whose squat alternates a named A and B, resting between sets", async () => {
     await renderWithHang(<WorkoutEditorScreen kind="strength" />);
     await fireEvent.changeText(screen.getByLabelText("Name"), "Leg day");
     await fireEvent.changeText(screen.getByLabelText("Exercise"), "Back squat");
@@ -36,6 +36,8 @@ describe("Workout editor", () => {
 
     await fireEvent.press(screen.getByLabelText("Alternate sessions: Back squat"));
     await type("Reps B", "10");
+    await fireEvent.changeText(screen.getByLabelText("Name A"), "Heavy");
+    await fireEvent.changeText(screen.getByLabelText("Name B"), " Light ");
     await type("Rest between sets", "2:00");
     await type("Rest between exercises", "3:00");
     await fireEvent.press(screen.getByText("Save"));
@@ -50,8 +52,8 @@ describe("Workout editor", () => {
         {
           exercise: "Back squat",
           doses: [
-            { sets: 3, reps: 5, weightKg: 100, setRestS: 120 },
-            { sets: 3, reps: 10, weightKg: 100, setRestS: 120 },
+            { sets: 3, reps: 5, weightKg: 100, setRestS: 120, name: "Heavy" },
+            { sets: 3, reps: 10, weightKg: 100, setRestS: 120, name: "Light" },
           ],
         },
       ],
