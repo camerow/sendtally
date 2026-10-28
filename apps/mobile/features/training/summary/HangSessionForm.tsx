@@ -7,7 +7,6 @@ import { colors } from "@sendtally/design/tokens";
 import { shortDate } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import { hangTitle } from "@sendtally/features/sessions";
-import { confirmDestructive } from "../../../lib/confirmDestructive";
 import { Button } from "../components/Button";
 import { DateField } from "../components/DateField";
 import { EffortField } from "../components/EffortField";
@@ -53,16 +52,6 @@ export function HangSessionForm({ session }: HangSessionFormProps): React.ReactE
     void actions.saveSession(fields);
     router.back();
   };
-  // Edit sits over the summary, and both go once the session does.
-  const remove = (): void =>
-    confirmDestructive({
-      title: t("workouts.deleteTitle", { name }),
-      action: t("common.delete"),
-      onConfirm: () => {
-        router.dismiss(2);
-        void actions.deleteSession(session.id);
-      },
-    });
 
   return (
     <KeyboardAvoidingView
@@ -153,7 +142,6 @@ export function HangSessionForm({ session }: HangSessionFormProps): React.ReactE
           onChange={(focus) => update({ focus })}
           note={t("focus.sessionNote")}
         />
-        <Button label={t("summary.deleteWorkout")} onPress={remove} variant="danger" />
       </ScrollView>
       <GripPickerSheet
         visible={picker}

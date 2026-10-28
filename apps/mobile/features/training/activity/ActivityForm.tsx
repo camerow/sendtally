@@ -35,12 +35,11 @@ import { Title } from "../components/Title";
 import { type } from "../type";
 import { DoneDetails } from "./DoneDetails";
 import { KindChips } from "./KindChips";
-import { confirmDestructive } from "../../../lib/confirmDestructive";
 
 export type ActivityFormProps = {
   id: string;
   initial: ActivityDraft;
-  /** The activity as logged, which can be deleted; null while logging a new one. */
+  /** The activity as logged; null while logging a new one. */
   logged: ActivityRecord | null;
   /** A player ran it: its start and length are already known, so only the date shows. */
   timed?: boolean;
@@ -104,16 +103,6 @@ export function ActivityForm({
     router.back();
   };
   const name = draft.title.trim() || kindLabel(draft.kind);
-  // Edit sits over the summary, and both go once the workout does.
-  const remove = (): void =>
-    confirmDestructive({
-      title: t("workouts.deleteTitle", { name }),
-      action: t("common.delete"),
-      onConfirm: () => {
-        router.dismiss(2);
-        void actions.deleteActivity(id);
-      },
-    });
 
   return (
     <KeyboardAvoidingView
@@ -243,14 +232,9 @@ export function ActivityForm({
           />
         </SheetSection>
 
-        <View style={{ gap: 6 }}>
-          {logged !== null && items.length > 0 && (
-            <Button label={t("workouts.saveAsWorkout")} onPress={saveAsWorkout} variant="link" />
-          )}
-          {logged !== null && (
-            <Button label={t("summary.deleteWorkout")} onPress={remove} variant="danger" />
-          )}
-        </View>
+        {logged !== null && items.length > 0 && (
+          <Button label={t("workouts.saveAsWorkout")} onPress={saveAsWorkout} variant="link" />
+        )}
       </ScrollView>
     </KeyboardAvoidingView>
   );

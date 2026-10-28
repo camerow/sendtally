@@ -110,14 +110,23 @@ describe("blocks", () => {
     });
   });
 
-  it("deletes the block from its editor, once confirmed, leaving both screens", async () => {
-    const alert = jest.spyOn(Alert, "alert").mockImplementation(() => undefined);
+  it("edits the block without a Delete: that lives in its screen's menu", async () => {
     await renderWithHang(<BlockFormScreen id="b1" />, hangData(), { workouts: [squat], plan });
+    expect(screen.queryByText("Delete block")).toBeNull();
+  });
+
+  it("deletes the block from its ··· menu, once confirmed, then goes back", async () => {
+    const alert = jest.spyOn(Alert, "alert").mockImplementation(() => undefined);
+    await renderWithHang(<BlockScreen id="b1" />, hangData(), { workouts: [squat], plan });
+    await fireEvent.press(screen.getByLabelText("More"));
+    expect(screen.getAllByText("Its plans go with it. What you logged stays.")).toHaveLength(1);
     await fireEvent.press(screen.getByText("Delete block"));
+    expect(alert.mock.calls[0]?.[0]).toBe("Delete Winter base?");
+    expect(mockPlan.deleteBlock).not.toHaveBeenCalled();
     const buttons = alert.mock.calls[0]?.[2] as AlertButton[];
     buttons.find((b) => b.style === "destructive")?.onPress?.();
     expect(mockPlan.deleteBlock).toHaveBeenCalledWith("b1");
-    expect(router.dismiss).toHaveBeenCalledWith(2);
+    expect(router.back).toHaveBeenCalled();
   });
 });
 

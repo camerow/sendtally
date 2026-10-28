@@ -1,8 +1,7 @@
 import { describe, expect, it, jest } from "@jest/globals";
-import { act, fireEvent, screen } from "@testing-library/react-native";
+import { fireEvent, screen } from "@testing-library/react-native";
 import { router } from "expo-router";
 import React from "react";
-import { Alert } from "react-native";
 import type { HangSessionRecord } from "@sendtally/api-client";
 import { hangData, renderWithHang } from "../data/renderWithHang";
 import { HangSessionForm } from "./HangSessionForm";
@@ -60,19 +59,8 @@ describe("Editing a hangboard session", () => {
     expect(router.back).toHaveBeenCalled();
   });
 
-  it("deletes it with its summary only once confirmed", async () => {
-    const alert = jest.spyOn(Alert, "alert");
-    const { actions } = await renderWithHang(
-      <HangSessionForm session={session} />,
-      hangData({ sessions: [session] })
-    );
-    await fireEvent.press(screen.getByText("Delete workout"));
-    expect(alert.mock.calls[0]?.[0]).toBe("Delete Repeaters 7/3?");
-    expect(actions.deleteSession).not.toHaveBeenCalled();
-    const buttons = alert.mock.calls[0]?.[2] ?? [];
-    await act(async () => buttons.find((b) => b.style === "destructive")?.onPress?.());
-    expect(actions.deleteSession).toHaveBeenCalledWith("h1");
-    expect(router.dismiss).toHaveBeenCalledWith(2);
-    alert.mockRestore();
+  it("edits without a Delete: that lives in the summary's menu", async () => {
+    await renderWithHang(<HangSessionForm session={session} />, hangData({ sessions: [session] }));
+    expect(screen.queryByText("Delete workout")).toBeNull();
   });
 });

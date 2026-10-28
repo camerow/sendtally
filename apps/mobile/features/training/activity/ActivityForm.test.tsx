@@ -246,20 +246,10 @@ describe("Log activity", () => {
     expect(screen.queryByText("Save as workout")).toBeNull();
   });
 
-  it("edits under the workout's name, and deletes it with the summary only once confirmed", async () => {
-    const alert = jest.spyOn(Alert, "alert");
-    alert.mockClear();
+  it("edits under the workout's name, with no Delete: that lives in the summary's menu", async () => {
     const initial = newActivityDraft({ kind: "strength", title: "Lower body" }, "2026-10-22");
     await render(<ActivityForm id="a1" initial={initial} logged={logged()} />);
     expect(screen.getByText("Edit workout")).toBeTruthy();
-    await fireEvent.press(screen.getByText("Delete workout"));
-    expect(alert.mock.calls[0]?.[0]).toBe("Delete Lower body?");
-    expect(alert.mock.calls[0]?.[1]).toBeUndefined();
-    expect(mockActions.deleteActivity).not.toHaveBeenCalled();
-    const buttons = alert.mock.calls[0]?.[2] ?? [];
-    await act(async () => buttons.find((b) => b.style === "destructive")?.onPress?.());
-    expect(mockActions.deleteActivity).toHaveBeenCalledWith("a1");
-    expect(router.dismiss).toHaveBeenCalledWith(2);
-    alert.mockRestore();
+    expect(screen.queryByText("Delete workout")).toBeNull();
   });
 });

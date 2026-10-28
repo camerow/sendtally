@@ -7,7 +7,6 @@ import { colors } from "@sendtally/design/tokens";
 import { formatNumber, t } from "@sendtally/features/i18n";
 import { usePlan } from "@sendtally/features/training";
 import { useApi } from "../../../lib/api";
-import { confirmDestructive } from "../../../lib/confirmDestructive";
 import { Button } from "../components/Button";
 import { Label } from "../components/Label";
 import { SheetSection } from "../components/SheetSection";
@@ -54,17 +53,6 @@ export function BlockForm({ initial, highlight }: BlockFormProps): React.ReactEl
     if (isNew) router.replace({ pathname: "/plan/block/[id]", params: { id } });
     else router.back();
   };
-
-  const remove = (): void =>
-    confirmDestructive({
-      title: t("plan.deleteBlockTitle", { name: initial.name }),
-      body: t("plan.deleteBlockBody"),
-      action: t("common.delete"),
-      onConfirm: () => {
-        router.dismiss(2);
-        void actions.deleteBlock(initial.id);
-      },
-    });
 
   return (
     <ScreenFrame
@@ -145,12 +133,7 @@ export function BlockForm({ initial, highlight }: BlockFormProps): React.ReactEl
           keyboard="number-pad"
         />
       </SheetSection>
-      {!isNew && (
-        <>
-          <BlockWorkouts block={initial} highlight={highlight} />
-          <Button label={t("plan.deleteBlock")} onPress={remove} variant="danger" height={50} />
-        </>
-      )}
+      {!isNew && <BlockWorkouts block={initial} highlight={highlight} />}
     </ScreenFrame>
   );
 }
