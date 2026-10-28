@@ -1,7 +1,7 @@
 import type { SessionLogWithClimbs } from "@sendtally/api-client";
 import { FOCI, gripSeries, setupsOf, totalSeconds, type Focus } from "@sendtally/core/hang";
 import { gripSetupLabel } from "../hang/format";
-import { t } from "../i18n";
+import { formatNumber, t } from "../i18n";
 import { durationLabel } from "../log-session/transforms";
 import { focusLabel } from "../training/focus";
 import { isUnscored } from "../sessions/meta";
@@ -193,7 +193,9 @@ export function trainingInsightsVM(
   const minutes = shown.reduce((n, d) => n + d.minutes, 0);
   const line = [
     effortLine(effortOf(shown), effortOf(before)),
-    t("statistics.perWeek", { n: oneDecimal(shown.length / weeks) }),
+    t("statistics.perWeek", {
+      n: formatNumber(shown.length / weeks, { maximumFractionDigits: 1 }),
+    }),
   ].filter((p) => p !== null);
   const activities = log.activities.filter((a) => within(Date.parse(a.date)));
   const groups: ExerciseGroupVM[] = [

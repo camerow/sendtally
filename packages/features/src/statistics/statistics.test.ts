@@ -131,7 +131,7 @@ describe("trainingInsightsVM", () => {
 
   it("leaves an unscored session out of the effort but in the count", () => {
     const vm = trainingInsightsVM(log, "7d", ACTIVITY_KINDS, grip, NOW);
-    expect(vm.line).toBe("Effort 6.8, up 0.8 · 5.0 sessions a week");
+    expect(vm.line).toBe("Effort 6.8, up 0.8 · 5 sessions a week");
   });
 
   it("splits what was trained by sessions, with each kind's time", () => {

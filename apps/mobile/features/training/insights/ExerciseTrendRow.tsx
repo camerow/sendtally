@@ -12,8 +12,9 @@ import { type } from "../type";
 const SPARK = 6;
 const SPARK_HEIGHT = 20;
 
-/** "+6 kg": the change since the first time in range, in what the exercise is measured in. */
+/** "+6 kg": the change since the first time in range, in what the exercise is measured in; nothing when it did not move. */
 function changeText(row: ExerciseTrendVM, unit: WeightUnit): string {
+  if (row.change === 0 || row.count < 2) return "";
   return `${row.change < 0 ? "−" : "+"}${metricText(Math.abs(row.change), row.metric, unit)}`;
 }
 
@@ -37,7 +38,7 @@ export function ExerciseTrendRow({
       onPress={onPress}
       disabled={onPress === undefined}
       accessibilityRole={onPress === undefined ? undefined : "button"}
-      accessibilityLabel={`${row.name}, ${count}, ${change}`}
+      accessibilityLabel={[row.name, count, change].filter(Boolean).join(", ")}
       style={pressRow({
         minHeight: 44,
         flexDirection: "row",
@@ -69,7 +70,15 @@ export function ExerciseTrendRow({
         ))}
       </View>
       <Text
-        style={[type.monoBold, { width: 74, textAlign: "right", fontSize: 12, color: colors.fern }]}
+        style={[
+          type.monoBold,
+          {
+            width: 74,
+            textAlign: "right",
+            fontSize: 12,
+            color: row.change > 0 ? colors.fern : colors.textMuted,
+          },
+        ]}
       >
         {change}
       </Text>
