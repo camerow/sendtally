@@ -1,6 +1,5 @@
 import { setAudioModeAsync, useAudioPlayer } from "expo-audio";
 import React from "react";
-import { Vibration } from "react-native";
 import workSound from "../../../assets/sounds/work.wav";
 import { restAfter, restLeft, withMoreRest, type Rest } from "./restCountdown";
 
@@ -15,8 +14,8 @@ export type RestClock = {
 };
 
 /**
- * The one rest a player runs at a time. At zero it plays the hang timer's work tone and
- * buzzes, then clears.
+ * The one rest a player runs at a time. At zero it plays the hang timer's work tone, then
+ * clears.
  */
 export function useRest(): RestClock {
   const [rest, setRest] = React.useState<Rest | null>(null);
@@ -37,7 +36,6 @@ export function useRest(): RestClock {
       }
       void work.seekTo(0);
       work.play();
-      Vibration.vibrate();
       setRest(null);
     }, 250);
     return () => clearInterval(timer);

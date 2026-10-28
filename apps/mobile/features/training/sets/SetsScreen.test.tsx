@@ -2,7 +2,6 @@ import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals
 import { act, fireEvent, screen } from "@testing-library/react-native";
 import { router } from "expo-router";
 import React from "react";
-import { Vibration } from "react-native";
 import { hangData, renderWithHang } from "../data/renderWithHang";
 import type { WorkoutRun } from "../data/workoutRunParams";
 import { SetsScreen } from "./SetsScreen";
@@ -58,7 +57,10 @@ describe("Sets player", () => {
   });
 
   it("rests in line after each tick, folds a finished exercise, and logs the clock's minutes", async () => {
-    const buzz = jest.spyOn(Vibration, "vibrate").mockImplementation(() => undefined);
+    const { useAudioPlayer } = jest.requireMock<{ useAudioPlayer: () => { play: () => void } }>(
+      "expo-audio"
+    );
+    const tone = jest.spyOn(useAudioPlayer(), "play");
     await renderWithHang(<SetsScreen run={run} />, hangData(), {
       workouts: [
         {
@@ -98,10 +100,10 @@ describe("Sets player", () => {
     expect(screen.getByLabelText("Back squat, 2 of 2 sets")).toBeTruthy();
     expect(screen.getByText("Next: Row")).toBeTruthy();
     expect(screen.getByLabelText("Rest, 2:00 left")).toBeTruthy();
-    expect(buzz).not.toHaveBeenCalled();
+    expect(tone).not.toHaveBeenCalled();
     await advance(120_000);
     expect(screen.queryByText("Next: Row")).toBeNull();
-    expect(buzz).toHaveBeenCalledTimes(1);
+    expect(tone).toHaveBeenCalledTimes(1);
     expect(screen.getByLabelText("Row, set 1 · Weight").props.value).toBe("60");
     await fireEvent.press(screen.getByLabelText("Row, set 1"));
 
