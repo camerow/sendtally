@@ -18,11 +18,18 @@ export function tallyMeasureOf(
   return e.measure === "seconds" ? "wallTime" : null;
 }
 
-/** How the exercise a workout item names logs on the tally, by name in any case. */
+/**
+ * How the exercise a workout item names logs on the tally, by name in any case. In a climbing
+ * workout, one the library does not know logs climbs.
+ */
 export function tallyMeasuresOf(
-  exercises: readonly Pick<Exercise, "name" | "kind" | "measure">[]
+  exercises: readonly Pick<Exercise, "name" | "kind" | "measure">[],
+  workoutKind: WorkoutKind
 ): (name: string) => TallyMeasure | null {
-  return (name) => tallyMeasureOf(exercises.find((e) => exerciseKey(e.name) === exerciseKey(name)));
+  return (name) => {
+    const e = exercises.find((x) => exerciseKey(x.name) === exerciseKey(name));
+    return e === undefined && workoutKind === "climbing" ? "climbs" : tallyMeasureOf(e);
+  };
 }
 
 /** A climbing exercise's reps read as climbs and its time as time on the wall. */

@@ -58,7 +58,10 @@ export function SetsScreen({ run }: { run: WorkoutRun }): React.ReactElement {
   const [opened, setOpened] = React.useState<ReadonlySet<number>>(new Set());
   const rest = useRest();
   React.useEffect(() => () => exerciseTallyStorage.remove(), []);
-  const tallyMeasure = tallyMeasuresOf(exercises.status === "ready" ? exercises.data : []);
+  const tallyMeasure = tallyMeasuresOf(
+    exercises.status === "ready" ? exercises.data : [],
+    run.kind
+  );
   const tallyOf = (item: number): TallyMeasure | null =>
     tallyMeasure(run.items[item]?.exercise ?? "");
   const sets = allSets(run.items).filter((at) => tallyOf(at.item) === null);
