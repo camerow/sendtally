@@ -236,11 +236,10 @@ export function SessionsLog(): React.ReactElement {
 
   const filtersActive =
     filters.tags.length > 0 || filters.grouping === "tag" || filters.scope !== "all";
-  const caption = sessions === null ? t("common.loading") : logCountLabel(visible);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.white }} edges={["top"]}>
-      <ScreenHeader title={t("journal.log")} caption={caption} right={<AccountButton />} />
+      <ScreenHeader title={t("journal.log")} right={<AccountButton />} />
       <InsightsLink
         title={t("statistics.trainingInsights")}
         onPress={() => router.push("/training-insights")}
