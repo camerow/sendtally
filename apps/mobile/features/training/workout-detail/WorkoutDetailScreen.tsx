@@ -21,7 +21,6 @@ import { useHangData } from "../data/HangDataContext";
 import { GripPickerSheet } from "../grip-picker/GripPickerSheet";
 import { useLibrary, useNextSession } from "../library/useLibrary";
 import { PlanList } from "../plans/PlanList";
-import { SessionEditorSheet } from "../session-editor/SessionEditorSheet";
 import { startWorkout } from "../timer/startWorkout";
 import { TrendCard } from "../trends/TrendCard";
 import { GripSetupCard } from "./GripSetupCard";
@@ -48,7 +47,6 @@ function Detail({
   const workouts = useWorkoutActions(useApi(), reportFailure);
   const [gripId, setGripId] = React.useState(initialGrip ?? model.defaultGrip(workout));
   const [picker, setPicker] = React.useState(false);
-  const [editing, setEditing] = React.useState<string | null>(null);
   const mine = workout.source === "mine";
   const series = seriesFor(model.sessions, workout.id, gripId);
   const summary = summarise(series, today);
@@ -118,7 +116,10 @@ function Detail({
             unit={model.settings.units}
           />
         )}
-        <WorkoutHistory workoutId={workout.id} onOpen={setEditing} />
+        <WorkoutHistory
+          workoutId={workout.id}
+          onOpen={(id) => router.push({ pathname: "/activity/[id]", params: { id } })}
+        />
         <View style={{ gap: 8 }}>
           <Button
             label={t("workouts.duplicate")}
@@ -159,7 +160,6 @@ function Detail({
         onPick={chooseGrip}
         onClose={() => setPicker(false)}
       />
-      <SessionEditorSheet sessionId={editing} onClose={() => setEditing(null)} />
     </SafeAreaView>
   );
 }

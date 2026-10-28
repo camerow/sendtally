@@ -1,35 +1,34 @@
+import { router } from "expo-router";
 import React from "react";
-import { View } from "react-native";
+import { KeyboardAvoidingView, Platform, ScrollView, Text, View } from "react-native";
 import type { HangSessionRecord } from "@sendtally/api-client";
 import { clamp, parseNumber } from "@sendtally/core/hang";
+import { colors } from "@sendtally/design/tokens";
 import { shortDate } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
+import { hangTitle } from "@sendtally/features/sessions";
+import { confirmDestructive } from "../../../lib/confirmDestructive";
 import { Button } from "../components/Button";
 import { DateField } from "../components/DateField";
 import { EffortField } from "../components/EffortField";
 import { MonthCalendar } from "../components/MonthCalendar";
 import { SelectField } from "../components/SelectField";
-import { SheetHeader } from "../components/SheetHeader";
 import { SheetSection } from "../components/SheetSection";
 import { Stepper } from "../components/Stepper";
+import { Title } from "../components/Title";
 import { useHangData } from "../data/HangDataContext";
-import { HangSheet } from "../data/HangSheet";
 import { GripPickerSheet } from "../grip-picker/GripPickerSheet";
 import { loadControl } from "../loads/loadControl";
 import { EdgeField } from "../setup/EdgeField";
-import { confirmDestructive } from "../../../lib/confirmDestructive";
+import { type } from "../type";
 
 const PCT_STEP = 5;
 
-function Editor({
-  session,
-  onClose,
-}: {
-  session: HangSessionRecord;
-  onClose: () => void;
-}): React.ReactElement {
+export type HangSessionFormProps = { session: HangSessionRecord };
+
+/** Edit a finished hangboard session: its day, grip, edge, weight, completion and effort. */
+export function HangSessionForm({ session }: HangSessionFormProps): React.ReactElement {
   const { model, actions, today } = useHangData();
-  const [open, setOpen] = React.useState(true);
   const [draft, setDraft] = React.useState(session);
   const [calendar, setCalendar] = React.useState(false);
   const [picker, setPicker] = React.useState(false);
@@ -42,6 +41,7 @@ function Editor({
     timeUnits: { hangS: "s" as const, restS: "s" as const, setRestS: "min" as const },
   };
   const kind = session.protocol.kind;
+  const name = hangTitle(session);
   const load = loadControl(kind, draft.loadKg, model.settings.units, (loadKg) =>
     update({ loadKg })
   );
@@ -50,29 +50,43 @@ function Editor({
   const save = (): void => {
     const { stravaActivityId: _s, postState: _p, postError: _e, updatedAt: _u, ...fields } = draft;
     void actions.saveSession(fields);
-    setOpen(false);
+    router.back();
   };
+  // Edit sits over the summary, and both go once the session does.
   const remove = (): void =>
     confirmDestructive({
-      title: t("hang.deleteConfirmTitle"),
-      body:
-        session.stravaActivityId !== null ? t("hang.deleteFromLogStrava") : t("hang.deleteFromLog"),
+      title: t("workouts.deleteTitle", { name }),
       action: t("common.delete"),
       onConfirm: () => {
+        router.dismiss(2);
         void actions.deleteSession(session.id);
-        setOpen(false);
       },
     });
 
   return (
-    <HangSheet visible={open} onClose={onClose} closeLabel={t("hang.cancel")}>
-      <View style={{ gap: 20 }}>
-        <SheetHeader
-          kicker={shortDate(session.date)}
-          title={workout.name}
-          action={t("hang.cancel")}
-          onAction={() => setOpen(false)}
-        />
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+    >
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+          paddingHorizontal: 10,
+        }}
+      >
+        <Button label={t("common.cancel")} onPress={() => router.back()} variant="muted" />
+        <Text style={[type.bodyBold, { fontSize: 15, color: colors.gunmetal }]}>
+          {t("summary.editWorkout")}
+        </Text>
+        <Button label={t("common.save")} onPress={save} variant="plain" />
+      </View>
+      <ScrollView
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{ paddingHorizontal: 18, paddingTop: 4, paddingBottom: 32, gap: 18 }}
+      >
+        <Title size={28}>{name}</Title>
         <SheetSection label={t("hang.date")}>
           <DateField
             text={shortDate(draft.date)}
@@ -133,11 +147,8 @@ function Editor({
           />
         </SheetSection>
         <EffortField value={draft.rpe} onChange={(rpe) => update({ rpe })} />
-        <View style={{ gap: 6 }}>
-          <Button label={t("hang.saveChanges")} onPress={save} variant="primary" height={54} />
-          <Button label={t("hang.deleteSession")} onPress={remove} variant="danger" />
-        </View>
-      </View>
+        <Button label={t("summary.deleteWorkout")} onPress={remove} variant="danger" />
+      </ScrollView>
       <GripPickerSheet
         visible={picker}
         workout={workout}
@@ -146,33 +157,6 @@ function Editor({
         onPick={(gripId) => update({ gripId })}
         onClose={() => setPicker(false)}
       />
-    </HangSheet>
-  );
-}
-
-function EditorLoader({
-  sessionId,
-  onClose,
-}: {
-  sessionId: string;
-  onClose: () => void;
-}): React.ReactElement | null {
-  const { model } = useHangData();
-  const [session] = React.useState(() => model.sessions.find((s) => s.id === sessionId));
-  return session === undefined ? null : <Editor session={session} onClose={onClose} />;
-}
-
-export type SessionEditorSheetProps = { sessionId: string | null; onClose: () => void };
-
-/**
- * Edit or delete a logged hangboard session. The row is read once per open, so the sheet
- * can slide away after a delete has already taken the session out of the data.
- */
-export function SessionEditorSheet({
-  sessionId,
-  onClose,
-}: SessionEditorSheetProps): React.ReactElement | null {
-  return sessionId === null ? null : (
-    <EditorLoader key={sessionId} sessionId={sessionId} onClose={onClose} />
+    </KeyboardAvoidingView>
   );
 }

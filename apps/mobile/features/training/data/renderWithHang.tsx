@@ -4,6 +4,7 @@ import { render, type RenderResult } from "@testing-library/react-native";
 import React from "react";
 import type {
   ActivityRecord,
+  ConnectionStatus,
   Exercise,
   HangData as ApiHangData,
   Plan,
@@ -77,6 +78,8 @@ export type HangWorld = {
   plan?: Plan;
   exercises?: readonly Exercise[];
   activities?: readonly ActivityRecord[];
+  /** The account's connections; fetched, and so unknown at first, when left out. */
+  status?: ConnectionStatus;
 };
 
 /**
@@ -101,6 +104,7 @@ export async function renderWithHang(
   client.setQueryData(["activities"], world.activities ?? []);
   client.setQueryData(EXERCISES_KEY, [...(world.exercises ?? [])]);
   client.setQueryData(["sessions"], { sessions: [], hangSessions: [], activities: [] });
+  if (world.status !== undefined) client.setQueryData(["status"], world.status);
   const result = await render(
     <QueryClientProvider client={client}>
       <HangDataContext.Provider value={value}>{ui}</HangDataContext.Provider>

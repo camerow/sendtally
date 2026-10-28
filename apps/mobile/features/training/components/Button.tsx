@@ -7,7 +7,7 @@ import { HangIcon, type HangIconName } from "./HangIcon";
 import { ON_DARK, ON_DARK_LINE } from "./onDark";
 
 export type ButtonVariant =
-  "primary" | "gold" | "outline" | "dashed" | "danger" | "link" | "outlineDark";
+  "primary" | "gold" | "outline" | "dashed" | "danger" | "link" | "plain" | "muted" | "outlineDark";
 
 export type ButtonProps = {
   label: string;
@@ -30,6 +30,8 @@ const LOOKS: Record<ButtonVariant, { box: ViewStyle; ink: string }> = {
   },
   danger: { box: {}, ink: colors.watermelonInk },
   link: { box: {}, ink: colors.azureInk },
+  plain: { box: {}, ink: colors.gunmetal },
+  muted: { box: {}, ink: colors.textSecondary },
   outlineDark: { box: { borderWidth: 1, borderColor: ON_DARK_LINE }, ink: ON_DARK },
 };
 

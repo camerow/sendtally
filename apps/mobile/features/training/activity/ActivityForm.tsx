@@ -18,7 +18,6 @@ import {
   kindLabel,
   parseMinutes,
   stepMinutes,
-  trainingLoadLabel,
   useActivityActions,
   useWeightUnit,
   type ActivityDraft,
@@ -33,7 +32,6 @@ import { SheetSection } from "../components/SheetSection";
 import { Stepper } from "../components/Stepper";
 import { Title } from "../components/Title";
 import { type } from "../type";
-import { ActivityPostBar } from "./ActivityPostBar";
 import { DoneDetails } from "./DoneDetails";
 import { KindChips } from "./KindChips";
 import { confirmDestructive } from "../../../lib/confirmDestructive";
@@ -41,9 +39,9 @@ import { confirmDestructive } from "../../../lib/confirmDestructive";
 export type ActivityFormProps = {
   id: string;
   initial: ActivityDraft;
-  /** The activity as logged, which can be deleted and posted to Strava; null while logging a new one. */
+  /** The activity as logged, which can be deleted; null while logging a new one. */
   logged: ActivityRecord | null;
-  /** A player ran it: its start, length and load are already known, so only the date shows. */
+  /** A player ran it: its start and length are already known, so only the date shows. */
   timed?: boolean;
   /** It came with a kind, from a workout; a logged activity always has one. */
   kindSet?: boolean;
@@ -69,7 +67,7 @@ const itemsOf = (done: readonly ItemDone[]) =>
     .filter((d) => d.sets.length > 0)
     .map((d) => ({ exercise: d.exercise, dose: { ...d.sets[0], sets: d.sets.length } }));
 
-/** Log or edit one activity: kind, title, when, how long, how hard, its sets or checklist, and its training load. */
+/** Log or edit one activity: kind, title, when, how long, how hard, and its sets or checklist. Save sits in the header. */
 export function ActivityForm({
   id,
   initial,
@@ -81,7 +79,6 @@ export function ActivityForm({
   const actions = useActivityActions(api, reportFailure);
   const [draft, setDraft] = React.useState(initial);
   const update = (patch: Partial<ActivityDraft>): void => setDraft((d) => ({ ...d, ...patch }));
-  const load = trainingLoadLabel(draft);
   const unit = useWeightUnit(api);
   const workouts = useWorkoutActions(api, reportFailure);
   const items = itemsOf(draft.done);
@@ -104,16 +101,14 @@ export function ActivityForm({
     void actions.saveActivity(activityFromDraft(id, draft));
     router.back();
   };
+  const name = draft.title.trim() || kindLabel(draft.kind);
+  // Edit sits over the summary, and both go once the workout does.
   const remove = (): void =>
     confirmDestructive({
-      title: t("activities.deleteTitle"),
-      body:
-        logged === null || logged.stravaActivityId === null
-          ? t("activities.deleteBody")
-          : t("activities.deleteBodyStrava"),
+      title: t("workouts.deleteTitle", { name }),
       action: t("common.delete"),
       onConfirm: () => {
-        router.back();
+        router.dismiss(2);
         void actions.deleteActivity(id);
       },
     });
@@ -123,30 +118,35 @@ export function ActivityForm({
       style={{ flex: 1 }}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+          paddingHorizontal: 10,
+        }}
+      >
+        <Button label={t("common.cancel")} onPress={() => router.back()} variant="muted" />
+        <Text style={[type.bodyBold, { fontSize: 15, color: colors.gunmetal }]}>
+          {logged !== null ? t("summary.editWorkout") : t("activities.logActivity")}
+        </Text>
+        <Button label={t("common.save")} onPress={save} variant="plain" />
+      </View>
       <ScrollView
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={{
           paddingHorizontal: 18,
-          paddingTop: 12,
+          paddingTop: 4,
           paddingBottom: 32,
           gap: 18,
         }}
       >
-        <View
-          style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}
-        >
-          <Title size={28}>
-            {logged !== null ? t("activities.editActivity") : t("activities.logActivity")}
-          </Title>
-          <Button label={t("common.cancel")} onPress={() => router.back()} variant="link" />
-        </View>
-
         {logged === null && !kindSet && (
           <KindChips value={draft.kind} onChange={(kind) => update({ kind })} />
         )}
 
         {draft.workoutId !== null ? (
-          <Title size={28}>{draft.title.trim() || kindLabel(draft.kind)}</Title>
+          <Title size={28}>{name}</Title>
         ) : (
           <SheetSection label={t("activities.title")}>
             <TextInput
@@ -235,44 +235,12 @@ export function ActivityForm({
           />
         </SheetSection>
 
-        {!timed && (
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "space-between",
-              gap: 12,
-              paddingVertical: 12,
-              paddingHorizontal: 14,
-              borderRadius: radius.control,
-              borderWidth: 1,
-              borderStyle: "dashed",
-              borderColor: colors.lineOnLightStrong,
-            }}
-          >
-            <Text style={[type.body, { fontSize: 14, color: colors.gunmetal }]}>
-              {t("activities.trainingLoad")}
-            </Text>
-            <Text
-              style={[
-                load === null ? type.body : type.monoBold,
-                { fontSize: 14, color: load === null ? colors.textMuted : colors.gunmetal },
-              ]}
-            >
-              {load ?? t("activities.loadNeedsEffort")}
-            </Text>
-          </View>
-        )}
-
-        {logged !== null && <ActivityPostBar activity={logged} />}
-
         <View style={{ gap: 6 }}>
-          <Button label={t("common.save")} onPress={save} variant="primary" height={54} />
           {logged !== null && items.length > 0 && (
             <Button label={t("workouts.saveAsWorkout")} onPress={saveAsWorkout} variant="link" />
           )}
           {logged !== null && (
-            <Button label={t("activities.deleteActivity")} onPress={remove} variant="danger" />
+            <Button label={t("summary.deleteWorkout")} onPress={remove} variant="danger" />
           )}
         </View>
       </ScrollView>

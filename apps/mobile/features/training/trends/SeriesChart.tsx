@@ -20,9 +20,11 @@ export type SeriesChartProps = {
   label: string;
   /** Changes when the series does, to fade the new one in. */
   seriesKey: string;
+  /** The point drawn in gold; the latest unless given. */
+  marked?: number;
 };
 
-/** Values over time: filled dots, hollow ones for partials, the latest in gold. */
+/** Values over time: filled dots, hollow ones for partials, the latest or the marked one in gold. */
 export function SeriesChart({
   values,
   hollow,
@@ -30,13 +32,14 @@ export function SeriesChart({
   edge,
   label,
   seriesKey,
+  marked = values.length - 1,
 }: SeriesChartProps): React.ReactElement {
   const [width, setWidth] = React.useState(0);
   const [lo, hi] = paddedRange(values, air);
   const points = plot(values, lo, hi, width, HEIGHT, PAD);
   const complete = points.filter((_, i) => hollow[i] !== true);
   const partial = points.filter((_, i) => hollow[i] === true);
-  const latest = points.slice(-1);
+  const latest = points.slice(marked, marked + 1);
   const rules = `M0 ${PAD}H${width}M0 ${HEIGHT - PAD}H${width}`;
   const axisText = [type.mono, { fontSize: 10, color: colors.textSecondary }];
 

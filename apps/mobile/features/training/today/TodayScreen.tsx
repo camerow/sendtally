@@ -26,7 +26,6 @@ import { blockOn } from "../calendar/calendarGrid";
 import { Label } from "../components/Label";
 import { useHangData } from "../data/HangDataContext";
 import { AddKindSheet } from "../planning/AddKindSheet";
-import { SessionEditorSheet } from "../session-editor/SessionEditorSheet";
 import { BlockRow } from "../train/BlockRow";
 import { DaySection } from "./DaySection";
 import { WeekStrip } from "./WeekStrip";
@@ -42,7 +41,6 @@ export function TodayScreen(): React.ReactElement {
   const { log } = useTrainingLog(useApi());
   const [offset, setOffset] = React.useState(0);
   const [selected, setSelected] = React.useState<CalendarDate>(today);
-  const [editing, setEditing] = React.useState<string | null>(null);
   const [adding, setAdding] = React.useState(false);
   const request = asked.date !== undefined && isCalendarDate(asked.date) ? asked.date : null;
   const [seen, setSeen] = React.useState<string | null>(null);
@@ -75,7 +73,8 @@ export function TodayScreen(): React.ReactElement {
     setSelected(addDays(addDays(weekStart(today), next * 7), weekday(selected)));
   };
   const open = (item: LoggedItem): void => {
-    if (item.kind === "hang") setEditing(item.session.id);
+    if (item.kind === "hang")
+      router.push({ pathname: "/activity/[id]", params: { id: item.session.id } });
     else if (item.kind === "activity")
       router.push({ pathname: "/activity/[id]", params: { id: item.activity.id } });
     else
@@ -120,7 +119,6 @@ export function TodayScreen(): React.ReactElement {
         visible={adding}
         onClose={() => setAdding(false)}
       />
-      <SessionEditorSheet sessionId={editing} onClose={() => setEditing(null)} />
     </View>
   );
 }

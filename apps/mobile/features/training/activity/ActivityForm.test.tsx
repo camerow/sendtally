@@ -5,19 +5,16 @@ import { Alert } from "react-native";
 import React from "react";
 import type { ActivityRecord } from "@sendtally/api-client";
 import type * as Activities from "@sendtally/features/activities";
-import {
-  activityFromDraft,
-  newActivityDraft,
-  type ActivityPostFeature,
-} from "@sendtally/features/activities";
+import { activityFromDraft, newActivityDraft } from "@sendtally/features/activities";
 import { ActivityForm } from "./ActivityForm";
 
 const mockActions = { saveActivity: jest.fn(), deleteActivity: jest.fn() };
-const mockPost = { busy: false, error: null, run: jest.fn() };
 const mockWorkouts = { saveWorkout: jest.fn(), deleteWorkout: jest.fn() };
 
 jest.mock("../../../components/Sheet", () => ({ Sheet: () => null }));
-jest.mock("expo-router", () => ({ router: { back: jest.fn(), push: jest.fn() } }));
+jest.mock("expo-router", () => ({
+  router: { back: jest.fn(), push: jest.fn(), dismiss: jest.fn() },
+}));
 jest.mock("expo-crypto", () => ({ randomUUID: () => "w-new" }));
 jest.mock("@sendtally/features/workouts", () => ({ useWorkoutActions: () => mockWorkouts }));
 jest.mock("../../../lib/api", () => ({ useApi: () => undefined }));
@@ -27,10 +24,6 @@ jest.mock("@sendtally/features/activities", () => {
     ...actual,
     useActivityActions: () => mockActions,
     useWeightUnit: () => "kg",
-    useActivityPost: (_api: unknown, activity: ActivityRecord): ActivityPostFeature => ({
-      vm: actual.activityPostVM(activity, { connected: true, active: true, since: null }),
-      action: mockPost,
-    }),
   };
 });
 
@@ -44,14 +37,15 @@ const logged = (post: Partial<ActivityRecord> = {}): ActivityRecord => ({
 });
 
 describe("Log activity", () => {
-  it("saves an untitled activity under its kind's name with its effort and load", async () => {
+  it("saves an untitled activity under its kind's name with its effort, from the header", async () => {
     await render(
       <ActivityForm id="a1" initial={newActivityDraft({}, "2026-10-22")} logged={null} />
     );
     await fireEvent.press(screen.getByText("Mobility"));
     await fireEvent.press(screen.getByLabelText("5 minutes less"));
     await fireEvent.press(screen.getByLabelText("Effort 7 of 10"));
-    expect(screen.getByText("55 min × 7 = 385")).toBeTruthy();
+    expect(screen.queryByText("Training load")).toBeNull();
+    expect(screen.getAllByText("Save")).toHaveLength(1);
     await fireEvent.press(screen.getByText("Save"));
 
     expect(mockActions.saveActivity).toHaveBeenCalledWith({
@@ -81,7 +75,6 @@ describe("Log activity", () => {
     expect(screen.queryByTestId("activity-time")).toBeNull();
     expect(screen.queryByText("Strength")).toBeNull();
     expect(screen.queryByLabelText("5 minutes less")).toBeNull();
-    expect(screen.queryByText("Training load")).toBeNull();
     await fireEvent.press(screen.getByText("Save"));
     expect(mockActions.saveActivity).toHaveBeenLastCalledWith(
       expect.objectContaining({ kind: "mobility", startTime: "07:00", minutes: 4 })
@@ -251,51 +244,20 @@ describe("Log activity", () => {
     expect(screen.queryByText("Save as workout")).toBeNull();
   });
 
-  it("deletes an existing activity only once confirmed", async () => {
+  it("edits under the workout's name, and deletes it with the summary only once confirmed", async () => {
     const alert = jest.spyOn(Alert, "alert");
-    await render(
-      <ActivityForm id="a1" initial={newActivityDraft({}, "2026-10-22")} logged={logged()} />
-    );
-    await fireEvent.press(screen.getByText("Delete activity"));
-    expect(alert.mock.calls[0]?.[1]).toBe(
-      "It comes out of your log and your statistics. This can’t be undone."
-    );
+    alert.mockClear();
+    const initial = newActivityDraft({ kind: "strength", title: "Lower body" }, "2026-10-22");
+    await render(<ActivityForm id="a1" initial={initial} logged={logged()} />);
+    expect(screen.getByText("Edit workout")).toBeTruthy();
+    await fireEvent.press(screen.getByText("Delete workout"));
+    expect(alert.mock.calls[0]?.[0]).toBe("Delete Lower body?");
+    expect(alert.mock.calls[0]?.[1]).toBeUndefined();
     expect(mockActions.deleteActivity).not.toHaveBeenCalled();
     const buttons = alert.mock.calls[0]?.[2] ?? [];
-    buttons.find((b) => b.style === "destructive")?.onPress?.();
+    await act(async () => buttons.find((b) => b.style === "destructive")?.onPress?.());
     expect(mockActions.deleteActivity).toHaveBeenCalledWith("a1");
-  });
-
-  it("posts a logged activity to Strava on request", async () => {
-    await render(
-      <ActivityForm id="a1" initial={newActivityDraft({}, "2026-10-22")} logged={logged()} />
-    );
-    expect(screen.getByText("Not posted to Strava")).toBeTruthy();
-    await fireEvent.press(screen.getByText("Post to Strava"));
-    expect(mockPost.run).toHaveBeenCalled();
-  });
-
-  it("offers a retry after a failed post and keeps the Strava activity on delete", async () => {
-    const alert = jest.spyOn(Alert, "alert");
-    await render(
-      <ActivityForm
-        id="a1"
-        initial={newActivityDraft({}, "2026-10-22")}
-        logged={logged({ postState: "failed", postError: "strava rate limit hit, not posted yet" })}
-      />
-    );
-    expect(screen.getByText("strava rate limit hit, not posted yet")).toBeTruthy();
-    expect(screen.getByText("Retry")).toBeTruthy();
-    alert.mockClear();
-    await render(
-      <ActivityForm
-        id="a1"
-        initial={newActivityDraft({}, "2026-10-22")}
-        logged={logged({ stravaActivityId: "9", postedAt: "2026-10-22T10:00:00Z" })}
-      />
-    );
-    expect(screen.queryByText("Post to Strava")).toBeNull();
-    await fireEvent.press(screen.getByText("Delete activity"));
-    expect(alert.mock.calls[0]?.[1]).toContain("so the Strava activity stays");
+    expect(router.dismiss).toHaveBeenCalledWith(2);
+    alert.mockRestore();
   });
 });

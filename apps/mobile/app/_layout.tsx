@@ -63,6 +63,7 @@ const SIGNED_IN_SCREENS = [
   "plan/membership/[id]",
   "activity/new",
   "activity/[id]",
+  "activity/[id]/edit",
   "exercise/[id]",
   "plan/calendar",
   "plan/day",

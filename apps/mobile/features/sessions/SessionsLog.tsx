@@ -36,8 +36,6 @@ import { DEFAULT_FILTERS, FilterSheet, type SessionFilters } from "./FilterSheet
 import { ScopeBar } from "./ScopeBar";
 import { SECTION_HEADER_HEIGHT, SectionHeader } from "./SectionHeader";
 import { InsightsLink } from "../../components/InsightsLink";
-import { HangDataProvider } from "../training/data/HangDataProvider";
-import { SessionEditorSheet } from "../training/session-editor/SessionEditorSheet";
 import { ACTIVITY_ROW_HEIGHT, ActivityRow } from "./ActivityRow";
 import { HANG_ROW_HEIGHT, HangRow } from "./HangRow";
 import { SessionRow, sessionRowHeight } from "./SessionRow";
@@ -57,7 +55,7 @@ const rowHeight = (item: LogItem): number => {
   return item.inside.length > 0 ? tripGroupHeight(item) : entryRowHeight(item.entry);
 };
 
-const openItem = (item: LogItem, editHang: (id: string) => void): void => {
+const openItem = (item: LogItem): void => {
   if (item.type === "session") {
     router.push({
       pathname: "/session/[fingerprint]",
@@ -65,10 +63,9 @@ const openItem = (item: LogItem, editHang: (id: string) => void): void => {
     });
   } else if (item.type === "entry") {
     router.push({ pathname: "/journal/[id]", params: { id: item.entry.id } });
-  } else if (item.type === "activity") {
-    router.push({ pathname: "/activity/[id]", params: { id: item.activity.id } });
   } else {
-    editHang(item.hang.id);
+    const id = item.type === "activity" ? item.activity.id : item.hang.id;
+    router.push({ pathname: "/activity/[id]", params: { id } });
   }
 };
 
@@ -123,8 +120,6 @@ export function SessionsLog(): React.ReactElement {
   const [filters, setFilters] = React.useState<SessionFilters>(DEFAULT_FILTERS);
   const [filtersOpen, setFiltersOpen] = React.useState(false);
   const [currentKey, setCurrentKey] = React.useState<string | null>(null);
-  const [editingHang, setEditingHang] = React.useState<string | null>(null);
-  const open = (item: LogItem): void => openItem(item, setEditingHang);
   // ponytail: a second status() read per mount, to know if Strava is live; a Strava-status context across tabs if it ever matters
   const settings = useSettings(api);
   const live = useLiveSession(liveSessionStorage);
@@ -330,25 +325,20 @@ export function SessionsLog(): React.ReactElement {
             <SessionRow
               session={item.session}
               title={sessionTitle(item.session)}
-              onPress={() => open(item)}
+              onPress={() => openItem(item)}
             />
           ) : item.type === "hang" ? (
-            <HangRow hang={item.hang} onPress={() => open(item)} />
+            <HangRow hang={item.hang} onPress={() => openItem(item)} />
           ) : item.type === "activity" ? (
-            <ActivityRow activity={item.activity} onPress={() => open(item)} />
+            <ActivityRow activity={item.activity} onPress={() => openItem(item)} />
           ) : item.inside.length > 0 ? (
-            <TripGroup item={item} onOpen={open} />
+            <TripGroup item={item} onOpen={openItem} />
           ) : (
-            <EntryRow entry={item.entry} onPress={() => open(item)} />
+            <EntryRow entry={item.entry} onPress={() => openItem(item)} />
           )
         }
       />
       <LogFab />
-      {editingHang !== null && (
-        <HangDataProvider fallback={null}>
-          <SessionEditorSheet sessionId={editingHang} onClose={() => setEditingHang(null)} />
-        </HangDataProvider>
-      )}
       <FilterSheet
         visible={filtersOpen}
         items={all}

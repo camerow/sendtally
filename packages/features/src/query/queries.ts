@@ -68,7 +68,15 @@ export const queries = {
       queryKey: ["moderation", "creations"],
       queryFn: () => api.moderationCreations(),
     }),
-  hang: (api: SendtallyApi) => queryOptions({ queryKey: ["hang"], queryFn: () => api.hang() }),
+  hang: (api: SendtallyApi) =>
+    queryOptions({
+      queryKey: ["hang"],
+      queryFn: () => api.hang(),
+      refetchInterval: (query) =>
+        query.state.data?.sessions.some((s) => s.postState === "pending") === true
+          ? POST_POLL_INTERVAL
+          : false,
+    }),
   activities: (api: SendtallyApi) =>
     queryOptions({
       queryKey: ["activities"],

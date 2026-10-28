@@ -21,6 +21,7 @@ import { sessions } from "./sessions";
 import { tally } from "./tally";
 import { settings } from "./settings";
 import { statistics } from "./statistics";
+import { summary } from "./summary";
 import { trends } from "./trends";
 import { training } from "./training";
 import { workouts } from "./workouts";
@@ -49,6 +50,7 @@ export const es = {
   ...tally,
   ...settings,
   ...statistics,
+  ...summary,
   ...trends,
   ...training,
   ...workouts,

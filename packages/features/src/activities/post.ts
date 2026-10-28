@@ -1,34 +1,43 @@
-import type { ActivityRecord } from "@sendtally/api-client";
-import { formatDate, t } from "../i18n";
-import type { PostingStatus, PostStatusVM } from "../session-detail/types";
+import type { ActivityPostState } from "@sendtally/api-client";
+import type { PostingStatus } from "../session-detail/types";
 
-/** Where an activity stands with Strava, and what the user can do about it. */
-export function activityPostVM(a: ActivityRecord, posting: PostingStatus | null): PostStatusVM {
-  const base = { detail: null, alert: false, action: null, actionLabel: null } as const;
-  if (a.stravaActivityId !== null) {
-    const on = new Date(a.postedAt ?? `${a.date}T12:00:00Z`);
-    const date = formatDate(on, { month: "short", day: "numeric", timeZone: "UTC" });
-    return { ...base, kind: "posted", label: t("sessionDetail.postedOn", { date }) };
-  }
-  if (a.postState === "pending") {
-    return { ...base, kind: "pending", label: t("sessionDetail.postingToStrava") };
-  }
-  const postable = posting !== null && posting.connected && posting.active;
-  if (a.postState === "failed") {
+/** What a finished workout carries about Strava; a hang session has no posting time. */
+export type PostFields = {
+  stravaActivityId: string | null;
+  postState: ActivityPostState | null;
+  postError: string | null;
+  postedAt?: string | null;
+};
+
+/** Where a finished workout stands with Strava, which decides its menu row and status row. */
+export type StravaState =
+  | { kind: "connect" }
+  | { kind: "post" }
+  | { kind: "posting" }
+  | { kind: "posted"; url: string; postedAt: string | null }
+  | { kind: "failed"; reason: string | null };
+
+/**
+ * Posted wins, then a post in flight. Without a live connection the way forward is to
+ * connect; a failure offers another go; null until the connection is known.
+ */
+export function stravaState(
+  record: PostFields,
+  posting: PostingStatus | null,
+  busy: boolean,
+  error: string | null
+): StravaState | null {
+  if (record.stravaActivityId !== null) {
     return {
-      kind: "failed",
-      label: t("sessionDetail.notPostedToStrava"),
-      detail: a.postError,
-      alert: true,
-      action: postable ? "retry" : null,
-      actionLabel: postable ? t("sessionDetail.retry") : null,
+      kind: "posted",
+      url: `https://www.strava.com/activities/${record.stravaActivityId}`,
+      postedAt: record.postedAt ?? null,
     };
   }
-  return {
-    ...base,
-    kind: "off",
-    label: t("sessionDetail.notPostedToStrava"),
-    action: postable ? "post" : null,
-    actionLabel: postable ? t("sessionDetail.postToStrava") : null,
-  };
+  if (busy || record.postState === "pending") return { kind: "posting" };
+  if (posting !== null && !(posting.connected && posting.active)) return { kind: "connect" };
+  if (error !== null || record.postState === "failed") {
+    return { kind: "failed", reason: error ?? record.postError };
+  }
+  return posting === null ? null : { kind: "post" };
 }
