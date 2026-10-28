@@ -9,17 +9,10 @@ import { BackButton } from "../../components/BackButton";
 import { Icon } from "../../components/Icon";
 import { useApi } from "../../lib/api";
 import { press, pressRow } from "../../lib/press";
+import { LabelTile } from "./LabelTile";
 import { RenameSheet } from "./RenameSheet";
 
-const eyebrow = {
-  fontFamily: fonts.monoMedium,
-  fontSize: 11,
-  letterSpacing: 0.9,
-  textTransform: "uppercase",
-  color: colors.textSecondary,
-} as const;
-
-/** Every visit to one climb, newest first, and a way to log today's. */
+/** One climb: a Project pill to mark it, its days, tries and best, and every session on it. */
 export function ClimbDetailScreen({ id }: { id: string }): React.ReactElement {
   const api = useApi();
   const { state, setWorking, rename } = useClimb(api, id);
@@ -50,10 +43,6 @@ export function ClimbDetailScreen({ id }: { id: string }): React.ReactElement {
   const more = (): void =>
     Alert.alert(vm.name, undefined, [
       { text: t("climbs.rename"), onPress: () => setRenaming((n) => n + 1) },
-      {
-        text: vm.working ? t("climbs.stopWorking") : t("climbs.markWorking"),
-        onPress: () => void setWorking(!vm.working),
-      },
       { text: t("common.cancel"), style: "cancel" },
     ]);
 
@@ -84,126 +73,135 @@ export function ClimbDetailScreen({ id }: { id: string }): React.ReactElement {
         }}
       >
         <BackButton label={t("climbs.title")} />
-        <Pressable
-          onPress={more}
-          accessibilityRole="button"
-          accessibilityLabel={t("climbs.more")}
-          style={press({ width: 44, height: 44, alignItems: "center", justifyContent: "center" })}
-        >
-          <Icon name="more" color={colors.gunmetal} size={20} strokeWidth={3} />
-        </Pressable>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+          <Pressable
+            onPress={() => void setWorking(!vm.project)}
+            accessibilityRole="switch"
+            accessibilityState={{ checked: vm.project }}
+            accessibilityLabel={t("common.project")}
+            style={press({
+              height: 36,
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 6,
+              paddingHorizontal: 12,
+              borderRadius: 18,
+              backgroundColor: vm.project ? colors.gold : colors.surfaceSoft,
+            })}
+          >
+            <Icon name="star" color={colors.gunmetal} size={15} strokeWidth={2} />
+            <Text
+              style={{ fontFamily: fonts.sansSemiBold, fontSize: 13.5, color: colors.gunmetal }}
+            >
+              {t("common.project")}
+            </Text>
+          </Pressable>
+          <Pressable
+            onPress={more}
+            accessibilityRole="button"
+            accessibilityLabel={t("climbs.more")}
+            style={press({ width: 44, height: 44, alignItems: "center", justifyContent: "center" })}
+          >
+            <Icon name="more" color={colors.gunmetal} size={20} strokeWidth={3} />
+          </Pressable>
+        </View>
       </View>
       <ScrollView
-        contentContainerStyle={{ gap: 14, paddingHorizontal: 18, paddingTop: 4, paddingBottom: 24 }}
+        contentContainerStyle={{
+          gap: 14,
+          paddingHorizontal: 18,
+          paddingTop: 10,
+          paddingBottom: 24,
+        }}
       >
-        <Text style={eyebrow}>{vm.eyebrow}</Text>
-        <View
-          style={{ flexDirection: "row", alignItems: "baseline", flexWrap: "wrap", columnGap: 14 }}
-        >
-          <Text
-            accessibilityRole="header"
-            style={{
-              fontFamily: fonts.displayHeavy,
-              fontSize: 38,
-              lineHeight: 42,
-              letterSpacing: -1.1,
-              color: colors.gunmetal,
-            }}
-          >
-            {vm.name}
-          </Text>
-          {vm.gradeLabel !== null && (
-            <Text
-              style={{
-                fontFamily: fonts.displayHeavy,
-                fontSize: 38,
-                lineHeight: 42,
-                letterSpacing: -1.1,
-                color: colors.azureInk,
-              }}
-            >
-              {vm.gradeLabel}
-            </Text>
-          )}
-        </View>
-        <Text style={{ fontFamily: fonts.sans, fontSize: 15, color: colors.gunmetal }}>
-          {vm.status}
+        <Text style={{ fontFamily: fonts.mono, fontSize: 12.5, color: colors.textSecondary }}>
+          {vm.eyebrow}
         </Text>
+        <Text
+          accessibilityRole="header"
+          style={{
+            fontFamily: fonts.displayHeavy,
+            fontSize: 34,
+            lineHeight: 38,
+            letterSpacing: -1,
+            color: colors.gunmetal,
+          }}
+        >
+          {vm.name}
+        </Text>
+        <View style={{ flexDirection: "row", gap: 8 }}>
+          <LabelTile label={t("climbs.days")} value={vm.days} />
+          <LabelTile label={t("logSession.tries")} value={vm.tries} />
+          <LabelTile label={t("statistics.best")} value={vm.best} />
+        </View>
         <View>
-          {vm.visits.map((v) => (
+          {vm.sessions.map((s) => (
             <Pressable
-              key={v.fingerprint}
+              key={s.fingerprint}
               onPress={() =>
                 router.push({
                   pathname: "/session/[fingerprint]",
-                  params: { fingerprint: v.fingerprint },
+                  params: { fingerprint: s.fingerprint },
                 })
               }
               accessibilityRole="button"
               style={pressRow({
+                minHeight: 60,
                 flexDirection: "row",
-                gap: 14,
-                paddingVertical: 12,
+                alignItems: "center",
+                gap: 12,
+                paddingVertical: 10,
                 borderBottomWidth: 1,
                 borderBottomColor: colors.lineOnLightSoft,
               })}
             >
-              <View style={{ width: 40, alignItems: "center" }}>
-                <Text style={{ ...eyebrow, fontSize: 9 }}>{v.month}</Text>
-                <Text
-                  style={{ fontFamily: fonts.monoSemiBold, fontSize: 18, color: colors.gunmetal }}
-                >
-                  {v.dayOfMonth}
-                </Text>
-              </View>
               <View style={{ flex: 1, gap: 3 }}>
                 <Text
                   style={{ fontFamily: fonts.sansSemiBold, fontSize: 15, color: colors.gunmetal }}
                 >
-                  {v.triesLabel}
+                  {s.dateLabel}
                 </Text>
-                {v.note !== null && (
+                <Text
+                  style={{ fontFamily: fonts.sans, fontSize: 12.5, color: colors.textSecondary }}
+                >
+                  {s.meta}
+                </Text>
+                {s.note !== null && (
                   <Text
                     style={{
                       fontFamily: fonts.sans,
                       fontSize: 14,
                       lineHeight: 20,
-                      color: colors.textSecondary,
+                      color: colors.gunmetal,
                     }}
                   >
-                    {v.note}
+                    {s.note}
                   </Text>
                 )}
               </View>
+              <Text style={{ fontFamily: fonts.mono, fontSize: 13, color: colors.gunmetal }}>
+                {s.triesLabel}
+              </Text>
             </Pressable>
           ))}
         </View>
-      </ScrollView>
-      <View
-        style={{
-          paddingHorizontal: 18,
-          paddingTop: 12,
-          paddingBottom: 10,
-          borderTopWidth: 1,
-          borderTopColor: colors.lineOnLight,
-        }}
-      >
         <Pressable
           onPress={() => router.push({ pathname: "/climb/log", params: { climbId: climb.id } })}
           accessibilityRole="button"
           style={press({
-            height: 54,
+            height: 52,
             borderRadius: radius.card,
+            borderWidth: 1.5,
+            borderColor: "rgba(64,63,76,0.3)",
             alignItems: "center",
             justifyContent: "center",
-            backgroundColor: colors.gunmetal,
           })}
         >
-          <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 16, color: colors.white }}>
-            {t("climbs.logToday")}
+          <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 15, color: colors.gunmetal }}>
+            {t("climbs.logSession")}
           </Text>
         </Pressable>
-      </View>
+      </ScrollView>
       <RenameSheet
         key={renaming}
         visible={renaming > 0}

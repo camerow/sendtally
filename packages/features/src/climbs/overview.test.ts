@@ -46,7 +46,7 @@ const climb = (over: Partial<ClimbSummary>): ClimbSummary => ({
 });
 
 describe("climbDetailVM", () => {
-  it("lists every visit newest first, matching by id or by name", () => {
+  it("lists every session newest first, matching by id or by name", () => {
     const vm = climbDetailVM(climb({}), [
       session("2026-09-26T18:00:00.000Z", "outdoor", [
         go(7, "attempt", { name: "the pinch", tries: 6, note: "First look." }),
@@ -56,12 +56,22 @@ describe("climbDetailVM", () => {
         go(7, "attempt", { name: "The Pinch", userClimbId: "other", tries: 1 }),
       ]),
     ]);
-    expect(vm.eyebrow).toBe("Boulder · Buttermilks");
-    expect(vm.status).toBe("Working · 3 days · 23 tries");
-    expect(vm.visits.map((v) => [v.month, v.dayOfMonth, v.triesLabel, v.note])).toEqual([
-      ["Oct", "24", "8 tries", null],
-      ["Sep", "26", "6 tries", "First look."],
+    expect(vm.eyebrow).toBe("V7 · Buttermilks");
+    expect([vm.project, vm.days, vm.tries, vm.best]).toEqual([true, "3", "23", "-"]);
+    expect(vm.sessions.map((v) => [v.dateLabel, v.meta, v.triesLabel, v.note])).toEqual([
+      ["24 Oct", "Buttermilks · Not yet", "8 tries", null],
+      ["26 Sep", "Buttermilks · Not yet", "6 tries", "First look."],
     ]);
+  });
+
+  it("names the best as how the first send went", () => {
+    const sent = climb({ sent_at: "2026-10-24T18:00:00.000Z" });
+    const vm = climbDetailVM(sent, [
+      session("2026-10-24T18:00:00.000Z", "outdoor", [
+        go(7, "send", { name: "The Pinch", style: "flash" }),
+      ]),
+    ]);
+    expect(vm.best).toBe("Flash");
   });
 });
 

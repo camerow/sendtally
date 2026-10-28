@@ -58,11 +58,10 @@ export {
 } from "./useProjects";
 export {
   climbDetailVM,
-  climbVisits,
-  dayCountLabel,
+  climbSessions,
   isThisClimb,
   type ClimbDetailVM,
-  type ClimbVisitVM,
+  type ClimbSessionRowVM,
 } from "./overview";
 export { sessionPyramid, type PyramidRow } from "./pyramid";
 export {

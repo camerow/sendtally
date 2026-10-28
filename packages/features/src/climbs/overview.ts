@@ -1,32 +1,8 @@
 import type { ClimbSummary, SessionWithClimbs } from "@sendtally/api-client";
 import { t } from "../i18n";
-import { utcDate } from "../log-session/transforms";
-import { monthShortName } from "../sessions/months";
+import type { ClimbStyle } from "../log-session/types";
 import { dateLabel } from "./projects";
 import { climbGradeLabel, climbKey } from "./transforms";
-
-export function dayCountLabel(climb: ClimbSummary): string {
-  return `${t("climbs.dayCount", { count: climb.sessions })} · ${t("tally.tryCount", { count: climb.attempts })}`;
-}
-
-export type ClimbVisitVM = {
-  fingerprint: string;
-  day: string;
-  month: string;
-  dayOfMonth: string;
-  triesLabel: string;
-  note: string | null;
-};
-
-export type ClimbDetailVM = {
-  id: string;
-  name: string;
-  gradeLabel: string | null;
-  eyebrow: string;
-  status: string;
-  working: boolean;
-  visits: ClimbVisitVM[];
-};
 
 /** A logged climb is this one when stamped with its id, or, unstamped, when it carries its name. */
 export function isThisClimb(
@@ -38,27 +14,63 @@ export function isThisClimb(
     : logged.userClimbId === climb.id;
 }
 
-export function climbVisits(
+/** How the first send went: a flash or onsight is named, any other send is just sent. */
+export function sendStyleOf(
   climb: ClimbSummary,
   sessions: readonly SessionWithClimbs[]
-): ClimbVisitVM[] {
+): ClimbStyle {
+  const send = [...sessions]
+    .sort((a, b) => a.start_at.localeCompare(b.start_at))
+    .flatMap((s) => s.climbs)
+    .find((c) => c.kind === "send" && isThisClimb(climb, c));
+  return send?.style ?? "redpoint";
+}
+
+export function sendStyleText(style: ClimbStyle): string {
+  if (style === "flash") return t("logSession.styleFlash");
+  if (style === "onsight") return t("logSession.styleOnsight");
+  return t("common.sent");
+}
+
+export type ClimbSessionRowVM = {
+  fingerprint: string;
+  dateLabel: string;
+  meta: string;
+  note: string | null;
+  triesLabel: string;
+};
+
+export type ClimbDetailVM = {
+  id: string;
+  name: string;
+  eyebrow: string;
+  project: boolean;
+  days: string;
+  tries: string;
+  best: string;
+  sessions: ClimbSessionRowVM[];
+};
+
+/** Every session with this climb in it, newest first. */
+export function climbSessions(
+  climb: ClimbSummary,
+  sessions: readonly SessionWithClimbs[]
+): ClimbSessionRowVM[] {
   return [...sessions]
     .sort((a, b) => b.start_at.localeCompare(a.start_at))
     .flatMap((s) => {
       const rows = s.climbs.filter((c) => isThisClimb(climb, c));
       if (rows.length === 0) return [];
-      const d = new Date(s.start_at);
-      const tries = t("tally.tryCount", { count: rows.reduce((n, c) => n + c.tries, 0) });
+      const sent = rows.some((c) => c.kind === "send");
       return [
         {
           fingerprint: s.fingerprint,
-          day: utcDate(s.start_at),
-          month: monthShortName(d.getUTCMonth() + 1),
-          dayOfMonth: String(d.getUTCDate()),
-          triesLabel: rows.some((c) => c.kind === "send")
-            ? `${tries} · ${t("common.sent")}`
-            : tries,
+          dateLabel: dateLabel(s.start_at),
+          meta: [climb.area?.name, sent ? t("common.sent") : t("sessionDetail.notYet")]
+            .filter((p) => p !== undefined)
+            .join(" · "),
           note: rows.find((c) => c.note !== null)?.note ?? null,
+          triesLabel: t("tally.tryCount", { count: rows.reduce((n, c) => n + c.tries, 0) }),
         },
       ];
     });
@@ -68,20 +80,19 @@ export function climbDetailVM(
   climb: ClimbSummary,
   sessions: readonly SessionWithClimbs[]
 ): ClimbDetailVM {
-  const discipline = t(climb.discipline === "route" ? "common.route" : "common.boulder");
-  const progress = dayCountLabel(climb);
+  const where = [climb.grade === null ? null : climbGradeLabel(climb), climb.area?.name ?? null];
+  const eyebrow = where.filter((p) => p !== null).join(" · ");
   return {
     id: climb.id,
     name: climb.name,
-    gradeLabel: climb.grade === null ? null : climbGradeLabel(climb),
-    eyebrow: climb.area === null ? discipline : `${discipline} · ${climb.area.name}`,
-    status:
-      climb.sent_at === null
-        ? climb.project
-          ? `${t("climbs.working")} · ${progress}`
-          : progress
-        : `${t("climbs.sentOn", { date: dateLabel(climb.sent_at) })} · ${progress}`,
-    working: climb.project,
-    visits: climbVisits(climb, sessions),
+    eyebrow:
+      eyebrow === ""
+        ? t(climb.discipline === "route" ? "common.route" : "common.boulder")
+        : eyebrow,
+    project: climb.project,
+    days: String(climb.sessions),
+    tries: String(climb.attempts),
+    best: climb.sent_at === null ? "-" : sendStyleText(sendStyleOf(climb, sessions)),
+    sessions: climbSessions(climb, sessions),
   };
 }

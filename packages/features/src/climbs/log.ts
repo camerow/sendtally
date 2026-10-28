@@ -1,9 +1,9 @@
 import type { ClimbSummary, SessionWithClimbs } from "@sendtally/api-client";
 import { t } from "../i18n";
 import { disciplineOf, gradeOptions, utcDate } from "../log-session/transforms";
-import type { ClimbStyle, GradeScale } from "../log-session/types";
+import type { GradeScale } from "../log-session/types";
 import { monthKey, monthLabel, monthName } from "../sessions/months";
-import { isThisClimb } from "./overview";
+import { sendStyleOf, sendStyleText } from "./overview";
 import { dateLabel } from "./projects";
 import { climbDraftGrade, climbGradeLabel } from "./transforms";
 
@@ -62,15 +62,6 @@ export function climbStatus(climb: ClimbSummary): Exclude<ClimbStatusFilter, "al
   return climb.project ? "projects" : "notYet";
 }
 
-/** How the first send went: a flash or onsight is named, any other send is just sent. */
-function sendStyleOf(climb: ClimbSummary, sessions: readonly SessionWithClimbs[]): ClimbStyle {
-  const send = [...sessions]
-    .sort((a, b) => a.start_at.localeCompare(b.start_at))
-    .flatMap((s) => s.climbs)
-    .find((c) => c.kind === "send" && isThisClimb(climb, c));
-  return send?.style ?? "redpoint";
-}
-
 function pillOf(
   climb: ClimbSummary,
   sessions: readonly SessionWithClimbs[]
@@ -79,9 +70,7 @@ function pillOf(
   if (climb.sent_at === null)
     return { kind: "tries", label: t("tally.tryCount", { count: climb.attempts }) };
   const style = sendStyleOf(climb, sessions);
-  if (style === "flash") return { kind: "flash", label: t("logSession.styleFlash") };
-  if (style === "onsight") return { kind: "onsight", label: t("logSession.styleOnsight") };
-  return { kind: "sent", label: t("common.sent") };
+  return { kind: style === "redpoint" ? "sent" : style, label: sendStyleText(style) };
 }
 
 function metaOf(climb: ClimbSummary, today: string): string {

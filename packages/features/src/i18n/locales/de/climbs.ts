@@ -20,8 +20,6 @@ export const climbs = {
   "climbs.noteSaveFailed": "Die Notiz konnte nicht gespeichert werden. Versuch es noch einmal.",
   "climbs.dayCount_one": "{count} Tag",
   "climbs.dayCount_other": "{count} Tage",
-  "climbs.sentOn": "Geschafft am {date}",
-  "climbs.working": "In Arbeit",
   "climbs.notFound": "Kletterei nicht gefunden.",
   "climbs.title": "Klettereien",
   "climbs.loadFailed": "Deine Klettereien konnten nicht geladen werden. Zum Aktualisieren ziehen.",
@@ -36,10 +34,7 @@ export const climbs = {
   "climbs.renameHint":
     "Mit dem Namen einer anderen deiner Klettereien werden beide zusammengeführt.",
   "climbs.renameFailed": "Die Kletterei konnte nicht umbenannt werden. Versuch es noch einmal.",
-  "climbs.markWorking": "Als in Arbeit markieren",
-  "climbs.stopWorking": "Nicht mehr in Arbeit",
   "climbs.more": "Mehr",
-  "climbs.logToday": "Heute eintragen",
   "climbs.climbingInsights": "Kletterauswertung",
   "climbs.gym": "Halle",
   "climbs.daysOutsideWord_one": "Tag draußen",
@@ -71,4 +66,6 @@ export const climbs = {
   "climbs.newCrag": "Noch nicht in den Gebieten. Er wird beim Speichern hinzugefügt.",
   "climbs.projectHint": "Oben angeheftet, bis du sie schaffst",
   "climbs.notesPlaceholder": "Notizen: Beta, Bedingungen, wie es sich anfühlte",
+  "climbs.days": "Tage",
+  "climbs.logSession": "Session eintragen",
 } as const;
