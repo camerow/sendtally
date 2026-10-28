@@ -19,9 +19,10 @@ export type StepperProps = {
   inputWidth?: number;
   fontSize?: number;
   keyboard?: KeyboardTypeOptions;
+  deferred?: boolean;
 };
 
-/** − / typed number / +. Buttons apply at once; typing commits on blur or return. */
+/** − / typed number / +. Buttons apply at once; typing commits as it changes unless `deferred`. */
 export function Stepper({
   value,
   onCommit,
@@ -35,6 +36,7 @@ export function Stepper({
   inputWidth,
   fontSize = 17,
   keyboard,
+  deferred,
 }: StepperProps): React.ReactElement {
   const fill = surface === "card" ? colors.white : colors.surfaceSoft;
   const step = (direction: 1 | -1, a11y: string, glyph: string): React.ReactElement => (
@@ -69,6 +71,7 @@ export function Stepper({
         label={label}
         placeholder={placeholder}
         keyboard={keyboard}
+        deferred={deferred}
         style={{
           width: inputWidth,
           flex: inputWidth === undefined ? 1 : undefined,

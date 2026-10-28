@@ -11,12 +11,15 @@ export type NumberFieldProps = {
   placeholder?: string;
   keyboard?: KeyboardTypeOptions;
   style?: StyleProp<TextStyle>;
+  /** Commit only on blur or return, for a commit that writes to the server. */
+  deferred?: boolean;
 };
 
 /**
- * Shows `value` until focused, then holds what is typed and commits it on blur
- * or return. A commit the parent rejects leaves `value` unchanged, which is
- * what the field shows again: invalid text reverts.
+ * Shows `value` until focused, then holds what is typed and commits it as it
+ * changes, so a Save pressed with the keyboard still up has it. A commit the
+ * parent rejects leaves `value` unchanged, which is what the field shows again
+ * on blur: invalid text reverts.
  */
 export function NumberField({
   value,
@@ -25,6 +28,7 @@ export function NumberField({
   placeholder,
   keyboard = "decimal-pad",
   style,
+  deferred = false,
 }: NumberFieldProps): React.ReactElement {
   const [draft, setDraft] = React.useState<string | null>(null);
   const commit = (): void => {
@@ -35,7 +39,10 @@ export function NumberField({
     <TextInput
       value={draft ?? value}
       onFocus={() => setDraft(value)}
-      onChangeText={setDraft}
+      onChangeText={(text) => {
+        setDraft(text);
+        if (!deferred) onCommit(text);
+      }}
       onBlur={commit}
       onSubmitEditing={commit}
       keyboardType={keyboard}

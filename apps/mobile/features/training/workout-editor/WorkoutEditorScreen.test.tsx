@@ -3,7 +3,7 @@ import { fireEvent, screen } from "@testing-library/react-native";
 import { router } from "expo-router";
 import React from "react";
 import type * as Workouts from "@sendtally/features/workouts";
-import { renderWithHang } from "../data/renderWithHang";
+import { hangData, renderWithHang } from "../data/renderWithHang";
 import { WorkoutEditorScreen } from "./WorkoutEditorScreen";
 
 const mockWorkouts = { saveWorkout: jest.fn(), deleteWorkout: jest.fn() };
@@ -62,6 +62,23 @@ describe("Workout editor", () => {
       exerciseRestS: 180,
     });
     expect(router.back).toHaveBeenCalled();
+  });
+
+  it("saves a weight typed in pounds while its field still has focus", async () => {
+    mockWorkouts.saveWorkout.mockClear();
+    const data = hangData();
+    await renderWithHang(<WorkoutEditorScreen kind="strength" />, {
+      ...data,
+      settings: { ...data.settings, units: "lb" },
+    });
+    await fireEvent.changeText(screen.getByLabelText("Exercise"), "Back squat");
+    const weight = screen.getByLabelText("Weight (lb)");
+    await fireEvent(weight, "focus");
+    await fireEvent.changeText(weight, "135");
+    await fireEvent.press(screen.getByText("Save"));
+
+    const [, saved] = mockWorkouts.saveWorkout.mock.calls[0] as [string, Workouts.WorkoutDraft];
+    expect(saved.variations[0]?.items[0]?.dose.weightKg).toBeCloseTo(61.235, 3);
   });
 
   it("customises a built-in hangboard workout as a copy on another grip", async () => {

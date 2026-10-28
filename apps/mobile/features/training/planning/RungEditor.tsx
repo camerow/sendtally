@@ -75,6 +75,7 @@ export function RungEditor({
               decreaseLabel={t("hang.decrease", { field: label })}
               increaseLabel={t("hang.increase", { field: label })}
               surface="card"
+              deferred
             />
           </View>
         );
