@@ -17,6 +17,7 @@ import {
   withField,
   type DoseField,
 } from "@sendtally/features/training";
+import { TimeField } from "../../../components/TimeField";
 import { press } from "../../../lib/press";
 import { Label } from "../components/Label";
 import { Stepper } from "../components/Stepper";
@@ -31,14 +32,9 @@ export type RungEditorProps = {
   onChange: (change: Partial<Dose>) => void;
 };
 
-const UNIT: Partial<Record<DoseField, string>> = {
-  onS: "s",
-  offS: "s",
-  setRestS: "s",
-  edgeMm: "mm",
-};
+const TIMES: readonly DoseField[] = ["onS", "offS", "setRestS"];
 
-/** One item of one week: a stepper for each field it changes, and more fields to change. */
+/** One item of one week: a stepper or time field for each field it changes, and more fields to change. */
 export function RungEditor({
   kind,
   item,
@@ -53,12 +49,24 @@ export function RungEditor({
   const dose: Dose = { ...written, ...change };
   const set = (target: Dose): void => onChange(changeFrom(written, target));
   const more = weekFields(kind, written).filter((f) => !shown.includes(f));
-  const suffix = (f: DoseField): string => (f === "weightKg" ? unit : (UNIT[f] ?? ""));
+  const suffix = (f: DoseField): string => (f === "weightKg" ? unit : f === "edgeMm" ? "mm" : "");
 
   return (
     <View style={{ gap: 12 }}>
       {shown.map((f) => {
         const label = fieldLabel(kind, written, f);
+        if (TIMES.includes(f))
+          return (
+            <TimeField
+              key={f}
+              label={label}
+              value={fieldValue(dose, f, unit)}
+              onChange={(seconds) => {
+                const next = withField(dose, f, seconds, unit);
+                if (next !== null) set(next);
+              }}
+            />
+          );
         return (
           <View key={f} style={{ gap: 6 }}>
             <Label small color={colors.textSecondary}>

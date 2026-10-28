@@ -77,4 +77,10 @@ export const common = {
   "common.closeOptions": "Close {label} options",
   "common.note": "Note",
   "common.back": "Back",
+  "common.next": "Next",
+  "common.deleteDigit": "Delete last digit",
+  "common.addAmount": "Add {amount}",
+  "common.subtractAmount": "Subtract {amount}",
+  "common.changeSign": "Change sign",
+  "common.decimalPoint": "Decimal point",
 } as const;

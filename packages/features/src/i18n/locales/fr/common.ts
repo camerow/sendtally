@@ -77,4 +77,10 @@ export const common = {
   "common.closeOptions": "Fermer les options {label}",
   "common.note": "Note",
   "common.back": "Retour",
+  "common.next": "Suivant",
+  "common.deleteDigit": "Effacer le dernier chiffre",
+  "common.addAmount": "Ajouter {amount}",
+  "common.subtractAmount": "Retirer {amount}",
+  "common.changeSign": "Changer le signe",
+  "common.decimalPoint": "Virgule décimale",
 } as const;
