@@ -21,5 +21,8 @@ export const tally = {
   "tally.discardTitle": "Discard this session?",
   "tally.discardBody": "Every climb in it goes too.",
   "tally.startSession": "Start session",
-  "tally.backToSession": "Back to session",
+  "tally.finishSession": "Finish session",
+  "tally.replaceTitle": "A session is already running",
+  "tally.replaceBody": "Starting a new one discards it, with every climb in it.",
+  "tally.replaceAction": "Discard and start new",
 } as const;

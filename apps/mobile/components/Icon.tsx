@@ -21,6 +21,7 @@ export type IconName =
   | "pencil"
   | "search"
   | "more"
+  | "stop"
   | "x";
 
 const SHAPES: Record<IconName, React.ReactElement> = {
@@ -72,6 +73,7 @@ const SHAPES: Record<IconName, React.ReactElement> = {
   pencil: <Path d="M5 19h4L19 9l-4-4L5 15zM13.5 6.5l4 4" />,
   search: <Path d="M11 5a6 6 0 1 1 0 12 6 6 0 0 1 0-12zM20 20l-4.5-4.5" />,
   more: <Path d="M6 12h.01M12 12h.01M18 12h.01" />,
+  stop: <Rect x={7} y={7} width={10} height={10} rx={1.5} />,
   x: <Path d="M6 6l12 12M18 6L6 18" />,
 };
 

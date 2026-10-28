@@ -43,18 +43,13 @@ const rows = (): Row[] => [
   })),
 ];
 
-export type LogFabProps = {
-  /** A session is running, so the button goes back to it. */
-  live: boolean;
-};
-
 /** The live session is the frequent action; the arrow holds the slower ways to log. */
-export function LogFab({ live }: LogFabProps): React.ReactElement {
+export function LogFab(): React.ReactElement {
   const [menuOpen, setMenuOpen] = React.useState(false);
   return (
     <>
       <Fab
-        label={live ? t("tally.backToSession") : t("tally.startSession")}
+        label={t("tally.startSession")}
         onPress={() => startLiveSession()}
         menu={{ label: t("sessions.moreWaysToLog"), onPress: () => setMenuOpen(true) }}
       />

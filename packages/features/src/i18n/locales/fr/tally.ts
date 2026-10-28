@@ -21,5 +21,8 @@ export const tally = {
   "tally.discardTitle": "Supprimer cette séance ?",
   "tally.discardBody": "Toutes ses lignes disparaissent aussi.",
   "tally.startSession": "Commencer une séance",
-  "tally.backToSession": "Retour à la séance",
+  "tally.finishSession": "Terminer la séance",
+  "tally.replaceTitle": "Une séance est déjà en cours",
+  "tally.replaceBody": "En commencer une nouvelle la supprime, avec toutes ses lignes.",
+  "tally.replaceAction": "Supprimer et recommencer",
 } as const;

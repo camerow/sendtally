@@ -3,10 +3,12 @@ import { Redirect, Tabs } from "expo-router";
 import React from "react";
 import { View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { BottomTabBar } from "expo-router/tabs";
 import { t } from "@sendtally/features/i18n";
 import { useTrainingMode } from "@sendtally/features/settings";
 import { colors, fonts } from "@sendtally/design/tokens";
 import { Icon, type IconName } from "../../components/Icon";
+import { LiveBar } from "../../features/live-session/LiveBar";
 import { useApi } from "../../lib/api";
 
 const SELECTED_RULE_HEIGHT = 3;
@@ -52,6 +54,12 @@ function SignedInTabs(): React.ReactElement {
 
   return (
     <Tabs
+      tabBar={(props) => (
+        <View>
+          <LiveBar />
+          <BottomTabBar {...props} />
+        </View>
+      )}
       screenOptions={{
         headerShown: false,
         tabBarStyle: {

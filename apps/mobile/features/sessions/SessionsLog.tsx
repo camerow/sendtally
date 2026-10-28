@@ -348,7 +348,7 @@ export function SessionsLog(): React.ReactElement {
           )
         }
       />
-      <LogFab live={live.stored !== null} />
+      <LogFab />
       {editingHang !== null && (
         <HangDataProvider fallback={null}>
           <SessionEditorSheet sessionId={editingHang} onClose={() => setEditingHang(null)} />

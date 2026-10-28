@@ -21,5 +21,8 @@ export const tally = {
   "tally.discardTitle": "¿Descartar esta sesión?",
   "tally.discardBody": "Todas sus escaladas se van también.",
   "tally.startSession": "Empezar sesión",
-  "tally.backToSession": "Volver a la sesión",
+  "tally.finishSession": "Terminar sesión",
+  "tally.replaceTitle": "Ya hay una sesión en curso",
+  "tally.replaceBody": "Empezar una nueva la descarta, con todas sus escaladas.",
+  "tally.replaceAction": "Descartar y empezar otra",
 } as const;

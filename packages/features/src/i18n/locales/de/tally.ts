@@ -21,5 +21,8 @@ export const tally = {
   "tally.discardTitle": "Diese Session verwerfen?",
   "tally.discardBody": "Alle Klettereien darin gehen mit.",
   "tally.startSession": "Session starten",
-  "tally.backToSession": "Zurück zur Session",
+  "tally.finishSession": "Session beenden",
+  "tally.replaceTitle": "Es läuft schon eine Session",
+  "tally.replaceBody": "Eine neue zu starten verwirft sie, mit allen Klettereien darin.",
+  "tally.replaceAction": "Verwerfen und neu starten",
 } as const;
