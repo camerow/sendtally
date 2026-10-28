@@ -36,7 +36,7 @@ const row = (over: Partial<HangHistoryRow> = {}): HangHistoryRow => ({
 describe("hang history rows", () => {
   it("labels a library workout on a built-in grip", () => {
     expect(hangTitle(row())).toBe("Repeaters 7:3");
-    expect(hangMetaLabel(row())).toBe("Hangboard session · Half crimp · 20 mm · +4 kg");
+    expect(hangMetaLabel(row())).toBe("Hangboard session · Half crimp · 20\u00A0mm · +4 kg");
     expect(hangEffortLabel(row())).toBe("RPE 7");
   });
 
@@ -56,7 +56,7 @@ describe("hang history rows", () => {
 
   it("reads a bodyweight hang and leaves out a grip it cannot name", () => {
     expect(hangMetaLabel(row({ loadKg: 0, gripId: "gone" }))).toBe(
-      "Hangboard session · 20 mm · Bodyweight"
+      "Hangboard session · 20\u00A0mm · Bodyweight"
     );
   });
 });

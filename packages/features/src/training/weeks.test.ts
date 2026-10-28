@@ -21,7 +21,7 @@ describe("weekChips", () => {
       weekChips("hangboard", repeaters, { sets: 2, reps: 7, onS: 9, edgeMm: 18 }, "kg").map(
         (c) => c.text
       )
-    ).toEqual(["−1 set", "+1 hang", "9s hang", "18 mm edge"]);
+    ).toEqual(["−1 set", "+1 hang", "9s hang", "18\u00A0mm edge"]);
   });
 
   it("counts timed sets as rounds and leaves out what matches", () => {

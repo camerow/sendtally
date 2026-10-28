@@ -24,7 +24,7 @@ const groups: ExerciseGroupVM[] = [
         values: [4],
         change: 0,
         metric: "load",
-        meta: "20 mm · 10s · 1 time",
+        meta: "20\u00A0mm · 10s · 1 time",
       },
     ],
   },
@@ -47,7 +47,7 @@ describe("exercise trends", () => {
     await fireEvent.press(pullUp);
     expect(router.push).toHaveBeenCalledWith({ pathname: "/exercise/[id]", params: { id: "e1" } });
 
-    expect(screen.getByText("20 mm · 10s · 1 time")).toBeTruthy();
+    expect(screen.getByText("20\u00A0mm · 10s · 1 time")).toBeTruthy();
     await fireEvent.press(screen.getByLabelText(/^Half crimp/));
     expect(router.push).toHaveBeenCalledWith({ pathname: "/grip/[id]", params: { id: "half" } });
   });

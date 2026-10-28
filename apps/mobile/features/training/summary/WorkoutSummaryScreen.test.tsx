@@ -250,7 +250,7 @@ describe("A finished workout's summary", () => {
     );
     expect(screen.getByText("New best")).toBeTruthy();
     expect(screen.getByText("Half crimp +12 kg")).toBeTruthy();
-    expect(screen.getByText("20 mm · 10s · up 2 kg on your last best")).toBeTruthy();
+    expect(screen.getByText("20\u00A0mm · 10s · up 2 kg on your last best")).toBeTruthy();
   });
 });
 

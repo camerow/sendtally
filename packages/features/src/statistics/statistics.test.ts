@@ -165,7 +165,7 @@ describe("trainingInsightsVM", () => {
       name: "Half crimp",
       count: 2,
       change: 4,
-      meta: "20 mm · 7s · 2 times",
+      meta: "20\u00A0mm · 7s · 2 times",
     });
     expect(vm.exercises[1]?.rows[0]).toMatchObject({
       name: "Back squat",
@@ -195,7 +195,7 @@ describe("trainingInsightsVM", () => {
       count: 4,
       values: [2, 5],
       change: 3,
-      meta: "20 mm · 7s · 4 times",
+      meta: "20\u00A0mm · 7s · 4 times",
     });
   });
 

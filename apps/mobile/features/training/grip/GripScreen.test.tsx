@@ -21,7 +21,7 @@ describe("GripScreen", () => {
     await renderWithHang(<GripScreen id="half" />, hangData({ sessions }));
     expect(screen.getByText("Hangboard · grip")).toBeTruthy();
     expect(screen.getByText("Half crimp")).toBeTruthy();
-    expect(screen.getAllByText("20 mm · 10s").length).toBeGreaterThan(1);
+    expect(screen.getAllByText("20\u00A0mm · 10s").length).toBeGreaterThan(1);
     expect(screen.getByText("Best · Sep 8")).toBeTruthy();
     expect(screen.getByText("Top attempt · 75%")).toBeTruthy();
     expect(screen.getByText("Reached +5 kg")).toBeTruthy();

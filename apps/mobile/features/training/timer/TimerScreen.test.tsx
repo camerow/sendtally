@@ -122,7 +122,7 @@ describe("Timer", () => {
     expect(screen.getByDisplayValue("8")).toBeTruthy();
     await fireEvent.press(screen.getByLabelText("Deeper edge"));
     await fireEvent.press(screen.getByText("Start"));
-    expect(screen.getByText("Half crimp · 16 mm · +8 kg")).toBeTruthy();
+    expect(screen.getByText("Half crimp · 16\u00A0mm · +8 kg")).toBeTruthy();
     expect(screen.getByText("3 sets ahead")).toBeTruthy();
     await fireEvent.press(screen.getByText("End"));
     await advance(200);

@@ -266,7 +266,7 @@ describe("summaries", () => {
         { sets: 3, reps: 6, onS: 7, offS: 3, setRestS: 180, edgeMm: 20, weightKg: 5 },
         "kg"
       )
-    ).toBe("6 × 7s on / 3s off · 3 sets · 3:00 rest · 20 mm · 5 kg");
+    ).toBe("6 × 7s on / 3s off · 3 sets · 3:00 rest · 20\u00A0mm · 5 kg");
   });
 
   it("reads a one-sided hold a side, and an assisted weight with a true minus", () => {

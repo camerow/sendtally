@@ -67,14 +67,14 @@ describe("grip screen", () => {
       ["+6 kg", "100%", true],
       ["+2 kg", "100%", false],
     ]);
-    expect(rows[0]?.meta).toBe("Tue, Sep 22 · 20 mm · 10s × 6");
+    expect(rows[0]?.meta).toBe("Tue, Sep 22 · 20\u00A0mm · 10s × 6");
   });
 
   it("says each milestone newest first, naming the setup only when they are mixed", () => {
     const rows = milestoneRows(series, "kg", false);
     expect(rows.map((r) => r.text)).toEqual(["Reached +5 kg", "First session on this grip"]);
     expect(rows[0]?.meta).toBe("Tue, Sep 8");
-    expect(milestoneRows(series, "kg", true)[0]?.meta).toBe("Tue, Sep 8 · 20 mm · 10s");
+    expect(milestoneRows(series, "kg", true)[0]?.meta).toBe("Tue, Sep 8 · 20\u00A0mm · 10s");
   });
 });
 
@@ -106,7 +106,7 @@ describe("newBestOf", () => {
     const now = hang("2026-09-29", 8);
     expect(newBestOf(now, [...series, now], "Half crimp", "kg")).toEqual({
       title: "Half crimp +8 kg",
-      meta: "20 mm · 10s · up 2 kg on your last best",
+      meta: "20\u00A0mm · 10s · up 2 kg on your last best",
     });
   });
 
