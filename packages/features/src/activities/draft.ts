@@ -1,8 +1,7 @@
 import type { Activity, ActivityKind } from "@sendtally/api-client";
 import { doneAsPrescribed, type ItemDone, type SessionItem } from "@sendtally/core/hang";
-import { formatNumber, t } from "../i18n";
 import { cleanDone } from "./done";
-import { ACTIVITY_KINDS, kindLabel, trainingLoad } from "./format";
+import { ACTIVITY_KINDS, kindLabel } from "./format";
 
 /** The activity form's state. Strings where the form edits text, `""` for an empty start time. */
 export type ActivityDraft = {
@@ -151,15 +150,4 @@ export function stepMinutes(minutes: number, direction: 1 | -1): number {
 export function parseMinutes(text: string): number | null {
   const n = Number(text.trim());
   return text.trim() === "" || !Number.isFinite(n) ? null : clampMinutes(n);
-}
-
-/** "50 min × 7 = 350", or null until there is an effort to multiply by. */
-export function trainingLoadLabel(d: Pick<ActivityDraft, "minutes" | "rpe">): string | null {
-  const load = trainingLoad(d);
-  if (load === null || d.rpe === null) return null;
-  return t("activities.loadFormula", {
-    minutes: formatNumber(d.minutes),
-    rpe: d.rpe,
-    load: formatNumber(load),
-  });
 }

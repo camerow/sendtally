@@ -5,7 +5,6 @@ import {
   newActivityDraft,
   parseMinutes,
   stepMinutes,
-  trainingLoadLabel,
 } from "./draft";
 
 describe("activity drafts", () => {
@@ -74,10 +73,5 @@ describe("activity drafts", () => {
     expect(parseMinutes("2000")).toBe(1440);
     expect(parseMinutes("abc")).toBeNull();
     expect(parseMinutes("")).toBeNull();
-  });
-
-  it("shows the load only once there is an effort", () => {
-    expect(trainingLoadLabel({ minutes: 50, rpe: 7 })).toBe("50 min × 7 = 350");
-    expect(trainingLoadLabel({ minutes: 50, rpe: null })).toBeNull();
   });
 });

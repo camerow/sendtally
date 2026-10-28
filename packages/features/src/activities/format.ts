@@ -22,11 +22,6 @@ export function kindLabel(kind: WorkoutKind): string {
   return t(KIND_LABELS[kind]);
 }
 
-/** Session RPE: minutes times effort. Null when the effort was not given. */
-export function trainingLoad(activity: Pick<Activity, "minutes" | "rpe">): number | null {
-  return activity.rpe === null ? null : activity.minutes * activity.rpe;
-}
-
 /** Sorts with sessions in the log: at its start time when it has one, else midday. */
 export const activityAt = (a: Pick<Activity, "date" | "startTime">): string =>
   `${a.date}T${a.startTime ?? "12:00"}:00Z`;

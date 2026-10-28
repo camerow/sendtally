@@ -198,12 +198,6 @@ export const hang = {
   "hang.completion": "Completion %",
   "hang.lessCompletion": "Less completion",
   "hang.moreCompletion": "More completion",
-  "hang.deleteSession": "Delete session",
-  "hang.deleteFromLog": "It is removed from your log.",
-  "hang.deleteFromLogStrava":
-    "It is removed from your log. Strava does not let apps delete activities, so the Strava activity stays.",
-  "hang.deleteConfirmTitle": "Delete this session?",
-
   "hang.addedLoadCompleted": "Added load · completed",
   "hang.weightCompleted": "Weight lifted · completed",
   "hang.delta": "{arrow} {value} {unit}",

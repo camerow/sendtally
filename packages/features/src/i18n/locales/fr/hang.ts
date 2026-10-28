@@ -199,12 +199,6 @@ export const hang = {
   "hang.completion": "Réalisé %",
   "hang.lessCompletion": "Moins réalisé",
   "hang.moreCompletion": "Plus réalisé",
-  "hang.deleteSession": "Supprimer la séance",
-  "hang.deleteFromLog": "Elle est retirée de ton carnet.",
-  "hang.deleteFromLogStrava":
-    "Elle est retirée de ton carnet. Strava ne permet pas aux applications de supprimer des activités, l'activité Strava reste donc en place.",
-  "hang.deleteConfirmTitle": "Supprimer cette séance ?",
-
   "hang.addedLoadCompleted": "Lest · réalisé",
   "hang.weightCompleted": "Poids tiré · réalisé",
   "hang.delta": "{arrow} {value} {unit}",
