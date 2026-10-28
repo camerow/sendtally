@@ -1,7 +1,7 @@
 import { router } from "expo-router";
 import React from "react";
 import { View } from "react-native";
-import { byDate, summarise } from "@sendtally/core/hang";
+import { byDate, summarise, type HangSession, type WorkoutKind } from "@sendtally/core/hang";
 import { setText, useWeightUnit } from "@sendtally/features/activities";
 import { categoryShelves, exerciseLabel } from "@sendtally/features/exercises";
 import { loadLabel } from "@sendtally/features/hang";
@@ -40,8 +40,12 @@ export function ExerciseShelves(): React.ReactElement {
 
   const workouts = library.status === "ready" ? library.data.workouts : [];
   const logged = series.status === "ready" ? series.data : [];
-  const metaOf = (name: string): string => {
+  const metaOf = (name: string, kind: WorkoutKind): string => {
     const s = logged.find((x) => x.key === exerciseKey(name));
+    if (kind === "climbing")
+      return s === undefined || s.sessions.length === 0
+        ? t("workouts.notDoneYet")
+        : `${t("common.climbs")} · ${t("statistics.timesCount", { count: s.sessions.length })}`;
     const best = s === undefined ? null : exerciseSummary(s, today)?.best;
     if (best !== undefined && best !== null)
       return t("workouts.exerciseBest", { value: setText(best.best, unit) });
@@ -52,6 +56,16 @@ export function ExerciseShelves(): React.ReactElement {
       : t("workouts.exerciseLast", { value: doseSummary(using.kind, dose, unit) });
   };
 
+  const gripBest = (onGrip: readonly HangSession[], best: number): string => {
+    const top = onGrip.findLast((s) => s.loadKg === best) ?? onGrip.at(-1);
+    if (top === undefined) return "";
+    const kind = top.protocol.kind;
+    const load =
+      kind !== "pull" && best === 0
+        ? t("workouts.exerciseBestBodyweight")
+        : t("workouts.exerciseBest", { value: loadLabel(kind, best, model.settings.units) });
+    return kind === "pull" ? load : `${load} · ${t("hang.edgeMm", { n: top.edgeMm })}`;
+  };
   const grips = model.grips
     .filter((g) => !g.hidden && (g.custom || model.sessions.some((s) => s.gripId === g.id)))
     .map((g): ShelfCard => {
@@ -62,12 +76,7 @@ export function ExerciseShelves(): React.ReactElement {
         key: g.id,
         kind: "hangboard",
         name: g.name,
-        meta:
-          summary === null || last === undefined
-            ? ""
-            : t("workouts.exerciseBest", {
-                value: loadLabel(last.protocol.kind, summary.best, model.settings.units),
-              }),
+        meta: summary === null || last === undefined ? "" : gripBest(onGrip, summary.best),
         open: openGrip(onGrip, g.id),
       };
     });
@@ -77,7 +86,7 @@ export function ExerciseShelves(): React.ReactElement {
       key: e.id,
       kind: e.kind,
       name: exerciseLabel(e),
-      meta: metaOf(e.name),
+      meta: metaOf(e.name, e.kind),
       open: () => router.push({ pathname: "/exercise/[id]", params: { id: e.id } }),
     }));
 

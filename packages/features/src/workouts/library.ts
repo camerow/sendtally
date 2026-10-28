@@ -19,6 +19,7 @@ import {
   type WorkoutKind,
   FOCI,
 } from "@sendtally/core/hang";
+import { climbingDoseLine } from "../activities/climbing";
 import { weightValue } from "../activities/done";
 import { ACTIVITY_KINDS, kindLabel } from "../activities/format";
 import { humanDuration, protocolSummary } from "../hang/format";
@@ -136,7 +137,10 @@ export function turnName(items: readonly Pick<Item, "doses">[], n: number): stri
   ]?.name;
 }
 
-/** "6 × 7s on, 3s off" for a one-item hangboard workout, "3 exercises", or null with none. */
+/**
+ * "6 × 7s on, 3s off" for a one-item hangboard workout, "4 sets of 4 climbs" for a one-item
+ * climbing one, "3 exercises", or null with none.
+ */
 export function bodySummary(w: Pick<Workout, "kind" | "items">): string | null {
   const items = sessionItems(w.items, 0);
   const [only] = items;
@@ -145,6 +149,8 @@ export function bodySummary(w: Pick<Workout, "kind" | "items">): string | null {
     const p = doseProtocol("", only.dose);
     return protocolSummary(p, timeUnitsOf(p));
   }
+  if (w.kind === "climbing" && items.length === 1)
+    return climbingDoseLine(only.dose, only.dose.onS === undefined ? "climbs" : "wallTime");
   return t("activities.exerciseCount", { count: items.length });
 }
 

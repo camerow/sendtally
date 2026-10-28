@@ -246,6 +246,12 @@ describe("summaries", () => {
     expect(bodySummary(byId("w-stretch"))).toBe("1 exercise");
     expect(bodySummary(byId("h-mine"))).toBe("6 × 7s on / 3s off · 3 sets · 3:00 rest");
     expect(bodySummary(byId("climb-limit"))).toBeNull();
+    expect(
+      bodySummary({
+        kind: "climbing",
+        items: [{ exercise: "Limit bouldering", doses: [{ sets: 4, reps: 4 }] }],
+      })
+    ).toBe("4 sets of 4 climbs");
   });
 
   it("describes a dose for each kind", () => {
