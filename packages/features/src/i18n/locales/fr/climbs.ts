@@ -31,7 +31,6 @@ export const climbs = {
   "climbs.rename": "Renommer",
   "climbs.renameHint": "Reprendre le nom d’une autre de tes voies fusionne les deux.",
   "climbs.renameFailed": "Impossible de renommer la voie. Réessaie.",
-  "climbs.more": "Plus",
   "climbs.climbingInsights": "Analyse de l’escalade",
   "climbs.gym": "Salle",
   "climbs.daysOutsideWord_one": "jour dehors",

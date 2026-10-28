@@ -32,7 +32,6 @@ export const climbs = {
   "climbs.rename": "Rename",
   "climbs.renameHint": "Using the name of another of your climbs merges the two.",
   "climbs.renameFailed": "Could not rename the climb. Try again.",
-  "climbs.more": "More",
   "climbs.climbingInsights": "Climbing insights",
   "climbs.gym": "Gym",
   "climbs.daysOutsideWord_one": "day outside",

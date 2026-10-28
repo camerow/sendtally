@@ -33,7 +33,6 @@ export const climbs = {
   "climbs.rename": "Renombrar",
   "climbs.renameHint": "Usar el nombre de otra de tus escaladas las fusiona.",
   "climbs.renameFailed": "No se pudo renombrar la escalada. Inténtalo de nuevo.",
-  "climbs.more": "Más",
   "climbs.climbingInsights": "Análisis de escalada",
   "climbs.gym": "Rocódromo",
   "climbs.daysOutsideWord_one": "día fuera",

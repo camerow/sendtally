@@ -106,14 +106,35 @@ export function ItemEditor({
         <Text style={[type.bodyBold, { flex: 1, fontSize: 16, color: colors.gunmetal }]}>
           {name}
         </Text>
-        <IconButton
-          icon="more"
-          label={t("workouts.exerciseMore")}
-          onPress={more}
-          color={colors.textSecondary}
-          size={36}
-          iconSize={20}
-        />
+        {alternating ? (
+          <IconButton
+            icon="more"
+            label={t("workouts.exerciseMore")}
+            onPress={more}
+            color={colors.textSecondary}
+            size={36}
+            iconSize={20}
+          />
+        ) : (
+          <>
+            <IconButton
+              icon="restart"
+              label={t("workouts.swapExercise")}
+              onPress={onSwap}
+              color={colors.textSecondary}
+              size={36}
+              iconSize={18}
+            />
+            <IconButton
+              icon="remove"
+              label={t("workouts.removeExercise", { name })}
+              onPress={onRemove}
+              color={colors.textSecondary}
+              size={36}
+              iconSize={18}
+            />
+          </>
+        )}
       </View>
       {item.doses.map((dose, d) => (
         <View key={d} style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>

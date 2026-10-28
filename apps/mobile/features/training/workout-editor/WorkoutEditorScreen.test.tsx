@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { act, fireEvent, screen } from "@testing-library/react-native";
 import { router } from "expo-router";
 import React from "react";
-import { Alert, type AlertButton } from "react-native";
+import { Alert } from "react-native";
 import type * as Workouts from "@sendtally/features/workouts";
 import { anExercise, hangData, renderWithHang } from "../data/renderWithHang";
 import { WorkoutEditorScreen } from "./WorkoutEditorScreen";
@@ -50,12 +50,6 @@ async function pick(...names: string[]): Promise<void> {
     screen.getByText(`Add ${names.length} exercise${names.length === 1 ? "" : "s"}`)
   );
   await act(async () => undefined);
-}
-
-async function menu(title: string): Promise<void> {
-  const calls = jest.mocked(Alert.alert).mock.calls;
-  const buttons = (calls[calls.length - 1]?.[2] ?? []) as AlertButton[];
-  await act(async () => buttons.find((b) => b.text === title)?.onPress?.());
 }
 
 async function type(label: string, text: string, index = 0): Promise<void> {
@@ -122,8 +116,7 @@ describe("Workout editor", () => {
     await renderWithHang(<WorkoutEditorScreen from="max10" />);
     expect(screen.getByDisplayValue("Max hangs (copy)")).toBeTruthy();
 
-    await fireEvent.press(screen.getByLabelText("More for this exercise"));
-    await menu("Swap exercise");
+    await fireEvent.press(screen.getByLabelText("Swap exercise"));
     expect(screen.queryByText("Back squat")).toBeNull();
     await fireEvent.press(screen.getByRole("button", { name: "Open hand" }));
     await act(async () => undefined);

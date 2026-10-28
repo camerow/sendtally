@@ -1,6 +1,6 @@
 import { router } from "expo-router";
 import React from "react";
-import { ActivityIndicator, Alert, Pressable, ScrollView, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useClimb } from "@sendtally/features/climbs";
 import { t } from "@sendtally/features/i18n";
@@ -42,12 +42,6 @@ export function ClimbDetailScreen({ id }: { id: string }): React.ReactElement {
   }
 
   const { climb, vm } = state.data;
-  const more = (): void =>
-    Alert.alert(vm.name, undefined, [
-      { text: t("climbs.rename"), onPress: () => setRenaming((n) => n + 1) },
-      { text: t("common.cancel"), style: "cancel" },
-    ]);
-
   const save = (name: string): void => {
     setSaving(true);
     setFailed(false);
@@ -99,12 +93,12 @@ export function ClimbDetailScreen({ id }: { id: string }): React.ReactElement {
             </Text>
           </Pressable>
           <Pressable
-            onPress={more}
+            onPress={() => setRenaming((n) => n + 1)}
             accessibilityRole="button"
-            accessibilityLabel={t("climbs.more")}
+            accessibilityLabel={t("climbs.rename")}
             style={press({ width: 44, height: 44, alignItems: "center", justifyContent: "center" })}
           >
-            <Icon name="more" color={colors.gunmetal} size={20} strokeWidth={3} />
+            <Icon name="pencil" color={colors.gunmetal} size={18} strokeWidth={2} />
           </Pressable>
         </View>
       </View>

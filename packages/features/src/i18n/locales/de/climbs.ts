@@ -34,7 +34,6 @@ export const climbs = {
   "climbs.renameHint":
     "Mit dem Namen einer anderen deiner Klettereien werden beide zusammengeführt.",
   "climbs.renameFailed": "Die Kletterei konnte nicht umbenannt werden. Versuch es noch einmal.",
-  "climbs.more": "Mehr",
   "climbs.climbingInsights": "Kletterauswertung",
   "climbs.gym": "Halle",
   "climbs.daysOutsideWord_one": "Tag draußen",
