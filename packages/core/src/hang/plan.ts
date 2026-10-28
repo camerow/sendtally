@@ -43,8 +43,8 @@ export type SetDone = Omit<Dose, "sets" | "name">;
  */
 export type Item = { exercise: string; doses: Dose[] };
 
-/** One exercise as one session runs it: the dose that session takes. */
-export type SessionItem = { exercise: string; dose: Dose };
+/** One exercise as one session runs it: the dose that session takes, and its turn when it alternates. */
+export type SessionItem = { exercise: string; dose: Dose; turn?: number };
 
 /** A library workout of any kind. */
 export type Workout = {
@@ -109,9 +109,16 @@ export const doseIndex = (item: Pick<Item, "doses">, n: number): number =>
 export const turnsOf = (items: readonly Pick<Item, "doses">[]): number =>
   Math.max(1, ...items.map((i) => i.doses.length));
 
+/** An item as session `n` of the workout runs it. */
+function sessionItem(item: Item, n: number): SessionItem {
+  const turn = doseIndex(item, n);
+  const run = { exercise: item.exercise, dose: item.doses[turn] ?? { sets: 1 } };
+  return item.doses.length > 1 ? { ...run, turn } : run;
+}
+
 /** Every item as session `n` of the workout runs it. */
 export const sessionItems = (items: readonly Item[], n: number): SessionItem[] =>
-  items.map((i) => ({ exercise: i.exercise, dose: i.doses[doseIndex(i, n)] ?? { sets: 1 } }));
+  items.map((i) => sessionItem(i, n));
 
 /** A, B, C: how a dose is named by its turn. */
 export const letterOf = (dose: number): string => String.fromCharCode(65 + dose);
@@ -209,7 +216,7 @@ export type Prescribed = {
 export function prescription(changes: readonly WeekChange[], p: Prescribed): SessionItem[] {
   return p.workout.items.map((item, i) => {
     const dose = doseIndex(item, p.session);
-    const run = { exercise: item.exercise, dose: item.doses[dose] ?? { sets: 1 } };
+    const run = sessionItem(item, p.session);
     const change =
       p.week === null
         ? undefined

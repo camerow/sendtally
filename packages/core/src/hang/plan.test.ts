@@ -179,6 +179,13 @@ describe("doses by session", () => {
     expect(items.map((i) => i.dose.sets)).toEqual(sets);
   });
 
+  it("marks the turn of an item that alternates, and none on one that does not", () => {
+    const [squatRun, benchRun, rowRun] = sessionItems([...squat.items, bench, row], 4);
+    expect(squatRun?.turn).toBe(0);
+    expect(benchRun).toEqual({ exercise: "Bench press", dose: { sets: 4, reps: 8 } });
+    expect(rowRun?.turn).toBe(1);
+  });
+
   it("counts the turns of the item with the most doses", () => {
     expect(turnsOf([])).toBe(1);
     expect(turnsOf([bench])).toBe(1);

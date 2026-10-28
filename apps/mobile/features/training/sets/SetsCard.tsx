@@ -11,6 +11,7 @@ import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
 import { exerciseName } from "@sendtally/features/workouts";
 import { Label } from "../components/Label";
+import { LetterBadge } from "../components/LetterBadge";
 import { type } from "../type";
 import { SET_COLUMNS } from "./setColumns";
 import { SetRow } from "./SetRow";
@@ -31,7 +32,7 @@ export type SetsCardProps = {
   restUnder: (set: number) => React.ReactNode;
 };
 
-/** One exercise of the workout as a table of its sets. */
+/** One exercise of the workout as a table of its sets, with its dose's letter when it alternates. */
 export function SetsCard({
   item,
   done,
@@ -45,7 +46,7 @@ export function SetsCard({
   restUnder,
 }: SetsCardProps): React.ReactElement {
   const name = exerciseName(item.exercise);
-  const { sets: _, name: _name, ...target } = item.dose;
+  const { sets: _, name: doseName, ...target } = item.dose;
   return (
     <View
       style={{
@@ -60,6 +61,16 @@ export function SetsCard({
         <Text style={[type.bodyBold, { flex: 1, fontSize: 17, color: colors.gunmetal }]}>
           {name}
         </Text>
+        {item.turn !== undefined && (
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 6, alignSelf: "center" }}>
+            <LetterBadge dose={item.turn} size={22} />
+            {doseName !== undefined && (
+              <Text style={[type.body, { fontSize: 13, color: colors.textSecondary }]}>
+                {doseName}
+              </Text>
+            )}
+          </View>
+        )}
         {target.setRestS !== undefined && target.setRestS > 0 && (
           <Text style={[type.body, { fontSize: 13, color: colors.textSecondary }]}>
             {t("plan.chipRest", { value: clock(target.setRestS) })}

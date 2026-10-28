@@ -133,4 +133,20 @@ describe("Sets player", () => {
       },
     });
   });
+
+  it("shows which dose an alternating exercise runs, with its name when it has one", async () => {
+    const alternating: WorkoutRun = {
+      ...run,
+      items: [
+        { exercise: "Back squat", dose: { sets: 3, reps: 10, name: "Light" }, turn: 1 },
+        { exercise: "Row", dose: { sets: 1, reps: 8 }, turn: 0 },
+        { exercise: "Plank", dose: { sets: 1, onS: 30 } },
+      ],
+    };
+    await renderWithHang(<SetsScreen run={alternating} />, hangData());
+    expect(screen.getByText("B")).toBeTruthy();
+    expect(screen.getByText("Light")).toBeTruthy();
+    expect(screen.getByText("A")).toBeTruthy();
+    expect(screen.queryByText("C")).toBeNull();
+  });
 });
