@@ -22,7 +22,9 @@ export type IconName =
   | "search"
   | "more"
   | "stop"
-  | "x";
+  | "x"
+  | "insights"
+  | "star";
 
 const SHAPES: Record<IconName, React.ReactElement> = {
   sessions: (
@@ -75,6 +77,8 @@ const SHAPES: Record<IconName, React.ReactElement> = {
   more: <Path d="M6 12h.01M12 12h.01M18 12h.01" />,
   stop: <Rect x={7} y={7} width={10} height={10} rx={1.5} />,
   x: <Path d="M6 6l12 12M18 6L6 18" />,
+  insights: <Path d="M5 19V11M10 19V5M15 19v-6M20 19V8" />,
+  star: <Path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z" />,
 };
 
 export type IconProps = {

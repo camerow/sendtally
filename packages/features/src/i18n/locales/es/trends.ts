@@ -171,4 +171,5 @@ export const trends = {
   "trends.daysByTagCaption": "Días en que cada etiqueta estuvo en una sesión",
   "trends.tagDays": "{tag} · {inside} interior · {outside} exterior",
   "trends.calendar": "Calendario de escalada",
+  "trends.freeRanges": "Gratis ves los últimos 7 días. Los miembros ven todos los periodos.",
 } as const;

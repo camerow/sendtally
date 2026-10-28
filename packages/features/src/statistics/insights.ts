@@ -1,0 +1,190 @@
+import type { SessionLogWithClimbs } from "@sendtally/api-client";
+import { totalSeconds } from "@sendtally/core/hang";
+import { t } from "../i18n";
+import { durationLabel } from "../log-session/transforms";
+import { isUnscored } from "../sessions/meta";
+import { DAY_MS, bucketsFor, windowOf } from "../trends/buckets";
+import type { TrendRange } from "../trends/types";
+import { exerciseSeries, type ExerciseMetric } from "./exercises";
+import { ACTIVITY_KINDS, kindName, oneDecimal, type ActivityKind } from "./overview";
+
+type Done = { kind: ActivityKind; at: number; rpe: number | null; minutes: number };
+
+export type InsightsPointVM = {
+  label: string;
+  axis: string;
+  sessions: number;
+  effort: number | null;
+};
+
+export type TrainedKindVM = { kind: ActivityKind; name: string; share: number; detail: string };
+
+export type ExerciseTrendVM = {
+  key: string;
+  name: string;
+  count: number;
+  /** The best of each session, oldest first. */
+  values: number[];
+  /** Latest minus first, on the metric. */
+  change: number;
+  metric: ExerciseMetric;
+};
+
+export type ExerciseGroupKind = "hangboard" | "strength" | "mobility" | "other";
+
+export type ExerciseGroupVM = { kind: ExerciseGroupKind; rows: ExerciseTrendVM[] };
+
+export type TrainingInsightsVM = {
+  sessions: number;
+  /** "Effort 6.4, up 0.3 · 2.6 sessions a week" */
+  line: string;
+  points: InsightsPointVM[];
+  trained: TrainedKindVM[];
+  total: string;
+  exercises: ExerciseGroupVM[];
+};
+
+const minutesBetween = (start: string, end: string): number =>
+  Math.max(0, Math.round((Date.parse(end) - Date.parse(start)) / 60_000));
+
+function doneOf(log: SessionLogWithClimbs): Done[] {
+  return [
+    ...log.sessions.map((s): Done => ({
+      kind: "climbing",
+      at: Date.parse(s.start_at),
+      rpe: isUnscored(s) ? null : s.rpe,
+      minutes: s.times === "both" ? minutesBetween(s.start_at, s.end_at) : 0,
+    })),
+    ...log.hangSessions.map((h): Done => ({
+      kind: "hangboard",
+      at: Date.parse(h.date),
+      rpe: h.rpe,
+      minutes: Math.round(totalSeconds(h.protocol) / 60),
+    })),
+    ...log.activities.map((a): Done => ({
+      kind: a.kind,
+      at: Date.parse(a.date),
+      rpe: a.rpe,
+      minutes: a.minutes,
+    })),
+  ];
+}
+
+const mean = (values: readonly number[]): number | null =>
+  values.length === 0 ? null : values.reduce((a, b) => a + b, 0) / values.length;
+
+const effortOf = (done: readonly Done[]): number | null =>
+  mean(done.flatMap((d) => (d.rpe === null ? [] : [d.rpe])));
+
+function effortLine(now: number | null, before: number | null): string | null {
+  if (now === null) return null;
+  const effort = oneDecimal(now);
+  if (before === null || Math.abs(now - before) < 0.05) return t("statistics.effortIs", { effort });
+  const change = oneDecimal(Math.abs(now - before));
+  return now > before
+    ? t("statistics.effortUp", { effort, change })
+    : t("statistics.effortDown", { effort, change });
+}
+
+function trend(
+  key: string,
+  name: string,
+  metric: ExerciseMetric,
+  values: number[]
+): ExerciseTrendVM {
+  return {
+    key,
+    name,
+    count: values.length,
+    values,
+    change: (values.at(-1) ?? 0) - (values[0] ?? 0),
+    metric,
+  };
+}
+
+function hangTrends(
+  log: SessionLogWithClimbs,
+  within: (ms: number) => boolean,
+  gripName: (id: string) => string
+): ExerciseTrendVM[] {
+  const byGrip = new Map<string, number[]>();
+  for (const h of [...log.hangSessions].sort((a, b) => a.date.localeCompare(b.date))) {
+    if (!within(Date.parse(h.date))) continue;
+    byGrip.set(h.gripId, [...(byGrip.get(h.gripId) ?? []), h.loadKg]);
+  }
+  return [...byGrip]
+    .map(([id, loads]) => trend(id, gripName(id), "load", loads))
+    .sort((a, b) => b.count - a.count);
+}
+
+/**
+ * Training over a range: effort and sessions per bucket, the mix of kinds by sessions and time,
+ * and each exercise grouped by kind, the most done first, with its change on its own metric.
+ */
+export function trainingInsightsVM(
+  log: SessionLogWithClimbs,
+  range: TrendRange,
+  kinds: readonly ActivityKind[],
+  gripName: (id: string) => string,
+  now: Date = new Date()
+): TrainingInsightsVM {
+  const all = doneOf(log).filter((d) => kinds.includes(d.kind));
+  const first = all.length === 0 ? null : Math.min(...all.map((d) => d.at));
+  const buckets = bucketsFor(range, now, first);
+  const { start, end } = windowOf(buckets);
+  const within = (ms: number): boolean => ms >= start && ms < end;
+  const shown = all.filter((d) => within(d.at));
+  const before = all.filter((d) => d.at >= start - (end - start) && d.at < start);
+  const weeks = Math.max(1, (end - start) / (7 * DAY_MS));
+  const minutes = shown.reduce((n, d) => n + d.minutes, 0);
+  const line = [
+    effortLine(effortOf(shown), effortOf(before)),
+    t("statistics.perWeek", { n: oneDecimal(shown.length / weeks) }),
+  ].filter((p) => p !== null);
+  const activities = log.activities.filter((a) => within(Date.parse(a.date)));
+  const groups: ExerciseGroupVM[] = [
+    {
+      kind: "hangboard" as const,
+      rows: kinds.includes("hangboard") ? hangTrends(log, within, gripName) : [],
+    },
+    ...(["strength", "mobility", "other"] as const).map((kind) => ({
+      kind,
+      rows: kinds.includes(kind)
+        ? exerciseSeries(activities.filter((a) => a.kind === kind)).map((s) =>
+            trend(
+              s.key,
+              s.name,
+              s.metric,
+              s.sessions.map((x) => x.value)
+            )
+          )
+        : [],
+    })),
+  ];
+  return {
+    sessions: shown.length,
+    line: line.join(" · "),
+    points: buckets.map((b) => {
+      const inside = shown.filter((d) => d.at >= b.start && d.at < b.end);
+      return { label: b.label, axis: b.axis, sessions: inside.length, effort: effortOf(inside) };
+    }),
+    trained: ACTIVITY_KINDS.flatMap((kind) => {
+      const of = shown.filter((d) => d.kind === kind);
+      if (of.length === 0) return [];
+      const time = of.reduce((n, d) => n + d.minutes, 0);
+      return [
+        {
+          kind,
+          name: kindName(kind),
+          share: of.length / shown.length,
+          detail: time === 0 ? String(of.length) : `${of.length} · ${durationLabel(time)}`,
+        },
+      ];
+    }),
+    total: [
+      t("statistics.sessionCount", { count: shown.length }),
+      ...(minutes === 0 ? [] : [durationLabel(minutes)]),
+    ].join(" · "),
+    exercises: groups.filter((g) => g.rows.length > 0),
+  };
+}

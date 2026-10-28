@@ -61,7 +61,7 @@ describe("Session done", () => {
       ],
     });
     expect(router.dismissTo).toHaveBeenCalledWith("/(tabs)/sessions");
-    expect(router.push).toHaveBeenCalledWith("/statistics");
+    expect(router.push).toHaveBeenCalledWith("/training-insights");
   });
 
   it("logs every item of a workout with more than one, each with its own setup", async () => {

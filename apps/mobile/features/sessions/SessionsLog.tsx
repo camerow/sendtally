@@ -8,9 +8,7 @@ import {
   type SectionListData,
   type ViewToken,
 } from "react-native";
-import { useSettings, useTrainingMode } from "@sendtally/features/settings";
-import { todayIn } from "@sendtally/core/hang";
-import { monthSummaryVM, shownKinds } from "@sendtally/features/statistics";
+import { useSettings } from "@sendtally/features/settings";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
   filterSessionsByTags,
@@ -37,7 +35,7 @@ import { LogFab } from "../live-session/LogFab";
 import { DEFAULT_FILTERS, FilterSheet, type SessionFilters } from "./FilterSheet";
 import { ScopeBar } from "./ScopeBar";
 import { SECTION_HEADER_HEIGHT, SectionHeader } from "./SectionHeader";
-import { LogSummary } from "./LogSummary";
+import { InsightsLink } from "../../components/InsightsLink";
 import { HangDataProvider } from "../training/data/HangDataProvider";
 import { SessionEditorSheet } from "../training/session-editor/SessionEditorSheet";
 import { ACTIVITY_ROW_HEIGHT, ActivityRow } from "./ActivityRow";
@@ -129,12 +127,6 @@ export function SessionsLog(): React.ReactElement {
   const open = (item: LogItem): void => openItem(item, setEditingHang);
   // ponytail: a second status() read per mount, to know if Strava is live; a Strava-status context across tabs if it ever matters
   const settings = useSettings(api);
-  const training = useTrainingMode(api).enabled;
-  const summary = React.useMemo(
-    () =>
-      sessionLog === null ? null : monthSummaryVM(sessionLog, todayIn(), shownKinds(training)),
-    [sessionLog, training]
-  );
   const live = useLiveSession(liveSessionStorage);
   const connect = useStravaConnect(api, settings.reload);
   const gyms = useGyms(api);
@@ -254,7 +246,10 @@ export function SessionsLog(): React.ReactElement {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.white }} edges={["top"]}>
       <ScreenHeader title={t("journal.log")} caption={caption} right={<AccountButton />} />
-      {summary !== null && <LogSummary vm={summary} />}
+      <InsightsLink
+        title={t("statistics.trainingInsights")}
+        onPress={() => router.push("/training-insights")}
+      />
       {sections.length > 0 && (
         <ScopeBar
           items={scopeItems}

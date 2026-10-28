@@ -169,4 +169,5 @@ export const trends = {
   "trends.daysByTagCaption": "Days each tag was on a session",
   "trends.tagDays": "{tag} · {inside} inside · {outside} outside",
   "trends.calendar": "Climbing calendar",
+  "trends.freeRanges": "Free shows the last 7 days. Members see every range.",
 } as const;

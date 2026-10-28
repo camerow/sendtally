@@ -170,4 +170,6 @@ export const trends = {
   "trends.daysByTagCaption": "Jours où chaque tag était sur une séance",
   "trends.tagDays": "{tag} · {inside} en salle · {outside} en extérieur",
   "trends.calendar": "Calendrier de grimpe",
+  "trends.freeRanges":
+    "La version gratuite montre les 7 derniers jours. Les membres voient toutes les périodes.",
 } as const;

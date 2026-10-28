@@ -4,7 +4,7 @@ import type { ActivityKind } from "@sendtally/api-client";
 import { colors } from "@sendtally/design/tokens";
 import { ACTIVITY_KINDS, kindLabel } from "@sendtally/features/activities";
 import { press } from "../../../lib/press";
-import { activityColor } from "../statistics/kindColors";
+import { activityColor } from "../insights/kindColors";
 import { type } from "../type";
 
 export type KindChipsProps = { value: ActivityKind; onChange: (kind: ActivityKind) => void };

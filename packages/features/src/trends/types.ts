@@ -11,6 +11,14 @@ export const PREVIEW_TREND_RANGE: TrendRange = "7d";
 
 export const TREND_RANGES: readonly TrendRange[] = ["7d", "1m", "3m", "6m", "ytd", "1y", "all"];
 
+/** Every range but the preview is the membership; unknown membership counts as free. */
+export const isLockedRange = (member: boolean | null, range: TrendRange): boolean =>
+  member !== true && range !== PREVIEW_TREND_RANGE;
+
+/** The range drawn: the one picked, unless it is locked. */
+export const shownRange = (member: boolean | null, picked: TrendRange): TrendRange =>
+  isLockedRange(member, picked) ? PREVIEW_TREND_RANGE : picked;
+
 export const ENDURANCE_RANGES: readonly TrendRange[] = ["3m", "6m", "1y", "all"];
 
 export function trendRangeLabel(range: TrendRange): string {

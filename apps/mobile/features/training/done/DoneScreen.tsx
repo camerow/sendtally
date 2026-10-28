@@ -22,7 +22,7 @@ import { Title } from "../components/Title";
 import { useHangData } from "../data/HangDataContext";
 import { usePlannedRun, type PlannedItem } from "../timer/usePlannedRun";
 import { SetupFields } from "../setup/SetupFields";
-import { openStatistics } from "../statistics/openStatistics";
+import { openTrainingInsights } from "../insights/openTrainingInsights";
 import { type } from "../type";
 import type { DoneParams } from "./doneParams";
 import { doneStats, doneStatus, partialNote } from "./doneText";
@@ -76,7 +76,7 @@ function Done({
         }),
       ],
     });
-    openStatistics();
+    openTrainingInsights();
   };
 
   return (

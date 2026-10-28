@@ -1,25 +1,14 @@
+export { ACTIVITY_KINDS, kindName, shownKinds, type ActivityKind } from "./overview";
 export {
-  summariseActivity,
-  type Activity,
-  type ActivitySummary,
-  type ActivityWeek,
-} from "./activity";
-export {
-  ACTIVITY_KINDS,
-  STATISTICS_RANGES,
-  activitiesOf,
-  overviewVM,
-  shownKinds,
-  statisticsRangeLabel,
-  type ActivityKind,
-  type OverviewKindVM,
-  type OverviewWeekVM,
-  type StatisticsOverviewVM,
-  type StatisticsRange,
-} from "./overview";
-export { monthSummaryVM, type MonthSummaryVM } from "./month";
-export { topSendVM, type TopSendVM, type TopSendWeekVM } from "./topSend";
-export { useStatisticsOverview } from "./useStatisticsOverview";
+  trainingInsightsVM,
+  type ExerciseGroupKind,
+  type ExerciseGroupVM,
+  type ExerciseTrendVM,
+  type InsightsPointVM,
+  type TrainedKindVM,
+  type TrainingInsightsVM,
+} from "./insights";
+export { useTrainingInsights } from "./useTrainingInsights";
 export {
   epley,
   exerciseKey,

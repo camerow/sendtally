@@ -2,7 +2,7 @@ const ROUTES: [RegExp, string][] = [
   [/^\/sessions\/(.+)$/, "/session/$1"],
   [/^\/projects\/(.+)$/, "/climb/$1"],
   [/^\/projects$/, "/(tabs)/climbs"],
-  [/^\/trends(\/.+)?$/, "/statistics"],
+  [/^\/trends(\/.+)?$/, "/training-insights"],
   [/^\/settings\/gyms\/(.+)$/, "/gym/$1"],
   [/^\/settings$/, "/profile"],
   [/^\/(journal\/.+|account|membership)$/, "/$1"],
