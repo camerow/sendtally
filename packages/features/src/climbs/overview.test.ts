@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import type { ClimbSummary, SessionClimb, SessionWithClimbs } from "@sendtally/api-client";
 import { climbDetailVM } from "./overview";
 import { sessionPyramid } from "./pyramid";
-import { climbLogDraft } from "./useClimbs";
 
 const go = (
   v: number,
@@ -74,29 +73,5 @@ describe("sessionPyramid", () => {
         { gradeLabel: "V4", inner: 2, outer: 0, countLabel: "2/2" },
       ]
     );
-  });
-});
-
-describe("climbLogDraft", () => {
-  it("is a flash on one try sent, a redpoint on more, and keeps its links", () => {
-    const base = {
-      name: " The Pinch ",
-      scale: "v",
-      grade: "V7",
-      note: "",
-      areaClimbId: "ac1",
-    } as const;
-    expect(climbLogDraft({ ...base, sent: true, tries: 1 })).toMatchObject({
-      name: "The Pinch",
-      kind: "send",
-      style: "flash",
-      tries: 1,
-      climbId: "ac1",
-    });
-    expect(climbLogDraft({ ...base, sent: true, tries: 4 })).toMatchObject({ style: "redpoint" });
-    expect(climbLogDraft({ ...base, sent: false, tries: 6 })).toMatchObject({
-      kind: "attempt",
-      tries: 6,
-    });
   });
 });

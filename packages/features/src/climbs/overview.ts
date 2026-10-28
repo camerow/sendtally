@@ -9,13 +9,6 @@ export function dayCountLabel(climb: ClimbSummary): string {
   return `${t("climbs.dayCount", { count: climb.sessions })} · ${t("tally.tryCount", { count: climb.attempts })}`;
 }
 
-/** What one of your climbs has seen: its days and tries while working it, or when it went. */
-export function climbProgressLabel(climb: ClimbSummary): string {
-  return climb.sent_at === null
-    ? dayCountLabel(climb)
-    : t("climbs.sentOn", { date: dateLabel(climb.sent_at) });
-}
-
 export type ClimbVisitVM = {
   fingerprint: string;
   day: string;

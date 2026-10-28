@@ -40,6 +40,13 @@ export {
   type ClimbingInsightsFilter,
   type ClimbingInsightsVM,
 } from "./insights";
+export {
+  climbSuggestions,
+  cragChoice,
+  isNewClimb,
+  type ClimbSuggestion,
+  type CragChoice,
+} from "./addClimb";
 export { useClimbVocabulary, type ClimbVocabulary } from "./useClimbVocabulary";
 export {
   useProject,
@@ -51,7 +58,6 @@ export {
 } from "./useProjects";
 export {
   climbDetailVM,
-  climbProgressLabel,
   climbVisits,
   dayCountLabel,
   isThisClimb,
@@ -75,12 +81,9 @@ export {
   type GradeFilter,
 } from "./log";
 export {
-  climbLogDraft,
-  logClimb,
   useClimb,
   useClimbs,
   type ClimbFeature,
-  type ClimbLog,
   type ClimbsData,
   type ClimbsFeature,
 } from "./useClimbs";

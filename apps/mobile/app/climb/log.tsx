@@ -1,6 +1,6 @@
 import React from "react";
-import { LogClimbScreen } from "../../features/climbs/LogClimbScreen";
+import { AddClimbScreen } from "../../features/climbs/AddClimbScreen";
 
-export default function LogClimb(): React.ReactElement {
-  return <LogClimbScreen />;
+export default function AddClimb(): React.ReactElement {
+  return <AddClimbScreen />;
 }
