@@ -28,6 +28,8 @@ export type ActivityPrefill = {
   membershipId?: string;
   week?: string;
   minutes?: string;
+  /** "HH:MM", set when a player timed the run. */
+  startTime?: string;
   /** What a player ran, as JSON, in place of what the workout prescribes. */
   done?: string;
 };
@@ -74,7 +76,7 @@ export function newActivityDraft(
     kind: ACTIVITY_KINDS.find((k) => k === prefill.kind) ?? "strength",
     title: prefill.title ?? "",
     date: prefill.date ?? today,
-    startTime: "",
+    startTime: prefill.startTime ?? "",
     minutes: parseMinutes(prefill.minutes ?? "") ?? DEFAULT_MINUTES,
     rpe: null,
     notes: "",

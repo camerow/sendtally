@@ -36,7 +36,12 @@ export default function NewActivityScreen(): React.ReactElement {
           <ActivityIndicator color={colors.gunmetal} />
         </View>
       ) : (
-        <ActivityForm id={id} initial={initial} logged={null} />
+        <ActivityForm
+          id={id}
+          initial={initial}
+          logged={null}
+          timed={params.startTime !== undefined}
+        />
       )}
     </SafeAreaView>
   );

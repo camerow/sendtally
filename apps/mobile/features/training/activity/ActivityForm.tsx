@@ -44,6 +44,8 @@ export type ActivityFormProps = {
   initial: ActivityDraft;
   /** The activity as logged, which can be deleted and posted to Strava; null while logging a new one. */
   logged: ActivityRecord | null;
+  /** A player ran it: its kind, start, length and load are already known, so only the date shows. */
+  timed?: boolean;
 };
 
 const input = {
@@ -67,7 +69,12 @@ const itemsOf = (done: readonly ItemDone[]) =>
     .map((d) => ({ exercise: d.exercise, dose: { ...d.sets[0], sets: d.sets.length } }));
 
 /** Log or edit one activity: kind, title, when, how long, how hard, its sets or checklist, and its training load. */
-export function ActivityForm({ id, initial, logged }: ActivityFormProps): React.ReactElement {
+export function ActivityForm({
+  id,
+  initial,
+  logged,
+  timed = false,
+}: ActivityFormProps): React.ReactElement {
   const api = useApi();
   const actions = useActivityActions(api, reportFailure);
   const [draft, setDraft] = React.useState(initial);
@@ -132,7 +139,7 @@ export function ActivityForm({ id, initial, logged }: ActivityFormProps): React.
           <Button label={t("common.cancel")} onPress={() => router.back()} variant="link" />
         </View>
 
-        <KindChips value={draft.kind} onChange={(kind) => update({ kind })} />
+        {!timed && <KindChips value={draft.kind} onChange={(kind) => update({ kind })} />}
 
         <SheetSection label={t("activities.title")}>
           <TextInput
@@ -159,36 +166,40 @@ export function ActivityForm({ id, initial, logged }: ActivityFormProps): React.
               />
             </SheetSection>
           </View>
-          <View style={{ flex: 1 }}>
-            <SheetSection label={t("activities.startTime")}>
-              <DateTimeField
-                testID="activity-time"
-                mode="time"
-                value={draft.startTime}
-                label={t("activities.startTime")}
-                placeholder={t("activities.anyTime")}
-                onChange={(startTime) => update({ startTime })}
-                onClear={() => update({ startTime: "" })}
-              />
-            </SheetSection>
-          </View>
+          {!timed && (
+            <View style={{ flex: 1 }}>
+              <SheetSection label={t("activities.startTime")}>
+                <DateTimeField
+                  testID="activity-time"
+                  mode="time"
+                  value={draft.startTime}
+                  label={t("activities.startTime")}
+                  placeholder={t("activities.anyTime")}
+                  onChange={(startTime) => update({ startTime })}
+                  onClear={() => update({ startTime: "" })}
+                />
+              </SheetSection>
+            </View>
+          )}
         </View>
 
-        <SheetSection label={t("activities.durationMinutes")}>
-          <Stepper
-            value={String(draft.minutes)}
-            onCommit={(text) => {
-              const minutes = parseMinutes(text);
-              if (minutes !== null) update({ minutes });
-            }}
-            onStep={(direction) => update({ minutes: stepMinutes(draft.minutes, direction) })}
-            label={t("activities.durationMinutes")}
-            decreaseLabel={t("activities.fewerMinutes")}
-            increaseLabel={t("activities.moreMinutes")}
-            surface="plain"
-            keyboard="number-pad"
-          />
-        </SheetSection>
+        {!timed && (
+          <SheetSection label={t("activities.durationMinutes")}>
+            <Stepper
+              value={String(draft.minutes)}
+              onCommit={(text) => {
+                const minutes = parseMinutes(text);
+                if (minutes !== null) update({ minutes });
+              }}
+              onStep={(direction) => update({ minutes: stepMinutes(draft.minutes, direction) })}
+              label={t("activities.durationMinutes")}
+              decreaseLabel={t("activities.fewerMinutes")}
+              increaseLabel={t("activities.moreMinutes")}
+              surface="plain"
+              keyboard="number-pad"
+            />
+          </SheetSection>
+        )}
 
         <EffortField value={draft.rpe} onChange={(rpe) => update({ rpe })} />
 
@@ -218,32 +229,34 @@ export function ActivityForm({ id, initial, logged }: ActivityFormProps): React.
           />
         </SheetSection>
 
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: 12,
-            paddingVertical: 12,
-            paddingHorizontal: 14,
-            borderRadius: radius.control,
-            borderWidth: 1,
-            borderStyle: "dashed",
-            borderColor: colors.lineOnLightStrong,
-          }}
-        >
-          <Text style={[type.body, { fontSize: 14, color: colors.gunmetal }]}>
-            {t("activities.trainingLoad")}
-          </Text>
-          <Text
-            style={[
-              load === null ? type.body : type.monoBold,
-              { fontSize: 14, color: load === null ? colors.textMuted : colors.gunmetal },
-            ]}
+        {!timed && (
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 12,
+              paddingVertical: 12,
+              paddingHorizontal: 14,
+              borderRadius: radius.control,
+              borderWidth: 1,
+              borderStyle: "dashed",
+              borderColor: colors.lineOnLightStrong,
+            }}
           >
-            {load ?? t("activities.loadNeedsEffort")}
-          </Text>
-        </View>
+            <Text style={[type.body, { fontSize: 14, color: colors.gunmetal }]}>
+              {t("activities.trainingLoad")}
+            </Text>
+            <Text
+              style={[
+                load === null ? type.body : type.monoBold,
+                { fontSize: 14, color: load === null ? colors.textMuted : colors.gunmetal },
+              ]}
+            >
+              {load ?? t("activities.loadNeedsEffort")}
+            </Text>
+          </View>
+        )}
 
         {logged !== null && <ActivityPostBar activity={logged} />}
 

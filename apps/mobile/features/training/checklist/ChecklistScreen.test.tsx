@@ -53,6 +53,7 @@ describe("Checklist player", () => {
         workoutId: "w2",
         minutes: "4",
         done: JSON.stringify([{ item: 0, exercise: "Cat-cow", sets: [{}, {}] }]),
+        startTime: "07:00",
       },
     });
     jest.useRealTimers();

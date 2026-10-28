@@ -2,6 +2,8 @@ import { router, type Href } from "expo-router";
 import type { ActivityKind } from "@sendtally/api-client";
 import type { CalendarDate, ItemDone, PlanLink, SessionItem } from "@sendtally/core/hang";
 import { ACTIVITY_KINDS } from "@sendtally/features/activities";
+import { today } from "@sendtally/features/journal";
+import { startTimeOf } from "../intervals/intervalsText";
 import { planLinkParams, readPlanLink } from "./planLinkParams";
 
 /** A workout run in the sets or checklist player, and what the activity it logs is filed under. */
@@ -83,7 +85,8 @@ export function readWorkoutRun(p: RawParams): WorkoutRun | null {
 /** The activity form for a workout, with what was done in place of what it prescribes when given. */
 export function activityFormPath(
   r: Omit<WorkoutRun, "items" | "exerciseRestS">,
-  done?: readonly ItemDone[]
+  done?: readonly ItemDone[],
+  startTime?: string
 ): Href {
   return {
     pathname: "/activity/new",
@@ -95,6 +98,7 @@ export function activityFormPath(
       ...minutesParam(r.minutes),
       ...planLinkParams(r.link),
       ...(done === undefined ? {} : { done: JSON.stringify(done) }),
+      ...(startTime === undefined ? {} : { startTime }),
     },
   };
 }
@@ -105,5 +109,6 @@ export function activityFormPath(
  */
 export function logRun(r: WorkoutRun, done: readonly ItemDone[], startedAt: number): void {
   const minutes = Math.max(1, Math.round((Date.now() - startedAt) / 60_000));
-  router.replace(activityFormPath({ ...r, minutes }, done));
+  const date = today(new Date(startedAt));
+  router.replace(activityFormPath({ ...r, date, minutes }, done, startTimeOf(startedAt)));
 }

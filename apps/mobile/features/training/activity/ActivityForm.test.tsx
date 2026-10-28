@@ -71,6 +71,23 @@ describe("Log activity", () => {
     expect(router.back).toHaveBeenCalled();
   });
 
+  it("keeps a timed run's kind, start and length, showing only its date", async () => {
+    const initial = newActivityDraft(
+      { kind: "mobility", startTime: "07:00", minutes: "4" },
+      "2026-10-22"
+    );
+    await render(<ActivityForm id="a1" initial={initial} logged={null} timed />);
+    expect(screen.getByTestId("activity-date")).toBeTruthy();
+    expect(screen.queryByTestId("activity-time")).toBeNull();
+    expect(screen.queryByText("Strength")).toBeNull();
+    expect(screen.queryByLabelText("5 minutes less")).toBeNull();
+    expect(screen.queryByText("Training load")).toBeNull();
+    await fireEvent.press(screen.getByText("Save"));
+    expect(mockActions.saveActivity).toHaveBeenLastCalledWith(
+      expect.objectContaining({ kind: "mobility", startTime: "07:00", minutes: 4 })
+    );
+  });
+
   it("logs what a planned workout prescribes, and saves it with the plan it ran", async () => {
     const initial = newActivityDraft(
       { kind: "strength", membershipId: "m1", week: "2", workoutId: "w1" },
