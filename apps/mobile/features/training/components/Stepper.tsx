@@ -1,53 +1,35 @@
 import React from "react";
-import { Pressable, Text, View, type KeyboardTypeOptions } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
 import { press } from "../../../lib/press";
 import { type } from "../type";
-import { NumberField } from "./NumberField";
+import { NumberField, type NumberFieldProps } from "./NumberField";
 
-export type StepperProps = {
-  value: string;
-  onCommit: (text: string) => void;
+export type StepperProps = Omit<NumberFieldProps, "hideLabel"> & {
   onStep: (direction: 1 | -1) => void;
-  label: string;
-  placeholder?: string;
   decreaseLabel: string;
   increaseLabel: string;
-  /** "card" sits on a soft panel, so its controls are white; "plain" sits on white. */
+  /** "card" sits on a soft panel, so its buttons are white; "plain" sits on white. */
   surface: "card" | "plain";
-  buttonSize?: number;
-  inputWidth?: number;
-  fontSize?: number;
-  keyboard?: KeyboardTypeOptions;
-  deferred?: boolean;
 };
 
-/** − / typed number / +. Buttons apply at once; typing commits as it changes unless `deferred`. */
+/** − / number box / +, for a number stepped more often than typed. Its section names it. */
 export function Stepper({
-  value,
-  onCommit,
   onStep,
-  label,
-  placeholder,
   decreaseLabel,
   increaseLabel,
   surface,
-  buttonSize = 44,
-  inputWidth,
-  fontSize = 17,
-  keyboard,
-  deferred,
+  ...field
 }: StepperProps): React.ReactElement {
-  const fill = surface === "card" ? colors.white : colors.surfaceSoft;
   const step = (direction: 1 | -1, a11y: string, glyph: string): React.ReactElement => (
     <Pressable
       onPress={() => onStep(direction)}
       accessibilityRole="button"
       accessibilityLabel={a11y}
       style={press({
-        width: buttonSize,
-        height: buttonSize,
-        borderRadius: buttonSize / 2,
+        width: 46,
+        height: 46,
+        borderRadius: 23,
         borderWidth: 1,
         borderColor: colors.lineOnLightStrong,
         backgroundColor: surface === "card" ? colors.white : undefined,
@@ -55,36 +37,15 @@ export function Stepper({
         justifyContent: "center",
       })}
     >
-      <Text
-        style={[type.bodyBold, { fontSize: buttonSize >= 48 ? 22 : 20, color: colors.gunmetal }]}
-      >
-        {glyph}
-      </Text>
+      <Text style={[type.bodyBold, { fontSize: 20, color: colors.gunmetal }]}>{glyph}</Text>
     </Pressable>
   );
   return (
     <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
       {step(-1, decreaseLabel, "−")}
-      <NumberField
-        value={value}
-        onCommit={onCommit}
-        label={label}
-        placeholder={placeholder}
-        keyboard={keyboard}
-        deferred={deferred}
-        style={{
-          width: inputWidth,
-          flex: inputWidth === undefined ? 1 : undefined,
-          minWidth: 0,
-          height: buttonSize,
-          borderRadius: 12,
-          borderWidth: 1,
-          borderColor: colors.lineOnLightStrong,
-          backgroundColor: fill,
-          color: colors.gunmetal,
-          fontSize,
-        }}
-      />
+      <View style={{ flex: 1 }}>
+        <NumberField {...field} hideLabel />
+      </View>
       {step(1, increaseLabel, "+")}
     </View>
   );

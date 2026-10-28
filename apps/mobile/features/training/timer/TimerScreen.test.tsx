@@ -118,8 +118,10 @@ describe("Timer", () => {
       hangData({ sessions: [session] }),
       { plan }
     );
-    expect(screen.getByDisplayValue("15")).toBeTruthy();
-    expect(screen.getByDisplayValue("8")).toBeTruthy();
+    expect(screen.getByLabelText("Edge depth").props.accessibilityValue).toEqual({ text: "15 mm" });
+    expect(screen.getByLabelText("Added weight").props.accessibilityValue).toEqual({
+      text: "8 kg",
+    });
     await fireEvent.press(screen.getByLabelText("Deeper edge"));
     await fireEvent.press(screen.getByText("Start"));
     expect(screen.getByText("Half crimp · 16\u00A0mm · +8 kg")).toBeTruthy();

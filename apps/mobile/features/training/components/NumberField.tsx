@@ -1,59 +1,41 @@
 import React from "react";
-import { type KeyboardTypeOptions, type StyleProp, type TextStyle } from "react-native";
-import { TextInput } from "../../../components/TextInput";
-import { colors } from "@sendtally/design/tokens";
-import { ungrouped } from "@sendtally/features/i18n";
-import { type } from "../type";
+import type { NumberLimits } from "@sendtally/core/hang";
+import { formatNumber } from "@sendtally/features/i18n";
+import { KeypadField } from "../../../components/KeypadField";
+import type { FieldSlot } from "../../../components/useFieldOrder";
 
-export type NumberFieldProps = {
-  value: string;
-  onCommit: (text: string) => void;
-  label: string;
-  placeholder?: string;
-  keyboard?: KeyboardTypeOptions;
-  style?: StyleProp<TextStyle>;
-  /** Commit only on blur or return, for a commit that writes to the server. */
-  deferred?: boolean;
-};
+export type NumberFieldProps = FieldSlot &
+  NumberLimits & {
+    label: string;
+    accessibilityLabel?: string;
+    hideLabel?: boolean;
+    /** Null reads as the placeholder, and the keypad opens on zero. */
+    value: number | null;
+    /** Called on Done, Next or a tap outside, only when it changed. */
+    onChange: (value: number) => void;
+    placeholder?: string;
+    unit?: string;
+  };
 
-/**
- * Shows `value` until focused, then holds what is typed and commits it as it
- * changes, so a Save pressed with the keyboard still up has it. A commit the
- * parent rejects leaves `value` unchanged, which is what the field shows again
- * on blur: invalid text reverts. Focus drops thousands separators so the number parses back
- * as written, and a blur with nothing typed commits nothing.
- */
+/** A count or weight typed on the in-app keypad, stepped by its keypad's ± key. */
 export function NumberField({
   value,
-  onCommit,
-  label,
-  placeholder,
-  keyboard = "decimal-pad",
-  style,
-  deferred = false,
+  placeholder = "–",
+  unit,
+  step,
+  min,
+  max,
+  decimals,
+  signed,
+  ...field
 }: NumberFieldProps): React.ReactElement {
-  const [draft, setDraft] = React.useState<string | null>(null);
-  const commit = (): void => {
-    if (draft !== null && draft !== ungrouped(value)) onCommit(draft);
-    setDraft(null);
-  };
   return (
-    <TextInput
-      value={draft ?? value}
-      onFocus={() => setDraft(ungrouped(value))}
-      onChangeText={(text) => {
-        setDraft(text);
-        if (!deferred) onCommit(text);
-      }}
-      onBlur={commit}
-      onSubmitEditing={commit}
-      keyboardType={keyboard}
-      returnKeyType="done"
-      selectTextOnFocus
-      accessibilityLabel={label}
-      placeholder={placeholder}
-      placeholderTextColor={colors.textMuted}
-      style={[type.monoBold, { textAlign: "center", paddingHorizontal: 6 }, style]}
+    <KeypadField
+      {...field}
+      mode={{ kind: "number", unit, step, min, max, decimals, signed }}
+      value={value ?? 0}
+      text={value === null ? [placeholder, ""] : ["", formatNumber(value).replace("-", "−")]}
+      unit={unit}
     />
   );
 }

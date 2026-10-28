@@ -8,12 +8,10 @@ export {
 export { useActivities } from "./useActivities";
 export { useActivityActions, type ActivityActions } from "./useActivityActions";
 export {
-  MINUTES_STEP,
   activityFromDraft,
   draftFromActivity,
+  minutesOf,
   newActivityDraft,
-  parseMinutes,
-  stepMinutes,
   type ActivityDraft,
   type ActivityPrefill,
 } from "./draft";

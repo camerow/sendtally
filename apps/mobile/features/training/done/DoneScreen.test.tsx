@@ -45,7 +45,9 @@ describe("Session done", () => {
     expect(screen.getByText(/Came off early on 2 hangs\. Ended after 2 of 6 sets\./)).toBeTruthy();
 
     await fireEvent.press(screen.getByLabelText("Shallower edge"));
-    await fireEvent.press(screen.getByLabelText("More weight"));
+    await fireEvent.press(screen.getByLabelText("Added weight"));
+    await fireEvent.press(screen.getByLabelText("Add 1"));
+    await fireEvent.press(screen.getByLabelText("Done"));
     await fireEvent.press(screen.getByLabelText("Effort 8 of 10"));
     expect(screen.getByText("Very hard")).toBeTruthy();
     await fireEvent.press(screen.getByText("Log session"));

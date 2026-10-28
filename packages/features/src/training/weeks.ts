@@ -3,6 +3,7 @@ import {
   fromUnit,
   toUnit,
   type Dose,
+  type NumberLimits,
   type WeightUnit,
   type WorkoutKind,
 } from "@sendtally/core/hang";
@@ -85,9 +86,20 @@ export function withField(
   return { ...dose, [field]: value };
 }
 
+/** How a field types and steps in the user's unit: weight by 2.5 kg or 5 lb, stepping below zero for assistance. */
+export function fieldLimits(field: DoseField, unit: WeightUnit): NumberLimits {
+  if (field === "weightKg")
+    return {
+      step: unit === "lb" ? 5 : STEP.weightKg,
+      decimals: true,
+      min: toUnit(MIN.weightKg, unit),
+    };
+  return { step: STEP[field], min: MIN[field] };
+}
+
 /** The dose one step up or down on a field: 2.5 kg or 5 lb of weight, 15 s of set rest, else 1. */
 export function stepped(dose: Dose, field: DoseField, direction: 1 | -1, unit: WeightUnit): Dose {
-  const step = field === "weightKg" && unit === "lb" ? 5 : STEP[field];
+  const { step } = fieldLimits(field, unit);
   return withField(dose, field, fieldValue(dose, field, unit) + direction * step, unit) ?? dose;
 }
 

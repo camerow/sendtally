@@ -8,9 +8,10 @@ import {
   type WorkoutKind,
 } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
-import { formatNumber, t } from "@sendtally/features/i18n";
+import { t } from "@sendtally/features/i18n";
 import {
   fieldLabel,
+  fieldLimits,
   fieldValue,
   stepped,
   weekFields,
@@ -18,8 +19,10 @@ import {
   type DoseField,
 } from "@sendtally/features/training";
 import { TimeField } from "../../../components/TimeField";
+import { useFieldOrder } from "../../../components/useFieldOrder";
 import { press } from "../../../lib/press";
 import { Label } from "../components/Label";
+import { NumberField } from "../components/NumberField";
 import { Stepper } from "../components/Stepper";
 import { type } from "../type";
 
@@ -34,7 +37,7 @@ export type RungEditorProps = {
 
 const TIMES: readonly DoseField[] = ["onS", "offS", "setRestS"];
 
-/** One item of one week: a stepper or time field for each field it changes, and more fields to change. */
+/** One item of one week: a typable field for each field it changes, Next walking them in order, and more fields to change. */
 export function RungEditor({
   kind,
   item,
@@ -49,43 +52,49 @@ export function RungEditor({
   const dose: Dose = { ...written, ...change };
   const set = (target: Dose): void => onChange(changeFrom(written, target));
   const more = weekFields(kind, written).filter((f) => !shown.includes(f));
-  const suffix = (f: DoseField): string => (f === "weightKg" ? unit : f === "edgeMm" ? "mm" : "");
+  const { slot } = useFieldOrder(shown);
 
   return (
     <View style={{ gap: 12 }}>
       {shown.map((f) => {
         const label = fieldLabel(kind, written, f);
+        const value = fieldValue(dose, f, unit);
+        const onChange = (typed: number): void => {
+          const next = withField(dose, f, typed, unit);
+          if (next !== null) set(next);
+        };
         if (TIMES.includes(f))
+          return <TimeField key={f} {...slot(f)} label={label} value={value} onChange={onChange} />;
+        if (f === "edgeMm")
           return (
-            <TimeField
-              key={f}
-              label={label}
-              value={fieldValue(dose, f, unit)}
-              onChange={(seconds) => {
-                const next = withField(dose, f, seconds, unit);
-                if (next !== null) set(next);
-              }}
-            />
+            <View key={f} style={{ gap: 6 }}>
+              <Label small color={colors.textSecondary}>
+                {label}
+              </Label>
+              <Stepper
+                {...slot(f)}
+                {...fieldLimits(f, unit)}
+                value={value}
+                onChange={onChange}
+                onStep={(direction) => set(stepped(dose, f, direction, unit))}
+                unit="mm"
+                label={label}
+                decreaseLabel={t("hang.decrease", { field: label })}
+                increaseLabel={t("hang.increase", { field: label })}
+                surface="card"
+              />
+            </View>
           );
         return (
-          <View key={f} style={{ gap: 6 }}>
-            <Label small color={colors.textSecondary}>
-              {suffix(f) === "" ? label : `${label} · ${suffix(f)}`}
-            </Label>
-            <Stepper
-              value={formatNumber(fieldValue(dose, f, unit))}
-              onCommit={(text) => {
-                const next = withField(dose, f, Number(text.replace(",", ".")), unit);
-                if (next !== null) set(next);
-              }}
-              onStep={(direction) => set(stepped(dose, f, direction, unit))}
-              label={label}
-              decreaseLabel={t("hang.decrease", { field: label })}
-              increaseLabel={t("hang.increase", { field: label })}
-              surface="card"
-              deferred
-            />
-          </View>
+          <NumberField
+            key={f}
+            {...slot(f)}
+            {...fieldLimits(f, unit)}
+            label={label}
+            value={value}
+            onChange={onChange}
+            unit={f === "weightKg" ? unit : undefined}
+          />
         );
       })}
       {more.length > 0 && (

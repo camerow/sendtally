@@ -22,11 +22,11 @@ import { Button } from "../components/Button";
 import { EditorHeader } from "../components/EditorHeader";
 import { FocusField } from "../components/FocusField";
 import { KindNameField } from "../components/KindNameField";
+import { SheetSection } from "../components/SheetSection";
 import { useHangData } from "../data/HangDataContext";
 import { LoadState } from "../data/LoadState";
 import { ExercisePickerSheet } from "../exercise-picker/ExercisePickerSheet";
 import { useLibrary } from "../library/useLibrary";
-import { MinutesField } from "../plan/MinutesField";
 import { TargetEffort } from "../plan/TargetEffort";
 import { EditorTextField } from "./EditorTextField";
 import { HangboardTiming } from "./HangboardTiming";
@@ -40,8 +40,14 @@ import {
 } from "./editorState";
 import { doseMeasureOf } from "./doseFields";
 import { ItemEditor } from "./ItemEditor";
-import { RestField } from "./RestField";
 import { confirmDestructive } from "../../../lib/confirmDestructive";
+import { TimeField } from "../../../components/TimeField";
+
+const MAX_MINUTES = 600;
+
+/** None at zero, else the whole minutes typed. */
+const usualMinutes = (seconds: number): number | null =>
+  seconds === 0 ? null : Math.min(MAX_MINUTES, Math.max(1, Math.round(seconds / 60)));
 
 export type WorkoutEditorScreenProps = {
   /** Edit this workout of the user's own. */
@@ -159,11 +165,11 @@ function Editor({
               onSwap={() => setPicking({ swap: i })}
             />
           ))}
-          <RestField
+          <TimeField
             label={t("workouts.exerciseRest")}
-            seconds={state.exerciseRestS}
+            value={state.exerciseRestS}
+            max={3600}
             onChange={(exerciseRestS) => setState((s) => ({ ...s, exerciseRestS }))}
-            soft
           />
           <Button
             label={t("workouts.addExercises")}
@@ -175,10 +181,15 @@ function Editor({
           {state.kind === "hangboard" ? (
             <HangboardTiming minutes={workoutMinutes(state)} />
           ) : (
-            <MinutesField
-              value={state.minutes}
-              onChange={(minutes) => setState((s) => ({ ...s, minutes }))}
-            />
+            <SheetSection label={t("common.duration")}>
+              <TimeField
+                hideLabel
+                label={t("common.duration")}
+                value={(state.minutes ?? 0) * 60}
+                max={MAX_MINUTES * 60}
+                onChange={(seconds) => setState((s) => ({ ...s, minutes: usualMinutes(seconds) }))}
+              />
+            </SheetSection>
           )}
           <TargetEffort
             value={state.targetRpe}

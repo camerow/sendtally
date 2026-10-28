@@ -16,8 +16,7 @@ import { defaultExerciseRestS, type ItemDone } from "@sendtally/core/hang";
 import {
   activityFromDraft,
   kindLabel,
-  parseMinutes,
-  stepMinutes,
+  minutesOf,
   useActivityActions,
   useWeightUnit,
   type ActivityDraft,
@@ -25,12 +24,12 @@ import {
 import { t } from "@sendtally/features/i18n";
 import { useWorkoutActions } from "@sendtally/features/workouts";
 import { DateTimeField } from "../../../components/DateTimeField";
+import { TimeField } from "../../../components/TimeField";
 import { useApi } from "../../../lib/api";
 import { Button } from "../components/Button";
 import { EffortField } from "../components/EffortField";
 import { FocusField } from "../components/FocusField";
 import { SheetSection } from "../components/SheetSection";
-import { Stepper } from "../components/Stepper";
 import { Title } from "../components/Title";
 import { type } from "../type";
 import { DoneDetails } from "./DoneDetails";
@@ -183,19 +182,13 @@ export function ActivityForm({
         </View>
 
         {!timed && (
-          <SheetSection label={t("activities.durationMinutes")}>
-            <Stepper
-              value={String(draft.minutes)}
-              onCommit={(text) => {
-                const minutes = parseMinutes(text);
-                if (minutes !== null) update({ minutes });
-              }}
-              onStep={(direction) => update({ minutes: stepMinutes(draft.minutes, direction) })}
-              label={t("activities.durationMinutes")}
-              decreaseLabel={t("activities.fewerMinutes")}
-              increaseLabel={t("activities.moreMinutes")}
-              surface="plain"
-              keyboard="number-pad"
+          <SheetSection label={t("common.duration")}>
+            <TimeField
+              hideLabel
+              label={t("common.duration")}
+              value={draft.minutes * 60}
+              min={60}
+              onChange={(seconds) => update({ minutes: minutesOf(seconds) })}
             />
           </SheetSection>
         )}

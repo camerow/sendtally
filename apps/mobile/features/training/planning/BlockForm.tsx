@@ -4,7 +4,7 @@ import React from "react";
 import { Text, TextInput, View } from "react-native";
 import type { Block } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
-import { formatNumber, t } from "@sendtally/features/i18n";
+import { t } from "@sendtally/features/i18n";
 import { usePlan } from "@sendtally/features/training";
 import { useApi } from "../../../lib/api";
 import { Button } from "../components/Button";
@@ -120,17 +120,16 @@ export function BlockForm({ initial, highlight }: BlockFormProps): React.ReactEl
       />
       <SheetSection label={t("plan.weeks")}>
         <Stepper
-          value={formatNumber(block.weeks)}
-          onCommit={(text) => {
-            const n = Number(text);
-            if (Number.isFinite(n) && n > 0) update({ weeks: clampWeeks(n) });
-          }}
+          value={block.weeks}
+          onChange={(n) => update({ weeks: clampWeeks(n) })}
+          step={1}
+          min={1}
+          max={MAX_WEEKS}
           onStep={(direction) => update({ weeks: clampWeeks(block.weeks + direction) })}
           label={t("plan.weeks")}
           decreaseLabel={t("hang.decrease", { field: t("plan.weeks") })}
           increaseLabel={t("hang.increase", { field: t("plan.weeks") })}
           surface="plain"
-          keyboard="number-pad"
         />
       </SheetSection>
       {!isNew && <BlockWorkouts block={initial} highlight={highlight} />}

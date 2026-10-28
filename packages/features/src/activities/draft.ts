@@ -46,11 +46,17 @@ export type ActivityPrefill = {
   skipped?: string;
 };
 
-export const MINUTES_STEP = 5;
-
 const DEFAULT_MINUTES = 60;
 
 const clampMinutes = (n: number): number => Math.min(1440, Math.max(1, Math.round(n)));
+
+/** A length typed in seconds as the whole minutes an activity keeps, one to a day. */
+export const minutesOf = (seconds: number): number => clampMinutes(seconds / 60);
+
+const minutesParam = (text: string | undefined): number | null => {
+  const n = Number(text);
+  return text === undefined || text.trim() === "" || !Number.isFinite(n) ? null : clampMinutes(n);
+};
 
 const wholeNumber = (text: string | undefined): number | null => {
   const n = Number(text);
@@ -98,7 +104,7 @@ export function newActivityDraft(
     title: prefill.title ?? "",
     date: prefill.date ?? today,
     startTime: prefill.startTime ?? "",
-    minutes: parseMinutes(prefill.minutes ?? "") ?? DEFAULT_MINUTES,
+    minutes: minutesParam(prefill.minutes) ?? DEFAULT_MINUTES,
     rpe: null,
     notes: "",
     workoutId: prefill.workoutId ?? null,
@@ -147,19 +153,4 @@ export function activityFromDraft(id: string, d: ActivityDraft): Activity {
     focus: d.focus,
     done: cleanDone(d.done.filter((x) => !d.skipped.includes(x.item))),
   };
-}
-
-/** Plus or minus lands on the next multiple of the step, never below one minute. */
-export function stepMinutes(minutes: number, direction: 1 | -1): number {
-  const next =
-    direction === 1
-      ? Math.floor(minutes / MINUTES_STEP) * MINUTES_STEP + MINUTES_STEP
-      : Math.ceil(minutes / MINUTES_STEP) * MINUTES_STEP - MINUTES_STEP;
-  return clampMinutes(next);
-}
-
-/** Typed minutes, or null for text that is not a number. */
-export function parseMinutes(text: string): number | null {
-  const n = Number(text.trim());
-  return text.trim() === "" || !Number.isFinite(n) ? null : clampMinutes(n);
 }

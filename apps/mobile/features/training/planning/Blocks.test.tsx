@@ -232,7 +232,9 @@ describe("block weeks", () => {
   it("stores a week's change to any field, counted from the workout as written", async () => {
     await renderWithHang(<LadderScreen id="m1" />, hangData(), { workouts: [squat], plan });
     await fireEvent.press(screen.getByLabelText("Week 3: +5 kg"));
-    await fireEvent.press(screen.getByLabelText("Increase Weight"));
+    await fireEvent.press(screen.getByLabelText("Weight"));
+    await fireEvent.press(screen.getByLabelText("Add 2.5"));
+    await fireEvent.press(screen.getByLabelText("Done"));
     expect(mockPlan.saveWeekChange).toHaveBeenLastCalledWith({
       membershipId: "m1",
       week: 3,
@@ -241,7 +243,9 @@ describe("block weeks", () => {
       change: { weightKg: 107.5 },
     });
     await fireEvent.press(screen.getByText("+ Sets"));
-    await fireEvent.press(screen.getByLabelText("Decrease Sets"));
+    await fireEvent.press(screen.getByLabelText("Sets"));
+    await fireEvent.press(screen.getByLabelText("Subtract 1"));
+    await fireEvent.press(screen.getByLabelText("Done"));
     expect(mockPlan.saveWeekChange).toHaveBeenLastCalledWith({
       membershipId: "m1",
       week: 3,

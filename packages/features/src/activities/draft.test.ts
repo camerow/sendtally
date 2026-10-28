@@ -1,11 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  activityFromDraft,
-  draftFromActivity,
-  newActivityDraft,
-  parseMinutes,
-  stepMinutes,
-} from "./draft";
+import { activityFromDraft, draftFromActivity, newActivityDraft, minutesOf } from "./draft";
 
 describe("activity drafts", () => {
   it("takes what the route knows and ignores a kind it does not", () => {
@@ -65,13 +59,17 @@ describe("activity drafts", () => {
     expect(newActivityDraft({ skipped: "[" }, "2026-10-22").skipped).toEqual([]);
   });
 
-  it("steps minutes to the next multiple of five and keeps them in range", () => {
-    expect(stepMinutes(52, 1)).toBe(55);
-    expect(stepMinutes(52, -1)).toBe(50);
-    expect(stepMinutes(5, -1)).toBe(1);
-    expect(parseMinutes("45")).toBe(45);
-    expect(parseMinutes("2000")).toBe(1440);
-    expect(parseMinutes("abc")).toBeNull();
-    expect(parseMinutes("")).toBeNull();
+  it("keeps a length typed in seconds as whole minutes, one to a day", () => {
+    expect(minutesOf(45 * 60)).toBe(45);
+    expect(minutesOf(90)).toBe(2);
+    expect(minutesOf(0)).toBe(1);
+    expect(minutesOf(86399)).toBe(1440);
+  });
+
+  it("reads a prefilled length, falling back to an hour", () => {
+    expect(newActivityDraft({ minutes: "45" }, "2026-10-22").minutes).toBe(45);
+    expect(newActivityDraft({ minutes: "2000" }, "2026-10-22").minutes).toBe(1440);
+    expect(newActivityDraft({ minutes: "abc" }, "2026-10-22").minutes).toBe(60);
+    expect(newActivityDraft({ minutes: "" }, "2026-10-22").minutes).toBe(60);
   });
 });

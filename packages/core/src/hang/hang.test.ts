@@ -6,8 +6,6 @@ import {
   cameOffEarly,
   endRun,
   logLift,
-  parseNumber,
-  parseSeconds,
   phasesFor,
   resultOf,
   skip,
@@ -98,23 +96,6 @@ describe("loads", () => {
     expect(bumpLoad("hang", 0, "kg", -1)).toBe(-1);
     expect(bumpLoad("pull", 0, "kg", -1)).toBe(0);
     expect(toUnit(bumpLoad("pull", 20, "lb", 1), "lb")).toBe(49);
-  });
-});
-
-describe("parsing", () => {
-  it.each([
-    ["1:30", "min", 90],
-    ["90", "s", 90],
-    ["3", "min", 180],
-    ["abc", "s", null],
-  ] as const)("reads %s in %s mode", (text, unit, seconds) => {
-    expect(parseSeconds(text, unit)).toBe(seconds);
-  });
-
-  it("accepts a comma decimal and the minus sign", () => {
-    expect(parseNumber("−3")).toBe(-3);
-    expect(parseNumber("2,5")).toBe(2.5);
-    expect(parseNumber("")).toBeNull();
   });
 });
 

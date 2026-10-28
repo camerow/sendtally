@@ -1,24 +1,28 @@
 import React from "react";
+import { clampEdge, MAX_EDGE_MM, MIN_EDGE_MM } from "@sendtally/core/hang";
 import { t } from "@sendtally/features/i18n";
 import { SheetSection } from "../components/SheetSection";
 import { Stepper } from "../components/Stepper";
-import { edgeControl } from "./edgeControl";
+import type { FieldSlot } from "../../../components/useFieldOrder";
 
-export type EdgeFieldProps = { edgeMm: number; onChange: (mm: number) => void };
+export type EdgeFieldProps = FieldSlot & { edgeMm: number; onChange: (mm: number) => void };
 
-export function EdgeField({ edgeMm, onChange }: EdgeFieldProps): React.ReactElement {
-  const edge = edgeControl(edgeMm, onChange);
+export function EdgeField({ edgeMm, onChange, ...slot }: EdgeFieldProps): React.ReactElement {
   return (
     <SheetSection label={t("hang.edgeDepth")}>
       <Stepper
-        value={edge.text}
-        onCommit={edge.commit}
-        onStep={edge.step}
+        {...slot}
+        value={edgeMm}
+        onChange={(mm) => onChange(clampEdge(mm))}
+        onStep={(direction) => onChange(clampEdge(edgeMm + direction))}
+        step={1}
+        min={MIN_EDGE_MM}
+        max={MAX_EDGE_MM}
+        unit="mm"
         label={t("hang.edgeDepth")}
         decreaseLabel={t("hang.shallowerEdge")}
         increaseLabel={t("hang.deeperEdge")}
         surface="plain"
-        keyboard="number-pad"
       />
     </SheetSection>
   );

@@ -3,7 +3,8 @@ import {
   DOSE_FIELDS_OF,
   doseFieldsFor,
   doseMeasureOf,
-  fieldText,
+  fieldLimits,
+  fieldValue,
   newDoseFor,
   withField,
 } from "./doseFields";
@@ -12,21 +13,24 @@ const [hangs, hang, rest, sets] = DOSE_FIELDS_OF.hangboard;
 const [, , weight] = DOSE_FIELDS_OF.strength;
 
 describe("dose fields", () => {
-  it("reads times as seconds or m:ss, and weights in the user's unit", () => {
-    expect(fieldText(hang!, { sets: 1, onS: 7 }, "kg")).toBe("7");
-    expect(fieldText(rest!, { sets: 1, offS: 180 }, "kg")).toBe("3:00");
-    expect(fieldText(weight!, { sets: 1, weightKg: 100 }, "lb")).toBe("220.5");
-    expect(fieldText(hangs!, { sets: 1 }, "kg")).toBe("");
-    expect(fieldText(weight!, { sets: 1, weightKg: -20 }, "kg")).toBe("−20");
-    expect(withField({ sets: 1 }, weight!, "−20", "kg")).toEqual({ sets: 1, weightKg: -20 });
+  it("reads times in seconds and weights in the user's unit, null when unset", () => {
+    expect(fieldValue(rest!, { sets: 1, offS: 180 }, "kg")).toBe(180);
+    expect(fieldValue(weight!, { sets: 1, weightKg: 100 }, "lb")).toBe(220.5);
+    expect(fieldValue(hangs!, { sets: 1 }, "kg")).toBeNull();
+    expect(withField({ sets: 1 }, weight!, -20, "kg")).toEqual({ sets: 1, weightKg: -20 });
   });
 
-  it("takes typed numbers, clears optional fields, and refuses what is not a number", () => {
-    expect(withField({ sets: 1 }, rest!, "1:30", "kg")).toEqual({ sets: 1, offS: 90 });
-    expect(withField({ sets: 1, onS: 7 }, hang!, " ", "kg")).toEqual({ sets: 1 });
-    expect(withField({ sets: 3 }, sets!, "", "kg")).toBeNull();
-    expect(withField({ sets: 3 }, sets!, "0", "kg")).toEqual({ sets: 1 });
-    expect(withField({ sets: 3 }, hangs!, "six", "kg")).toBeNull();
+  it("clears any field but sets at zero, and keeps sets at one or more", () => {
+    expect(withField({ sets: 1 }, rest!, 90, "kg")).toEqual({ sets: 1, offS: 90 });
+    expect(withField({ sets: 1, onS: 7 }, hang!, 0, "kg")).toEqual({ sets: 1 });
+    expect(withField({ sets: 3 }, sets!, 0, "kg")).toEqual({ sets: 1 });
+    expect(withField({ sets: 3, reps: 6 }, hangs!, 6.4, "kg")).toEqual({ sets: 3, reps: 6 });
+  });
+
+  it("steps weight by 2.5 kg or 5 lb with a sign, and counts by one", () => {
+    expect(fieldLimits(weight!, "kg")).toEqual({ step: 2.5, decimals: true, min: -200 });
+    expect(fieldLimits(weight!, "lb").step).toBe(5);
+    expect(fieldLimits(sets!, "kg")).toEqual({ step: 1, min: 1, max: 100 });
   });
 
   it("asks a climbing exercise for climbs or time, never a grade, and empty climbs runs until Done", () => {
@@ -40,7 +44,7 @@ describe("dose fields", () => {
       "workouts.dose.climbs",
     ]);
     expect(doseFieldsFor("climbing", "wallTime").map((f) => f.key)).toEqual(["sets", "onS"]);
-    expect(withField({ sets: 1, reps: 4 }, climbs!, "", "kg")).toEqual({ sets: 1 });
+    expect(withField({ sets: 1, reps: 4 }, climbs!, 0, "kg")).toEqual({ sets: 1 });
     expect(newDoseFor("climbing", "wallTime")).toEqual({ sets: 2, onS: 1200, setRestS: 300 });
   });
 });

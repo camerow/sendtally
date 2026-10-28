@@ -92,10 +92,9 @@ describe("Sets player", () => {
     expect(screen.getByLabelText("Rest, 1:00 left")).toBeTruthy();
     expect(screen.getByText("0:30")).toBeTruthy();
 
-    const reps = screen.getByLabelText("Back squat, set 2 · Reps");
-    await fireEvent(reps, "focus");
-    await fireEvent.changeText(reps, "4");
-    await fireEvent(reps, "blur");
+    await fireEvent.press(screen.getByLabelText("Back squat, set 2 · Reps"));
+    await fireEvent.press(screen.getByLabelText("4"));
+    await fireEvent.press(screen.getByLabelText("Done"));
     await fireEvent.press(screen.getByLabelText("Back squat, set 2"));
     expect(screen.queryByLabelText("Rest, 1:00 left")).toBeNull();
     expect(screen.getByLabelText("Back squat, 2 of 2 sets")).toBeTruthy();
@@ -105,7 +104,9 @@ describe("Sets player", () => {
     await advance(120_000);
     expect(screen.queryByText("Next: Row")).toBeNull();
     expect(tone).toHaveBeenCalledTimes(1);
-    expect(screen.getByLabelText("Row, set 1 · Weight").props.value).toBe("60");
+    expect(screen.getByLabelText("Row, set 1 · Weight").props.accessibilityValue).toEqual({
+      text: "60 kg",
+    });
     await fireEvent.press(screen.getByLabelText("Row, set 1"));
 
     await fireEvent.press(screen.getByText("Finish"));

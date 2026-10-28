@@ -1,13 +1,11 @@
 import {
   clamp,
-  clock,
   fromUnit,
-  parseNumber,
-  parseSeconds,
   toUnit,
   type Dose,
   type ExerciseKind,
   type ExerciseMeasure,
+  type NumberLimits,
   type WeightUnit,
   type WorkoutKind,
 } from "@sendtally/core/hang";
@@ -29,7 +27,7 @@ export type DoseField = {
 
 const count = (key: DoseKey, label: MessageKey): DoseField => ({ key, label, measure: "count" });
 const time = (key: DoseKey, label: MessageKey): DoseField => ({ key, label, measure: "time" });
-const weight: DoseField = { key: "weightKg", label: "workouts.dose.weight", measure: "weight" };
+const weight: DoseField = { key: "weightKg", label: "hang.weight", measure: "weight" };
 
 /** The dose numbers each kind asks for, in the order they show. */
 export const DOSE_FIELDS_OF: Record<WorkoutKind, readonly DoseField[]> = {
@@ -108,12 +106,18 @@ export const newDoseFor = (kind: WorkoutKind, measure?: DoseMeasure): Dose => ({
   ...(byMeasure(kind, measure) ? NEW_DOSE_BY_MEASURE[measure] : NEW_DOSE[kind]),
 });
 
-/** A field as typed: a count, seconds or "m:ss", a weight in the user's unit; empty when unset. */
-export function fieldText(field: DoseField, dose: Dose, unit: WeightUnit): string {
+/** A field in the user's unit; null when unset. */
+export function fieldValue(field: DoseField, dose: Dose, unit: WeightUnit): number | null {
   const value = dose[field.key];
-  if (value === undefined) return "";
-  if (field.measure === "time") return clock(value);
-  return String(field.measure === "weight" ? toUnit(value, unit) : value).replace("-", "−");
+  if (value === undefined) return null;
+  return field.measure === "weight" ? toUnit(value, unit) : value;
+}
+
+/** How a count or weight types on the keypad: weight by 2.5 kg or 5 lb, stepping below zero for assistance. */
+export function fieldLimits(field: DoseField, unit: WeightUnit): NumberLimits {
+  if (field.measure === "weight")
+    return { step: unit === "lb" ? 5 : 2.5, decimals: true, min: toUnit(LIMITS.weight[0], unit) };
+  return field.key === "sets" ? { step: 1, min: 1, max: 100 } : { step: 1, max: 1000 };
 }
 
 const LIMITS: Record<DoseField["measure"], readonly [number, number]> = {
@@ -122,21 +126,13 @@ const LIMITS: Record<DoseField["measure"], readonly [number, number]> = {
   weight: [-200, 1000],
 };
 
-/** The dose with one field typed in; empty clears it. Null when the text is not a number. */
-export function withField(
-  dose: Dose,
-  field: DoseField,
-  text: string,
-  unit: WeightUnit
-): Dose | null {
-  if (text.trim() === "") {
-    if (field.key === "sets") return null;
+/** The dose with one field set in the user's unit. Zero clears any field but sets. */
+export function withField(dose: Dose, field: DoseField, value: number, unit: WeightUnit): Dose {
+  if (value === 0 && field.key !== "sets") {
     const { [field.key]: _, ...rest } = dose;
     return rest;
   }
-  const n = field.measure === "time" ? parseSeconds(text, "s") : parseNumber(text);
-  if (n === null) return null;
-  const typed = field.measure === "weight" ? fromUnit(n, unit) : Math.round(n);
+  const typed = field.measure === "weight" ? fromUnit(value, unit) : Math.round(value);
   const [min, max] = field.key === "sets" ? [1, 100] : LIMITS[field.measure];
   return { ...dose, [field.key]: clamp(typed, min, max) };
 }

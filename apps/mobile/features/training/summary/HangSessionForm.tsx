@@ -2,7 +2,7 @@ import { router } from "expo-router";
 import React from "react";
 import { KeyboardAvoidingView, Platform, ScrollView, Text, View } from "react-native";
 import type { HangSessionRecord } from "@sendtally/api-client";
-import { clamp, parseNumber } from "@sendtally/core/hang";
+import { clamp } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { shortDate } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
@@ -14,13 +14,14 @@ import { FocusField } from "../components/FocusField";
 import { MonthCalendar } from "../components/MonthCalendar";
 import { SelectField } from "../components/SelectField";
 import { SheetSection } from "../components/SheetSection";
-import { Stepper } from "../components/Stepper";
+import { NumberField } from "../components/NumberField";
 import { Title } from "../components/Title";
 import { useHangData } from "../data/HangDataContext";
 import { GripPickerSheet } from "../grip-picker/GripPickerSheet";
-import { loadControl } from "../loads/loadControl";
+import { LoadField } from "../loads/LoadField";
 import { EdgeField } from "../setup/EdgeField";
 import { type } from "../type";
+import { useFieldOrder } from "../../../components/useFieldOrder";
 
 const PCT_STEP = 5;
 
@@ -42,8 +43,8 @@ export function HangSessionForm({ session }: HangSessionFormProps): React.ReactE
   };
   const kind = session.protocol.kind;
   const name = hangTitle(session);
-  const load = loadControl(kind, draft.loadKg, model.settings.units, (loadKg) =>
-    update({ loadKg })
+  const { slot } = useFieldOrder(
+    kind === "hang" ? ["edge", "load", "completion"] : ["load", "completion"]
   );
   const setPct = (pct: number): void => update({ pct: clamp(Math.round(pct), 0, 100) });
 
@@ -107,33 +108,30 @@ export function HangSessionForm({ session }: HangSessionFormProps): React.ReactE
           />
         </SheetSection>
         {kind === "hang" && (
-          <EdgeField edgeMm={draft.edgeMm} onChange={(edgeMm) => update({ edgeMm })} />
-        )}
-        <SheetSection label={t("hang.load")}>
-          <Stepper
-            value={load.text}
-            onCommit={load.commit}
-            onStep={load.step}
-            label={t("hang.load")}
-            decreaseLabel={t("hang.lessWeight")}
-            increaseLabel={t("hang.moreWeight")}
-            surface="plain"
-            keyboard="numbers-and-punctuation"
+          <EdgeField
+            {...slot("edge")}
+            edgeMm={draft.edgeMm}
+            onChange={(edgeMm) => update({ edgeMm })}
           />
-        </SheetSection>
+        )}
+        <LoadField
+          {...slot("load")}
+          kind={kind}
+          kg={draft.loadKg}
+          unit={model.settings.units}
+          label={t("hang.load")}
+          onChange={(loadKg) => update({ loadKg })}
+        />
         <SheetSection label={t("hang.completion")}>
-          <Stepper
-            value={String(draft.pct)}
-            onCommit={(text) => {
-              const n = parseNumber(text);
-              if (n !== null) setPct(n);
-            }}
-            onStep={(dir) => setPct(draft.pct + dir * PCT_STEP)}
+          <NumberField
+            {...slot("completion")}
+            hideLabel
             label={t("hang.completion")}
-            decreaseLabel={t("hang.lessCompletion")}
-            increaseLabel={t("hang.moreCompletion")}
-            surface="plain"
-            keyboard="number-pad"
+            value={draft.pct}
+            onChange={setPct}
+            unit="%"
+            step={PCT_STEP}
+            max={100}
           />
         </SheetSection>
         <EffortField value={draft.rpe} onChange={(rpe) => update({ rpe })} />

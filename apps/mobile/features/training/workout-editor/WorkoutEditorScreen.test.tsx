@@ -62,11 +62,14 @@ async function pick(...names: string[]): Promise<void> {
   await act(async () => undefined);
 }
 
-async function type(label: string, text: string, index = 0): Promise<void> {
-  const field = screen.getAllByLabelText(label)[index]!;
-  await fireEvent(field, "focus");
-  await fireEvent.changeText(field, text);
-  await fireEvent(field, "blur");
+async function keys(...pressed: string[]): Promise<void> {
+  for (const key of pressed) await fireEvent.press(screen.getByLabelText(key));
+}
+
+/** Opens a field and types its digits on the keypad, then Done. */
+async function type(label: string, digits: string, index = 0): Promise<void> {
+  await fireEvent.press(screen.getAllByLabelText(label)[index]!);
+  await keys(...digits, "Done");
 }
 
 describe("Workout editor", () => {
@@ -94,14 +97,14 @@ describe("Workout editor", () => {
     await fireEvent.changeText(screen.getByLabelText("Name"), "Leg day");
     await pick("Back squat");
     await type("Reps", "5");
-    await type("Weight (kg)", "100");
+    await type("Weight", "100");
 
     await fireEvent.press(screen.getByLabelText("Alternate sessions: Back squat"));
     await type("Reps B", "10");
     await fireEvent.changeText(screen.getByLabelText("Name A"), "Heavy");
     await fireEvent.changeText(screen.getByLabelText("Name B"), " Light ");
-    await type("Rest between sets", "2:00");
-    await type("Rest between exercises", "3:00");
+    await type("Rest between sets", "200");
+    await type("Rest between exercises", "300");
     await fireEvent.press(screen.getByText("Save"));
 
     expect(mockWorkouts.saveWorkout).toHaveBeenCalledWith("w-new", {
@@ -125,7 +128,28 @@ describe("Workout editor", () => {
     expect(router.back).toHaveBeenCalled();
   });
 
-  it("saves a weight typed in pounds while its field still has focus", async () => {
+  it("fills a dose row on one keypad, Next walking Sets, Reps, Weight and the rest", async () => {
+    await renderWithHang(<WorkoutEditorScreen kind="strength" />, hangData(), world);
+    await pick("Back squat");
+    await fireEvent.press(screen.getByLabelText("Sets"));
+    await keys("4", "Next");
+    expect(screen.getByLabelText("Reps").props.accessibilityState).toEqual({ expanded: true });
+    await keys("5", "Next", "1", "0", "0", "Add 2.5", "Next");
+    expect(screen.getByLabelText("Rest between sets").props.accessibilityState).toEqual({
+      expanded: true,
+    });
+    expect(screen.queryByLabelText("Next")).toBeNull();
+    await keys("1", "3", "0", "Done");
+    expect(screen.getByLabelText("Rest between sets").props.accessibilityValue).toEqual({
+      text: "00:01:30",
+    });
+    await fireEvent.press(screen.getByText("Save"));
+
+    const [, saved] = mockWorkouts.saveWorkout.mock.calls[0] as [string, Workouts.WorkoutDraft];
+    expect(saved.items[0]?.doses).toEqual([{ sets: 4, reps: 5, weightKg: 102.5, setRestS: 90 }]);
+  });
+
+  it("types a weight in pounds and keeps it in kg", async () => {
     const data = hangData();
     await renderWithHang(
       <WorkoutEditorScreen kind="strength" />,
@@ -133,9 +157,10 @@ describe("Workout editor", () => {
       world
     );
     await pick("Back squat");
-    const weight = screen.getByLabelText("Weight (lb)");
-    await fireEvent(weight, "focus");
-    await fireEvent.changeText(weight, "135");
+    expect(screen.getByLabelText("Weight").props.accessibilityValue).toEqual({
+      text: "Bodyweight lb",
+    });
+    await type("Weight", "135");
     await fireEvent.press(screen.getByText("Save"));
 
     const [, saved] = mockWorkouts.saveWorkout.mock.calls[0] as [string, Workouts.WorkoutDraft];
@@ -151,11 +176,11 @@ describe("Workout editor", () => {
     await fireEvent.press(screen.getByRole("button", { name: "Open hand" }));
     await act(async () => undefined);
     await type("Hang time", "12");
-    expect(screen.queryByText("Minutes")).toBeNull();
+    expect(screen.queryByText("Duration")).toBeNull();
     expect(screen.getByText("16m")).toBeTruthy();
     await pick("Open hand");
     expect(screen.getByText("35m")).toBeTruthy();
-    await type("Rest between exercises", "2:00");
+    await type("Rest between exercises", "200");
     expect(screen.getByText("34m")).toBeTruthy();
     await fireEvent.press(screen.getByText("Save"));
 

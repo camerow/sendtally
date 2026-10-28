@@ -70,13 +70,3 @@ export function formatDate(date: Date, options: Intl.DateTimeFormatOptions): str
 export function formatNumber(n: number, options?: Intl.NumberFormatOptions): string {
   return new Intl.NumberFormat(getLocale(), options).format(n);
 }
-
-/** A number `formatNumber` wrote, without its thousands separators so it reads back as typed; other text as is. */
-export function ungrouped(text: string): string {
-  const group = formatNumber(1111).replace(/1/g, "");
-  const decimal = formatNumber(1.5).replace(/[15]/g, "");
-  const n = Number(text.split(group).join("").replace(decimal, ".").replace("\u2212", "-"));
-  return text.trim() !== "" && formatNumber(n) === text
-    ? formatNumber(n, { useGrouping: false })
-    : text;
-}

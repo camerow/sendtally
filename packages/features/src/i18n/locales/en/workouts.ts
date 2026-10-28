@@ -96,7 +96,6 @@ export const workouts = {
   "workouts.dose.hold": "Hold",
   "workouts.dose.work": "Work",
   "workouts.dose.rounds": "Rounds",
-  "workouts.dose.weight": "Weight ({unit})",
   "workouts.alternates": "Alternate sessions",
   "workouts.addDose": "Add {letter}",
   "workouts.removeDose": "Remove {letter}",

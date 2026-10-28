@@ -7,8 +7,8 @@ import { Switch } from "../../../components/Switch";
 import { IconButton } from "../components/IconButton";
 import { type } from "../type";
 import { DoseNameTile } from "./DoseNameTile";
-import { DoseTile } from "./DoseTile";
-import { doseFieldsFor, fieldText, withField, type DoseMeasure } from "./doseFields";
+import { DoseInput } from "./DoseInput";
+import { doseFieldsFor, type DoseMeasure } from "./doseFields";
 import {
   MAX_DOSES,
   withAlternates,
@@ -19,7 +19,8 @@ import {
   withSetRest,
 } from "./editorState";
 import { LetterBadge } from "../components/LetterBadge";
-import { RestField } from "./RestField";
+import { TimeField } from "../../../components/TimeField";
+import { useFieldOrder } from "../../../components/useFieldOrder";
 
 export type ItemEditorProps = {
   kind: WorkoutKind;
@@ -33,12 +34,6 @@ export type ItemEditorProps = {
   onRemove: () => void;
   onSwap: () => void;
 };
-
-const KEYBOARD = {
-  count: "number-pad",
-  time: "numbers-and-punctuation",
-  weight: "numbers-and-punctuation",
-} as const;
 
 /**
  * One exercise, or for hangboard one grip, on its own card: the numbers each of its doses
@@ -58,6 +53,11 @@ export function ItemEditor({
   const alternating = item.doses.length > 1;
   const next = letterOf(item.doses.length);
   const last = letterOf(item.doses.length - 1);
+  const fields = doseFieldsFor(kind, measure);
+  const { slot } = useFieldOrder([
+    ...item.doses.flatMap((_, d) => fields.map((f) => `${d}.${f.key}`)),
+    "setRest",
+  ]);
   const more = (): void =>
     Alert.alert(name, undefined, [
       { text: t("workouts.swapExercise"), onPress: onSwap },
@@ -134,15 +134,17 @@ export function ItemEditor({
         <View key={d} style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
           {alternating && <LetterBadge dose={d} size={26} />}
           <View style={{ flex: 1, flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-            {doseFieldsFor(kind, measure).map((field) => {
-              const label = t(field.label, { unit });
+            {fields.map((field) => {
+              const label = t(field.label);
               return (
-                <DoseTile
+                <DoseInput
                   key={field.key}
+                  {...slot(`${d}.${field.key}`)}
+                  field={field}
+                  dose={dose}
+                  unit={unit}
                   label={label}
                   accessibilityLabel={alternating ? `${label} ${letterOf(d)}` : label}
-                  value={fieldText(field, dose, unit)}
-                  keyboard={KEYBOARD[field.measure]}
                   placeholder={
                     field.measure === "weight"
                       ? t("hang.bodyweight")
@@ -150,10 +152,7 @@ export function ItemEditor({
                         ? undefined
                         : t(field.placeholder)
                   }
-                  onCommit={(text) => {
-                    const typed = withField(dose, field, text, unit);
-                    if (typed !== null) onChange(withDose(item, d, typed));
-                  }}
+                  onChange={(typed) => onChange(withDose(item, d, typed))}
                 />
               );
             })}
@@ -188,9 +187,11 @@ export function ItemEditor({
           label={`${t("workouts.alternates")}: ${name}`}
         />
       </View>
-      <RestField
+      <TimeField
+        {...slot("setRest")}
         label={t("hang.fieldSetRest")}
-        seconds={item.doses[0]?.setRestS ?? 0}
+        value={item.doses[0]?.setRestS ?? 0}
+        max={3600}
         onChange={(seconds) => onChange(withSetRest(item, seconds))}
       />
     </View>

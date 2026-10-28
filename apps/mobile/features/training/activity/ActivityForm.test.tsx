@@ -11,7 +11,10 @@ import { ActivityForm } from "./ActivityForm";
 const mockActions = { saveActivity: jest.fn(), deleteActivity: jest.fn() };
 const mockWorkouts = { saveWorkout: jest.fn(), deleteWorkout: jest.fn() };
 
-jest.mock("../../../components/Sheet", () => ({ Sheet: () => null }));
+jest.mock("../../../components/Sheet", () => ({
+  Sheet: ({ visible, children }: { visible: boolean; children: React.ReactNode }) =>
+    visible ? children : null,
+}));
 jest.mock("expo-router", () => ({
   router: { back: jest.fn(), push: jest.fn(), dismiss: jest.fn() },
 }));
@@ -36,13 +39,17 @@ const logged = (post: Partial<ActivityRecord> = {}): ActivityRecord => ({
   ...post,
 });
 
+async function keys(...pressed: string[]): Promise<void> {
+  for (const key of pressed) await fireEvent.press(screen.getByLabelText(key));
+}
+
 describe("Log activity", () => {
   it("saves an untitled activity under its kind's name with its effort, from the header", async () => {
     await render(
       <ActivityForm id="a1" initial={newActivityDraft({}, "2026-10-22")} logged={null} />
     );
     await fireEvent.press(screen.getByText("Mobility"));
-    await fireEvent.press(screen.getByLabelText("5 minutes less"));
+    await keys("Duration", "5", "4", "3", "0", "Done");
     await fireEvent.press(screen.getByLabelText("Effort 7 of 10"));
     expect(screen.queryByText("Training load")).toBeNull();
     expect(screen.getAllByText("Save")).toHaveLength(1);
@@ -75,7 +82,7 @@ describe("Log activity", () => {
     expect(screen.getByTestId("activity-date")).toBeTruthy();
     expect(screen.queryByTestId("activity-time")).toBeNull();
     expect(screen.queryAllByText("Strength")).toHaveLength(1);
-    expect(screen.queryByLabelText("5 minutes less")).toBeNull();
+    expect(screen.queryByLabelText("Duration")).toBeNull();
     await fireEvent.press(screen.getByText("Save"));
     expect(mockActions.saveActivity).toHaveBeenLastCalledWith(
       expect.objectContaining({ kind: "mobility", startTime: "07:00", minutes: 4 })
@@ -129,7 +136,7 @@ describe("Log activity", () => {
 
     await fireEvent.press(screen.getByLabelText("Edit Back squat"));
     await fireEvent.press(screen.getByText("Add set"));
-    await fireEvent.changeText(screen.getByLabelText("Back squat, set 2 · Reps"), "4");
+    await keys("Back squat, set 2 · Reps", "4", "Done");
     await fireEvent.press(screen.getByLabelText("Edit Pull-up"));
     expect(screen.queryByLabelText("Back squat, set 2 · Reps")).toBeNull();
     expect(screen.getAllByText("5 × 100")).toHaveLength(1);
@@ -193,7 +200,7 @@ describe("Log activity", () => {
     await fireEvent.press(screen.getByRole("checkbox", { name: "Cat-cow" }));
     expect(screen.getByText("2 of 3 done")).toBeTruthy();
     await fireEvent.press(screen.getByLabelText("Edit Pigeon"));
-    await fireEvent.changeText(screen.getByLabelText("Pigeon, set 1 · Hold"), "90");
+    await keys("Pigeon, set 1 · Hold", "9", "0", "Done");
     await fireEvent.press(screen.getByLabelText("Edit Pigeon"));
     expect(screen.getByText("90s")).toBeTruthy();
     await fireEvent.press(screen.getByText("Save"));

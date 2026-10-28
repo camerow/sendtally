@@ -1,8 +1,5 @@
 export const plan = {
   "plan.close": "Fermer le planificateur",
-  "plan.minutes": "Minutes",
-  "plan.fewerMinutes": "5 minutes de moins",
-  "plan.moreMinutes": "5 minutes de plus",
   "plan.targetEffort": "Effort visé",
   "plan.targetValue": "Effort visé {n}",
   "plan.logSession": "Noter la séance",

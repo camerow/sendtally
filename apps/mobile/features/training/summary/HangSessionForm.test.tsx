@@ -7,7 +7,10 @@ import { hangData, renderWithHang } from "../data/renderWithHang";
 import { HangSessionForm } from "./HangSessionForm";
 
 jest.mock("../../../lib/api", () => ({ useApi: () => undefined }));
-jest.mock("../../../components/Sheet", () => ({ Sheet: () => null }));
+jest.mock("../../../components/Sheet", () => ({
+  Sheet: ({ visible, children }: { visible: boolean; children: React.ReactNode }) =>
+    visible ? children : null,
+}));
 jest.mock("expo-router", () => ({ router: { back: jest.fn(), dismiss: jest.fn() } }));
 
 const session: HangSessionRecord = {
@@ -46,7 +49,9 @@ describe("Editing a hangboard session", () => {
       hangData({ sessions: [session] })
     );
     expect(screen.getByText("Edit workout")).toBeTruthy();
-    await fireEvent.press(screen.getByLabelText("Less completion"));
+    await fireEvent.press(screen.getByLabelText("Completion"));
+    await fireEvent.press(screen.getByLabelText("Subtract 5"));
+    await fireEvent.press(screen.getByLabelText("Done"));
     await fireEvent.press(screen.getByText("Save"));
     const {
       stravaActivityId: _s,

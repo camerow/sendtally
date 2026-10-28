@@ -49,6 +49,7 @@ export { usePlan } from "./usePlan";
 export { usePlanActions, type PlanActions } from "./usePlanActions";
 export {
   fieldLabel,
+  fieldLimits,
   fieldValue,
   stepped,
   weekChips,

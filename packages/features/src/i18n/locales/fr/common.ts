@@ -1,4 +1,5 @@
 export const common = {
+  "common.duration": "Durée",
   "common.effort": "Effort",
   "common.effortValue": "Effort {n} sur 10",
   "common.route": "Voie",
