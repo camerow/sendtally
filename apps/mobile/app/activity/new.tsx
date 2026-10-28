@@ -41,6 +41,7 @@ export default function NewActivityScreen(): React.ReactElement {
           initial={initial}
           logged={null}
           timed={params.startTime !== undefined}
+          kindSet={params.kind !== undefined}
         />
       )}
     </SafeAreaView>

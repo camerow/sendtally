@@ -44,8 +44,10 @@ export type ActivityFormProps = {
   initial: ActivityDraft;
   /** The activity as logged, which can be deleted and posted to Strava; null while logging a new one. */
   logged: ActivityRecord | null;
-  /** A player ran it: its kind, start, length and load are already known, so only the date shows. */
+  /** A player ran it: its start, length and load are already known, so only the date shows. */
   timed?: boolean;
+  /** It came with a kind, from a workout; a logged activity always has one. */
+  kindSet?: boolean;
 };
 
 const input = {
@@ -74,6 +76,7 @@ export function ActivityForm({
   initial,
   logged,
   timed = false,
+  kindSet = false,
 }: ActivityFormProps): React.ReactElement {
   const api = useApi();
   const actions = useActivityActions(api, reportFailure);
@@ -139,7 +142,9 @@ export function ActivityForm({
           <Button label={t("common.cancel")} onPress={() => router.back()} variant="link" />
         </View>
 
-        {!timed && <KindChips value={draft.kind} onChange={(kind) => update({ kind })} />}
+        {logged === null && !kindSet && (
+          <KindChips value={draft.kind} onChange={(kind) => update({ kind })} />
+        )}
 
         <SheetSection label={t("activities.title")}>
           <TextInput

@@ -71,12 +71,12 @@ describe("Log activity", () => {
     expect(router.back).toHaveBeenCalled();
   });
 
-  it("keeps a timed run's kind, start and length, showing only its date", async () => {
+  it("keeps a timed run's start and length, showing only its date", async () => {
     const initial = newActivityDraft(
       { kind: "mobility", startTime: "07:00", minutes: "4" },
       "2026-10-22"
     );
-    await render(<ActivityForm id="a1" initial={initial} logged={null} timed />);
+    await render(<ActivityForm id="a1" initial={initial} logged={null} timed kindSet />);
     expect(screen.getByTestId("activity-date")).toBeTruthy();
     expect(screen.queryByTestId("activity-time")).toBeNull();
     expect(screen.queryByText("Strength")).toBeNull();
@@ -137,6 +137,13 @@ describe("Log activity", () => {
       pathname: "/workout/[id]",
       params: { id: "w-new" },
     });
+  });
+
+  it("keeps a logged activity's kind", async () => {
+    await render(
+      <ActivityForm id="a1" initial={newActivityDraft({}, "2026-10-22")} logged={logged()} />
+    );
+    expect(screen.queryByText("Mobility")).toBeNull();
   });
 
   it("offers no Save as workout with nothing done", async () => {
