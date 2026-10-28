@@ -195,16 +195,17 @@ export const workouts = new Hono<AppEnv>()
     return c.json({ deleted: await repo.deleteWorkout(c.env.DB, c.get("userId"), id) });
   });
 
-// The user's exercises: every name their strength, mobility and other workouts and
-// logs use. Renaming or merging one rewrites those names everywhere.
+// The user's exercises: every name their workouts and logs use, with how each is
+// measured. Renaming or merging one rewrites those names everywhere.
 export const exercises = new Hono<AppEnv>()
   .get("/", async (c) => {
     const rows = await repo.listExercises(c.env.DB, c.get("userId"));
     return c.json({ exercises: rows.map(exerciseOf) });
   })
 
-  // Creates, or renames everywhere. A name another exercise has is a 409 naming it,
-  // so the app can offer to merge instead.
+  // Creates, or saves and renames everywhere. A name another exercise has is a 409
+  // naming it, so the app can offer to merge instead; creating one by the name of an
+  // archived exercise brings that one back.
   .put(
     "/:id",
     zValidator("param", trainingIdParam, invalidBody),
@@ -213,19 +214,33 @@ export const exercises = new Hono<AppEnv>()
       const { id } = c.req.valid("param");
       const userId = c.get("userId");
       const body = c.req.valid("json");
-      const taken = await repo.findExerciseByName(c.env.DB, userId, body.name);
+      const [taken, row] = await Promise.all([
+        repo.findExerciseByName(c.env.DB, userId, body.name),
+        repo.getExercise(c.env.DB, userId, id),
+      ]);
       if (taken !== null && taken.id !== id) {
-        return c.json({ error: "name taken", exercise: exerciseOf(taken) }, 409);
+        if (row !== null || !taken.archived)
+          return c.json({ error: "name taken", exercise: exerciseOf(taken) }, 409);
+        const restored = await repo.restoreExercise(c.env.DB, userId, taken);
+        return c.json({ exercise: exerciseOf(restored) });
       }
       await repo.ensureUser(c.env.DB, userId);
-      const row = await repo.getExercise(c.env.DB, userId, id);
       const saved =
         row === null
           ? await repo.createExercise(c.env.DB, userId, id, body)
-          : await repo.renameExercise(c.env.DB, userId, row, body);
+          : await repo.updateExercise(c.env.DB, userId, row, body);
       return c.json({ exercise: exerciseOf(saved) });
     }
   )
+
+  // Deleted when nothing uses it; archived when a workout or log names it, keeping its history.
+  .delete("/:id", zValidator("param", trainingIdParam, invalidBody), async (c) => {
+    const { id } = c.req.valid("param");
+    const userId = c.get("userId");
+    const row = await repo.getExercise(c.env.DB, userId, id);
+    if (row === null) return c.json({ error: "not found" }, 404);
+    return c.json({ removed: await repo.removeExercise(c.env.DB, userId, row) });
+  })
 
   // Every workout and log naming this one takes the other's name, and this one goes.
   .post(

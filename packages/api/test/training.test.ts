@@ -550,7 +550,15 @@ describe("exercises", () => {
       kind: "strength",
     });
     expect(await json(res)).toEqual({
-      exercise: { id: squat?.id, name: "High-bar squat", kind: "strength" },
+      exercise: {
+        id: squat?.id,
+        name: "High-bar squat",
+        kind: "strength",
+        measure: "repsWeight",
+        eachSide: false,
+        builtIn: null,
+        archived: false,
+      },
     });
     const { workouts } = await json<{ workouts: WorkoutRecord[] }>(
       await call(userId, "GET", "/v1/workouts")
@@ -587,6 +595,51 @@ describe("exercises", () => {
     expect(activities[0]?.done.map((d) => d.exercise)).toEqual(["Squat", "Copenhagen plank"]);
     expect((await call(userId, "POST", "/v1/exercises/e1/merge", { into: "e1" })).status).toBe(400);
     expect((await call(userId, "POST", "/v1/exercises/e9/merge", { into: "e1" })).status).toBe(404);
+  });
+
+  it("saves how an exercise is measured, starting a new one on its category's measure", async () => {
+    const userId = "user_exercises_measure";
+    const pigeon = await call(userId, "PUT", "/v1/exercises/e1", {
+      name: "Pigeon",
+      kind: "mobility",
+      eachSide: true,
+      builtIn: "pigeon",
+    });
+    expect(await json(pigeon)).toMatchObject({
+      exercise: { measure: "seconds", eachSide: true, builtIn: "pigeon" },
+    });
+    const climb = await call(userId, "PUT", "/v1/exercises/e2", { name: "4x4", kind: "climbing" });
+    expect(await json(climb)).toMatchObject({ exercise: { kind: "climbing", measure: "rounds" } });
+    const renamed = await call(userId, "PUT", "/v1/exercises/e1", {
+      name: "Pigeon pose",
+      kind: "mobility",
+    });
+    expect(await json(renamed)).toMatchObject({
+      exercise: { measure: "seconds", eachSide: true, builtIn: "pigeon" },
+    });
+  });
+
+  it("deletes an exercise nothing uses and archives one in use, back when made again", async () => {
+    const userId = "user_exercises_remove";
+    await call(userId, "PUT", "/v1/workouts/w1", squatWorkout);
+    await call(userId, "PUT", "/v1/exercises/e1", { name: "Dips", kind: "strength" });
+    const { exercises } = await json<ExerciseList>(await call(userId, "GET", "/v1/exercises"));
+    const squat = exercises.find((e) => e.name === "Back squat");
+
+    expect(await json(await call(userId, "DELETE", "/v1/exercises/e1"))).toEqual({
+      removed: "deleted",
+    });
+    expect(await json(await call(userId, "DELETE", `/v1/exercises/${squat?.id}`))).toEqual({
+      removed: "archived",
+    });
+    expect(await exerciseNames(userId)).toEqual(["Back squat"]);
+    expect((await call(userId, "DELETE", "/v1/exercises/e9")).status).toBe(404);
+
+    const again = await call(userId, "PUT", "/v1/exercises/e2", {
+      name: "back squat",
+      kind: "strength",
+    });
+    expect(await json(again)).toMatchObject({ exercise: { id: squat?.id, archived: false } });
   });
 });
 

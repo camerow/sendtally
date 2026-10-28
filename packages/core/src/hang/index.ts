@@ -1,4 +1,5 @@
 export * from "./calendar";
+export * from "./exercise";
 export * from "./intervals";
 export * from "./library";
 export * from "./loads";

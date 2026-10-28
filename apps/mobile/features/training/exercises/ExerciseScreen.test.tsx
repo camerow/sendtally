@@ -4,7 +4,7 @@ import { router } from "expo-router";
 import React from "react";
 import { Alert, type AlertButton } from "react-native";
 import { ApiError, type ActivityRecord, type WorkoutRecord } from "@sendtally/api-client";
-import { renderWithHang, hangData } from "../data/renderWithHang";
+import { anExercise, renderWithHang, hangData } from "../data/renderWithHang";
 import { ExerciseScreen } from "./ExerciseScreen";
 
 const mockApi = {
@@ -24,8 +24,8 @@ jest.mock("../../../components/Sheet", () => ({
 jest.mock("expo-router", () => ({ router: { push: jest.fn(), replace: jest.fn() } }));
 
 const exercises = [
-  { id: "e1", name: "Back squat", kind: "strength" as const },
-  { id: "e2", name: "Squat", kind: "strength" as const },
+  anExercise("e1", "Back squat", "strength"),
+  anExercise("e2", "Squat", "strength"),
 ];
 
 const legs: WorkoutRecord = {

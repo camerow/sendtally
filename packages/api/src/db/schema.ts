@@ -8,7 +8,12 @@ import {
   text,
   uniqueIndex,
 } from "drizzle-orm/sqlite-core";
-import { DEFAULT_EXERCISE_REST_S, WORKOUT_KINDS } from "@sendtally/core/hang";
+import {
+  DEFAULT_EXERCISE_REST_S,
+  EXERCISE_KINDS,
+  EXERCISE_MEASURES,
+  WORKOUT_KINDS,
+} from "@sendtally/core/hang";
 
 export const users = sqliteTable("users", {
   id: text("id").primaryKey(),
@@ -679,7 +684,8 @@ export const weekChanges = sqliteTable(
 );
 
 // Every exercise name the user's workouts and logs use, so one can be renamed or
-// merged everywhere at once. `name_key` is SQLite's lower(name), which folds ASCII
+// merged everywhere at once. `built_in` is the library exercise it was picked from,
+// whose name the apps show translated; an archived one keeps its history. `name_key` is SQLite's lower(name), which folds ASCII
 // only, so the backfill migration and the Worker agree on it.
 export const exercises = sqliteTable(
   "exercises",
@@ -690,7 +696,11 @@ export const exercises = sqliteTable(
     id: text("id").notNull(),
     name: text("name").notNull(),
     name_key: text("name_key").notNull(),
-    kind: text("kind", { enum: ["strength", "mobility", "other"] }).notNull(),
+    kind: text("kind", { enum: EXERCISE_KINDS }).notNull(),
+    measure: text("measure", { enum: EXERCISE_MEASURES }).notNull().default("reps"),
+    each_side: integer("each_side", { mode: "boolean" }).notNull().default(false),
+    built_in: text("built_in"),
+    archived: integer("archived", { mode: "boolean" }).notNull().default(false),
     created_at: text("created_at").notNull(),
     updated_at: text("updated_at").notNull(),
   },

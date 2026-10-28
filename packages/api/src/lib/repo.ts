@@ -59,7 +59,9 @@ import {
 import {
   addDays,
   daysBetween,
+  defaultMeasure,
   loadKey,
+  measureOf,
   type Block,
   type HangSession,
   type HangSettings,
@@ -2779,7 +2781,7 @@ export async function saveActivity(
     ...addExercises(
       d,
       userId,
-      a.done.map((e) => ({ name: e.exercise, kind: a.kind }))
+      a.done.map((e) => ({ name: e.exercise, kind: a.kind, measure: measureOf(a.kind, e.sets) }))
     ),
   ]);
   return only(rows);
@@ -3176,8 +3178,22 @@ export async function findExerciseByName(
   return row ?? null;
 }
 
-// D1 binds at most 100 parameters a statement, and an exercise row takes 7.
-const EXERCISES_PER_INSERT = 14;
+// D1 binds at most 100 parameters a statement, and an exercise row takes 11.
+const EXERCISES_PER_INSERT = 9;
+
+const exerciseValues = (userId: string, id: string, e: ExerciseInput, now: string) => ({
+  user_id: userId,
+  id,
+  name: e.name.trim(),
+  name_key: exerciseNameKey(e.name),
+  kind: e.kind,
+  measure: e.measure ?? defaultMeasure(e.kind),
+  each_side: e.eachSide ?? false,
+  built_in: e.builtIn ?? null,
+  archived: false,
+  created_at: now,
+  updated_at: now,
+});
 
 /** Adds the names not yet listed; a name already there, in any case, keeps its row. */
 function addExercises(d: DrizzleD1Database, userId: string, list: readonly ExerciseInput[]) {
@@ -3186,18 +3202,7 @@ function addExercises(d: DrizzleD1Database, userId: string, list: readonly Exerc
     ...new Map(
       list
         .filter((e) => e.name.trim() !== "")
-        .map((e) => [
-          exerciseNameKey(e.name),
-          {
-            user_id: userId,
-            id: crypto.randomUUID(),
-            name: e.name.trim(),
-            name_key: exerciseNameKey(e.name),
-            kind: e.kind,
-            created_at: now,
-            updated_at: now,
-          },
-        ])
+        .map((e) => [exerciseNameKey(e.name), exerciseValues(userId, crypto.randomUUID(), e, now)])
     ).values(),
   ];
   return Array.from({ length: Math.ceil(rows.length / EXERCISES_PER_INSERT) }, (_, i) =>
@@ -3214,20 +3219,57 @@ export async function createExercise(
   id: string,
   e: ExerciseInput
 ): Promise<ExerciseRow> {
-  const now = new Date().toISOString();
   return drizzle(db)
     .insert(exercises)
-    .values({
-      user_id: userId,
-      id,
-      name: e.name,
-      name_key: exerciseNameKey(e.name),
-      kind: e.kind,
-      created_at: now,
-      updated_at: now,
-    })
+    .values(exerciseValues(userId, id, e, new Date().toISOString()))
     .returning()
     .get();
+}
+
+/** Brings an archived exercise back into the lists. */
+export async function restoreExercise(
+  db: D1Database,
+  userId: string,
+  row: ExerciseRow
+): Promise<ExerciseRow> {
+  await drizzle(db)
+    .update(exercises)
+    .set({ archived: false, updated_at: new Date().toISOString() })
+    .where(and(eq(exercises.user_id, userId), eq(exercises.id, row.id)));
+  return { ...row, archived: false };
+}
+
+/** Whether any workout item or logged exercise names it, in any case. */
+async function exerciseInUse(d: DrizzleD1Database, userId: string, name: string): Promise<boolean> {
+  const key = exerciseNameKey(name);
+  const [ws, as] = await d.batch([
+    d.select({ json: workouts.items_json }).from(workouts).where(eq(workouts.user_id, userId)),
+    d.select({ json: activities.done_json }).from(activities).where(eq(activities.user_id, userId)),
+  ]);
+  return [...ws, ...as].some((row) =>
+    (JSON.parse(row.json) as { exercise: string }[]).some(
+      (x) => exerciseNameKey(x.exercise) === key
+    )
+  );
+}
+
+/** Deletes an exercise nothing uses; one in use is archived instead, keeping its history. */
+export async function removeExercise(
+  db: D1Database,
+  userId: string,
+  row: ExerciseRow
+): Promise<"deleted" | "archived"> {
+  const d = drizzle(db);
+  const where = and(eq(exercises.user_id, userId), eq(exercises.id, row.id));
+  if (await exerciseInUse(d, userId, row.name)) {
+    await d
+      .update(exercises)
+      .set({ archived: true, updated_at: new Date().toISOString() })
+      .where(where);
+    return "archived";
+  }
+  await d.delete(exercises).where(where);
+  return "deleted";
 }
 
 /**
@@ -3280,8 +3322,8 @@ async function renameEverywhere(
   await d.batch([then, ...workoutWrites, ...activityWrites]);
 }
 
-/** Renames the exercise and every workout and log that names it. */
-export async function renameExercise(
+/** Saves the exercise, shown again if archived, and renames every workout and log that names it. */
+export async function updateExercise(
   db: D1Database,
   userId: string,
   row: ExerciseRow,
@@ -3289,22 +3331,18 @@ export async function renameExercise(
 ): Promise<ExerciseRow> {
   const d = drizzle(db);
   const where = and(eq(exercises.user_id, userId), eq(exercises.id, row.id));
-  await renameEverywhere(
-    d,
-    userId,
-    row.name,
-    e.name,
-    d
-      .update(exercises)
-      .set({
-        name: e.name,
-        name_key: exerciseNameKey(e.name),
-        kind: e.kind,
-        updated_at: new Date().toISOString(),
-      })
-      .where(where)
-  );
-  return { ...row, ...e, name_key: exerciseNameKey(e.name) };
+  const fields = {
+    name: e.name,
+    name_key: exerciseNameKey(e.name),
+    kind: e.kind,
+    measure: e.measure ?? row.measure,
+    each_side: e.eachSide ?? row.each_side,
+    built_in: e.builtIn === undefined ? row.built_in : e.builtIn,
+    archived: false,
+    updated_at: new Date().toISOString(),
+  };
+  await renameEverywhere(d, userId, row.name, e.name, d.update(exercises).set(fields).where(where));
+  return { ...row, ...fields };
 }
 
 /** Folds `from` into `into`: every workout and log naming it takes `into`'s name. */

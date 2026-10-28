@@ -84,9 +84,10 @@ export const queries = {
       queryKey: ["workouts"],
       queryFn: async () => (await api.workouts()).workouts,
     }),
+  /** Keyed past the persisted lists from before exercises carried their measure. */
   exercises: (api: SendtallyApi) =>
     queryOptions({
-      queryKey: ["exercises"],
+      queryKey: ["exercises", "measured"],
       queryFn: async () => (await api.exercises()).exercises,
     }),
   tags: (api: SendtallyApi) =>

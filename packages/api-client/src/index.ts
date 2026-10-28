@@ -502,6 +502,11 @@ export class SendtallyApi {
     return body(this.client.v1.exercises[":id"].$put({ param: { id }, json: exercise }));
   }
 
+  /** Deleted when nothing uses it, else archived: out of the lists, its history kept. */
+  removeExercise(id: string): Promise<{ removed: "deleted" | "archived" }> {
+    return body(this.client.v1.exercises[":id"].$delete({ param: { id } }));
+  }
+
   /** Every workout and log naming `id` takes `into`'s name, and `id` goes. */
   mergeExercise(id: string, into: string): Promise<{ exercise: Exercise }> {
     return body(this.client.v1.exercises[":id"].merge.$post({ param: { id }, json: { into } }));

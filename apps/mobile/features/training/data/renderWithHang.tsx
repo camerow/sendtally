@@ -7,11 +7,16 @@ import type {
   Exercise,
   HangData as ApiHangData,
   Plan,
+  SendtallyApi,
   WorkoutRecord,
 } from "@sendtally/api-client";
+import { defaultMeasure, type ExerciseKind } from "@sendtally/core/hang";
 import { hangModel, type HangActions } from "@sendtally/features/hang";
+import { queries } from "@sendtally/features/query";
 import { libraryOf } from "@sendtally/features/workouts";
 import { HangDataContext } from "./HangDataContext";
+
+const EXERCISES_KEY = queries.exercises({} as SendtallyApi).queryKey;
 
 export const TODAY = "2026-09-29";
 
@@ -33,6 +38,23 @@ export function hangData(overrides: Partial<ApiHangData> = {}): ApiHangData {
     ...overrides,
   };
 }
+
+/** One of the user's exercises, measured as its kind starts. */
+export const anExercise = (
+  id: string,
+  name: string,
+  kind: ExerciseKind,
+  more: Partial<Exercise> = {}
+): Exercise => ({
+  id,
+  name,
+  kind,
+  measure: defaultMeasure(kind),
+  eachSide: false,
+  builtIn: null,
+  archived: false,
+  ...more,
+});
 
 export type MockActions = { [K in keyof HangActions]: jest.Mock<HangActions[K]> };
 
@@ -77,7 +99,7 @@ export async function renderWithHang(
   client.setQueryData(["workouts"], workouts);
   client.setQueryData(["plan"], world.plan ?? { blocks: [], memberships: [], weekChanges: [] });
   client.setQueryData(["activities"], world.activities ?? []);
-  client.setQueryData(["exercises"], world.exercises ?? []);
+  client.setQueryData(EXERCISES_KEY, [...(world.exercises ?? [])]);
   client.setQueryData(["sessions"], { sessions: [], hangSessions: [], activities: [] });
   const result = await render(
     <QueryClientProvider client={client}>
