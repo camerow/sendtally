@@ -53,8 +53,7 @@ export const plan = {
   "plan.deleteBlockBody": "Seine Pläne werden mit gelöscht. Was du eingetragen hast, bleibt.",
   "plan.moveIn": "In diesen Block verschieben",
   "plan.moveInAria": "{title} in diesen Block verschieben",
-  "plan.takeOut": "Aus dem Block nehmen",
-  "plan.removeFromPlan": "Aus dem Plan entfernen",
+  "plan.removeFromBlock": "Aus dem Block entfernen",
   "plan.asWritten": "Wie geschrieben",
   "plan.ladderHint":
     "Jede Woche beginnt so, wie das Workout geschrieben ist. Ändere nur die Wochen, die abweichen.",

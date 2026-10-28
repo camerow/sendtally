@@ -5,12 +5,7 @@ import type { Dose } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { kindLabel } from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
-import {
-  blockOfMembership,
-  movedTo,
-  useTrainingLog,
-  variationName,
-} from "@sendtally/features/training";
+import { blockOfMembership, useTrainingLog, variationName } from "@sendtally/features/training";
 import { doseSummary, exerciseName } from "@sendtally/features/workouts";
 import { useApi } from "../../../lib/api";
 import { Button } from "../components/Button";
@@ -32,7 +27,7 @@ export type LadderScreenProps = { id: string };
  * from the workout as written, and opens in place to change it.
  */
 export function LadderScreen({ id }: LadderScreenProps): React.ReactElement | null {
-  const { model, today } = useHangData();
+  const { model } = useHangData();
   const unit = model.settings.units;
   const { log } = useTrainingLog(useApi());
   const actions = usePlanActions();
@@ -53,10 +48,6 @@ export function LadderScreen({ id }: LadderScreenProps): React.ReactElement | nu
             c.membershipId === id && c.week === week && c.variation === variation && c.item === item
         )?.change ?? {}
     );
-  const takeOut = (): void => {
-    void actions.saveMembership(movedTo(m, null, block, today));
-    router.back();
-  };
   const remove = (): void => {
     void actions.deleteMembership(m.id);
     router.back();
@@ -113,8 +104,7 @@ export function LadderScreen({ id }: LadderScreenProps): React.ReactElement | nu
           />
         ))}
       </View>
-      <Button label={t("plan.takeOut")} onPress={takeOut} variant="outline" height={50} />
-      <Button label={t("plan.removeFromPlan")} onPress={remove} variant="danger" height={50} />
+      <Button label={t("plan.removeFromBlock")} onPress={remove} variant="danger" height={50} />
     </ScreenFrame>
   );
 }

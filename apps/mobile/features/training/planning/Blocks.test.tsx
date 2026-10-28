@@ -161,9 +161,9 @@ describe("block weeks", () => {
     });
   });
 
-  it("takes a workout out of the plan from its weeks", async () => {
+  it("takes a workout out of its block from its weeks", async () => {
     await renderWithHang(<LadderScreen id="m1" />, hangData(), { workouts: [squat], plan });
-    await fireEvent.press(screen.getByText("Remove from plan"));
+    await fireEvent.press(screen.getByText("Remove from block"));
     expect(mockPlan.deleteMembership).toHaveBeenCalledWith("m1");
     expect(router.back).toHaveBeenCalled();
   });
