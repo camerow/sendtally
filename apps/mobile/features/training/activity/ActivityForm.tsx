@@ -28,6 +28,7 @@ import { DateTimeField } from "../../../components/DateTimeField";
 import { useApi } from "../../../lib/api";
 import { Button } from "../components/Button";
 import { EffortField } from "../components/EffortField";
+import { FocusField } from "../components/FocusField";
 import { SheetSection } from "../components/SheetSection";
 import { Stepper } from "../components/Stepper";
 import { Title } from "../components/Title";
@@ -67,7 +68,7 @@ const itemsOf = (done: readonly ItemDone[]) =>
     .filter((d) => d.sets.length > 0)
     .map((d) => ({ exercise: d.exercise, dose: { ...d.sets[0], sets: d.sets.length } }));
 
-/** Log or edit one activity: kind, title, when, how long, how hard, and its sets or checklist. Save sits in the header. */
+/** Log or edit one activity: kind, title, when, how long, how hard, its focus, and its sets or checklist. Save sits in the header. */
 export function ActivityForm({
   id,
   initial,
@@ -94,6 +95,7 @@ export function ActivityForm({
       targetRpe: draft.rpe,
       items: items.map(({ exercise, dose }) => ({ exercise, doses: [dose] })),
       exerciseRestS: defaultExerciseRestS(draft.kind),
+      focus: draft.focus,
     });
     router.push({ pathname: "/workout/[id]", params: { id: workoutId } });
   };
@@ -210,6 +212,12 @@ export function ActivityForm({
         )}
 
         <EffortField value={draft.rpe} onChange={(rpe) => update({ rpe })} />
+
+        <FocusField
+          value={draft.focus}
+          onChange={(focus) => update({ focus })}
+          note={logged === null ? undefined : t("focus.sessionNote")}
+        />
 
         {draft.done.length > 0 && (
           <DoneDetails

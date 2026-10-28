@@ -14,7 +14,7 @@ const partial = {
   edgeMm: 20,
   loadKg: 4,
   result: { ended: true, setsDone: 2, pct: 30, work: 76, misses: 2, seconds: 312 },
-  link: { membershipId: "m1", week: 3 },
+  link: { membershipId: "m1", week: 3, focus: null },
   session: 0,
   more: [],
 };
@@ -45,6 +45,7 @@ describe("Session done", () => {
       protocol: expect.objectContaining({ name: "Repeaters 7:3", hangS: 7, sets: 6 }),
       membershipId: "m1",
       week: 3,
+      focus: null,
       done: [
         {
           item: 0,
@@ -77,6 +78,7 @@ describe("Session done", () => {
         { exercise: "open", doses: [{ sets: 3, reps: 1, onS: 10, setRestS: 60 }] },
       ],
       exerciseRestS: 120,
+      focus: null,
       updatedAt: "t",
     };
     const { actions } = await renderWithHang(
@@ -87,7 +89,7 @@ describe("Session done", () => {
           edgeMm: 20,
           loadKg: 4,
           result: { ended: true, setsDone: 2, pct: 80, work: 40, misses: 0, seconds: 400 },
-          link: { membershipId: null, week: null },
+          link: { membershipId: null, week: null, focus: null },
           session: 0,
           more: [{ edgeMm: 15, loadKg: 0, setsDone: 2 }],
         }}

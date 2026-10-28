@@ -48,7 +48,11 @@ export function TrainingInsightsScreen(): React.ReactElement {
             {state.data.line}
           </Text>
           <InsightsChart points={state.data.points} />
-          <TrainedMix trained={state.data.trained} total={state.data.total} />
+          <TrainedMix
+            trained={state.data.trained}
+            byFocus={state.data.byFocus}
+            total={state.data.total}
+          />
           {training && <CurrentBlockRow />}
           <ExerciseGroups groups={state.data.exercises} />
         </>

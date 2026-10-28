@@ -11,6 +11,7 @@ import { confirmDestructive } from "../../../lib/confirmDestructive";
 import { Button } from "../components/Button";
 import { DateField } from "../components/DateField";
 import { EffortField } from "../components/EffortField";
+import { FocusField } from "../components/FocusField";
 import { MonthCalendar } from "../components/MonthCalendar";
 import { SelectField } from "../components/SelectField";
 import { SheetSection } from "../components/SheetSection";
@@ -26,7 +27,7 @@ const PCT_STEP = 5;
 
 export type HangSessionFormProps = { session: HangSessionRecord };
 
-/** Edit a finished hangboard session: its day, grip, edge, weight, completion and effort. */
+/** Edit a finished hangboard session: its day, grip, edge, weight, completion, effort and focus. */
 export function HangSessionForm({ session }: HangSessionFormProps): React.ReactElement {
   const { model, actions, today } = useHangData();
   const [draft, setDraft] = React.useState(session);
@@ -147,6 +148,11 @@ export function HangSessionForm({ session }: HangSessionFormProps): React.ReactE
           />
         </SheetSection>
         <EffortField value={draft.rpe} onChange={(rpe) => update({ rpe })} />
+        <FocusField
+          value={draft.focus}
+          onChange={(focus) => update({ focus })}
+          note={t("focus.sessionNote")}
+        />
         <Button label={t("summary.deleteWorkout")} onPress={remove} variant="danger" />
       </ScrollView>
       <GripPickerSheet

@@ -1,16 +1,24 @@
 import { router } from "expo-router";
 import React from "react";
 import { Pressable, Text, View } from "react-native";
+import type { Focus } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
 import { pressRow } from "../../../lib/press";
+import { FocusTag } from "../components/FocusTag";
 import { HangIcon } from "../components/HangIcon";
 import { type } from "../type";
 
-export type BlockRowProps = { id: string; name: string; meta?: string };
+export type BlockRowProps = {
+  id: string;
+  name: string;
+  meta?: string;
+  /** Its focus as a tag; none where the row does not say. */
+  focus?: Focus | null;
+};
 
 /** A block in the list: its name and when, opening the block. */
-export function BlockRow({ id, name, meta }: BlockRowProps): React.ReactElement {
+export function BlockRow({ id, name, meta, focus }: BlockRowProps): React.ReactElement {
   return (
     <Pressable
       onPress={() => router.push({ pathname: "/plan/block/[id]", params: { id } })}
@@ -31,6 +39,7 @@ export function BlockRow({ id, name, meta }: BlockRowProps): React.ReactElement 
           <Text style={[type.mono, { fontSize: 12, color: colors.textSecondary }]}>{meta}</Text>
         )}
       </View>
+      {focus !== undefined && <FocusTag focus={focus} />}
       <HangIcon name="forward" color={colors.textSecondary} size={16} strokeWidth={2.2} />
     </Pressable>
   );

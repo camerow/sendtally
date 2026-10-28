@@ -99,7 +99,7 @@ function Detail({
       <ScrollView
         contentContainerStyle={{ gap: 18, paddingTop: 8, paddingHorizontal: 18, paddingBottom: 24 }}
       >
-        <WorkoutIntro workout={workout} description={library.description} />
+        <WorkoutIntro workout={workout} description={library.description} focus={library.focus} />
         <GripSetupCard workout={next} gripId={gripId} onChooseGrip={() => setPicker(true)} />
         <ProtocolPanel workout={next} />
         <View style={{ gap: 8 }}>

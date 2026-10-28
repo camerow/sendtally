@@ -60,6 +60,7 @@ describe("Log activity", () => {
       workoutId: null,
       membershipId: null,
       week: null,
+      focus: null,
       done: [],
     });
     expect(router.back).toHaveBeenCalled();
@@ -73,7 +74,7 @@ describe("Log activity", () => {
     await render(<ActivityForm id="a1" initial={initial} logged={null} timed kindSet />);
     expect(screen.getByTestId("activity-date")).toBeTruthy();
     expect(screen.queryByTestId("activity-time")).toBeNull();
-    expect(screen.queryByText("Strength")).toBeNull();
+    expect(screen.queryAllByText("Strength")).toHaveLength(1);
     expect(screen.queryByLabelText("5 minutes less")).toBeNull();
     await fireEvent.press(screen.getByText("Save"));
     expect(mockActions.saveActivity).toHaveBeenLastCalledWith(
@@ -223,6 +224,7 @@ describe("Log activity", () => {
       targetRpe: 3,
       items: [{ exercise: "Pigeon", doses: [{ sets: 1, onS: 60 }] }],
       exerciseRestS: 0,
+      focus: null,
     });
     expect(router.push).toHaveBeenCalledWith({
       pathname: "/workout/[id]",

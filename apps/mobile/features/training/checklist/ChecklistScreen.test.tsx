@@ -18,7 +18,7 @@ const run: WorkoutRun = {
   title: "Morning mobility",
   date: "2026-10-22",
   workoutId: "w2",
-  link: { membershipId: null, week: null },
+  link: { membershipId: null, week: null, focus: null },
   minutes: 12,
   exerciseRestS: 60,
   items: [

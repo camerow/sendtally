@@ -24,7 +24,7 @@ jest.mock("../../lib/liveSessionStorage", () => {
   };
 });
 
-const PLAN = { membershipId: "m1", week: 2 };
+const PLAN = { membershipId: "m1", week: 2, focus: null };
 
 const lastButtons = (): AlertButton[] =>
   (jest.mocked(Alert.alert).mock.calls.at(-1)?.[2] ?? []) as AlertButton[];

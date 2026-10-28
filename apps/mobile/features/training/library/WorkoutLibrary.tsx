@@ -1,6 +1,7 @@
 import { router } from "expo-router";
 import React from "react";
 import { View } from "react-native";
+import { focusParam } from "@sendtally/features/training";
 import { libraryShelves, type LibraryWorkout } from "@sendtally/features/workouts";
 import { HangDataProvider } from "../data/HangDataProvider";
 import { LoadState } from "../data/LoadState";
@@ -19,12 +20,15 @@ function Library(): React.ReactElement {
         <LibraryBrowser library={state.data} onPick={preview}>
           {libraryShelves(state.data.workouts, state.data.usage).map((shelf) => (
             <LibraryShelf
-              key={shelf.kind}
+              key={focusParam(shelf.focus)}
               shelf={shelf}
               usage={state.data.usage}
               onPick={preview}
               onSeeAll={() =>
-                router.push({ pathname: "/workout/category", params: { kind: shelf.kind } })
+                router.push({
+                  pathname: "/workout/category",
+                  params: { focus: focusParam(shelf.focus) },
+                })
               }
               gutter={18}
             />
@@ -38,8 +42,8 @@ function Library(): React.ReactElement {
 }
 
 /**
- * Every workout, built in and the user's own, on one sideways shelf per category, to
- * search, open, or see a category whole. It lays out as a plain column for the host screen's own scroll view and loads its own data.
+ * Every workout, built in and the user's own, on one sideways shelf per focus, to
+ * search, open, or see a focus whole. It lays out as a plain column for the host screen's own scroll view and loads its own data.
  */
 export function WorkoutLibrary(): React.ReactElement {
   return (

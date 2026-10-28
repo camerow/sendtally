@@ -36,7 +36,7 @@ export const postedTime = (iso: string): string =>
 export function kickerText(
   kind: WorkoutKind,
   date: CalendarDate,
-  link: PlanLink,
+  link: Pick<PlanLink, "membershipId" | "week">,
   plan: Pick<Plan, "blocks" | "memberships">
 ): string {
   const membership = plan.memberships.find((m) => m.id === link.membershipId);

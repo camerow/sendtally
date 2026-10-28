@@ -41,6 +41,7 @@ const session = (
   protocol: PROTOCOLS[workoutId]!,
   membershipId: null,
   week: null,
+  focus: null,
   done: [],
   stravaActivityId: null,
   postState: null,

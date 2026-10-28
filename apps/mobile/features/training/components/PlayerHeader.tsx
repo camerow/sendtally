@@ -1,9 +1,11 @@
 import React from "react";
 import { View } from "react-native";
 import type { ActivityKind } from "@sendtally/api-client";
+import type { Focus } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { kindLabel } from "@sendtally/features/activities";
 import { durationLabel } from "@sendtally/features/sessions";
+import { focusLabel } from "@sendtally/features/training";
 import { BackButton } from "../../../components/BackButton";
 import { LiveClock } from "../../../components/LiveClock";
 import { KIND_LOOK } from "../today/kindLook";
@@ -14,6 +16,8 @@ import { WorkoutNotes } from "./WorkoutNotes";
 
 export type PlayerHeaderProps = {
   kind: ActivityKind;
+  /** What the run records it trained for. */
+  focus: Focus | null;
   title: string;
   minutes: number | null;
   workoutId: string;
@@ -22,11 +26,12 @@ export type PlayerHeaderProps = {
 };
 
 /**
- * Back and the clock from Start, then the workout's kind and length, its name and notes: the
+ * Back and the clock from Start, then the workout's kind, focus and length, its name and notes: the
  * top of the sets and checklist players.
  */
 export function PlayerHeader({
   kind,
+  focus,
   title,
   minutes,
   workoutId,
@@ -46,7 +51,11 @@ export function PlayerHeader({
       </View>
       <View style={{ gap: 4 }}>
         <Label color={KIND_LOOK[kind].ink}>
-          {[kindLabel(kind), minutes === null ? null : durationLabel(minutes)]
+          {[
+            kindLabel(kind),
+            focus === null ? null : focusLabel(focus),
+            minutes === null ? null : durationLabel(minutes),
+          ]
             .filter((p) => p !== null)
             .join(" · ")}
         </Label>

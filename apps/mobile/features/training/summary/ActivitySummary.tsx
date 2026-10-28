@@ -63,6 +63,7 @@ export function ActivitySummary({
       kicker={kickerText(activity.kind, activity.date, activity, log.plan)}
       kickerColor={KIND_LOOK[activity.kind].ink}
       title={activity.title}
+      focus={activity.focus ?? null}
       tiles={[
         { value: t("hang.minutes", { n: activity.minutes }), label: t("summary.length") },
         effortTile(activity.rpe, target?.targetRpe ?? null),

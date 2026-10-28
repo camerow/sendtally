@@ -17,7 +17,9 @@ export function BlockFormScreen({ id }: BlockFormScreenProps): React.ReactElemen
   const { today } = useHangData();
   const { state, reload } = usePlan(useApi());
   if (id === undefined)
-    return <BlockForm initial={{ id: "", name: "", start: today, weeks: DEFAULT_WEEKS }} />;
+    return (
+      <BlockForm initial={{ id: "", name: "", start: today, weeks: DEFAULT_WEEKS, focus: null }} />
+    );
   if (state.status !== "ready") return <LoadState state={state} onRetry={() => void reload()} />;
   const block = state.data.blocks.find((b) => b.id === id);
   return block === undefined ? null : <BlockForm initial={block} />;

@@ -6,16 +6,21 @@ import { t } from "@sendtally/features/i18n";
 export type LibrarySearchProps = {
   value: string;
   onChange: (text: string) => void;
+  placeholder?: string;
 };
 
-export function LibrarySearch({ value, onChange }: LibrarySearchProps): React.ReactElement {
+export function LibrarySearch({
+  value,
+  onChange,
+  placeholder = t("workouts.search"),
+}: LibrarySearchProps): React.ReactElement {
   return (
     <TextInput
       value={value}
       onChangeText={onChange}
-      placeholder={t("workouts.search")}
+      placeholder={placeholder}
       placeholderTextColor={colors.textFaint}
-      accessibilityLabel={t("workouts.search")}
+      accessibilityLabel={placeholder}
       autoCorrect={false}
       returnKeyType="search"
       clearButtonMode="while-editing"

@@ -1,6 +1,6 @@
 import React from "react";
 import { View } from "react-native";
-import type { WorkoutKind } from "@sendtally/core/hang";
+import type { Focus, WorkoutKind } from "@sendtally/core/hang";
 import { t } from "@sendtally/features/i18n";
 import {
   browseLibrary,
@@ -15,6 +15,10 @@ export type LibraryBrowserProps = {
   library: WorkoutLibrary;
   /** The kinds it offers; all of them by default. */
   kinds?: readonly WorkoutKind[];
+  /** The one focus it offers, where null is General; every focus by default. */
+  focus?: Focus | null;
+  /** What the search box says before anything is typed. */
+  placeholder?: string;
   onPick: (workout: LibraryWorkout) => void;
   /** Shown in place of the list until a search is typed. */
   children?: React.ReactNode;
@@ -24,15 +28,19 @@ export type LibraryBrowserProps = {
 export function LibraryBrowser({
   library,
   kinds,
+  focus,
+  placeholder,
   onPick,
   children,
 }: LibraryBrowserProps): React.ReactElement {
   const [text, setText] = React.useState("");
   const browsing = children !== undefined && text.trim() === "";
-  const found = browsing ? [] : browseLibrary(library.workouts, { text, kinds }, library.usage);
+  const found = browsing
+    ? []
+    : browseLibrary(library.workouts, { text, kinds, focus }, library.usage);
   return (
     <View style={{ gap: 12 }}>
-      <LibrarySearch value={text} onChange={setText} />
+      <LibrarySearch value={text} onChange={setText} placeholder={placeholder} />
       {browsing && children}
       {!browsing && found.length === 0 && (
         <DashedPanel title={t("workouts.noResultsTitle")} body={t("workouts.noResults")} />

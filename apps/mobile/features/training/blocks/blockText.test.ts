@@ -2,7 +2,13 @@ import { describe, expect, it } from "@jest/globals";
 import type { Block } from "@sendtally/core/hang";
 import { blockDates, blockTag } from "./blockText";
 
-const block: Block = { id: "b1", name: "Autumn finger block", start: "2026-09-28", weeks: 3 };
+const block: Block = {
+  id: "b1",
+  name: "Autumn finger block",
+  start: "2026-09-28",
+  weeks: 3,
+  focus: null,
+};
 
 describe("block text", () => {
   it("names the week a date falls in, and nothing outside the block", () => {

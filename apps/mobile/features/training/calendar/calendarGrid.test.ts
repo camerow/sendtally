@@ -2,7 +2,13 @@ import { describe, expect, it } from "@jest/globals";
 import type { Block } from "@sendtally/core/hang";
 import { bandOn, blockOn, monthWeeks } from "./calendarGrid";
 
-const autumn: Block = { id: "b1", name: "Autumn power", start: "2026-09-28", weeks: 4 };
+const autumn: Block = {
+  id: "b1",
+  name: "Autumn power",
+  start: "2026-09-28",
+  weeks: 4,
+  focus: null,
+};
 
 describe("calendar grid", () => {
   it("lists the Monday of every week a month touches", () => {

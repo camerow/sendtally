@@ -1,8 +1,8 @@
 import React from "react";
 import { Pressable, ScrollView, View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
-import { kindLabel } from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
+import { focusLabel } from "@sendtally/features/training";
 import type {
   LibraryShelf as Shelf,
   LibraryWorkout,
@@ -12,7 +12,6 @@ import { press } from "../../../lib/press";
 import { HangIcon } from "../components/HangIcon";
 import { Label } from "../components/Label";
 import { Title } from "../components/Title";
-import { CategoryMark } from "./CategoryMark";
 import { LibraryCard } from "./LibraryCard";
 
 export type LibraryShelfProps = {
@@ -24,7 +23,7 @@ export type LibraryShelfProps = {
   gutter: number;
 };
 
-/** One category: its name, which opens all of it, over a sideways row of its workouts. */
+/** One focus: its name, which opens all of it, over a sideways row of its workouts. */
 export function LibraryShelf({
   shelf,
   usage,
@@ -37,12 +36,14 @@ export function LibraryShelf({
       <Pressable
         onPress={onSeeAll}
         accessibilityRole="button"
-        accessibilityLabel={t("workouts.seeAllOf", { kind: kindLabel(shelf.kind) })}
+        accessibilityLabel={t("workouts.seeAllOf", { kind: focusLabel(shelf.focus) })}
         style={press({ minHeight: 44, flexDirection: "row", alignItems: "center", gap: 10 })}
       >
-        <CategoryMark kind={shelf.kind} size={28} />
-        <Title size={26} style={{ flex: 1 }}>
-          {kindLabel(shelf.kind)}
+        <Title
+          size={26}
+          style={{ flex: 1, ...(shelf.focus === null && { color: colors.textMuted }) }}
+        >
+          {focusLabel(shelf.focus)}
         </Title>
         <Label color={colors.textSecondary}>{t("workouts.seeAll")}</Label>
         <HangIcon name="forward" color={colors.textSecondary} size={16} strokeWidth={2.2} />
@@ -58,7 +59,6 @@ export function LibraryShelf({
             key={w.id}
             workout={w}
             use={usage.get(w.id)}
-            showKind={false}
             width={264}
             onPress={() => onPick(w)}
           />

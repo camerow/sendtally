@@ -5,7 +5,7 @@ import { colors } from "@sendtally/design/tokens";
 import { kindLabel } from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
 import { durationLabel } from "@sendtally/features/sessions";
-import type { Occurrence } from "@sendtally/features/training";
+import { occurrenceLink, type Occurrence } from "@sendtally/features/training";
 import { workoutMinutes, type LibraryWorkout } from "@sendtally/features/workouts";
 import { Label } from "../components/Label";
 import { Title } from "../components/Title";
@@ -22,7 +22,7 @@ export type OccurrenceCardProps = { occurrence: Occurrence; workout: LibraryWork
 export function OccurrenceCard({ occurrence, workout }: OccurrenceCardProps): React.ReactElement {
   const { model } = useHangData();
   const o = occurrence;
-  const link = { membershipId: o.membership.id, week: o.week };
+  const link = occurrenceLink(o);
   const minutes = workoutMinutes(workout);
   return (
     <View

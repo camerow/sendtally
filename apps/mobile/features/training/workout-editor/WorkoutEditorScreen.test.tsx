@@ -60,6 +60,18 @@ async function type(label: string, text: string, index = 0): Promise<void> {
 }
 
 describe("Workout editor", () => {
+  it("starts on General and saves the focus picked, saying what it means", async () => {
+    await renderWithHang(<WorkoutEditorScreen kind="climbing" />, hangData(), world);
+    expect(screen.getByRole("radio", { name: "General" }).props.accessibilityState).toEqual({
+      checked: true,
+    });
+    await fireEvent.press(screen.getByRole("radio", { name: "Power endurance" }));
+    expect(screen.getByText("Hard efforts of one to a few minutes with short rests.")).toBeTruthy();
+    await fireEvent.press(screen.getByText("Save"));
+    const [, saved] = mockWorkouts.saveWorkout.mock.calls[0] as [string, Workouts.WorkoutDraft];
+    expect(saved.focus).toBe("power_endurance");
+  });
+
   it("makes a strength workout whose squat alternates a named A and B, resting between sets", async () => {
     await renderWithHang(<WorkoutEditorScreen kind="strength" />, hangData(), world);
     await fireEvent.changeText(screen.getByLabelText("Name"), "Leg day");
@@ -91,6 +103,7 @@ describe("Workout editor", () => {
         },
       ],
       exerciseRestS: 180,
+      focus: null,
     });
     expect(router.back).toHaveBeenCalled();
   });
@@ -151,7 +164,9 @@ describe("Workout editor", () => {
     await renderWithHang(<WorkoutEditorScreen kind="mobility" />, hangData(), world);
     await fireEvent.press(screen.getByText("Add exercises"));
     expect(screen.queryByRole("checkbox", { name: "Back squat" })).toBeNull();
-    await fireEvent.press(screen.getByRole("radio", { name: "Strength" }));
+    const strength = screen.getAllByRole("radio", { name: "Strength" }).at(-1);
+    if (strength === undefined) throw new Error("no Strength filter");
+    await fireEvent.press(strength);
     await fireEvent.press(screen.getByRole("checkbox", { name: "Bench press" }));
     await fireEvent.press(screen.getByRole("checkbox", { name: "Back squat" }));
     await fireEvent.press(screen.getByText("Add 2 exercises"));
@@ -165,7 +180,9 @@ describe("Workout editor", () => {
       builtIn: "benchPress",
     });
     await fireEvent.press(screen.getByText("Add exercises"));
-    await fireEvent.press(screen.getByRole("radio", { name: "Strength" }));
+    const filter = screen.getAllByRole("radio", { name: "Strength" }).at(-1);
+    if (filter === undefined) throw new Error("no Strength filter");
+    await fireEvent.press(filter);
     expect(screen.getAllByText("In workout")).toHaveLength(2);
     await fireEvent.press(screen.getByText("Save"));
     const [, saved] = mockWorkouts.saveWorkout.mock.calls[0] as [string, Workouts.WorkoutDraft];

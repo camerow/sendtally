@@ -83,6 +83,7 @@ export function SetsScreen({ run }: { run: WorkoutRun }): React.ReactElement {
         >
           <PlayerHeader
             kind={run.kind}
+            focus={run.link.focus}
             title={run.title}
             minutes={run.minutes}
             workoutId={run.workoutId}

@@ -27,6 +27,7 @@ const legs: WorkoutRecord = {
   targetRpe: null,
   items: [{ exercise: "Back squat", doses: [{ sets: 5, reps: 5 }] }],
   exerciseRestS: 180,
+  focus: null,
   updatedAt: "t",
 };
 
@@ -44,7 +45,13 @@ describe("Today", () => {
     await fireEvent.press(screen.getByText("Start"));
     expect(router.push).toHaveBeenCalledWith({
       pathname: "/workout/timer",
-      params: { workoutId: "max10", gripId: "half", membershipId: "m1", session: "0" },
+      params: {
+        workoutId: "max10",
+        gripId: "half",
+        membershipId: "m1",
+        session: "0",
+        focus: "strength",
+      },
     });
   });
 
@@ -62,7 +69,7 @@ describe("Today", () => {
   it("opens the block the day is in, by its week", async () => {
     const inBlock: Plan = {
       ...plan("max10"),
-      blocks: [{ id: "b1", name: "Winter base", start: "2026-09-21", weeks: 4 }],
+      blocks: [{ id: "b1", name: "Winter base", start: "2026-09-21", weeks: 4, focus: null }],
     };
     await renderWithHang(<TodayScreen />, hangData(), { plan: inBlock });
     await fireEvent.press(screen.getByText("Winter base · week 2 of 4"));

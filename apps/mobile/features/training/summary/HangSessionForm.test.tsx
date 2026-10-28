@@ -32,6 +32,7 @@ const session: HangSessionRecord = {
   },
   membershipId: null,
   week: null,
+  focus: null,
   done: [],
   stravaActivityId: "9",
   postState: "posted",

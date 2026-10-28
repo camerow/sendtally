@@ -21,12 +21,13 @@ const legs: WorkoutRecord = {
   targetRpe: null,
   items: [{ exercise: "Back squat", doses: [{ sets: 5, reps: 5 }] }],
   exerciseRestS: 180,
+  focus: null,
   updatedAt: "t",
 };
 
 // Legs on Mondays and Tuesdays in a block; today is Tuesday 29 September.
 const plan: Plan = {
-  blocks: [{ id: "b1", name: "Autumn power", start: "2026-09-28", weeks: 4 }],
+  blocks: [{ id: "b1", name: "Autumn power", start: "2026-09-28", weeks: 4, focus: null }],
   memberships: [
     { id: "m1", workoutId: "legs", blockId: "b1", weekdays: [0, 1], start: "2026-09-28" },
   ],

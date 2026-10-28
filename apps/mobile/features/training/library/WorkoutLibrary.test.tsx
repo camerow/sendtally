@@ -17,16 +17,19 @@ const legs: WorkoutRecord = {
   targetRpe: null,
   items: [],
   exerciseRestS: 180,
+  focus: "strength",
   updatedAt: "2026-10-01T00:00:00Z",
 };
 const show = (ui: React.ReactElement): Promise<unknown> =>
   renderWithHang(ui, hangData(), { workouts: [legs] });
 
 describe("Workout library", () => {
-  it("shelves every category with the user's own mixed in and labelled", async () => {
+  it("shelves every focus with the user's own mixed in and labelled, General last", async () => {
     await show(<WorkoutLibrary />);
-    for (const kind of ["Fingers", "Climbing", "Strength", "Mobility", "Other"])
-      expect(screen.getByLabelText(`See all ${kind}`)).toBeTruthy();
+    const shelves = ["Strength", "Power", "Power endurance", "Endurance", "Conditioning"];
+    for (const focus of [...shelves, "Recovery", "General"])
+      expect(screen.getByLabelText(`See all ${focus}`)).toBeTruthy();
+    expect(screen.queryByLabelText("See all Skill")).toBeNull();
     expect(screen.getByText("Leg day")).toBeTruthy();
     expect(screen.getByText("Max hangs")).toBeTruthy();
     expect(screen.getAllByText("Mine")).toHaveLength(1);
@@ -39,20 +42,24 @@ describe("Workout library", () => {
     });
   });
 
-  it("opens a whole category from its shelf, to search", async () => {
+  it("opens a whole focus from its shelf, to search", async () => {
     await show(<WorkoutLibrary />);
     await fireEvent.press(screen.getByLabelText("See all Strength"));
     expect(router.push).toHaveBeenLastCalledWith({
       pathname: "/workout/category",
-      params: { kind: "strength" },
+      params: { focus: "strength" },
     });
 
-    await show(<CategoryScreen kind="strength" />);
+    await show(<CategoryScreen focus="strength" />);
+    expect(
+      screen.getByText("Heavy efforts with long rests, like max hangs and big lifts.")
+    ).toBeTruthy();
     expect(screen.getByText("Leg day")).toBeTruthy();
     expect(screen.getByText("5x5 strength")).toBeTruthy();
-    expect(screen.queryByText("Max hangs")).toBeNull();
+    expect(screen.getByText("Max hangs")).toBeTruthy();
+    expect(screen.queryByText("Repeaters 7:3")).toBeNull();
 
-    await fireEvent.changeText(screen.getByLabelText("Search workouts"), "leg");
+    await fireEvent.changeText(screen.getByLabelText("Search Strength"), "leg");
     expect(screen.queryByText("5x5 strength")).toBeNull();
     await fireEvent.press(screen.getByText("Leg day"));
     expect(router.push).toHaveBeenLastCalledWith({
@@ -66,6 +73,6 @@ describe("Workout library", () => {
     await fireEvent.changeText(screen.getByLabelText("Search workouts"), "max");
     expect(screen.getByText("Max hangs")).toBeTruthy();
     expect(screen.queryByText("Leg day")).toBeNull();
-    expect(screen.queryByLabelText("See all Fingers")).toBeNull();
+    expect(screen.queryByLabelText("See all Strength")).toBeNull();
   });
 });

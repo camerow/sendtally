@@ -40,11 +40,12 @@ const squat: WorkoutRecord = {
   targetRpe: null,
   items: [{ exercise: "Back squat", doses: [{ sets: 5, reps: 5, weightKg: 100 }] }],
   exerciseRestS: 180,
+  focus: null,
   updatedAt: "t",
 };
 
 const plan: Plan = {
-  blocks: [{ id: "b1", name: "Winter base", start: "2026-10-05", weeks: 4 }],
+  blocks: [{ id: "b1", name: "Winter base", start: "2026-10-05", weeks: 4, focus: null }],
   memberships: [
     { id: "m1", workoutId: "squat", blockId: "b1", weekdays: [1, 4], start: "2026-10-05" },
     { id: "m2", workoutId: "squat", blockId: null, weekdays: [2], start: "2026-09-01" },
@@ -68,6 +69,7 @@ describe("blocks", () => {
       name: "Winter base",
       start: "2026-09-29",
       weeks: 5,
+      focus: null,
     });
     expect(router.replace).toHaveBeenCalledWith({
       pathname: "/plan/block/[id]",
@@ -97,7 +99,10 @@ describe("blocks", () => {
 describe("plan again", () => {
   const past: Plan = {
     ...plan,
-    blocks: [...plan.blocks, { id: "b0", name: "Summer base", start: "2026-08-03", weeks: 4 }],
+    blocks: [
+      ...plan.blocks,
+      { id: "b0", name: "Summer base", start: "2026-08-03", weeks: 4, focus: null },
+    ],
     memberships: [
       ...plan.memberships,
       { id: "m3", workoutId: "squat", blockId: "b0", weekdays: [0], start: "2026-08-03" },

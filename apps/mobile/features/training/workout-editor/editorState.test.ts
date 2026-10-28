@@ -18,6 +18,7 @@ const legs: WorkoutDraft = {
   targetRpe: 8,
   items: [squat],
   exerciseRestS: 180,
+  focus: null,
 };
 
 describe("workout editor state", () => {

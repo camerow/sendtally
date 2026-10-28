@@ -33,7 +33,7 @@ export function StartButton({
   const exercises = useExercises(useApi()).state;
   const eachSide = eachSideOf(exercises.status === "ready" ? exercises.data : []);
   const run = planned ?? {
-    link: NO_PLAN,
+    link: { ...NO_PLAN, focus: workout.focus },
     session,
     items: sessionItems(workout.items, session),
   };

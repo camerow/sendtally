@@ -21,6 +21,7 @@ const logged = {
   rpe: null,
   membershipId: null,
   week: null,
+  focus: null,
   done: [],
   protocol: {
     name: "Fingers A/B",

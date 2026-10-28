@@ -36,6 +36,7 @@ export function HangSummary({
       kicker={kickerText("hangboard", session.date, session, log.plan)}
       kickerColor={KIND_LOOK.hangboard.ink}
       title={hangTitle(session)}
+      focus={session.focus}
       tiles={[
         { value: clock(totalSeconds(session.protocol), true), label: t("summary.length") },
         effortTile(session.rpe, log.workout(session.workoutId)?.targetRpe ?? null),

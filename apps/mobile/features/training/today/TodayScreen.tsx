@@ -12,8 +12,10 @@ import {
 } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { longDate, weekdayShort } from "@sendtally/features/hang";
-import { t } from "@sendtally/features/i18n";
+import { formatNumber, t } from "@sendtally/features/i18n";
 import {
+  focusCounts,
+  focusLabel,
   trainingDay,
   trainingWeek,
   useTrainingLog,
@@ -23,6 +25,7 @@ import {
 import { Fab } from "../../../components/Fab";
 import { useApi } from "../../../lib/api";
 import { blockOn } from "../calendar/calendarGrid";
+import { KindTag } from "../components/KindTag";
 import { Label } from "../components/Label";
 import { useHangData } from "../data/HangDataContext";
 import { AddKindSheet } from "../planning/AddKindSheet";
@@ -65,6 +68,7 @@ export function TodayScreen(): React.ReactElement {
   const monday = addDays(weekStart(today), offset * 7);
   const days = trainingWeek(log, monday, today);
   const day = trainingDay(log, selected, today);
+  const foci = focusCounts(days);
   const block = blockOn(log.plan.blocks, selected);
   const at = block === null ? null : blockWeekOn(block, selected);
 
@@ -111,6 +115,24 @@ export function TodayScreen(): React.ReactElement {
             />
           )}
         </View>
+        {foci.length > 0 && (
+          <View
+            accessible
+            accessibilityLabel={`${t("focus.thisWeek")}: ${foci
+              .map((c) => `${c.count} ${focusLabel(c.focus)}`)
+              .join(", ")}`}
+            style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}
+          >
+            {foci.map((c) => (
+              <KindTag
+                key={c.focus}
+                label={`${formatNumber(c.count)} ${focusLabel(c.focus)}`}
+                color={colors.gunmetal}
+                background={colors.surfaceSoft}
+              />
+            ))}
+          </View>
+        )}
         <DaySection day={day} onOpen={open} />
       </ScrollView>
       <Fab label={addLabel} onPress={() => setAdding(true)} />

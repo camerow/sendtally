@@ -32,7 +32,7 @@ const run: WorkoutRun = {
   title: "Lower body A",
   date: "2026-10-22",
   workoutId: "w1",
-  link: { membershipId: "m1", week: 2 },
+  link: { membershipId: "m1", week: 2, focus: null },
   minutes: 45,
   exerciseRestS: 120,
   items: [
@@ -72,6 +72,7 @@ describe("Sets player", () => {
           targetRpe: 8,
           items: run.items.map(({ exercise, dose }) => ({ exercise, doses: [dose] })),
           exerciseRestS: 180,
+          focus: null,
           updatedAt: "2026-10-01T00:00:00.000Z",
         },
       ],

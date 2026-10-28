@@ -51,11 +51,12 @@ const legs: WorkoutRecord = {
     },
   ],
   exerciseRestS: 180,
+  focus: null,
   updatedAt: "t",
 };
 
 const winter: Plan = {
-  blocks: [{ id: "b1", name: "Winter base", start: "2026-10-05", weeks: 6 }],
+  blocks: [{ id: "b1", name: "Winter base", start: "2026-10-05", weeks: 6, focus: null }],
   memberships: [],
   weekChanges: [],
 };

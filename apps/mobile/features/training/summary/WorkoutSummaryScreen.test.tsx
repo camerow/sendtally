@@ -59,6 +59,7 @@ const activity = (
   workoutId: "legs",
   membershipId: null,
   week: null,
+  focus: null,
   done: [],
   stravaActivityId: null,
   postedAt: null,
@@ -97,11 +98,12 @@ const legs: WorkoutRecord = {
   targetRpe: 7,
   items: [],
   exerciseRestS: 0,
+  focus: null,
   updatedAt: "t",
 };
 
 const plan: Plan = {
-  blocks: [{ id: "b1", name: "Strength block", start: "2026-10-13", weeks: 6 }],
+  blocks: [{ id: "b1", name: "Strength block", start: "2026-10-13", weeks: 6, focus: null }],
   memberships: [{ id: "m1", workoutId: "legs", blockId: "b1", weekdays: [1], start: "2026-10-13" }],
   weekChanges: [],
 };
@@ -193,6 +195,7 @@ describe("A finished workout's summary", () => {
       protocol,
       membershipId: null,
       week: null,
+      focus: null,
       done: [],
       stravaActivityId: null,
       postState: null,

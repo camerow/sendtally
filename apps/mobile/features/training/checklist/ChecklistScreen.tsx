@@ -48,6 +48,7 @@ export function ChecklistScreen({ run }: { run: WorkoutRun }): React.ReactElemen
       <ScrollView contentContainerStyle={{ flexGrow: 1, gap: 16, paddingHorizontal: 18 }}>
         <PlayerHeader
           kind={run.kind}
+          focus={run.link.focus}
           title={run.title}
           minutes={run.minutes}
           workoutId={run.workoutId}

@@ -1,19 +1,31 @@
 import React from "react";
 import { Text, View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
-import type { HangWorkout } from "@sendtally/core/hang";
+import type { Focus, HangWorkout } from "@sendtally/core/hang";
 import { kindLabel } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
+import { FocusTag } from "../components/FocusTag";
 import { Label } from "../components/Label";
 import { Title } from "../components/Title";
 import { type } from "../type";
 
-export type WorkoutIntroProps = { workout: HangWorkout; description: string };
+export type WorkoutIntroProps = {
+  workout: HangWorkout;
+  description: string;
+  focus: Focus | null;
+};
 
-export function WorkoutIntro({ workout, description }: WorkoutIntroProps): React.ReactElement {
+export function WorkoutIntro({
+  workout,
+  description,
+  focus,
+}: WorkoutIntroProps): React.ReactElement {
   return (
     <View style={{ gap: 6 }}>
-      <Label color={colors.petalInk}>{kindLabel(workout.kind)}</Label>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+        <Label color={colors.petalInk}>{kindLabel(workout.kind)}</Label>
+        <FocusTag focus={focus} />
+      </View>
       <Title size={38}>{workout.name}</Title>
       <Text
         style={[

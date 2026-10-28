@@ -1,6 +1,7 @@
 import { router } from "expo-router";
 import React from "react";
 import { Linking, ScrollView, View } from "react-native";
+import type { Focus } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { useActivityPost, type PostTarget } from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
@@ -9,6 +10,7 @@ import { useApi } from "../../../lib/api";
 import { confirmDestructive } from "../../../lib/confirmDestructive";
 import { useStravaConnect } from "../../settings/useStravaConnect";
 import { Button } from "../components/Button";
+import { FocusTag } from "../components/FocusTag";
 import { IconButton } from "../components/IconButton";
 import { Label } from "../components/Label";
 import { Title } from "../components/Title";
@@ -21,6 +23,8 @@ export type SummaryFrameProps = {
   kicker: string;
   kickerColor: string;
   title: string;
+  /** What the session recorded it trained for. */
+  focus: Focus | null;
   tiles: readonly Stat[];
   target: PostTarget;
   rpe: number | null;
@@ -28,11 +32,12 @@ export type SummaryFrameProps = {
   children: React.ReactNode;
 };
 
-/** What every finished workout shares: Back, Edit and the menu, its kicker and title, its tiles and Strava. */
+/** What every finished workout shares: Back, Edit and the menu, its kicker, title and focus, its tiles and Strava. */
 export function SummaryFrame({
   kicker,
   kickerColor,
   title,
+  focus,
   tiles,
   target,
   rpe,
@@ -102,7 +107,12 @@ export function SummaryFrame({
         contentContainerStyle={{ gap: 12, paddingTop: 6, paddingHorizontal: 18, paddingBottom: 32 }}
       >
         <Label color={kickerColor}>{kicker}</Label>
-        <Title size={32}>{title}</Title>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+          <Title size={32} style={{ flex: 1 }}>
+            {title}
+          </Title>
+          <FocusTag focus={focus} />
+        </View>
         <SummaryTiles stats={tiles} />
         {post.state !== null && <StravaStatusRow state={post.state} />}
         {children}

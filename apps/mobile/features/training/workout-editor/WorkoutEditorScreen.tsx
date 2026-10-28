@@ -21,6 +21,7 @@ import {
 import { TextInput } from "../../../components/TextInput";
 import { useApi } from "../../../lib/api";
 import { Button } from "../components/Button";
+import { FocusField } from "../components/FocusField";
 import { Label } from "../components/Label";
 import { useHangData } from "../data/HangDataContext";
 import { LoadState } from "../data/LoadState";
@@ -155,6 +156,10 @@ function Editor({
             maxLength={2000}
             multiline
             onChange={(description) => setState((s) => ({ ...s, description }))}
+          />
+          <FocusField
+            value={state.focus}
+            onChange={(focus) => setState((s) => ({ ...s, focus }))}
           />
           {state.items.map((item, i) => (
             <ItemEditor

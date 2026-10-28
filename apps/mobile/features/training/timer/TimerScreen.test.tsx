@@ -72,7 +72,7 @@ describe("Timer", () => {
 
   it("runs the week's prescription, and carries the setup and plan to the done screen", async () => {
     const plan = {
-      blocks: [{ id: "b1", name: "Winter base", start: TODAY, weeks: 4 }],
+      blocks: [{ id: "b1", name: "Winter base", start: TODAY, weeks: 4, focus: null }],
       memberships: [
         { id: "m1", workoutId: "max10", blockId: "b1", weekdays: [1 as const], start: TODAY },
       ],
@@ -92,6 +92,7 @@ describe("Timer", () => {
       rpe: null,
       membershipId: null,
       week: null,
+      focus: null,
       done: [],
       protocol: {
         name: "Max hangs",
@@ -111,7 +112,7 @@ describe("Timer", () => {
       <TimerScreen
         workoutId="max10"
         gripId="half"
-        link={{ membershipId: "m1", week: 1 }}
+        link={{ membershipId: "m1", week: 1, focus: null }}
         session={0}
       />,
       hangData({ sessions: [session] }),
@@ -151,6 +152,7 @@ describe("Timer", () => {
         { exercise: "open", doses: [{ sets: 1, reps: 1, onS: 10 }] },
       ],
       exerciseRestS: 120,
+      focus: null,
       updatedAt: "t",
     };
     await renderWithHang(
