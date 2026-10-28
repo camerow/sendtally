@@ -325,6 +325,7 @@ export function SessionsLog(): React.ReactElement {
             <SessionRow
               session={item.session}
               title={sessionTitle(item.session)}
+              marked
               onPress={() => openItem(item)}
             />
           ) : item.type === "hang" ? (

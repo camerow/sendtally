@@ -8,6 +8,7 @@ import { Icon } from "../../components/Icon";
 import { pressRow } from "../../lib/press";
 import { SESSION_ROW_HEIGHT, rowMeta, rowTitle } from "./SessionRow";
 import { DayColumn } from "./SessionRowParts";
+import { CategoryMark } from "../training/library/CategoryMark";
 
 /** Other training carries no tags, so it is always one plain row tall. */
 export const ACTIVITY_ROW_HEIGHT = SESSION_ROW_HEIGHT;
@@ -47,6 +48,7 @@ export function ActivityRow({
       })}
     >
       <DayColumn weekday={weekday} day={day} />
+      <CategoryMark kind={activity.kind} size={28} />
       <View style={{ flex: 1, gap: 3 }}>
         <Text numberOfLines={1} style={rowTitle}>
           {activity.title}

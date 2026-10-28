@@ -15,6 +15,7 @@ import { StravaMark } from "../../components/StravaMark";
 import { pressRow } from "../../lib/press";
 import { SESSION_ROW_HEIGHT, rowMeta, rowTitle } from "./SessionRow";
 import { DayColumn } from "./SessionRowParts";
+import { CategoryMark } from "../training/library/CategoryMark";
 
 /** A hang session carries no tags, so it is always one plain row tall. */
 export const HANG_ROW_HEIGHT = SESSION_ROW_HEIGHT;
@@ -64,6 +65,7 @@ export function HangRow({
       })}
     >
       <DayColumn weekday={weekday} day={day} />
+      <CategoryMark kind="hangboard" size={28} />
       <View style={{ flex: 1, gap: 3 }}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
           <Text numberOfLines={1} style={{ flexShrink: 1, ...rowTitle }}>
