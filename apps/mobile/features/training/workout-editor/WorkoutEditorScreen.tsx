@@ -3,11 +3,12 @@ import { router } from "expo-router";
 import React from "react";
 import { Alert, KeyboardAvoidingView, Platform, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { sessionItems, type WorkoutKind } from "@sendtally/core/hang";
+import type { WorkoutKind } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { kindLabel } from "@sendtally/features/activities";
-import { hangWorkoutFromItem } from "@sendtally/features/hang";
+import { exerciseLabel } from "@sendtally/features/exercises";
 import { t } from "@sendtally/features/i18n";
+import { exerciseKey, useExercises } from "@sendtally/features/statistics";
 import {
   copyName,
   draftOf,
@@ -23,7 +24,7 @@ import { Button } from "../components/Button";
 import { Label } from "../components/Label";
 import { useHangData } from "../data/HangDataContext";
 import { LoadState } from "../data/LoadState";
-import { GripPickerSheet } from "../grip-picker/GripPickerSheet";
+import { ExercisePickerSheet } from "../exercise-picker/ExercisePickerSheet";
 import { useLibrary } from "../library/useLibrary";
 import { MinutesField } from "../plan/MinutesField";
 import { TargetEffort } from "../plan/TargetEffort";
@@ -33,10 +34,10 @@ import { EditorTextField } from "./EditorTextField";
 import { HangboardTiming } from "./HangboardTiming";
 import {
   draftOfEditor,
-  newItem,
   startingDraft,
+  withExerciseSwapped,
   withItem,
-  withItemAdded,
+  withItemsAdded,
   withoutItem,
 } from "./editorState";
 import { ItemEditor } from "./ItemEditor";
@@ -73,11 +74,22 @@ function Editor({
   id: string | undefined;
   initial: WorkoutDraft;
 }): React.ReactElement {
-  const actions = useWorkoutActions(useApi(), reportFailure);
+  const api = useApi();
+  const actions = useWorkoutActions(api, reportFailure);
+  const exercises = useExercises(api).state;
   const { model } = useHangData();
   const [state, setState] = React.useState(initial);
   const [untouched] = React.useState(initial);
-  const [gripFor, setGripFor] = React.useState<number | null>(null);
+  const [picking, setPicking] = React.useState<{ swap: number } | "add" | null>(null);
+  const exerciseNamed = (name: string) =>
+    exercises.status === "ready"
+      ? exercises.data.find((e) => exerciseKey(e.name) === exerciseKey(name))
+      : undefined;
+  const nameOf = (exercise: string): string => {
+    if (state.kind === "hangboard") return model.gripName(exercise);
+    const own = exerciseNamed(exercise);
+    return own === undefined ? exercise : exerciseLabel(own);
+  };
 
   const save = (): void => {
     void actions.saveWorkout(id ?? randomUUID(), draftOfEditor(state));
@@ -93,8 +105,6 @@ function Editor({
         onConfirm: () => router.back(),
       });
   };
-
-  const picking = gripFor === null ? undefined : state.items[gripFor];
 
   return (
     <SafeAreaView edges={["top", "bottom"]} style={{ flex: 1, backgroundColor: colors.white }}>
@@ -151,11 +161,12 @@ function Editor({
               key={i}
               kind={state.kind}
               item={item}
+              name={nameOf(item.exercise)}
+              measure={exerciseNamed(item.exercise)?.measure}
               unit={model.settings.units}
-              gripName={model.gripName}
               onChange={(next) => setState((s) => withItem(s, i, next))}
               onRemove={() => setState((s) => withoutItem(s, i))}
-              onPickGrip={() => setGripFor(i)}
+              onSwap={() => setPicking({ swap: i })}
             />
           ))}
           <RestField
@@ -165,11 +176,11 @@ function Editor({
             soft
           />
           <Button
-            label={state.kind === "hangboard" ? t("workouts.addGrip") : t("workouts.addExercise")}
-            onPress={() => setState(withItemAdded)}
+            label={t("workouts.addExercises")}
+            onPress={() => setPicking("add")}
             variant="outline"
             icon="plus"
-            height={44}
+            height={48}
           />
           {state.kind === "hangboard" ? (
             <HangboardTiming minutes={workoutMinutes(state)} />
@@ -185,23 +196,19 @@ function Editor({
           />
         </ScrollView>
       </KeyboardAvoidingView>
-      {state.kind === "hangboard" && (
-        <GripPickerSheet
-          visible={picking !== undefined}
-          workout={hangWorkoutFromItem(
-            { id: id ?? "", source: "mine", name: state.name },
-            sessionItems([picking ?? newItem("hangboard")], 0)[0] ?? {
-              exercise: "",
-              dose: { sets: 1 },
-            }
-          )}
-          multi={false}
-          selected={picking === undefined ? [] : [picking.exercise]}
-          onPick={(exercise) => {
-            if (gripFor !== null && picking !== undefined)
-              setState((s) => withItem(s, gripFor, { ...picking, exercise }));
-          }}
-          onClose={() => setGripFor(null)}
+      {picking !== null && (
+        <ExercisePickerSheet
+          kind={state.kind}
+          items={state.items}
+          multi={picking === "add"}
+          onPick={(picked) =>
+            setState((s) =>
+              picking === "add"
+                ? withItemsAdded(s, picked)
+                : withExerciseSwapped(s, picking.swap, picked[0]?.exercise ?? "")
+            )
+          }
+          onClose={() => setPicking(null)}
         />
       )}
     </SafeAreaView>

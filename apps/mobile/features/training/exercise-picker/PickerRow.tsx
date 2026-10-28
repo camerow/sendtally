@@ -1,0 +1,53 @@
+import React from "react";
+import { Pressable, Text, View } from "react-native";
+import { colors } from "@sendtally/design/tokens";
+import { measureLabel, type PickerEntry } from "@sendtally/features/exercises";
+import { t } from "@sendtally/features/i18n";
+import { pressRow } from "../../../lib/press";
+import { CheckBox } from "../components/CheckBox";
+import { Label } from "../components/Label";
+import { type } from "../type";
+
+export type PickerRowProps = {
+  entry: PickerEntry;
+  ticked: boolean;
+  /** Ticks in a multi-select picker; picks at once otherwise. */
+  multi: boolean;
+  onPress: () => void;
+};
+
+function metaOf(entry: PickerEntry): string {
+  if (entry.uses > 0) return t("workouts.timesUsed", { count: entry.uses });
+  if (entry.library) return t("workouts.fromLibrary");
+  return "exercise" in entry.source ? measureLabel(entry.source.exercise.measure) : "";
+}
+
+/** One exercise the picker offers: how often it was used, and whether the workout already has it. */
+export function PickerRow({ entry, ticked, multi, onPress }: PickerRowProps): React.ReactElement {
+  const meta = metaOf(entry);
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole={multi ? "checkbox" : "button"}
+      accessibilityState={multi ? { checked: ticked } : undefined}
+      accessibilityLabel={entry.name}
+      style={pressRow({
+        minHeight: 56,
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 12,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.lineOnLightSoft,
+      })}
+    >
+      {multi && <CheckBox checked={ticked} color={colors.gunmetal} />}
+      <View style={{ flex: 1, gap: 2, paddingVertical: 8 }}>
+        <Text style={[type.bodyBold, { fontSize: 15, color: colors.gunmetal }]}>{entry.name}</Text>
+        {meta !== "" && (
+          <Text style={[type.mono, { fontSize: 12, color: colors.textSecondary }]}>{meta}</Text>
+        )}
+      </View>
+      {entry.inWorkout && <Label color={colors.textSecondary}>{t("workouts.inWorkout")}</Label>}
+    </Pressable>
+  );
+}

@@ -1,28 +1,40 @@
-import { BUILT_IN_GRIPS, type Dose, type Item, type WorkoutKind } from "@sendtally/core/hang";
+import { BUILT_IN_GRIPS, type Dose, type Item } from "@sendtally/core/hang";
 import { t } from "@sendtally/features/i18n";
 import type { WorkoutDraft } from "@sendtally/features/workouts";
-import { NEW_DOSE } from "./doseFields";
+import type { Picked } from "../exercise-picker/types";
+import { newDoseFor } from "./doseFields";
 
 export const MAX_DOSES = 10;
 
-/** A new item: a copy of the one before it, or the kind's starting dose on the first grip. */
-export function newItem(kind: WorkoutKind, previous?: Item): Item {
-  if (previous !== undefined)
-    return { exercise: previous.exercise, doses: previous.doses.map((d) => ({ ...d })) };
-  return {
-    exercise: kind === "hangboard" ? BUILT_IN_GRIPS[0] : "",
-    doses: [{ ...NEW_DOSE[kind] }],
-  };
+/**
+ * New items for what was picked, in order: a grip takes the doses of the grip before it,
+ * anything else its measure's starting dose.
+ */
+export function withItemsAdded(s: WorkoutDraft, picked: readonly Picked[]): WorkoutDraft {
+  const last = s.items[s.items.length - 1];
+  const items = picked.map(({ exercise, measure }): Item =>
+    s.kind === "hangboard" && last !== undefined
+      ? { exercise, doses: last.doses.map((d) => ({ ...d })) }
+      : { exercise, doses: [newDoseFor(s.kind, measure)] }
+  );
+  return { ...s, items: [...s.items, ...items] };
 }
 
-/** A new workout of the kind starts with one item, except climbing, which often has none. */
+/** A new hangboard workout starts on the first grip; anything else starts empty, to pick into. */
 export function startingDraft(draft: WorkoutDraft): WorkoutDraft {
-  return draft.items.length === 0 && draft.kind !== "climbing" ? withItemAdded(draft) : draft;
+  return draft.items.length === 0 && draft.kind === "hangboard"
+    ? withItemsAdded(draft, [{ exercise: BUILT_IN_GRIPS[0] }])
+    : draft;
 }
 
-export const withItemAdded = (s: WorkoutDraft): WorkoutDraft => ({
+/** Another exercise in the item's place, keeping its doses. */
+export const withExerciseSwapped = (
+  s: WorkoutDraft,
+  at: number,
+  exercise: string
+): WorkoutDraft => ({
   ...s,
-  items: [...s.items, newItem(s.kind, s.items[s.items.length - 1])],
+  items: s.items.map((x, i) => (i === at ? { ...x, exercise } : x)),
 });
 
 export const withItem = (s: WorkoutDraft, at: number, item: Item): WorkoutDraft => ({

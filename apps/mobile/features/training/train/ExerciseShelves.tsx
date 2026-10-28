@@ -3,7 +3,7 @@ import React from "react";
 import { View } from "react-native";
 import { byDate, summarise, type WorkoutKind } from "@sendtally/core/hang";
 import { setText, useWeightUnit } from "@sendtally/features/activities";
-import { categoryShelves } from "@sendtally/features/exercises";
+import { categoryShelves, exerciseLabel } from "@sendtally/features/exercises";
 import { loadLabel } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import {
@@ -82,7 +82,7 @@ export function ExerciseShelves({ onAdd }: ExerciseShelvesProps): React.ReactEle
     .map((e): ShelfCard => ({
       key: e.id,
       kind: e.kind,
-      name: e.name,
+      name: exerciseLabel(e),
       meta: metaOf(e.name),
       open: () => router.push({ pathname: "/exercise/[id]", params: { id: e.id } }),
     }));

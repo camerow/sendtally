@@ -5,7 +5,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import type { Exercise } from "@sendtally/api-client";
 import { colors } from "@sendtally/design/tokens";
 import { kindLabel, useWeightUnit } from "@sendtally/features/activities";
-import { exerciseKindOf } from "@sendtally/features/exercises";
+import { EXERCISE_KINDS } from "@sendtally/core/hang";
+import { exerciseKindOf, exerciseLabel } from "@sendtally/features/exercises";
 import { t } from "@sendtally/features/i18n";
 import {
   exerciseKey,
@@ -116,7 +117,7 @@ export function ExerciseScreen({ id }: ExerciseScreenProps): React.ReactElement 
             <CategoryMark kind={exercise.kind} size={28} />
             <Label color={colors.textSecondary}>{kindLabel(exercise.kind)}</Label>
           </View>
-          <Title size={38}>{exercise.name}</Title>
+          <Title size={38}>{exerciseLabel(exercise)}</Title>
         </View>
         {logged === undefined ? (
           <DashedPanel body={t("workouts.exerciseNothingLogged")} />
@@ -148,6 +149,7 @@ export function ExerciseScreen({ id }: ExerciseScreenProps): React.ReactElement 
             eachSide: exercise.eachSide,
           }}
           editing={{ logged: logged !== undefined }}
+          kinds={EXERCISE_KINDS}
           onSave={save}
           onClose={() => setSheet(null)}
         />

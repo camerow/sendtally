@@ -1,17 +1,20 @@
 import React from "react";
-import { Alert, Pressable, Text, View } from "react-native";
-import { letterOf, type Item, type WeightUnit, type WorkoutKind } from "@sendtally/core/hang";
-import { colors, fonts, radius } from "@sendtally/design/tokens";
+import { Alert, Text, View } from "react-native";
+import {
+  letterOf,
+  type ExerciseMeasure,
+  type Item,
+  type WeightUnit,
+  type WorkoutKind,
+} from "@sendtally/core/hang";
+import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
 import { Switch } from "../../../components/Switch";
-import { TextInput } from "../../../components/TextInput";
-import { press } from "../../../lib/press";
-import { HangIcon } from "../components/HangIcon";
 import { IconButton } from "../components/IconButton";
 import { type } from "../type";
 import { DoseNameTile } from "./DoseNameTile";
 import { DoseTile } from "./DoseTile";
-import { DOSE_FIELDS_OF, fieldText, withField } from "./doseFields";
+import { doseFieldsFor, fieldText, withField } from "./doseFields";
 import {
   MAX_DOSES,
   withAlternates,
@@ -27,11 +30,14 @@ import { RestField } from "./RestField";
 export type ItemEditorProps = {
   kind: WorkoutKind;
   item: Item;
+  /** Its exercise or grip as the user reads it. */
+  name: string;
+  /** How its exercise is measured, when it is one of the user's own. */
+  measure?: ExerciseMeasure;
   unit: WeightUnit;
-  gripName: (id: string) => string;
   onChange: (item: Item) => void;
   onRemove: () => void;
-  onPickGrip: () => void;
+  onSwap: () => void;
 };
 
 const KEYBOARD = {
@@ -42,23 +48,25 @@ const KEYBOARD = {
 
 /**
  * One exercise, or for hangboard one grip, on its own card: the numbers each of its doses
- * asks for, whether sessions take turns between them, and the rest between its sets.
+ * asks for by how it is measured, whether sessions take turns between them, and the rest
+ * between its sets. Its menu swaps the exercise for another.
  */
 export function ItemEditor({
   kind,
   item,
+  name,
+  measure,
   unit,
-  gripName,
   onChange,
   onRemove,
-  onPickGrip,
+  onSwap,
 }: ItemEditorProps): React.ReactElement {
-  const name = kind === "hangboard" ? gripName(item.exercise) : item.exercise;
   const alternating = item.doses.length > 1;
   const next = letterOf(item.doses.length);
   const last = letterOf(item.doses.length - 1);
   const more = (): void =>
-    Alert.alert(name || t("workouts.exercise"), undefined, [
+    Alert.alert(name, undefined, [
+      { text: t("workouts.swapExercise"), onPress: onSwap },
       ...(alternating && item.doses.length < MAX_DOSES
         ? [
             {
@@ -76,7 +84,7 @@ export function ItemEditor({
           ]
         : []),
       {
-        text: t("workouts.removeExercise", { name: name || t("workouts.exercise") }),
+        text: t("workouts.removeExercise", { name }),
         style: "destructive",
         onPress: onRemove,
       },
@@ -94,44 +102,10 @@ export function ItemEditor({
         borderColor: colors.lineOnLightStrong,
       }}
     >
-      <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-        {kind === "hangboard" ? (
-          <Pressable
-            onPress={onPickGrip}
-            accessibilityRole="button"
-            accessibilityLabel={`${t("hang.chooseAGrip")}: ${name}`}
-            style={press({
-              flex: 1,
-              height: 44,
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 6,
-            })}
-          >
-            <Text style={[type.bodyBold, { fontSize: 16, color: colors.gunmetal }]}>{name}</Text>
-            <HangIcon name="down" color={colors.textSecondary} size={16} strokeWidth={2.2} />
-          </Pressable>
-        ) : (
-          <TextInput
-            value={item.exercise}
-            onChangeText={(exercise) => onChange({ ...item, exercise })}
-            placeholder={t("workouts.exercisePlaceholder")}
-            placeholderTextColor={colors.textFaint}
-            accessibilityLabel={t("workouts.exercise")}
-            maxLength={80}
-            style={{
-              flex: 1,
-              height: 44,
-              paddingHorizontal: 12,
-              borderRadius: radius.control,
-              borderWidth: 1,
-              borderColor: colors.lineOnLightStrong,
-              fontFamily: fonts.sansSemiBold,
-              fontSize: 15,
-              color: colors.gunmetal,
-            }}
-          />
-        )}
+      <View style={{ minHeight: 36, flexDirection: "row", alignItems: "center", gap: 6 }}>
+        <Text style={[type.bodyBold, { flex: 1, fontSize: 16, color: colors.gunmetal }]}>
+          {name}
+        </Text>
         <IconButton
           icon="more"
           label={t("workouts.exerciseMore")}
@@ -145,7 +119,7 @@ export function ItemEditor({
         <View key={d} style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
           {alternating && <LetterBadge dose={d} size={26} />}
           <View style={{ flex: 1, flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-            {DOSE_FIELDS_OF[kind].map((field) => {
+            {doseFieldsFor(kind, measure).map((field) => {
               const label = t(field.label, { unit });
               return (
                 <DoseTile
@@ -190,7 +164,7 @@ export function ItemEditor({
           checked={alternating}
           onChange={(on) => onChange(withAlternates(item, on))}
           disabled={false}
-          label={`${t("workouts.alternates")}: ${name || t("workouts.exercise")}`}
+          label={`${t("workouts.alternates")}: ${name}`}
         />
       </View>
       <RestField

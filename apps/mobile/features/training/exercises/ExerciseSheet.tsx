@@ -30,8 +30,10 @@ import type { ExerciseForm } from "./types";
 export type ExerciseSheetProps = {
   /** A new exercise's category and name, or the exercise being edited. */
   initial: Pick<ExerciseForm, "kind" | "name"> & Partial<ExerciseForm>;
-  /** Editing one of the user's exercises: Fingers is not offered, and a logged one warns before its measure changes. */
+  /** Editing one of the user's exercises: a logged one warns before its measure changes. */
   editing?: { logged: boolean };
+  /** The categories it can be; all five unless a workout or an edit limits them. */
+  kinds?: readonly WorkoutKind[];
   onSave: (form: ExerciseForm) => void;
   onClose: () => void;
 };
@@ -46,6 +48,7 @@ const measureOrDefault = (kind: WorkoutKind): ExerciseMeasure =>
 export function ExerciseSheet({
   initial,
   editing,
+  kinds = WORKOUT_KINDS,
   onSave,
   onClose,
 }: ExerciseSheetProps): React.ReactElement {
@@ -57,8 +60,6 @@ export function ExerciseSheet({
   const [measureTouched, setMeasureTouched] = React.useState(initial.measure !== undefined);
   const trimmed = form.name.trim();
   const fingers = form.kind === "hangboard";
-  const kinds =
-    editing === undefined ? WORKOUT_KINDS : WORKOUT_KINDS.filter((k) => k !== "hangboard");
 
   const setKind = (kind: WorkoutKind): void =>
     setForm((f) => ({ ...f, kind, measure: measureTouched ? f.measure : measureOrDefault(kind) }));

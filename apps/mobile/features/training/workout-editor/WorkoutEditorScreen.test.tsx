@@ -1,16 +1,32 @@
-import { describe, expect, it, jest } from "@jest/globals";
-import { fireEvent, screen } from "@testing-library/react-native";
+import { beforeEach, describe, expect, it, jest } from "@jest/globals";
+import { act, fireEvent, screen } from "@testing-library/react-native";
 import { router } from "expo-router";
 import React from "react";
+import { Alert, type AlertButton } from "react-native";
 import type * as Workouts from "@sendtally/features/workouts";
-import { hangData, renderWithHang } from "../data/renderWithHang";
+import { anExercise, hangData, renderWithHang } from "../data/renderWithHang";
 import { WorkoutEditorScreen } from "./WorkoutEditorScreen";
 
 const mockWorkouts = { saveWorkout: jest.fn(), deleteWorkout: jest.fn() };
+const mockApi = { saveExercise: jest.fn<(...args: unknown[]) => Promise<unknown>>() };
 
+jest.mock("../../../lib/api", () => ({ useApi: () => mockApi }));
 jest.mock("../../../components/Sheet", () => ({
-  Sheet: ({ visible, children }: { visible: boolean; children: React.ReactNode }) =>
-    visible ? children : null,
+  Sheet: ({
+    visible,
+    children,
+    footer,
+  }: {
+    visible: boolean;
+    children: React.ReactNode;
+    footer?: React.ReactNode;
+  }) =>
+    visible ? (
+      <>
+        {children}
+        {footer}
+      </>
+    ) : null,
 }));
 jest.mock("expo-router", () => ({ router: { back: jest.fn() } }));
 jest.mock("expo-crypto", () => ({ randomUUID: () => "w-new" }));
@@ -18,6 +34,29 @@ jest.mock("@sendtally/features/workouts", () => ({
   ...jest.requireActual<typeof Workouts>("@sendtally/features/workouts"),
   useWorkoutActions: () => mockWorkouts,
 }));
+
+const squat = anExercise("e1", "Back squat", "strength");
+const world = { exercises: [squat] };
+
+beforeEach(() => {
+  jest.clearAllMocks();
+  jest.spyOn(Alert, "alert").mockImplementation(() => undefined);
+});
+
+async function pick(...names: string[]): Promise<void> {
+  await fireEvent.press(screen.getByText("Add exercises"));
+  for (const name of names) await fireEvent.press(screen.getByRole("checkbox", { name }));
+  await fireEvent.press(
+    screen.getByText(`Add ${names.length} exercise${names.length === 1 ? "" : "s"}`)
+  );
+  await act(async () => undefined);
+}
+
+async function menu(title: string): Promise<void> {
+  const calls = jest.mocked(Alert.alert).mock.calls;
+  const buttons = (calls[calls.length - 1]?.[2] ?? []) as AlertButton[];
+  await act(async () => buttons.find((b) => b.text === title)?.onPress?.());
+}
 
 async function type(label: string, text: string, index = 0): Promise<void> {
   const field = screen.getAllByLabelText(label)[index]!;
@@ -28,9 +67,9 @@ async function type(label: string, text: string, index = 0): Promise<void> {
 
 describe("Workout editor", () => {
   it("makes a strength workout whose squat alternates a named A and B, resting between sets", async () => {
-    await renderWithHang(<WorkoutEditorScreen kind="strength" />);
+    await renderWithHang(<WorkoutEditorScreen kind="strength" />, hangData(), world);
     await fireEvent.changeText(screen.getByLabelText("Name"), "Leg day");
-    await fireEvent.changeText(screen.getByLabelText("Exercise"), "Back squat");
+    await pick("Back squat");
     await type("Reps", "5");
     await type("Weight (kg)", "100");
 
@@ -63,13 +102,13 @@ describe("Workout editor", () => {
   });
 
   it("saves a weight typed in pounds while its field still has focus", async () => {
-    mockWorkouts.saveWorkout.mockClear();
     const data = hangData();
-    await renderWithHang(<WorkoutEditorScreen kind="strength" />, {
-      ...data,
-      settings: { ...data.settings, units: "lb" },
-    });
-    await fireEvent.changeText(screen.getByLabelText("Exercise"), "Back squat");
+    await renderWithHang(
+      <WorkoutEditorScreen kind="strength" />,
+      { ...data, settings: { ...data.settings, units: "lb" } },
+      world
+    );
+    await pick("Back squat");
     const weight = screen.getByLabelText("Weight (lb)");
     await fireEvent(weight, "focus");
     await fireEvent.changeText(weight, "135");
@@ -80,16 +119,18 @@ describe("Workout editor", () => {
   });
 
   it("customises a built-in hangboard workout as a copy on another grip", async () => {
-    mockWorkouts.saveWorkout.mockClear();
     await renderWithHang(<WorkoutEditorScreen from="max10" />);
     expect(screen.getByDisplayValue("Max hangs (copy)")).toBeTruthy();
 
-    await fireEvent.press(screen.getByLabelText("Choose a grip: Half crimp"));
-    await fireEvent.press(screen.getByText("Open hand"));
+    await fireEvent.press(screen.getByLabelText("More for this exercise"));
+    await menu("Swap exercise");
+    expect(screen.queryByText("Back squat")).toBeNull();
+    await fireEvent.press(screen.getByRole("button", { name: "Open hand" }));
+    await act(async () => undefined);
     await type("Hang time", "12");
     expect(screen.queryByText("Minutes")).toBeNull();
     expect(screen.getByText("16m")).toBeTruthy();
-    await fireEvent.press(screen.getByText("Add grip"));
+    await pick("Open hand");
     expect(screen.getByText("35m")).toBeTruthy();
     await type("Rest between exercises", "2:00");
     expect(screen.getByText("34m")).toBeTruthy();
@@ -108,5 +149,51 @@ describe("Workout editor", () => {
         ],
       })
     );
+  });
+
+  it("adds ticked exercises in tick order, a built-in made the user's own, the ones it has tagged", async () => {
+    mockApi.saveExercise.mockResolvedValue({
+      exercise: anExercise("new-id", "Bench press", "strength", { builtIn: "benchPress" }),
+    });
+    await renderWithHang(<WorkoutEditorScreen kind="mobility" />, hangData(), world);
+    await fireEvent.press(screen.getByText("Add exercises"));
+    expect(screen.queryByRole("checkbox", { name: "Back squat" })).toBeNull();
+    await fireEvent.press(screen.getByRole("radio", { name: "Strength" }));
+    await fireEvent.press(screen.getByRole("checkbox", { name: "Bench press" }));
+    await fireEvent.press(screen.getByRole("checkbox", { name: "Back squat" }));
+    await fireEvent.press(screen.getByText("Add 2 exercises"));
+    await act(async () => undefined);
+
+    expect(mockApi.saveExercise).toHaveBeenCalledWith("w-new", {
+      name: "Bench press",
+      kind: "strength",
+      measure: "repsWeight",
+      eachSide: false,
+      builtIn: "benchPress",
+    });
+    await fireEvent.press(screen.getByText("Add exercises"));
+    await fireEvent.press(screen.getByRole("radio", { name: "Strength" }));
+    expect(screen.getAllByText("In workout")).toHaveLength(2);
+    await fireEvent.press(screen.getByText("Save"));
+    const [, saved] = mockWorkouts.saveWorkout.mock.calls[0] as [string, Workouts.WorkoutDraft];
+    expect(saved.items.map((i) => i.exercise)).toEqual(["Bench press", "Back squat"]);
+  });
+
+  it("makes a new exercise from what was searched and adds it once saved", async () => {
+    mockApi.saveExercise.mockResolvedValue({
+      exercise: anExercise("new-id", "Nordic curl", "strength", { measure: "reps" }),
+    });
+    await renderWithHang(<WorkoutEditorScreen kind="strength" />, hangData(), world);
+    await fireEvent.press(screen.getByText("Add exercises"));
+    await fireEvent.changeText(screen.getByLabelText("Search exercises"), "Nordic curl");
+    expect(screen.getByText("No exercise called Nordic curl")).toBeTruthy();
+    await fireEvent.press(screen.getAllByText("New")[1]!);
+    expect(screen.getAllByDisplayValue("Nordic curl")).toHaveLength(2);
+    await fireEvent.press(screen.getAllByText("Save").at(-1)!);
+    await act(async () => undefined);
+
+    expect(screen.getByText("Nordic curl")).toBeTruthy();
+    expect(screen.getByLabelText("Reps")).toBeTruthy();
+    expect(screen.queryByLabelText("Weight (kg)")).toBeNull();
   });
 });
