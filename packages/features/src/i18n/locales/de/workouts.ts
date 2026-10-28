@@ -10,6 +10,7 @@ export const workouts = {
   "workouts.usedTimes_other": "{count}-mal genutzt",
   "workouts.notUsed": "Noch nicht genutzt",
   "workouts.newWorkout": "Neues Workout",
+  "workouts.newWorkoutHint": "Was eine Einheit enthält, zum Starten oder Planen",
   "workouts.pickCategory": "Welche Art von Workout?",
   "workouts.category": "Kategorie",
   "workouts.namePlaceholder": "Dienstag im Gym",
@@ -131,4 +132,5 @@ export const workouts = {
   "workouts.exerciseNothingLogged":
     "Noch nichts eingetragen. Deine Sätze erscheinen hier, sobald du sie einträgst.",
   "workouts.newExercise": "Neue Übung",
+  "workouts.newExerciseHint": "Eine Übung für deine Workouts",
 } as const;

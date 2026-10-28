@@ -40,6 +40,8 @@ export const plan = {
   "plan.addOnDays_one": "An {count} Tag hinzufügen",
   "plan.addOnDays_other": "An {count} Tagen hinzufügen",
   "plan.newBlock": "Neuer Block",
+  "plan.createMenu": "Mehr erstellen",
+  "plan.newBlockHint": "Trainingswochen mit Workouts an festen Tagen",
   "plan.editBlock": "Block bearbeiten",
   "plan.blockNamePlaceholder": "Wintergrundlage",
   "plan.weeks": "Wochen",

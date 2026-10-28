@@ -9,6 +9,7 @@ export const workouts = {
   "workouts.usedTimes_other": "Used {count} times",
   "workouts.notUsed": "Not used yet",
   "workouts.newWorkout": "New workout",
+  "workouts.newWorkoutHint": "What one session holds, to run or plan",
   "workouts.pickCategory": "What kind of workout?",
   "workouts.category": "Category",
   "workouts.namePlaceholder": "Tuesday gym",
@@ -128,4 +129,5 @@ export const workouts = {
   "workouts.exerciseMore": "More for this exercise",
   "workouts.exerciseNothingLogged": "Nothing logged yet. Its sets show here once you log them.",
   "workouts.newExercise": "New exercise",
+  "workouts.newExerciseHint": "A lift or drill to use in your workouts",
 } as const;
