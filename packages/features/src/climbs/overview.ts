@@ -45,7 +45,10 @@ export type ClimbSessionRowVM = {
 export type ClimbDetailVM = {
   id: string;
   name: string;
-  eyebrow: string;
+  /** Its discipline, then its grade when it has one. */
+  kicker: string;
+  /** Where it is, then the day it was first tried. */
+  meta: string;
   project: boolean;
   days: string;
   tries: string;
@@ -83,15 +86,17 @@ export function climbDetailVM(
   climb: ClimbSummary,
   sessions: readonly SessionWithClimbs[]
 ): ClimbDetailVM {
-  const where = [climb.grade === null ? null : climbGradeLabel(climb), climb.area?.name ?? null];
-  const eyebrow = where.filter((p) => p !== null).join(" · ");
   return {
     id: climb.id,
     name: climb.name,
-    eyebrow:
-      eyebrow === ""
-        ? t(climb.discipline === "route" ? "common.route" : "common.boulder")
-        : eyebrow,
+    kicker: [
+      t(climb.discipline === "route" ? "common.route" : "common.boulder"),
+      ...(climb.grade === null ? [] : [climbGradeLabel(climb)]),
+    ].join(" · "),
+    meta: [
+      ...(climb.area?.name === undefined ? [] : [climb.area.name]),
+      t("climbs.firstTried", { date: dateLabel(climb.first_at) }),
+    ].join(" · "),
     project: climb.project,
     days: String(climb.sessions),
     tries: String(climb.attempts),

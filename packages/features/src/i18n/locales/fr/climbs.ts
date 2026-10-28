@@ -67,5 +67,7 @@ export const climbs = {
   "climbs.projectHint": "Épinglée en haut jusqu’à ce que tu la réussisses",
   "climbs.notesPlaceholder": "Notes : méthode, conditions, ressenti",
   "climbs.days": "Jours",
+  "climbs.firstTried": "premier essai le {date}",
+  "climbs.addNoteHint": "Une ligne datée dans son historique",
   "climbs.logSession": "Noter une séance",
 } as const;

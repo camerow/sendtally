@@ -3,18 +3,20 @@ import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { useClimb } from "@sendtally/features/climbs";
 import { t } from "@sendtally/features/i18n";
-import { colors, fonts, radius } from "@sendtally/design/tokens";
+import { colors, fonts } from "@sendtally/design/tokens";
 import { Icon } from "../../components/Icon";
 import { ScreenFrame } from "../../components/ScreenFrame";
 import { useApi } from "../../lib/api";
 import { press, pressRow } from "../../lib/press";
+import { Button } from "../training/components/Button";
 import { DetailActions } from "../training/components/DetailActions";
 import { LoadState } from "../training/data/LoadState";
+import { SummaryTiles } from "../training/summary/SummaryTiles";
 import { AddNoteSheet } from "./AddNoteSheet";
-import { LabelTile } from "./LabelTile";
+import { ClimbingHero } from "./ClimbingHero";
 import { RenameSheet } from "./RenameSheet";
 
-/** One climb: a Project chip to mark it, its days, tries and best, and every session on it. */
+/** One climb: a Project chip to mark it, its days, tries and best, every session on it, and Log session. */
 export function ClimbDetailScreen({ id }: { id: string }): React.ReactElement {
   const api = useApi();
   const { state, setWorking, rename, addNote, reload } = useClimb(api, id);
@@ -44,14 +46,34 @@ export function ClimbDetailScreen({ id }: { id: string }): React.ReactElement {
   };
 
   return (
-    <ScreenFrame action={<DetailActions onEdit={() => setRenaming((n) => n + 1)} />}>
-      <View style={{ gap: 6 }}>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-          <Text
-            style={{ flex: 1, fontFamily: fonts.mono, fontSize: 12.5, color: colors.textSecondary }}
-          >
-            {vm.eyebrow}
-          </Text>
+    <ScreenFrame
+      action={
+        <DetailActions
+          onEdit={() => setRenaming((n) => n + 1)}
+          menu={[
+            {
+              icon: "journal",
+              title: t("climbs.addNote"),
+              hint: t("climbs.addNoteHint"),
+              onPress: () => setNoting(true),
+            },
+          ]}
+        />
+      }
+      footer={
+        <Button
+          label={t("climbs.logSession")}
+          onPress={() => router.push({ pathname: "/climb/log", params: { climbId: climb.id } })}
+          variant="primary"
+          height={54}
+        />
+      }
+    >
+      <ClimbingHero
+        kind={vm.kicker}
+        title={vm.name}
+        meta={vm.meta}
+        aside={
           <Pressable
             onPress={() => void setWorking(!vm.project)}
             accessibilityRole="switch"
@@ -74,25 +96,15 @@ export function ClimbDetailScreen({ id }: { id: string }): React.ReactElement {
               {t("common.project")}
             </Text>
           </Pressable>
-        </View>
-        <Text
-          accessibilityRole="header"
-          style={{
-            fontFamily: fonts.displayHeavy,
-            fontSize: 34,
-            lineHeight: 38,
-            letterSpacing: -1,
-            color: colors.gunmetal,
-          }}
-        >
-          {vm.name}
-        </Text>
-      </View>
-      <View style={{ flexDirection: "row", gap: 8 }}>
-        <LabelTile label={t("climbs.days")} value={vm.days} />
-        <LabelTile label={t("logSession.tries")} value={vm.tries} />
-        <LabelTile label={t("statistics.best")} value={vm.best} />
-      </View>
+        }
+      />
+      <SummaryTiles
+        stats={[
+          { value: vm.days, label: t("climbs.days") },
+          { value: vm.tries, label: t("logSession.tries") },
+          { value: vm.best, label: t("statistics.best") },
+        ]}
+      />
       <View>
         {vm.sessions.map((s) => (
           <Pressable
@@ -142,38 +154,6 @@ export function ClimbDetailScreen({ id }: { id: string }): React.ReactElement {
           </Pressable>
         ))}
       </View>
-      <Pressable
-        onPress={() => setNoting(true)}
-        accessibilityRole="button"
-        style={press({
-          height: 52,
-          borderRadius: radius.card,
-          borderWidth: 1.5,
-          borderColor: "rgba(64,63,76,0.3)",
-          alignItems: "center",
-          justifyContent: "center",
-        })}
-      >
-        <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 15, color: colors.gunmetal }}>
-          {t("climbs.addNote")}
-        </Text>
-      </Pressable>
-      <Pressable
-        onPress={() => router.push({ pathname: "/climb/log", params: { climbId: climb.id } })}
-        accessibilityRole="button"
-        style={press({
-          height: 52,
-          borderRadius: radius.card,
-          borderWidth: 1.5,
-          borderColor: "rgba(64,63,76,0.3)",
-          alignItems: "center",
-          justifyContent: "center",
-        })}
-      >
-        <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 15, color: colors.gunmetal }}>
-          {t("climbs.logSession")}
-        </Text>
-      </Pressable>
       <AddNoteSheet
         visible={noting}
         sessions={vm.sessions}

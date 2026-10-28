@@ -56,7 +56,8 @@ describe("climbDetailVM", () => {
         go(7, "attempt", { name: "The Pinch", userClimbId: "other", tries: 1 }),
       ]),
     ]);
-    expect(vm.eyebrow).toBe("V7 · Buttermilks");
+    expect(vm.kicker).toBe("Boulder · V7");
+    expect(vm.meta).toBe("Buttermilks · first tried 26 Sep");
     expect([vm.project, vm.days, vm.tries, vm.best]).toEqual([true, "3", "23", "-"]);
     expect(vm.sessions.map((v) => [v.dateLabel, v.meta, v.triesLabel, v.note])).toEqual([
       ["24 Oct", "Buttermilks · Not yet", "8 tries", null],
