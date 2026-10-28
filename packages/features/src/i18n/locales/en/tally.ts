@@ -7,6 +7,7 @@ export const tally = {
   "tally.fallCount_one": "{count} fall",
   "tally.fallCount_other": "{count} falls",
   "tally.pickGrade": "Pick a grade to start a climb.",
+  "tally.pickGradeForSet": "Pick a grade to start set {set}.",
   "tally.fell": "Fell",
   "tally.fellOn": "Fell on {grade}",
   "tally.sentGrade": "Sent {grade}",

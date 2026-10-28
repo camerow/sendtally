@@ -7,6 +7,7 @@ export const tally = {
   "tally.fallCount_one": "{count} Sturz",
   "tally.fallCount_other": "{count} Stürze",
   "tally.pickGrade": "Wähle einen Grad, um eine Kletterei zu beginnen.",
+  "tally.pickGradeForSet": "Wähle einen Grad, um Satz {set} zu beginnen.",
   "tally.fell": "Gestürzt",
   "tally.fellOn": "Gestürzt in {grade}",
   "tally.sentGrade": "{grade} geschafft",

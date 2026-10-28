@@ -392,6 +392,19 @@ export function TallyScreen({ exercise = false }: TallyScreenProps): React.React
                     {group.label}
                   </Text>
                 )}
+                {group.climbs.length === 0 && group.label !== "" && (
+                  <Text
+                    style={{
+                      fontFamily: fonts.sans,
+                      fontSize: 16,
+                      color: "rgba(255,255,255,0.72)",
+                      paddingHorizontal: 2,
+                      paddingBottom: 6,
+                    }}
+                  >
+                    {t("tally.pickGradeForSet", { set: group.set })}
+                  </Text>
+                )}
                 {group.climbs.map((climb) => (
                   <TallyRow
                     key={climb.key}
@@ -505,13 +518,21 @@ export function TallyScreen({ exercise = false }: TallyScreenProps): React.React
               flex: 1,
               height: 72,
               borderRadius: 16,
-              backgroundColor: colors.gold,
+              borderWidth: off ? 2 : 0,
+              borderColor: "rgba(255,255,255,0.5)",
+              backgroundColor: off ? "transparent" : colors.gold,
               alignItems: "center",
               justifyContent: "center",
               opacity: off ? 0.35 : 1,
             })}
           >
-            <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 18, color: colors.gunmetal }}>
+            <Text
+              style={{
+                fontFamily: fonts.sansSemiBold,
+                fontSize: 18,
+                color: off ? colors.white : colors.gunmetal,
+              }}
+            >
               {t("common.sent")}
             </Text>
           </Pressable>
