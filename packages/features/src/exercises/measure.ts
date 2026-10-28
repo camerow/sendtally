@@ -1,3 +1,4 @@
+import type { Exercise } from "@sendtally/api-client";
 import {
   EXERCISE_KINDS,
   type ExerciseKind,
@@ -5,6 +6,7 @@ import {
   type WorkoutKind,
 } from "@sendtally/core/hang";
 import { t } from "../i18n";
+import { exerciseKey } from "../statistics/exercises";
 import type { TallyMeasure } from "./types";
 
 /** How a climbing exercise is logged on the session tally, or null for any other. */
@@ -14,6 +16,13 @@ export function tallyMeasureOf(
   if (e?.kind !== "climbing") return null;
   if (e.measure === "reps") return "climbs";
   return e.measure === "seconds" ? "wallTime" : null;
+}
+
+/** How the exercise a workout item names logs on the tally, by name in any case. */
+export function tallyMeasuresOf(
+  exercises: readonly Pick<Exercise, "name" | "kind" | "measure">[]
+): (name: string) => TallyMeasure | null {
+  return (name) => tallyMeasureOf(exercises.find((e) => exerciseKey(e.name) === exerciseKey(name)));
 }
 
 /** A climbing exercise's reps read as climbs and its time as time on the wall. */

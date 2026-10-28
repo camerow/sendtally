@@ -75,6 +75,7 @@ const FOCUS_SCREENS = [
   "workout/done",
   "workout/intervals",
   "workout/sets",
+  "workout/tally",
 ];
 
 function InteractiveMarker(): React.ReactElement | null {

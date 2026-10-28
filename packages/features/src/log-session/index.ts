@@ -129,9 +129,26 @@ export {
   sendStyleLabel,
   sendStylesFor,
 } from "./types";
+export {
+  allSetsDone,
+  exerciseLine,
+  exerciseSets,
+  nextSet,
+  setGroups,
+  setOver,
+  startExercise,
+  wallLeft,
+  withExerciseClimb,
+  withExerciseDone,
+  withSetEnded,
+  withWallStarted,
+  type ExerciseTallyStart,
+  type TallySetGroup,
+} from "./exerciseTally";
 export type {
   ClimbDraft,
   ClimbOutcome,
+  ExerciseTally,
   ClimbStyle,
   Discipline,
   GradePrefs,

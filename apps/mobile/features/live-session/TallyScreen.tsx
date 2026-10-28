@@ -19,12 +19,18 @@ import {
   gradeOptions,
   newTallyClimb,
   readClimbKind,
+  setGroups,
+  setOver,
   tallyDraft,
   tallyElapsedSeconds,
   tallySummary,
   useLiveSession,
   vGradeOf,
+  withExerciseClimb,
+  withExerciseDone,
+  withSetEnded,
   withTallyGo,
+  withWallStarted,
   type ClimbDraft,
   type Discipline,
   type LogSessionDraft,
@@ -37,9 +43,12 @@ import { colors, fonts } from "@sendtally/design/tokens";
 import { Icon } from "../../components/Icon";
 import { useApi } from "../../lib/api";
 import { climbKindStorage } from "../../lib/climbKindStorage";
+import { exerciseTallyStorage } from "../../lib/exerciseTallyStorage";
 import { liveSessionStorage } from "../../lib/liveSessionStorage";
 import { press } from "../../lib/press";
 import { readPlanLink } from "../training/data/planLinkParams";
+import { useRest } from "../training/rest/useRest";
+import { ExerciseClock } from "./ExerciseClock";
 import { FinishSheet } from "./FinishSheet";
 import { GradeChips, type GradeChip } from "../../components/GradeChips";
 import { GymSheet } from "./GymSheet";
@@ -69,12 +78,22 @@ function finishSummary(draft: LogSessionDraft, minutes: number): string {
   ].join(" · ");
 }
 
+export type TallyScreenProps = {
+  /**
+   * Logs the workout exercise the player started it on, into the player: its sets end on
+   * their last climb or their time, and rest; Done hands the climbs back, asking no effort.
+   */
+  exercise?: boolean;
+};
+
 /** The gym session as it happens: a grade starts a climb, then Fell or Sent for each go. */
-export function TallyScreen(): React.ReactElement {
+export function TallyScreen({ exercise = false }: TallyScreenProps): React.ReactElement {
   const api = useApi();
   const params = useLocalSearchParams();
   const plan = readPlanLink(params);
-  const live = useLiveSession(liveSessionStorage);
+  const live = useLiveSession(exercise ? exerciseTallyStorage : liveSessionStorage);
+  const rest = useRest();
+  const [now, setNow] = React.useState(() => new Date());
   const gyms = useGyms(api);
   const vocabulary = useClimbVocabulary(api);
   const { scales } = useGradeScalePrefs(api);
@@ -97,22 +116,50 @@ export function TallyScreen(): React.ReactElement {
   React.useEffect(() => {
     if (started.current || !settled) return;
     started.current = true;
-    if (draft !== null) return;
     const lastGym =
       sessions.status === "ready"
         ? sessions.data.sessions.find((s) => s.gym_id !== null)?.gym_id
         : undefined;
     const gymId = gyms.gyms.some((g) => g.id === lastGym) ? (lastGym ?? undefined) : undefined;
+    if (exercise) {
+      if (draft !== null && draft.gymId === undefined && draft.climbs.length === 0 && gymId)
+        live.replace({ ...draft, gymId });
+      return;
+    }
+    if (draft !== null) return;
     const name = typeof params.name === "string" ? params.name : undefined;
     live.start(tallyDraft(new Date(), { gymId, plan, name }));
-  }, [settled, draft, live, plan, params.name, sessions, gyms.gyms]);
+  }, [settled, draft, live, plan, params.name, sessions, gyms.gyms, exercise]);
+
+  React.useEffect(() => {
+    if (!exercise) return;
+    const timer = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, [exercise]);
+
+  /** A set over ends, and its rest starts. */
+  const settle = React.useCallback(
+    (next: LogSessionDraft, at: Date): LogSessionDraft => {
+      if (!setOver(next, at)) return next;
+      const ended = withSetEnded(next);
+      if (ended.restS > 0) rest.tick("tally", ended.restS);
+      return ended.draft;
+    },
+    [rest]
+  );
+
+  const open = selection?.kind === "pending";
+  React.useEffect(() => {
+    if (draft === null || open || !setOver(draft, now)) return;
+    live.replace(settle(draft, now));
+  }, [draft, open, now, live, settle]);
 
   const leave = (): void => {
     if (router.canGoBack()) router.back();
     else router.replace("/(tabs)/sessions");
   };
 
-  if (draft === null) {
+  if (draft === null || (exercise && draft.exercise === undefined)) {
     return <SafeAreaView style={{ flex: 1, backgroundColor: colors.gunmetal }} />;
   }
 
@@ -143,13 +190,19 @@ export function TallyScreen(): React.ReactElement {
       const choice = choiceOf(selection.chip);
       if (choice === null) return;
       const next = newTallyClimb(draft, choice, g);
-      live.replace(next.draft);
+      live.replace(settle(withExerciseClimb(next.draft, next.key), new Date()));
       climb = next.draft.climbs.find((c) => c.key === next.key);
       setSelection(g === "fell" ? { kind: "row", key: next.key } : null);
     } else if (selection?.kind === "row") {
       climb = draft.climbs.find((c) => c.key === selection.key);
       if (climb === undefined) return;
-      live.updateClimb(selection.key, (c) => withTallyGo(c, g));
+      const key = selection.key;
+      live.replace(
+        settle(
+          { ...draft, climbs: draft.climbs.map((c) => (c.key === key ? withTallyGo(c, g) : c)) },
+          new Date()
+        )
+      );
       if (g === "sent") setSelection(null);
     }
     if (climb === undefined) return;
@@ -202,6 +255,19 @@ export function TallyScreen(): React.ReactElement {
     );
   };
 
+  const pick = (chip: string): void => {
+    rest.skip();
+    setSelection({ kind: "pending", chip });
+    const wall = withWallStarted(draft, new Date());
+    if (wall !== draft) live.replace(wall);
+  };
+
+  const done = (): void => {
+    rest.skip();
+    live.replace(withExerciseDone(draft));
+    leave();
+  };
+
   const discard = (): void => {
     Alert.alert(t("tally.discardTitle"), t("tally.discardBody"), [
       { text: t("common.cancel"), style: "cancel" },
@@ -218,6 +284,9 @@ export function TallyScreen(): React.ReactElement {
   };
 
   const minutes = Math.floor(tallyElapsedSeconds(draft, new Date()) / 60);
+  const groups = exercise
+    ? setGroups(draft)
+    : [{ set: 0, label: "", climbs: [...draft.climbs].reverse() }];
   const editingClimb = draft.climbs.find((c) => c.key === editing) ?? null;
   const active = selection?.kind === "pending" ? selection.chip : null;
   const off = selection === null;
@@ -258,7 +327,7 @@ export function TallyScreen(): React.ReactElement {
           </View>
         </Pressable>
         <Pressable
-          onPress={() => setFinishing(true)}
+          onPress={exercise ? done : () => setFinishing(true)}
           accessibilityRole="button"
           style={press({
             width: 76,
@@ -269,29 +338,33 @@ export function TallyScreen(): React.ReactElement {
           })}
         >
           <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 15, color: colors.gold }}>
-            {t("tally.finish")}
+            {exercise ? t("common.done") : t("tally.finish")}
           </Text>
         </Pressable>
       </View>
 
-      <View style={{ alignItems: "center", gap: 2, paddingTop: 4, paddingBottom: 12 }}>
-        <LiveClock
-          elapsed={(now) => tallyElapsedSeconds(draft, now)}
-          style={{
-            fontFamily: fonts.displayHeavy,
-            fontSize: 44,
-            lineHeight: 50,
-            letterSpacing: -1.3,
-            color: colors.white,
-          }}
-        />
-        <Text style={{ fontFamily: fonts.mono, fontSize: 13, color: "rgba(255,255,255,0.75)" }}>
-          {tallySummary(draft)}
-        </Text>
-      </View>
+      {exercise ? (
+        <ExerciseClock draft={draft} rest={rest} now={now} />
+      ) : (
+        <View style={{ alignItems: "center", gap: 2, paddingTop: 4, paddingBottom: 12 }}>
+          <LiveClock
+            elapsed={(at) => tallyElapsedSeconds(draft, at)}
+            style={{
+              fontFamily: fonts.displayHeavy,
+              fontSize: 44,
+              lineHeight: 50,
+              letterSpacing: -1.3,
+              color: colors.white,
+            }}
+          />
+          <Text style={{ fontFamily: fonts.mono, fontSize: 13, color: "rgba(255,255,255,0.75)" }}>
+            {tallySummary(draft)}
+          </Text>
+        </View>
+      )}
 
       <View style={{ flex: 1 }}>
-        {draft.climbs.length === 0 ? (
+        {groups.every((g) => g.climbs.length === 0) ? (
           <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 18 }}>
             <Text style={{ fontFamily: fonts.sans, fontSize: 16, color: "rgba(255,255,255,0.72)" }}>
               {t("tally.pickGrade")}
@@ -302,20 +375,39 @@ export function TallyScreen(): React.ReactElement {
             style={{ flex: 1 }}
             contentContainerStyle={{ gap: 6, paddingHorizontal: 18, paddingBottom: 72 }}
           >
-            {[...draft.climbs].reverse().map((climb) => (
-              <TallyRow
-                key={climb.key}
-                climb={climb}
-                selected={selection?.kind === "row" && selection.key === climb.key}
-                onPress={() =>
-                  setSelection((s) =>
-                    s?.kind === "row" && s.key === climb.key
-                      ? null
-                      : { kind: "row", key: climb.key }
-                  )
-                }
-                onEdit={() => setEditing(climb.key)}
-              />
+            {groups.map((group) => (
+              <React.Fragment key={group.set}>
+                {group.label !== "" && (
+                  <Text
+                    style={{
+                      fontFamily: fonts.mono,
+                      fontSize: 11,
+                      letterSpacing: 0.9,
+                      textTransform: "uppercase",
+                      color: "rgba(255,255,255,0.6)",
+                      paddingTop: 6,
+                      paddingHorizontal: 2,
+                    }}
+                  >
+                    {group.label}
+                  </Text>
+                )}
+                {group.climbs.map((climb) => (
+                  <TallyRow
+                    key={climb.key}
+                    climb={climb}
+                    selected={selection?.kind === "row" && selection.key === climb.key}
+                    onPress={() =>
+                      setSelection((s) =>
+                        s?.kind === "row" && s.key === climb.key
+                          ? null
+                          : { kind: "row", key: climb.key }
+                      )
+                    }
+                    onEdit={() => setEditing(climb.key)}
+                  />
+                ))}
+              </React.Fragment>
             ))}
           </ScrollView>
         )}
@@ -381,7 +473,7 @@ export function TallyScreen(): React.ReactElement {
           chips={chips}
           active={active}
           startIndex={segment === "circuit" ? 0 : typicalGradeIndex(vocabulary.climbs, scale)}
-          onPick={(chip) => setSelection({ kind: "pending", chip })}
+          onPick={pick}
         />
         <View style={{ flexDirection: "row", gap: 10, paddingHorizontal: 18 }}>
           <Pressable

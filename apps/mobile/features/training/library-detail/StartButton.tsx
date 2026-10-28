@@ -1,7 +1,7 @@
 import React from "react";
 import type { StyleProp, ViewStyle } from "react-native";
 import { sessionItems, type CalendarDate } from "@sendtally/core/hang";
-import { eachSideOf } from "@sendtally/features/exercises";
+import { eachSideOf, tallyMeasuresOf } from "@sendtally/features/exercises";
 import { t } from "@sendtally/features/i18n";
 import { useExercises } from "@sendtally/features/statistics";
 import type { LibraryWorkout } from "@sendtally/features/workouts";
@@ -20,7 +20,7 @@ export type StartButtonProps = {
   style?: StyleProp<ViewStyle>;
 };
 
-/** Start, which opens the workout's player; a climbing workout logs its session instead. */
+/** Start, which opens the workout's player; a climbing workout with no exercises logs its session instead. */
 export function StartButton({
   workout,
   date,
@@ -28,19 +28,21 @@ export function StartButton({
   height,
   style,
 }: StartButtonProps): React.ReactElement {
-  const climbing = workout.kind === "climbing";
   const session = useNextSession(workout.id);
   const exercises = useExercises(useApi()).state;
-  const eachSide = eachSideOf(exercises.status === "ready" ? exercises.data : []);
+  const mine = exercises.status === "ready" ? exercises.data : [];
+  const eachSide = eachSideOf(mine);
+  const tally = tallyMeasuresOf(mine);
   const run = planned ?? {
     link: { ...NO_PLAN, focus: workout.focus },
     session,
     items: sessionItems(workout.items, session),
   };
+  const climbing = workout.kind === "climbing" && run.items.length === 0;
   return (
     <Button
       label={climbing ? t("plan.logSession") : t("hang.start")}
-      onPress={() => startLibraryWorkout(workout, date, run, eachSide)}
+      onPress={() => startLibraryWorkout(workout, date, run, eachSide, (e) => tally(e) !== null)}
       variant={climbing ? "gold" : "primary"}
       height={height}
       icon={climbing ? "plus" : "play"}

@@ -23,16 +23,18 @@ const playerOf = (items: readonly SessionItem[]): RunPlayer =>
     : "/workout/checklist";
 
 /**
- * Runs a workout in the player its items call for: hangboard in the timer, all timed in
- * the intervals player, reps or weight in the sets table, anything else as a checklist.
- * Climbing opens the live session, and a workout with no items the activity form. An
- * exercise done on each side plays twice in the intervals player.
+ * Runs a workout in the player its items call for: hangboard in the timer, any exercise
+ * logged on the tally or with reps or weight in the sets player, all timed in the intervals
+ * player, anything else as a checklist. A climbing workout with no items opens the live
+ * session, and any other workout with none the activity form. An exercise done on each side
+ * plays twice in the intervals player.
  */
 export function startLibraryWorkout(
   w: LibraryWorkout,
   date: CalendarDate,
   { link, session, items }: PlannedItems,
-  eachSide: (exercise: string) => boolean
+  eachSide: (exercise: string) => boolean,
+  tallied: (exercise: string) => boolean = () => false
 ): void {
   const kind = activityKindOf(w.kind);
   const [first] = items;
@@ -40,7 +42,7 @@ export function startLibraryWorkout(
     startWorkout(w.id, first.exercise, session, link);
     return;
   }
-  if (kind === null) {
+  if (kind === null || (kind === "climbing" && first === undefined)) {
     startLiveSession(link.membershipId === null ? undefined : link, w.name);
     return;
   }
@@ -49,11 +51,16 @@ export function startLibraryWorkout(
     router.push(activityFormPath(run));
     return;
   }
-  if (items.every((i) => i.dose.onS !== undefined)) {
+  const onTally = items.some((i) => tallied(i.exercise));
+  if (!onTally && items.every((i) => i.dose.onS !== undefined)) {
     startIntervals({ ...run, activityId: null, body: intervalsOf(items, eachSide) });
     return;
   }
   router.push(
-    runPath(playerOf(items), { ...run, exerciseRestS: w.exerciseRestS, items: [...items] })
+    runPath(onTally ? "/workout/sets" : playerOf(items), {
+      ...run,
+      exerciseRestS: w.exerciseRestS,
+      items: [...items],
+    })
   );
 }

@@ -1,5 +1,11 @@
 export { builtInDose, builtInExercises, exerciseLabel } from "./builtIns";
-export { exerciseKindOf, measureChangeNeedsWarning, measureLabel, tallyMeasureOf } from "./measure";
+export {
+  exerciseKindOf,
+  measureChangeNeedsWarning,
+  measureLabel,
+  tallyMeasureOf,
+  tallyMeasuresOf,
+} from "./measure";
 export { entryNamed, pickerEntries, type PickerWorld } from "./picker";
 export { categoryShelves } from "./shelves";
 export { eachSideOf } from "./sides";
