@@ -56,7 +56,7 @@ export function epley(loadKg: number, reps: number): number {
   return reps === 1 ? loadKg : loadKg * (1 + reps / 30);
 }
 
-const valueOf = (set: SetDone, metric: ExerciseMetric): number | undefined =>
+export const valueOf = (set: SetDone, metric: ExerciseMetric): number | undefined =>
   metric === "load" ? set.weightKg : metric === "seconds" ? set.onS : set.reps;
 
 function better(a: SetDone, b: SetDone, metric: ExerciseMetric): boolean {
@@ -64,7 +64,7 @@ function better(a: SetDone, b: SetDone, metric: ExerciseMetric): boolean {
   return va !== vb ? va > vb : (a.reps ?? 0) > (b.reps ?? 0);
 }
 
-function bestOf(sets: readonly SetDone[], metric: ExerciseMetric): SetDone | undefined {
+export function bestOf(sets: readonly SetDone[], metric: ExerciseMetric): SetDone | undefined {
   return sets
     .filter((s) => valueOf(s, metric) !== undefined)
     .reduce<SetDone | undefined>(
@@ -99,7 +99,7 @@ function sessionOf(
   };
 }
 
-function metricOf(sets: readonly SetDone[]): ExerciseMetric {
+export function metricOf(sets: readonly SetDone[]): ExerciseMetric {
   if (sets.some((s) => s.weightKg !== undefined)) return "load";
   return sets.some((s) => s.onS !== undefined) ? "seconds" : "reps";
 }
