@@ -128,4 +128,10 @@ export const workouts = {
     "Aún no hay nada registrado. Tus series aparecen aquí en cuanto las registres.",
   "workouts.newExercise": "Nuevo ejercicio",
   "workouts.newExerciseHint": "Un ejercicio para usar en tus entrenos",
+  "workouts.categoryEmpty.hangboard": "Un agarre o una regleta donde colgarse.",
+  "workouts.categoryEmpty.climbing": "Ejercicios en la pared, como 4x4 o bloque al límite.",
+  "workouts.categoryEmpty.strength": "Un ejercicio de fuerza, como la sentadilla.",
+  "workouts.categoryEmpty.mobility": "Un estiramiento o una postura, como el pancake.",
+  "workouts.categoryEmpty.other": "Correr, bici, cualquier otra cosa.",
+  "workouts.newExerciseIn": "Nuevo ejercicio en {category}",
 } as const;

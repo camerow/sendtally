@@ -129,4 +129,10 @@ export const workouts = {
     "Rien d'enregistré pour l'instant. Tes séries apparaîtront ici dès que tu les notes.",
   "workouts.newExercise": "Nouvel exercice",
   "workouts.newExerciseHint": "Un mouvement à utiliser dans tes séances",
+  "workouts.categoryEmpty.hangboard": "Une préhension ou une réglette où se suspendre.",
+  "workouts.categoryEmpty.climbing": "Des exercices au mur, comme des 4x4 ou du bloc à la limite.",
+  "workouts.categoryEmpty.strength": "Un exercice de force, comme le squat.",
+  "workouts.categoryEmpty.mobility": "Un étirement ou un maintien, comme le pancake.",
+  "workouts.categoryEmpty.other": "Course, vélo, tout le reste.",
+  "workouts.newExerciseIn": "Nouvel exercice dans {category}",
 } as const;

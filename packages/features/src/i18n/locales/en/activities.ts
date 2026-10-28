@@ -69,4 +69,5 @@ export const activities = {
   "activities.removeLastSetTitle": "Remove {exercise}?",
   "activities.removeLastSetBody": "That is its last set, so the exercise comes out of this log.",
   "activities.editSets": "Edit {exercise}",
+  "activities.kindFingers": "Fingers",
 } as const;

@@ -124,4 +124,10 @@ export const workouts = {
   "workouts.exerciseNothingLogged": "Nothing logged yet. Its sets show here once you log them.",
   "workouts.newExercise": "New exercise",
   "workouts.newExerciseHint": "A lift or drill to use in your workouts",
+  "workouts.categoryEmpty.hangboard": "A grip or edge to hang on.",
+  "workouts.categoryEmpty.climbing": "Drills on the wall, like 4x4s or limit bouldering.",
+  "workouts.categoryEmpty.strength": "A lift, like Back squat.",
+  "workouts.categoryEmpty.mobility": "A stretch or a hold, like Pancake.",
+  "workouts.categoryEmpty.other": "Running, cycling, anything else.",
+  "workouts.newExerciseIn": "New exercise in {category}",
 } as const;

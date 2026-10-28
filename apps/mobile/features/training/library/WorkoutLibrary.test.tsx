@@ -25,7 +25,7 @@ const show = (ui: React.ReactElement): Promise<unknown> =>
 describe("Workout library", () => {
   it("shelves every category with the user's own mixed in and labelled", async () => {
     await show(<WorkoutLibrary />);
-    for (const kind of ["Hangboard", "Climbing", "Strength", "Mobility", "Other"])
+    for (const kind of ["Fingers", "Climbing", "Strength", "Mobility", "Other"])
       expect(screen.getByLabelText(`See all ${kind}`)).toBeTruthy();
     expect(screen.getByText("Leg day")).toBeTruthy();
     expect(screen.getByText("Max hangs")).toBeTruthy();
@@ -66,6 +66,6 @@ describe("Workout library", () => {
     await fireEvent.changeText(screen.getByLabelText("Search workouts"), "max");
     expect(screen.getByText("Max hangs")).toBeTruthy();
     expect(screen.queryByText("Leg day")).toBeNull();
-    expect(screen.queryByLabelText("See all Hangboard")).toBeNull();
+    expect(screen.queryByLabelText("See all Fingers")).toBeNull();
   });
 });

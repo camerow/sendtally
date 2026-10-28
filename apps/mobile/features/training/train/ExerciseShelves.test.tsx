@@ -33,7 +33,7 @@ const plank: ActivityRecord = {
 
 describe("exercise shelves", () => {
   it("shelves exercises by kind with their best, and opens one", async () => {
-    await renderWithHang(<ExerciseShelves />, hangData(), {
+    await renderWithHang(<ExerciseShelves onAdd={jest.fn()} />, hangData(), {
       exercises: [anExercise("e1", "Plank", "strength"), anExercise("e2", "Pigeon", "mobility")],
       activities: [plank],
     });
@@ -42,5 +42,21 @@ describe("exercise shelves", () => {
     expect(screen.getByText("Best 60s")).toBeTruthy();
     await fireEvent.press(screen.getByText("Pigeon"));
     expect(router.push).toHaveBeenCalledWith({ pathname: "/exercise/[id]", params: { id: "e2" } });
+  });
+
+  it("shows every category with its count, a hint when empty, and a plus for each", async () => {
+    const onAdd = jest.fn();
+    await renderWithHang(<ExerciseShelves onAdd={onAdd} />, hangData(), {
+      exercises: [
+        anExercise("e1", "Plank", "strength"),
+        anExercise("e2", "Pigeon", "mobility", { archived: true }),
+      ],
+    });
+    for (const kind of ["Fingers", "Climbing", "Strength", "Mobility", "Other"])
+      expect(screen.getByText(kind)).toBeTruthy();
+    expect(screen.queryByText("Pigeon")).toBeNull();
+    expect(screen.getByText("A stretch or a hold, like Pancake.")).toBeTruthy();
+    await fireEvent.press(screen.getByLabelText("New exercise in Climbing"));
+    expect(onAdd).toHaveBeenCalledWith("climbing");
   });
 });

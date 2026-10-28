@@ -11,7 +11,7 @@ export const ACTIVITY_KINDS = [
 ] as const satisfies readonly ActivityKind[];
 
 const KIND_LABELS: Record<WorkoutKind, MessageKey> = {
-  hangboard: "training.hangboard",
+  hangboard: "activities.kindFingers",
   climbing: "activities.kindClimb",
   strength: "activities.kindStrength",
   mobility: "activities.kindMobility",

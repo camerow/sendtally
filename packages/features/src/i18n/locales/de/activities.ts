@@ -71,4 +71,5 @@ export const activities = {
   "activities.removeLastSetBody":
     "Das ist ihr letzter Satz, also fällt die Übung aus diesem Eintrag.",
   "activities.editSets": "{exercise} bearbeiten",
+  "activities.kindFingers": "Finger",
 } as const;

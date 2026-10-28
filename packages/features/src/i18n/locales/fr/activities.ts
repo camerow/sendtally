@@ -69,4 +69,5 @@ export const activities = {
   "activities.removeLastSetTitle": "Retirer {exercise} ?",
   "activities.removeLastSetBody": "C’est sa dernière série, l’exercice sort donc de cette séance.",
   "activities.editSets": "Modifier {exercise}",
+  "activities.kindFingers": "Doigts",
 } as const;

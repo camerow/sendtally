@@ -3,37 +3,54 @@ import { router } from "expo-router";
 import React from "react";
 import { Alert, View } from "react-native";
 import type { Exercise } from "@sendtally/api-client";
+import { EXERCISE_KINDS, WORKOUT_KINDS, type WorkoutKind } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { kindLabel } from "@sendtally/features/activities";
+import { findGrip } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
-import { Sheet } from "../../../components/Sheet";
 import { TextInput } from "../../../components/TextInput";
 import { useApi } from "../../../lib/api";
 import { Button } from "../components/Button";
-import { Segmented } from "../components/Segmented";
+import { ChipRow } from "../components/ChipRow";
 import { SheetHeader } from "../components/SheetHeader";
 import { SheetSection } from "../components/SheetSection";
-import { EXERCISE_SHELVES } from "../train/ExerciseShelves";
+import { useHangData } from "../data/HangDataContext";
+import { HangSheet } from "../data/HangSheet";
+import { KIND_COLORS } from "../insights/kindColors";
 import { type } from "../type";
 import { takenBy } from "./takenBy";
 
-type Kind = (typeof EXERCISE_SHELVES)[number];
-
-export type NewExerciseSheetProps = { onClose: () => void };
+export type NewExerciseSheetProps = {
+  /** The category it starts in. */
+  kind?: WorkoutKind;
+  onClose: () => void;
+};
 
 const open = (exercise: Exercise): void =>
   router.push({ pathname: "/exercise/[id]", params: { id: exercise.id } });
 
-/** A new exercise by name and kind, opened once saved; a name already taken opens that one. */
-export function NewExerciseSheet({ onClose }: NewExerciseSheetProps): React.ReactElement {
+/** A new exercise in any category, opened once saved; Fingers makes a grip, and a name already taken opens that one. */
+export function NewExerciseSheet({
+  kind: initialKind = "strength",
+  onClose,
+}: NewExerciseSheetProps): React.ReactElement {
   const api = useApi();
+  const { model, actions } = useHangData();
   const [name, setName] = React.useState("");
-  const [kind, setKind] = React.useState<Kind>("strength");
+  const [kind, setKind] = React.useState<WorkoutKind>(initialKind);
   const trimmed = name.trim();
   const save = (): void => {
     if (trimmed === "") return;
     onClose();
-    void api.saveExercise(randomUUID(), { name: trimmed, kind }).then(
+    const exerciseKind = EXERCISE_KINDS.find((k) => k === kind);
+    if (exerciseKind === undefined) {
+      const existing = findGrip(model.grips, trimmed);
+      if (existing === undefined)
+        void actions.saveGrip({ id: randomUUID(), name: trimmed, custom: true, hidden: false });
+      else if (existing.hidden) void actions.saveGrip({ ...existing, hidden: false });
+      return;
+    }
+    void api.saveExercise(randomUUID(), { name: trimmed, kind: exerciseKind }).then(
       ({ exercise }) => open(exercise),
       (error: unknown) => {
         const taken = takenBy(error);
@@ -43,14 +60,25 @@ export function NewExerciseSheet({ onClose }: NewExerciseSheetProps): React.Reac
     );
   };
   return (
-    <Sheet visible onClose={onClose} closeLabel={t("common.cancel")}>
-      <View style={{ gap: 20, paddingHorizontal: 18, paddingTop: 4, paddingBottom: 12 }}>
+    <HangSheet visible onClose={onClose} closeLabel={t("common.cancel")}>
+      <View style={{ gap: 20, paddingBottom: 12 }}>
         <SheetHeader
           kicker={t("plan.tabExercises")}
           title={t("workouts.newExercise")}
           action={t("common.cancel")}
           onAction={onClose}
         />
+        <SheetSection label={t("workouts.category")}>
+          <ChipRow<WorkoutKind>
+            value={kind}
+            onChange={setKind}
+            options={WORKOUT_KINDS.map((k) => ({
+              value: k,
+              label: kindLabel(k),
+              mark: KIND_COLORS[k],
+            }))}
+          />
+        </SheetSection>
         <SheetSection label={t("hang.name")}>
           <TextInput
             value={name}
@@ -74,13 +102,6 @@ export function NewExerciseSheet({ onClose }: NewExerciseSheetProps): React.Reac
             ]}
           />
         </SheetSection>
-        <SheetSection label={t("workouts.category")}>
-          <Segmented<Kind>
-            value={kind}
-            onChange={setKind}
-            options={EXERCISE_SHELVES.map((k) => ({ value: k, label: kindLabel(k) }))}
-          />
-        </SheetSection>
         <Button
           label={t("hang.save")}
           onPress={save}
@@ -89,6 +110,6 @@ export function NewExerciseSheet({ onClose }: NewExerciseSheetProps): React.Reac
           disabled={trimmed === ""}
         />
       </View>
-    </Sheet>
+    </HangSheet>
   );
 }

@@ -1,9 +1,9 @@
 import { router } from "expo-router";
 import React from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { View } from "react-native";
 import { byDate, summarise, type WorkoutKind } from "@sendtally/core/hang";
-import { colors } from "@sendtally/design/tokens";
-import { kindLabel, setText, useWeightUnit } from "@sendtally/features/activities";
+import { setText, useWeightUnit } from "@sendtally/features/activities";
+import { categoryShelves } from "@sendtally/features/exercises";
 import { loadLabel } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import {
@@ -15,58 +15,19 @@ import {
 } from "@sendtally/features/statistics";
 import { doseSummary } from "@sendtally/features/workouts";
 import { useApi } from "../../../lib/api";
-import { pressRow } from "../../../lib/press";
-import { DashedPanel } from "../components/DashedPanel";
-import { Title } from "../components/Title";
 import { useHangData } from "../data/HangDataContext";
 import { LoadState } from "../data/LoadState";
-import { CategoryMark } from "../library/CategoryMark";
 import { useLibrary } from "../library/useLibrary";
-import { type } from "../type";
+import { ExerciseShelf } from "./ExerciseShelf";
+import type { ShelfCard } from "./types";
 
-type Card = { key: string; name: string; meta: string; open: () => void };
+export type ExerciseShelvesProps = { onAdd: (kind: WorkoutKind) => void };
 
-export const EXERCISE_SHELVES = ["strength", "mobility", "other"] as const;
-
-function Shelf({ kind, cards }: { kind: WorkoutKind; cards: Card[] }): React.ReactElement {
-  return (
-    <View style={{ gap: 10 }}>
-      <View style={{ minHeight: 44, flexDirection: "row", alignItems: "center", gap: 10 }}>
-        <CategoryMark kind={kind} size={28} />
-        <Title size={26}>{kindLabel(kind)}</Title>
-      </View>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={{ marginHorizontal: -18 }}
-        contentContainerStyle={{ gap: 12, paddingHorizontal: 18 }}
-      >
-        {cards.map((c) => (
-          <Pressable
-            key={c.key}
-            onPress={c.open}
-            accessibilityRole="button"
-            style={pressRow({
-              width: 184,
-              minHeight: 96,
-              padding: 14,
-              gap: 8,
-              borderRadius: 16,
-              borderWidth: 1,
-              borderColor: colors.lineOnLight,
-            })}
-          >
-            <Text style={[type.bodyBold, { fontSize: 15, color: colors.gunmetal }]}>{c.name}</Text>
-            <Text style={[type.mono, { fontSize: 12, color: colors.textSecondary }]}>{c.meta}</Text>
-          </Pressable>
-        ))}
-      </ScrollView>
-    </View>
-  );
-}
-
-/** Train > Exercises: a shelf per kind, each exercise with its best result or its last dose. */
-export function ExerciseShelves(): React.ReactElement {
+/**
+ * Train > Exercises: every category, each exercise with its best result or its last dose.
+ * Fingers holds the user's own grips and the built-in ones they have hung on.
+ */
+export function ExerciseShelves({ onAdd }: ExerciseShelvesProps): React.ReactElement {
   const api = useApi();
   const { model, today } = useHangData();
   const exercises = useExercises(api);
@@ -76,7 +37,6 @@ export function ExerciseShelves(): React.ReactElement {
   if (exercises.state.status !== "ready")
     return <LoadState state={exercises.state} onRetry={() => void exercises.reload()} />;
 
-  const list = exercises.state.data;
   const workouts = library.status === "ready" ? library.data.workouts : [];
   const logged = series.status === "ready" ? series.data : [];
   const metaOf = (name: string): string => {
@@ -91,14 +51,15 @@ export function ExerciseShelves(): React.ReactElement {
       : t("workouts.exerciseLast", { value: doseSummary(using.kind, dose, unit) });
   };
 
-  const grips: Card[] = model.grips
-    .filter((g) => !g.hidden && model.sessions.some((s) => s.gripId === g.id))
-    .map((g) => {
+  const grips = model.grips
+    .filter((g) => !g.hidden && (g.custom || model.sessions.some((s) => s.gripId === g.id)))
+    .map((g): ShelfCard => {
       const onGrip = model.sessions.filter((s) => s.gripId === g.id).sort(byDate);
       const last = onGrip.at(-1);
       const summary = summarise(onGrip, today);
       return {
         key: g.id,
+        kind: "hangboard",
         name: g.name,
         meta:
           summary === null || last === undefined
@@ -106,34 +67,30 @@ export function ExerciseShelves(): React.ReactElement {
             : t("workouts.exerciseBest", {
                 value: loadLabel(last.protocol.kind, summary.best, model.settings.units),
               }),
-        open: () =>
-          last !== undefined &&
-          router.push({
-            pathname: "/workout/[id]",
-            params: { id: last.workoutId, grip: g.id },
-          }),
+        open:
+          last === undefined
+            ? undefined
+            : () =>
+                router.push({
+                  pathname: "/workout/[id]",
+                  params: { id: last.workoutId, grip: g.id },
+                }),
       };
     });
-  const shelves = [
-    { kind: "hangboard" as const, cards: grips },
-    ...EXERCISE_SHELVES.map((kind) => ({
-      kind,
-      cards: list
-        .filter((e) => e.kind === kind)
-        .map((e): Card => ({
-          key: e.id,
-          name: e.name,
-          meta: metaOf(e.name),
-          open: () => router.push({ pathname: "/exercise/[id]", params: { id: e.id } }),
-        })),
-    })),
-  ].filter((s) => s.cards.length > 0);
+  const mine = exercises.state.data
+    .filter((e) => !e.archived)
+    .map((e): ShelfCard => ({
+      key: e.id,
+      kind: e.kind,
+      name: e.name,
+      meta: metaOf(e.name),
+      open: () => router.push({ pathname: "/exercise/[id]", params: { id: e.id } }),
+    }));
 
-  if (shelves.length === 0) return <DashedPanel body={t("statistics.exercisesEmpty")} />;
   return (
     <View style={{ gap: 20 }}>
-      {shelves.map((s) => (
-        <Shelf key={s.kind} kind={s.kind} cards={s.cards} />
+      {categoryShelves([...grips, ...mine]).map((s) => (
+        <ExerciseShelf key={s.kind} kind={s.kind} cards={s.entries} onAdd={() => onAdd(s.kind)} />
       ))}
     </View>
   );

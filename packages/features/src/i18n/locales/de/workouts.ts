@@ -126,4 +126,10 @@ export const workouts = {
     "Noch nichts eingetragen. Deine Sätze erscheinen hier, sobald du sie einträgst.",
   "workouts.newExercise": "Neue Übung",
   "workouts.newExerciseHint": "Eine Übung für deine Workouts",
+  "workouts.categoryEmpty.hangboard": "Ein Griff oder eine Leiste zum Hängen.",
+  "workouts.categoryEmpty.climbing": "Übungen an der Wand, etwa 4x4 oder Limit-Bouldern.",
+  "workouts.categoryEmpty.strength": "Eine Kraftübung, etwa Kniebeuge.",
+  "workouts.categoryEmpty.mobility": "Eine Dehnung oder Halteübung, etwa Pancake.",
+  "workouts.categoryEmpty.other": "Laufen, Radfahren, alles andere.",
+  "workouts.newExerciseIn": "Neue Übung in {category}",
 } as const;

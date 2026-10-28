@@ -40,7 +40,7 @@ const plan = (workoutId: string, weekdays: (0 | 1)[] = [0, 1]): Plan => ({
 describe("Today", () => {
   it("starts today's planned hangboard workout on its grip, against its plan", async () => {
     await renderWithHang(<TodayScreen />, hangData(), { plan: plan("max10") });
-    expect(screen.getByText("Up today · Hangboard")).toBeTruthy();
+    expect(screen.getByText("Up today · Fingers")).toBeTruthy();
     await fireEvent.press(screen.getByText("Start"));
     expect(router.push).toHaveBeenCalledWith({
       pathname: "/workout/timer",

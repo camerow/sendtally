@@ -23,7 +23,8 @@
     "./hang": "./src/hang/index.ts",
     "./training": "./src/training/index.ts",
     "./activities": "./src/activities/index.ts",
-    "./workouts": "./src/workouts/index.ts"
+    "./workouts": "./src/workouts/index.ts",
+    "./exercises": "./src/exercises/index.ts"
   },
   "scripts": {
     "test": "vitest run",
