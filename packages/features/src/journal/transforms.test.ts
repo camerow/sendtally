@@ -20,6 +20,8 @@ import {
   severitySeries,
 } from "./transforms";
 import { logCountLabel } from "../sessions/years";
+import type { LogTraining } from "./types";
+import type { Block } from "@sendtally/core/hang";
 
 function entry(overrides: Partial<JournalEntry> = {}): JournalEntry {
   return {
@@ -191,6 +193,63 @@ describe("other training in the log", () => {
     expect(grouped?.type === "entry" ? grouped.inside.map((i) => i.key) : []).toEqual([
       "activity:a1",
     ]);
+  });
+});
+
+describe("blocks in the log", () => {
+  const block: Block = {
+    id: "b1",
+    name: "Winter base",
+    start: "2026-05-04",
+    weeks: 4,
+    focus: null,
+  };
+  const recap = {
+    block,
+    done: 3,
+    planned: 4,
+    missed: 1,
+    soFar: { done: 3, planned: 4 },
+    effort: 7,
+    weeks: [],
+    workouts: [],
+  };
+  const training: LogTraining = {
+    plan: {
+      blocks: [block],
+      memberships: [
+        { id: "m1", workoutId: "w1", blockId: "b1", weekdays: [0], start: block.start },
+      ],
+    },
+    finished: [recap],
+  };
+  const linked = { ...session("a", "2026-05-25T18:00:00.000Z"), membership_id: "m1" };
+
+  it("puts a finished block on its last day and tags its sessions with block and week", () => {
+    const items = logItems(
+      [linked, session("b", "2026-06-02T18:00:00.000Z")],
+      [],
+      [],
+      [],
+      training
+    );
+    expect(items.map((i) => i.key)).toEqual(["session:b", "block:b1", "session:a"]);
+    expect(items.map((i) => i.blockTag)).toEqual([undefined, undefined, "Winter base · W4"]);
+    expect(logCountLabel(items)).toBe("2 sessions");
+  });
+
+  it("shows with sessions but not in the journal, and stays out of trips", () => {
+    const items = logItems([linked], [], [], [], training);
+    expect(logScopeItems(items, "sessions").map((i) => i.key)).toContain("block:b1");
+    expect(logScopeItems(items, "journal")).toHaveLength(0);
+    const trip = entry({
+      id: "t1",
+      kind: "trip",
+      occurred_at: "2026-05-30",
+      ends_at: "2026-06-01",
+    });
+    const grouped = groupTrips(logItems([], [trip], [], [], training));
+    expect(grouped.map((i) => i.key)).toEqual(["block:b1", "entry:t1"]);
   });
 });
 

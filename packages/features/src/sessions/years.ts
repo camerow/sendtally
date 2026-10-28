@@ -100,6 +100,10 @@ export function countLabel(count: number): string {
   return t("sessions.sessionCount", { count });
 }
 
+/** What was logged: a finished block's row is not something logged. */
+const logged = (items: LogItem[]): LogItem[] =>
+  flatLog(items).filter((item) => item.type !== "block");
+
 /** Journal entries only: a hangboard session counts as a session. */
 const entryCount = (items: LogItem[]): number =>
   flatLog(items).filter((item) => item.type === "entry").length;
@@ -110,7 +114,7 @@ const entryCount = (items: LogItem[]): number =>
  */
 export function logCountLabel(items: LogItem[]): string {
   const entries = entryCount(items);
-  const sessions = flatLog(items).length - entries;
+  const sessions = logged(items).length - entries;
   const parts = [
     sessions === 0 && entries > 0 ? null : countLabel(sessions),
     entries === 0 ? null : t("journal.entryCount", { count: entries }),
@@ -122,7 +126,7 @@ export function logTotalsLabel(items: LogItem[]): string {
   const sessions = sessionsIn(items);
   if (sessions.length === 0) return logCountLabel(items);
   const entries = entryCount(items);
-  const hang = flatLog(items).length - entries - sessions.length;
+  const hang = logged(items).length - entries - sessions.length;
   const all = sessionTotals(sessions);
   const totals = totalsLabel({ ...all, count: all.count + hang });
   return entries === 0 ? totals : `${totals} · ${t("journal.entryCount", { count: entries })}`;

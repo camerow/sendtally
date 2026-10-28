@@ -10,7 +10,7 @@ import { SESSION_ROW_HEIGHT, rowMeta, rowTitle } from "./SessionRow";
 import { DayColumn } from "./SessionRowParts";
 import { CategoryMark } from "../training/library/CategoryMark";
 
-/** Other training carries no tags, so it is always one plain row tall. */
+/** Other training carries no tags, so it is one plain row tall before any block line. */
 export const ACTIVITY_ROW_HEIGHT = SESSION_ROW_HEIGHT;
 
 export type ActivityRowProps = {
@@ -18,6 +18,8 @@ export type ActivityRowProps = {
   onPress: () => void;
   inset?: boolean;
   divider?: boolean;
+  /** "Winter base · W4" when it ran one of a block's workouts. */
+  blockTag?: string;
 };
 
 /** A strength, mobility, run or other session in the log, laid out like a session row. */
@@ -26,6 +28,7 @@ export function ActivityRow({
   onPress,
   inset = false,
   divider = true,
+  blockTag,
 }: ActivityRowProps): React.ReactElement {
   const { weekday, day } = sessionDay({ start_at: activityAt(activity) });
   const meta = activityMetaLabel(activity);
@@ -34,7 +37,7 @@ export function ActivityRow({
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel={[activity.title, `${weekday} ${day}`, meta, effort]
+      accessibilityLabel={[activity.title, `${weekday} ${day}`, meta, blockTag ?? null, effort]
         .filter((part) => part !== null)
         .join(", ")}
       style={pressRow({
@@ -56,6 +59,11 @@ export function ActivityRow({
         <Text numberOfLines={1} style={rowMeta}>
           {meta}
         </Text>
+        {blockTag !== undefined && (
+          <Text numberOfLines={1} style={rowMeta}>
+            {blockTag}
+          </Text>
+        )}
       </View>
       {effort !== null && (
         <Text

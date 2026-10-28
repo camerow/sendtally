@@ -17,7 +17,7 @@ import { SESSION_ROW_HEIGHT, rowMeta, rowTitle } from "./SessionRow";
 import { DayColumn } from "./SessionRowParts";
 import { CategoryMark } from "../training/library/CategoryMark";
 
-/** A hang session carries no tags, so it is always one plain row tall. */
+/** A hang session carries no tags, so it is one plain row tall before any block line. */
 export const HANG_ROW_HEIGHT = SESSION_ROW_HEIGHT;
 
 export type HangRowProps = {
@@ -25,6 +25,8 @@ export type HangRowProps = {
   onPress: () => void;
   inset?: boolean;
   divider?: boolean;
+  /** "Winter base · W4" when it ran one of a block's workouts. */
+  blockTag?: string;
 };
 
 /** A hangboard session in the log, laid out like a session row. */
@@ -33,6 +35,7 @@ export function HangRow({
   onPress,
   inset = false,
   divider = true,
+  blockTag,
 }: HangRowProps): React.ReactElement {
   const { weekday, day } = sessionDay({ start_at: hangAt(hang) });
   const title = hangTitle(hang);
@@ -43,6 +46,7 @@ export function HangRow({
     title,
     `${weekday} ${day}`,
     meta,
+    blockTag ?? null,
     effort,
     onStrava ? t("sessions.postedToStrava") : null,
   ]
@@ -76,6 +80,11 @@ export function HangRow({
         <Text numberOfLines={1} style={rowMeta}>
           {meta}
         </Text>
+        {blockTag !== undefined && (
+          <Text numberOfLines={1} style={rowMeta}>
+            {blockTag}
+          </Text>
+        )}
       </View>
       {effort !== null && (
         <Text

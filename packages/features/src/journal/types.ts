@@ -3,9 +3,11 @@ import type {
   EntryKind,
   HangHistoryRow,
   JournalEntry,
+  Plan,
   SessionRow,
   SessionTag,
 } from "@sendtally/api-client";
+import type { BlockRecap } from "../training/recap";
 
 export type { EntryKind, JournalEntry };
 
@@ -20,14 +22,22 @@ export const ENTRY_BODY_MAX = 10000;
  * One log holds sessions, other training and entries. `at` is what the list sorts and groups on,
  * and `tags` is lifted to the top so the tag filter works over both without
  * knowing which it is looking at. A trip in a grouped log holds what was logged
- * inside its dates in `inside`; everywhere else it is empty.
+ * inside its dates in `inside`; everywhere else it is empty. A session of a block's workouts
+ * names the block and week in `blockTag`, and a finished block is a row on its last day.
  */
-export type LogItem = { key: string; at: string; tags: SessionTag[] } & (
+export type LogItem = { key: string; at: string; tags: SessionTag[]; blockTag?: string } & (
   | { type: "session"; session: SessionRow }
   | { type: "hang"; hang: HangHistoryRow }
   | { type: "activity"; activity: Activity }
   | { type: "entry"; entry: JournalEntry; inside: LogItem[] }
+  | { type: "block"; recap: BlockRecap }
 );
+
+/** The plan and finished blocks the log reads to tag sessions and mark blocks done. */
+export type LogTraining = {
+  plan: Pick<Plan, "blocks" | "memberships">;
+  finished: readonly BlockRecap[];
+};
 
 /** A trip's dates, or a draft's before it is saved: `id` is null until then. */
 export type TripSpan = { id: string | null; occurred_at: string; ends_at: string | null };

@@ -23,7 +23,7 @@ import { EntryRow, entryRowHeight } from "./EntryRow";
 import { EntryKindChip } from "./EntryKindChip";
 import { ACTIVITY_ROW_HEIGHT, ActivityRow } from "../sessions/ActivityRow";
 import { HANG_ROW_HEIGHT, HangRow } from "../sessions/HangRow";
-import { SessionRow, sessionRowHeight } from "../sessions/SessionRow";
+import { BLOCK_TAG_HEIGHT, SessionRow, sessionRowHeight } from "../sessions/SessionRow";
 import { ROW_TAGS_HEIGHT, RowTags } from "../sessions/RowTags";
 
 type TripItem = Extract<LogItem, { type: "entry" }>;
@@ -40,10 +40,13 @@ const MAX_DOTS = 12;
 const ROW_PADDING = 14;
 const TINT = "rgba(204,121,234,0.13)";
 
+const blockLine = (item: LogItem): number => (item.blockTag === undefined ? 0 : BLOCK_TAG_HEIGHT);
+
 const innerHeight = (item: LogItem): number => {
-  if (item.type === "session") return sessionRowHeight(item.session);
-  if (item.type === "activity") return ACTIVITY_ROW_HEIGHT;
-  return item.type === "hang" ? HANG_ROW_HEIGHT : entryRowHeight(item.entry);
+  if (item.type === "session") return sessionRowHeight(item.session) + blockLine(item);
+  if (item.type === "activity") return ACTIVITY_ROW_HEIGHT + blockLine(item);
+  if (item.type === "hang") return HANG_ROW_HEIGHT + blockLine(item);
+  return item.type === "block" ? 0 : entryRowHeight(item.entry);
 };
 
 export function tripGroupHeight(item: TripItem): number {
@@ -186,18 +189,26 @@ export function TripGroup({
               title={sessionTitle(inner.session)}
               inset
               divider={n < last}
+              blockTag={inner.blockTag}
               onPress={() => onOpen(inner)}
             />
           ) : inner.type === "hang" ? (
-            <HangRow hang={inner.hang} inset divider={n < last} onPress={() => onOpen(inner)} />
+            <HangRow
+              hang={inner.hang}
+              inset
+              divider={n < last}
+              blockTag={inner.blockTag}
+              onPress={() => onOpen(inner)}
+            />
           ) : inner.type === "activity" ? (
             <ActivityRow
               activity={inner.activity}
               inset
               divider={n < last}
+              blockTag={inner.blockTag}
               onPress={() => onOpen(inner)}
             />
-          ) : (
+          ) : inner.type === "block" ? null : (
             <EntryRow entry={inner.entry} inset divider={n < last} onPress={() => onOpen(inner)} />
           )}
         </View>

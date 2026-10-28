@@ -20,7 +20,14 @@ import {
   logYearGroups,
   tagScopeItems,
 } from "@sendtally/features/sessions";
-import { groupTrips, logItems, logScopeItems, type LogItem } from "@sendtally/features/journal";
+import {
+  groupTrips,
+  logItems,
+  logScopeItems,
+  today,
+  type LogItem,
+  type LogTraining,
+} from "@sendtally/features/journal";
 import { t } from "@sendtally/features/i18n";
 import { queries, useQueryPair } from "@sendtally/features/query";
 import { colors, fonts } from "@sendtally/design/tokens";
@@ -38,20 +45,25 @@ import { SECTION_HEADER_HEIGHT, SectionHeader } from "./SectionHeader";
 import { InsightsLink } from "../../components/InsightsLink";
 import { ACTIVITY_ROW_HEIGHT, ActivityRow } from "./ActivityRow";
 import { HANG_ROW_HEIGHT, HangRow } from "./HangRow";
-import { SessionRow, sessionRowHeight } from "./SessionRow";
+import { BLOCK_TAG_HEIGHT, SessionRow, sessionRowHeight } from "./SessionRow";
+import { BLOCK_DONE_ROW_HEIGHT, BlockDoneRow } from "./BlockDoneRow";
 import { SetupStack, type SetupCard } from "./SetupStack";
 import { useStravaConnect } from "../settings/useStravaConnect";
 import { useApi } from "../../lib/api";
 import { maybeAskForReview } from "../../lib/review";
 import { useSetupDismissed } from "../../lib/setupPrompt";
 import { useGyms } from "@sendtally/features/gyms";
+import { blockGroups, blockRecap, useTrainingLog } from "@sendtally/features/training";
 
 type Section = { key: string; title: string; meta: string; data: LogItem[] };
 
+const blockLine = (item: LogItem): number => (item.blockTag === undefined ? 0 : BLOCK_TAG_HEIGHT);
+
 const rowHeight = (item: LogItem): number => {
-  if (item.type === "session") return sessionRowHeight(item.session);
-  if (item.type === "hang") return HANG_ROW_HEIGHT;
-  if (item.type === "activity") return ACTIVITY_ROW_HEIGHT;
+  if (item.type === "session") return sessionRowHeight(item.session) + blockLine(item);
+  if (item.type === "hang") return HANG_ROW_HEIGHT + blockLine(item);
+  if (item.type === "activity") return ACTIVITY_ROW_HEIGHT + blockLine(item);
+  if (item.type === "block") return BLOCK_DONE_ROW_HEIGHT;
   return item.inside.length > 0 ? tripGroupHeight(item) : entryRowHeight(item.entry);
 };
 
@@ -63,6 +75,8 @@ const openItem = (item: LogItem): void => {
     });
   } else if (item.type === "entry") {
     router.push({ pathname: "/journal/[id]", params: { id: item.entry.id } });
+  } else if (item.type === "block") {
+    router.push({ pathname: "/plan/block/[id]", params: { id: item.recap.block.id } });
   } else {
     const id = item.type === "activity" ? item.activity.id : item.hang.id;
     router.push({ pathname: "/activity/[id]", params: { id } });
@@ -158,9 +172,19 @@ export function SessionsLog(): React.ReactElement {
     });
   }
 
+  const { log: training } = useTrainingLog(api);
+  const blocks = React.useMemo((): LogTraining => {
+    const day = today();
+    return {
+      plan: training.plan,
+      finished: blockGroups(training.plan.blocks, day).past.map((b) =>
+        blockRecap(training, b, day)
+      ),
+    };
+  }, [training]);
   const all = React.useMemo(
-    () => logItems(sessions ?? [], entries ?? [], hangSessions ?? [], activities ?? []),
-    [sessions, entries, hangSessions, activities]
+    () => logItems(sessions ?? [], entries ?? [], hangSessions ?? [], activities ?? [], blocks),
+    [sessions, entries, hangSessions, activities, blocks]
   );
   const inScope = React.useMemo(() => logScopeItems(all, filters.scope), [all, filters.scope]);
   const tagOptions = React.useMemo(() => sessionTagOptions(inScope), [inScope]);
@@ -325,12 +349,19 @@ export function SessionsLog(): React.ReactElement {
               session={item.session}
               title={sessionTitle(item.session)}
               marked
+              blockTag={item.blockTag}
               onPress={() => openItem(item)}
             />
           ) : item.type === "hang" ? (
-            <HangRow hang={item.hang} onPress={() => openItem(item)} />
+            <HangRow hang={item.hang} blockTag={item.blockTag} onPress={() => openItem(item)} />
           ) : item.type === "activity" ? (
-            <ActivityRow activity={item.activity} onPress={() => openItem(item)} />
+            <ActivityRow
+              activity={item.activity}
+              blockTag={item.blockTag}
+              onPress={() => openItem(item)}
+            />
+          ) : item.type === "block" ? (
+            <BlockDoneRow recap={item.recap} onPress={() => openItem(item)} />
           ) : item.inside.length > 0 ? (
             <TripGroup item={item} onOpen={openItem} />
           ) : (

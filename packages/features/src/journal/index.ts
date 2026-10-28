@@ -6,6 +6,7 @@ export {
   type EntryKind,
   type JournalEntry,
   type LogItem,
+  type LogTraining,
   type TripSpan,
 } from "./types";
 export {

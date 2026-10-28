@@ -13,6 +13,9 @@ import { CategoryMark } from "../training/library/CategoryMark";
 
 export const SESSION_ROW_HEIGHT = 59;
 
+/** The extra line naming the block and week a session of a block's workouts ran in. */
+export const BLOCK_TAG_HEIGHT = 17;
+
 export function sessionRowHeight(session: SessionRowData): number {
   return SESSION_ROW_HEIGHT + (session.tags.length > 0 ? ROW_TAGS_HEIGHT : 0);
 }
@@ -29,6 +32,8 @@ export type SessionRowProps = {
   divider?: boolean;
   /** Shows the climbing mark, so it lines up with training in the log. */
   marked?: boolean;
+  /** "Winter base · W4" when it ran one of a block's workouts. */
+  blockTag?: string;
 };
 
 export function SessionRow({
@@ -39,11 +44,18 @@ export function SessionRow({
   inset = false,
   divider = true,
   marked = false,
+  blockTag,
 }: SessionRowProps): React.ReactElement {
   const { weekday, day } = sessionDay(session);
   const meta = sessionTallyLabel(session);
   const onStrava = session.strava_activity_id !== null;
-  const spoken = [title, `${weekday} ${day}`, meta, onStrava ? t("sessions.postedToStrava") : null]
+  const spoken = [
+    title,
+    `${weekday} ${day}`,
+    meta,
+    blockTag ?? null,
+    onStrava ? t("sessions.postedToStrava") : null,
+  ]
     .filter((part) => part !== null)
     .join(", ");
 
@@ -74,6 +86,11 @@ export function SessionRow({
         <Text numberOfLines={1} style={rowMeta}>
           {meta}
         </Text>
+        {blockTag !== undefined && (
+          <Text numberOfLines={1} style={rowMeta}>
+            {blockTag}
+          </Text>
+        )}
         <RowTags tags={session.tags} />
       </View>
       {trailing ?? <Icon name="chevron" size={12} strokeWidth={2} color="rgba(64,63,76,0.35)" />}
