@@ -3,6 +3,7 @@ import { ActivityIndicator, Text, View } from "react-native";
 import {
   CLIMB_PLACES,
   climbingInsightsVM,
+  daysClimbed,
   mainDiscipline,
   useClimbs,
   workoutClimbSessions,
@@ -10,16 +11,17 @@ import {
 } from "@sendtally/features/climbs";
 import { t } from "@sendtally/features/i18n";
 import { disciplineLabel, type Discipline } from "@sendtally/features/log-session";
-import { PREVIEW_TREND_RANGE, shownRange, type TrendRange } from "@sendtally/features/trends";
+import { useGradeScalePrefs } from "@sendtally/features/settings";
+import type { TrendRange } from "@sendtally/features/trends";
 import { colors, fonts } from "@sendtally/design/tokens";
-import { InsightsFrame } from "../../components/InsightsFrame";
 import { Pyramid } from "../../components/Pyramid";
 import { PyramidLegend } from "../../components/PyramidLegend";
 import { Segmented } from "../../components/Segmented";
 import { useApi } from "../../lib/api";
-import { useCanSeeInsights } from "../billing/useBilling";
 import { CountTile } from "./CountTile";
+import { DaysClimbing } from "./DaysClimbing";
 import { GradeBadge } from "./GradeBadge";
+import { sectionLabel } from "./sectionLabel";
 
 const PLACE_LABELS: Record<ClimbPlaceFilter, () => string> = {
   all: () => t("trends.scopeAll"),
@@ -27,25 +29,17 @@ const PLACE_LABELS: Record<ClimbPlaceFilter, () => string> = {
   indoor: () => t("climbs.gym"),
 };
 
-const sectionLabel = {
-  fontFamily: fonts.monoMedium,
-  fontSize: 11,
-  letterSpacing: 0.9,
-  textTransform: "uppercase",
-  color: colors.gunmetal,
-} as const;
-
 /**
- * Days outside, sends, flashes and projects, the pyramid of what was sent, and the top send,
- * counting the climbs workouts logged on the tally alongside the sessions.
+ * The pyramid of what was sent, the average send, sends, flashes and projects, the days
+ * climbed and the top send, counting the climbs workouts logged on the tally alongside the
+ * sessions.
  */
-export function ClimbingInsightsScreen(): React.ReactElement {
-  const { state } = useClimbs(useApi());
-  const member = useCanSeeInsights();
-  const [picked, setPicked] = React.useState<TrendRange>(PREVIEW_TREND_RANGE);
+export function ClimbingInsights({ range }: { range: TrendRange }): React.ReactElement {
+  const api = useApi();
+  const { state } = useClimbs(api);
+  const boulderScale = useGradeScalePrefs(api).scales.boulder === "font" ? "font" : "v";
   const [discipline, setDiscipline] = React.useState<Discipline | null>(null);
   const [place, setPlace] = React.useState<ClimbPlaceFilter>("all");
-  const range = shownRange(member, picked);
   const ready = state.status === "ready" ? state.data : null;
   const sessions = React.useMemo(
     () => (ready === null ? [] : [...ready.sessions, ...workoutClimbSessions(ready.activities)]),
@@ -60,18 +54,14 @@ export function ClimbingInsightsScreen(): React.ReactElement {
             range,
             discipline: shownDiscipline,
             place,
+            boulderScale,
           }),
-    [ready, sessions, range, shownDiscipline, place]
+    [ready, sessions, range, shownDiscipline, place, boulderScale]
   );
+  const days = React.useMemo(() => daysClimbed(sessions, range), [sessions, range]);
 
   return (
-    <InsightsFrame
-      back={t("climbs.title")}
-      title={t("climbs.climbingInsights")}
-      member={member}
-      range={range}
-      onRange={setPicked}
-    >
+    <>
       <View style={{ flexDirection: "row", gap: 8 }}>
         <View style={{ flex: 1 }}>
           <Segmented
@@ -108,18 +98,6 @@ export function ClimbingInsightsScreen(): React.ReactElement {
         )
       ) : (
         <>
-          <View style={{ flexDirection: "row", gap: 6 }}>
-            <CountTile
-              value={vm.daysOutside}
-              label={t("climbs.daysOutsideWord", { count: vm.daysOutside })}
-            />
-            <CountTile value={vm.sends} label={t("climbs.sendsWord", { count: vm.sends })} />
-            <CountTile value={vm.flashed} label={t("climbs.flashedWord")} />
-            <CountTile
-              value={vm.projects}
-              label={t("climbs.projectsWord", { count: vm.projects })}
-            />
-          </View>
           <View
             style={{
               gap: 8,
@@ -152,6 +130,16 @@ export function ClimbingInsightsScreen(): React.ReactElement {
               />
             )}
           </View>
+          <View style={{ flexDirection: "row", gap: 6 }}>
+            <CountTile value={vm.avgSend ?? "–"} label={t("climbs.avgSendWord")} />
+            <CountTile value={vm.sends} label={t("climbs.sendsWord", { count: vm.sends })} />
+            <CountTile value={vm.flashed} label={t("climbs.flashedWord")} />
+            <CountTile
+              value={vm.projects}
+              label={t("climbs.projectsWord", { count: vm.projects })}
+            />
+          </View>
+          <DaysClimbing vm={days} />
           {vm.hardest !== null && (
             <View
               style={{
@@ -182,6 +170,6 @@ export function ClimbingInsightsScreen(): React.ReactElement {
           )}
         </>
       )}
-    </InsightsFrame>
+    </>
   );
 }

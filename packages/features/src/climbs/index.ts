@@ -34,14 +34,22 @@ export {
 } from "./projects";
 export {
   CLIMB_PLACES,
+  avgSendLabel,
   climbingInsightsVM,
   mainDiscipline,
   workoutClimbSessions,
+  type BoulderScale,
   type ClimbPlaceFilter,
   type ClimbingInsightsFilter,
   type ClimbingInsightsVM,
   type InsightsSession,
 } from "./insights";
+export {
+  daysClimbed,
+  type ClimbingDay,
+  type ClimbingWeek,
+  type DaysClimbedVM,
+} from "./daysClimbed";
 export {
   areaChoice,
   climbSuggestions,

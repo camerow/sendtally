@@ -42,7 +42,6 @@ import { LogFab } from "../live-session/LogFab";
 import { DEFAULT_FILTERS, FilterSheet, type SessionFilters } from "./FilterSheet";
 import { ScopeBar } from "./ScopeBar";
 import { SECTION_HEADER_HEIGHT, SectionHeader } from "./SectionHeader";
-import { InsightsLink } from "../../components/InsightsLink";
 import { ACTIVITY_ROW_HEIGHT, ActivityRow } from "./ActivityRow";
 import { HANG_ROW_HEIGHT, HangRow } from "./HangRow";
 import { BLOCK_TAG_HEIGHT, SessionRow, sessionRowHeight } from "./SessionRow";
@@ -264,10 +263,6 @@ export function SessionsLog(): React.ReactElement {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.white }} edges={["top"]}>
       <ScreenHeader title={t("journal.log")} right={<AccountButton />} />
-      <InsightsLink
-        title={t("statistics.trainingInsights")}
-        onPress={() => router.push("/training-insights")}
-      />
       {sections.length > 0 && (
         <ScopeBar
           items={scopeItems}

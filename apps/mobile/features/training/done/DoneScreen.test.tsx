@@ -2,10 +2,28 @@ import { describe, expect, it, jest } from "@jest/globals";
 import { fireEvent, screen } from "@testing-library/react-native";
 import { router } from "expo-router";
 import React from "react";
+import type * as LogSession from "@sendtally/features/log-session";
+import { statsSegmentStorage } from "../../../lib/statsSegmentStorage";
 import { hangData, renderWithHang, TODAY } from "../data/renderWithHang";
 import { DoneScreen } from "./DoneScreen";
 
 jest.mock("expo-router", () => ({ router: { dismissTo: jest.fn(), push: jest.fn() } }));
+jest.mock("../../../lib/statsSegmentStorage", () => {
+  let value: string | null = null;
+  return {
+    statsSegmentStorage: jest
+      .requireActual<typeof LogSession>("@sendtally/features/log-session")
+      .draftStorage({
+        read: () => value,
+        write: (next) => {
+          value = next;
+        },
+        remove: () => {
+          value = null;
+        },
+      }),
+  };
+});
 jest.mock("expo-crypto", () => ({ randomUUID: () => "session-1" }));
 
 const partial = {
@@ -61,8 +79,8 @@ describe("Session done", () => {
         },
       ],
     });
-    expect(router.dismissTo).toHaveBeenCalledWith("/(tabs)/sessions");
-    expect(router.push).toHaveBeenCalledWith("/training-insights");
+    expect(router.dismissTo).toHaveBeenCalledWith("/(tabs)/stats");
+    expect(statsSegmentStorage.read()).toBe("training");
   });
 
   it("logs every item of a workout with more than one, each with its own setup", async () => {

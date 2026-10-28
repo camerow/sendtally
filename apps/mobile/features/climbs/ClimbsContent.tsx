@@ -15,7 +15,6 @@ import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { Chip } from "../../components/Chip";
 import { Fab } from "../../components/Fab";
 import { Icon } from "../../components/Icon";
-import { InsightsLink } from "../../components/InsightsLink";
 import { TextInput } from "../../components/TextInput";
 import { useApi } from "../../lib/api";
 import { ClimbLogRow } from "./ClimbLogRow";
@@ -71,13 +70,7 @@ export function ClimbsContent({ header }: ClimbsContentProps): React.ReactElemen
         }
       >
         {header}
-        <View style={{ paddingTop: 14 }}>
-          <InsightsLink
-            title={t("climbs.climbingInsights")}
-            onPress={() => router.push("/climbing-insights")}
-          />
-        </View>
-        <View style={{ gap: 10, paddingHorizontal: 18, paddingTop: 2 }}>
+        <View style={{ gap: 10, paddingHorizontal: 18, paddingTop: 4 }}>
           <View
             style={{
               minHeight: 50,

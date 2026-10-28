@@ -1,5 +1,7 @@
 export const statistics = {
   "statistics.climbing": "Climbing",
+  "statistics.training": "Training",
+  "statistics.tab": "Stats",
   "statistics.hangboard": "Hangboard",
   "statistics.sessions": "Sessions",
   "statistics.empty": "Log a session and your weeks start to fill in here.",
@@ -26,7 +28,6 @@ export const statistics = {
   "statistics.latest": "Latest",
   "statistics.volumeThisMonth": "Volume this month",
   "statistics.lastSessions": "Last sessions",
-  "statistics.trainingInsights": "Training insights",
   "statistics.effortIs": "Effort {effort}",
   "statistics.effortUp": "Effort {effort}, up {change}",
   "statistics.effortDown": "Effort {effort}, down {change}",

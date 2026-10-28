@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { SessionClimb, SessionWithClimbs } from "@sendtally/api-client";
-import { climbingInsightsVM, mainDiscipline, workoutClimbSessions } from "./insights";
+import { gradeFormatter } from "../sessions/grades";
+import { avgSendLabel, climbingInsightsVM, mainDiscipline, workoutClimbSessions } from "./insights";
 
 const NOW = new Date("2026-10-27T12:00:00.000Z");
 
@@ -40,7 +41,7 @@ const sessions = [
 ];
 
 describe("climbingInsightsVM", () => {
-  const all = { range: "7d", discipline: "boulder", place: "all" } as const;
+  const all = { range: "7d", discipline: "boulder", place: "all", boulderScale: "v" } as const;
 
   it("counts a named climb once across sessions, sent when any of them sent it", () => {
     const vm = climbingInsightsVM(sessions, [], all, NOW);
@@ -50,14 +51,19 @@ describe("climbingInsightsVM", () => {
       { gradeLabel: "V5", inner: 0, outer: 1, countLabel: "0/1" },
       { gradeLabel: "V4", inner: 1, outer: 0, countLabel: "1/1" },
     ]);
-    expect([vm.daysOutside, vm.sends, vm.flashed]).toEqual([2, 3, 1]);
+    expect([vm.avgSend, vm.sends, vm.flashed]).toEqual(["V5", 3, 1]);
     expect(vm.hardest).toEqual({ gradeLabel: "V7", name: "the pinch", dateLabel: "26 Oct" });
   });
 
   it("keeps to the gym with the Gym filter, so the hardest is the top gym send", () => {
     const vm = climbingInsightsVM(sessions, [], { ...all, place: "indoor" }, NOW);
     expect(vm.hardest).toEqual({ gradeLabel: "V6", name: null, dateLabel: "26 Oct" });
-    expect(vm.daysOutside).toBe(2);
+    expect(vm.avgSend).toBe("V6");
+  });
+
+  it("reads the average send in Font for a climber who grades in Font", () => {
+    const vm = climbingInsightsVM(sessions, [], { ...all, boulderScale: "font" }, NOW);
+    expect(vm.avgSend).toBe("6C");
   });
 
   it("reaches back as far as the range does", () => {
@@ -102,5 +108,27 @@ describe("climbingInsightsVM", () => {
     expect([vm.sends, vm.flashed]).toEqual([4, 2]);
     expect(vm.hardest?.gradeLabel).toBe("V8");
     expect(vm.pyramid.find((r) => r.gradeLabel === "V5")).toMatchObject({ inner: 0, outer: 2 });
+  });
+});
+
+describe("avgSendLabel", () => {
+  const boulder = gradeFormatter("boulder", "yds");
+
+  it("rounds the mean of the sends down to a grade", () => {
+    expect(avgSendLabel([4, 6, 7], boulder, "v")).toBe("V5");
+    expect(avgSendLabel([3, 4], boulder, "v")).toBe("V3");
+  });
+
+  it("reads boulders in Font when the climber does", () => {
+    expect(avgSendLabel([4, 6, 7], boulder, "font")).toBe("6C");
+  });
+
+  it("reads routes in the scale they were logged in, whatever the boulder scale", () => {
+    expect(avgSendLabel([10, 11], gradeFormatter("route", "french"), "font")).toBe("6c");
+    expect(avgSendLabel([10, 11], gradeFormatter("route", "yds"), "v")).toBe("5.11b");
+  });
+
+  it("has nothing to say without a send", () => {
+    expect(avgSendLabel([], boulder, "v")).toBeNull();
   });
 });

@@ -1,9 +1,11 @@
 import React from "react";
-import { Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import type { WeightUnit } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
 import type { ExerciseTrendVM } from "@sendtally/features/statistics";
+import { Icon } from "../../../components/Icon";
+import { pressRow } from "../../../lib/press";
 import { metricText } from "../exercises/exerciseText";
 import { type } from "../type";
 
@@ -15,13 +17,15 @@ function changeText(row: ExerciseTrendVM, unit: WeightUnit): string {
   return `${row.change < 0 ? "−" : "+"}${metricText(Math.abs(row.change), row.metric, unit)}`;
 }
 
-/** An exercise: how often, its last few bests as bars, and how much it moved. */
+/** An exercise: how often, its last few bests as bars, and how much it moved; it opens its trend. */
 export function ExerciseTrendRow({
   row,
   unit,
+  onPress,
 }: {
   row: ExerciseTrendVM;
   unit: WeightUnit;
+  onPress?: () => void;
 }): React.ReactElement {
   const values = row.values.slice(-SPARK);
   const lo = Math.min(...values);
@@ -29,17 +33,19 @@ export function ExerciseTrendRow({
   const change = changeText(row, unit);
   const count = t("statistics.timesCount", { count: row.count });
   return (
-    <View
-      accessible
+    <Pressable
+      onPress={onPress}
+      disabled={onPress === undefined}
+      accessibilityRole={onPress === undefined ? undefined : "button"}
       accessibilityLabel={`${row.name}, ${count}, ${change}`}
-      style={{
+      style={pressRow({
         minHeight: 44,
         flexDirection: "row",
         alignItems: "center",
         gap: 10,
         borderBottomWidth: 1,
         borderBottomColor: colors.lineOnLightSoft,
-      }}
+      })}
     >
       <View style={{ flex: 1, minWidth: 0 }}>
         <Text numberOfLines={1} style={[type.bodyBold, { fontSize: 14, color: colors.gunmetal }]}>
@@ -65,6 +71,9 @@ export function ExerciseTrendRow({
       >
         {change}
       </Text>
-    </View>
+      {onPress !== undefined && (
+        <Icon name="chevron" color={colors.textMuted} size={16} strokeWidth={2} />
+      )}
+    </Pressable>
   );
 }

@@ -2,9 +2,9 @@ import React from "react";
 import { Text, View } from "react-native";
 import { colors, fonts } from "@sendtally/design/tokens";
 
-export type CountTileProps = { value: number; label: string };
+export type CountTileProps = { value: number | string; label: string };
 
-/** A number over a word: one of the four counts on Climbing insights. */
+/** A number or grade over a word: one of the four tiles on Stats > Climbing. */
 export function CountTile({ value, label }: CountTileProps): React.ReactElement {
   return (
     <View
@@ -20,6 +20,8 @@ export function CountTile({ value, label }: CountTileProps): React.ReactElement 
       }}
     >
       <Text
+        numberOfLines={1}
+        adjustsFontSizeToFit
         style={{
           fontFamily: fonts.displayHeavy,
           fontSize: 22,

@@ -1,5 +1,7 @@
 export const statistics = {
   "statistics.climbing": "Escalada",
+  "statistics.training": "Entrenamiento",
+  "statistics.tab": "Datos",
   "statistics.hangboard": "Multipresa",
   "statistics.sessions": "Sesiones",
   "statistics.empty": "Registra una sesión y aquí se irán llenando tus semanas.",
@@ -26,7 +28,6 @@ export const statistics = {
   "statistics.latest": "Última",
   "statistics.volumeThisMonth": "Volumen este mes",
   "statistics.lastSessions": "Últimas sesiones",
-  "statistics.trainingInsights": "Análisis del entrenamiento",
   "statistics.effortIs": "Esfuerzo {effort}",
   "statistics.effortUp": "Esfuerzo {effort}, sube {change}",
   "statistics.effortDown": "Esfuerzo {effort}, baja {change}",

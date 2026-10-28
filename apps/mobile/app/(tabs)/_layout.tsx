@@ -92,6 +92,10 @@ function SignedInTabs(): React.ReactElement {
         name="train"
         options={{ tabBarLabel: t("training.train"), tabBarIcon: tabIcon("train") }}
       />
+      <Tabs.Screen
+        name="stats"
+        options={{ tabBarLabel: t("statistics.tab"), tabBarIcon: tabIcon("insights") }}
+      />
     </Tabs>
   );
 }

@@ -1,4 +1,11 @@
-import { climbDiscipline, climbRank, isEndurance, type Discipline } from "@sendtally/core";
+import {
+  boulderGradeFromV,
+  climbDiscipline,
+  climbRank,
+  formatGrade,
+  isEndurance,
+  type Discipline,
+} from "@sendtally/core";
 import type {
   Activity,
   ClimbSummary,
@@ -7,8 +14,8 @@ import type {
 } from "@sendtally/api-client";
 import type { SetClimb } from "@sendtally/core/hang";
 import { activityAt } from "../activities/format";
-import { draftGrade, utcDate, vGradeOf } from "../log-session/transforms";
-import { gradeFormatterFor } from "../sessions/grades";
+import { draftGrade, vGradeOf } from "../log-session/transforms";
+import { gradeFormatterFor, type GradeFormatter } from "../sessions/grades";
 import { bucketsFor, windowOf } from "../trends/buckets";
 import type { TrendRange } from "../trends/types";
 import { dateLabel } from "./projects";
@@ -24,10 +31,14 @@ export type ClimbingInsightsFilter = {
   range: TrendRange;
   discipline: Discipline;
   place: ClimbPlaceFilter;
+  boulderScale: BoulderScale;
 };
 
+/** How the climber reads boulder grades. */
+export type BoulderScale = "v" | "font";
+
 export type ClimbingInsightsVM = {
-  daysOutside: number;
+  avgSend: string | null;
   sends: number;
   flashed: number;
   projects: number;
@@ -110,6 +121,22 @@ function triedIn(sessions: readonly InsightsSession[], discipline: Discipline): 
   return [...byKey.values()];
 }
 
+/**
+ * The mean grade of the sends on the grade ladder, rounded down to a grade: boulders in the
+ * climber's scale, routes in the scale they were logged in.
+ */
+export function avgSendLabel(
+  ranks: readonly number[],
+  format: GradeFormatter,
+  boulderScale: BoulderScale
+): string | null {
+  if (ranks.length === 0) return null;
+  const rank = Math.floor(ranks.reduce((sum, r) => sum + r, 0) / ranks.length);
+  const boulder =
+    format.discipline === "boulder" ? boulderGradeFromV(boulderScale, rank) : undefined;
+  return boulder === undefined ? format.label(rank) : formatGrade(boulder);
+}
+
 /** Climbing over a range, in one discipline and place: the tiles, the pyramid and the top send. */
 export function climbingInsightsVM(
   sessions: readonly InsightsSession[],
@@ -135,9 +162,11 @@ export function climbingInsightsVM(
     (a, b) => b.rank - a.rank || (a.sentAt ?? "").localeCompare(b.sentAt ?? "")
   )[0];
   return {
-    daysOutside: new Set(
-      inRange.filter((s) => s.location === "outdoor").map((s) => utcDate(s.start_at))
-    ).size,
+    avgSend: avgSendLabel(
+      sent.map((c) => c.rank),
+      format,
+      filter.boulderScale
+    ),
     sends: sent.length,
     flashed: sent.filter((c) => c.flashed).length,
     projects: climbs.filter(
