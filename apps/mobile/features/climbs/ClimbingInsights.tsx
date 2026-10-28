@@ -164,7 +164,7 @@ export function ClimbingInsights({ range }: { range: TrendRange }): React.ReactE
                 {vm.hardest.name ?? t("climbs.hardestSend")}
               </Text>
               <Text style={{ fontFamily: fonts.mono, fontSize: 12, color: colors.textSecondary }}>
-                {t("climbs.hardestOn", { date: vm.hardest.dateLabel })}
+                {vm.hardest.dateLabel}
               </Text>
             </View>
           )}

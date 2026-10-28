@@ -50,7 +50,6 @@ export const climbs = {
   "climbs.daysClimbingLabel": "Klettertage, {range}: {outside} draußen, {gym} in der Halle.",
   "climbs.sendsByGrade": "Durchstiege nach Grad",
   "climbs.insightsEmpty": "In diesem Zeitraum ist noch nichts eingetragen.",
-  "climbs.hardestOn": "Schwerster · {date}",
   "climbs.gradeRange": "{from} bis {to}",
   "climbs.today": "heute",
   "climbs.search": "Klettereien, Gebiete oder Grade suchen",

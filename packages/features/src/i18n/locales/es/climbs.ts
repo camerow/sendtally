@@ -49,7 +49,6 @@ export const climbs = {
   "climbs.daysClimbingLabel": "Días escalando, {range}: {outside} fuera, {gym} en rocódromo.",
   "climbs.sendsByGrade": "Encadenes por grado",
   "climbs.insightsEmpty": "Aún no hay nada registrado en este periodo.",
-  "climbs.hardestOn": "La más dura · {date}",
   "climbs.gradeRange": "{from} a {to}",
   "climbs.today": "hoy",
   "climbs.search": "Buscar vías, zonas o grados",

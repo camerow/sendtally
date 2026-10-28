@@ -48,7 +48,6 @@ export const climbs = {
   "climbs.daysClimbingLabel": "Days climbing, {range}: {outside} outside, {gym} in the gym.",
   "climbs.sendsByGrade": "Sends by grade",
   "climbs.insightsEmpty": "Nothing logged in this range yet.",
-  "climbs.hardestOn": "Hardest · {date}",
   "climbs.gradeRange": "{from} to {to}",
   "climbs.today": "today",
   "climbs.search": "Search climbs, areas or grades",

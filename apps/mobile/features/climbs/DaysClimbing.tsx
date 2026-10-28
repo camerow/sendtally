@@ -7,6 +7,8 @@ import { sectionLabel } from "./sectionLabel";
 
 const SQUARE = 14;
 const GAP = 3;
+const STRIP = 28;
+const STRIP_GAP = 6;
 
 const DAY_COLORS: Record<ClimbingDay, string> = {
   outside: colors.azureInk,
@@ -44,53 +46,89 @@ export function DaysClimbing({ vm }: { vm: DaysClimbedVM }): React.ReactElement 
       <Text accessibilityRole="header" style={sectionLabel}>
         {t("climbs.daysClimbing")}
       </Text>
-      <View style={{ flexDirection: "row", alignItems: "flex-end", gap: 16 }}>
+      {vm.strip.length > 0 ? (
         <View
           accessible
           accessibilityRole="image"
           accessibilityLabel={vm.label}
-          style={{ flexShrink: 1, flexDirection: "row", gap: GAP }}
+          style={{ flexDirection: "row", gap: STRIP_GAP }}
         >
-          <View style={{ gap: GAP, paddingTop: SQUARE + GAP, marginRight: GAP }}>
-            {vm.weekdays.map((d, i) => (
-              <Text key={i} style={tiny}>
-                {d}
-              </Text>
-            ))}
-          </View>
-          <ScrollView
-            ref={scroll}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={{ flexGrow: 0, flexShrink: 1 }}
-            onContentSizeChange={() => scroll.current?.scrollToEnd({ animated: false })}
-            contentContainerStyle={{ gap: GAP, paddingRight: 12 }}
-          >
-            {vm.weeks.map((w, i) => (
-              <View key={i} style={{ gap: GAP }}>
-                <View style={{ width: SQUARE, height: SQUARE }}>
-                  {w.month !== null && (
-                    <Text numberOfLines={1} style={[tiny, { position: "absolute", width: 40 }]}>
-                      {w.month}
-                    </Text>
-                  )}
-                </View>
-                {w.days.map((d, j) => (
-                  <View
-                    key={j}
-                    style={{
-                      width: SQUARE,
-                      height: SQUARE,
-                      borderRadius: 3,
-                      backgroundColor: DAY_COLORS[d],
-                    }}
-                  />
-                ))}
-              </View>
-            ))}
-          </ScrollView>
+          {vm.strip.map((s, i) => (
+            <View key={i} style={{ alignItems: "center", gap: 4 }}>
+              <View
+                style={{
+                  width: STRIP,
+                  height: STRIP,
+                  borderRadius: 5,
+                  backgroundColor: DAY_COLORS[s.day],
+                }}
+              />
+              <Text style={tiny}>{s.weekday}</Text>
+            </View>
+          ))}
         </View>
-        <View style={{ gap: 6, paddingBottom: 2 }}>
+      ) : null}
+      <View
+        style={
+          vm.strip.length > 0
+            ? undefined
+            : { flexDirection: "row", alignItems: "flex-end", gap: 16 }
+        }
+      >
+        {vm.strip.length === 0 && (
+          <View
+            accessible
+            accessibilityRole="image"
+            accessibilityLabel={vm.label}
+            style={{ flexShrink: 1, flexDirection: "row", gap: GAP }}
+          >
+            <View style={{ gap: GAP, paddingTop: SQUARE + GAP, marginRight: GAP }}>
+              {vm.weekdays.map((d, i) => (
+                <Text key={i} style={tiny}>
+                  {d}
+                </Text>
+              ))}
+            </View>
+            <ScrollView
+              ref={scroll}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={{ flexGrow: 0, flexShrink: 1 }}
+              onContentSizeChange={() => scroll.current?.scrollToEnd({ animated: false })}
+              contentContainerStyle={{ gap: GAP, paddingRight: 12 }}
+            >
+              {vm.weeks.map((w, i) => (
+                <View key={i} style={{ gap: GAP }}>
+                  <View style={{ width: SQUARE, height: SQUARE }}>
+                    {w.month !== null && (
+                      <Text numberOfLines={1} style={[tiny, { position: "absolute", width: 40 }]}>
+                        {w.month}
+                      </Text>
+                    )}
+                  </View>
+                  {w.days.map((d, j) => (
+                    <View
+                      key={j}
+                      style={{
+                        width: SQUARE,
+                        height: SQUARE,
+                        borderRadius: 3,
+                        backgroundColor: DAY_COLORS[d],
+                      }}
+                    />
+                  ))}
+                </View>
+              ))}
+            </ScrollView>
+          </View>
+        )}
+        <View
+          style={
+            vm.strip.length > 0
+              ? { flexDirection: "row", flexWrap: "wrap", columnGap: 14, rowGap: 6 }
+              : { gap: 6, paddingBottom: 2 }
+          }
+        >
           {legend.map(([day, label]) => (
             <View key={day} style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
               <View

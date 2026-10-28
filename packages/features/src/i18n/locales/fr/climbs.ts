@@ -47,7 +47,6 @@ export const climbs = {
   "climbs.daysClimbingLabel": "Jours de grimpe, {range} : {outside} dehors, {gym} en salle.",
   "climbs.sendsByGrade": "Réussites par cotation",
   "climbs.insightsEmpty": "Rien de noté sur cette période pour l’instant.",
-  "climbs.hardestOn": "La plus dure · {date}",
   "climbs.gradeRange": "{from} à {to}",
   "climbs.today": "aujourd’hui",
   "climbs.search": "Chercher des voies, secteurs ou cotations",

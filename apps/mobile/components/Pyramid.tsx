@@ -42,7 +42,12 @@ export function Pyramid({ rows, label }: PyramidProps): React.ReactElement {
           </Text>
           <View
             onLayout={(e) => setWidth(e.nativeEvent.layout.width)}
-            style={{ flex: 1, flexDirection: "row", justifyContent: "center", gap: 1 }}
+            style={{
+              flex: 1,
+              flexDirection: "row",
+              justifyContent: "center",
+              gap: r.inner > 0 && r.outer > 0 ? 1 : 0,
+            }}
           >
             {r.outer > 0 && <Side width={(r.outer / 2) * unit} left />}
             {r.inner > 0 && (

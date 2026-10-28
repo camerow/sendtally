@@ -7,7 +7,7 @@ const at = (start_at: string, location: "indoor" | "outdoor" | null) => ({ start
 
 describe("daysClimbed", () => {
   it("draws a column per week of the range, ending on this week", () => {
-    expect(daysClimbed([], "7d", NOW).weeks).toHaveLength(1);
+    expect(daysClimbed([], "1m", NOW).strip).toEqual([]);
     expect(daysClimbed([], "3m", NOW).weeks).toHaveLength(13);
     expect(daysClimbed([], "1y", NOW).weeks).toHaveLength(53);
   });
@@ -23,17 +23,28 @@ describe("daysClimbed", () => {
       "7d",
       NOW
     );
-    expect(vm.weeks[0]?.days).toEqual([
-      "outside",
-      "gym",
-      "rest",
-      "future",
-      "future",
-      "future",
-      "future",
+    expect(vm.weeks).toEqual([]);
+    expect(vm.strip).toEqual([
+      { weekday: "T", day: "rest" },
+      { weekday: "F", day: "rest" },
+      { weekday: "S", day: "rest" },
+      { weekday: "S", day: "rest" },
+      { weekday: "M", day: "outside" },
+      { weekday: "T", day: "gym" },
+      { weekday: "W", day: "rest" },
     ]);
     expect([vm.outside, vm.gym]).toEqual([1, 1]);
     expect(vm.label).toBe("Days climbing, Last 7 days: 1 outside, 1 in the gym.");
+  });
+
+  it("draws 7D across the week boundary, the last seven days and no further", () => {
+    const vm = daysClimbed(
+      [at("2026-10-21T10:00:00.000Z", "indoor"), at("2026-10-22T10:00:00.000Z", "outdoor")],
+      "7d",
+      NOW
+    );
+    expect(vm.strip[0]).toEqual({ weekday: "T", day: "outside" });
+    expect([vm.outside, vm.gym]).toEqual([1, 0]);
   });
 
   it("counts every day drawn, the weeks before this one too", () => {
