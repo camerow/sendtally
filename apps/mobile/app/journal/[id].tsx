@@ -24,6 +24,7 @@ import {
 import { sessionTitle } from "@sendtally/features/sessions";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { BackButton } from "../../components/BackButton";
+import { Icon } from "../../components/Icon";
 import { EntryKindChip } from "../../features/journal/EntryKindChip";
 import { SeverityChart } from "../../features/journal/SeverityChart";
 import { TripBody } from "../../features/journal/TripBody";
@@ -31,14 +32,6 @@ import { RowTags } from "../../features/sessions/RowTags";
 import { SessionRow } from "../../features/sessions/SessionRow";
 import { useApi } from "../../lib/api";
 import { press } from "../../lib/press";
-
-const action = {
-  fontFamily: fonts.monoMedium,
-  fontSize: 12,
-  letterSpacing: 0.5,
-  textTransform: "uppercase",
-  color: colors.labelAccent,
-} as const;
 
 const cardLabel = {
   fontFamily: fonts.monoMedium,
@@ -63,20 +56,6 @@ const card = {
   borderRadius: radius.card,
   padding: 16,
 } as const;
-
-function HeaderAction({
-  label,
-  onPress,
-}: {
-  label: string;
-  onPress: () => void;
-}): React.ReactElement {
-  return (
-    <Pressable onPress={onPress} style={press({ minHeight: 44, justifyContent: "center" })}>
-      <Text style={action}>{label}</Text>
-    </Pressable>
-  );
-}
 
 function SessionCard({
   label,
@@ -140,6 +119,16 @@ export default function EntryDetailScreen(): React.ReactElement {
     ]);
   }
 
+  const more = (entry: EntryDetail): void =>
+    Alert.alert(entryHasTitle(entry) ? entryTitle(entry) : entryWhen(entry), undefined, [
+      {
+        text: t("common.edit"),
+        onPress: () => router.push({ pathname: "/journal/[id]/edit", params: { id: entry.id } }),
+      },
+      { text: t("common.delete"), style: "destructive", onPress: () => confirmDelete(entry) },
+      { text: t("common.cancel"), style: "cancel" },
+    ]);
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.white }} edges={["top"]}>
       <ScrollView
@@ -155,23 +144,25 @@ export default function EntryDetailScreen(): React.ReactElement {
         >
           <BackButton />
           {state.status === "ready" && (
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 16 }}>
-              <HeaderAction
-                label={t("common.edit")}
-                onPress={() =>
-                  router.push({
-                    pathname: "/journal/[id]/edit",
-                    params: { id: state.data.entry.id },
-                  })
-                }
-              />
-              <HeaderAction
-                label={deleting ? t("common.deleting") : t("common.delete")}
-                onPress={() => {
-                  if (!deleting) confirmDelete(state.data.entry);
-                }}
-              />
-            </View>
+            <Pressable
+              onPress={() => {
+                if (!deleting) more(state.data.entry);
+              }}
+              accessibilityRole="button"
+              accessibilityLabel={t("climbs.more")}
+              style={press({
+                width: 44,
+                height: 44,
+                alignItems: "center",
+                justifyContent: "center",
+              })}
+            >
+              {deleting ? (
+                <ActivityIndicator color={colors.gunmetal} />
+              ) : (
+                <Icon name="more" color={colors.gunmetal} size={20} strokeWidth={3} />
+              )}
+            </Pressable>
           )}
         </View>
 
