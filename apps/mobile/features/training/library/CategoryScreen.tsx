@@ -28,7 +28,7 @@ export function CategoryScreen({ focus }: CategoryScreenProps): React.ReactEleme
           library={state.data}
           focus={focus}
           placeholder={t("focus.search", { focus: focusLabel(focus) })}
-          onPick={(w) => router.push({ pathname: "/workout/preview", params: { id: w.id } })}
+          onPick={(w) => router.push({ pathname: "/workout/[id]", params: { id: w.id } })}
         />
       ) : (
         <LoadState state={state} onRetry={() => void reload()} />

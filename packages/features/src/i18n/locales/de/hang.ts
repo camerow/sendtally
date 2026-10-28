@@ -32,7 +32,6 @@ export const hang = {
   "hang.workout.lowpull.name": "Leichte tägliche Züge",
   "hang.workout.lowpull.blurb":
     "Viele leichte Züge an den meisten Tagen der Woche. Durchblutung für die Sehnen, kein hartes Training.",
-  "hang.workout.mineBlurb": "Dein Workout.",
   "hang.untitledWorkout": "Workout ohne Namen",
   "hang.copyName": "{name} (Kopie)",
 
@@ -61,9 +60,6 @@ export const hang = {
   "hang.start": "Start",
   "hang.planned": "Geplant",
   "hang.missed": "Verpasst",
-  "hang.complete": "Geschafft",
-  "hang.completeLower": "geschafft",
-  "hang.percentComplete": "{pct}% geschafft",
   "hang.rpeValue": "RPE {value}",
   "hang.restDay": "Ruhetag",
   "hang.restDayFuture":
@@ -91,12 +87,9 @@ export const hang = {
   "hang.statOnEdge": "An der Leiste",
   "hang.statTotalLifts": "Züge gesamt",
   "hang.statSets": "Sätze",
-  "hang.schedule": "Plan",
-  "hang.notScheduled": "Noch nicht geplant.",
   "hang.history": "Verlauf · {count}",
   "hang.sessionCount_one": "{count} Session",
   "hang.sessionCount_other": "{count} Sessions",
-  "hang.noHistory": "Noch keine Sessions. Deine erste taucht hier auf.",
   "hang.showAll": "Alle {n} anzeigen",
   "hang.showFewer": "Weniger anzeigen",
 

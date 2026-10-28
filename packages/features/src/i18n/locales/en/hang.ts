@@ -32,7 +32,6 @@ export const hang = {
   "hang.workout.lowpull.name": "Light daily lifts",
   "hang.workout.lowpull.blurb":
     "Many light lifts, most days of the week. Blood flow for tendons, not a hard workout.",
-  "hang.workout.mineBlurb": "Your workout.",
   "hang.untitledWorkout": "Untitled workout",
   "hang.copyName": "{name} (copy)",
 
@@ -61,9 +60,6 @@ export const hang = {
   "hang.start": "Start",
   "hang.planned": "Planned",
   "hang.missed": "Missed",
-  "hang.complete": "Complete",
-  "hang.completeLower": "complete",
-  "hang.percentComplete": "{pct}% complete",
   "hang.rpeValue": "RPE {value}",
   "hang.restDay": "Rest day",
   "hang.restDayFuture": "Nothing planned. Tendons adapt between sessions, not during them.",
@@ -90,12 +86,9 @@ export const hang = {
   "hang.statOnEdge": "On the edge",
   "hang.statTotalLifts": "Total lifts",
   "hang.statSets": "Sets",
-  "hang.schedule": "Schedule",
-  "hang.notScheduled": "Not scheduled yet.",
   "hang.history": "History · {count}",
   "hang.sessionCount_one": "{count} session",
   "hang.sessionCount_other": "{count} sessions",
-  "hang.noHistory": "No sessions yet. Your first one shows up here.",
   "hang.showAll": "Show all {n}",
   "hang.showFewer": "Show fewer",
 

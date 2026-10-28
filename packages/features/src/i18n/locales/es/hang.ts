@@ -32,7 +32,6 @@ export const hang = {
   "hang.workout.lowpull.name": "Tirones ligeros diarios",
   "hang.workout.lowpull.blurb":
     "Muchos tirones ligeros, casi todos los días de la semana. Riego para los tendones, no un entreno duro.",
-  "hang.workout.mineBlurb": "Tu entreno.",
   "hang.untitledWorkout": "Entreno sin nombre",
   "hang.copyName": "{name} (copia)",
 
@@ -61,9 +60,6 @@ export const hang = {
   "hang.start": "Empezar",
   "hang.planned": "Previsto",
   "hang.missed": "Perdido",
-  "hang.complete": "Completado",
-  "hang.completeLower": "completado",
-  "hang.percentComplete": "{pct} % completado",
   "hang.rpeValue": "RPE {value}",
   "hang.restDay": "Día de descanso",
   "hang.restDayFuture": "Nada previsto. Los tendones se adaptan entre sesiones, no durante ellas.",
@@ -90,12 +86,9 @@ export const hang = {
   "hang.statOnEdge": "En la regleta",
   "hang.statTotalLifts": "Tirones totales",
   "hang.statSets": "Series",
-  "hang.schedule": "Plan",
-  "hang.notScheduled": "Aún no programado.",
   "hang.history": "Historial · {count}",
   "hang.sessionCount_one": "{count} sesión",
   "hang.sessionCount_other": "{count} sesiones",
-  "hang.noHistory": "Aún no hay sesiones. La primera aparecerá aquí.",
   "hang.showAll": "Ver las {n}",
   "hang.showFewer": "Ver menos",
 

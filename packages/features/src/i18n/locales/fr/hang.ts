@@ -32,7 +32,6 @@ export const hang = {
   "hang.workout.lowpull.name": "Tirages légers quotidiens",
   "hang.workout.lowpull.blurb":
     "Beaucoup de tirages légers, la plupart des jours de la semaine. De la circulation pour les tendons, pas une séance dure.",
-  "hang.workout.mineBlurb": "Ton exercice.",
   "hang.untitledWorkout": "Exercice sans nom",
   "hang.copyName": "{name} (copie)",
 
@@ -61,9 +60,6 @@ export const hang = {
   "hang.start": "Démarrer",
   "hang.planned": "Prévu",
   "hang.missed": "Manqué",
-  "hang.complete": "Terminé",
-  "hang.completeLower": "terminé",
-  "hang.percentComplete": "{pct} % terminé",
   "hang.rpeValue": "RPE {value}",
   "hang.restDay": "Jour de repos",
   "hang.restDayFuture": "Rien de prévu. Les tendons s'adaptent entre les séances, pas pendant.",
@@ -90,12 +86,9 @@ export const hang = {
   "hang.statOnEdge": "Sur la réglette",
   "hang.statTotalLifts": "Tirages au total",
   "hang.statSets": "Séries",
-  "hang.schedule": "Planning",
-  "hang.notScheduled": "Pas encore planifié.",
   "hang.history": "Historique · {count}",
   "hang.sessionCount_one": "{count} séance",
   "hang.sessionCount_other": "{count} séances",
-  "hang.noHistory": "Pas encore de séance. La première apparaîtra ici.",
   "hang.showAll": "Tout afficher ({n})",
   "hang.showFewer": "Afficher moins",
 

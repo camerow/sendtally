@@ -56,7 +56,7 @@ describe("Workout library", () => {
 
     await fireEvent.press(screen.getByText("Max hangs"));
     expect(router.push).toHaveBeenLastCalledWith({
-      pathname: "/workout/preview",
+      pathname: "/workout/[id]",
       params: { id: "max10" },
     });
   });
@@ -82,7 +82,7 @@ describe("Workout library", () => {
     expect(screen.queryByText("5x5 strength")).toBeNull();
     await fireEvent.press(screen.getByText("Leg day"));
     expect(router.push).toHaveBeenLastCalledWith({
-      pathname: "/workout/preview",
+      pathname: "/workout/[id]",
       params: { id: "w1" },
     });
   });

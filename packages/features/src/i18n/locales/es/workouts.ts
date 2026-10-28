@@ -156,6 +156,7 @@ export const workouts = {
   "workouts.exercise.limitBouldering": "Bloque al límite",
   "workouts.exercise.campusLadders": "Escaleras en campus",
   "workouts.exercise.arc": "ARC",
+  "workouts.exercises": "Ejercicios",
   "workouts.addExercises": "Añadir ejercicios",
   "workouts.addCount_one": "Añadir {count} ejercicio",
   "workouts.addCount_other": "Añadir {count} ejercicios",

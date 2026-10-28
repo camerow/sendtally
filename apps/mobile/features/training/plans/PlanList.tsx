@@ -1,29 +1,29 @@
 import React from "react";
-import { Text, View } from "react-native";
+import { View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
 import { blockOfMembership, usePlan } from "@sendtally/features/training";
 import { useApi } from "../../../lib/api";
+import { Label } from "../components/Label";
 import { PlanRow } from "../components/PlanRow";
 import { useHangData } from "../data/HangDataContext";
 import { usePlanActions } from "../plan/usePlanActions";
-import { type } from "../type";
 import { membershipTag, membershipWhen } from "./planText";
 import { confirmDestructive } from "../../../lib/confirmDestructive";
 
-export type PlanListProps = { workoutId: string; name: string; empty: string };
+export type PlanListProps = { workoutId: string; name: string };
 
-/** Where a workout is planned, by start date: × takes it out. */
-export function PlanList({ workoutId, name, empty }: PlanListProps): React.ReactElement {
+/** Where a workout is planned, by start date: × takes it out. Left out when it is planned nowhere. */
+export function PlanList({ workoutId, name }: PlanListProps): React.ReactElement | null {
   const { today } = useHangData();
   const { state } = usePlan(useApi());
   const actions = usePlanActions();
   const plan = state.status === "ready" ? state.data : null;
   const members = plan?.memberships.filter((m) => m.workoutId === workoutId) ?? [];
-  if (plan === null || members.length === 0)
-    return <Text style={[type.body, { fontSize: 14, color: colors.textSecondary }]}>{empty}</Text>;
+  if (plan === null || members.length === 0) return null;
   return (
     <View style={{ gap: 8 }}>
+      <Label color={colors.gunmetal}>{t("hang.planned")}</Label>
       {members.map((m) => {
         const block = blockOfMembership(plan, m);
         return (

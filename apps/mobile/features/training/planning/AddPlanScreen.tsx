@@ -22,7 +22,7 @@ export type AddPlanScreenProps = { flow: AddFlow; initialKind?: WorkoutKind | nu
 
 /**
  * Adding to the plan: what kind in the one sheet, then the library of that kind in one
- * searchable list, the user's own first, to preview one or make a new one.
+ * searchable list, the user's own first, to open one or make a new one.
  */
 export function AddPlanScreen({
   flow,
@@ -39,9 +39,9 @@ export function AddPlanScreen({
 
   const kicker = addKicker(flow, plan.status === "ready" ? plan.data.blocks : []);
   const library = state.status === "ready" ? state.data : null;
-  const preview = (w: LibraryWorkout): void =>
+  const open = (w: LibraryWorkout): void =>
     router.push({
-      pathname: "/workout/preview",
+      pathname: "/workout/[id]",
       params: { id: w.id, add: "1", ...addFlowParams(flow) },
     });
 
@@ -75,7 +75,7 @@ export function AddPlanScreen({
       )}
       {state.status !== "ready" && <LoadState state={state} onRetry={() => void reload()} />}
       {library !== null && kind !== null && (
-        <LibraryBrowser key={kind} library={library} kinds={[kind]} onPick={preview} />
+        <LibraryBrowser key={kind} library={library} kinds={[kind]} onPick={open} />
       )}
       <KindSheet
         visible={choosing}

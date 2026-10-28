@@ -8,7 +8,7 @@ import type * as Workouts from "@sendtally/features/workouts";
 import { hangData, renderWithHang } from "../data/renderWithHang";
 import { AddPlanScreen } from "./AddPlanScreen";
 import { ScheduleScreen } from "./ScheduleScreen";
-import { WorkoutPreviewScreen } from "./WorkoutPreviewScreen";
+import { WorkoutScreen } from "../library-detail/WorkoutScreen";
 
 const mockPlan = {
   saveBlock: jest.fn(),
@@ -82,7 +82,7 @@ describe("adding to the plan", () => {
     expect(screen.queryByText("5x5 strength")).toBeNull();
     await fireEvent.press(screen.getByText("Gym, legs"));
     expect(router.push).toHaveBeenCalledWith({
-      pathname: "/workout/preview",
+      pathname: "/workout/[id]",
       params: { id: "legs", add: "1", date: "2026-10-01" },
     });
   });
@@ -115,8 +115,8 @@ describe("adding to the plan", () => {
     expect(router.back).not.toHaveBeenCalled();
   });
 
-  it("previews the next session and what each exercise alternates with, then goes on to when", async () => {
-    await renderWithHang(<WorkoutPreviewScreen id="legs" adding={flow} />, hangData(), {
+  it("shows the next session and what each exercise alternates with, then goes on to when", async () => {
+    await renderWithHang(<WorkoutScreen id="legs" adding={flow} />, hangData(), {
       workouts: [legs],
     });
     expect(screen.getByText("Next session")).toBeTruthy();
@@ -144,18 +144,18 @@ describe("adding to the plan", () => {
         },
       ],
     };
-    await renderWithHang(<WorkoutPreviewScreen id="legs" adding={flow} />, hangData(), {
+    await renderWithHang(<WorkoutScreen id="legs" adding={flow} />, hangData(), {
       workouts: [named],
     });
     expect(screen.getByText("Heavy then B Light")).toBeTruthy();
     expect(screen.getByText("Alternates: B Light is 3 × 8")).toBeTruthy();
   });
 
-  it("previewed from the library, starts or edits it instead", async () => {
-    await renderWithHang(<WorkoutPreviewScreen id="legs" adding={null} />, hangData(), {
+  it("opened from the library, starts or edits it instead", async () => {
+    await renderWithHang(<WorkoutScreen id="legs" />, hangData(), {
       workouts: [legs],
     });
-    expect(screen.queryByText("Add to plan")).toBeNull();
+    expect(screen.getByText("Start")).toBeTruthy();
     await fireEvent.press(screen.getByText("Edit"));
     expect(router.push).toHaveBeenCalledWith({
       pathname: "/workout/edit",
@@ -163,9 +163,9 @@ describe("adding to the plan", () => {
     });
   });
 
-  it("deletes the user's own workout from its preview's ··· menu, once confirmed", async () => {
+  it("deletes the user's own workout from its ··· menu, once confirmed", async () => {
     const alert = jest.spyOn(Alert, "alert").mockImplementation(() => undefined);
-    await renderWithHang(<WorkoutPreviewScreen id="legs" adding={null} />, hangData(), {
+    await renderWithHang(<WorkoutScreen id="legs" />, hangData(), {
       workouts: [legs],
     });
     expect(screen.queryByText("Delete workout")).toBeNull();

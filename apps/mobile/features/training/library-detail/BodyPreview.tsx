@@ -45,8 +45,7 @@ export function BodyPreview({
   session,
   openExercise,
 }: BodyPreviewProps): React.ReactElement {
-  const summary = bodySummary(workout);
-  if (summary === null) return <DashedPanel body={t("workouts.noBody")} />;
+  if (bodySummary(workout) === null) return <DashedPanel body={t("workouts.noBody")} />;
   const turns = turnsOf(workout.items);
   const items = sessionItems(workout.items, session);
   const timed = items.every((item) => item.dose.onS !== undefined);
@@ -69,7 +68,7 @@ export function BodyPreview({
   };
   return (
     <View style={{ gap: 4 }}>
-      {turns > 1 ? (
+      {turns > 1 && (
         <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
           <Label color={colors.gunmetal} style={{ flex: 1 }}>
             {t("workouts.nextSession")}
@@ -86,8 +85,6 @@ export function BodyPreview({
               .join(" ")}
           </Text>
         </View>
-      ) : (
-        <Label color={colors.gunmetal}>{summary}</Label>
       )}
       {timed && workout.kind !== "hangboard" && (
         <View style={{ flexDirection: "row", paddingVertical: 8 }}>

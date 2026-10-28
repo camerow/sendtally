@@ -11,8 +11,8 @@ import { LibraryShelf } from "./LibraryShelf";
 import { NewWorkoutSheet } from "./NewWorkoutSheet";
 import { useLibrary } from "./useLibrary";
 
-const preview = (w: LibraryWorkout): void =>
-  router.push({ pathname: "/workout/preview", params: { id: w.id } });
+const open = (w: LibraryWorkout): void =>
+  router.push({ pathname: "/workout/[id]", params: { id: w.id } });
 
 function Library(): React.ReactElement {
   const { state, reload } = useLibrary();
@@ -20,13 +20,13 @@ function Library(): React.ReactElement {
   return (
     <View style={{ gap: 14 }}>
       {state.status === "ready" ? (
-        <LibraryBrowser library={state.data} onPick={preview}>
+        <LibraryBrowser library={state.data} onPick={open}>
           {libraryShelves(state.data.workouts, state.data.usage).map((shelf) => (
             <LibraryShelf
               key={focusParam(shelf.focus)}
               shelf={shelf}
               usage={state.data.usage}
-              onPick={preview}
+              onPick={open}
               onSeeAll={() =>
                 router.push({
                   pathname: "/workout/category",

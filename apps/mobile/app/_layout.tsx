@@ -50,7 +50,6 @@ const SIGNED_IN_SCREENS = [
   "membership",
   "workout/[id]",
   "workout/edit",
-  "workout/preview",
   "workout/category",
   "workout/checklist",
   "plan/add",
