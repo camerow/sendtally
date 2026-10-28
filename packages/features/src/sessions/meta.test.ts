@@ -58,6 +58,15 @@ describe("sessionTallyLabel", () => {
     ).toBe("1h 40m · 6 sent · top V6");
     expect(sessionTallyLabel(session({ times: "none", top_send_grade: -1 }))).toBe("0 sent");
   });
+
+  it("leaves out the top send where the row shows it beside", () => {
+    expect(
+      sessionTallyLabel(
+        session({ send_count: 6, top_send_grade: 6, top_send_grade_label: "V6" }),
+        false
+      )
+    ).toBe("1h 40m · 6 sent");
+  });
 });
 
 describe("climbCountLabel", () => {

@@ -18,10 +18,10 @@ export function sessionMetaLabel(session: SessionRow): string {
   ].join(" · ");
 }
 
-/** The log row's line: how long, how many sent, and the hardest send. */
-export function sessionTallyLabel(session: SessionRow): string {
+/** The log row's line: how long, how many sent, and the hardest send unless shown beside it. */
+export function sessionTallyLabel(session: SessionRow, withTop = true): string {
   const top =
-    session.top_send_grade < 0
+    !withTop || session.top_send_grade < 0
       ? []
       : [
           t("sessions.topSend", {
