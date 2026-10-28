@@ -296,6 +296,7 @@ export function toLogSessionInput(draft: LogSessionDraft): LogSessionInput {
       : {
           membershipId: draft.plan.membershipId,
           week: draft.plan.week,
+          focus: draft.plan.focus ?? null,
         }),
     climbs,
   };

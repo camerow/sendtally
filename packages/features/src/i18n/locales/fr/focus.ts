@@ -1,0 +1,28 @@
+export const focus = {
+  "focus.label": "Objectif",
+  "focus.general": "Général",
+  "focus.strength": "Force",
+  "focus.power": "Puissance",
+  "focus.powerEndurance": "Résistance",
+  "focus.endurance": "Endurance",
+  "focus.conditioning": "Condition physique",
+  "focus.skill": "Technique",
+  "focus.recovery": "Récupération",
+  "focus.generalMeaning": "Pas d'objectif unique. Compte comme entraînement général.",
+  "focus.strengthMeaning":
+    "Efforts lourds avec de longues pauses, comme les suspensions max et les gros mouvements.",
+  "focus.powerMeaning": "Mouvements rapides et durs à votre limite, avec des pauses complètes.",
+  "focus.powerEnduranceMeaning": "Efforts durs d'une à quelques minutes avec des pauses courtes.",
+  "focus.enduranceMeaning": "Efforts longs et réguliers avec une légère fatigue, comme l'ARC.",
+  "focus.conditioningMeaning": "La forme au-delà de l'escalade : course, vélo, circuits.",
+  "focus.skillMeaning": "Mouvement et technique, bien en dessous de votre limite.",
+  "focus.recoveryMeaning": "Décharges, jours faciles et mobilité, voulus.",
+  "focus.blockNote":
+    "Les séances ajoutées à ce bloc prennent cet objectif, sauf si elles ont le leur.",
+  "focus.sessionNote": "Ne change que cette séance. La séance type et le bloc gardent le leur.",
+  "focus.keepsOwn": "Garde son propre objectif : {focus}",
+  "focus.takesBlock": "Prend l'objectif du bloc : {focus}",
+  "focus.search": "Rechercher : {focus}",
+  "focus.season": "Cette saison",
+  "focus.thisWeek": "Cette semaine par objectif",
+} as const;

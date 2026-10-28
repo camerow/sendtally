@@ -29,6 +29,7 @@ const squat: Workout = {
     },
   ],
   exerciseRestS: 180,
+  focus: null,
 };
 
 const climbing: Workout = {
@@ -39,7 +40,7 @@ const climbing: Workout = {
 };
 
 const plan: Plan = {
-  blocks: [{ id: "b1", name: "Winter base", start: "2026-11-02", weeks: 6 }],
+  blocks: [{ id: "b1", name: "Winter base", start: "2026-11-02", weeks: 6, focus: null }],
   memberships: [
     // Tuesdays and Fridays.
     { id: "m1", workoutId: "squat", blockId: "b1", weekdays: [1, 4], start: "2026-11-02" },

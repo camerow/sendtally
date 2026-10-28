@@ -2,6 +2,7 @@ import {
   defaultExerciseRestS,
   type BuiltInGrip,
   type Dose,
+  type Focus,
   type Item,
   type WorkoutKind,
 } from "@sendtally/core/hang";
@@ -13,6 +14,7 @@ type ItemSpec = { exercise: MessageKey; doses: Dose[] } | { grip: BuiltInGrip; d
 
 type BuiltIn = {
   id: string;
+  focus: Focus | null;
   kind: WorkoutKind;
   name: MessageKey;
   description: MessageKey;
@@ -33,6 +35,7 @@ const lift = (exercise: MessageKey, ...doses: Dose[]): ItemSpec => ({ exercise, 
 const BUILT_INS: readonly BuiltIn[] = [
   {
     id: "rep73",
+    focus: "power_endurance",
     kind: "hangboard",
     name: "hang.workout.rep73.name",
     description: "hang.workout.rep73.blurb",
@@ -42,6 +45,7 @@ const BUILT_INS: readonly BuiltIn[] = [
   },
   {
     id: "max10",
+    focus: "strength",
     kind: "hangboard",
     name: "hang.workout.max10.name",
     description: "hang.workout.max10.blurb",
@@ -51,6 +55,7 @@ const BUILT_INS: readonly BuiltIn[] = [
   },
   {
     id: "fingers-ab",
+    focus: null,
     kind: "hangboard",
     name: "workouts.builtIn.fingersAb.name",
     description: "workouts.builtIn.fingersAb.blurb",
@@ -66,6 +71,7 @@ const BUILT_INS: readonly BuiltIn[] = [
   },
   {
     id: "block",
+    focus: "strength",
     kind: "hangboard",
     name: "hang.workout.block.name",
     description: "hang.workout.block.blurb",
@@ -75,6 +81,7 @@ const BUILT_INS: readonly BuiltIn[] = [
   },
   {
     id: "density",
+    focus: null,
     kind: "hangboard",
     name: "hang.workout.density.name",
     description: "hang.workout.density.blurb",
@@ -84,6 +91,7 @@ const BUILT_INS: readonly BuiltIn[] = [
   },
   {
     id: "assist",
+    focus: "strength",
     kind: "hangboard",
     name: "hang.workout.assist.name",
     description: "hang.workout.assist.blurb",
@@ -93,6 +101,7 @@ const BUILT_INS: readonly BuiltIn[] = [
   },
   {
     id: "lowpull",
+    focus: "recovery",
     kind: "hangboard",
     name: "hang.workout.lowpull.name",
     description: "hang.workout.lowpull.blurb",
@@ -102,6 +111,7 @@ const BUILT_INS: readonly BuiltIn[] = [
   },
   {
     id: "climb-limit",
+    focus: "power",
     kind: "climbing",
     name: "workouts.builtIn.limit.name",
     description: "workouts.builtIn.limit.blurb",
@@ -111,6 +121,7 @@ const BUILT_INS: readonly BuiltIn[] = [
   },
   {
     id: "climb-4x4",
+    focus: "power_endurance",
     kind: "climbing",
     name: "workouts.builtIn.fourByFour.name",
     description: "workouts.builtIn.fourByFour.blurb",
@@ -120,6 +131,7 @@ const BUILT_INS: readonly BuiltIn[] = [
   },
   {
     id: "climb-arc",
+    focus: "endurance",
     kind: "climbing",
     name: "workouts.builtIn.arc.name",
     description: "workouts.builtIn.arc.blurb",
@@ -129,6 +141,7 @@ const BUILT_INS: readonly BuiltIn[] = [
   },
   {
     id: "strength-squat",
+    focus: "strength",
     kind: "strength",
     name: "workouts.builtIn.squat.name",
     description: "workouts.builtIn.squat.blurb",
@@ -138,6 +151,7 @@ const BUILT_INS: readonly BuiltIn[] = [
   },
   {
     id: "strength-5x5",
+    focus: "strength",
     kind: "strength",
     name: "workouts.builtIn.fiveByFive.name",
     description: "workouts.builtIn.fiveByFive.blurb",
@@ -151,6 +165,7 @@ const BUILT_INS: readonly BuiltIn[] = [
   },
   {
     id: "strength-antagonist",
+    focus: null,
     kind: "strength",
     name: "workouts.builtIn.antagonist.name",
     description: "workouts.builtIn.antagonist.blurb",
@@ -165,6 +180,7 @@ const BUILT_INS: readonly BuiltIn[] = [
   },
   {
     id: "strength-extensors",
+    focus: null,
     kind: "strength",
     name: "workouts.builtIn.extensors.name",
     description: "workouts.builtIn.extensors.blurb",
@@ -178,6 +194,7 @@ const BUILT_INS: readonly BuiltIn[] = [
   },
   {
     id: "mobility-hips",
+    focus: "recovery",
     kind: "mobility",
     name: "workouts.builtIn.hips.name",
     description: "workouts.builtIn.hips.blurb",
@@ -194,6 +211,7 @@ const BUILT_INS: readonly BuiltIn[] = [
   },
   {
     id: "yoga-climbers",
+    focus: "recovery",
     kind: "mobility",
     name: "workouts.builtIn.yoga.name",
     description: "workouts.builtIn.yoga.blurb",
@@ -209,6 +227,7 @@ const BUILT_INS: readonly BuiltIn[] = [
   },
   {
     id: "run-tempo",
+    focus: "conditioning",
     kind: "other",
     name: "workouts.builtIn.tempo.name",
     description: "workouts.builtIn.tempo.blurb",
@@ -221,6 +240,7 @@ const BUILT_INS: readonly BuiltIn[] = [
   },
   {
     id: "other-core",
+    focus: "strength",
     kind: "other",
     name: "workouts.builtIn.core.name",
     description: "workouts.builtIn.core.blurb",
@@ -253,5 +273,6 @@ export function builtInWorkouts(): LibraryWorkout[] {
     targetRpe: w.targetRpe,
     items: w.items.map(itemOf),
     exerciseRestS: defaultExerciseRestS(w.kind),
+    focus: w.focus,
   }));
 }

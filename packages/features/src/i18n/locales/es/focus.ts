@@ -1,0 +1,28 @@
+export const focus = {
+  "focus.label": "Enfoque",
+  "focus.general": "General",
+  "focus.strength": "Fuerza",
+  "focus.power": "Potencia",
+  "focus.powerEndurance": "Resistencia de potencia",
+  "focus.endurance": "Resistencia",
+  "focus.conditioning": "Acondicionamiento",
+  "focus.skill": "Técnica",
+  "focus.recovery": "Recuperación",
+  "focus.generalMeaning": "Sin un único objetivo. Cuenta como entrenamiento general.",
+  "focus.strengthMeaning":
+    "Esfuerzos pesados con descansos largos, como suspensiones máximas y levantamientos grandes.",
+  "focus.powerMeaning": "Movimientos rápidos y duros en tu límite, con descansos completos.",
+  "focus.powerEnduranceMeaning": "Esfuerzos duros de uno a pocos minutos con descansos cortos.",
+  "focus.enduranceMeaning": "Esfuerzos largos y constantes con un bombeo ligero, como el ARC.",
+  "focus.conditioningMeaning": "Forma física más allá de escalar: correr, bici, circuitos.",
+  "focus.skillMeaning": "Movimiento y técnica, muy por debajo de tu límite.",
+  "focus.recoveryMeaning": "Descargas, días suaves y movilidad, a propósito.",
+  "focus.blockNote":
+    "Los entrenos añadidos a este bloque toman este enfoque salvo que tengan el suyo.",
+  "focus.sessionNote": "Solo cambia esta sesión. El entreno y el bloque mantienen el suyo.",
+  "focus.keepsOwn": "Mantiene su propio enfoque: {focus}",
+  "focus.takesBlock": "Toma el enfoque del bloque: {focus}",
+  "focus.search": "Buscar en {focus}",
+  "focus.season": "Esta temporada",
+  "focus.thisWeek": "Esta semana por enfoque",
+} as const;

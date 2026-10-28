@@ -30,6 +30,7 @@ const record = (
   targetRpe: null,
   items: [],
   exerciseRestS: 180,
+  focus: null,
   updatedAt: "2026-10-01T00:00:00Z",
   ...over,
 });
@@ -48,6 +49,7 @@ const legs = record({
   minutes: 50,
   targetRpe: 8,
   items: [{ exercise: "Goblet squat", doses: [{ sets: 3, reps: 8 }] }],
+  focus: "strength",
 });
 
 const stretch = record({
@@ -112,6 +114,7 @@ describe("libraryOf", () => {
       targetRpe: null,
       items: [],
       exerciseRestS: 0,
+      focus: null,
     });
   });
 });
@@ -173,30 +176,42 @@ describe("browseLibrary", () => {
     expect(found[0]?.id).toBe("h-mine");
     expect(found.every((w) => w.kind === "hangboard")).toBe(true);
   });
+
+  it("narrows to one focus, where none is General", () => {
+    const strength = browseLibrary(library(), { text: "", focus: "strength" }, usage);
+    expect(strength[0]?.id).toBe("w-legs");
+    expect(strength.every((w) => w.focus === "strength")).toBe(true);
+    const general = browseLibrary(library(), { text: "", focus: null }, usage);
+    expect(ids(general.filter((w) => w.source === "mine"))).toEqual(["w-stretch", "h-mine"]);
+  });
 });
 
 describe("libraryShelves", () => {
-  it("makes one shelf per category in order, the user's own mixed in first", () => {
+  it("makes one shelf per focus in season order, General last, the user's own first", () => {
     const usage = workoutUsage([{ workoutId: "w-legs", date: "2026-10-06" }], []);
     const shelves = libraryShelves(library(), usage);
-    expect(shelves.map((s) => s.kind)).toEqual(WORKOUT_KINDS);
-    const strength = shelves.find((s) => s.kind === "strength")?.workouts ?? [];
+    expect(shelves.map((s) => s.focus)).toEqual([
+      "strength",
+      "power",
+      "power_endurance",
+      "endurance",
+      "conditioning",
+      "recovery",
+      null,
+    ]);
+    const strength = shelves.find((s) => s.focus === "strength")?.workouts ?? [];
     expect(strength[0]?.id).toBe("w-legs");
     expect(builtInIds(strength)).toEqual(
       builtInWorkouts()
-        .filter((w) => w.kind === "strength")
+        .filter((w) => w.focus === "strength")
         .map((w) => w.id)
     );
-    expect(shelves.every((s) => s.workouts.every((w) => w.kind === s.kind))).toBe(true);
+    expect(shelves.every((s) => s.workouts.every((w) => w.focus === s.focus))).toBe(true);
   });
 
-  it("leaves out a category with nothing in it", () => {
+  it("leaves out a focus with nothing in it", () => {
     const mine = library().filter((w) => w.source === "mine");
-    expect(libraryShelves(mine, new Map()).map((s) => s.kind)).toEqual([
-      "hangboard",
-      "strength",
-      "mobility",
-    ]);
+    expect(libraryShelves(mine, new Map()).map((s) => s.focus)).toEqual(["strength", null]);
   });
 });
 
@@ -270,6 +285,7 @@ describe("summaries", () => {
       ...rep73,
       minutes: 90,
       exerciseRestS: 120,
+      focus: null,
       items: [...rep73.items, ...rep73.items],
     };
     expect(workoutMinutes(twice)).toBe(50);

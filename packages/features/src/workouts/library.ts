@@ -11,12 +11,13 @@ import {
   turnsOf,
   type CalendarDate,
   type Dose,
+  type Focus,
   type Item,
   type Membership,
   type WeightUnit,
   type Workout,
   type WorkoutKind,
-  WORKOUT_KINDS,
+  FOCI,
 } from "@sendtally/core/hang";
 import { weightValue } from "../activities/done";
 import { ACTIVITY_KINDS, kindLabel } from "../activities/format";
@@ -59,6 +60,7 @@ export function newWorkoutDraft(kind: WorkoutKind): WorkoutDraft {
     targetRpe: null,
     items: [],
     exerciseRestS: defaultExerciseRestS(kind),
+    focus: null,
   };
 }
 
@@ -176,6 +178,9 @@ export function workoutUsage(
 
 const fold = (text: string): string => text.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 
+/** Its own focus; none from app builds before focus. */
+const focusOf = (w: LibraryWorkout): Focus | null => w.focus ?? null;
+
 function matches(w: LibraryWorkout, text: string): boolean {
   const words = fold(text).split(/\s+/).filter(Boolean);
   if (words.length === 0) return true;
@@ -186,17 +191,27 @@ function matches(w: LibraryWorkout, text: string): boolean {
 
 const UNUSED: WorkoutUse = { count: 0, last: null };
 
+/** What a search lets through: some kinds only, or one focus only, where null is General. */
+export type LibrarySearch = {
+  text: string;
+  kinds?: readonly WorkoutKind[];
+  focus?: Focus | null;
+};
+
 /**
- * The workouts a search lets through, optionally of some kinds only, in one list: the
- * user's own first, last used first then by name, then the built-ins in their curated order.
+ * The workouts a search lets through, in one list: the user's own first, last used
+ * first then by name, then the built-ins in their curated order.
  */
 export function browseLibrary(
   library: readonly LibraryWorkout[],
-  search: { text: string; kinds?: readonly WorkoutKind[] },
+  search: LibrarySearch,
   usage: ReadonlyMap<string, WorkoutUse>
 ): LibraryWorkout[] {
   const found = library.filter(
-    (w) => (search.kinds === undefined || search.kinds.includes(w.kind)) && matches(w, search.text)
+    (w) =>
+      (search.kinds === undefined || search.kinds.includes(w.kind)) &&
+      (search.focus === undefined || focusOf(w) === search.focus) &&
+      matches(w, search.text)
   );
   const last = (w: LibraryWorkout): string => (usage.get(w.id) ?? UNUSED).last ?? "";
   return [
@@ -207,13 +222,15 @@ export function browseLibrary(
   ];
 }
 
-/** One shelf per category that has a workout, in category order, each as `browseLibrary` orders it. */
+/**
+ * One shelf per focus that has a workout, in the order a season runs and General last,
+ * each as `browseLibrary` orders it.
+ */
 export function libraryShelves(
   library: readonly LibraryWorkout[],
   usage: ReadonlyMap<string, WorkoutUse>
 ): LibraryShelf[] {
-  return WORKOUT_KINDS.map((kind) => ({
-    kind,
-    workouts: browseLibrary(library, { text: "", kinds: [kind] }, usage),
-  })).filter((s) => s.workouts.length > 0);
+  return [...FOCI, null]
+    .map((focus) => ({ focus, workouts: browseLibrary(library, { text: "", focus }, usage) }))
+    .filter((s) => s.workouts.length > 0);
 }

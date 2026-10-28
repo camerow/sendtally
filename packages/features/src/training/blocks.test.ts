@@ -4,7 +4,13 @@ import type { Block } from "@sendtally/core/hang";
 import { blockDone, blockGroups, blockMembers } from "./blocks";
 import type { TrainingLog } from "./days";
 
-const block: Block = { id: "b1", name: "Autumn finger block", start: "2026-09-28", weeks: 3 };
+const block: Block = {
+  id: "b1",
+  name: "Autumn finger block",
+  start: "2026-09-28",
+  weeks: 3,
+  focus: null,
+};
 
 describe("blockMembers", () => {
   it("takes only the block's own memberships", () => {
@@ -23,7 +29,13 @@ describe("blockMembers", () => {
 
 describe("blockGroups", () => {
   it("splits blocks into running, upcoming soonest first, and past latest first", () => {
-    const at = (id: string, start: string): Block => ({ id, name: id, start, weeks: 2 });
+    const at = (id: string, start: string): Block => ({
+      id,
+      name: id,
+      start,
+      weeks: 2,
+      focus: null,
+    });
     const groups = blockGroups(
       [
         at("old", "2026-08-03"),
@@ -80,6 +92,7 @@ describe("blockDone", () => {
         targetRpe: null,
         items: [],
         exerciseRestS: 180,
+        focus: null,
       }),
     };
     expect(blockDone(log, block, "2026-10-30")).toEqual({ done: 1, planned: 3 });

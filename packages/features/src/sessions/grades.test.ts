@@ -30,6 +30,7 @@ function session(overrides: Partial<SessionRow> = {}): SessionRow {
     post_error: null,
     membership_id: null,
     week: null,
+    focus: null,
     tags: [],
     ...overrides,
   };

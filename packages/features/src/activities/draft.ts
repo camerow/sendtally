@@ -1,5 +1,11 @@
 import type { Activity, ActivityKind } from "@sendtally/api-client";
-import { doneAsPrescribed, type ItemDone, type SessionItem } from "@sendtally/core/hang";
+import {
+  doneAsPrescribed,
+  type Focus,
+  type ItemDone,
+  type SessionItem,
+} from "@sendtally/core/hang";
+import { readFocus } from "../training/focus";
 import { cleanDone } from "./done";
 import { ACTIVITY_KINDS, kindLabel } from "./format";
 
@@ -15,6 +21,7 @@ export type ActivityDraft = {
   workoutId: string | null;
   membershipId: string | null;
   week: number | null;
+  focus: Focus | null;
   done: ItemDone[];
   /** Items of `done` unticked before saving, which do not save. */
   skipped: number[];
@@ -28,6 +35,8 @@ export type ActivityPrefill = {
   workoutId?: string;
   membershipId?: string;
   week?: string;
+  /** The focus a run recorded when it started. */
+  focus?: string;
   minutes?: string;
   /** "HH:MM", set when a player timed the run. */
   startTime?: string;
@@ -78,11 +87,15 @@ const parseSkipped = (text: string | undefined): number[] => {
   }
 };
 
-/** `prescribed` is what the workout asks of this session, which the activity starts as done. */
+/**
+ * `prescribed` is what the workout asks of this session, which the activity starts as done.
+ * With no workout, it takes the focus of `dayFocus`, the block running that day.
+ */
 export function newActivityDraft(
   prefill: ActivityPrefill,
   today: string,
-  prescribed: readonly SessionItem[] = []
+  prescribed: readonly SessionItem[] = [],
+  dayFocus: Focus | null = null
 ): ActivityDraft {
   return {
     kind: ACTIVITY_KINDS.find((k) => k === prefill.kind) ?? "strength",
@@ -95,6 +108,7 @@ export function newActivityDraft(
     workoutId: prefill.workoutId ?? null,
     membershipId: prefill.membershipId ?? null,
     week: wholeNumber(prefill.week),
+    focus: readFocus(prefill.focus) ?? (prefill.workoutId === undefined ? dayFocus : null),
     done: parseDone(prefill.done) ?? doneAsPrescribed(prescribed),
     skipped: parseSkipped(prefill.skipped),
   };
@@ -112,6 +126,7 @@ export function draftFromActivity(a: Activity): ActivityDraft {
     workoutId: a.workoutId,
     membershipId: a.membershipId,
     week: a.week,
+    focus: a.focus ?? null,
     done: a.done,
     skipped: [],
   };
@@ -133,6 +148,7 @@ export function activityFromDraft(id: string, d: ActivityDraft): Activity {
     workoutId: d.workoutId,
     membershipId: d.membershipId,
     week: d.week,
+    focus: d.focus,
     done: cleanDone(d.done.filter((x) => !d.skipped.includes(x.item))),
   };
 }

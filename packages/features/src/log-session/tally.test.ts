@@ -36,13 +36,14 @@ describe("tally", () => {
     expect(tallySummary(start)).toBe("No climbs yet");
   });
 
-  it("starts at the clock with the gym and plan, and puts a circuit climb at its gym", () => {
-    const plan = { membershipId: "m1", week: 2 };
+  it("starts at the clock with the gym, plan and focus, and puts a circuit climb at its gym", () => {
+    const plan = { membershipId: "m1", week: 2, focus: "power" as const };
     const draft = tallyDraft(NOW, { plan });
     expect(draft).toMatchObject({ startTime: "18:30", plan, climbs: [] });
     expect(toLogSessionInput({ ...draft, climbs: [] })).toMatchObject({
       membershipId: "m1",
       week: 2,
+      focus: "power",
     });
 
     const circuit = { id: "c1", colour: "blue", label: "Blue", low: 3, high: 5 } as const;

@@ -3,7 +3,7 @@ import type { Block, Membership } from "@sendtally/core/hang";
 import { movedTo, newSchedule, scheduledMemberships, scheduleReady, toggled } from "./schedule";
 
 const TODAY = "2026-10-22";
-const block: Block = { id: "b1", name: "Winter base", start: "2026-11-02", weeks: 6 };
+const block: Block = { id: "b1", name: "Winter base", start: "2026-11-02", weeks: 6, focus: null };
 
 const ids = (): (() => string) => {
   let n = 0;

@@ -2,11 +2,13 @@ import type { Plan } from "@sendtally/api-client";
 import {
   addDays,
   blockWeekOn,
+  focusOf,
   occursOn,
   prescription,
   type Block,
   type CalendarDate,
   type Membership,
+  type PlanLink,
   type SessionItem,
   type Workout,
   type WorkoutKind,
@@ -42,6 +44,13 @@ export type Occurrence = {
 };
 
 export type WorkoutLookup = (id: string) => Workout | undefined;
+
+/** The plan a run of the occurrence logs against, and the focus it records. */
+export const occurrenceLink = (o: Occurrence): PlanLink => ({
+  membershipId: o.membership.id,
+  week: o.week,
+  focus: focusOf(o.workout, o.block),
+});
 
 export const blockOfMembership = (plan: Plan, m: Pick<Membership, "blockId">): Block | null =>
   m.blockId === null ? null : (plan.blocks.find((b) => b.id === m.blockId) ?? null);

@@ -8,6 +8,7 @@ import { calendar } from "./calendar";
 import { climbs } from "./climbs";
 import { common } from "./common";
 import { endurance } from "./endurance";
+import { focus } from "./focus";
 import { gyms } from "./gyms";
 import { hang } from "./hang";
 import { importCsv } from "./importCsv";
@@ -37,6 +38,7 @@ export const es = {
   ...climbs,
   ...common,
   ...endurance,
+  ...focus,
   ...gyms,
   ...hang,
   ...importCsv,

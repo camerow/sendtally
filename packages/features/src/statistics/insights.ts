@@ -1,14 +1,21 @@
 import type { SessionLogWithClimbs } from "@sendtally/api-client";
-import { totalSeconds } from "@sendtally/core/hang";
+import { FOCI, totalSeconds, type Focus } from "@sendtally/core/hang";
 import { t } from "../i18n";
 import { durationLabel } from "../log-session/transforms";
+import { focusLabel } from "../training/focus";
 import { isUnscored } from "../sessions/meta";
 import { DAY_MS, bucketsFor, windowOf } from "../trends/buckets";
 import type { TrendRange } from "../trends/types";
 import { exerciseSeries, type ExerciseMetric } from "./exercises";
 import { ACTIVITY_KINDS, kindName, oneDecimal, type ActivityKind } from "./overview";
 
-type Done = { kind: ActivityKind; at: number; rpe: number | null; minutes: number };
+type Done = {
+  kind: ActivityKind;
+  focus: Focus | null;
+  at: number;
+  rpe: number | null;
+  minutes: number;
+};
 
 export type InsightsPointVM = {
   label: string;
@@ -17,7 +24,12 @@ export type InsightsPointVM = {
   effort: number | null;
 };
 
-export type TrainedKindVM = { kind: ActivityKind; name: string; share: number; detail: string };
+type TrainedVM = { name: string; share: number; detail: string };
+
+export type TrainedKindVM = TrainedVM & { kind: ActivityKind };
+
+/** A focus's share of what was trained, General for sessions with none. */
+export type TrainedFocusVM = TrainedVM & { focus: Focus | null };
 
 export type ExerciseTrendVM = {
   key: string;
@@ -40,6 +52,8 @@ export type TrainingInsightsVM = {
   line: string;
   points: InsightsPointVM[];
   trained: TrainedKindVM[];
+  /** Every focus trained, in season order, then General. */
+  byFocus: TrainedFocusVM[];
   total: string;
   exercises: ExerciseGroupVM[];
 };
@@ -51,18 +65,21 @@ function doneOf(log: SessionLogWithClimbs): Done[] {
   return [
     ...log.sessions.map((s): Done => ({
       kind: "climbing",
+      focus: s.focus ?? null,
       at: Date.parse(s.start_at),
       rpe: isUnscored(s) ? null : s.rpe,
       minutes: s.times === "both" ? minutesBetween(s.start_at, s.end_at) : 0,
     })),
     ...log.hangSessions.map((h): Done => ({
       kind: "hangboard",
+      focus: h.focus ?? null,
       at: Date.parse(h.date),
       rpe: h.rpe,
       minutes: Math.round(totalSeconds(h.protocol) / 60),
     })),
     ...log.activities.map((a): Done => ({
       kind: a.kind,
+      focus: a.focus ?? null,
       at: Date.parse(a.date),
       rpe: a.rpe,
       minutes: a.minutes,
@@ -117,6 +134,28 @@ function hangTrends(
     .sort((a, b) => b.count - a.count);
 }
 
+/** Each group's share of the sessions and its time, leaving out groups with none. */
+function mix<K>(
+  shown: readonly Done[],
+  keys: readonly K[],
+  keyOf: (d: Done) => K,
+  name: (k: K) => string
+): (TrainedVM & { key: K })[] {
+  return keys.flatMap((key) => {
+    const of = shown.filter((d) => keyOf(d) === key);
+    if (of.length === 0) return [];
+    const time = of.reduce((n, d) => n + d.minutes, 0);
+    return [
+      {
+        key,
+        name: name(key),
+        share: of.length / shown.length,
+        detail: time === 0 ? String(of.length) : `${of.length} · ${durationLabel(time)}`,
+      },
+    ];
+  });
+}
+
 /**
  * Training over a range: effort and sessions per bucket, the mix of kinds by sessions and time,
  * and each exercise grouped by kind, the most done first, with its change on its own metric.
@@ -168,19 +207,14 @@ export function trainingInsightsVM(
       const inside = shown.filter((d) => d.at >= b.start && d.at < b.end);
       return { label: b.label, axis: b.axis, sessions: inside.length, effort: effortOf(inside) };
     }),
-    trained: ACTIVITY_KINDS.flatMap((kind) => {
-      const of = shown.filter((d) => d.kind === kind);
-      if (of.length === 0) return [];
-      const time = of.reduce((n, d) => n + d.minutes, 0);
-      return [
-        {
-          kind,
-          name: kindName(kind),
-          share: of.length / shown.length,
-          detail: time === 0 ? String(of.length) : `${of.length} · ${durationLabel(time)}`,
-        },
-      ];
-    }),
+    trained: mix(shown, ACTIVITY_KINDS, (d) => d.kind, kindName).map(({ key, ...k }) => ({
+      ...k,
+      kind: key,
+    })),
+    byFocus: mix(shown, [...FOCI, null], (d) => d.focus, focusLabel).map(({ key, ...f }) => ({
+      ...f,
+      focus: key,
+    })),
     total: [
       t("statistics.sessionCount", { count: shown.length }),
       ...(minutes === 0 ? [] : [durationLabel(minutes)]),

@@ -1,5 +1,5 @@
 import type { Activity, HangSessionRecord, Plan, SessionRow } from "@sendtally/api-client";
-import { addDays, type CalendarDate, type WorkoutKind } from "@sendtally/core/hang";
+import { addDays, type CalendarDate, type Focus, type WorkoutKind } from "@sendtally/core/hang";
 import { utcDate } from "../log-session/transforms";
 import { isUnscored } from "../sessions/meta";
 import { occurrencesOn, type LoggedSession, type Occurrence, type WorkoutLookup } from "./plan";
@@ -97,6 +97,10 @@ export function itemEffort(item: LoggedItem): number | null {
 /** The kind of training a logged item is. */
 export const loggedKind = (item: LoggedItem): WorkoutKind =>
   item.kind === "activity" ? item.activity.kind : item.kind === "hang" ? "hangboard" : "climbing";
+
+/** The focus a logged item recorded; none from app builds before focus. */
+export const loggedFocus = (item: LoggedItem): Focus | null =>
+  (item.kind === "activity" ? item.activity.focus : item.session.focus) ?? null;
 
 export type DayMarkSpec = { kind: WorkoutKind; filled: boolean };
 

@@ -5,6 +5,7 @@ export {
   type ExerciseGroupVM,
   type ExerciseTrendVM,
   type InsightsPointVM,
+  type TrainedFocusVM,
   type TrainedKindVM,
   type TrainingInsightsVM,
 } from "./insights";

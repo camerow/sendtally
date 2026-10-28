@@ -491,6 +491,7 @@ function session(overrides: Partial<SessionDetail> = {}): SessionDetail {
     post_error: null,
     membership_id: null,
     week: null,
+    focus: null,
     tags: [{ id: "t1", name: "Endurance", slug: "endurance" }],
     climbs: [
       {

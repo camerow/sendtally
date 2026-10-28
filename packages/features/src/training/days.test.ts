@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { Activity, HangSessionRecord, Plan, SessionRow } from "@sendtally/api-client";
 import type { Protocol, Workout } from "@sendtally/core/hang";
 import { dayMarks, trainingDay, trainingWeek, weekDone, type TrainingLog } from "./days";
+import { focusCounts } from "./focus";
 
 const TODAY = "2026-10-01";
 
@@ -33,6 +34,7 @@ function climb(start_at: string, overrides: Partial<SessionRow> = {}): SessionRo
     post_error: null,
     membership_id: null,
     week: null,
+    focus: null,
     tags: [],
     ...overrides,
   };
@@ -62,6 +64,7 @@ function hang(date: string, overrides: Partial<HangSessionRecord> = {}): HangSes
     protocol,
     membershipId: null,
     week: null,
+    focus: null,
     done: [],
     stravaActivityId: null,
     postState: null,
@@ -83,6 +86,7 @@ const activity = (date: string, overrides: Partial<Activity> = {}): Activity => 
   workoutId: null,
   membershipId: null,
   week: null,
+  focus: null,
   done: [],
   ...overrides,
 });
@@ -97,6 +101,7 @@ const workouts: Workout[] = [
     targetRpe: null,
     items: [{ exercise: "half", doses: [{ sets: 6, reps: 6, onS: 7 }] }],
     exerciseRestS: 180,
+    focus: null,
   },
   {
     id: "legs",
@@ -107,6 +112,7 @@ const workouts: Workout[] = [
     targetRpe: null,
     items: [],
     exerciseRestS: 180,
+    focus: null,
   },
   {
     id: "limit",
@@ -117,6 +123,7 @@ const workouts: Workout[] = [
     targetRpe: null,
     items: [],
     exerciseRestS: 180,
+    focus: null,
   },
 ];
 
@@ -220,6 +227,24 @@ describe("weekDone", () => {
 
   it("is nothing of nothing on an empty week", () => {
     expect(done(log({ plan: nothingPlanned }))).toEqual({ done: 0, planned: 0 });
+  });
+});
+
+describe("focusCounts", () => {
+  it("counts the week's sessions by focus in season order, leaving out unset ones", () => {
+    const week = trainingWeek(
+      log({
+        climbs: [climb("2026-09-30T18:00:00.000Z", { focus: "power" })],
+        hangs: [hang("2026-09-28", { focus: "strength" }), hang("2026-09-29")],
+        activities: [activity("2026-09-29", { focus: "power" }), activity("2026-09-21")],
+      }),
+      "2026-09-28",
+      TODAY
+    );
+    expect(focusCounts(week)).toEqual([
+      { focus: "strength", count: 1 },
+      { focus: "power", count: 2 },
+    ]);
   });
 });
 

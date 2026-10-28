@@ -2,6 +2,7 @@ export {
   climbDate,
   dayMarks,
   itemEffort,
+  loggedFocus,
   loggedKind,
   loggedSessions,
   trainingDay,
@@ -16,6 +17,7 @@ export { blockDone, blockGroups, blockMembers, type BlockGroups } from "./blocks
 export {
   blockOfMembership,
   nextOccurrence,
+  occurrenceLink,
   occurrencesOn,
   sessionsOf,
   withoutBlock,
@@ -54,3 +56,11 @@ export {
   trainingReminders,
   type TrainingReminder,
 } from "./reminders";
+export {
+  focusCounts,
+  focusLabel,
+  focusMeaning,
+  focusParam,
+  readFocus,
+  type FocusCount,
+} from "./focus";

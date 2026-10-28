@@ -38,6 +38,7 @@ function climbing(
     post_error: null,
     membership_id: null,
     week: null,
+    focus: null,
     tags: [],
     climbs: [],
     ...extra,
@@ -68,6 +69,7 @@ function hang(date: string, rpe: number | null, loadKg = 4): HangHistoryRow {
     stravaActivityId: null,
     membershipId: null,
     week: null,
+    focus: null,
     done: [],
     postState: null,
     postError: null,
@@ -87,6 +89,7 @@ const lift = (date: string, weightKg: number): Logged => ({
   workoutId: null,
   membershipId: null,
   week: null,
+  focus: null,
   done: [{ item: 0, exercise: "Back squat", sets: [{ reps: 5, weightKg }] }],
 });
 
@@ -139,6 +142,20 @@ describe("trainingInsightsVM", () => {
       ["strength", 2 / 7],
     ]);
     expect(vm.trained[2]?.detail).toBe("2 · 1h 20m");
+  });
+
+  it("splits it by focus too, in season order with General for none last", () => {
+    const focused = {
+      ...log,
+      hangSessions: [{ ...hang("2026-10-16", 6), focus: "power_endurance" as const }],
+      activities: [{ ...lift("2026-10-19", 110), focus: "strength" as const }],
+    };
+    const vm = trainingInsightsVM(focused, "1m", ACTIVITY_KINDS, grip, NOW);
+    expect(vm.byFocus.map((f) => [f.focus, f.name, f.share])).toEqual([
+      ["strength", "Strength", 1 / 5],
+      ["power_endurance", "Power endurance", 1 / 5],
+      [null, "General", 3 / 5],
+    ]);
   });
 
   it("groups exercises by kind with their change on their own metric", () => {

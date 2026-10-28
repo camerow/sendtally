@@ -37,6 +37,7 @@ const mine: LibraryWorkout = {
   targetRpe: null,
   items: [{ exercise: "g1", doses: [{ sets: 3, reps: 6, onS: 7, offS: 3, edgeMm: 18 }] }],
   exerciseRestS: 180,
+  focus: null,
 };
 
 const model = (overrides: Partial<HangData> = {}) =>
@@ -135,6 +136,7 @@ describe("setup", () => {
     },
     membershipId: null,
     week: null,
+    focus: null,
     done: [],
     stravaActivityId: null,
     postState: null,

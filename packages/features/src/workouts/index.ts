@@ -15,6 +15,7 @@ export {
   workoutMinutes,
   workoutUsage,
 } from "./library";
+export type { LibrarySearch } from "./library";
 export type {
   LibraryShelf,
   LibrarySource,
