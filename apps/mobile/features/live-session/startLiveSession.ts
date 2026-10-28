@@ -27,6 +27,7 @@ export function startLiveSession(link?: PlanLink, name?: string): void {
   }
   Alert.alert(t("tally.replaceTitle"), t("tally.replaceBody"), [
     { text: t("common.cancel"), style: "cancel" },
+    { text: t("tally.resumeAction"), onPress: () => router.push("/session/live") },
     {
       text: t("tally.replaceAction"),
       style: "destructive",

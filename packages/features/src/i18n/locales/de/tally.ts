@@ -25,4 +25,5 @@ export const tally = {
   "tally.replaceTitle": "Es läuft schon eine Session",
   "tally.replaceBody": "Eine neue zu starten verwirft sie, mit allen Klettereien darin.",
   "tally.replaceAction": "Verwerfen und neu starten",
+  "tally.resumeAction": "Laufende Session fortsetzen",
 } as const;

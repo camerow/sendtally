@@ -25,4 +25,5 @@ export const tally = {
   "tally.replaceTitle": "Une séance est déjà en cours",
   "tally.replaceBody": "En commencer une nouvelle la supprime, avec toutes ses lignes.",
   "tally.replaceAction": "Supprimer et recommencer",
+  "tally.resumeAction": "Reprendre la session en cours",
 } as const;

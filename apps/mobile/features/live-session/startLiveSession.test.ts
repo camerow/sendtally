@@ -56,6 +56,16 @@ describe("startLiveSession", () => {
     expect(liveSessionStorage.read()).not.toBeNull();
   });
 
+  it("resumes the running session instead, keeping it", () => {
+    writeStoredDraft(liveSessionStorage, tallyDraft(new Date()), new Date());
+    startLiveSession(PLAN, "Limit bouldering");
+    lastButtons()
+      .find((b) => b.style === undefined)
+      ?.onPress?.();
+    expect(liveSessionStorage.read()).not.toBeNull();
+    expect(router.push).toHaveBeenCalledWith("/session/live");
+  });
+
   it("discards the running session and starts the new one once agreed", () => {
     writeStoredDraft(liveSessionStorage, tallyDraft(new Date()), new Date());
     startLiveSession(PLAN, "Limit bouldering");

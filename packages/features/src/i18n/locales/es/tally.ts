@@ -25,4 +25,5 @@ export const tally = {
   "tally.replaceTitle": "Ya hay una sesión en curso",
   "tally.replaceBody": "Empezar una nueva la descarta, con todas sus escaladas.",
   "tally.replaceAction": "Descartar y empezar otra",
+  "tally.resumeAction": "Seguir con la sesión actual",
 } as const;
