@@ -1,6 +1,13 @@
 import { climbDiscipline, climbRank, isEndurance, type Discipline } from "@sendtally/core";
-import type { ClimbSummary, SessionClimb, SessionWithClimbs } from "@sendtally/api-client";
-import { utcDate } from "../log-session/transforms";
+import type {
+  Activity,
+  ClimbSummary,
+  SessionClimb,
+  SessionWithClimbs,
+} from "@sendtally/api-client";
+import type { SetClimb } from "@sendtally/core/hang";
+import { activityAt } from "../activities/format";
+import { draftGrade, utcDate, vGradeOf } from "../log-session/transforms";
 import { gradeFormatterFor } from "../sessions/grades";
 import { bucketsFor, windowOf } from "../trends/buckets";
 import type { TrendRange } from "../trends/types";
@@ -30,13 +37,49 @@ export type ClimbingInsightsVM = {
 
 type Tried = { rank: number; name: string; sent: boolean; flashed: boolean; sentAt: string | null };
 
-const graded = (c: SessionClimb): boolean => !isEndurance(c) && climbRank(c) >= 0;
+type InsightsClimb = Pick<
+  SessionClimb,
+  "name" | "kind" | "style" | "vGrade" | "grade" | "endurance"
+>;
 
-const placed = (s: SessionWithClimbs, place: ClimbPlaceFilter): boolean =>
+/** What the insights read of a session: where and when, and its climbs. */
+export type InsightsSession = Pick<SessionWithClimbs, "fingerprint" | "start_at" | "location"> & {
+  climbs: readonly InsightsClimb[];
+};
+
+const insightsClimb = (c: SetClimb): InsightsClimb => ({
+  name: c.name ?? "",
+  kind: c.sent ? "send" : "attempt",
+  ...(c.sent ? { style: c.style ?? (c.tries === 1 ? "flash" : "redpoint") } : {}),
+  vGrade: vGradeOf(c.grade, c.scale) ?? -1,
+  grade: draftGrade(c.grade, c.scale),
+});
+
+/** Each workout's tally climbs as an indoor session on its day, so they count with the rest. */
+export function workoutClimbSessions(
+  activities: readonly Pick<Activity, "id" | "date" | "startTime" | "done">[]
+): InsightsSession[] {
+  return activities.flatMap((a) => {
+    const climbs = a.done.flatMap((d) => d.sets.flatMap((s) => s.climbs ?? []));
+    if (climbs.length === 0) return [];
+    return [
+      {
+        fingerprint: a.id,
+        start_at: activityAt(a),
+        location: "indoor" as const,
+        climbs: climbs.map(insightsClimb),
+      },
+    ];
+  });
+}
+
+const graded = (c: InsightsClimb): boolean => !isEndurance(c) && climbRank(c) >= 0;
+
+const placed = (s: InsightsSession, place: ClimbPlaceFilter): boolean =>
   place === "all" || (place === "outdoor") === (s.location === "outdoor");
 
 /** The discipline with the most graded climbs logged, boulder on a tie. */
-export function mainDiscipline(sessions: readonly SessionWithClimbs[]): Discipline {
+export function mainDiscipline(sessions: readonly InsightsSession[]): Discipline {
   const climbs = sessions.flatMap((s) => s.climbs.filter(graded));
   const routes = climbs.filter((c) => climbDiscipline(c) === "route").length;
   return routes * 2 > climbs.length ? "route" : "boulder";
@@ -46,7 +89,7 @@ export function mainDiscipline(sessions: readonly SessionWithClimbs[]): Discipli
  * Each climb tried in the window once: a named climb is one climb however many sessions it
  * took, sent if any of them sent it; an unnamed one counts on its own.
  */
-function triedIn(sessions: readonly SessionWithClimbs[], discipline: Discipline): Tried[] {
+function triedIn(sessions: readonly InsightsSession[], discipline: Discipline): Tried[] {
   const byKey = new Map<string, Tried>();
   const ordered = [...sessions].sort((a, b) => a.start_at.localeCompare(b.start_at));
   for (const s of ordered) {
@@ -69,7 +112,7 @@ function triedIn(sessions: readonly SessionWithClimbs[], discipline: Discipline)
 
 /** Climbing over a range, in one discipline and place: the tiles, the pyramid and the top send. */
 export function climbingInsightsVM(
-  sessions: readonly SessionWithClimbs[],
+  sessions: readonly InsightsSession[],
   climbs: readonly ClimbSummary[],
   filter: ClimbingInsightsFilter,
   now: Date = new Date()

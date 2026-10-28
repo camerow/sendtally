@@ -1,11 +1,16 @@
 import React from "react";
 import { ScrollView, Text, View } from "react-native";
-import { fromUnit, toUnit, type WeightUnit } from "@sendtally/core/hang";
+import { fromUnit, toUnit, type ItemDone, type WeightUnit } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
-import { seriesPoint, setText } from "@sendtally/features/activities";
+import { climbsTotal, seriesPoint, setText } from "@sendtally/features/activities";
 import { shortDate } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
-import type { ExerciseSeries } from "@sendtally/features/statistics";
+import {
+  exerciseKey,
+  isClimbingMetric,
+  type ExerciseMetric,
+  type ExerciseSeries,
+} from "@sendtally/features/statistics";
 import { Chip } from "../../../components/Chip";
 import { Label } from "../components/Label";
 import { Title } from "../components/Title";
@@ -18,11 +23,28 @@ export type OverTimeProps = {
   /** The series of the exercises this session did, in its order. */
   series: readonly ExerciseSeries[];
   activityId: string;
+  /** What this session did, which a climbing exercise reads its sends from. */
+  done: readonly ItemDone[];
   unit: WeightUnit;
 };
 
-/** One exercise at a time: its best set per session, this session in gold. */
-export function OverTime({ series, activityId, unit }: OverTimeProps): React.ReactElement | null {
+const headerOf = (metric: ExerciseMetric): string =>
+  metric === "sends"
+    ? t("common.sent")
+    : metric === "laps"
+      ? t("summary.laps")
+      : t("summary.bestSet");
+
+/**
+ * One exercise at a time: its best set per session, this session in gold. A climbing
+ * exercise charts its sends per session, or its laps on the wall.
+ */
+export function OverTime({
+  series,
+  activityId,
+  done,
+  unit,
+}: OverTimeProps): React.ReactElement | null {
   const [picked, setPicked] = React.useState(series[0]?.key);
   const shown = series.find((s) => s.key === picked) ?? series[0];
   const point = shown === undefined ? null : seriesPoint(shown, activityId);
@@ -32,13 +54,22 @@ export function OverTime({ series, activityId, unit }: OverTimeProps): React.Rea
   const text = (v: number): string => metricText(load ? fromUnit(v, unit) : v, shown.metric, unit);
   const change = point.change === null ? null : changeText(point.change, unit);
   const first = shown.sessions[0];
+  const climbs = climbsTotal(done.find((d) => exerciseKey(d.exercise) === shown.key)?.sets ?? []);
+  const headline =
+    shown.metric === "sends"
+      ? t("summary.sentOf", { sent: climbs.sent, of: climbs.climbs })
+      : shown.metric === "laps"
+        ? t("tally.lapCount", { count: climbs.climbs })
+        : at === undefined
+          ? ""
+          : setText(at.best, unit);
 
   return (
     <View style={{ gap: 12, paddingTop: 4 }}>
       <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
         <Label color={colors.gunmetal}>{t("summary.overTime")}</Label>
         <Text style={[type.mono, { fontSize: 12, color: colors.textSecondary }]}>
-          {t("summary.bestSet")}
+          {headerOf(shown.metric)}
         </Text>
       </View>
       {series.length > 1 && (
@@ -65,7 +96,14 @@ export function OverTime({ series, activityId, unit }: OverTimeProps): React.Rea
         }}
       >
         <View style={{ flexDirection: "row", justifyContent: "space-between", gap: 8 }}>
-          <Title size={24}>{at === undefined ? "" : setText(at.best, unit)}</Title>
+          <View style={{ flex: 1, gap: 2 }}>
+            <Title size={24}>{headline}</Title>
+            {isClimbingMetric(shown.metric) && climbs.top !== null && (
+              <Text style={[type.mono, { fontSize: 12, color: colors.textSecondary }]}>
+                {t("sessions.topSend", { grade: climbs.top })}
+              </Text>
+            )}
+          </View>
           {change !== null && (
             <Text style={[type.monoBold, { fontSize: 11.5, color: colors.fern }]}>
               {point.bestYet ? `${change} · ${t("summary.bestYet")}` : change}

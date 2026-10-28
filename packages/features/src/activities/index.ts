@@ -33,6 +33,16 @@ export {
   weightValue,
 } from "./done";
 export { doneOfRun, intervalsSummary, stepDose } from "./intervals";
+export {
+  climbingDoseLine,
+  climbingLastTime,
+  climbsLine,
+  climbsTotal,
+  isClimbingSets,
+  wallChip,
+  wallLine,
+  type ClimbsTotal,
+} from "./climbing";
 export { useExerciseNames } from "./useExerciseNames";
 export { useWeightUnit } from "./useWeightUnit";
 export { stravaState, type PostFields, type StravaState } from "./post";

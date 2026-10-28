@@ -61,4 +61,10 @@ export const activities = {
   "activities.removeLastSetBody": "That is its last set, so the exercise comes out of this log.",
   "activities.editSets": "Edit {exercise}",
   "activities.kindFingers": "Fingers",
+  "activities.setsOfClimbs_one": "{count} set of {climbs} climbs",
+  "activities.setsOfClimbs_other": "{count} sets of {climbs} climbs",
+  "activities.onTheWall": "{time} on the wall",
+  "activities.lastTimeLine": "Last time: {summary}",
+  "activities.circuitNamed": "{name} circuit",
+  "activities.resume": "Resume",
 } as const;

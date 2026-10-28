@@ -5,6 +5,7 @@ import {
   climbingInsightsVM,
   mainDiscipline,
   useClimbs,
+  workoutClimbSessions,
   type ClimbPlaceFilter,
 } from "@sendtally/features/climbs";
 import { t } from "@sendtally/features/i18n";
@@ -34,7 +35,10 @@ const sectionLabel = {
   color: colors.gunmetal,
 } as const;
 
-/** Days outside, sends, flashes and projects, the pyramid of what was sent, and the top send. */
+/**
+ * Days outside, sends, flashes and projects, the pyramid of what was sent, and the top send,
+ * counting the climbs workouts logged on the tally alongside the sessions.
+ */
 export function ClimbingInsightsScreen(): React.ReactElement {
   const { state } = useClimbs(useApi());
   const member = useCanSeeInsights();
@@ -43,18 +47,21 @@ export function ClimbingInsightsScreen(): React.ReactElement {
   const [place, setPlace] = React.useState<ClimbPlaceFilter>("all");
   const range = shownRange(member, picked);
   const ready = state.status === "ready" ? state.data : null;
-  const shownDiscipline =
-    discipline ?? (ready === null ? "boulder" : mainDiscipline(ready.sessions));
+  const sessions = React.useMemo(
+    () => (ready === null ? [] : [...ready.sessions, ...workoutClimbSessions(ready.activities)]),
+    [ready]
+  );
+  const shownDiscipline = discipline ?? mainDiscipline(sessions);
   const vm = React.useMemo(
     () =>
       ready === null
         ? null
-        : climbingInsightsVM(ready.sessions, ready.climbs, {
+        : climbingInsightsVM(sessions, ready.climbs, {
             range,
             discipline: shownDiscipline,
             place,
           }),
-    [ready, range, shownDiscipline, place]
+    [ready, sessions, range, shownDiscipline, place]
   );
 
   return (

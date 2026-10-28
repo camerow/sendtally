@@ -1,8 +1,16 @@
 import type { Activity } from "@sendtally/api-client";
 import { daysBetween, type CalendarDate, type SetDone, type Workout } from "@sendtally/core/hang";
 
-/** What an exercise's best set is judged on: the heaviest load, the longest hold, or the most reps. */
-export type ExerciseMetric = "load" | "seconds" | "reps";
+/**
+ * What an exercise's best set is judged on: the heaviest load, the longest hold, or the most
+ * reps. A climbing exercise logged on the tally counts its sends, or its laps on the wall,
+ * over the whole session.
+ */
+export type ExerciseMetric = "load" | "seconds" | "reps" | "sends" | "laps";
+
+/** A metric counted over every set of a session rather than taken from its best one. */
+export const isClimbingMetric = (metric: ExerciseMetric): boolean =>
+  metric === "sends" || metric === "laps";
 
 export type ExerciseSession = {
   activityId: string;
@@ -56,8 +64,16 @@ export function epley(loadKg: number, reps: number): number {
   return reps === 1 ? loadKg : loadKg * (1 + reps / 30);
 }
 
-export const valueOf = (set: SetDone, metric: ExerciseMetric): number | undefined =>
-  metric === "load" ? set.weightKg : metric === "seconds" ? set.onS : set.reps;
+export function valueOf(set: SetDone, metric: ExerciseMetric): number | undefined {
+  if (metric === "load") return set.weightKg;
+  if (metric === "seconds") return set.onS;
+  if (metric === "sends") return set.climbs?.filter((c) => c.sent).length;
+  return metric === "laps" ? set.climbs?.length : set.reps;
+}
+
+/** The metric over every set: what a climbing exercise's session counts. */
+export const metricTotal = (sets: readonly SetDone[], metric: ExerciseMetric): number =>
+  sets.reduce((n, s) => n + (valueOf(s, metric) ?? 0), 0);
 
 function better(a: SetDone, b: SetDone, metric: ExerciseMetric): boolean {
   const [va, vb] = [valueOf(a, metric) ?? -Infinity, valueOf(b, metric) ?? -Infinity];
@@ -86,7 +102,11 @@ function sessionOf(
   metric: ExerciseMetric
 ): ExerciseSession | null {
   const best = bestOf(sets, metric);
-  const value = best === undefined ? undefined : valueOf(best, metric);
+  const value = isClimbingMetric(metric)
+    ? metricTotal(sets, metric)
+    : best === undefined
+      ? undefined
+      : valueOf(best, metric);
   if (best === undefined || value === undefined) return null;
   const done = lifts(sets);
   return {
@@ -100,6 +120,8 @@ function sessionOf(
 }
 
 export function metricOf(sets: readonly SetDone[]): ExerciseMetric {
+  if (sets.some((s) => s.climbs !== undefined))
+    return sets.some((s) => s.onS !== undefined) ? "laps" : "sends";
   if (sets.some((s) => s.weightKg !== undefined)) return "load";
   return sets.some((s) => s.onS !== undefined) ? "seconds" : "reps";
 }

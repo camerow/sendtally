@@ -163,6 +163,36 @@ describe("A finished workout's summary", () => {
     expect(screen.getByText("effort")).toBeTruthy();
   });
 
+  it("reads a climbing workout's climbs per set and its time on the wall, against last time", async () => {
+    const v = (grade: string, sent = true) => ({ grade, scale: "v" as const, tries: 1, sent });
+    const green = { ...v("V1"), circuit: { id: "g", label: "Green", colour: "green" } };
+    const climbing = (id: string, date: string, sends: boolean[], laps: number) =>
+      activity(id, date, {
+        kind: "climbing",
+        title: "Power endurance",
+        done: [
+          { item: 0, exercise: "4x4s", sets: [{ climbs: sends.map((sent) => v("V4", sent)) }] },
+          {
+            item: 1,
+            exercise: "ARC",
+            sets: [{ onS: 1200, climbs: Array.from({ length: laps }, () => green) }],
+          },
+        ],
+      });
+    await show("c2", [
+      climbing("c2", "2026-10-28", [true, true, true, false], 18),
+      climbing("c1", "2026-10-21", [true, false, false, false], 15),
+    ]);
+    expect(screen.getByText("Climbing · Wed, Oct 28")).toBeTruthy();
+    expect(screen.getByText("+2 sent vs last")).toBeTruthy();
+    expect(screen.getByText("4 climbs · 3 sent · top V4")).toBeTruthy();
+    expect(screen.getAllByLabelText("V4, Not yet")).toHaveLength(1);
+    expect(screen.getByText("+3 laps vs last")).toBeTruthy();
+    expect(screen.getByText("20:00 · 18 laps")).toBeTruthy();
+    expect(screen.getByText("20:00 on the wall · Green circuit")).toBeTruthy();
+    expect(screen.getByText("3 of 4 sent")).toBeTruthy();
+  });
+
   it("opens the form from Edit", async () => {
     await show("a1", [today]);
     await fireEvent.press(screen.getByText("Edit"));

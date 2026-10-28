@@ -62,4 +62,10 @@ export const activities = {
     "Das ist ihr letzter Satz, also fällt die Übung aus diesem Eintrag.",
   "activities.editSets": "{exercise} bearbeiten",
   "activities.kindFingers": "Finger",
+  "activities.setsOfClimbs_one": "{count} Satz mit {climbs} Klettereien",
+  "activities.setsOfClimbs_other": "{count} Sätze mit {climbs} Klettereien",
+  "activities.onTheWall": "{time} an der Wand",
+  "activities.lastTimeLine": "Letztes Mal: {summary}",
+  "activities.circuitNamed": "Zirkel {name}",
+  "activities.resume": "Fortsetzen",
 } as const;

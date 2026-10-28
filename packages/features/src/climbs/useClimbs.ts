@@ -1,12 +1,22 @@
 import React from "react";
-import type { ClimbSummary, SendtallyApi, SessionWithClimbs } from "@sendtally/api-client";
+import type {
+  Activity,
+  ClimbSummary,
+  SendtallyApi,
+  SessionWithClimbs,
+} from "@sendtally/api-client";
 import { t } from "../i18n";
 import { queries, useQueryPair, type QueryState } from "../query";
 import { logClimbOnDay } from "../log-session/dayClimb";
 import { climbDetailVM, type ClimbDetailVM } from "./overview";
 import { joinNotes, noteAttempt } from "./projects";
 
-export type ClimbsData = { climbs: ClimbSummary[]; sessions: SessionWithClimbs[] };
+/** The user's climbs and climbing sessions, and the training beside them, whose workouts log climbs too. */
+export type ClimbsData = {
+  climbs: ClimbSummary[];
+  sessions: SessionWithClimbs[];
+  activities: Activity[];
+};
 
 export type ClimbsFeature = { state: QueryState<ClimbsData>; reload: () => Promise<void> };
 
@@ -17,8 +27,8 @@ export function useClimbs(api: SendtallyApi): ClimbsFeature {
   );
   const state = React.useMemo((): QueryState<ClimbsData> => {
     if (loaded.status !== "ready") return loaded;
-    const [climbs, { sessions }] = loaded.data;
-    return { status: "ready", data: { climbs, sessions } };
+    const [climbs, { sessions, activities }] = loaded.data;
+    return { status: "ready", data: { climbs, sessions, activities } };
   }, [loaded]);
   return { state, reload };
 }

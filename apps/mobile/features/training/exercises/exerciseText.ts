@@ -22,11 +22,15 @@ export function loadText(kg: number, unit: WeightUnit): string {
 export function metricText(value: number, metric: ExerciseMetric, unit: WeightUnit): string {
   if (metric === "load") return loadText(value, unit);
   if (metric === "seconds") return `${formatNumber(value)}s`;
+  if (metric === "sends") return t("tally.sentCount", { count: value });
+  if (metric === "laps") return t("tally.lapCount", { count: value });
   return t("statistics.repsValue", { count: value });
 }
 
 export function headlineLabel(metric: ExerciseMetric): string {
   if (metric === "load") return t("statistics.heaviestDone");
+  if (metric === "sends") return t("common.sent");
+  if (metric === "laps") return t("summary.laps");
   return metric === "seconds" ? t("statistics.longestDone") : t("statistics.mostRepsDone");
 }
 

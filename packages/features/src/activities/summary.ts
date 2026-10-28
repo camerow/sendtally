@@ -3,7 +3,9 @@ import type { CalendarDate, HangSession, SetDone } from "@sendtally/core/hang";
 import {
   bestOf,
   exerciseKey,
+  isClimbingMetric,
   metricOf,
+  metricTotal,
   valueOf,
   type ExerciseMetric,
   type ExerciseSeries,
@@ -66,6 +68,10 @@ export function exerciseResults(activity: Logged, activities: readonly Logged[])
       const metric = metricOf([...d.sets, ...(previous?.sets ?? [])]);
       const best = bestOf(d.sets, metric);
       const lastBest = previous === undefined ? undefined : bestOf(previous.sets, metric);
+      const counted =
+        isClimbingMetric(metric) && previous !== undefined
+          ? { metric, by: metricTotal(d.sets, metric) - metricTotal(previous.sets, metric) }
+          : null;
       return {
         exercise: d.exercise,
         sets: d.sets,
@@ -75,7 +81,8 @@ export function exerciseResults(activity: Logged, activities: readonly Logged[])
             ? null
             : { set: lastBest, date: previous.date },
         change:
-          best === undefined || lastBest === undefined ? null : setChange(best, lastBest, metric),
+          counted ??
+          (best === undefined || lastBest === undefined ? null : setChange(best, lastBest, metric)),
       };
     });
 }
@@ -107,9 +114,15 @@ export function seriesPoint(series: ExerciseSeries, activityId: string): SeriesP
   if (at === undefined) return null;
   const earlier = series.sessions.slice(0, index);
   const previous = earlier.at(-1);
+  const change =
+    previous === undefined
+      ? null
+      : isClimbingMetric(series.metric)
+        ? { metric: series.metric, by: at.value - previous.value }
+        : setChange(at.best, previous.best, series.metric);
   return {
     index,
-    change: previous === undefined ? null : setChange(at.best, previous.best, series.metric),
+    change,
     bestYet: earlier.length > 0 && earlier.every((s) => at.value > s.value),
   };
 }

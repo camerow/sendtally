@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { SessionClimb, SessionWithClimbs } from "@sendtally/api-client";
-import { climbingInsightsVM, mainDiscipline } from "./insights";
+import { climbingInsightsVM, mainDiscipline, workoutClimbSessions } from "./insights";
 
 const NOW = new Date("2026-10-27T12:00:00.000Z");
 
@@ -69,5 +69,38 @@ describe("climbingInsightsVM", () => {
     expect(mainDiscipline(sessions)).toBe("boulder");
     const vm = climbingInsightsVM(sessions, [], { ...all, discipline: "route" }, NOW);
     expect([vm.sends, vm.pyramid, vm.hardest]).toEqual([0, [], null]);
+  });
+
+  it("counts the climbs a workout logged on its tally, inside at the gym", () => {
+    const workout = workoutClimbSessions([
+      {
+        id: "a1",
+        date: "2026-10-26",
+        startTime: "19:00",
+        done: [
+          {
+            item: 0,
+            exercise: "4x4s",
+            sets: [
+              {
+                climbs: [
+                  { grade: "V8", scale: "v", tries: 1, sent: true, style: "flash" },
+                  { grade: "V5", scale: "v", tries: 2, sent: false },
+                ],
+              },
+            ],
+          },
+          { item: 1, exercise: "Core", sets: [{ reps: 10 }] },
+        ],
+      },
+      { id: "a2", date: "2026-10-26", startTime: null, done: [] },
+    ]);
+    expect(workout.map((s) => [s.fingerprint, s.location, s.climbs.length])).toEqual([
+      ["a1", "indoor", 2],
+    ]);
+    const vm = climbingInsightsVM([...sessions, ...workout], [], all, NOW);
+    expect([vm.sends, vm.flashed]).toEqual([4, 2]);
+    expect(vm.hardest?.gradeLabel).toBe("V8");
+    expect(vm.pyramid.find((r) => r.gradeLabel === "V5")).toMatchObject({ inner: 0, outer: 2 });
   });
 });

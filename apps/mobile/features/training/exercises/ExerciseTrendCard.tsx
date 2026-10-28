@@ -25,7 +25,10 @@ export type ExerciseTrendCardProps = {
 
 type Point = { session: ExerciseSession; value: number };
 
-const AIR = { load: 2, seconds: 5, reps: 1 } as const satisfies Record<ExerciseMetric, number>;
+const AIR = { load: 2, seconds: 5, reps: 1, sends: 1, laps: 1 } as const satisfies Record<
+  ExerciseMetric,
+  number
+>;
 
 /** One exercise over time: the best set per session, or the estimated one-rep max. */
 export function ExerciseTrendCard({

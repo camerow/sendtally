@@ -1,6 +1,7 @@
 import type { Activity } from "@sendtally/api-client";
 import { toUnit, type ItemDone, type SetDone, type WeightUnit } from "@sendtally/core/hang";
 import { formatNumber, t } from "../i18n";
+import { climbingSetText } from "./climbing";
 
 const MAX_SUGGESTIONS = 5;
 
@@ -19,8 +20,9 @@ export function doneSummary(done: readonly ItemDone[]): string | null {
   ].join(" · ");
 }
 
-/** "5 × 100 kg · 30s", leaving out what the set does not have. */
+/** "5 × 100 kg · 30s", leaving out what the set does not have; a climbing set reads its climbs. */
 export function setText(set: SetDone, unit: WeightUnit): string {
+  if (set.climbs !== undefined) return climbingSetText(set);
   const load =
     set.weightKg === undefined
       ? undefined
@@ -35,6 +37,7 @@ export function setText(set: SetDone, unit: WeightUnit): string {
 
 /** A set as a chip under its exercise, whose unit the card states once: "5 × 180", "8", "60s". */
 export function setChip(set: SetDone, unit: WeightUnit): string {
+  if (set.climbs !== undefined) return climbingSetText(set);
   const weight = set.weightKg ? weightValue(set.weightKg, unit) : undefined;
   const work = [set.reps === undefined ? undefined : formatNumber(set.reps), weight]
     .filter((p) => p !== undefined)

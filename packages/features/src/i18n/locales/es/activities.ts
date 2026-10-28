@@ -61,4 +61,10 @@ export const activities = {
   "activities.removeLastSetBody": "Es su última serie, así que el ejercicio sale de este registro.",
   "activities.editSets": "Editar {exercise}",
   "activities.kindFingers": "Dedos",
+  "activities.setsOfClimbs_one": "{count} serie de {climbs} escaladas",
+  "activities.setsOfClimbs_other": "{count} series de {climbs} escaladas",
+  "activities.onTheWall": "{time} en la pared",
+  "activities.lastTimeLine": "La última vez: {summary}",
+  "activities.circuitNamed": "Circuito {name}",
+  "activities.resume": "Reanudar",
 } as const;

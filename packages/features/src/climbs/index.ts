@@ -36,9 +36,11 @@ export {
   CLIMB_PLACES,
   climbingInsightsVM,
   mainDiscipline,
+  workoutClimbSessions,
   type ClimbPlaceFilter,
   type ClimbingInsightsFilter,
   type ClimbingInsightsVM,
+  type InsightsSession,
 } from "./insights";
 export {
   areaChoice,

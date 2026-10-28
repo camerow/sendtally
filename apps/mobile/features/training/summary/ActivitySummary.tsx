@@ -81,7 +81,7 @@ export function ActivitySummary({
       {results.map((r) => (
         <ExerciseResultCard key={r.exercise} result={r} unit={unit} />
       ))}
-      <OverTime series={trends} activityId={activity.id} unit={unit} />
+      <OverTime series={trends} activityId={activity.id} done={activity.done} unit={unit} />
       <PastSessions
         rows={pastSessions(activity, activities).map((a) => pastRow(a, activity.id, unit))}
       />

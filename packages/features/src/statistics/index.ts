@@ -15,6 +15,8 @@ export {
   exerciseKey,
   exerciseSeries,
   exerciseSummary,
+  isClimbingMetric,
+  metricTotal,
   workoutsUsing,
   type ExerciseMetric,
   type ExerciseSeries,
