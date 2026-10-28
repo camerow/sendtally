@@ -48,6 +48,7 @@ const SIGNED_IN_SCREENS = [
   "account",
   "profile",
   "training-insights",
+  "climbing-insights",
   "membership",
   "workout/[id]",
   "workout/edit",

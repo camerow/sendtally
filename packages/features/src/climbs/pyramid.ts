@@ -14,7 +14,7 @@ export type PyramidRow = { gradeLabel: string; inner: number; outer: number; cou
 
 type Counted = { rank: number; inner: boolean };
 
-function rowsOf(
+export function rowsOf(
   counted: readonly Counted[],
   label: (rank: number) => string,
   countLabel: (inner: number, all: number) => string

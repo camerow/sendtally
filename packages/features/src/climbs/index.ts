@@ -32,6 +32,14 @@ export {
   type ProjectStat,
   type ProjectsOverviewVM,
 } from "./projects";
+export {
+  CLIMB_PLACES,
+  climbingInsightsVM,
+  mainDiscipline,
+  type ClimbPlaceFilter,
+  type ClimbingInsightsFilter,
+  type ClimbingInsightsVM,
+} from "./insights";
 export { useClimbVocabulary, type ClimbVocabulary } from "./useClimbVocabulary";
 export {
   useProject,
