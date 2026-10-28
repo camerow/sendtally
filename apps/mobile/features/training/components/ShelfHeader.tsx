@@ -34,8 +34,12 @@ export function ShelfHeader({
   const heading = (
     <>
       {kind !== undefined && <CategoryMark kind={kind} size={28} />}
-      <View style={{ flex: 1, flexDirection: "row", alignItems: "baseline", gap: 10 }}>
-        <Title size={26} color={muted ? colors.textMuted : colors.gunmetal} style={{ flex: 1 }}>
+      <View style={{ flexShrink: 1, flexDirection: "row", alignItems: "baseline", gap: 10 }}>
+        <Title
+          size={26}
+          color={muted ? colors.textMuted : colors.gunmetal}
+          style={{ flexShrink: 1 }}
+        >
           {title}
         </Title>
         {onSeeAll !== undefined && (
@@ -48,7 +52,7 @@ export function ShelfHeader({
     </>
   );
   const row = {
-    flex: 1,
+    flexShrink: 1,
     minHeight: 44,
     flexDirection: "row",
     alignItems: "center",
@@ -68,6 +72,7 @@ export function ShelfHeader({
           {heading}
         </Pressable>
       )}
+      <View style={{ flex: 1 }} />
       <IconButton
         icon="plus"
         label={addLabel}
