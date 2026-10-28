@@ -2,8 +2,7 @@ import React from "react";
 import { ActivityIndicator, Text } from "react-native";
 import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
-import { useTrainingMode } from "@sendtally/features/settings";
-import { shownKinds, useTrainingInsights } from "@sendtally/features/statistics";
+import { ACTIVITY_KINDS, useTrainingInsights } from "@sendtally/features/statistics";
 import { PREVIEW_TREND_RANGE, shownRange, type TrendRange } from "@sendtally/features/trends";
 import { InsightsFrame } from "../../../components/InsightsFrame";
 import { useApi } from "../../../lib/api";
@@ -21,10 +20,9 @@ export function TrainingInsightsScreen(): React.ReactElement {
   const api = useApi();
   const { model } = useHangData();
   const member = useCanSeeInsights();
-  const training = useTrainingMode(api).enabled;
   const [picked, setPicked] = React.useState<TrendRange>(PREVIEW_TREND_RANGE);
   const range = shownRange(member, picked);
-  const state = useTrainingInsights(api, range, shownKinds(training), model.gripName);
+  const state = useTrainingInsights(api, range, ACTIVITY_KINDS, model.gripName);
 
   return (
     <InsightsFrame
@@ -53,7 +51,7 @@ export function TrainingInsightsScreen(): React.ReactElement {
             byFocus={state.data.byFocus}
             total={state.data.total}
           />
-          {training && <CurrentBlockRow />}
+          <CurrentBlockRow />
           <ExerciseGroups groups={state.data.exercises} />
         </>
       )}

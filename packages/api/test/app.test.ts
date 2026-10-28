@@ -446,31 +446,6 @@ describe("app", () => {
     expect(rejected.status).toBe(400);
   });
 
-  it("defaults training mode off and remembers a change", async () => {
-    const headers = { "x-test-user": "user_training", "Content-Type": "application/json" };
-
-    const before = await testApp().request("/v1/status", { headers }, env);
-    expect(await before.json()).toMatchObject({ trainingMode: false });
-
-    const saved = await testApp().request(
-      "/v1/preferences/training-mode",
-      { method: "PUT", headers, body: JSON.stringify({ enabled: true }) },
-      env
-    );
-    expect(saved.status).toBe(200);
-    expect(await saved.json()).toEqual({ trainingMode: true });
-
-    const after = await testApp().request("/v1/status", { headers }, env);
-    expect(await after.json()).toMatchObject({ trainingMode: true });
-
-    const rejected = await testApp().request(
-      "/v1/preferences/training-mode",
-      { method: "PUT", headers, body: JSON.stringify({ enabled: "yes" }) },
-      env
-    );
-    expect(rejected.status).toBe(400);
-  });
-
   it("defaults training reminders off and saves partial changes", async () => {
     const headers = { "x-test-user": "user_reminders", "Content-Type": "application/json" };
     const put = async (json: unknown): Promise<Response> =>

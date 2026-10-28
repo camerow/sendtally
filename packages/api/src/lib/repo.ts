@@ -145,13 +145,6 @@ export async function setGradeScales(
     .where(eq(users.id, id));
 }
 
-export async function setTrainingMode(db: D1Database, id: string, enabled: boolean): Promise<void> {
-  await drizzle(db)
-    .update(users)
-    .set({ training_mode: enabled ? 1 : 0 })
-    .where(eq(users.id, id));
-}
-
 export type TrainingReminderSettings = { enabled: boolean; time: string; promptSeen: boolean };
 
 export function trainingRemindersOf(user: UserRow | null): TrainingReminderSettings {

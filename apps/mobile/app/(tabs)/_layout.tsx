@@ -5,11 +5,9 @@ import { View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { BottomTabBar } from "expo-router/tabs";
 import { t } from "@sendtally/features/i18n";
-import { useTrainingMode } from "@sendtally/features/settings";
 import { colors, fonts } from "@sendtally/design/tokens";
 import { Icon, type IconName } from "../../components/Icon";
 import { LiveBar } from "../../features/live-session/LiveBar";
-import { useApi } from "../../lib/api";
 
 const SELECTED_RULE_HEIGHT = 3;
 
@@ -49,8 +47,6 @@ export default function TabsLayout(): React.ReactElement | null {
 
 function SignedInTabs(): React.ReactElement {
   const insets = useSafeAreaInsets();
-  const training = useTrainingMode(useApi()).enabled;
-  const only = (on: boolean): { href?: null } => (on ? {} : { href: null });
 
   return (
     <Tabs
@@ -82,11 +78,7 @@ function SignedInTabs(): React.ReactElement {
     >
       <Tabs.Screen
         name="today"
-        options={{
-          ...only(training),
-          tabBarLabel: t("training.today"),
-          tabBarIcon: tabIcon("today"),
-        }}
+        options={{ tabBarLabel: t("training.today"), tabBarIcon: tabIcon("today") }}
       />
       <Tabs.Screen
         name="sessions"
@@ -98,11 +90,7 @@ function SignedInTabs(): React.ReactElement {
       />
       <Tabs.Screen
         name="train"
-        options={{
-          ...only(training),
-          tabBarLabel: t("training.train"),
-          tabBarIcon: tabIcon("train"),
-        }}
+        options={{ tabBarLabel: t("training.train"), tabBarIcon: tabIcon("train") }}
       />
     </Tabs>
   );

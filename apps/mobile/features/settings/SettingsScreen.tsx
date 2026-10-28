@@ -2,12 +2,7 @@ import { useUser } from "@clerk/clerk-expo";
 import { useRouter } from "expo-router";
 import React from "react";
 import { useGyms } from "@sendtally/features/gyms";
-import {
-  useGradeScales,
-  useSettings,
-  useStravaPosting,
-  useTrainingMode,
-} from "@sendtally/features/settings";
+import { useGradeScales, useSettings, useStravaPosting } from "@sendtally/features/settings";
 import type { Discipline, GradeScale } from "@sendtally/features/log-session";
 import { useBilling } from "../billing/useBilling";
 import { useCsvExport } from "./useCsvExport";
@@ -24,7 +19,6 @@ export function SettingsScreen(): React.ReactElement {
   const posting = useStravaPosting(api, vm, reload);
   const connect = useStravaConnect(api, reload);
   const scales = useGradeScales(api, vm, reload);
-  const trainingMode = useTrainingMode(api);
   const gyms = useGyms(api);
   const exporter = useCsvExport(api);
   const onChangeGradePref = React.useCallback(
@@ -44,7 +38,6 @@ export function SettingsScreen(): React.ReactElement {
         billing === null ? null : { membership: billing.membership.vm, onOpen: onOpenMembership }
       }
       posting={posting}
-      trainingMode={trainingMode}
       connect={connect}
       exporter={exporter}
       onChangeGradePref={onChangeGradePref}

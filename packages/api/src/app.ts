@@ -571,7 +571,7 @@ const gradeScalesBody = z.object({
   route: z.enum(["yds", "french"]).optional(),
 });
 
-const trainingModeBody = z.object({ enabled: z.boolean() });
+const enabledBody = z.object({ enabled: z.boolean() });
 
 const trainingRemindersBody = z.object({
   enabled: z.boolean().optional(),
@@ -1875,7 +1875,6 @@ const app = new Hono<AppEnv>()
     return c.json({
       gradeScales: { boulder: scales.boulder, route: scales.route },
       role: user?.role ?? "user",
-      trainingMode: user?.training_mode === 1,
       trainingReminders: repo.trainingRemindersOf(user),
       strava:
         strava === null
@@ -1918,19 +1917,6 @@ const app = new Hono<AppEnv>()
   )
 
   .put(
-    "/v1/preferences/training-mode",
-    zValidator("json", trainingModeBody, invalidBody),
-    async (c) => {
-      const userId = c.get("userId");
-      const { enabled } = c.req.valid("json");
-      await repo.ensureUser(c.env.DB, userId);
-      await repo.setTrainingMode(c.env.DB, userId, enabled);
-      await captureEvent(c, "training_mode_updated", { enabled: String(enabled) });
-      return c.json({ trainingMode: enabled });
-    }
-  )
-
-  .put(
     "/v1/preferences/training-reminders",
     zValidator("json", trainingRemindersBody, invalidBody),
     async (c) => {
@@ -1964,7 +1950,7 @@ const app = new Hono<AppEnv>()
 
   .put(
     "/v1/connections/strava/training-posting",
-    zValidator("json", trainingModeBody, invalidBody),
+    zValidator("json", enabledBody, invalidBody),
     async (c) => {
       const { enabled } = c.req.valid("json");
       const userId = c.get("userId");

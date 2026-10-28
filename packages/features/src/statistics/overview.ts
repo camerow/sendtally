@@ -4,12 +4,6 @@ export const ACTIVITY_KINDS = ["climbing", "hangboard", "strength", "mobility", 
 
 export type ActivityKind = (typeof ACTIVITY_KINDS)[number];
 
-const CLIMBING_ONLY: readonly ActivityKind[] = ["climbing"];
-
-/** Every kind with training on; climbing alone with it off. */
-export const shownKinds = (training: boolean): readonly ActivityKind[] =>
-  training ? ACTIVITY_KINDS : CLIMBING_ONLY;
-
 const KIND_NAMES: Record<ActivityKind, MessageKey> = {
   climbing: "statistics.climbing",
   hangboard: "statistics.hangboard",

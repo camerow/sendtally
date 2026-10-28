@@ -10,8 +10,6 @@ import { TrainingStravaRows } from "./TrainingStravaRows";
 
 export type StravaPostingSectionProps = {
   posting: StravaPostingFeature;
-  /** Training mode adds switches for hangboard sessions and other training. */
-  training: boolean;
 };
 
 const rowTitle = {
@@ -20,15 +18,11 @@ const rowTitle = {
   color: colors.gunmetal,
 } as const;
 
-export function StravaPostingSection({
-  posting,
-  training,
-}: StravaPostingSectionProps): React.ReactElement {
-  const title = training ? t("settings.postClimbing") : t("settings.postAutomatically");
+export function StravaPostingSection({ posting }: StravaPostingSectionProps): React.ReactElement {
   return (
     <>
       <SwitchRow
-        title={title}
+        title={t("settings.postClimbing")}
         body={posting.enabled ? t("settings.postingOn") : t("settings.postingOffMobile")}
         checked={posting.enabled}
         disabled={posting.busy}
@@ -54,7 +48,7 @@ export function StravaPostingSection({
         </>
       )}
 
-      {training && <TrainingStravaRows posting={posting} />}
+      <TrainingStravaRows posting={posting} />
 
       {posting.error !== null && <Text style={messageText}>{posting.error}</Text>}
     </>

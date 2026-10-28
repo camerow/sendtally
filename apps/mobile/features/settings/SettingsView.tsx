@@ -1,11 +1,7 @@
 import React from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import type {
-  SettingsVM,
-  StravaPostingFeature,
-  TrainingModeFeature,
-} from "@sendtally/features/settings";
+import type { SettingsVM, StravaPostingFeature } from "@sendtally/features/settings";
 import type { StravaConnectFeature } from "./useStravaConnect";
 import type { Discipline, GradePrefs, GradeScale } from "@sendtally/features/log-session";
 import { t } from "@sendtally/features/i18n";
@@ -22,7 +18,6 @@ import { GradeSection } from "./GradeSection";
 import { GymsSection } from "./GymsSection";
 import { MembershipSection, type MembershipSectionProps } from "./MembershipSection";
 import { StravaPostingSection } from "./StravaPostingSection";
-import { TrainingModeSection } from "./TrainingModeSection";
 import { TrainingRemindersSection } from "./TrainingRemindersSection";
 import { WeightUnitSection } from "./WeightUnitSection";
 import { BackButton } from "../../components/BackButton";
@@ -36,7 +31,6 @@ export type SettingsViewProps = {
   gyms: Gym[];
   billing: MembershipSectionProps | null;
   posting: StravaPostingFeature;
-  trainingMode: TrainingModeFeature;
   connect: StravaConnectFeature;
   exporter: CsvExportFeature;
   onChangeGradePref: (discipline: Discipline, scale: GradeScale) => void;
@@ -72,7 +66,6 @@ export function SettingsView({
   gyms,
   billing,
   posting,
-  trainingMode,
   connect,
   exporter,
   onChangeGradePref,
@@ -92,9 +85,8 @@ export function SettingsView({
           gap: 14,
         }}
       >
-        <TrainingModeSection trainingMode={trainingMode} />
-        {trainingMode.enabled && <TrainingRemindersSection />}
-        {trainingMode.enabled && <WeightUnitSection />}
+        <TrainingRemindersSection />
+        <WeightUnitSection />
         <GradeSection prefs={gradePrefs} onChange={onChangeGradePref} />
         <GymsSection gyms={gyms} />
 
@@ -113,7 +105,7 @@ export function SettingsView({
                 : t("settings.stravaNotConnectedMobile")}
           </Text>
           {vm.stravaActive ? (
-            <StravaPostingSection posting={posting} training={trainingMode.enabled} />
+            <StravaPostingSection posting={posting} />
           ) : (
             <>
               <Pressable

@@ -8,7 +8,6 @@ export const settings = {
     "Strava access has lapsed. Re-link it and your sessions can post to your feed again.",
   "settings.stravaNotConnectedMobile":
     "Each logged session can post to your feed as a Rock Climbing activity. You approve it on strava.com and can revoke it there any time.",
-  "settings.postAutomatically": "Post sessions automatically",
   "settings.postingOn": "Logged sessions post to your feed as Rock Climbing activities.",
   "settings.postingOffMobile": "Off. Each session page keeps its own Post to Strava button.",
   "settings.postSince": "Post sessions logged from",
@@ -45,13 +44,8 @@ export const settings = {
     "Take everything you have logged here with you as a CSV file. Importing one happens on sendtally.com.",
   "settings.exportSaved": "Saved to the folder you picked.",
   "settings.exportFailed": "The export did not go through. Try again in a moment.",
-  "settings.trainingMode": "Training mode",
-  "settings.trainingModeBody":
-    "Adds Today, Train and Statistics, so you can plan and run hangboard and other training next to your climbing.",
   "settings.weightUnit": "Weight units",
   "settings.weightUnitBody": "Loads and lifts show in this unit.",
-  "settings.trainingModeWebHint":
-    "Training lives in the sendtally app on iOS and Android. Turn it on here and it is waiting the next time you open the app.",
   "settings.postClimbing": "Post climbing sessions",
   "settings.postHangboard": "Post hangboard sessions",
   "settings.postHangboardBody": "Each hangboard session posts as a Workout.",

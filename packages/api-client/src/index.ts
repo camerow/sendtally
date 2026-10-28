@@ -189,10 +189,6 @@ export class SendtallyApi {
     return body(this.client.v1.preferences["grade-scales"].$put({ json: scales }));
   }
 
-  setTrainingMode(enabled: boolean): Promise<{ trainingMode: boolean }> {
-    return body(this.client.v1.preferences["training-mode"].$put({ json: { enabled } }));
-  }
-
   setTrainingReminders(
     settings: Partial<TrainingReminderSettings>
   ): Promise<{ trainingReminders: TrainingReminderSettings }> {

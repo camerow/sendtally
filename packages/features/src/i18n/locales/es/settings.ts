@@ -8,7 +8,6 @@ export const settings = {
     "El acceso a Strava ha caducado. Vuelve a vincularlo y tus sesiones podrán publicarse de nuevo en tu feed.",
   "settings.stravaNotConnectedMobile":
     "Cada sesión registrada puede publicarse en tu feed como actividad Rock Climbing. Lo apruebas en strava.com y puedes revocarlo allí cuando quieras.",
-  "settings.postAutomatically": "Publicar sesiones automáticamente",
   "settings.postingOn":
     "Las sesiones registradas se publican en tu feed como actividades Rock Climbing.",
   "settings.postingOffMobile":
@@ -48,13 +47,8 @@ export const settings = {
     "Llévate todo lo que has registrado aquí en un archivo CSV. La importación se hace en sendtally.com.",
   "settings.exportSaved": "Guardado en la carpeta que elegiste.",
   "settings.exportFailed": "La exportación no salió bien. Inténtalo de nuevo en un momento.",
-  "settings.trainingMode": "Modo entrenamiento",
-  "settings.trainingModeBody":
-    "Añade Hoy, Entrenar y Estadísticas para planificar y hacer multipresa y otros entrenamientos junto a tu escalada.",
   "settings.weightUnit": "Unidad de peso",
   "settings.weightUnitBody": "Las cargas se muestran en esta unidad.",
-  "settings.trainingModeWebHint":
-    "El entrenamiento está en la app de sendtally para iOS y Android. Actívalo aquí y estará listo la próxima vez que abras la app.",
   "settings.postClimbing": "Publicar sesiones de escalada",
   "settings.postHangboard": "Publicar sesiones de multipresa",
   "settings.postHangboardBody": "Cada sesión de multipresa se publica como Workout.",

@@ -8,7 +8,6 @@ import { saveTrainingReminders } from "./useTrainingReminders";
 const status: ConnectionStatus = {
   gradeScales: DEFAULT_GRADE_SCALES,
   role: "user",
-  trainingMode: true,
   trainingReminders: { enabled: false, time: "08:00", promptSeen: false },
   strava: null,
 };

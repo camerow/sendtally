@@ -8,7 +8,6 @@ export const settings = {
     "L’accès Strava a expiré. Relie-le à nouveau et tes sessions pourront de nouveau être publiées dans ton fil.",
   "settings.stravaNotConnectedMobile":
     "Chaque session enregistrée peut être publiée dans ton fil comme activité Rock Climbing. Tu l’approuves sur strava.com et peux la révoquer là-bas à tout moment.",
-  "settings.postAutomatically": "Publier les séances automatiquement",
   "settings.postingOn":
     "Les séances enregistrées sont publiées dans ton fil comme activités Rock Climbing.",
   "settings.postingOffMobile":
@@ -47,13 +46,8 @@ export const settings = {
     "Emporte tout ce que tu as enregistré ici dans un fichier CSV. L'import se fait sur sendtally.com.",
   "settings.exportSaved": "Enregistré dans le dossier choisi.",
   "settings.exportFailed": "L'export n'a pas abouti. Réessaie dans un instant.",
-  "settings.trainingMode": "Mode entraînement",
-  "settings.trainingModeBody":
-    "Ajoute Aujourd'hui, Entraînement et Statistiques pour planifier et faire ta poutre et tes autres entraînements à côté de ta grimpe.",
   "settings.weightUnit": "Unité de poids",
   "settings.weightUnitBody": "Les charges s'affichent dans cette unité.",
-  "settings.trainingModeWebHint":
-    "L'entraînement se trouve dans l'app sendtally sur iOS et Android. Active-le ici et il t'attend à la prochaine ouverture de l'app.",
   "settings.postClimbing": "Publier les séances d’escalade",
   "settings.postHangboard": "Publier les séances de poutre",
   "settings.postHangboardBody": "Chaque séance de poutre est publiée comme Workout.",
