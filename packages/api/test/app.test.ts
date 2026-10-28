@@ -1135,6 +1135,16 @@ describe("app", () => {
     expect(session.end_at).toBe("2026-08-21T01:00:00.000Z");
   });
 
+  it("logs a session that ended in the minute it started as one minute long", async () => {
+    const res = await postSession(
+      "user_manual_minute",
+      logBody({ startTime: "14:39", endTime: "14:39" })
+    );
+    expect(res.status).toBe(201);
+    const { session } = (await res.json()) as ManualSessionResponse;
+    expect(session.end_at).toBe("2026-08-20T14:40:00.000Z");
+  });
+
   it("defaults to a 90-minute session when no end time is given", async () => {
     const res = await postSession("user_manual_defaults", logBody({ endTime: undefined }));
     expect(res.status).toBe(201);

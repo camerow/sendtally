@@ -215,7 +215,7 @@ function sessionMinutes(body: {
 }): number {
   if (body.startTime === undefined || body.endTime === undefined) return DEFAULT_DURATION_MINUTES;
   const diff = minutesOf(body.endTime) - minutesOf(body.startTime);
-  return diff > 0 ? diff : diff + 24 * 60;
+  return diff < 0 ? diff + 24 * 60 : Math.max(diff, 1);
 }
 
 type ManualGrade = z.infer<typeof gradeSchema>;
