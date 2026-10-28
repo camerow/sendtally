@@ -8,10 +8,6 @@ import { TimerScreen } from "./TimerScreen";
 
 jest.mock("expo-router", () => ({ router: { replace: jest.fn() } }));
 jest.mock("expo-keep-awake", () => ({ useKeepAwake: () => undefined }));
-jest.mock("expo-audio", () => ({
-  useAudioPlayer: () => ({ seekTo: () => Promise.resolve(), play: () => undefined }),
-  setAudioModeAsync: () => Promise.resolve(),
-}));
 
 const advance = async (ms: number): Promise<void> => {
   await act(async () => {

@@ -54,6 +54,12 @@ export const activities = {
   "activities.colDone": "Hecho",
   "activities.finish": "Terminar",
   "activities.setOf": "{exercise}, serie {n}",
+  "activities.restLeft": "Descanso, quedan {time}",
+  "activities.restNext": "Siguiente: {name}",
+  "activities.restMore": "+30 s",
+  "activities.restSkip": "Saltar",
+  "activities.setsDoneOf_one": "{done} de {count} serie",
+  "activities.setsDoneOf_other": "{done} de {count} series",
   "activities.doneForToday": "Listo por hoy",
   "activities.partialCounts": "Marca lo que hiciste. Los días a medias también cuentan.",
 } as const;

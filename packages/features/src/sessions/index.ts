@@ -49,6 +49,7 @@ export {
   logCountLabel,
   logTotalsLabel,
   durationLabel,
+  elapsedClock,
   sessionMinutes,
   sessionTotals,
   logYearGroups,

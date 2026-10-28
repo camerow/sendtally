@@ -51,5 +51,7 @@ export function startLibraryWorkout(
     startIntervals({ ...run, activityId: null, body: intervalsOf(items) });
     return;
   }
-  router.push(runPath(playerOf(items), { ...run, items: [...items] }));
+  router.push(
+    runPath(playerOf(items), { ...run, exerciseRestS: w.exerciseRestS, items: [...items] })
+  );
 }

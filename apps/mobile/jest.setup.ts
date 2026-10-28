@@ -34,6 +34,12 @@ jest.mock("@gorhom/bottom-sheet", () => {
     useBottomSheetInternal: () => (React.useContext(Inside) ? mock.useBottomSheetInternal() : null),
   };
 });
+// Players and timers play their tones through one stable player that makes no sound.
+const mockPlayer = { seekTo: () => Promise.resolve(), play: () => undefined };
+jest.mock("expo-audio", () => ({
+  useAudioPlayer: () => mockPlayer,
+  setAudioModeAsync: () => Promise.resolve(),
+}));
 jest.mock("expo-notifications", () => ({
   setNotificationHandler: () => undefined,
   getPermissionsAsync: () => Promise.resolve({ granted: false }),

@@ -91,14 +91,6 @@ export function tallyElapsedSeconds(draft: LogSessionDraft, now: Date): number {
   return Math.max(0, Math.floor((now.getTime() - started) / 1000));
 }
 
-/** H:MM:SS with the leading zeros dropped: 0:42, 4:07, 1:04:07. */
-export function tallyClock(seconds: number): string {
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor(seconds / 60) % 60;
-  const rest = pad(seconds % 60);
-  return hours === 0 ? `${minutes}:${rest}` : `${hours}:${pad(minutes)}:${rest}`;
-}
-
 export type FinishApi = {
   logSession: (input: LogSessionInput) => Promise<{ session: SessionDetail }>;
   updateLoggedSession: (

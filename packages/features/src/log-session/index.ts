@@ -86,7 +86,6 @@ export {
   clockTime,
   finishLiveSession,
   newTallyClimb,
-  tallyClock,
   tallyDraft,
   tallyElapsedSeconds,
   tallySummary,

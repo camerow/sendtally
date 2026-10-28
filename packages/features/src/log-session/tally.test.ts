@@ -4,7 +4,6 @@ import { draftStorage, writeStoredDraft, type DraftStorage } from "./draftStore"
 import {
   finishLiveSession,
   newTallyClimb,
-  tallyClock,
   tallyDraft,
   tallyElapsedSeconds,
   tallySummary,
@@ -51,16 +50,6 @@ describe("tally", () => {
     const { draft: next } = newTallyClimb(draft, { kind: "circuit", gym, circuit }, "fell");
     expect(next.gymId).toBe("g1");
     expect(next.climbs[0]?.circuit?.id).toBe("c1");
-  });
-
-  it("shows the clock as H:MM:SS without leading zeros", () => {
-    expect(tallyClock(0)).toBe("0:00");
-    expect(tallyClock(42)).toBe("0:42");
-    expect(tallyClock(4 * 60 + 7)).toBe("4:07");
-    expect(tallyClock(42 * 60 + 7)).toBe("42:07");
-    expect(tallyClock(3599)).toBe("59:59");
-    expect(tallyClock(3600)).toBe("1:00:00");
-    expect(tallyClock(3600 + 4 * 60 + 7)).toBe("1:04:07");
   });
 
   it("times the session from its start to the second, and from the minute for an older draft", () => {

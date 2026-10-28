@@ -86,6 +86,16 @@ export function durationLabel(minutes: number): string {
   return m === 0 ? hours : `${hours} ${String(m).padStart(2, "0")}${t("sessions.minutesShort")}`;
 }
 
+const pad = (n: number): string => String(n).padStart(2, "0");
+
+/** A running clock, H:MM:SS with the leading zeros dropped: 0:42, 4:07, 1:04:07. */
+export function elapsedClock(seconds: number): string {
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor(seconds / 60) % 60;
+  const rest = pad(seconds % 60);
+  return hours === 0 ? `${minutes}:${rest}` : `${hours}:${pad(minutes)}:${rest}`;
+}
+
 export function countLabel(count: number): string {
   return t("sessions.sessionCount", { count });
 }

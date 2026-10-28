@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals
 import { act, fireEvent, screen } from "@testing-library/react-native";
 import { router } from "expo-router";
 import React from "react";
+import { Vibration } from "react-native";
 import { hangData, renderWithHang } from "../data/renderWithHang";
 import type { WorkoutRun } from "../data/workoutRunParams";
 import { SetsScreen } from "./SetsScreen";
@@ -34,6 +35,7 @@ const run: WorkoutRun = {
   workoutId: "w1",
   link: { membershipId: "m1", week: 2 },
   minutes: 45,
+  exerciseRestS: 120,
   items: [
     { exercise: "Back squat", dose: { sets: 2, reps: 5, weightKg: 100, setRestS: 90 } },
     { exercise: "Row", dose: { sets: 1, reps: 8 } },
@@ -55,7 +57,8 @@ describe("Sets player", () => {
     jest.useRealTimers();
   });
 
-  it("ticks sets without a rest clock and hands what was done to the activity form", async () => {
+  it("rests in line after each tick, folds a finished exercise, and logs the clock's minutes", async () => {
+    const buzz = jest.spyOn(Vibration, "vibrate").mockImplementation(() => undefined);
     await renderWithHang(<SetsScreen run={run} />, hangData(), {
       workouts: [
         {
@@ -79,16 +82,26 @@ describe("Sets player", () => {
     expect(screen.getByText("Last 5 × 97.5 kg")).toBeTruthy();
     expect(screen.getByText("Last 8 × 60 kg")).toBeTruthy();
     expect(screen.getByText("8 × 60 kg")).toBeTruthy();
+    expect(screen.getByText("1:30 rest")).toBeTruthy();
     await fireEvent.press(screen.getByLabelText("Back squat, set 1"));
-    expect(screen.queryByText(/^Rest/)).toBeNull();
+    expect(screen.getByLabelText("Rest, 1:30 left")).toBeTruthy();
     await advance(30_000);
+    expect(screen.getByLabelText("Rest, 1:00 left")).toBeTruthy();
+    expect(screen.getByText("0:30")).toBeTruthy();
 
     const reps = screen.getByLabelText("Back squat, set 2 · Reps");
     await fireEvent(reps, "focus");
     await fireEvent.changeText(reps, "4");
     await fireEvent(reps, "blur");
     await fireEvent.press(screen.getByLabelText("Back squat, set 2"));
+    expect(screen.queryByLabelText("Rest, 1:00 left")).toBeNull();
+    expect(screen.getByLabelText("Back squat, 2 of 2 sets")).toBeTruthy();
+    expect(screen.getByText("Next: Row")).toBeTruthy();
+    expect(screen.getByLabelText("Rest, 2:00 left")).toBeTruthy();
+    expect(buzz).not.toHaveBeenCalled();
     await advance(120_000);
+    expect(screen.queryByText("Next: Row")).toBeNull();
+    expect(buzz).toHaveBeenCalledTimes(1);
     expect(screen.getByLabelText("Row, set 1 · Weight").props.value).toBe("60");
     await fireEvent.press(screen.getByLabelText("Row, set 1"));
 

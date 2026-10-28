@@ -1,5 +1,5 @@
 import { describe, expect, it, jest } from "@jest/globals";
-import { fireEvent, screen } from "@testing-library/react-native";
+import { act, fireEvent, screen } from "@testing-library/react-native";
 import { router } from "expo-router";
 import React from "react";
 import { renderWithHang } from "../data/renderWithHang";
@@ -20,6 +20,7 @@ const run: WorkoutRun = {
   workoutId: "w2",
   link: { membershipId: null, week: null },
   minutes: 12,
+  exerciseRestS: 60,
   items: [
     { exercise: "Cat-cow", dose: { sets: 2 } },
     { exercise: "Wrist circles", dose: { sets: 1 } },
@@ -27,12 +28,18 @@ const run: WorkoutRun = {
 };
 
 describe("Checklist player", () => {
-  it("ticks lines off and hands the ticked ones to the activity form", async () => {
+  it("ticks lines off, rests before the next, and logs the ticked ones on the clock", async () => {
+    jest.useFakeTimers({ now: new Date(2026, 9, 22, 7) });
     await renderWithHang(<ChecklistScreen run={run} />);
     expect(screen.getByText("Mobility · 12m")).toBeTruthy();
     const catCow = screen.getByLabelText("Cat-cow, 2 sets");
     await fireEvent.press(catCow);
     expect(catCow.props.accessibilityState).toEqual({ checked: true });
+    expect(screen.getByText("Next: Wrist circles")).toBeTruthy();
+    await act(async () => {
+      jest.advanceTimersByTime(4 * 60_000);
+    });
+    expect(screen.queryByText("Next: Wrist circles")).toBeNull();
     await fireEvent.press(screen.getByLabelText("Wrist circles, 1 set"));
     await fireEvent.press(screen.getByLabelText("Wrist circles, 1 set"));
 
@@ -44,9 +51,10 @@ describe("Checklist player", () => {
         title: "Morning mobility",
         date: "2026-10-22",
         workoutId: "w2",
-        minutes: "12",
+        minutes: "4",
         done: JSON.stringify([{ item: 0, exercise: "Cat-cow", sets: [{}, {}] }]),
       },
     });
+    jest.useRealTimers();
   });
 });

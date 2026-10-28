@@ -46,6 +46,7 @@ describe("Plan day", () => {
       params: {
         kind: "strength",
         title: "Gym, legs",
+        exerciseRestS: "180",
         date: "2026-09-29",
         workoutId: "legs",
         minutes: "50",

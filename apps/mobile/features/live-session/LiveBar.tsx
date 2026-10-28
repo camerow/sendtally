@@ -3,13 +3,13 @@ import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { gymOfDraft, useGyms } from "@sendtally/features/gyms";
 import { t } from "@sendtally/features/i18n";
-import { tallySummary, useLiveSession } from "@sendtally/features/log-session";
+import { tallyElapsedSeconds, tallySummary, useLiveSession } from "@sendtally/features/log-session";
 import { colors, fonts } from "@sendtally/design/tokens";
 import { Icon } from "../../components/Icon";
 import { useApi } from "../../lib/api";
 import { liveSessionStorage } from "../../lib/liveSessionStorage";
 import { press } from "../../lib/press";
-import { LiveClock } from "./LiveClock";
+import { LiveClock } from "../../components/LiveClock";
 
 /** The running session folded down on top of the tab bar: tap to open it, stop to finish it. */
 export function LiveBar(): React.ReactElement | null {
@@ -57,7 +57,7 @@ export function LiveBar(): React.ReactElement | null {
           </Text>
         </View>
         <LiveClock
-          draft={draft}
+          elapsed={(now) => tallyElapsedSeconds(draft, now)}
           style={{ fontFamily: fonts.mono, fontSize: 15, color: colors.white }}
         />
       </Pressable>

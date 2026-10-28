@@ -11,10 +11,6 @@ const mockActions = { saveActivity: jest.fn(), deleteActivity: jest.fn() };
 jest.mock("expo-router", () => ({ router: { dismissAll: jest.fn(), back: jest.fn() } }));
 jest.mock("expo-crypto", () => ({ randomUUID: () => "activity-1" }));
 jest.mock("expo-keep-awake", () => ({ useKeepAwake: () => undefined }));
-jest.mock("expo-audio", () => ({
-  useAudioPlayer: () => ({ seekTo: () => Promise.resolve(), play: () => undefined }),
-  setAudioModeAsync: () => Promise.resolve(),
-}));
 jest.mock("../../../lib/api", () => ({ useApi: () => undefined }));
 jest.mock("@sendtally/features/activities", () => ({
   ...jest.requireActual<object>("@sendtally/features/activities"),

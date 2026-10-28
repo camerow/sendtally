@@ -44,7 +44,7 @@ import { FinishSheet } from "./FinishSheet";
 import { GradeChips, type GradeChip } from "./GradeChips";
 import { GymSheet } from "./GymSheet";
 import { LiveClimbEditor } from "./LiveClimbEditor";
-import { LiveClock } from "./LiveClock";
+import { LiveClock } from "../../components/LiveClock";
 import { TallyRow } from "./TallyRow";
 import { UndoSnackbar } from "./UndoSnackbar";
 
@@ -276,7 +276,7 @@ export function TallyScreen(): React.ReactElement {
 
       <View style={{ alignItems: "center", gap: 2, paddingTop: 4, paddingBottom: 12 }}>
         <LiveClock
-          draft={draft}
+          elapsed={(now) => tallyElapsedSeconds(draft, now)}
           style={{
             fontFamily: fonts.displayHeavy,
             fontSize: 44,

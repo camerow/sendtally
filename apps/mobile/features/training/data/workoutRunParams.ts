@@ -1,6 +1,6 @@
 import { router, type Href } from "expo-router";
 import type { ActivityKind } from "@sendtally/api-client";
-import type { CalendarDate, SessionItem, ItemDone, PlanLink } from "@sendtally/core/hang";
+import type { CalendarDate, ItemDone, PlanLink, SessionItem } from "@sendtally/core/hang";
 import { ACTIVITY_KINDS } from "@sendtally/features/activities";
 import { planLinkParams, readPlanLink } from "./planLinkParams";
 
@@ -13,6 +13,8 @@ export type WorkoutRun = {
   link: PlanLink;
   /** What the workout says it takes, if it says. */
   minutes: number | null;
+  /** The rest between one item and the next; none at zero. */
+  exerciseRestS: number;
   items: SessionItem[];
 };
 
@@ -34,6 +36,7 @@ export function runPath(player: RunPlayer, r: WorkoutRun): Href {
       date: r.date,
       workoutId: r.workoutId,
       items: JSON.stringify(r.items),
+      ...(r.exerciseRestS > 0 ? { exerciseRestS: String(r.exerciseRestS) } : {}),
       ...minutesParam(r.minutes),
       ...planLinkParams(r.link),
     },
@@ -72,12 +75,16 @@ export function readWorkoutRun(p: RawParams): WorkoutRun | null {
     workoutId: str(p.workoutId),
     link: readPlanLink(p),
     minutes: count(str(p.minutes)),
+    exerciseRestS: count(str(p.exerciseRestS)) ?? 0,
     items,
   };
 }
 
 /** The activity form for a workout, with what was done in place of what it prescribes when given. */
-export function activityFormPath(r: Omit<WorkoutRun, "items">, done?: readonly ItemDone[]): Href {
+export function activityFormPath(
+  r: Omit<WorkoutRun, "items" | "exerciseRestS">,
+  done?: readonly ItemDone[]
+): Href {
   return {
     pathname: "/activity/new",
     params: {
@@ -92,7 +99,11 @@ export function activityFormPath(r: Omit<WorkoutRun, "items">, done?: readonly I
   };
 }
 
-/** Hands a finished run to the activity form, in place of the player, to take an effort and save. */
-export function logRun(r: WorkoutRun, done: readonly ItemDone[], minutes: number | null): void {
-  router.replace(activityFormPath({ ...r, minutes: minutes ?? r.minutes }, done));
+/**
+ * Hands a finished run to the activity form, in place of the player, to take an effort and
+ * save, timed by the player's clock from its start.
+ */
+export function logRun(r: WorkoutRun, done: readonly ItemDone[], startedAt: number): void {
+  const minutes = Math.max(1, Math.round((Date.now() - startedAt) / 60_000));
+  router.replace(activityFormPath({ ...r, minutes }, done));
 }

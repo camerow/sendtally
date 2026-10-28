@@ -54,6 +54,12 @@ export const activities = {
   "activities.colDone": "Fait",
   "activities.finish": "Terminer",
   "activities.setOf": "{exercise}, série {n}",
+  "activities.restLeft": "Repos, encore {time}",
+  "activities.restNext": "Ensuite : {name}",
+  "activities.restMore": "+30 s",
+  "activities.restSkip": "Passer",
+  "activities.setsDoneOf_one": "{done} série sur {count}",
+  "activities.setsDoneOf_other": "{done} séries sur {count}",
   "activities.doneForToday": "Fini pour aujourd’hui",
   "activities.partialCounts": "Coche ce que tu as fait. Les jours partiels comptent aussi.",
 } as const;

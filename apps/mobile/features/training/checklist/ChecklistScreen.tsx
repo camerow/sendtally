@@ -10,24 +10,36 @@ import { useApi } from "../../../lib/api";
 import { Button } from "../components/Button";
 import { PlayerHeader } from "../components/PlayerHeader";
 import { logRun, type WorkoutRun } from "../data/workoutRunParams";
+import { RestRow } from "../rest/RestRow";
+import { useRest } from "../rest/useRest";
+import { afterKey } from "../sets/setsRun";
 import { type } from "../type";
 import { ChecklistRow } from "./ChecklistRow";
 
-/** A routine to tick off line by line; whatever is ticked is what gets logged. */
+/**
+ * A routine to tick off line by line on a clock from Start, resting between lines; whatever is
+ * ticked is what gets logged.
+ */
 export function ChecklistScreen({ run }: { run: WorkoutRun }): React.ReactElement {
   const unit = useWeightUnit(useApi());
+  const [startedAt] = React.useState(Date.now);
   const [ticked, setTicked] = React.useState<ReadonlySet<number>>(new Set());
-  const toggle = (i: number): void =>
-    setTicked((was) => {
-      const next = new Set(was);
-      if (!next.delete(i)) next.add(i);
-      return next;
-    });
+  const rest = useRest();
+  const toggle = (i: number): void => {
+    const next = new Set(ticked);
+    const ticking = !next.delete(i);
+    if (ticking) next.add(i);
+    setTicked(next);
+    const following = run.items.findIndex((_, j) => j > i && !next.has(j));
+    const name = run.items[following]?.exercise;
+    if (!ticking || name === undefined) rest.skip();
+    else rest.tick(afterKey(i), run.exerciseRestS, exerciseName(name));
+  };
   const finish = (): void =>
     logRun(
       run,
       doneAsPrescribed(run.items).filter((d) => ticked.has(d.item)),
-      null
+      startedAt
     );
 
   return (
@@ -38,16 +50,21 @@ export function ChecklistScreen({ run }: { run: WorkoutRun }): React.ReactElemen
           title={run.title}
           minutes={run.minutes}
           workoutId={run.workoutId}
+          startedAt={startedAt}
         />
         <View>
           {run.items.map((item, i) => (
-            <ChecklistRow
-              key={i}
-              name={exerciseName(item.exercise)}
-              dose={doseSummary(run.kind, item.dose, unit)}
-              ticked={ticked.has(i)}
-              onToggle={() => toggle(i)}
-            />
+            <React.Fragment key={i}>
+              <ChecklistRow
+                name={exerciseName(item.exercise)}
+                dose={doseSummary(run.kind, item.dose, unit)}
+                ticked={ticked.has(i)}
+                onToggle={() => toggle(i)}
+              />
+              {rest.rest?.at === afterKey(i) && (
+                <RestRow rest={rest.rest} left={rest.left} onMore={rest.more} onSkip={rest.skip} />
+              )}
+            </React.Fragment>
           ))}
         </View>
       </ScrollView>

@@ -1,6 +1,12 @@
 import React from "react";
 import { Text, View } from "react-native";
-import type { SessionItem, ItemDone, SetDone, WeightUnit } from "@sendtally/core/hang";
+import {
+  clock,
+  type ItemDone,
+  type SessionItem,
+  type SetDone,
+  type WeightUnit,
+} from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
 import { exerciseName } from "@sendtally/features/workouts";
@@ -21,6 +27,8 @@ export type SetsCardProps = {
   unit: WeightUnit;
   onChange: (set: number, value: SetDone) => void;
   onToggle: (set: number) => void;
+  /** What shows under a set: the rest its tick started, if it is running. */
+  restUnder: (set: number) => React.ReactNode;
 };
 
 /** One exercise of the workout as a table of its sets. */
@@ -34,6 +42,7 @@ export function SetsCard({
   unit,
   onChange,
   onToggle,
+  restUnder,
 }: SetsCardProps): React.ReactElement {
   const name = exerciseName(item.exercise);
   const { sets: _, ...target } = item.dose;
@@ -47,9 +56,16 @@ export function SetsCard({
         borderColor: colors.lineOnLightStrong,
       }}
     >
-      <Text style={[type.bodyBold, { fontSize: 17, color: colors.gunmetal, paddingBottom: 4 }]}>
-        {name}
-      </Text>
+      <View style={{ flexDirection: "row", alignItems: "baseline", gap: 8, paddingBottom: 4 }}>
+        <Text style={[type.bodyBold, { flex: 1, fontSize: 17, color: colors.gunmetal }]}>
+          {name}
+        </Text>
+        {target.setRestS !== undefined && target.setRestS > 0 && (
+          <Text style={[type.body, { fontSize: 13, color: colors.textSecondary }]}>
+            {t("plan.chipRest", { value: clock(target.setRestS) })}
+          </Text>
+        )}
+      </View>
       <View style={SET_COLUMNS.row}>
         <Label small color={colors.textSecondary} style={SET_COLUMNS.set}>
           {t("activities.colSet")}
@@ -63,22 +79,24 @@ export function SetsCard({
         <View style={SET_COLUMNS.tick} />
       </View>
       {done.sets.map((set, i) => (
-        <SetRow
-          key={i}
-          n={i + 1}
-          target={
-            lifting ? { ...target, weightKg: target.weightKg ?? previous[i]?.weightKg } : target
-          }
-          done={set}
-          previous={previous[i]}
-          lifting={lifting}
-          ticked={ticked.has(setKey({ item: done.item, set: i }))}
-          current={current?.item === done.item && current.set === i}
-          unit={unit}
-          label={t("activities.setOf", { exercise: name, n: i + 1 })}
-          onChange={(value) => onChange(i, value)}
-          onToggle={() => onToggle(i)}
-        />
+        <React.Fragment key={i}>
+          <SetRow
+            n={i + 1}
+            target={
+              lifting ? { ...target, weightKg: target.weightKg ?? previous[i]?.weightKg } : target
+            }
+            done={set}
+            previous={previous[i]}
+            lifting={lifting}
+            ticked={ticked.has(setKey({ item: done.item, set: i }))}
+            current={current?.item === done.item && current.set === i}
+            unit={unit}
+            label={t("activities.setOf", { exercise: name, n: i + 1 })}
+            onChange={(value) => onChange(i, value)}
+            onToggle={() => onToggle(i)}
+          />
+          {restUnder(i)}
+        </React.Fragment>
       ))}
     </View>
   );

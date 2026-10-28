@@ -5,17 +5,31 @@ import { doneAsPrescribed, type ItemDone, type SetDone } from "@sendtally/core/h
 import { colors } from "@sendtally/design/tokens";
 import { previousSets, useActivities, useWeightUnit } from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
+import { exerciseName } from "@sendtally/features/workouts";
 import { useApi } from "../../../lib/api";
 import { Button } from "../components/Button";
 import { PlayerHeader } from "../components/PlayerHeader";
 import { logRun, type WorkoutRun } from "../data/workoutRunParams";
+import { RestRow } from "../rest/RestRow";
+import { useRest } from "../rest/useRest";
+import { FoldedSetsCard } from "./FoldedSetsCard";
 import { SetsCard } from "./SetsCard";
-import { allSets, isLifting, setKey, tickedDone, withPrevious, type SetAt } from "./setsRun";
+import {
+  afterKey,
+  allSets,
+  isLifting,
+  itemDone,
+  restAfterTick,
+  setKey,
+  tickedDone,
+  withPrevious,
+  type SetAt,
+} from "./setsRun";
 
-const minutesSince = (start: number): number =>
-  Math.max(1, Math.round((Date.now() - start) / 60_000));
-
-/** A lifting workout as a set table: tick each set as it is done, then log what was done. */
+/**
+ * A lifting workout as a set table on a clock from Start: tick each set as it is done, rest
+ * in line after it, then log what was done.
+ */
 export function SetsScreen({ run }: { run: WorkoutRun }): React.ReactElement {
   const api = useApi();
   const unit = useWeightUnit(api);
@@ -23,18 +37,26 @@ export function SetsScreen({ run }: { run: WorkoutRun }): React.ReactElement {
   const [startedAt] = React.useState(Date.now);
   const [done, setDone] = React.useState<ItemDone[]>(() => doneAsPrescribed(run.items));
   const [ticked, setTicked] = React.useState<ReadonlySet<string>>(new Set());
+  const [opened, setOpened] = React.useState<ReadonlySet<number>>(new Set());
+  const rest = useRest();
   const sets = allSets(run.items);
   const previous = (exercise: string): SetDone[] =>
     activities.status === "ready" ? previousSets(activities.data, run.workoutId, exercise) : [];
   const lifting = (item: number): boolean => isLifting(run.kind, run.items[item]);
   const shown = withPrevious(done, lifting, previous);
   const current = sets.find((at) => !ticked.has(setKey(at))) ?? null;
+  const nameOf = (item: number): string => exerciseName(run.items[item]?.exercise ?? "");
 
   const toggle = (at: SetAt): void => {
     const key = setKey(at);
     const next = new Set(ticked);
-    if (!next.delete(key)) next.add(key);
+    const ticking = !next.delete(key);
+    if (ticking) next.add(key);
     setTicked(next);
+    setOpened((was) => new Set([...was].filter((i) => i !== at.item)));
+    const after = ticking ? restAfterTick(run.items, next, at, run.exerciseRestS) : null;
+    if (after === null) rest.skip();
+    else rest.tick(after.at, after.seconds, after.next === null ? undefined : nameOf(after.next));
   };
   const change = (item: number, set: number, value: SetDone): void =>
     setDone((all) =>
@@ -42,7 +64,11 @@ export function SetsScreen({ run }: { run: WorkoutRun }): React.ReactElement {
         d.item === item ? { ...d, sets: d.sets.map((s, i) => (i === set ? value : s)) } : d
       )
     );
-  const finish = (): void => logRun(run, tickedDone(shown, ticked), minutesSince(startedAt));
+  const restAt = (key: string): React.ReactNode =>
+    rest.rest?.at === key && (
+      <RestRow rest={rest.rest} left={rest.left} onMore={rest.more} onSkip={rest.skip} />
+    );
+  const finish = (): void => logRun(run, tickedDone(shown, ticked), startedAt);
 
   return (
     <SafeAreaView edges={["top", "bottom"]} style={{ flex: 1, backgroundColor: colors.white }}>
@@ -52,29 +78,43 @@ export function SetsScreen({ run }: { run: WorkoutRun }): React.ReactElement {
       >
         <ScrollView
           keyboardShouldPersistTaps="handled"
-          contentContainerStyle={{ gap: 12, paddingHorizontal: 18, paddingBottom: 24 }}
+          contentContainerStyle={{ gap: 10, paddingHorizontal: 18, paddingBottom: 24 }}
         >
           <PlayerHeader
             kind={run.kind}
             title={run.title}
             minutes={run.minutes}
             workoutId={run.workoutId}
+            startedAt={startedAt}
           />
           {run.items.map((item, i) => {
             const d = shown[i];
-            return d === undefined ? null : (
-              <SetsCard
-                key={i}
-                item={item}
-                done={d}
-                previous={previous(d.exercise)}
-                lifting={lifting(i)}
-                ticked={ticked}
-                current={current}
-                unit={unit}
-                onChange={(set, value) => change(i, set, value)}
-                onToggle={(set) => toggle({ item: i, set })}
-              />
+            if (d === undefined) return null;
+            const folded = itemDone(run.items, ticked, i) && !opened.has(i);
+            return (
+              <React.Fragment key={i}>
+                {folded ? (
+                  <FoldedSetsCard
+                    name={nameOf(i)}
+                    sets={item.dose.sets}
+                    onOpen={() => setOpened((was) => new Set([...was, i]))}
+                  />
+                ) : (
+                  <SetsCard
+                    item={item}
+                    done={d}
+                    previous={previous(d.exercise)}
+                    lifting={lifting(i)}
+                    ticked={ticked}
+                    current={current}
+                    unit={unit}
+                    onChange={(set, value) => change(i, set, value)}
+                    onToggle={(set) => toggle({ item: i, set })}
+                    restUnder={(set) => restAt(setKey({ item: i, set }))}
+                  />
+                )}
+                {restAt(afterKey(i))}
+              </React.Fragment>
             );
           })}
         </ScrollView>
