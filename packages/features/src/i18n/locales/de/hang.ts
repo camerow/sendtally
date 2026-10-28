@@ -72,7 +72,6 @@ export const hang = {
   "hang.statusStarts": "Beginnt {date}",
   "hang.statusOngoing": "Laufend",
 
-  "hang.edit": "Bearbeiten",
   "hang.customise": "Anpassen",
   "hang.gripTapToChange": "Griff · zum Ändern tippen",
   "hang.edgeDepth": "Leistentiefe",

@@ -23,7 +23,7 @@ import { EditorHeader } from "../components/EditorHeader";
 import { KindNameField } from "../components/KindNameField";
 import { SheetSection } from "../components/SheetSection";
 import { LoadState } from "../data/LoadState";
-import { ScreenFrame } from "../planning/ScreenFrame";
+import { ScreenFrame } from "../../../components/ScreenFrame";
 import { type } from "../type";
 import { forgetOpener, openerOf } from "./openExerciseEditor";
 import { takenBy } from "./takenBy";

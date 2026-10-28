@@ -16,7 +16,7 @@ import { LibraryBrowser } from "../library/LibraryBrowser";
 import { useLibrary } from "../library/useLibrary";
 import { addFlowParams, addKicker, type AddFlow } from "./flowParams";
 import { KindSheet } from "./KindSheet";
-import { ScreenFrame } from "./ScreenFrame";
+import { ScreenFrame } from "../../../components/ScreenFrame";
 
 export type AddPlanScreenProps = { flow: AddFlow; initialKind?: WorkoutKind | null };
 

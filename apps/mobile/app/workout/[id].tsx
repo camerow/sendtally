@@ -6,7 +6,7 @@ import { WorkoutScreen } from "../../features/training/library-detail/WorkoutScr
 export default function WorkoutRoute(): React.ReactElement {
   const { id, grip } = useLocalSearchParams<{ id: string; grip?: string }>();
   return (
-    <HangDataProvider>
+    <HangDataProvider framed>
       <WorkoutScreen id={id} grip={grip} />
     </HangDataProvider>
   );

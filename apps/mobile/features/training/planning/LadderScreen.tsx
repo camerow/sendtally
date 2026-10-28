@@ -17,7 +17,7 @@ import { PreviewRow } from "../library-detail/PreviewRow";
 import { usePlanActions } from "../plan/usePlanActions";
 import { membershipWhen } from "../plans/planText";
 import { type } from "../type";
-import { ScreenFrame } from "./ScreenFrame";
+import { ScreenFrame } from "../../../components/ScreenFrame";
 import { WeekRung } from "./WeekRung";
 import { confirmDestructive } from "../../../lib/confirmDestructive";
 

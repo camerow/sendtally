@@ -2,7 +2,7 @@ import React from "react";
 import { KeyboardAvoidingView, Platform, ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors } from "@sendtally/design/tokens";
-import { BackButton } from "../../../components/BackButton";
+import { BackButton } from "./BackButton";
 
 export type ScreenFrameProps = {
   children: React.ReactNode;
@@ -14,7 +14,7 @@ export type ScreenFrameProps = {
   footer?: React.ReactNode;
 };
 
-/** A full planning screen: back, a scrolling body that keeps a focused field above the keys, and a footer. */
+/** A full screen, planning or detail: back, a scrolling body that keeps a focused field above the keys, and a footer. */
 export function ScreenFrame({
   children,
   action,

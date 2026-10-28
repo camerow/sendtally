@@ -24,7 +24,9 @@ export type IconName =
   | "stop"
   | "x"
   | "insights"
-  | "star";
+  | "star"
+  | "copy"
+  | "merge";
 
 const SHAPES: Record<IconName, React.ReactElement> = {
   sessions: (
@@ -79,6 +81,8 @@ const SHAPES: Record<IconName, React.ReactElement> = {
   x: <Path d="M6 6l12 12M18 6L6 18" />,
   insights: <Path d="M5 19V11M10 19V5M15 19v-6M20 19V8" />,
   star: <Path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z" />,
+  copy: <Path d="M9 9h11v11H9zM5 15H4V4h11v1" />,
+  merge: <Path d="M7 4v5a5 5 0 0 0 5 5v6M17 4v5a5 5 0 0 1-5 5" />,
 };
 
 export type IconProps = {

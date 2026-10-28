@@ -15,6 +15,7 @@ export const sessions = {
   "sessions.posting": "Publication…",
   "sessions.createTag": "+ Créer « {name} »",
   "sessions.deleteTitle": "Supprimer la séance ?",
+  "sessions.deleteSession": "Supprimer la séance",
   "sessions.deleteBody": "La séance et son détail seront supprimés définitivement.",
   "sessions.deleteFailed": "Suppression impossible",
   "sessions.readOnlyBoard":

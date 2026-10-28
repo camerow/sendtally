@@ -7,7 +7,7 @@ import { t } from "@sendtally/features/i18n";
 import { focusLabel, focusMeaning } from "@sendtally/features/training";
 import { Title } from "../components/Title";
 import { LoadState } from "../data/LoadState";
-import { ScreenFrame } from "../planning/ScreenFrame";
+import { ScreenFrame } from "../../../components/ScreenFrame";
 import { type } from "../type";
 import { LibraryBrowser } from "./LibraryBrowser";
 import { useLibrary } from "./useLibrary";

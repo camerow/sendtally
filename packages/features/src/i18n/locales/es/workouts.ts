@@ -19,6 +19,7 @@ export const workouts = {
   "workouts.descriptionPlaceholder": "Para qué sirve y cómo se hace",
   "workouts.noBody": "Sin ejercicios ni pasos. Edítalo para añadir algunos.",
   "workouts.duplicate": "Duplicar",
+  "workouts.duplicateHint": "Cópialo en tus entrenos para cambiarlo",
   "workouts.delete": "Borrar entreno",
   "workouts.deleteTitle": "¿Borrar {name}?",
   "workouts.deleteBody": "Sus planes se van con él. Las sesiones registradas se quedan.",
@@ -117,6 +118,7 @@ export const workouts = {
   "workouts.exerciseLast": "Último {value}",
   "workouts.usedIn": "Se usa en",
   "workouts.mergeExercise": "Fusionar con…",
+  "workouts.mergeExerciseHint": "Unirlo a otro ejercicio, con todo su historial",
   "workouts.mergeExerciseTitle": "¿Fusionar {from} con {into}?",
   "workouts.mergeExerciseBody":
     "Cada entreno y registro que nombra {from} pasará a nombrar {into}.",

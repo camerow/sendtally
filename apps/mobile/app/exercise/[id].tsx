@@ -6,7 +6,7 @@ import { ExerciseScreen } from "../../features/training/exercises/ExerciseScreen
 export default function ExerciseRoute(): React.ReactElement {
   const { id } = useLocalSearchParams<{ id: string }>();
   return (
-    <HangDataProvider>
+    <HangDataProvider framed>
       <ExerciseScreen id={id} />
     </HangDataProvider>
   );

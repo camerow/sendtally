@@ -15,6 +15,7 @@ export const sessions = {
   "sessions.posting": "Posting…",
   "sessions.createTag": "+ Create “{name}”",
   "sessions.deleteTitle": "Delete session?",
+  "sessions.deleteSession": "Delete session",
   "sessions.deleteBody": "This removes the session and its climb log for good.",
   "sessions.deleteFailed": "Could not delete",
   "sessions.readOnlyBoard":

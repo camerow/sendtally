@@ -15,6 +15,7 @@ export const sessions = {
   "sessions.posting": "Wird gepostet…",
   "sessions.createTag": "+ „{name}“ erstellen",
   "sessions.deleteTitle": "Session löschen?",
+  "sessions.deleteSession": "Session löschen",
   "sessions.deleteBody": "Das entfernt die Session und ihr Kletterprotokoll endgültig.",
   "sessions.deleteFailed": "Löschen fehlgeschlagen",
   "sessions.readOnlyBoard":

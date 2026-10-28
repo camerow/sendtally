@@ -14,7 +14,7 @@ import { PickerRow } from "../exercise-picker/PickerRow";
 import { usePickerWorld } from "../exercise-picker/usePickerWorld";
 import { CategoryMark } from "../library/CategoryMark";
 import { LibrarySearch } from "../library/LibrarySearch";
-import { ScreenFrame } from "../planning/ScreenFrame";
+import { ScreenFrame } from "../../../components/ScreenFrame";
 import { openGrip } from "../train/openGrip";
 import { type } from "../type";
 import { openExerciseEditor } from "./openExerciseEditor";

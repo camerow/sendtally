@@ -9,7 +9,8 @@ export type WorkoutScreenProps = { id: string; grip?: string };
 /** A library workout's screen: the hangboard one for hangboard workouts, the library one for the rest. */
 export function WorkoutScreen({ id, grip }: WorkoutScreenProps): React.ReactElement | null {
   const { state, reload } = useLibrary();
-  if (state.status !== "ready") return <LoadState state={state} onRetry={() => void reload()} />;
+  if (state.status !== "ready")
+    return <LoadState state={state} onRetry={() => void reload()} framed />;
   const workout = state.data.workout(id);
   if (workout === undefined) return null;
   if (workout.kind === "hangboard") return <WorkoutDetailScreen id={id} grip={grip} />;

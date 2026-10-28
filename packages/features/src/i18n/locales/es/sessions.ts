@@ -15,6 +15,7 @@ export const sessions = {
   "sessions.posting": "Publicando…",
   "sessions.createTag": "+ Crear “{name}”",
   "sessions.deleteTitle": "¿Eliminar la sesión?",
+  "sessions.deleteSession": "Eliminar la sesión",
   "sessions.deleteBody": "Esto elimina la sesión y su registro de escaladas para siempre.",
   "sessions.deleteFailed": "No se pudo eliminar",
   "sessions.readOnlyBoard":

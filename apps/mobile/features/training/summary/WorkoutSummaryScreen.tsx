@@ -1,15 +1,13 @@
 import React from "react";
-import { ActivityIndicator, Alert, Text, View } from "react-native";
+import { Alert } from "react-native";
 import type { ActivityRecord, HangSessionRecord } from "@sendtally/api-client";
-import { colors } from "@sendtally/design/tokens";
 import { useActivities, useActivityActions } from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
 import { useExerciseSeries } from "@sendtally/features/statistics";
 import { useTrainingLog } from "@sendtally/features/training";
-import { BackButton } from "../../../components/BackButton";
 import { useApi } from "../../../lib/api";
 import { useHangData } from "../data/HangDataContext";
-import { type } from "../type";
+import { LoadState } from "../data/LoadState";
 import { ActivitySummary } from "./ActivitySummary";
 import { HangSummary } from "./HangSummary";
 
@@ -22,7 +20,7 @@ type Found =
 export function WorkoutSummaryScreen({ id }: { id: string }): React.ReactElement {
   const api = useApi();
   const { model, actions: hangActions } = useHangData();
-  const { state } = useActivities(api);
+  const { state, reload } = useActivities(api);
   const series = useExerciseSeries(api);
   const { log } = useTrainingLog(api);
   const actions = useActivityActions(api, reportFailure);
@@ -55,21 +53,13 @@ export function WorkoutSummaryScreen({ id }: { id: string }): React.ReactElement
       />
     );
   }
-  if (state.status === "loading") {
-    return (
-      <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-        <ActivityIndicator color={colors.gunmetal} />
-      </View>
-    );
-  }
   return (
-    <View style={{ padding: 18, gap: 16 }}>
-      <BackButton />
-      <Text style={[type.body, { fontSize: 15, color: colors.textSecondary }]}>
-        {state.status === "error"
-          ? t("common.somethingWentWrongTryAgain")
-          : t("activities.notFound")}
-      </Text>
-    </View>
+    <LoadState
+      state={
+        state.status === "ready" ? { status: "error", message: t("activities.notFound") } : state
+      }
+      onRetry={() => void reload()}
+      framed
+    />
   );
 }

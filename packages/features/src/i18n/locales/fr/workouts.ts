@@ -19,6 +19,7 @@ export const workouts = {
   "workouts.descriptionPlaceholder": "À quoi elle sert, et comment la faire",
   "workouts.noBody": "Aucun exercice ni étape. Modifie-la pour en ajouter.",
   "workouts.duplicate": "Dupliquer",
+  "workouts.duplicateHint": "La copier dans vos séances pour la modifier",
   "workouts.delete": "Supprimer la séance",
   "workouts.deleteTitle": "Supprimer {name} ?",
   "workouts.deleteBody": "Ses plans partent avec elle. Les séances notées restent.",
@@ -118,6 +119,7 @@ export const workouts = {
   "workouts.exerciseLast": "Dernier {value}",
   "workouts.usedIn": "Utilisé dans",
   "workouts.mergeExercise": "Fusionner avec…",
+  "workouts.mergeExerciseHint": "Le fondre dans un autre exercice, historique compris",
   "workouts.mergeExerciseTitle": "Fusionner {from} avec {into} ?",
   "workouts.mergeExerciseBody":
     "Chaque séance et chaque entrée qui nomme {from} nommera {into} à la place.",

@@ -40,6 +40,7 @@ export type ClimbFeature = {
   rename: (name: string) => Promise<string>;
   /** A note dated to a day: on that day's session of this climb, or on a new attempt there. */
   addNote: (day: string, note: string) => Promise<void>;
+  reload: () => Promise<void>;
 };
 
 /** A climb by its id, or by the slug a web link carries. */
@@ -78,5 +79,5 @@ export function useClimb(api: SendtallyApi, idOrSlug: string): ClimbFeature {
     },
     [api, state, reload]
   );
-  return { state, setWorking, rename, addNote };
+  return { state, setWorking, rename, addNote, reload };
 }

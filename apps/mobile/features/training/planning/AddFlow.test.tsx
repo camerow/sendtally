@@ -163,11 +163,14 @@ describe("adding to the plan", () => {
     });
   });
 
-  it("deletes the user's own workout from its preview, once confirmed", async () => {
+  it("deletes the user's own workout from its preview's ··· menu, once confirmed", async () => {
     const alert = jest.spyOn(Alert, "alert").mockImplementation(() => undefined);
     await renderWithHang(<WorkoutPreviewScreen id="legs" adding={null} />, hangData(), {
       workouts: [legs],
     });
+    expect(screen.queryByText("Delete workout")).toBeNull();
+    await fireEvent.press(screen.getByLabelText("More"));
+    expect(screen.getByText("Duplicate")).toBeTruthy();
     await fireEvent.press(screen.getByText("Delete workout"));
     expect(mockWorkouts.deleteWorkout).not.toHaveBeenCalled();
     const buttons = alert.mock.calls[0]?.[2] as AlertButton[];

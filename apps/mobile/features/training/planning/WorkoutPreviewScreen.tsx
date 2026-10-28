@@ -1,19 +1,18 @@
 import { router } from "expo-router";
 import React from "react";
-import { Alert } from "react-native";
 import { t } from "@sendtally/features/i18n";
-import { useWorkoutActions } from "@sendtally/features/workouts";
-import { useApi } from "../../../lib/api";
-import { confirmDestructive } from "../../../lib/confirmDestructive";
+import type { LibraryWorkout, WorkoutUse } from "@sendtally/features/workouts";
+import { ScreenFrame } from "../../../components/ScreenFrame";
 import { Button } from "../components/Button";
+import { DetailActions } from "../components/DetailActions";
 import { useHangData } from "../data/HangDataContext";
 import { LoadState } from "../data/LoadState";
 import { BodyPreview } from "../library-detail/BodyPreview";
 import { LibraryIntro } from "../library-detail/LibraryIntro";
 import { StartButton } from "../library-detail/StartButton";
+import { useWorkoutDetailActions } from "../library-detail/useWorkoutDetailActions";
 import { useLibrary } from "../library/useLibrary";
 import { addFlowParams, type AddFlow } from "./flowParams";
-import { ScreenFrame } from "./ScreenFrame";
 
 export type WorkoutPreviewScreenProps = {
   id: string;
@@ -21,48 +20,20 @@ export type WorkoutPreviewScreenProps = {
   adding: AddFlow | null;
 };
 
-const reportFailure = (): void => Alert.alert(t("workouts.saveFailed"));
-
-/** A workout read through before it is planned or run: what it holds and what its next session takes. */
-export function WorkoutPreviewScreen({
-  id,
+function Preview({
+  workout,
+  use,
   adding,
-}: WorkoutPreviewScreenProps): React.ReactElement | null {
+}: {
+  workout: LibraryWorkout;
+  use: WorkoutUse | undefined;
+  adding: AddFlow | null;
+}): React.ReactElement {
   const { model, today } = useHangData();
-  const { state, reload } = useLibrary();
-  const actions = useWorkoutActions(useApi(), reportFailure);
-  if (state.status !== "ready") return <LoadState state={state} onRetry={() => void reload()} />;
-  const workout = state.data.workout(id);
-  if (workout === undefined) return null;
-  const mine = workout.source === "mine";
-  const remove = (): void =>
-    confirmDestructive({
-      title: t("workouts.deleteTitle", { name: workout.name }),
-      body: t("workouts.deleteBody"),
-      action: t("common.delete"),
-      onConfirm: () => {
-        router.back();
-        void actions.deleteWorkout(workout.id);
-      },
-    });
-
+  const actions = useWorkoutDetailActions(workout);
   return (
     <ScreenFrame
-      action={
-        adding === null && (
-          <Button
-            label={mine ? t("hang.edit") : t("hang.customise")}
-            onPress={() =>
-              router.push({
-                pathname: "/workout/edit",
-                params: mine ? { id: workout.id } : { from: workout.id },
-              })
-            }
-            variant="outline"
-            height={44}
-          />
-        )
-      }
+      action={adding === null && <DetailActions {...actions} />}
       footer={
         adding === null ? (
           <StartButton workout={workout} date={today} height={54} />
@@ -82,15 +53,22 @@ export function WorkoutPreviewScreen({
         )
       }
     >
-      <LibraryIntro workout={workout} use={state.data.usage.get(id)} />
-      <BodyPreview
-        workout={workout}
-        unit={model.settings.units}
-        session={state.data.usage.get(id)?.count ?? 0}
-      />
-      {mine && adding === null && (
-        <Button label={t("workouts.delete")} onPress={remove} variant="danger" height={50} />
-      )}
+      <LibraryIntro workout={workout} use={use} />
+      <BodyPreview workout={workout} unit={model.settings.units} session={use?.count ?? 0} />
     </ScreenFrame>
+  );
+}
+
+/** A workout read through before it is planned or run: what it holds and what its next session takes. */
+export function WorkoutPreviewScreen({
+  id,
+  adding,
+}: WorkoutPreviewScreenProps): React.ReactElement | null {
+  const { state, reload } = useLibrary();
+  if (state.status !== "ready")
+    return <LoadState state={state} onRetry={() => void reload()} framed />;
+  const workout = state.data.workout(id);
+  return workout === undefined ? null : (
+    <Preview workout={workout} use={state.data.usage.get(id)} adding={adding} />
   );
 }

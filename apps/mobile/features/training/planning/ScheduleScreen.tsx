@@ -28,7 +28,7 @@ import { usePlanActions } from "../plan/usePlanActions";
 import { backToPlan } from "./backToPlan";
 import { BlockChoice } from "./BlockChoice";
 import type { AddFlow } from "./flowParams";
-import { ScreenFrame } from "./ScreenFrame";
+import { ScreenFrame } from "../../../components/ScreenFrame";
 import { StartField } from "./StartField";
 import { WeekdayChips } from "./WeekdayChips";
 

@@ -5,7 +5,7 @@ import { colors } from "@sendtally/design/tokens";
 import { dayTitle } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import { trainingDay, useTrainingLog } from "@sendtally/features/training";
-import { BackButton } from "../../../components/BackButton";
+import { ScreenFrame } from "../../../components/ScreenFrame";
 import { useApi } from "../../../lib/api";
 import { blockTag } from "../blocks/blockText";
 import { Button } from "../components/Button";
@@ -32,8 +32,7 @@ export function PlanDayScreen({ date }: PlanDayScreenProps): React.ReactElement 
   const kicker = block === null ? null : blockTag(block.name, block, date);
   const [adding, setAdding] = React.useState(false);
   return (
-    <View style={{ gap: 16 }}>
-      <BackButton />
+    <ScreenFrame>
       <View style={{ gap: 6 }}>
         {kicker !== null && <Label color={colors.textSecondary}>{kicker}</Label>}
         <Title size={32}>{day.isToday ? t("training.today") : dayTitle(date)}</Title>
@@ -56,6 +55,6 @@ export function PlanDayScreen({ date }: PlanDayScreenProps): React.ReactElement 
         visible={adding}
         onClose={() => setAdding(false)}
       />
-    </View>
+    </ScreenFrame>
   );
 }

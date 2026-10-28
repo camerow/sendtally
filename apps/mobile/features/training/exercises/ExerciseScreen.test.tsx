@@ -76,7 +76,7 @@ const press = async (title: string): Promise<void> => {
 };
 
 const edit = async (): Promise<void> => {
-  await press("Edit");
+  await fireEvent.press(screen.getByText("Edit"));
   expect(router.push).toHaveBeenLastCalledWith({
     pathname: "/exercise/edit",
     params: { id: "e1", kind: "strength" },
@@ -107,7 +107,6 @@ describe("exercise screen", () => {
     );
     mockApi.mergeExercise.mockResolvedValue({ exercise: exercises[1] });
     await renderWithHang(<ExerciseScreen id="e1" />, hangData(), world);
-    await fireEvent.press(screen.getByLabelText("More for this exercise"));
     await edit();
     await fireEvent.changeText(screen.getByLabelText("Name"), "squat");
     await fireEvent.press(screen.getByText("Save"));
@@ -135,7 +134,6 @@ describe("exercise screen", () => {
   it("warns before changing how a logged exercise is measured", async () => {
     mockApi.saveExercise.mockResolvedValue({ exercise: exercises[0] });
     await renderWithHang(<ExerciseScreen id="e1" />, hangData(), world);
-    await fireEvent.press(screen.getByLabelText("More for this exercise"));
     await edit();
     await fireEvent.press(screen.getByText("Seconds"));
     await fireEvent.press(screen.getByLabelText("Each side"));
@@ -155,11 +153,13 @@ describe("exercise screen", () => {
     });
   });
 
-  it("archives an exercise in use and deletes one nothing uses, asking first", async () => {
+  it("archives an exercise in use and deletes one nothing uses, asking first, then goes back", async () => {
     mockApi.removeExercise.mockResolvedValue({ removed: "archived" });
     await renderWithHang(<ExerciseScreen id="e1" />, hangData(), world);
-    await fireEvent.press(screen.getByLabelText("More for this exercise"));
-    await press("Archive");
+    await fireEvent.press(screen.getByLabelText("More"));
+    expect(screen.getByText("Merge into…")).toBeTruthy();
+    await fireEvent.press(screen.getByText("Archive"));
+    expect(router.back).not.toHaveBeenCalled();
     expect(Alert.alert).toHaveBeenLastCalledWith(
       "Archive Back squat?",
       "It leaves the picker and Exercises but keeps its history. Making it again brings it back.",
@@ -170,8 +170,9 @@ describe("exercise screen", () => {
     expect(router.back).toHaveBeenCalled();
 
     await renderWithHang(<ExerciseScreen id="e2" />, hangData(), world);
-    await fireEvent.press(screen.getByLabelText("More for this exercise"));
-    await press("Delete");
+    await fireEvent.press(screen.getByLabelText("More"));
+    expect(screen.getByText("Nothing uses it, so it goes for good.")).toBeTruthy();
+    await fireEvent.press(screen.getByText("Delete"));
     expect(Alert.alert).toHaveBeenLastCalledWith(
       "Delete Squat?",
       "Nothing uses it, so it goes for good.",

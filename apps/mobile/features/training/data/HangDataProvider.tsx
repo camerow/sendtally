@@ -13,9 +13,11 @@ export type HangDataProviderProps = {
   children: React.ReactNode;
   /** What shows until the training data has loaded; a loading and retry state by default. */
   fallback?: React.ReactNode;
+  /** The default fallback inside a detail screen's frame. */
+  framed?: boolean;
 };
 
-function Loader({ children, fallback }: HangDataProviderProps): React.ReactElement {
+function Loader({ children, fallback, framed }: HangDataProviderProps): React.ReactElement {
   const api = useApi();
   const { state, reload } = useHang(api);
   const actions = useHangActions(api, reportFailure);
@@ -27,7 +29,15 @@ function Loader({ children, fallback }: HangDataProviderProps): React.ReactEleme
   );
 
   if (value === null)
-    return <>{fallback === undefined ? <LoadState state={state} onRetry={reload} /> : fallback}</>;
+    return (
+      <>
+        {fallback === undefined ? (
+          <LoadState state={state} onRetry={reload} framed={framed} />
+        ) : (
+          fallback
+        )}
+      </>
+    );
   return <HangDataContext.Provider value={value}>{children}</HangDataContext.Provider>;
 }
 

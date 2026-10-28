@@ -16,7 +16,7 @@ import { useHangData } from "../data/HangDataContext";
 import { usePlanActions } from "../plan/usePlanActions";
 import { type } from "../type";
 import { BlockWorkouts } from "./BlockWorkouts";
-import { ScreenFrame } from "./ScreenFrame";
+import { ScreenFrame } from "../../../components/ScreenFrame";
 import { StartField } from "./StartField";
 
 const MAX_WEEKS = 16;

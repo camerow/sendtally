@@ -27,6 +27,7 @@ export type SessionDetailFeature = {
   sort: ClimbSort;
   setSort: (s: ClimbSort) => void;
   post: PostActionFeature;
+  reload: () => Promise<void>;
 };
 
 export function useSessionDetail(api: SendtallyApi, fingerprint: string): SessionDetailFeature {
@@ -85,5 +86,6 @@ export function useSessionDetail(api: SendtallyApi, fingerprint: string): Sessio
     sort,
     setSort,
     post: { busy: posting, error: postError, run },
+    reload: session.reload,
   };
 }

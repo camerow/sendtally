@@ -9,7 +9,7 @@ export default function WorkoutPreviewRoute(): React.ReactElement {
     RawAddParams & { id: string; add?: string }
   >();
   return (
-    <HangDataProvider>
+    <HangDataProvider framed>
       <WorkoutPreviewScreen id={id} adding={add === undefined ? null : addFlowOf(params)} />
     </HangDataProvider>
   );

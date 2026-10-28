@@ -4,18 +4,21 @@ import { Text, View } from "react-native";
 import { blockEnd } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
-import { blockRecap, useTrainingLog } from "@sendtally/features/training";
+import { blockRecap, usePlan, useTrainingLog } from "@sendtally/features/training";
+import { ScreenFrame } from "../../../components/ScreenFrame";
 import { useApi } from "../../../lib/api";
 import { blockDates } from "../blocks/blockText";
-import { Button } from "../components/Button";
+import { DetailActions } from "../components/DetailActions";
+import { deleteRow } from "../components/deleteRow";
 import { Label } from "../components/Label";
 import { Title } from "../components/Title";
 import { useHangData } from "../data/HangDataContext";
+import { LoadState } from "../data/LoadState";
+import { usePlanActions } from "../plan/usePlanActions";
 import { useLit } from "../plan/useLit";
 import { type } from "../type";
 import { BlockOverview } from "./BlockOverview";
 import { BlockRecapView } from "./BlockRecapView";
-import { ScreenFrame } from "./ScreenFrame";
 
 export type BlockScreenProps = {
   id: string;
@@ -27,7 +30,12 @@ export type BlockScreenProps = {
 export function BlockScreen({ id, highlight }: BlockScreenProps): React.ReactElement | null {
   const lit = useLit(highlight);
   const { today } = useHangData();
-  const { log } = useTrainingLog(useApi());
+  const api = useApi();
+  const plan = usePlan(api);
+  const { log } = useTrainingLog(api);
+  const actions = usePlanActions();
+  if (plan.state.status !== "ready")
+    return <LoadState state={plan.state} onRetry={() => void plan.reload()} framed />;
   const block = log.plan.blocks.find((b) => b.id === id);
   if (block === undefined) return null;
   const recap = blockRecap(log, block, today);
@@ -36,11 +44,19 @@ export function BlockScreen({ id, highlight }: BlockScreenProps): React.ReactEle
   return (
     <ScreenFrame
       action={
-        <Button
-          label={t("hang.edit")}
-          onPress={() => router.push({ pathname: "/plan/block/edit", params: { id } })}
-          variant="outline"
-          height={44}
+        <DetailActions
+          onEdit={() => router.push({ pathname: "/plan/block/edit", params: { id } })}
+          menu={[
+            deleteRow({
+              title: t("plan.deleteBlock"),
+              hint: t("plan.deleteBlockBody"),
+              confirm: {
+                title: t("plan.deleteBlockTitle", { name: block.name }),
+                body: t("plan.deleteBlockBody"),
+              },
+              onDelete: () => void actions.deleteBlock(id),
+            }),
+          ]}
         />
       }
     >
