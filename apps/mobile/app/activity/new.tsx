@@ -11,7 +11,7 @@ import {
 } from "@sendtally/features/activities";
 import { today } from "@sendtally/features/journal";
 import { ActivityForm } from "../../features/training/activity/ActivityForm";
-import { readPlanLink } from "../../features/training/data/planLinkParams";
+import { readPlanLink, readSession } from "../../features/training/data/planLinkParams";
 import { usePrescribed } from "../../features/training/data/usePrescribed";
 
 // A plan or a library workout opens this with what it already knows: the kind, its title,
@@ -20,7 +20,11 @@ import { usePrescribed } from "../../features/training/data/usePrescribed";
 export default function NewActivityScreen(): React.ReactElement {
   const params = useLocalSearchParams<ActivityPrefill>();
   const [id] = React.useState(randomUUID);
-  const prescribed = usePrescribed(params.workoutId ?? null, readPlanLink(params));
+  const prescribed = usePrescribed(
+    params.workoutId ?? null,
+    readPlanLink(params),
+    readSession(params)
+  );
   const [initial, setInitial] = React.useState<ActivityDraft | null>(null);
   if (initial === null && prescribed !== undefined) {
     setInitial(newActivityDraft(params, today(), prescribed));

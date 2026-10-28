@@ -35,15 +35,16 @@ export const DOSE_FIELDS = [
 /** One set as it was done. */
 export type SetDone = Omit<Dose, "sets">;
 
-/** One exercise of a variation. A hangboard item's exercise is its grip id. */
-export type Item = { exercise: string; dose: Dose };
-
-export type Variation = { label: string; items: Item[] };
-
 /**
- * A library workout of any kind. One variation is no rotation; with more, `pattern`
- * lists the variation each session takes in turn, so A, A, B is [0, 0, 1].
+ * One exercise of a workout. One dose is the same every session; with more, sessions
+ * take them in turn. A hangboard item's exercise is its grip id.
  */
+export type Item = { exercise: string; doses: Dose[] };
+
+/** One exercise as one session runs it: the dose that session takes. */
+export type SessionItem = { exercise: string; dose: Dose };
+
+/** A library workout of any kind. */
 export type Workout = {
   id: string;
   kind: WorkoutKind;
@@ -52,14 +53,17 @@ export type Workout = {
   /** Ignored for hangboard, whose duration is counted from its items. */
   minutes: number | null;
   targetRpe: number | null;
-  variations: Variation[];
-  pattern: number[];
-  /** Hangboard: the rest between one item and the next. */
+  items: Item[];
+  /** The rest between one item and the next; none at zero. */
   exerciseRestS: number;
 };
 
 /** What a hangboard workout rests between exercises unless it says otherwise. */
 export const DEFAULT_EXERCISE_REST_S = 180;
+
+/** A new workout rests between exercises on the hangboard only. */
+export const defaultExerciseRestS = (kind: WorkoutKind): number =>
+  kind === "hangboard" ? DEFAULT_EXERCISE_REST_S : 0;
 
 /** A run of weeks from a start date. */
 export type Block = { id: string; name: string; start: CalendarDate; weeks: number };
@@ -77,11 +81,11 @@ export type Membership = {
   start: CalendarDate;
 };
 
-/** What one block week changes about one item of one variation, counted from the workout as written. */
+/** What one block week changes about one dose of one item, counted from the workout as written. */
 export type WeekChange = {
   membershipId: string;
   week: number;
-  variation: number;
+  dose: number;
   item: number;
   change: Partial<Dose>;
 };
@@ -93,12 +97,49 @@ export type ItemDone = { item: number; exercise: string; sets: SetDone[] };
 export type PlanLink = {
   membershipId: string | null;
   week: number | null;
-  variation: number | null;
 };
 
-/** Every variation in turn. */
-export const defaultPattern = (variations: number): number[] =>
-  Array.from({ length: Math.max(1, variations) }, (_, i) => i);
+/** The dose session `n` of a workout takes from an item: its doses in turn. */
+export const doseIndex = (item: Pick<Item, "doses">, n: number): number =>
+  n % Math.max(1, item.doses.length);
+
+/** How many sessions before every item is back on its first dose: the most doses any item has. */
+export const turnsOf = (items: readonly Pick<Item, "doses">[]): number =>
+  Math.max(1, ...items.map((i) => i.doses.length));
+
+/** Every item as session `n` of the workout runs it. */
+export const sessionItems = (items: readonly Item[], n: number): SessionItem[] =>
+  items.map((i) => ({ exercise: i.exercise, dose: i.doses[doseIndex(i, n)] ?? { sets: 1 } }));
+
+/** A, B, C: how a dose is named by its turn. */
+export const letterOf = (dose: number): string => String.fromCharCode(65 + dose);
+
+/** A workout as it was written before items took turns: whole variations, one per session. */
+export type VariationsWorkout = { variations: { items: SessionItem[] }[] };
+
+const sameExercise = (a: string, b: string): boolean =>
+  a.trim().toLowerCase() === b.trim().toLowerCase();
+
+/**
+ * Folds whole variations into items that take turns, item by item, when every variation
+ * holds the same exercises in the same order. A dose no variation changes is kept once.
+ * Null when the variations do not line up.
+ */
+export function foldVariations({ variations }: VariationsWorkout): Item[] | null {
+  const [first, ...rest] = variations;
+  if (first === undefined) return [];
+  const lineUp = rest.every(
+    (v) =>
+      v.items.length === first.items.length &&
+      v.items.every((item, i) => sameExercise(item.exercise, first.items[i]?.exercise ?? ""))
+  );
+  if (!lineUp) return null;
+  return first.items.map((item, i) => {
+    const doses = variations.map((v) => v.items[i]?.dose ?? item.dose);
+    const same = doses.every((d) => JSON.stringify(d) === JSON.stringify(item.dose));
+    return { exercise: item.exercise, doses: same ? [item.dose] : doses };
+  });
+}
 
 /** Exclusive. */
 export const blockEnd = (b: Pick<Block, "start" | "weeks">): CalendarDate =>
@@ -154,17 +195,19 @@ export function occurrencesIn(
 }
 
 export type Prescribed = {
-  workout: Pick<Workout, "variations">;
+  workout: Pick<Workout, "items">;
   membershipId: string;
-  variation: number;
+  /** How many sessions of the workout came before this one. */
+  session: number;
   /** The block week, or null outside a block, which is always as written. */
   week: number | null;
 };
 
-/** The variation's items with that week's changes laid over each dose. */
-export function prescription(changes: readonly WeekChange[], p: Prescribed): Item[] {
-  const items = p.workout.variations[p.variation]?.items ?? [];
-  return items.map((item, i) => {
+/** The items as the session runs them, with that week's changes laid over each dose. */
+export function prescription(changes: readonly WeekChange[], p: Prescribed): SessionItem[] {
+  return p.workout.items.map((item, i) => {
+    const dose = doseIndex(item, p.session);
+    const run = { exercise: item.exercise, dose: item.doses[dose] ?? { sets: 1 } };
     const change =
       p.week === null
         ? undefined
@@ -172,10 +215,10 @@ export function prescription(changes: readonly WeekChange[], p: Prescribed): Ite
             (c) =>
               c.membershipId === p.membershipId &&
               c.week === p.week &&
-              c.variation === p.variation &&
+              c.dose === dose &&
               c.item === i
           );
-    return change === undefined ? item : { ...item, dose: { ...item.dose, ...change.change } };
+    return change === undefined ? run : { ...run, dose: { ...run.dose, ...change.change } };
   });
 }
 
@@ -187,63 +230,6 @@ export function changeFrom(written: Dose, target: Dose): Partial<Dose> {
     if (value !== undefined && value !== written[field]) change[field] = value;
   }
   return change;
-}
-
-const cyclic = (n: number, length: number): number => ((n % length) + length) % length;
-
-/**
- * The pattern step the trail of logged variations (oldest first) ended on: the
- * step whose run up to it matches the most recent sessions, so A, A, B knows
- * which A came last. -1 before any session.
- */
-function lastStep(pattern: readonly number[], trail: readonly number[]): number {
-  if (trail.length === 0) return -1;
-  let best = -1;
-  let bestScore = -1;
-  pattern.forEach((_, step) => {
-    let score = 0;
-    while (
-      score < pattern.length &&
-      score < trail.length &&
-      trail[trail.length - 1 - score] === pattern[cyclic(step - score, pattern.length)]
-    )
-      score++;
-    if (score > bestScore) [best, bestScore] = [step, score];
-  });
-  return best;
-}
-
-/**
- * The variations the next `count` sessions take: the steps after the one the last
- * logged session matched. Goes by session, so a missed day never breaks the turn.
- */
-export function upcomingVariations(
-  pattern: readonly number[],
-  trail: readonly number[],
-  count: number
-): number[] {
-  const steps = pattern.length === 0 ? [0] : pattern;
-  const last = lastStep(steps, trail);
-  return Array.from({ length: count }, (_, k) => steps[cyclic(last + 1 + k, steps.length)] ?? 0);
-}
-
-type LoggedAgainst = { membershipId: string | null; variation: number | null; date: CalendarDate };
-
-/** The variations logged against a membership, oldest first. */
-export function variationTrail(sessions: readonly LoggedAgainst[], membershipId: string): number[] {
-  return sessions
-    .filter((s) => s.membershipId === membershipId && s.variation !== null)
-    .sort((a, b) => a.date.localeCompare(b.date))
-    .map((s) => s.variation ?? 0);
-}
-
-/** The variation the membership's next session takes. */
-export function nextVariation(
-  workout: Pick<Workout, "pattern">,
-  sessions: readonly LoggedAgainst[],
-  membershipId: string
-): number {
-  return upcomingVariations(workout.pattern, variationTrail(sessions, membershipId), 1)[0] ?? 0;
 }
 
 /** A hangboard dose with time on the edge hangs; without, it is a ground pull. */
@@ -285,7 +271,7 @@ export const timeUnitsOf = (p: Pick<Protocol, "hangS" | "restS" | "setRestS">): 
 });
 
 /** Items run as a circuit: each round does every item once, for as many rounds as the most sets. */
-export function intervalsOf(items: readonly Item[]): Intervals {
+export function intervalsOf(items: readonly SessionItem[]): Intervals {
   return {
     rounds: Math.max(1, ...items.map((i) => i.dose.sets)),
     steps: items.map((i) => ({
@@ -299,8 +285,8 @@ export function intervalsOf(items: readonly Item[]): Intervals {
   };
 }
 
-/** Rough seconds a variation takes, timed as the hang timer would run each item. */
-export const itemsSeconds = (items: readonly Item[]): number =>
+/** Rough seconds a session takes, timed as the hang timer would run each item. */
+export const itemsSeconds = (items: readonly SessionItem[]): number =>
   items.reduce((sum, i) => sum + totalSeconds(doseProtocol(i.exercise, i.dose)), 0);
 
 /**
@@ -313,13 +299,13 @@ export function hangItemSeconds(dose: Dose): number {
   return p.sets * p.reps * (work + p.restS) + p.sets * p.setRestS;
 }
 
-/** Seconds a hangboard variation takes: every item, with the rest between exercises between them. */
-export const hangboardSeconds = (items: readonly Item[], exerciseRestS: number): number =>
+/** Seconds a hangboard session takes: every item, with the rest between exercises between them. */
+export const hangboardSeconds = (items: readonly SessionItem[], exerciseRestS: number): number =>
   items.reduce((sum, i) => sum + hangItemSeconds(i.dose), 0) +
   Math.max(0, items.length - 1) * exerciseRestS;
 
 /** Every set of every item done as prescribed. */
-export function doneAsPrescribed(items: readonly Item[]): ItemDone[] {
+export function doneAsPrescribed(items: readonly SessionItem[]): ItemDone[] {
   return items.map(({ exercise, dose: { sets, ...set } }, item) => ({
     item,
     exercise,

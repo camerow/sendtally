@@ -55,7 +55,6 @@ function climbing(
     post_error: null,
     membership_id: null,
     week: null,
-    variation: null,
     tags: [],
     climbs: climbs.map((c, i) => ({
       time: start,
@@ -96,7 +95,6 @@ function hang(date: string, rpe: number | null): HangHistoryRow {
     stravaActivityId: null,
     membershipId: null,
     week: null,
-    variation: null,
     done: [],
     postState: null,
     postError: null,
@@ -225,7 +223,6 @@ describe("overviewVM with other training", () => {
     workoutId: null,
     membershipId: null,
     week: null,
-    variation: null,
     done: [],
   });
   const vm = overviewVM(

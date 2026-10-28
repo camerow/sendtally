@@ -1,8 +1,8 @@
 import React from "react";
 import { Text } from "react-native";
+import { letterOf } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { type } from "../type";
-import { letterOf } from "./editorState";
 
 const LOOKS = [
   { backgroundColor: colors.gunmetal, color: colors.white },
@@ -11,14 +11,14 @@ const LOOKS = [
   { backgroundColor: colors.petalTint, color: colors.petalInk },
 ] as const;
 
-/** A variation's letter on its own colour, the same in its card and in the pattern. */
-export const letterLook = (variation: number): { backgroundColor: string; color: string } =>
-  LOOKS[variation % LOOKS.length] ?? LOOKS[0];
+/** A dose's letter on its own colour, the same in the editor, the preview and the player. */
+const letterLook = (dose: number): { backgroundColor: string; color: string } =>
+  LOOKS[dose % LOOKS.length] ?? LOOKS[0];
 
-export type LetterBadgeProps = { variation: number; size: number };
+export type LetterBadgeProps = { dose: number; size: number };
 
-export function LetterBadge({ variation, size }: LetterBadgeProps): React.ReactElement {
-  const { backgroundColor, color } = letterLook(variation);
+export function LetterBadge({ dose, size }: LetterBadgeProps): React.ReactElement {
+  const { backgroundColor, color } = letterLook(dose);
   return (
     <Text
       style={[
@@ -36,7 +36,7 @@ export function LetterBadge({ variation, size }: LetterBadgeProps): React.ReactE
         },
       ]}
     >
-      {letterOf(variation)}
+      {letterOf(dose)}
     </Text>
   );
 }

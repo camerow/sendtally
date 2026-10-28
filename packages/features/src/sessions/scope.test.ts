@@ -33,7 +33,6 @@ function session(fingerprint: string, startAt: string, tags: string[] = []): Ses
     post_error: null,
     membership_id: null,
     week: null,
-    variation: null,
     tags: tags.map((name) => ({ id: name, slug: name, name })),
   };
 }

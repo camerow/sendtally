@@ -135,6 +135,6 @@ function Done({
 }
 
 export function DoneScreen({ params }: { params: DoneParams }): React.ReactElement | null {
-  const planned = usePlannedRun(params.workoutId, params.link);
+  const planned = usePlannedRun(params.workoutId, params.link, params.session);
   return planned === undefined ? null : <Done items={planned.items} params={params} />;
 }

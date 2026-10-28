@@ -31,11 +31,13 @@ function Timer({
   grips,
   setups,
   link,
+  session,
 }: {
   planned: PlannedRun;
   grips: readonly string[];
   setups: readonly HangSetup[];
   link: PlanLink;
+  session: number;
 }): React.ReactElement {
   const { model } = useHangData();
   const { items, exerciseRestS } = planned;
@@ -74,10 +76,11 @@ function Timer({
         ...setup0,
         result: { ...resultOf(run), setsDone: first },
         link,
+        session,
         more: more.map((s, k) => ({ ...s, setsDone: rest[k] ?? 0 })),
       })
     );
-  }, [run, items, workout, grips, setups, link]);
+  }, [run, items, workout, grips, setups, link, session]);
 
   const lift = (ok: boolean): void => {
     timer.play(ok ? "lift" : "miss");
@@ -126,15 +129,22 @@ function Timer({
   );
 }
 
-export type TimerScreenProps = { workoutId: string; gripId: string; link: PlanLink };
+export type TimerScreenProps = {
+  workoutId: string;
+  gripId: string;
+  link: PlanLink;
+  /** How many sessions of the workout came before this one. */
+  session: number;
+};
 
 export function TimerScreen({
   workoutId,
   gripId,
   link,
+  session,
 }: TimerScreenProps): React.ReactElement | null {
   const { model } = useHangData();
-  const planned = usePlannedRun(workoutId, link);
+  const planned = usePlannedRun(workoutId, link, session);
   const [setups, setSetups] = React.useState<HangSetup[] | null>(null);
   if (planned === undefined) return null;
   const grips = planned.items.map((item, i) => (i === 0 ? gripId : item.workout.grip));
@@ -149,6 +159,6 @@ export function TimerScreen({
       onStart={setSetups}
     />
   ) : (
-    <Timer planned={planned} grips={grips} setups={setups} link={link} />
+    <Timer planned={planned} grips={grips} setups={setups} link={link} session={session} />
   );
 }

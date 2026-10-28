@@ -38,10 +38,7 @@ const squat: WorkoutRecord = {
   description: "",
   minutes: 45,
   targetRpe: null,
-  variations: [
-    { label: "", items: [{ exercise: "Back squat", dose: { sets: 5, reps: 5, weightKg: 100 } }] },
-  ],
-  pattern: [0],
+  items: [{ exercise: "Back squat", doses: [{ sets: 5, reps: 5, weightKg: 100 }] }],
   exerciseRestS: 180,
   updatedAt: "t",
 };
@@ -52,7 +49,7 @@ const plan: Plan = {
     { id: "m1", workoutId: "squat", blockId: "b1", weekdays: [1, 4], start: "2026-10-05" },
     { id: "m2", workoutId: "squat", blockId: null, weekdays: [2], start: "2026-09-01" },
   ],
-  weekChanges: [{ membershipId: "m1", week: 3, variation: 0, item: 0, change: { weightKg: 105 } }],
+  weekChanges: [{ membershipId: "m1", week: 3, dose: 0, item: 0, change: { weightKg: 105 } }],
 };
 
 beforeEach(() => {
@@ -147,7 +144,7 @@ describe("block weeks", () => {
     expect(mockPlan.saveWeekChange).toHaveBeenLastCalledWith({
       membershipId: "m1",
       week: 3,
-      variation: 0,
+      dose: 0,
       item: 0,
       change: { weightKg: 107.5 },
     });
@@ -156,7 +153,7 @@ describe("block weeks", () => {
     expect(mockPlan.saveWeekChange).toHaveBeenLastCalledWith({
       membershipId: "m1",
       week: 3,
-      variation: 0,
+      dose: 0,
       item: 0,
       change: { sets: 4, weightKg: 105 },
     });

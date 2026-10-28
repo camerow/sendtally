@@ -11,6 +11,8 @@ export type DoseTileProps = {
   onCommit: (text: string) => void;
   /** What an empty field reads as. */
   placeholder?: string;
+  /** What a screen reader calls it, when the label alone is not enough. */
+  accessibilityLabel?: string;
 };
 
 /** One dose number on a soft tile: its label over what is typed. */
@@ -20,6 +22,7 @@ export function DoseTile({
   keyboard,
   onCommit,
   placeholder = "–",
+  accessibilityLabel = label,
 }: DoseTileProps): React.ReactElement {
   return (
     <View
@@ -40,7 +43,7 @@ export function DoseTile({
       <NumberField
         value={value}
         onCommit={onCommit}
-        label={label}
+        label={accessibilityLabel}
         placeholder={placeholder}
         keyboard={keyboard}
         style={{

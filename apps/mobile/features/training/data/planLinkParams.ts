@@ -3,7 +3,7 @@ import type { PlanLink } from "@sendtally/core/hang";
 type RawParams = Partial<Record<string, string | string[]>>;
 
 /** Logged on its own, against no plan. */
-export const NO_PLAN: PlanLink = { membershipId: null, week: null, variation: null };
+export const NO_PLAN: PlanLink = { membershipId: null, week: null };
 
 const first = (v: string | string[] | undefined): string => (Array.isArray(v) ? v[0] : v) ?? "";
 
@@ -17,14 +17,12 @@ export function planLinkParams(link: PlanLink): Record<string, string> {
   return {
     ...(link.membershipId === null ? {} : { membershipId: link.membershipId }),
     ...(link.week === null ? {} : { week: String(link.week) }),
-    ...(link.variation === null ? {} : { variation: String(link.variation) }),
   };
 }
 
 export function readPlanLink(p: RawParams): PlanLink {
-  return {
-    membershipId: first(p.membershipId) || null,
-    week: whole(p.week),
-    variation: whole(p.variation),
-  };
+  return { membershipId: first(p.membershipId) || null, week: whole(p.week) };
 }
+
+/** How many sessions of its workout came before a run: which dose each item takes. */
+export const readSession = (p: RawParams): number => Math.max(0, whole(p.session) ?? 0);

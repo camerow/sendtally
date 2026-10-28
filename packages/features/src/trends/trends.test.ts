@@ -56,7 +56,6 @@ function session(
     post_error: null,
     membership_id: null,
     week: null,
-    variation: null,
     tags: [],
     climbs: climbs.map((c, i) => ({
       time: startIso,
@@ -97,7 +96,6 @@ function hangRow(id: string, date: string, rpe: number | null): HangHistoryRow {
     stravaActivityId: null,
     membershipId: null,
     week: null,
-    variation: null,
     done: [],
     postState: null,
     postError: null,

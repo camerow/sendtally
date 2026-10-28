@@ -31,7 +31,6 @@ const detail: SessionDetail = {
   post_error: null,
   membership_id: null,
   week: null,
-  variation: null,
   tags: [],
   climbs: [
     {
@@ -151,7 +150,6 @@ describe("sessionDetailVM", () => {
       post_error: null,
       membership_id: null,
       week: null,
-      variation: null,
     });
     expect(vm.post.kind).toBe("legacy");
     expect(vm.post.label).toBe("Tension Board · read-only history");
@@ -178,7 +176,6 @@ describe("sessionDetailVM", () => {
       post_error: null,
       membership_id: null,
       week: null,
-      variation: null,
     });
     expect(vm.title).toContain("Tuesday board night");
     expect(vm.meta).toContain("· Indoor ·");
@@ -195,7 +192,6 @@ describe("sessionDetailVM", () => {
     post_error: null,
     membership_id: null,
     week: null,
-    variation: null,
   };
   const connected = { connected: true, active: true, since: null };
 

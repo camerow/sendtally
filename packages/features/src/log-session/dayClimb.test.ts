@@ -32,7 +32,6 @@ const row = (over: Partial<SessionDetail>): SessionDetail => ({
   post_error: null,
   membership_id: null,
   week: null,
-  variation: null,
   tags: [],
   climbs: [
     {

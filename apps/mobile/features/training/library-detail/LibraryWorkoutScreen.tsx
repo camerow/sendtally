@@ -94,7 +94,12 @@ export function LibraryWorkoutScreen({
         contentContainerStyle={{ gap: 20, paddingTop: 8, paddingHorizontal: 18, paddingBottom: 24 }}
       >
         <LibraryIntro workout={workout} use={use} />
-        <BodyPreview workout={workout} unit={model.settings.units} openExercise={openExercise} />
+        <BodyPreview
+          workout={workout}
+          unit={model.settings.units}
+          session={use?.count ?? 0}
+          openExercise={openExercise}
+        />
         <WorkoutRuns workout={workout} />
         <PlanList workoutId={workout.id} name={workout.name} empty={t("hang.notScheduled")} />
         <View style={{ gap: 8 }}>

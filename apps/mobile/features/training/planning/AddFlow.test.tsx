@@ -41,11 +41,15 @@ const legs: WorkoutRecord = {
   description: "Squats, then the rest.",
   minutes: 50,
   targetRpe: null,
-  variations: [
-    { label: "Heavy", items: [{ exercise: "Back squat", dose: { sets: 5, reps: 5 } }] },
-    { label: "Light", items: [{ exercise: "Back squat", dose: { sets: 3, reps: 8 } }] },
+  items: [
+    {
+      exercise: "Back squat",
+      doses: [
+        { sets: 5, reps: 5 },
+        { sets: 3, reps: 8 },
+      ],
+    },
   ],
-  pattern: [0, 1],
   exerciseRestS: 180,
   updatedAt: "t",
 };
@@ -102,11 +106,14 @@ describe("adding to the plan", () => {
     expect(router.back).not.toHaveBeenCalled();
   });
 
-  it("previews the workout with how it takes turns, then goes on to when", async () => {
+  it("previews the next session and what each exercise alternates with, then goes on to when", async () => {
     await renderWithHang(<WorkoutPreviewScreen id="legs" adding={flow} />, hangData(), {
       workouts: [legs],
     });
-    expect(screen.getByText("Takes turns by session: Heavy, Light")).toBeTruthy();
+    expect(screen.getByText("Next session")).toBeTruthy();
+    expect(screen.getByText("then B")).toBeTruthy();
+    expect(screen.getByText("5 × 5")).toBeTruthy();
+    expect(screen.getByText("Alternates: B is 3 × 8")).toBeTruthy();
     expect(screen.queryByText("Start")).toBeNull();
     await fireEvent.press(screen.getByText("Add to plan"));
     expect(router.push).toHaveBeenCalledWith({

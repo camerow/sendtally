@@ -28,7 +28,9 @@ describe("Timer", () => {
   });
 
   it("counts down Get ready into the first hang, then credits a hang cut short", async () => {
-    await renderWithHang(<TimerScreen workoutId="rep73" gripId="half" link={NO_PLAN} />);
+    await renderWithHang(
+      <TimerScreen workoutId="rep73" gripId="half" link={NO_PLAN} session={0} />
+    );
     await fireEvent.press(screen.getByText("Start"));
     expect(screen.getByText("Get ready")).toBeTruthy();
     expect(screen.getByText("6 sets ahead")).toBeTruthy();
@@ -58,7 +60,9 @@ describe("Timer", () => {
   });
 
   it("pauses the clock from the primary button", async () => {
-    await renderWithHang(<TimerScreen workoutId="max10" gripId="half" link={NO_PLAN} />);
+    await renderWithHang(
+      <TimerScreen workoutId="max10" gripId="half" link={NO_PLAN} session={0} />
+    );
     await fireEvent.press(screen.getByText("Start"));
     await advance(5000);
     await fireEvent.press(screen.getByText("Pause"));
@@ -77,7 +81,7 @@ describe("Timer", () => {
         { id: "m1", workoutId: "max10", blockId: "b1", weekdays: [1 as const], start: TODAY },
       ],
       weekChanges: [
-        { membershipId: "m1", week: 1, variation: 0, item: 0, change: { sets: 3, edgeMm: 15 } },
+        { membershipId: "m1", week: 1, dose: 0, item: 0, change: { sets: 3, edgeMm: 15 } },
       ],
     };
     const session = {
@@ -92,7 +96,6 @@ describe("Timer", () => {
       rpe: null,
       membershipId: null,
       week: null,
-      variation: null,
       done: [],
       protocol: {
         name: "Max hangs",
@@ -112,7 +115,8 @@ describe("Timer", () => {
       <TimerScreen
         workoutId="max10"
         gripId="half"
-        link={{ membershipId: "m1", week: 1, variation: 0 }}
+        link={{ membershipId: "m1", week: 1 }}
+        session={0}
       />,
       hangData({ sessions: [session] }),
       { plan }
@@ -132,7 +136,7 @@ describe("Timer", () => {
           loadKg: "8",
           membershipId: "m1",
           week: "1",
-          variation: "0",
+          session: "0",
         }),
       })
     );
@@ -146,21 +150,15 @@ describe("Timer", () => {
       description: "",
       minutes: null,
       targetRpe: null,
-      variations: [
-        {
-          label: "",
-          items: [
-            { exercise: "half", dose: { sets: 1, reps: 1, onS: 10 } },
-            { exercise: "open", dose: { sets: 1, reps: 1, onS: 10 } },
-          ],
-        },
+      items: [
+        { exercise: "half", doses: [{ sets: 1, reps: 1, onS: 10 }] },
+        { exercise: "open", doses: [{ sets: 1, reps: 1, onS: 10 }] },
       ],
-      pattern: [0],
       exerciseRestS: 120,
       updatedAt: "t",
     };
     await renderWithHang(
-      <TimerScreen workoutId="w-two" gripId="half" link={NO_PLAN} />,
+      <TimerScreen workoutId="w-two" gripId="half" link={NO_PLAN} session={0} />,
       hangData(),
       { workouts: [twoGrips] }
     );

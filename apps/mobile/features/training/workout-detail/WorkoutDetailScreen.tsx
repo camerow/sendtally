@@ -18,7 +18,7 @@ import { Button } from "../components/Button";
 import { Label } from "../components/Label";
 import { useHangData } from "../data/HangDataContext";
 import { GripPickerSheet } from "../grip-picker/GripPickerSheet";
-import { useLibrary } from "../library/useLibrary";
+import { useLibrary, useNextSession } from "../library/useLibrary";
 import { PlanList } from "../plans/PlanList";
 import { SessionEditorSheet } from "../session-editor/SessionEditorSheet";
 import { startWorkout } from "../timer/startWorkout";
@@ -42,6 +42,7 @@ function Detail({
   initialGrip?: string;
 }): React.ReactElement {
   const { model, actions, today } = useHangData();
+  const session = useNextSession(workout.id);
   const workouts = useWorkoutActions(useApi(), reportFailure);
   const [gripId, setGripId] = React.useState(initialGrip ?? model.defaultGrip(workout));
   const [picker, setPicker] = React.useState(false);
@@ -140,7 +141,7 @@ function Detail({
         <AddToPlanFooter workoutId={workout.id}>
           <Button
             label={t("hang.start")}
-            onPress={() => startWorkout(workout.id, gripId)}
+            onPress={() => startWorkout(workout.id, gripId, session)}
             variant="primary"
             height={54}
             icon="play"

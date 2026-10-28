@@ -31,7 +31,6 @@ function session(fingerprint: string, startAt: string): SessionRow {
     post_error: null,
     membership_id: null,
     week: null,
-    variation: null,
     tags: [],
   };
 }

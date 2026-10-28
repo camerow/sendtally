@@ -14,8 +14,7 @@ const workout = (id: string, kind: Workout["kind"], name: string): Workout => ({
   description: "",
   minutes: null,
   targetRpe: null,
-  variations: [{ label: "", items: [] }],
-  pattern: [0],
+  items: [],
   exerciseRestS: 180,
 });
 
@@ -47,7 +46,6 @@ const hang = (date: string): HangSessionRecord => ({
   protocol: { name: "R", kind: "hang", hangS: 7, restS: 3, reps: 6, sets: 6, setRestS: 180 },
   membershipId: "s1",
   week: null,
-  variation: 0,
   done: [],
   stravaActivityId: null,
   postState: null,
@@ -67,7 +65,6 @@ const activity = (date: string): Activity => ({
   workoutId: "legs",
   membershipId: "p1",
   week: null,
-  variation: 0,
   done: [],
 });
 

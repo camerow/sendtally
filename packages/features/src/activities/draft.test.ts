@@ -12,7 +12,7 @@ describe("activity drafts", () => {
   it("takes what the route knows and ignores a kind it does not", () => {
     expect(
       newActivityDraft(
-        { kind: "other", membershipId: "m1", week: "2", variation: "1", workoutId: "w1" },
+        { kind: "other", membershipId: "m1", week: "2", workoutId: "w1" },
         "2026-10-22"
       )
     ).toMatchObject({
@@ -20,7 +20,6 @@ describe("activity drafts", () => {
       date: "2026-10-22",
       membershipId: "m1",
       week: 2,
-      variation: 1,
       workoutId: "w1",
     });
     expect(newActivityDraft({ week: "soon" }, "2026-10-22").week).toBeNull();

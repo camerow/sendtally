@@ -14,7 +14,6 @@ const activity: ActivityRecord = {
   workoutId: null,
   membershipId: null,
   week: null,
-  variation: null,
   done: [],
   stravaActivityId: null,
   postedAt: null,

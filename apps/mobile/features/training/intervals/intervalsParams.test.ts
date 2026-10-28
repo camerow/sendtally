@@ -10,7 +10,7 @@ const run: IntervalsRun = {
   date: "2026-10-22",
   activityId: "a1",
   workoutId: null,
-  link: { membershipId: "m1", week: null, variation: 0 },
+  link: { membershipId: "m1", week: null },
   body: {
     rounds: 10,
     steps: [{ label: "Swing", measure: "count", count: 15, loadKg: 24, restAfter: 45 }],

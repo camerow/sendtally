@@ -19,17 +19,15 @@ const squat: Workout = {
   description: "",
   minutes: 45,
   targetRpe: 8,
-  variations: [
+  items: [
     {
-      label: "5×5",
-      items: [{ exercise: "Back squat", dose: { sets: 5, reps: 5, weightKg: 100 } }],
-    },
-    {
-      label: "3×10",
-      items: [{ exercise: "Back squat", dose: { sets: 3, reps: 10, weightKg: 75 } }],
+      exercise: "Back squat",
+      doses: [
+        { sets: 5, reps: 5, weightKg: 100 },
+        { sets: 3, reps: 10, weightKg: 75 },
+      ],
     },
   ],
-  pattern: [0, 1],
   exerciseRestS: 180,
 };
 
@@ -37,8 +35,7 @@ const climbing: Workout = {
   ...squat,
   id: "limit",
   kind: "climbing",
-  variations: [{ label: "", items: [] }],
-  pattern: [0],
+  items: [],
 };
 
 const plan: Plan = {
@@ -50,8 +47,8 @@ const plan: Plan = {
     { id: "once", workoutId: "squat", blockId: null, weekdays: [], start: "2026-11-12" },
   ],
   weekChanges: [
-    { membershipId: "m1", week: 2, variation: 1, item: 0, change: { weightKg: 80 } },
-    { membershipId: "m1", week: 3, variation: 0, item: 0, change: { sets: 3, weightKg: 95 } },
+    { membershipId: "m1", week: 2, dose: 1, item: 0, change: { weightKg: 80 } },
+    { membershipId: "m1", week: 3, dose: 0, item: 0, change: { sets: 3, weightKg: 95 } },
   ],
 };
 
@@ -60,8 +57,8 @@ const workout = (id: string): Workout | undefined =>
 
 const logged = (over: Partial<LoggedSession> & Pick<LoggedSession, "date">): LoggedSession => ({
   kind: "strength",
+  workoutId: null,
   membershipId: "m1",
-  variation: 0,
   ...over,
 });
 
@@ -69,7 +66,7 @@ const on = (date: string, sessions: LoggedSession[] = []) =>
   occurrencesOn(plan, workout, sessions, date, TODAY).map((o) => ({
     id: o.membership.id,
     week: o.week,
-    variation: o.variation,
+    session: o.session,
     status: o.status,
     dose: o.items[0]?.dose,
   }));
@@ -80,46 +77,50 @@ describe("occurrencesOn", () => {
       {
         id: "m1",
         week: 2,
-        variation: 0,
+        session: 0,
         status: "planned",
         dose: { sets: 5, reps: 5, weightKg: 100 },
       },
     ]);
   });
 
-  it("advances the variation by session, each open day before taking one", () => {
-    const sessions = [logged({ date: "2026-11-03", variation: 0 })];
-    expect(on("2026-11-10", sessions).map((o) => o.variation)).toEqual([1]);
-    expect(on("2026-11-13", sessions)[0]).toMatchObject({ variation: 0, week: 2 });
+  it("counts the workout's sessions, each open day before taking one", () => {
+    const sessions = [logged({ date: "2026-11-03" })];
+    expect(on("2026-11-10", sessions).map((o) => o.session)).toEqual([1]);
+    expect(on("2026-11-13", sessions)[0]).toMatchObject({ session: 2, week: 2 });
     expect(on("2026-11-17", sessions)[0]).toMatchObject({
-      variation: 1,
+      session: 3,
       week: 3,
       dose: { sets: 3, reps: 10, weightKg: 75 },
     });
   });
 
-  it("lays the week's change over the variation it names", () => {
-    const sessions = [logged({ date: "2026-11-06", variation: 0 })];
+  it("counts a session of the workout run outside the plan", () => {
+    const own = logged({ date: "2026-11-05", membershipId: null, workoutId: "squat" });
+    const other = logged({ date: "2026-11-05", membershipId: null, workoutId: "deadlift" });
+    expect(on("2026-11-10", [own, other])[0]).toMatchObject({ session: 1 });
+  });
+
+  it("lays the week's change over the dose it names", () => {
+    const sessions = [logged({ date: "2026-11-06" })];
     expect(on("2026-11-10", sessions)[0]).toMatchObject({
-      variation: 1,
+      session: 1,
       dose: { sets: 3, reps: 10, weightKg: 80 },
     });
   });
 
-  it("keeps a missed day's variation for the next session", () => {
-    expect(on("2026-11-06")[0]).toMatchObject({ status: "missed", variation: 0 });
-    expect(on("2026-11-10")[0]).toMatchObject({ status: "planned", variation: 0 });
+  it("keeps a missed day's dose for the next session", () => {
+    expect(on("2026-11-06")[0]).toMatchObject({ status: "missed", session: 0 });
+    expect(on("2026-11-10")[0]).toMatchObject({ status: "planned", session: 0 });
   });
 
-  it("is done by a session logged against it, with the variation it ran", () => {
-    expect(on("2026-11-06", [logged({ date: "2026-11-06", variation: 1 })])[0]).toMatchObject({
-      status: "done",
-      variation: 1,
-    });
+  it("is done by a session logged against it, counted from the ones before it", () => {
+    const sessions = [logged({ date: "2026-11-03" }), logged({ date: "2026-11-06" })];
+    expect(on("2026-11-06", sessions)[0]).toMatchObject({ status: "done", session: 1 });
   });
 
   it("is done by a session of its kind logged on its own that day, and not by another plan's", () => {
-    const climb = { kind: "climbing" as const, membershipId: null, variation: null };
+    const climb = { kind: "climbing" as const, membershipId: null };
     expect(on("2026-11-04", [logged({ ...climb, date: "2026-11-04" })])[0]?.status).toBe("done");
     const otherPlan = logged({ ...climb, date: "2026-11-04", membershipId: "m9" });
     expect(on("2026-11-04", [otherPlan])[0]?.status).toBe("missed");
@@ -130,7 +131,7 @@ describe("occurrencesOn", () => {
       {
         id: "once",
         week: null,
-        variation: 0,
+        session: 0,
         status: "planned",
         dose: { sets: 5, reps: 5, weightKg: 100 },
       },
@@ -149,7 +150,7 @@ describe("nextOccurrence", () => {
   it("finds the next open day and what it prescribes", () => {
     const m1 = plan.memberships[0]!;
     const next = nextOccurrence(plan, m1, workout, [logged({ date: TODAY })], TODAY);
-    expect(next).toMatchObject({ date: "2026-11-13", variation: 1, week: 2 });
+    expect(next).toMatchObject({ date: "2026-11-13", session: 1, week: 2 });
   });
 });
 

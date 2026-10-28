@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Dose } from "@sendtally/core/hang";
-import { patternText, stepped, weekChips, weekFields, withField } from "./weeks";
+import { stepped, weekChips, weekFields, withField } from "./weeks";
 
 const squat: Dose = { sets: 5, reps: 5, weightKg: 100 };
 const repeaters: Dose = { sets: 3, reps: 6, onS: 7, offS: 3, edgeMm: 20 };
@@ -57,15 +57,5 @@ describe("week fields", () => {
     expect(withField(squat, "reps", 3, "kg")).toEqual({ ...squat, reps: 3 });
     expect(withField(squat, "sets", 0, "kg")).toBeNull();
     expect(withField(squat, "reps", Number.NaN, "kg")).toBeNull();
-  });
-});
-
-describe("patternText", () => {
-  it("reads labels, or letters without them", () => {
-    const v = (label: string) => ({ label, items: [] });
-    expect(patternText({ variations: [v(""), v("")], pattern: [0, 0, 1] })).toBe("A, A, B");
-    expect(patternText({ variations: [v("Heavy"), v("Light")], pattern: [0, 1] })).toBe(
-      "Heavy, Light"
-    );
   });
 });

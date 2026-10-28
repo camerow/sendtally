@@ -60,7 +60,6 @@ describe("blockDone", () => {
           workoutId: "w1",
           membershipId: "m1",
           week: 1,
-          variation: 0,
           done: [],
         },
       ],
@@ -79,8 +78,7 @@ describe("blockDone", () => {
         description: "",
         minutes: 40,
         targetRpe: null,
-        variations: [{ label: "", items: [] }],
-        pattern: [0],
+        items: [],
         exerciseRestS: 180,
       }),
     };

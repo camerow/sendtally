@@ -42,15 +42,13 @@ export type ExerciseSummary = {
 export const exerciseKey = (name: string): string => name.trim().toLowerCase();
 
 /** The workouts with an item of this exercise, in any case; a hangboard item names a grip. */
-export function workoutsUsing<W extends Pick<Workout, "kind" | "variations">>(
+export function workoutsUsing<W extends Pick<Workout, "kind" | "items">>(
   workouts: readonly W[],
   name: string
 ): W[] {
   const key = exerciseKey(name);
   return workouts.filter(
-    (w) =>
-      w.kind !== "hangboard" &&
-      w.variations.some((v) => v.items.some((i) => exerciseKey(i.exercise) === key))
+    (w) => w.kind !== "hangboard" && w.items.some((i) => exerciseKey(i.exercise) === key)
   );
 }
 

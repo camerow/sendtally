@@ -3,7 +3,7 @@ import { Pressable, Text, View } from "react-native";
 import {
   changeFrom,
   type Dose,
-  type Item,
+  type SessionItem,
   type WeightUnit,
   type WorkoutKind,
 } from "@sendtally/core/hang";
@@ -24,7 +24,7 @@ import { type } from "../type";
 
 export type RungEditorProps = {
   kind: WorkoutKind;
-  item: Item;
+  item: SessionItem;
   change: Partial<Dose>;
   unit: WeightUnit;
   /** The week's whole change to this item, counted from the item as written. */

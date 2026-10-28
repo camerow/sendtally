@@ -4,7 +4,6 @@ import {
   toUnit,
   type Dose,
   type WeightUnit,
-  type Workout,
   type WorkoutKind,
 } from "@sendtally/core/hang";
 import { humanDuration } from "../hang/format";
@@ -147,13 +146,4 @@ export function weekChips(
       },
     ];
   });
-}
-
-/** A variation's label, or its letter when it has none: "A", "B". */
-export const variationName = (label: string, index: number): string =>
-  label.trim() === "" ? String.fromCharCode(65 + index) : label.trim();
-
-/** The order variations take by session: "A, A, B". */
-export function patternText(w: Pick<Workout, "variations" | "pattern">): string {
-  return w.pattern.map((i) => variationName(w.variations[i]?.label ?? "", i)).join(", ");
 }

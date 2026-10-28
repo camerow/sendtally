@@ -26,8 +26,7 @@ const record = (
   description: "",
   minutes: null,
   targetRpe: null,
-  variations: [{ label: "", items: [] }],
-  pattern: [0],
+  items: [],
   exerciseRestS: 180,
   updatedAt: "2026-10-01T00:00:00Z",
   ...over,
@@ -37,12 +36,7 @@ const garage = record({
   id: "h-mine",
   kind: "hangboard",
   name: "Garage repeaters",
-  variations: [
-    {
-      label: "",
-      items: [{ exercise: "half", dose: { sets: 3, reps: 6, onS: 7, offS: 3, setRestS: 180 } }],
-    },
-  ],
+  items: [{ exercise: "half", doses: [{ sets: 3, reps: 6, onS: 7, offS: 3, setRestS: 180 }] }],
 });
 
 const legs = record({
@@ -51,14 +45,14 @@ const legs = record({
   description: "Heavy and slow",
   minutes: 50,
   targetRpe: 8,
-  variations: [{ label: "", items: [{ exercise: "Goblet squat", dose: { sets: 3, reps: 8 } }] }],
+  items: [{ exercise: "Goblet squat", doses: [{ sets: 3, reps: 8 }] }],
 });
 
 const stretch = record({
   id: "w-stretch",
   kind: "mobility",
   name: "Evening stretch",
-  variations: [{ label: "", items: [{ exercise: "Pancake", dose: { sets: 1, onS: 120 } }] }],
+  items: [{ exercise: "Pancake", doses: [{ sets: 1, onS: 120 }] }],
 });
 
 const library = (): LibraryWorkout[] => libraryOf([garage, legs, stretch]);
@@ -89,22 +83,23 @@ describe("libraryOf", () => {
     expect(builtInWorkouts().find((w) => w.id === "strength-5x5")?.name).toBe("5x5 Kraft");
   });
 
-  it("shows alternation with built-ins that take turns by session", () => {
+  it("shows alternation with built-ins whose exercises take turns by session", () => {
     const squat = builtInWorkouts().find((w) => w.id === "strength-squat");
-    expect(squat?.variations.map((v) => [v.label, v.items[0]?.dose])).toEqual([
-      ["5×5", { sets: 5, reps: 5 }],
-      ["3×10", { sets: 3, reps: 10 }],
+    expect(squat?.items.map((i) => i.doses)).toEqual([
+      [
+        { sets: 5, reps: 5 },
+        { sets: 3, reps: 10 },
+      ],
     ]);
-    expect(squat?.pattern).toEqual([0, 1]);
     const fingers = builtInWorkouts().find((w) => w.id === "fingers-ab");
-    expect(fingers?.variations.map((v) => v.label)).toEqual(["Max hangs", "Repeaters 7/3"]);
+    expect(fingers?.items.map((i) => i.doses.map((d) => d.reps))).toEqual([[1, 6]]);
   });
 
   it("names a copy '(copy)', never '(mine)'", () => {
     expect(copyName("Repeaters 7:3")).toBe("Repeaters 7:3 (copy)");
   });
 
-  it("drafts a workout for the editor, and a new one with one empty variation", () => {
+  it("drafts a workout for the editor, and a new one with nothing in it", () => {
     const { id: _, updatedAt: __, ...draft } = legs;
     expect(draftOf(library().find((w) => w.id === "w-legs")!)).toEqual(draft);
     expect(newWorkoutDraft("mobility")).toEqual({
@@ -113,9 +108,8 @@ describe("libraryOf", () => {
       description: "",
       minutes: null,
       targetRpe: null,
-      variations: [{ label: "", items: [] }],
-      pattern: [0],
-      exerciseRestS: 180,
+      items: [],
+      exerciseRestS: 0,
     });
   });
 });
@@ -158,14 +152,13 @@ describe("browseLibrary", () => {
     ]);
   });
 
-  it("searches names, descriptions, kinds, labels and exercises, ignoring case and accents", () => {
+  it("searches names, descriptions, kinds and exercises, ignoring case and accents", () => {
     const search = (text: string): string[] => ids(browseLibrary(library(), { text }, usage));
     expect(search("garage")).toEqual(["h-mine"]);
     expect(search("HEAVY leg")).toEqual(["w-legs"]);
     expect(search("goblet")).toEqual(["w-legs"]);
     expect(search("pancake")).toEqual(["w-stretch"]);
     expect(search("half crimp")[0]).toBe("h-mine");
-    expect(search("3×10")).toEqual(["strength-squat"]);
     expect(search("nothing like this")).toEqual([]);
     setLocale("fr");
     expect(builtInIds(browseLibrary(libraryOf([]), { text: "developpe" }, usage))).toContain(
@@ -241,14 +234,13 @@ describe("summaries", () => {
     // 6 sets × 6 hangs × (7s + 3s) + 6 × 3:00 set rest = 24 minutes.
     expect(workoutMinutes(byId("rep73"))).toBe(24);
     const rep73 = byId("rep73");
-    const [first] = rep73.variations;
     const twice = {
       ...rep73,
       minutes: 90,
       exerciseRestS: 120,
-      variations: [{ label: "", items: [...(first?.items ?? []), ...(first?.items ?? [])] }],
+      items: [...rep73.items, ...rep73.items],
     };
     expect(workoutMinutes(twice)).toBe(50);
-    expect(workoutMinutes({ ...twice, variations: [{ label: "", items: [] }] })).toBeNull();
+    expect(workoutMinutes({ ...twice, items: [] })).toBeNull();
   });
 });

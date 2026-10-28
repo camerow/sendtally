@@ -24,7 +24,6 @@ const plank: ActivityRecord = {
   workoutId: null,
   membershipId: null,
   week: null,
-  variation: null,
   done: [{ item: 0, exercise: "Plank", sets: [{ onS: 45 }, { onS: 60 }] }],
   stravaActivityId: null,
   postedAt: null,

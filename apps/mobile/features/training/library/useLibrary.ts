@@ -15,3 +15,9 @@ export function useRunWorkout(id: string | null): LibraryWorkout | undefined {
   const { state } = useLibrary();
   return state.status === "ready" && id !== null ? state.data.workout(id) : undefined;
 }
+
+/** How many sessions of the workout are logged, which is the turn its next session takes. */
+export function useNextSession(id: string): number {
+  const { state } = useLibrary();
+  return state.status === "ready" ? (state.data.usage.get(id)?.count ?? 0) : 0;
+}

@@ -25,7 +25,6 @@ const row = (over: Partial<HangHistoryRow> = {}): HangHistoryRow => ({
   stravaActivityId: null,
   membershipId: null,
   week: null,
-  variation: null,
   done: [],
   postState: null,
   postError: null,

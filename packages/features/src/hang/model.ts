@@ -12,7 +12,7 @@ import {
   type HangSettings,
   type HangSetup,
   type HangWorkout,
-  type Item,
+  type SessionItem,
   type SetupLayer,
 } from "@sendtally/core/hang";
 import type { LibraryWorkout } from "../workouts/types";
@@ -26,8 +26,8 @@ export type HangModel = {
   workouts: HangWorkout[];
   grips: Grip[];
   sessions: HangSessionRecord[];
-  /** A hangboard workout's variation as the timer runs its first item; the first by default. */
-  workout: (id: string, variation?: number) => HangWorkout | undefined;
+  /** A hangboard workout as the timer runs its first item. */
+  workout: (id: string) => HangWorkout | undefined;
   gripName: (id: string) => string;
   defaultGrip: (w: HangWorkout) => string;
   /**
@@ -46,7 +46,7 @@ export type HangModel = {
 /** One hangboard item as the timer runs it: on its grip, under the workout's name. */
 export function hangWorkoutFromItem(
   w: Pick<LibraryWorkout, "id" | "source" | "name">,
-  item: Item
+  item: SessionItem
 ): HangWorkout {
   const protocol = doseProtocol(w.name, item.dose);
   return {
@@ -58,14 +58,15 @@ export function hangWorkoutFromItem(
   };
 }
 
-/** One item of a hangboard workout as the timer runs it, or null when it has no such item. */
+/** The first item of a hangboard workout as the timer runs it, or null when it has none. */
 export function hangWorkoutOf(
-  w: Pick<LibraryWorkout, "id" | "source" | "kind" | "name" | "variations">,
-  variation = 0,
-  item = 0
+  w: Pick<LibraryWorkout, "id" | "source" | "kind" | "name" | "items">
 ): HangWorkout | null {
-  const found = w.kind === "hangboard" ? w.variations[variation]?.items[item] : undefined;
-  return found === undefined ? null : hangWorkoutFromItem(w, found);
+  const [first] = w.kind === "hangboard" ? w.items : [];
+  const dose = first?.doses[0];
+  return first === undefined || dose === undefined
+    ? null
+    : hangWorkoutFromItem(w, { exercise: first.exercise, dose });
 }
 
 export function hangModel(data: HangData, library: readonly LibraryWorkout[]): HangModel {
@@ -88,9 +89,9 @@ export function hangModel(data: HangData, library: readonly LibraryWorkout[]): H
     workouts,
     grips,
     sessions: data.sessions,
-    workout: (id, variation = 0) => {
+    workout: (id) => {
       const w = hangboard.get(id);
-      return w === undefined ? undefined : (hangWorkoutOf(w, variation) ?? undefined);
+      return w === undefined ? undefined : (hangWorkoutOf(w) ?? undefined);
     },
     gripName: (id) => names.get(id) ?? id,
     defaultGrip: (w) => {

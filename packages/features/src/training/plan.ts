@@ -4,15 +4,14 @@ import {
   blockWeekOn,
   occursOn,
   prescription,
-  upcomingVariations,
-  variationTrail,
   type Block,
   type CalendarDate,
-  type Item,
   type Membership,
+  type SessionItem,
   type Workout,
   type WorkoutKind,
 } from "@sendtally/core/hang";
+import { workoutUsage } from "../workouts/library";
 
 /** Past and not done is missed; today and later, not done yet, is planned. */
 export type OccurrenceStatus = "done" | "missed" | "planned";
@@ -21,8 +20,9 @@ export type OccurrenceStatus = "done" | "missed" | "planned";
 export type LoggedSession = {
   kind: WorkoutKind;
   date: CalendarDate;
+  /** The workout it ran, when it names one; else the plan's says which. */
+  workoutId: string | null;
   membershipId: string | null;
-  variation: number | null;
 };
 
 /** One day a membership lands on: what it prescribes that day, and whether it happened. */
@@ -34,9 +34,10 @@ export type Occurrence = {
   date: CalendarDate;
   /** The block week, or null outside a block, which is always as written. */
   week: number | null;
-  variation: number;
-  /** The variation's items with the week's changes laid over them. */
-  items: Item[];
+  /** How many sessions of the workout come before this one: which dose each item takes. */
+  session: number;
+  /** The items as this session runs them, with the week's changes laid over them. */
+  items: SessionItem[];
   status: OccurrenceStatus;
 };
 
@@ -61,6 +62,18 @@ function doneBy(
   );
 }
 
+/** How many sessions of the workout were logged before a date, or in all without one. */
+export const sessionsOf = (
+  plan: Pick<Plan, "memberships">,
+  workoutId: string,
+  logged: readonly LoggedSession[],
+  before?: CalendarDate
+): number =>
+  workoutUsage(
+    before === undefined ? logged : logged.filter((s) => s.date < before),
+    plan.memberships
+  ).get(workoutId)?.count ?? 0;
+
 function occurrence(
   plan: Plan,
   m: Membership,
@@ -72,14 +85,12 @@ function occurrence(
   const block = blockOfMembership(plan, m);
   const week = block === null ? null : blockWeekOn(block, date);
   const done = doneBy(m, workout?.kind, logged, date);
-  let variation = done?.variation ?? 0;
-  if (done === undefined && workout !== undefined) {
-    // The next session takes the next variation; each open day before this one takes one more.
-    let ahead = 0;
+  let session = sessionsOf(plan, m.workoutId, logged, date);
+  if (done === undefined && date >= today) {
+    // The next session follows every one logged; each open day before this one takes one more.
+    session = sessionsOf(plan, m.workoutId, logged);
     for (let d = today; d < date; d = addDays(d, 1))
-      if (occursOn(m, block, d) && doneBy(m, workout.kind, logged, d) === undefined) ahead++;
-    variation =
-      upcomingVariations(workout.pattern, variationTrail(logged, m.id), ahead + 1)[ahead] ?? 0;
+      if (occursOn(m, block, d) && doneBy(m, workout?.kind, logged, d) === undefined) session++;
   }
   return {
     membership: m,
@@ -87,11 +98,11 @@ function occurrence(
     block,
     date,
     week,
-    variation,
+    session,
     items:
       workout === undefined
         ? []
-        : prescription(plan.weekChanges, { workout, membershipId: m.id, variation, week }),
+        : prescription(plan.weekChanges, { workout, membershipId: m.id, session, week }),
     status: done !== undefined ? "done" : date < today ? "missed" : "planned",
   };
 }

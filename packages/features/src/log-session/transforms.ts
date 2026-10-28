@@ -296,7 +296,6 @@ export function toLogSessionInput(draft: LogSessionDraft): LogSessionInput {
       : {
           membershipId: draft.plan.membershipId,
           week: draft.plan.week,
-          variation: draft.plan.variation,
         }),
     climbs,
   };

@@ -32,7 +32,7 @@ const run: WorkoutRun = {
   title: "Lower body A",
   date: "2026-10-22",
   workoutId: "w1",
-  link: { membershipId: "m1", week: 2, variation: 0 },
+  link: { membershipId: "m1", week: 2 },
   minutes: 45,
   items: [
     { exercise: "Back squat", dose: { sets: 2, reps: 5, weightKg: 100, setRestS: 90 } },
@@ -65,8 +65,7 @@ describe("Sets player", () => {
           description: "Heavy squats, then rows.",
           minutes: 45,
           targetRpe: 8,
-          variations: [{ label: "", items: run.items }],
-          pattern: [0],
+          items: run.items.map(({ exercise, dose }) => ({ exercise, doses: [dose] })),
           exerciseRestS: 180,
           updatedAt: "2026-10-01T00:00:00.000Z",
         },
@@ -104,7 +103,6 @@ describe("Sets player", () => {
         minutes: "3",
         membershipId: "m1",
         week: "2",
-        variation: "0",
         done: JSON.stringify([
           {
             item: 0,

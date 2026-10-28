@@ -41,7 +41,6 @@ function session(fingerprint: string, tags: SessionTag[]): SessionRow {
     post_error: null,
     membership_id: null,
     week: null,
-    variation: null,
     tags,
   };
 }

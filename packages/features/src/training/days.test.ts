@@ -33,7 +33,6 @@ function climb(start_at: string, overrides: Partial<SessionRow> = {}): SessionRo
     post_error: null,
     membership_id: null,
     week: null,
-    variation: null,
     tags: [],
     ...overrides,
   };
@@ -63,7 +62,6 @@ function hang(date: string, overrides: Partial<HangSessionRecord> = {}): HangSes
     protocol,
     membershipId: null,
     week: null,
-    variation: null,
     done: [],
     stravaActivityId: null,
     postState: null,
@@ -85,7 +83,6 @@ const activity = (date: string, overrides: Partial<Activity> = {}): Activity => 
   workoutId: null,
   membershipId: null,
   week: null,
-  variation: null,
   done: [],
   ...overrides,
 });
@@ -98,8 +95,7 @@ const workouts: Workout[] = [
     description: "",
     minutes: null,
     targetRpe: null,
-    variations: [{ label: "", items: [{ exercise: "half", dose: { sets: 6, reps: 6, onS: 7 } }] }],
-    pattern: [0],
+    items: [{ exercise: "half", doses: [{ sets: 6, reps: 6, onS: 7 }] }],
     exerciseRestS: 180,
   },
   {
@@ -109,8 +105,7 @@ const workouts: Workout[] = [
     description: "",
     minutes: 60,
     targetRpe: null,
-    variations: [{ label: "", items: [] }],
-    pattern: [0],
+    items: [],
     exerciseRestS: 180,
   },
   {
@@ -120,8 +115,7 @@ const workouts: Workout[] = [
     description: "",
     minutes: 90,
     targetRpe: null,
-    variations: [{ label: "", items: [] }],
-    pattern: [0],
+    items: [],
     exerciseRestS: 180,
   },
 ];
@@ -160,7 +154,7 @@ describe("trainingDay", () => {
 
   it("marks a plan done by a session logged against it", () => {
     const day = trainingDay(
-      log({ hangs: [hang("2026-09-28", { membershipId: "h1", variation: 0 })] }),
+      log({ hangs: [hang("2026-09-28", { membershipId: "h1" })] }),
       "2026-09-28",
       TODAY
     );
@@ -207,7 +201,7 @@ describe("weekDone", () => {
           climb("2026-09-29T18:00:00.000Z", { rpe_source: "none", rpe: 1 }),
           climb("2026-09-22T18:00:00.000Z"),
         ],
-        hangs: [hang("2026-09-28", { rpe: 7, membershipId: "h1", variation: 0 })],
+        hangs: [hang("2026-09-28", { rpe: 7, membershipId: "h1" })],
       })
     );
     // Logged: two climbs and a hang. Open: legs Tuesday (missed), hangs and legs Thursday.

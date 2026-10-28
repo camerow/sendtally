@@ -15,8 +15,7 @@ const legs: WorkoutRecord = {
   description: "",
   minutes: 45,
   targetRpe: null,
-  variations: [{ label: "", items: [] }],
-  pattern: [0],
+  items: [],
   exerciseRestS: 180,
   updatedAt: "2026-10-01T00:00:00Z",
 };

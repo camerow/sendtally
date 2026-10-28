@@ -3,19 +3,19 @@ import {
   blockEnd,
   blockWeekOn,
   changeFrom,
-  defaultPattern,
   doneAsPrescribed,
   doseProtocol,
   hangboardSeconds,
   hangItemSeconds,
+  foldVariations,
   intervalsOf,
-  nextVariation,
   occurrencesIn,
   occursOn,
   prescription,
   protocolDose,
+  sessionItems,
   timeUnitsOf,
-  upcomingVariations,
+  turnsOf,
   type Block,
   type Dose,
   type Membership,
@@ -32,24 +32,22 @@ const squat: Workout = {
   description: "Alternate five sets of five with three sets of ten.",
   minutes: 45,
   targetRpe: 8,
-  variations: [
+  items: [
     {
-      label: "5×5",
-      items: [{ exercise: "Back squat", dose: { sets: 5, reps: 5, weightKg: 100 } }],
-    },
-    {
-      label: "3×10",
-      items: [{ exercise: "Back squat", dose: { sets: 3, reps: 10, weightKg: 75 } }],
+      exercise: "Back squat",
+      doses: [
+        { sets: 5, reps: 5, weightKg: 100 },
+        { sets: 3, reps: 10, weightKg: 75 },
+      ],
     },
   ],
-  pattern: [0, 1],
   exerciseRestS: 0,
 };
 
 const change = (over: Partial<WeekChange> & Pick<WeekChange, "change">): WeekChange => ({
   membershipId: "m",
   week: 4,
-  variation: 0,
+  dose: 0,
   item: 0,
   ...over,
 });
@@ -136,7 +134,8 @@ describe("prescription", () => {
       95,
       3,
     ],
-    ["another variation keeps its own ladder", [change({ change: { sets: 1 } })], 4, 1, 75, 3],
+    ["another dose keeps its own ladder", [change({ change: { sets: 1 } })], 4, 1, 75, 3],
+    ["the dose comes round again", [change({ change: { sets: 1 } })], 4, 2, 100, 1],
     [
       "another membership's change does not apply",
       [change({ membershipId: "other", change: { sets: 1 } })],
@@ -145,15 +144,9 @@ describe("prescription", () => {
       100,
       5,
     ],
-  ] as const)("%s", (_, changes, week, variation, weightKg, sets) => {
-    const [item] = prescription(changes, { workout: squat, membershipId: "m", variation, week });
+  ] as const)("%s", (_, changes, week, session, weightKg, sets) => {
+    const [item] = prescription(changes, { workout: squat, membershipId: "m", session, week });
     expect(item?.dose).toMatchObject({ weightKg, sets });
-  });
-
-  it("is empty for a variation that no longer exists", () => {
-    expect(prescription([], { workout: squat, membershipId: "m", variation: 5, week: 1 })).toEqual(
-      []
-    );
   });
 });
 
@@ -169,36 +162,74 @@ describe("changeFrom", () => {
   });
 });
 
-describe("rotation by session", () => {
+describe("doses by session", () => {
+  const bench = { exercise: "Bench press", doses: [{ sets: 4, reps: 8 }] };
+  const row = {
+    exercise: "Row",
+    doses: [{ sets: 1 }, { sets: 2 }, { sets: 3 }],
+  };
+
   it.each([
-    ["A, B starts on A", [0, 1], [], [0, 1, 0]],
-    ["A, B after A is B", [0, 1], [0], [1, 0, 1]],
-    ["A, B after A, B is A", [0, 1], [0, 1], [0, 1, 0]],
-    ["A, A, B after one A is A", [0, 0, 1], [0], [0, 1, 0]],
-    ["A, A, B after two A is B", [0, 0, 1], [0, 0], [1, 0, 0]],
-    ["A, A, B after B is A", [0, 0, 1], [0, 0, 1], [0, 0, 1]],
-    ["A, A, B after B then A is A", [0, 0, 1], [1, 0], [0, 1, 0]],
-    ["A, B, C after C is A", [0, 1, 2], [2], [0, 1, 2]],
-    ["one variation is always it", [0], [0, 0], [0, 0, 0]],
-    ["an empty pattern runs the first", [], [], [0, 0, 0]],
-  ] as const)("%s", (_, pattern, trail, upcoming) => {
-    expect(upcomingVariations(pattern, trail, 3)).toEqual(upcoming);
+    [0, [5, 4, 1]],
+    [1, [3, 4, 2]],
+    [2, [5, 4, 3]],
+    [3, [3, 4, 1]],
+  ] as const)("session %i takes each item's doses in turn", (n, sets) => {
+    const items = sessionItems([...squat.items, bench, row], n);
+    expect(items.map((i) => i.dose.sets)).toEqual(sets);
   });
 
-  it("goes by the last session logged against the membership, whatever day it was", () => {
-    const sessions = [
-      { membershipId: "m", variation: 0, date: "2026-11-03" },
-      { membershipId: "other", variation: 0, date: "2026-11-05" },
-      { membershipId: "m", variation: null, date: "2026-11-06" },
-    ];
-    expect(nextVariation(squat, sessions, "m")).toBe(1);
-    expect(nextVariation(squat, [], "m")).toBe(0);
+  it("counts the turns of the item with the most doses", () => {
+    expect(turnsOf([])).toBe(1);
+    expect(turnsOf([bench])).toBe(1);
+    expect(turnsOf([bench, ...squat.items, row])).toBe(3);
+  });
+});
+
+describe("foldVariations", () => {
+  const item = (exercise: string, dose: Dose): { exercise: string; dose: Dose } => ({
+    exercise,
+    dose,
   });
 
-  it("defaults to every variation in turn", () => {
-    expect(defaultPattern(1)).toEqual([0]);
-    expect(defaultPattern(2)).toEqual([0, 1]);
-    expect(defaultPattern(3)).toEqual([0, 1, 2]);
+  it("keeps a single variation as items of one dose", () => {
+    expect(foldVariations({ variations: [{ items: [item("Squat", { sets: 5 })] }] })).toEqual([
+      { exercise: "Squat", doses: [{ sets: 5 }] },
+    ]);
+  });
+
+  it("folds variations item by item, keeping an unchanged dose once", () => {
+    expect(
+      foldVariations({
+        variations: [
+          { items: [item("Squat", { sets: 5, reps: 5 }), item("Bench", { sets: 4, reps: 8 })] },
+          { items: [item(" squat", { sets: 3, reps: 10 }), item("Bench", { sets: 4, reps: 8 })] },
+        ],
+      })
+    ).toEqual([
+      {
+        exercise: "Squat",
+        doses: [
+          { sets: 5, reps: 5 },
+          { sets: 3, reps: 10 },
+        ],
+      },
+      { exercise: "Bench", doses: [{ sets: 4, reps: 8 }] },
+    ]);
+  });
+
+  it.each([
+    ["another exercise", [[item("Squat", { sets: 5 })], [item("Deadlift", { sets: 5 })]]],
+    ["another count of items", [[item("Squat", { sets: 5 })], []]],
+    [
+      "another order",
+      [
+        [item("Squat", { sets: 5 }), item("Bench", { sets: 4 })],
+        [item("Bench", { sets: 4 }), item("Squat", { sets: 5 })],
+      ],
+    ],
+  ])("does not fold %s", (_, variations) => {
+    expect(foldVariations({ variations: variations.map((items) => ({ items })) })).toBeNull();
   });
 });
 
@@ -270,7 +301,7 @@ describe("intervalsOf", () => {
 
 describe("doneAsPrescribed", () => {
   it("logs every set of every item", () => {
-    expect(doneAsPrescribed(squat.variations[0]?.items ?? [])).toEqual([
+    expect(doneAsPrescribed(sessionItems(squat.items, 0))).toEqual([
       {
         item: 0,
         exercise: "Back squat",

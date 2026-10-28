@@ -21,10 +21,10 @@ export const exerciseKindOf = (kind: WorkoutKind): ActivityKind | null =>
   ACTIVITY_KINDS.find((k) => k === kind) ?? null;
 
 /** Every exercise a workout's items name, with the kind they take from it. */
-export function workoutExercises(w: Pick<Workout, "kind" | "variations">): ExerciseInput[] {
+export function workoutExercises(w: Pick<Workout, "kind" | "items">): ExerciseInput[] {
   const kind = exerciseKindOf(w.kind);
   if (kind === null) return [];
-  return w.variations.flatMap((v) => v.items.map((i) => ({ name: i.exercise.trim(), kind })));
+  return w.items.map((i) => ({ name: i.exercise.trim(), kind }));
 }
 
 export const exerciseOf = (row: ExerciseRow): Exercise => ({

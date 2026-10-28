@@ -1,7 +1,7 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
-import { doseProtocol, intervalsOf } from "@sendtally/core/hang";
+import { doseProtocol, intervalsOf, sessionItems } from "@sendtally/core/hang";
 import { kindLabel } from "@sendtally/features/activities";
 import { durationLabel } from "@sendtally/features/sessions";
 import { t } from "@sendtally/features/i18n";
@@ -40,7 +40,7 @@ export function LibraryCard({
 }: LibraryCardProps): React.ReactElement {
   const minutes = workoutMinutes(workout);
   const summary = bodySummary(workout);
-  const items = workout.variations[0]?.items ?? [];
+  const items = sessionItems(workout.items, use?.count ?? 0);
   const [first] = items;
   const timed = items.length > 0 && items.every((i) => i.dose.onS !== undefined);
   const foot =

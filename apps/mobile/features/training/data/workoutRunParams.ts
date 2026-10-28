@@ -1,6 +1,6 @@
 import { router, type Href } from "expo-router";
 import type { ActivityKind } from "@sendtally/api-client";
-import type { CalendarDate, Item, ItemDone, PlanLink } from "@sendtally/core/hang";
+import type { CalendarDate, SessionItem, ItemDone, PlanLink } from "@sendtally/core/hang";
 import { ACTIVITY_KINDS } from "@sendtally/features/activities";
 import { planLinkParams, readPlanLink } from "./planLinkParams";
 
@@ -13,7 +13,7 @@ export type WorkoutRun = {
   link: PlanLink;
   /** What the workout says it takes, if it says. */
   minutes: number | null;
-  items: Item[];
+  items: SessionItem[];
 };
 
 export type RunPlayer = "/workout/sets" | "/workout/checklist";
@@ -40,13 +40,13 @@ export function runPath(player: RunPlayer, r: WorkoutRun): Href {
   };
 }
 
-const isItem = (v: unknown): v is Item => {
+const isItem = (v: unknown): v is SessionItem => {
   if (typeof v !== "object" || v === null) return false;
-  const { exercise, dose } = v as Partial<Item>;
+  const { exercise, dose } = v as Partial<SessionItem>;
   return typeof exercise === "string" && typeof dose?.sets === "number";
 };
 
-const parseItems = (text: string): Item[] | null => {
+const parseItems = (text: string): SessionItem[] | null => {
   try {
     const items: unknown = JSON.parse(text);
     return Array.isArray(items) && items.length > 0 && items.every(isItem) ? items : null;

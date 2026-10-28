@@ -148,7 +148,6 @@ export const manualSessionShape = z.object({
   // The plan the session ran; absent on an edit keeps the link it had.
   membershipId: id.nullable().optional(),
   week: z.number().int().min(1).max(MAX_BLOCK_WEEKS).nullable().optional(),
-  variation: z.number().int().min(0).max(9).nullable().optional(),
 });
 
 export function sessionTooLong(
@@ -322,15 +321,12 @@ export function historySession(row: {
   };
 }
 
-function planLinkOf(
-  body: ManualSessionBody
-): Pick<ManualSessionInput, "membership_id" | "week" | "variation"> {
+function planLinkOf(body: ManualSessionBody): Pick<ManualSessionInput, "membership_id" | "week"> {
   return body.membershipId === undefined
     ? {}
     : {
         membership_id: body.membershipId,
         week: body.week ?? null,
-        variation: body.variation ?? null,
       };
 }
 

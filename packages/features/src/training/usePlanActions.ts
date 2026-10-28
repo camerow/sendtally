@@ -24,10 +24,7 @@ const upsert = <T extends { id: string }>(list: readonly T[], item: T): T[] =>
     : [...list, item];
 
 const sameRung = (a: WeekChange, b: WeekChange): boolean =>
-  a.membershipId === b.membershipId &&
-  a.week === b.week &&
-  a.variation === b.variation &&
-  a.item === b.item;
+  a.membershipId === b.membershipId && a.week === b.week && a.dose === b.dose && a.item === b.item;
 
 function withChange(plan: Plan, change: WeekChange): Plan {
   const rest = plan.weekChanges.filter((c) => !sameRung(c, change));

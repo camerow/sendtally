@@ -1,6 +1,6 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
-import type { Dose, Item, WeightUnit, WorkoutKind } from "@sendtally/core/hang";
+import type { Dose, SessionItem, WeightUnit, WorkoutKind } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
 import { weekChips } from "@sendtally/features/training";
@@ -15,7 +15,7 @@ import { WeekChipRow } from "./WeekChipRow";
 export type WeekRungProps = {
   kind: WorkoutKind;
   week: number;
-  items: readonly Item[];
+  items: readonly SessionItem[];
   /** This week's change to each item, empty where it runs as written. */
   changes: readonly Partial<Dose>[];
   unit: WeightUnit;

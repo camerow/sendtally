@@ -32,7 +32,6 @@ const logged = (id: string, date: string, name: string, weightKg: number): Activ
   workoutId: null,
   membershipId: null,
   week: null,
-  variation: null,
   done: [{ item: 0, exercise: name, sets: [{ reps: 5, weightKg }] }],
 });
 

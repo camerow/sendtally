@@ -35,13 +35,7 @@ const mine: LibraryWorkout = {
   description: "",
   minutes: null,
   targetRpe: null,
-  variations: [
-    {
-      label: "",
-      items: [{ exercise: "g1", dose: { sets: 3, reps: 6, onS: 7, offS: 3, edgeMm: 18 } }],
-    },
-  ],
-  pattern: [0],
+  items: [{ exercise: "g1", doses: [{ sets: 3, reps: 6, onS: 7, offS: 3, edgeMm: 18 }] }],
   exerciseRestS: 180,
 };
 
@@ -91,14 +85,14 @@ describe("hang workouts", () => {
     });
   });
 
-  it("runs any variation and item a session takes", () => {
+  it("runs a workout's first item at its first dose, and nothing without one", () => {
     const fingers = libraryOf([]).find((w) => w.id === "fingers-ab");
-    expect(fingers === undefined ? null : hangWorkoutOf(fingers, 1)).toMatchObject({
-      reps: 6,
-      hangS: 7,
-      sets: 3,
+    expect(fingers === undefined ? null : hangWorkoutOf(fingers)).toMatchObject({
+      reps: 1,
+      hangS: 10,
+      sets: 6,
     });
-    expect(fingers === undefined ? null : hangWorkoutOf(fingers, 2)).toBeNull();
+    expect(hangWorkoutOf({ ...mine, items: [] })).toBeNull();
   });
 });
 
@@ -133,7 +127,6 @@ describe("setup", () => {
     },
     membershipId: null,
     week: null,
-    variation: null,
     done: [],
     stravaActivityId: null,
     postState: null,

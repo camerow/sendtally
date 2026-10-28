@@ -1,10 +1,11 @@
 import type { ActivityKind, WorkoutRecord } from "@sendtally/api-client";
 import {
-  DEFAULT_EXERCISE_REST_S,
+  defaultExerciseRestS,
   doseProtocol,
   hangboardSeconds,
   isBuiltInGrip,
   itemsSeconds,
+  sessionItems,
   timeUnitsOf,
   toUnit,
   type CalendarDate,
@@ -45,7 +46,7 @@ export function draftOf({ id: _, source: __, ...w }: LibraryWorkout): WorkoutDra
   return w;
 }
 
-/** A new workout of the kind: one variation, nothing in it yet. */
+/** A new workout of the kind, nothing in it yet. */
 export function newWorkoutDraft(kind: WorkoutKind): WorkoutDraft {
   return {
     kind,
@@ -53,22 +54,21 @@ export function newWorkoutDraft(kind: WorkoutKind): WorkoutDraft {
     description: "",
     minutes: null,
     targetRpe: null,
-    variations: [{ label: "", items: [] }],
-    pattern: [0],
-    exerciseRestS: DEFAULT_EXERCISE_REST_S,
+    items: [],
+    exerciseRestS: defaultExerciseRestS(kind),
   };
 }
 
 const roundMinutes = (seconds: number): number => Math.max(1, Math.round(seconds / 60));
 
 /**
- * How long the first variation takes: for hangboard always counted from its items,
+ * How long its first session takes: for hangboard always counted from its items,
  * otherwise the minutes set, or for timed work without them the time its items take.
  */
 export function workoutMinutes(
-  w: Pick<Workout, "kind" | "minutes" | "variations" | "exerciseRestS">
+  w: Pick<Workout, "kind" | "minutes" | "items" | "exerciseRestS">
 ): number | null {
-  const items = w.variations[0]?.items ?? [];
+  const items = sessionItems(w.items, 0);
   if (w.kind === "hangboard")
     return items.length > 0 ? roundMinutes(hangboardSeconds(items, w.exerciseRestS)) : null;
   if (w.minutes !== null) return w.minutes;
@@ -108,8 +108,8 @@ export function doseSummary(kind: WorkoutKind, dose: Dose, unit: WeightUnit): st
 }
 
 /** "6 × 7s on, 3s off" for a one-item hangboard workout, "3 exercises", or null with none. */
-export function bodySummary(w: Pick<Workout, "kind" | "variations">): string | null {
-  const items = w.variations[0]?.items ?? [];
+export function bodySummary(w: Pick<Workout, "kind" | "items">): string | null {
+  const items = sessionItems(w.items, 0);
   const [only] = items;
   if (only === undefined) return null;
   if (w.kind === "hangboard" && items.length === 1) {
@@ -152,10 +152,7 @@ const fold = (text: string): string => text.normalize("NFD").replace(/[̀-ͯ]/g,
 function matches(w: LibraryWorkout, text: string): boolean {
   const words = fold(text).split(/\s+/).filter(Boolean);
   if (words.length === 0) return true;
-  const exercises = w.variations.flatMap((v) => [
-    v.label,
-    ...v.items.map((i) => exerciseName(i.exercise)),
-  ]);
+  const exercises = w.items.map((i) => exerciseName(i.exercise));
   const haystack = fold([w.name, w.description, kindLabel(w.kind), ...exercises].join(" "));
   return words.every((word) => haystack.includes(word));
 }

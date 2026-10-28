@@ -1,5 +1,5 @@
 import type { Activity, ActivityKind } from "@sendtally/api-client";
-import { doneAsPrescribed, type Item, type ItemDone } from "@sendtally/core/hang";
+import { doneAsPrescribed, type ItemDone, type SessionItem } from "@sendtally/core/hang";
 import { formatNumber, t } from "../i18n";
 import { cleanDone } from "./done";
 import { ACTIVITY_KINDS, kindLabel, trainingLoad } from "./format";
@@ -16,7 +16,6 @@ export type ActivityDraft = {
   workoutId: string | null;
   membershipId: string | null;
   week: number | null;
-  variation: number | null;
   done: ItemDone[];
 };
 
@@ -28,7 +27,6 @@ export type ActivityPrefill = {
   workoutId?: string;
   membershipId?: string;
   week?: string;
-  variation?: string;
   minutes?: string;
   /** What a player ran, as JSON, in place of what the workout prescribes. */
   done?: string;
@@ -70,7 +68,7 @@ const parseDone = (text: string | undefined): ItemDone[] | null => {
 export function newActivityDraft(
   prefill: ActivityPrefill,
   today: string,
-  prescribed: readonly Item[] = []
+  prescribed: readonly SessionItem[] = []
 ): ActivityDraft {
   return {
     kind: ACTIVITY_KINDS.find((k) => k === prefill.kind) ?? "strength",
@@ -83,7 +81,6 @@ export function newActivityDraft(
     workoutId: prefill.workoutId ?? null,
     membershipId: prefill.membershipId ?? null,
     week: wholeNumber(prefill.week),
-    variation: wholeNumber(prefill.variation),
     done: parseDone(prefill.done) ?? doneAsPrescribed(prescribed),
   };
 }
@@ -100,7 +97,6 @@ export function draftFromActivity(a: Activity): ActivityDraft {
     workoutId: a.workoutId,
     membershipId: a.membershipId,
     week: a.week,
-    variation: a.variation,
     done: a.done,
   };
 }
@@ -121,7 +117,6 @@ export function activityFromDraft(id: string, d: ActivityDraft): Activity {
     workoutId: d.workoutId,
     membershipId: d.membershipId,
     week: d.week,
-    variation: d.variation,
     done: cleanDone(d.done),
   };
 }

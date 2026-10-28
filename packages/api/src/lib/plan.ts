@@ -1,13 +1,13 @@
 import {
-  DEFAULT_EXERCISE_REST_S,
-  defaultPattern,
+  defaultExerciseRestS,
+  foldVariations,
   isCalendarDate,
   WORKOUT_KINDS,
   type Block,
   type Dose,
   type ItemDone,
+  type Item,
   type Membership,
-  type Variation,
   type WeekChange,
   type Workout,
 } from "@sendtally/core/hang";
@@ -28,7 +28,7 @@ export const rpe = z.number().int().min(1).max(10);
 
 export const MAX_BLOCK_WEEKS = 16;
 
-const MAX_VARIATIONS = 10;
+const MAX_DOSES = 10;
 
 const MAX_ITEMS = 30;
 
@@ -44,18 +44,15 @@ export const dose = z.object({
   setRestS: seconds.optional(),
 });
 
-const item = z.object({ exercise: z.string().trim().min(1).max(80), dose });
+const exercise = z.string().trim().min(1).max(80);
 
-const variation = z.object({
-  label: z.string().trim().max(40),
-  items: z.array(item).max(MAX_ITEMS),
-});
+const item = z.object({ exercise, doses: z.array(dose).min(1).max(MAX_DOSES) });
 
-const variationIndex = z
+const doseIndex = z
   .number()
   .int()
   .min(0)
-  .max(MAX_VARIATIONS - 1);
+  .max(MAX_DOSES - 1);
 
 const itemIndex = z
   .number()
@@ -65,24 +62,46 @@ const itemIndex = z
 
 const blockWeek = z.number().int().min(1).max(MAX_BLOCK_WEEKS);
 
-// No pattern is every variation in turn.
+const workoutFields = {
+  kind: z.enum(WORKOUT_KINDS),
+  name: title,
+  description: z.string().trim().max(2000),
+  minutes: minutes.nullable(),
+  targetRpe: rpe.nullable(),
+  // Older app builds send none.
+  exerciseRestS: seconds.optional(),
+};
+
+// Older app builds send whole variations, which fold into items where their exercises line
+// up and otherwise keep the first.
+const legacyItems = z
+  .array(
+    z.object({
+      items: z.array(z.object({ exercise, dose })).max(MAX_ITEMS),
+    })
+  )
+  .min(1)
+  .max(MAX_DOSES)
+  .transform(
+    (variations): Item[] =>
+      foldVariations({ variations }) ??
+      (variations[0]?.items ?? []).map((i) => ({ exercise: i.exercise, doses: [i.dose] }))
+  );
+
 export const workoutBody = z
-  .object({
-    kind: z.enum(WORKOUT_KINDS),
-    name: title,
-    description: z.string().trim().max(2000),
-    minutes: minutes.nullable(),
-    targetRpe: rpe.nullable(),
-    variations: z.array(variation).min(1).max(MAX_VARIATIONS),
-    pattern: z.array(variationIndex).min(1).max(20).optional(),
-    // Older app builds send none.
-    exerciseRestS: seconds.default(DEFAULT_EXERCISE_REST_S),
-  })
-  .transform(({ pattern, ...w }) => ({
-    ...w,
-    pattern: pattern ?? defaultPattern(w.variations.length),
-  }))
-  .refine((w) => w.pattern.every((i) => i < w.variations.length), "pattern names no variation");
+  .union([
+    z.object({ ...workoutFields, items: z.array(item).max(MAX_ITEMS) }),
+    z.object({ ...workoutFields, variations: legacyItems }),
+  ])
+  .transform(({ kind, name, description, minutes, targetRpe, exerciseRestS, ...body }) => ({
+    kind,
+    name,
+    description,
+    minutes,
+    targetRpe,
+    items: "items" in body ? body.items : body.variations,
+    exerciseRestS: exerciseRestS ?? defaultExerciseRestS(kind),
+  }));
 
 export const blockBody = z.object({
   name: title,
@@ -103,7 +122,7 @@ export const membershipBody = z.object({
 /** An empty change puts the item back as written for that week. */
 export const weekChangeBody = z.object({
   week: blockWeek,
-  variation: variationIndex,
+  dose: doseIndex,
   item: itemIndex,
   change: dose.partial(),
 });
@@ -125,7 +144,6 @@ export const doneBody = z
 export const planLinkShape = {
   membershipId: id.nullable().default(null),
   week: blockWeek.nullable().default(null),
-  variation: variationIndex.nullable().default(null),
 };
 
 export type WorkoutInput = z.infer<typeof workoutBody>;
@@ -148,8 +166,7 @@ export const workoutOf = (row: WorkoutRow): WorkoutRecord => ({
   description: row.description ?? "",
   minutes: row.minutes,
   targetRpe: row.target_rpe,
-  variations: JSON.parse(row.variations_json) as Variation[],
-  pattern: JSON.parse(row.pattern_json) as number[],
+  items: JSON.parse(row.items_json) as Item[],
   exerciseRestS: row.exercise_rest_s,
   updatedAt: row.updated_at,
 });
@@ -172,7 +189,7 @@ export const membershipOf = (row: MembershipRow): Membership => ({
 export const weekChangeOf = (row: WeekChangeRow): WeekChange => ({
   membershipId: row.membership_id,
   week: row.week,
-  variation: row.variation,
+  dose: row.dose,
   item: row.item,
   change: JSON.parse(row.change_json) as Partial<Dose>,
 });

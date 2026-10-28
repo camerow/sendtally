@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import type { ActivityRecord } from "@sendtally/api-client";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
-import { DEFAULT_EXERCISE_REST_S, type ItemDone } from "@sendtally/core/hang";
+import { defaultExerciseRestS, type ItemDone } from "@sendtally/core/hang";
 import {
   activityFromDraft,
   kindLabel,
@@ -86,9 +86,8 @@ export function ActivityForm({ id, initial, logged }: ActivityFormProps): React.
       description: "",
       minutes: draft.minutes,
       targetRpe: draft.rpe,
-      variations: [{ label: "", items }],
-      pattern: [0],
-      exerciseRestS: DEFAULT_EXERCISE_REST_S,
+      items: items.map(({ exercise, dose }) => ({ exercise, doses: [dose] })),
+      exerciseRestS: defaultExerciseRestS(draft.kind),
     });
     router.push({ pathname: "/workout/[id]", params: { id: workoutId } });
   };

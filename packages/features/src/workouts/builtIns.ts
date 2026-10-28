@@ -1,6 +1,5 @@
 import {
-  DEFAULT_EXERCISE_REST_S,
-  defaultPattern,
+  defaultExerciseRestS,
   type BuiltInGrip,
   type Dose,
   type Item,
@@ -10,9 +9,7 @@ import { t, type MessageKey } from "../i18n";
 import type { LibraryWorkout } from "./types";
 
 /** A hangboard item names its grip by id; every other item names its exercise. */
-type ItemSpec = { exercise: MessageKey; dose: Dose } | { grip: BuiltInGrip; dose: Dose };
-
-type VariationSpec = { label: MessageKey | null; items: ItemSpec[] };
+type ItemSpec = { exercise: MessageKey; doses: Dose[] } | { grip: BuiltInGrip; doses: Dose[] };
 
 type BuiltIn = {
   id: string;
@@ -21,16 +18,12 @@ type BuiltIn = {
   description: MessageKey;
   minutes: number | null;
   targetRpe: number | null;
-  variations: VariationSpec[];
-  pattern?: number[];
-  exerciseRestS?: number;
+  items: ItemSpec[];
 };
 
-const one = (...items: ItemSpec[]): VariationSpec[] => [{ label: null, items }];
+const hang = (grip: BuiltInGrip, ...doses: Dose[]): ItemSpec => ({ grip, doses });
 
-const hang = (grip: BuiltInGrip, dose: Dose): ItemSpec => ({ grip, dose });
-
-const lift = (exercise: MessageKey, dose: Dose): ItemSpec => ({ exercise, dose });
+const lift = (exercise: MessageKey, ...doses: Dose[]): ItemSpec => ({ exercise, doses });
 
 /**
  * The curated starter library. An id is never reused: sessions and memberships
@@ -45,7 +38,7 @@ const BUILT_INS: readonly BuiltIn[] = [
     description: "hang.workout.rep73.blurb",
     minutes: null,
     targetRpe: null,
-    variations: one(hang("half", { sets: 6, reps: 6, onS: 7, offS: 3, setRestS: 180 })),
+    items: [hang("half", { sets: 6, reps: 6, onS: 7, offS: 3, setRestS: 180 })],
   },
   {
     id: "max10",
@@ -54,7 +47,7 @@ const BUILT_INS: readonly BuiltIn[] = [
     description: "hang.workout.max10.blurb",
     minutes: null,
     targetRpe: null,
-    variations: one(hang("half", { sets: 5, reps: 1, onS: 10, setRestS: 180 })),
+    items: [hang("half", { sets: 5, reps: 1, onS: 10, setRestS: 180 })],
   },
   {
     id: "fingers-ab",
@@ -63,15 +56,12 @@ const BUILT_INS: readonly BuiltIn[] = [
     description: "workouts.builtIn.fingersAb.blurb",
     minutes: null,
     targetRpe: 8,
-    variations: [
-      {
-        label: "workouts.variation.maxHangs",
-        items: [hang("half", { sets: 6, reps: 1, onS: 10, setRestS: 180 })],
-      },
-      {
-        label: "workouts.variation.repeaters",
-        items: [hang("half", { sets: 3, reps: 6, onS: 7, offS: 3, setRestS: 180 })],
-      },
+    items: [
+      hang(
+        "half",
+        { sets: 6, reps: 1, onS: 10, setRestS: 180 },
+        { sets: 3, reps: 6, onS: 7, offS: 3, setRestS: 180 }
+      ),
     ],
   },
   {
@@ -81,7 +71,7 @@ const BUILT_INS: readonly BuiltIn[] = [
     description: "hang.workout.block.blurb",
     minutes: null,
     targetRpe: null,
-    variations: one(hang("pinch", { sets: 5, reps: 5, setRestS: 120 })),
+    items: [hang("pinch", { sets: 5, reps: 5, setRestS: 120 })],
   },
   {
     id: "density",
@@ -90,7 +80,7 @@ const BUILT_INS: readonly BuiltIn[] = [
     description: "hang.workout.density.blurb",
     minutes: null,
     targetRpe: null,
-    variations: one(hang("open", { sets: 4, reps: 1, onS: 30, setRestS: 60 })),
+    items: [hang("open", { sets: 4, reps: 1, onS: 30, setRestS: 60 })],
   },
   {
     id: "assist",
@@ -99,7 +89,7 @@ const BUILT_INS: readonly BuiltIn[] = [
     description: "hang.workout.assist.blurb",
     minutes: null,
     targetRpe: null,
-    variations: one(hang("half", { sets: 6, reps: 1, onS: 10, setRestS: 120 })),
+    items: [hang("half", { sets: 6, reps: 1, onS: 10, setRestS: 120 })],
   },
   {
     id: "lowpull",
@@ -108,7 +98,7 @@ const BUILT_INS: readonly BuiltIn[] = [
     description: "hang.workout.lowpull.blurb",
     minutes: null,
     targetRpe: null,
-    variations: one(hang("open", { sets: 3, reps: 10, setRestS: 90 })),
+    items: [hang("open", { sets: 3, reps: 10, setRestS: 90 })],
   },
   {
     id: "climb-limit",
@@ -117,7 +107,7 @@ const BUILT_INS: readonly BuiltIn[] = [
     description: "workouts.builtIn.limit.blurb",
     minutes: 90,
     targetRpe: 9,
-    variations: one(),
+    items: [],
   },
   {
     id: "climb-4x4",
@@ -126,7 +116,7 @@ const BUILT_INS: readonly BuiltIn[] = [
     description: "workouts.builtIn.fourByFour.blurb",
     minutes: 60,
     targetRpe: 8,
-    variations: one(),
+    items: [],
   },
   {
     id: "climb-arc",
@@ -135,7 +125,7 @@ const BUILT_INS: readonly BuiltIn[] = [
     description: "workouts.builtIn.arc.blurb",
     minutes: 45,
     targetRpe: 4,
-    variations: one(),
+    items: [],
   },
   {
     id: "strength-squat",
@@ -144,16 +134,7 @@ const BUILT_INS: readonly BuiltIn[] = [
     description: "workouts.builtIn.squat.blurb",
     minutes: 45,
     targetRpe: 8,
-    variations: [
-      {
-        label: "workouts.variation.fiveByFive",
-        items: [lift("workouts.exercise.backSquat", { sets: 5, reps: 5 })],
-      },
-      {
-        label: "workouts.variation.threeByTen",
-        items: [lift("workouts.exercise.backSquat", { sets: 3, reps: 10 })],
-      },
-    ],
+    items: [lift("workouts.exercise.backSquat", { sets: 5, reps: 5 }, { sets: 3, reps: 10 })],
   },
   {
     id: "strength-5x5",
@@ -162,11 +143,11 @@ const BUILT_INS: readonly BuiltIn[] = [
     description: "workouts.builtIn.fiveByFive.blurb",
     minutes: 45,
     targetRpe: 8,
-    variations: one(
+    items: [
       lift("workouts.exercise.backSquat", { sets: 5, reps: 5 }),
       lift("workouts.exercise.benchPress", { sets: 5, reps: 5 }),
-      lift("workouts.exercise.barbellRow", { sets: 5, reps: 5 })
-    ),
+      lift("workouts.exercise.barbellRow", { sets: 5, reps: 5 }),
+    ],
   },
   {
     id: "strength-antagonist",
@@ -175,12 +156,12 @@ const BUILT_INS: readonly BuiltIn[] = [
     description: "workouts.builtIn.antagonist.blurb",
     minutes: 30,
     targetRpe: 6,
-    variations: one(
+    items: [
       lift("workouts.exercise.pushUps", { sets: 3, reps: 15 }),
       lift("workouts.exercise.overheadPress", { sets: 3, reps: 8 }),
       lift("workouts.exercise.dips", { sets: 3, reps: 10 }),
-      lift("workouts.exercise.externalRotation", { sets: 4, reps: 15 })
-    ),
+      lift("workouts.exercise.externalRotation", { sets: 4, reps: 15 }),
+    ],
   },
   {
     id: "strength-extensors",
@@ -189,11 +170,11 @@ const BUILT_INS: readonly BuiltIn[] = [
     description: "workouts.builtIn.extensors.blurb",
     minutes: 15,
     targetRpe: 4,
-    variations: one(
+    items: [
       lift("workouts.exercise.bandExtensions", { sets: 3, reps: 20 }),
       lift("workouts.exercise.reverseWristCurls", { sets: 3, reps: 15 }),
-      lift("workouts.exercise.riceBucket", { sets: 3, onS: 60 })
-    ),
+      lift("workouts.exercise.riceBucket", { sets: 3, onS: 60 }),
+    ],
   },
   {
     id: "mobility-hips",
@@ -202,14 +183,14 @@ const BUILT_INS: readonly BuiltIn[] = [
     description: "workouts.builtIn.hips.blurb",
     minutes: 20,
     targetRpe: 3,
-    variations: one(
+    items: [
       lift("workouts.item.ninetyNinety", { sets: 1, reps: 10 }),
       lift("workouts.item.couchStretch", { sets: 1, onS: 60 }),
       lift("workouts.item.frogStretch", { sets: 1, onS: 90 }),
       lift("workouts.item.pigeon", { sets: 1, onS: 60 }),
       lift("workouts.item.hipFlexorLunge", { sets: 1, onS: 60 }),
-      lift("workouts.item.deepSquat", { sets: 1, onS: 120 })
-    ),
+      lift("workouts.item.deepSquat", { sets: 1, onS: 120 }),
+    ],
   },
   {
     id: "yoga-climbers",
@@ -218,13 +199,13 @@ const BUILT_INS: readonly BuiltIn[] = [
     description: "workouts.builtIn.yoga.blurb",
     minutes: 25,
     targetRpe: 2,
-    variations: one(
+    items: [
       lift("workouts.item.sunSalutation", { sets: 1, reps: 5 }),
       lift("workouts.item.downwardDog", { sets: 1, onS: 60 }),
       lift("workouts.item.threadNeedle", { sets: 1, onS: 60 }),
       lift("workouts.item.lizard", { sets: 1, onS: 60 }),
-      lift("workouts.item.childsPose", { sets: 1, onS: 120 })
-    ),
+      lift("workouts.item.childsPose", { sets: 1, onS: 120 }),
+    ],
   },
   {
     id: "run-tempo",
@@ -233,10 +214,10 @@ const BUILT_INS: readonly BuiltIn[] = [
     description: "workouts.builtIn.tempo.blurb",
     minutes: 25,
     targetRpe: 7,
-    variations: one(
+    items: [
       lift("workouts.step.hard", { sets: 5, onS: 180 }),
-      lift("workouts.step.easy", { sets: 5, onS: 120 })
-    ),
+      lift("workouts.step.easy", { sets: 5, onS: 120 }),
+    ],
   },
   {
     id: "other-core",
@@ -245,18 +226,18 @@ const BUILT_INS: readonly BuiltIn[] = [
     description: "workouts.builtIn.core.blurb",
     minutes: 15,
     targetRpe: 6,
-    variations: one(
+    items: [
       lift("workouts.step.plank", { sets: 3, onS: 45, offS: 15 }),
       lift("workouts.step.hollowHold", { sets: 3, onS: 30, offS: 15 }),
-      lift("workouts.step.kneeRaises", { sets: 3, reps: 10, offS: 60 })
-    ),
+      lift("workouts.step.kneeRaises", { sets: 3, reps: 10, offS: 60 }),
+    ],
   },
 ];
 
-const itemOf = (spec: ItemSpec): Item =>
-  "grip" in spec
-    ? { exercise: spec.grip, dose: spec.dose }
-    : { exercise: t(spec.exercise), dose: spec.dose };
+const itemOf = (spec: ItemSpec): Item => ({
+  exercise: "grip" in spec ? spec.grip : t(spec.exercise),
+  doses: spec.doses,
+});
 
 export const BUILT_IN_WORKOUT_IDS: readonly string[] = BUILT_INS.map((w) => w.id);
 
@@ -270,11 +251,7 @@ export function builtInWorkouts(): LibraryWorkout[] {
     description: t(w.description),
     minutes: w.minutes,
     targetRpe: w.targetRpe,
-    variations: w.variations.map((v) => ({
-      label: v.label === null ? "" : t(v.label),
-      items: v.items.map(itemOf),
-    })),
-    pattern: w.pattern ?? defaultPattern(w.variations.length),
-    exerciseRestS: w.exerciseRestS ?? DEFAULT_EXERCISE_REST_S,
+    items: w.items.map(itemOf),
+    exerciseRestS: defaultExerciseRestS(w.kind),
   }));
 }

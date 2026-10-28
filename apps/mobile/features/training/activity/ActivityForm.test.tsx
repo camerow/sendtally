@@ -66,7 +66,6 @@ describe("Log activity", () => {
       workoutId: null,
       membershipId: null,
       week: null,
-      variation: null,
       done: [],
     });
     expect(router.back).toHaveBeenCalled();
@@ -74,7 +73,7 @@ describe("Log activity", () => {
 
   it("logs what a planned workout prescribes, and saves it with the plan it ran", async () => {
     const initial = newActivityDraft(
-      { kind: "strength", membershipId: "m1", week: "2", variation: "1", workoutId: "w1" },
+      { kind: "strength", membershipId: "m1", week: "2", workoutId: "w1" },
       "2026-10-22",
       [{ exercise: "Back squat", dose: { sets: 2, reps: 5, weightKg: 100 } }]
     );
@@ -86,7 +85,6 @@ describe("Log activity", () => {
         workoutId: "w1",
         membershipId: "m1",
         week: 2,
-        variation: 1,
         done: [
           {
             item: 0,
@@ -115,9 +113,8 @@ describe("Log activity", () => {
       description: "",
       minutes: 60,
       targetRpe: 3,
-      variations: [{ label: "", items: [{ exercise: "Pigeon", dose: { sets: 1, onS: 60 } }] }],
-      pattern: [0],
-      exerciseRestS: 180,
+      items: [{ exercise: "Pigeon", doses: [{ sets: 1, onS: 60 }] }],
+      exerciseRestS: 0,
     });
     expect(router.push).toHaveBeenCalledWith({
       pathname: "/workout/[id]",

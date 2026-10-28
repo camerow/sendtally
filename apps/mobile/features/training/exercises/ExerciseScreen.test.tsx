@@ -35,8 +35,7 @@ const legs: WorkoutRecord = {
   description: "",
   minutes: 50,
   targetRpe: null,
-  variations: [{ label: "", items: [{ exercise: "back squat", dose: { sets: 5, reps: 5 } }] }],
-  pattern: [0],
+  items: [{ exercise: "back squat", doses: [{ sets: 5, reps: 5 }] }],
   exerciseRestS: 180,
   updatedAt: "t",
 };
@@ -53,7 +52,6 @@ const squatted: ActivityRecord = {
   workoutId: "legs",
   membershipId: null,
   week: null,
-  variation: null,
   done: [{ item: 0, exercise: "Back squat", sets: [{ reps: 5, weightKg: 100 }] }],
   stravaActivityId: null,
   postedAt: null,

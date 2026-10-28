@@ -30,7 +30,6 @@ const sessionBody = {
   protocol: repeaters,
   membershipId: null,
   week: null,
-  variation: null,
   done: [],
 };
 
@@ -248,23 +247,20 @@ describe("hangboard", () => {
       ...sessionBody,
       membershipId: "m1",
       week: 3,
-      variation: 1,
       done: [{ item: 0, exercise: "half", sets: [{ reps: 6, onS: 7, offS: 3, edgeMm: 20 }] }],
     };
     await call(userId, "PUT", "/sessions/h1", planned);
-    const { membershipId, week, variation, done, ...older } = planned;
+    const { membershipId, week, done, ...older } = planned;
     await call(userId, "PUT", "/sessions/h2", older);
     const sessions = (await read(userId)).sessions;
     expect(sessions.find((s) => s.id === "h1")).toMatchObject({
       membershipId,
       week,
-      variation,
       done,
     });
     expect(sessions.find((s) => s.id === "h2")).toMatchObject({
       membershipId: null,
       week: null,
-      variation: null,
       done: [],
     });
   });

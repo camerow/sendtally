@@ -27,7 +27,7 @@ export function WorkoutRuns({ workout }: WorkoutRunsProps): React.ReactElement |
   const all =
     activities.status === "ready" ? activities.data.filter((a) => a.workoutId === workout.id) : [];
   const runs = all.slice(0, SHOWN);
-  const names = workout.variations.flatMap((v) => v.items.map((i) => exerciseKey(i.exercise)));
+  const names = workout.items.map((i) => exerciseKey(i.exercise));
   const lead =
     series.status === "ready"
       ? names.map((key) => series.data.find((s) => s.key === key)).find((s) => s !== undefined)

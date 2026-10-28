@@ -60,7 +60,6 @@ function session(
     post_error: null,
     membership_id: null,
     week: null,
-    variation: null,
     tags: [],
     climbs: [],
     ...overrides,

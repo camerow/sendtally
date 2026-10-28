@@ -63,10 +63,10 @@ import {
   type Block,
   type HangSession,
   type HangSettings,
+  type Item,
   type ItemDone,
   type Loads,
   type Membership,
-  type Variation,
   type WeekChange,
   type Workout,
 } from "@sendtally/core/hang";
@@ -290,7 +290,6 @@ export type ManualSessionInput = {
   /** Absent leaves the plan link as it was. */
   membership_id?: string | null;
   week?: number | null;
-  variation?: number | null;
   location: "indoor" | "outdoor" | null;
   gym_id: string | null;
   area_id: string | null;
@@ -2626,7 +2625,6 @@ export async function saveHangSession(
     protocol_json: JSON.stringify(s.protocol),
     membership_id: s.membershipId,
     week: s.week,
-    variation: s.variation,
     done_json: JSON.stringify(s.done),
     updated_at: now,
   };
@@ -2765,7 +2763,6 @@ export async function saveActivity(
     workout_id: a.workoutId,
     membership_id: a.membershipId,
     week: a.week,
-    variation: a.variation,
     done_json: JSON.stringify(a.done),
     updated_at: now,
   };
@@ -2872,12 +2869,7 @@ export async function planRows(db: D1Database, userId: string): Promise<PlanRows
       .select()
       .from(weekChanges)
       .where(eq(weekChanges.user_id, userId))
-      .orderBy(
-        weekChanges.membership_id,
-        weekChanges.week,
-        weekChanges.variation,
-        weekChanges.item
-      ),
+      .orderBy(weekChanges.membership_id, weekChanges.week, weekChanges.dose, weekChanges.item),
   ]);
   return { blocks, memberships: members, weekChanges: changes };
 }
@@ -2910,7 +2902,7 @@ export async function saveBlock(db: D1Database, userId: string, b: Block): Promi
     .get();
 }
 
-const UNLINKED = { membership_id: null, week: null, variation: null };
+const UNLINKED = { membership_id: null, week: null };
 
 /**
  * Takes out the memberships `where` picks, with their week changes. Sessions logged
@@ -2998,7 +2990,7 @@ const weekChangeKey = (userId: string, c: Omit<WeekChange, "change">): SQL | und
     eq(weekChanges.user_id, userId),
     eq(weekChanges.membership_id, c.membershipId),
     eq(weekChanges.week, c.week),
-    eq(weekChanges.variation, c.variation),
+    eq(weekChanges.dose, c.dose),
     eq(weekChanges.item, c.item)
   );
 
@@ -3016,7 +3008,7 @@ export async function saveWeekChange(db: D1Database, userId: string, c: WeekChan
       user_id: userId,
       membership_id: c.membershipId,
       week: c.week,
-      variation: c.variation,
+      dose: c.dose,
       item: c.item,
       change_json,
     })
@@ -3025,7 +3017,7 @@ export async function saveWeekChange(db: D1Database, userId: string, c: WeekChan
         weekChanges.user_id,
         weekChanges.membership_id,
         weekChanges.week,
-        weekChanges.variation,
+        weekChanges.dose,
         weekChanges.item,
       ],
       set: { change_json },
@@ -3051,8 +3043,7 @@ export async function saveWorkout(db: D1Database, userId: string, w: Workout): P
     description: w.description === "" ? null : w.description,
     minutes: w.minutes,
     target_rpe: w.targetRpe,
-    variations_json: JSON.stringify(w.variations),
-    pattern_json: JSON.stringify(w.pattern),
+    items_json: JSON.stringify(w.items),
     exercise_rest_s: w.exerciseRestS,
     updated_at: now,
   };
@@ -3253,7 +3244,7 @@ async function renameEverywhere(
     hit(x) ? { ...x, exercise: name } : x;
   const [ws, as] = await d.batch([
     d
-      .select({ id: workouts.id, kind: workouts.kind, json: workouts.variations_json })
+      .select({ id: workouts.id, kind: workouts.kind, json: workouts.items_json })
       .from(workouts)
       .where(eq(workouts.user_id, userId)),
     d
@@ -3263,13 +3254,13 @@ async function renameEverywhere(
   ]);
   const now = new Date().toISOString();
   const workoutWrites = ws.flatMap((w) => {
-    const variations = JSON.parse(w.json) as Variation[];
-    if (exerciseKindOf(w.kind) === null || !variations.some((v) => v.items.some(hit))) return [];
-    const json = JSON.stringify(variations.map((v) => ({ ...v, items: v.items.map(renamed) })));
+    const items = JSON.parse(w.json) as Item[];
+    if (exerciseKindOf(w.kind) === null || !items.some(hit)) return [];
+    const json = JSON.stringify(items.map(renamed));
     return [
       d
         .update(workouts)
-        .set({ variations_json: json, updated_at: now })
+        .set({ items_json: json, updated_at: now })
         .where(and(eq(workouts.user_id, userId), eq(workouts.id, w.id))),
     ];
   });

@@ -38,19 +38,19 @@ export function loggedSessions(log: Omit<TrainingLog, "plan" | "workout">): Logg
       kind: "climbing" as const,
       date: climbDate(s),
       membershipId: s.membership_id,
-      variation: s.variation,
+      workoutId: null,
     })),
     ...log.hangs.map((s) => ({
       kind: "hangboard" as const,
       date: s.date,
       membershipId: s.membershipId,
-      variation: s.variation,
+      workoutId: s.workoutId,
     })),
     ...log.activities.map((a) => ({
       kind: a.kind,
       date: a.date,
       membershipId: a.membershipId,
-      variation: a.variation,
+      workoutId: a.workoutId,
     })),
   ];
 }

@@ -38,13 +38,12 @@ describe("tally", () => {
   });
 
   it("starts at the clock with the gym and plan, and puts a circuit climb at its gym", () => {
-    const plan = { membershipId: "m1", week: 2, variation: 0 };
+    const plan = { membershipId: "m1", week: 2 };
     const draft = tallyDraft(NOW, { plan });
     expect(draft).toMatchObject({ startTime: "18:30", plan, climbs: [] });
     expect(toLogSessionInput({ ...draft, climbs: [] })).toMatchObject({
       membershipId: "m1",
       week: 2,
-      variation: 0,
     });
 
     const circuit = { id: "c1", colour: "blue", label: "Blue", low: 3, high: 5 } as const;

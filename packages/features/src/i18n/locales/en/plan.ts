@@ -29,7 +29,6 @@ export const plan = {
   "plan.kindOtherHint": "Running, anything else",
   "plan.changeType": "Change type",
   "plan.forDate": "For {date}",
-  "plan.takesTurns": "Takes turns by session: {pattern}",
   "plan.howOften": "How often?",
   "plan.repeatEvery": "Repeat every",
   "plan.specificDays": "On specific days",

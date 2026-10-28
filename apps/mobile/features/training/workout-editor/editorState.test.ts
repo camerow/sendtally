@@ -3,22 +3,19 @@ import type { WorkoutDraft } from "@sendtally/features/workouts";
 import {
   draftOfEditor,
   withAlternates,
-  withoutStep,
-  withoutVariation,
-  withStepAdded,
-  withStepCycled,
-  withVariationAdded,
+  withDoseAdded,
+  withoutLastDose,
+  withSetRest,
 } from "./editorState";
 
-const squat = { exercise: "Back squat", dose: { sets: 5, reps: 5 } };
+const squat = { exercise: "Back squat", doses: [{ sets: 5, reps: 5 }] };
 const legs: WorkoutDraft = {
   kind: "strength",
   name: "Leg day",
   description: "Heavy",
   minutes: 50,
   targetRpe: 8,
-  variations: [{ label: "", items: [squat] }],
-  pattern: [0],
+  items: [squat],
   exerciseRestS: 180,
 };
 
@@ -28,38 +25,36 @@ describe("workout editor state", () => {
   });
 
   it("saves trimmed text, an untitled name, and leaves unnamed exercises out", () => {
-    const blank = { exercise: "  ", dose: { sets: 3 } };
-    const state = {
-      ...legs,
-      name: "  ",
-      description: " Slow ",
-      variations: [{ label: " 5×5 ", items: [squat, blank] }],
-    };
+    const blank = { exercise: "  ", doses: [{ sets: 3 }] };
+    const state = { ...legs, name: "  ", description: " Slow ", items: [squat, blank] };
     expect(draftOfEditor(state)).toMatchObject({
       name: "Untitled workout",
       description: "Slow",
-      variations: [{ label: "5×5", items: [squat] }],
+      items: [squat],
     });
   });
 
   it("alternates A and B from a copy of A, and keeps only A when switched off", () => {
-    const ab = withAlternates(legs, true);
-    expect(ab.variations).toEqual([legs.variations[0], { label: "", items: [squat] }]);
-    expect(ab.pattern).toEqual([0, 1]);
-    expect(withAlternates(ab, false)).toEqual(legs);
+    const ab = withAlternates(squat, true);
+    expect(ab.doses).toEqual([squat.doses[0], squat.doses[0]]);
+    expect(withAlternates(ab, true)).toBe(ab);
+    expect(withAlternates(ab, false)).toEqual(squat);
   });
 
-  it("cycles a step's letter, adds steps after the last, and keeps at least one", () => {
-    const ab = withAlternates(legs, true);
-    expect(withStepCycled(ab, 1).pattern).toEqual([0, 0]);
-    expect(withStepAdded(withStepCycled(ab, 1)).pattern).toEqual([0, 0, 1]);
-    expect(withoutStep(withoutStep(ab, 0), 0).pattern).toEqual([1]);
+  it("adds C as a copy of B, and removes it while two are left", () => {
+    const ab = { ...squat, doses: [{ sets: 5 }, { sets: 3 }] };
+    const abc = withDoseAdded(ab);
+    expect(abc.doses).toEqual([{ sets: 5 }, { sets: 3 }, { sets: 3 }]);
+    expect(withoutLastDose(abc)).toEqual(ab);
+    expect(withoutLastDose(ab)).toBe(ab);
   });
 
-  it("adds C after the others, and removing a variation renumbers the pattern", () => {
-    const abc = withVariationAdded(withAlternates(legs, true));
-    expect(abc.pattern).toEqual([0, 1, 2]);
-    expect(withoutVariation({ ...abc, pattern: [0, 2, 1, 2] }, 1).pattern).toEqual([0, 1, 1]);
-    expect(withoutVariation(withAlternates(legs, true), 1).pattern).toEqual([0]);
+  it("keeps the rest between sets on every dose, and clears it at zero", () => {
+    const ab = { ...squat, doses: [{ sets: 5 }, { sets: 3, setRestS: 60 }] };
+    expect(withSetRest(ab, 120).doses).toEqual([
+      { sets: 5, setRestS: 120 },
+      { sets: 3, setRestS: 120 },
+    ]);
+    expect(withSetRest(ab, 0).doses).toEqual([{ sets: 5 }, { sets: 3 }]);
   });
 });

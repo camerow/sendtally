@@ -85,12 +85,10 @@ export function ExerciseShelves(): React.ReactElement {
     if (best !== undefined && best !== null)
       return t("workouts.exerciseBest", { value: setText(best.best, unit) });
     const using = workoutsUsing(workouts, name)[0];
-    const item = using?.variations
-      .flatMap((v) => v.items)
-      .find((i) => exerciseKey(i.exercise) === exerciseKey(name));
-    return using === undefined || item === undefined
+    const dose = using?.items.find((i) => exerciseKey(i.exercise) === exerciseKey(name))?.doses[0];
+    return using === undefined || dose === undefined
       ? ""
-      : t("workouts.exerciseLast", { value: doseSummary(using.kind, item.dose, unit) });
+      : t("workouts.exerciseLast", { value: doseSummary(using.kind, dose, unit) });
   };
 
   const grips: Card[] = model.grips

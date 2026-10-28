@@ -18,7 +18,6 @@ function logged(id: string, date: string, done: ItemDone[]): Activity {
     workoutId: null,
     membershipId: null,
     week: null,
-    variation: null,
     done,
   };
 }
@@ -101,7 +100,7 @@ describe("workoutsUsing", () => {
   it("finds the workouts naming the exercise in any case, never by a grip id", () => {
     const w = (kind: "strength" | "hangboard", exercise: string) => ({
       kind,
-      variations: [{ label: "", items: [{ exercise, dose: { sets: 1 } }] }],
+      items: [{ exercise, doses: [{ sets: 1 }] }],
     });
     const legs = w("strength", " back Squat");
     expect(

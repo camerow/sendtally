@@ -593,11 +593,11 @@ describe("app", () => {
 
   it("keeps the plan a session ran, and an edit that does not send one keeps the link", async () => {
     const userId = "user_session_plan";
-    const plan = { membershipId: "m1", week: 2, variation: 1 };
+    const plan = { membershipId: "m1", week: 2 };
     const res = await postSession(userId, logBody(plan));
     expect(res.status).toBe(201);
     const { session } = (await res.json()) as { session: { fingerprint: string } };
-    expect(session).toMatchObject({ membership_id: "m1", week: 2, variation: 1 });
+    expect(session).toMatchObject({ membership_id: "m1", week: 2 });
     const edited = await testApp().request(
       `/v1/sessions/${session.fingerprint}`,
       {
@@ -608,11 +608,11 @@ describe("app", () => {
       env
     );
     expect(await edited.json()).toMatchObject({
-      session: { name: "Edited", membership_id: "m1", week: 2, variation: 1 },
+      session: { name: "Edited", membership_id: "m1", week: 2 },
     });
     const logged = await postSession(userId, logBody());
     expect(await logged.json()).toMatchObject({
-      session: { membership_id: null, week: null, variation: null },
+      session: { membership_id: null, week: null },
     });
   });
 

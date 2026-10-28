@@ -18,7 +18,7 @@ const run: WorkoutRun = {
   title: "Morning mobility",
   date: "2026-10-22",
   workoutId: "w2",
-  link: { membershipId: null, week: null, variation: null },
+  link: { membershipId: null, week: null },
   minutes: 12,
   items: [
     { exercise: "Cat-cow", dose: { sets: 2 } },

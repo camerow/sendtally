@@ -29,7 +29,6 @@ export const plan = {
   "plan.kindOtherHint": "Course à pied, tout le reste",
   "plan.changeType": "Changer de type",
   "plan.forDate": "Pour le {date}",
-  "plan.takesTurns": "Alterne à chaque séance : {pattern}",
   "plan.howOften": "À quelle fréquence ?",
   "plan.repeatEvery": "Chaque semaine",
   "plan.specificDays": "Certains jours",

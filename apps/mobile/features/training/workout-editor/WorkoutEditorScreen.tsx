@@ -3,7 +3,7 @@ import { router } from "expo-router";
 import React from "react";
 import { Alert, KeyboardAvoidingView, Platform, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import type { WorkoutKind } from "@sendtally/core/hang";
+import { sessionItems, type WorkoutKind } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { kindLabel } from "@sendtally/features/activities";
 import { hangWorkoutFromItem } from "@sendtally/features/hang";
@@ -17,7 +17,6 @@ import {
   type WorkoutDraft,
   type WorkoutLibrary,
 } from "@sendtally/features/workouts";
-import { Switch } from "../../../components/Switch";
 import { TextInput } from "../../../components/TextInput";
 import { useApi } from "../../../lib/api";
 import { Button } from "../components/Button";
@@ -34,25 +33,14 @@ import { EditorTextField } from "./EditorTextField";
 import { HangboardTiming } from "./HangboardTiming";
 import {
   draftOfEditor,
-  letterOf,
-  MAX_VARIATIONS,
   newItem,
   startingDraft,
-  withAlternates,
   withItem,
   withItemAdded,
-  withLabel,
   withoutItem,
-  withoutStep,
-  withoutVariation,
-  withStepAdded,
-  withStepCycled,
-  withVariationAdded,
-  type ItemAt,
 } from "./editorState";
-import { ItemList, type ItemListProps } from "./ItemList";
-import { PatternRow } from "./PatternRow";
-import { VariationCard } from "./VariationCard";
+import { ItemEditor } from "./ItemEditor";
+import { RestField } from "./RestField";
 import { confirmDestructive } from "../../../lib/confirmDestructive";
 
 export type WorkoutEditorScreenProps = {
@@ -89,8 +77,7 @@ function Editor({
   const { model } = useHangData();
   const [state, setState] = React.useState(initial);
   const [untouched] = React.useState(initial);
-  const [gripFor, setGripFor] = React.useState<ItemAt | null>(null);
-  const alternating = state.variations.length > 1;
+  const [gripFor, setGripFor] = React.useState<number | null>(null);
 
   const save = (): void => {
     void actions.saveWorkout(id ?? randomUUID(), draftOfEditor(state));
@@ -107,18 +94,7 @@ function Editor({
       });
   };
 
-  const listOf = (variation: number): Omit<ItemListProps, "items"> => ({
-    kind: state.kind,
-    unit: model.settings.units,
-    gripName: model.gripName,
-    onItem: (item, next) => setState((s) => withItem(s, { variation, item }, next)),
-    onRemoveItem: (item) => setState((s) => withoutItem(s, { variation, item })),
-    onAddItem: () => setState((s) => withItemAdded(s, variation)),
-    onPickGrip: (item) => setGripFor({ variation, item }),
-  });
-
-  const picking =
-    gripFor === null ? undefined : state.variations[gripFor.variation]?.items[gripFor.item];
+  const picking = gripFor === null ? undefined : state.items[gripFor];
 
   return (
     <SafeAreaView edges={["top", "bottom"]} style={{ flex: 1, backgroundColor: colors.white }}>
@@ -170,68 +146,33 @@ function Editor({
             multiline
             onChange={(description) => setState((s) => ({ ...s, description }))}
           />
-          <View
-            style={{
-              minHeight: 52,
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "space-between",
-              borderBottomWidth: 1,
-              borderBottomColor: colors.lineOnLightSoft,
-            }}
-          >
-            <Text style={[type.bodyBold, { fontSize: 16, color: colors.gunmetal }]}>
-              {t("workouts.alternates")}
-            </Text>
-            <Switch
-              checked={alternating}
-              onChange={(on) => setState((s) => withAlternates(s, on))}
-              disabled={false}
-              label={t("workouts.alternates")}
+          {state.items.map((item, i) => (
+            <ItemEditor
+              key={i}
+              kind={state.kind}
+              item={item}
+              unit={model.settings.units}
+              gripName={model.gripName}
+              onChange={(next) => setState((s) => withItem(s, i, next))}
+              onRemove={() => setState((s) => withoutItem(s, i))}
+              onPickGrip={() => setGripFor(i)}
             />
-          </View>
-          {alternating ? (
-            <>
-              {state.variations.map((v, i) => (
-                <VariationCard
-                  key={i}
-                  index={i}
-                  variation={v}
-                  onLabel={(label) => setState((s) => withLabel(s, i, label))}
-                  onRemove={
-                    state.variations.length > 2
-                      ? () => setState((s) => withoutVariation(s, i))
-                      : undefined
-                  }
-                  {...listOf(i)}
-                />
-              ))}
-              {state.variations.length < MAX_VARIATIONS && (
-                <Button
-                  label={t("workouts.addVariation", { letter: letterOf(state.variations.length) })}
-                  onPress={() => setState(withVariationAdded)}
-                  variant="link"
-                  icon="plus"
-                  height={44}
-                  style={{ alignSelf: "flex-start", paddingHorizontal: 0 }}
-                />
-              )}
-              <PatternRow
-                pattern={state.pattern}
-                onCycle={(step) => setState((s) => withStepCycled(s, step))}
-                onRemove={(step) => setState((s) => withoutStep(s, step))}
-                onAdd={() => setState(withStepAdded)}
-              />
-            </>
-          ) : (
-            <ItemList items={state.variations[0]?.items ?? []} {...listOf(0)} />
-          )}
+          ))}
+          <RestField
+            label={t("workouts.exerciseRest")}
+            seconds={state.exerciseRestS}
+            onChange={(exerciseRestS) => setState((s) => ({ ...s, exerciseRestS }))}
+            soft
+          />
+          <Button
+            label={state.kind === "hangboard" ? t("workouts.addGrip") : t("workouts.addExercise")}
+            onPress={() => setState(withItemAdded)}
+            variant="outline"
+            icon="plus"
+            height={44}
+          />
           {state.kind === "hangboard" ? (
-            <HangboardTiming
-              exerciseRestS={state.exerciseRestS}
-              minutes={workoutMinutes(state)}
-              onExerciseRest={(exerciseRestS) => setState((s) => ({ ...s, exerciseRestS }))}
-            />
+            <HangboardTiming minutes={workoutMinutes(state)} />
           ) : (
             <MinutesField
               value={state.minutes}
@@ -249,7 +190,10 @@ function Editor({
           visible={picking !== undefined}
           workout={hangWorkoutFromItem(
             { id: id ?? "", source: "mine", name: state.name },
-            picking ?? newItem("hangboard")
+            sessionItems([picking ?? newItem("hangboard")], 0)[0] ?? {
+              exercise: "",
+              dose: { sets: 1 },
+            }
           )}
           multi={false}
           selected={picking === undefined ? [] : [picking.exercise]}
@@ -264,7 +208,7 @@ function Editor({
   );
 }
 
-/** Make, edit or customise a workout of any kind: what it holds, and whether it alternates. */
+/** Make, edit or customise a workout of any kind: what it holds, and how each exercise rests and alternates. */
 export function WorkoutEditorScreen(props: WorkoutEditorScreenProps): React.ReactElement | null {
   const { state, reload } = useLibrary();
   if (state.status !== "ready") return <LoadState state={state} onRetry={() => void reload()} />;

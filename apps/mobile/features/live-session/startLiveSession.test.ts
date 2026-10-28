@@ -24,7 +24,7 @@ jest.mock("../../lib/liveSessionStorage", () => {
   };
 });
 
-const PLAN = { membershipId: "m1", week: 2, variation: 0 };
+const PLAN = { membershipId: "m1", week: 2 };
 
 const lastButtons = (): AlertButton[] =>
   (jest.mocked(Alert.alert).mock.calls.at(-1)?.[2] ?? []) as AlertButton[];
@@ -41,7 +41,7 @@ describe("startLiveSession", () => {
     expect(Alert.alert).not.toHaveBeenCalled();
     expect(router.push).toHaveBeenCalledWith({
       pathname: "/session/live",
-      params: { membershipId: "m1", week: "2", variation: "0", name: "Limit bouldering" },
+      params: { membershipId: "m1", week: "2", name: "Limit bouldering" },
     });
   });
 

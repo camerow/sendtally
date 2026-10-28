@@ -1,6 +1,6 @@
 import type { Href } from "expo-router";
 import type { HangSetup, PlanLink, RunResult } from "@sendtally/core/hang";
-import { planLinkParams, readPlanLink } from "../data/planLinkParams";
+import { planLinkParams, readPlanLink, readSession } from "../data/planLinkParams";
 
 export type DoneParams = {
   workoutId: string;
@@ -9,6 +9,8 @@ export type DoneParams = {
   loadKg: number;
   result: RunResult;
   link: PlanLink;
+  /** How many sessions of the workout came before this one. */
+  session: number;
   /** Each item after the first: its setup and the sets it finished. */
   more: ItemRun[];
 };
@@ -25,6 +27,7 @@ export function donePath({
   loadKg,
   result,
   link,
+  session,
   more,
 }: DoneParams): Href {
   return {
@@ -40,6 +43,7 @@ export function donePath({
       work: String(result.work),
       misses: String(result.misses),
       seconds: String(result.seconds),
+      session: String(session),
       ...planLinkParams(link),
       ...(more.length === 0
         ? {}
@@ -66,6 +70,7 @@ export function readDoneParams(p: RawParams): DoneParams {
       seconds: num(p.seconds),
     },
     link: readPlanLink(p),
+    session: readSession(p),
     more: str(p.more)
       .split(",")
       .filter(Boolean)

@@ -27,19 +27,17 @@ async function type(label: string, text: string, index = 0): Promise<void> {
 }
 
 describe("Workout editor", () => {
-  it("makes a strength workout that alternates A, A, B", async () => {
+  it("makes a strength workout whose squat alternates A and B, resting between sets", async () => {
     await renderWithHang(<WorkoutEditorScreen kind="strength" />);
     await fireEvent.changeText(screen.getByLabelText("Name"), "Leg day");
     await fireEvent.changeText(screen.getByLabelText("Exercise"), "Back squat");
     await type("Reps", "5");
     await type("Weight (kg)", "100");
 
-    await fireEvent.press(screen.getByLabelText("Alternates"));
-    await fireEvent.changeText(screen.getByLabelText("Variation A"), "5×5");
-    await fireEvent.changeText(screen.getByLabelText("Variation B"), "3×10");
-    await type("Reps", "10", 1);
-    await fireEvent.press(screen.getByLabelText("Session 2: B, tap to change"));
-    await fireEvent.press(screen.getByLabelText("Add a step"));
+    await fireEvent.press(screen.getByLabelText("Alternate sessions: Back squat"));
+    await type("Reps B", "10");
+    await type("Rest between sets", "2:00");
+    await type("Rest between exercises", "3:00");
     await fireEvent.press(screen.getByText("Save"));
 
     expect(mockWorkouts.saveWorkout).toHaveBeenCalledWith("w-new", {
@@ -48,17 +46,15 @@ describe("Workout editor", () => {
       description: "",
       minutes: null,
       targetRpe: null,
-      variations: [
+      items: [
         {
-          label: "5×5",
-          items: [{ exercise: "Back squat", dose: { sets: 3, reps: 5, weightKg: 100 } }],
-        },
-        {
-          label: "3×10",
-          items: [{ exercise: "Back squat", dose: { sets: 3, reps: 10, weightKg: 100 } }],
+          exercise: "Back squat",
+          doses: [
+            { sets: 3, reps: 5, weightKg: 100, setRestS: 120 },
+            { sets: 3, reps: 10, weightKg: 100, setRestS: 120 },
+          ],
         },
       ],
-      pattern: [0, 0, 1],
       exerciseRestS: 180,
     });
     expect(router.back).toHaveBeenCalled();
@@ -78,7 +74,7 @@ describe("Workout editor", () => {
     await fireEvent.press(screen.getByText("Save"));
 
     const [, saved] = mockWorkouts.saveWorkout.mock.calls[0] as [string, Workouts.WorkoutDraft];
-    expect(saved.variations[0]?.items[0]?.dose.weightKg).toBeCloseTo(61.235, 3);
+    expect(saved.items[0]?.doses[0]?.weightKg).toBeCloseTo(61.235, 3);
   });
 
   it("customises a built-in hangboard workout as a copy on another grip", async () => {
@@ -104,14 +100,9 @@ describe("Workout editor", () => {
         name: "Max hangs (copy)",
         minutes: null,
         exerciseRestS: 120,
-        variations: [
-          {
-            label: "",
-            items: [
-              { exercise: "open", dose: { sets: 5, reps: 1, onS: 12, setRestS: 180 } },
-              { exercise: "open", dose: { sets: 5, reps: 1, onS: 12, setRestS: 180 } },
-            ],
-          },
+        items: [
+          { exercise: "open", doses: [{ sets: 5, reps: 1, onS: 12, setRestS: 180 }] },
+          { exercise: "open", doses: [{ sets: 5, reps: 1, onS: 12, setRestS: 180 }] },
         ],
       })
     );

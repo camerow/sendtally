@@ -14,7 +14,6 @@ const session = (over: Partial<HangSession>): HangSession => ({
   protocol: { name: "R", kind: "hang", hangS: 7, restS: 3, reps: 6, sets: 6, setRestS: 180 },
   membershipId: null,
   week: null,
-  variation: null,
   done: [],
   ...over,
 });

@@ -22,7 +22,7 @@ export type OccurrenceCardProps = { occurrence: Occurrence; workout: LibraryWork
 export function OccurrenceCard({ occurrence, workout }: OccurrenceCardProps): React.ReactElement {
   const { model } = useHangData();
   const o = occurrence;
-  const link = { membershipId: o.membership.id, week: o.week, variation: o.variation };
+  const link = { membershipId: o.membership.id, week: o.week };
   const minutes = workoutMinutes(workout);
   return (
     <View
@@ -54,7 +54,12 @@ export function OccurrenceCard({ occurrence, workout }: OccurrenceCardProps): Re
           </Text>
         </View>
       </Pressable>
-      <StartButton workout={workout} date={o.date} planned={{ link, items: o.items }} height={50} />
+      <StartButton
+        workout={workout}
+        date={o.date}
+        planned={{ link, items: o.items, session: o.session }}
+        height={50}
+      />
     </View>
   );
 }

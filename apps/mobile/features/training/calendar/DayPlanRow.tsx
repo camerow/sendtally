@@ -24,7 +24,7 @@ const STATUS = {
 /** A workout planned on the day: what it asks for, whether it happened, and Start when it is due. */
 export function DayPlanRow({ occurrence: o, workout, today }: DayPlanRowProps): React.ReactElement {
   const { model } = useHangData();
-  const link = { membershipId: o.membership.id, week: o.week, variation: o.variation };
+  const link = { membershipId: o.membership.id, week: o.week };
   const due = (today && o.status === "planned") || o.status === "missed";
   return (
     <View
@@ -68,7 +68,7 @@ export function DayPlanRow({ occurrence: o, workout, today }: DayPlanRowProps): 
         <StartButton
           workout={workout}
           date={o.date}
-          planned={{ link, items: o.items }}
+          planned={{ link, items: o.items, session: o.session }}
           height={44}
         />
       )}

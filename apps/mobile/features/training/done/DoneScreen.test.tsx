@@ -14,7 +14,8 @@ const partial = {
   edgeMm: 20,
   loadKg: 4,
   result: { ended: true, setsDone: 2, pct: 30, work: 76, misses: 2, seconds: 312 },
-  link: { membershipId: "m1", week: 3, variation: 0 },
+  link: { membershipId: "m1", week: 3 },
+  session: 0,
   more: [],
 };
 
@@ -44,7 +45,6 @@ describe("Session done", () => {
       protocol: expect.objectContaining({ name: "Repeaters 7:3", hangS: 7, sets: 6 }),
       membershipId: "m1",
       week: 3,
-      variation: 0,
       done: [
         {
           item: 0,
@@ -72,16 +72,10 @@ describe("Session done", () => {
       description: "",
       minutes: null,
       targetRpe: null,
-      variations: [
-        {
-          label: "",
-          items: [
-            { exercise: "half", dose: { sets: 2, reps: 1, onS: 10, setRestS: 60 } },
-            { exercise: "open", dose: { sets: 3, reps: 1, onS: 10, setRestS: 60 } },
-          ],
-        },
+      items: [
+        { exercise: "half", doses: [{ sets: 2, reps: 1, onS: 10, setRestS: 60 }] },
+        { exercise: "open", doses: [{ sets: 3, reps: 1, onS: 10, setRestS: 60 }] },
       ],
-      pattern: [0],
       exerciseRestS: 120,
       updatedAt: "t",
     };
@@ -93,7 +87,8 @@ describe("Session done", () => {
           edgeMm: 20,
           loadKg: 4,
           result: { ended: true, setsDone: 2, pct: 80, work: 40, misses: 0, seconds: 400 },
-          link: { membershipId: null, week: null, variation: null },
+          link: { membershipId: null, week: null },
+          session: 0,
           more: [{ edgeMm: 15, loadKg: 0, setsDone: 2 }],
         }}
       />,

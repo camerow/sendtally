@@ -28,7 +28,7 @@ const workout: IntervalsRun = {
   date: "2026-10-22",
   activityId: null,
   workoutId: "w1",
-  link: { membershipId: "m1", week: 2, variation: 1 },
+  link: { membershipId: "m1", week: 2 },
   body: {
     rounds: 1,
     steps: [
@@ -94,7 +94,6 @@ describe("Intervals player", () => {
       workoutId: "w1",
       membershipId: "m1",
       week: 2,
-      variation: 1,
       done: [
         { item: 0, exercise: "Couch stretch", sets: [{ onS: 45 }, { onS: 20 }] },
         { item: 1, exercise: "Swing", sets: [{ reps: 15, weightKg: 24 }] },

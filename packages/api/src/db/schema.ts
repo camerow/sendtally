@@ -117,7 +117,6 @@ export const sessions = sqliteTable(
     post_error: text("post_error"),
     membership_id: text("membership_id"),
     week: integer("week"),
-    variation: integer("variation"),
   },
   (t) => [
     primaryKey({ columns: [t.user_id, t.fingerprint] }),
@@ -545,7 +544,6 @@ export const hangSessions = sqliteTable(
     protocol_json: text("protocol_json").notNull(),
     membership_id: text("membership_id"),
     week: integer("week"),
-    variation: integer("variation"),
     done_json: text("done_json").notNull().default("[]"),
     strava_activity_id: integer("strava_activity_id"),
     posted_at: text("posted_at"),
@@ -592,7 +590,6 @@ export const activities = sqliteTable(
     workout_id: text("workout_id"),
     membership_id: text("membership_id"),
     week: integer("week"),
-    variation: integer("variation"),
     done_json: text("done_json").notNull().default("[]"),
     strava_activity_id: integer("strava_activity_id"),
     posted_at: text("posted_at"),
@@ -623,8 +620,8 @@ export const trainingBlocks = sqliteTable(
   (t) => [primaryKey({ columns: [t.user_id, t.id] })]
 );
 
-// The user's own library workouts of every kind: variations of items, each with
-// a dose; `pattern_json` lists the variation each session takes in turn.
+// The user's own library workouts of every kind: items, each with one dose or
+// several that sessions take in turn.
 export const workouts = sqliteTable(
   "workouts",
   {
@@ -637,8 +634,7 @@ export const workouts = sqliteTable(
     minutes: integer("minutes"),
     target_rpe: integer("target_rpe"),
     kind: text("kind", { enum: WORKOUT_KINDS }).notNull().default("other"),
-    variations_json: text("variations_json").notNull().default('[{"label":"","items":[]}]'),
-    pattern_json: text("pattern_json").notNull().default("[0]"),
+    items_json: text("items_json").notNull().default("[]"),
     exercise_rest_s: integer("exercise_rest_s").notNull().default(DEFAULT_EXERCISE_REST_S),
     created_at: text("created_at").notNull(),
     updated_at: text("updated_at").notNull(),
@@ -664,8 +660,9 @@ export const memberships = sqliteTable(
   (t) => [primaryKey({ columns: [t.user_id, t.id] })]
 );
 
-// What one block week changes about one item of one variation of a membership's
-// workout, as a partial dose counted from the workout as written.
+// What one block week changes about one dose of one item of a membership's
+// workout, as a partial dose counted from the workout as written. The `variation`
+// column holds the dose index: a variation index became one when items took turns.
 export const weekChanges = sqliteTable(
   "week_changes",
   {
@@ -674,11 +671,11 @@ export const weekChanges = sqliteTable(
       .references(() => users.id),
     membership_id: text("membership_id").notNull(),
     week: integer("week").notNull(),
-    variation: integer("variation").notNull(),
+    dose: integer("variation").notNull(),
     item: integer("item").notNull(),
     change_json: text("change_json").notNull(),
   },
-  (t) => [primaryKey({ columns: [t.user_id, t.membership_id, t.week, t.variation, t.item] })]
+  (t) => [primaryKey({ columns: [t.user_id, t.membership_id, t.week, t.dose, t.item] })]
 );
 
 // Every exercise name the user's workouts and logs use, so one can be renamed or

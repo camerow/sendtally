@@ -22,8 +22,7 @@ const legs: WorkoutRecord = {
   description: "",
   minutes: 50,
   targetRpe: null,
-  variations: [{ label: "", items: [{ exercise: "Back squat", dose: { sets: 5, reps: 5 } }] }],
-  pattern: [0],
+  items: [{ exercise: "Back squat", doses: [{ sets: 5, reps: 5 }] }],
   exerciseRestS: 180,
   updatedAt: "t",
 };
@@ -42,7 +41,7 @@ describe("Today", () => {
     await fireEvent.press(screen.getByText("Start"));
     expect(router.push).toHaveBeenCalledWith({
       pathname: "/workout/timer",
-      params: { workoutId: "max10", gripId: "half", membershipId: "m1", variation: "0" },
+      params: { workoutId: "max10", gripId: "half", membershipId: "m1", session: "0" },
     });
   });
 
@@ -109,7 +108,6 @@ describe("Today", () => {
         minutes: "50",
         items: JSON.stringify([{ exercise: "Back squat", dose: { sets: 5, reps: 5 } }]),
         membershipId: "m1",
-        variation: "0",
       },
     });
   });

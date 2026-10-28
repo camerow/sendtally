@@ -19,7 +19,6 @@ const activityBody = {
   workoutId: null,
   membershipId: null,
   week: null,
-  variation: null,
   done: [],
 };
 
@@ -41,17 +40,16 @@ const squatWorkout = {
   description: "Alternate five sets of five with three sets of ten.",
   minutes: 45,
   targetRpe: 8,
-  variations: [
+  items: [
     {
-      label: "5×5",
-      items: [{ exercise: "Back squat", dose: { sets: 5, reps: 5, weightKg: 100 } }],
-    },
-    {
-      label: "3×10",
-      items: [{ exercise: "Back squat", dose: { sets: 3, reps: 10, weightKg: 75 } }],
+      exercise: "Back squat",
+      doses: [
+        { sets: 5, reps: 5, weightKg: 100 },
+        { sets: 3, reps: 10, weightKg: 75 },
+      ],
     },
   ],
-  pattern: [0, 0, 1],
+  exerciseRestS: 120,
 };
 
 const blockBody = { name: "Winter base", start: "2026-11-02", weeks: 6 };
@@ -129,7 +127,6 @@ describe("activities", () => {
       workoutId: "w1",
       membershipId: "m1",
       week: 4,
-      variation: 1,
       done: squatDone,
     };
     const res = await call(userId, "PUT", "/v1/activities/a1", body);
@@ -138,17 +135,10 @@ describe("activities", () => {
 
   it("reads an older client's body, with no plan and nothing done, as logged on its own", async () => {
     const userId = "user_activity_older";
-    const {
-      workoutId: _,
-      membershipId: __,
-      week: ___,
-      variation: ____,
-      done: _____,
-      ...older
-    } = activityBody;
+    const { workoutId: _, membershipId: __, week: ___, done: ____, ...older } = activityBody;
     const res = await call(userId, "PUT", "/v1/activities/a1", older);
     expect(await json(res)).toMatchObject({
-      activity: { workoutId: null, membershipId: null, week: null, variation: null, done: [] },
+      activity: { workoutId: null, membershipId: null, week: null, done: [] },
     });
   });
 
@@ -161,7 +151,6 @@ describe("activities", () => {
       { ...activityBody, date: "2026-02-30" },
       { ...activityBody, minutes: 0 },
       { ...activityBody, week: 0 },
-      { ...activityBody, variation: 10 },
       { ...activityBody, done: [{ item: 0, exercise: " ", sets: [] }] },
       { ...activityBody, done: [{ item: -1, exercise: "Squat", sets: [] }] },
       { ...activityBody, done: [{ item: 0, exercise: "Squat", sets: [{ reps: -1 }] }] },
@@ -192,23 +181,17 @@ describe("activities", () => {
 });
 
 describe("workouts", () => {
-  it("round trips variations and a pattern, edits in place and lists oldest first", async () => {
+  it("round trips items and their doses, edits in place and lists oldest first", async () => {
     const userId = "user_workouts_roundtrip";
     await call(userId, "PUT", "/v1/workouts/w1", squatWorkout);
     await call(userId, "PUT", "/v1/workouts/w2", {
       ...squatWorkout,
       kind: "hangboard",
       name: "Repeaters",
-      variations: [
-        {
-          label: "",
-          items: [
-            { exercise: "half", dose: { sets: 3, reps: 6, onS: 7, offS: 3, edgeMm: 20 } },
-            { exercise: "open", dose: { sets: 3, reps: 1, onS: 10, setRestS: 120 } },
-          ],
-        },
+      items: [
+        { exercise: "half", doses: [{ sets: 3, reps: 6, onS: 7, offS: 3, edgeMm: 20 }] },
+        { exercise: "open", doses: [{ sets: 3, reps: 1, onS: 10, setRestS: 120 }] },
       ],
-      pattern: [0],
       exerciseRestS: 240,
     });
     await call(userId, "PUT", "/v1/workouts/w1", { ...squatWorkout, name: "Squat" });
@@ -223,17 +206,37 @@ describe("workouts", () => {
     expect(workouts[1]?.exerciseRestS).toBe(240);
   });
 
-  it("rests three minutes between exercises when an older app sends no rest", async () => {
+  it("rests between exercises on the hangboard only when an older app sends no rest", async () => {
     const userId = "user_workouts_exercise_rest";
-    const res = await call(userId, "PUT", "/v1/workouts/w1", squatWorkout);
-    expect(await json(res)).toMatchObject({ workout: { exerciseRestS: 180 } });
+    const { exerciseRestS: _, ...noRest } = squatWorkout;
+    const strength = await call(userId, "PUT", "/v1/workouts/w1", noRest);
+    expect(await json(strength)).toMatchObject({ workout: { exerciseRestS: 0 } });
+    const hang = await call(userId, "PUT", "/v1/workouts/w2", { ...noRest, kind: "hangboard" });
+    expect(await json(hang)).toMatchObject({ workout: { exerciseRestS: 180 } });
   });
 
-  it("takes every variation in turn when no pattern is sent", async () => {
-    const userId = "user_workouts_pattern";
-    const { pattern: _, ...noPattern } = squatWorkout;
-    const res = await call(userId, "PUT", "/v1/workouts/w1", noPattern);
-    expect(await json(res)).toMatchObject({ workout: { pattern: [0, 1] } });
+  it("folds an older app's variations into items where their exercises line up", async () => {
+    const userId = "user_workouts_variations";
+    const { items: _, ...rest } = squatWorkout;
+    const squat = (dose: object): object => ({ items: [{ exercise: "Back squat", dose }] });
+    const folded = await call(userId, "PUT", "/v1/workouts/w1", {
+      ...rest,
+      variations: [
+        { label: "5×5", ...squat({ sets: 5 }) },
+        { label: "", ...squat({ sets: 3 }) },
+      ],
+      pattern: [0, 0, 1],
+    });
+    expect(await json(folded)).toMatchObject({
+      workout: { items: [{ exercise: "Back squat", doses: [{ sets: 5 }, { sets: 3 }] }] },
+    });
+    const kept = await call(userId, "PUT", "/v1/workouts/w2", {
+      ...rest,
+      variations: [squat({ sets: 5 }), { items: [{ exercise: "Deadlift", dose: { sets: 3 } }] }],
+    });
+    expect(await json(kept)).toMatchObject({
+      workout: { items: [{ exercise: "Back squat", doses: [{ sets: 5 }] }] },
+    });
   });
 
   it("keeps an empty description and a climbing workout with no items", async () => {
@@ -244,10 +247,11 @@ describe("workouts", () => {
       description: "",
       minutes: 90,
       targetRpe: 9,
-      variations: [{ label: "", items: [] }],
+      items: [],
+      exerciseRestS: 0,
     };
     const res = await call(userId, "PUT", "/v1/workouts/w1", climb);
-    expect(await json(res)).toMatchObject({ workout: { ...climb, pattern: [0] } });
+    expect(await json(res)).toMatchObject({ workout: climb });
   });
 
   it("rejects a workout out of shape", async () => {
@@ -255,21 +259,11 @@ describe("workouts", () => {
     for (const body of [
       { ...squatWorkout, kind: "run" },
       { ...squatWorkout, name: " " },
-      { ...squatWorkout, variations: [] },
-      { ...squatWorkout, pattern: [] },
-      { ...squatWorkout, pattern: [0, 2] },
+      { ...squatWorkout, items: [{ exercise: "Squat", doses: [] }] },
       { ...squatWorkout, targetRpe: 11 },
       { ...squatWorkout, exerciseRestS: -1 },
-      {
-        ...squatWorkout,
-        variations: [{ label: "", items: [{ exercise: "Squat", dose: { sets: 0 } }] }],
-        pattern: [0],
-      },
-      {
-        ...squatWorkout,
-        variations: [{ label: "", items: [{ exercise: "Squat", dose: { reps: 5 } }] }],
-        pattern: [0],
-      },
+      { ...squatWorkout, items: [{ exercise: "Squat", doses: [{ sets: 0 }] }] },
+      { ...squatWorkout, items: [{ exercise: "Squat", doses: [{ reps: 5 }] }] },
     ]) {
       expect((await call(userId, "PUT", "/v1/workouts/w1", body)).status).toBe(400);
     }
@@ -284,7 +278,7 @@ describe("workouts", () => {
     await call(userId, "PUT", "/v1/memberships/m3", { ...membershipBody, workoutId: "other" });
     await call(userId, "PUT", "/v1/memberships/m1/changes", {
       week: 4,
-      variation: 0,
+      dose: 0,
       item: 0,
       change: { sets: 3 },
     });
@@ -293,7 +287,6 @@ describe("workouts", () => {
       workoutId: "w1",
       membershipId: "m1",
       week: 4,
-      variation: 0,
       done: squatDone,
     });
 
@@ -311,7 +304,6 @@ describe("workouts", () => {
       workoutId: "w1",
       membershipId: null,
       week: null,
-      variation: null,
       done: squatDone,
     });
   });
@@ -384,7 +376,7 @@ describe("blocks and memberships", () => {
     const userId = "user_plan_weeks";
     await call(userId, "PUT", "/v1/blocks/b1", blockBody);
     await call(userId, "PUT", "/v1/memberships/m1", membershipBody);
-    const change = { week: 4, variation: 0, item: 0, change: { sets: 3, weightKg: 95 } };
+    const change = { week: 4, dose: 0, item: 0, change: { sets: 3, weightKg: 95 } };
     const res = await call(userId, "PUT", "/v1/memberships/m1/changes", change);
     expect(await json(res)).toEqual({ weekChange: { membershipId: "m1", ...change } });
     await call(userId, "PUT", "/v1/memberships/m1/changes", { ...change, change: { sets: 2 } });
@@ -399,13 +391,13 @@ describe("blocks and memberships", () => {
 
   it("404s a week change for a membership that does not exist, and rejects one out of shape", async () => {
     const userId = "user_plan_weeks_invalid";
-    const change = { week: 1, variation: 0, item: 0, change: { sets: 3 } };
+    const change = { week: 1, dose: 0, item: 0, change: { sets: 3 } };
     expect((await call(userId, "PUT", "/v1/memberships/m1/changes", change)).status).toBe(404);
     await call(userId, "PUT", "/v1/memberships/m1", { ...membershipBody, blockId: null });
     for (const body of [
       { ...change, week: 0 },
       { ...change, week: 17 },
-      { ...change, variation: -1 },
+      { ...change, dose: -1 },
       { ...change, change: { sets: 0 } },
     ]) {
       expect((await call(userId, "PUT", "/v1/memberships/m1/changes", body)).status).toBe(400);
@@ -417,7 +409,7 @@ describe("blocks and memberships", () => {
     await call(userId, "PUT", "/v1/memberships/m1", { ...membershipBody, blockId: null });
     await call(userId, "PUT", "/v1/memberships/m1/changes", {
       week: 1,
-      variation: 0,
+      dose: 0,
       item: 0,
       change: { sets: 3 },
     });
@@ -439,7 +431,7 @@ describe("blocks and memberships", () => {
     await call(userId, "PUT", "/v1/memberships/m2", { ...membershipBody, blockId: null });
     await call(userId, "PUT", "/v1/memberships/m1/changes", {
       week: 1,
-      variation: 0,
+      dose: 0,
       item: 0,
       change: { sets: 3 },
     });
@@ -456,7 +448,7 @@ describe("blocks and memberships", () => {
     await call(userId, "PUT", "/v1/memberships/m1", membershipBody);
     await call(userId, "PUT", "/v1/memberships/m1/changes", {
       week: 1,
-      variation: 0,
+      dose: 0,
       item: 0,
       change: { sets: 3 },
     });
@@ -485,7 +477,7 @@ describe("blocks and memberships", () => {
     await call(userId, "PUT", "/v1/memberships/m2", { ...membershipBody, blockId: null });
     await call(userId, "PUT", "/v1/memberships/m1/changes", {
       week: 2,
-      variation: 0,
+      dose: 0,
       item: 0,
       change: { sets: 3 },
     });
@@ -499,7 +491,7 @@ describe("blocks and memberships", () => {
       ["w1", "2027-01-06", [1, 4]],
     ]);
     expect(after.weekChanges.filter((c) => c.membershipId === copied[0]?.id)).toEqual([
-      { membershipId: copied[0]?.id, week: 2, variation: 0, item: 0, change: { sets: 3 } },
+      { membershipId: copied[0]?.id, week: 2, dose: 0, item: 0, change: { sets: 3 } },
     ]);
     expect((await call(userId, "POST", "/v1/blocks/nope/copy", copy)).status).toBe(404);
   });
@@ -524,7 +516,7 @@ describe("exercises", () => {
     await call(userId, "PUT", "/v1/workouts/w2", {
       ...squatWorkout,
       kind: "hangboard",
-      variations: [{ label: "", items: [{ exercise: "half-crimp", dose: { sets: 1 } }] }],
+      items: [{ exercise: "half-crimp", doses: [{ sets: 1 }] }],
     });
     expect(await exerciseNames(userId)).toEqual(["Back squat", "Copenhagen plank"]);
   });
@@ -546,10 +538,7 @@ describe("exercises", () => {
     const { workouts } = await json<{ workouts: WorkoutRecord[] }>(
       await call(userId, "GET", "/v1/workouts")
     );
-    expect(workouts[0]?.variations.map((v) => v.items[0]?.exercise)).toEqual([
-      "High-bar squat",
-      "High-bar squat",
-    ]);
+    expect(workouts[0]?.items.map((i) => i.exercise)).toEqual(["High-bar squat"]);
     const { activities } = await json<{ activities: ActivityRecord[] }>(
       await call(userId, "GET", "/v1/activities")
     );
@@ -581,21 +570,6 @@ describe("exercises", () => {
     expect(activities[0]?.done.map((d) => d.exercise)).toEqual(["Squat", "Copenhagen plank"]);
     expect((await call(userId, "POST", "/v1/exercises/e1/merge", { into: "e1" })).status).toBe(400);
     expect((await call(userId, "POST", "/v1/exercises/e9/merge", { into: "e1" })).status).toBe(404);
-  });
-
-  it("backfills the names saved before the table existed, once", async () => {
-    const userId = "user_exercises_backfill";
-    await call(userId, "PUT", "/v1/workouts/w1", squatWorkout);
-    await call(userId, "PUT", "/v1/activities/a1", { ...activityBody, done: squatDone });
-    await env.DB.prepare("DELETE FROM exercises WHERE user_id = ?").bind(userId).run();
-    const backfill = env.TEST_MIGRATIONS.find((m) => m.name.includes("backfill_exercises"));
-    expect(backfill).toBeDefined();
-    for (const run of [1, 2]) {
-      for (const query of backfill?.queries ?? []) await env.DB.prepare(query).run();
-      expect(`${run}:${(await exerciseNames(userId)).join()}`).toBe(
-        `${run}:Back squat,Copenhagen plank`
-      );
-    }
   });
 });
 

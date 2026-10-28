@@ -1,6 +1,6 @@
 import React from "react";
 import { Text, View } from "react-native";
-import type { Item, ItemDone, SetDone, WeightUnit } from "@sendtally/core/hang";
+import type { SessionItem, ItemDone, SetDone, WeightUnit } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
 import { exerciseName } from "@sendtally/features/workouts";
@@ -11,7 +11,7 @@ import { SetRow } from "./SetRow";
 import { setKey, type SetAt } from "./setsRun";
 
 export type SetsCardProps = {
-  item: Item;
+  item: SessionItem;
   done: ItemDone;
   /** Each set as the last run of this workout did it. */
   previous: readonly SetDone[];

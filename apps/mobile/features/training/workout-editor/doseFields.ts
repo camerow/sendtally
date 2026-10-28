@@ -25,7 +25,6 @@ export const DOSE_FIELDS_OF: Record<WorkoutKind, readonly DoseField[]> = {
     time("onS", "workouts.dose.hangTime"),
     time("offS", "workouts.dose.restTime"),
     count("sets", "workouts.dose.sets"),
-    time("setRestS", "workouts.dose.setRest"),
   ],
   climbing: [count("sets", "workouts.dose.sets"), count("reps", "workouts.dose.reps")],
   strength: [

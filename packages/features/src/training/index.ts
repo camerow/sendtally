@@ -17,6 +17,7 @@ export {
   blockOfMembership,
   nextOccurrence,
   occurrencesOn,
+  sessionsOf,
   withoutBlock,
   withoutMembership,
   withoutWorkout,
@@ -39,9 +40,7 @@ export { usePlanActions, type PlanActions } from "./usePlanActions";
 export {
   fieldLabel,
   fieldValue,
-  patternText,
   stepped,
-  variationName,
   weekChips,
   weekFields,
   withField,

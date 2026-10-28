@@ -1,9 +1,7 @@
 import { router } from "expo-router";
 import React from "react";
-import { Alert, Text } from "react-native";
-import { colors } from "@sendtally/design/tokens";
+import { Alert } from "react-native";
 import { t } from "@sendtally/features/i18n";
-import { patternText } from "@sendtally/features/training";
 import { useWorkoutActions } from "@sendtally/features/workouts";
 import { useApi } from "../../../lib/api";
 import { confirmDestructive } from "../../../lib/confirmDestructive";
@@ -14,7 +12,6 @@ import { BodyPreview } from "../library-detail/BodyPreview";
 import { LibraryIntro } from "../library-detail/LibraryIntro";
 import { StartButton } from "../library-detail/StartButton";
 import { useLibrary } from "../library/useLibrary";
-import { type } from "../type";
 import { addFlowParams, type AddFlow } from "./flowParams";
 import { ScreenFrame } from "./ScreenFrame";
 
@@ -26,7 +23,7 @@ export type WorkoutPreviewScreenProps = {
 
 const reportFailure = (): void => Alert.alert(t("workouts.saveFailed"));
 
-/** A workout read through before it is planned or run: what it holds and how it takes turns. */
+/** A workout read through before it is planned or run: what it holds and what its next session takes. */
 export function WorkoutPreviewScreen({
   id,
   adding,
@@ -86,12 +83,11 @@ export function WorkoutPreviewScreen({
       }
     >
       <LibraryIntro workout={workout} use={state.data.usage.get(id)} />
-      <BodyPreview workout={workout} unit={model.settings.units} />
-      {workout.variations.length > 1 && (
-        <Text style={[type.mono, { fontSize: 12, lineHeight: 18, color: colors.textSecondary }]}>
-          {t("plan.takesTurns", { pattern: patternText(workout) })}
-        </Text>
-      )}
+      <BodyPreview
+        workout={workout}
+        unit={model.settings.units}
+        session={state.data.usage.get(id)?.count ?? 0}
+      />
       {mine && adding === null && (
         <Button label={t("workouts.delete")} onPress={remove} variant="danger" height={50} />
       )}
