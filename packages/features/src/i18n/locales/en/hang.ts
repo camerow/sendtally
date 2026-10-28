@@ -206,7 +206,10 @@ export const hang = {
     "Completed load has held at {load}. If effort keeps sitting below 7, try {next} next time.",
   "hang.insightAttempt":
     "Your top attempt is {load} on {date}, at {pct}% complete. It stays an attempt until you finish every set at that load.",
-  "hang.statBest": "Best completed",
+  "hang.statBest": "Best",
+  "hang.latestAttempt": "Latest attempt",
+  "hang.insightNoneComplete":
+    "No completed session yet. Finish every set at {load} to set your first best.",
   "hang.statTopAttempt": "Top attempt",
   "hang.statAvgEffort": "Avg effort",
   "hang.effortOutOf": "{value}/10",
@@ -234,6 +237,7 @@ export const hang = {
   "hang.mixedSetups": "Mixed setups",
   "hang.allSetups": "All",
   "hang.compareGrips": "Compare grips",
+  "hang.compare": "Compare",
   "hang.compareEmpty": "No completed sessions on this setup yet.",
   "hang.bestOn": "Best · {date}",
   "hang.topAttemptAt": "Top attempt · {pct}%",

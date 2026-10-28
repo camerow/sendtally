@@ -1,5 +1,6 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
+import Svg, { Path, Polyline } from "react-native-svg";
 import type { WeightUnit } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
@@ -7,10 +8,13 @@ import type { ExerciseTrendVM } from "@sendtally/features/statistics";
 import { Icon } from "../../../components/Icon";
 import { pressRow } from "../../../lib/press";
 import { metricText } from "../exercises/exerciseText";
+import { dots, plot, polyline } from "../trends/chartGeometry";
 import { type } from "../type";
 
 const SPARK = 6;
+const SPARK_WIDTH = 34;
 const SPARK_HEIGHT = 20;
+const SPARK_PAD = 3;
 
 /** "+6 kg": the change since the first time in range, in what the exercise is measured in; nothing when it did not move. */
 function changeText(row: ExerciseTrendVM, unit: WeightUnit): string {
@@ -18,7 +22,7 @@ function changeText(row: ExerciseTrendVM, unit: WeightUnit): string {
   return `${row.change < 0 ? "−" : "+"}${metricText(Math.abs(row.change), row.metric, unit)}`;
 }
 
-/** An exercise: how often, its last few bests as bars, and how much it moved; it opens its trend. */
+/** An exercise: how often, its last few bests as a line, and how much it moved; it opens its trend. */
 export function ExerciseTrendRow({
   row,
   unit,
@@ -30,7 +34,17 @@ export function ExerciseTrendRow({
 }): React.ReactElement {
   const values = row.values.slice(-SPARK);
   const lo = Math.min(...values);
-  const span = Math.max(...values) - lo || 1;
+  const hi = Math.max(...values);
+  const flat = lo === hi;
+  const points = plot(
+    values,
+    flat ? lo - 1 : lo,
+    flat ? hi + 1 : hi,
+    SPARK_WIDTH,
+    SPARK_HEIGHT,
+    SPARK_PAD
+  );
+  const tone = row.change > 0 ? colors.fern : colors.textMuted;
   const change = changeText(row, unit);
   const count = t("statistics.timesCount", { count: row.count });
   return (
@@ -56,19 +70,26 @@ export function ExerciseTrendRow({
           {row.meta ?? count}
         </Text>
       </View>
-      <View style={{ flexDirection: "row", alignItems: "flex-end", gap: 2, height: SPARK_HEIGHT }}>
-        {values.map((v, i) => (
-          <View
-            key={i}
-            style={{
-              width: 4,
-              height: 4 + ((v - lo) / span) * (SPARK_HEIGHT - 4),
-              borderRadius: 1,
-              backgroundColor: i === values.length - 1 ? colors.fern : colors.lineOnLightStrong,
-            }}
+      {points.length < 2 ? (
+        <View style={{ width: SPARK_WIDTH }} />
+      ) : (
+        <Svg width={SPARK_WIDTH} height={SPARK_HEIGHT} testID="sparkline">
+          <Polyline
+            points={polyline(points)}
+            fill="none"
+            stroke={colors.lineOnLightStrong}
+            strokeWidth={1.5}
+            strokeLinejoin="round"
           />
-        ))}
-      </View>
+          <Path
+            d={dots(points.slice(-1))}
+            stroke={tone}
+            strokeWidth={5}
+            strokeLinecap="round"
+            fill="none"
+          />
+        </Svg>
+      )}
       <Text
         style={[
           type.monoBold,
@@ -76,7 +97,7 @@ export function ExerciseTrendRow({
             width: 74,
             textAlign: "right",
             fontSize: 12,
-            color: row.change > 0 ? colors.fern : colors.textMuted,
+            color: tone,
           },
         ]}
       >

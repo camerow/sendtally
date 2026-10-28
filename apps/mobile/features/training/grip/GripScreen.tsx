@@ -38,6 +38,10 @@ export function GripScreen({ id }: GripScreenProps): React.ReactElement {
   const name = model.gripName(id);
   const kind = series[0]?.protocol.kind ?? "hang";
   const caption = setup === null ? t("hang.mixedSetups") : gripSetupLabel(setup);
+  const said =
+    summary === null || setup === null
+      ? ""
+      : insight(summary, { workout: name, grip: caption, kind, unit });
 
   return (
     <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: colors.white }}>
@@ -67,9 +71,9 @@ export function GripScreen({ id }: GripScreenProps): React.ReactElement {
               unit={unit}
             />
             <SummaryTiles stats={gripTiles(series, summary, unit)} />
-            {setup !== null && (
+            {said !== "" && (
               <Text style={[type.body, { fontSize: 15, lineHeight: 22, color: colors.gunmetal }]}>
-                {insight(summary, { workout: name, grip: caption, kind, unit })}
+                {said}
               </Text>
             )}
             <Milestones rows={milestoneRows(series, unit, setup === null)} />

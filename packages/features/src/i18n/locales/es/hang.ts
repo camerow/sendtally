@@ -207,7 +207,10 @@ export const hang = {
     "La carga completada se mantiene en {load}. Si el esfuerzo sigue por debajo de 7, prueba {next} la próxima vez.",
   "hang.insightAttempt":
     "Tu mejor intento es {load} el {date}, al {pct} % completado. Sigue siendo un intento hasta que termines todas las series con esa carga.",
-  "hang.statBest": "Mejor completada",
+  "hang.statBest": "Mejor",
+  "hang.latestAttempt": "Último intento",
+  "hang.insightNoneComplete":
+    "Aún no hay ninguna sesión completada. Termina todas las series con {load} para marcar tu primer mejor registro.",
   "hang.statTopAttempt": "Mejor intento",
   "hang.statAvgEffort": "Esfuerzo medio",
   "hang.effortOutOf": "{value}/10",
@@ -235,6 +238,7 @@ export const hang = {
   "hang.mixedSetups": "Configuraciones mezcladas",
   "hang.allSetups": "Todas",
   "hang.compareGrips": "Comparar agarres",
+  "hang.compare": "Comparar",
   "hang.compareEmpty": "Aún no hay sesiones completadas con esta configuración.",
   "hang.bestOn": "Mejor · {date}",
   "hang.topAttemptAt": "Mejor intento · {pct}%",

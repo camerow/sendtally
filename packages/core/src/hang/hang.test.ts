@@ -178,8 +178,24 @@ describe("trends", () => {
     expect(summary.best).toBe(4);
     expect(summary.first).toBe(2);
     expect(summary.last).toBe(4);
+    expect(summary.completed).toBe(2);
+    expect(summary.latest).toBe(6);
     expect(summary.topAttempt?.loadKg).toBe(6);
     expect(summary.avgPct).toBe(93);
+  });
+
+  it("has no best until a session is complete", () => {
+    const series = [
+      session({ date: "2026-09-01", loadKg: 2, pct: 50 }),
+      session({ date: "2026-09-08", loadKg: 0, pct: 80 }),
+    ];
+    const summary = summarise(series, "2026-09-29")!;
+    expect(summary.best).toBeNull();
+    expect(summary.first).toBeNull();
+    expect(summary.last).toBeNull();
+    expect(summary.completed).toBe(0);
+    expect(summary.latest).toBe(0);
+    expect(summary.topAttempt?.loadKg).toBe(2);
   });
 });
 

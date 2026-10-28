@@ -28,6 +28,47 @@ describe("GripScreen", () => {
     expect(screen.getByText("First session on this grip")).toBeTruthy();
     expect(screen.getByText("History · 4 sessions")).toBeTruthy();
     expect(screen.getByText(/is up 4 kg/)).toBeTruthy();
+    expect(screen.getByText("Added load · completed")).toBeTruthy();
+    expect(screen.getByText("▲ 4 kg")).toBeTruthy();
+  });
+
+  it("leads with the latest attempt before any session is complete", async () => {
+    const partials = [
+      aHang({ date: "2026-09-01", loadKg: 4, pct: 50 }),
+      aHang({ date: "2026-09-08", loadKg: 0, pct: 80 }),
+    ];
+    await renderWithHang(<GripScreen id="half" />, hangData({ sessions: partials }));
+    expect(screen.getByText("Latest attempt")).toBeTruthy();
+    expect(screen.queryByText("Added load · completed")).toBeNull();
+    expect(screen.getAllByText("Bodyweight").length).toBeGreaterThan(0);
+    expect(screen.getByText("Best")).toBeTruthy();
+    expect(screen.getAllByText("–")).toHaveLength(2);
+    expect(
+      screen.getByText(
+        "No completed session yet. Finish every set at Bodyweight to set your first best."
+      )
+    ).toBeTruthy();
+    expect(screen.queryByText(/▲|▼/)).toBeNull();
+  });
+
+  it("shows no change and no held insight on a single completed session", async () => {
+    await renderWithHang(
+      <GripScreen id="half" />,
+      hangData({ sessions: [aHang({ date: "2026-09-01", loadKg: 4 })] })
+    );
+    expect(screen.getByText("Best · Sep 1")).toBeTruthy();
+    expect(screen.queryByText(/▲|▼/)).toBeNull();
+    expect(screen.queryByText(/has held/)).toBeNull();
+  });
+
+  it("says a completed load has held once two sessions sat on it", async () => {
+    const held = [
+      aHang({ date: "2026-09-01", loadKg: 4 }),
+      aHang({ date: "2026-09-08", loadKg: 4 }),
+    ];
+    await renderWithHang(<GripScreen id="half" />, hangData({ sessions: held }));
+    expect(screen.getByText(/Completed load has held at \+4 kg/)).toBeTruthy();
+    expect(screen.queryByText(/▲|▼/)).toBeNull();
   });
 
   it("plots every setup under All, labelled mixed, with no insight", async () => {
@@ -40,7 +81,7 @@ describe("GripScreen", () => {
 
   it("tags a best and opens its session", async () => {
     await renderWithHang(<GripScreen id="half" />, hangData({ sessions }));
-    const best = screen.getByLabelText(/^\+6 kg, Tue, Sep 8 .*, Best$/);
+    const best = screen.getByLabelText(/^\+6 kg, Sep 8 .*, Best$/);
     await fireEvent.press(best);
     expect(router.push).toHaveBeenCalledWith({
       pathname: "/activity/[id]",

@@ -207,7 +207,10 @@ export const hang = {
     "La charge réalisée reste à {load}. Si l'effort reste sous 7, essaie {next} la prochaine fois.",
   "hang.insightAttempt":
     "Ta meilleure tentative est {load} le {date}, à {pct} % réalisée. Elle reste une tentative tant que tu ne termines pas toutes les séries à cette charge.",
-  "hang.statBest": "Meilleure réalisée",
+  "hang.statBest": "Record",
+  "hang.latestAttempt": "Dernière tentative",
+  "hang.insightNoneComplete":
+    "Aucune séance réalisée pour l'instant. Termine toutes les séries à {load} pour établir ton premier record.",
   "hang.statTopAttempt": "Meilleure tentative",
   "hang.statAvgEffort": "Effort moyen",
   "hang.effortOutOf": "{value}/10",
@@ -235,6 +238,7 @@ export const hang = {
   "hang.mixedSetups": "Réglages mélangés",
   "hang.allSetups": "Tous",
   "hang.compareGrips": "Comparer les préhensions",
+  "hang.compare": "Comparer",
   "hang.compareEmpty": "Aucune séance terminée avec ce réglage pour l'instant.",
   "hang.bestOn": "Record · {date}",
   "hang.topAttemptAt": "Meilleure tentative · {pct} %",

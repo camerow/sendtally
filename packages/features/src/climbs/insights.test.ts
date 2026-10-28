@@ -52,12 +52,12 @@ describe("climbingInsightsVM", () => {
       { gradeLabel: "V4", inner: 1, outer: 0, countLabel: "1/1" },
     ]);
     expect([vm.avgSend, vm.sends, vm.flashed]).toEqual(["V5", 3, 1]);
-    expect(vm.hardest).toEqual({ gradeLabel: "V7", name: "the pinch", dateLabel: "26 Oct" });
+    expect(vm.hardest).toEqual({ gradeLabel: "V7", name: "the pinch", dateLabel: "Oct 26" });
   });
 
   it("keeps to the gym with the Gym filter, so the hardest is the top gym send", () => {
     const vm = climbingInsightsVM(sessions, [], { ...all, place: "indoor" }, NOW);
-    expect(vm.hardest).toEqual({ gradeLabel: "V6", name: null, dateLabel: "26 Oct" });
+    expect(vm.hardest).toEqual({ gradeLabel: "V6", name: null, dateLabel: "Oct 26" });
     expect(vm.avgSend).toBe("V6");
   });
 

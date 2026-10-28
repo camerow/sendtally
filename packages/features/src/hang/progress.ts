@@ -4,6 +4,7 @@ import {
   newBestBy,
   previousBest,
   setupOf,
+  setupsOf,
   toUnit,
   type GripSetup,
   type HangSession,
@@ -12,14 +13,13 @@ import {
   type WeightUnit,
 } from "@sendtally/core/hang";
 import { formatNumber, t } from "../i18n";
-import { dayMonth, gripSetupLabel, loadLabel, shortDate } from "./format";
+import { dayMonth, gripSetupLabel, loadLabel } from "./format";
 
 const complete = (s: Pick<HangSession, "pct">): boolean => s.pct >= 100;
 
-/** Where the best sits in a series: the session that first reached the summary's best. */
+/** Where the best sits in a series: the completed session that first reached it; -1 with none. */
 export function bestIndex(series: readonly HangSession[], summary: TrendSummary): number {
-  const counted = series.some(complete) ? complete : (): boolean => true;
-  return series.findIndex((s) => counted(s) && s.loadKg === summary.best);
+  return series.findIndex((s) => complete(s) && s.loadKg === summary.best);
 }
 
 export type GripTileVM = { value: string; label: string };
@@ -34,11 +34,12 @@ export function gripTiles(
   const best = series[bestIndex(series, summary)];
   const attempt = summary.topAttempt;
   return [
-    {
-      value: loadLabel(kind, summary.best, unit),
-      label:
-        best === undefined ? t("hang.statBest") : t("hang.bestOn", { date: dayMonth(best.date) }),
-    },
+    summary.best === null || best === undefined
+      ? { value: "–", label: t("hang.statBest") }
+      : {
+          value: loadLabel(kind, summary.best, unit),
+          label: t("hang.bestOn", { date: dayMonth(best.date) }),
+        },
     attempt === null
       ? { value: "–", label: t("hang.statTopAttempt") }
       : {
@@ -80,17 +81,16 @@ export function milestoneRows(
     .map((m, i) => ({
       key: `${m.kind}-${m.session.id}-${i}`,
       text: milestoneText(m, unit),
-      meta: [
-        shortDate(m.session.date),
-        ...(mixed ? [gripSetupLabel(setupOf(m.session))] : []),
-      ].join(" · "),
+      meta: [dayMonth(m.session.date), ...(mixed ? [gripSetupLabel(setupOf(m.session))] : [])].join(
+        " · "
+      ),
     }));
 }
 
 export type GripSessionVM = {
   id: string;
   load: string;
-  /** "Fri 25 Sep · 20 mm · 10s × 6" */
+  /** "Sep 25 · 20 mm · 10s × 6" */
   meta: string;
   completion: string;
   /** It beat the best before it on its setup. */
@@ -106,7 +106,7 @@ export function gripSessionRows(
   return [...series].reverse().map((s) => ({
     id: s.id,
     load: loadLabel(s.protocol.kind, s.loadKg, unit),
-    meta: `${shortDate(s.date)} · ${gripSetupLabel(setupOf(s))} × ${s.protocol.reps * s.protocol.sets}`,
+    meta: `${dayMonth(s.date)} · ${gripSetupLabel(setupOf(s))} × ${s.protocol.reps * s.protocol.sets}`,
     completion: `${s.pct}%`,
     best: newBestBy(all, s) !== null,
   }));
@@ -142,6 +142,11 @@ export function compareGrips(
       ];
     })
     .sort((a, b) => b.bestKg - a.bestKg);
+}
+
+/** Two or more grips have a completed session on one setup, so there is something to compare. */
+export function canCompareGrips(sessions: readonly HangSession[]): boolean {
+  return setupsOf(sessions).some((setup) => compareGrips(sessions, setup, String).length > 1);
 }
 
 export type NewBestVM = { title: string; meta: string };

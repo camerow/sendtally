@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { summarise, type HangSession, type Protocol } from "@sendtally/core/hang";
 import {
   bestIndex,
+  canCompareGrips,
   compareGrips,
   gripSessionRows,
   gripTiles,
@@ -59,6 +60,13 @@ describe("grip screen", () => {
     ]);
   });
 
+  it("has no best tile until a session is complete", () => {
+    const partials = [hang("2026-09-01", 0, { pct: 50 }), hang("2026-09-08", 2, { pct: 80 })];
+    const summary = summarise(partials, "2026-09-29")!;
+    expect(bestIndex(partials, summary)).toBe(-1);
+    expect(gripTiles(partials, summary, "kg")[0]).toEqual({ value: "–", label: "Best" });
+  });
+
   it("lists sessions newest first, marking each that beat the best before it", () => {
     const rows = gripSessionRows(series, series, "kg");
     expect(rows.map((r) => [r.load, r.completion, r.best])).toEqual([
@@ -67,14 +75,14 @@ describe("grip screen", () => {
       ["+6 kg", "100%", true],
       ["+2 kg", "100%", false],
     ]);
-    expect(rows[0]?.meta).toBe("Tue, Sep 22 · 20\u00A0mm · 10s × 6");
+    expect(rows[0]?.meta).toBe("Sep 22 · 20\u00A0mm · 10s × 6");
   });
 
   it("says each milestone newest first, naming the setup only when they are mixed", () => {
     const rows = milestoneRows(series, "kg", false);
     expect(rows.map((r) => r.text)).toEqual(["Reached +5 kg", "First session on this grip"]);
-    expect(rows[0]?.meta).toBe("Tue, Sep 8");
-    expect(milestoneRows(series, "kg", true)[0]?.meta).toBe("Tue, Sep 8 · 20\u00A0mm · 10s");
+    expect(rows[0]?.meta).toBe("Sep 8");
+    expect(milestoneRows(series, "kg", true)[0]?.meta).toBe("Sep 8 · 20\u00A0mm · 10s");
   });
 });
 
@@ -92,6 +100,17 @@ describe("compareGrips", () => {
       { gripId: "open", name: "Open hand", bestKg: 12, changeKg: 2 },
       { gripId: "half", name: "Half crimp", bestKg: 6, changeKg: 4 },
     ]);
+  });
+
+  it("is worth comparing only once two grips are complete on one setup", () => {
+    expect(canCompareGrips(all)).toBe(true);
+    expect(canCompareGrips(series)).toBe(false);
+    expect(canCompareGrips([...series, hang("2026-09-02", 10, { gripId: "open", pct: 90 })])).toBe(
+      false
+    );
+    expect(
+      canCompareGrips([...series, hang("2026-09-02", 10, { gripId: "open", edgeMm: 15 })])
+    ).toBe(false);
   });
 
   it("compares ground pulls only with each other", () => {

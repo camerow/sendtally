@@ -208,7 +208,10 @@ export const hang = {
     "Die geschaffte Last liegt konstant bei {load}. Wenn die Anstrengung weiter unter 7 bleibt, probier nächstes Mal {next}.",
   "hang.insightAttempt":
     "Dein Top-Versuch ist {load} am {date}, zu {pct}% geschafft. Er bleibt ein Versuch, bis du jeden Satz mit dieser Last durchziehst.",
-  "hang.statBest": "Beste geschafft",
+  "hang.statBest": "Bestwert",
+  "hang.latestAttempt": "Letzter Versuch",
+  "hang.insightNoneComplete":
+    "Noch keine geschaffte Session. Zieh jeden Satz mit {load} durch, um deinen ersten Bestwert zu setzen.",
   "hang.statTopAttempt": "Top-Versuch",
   "hang.statAvgEffort": "Ø Anstrengung",
   "hang.effortOutOf": "{value}/10",
@@ -236,6 +239,7 @@ export const hang = {
   "hang.mixedSetups": "Gemischte Setups",
   "hang.allSetups": "Alle",
   "hang.compareGrips": "Griffe vergleichen",
+  "hang.compare": "Vergleichen",
   "hang.compareEmpty": "Noch keine abgeschlossenen Sessions mit diesem Setup.",
   "hang.bestOn": "Bestwert · {date}",
   "hang.topAttemptAt": "Top-Versuch · {pct}%",

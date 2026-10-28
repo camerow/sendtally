@@ -3,7 +3,7 @@ import { fireEvent, screen } from "@testing-library/react-native";
 import { router } from "expo-router";
 import React from "react";
 import type { ExerciseGroupVM } from "@sendtally/features/statistics";
-import { anExercise, hangData, renderWithHang } from "../data/renderWithHang";
+import { aHang, anExercise, hangData, renderWithHang } from "../data/renderWithHang";
 import { ExerciseGroups } from "./ExerciseGroups";
 
 jest.mock("expo-router", () => ({ router: { push: jest.fn() } }));
@@ -52,10 +52,30 @@ describe("exercise trends", () => {
     expect(router.push).toHaveBeenCalledWith({ pathname: "/grip/[id]", params: { id: "half" } });
   });
 
-  it("compares grips from the hangboard heading", async () => {
-    await renderWithHang(<ExerciseGroups groups={groups} />);
-    await fireEvent.press(screen.getByText("Compare grips"));
+  it("compares grips from the hangboard heading once two are complete on one setup", async () => {
+    await renderWithHang(
+      <ExerciseGroups groups={groups} />,
+      hangData({
+        sessions: [aHang({ gripId: "half" }), aHang({ gripId: "open" })],
+      })
+    );
+    await fireEvent.press(screen.getByLabelText("Compare grips"));
     expect(router.push).toHaveBeenCalledWith("/grip/compare");
+  });
+
+  it("offers no compare with only one grip complete on a setup", async () => {
+    await renderWithHang(
+      <ExerciseGroups groups={groups} />,
+      hangData({
+        sessions: [aHang({ gripId: "half" }), aHang({ gripId: "open", pct: 50 })],
+      })
+    );
+    expect(screen.queryByLabelText("Compare grips")).toBeNull();
+  });
+
+  it("draws a sparkline from two points, none from one", async () => {
+    await renderWithHang(<ExerciseGroups groups={groups} />);
+    expect(screen.getAllByTestId("sparkline")).toHaveLength(1);
   });
 
   it("leaves a row with nowhere to go as a plain row", async () => {

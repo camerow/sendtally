@@ -3,7 +3,7 @@ import { fireEvent, screen } from "@testing-library/react-native";
 import { router } from "expo-router";
 import React from "react";
 import type { ActivityRecord } from "@sendtally/api-client";
-import { anExercise, renderWithHang, hangData } from "../data/renderWithHang";
+import { aHang, anExercise, renderWithHang, hangData } from "../data/renderWithHang";
 import { ExerciseShelves } from "./ExerciseShelves";
 
 jest.mock("expo-router", () => ({ router: { push: jest.fn() } }));
@@ -70,5 +70,22 @@ describe("exercise shelves", () => {
       pathname: "/exercise/edit",
       params: { kind: "climbing" },
     });
+  });
+
+  it("says a grip's best completed load, or its last load before one is complete", async () => {
+    await renderWithHang(
+      <ExerciseShelves />,
+      hangData({
+        sessions: [
+          aHang({ gripId: "half", date: "2026-09-01", loadKg: 4 }),
+          aHang({ gripId: "half", date: "2026-09-08", loadKg: 6, pct: 50 }),
+          aHang({ gripId: "open", date: "2026-09-02", loadKg: 12, pct: 80 }),
+          aHang({ gripId: "pinch", date: "2026-09-03", loadKg: 0, pct: 80, edgeMm: 15 }),
+        ],
+      })
+    );
+    expect(screen.getByText("Best +4 kg · 20\u00A0mm")).toBeTruthy();
+    expect(screen.getByText("Last +12 kg · 20\u00A0mm")).toBeTruthy();
+    expect(screen.getByText("Last bodyweight · 15\u00A0mm")).toBeTruthy();
   });
 });

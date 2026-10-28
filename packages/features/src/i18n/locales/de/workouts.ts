@@ -115,6 +115,7 @@ export const workouts = {
   "workouts.exerciseBest": "Bestwert {value}",
   "workouts.exerciseBestBodyweight": "Bestwert Körpergewicht",
   "workouts.exerciseLast": "Zuletzt {value}",
+  "workouts.exerciseLastBodyweight": "Zuletzt Körpergewicht",
   "workouts.usedIn": "Verwendet in",
   "workouts.mergeExercise": "Zusammenführen mit…",
   "workouts.mergeExerciseHint": "In eine andere Übung aufgehen lassen, samt Verlauf",

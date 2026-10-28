@@ -56,27 +56,30 @@ export function ExerciseShelves(): React.ReactElement {
       : t("workouts.exerciseLast", { value: doseSummary(using.kind, dose, unit) });
   };
 
-  const gripBest = (onGrip: readonly HangSession[], best: number): string => {
-    const top = onGrip.findLast((s) => s.loadKg === best) ?? onGrip.at(-1);
+  const gripMeta = (onGrip: readonly HangSession[], best: number | null): string => {
+    const top =
+      (best === null ? undefined : onGrip.findLast((s) => s.pct >= 100 && s.loadKg === best)) ??
+      onGrip.at(-1);
     if (top === undefined) return "";
     const kind = top.protocol.kind;
+    const kg = best ?? top.loadKg;
+    const value = loadLabel(kind, kg, model.settings.units);
     const load =
-      kind !== "pull" && best === 0
-        ? t("workouts.exerciseBestBodyweight")
-        : t("workouts.exerciseBest", { value: loadLabel(kind, best, model.settings.units) });
+      kind !== "pull" && kg === 0
+        ? t(best === null ? "workouts.exerciseLastBodyweight" : "workouts.exerciseBestBodyweight")
+        : t(best === null ? "workouts.exerciseLast" : "workouts.exerciseBest", { value });
     return kind === "pull" ? load : `${load} · ${t("hang.edgeMm", { n: top.edgeMm })}`;
   };
   const grips = model.grips
     .filter((g) => !g.hidden && (g.custom || model.sessions.some((s) => s.gripId === g.id)))
     .map((g): ShelfCard => {
       const onGrip = model.sessions.filter((s) => s.gripId === g.id).sort(byDate);
-      const last = onGrip.at(-1);
       const summary = summarise(onGrip, today);
       return {
         key: g.id,
         kind: "hangboard",
         name: g.name,
-        meta: summary === null || last === undefined ? "" : gripBest(onGrip, summary.best),
+        meta: summary === null ? "" : gripMeta(onGrip, summary.best),
         open: openGrip(onGrip, g.id),
       };
     });

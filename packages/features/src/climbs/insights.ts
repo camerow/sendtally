@@ -18,7 +18,7 @@ import { draftGrade, vGradeOf } from "../log-session/transforms";
 import { gradeFormatterFor, type GradeFormatter } from "../sessions/grades";
 import { bucketsFor, windowOf } from "../trends/buckets";
 import type { TrendRange } from "../trends/types";
-import { dateLabel } from "./projects";
+import { dayMonth } from "../hang/format";
 import { rowsOf, type PyramidRow } from "./pyramid";
 import { climbKey } from "./transforms";
 
@@ -183,7 +183,7 @@ export function climbingInsightsVM(
         : {
             gradeLabel: format.label(hardest.rank),
             name: hardest.name === "" ? null : hardest.name,
-            dateLabel: dateLabel(hardest.sentAt ?? ""),
+            dateLabel: dayMonth((hardest.sentAt ?? "").slice(0, 10)),
           },
   };
 }

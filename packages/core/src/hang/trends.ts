@@ -112,9 +112,14 @@ export function milestones(series: readonly HangSession[]): Milestone[] {
 }
 
 export type TrendSummary = {
-  first: number;
-  last: number;
-  best: number;
+  /** The first, latest and heaviest completed loads; null before any session is complete. */
+  first: number | null;
+  last: number | null;
+  best: number | null;
+  /** How many sessions were complete. */
+  completed: number;
+  /** The newest session's load, complete or not. */
+  latest: number;
   topAttempt: HangSession | null;
   avgRpe: number | null;
   avgPct: number;
@@ -127,18 +132,21 @@ export function summarise(
   today: CalendarDate
 ): TrendSummary | null {
   const oldest = series[0];
-  if (oldest === undefined) return null;
-  const complete = series.filter((s) => s.pct >= 100);
-  const counted = (complete.length > 0 ? complete : series).map((s) => s.loadKg);
-  const best = Math.max(...counted);
+  const newest = series.at(-1);
+  if (oldest === undefined || newest === undefined) return null;
+  const counted = series.filter(isComplete).map((s) => s.loadKg);
+  const best = counted.length === 0 ? null : Math.max(...counted);
   const topAttempt =
-    series.filter((s) => s.pct < 100 && s.loadKg > best).sort((a, b) => b.loadKg - a.loadKg)[0] ??
-    null;
+    series
+      .filter((s) => !isComplete(s) && (best === null || s.loadKg > best))
+      .sort((a, b) => b.loadKg - a.loadKg)[0] ?? null;
   const rpes = series.flatMap((s) => (s.rpe === null ? [] : [s.rpe]));
   return {
-    first: counted[0] ?? 0,
-    last: counted[counted.length - 1] ?? 0,
+    first: counted[0] ?? null,
+    last: counted.at(-1) ?? null,
     best,
+    completed: counted.length,
+    latest: newest.loadKg,
     topAttempt,
     avgRpe: rpes.length > 0 ? rpes.reduce((a, b) => a + b, 0) / rpes.length : null,
     avgPct: Math.round(series.reduce((a, s) => a + s.pct, 0) / series.length),

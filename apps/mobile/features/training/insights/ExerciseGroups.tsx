@@ -1,8 +1,9 @@
 import { router } from "expo-router";
 import React from "react";
-import { View } from "react-native";
+import { Pressable, View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
 import { useWeightUnit } from "@sendtally/features/activities";
+import { canCompareGrips } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import {
   exerciseKey,
@@ -12,8 +13,10 @@ import {
   type ExerciseGroupVM,
 } from "@sendtally/features/statistics";
 import { useApi } from "../../../lib/api";
+import { press } from "../../../lib/press";
+import { HangIcon } from "../components/HangIcon";
 import { Label } from "../components/Label";
-import { Button } from "../components/Button";
+import { useHangData } from "../data/HangDataContext";
 import { KIND_LOOK } from "../today/kindLook";
 import { ExerciseTrendRow } from "./ExerciseTrendRow";
 
@@ -26,6 +29,7 @@ export function ExerciseGroups({
   const api = useApi();
   const unit = useWeightUnit(api);
   const exercises = useExercises(api).state;
+  const { model } = useHangData();
   if (groups.length === 0) return null;
 
   const openOf = (kind: ExerciseGroupKind, key: string): (() => void) | undefined => {
@@ -58,13 +62,25 @@ export function ExerciseGroups({
               <Label small color={KIND_LOOK.hangboard.ink}>
                 {kindName(g.kind)}
               </Label>
-              <Button
-                label={t("hang.compareGrips")}
-                onPress={() => router.push("/grip/compare")}
-                variant="link"
-                height={44}
-                style={{ marginVertical: -10 }}
-              />
+              {canCompareGrips(model.sessions) && (
+                <Pressable
+                  onPress={() => router.push("/grip/compare")}
+                  accessibilityRole="button"
+                  accessibilityLabel={t("hang.compareGrips")}
+                  hitSlop={16}
+                  style={press({ flexDirection: "row", alignItems: "center", gap: 4 })}
+                >
+                  <Label small color={colors.textSecondary}>
+                    {t("hang.compare")}
+                  </Label>
+                  <HangIcon
+                    name="forward"
+                    color={colors.textSecondary}
+                    size={12}
+                    strokeWidth={2.2}
+                  />
+                </Pressable>
+              )}
             </View>
           ) : (
             <Label small color={colors.textSecondary}>
