@@ -117,7 +117,6 @@ export const workouts = {
   "workouts.exerciseBest": "Mejor {value}",
   "workouts.exerciseLast": "Último {value}",
   "workouts.usedIn": "Se usa en",
-  "workouts.renameExercise": "Renombrar",
   "workouts.mergeExercise": "Fusionar con…",
   "workouts.mergeExerciseTitle": "¿Fusionar {from} con {into}?",
   "workouts.mergeExerciseBody":
@@ -134,4 +133,20 @@ export const workouts = {
   "workouts.categoryEmpty.mobility": "Un estiramiento o una postura, como el pancake.",
   "workouts.categoryEmpty.other": "Correr, bici, cualquier otra cosa.",
   "workouts.newExerciseIn": "Nuevo ejercicio en {category}",
+  "workouts.measuredIn": "Se mide en",
+  "workouts.measure.reps": "Repeticiones",
+  "workouts.measure.repsWeight": "Repeticiones × peso",
+  "workouts.measure.seconds": "Segundos",
+  "workouts.measure.secondsWeight": "Segundos × peso",
+  "workouts.measure.rounds": "Rondas",
+  "workouts.measuredInHint": "Define qué piden sus series y la unidad de su tendencia.",
+  "workouts.measureFingers": "Tiempo de suspensión × lastre, en una regleta",
+  "workouts.eachSide": "Cada lado",
+  "workouts.eachSideHint": "2 × 60 s son 60 s por lado",
+  "workouts.aSide": "{value} por lado",
+  "workouts.changeMeasureTitle": "¿Cambiar cómo se mide {name}?",
+  "workouts.changeMeasureBody":
+    "Las series anotadas conservan sus valores. Las nuevas piden los campos nuevos.",
+  "workouts.changeMeasure": "Cambiar",
+  "workouts.editExercise": "Editar ejercicio",
 } as const;

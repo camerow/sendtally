@@ -93,10 +93,15 @@ describe("exercise screen", () => {
     mockApi.mergeExercise.mockResolvedValue({ exercise: exercises[1] });
     await renderWithHang(<ExerciseScreen id="e1" />, hangData(), world);
     await fireEvent.press(screen.getByLabelText("More for this exercise"));
-    await press("Rename");
+    await press("Edit");
     await fireEvent.changeText(screen.getByLabelText("Name"), "squat");
-    await fireEvent.press(screen.getByText("Save changes"));
-    expect(mockApi.saveExercise).toHaveBeenCalledWith("e1", { name: "squat", kind: "strength" });
+    await fireEvent.press(screen.getByText("Save"));
+    expect(mockApi.saveExercise).toHaveBeenCalledWith("e1", {
+      name: "squat",
+      kind: "strength",
+      measure: "repsWeight",
+      eachSide: false,
+    });
     await act(async () => undefined);
     expect(Alert.alert).toHaveBeenLastCalledWith(
       "Merge Back squat into Squat?",
@@ -109,6 +114,29 @@ describe("exercise screen", () => {
     expect(router.replace).toHaveBeenCalledWith({
       pathname: "/exercise/[id]",
       params: { id: "e2" },
+    });
+  });
+
+  it("warns before changing how a logged exercise is measured", async () => {
+    mockApi.saveExercise.mockResolvedValue({ exercise: exercises[0] });
+    await renderWithHang(<ExerciseScreen id="e1" />, hangData(), world);
+    await fireEvent.press(screen.getByLabelText("More for this exercise"));
+    await press("Edit");
+    await fireEvent.press(screen.getByText("Seconds"));
+    await fireEvent.press(screen.getByLabelText("Each side"));
+    await fireEvent.press(screen.getByText("Save"));
+    expect(mockApi.saveExercise).not.toHaveBeenCalled();
+    expect(Alert.alert).toHaveBeenLastCalledWith(
+      "Change how Back squat is measured?",
+      "Sets you logged keep their numbers. New sets ask for the new fields.",
+      expect.anything()
+    );
+    await press("Change");
+    expect(mockApi.saveExercise).toHaveBeenCalledWith("e1", {
+      name: "Back squat",
+      kind: "strength",
+      measure: "seconds",
+      eachSide: true,
     });
   });
 });

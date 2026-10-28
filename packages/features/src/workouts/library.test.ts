@@ -248,6 +248,13 @@ describe("summaries", () => {
     ).toBe("6 × 7s on / 3s off · 3 sets · 3:00 rest · 20 mm · 5 kg");
   });
 
+  it("reads a one-sided hold a side, and an assisted weight with a true minus", () => {
+    expect(doseSummary("mobility", { sets: 2, onS: 45 }, "kg", true)).toBe("2 × 45s a side");
+    expect(doseSummary("strength", { sets: 3, reps: 6, weightKg: -20 }, "kg")).toBe(
+      "3 × 6 · −20 kg"
+    );
+  });
+
   it("takes a timed workout's length from its first variation when it has no minutes", () => {
     expect(workoutMinutes(byId("run-tempo"))).toBe(25);
     expect(workoutMinutes({ ...byId("run-tempo"), minutes: null })).toBe(25);

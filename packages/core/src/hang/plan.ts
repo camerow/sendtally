@@ -279,12 +279,19 @@ export const timeUnitsOf = (p: Pick<Protocol, "hangS" | "restS" | "setRestS">): 
   setRestS: unitOf(p.setRestS),
 });
 
-/** Items run as a circuit: each round does every item once, for as many rounds as the most sets. */
-export function intervalsOf(items: readonly SessionItem[]): Intervals {
+/**
+ * Items run as a circuit: each round does every item once, for as many rounds as the most
+ * sets. An exercise done on each side plays twice, left then right.
+ */
+export function intervalsOf(
+  items: readonly SessionItem[],
+  eachSide: (exercise: string) => boolean = () => false
+): Intervals {
   return {
     rounds: Math.max(1, ...items.map((i) => i.dose.sets)),
     steps: items.map((i) => ({
       label: i.exercise,
+      ...(eachSide(i.exercise) ? { side: "each" as const } : {}),
       ...(i.dose.onS === undefined
         ? { measure: "count" as const, count: i.dose.reps ?? 1 }
         : { measure: "time" as const, seconds: i.dose.onS }),

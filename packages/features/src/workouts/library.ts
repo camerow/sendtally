@@ -8,7 +8,6 @@ import {
   letterOf,
   sessionItems,
   timeUnitsOf,
-  toUnit,
   turnsOf,
   type CalendarDate,
   type Dose,
@@ -19,6 +18,7 @@ import {
   type WorkoutKind,
   WORKOUT_KINDS,
 } from "@sendtally/core/hang";
+import { weightValue } from "../activities/done";
 import { ACTIVITY_KINDS, kindLabel } from "../activities/format";
 import { humanDuration, protocolSummary } from "../hang/format";
 import { builtInGripName } from "../hang/names";
@@ -87,13 +87,19 @@ export function exerciseName(exercise: string, gripName?: (id: string) => string
 
 /**
  * What one dose prescribes. Hangboard: "6 × 7s on / 3s off · 6 sets · 3:00 rest", with
- * its edge and weight when the dose sets them. Anything else: "5 × 5 · 100 kg", "3 × 45s".
+ * its edge and weight when the dose sets them. Anything else: "5 × 5 · 100 kg", "3 × 45s",
+ * and for an exercise done on each side "2 × 60s a side".
  */
-export function doseSummary(kind: WorkoutKind, dose: Dose, unit: WeightUnit): string {
+export function doseSummary(
+  kind: WorkoutKind,
+  dose: Dose,
+  unit: WeightUnit,
+  eachSide = false
+): string {
   const weight =
     dose.weightKg === undefined
       ? null
-      : t("hang.loadPlain", { value: formatNumber(toUnit(dose.weightKg, unit)), unit });
+      : t("hang.loadPlain", { value: weightValue(dose.weightKg, unit), unit });
   const edge = dose.edgeMm === undefined ? null : t("hang.edgeMm", { n: dose.edgeMm });
   if (kind === "hangboard") {
     const p = doseProtocol("", dose);
@@ -103,10 +109,11 @@ export function doseSummary(kind: WorkoutKind, dose: Dose, unit: WeightUnit): st
     dose.reps === undefined ? null : formatNumber(dose.reps),
     dose.onS === undefined ? null : humanDuration(dose.onS),
   ].filter((x) => x !== null);
+  const done = work.join(" · ");
   const main =
     work.length === 0
       ? t("activities.setCount", { count: dose.sets })
-      : `${formatNumber(dose.sets)} × ${work.join(" · ")}`;
+      : `${formatNumber(dose.sets)} × ${eachSide ? t("workouts.aSide", { value: done }) : done}`;
   return [main, weight, edge].filter((x) => x !== null).join(" · ");
 }
 

@@ -1,8 +1,11 @@
 import React from "react";
 import type { StyleProp, ViewStyle } from "react-native";
 import { sessionItems, type CalendarDate } from "@sendtally/core/hang";
+import { eachSideOf } from "@sendtally/features/exercises";
 import { t } from "@sendtally/features/i18n";
+import { useExercises } from "@sendtally/features/statistics";
 import type { LibraryWorkout } from "@sendtally/features/workouts";
+import { useApi } from "../../../lib/api";
 import { Button } from "../components/Button";
 import { NO_PLAN } from "../data/planLinkParams";
 import { useNextSession } from "../library/useLibrary";
@@ -27,6 +30,8 @@ export function StartButton({
 }: StartButtonProps): React.ReactElement {
   const climbing = workout.kind === "climbing";
   const session = useNextSession(workout.id);
+  const exercises = useExercises(useApi()).state;
+  const eachSide = eachSideOf(exercises.status === "ready" ? exercises.data : []);
   const run = planned ?? {
     link: NO_PLAN,
     session,
@@ -35,7 +40,7 @@ export function StartButton({
   return (
     <Button
       label={climbing ? t("plan.logSession") : t("hang.start")}
-      onPress={() => startLibraryWorkout(workout, date, run)}
+      onPress={() => startLibraryWorkout(workout, date, run, eachSide)}
       variant={climbing ? "gold" : "primary"}
       height={height}
       icon={climbing ? "plus" : "play"}

@@ -118,7 +118,6 @@ export const workouts = {
   "workouts.exerciseBest": "Meilleur {value}",
   "workouts.exerciseLast": "Dernier {value}",
   "workouts.usedIn": "Utilisé dans",
-  "workouts.renameExercise": "Renommer",
   "workouts.mergeExercise": "Fusionner avec…",
   "workouts.mergeExerciseTitle": "Fusionner {from} avec {into} ?",
   "workouts.mergeExerciseBody":
@@ -135,4 +134,20 @@ export const workouts = {
   "workouts.categoryEmpty.mobility": "Un étirement ou un maintien, comme le pancake.",
   "workouts.categoryEmpty.other": "Course, vélo, tout le reste.",
   "workouts.newExerciseIn": "Nouvel exercice dans {category}",
+  "workouts.measuredIn": "Mesuré en",
+  "workouts.measure.reps": "Répétitions",
+  "workouts.measure.repsWeight": "Répétitions × poids",
+  "workouts.measure.seconds": "Secondes",
+  "workouts.measure.secondsWeight": "Secondes × poids",
+  "workouts.measure.rounds": "Tours",
+  "workouts.measuredInHint": "Définit ce que demandent ses séries et l’unité de sa courbe.",
+  "workouts.measureFingers": "Temps de suspension × lest, sur une réglette",
+  "workouts.eachSide": "Chaque côté",
+  "workouts.eachSideHint": "2 × 60 s, c’est 60 s de chaque côté",
+  "workouts.aSide": "{value} de chaque côté",
+  "workouts.changeMeasureTitle": "Changer la mesure de {name} ?",
+  "workouts.changeMeasureBody":
+    "Les séries notées gardent leurs valeurs. Les nouvelles demandent les nouveaux champs.",
+  "workouts.changeMeasure": "Changer",
+  "workouts.editExercise": "Modifier l’exercice",
 } as const;

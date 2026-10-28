@@ -32,6 +32,7 @@ export {
   exerciseSuggestions,
   previousSets,
   setText,
+  weightValue,
 } from "./done";
 export { doneOfRun, intervalsSummary, stepDose } from "./intervals";
 export { useExerciseNames } from "./useExerciseNames";

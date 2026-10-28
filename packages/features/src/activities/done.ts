@@ -4,6 +4,10 @@ import { formatNumber, t } from "../i18n";
 
 const MAX_SUGGESTIONS = 5;
 
+/** A weight in the user's unit, an assisted one with a true minus: "−20". */
+export const weightValue = (kg: number, unit: WeightUnit): string =>
+  formatNumber(toUnit(kg, unit)).replace("-", "−");
+
 /** "3 exercises · 9 sets", or null when nothing was done. */
 export function doneSummary(done: readonly ItemDone[]): string | null {
   const items = done.filter((d) => d.sets.length > 0);
@@ -20,7 +24,7 @@ export function setText(set: SetDone, unit: WeightUnit): string {
   const load =
     set.weightKg === undefined
       ? undefined
-      : t("hang.loadPlain", { value: formatNumber(toUnit(set.weightKg, unit)), unit });
+      : t("hang.loadPlain", { value: weightValue(set.weightKg, unit), unit });
   const work = [set.reps === undefined ? undefined : formatNumber(set.reps), load]
     .filter((p) => p !== undefined)
     .join(" × ");
@@ -31,7 +35,7 @@ export function setText(set: SetDone, unit: WeightUnit): string {
 
 /** A set as a chip under its exercise, whose unit the card states once: "5 × 180", "8", "60s". */
 export function setChip(set: SetDone, unit: WeightUnit): string {
-  const weight = set.weightKg ? formatNumber(toUnit(set.weightKg, unit)) : undefined;
+  const weight = set.weightKg ? weightValue(set.weightKg, unit) : undefined;
   const work = [set.reps === undefined ? undefined : formatNumber(set.reps), weight]
     .filter((p) => p !== undefined)
     .join(" × ");

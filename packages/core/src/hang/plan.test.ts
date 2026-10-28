@@ -8,6 +8,7 @@ import {
   hangboardSeconds,
   hangItemSeconds,
   foldVariations,
+  intervalPhases,
   intervalsOf,
   occurrencesIn,
   occursOn,
@@ -303,6 +304,15 @@ describe("intervalsOf", () => {
         { label: "Knee raises", measure: "count", count: 10, restAfter: 60 },
       ],
     });
+  });
+
+  it("plays an exercise done on each side twice", () => {
+    const body = intervalsOf(
+      [{ exercise: "Pigeon", dose: { sets: 2, onS: 60 } }],
+      (exercise) => exercise === "Pigeon"
+    );
+    expect(body.steps[0]?.side).toBe("each");
+    expect(intervalPhases(body).filter((p) => p.kind === "hang")).toHaveLength(4);
   });
 });
 

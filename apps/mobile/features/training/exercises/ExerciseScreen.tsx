@@ -5,6 +5,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import type { Exercise } from "@sendtally/api-client";
 import { colors } from "@sendtally/design/tokens";
 import { kindLabel, useWeightUnit } from "@sendtally/features/activities";
+import { exerciseKindOf } from "@sendtally/features/exercises";
 import { t } from "@sendtally/features/i18n";
 import {
   exerciseKey,
@@ -25,8 +26,9 @@ import { useLibrary } from "../library/useLibrary";
 import { ExerciseTrendCard } from "./ExerciseTrendCard";
 import { MergeExerciseSheet } from "./MergeExerciseSheet";
 import { RecentSessions } from "./RecentSessions";
-import { RenameExerciseSheet } from "./RenameExerciseSheet";
+import { ExerciseSheet } from "./ExerciseSheet";
 import { takenBy } from "./takenBy";
+import type { ExerciseForm } from "./types";
 import { confirmDestructive } from "../../../lib/confirmDestructive";
 
 const failed = (): void => Alert.alert(t("workouts.saveFailed"));
@@ -40,7 +42,7 @@ export function ExerciseScreen({ id }: ExerciseScreenProps): React.ReactElement 
   const series = useExerciseSeries(api);
   const library = useLibrary().state;
   const unit = useWeightUnit(api);
-  const [sheet, setSheet] = React.useState<"rename" | "merge" | null>(null);
+  const [sheet, setSheet] = React.useState<"edit" | "merge" | null>(null);
   if (exercises.state.status !== "ready")
     return <LoadState state={exercises.state} onRetry={() => void exercises.reload()} />;
   const all = exercises.state.data;
@@ -66,15 +68,22 @@ export function ExerciseScreen({ id }: ExerciseScreenProps): React.ReactElement 
             failed
           ),
     });
-  const rename = (name: string): void =>
-    void api.saveExercise(exercise.id, { name, kind: exercise.kind }).catch((error: unknown) => {
-      const taken = takenBy(error);
-      if (taken === undefined) failed();
-      else merge(taken);
-    });
+  const save = ({ name, kind, measure, eachSide }: ExerciseForm): void =>
+    void api
+      .saveExercise(exercise.id, {
+        name,
+        kind: exerciseKindOf(kind) ?? exercise.kind,
+        measure,
+        eachSide,
+      })
+      .catch((error: unknown) => {
+        const taken = takenBy(error);
+        if (taken === undefined) failed();
+        else merge(taken);
+      });
   const more = (): void =>
     Alert.alert(exercise.name, undefined, [
-      { text: t("workouts.renameExercise"), onPress: () => setSheet("rename") },
+      { text: t("common.edit"), onPress: () => setSheet("edit") },
       { text: t("workouts.mergeExercise"), onPress: () => setSheet("merge") },
       { text: t("common.cancel"), style: "cancel" },
     ]);
@@ -130,8 +139,18 @@ export function ExerciseScreen({ id }: ExerciseScreenProps): React.ReactElement 
           </View>
         )}
       </ScrollView>
-      {sheet === "rename" && (
-        <RenameExerciseSheet exercise={exercise} onSave={rename} onClose={() => setSheet(null)} />
+      {sheet === "edit" && (
+        <ExerciseSheet
+          initial={{
+            kind: exercise.kind,
+            name: exercise.name,
+            measure: exercise.measure,
+            eachSide: exercise.eachSide,
+          }}
+          editing={{ logged: logged !== undefined }}
+          onSave={save}
+          onClose={() => setSheet(null)}
+        />
       )}
       {sheet === "merge" && (
         <MergeExerciseSheet

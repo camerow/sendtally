@@ -58,7 +58,7 @@ export function fieldText(field: DoseField, dose: Dose, unit: WeightUnit): strin
   const value = dose[field.key];
   if (value === undefined) return "";
   if (field.measure === "time") return clock(value);
-  return String(field.measure === "weight" ? toUnit(value, unit) : value);
+  return String(field.measure === "weight" ? toUnit(value, unit) : value).replace("-", "−");
 }
 
 const LIMITS: Record<DoseField["measure"], readonly [number, number]> = {

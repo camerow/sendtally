@@ -25,12 +25,14 @@ const playerOf = (items: readonly SessionItem[]): RunPlayer =>
 /**
  * Runs a workout in the player its items call for: hangboard in the timer, all timed in
  * the intervals player, reps or weight in the sets table, anything else as a checklist.
- * Climbing opens the live session, and a workout with no items the activity form.
+ * Climbing opens the live session, and a workout with no items the activity form. An
+ * exercise done on each side plays twice in the intervals player.
  */
 export function startLibraryWorkout(
   w: LibraryWorkout,
   date: CalendarDate,
-  { link, session, items }: PlannedItems
+  { link, session, items }: PlannedItems,
+  eachSide: (exercise: string) => boolean
 ): void {
   const kind = activityKindOf(w.kind);
   const [first] = items;
@@ -48,7 +50,7 @@ export function startLibraryWorkout(
     return;
   }
   if (items.every((i) => i.dose.onS !== undefined)) {
-    startIntervals({ ...run, activityId: null, body: intervalsOf(items) });
+    startIntervals({ ...run, activityId: null, body: intervalsOf(items, eachSide) });
     return;
   }
   router.push(

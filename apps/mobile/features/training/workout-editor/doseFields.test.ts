@@ -10,6 +10,8 @@ describe("dose fields", () => {
     expect(fieldText(rest!, { sets: 1, offS: 180 }, "kg")).toBe("3:00");
     expect(fieldText(weight!, { sets: 1, weightKg: 100 }, "lb")).toBe("220.5");
     expect(fieldText(hangs!, { sets: 1 }, "kg")).toBe("");
+    expect(fieldText(weight!, { sets: 1, weightKg: -20 }, "kg")).toBe("−20");
+    expect(withField({ sets: 1 }, weight!, "−20", "kg")).toEqual({ sets: 1, weightKg: -20 });
   });
 
   it("takes typed numbers, clears optional fields, and refuses what is not a number", () => {
