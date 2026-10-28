@@ -9,13 +9,15 @@ import { BackButton } from "../../components/BackButton";
 import { Icon } from "../../components/Icon";
 import { useApi } from "../../lib/api";
 import { press, pressRow } from "../../lib/press";
+import { AddNoteSheet } from "./AddNoteSheet";
 import { LabelTile } from "./LabelTile";
 import { RenameSheet } from "./RenameSheet";
 
 /** One climb: a Project pill to mark it, its days, tries and best, and every session on it. */
 export function ClimbDetailScreen({ id }: { id: string }): React.ReactElement {
   const api = useApi();
-  const { state, setWorking, rename } = useClimb(api, id);
+  const { state, setWorking, rename, addNote } = useClimb(api, id);
+  const [noting, setNoting] = React.useState(false);
   const [renaming, setRenaming] = React.useState(0);
   const [saving, setSaving] = React.useState(false);
   const [failed, setFailed] = React.useState(false);
@@ -186,6 +188,22 @@ export function ClimbDetailScreen({ id }: { id: string }): React.ReactElement {
           ))}
         </View>
         <Pressable
+          onPress={() => setNoting(true)}
+          accessibilityRole="button"
+          style={press({
+            height: 52,
+            borderRadius: radius.card,
+            borderWidth: 1.5,
+            borderColor: "rgba(64,63,76,0.3)",
+            alignItems: "center",
+            justifyContent: "center",
+          })}
+        >
+          <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 15, color: colors.gunmetal }}>
+            {t("climbs.addNote")}
+          </Text>
+        </Pressable>
+        <Pressable
           onPress={() => router.push({ pathname: "/climb/log", params: { climbId: climb.id } })}
           accessibilityRole="button"
           style={press({
@@ -202,6 +220,12 @@ export function ClimbDetailScreen({ id }: { id: string }): React.ReactElement {
           </Text>
         </Pressable>
       </ScrollView>
+      <AddNoteSheet
+        visible={noting}
+        sessions={vm.sessions}
+        onSave={addNote}
+        onClose={() => setNoting(false)}
+      />
       <RenameSheet
         key={renaming}
         visible={renaming > 0}

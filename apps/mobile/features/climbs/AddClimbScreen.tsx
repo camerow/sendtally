@@ -174,24 +174,7 @@ export function AddClimbScreen(): React.ReactElement {
         >
           {t("climbs.addClimb")}
         </Text>
-        <Pressable
-          onPress={submit}
-          disabled={!valid || saving}
-          accessibilityRole="button"
-          accessibilityState={{ disabled: !valid || saving }}
-          style={press({
-            minWidth: 72,
-            height: 44,
-            alignItems: "flex-end",
-            justifyContent: "center",
-            paddingHorizontal: 8,
-            opacity: !valid || saving ? 0.4 : 1,
-          })}
-        >
-          <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 15, color: colors.gunmetal }}>
-            {saving ? t("common.saving") : t("common.save")}
-          </Text>
-        </Pressable>
+        <View style={{ minWidth: 72 }} />
       </View>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
@@ -327,6 +310,35 @@ export function AddClimbScreen(): React.ReactElement {
             }}
           />
         </ScrollView>
+        <View
+          style={{
+            borderTopWidth: 1,
+            borderTopColor: colors.lineOnLight,
+            paddingHorizontal: 18,
+            paddingTop: 12,
+            paddingBottom: 10,
+            backgroundColor: colors.white,
+          }}
+        >
+          <Pressable
+            onPress={submit}
+            disabled={!valid || saving}
+            accessibilityRole="button"
+            accessibilityState={{ disabled: !valid || saving }}
+            style={press({
+              minHeight: 50,
+              alignItems: "center",
+              justifyContent: "center",
+              borderRadius: radius.control,
+              backgroundColor: colors.azureInk,
+              opacity: !valid || saving ? 0.45 : 1,
+            })}
+          >
+            <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 15, color: colors.white }}>
+              {saving ? t("common.saving") : t("common.save")}
+            </Text>
+          </Pressable>
+        </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

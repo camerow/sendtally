@@ -2,7 +2,9 @@ import React from "react";
 import type { ClimbSummary, SendtallyApi, SessionWithClimbs } from "@sendtally/api-client";
 import { t } from "../i18n";
 import { queries, useQueryPair, type QueryState } from "../query";
+import { logClimbOnDay } from "../log-session/dayClimb";
 import { climbDetailVM, type ClimbDetailVM } from "./overview";
+import { joinNotes, noteAttempt } from "./projects";
 
 export type ClimbsData = { climbs: ClimbSummary[]; sessions: SessionWithClimbs[] };
 
@@ -26,11 +28,13 @@ export type ClimbFeature = {
   setWorking: (working: boolean) => Promise<void>;
   /** Resolves to the climb's id after the rename: another one's when it merged into it. */
   rename: (name: string) => Promise<string>;
+  /** A note dated to a day: on that day's session of this climb, or on a new attempt there. */
+  addNote: (day: string, note: string) => Promise<void>;
 };
 
 /** A climb by its id, or by the slug a web link carries. */
 export function useClimb(api: SendtallyApi, idOrSlug: string): ClimbFeature {
-  const { state: loaded } = useClimbs(api);
+  const { state: loaded, reload } = useClimbs(api);
   const state = React.useMemo((): ClimbFeature["state"] => {
     if (loaded.status !== "ready") return loaded;
     const { climbs, sessions } = loaded.data;
@@ -53,5 +57,16 @@ export function useClimb(api: SendtallyApi, idOrSlug: string): ClimbFeature {
     },
     [api, id]
   );
-  return { state, setWorking, rename };
+  const addNote = React.useCallback(
+    async (day: string, note: string): Promise<void> => {
+      if (state.status !== "ready") throw new Error("climb not loaded");
+      const { climb, vm } = state.data;
+      const onDay = vm.sessions.find((s) => s.day === day);
+      if (onDay === undefined) await logClimbOnDay(api, noteAttempt(climb, note), day, []);
+      else await api.setClimbNote(onDay.fingerprint, climb.slug, joinNotes(onDay.note, note));
+      await reload();
+    },
+    [api, state, reload]
+  );
+  return { state, setWorking, rename, addNote };
 }
