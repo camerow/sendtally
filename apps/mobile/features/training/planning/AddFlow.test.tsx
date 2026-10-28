@@ -2,7 +2,9 @@ import { describe, expect, it, jest, beforeEach } from "@jest/globals";
 import { fireEvent, screen } from "@testing-library/react-native";
 import { router } from "expo-router";
 import React from "react";
+import { Alert, type AlertButton } from "react-native";
 import type { Plan, WorkoutRecord } from "@sendtally/api-client";
+import type * as Workouts from "@sendtally/features/workouts";
 import { hangData, renderWithHang } from "../data/renderWithHang";
 import { AddPlanScreen } from "./AddPlanScreen";
 import { ScheduleScreen } from "./ScheduleScreen";
@@ -16,7 +18,13 @@ const mockPlan = {
   saveWeekChange: jest.fn(),
 };
 
+const mockWorkouts = { saveWorkout: jest.fn(), deleteWorkout: jest.fn() };
+
 jest.mock("../plan/usePlanActions", () => ({ usePlanActions: () => mockPlan }));
+jest.mock("@sendtally/features/workouts", () => ({
+  ...jest.requireActual<typeof Workouts>("@sendtally/features/workouts"),
+  useWorkoutActions: () => mockWorkouts,
+}));
 jest.mock("../../../components/Sheet", () => ({
   Sheet: ({ visible, children }: { visible: boolean; children: React.ReactNode }) =>
     visible ? children : null,
@@ -117,6 +125,19 @@ describe("adding to the plan", () => {
       pathname: "/workout/edit",
       params: { id: "legs" },
     });
+  });
+
+  it("deletes the user's own workout from its preview, once confirmed", async () => {
+    const alert = jest.spyOn(Alert, "alert").mockImplementation(() => undefined);
+    await renderWithHang(<WorkoutPreviewScreen id="legs" adding={null} />, hangData(), {
+      workouts: [legs],
+    });
+    await fireEvent.press(screen.getByText("Delete workout"));
+    expect(mockWorkouts.deleteWorkout).not.toHaveBeenCalled();
+    const buttons = alert.mock.calls[0]?.[2] as AlertButton[];
+    buttons.find((b) => b.style === "destructive")?.onPress?.();
+    expect(mockWorkouts.deleteWorkout).toHaveBeenCalledWith("legs");
+    expect(router.back).toHaveBeenCalled();
   });
 
   it("saves a weekly plan from the day's weekday and returns to Today on its start", async () => {
