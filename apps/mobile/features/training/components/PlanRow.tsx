@@ -43,8 +43,6 @@ export function PlanRow({
       style={{
         flexDirection: "row",
         alignItems: "center",
-        gap: 12,
-        paddingLeft: 14,
         paddingRight: 6,
         borderRadius: 14,
         borderWidth: 1,
@@ -53,34 +51,42 @@ export function PlanRow({
         overflow: "hidden",
       }}
     >
-      {mark}
       <Pressable
         onPress={onOpen}
         disabled={onOpen === undefined}
         accessibilityRole={onOpen === undefined ? undefined : "button"}
-        style={pressRow({ flex: 1, gap: 3, paddingVertical: 12 })}
+        style={pressRow({
+          flex: 1,
+          flexDirection: "row",
+          alignItems: "center",
+          gap: 12,
+          paddingLeft: 14,
+          paddingVertical: 12,
+        })}
       >
-        <Label small color={tagColor}>
-          {tag}
-        </Label>
-        {name !== undefined && (
-          <Text style={[type.bodyBold, { fontSize: 15, color: colors.gunmetal }]}>{name}</Text>
+        {mark}
+        <View style={{ flex: 1, gap: 3 }}>
+          <Label small color={tagColor}>
+            {tag}
+          </Label>
+          {name !== undefined && (
+            <Text style={[type.bodyBold, { fontSize: 15, color: colors.gunmetal }]}>{name}</Text>
+          )}
+          <Text style={[type.mono, { fontSize: 12, color: colors.textSecondary }]}>{meta}</Text>
+        </View>
+        {onRemove === undefined && onOpen !== undefined && (
+          <View style={{ paddingHorizontal: 8 }}>
+            <HangIcon name="forward" color={colors.textSecondary} size={16} strokeWidth={2.2} />
+          </View>
         )}
-        <Text style={[type.mono, { fontSize: 12, color: colors.textSecondary }]}>{meta}</Text>
       </Pressable>
-      {onRemove !== undefined && removeLabel !== undefined ? (
+      {onRemove !== undefined && removeLabel !== undefined && (
         <IconButton
           icon={actionIcon}
           label={removeLabel}
           onPress={onRemove}
           color={colors.textSecondary}
         />
-      ) : (
-        onOpen !== undefined && (
-          <View style={{ paddingHorizontal: 8 }}>
-            <HangIcon name="forward" color={colors.textSecondary} size={16} strokeWidth={2.2} />
-          </View>
-        )
       )}
     </View>
   );
