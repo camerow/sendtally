@@ -18,9 +18,6 @@ jest.mock("expo-router", () => ({
   router: { push: jest.fn(), back: jest.fn(), replace: jest.fn() },
   useLocalSearchParams: () => ({ fingerprint: "manual-1" }),
 }));
-jest.mock("react-native-safe-area-context", () => ({
-  SafeAreaView: ({ children }: { children: React.ReactNode }) => children,
-}));
 jest.mock("../../lib/api", () => ({ useApi: () => mockApi }));
 jest.mock("../../components/Sheet", () => ({
   Sheet: ({ visible, children }: { visible: boolean; children: React.ReactNode }) =>

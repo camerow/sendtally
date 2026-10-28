@@ -3,11 +3,6 @@ import React from "react";
 import { fireEvent, render, screen } from "@testing-library/react-native";
 import { TimeField } from "./TimeField";
 
-jest.mock(
-  "react-native-safe-area-context",
-  () => jest.requireActual<{ default: unknown }>("react-native-safe-area-context/jest/mock").default
-);
-
 async function press(...keys: string[]): Promise<void> {
   for (const key of keys) await fireEvent.press(screen.getByLabelText(key));
 }

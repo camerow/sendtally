@@ -7,9 +7,6 @@ import { ClimbDetailScreen } from "./ClimbDetailScreen";
 const mockAddNote = jest.fn(async (_day: string, _note: string) => {});
 
 jest.mock("expo-router", () => ({ router: { push: jest.fn(), replace: jest.fn() } }));
-jest.mock("react-native-safe-area-context", () => ({
-  SafeAreaView: ({ children }: { children: React.ReactNode }) => children,
-}));
 jest.mock("../../lib/api", () => ({ useApi: () => undefined }));
 jest.mock("../../components/BackButton", () => ({ BackButton: () => null }));
 jest.mock("../../components/Sheet", () => ({

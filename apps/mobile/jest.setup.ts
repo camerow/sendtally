@@ -5,6 +5,10 @@ import type * as MockReactNative from "react-native";
 
 jest.mock("react-native-worklets", () => jest.requireActual("react-native-worklets/src/mock"));
 jest.mock("react-native-reanimated", () => jest.requireActual("react-native-reanimated/mock"));
+jest.mock(
+  "react-native-safe-area-context",
+  () => jest.requireActual<{ default: unknown }>("react-native-safe-area-context/jest/mock").default
+);
 // The library's mock answers useBottomSheetInternal everywhere; this one answers only inside a
 // sheet, as the real library does, and keeps the sheet's own input a type of its own.
 type MockSheet = new (...args: never[]) => MockReact.Component;

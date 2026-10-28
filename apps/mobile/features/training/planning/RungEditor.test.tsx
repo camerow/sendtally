@@ -4,11 +4,6 @@ import React from "react";
 import { setLocale } from "@sendtally/features/i18n";
 import { RungEditor } from "./RungEditor";
 
-jest.mock(
-  "react-native-safe-area-context",
-  () => jest.requireActual<{ default: unknown }>("react-native-safe-area-context/jest/mock").default
-);
-
 const wallTime = { exercise: "Circuit", dose: { sets: 1, onS: 1200, offS: 60 } };
 
 async function renderWeek(onChange: (change: object) => void): Promise<void> {
