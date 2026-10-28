@@ -1,4 +1,4 @@
-import type { SetDone } from "./plan";
+import type { SetDone, WorkoutKind } from "./plan";
 
 /** What an exercise's sets ask for, and the unit its trend uses. */
 export const EXERCISE_MEASURES = [
@@ -16,8 +16,18 @@ export const EXERCISE_KINDS = ["climbing", "strength", "mobility", "other"] as c
 
 export type ExerciseKind = (typeof EXERCISE_KINDS)[number];
 
+/**
+ * What a climbing exercise can be measured in: climbs per set, or time on the wall per set,
+ * both logged on the session tally. Rounds stays readable on climbing exercises logged in it.
+ */
+export const CLIMBING_MEASURES = ["reps", "seconds"] as const satisfies readonly ExerciseMeasure[];
+
+/** The measures a new or edited exercise of a category offers. */
+export const measuresFor = (kind: WorkoutKind): readonly ExerciseMeasure[] =>
+  kind === "climbing" ? CLIMBING_MEASURES : EXERCISE_MEASURES;
+
 const DEFAULT_MEASURE: Record<ExerciseKind, ExerciseMeasure> = {
-  climbing: "rounds",
+  climbing: "reps",
   strength: "repsWeight",
   mobility: "seconds",
   other: "rounds",
@@ -27,11 +37,11 @@ export const defaultMeasure = (kind: ExerciseKind): ExerciseMeasure => DEFAULT_M
 
 /**
  * The measure sets were logged or written in: weight with time or reps, time, then reps,
- * as the backfill migration reads them. Time in an Other or Climbing exercise is rounds.
+ * as the backfill migration reads them. Time in an Other exercise is rounds.
  */
 export function measureOf(kind: ExerciseKind, sets: readonly SetDone[]): ExerciseMeasure {
   const has = (field: keyof SetDone): boolean => sets.some((s) => s[field] !== undefined);
   if (has("weightKg")) return has("onS") ? "secondsWeight" : "repsWeight";
-  if (has("onS")) return DEFAULT_MEASURE[kind] === "rounds" ? "rounds" : "seconds";
+  if (has("onS")) return kind === "other" ? "rounds" : "seconds";
   return has("reps") ? "reps" : DEFAULT_MEASURE[kind];
 }

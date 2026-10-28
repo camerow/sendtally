@@ -2,7 +2,8 @@ import { z } from "zod";
 import { calendarDate, doneBody, doneOf, id, minutes, planLinkShape, rpe, title } from "./plan";
 import type { ActivityRow } from "./repo";
 
-export const ACTIVITY_KINDS = ["strength", "mobility", "other"] as const;
+// A climbing workout logs here too: its climbs ride in its sets, never as a session.
+export const ACTIVITY_KINDS = ["climbing", "strength", "mobility", "other"] as const;
 
 export type ActivityKind = (typeof ACTIVITY_KINDS)[number];
 

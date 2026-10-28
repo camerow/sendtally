@@ -1,4 +1,6 @@
 import { addDays, daysBetween, weekday } from "./calendar";
+import type { ClimbStyle } from "../effort";
+import type { GradeScale } from "../grades";
 import type { Intervals } from "./intervals";
 import { SECONDS_PER_LIFT, totalSeconds } from "./protocol";
 import type { CalendarDate, HangKind, Protocol, TimeUnit, TimeUnits, Weekday } from "./types";
@@ -47,8 +49,22 @@ export const DOSE_FIELDS = [
   "setRestS",
 ] as const satisfies readonly (keyof Dose)[];
 
-/** One set as it was done. */
-export type SetDone = Omit<Dose, "sets" | "name">;
+/**
+ * A climb logged on the session tally inside a set: its grade or circuit, how many goes
+ * it took, and whether it went. A circuit's colour is one of the gym circuit colours.
+ */
+export type SetClimb = {
+  grade: string;
+  scale: GradeScale;
+  tries: number;
+  sent: boolean;
+  style?: ClimbStyle;
+  circuit?: { id: string; label: string; colour: string };
+  name?: string;
+};
+
+/** One set as it was done. A climbing exercise's set holds the climbs logged in it. */
+export type SetDone = Omit<Dose, "sets" | "name"> & { climbs?: SetClimb[] };
 
 /**
  * One exercise of a workout. One dose is the same every session; with more, sessions

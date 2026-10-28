@@ -144,7 +144,24 @@ export const weekChangeBody = z.object({
   change: dose.partial(),
 });
 
-const setDone = dose.omit({ sets: true });
+// A climb logged on the session tally, in the set it was climbed in.
+const setClimb = z.object({
+  grade: z.string().max(12),
+  scale: z.enum(["v", "font", "yds", "french"]),
+  tries: z.number().int().min(1).max(99),
+  sent: z.boolean(),
+  style: z.enum(["redpoint", "flash", "onsight"]).optional(),
+  circuit: z
+    .object({
+      id: z.string().min(1).max(40),
+      label: z.string().max(40),
+      colour: z.string().min(1).max(20),
+    })
+    .optional(),
+  name: z.string().trim().max(200).optional(),
+});
+
+const setDone = dose.omit({ sets: true }).extend({ climbs: z.array(setClimb).max(100).optional() });
 
 /** What a session did, per item of what it ran. */
 export const doneBody = z

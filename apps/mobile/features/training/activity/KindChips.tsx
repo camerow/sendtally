@@ -9,11 +9,11 @@ import { type } from "../type";
 
 export type KindChipsProps = { value: ActivityKind; onChange: (kind: ActivityKind) => void };
 
-/** One chip per kind, each with the mark it wears in the statistics. */
+/** One chip per kind, each with the mark it wears in the statistics. Climbing is logged as a session. */
 export function KindChips({ value, onChange }: KindChipsProps): React.ReactElement {
   return (
     <View accessibilityRole="radiogroup" style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-      {ACTIVITY_KINDS.map((kind) => {
+      {ACTIVITY_KINDS.filter((k) => k !== "climbing").map((kind) => {
         const on = kind === value;
         return (
           <Pressable

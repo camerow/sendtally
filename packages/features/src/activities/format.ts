@@ -5,6 +5,7 @@ import { durationLabel } from "../sessions/years";
 import { doneSummary } from "./done";
 
 export const ACTIVITY_KINDS = [
+  "climbing",
   "strength",
   "mobility",
   "other",

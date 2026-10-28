@@ -155,6 +155,7 @@ describe("activities", () => {
     const userId = "user_activity_invalid";
     for (const body of [
       { ...activityBody, kind: "climb" },
+      { ...activityBody, kind: "hangboard" },
       { ...activityBody, kind: "run" },
       { ...activityBody, rpe: 11 },
       { ...activityBody, date: "2026-02-30" },
@@ -166,6 +167,52 @@ describe("activities", () => {
     ]) {
       expect((await call(userId, "PUT", "/v1/activities/a1", body)).status).toBe(400);
     }
+  });
+
+  it("keeps a climbing workout's climbs in its sets", async () => {
+    const userId = "user_activity_climbs";
+    const done = [
+      {
+        item: 0,
+        exercise: "4x4s",
+        sets: [
+          {
+            climbs: [
+              { grade: "V4", scale: "v", tries: 1, sent: true, style: "flash" },
+              { grade: "V3", scale: "v", tries: 2, sent: false },
+            ],
+          },
+        ],
+      },
+      {
+        item: 1,
+        exercise: "ARC",
+        sets: [
+          {
+            onS: 1200,
+            climbs: [
+              {
+                grade: "",
+                scale: "v",
+                tries: 1,
+                sent: true,
+                circuit: { id: "c1", label: "Green", colour: "green" },
+              },
+            ],
+          },
+        ],
+      },
+    ];
+    const body = { ...activityBody, kind: "climbing", done };
+    const res = await call(userId, "PUT", "/v1/activities/a1", body);
+    expect((await json<{ activity: Activity }>(res)).activity.done).toEqual(done);
+    const bad = done.map((d) => ({
+      ...d,
+      sets: [{ climbs: [{ grade: "V4", scale: "v", tries: 0, sent: true }] }],
+    }));
+    expect((await call(userId, "PUT", "/v1/activities/a2", { ...body, done: bad })).status).toBe(
+      400
+    );
   });
 
   it("deletes only the caller's own activity", async () => {
@@ -630,7 +677,7 @@ describe("exercises", () => {
       exercise: { measure: "seconds", eachSide: true, builtIn: "pigeon" },
     });
     const climb = await call(userId, "PUT", "/v1/exercises/e2", { name: "4x4", kind: "climbing" });
-    expect(await json(climb)).toMatchObject({ exercise: { kind: "climbing", measure: "rounds" } });
+    expect(await json(climb)).toMatchObject({ exercise: { kind: "climbing", measure: "reps" } });
     const renamed = await call(userId, "PUT", "/v1/exercises/e1", {
       name: "Pigeon pose",
       kind: "mobility",
@@ -864,5 +911,55 @@ describe("activity strava posting", () => {
       }
     );
     expect(res.status).toBe(409);
+  });
+});
+
+// A one-shot data move, exercised against the same SQL the migration applies.
+describe("climbing measures backfill", () => {
+  const backfill = async (): Promise<void> => {
+    const sql = await import("../migrations/0051_climbing_tally_measures.sql?raw");
+    await env.DB.prepare(sql.default).run();
+  };
+
+  const seedExercise = (
+    id: string,
+    name: string,
+    kind: string,
+    measure: string,
+    builtIn: string | null
+  ) =>
+    env.DB.prepare(
+      `INSERT INTO exercises (user_id, id, name, name_key, kind, measure, built_in, created_at, updated_at)
+       VALUES ('u_measures', ?, ?, lower(?), ?, ?, ?, '', '')`
+    )
+      .bind(id, name, name, kind, measure, builtIn)
+      .run();
+
+  it("moves unlogged climbing exercises onto climbs or time on the wall", async () => {
+    await env.DB.prepare(
+      `INSERT OR IGNORE INTO users (id, timezone, created_at) VALUES ('u_measures', 'UTC', '')`
+    ).run();
+    await seedExercise("e1", "4x4s", "climbing", "rounds", "fourByFours");
+    await seedExercise("e2", "ARC", "climbing", "rounds", "arc");
+    await seedExercise("e3", "Logged laps", "climbing", "rounds", null);
+    await seedExercise("e4", "Plank", "other", "rounds", null);
+    await env.DB.prepare(
+      `INSERT INTO activities (user_id, id, kind, title, date, minutes, done_json, created_at, updated_at)
+       VALUES ('u_measures', 'a1', 'other', 'Laps', '2026-10-01', 30, ?, '', '')`
+    )
+      .bind(JSON.stringify([{ item: 0, exercise: "Logged laps", sets: [{ onS: 240 }] }]))
+      .run();
+
+    await backfill();
+
+    const rows = await env.DB.prepare(
+      `SELECT id, measure FROM exercises WHERE user_id = 'u_measures' ORDER BY id`
+    ).all<{ id: string; measure: string }>();
+    expect(rows.results).toEqual([
+      { id: "e1", measure: "reps" },
+      { id: "e2", measure: "seconds" },
+      { id: "e3", measure: "rounds" },
+      { id: "e4", measure: "rounds" },
+    ]);
   });
 });

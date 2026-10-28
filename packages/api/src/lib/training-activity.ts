@@ -1,18 +1,35 @@
-import { toUnit, type ItemDone, type SetDone, type WeightUnit } from "@sendtally/core/hang";
+import {
+  toUnit,
+  type ItemDone,
+  type SetClimb,
+  type SetDone,
+  type WeightUnit,
+} from "@sendtally/core/hang";
 import type { Activity, ActivityKind } from "./activities";
 import type { StravaActivity, StravaSportType } from "./strava";
 
 const SPORT_TYPES: Record<ActivityKind, StravaSportType> = {
+  climbing: "RockClimbing",
   strength: "WeightTraining",
   mobility: "Workout",
   other: "Workout",
 };
 
-/** "5×100 kg", "30s", leaving out what the set does not have. */
+/** "4 climbs, 3 sent" for a set logged on the tally. */
+const climbsLine = (climbs: readonly SetClimb[]): string =>
+  `${climbs.length} climbs, ${climbs.filter((c) => c.sent).length} sent`;
+
+/** "5×100 kg", "30s", "4 climbs, 3 sent", leaving out what the set does not have. */
 function setLine(set: SetDone, unit: WeightUnit): string {
   const load = set.weightKg === undefined ? undefined : `${toUnit(set.weightKg, unit)} ${unit}`;
   const work = [set.reps, load].filter((p) => p !== undefined).join("×");
-  return [work, set.onS === undefined ? "" : `${set.onS}s`].filter((p) => p !== "").join(" ");
+  return [
+    work,
+    set.onS === undefined ? "" : `${set.onS}s`,
+    set.climbs === undefined ? "" : climbsLine(set.climbs),
+  ]
+    .filter((p) => p !== "")
+    .join(" ");
 }
 
 /** Each item with the sets done, or ticked when its sets carry no numbers. */
