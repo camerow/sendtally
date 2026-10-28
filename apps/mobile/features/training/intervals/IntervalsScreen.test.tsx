@@ -1,7 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals";
-import { act, fireEvent, render, screen } from "@testing-library/react-native";
+import { act, fireEvent, screen } from "@testing-library/react-native";
 import { router } from "expo-router";
 import React from "react";
+import { renderWithHang } from "../data/renderWithHang";
 import type { IntervalsRun } from "./intervalsParams";
 import { IntervalsScreen } from "./IntervalsScreen";
 
@@ -59,7 +60,7 @@ describe("Intervals player", () => {
   });
 
   it("plays each side, waits for a counted step, and saves what was done", async () => {
-    await render(<IntervalsScreen workout={workout} />);
+    await renderWithHang(<IntervalsScreen workout={workout} />);
     expect(screen.getByText("Get ready")).toBeTruthy();
     expect(screen.getByText("0:45 · each side")).toBeTruthy();
 

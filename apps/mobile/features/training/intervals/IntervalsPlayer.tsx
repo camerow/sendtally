@@ -17,6 +17,7 @@ import type { IntervalsRun } from "./intervalsParams";
 import { stepText, upNext } from "./intervalsText";
 import { StepCard } from "./StepCard";
 import { UpNext } from "./UpNext";
+import { useRunWorkout } from "../library/useLibrary";
 
 export type IntervalsPlayerProps = {
   workout: IntervalsRun;
@@ -31,6 +32,7 @@ export function IntervalsPlayer({
   onFinish,
 }: IntervalsPlayerProps): React.ReactElement {
   const { body } = workout;
+  const targetRpe = useRunWorkout(workout.workoutId)?.targetRpe;
   const timer = useTimer((now) => startIntervalsRun(body, now));
   const { run, secondsLeft } = timer;
   const phase = currentPhase(run);
@@ -56,7 +58,11 @@ export function IntervalsPlayer({
     <TimerFrame
       timer={timer}
       name={workout.title}
-      meta={`${kindLabel(workout.kind)} · ${t("activities.roundOf", { round: phase.set, rounds: body.rounds })}`}
+      meta={[
+        kindLabel(workout.kind),
+        t("activities.roundOf", { round: phase.set, rounds: body.rounds }),
+        ...(targetRpe == null ? [] : [t("plan.targetValue", { n: targetRpe })]),
+      ].join(" · ")}
       controls={{
         color: look.fill,
         primary: primaryLabel,

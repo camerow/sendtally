@@ -54,7 +54,12 @@ export function SetsScreen({ run }: { run: WorkoutRun }): React.ReactElement {
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={{ gap: 12, paddingHorizontal: 18, paddingBottom: 24 }}
         >
-          <PlayerHeader kind={run.kind} title={run.title} minutes={run.minutes} />
+          <PlayerHeader
+            kind={run.kind}
+            title={run.title}
+            minutes={run.minutes}
+            workoutId={run.workoutId}
+          />
           {run.items.map((item, i) => {
             const d = shown[i];
             return d === undefined ? null : (

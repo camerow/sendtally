@@ -33,7 +33,12 @@ export function ChecklistScreen({ run }: { run: WorkoutRun }): React.ReactElemen
   return (
     <SafeAreaView edges={["top", "bottom"]} style={{ flex: 1, backgroundColor: colors.white }}>
       <ScrollView contentContainerStyle={{ flexGrow: 1, gap: 16, paddingHorizontal: 18 }}>
-        <PlayerHeader kind={run.kind} title={run.title} minutes={run.minutes} />
+        <PlayerHeader
+          kind={run.kind}
+          title={run.title}
+          minutes={run.minutes}
+          workoutId={run.workoutId}
+        />
         <View>
           {run.items.map((item, i) => (
             <ChecklistRow

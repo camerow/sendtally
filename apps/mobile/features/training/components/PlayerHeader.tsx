@@ -7,15 +7,22 @@ import { BackButton } from "../../../components/BackButton";
 import { KIND_LOOK } from "../today/kindLook";
 import { Label } from "./Label";
 import { Title } from "./Title";
+import { WorkoutNotes } from "./WorkoutNotes";
 
 export type PlayerHeaderProps = {
   kind: ActivityKind;
   title: string;
   minutes: number | null;
+  workoutId: string;
 };
 
-/** Back, the workout's kind and length, and its name: the top of the sets and checklist players. */
-export function PlayerHeader({ kind, title, minutes }: PlayerHeaderProps): React.ReactElement {
+/** Back, the workout's kind and length, its name and notes: the top of the sets and checklist players. */
+export function PlayerHeader({
+  kind,
+  title,
+  minutes,
+  workoutId,
+}: PlayerHeaderProps): React.ReactElement {
   return (
     <View style={{ gap: 8 }}>
       <BackButton />
@@ -26,6 +33,7 @@ export function PlayerHeader({ kind, title, minutes }: PlayerHeaderProps): React
             .join(" · ")}
         </Label>
         <Title size={32}>{title}</Title>
+        <WorkoutNotes workoutId={workoutId} />
       </View>
     </View>
   );

@@ -1,7 +1,8 @@
 import { describe, expect, it, jest } from "@jest/globals";
-import { fireEvent, render, screen } from "@testing-library/react-native";
+import { fireEvent, screen } from "@testing-library/react-native";
 import { router } from "expo-router";
 import React from "react";
+import { renderWithHang } from "../data/renderWithHang";
 import type { WorkoutRun } from "../data/workoutRunParams";
 import { ChecklistScreen } from "./ChecklistScreen";
 
@@ -27,7 +28,7 @@ const run: WorkoutRun = {
 
 describe("Checklist player", () => {
   it("ticks lines off and hands the ticked ones to the activity form", async () => {
-    await render(<ChecklistScreen run={run} />);
+    await renderWithHang(<ChecklistScreen run={run} />);
     expect(screen.getByText("Mobility · 12m")).toBeTruthy();
     const catCow = screen.getByLabelText("Cat-cow, 2 sets");
     await fireEvent.press(catCow);

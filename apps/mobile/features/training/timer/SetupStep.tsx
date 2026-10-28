@@ -8,6 +8,7 @@ import { BackButton } from "../../../components/BackButton";
 import { Button } from "../components/Button";
 import { Label } from "../components/Label";
 import { Title } from "../components/Title";
+import { WorkoutNotes } from "../components/WorkoutNotes";
 import { useHangData } from "../data/HangDataContext";
 import { SetupFields } from "../setup/SetupFields";
 
@@ -16,12 +17,18 @@ export type SetupEntry = { gripId: string; kind: HangKind; initial: HangSetup };
 
 export type SetupStepProps = {
   name: string;
+  workoutId: string;
   entries: readonly SetupEntry[];
   onStart: (setups: HangSetup[]) => void;
 };
 
 /** The edge and weight for each item of this run, checked before the clock starts. */
-export function SetupStep({ name, entries, onStart }: SetupStepProps): React.ReactElement {
+export function SetupStep({
+  name,
+  workoutId,
+  entries,
+  onStart,
+}: SetupStepProps): React.ReactElement {
   const { model } = useHangData();
   const [setups, setSetups] = React.useState(() => entries.map((e) => e.initial));
   const grips = entries.map((e) => model.gripName(e.gripId));
@@ -48,6 +55,7 @@ export function SetupStep({ name, entries, onStart }: SetupStepProps): React.Rea
               {t("hang.setupKicker", { grip: grips.join(" · ") })}
             </Label>
             <Title size={34}>{name}</Title>
+            <WorkoutNotes workoutId={workoutId} />
           </View>
           {entries.map((e, i) => (
             <View key={i} style={{ gap: 12 }}>

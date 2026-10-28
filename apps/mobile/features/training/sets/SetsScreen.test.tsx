@@ -1,7 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals";
-import { act, fireEvent, render, screen } from "@testing-library/react-native";
+import { act, fireEvent, screen } from "@testing-library/react-native";
 import { router } from "expo-router";
 import React from "react";
+import { hangData, renderWithHang } from "../data/renderWithHang";
 import type { WorkoutRun } from "../data/workoutRunParams";
 import { SetsScreen } from "./SetsScreen";
 
@@ -55,8 +56,25 @@ describe("Sets player", () => {
   });
 
   it("ticks sets without a rest clock and hands what was done to the activity form", async () => {
-    await render(<SetsScreen run={run} />);
+    await renderWithHang(<SetsScreen run={run} />, hangData(), {
+      workouts: [
+        {
+          id: "w1",
+          kind: "strength",
+          name: "Lower body A",
+          description: "Heavy squats, then rows.",
+          minutes: 45,
+          targetRpe: 8,
+          variations: [{ label: "", items: run.items }],
+          pattern: [0],
+          exerciseRestS: 180,
+          updatedAt: "2026-10-01T00:00:00.000Z",
+        },
+      ],
+    });
     expect(screen.getByText("Strength · 45m")).toBeTruthy();
+    expect(screen.getByText("Heavy squats, then rows.")).toBeTruthy();
+    expect(screen.getByText("Target effort 8")).toBeTruthy();
     expect(screen.getAllByText("5 × 100 kg")).toHaveLength(2);
     expect(screen.getByText("30s")).toBeTruthy();
     expect(screen.getByText("Last 5 × 97.5 kg")).toBeTruthy();

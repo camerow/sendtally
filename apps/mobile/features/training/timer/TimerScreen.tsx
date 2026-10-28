@@ -141,6 +141,7 @@ export function TimerScreen({
   return setups === null ? (
     <SetupStep
       name={planned.items[0].workout.name}
+      workoutId={workoutId}
       entries={planned.items.map(({ workout, dose }, i) => {
         const grip = i === 0 ? gripId : workout.grip;
         return { gripId: grip, kind: workout.kind, initial: model.setup(workout, grip, dose) };
