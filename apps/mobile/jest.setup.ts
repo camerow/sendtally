@@ -1,4 +1,5 @@
 import { jest } from "@jest/globals";
+import { timeoutManager } from "@tanstack/react-query";
 import type * as MockReact from "react";
 import type * as MockReactNative from "react-native";
 
@@ -59,3 +60,16 @@ jest.mock("@clerk/clerk-expo", () => ({
   useUser: () => ({ isLoaded: true, user: null }),
   useClerk: () => ({ signOut: () => Promise.resolve() }),
 }));
+// A query unmounted waits out its gcTime, five minutes for a climb search, before it goes; a
+// timer that long kept a lone test file's run open. Unreferenced, it still fires but holds nothing.
+type Unreferenced = { unref?: () => void };
+timeoutManager.setTimeoutProvider({
+  setTimeout: (callback, delay) => {
+    const id = setTimeout(callback, delay);
+    (id as Unreferenced).unref?.();
+    return id;
+  },
+  clearTimeout: (id) => clearTimeout(id),
+  setInterval: (callback, delay) => setInterval(callback, delay),
+  clearInterval: (id) => clearInterval(id),
+});
