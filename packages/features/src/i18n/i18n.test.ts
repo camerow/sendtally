@@ -1,5 +1,13 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { formatNumber, LOCALES, resolveLocale, setLocale, t, type Locale } from "./index";
+import {
+  formatNumber,
+  LOCALES,
+  resolveLocale,
+  setLocale,
+  t,
+  ungrouped,
+  type Locale,
+} from "./index";
 import { de } from "./locales/de";
 import { en } from "./locales/en";
 import { es } from "./locales/es";
@@ -41,6 +49,21 @@ describe("t", () => {
   it("formats numbers per locale", () => {
     setLocale("de");
     expect(formatNumber(4.5)).toBe("4,5");
+  });
+
+  it.each([
+    ["en", "1,200", "1200"],
+    ["en", "2.5", "2.5"],
+    ["en", "-7.5", "-7.5"],
+    ["de", "1.200", "1200"],
+    ["de", "1.234,5", "1234,5"],
+    ["de", "2.5", "2.5"],
+    ["fr", "1\u202f200", "1200"],
+    ["en", "1:30", "1:30"],
+    ["en", "", ""],
+  ] as const)("ungroups %s %j to %j", (locale, text, expected) => {
+    setLocale(locale);
+    expect(ungrouped(text)).toBe(expected);
   });
 });
 
