@@ -1,20 +1,21 @@
 import { randomUUID } from "expo-crypto";
 import { router } from "expo-router";
 import React from "react";
-import { TextInput, View } from "react-native";
+import { Text, TextInput, View } from "react-native";
 import type { Block } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { formatNumber, t } from "@sendtally/features/i18n";
 import { usePlan } from "@sendtally/features/training";
 import { useApi } from "../../../lib/api";
+import { confirmDestructive } from "../../../lib/confirmDestructive";
 import { Button } from "../components/Button";
 import { Label } from "../components/Label";
 import { SheetSection } from "../components/SheetSection";
 import { Stepper } from "../components/Stepper";
-import { Title } from "../components/Title";
 import { useHangData } from "../data/HangDataContext";
 import { usePlanActions } from "../plan/usePlanActions";
 import { type } from "../type";
+import { BlockWorkouts } from "./BlockWorkouts";
 import { ScreenFrame } from "./ScreenFrame";
 import { StartField } from "./StartField";
 
@@ -25,10 +26,15 @@ const clampWeeks = (n: number): number => Math.min(MAX_WEEKS, Math.max(1, Math.r
 export type BlockFormProps = {
   /** The block as it is, or a new one's starting values with an empty id. */
   initial: Block;
+  /** A plan just added, lit for a moment. */
+  highlight?: string;
 };
 
-/** A block's name, first day and number of weeks. A new one opens on its own screen once saved. */
-export function BlockForm({ initial }: BlockFormProps): React.ReactElement {
+/**
+ * A block's name, first day and number of weeks, saved on Save, and its workouts, which save
+ * as they change. A new one opens on its own screen once saved.
+ */
+export function BlockForm({ initial, highlight }: BlockFormProps): React.ReactElement {
   const { today } = useHangData();
   const plan = usePlan(useApi()).state;
   const actions = usePlanActions();
@@ -49,19 +55,51 @@ export function BlockForm({ initial }: BlockFormProps): React.ReactElement {
     else router.back();
   };
 
+  const remove = (): void =>
+    confirmDestructive({
+      title: t("plan.deleteBlockTitle", { name: initial.name }),
+      body: t("plan.deleteBlockBody"),
+      action: t("common.delete"),
+      onConfirm: () => {
+        router.dismiss(2);
+        void actions.deleteBlock(initial.id);
+      },
+    });
+
   return (
     <ScreenFrame
-      action={
-        <Button
-          label={t("hang.save")}
-          onPress={save}
-          disabled={name === ""}
-          variant="primary"
-          height={44}
-        />
+      header={
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+            paddingHorizontal: 8,
+            paddingVertical: 4,
+          }}
+        >
+          <Button
+            label={t("hang.cancel")}
+            onPress={() => router.back()}
+            variant="link"
+            height={44}
+          />
+          <Text
+            accessibilityRole="header"
+            style={[type.bodyBold, { fontSize: 15, color: colors.gunmetal }]}
+          >
+            {isNew ? t("plan.newBlock") : t("plan.editBlock")}
+          </Text>
+          <Button
+            label={t("hang.save")}
+            onPress={save}
+            disabled={name === ""}
+            variant="link"
+            height={44}
+          />
+        </View>
       }
     >
-      <Title size={34}>{isNew ? t("plan.newBlock") : t("plan.editBlock")}</Title>
       <View style={{ gap: 6 }}>
         <Label small color={colors.textSecondary}>
           {t("hang.name")}
@@ -107,6 +145,12 @@ export function BlockForm({ initial }: BlockFormProps): React.ReactElement {
           keyboard="number-pad"
         />
       </SheetSection>
+      {!isNew && (
+        <>
+          <BlockWorkouts block={initial} highlight={highlight} />
+          <Button label={t("plan.deleteBlock")} onPress={remove} variant="danger" height={50} />
+        </>
+      )}
     </ScreenFrame>
   );
 }

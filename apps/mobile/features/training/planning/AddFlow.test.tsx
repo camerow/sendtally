@@ -217,6 +217,20 @@ describe("adding to the plan", () => {
     });
   });
 
+  it("goes back to the block's editor when the add started there", async () => {
+    await renderWithHang(
+      <ScheduleScreen workoutId="legs" flow={{ date: null, blockId: "b1", editing: true }} />,
+      hangData(),
+      { workouts: [legs], plan: winter }
+    );
+    await fireEvent.press(screen.getByLabelText("Tuesday"));
+    await fireEvent.press(screen.getByText("Add every Tue"));
+    expect(router.dismissTo).toHaveBeenCalledWith({
+      pathname: "/plan/block/edit",
+      params: { id: "b1", highlight: "m-new" },
+    });
+  });
+
   it("saves a one-off per picked date", async () => {
     await renderWithHang(<ScheduleScreen workoutId="legs" flow={flow} />, hangData(), {
       workouts: [legs],

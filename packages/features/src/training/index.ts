@@ -38,7 +38,6 @@ export {
   type WorkoutLookup,
 } from "./plan";
 export {
-  movedTo,
   newSchedule,
   scheduledMemberships,
   scheduleReady,

@@ -71,18 +71,3 @@ export function scheduledMemberships(
     .sort(ascending)
     .map((date) => ({ id: newId(), workoutId, blockId, weekdays: [], start: date }));
 }
-
-/**
- * The plan moved into a block, starting with it, or out of its block, running on from
- * today or the block's start, whichever is later. A one-off keeps its date.
- */
-export function movedTo(
-  m: Membership,
-  block: Block | null,
-  from: Block | null,
-  today: CalendarDate
-): Membership {
-  if (m.weekdays.length === 0) return { ...m, blockId: block?.id ?? null };
-  if (block !== null) return { ...m, blockId: block.id, start: block.start };
-  return { ...m, blockId: null, start: from === null ? m.start : maxDate(today, from.start) };
-}

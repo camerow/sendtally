@@ -8,16 +8,17 @@ import {
 import { shortDate } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 
-/** Where an add started: a day to schedule on, a block to add to. */
-export type AddFlow = { date: CalendarDate | null; blockId: string | null };
+/** Where an add started: a day to schedule on, a block to add to, from its editor or not. */
+export type AddFlow = { date: CalendarDate | null; blockId: string | null; editing?: boolean };
 
-export type RawAddParams = { date?: string; blockId?: string; kind?: string };
+export type RawAddParams = { date?: string; blockId?: string; kind?: string; editing?: string };
 
 /** The add flow a route was opened with, ignoring what is not a real date. */
 export function addFlowOf(p: RawAddParams): AddFlow {
   return {
     date: p.date !== undefined && isCalendarDate(p.date) ? p.date : null,
     blockId: p.blockId === undefined || p.blockId === "" ? null : p.blockId,
+    ...(p.editing === "1" && { editing: true }),
   };
 }
 
@@ -26,6 +27,7 @@ export function addFlowParams(flow: AddFlow): RawAddParams {
   return {
     ...(flow.date === null ? {} : { date: flow.date }),
     ...(flow.blockId === null ? {} : { blockId: flow.blockId }),
+    ...(flow.editing === true && { editing: "1" }),
   };
 }
 

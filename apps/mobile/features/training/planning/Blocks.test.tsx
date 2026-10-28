@@ -27,7 +27,7 @@ jest.mock("../../../components/Sheet", () => ({
     visible ? children : null,
 }));
 jest.mock("expo-router", () => ({
-  router: { push: jest.fn(), back: jest.fn(), replace: jest.fn() },
+  router: { push: jest.fn(), back: jest.fn(), replace: jest.fn(), dismiss: jest.fn() },
 }));
 jest.mock("expo-crypto", () => ({ randomUUID: () => "b-new" }));
 
@@ -77,21 +77,80 @@ describe("blocks", () => {
     });
   });
 
-  it("adds to the block, and moves a plan outside it in", async () => {
-    await renderWithHang(<BlockScreen id="b1" />, hangData(), { workouts: [squat], plan });
+  it("edits a block's workouts in place, saving the rest on Save", async () => {
+    const alert = jest.spyOn(Alert, "alert").mockImplementation(() => undefined);
+    await renderWithHang(<BlockFormScreen id="b1" />, hangData(), { workouts: [squat], plan });
+    expect(screen.getByText("Edit block")).toBeTruthy();
+    expect(screen.getByText("Workout changes save as you make them.")).toBeTruthy();
+    await fireEvent.press(screen.getByText("Back squat"));
+    expect(router.push).toHaveBeenCalledWith({
+      pathname: "/plan/membership/[id]",
+      params: { id: "m1" },
+    });
+    await fireEvent.press(screen.getByLabelText("Remove Back squat from your plan"));
+    const buttons = alert.mock.calls[0]?.[2] as AlertButton[];
+    buttons.find((b) => b.style === "destructive")?.onPress?.();
+    expect(mockPlan.deleteMembership).toHaveBeenCalledWith("m1");
+    expect(mockPlan.saveBlock).not.toHaveBeenCalled();
+    await fireEvent.changeText(screen.getByLabelText("Name"), "Winter power");
+    await fireEvent.press(screen.getByText("Save"));
+    expect(mockPlan.saveBlock).toHaveBeenCalledWith(
+      expect.objectContaining({ id: "b1", name: "Winter power" })
+    );
+    expect(router.back).toHaveBeenCalled();
+  });
+
+  it("adds a workout from the editor and comes back to it", async () => {
+    await renderWithHang(<BlockFormScreen id="b1" />, hangData(), { workouts: [squat], plan });
     await fireEvent.press(screen.getByText("Add a workout"));
     await fireEvent.press(screen.getByText("Strength"));
     expect(router.push).toHaveBeenCalledWith({
       pathname: "/plan/add",
-      params: { blockId: "b1", kind: "strength" },
+      params: { blockId: "b1", editing: "1", kind: "strength" },
     });
-    await fireEvent.press(screen.getByLabelText("Move Back squat into this block"));
-    expect(mockPlan.saveMembership).toHaveBeenCalledWith({
-      id: "m2",
-      workoutId: "squat",
-      blockId: "b1",
-      weekdays: [2],
-      start: "2026-10-05",
+  });
+
+  it("deletes the block from its editor, once confirmed, leaving both screens", async () => {
+    const alert = jest.spyOn(Alert, "alert").mockImplementation(() => undefined);
+    await renderWithHang(<BlockFormScreen id="b1" />, hangData(), { workouts: [squat], plan });
+    await fireEvent.press(screen.getByText("Delete block"));
+    const buttons = alert.mock.calls[0]?.[2] as AlertButton[];
+    buttons.find((b) => b.style === "destructive")?.onPress?.();
+    expect(mockPlan.deleteBlock).toHaveBeenCalledWith("b1");
+    expect(router.dismiss).toHaveBeenCalledWith(2);
+  });
+});
+
+describe("block overview", () => {
+  // Today is Tuesday 29 September, in week 2 of 4.
+  const running: Plan = {
+    ...plan,
+    blocks: [{ id: "b1", name: "Winter base", start: "2026-09-21", weeks: 4, focus: null }],
+    memberships: [
+      { id: "m1", workoutId: "squat", blockId: "b1", weekdays: [0, 1], start: "2026-09-21" },
+    ],
+    weekChanges: [],
+  };
+
+  it("reads the running block: its weeks, how it is going and its workouts", async () => {
+    await renderWithHang(<BlockScreen id="b1" />, hangData(), { workouts: [squat], plan: running });
+    expect(screen.getByText("Mon, Sep 21 to Sun, Oct 18 · 4 weeks")).toBeTruthy();
+    expect(screen.getByText("W4")).toBeTruthy();
+    expect(screen.getByText("This week")).toBeTruthy();
+    expect(screen.getByText("So far")).toBeTruthy();
+    expect(screen.getByText("0 of 4")).toBeTruthy();
+    expect(screen.queryByText("Delete block")).toBeNull();
+    expect(screen.queryByText("Add a workout")).toBeNull();
+    expect(screen.queryByLabelText("Remove Back squat from your plan")).toBeNull();
+    await fireEvent.press(screen.getByText("Back squat"));
+    expect(router.push).toHaveBeenCalledWith({
+      pathname: "/workout/[id]",
+      params: { id: "squat" },
+    });
+    await fireEvent.press(screen.getByText("Edit"));
+    expect(router.push).toHaveBeenCalledWith({
+      pathname: "/plan/block/edit",
+      params: { id: "b1" },
     });
   });
 });
@@ -118,6 +177,21 @@ describe("plan again", () => {
     expect(router.push).toHaveBeenCalledWith({
       pathname: "/plan/block/[id]",
       params: { id: "b0" },
+    });
+  });
+
+  it("recaps a finished block: done, missed, its weeks and each workout", async () => {
+    await renderWithHang(<BlockScreen id="b0" />, hangData(), { workouts: [squat], plan: past });
+    expect(screen.getByText("Finished")).toBeTruthy();
+    expect(screen.getByText("0 of 4")).toBeTruthy();
+    expect(screen.getByText("Missed")).toBeTruthy();
+    expect(screen.getAllByText("0/1")).toHaveLength(4);
+    expect(screen.getByText("W1")).toBeTruthy();
+    expect(screen.getByText("0 of 4 done · -")).toBeTruthy();
+    await fireEvent.press(screen.getByText("Back squat"));
+    expect(router.push).toHaveBeenCalledWith({
+      pathname: "/workout/[id]",
+      params: { id: "squat" },
     });
   });
 

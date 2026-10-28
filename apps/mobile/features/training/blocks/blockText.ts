@@ -6,7 +6,8 @@ import {
   type CalendarDate,
 } from "@sendtally/core/hang";
 import { shortDate } from "@sendtally/features/hang";
-import { t } from "@sendtally/features/i18n";
+import { formatNumber, t } from "@sendtally/features/i18n";
+import type { DoneCount } from "@sendtally/features/training";
 
 /** "28 Sep to 25 Oct": first and last day, both inclusive. */
 export function blockDates(block: Pick<Block, "start" | "weeks">): string {
@@ -28,3 +29,11 @@ export function blockTag(label: string, block: Block, date: CalendarDate): strin
   const at = blockWeekOn(block, date);
   return at === null ? null : t("hang.blockWeek", { label, at, of: block.weeks });
 }
+
+/** "3 of 5". */
+export const doneOfShort = (c: DoneCount): string =>
+  t("plan.doneOfShort", { done: formatNumber(c.done), planned: formatNumber(c.planned) });
+
+/** An average effort to one place, or "-" with none. */
+export const effortText = (effort: number | null): string =>
+  effort === null ? "-" : formatNumber(Math.round(effort * 10) / 10);

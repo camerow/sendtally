@@ -8,26 +8,35 @@ export type ScreenFrameProps = {
   children: React.ReactNode;
   /** Beside the back button, top right. */
   action?: React.ReactNode;
+  /** In place of the back button and action, as an editor's Cancel and Save. */
+  header?: React.ReactNode;
   /** Pinned under the scrolling body. */
   footer?: React.ReactNode;
 };
 
 /** A full planning screen: back, a scrolling body that keeps a focused field above the keys, and a footer. */
-export function ScreenFrame({ children, action, footer }: ScreenFrameProps): React.ReactElement {
+export function ScreenFrame({
+  children,
+  action,
+  header,
+  footer,
+}: ScreenFrameProps): React.ReactElement {
   return (
     <SafeAreaView edges={["top", "bottom"]} style={{ flex: 1, backgroundColor: colors.white }}>
-      <View
-        style={{
-          flexDirection: "row",
-          justifyContent: "space-between",
-          alignItems: "center",
-          paddingHorizontal: 18,
-          paddingTop: 6,
-        }}
-      >
-        <BackButton />
-        {action}
-      </View>
+      {header ?? (
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+            paddingHorizontal: 18,
+            paddingTop: 6,
+          }}
+        >
+          <BackButton />
+          {action}
+        </View>
+      )}
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : undefined}
         style={{ flex: 1 }}

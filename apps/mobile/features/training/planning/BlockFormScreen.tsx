@@ -8,12 +8,17 @@ import { BlockForm } from "./BlockForm";
 export type BlockFormScreenProps = {
   /** The block to edit; without it a new one. */
   id?: string;
+  /** A plan just added, lit for a moment. */
+  highlight?: string;
 };
 
 const DEFAULT_WEEKS = 4;
 
 /** New block, or editing one. */
-export function BlockFormScreen({ id }: BlockFormScreenProps): React.ReactElement | null {
+export function BlockFormScreen({
+  id,
+  highlight,
+}: BlockFormScreenProps): React.ReactElement | null {
   const { today } = useHangData();
   const { state, reload } = usePlan(useApi());
   if (id === undefined)
@@ -22,5 +27,5 @@ export function BlockFormScreen({ id }: BlockFormScreenProps): React.ReactElemen
     );
   if (state.status !== "ready") return <LoadState state={state} onRetry={() => void reload()} />;
   const block = state.data.blocks.find((b) => b.id === id);
-  return block === undefined ? null : <BlockForm initial={block} />;
+  return block === undefined ? null : <BlockForm initial={block} highlight={highlight} />;
 }

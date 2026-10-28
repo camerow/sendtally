@@ -22,7 +22,6 @@ export const plan = {
   "plan.weekShort": "W{n}",
   "plan.blockEmpty":
     "Nothing in this block yet. Add hangboard workouts, climbing and the rest of the training it is for.",
-  "plan.outsideBlocks": "Outside a block",
   "plan.addToPlan": "Add to plan",
   "plan.whatKind": "What kind?",
   "plan.kindMobilityHint": "Yoga and stretching too",
@@ -53,8 +52,6 @@ export const plan = {
   "plan.deleteBlock": "Delete block",
   "plan.deleteBlockTitle": "Delete {name}?",
   "plan.deleteBlockBody": "Its plans go with it. What you logged stays.",
-  "plan.moveIn": "Move into this block",
-  "plan.moveInAria": "Move {title} into this block",
   "plan.removeFromBlock": "Remove from block",
   "plan.asWritten": "As written",
   "plan.ladderHint":

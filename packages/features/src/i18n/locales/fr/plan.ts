@@ -22,7 +22,6 @@ export const plan = {
   "plan.weekShort": "S{n}",
   "plan.blockEmpty":
     "Rien dans ce bloc pour l’instant. Ajoute la poutre, l’escalade et le reste de l’entraînement prévu.",
-  "plan.outsideBlocks": "Hors bloc",
   "plan.addToPlan": "Ajouter au plan",
   "plan.whatKind": "Quel type ?",
   "plan.kindMobilityHint": "Yoga et étirements aussi",
@@ -53,8 +52,6 @@ export const plan = {
   "plan.deleteBlock": "Supprimer le bloc",
   "plan.deleteBlockTitle": "Supprimer {name} ?",
   "plan.deleteBlockBody": "Ses plans partent avec lui. Ce que tu as enregistré reste.",
-  "plan.moveIn": "Déplacer dans ce bloc",
-  "plan.moveInAria": "Déplacer {title} dans ce bloc",
   "plan.removeFromBlock": "Retirer du bloc",
   "plan.asWritten": "Tel qu’écrit",
   "plan.ladderHint":

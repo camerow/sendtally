@@ -1,29 +1,21 @@
 import { router } from "expo-router";
 import React from "react";
 import { Text, View } from "react-native";
-import { blockEnd, blockWeekOn } from "@sendtally/core/hang";
+import { blockEnd } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
-import { blockMembers, movedTo, useTrainingLog } from "@sendtally/features/training";
+import { blockRecap, useTrainingLog } from "@sendtally/features/training";
 import { useApi } from "../../../lib/api";
 import { blockDates } from "../blocks/blockText";
 import { Button } from "../components/Button";
-import { DashedPanel } from "../components/DashedPanel";
 import { Label } from "../components/Label";
-import { PlanRow } from "../components/PlanRow";
 import { Title } from "../components/Title";
 import { useHangData } from "../data/HangDataContext";
-import { PlanRows } from "../plan/PlanRows";
-import { usePlanActions } from "../plan/usePlanActions";
-import { membershipWhen } from "../plans/planText";
-import { DayMark } from "../today/DayMark";
+import { useLit } from "../plan/useLit";
 import { type } from "../type";
-import { AddKindSheet } from "./AddKindSheet";
-import { PlanAgainSheet } from "./PlanAgainSheet";
+import { BlockOverview } from "./BlockOverview";
+import { BlockRecapView } from "./BlockRecapView";
 import { ScreenFrame } from "./ScreenFrame";
-import { confirmDestructive } from "../../../lib/confirmDestructive";
-
-const LIT_MS = 2500;
 
 export type BlockScreenProps = {
   id: string;
@@ -31,40 +23,15 @@ export type BlockScreenProps = {
   highlight?: string;
 };
 
-/** One block: its workouts, adding and moving plans in, and planning it again once over. */
+/** One block, read only: how it is going while it runs, a recap once it is over. Edit changes it. */
 export function BlockScreen({ id, highlight }: BlockScreenProps): React.ReactElement | null {
-  const [lit, setLit] = React.useState(highlight);
-  const [again, setAgain] = React.useState(false);
-  const [adding, setAdding] = React.useState(false);
-  React.useEffect(() => {
-    const timer = setTimeout(() => setLit(undefined), LIT_MS);
-    return () => clearTimeout(timer);
-  }, []);
+  const lit = useLit(highlight);
   const { today } = useHangData();
   const { log } = useTrainingLog(useApi());
-  const actions = usePlanActions();
-  const { plan, workout } = log;
-  const block = plan.blocks.find((b) => b.id === id);
+  const block = log.plan.blocks.find((b) => b.id === id);
   if (block === undefined) return null;
-  const members = blockMembers(plan, block);
-  // Weekly plans outside any block, and one-offs that fall inside this one.
-  const movable = plan.memberships.filter(
-    (m) =>
-      m.blockId === null &&
-      (m.weekdays.length > 0 || blockWeekOn(block, m.start) !== null) &&
-      workout(m.workoutId) !== undefined
-  );
-
-  const remove = (): void =>
-    confirmDestructive({
-      title: t("plan.deleteBlockTitle", { name: block.name }),
-      body: t("plan.deleteBlockBody"),
-      action: t("common.delete"),
-      onConfirm: () => {
-        router.back();
-        void actions.deleteBlock(block.id);
-      },
-    });
+  const recap = blockRecap(log, block, today);
+  const ended = blockEnd(block) <= today;
 
   return (
     <ScreenFrame
@@ -78,60 +45,17 @@ export function BlockScreen({ id, highlight }: BlockScreenProps): React.ReactEle
       }
     >
       <View style={{ gap: 4 }}>
+        {ended && <Label color={colors.fern}>{t("plan.finished")}</Label>}
         <Title size={34}>{block.name}</Title>
         <Text style={[type.mono, { fontSize: 12, color: colors.textSecondary }]}>
-          {blockDates(block)}
+          {`${blockDates(block)} · ${t("calendar.weeks", { count: block.weeks })}`}
         </Text>
       </View>
-      {members.length === 0 ? (
-        <DashedPanel body={t("plan.blockEmpty")} />
+      {ended ? (
+        <BlockRecapView recap={recap} workout={log.workout} />
       ) : (
-        <PlanRows plan={plan} members={members} workout={workout} highlight={lit} />
+        <BlockOverview recap={recap} plan={log.plan} workout={log.workout} lit={lit} />
       )}
-      <Button
-        label={t("plan.addWorkout")}
-        onPress={() => setAdding(true)}
-        variant="dashed"
-        icon="plus"
-        height={50}
-      />
-      {movable.length > 0 && (
-        <View style={{ gap: 8 }}>
-          <Label color={colors.textSecondary}>{t("plan.moveIn")}</Label>
-          {movable.map((m) => {
-            const w = workout(m.workoutId);
-            if (w === undefined) return null;
-            return (
-              <PlanRow
-                key={m.id}
-                mark={<DayMark kind={w.kind} filled />}
-                tag={t("plan.outsideBlocks")}
-                tagColor={colors.textSecondary}
-                name={w.name}
-                meta={membershipWhen(m)}
-                actionIcon="plus"
-                onRemove={() => void actions.saveMembership(movedTo(m, block, null, today))}
-                removeLabel={t("plan.moveInAria", { title: w.name })}
-              />
-            );
-          })}
-        </View>
-      )}
-      {blockEnd(block) <= today && (
-        <Button
-          label={t("plan.planAgain")}
-          onPress={() => setAgain(true)}
-          variant="outline"
-          height={50}
-        />
-      )}
-      <Button label={t("plan.deleteBlock")} onPress={remove} variant="danger" height={50} />
-      {again && <PlanAgainSheet block={block} onClose={() => setAgain(false)} />}
-      <AddKindSheet
-        flow={{ date: null, blockId: id }}
-        visible={adding}
-        onClose={() => setAdding(false)}
-      />
     </ScreenFrame>
   );
 }

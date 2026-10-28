@@ -22,7 +22,6 @@ export const plan = {
   "plan.weekShort": "S{n}",
   "plan.blockEmpty":
     "Nada en este bloque todavía. Añade multipresa, escalada y el resto del entrenamiento para el que es.",
-  "plan.outsideBlocks": "Fuera de un bloque",
   "plan.addToPlan": "Añadir al plan",
   "plan.whatKind": "¿Qué tipo?",
   "plan.kindMobilityHint": "También yoga y estiramientos",
@@ -53,8 +52,6 @@ export const plan = {
   "plan.deleteBlock": "Eliminar bloque",
   "plan.deleteBlockTitle": "¿Eliminar {name}?",
   "plan.deleteBlockBody": "Sus planes se van con él. Lo que registraste se queda.",
-  "plan.moveIn": "Mover a este bloque",
-  "plan.moveInAria": "Mover {title} a este bloque",
   "plan.removeFromBlock": "Quitar del bloque",
   "plan.asWritten": "Tal como está",
   "plan.ladderHint":
