@@ -41,8 +41,13 @@ export function KindNameField({
         accessibilityLabel={t("hang.name")}
         maxLength={maxLength}
         autoFocus={autoFocus}
-        returnKeyType={onSubmit === undefined ? undefined : "done"}
-        style={[type.display, { fontSize: 30, paddingVertical: 4, color: colors.gunmetal }]}
+        multiline
+        submitBehavior="blurAndSubmit"
+        returnKeyType="done"
+        style={[
+          type.display,
+          { fontSize: 30, lineHeight: 34, paddingVertical: 4, color: colors.gunmetal },
+        ]}
       />
     </View>
   );
