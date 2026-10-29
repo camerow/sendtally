@@ -267,6 +267,9 @@ describe("summaries", () => {
         "kg"
       )
     ).toBe("6 × 7s on / 3s off · 3 sets · 3:00 rest · 20\u00A0mm · 5 kg");
+    expect(doseSummary("hangboard", { sets: 5, reps: 1, onS: 10, edgeMm: 0 }, "kg")).toBe(
+      "10s pull · 5 sets · 0s rest"
+    );
   });
 
   it("reads a one-sided hold a side, and an assisted weight with a true minus", () => {

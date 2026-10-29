@@ -142,8 +142,10 @@ export const workouts = {
   "workouts.measure.seconds": "Tiempo",
   "workouts.measure.secondsWeight": "Tiempo × peso",
   "workouts.measure.rounds": "Rondas",
+  "workouts.measure.hang": "Suspensión × peso",
   "workouts.measuredInHint": "Define qué piden sus series y la unidad de su tendencia.",
-  "workouts.measureFingers": "Tiempo de suspensión × lastre, en una regleta",
+  "workouts.measuredInHintFingers":
+    "La suspensión es en una regleta. Repeticiones y tiempo son tirones desde el suelo, sin regleta.",
   "workouts.eachSide": "Cada lado",
   "workouts.eachSideHint": "2 × 60 s son 60 s por lado",
   "workouts.aSide": "{value} por lado",

@@ -13,6 +13,7 @@ export const hang = {
   "hang.summarySingle": "{on} hang",
   "hang.summaryHang": "{core} · {sets} sets · {setRest} rest",
   "hang.summaryPull": "{reps} lifts × {sets} sets · {setRest} between sets",
+  "hang.summaryTimedPull": "{on} pull",
 
   "hang.workout.rep73.name": "Repeaters 7:3",
   "hang.workout.rep73.blurb":
@@ -144,6 +145,7 @@ export const hang = {
   "hang.nextSetRest": "Set rest {time}",
   "hang.nextExerciseRest": "Rest {time}, then the next exercise",
   "hang.nextLift": "Lift {reps} × {load}",
+  "hang.nextTimedLift": "Lift {n}s · set {set}",
   "hang.restartInterval": "Restart this interval",
   "hang.skipInterval": "Skip to next interval",
   "hang.pause": "Pause",

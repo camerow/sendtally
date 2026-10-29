@@ -105,7 +105,7 @@ export function doseSummary(
     dose.weightKg === undefined
       ? null
       : t("hang.loadPlain", { value: weightValue(dose.weightKg, unit), unit });
-  const edge = dose.edgeMm === undefined ? null : t("hang.edgeMm", { n: dose.edgeMm });
+  const edge = dose.edgeMm ? t("hang.edgeMm", { n: dose.edgeMm }) : null;
   if (kind === "hangboard") {
     const p = doseProtocol("", dose);
     return [protocolSummary(p, timeUnitsOf(p)), edge, weight].filter((x) => x !== null).join(" · ");
