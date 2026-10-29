@@ -212,8 +212,36 @@ describe("hangboard", () => {
       grip: { id: "g1", name: "Mono", custom: true, hidden: false },
     });
     expect((await read(userId)).grips[0]?.hidden).toBe(false);
-    expect((await call(userId, "DELETE", "/grips/half")).status).toBe(400);
     expect(await (await call(userId, "DELETE", "/grips/nope")).json()).toEqual({ deleted: false });
+  });
+
+  it("keeps a built-in grip's name, but changes its measure and archives it", async () => {
+    const userId = "user_hang_builtin_grip";
+    const half = { id: "half", name: "Half crimp", custom: false, hidden: false };
+    const put = await call(userId, "PUT", "/grips/half", {
+      name: "Halbcrimp",
+      measure: "repsWeight",
+    });
+    expect(await put.json()).toEqual({ grip: { ...half, measure: "repsWeight" } });
+    await call(userId, "PUT", "/default-grips/rep73", { gripId: "half" });
+
+    expect(await (await call(userId, "DELETE", "/grips/half")).json()).toEqual({ deleted: true });
+    const archived = await read(userId);
+    expect(archived.grips).toEqual([{ ...half, hidden: true, measure: "repsWeight" }]);
+    expect(archived.defaultGrips).toEqual({});
+
+    await call(userId, "PUT", "/grips/g1", { name: "Mono" });
+    expect((await call(userId, "PUT", "/grips/g1", { name: "half CRIMP" })).status).toBe(409);
+    expect(await (await call(userId, "PUT", "/grips/g2", { name: "half crimp" })).json()).toEqual({
+      grip: { ...half, measure: "repsWeight" },
+    });
+    expect(await (await call(userId, "DELETE", "/grips/full")).json()).toEqual({ deleted: true });
+    const shown = (await read(userId)).grips.map((g) => [g.id, g.hidden]).sort();
+    expect(shown).toEqual([
+      ["full", true],
+      ["g1", false],
+      ["half", false],
+    ]);
   });
 
   it("renames a grip onto a deleted grip's name, which keeps its own for history", async () => {
@@ -232,7 +260,6 @@ describe("hangboard", () => {
   });
 
   it.each([
-    ["/grips/half", { name: "Crimpy" }],
     ["/grips/g1", { name: "x".repeat(41) }],
     ["/loads", { loads: { "rep73:half": 600 } }],
     ["/loads", { loads: { rep73: 4 } }],
