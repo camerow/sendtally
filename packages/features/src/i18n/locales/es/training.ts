@@ -4,7 +4,7 @@ export const training = {
   "training.statistics": "Estadísticas",
   "training.account": "Cuenta y ajustes",
   "training.climbing": "Escalada",
-  "training.dayAria": "{day}: {logged} registradas, {planned} previstas",
+  "training.dayAria": "{day}: {logged} hechas, {planned} previstas",
   "training.logTraining": "Entrenamiento",
   "training.logTrainingBody": "Fuerza, movilidad, carrera y más.",
   "training.reminders": "Recordatorios de entreno",

@@ -55,7 +55,7 @@ export const hang = {
   "hang.previousWeek": "Vorherige Woche",
   "hang.nextWeek": "Nächste Woche",
   "hang.plannedCount": "{n} geplant",
-  "hang.loggedCount": "{n} eingetragen",
+  "hang.doneCount": "{n} erledigt",
   "hang.upToday": "Heute dran · {kind}",
   "hang.blockWeek": "{label} · Woche {at} von {of}",
   "hang.start": "Start",
