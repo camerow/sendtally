@@ -1,5 +1,5 @@
 import { formatDate, t } from "../i18n";
-import { bucketsFor, DAY_MS, dayStart, rangeLabel, windowOf } from "../trends/buckets";
+import { bucketsFor, DAY_MS, dayStart, rangeLabel, wallClock, windowOf } from "../trends/buckets";
 import type { TrendRange } from "../trends/types";
 import type { InsightsSession } from "./insights";
 
@@ -47,7 +47,7 @@ export function daysClimbed(
     sessions.length === 0 ? null : Math.min(...sessions.map((s) => Date.parse(s.start_at)));
   const { start, end } = windowOf(bucketsFor(range, now, first));
   const columns = Math.max(1, Math.ceil((end - start) / WEEK_MS));
-  const today = dayStart(now.getTime());
+  const today = dayStart(wallClock(now));
   const monday = today - ((new Date(today).getUTCDay() + 6) % 7) * DAY_MS;
   const from = monday - (columns - 1) * WEEK_MS;
 

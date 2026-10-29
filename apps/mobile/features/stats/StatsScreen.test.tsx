@@ -6,7 +6,7 @@ import type * as LogSession from "@sendtally/features/log-session";
 import { statsSegmentStorage } from "../../lib/statsSegmentStorage";
 import { StatsScreen } from "./StatsScreen";
 
-const mockToday = `${new Date().toISOString().slice(0, 10)}T00:00:00.000Z`;
+const mockToday = `${new Date(Date.now() - new Date().getTimezoneOffset() * 60_000).toISOString().slice(0, 10)}T00:00:00.000Z`;
 
 const mockClimb = (vGrade: number, kind: "send" | "attempt"): object => ({
   time: mockToday,
