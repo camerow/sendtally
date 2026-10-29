@@ -103,7 +103,7 @@ describe("Plan day", () => {
   it("shows what was logged on the day and opens it", async () => {
     await renderWithHang(<PlanDayScreen date="2026-09-30" />, hangData(), world);
     expect(screen.getByText("Wednesday")).toBeTruthy();
-    expect(screen.getByText("Sep 30 · 0 planned · 1 logged")).toBeTruthy();
+    expect(screen.getByText("Sep 30 · 0 planned · 1 done")).toBeTruthy();
     await fireEvent.press(screen.getByText("Hip opener flow"));
     expect(router.push).toHaveBeenCalledWith({
       pathname: "/activity/[id]",
