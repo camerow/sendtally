@@ -154,6 +154,26 @@ describe("The tally in exercise mode", () => {
     expect(screen.getByRole("button", { name: "Sent" })).toBeEnabled();
   });
 
+  it("closes the climb and the grade when a time set runs out on its own", async () => {
+    await renderWithHang(
+      <View>
+        <SetsScreen run={{ ...run, items: [{ exercise: "ARC", dose: { sets: 2, onS: 60 } }] }} />
+        <TallyScreen exercise />
+      </View>,
+      hangData(),
+      { exercises: [anExercise("e1", "ARC", "climbing", { measure: "seconds" })] }
+    );
+    await fireEvent.press(screen.getByText("Start"));
+    await go("V1", "Fell");
+    expect(screen.getByLabelText("V1, 1 fall")).toBeSelected();
+
+    await advance(61_000);
+    expect(screen.getByLabelText("V1, 1 fall")).not.toBeSelected();
+    expect(screen.queryByLabelText("Edit climb")).toBeNull();
+    expect(screen.getByRole("button", { name: "Fell" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Sent" })).toBeDisabled();
+  });
+
   it("stops the rest a set's last climb started when that climb is undone", async () => {
     await both();
     await fireEvent.press(screen.getByText("Start"));

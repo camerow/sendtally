@@ -98,7 +98,10 @@ export function TallyScreen({ exercise = false }: TallyScreenProps): React.React
   const vocabulary = useClimbVocabulary(api);
   const { scales } = useGradeScalePrefs(api);
   const sessions = useQuery(queries.sessions(api)).state;
-  const [selection, setSelection] = React.useState<Selection>(null);
+  const [held, setHeld] = React.useState<{ set: number | undefined; selection: Selection }>({
+    set: undefined,
+    selection: null,
+  });
   const [snack, setSnack] = React.useState<Snack | null>(null);
   const [editing, setEditing] = React.useState<string | null>(null);
   const [picking, setPicking] = React.useState(false);
@@ -113,6 +116,10 @@ export function TallyScreen({ exercise = false }: TallyScreenProps): React.React
   const started = React.useRef(false);
   const settled = sessions.status !== "loading" && gyms.state.status !== "loading";
   const draft = live.stored?.draft ?? null;
+  const set = draft?.exercise?.set;
+  const selection = held.set === set ? held.selection : null;
+  const setSelection = (next: Selection, of: number | undefined = set): void =>
+    setHeld({ set: of, selection: next });
   React.useEffect(() => {
     if (started.current || !settled) return;
     started.current = true;
@@ -184,12 +191,7 @@ export function TallyScreen({ exercise = false }: TallyScreenProps): React.React
     return circuit === undefined ? null : { kind: "circuit", gym: circuitGym, circuit };
   };
 
-  /** A go that ends its set leaves nothing picked for the next. */
-  const commit = (next: LogSessionDraft): void => {
-    const settled = settle(next, new Date());
-    if (settled.exercise?.set !== next.exercise?.set) setSelection(null);
-    live.replace(settled);
-  };
+  const commit = (next: LogSessionDraft): void => live.replace(settle(next, new Date()));
 
   const go = (g: TallyGo): void => {
     let climb: ClimbDraft | undefined;
@@ -224,7 +226,7 @@ export function TallyScreen({ exercise = false }: TallyScreenProps): React.React
     if (snack === null) return;
     if (snack.draft.exercise?.set !== draft.exercise?.set) rest.skip();
     live.replace(snack.draft);
-    setSelection(snack.selection);
+    setSelection(snack.selection, snack.draft.exercise?.set);
     setSnack(null);
   };
 
@@ -417,8 +419,8 @@ export function TallyScreen({ exercise = false }: TallyScreenProps): React.React
                     climb={climb}
                     selected={selection?.kind === "row" && selection.key === climb.key}
                     onPress={() =>
-                      setSelection((s) =>
-                        s?.kind === "row" && s.key === climb.key
+                      setSelection(
+                        selection?.kind === "row" && selection.key === climb.key
                           ? null
                           : { kind: "row", key: climb.key }
                       )
