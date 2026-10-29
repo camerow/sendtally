@@ -2530,7 +2530,7 @@ export async function releaseHangGripName(
 }
 
 /**
- * Hides a custom grip from the pickers and drops its explicit default choices.
+ * Hides a grip from the pickers and drops its explicit default choices.
  * A workout created with it still names it as `grip`; the app's model skips it.
  * Sessions, schedules and loads keep pointing at it, so history keeps its name.
  */

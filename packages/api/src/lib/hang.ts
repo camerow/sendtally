@@ -2,9 +2,11 @@ import {
   BUILT_IN_GRIP_NAMES,
   BUILT_IN_GRIPS,
   GRIP_MEASURES,
+  isBuiltInGrip,
   isCalendarDate,
   defaultSetup,
   protocolOf,
+  type BuiltInGrip,
   type Grip,
   type GripMeasure,
   type HangSession,
@@ -133,6 +135,13 @@ export type HangData = {
 /** The one spelling two grip names share when they differ only in case or spacing. */
 export const gripKey = (name: string): string => name.trim().replace(/\s+/g, " ").toLowerCase();
 
+/** A built-in grip's row: its English name, so a custom grip can never take it. */
+export const builtInGripRow = (id: BuiltInGrip): { id: string; name: string; nameKey: string } => ({
+  id,
+  name: BUILT_IN_GRIP_NAMES[id],
+  nameKey: gripKey(BUILT_IN_GRIP_NAMES[id]),
+});
+
 export function builtInGripNamed(name: string): Grip | null {
   const id = BUILT_IN_GRIPS.find((g) => gripKey(BUILT_IN_GRIP_NAMES[g]) === gripKey(name));
   return id === undefined
@@ -147,7 +156,7 @@ export const measured = (measure: GripMeasure): Pick<Grip, "measure"> =>
 export const gripOf = (row: HangGripRow): Grip => ({
   id: row.id,
   name: row.name,
-  custom: true,
+  custom: !isBuiltInGrip(row.id),
   hidden: row.hidden,
   ...measured(row.measure),
 });
