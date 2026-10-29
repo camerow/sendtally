@@ -84,6 +84,7 @@ describe("live session", () => {
       write: () => true,
       remove: () => undefined,
       subscribe: () => () => undefined,
+      changed: () => undefined,
     });
     expect(readClimbKind(stored(null), [gym])).toBe("boulder");
     expect(readClimbKind(stored("nonsense"), [gym])).toBe("boulder");
