@@ -19,5 +19,4 @@ export const focus = {
   "focus.recoveryMeaning": "Descargas, días suaves y movilidad, a propósito.",
   "focus.sessionNote": "Solo cambia esta sesión. El entreno mantiene el suyo.",
   "focus.search": "Buscar en {focus}",
-  "focus.thisWeek": "Esta semana por enfoque",
 } as const;
