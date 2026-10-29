@@ -179,6 +179,7 @@ export const workouts = {
   "workouts.preview": "Preview",
   "workouts.previewHint": "This is how you will measure this exercise",
   "workouts.progress": "Progress",
+  "workouts.progressIs": "Progress: {pick}",
   "workouts.progress.averageGrade": "Average grade",
   "workouts.progress.topGrade": "Highest grade",
   "workouts.progress.completed": "Climbs completed",
