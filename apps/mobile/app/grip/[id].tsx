@@ -6,7 +6,7 @@ import { GripScreen } from "../../features/training/grip/GripScreen";
 export default function GripRoute(): React.ReactElement {
   const { id } = useLocalSearchParams<{ id: string }>();
   return (
-    <HangDataProvider>
+    <HangDataProvider framed>
       <GripScreen id={id} />
     </HangDataProvider>
   );

@@ -124,7 +124,7 @@ export const workouts = {
   "workouts.exerciseNothingLogged": "Nothing logged yet. Its sets show here once you log them.",
   "workouts.newExercise": "New exercise",
   "workouts.newExerciseHint": "A lift or drill to use in your workouts",
-  "workouts.categoryEmpty.hangboard": "A grip or edge to hang on.",
+  "workouts.categoryEmpty.hangboard": "A hang or a pull on an edge.",
   "workouts.categoryEmpty.climbing": "Drills on the wall, like 4x4s or limit bouldering.",
   "workouts.categoryEmpty.strength": "A lift, like Back squat.",
   "workouts.categoryEmpty.mobility": "A stretch or a hold, like Pancake.",
@@ -139,8 +139,6 @@ export const workouts = {
   "workouts.measure.secondsWeight": "Time × weight",
   "workouts.measure.rounds": "Rounds",
   "workouts.measure.hang": "Hang × weight",
-  "workouts.measuredInHintFingers":
-    "A hang is on an edge. Reps and time are ground pulls, off the floor with no edge.",
   "workouts.eachSide": "Each side",
   "workouts.eachSideHint": "2 × 60 s means 60 s a side",
   "workouts.aSide": "{value} a side",
@@ -149,6 +147,8 @@ export const workouts = {
     "Sets you logged keep their numbers. New sets ask for the new fields.",
   "workouts.changeMeasure": "Change",
   "workouts.editExercise": "Edit exercise",
+  "workouts.builtInNameLocked":
+    "Built-in names stay as they are, so they read right in every language.",
   "workouts.exercise.fourByFours": "4x4s",
   "workouts.exercise.limitBouldering": "Limit bouldering",
   "workouts.exercise.campusLadders": "Campus ladders",

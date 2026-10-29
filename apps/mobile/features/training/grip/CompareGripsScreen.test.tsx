@@ -25,7 +25,7 @@ const sessions = [
 describe("CompareGripsScreen", () => {
   it("ranks the grips on the most used setup by best completed load", async () => {
     await renderWithHang(<CompareGripsScreen />, hangData({ sessions }));
-    expect(screen.getByText("Compare grips")).toBeTruthy();
+    expect(screen.getByText("Compare exercises")).toBeTruthy();
     expect(screen.getByLabelText("Open hand, +10 kg, Same")).toBeTruthy();
     expect(screen.getByLabelText("Half crimp, +6 kg, +4 kg")).toBeTruthy();
     expect(screen.queryByLabelText(/^Pinch/)).toBeNull();

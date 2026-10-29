@@ -4,7 +4,7 @@ import { router } from "expo-router";
 import React from "react";
 import { Alert } from "react-native";
 import type * as Workouts from "@sendtally/features/workouts";
-import { anExercise, hangData, renderWithHang } from "../data/renderWithHang";
+import { aHang, anExercise, hangData, renderWithHang } from "../data/renderWithHang";
 import { ExerciseEditorScreen } from "../exercises/ExerciseEditorScreen";
 import { WorkoutEditorScreen } from "./WorkoutEditorScreen";
 
@@ -197,6 +197,19 @@ describe("Workout editor", () => {
         ],
       })
     );
+  });
+
+  it("lists Fingers exercises with their best and last day, each with a pencil to its editor", async () => {
+    await renderWithHang(<WorkoutEditorScreen from="max10" />, hangData({ sessions: [aHang()] }));
+    await fireEvent.press(screen.getByLabelText("Swap exercise"));
+    expect(screen.getByText(/^Best bodyweight · 20\smm · Sep 20$/)).toBeTruthy();
+    expect(screen.getAllByText("Not done yet").length).toBeGreaterThan(0);
+    await fireEvent.press(screen.getByLabelText("Edit Open hand"));
+    expect(screen.queryByLabelText("Edit Open hand")).toBeNull();
+    expect(router.push).toHaveBeenCalledWith({
+      pathname: "/exercise/edit",
+      params: { kind: "hangboard", id: "open" },
+    });
   });
 
   it("adds ticked exercises in tick order, a built-in made the user's own, the ones it has tagged", async () => {

@@ -11,7 +11,7 @@ import { type } from "../type";
 
 /**
  * "Add your own": a new name makes a custom grip; a name that exists, ignoring
- * case, picks that one, bringing it back if it had been deleted.
+ * case, picks that one, bringing it back if it had been archived.
  */
 export function AddGrip({ onAdded }: { onAdded: (gripId: string) => void }): React.ReactElement {
   const { model, actions } = useHangData();

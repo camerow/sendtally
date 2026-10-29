@@ -3,7 +3,7 @@ import { act, fireEvent, screen } from "@testing-library/react-native";
 import { router } from "expo-router";
 import React from "react";
 import { Alert } from "react-native";
-import { anExercise, renderWithHang } from "../data/renderWithHang";
+import { anExercise, hangData, renderWithHang } from "../data/renderWithHang";
 import { ExerciseEditorScreen } from "./ExerciseEditorScreen";
 import { openExerciseEditor } from "./openExerciseEditor";
 
@@ -97,6 +97,51 @@ describe("exercise editor", () => {
       id: "new-id",
       name: "Block",
       custom: true,
+      hidden: false,
+      measure: "secondsWeight",
+    });
+  });
+
+  it("edits a grip of the user's own, but not onto another exercise's name", async () => {
+    const grips = [
+      { id: "g1", name: "Mono", custom: true, hidden: false },
+      { id: "g2", name: "Block", custom: true, hidden: false, measure: "secondsWeight" as const },
+    ];
+    const { actions } = await renderWithHang(
+      <ExerciseEditorScreen kind="hangboard" id="g1" />,
+      hangData({ grips })
+    );
+    expect(screen.getByText("Edit exercise")).toBeTruthy();
+    await fireEvent.changeText(screen.getByLabelText("Name"), "block");
+    expect(screen.getByText("You already have an exercise called Block.")).toBeTruthy();
+    await fireEvent.press(screen.getByText("Save"));
+    expect(actions.saveGrip).not.toHaveBeenCalled();
+
+    await fireEvent.changeText(screen.getByLabelText("Name"), "Front 3");
+    await fireEvent.press(screen.getByText("Reps × weight"));
+    await fireEvent.press(screen.getByText("Save"));
+    expect(actions.saveGrip).toHaveBeenCalledWith({
+      id: "g1",
+      name: "Front 3",
+      custom: true,
+      hidden: false,
+      measure: "repsWeight",
+    });
+    expect(router.back).toHaveBeenCalled();
+  });
+
+  it("keeps a built-in's name but changes what it is measured in", async () => {
+    const { actions } = await renderWithHang(<ExerciseEditorScreen kind="hangboard" id="half" />);
+    expect(screen.getByLabelText("Name").props.editable).toBe(false);
+    expect(
+      screen.getByText("Built-in names stay as they are, so they read right in every language.")
+    ).toBeTruthy();
+    await fireEvent.press(screen.getByText("Time × weight"));
+    await fireEvent.press(screen.getByText("Save"));
+    expect(actions.saveGrip).toHaveBeenCalledWith({
+      id: "half",
+      name: "Half crimp",
+      custom: false,
       hidden: false,
       measure: "secondsWeight",
     });

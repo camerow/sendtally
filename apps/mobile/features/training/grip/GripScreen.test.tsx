@@ -1,11 +1,30 @@
-import { describe, expect, it, jest } from "@jest/globals";
+import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { fireEvent, screen } from "@testing-library/react-native";
 import { router } from "expo-router";
 import React from "react";
+import { Alert, type AlertButton } from "react-native";
+import type { WorkoutRecord } from "@sendtally/api-client";
 import { aHang, hangData, renderWithHang } from "../data/renderWithHang";
 import { GripScreen } from "./GripScreen";
 
 jest.mock("expo-router", () => ({ router: { push: jest.fn(), back: jest.fn() } }));
+jest.mock("../../../components/Sheet", () => ({
+  Sheet: ({ visible, children }: { visible: boolean; children: React.ReactNode }) =>
+    visible ? children : null,
+}));
+
+const pinches: WorkoutRecord = {
+  id: "pinches",
+  kind: "hangboard",
+  name: "Pinch blocks",
+  description: "",
+  minutes: 20,
+  targetRpe: null,
+  items: [{ exercise: "pinch", doses: [{ sets: 3, reps: 5, onS: 10, offS: 0, edgeMm: 20 }] }],
+  exerciseRestS: 180,
+  focus: null,
+  updatedAt: "t",
+};
 
 const sessions = [
   aHang({ date: "2026-09-01", loadKg: 2 }),
@@ -16,16 +35,20 @@ const sessions = [
   aHang({ date: "2026-09-12", loadKg: 20, gripId: "open" }),
 ];
 
+beforeEach(() => {
+  jest.clearAllMocks();
+});
+
 describe("GripScreen", () => {
   it("shows the grip across workouts on its most used setup", async () => {
     await renderWithHang(<GripScreen id="half" />, hangData({ sessions }));
-    expect(screen.getByText("Hangboard · grip")).toBeTruthy();
+    expect(screen.getByText("Fingers · grip")).toBeTruthy();
     expect(screen.getByText("Half crimp")).toBeTruthy();
     expect(screen.getAllByText("20\u00A0mm · 10s").length).toBeGreaterThan(1);
     expect(screen.getByText("Best · Sep 8")).toBeTruthy();
     expect(screen.getByText("Top attempt · 75%")).toBeTruthy();
     expect(screen.getByText("Reached +5 kg")).toBeTruthy();
-    expect(screen.getByText("First session on this grip")).toBeTruthy();
+    expect(screen.getByText("First session on this exercise")).toBeTruthy();
     expect(screen.getByText("History · 4 sessions")).toBeTruthy();
     expect(screen.getByText(/is up 4 kg/)).toBeTruthy();
     expect(screen.getByText("Added load · completed")).toBeTruthy();
@@ -89,8 +112,54 @@ describe("GripScreen", () => {
     });
   });
 
-  it("says there is nothing yet on a grip never hung", async () => {
-    await renderWithHang(<GripScreen id="pinch" />, hangData({ sessions }));
-    expect(screen.getByText(/Nothing to chart yet/)).toBeTruthy();
+  it("says nothing is logged on an exercise never done, and lists the workouts using it", async () => {
+    await renderWithHang(<GripScreen id="pinch" />, hangData({ sessions }), {
+      workouts: [pinches],
+    });
+    expect(
+      screen.getByText("Nothing logged yet. Its sets show here once you log them.")
+    ).toBeTruthy();
+    expect(screen.queryByText("Best")).toBeNull();
+    await fireEvent.press(screen.getByText("Pinch blocks"));
+    expect(router.push).toHaveBeenCalledWith({
+      pathname: "/workout/[id]",
+      params: { id: "pinches" },
+    });
+  });
+
+  it("edits any exercise, built-ins too, in the exercise editor", async () => {
+    await renderWithHang(<GripScreen id="pinch" />, hangData());
+    await fireEvent.press(screen.getByText("Edit"));
+    expect(router.push).toHaveBeenCalledWith({
+      pathname: "/exercise/edit",
+      params: { kind: "hangboard", id: "pinch" },
+    });
+  });
+
+  it("compares and archives from its menu, asking before archiving", async () => {
+    const alert = jest
+      .spyOn(Alert, "alert")
+      .mockImplementation((_title, _body, buttons?: AlertButton[]) => buttons?.[1]?.onPress?.());
+    const { actions } = await renderWithHang(<GripScreen id="half" />, hangData({ sessions }));
+    await fireEvent.press(screen.getByLabelText("More"));
+    await fireEvent.press(screen.getByText("Compare exercises"));
+    expect(router.push).toHaveBeenCalledWith("/grip/compare");
+
+    await fireEvent.press(screen.getByLabelText("More"));
+    await fireEvent.press(screen.getByText("Archive"));
+    expect(alert).toHaveBeenCalledWith(
+      "Archive Half crimp?",
+      expect.any(String),
+      expect.anything()
+    );
+    expect(actions.archiveGrip).toHaveBeenCalledWith(expect.objectContaining({ id: "half" }));
+    expect(router.back).toHaveBeenCalled();
+  });
+
+  it("offers no compare until two exercises are done", async () => {
+    await renderWithHang(<GripScreen id="half" />, hangData({ sessions: [aHang()] }));
+    await fireEvent.press(screen.getByLabelText("More"));
+    expect(screen.queryByText("Compare exercises")).toBeNull();
+    expect(screen.getByText("Archive")).toBeTruthy();
   });
 });

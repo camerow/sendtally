@@ -15,7 +15,7 @@ export const summary = {
   "summary.overTime": "Dans le temps",
   "summary.bestSet": "Meilleure série",
   "summary.bestYet": "record",
-  "summary.addedWeight": "Lest sur cette prise",
+  "summary.addedWeight": "Lest sur cet exercice",
   "summary.thisSession": "Cette séance",
   "summary.hangsOf": "{held} suspensions sur {total}",
   "summary.setsOf_one": "{count} série de {reps}",

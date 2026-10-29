@@ -43,6 +43,23 @@ const mine: LibraryWorkout = {
 const model = (overrides: Partial<HangData> = {}) =>
   hangModel(data(overrides), [...libraryOf([]), mine]);
 
+describe("grips", () => {
+  it("reads a built-in's measure and archive from its row, under its own translated name", () => {
+    setLocale("de");
+    const row = {
+      id: "open",
+      name: "Open hand",
+      custom: false,
+      hidden: true,
+      measure: "repsWeight" as const,
+    };
+    const grips = model({ grips: [row] }).grips;
+    expect(grips.filter((g) => g.id === "open")).toEqual([
+      { id: "open", name: "Offene Hand", custom: false, hidden: true, measure: "repsWeight" },
+    ]);
+  });
+});
+
 describe("renameClash", () => {
   it("lets a rename take a deleted grip's name", () => {
     expect(renameClash(model().grips, "g2", "mono")).toBeUndefined();

@@ -4,6 +4,7 @@ import {
   bestIndex,
   canCompareGrips,
   compareGrips,
+  gripMeta,
   gripSessionRows,
   gripTiles,
   milestoneRows,
@@ -80,7 +81,7 @@ describe("grip screen", () => {
 
   it("says each milestone newest first, naming the setup only when they are mixed", () => {
     const rows = milestoneRows(series, "kg", false);
-    expect(rows.map((r) => r.text)).toEqual(["Reached +5 kg", "First session on this grip"]);
+    expect(rows.map((r) => r.text)).toEqual(["Reached +5 kg", "First session on this exercise"]);
     expect(rows[0]?.meta).toBe("Sep 8");
     expect(milestoneRows(series, "kg", true)[0]?.meta).toBe("Sep 8 · 20\u00A0mm · 10s");
   });
@@ -132,5 +133,19 @@ describe("newBestOf", () => {
   it("is null for a first session or one that did not beat the best", () => {
     expect(newBestOf(series[0]!, series, "Half crimp", "kg")).toBeNull();
     expect(newBestOf(series[3]!, series, "Half crimp", "kg")).toBeNull();
+  });
+});
+
+describe("gripMeta", () => {
+  it("reads the best on its edge, with the last day when dated, or not done yet", () => {
+    expect(gripMeta(series, "half", "2026-09-29", "kg").replace(/\s/g, " ")).toBe(
+      "Best +6 kg · 20 mm"
+    );
+    expect(gripMeta(series, "half", "2026-09-29", "kg", true).replace(/\s/g, " ")).toBe(
+      "Best +6 kg · 20 mm · Sep 22"
+    );
+    expect(gripMeta(series, "open", "2026-09-29", "kg", true).replace(/\s/g, " ")).toBe(
+      "Not done yet"
+    );
   });
 });
