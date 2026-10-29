@@ -184,26 +184,31 @@ export function TallyScreen({ exercise = false }: TallyScreenProps): React.React
     return circuit === undefined ? null : { kind: "circuit", gym: circuitGym, circuit };
   };
 
+  /** A go that ends its set leaves nothing picked for the next. */
+  const commit = (next: LogSessionDraft): void => {
+    const settled = settle(next, new Date());
+    if (settled.exercise?.set !== next.exercise?.set) setSelection(null);
+    live.replace(settled);
+  };
+
   const go = (g: TallyGo): void => {
     let climb: ClimbDraft | undefined;
     if (selection?.kind === "pending") {
       const choice = choiceOf(selection.chip);
       if (choice === null) return;
       const next = newTallyClimb(draft, choice, g);
-      live.replace(settle(withExerciseClimb(next.draft, next.key), new Date()));
-      climb = next.draft.climbs.find((c) => c.key === next.key);
       setSelection(g === "fell" ? { kind: "row", key: next.key } : null);
+      commit(withExerciseClimb(next.draft, next.key));
+      climb = next.draft.climbs.find((c) => c.key === next.key);
     } else if (selection?.kind === "row") {
       climb = draft.climbs.find((c) => c.key === selection.key);
       if (climb === undefined) return;
       const key = selection.key;
-      live.replace(
-        settle(
-          { ...draft, climbs: draft.climbs.map((c) => (c.key === key ? withTallyGo(c, g) : c)) },
-          new Date()
-        )
-      );
       if (g === "sent") setSelection(null);
+      commit({
+        ...draft,
+        climbs: draft.climbs.map((c) => (c.key === key ? withTallyGo(c, g) : c)),
+      });
     }
     if (climb === undefined) return;
     const grade = gradeOf(climb);
@@ -217,6 +222,7 @@ export function TallyScreen({ exercise = false }: TallyScreenProps): React.React
 
   const undo = (): void => {
     if (snack === null) return;
+    if (snack.draft.exercise?.set !== draft.exercise?.set) rest.skip();
     live.replace(snack.draft);
     setSelection(snack.selection);
     setSnack(null);

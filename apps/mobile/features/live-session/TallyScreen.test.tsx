@@ -125,6 +125,48 @@ describe("The tally in exercise mode", () => {
     ]);
   });
 
+  it("closes the climb and the grade when a set ends, and undo takes the set change back", async () => {
+    await renderWithHang(
+      <View>
+        <SetsScreen run={{ ...run, items: [{ exercise: "4x4s", dose: { sets: 4, reps: 4 } }] }} />
+        <TallyScreen exercise />
+      </View>,
+      hangData(),
+      { exercises: [anExercise("e1", "4x4s", "climbing")] }
+    );
+    await fireEvent.press(screen.getByText("Start"));
+    await go("V4", "Sent");
+    await go("V5", "Sent");
+    await go("V6", "Sent");
+    await go("V7", "Fell");
+
+    expect(screen.getByText("4x4s · Set 2 of 4 · 0 of 4 climbs")).toBeTruthy();
+    expect(screen.getByLabelText("V7, 1 fall")).not.toBeSelected();
+    expect(screen.queryByLabelText("Edit climb")).toBeNull();
+    expect(screen.getByLabelText("V7")).not.toBeSelected();
+    expect(screen.getByRole("button", { name: "Fell" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Sent" })).toBeDisabled();
+
+    await fireEvent.press(screen.getByText("Undo"));
+    expect(screen.getByText("4x4s · Set 1 of 4 · 3 of 4 climbs")).toBeTruthy();
+    expect(screen.queryByLabelText("V7, 1 fall")).toBeNull();
+    expect(screen.getByLabelText("V7")).toBeSelected();
+    expect(screen.getByRole("button", { name: "Sent" })).toBeEnabled();
+  });
+
+  it("stops the rest a set's last climb started when that climb is undone", async () => {
+    await both();
+    await fireEvent.press(screen.getByText("Start"));
+    await go("V4", "Sent");
+    await go("V3", "Fell");
+    expect(screen.getByText("Rest 4:00")).toBeTruthy();
+
+    await fireEvent.press(screen.getByText("Undo"));
+    expect(screen.queryByText("Rest 4:00")).toBeNull();
+    expect(screen.getByText("4x4s · Set 1 of 2 · 1 of 2 climbs")).toBeTruthy();
+    expect(screen.getByLabelText("V3")).toBeSelected();
+  });
+
   it("counts a time set down from its first grade, and lets the climb on the wall finish", async () => {
     await renderWithHang(
       <View>
