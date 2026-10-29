@@ -1,4 +1,5 @@
 import {
+  isTimed,
   toUnit,
   totalSeconds,
   type HangSession,
@@ -18,15 +19,14 @@ function duration(seconds: number): string {
 }
 
 function protocolLine(p: Protocol, edgeMm: number): string {
-  const parts =
-    p.kind === "pull"
-      ? [`${plural(p.sets, "set")} × ${plural(p.reps, "lift")}`]
-      : [
-          `${plural(p.sets, "set")} × ${plural(p.reps, "hang")}`,
-          p.restS > 0
-            ? `${duration(p.hangS)} on, ${duration(p.restS)} off`
-            : `${duration(p.hangS)} on`,
-        ];
+  const parts = !isTimed(p)
+    ? [`${plural(p.sets, "set")} × ${plural(p.reps, "lift")}`]
+    : [
+        `${plural(p.sets, "set")} × ${plural(p.reps, p.kind === "hang" ? "hang" : "pull")}`,
+        p.restS > 0
+          ? `${duration(p.hangS)} on, ${duration(p.restS)} off`
+          : `${duration(p.hangS)} on`,
+      ];
   if (p.sets > 1 && p.setRestS > 0) parts.push(`${duration(p.setRestS)} between sets`);
   if (edgeMm > 0) parts.push(`${edgeMm} mm edge`);
   return parts.join(" · ");

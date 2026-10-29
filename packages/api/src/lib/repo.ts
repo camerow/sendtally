@@ -64,6 +64,7 @@ import {
   measureOf,
   type Block,
   type Focus,
+  type GripMeasure,
   type HangSession,
   type HangSettings,
   type Item,
@@ -2486,8 +2487,9 @@ export async function getHangGrip(
 export async function saveHangGrip(
   db: D1Database,
   userId: string,
-  grip: { id: string; name: string; nameKey: string }
+  grip: { id: string; name: string; nameKey: string; measure?: GripMeasure }
 ): Promise<void> {
+  const measure = grip.measure === undefined ? {} : { measure: grip.measure };
   await drizzle(db)
     .insert(hangGrips)
     .values({
@@ -2496,11 +2498,12 @@ export async function saveHangGrip(
       name: grip.name,
       name_key: grip.nameKey,
       hidden: false,
+      ...measure,
       created_at: new Date().toISOString(),
     })
     .onConflictDoUpdate({
       target: [hangGrips.user_id, hangGrips.id],
-      set: { name: grip.name, name_key: grip.nameKey, hidden: false },
+      set: { name: grip.name, name_key: grip.nameKey, hidden: false, ...measure },
     });
 }
 

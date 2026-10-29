@@ -61,7 +61,7 @@ export function useHangActions(api: SendtallyApi, onError: (error: unknown) => v
       saveGrip: (grip) =>
         write(
           (d) => ({ ...d, grips: upsert(d.grips, grip) }),
-          () => api.saveHangGrip(grip.id, grip.name)
+          () => api.saveHangGrip(grip)
         ),
       deleteGrip: (id) =>
         write(

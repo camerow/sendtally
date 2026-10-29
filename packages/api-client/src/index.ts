@@ -413,8 +413,8 @@ export class SendtallyApi {
     return body(this.client.v1.hang.$get());
   }
 
-  saveHangGrip(id: string, name: string): Promise<{ grip: Grip }> {
-    return body(this.client.v1.hang.grips[":id"].$put({ param: { id }, json: { name } }));
+  saveHangGrip({ id, name, measure }: Grip): Promise<{ grip: Grip }> {
+    return body(this.client.v1.hang.grips[":id"].$put({ param: { id }, json: { name, measure } }));
   }
 
   setHangDefaultGrip(
