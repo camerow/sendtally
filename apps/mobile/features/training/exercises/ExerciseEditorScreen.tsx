@@ -163,7 +163,7 @@ function Form({ initial, editing, logged, onSave }: FormProps): React.ReactEleme
             </Text>
             {!advanced && (
               <Text style={[type.body, { fontSize: 12.5, color: colors.textSecondary }]}>
-                {`${t("workouts.progress")}: ${progress}`}
+                {t("workouts.progressIs", { pick: progress })}
               </Text>
             )}
           </View>
