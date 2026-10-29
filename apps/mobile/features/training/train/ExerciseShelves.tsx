@@ -75,7 +75,7 @@ export function ExerciseShelves(): React.ReactElement {
     return kind === "pull" ? load : `${load} · ${t("hang.edgeMm", { n: top.edgeMm })}`;
   };
   const grips = model.grips
-    .filter((g) => !g.hidden && (g.custom || model.sessions.some((s) => s.gripId === g.id)))
+    .filter((g) => !g.hidden)
     .map((g): ShelfCard => {
       const onGrip = model.sessions.filter((s) => s.gripId === g.id).sort(byDate);
       const summary = summarise(onGrip, today);
@@ -83,7 +83,7 @@ export function ExerciseShelves(): React.ReactElement {
         key: g.id,
         kind: "hangboard",
         name: g.name,
-        meta: summary === null ? "" : gripMeta(onGrip, summary.best),
+        meta: summary === null ? t("workouts.notDoneYet") : gripMeta(onGrip, summary.best),
         open: () => router.push({ pathname: "/grip/[id]", params: { id: g.id } }),
       };
     });
