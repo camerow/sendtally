@@ -27,7 +27,7 @@ const loggedKey = (item: LoggedItem): string => {
   return item.kind === "climb" ? item.session.fingerprint : item.session.id;
 };
 
-/** The selected day: what was logged, what is planned on it, done, missed or still to come. */
+/** The selected day: what was done, then what is planned on it, missed or still to come. */
 export function DaySection({ day, onOpen, heading = true }: DaySectionProps): React.ReactElement {
   const { model } = useHangData();
   const library = useLibrary().state;
@@ -60,7 +60,7 @@ export function DaySection({ day, onOpen, heading = true }: DaySectionProps): Re
       ))}
       {day.plans.map((o) => {
         const w = workout(o.membership.workoutId);
-        if (w === undefined) return null;
+        if (w === undefined || o.status === "done") return null;
         return day.isToday && o.status === "planned" ? (
           <OccurrenceCard key={o.membership.id} occurrence={o} workout={w} />
         ) : (
