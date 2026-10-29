@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { Activity } from "@sendtally/api-client";
-import type { ItemDone, SetDone } from "@sendtally/core/hang";
+import type { GradeScale } from "@sendtally/core";
+import type { ItemDone, SetClimb, SetDone } from "@sendtally/core/hang";
 import { epley, exerciseSeries, exerciseSummary, workoutsUsing } from "./exercises";
 
 const TODAY = "2026-10-22";
@@ -93,6 +94,46 @@ describe("exerciseSummary", () => {
     });
     expect(summary?.best?.activityId).toBe("b");
     expect(summary?.latest.activityId).toBe("c");
+  });
+});
+
+describe("grade metrics", () => {
+  const climb = (grade: string, sent = true, scale: GradeScale = "v"): SetClimb => ({
+    grade,
+    scale,
+    tries: 1,
+    sent,
+  });
+  const limit = (...climbs: SetClimb[]): ItemDone => item("Limit boulders", [{ climbs }]);
+  const sessions = [
+    logged("a", "2026-10-01", [limit(climb("V3"), climb("V5"), climb("V7", false))]),
+    logged("b", "2026-10-08", [limit(climb("V4"), climb("V6"), climb(""))]),
+  ];
+
+  it("reads the average and highest grade sent per session, leaving out falls and circuits", () => {
+    const [top] = exerciseSeries(sessions, () => "topGrade");
+    const [average] = exerciseSeries(sessions, () => "averageGrade");
+    expect(top?.metric).toBe("topGrade");
+    expect(top?.sessions.map((s) => s.value)).toEqual([5, 6]);
+    expect(average?.sessions.map((s) => s.value)).toEqual([4, 5]);
+    expect(average?.grades?.average(4.5)).toBe("V4.5");
+    expect(top === undefined ? null : exerciseSummary(top, TODAY)).toMatchObject({ change: 1 });
+  });
+
+  it("counts sends when no grade metric is named", () => {
+    expect(exerciseSeries(sessions)[0]?.metric).toBe("sends");
+  });
+
+  it("ranks routes on their own ladder and reads them in the scale logged", () => {
+    const routes = limit(climb("6a", true, "french"), climb("V9"), climb("6c", true, "french"));
+    const [series] = exerciseSeries([logged("a", "2026-10-01", [routes])], () => "topGrade");
+    expect(series?.grades?.label(series.sessions[0]?.value ?? -1)).toBe("6c");
+  });
+
+  it("drops a session with nothing sent at a grade", () => {
+    const fell = logged("c", "2026-10-15", [limit(climb("V8", false))]);
+    const [series] = exerciseSeries([...sessions, fell], () => "averageGrade");
+    expect(series?.sessions.map((s) => s.activityId)).toEqual(["a", "b"]);
   });
 });
 

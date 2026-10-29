@@ -16,10 +16,12 @@ export {
   exerciseSeries,
   exerciseSummary,
   isClimbingMetric,
+  isGradeMetric,
   metricTotal,
   workoutsUsing,
   type ExerciseMetric,
   type ExerciseSeries,
+  type GradeMetric,
   type ExerciseSession,
   type ExerciseSummary,
 } from "./exercises";

@@ -12,12 +12,15 @@ import { shortDate } from "@sendtally/features/hang";
 import { formatDate, formatNumber, t } from "@sendtally/features/i18n";
 import { focusLabel } from "@sendtally/features/training";
 import type { Stat } from "../components/types";
+import { gradesText } from "../exercises/exerciseText";
 
 /** "+5 lb", "+1 rep", "−10s", or "Same". */
 export function changeText({ metric, by }: SetChange, unit: WeightUnit): string {
   if (by === 0) return t("summary.same");
   if (metric === "load") return loadChange(by, unit);
   if (metric === "seconds") return `${by > 0 ? "+" : "−"}${t("hang.seconds", { n: Math.abs(by) })}`;
+  if (metric === "averageGrade" || metric === "topGrade")
+    return `${by > 0 ? "+" : "−"}${gradesText(by)}`;
   const count = Math.abs(by);
   if (metric === "sends")
     return by > 0 ? t("summary.sentUp", { count }) : t("summary.sentDown", { count });

@@ -2,10 +2,13 @@ import { toUnit, type WeightUnit } from "@sendtally/core/hang";
 import { setText } from "@sendtally/features/activities";
 import { shortDate } from "@sendtally/features/hang";
 import { formatNumber, t } from "@sendtally/features/i18n";
-import type {
-  ExerciseMetric,
-  ExerciseSeries,
-  ExerciseSummary,
+import type { GradeFormatter } from "@sendtally/features/sessions";
+import {
+  isGradeMetric,
+  type ExerciseMetric,
+  type ExerciseSeries,
+  type ExerciseSession,
+  type ExerciseSummary,
 } from "@sendtally/features/statistics";
 import type { Stat } from "../components/types";
 
@@ -18,8 +21,15 @@ export function loadText(kg: number, unit: WeightUnit): string {
   });
 }
 
-/** A value on the exercise's metric, as the chart and sentences show it. */
-export function metricText(value: number, metric: ExerciseMetric, unit: WeightUnit): string {
+/** A value on the exercise's metric, as the chart and sentences show it; a grade reads on `grades`. */
+export function metricText(
+  value: number,
+  metric: ExerciseMetric,
+  unit: WeightUnit,
+  grades?: GradeFormatter
+): string {
+  if (metric === "topGrade" && grades !== undefined) return grades.label(value);
+  if (metric === "averageGrade" && grades !== undefined) return grades.average(value);
   if (metric === "load") return loadText(value, unit);
   if (metric === "seconds") return `${formatNumber(value)}s`;
   if (metric === "sends") return t("tally.sentCount", { count: value });
@@ -27,7 +37,18 @@ export function metricText(value: number, metric: ExerciseMetric, unit: WeightUn
   return t("statistics.repsValue", { count: value });
 }
 
+/** "1 grade", "0.4 grades": how far a grade moved, whatever the scale. */
+export function gradesText(by: number): string {
+  const steps = Math.round(Math.abs(by) * 10) / 10;
+  return t("trends.deltaGrades", {
+    count: steps,
+    n: formatNumber(steps, { maximumFractionDigits: 1 }),
+  });
+}
+
 export function headlineLabel(metric: ExerciseMetric): string {
+  if (metric === "topGrade") return t("trends.hardestSend");
+  if (metric === "averageGrade") return t("trends.avgSendGrade");
   if (metric === "load") return t("statistics.heaviestDone");
   if (metric === "sends") return t("common.sent");
   if (metric === "laps") return t("summary.laps");
@@ -44,7 +65,9 @@ export function exerciseInsight(
     return t("statistics.insightAttempted", { set: setText(summary.latest.best, unit) });
   const exercise = series.name;
   const date = shortDate(first.date);
-  const change = metricText(Math.abs(summary.change), series.metric, unit);
+  const change = isGradeMetric(series.metric)
+    ? gradesText(summary.change)
+    : metricText(Math.abs(summary.change), series.metric, unit);
   const line =
     summary.change > 0
       ? t("statistics.insightUp", { exercise, change, date })
@@ -52,7 +75,7 @@ export function exerciseInsight(
         ? t("statistics.insightDown", { exercise, change, date })
         : t("statistics.insightHeld", {
             exercise,
-            value: metricText(first.value, series.metric, unit),
+            value: metricText(first.value, series.metric, unit, series.grades),
             date,
           });
   const e1rm =
@@ -67,13 +90,14 @@ export function exerciseStats(
   summary: ExerciseSummary,
   unit: WeightUnit
 ): Stat[] {
+  const shown = (s: ExerciseSession): string =>
+    isGradeMetric(series.metric)
+      ? metricText(s.value, series.metric, unit, series.grades)
+      : setText(s.best, unit);
   return [
     { label: t("statistics.sessions"), value: String(summary.sessions) },
-    {
-      label: t("statistics.best"),
-      value: summary.best === null ? DASH : setText(summary.best.best, unit),
-    },
-    { label: t("statistics.latest"), value: setText(summary.latest.best, unit) },
+    { label: t("statistics.best"), value: summary.best === null ? DASH : shown(summary.best) },
+    { label: t("statistics.latest"), value: shown(summary.latest) },
     {
       label: t("statistics.volumeThisMonth"),
       value: series.metric === "load" ? loadText(summary.volumeThisMonthKg, unit) : DASH,
