@@ -1,7 +1,6 @@
 import { router } from "expo-router";
 import React from "react";
 import { Linking, View } from "react-native";
-import type { Focus } from "@sendtally/core/hang";
 import { useActivityPost, type PostTarget } from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
 import { ScreenFrame } from "../../../components/ScreenFrame";
@@ -9,7 +8,6 @@ import { useApi } from "../../../lib/api";
 import { useStravaConnect } from "../../settings/useStravaConnect";
 import { DetailActions } from "../components/DetailActions";
 import { deleteRow } from "../components/deleteRow";
-import { FocusTag } from "../components/FocusTag";
 import { Label } from "../components/Label";
 import { Title } from "../components/Title";
 import type { Stat } from "../components/types";
@@ -21,8 +19,6 @@ export type SummaryFrameProps = {
   kicker: string;
   kickerColor: string;
   title: string;
-  /** What the session recorded it trained for. */
-  focus: Focus | null;
   tiles: readonly Stat[];
   target: PostTarget;
   rpe: number | null;
@@ -30,12 +26,11 @@ export type SummaryFrameProps = {
   children: React.ReactNode;
 };
 
-/** What every finished workout shares: Back, Edit and the menu, its kicker, title and focus, its tiles and Strava. */
+/** What every finished workout shares: Back, Edit and the menu, its kicker, title, its tiles and Strava. */
 export function SummaryFrame({
   kicker,
   kickerColor,
   title,
-  focus,
   tiles,
   target,
   rpe,
@@ -76,12 +71,7 @@ export function SummaryFrame({
     >
       <View style={{ gap: 6 }}>
         <Label color={kickerColor}>{kicker}</Label>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-          <Title size={32} style={{ flex: 1 }}>
-            {title}
-          </Title>
-          <FocusTag focus={focus} />
-        </View>
+        <Title size={32}>{title}</Title>
       </View>
       <SummaryTiles stats={tiles} />
       {post.state !== null && <StravaStatusRow state={post.state} />}

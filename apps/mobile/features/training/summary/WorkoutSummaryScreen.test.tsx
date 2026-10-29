@@ -80,6 +80,7 @@ const before = activity("a0", "2026-10-23", {
 });
 
 const today = activity("a1", "2026-10-28", {
+  focus: "power",
   membershipId: "m1",
   week: 3,
   done: [
@@ -131,9 +132,9 @@ beforeEach(() => {
 });
 
 describe("A finished workout's summary", () => {
-  it("shows its kind, day and block week, its tiles, and each exercise against last time", async () => {
+  it("shows its kind, focus, day and block week, its tiles, and each exercise against last time", async () => {
     await show("a1", [today, before]);
-    expect(screen.getByText("Strength · Wed, Oct 28 · Week 3 of 6")).toBeTruthy();
+    expect(screen.getByText("Strength · Power · Wed, Oct 28 · Week 3 of 6")).toBeTruthy();
     expect(screen.getByRole("header", { name: "Lower body strength" })).toBeTruthy();
     expect(screen.getByText("41 min")).toBeTruthy();
     expect(screen.getByText("effort · aimed 7")).toBeTruthy();

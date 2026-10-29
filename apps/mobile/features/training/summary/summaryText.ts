@@ -2,6 +2,7 @@ import type { Plan } from "@sendtally/api-client";
 import {
   toUnit,
   type CalendarDate,
+  type Focus,
   type PlanLink,
   type WeightUnit,
   type WorkoutKind,
@@ -9,6 +10,7 @@ import {
 import { kindLabel, type SetChange } from "@sendtally/features/activities";
 import { shortDate } from "@sendtally/features/hang";
 import { formatDate, formatNumber, t } from "@sendtally/features/i18n";
+import { focusLabel } from "@sendtally/features/training";
 import type { Stat } from "../components/types";
 
 /** "+5 lb", "+1 rep", "−10s", or "Same". */
@@ -36,9 +38,10 @@ export function loadChange(kg: number, unit: WeightUnit): string {
 export const postedTime = (iso: string): string =>
   formatDate(new Date(iso), { hour: "numeric", minute: "2-digit" });
 
-/** "Strength · Tue 28 Oct · Week 3 of 6": the kind, the day, and the block week it ran in. */
+/** "Fingers · Strength · Tue 28 Oct · Week 3 of 6": the kind, its focus when it has one, the day, and the block week it ran in. */
 export function kickerText(
   kind: WorkoutKind,
+  focus: Focus | null,
   date: CalendarDate,
   link: Pick<PlanLink, "membershipId" | "week">,
   plan: Pick<Plan, "blocks" | "memberships">
@@ -49,7 +52,8 @@ export function kickerText(
     block === undefined || link.week === null
       ? []
       : [t("statistics.blockWeek", { at: link.week, of: block.weeks })];
-  return [kindLabel(kind), shortDate(date), ...week].join(" · ");
+  const trains = focus === null ? [] : [focusLabel(focus)];
+  return [kindLabel(kind), ...trains, shortDate(date), ...week].join(" · ");
 }
 
 /** The effort tile: the effort given, and what the workout aimed for when it says. */

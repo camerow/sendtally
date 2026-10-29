@@ -36,10 +36,9 @@ export function HangSummary({
   const best = newBestOf(session, all, model.gripName(session.gripId), unit);
   return (
     <SummaryFrame
-      kicker={kickerText("hangboard", session.date, session, log.plan)}
+      kicker={kickerText("hangboard", session.focus, session.date, session, log.plan)}
       kickerColor={KIND_LOOK.hangboard.ink}
       title={hangTitle(session)}
-      focus={session.focus}
       tiles={[
         { value: clock(totalSeconds(session.protocol), true), label: t("summary.length") },
         effortTile(session.rpe, log.workout(session.workoutId)?.targetRpe ?? null),

@@ -45,10 +45,9 @@ export function ActivitySummary({
   const target = activity.workoutId === null ? null : log.workout(activity.workoutId);
   return (
     <SummaryFrame
-      kicker={kickerText(activity.kind, activity.date, activity, log.plan)}
+      kicker={kickerText(activity.kind, activity.focus ?? null, activity.date, activity, log.plan)}
       kickerColor={KIND_LOOK[activity.kind].ink}
       title={activity.title}
-      focus={activity.focus ?? null}
       tiles={[
         { value: t("hang.minutes", { n: activity.minutes }), label: t("summary.length") },
         effortTile(activity.rpe, target?.targetRpe ?? null),
