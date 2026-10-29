@@ -1,17 +1,24 @@
 import React from "react";
 import { Text, View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
-import { timeOnEdge, totalSeconds, type HangWorkout } from "@sendtally/core/hang";
+import { timeOnEdge, type HangWorkout } from "@sendtally/core/hang";
 import { humanDuration, protocolSummary } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
+import { durationLabel } from "@sendtally/features/sessions";
 import { Label } from "../components/Label";
 import { PhaseBar } from "../components/PhaseBar";
 import { StatGrid } from "../components/StatGrid";
 import { type } from "../type";
 import { Swatch } from "./Swatch";
 
+export type ProtocolPanelProps = {
+  workout: HangWorkout;
+  /** The workout's planned length, as its cards and meta line read it. */
+  minutes: number | null;
+};
+
 /** The phase bar with its legend, the summary line, and the headline numbers. */
-export function ProtocolPanel({ workout }: { workout: HangWorkout }): React.ReactElement {
+export function ProtocolPanel({ workout, minutes }: ProtocolPanelProps): React.ReactElement {
   const hang = workout.kind === "hang";
   return (
     <>
@@ -35,7 +42,7 @@ export function ProtocolPanel({ workout }: { workout: HangWorkout }): React.Reac
       <StatGrid
         columns={3}
         stats={[
-          { label: t("hang.statDuration"), value: humanDuration(totalSeconds(workout)) },
+          { label: t("hang.statDuration"), value: minutes === null ? "-" : durationLabel(minutes) },
           hang
             ? { label: t("hang.statOnEdge"), value: humanDuration(timeOnEdge(workout)) }
             : { label: t("hang.statTotalLifts"), value: String(workout.reps * workout.sets) },

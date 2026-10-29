@@ -3,10 +3,11 @@ import React from "react";
 import { View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
 import { useActivities } from "@sendtally/features/activities";
+import { tallyMeasuresOf } from "@sendtally/features/exercises";
 import { hangWorkoutOf } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import { exerciseKey, useExercises } from "@sendtally/features/statistics";
-import type { LibraryWorkout, WorkoutUse } from "@sendtally/features/workouts";
+import { workoutMinutes, type LibraryWorkout, type WorkoutUse } from "@sendtally/features/workouts";
 import { ScreenFrame } from "../../../components/ScreenFrame";
 import { useApi } from "../../../lib/api";
 import { Button } from "../components/Button";
@@ -113,12 +114,16 @@ function Detail({ workout, use, grip, adding }: DetailProps): React.ReactElement
             workout={workout}
             unit={model.settings.units}
             session={use?.count ?? 0}
+            tally={tallyMeasuresOf(
+              exercises.status === "ready" ? exercises.data : [],
+              workout.kind
+            )}
             openExercise={openExercise}
           />
         ) : (
           <>
             <GripSetupCard workout={next} gripId={gripId} onChooseGrip={() => setPicker(true)} />
-            <ProtocolPanel workout={next} />
+            <ProtocolPanel workout={next} minutes={workoutMinutes(workout, session)} />
           </>
         )}
       </View>

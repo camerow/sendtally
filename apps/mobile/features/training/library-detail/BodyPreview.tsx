@@ -6,9 +6,12 @@ import {
   intervalsOf,
   sessionItems,
   turnsOf,
+  type Dose,
   type WeightUnit,
 } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
+import { climbingDoseLine } from "@sendtally/features/activities";
+import type { TallyMeasure } from "@sendtally/features/exercises";
 import { t } from "@sendtally/features/i18n";
 import {
   bodySummary,
@@ -31,6 +34,8 @@ export type BodyPreviewProps = {
   unit: WeightUnit;
   /** How many sessions of it are logged: which dose each item takes next. */
   session: number;
+  /** How an item's exercise logs on the climbing tally, as the player reads its dose. */
+  tally: (exercise: string) => TallyMeasure | null;
   /** Where tapping an item goes: its exercise, when it has a screen. */
   openExercise?: (name: string) => (() => void) | undefined;
 };
@@ -43,6 +48,7 @@ export function BodyPreview({
   workout,
   unit,
   session,
+  tally,
   openExercise,
 }: BodyPreviewProps): React.ReactElement {
   if (bodySummary(workout) === null) return <DashedPanel body={t("workouts.noBody")} />;
@@ -53,6 +59,12 @@ export function BodyPreview({
     seconds === undefined || seconds === 0
       ? undefined
       : t("plan.chipRest", { value: clock(seconds) });
+  const doseText = (exercise: string, dose: Dose): string => {
+    const measure = tally(exercise);
+    return measure === null
+      ? doseSummary(workout.kind, dose, unit)
+      : climbingDoseLine(dose, measure);
+  };
   const noteOf = (i: number): string | undefined => {
     const item = workout.items[i];
     if (turns === 1 || item === undefined) return undefined;
@@ -63,7 +75,7 @@ export function BodyPreview({
       ? undefined
       : t("workouts.alternatesWith", {
           letter: letterName(next, dose.name),
-          dose: doseSummary(workout.kind, dose, unit),
+          dose: doseText(item.exercise, dose),
         });
   };
   return (
@@ -98,7 +110,7 @@ export function BodyPreview({
           )}
           <PreviewRow
             title={exerciseName(item.exercise)}
-            detail={doseSummary(workout.kind, item.dose, unit)}
+            detail={doseText(item.exercise, item.dose)}
             note={noteOf(i)}
             rest={workout.kind === "hangboard" ? undefined : restOf(item.dose.setRestS)}
             onPress={openExercise?.(item.exercise)}

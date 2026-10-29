@@ -3,7 +3,9 @@ import { fireEvent, screen } from "@testing-library/react-native";
 import { router } from "expo-router";
 import React from "react";
 import type { ActivityRecord, Plan, WorkoutRecord } from "@sendtally/api-client";
+import { builtInWorkouts } from "@sendtally/features/workouts";
 import { aHang, hangData, renderWithHang } from "../data/renderWithHang";
+import { LibraryCard } from "../library/LibraryCard";
 import { WorkoutScreen } from "./WorkoutScreen";
 
 jest.mock("expo-router", () => ({ router: { push: jest.fn(), back: jest.fn() } }));
@@ -130,5 +132,40 @@ describe("Other workouts", () => {
       pathname: "/plan/schedule",
       params: { workoutId: "legs" },
     });
+  });
+});
+
+describe("Its length", () => {
+  it("reads the planned length from its dose, the same on its card and its screen", async () => {
+    const maxHangs = builtInWorkouts().find((w) => w.id === "max10")!;
+    await renderWithHang(<LibraryCard workout={maxHangs} use={undefined} onPress={() => {}} />);
+    expect(screen.getByText("13m")).toBeTruthy();
+
+    await renderWithHang(<WorkoutScreen id="max10" />);
+    expect(screen.getByText("13m · Not used yet")).toBeTruthy();
+    expect(screen.getByText("13m")).toBeTruthy();
+  });
+});
+
+describe("A climbing workout", () => {
+  const boulders: WorkoutRecord = {
+    ...legs,
+    id: "boulders",
+    kind: "climbing",
+    name: "Hard boulders",
+    minutes: 60,
+    items: [{ exercise: "Limit boulders", doses: [{ sets: 4, reps: 4 }] }],
+    focus: "power",
+  };
+
+  it("names its kind, focus and that it is the user's own in its kicker", async () => {
+    await renderWithHang(<WorkoutScreen id="boulders" />, hangData(), { workouts: [boulders] });
+    expect(screen.getByText("Climbing · Power · Mine")).toBeTruthy();
+  });
+
+  it("reads an exercise the library does not know in climbs, as the player does", async () => {
+    await renderWithHang(<WorkoutScreen id="boulders" />, hangData(), { workouts: [boulders] });
+    expect(screen.getByText("4 sets of 4 climbs")).toBeTruthy();
+    expect(screen.queryByText("4 × 4")).toBeNull();
   });
 });
