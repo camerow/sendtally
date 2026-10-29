@@ -31,8 +31,12 @@ export type GripMeasure = (typeof GRIP_MEASURES)[number];
 export const CLIMBING_MEASURES = ["reps", "seconds"] as const satisfies readonly ExerciseMeasure[];
 
 /** The measures a new or edited exercise of a category offers. */
-export const measuresFor = (kind: WorkoutKind): readonly ExerciseMeasure[] =>
-  kind === "climbing" ? CLIMBING_MEASURES : EXERCISE_MEASURES;
+export const measuresFor = (kind: WorkoutKind): readonly (ExerciseMeasure | GripMeasure)[] =>
+  kind === "hangboard"
+    ? GRIP_MEASURES
+    : kind === "climbing"
+      ? CLIMBING_MEASURES
+      : EXERCISE_MEASURES;
 
 const DEFAULT_MEASURE: Record<ExerciseKind, ExerciseMeasure> = {
   climbing: "reps",

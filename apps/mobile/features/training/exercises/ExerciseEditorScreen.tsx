@@ -1,12 +1,7 @@
 import { router } from "expo-router";
 import React from "react";
 import { Alert, Text, View } from "react-native";
-import {
-  defaultMeasure,
-  measuresFor,
-  type ExerciseMeasure,
-  type WorkoutKind,
-} from "@sendtally/core/hang";
+import { defaultMeasure, measuresFor, type WorkoutKind } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import {
   exerciseKindOf,
@@ -28,6 +23,8 @@ import { type } from "../type";
 import { forgetOpener, openerOf } from "./openExerciseEditor";
 import { takenBy } from "./takenBy";
 import type { ExerciseForm } from "./types";
+
+type Measure = ExerciseForm["measure"];
 import { useMakeExercise } from "./useMakeExercise";
 import { useMergeExercise } from "./useMergeExercise";
 
@@ -101,22 +98,18 @@ function Form({ initial, editing, logged, onSave }: FormProps): React.ReactEleme
         autoFocus={!editing}
       />
       <SheetSection label={t("workouts.measuredIn")}>
-        {fingers ? (
-          <Text style={[type.body, { fontSize: 15, color: colors.gunmetal }]}>
-            {t("workouts.measureFingers")}
-          </Text>
-        ) : (
-          <>
-            <ChipRow<ExerciseMeasure>
-              value={form.measure}
-              onChange={(measure) => setForm((f) => ({ ...f, measure }))}
-              options={measuresFor(kind).map((m) => ({ value: m, label: measureLabel(m, kind) }))}
-            />
-            <Text style={[type.body, { fontSize: 12.5, color: colors.textSecondary }]}>
-              {climbing ? t("workouts.measuredInHintClimbing") : t("workouts.measuredInHint")}
-            </Text>
-          </>
-        )}
+        <ChipRow<Measure>
+          value={form.measure}
+          onChange={(measure) => setForm((f) => ({ ...f, measure }))}
+          options={measuresFor(kind).map((m) => ({ value: m, label: measureLabel(m, kind) }))}
+        />
+        <Text style={[type.body, { fontSize: 12.5, color: colors.textSecondary }]}>
+          {fingers
+            ? t("workouts.measuredInHintFingers")
+            : climbing
+              ? t("workouts.measuredInHintClimbing")
+              : t("workouts.measuredInHint")}
+        </Text>
       </SheetSection>
       {!fingers && !climbing && (
         <View
@@ -157,7 +150,7 @@ function NewExercise({ kind, name = "", ret }: ExerciseEditorScreenProps): React
   const initial: ExerciseForm = {
     kind,
     name,
-    measure: defaultMeasure(exerciseKindOf(kind) ?? "other"),
+    measure: kind === "hangboard" ? "hang" : defaultMeasure(exerciseKindOf(kind) ?? "other"),
     eachSide: false,
   };
   const save = (form: ExerciseForm): void => {
@@ -195,7 +188,7 @@ function EditExercise({ id }: { id: string }): React.ReactElement | null {
       .saveExercise(exercise.id, {
         name,
         kind: exerciseKindOf(kind) ?? exercise.kind,
-        measure,
+        measure: measure === "hang" ? exercise.measure : measure,
         eachSide,
       })
       .catch((error: unknown) => {
@@ -222,8 +215,8 @@ function EditExercise({ id }: { id: string }): React.ReactElement | null {
 /**
  * New exercise, or one edited: its name under its category, what its sets are measured in,
  * and whether it is done on each side. The category comes from where it was opened. Fingers
- * is fixed to hang time and added weight on an edge; climbing logs on the session tally, in
- * climbs or time on the wall, never by side.
+ * hangs on an edge or pulls off the ground, by reps or time; climbing logs on the session
+ * tally, in climbs or time on the wall, never by side.
  */
 export function ExerciseEditorScreen(props: ExerciseEditorScreenProps): React.ReactElement | null {
   return props.id === undefined ? <NewExercise {...props} /> : <EditExercise id={props.id} />;

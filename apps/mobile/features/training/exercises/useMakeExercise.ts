@@ -2,6 +2,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { randomUUID } from "expo-crypto";
 import { Alert } from "react-native";
 import type { Exercise } from "@sendtally/api-client";
+import { defaultMeasure } from "@sendtally/core/hang";
 import { exerciseKindOf } from "@sendtally/features/exercises";
 import { findGrip } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
@@ -34,12 +35,20 @@ export function useMakeExercise(): (
     const exerciseKind = exerciseKindOf(kind);
     if (exerciseKind === null) {
       const existing = findGrip(model.grips, name);
-      const grip = { ...(existing ?? { id: randomUUID(), name, custom: true }), hidden: false };
+      const pulls = measure === "repsWeight" || measure === "secondsWeight";
+      const made = { id: randomUUID(), name, custom: true, ...(pulls ? { measure } : {}) };
+      const grip = { ...(existing ?? made), hidden: false };
       if (existing === undefined || existing.hidden) void actions.saveGrip(grip);
       return { grip };
     }
     try {
-      const input = { name, kind: exerciseKind, measure, eachSide, builtIn: builtIn ?? null };
+      const input = {
+        name,
+        kind: exerciseKind,
+        measure: measure === "hang" ? defaultMeasure(exerciseKind) : measure,
+        eachSide,
+        builtIn: builtIn ?? null,
+      };
       return listed((await api.saveExercise(randomUUID(), input)).exercise);
     } catch (error) {
       const taken = takenBy(error);
