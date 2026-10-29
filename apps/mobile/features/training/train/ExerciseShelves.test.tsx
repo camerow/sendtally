@@ -54,6 +54,8 @@ describe("exercise shelves", () => {
     for (const kind of ["Fingers", "Climbing", "Strength", "Mobility", "Other"])
       expect(screen.getByText(kind)).toBeTruthy();
     expect(screen.queryByText("Pigeon")).toBeNull();
+    expect(screen.getByText("Sloper")).toBeTruthy();
+    expect(screen.getAllByText("Not done yet").length).toBeGreaterThan(0);
     expect(screen.getByText("A stretch or a hold, like Pancake.")).toBeTruthy();
     expect(screen.queryByText("1")).toBeNull();
     expect(screen.getByLabelText("See all Strength")).toBeTruthy();
