@@ -38,7 +38,7 @@ export function LibraryCard({
   showKind = true,
   width,
 }: LibraryCardProps): React.ReactElement {
-  const minutes = workoutMinutes(workout);
+  const minutes = workoutMinutes(workout, use?.count ?? 0);
   const summary = bodySummary(workout);
   const items = sessionItems(workout.items, use?.count ?? 0);
   const [first] = items;

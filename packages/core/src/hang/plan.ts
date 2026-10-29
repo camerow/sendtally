@@ -2,7 +2,7 @@ import { addDays, daysBetween, weekday } from "./calendar";
 import type { ClimbStyle } from "../effort";
 import type { GradeScale } from "../grades";
 import type { Intervals } from "./intervals";
-import { SECONDS_PER_LIFT, totalSeconds } from "./protocol";
+import { totalSeconds } from "./protocol";
 import type { CalendarDate, HangKind, Protocol, TimeUnit, TimeUnits, Weekday } from "./types";
 
 export const WORKOUT_KINDS = ["hangboard", "climbing", "strength", "mobility", "other"] as const;
@@ -346,24 +346,13 @@ export function intervalsOf(
   };
 }
 
-/** Rough seconds a session takes, timed as the hang timer would run each item. */
+/** Seconds a session's items take as the hang timer runs each one: no rest after the last hang or set. */
 export const itemsSeconds = (items: readonly SessionItem[]): number =>
   items.reduce((sum, i) => sum + totalSeconds(doseProtocol(i.exercise, i.dose)), 0);
 
-/**
- * Seconds one hangboard item takes: sets × hangs × (hang time + rest time) + sets × set rest.
- * A ground pull has no hang time, so each lift counts as SECONDS_PER_LIFT.
- */
-export function hangItemSeconds(dose: Dose): number {
-  const p = doseProtocol("", dose);
-  const work = p.kind === "hang" ? p.hangS : SECONDS_PER_LIFT;
-  return p.sets * p.reps * (work + p.restS) + p.sets * p.setRestS;
-}
-
-/** Seconds a hangboard session takes: every item, with the rest between exercises between them. */
+/** Seconds a hangboard session takes as the timer runs it: every item, with the rest between exercises between them. */
 export const hangboardSeconds = (items: readonly SessionItem[], exerciseRestS: number): number =>
-  items.reduce((sum, i) => sum + hangItemSeconds(i.dose), 0) +
-  Math.max(0, items.length - 1) * exerciseRestS;
+  itemsSeconds(items) + Math.max(0, items.length - 1) * exerciseRestS;
 
 /** Every set of every item done as prescribed. */
 export function doneAsPrescribed(items: readonly SessionItem[]): ItemDone[] {

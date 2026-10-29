@@ -68,13 +68,15 @@ export function newWorkoutDraft(kind: WorkoutKind): WorkoutDraft {
 const roundMinutes = (seconds: number): number => Math.max(1, Math.round(seconds / 60));
 
 /**
- * How long its first session takes: for hangboard always counted from its items,
- * otherwise the minutes set, or for timed work without them the time its items take.
+ * A workout's planned length, the one every screen shows: for hangboard always timed from
+ * the session's doses as the timer runs them, otherwise the minutes set, or for timed work
+ * without them the time its items take. Doses that take turns make session `n` its own length.
  */
 export function workoutMinutes(
-  w: Pick<Workout, "kind" | "minutes" | "items" | "exerciseRestS">
+  w: Pick<Workout, "kind" | "minutes" | "items" | "exerciseRestS">,
+  session = 0
 ): number | null {
-  const items = sessionItems(w.items, 0);
+  const items = sessionItems(w.items, session);
   if (w.kind === "hangboard")
     return items.length > 0 ? roundMinutes(hangboardSeconds(items, w.exerciseRestS)) : null;
   if (w.minutes !== null) return w.minutes;

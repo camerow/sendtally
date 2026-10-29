@@ -284,8 +284,8 @@ describe("summaries", () => {
   });
 
   it("counts a hangboard workout's length from its items and the rest between them", () => {
-    // 6 sets × 6 hangs × (7s + 3s) + 6 × 3:00 set rest = 24 minutes.
-    expect(workoutMinutes(byId("rep73"))).toBe(24);
+    expect(workoutMinutes(byId("rep73"))).toBe(21);
+    expect(workoutMinutes(byId("max10"))).toBe(13);
     const rep73 = byId("rep73");
     const twice = {
       ...rep73,
@@ -294,7 +294,12 @@ describe("summaries", () => {
       focus: null,
       items: [...rep73.items, ...rep73.items],
     };
-    expect(workoutMinutes(twice)).toBe(50);
+    expect(workoutMinutes(twice)).toBe(43);
     expect(workoutMinutes({ ...twice, items: [] })).toBeNull();
+  });
+
+  it("times the session it is asked for when doses take turns", () => {
+    expect(workoutMinutes(byId("fingers-ab"))).toBe(16);
+    expect(workoutMinutes(byId("fingers-ab"), 1)).toBe(9);
   });
 });

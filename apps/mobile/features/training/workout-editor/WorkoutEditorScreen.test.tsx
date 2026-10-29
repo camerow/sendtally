@@ -177,11 +177,11 @@ describe("Workout editor", () => {
     await act(async () => undefined);
     await type("Hang time", "12");
     expect(screen.queryByText("Duration")).toBeNull();
-    expect(screen.getByText("16m")).toBeTruthy();
+    expect(screen.getByText("13m")).toBeTruthy();
     await pick("Open hand");
-    expect(screen.getByText("35m")).toBeTruthy();
+    expect(screen.getByText("29m")).toBeTruthy();
     await type("Rest between exercises", "200");
-    expect(screen.getByText("34m")).toBeTruthy();
+    expect(screen.getByText("28m")).toBeTruthy();
     await fireEvent.press(screen.getByText("Save"));
 
     expect(mockWorkouts.saveWorkout).toHaveBeenCalledWith(

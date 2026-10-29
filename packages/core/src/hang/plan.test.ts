@@ -7,7 +7,6 @@ import {
   doseProtocol,
   focusOf,
   hangboardSeconds,
-  hangItemSeconds,
   foldVariations,
   intervalPhases,
   intervalsOf,
@@ -271,24 +270,27 @@ describe("hangboard doses", () => {
 });
 
 describe("hangboard duration", () => {
+  const item = (dose: Dose) => ({ exercise: "half", dose });
+
   it.each([
-    // sets × hangs × (hang time + rest time) + sets × set rest
-    [{ sets: 6, reps: 6, onS: 7, offS: 3, setRestS: 180 }, 6 * 6 * (7 + 3) + 6 * 180],
-    [{ sets: 5, reps: 1, onS: 10, setRestS: 180 }, 5 * 1 * (10 + 0) + 5 * 180],
-    [{ sets: 3, reps: 6, onS: 7, offS: 3 }, 3 * 6 * (7 + 3)],
-    [{ sets: 5, reps: 5, setRestS: 120 }, 5 * 5 * 6 + 5 * 120],
-  ] satisfies [Dose, number][])("counts %o as %i seconds", (dose, seconds) => {
-    expect(hangItemSeconds(dose)).toBe(seconds);
-  });
+    [{ sets: 6, reps: 6, onS: 7, offS: 3, setRestS: 180 }, 6 * (6 * 7 + 5 * 3) + 5 * 180],
+    [{ sets: 5, reps: 1, onS: 10, setRestS: 180 }, 5 * 10 + 4 * 180],
+    [{ sets: 3, reps: 6, onS: 7, offS: 3 }, 3 * (6 * 7 + 5 * 3)],
+    [{ sets: 5, reps: 5, setRestS: 120 }, 5 * 5 * 6 + 4 * 120],
+  ] satisfies [Dose, number][])(
+    "counts %o as %i seconds, with no rest after the last hang or set",
+    (dose, seconds) => {
+      expect(hangboardSeconds([item(dose)], 0)).toBe(seconds);
+    }
+  );
 
   it("adds the rest between exercises between items, not after the last", () => {
-    const item = (dose: Dose) => ({ exercise: "half", dose });
     const a = item({ sets: 3, reps: 6, onS: 7, offS: 3, setRestS: 120 });
     const b = item({ sets: 5, reps: 1, onS: 10, setRestS: 180 });
     expect(hangboardSeconds([], 180)).toBe(0);
-    expect(hangboardSeconds([a], 180)).toBe(540);
-    expect(hangboardSeconds([a, b], 180)).toBe(540 + 180 + 950);
-    expect(hangboardSeconds([a, b, a], 90)).toBe(540 + 90 + 950 + 90 + 540);
+    expect(hangboardSeconds([a], 180)).toBe(411);
+    expect(hangboardSeconds([a, b], 180)).toBe(411 + 180 + 770);
+    expect(hangboardSeconds([a, b, a], 90)).toBe(411 + 90 + 770 + 90 + 411);
   });
 });
 
