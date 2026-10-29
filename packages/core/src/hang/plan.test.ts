@@ -254,6 +254,11 @@ describe("hangboard doses", () => {
       { sets: 5, reps: 5, setRestS: 120 },
       { kind: "pull", hangS: 0, restS: 0, reps: 5, sets: 5, setRestS: 120 },
     ],
+    [
+      "time with no edge is a ground pull held for time",
+      { sets: 5, reps: 1, onS: 10, edgeMm: 0, setRestS: 120 },
+      { kind: "pull", hangS: 10, restS: 0, reps: 1, sets: 5, setRestS: 120 },
+    ],
   ] as const)("%s", (_, dose, protocol) => {
     const p = doseProtocol("Repeaters", dose);
     expect(p).toEqual({ name: "Repeaters", ...protocol });
@@ -277,6 +282,7 @@ describe("hangboard duration", () => {
     [{ sets: 5, reps: 1, onS: 10, setRestS: 180 }, 5 * 10 + 4 * 180],
     [{ sets: 3, reps: 6, onS: 7, offS: 3 }, 3 * (6 * 7 + 5 * 3)],
     [{ sets: 5, reps: 5, setRestS: 120 }, 5 * 5 * 6 + 4 * 120],
+    [{ sets: 5, reps: 1, onS: 10, edgeMm: 0, setRestS: 120 }, 5 * 10 + 4 * 120],
   ] satisfies [Dose, number][])(
     "counts %o as %i seconds, with no rest after the last hang or set",
     (dose, seconds) => {

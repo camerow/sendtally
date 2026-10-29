@@ -1,3 +1,4 @@
+import type { GripMeasure } from "./exercise";
 import type { ItemDone, PlanLink } from "./plan";
 
 export type HangKind = "hang" | "pull";
@@ -28,8 +29,17 @@ export type TimeField = "hangS" | "restS" | "setRestS";
 
 export type TimeUnits = Record<TimeField, TimeUnit>;
 
-/** A deleted custom grip is hidden, not removed: its sessions and trend keep its name. */
-export type Grip = { id: string; name: string; custom: boolean; hidden: boolean };
+/**
+ * A deleted custom grip is hidden, not removed: its sessions and trend keep its name.
+ * Its measure is what a new workout item on it starts as; none is a hang.
+ */
+export type Grip = {
+  id: string;
+  name: string;
+  custom: boolean;
+  hidden: boolean;
+  measure?: GripMeasure;
+};
 
 /** One hangboard item as the hang timer runs it: a protocol on a grip. */
 export type HangWorkout = Protocol & {

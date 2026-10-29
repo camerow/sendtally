@@ -146,6 +146,18 @@ describe("timer", () => {
     expect(run.finished).not.toBeNull();
     expect(resultOf(run)).toMatchObject({ ended: false, pct: 50, misses: 1, work: 1 });
   });
+
+  it("runs a ground pull held for time on the clock", () => {
+    const held = { ...blockPulls, hangS: 10, reps: 1, sets: 2 };
+    expect(phasesFor(held).map((p) => [p.kind, p.seconds, p.taps])).toEqual([
+      ["ready", 5, 0],
+      ["pull", 10, 0],
+      ["setrest", 120, 0],
+      ["pull", 10, 0],
+    ]);
+    const run = tick(startRun(held, 0), 5000 + 10_000 + 120_000 + 10_000);
+    expect(resultOf(run)).toMatchObject({ ended: false, pct: 100, work: 20 });
+  });
 });
 
 describe("trends", () => {

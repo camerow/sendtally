@@ -2,7 +2,8 @@ import { addDays, daysBetween, weekday } from "./calendar";
 import type { ClimbStyle } from "../effort";
 import type { GradeScale } from "../grades";
 import type { Intervals } from "./intervals";
-import { totalSeconds } from "./protocol";
+import type { GripMeasure } from "./exercise";
+import { isTimed, totalSeconds } from "./protocol";
 import type { CalendarDate, HangKind, Protocol, TimeUnit, TimeUnits, Weekday } from "./types";
 
 export const WORKOUT_KINDS = ["hangboard", "climbing", "strength", "mobility", "other"] as const;
@@ -25,7 +26,7 @@ export type Focus = (typeof FOCI)[number];
 /**
  * One prescription for any kind of training. Strength: sets, reps, weightKg.
  * Hangboard: reps are hangs of onS with offS between, on edgeMm; no onS is a
- * ground pull. Intervals: sets are rounds of onS work and offS rest.
+ * ground pull of reps lifts, and an edgeMm of 0 one held for onS. Intervals: sets are rounds of onS work and offS rest.
  */
 export type Dose = {
   sets: number;
@@ -286,18 +287,23 @@ export function changeFrom(written: Dose, target: Dose): Partial<Dose> {
   return change;
 }
 
-/** A hangboard dose with time on the edge hangs; without, it is a ground pull. */
+/** A hangboard dose with time hangs, unless it has no edge; without time it is a ground pull in lifts. */
+export function gripMeasureOf(dose: Dose): GripMeasure {
+  if (dose.onS === undefined || dose.onS <= 0) return "repsWeight";
+  return dose.edgeMm === 0 ? "secondsWeight" : "hang";
+}
+
 export const hangKindOf = (dose: Dose): HangKind =>
-  dose.onS !== undefined && dose.onS > 0 ? "hang" : "pull";
+  gripMeasureOf(dose) === "hang" ? "hang" : "pull";
 
 /** What the hang timer runs for one hangboard item. */
 export function doseProtocol(name: string, dose: Dose): Protocol {
-  const kind = hangKindOf(dose);
+  const timed = gripMeasureOf(dose) !== "repsWeight";
   return {
     name,
-    kind,
-    hangS: kind === "hang" ? (dose.onS ?? 0) : 0,
-    restS: kind === "hang" ? (dose.offS ?? 0) : 0,
+    kind: hangKindOf(dose),
+    hangS: timed ? (dose.onS ?? 0) : 0,
+    restS: timed ? (dose.offS ?? 0) : 0,
     reps: dose.reps ?? 1,
     sets: dose.sets,
     setRestS: dose.setRestS ?? 0,
@@ -309,8 +315,9 @@ export function protocolDose(p: Protocol): Dose {
   return {
     sets: p.sets,
     reps: p.reps,
-    ...(p.kind === "hang" ? { onS: p.hangS } : {}),
-    ...(p.kind === "hang" && p.restS > 0 ? { offS: p.restS } : {}),
+    ...(isTimed(p) ? { onS: p.hangS } : {}),
+    ...(isTimed(p) && p.restS > 0 ? { offS: p.restS } : {}),
+    ...(p.kind === "pull" && isTimed(p) ? { edgeMm: 0 } : {}),
     ...(p.setRestS > 0 ? { setRestS: p.setRestS } : {}),
   };
 }
