@@ -34,7 +34,7 @@ export function timerText(
   const phase = currentPhase(run);
   const paused = run.pausedAt !== null;
   const next = run.phases[run.index + 1];
-  const pull = phase.kind === "pull";
+  const pull = phase.taps > 0;
   return {
     label: paused ? t("hang.paused") : t(label(run, phase)),
     big: pull ? `${run.taps}/${phase.taps}` : clock(secondsLeft),
@@ -60,7 +60,9 @@ function nextText(next: Phase | undefined, loadText: string): string {
     case "setrest":
       return t("hang.nextSetRest", { time: clock(next.seconds) });
     case "pull":
-      return t("hang.nextLift", { reps: next.taps, load: loadText });
+      return next.taps > 0
+        ? t("hang.nextLift", { reps: next.taps, load: loadText })
+        : t("hang.nextTimedLift", { n: next.seconds, set: next.set });
     case "ready":
       return t("hang.nextExerciseRest", { time: clock(next.seconds) });
   }
