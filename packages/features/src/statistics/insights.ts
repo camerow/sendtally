@@ -175,6 +175,11 @@ function mix<K>(
  * Training over a range: effort and sessions per bucket, the mix of kinds by sessions and time,
  * and each exercise grouped by kind, the most done first, with its change on its own metric.
  */
+function perWeekLabel(perWeek: number): string {
+  const n = Math.round(perWeek * 10) / 10;
+  return t("statistics.perWeek", { count: n, n: formatNumber(n, { maximumFractionDigits: 1 }) });
+}
+
 export function trainingInsightsVM(
   log: SessionLogWithClimbs,
   range: TrendRange,
@@ -193,9 +198,7 @@ export function trainingInsightsVM(
   const minutes = shown.reduce((n, d) => n + d.minutes, 0);
   const line = [
     effortLine(effortOf(shown), effortOf(before)),
-    t("statistics.perWeek", {
-      n: formatNumber(shown.length / weeks, { maximumFractionDigits: 1 }),
-    }),
+    perWeekLabel(shown.length / weeks),
   ].filter((p) => p !== null);
   const activities = log.activities.filter((a) => within(Date.parse(a.date)));
   const groups: ExerciseGroupVM[] = [
