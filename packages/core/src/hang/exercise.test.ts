@@ -24,5 +24,6 @@ describe("measureOf", () => {
   it("offers climbing only climbs and time on the wall", () => {
     expect(measuresFor("climbing")).toEqual(["reps", "seconds"]);
     expect(measuresFor("strength")).toHaveLength(5);
+    expect(measuresFor("hangboard")).toEqual(["hang", "repsWeight", "secondsWeight"]);
   });
 });

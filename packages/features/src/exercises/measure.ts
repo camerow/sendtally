@@ -45,8 +45,8 @@ export const measureLabel = (
 
 /** Whether saving asks first: the measure of an exercise that was logged changes. */
 export const measureChangeNeedsWarning = (
-  before: ExerciseMeasure,
-  after: ExerciseMeasure,
+  before: ExerciseMeasure | GripMeasure,
+  after: ExerciseMeasure | GripMeasure,
   logged: boolean
 ): boolean => logged && before !== after;
 

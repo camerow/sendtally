@@ -56,6 +56,14 @@ describe("Grip picker", () => {
     expect(actions.saveGrip).toHaveBeenCalledWith({ ...mono, name: "Mono pocket" });
   });
 
+  it("measures a grip as a ground pull", async () => {
+    const { actions } = await renderPicker();
+    await fireEvent.press(screen.getByLabelText("Edit Mono"));
+    await fireEvent.press(screen.getByText("Reps × weight"));
+    await fireEvent.press(screen.getByText("Save changes"));
+    expect(actions.saveGrip).toHaveBeenCalledWith({ ...mono, measure: "repsWeight" });
+  });
+
   it("deletes a grip after confirming, and drops it from the selection", async () => {
     jest
       .spyOn(Alert, "alert")

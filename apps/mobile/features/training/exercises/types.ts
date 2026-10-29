@@ -1,13 +1,13 @@
 import type { Exercise } from "@sendtally/api-client";
-import type { ExerciseMeasure, Grip, WorkoutKind } from "@sendtally/core/hang";
+import type { ExerciseMeasure, Grip, GripMeasure, WorkoutKind } from "@sendtally/core/hang";
 
 export type ExerciseChartMetric = "best" | "e1rm";
 
-/** What the exercise sheet asks for. */
+/** What the exercise sheet asks for. A Fingers exercise takes a grip's measure. */
 export type ExerciseForm = {
   kind: WorkoutKind;
   name: string;
-  measure: ExerciseMeasure;
+  measure: ExerciseMeasure | GripMeasure;
   eachSide: boolean;
 };
 

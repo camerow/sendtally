@@ -71,7 +71,7 @@ describe("exercise editor", () => {
 
   it("makes a grip in Fingers, measured as hangs", async () => {
     const { actions } = await renderWithHang(<ExerciseEditorScreen kind="hangboard" />);
-    expect(screen.getByText("Hang time × added weight, on an edge")).toBeTruthy();
+    expect(screen.getByRole("radio", { name: "Hang × weight" })).toBeChecked();
     await fireEvent.changeText(screen.getByLabelText("Name"), "Mono");
     await fireEvent.press(screen.getByText("Save"));
     await act(async () => undefined);
@@ -83,6 +83,21 @@ describe("exercise editor", () => {
     });
     expect(mockApi.saveExercise).not.toHaveBeenCalled();
     expect(router.back).toHaveBeenCalled();
+  });
+
+  it("makes a grip in Fingers measured as a ground pull held for time", async () => {
+    const { actions } = await renderWithHang(<ExerciseEditorScreen kind="hangboard" />);
+    await fireEvent.changeText(screen.getByLabelText("Name"), "Block");
+    await fireEvent.press(screen.getByText("Time × weight"));
+    await fireEvent.press(screen.getByText("Save"));
+    await act(async () => undefined);
+    expect(actions.saveGrip).toHaveBeenCalledWith({
+      id: "new-id",
+      name: "Block",
+      custom: true,
+      hidden: false,
+      measure: "secondsWeight",
+    });
   });
 
   it("hands what was saved back to the screen that opened it", async () => {
