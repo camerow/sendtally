@@ -65,11 +65,4 @@ export {
   trainingReminders,
   type TrainingReminder,
 } from "./reminders";
-export {
-  focusCounts,
-  focusLabel,
-  focusMeaning,
-  focusParam,
-  readFocus,
-  type FocusCount,
-} from "./focus";
+export { focusLabel, focusMeaning, focusParam, readFocus } from "./focus";
