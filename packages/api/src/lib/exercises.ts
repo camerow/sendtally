@@ -1,9 +1,11 @@
 import {
   EXERCISE_KINDS,
   EXERCISE_MEASURES,
+  EXERCISE_PROGRESS,
   measureOf,
   type ExerciseKind,
   type ExerciseMeasure,
+  type ExerciseProgress,
   type Workout,
   type WorkoutKind,
 } from "@sendtally/core/hang";
@@ -12,12 +14,13 @@ import { id, title } from "./plan";
 import type { ExerciseRow } from "./repo";
 
 // Older app builds send a name and kind only: a new exercise then takes its kind's
-// measure, and a rename keeps what it had.
+// measure, and a rename keeps what it had, its progress too.
 export const exerciseBody = z.object({
   name: title,
   kind: z.enum(EXERCISE_KINDS),
   measure: z.enum(EXERCISE_MEASURES).optional(),
   eachSide: z.boolean().optional(),
+  progress: z.enum(EXERCISE_PROGRESS).nullable().optional(),
   builtIn: id.nullable().optional(),
 });
 
@@ -31,6 +34,8 @@ export type Exercise = {
   kind: ExerciseKind;
   measure: ExerciseMeasure;
   eachSide: boolean;
+  /** What a climbing exercise's trend follows; null follows the climbs completed. */
+  progress: ExerciseProgress | null;
   /** The library exercise it was picked from, whose name the apps translate. */
   builtIn: string | null;
   archived: boolean;
@@ -61,6 +66,7 @@ export const exerciseOf = (row: ExerciseRow): Exercise => ({
   kind: row.kind,
   measure: row.measure,
   eachSide: row.each_side,
+  progress: row.progress,
   builtIn: row.built_in,
   archived: row.archived,
 });

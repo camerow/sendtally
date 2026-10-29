@@ -30,6 +30,14 @@ export type GripMeasure = (typeof GRIP_MEASURES)[number];
  */
 export const CLIMBING_MEASURES = ["reps", "seconds"] as const satisfies readonly ExerciseMeasure[];
 
+/**
+ * What a climbing exercise's trend follows: the climbs completed, the average or highest
+ * grade sent, or nothing. An exercise with none set follows the climbs completed.
+ */
+export const EXERCISE_PROGRESS = ["completed", "averageGrade", "topGrade", "none"] as const;
+
+export type ExerciseProgress = (typeof EXERCISE_PROGRESS)[number];
+
 /** The measures a new or edited exercise of a category offers. */
 export const measuresFor = (kind: WorkoutKind): readonly (ExerciseMeasure | GripMeasure)[] =>
   kind === "hangboard"

@@ -3189,8 +3189,8 @@ export async function findExerciseByName(
   return row ?? null;
 }
 
-// D1 binds at most 100 parameters a statement, and an exercise row takes 11.
-const EXERCISES_PER_INSERT = 9;
+// D1 binds at most 100 parameters a statement, and an exercise row takes 12.
+const EXERCISES_PER_INSERT = 8;
 
 const exerciseValues = (userId: string, id: string, e: ExerciseInput, now: string) => ({
   user_id: userId,
@@ -3200,6 +3200,7 @@ const exerciseValues = (userId: string, id: string, e: ExerciseInput, now: strin
   kind: e.kind,
   measure: e.measure ?? defaultMeasure(e.kind),
   each_side: e.eachSide ?? false,
+  progress: e.progress ?? null,
   built_in: e.builtIn ?? null,
   archived: false,
   created_at: now,
@@ -3348,6 +3349,7 @@ export async function updateExercise(
     kind: e.kind,
     measure: e.measure ?? row.measure,
     each_side: e.eachSide ?? row.each_side,
+    progress: e.progress === undefined ? row.progress : e.progress,
     built_in: e.builtIn === undefined ? row.built_in : e.builtIn,
     archived: false,
     updated_at: new Date().toISOString(),
