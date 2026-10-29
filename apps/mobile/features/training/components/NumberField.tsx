@@ -1,14 +1,12 @@
 import React from "react";
 import type { NumberLimits } from "@sendtally/core/hang";
 import { formatNumber } from "@sendtally/features/i18n";
-import { KeypadField } from "../../../components/KeypadField";
+import { KeypadField, type KeypadFieldProps } from "../../../components/KeypadField";
 import type { FieldSlot } from "../../../components/useFieldOrder";
 
 export type NumberFieldProps = FieldSlot &
-  NumberLimits & {
-    label: string;
-    accessibilityLabel?: string;
-    hideLabel?: boolean;
+  NumberLimits &
+  Pick<KeypadFieldProps, "label" | "accessibilityLabel" | "before" | "after"> & {
     /** Null reads as the placeholder, and the keypad opens on zero. */
     value: number | null;
     /** Called on Done, Next or a tap outside, only when it changed. */

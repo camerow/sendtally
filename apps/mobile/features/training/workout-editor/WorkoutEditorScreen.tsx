@@ -1,7 +1,7 @@
 import { randomUUID } from "expo-crypto";
 import { router } from "expo-router";
 import React from "react";
-import { Alert, KeyboardAvoidingView, Platform, ScrollView } from "react-native";
+import { Alert, KeyboardAvoidingView, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import type { Focus, WorkoutKind } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
@@ -22,7 +22,6 @@ import { Button } from "../components/Button";
 import { EditorHeader } from "../components/EditorHeader";
 import { FocusField } from "../components/FocusField";
 import { KindNameField } from "../components/KindNameField";
-import { SheetSection } from "../components/SheetSection";
 import { useHangData } from "../data/HangDataContext";
 import { LoadState } from "../data/LoadState";
 import { ExercisePickerSheet } from "../exercise-picker/ExercisePickerSheet";
@@ -41,6 +40,7 @@ import {
 import { doseMeasureOf } from "./doseFields";
 import { ItemEditor } from "./ItemEditor";
 import { confirmDestructive } from "../../../lib/confirmDestructive";
+import { KeypadScrollView } from "../../../components/KeypadScrollView";
 import { TimeField } from "../../../components/TimeField";
 
 const MAX_MINUTES = 600;
@@ -124,8 +124,7 @@ function Editor({
         behavior={Platform.OS === "ios" ? "padding" : undefined}
         style={{ flex: 1 }}
       >
-        <ScrollView
-          keyboardShouldPersistTaps="handled"
+        <KeypadScrollView
           contentContainerStyle={{
             gap: 18,
             paddingTop: 6,
@@ -181,21 +180,18 @@ function Editor({
           {state.kind === "hangboard" ? (
             <HangboardTiming minutes={workoutMinutes(state)} />
           ) : (
-            <SheetSection label={t("common.duration")}>
-              <TimeField
-                hideLabel
-                label={t("common.duration")}
-                value={(state.minutes ?? 0) * 60}
-                max={MAX_MINUTES * 60}
-                onChange={(seconds) => setState((s) => ({ ...s, minutes: usualMinutes(seconds) }))}
-              />
-            </SheetSection>
+            <TimeField
+              label={t("common.duration")}
+              value={(state.minutes ?? 0) * 60}
+              max={MAX_MINUTES * 60}
+              onChange={(seconds) => setState((s) => ({ ...s, minutes: usualMinutes(seconds) }))}
+            />
           )}
           <TargetEffort
             value={state.targetRpe}
             onChange={(targetRpe) => setState((s) => ({ ...s, targetRpe }))}
           />
-        </ScrollView>
+        </KeypadScrollView>
       </KeyboardAvoidingView>
       {picking !== null && (
         <ExercisePickerSheet

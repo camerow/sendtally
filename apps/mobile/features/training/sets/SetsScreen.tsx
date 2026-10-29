@@ -1,6 +1,6 @@
 import { router } from "expo-router";
 import React from "react";
-import { KeyboardAvoidingView, Platform, ScrollView, View } from "react-native";
+import { KeyboardAvoidingView, Platform, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { doneAsPrescribed, type ItemDone, type SetDone } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
@@ -18,6 +18,7 @@ import { t } from "@sendtally/features/i18n";
 import { exerciseSets, startExercise, useLiveSession } from "@sendtally/features/log-session";
 import { useExercises } from "@sendtally/features/statistics";
 import { exerciseName } from "@sendtally/features/workouts";
+import { KeypadScrollView } from "../../../components/KeypadScrollView";
 import { useApi } from "../../../lib/api";
 import { exerciseTallyStorage } from "../../../lib/exerciseTallyStorage";
 import { Button } from "../components/Button";
@@ -56,6 +57,7 @@ export function SetsScreen({ run }: { run: WorkoutRun }): React.ReactElement {
   const [done, setDone] = React.useState<ItemDone[]>(() => doneAsPrescribed(run.items));
   const [ticked, setTicked] = React.useState<ReadonlySet<string>>(new Set());
   const [opened, setOpened] = React.useState<ReadonlySet<number>>(new Set());
+  const [keypad, setKeypad] = React.useState(false);
   const rest = useRest();
   React.useEffect(() => () => exerciseTallyStorage.remove(), []);
   const tallyMeasure = tallyMeasuresOf(
@@ -131,8 +133,8 @@ export function SetsScreen({ run }: { run: WorkoutRun }): React.ReactElement {
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
-        <ScrollView
-          keyboardShouldPersistTaps="handled"
+        <KeypadScrollView
+          onKeypadChange={setKeypad}
           contentContainerStyle={{ gap: 10, paddingHorizontal: 18, paddingBottom: 24 }}
         >
           <PlayerHeader
@@ -194,18 +196,20 @@ export function SetsScreen({ run }: { run: WorkoutRun }): React.ReactElement {
               </React.Fragment>
             );
           })}
-        </ScrollView>
-        <View
-          style={{
-            paddingTop: 12,
-            paddingHorizontal: 18,
-            paddingBottom: 10,
-            borderTopWidth: 1,
-            borderTopColor: colors.lineOnLight,
-          }}
-        >
-          <Button label={t("activities.finish")} onPress={finish} variant="primary" height={54} />
-        </View>
+        </KeypadScrollView>
+        {!keypad && (
+          <View
+            style={{
+              paddingTop: 12,
+              paddingHorizontal: 18,
+              paddingBottom: 10,
+              borderTopWidth: 1,
+              borderTopColor: colors.lineOnLight,
+            }}
+          >
+            <Button label={t("activities.finish")} onPress={finish} variant="primary" height={54} />
+          </View>
+        )}
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

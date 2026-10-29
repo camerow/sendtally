@@ -1,4 +1,5 @@
 import React from "react";
+import { View } from "react-native";
 import {
   clampLoad,
   fromUnit,
@@ -8,7 +9,6 @@ import {
   type WeightUnit,
 } from "@sendtally/core/hang";
 import { NumberField } from "../components/NumberField";
-import { SheetSection } from "../components/SheetSection";
 import type { FieldSlot } from "../../../components/useFieldOrder";
 
 export type LoadFieldProps = FieldSlot & {
@@ -31,10 +31,9 @@ export function LoadField({
   ...slot
 }: LoadFieldProps): React.ReactElement {
   return (
-    <SheetSection label={label}>
+    <View style={{ gap: 8 }}>
       <NumberField
         {...slot}
-        hideLabel
         label={label}
         value={toUnit(kg, unit)}
         onChange={(n) => onChange(clampLoad(kind, fromUnit(n, unit)))}
@@ -44,6 +43,6 @@ export function LoadField({
         signed={kind === "hang"}
       />
       {children}
-    </SheetSection>
+    </View>
   );
 }

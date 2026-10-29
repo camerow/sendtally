@@ -1,15 +1,7 @@
 import { randomUUID } from "expo-crypto";
 import { router } from "expo-router";
 import React from "react";
-import {
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { Alert, KeyboardAvoidingView, Platform, Text, TextInput, View } from "react-native";
 import type { ActivityRecord } from "@sendtally/api-client";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { defaultExerciseRestS, type ItemDone } from "@sendtally/core/hang";
@@ -24,6 +16,7 @@ import {
 import { t } from "@sendtally/features/i18n";
 import { useWorkoutActions } from "@sendtally/features/workouts";
 import { DateTimeField } from "../../../components/DateTimeField";
+import { KeypadScrollView } from "../../../components/KeypadScrollView";
 import { TimeField } from "../../../components/TimeField";
 import { useApi } from "../../../lib/api";
 import { Button } from "../components/Button";
@@ -122,8 +115,7 @@ export function ActivityForm({
         </Text>
         <Button label={t("common.save")} onPress={save} variant="plain" />
       </View>
-      <ScrollView
-        keyboardShouldPersistTaps="handled"
+      <KeypadScrollView
         contentContainerStyle={{
           paddingHorizontal: 18,
           paddingTop: 4,
@@ -182,15 +174,12 @@ export function ActivityForm({
         </View>
 
         {!timed && (
-          <SheetSection label={t("common.duration")}>
-            <TimeField
-              hideLabel
-              label={t("common.duration")}
-              value={draft.minutes * 60}
-              min={60}
-              onChange={(seconds) => update({ minutes: minutesOf(seconds) })}
-            />
-          </SheetSection>
+          <TimeField
+            label={t("common.duration")}
+            value={draft.minutes * 60}
+            min={60}
+            onChange={(seconds) => update({ minutes: minutesOf(seconds) })}
+          />
         )}
 
         <EffortField value={draft.rpe} onChange={(rpe) => update({ rpe })} />
@@ -228,7 +217,7 @@ export function ActivityForm({
         {logged !== null && items.length > 0 && (
           <Button label={t("workouts.saveAsWorkout")} onPress={saveAsWorkout} variant="link" />
         )}
-      </ScrollView>
+      </KeypadScrollView>
     </KeyboardAvoidingView>
   );
 }

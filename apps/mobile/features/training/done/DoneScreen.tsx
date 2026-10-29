@@ -1,7 +1,7 @@
 import { randomUUID } from "expo-crypto";
 import { router } from "expo-router";
 import React from "react";
-import { ScrollView, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors } from "@sendtally/design/tokens";
 import {
@@ -27,6 +27,7 @@ import { type } from "../type";
 import type { DoneParams } from "./doneParams";
 import { doneStats, doneStatus, partialNote } from "./doneText";
 import { confirmDestructive } from "../../../lib/confirmDestructive";
+import { KeypadScrollView } from "../../../components/KeypadScrollView";
 
 /** The sets a run finished, each as the protocol ran it on the edge and weight it used. */
 function setsDone(w: HangWorkout, setup: HangSetup, count: number): SetDone[] {
@@ -81,7 +82,7 @@ function Done({
 
   return (
     <SafeAreaView edges={["top", "bottom"]} style={{ flex: 1, backgroundColor: colors.white }}>
-      <ScrollView
+      <KeypadScrollView
         contentContainerStyle={{
           flexGrow: 1,
           gap: 20,
@@ -129,7 +130,7 @@ function Done({
             variant="danger"
           />
         </View>
-      </ScrollView>
+      </KeypadScrollView>
     </SafeAreaView>
   );
 }

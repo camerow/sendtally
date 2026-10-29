@@ -9,7 +9,6 @@ import { usePlan } from "@sendtally/features/training";
 import { useApi } from "../../../lib/api";
 import { Button } from "../components/Button";
 import { Label } from "../components/Label";
-import { SheetSection } from "../components/SheetSection";
 import { Stepper } from "../components/Stepper";
 import { useHangData } from "../data/HangDataContext";
 import { usePlanActions } from "../plan/usePlanActions";
@@ -88,10 +87,8 @@ export function BlockForm({ initial, highlight }: BlockFormProps): React.ReactEl
         </View>
       }
     >
-      <View style={{ gap: 6 }}>
-        <Label small color={colors.textSecondary}>
-          {t("hang.name")}
-        </Label>
+      <View style={{ gap: 8 }}>
+        <Label color={colors.textSecondary}>{t("hang.name")}</Label>
         <TextInput
           value={block.name}
           onChangeText={(text) => update({ name: text })}
@@ -118,20 +115,18 @@ export function BlockForm({ initial, highlight }: BlockFormProps): React.ReactEl
         min={isNew ? today : null}
         onChange={(start) => update({ start })}
       />
-      <SheetSection label={t("plan.weeks")}>
-        <Stepper
-          value={block.weeks}
-          onChange={(n) => update({ weeks: clampWeeks(n) })}
-          step={1}
-          min={1}
-          max={MAX_WEEKS}
-          onStep={(direction) => update({ weeks: clampWeeks(block.weeks + direction) })}
-          label={t("plan.weeks")}
-          decreaseLabel={t("hang.decrease", { field: t("plan.weeks") })}
-          increaseLabel={t("hang.increase", { field: t("plan.weeks") })}
-          surface="plain"
-        />
-      </SheetSection>
+      <Stepper
+        value={block.weeks}
+        onChange={(n) => update({ weeks: clampWeeks(n) })}
+        step={1}
+        min={1}
+        max={MAX_WEEKS}
+        onStep={(direction) => update({ weeks: clampWeeks(block.weeks + direction) })}
+        label={t("plan.weeks")}
+        decreaseLabel={t("hang.decrease", { field: t("plan.weeks") })}
+        increaseLabel={t("hang.increase", { field: t("plan.weeks") })}
+        surface="plain"
+      />
       {!isNew && <BlockWorkouts block={initial} highlight={highlight} />}
     </ScreenFrame>
   );

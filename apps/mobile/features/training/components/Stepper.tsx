@@ -1,11 +1,11 @@
 import React from "react";
-import { Pressable, Text, View } from "react-native";
+import { Pressable, Text } from "react-native";
 import { colors } from "@sendtally/design/tokens";
 import { press } from "../../../lib/press";
 import { type } from "../type";
 import { NumberField, type NumberFieldProps } from "./NumberField";
 
-export type StepperProps = Omit<NumberFieldProps, "hideLabel"> & {
+export type StepperProps = Omit<NumberFieldProps, "before" | "after"> & {
   onStep: (direction: 1 | -1) => void;
   decreaseLabel: string;
   increaseLabel: string;
@@ -13,7 +13,7 @@ export type StepperProps = Omit<NumberFieldProps, "hideLabel"> & {
   surface: "card" | "plain";
 };
 
-/** − / number box / +, for a number stepped more often than typed. Its section names it. */
+/** − / number box / + under the box's label, for a number stepped more often than typed. */
 export function Stepper({
   onStep,
   decreaseLabel,
@@ -41,12 +41,10 @@ export function Stepper({
     </Pressable>
   );
   return (
-    <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-      {step(-1, decreaseLabel, "−")}
-      <View style={{ flex: 1 }}>
-        <NumberField {...field} hideLabel />
-      </View>
-      {step(1, increaseLabel, "+")}
-    </View>
+    <NumberField
+      {...field}
+      before={step(-1, decreaseLabel, "−")}
+      after={step(1, increaseLabel, "+")}
+    />
   );
 }

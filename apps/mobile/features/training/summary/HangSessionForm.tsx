@@ -1,6 +1,6 @@
 import { router } from "expo-router";
 import React from "react";
-import { KeyboardAvoidingView, Platform, ScrollView, Text, View } from "react-native";
+import { KeyboardAvoidingView, Platform, Text, View } from "react-native";
 import type { HangSessionRecord } from "@sendtally/api-client";
 import { clamp } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
@@ -21,6 +21,7 @@ import { GripPickerSheet } from "../grip-picker/GripPickerSheet";
 import { LoadField } from "../loads/LoadField";
 import { EdgeField } from "../setup/EdgeField";
 import { type } from "../type";
+import { KeypadScrollView } from "../../../components/KeypadScrollView";
 import { useFieldOrder } from "../../../components/useFieldOrder";
 
 const PCT_STEP = 5;
@@ -73,8 +74,7 @@ export function HangSessionForm({ session }: HangSessionFormProps): React.ReactE
         </Text>
         <Button label={t("common.save")} onPress={save} variant="plain" />
       </View>
-      <ScrollView
-        keyboardShouldPersistTaps="handled"
+      <KeypadScrollView
         contentContainerStyle={{ paddingHorizontal: 18, paddingTop: 4, paddingBottom: 32, gap: 18 }}
       >
         <Title size={28}>{name}</Title>
@@ -122,25 +122,22 @@ export function HangSessionForm({ session }: HangSessionFormProps): React.ReactE
           label={t("hang.load")}
           onChange={(loadKg) => update({ loadKg })}
         />
-        <SheetSection label={t("hang.completion")}>
-          <NumberField
-            {...slot("completion")}
-            hideLabel
-            label={t("hang.completion")}
-            value={draft.pct}
-            onChange={setPct}
-            unit="%"
-            step={PCT_STEP}
-            max={100}
-          />
-        </SheetSection>
+        <NumberField
+          {...slot("completion")}
+          label={t("hang.completion")}
+          value={draft.pct}
+          onChange={setPct}
+          unit="%"
+          step={PCT_STEP}
+          max={100}
+        />
         <EffortField value={draft.rpe} onChange={(rpe) => update({ rpe })} />
         <FocusField
           value={draft.focus}
           onChange={(focus) => update({ focus })}
           note={t("focus.sessionNote")}
         />
-      </ScrollView>
+      </KeypadScrollView>
       <GripPickerSheet
         visible={picker}
         workout={workout}

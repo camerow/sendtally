@@ -67,23 +67,19 @@ export function RungEditor({
           return <TimeField key={f} {...slot(f)} label={label} value={value} onChange={onChange} />;
         if (f === "edgeMm")
           return (
-            <View key={f} style={{ gap: 6 }}>
-              <Label small color={colors.textSecondary}>
-                {label}
-              </Label>
-              <Stepper
-                {...slot(f)}
-                {...fieldLimits(f, unit)}
-                value={value}
-                onChange={onChange}
-                onStep={(direction) => set(stepped(dose, f, direction, unit))}
-                unit="mm"
-                label={label}
-                decreaseLabel={t("hang.decrease", { field: label })}
-                increaseLabel={t("hang.increase", { field: label })}
-                surface="card"
-              />
-            </View>
+            <Stepper
+              key={f}
+              {...slot(f)}
+              {...fieldLimits(f, unit)}
+              value={value}
+              onChange={onChange}
+              onStep={(direction) => set(stepped(dose, f, direction, unit))}
+              unit="mm"
+              label={label}
+              decreaseLabel={t("hang.decrease", { field: label })}
+              increaseLabel={t("hang.increase", { field: label })}
+              surface="card"
+            />
           );
         return (
           <NumberField
@@ -98,10 +94,8 @@ export function RungEditor({
         );
       })}
       {more.length > 0 && (
-        <View style={{ gap: 6 }}>
-          <Label small color={colors.textSecondary}>
-            {t("plan.alsoChange")}
-          </Label>
+        <View style={{ gap: 8 }}>
+          <Label color={colors.textSecondary}>{t("plan.alsoChange")}</Label>
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}>
             {more.map((f) => (
               <Pressable

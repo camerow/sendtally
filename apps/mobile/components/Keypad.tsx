@@ -31,6 +31,8 @@ export type KeypadProps = {
   onClose: () => void;
   /** Shows a Next key that commits, closes and calls this. */
   onNext?: () => void;
+  /** Which field it types into; switching to another starts a fresh entry without closing. */
+  field?: string;
 };
 
 type Entries = {
@@ -40,6 +42,17 @@ type Entries = {
 };
 
 const NUMBER_DEFAULTS: NumberLimits = { step: 1 };
+
+const KEY_HEIGHT = 48;
+const ROW_GAP = 8;
+const PAD_TOP = 4;
+const SHEET_HANDLE = 24;
+
+/** How far the keypad rises from the bottom of the window, over a bottom inset. */
+export const keypadHeight = (bottomInset: number): number =>
+  SHEET_HANDLE + PAD_TOP + 5 * KEY_HEIGHT + 4 * ROW_GAP + Math.max(bottomInset, 16);
+
+const noop = (): void => undefined;
 
 const decimalMark = (): string => formatNumber(1.5).replace(/[15]/g, "");
 
@@ -61,6 +74,7 @@ export function Keypad({
   onCommit,
   onClose,
   onNext,
+  field,
 }: KeypadProps): React.ReactElement | null {
   const limits = mode.kind === "number" ? mode : NUMBER_DEFAULTS;
   const open = (): Entries => ({
@@ -69,10 +83,11 @@ export function Keypad({
     committed: false,
   });
   const [entries, setEntries] = React.useState(open);
-  const [wasVisible, setWasVisible] = React.useState(visible);
-  if (visible !== wasVisible) {
-    setWasVisible(visible);
-    if (visible) setEntries(open());
+  const opened = visible ? (field ?? "") : null;
+  const [wasOpened, setWasOpened] = React.useState(opened);
+  if (opened !== wasOpened) {
+    setWasOpened(opened);
+    if (opened !== null) setEntries(open());
   }
 
   const reduce = (e: Entries, action: EntryAction): Entries =>
@@ -122,7 +137,7 @@ export function Keypad({
         accessibilityLabel={a11y ?? text}
         style={press({
           flex: 1,
-          height: 48,
+          height: KEY_HEIGHT,
           borderRadius: radius.control,
           alignItems: "center",
           justifyContent: "center",
@@ -184,15 +199,20 @@ export function Keypad({
   ];
 
   return (
-    <Sheet visible={visible} onClose={close} closeLabel={t("common.close")}>
-      <View style={{ paddingHorizontal: 12, paddingTop: 4, gap: 8 }}>
+    <Sheet
+      visible={visible}
+      onClose={visible ? close : noop}
+      closeLabel={t("common.close")}
+      dim={false}
+    >
+      <View style={{ paddingHorizontal: 12, paddingTop: PAD_TOP, gap: ROW_GAP }}>
         <View
           style={{
             flexDirection: "row",
             alignItems: "center",
             justifyContent: "space-between",
             gap: 12,
-            minHeight: 48,
+            height: KEY_HEIGHT,
             paddingHorizontal: 12,
             borderRadius: radius.control,
             backgroundColor: colors.surfaceSoft,

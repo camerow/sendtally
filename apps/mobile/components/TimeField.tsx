@@ -6,7 +6,6 @@ import type { FieldSlot } from "./useFieldOrder";
 export type TimeFieldProps = FieldSlot & {
   label: string;
   accessibilityLabel?: string;
-  hideLabel?: boolean;
   /** Seconds. */
   value: number;
   /** Called with the new length on Done, Next or a tap outside, only when it changed. */
