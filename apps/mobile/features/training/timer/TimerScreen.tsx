@@ -54,7 +54,7 @@ function Timer({
   const current = (items[phase.item] ?? items[0]).workout;
   const setup = setups[phase.item] ?? { edgeMm: 0, loadKg: 0 };
   const gripId = grips[phase.item] ?? current.grip;
-  const pull = phase.kind === "pull";
+  const pull = phase.taps > 0;
   const working = isWork(phase.kind);
   const load = loadLabel(current.kind, setup.loadKg, model.settings.units);
   const text = timerText(run, secondsLeft, load, current.sets);
