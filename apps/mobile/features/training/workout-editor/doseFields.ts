@@ -5,6 +5,7 @@ import {
   type Dose,
   type ExerciseKind,
   type ExerciseMeasure,
+  type GripMeasure,
   type NumberLimits,
   type WeightUnit,
   type WorkoutKind,
@@ -14,8 +15,11 @@ import type { MessageKey } from "@sendtally/features/i18n";
 
 export type DoseKey = Exclude<keyof Dose, "edgeMm" | "name">;
 
-/** What an item's doses ask for: its exercise's measure, or how a climbing one logs on the tally. */
-export type DoseMeasure = ExerciseMeasure | TallyMeasure;
+/**
+ * What an item's doses ask for: its exercise's measure, how a climbing one logs on the tally,
+ * or on the hangboard whether its grip hangs or pulls off the ground.
+ */
+export type DoseMeasure = ExerciseMeasure | TallyMeasure | GripMeasure;
 
 export type DoseField = {
   key: DoseKey;
@@ -29,14 +33,21 @@ const count = (key: DoseKey, label: MessageKey): DoseField => ({ key, label, mea
 const time = (key: DoseKey, label: MessageKey): DoseField => ({ key, label, measure: "time" });
 const weight: DoseField = { key: "weightKg", label: "hang.weight", measure: "weight" };
 
-/** The dose numbers each kind asks for, in the order they show. */
-export const DOSE_FIELDS_OF: Record<WorkoutKind, readonly DoseField[]> = {
-  hangboard: [
+/** The dose numbers a grip asks for: hangs, or a ground pull's lifts or time. Weight is chosen per use. */
+const FINGERS_FIELDS: Record<GripMeasure, readonly DoseField[]> = {
+  hang: [
     count("reps", "workouts.dose.hangs"),
     time("onS", "workouts.dose.hangTime"),
     time("offS", "workouts.dose.restTime"),
     count("sets", "workouts.dose.sets"),
   ],
+  repsWeight: [count("reps", "workouts.dose.reps"), count("sets", "workouts.dose.sets")],
+  secondsWeight: [time("onS", "workouts.dose.time"), count("sets", "workouts.dose.sets")],
+};
+
+/** The dose numbers each kind asks for, in the order they show. */
+export const DOSE_FIELDS_OF: Record<WorkoutKind, readonly DoseField[]> = {
+  hangboard: FINGERS_FIELDS.hang,
   climbing: [count("sets", "workouts.dose.sets"), count("reps", "workouts.dose.reps")],
   strength: [count("sets", "workouts.dose.sets"), count("reps", "workouts.dose.reps"), weight],
   mobility: [
@@ -52,7 +63,7 @@ export const DOSE_FIELDS_OF: Record<WorkoutKind, readonly DoseField[]> = {
 };
 
 /** The dose numbers each measure asks for, in the order they show. Climbing asks no grade. */
-export const DOSE_FIELDS_BY_MEASURE: Record<DoseMeasure, readonly DoseField[]> = {
+export const DOSE_FIELDS_BY_MEASURE: Record<Exclude<DoseMeasure, "hang">, readonly DoseField[]> = {
   climbs: [
     count("sets", "workouts.dose.sets"),
     { ...count("reps", "workouts.dose.climbs"), placeholder: "workouts.dose.anyClimbs" },
@@ -78,8 +89,15 @@ const NEW_DOSE: Record<WorkoutKind, Dose> = {
   other: { sets: 3, onS: 60, offS: 60 },
 };
 
+/** What a new item on a grip starts at; a ground pull held for time has no edge. */
+const NEW_FINGERS_DOSE: Record<GripMeasure, Dose> = {
+  hang: NEW_DOSE.hangboard,
+  repsWeight: { sets: 5, reps: 5, setRestS: 120 },
+  secondsWeight: { sets: 5, reps: 1, onS: 10, edgeMm: 0, setRestS: 120 },
+};
+
 /** What a new item of each measure starts at. */
-const NEW_DOSE_BY_MEASURE: Record<DoseMeasure, Dose> = {
+const NEW_DOSE_BY_MEASURE: Record<Exclude<DoseMeasure, "hang">, Dose> = {
   climbs: { sets: 4, reps: 4, setRestS: 240 },
   wallTime: { sets: 2, onS: 1200, setRestS: 300 },
   reps: { sets: 3, reps: 10 },
@@ -89,8 +107,15 @@ const NEW_DOSE_BY_MEASURE: Record<DoseMeasure, Dose> = {
   rounds: { sets: 4, onS: 240, offS: 240 },
 };
 
-const byMeasure = (kind: WorkoutKind, measure?: DoseMeasure): measure is DoseMeasure =>
-  kind !== "hangboard" && measure !== undefined;
+const byMeasure = (
+  kind: WorkoutKind,
+  measure?: DoseMeasure
+): measure is Exclude<DoseMeasure, "hang"> =>
+  kind !== "hangboard" && measure !== undefined && measure !== "hang";
+
+/** A grip's measure: a ground pull by lifts or time, else a hang. */
+export const fingersMeasure = (measure?: DoseMeasure): GripMeasure =>
+  measure === "repsWeight" || measure === "secondsWeight" ? measure : "hang";
 
 /** The measure an item of one of the user's exercises takes its doses by. */
 export const doseMeasureOf = (
@@ -98,13 +123,16 @@ export const doseMeasureOf = (
 ): DoseMeasure | undefined => tallyMeasureOf(e) ?? e?.measure;
 
 /** The fields an item asks for: a grip's on the hangboard, else its exercise's measure, else its workout kind's. */
-export const doseFieldsFor = (kind: WorkoutKind, measure?: DoseMeasure): readonly DoseField[] =>
-  byMeasure(kind, measure) ? DOSE_FIELDS_BY_MEASURE[measure] : DOSE_FIELDS_OF[kind];
+export const doseFieldsFor = (kind: WorkoutKind, measure?: DoseMeasure): readonly DoseField[] => {
+  if (kind === "hangboard") return FINGERS_FIELDS[fingersMeasure(measure)];
+  return byMeasure(kind, measure) ? DOSE_FIELDS_BY_MEASURE[measure] : DOSE_FIELDS_OF[kind];
+};
 
 /** What a new item starts at, by the same rule. */
-export const newDoseFor = (kind: WorkoutKind, measure?: DoseMeasure): Dose => ({
-  ...(byMeasure(kind, measure) ? NEW_DOSE_BY_MEASURE[measure] : NEW_DOSE[kind]),
-});
+export const newDoseFor = (kind: WorkoutKind, measure?: DoseMeasure): Dose => {
+  if (kind === "hangboard") return { ...NEW_FINGERS_DOSE[fingersMeasure(measure)] };
+  return { ...(byMeasure(kind, measure) ? NEW_DOSE_BY_MEASURE[measure] : NEW_DOSE[kind]) };
+};
 
 /** A field in the user's unit; null when unset. */
 export function fieldValue(field: DoseField, dose: Dose, unit: WeightUnit): number | null {

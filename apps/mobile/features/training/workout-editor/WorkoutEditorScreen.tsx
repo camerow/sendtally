@@ -3,7 +3,7 @@ import { router } from "expo-router";
 import React from "react";
 import { Alert, KeyboardAvoidingView, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import type { Focus, WorkoutKind } from "@sendtally/core/hang";
+import { gripMeasureOf, type Focus, type Item, type WorkoutKind } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { exerciseLabel } from "@sendtally/features/exercises";
 import { t } from "@sendtally/features/i18n";
@@ -92,6 +92,10 @@ function Editor({
     exercises.status === "ready"
       ? exercises.data.find((e) => exerciseKey(e.name) === exerciseKey(name))
       : undefined;
+  const measureOf = (item: Item) =>
+    state.kind === "hangboard"
+      ? gripMeasureOf(item.doses[0] ?? { sets: 1 })
+      : doseMeasureOf(exerciseNamed(item.exercise));
   const nameOf = (exercise: string): string => {
     if (state.kind === "hangboard") return model.gripName(exercise);
     const own = exerciseNamed(exercise);
@@ -157,7 +161,7 @@ function Editor({
               kind={state.kind}
               item={item}
               name={nameOf(item.exercise)}
-              measure={doseMeasureOf(exerciseNamed(item.exercise))}
+              measure={measureOf(item)}
               unit={model.settings.units}
               onChange={(next) => setState((s) => withItem(s, i, next))}
               onRemove={() => setState((s) => withoutItem(s, i))}
@@ -202,7 +206,7 @@ function Editor({
             setState((s) =>
               picking === "add"
                 ? withItemsAdded(s, picked)
-                : withExerciseSwapped(s, picking.swap, picked[0]?.exercise ?? "")
+                : withExerciseSwapped(s, picking.swap, picked[0] ?? { exercise: "" })
             )
           }
           onClose={() => setPicking(null)}

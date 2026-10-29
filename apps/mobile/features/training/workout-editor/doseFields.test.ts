@@ -47,4 +47,21 @@ describe("dose fields", () => {
     expect(withField({ sets: 1, reps: 4 }, climbs!, 0, "kg")).toEqual({ sets: 1 });
     expect(newDoseFor("climbing", "wallTime")).toEqual({ sets: 2, onS: 1200, setRestS: 300 });
   });
+
+  it("asks a grip for hangs, or a ground pull for reps or time with no edge", () => {
+    const keys = (measure?: "hang" | "repsWeight" | "secondsWeight") =>
+      doseFieldsFor("hangboard", measure).map((f) => f.key);
+    expect(keys()).toEqual(["reps", "onS", "offS", "sets"]);
+    expect(keys("hang")).toEqual(["reps", "onS", "offS", "sets"]);
+    expect(keys("repsWeight")).toEqual(["reps", "sets"]);
+    expect(keys("secondsWeight")).toEqual(["onS", "sets"]);
+    expect(newDoseFor("hangboard", "repsWeight")).toEqual({ sets: 5, reps: 5, setRestS: 120 });
+    expect(newDoseFor("hangboard", "secondsWeight")).toEqual({
+      sets: 5,
+      reps: 1,
+      onS: 10,
+      edgeMm: 0,
+      setRestS: 120,
+    });
+  });
 });

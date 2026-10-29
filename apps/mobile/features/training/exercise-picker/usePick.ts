@@ -6,7 +6,11 @@ import type { Picked } from "./types";
 
 /** A grip, or one of the user's exercises, as a workout item names it. */
 export function pickedOf(made: MadeExercise): Picked {
-  if ("grip" in made) return { exercise: made.grip.id };
+  if ("grip" in made)
+    return {
+      exercise: made.grip.id,
+      ...(made.grip.measure === undefined ? {} : { measure: made.grip.measure }),
+    };
   const dose = builtInDose(made.exercise.builtIn);
   return {
     exercise: made.exercise.name,
