@@ -1,6 +1,7 @@
 import React from "react";
 import type { LinksFunction } from "react-router";
 import { LegalPage, legalLinks } from "../legal/components/LegalPage";
+import { CONTACT_EMAIL } from "../legal/constants";
 import { pageMeta } from "../lib/seo";
 
 export const links: LinksFunction = legalLinks;
@@ -23,8 +24,8 @@ export default function Support(): React.ReactElement {
     >
       <h2>Get in touch</h2>
       <p>
-        Email <a href="mailto:hello@sendtally.com">hello@sendtally.com</a>. Tell us what you did,
-        what you expected, and what happened instead. If it is about one session, the date and the
+        Email <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>. Tell us what you did, what
+        you expected, and what happened instead. If it is about one session, the date and the
         location are usually enough to find it.
       </p>
 
