@@ -8,13 +8,14 @@ import { t } from "@sendtally/features/i18n";
 import {
   exerciseKey,
   isClimbingMetric,
+  isGradeMetric,
   type ExerciseMetric,
   type ExerciseSeries,
 } from "@sendtally/features/statistics";
 import { Chip } from "../../../components/Chip";
 import { Label } from "../components/Label";
 import { Title } from "../components/Title";
-import { metricText } from "../exercises/exerciseText";
+import { headlineLabel, metricText } from "../exercises/exerciseText";
 import { SeriesChart } from "../trends/SeriesChart";
 import { type } from "../type";
 import { changeText } from "./summaryText";
@@ -33,7 +34,9 @@ const headerOf = (metric: ExerciseMetric): string =>
     ? t("common.sent")
     : metric === "laps"
       ? t("summary.laps")
-      : t("summary.bestSet");
+      : isGradeMetric(metric)
+        ? headlineLabel(metric)
+        : t("summary.bestSet");
 
 /**
  * One exercise at a time: its best set per session, this session in gold. A climbing
@@ -51,7 +54,8 @@ export function OverTime({
   if (shown === undefined || point === null) return null;
   const at = shown.sessions[point.index];
   const load = shown.metric === "load";
-  const text = (v: number): string => metricText(load ? fromUnit(v, unit) : v, shown.metric, unit);
+  const text = (v: number): string =>
+    metricText(load ? fromUnit(v, unit) : v, shown.metric, unit, shown.grades);
   const change = point.change === null ? null : changeText(point.change, unit);
   const first = shown.sessions[0];
   const climbs = climbsTotal(done.find((d) => exerciseKey(d.exercise) === shown.key)?.sets ?? []);
@@ -62,7 +66,9 @@ export function OverTime({
         ? t("tally.lapCount", { count: climbs.climbs })
         : at === undefined
           ? ""
-          : setText(at.best, unit);
+          : isGradeMetric(shown.metric)
+            ? metricText(at.value, shown.metric, unit, shown.grades)
+            : setText(at.best, unit);
 
   return (
     <View style={{ gap: 12, paddingTop: 4 }}>
@@ -98,11 +104,13 @@ export function OverTime({
         <View style={{ flexDirection: "row", justifyContent: "space-between", gap: 8 }}>
           <View style={{ flex: 1, gap: 2 }}>
             <Title size={24}>{headline}</Title>
-            {isClimbingMetric(shown.metric) && climbs.top !== null && (
-              <Text style={[type.mono, { fontSize: 12, color: colors.textSecondary }]}>
-                {t("sessions.topSend", { grade: climbs.top })}
-              </Text>
-            )}
+            {isClimbingMetric(shown.metric) &&
+              shown.metric !== "topGrade" &&
+              climbs.top !== null && (
+                <Text style={[type.mono, { fontSize: 12, color: colors.textSecondary }]}>
+                  {t("sessions.topSend", { grade: climbs.top })}
+                </Text>
+              )}
           </View>
           {change !== null && (
             <Text style={[type.monoBold, { fontSize: 11.5, color: colors.fern }]}>
@@ -118,8 +126,11 @@ export function OverTime({
             edge={text}
             label={t("statistics.exerciseChart", {
               exercise: shown.name,
-              from: first === undefined ? "" : metricText(first.value, shown.metric, unit),
-              to: at === undefined ? "" : metricText(at.value, shown.metric, unit),
+              from:
+                first === undefined
+                  ? ""
+                  : metricText(first.value, shown.metric, unit, shown.grades),
+              to: at === undefined ? "" : metricText(at.value, shown.metric, unit, shown.grades),
             })}
             seriesKey={shown.key}
             marked={point.index}

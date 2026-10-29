@@ -25,10 +25,15 @@ export type ExerciseTrendCardProps = {
 
 type Point = { session: ExerciseSession; value: number };
 
-const AIR = { load: 2, seconds: 5, reps: 1, sends: 1, laps: 1 } as const satisfies Record<
-  ExerciseMetric,
-  number
->;
+const AIR = {
+  load: 2,
+  seconds: 5,
+  reps: 1,
+  sends: 1,
+  laps: 1,
+  averageGrade: 1,
+  topGrade: 1,
+} as const satisfies Record<ExerciseMetric, number>;
 
 /** One exercise over time: the best set per session, or the estimated one-rep max. */
 export function ExerciseTrendCard({
@@ -42,7 +47,7 @@ export function ExerciseTrendCard({
       : series.sessions.map((s) => ({ session: s, value: s.value }));
   const load = chart === "e1rm" || series.metric === "load";
   const text = (v: number): string =>
-    load ? loadText(v, unit) : metricText(v, series.metric, unit);
+    load ? loadText(v, unit) : metricText(v, series.metric, unit, series.grades);
   const shown = (v: number): number => (load ? toUnit(v, unit) : v);
   const fromShown = (v: number): number => (load ? fromUnit(v, unit) : v);
   const latest = points.at(-1);

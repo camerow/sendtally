@@ -1,16 +1,31 @@
 import type { Activity } from "@sendtally/api-client";
+import {
+  climbDiscipline,
+  climbRank,
+  dominantDiscipline,
+  effortGrade,
+  type Discipline,
+  type GradedClimb,
+} from "@sendtally/core";
 import { daysBetween, type CalendarDate, type SetDone, type Workout } from "@sendtally/core/hang";
+import { draftGrade } from "../log-session/transforms";
+import { gradeFormatterFor, type GradeFormatter } from "../sessions/grades";
 
 /**
  * What an exercise's best set is judged on: the heaviest load, the longest hold, or the most
  * reps. A climbing exercise logged on the tally counts its sends, or its laps on the wall,
- * over the whole session.
+ * over the whole session, or reads the average or highest grade it sent.
  */
-export type ExerciseMetric = "load" | "seconds" | "reps" | "sends" | "laps";
+export type ExerciseMetric = "load" | "seconds" | "reps" | "sends" | "laps" | GradeMetric;
+
+export type GradeMetric = "averageGrade" | "topGrade";
+
+export const isGradeMetric = (metric: ExerciseMetric): metric is GradeMetric =>
+  metric === "averageGrade" || metric === "topGrade";
 
 /** A metric counted over every set of a session rather than taken from its best one. */
 export const isClimbingMetric = (metric: ExerciseMetric): boolean =>
-  metric === "sends" || metric === "laps";
+  metric === "sends" || metric === "laps" || isGradeMetric(metric);
 
 export type ExerciseSession = {
   activityId: string;
@@ -33,6 +48,8 @@ export type ExerciseSeries = {
   metric: ExerciseMetric;
   /** Oldest first. */
   sessions: ExerciseSession[];
+  /** How a grade metric's values read: V for boulders, the scale logged for routes. */
+  grades?: GradeFormatter;
 };
 
 export type ExerciseSummary = {
@@ -64,7 +81,34 @@ export function epley(loadKg: number, reps: number): number {
   return reps === 1 ? loadKg : loadKg * (1 + reps / 30);
 }
 
+/** The sends of the sets with a grade; circuits and grades that do not read drop out. */
+function gradedSends(sets: readonly SetDone[]): GradedClimb[] {
+  return sets.flatMap((s) =>
+    (s.climbs ?? []).flatMap((c) => {
+      const grade = c.sent && c.grade.trim() !== "" ? draftGrade(c.grade, c.scale) : undefined;
+      return grade === undefined ? [] : [{ vGrade: effortGrade(grade), grade }];
+    })
+  );
+}
+
+/** The average or highest grade sent, ranked within one discipline, never converted across. */
+export function gradeOf(
+  sets: readonly SetDone[],
+  metric: GradeMetric,
+  discipline: Discipline = dominantDiscipline(gradedSends(sets))
+): number | undefined {
+  const ranks = gradedSends(sets)
+    .filter((c) => climbDiscipline(c) === discipline)
+    .map(climbRank)
+    .filter((r) => r >= 0);
+  if (ranks.length === 0) return undefined;
+  return metric === "topGrade"
+    ? Math.max(...ranks)
+    : ranks.reduce((a, b) => a + b, 0) / ranks.length;
+}
+
 export function valueOf(set: SetDone, metric: ExerciseMetric): number | undefined {
+  if (isGradeMetric(metric)) return gradeOf([set], metric);
   if (metric === "load") return set.weightKg;
   if (metric === "seconds") return set.onS;
   if (metric === "sends") return set.climbs?.filter((c) => c.sent).length;
@@ -99,14 +143,17 @@ const lifts = (sets: readonly SetDone[]): { reps: number; loadKg: number }[] =>
 function sessionOf(
   activity: Pick<Activity, "id" | "date">,
   sets: readonly SetDone[],
-  metric: ExerciseMetric
+  metric: ExerciseMetric,
+  discipline: Discipline
 ): ExerciseSession | null {
   const best = bestOf(sets, metric);
-  const value = isClimbingMetric(metric)
-    ? metricTotal(sets, metric)
-    : best === undefined
-      ? undefined
-      : valueOf(best, metric);
+  const value = isGradeMetric(metric)
+    ? gradeOf(sets, metric, discipline)
+    : isClimbingMetric(metric)
+      ? metricTotal(sets, metric)
+      : best === undefined
+        ? undefined
+        : valueOf(best, metric);
   if (best === undefined || value === undefined) return null;
   const done = lifts(sets);
   return {
@@ -131,8 +178,14 @@ type Logged = Pick<Activity, "id" | "date" | "startTime" | "done">;
 const chronological = (a: Logged, b: Logged): number =>
   a.date.localeCompare(b.date) || (a.startTime ?? "").localeCompare(b.startTime ?? "");
 
-/** Every exercise the user logged sets of, each a session series, the most often logged first. */
-export function exerciseSeries(activities: readonly Logged[]): ExerciseSeries[] {
+/**
+ * Every exercise the user logged sets of, each a session series, the most often logged first.
+ * A climbing exercise reads in grade when `gradeMetricOf` names a grade metric for its key.
+ */
+export function exerciseSeries(
+  activities: readonly Logged[],
+  gradeMetricOf: (key: string) => GradeMetric | undefined = () => undefined
+): ExerciseSeries[] {
   const found = new Map<string, { name: string; logs: { activity: Logged; sets: SetDone[] }[] }>();
   for (const activity of [...activities].sort(chronological)) {
     const byKey = new Map<string, SetDone[]>();
@@ -147,11 +200,16 @@ export function exerciseSeries(activities: readonly Logged[]): ExerciseSeries[] 
   }
   return [...found]
     .map(([key, { name, logs }]): ExerciseSeries => {
-      const metric = metricOf(logs.flatMap((l) => l.sets));
+      const sets = logs.flatMap((l) => l.sets);
+      const counted = metricOf(sets);
+      const metric = (isClimbingMetric(counted) ? gradeMetricOf(key) : undefined) ?? counted;
+      const sends = gradedSends(sets);
+      const discipline = dominantDiscipline(sends);
       const sessions = logs
-        .map((l) => sessionOf(l.activity, l.sets, metric))
+        .map((l) => sessionOf(l.activity, l.sets, metric, discipline))
         .filter((s) => s !== null);
-      return { key, name, metric, sessions };
+      const grades = isGradeMetric(metric) ? gradeFormatterFor(sends, discipline) : undefined;
+      return { key, name, metric, sessions, ...(grades === undefined ? {} : { grades }) };
     })
     .filter((s) => s.sessions.length > 0)
     .sort(
@@ -172,7 +230,11 @@ export function exerciseSummary(
   const first = done[0];
   const last = done.at(-1);
   const best = done.reduce<ExerciseSession | null>(
-    (top, s) => (top === null || better(s.best, top.best, series.metric) ? s : top),
+    (top, s) =>
+      top === null ||
+      (isGradeMetric(series.metric) ? s.value > top.value : better(s.best, top.best, series.metric))
+        ? s
+        : top,
     null
   );
   const e1rms = done.flatMap((s) => (s.e1rmKg === null ? [] : [s.e1rmKg]));

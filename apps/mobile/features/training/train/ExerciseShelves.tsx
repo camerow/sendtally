@@ -9,6 +9,7 @@ import { t } from "@sendtally/features/i18n";
 import {
   exerciseKey,
   exerciseSummary,
+  isGradeMetric,
   useExerciseSeries,
   useExercises,
   workoutsUsing,
@@ -17,6 +18,7 @@ import { doseSummary } from "@sendtally/features/workouts";
 import { useApi } from "../../../lib/api";
 import { useHangData } from "../data/HangDataContext";
 import { LoadState } from "../data/LoadState";
+import { metricText } from "../exercises/exerciseText";
 import { openExerciseEditor } from "../exercises/openExerciseEditor";
 import { useLibrary } from "../library/useLibrary";
 import { ExerciseShelf } from "./ExerciseShelf";
@@ -41,11 +43,14 @@ export function ExerciseShelves(): React.ReactElement {
   const logged = series.status === "ready" ? series.data : [];
   const metaOf = (name: string, kind: WorkoutKind): string => {
     const s = logged.find((x) => x.key === exerciseKey(name));
-    if (kind === "climbing")
-      return s === undefined || s.sessions.length === 0
-        ? t("workouts.notDoneYet")
-        : `${t("common.climbs")} · ${t("statistics.timesCount", { count: s.sessions.length })}`;
     const best = s === undefined ? null : exerciseSummary(s, today)?.best;
+    if (kind === "climbing") {
+      if (s === undefined || best === undefined || best === null) return t("workouts.notDoneYet");
+      const reads = isGradeMetric(s.metric)
+        ? t("workouts.exerciseBest", { value: metricText(best.value, s.metric, unit, s.grades) })
+        : t("common.climbs");
+      return `${reads} · ${t("statistics.timesCount", { count: s.sessions.length })}`;
+    }
     if (best !== undefined && best !== null)
       return t("workouts.exerciseBest", { value: setText(best.best, unit) });
     const using = workoutsUsing(workouts, name)[0];
