@@ -9,6 +9,7 @@ const mine = (id: string, name: string, more: Partial<Exercise> = {}): Exercise 
   kind: "strength",
   measure: "repsWeight",
   eachSide: false,
+  progress: null,
   builtIn: null,
   archived: false,
   ...more,

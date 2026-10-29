@@ -98,7 +98,9 @@ export function ExerciseScreen({ id }: ExerciseScreenProps): React.ReactElement 
         <DashedPanel body={t("workouts.exerciseNothingLogged")} />
       ) : (
         <>
-          <ExerciseTrendCard series={logged} chart="best" unit={unit} />
+          {logged.untracked !== true && (
+            <ExerciseTrendCard series={logged} chart="best" unit={unit} />
+          )}
           <ExerciseHistory series={logged} unit={unit} />
         </>
       )}

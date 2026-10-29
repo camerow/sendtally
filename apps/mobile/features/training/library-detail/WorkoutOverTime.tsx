@@ -30,7 +30,9 @@ export function WorkoutOverTime({
   const lead =
     series.status === "ready"
       ? workout.items
-          .map((i) => series.data.find((s) => s.key === exerciseKey(i.exercise)))
+          .map((i) =>
+            series.data.find((s) => s.key === exerciseKey(i.exercise) && s.untracked !== true)
+          )
           .find((s) => s !== undefined)
       : undefined;
   const body =

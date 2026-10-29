@@ -7,7 +7,13 @@ import {
   type Discipline,
   type GradedClimb,
 } from "@sendtally/core";
-import { daysBetween, type CalendarDate, type SetDone, type Workout } from "@sendtally/core/hang";
+import {
+  daysBetween,
+  type CalendarDate,
+  type ExerciseProgress,
+  type SetDone,
+  type Workout,
+} from "@sendtally/core/hang";
 import { draftGrade } from "../log-session/transforms";
 import { gradeFormatterFor, type GradeFormatter } from "../sessions/grades";
 
@@ -50,6 +56,8 @@ export type ExerciseSeries = {
   sessions: ExerciseSession[];
   /** How a grade metric's values read: V for boulders, the scale logged for routes. */
   grades?: GradeFormatter;
+  /** A climbing exercise whose progress is None: logged, with no trend to show. */
+  untracked?: true;
 };
 
 export type ExerciseSummary = {
@@ -180,11 +188,12 @@ const chronological = (a: Logged, b: Logged): number =>
 
 /**
  * Every exercise the user logged sets of, each a session series, the most often logged first.
- * A climbing exercise reads in grade when `gradeMetricOf` names a grade metric for its key.
+ * A climbing exercise follows the progress `progressOf` gives its key: a grade, the number
+ * completed (also when it gives none), or nothing.
  */
 export function exerciseSeries(
   activities: readonly Logged[],
-  gradeMetricOf: (key: string) => GradeMetric | undefined = () => undefined
+  progressOf: (key: string) => ExerciseProgress | null | undefined = () => undefined
 ): ExerciseSeries[] {
   const found = new Map<string, { name: string; logs: { activity: Logged; sets: SetDone[] }[] }>();
   for (const activity of [...activities].sort(chronological)) {
@@ -202,14 +211,22 @@ export function exerciseSeries(
     .map(([key, { name, logs }]): ExerciseSeries => {
       const sets = logs.flatMap((l) => l.sets);
       const counted = metricOf(sets);
-      const metric = (isClimbingMetric(counted) ? gradeMetricOf(key) : undefined) ?? counted;
+      const progress = isClimbingMetric(counted) ? progressOf(key) : undefined;
+      const metric = progress === "averageGrade" || progress === "topGrade" ? progress : counted;
       const sends = gradedSends(sets);
       const discipline = dominantDiscipline(sends);
       const sessions = logs
         .map((l) => sessionOf(l.activity, l.sets, metric, discipline))
         .filter((s) => s !== null);
       const grades = isGradeMetric(metric) ? gradeFormatterFor(sends, discipline) : undefined;
-      return { key, name, metric, sessions, ...(grades === undefined ? {} : { grades }) };
+      return {
+        key,
+        name,
+        metric,
+        sessions,
+        ...(grades === undefined ? {} : { grades }),
+        ...(progress === "none" ? { untracked: true as const } : {}),
+      };
     })
     .filter((s) => s.sessions.length > 0)
     .sort(

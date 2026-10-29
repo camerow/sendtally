@@ -120,8 +120,16 @@ describe("grade metrics", () => {
     expect(top === undefined ? null : exerciseSummary(top, TODAY)).toMatchObject({ change: 1 });
   });
 
-  it("counts sends when no grade metric is named", () => {
+  it("counts sends when the progress is the climbs completed or unset", () => {
     expect(exerciseSeries(sessions)[0]?.metric).toBe("sends");
+    expect(exerciseSeries(sessions, () => null)[0]?.metric).toBe("sends");
+    expect(exerciseSeries(sessions, () => "completed")[0]?.metric).toBe("sends");
+  });
+
+  it("marks an exercise with no progress untracked, still logged", () => {
+    const [series] = exerciseSeries(sessions, () => "none");
+    expect(series).toMatchObject({ metric: "sends", untracked: true });
+    expect(series?.sessions).toHaveLength(2);
   });
 
   it("ranks routes on their own ladder and reads them in the scale logged", () => {

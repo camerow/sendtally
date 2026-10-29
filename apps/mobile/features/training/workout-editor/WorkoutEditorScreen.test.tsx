@@ -219,6 +219,7 @@ describe("Workout editor", () => {
       kind: "strength",
       measure: "repsWeight",
       eachSide: false,
+      progress: null,
       builtIn: "benchPress",
     });
     await fireEvent.press(screen.getByText("Add exercises"));
@@ -258,6 +259,7 @@ describe("Workout editor", () => {
       kind: "strength",
       measure: "reps",
       eachSide: false,
+      progress: null,
       builtIn: null,
     });
     expect(editor.getByText("Nordic curl")).toBeTruthy();
