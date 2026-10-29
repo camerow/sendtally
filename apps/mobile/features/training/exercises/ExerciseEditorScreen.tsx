@@ -1,25 +1,31 @@
 import { router } from "expo-router";
 import React from "react";
-import { Alert, Text, View } from "react-native";
+import { Alert, Pressable, Text, View } from "react-native";
 import { defaultMeasure, measuresFor, type WorkoutKind } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import {
   exerciseKindOf,
   measureChangeNeedsWarning,
   measureLabel,
+  tallyMeasureOf,
 } from "@sendtally/features/exercises";
 import { t } from "@sendtally/features/i18n";
 import { exerciseKey, useExerciseSeries, useExercises } from "@sendtally/features/statistics";
+import { Icon } from "../../../components/Icon";
 import { Switch } from "../../../components/Switch";
 import { useApi } from "../../../lib/api";
 import { confirmDestructive } from "../../../lib/confirmDestructive";
+import { pressRow } from "../../../lib/press";
 import { ChipRow } from "../components/ChipRow";
 import { EditorHeader } from "../components/EditorHeader";
 import { KindNameField } from "../components/KindNameField";
 import { SheetSection } from "../components/SheetSection";
+import { useHangData } from "../data/HangDataContext";
 import { LoadState } from "../data/LoadState";
 import { ScreenFrame } from "../../../components/ScreenFrame";
 import { type } from "../type";
+import { ItemEditor } from "../workout-editor/ItemEditor";
+import { newDoseFor } from "../workout-editor/doseFields";
 import { forgetOpener, openerOf } from "./openExerciseEditor";
 import { ProgressChips } from "./ProgressChips";
 import { takenBy } from "./takenBy";
@@ -48,13 +54,34 @@ type FormProps = {
   onSave: (form: ExerciseForm) => void;
 };
 
+const ROW = {
+  minHeight: 52,
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "space-between",
+  gap: 12,
+  borderTopWidth: 1,
+  borderBottomWidth: 1,
+  borderColor: colors.lineOnLightSoft,
+} as const;
+
+const noop = (): void => undefined;
+
 function Form({ initial, editing, logged, onSave }: FormProps): React.ReactElement {
+  const { model } = useHangData();
   const [untouched] = React.useState(initial);
   const [form, setForm] = React.useState(untouched);
+  const [advanced, setAdvanced] = React.useState(false);
   const { kind } = form;
   const trimmed = form.name.trim();
   const fingers = kind === "hangboard";
   const climbing = kind === "climbing";
+  const doseMeasure =
+    (climbing && form.measure !== "hang"
+      ? tallyMeasureOf({ kind, measure: form.measure })
+      : null) ?? form.measure;
+  const previewName = trimmed === "" ? t("workouts.exerciseNamePlaceholder") : trimmed;
+  const progress = t(`workouts.progress.${form.progress ?? "completed"}`);
 
   const save = (): void => {
     if (trimmed === "") return;
@@ -104,33 +131,9 @@ function Form({ initial, editing, logged, onSave }: FormProps): React.ReactEleme
           onChange={(measure) => setForm((f) => ({ ...f, measure }))}
           options={measuresFor(kind).map((m) => ({ value: m, label: measureLabel(m, kind) }))}
         />
-        <Text style={[type.body, { fontSize: 12.5, color: colors.textSecondary }]}>
-          {fingers
-            ? t("workouts.measuredInHintFingers")
-            : climbing
-              ? t("workouts.measuredInHintClimbing")
-              : t("workouts.measuredInHint")}
-        </Text>
       </SheetSection>
-      {climbing && (
-        <ProgressChips
-          value={form.progress ?? null}
-          onChange={(progress) => setForm((f) => ({ ...f, progress }))}
-        />
-      )}
       {!fingers && !climbing && (
-        <View
-          style={{
-            minHeight: 52,
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: 12,
-            borderTopWidth: 1,
-            borderBottomWidth: 1,
-            borderColor: colors.lineOnLightSoft,
-          }}
-        >
+        <View style={ROW}>
           <View style={{ flex: 1, gap: 2 }}>
             <Text style={[type.body, { fontSize: 15, color: colors.gunmetal }]}>
               {t("workouts.eachSide")}
@@ -147,6 +150,51 @@ function Form({ initial, editing, logged, onSave }: FormProps): React.ReactEleme
           />
         </View>
       )}
+      {climbing && (
+        <Pressable
+          onPress={() => setAdvanced((open) => !open)}
+          accessibilityRole="button"
+          accessibilityState={{ expanded: advanced }}
+          style={pressRow(ROW)}
+        >
+          <View style={{ flex: 1, gap: 2 }}>
+            <Text style={[type.body, { fontSize: 15, color: colors.gunmetal }]}>
+              {t("workouts.advanced")}
+            </Text>
+            {!advanced && (
+              <Text style={[type.body, { fontSize: 12.5, color: colors.textSecondary }]}>
+                {`${t("workouts.progress")}: ${progress}`}
+              </Text>
+            )}
+          </View>
+          <View style={{ transform: [{ rotate: advanced ? "-90deg" : "90deg" }] }}>
+            <Icon name="chevron" color={colors.textSecondary} size={18} strokeWidth={2} />
+          </View>
+        </Pressable>
+      )}
+      {climbing && advanced && (
+        <ProgressChips
+          value={form.progress ?? null}
+          onChange={(progress) => setForm((f) => ({ ...f, progress }))}
+        />
+      )}
+      <SheetSection label={t("workouts.preview")}>
+        <Text style={[type.body, { fontSize: 12.5, color: colors.textSecondary }]}>
+          {t("workouts.previewHint")}
+        </Text>
+        <View accessible pointerEvents="none">
+          <ItemEditor
+            kind={kind}
+            item={{ exercise: previewName, doses: [newDoseFor(kind, doseMeasure)] }}
+            name={form.eachSide ? `${previewName} · ${t("activities.eachSide")}` : previewName}
+            measure={doseMeasure}
+            unit={model.settings.units}
+            onChange={noop}
+            onRemove={noop}
+            onSwap={noop}
+          />
+        </View>
+      </SheetSection>
     </ScreenFrame>
   );
 }
