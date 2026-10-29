@@ -13,6 +13,7 @@ export const hang = {
   "hang.summarySingle": "Suspension de {on}",
   "hang.summaryHang": "{core} · {sets} séries · {setRest} de repos",
   "hang.summaryPull": "{reps} tirages × {sets} séries · {setRest} entre les séries",
+  "hang.summaryTimedPull": "Tirage de {on}",
 
   "hang.workout.rep73.name": "Repeaters 7:3",
   "hang.workout.rep73.blurb":
@@ -145,6 +146,7 @@ export const hang = {
   "hang.nextSetRest": "Repos série {time}",
   "hang.nextExerciseRest": "Repos {time}, puis l'exercice suivant",
   "hang.nextLift": "Tirage {reps} × {load}",
+  "hang.nextTimedLift": "Tirage {n} s · série {set}",
   "hang.restartInterval": "Recommencer cet intervalle",
   "hang.skipInterval": "Passer à l'intervalle suivant",
   "hang.pause": "Pause",

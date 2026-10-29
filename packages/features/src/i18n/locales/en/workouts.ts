@@ -138,8 +138,10 @@ export const workouts = {
   "workouts.measure.seconds": "Time",
   "workouts.measure.secondsWeight": "Time × weight",
   "workouts.measure.rounds": "Rounds",
+  "workouts.measure.hang": "Hang × weight",
   "workouts.measuredInHint": "Sets the fields its sets ask for and the unit its trend uses.",
-  "workouts.measureFingers": "Hang time × added weight, on an edge",
+  "workouts.measuredInHintFingers":
+    "A hang is on an edge. Reps and time are ground pulls, off the floor with no edge.",
   "workouts.eachSide": "Each side",
   "workouts.eachSideHint": "2 × 60 s means 60 s a side",
   "workouts.aSide": "{value} a side",

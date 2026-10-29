@@ -13,6 +13,7 @@ export const hang = {
   "hang.summarySingle": "Suspensión de {on}",
   "hang.summaryHang": "{core} · {sets} series · {setRest} de descanso",
   "hang.summaryPull": "{reps} tirones × {sets} series · {setRest} entre series",
+  "hang.summaryTimedPull": "Tirón de {on}",
 
   "hang.workout.rep73.name": "Repeaters 7:3",
   "hang.workout.rep73.blurb":
@@ -145,6 +146,7 @@ export const hang = {
   "hang.nextSetRest": "Descanso de serie {time}",
   "hang.nextExerciseRest": "Descanso {time}, luego el siguiente ejercicio",
   "hang.nextLift": "Tirón {reps} × {load}",
+  "hang.nextTimedLift": "Tirón {n} s · serie {set}",
   "hang.restartInterval": "Reiniciar este intervalo",
   "hang.skipInterval": "Saltar al siguiente intervalo",
   "hang.pause": "Pausar",

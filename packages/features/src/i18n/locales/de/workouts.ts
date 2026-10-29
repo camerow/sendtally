@@ -140,9 +140,11 @@ export const workouts = {
   "workouts.measure.seconds": "Zeit",
   "workouts.measure.secondsWeight": "Zeit × Gewicht",
   "workouts.measure.rounds": "Runden",
+  "workouts.measure.hang": "Hängen × Gewicht",
   "workouts.measuredInHint":
     "Bestimmt, was seine Sätze abfragen und in welcher Einheit sein Verlauf zählt.",
-  "workouts.measureFingers": "Hängezeit × Zusatzgewicht, an einer Leiste",
+  "workouts.measuredInHintFingers":
+    "Hängen ist an einer Leiste. Wiederholungen und Zeit sind Bodenzüge, ohne Leiste.",
   "workouts.eachSide": "Pro Seite",
   "workouts.eachSideHint": "2 × 60 s heißt 60 s pro Seite",
   "workouts.aSide": "{value} pro Seite",

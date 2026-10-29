@@ -43,6 +43,18 @@ describe("week fields", () => {
       "weightKg",
       "setRestS",
     ]);
+    expect(weekFields("hangboard", { sets: 5, reps: 5 })).toEqual([
+      "sets",
+      "reps",
+      "weightKg",
+      "setRestS",
+    ]);
+    expect(weekFields("hangboard", { sets: 5, onS: 10, edgeMm: 0 })).toEqual([
+      "sets",
+      "onS",
+      "weightKg",
+      "setRestS",
+    ]);
     expect(weekFields("strength", squat)).toEqual(["sets", "reps", "weightKg", "setRestS"]);
     expect(weekFields("other", { sets: 4, onS: 240 })).toEqual(["sets", "onS", "offS", "weightKg"]);
   });

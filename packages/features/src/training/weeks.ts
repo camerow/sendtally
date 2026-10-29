@@ -1,8 +1,10 @@
 import {
   DOSE_FIELDS,
+  gripMeasureOf,
   fromUnit,
   toUnit,
   type Dose,
+  type GripMeasure,
   type NumberLimits,
   type WeightUnit,
   type WorkoutKind,
@@ -16,10 +18,15 @@ export type DoseField = (typeof DOSE_FIELDS)[number];
 const timed = (kind: WorkoutKind, dose: Dose): boolean =>
   kind !== "hangboard" && dose.onS !== undefined;
 
-/** The fields a block week can change for an item, in the order they read. */
+const HANGBOARD_FIELDS: Record<GripMeasure, DoseField[]> = {
+  hang: ["sets", "reps", "onS", "offS", "edgeMm", "weightKg", "setRestS"],
+  repsWeight: ["sets", "reps", "weightKg", "setRestS"],
+  secondsWeight: ["sets", "onS", "weightKg", "setRestS"],
+};
+
+/** The fields a block week can change for an item, in the order they read. A ground pull has no edge. */
 export function weekFields(kind: WorkoutKind, dose: Dose): DoseField[] {
-  if (kind === "hangboard")
-    return ["sets", "reps", "onS", "offS", "edgeMm", "weightKg", "setRestS"];
+  if (kind === "hangboard") return HANGBOARD_FIELDS[gripMeasureOf(dose)];
   if (timed(kind, dose)) return ["sets", "onS", "offS", "weightKg"];
   return ["sets", "reps", "weightKg", "setRestS"];
 }

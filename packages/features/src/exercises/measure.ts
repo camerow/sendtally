@@ -3,6 +3,7 @@ import {
   EXERCISE_KINDS,
   type ExerciseKind,
   type ExerciseMeasure,
+  type GripMeasure,
   type WorkoutKind,
 } from "@sendtally/core/hang";
 import { t } from "../i18n";
@@ -33,8 +34,12 @@ export function tallyMeasuresOf(
 }
 
 /** A climbing exercise's reps read as climbs and its time as time on the wall. */
-export const measureLabel = (measure: ExerciseMeasure, kind?: WorkoutKind): string => {
-  const tally = kind === "climbing" ? tallyMeasureOf({ kind, measure }) : null;
+export const measureLabel = (
+  measure: ExerciseMeasure | GripMeasure,
+  kind?: WorkoutKind
+): string => {
+  const tally =
+    kind === "climbing" && measure !== "hang" ? tallyMeasureOf({ kind, measure }) : null;
   return t(`workouts.measure.${tally ?? measure}`);
 };
 
