@@ -624,6 +624,7 @@ describe("exercises", () => {
         kind: "strength",
         measure: "repsWeight",
         eachSide: false,
+        progress: null,
         builtIn: null,
         archived: false,
       },
@@ -677,7 +678,20 @@ describe("exercises", () => {
       exercise: { measure: "seconds", eachSide: true, builtIn: "pigeon" },
     });
     const climb = await call(userId, "PUT", "/v1/exercises/e2", { name: "4x4", kind: "climbing" });
-    expect(await json(climb)).toMatchObject({ exercise: { kind: "climbing", measure: "reps" } });
+    expect(await json(climb)).toMatchObject({
+      exercise: { kind: "climbing", measure: "reps", progress: null },
+    });
+    const graded = await call(userId, "PUT", "/v1/exercises/e2", {
+      name: "4x4",
+      kind: "climbing",
+      progress: "topGrade",
+    });
+    expect(await json(graded)).toMatchObject({ exercise: { progress: "topGrade" } });
+    const older = await call(userId, "PUT", "/v1/exercises/e2", {
+      name: "4 x 4",
+      kind: "climbing",
+    });
+    expect(await json(older)).toMatchObject({ exercise: { progress: "topGrade" } });
     const renamed = await call(userId, "PUT", "/v1/exercises/e1", {
       name: "Pigeon pose",
       kind: "mobility",
