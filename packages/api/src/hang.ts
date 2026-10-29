@@ -6,6 +6,7 @@ import {
   builtInGripNamed,
   gripKey,
   gripOf,
+  measured,
   hangDefaultGripBody,
   hangGripBody,
   hangIdParam,
@@ -51,7 +52,7 @@ export const hang = new Hono<AppEnv>()
     async (c) => {
       const { id } = c.req.valid("param");
       if (isBuiltInGrip(id)) return c.json({ error: "built-in grips cannot be changed" }, 400);
-      const { name } = c.req.valid("json");
+      const { name, measure } = c.req.valid("json");
       const userId = c.get("userId");
       const nameKey = gripKey(name);
       const builtIn = builtInGripNamed(name);
@@ -69,8 +70,9 @@ export const hang = new Hono<AppEnv>()
         return c.json({ grip: { ...clash, hidden: false } });
       }
       await repo.ensureUser(c.env.DB, userId);
-      await repo.saveHangGrip(c.env.DB, userId, { id, name, nameKey });
-      return c.json({ grip: { id, name, custom: true, hidden: false } });
+      await repo.saveHangGrip(c.env.DB, userId, { id, name, nameKey, measure });
+      const saved = measured(measure ?? existing?.measure ?? "hang");
+      return c.json({ grip: { id, name, custom: true, hidden: false, ...saved } });
     }
   )
 

@@ -111,6 +111,24 @@ describe("hangboard", () => {
     });
   });
 
+  it("keeps a grip's measure, and leaves it alone when a rename sends none", async () => {
+    const userId = "user_hang_measure";
+    const pull = {
+      grip: { id: "g1", name: "Block", custom: true, hidden: false, measure: "secondsWeight" },
+    };
+    expect(
+      await (
+        await call(userId, "PUT", "/grips/g1", { name: "Block", measure: "secondsWeight" })
+      ).json()
+    ).toEqual(pull);
+    expect(await (await call(userId, "PUT", "/grips/g1", { name: "Block" })).json()).toEqual(pull);
+    expect((await read(userId)).grips).toEqual([pull.grip]);
+    await call(userId, "PUT", "/grips/g1", { name: "Block", measure: "hang" });
+    expect((await read(userId)).grips).toEqual([
+      { id: "g1", name: "Block", custom: true, hidden: false },
+    ]);
+  });
+
   it("round trips every write through the read", async () => {
     const userId = "user_hang_crud";
     expect(await (await call(userId, "PUT", "/grips/g1", { name: " Wide pinch " })).json()).toEqual(

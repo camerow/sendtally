@@ -1,10 +1,12 @@
 import {
   BUILT_IN_GRIP_NAMES,
   BUILT_IN_GRIPS,
+  GRIP_MEASURES,
   isCalendarDate,
   defaultSetup,
   protocolOf,
   type Grip,
+  type GripMeasure,
   type HangSession,
   type HangSettings,
   type Loads,
@@ -51,7 +53,11 @@ const protocolShape = {
 
 const protocolSchema = z.object(protocolShape).refine(fitsKind, "outside the protocol's ranges");
 
-export const hangGripBody = z.object({ name: z.string().trim().min(1).max(40) });
+// App builds before grip measures send none, which leaves a grip's measure as it was.
+export const hangGripBody = z.object({
+  name: z.string().trim().min(1).max(40),
+  measure: z.enum(GRIP_MEASURES).optional(),
+});
 
 export const hangDefaultGripBody = z.object({ gripId: hangId });
 
@@ -134,11 +140,16 @@ export function builtInGripNamed(name: string): Grip | null {
     : { id, name: BUILT_IN_GRIP_NAMES[id], custom: false, hidden: false };
 }
 
+/** A grip's measure as the apps read it: none for a hang. */
+export const measured = (measure: GripMeasure): Pick<Grip, "measure"> =>
+  measure === "hang" ? {} : { measure };
+
 export const gripOf = (row: HangGripRow): Grip => ({
   id: row.id,
   name: row.name,
   custom: true,
   hidden: row.hidden,
+  ...measured(row.measure),
 });
 
 // App builds before setups read the edge from the protocol snapshot.

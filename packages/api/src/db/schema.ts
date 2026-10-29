@@ -13,6 +13,7 @@ import {
   EXERCISE_KINDS,
   EXERCISE_MEASURES,
   FOCI,
+  GRIP_MEASURES,
   WORKOUT_KINDS,
 } from "@sendtally/core/hang";
 
@@ -497,6 +498,7 @@ export const hangGrips = sqliteTable(
     name: text("name").notNull(),
     name_key: text("name_key").notNull(),
     hidden: integer("hidden", { mode: "boolean" }).notNull().default(false),
+    measure: text("measure", { enum: GRIP_MEASURES }).notNull().default("hang"),
     created_at: text("created_at").notNull(),
   },
   (t) => [

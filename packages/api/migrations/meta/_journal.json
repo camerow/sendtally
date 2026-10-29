@@ -337,6 +337,13 @@
       "when": 1793234939821,
       "tag": "0052_slimy_giant_girl",
       "breakpoints": true
+    },
+    {
+      "idx": 53,
+      "version": "6",
+      "when": 1793288544884,
+      "tag": "0053_good_talisman",
+      "breakpoints": true
     }
   ]
 }
