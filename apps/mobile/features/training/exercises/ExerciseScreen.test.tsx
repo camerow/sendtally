@@ -135,7 +135,7 @@ describe("exercise screen", () => {
     mockApi.saveExercise.mockResolvedValue({ exercise: exercises[0] });
     await renderWithHang(<ExerciseScreen id="e1" />, hangData(), world);
     await edit();
-    await fireEvent.press(screen.getByText("Seconds"));
+    await fireEvent.press(screen.getByText("Time"));
     await fireEvent.press(screen.getByLabelText("Each side"));
     await fireEvent.press(screen.getByText("Save"));
     expect(mockApi.saveExercise).not.toHaveBeenCalled();

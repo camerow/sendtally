@@ -137,8 +137,8 @@ export const workouts = {
   "workouts.measuredIn": "Gemessen in",
   "workouts.measure.reps": "Wdh.",
   "workouts.measure.repsWeight": "Wdh. × Gewicht",
-  "workouts.measure.seconds": "Sekunden",
-  "workouts.measure.secondsWeight": "Sekunden × Gewicht",
+  "workouts.measure.seconds": "Zeit",
+  "workouts.measure.secondsWeight": "Zeit × Gewicht",
   "workouts.measure.rounds": "Runden",
   "workouts.measuredInHint":
     "Bestimmt, was seine Sätze abfragen und in welcher Einheit sein Verlauf zählt.",
