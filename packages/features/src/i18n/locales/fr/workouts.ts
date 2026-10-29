@@ -181,6 +181,11 @@ export const workouts = {
     "Il quitte le sélecteur et les exercices mais garde son historique. Le recréer le fait revenir.",
   "workouts.measure.climbs": "Voies",
   "workouts.measure.wallTime": "Temps sur le mur",
+  "workouts.progress": "Progression",
+  "workouts.progress.averageGrade": "Cotation moyenne",
+  "workouts.progress.topGrade": "Cotation max",
+  "workouts.progress.completed": "Voies réussies",
+  "workouts.progress.none": "Aucune",
   "workouts.measuredInHintClimbing":
     "Saisi comme une séance en direct : touchez une cotation, puis Chute ou Enchaîné. Une série se termine après un nombre de voies ou une durée.",
   "workouts.dose.climbs": "Voies",

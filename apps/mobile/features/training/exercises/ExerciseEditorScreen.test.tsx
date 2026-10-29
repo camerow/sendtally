@@ -41,6 +41,7 @@ describe("exercise editor", () => {
       kind: "strength",
       measure: "repsWeight",
       eachSide: true,
+      progress: null,
       builtIn: null,
     });
     expect(router.replace).toHaveBeenCalledWith({
@@ -65,6 +66,7 @@ describe("exercise editor", () => {
       kind: "climbing",
       measure: "reps",
       eachSide: false,
+      progress: null,
       builtIn: null,
     });
   });
@@ -138,6 +140,26 @@ describe("exercise editor", () => {
       kind: "strength",
       measure: "seconds",
       eachSide: false,
+      progress: null,
     });
+  });
+
+  it("sets what a climbing exercise's progress follows, the climbs completed until picked", async () => {
+    mockApi.saveExercise.mockResolvedValue({});
+    await renderWithHang(<ExerciseEditorScreen kind="climbing" id="e1" />, undefined, {
+      exercises: [anExercise("e1", "Limit boulders", "climbing")],
+    });
+    expect(checked("Climbs completed")).toBe(true);
+    await fireEvent.press(screen.getByText("Highest grade"));
+    await fireEvent.press(screen.getByText("Save"));
+    expect(mockApi.saveExercise).toHaveBeenCalledWith(
+      "e1",
+      expect.objectContaining({ progress: "topGrade" })
+    );
+  });
+
+  it("offers no progress outside climbing", async () => {
+    await renderWithHang(<ExerciseEditorScreen kind="strength" />);
+    expect(screen.queryByText("Progress")).toBeNull();
   });
 });

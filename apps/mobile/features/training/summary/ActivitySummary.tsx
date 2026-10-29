@@ -40,7 +40,7 @@ export function ActivitySummary({
 }: ActivitySummaryProps): React.ReactElement {
   const results = exerciseResults(activity, activities);
   const done = results.map((r) => exerciseKey(r.exercise));
-  const trends = done.flatMap((key) => series.filter((s) => s.key === key));
+  const trends = done.flatMap((key) => series.filter((s) => s.key === key && s.untracked !== true));
   const sets = results.reduce((n, r) => n + r.sets.length, 0);
   const target = activity.workoutId === null ? null : log.workout(activity.workoutId);
   return (

@@ -53,6 +53,7 @@ export const anExercise = (
   kind,
   measure: defaultMeasure(kind),
   eachSide: false,
+  progress: null,
   builtIn: null,
   archived: false,
   ...more,

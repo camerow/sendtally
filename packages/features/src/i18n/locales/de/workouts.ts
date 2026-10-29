@@ -179,6 +179,11 @@ export const workouts = {
     "Sie verschwindet aus der Auswahl und den Übungen, ihr Verlauf bleibt. Legst du sie neu an, ist sie wieder da.",
   "workouts.measure.climbs": "Klettereien",
   "workouts.measure.wallTime": "Zeit an der Wand",
+  "workouts.progress": "Fortschritt",
+  "workouts.progress.averageGrade": "Ø Grad",
+  "workouts.progress.topGrade": "Höchster Grad",
+  "workouts.progress.completed": "Geschaffte Klettereien",
+  "workouts.progress.none": "Keiner",
   "workouts.measuredInHintClimbing":
     "Erfasst wie eine Live-Session: Grad tippen, dann Gestürzt oder Geschafft. Ein Satz endet nach einer Anzahl Klettereien oder nach einer Zeit.",
   "workouts.dose.climbs": "Klettereien",

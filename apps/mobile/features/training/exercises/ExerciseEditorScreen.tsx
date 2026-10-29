@@ -21,6 +21,7 @@ import { LoadState } from "../data/LoadState";
 import { ScreenFrame } from "../../../components/ScreenFrame";
 import { type } from "../type";
 import { forgetOpener, openerOf } from "./openExerciseEditor";
+import { ProgressChips } from "./ProgressChips";
 import { takenBy } from "./takenBy";
 import type { ExerciseForm } from "./types";
 
@@ -111,6 +112,12 @@ function Form({ initial, editing, logged, onSave }: FormProps): React.ReactEleme
               : t("workouts.measuredInHint")}
         </Text>
       </SheetSection>
+      {climbing && (
+        <ProgressChips
+          value={form.progress ?? null}
+          onChange={(progress) => setForm((f) => ({ ...f, progress }))}
+        />
+      )}
       {!fingers && !climbing && (
         <View
           style={{
@@ -182,7 +189,7 @@ function EditExercise({ id }: { id: string }): React.ReactElement | null {
   const logged =
     series.status === "ready" && series.data.some((s) => s.key === exerciseKey(exercise.name));
 
-  const save = ({ name, kind, measure, eachSide }: ExerciseForm): void => {
+  const save = ({ name, kind, measure, eachSide, progress }: ExerciseForm): void => {
     router.back();
     void api
       .saveExercise(exercise.id, {
@@ -190,6 +197,7 @@ function EditExercise({ id }: { id: string }): React.ReactElement | null {
         kind: exerciseKindOf(kind) ?? exercise.kind,
         measure: measure === "hang" ? exercise.measure : measure,
         eachSide,
+        progress: progress ?? null,
       })
       .catch((error: unknown) => {
         const taken = takenBy(error);
@@ -204,6 +212,7 @@ function EditExercise({ id }: { id: string }): React.ReactElement | null {
         name: exercise.name,
         measure: exercise.measure,
         eachSide: exercise.eachSide,
+        progress: exercise.progress,
       }}
       editing
       logged={logged}

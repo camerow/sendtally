@@ -180,6 +180,11 @@ export const workouts = {
     "Sale del selector y de Ejercicios, pero conserva su historial. Crearlo de nuevo lo recupera.",
   "workouts.measure.climbs": "Escaladas",
   "workouts.measure.wallTime": "Tiempo en la pared",
+  "workouts.progress": "Progreso",
+  "workouts.progress.averageGrade": "Grado medio",
+  "workouts.progress.topGrade": "Grado máximo",
+  "workouts.progress.completed": "Escaladas completadas",
+  "workouts.progress.none": "Ninguno",
   "workouts.measuredInHintClimbing":
     "Se registra como una sesión en directo: toca un grado y luego Caída o Encadenado. Una serie termina tras un número de escaladas o un tiempo.",
   "workouts.dose.climbs": "Escaladas",

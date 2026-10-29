@@ -31,7 +31,7 @@ export function useMakeExercise(): (
     );
     return { exercise };
   };
-  return async ({ kind, name, measure, eachSide }, builtIn) => {
+  return async ({ kind, name, measure, eachSide, progress }, builtIn) => {
     const exerciseKind = exerciseKindOf(kind);
     if (exerciseKind === null) {
       const existing = findGrip(model.grips, name);
@@ -47,6 +47,7 @@ export function useMakeExercise(): (
         kind: exerciseKind,
         measure: measure === "hang" ? defaultMeasure(exerciseKind) : measure,
         eachSide,
+        progress: progress ?? null,
         builtIn: builtIn ?? null,
       };
       return listed((await api.saveExercise(randomUUID(), input)).exercise);

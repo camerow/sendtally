@@ -176,6 +176,11 @@ export const workouts = {
     "It leaves the picker and Exercises but keeps its history. Making it again brings it back.",
   "workouts.measure.climbs": "Climbs",
   "workouts.measure.wallTime": "Time on the wall",
+  "workouts.progress": "Progress",
+  "workouts.progress.averageGrade": "Average grade",
+  "workouts.progress.topGrade": "Highest grade",
+  "workouts.progress.completed": "Climbs completed",
+  "workouts.progress.none": "None",
   "workouts.measuredInHintClimbing":
     "Logged on the session tally: tap a grade, then Fell or Sent. A set can end after a number of climbs or a length of time.",
   "workouts.dose.climbs": "Climbs",

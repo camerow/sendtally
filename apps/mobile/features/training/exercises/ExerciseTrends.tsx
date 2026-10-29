@@ -46,7 +46,7 @@ export function ExerciseTrends({ exercise }: ExerciseTrendsProps): React.ReactEl
         {state.message}
       </Text>
     );
-  const all = state.data;
+  const all = state.data.filter((s) => s.untracked !== true);
   const series = all.find((s) => s.key === picked) ?? all[0];
   const summary = series === undefined ? null : exerciseSummary(series, todayIn());
   if (series === undefined || summary === null)
