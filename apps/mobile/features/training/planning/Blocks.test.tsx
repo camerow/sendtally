@@ -207,8 +207,9 @@ describe("plan again", () => {
   it("copies a past block from the week picked, then opens the copy", async () => {
     await renderWithHang(<BlockScreen id="b0" />, hangData(), { workouts: [squat], plan: past });
     await fireEvent.press(screen.getByText("Plan again"));
-    const buttons = screen.getAllByText("Plan again");
-    await fireEvent.press(buttons[buttons.length - 1]!);
+    const [sheet, footer] = screen.getAllByText("Plan again");
+    expect(footer).toBeTruthy();
+    await fireEvent.press(sheet!);
     expect(mockPlan.copyBlock).toHaveBeenCalledWith("b0", "b-new", "2026-09-28");
     expect(router.replace).toHaveBeenCalledWith({
       pathname: "/plan/block/[id]",

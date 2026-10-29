@@ -8,6 +8,7 @@ import { blockRecap, usePlan, useTrainingLog } from "@sendtally/features/trainin
 import { ScreenFrame } from "../../../components/ScreenFrame";
 import { useApi } from "../../../lib/api";
 import { blockDates } from "../blocks/blockText";
+import { Button } from "../components/Button";
 import { DetailActions } from "../components/DetailActions";
 import { deleteRow } from "../components/deleteRow";
 import { Label } from "../components/Label";
@@ -19,6 +20,7 @@ import { useLit } from "../plan/useLit";
 import { type } from "../type";
 import { BlockOverview } from "./BlockOverview";
 import { BlockRecapView } from "./BlockRecapView";
+import { PlanAgainSheet } from "./PlanAgainSheet";
 
 export type BlockScreenProps = {
   id: string;
@@ -26,7 +28,7 @@ export type BlockScreenProps = {
   highlight?: string;
 };
 
-/** One block, read only: how it is going while it runs, a recap once it is over. Edit changes it. */
+/** One block, read only: how it is going while it runs, a recap and Plan again once it is over. Edit changes it. */
 export function BlockScreen({ id, highlight }: BlockScreenProps): React.ReactElement | null {
   const lit = useLit(highlight);
   const { today } = useHangData();
@@ -34,6 +36,7 @@ export function BlockScreen({ id, highlight }: BlockScreenProps): React.ReactEle
   const plan = usePlan(api);
   const { log } = useTrainingLog(api);
   const actions = usePlanActions();
+  const [again, setAgain] = React.useState(false);
   if (plan.state.status !== "ready")
     return <LoadState state={plan.state} onRetry={() => void plan.reload()} framed />;
   const block = log.plan.blocks.find((b) => b.id === id);
@@ -59,6 +62,16 @@ export function BlockScreen({ id, highlight }: BlockScreenProps): React.ReactEle
           ]}
         />
       }
+      footer={
+        ended ? (
+          <Button
+            label={t("plan.planAgain")}
+            onPress={() => setAgain(true)}
+            variant="primary"
+            height={54}
+          />
+        ) : undefined
+      }
     >
       <View style={{ gap: 4 }}>
         {ended && <Label color={colors.fern}>{t("plan.finished")}</Label>}
@@ -72,6 +85,7 @@ export function BlockScreen({ id, highlight }: BlockScreenProps): React.ReactEle
       ) : (
         <BlockOverview recap={recap} plan={log.plan} workout={log.workout} lit={lit} />
       )}
+      {again && <PlanAgainSheet block={block} onClose={() => setAgain(false)} />}
     </ScreenFrame>
   );
 }

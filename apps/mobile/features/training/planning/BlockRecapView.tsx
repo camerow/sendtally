@@ -6,21 +6,18 @@ import { formatNumber, t } from "@sendtally/features/i18n";
 import type { BlockRecap, WorkoutLookup } from "@sendtally/features/training";
 import { BlockWeekBars } from "../blocks/BlockWeekBars";
 import { doneOfShort, effortText } from "../blocks/blockText";
-import { Button } from "../components/Button";
 import { PlanRow } from "../components/PlanRow";
 import { useHangData } from "../data/HangDataContext";
 import { SummaryTiles } from "../summary/SummaryTiles";
 import { changeText } from "../summary/summaryText";
 import { DayMark } from "../today/DayMark";
 import { KIND_LOOK } from "../today/kindLook";
-import { PlanAgainSheet } from "./PlanAgainSheet";
 
 export type BlockRecapViewProps = { recap: BlockRecap; workout: WorkoutLookup };
 
-/** A block once it is over: what got done, week by week and workout by workout, and Plan again. */
+/** A block once it is over: what got done, week by week and and workout by workout. */
 export function BlockRecapView({ recap, workout }: BlockRecapViewProps): React.ReactElement {
   const { model } = useHangData();
-  const [again, setAgain] = React.useState(false);
   return (
     <>
       <SummaryTiles
@@ -50,13 +47,6 @@ export function BlockRecapView({ recap, workout }: BlockRecapViewProps): React.R
           );
         })}
       </View>
-      <Button
-        label={t("plan.planAgain")}
-        onPress={() => setAgain(true)}
-        variant="primary"
-        height={54}
-      />
-      {again && <PlanAgainSheet block={recap.block} onClose={() => setAgain(false)} />}
     </>
   );
 }
