@@ -149,6 +149,9 @@ describe("exercise editor", () => {
     await renderWithHang(<ExerciseEditorScreen kind="climbing" id="e1" />, undefined, {
       exercises: [anExercise("e1", "Limit boulders", "climbing")],
     });
+    expect(screen.queryByRole("radio", { name: "Climbs completed" })).toBeNull();
+    expect(screen.getByText("Progress: Climbs completed")).toBeTruthy();
+    await fireEvent.press(screen.getByRole("button", { name: /Advanced/ }));
     expect(checked("Climbs completed")).toBe(true);
     await fireEvent.press(screen.getByText("Highest grade"));
     await fireEvent.press(screen.getByText("Save"));
@@ -158,8 +161,21 @@ describe("exercise editor", () => {
     );
   });
 
-  it("offers no progress outside climbing", async () => {
+  it("offers no advanced settings outside climbing", async () => {
     await renderWithHang(<ExerciseEditorScreen kind="strength" />);
+    expect(screen.queryByText("Advanced")).toBeNull();
     expect(screen.queryByText("Progress")).toBeNull();
+  });
+
+  it("previews the workout item its measure asks for, as it is typed", async () => {
+    await renderWithHang(<ExerciseEditorScreen kind="strength" />);
+    expect(screen.getByText("Exercise name")).toBeTruthy();
+    expect(screen.getByText("Weight")).toBeTruthy();
+    await fireEvent.changeText(screen.getByLabelText("Name"), "Plank");
+    await fireEvent.press(screen.getByText("Time"));
+    await fireEvent.press(screen.getByLabelText("Each side"));
+    expect(screen.getByText("Plank · each side")).toBeTruthy();
+    expect(screen.getByText("Hold")).toBeTruthy();
+    expect(screen.queryByText("Weight")).toBeNull();
   });
 });

@@ -141,8 +141,6 @@ export const workouts = {
   "workouts.measure.secondsWeight": "Zeit × Gewicht",
   "workouts.measure.rounds": "Runden",
   "workouts.measure.hang": "Hängen × Gewicht",
-  "workouts.measuredInHint":
-    "Bestimmt, was seine Sätze abfragen und in welcher Einheit sein Verlauf zählt.",
   "workouts.measuredInHintFingers":
     "Hängen ist an einer Leiste. Wiederholungen und Zeit sind Bodenzüge, ohne Leiste.",
   "workouts.eachSide": "Pro Seite",
@@ -179,13 +177,14 @@ export const workouts = {
     "Sie verschwindet aus der Auswahl und den Übungen, ihr Verlauf bleibt. Legst du sie neu an, ist sie wieder da.",
   "workouts.measure.climbs": "Klettereien",
   "workouts.measure.wallTime": "Zeit an der Wand",
+  "workouts.advanced": "Erweitert",
+  "workouts.preview": "Vorschau",
+  "workouts.previewHint": "So misst du diese Übung",
   "workouts.progress": "Fortschritt",
   "workouts.progress.averageGrade": "Ø Grad",
   "workouts.progress.topGrade": "Höchster Grad",
   "workouts.progress.completed": "Geschaffte Klettereien",
   "workouts.progress.none": "Keiner",
-  "workouts.measuredInHintClimbing":
-    "Erfasst wie eine Live-Session: Grad tippen, dann Gestürzt oder Geschafft. Ein Satz endet nach einer Anzahl Klettereien oder nach einer Zeit.",
   "workouts.dose.climbs": "Klettereien",
   "workouts.dose.time": "Zeit",
   "workouts.dose.anyClimbs": "Beliebig",
