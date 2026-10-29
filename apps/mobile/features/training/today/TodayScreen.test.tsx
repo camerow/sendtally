@@ -62,12 +62,12 @@ describe("Today", () => {
     expect(screen.getByText("Start")).toBeTruthy();
   });
 
-  it("shows a planned workout once it is done as its logged session, not twice", async () => {
+  it("shows a planned workout once it is done, under Done, as its logged session", async () => {
     const hang = aHang({ workoutId: "max10", date: "2026-09-28", membershipId: "m1" });
     await renderWithHang(<TodayScreen />, hangData({ sessions: [hang] }), { plan: plan("max10") });
     await fireEvent.press(screen.getByLabelText(/^Monday.*1 done, 0 planned$/));
     expect(screen.getByText("1 done")).toBeTruthy();
-    expect(screen.queryByText("Done")).toBeNull();
+    expect(screen.getAllByText("Done")).toHaveLength(1);
     expect(screen.getAllByText("Max hangs")).toHaveLength(1);
   });
 

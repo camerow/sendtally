@@ -27,7 +27,7 @@ const loggedKey = (item: LoggedItem): string => {
   return item.kind === "climb" ? item.session.fingerprint : item.session.id;
 };
 
-/** The selected day: what was done, then what is planned on it, missed or still to come. */
+/** The selected day: what is planned on it, missed or still to come, then what was done under Done. */
 export function DaySection({ day, onOpen, heading = true }: DaySectionProps): React.ReactElement {
   const { model } = useHangData();
   const library = useLibrary().state;
@@ -50,14 +50,6 @@ export function DaySection({ day, onOpen, heading = true }: DaySectionProps): Re
           <Label color={colors.textSecondary}>{daySummary(day)}</Label>
         </View>
       )}
-      {day.logged.map((item) => (
-        <LoggedRow
-          key={loggedKey(item)}
-          kind={loggedKind(item)}
-          text={loggedRowText(item, model)}
-          onPress={() => onOpen(item)}
-        />
-      ))}
       {day.plans.map((o) => {
         const w = workout(o.membership.workoutId);
         if (w === undefined || o.status === "done") return null;
@@ -67,6 +59,19 @@ export function DaySection({ day, onOpen, heading = true }: DaySectionProps): Re
           <OccurrenceRow key={o.membership.id} occurrence={o} workout={w} />
         );
       })}
+      {day.logged.length > 0 && (
+        <Label color={colors.textSecondary} style={{ paddingTop: 4 }}>
+          {t("plan.done")}
+        </Label>
+      )}
+      {day.logged.map((item) => (
+        <LoggedRow
+          key={loggedKey(item)}
+          kind={loggedKind(item)}
+          text={loggedRowText(item, model)}
+          onPress={() => onOpen(item)}
+        />
+      ))}
       {empty && (
         <DashedPanel
           title={t("hang.restDay")}
