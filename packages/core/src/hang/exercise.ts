@@ -17,6 +17,14 @@ export const EXERCISE_KINDS = ["climbing", "strength", "mobility", "other"] as c
 export type ExerciseKind = (typeof EXERCISE_KINDS)[number];
 
 /**
+ * What a Fingers exercise, a grip, is measured in: hangs on an edge, or a ground pull
+ * off the floor in lifts or in time. Both carry weight.
+ */
+export const GRIP_MEASURES = ["hang", "repsWeight", "secondsWeight"] as const;
+
+export type GripMeasure = (typeof GRIP_MEASURES)[number];
+
+/**
  * What a climbing exercise can be measured in: climbs per set, or time on the wall per set,
  * both logged on the session tally. Rounds stays readable on climbing exercises logged in it.
  */
