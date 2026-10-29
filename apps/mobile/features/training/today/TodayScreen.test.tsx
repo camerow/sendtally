@@ -3,7 +3,7 @@ import { fireEvent, screen } from "@testing-library/react-native";
 import { router } from "expo-router";
 import React from "react";
 import type { Plan, WorkoutRecord } from "@sendtally/api-client";
-import { renderWithHang, hangData } from "../data/renderWithHang";
+import { aHang, renderWithHang, hangData } from "../data/renderWithHang";
 import { TodayScreen } from "./TodayScreen";
 
 jest.mock("../../../components/Sheet", () => ({
@@ -60,6 +60,15 @@ describe("Today", () => {
     await fireEvent.press(screen.getByLabelText(/^Monday.*0 done, 1 planned$/));
     expect(screen.getByText("Missed")).toBeTruthy();
     expect(screen.getByText("Start")).toBeTruthy();
+  });
+
+  it("shows a planned workout once it is done as its logged session, not twice", async () => {
+    const hang = aHang({ workoutId: "max10", date: "2026-09-28", membershipId: "m1" });
+    await renderWithHang(<TodayScreen />, hangData({ sessions: [hang] }), { plan: plan("max10") });
+    await fireEvent.press(screen.getByLabelText(/^Monday.*1 done, 0 planned$/));
+    expect(screen.getByText("1 done")).toBeTruthy();
+    expect(screen.queryByText("Done")).toBeNull();
+    expect(screen.getAllByText("Max hangs")).toHaveLength(1);
   });
 
   it("counts the week as done of planned", async () => {
