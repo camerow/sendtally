@@ -5,6 +5,8 @@ import {
   withAlternates,
   withDoseAdded,
   withDoseName,
+  withExerciseSwapped,
+  withItemsAdded,
   withoutLastDose,
   withSetRest,
 } from "./editorState";
@@ -22,6 +24,30 @@ const legs: WorkoutDraft = {
 };
 
 describe("workout editor state", () => {
+  it("starts a grip that pulls on its own dose, and copies the grip before it otherwise", () => {
+    const hang = { sets: 3, reps: 6, onS: 7, offS: 3, setRestS: 180 };
+    const fingers: WorkoutDraft = {
+      ...legs,
+      kind: "hangboard",
+      items: [{ exercise: "half", doses: [hang] }],
+    };
+    const added = withItemsAdded(fingers, [
+      { exercise: "open" },
+      { exercise: "block", measure: "secondsWeight" },
+    ]);
+    expect(added.items.map((i) => i.doses)).toEqual([
+      [hang],
+      [hang],
+      [{ sets: 5, reps: 1, onS: 10, edgeMm: 0, setRestS: 120 }],
+    ]);
+    expect(
+      withExerciseSwapped(fingers, 0, { exercise: "block", measure: "repsWeight" }).items
+    ).toEqual([{ exercise: "block", doses: [{ sets: 5, reps: 5, setRestS: 120 }] }]);
+    expect(withExerciseSwapped(fingers, 0, { exercise: "open" }).items).toEqual([
+      { exercise: "open", doses: [hang] },
+    ]);
+  });
+
   it("round trips a workout unchanged", () => {
     expect(draftOfEditor(legs)).toEqual(legs);
   });

@@ -1,19 +1,24 @@
-import { BUILT_IN_GRIPS, type Dose, type Item } from "@sendtally/core/hang";
+import { BUILT_IN_GRIPS, gripMeasureOf, type Dose, type Item } from "@sendtally/core/hang";
 import { t } from "@sendtally/features/i18n";
 import type { WorkoutDraft } from "@sendtally/features/workouts";
 import type { Picked } from "../exercise-picker/types";
-import { newDoseFor } from "./doseFields";
+import { fingersMeasure, newDoseFor, type DoseMeasure } from "./doseFields";
 
 export const MAX_DOSES = 10;
 
+/** Whether an item's doses suit a grip's measure: both hang, or both pull the same way. */
+const fitsGrip = (item: Item, measure?: DoseMeasure): boolean =>
+  gripMeasureOf(item.doses[0] ?? { sets: 1 }) === fingersMeasure(measure);
+
 /**
- * New items for what was picked, in order: a grip takes the doses of the grip before it,
- * anything else the dose its built-in starts at, else its measure's starting dose.
+ * New items for what was picked, in order: a grip takes the doses of the grip before it
+ * when they are measured the same, anything else the dose its built-in starts at, else its
+ * measure's starting dose.
  */
 export function withItemsAdded(s: WorkoutDraft, picked: readonly Picked[]): WorkoutDraft {
   const last = s.items[s.items.length - 1];
   const items = picked.map(({ exercise, measure, dose }): Item =>
-    s.kind === "hangboard" && last !== undefined
+    s.kind === "hangboard" && last !== undefined && fitsGrip(last, measure)
       ? { exercise, doses: last.doses.map((d) => ({ ...d })) }
       : { exercise, doses: [dose === undefined ? newDoseFor(s.kind, measure) : { ...dose }] }
   );
@@ -27,14 +32,20 @@ export function startingDraft(draft: WorkoutDraft): WorkoutDraft {
     : draft;
 }
 
-/** Another exercise in the item's place, keeping its doses. */
+/** Another exercise in the item's place, keeping its doses unless a grip is measured another way. */
 export const withExerciseSwapped = (
   s: WorkoutDraft,
   at: number,
-  exercise: string
+  { exercise, measure }: Picked
 ): WorkoutDraft => ({
   ...s,
-  items: s.items.map((x, i) => (i === at ? { ...x, exercise } : x)),
+  items: s.items.map((x, i) =>
+    i !== at
+      ? x
+      : s.kind === "hangboard" && !fitsGrip(x, measure)
+        ? { exercise, doses: [newDoseFor(s.kind, measure)] }
+        : { ...x, exercise }
+  ),
 });
 
 export const withItem = (s: WorkoutDraft, at: number, item: Item): WorkoutDraft => ({
