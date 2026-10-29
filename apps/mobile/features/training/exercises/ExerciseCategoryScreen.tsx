@@ -9,13 +9,11 @@ import { t } from "@sendtally/features/i18n";
 import { DashedPanel } from "../components/DashedPanel";
 import { IconButton } from "../components/IconButton";
 import { Title } from "../components/Title";
-import { useHangData } from "../data/HangDataContext";
 import { PickerRow } from "../exercise-picker/PickerRow";
 import { usePickerWorld } from "../exercise-picker/usePickerWorld";
 import { CategoryMark } from "../library/CategoryMark";
 import { LibrarySearch } from "../library/LibrarySearch";
 import { ScreenFrame } from "../../../components/ScreenFrame";
-import { openGrip } from "../train/openGrip";
 import { type } from "../type";
 import { openExerciseEditor } from "./openExerciseEditor";
 
@@ -29,7 +27,6 @@ const mine = ({ source }: PickerEntry): boolean =>
  * used first, to search; the plus makes a new one in it.
  */
 export function ExerciseCategoryScreen({ kind }: ExerciseCategoryScreenProps): React.ReactElement {
-  const { model } = useHangData();
   const world = usePickerWorld([], kind === "hangboard");
   const [text, setText] = React.useState("");
   const label = kindLabel(kind);
@@ -38,7 +35,7 @@ export function ExerciseCategoryScreen({ kind }: ExerciseCategoryScreenProps): R
     "exercise" in source
       ? () => router.push({ pathname: "/exercise/[id]", params: { id: source.exercise.id } })
       : "grip" in source
-        ? openGrip(model.sessions, source.grip.id)
+        ? () => router.push({ pathname: "/grip/[id]", params: { id: source.grip.id } })
         : undefined;
 
   return (

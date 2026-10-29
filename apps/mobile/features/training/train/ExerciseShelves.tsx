@@ -20,7 +20,6 @@ import { LoadState } from "../data/LoadState";
 import { openExerciseEditor } from "../exercises/openExerciseEditor";
 import { useLibrary } from "../library/useLibrary";
 import { ExerciseShelf } from "./ExerciseShelf";
-import { openGrip } from "./openGrip";
 import type { ShelfCard } from "./types";
 
 /**
@@ -80,7 +79,7 @@ export function ExerciseShelves(): React.ReactElement {
         kind: "hangboard",
         name: g.name,
         meta: summary === null ? "" : gripMeta(onGrip, summary.best),
-        open: openGrip(onGrip, g.id),
+        open: () => router.push({ pathname: "/grip/[id]", params: { id: g.id } }),
       };
     });
   const mine = exercises.state.data
