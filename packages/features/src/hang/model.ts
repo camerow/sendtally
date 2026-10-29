@@ -4,6 +4,7 @@ import {
   BUILT_IN_GRIPS,
   doseIndex,
   doseProtocol,
+  isBuiltInGrip,
   lastSession,
   loadKey,
   resolveSetup,
@@ -78,12 +79,13 @@ export function hangModel(data: HangData, library: readonly LibraryWorkout[]): H
   const workouts = library.flatMap((w) => hangWorkoutOf(w) ?? []);
   const grips = [
     ...BUILT_IN_GRIPS.map((id) => ({
+      hidden: false,
+      ...data.grips.find((g) => g.id === id),
       id,
       name: builtInGripName(id),
       custom: false,
-      hidden: false,
     })),
-    ...data.grips,
+    ...data.grips.filter((g) => !isBuiltInGrip(g.id)),
   ];
   const hangboard = new Map(library.filter((w) => w.kind === "hangboard").map((w) => [w.id, w]));
   const names = new Map(grips.map((g) => [g.id, g.name]));

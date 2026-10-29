@@ -11,7 +11,7 @@ import { ChipRow } from "../components/ChipRow";
 import { Label } from "../components/Label";
 import { Title } from "../components/Title";
 import { HangSheet } from "../data/HangSheet";
-import { openExerciseEditor } from "../exercises/openExerciseEditor";
+import { openExerciseEditor, openGripEditor } from "../exercises/openExerciseEditor";
 import type { ExerciseForm } from "../exercises/types";
 import { useMakeExercise } from "../exercises/useMakeExercise";
 import { KIND_COLORS } from "../insights/kindColors";
@@ -41,7 +41,8 @@ const NOT_FINGERS = WORKOUT_KINDS.filter((k) => k !== "hangboard");
  * The exercise library, to build a workout from: search, a category or all, the most used
  * first. Ticked exercises are added in the order they were ticked; New adds them, then opens
  * the exercise editor on what was typed in the category in view, asking which one under All,
- * and adds the exercise once saved. A Fingers workout picks grips, any other the rest.
+ * and adds the exercise once saved. A Fingers workout picks grips, any other the rest; a
+ * grip's pencil opens it in the exercise editor.
  */
 export function ExercisePickerSheet({
   kind,
@@ -81,6 +82,7 @@ export function ExercisePickerSheet({
         : [...list, entry]
     );
   };
+  const leave = (): void => (multi ? void finish() : onClose());
   const startNew = (made: WorkoutKind): void => {
     const added = ticked.map((e) => e.key);
     const add = async (form: ExerciseForm): Promise<void> => {
@@ -92,10 +94,16 @@ export function ExercisePickerSheet({
           : await pick(existing.source);
       if (one !== null) onPick([one]);
     };
-    if (multi) void finish();
-    else onClose();
+    leave();
     openExerciseEditor(made, typed, (form) => void add(form));
   };
+  const editOf = ({ source }: PickerEntry): (() => void) | undefined =>
+    "grip" in source
+      ? () => {
+          leave();
+          openGripEditor(source.grip.id);
+        }
+      : undefined;
   const newButton = (
     <Button
       label={t("workouts.newShort")}
@@ -192,6 +200,7 @@ export function ExercisePickerSheet({
                   multi={multi}
                   ticked={ticked.some((e) => e.key === entry.key)}
                   onPress={() => press(entry)}
+                  onEdit={editOf(entry)}
                 />
               ))}
             </View>

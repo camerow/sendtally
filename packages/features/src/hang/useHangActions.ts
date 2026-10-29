@@ -6,7 +6,8 @@ import { queries } from "../query";
 
 export type HangActions = {
   saveGrip: (grip: Grip) => Promise<void>;
-  deleteGrip: (id: string) => Promise<void>;
+  /** Hides a grip from the pickers and Exercises; its history stays. */
+  archiveGrip: (grip: Grip) => Promise<void>;
   setDefaultGrip: (workoutId: string, gripId: string) => Promise<void>;
   saveSession: (session: HangSession) => Promise<void>;
   deleteSession: (id: string) => Promise<void>;
@@ -63,16 +64,16 @@ export function useHangActions(api: SendtallyApi, onError: (error: unknown) => v
           (d) => ({ ...d, grips: upsert(d.grips, grip) }),
           () => api.saveHangGrip(grip)
         ),
-      deleteGrip: (id) =>
+      archiveGrip: (grip) =>
         write(
           (d) => ({
             ...d,
-            grips: d.grips.map((g) => (g.id === id ? { ...g, hidden: true } : g)),
+            grips: upsert(d.grips, { ...grip, hidden: true }),
             defaultGrips: Object.fromEntries(
-              Object.entries(d.defaultGrips).filter(([, gripId]) => gripId !== id)
+              Object.entries(d.defaultGrips).filter(([, gripId]) => gripId !== grip.id)
             ),
           }),
-          () => api.deleteHangGrip(id)
+          () => api.deleteHangGrip(grip.id)
         ),
       setDefaultGrip: (workoutId, gripId) =>
         write(

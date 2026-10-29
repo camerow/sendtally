@@ -21,6 +21,11 @@ export function openExerciseEditor(kind: WorkoutKind, name = "", onSave?: OnSave
   });
 }
 
+/** The exercise editor on a Fingers exercise, built-ins too. */
+export function openGripEditor(id: string): void {
+  router.push({ pathname: "/exercise/edit", params: { kind: "hangboard", id } });
+}
+
 /** Who asked for the exercise an editor makes, if it is still waiting. */
 export const openerOf = (ret: string | undefined): OnSave | undefined =>
   ret === undefined ? undefined : waiting.get(ret);

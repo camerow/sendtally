@@ -59,7 +59,7 @@ describe("exercise trends", () => {
         sessions: [aHang({ gripId: "half" }), aHang({ gripId: "open" })],
       })
     );
-    await fireEvent.press(screen.getByLabelText("Compare grips"));
+    await fireEvent.press(screen.getByLabelText("Compare exercises"));
     expect(router.push).toHaveBeenCalledWith("/grip/compare");
   });
 
@@ -70,7 +70,7 @@ describe("exercise trends", () => {
         sessions: [aHang({ gripId: "half" }), aHang({ gripId: "open", pct: 50 })],
       })
     );
-    expect(screen.queryByLabelText("Compare grips")).toBeNull();
+    expect(screen.queryByLabelText("Compare exercises")).toBeNull();
   });
 
   it("draws a sparkline from two points, none from one", async () => {

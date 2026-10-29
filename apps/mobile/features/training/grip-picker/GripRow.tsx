@@ -14,12 +14,11 @@ export type GripRowProps = {
   on: boolean;
   multi: boolean;
   onPress: () => void;
-  /** Only the user's own grips can be renamed or deleted. */
-  onEdit?: () => void;
+  onEdit: () => void;
 };
 
 /**
- * A grip with its history for this workout: square checkboxes when several can
+ * A Fingers exercise with its best and when it was last done: square checkboxes when several can
  * be picked, radios otherwise. The edit button sits beside the row, not inside
  * it, so a screen reader reaches both.
  */
@@ -38,7 +37,7 @@ export function GripRow({
         minHeight: 60,
         flexDirection: "row",
         alignItems: "center",
-        paddingRight: onEdit === undefined ? 0 : 4,
+        paddingRight: 4,
         borderRadius: 12,
         borderWidth: on ? 0 : 1,
         borderColor: colors.lineOnLight,
@@ -90,15 +89,13 @@ export function GripRow({
           <Text style={[type.monoBold, { fontSize: 14, color: colors.gunmetal }]}>{load}</Text>
         )}
       </Pressable>
-      {onEdit !== undefined && (
-        <IconButton
-          icon="edit"
-          label={t("hang.editGripAria", { grip: name })}
-          onPress={onEdit}
-          color={colors.textSecondary}
-          iconSize={18}
-        />
-      )}
+      <IconButton
+        icon="edit"
+        label={t("hang.editGripAria", { grip: name })}
+        onPress={onEdit}
+        color={colors.textSecondary}
+        iconSize={18}
+      />
     </View>
   );
 }

@@ -126,7 +126,7 @@ export const workouts = {
     "Noch nichts eingetragen. Deine Sätze erscheinen hier, sobald du sie einträgst.",
   "workouts.newExercise": "Neue Übung",
   "workouts.newExerciseHint": "Eine Übung für deine Workouts",
-  "workouts.categoryEmpty.hangboard": "Ein Griff oder eine Leiste zum Hängen.",
+  "workouts.categoryEmpty.hangboard": "Ein Hang oder ein Zug an einer Leiste.",
   "workouts.categoryEmpty.climbing": "Übungen an der Wand, etwa 4x4 oder Limit-Bouldern.",
   "workouts.categoryEmpty.strength": "Eine Kraftübung, etwa Kniebeuge.",
   "workouts.categoryEmpty.mobility": "Eine Dehnung oder Halteübung, etwa Pancake.",
@@ -141,8 +141,6 @@ export const workouts = {
   "workouts.measure.secondsWeight": "Zeit × Gewicht",
   "workouts.measure.rounds": "Runden",
   "workouts.measure.hang": "Hängen × Gewicht",
-  "workouts.measuredInHintFingers":
-    "Hängen ist an einer Leiste. Wiederholungen und Zeit sind Bodenzüge, ohne Leiste.",
   "workouts.eachSide": "Pro Seite",
   "workouts.eachSideHint": "2 × 60 s heißt 60 s pro Seite",
   "workouts.aSide": "{value} pro Seite",
@@ -151,6 +149,8 @@ export const workouts = {
     "Eingetragene Sätze behalten ihre Werte. Neue Sätze fragen nach den neuen Feldern.",
   "workouts.changeMeasure": "Ändern",
   "workouts.editExercise": "Übung bearbeiten",
+  "workouts.builtInNameLocked":
+    "Eingebaute Namen bleiben, wie sie sind, damit sie in jeder Sprache stimmen.",
   "workouts.exercise.fourByFours": "4x4",
   "workouts.exercise.limitBouldering": "Limit-Bouldern",
   "workouts.exercise.campusLadders": "Campus-Leitern",

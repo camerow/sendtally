@@ -1,11 +1,14 @@
 import {
+  byDate,
   gripSeries,
   milestones,
   newBestBy,
   previousBest,
   setupOf,
   setupsOf,
+  summarise,
   toUnit,
+  type CalendarDate,
   type GripSetup,
   type HangSession,
   type Milestone,
@@ -168,4 +171,33 @@ export function newBestOf(
       t("hang.upOnLastBest", { change: `${formatNumber(by)} ${unit}` }),
     ].join(" · "),
   };
+}
+
+/**
+ * A grip's line wherever it is listed: its best load, else its last, with the edge it was
+ * on, and with `dated` the day it was last done; Not done yet before its first session.
+ */
+export function gripMeta(
+  sessions: readonly HangSession[],
+  gripId: string,
+  today: CalendarDate,
+  unit: WeightUnit,
+  dated = false
+): string {
+  const onGrip = sessions.filter((s) => s.gripId === gripId).sort(byDate);
+  const best = summarise(onGrip, today)?.best;
+  const last = onGrip.at(-1);
+  if (best === undefined || last === undefined) return t("workouts.notDoneYet");
+  const top =
+    (best === null ? undefined : onGrip.findLast((s) => complete(s) && s.loadKg === best)) ?? last;
+  const kind = top.protocol.kind;
+  const kg = best ?? top.loadKg;
+  const load =
+    kind !== "pull" && kg === 0
+      ? t(best === null ? "workouts.exerciseLastBodyweight" : "workouts.exerciseBestBodyweight")
+      : t(best === null ? "workouts.exerciseLast" : "workouts.exerciseBest", {
+          value: loadLabel(kind, kg, unit),
+        });
+  const line = kind === "pull" ? load : `${load} · ${t("hang.edgeMm", { n: top.edgeMm })}`;
+  return dated ? `${line} · ${dayMonth(last.date)}` : line;
 }

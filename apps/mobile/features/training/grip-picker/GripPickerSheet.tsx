@@ -1,15 +1,15 @@
 import React from "react";
 import { Text, View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
-import { byDate, type Grip, type HangWorkout } from "@sendtally/core/hang";
-import { setupLabel, shortDate } from "@sendtally/features/hang";
+import type { HangWorkout } from "@sendtally/core/hang";
+import { gripMeta, setupLabel } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import { SheetHeader } from "../components/SheetHeader";
 import { useHangData } from "../data/HangDataContext";
 import { HangSheet } from "../data/HangSheet";
 import { type } from "../type";
+import { openGripEditor } from "../exercises/openExerciseEditor";
 import { AddGrip } from "./AddGrip";
-import { GripEditSheet } from "./GripEditSheet";
 import { GripRow } from "./GripRow";
 
 export type GripPickerSheetProps = {
@@ -21,7 +21,10 @@ export type GripPickerSheetProps = {
   onClose: () => void;
 };
 
-/** Choose grips (several, stays open) or choose a grip (one, closes on pick). */
+/**
+ * Choose Fingers exercises (several, stays open) or one (closes on pick). A pencil opens the
+ * exercise editor on any of them, built-ins too.
+ */
 export function GripPickerSheet({
   visible,
   workout,
@@ -30,8 +33,7 @@ export function GripPickerSheet({
   onPick,
   onClose,
 }: GripPickerSheetProps): React.ReactElement | null {
-  const { model } = useHangData();
-  const [editing, setEditing] = React.useState<Grip | null>(null);
+  const { model, today } = useHangData();
   const unit = model.settings.units;
   const shown = model.grips.filter((g) => !g.hidden || selected.includes(g.id));
 
@@ -42,8 +44,9 @@ export function GripPickerSheet({
   const choose = (id: string): void => {
     if (!multi || !selected.includes(id)) pick(id);
   };
-  const deleted = (id: string): void => {
-    if (multi && selected.includes(id)) onPick(id);
+  const edit = (id: string): void => {
+    onClose();
+    openGripEditor(id);
   };
 
   return (
@@ -66,38 +69,22 @@ export function GripPickerSheet({
       )}
       <View style={{ gap: 8, paddingTop: 14 }}>
         {shown.map((g) => {
-          const logs = model.sessions
-            .filter((s) => s.workoutId === workout.id && s.gripId === g.id)
-            .sort(byDate);
-          const last = logs[logs.length - 1];
           const used = model.lastUsed(workout, g.id);
-          const meta =
-            last === undefined
-              ? ""
-              : t("hang.gripUsed", { count: logs.length, date: shortDate(last.date) });
           return (
             <GripRow
               key={g.id}
               name={g.name}
-              meta={meta}
+              meta={gripMeta(model.sessions, g.id, today, unit, true)}
               load={used === null ? "" : setupLabel(workout.kind, used, unit)}
               on={selected.includes(g.id)}
               multi={multi}
               onPress={() => pick(g.id)}
-              onEdit={g.custom ? () => setEditing(g) : undefined}
+              onEdit={() => edit(g.id)}
             />
           );
         })}
       </View>
       <AddGrip onAdded={choose} />
-      {editing !== null && (
-        <GripEditSheet
-          key={editing.id}
-          grip={editing}
-          onClose={() => setEditing(null)}
-          onDeleted={deleted}
-        />
-      )}
     </HangSheet>
   );
 }

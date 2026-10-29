@@ -1,7 +1,7 @@
 import { router } from "expo-router";
 import React from "react";
 import { Alert, Pressable, Text, View } from "react-native";
-import { defaultMeasure, measuresFor, type WorkoutKind } from "@sendtally/core/hang";
+import { defaultMeasure, GRIP_MEASURES, measuresFor, type WorkoutKind } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import {
   exerciseKindOf,
@@ -9,6 +9,7 @@ import {
   measureLabel,
   tallyMeasureOf,
 } from "@sendtally/features/exercises";
+import { renameClash } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import { exerciseKey, useExerciseSeries, useExercises } from "@sendtally/features/statistics";
 import { Icon } from "../../../components/Icon";
@@ -38,7 +39,7 @@ import { useMergeExercise } from "./useMergeExercise";
 export type ExerciseEditorScreenProps = {
   /** The category it is made in; an edited exercise keeps its own. */
   kind: WorkoutKind;
-  /** Edit this exercise of the user's own. */
+  /** Edit this exercise of the user's own, or under Fingers this grip, built-ins too. */
   id?: string;
   /** A new exercise's name so far, from what was searched. */
   name?: string;
@@ -52,6 +53,10 @@ type FormProps = {
   /** Sets are logged on it, so changing its measure warns first. */
   logged: boolean;
   onSave: (form: ExerciseForm) => void;
+  /** A built-in's name, which stays as it is. */
+  locked?: boolean;
+  /** What is wrong with a name, if anything. */
+  nameError?: (name: string) => string | undefined;
 };
 
 const ROW = {
@@ -67,13 +72,21 @@ const ROW = {
 
 const noop = (): void => undefined;
 
-function Form({ initial, editing, logged, onSave }: FormProps): React.ReactElement {
+function Form({
+  initial,
+  editing,
+  logged,
+  onSave,
+  locked = false,
+  nameError = () => undefined,
+}: FormProps): React.ReactElement {
   const { model } = useHangData();
   const [untouched] = React.useState(initial);
   const [form, setForm] = React.useState(untouched);
   const [advanced, setAdvanced] = React.useState(false);
   const { kind } = form;
   const trimmed = form.name.trim();
+  const error = nameError(trimmed);
   const fingers = kind === "hangboard";
   const climbing = kind === "climbing";
   const doseMeasure =
@@ -84,7 +97,7 @@ function Form({ initial, editing, logged, onSave }: FormProps): React.ReactEleme
   const progress = t(`workouts.progress.${form.progress ?? "completed"}`);
 
   const save = (): void => {
-    if (trimmed === "") return;
+    if (trimmed === "" || error !== undefined) return;
     const saved = { ...form, name: trimmed };
     if (measureChangeNeedsWarning(untouched.measure, form.measure, logged))
       confirmDestructive({
@@ -112,7 +125,7 @@ function Form({ initial, editing, logged, onSave }: FormProps): React.ReactEleme
           title={editing ? t("workouts.editExercise") : t("workouts.newExercise")}
           onCancel={cancel}
           onSave={save}
-          saveDisabled={trimmed === ""}
+          saveDisabled={trimmed === "" || error !== undefined}
         />
       }
     >
@@ -124,6 +137,8 @@ function Form({ initial, editing, logged, onSave }: FormProps): React.ReactEleme
         placeholder={t("workouts.exerciseNamePlaceholder")}
         maxLength={fingers ? 40 : 80}
         autoFocus={!editing}
+        locked={locked ? t("workouts.builtInNameLocked") : undefined}
+        error={error}
       />
       <SheetSection label={t("workouts.measuredIn")}>
         <ChipRow<Measure>
@@ -269,6 +284,34 @@ function EditExercise({ id }: { id: string }): React.ReactElement | null {
   );
 }
 
+function EditGrip({ id }: { id: string }): React.ReactElement | null {
+  const { model, actions } = useHangData();
+  const grip = model.grips.find((g) => g.id === id);
+  if (grip === undefined) return null;
+  const measure = grip.measure ?? "hang";
+
+  const save = (form: ExerciseForm): void => {
+    router.back();
+    const picked = GRIP_MEASURES.find((m) => m === form.measure) ?? measure;
+    if (form.name !== grip.name || picked !== measure)
+      void actions.saveGrip({ ...grip, name: form.name, measure: picked });
+  };
+  const nameError = (name: string): string | undefined => {
+    const clash = renameClash(model.grips, grip.id, name);
+    return clash === undefined ? undefined : t("hang.gripNameTaken", { name: clash.name });
+  };
+  return (
+    <Form
+      initial={{ kind: "hangboard", name: grip.name, measure, eachSide: false }}
+      editing
+      logged={model.sessions.some((s) => s.gripId === id)}
+      onSave={save}
+      locked={!grip.custom}
+      nameError={nameError}
+    />
+  );
+}
+
 /**
  * New exercise, or one edited: its name under its category, what its sets are measured in,
  * and whether it is done on each side. The category comes from where it was opened. Fingers
@@ -276,5 +319,6 @@ function EditExercise({ id }: { id: string }): React.ReactElement | null {
  * tally, in climbs or time on the wall, never by side.
  */
 export function ExerciseEditorScreen(props: ExerciseEditorScreenProps): React.ReactElement | null {
-  return props.id === undefined ? <NewExercise {...props} /> : <EditExercise id={props.id} />;
+  if (props.id === undefined) return <NewExercise {...props} />;
+  return props.kind === "hangboard" ? <EditGrip id={props.id} /> : <EditExercise id={props.id} />;
 }

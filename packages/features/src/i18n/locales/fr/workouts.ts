@@ -129,7 +129,7 @@ export const workouts = {
     "Rien d'enregistré pour l'instant. Tes séries apparaîtront ici dès que tu les notes.",
   "workouts.newExercise": "Nouvel exercice",
   "workouts.newExerciseHint": "Un mouvement à utiliser dans tes séances",
-  "workouts.categoryEmpty.hangboard": "Une préhension ou une réglette où se suspendre.",
+  "workouts.categoryEmpty.hangboard": "Une suspension ou un tirage sur une réglette.",
   "workouts.categoryEmpty.climbing": "Des exercices au mur, comme des 4x4 ou du bloc à la limite.",
   "workouts.categoryEmpty.strength": "Un exercice de force, comme le squat.",
   "workouts.categoryEmpty.mobility": "Un étirement ou un maintien, comme le pancake.",
@@ -144,8 +144,6 @@ export const workouts = {
   "workouts.measure.secondsWeight": "Temps × poids",
   "workouts.measure.rounds": "Tours",
   "workouts.measure.hang": "Suspension × poids",
-  "workouts.measuredInHintFingers":
-    "Une suspension se fait sur une réglette. Répétitions et temps sont des tirages au sol, sans réglette.",
   "workouts.eachSide": "Chaque côté",
   "workouts.eachSideHint": "2 × 60 s, c’est 60 s de chaque côté",
   "workouts.aSide": "{value} de chaque côté",
@@ -154,6 +152,8 @@ export const workouts = {
     "Les séries notées gardent leurs valeurs. Les nouvelles demandent les nouveaux champs.",
   "workouts.changeMeasure": "Changer",
   "workouts.editExercise": "Modifier l’exercice",
+  "workouts.builtInNameLocked":
+    "Les noms intégrés restent tels quels, pour se lire juste dans chaque langue.",
   "workouts.exercise.fourByFours": "4x4",
   "workouts.exercise.limitBouldering": "Bloc à la limite",
   "workouts.exercise.campusLadders": "Échelles au campus",

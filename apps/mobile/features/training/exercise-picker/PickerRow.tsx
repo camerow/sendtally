@@ -2,10 +2,13 @@ import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
 import { measureLabel, type PickerEntry } from "@sendtally/features/exercises";
+import { gripMeta } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import { pressRow } from "../../../lib/press";
 import { CheckBox } from "../components/CheckBox";
+import { IconButton } from "../components/IconButton";
 import { Label } from "../components/Label";
+import { useHangData, type HangData } from "../data/HangDataContext";
 import { MineBadge } from "../library/MineBadge";
 import { type } from "../type";
 
@@ -18,9 +21,13 @@ export type PickerRowProps = {
   mine?: boolean;
   /** Left out where the row has nothing to open. */
   onPress?: () => void;
+  /** A pencil beside the row, where it can be edited from the list. */
+  onEdit?: () => void;
 };
 
-function metaOf(entry: PickerEntry): string {
+function metaOf(entry: PickerEntry, { model, today }: HangData): string {
+  if ("grip" in entry.source)
+    return gripMeta(model.sessions, entry.source.grip.id, today, model.settings.units, true);
   if (entry.uses > 0) return t("workouts.timesUsed", { count: entry.uses });
   if (entry.library) return t("workouts.fromLibrary");
   if (!("exercise" in entry.source)) return "";
@@ -35,37 +42,55 @@ export function PickerRow({
   multi,
   mine = false,
   onPress,
+  onEdit,
 }: PickerRowProps): React.ReactElement {
-  const meta = metaOf(entry);
+  const meta = metaOf(entry, useHangData());
   return (
-    <Pressable
-      onPress={onPress}
-      disabled={onPress === undefined}
-      accessibilityRole={multi ? "checkbox" : "button"}
-      accessibilityState={multi ? { checked: ticked } : undefined}
-      accessibilityLabel={entry.name}
-      style={pressRow({
-        minHeight: 56,
+    <View
+      style={{
         flexDirection: "row",
         alignItems: "center",
-        gap: 12,
         borderBottomWidth: 1,
         borderBottomColor: colors.lineOnLightSoft,
-      })}
+      }}
     >
-      {multi && <CheckBox checked={ticked} color={colors.gunmetal} />}
-      <View style={{ flex: 1, gap: 2, paddingVertical: 8 }}>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-          <Text style={[type.bodyBold, { flexShrink: 1, fontSize: 15, color: colors.gunmetal }]}>
-            {entry.name}
-          </Text>
-          {mine && <MineBadge />}
+      <Pressable
+        onPress={onPress}
+        disabled={onPress === undefined}
+        accessibilityRole={multi ? "checkbox" : "button"}
+        accessibilityState={multi ? { checked: ticked } : undefined}
+        accessibilityLabel={entry.name}
+        style={pressRow({
+          flex: 1,
+          minHeight: 56,
+          flexDirection: "row",
+          alignItems: "center",
+          gap: 12,
+        })}
+      >
+        {multi && <CheckBox checked={ticked} color={colors.gunmetal} />}
+        <View style={{ flex: 1, gap: 2, paddingVertical: 8 }}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+            <Text style={[type.bodyBold, { flexShrink: 1, fontSize: 15, color: colors.gunmetal }]}>
+              {entry.name}
+            </Text>
+            {mine && <MineBadge />}
+          </View>
+          {meta !== "" && (
+            <Text style={[type.mono, { fontSize: 12, color: colors.textSecondary }]}>{meta}</Text>
+          )}
         </View>
-        {meta !== "" && (
-          <Text style={[type.mono, { fontSize: 12, color: colors.textSecondary }]}>{meta}</Text>
-        )}
-      </View>
-      {entry.inWorkout && <Label color={colors.textSecondary}>{t("workouts.inWorkout")}</Label>}
-    </Pressable>
+        {entry.inWorkout && <Label color={colors.textSecondary}>{t("workouts.inWorkout")}</Label>}
+      </Pressable>
+      {onEdit !== undefined && (
+        <IconButton
+          icon="edit"
+          label={t("hang.editGripAria", { grip: entry.name })}
+          onPress={onEdit}
+          color={colors.textSecondary}
+          iconSize={18}
+        />
+      )}
+    </View>
   );
 }

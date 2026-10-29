@@ -238,7 +238,7 @@ describe("A finished workout's summary", () => {
     expect(screen.getByText("hangs held")).toBeTruthy();
     expect(screen.getByText("+2 kg vs last")).toBeTruthy();
     expect(screen.getByText("+12 kg · 3 sets of 6 · 1 hang let go")).toBeTruthy();
-    expect(screen.getByText("Added weight on this grip")).toBeTruthy();
+    expect(screen.getByText("Added weight on this exercise")).toBeTruthy();
     expect(screen.getByText("+10 kg · 18 of 18 hangs")).toBeTruthy();
     expect(screen.queryByText("New best")).toBeNull();
   });

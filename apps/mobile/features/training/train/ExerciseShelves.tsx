@@ -1,10 +1,10 @@
 import { router } from "expo-router";
 import React from "react";
 import { View } from "react-native";
-import { byDate, summarise, type HangSession, type WorkoutKind } from "@sendtally/core/hang";
+import type { WorkoutKind } from "@sendtally/core/hang";
 import { setText, useWeightUnit } from "@sendtally/features/activities";
 import { categoryShelves, exerciseLabel } from "@sendtally/features/exercises";
-import { loadLabel } from "@sendtally/features/hang";
+import { gripMeta } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import {
   exerciseKey,
@@ -60,33 +60,15 @@ export function ExerciseShelves(): React.ReactElement {
       : t("workouts.exerciseLast", { value: doseSummary(using.kind, dose, unit) });
   };
 
-  const gripMeta = (onGrip: readonly HangSession[], best: number | null): string => {
-    const top =
-      (best === null ? undefined : onGrip.findLast((s) => s.pct >= 100 && s.loadKg === best)) ??
-      onGrip.at(-1);
-    if (top === undefined) return "";
-    const kind = top.protocol.kind;
-    const kg = best ?? top.loadKg;
-    const value = loadLabel(kind, kg, model.settings.units);
-    const load =
-      kind !== "pull" && kg === 0
-        ? t(best === null ? "workouts.exerciseLastBodyweight" : "workouts.exerciseBestBodyweight")
-        : t(best === null ? "workouts.exerciseLast" : "workouts.exerciseBest", { value });
-    return kind === "pull" ? load : `${load} · ${t("hang.edgeMm", { n: top.edgeMm })}`;
-  };
   const grips = model.grips
     .filter((g) => !g.hidden)
-    .map((g): ShelfCard => {
-      const onGrip = model.sessions.filter((s) => s.gripId === g.id).sort(byDate);
-      const summary = summarise(onGrip, today);
-      return {
-        key: g.id,
-        kind: "hangboard",
-        name: g.name,
-        meta: summary === null ? t("workouts.notDoneYet") : gripMeta(onGrip, summary.best),
-        open: () => router.push({ pathname: "/grip/[id]", params: { id: g.id } }),
-      };
-    });
+    .map((g): ShelfCard => ({
+      key: g.id,
+      kind: "hangboard",
+      name: g.name,
+      meta: gripMeta(model.sessions, g.id, today, model.settings.units),
+      open: () => router.push({ pathname: "/grip/[id]", params: { id: g.id } }),
+    }));
   const mine = exercises.state.data
     .filter((e) => !e.archived)
     .map((e): ShelfCard => ({

@@ -96,7 +96,7 @@ export function mockActions(): MockActions {
   const done = (): Promise<void> => Promise.resolve();
   return {
     saveGrip: jest.fn(done),
-    deleteGrip: jest.fn(done),
+    archiveGrip: jest.fn(done),
     setDefaultGrip: jest.fn(done),
     saveSession: jest.fn(done),
     deleteSession: jest.fn(done),
