@@ -11,10 +11,7 @@ export type KeypadFieldProps = FieldSlot & {
   label: string;
   /** A small box sized to its value with no label shown, for a value in a table row. */
   compact?: boolean;
-  /**
-   * A table cell filling its column, with no box until it opens: gold when `marked`. Implies
-   * no label, like `compact`.
-   */
+  /** A small box filling its table column, gold when `marked`. Implies no label, like `compact`. */
   cell?: { marked: boolean };
   /** On the keypad under the value, with Reset when `onReset` is given. */
   note?: string;
@@ -34,6 +31,7 @@ export type KeypadFieldProps = FieldSlot & {
 };
 
 const MARKED = "rgba(249,220,92,0.35)";
+const MARKED_LINE = "rgba(194,124,14,0.45)";
 
 /** The one label a typable number has, in the same voice as a form section's. */
 export const keypadFieldLabel = {
@@ -152,8 +150,17 @@ export function KeypadField({
               justifyContent: "center",
               paddingHorizontal: 2,
               borderRadius: 8,
-              borderWidth: open ? 2 : 0,
-              backgroundColor: open ? colors.white : cell.marked ? MARKED : "transparent",
+              borderWidth: open ? 2.5 : 1,
+              borderColor: open
+                ? colors.gold
+                : cell.marked
+                  ? MARKED_LINE
+                  : colors.lineOnLightStrong,
+              backgroundColor: cell.marked && !open ? MARKED : colors.white,
+              shadowColor: open ? colors.gold : colors.gunmetal,
+              shadowOffset: { width: 0, height: open ? 0 : 1 },
+              shadowOpacity: open ? 0.6 : 0.06,
+              shadowRadius: open ? 3 : 0,
             },
           ]}
         >
@@ -161,9 +168,9 @@ export function KeypadField({
             numberOfLines={1}
             style={{
               flexShrink: 1,
-              fontFamily: cell?.marked === false && !open ? fonts.mono : fonts.monoSemiBold,
+              fontFamily: fonts.monoSemiBold,
               fontSize: cell !== undefined ? 14 : compact ? 15 : 17,
-              color: cell?.marked === false && !open ? colors.textSecondary : colors.gunmetal,
+              color: colors.gunmetal,
             }}
           >
             <Text style={{ color: colors.textFaint }}>{dim}</Text>
