@@ -1,4 +1,7 @@
 export const training = {
+  "training.logTrainingAction": "Log training",
+  "training.logEmptyTitle": "No training yet",
+  "training.logEmptyBody": "Workouts, hangs and the rest of your training land here, newest first.",
   "training.today": "Today",
   "training.train": "Train",
   "training.statistics": "Statistics",

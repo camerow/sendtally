@@ -9,12 +9,8 @@ import {
   tripEffort,
   type LogItem,
 } from "@sendtally/features/journal";
-import {
-  logCountLabel,
-  sessionTitle,
-  sessionTotals,
-  sessionsIn,
-} from "@sendtally/features/sessions";
+import type { ClimbingSessionVM } from "@sendtally/features/climbs";
+import { logCountLabel, sessionTotals, sessionsIn } from "@sendtally/features/sessions";
 import { t } from "@sendtally/features/i18n";
 import { colors, fonts } from "@sendtally/design/tokens";
 import { Icon } from "../../components/Icon";
@@ -23,7 +19,8 @@ import { EntryRow, entryRowHeight } from "./EntryRow";
 import { EntryKindChip } from "./EntryKindChip";
 import { ACTIVITY_ROW_HEIGHT, ActivityRow } from "../sessions/ActivityRow";
 import { HANG_ROW_HEIGHT, HangRow } from "../sessions/HangRow";
-import { BLOCK_TAG_HEIGHT, SessionRow, sessionRowHeight } from "../sessions/SessionRow";
+import { BLOCK_TAG_HEIGHT, sessionRowHeight } from "../sessions/SessionRow";
+import { ClimbingSessionRows } from "../sessions/ClimbingSessionRows";
 import { ROW_TAGS_HEIGHT, RowTags } from "../sessions/RowTags";
 
 type TripItem = Extract<LogItem, { type: "entry" }>;
@@ -101,9 +98,12 @@ function EffortDots({ trip, inside }: { trip: JournalEntry; inside: LogItem[] })
 export function TripGroup({
   item,
   onOpen,
+  climbing,
 }: {
   item: TripItem;
   onOpen: (item: LogItem) => void;
+  /** Each session's climbs, set in under it in the climbing log. */
+  climbing?: ReadonlyMap<string, ClimbingSessionVM>;
 }): React.ReactElement {
   const last = item.inside.length - 1;
   return (
@@ -184,9 +184,9 @@ export function TripGroup({
       {item.inside.map((inner, n) => (
         <View key={inner.key} style={{ paddingHorizontal: ROW_PADDING }}>
           {inner.type === "session" ? (
-            <SessionRow
+            <ClimbingSessionRows
               session={inner.session}
-              title={sessionTitle(inner.session)}
+              vm={climbing?.get(inner.session.fingerprint)}
               inset
               divider={n < last}
               blockTag={inner.blockTag}

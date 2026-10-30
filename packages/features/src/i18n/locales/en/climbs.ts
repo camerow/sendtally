@@ -1,4 +1,5 @@
 export const climbs = {
+  "climbs.addClimbHint": "One climb on its day, no session needed",
   "climbs.thisWeek": "This week",
   "climbs.weekCount_one": "{count} week",
   "climbs.weekCount_other": "{count} weeks",
@@ -20,7 +21,6 @@ export const climbs = {
   "climbs.dayCount_one": "{count} day",
   "climbs.dayCount_other": "{count} days",
   "climbs.notFound": "Climb not found.",
-  "climbs.title": "Climbs",
   "climbs.loadFailed": "Could not load your climbs. Pull to try again.",
   "climbs.hardestSend": "Hardest send",
   "climbs.discipline": "Discipline",

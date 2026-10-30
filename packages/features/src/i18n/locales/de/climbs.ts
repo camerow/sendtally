@@ -1,4 +1,5 @@
 export const climbs = {
+  "climbs.addClimbHint": "Eine Kletterei an ihrem Tag, ganz ohne Session",
   "climbs.thisWeek": "Diese Woche",
   "climbs.weekCount_one": "{count} Woche",
   "climbs.weekCount_other": "{count} Wochen",
@@ -21,7 +22,6 @@ export const climbs = {
   "climbs.dayCount_one": "{count} Tag",
   "climbs.dayCount_other": "{count} Tage",
   "climbs.notFound": "Kletterei nicht gefunden.",
-  "climbs.title": "Klettereien",
   "climbs.loadFailed": "Deine Klettereien konnten nicht geladen werden. Zum Aktualisieren ziehen.",
   "climbs.hardestSend": "Schwerste Begehung",
   "climbs.discipline": "Disziplin",

@@ -2,7 +2,13 @@ import { router, type Href } from "expo-router";
 import React from "react";
 import { View } from "react-native";
 import { t } from "@sendtally/features/i18n";
-import { ENTRY_KINDS, entryKindLabel, today, type EntryKind } from "@sendtally/features/journal";
+import {
+  ENTRY_KINDS,
+  entryKindLabel,
+  today,
+  type EntryKind,
+  type LogSegment,
+} from "@sendtally/features/journal";
 import { Fab } from "../../components/Fab";
 import { Sheet } from "../../components/Sheet";
 import { MenuRow, type MenuRowProps } from "./MenuRow";
@@ -19,43 +25,56 @@ const ENTRY_HINTS: Record<
 
 type Row = Pick<MenuRowProps, "icon" | "title" | "hint"> & { key: string; href: Href };
 
-const rows = (): Row[] => [
-  {
-    key: "session",
-    icon: "sessions",
-    title: t("sessions.pastSession"),
-    hint: t("sessions.logFullSessionHint"),
-    href: "/session/new",
-  },
-  {
-    key: "activity",
-    icon: "train",
-    title: t("training.logTraining"),
-    hint: t("training.logTrainingBody"),
-    href: { pathname: "/activity/new", params: { date: today() } },
-  },
-  ...ENTRY_KINDS.map((kind): Row => ({
-    key: kind,
-    icon: kind,
-    title: entryKindLabel(kind),
-    hint: t(ENTRY_HINTS[kind]),
-    href: { pathname: "/journal/new", params: { kind, date: today() } },
-  })),
-];
+const trainingHref = (): Href => ({ pathname: "/activity/new", params: { date: today() } });
 
-/** The live session is the frequent action; the arrow holds the slower ways to log. */
-export function LogFab(): React.ReactElement {
+const rows = (segment: LogSegment): Row[] =>
+  segment === "climbing"
+    ? [
+        {
+          key: "session",
+          icon: "sessions",
+          title: t("sessions.pastSession"),
+          hint: t("sessions.logFullSessionHint"),
+          href: "/session/new",
+        },
+        {
+          key: "climb",
+          icon: "climbs",
+          title: t("climbs.addClimb"),
+          hint: t("climbs.addClimbHint"),
+          href: "/climb/log",
+        },
+      ]
+    : [
+        {
+          key: "activity",
+          icon: "train",
+          title: t("training.logTraining"),
+          hint: t("training.logTrainingBody"),
+          href: trainingHref(),
+        },
+        ...ENTRY_KINDS.map((kind): Row => ({
+          key: kind,
+          icon: kind,
+          title: entryKindLabel(kind),
+          hint: t(ENTRY_HINTS[kind]),
+          href: { pathname: "/journal/new", params: { kind, date: today() } },
+        })),
+      ];
+
+/** Each half's frequent action; the arrow holds the slower ways to log there. */
+export function LogFab({ segment }: { segment: LogSegment }): React.ReactElement {
   const [menuOpen, setMenuOpen] = React.useState(false);
   return (
     <>
       <Fab
-        label={t("tally.startSession")}
-        onPress={() => startLiveSession()}
+        label={segment === "climbing" ? t("tally.startSession") : t("training.logTrainingAction")}
+        onPress={() => (segment === "climbing" ? startLiveSession() : router.push(trainingHref()))}
         menu={{ label: t("sessions.moreWaysToLog"), onPress: () => setMenuOpen(true) }}
       />
       <Sheet visible={menuOpen} onClose={() => setMenuOpen(false)} closeLabel={t("common.cancel")}>
         <View style={{ gap: 4, paddingTop: 4, paddingHorizontal: 12, paddingBottom: 4 }}>
-          {rows().map((row) => (
+          {rows(segment).map((row) => (
             <MenuRow
               key={row.key}
               icon={row.icon}

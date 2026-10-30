@@ -6,7 +6,7 @@ import { gradeBins } from "../trends/filter";
 import type { GradeBinVM, GradeRange } from "../trends/types";
 import { monthKey, monthLabel, monthName } from "../sessions/months";
 import { isThisClimb, sendStyleOf, sendStyleText } from "./overview";
-import { dateLabel } from "./projects";
+import { dateLabel, disciplineLabel } from "./projects";
 import { climbDraftGrade, climbGradeLabel } from "./transforms";
 
 export type ClimbStatusFilter = "all" | "projects" | "sent" | "notYet";
@@ -139,17 +139,16 @@ export function climbingSessionVM(
         : isProject(c)
           ? { kind: "project", label: t("common.project") }
           : { kind: "tries", label: t("tally.tryCount", { count: tries }) };
+    const meta = [
+      c.area?.name ?? null,
+      named ? null : dateLabel(session.start_at),
+      pill.kind === "tries" ? null : t("tally.tryCount", { count: tries }),
+    ].filter((part) => part !== null);
     return {
       id: c.id,
       gradeLabel: climbGradeLabel(c),
       name: c.name,
-      meta: [
-        c.area?.name ?? null,
-        named ? null : dateLabel(session.start_at),
-        t("tally.tryCount", { count: tries }),
-      ]
-        .filter((part) => part !== null)
-        .join(" · "),
+      meta: meta.length > 0 ? meta.join(" · ") : disciplineLabel(c),
       pill,
     };
   };
