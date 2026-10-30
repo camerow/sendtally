@@ -23,6 +23,7 @@ import { useHangData } from "../data/HangDataContext";
 import { usePlannedRun, type PlannedItem } from "../timer/usePlannedRun";
 import { SetupFields } from "../setup/SetupFields";
 import { openStats } from "../../stats/statsSegment";
+import { clearLiveRun } from "../../live-session/liveRun";
 import { type } from "../type";
 import type { DoneParams } from "./doneParams";
 import { doneStats, doneStatus, partialNote } from "./doneText";
@@ -77,6 +78,7 @@ function Done({
         }),
       ],
     });
+    clearLiveRun();
     openStats("training");
   };
 
@@ -124,7 +126,10 @@ function Done({
                 title: t("hang.discardRunTitle"),
                 body: t("hang.discardRunBody"),
                 action: t("hang.discard"),
-                onConfirm: () => router.back(),
+                onConfirm: () => {
+                  clearLiveRun();
+                  router.back();
+                },
               })
             }
             variant="danger"

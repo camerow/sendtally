@@ -4,6 +4,11 @@ import { ChecklistScreen } from "../../features/training/checklist/ChecklistScre
 import { readWorkoutRun } from "../../features/training/data/workoutRunParams";
 
 export default function ChecklistRoute(): React.ReactElement {
-  const run = readWorkoutRun(useLocalSearchParams());
-  return run === null ? <Redirect href="/" /> : <ChecklistScreen run={run} />;
+  const params = useLocalSearchParams();
+  const run = readWorkoutRun(params);
+  return run === null ? (
+    <Redirect href="/" />
+  ) : (
+    <ChecklistScreen run={run} end={params.end === "1"} />
+  );
 }

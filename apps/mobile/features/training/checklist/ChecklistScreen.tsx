@@ -9,7 +9,8 @@ import { doseSummary, exerciseName } from "@sendtally/features/workouts";
 import { useApi } from "../../../lib/api";
 import { Button } from "../components/Button";
 import { PlayerHeader } from "../components/PlayerHeader";
-import { logRun, type WorkoutRun } from "../data/workoutRunParams";
+import { logRun, runParams, type WorkoutRun } from "../data/workoutRunParams";
+import { resumedRun, writeLiveRun } from "../../live-session/liveRun";
 import { RestRow } from "../rest/RestRow";
 import { useRest } from "../rest/useRest";
 import { afterKey } from "../sets/setsRun";
@@ -20,10 +21,31 @@ import { ChecklistRow } from "./ChecklistRow";
  * A routine to tick off line by line on a clock from Start, resting between lines; whatever is
  * ticked is what gets logged, and the form can still tick the rest.
  */
-export function ChecklistScreen({ run }: { run: WorkoutRun }): React.ReactElement {
+export function ChecklistScreen({
+  run,
+  end = false,
+}: {
+  run: WorkoutRun;
+  /** Finishes the running workout as it opens, straight to its review. */
+  end?: boolean;
+}): React.ReactElement {
   const unit = useWeightUnit(useApi());
-  const [startedAt] = React.useState(Date.now);
-  const [ticked, setTicked] = React.useState<ReadonlySet<number>>(new Set());
+  const [resumed] = React.useState(() => {
+    const live = resumedRun("/workout/checklist", run.workoutId);
+    return live?.state.player === "checklist" ? { ...live.state, startedAt: live.startedAt } : null;
+  });
+  const [startedAt] = React.useState(() => resumed?.startedAt ?? Date.now());
+  const [ticked, setTicked] = React.useState<ReadonlySet<number>>(() => new Set(resumed?.ticked));
+  React.useEffect(() => {
+    writeLiveRun({
+      title: run.title,
+      workoutId: run.workoutId,
+      pathname: "/workout/checklist",
+      params: runParams(run),
+      startedAt,
+      state: { player: "checklist", ticked: [...ticked], count: run.items.length },
+    });
+  }, [run, startedAt, ticked]);
   const rest = useRest();
   const toggle = (i: number): void => {
     const next = new Set(ticked);
@@ -42,6 +64,12 @@ export function ChecklistScreen({ run }: { run: WorkoutRun }): React.ReactElemen
       startedAt,
       run.items.flatMap((_, i) => (ticked.has(i) ? [] : [i]))
     );
+  const ending = React.useRef(end);
+  React.useEffect(() => {
+    if (!ending.current) return;
+    ending.current = false;
+    finish();
+  });
 
   return (
     <SafeAreaView edges={["top", "bottom"]} style={{ flex: 1, backgroundColor: colors.white }}>

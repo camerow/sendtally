@@ -18,7 +18,7 @@ import { usePrescribed } from "../../features/training/data/usePrescribed";
 // the day, itself and the plan it ran. What it prescribes starts as done, so the form
 // waits for it to load.
 export default function NewActivityScreen(): React.ReactElement {
-  const params = useLocalSearchParams<ActivityPrefill>();
+  const params = useLocalSearchParams<ActivityPrefill & { live?: string }>();
   const [id] = React.useState(randomUUID);
   const prescribed = usePrescribed(
     params.workoutId ?? null,
@@ -42,6 +42,7 @@ export default function NewActivityScreen(): React.ReactElement {
           logged={null}
           timed={params.startTime !== undefined}
           kindSet={params.kind !== undefined}
+          live={params.live === "1"}
         />
       )}
     </SafeAreaView>

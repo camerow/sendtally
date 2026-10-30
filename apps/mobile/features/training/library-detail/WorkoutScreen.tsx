@@ -76,7 +76,7 @@ function Detail({ workout, use, grip, adding }: DetailProps): React.ReactElement
     ) : (
       <Button
         label={t("hang.start")}
-        onPress={() => startWorkout(workout.id, gripId, session)}
+        onPress={() => startWorkout(workout.name, workout.id, gripId, session)}
         variant="primary"
         height={54}
         icon="play"

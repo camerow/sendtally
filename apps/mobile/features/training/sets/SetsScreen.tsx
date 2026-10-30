@@ -23,7 +23,8 @@ import { useApi } from "../../../lib/api";
 import { exerciseTallyStorage } from "../../../lib/exerciseTallyStorage";
 import { Button } from "../components/Button";
 import { PlayerHeader } from "../components/PlayerHeader";
-import { logRun, type WorkoutRun } from "../data/workoutRunParams";
+import { logRun, runParams, type WorkoutRun } from "../data/workoutRunParams";
+import { resumedRun, writeLiveRun } from "../../live-session/liveRun";
 import { RestRow } from "../rest/RestRow";
 import { useRest } from "../rest/useRest";
 import { ClimbingCard } from "./ClimbingCard";
@@ -46,20 +47,42 @@ import {
  * in line after it, then log what was done. A climbing exercise is a card instead, whose Start
  * logs it on the session tally; its climbs come back as its sets.
  */
-export function SetsScreen({ run }: { run: WorkoutRun }): React.ReactElement {
+export function SetsScreen({
+  run,
+  end = false,
+}: {
+  run: WorkoutRun;
+  /** Finishes the running workout as it opens, straight to its review. */
+  end?: boolean;
+}): React.ReactElement {
   const api = useApi();
+  const [resumed] = React.useState(() => {
+    const live = resumedRun("/workout/sets", run.workoutId);
+    return live?.state.player === "sets" ? { ...live.state, startedAt: live.startedAt } : null;
+  });
   const unit = useWeightUnit(api);
   const { state: activities } = useActivities(api);
   const exercises = useExercises(api).state;
   const tally = useLiveSession(exerciseTallyStorage);
   const climbs = tally.stored?.draft.climbs ?? [];
-  const [startedAt] = React.useState(Date.now);
-  const [done, setDone] = React.useState<ItemDone[]>(() => doneAsPrescribed(run.items));
-  const [ticked, setTicked] = React.useState<ReadonlySet<string>>(new Set());
+  const [startedAt] = React.useState(() => resumed?.startedAt ?? Date.now());
+  const [done, setDone] = React.useState<ItemDone[]>(
+    () => resumed?.done ?? doneAsPrescribed(run.items)
+  );
+  const [ticked, setTicked] = React.useState<ReadonlySet<string>>(() => new Set(resumed?.ticked));
   const [opened, setOpened] = React.useState<ReadonlySet<number>>(new Set());
   const [keypad, setKeypad] = React.useState(false);
   const rest = useRest();
-  React.useEffect(() => () => exerciseTallyStorage.remove(), []);
+  React.useEffect(() => {
+    writeLiveRun({
+      title: run.title,
+      workoutId: run.workoutId,
+      pathname: "/workout/sets",
+      params: runParams(run),
+      startedAt,
+      state: { player: "sets", done, ticked: [...ticked] },
+    });
+  }, [run, startedAt, done, ticked]);
   const tallyMeasure = tallyMeasuresOf(
     exercises.status === "ready" ? exercises.data : [],
     run.kind
@@ -105,6 +128,13 @@ export function SetsScreen({ run }: { run: WorkoutRun }): React.ReactElement {
       ),
       startedAt
     );
+  const ending = React.useRef(end);
+  const loaded = exercises.status !== "loading" && activities.status !== "loading";
+  React.useEffect(() => {
+    if (!ending.current || !loaded) return;
+    ending.current = false;
+    finish();
+  });
   const startClimbing = (item: number, measure: TallyMeasure): void => {
     const at = run.items[item];
     if (at === undefined) return;

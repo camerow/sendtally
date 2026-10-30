@@ -25,6 +25,7 @@ import { FocusField } from "../components/FocusField";
 import { SheetSection } from "../components/SheetSection";
 import { Title } from "../components/Title";
 import { type } from "../type";
+import { clearLiveRun } from "../../live-session/liveRun";
 import { DoneDetails } from "./DoneDetails";
 import { KindChips } from "./KindChips";
 
@@ -37,6 +38,8 @@ export type ActivityFormProps = {
   timed?: boolean;
   /** It came with a kind, from a workout; a logged activity always has one. */
   kindSet?: boolean;
+  /** It reviews the workout running live, which saving ends. */
+  live?: boolean;
 };
 
 const input = {
@@ -66,6 +69,7 @@ export function ActivityForm({
   logged,
   timed = false,
   kindSet = false,
+  live = false,
 }: ActivityFormProps): React.ReactElement {
   const api = useApi();
   const actions = useActivityActions(api, reportFailure);
@@ -93,6 +97,7 @@ export function ActivityForm({
   const save = (): void => {
     void actions.saveActivity(activityFromDraft(id, draft));
     router.back();
+    if (live) clearLiveRun();
   };
   const name = draft.title.trim() || kindLabel(draft.kind);
 

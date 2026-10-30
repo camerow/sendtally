@@ -23,6 +23,7 @@ import { Title } from "../components/Title";
 import type { IntervalsRun } from "./intervalsParams";
 import { startTimeOf } from "./intervalsText";
 import { confirmDestructive } from "../../../lib/confirmDestructive";
+import { clearLiveRun } from "../../live-session/liveRun";
 
 export type IntervalsDoneProps = { workout: IntervalsRun; run: Run<IntervalPhase> };
 
@@ -51,6 +52,7 @@ export function IntervalsDone({ workout, run }: IntervalsDoneProps): React.React
       ...workout.link,
       done: doneOfRun(workout.body, done),
     });
+    clearLiveRun();
     router.dismissAll();
   };
 
@@ -92,7 +94,10 @@ export function IntervalsDone({ workout, run }: IntervalsDoneProps): React.React
                 title: t("hang.discardRunTitle"),
                 body: t("hang.discardRunBody"),
                 action: t("hang.discard"),
-                onConfirm: () => router.back(),
+                onConfirm: () => {
+                  clearLiveRun();
+                  router.back();
+                },
               })
             }
             variant="danger"

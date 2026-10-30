@@ -8,6 +8,7 @@ import {
 import { activityKindOf, type LibraryWorkout } from "@sendtally/features/workouts";
 import { activityFormPath, runPath, type RunPlayer } from "../data/workoutRunParams";
 import { startIntervals } from "../intervals/intervalsParams";
+import { startLive } from "../../live-session/startLive";
 import { startLiveSession } from "../../live-session/startLiveSession";
 import { startWorkout } from "../timer/startWorkout";
 
@@ -39,7 +40,7 @@ export function startLibraryWorkout(
   const kind = activityKindOf(w.kind);
   const [first] = items;
   if (w.kind === "hangboard" && first !== undefined) {
-    startWorkout(w.id, first.exercise, session, link);
+    startWorkout(w.name, w.id, first.exercise, session, link);
     return;
   }
   if (kind === null || (kind === "climbing" && first === undefined)) {
@@ -56,11 +57,8 @@ export function startLibraryWorkout(
     startIntervals({ ...run, activityId: null, body: intervalsOf(items, eachSide) });
     return;
   }
-  router.push(
-    runPath(onTally ? "/workout/sets" : playerOf(items), {
-      ...run,
-      exerciseRestS: w.exerciseRestS,
-      items: [...items],
-    })
+  const player = onTally ? "/workout/sets" : playerOf(items);
+  startLive(w.name, () =>
+    router.push(runPath(player, { ...run, exerciseRestS: w.exerciseRestS, items: [...items] }))
   );
 }

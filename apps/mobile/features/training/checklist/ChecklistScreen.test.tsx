@@ -58,6 +58,7 @@ describe("Checklist player", () => {
         ]),
         startTime: "07:00",
         skipped: "[1]",
+        live: "1",
       },
     });
     jest.useRealTimers();
