@@ -54,9 +54,7 @@ export const plan = {
   "plan.asWritten": "Tel qu’écrit",
   "plan.weeklyLoad": "Charge par semaine",
   "plan.openAll": "Tout ouvrir",
-  "plan.unchanged": "tel qu’écrit",
   "plan.changesWeeks": "change {weeks}",
-  "plan.addColumn": "Colonne",
   "plan.loadHint":
     "Ajuste la charge par semaine pour planifier des cycles de charge et de décharge",
   "plan.colEdge": "Réglette",

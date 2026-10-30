@@ -112,7 +112,7 @@ export function stepped(dose: Dose, field: DoseField, direction: 1 | -1, unit: W
   return withField(dose, field, fieldValue(dose, field, unit) + direction * step, unit) ?? dose;
 }
 
-/** The rest fields, and on a hang its hangs per set: set by the dose, but left to + Column. */
+/** The rest fields, and on a hang its hangs per set: set by the dose, but kept out of the table. */
 const quiet = (kind: WorkoutKind, dose: Dose, field: DoseField): boolean =>
   field === "offS" ||
   field === "setRestS" ||
@@ -122,13 +122,12 @@ const LEAD: readonly DoseField[] = ["edgeMm", "weightKg", "sets", "onS"];
 
 /**
  * The columns of an item's weekly load, edge first on a hang: the numbers its dose sets, a
- * hangboard's edge and load always, and any a week changes or the user added.
+ * hangboard's edge and load always, and any a week changes.
  */
 export function loadColumns(
   kind: WorkoutKind,
   dose: Dose,
-  changes: readonly Partial<Dose>[],
-  added: readonly DoseField[] = []
+  changes: readonly Partial<Dose>[]
 ): DoseField[] {
   const fields = weekFields(kind, dose);
   const ordered =
@@ -141,7 +140,6 @@ export function loadColumns(
     (f) =>
       always(f) ||
       (dose[f] !== undefined && !quiet(kind, dose, f)) ||
-      added.includes(f) ||
       changes.some((c) => c[f] !== undefined)
   );
 }

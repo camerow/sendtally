@@ -6,14 +6,13 @@ const squat: Dose = { sets: 5, reps: 5, weightKg: 100 };
 const repeaters: Dose = { sets: 3, reps: 6, onS: 7, offS: 3, edgeMm: 20 };
 
 describe("weekly load", () => {
-  it("leads a hang with edge and load, leaving rests and hangs per set to + Column", () => {
+  it("leads a hang with edge and load, leaving out rests and hangs per set unless a week changes them", () => {
     expect(loadColumns("hangboard", repeaters, [])).toEqual(["edgeMm", "weightKg", "sets", "onS"]);
-    expect(loadColumns("hangboard", repeaters, [{ offS: 4 }], ["reps"])).toEqual([
+    expect(loadColumns("hangboard", repeaters, [{ offS: 4 }])).toEqual([
       "edgeMm",
       "weightKg",
       "sets",
       "onS",
-      "reps",
       "offS",
     ]);
   });

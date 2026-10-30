@@ -5,11 +5,8 @@ import {
   cleanDone,
   doneSummary,
   exerciseNames,
-  fromTimerNote,
   keptSets,
   offWithout,
-  runStatus,
-  setCounts,
   shortOf,
   previousSets,
   removeSet,
@@ -102,27 +99,6 @@ describe("done", () => {
     expect(shortOf({ onS: 30 }, { onS: 45 })).toBe("0:30 of 0:45");
     expect(shortOf({ reps: 8 }, { reps: 8 })).toBeNull();
     expect(shortOf({ reps: 4 }, undefined)).toBeNull();
-  });
-
-  it("tells what the timer saw: sets full, partial and not done, and where it fell short", () => {
-    const done = [{ item: 0, exercise: "half", sets: [6, 6, 6, 4, 6].map((reps) => ({ reps })) }];
-    const counts = setCounts(done, ["0:4"], [{ reps: 6 }]);
-    expect(counts).toEqual({
-      full: 3,
-      partial: 1,
-      off: 1,
-      total: 5,
-      firstShort: 3,
-      lastReached: 3,
-    });
-    expect(fromTimerNote(counts)).toBe(
-      "From the timer: 3 sets full, 1 partial, 1 not done. Fix anything before saving."
-    );
-    expect(runStatus(counts)).toBe("Ended at set 4 of 5");
-    expect(runStatus(setCounts(done, [], [{ reps: 4 }]))).toBe("Session complete");
-    expect(runStatus(setCounts(done, ["0:0", "0:2", "0:3", "0:4"], [{ reps: 6 }]))).toBe(
-      "Ended at set 2 of 5"
-    );
   });
 
   it("changes, copies and removes sets, and drops an exercise with its last set", () => {

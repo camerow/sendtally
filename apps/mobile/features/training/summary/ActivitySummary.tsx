@@ -1,5 +1,6 @@
 import { router } from "expo-router";
 import React from "react";
+import { kindLabel } from "@sendtally/features/activities";
 import type { ActivityRecord } from "@sendtally/api-client";
 import { colors } from "@sendtally/design/tokens";
 import {
@@ -18,7 +19,7 @@ import { KIND_LOOK } from "../today/kindLook";
 import { ExerciseResultCard } from "./ExerciseResultCard";
 import { OverTime } from "./OverTime";
 import { SummaryFrame } from "./SummaryFrame";
-import { effortTile, kickerText } from "./summaryText";
+import { effortTile } from "./summaryText";
 
 export type ActivitySummaryProps = {
   activity: ActivityRecord;
@@ -45,7 +46,7 @@ export function ActivitySummary({
   const target = activity.workoutId === null ? null : log.workout(activity.workoutId);
   return (
     <SummaryFrame
-      kicker={kickerText(activity.kind, activity.focus ?? null, activity.date, activity, log.plan)}
+      kicker={kindLabel(activity.kind)}
       kickerColor={KIND_LOOK[activity.kind].ink}
       title={activity.title}
       tiles={[

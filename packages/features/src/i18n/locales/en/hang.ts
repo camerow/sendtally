@@ -154,7 +154,6 @@ export const hang = {
   "hang.lifted": "Lifted",
   "hang.logLift": "Log a lift",
 
-  "hang.sessionComplete": "Session complete",
   "hang.clear": "Clear",
   "hang.effortHint": "Effort is what makes the load trend meaningful.",
   "hang.effort1": "Barely working",

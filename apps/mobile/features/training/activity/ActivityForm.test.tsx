@@ -229,7 +229,7 @@ describe("Log activity", () => {
     );
     await render(<ActivityForm id="a1" initial={initial} logged={null} />);
     expect(screen.getByText("Log workout")).toBeTruthy();
-    expect(screen.getByText("Mobility · Logged, not timed")).toBeTruthy();
+    expect(screen.getAllByText("Mobility").length).toBeGreaterThan(0);
     expect(screen.getByLabelText("Pigeon, set 1 · Hold")).toBeTruthy();
     expect(screen.getByRole("checkbox", { name: "Jefferson curl, set 1" })).not.toBeChecked();
     await fireEvent.press(screen.getByRole("checkbox", { name: "Jefferson curl, set 1" }));
@@ -269,12 +269,8 @@ describe("Log activity", () => {
         planned={[{ exercise: "Ring row", dose: { sets: 3, reps: 10 } }]}
       />
     );
-    expect(screen.getByText("Strength · Ended at set 2 of 3")).toBeTruthy();
-    expect(
-      screen.getByText(
-        "From the timer: 1 set full, 1 partial, 1 not done. Fix anything before saving."
-      )
-    ).toBeTruthy();
+    expect(screen.getAllByText("Strength").length).toBeGreaterThan(0);
+    expect(screen.queryByText(/^From the timer/)).toBeNull();
     expect(screen.getByText("7 of 10 reps")).toBeTruthy();
     await fireEvent.press(screen.getByText("Discard"));
     expect(router.back).not.toHaveBeenCalled();

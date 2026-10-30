@@ -67,48 +67,6 @@ export function shortOf(set: SetDone, dose: SetDone | undefined, hangs = false):
   return null;
 }
 
-/** Every set reviewed: done in full, done in part, or off. */
-export type SetCounts = { full: number; partial: number; off: number; total: number };
-
-export function setCounts(
-  done: readonly ItemDone[],
-  off: readonly string[],
-  planned: readonly (SetDone | undefined)[]
-): SetCounts & { firstShort: number | null; lastReached: number } {
-  const states = done.flatMap((d) =>
-    d.sets.map((s, set) =>
-      off.includes(setKeyOf(d.item, set))
-        ? "off"
-        : shortOf(s, planned[d.item]) === null
-          ? "full"
-          : "partial"
-    )
-  );
-  const count = (state: string): number => states.filter((s) => s === state).length;
-  const short = states.findIndex((s) => s !== "full");
-  return {
-    full: count("full"),
-    partial: count("partial"),
-    off: count("off"),
-    total: states.length,
-    firstShort: short === -1 ? null : short,
-    lastReached: Math.max(
-      0,
-      states.findLastIndex((s) => s !== "off")
-    ),
-  };
-}
-
-/** "From the timer: 3 sets full, 1 partial, 1 not done. Fix anything before saving." */
-export function fromTimerNote(c: SetCounts): string {
-  const parts = [
-    c.full > 0 ? t("activities.setsFull", { count: c.full }) : "",
-    c.partial > 0 ? t("activities.setsPartial", { count: c.partial }) : "",
-    c.off > 0 ? t("activities.setsNotDone", { count: c.off }) : "",
-  ];
-  return t("activities.fromTimer", { summary: parts.filter((p) => p !== "").join(", ") });
-}
-
 const withSets = (
   done: readonly ItemDone[],
   item: number,
@@ -171,14 +129,6 @@ export function previousSets(
   }
   return [];
 }
-
-/** How a run went, from its sets: complete, or the last set it reached. */
-export const runStatus = (
-  c: SetCounts & { firstShort: number | null; lastReached: number }
-): string =>
-  c.firstShort === null
-    ? t("hang.sessionComplete")
-    : t("activities.endedAtSet", { set: c.lastReached + 1, sets: c.total });
 
 /** The sets still off once one of an item's sets is removed: those after it move up one. */
 export function offWithout(off: readonly string[], item: number, set: number): string[] {

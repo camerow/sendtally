@@ -425,14 +425,6 @@ describe("block weeks", () => {
     });
   });
 
-  it("adds a column the dose does not show yet", async () => {
-    await renderWithHang(<LadderScreen id="m1" />, hangData(), { workouts: [squat], plan });
-    expect(screen.queryByLabelText("Week 1, Set rest")).toBeNull();
-    await fireEvent.press(screen.getByText("+ Column"));
-    await fireEvent.press(screen.getByText("Set rest"));
-    expect(screen.getByLabelText("Week 1, Set rest")).toBeTruthy();
-  });
-
   it("gives each exercise its own section, saying which weeks change it", async () => {
     const pair: WorkoutRecord = {
       ...squat,
@@ -440,7 +432,7 @@ describe("block weeks", () => {
     };
     await renderWithHang(<LadderScreen id="m1" />, hangData(), { workouts: [pair], plan });
     expect(screen.getByText("5 × 5 · 100 kg · changes W3")).toBeTruthy();
-    expect(screen.getByText("3 × 5 · as written")).toBeTruthy();
+    expect(screen.getByText("3 × 5")).toBeTruthy();
     expect(screen.getAllByLabelText("Week 1, Sets")).toHaveLength(1);
     await fireEvent.press(screen.getByText("Open all"));
     expect(screen.getAllByLabelText("Week 1, Sets")).toHaveLength(2);

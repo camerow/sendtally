@@ -155,7 +155,6 @@ export const hang = {
   "hang.lifted": "Tiré",
   "hang.logLift": "Enregistrer un tirage",
 
-  "hang.sessionComplete": "Séance terminée",
   "hang.clear": "Effacer",
   "hang.effortHint": "C'est l'effort qui donne du sens à la courbe de charge.",
   "hang.effort1": "À peine un effort",

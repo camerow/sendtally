@@ -14,11 +14,8 @@ import {
   activityFromDraft,
   previousSets,
   useActivities,
-  fromTimerNote,
   kindLabel,
   minutesOf,
-  runStatus,
-  setCounts,
   useActivityActions,
   useWeightUnit,
   type ActivityDraft,
@@ -142,9 +139,7 @@ export function ActivityForm({
   const name = draft.title.trim() || kindLabel(draft.kind);
   const look = hang === undefined ? draft.kind : "hangboard";
   const doses = planned.map((p) => p.dose);
-  const counts = setCounts(draft.done, draft.off, doses);
   const reviewing = logged === null && draft.workoutId !== null;
-  const status = live ? runStatus(counts) : t("activities.loggedNotTimed");
   const [opened, setOpened] = React.useState<"date" | "start" | "duration" | null>(null);
   const dateField = (
     <SheetSection label={t("activities.date")}>
@@ -229,30 +224,9 @@ export function ActivityForm({
         {draft.workoutId !== null ? (
           <View style={{ gap: 10 }}>
             <View style={{ gap: 4 }}>
-              {reviewing && (
-                <Label color={KIND_LOOK[look].ink}>{`${kindLabel(look)} · ${status}`}</Label>
-              )}
+              {reviewing && <Label color={KIND_LOOK[look].ink}>{kindLabel(look)}</Label>}
               <Title size={28}>{name}</Title>
             </View>
-            {reviewing && live && (
-              <Text
-                style={[
-                  type.body,
-                  {
-                    fontSize: 13.5,
-                    lineHeight: 19,
-                    color: colors.textSecondary,
-                    backgroundColor: colors.surfaceSoft,
-                    borderRadius: 12,
-                    paddingVertical: 10,
-                    paddingHorizontal: 12,
-                    overflow: "hidden",
-                  },
-                ]}
-              >
-                {fromTimerNote(counts)}
-              </Text>
-            )}
           </View>
         ) : (
           <SheetSection label={t("activities.title")}>

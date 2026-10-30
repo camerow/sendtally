@@ -155,7 +155,6 @@ export const hang = {
   "hang.lifted": "Levantado",
   "hang.logLift": "Registrar un tirón",
 
-  "hang.sessionComplete": "Sesión completada",
   "hang.clear": "Borrar",
   "hang.effortHint": "El esfuerzo es lo que da sentido a la tendencia de carga.",
   "hang.effort1": "Casi sin esfuerzo",

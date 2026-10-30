@@ -1,5 +1,6 @@
 import { router } from "expo-router";
 import React from "react";
+import { kindLabel } from "@sendtally/features/activities";
 import type { HangSessionRecord } from "@sendtally/api-client";
 import { clock, totalSeconds } from "@sendtally/core/hang";
 import { gripSessions, hangGrid, pastSessions, previousHang } from "@sendtally/features/activities";
@@ -14,7 +15,7 @@ import { GripTrend } from "./GripTrend";
 import { HangResultCard } from "./HangResultCard";
 import { NewBestCard } from "./NewBestCard";
 import { SummaryFrame } from "./SummaryFrame";
-import { effortTile, kickerText } from "./summaryText";
+import { effortTile } from "./summaryText";
 
 export type HangSummaryProps = {
   session: HangSessionRecord;
@@ -36,7 +37,7 @@ export function HangSummary({
   const best = newBestOf(session, all, model.gripName(session.gripId), unit);
   return (
     <SummaryFrame
-      kicker={kickerText("hangboard", session.focus, session.date, session, log.plan)}
+      kicker={kindLabel("hangboard")}
       kickerColor={KIND_LOOK.hangboard.ink}
       title={hangTitle(session)}
       tiles={[

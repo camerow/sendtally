@@ -57,12 +57,8 @@ describe("A hangboard workout's review", () => {
   it("shows what the timer saw, and saves the sets as they were confirmed", async () => {
     const { actions } = await renderWithHang(<DoneScreen params={ended} />);
     expect(screen.getByText("Log workout")).toBeTruthy();
-    expect(screen.getByText("Fingers · Ended at set 4 of 6")).toBeTruthy();
-    expect(
-      screen.getByText(
-        "From the timer: 3 sets full, 1 partial, 2 not done. Fix anything before saving."
-      )
-    ).toBeTruthy();
+    expect(screen.getByText("Fingers")).toBeTruthy();
+    expect(screen.queryByText(/^From the timer/)).toBeNull();
     expect(screen.getByText("4 of 6 hangs")).toBeTruthy();
     expect(screen.getByText("Started")).toBeTruthy();
     expect(screen.queryByText("Focus")).toBeNull();
@@ -138,7 +134,7 @@ describe("A hangboard workout's review", () => {
       hangData(),
       { workouts: [twoGrips] }
     );
-    expect(screen.getByText("Fingers · Logged, not timed")).toBeTruthy();
+    expect(screen.getByText("Fingers")).toBeTruthy();
     expect(screen.queryByText(/From the timer/)).toBeNull();
     await fireEvent.press(screen.getByText("Save"));
     const saved = jest.mocked(actions.saveSession).mock.calls[0]?.[0];

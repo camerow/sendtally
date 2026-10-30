@@ -156,7 +156,6 @@ export const hang = {
   "hang.lifted": "Gezogen",
   "hang.logLift": "Zug eintragen",
 
-  "hang.sessionComplete": "Session geschafft",
   "hang.clear": "Löschen",
   "hang.effortHint": "Erst die Anstrengung macht den Lasttrend aussagekräftig.",
   "hang.effort1": "Kaum Arbeit",

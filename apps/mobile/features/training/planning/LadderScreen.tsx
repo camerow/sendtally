@@ -15,7 +15,12 @@ import { colors } from "@sendtally/design/tokens";
 import { kindLabel } from "@sendtally/features/activities";
 import { weekdayLetters } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
-import { blockOfMembership, blockRecap, useTrainingLog } from "@sendtally/features/training";
+import {
+  blockOfMembership,
+  blockRecap,
+  loadColumns,
+  useTrainingLog,
+} from "@sendtally/features/training";
 import { bodySummary, doseSummary, exerciseName } from "@sendtally/features/workouts";
 import { ScreenFrame } from "../../../components/ScreenFrame";
 import { useApi } from "../../../lib/api";
@@ -32,17 +37,15 @@ import { workoutLines } from "../plan/planGridRows";
 import { usePlanActions } from "../plan/usePlanActions";
 import { KIND_LOOK } from "../today/kindLook";
 import { type } from "../type";
-import { ItemLoad } from "./ItemLoad";
+import { LoadTable } from "./LoadTable";
 import { LoadSection } from "./LoadSection";
 
-/** "changes W5, W6", or "as written" when no week changes it. */
-const changedWeeks = (changes: readonly Partial<Dose>[]): string => {
+/** "changes W5, W6"; nothing when no week changes it. */
+const changedWeeks = (changes: readonly Partial<Dose>[]): string[] => {
   const weeks = changes.flatMap((c, i) =>
     Object.keys(c).length > 0 ? [t("plan.weekShort", { n: i + 1 })] : []
   );
-  return weeks.length === 0
-    ? t("plan.unchanged")
-    : t("plan.changesWeeks", { weeks: weeks.join(", ") });
+  return weeks.length === 0 ? [] : [t("plan.changesWeeks", { weeks: weeks.join(", ") })];
 };
 
 export type LadderScreenProps = {
@@ -100,18 +103,20 @@ export function LadderScreen({ id, back }: LadderScreenProps): React.ReactElemen
   const mine = library?.source === "mine";
   const days: readonly number[] = m.weekdays;
 
-  const loadOf = (index: number, header?: React.ReactNode): React.ReactElement | null => {
+  const loadOf = (index: number): React.ReactElement | null => {
     const item = items[index];
-    return item === undefined ? null : (
-      <ItemLoad
+    if (item === undefined) return null;
+    const changes = changesOf(index);
+    return (
+      <LoadTable
         key={`${turn}:${index}`}
         kind={w.kind}
         written={item.dose}
-        changes={changesOf(index)}
+        changes={changes}
+        columns={loadColumns(w.kind, item.dose, changes)}
         unit={unit}
         current={current}
         done={done}
-        header={header}
         onChange={(week, change) =>
           void actions.saveWeekChange({
             membershipId: id,
@@ -203,7 +208,10 @@ export function LadderScreen({ id, back }: LadderScreenProps): React.ReactElemen
       )}
       <View style={{ gap: 10 }}>
         {items.length === 1 ? (
-          loadOf(0, <Label color={colors.gunmetal}>{t("plan.weeklyLoad")}</Label>)
+          <>
+            <Label color={colors.gunmetal}>{t("plan.weeklyLoad")}</Label>
+            {loadOf(0)}
+          </>
         ) : (
           <>
             <View
@@ -225,7 +233,7 @@ export function LadderScreen({ id, back }: LadderScreenProps): React.ReactElemen
               <LoadSection
                 key={`${turn}:${i}`}
                 name={exerciseName(it.exercise, model.gripName)}
-                summary={[doseSummary(w.kind, it.dose, unit), changedWeeks(changesOf(i))].join(
+                summary={[doseSummary(w.kind, it.dose, unit), ...changedWeeks(changesOf(i))].join(
                   " · "
                 )}
                 open={open.includes(i)}

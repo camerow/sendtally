@@ -132,9 +132,9 @@ beforeEach(() => {
 });
 
 describe("A finished workout's summary", () => {
-  it("shows its kind, focus, day and block week, its tiles, and each exercise against last time", async () => {
+  it("shows only its kind over the title, its tiles, and each exercise against last time", async () => {
     await show("a1", [today, before]);
-    expect(screen.getByText("Strength · Power · Wed, Oct 28 · Week 3 of 6")).toBeTruthy();
+    expect(screen.getByText("Strength")).toBeTruthy();
     expect(screen.getByRole("header", { name: "Lower body strength" })).toBeTruthy();
     expect(screen.getByText("41 min")).toBeTruthy();
     expect(screen.getByText("effort · aimed 7")).toBeTruthy();
@@ -184,7 +184,7 @@ describe("A finished workout's summary", () => {
       climbing("c2", "2026-10-28", [true, true, true, false], 18),
       climbing("c1", "2026-10-21", [true, false, false, false], 15),
     ]);
-    expect(screen.getByText("Climbing · Wed, Oct 28")).toBeTruthy();
+    expect(screen.getByText("Climbing")).toBeTruthy();
     expect(screen.getByText("+2 sent vs last")).toBeTruthy();
     expect(screen.getByText("4 climbs · 3 sent · top V4")).toBeTruthy();
     expect(screen.getAllByLabelText("V4, Not yet")).toHaveLength(1);
