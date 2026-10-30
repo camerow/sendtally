@@ -80,6 +80,7 @@ export {
   climbGradeBins,
   climbLog,
   climbStatus,
+  climbingSessionVM,
   gradeFilterLabel,
   gradeFilterOf,
   gradeRangeOf,
@@ -91,6 +92,7 @@ export {
   type ClimbLogVM,
   type ClimbPillKind,
   type ClimbStatusFilter,
+  type ClimbingSessionVM,
   type GradeFilter,
 } from "./log";
 export {

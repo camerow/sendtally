@@ -3,6 +3,7 @@ import type { ClimbSummary, SessionClimb, SessionWithClimbs } from "@sendtally/a
 import {
   climbGradeBins,
   climbLog,
+  climbingSessionVM,
   gradeFilterLabel,
   gradeFilterOf,
   gradeRangeOf,
@@ -145,6 +146,38 @@ describe("climbLog", () => {
       ["3 tries", "Stanage Plantation · 4 Sep"],
       ["Sent", "Stanage Popular · 2 days"],
     ]);
+  });
+
+  it("puts each climb of a named session under it once, with how it went that day", () => {
+    const day = {
+      source: "manual",
+      name: "Tuesday night session",
+      start_at: "2026-10-18T10:00:00.000Z",
+      climbs: [
+        { name: "The Ramp", kind: "attempt", tries: 4 },
+        { name: "Pocket Rocket", kind: "send", style: "flash", tries: 1 },
+        { name: "The Ramp", kind: "attempt", tries: 2 },
+      ],
+    } as unknown as SessionWithClimbs;
+    const vm = climbingSessionVM(day, climbs);
+    expect(vm.named).toBe(true);
+    expect(vm.climbs.map((r) => [r.name, r.pill.label, r.meta])).toEqual([
+      ["The Ramp", "Project", "Burbage North · 6 tries"],
+      ["Pocket Rocket", "Flash", "Stanage Popular · 1 try"],
+    ]);
+  });
+
+  it("reads a bare session of climbs added on their own as those climbs, on its day", () => {
+    const bare = {
+      source: "manual",
+      name: "",
+      start_at: "2026-09-04T10:00:00.000Z",
+      climbs: [{ name: "Brad Pit", kind: "attempt", tries: 3 }],
+    } as unknown as SessionWithClimbs;
+    const vm = climbingSessionVM(bare, climbs);
+    expect(vm.named).toBe(false);
+    expect(vm.climbs.map((r) => r.meta)).toEqual(["Stanage Plantation · 4 Sep · 3 tries"]);
+    expect(climbingSessionVM({ ...bare, climbs: [] }, climbs).named).toBe(true);
   });
 
   it("counts each status inside the search and picks one", () => {

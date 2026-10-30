@@ -13,6 +13,7 @@ import {
   linkedSessions,
   logItems,
   logScopeItems,
+  logSegmentItems,
   openInjuries,
   overlappingTrip,
   sessionsInSpan,
@@ -193,6 +194,22 @@ describe("other training in the log", () => {
     expect(grouped?.type === "entry" ? grouped.inside.map((i) => i.key) : []).toEqual([
       "activity:a1",
     ]);
+  });
+
+  it("splits into climbing and training, with entries in both and a trip holding only its half", () => {
+    const trip = entry({
+      id: "t1",
+      kind: "trip",
+      occurred_at: "2026-05-27",
+      ends_at: "2026-05-29",
+    });
+    const items = logItems([session("a", "2026-05-28T12:00:00.000Z")], [trip], [], [activity]);
+    const inside = (segment: "climbing" | "training"): string[] =>
+      groupTrips(logSegmentItems(items, segment)).flatMap((i) =>
+        i.type === "entry" ? [i.key, ...i.inside.map((x) => x.key)] : [i.key]
+      );
+    expect(inside("climbing")).toEqual(["entry:t1", "session:a"]);
+    expect(inside("training")).toEqual(["entry:t1", "activity:a1"]);
   });
 });
 
