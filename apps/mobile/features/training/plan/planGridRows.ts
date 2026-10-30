@@ -65,7 +65,7 @@ export function workoutLines(w: Workout, grips: GripNames): string[] {
 }
 
 /**
- * A row's lines in one block week: a one-grip hang's edge and load, else how many of its
+ * A row's lines in one block week: a one-dose hang's edge and load, else how many of its
  * exercises the week changes, gold where they differ from as written.
  */
 export function weekLines(
@@ -75,9 +75,10 @@ export function weekLines(
   unit: WeightUnit
 ): GridPart[][] {
   const [first = "", second] = workoutLines(w, grips);
-  const one = new Set(w.items.map((i) => i.exercise)).size === 1;
-  const dose = w.items[0]?.doses[0];
-  if (w.kind === "hangboard" && one && dose !== undefined) {
+  // Edge and load read for one hang with one dose; anything more counts its changes instead.
+  const [only] = w.items;
+  const dose = w.items.length === 1 && only?.doses.length === 1 ? only.doses[0] : undefined;
+  if (w.kind === "hangboard" && dose !== undefined) {
     const c = changes[0] ?? {};
     const edge = c.edgeMm ?? dose.edgeMm;
     const parts: GridPart[] = [

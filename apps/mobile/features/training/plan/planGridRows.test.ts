@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@jest/globals";
 import type { Workout } from "@sendtally/core/hang";
-import { workoutLines, type GripNames } from "./planGridRows";
+import { weekLines, workoutLines, type GripNames } from "./planGridRows";
 
 const named = (name: (id: string) => string, chosen?: string): GripNames => ({
   gripName: name,
@@ -74,5 +74,35 @@ describe("workoutLines", () => {
         named((id) => id)
       )
     ).toEqual(["2 grips"]);
+  });
+});
+
+describe("weekLines", () => {
+  it("reads a one-dose hang's edge and load, gold where the week changes them", () => {
+    expect(
+      weekLines(
+        fingers(["half"]),
+        [{ weightKg: 8 }],
+        named((id) => id),
+        "kg"
+      )
+    ).toEqual([
+      [{ text: "half" }],
+      [
+        { text: "20\u00A0mm", changed: false },
+        { text: "+8 kg", changed: true },
+      ],
+    ]);
+  });
+
+  it("counts the exercises a week changes when there is more than one dose", () => {
+    expect(
+      weekLines(
+        fingers(["half", "open"]),
+        [{}, { sets: 3 }],
+        named((id) => id),
+        "kg"
+      )
+    ).toEqual([[{ text: "2 grips" }], [{ text: "1 changed", changed: true }]]);
   });
 });
