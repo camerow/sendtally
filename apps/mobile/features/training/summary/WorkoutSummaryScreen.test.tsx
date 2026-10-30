@@ -290,12 +290,16 @@ describe("The ··· menu", () => {
   });
 
   it("offers another go after a failed post, with Strava's reason", async () => {
+    mockApi.postActivityToStrava.mockResolvedValue({
+      activity: { ...today, stravaActivityId: "9" },
+    });
     await show("a1", [{ ...today, postState: "failed", postError: "rate limited" }]);
     expect(await screen.findByText("Strava post failed")).toBeTruthy();
     await pressMenu();
     expect(screen.getAllByText("rate limited")).toHaveLength(2);
     await fireEvent.press(screen.getByText("Try posting again"));
     expect(mockApi.postActivityToStrava).toHaveBeenCalledWith("a1");
+    expect(await screen.findByText("On Strava")).toBeTruthy();
   });
 
   it("deletes only once confirmed, by name and with no more said", async () => {

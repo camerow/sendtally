@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals";
-import { act, fireEvent, screen } from "@testing-library/react-native";
+import { act, cleanup, fireEvent, screen } from "@testing-library/react-native";
 import { router } from "expo-router";
 import React from "react";
 import { View } from "react-native";
@@ -74,6 +74,7 @@ describe("The tally in exercise mode", () => {
   });
   afterEach(() => {
     jest.useRealTimers();
+    cleanup();
     exerciseTallyStorage.remove();
     liveRunStorage.remove();
   });

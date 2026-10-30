@@ -1,5 +1,5 @@
 import { jest } from "@jest/globals";
-import { timeoutManager } from "@tanstack/react-query";
+import { notifyManager, timeoutManager } from "@tanstack/react-query";
 import type * as MockReact from "react";
 import type * as MockReactNative from "react-native";
 
@@ -77,3 +77,7 @@ timeoutManager.setTimeoutProvider({
   setInterval: (callback, delay) => setInterval(callback, delay),
   clearInterval: (id) => clearInterval(id),
 });
+
+// Cache changes reach screens on a macrotask by default, which can land after a test has ended;
+// as microtasks they flush inside the act() that caused them.
+notifyManager.setScheduler(queueMicrotask);
