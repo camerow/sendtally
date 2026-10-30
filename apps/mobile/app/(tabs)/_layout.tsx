@@ -7,7 +7,6 @@ import { BottomTabBar } from "expo-router/tabs";
 import { t } from "@sendtally/features/i18n";
 import { colors, fonts } from "@sendtally/design/tokens";
 import { Icon, type IconName } from "../../components/Icon";
-import { TabSwipe } from "../../components/TabSwipe";
 import { LiveBar } from "../../features/live-session/LiveBar";
 
 const SELECTED_RULE_HEIGHT = 3;
@@ -57,20 +56,8 @@ function SignedInTabs(): React.ReactElement {
           <BottomTabBar {...props} />
         </View>
       )}
-      screenLayout={({ children, navigation, route }) => (
-        <TabSwipe
-          onSwipe={(step) => {
-            const { routes } = navigation.getState();
-            const next = routes[routes.findIndex((r) => r.key === route.key) + step];
-            if (next !== undefined) navigation.navigate(next.name);
-          }}
-        >
-          {children}
-        </TabSwipe>
-      )}
       screenOptions={{
         headerShown: false,
-        animation: "shift",
         tabBarStyle: {
           height: 62 + insets.bottom,
           backgroundColor: colors.surfaceSoft,

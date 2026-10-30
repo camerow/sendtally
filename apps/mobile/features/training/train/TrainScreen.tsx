@@ -7,6 +7,7 @@ import type { IconName } from "../../../components/Icon";
 import { Sheet } from "../../../components/Sheet";
 import { MenuRow } from "../../live-session/MenuRow";
 import { Segmented } from "../components/Segmented";
+import { SegmentSwipe } from "../../../components/SegmentSwipe";
 import { HangDataProvider } from "../data/HangDataProvider";
 import { openExerciseEditor } from "../exercises/openExerciseEditor";
 import { NewWorkoutSheet } from "../library/NewWorkoutSheet";
@@ -51,28 +52,32 @@ export function TrainScreen(): React.ReactElement {
     if (v === "blocks") router.push("/plan/block/new");
     else setAdding(v === "workouts" ? "workout" : "exercise");
   };
+  const views = [
+    { value: "blocks" as const, label: t("plan.tabBlocks") },
+    { value: "workouts" as const, label: t("plan.tabWorkouts") },
+    { value: "exercises" as const, label: t("plan.tabExercises") },
+  ];
   return (
     <View style={{ flex: 1 }}>
-      <ScrollView
-        contentContainerStyle={{ gap: 16, paddingHorizontal: 18, paddingTop: 4, paddingBottom: 96 }}
-      >
-        <Segmented<TrainView>
-          value={view}
-          onChange={setView}
-          options={[
-            { value: "blocks", label: t("plan.tabBlocks") },
-            { value: "workouts", label: t("plan.tabWorkouts") },
-            { value: "exercises", label: t("plan.tabExercises") },
-          ]}
-        />
-        {view === "workouts" ? (
-          <WorkoutLibrary />
-        ) : (
-          <HangDataProvider>
-            {view === "blocks" ? <BlocksList /> : <ExerciseShelves />}
-          </HangDataProvider>
-        )}
-      </ScrollView>
+      <SegmentSwipe options={views} value={view} onChange={setView}>
+        <ScrollView
+          contentContainerStyle={{
+            gap: 16,
+            paddingHorizontal: 18,
+            paddingTop: 4,
+            paddingBottom: 96,
+          }}
+        >
+          <Segmented<TrainView> value={view} onChange={setView} options={views} />
+          {view === "workouts" ? (
+            <WorkoutLibrary />
+          ) : (
+            <HangDataProvider>
+              {view === "blocks" ? <BlocksList /> : <ExerciseShelves />}
+            </HangDataProvider>
+          )}
+        </ScrollView>
+      </SegmentSwipe>
       <Fab
         label={label(view)}
         onPress={() => create(view)}
