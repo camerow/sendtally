@@ -598,9 +598,16 @@ describe("blocks and memberships", () => {
     });
     const scheduled = after.memberships.filter((m) => m.blockId === "b2");
     expect(scheduled.map((m) => m.start)).toEqual(["2027-01-04"]);
-    expect((await call(userId, "PUT", "/v1/blocks/t2", { ...blockBody, start: null })).status).toBe(
-      200
-    );
+    const unnamed = { ...blockBody, name: "", start: null };
+    expect((await call(userId, "PUT", "/v1/blocks/t2", unnamed)).status).toBe(200);
+    await call(userId, "PUT", "/v1/memberships/m9", {
+      ...membershipBody,
+      blockId: "t1",
+      weekdays: [],
+    });
+    await call(userId, "POST", "/v1/blocks/t1/copy", { id: "b3", start: "2027-03-01" });
+    const again = await plan(userId);
+    expect(again.memberships.filter((m) => m.blockId === "b3")).toHaveLength(1);
   });
 });
 

@@ -119,13 +119,15 @@ export const workoutBody = z
     focus,
   }));
 
-export const blockBody = z.object({
-  name: title,
-  // None is a template.
-  start: calendarDate.nullable(),
-  weeks: z.number().int().min(1).max(MAX_BLOCK_WEEKS),
-  focus,
-});
+// None is a template, which may go unnamed while it is being built.
+export const blockBody = z
+  .object({
+    name: z.string().trim().max(80),
+    start: calendarDate.nullable(),
+    weeks: z.number().int().min(1).max(MAX_BLOCK_WEEKS),
+    focus,
+  })
+  .refine((b) => b.name !== "" || b.start === null, "a scheduled block needs a name");
 
 export const membershipBody = z.object({
   workoutId: id,

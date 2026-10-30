@@ -78,7 +78,7 @@ export function BlocksList(): React.ReactElement {
               back={t("training.train")}
               key={b.id}
               id={b.id}
-              name={b.name}
+              name={b.name || t("plan.untitled")}
               meta={`${weeks(b.weeks)} · ${t("plan.workoutCount", { count: blockMembers(plan, b).length })}`}
             />
           ))}

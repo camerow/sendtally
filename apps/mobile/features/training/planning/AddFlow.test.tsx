@@ -220,6 +220,31 @@ describe("adding to the plan", () => {
     });
   });
 
+  it("adds to a template with no days, straight back to its grid", async () => {
+    const template = {
+      ...winter,
+      blocks: [{ id: "t1", name: "Base to peak", start: null, weeks: 6, focus: null }],
+    };
+    await renderWithHang(
+      <WorkoutScreen id="legs" adding={{ date: null, blockId: "t1" }} />,
+      hangData(),
+      { workouts: [legs], plan: template }
+    );
+    await fireEvent.press(screen.getByText("Add to plan"));
+    expect(router.push).not.toHaveBeenCalled();
+    expect(mockPlan.saveMembership).toHaveBeenCalledWith({
+      id: "m-new",
+      workoutId: "legs",
+      blockId: "t1",
+      weekdays: [],
+      start: "2026-09-29",
+    });
+    expect(router.dismissTo).toHaveBeenCalledWith({
+      pathname: "/plan/block/[id]",
+      params: { id: "t1", highlight: "m-new" },
+    });
+  });
+
   it("goes back to the block's editor when the add started there", async () => {
     await renderWithHang(
       <ScheduleScreen workoutId="legs" flow={{ date: null, blockId: "b1", editing: true }} />,

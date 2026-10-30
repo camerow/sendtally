@@ -20,6 +20,7 @@ import { HistoryList } from "../history/HistoryList";
 import { activityItem, hangItem, ofWorkout } from "../history/historyItems";
 import { useLibrary, useNextSession } from "../library/useLibrary";
 import { addFlowParams, type AddFlow } from "../planning/flowParams";
+import { useAddToTemplate } from "../planning/useAddToTemplate";
 import { PlanList } from "../plans/PlanList";
 import { startWorkout } from "../timer/startWorkout";
 import { GripSetupCard } from "../workout-detail/GripSetupCard";
@@ -46,6 +47,7 @@ function Detail({ workout, use, grip, adding }: DetailProps): React.ReactElement
   const api = useApi();
   const { model, today, actions } = useHangData();
   const session = useNextSession(workout.id);
+  const addToTemplate = useAddToTemplate(adding);
   const exercises = useExercises(api).state;
   const activities = useActivities(api).state;
   const detailActions = useWorkoutDetailActions(workout);
@@ -104,10 +106,12 @@ function Detail({ workout, use, grip, adding }: DetailProps): React.ReactElement
           <Button
             label={t("plan.addToPlan")}
             onPress={() =>
-              router.push({
-                pathname: "/plan/schedule",
-                params: { workoutId: workout.id, ...addFlowParams(adding) },
-              })
+              addToTemplate === null
+                ? router.push({
+                    pathname: "/plan/schedule",
+                    params: { workoutId: workout.id, ...addFlowParams(adding) },
+                  })
+                : addToTemplate(workout.id)
             }
             variant="primary"
             height={54}

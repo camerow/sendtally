@@ -1,6 +1,6 @@
 import { router } from "expo-router";
 import React from "react";
-import { ScrollView, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import {
   blockEnd,
   blockWeekOn,
@@ -15,17 +15,8 @@ import { colors } from "@sendtally/design/tokens";
 import { kindLabel } from "@sendtally/features/activities";
 import { weekdayLetters } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
-import {
-  blockOfMembership,
-  blockRecap,
-  columnLabel,
-  loadColumns,
-  useTrainingLog,
-  weekFields,
-  type DoseField,
-} from "@sendtally/features/training";
-import { bodySummary, exerciseName } from "@sendtally/features/workouts";
-import { Chip } from "../../../components/Chip";
+import { blockOfMembership, blockRecap, useTrainingLog } from "@sendtally/features/training";
+import { bodySummary, doseSummary, exerciseName } from "@sendtally/features/workouts";
 import { ScreenFrame } from "../../../components/ScreenFrame";
 import { useApi } from "../../../lib/api";
 import { confirmDestructive } from "../../../lib/confirmDestructive";
@@ -41,7 +32,18 @@ import { workoutLines } from "../plan/planGridRows";
 import { usePlanActions } from "../plan/usePlanActions";
 import { KIND_LOOK } from "../today/kindLook";
 import { type } from "../type";
-import { LoadTable } from "./LoadTable";
+import { ItemLoad } from "./ItemLoad";
+import { LoadSection } from "./LoadSection";
+
+/** "changes W5, W6", or "as written" when no week changes it. */
+const changedWeeks = (changes: readonly Partial<Dose>[]): string => {
+  const weeks = changes.flatMap((c, i) =>
+    Object.keys(c).length > 0 ? [t("plan.weekShort", { n: i + 1 })] : []
+  );
+  return weeks.length === 0
+    ? t("plan.unchanged")
+    : t("plan.changesWeeks", { weeks: weeks.join(", ") });
+};
 
 export type LadderScreenProps = {
   id: string;
@@ -59,9 +61,7 @@ export function LadderScreen({ id, back }: LadderScreenProps): React.ReactElemen
   const { log } = useTrainingLog(useApi());
   const actions = usePlanActions();
   const [turn, setTurn] = React.useState(0);
-  const [picked, setPicked] = React.useState(0);
-  const [added, setAdded] = React.useState<Record<string, DoseField[]>>({});
-  const [adding, setAdding] = React.useState(false);
+  const [open, setOpen] = React.useState<readonly number[]>([0]);
   const { plan } = log;
   const m = plan.memberships.find((x) => x.id === id);
   const block = m === undefined ? null : blockOfMembership(plan, m);
@@ -71,21 +71,16 @@ export function LadderScreen({ id, back }: LadderScreenProps): React.ReactElemen
   const look = KIND_LOOK[w.kind];
   const turns = turnsOf(w.items);
   const items = sessionItems(w.items, turn);
-  const index = Math.min(picked, items.length - 1);
-  const item = items[index];
-  const dose = doseIndex(w.items[index] ?? { doses: [] }, turn);
+  const doseOf = (index: number): number => doseIndex(w.items[index] ?? { doses: [] }, turn);
   const weeks = Array.from({ length: block.weeks }, (_, i) => i + 1);
-  const changes = weeks.map(
-    (week) =>
-      plan.weekChanges.find(
-        (c) => c.membershipId === id && c.week === week && c.dose === dose && c.item === index
-      )?.change ?? {}
-  );
-  const key = `${turn}:${index}`;
-  const columns =
-    item === undefined ? [] : loadColumns(w.kind, item.dose, changes, added[key] ?? []);
-  const more =
-    item === undefined ? [] : weekFields(w.kind, item.dose).filter((f) => !columns.includes(f));
+  const changesOf = (index: number): Partial<Dose>[] =>
+    weeks.map(
+      (week) =>
+        plan.weekChanges.find(
+          (c) =>
+            c.membershipId === id && c.week === week && c.dose === doseOf(index) && c.item === index
+        )?.change ?? {}
+    );
   const current = blockWeekOn(block, today);
   const dated = isDated(block) ? block : null;
   const ended = dated !== null && blockEnd(dated) <= today;
@@ -100,6 +95,31 @@ export function LadderScreen({ id, back }: LadderScreenProps): React.ReactElemen
     w.kind === "hangboard" ? (bodySummary(w)?.split(" · ") ?? []) : workoutLines(w, model);
   const mine = library?.source === "mine";
   const days: readonly number[] = m.weekdays;
+
+  const loadOf = (index: number, header?: React.ReactNode): React.ReactElement | null => {
+    const item = items[index];
+    return item === undefined ? null : (
+      <ItemLoad
+        key={`${turn}:${index}`}
+        kind={w.kind}
+        written={item.dose}
+        changes={changesOf(index)}
+        unit={unit}
+        current={current}
+        done={done}
+        header={header}
+        onChange={(week, change) =>
+          void actions.saveWeekChange({
+            membershipId: id,
+            week,
+            dose: doseOf(index),
+            item: index,
+            change,
+          })
+        }
+      />
+    );
+  };
 
   const remove = (): void =>
     confirmDestructive({
@@ -178,64 +198,41 @@ export function LadderScreen({ id, back }: LadderScreenProps): React.ReactElemen
         />
       )}
       <View style={{ gap: 10 }}>
-        <View
-          style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}
-        >
-          <Label color={colors.gunmetal}>{t("plan.weeklyLoad")}</Label>
-          {more.length > 0 && (
-            <Button
-              label={`+ ${t("plan.addColumn")}`}
-              onPress={() => setAdding(!adding)}
-              variant="link"
-              height={36}
-            />
-          )}
-        </View>
-        {adding && more.length > 0 && item !== undefined && (
-          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}>
-            {more.map((f) => (
-              <Chip
-                key={f}
-                label={columnLabel(w.kind, item.dose, f)}
-                uppercase={false}
-                active={false}
-                onPress={() => {
-                  setAdded({ ...added, [key]: [...(added[key] ?? []), f] });
-                  setAdding(false);
-                }}
+        {items.length === 1 ? (
+          loadOf(0, <Label color={colors.gunmetal}>{t("plan.weeklyLoad")}</Label>)
+        ) : (
+          <>
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
+              <Label color={colors.gunmetal}>{t("plan.weeklyLoad")}</Label>
+              <Button
+                label={t("plan.openAll")}
+                onPress={() => setOpen(items.map((_, i) => i))}
+                variant="link"
+                height={36}
               />
-            ))}
-          </View>
-        )}
-        {items.length > 1 && (
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            <View style={{ flexDirection: "row", gap: 6 }}>
-              {items.map((it, i) => (
-                <Chip
-                  key={i}
-                  label={exerciseName(it.exercise, model.gripName)}
-                  uppercase={false}
-                  active={i === index}
-                  onPress={() => setPicked(i)}
-                />
-              ))}
             </View>
-          </ScrollView>
-        )}
-        {item !== undefined && (
-          <LoadTable
-            key={key}
-            kind={w.kind}
-            written={item.dose}
-            changes={changes}
-            columns={columns}
-            unit={unit}
-            current={current}
-            done={done}
-            onChange={(week, change: Partial<Dose>) =>
-              void actions.saveWeekChange({ membershipId: id, week, dose, item: index, change })
-            }
-          />
+            {items.map((it, i) => (
+              <LoadSection
+                key={`${turn}:${i}`}
+                name={exerciseName(it.exercise, model.gripName)}
+                summary={[doseSummary(w.kind, it.dose, unit), changedWeeks(changesOf(i))].join(
+                  " · "
+                )}
+                open={open.includes(i)}
+                onToggle={() =>
+                  setOpen(open.includes(i) ? open.filter((x) => x !== i) : [...open, i])
+                }
+              >
+                {loadOf(i)}
+              </LoadSection>
+            ))}
+          </>
         )}
         <Text style={[type.body, { fontSize: 13, lineHeight: 19, color: colors.textSecondary }]}>
           {t("plan.loadHint")}

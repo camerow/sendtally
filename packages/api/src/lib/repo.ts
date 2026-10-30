@@ -3134,13 +3134,16 @@ export async function copyBlock(
   ]);
   const now = new Date().toISOString();
   const { start: from } = source;
+  // A template's workouts with no days yet have nothing to schedule.
+  const kept = from === null ? members.filter((m) => m.weekdays_json !== "[]") : members;
+  const keptIds = new Set(kept.map((m) => m.id));
   const { start: to } = copy;
   const startOf = (start: string): string =>
     from === null || to === null ? (to ?? start) : addDays(start, daysBetween(from, to));
-  const ids = new Map(members.map((m) => [m.id, crypto.randomUUID()]));
+  const ids = new Map(kept.map((m) => [m.id, crypto.randomUUID()]));
   await d.batch([
     d.insert(trainingBlocks).values({ user_id: userId, ...copy, updated_at: now }),
-    ...members.map((m) =>
+    ...kept.map((m) =>
       d.insert(memberships).values({
         ...m,
         id: ids.get(m.id) ?? m.id,
@@ -3149,11 +3152,13 @@ export async function copyBlock(
         updated_at: now,
       })
     ),
-    ...changes.map((c) =>
-      d
-        .insert(weekChanges)
-        .values({ ...c, membership_id: ids.get(c.membership_id) ?? c.membership_id })
-    ),
+    ...changes
+      .filter((c) => keptIds.has(c.membership_id))
+      .map((c) =>
+        d
+          .insert(weekChanges)
+          .values({ ...c, membership_id: ids.get(c.membership_id) ?? c.membership_id })
+      ),
   ]);
 }
 

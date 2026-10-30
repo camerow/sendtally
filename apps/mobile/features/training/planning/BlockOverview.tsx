@@ -15,31 +15,46 @@ export type BlockOverviewProps = {
   workout: WorkoutLookup;
   /** A plan just added, lit for a moment. */
   lit?: string;
+  /** The week its chips picked, this week when it opened. */
+  week: number;
+  onPickWeek: (week: number) => void;
 };
 
-/** A block before it ends: its weeks, how this week and the block are going, and its week. */
+/** A block before it ends: its weeks, how the picked week and the block are going, and that week. */
 export function BlockOverview({
   recap,
   plan,
   workout,
   lit,
+  week,
+  onPickWeek,
 }: BlockOverviewProps): React.ReactElement {
   const { today } = useHangData();
   const { block } = recap;
-  const week = recap.weeks[(blockWeekOn(block, today) ?? 0) - 1];
+  const picked = recap.weeks[week - 1];
+  const current = blockWeekOn(block, today);
   return (
     <>
-      <BlockWeekChips block={block} today={today} />
-      {week !== undefined && (
+      <BlockWeekChips block={block} today={today} picked={week} onPick={onPickWeek} />
+      {current !== null && picked !== undefined && (
         <SummaryTiles
           stats={[
-            { value: doneOfShort(week), label: t("hang.weekThis") },
+            {
+              value: doneOfShort(picked),
+              label: week === current ? t("hang.weekThis") : t("plan.weekNumber", { n: week }),
+            },
             { value: doneOfShort(recap.soFar), label: t("plan.soFar") },
             { value: effortText(recap.effort), label: t("hang.statAvgEffort") },
           ]}
         />
       )}
-      <BlockWeek block={block} members={blockMembers(plan, block)} workout={workout} lit={lit} />
+      <BlockWeek
+        block={block}
+        members={blockMembers(plan, block)}
+        workout={workout}
+        lit={lit}
+        week={week}
+      />
     </>
   );
 }
