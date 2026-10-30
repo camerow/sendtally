@@ -51,7 +51,7 @@ describe("Timer", () => {
     expect(screen.getByText("Get ready")).toBeTruthy();
     expect(screen.getByText("6 sets ahead")).toBeTruthy();
     expect(StyleSheet.flatten(screen.getByText("End").props.style).color).toBe(colors.gold);
-    await fireEvent.press(screen.getByLabelText("Minimise"));
+    await fireEvent.press(screen.getByLabelText("Minimize"));
     expect(router.back).toHaveBeenCalled();
 
     await advance(5000);

@@ -76,7 +76,7 @@ export function PlanGrid({
       ]}
     >
       <View style={{ flexDirection: "row", alignItems: "flex-end", gap: 5 }}>
-        <View style={{ flex: 1, gap: 2 }}>
+        <View style={{ flex: 1, flexDirection: "row", alignItems: "center", gap: 10 }}>
           <Label color={colors.gunmetal}>{title}</Label>
           {action}
         </View>

@@ -5,7 +5,7 @@ export const importCsv = {
   "import.stepDone": "3 Done",
   "import.dropLabel": "Drop a CSV here, or choose a file",
   "import.dropHint":
-    "Kaya exports are recognised automatically. Anything else uses the Sendtally CSV format below. Nothing is saved until you confirm on the next step.",
+    "Kaya exports are recognized automatically. Anything else uses the Sendtally CSV format below. Nothing is saved until you confirm on the next step.",
   "import.formatLabel": "Sendtally CSV format",
   "import.downloadTemplate": "Download template",
   "import.formatBody":
@@ -48,7 +48,7 @@ export const importCsv = {
     "Everything else imports as shown below. Fix the file and choose it again, or continue without these rows.",
   "import.nothingFound":
     "This file is not a Kaya export or in the Sendtally CSV format. Convert it with the prompt below, then choose the converted file.",
-  "import.issueNoHeader": "The first row is not a header Sendtally recognises.",
+  "import.issueNoHeader": "The first row is not a header Sendtally recognizes.",
   "import.issueMissingDate": "No date, and no session above to continue.",
   "import.issueBadDate": '"{value}" is not a date in YYYY-MM-DD form.',
   "import.issueMissingGrade": "No grade.",

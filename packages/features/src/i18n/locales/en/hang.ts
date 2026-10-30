@@ -73,7 +73,7 @@ export const hang = {
   "hang.statusStarts": "Starts {date}",
   "hang.statusOngoing": "Ongoing",
 
-  "hang.customise": "Customise",
+  "hang.customise": "Customize",
   "hang.gripTapToChange": "Exercise · tap to change",
   "hang.edgeDepth": "Edge depth",
   "hang.shallowerEdge": "Shallower edge",
@@ -217,7 +217,6 @@ export const hang = {
   "hang.decrease": "Decrease {field}",
   "hang.increase": "Increase {field}",
 
-  "hang.gripKicker": "Fingers · grip",
   "hang.mixedSetups": "Mixed setups",
   "hang.allSetups": "All",
   "hang.compareGrips": "Compare exercises",

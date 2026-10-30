@@ -37,7 +37,7 @@ describe("Checklist player", () => {
     await renderWithHang(<ChecklistScreen run={run} />);
     expect(screen.getByText("Mobility · 12m")).toBeTruthy();
     expect(screen.queryByText("Back")).toBeNull();
-    await fireEvent.press(screen.getByLabelText("Minimise"));
+    await fireEvent.press(screen.getByLabelText("Minimize"));
     expect(router.back).toHaveBeenCalled();
     const order = (): string[] =>
       readingOrder("Cat-cow, 2 sets", "Rest 1:00", "Next: Wrist circles", "Wrist circles, 1 set");

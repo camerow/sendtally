@@ -3,7 +3,7 @@ import { Text, View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
 import { kindLabel } from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
-import { focusLabel } from "@sendtally/features/training";
+import { focusBeside } from "@sendtally/features/training";
 import { durationLabel } from "@sendtally/features/sessions";
 import { workoutMinutes, type LibraryWorkout, type WorkoutUse } from "@sendtally/features/workouts";
 import { Label } from "../components/Label";
@@ -19,7 +19,7 @@ export function LibraryIntro({ workout, use }: LibraryIntroProps): React.ReactEl
   const minutes = workoutMinutes(workout, use?.count ?? 0);
   const kicker = [
     kindLabel(workout.kind),
-    ...(workout.focus === null ? [] : [focusLabel(workout.focus)]),
+    ...focusBeside(kindLabel(workout.kind), workout.focus),
     ...(workout.source === "mine" ? [t("workouts.mine")] : []),
   ].join(" · ");
   const meta = [

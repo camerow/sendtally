@@ -13,7 +13,7 @@ export const tally = {
   "tally.sentGrade": "Sent {grade}",
   "tally.undo": "Undo",
   "tally.editClimb": "Edit climb",
-  "tally.minimise": "Minimise",
+  "tally.minimise": "Minimize",
   "tally.finish": "Finish",
   "tally.howHard": "How hard was it?",
   "tally.skipEffort": "Skip it and the session rates itself.",

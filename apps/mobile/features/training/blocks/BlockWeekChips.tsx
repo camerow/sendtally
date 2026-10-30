@@ -1,5 +1,5 @@
 import React from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { Pressable, ScrollView, Text, useWindowDimensions, View } from "react-native";
 import { blockWeekOn, type Block, type CalendarDate } from "@sendtally/core/hang";
 import { colors, fonts } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
@@ -8,6 +8,9 @@ import { FERN_TINT } from "../components/tints";
 
 const SCROLL_FROM = 9;
 const CHIP_MIN = 44;
+const GUTTER = 18;
+// Seven and a half chips across, so the cut-off one says the row scrolls.
+const SHOWN = 7.5;
 const GAP = 6;
 
 export type BlockWeekChipsProps = {
@@ -34,6 +37,8 @@ export function BlockWeekChips({
   const dark = picked ?? now;
   // Up to eight weeks share the row; more keep a usable width and scroll, opened on this week.
   const scrolls = block.weeks >= SCROLL_FROM;
+  const { width } = useWindowDimensions();
+  const chipWidth = Math.max(CHIP_MIN, (width - GUTTER * 2 - GAP * 7) / SHOWN);
   const chips = Array.from({ length: block.weeks }, (_, i) => {
     const week = i + 1;
     const look =
@@ -53,7 +58,7 @@ export function BlockWeekChips({
         accessibilityLabel={t("plan.weekNumber", { n: week })}
         style={press({
           height: 36,
-          ...(scrolls ? { minWidth: CHIP_MIN } : { flex: 1 }),
+          ...(scrolls ? { width: chipWidth } : { flex: 1 }),
           paddingHorizontal: 11,
           borderRadius: 8,
           alignItems: "center",
@@ -78,7 +83,7 @@ export function BlockWeekChips({
     <ScrollView
       horizontal
       showsHorizontalScrollIndicator={false}
-      contentOffset={{ x: Math.max(0, (dark - 2) * (CHIP_MIN + GAP)), y: 0 }}
+      contentOffset={{ x: Math.max(0, (dark - 2) * (chipWidth + GAP)), y: 0 }}
       contentContainerStyle={{ gap: GAP }}
     >
       {chips}

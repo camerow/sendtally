@@ -42,7 +42,7 @@ beforeEach(() => {
 describe("GripScreen", () => {
   it("shows the grip across workouts on its most used setup", async () => {
     await renderWithHang(<GripScreen id="half" />, hangData({ sessions }));
-    expect(screen.getByText("Fingers · grip")).toBeTruthy();
+    expect(screen.getByText("Fingers")).toBeTruthy();
     expect(screen.getByText("Half crimp")).toBeTruthy();
     expect(screen.getAllByText("20\u00A0mm · 10s").length).toBeGreaterThan(1);
     expect(screen.getByText("Best · Sep 8")).toBeTruthy();

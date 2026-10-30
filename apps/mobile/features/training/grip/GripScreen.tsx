@@ -10,6 +10,7 @@ import {
   gripTiles,
   milestoneRows,
 } from "@sendtally/features/hang";
+import { kindLabel } from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
 import { LinkRow } from "../../../components/LinkRow";
 import { ScreenFrame } from "../../../components/ScreenFrame";
@@ -96,7 +97,7 @@ export function GripScreen({ id }: GripScreenProps): React.ReactElement {
       <View style={{ gap: 8 }}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
           <CategoryMark kind="hangboard" size={28} />
-          <Label color={colors.textSecondary}>{t("hang.gripKicker")}</Label>
+          <Label color={colors.textSecondary}>{kindLabel("hangboard")}</Label>
         </View>
         <Title size={38}>{name}</Title>
       </View>

@@ -103,7 +103,7 @@ describe("Hangboard workout", () => {
       <WorkoutScreen id="fingers-ab" adding={{ date: "2026-10-01", blockId: "b1" }} />
     );
     expect(screen.queryByText("Start")).toBeNull();
-    expect(screen.queryByText("Customise")).toBeNull();
+    expect(screen.queryByText("Customize")).toBeNull();
     expect(screen.queryByLabelText("More")).toBeNull();
     await fireEvent.press(screen.getByText("Add to plan"));
     expect(router.push).toHaveBeenCalledWith({

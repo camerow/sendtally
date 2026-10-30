@@ -16,10 +16,15 @@ import { HangSheet } from "../data/HangSheet";
 import { usePlanActions } from "../plan/usePlanActions";
 import { type } from "../type";
 
-export type PlanAgainSheetProps = { block: Block; onClose: () => void };
+export type PlanAgainSheetProps = {
+  block: Block;
+  /** What back says on the block it makes: where this block was opened from. */
+  back?: string;
+  onClose: () => void;
+};
 
 /** Plan a block again, or schedule a template, from any day on: its weeks run from that weekday, and the copy opens once it is made. */
-export function PlanAgainSheet({ block, onClose }: PlanAgainSheetProps): React.ReactElement {
+export function PlanAgainSheet({ block, back, onClose }: PlanAgainSheetProps): React.ReactElement {
   const { today } = useHangData();
   const actions = usePlanActions();
   const [start, setStart] = React.useState(today);
@@ -40,7 +45,10 @@ export function PlanAgainSheet({ block, onClose }: PlanAgainSheetProps): React.R
     setBusy(false);
     if (!made) return;
     onClose();
-    router.replace({ pathname: "/plan/block/[id]", params: { id } });
+    router.replace({
+      pathname: "/plan/block/[id]",
+      params: back === undefined ? { id } : { id, back },
+    });
   };
 
   return (
@@ -54,10 +62,10 @@ export function PlanAgainSheet({ block, onClose }: PlanAgainSheetProps): React.R
         />
         <MonthCalendar
           selected={start}
-          picked={Array.from({ length: 7 }, (_, i) => addDays(start, i))}
+          picked={[start]}
           min={today}
           today={today}
-          shaded={() => false}
+          shaded={(d) => d > start && d < addDays(start, 7)}
           onPick={setStart}
         />
         <Text style={[type.body, { fontSize: 13, lineHeight: 19, color: colors.textSecondary }]}>

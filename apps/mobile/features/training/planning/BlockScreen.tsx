@@ -169,7 +169,7 @@ export function BlockScreen({
           )}
         </>
       )}
-      {again && <PlanAgainSheet block={block} onClose={() => setAgain(false)} />}
+      {again && <PlanAgainSheet block={block} back={backLabel} onClose={() => setAgain(false)} />}
     </ScreenFrame>
   );
 }

@@ -35,3 +35,7 @@ export const focusParam = (focus: Focus | null): string => focus ?? "general";
 /** The focus a route param names, null for "general", undefined for anything else. */
 export const readFocus = (param: string | undefined): Focus | null | undefined =>
   param === "general" ? null : FOCI.find((f) => f === param);
+
+/** A focus beside a kind's label, as a kicker joins them: left out when it repeats the kind. */
+export const focusBeside = (kind: string, focus: Focus | null): string[] =>
+  focus === null || focusLabel(focus) === kind ? [] : [focusLabel(focus)];

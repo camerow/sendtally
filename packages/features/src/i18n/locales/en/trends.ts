@@ -18,7 +18,7 @@ export const trends = {
   "trends.scopeMore": "More",
   "trends.gymGrades": "Gym grades",
   "trends.gymGradesBody":
-    "Gyms where you log on their own circuit colours. Trends read in those colours, never converted to V.",
+    "Gyms where you log on their own circuit colors. Trends read in those colors, never converted to V.",
   "trends.place": "Place",
   "trends.everywhere": "Everywhere",
   "trends.inside": "Inside",

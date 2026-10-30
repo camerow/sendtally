@@ -80,7 +80,7 @@ describe("Sets player", () => {
       ],
     });
     expect(screen.getByText("Strength · 45m")).toBeTruthy();
-    await fireEvent.press(screen.getByLabelText("Minimise"));
+    await fireEvent.press(screen.getByLabelText("Minimize"));
     expect(router.back).toHaveBeenCalled();
     expect(screen.getByText("Heavy squats, then rows.")).toBeTruthy();
     expect(screen.getByText("Target effort 8")).toBeTruthy();

@@ -137,12 +137,12 @@ describe("newBestOf", () => {
 });
 
 describe("gripMeta", () => {
-  it("reads the best on its edge, with the last day when dated, or not done yet", () => {
+  it("reads the best on its edge, or with the last day in its place when dated, or not done yet", () => {
     expect(gripMeta(series, "half", "2026-09-29", "kg").replace(/\s/g, " ")).toBe(
       "Best +6 kg · 20 mm"
     );
     expect(gripMeta(series, "half", "2026-09-29", "kg", true).replace(/\s/g, " ")).toBe(
-      "Best +6 kg · 20 mm · Sep 22"
+      "Best +6 kg · Sep 22"
     );
     expect(gripMeta(series, "open", "2026-09-29", "kg", true).replace(/\s/g, " ")).toBe(
       "Not done yet"

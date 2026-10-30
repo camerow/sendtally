@@ -218,7 +218,6 @@ export const hang = {
   "hang.decrease": "Reducir {field}",
   "hang.increase": "Aumentar {field}",
 
-  "hang.gripKicker": "Dedos · agarre",
   "hang.mixedSetups": "Configuraciones mezcladas",
   "hang.allSetups": "Todas",
   "hang.compareGrips": "Comparar ejercicios",

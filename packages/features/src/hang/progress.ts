@@ -198,6 +198,7 @@ export function gripMeta(
       : t(best === null ? "workouts.exerciseLast" : "workouts.exerciseBest", {
           value: loadLabel(kind, kg, unit),
         });
-  const line = kind === "pull" ? load : `${load} · ${t("hang.edgeMm", { n: top.edgeMm })}`;
-  return dated ? `${line} · ${dayMonth(last.date)}` : line;
+  // Dated, as a picker shows it beside the setup it already names, it leaves the edge out.
+  if (dated) return `${load} · ${dayMonth(last.date)}`;
+  return kind === "pull" ? load : `${load} · ${t("hang.edgeMm", { n: top.edgeMm })}`;
 }

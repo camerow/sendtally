@@ -202,7 +202,7 @@ describe("Workout editor", () => {
   it("lists Fingers exercises with their best and last day, each with a pencil to its editor", async () => {
     await renderWithHang(<WorkoutEditorScreen from="max10" />, hangData({ sessions: [aHang()] }));
     await fireEvent.press(screen.getByLabelText("Swap exercise"));
-    expect(screen.getByText(/^Best bodyweight · 20\smm · Sep 20$/)).toBeTruthy();
+    expect(screen.getByText(/^Best bodyweight · Sep 20$/)).toBeTruthy();
     expect(screen.getAllByText("Not done yet").length).toBeGreaterThan(0);
     await fireEvent.press(screen.getByLabelText("Edit Open hand"));
     expect(screen.queryByLabelText("Edit Open hand")).toBeNull();

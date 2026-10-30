@@ -46,7 +46,7 @@ describe("Grip picker", () => {
     await renderPicker(jest.fn(), ["half"], [aHang({ gripId: "g1", loadKg: 5 })]);
     expect(screen.getByText("Mono")).toBeTruthy();
     expect(screen.queryByText("Front 3")).toBeNull();
-    expect(screen.getByText(/Best \+5\skg · 20\smm · Sep 20/)).toBeTruthy();
+    expect(screen.getByText(/Best \+5\skg · Sep 20/)).toBeTruthy();
     expect(screen.getAllByText("Not done yet").length).toBeGreaterThan(0);
   });
 

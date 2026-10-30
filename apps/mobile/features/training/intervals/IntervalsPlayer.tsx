@@ -10,7 +10,7 @@ import {
 } from "@sendtally/core/hang";
 import { kindLabel } from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
-import { focusLabel } from "@sendtally/features/training";
+import { focusBeside } from "@sendtally/features/training";
 import { phaseLook } from "../timer/phaseLook";
 import { SetArrows } from "../timer/SetArrows";
 import { TimerFrame } from "../timer/TimerFrame";
@@ -87,7 +87,7 @@ export function IntervalsPlayer({
       name={workout.title}
       meta={[
         kindLabel(workout.kind),
-        ...(workout.link.focus === null ? [] : [focusLabel(workout.link.focus)]),
+        ...focusBeside(kindLabel(workout.kind), workout.link.focus),
         ...(targetRpe == null ? [] : [t("plan.targetValue", { n: targetRpe })]),
       ].join(" · ")}
       controls={{

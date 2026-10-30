@@ -5,7 +5,7 @@ import type { Focus } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { kindLabel } from "@sendtally/features/activities";
 import { durationLabel } from "@sendtally/features/sessions";
-import { focusLabel } from "@sendtally/features/training";
+import { focusBeside } from "@sendtally/features/training";
 import { LiveClock } from "../../../components/LiveClock";
 import { LIVE_HEADER, MinimiseButton } from "../../../components/MinimiseButton";
 import { KIND_LOOK } from "../today/kindLook";
@@ -53,7 +53,7 @@ export function PlayerHeader({
         <Label color={KIND_LOOK[kind].ink}>
           {[
             kindLabel(kind),
-            focus === null ? null : focusLabel(focus),
+            ...focusBeside(kindLabel(kind), focus),
             minutes === null ? null : durationLabel(minutes),
           ]
             .filter((p) => p !== null)
