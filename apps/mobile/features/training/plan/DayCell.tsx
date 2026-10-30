@@ -60,7 +60,7 @@ export function DayCell({
       accessibilityRole="checkbox"
       accessibilityState={{ checked: on }}
       accessibilityLabel={accessibilityLabel}
-      hitSlop={3}
+      hitSlop={{ top: 10, bottom: 10, left: 2, right: 2 }}
       style={press(box)}
     >
       {mark}

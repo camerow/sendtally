@@ -10,7 +10,7 @@ import type {
 import { kindLabel } from "@sendtally/features/activities";
 import type { OccurrenceStatus, WorkoutLookup } from "@sendtally/features/training";
 import { durationLabel } from "@sendtally/features/sessions";
-import { loadLabel, type HangModel } from "@sendtally/features/hang";
+import { humanDuration, loadLabel, type HangModel } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import { bodySummary, workoutMinutes } from "@sendtally/features/workouts";
 import { openMembership } from "./openMembership";
@@ -86,6 +86,10 @@ export function weekLines(
         text: loadLabel("hang", c.weightKg ?? dose.weightKg ?? 0, unit),
         changed: c.weightKg !== undefined,
       },
+      ...(c.sets === undefined
+        ? []
+        : [{ text: t("activities.setCount", { count: c.sets }), changed: true }]),
+      ...(c.onS === undefined ? [] : [{ text: humanDuration(c.onS), changed: true }]),
     ];
     return [[{ text: first }], parts];
   }

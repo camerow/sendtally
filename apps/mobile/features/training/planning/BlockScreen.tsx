@@ -46,6 +46,8 @@ export function BlockScreen({
   fresh = false,
 }: BlockScreenProps): React.ReactElement | null {
   const lit = useLit(highlight);
+  // Coming back from an add replaces the route's params, so keep where back went first.
+  const [backLabel] = React.useState(back);
   const { today } = useHangData();
   const api = useApi();
   const plan = usePlan(api);
@@ -84,7 +86,7 @@ export function BlockScreen({
 
   return (
     <ScreenFrame
-      backLabel={back}
+      backLabel={backLabel}
       action={
         <DetailActions
           onEdit={

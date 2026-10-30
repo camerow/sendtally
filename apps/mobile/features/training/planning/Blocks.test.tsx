@@ -4,7 +4,7 @@ import { router } from "expo-router";
 import React from "react";
 import { Alert, type AlertButton } from "react-native";
 import type { Plan, WorkoutRecord } from "@sendtally/api-client";
-import { hangData, renderWithHang } from "../data/renderWithHang";
+import { hangData, readingOrder, renderWithHang } from "../data/renderWithHang";
 import { PlanGrid } from "../plan/PlanGrid";
 import { planGridRows } from "../plan/planGridRows";
 import { BlockFormScreen } from "./BlockFormScreen";
@@ -177,6 +177,27 @@ describe("block card", () => {
       pathname: "/plan/membership/[id]",
       params: { id: "m1", back: "Train" },
     });
+  });
+});
+
+describe("a dated week", () => {
+  it("puts each date under its weekday when the block starts mid-week", async () => {
+    // Wednesday 23 September: week 2 runs Wednesday 30 to Tuesday 6 October.
+    const midweek: Plan = {
+      ...plan,
+      blocks: [{ id: "b1", name: "Winter base", start: "2026-09-23", weeks: 4, focus: null }],
+    };
+    await renderWithHang(<BlockScreen id="b1" />, hangData(), { workouts: [squat], plan: midweek });
+    expect(screen.getByText(/^Week 1 · /)).toBeTruthy();
+    expect(readingOrder("28", "29", "23", "24", "25", "26", "27")).toEqual([
+      "28",
+      "29",
+      "23",
+      "24",
+      "25",
+      "26",
+      "27",
+    ]);
   });
 });
 

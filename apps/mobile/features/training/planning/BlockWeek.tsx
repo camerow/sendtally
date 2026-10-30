@@ -1,6 +1,13 @@
 import React from "react";
 import { Text, View } from "react-native";
-import { addDays, isDated, type Block, type Membership, type Weekday } from "@sendtally/core/hang";
+import {
+  addDays,
+  isDated,
+  weekday,
+  type Block,
+  type Membership,
+  type Weekday,
+} from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { dayMonth } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
@@ -61,10 +68,9 @@ export function BlockWeek({
   const [adding, setAdding] = React.useState(false);
   const template = !isDated(block);
   const from = isDated(block) && week !== undefined ? addDays(block.start, (week - 1) * 7) : null;
-  const statuses = React.useMemo(
-    () => (from === null ? null : DAYS.map((i) => trainingDay(log, addDays(from, i), today).plans)),
-    [from, log, today]
-  );
+  // A block week runs from its start's weekday, so each weekday column finds its own date.
+  const dates = from === null ? null : DAYS.map((d) => addDays(from, (d - weekday(from) + 7) % 7));
+  const statuses = dates === null ? null : dates.map((date) => trainingDay(log, date, today).plans);
   const options: GridOptions = {
     back: block.name,
     ...(template &&
@@ -131,9 +137,7 @@ export function BlockWeek({
                 ? t("plan.weekNumber", { n: week })
                 : undefined
           }
-          dates={
-            from === null ? undefined : DAYS.map((i) => String(Number(addDays(from, i).slice(8))))
-          }
+          dates={dates === null ? undefined : dates.map((d) => String(Number(d.slice(8))))}
         />
       )}
       {template &&
