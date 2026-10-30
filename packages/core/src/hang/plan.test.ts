@@ -17,14 +17,20 @@ import {
   sessionItems,
   timeUnitsOf,
   turnsOf,
-  type Block,
+  type DatedBlock,
   type Dose,
   type Membership,
   type WeekChange,
   type Workout,
 } from ".";
 
-const block: Block = { id: "b", name: "Winter base", start: "2026-11-02", weeks: 6, focus: null };
+const block: DatedBlock = {
+  id: "b",
+  name: "Winter base",
+  start: "2026-11-02",
+  weeks: 6,
+  focus: null,
+};
 
 const squat: Workout = {
   id: "squat",
@@ -58,6 +64,7 @@ describe("blocks", () => {
   it("numbers weeks from the start and knows nothing outside the block", () => {
     expect(blockEnd(block)).toBe("2026-12-14");
     expect.soft(blockWeekOn(block, "2026-11-01")).toBeNull();
+    expect.soft(blockWeekOn({ ...block, start: null }, "2026-11-02")).toBeNull();
     expect.soft(blockWeekOn(block, "2026-11-02")).toBe(1);
     expect.soft(blockWeekOn(block, "2026-11-08")).toBe(1);
     expect.soft(blockWeekOn(block, "2026-11-09")).toBe(2);

@@ -5,6 +5,7 @@ import {
   blockEnd,
   blockWeekOn,
   doseIndex,
+  isDated,
   letterOf,
   sessionItems,
   turnsOf,
@@ -82,8 +83,12 @@ export function LadderScreen({ id }: LadderScreenProps): React.ReactElement | nu
   const more =
     item === undefined ? [] : weekFields(w.kind, item.dose).filter((f) => !columns.includes(f));
   const current = blockWeekOn(block, today);
-  const ended = blockEnd(block) <= today;
-  const ran = blockRecap(log, block, today).workouts.find((r) => r.membershipId === id)?.weeks;
+  const dated = isDated(block) ? block : null;
+  const ended = dated !== null && blockEnd(dated) <= today;
+  const ran =
+    dated === null
+      ? undefined
+      : blockRecap(log, dated, today).workouts.find((r) => r.membershipId === id)?.weeks;
   const done = weeks.map((week) =>
     ended || (current !== null && week <= current) ? (ran?.[week - 1] ?? null) : null
   );

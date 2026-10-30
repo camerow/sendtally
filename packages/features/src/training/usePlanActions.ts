@@ -15,7 +15,7 @@ export type PlanActions = {
   /** An empty change puts the item back as written for that week. */
   saveWeekChange: (change: WeekChange) => Promise<void>;
   /** Plans `from` again as block `to` from `start`, with its plans; false when it failed. */
-  copyBlock: (from: string, to: string, start: string) => Promise<boolean>;
+  copyBlock: (from: string, to: string, start: string | null) => Promise<boolean>;
 };
 
 const upsert = <T extends { id: string }>(list: readonly T[], item: T): T[] =>

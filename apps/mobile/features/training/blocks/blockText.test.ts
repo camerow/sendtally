@@ -1,8 +1,8 @@
 import { describe, expect, it } from "@jest/globals";
-import type { Block } from "@sendtally/core/hang";
+import type { DatedBlock } from "@sendtally/core/hang";
 import { blockDates, blockTag } from "./blockText";
 
-const block: Block = {
+const block: DatedBlock = {
   id: "b1",
   name: "Autumn finger block",
   start: "2026-09-28",

@@ -28,12 +28,12 @@ function Group({
   );
 }
 
-/** Train > Blocks: the running block on top, then plans with no block, then upcoming and past blocks. */
+/** Train > Blocks: the running block on top, then plans with no block, then upcoming blocks, templates and past blocks. */
 export function BlocksList(): React.ReactElement {
   const { today, model } = useHangData();
   const { log } = useTrainingLog(useApi());
   const { plan, workout } = log;
-  const { current, upcoming, past } = blockGroups(plan.blocks, today);
+  const { current, upcoming, templates, past } = blockGroups(plan.blocks, today);
   const ongoing = planGridRows(
     liveMembers(plan, today).filter((m) => m.blockId === null),
     workout,
@@ -66,6 +66,18 @@ export function BlocksList(): React.ReactElement {
               id={b.id}
               name={b.name}
               meta={`${t("plan.startsOn", { date: shortDate(b.start) })} · ${weeks(b.weeks)}`}
+            />
+          ))}
+        </Group>
+      )}
+      {templates.length > 0 && (
+        <Group label={t("plan.templates")}>
+          {templates.map((b) => (
+            <BlockRow
+              key={b.id}
+              id={b.id}
+              name={b.name}
+              meta={`${weeks(b.weeks)} · ${t("plan.workoutCount", { count: blockMembers(plan, b).length })}`}
             />
           ))}
         </Group>

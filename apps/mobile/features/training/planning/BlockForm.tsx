@@ -44,11 +44,17 @@ export function BlockForm({ initial, highlight }: BlockFormProps): React.ReactEl
   const save = (): void => {
     const id = isNew ? randomUUID() : block.id;
     void actions.saveBlock({ ...block, id, name });
-    // Weekly plans start with their block, so they move with it.
-    if (!isNew && block.start !== initial.start && plan.status === "ready")
+    // Weekly plans start with their block, so they move with it; a template's all start with it.
+    const { start } = block;
+    if (!isNew && start !== null && start !== initial.start && plan.status === "ready")
       plan.data.memberships
-        .filter((m) => m.blockId === id && m.weekdays.length > 0 && m.start === initial.start)
-        .forEach((m) => void actions.saveMembership({ ...m, start: block.start }));
+        .filter(
+          (m) =>
+            m.blockId === id &&
+            m.weekdays.length > 0 &&
+            (initial.start === null || m.start === initial.start)
+        )
+        .forEach((m) => void actions.saveMembership({ ...m, start }));
     if (isNew) router.replace({ pathname: "/plan/block/[id]", params: { id } });
     else router.back();
   };
@@ -114,6 +120,7 @@ export function BlockForm({ initial, highlight }: BlockFormProps): React.ReactEl
         value={block.start}
         min={isNew ? today : null}
         onChange={(start) => update({ start })}
+        onNone={isNew || initial.start === null ? () => update({ start: null }) : undefined}
       />
       <Stepper
         value={block.weeks}

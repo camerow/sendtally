@@ -3100,7 +3100,9 @@ function only<T>(rows: readonly T[]): T {
 
 /**
  * Plans the block again from `copy.start`: a new block of the same name and length
- * with every membership and week change of the old one, shifted by the same days.
+ * with every membership and week change of the old one, shifted by the same days. A
+ * template has no dates to shift from, so its plans start with the copy; a copy with
+ * no start is a template, keeping the dates it had.
  */
 export async function copyBlock(
   db: D1Database,
@@ -3131,7 +3133,10 @@ export async function copyBlock(
       ),
   ]);
   const now = new Date().toISOString();
-  const shift = daysBetween(source.start, copy.start);
+  const { start: from } = source;
+  const { start: to } = copy;
+  const startOf = (start: string): string =>
+    from === null || to === null ? (to ?? start) : addDays(start, daysBetween(from, to));
   const ids = new Map(members.map((m) => [m.id, crypto.randomUUID()]));
   await d.batch([
     d.insert(trainingBlocks).values({ user_id: userId, ...copy, updated_at: now }),
@@ -3140,7 +3145,7 @@ export async function copyBlock(
         ...m,
         id: ids.get(m.id) ?? m.id,
         block_id: copy.id,
-        start: addDays(m.start, shift),
+        start: startOf(m.start),
         updated_at: now,
       })
     ),

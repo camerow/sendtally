@@ -228,6 +228,59 @@ describe("plan again", () => {
   });
 });
 
+describe("templates", () => {
+  const withTemplate: Plan = {
+    ...plan,
+    blocks: [
+      ...plan.blocks,
+      { id: "t1", name: "Base to peak", start: null, weeks: 6, focus: null },
+    ],
+    memberships: [
+      ...plan.memberships,
+      { id: "m9", workoutId: "squat", blockId: "t1", weekdays: [0], start: "2026-09-01" },
+    ],
+  };
+
+  it("lists templates between upcoming and past blocks", async () => {
+    await renderWithHang(<BlocksList />, hangData(), { workouts: [squat], plan: withTemplate });
+    expect(screen.getByText("Templates")).toBeTruthy();
+    expect(screen.getByText("6 weeks · 1 workout")).toBeTruthy();
+  });
+
+  it("opens a template with its weeks and workouts, and schedules a copy", async () => {
+    await renderWithHang(<BlockScreen id="t1" />, hangData(), {
+      workouts: [squat],
+      plan: withTemplate,
+    });
+    expect(screen.getByText("Template")).toBeTruthy();
+    expect(screen.getByText("6 weeks · not scheduled")).toBeTruthy();
+    expect(screen.queryByText("This week")).toBeNull();
+    expect(screen.getByLabelText("Back squat")).toBeTruthy();
+    await fireEvent.press(screen.getByText("Schedule"));
+    await fireEvent.press(screen.getAllByText("Schedule")[0]!);
+    expect(mockPlan.copyBlock).toHaveBeenCalledWith("t1", "b-new", "2026-09-28");
+  });
+
+  it("saves any block as a template from its ··· menu", async () => {
+    await renderWithHang(<BlockScreen id="b1" />, hangData(), { workouts: [squat], plan });
+    await fireEvent.press(screen.getByLabelText("More"));
+    await fireEvent.press(screen.getByText("Save as template"));
+    expect(mockPlan.copyBlock).toHaveBeenCalledWith("b1", "b-new", null);
+  });
+
+  it("saves a new block with no start as a template", async () => {
+    await renderWithHang(<BlockFormScreen />, hangData(), { workouts: [squat], plan });
+    await fireEvent.changeText(screen.getByLabelText("Name"), "Base to peak");
+    await fireEvent.press(screen.getByLabelText(/^Starts, /));
+    await fireEvent.press(screen.getByText("No start date, keep it as a template"));
+    expect(screen.getByText("not scheduled")).toBeTruthy();
+    await fireEvent.press(screen.getByText("Save"));
+    expect(mockPlan.saveBlock).toHaveBeenCalledWith(
+      expect.objectContaining({ name: "Base to peak", start: null })
+    );
+  });
+});
+
 describe("block weeks", () => {
   it("lays the weeks out as a table, gold where a week differs from as written", async () => {
     await renderWithHang(<LadderScreen id="m1" />, hangData(), { workouts: [squat], plan });

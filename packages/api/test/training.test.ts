@@ -580,6 +580,28 @@ describe("blocks and memberships", () => {
     ]);
     expect((await call(userId, "POST", "/v1/blocks/nope/copy", copy)).status).toBe(404);
   });
+
+  it("saves a block as a template with no start, and schedules it from the week picked", async () => {
+    const userId = "user_templates";
+    await call(userId, "PUT", "/v1/blocks/b1", blockBody);
+    await call(userId, "PUT", "/v1/memberships/m1", { ...membershipBody, start: "2026-11-04" });
+    const saved = await call(userId, "POST", "/v1/blocks/b1/copy", { id: "t1", start: null });
+    expect(await json(saved)).toEqual({
+      block: { ...blockBody, focus: null, id: "t1", start: null },
+    });
+    await call(userId, "POST", "/v1/blocks/t1/copy", { id: "b2", start: "2027-01-04" });
+    const after = await plan(userId);
+    expect(Object.fromEntries(after.blocks.map((b) => [b.id, b.start]))).toEqual({
+      b1: blockBody.start,
+      t1: null,
+      b2: "2027-01-04",
+    });
+    const scheduled = after.memberships.filter((m) => m.blockId === "b2");
+    expect(scheduled.map((m) => m.start)).toEqual(["2027-01-04"]);
+    expect((await call(userId, "PUT", "/v1/blocks/t2", { ...blockBody, start: null })).status).toBe(
+      200
+    );
+  });
 });
 
 type ExerciseList = { exercises: { id: string; name: string; kind: string }[] };

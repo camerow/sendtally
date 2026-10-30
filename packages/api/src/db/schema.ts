@@ -616,7 +616,8 @@ export const activities = sqliteTable(
   ]
 );
 
-// A run of weeks from a start date. Memberships join it by their block_id.
+// A run of weeks from a start date, or with none a template to schedule. Memberships
+// join it by their block_id.
 export const trainingBlocks = sqliteTable(
   "training_blocks",
   {
@@ -625,7 +626,7 @@ export const trainingBlocks = sqliteTable(
       .references(() => users.id),
     id: text("id").notNull(),
     name: text("name").notNull(),
-    start: text("start").notNull(),
+    start: text("start"),
     weeks: integer("weeks").notNull(),
     focus: text("focus", { enum: FOCI }),
     updated_at: text("updated_at").notNull(),

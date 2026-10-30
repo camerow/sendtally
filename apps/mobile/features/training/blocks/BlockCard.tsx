@@ -1,7 +1,7 @@
 import { router } from "expo-router";
 import React from "react";
 import { Pressable, Text, View } from "react-native";
-import type { Block, Membership } from "@sendtally/core/hang";
+import type { DatedBlock, Membership } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
 import type { WorkoutLookup } from "@sendtally/features/training";
@@ -17,7 +17,7 @@ import { type } from "../type";
 import { blockDates } from "./blockText";
 
 export type BlockCardProps = {
-  block: Block;
+  block: DatedBlock;
   members: readonly Membership[];
   workout: WorkoutLookup;
 };

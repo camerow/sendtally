@@ -22,7 +22,7 @@ import {
 } from "./transforms";
 import { logCountLabel } from "../sessions/years";
 import type { LogTraining } from "./types";
-import type { Block } from "@sendtally/core/hang";
+import type { DatedBlock } from "@sendtally/core/hang";
 
 function entry(overrides: Partial<JournalEntry> = {}): JournalEntry {
   return {
@@ -214,7 +214,7 @@ describe("other training in the log", () => {
 });
 
 describe("blocks in the log", () => {
-  const block: Block = {
+  const block: DatedBlock = {
     id: "b1",
     name: "Winter base",
     start: "2026-05-04",

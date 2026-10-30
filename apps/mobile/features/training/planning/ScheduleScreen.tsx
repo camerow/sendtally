@@ -1,7 +1,7 @@
 import { randomUUID } from "expo-crypto";
 import React from "react";
 import { View } from "react-native";
-import { addDays, blockEnd, maxDate, type Block } from "@sendtally/core/hang";
+import { addDays, blockEnd, isDated, maxDate, type Block } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { daysList, shortDate } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
@@ -60,8 +60,12 @@ export function ScheduleScreen({
     return <LoadState state={library.state} onRetry={() => void library.reload()} />;
   const workout = library.state.data.workout(workoutId);
   if (workout === undefined) return null;
-  const blocks = plan.status === "ready" ? plan.data.blocks.filter((b) => blockEnd(b) > today) : [];
-  const block: Block | null = blocks.find((b) => b.id === blockId) ?? null;
+  const all = plan.status === "ready" ? plan.data.blocks : [];
+  const template = all.find((b) => b.id === flow.blockId && !isDated(b));
+  const blocks =
+    template === undefined ? all.filter(isDated).filter((b) => blockEnd(b) > today) : [];
+  const block: Block | null = template ?? blocks.find((b) => b.id === blockId) ?? null;
+  const dated = block !== null && isDated(block) ? block : null;
   const planned = scheduledMemberships(draft, workoutId, block, () => "");
   const ready = scheduleReady(draft, block);
 
@@ -94,14 +98,16 @@ export function ScheduleScreen({
         <Label color={colors.gunmetal}>{workout.name}</Label>
         <Title size={34}>{t("plan.howOften")}</Title>
       </View>
-      <Segmented<ScheduleMode>
-        value={draft.mode}
-        onChange={(mode) => update({ mode })}
-        options={[
-          { value: "repeat", label: t("plan.repeatEvery") },
-          { value: "dates", label: t("plan.specificDays") },
-        ]}
-      />
+      {template === undefined && (
+        <Segmented<ScheduleMode>
+          value={draft.mode}
+          onChange={(mode) => update({ mode })}
+          options={[
+            { value: "repeat", label: t("plan.repeatEvery") },
+            { value: "dates", label: t("plan.specificDays") },
+          ]}
+        />
+      )}
       {draft.mode === "repeat" ? (
         <SheetSection label={t("plan.days")}>
           <WeekdayChips
@@ -115,7 +121,7 @@ export function ScheduleScreen({
           selected={draft.dates[0] ?? maxDate(block?.start ?? today, today)}
           picked={draft.dates}
           min={maxDate(block?.start ?? today, today)}
-          max={block === null ? undefined : addDays(blockEnd(block), -1)}
+          max={dated === null ? undefined : addDays(blockEnd(dated), -1)}
           today={today}
           shaded={() => false}
           blocks={blocks}

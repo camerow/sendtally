@@ -10,7 +10,9 @@ export type BlockWeekChipsProps = { block: Block; today: CalendarDate };
 
 /** W1 to the last week: the weeks gone on fern, this one dark, the rest plain. */
 export function BlockWeekChips({ block, today }: BlockWeekChipsProps): React.ReactElement {
-  const now = blockWeekOn(block, today) ?? (today < block.start ? 0 : block.weeks + 1);
+  const now =
+    blockWeekOn(block, today) ??
+    (block.start === null || today < block.start ? 0 : block.weeks + 1);
   return (
     <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}>
       {Array.from({ length: block.weeks }, (_, i) => {

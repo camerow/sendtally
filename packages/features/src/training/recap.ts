@@ -6,8 +6,8 @@ import {
   gripSeries,
   newBestBy,
   setupOf,
-  type Block,
   type CalendarDate,
+  type DatedBlock,
 } from "@sendtally/core/hang";
 import { setChange, type SetChange } from "../activities/summary";
 import { t } from "../i18n";
@@ -42,7 +42,7 @@ export type BlockWorkout = DoneCount & {
 };
 
 export type BlockRecap = DoneCount & {
-  block: Block;
+  block: DatedBlock;
   missed: number;
   /** Sessions up to and including today, done of planned. */
   soFar: DoneCount;
@@ -107,7 +107,7 @@ function hangProgress(
 }
 
 /** A block's sessions week by week and workout by workout, with the effort of those done. */
-export function blockRecap(log: TrainingLog, block: Block, today: CalendarDate): BlockRecap {
+export function blockRecap(log: TrainingLog, block: DatedBlock, today: CalendarDate): BlockRecap {
   const ran = Array.from({ length: block.weeks * 7 }, (_, i) =>
     trainingDay(log, addDays(block.start, i), today)
   ).flatMap((day) =>
@@ -146,7 +146,7 @@ export function blockRecap(log: TrainingLog, block: Block, today: CalendarDate):
 }
 
 /** How many of the block's planned sessions were done, over all its days. */
-export function blockDone(log: TrainingLog, block: Block, today: CalendarDate): DoneCount {
+export function blockDone(log: TrainingLog, block: DatedBlock, today: CalendarDate): DoneCount {
   const { done, planned } = blockRecap(log, block, today);
   return { done, planned };
 }

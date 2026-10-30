@@ -1,7 +1,8 @@
+import { randomUUID } from "expo-crypto";
 import { router } from "expo-router";
 import React from "react";
 import { Text, View } from "react-native";
-import { blockEnd } from "@sendtally/core/hang";
+import { blockEnd, isDated } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
 import { blockMembers, blockRecap, usePlan, useTrainingLog } from "@sendtally/features/training";
@@ -18,6 +19,7 @@ import { LoadState } from "../data/LoadState";
 import { usePlanActions } from "../plan/usePlanActions";
 import { useLit } from "../plan/useLit";
 import { type } from "../type";
+import { BlockWeekChips } from "../blocks/BlockWeekChips";
 import { BlockOverview } from "./BlockOverview";
 import { BlockRecapView } from "./BlockRecapView";
 import { BlockWeek } from "./BlockWeek";
@@ -29,7 +31,10 @@ export type BlockScreenProps = {
   highlight?: string;
 };
 
-/** One block, read only: how it is going while it runs, a recap and Plan again once it is over. Edit changes it. */
+/**
+ * One block, read only: how it is going while it runs, a recap and Plan again once it is over,
+ * and for a template its weeks with Schedule. Edit changes it.
+ */
 export function BlockScreen({ id, highlight }: BlockScreenProps): React.ReactElement | null {
   const lit = useLit(highlight);
   const { today } = useHangData();
@@ -42,8 +47,14 @@ export function BlockScreen({ id, highlight }: BlockScreenProps): React.ReactEle
     return <LoadState state={plan.state} onRetry={() => void plan.reload()} framed />;
   const block = log.plan.blocks.find((b) => b.id === id);
   if (block === undefined) return null;
-  const recap = blockRecap(log, block, today);
-  const ended = blockEnd(block) <= today;
+  const dated = isDated(block) ? block : null;
+  const ended = dated !== null && blockEnd(dated) <= today;
+  const members = blockMembers(log.plan, block);
+  const saveAsTemplate = async (): Promise<void> => {
+    const copy = randomUUID();
+    if (await actions.copyBlock(id, copy, null))
+      router.push({ pathname: "/plan/block/[id]", params: { id: copy } });
+  };
 
   return (
     <ScreenFrame
@@ -51,6 +62,12 @@ export function BlockScreen({ id, highlight }: BlockScreenProps): React.ReactEle
         <DetailActions
           onEdit={() => router.push({ pathname: "/plan/block/edit", params: { id } })}
           menu={[
+            {
+              icon: "copy",
+              title: t("plan.saveAsTemplate"),
+              hint: t("plan.saveAsTemplateHint"),
+              onPress: () => void saveAsTemplate(),
+            },
             deleteRow({
               title: t("plan.deleteBlock"),
               hint: t("plan.deleteBlockBody"),
@@ -64,9 +81,9 @@ export function BlockScreen({ id, highlight }: BlockScreenProps): React.ReactEle
         />
       }
       footer={
-        ended ? (
+        ended || dated === null ? (
           <Button
-            label={t("plan.planAgain")}
+            label={dated === null ? t("plan.schedule") : t("plan.planAgain")}
             onPress={() => setAgain(true)}
             variant="primary"
             height={54}
@@ -76,23 +93,35 @@ export function BlockScreen({ id, highlight }: BlockScreenProps): React.ReactEle
     >
       <View style={{ gap: 4 }}>
         {ended && <Label color={colors.fern}>{t("plan.finished")}</Label>}
+        {dated === null && <Label color={colors.textSecondary}>{t("plan.template")}</Label>}
         <Title size={34}>{block.name}</Title>
         <Text style={[type.mono, { fontSize: 12, color: colors.textSecondary }]}>
-          {`${blockDates(block)} · ${t("calendar.weeks", { count: block.weeks })}`}
+          {[
+            dated === null ? null : blockDates(dated),
+            t("calendar.weeks", { count: block.weeks }),
+            dated === null ? t("plan.notScheduled") : null,
+          ]
+            .filter((x) => x !== null)
+            .join(" · ")}
         </Text>
       </View>
-      {ended ? (
+      {dated === null ? (
         <>
-          <BlockRecapView recap={recap} workout={log.workout} />
-          <BlockWeek
-            block={block}
-            members={blockMembers(log.plan, block)}
-            workout={log.workout}
-            lit={lit}
-          />
+          <BlockWeekChips block={block} today={today} />
+          <BlockWeek block={block} members={members} workout={log.workout} lit={lit} />
+        </>
+      ) : ended ? (
+        <>
+          <BlockRecapView recap={blockRecap(log, dated, today)} workout={log.workout} />
+          <BlockWeek block={block} members={members} workout={log.workout} lit={lit} />
         </>
       ) : (
-        <BlockOverview recap={recap} plan={log.plan} workout={log.workout} lit={lit} />
+        <BlockOverview
+          recap={blockRecap(log, dated, today)}
+          plan={log.plan}
+          workout={log.workout}
+          lit={lit}
+        />
       )}
       {again && <PlanAgainSheet block={block} onClose={() => setAgain(false)} />}
     </ScreenFrame>

@@ -1,12 +1,12 @@
 import React from "react";
 import { View } from "react-native";
-import type { Block } from "@sendtally/core/hang";
+import type { DatedBlock } from "@sendtally/core/hang";
 import { t } from "@sendtally/features/i18n";
 import { blockDates } from "../blocks/blockText";
 import { RadioRow } from "./RadioRow";
 
 export type BlockChoiceProps = {
-  blocks: readonly Block[];
+  blocks: readonly DatedBlock[];
   value: string | null;
   onChange: (blockId: string | null) => void;
 };

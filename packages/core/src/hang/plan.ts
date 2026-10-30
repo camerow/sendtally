@@ -98,11 +98,11 @@ export const DEFAULT_EXERCISE_REST_S = 180;
 export const defaultExerciseRestS = (kind: WorkoutKind): number =>
   kind === "hangboard" ? DEFAULT_EXERCISE_REST_S : 0;
 
-/** A run of weeks from a start date. */
+/** A run of weeks from a start date, or with none a template to schedule. */
 export type Block = {
   id: string;
   name: string;
-  start: CalendarDate;
+  start: CalendarDate | null;
   weeks: number;
   /** Kept by the API for older app builds; the apps neither read nor write it. */
   focus: Focus | null;
@@ -113,6 +113,11 @@ export type Block = {
  * no block from `start` until deleted. No weekdays is a one-off on `start` alone.
  * It holds no copy of the workout.
  */
+/** A block that has been scheduled. */
+export type DatedBlock = Block & { start: CalendarDate };
+
+export const isDated = (b: Block): b is DatedBlock => b.start !== null;
+
 export type Membership = {
   id: string;
   workoutId: string;
@@ -197,13 +202,14 @@ export function foldVariations({ variations }: VariationsWorkout): Item[] | null
 }
 
 /** Exclusive. */
-export const blockEnd = (b: Pick<Block, "start" | "weeks">): CalendarDate =>
+export const blockEnd = (b: Pick<DatedBlock, "start" | "weeks">): CalendarDate =>
   addDays(b.start, b.weeks * 7);
 
-/** 1-based week of the block a date falls in, or null outside it. */
+/** 1-based week of the block a date falls in, or null outside it or for a template. */
 export function blockWeekOn(b: Pick<Block, "start" | "weeks">, d: CalendarDate): number | null {
-  if (d < b.start || d >= blockEnd(b)) return null;
-  return Math.floor(daysBetween(b.start, d) / 7) + 1;
+  const { start, weeks } = b;
+  if (start === null || d < start || d >= blockEnd({ start, weeks })) return null;
+  return Math.floor(daysBetween(start, d) / 7) + 1;
 }
 
 /**

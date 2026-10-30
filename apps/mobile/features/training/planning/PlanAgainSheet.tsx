@@ -13,7 +13,7 @@ import { usePlanActions } from "../plan/usePlanActions";
 
 export type PlanAgainSheetProps = { block: Block; onClose: () => void };
 
-/** Plan a block again: only the week it starts asks; the copy opens once it is made. */
+/** Plan a block again, or schedule a template: only the week it starts asks; the copy opens once it is made. */
 export function PlanAgainSheet({ block, onClose }: PlanAgainSheetProps): React.ReactElement {
   const { today } = useHangData();
   const actions = usePlanActions();
@@ -48,7 +48,7 @@ export function PlanAgainSheet({ block, onClose }: PlanAgainSheetProps): React.R
           onPick={(d) => setStart(weekStart(d))}
         />
         <Button
-          label={t("plan.planAgain")}
+          label={block.start === null ? t("plan.schedule") : t("plan.planAgain")}
           onPress={() => void save()}
           disabled={busy}
           variant="primary"

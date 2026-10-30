@@ -121,7 +121,8 @@ export const workoutBody = z
 
 export const blockBody = z.object({
   name: title,
-  start: calendarDate,
+  // None is a template.
+  start: calendarDate.nullable(),
   weeks: z.number().int().min(1).max(MAX_BLOCK_WEEKS),
   focus,
 });

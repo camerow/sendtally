@@ -484,7 +484,7 @@ export class SendtallyApi {
   }
 
   /** The block planned again as block `to` from `start`, with its plans and week changes. */
-  copyBlock(id: string, to: string, start: string): Promise<{ block: Block }> {
+  copyBlock(id: string, to: string, start: string | null): Promise<{ block: Block }> {
     return body(
       this.client.v1.blocks[":id"].copy.$post({ param: { id }, json: { id: to, start } })
     );

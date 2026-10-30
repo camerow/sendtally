@@ -107,12 +107,12 @@ export const blocks = new Hono<AppEnv>()
     return c.json({ deleted: await repo.deleteBlock(c.env.DB, c.get("userId"), id) });
   })
 
-  // Plans the block again from another start, under the id the app chose. A replay
-  // finds that block already there and copies nothing twice.
+  // Plans the block again from another start, under the id the app chose; with none it
+  // saves a template. A replay finds that block already there and copies nothing twice.
   .post(
     "/:id/copy",
     zValidator("param", trainingIdParam, invalidBody),
-    zValidator("json", z.object({ id, start: calendarDate }), invalidBody),
+    zValidator("json", z.object({ id, start: calendarDate.nullable() }), invalidBody),
     async (c) => {
       const userId = c.get("userId");
       const { id: from } = c.req.valid("param");

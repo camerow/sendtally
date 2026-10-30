@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 import type { Plan } from "@sendtally/api-client";
-import type { Block } from "@sendtally/core/hang";
+import type { Block, DatedBlock } from "@sendtally/core/hang";
 import { blockGroups, blockMembers } from "./blocks";
 
-const block: Block = {
+const block: DatedBlock = {
   id: "b1",
   name: "Autumn finger block",
   start: "2026-09-28",
@@ -27,8 +27,8 @@ describe("blockMembers", () => {
 });
 
 describe("blockGroups", () => {
-  it("splits blocks into running, upcoming soonest first, and past latest first", () => {
-    const at = (id: string, start: string): Block => ({
+  it("splits blocks into running, upcoming soonest first, templates, and past latest first", () => {
+    const at = (id: string, start: string | null): Block => ({
       id,
       name: id,
       start,
@@ -42,13 +42,21 @@ describe("blockGroups", () => {
         at("now", "2026-10-05"),
         at("last", "2026-09-07"),
         at("next", "2026-10-26"),
+        at("peak", null),
+        at("deload", null),
       ],
       "2026-10-12"
     );
     expect({
       current: groups.current.map((b) => b.id),
       upcoming: groups.upcoming.map((b) => b.id),
+      templates: groups.templates.map((b) => b.id),
       past: groups.past.map((b) => b.id),
-    }).toEqual({ current: ["now"], upcoming: ["next", "later"], past: ["last", "old"] });
+    }).toEqual({
+      current: ["now"],
+      upcoming: ["next", "later"],
+      templates: ["deload", "peak"],
+      past: ["last", "old"],
+    });
   });
 });

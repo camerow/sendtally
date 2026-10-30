@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 import type { Activity, HangSessionRecord } from "@sendtally/api-client";
-import type { Block, Workout } from "@sendtally/core/hang";
+import type { DatedBlock, Workout } from "@sendtally/core/hang";
 import type { TrainingLog } from "./days";
 import { blockDone, blockRecap, blockTagOf } from "./recap";
 
 // Mondays from 28 September for two weeks.
-const block: Block = {
+const block: DatedBlock = {
   id: "b1",
   name: "Winter base",
   start: "2026-09-28",
