@@ -54,12 +54,15 @@ describe("A hangboard workout's review", () => {
         "From the timer: 3 sets full, 1 partial, 2 not done. Fix anything before saving."
       )
     ).toBeTruthy();
-    expect(screen.getByText("4 of 6")).toBeTruthy();
+    expect(screen.getByText("4 of 6 hangs")).toBeTruthy();
+    expect(screen.getByText("Started")).toBeTruthy();
+    expect(screen.queryByText("Focus")).toBeNull();
     expect(screen.getByLabelText("Half crimp, set 5").props.accessibilityState).toEqual({
       checked: false,
     });
 
     await fireEvent.press(screen.getByLabelText("Half crimp, set 5"));
+    await fireEvent.press(screen.getByLabelText("Change edge and weight"));
     await fireEvent.press(screen.getByLabelText("Shallower edge"));
     await fireEvent.press(screen.getByLabelText("Effort 8 of 10"));
     await fireEvent.press(screen.getByText("Save"));

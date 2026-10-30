@@ -15,10 +15,13 @@ import { keptSets, type ActivityDraft } from "@sendtally/features/activities";
 import { today as dayOf } from "@sendtally/features/journal";
 import { ActivityForm } from "../activity/ActivityForm";
 import { useHangData } from "../data/HangDataContext";
-import { SetupFields } from "../setup/SetupFields";
+import { SetupPill } from "./SetupPill";
 import { usePlannedRun, type PlannedRun } from "../timer/usePlannedRun";
 import { openStats } from "../../stats/statsSegment";
 import type { DoneParams } from "./doneParams";
+
+const clockOf = (d: Date): string =>
+  `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
 
 /** Seconds on the edge, or lifts, that sets hold. */
 const workOf = (sets: readonly SetDone[]): number =>
@@ -49,8 +52,9 @@ function Review({
     kind: "other",
     title: workout.name,
     date: run === null ? today : dayOf(new Date(run.startedAt)),
-    startTime: "",
-    minutes: 0,
+    // Read on the review only: a hang session saves no clock time.
+    startTime: run === null ? "" : clockOf(new Date(run.startedAt)),
+    minutes: run === null ? 0 : Math.max(1, Math.round((Date.now() - run.startedAt) / 60_000)),
     rpe: null,
     notes: "",
     workoutId: workout.id,
@@ -115,12 +119,19 @@ function Review({
       id={id}
       initial={initial}
       logged={null}
-      timed
+      timed={run !== null}
       kindSet
       live={run !== null}
       planned={prescribed}
       hang={{
-        setup: <SetupFields kind={workout.kind} setup={setup} onChange={setSetup} />,
+        setup: (
+          <SetupPill
+            kind={workout.kind}
+            setup={setup}
+            kicker={model.gripName(params.gripId)}
+            onChange={setSetup}
+          />
+        ),
         save,
       }}
     />

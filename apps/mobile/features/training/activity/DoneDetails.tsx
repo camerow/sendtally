@@ -1,5 +1,5 @@
 import React from "react";
-import { Text } from "react-native";
+import { Text, View } from "react-native";
 import type { ItemDone, SetDone, WeightUnit } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import {
@@ -12,10 +12,12 @@ import {
 } from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
 import { confirmDestructive } from "../../../lib/confirmDestructive";
+import { Button } from "../components/Button";
+import { Label } from "../components/Label";
 import { SheetSection } from "../components/SheetSection";
+import { SET_COLUMNS } from "../sets/setColumns";
 import { type } from "../type";
-import { ExerciseCard } from "./ExerciseCard";
-import { SetsEditor } from "./SetsEditor";
+import { ReviewSetRow } from "./ReviewSetRow";
 
 export type DoneDetailsProps = {
   done: readonly ItemDone[];
@@ -26,19 +28,27 @@ export type DoneDetailsProps = {
   unit: WeightUnit;
   /** The kind's colour, on each exercise's mark. */
   color: string;
+  /** A hangboard workout: its sets are hang counts. */
+  hangs?: boolean;
+  /** Beside the first exercise's name, such as a hangboard run's edge and weight. */
+  setup?: React.ReactNode;
   onChange: (done: ItemDone[], off: string[]) => void;
 };
 
-/** What was done, to review and fix before saving: a card per exercise, a chip per set to tick. */
+/**
+ * What was done, to review before saving: each exercise as its sets' table, ticked when it
+ * counts, amber where it fell short, a number typed in place, a set added or swiped away.
+ */
 export function DoneDetails({
   done,
   off,
   planned,
   unit,
   color,
+  hangs = false,
+  setup,
   onChange,
 }: DoneDetailsProps): React.ReactElement {
-  const [open, setOpen] = React.useState<number | null>(null);
   const edit = (next: ItemDone[]): void => onChange(next, [...off]);
   const remove = (d: ItemDone, set: number): void => {
     const removed = (): void =>
@@ -51,10 +61,7 @@ export function DoneDetails({
       title: t("activities.removeLastSetTitle", { exercise: d.exercise }),
       body: t("activities.removeLastSetBody"),
       action: t("workouts.removeExercise", { name: d.exercise }),
-      onConfirm: () => {
-        setOpen(null);
-        removed();
-      },
+      onConfirm: removed,
     });
   };
   const toggle = (item: number, set: number): void => {
@@ -71,30 +78,74 @@ export function DoneDetails({
         </Text>
       }
     >
-      {done.map((d) => (
-        <ExerciseCard
-          key={d.item}
-          done={d}
-          unit={unit}
-          color={color}
-          editor={
-            open === d.item ? (
-              <SetsEditor
-                done={d}
-                unit={unit}
-                onChange={(set, value) => edit(changeSet(done, d.item, set, value))}
-                onRemove={(set) => remove(d, set)}
-                onAdd={() => edit(addSet(done, d.item))}
-              />
-            ) : null
-          }
-          isOn={(set) => !off.includes(setKeyOf(d.item, set))}
-          shortOf={(set) => shortOf(d.sets[set] ?? {}, planned[d.item])}
-          onToggle={(set) => toggle(d.item, set)}
-          onOpen={() => setOpen(d.item)}
-          onClose={() => setOpen(null)}
-        />
-      ))}
+      {done.map((d, index) => {
+        const target = planned[d.item];
+        const lifting = d.sets.some((s) => s.weightKg !== undefined) && !hangs;
+        return (
+          <View
+            key={d.item}
+            style={{
+              gap: 4,
+              padding: 14,
+              borderRadius: 16,
+              borderWidth: 1,
+              borderColor: colors.lineOnLightStrong,
+            }}
+          >
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 8, paddingBottom: 4 }}>
+              <View style={{ width: 10, height: 10, borderRadius: 3, backgroundColor: color }} />
+              <Text style={[type.bodyBold, { flex: 1, fontSize: 17, color: colors.gunmetal }]}>
+                {d.exercise}
+              </Text>
+              <Text style={[type.mono, { fontSize: 12, color: colors.textSecondary }]}>
+                {t("activities.setCount", { count: d.sets.length })}
+              </Text>
+            </View>
+            {index === 0 && setup}
+            <View style={SET_COLUMNS.row}>
+              <Label small color={colors.textSecondary} style={SET_COLUMNS.set}>
+                {t("activities.colSet")}
+              </Label>
+              <Label small color={colors.textSecondary} style={SET_COLUMNS.target}>
+                {t("activities.colTarget")}
+              </Label>
+              <Label small color={colors.textSecondary} style={SET_COLUMNS.done}>
+                {t("activities.colDone")}
+              </Label>
+              <View style={SET_COLUMNS.tick} />
+            </View>
+            {d.sets.map((set, i) => {
+              const on = !off.includes(setKeyOf(d.item, i));
+              return (
+                <ReviewSetRow
+                  key={i}
+                  n={i + 1}
+                  target={target}
+                  done={set}
+                  hangs={hangs}
+                  lifting={lifting}
+                  unit={unit}
+                  on={on}
+                  short={shortOf(set, target, hangs)}
+                  label={t("activities.setOf", { exercise: d.exercise, n: i + 1 })}
+                  onChange={(value) => edit(changeSet(done, d.item, i, value))}
+                  onToggle={() => toggle(d.item, i)}
+                  onRemove={() => remove(d, i)}
+                />
+              );
+            })}
+            <Button
+              label={t("activities.addSet")}
+              accessibilityLabel={t("activities.addSetTo", { exercise: d.exercise })}
+              onPress={() => edit(addSet(done, d.item))}
+              variant="outline"
+              icon="plus"
+              height={40}
+              style={{ alignSelf: "flex-start", marginTop: 6 }}
+            />
+          </View>
+        );
+      })}
     </SheetSection>
   );
 }

@@ -97,7 +97,8 @@ describe("done", () => {
   });
 
   it("reads a set short of its dose as how much of it was done", () => {
-    expect(shortOf({ reps: 4, onS: 10 }, { reps: 6, onS: 10 })).toBe("4 of 6");
+    expect(shortOf({ reps: 4, onS: 10 }, { reps: 6, onS: 10 }, true)).toBe("4 of 6 hangs");
+    expect(shortOf({ reps: 6 }, { reps: 8 })).toBe("6 of 8 reps");
     expect(shortOf({ onS: 30 }, { onS: 45 })).toBe("0:30 of 0:45");
     expect(shortOf({ reps: 8 }, { reps: 8 })).toBeNull();
     expect(shortOf({ reps: 4 }, undefined)).toBeNull();

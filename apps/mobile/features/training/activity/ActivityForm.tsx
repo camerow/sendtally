@@ -16,7 +16,9 @@ import {
   useWeightUnit,
   type ActivityDraft,
 } from "@sendtally/features/activities";
+import { shortDate, timeOfDay } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
+import { durationLabel } from "@sendtally/features/sessions";
 import { useWorkoutActions } from "@sendtally/features/workouts";
 import { DateTimeField } from "../../../components/DateTimeField";
 import { KeypadScrollView } from "../../../components/KeypadScrollView";
@@ -33,6 +35,7 @@ import { KIND_LOOK } from "../today/kindLook";
 import { type } from "../type";
 import { clearLiveRun } from "../../live-session/liveRun";
 import { DoneDetails } from "./DoneDetails";
+import { ReadRow } from "./ReadRow";
 import { KindChips } from "./KindChips";
 
 export type ActivityFormProps = {
@@ -40,7 +43,10 @@ export type ActivityFormProps = {
   initial: ActivityDraft;
   /** The activity as logged; null while logging a new one. */
   logged: ActivityRecord | null;
-  /** A player ran it: its start and length are already known, so only the date shows. */
+  /**
+   * A player ran it: its date, start and length read as measured, each typed over by a tap,
+   * and its focus is the workout's. A hangboard run's start and length only read.
+   */
   timed?: boolean;
   /** It came with a kind, from a workout; a logged activity always has one. */
   kindSet?: boolean;
@@ -132,6 +138,39 @@ export function ActivityForm({
   const counts = setCounts(draft.done, draft.off, doses);
   const reviewing = logged === null && draft.workoutId !== null;
   const status = live ? runStatus(counts) : t("activities.loggedNotTimed");
+  const [opened, setOpened] = React.useState<"date" | "start" | "duration" | null>(null);
+  const dateField = (
+    <SheetSection label={t("activities.date")}>
+      <DateTimeField
+        testID="activity-date"
+        mode="date"
+        value={draft.date}
+        label={t("activities.date")}
+        onChange={(date) => update({ date })}
+      />
+    </SheetSection>
+  );
+  const startField = (
+    <SheetSection label={t("activities.startTime")}>
+      <DateTimeField
+        testID="activity-time"
+        mode="time"
+        value={draft.startTime}
+        label={t("activities.startTime")}
+        placeholder={t("activities.anyTime")}
+        onChange={(startTime) => update({ startTime })}
+        onClear={() => update({ startTime: "" })}
+      />
+    </SheetSection>
+  );
+  const durationField = (
+    <TimeField
+      label={t("common.duration")}
+      value={draft.minutes * 60}
+      min={60}
+      onChange={(seconds) => update({ minutes: minutesOf(seconds) })}
+    />
+  );
 
   return (
     <KeyboardAvoidingView
@@ -215,53 +254,57 @@ export function ActivityForm({
           </SheetSection>
         )}
 
-        <View style={{ flexDirection: "row", gap: 10 }}>
-          <View style={{ flex: 1 }}>
-            <SheetSection label={t("activities.date")}>
-              <DateTimeField
-                testID="activity-date"
-                mode="date"
-                value={draft.date}
+        {timed ? (
+          <View>
+            {opened === "date" ? (
+              dateField
+            ) : (
+              <ReadRow
                 label={t("activities.date")}
-                onChange={(date) => update({ date })}
+                value={shortDate(draft.date)}
+                onEdit={() => setOpened("date")}
               />
-            </SheetSection>
+            )}
+            {opened === "start" && hang === undefined ? (
+              startField
+            ) : (
+              <ReadRow
+                label={t("activities.started")}
+                value={draft.startTime === "" ? "-" : timeOfDay(draft.startTime)}
+                note={t("activities.measured")}
+                onEdit={hang === undefined ? () => setOpened("start") : undefined}
+              />
+            )}
+            {opened === "duration" && hang === undefined ? (
+              durationField
+            ) : (
+              <ReadRow
+                label={t("common.duration")}
+                value={durationLabel(draft.minutes)}
+                note={t("activities.measured")}
+                onEdit={hang === undefined ? () => setOpened("duration") : undefined}
+              />
+            )}
           </View>
-          {!timed && hang === undefined && (
-            <View style={{ flex: 1 }}>
-              <SheetSection label={t("activities.startTime")}>
-                <DateTimeField
-                  testID="activity-time"
-                  mode="time"
-                  value={draft.startTime}
-                  label={t("activities.startTime")}
-                  placeholder={t("activities.anyTime")}
-                  onChange={(startTime) => update({ startTime })}
-                  onClear={() => update({ startTime: "" })}
-                />
-              </SheetSection>
+        ) : (
+          <>
+            <View style={{ flexDirection: "row", gap: 10 }}>
+              <View style={{ flex: 1 }}>{dateField}</View>
+              {hang === undefined && <View style={{ flex: 1 }}>{startField}</View>}
             </View>
-          )}
-        </View>
-
-        {!timed && hang === undefined && (
-          <TimeField
-            label={t("common.duration")}
-            value={draft.minutes * 60}
-            min={60}
-            onChange={(seconds) => update({ minutes: minutesOf(seconds) })}
-          />
+            {hang === undefined && durationField}
+          </>
         )}
 
         <EffortField value={draft.rpe} onChange={(rpe) => update({ rpe })} />
 
-        {hang?.setup}
-
-        <FocusField
-          value={draft.focus}
-          onChange={(focus) => update({ focus })}
-          note={logged === null ? undefined : t("focus.sessionNote")}
-        />
+        {!timed && (
+          <FocusField
+            value={draft.focus}
+            onChange={(focus) => update({ focus })}
+            note={logged === null ? undefined : t("focus.sessionNote")}
+          />
+        )}
 
         {draft.done.length > 0 && (
           <DoneDetails
@@ -270,6 +313,8 @@ export function ActivityForm({
             planned={doses}
             unit={unit}
             color={KIND_LOOK[look].ink}
+            hangs={hang !== undefined}
+            setup={hang?.setup}
             onChange={(done, off) => update({ done, off })}
           />
         )}

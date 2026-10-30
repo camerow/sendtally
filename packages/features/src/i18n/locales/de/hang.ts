@@ -60,6 +60,8 @@ export const hang = {
   "hang.blockWeek": "{label} · Woche {at} von {of}",
   "hang.start": "Start",
   "hang.forToday": "Für heute",
+  "hang.edgeAndWeight": "Leiste und Gewicht",
+  "hang.changeSetup": "Leiste und Gewicht ändern",
   "hang.forTodayNote": "Geplant: {planned}. Änderungen gelten nur für diesen Durchgang.",
   "hang.changeToday": "Heutiges Setup ändern",
   "hang.planned": "Geplant",

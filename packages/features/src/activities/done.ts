@@ -56,10 +56,12 @@ export const keptSets = (done: readonly ItemDone[], off: readonly string[]): Ite
     .map((d) => ({ ...d, sets: d.sets.filter((_, set) => !off.includes(setKeyOf(d.item, set))) }))
     .filter((d, i) => d.sets.length > 0 || done[i]?.sets.length === 0);
 
-/** How far a set fell short of its dose, "4 of 6" or "0:30 of 0:45"; null when it did not. */
-export function shortOf(set: SetDone, dose: SetDone | undefined): string | null {
-  if (dose?.reps !== undefined && set.reps !== undefined && set.reps < dose.reps)
-    return t("activities.partOf", { done: formatNumber(set.reps), of: formatNumber(dose.reps) });
+/** How far a set fell short of its dose, "4 of 6 hangs", "6 of 8 reps" or "0:30 of 0:45"; null when it did not. */
+export function shortOf(set: SetDone, dose: SetDone | undefined, hangs = false): string | null {
+  if (dose?.reps !== undefined && set.reps !== undefined && set.reps < dose.reps) {
+    const counts = { done: formatNumber(set.reps), of: formatNumber(dose.reps) };
+    return hangs ? t("activities.shortHangs", counts) : t("activities.shortReps", counts);
+  }
   if (dose?.onS !== undefined && set.onS !== undefined && set.onS < dose.onS)
     return t("activities.partOf", { done: clock(set.onS, true), of: clock(dose.onS, true) });
   return null;

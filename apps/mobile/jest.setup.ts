@@ -81,3 +81,9 @@ timeoutManager.setTimeoutProvider({
 // Cache changes reach screens on a macrotask by default, which can land after a test has ended;
 // as microtasks they flush inside the act() that caused them.
 notifyManager.setScheduler(queueMicrotask);
+
+// A swipe runs as a worklet on the UI thread, which jest has not got; a row renders as itself.
+jest.mock("react-native-gesture-handler/ReanimatedSwipeable", () => ({
+  __esModule: true,
+  default: ({ children }: { children: MockReact.ReactNode }) => children,
+}));

@@ -39,6 +39,15 @@ const logged = (post: Partial<ActivityRecord> = {}): ActivityRecord => ({
   ...post,
 });
 
+/** Swipes a set away, as a screen reader's remove action does. */
+async function removeSetRow(n: number, of: number): Promise<void> {
+  const rows = screen.getAllByTestId("review-set");
+  expect(rows).toHaveLength(of);
+  const row = rows[n - 1];
+  if (row === undefined) throw new Error(`no set row ${n}`);
+  await fireEvent(row, "accessibilityAction", { nativeEvent: { actionName: "remove" } });
+}
+
 async function keys(...pressed: string[]): Promise<void> {
   for (const key of pressed) await fireEvent.press(screen.getByLabelText(key));
 }
@@ -73,16 +82,18 @@ describe("Log activity", () => {
     expect(router.back).toHaveBeenCalled();
   });
 
-  it("keeps a timed run's start and length, showing only its date", async () => {
+  it("reads a timed run's date, start and length, opening one in place to change it", async () => {
     const initial = newActivityDraft(
       { kind: "mobility", startTime: "07:00", minutes: "4" },
       "2026-10-22"
     );
     await render(<ActivityForm id="a1" initial={initial} logged={null} timed kindSet />);
-    expect(screen.getByTestId("activity-date")).toBeTruthy();
+    expect(screen.queryByTestId("activity-date")).toBeNull();
     expect(screen.queryByTestId("activity-time")).toBeNull();
-    expect(screen.queryAllByText("Strength")).toHaveLength(1);
-    expect(screen.queryByLabelText("Duration")).toBeNull();
+    expect(screen.getAllByText("from the timer")).toHaveLength(2);
+    expect(screen.queryByText("Focus")).toBeNull();
+    await fireEvent.press(screen.getByLabelText(/^Started, /));
+    expect(screen.getByTestId("activity-time")).toBeTruthy();
     await fireEvent.press(screen.getByText("Save"));
     expect(mockActions.saveActivity).toHaveBeenLastCalledWith(
       expect.objectContaining({ kind: "mobility", startTime: "07:00", minutes: 4 })
@@ -95,12 +106,19 @@ describe("Log activity", () => {
       "2026-10-22",
       [{ exercise: "Back squat", dose: { sets: 2, reps: 5, weightKg: 100 } }]
     );
-    await render(<ActivityForm id="a1" initial={initial} logged={null} />);
+    await render(
+      <ActivityForm
+        id="a1"
+        initial={initial}
+        logged={null}
+        planned={[{ exercise: "Back squat", dose: { sets: 2, reps: 5, weightKg: 100 } }]}
+      />
+    );
     expect(screen.getByRole("header", { name: "Strength" })).toBeTruthy();
     expect(screen.queryByTestId("activity-title")).toBeNull();
     expect(screen.getByText("Back squat")).toBeTruthy();
-    expect(screen.getByText("2 sets · kg")).toBeTruthy();
-    expect(screen.getAllByText("5 × 100")).toHaveLength(2);
+    expect(screen.getByText("2 sets")).toBeTruthy();
+    expect(screen.getAllByText("5 × 100 kg")).toHaveLength(2);
     await fireEvent.press(screen.getByText("Save"));
     expect(mockActions.saveActivity).toHaveBeenLastCalledWith(
       expect.objectContaining({
@@ -131,18 +149,9 @@ describe("Log activity", () => {
     };
     await render(<ActivityForm id="a1" initial={initial} logged={null} />);
     expect(screen.getByRole("header", { name: "Lower body" })).toBeTruthy();
-    expect(screen.getByText("8")).toBeTruthy();
-    expect(screen.getByText("6")).toBeTruthy();
-
-    await fireEvent.press(screen.getByLabelText("Edit Back squat"));
-    await fireEvent.press(screen.getByText("Add set"));
+    await fireEvent.press(screen.getByLabelText("Add a set to Back squat"));
     await keys("Back squat, set 2 · Reps", "4", "Done");
-    await fireEvent.press(screen.getByLabelText("Edit Pull-up"));
-    expect(screen.queryByLabelText("Back squat, set 2 · Reps")).toBeNull();
-    expect(screen.getAllByText("5 × 100")).toHaveLength(1);
-    expect(screen.getByText("4 × 100")).toBeTruthy();
-    await fireEvent.press(screen.getByLabelText("Remove set 1"));
-    await fireEvent.press(screen.getByText("Done"));
+    await removeSetRow(3, 4);
     await fireEvent.press(screen.getByText("Save"));
 
     expect(mockActions.saveActivity).toHaveBeenLastCalledWith(
@@ -172,8 +181,7 @@ describe("Log activity", () => {
     };
     await render(<ActivityForm id="a1" initial={initial} logged={null} />);
     expect(screen.getByTestId("activity-title")).toBeTruthy();
-    await fireEvent.press(screen.getByLabelText("Edit Back squat"));
-    await fireEvent.press(screen.getByLabelText("Remove set 1"));
+    await removeSetRow(1, 1);
     expect(alert.mock.calls[0]?.[0]).toBe("Remove Back squat?");
     expect(screen.getByText("Back squat")).toBeTruthy();
     const buttons = alert.mock.calls[0]?.[2] ?? [];
@@ -196,12 +204,11 @@ describe("Log activity", () => {
     await render(<ActivityForm id="a1" initial={initial} logged={null} />);
     expect(screen.getByText("Log workout")).toBeTruthy();
     expect(screen.getByText("Mobility · Logged, not timed")).toBeTruthy();
-    expect(screen.getByText("60s")).toBeTruthy();
+    expect(screen.getByLabelText("Pigeon, set 1 · Hold")).toBeTruthy();
     expect(screen.getByRole("checkbox", { name: "Jefferson curl, set 1" })).not.toBeChecked();
     await fireEvent.press(screen.getByRole("checkbox", { name: "Jefferson curl, set 1" }));
     await fireEvent.press(screen.getByRole("checkbox", { name: "Cat-cow, set 1" }));
     expect(screen.getByRole("checkbox", { name: "Cat-cow, set 1" })).not.toBeChecked();
-    await fireEvent.press(screen.getByLabelText("Edit Pigeon"));
     await keys("Pigeon, set 1 · Hold", "9", "0", "Done");
     await fireEvent.press(screen.getByText("Save"));
 
@@ -242,7 +249,7 @@ describe("Log activity", () => {
         "From the timer: 1 set full, 1 partial, 1 not done. Fix anything before saving."
       )
     ).toBeTruthy();
-    expect(screen.getByText("7 of 10")).toBeTruthy();
+    expect(screen.getByText("7 of 10 reps")).toBeTruthy();
     await fireEvent.press(screen.getByText("Discard"));
     expect(router.back).not.toHaveBeenCalled();
     await act(async () =>

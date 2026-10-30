@@ -60,6 +60,8 @@ export const hang = {
   "hang.blockWeek": "{label} · semaine {at} sur {of}",
   "hang.start": "Démarrer",
   "hang.forToday": "Pour aujourd’hui",
+  "hang.edgeAndWeight": "Réglette et poids",
+  "hang.changeSetup": "Changer la réglette et le poids",
   "hang.forTodayNote": "Prévu : {planned}. Les changements valent pour cette séance seulement.",
   "hang.changeToday": "Changer le réglage du jour",
   "hang.planned": "Prévu",

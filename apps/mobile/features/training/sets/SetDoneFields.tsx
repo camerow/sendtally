@@ -15,6 +15,10 @@ export type SetDoneFieldsProps = {
   unit: WeightUnit;
   /** Names the set for screen readers, ahead of each field's own name. */
   label: string;
+  /** A hangboard set: its hangs typed, its hang time read, as the timer measured it. */
+  hangs?: boolean;
+  /** Fell short of its target: the count it fell short on reads amber. */
+  short?: boolean;
   onChange: (set: SetDone) => void;
 };
 
@@ -39,11 +43,13 @@ export function SetDoneFields({
   lifting = false,
   unit,
   label,
+  hangs = false,
+  short = false,
   onChange,
 }: SetDoneFieldsProps): React.ReactElement {
-  const reps = lifting || set.reps !== undefined;
-  const weight = lifting || set.weightKg !== undefined;
-  const hold = set.onS !== undefined;
+  const reps = lifting || hangs || set.reps !== undefined;
+  const weight = !hangs && (lifting || set.weightKg !== undefined);
+  const hold = !hangs && set.onS !== undefined;
   const { slot } = useFieldOrder([
     ...(reps ? ["reps"] : []),
     ...(weight ? ["weight"] : []),
@@ -59,7 +65,8 @@ export function SetDoneFields({
       {reps && (
         <NumberField
           {...slot("reps")}
-          {...named(t("workouts.dose.reps"))}
+          {...named(hangs ? t("plan.colHangs") : t("workouts.dose.reps"))}
+          short={short}
           value={set.reps ?? null}
           onChange={(n) => onChange({ ...set, reps: n })}
           step={1}
@@ -80,6 +87,11 @@ export function SetDoneFields({
           decimals
           signed
         />
+      )}
+      {hangs && set.onS !== undefined && (
+        <Text style={[type.mono, { fontSize: 13, color: colors.textSecondary }]}>
+          {`× ${t("hang.seconds", { n: set.onS })}`}
+        </Text>
       )}
       {(reps || weight) && hold && <Joiner mark="·" />}
       {hold && (
