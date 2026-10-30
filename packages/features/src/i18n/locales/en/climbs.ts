@@ -56,8 +56,6 @@ export const climbs = {
   "climbs.statusSent": "Sent {n}",
   "climbs.statusNotYet": "Not yet {n}",
   "climbs.anyGrade": "Any grade",
-  "climbs.from": "From",
-  "climbs.to": "To",
   "climbs.noMatches": "No climbs match.",
   "climbs.addClimb": "Add climb",
   "climbs.empty": "Every climb you add lands here, newest first. Add one to start.",

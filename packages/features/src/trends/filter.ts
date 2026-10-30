@@ -87,7 +87,9 @@ export function gradeBins(
   return out;
 }
 
-export function presetsOf(bins: GradeBinVM[], label: (rank: number) => string): GradePresetVM[] {
+/** Any grade, the top three grades climbed, and everything up to a grade below those. */
+export function presetsOf(bins: readonly GradeBinVM[]): GradePresetVM[] {
+  const label = (rank: number): string => bins.find((b) => b.rank === rank)?.label ?? "";
   const present = bins.filter((b) => b.count > 0);
   const low = present[0]?.rank;
   const top = present[present.length - 1]?.rank;

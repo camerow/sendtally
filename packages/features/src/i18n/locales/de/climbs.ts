@@ -58,8 +58,6 @@ export const climbs = {
   "climbs.statusSent": "Geschafft {n}",
   "climbs.statusNotYet": "Noch nicht {n}",
   "climbs.anyGrade": "Jeder Grad",
-  "climbs.from": "Von",
-  "climbs.to": "Bis",
   "climbs.noMatches": "Keine Kletterei passt.",
   "climbs.addClimb": "Kletterei hinzufügen",
   "climbs.empty":

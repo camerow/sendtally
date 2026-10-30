@@ -57,8 +57,6 @@ export const climbs = {
   "climbs.statusSent": "Encadenadas {n}",
   "climbs.statusNotYet": "Aún no {n}",
   "climbs.anyGrade": "Cualquier grado",
-  "climbs.from": "Desde",
-  "climbs.to": "Hasta",
   "climbs.noMatches": "Ninguna vía coincide.",
   "climbs.addClimb": "Añadir vía",
   "climbs.empty":
