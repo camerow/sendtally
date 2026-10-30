@@ -3,6 +3,7 @@ import { act, fireEvent, screen } from "@testing-library/react-native";
 import { router } from "expo-router";
 import React from "react";
 import { View } from "react-native";
+import { exerciseTallyStorage } from "../../lib/exerciseTallyStorage";
 import { anExercise, hangData, renderWithHang } from "../training/data/renderWithHang";
 import type { WorkoutRun } from "../training/data/workoutRunParams";
 import { SetsScreen } from "../training/sets/SetsScreen";
@@ -71,6 +72,7 @@ describe("The tally in exercise mode", () => {
   });
   afterEach(() => {
     jest.useRealTimers();
+    exerciseTallyStorage.remove();
   });
 
   it("logs a climbing exercise set by set, rests between, and hands the climbs to the workout", async () => {

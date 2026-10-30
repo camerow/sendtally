@@ -8,8 +8,10 @@ import {
   resultOf,
   setsDoneByItem,
   startWorkoutRun,
+  type HangPhase,
   type HangSetup,
   type PlanLink,
+  type Run,
 } from "@sendtally/core/hang";
 import { loadLabel, setupLabel } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
@@ -25,6 +27,8 @@ import { TimerFrame } from "./TimerFrame";
 import { TimerRing } from "./TimerRing";
 import { timerText } from "./timerText";
 import { useTimer } from "./useTimer";
+import { resumedRun, writeLiveRun } from "../../live-session/liveRun";
+import { timerParams } from "./startWorkout";
 
 function Timer({
   planned,
@@ -32,22 +36,30 @@ function Timer({
   setups,
   link,
   session,
+  resumed,
+  end,
 }: {
   planned: PlannedRun;
   grips: readonly string[];
-  setups: readonly HangSetup[];
+  setups: HangSetup[];
   link: PlanLink;
   session: number;
+  /** Where the run was when it was minimised or the app closed. */
+  resumed: Run<HangPhase> | null;
+  /** Ends the run as it opens, for its review. */
+  end: boolean;
 }): React.ReactElement {
   const { model } = useHangData();
   const { items, exerciseRestS } = planned;
   const workout = items[0].workout;
-  const timer = useTimer((now) =>
-    startWorkoutRun(
-      items.map((i) => protocolOf(i.workout)),
-      exerciseRestS,
-      now
-    )
+  const timer = useTimer(
+    (now) =>
+      resumed ??
+      startWorkoutRun(
+        items.map((i) => protocolOf(i.workout)),
+        exerciseRestS,
+        now
+      )
   );
   const { run, secondsLeft, progress } = timer;
   const phase = currentPhase(run);
@@ -59,6 +71,24 @@ function Timer({
   const load = loadLabel(current.kind, setup.loadKg, model.settings.units);
   const text = timerText(run, secondsLeft, load, current.sets);
   const look = phaseLook(working, phase.kind === "ready" && run.index === 0);
+
+  React.useEffect(() => {
+    writeLiveRun({
+      title: workout.name,
+      workoutId: workout.id,
+      pathname: "/workout/timer",
+      params: timerParams(workout.id, grips[0] ?? workout.grip, session, link),
+      startedAt: run.startedAt,
+      state: { player: "timer", run, setups },
+    });
+  }, [run, workout, grips, session, link, setups]);
+
+  const ending = React.useRef(end);
+  React.useEffect(() => {
+    if (!ending.current) return;
+    ending.current = false;
+    timer.end();
+  }, [timer]);
 
   const sent = React.useRef(false);
   React.useEffect(() => {
@@ -135,6 +165,8 @@ export type TimerScreenProps = {
   link: PlanLink;
   /** How many sessions of the workout came before this one. */
   session: number;
+  /** Ends the running workout as it opens, straight to its review. */
+  end?: boolean;
 };
 
 export function TimerScreen({
@@ -142,10 +174,15 @@ export function TimerScreen({
   gripId,
   link,
   session,
+  end = false,
 }: TimerScreenProps): React.ReactElement | null {
   const { model } = useHangData();
   const planned = usePlannedRun(workoutId, link, session);
-  const [setups, setSetups] = React.useState<HangSetup[] | null>(null);
+  const [resumed] = React.useState(() => {
+    const state = resumedRun("/workout/timer", workoutId)?.state;
+    return state?.player === "timer" ? state : null;
+  });
+  const [setups, setSetups] = React.useState<HangSetup[] | null>(resumed?.setups ?? null);
   if (planned === undefined) return null;
   const grips = planned.items.map((item, i) => (i === 0 ? gripId : item.workout.grip));
   return setups === null ? (
@@ -159,6 +196,14 @@ export function TimerScreen({
       onStart={setSetups}
     />
   ) : (
-    <Timer planned={planned} grips={grips} setups={setups} link={link} session={session} />
+    <Timer
+      planned={planned}
+      grips={grips}
+      setups={setups}
+      link={link}
+      session={session}
+      resumed={(resumed?.run as Run<HangPhase> | undefined) ?? null}
+      end={end}
+    />
   );
 }

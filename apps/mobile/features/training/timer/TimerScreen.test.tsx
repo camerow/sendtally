@@ -2,12 +2,31 @@ import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals
 import { act, fireEvent, screen } from "@testing-library/react-native";
 import { router } from "expo-router";
 import React from "react";
+import type * as LogSession from "@sendtally/features/log-session";
+import { liveRunStorage } from "../../../lib/liveRunStorage";
+import { readLiveRun } from "../../live-session/liveRun";
 import { NO_PLAN } from "../data/planLinkParams";
 import { hangData, renderWithHang, TODAY } from "../data/renderWithHang";
 import { TimerScreen } from "./TimerScreen";
 
 jest.mock("expo-router", () => ({ router: { replace: jest.fn() } }));
 jest.mock("expo-keep-awake", () => ({ useKeepAwake: () => undefined }));
+jest.mock("../../../lib/liveRunStorage", () => {
+  let value: string | null = null;
+  return {
+    liveRunStorage: jest
+      .requireActual<typeof LogSession>("@sendtally/features/log-session")
+      .draftStorage({
+        read: () => value,
+        write: (next) => {
+          value = next;
+        },
+        remove: () => {
+          value = null;
+        },
+      }),
+  };
+});
 
 const advance = async (ms: number): Promise<void> => {
   await act(async () => {
@@ -18,6 +37,7 @@ const advance = async (ms: number): Promise<void> => {
 describe("Timer", () => {
   beforeEach(() => {
     jest.useFakeTimers({ now: new Date(2026, 8, 29, 18) });
+    liveRunStorage.remove();
   });
   afterEach(() => {
     jest.useRealTimers();
@@ -53,6 +73,28 @@ describe("Timer", () => {
         }),
       })
     );
+  });
+
+  it("keeps the run on disk, and picks it up past the setup where it was", async () => {
+    const view = await renderWithHang(
+      <TimerScreen workoutId="rep73" gripId="half" link={NO_PLAN} session={0} />
+    );
+    await fireEvent.press(screen.getByText("Start"));
+    await advance(5100);
+    expect(readLiveRun()).toMatchObject({
+      title: "Repeaters 7:3",
+      pathname: "/workout/timer",
+      params: { workoutId: "rep73", gripId: "half", session: "0" },
+      state: { player: "timer", setups: [expect.anything()] },
+    });
+    await view.unmount();
+
+    await renderWithHang(
+      <TimerScreen workoutId="rep73" gripId="half" link={NO_PLAN} session={0} />
+    );
+    expect(screen.queryByText("Start")).toBeNull();
+    expect(screen.getByText("Hang")).toBeTruthy();
+    expect(screen.getByText("Set 1 of 6")).toBeTruthy();
   });
 
   it("pauses the clock from the primary button", async () => {

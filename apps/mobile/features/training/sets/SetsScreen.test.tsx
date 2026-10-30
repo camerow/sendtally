@@ -121,6 +121,7 @@ describe("Sets player", () => {
         membershipId: "m1",
         week: "2",
         startTime: "18:05",
+        live: "1",
         done: JSON.stringify([
           {
             item: 0,

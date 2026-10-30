@@ -29,20 +29,19 @@ const str = (v: string | string[] | undefined): string => (Array.isArray(v) ? v[
 const minutesParam = (minutes: number | null): Record<string, string> =>
   minutes === null ? {} : { minutes: String(minutes) };
 
+export const runParams = (r: WorkoutRun): Record<string, string> => ({
+  kind: r.kind,
+  title: r.title,
+  date: r.date,
+  workoutId: r.workoutId,
+  items: JSON.stringify(r.items),
+  ...(r.exerciseRestS > 0 ? { exerciseRestS: String(r.exerciseRestS) } : {}),
+  ...minutesParam(r.minutes),
+  ...planLinkParams(r.link),
+});
+
 export function runPath(player: RunPlayer, r: WorkoutRun): Href {
-  return {
-    pathname: player,
-    params: {
-      kind: r.kind,
-      title: r.title,
-      date: r.date,
-      workoutId: r.workoutId,
-      items: JSON.stringify(r.items),
-      ...(r.exerciseRestS > 0 ? { exerciseRestS: String(r.exerciseRestS) } : {}),
-      ...minutesParam(r.minutes),
-      ...planLinkParams(r.link),
-    },
-  };
+  return { pathname: player, params: runParams(r) };
 }
 
 const isItem = (v: unknown): v is SessionItem => {
@@ -91,7 +90,7 @@ export function activityFormPath(
   done?: readonly ItemDone[],
   startTime?: string,
   skipped: readonly number[] = []
-): Href {
+): { pathname: "/activity/new"; params: Record<string, string> } {
   return {
     pathname: "/activity/new",
     params: {
@@ -120,5 +119,6 @@ export function logRun(
 ): void {
   const minutes = Math.max(1, Math.round((Date.now() - startedAt) / 60_000));
   const date = today(new Date(startedAt));
-  router.replace(activityFormPath({ ...r, date, minutes }, done, startTimeOf(startedAt), skipped));
+  const path = activityFormPath({ ...r, date, minutes }, done, startTimeOf(startedAt), skipped);
+  router.replace({ ...path, params: { ...path.params, live: "1" } });
 }

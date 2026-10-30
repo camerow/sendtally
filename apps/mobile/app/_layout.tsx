@@ -25,6 +25,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { colors } from "@sendtally/design/tokens";
 import { resolveLocale, setLocale } from "@sendtally/features/i18n";
 import { AnalyticsProvider } from "../features/analytics/AnalyticsProvider";
+import { AlreadyRunningSheet } from "../features/live-session/AlreadyRunningSheet";
 import { BillingProvider } from "../features/billing/BillingProvider";
 import { ReminderPromptProvider } from "../features/training/reminders/ReminderPromptProvider";
 import { CLERK_PUBLISHABLE_KEY } from "../lib/config";
@@ -105,6 +106,7 @@ function AppStack(): React.ReactElement | null {
           ))}
         </Stack.Protected>
       </Stack>
+      {isSignedIn && <AlreadyRunningSheet />}
     </ReminderPromptProvider>
   );
 }

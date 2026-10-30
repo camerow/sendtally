@@ -14,7 +14,8 @@ import { focusLabel } from "@sendtally/features/training";
 import { phaseLook } from "../timer/phaseLook";
 import { TimerFrame } from "../timer/TimerFrame";
 import { useTimer } from "../timer/useTimer";
-import type { IntervalsRun } from "./intervalsParams";
+import { resumedRun, writeLiveRun } from "../../live-session/liveRun";
+import { intervalsParams, type IntervalsRun } from "./intervalsParams";
 import { stepText, upNext } from "./intervalsText";
 import { StepCard } from "./StepCard";
 import { UpNext } from "./UpNext";
@@ -23,6 +24,8 @@ import { useRunWorkout } from "../library/useLibrary";
 export type IntervalsPlayerProps = {
   workout: IntervalsRun;
   unit: WeightUnit;
+  /** Ends the run as it opens, for its review. */
+  end: boolean;
   onFinish: (run: Run<IntervalPhase>) => void;
 };
 
@@ -30,11 +33,17 @@ export type IntervalsPlayerProps = {
 export function IntervalsPlayer({
   workout,
   unit,
+  end,
   onFinish,
 }: IntervalsPlayerProps): React.ReactElement {
   const { body } = workout;
   const targetRpe = useRunWorkout(workout.workoutId)?.targetRpe;
-  const timer = useTimer((now) => startIntervalsRun(body, now));
+  const timer = useTimer((now) => {
+    const state = resumedRun("/workout/intervals", workout.workoutId)?.state;
+    return state?.player === "timer"
+      ? (state.run as Run<IntervalPhase>)
+      : startIntervalsRun(body, now);
+  });
   const { run, secondsLeft } = timer;
   const phase = currentPhase(run);
   const tapped = phase.taps > 0;
@@ -43,8 +52,23 @@ export function IntervalsPlayer({
   const look = phaseLook(working, phase.kind === "ready");
 
   React.useEffect(() => {
+    writeLiveRun({
+      title: workout.title,
+      workoutId: workout.workoutId,
+      pathname: "/workout/intervals",
+      params: intervalsParams(workout),
+      startedAt: run.startedAt,
+      state: { player: "timer", run, ...(workout.kind === "climbing" ? { laps: true } : {}) },
+    });
     if (run.finished !== null) onFinish(run);
-  }, [run, onFinish]);
+  }, [run, workout, onFinish]);
+
+  const ending = React.useRef(end);
+  React.useEffect(() => {
+    if (!ending.current) return;
+    ending.current = false;
+    timer.end();
+  }, [timer]);
 
   const primary = tapped
     ? () => {

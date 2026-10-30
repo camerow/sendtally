@@ -1,4 +1,4 @@
-import { router } from "expo-router";
+import { router, type Href } from "expo-router";
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { gymOfDraft, useGyms } from "@sendtally/features/gyms";
@@ -10,15 +10,41 @@ import { useApi } from "../../lib/api";
 import { liveSessionStorage } from "../../lib/liveSessionStorage";
 import { press } from "../../lib/press";
 import { LiveClock } from "../../components/LiveClock";
+import { liveRunHref, liveRunSummary, useLiveRun } from "./liveRun";
 
-/** The running session folded down on top of the tab bar: tap to open it, stop to finish it. */
+type Live = {
+  name: string;
+  summary: string;
+  elapsed: (now: Date) => number;
+  open: Href;
+  stop: Href;
+};
+
+/** The climbing session or workout running, folded down on top of the tab bar: tap to open it, stop to end it. */
 export function LiveBar(): React.ReactElement | null {
-  const live = useLiveSession(liveSessionStorage);
+  const session = useLiveSession(liveSessionStorage);
+  const run = useLiveRun();
   const gyms = useGyms(useApi());
-  const draft = live.stored?.draft;
-  if (draft === undefined) return null;
-  const gym = gymOfDraft(gyms.gyms, draft.gymId)?.name ?? t("gyms.noGym");
-  const summary = tallySummary(draft);
+  const draft = session.stored?.draft;
+  const live: Live | null =
+    draft !== undefined
+      ? {
+          name: gymOfDraft(gyms.gyms, draft.gymId)?.name ?? t("gyms.noGym"),
+          summary: tallySummary(draft),
+          elapsed: (now) => tallyElapsedSeconds(draft, now),
+          open: "/session/live",
+          stop: { pathname: "/session/live", params: { finish: "1" } },
+        }
+      : run !== null
+        ? {
+            name: run.title,
+            summary: liveRunSummary(run),
+            elapsed: (now) => Math.max(0, Math.floor((now.getTime() - run.startedAt) / 1000)),
+            open: liveRunHref(run),
+            stop: liveRunHref(run, true),
+          }
+        : null;
+  if (live === null) return null;
   return (
     <View
       style={{
@@ -29,9 +55,9 @@ export function LiveBar(): React.ReactElement | null {
       }}
     >
       <Pressable
-        onPress={() => router.push("/session/live")}
+        onPress={() => router.push(live.open)}
         accessibilityRole="button"
-        accessibilityLabel={`${gym}, ${summary}`}
+        accessibilityLabel={`${live.name}, ${live.summary}`}
         style={press({
           flex: 1,
           height: 56,
@@ -47,24 +73,24 @@ export function LiveBar(): React.ReactElement | null {
             numberOfLines={1}
             style={{ fontFamily: fonts.sansSemiBold, fontSize: 15, color: colors.white }}
           >
-            {gym}
+            {live.name}
           </Text>
           <Text
             numberOfLines={1}
             style={{ fontFamily: fonts.mono, fontSize: 12, color: "rgba(255,255,255,0.75)" }}
           >
-            {summary}
+            {live.summary}
           </Text>
         </View>
         <LiveClock
-          elapsed={(now) => tallyElapsedSeconds(draft, now)}
+          elapsed={live.elapsed}
           style={{ fontFamily: fonts.mono, fontSize: 15, color: colors.white }}
         />
       </Pressable>
       <Pressable
-        onPress={() => router.push({ pathname: "/session/live", params: { finish: "1" } })}
+        onPress={() => router.push(live.stop)}
         accessibilityRole="button"
-        accessibilityLabel={t("tally.finishSession")}
+        accessibilityLabel={draft !== undefined ? t("tally.finishSession") : t("hang.end")}
         style={press({
           width: 44,
           height: 44,

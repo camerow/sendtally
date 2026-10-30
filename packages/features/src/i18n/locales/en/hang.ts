@@ -121,6 +121,7 @@ export const hang = {
   "hang.phaseRest": "Rest",
   "hang.phaseSetRest": "Set rest",
   "hang.phaseLift": "Lift",
+  "hang.phaseClimb": "Climb",
   "hang.paused": "Paused",
   "hang.tapToPause": "Tap to pause",
   "hang.tapToResume": "Tap to resume",

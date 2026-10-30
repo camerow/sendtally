@@ -2,6 +2,7 @@ import { router, type Href } from "expo-router";
 import type { ActivityKind } from "@sendtally/api-client";
 import type { CalendarDate, Intervals, PlanLink } from "@sendtally/core/hang";
 import { ACTIVITY_KINDS } from "@sendtally/features/activities";
+import { startLive } from "../../live-session/startLive";
 import { planLinkParams, readPlanLink } from "../data/planLinkParams";
 
 /** What the intervals player runs, and what the activity it logs is filed under. */
@@ -21,23 +22,23 @@ type RawParams = Partial<Record<string, string | string[]>>;
 
 const str = (v: string | string[] | undefined): string => (Array.isArray(v) ? v[0] : v) ?? "";
 
+export const intervalsParams = (r: IntervalsRun): Record<string, string> => ({
+  kind: r.kind,
+  title: r.title,
+  date: r.date,
+  body: JSON.stringify(r.body),
+  ...(r.activityId === null ? {} : { activityId: r.activityId }),
+  ...(r.workoutId === null ? {} : { workoutId: r.workoutId }),
+  ...planLinkParams(r.link),
+});
+
 export function intervalsPath(r: IntervalsRun): Href {
-  return {
-    pathname: "/workout/intervals",
-    params: {
-      kind: r.kind,
-      title: r.title,
-      date: r.date,
-      body: JSON.stringify(r.body),
-      ...(r.activityId === null ? {} : { activityId: r.activityId }),
-      ...(r.workoutId === null ? {} : { workoutId: r.workoutId }),
-      ...planLinkParams(r.link),
-    },
-  };
+  return { pathname: "/workout/intervals", params: intervalsParams(r) };
 }
 
+/** Runs it in the intervals player, once whatever already runs is dealt with. */
 export function startIntervals(r: IntervalsRun): void {
-  router.push(intervalsPath(r));
+  startLive(r.title, () => router.push(intervalsPath(r)));
 }
 
 const parseBody = (text: string): Intervals | null => {

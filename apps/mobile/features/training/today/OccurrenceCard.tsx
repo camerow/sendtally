@@ -7,6 +7,8 @@ import { t } from "@sendtally/features/i18n";
 import { durationLabel } from "@sendtally/features/sessions";
 import { occurrenceLink, type Occurrence } from "@sendtally/features/training";
 import { workoutMinutes, type LibraryWorkout } from "@sendtally/features/workouts";
+import { liveRunHref, useLiveRun } from "../../live-session/liveRun";
+import { Button } from "../components/Button";
 import { Label } from "../components/Label";
 import { Title } from "../components/Title";
 import { useHangData } from "../data/HangDataContext";
@@ -18,12 +20,15 @@ import { occurrenceMeta, occurrenceTag } from "./occurrenceText";
 
 export type OccurrenceCardProps = { occurrence: Occurrence; workout: LibraryWorkout };
 
-/** A workout due today: the card opens the workout, Start runs what it prescribes. */
+/** A workout due today: the card opens the workout, Start runs what it prescribes, Resume goes back to it running. */
 export function OccurrenceCard({ occurrence, workout }: OccurrenceCardProps): React.ReactElement {
   const { model } = useHangData();
   const o = occurrence;
   const link = occurrenceLink(o);
   const minutes = workoutMinutes(workout);
+  const run = useLiveRun();
+  const running = run?.workoutId === workout.id ? run : null;
+  const tag = occurrenceTag(kindLabel(workout.kind), o);
   return (
     <View
       style={{
@@ -43,7 +48,9 @@ export function OccurrenceCard({ occurrence, workout }: OccurrenceCardProps): Re
         <View style={{ flexDirection: "row", alignItems: "center", gap: 7 }}>
           <DayMark kind={workout.kind} filled />
           <Label color={KIND_LOOK[workout.kind].ink} style={{ flex: 1 }}>
-            {t("hang.upToday", { kind: occurrenceTag(kindLabel(workout.kind), o) })}
+            {running === null
+              ? t("hang.upToday", { kind: tag })
+              : `${t("tally.inProgress")} · ${tag}`}
           </Label>
           {minutes !== null && <Label color={colors.textSecondary}>{durationLabel(minutes)}</Label>}
         </View>
@@ -54,12 +61,22 @@ export function OccurrenceCard({ occurrence, workout }: OccurrenceCardProps): Re
           </Text>
         </View>
       </Pressable>
-      <StartButton
-        workout={workout}
-        date={o.date}
-        planned={{ link, items: o.items, session: o.session }}
-        height={50}
-      />
+      {running === null ? (
+        <StartButton
+          workout={workout}
+          date={o.date}
+          planned={{ link, items: o.items, session: o.session }}
+          height={50}
+        />
+      ) : (
+        <Button
+          label={t("hang.resume")}
+          onPress={() => router.push(liveRunHref(running))}
+          variant="primary"
+          height={50}
+          icon="play"
+        />
+      )}
     </View>
   );
 }
