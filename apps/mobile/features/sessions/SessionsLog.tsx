@@ -17,6 +17,7 @@ import { UpdateReadyCard } from "../app-update/UpdateReadyCard";
 import { ClimbingLog } from "../climbs/ClimbingLog";
 import { LogFab } from "../live-session/LogFab";
 import { Segmented } from "../training/components/Segmented";
+import { SegmentSwipe } from "../../components/SegmentSwipe";
 import { SetupStack, type SetupCard } from "./SetupStack";
 import { TrainingLog } from "./TrainingLog";
 import { useStravaConnect } from "../settings/useStravaConnect";
@@ -107,38 +108,38 @@ export function SessionsLog(): React.ReactElement {
     </>
   );
 
+  const segments = [
+    { value: "climbing" as const, label: t("statistics.climbing") },
+    { value: "training" as const, label: t("statistics.training") },
+  ];
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.white }} edges={["top"]}>
       <ScreenHeader title={t("journal.log")} right={<AccountButton />} />
-      <View style={{ paddingHorizontal: 18, paddingTop: 4, paddingBottom: 8 }}>
-        <Segmented
-          value={segment}
-          onChange={setSegment}
-          options={[
-            { value: "climbing", label: t("statistics.climbing") },
-            { value: "training", label: t("statistics.training") },
-          ]}
-        />
-      </View>
-      {error !== null && (
-        <Text
-          style={{
-            paddingHorizontal: 18,
-            paddingVertical: 8,
-            fontFamily: fonts.mono,
-            fontSize: 12,
-            color: colors.watermelonInk,
-          }}
-        >
-          {error}
-        </Text>
-      )}
-      {segment === "climbing" ? (
-        <ClimbingLog items={items} header={header} onRefresh={log.reload} />
-      ) : (
-        <TrainingLog items={items} header={header} onRefresh={log.reload} />
-      )}
-      <LogFab segment={segment} />
+      <SegmentSwipe options={segments} value={segment} onChange={setSegment}>
+        <View style={{ paddingHorizontal: 18, paddingTop: 4, paddingBottom: 8 }}>
+          <Segmented value={segment} onChange={setSegment} options={segments} />
+        </View>
+        {error !== null && (
+          <Text
+            style={{
+              paddingHorizontal: 18,
+              paddingVertical: 8,
+              fontFamily: fonts.mono,
+              fontSize: 12,
+              color: colors.watermelonInk,
+            }}
+          >
+            {error}
+          </Text>
+        )}
+        {segment === "climbing" ? (
+          <ClimbingLog items={items} header={header} onRefresh={log.reload} />
+        ) : (
+          <TrainingLog items={items} header={header} onRefresh={log.reload} />
+        )}
+        <LogFab segment={segment} />
+      </SegmentSwipe>
     </SafeAreaView>
   );
 }
