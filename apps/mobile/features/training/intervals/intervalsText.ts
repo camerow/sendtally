@@ -25,12 +25,13 @@ const UP_NEXT = 4;
 const sideText = (side: IntervalPhase["side"]): string =>
   side === undefined ? "" : side === "L" ? t("activities.leftSide") : t("activities.rightSide");
 
-/** The words on the current step's card: what it is, its side, the countdown and the cue. */
+/** The words on the current step's card: what it is, its side, the countdown and the cue; a climb reads Climb. */
 export function stepText(
   run: Run<IntervalPhase>,
   body: Intervals,
   secondsLeft: number,
-  unit: WeightUnit
+  unit: WeightUnit,
+  climbing = false
 ): StepText {
   const phase = currentPhase(run);
   const paused = run.pausedAt !== null;
@@ -54,7 +55,8 @@ export function stepText(
       note: stepDose(next, unit),
     };
   }
-  const work = phase.taps > 0 ? t("activities.doReps") : t("activities.hold");
+  const hold = climbing ? t("hang.phaseClimb") : t("activities.hold");
+  const work = phase.taps > 0 ? t("activities.doReps") : hold;
   const kicker = [paused ? t("hang.paused") : work, sideText(phase.side)]
     .filter((p) => p !== "")
     .join(" · ");

@@ -51,6 +51,7 @@ export function IntervalsPlayer({
   const working = isWork(phase.kind);
   const paused = run.pausedAt !== null;
   const look = phaseLook(working, phase.kind === "ready");
+  const climbing = workout.kind === "climbing";
 
   React.useEffect(() => {
     writeLiveRun({
@@ -59,10 +60,10 @@ export function IntervalsPlayer({
       pathname: "/workout/intervals",
       params: intervalsParams(workout),
       startedAt: run.startedAt,
-      state: { player: "timer", run, ...(workout.kind === "climbing" ? { laps: true } : {}) },
+      state: { player: "timer", run, ...(climbing ? { laps: true } : {}) },
     });
     if (run.finished !== null) onFinish(run);
-  }, [run, workout, onFinish]);
+  }, [run, workout, climbing, onFinish]);
 
   const ending = React.useRef(end);
   React.useEffect(() => {
@@ -100,14 +101,18 @@ export function IntervalsPlayer({
     >
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ gap: 18 }}>
         <StepCard
-          text={stepText(run, body, secondsLeft, unit)}
+          text={stepText(run, body, secondsLeft, unit, climbing)}
           color={look.fill}
           accessibilityLabel={primaryLabel}
           onPress={primary}
         />
         <SetArrows
           timer={timer}
-          label={t("activities.roundOf", { round: phase.set, rounds: body.rounds })}
+          label={
+            climbing
+              ? t("tally.lapOf", { set: phase.set, sets: body.rounds })
+              : t("activities.roundOf", { round: phase.set, rounds: body.rounds })
+          }
         />
         <UpNext items={upNext(run, body)} />
       </ScrollView>
