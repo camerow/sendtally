@@ -2,7 +2,8 @@ import { randomUUID } from "expo-crypto";
 import { router } from "expo-router";
 import React from "react";
 import { Text, View } from "react-native";
-import { addDays, weekStart, type Block } from "@sendtally/core/hang";
+import { addDays, weekday, type Block } from "@sendtally/core/hang";
+import { shortDate, weekdayLong } from "@sendtally/features/hang";
 import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
 import { blockMembers, useTrainingLog } from "@sendtally/features/training";
@@ -17,11 +18,12 @@ import { type } from "../type";
 
 export type PlanAgainSheetProps = { block: Block; onClose: () => void };
 
-/** Plan a block again, or schedule a template: only the week it starts asks; the copy opens once it is made. */
+/** Plan a block again, or schedule a template, from any day on: its weeks run from that weekday, and the copy opens once it is made. */
 export function PlanAgainSheet({ block, onClose }: PlanAgainSheetProps): React.ReactElement {
   const { today } = useHangData();
   const actions = usePlanActions();
-  const [start, setStart] = React.useState(weekStart(today));
+  const [start, setStart] = React.useState(today);
+  const last = addDays(start, block.weeks * 7 - 1);
   const [busy, setBusy] = React.useState(false);
   const { log } = useTrainingLog(useApi());
   const dayless =
@@ -53,18 +55,26 @@ export function PlanAgainSheet({ block, onClose }: PlanAgainSheetProps): React.R
         <MonthCalendar
           selected={start}
           picked={Array.from({ length: 7 }, (_, i) => addDays(start, i))}
-          min={weekStart(today)}
+          min={today}
           today={today}
           shaded={() => false}
-          onPick={(d) => setStart(weekStart(d))}
+          onPick={setStart}
         />
+        <Text style={[type.body, { fontSize: 13, lineHeight: 19, color: colors.textSecondary }]}>
+          {t("plan.startsRange", {
+            start: shortDate(start),
+            end: shortDate(last),
+            from: weekdayLong(weekday(start)),
+            to: weekdayLong(weekday(last)),
+          })}
+        </Text>
         {dayless.length > 0 && (
           <Text style={[type.body, { fontSize: 13, lineHeight: 19, color: colors.textSecondary }]}>
             {t("plan.noDaysYet", { count: dayless.length, workouts: dayless.join(", ") })}
           </Text>
         )}
         <Button
-          label={block.start === null ? t("plan.schedule") : t("plan.planAgain")}
+          label={t("plan.scheduleFrom", { day: shortDate(start) })}
           onPress={() => void save()}
           disabled={busy}
           variant="primary"

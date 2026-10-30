@@ -289,13 +289,15 @@ describe("plan again", () => {
     expect(screen.queryByLabelText("Add a workout to Summer base")).toBeNull();
   });
 
-  it("copies a past block from the week picked, then opens the copy", async () => {
+  it("copies a past block from the day picked, its weeks running from that weekday", async () => {
     await renderWithHang(<BlockScreen id="b0" />, hangData(), { workouts: [squat], plan: past });
     await fireEvent.press(screen.getByText("Plan again"));
-    const [sheet, footer] = screen.getAllByText("Plan again");
-    expect(footer).toBeTruthy();
-    await fireEvent.press(sheet!);
-    expect(mockPlan.copyBlock).toHaveBeenCalledWith("b0", "b-new", "2026-09-28");
+    expect(screen.getByText("When does it start?")).toBeTruthy();
+    expect(
+      screen.getByText("Tue, Sep 29 to Mon, Oct 26. Each block week runs Tuesday to Monday.")
+    ).toBeTruthy();
+    await fireEvent.press(screen.getByText("Schedule from Tue, Sep 29"));
+    expect(mockPlan.copyBlock).toHaveBeenCalledWith("b0", "b-new", "2026-09-29");
     expect(router.replace).toHaveBeenCalledWith({
       pathname: "/plan/block/[id]",
       params: { id: "b-new" },
@@ -337,8 +339,8 @@ describe("templates", () => {
     expect(screen.queryByText("This week")).toBeNull();
     expect(screen.getByLabelText("Back squat")).toBeTruthy();
     await fireEvent.press(screen.getByText("Schedule"));
-    await fireEvent.press(screen.getAllByText("Schedule")[0]!);
-    expect(mockPlan.copyBlock).toHaveBeenCalledWith("t1", "b-new", "2026-09-28");
+    await fireEvent.press(screen.getByText("Schedule from Tue, Sep 29"));
+    expect(mockPlan.copyBlock).toHaveBeenCalledWith("t1", "b-new", "2026-09-29");
   });
 
   it("names the workouts a schedule leaves out for having no days", async () => {
