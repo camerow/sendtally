@@ -7,12 +7,11 @@ import { AccountButton } from "../../components/AccountButton";
 import { ScreenHeader } from "../../components/ScreenHeader";
 import { StatsScreen } from "../../features/stats/StatsScreen";
 import { statsSegmentStorage } from "../../lib/statsSegmentStorage";
+import { useSegmentParam } from "../../lib/storedSegment";
 
 export default function Stats(): React.ReactElement {
   const { segment } = useLocalSearchParams<{ segment?: string }>();
-  React.useEffect(() => {
-    if (segment === "climbing" || segment === "training") statsSegmentStorage.write(segment);
-  }, [segment]);
+  useSegmentParam(statsSegmentStorage, segment);
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.white }} edges={["top"]}>
       <ScreenHeader title={t("statistics.tab")} right={<AccountButton />} />
