@@ -110,6 +110,7 @@ export function ClimbsContent({ header }: ClimbsContentProps): React.ReactElemen
               label={grade === null ? t("climbs.anyGrade") : gradeFilterLabel(grade)}
               active={grade !== null}
               uppercase={false}
+              icon="insights"
               onPress={() => setPicking(true)}
             />
             {CLIMB_STATUSES.map((s) => (
