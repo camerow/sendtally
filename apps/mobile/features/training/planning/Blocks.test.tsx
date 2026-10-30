@@ -156,7 +156,7 @@ describe("block overview", () => {
     await fireEvent.press(screen.getByLabelText("Back squat"));
     expect(router.push).toHaveBeenCalledWith({
       pathname: "/plan/membership/[id]",
-      params: { id: "m1" },
+      params: { id: "m1", back: "Winter base" },
     });
     await fireEvent.press(screen.getByLabelText("Add to Winter base"));
     expect(screen.getByText("What kind?")).toBeTruthy();
@@ -164,6 +164,21 @@ describe("block overview", () => {
     expect(router.push).toHaveBeenCalledWith({
       pathname: "/plan/block/edit",
       params: { id: "b1" },
+    });
+  });
+});
+
+describe("block card", () => {
+  it("opens a workout in its block, back naming Train", async () => {
+    const running: Plan = {
+      ...plan,
+      blocks: [{ id: "b1", name: "Winter base", start: "2026-09-21", weeks: 4, focus: null }],
+    };
+    await renderWithHang(<BlocksList />, hangData(), { workouts: [squat], plan: running });
+    await fireEvent.press(screen.getAllByLabelText("Back squat")[0]!);
+    expect(router.push).toHaveBeenCalledWith({
+      pathname: "/plan/membership/[id]",
+      params: { id: "m1", back: "Train" },
     });
   });
 });
@@ -204,7 +219,7 @@ describe("plan again", () => {
     await fireEvent.press(screen.getByText("0 of 4 done · -"));
     expect(router.push).toHaveBeenCalledWith({
       pathname: "/plan/membership/[id]",
-      params: { id: "m3" },
+      params: { id: "m3", back: "Summer base" },
     });
     expect(screen.getByLabelText("Back squat")).toBeTruthy();
   });
@@ -291,7 +306,7 @@ describe("block weeks", () => {
     expect(screen.getByLabelText("Week 2, Weight")).toHaveProp("accessibilityValue", {
       text: "100",
     });
-    expect(screen.getByText("Winter base")).toBeTruthy();
+    expect(screen.getByText("Back")).toBeTruthy();
   });
 
   it("stores a week's change from its cell, Next walking down the column", async () => {

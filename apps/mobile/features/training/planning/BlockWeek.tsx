@@ -22,7 +22,7 @@ export type BlockWeekProps = {
 export function BlockWeek({ block, members, workout, lit }: BlockWeekProps): React.ReactElement {
   const { model } = useHangData();
   const [adding, setAdding] = React.useState(false);
-  const rows = planGridRows(members, workout, model.gripName);
+  const rows = planGridRows(members, workout, model.gripName, block.name);
   return (
     <View style={{ gap: 12 }}>
       {rows.length === 0 ? (

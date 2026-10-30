@@ -43,13 +43,17 @@ import { KIND_LOOK } from "../today/kindLook";
 import { type } from "../type";
 import { LoadTable } from "./LoadTable";
 
-export type LadderScreenProps = { id: string };
+export type LadderScreenProps = {
+  id: string;
+  /** Where back goes, as that screen is called; plain Back without it. */
+  back?: string;
+};
 
 /**
  * A workout in its block: its week, and its weekly load as a table of the block's weeks,
  * each changing only what differs from the workout as written.
  */
-export function LadderScreen({ id }: LadderScreenProps): React.ReactElement | null {
+export function LadderScreen({ id, back }: LadderScreenProps): React.ReactElement | null {
   const { model, today } = useHangData();
   const unit = model.settings.units;
   const { log } = useTrainingLog(useApi());
@@ -110,7 +114,7 @@ export function LadderScreen({ id }: LadderScreenProps): React.ReactElement | nu
 
   return (
     <ScreenFrame
-      backLabel={block.name}
+      backLabel={back}
       action={
         <DetailMenu
           rows={[

@@ -43,7 +43,10 @@ export function BlockRecapView({ recap, workout }: BlockRecapViewProps): React.R
               name={w.name}
               meta={`${t("plan.doneOf", { done: r.done, planned: r.planned })} · ${change}`}
               onOpen={() =>
-                openMembership({ id: r.membershipId, blockId: recap.block.id, workoutId: w.id })
+                openMembership(
+                  { id: r.membershipId, blockId: recap.block.id, workoutId: w.id },
+                  recap.block.name
+                )
               }
             />
           );

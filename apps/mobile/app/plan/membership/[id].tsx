@@ -4,10 +4,10 @@ import { HangDataProvider } from "../../../features/training/data/HangDataProvid
 import { LadderScreen } from "../../../features/training/planning/LadderScreen";
 
 export default function LadderRoute(): React.ReactElement {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, back } = useLocalSearchParams<{ id: string; back?: string }>();
   return (
     <HangDataProvider>
-      <LadderScreen id={id} />
+      <LadderScreen id={id} back={back} />
     </HangDataProvider>
   );
 }

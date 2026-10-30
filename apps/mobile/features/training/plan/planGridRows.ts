@@ -37,7 +37,9 @@ export function workoutLines(w: Workout, gripName: (id: string) => string): stri
 export function planGridRows(
   members: readonly Membership[],
   workout: WorkoutLookup,
-  gripName: (id: string) => string
+  gripName: (id: string) => string,
+  /** What back says on the screen a row opens: the screen the grid is on. */
+  back?: string
 ): PlanGridRow[] {
   return members.flatMap((m): PlanGridRow[] => {
     const w = workout(m.workoutId);
@@ -49,7 +51,7 @@ export function planGridRows(
         name: w.name,
         lines: workoutLines(w, gripName),
         days: m.weekdays,
-        open: () => openMembership(m),
+        open: () => openMembership(m, back),
       },
     ];
   });

@@ -25,7 +25,7 @@ export type BlockCardProps = {
 /** A training block: where it is and what is in it. Tap to open it. */
 export function BlockCard({ block, members, workout }: BlockCardProps): React.ReactElement {
   const { model } = useHangData();
-  const rows = planGridRows(members, workout, model.gripName);
+  const rows = planGridRows(members, workout, model.gripName, t("training.train"));
   const [adding, setAdding] = React.useState(false);
   return (
     <View
