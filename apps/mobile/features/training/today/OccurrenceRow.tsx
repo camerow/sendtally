@@ -6,7 +6,10 @@ import { t } from "@sendtally/features/i18n";
 import { occurrenceLink, type Occurrence } from "@sendtally/features/training";
 import type { LibraryWorkout } from "@sendtally/features/workouts";
 import { pressRow } from "../../../lib/press";
+import { DetailMenu } from "../components/DetailMenu";
 import { Label } from "../components/Label";
+import { dayRows } from "../plan-days/dayRows";
+import { useDayChanges } from "../plan-days/useDayChanges";
 import { useHangData } from "../data/HangDataContext";
 import { StartButton } from "../library-detail/StartButton";
 import { type } from "../type";
@@ -21,6 +24,7 @@ export function OccurrenceRow({ occurrence, workout }: OccurrenceRowProps): Reac
   const { model } = useHangData();
   const { status } = occurrence;
   const done = status === "done";
+  const changes = useDayChanges();
   const tag =
     status === "done"
       ? t("plan.done")
@@ -60,6 +64,10 @@ export function OccurrenceRow({ occurrence, workout }: OccurrenceRowProps): Reac
           {occurrenceMeta(occurrence, model.settings.units)}
         </Text>
       </Pressable>
+      {status === "planned" && (
+        <DetailMenu rows={dayRows((kind) => changes.open(kind, occurrence, workout.name))} />
+      )}
+      {changes.sheets}
       {status === "missed" && (
         <StartButton
           workout={workout}

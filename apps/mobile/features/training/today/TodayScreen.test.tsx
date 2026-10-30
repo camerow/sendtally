@@ -12,6 +12,11 @@ jest.mock("../../../components/Sheet", () => ({
 }));
 let mockParams: Record<string, string> = {};
 
+const mockPlanActions = {
+  savePlanChange: jest.fn(async () => undefined),
+  undoPlanChange: jest.fn(async () => undefined),
+};
+jest.mock("../plan/usePlanActions", () => ({ usePlanActions: () => mockPlanActions }));
 jest.mock("expo-router", () => ({
   router: { push: jest.fn() },
   useLocalSearchParams: () => mockParams,
@@ -174,5 +179,54 @@ describe("Today", () => {
       pathname: "/session/live",
       params: expect.objectContaining({ membershipId: "m1" }),
     });
+  });
+
+  it("skips today's workout from its ··· menu, with why", async () => {
+    await renderWithHang(<TodayScreen />, hangData(), { plan: plan("max10") });
+    await fireEvent.press(screen.getByLabelText("More"));
+    await fireEvent.press(screen.getByText("Skip"));
+    expect(screen.getByText("Skip it?")).toBeTruthy();
+    await fireEvent.press(screen.getByText("Sore"));
+    await fireEvent.press(screen.getAllByText("Skip").at(-1)!);
+    expect(mockPlanActions.savePlanChange).toHaveBeenCalledWith({
+      membershipId: "m1",
+      plannedOn: "2026-09-29",
+      kind: "skip",
+      movedTo: null,
+      reason: "sore",
+      note: null,
+    });
+  });
+
+  it("shows a skipped day faded with why, and undoes it", async () => {
+    const skipped: Plan = {
+      ...plan("max10"),
+      planChanges: [
+        {
+          membershipId: "m1",
+          plannedOn: "2026-09-29",
+          kind: "skip",
+          movedTo: null,
+          reason: "sick",
+          note: "Head cold",
+        },
+      ],
+    };
+    await renderWithHang(<TodayScreen />, hangData(), { plan: skipped });
+    expect(screen.getByText("Skipped · Sick")).toBeTruthy();
+    expect(screen.getByText("Head cold")).toBeTruthy();
+    await fireEvent.press(screen.getByText("Undo skip"));
+    expect(mockPlanActions.undoPlanChange).toHaveBeenCalledWith("m1", "2026-09-29");
+  });
+
+  it("moves today's workout to another day of its week, which then shows it moved", async () => {
+    await renderWithHang(<TodayScreen />, hangData(), { plan: plan("max10") });
+    await fireEvent.press(screen.getByLabelText("More"));
+    await fireEvent.press(screen.getByText("Move"));
+    await fireEvent.press(screen.getByLabelText("Wed"));
+    await fireEvent.press(screen.getByText("Move to Wed"));
+    expect(mockPlanActions.savePlanChange).toHaveBeenLastCalledWith(
+      expect.objectContaining({ kind: "move", plannedOn: "2026-09-29", movedTo: "2026-09-30" })
+    );
   });
 });

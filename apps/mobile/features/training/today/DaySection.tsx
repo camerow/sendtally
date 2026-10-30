@@ -14,6 +14,7 @@ import { LoggedRow } from "./LoggedRow";
 import { loggedRowText } from "./loggedRowText";
 import { OccurrenceCard } from "./OccurrenceCard";
 import { OccurrenceRow } from "./OccurrenceRow";
+import { SkippedRow } from "./SkippedRow";
 
 export type DaySectionProps = {
   day: TrainingDay;
@@ -52,7 +53,9 @@ export function DaySection({ day, onOpen, heading = true }: DaySectionProps): Re
       )}
       {day.plans.map((o) => {
         const w = workout(o.membership.workoutId);
-        if (w === undefined || o.status === "done") return null;
+        if (w === undefined || o.status === "done" || o.status === "moved") return null;
+        if (o.status === "skipped")
+          return <SkippedRow key={o.membership.id} occurrence={o} workout={w} />;
         return day.isToday && o.status === "planned" ? (
           <OccurrenceCard key={o.membership.id} occurrence={o} workout={w} />
         ) : (

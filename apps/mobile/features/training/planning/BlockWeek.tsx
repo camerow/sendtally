@@ -14,7 +14,7 @@ import { t } from "@sendtally/features/i18n";
 import {
   trainingDay,
   useTrainingLog,
-  type OccurrenceStatus,
+  type Occurrence,
   type WorkoutLookup,
 } from "@sendtally/features/training";
 import { useApi } from "../../../lib/api";
@@ -23,7 +23,11 @@ import { DashedPanel } from "../components/DashedPanel";
 import { AMBER } from "../components/tints";
 import { useHangData } from "../data/HangDataContext";
 import { PlanGrid } from "../plan/PlanGrid";
-import { planGridRows, type GridOptions } from "../plan/planGridRows";
+import { planGridRows, type CellMark, type GridOptions } from "../plan/planGridRows";
+import { DaySheet } from "../plan-days/DaySheet";
+import { useDayChanges } from "../plan-days/useDayChanges";
+import { useLibrary } from "../library/useLibrary";
+import type { LibraryWorkout } from "@sendtally/features/workouts";
 import { usePlanActions } from "../plan/usePlanActions";
 import { type } from "../type";
 import { AddKindSheet } from "./AddKindSheet";
@@ -66,6 +70,13 @@ export function BlockWeek({
   const { log } = useTrainingLog(useApi());
   const actions = usePlanActions();
   const [adding, setAdding] = React.useState(false);
+  const [day, setDay] = React.useState<{ occurrence: Occurrence; workout: LibraryWorkout } | null>(
+    null
+  );
+  const changes = useDayChanges();
+  const libraryState = useLibrary().state;
+  const library = (id: string): LibraryWorkout | undefined =>
+    libraryState.status === "ready" ? libraryState.data.workout(id) : undefined;
   const template = !isDated(block);
   const from = isDated(block) && week !== undefined ? addDays(block.start, (week - 1) * 7) : null;
   // A block week runs from its start's weekday, so each weekday column finds its own date.
@@ -77,8 +88,23 @@ export function BlockWeek({
       week !== undefined &&
       week > 1 && { week: { n: week, changes: log.plan.weekChanges, unit: model.settings.units } }),
     ...(statuses !== null && {
-      marks: (m: Membership): (OccurrenceStatus | null)[] =>
-        statuses.map((plans) => plans.find((o) => o.membership.id === m.id)?.status ?? null),
+      marks: (m: Membership): (CellMark | null)[] =>
+        statuses.map((plans) => {
+          const o = plans.find((x) => x.membership.id === m.id);
+          return o === undefined
+            ? null
+            : o.movedFrom !== null && o.status === "planned"
+              ? "movedIn"
+              : o.status;
+        }),
+      // A planned day from today on opens its day; anything else opens the workout.
+      press: (m: Membership, day: number) => {
+        const o = statuses[day]?.find((x) => x.membership.id === m.id);
+        const w = library(m.workoutId);
+        return o === undefined || o.status !== "planned" || w === undefined
+          ? undefined
+          : () => setDay({ occurrence: o, workout: w });
+      },
     }),
     ...(template && {
       toggle: (m: Membership, day: number) =>
@@ -155,6 +181,15 @@ export function BlockWeek({
           colors.textSecondary
         )}
       {canAdd && !(template && rows.length === 0) && add}
+      {day !== null && (
+        <DaySheet
+          occurrence={day.occurrence}
+          workout={day.workout}
+          onChange={(kind) => changes.open(kind, day.occurrence, day.workout.name)}
+          onClose={() => setDay(null)}
+        />
+      )}
+      {changes.sheets}
       <AddKindSheet
         flow={{ date: null, blockId: block.id }}
         visible={adding}

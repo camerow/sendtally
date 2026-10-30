@@ -99,18 +99,22 @@ export function PlanGrid({
           </View>
         );
         const { toggle } = row;
-        const cells = columns.map((day) => (
-          <DayCell
-            key={day}
-            kind={row.kind}
-            on={row.days.includes(day)}
-            size={CELL}
-            status={row.marks?.[day] ?? undefined}
-            asking={toggle !== undefined && row.days.length === 0}
-            onPress={toggle === undefined ? undefined : () => toggle(day)}
-            accessibilityLabel={`${row.name}, ${weekdayLong(day)}`}
-          />
-        ));
+        const cells = columns.map((day) => {
+          const mark = row.marks?.[day] ?? null;
+          return (
+            <DayCell
+              key={day}
+              kind={row.kind}
+              on={row.marks === undefined ? row.days.includes(day) : mark !== null}
+              size={CELL}
+              status={mark ?? undefined}
+              asking={toggle !== undefined && row.days.length === 0}
+              onPress={toggle === undefined ? row.press?.(day) : () => toggle(day)}
+              opens={toggle === undefined}
+              accessibilityLabel={`${row.name}, ${weekdayLong(day)}`}
+            />
+          );
+        });
         const line = {
           flexDirection: "row",
           alignItems: "center",

@@ -15,6 +15,9 @@ import { t } from "@sendtally/features/i18n";
 import { bodySummary, workoutMinutes } from "@sendtally/features/workouts";
 import { openMembership } from "./openMembership";
 
+/** How a dated day went for a row: an occurrence's status, or moved in from another day. */
+export type CellMark = OccurrenceStatus | "movedIn";
+
 /** Part of a line under a row's name, gold when its week changes it from as written. */
 export type GridPart = { text: string; changed?: boolean };
 
@@ -26,8 +29,10 @@ export type PlanGridRow = {
   lines: readonly (readonly GridPart[])[];
   days: readonly number[];
   /** On a dated week, how each day it lands went, Monday first; null where it does not land. */
-  marks?: readonly (OccurrenceStatus | null)[];
+  marks?: readonly (CellMark | null)[];
   open: () => void;
+  /** A dated day's cell, when it opens that day's sheet. */
+  press?: (day: number) => (() => void) | undefined;
   /** Sets or clears a weekday, on a block still being built. */
   toggle?: (day: number) => void;
 };
@@ -38,7 +43,8 @@ export type GridOptions = {
   back?: string;
   /** A block week past the first, its changes read in gold. */
   week?: { n: number; changes: readonly WeekChange[]; unit: WeightUnit };
-  marks?: (m: Membership) => readonly (OccurrenceStatus | null)[];
+  marks?: (m: Membership) => readonly (CellMark | null)[];
+  press?: (m: Membership, day: number) => (() => void) | undefined;
   toggle?: (m: Membership, day: number) => void;
 };
 
@@ -111,7 +117,7 @@ export function planGridRows(
   grips: GripNames,
   options: GridOptions = {}
 ): PlanGridRow[] {
-  const { back, week, marks, toggle } = options;
+  const { back, week, marks, toggle, press } = options;
   return members.flatMap((m): PlanGridRow[] => {
     const w = workout(m.workoutId);
     if (w === undefined) return [];
@@ -135,6 +141,7 @@ export function planGridRows(
         ...(marks !== undefined && { marks: marks(m) }),
         open: () => openMembership(m, back),
         ...(toggle !== undefined && { toggle: (day: number) => toggle(m, day) }),
+        ...(press !== undefined && { press: (day: number) => press(m, day) }),
       },
     ];
   });

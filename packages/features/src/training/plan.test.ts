@@ -1,3 +1,4 @@
+import { canMoveTo, moveOf, moveWeek } from "./moves";
 import { describe, expect, it } from "vitest";
 import type { Plan } from "@sendtally/api-client";
 import type { Workout } from "@sendtally/core/hang";
@@ -220,5 +221,36 @@ describe("skipped and moved days", () => {
   it("finds the next session past a skip", () => {
     const next = nextOccurrence(changed, changed.memberships[0]!, workout, [], "2026-11-03");
     expect(next?.date).toBe("2026-11-07");
+  });
+});
+
+describe("moving a day", () => {
+  const today = "2026-11-03";
+  const [tuesday] = occurrencesOn(plan, workout, [], "2026-11-03", today).filter(
+    (o) => o.membership.id === "m1"
+  );
+
+  it("moves within its block week, from today on, onto a day free of the same workout", () => {
+    if (tuesday === undefined) throw new Error("no Tuesday");
+    expect(moveWeek(tuesday)).toEqual([
+      "2026-11-02",
+      "2026-11-03",
+      "2026-11-04",
+      "2026-11-05",
+      "2026-11-06",
+      "2026-11-07",
+      "2026-11-08",
+    ]);
+    const plansOn = (d: string) => occurrencesOn(plan, workout, [], d, today);
+    expect(moveWeek(tuesday).filter((d) => canMoveTo(tuesday, d, today, plansOn))).toEqual([
+      "2026-11-04",
+      "2026-11-05",
+      "2026-11-07",
+      "2026-11-08",
+    ]);
+    expect(moveOf(tuesday, "2026-11-05")).toMatchObject({
+      plannedOn: "2026-11-03",
+      movedTo: "2026-11-05",
+    });
   });
 });

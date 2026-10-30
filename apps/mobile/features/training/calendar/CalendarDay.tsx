@@ -12,7 +12,9 @@ export type CalendarDayProps = { day: TrainingDay; inMonth: boolean; onPress: ()
 
 /** One day on the month: its number, today in a dark circle, and a mark per planned workout. */
 export function CalendarDay({ day, inMonth, onPress }: CalendarDayProps): React.ReactElement {
-  const plans = day.plans.filter((o) => o.workout !== undefined);
+  const plans = day.plans.filter(
+    (o) => o.workout !== undefined && o.status !== "moved" && o.status !== "skipped"
+  );
   return (
     <Pressable
       onPress={onPress}

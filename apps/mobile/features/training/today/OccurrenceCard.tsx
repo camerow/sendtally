@@ -9,6 +9,9 @@ import { occurrenceLink, type Occurrence } from "@sendtally/features/training";
 import { workoutMinutes, type LibraryWorkout } from "@sendtally/features/workouts";
 import { liveRunHref, useLiveRun } from "../../live-session/liveRun";
 import { Button } from "../components/Button";
+import { DetailMenu } from "../components/DetailMenu";
+import { dayRows } from "../plan-days/dayRows";
+import { useDayChanges } from "../plan-days/useDayChanges";
 import { Label } from "../components/Label";
 import { Title } from "../components/Title";
 import { useHangData } from "../data/HangDataContext";
@@ -30,6 +33,7 @@ export function OccurrenceCard({ occurrence, workout }: OccurrenceCardProps): Re
   const run = useLiveRun();
   const running = run?.workoutId === workout.id ? run : null;
   const tag = occurrenceTag(kindLabel(workout.kind), o);
+  const changes = useDayChanges();
   return (
     <View
       style={{
@@ -54,6 +58,9 @@ export function OccurrenceCard({ occurrence, workout }: OccurrenceCardProps): Re
               : `${t("tally.inProgress")} · ${tag}`}
           </Label>
           {minutes !== null && <Label color={colors.textSecondary}>{durationLabel(minutes)}</Label>}
+          {running === null && (
+            <DetailMenu rows={dayRows((kind) => changes.open(kind, o, workout.name))} />
+          )}
         </View>
         <View style={{ gap: 4 }}>
           <Title size={28}>{workout.name}</Title>
@@ -89,6 +96,7 @@ export function OccurrenceCard({ occurrence, workout }: OccurrenceCardProps): Re
           icon="play"
         />
       )}
+      {changes.sheets}
     </View>
   );
 }

@@ -20,6 +20,8 @@ const mockPlan = {
   deleteMembership: jest.fn(),
   saveWeekChange: jest.fn(),
   copyBlock: jest.fn(async () => true),
+  savePlanChange: jest.fn(async () => undefined),
+  undoPlanChange: jest.fn(async () => undefined),
 };
 
 jest.mock("../plan/usePlanActions", () => ({ usePlanActions: () => mockPlan }));
@@ -200,6 +202,48 @@ describe("a dated week", () => {
       "28",
       "29",
     ]);
+  });
+});
+
+describe("a day on a scheduled block", () => {
+  // Today is Tuesday 29 September, in week 2 of 4.
+  const running: Plan = {
+    ...plan,
+    blocks: [{ id: "b1", name: "Winter base", start: "2026-09-21", weeks: 4, focus: null }],
+    memberships: [
+      { id: "m1", workoutId: "squat", blockId: "b1", weekdays: [0, 1], start: "2026-09-21" },
+    ],
+    weekChanges: [],
+  };
+
+  it("opens today's planned day to start, log, move, skip or open", async () => {
+    await renderWithHang(<BlockScreen id="b1" />, hangData(), { workouts: [squat], plan: running });
+    await fireEvent.press(screen.getByLabelText("Back squat, Tuesday"));
+    expect(screen.getByText("Tue · Winter base · W2")).toBeTruthy();
+    expect(screen.getByText("Open workout")).toBeTruthy();
+    await fireEvent.press(screen.getByText("Skip"));
+    expect(screen.getByText("Skip it?")).toBeTruthy();
+  });
+
+  it("marks a skipped day and leaves it out of Done", async () => {
+    const skipped: Plan = {
+      ...running,
+      planChanges: [
+        {
+          membershipId: "m1",
+          plannedOn: "2026-09-29",
+          kind: "skip",
+          movedTo: null,
+          reason: null,
+          note: null,
+        },
+      ],
+    };
+    await renderWithHang(<LadderScreen id="m1" />, hangData(), {
+      workouts: [squat],
+      plan: skipped,
+    });
+    expect(screen.getByText("0/1")).toBeTruthy();
   });
 });
 
