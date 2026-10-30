@@ -42,6 +42,7 @@ const plan = (workoutId: string, weekdays: (0 | 1)[] = [0, 1]): Plan => ({
   memberships: [{ id: "m1", workoutId, blockId: null, weekdays, start: "2026-09-28" }],
   weekChanges: [],
   planChanges: [],
+  membershipDays: [],
 });
 
 describe("Today", () => {

@@ -73,6 +73,9 @@ export const plan = {
   "plan.upcoming": "Upcoming",
   "plan.past": "Past",
   "plan.templates": "Templates",
+  "plan.editDays": "Edit days",
+  "plan.editingDays":
+    "Editing days from W{n} on. Tap cells to set them; Done goes back to the week.",
   "plan.move": "Move",
   "plan.moveHint": "To another day this week",
   "plan.skip": "Skip",

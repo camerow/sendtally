@@ -13,6 +13,9 @@ import {
   membershipBody,
   membershipOf,
   trainingIdParam,
+  membershipDaysBody,
+  membershipDaysOf,
+  membershipDaysParam,
   planChangeBody,
   planChangeOf,
   planChangeParam,
@@ -88,6 +91,7 @@ export const plan = new Hono<AppEnv>().get("/", async (c) => {
     memberships: rows.memberships.map(membershipOf),
     weekChanges: rows.weekChanges.map(weekChangeOf),
     planChanges: rows.planChanges.map(planChangeOf),
+    membershipDays: rows.membershipDays.map(membershipDaysOf),
   };
   return c.json(body);
 });
@@ -198,6 +202,23 @@ export const memberships = new Hono<AppEnv>()
             };
       await repo.savePlanChange(c.env.DB, userId, planChange);
       return c.json({ planChange });
+    }
+  )
+
+  // Sets its weekdays from one block week on; earlier weeks keep what they had.
+  .put(
+    "/:id/weeks/:week",
+    zValidator("param", membershipDaysParam, invalidBody),
+    zValidator("json", membershipDaysBody, invalidBody),
+    async (c) => {
+      const { id, week } = c.req.valid("param");
+      const userId = c.get("userId");
+      if ((await repo.getMembership(c.env.DB, userId, id)) === null) {
+        return c.json({ error: "not found" }, 404);
+      }
+      const days = { membershipId: id, fromWeek: week, weekdays: c.req.valid("json").weekdays };
+      await repo.saveMembershipDays(c.env.DB, userId, days);
+      return c.json({ membershipDays: days });
     }
   )
 

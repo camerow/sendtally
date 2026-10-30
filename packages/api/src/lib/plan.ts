@@ -10,13 +10,21 @@ import {
   type ItemDone,
   type Item,
   type Membership,
+  type MembershipDays,
   type PlanChange,
   SKIP_REASONS,
   type WeekChange,
   type Workout,
 } from "@sendtally/core/hang";
 import { z } from "zod";
-import type { BlockRow, MembershipRow, PlanChangeRow, WeekChangeRow, WorkoutRow } from "./repo";
+import type {
+  BlockRow,
+  MembershipDaysRow,
+  MembershipRow,
+  PlanChangeRow,
+  WeekChangeRow,
+  WorkoutRow,
+} from "./repo";
 
 export const id = z.string().regex(/^[A-Za-z0-9_-]{1,64}$/);
 
@@ -154,6 +162,17 @@ export const planChangeBody = z.discriminatedUnion("kind", [
 
 export const planChangeParam = z.object({ id, date: calendarDate });
 
+export const membershipDaysParam = z.object({
+  id,
+  week: z.coerce.number().int().min(1).max(MAX_BLOCK_WEEKS),
+});
+
+export const membershipDaysBody = z.object({
+  weekdays: z
+    .array(z.literal([0, 1, 2, 3, 4, 5, 6]))
+    .refine((days) => new Set(days).size === days.length, "repeated weekday"),
+});
+
 export const weekChangeBody = z.object({
   week: blockWeek,
   dose: doseIndex,
@@ -211,6 +230,7 @@ export type Plan = {
   memberships: Membership[];
   weekChanges: WeekChange[];
   planChanges: PlanChange[];
+  membershipDays: MembershipDays[];
 };
 
 /** A workout of the user's own, as the API returns it. */
@@ -260,6 +280,12 @@ export const planChangeOf = (row: PlanChangeRow): PlanChange => ({
   movedTo: row.moved_to,
   reason: row.reason,
   note: row.note,
+});
+
+export const membershipDaysOf = (row: MembershipDaysRow): MembershipDays => ({
+  membershipId: row.membership_id,
+  fromWeek: row.from_week,
+  weekdays: JSON.parse(row.weekdays_json) as MembershipDays["weekdays"],
 });
 
 export const doneOf = (json: string): ItemDone[] => JSON.parse(json) as ItemDone[];

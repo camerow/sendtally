@@ -694,6 +694,21 @@ export const weekChanges = sqliteTable(
   (t) => [primaryKey({ columns: [t.user_id, t.membership_id, t.week, t.dose, t.item] })]
 );
 
+// A block membership's weekdays from one block week on, set when its days are edited
+// partway through. Weeks before the first row run on the membership's own weekdays.
+export const membershipDays = sqliteTable(
+  "membership_days",
+  {
+    user_id: text("user_id")
+      .notNull()
+      .references(() => users.id),
+    membership_id: text("membership_id").notNull(),
+    from_week: integer("from_week").notNull(),
+    weekdays_json: text("weekdays_json").notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.user_id, t.membership_id, t.from_week] })]
+);
+
 // One planned day changed: skipped, or moved to another day of its week. Undo deletes
 // the row; the day it was planned on is the key, so a day is changed once.
 export const planChanges = sqliteTable(

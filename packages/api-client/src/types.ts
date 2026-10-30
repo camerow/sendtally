@@ -38,6 +38,7 @@ export type {
   LogClimbInput,
   LogSessionInput,
   Membership,
+  MembershipDays,
   MembershipInput,
   Plan,
   PlanChange,

@@ -16,6 +16,7 @@ const plan: Plan = {
   ],
   weekChanges: [],
   planChanges: [],
+  membershipDays: [],
 };
 
 describe("Calendar", () => {

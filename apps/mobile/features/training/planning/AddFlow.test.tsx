@@ -60,6 +60,7 @@ const winter: Plan = {
   memberships: [],
   weekChanges: [],
   planChanges: [],
+  membershipDays: [],
 };
 
 // Today is Tuesday 29 September 2026; Thursday 1 October is the day asked from.

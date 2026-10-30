@@ -12,7 +12,13 @@ export type TrainingLogQuery = {
   ready: boolean;
 };
 
-const EMPTY_PLAN = { blocks: [], memberships: [], weekChanges: [], planChanges: [] };
+const EMPTY_PLAN = {
+  blocks: [],
+  memberships: [],
+  weekChanges: [],
+  planChanges: [],
+  membershipDays: [],
+};
 
 /** The log and the plan as the training screens read them, with every workout to look up. */
 export function useTrainingLog(api: SendtallyApi): TrainingLogQuery {

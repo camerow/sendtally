@@ -1,7 +1,13 @@
 import { useQueryClient } from "@tanstack/react-query";
 import React from "react";
 import type { Plan, SendtallyApi } from "@sendtally/api-client";
-import type { Block, Membership, PlanChange, WeekChange } from "@sendtally/core/hang";
+import type {
+  Block,
+  Membership,
+  MembershipDays,
+  PlanChange,
+  WeekChange,
+} from "@sendtally/core/hang";
 import { queries } from "../query";
 import { withoutBlock, withoutMembership } from "./plan";
 
@@ -16,6 +22,8 @@ export type PlanActions = {
   saveWeekChange: (change: WeekChange) => Promise<void>;
   /** Skips or moves one planned day, replacing any change it had. */
   savePlanChange: (change: PlanChange) => Promise<void>;
+  /** Sets a block membership's weekdays from one block week on. */
+  saveMembershipDays: (days: MembershipDays) => Promise<void>;
   /** Undoes a skip or move: the day is planned as it was. */
   undoPlanChange: (membershipId: string, plannedOn: string) => Promise<void>;
   /** Plans `from` again as block `to` from `start`, with its plans; false when it failed. */
@@ -99,6 +107,19 @@ export function usePlanActions(api: SendtallyApi, onError: (error: unknown) => v
             ],
           }),
           () => api.savePlanChange(change)
+        ),
+      saveMembershipDays: (days) =>
+        write(
+          (p) => ({
+            ...p,
+            membershipDays: [
+              ...p.membershipDays.filter(
+                (d) => d.membershipId !== days.membershipId || d.fromWeek !== days.fromWeek
+              ),
+              days,
+            ],
+          }),
+          () => api.saveMembershipDays(days)
         ),
       undoPlanChange: (membershipId, plannedOn) =>
         write(

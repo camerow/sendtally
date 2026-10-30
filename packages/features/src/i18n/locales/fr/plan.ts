@@ -74,6 +74,9 @@ export const plan = {
   "plan.upcoming": "À venir",
   "plan.past": "Passés",
   "plan.templates": "Modèles",
+  "plan.editDays": "Modifier les jours",
+  "plan.editingDays":
+    "Jours modifiés à partir de S{n}. Touche les cases pour les régler ; OK revient à la semaine.",
   "plan.move": "Déplacer",
   "plan.moveHint": "À un autre jour de cette semaine",
   "plan.skip": "Passer",

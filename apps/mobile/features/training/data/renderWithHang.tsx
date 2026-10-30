@@ -135,7 +135,13 @@ export async function renderWithHang(
   client.setQueryData(["workouts"], workouts);
   client.setQueryData(
     ["plan"],
-    world.plan ?? { blocks: [], memberships: [], weekChanges: [], planChanges: [] }
+    world.plan ?? {
+      blocks: [],
+      memberships: [],
+      weekChanges: [],
+      planChanges: [],
+      membershipDays: [],
+    }
   );
   client.setQueryData(["activities"], world.activities ?? []);
   client.setQueryData(EXERCISES_KEY, [...(world.exercises ?? [])]);

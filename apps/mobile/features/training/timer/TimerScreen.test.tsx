@@ -137,6 +137,7 @@ describe("Timer", () => {
         { membershipId: "m1", week: 1, dose: 0, item: 0, change: { sets: 3, edgeMm: 15 } },
       ],
       planChanges: [],
+      membershipDays: [],
     };
     const session = {
       id: "h1",

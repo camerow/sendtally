@@ -53,6 +53,7 @@ const planned: Plan = {
   memberships: [{ id: "m1", workoutId: "legs", blockId: null, weekdays: [0], start: "2026-09-28" }],
   weekChanges: [],
   planChanges: [],
+  membershipDays: [],
 };
 
 const labels = (): string[] =>

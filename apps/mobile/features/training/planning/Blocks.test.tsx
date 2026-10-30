@@ -22,6 +22,7 @@ const mockPlan = {
   copyBlock: jest.fn(async () => true),
   savePlanChange: jest.fn(async () => undefined),
   undoPlanChange: jest.fn(async () => undefined),
+  saveMembershipDays: jest.fn(async () => undefined),
 };
 
 jest.mock("../plan/usePlanActions", () => ({ usePlanActions: () => mockPlan }));
@@ -55,6 +56,7 @@ const plan: Plan = {
   ],
   weekChanges: [{ membershipId: "m1", week: 3, dose: 0, item: 0, change: { weightKg: 105 } }],
   planChanges: [],
+  membershipDays: [],
 };
 
 beforeEach(() => {
@@ -140,6 +142,7 @@ describe("block overview", () => {
     ],
     weekChanges: [],
     planChanges: [],
+    membershipDays: [],
   };
 
   it("reads the running block: its weeks, how it is going and its workouts", async () => {
@@ -223,6 +226,24 @@ describe("a day on a scheduled block", () => {
     expect(screen.getByText("Open workout")).toBeTruthy();
     await fireEvent.press(screen.getByText("Skip"));
     expect(screen.getByText("Skip it?")).toBeTruthy();
+  });
+
+  it("edits the days from this block week on", async () => {
+    await renderWithHang(<BlockScreen id="b1" />, hangData(), { workouts: [squat], plan: running });
+    await fireEvent.press(screen.getByText("Edit days"));
+    expect(
+      screen.getByText(
+        "Editing days from W2 on. Tap cells to set them; Done goes back to the week."
+      )
+    ).toBeTruthy();
+    await fireEvent.press(screen.getByLabelText("Back squat, Thursday"));
+    expect(mockPlan.saveMembershipDays).toHaveBeenCalledWith({
+      membershipId: "m1",
+      fromWeek: 2,
+      weekdays: [0, 1, 3],
+    });
+    await fireEvent.press(screen.getByText("Done"));
+    expect(screen.getByText("Edit days")).toBeTruthy();
   });
 
   it("marks a skipped day and leaves it out of Done", async () => {

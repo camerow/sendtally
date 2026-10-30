@@ -58,6 +58,7 @@ const log = (activities: Activity[]): TrainingLog => ({
     ],
     weekChanges: [],
     planChanges: [],
+    membershipDays: [],
   },
   workout: (id) => (id === "w1" ? legs : undefined),
 });
@@ -180,6 +181,7 @@ describe("blockRecap on a hangboard workout", () => {
       ],
       weekChanges: [],
       planChanges: [],
+      membershipDays: [],
     },
     workout: (id) => (id === "w2" ? maxHangs : undefined),
   });

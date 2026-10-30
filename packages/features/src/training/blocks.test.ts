@@ -22,6 +22,7 @@ describe("blockMembers", () => {
       ],
       weekChanges: [],
       planChanges: [],
+      membershipDays: [],
     };
     expect(blockMembers(plan, block).map((m) => m.id)).toEqual(["m1"]);
   });

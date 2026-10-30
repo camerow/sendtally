@@ -108,6 +108,7 @@ const plan: Plan = {
   memberships: [{ id: "m1", workoutId: "legs", blockId: "b1", weekdays: [1], start: "2026-10-13" }],
   weekChanges: [],
   planChanges: [],
+  membershipDays: [],
 };
 
 const show = async (

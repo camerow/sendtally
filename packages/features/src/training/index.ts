@@ -27,6 +27,7 @@ export {
   blockOfMembership,
   nextOccurrence,
   occurrenceLink,
+  asOn,
   occurrencesOn,
   sessionsOf,
   withoutBlock,

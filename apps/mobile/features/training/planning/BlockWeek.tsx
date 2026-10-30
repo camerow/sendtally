@@ -2,6 +2,7 @@ import React from "react";
 import { Text, View } from "react-native";
 import {
   addDays,
+  blockWeekOn,
   isDated,
   weekday,
   type Block,
@@ -12,6 +13,7 @@ import { colors } from "@sendtally/design/tokens";
 import { dayMonth } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import {
+  asOn,
   trainingDay,
   useTrainingLog,
   type Occurrence,
@@ -78,40 +80,59 @@ export function BlockWeek({
   const library = (id: string): LibraryWorkout | undefined =>
     libraryState.status === "ready" ? libraryState.data.workout(id) : undefined;
   const template = !isDated(block);
+  const [editing, setEditing] = React.useState(false);
+  // Days edited on a scheduled block take effect from this block week on.
+  const editsFrom = blockWeekOn(block, today) ?? 1;
+  const editable = isDated(block) && canAdd;
+  const editWeekStart = isDated(block) ? addDays(block.start, (editsFrom - 1) * 7) : null;
   const from = isDated(block) && week !== undefined ? addDays(block.start, (week - 1) * 7) : null;
   // A block week runs from its start's weekday, so each weekday column finds its own date.
   const dates = from === null ? null : DAYS.map((d) => addDays(from, (d - weekday(from) + 7) % 7));
   const statuses = dates === null ? null : dates.map((date) => trainingDay(log, date, today).plans);
-  const options: GridOptions = {
-    back: block.name,
-    ...(template &&
-      week !== undefined &&
-      week > 1 && { week: { n: week, changes: log.plan.weekChanges, unit: model.settings.units } }),
-    ...(statuses !== null && {
-      marks: (m: Membership): (CellMark | null)[] =>
-        statuses.map((plans) => {
-          const o = plans.find((x) => x.membership.id === m.id);
-          return o === undefined
-            ? null
-            : o.movedFrom !== null && o.status === "planned"
-              ? "movedIn"
-              : o.status;
+  const options: GridOptions = editing
+    ? {
+        back: block.name,
+        toggle: (m: Membership, day: number) =>
+          void actions.saveMembershipDays({
+            membershipId: m.id,
+            fromWeek: editsFrom,
+            weekdays: toggled(m.weekdays, day),
+          }),
+      }
+    : {
+        back: block.name,
+        ...(template &&
+          week !== undefined &&
+          week > 1 && {
+            week: { n: week, changes: log.plan.weekChanges, unit: model.settings.units },
+          }),
+        ...(statuses !== null && {
+          marks: (m: Membership): (CellMark | null)[] =>
+            statuses.map((plans) => {
+              const o = plans.find((x) => x.membership.id === m.id);
+              return o === undefined
+                ? null
+                : o.movedFrom !== null && o.status === "planned"
+                  ? "movedIn"
+                  : o.status;
+            }),
+          // A planned day from today on opens its day; anything else opens the workout.
+          press: (m: Membership, day: number) => {
+            const o = statuses[day]?.find((x) => x.membership.id === m.id);
+            const w = library(m.workoutId);
+            return o === undefined || o.status !== "planned" || w === undefined
+              ? undefined
+              : () => setDay({ occurrence: o, workout: w });
+          },
         }),
-      // A planned day from today on opens its day; anything else opens the workout.
-      press: (m: Membership, day: number) => {
-        const o = statuses[day]?.find((x) => x.membership.id === m.id);
-        const w = library(m.workoutId);
-        return o === undefined || o.status !== "planned" || w === undefined
-          ? undefined
-          : () => setDay({ occurrence: o, workout: w });
-      },
-    }),
-    ...(template && {
-      toggle: (m: Membership, day: number) =>
-        void actions.saveMembership({ ...m, weekdays: toggled(m.weekdays, day) }),
-    }),
-  };
-  const rows = planGridRows(members, workout, model, options);
+        ...(template && {
+          toggle: (m: Membership, day: number) =>
+            void actions.saveMembership({ ...m, weekdays: toggled(m.weekdays, day) }),
+        }),
+      };
+  const shown =
+    editWeekStart === null ? members : members.map((m) => asOn(log.plan, m, block, editWeekStart));
+  const rows = planGridRows(shown, workout, model, options);
   const dayless = rows.find((r) => r.days.length === 0);
   const add = (
     <Button
@@ -156,17 +177,36 @@ export function BlockWeek({
         <PlanGrid
           rows={rows}
           lit={lit}
-          title={
-            from !== null && week !== undefined
-              ? t("plan.weekDated", { n: week, date: dayMonth(from) })
-              : template && week !== undefined && week > 1
-                ? t("plan.weekNumber", { n: week })
-                : undefined
+          editing={editing}
+          action={
+            editable ? (
+              <Button
+                label={editing ? t("common.done") : t("plan.editDays")}
+                onPress={() => setEditing(!editing)}
+                variant="link"
+                height={32}
+                style={{ alignSelf: "flex-start", paddingHorizontal: 0 }}
+              />
+            ) : undefined
           }
-          dates={dates === null ? undefined : dates.map((d) => String(Number(d.slice(8))))}
-          columns={from === null ? undefined : DAYS.map((i) => weekday(addDays(from, i)))}
+          title={
+            editing
+              ? undefined
+              : from !== null && week !== undefined
+                ? t("plan.weekDated", { n: week, date: dayMonth(from) })
+                : template && week !== undefined && week > 1
+                  ? t("plan.weekNumber", { n: week })
+                  : undefined
+          }
+          dates={
+            dates === null || editing ? undefined : dates.map((d) => String(Number(d.slice(8))))
+          }
+          columns={
+            from === null || editing ? undefined : DAYS.map((i) => weekday(addDays(from, i)))
+          }
         />
       )}
+      {editing && hint(t("plan.editingDays", { n: editsFrom }), colors.textSecondary)}
       {template &&
         dayless !== undefined &&
         hint(t("plan.tapDays", { workout: dayless.name }), AMBER)}

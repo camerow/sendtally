@@ -135,6 +135,9 @@ export type WeekChange = {
   change: Partial<Dose>;
 };
 
+/** A block membership's weekdays from one block week on, until a later week's say otherwise. */
+export type MembershipDays = { membershipId: string; fromWeek: number; weekdays: Weekday[] };
+
 /** Why a planned day was skipped, when the user says. */
 export const SKIP_REASONS = ["rest", "sick", "sore", "travel", "busy"] as const;
 export type SkipReason = (typeof SKIP_REASONS)[number];

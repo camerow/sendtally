@@ -52,6 +52,7 @@ import type {
   SessionTag,
   TagSummary,
   TrainingReminderSettings,
+  MembershipDays,
   PlanChange,
   WeekChange,
   WorkoutInput,
@@ -535,6 +536,16 @@ export class SendtallyApi {
           change.kind === "skip"
             ? { kind: "skip", reason: change.reason, note: change.note }
             : { kind: "move", movedTo: change.movedTo ?? plannedOn },
+      })
+    );
+  }
+
+  /** Sets a block membership's weekdays from one block week on. */
+  saveMembershipDays({ membershipId, fromWeek, weekdays }: MembershipDays): Promise<unknown> {
+    return body(
+      this.client.v1.memberships[":id"].weeks[":week"].$put({
+        param: { id: membershipId, week: String(fromWeek) },
+        json: { weekdays },
       })
     );
   }

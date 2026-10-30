@@ -428,6 +428,7 @@ describe("blocks and memberships", () => {
       ],
       weekChanges: [],
       planChanges: [],
+      membershipDays: [],
     });
   });
 
@@ -508,6 +509,7 @@ describe("blocks and memberships", () => {
       memberships: [],
       weekChanges: [],
       planChanges: [],
+      membershipDays: [],
     });
     const { activities } = await json<{ activities: Activity[] }>(
       await call(userId, "GET", "/v1/activities")
@@ -624,6 +626,22 @@ describe("blocks and memberships", () => {
     expect((await plan(userId)).planChanges).toHaveLength(1);
     await call(userId, "DELETE", "/v1/memberships/m1");
     expect((await plan(userId)).planChanges).toEqual([]);
+  });
+
+  it("sets a membership's weekdays from a block week on, and drops them with it", async () => {
+    const userId = "user_plan_week_days";
+    await call(userId, "PUT", "/v1/blocks/b1", blockBody);
+    await call(userId, "PUT", "/v1/memberships/m1", membershipBody);
+    const res = await call(userId, "PUT", "/v1/memberships/m1/weeks/3", { weekdays: [4, 0] });
+    expect(res.status).toBe(200);
+    expect((await plan(userId)).membershipDays).toEqual([
+      { membershipId: "m1", fromWeek: 3, weekdays: [0, 4] },
+    ]);
+    expect((await call(userId, "PUT", "/v1/memberships/m1/weeks/0", { weekdays: [] })).status).toBe(
+      400
+    );
+    await call(userId, "DELETE", "/v1/memberships/m1");
+    expect((await plan(userId)).membershipDays).toEqual([]);
   });
 
   it("saves a block as a template with no start, and schedules it from the week picked", async () => {

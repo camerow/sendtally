@@ -73,6 +73,9 @@ export const plan = {
   "plan.upcoming": "Próximos",
   "plan.past": "Anteriores",
   "plan.templates": "Plantillas",
+  "plan.editDays": "Editar días",
+  "plan.editingDays":
+    "Editando días desde S{n}. Toca las casillas para fijarlos; Listo vuelve a la semana.",
   "plan.move": "Mover",
   "plan.moveHint": "A otro día de esta semana",
   "plan.skip": "Saltar",

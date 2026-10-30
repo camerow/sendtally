@@ -26,6 +26,10 @@ export type PlanGridProps = {
   dates?: readonly string[];
   /** The weekdays left to right: Monday first unless a dated week starts on another. */
   columns?: readonly number[];
+  /** Under the title, such as Edit days. */
+  action?: React.ReactNode;
+  /** Every cell a day to set: off cells read as white boxes. */
+  editing?: boolean;
 };
 
 function Line({ parts, ink }: { parts: readonly GridPart[]; ink: string }): React.ReactElement {
@@ -56,6 +60,8 @@ export function PlanGrid({
   title = t("plan.week"),
   dates,
   columns = DAYS,
+  action,
+  editing = false,
 }: PlanGridProps): React.ReactElement {
   return (
     <View
@@ -70,9 +76,10 @@ export function PlanGrid({
       ]}
     >
       <View style={{ flexDirection: "row", alignItems: "flex-end", gap: 5 }}>
-        <Label color={colors.gunmetal} style={{ flex: 1 }}>
-          {title}
-        </Label>
+        <View style={{ flex: 1, gap: 2 }}>
+          <Label color={colors.gunmetal}>{title}</Label>
+          {action}
+        </View>
         {columns.map((i) => (
           <View key={i} style={{ width: CELL, alignItems: "center", gap: 1 }}>
             <Label small color={colors.textSecondary} style={{ textAlign: "center" }}>
@@ -111,6 +118,7 @@ export function PlanGrid({
               asking={toggle !== undefined && row.days.length === 0}
               onPress={toggle === undefined ? row.press?.(day) : () => toggle(day)}
               opens={toggle === undefined}
+              editing={editing}
               accessibilityLabel={`${row.name}, ${weekdayLong(day)}`}
             />
           );

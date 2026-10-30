@@ -21,6 +21,8 @@ export type DayCellProps = {
   /** Makes the cell a button: a weekday to toggle, or with `opens` a day to open. */
   onPress?: () => void;
   opens?: boolean;
+  /** Editing days: an off day reads as an empty white box to tap. */
+  editing?: boolean;
   accessibilityLabel?: string;
 };
 
@@ -33,6 +35,7 @@ export function DayCell({
   asking = false,
   onPress,
   opens = false,
+  editing = false,
   accessibilityLabel,
 }: DayCellProps): React.ReactElement {
   const look = KIND_LOOK[kind];
@@ -43,13 +46,13 @@ export function DayCell({
     alignItems: "center",
     justifyContent: "center",
     backgroundColor:
-      status === "moved"
+      status === "moved" || (editing && !on)
         ? colors.white
         : on && status !== "skipped"
           ? look.tint
           : colors.surfaceSoft,
-    borderWidth: asking ? 1.5 : status === "moved" ? 1 : 0,
-    borderColor: status === "moved" ? colors.lineOnLightStrong : look.ink,
+    borderWidth: asking ? 1.5 : status === "moved" || (editing && !on) ? 1 : 0,
+    borderColor: status === "moved" || (editing && !on) ? colors.lineOnLightStrong : look.ink,
   } as const;
   const mark =
     status === "skipped" ? (

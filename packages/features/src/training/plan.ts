@@ -79,13 +79,31 @@ function doneBy(
   );
 }
 
+/**
+ * A membership as it plans a day: inside a block, the weekdays of the latest edit made at or
+ * before that day's week; else as saved.
+ */
+export function asOn(
+  plan: Pick<Plan, "membershipDays">,
+  m: Membership,
+  block: Block | null,
+  d: CalendarDate
+): Membership {
+  const week = block === null ? null : blockWeekOn(block, d);
+  if (week === null) return m;
+  const edit = plan.membershipDays
+    .filter((x) => x.membershipId === m.id && x.fromWeek <= week)
+    .sort((a, b) => b.fromWeek - a.fromWeek)[0];
+  return edit === undefined ? m : { ...m, weekdays: edit.weekdays };
+}
+
 /** The skip or move made on the day a membership was planned. */
 const changeOn = (plan: Plan, m: Membership, d: CalendarDate): PlanChange | null =>
   plan.planChanges.find((c) => c.membershipId === m.id && c.plannedOn === d) ?? null;
 
 /** Landing on a day as planned and left alone, or moved there from another day. */
 const lands = (plan: Plan, m: Membership, block: Block | null, d: CalendarDate): boolean =>
-  (occursOn(m, block, d) && changeOn(plan, m, d) === null) ||
+  (occursOn(asOn(plan, m, block, d), block, d) && changeOn(plan, m, d) === null) ||
   plan.planChanges.some((c) => c.membershipId === m.id && c.kind === "move" && c.movedTo === d);
 
 /** How many sessions of the workout were logged before a date, or in all without one. */
@@ -157,7 +175,9 @@ export function occurrencesOn(
   const planned = plan.memberships
     .filter((m) => {
       const block = blockOfMembership(plan, m);
-      return (m.blockId === null || block !== null) && occursOn(m, block, date);
+      return (
+        (m.blockId === null || block !== null) && occursOn(asOn(plan, m, block, date), block, date)
+      );
     })
     .map((m) => occurrence(plan, m, workout(m.workoutId), logged, date, today));
   const movedIn = plan.planChanges.flatMap((c) => {
@@ -199,6 +219,7 @@ function without(plan: Plan, drop: (m: Membership) => boolean): Plan {
     memberships: plan.memberships.filter((m) => !gone.has(m.id)),
     weekChanges: plan.weekChanges.filter((c) => !gone.has(c.membershipId)),
     planChanges: plan.planChanges.filter((c) => !gone.has(c.membershipId)),
+    membershipDays: plan.membershipDays.filter((c) => !gone.has(c.membershipId)),
   };
 }
 

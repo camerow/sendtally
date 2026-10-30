@@ -53,6 +53,7 @@ const plan: Plan = {
     { membershipId: "m1", week: 3, dose: 0, item: 0, change: { sets: 3, weightKg: 95 } },
   ],
   planChanges: [],
+  membershipDays: [],
 };
 
 const workout = (id: string): Workout | undefined =>
@@ -164,6 +165,7 @@ describe("cache edits", () => {
       memberships: [plan.memberships[1]],
       weekChanges: [],
       planChanges: [],
+      membershipDays: [],
     });
   });
 
@@ -173,6 +175,7 @@ describe("cache edits", () => {
       memberships: plan.memberships.slice(1),
       weekChanges: [],
       planChanges: [],
+      membershipDays: [],
     });
   });
 
@@ -252,5 +255,27 @@ describe("moving a day", () => {
       plannedOn: "2026-11-03",
       movedTo: "2026-11-05",
     });
+  });
+});
+
+describe("days edited partway through a block", () => {
+  // From week 2 on, m1 moves from Tuesdays and Fridays to Wednesdays.
+  const edited: Plan = {
+    ...plan,
+    membershipDays: [{ membershipId: "m1", fromWeek: 2, weekdays: [2] }],
+  };
+  const lands = (d: string): boolean =>
+    occurrencesOn(edited, workout, [], d, "2026-11-01").some((o) => o.membership.id === "m1");
+
+  it("keeps the weeks before the edit on the days they had", () => {
+    expect([lands("2026-11-03"), lands("2026-11-04")]).toEqual([true, false]);
+  });
+
+  it("runs the edited days from that week on", () => {
+    expect([lands("2026-11-10"), lands("2026-11-11"), lands("2026-11-18")]).toEqual([
+      false,
+      true,
+      true,
+    ]);
   });
 });

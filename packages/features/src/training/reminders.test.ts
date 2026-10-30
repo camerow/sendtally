@@ -33,6 +33,7 @@ const plan: Plan = {
   ],
   weekChanges: [],
   planChanges: [],
+  membershipDays: [],
 };
 
 const hang = (date: string): HangSessionRecord => ({
