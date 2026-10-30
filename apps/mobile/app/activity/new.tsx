@@ -43,6 +43,7 @@ export default function NewActivityScreen(): React.ReactElement {
           timed={params.startTime !== undefined}
           kindSet={params.kind !== undefined}
           live={params.live === "1"}
+          planned={prescribed}
         />
       )}
     </SafeAreaView>

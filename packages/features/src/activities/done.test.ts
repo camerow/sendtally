@@ -5,12 +5,16 @@ import {
   cleanDone,
   doneSummary,
   exerciseNames,
-  isChecklist,
+  fromTimerNote,
+  keptSets,
+  offWithout,
+  runStatus,
+  setCounts,
+  shortOf,
   previousSets,
   removeSet,
   setChip,
   setText,
-  setsLine,
 } from "./done";
 
 describe("done", () => {
@@ -77,15 +81,37 @@ describe("done", () => {
     expect(setChip({ reps: 8 }, "kg")).toBe("8");
     expect(setChip({ reps: 8, weightKg: 0 }, "kg")).toBe("8");
     expect(setChip({ onS: 60 }, "kg")).toBe("60s");
-    expect(setsLine([{ onS: 60 }, { onS: 60 }], "kg")).toBe("2 × 60s");
-    expect(setsLine([{ onS: 90 }], "kg")).toBe("90s");
-    expect(setsLine([{ onS: 60 }, { onS: 45 }], "kg")).toBe("60s, 45s");
-    expect(setsLine([{}, {}], "kg")).toBe("");
   });
 
-  it("reads as a checklist when nothing done has reps or a weight", () => {
-    expect(isChecklist([{ item: 0, exercise: "Pigeon", sets: [{ onS: 60 }, {}] }])).toBe(true);
-    expect(isChecklist([{ item: 0, exercise: "Squat", sets: [{ reps: 5 }] }])).toBe(false);
+  it("saves only the sets left ticked, dropping an exercise with every set off", () => {
+    const done = [
+      { item: 0, exercise: "Pull-up", sets: [{ reps: 8 }, { reps: 8 }] },
+      { item: 1, exercise: "Dead hang", sets: [{ onS: 45 }] },
+      { item: 2, exercise: "Plank", sets: [] },
+    ];
+    expect(keptSets(done, ["0:1", "1:0"])).toEqual([
+      { item: 0, exercise: "Pull-up", sets: [{ reps: 8 }] },
+      { item: 2, exercise: "Plank", sets: [] },
+    ]);
+    expect(offWithout(["0:0", "0:2", "0:3", "1:2"], 0, 2)).toEqual(["0:0", "0:2", "1:2"]);
+  });
+
+  it("reads a set short of its dose as how much of it was done", () => {
+    expect(shortOf({ reps: 4, onS: 10 }, { reps: 6, onS: 10 })).toBe("4 of 6");
+    expect(shortOf({ onS: 30 }, { onS: 45 })).toBe("0:30 of 0:45");
+    expect(shortOf({ reps: 8 }, { reps: 8 })).toBeNull();
+    expect(shortOf({ reps: 4 }, undefined)).toBeNull();
+  });
+
+  it("tells what the timer saw: sets full, partial and not done, and where it fell short", () => {
+    const done = [{ item: 0, exercise: "half", sets: [6, 6, 6, 4, 6].map((reps) => ({ reps })) }];
+    const counts = setCounts(done, ["0:4"], [{ reps: 6 }]);
+    expect(counts).toEqual({ full: 3, partial: 1, off: 1, total: 5, firstShort: 3 });
+    expect(fromTimerNote(counts)).toBe(
+      "From the timer: 3 sets full, 1 partial, 1 not done. Fix anything before saving."
+    );
+    expect(runStatus(counts)).toBe("Ended at set 4 of 5");
+    expect(runStatus(setCounts(done, [], [{ reps: 4 }]))).toBe("Session complete");
   });
 
   it("changes, copies and removes sets, and drops an exercise with its last set", () => {

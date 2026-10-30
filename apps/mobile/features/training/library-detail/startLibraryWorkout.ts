@@ -54,7 +54,7 @@ export function startLibraryWorkout(
   }
   const onTally = items.some((i) => tallied(i.exercise));
   if (!onTally && items.every((i) => i.dose.onS !== undefined)) {
-    startIntervals({ ...run, activityId: null, body: intervalsOf(items, eachSide) });
+    startIntervals({ ...run, body: intervalsOf(items, eachSide) });
     return;
   }
   const player = onTally ? "/workout/sets" : playerOf(items);
@@ -76,10 +76,7 @@ export function logLibraryWorkout(
   const kind = activityKindOf(w.kind);
   if (kind === null) {
     const grip = gripId ?? items[0]?.exercise ?? "";
-    router.push({
-      pathname: "/workout/done",
-      params: { ...timerParams(w.id, grip, session, link), logIt: "1" },
-    });
+    router.push({ pathname: "/workout/done", params: timerParams(w.id, grip, session, link) });
     return;
   }
   const path = activityFormPath({

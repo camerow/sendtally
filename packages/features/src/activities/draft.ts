@@ -6,7 +6,7 @@ import {
   type SessionItem,
 } from "@sendtally/core/hang";
 import { readFocus } from "../training/focus";
-import { cleanDone } from "./done";
+import { cleanDone, keptSets } from "./done";
 import { ACTIVITY_KINDS, kindLabel } from "./format";
 
 /** The activity form's state. Strings where the form edits text, `""` for an empty start time. */
@@ -23,8 +23,8 @@ export type ActivityDraft = {
   week: number | null;
   focus: Focus | null;
   done: ItemDone[];
-  /** Items of `done` unticked before saving, which do not save. */
-  skipped: number[];
+  /** Sets of `done` toggled off before saving, by `setKeyOf`, which do not save. */
+  off: string[];
 };
 
 /** What a doorway into the form may already know, straight from the route's query. */
@@ -42,8 +42,8 @@ export type ActivityPrefill = {
   startTime?: string;
   /** What a player ran, as JSON, in place of what the workout prescribes. */
   done?: string;
-  /** The items of `done` a checklist left unticked, as JSON. */
-  skipped?: string;
+  /** The sets of `done` a player did not finish, as JSON keys. */
+  off?: string;
 };
 
 const DEFAULT_MINUTES = 60;
@@ -84,10 +84,10 @@ const parseDone = (text: string | undefined): ItemDone[] | null => {
   }
 };
 
-const parseSkipped = (text: string | undefined): number[] => {
+const parseOff = (text: string | undefined): string[] => {
   try {
-    const skipped: unknown = JSON.parse(text ?? "[]");
-    return Array.isArray(skipped) ? skipped.filter((n): n is number => Number.isInteger(n)) : [];
+    const off: unknown = JSON.parse(text ?? "[]");
+    return Array.isArray(off) ? off.filter((k): k is string => typeof k === "string") : [];
   } catch {
     return [];
   }
@@ -112,7 +112,7 @@ export function newActivityDraft(
     week: wholeNumber(prefill.week),
     focus: readFocus(prefill.focus) ?? null,
     done: parseDone(prefill.done) ?? doneAsPrescribed(prescribed),
-    skipped: parseSkipped(prefill.skipped),
+    off: parseOff(prefill.off),
   };
 }
 
@@ -130,11 +130,11 @@ export function draftFromActivity(a: Activity): ActivityDraft {
     week: a.week,
     focus: a.focus ?? null,
     done: a.done,
-    skipped: [],
+    off: [],
   };
 }
 
-/** An untitled activity takes its kind's name, and an unticked item does not save. */
+/** An untitled activity takes its kind's name, and a set toggled off does not save. */
 export function activityFromDraft(id: string, d: ActivityDraft): Activity {
   const title = d.title.trim();
   const notes = d.notes.trim();
@@ -151,6 +151,6 @@ export function activityFromDraft(id: string, d: ActivityDraft): Activity {
     membershipId: d.membershipId,
     week: d.week,
     focus: d.focus,
-    done: cleanDone(d.done.filter((x) => !d.skipped.includes(x.item))),
+    done: cleanDone(keptSets(d.done, d.off)),
   };
 }

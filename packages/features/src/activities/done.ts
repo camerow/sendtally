@@ -1,5 +1,5 @@
 import type { Activity } from "@sendtally/api-client";
-import { toUnit, type ItemDone, type SetDone, type WeightUnit } from "@sendtally/core/hang";
+import { clock, toUnit, type ItemDone, type SetDone, type WeightUnit } from "@sendtally/core/hang";
 import { formatNumber, t } from "../i18n";
 import { climbingSetText } from "./climbing";
 
@@ -47,17 +47,61 @@ export function setChip(set: SetDone, unit: WeightUnit): string {
     .join(" · ");
 }
 
-/** An item's sets in one line: "2 × 60s" when they match, else each in turn. */
-export function setsLine(sets: readonly SetDone[], unit: WeightUnit): string {
-  const chips = sets.map((s) => setChip(s, unit)).filter((c) => c !== "");
-  const [first = ""] = chips;
-  if (chips.length !== sets.length || chips.some((c) => c !== first)) return chips.join(", ");
-  return chips.length === 1 ? first : `${formatNumber(chips.length)} × ${first}`;
+/** One set of one item, as the review ticks it off: "0:2". */
+export const setKeyOf = (item: number, set: number): string => `${item}:${set}`;
+
+/** What saves: the sets left ticked. An item with every set off goes; one that had none stays. */
+export const keptSets = (done: readonly ItemDone[], off: readonly string[]): ItemDone[] =>
+  done
+    .map((d) => ({ ...d, sets: d.sets.filter((_, set) => !off.includes(setKeyOf(d.item, set))) }))
+    .filter((d, i) => d.sets.length > 0 || done[i]?.sets.length === 0);
+
+/** How far a set fell short of its dose, "4 of 6" or "0:30 of 0:45"; null when it did not. */
+export function shortOf(set: SetDone, dose: SetDone | undefined): string | null {
+  if (dose?.reps !== undefined && set.reps !== undefined && set.reps < dose.reps)
+    return t("activities.partOf", { done: formatNumber(set.reps), of: formatNumber(dose.reps) });
+  if (dose?.onS !== undefined && set.onS !== undefined && set.onS < dose.onS)
+    return t("activities.partOf", { done: clock(set.onS, true), of: clock(dose.onS, true) });
+  return null;
 }
 
-/** What was done only ticks off: nothing has reps or a weight. */
-export const isChecklist = (done: readonly ItemDone[]): boolean =>
-  done.every((d) => d.sets.every((s) => s.reps === undefined && s.weightKg === undefined));
+/** Every set reviewed: done in full, done in part, or off. */
+export type SetCounts = { full: number; partial: number; off: number; total: number };
+
+export function setCounts(
+  done: readonly ItemDone[],
+  off: readonly string[],
+  planned: readonly (SetDone | undefined)[]
+): SetCounts & { firstShort: number | null } {
+  const states = done.flatMap((d) =>
+    d.sets.map((s, set) =>
+      off.includes(setKeyOf(d.item, set))
+        ? "off"
+        : shortOf(s, planned[d.item]) === null
+          ? "full"
+          : "partial"
+    )
+  );
+  const count = (state: string): number => states.filter((s) => s === state).length;
+  const short = states.findIndex((s) => s !== "full");
+  return {
+    full: count("full"),
+    partial: count("partial"),
+    off: count("off"),
+    total: states.length,
+    firstShort: short === -1 ? null : short,
+  };
+}
+
+/** "From the timer: 3 sets full, 1 partial, 1 not done. Fix anything before saving." */
+export function fromTimerNote(c: SetCounts): string {
+  const parts = [
+    c.full > 0 ? t("activities.setsFull", { count: c.full }) : "",
+    c.partial > 0 ? t("activities.setsPartial", { count: c.partial }) : "",
+    c.off > 0 ? t("activities.setsNotDone", { count: c.off }) : "",
+  ];
+  return t("activities.fromTimer", { summary: parts.filter((p) => p !== "").join(", ") });
+}
 
 const withSets = (
   done: readonly ItemDone[],
@@ -120,4 +164,19 @@ export function previousSets(
     if (sets !== undefined) return sets;
   }
   return [];
+}
+
+/** How a run went, from its sets: complete, or where it first fell short. */
+export const runStatus = (c: SetCounts & { firstShort: number | null }): string =>
+  c.firstShort === null
+    ? t("hang.sessionComplete")
+    : t("activities.endedAtSet", { set: c.firstShort + 1, sets: c.total });
+
+/** The sets still off once one of an item's sets is removed: those after it move up one. */
+export function offWithout(off: readonly string[], item: number, set: number): string[] {
+  return off.flatMap((key) => {
+    const [i, s] = key.split(":").map(Number);
+    if (i !== item || s === undefined || s < set) return [key];
+    return s === set ? [] : [setKeyOf(item, s - 1)];
+  });
 }

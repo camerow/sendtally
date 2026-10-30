@@ -2,7 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   endRun,
   GET_READY_S,
-  setsDoneByItem,
+  cameOffEarly,
+  setsHeld,
   startWorkoutRun,
   tick,
   workoutPhases,
@@ -45,8 +46,32 @@ describe("a hangboard workout run", () => {
     // Into the rest between exercises: the first item is done, the second not started.
     const resting = tick(run, (5 + 10 + 60 + 10 + 1) * 1000);
     expect(resting.phases[resting.index]).toMatchObject({ kind: "ready", item: 1 });
-    expect(setsDoneByItem(endRun(resting, 86_000), [2, 2])).toEqual([2, 0]);
-    expect(setsDoneByItem(endRun(run, 0), [2, 2])).toEqual([0, 0]);
-    expect(setsDoneByItem({ ...run, finished: { ended: false, at: 1 } }, [2, 2])).toEqual([2, 2]);
+    const doses = [
+      { sets: 2, reps: 1, onS: 10 },
+      { sets: 2, reps: 3 },
+    ];
+    expect(setsHeld(endRun(resting, 86_000), doses)).toEqual([
+      [
+        { reps: 1, onS: 10 },
+        { reps: 1, onS: 10 },
+      ],
+      [null, null],
+    ]);
+    expect(setsHeld(endRun(run, 0), doses)).toEqual([
+      [null, null],
+      [null, null],
+    ]);
+  });
+
+  it("keeps the seconds of a lone hang cut short, and the hangs held of a set cut short", () => {
+    const into = tick(startWorkoutRun([hangs], 0, 0), (5 + 4) * 1000);
+    expect(setsHeld(cameOffEarly(into, 9_000), [{ sets: 2, reps: 1, onS: 10 }])).toEqual([
+      [{ reps: 1, onS: 4 }, null],
+    ]);
+    const repeaters = { ...hangs, reps: 3, restS: 5 };
+    const second = tick(startWorkoutRun([repeaters], 0, 0), (5 + 10 + 5 + 2) * 1000);
+    expect(setsHeld(cameOffEarly(second, 22_000), [{ sets: 2, reps: 3, onS: 10 }])).toEqual([
+      [{ reps: 1, onS: 10 }, null],
+    ]);
   });
 });

@@ -183,26 +183,26 @@ describe("Log activity", () => {
     alert.mockRestore();
   });
 
-  it("ticks a checklist's items, fixes a hold's seconds, and saves only what is ticked", async () => {
+  it("ticks sets on and off, fixes a hold's seconds, and saves only what is ticked", async () => {
     const done = [
       { item: 0, exercise: "Cat-cow", sets: [{}] },
       { item: 1, exercise: "Pigeon", sets: [{ onS: 60 }] },
       { item: 2, exercise: "Jefferson curl", sets: [{}] },
     ];
     const initial = newActivityDraft(
-      { kind: "mobility", workoutId: "w2", done: JSON.stringify(done), skipped: "[2]" },
+      { kind: "mobility", workoutId: "w2", done: JSON.stringify(done), off: '["2:0"]' },
       "2026-10-22"
     );
     await render(<ActivityForm id="a1" initial={initial} logged={null} />);
-    expect(screen.getByText("2 of 3 done")).toBeTruthy();
+    expect(screen.getByText("Log workout")).toBeTruthy();
+    expect(screen.getByText("Mobility · Logged, not timed")).toBeTruthy();
     expect(screen.getByText("60s")).toBeTruthy();
-    await fireEvent.press(screen.getByRole("checkbox", { name: "Jefferson curl" }));
-    await fireEvent.press(screen.getByRole("checkbox", { name: "Cat-cow" }));
-    expect(screen.getByText("2 of 3 done")).toBeTruthy();
+    expect(screen.getByRole("checkbox", { name: "Jefferson curl, set 1" })).not.toBeChecked();
+    await fireEvent.press(screen.getByRole("checkbox", { name: "Jefferson curl, set 1" }));
+    await fireEvent.press(screen.getByRole("checkbox", { name: "Cat-cow, set 1" }));
+    expect(screen.getByRole("checkbox", { name: "Cat-cow, set 1" })).not.toBeChecked();
     await fireEvent.press(screen.getByLabelText("Edit Pigeon"));
     await keys("Pigeon, set 1 · Hold", "9", "0", "Done");
-    await fireEvent.press(screen.getByLabelText("Edit Pigeon"));
-    expect(screen.getByText("90s")).toBeTruthy();
     await fireEvent.press(screen.getByText("Save"));
 
     expect(mockActions.saveActivity).toHaveBeenLastCalledWith(
@@ -213,6 +213,48 @@ describe("Log activity", () => {
         ],
       })
     );
+  });
+
+  it("reviews a run: a set short of its dose in amber, and Discard ends the run once confirmed", async () => {
+    jest.clearAllMocks();
+    const alert = jest.spyOn(Alert, "alert").mockImplementation(() => undefined);
+    const done = [
+      { item: 0, exercise: "Ring row", sets: [{ reps: 10 }, { reps: 7 }, { reps: 10 }] },
+    ];
+    const initial = newActivityDraft(
+      { kind: "strength", workoutId: "w3", done: JSON.stringify(done), off: '["0:2"]' },
+      "2026-10-22"
+    );
+    await render(
+      <ActivityForm
+        id="a1"
+        initial={initial}
+        logged={null}
+        timed
+        kindSet
+        live
+        planned={[{ exercise: "Ring row", dose: { sets: 3, reps: 10 } }]}
+      />
+    );
+    expect(screen.getByText("Strength · Ended at set 2 of 3")).toBeTruthy();
+    expect(
+      screen.getByText(
+        "From the timer: 1 set full, 1 partial, 1 not done. Fix anything before saving."
+      )
+    ).toBeTruthy();
+    expect(screen.getByText("7 of 10")).toBeTruthy();
+    await fireEvent.press(screen.getByText("Discard"));
+    expect(router.back).not.toHaveBeenCalled();
+    await act(async () =>
+      jest
+        .mocked(Alert.alert)
+        .mock.calls.at(-1)?.[2]
+        ?.find((b) => b.style === "destructive")
+        ?.onPress?.()
+    );
+    expect(router.back).toHaveBeenCalled();
+    expect(mockActions.saveActivity).not.toHaveBeenCalled();
+    alert.mockRestore();
   });
 
   it("saves what a logged session did as a library workout of its kind", async () => {

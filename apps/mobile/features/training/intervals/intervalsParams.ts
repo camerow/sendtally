@@ -10,8 +10,6 @@ export type IntervalsRun = {
   kind: ActivityKind;
   title: string;
   date: CalendarDate;
-  /** The activity a run from the activity form becomes; null logs a new one. */
-  activityId: string | null;
   /** The library workout it runs, if any. */
   workoutId: string | null;
   link: PlanLink;
@@ -27,7 +25,6 @@ export const intervalsParams = (r: IntervalsRun): Record<string, string> => ({
   title: r.title,
   date: r.date,
   body: JSON.stringify(r.body),
-  ...(r.activityId === null ? {} : { activityId: r.activityId }),
   ...(r.workoutId === null ? {} : { workoutId: r.workoutId }),
   ...planLinkParams(r.link),
 });
@@ -62,7 +59,6 @@ export function readIntervalsParams(p: RawParams): IntervalsRun | null {
     kind,
     title: str(p.title),
     date: str(p.date),
-    activityId: str(p.activityId) || null,
     workoutId: str(p.workoutId) || null,
     link: readPlanLink(p),
     body,

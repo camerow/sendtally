@@ -10,6 +10,7 @@ import {
   type WeightUnit,
 } from "@sendtally/core/hang";
 import { humanDuration } from "../hang/format";
+import { setKeyOf } from "./done";
 import { formatNumber, t, type MessageKey } from "../i18n";
 
 const SIDE_TEXT = {
@@ -39,20 +40,31 @@ export function stepDose(step: IntervalStep, unit: WeightUnit): string {
   return [work, load, side].filter((p) => p !== "").join(" · ");
 }
 
-/** What a run did, per step: one set per turn, holding the seconds held when cut short. */
-export function doneOfRun(body: Intervals, stepsDone: readonly StepDone[]): ItemDone[] {
-  return body.steps.map((step, item) => ({
-    item,
-    exercise: step.label,
-    sets: stepsDone
-      .filter((d) => d.step === item)
-      .map((d) => {
-        const onS = d.heldSeconds ?? step.seconds;
-        return {
-          ...(onS === undefined ? {} : { onS }),
-          ...(step.count === undefined ? {} : { reps: step.count }),
-          ...(step.loadKg === undefined ? {} : { weightKg: step.loadKg }),
-        };
-      }),
-  }));
+/**
+ * What a run did, per step: one set per turn, round by round and side by side, holding the
+ * seconds held when cut short. A turn the run never finished stays at its planned dose, off.
+ */
+export function doneOfRun(
+  body: Intervals,
+  stepsDone: readonly StepDone[]
+): { done: ItemDone[]; off: string[] } {
+  const off: string[] = [];
+  const done = body.steps.map((step, item) => {
+    const planned = {
+      ...(step.seconds === undefined ? {} : { onS: step.seconds }),
+      ...(step.count === undefined ? {} : { reps: step.count }),
+      ...(step.loadKg === undefined ? {} : { weightKg: step.loadKg }),
+    };
+    const sides = step.side === "each" ? (["L", "R"] as const) : [step.side];
+    const turns = Array.from({ length: body.rounds }, (_, round) =>
+      sides.map((side) => ({ round, side }))
+    ).flat();
+    const sets = turns.map(({ round, side }, set) => {
+      const ran = stepsDone.find((d) => d.step === item && d.round === round && d.side === side);
+      if (ran === undefined) off.push(setKeyOf(item, set));
+      return ran?.heldSeconds === undefined ? planned : { ...planned, onS: ran.heldSeconds };
+    });
+    return { item, exercise: step.label, sets };
+  });
+  return { done, off };
 }

@@ -4,11 +4,14 @@ import React from "react";
 import { Alert, KeyboardAvoidingView, Platform, Text, TextInput, View } from "react-native";
 import type { ActivityRecord } from "@sendtally/api-client";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
-import { defaultExerciseRestS, type ItemDone } from "@sendtally/core/hang";
+import { defaultExerciseRestS, type ItemDone, type SessionItem } from "@sendtally/core/hang";
 import {
   activityFromDraft,
+  fromTimerNote,
   kindLabel,
   minutesOf,
+  runStatus,
+  setCounts,
   useActivityActions,
   useWeightUnit,
   type ActivityDraft,
@@ -18,12 +21,15 @@ import { useWorkoutActions } from "@sendtally/features/workouts";
 import { DateTimeField } from "../../../components/DateTimeField";
 import { KeypadScrollView } from "../../../components/KeypadScrollView";
 import { TimeField } from "../../../components/TimeField";
+import { confirmDestructive } from "../../../lib/confirmDestructive";
 import { useApi } from "../../../lib/api";
 import { Button } from "../components/Button";
 import { EffortField } from "../components/EffortField";
 import { FocusField } from "../components/FocusField";
+import { Label } from "../components/Label";
 import { SheetSection } from "../components/SheetSection";
 import { Title } from "../components/Title";
+import { KIND_LOOK } from "../today/kindLook";
 import { type } from "../type";
 import { clearLiveRun } from "../../live-session/liveRun";
 import { DoneDetails } from "./DoneDetails";
@@ -38,8 +44,12 @@ export type ActivityFormProps = {
   timed?: boolean;
   /** It came with a kind, from a workout; a logged activity always has one. */
   kindSet?: boolean;
-  /** It reviews the workout running live, which saving ends. */
+  /** It reviews the workout running live, which saving or discarding ends. */
   live?: boolean;
+  /** What the workout prescribes, which a set short of its dose reads against. */
+  planned?: readonly SessionItem[];
+  /** A hangboard workout, which saves as a hang session with its setup and no notes or times. */
+  hang?: { setup: React.ReactNode; save: (draft: ActivityDraft) => void };
 };
 
 const input = {
@@ -62,7 +72,10 @@ const itemsOf = (done: readonly ItemDone[]) =>
     .filter((d) => d.sets.length > 0)
     .map((d) => ({ exercise: d.exercise, dose: { ...d.sets[0], sets: d.sets.length } }));
 
-/** Log or edit one activity: kind, title, when, how long, how hard, its focus, and its sets or checklist. Save sits in the header. */
+/**
+ * Log or edit one activity: kind, title, when, how long, how hard, its focus, and a chip per set
+ * to tick. A workout's review says how the run went first. Save sits in the header.
+ */
 export function ActivityForm({
   id,
   initial,
@@ -70,6 +83,8 @@ export function ActivityForm({
   timed = false,
   kindSet = false,
   live = false,
+  planned = [],
+  hang,
 }: ActivityFormProps): React.ReactElement {
   const api = useApi();
   const actions = useActivityActions(api, reportFailure);
@@ -95,11 +110,28 @@ export function ActivityForm({
     router.push({ pathname: "/workout/[id]", params: { id: workoutId } });
   };
   const save = (): void => {
-    void actions.saveActivity(activityFromDraft(id, draft));
-    router.back();
+    if (hang === undefined) {
+      void actions.saveActivity(activityFromDraft(id, draft));
+      router.back();
+    } else hang.save(draft);
     if (live) clearLiveRun();
   };
+  const discard = (): void =>
+    confirmDestructive({
+      title: t("hang.discardRunTitle"),
+      body: t("hang.discardRunBody"),
+      action: t("hang.discard"),
+      onConfirm: () => {
+        router.back();
+        clearLiveRun();
+      },
+    });
   const name = draft.title.trim() || kindLabel(draft.kind);
+  const look = hang === undefined ? draft.kind : "hangboard";
+  const doses = planned.map((p) => p.dose);
+  const counts = setCounts(draft.done, draft.off, doses);
+  const reviewing = logged === null && draft.workoutId !== null;
+  const status = live ? runStatus(counts) : t("activities.loggedNotTimed");
 
   return (
     <KeyboardAvoidingView
@@ -114,9 +146,17 @@ export function ActivityForm({
           paddingHorizontal: 10,
         }}
       >
-        <Button label={t("common.cancel")} onPress={() => router.back()} variant="muted" />
+        {live ? (
+          <Button label={t("hang.discard")} onPress={discard} variant="muted" />
+        ) : (
+          <Button label={t("common.cancel")} onPress={() => router.back()} variant="muted" />
+        )}
         <Text style={[type.bodyBold, { fontSize: 15, color: colors.gunmetal }]}>
-          {logged !== null ? t("summary.editWorkout") : t("activities.logActivity")}
+          {logged !== null
+            ? t("summary.editWorkout")
+            : reviewing
+              ? t("activities.logWorkout")
+              : t("activities.logActivity")}
         </Text>
         <Button label={t("common.save")} onPress={save} variant="plain" />
       </View>
@@ -133,7 +173,33 @@ export function ActivityForm({
         )}
 
         {draft.workoutId !== null ? (
-          <Title size={28}>{name}</Title>
+          <View style={{ gap: 10 }}>
+            <View style={{ gap: 4 }}>
+              {reviewing && (
+                <Label color={KIND_LOOK[look].ink}>{`${kindLabel(look)} · ${status}`}</Label>
+              )}
+              <Title size={28}>{name}</Title>
+            </View>
+            {reviewing && live && (
+              <Text
+                style={[
+                  type.body,
+                  {
+                    fontSize: 13.5,
+                    lineHeight: 19,
+                    color: colors.textSecondary,
+                    backgroundColor: colors.surfaceSoft,
+                    borderRadius: 12,
+                    paddingVertical: 10,
+                    paddingHorizontal: 12,
+                    overflow: "hidden",
+                  },
+                ]}
+              >
+                {fromTimerNote(counts)}
+              </Text>
+            )}
+          </View>
         ) : (
           <SheetSection label={t("activities.title")}>
             <TextInput
@@ -161,7 +227,7 @@ export function ActivityForm({
               />
             </SheetSection>
           </View>
-          {!timed && (
+          {!timed && hang === undefined && (
             <View style={{ flex: 1 }}>
               <SheetSection label={t("activities.startTime")}>
                 <DateTimeField
@@ -178,7 +244,7 @@ export function ActivityForm({
           )}
         </View>
 
-        {!timed && (
+        {!timed && hang === undefined && (
           <TimeField
             label={t("common.duration")}
             value={draft.minutes * 60}
@@ -189,6 +255,8 @@ export function ActivityForm({
 
         <EffortField value={draft.rpe} onChange={(rpe) => update({ rpe })} />
 
+        {hang?.setup}
+
         <FocusField
           value={draft.focus}
           onChange={(focus) => update({ focus })}
@@ -198,26 +266,29 @@ export function ActivityForm({
         {draft.done.length > 0 && (
           <DoneDetails
             done={draft.done}
-            skipped={draft.skipped}
+            off={draft.off}
+            planned={doses}
             unit={unit}
-            onChange={(done) => update({ done })}
-            onSkip={(skipped) => update({ skipped })}
+            color={KIND_LOOK[look].ink}
+            onChange={(done, off) => update({ done, off })}
           />
         )}
 
-        <SheetSection label={t("common.notes")}>
-          <TextInput
-            testID="activity-notes"
-            value={draft.notes}
-            multiline
-            maxLength={2000}
-            placeholder={t("common.notesPlaceholder")}
-            placeholderTextColor={colors.textFaint}
-            accessibilityLabel={t("common.notes")}
-            onChangeText={(notes) => update({ notes })}
-            style={{ ...input, minHeight: 96, lineHeight: 22, textAlignVertical: "top" }}
-          />
-        </SheetSection>
+        {hang === undefined && (
+          <SheetSection label={t("common.notes")}>
+            <TextInput
+              testID="activity-notes"
+              value={draft.notes}
+              multiline
+              maxLength={2000}
+              placeholder={t("common.notesPlaceholder")}
+              placeholderTextColor={colors.textFaint}
+              accessibilityLabel={t("common.notes")}
+              onChangeText={(notes) => update({ notes })}
+              style={{ ...input, minHeight: 96, lineHeight: 22, textAlignVertical: "top" }}
+            />
+          </SheetSection>
+        )}
 
         {logged !== null && items.length > 0 && (
           <Button label={t("workouts.saveAsWorkout")} onPress={saveAsWorkout} variant="link" />

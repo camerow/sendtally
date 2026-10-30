@@ -1,10 +1,11 @@
 import type { ActivityKind } from "@sendtally/api-client";
 import type { SessionItem, ItemDone, SetDone } from "@sendtally/core/hang";
+import { setKeyOf } from "@sendtally/features/activities";
 
 /** One set of one item, by position. */
 export type SetAt = { item: number; set: number };
 
-export const setKey = ({ item, set }: SetAt): string => `${item}:${set}`;
+export const setKey = ({ item, set }: SetAt): string => setKeyOf(item, set);
 
 /** Every set in order, item by item. */
 export const allSets = (items: readonly SessionItem[]): SetAt[] =>
@@ -42,13 +43,6 @@ export function restAfterTick(
   const next = items.findIndex((_, i) => i > at.item && !itemDone(items, ticked, i));
   return next === -1 ? null : { at: afterKey(at.item), seconds: exerciseRestS, next };
 }
-
-/** What was done: the ticked sets of each item, as they were entered. */
-export const tickedDone = (done: readonly ItemDone[], ticked: ReadonlySet<string>): ItemDone[] =>
-  done.map((d) => ({
-    ...d,
-    sets: d.sets.filter((_, set) => ticked.has(setKey({ item: d.item, set }))),
-  }));
 
 /** A lifting item: a strength exercise counted in reps, which takes a weight too. */
 export const isLifting = (kind: ActivityKind, item: SessionItem | undefined): boolean =>

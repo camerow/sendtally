@@ -13,7 +13,7 @@ import { logRun, runParams, type WorkoutRun } from "../data/workoutRunParams";
 import { resumedRun, writeLiveRun } from "../../live-session/liveRun";
 import { RestRow } from "../rest/RestRow";
 import { useRest } from "../rest/useRest";
-import { afterKey } from "../sets/setsRun";
+import { afterKey, allSets, setKey } from "../sets/setsRun";
 import { type } from "../type";
 import { ChecklistRow } from "./ChecklistRow";
 
@@ -62,7 +62,9 @@ export function ChecklistScreen({
       run,
       doneAsPrescribed(run.items),
       startedAt,
-      run.items.flatMap((_, i) => (ticked.has(i) ? [] : [i]))
+      allSets(run.items)
+        .filter((at) => !ticked.has(at.item))
+        .map(setKey)
     );
   const ending = React.useRef(end);
   React.useEffect(() => {
