@@ -39,9 +39,8 @@ export function OccurrenceRow({ occurrence, workout }: OccurrenceRowProps): Reac
         gap: 12,
         paddingHorizontal: 14,
         borderRadius: 14,
-        borderWidth: done ? 1 : 1.5,
-        borderStyle: done ? "solid" : "dashed",
-        borderColor: done ? colors.lineOnLightStrong : "rgba(64,63,76,0.24)",
+        borderWidth: 1,
+        borderColor: colors.lineOnLightStrong,
         overflow: "hidden",
       }}
     >

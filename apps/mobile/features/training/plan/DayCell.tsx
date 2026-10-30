@@ -1,8 +1,7 @@
 import React from "react";
-import { Pressable, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import type { WorkoutKind } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
-import { Icon } from "../../../components/Icon";
 import { press } from "../../../lib/press";
 import { DayMark } from "../today/DayMark";
 import { KIND_LOOK } from "../today/kindLook";
@@ -64,7 +63,7 @@ export function DayCell({
         }}
       />
     ) : status === "moved" ? (
-      <Icon name="chevron" size={11} strokeWidth={2.2} color={colors.textMuted} />
+      <Text style={{ fontSize: 13, lineHeight: 15, color: "rgba(64,63,76,0.32)" }}>→</Text>
     ) : on ? (
       <>
         <DayMark
