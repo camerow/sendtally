@@ -1,12 +1,12 @@
 import React from "react";
-import { Pressable, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import type { StravaPostingFeature } from "@sendtally/features/settings";
 import { t } from "@sendtally/features/i18n";
 import { colors, fonts } from "@sendtally/design/tokens";
 import { DateTimeField } from "../../components/DateTimeField";
-import { SwitchTrack } from "../../components/SwitchTrack";
 import { bodyText, messageText } from "../../lib/styles";
-import { press } from "../../lib/press";
+import { SwitchRow } from "./SwitchRow";
+import { TrainingStravaRows } from "./TrainingStravaRows";
 
 export type StravaPostingSectionProps = {
   posting: StravaPostingFeature;
@@ -18,59 +18,16 @@ const rowTitle = {
   color: colors.gunmetal,
 } as const;
 
-function Switch({
-  checked,
-  onChange,
-  disabled,
-  label,
-}: {
-  checked: boolean;
-  onChange: (value: boolean) => void;
-  disabled: boolean;
-  label: string;
-}): React.ReactElement {
-  return (
-    <Pressable
-      accessibilityRole="switch"
-      accessibilityState={{ checked, disabled }}
-      accessibilityLabel={label}
-      disabled={disabled}
-      onPress={() => onChange(!checked)}
-      hitSlop={10}
-      style={press({})}
-    >
-      <SwitchTrack checked={checked} disabled={disabled} />
-    </Pressable>
-  );
-}
-
 export function StravaPostingSection({ posting }: StravaPostingSectionProps): React.ReactElement {
   return (
     <>
-      <View style={{ borderTopWidth: 1, borderTopColor: colors.lineOnLight }} />
-
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: 14,
-          minHeight: 44,
-        }}
-      >
-        <View style={{ flex: 1, gap: 3 }}>
-          <Text style={rowTitle}>{t("settings.postAutomatically")}</Text>
-          <Text style={bodyText}>
-            {posting.enabled ? t("settings.postingOn") : t("settings.postingOffMobile")}
-          </Text>
-        </View>
-        <Switch
-          checked={posting.enabled}
-          onChange={posting.setEnabled}
-          disabled={posting.busy}
-          label={t("settings.postAutomatically")}
-        />
-      </View>
+      <SwitchRow
+        title={t("settings.postClimbing")}
+        body={posting.enabled ? t("settings.postingOn") : t("settings.postingOffMobile")}
+        checked={posting.enabled}
+        disabled={posting.busy}
+        onChange={posting.setEnabled}
+      />
 
       {posting.enabled && (
         <>
@@ -90,6 +47,8 @@ export function StravaPostingSection({ posting }: StravaPostingSectionProps): Re
           </View>
         </>
       )}
+
+      <TrainingStravaRows posting={posting} />
 
       {posting.error !== null && <Text style={messageText}>{posting.error}</Text>}
     </>

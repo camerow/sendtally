@@ -9,19 +9,18 @@ import {
   tripEffort,
   type LogItem,
 } from "@sendtally/features/journal";
-import {
-  logCountLabel,
-  sessionTitle,
-  sessionTotals,
-  sessionsIn,
-} from "@sendtally/features/sessions";
+import type { ClimbingSessionVM } from "@sendtally/features/climbs";
+import { logCountLabel, sessionTotals, sessionsIn } from "@sendtally/features/sessions";
 import { t } from "@sendtally/features/i18n";
 import { colors, fonts } from "@sendtally/design/tokens";
 import { Icon } from "../../components/Icon";
 import { press } from "../../lib/press";
 import { EntryRow, entryRowHeight } from "./EntryRow";
 import { EntryKindChip } from "./EntryKindChip";
-import { SessionRow, sessionRowHeight } from "../sessions/SessionRow";
+import { ACTIVITY_ROW_HEIGHT, ActivityRow } from "../sessions/ActivityRow";
+import { HANG_ROW_HEIGHT, HangRow } from "../sessions/HangRow";
+import { BLOCK_TAG_HEIGHT, sessionRowHeight } from "../sessions/SessionRow";
+import { ClimbingSessionRows } from "../sessions/ClimbingSessionRows";
 import { ROW_TAGS_HEIGHT, RowTags } from "../sessions/RowTags";
 
 type TripItem = Extract<LogItem, { type: "entry" }>;
@@ -38,8 +37,14 @@ const MAX_DOTS = 12;
 const ROW_PADDING = 14;
 const TINT = "rgba(204,121,234,0.13)";
 
-const innerHeight = (item: LogItem): number =>
-  item.type === "session" ? sessionRowHeight(item.session) : entryRowHeight(item.entry);
+const blockLine = (item: LogItem): number => (item.blockTag === undefined ? 0 : BLOCK_TAG_HEIGHT);
+
+const innerHeight = (item: LogItem): number => {
+  if (item.type === "session") return sessionRowHeight(item.session) + blockLine(item);
+  if (item.type === "activity") return ACTIVITY_ROW_HEIGHT + blockLine(item);
+  if (item.type === "hang") return HANG_ROW_HEIGHT + blockLine(item);
+  return item.type === "block" ? 0 : entryRowHeight(item.entry);
+};
 
 export function tripGroupHeight(item: TripItem): number {
   // The margin under the group, the header and its rule, less the last row's dropped hairline.
@@ -93,9 +98,12 @@ function EffortDots({ trip, inside }: { trip: JournalEntry; inside: LogItem[] })
 export function TripGroup({
   item,
   onOpen,
+  climbing,
 }: {
   item: TripItem;
   onOpen: (item: LogItem) => void;
+  /** Each session's climbs, set in under it in the climbing log. */
+  climbing?: ReadonlyMap<string, ClimbingSessionVM>;
 }): React.ReactElement {
   const last = item.inside.length - 1;
   return (
@@ -176,14 +184,31 @@ export function TripGroup({
       {item.inside.map((inner, n) => (
         <View key={inner.key} style={{ paddingHorizontal: ROW_PADDING }}>
           {inner.type === "session" ? (
-            <SessionRow
+            <ClimbingSessionRows
               session={inner.session}
-              title={sessionTitle(inner.session)}
+              vm={climbing?.get(inner.session.fingerprint)}
               inset
               divider={n < last}
+              blockTag={inner.blockTag}
               onPress={() => onOpen(inner)}
             />
-          ) : (
+          ) : inner.type === "hang" ? (
+            <HangRow
+              hang={inner.hang}
+              inset
+              divider={n < last}
+              blockTag={inner.blockTag}
+              onPress={() => onOpen(inner)}
+            />
+          ) : inner.type === "activity" ? (
+            <ActivityRow
+              activity={inner.activity}
+              inset
+              divider={n < last}
+              blockTag={inner.blockTag}
+              onPress={() => onOpen(inner)}
+            />
+          ) : inner.type === "block" ? null : (
             <EntryRow entry={inner.entry} inset divider={n < last} onPress={() => onOpen(inner)} />
           )}
         </View>

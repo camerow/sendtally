@@ -2,7 +2,10 @@ import { hc } from "hono/client";
 import type { AppType } from "@sendtally/api/app";
 import { ApiError } from "./types";
 import type {
+  ActivityInput,
+  ActivityRecord,
   Area,
+  Block,
   AreaClimb,
   AreaClimbDraftInput,
   AreaClimbInput,
@@ -21,12 +24,21 @@ import type {
   JournalEntry,
   ConnectionStatus,
   Entitlements,
+  Exercise,
+  ExerciseInput,
   GradeScales,
   Gym,
   GymInput,
+  Grip,
+  HangData,
+  HangSession,
+  HangSessionRecord,
+  HangSettings,
   ImportBody,
   ImportResult,
   LogSessionInput,
+  Membership,
+  Plan,
   BulkCreationsInput,
   CreationRef,
   CreationResult,
@@ -35,10 +47,14 @@ import type {
   PostOutcome,
   ProjectInput,
   SessionDetail,
-  SessionRow,
+  SessionLog,
+  SessionLogWithClimbs,
   SessionTag,
-  SessionWithClimbs,
   TagSummary,
+  TrainingReminderSettings,
+  WeekChange,
+  WorkoutInput,
+  WorkoutRecord,
 } from "./types";
 
 export * from "./types";
@@ -100,11 +116,11 @@ export class SendtallyApi {
     return body(this.client.v1.entitlements.refresh.$post());
   }
 
-  sessions(): Promise<{ sessions: SessionRow[] }> {
+  sessions(): Promise<SessionLog> {
     return body(this.client.v1.sessions.$get());
   }
 
-  sessionsWithClimbs(): Promise<{ sessions: SessionWithClimbs[] }> {
+  sessionsWithClimbs(): Promise<SessionLogWithClimbs> {
     return body(this.client.v1.sessions.$get({ query: { include: "climbs" } }));
   }
 
@@ -173,6 +189,12 @@ export class SendtallyApi {
     return body(this.client.v1.preferences["grade-scales"].$put({ json: scales }));
   }
 
+  setTrainingReminders(
+    settings: Partial<TrainingReminderSettings>
+  ): Promise<{ trainingReminders: TrainingReminderSettings }> {
+    return body(this.client.v1.preferences["training-reminders"].$put({ json: settings }));
+  }
+
   climbs(): Promise<{ climbs: ClimbSummary[] }> {
     return body(this.client.v1.climbs.$get());
   }
@@ -184,6 +206,10 @@ export class SendtallyApi {
         json: { note },
       })
     );
+  }
+
+  updateClimb(id: string, change: { name?: string; working?: boolean }): Promise<{ id: string }> {
+    return body(this.client.v1.climbs[":id"].$patch({ param: { id }, json: change }));
   }
 
   saveProject(project: ProjectInput): Promise<{ slug: string }> {
@@ -375,8 +401,141 @@ export class SendtallyApi {
     );
   }
 
+  setTrainingPosting(enabled: boolean): Promise<{ postTraining: boolean }> {
+    return body(this.client.v1.connections.strava["training-posting"].$put({ json: { enabled } }));
+  }
+
   stravaAuthorizeUrl(returnTo: "web" | "app" = "web"): Promise<{ url: string }> {
     return body(this.client.v1.connect.strava.start.$get({ query: { return: returnTo } }));
+  }
+
+  hang(): Promise<HangData> {
+    return body(this.client.v1.hang.$get());
+  }
+
+  saveHangGrip({ id, name, measure }: Grip): Promise<{ grip: Grip }> {
+    return body(this.client.v1.hang.grips[":id"].$put({ param: { id }, json: { name, measure } }));
+  }
+
+  setHangDefaultGrip(
+    workoutId: string,
+    gripId: string
+  ): Promise<{ workoutId: string; gripId: string }> {
+    return body(
+      this.client.v1.hang["default-grips"][":workoutId"].$put({
+        param: { workoutId },
+        json: { gripId },
+      })
+    );
+  }
+
+  deleteHangGrip(id: string): Promise<{ deleted: boolean }> {
+    return body(this.client.v1.hang.grips[":id"].$delete({ param: { id } }));
+  }
+
+  saveHangSession({ id, ...session }: HangSession): Promise<{ session: HangSessionRecord }> {
+    return body(this.client.v1.hang.sessions[":id"].$put({ param: { id }, json: session }));
+  }
+
+  deleteHangSession(id: string): Promise<{ deleted: boolean }> {
+    return body(this.client.v1.hang.sessions[":id"].$delete({ param: { id } }));
+  }
+
+  postHangSession(id: string): Promise<{ session: HangSessionRecord }> {
+    return body(this.client.v1.hang.sessions[":id"].strava.$post({ param: { id } }));
+  }
+
+  saveHangSettings(settings: Partial<HangSettings>): Promise<{ settings: HangSettings }> {
+    return body(this.client.v1.hang.settings.$put({ json: settings }));
+  }
+
+  /** Both dates inclusive; without them, the newest 1000. */
+  activities(
+    range: { from?: string; to?: string } = {}
+  ): Promise<{ activities: ActivityRecord[] }> {
+    return body(this.client.v1.activities.$get({ query: range }));
+  }
+
+  saveActivity(id: string, activity: ActivityInput): Promise<{ activity: ActivityRecord }> {
+    return body(this.client.v1.activities[":id"].$put({ param: { id }, json: activity }));
+  }
+
+  postActivityToStrava(id: string): Promise<{ activity: ActivityRecord }> {
+    return body(this.client.v1.activities[":id"].strava.$post({ param: { id } }));
+  }
+
+  deleteActivity(id: string): Promise<{ deleted: boolean }> {
+    return body(this.client.v1.activities[":id"].$delete({ param: { id } }));
+  }
+
+  /** Blocks, memberships and their week changes. */
+  plan(): Promise<Plan> {
+    return body(this.client.v1.plan.$get());
+  }
+
+  /** A block's focus is no longer the app's to write, so the one saved stays. */
+  saveBlock({ id, name, start, weeks }: Block): Promise<{ block: Block }> {
+    return body(this.client.v1.blocks[":id"].$put({ param: { id }, json: { name, start, weeks } }));
+  }
+
+  /** Its memberships go with it. */
+  deleteBlock(id: string): Promise<{ deleted: boolean }> {
+    return body(this.client.v1.blocks[":id"].$delete({ param: { id } }));
+  }
+
+  /** The block planned again as block `to` from `start`, with its plans and week changes. */
+  copyBlock(id: string, to: string, start: string): Promise<{ block: Block }> {
+    return body(
+      this.client.v1.blocks[":id"].copy.$post({ param: { id }, json: { id: to, start } })
+    );
+  }
+
+  exercises(): Promise<{ exercises: Exercise[] }> {
+    return body(this.client.v1.exercises.$get());
+  }
+
+  /** Creates or renames everywhere; a name another exercise has fails with 409 naming it. */
+  saveExercise(id: string, exercise: ExerciseInput): Promise<{ exercise: Exercise }> {
+    return body(this.client.v1.exercises[":id"].$put({ param: { id }, json: exercise }));
+  }
+
+  /** Deleted when nothing uses it, else archived: out of the lists, its history kept. */
+  removeExercise(id: string): Promise<{ removed: "deleted" | "archived" }> {
+    return body(this.client.v1.exercises[":id"].$delete({ param: { id } }));
+  }
+
+  /** Every workout and log naming `id` takes `into`'s name, and `id` goes. */
+  mergeExercise(id: string, into: string): Promise<{ exercise: Exercise }> {
+    return body(this.client.v1.exercises[":id"].merge.$post({ param: { id }, json: { into } }));
+  }
+
+  saveMembership({ id, ...membership }: Membership): Promise<{ membership: Membership }> {
+    return body(this.client.v1.memberships[":id"].$put({ param: { id }, json: membership }));
+  }
+
+  /** Its week changes go with it; sessions logged against it lose only the link. */
+  deleteMembership(id: string): Promise<{ deleted: boolean }> {
+    return body(this.client.v1.memberships[":id"].$delete({ param: { id } }));
+  }
+
+  /** An empty change puts the item back as written for that week. */
+  saveWeekChange({ membershipId, ...change }: WeekChange): Promise<{ weekChange: WeekChange }> {
+    return body(
+      this.client.v1.memberships[":id"].changes.$put({ param: { id: membershipId }, json: change })
+    );
+  }
+
+  workouts(): Promise<{ workouts: WorkoutRecord[] }> {
+    return body(this.client.v1.workouts.$get());
+  }
+
+  saveWorkout(id: string, workout: WorkoutInput): Promise<{ workout: WorkoutRecord }> {
+    return body(this.client.v1.workouts[":id"].$put({ param: { id }, json: workout }));
+  }
+
+  /** It leaves every block; sessions that ran it keep what was done. */
+  deleteWorkout(id: string): Promise<{ deleted: boolean }> {
+    return body(this.client.v1.workouts[":id"].$delete({ param: { id } }));
   }
 
   deleteAccount(): Promise<{ deleted: boolean }> {

@@ -2,6 +2,7 @@ export const sessions = {
   "sessions.unscored": "sin puntuar",
   "sessions.back": "← Registro",
   "sessions.onStrava": "En Strava",
+  "sessions.hangboardSession": "Sesión de multipresa",
   "sessions.loadFailed": "No se pudo conectar con sendtally. Desliza para reintentar.",
   "sessions.noneForTags": "Ninguna sesión lleva esas etiquetas.",
   "sessions.monthMeta": "{year} · {sessions}",
@@ -14,6 +15,7 @@ export const sessions = {
   "sessions.posting": "Publicando…",
   "sessions.createTag": "+ Crear “{name}”",
   "sessions.deleteTitle": "¿Eliminar la sesión?",
+  "sessions.deleteSession": "Eliminar la sesión",
   "sessions.deleteBody": "Esto elimina la sesión y su registro de escaladas para siempre.",
   "sessions.deleteFailed": "No se pudo eliminar",
   "sessions.readOnlyBoard":
@@ -56,7 +58,7 @@ export const sessions = {
   "sessions.logClimb": "Vía",
   "sessions.moreWaysToLog": "Más formas de registrar",
   "sessions.logAClimb": "Vía",
-  "sessions.logAClimbHint": "Registrar una sola vía. Empieza una sesión en curso",
+  "sessions.logAClimbHint": "Empezar una sesión en directo, escalada a escalada",
   "sessions.logFullSession": "Sesión",
   "sessions.logFullSessionHint":
     "Agrupa vías en una sesión con nombre, notas, fecha, lugar y esfuerzo.",
@@ -65,4 +67,6 @@ export const sessions = {
   "sessions.saving": "Guardando…",
   "sessions.notSavedYet": "Aún sin guardar, se reintentará",
   "sessions.addDetails": "Añadir detalles",
+  "sessions.topSend": "máx. {grade}",
+  "sessions.pastSession": "Sesión pasada",
 } as const;

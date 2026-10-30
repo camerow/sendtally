@@ -1,8 +1,5 @@
 export const trends = {
-  "trends.backToTrends": "← Trends",
   "trends.loadFailed": "Trends konnten nicht geladen werden. Lade die Seite neu.",
-  "trends.loadFailedMobile": "Trends konnten nicht geladen werden.",
-  "trends.loadFailedPull": "Trends konnten nicht geladen werden. Zum Neuladen ziehen.",
   "trends.details": "Details →",
   "trends.range7d": "Letzte 7 Tage",
   "trends.range1m": "Letzter Monat",
@@ -175,4 +172,5 @@ export const trends = {
   "trends.daysByTagCaption": "Tage, an denen ein Tag an einer Session hing",
   "trends.tagDays": "{tag} · {inside} drinnen · {outside} draußen",
   "trends.calendar": "Kletterkalender",
+  "trends.freeRanges": "Kostenlos siehst du die letzten 7 Tage. Mitglieder sehen jeden Zeitraum.",
 } as const;

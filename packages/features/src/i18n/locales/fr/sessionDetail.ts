@@ -1,6 +1,6 @@
 export const sessionDetail = {
   "sessionDetail.loadFailed": "Impossible de charger cette séance.",
-  "sessionDetail.unknownClimb": "Ligne inconnue",
+  "sessionDetail.unknownClimb": "Voie inconnue",
   "sessionDetail.sortOrder": "Ordre de grimpe",
   "sessionDetail.sortGradeDesc": "Cotation - la plus dure d'abord",
   "sessionDetail.sortGradeAsc": "Cotation - la plus facile d'abord",
@@ -22,11 +22,13 @@ export const sessionDetail = {
   "sessionDetail.backToSessions": "Retour aux séances",
   "sessionDetail.deleteFailed": "Impossible de supprimer cette séance. Réessaie.",
   "sessionDetail.viewOnStrava": "Voir sur Strava ↗",
-  "sessionDetail.colClimb": "Ligne",
+  "sessionDetail.colClimb": "Voie",
   "sessionDetail.colAngle": "Inclinaison",
   "sessionDetail.colAttempts": "Essais",
   "sessionDetail.noteCounter": "{n} / {max}",
   "sessionDetail.editNote": "Modifier la note",
   "sessionDetail.backToSession": "Retour à la séance",
   "sessionDetail.backSession": "Séance",
+  "sessionDetail.byGrade": "Par cotation",
+  "sessionDetail.notYet": "Pas encore",
 } as const;

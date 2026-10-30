@@ -2,6 +2,7 @@ export const sessions = {
   "sessions.unscored": "unscored",
   "sessions.back": "← Log",
   "sessions.onStrava": "On Strava",
+  "sessions.hangboardSession": "Hangboard session",
   "sessions.loadFailed": "Could not reach sendtally. Pull to retry.",
   "sessions.noneForTags": "No sessions carry those tags.",
   "sessions.monthMeta": "{year} · {sessions}",
@@ -14,6 +15,7 @@ export const sessions = {
   "sessions.posting": "Posting…",
   "sessions.createTag": "+ Create “{name}”",
   "sessions.deleteTitle": "Delete session?",
+  "sessions.deleteSession": "Delete session",
   "sessions.deleteBody": "This removes the session and its climb log for good.",
   "sessions.deleteFailed": "Could not delete",
   "sessions.readOnlyBoard":
@@ -55,7 +57,7 @@ export const sessions = {
   "sessions.logClimb": "Climb",
   "sessions.moreWaysToLog": "More ways to log",
   "sessions.logAClimb": "Climb",
-  "sessions.logAClimbHint": "Log a single climb. Starts a live session",
+  "sessions.logAClimbHint": "Start a live session, climb by climb",
   "sessions.logFullSession": "Session",
   "sessions.logFullSessionHint":
     "Group climbs into a single session with a name, notes, date, location and effort.",
@@ -64,4 +66,6 @@ export const sessions = {
   "sessions.saving": "Saving…",
   "sessions.notSavedYet": "Not saved yet, will retry",
   "sessions.addDetails": "Add details",
+  "sessions.topSend": "top {grade}",
+  "sessions.pastSession": "Past session",
 } as const;

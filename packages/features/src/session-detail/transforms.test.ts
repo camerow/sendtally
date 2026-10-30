@@ -15,6 +15,7 @@ const detail: SessionDetail = {
   end_at: "2026-07-01T19:25:00.000Z",
   times: "both",
   climb_count: 4,
+  send_count: 0,
   top_grade: 7,
   top_send_grade: 7,
   top_grade_label: null,
@@ -28,6 +29,9 @@ const detail: SessionDetail = {
   posted_at: "2026-07-02T00:00:00.000Z",
   post_state: "posted",
   post_error: null,
+  membership_id: null,
+  week: null,
+  focus: null,
   tags: [],
   climbs: [
     {
@@ -145,6 +149,9 @@ describe("sessionDetailVM", () => {
       posted_at: null,
       post_state: null,
       post_error: null,
+      membership_id: null,
+      week: null,
+      focus: null,
     });
     expect(vm.post.kind).toBe("legacy");
     expect(vm.post.label).toBe("Tension Board · read-only history");
@@ -169,10 +176,26 @@ describe("sessionDetailVM", () => {
       posted_at: null,
       post_state: null,
       post_error: null,
+      membership_id: null,
+      week: null,
+      focus: null,
     });
     expect(vm.title).toContain("Tuesday board night");
     expect(vm.meta).toContain("· Indoor ·");
     expect(vm.post.label).toBe("Logged manually");
+  });
+
+  it("names it without its date, places it in its gym and dates it on its own line", () => {
+    const vm = sessionDetailVM(
+      { ...detail, name: "Tuesday night session", location: "indoor", gym_id: "g1" },
+      null,
+      new Set(),
+      "The Depot"
+    );
+    expect(vm.name).toBe("Tuesday night session");
+    expect(vm.place).toBe("Indoor · The Depot");
+    expect(vm.when).toMatch(/^Wed Jul 1 · \S.* · 1h 35m$/);
+    expect([vm.length, vm.rpe]).toEqual(["1h 35m", 7]);
   });
 
   const unposted = {
@@ -183,6 +206,9 @@ describe("sessionDetailVM", () => {
     posted_at: null,
     post_state: null,
     post_error: null,
+    membership_id: null,
+    week: null,
+    focus: null,
   };
   const connected = { connected: true, active: true, since: null };
 

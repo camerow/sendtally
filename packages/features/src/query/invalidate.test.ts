@@ -60,6 +60,78 @@ describe("writeEffect", () => {
     expect(writeEffect({ method: "DELETE", path: "/v1/account" })?.stale).toEqual([]);
   });
 
+  it("stales sendtally's log and trends for a hang session write, never the hang cache", () => {
+    for (const write of [
+      { method: "PUT", path: "/v1/hang/sessions/h1" },
+      { method: "DELETE", path: "/v1/hang/sessions/h1" },
+      { method: "POST", path: "/v1/hang/sessions/h1/strava" },
+      { method: "PUT", path: "/v1/hang/grips/g1" },
+    ]) {
+      expect(writeEffect(write)).toEqual({
+        stale: [["sessions"], ["sessionsWithClimbs"]],
+        gone: null,
+      });
+    }
+  });
+
+  it("stales nothing for the rest of the hangboard writes", () => {
+    for (const path of ["/v1/hang/loads", "/v1/hang/default-grips/rep73", "/v1/hang/settings"]) {
+      expect(writeEffect({ method: "PUT", path })).toEqual({ stale: [], gone: null });
+    }
+  });
+
+  it("stales the log for an activity write, never the activities' own cache", () => {
+    for (const method of ["PUT", "DELETE"]) {
+      expect(writeEffect({ method, path: "/v1/activities/a1" })).toEqual({
+        stale: [["sessions"], ["sessionsWithClimbs"], ["exercises"]],
+        gone: null,
+      });
+    }
+  });
+
+  it("stales nothing for a plan edit, which owns its cache", () => {
+    for (const path of ["/v1/blocks/b1", "/v1/memberships/m1", "/v1/memberships/m1/changes"]) {
+      expect(writeEffect({ method: "PUT", path })).toEqual({ stale: [], gone: null });
+    }
+  });
+
+  it("stales the exercises for a workout edit, and the plan for a copied block", () => {
+    expect(writeEffect({ method: "PUT", path: "/v1/workouts/w1" })).toEqual({
+      stale: [["exercises"]],
+      gone: null,
+    });
+    expect(writeEffect({ method: "POST", path: "/v1/blocks/b1/copy" })).toEqual({
+      stale: [["plan"]],
+      gone: null,
+    });
+  });
+
+  it("stales the workouts and activities an exercise rename rewrites", () => {
+    expect(writeEffect({ method: "POST", path: "/v1/exercises/e1/merge" })).toEqual({
+      stale: [["exercises"], ["workouts"], ["activities"]],
+      gone: null,
+    });
+  });
+
+  it("stales whatever logged against a deleted workout, block or membership", () => {
+    for (const path of ["/v1/workouts/w1", "/v1/blocks/b1", "/v1/memberships/m1"]) {
+      expect(writeEffect({ method: "DELETE", path })).toEqual({
+        stale: [
+          ["sessions"],
+          ["sessionsWithClimbs"],
+          ["session"],
+          ["climbs"],
+          ["tags"],
+          ["areaClimb"],
+          ["activities"],
+          ["hang"],
+          ["plan"],
+        ],
+        gone: null,
+      });
+    }
+  });
+
   it("does not guess at a path it does not know", () => {
     expect(writeEffect({ method: "POST", path: "/v1/something-new" })).toBeNull();
     expect(writeEffect({ method: "POST", path: "/webhooks/clerk" })).toBeNull();

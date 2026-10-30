@@ -26,6 +26,11 @@ const utc = (options: Intl.DateTimeFormatOptions): Intl.DateTimeFormatOptions =>
   timeZone: "UTC",
 });
 
+/** Now on the climber's wall clock, read as UTC like the session times it is compared with. */
+export function wallClock(now: Date): number {
+  return now.getTime() - now.getTimezoneOffset() * 60_000;
+}
+
 export function dayStart(ms: number): number {
   return Math.floor(ms / DAY_MS) * DAY_MS;
 }
@@ -97,7 +102,8 @@ function yearsFrom(firstMs: number, now: Date): Bucket[] {
 }
 
 /** Session times are the climber's wall clock stored as UTC, so every bucket is cut in UTC. */
-export function bucketsFor(range: TrendRange, now: Date, firstMs: number | null): Bucket[] {
+export function bucketsFor(range: TrendRange, clock: Date, firstMs: number | null): Bucket[] {
+  const now = new Date(wallClock(clock));
   switch (range) {
     case "7d":
       return trailingDays(now, 7);

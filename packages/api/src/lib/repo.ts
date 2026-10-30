@@ -20,9 +20,11 @@ import {
   sql,
   type SQL,
 } from "drizzle-orm";
+import type { BatchItem } from "drizzle-orm/batch";
 import { drizzle, type DrizzleD1Database } from "drizzle-orm/d1";
 import { alias, type SQLiteColumn } from "drizzle-orm/sqlite-core";
 import {
+  activities,
   areaClimbs,
   areas,
   boardConnections,
@@ -32,9 +34,15 @@ import {
   duplicateReports,
   entrySessions,
   entryTags,
+  exercises,
   gyms,
+  hangDefaultGrips,
+  hangGrips,
+  hangLoads,
+  hangSessions,
+  hangSettings,
   journalEntries,
-  projects,
+  memberships,
   sessionClimbLinks,
   sessions,
   sessionTags,
@@ -42,10 +50,35 @@ import {
   stravaConnections,
   syncState,
   tags,
+  trainingBlocks,
+  userClimbs,
   users,
+  weekChanges,
+  workouts,
 } from "../db/schema";
+import {
+  addDays,
+  daysBetween,
+  defaultMeasure,
+  loadKey,
+  measureOf,
+  type Block,
+  type Focus,
+  type GripMeasure,
+  type HangSession,
+  type HangSettings,
+  type Item,
+  type ItemDone,
+  type Loads,
+  type Membership,
+  type WeekChange,
+  type Workout,
+} from "@sendtally/core/hang";
+import type { ActivityInput } from "./activities";
+import { exerciseKindOf, exerciseNameKey, workoutExercises, type ExerciseInput } from "./exercises";
 import type { ContentEntity, Viewer } from "./areas";
 import type { ClimbLink } from "./manual";
+import type { FocusOptional } from "./plan";
 import type { EntryWrite } from "./entries";
 import type { StoreEntitlement } from "./revenuecat";
 import type { NormalizedTag } from "./tags";
@@ -109,6 +142,34 @@ export async function setGradeScales(
     .set({
       ...(scales.boulder === undefined ? {} : { boulder_scale: scales.boulder }),
       ...(scales.route === undefined ? {} : { route_scale: scales.route }),
+    })
+    .where(eq(users.id, id));
+}
+
+export type TrainingReminderSettings = { enabled: boolean; time: string; promptSeen: boolean };
+
+export function trainingRemindersOf(user: UserRow | null): TrainingReminderSettings {
+  return {
+    enabled: user?.training_reminders === 1,
+    time: user?.training_reminder_time ?? "08:00",
+    promptSeen: user?.training_reminder_prompt_seen === 1,
+  };
+}
+
+export async function setTrainingReminders(
+  db: D1Database,
+  id: string,
+  settings: Partial<TrainingReminderSettings>
+): Promise<void> {
+  const flag = (value: boolean): number => (value ? 1 : 0);
+  await drizzle(db)
+    .update(users)
+    .set({
+      ...(settings.enabled === undefined ? {} : { training_reminders: flag(settings.enabled) }),
+      ...(settings.time === undefined ? {} : { training_reminder_time: settings.time }),
+      ...(settings.promptSeen === undefined
+        ? {}
+        : { training_reminder_prompt_seen: flag(settings.promptSeen) }),
     })
     .where(eq(users.id, id));
 }
@@ -224,6 +285,10 @@ export async function replaceStoreEntitlements(
 
 export type ManualSessionInput = {
   fingerprint: string;
+  /** Absent leaves the plan link as it was. */
+  membership_id?: string | null;
+  week?: number | null;
+  focus?: Focus | null;
   location: "indoor" | "outdoor" | null;
   gym_id: string | null;
   area_id: string | null;
@@ -232,6 +297,7 @@ export type ManualSessionInput = {
   end_at: string;
   times: "both" | "start" | "end" | "none";
   climb_count: number;
+  send_count: number;
   top_grade: number;
   top_send_grade: number;
   top_grade_label: string | null;
@@ -596,6 +662,17 @@ export async function setSessionTags(
   return linked;
 }
 
+export async function listSessionClimbLinks(
+  db: D1Database,
+  userId: string
+): Promise<Array<{ climb_slug: string; climb_id: string }>> {
+  return drizzle(db)
+    .select({ climb_slug: sessionClimbLinks.climb_slug, climb_id: sessionClimbLinks.climb_id })
+    .from(sessionClimbLinks)
+    .where(eq(sessionClimbLinks.user_id, userId))
+    .all();
+}
+
 export type ClimbNoteRow = typeof climbNotes.$inferSelect;
 
 export type ClimbNoteInput = { climb_slug: string; note: string };
@@ -883,57 +960,172 @@ export type Discipline = "boulder" | "route";
 export type ClimbGrade =
   { scale: "v"; value: number } | { scale: "font" | "yds" | "french"; value: string };
 
-export type ProjectRow = typeof projects.$inferSelect;
+export type UserClimbRow = typeof userClimbs.$inferSelect;
 
-export async function listProjects(db: D1Database, userId: string): Promise<ProjectRow[]> {
-  return drizzle(db).select().from(projects).where(eq(projects.user_id, userId)).all();
+export async function listUserClimbs(db: D1Database, userId: string): Promise<UserClimbRow[]> {
+  return drizzle(db).select().from(userClimbs).where(eq(userClimbs.user_id, userId)).all();
 }
 
-export type ProjectInput = {
-  slug: string;
+export type UserClimbInput = {
+  name: string;
+  name_key: string;
+  discipline: Discipline;
+  grade_json: string | null;
+  area_climb_id: string | null;
+};
+
+export async function insertUserClimbs(
+  db: D1Database,
+  userId: string,
+  climbs: UserClimbInput[]
+): Promise<void> {
+  if (climbs.length === 0) return;
+  const now = new Date().toISOString();
+  const d = drizzle(db);
+  const inserts = climbs.map((c) =>
+    d
+      .insert(userClimbs)
+      .values({ user_id: userId, id: crypto.randomUUID(), ...c, created_at: now, updated_at: now })
+      .onConflictDoNothing()
+  );
+  const [first, ...rest] = inserts;
+  if (first !== undefined) await d.batch([first, ...rest]);
+}
+
+export async function linkUserClimbs(
+  db: D1Database,
+  userId: string,
+  links: Array<{ id: string; area_climb_id: string }>
+): Promise<void> {
+  const d = drizzle(db);
+  const updates = links.map((l) =>
+    d
+      .update(userClimbs)
+      .set({ area_climb_id: l.area_climb_id })
+      .where(and(eq(userClimbs.user_id, userId), eq(userClimbs.id, l.id)))
+  );
+  const [first, ...rest] = updates;
+  if (first !== undefined) await d.batch([first, ...rest]);
+}
+
+export type WorkingInput = {
+  name_key: string;
   name: string;
   grade?: ClimbGrade;
   discipline?: Discipline;
 };
 
-// A project row carries only what the caller supplied: the log form knows the
-// grade and the projects page knows the discipline, and neither overwrites
-// what the other wrote.
-export async function upsertProject(
+// The log form knows the grade and the Climbs tab knows the discipline, and
+// neither overwrites what the other wrote.
+export async function markWorking(
   db: D1Database,
   userId: string,
-  project: ProjectInput
+  climb: WorkingInput
 ): Promise<void> {
   const now = new Date().toISOString();
-  const grade_json = project.grade === undefined ? null : JSON.stringify(project.grade);
+  const grade_json = climb.grade === undefined ? null : JSON.stringify(climb.grade);
   const discipline =
-    project.discipline ??
-    (project.grade === undefined ? "boulder" : disciplineOf(project.grade.scale));
-  const set: Partial<typeof projects.$inferInsert> = { name: project.name };
+    climb.discipline ?? (climb.grade === undefined ? "boulder" : disciplineOf(climb.grade.scale));
+  const set: Partial<typeof userClimbs.$inferInsert> = {
+    name: climb.name,
+    working: true,
+    updated_at: now,
+  };
   if (grade_json !== null) set.grade_json = grade_json;
-  if (project.discipline !== undefined || project.grade !== undefined) set.discipline = discipline;
+  if (climb.discipline !== undefined || climb.grade !== undefined) set.discipline = discipline;
   await drizzle(db)
-    .insert(projects)
+    .insert(userClimbs)
     .values({
       user_id: userId,
-      slug: project.slug,
-      name: project.name,
+      id: crypto.randomUUID(),
+      name: climb.name,
+      name_key: climb.name_key,
       grade_json,
       discipline,
+      area_climb_id: null,
+      working: true,
       created_at: now,
+      updated_at: now,
     })
-    .onConflictDoUpdate({ target: [projects.user_id, projects.slug], set });
+    .onConflictDoUpdate({ target: [userClimbs.user_id, userClimbs.name_key], set });
 }
 
-export async function deleteProject(
+export async function stopWorking(
   db: D1Database,
   userId: string,
-  slug: string
+  nameKey: string
 ): Promise<boolean> {
   const result = await drizzle(db)
-    .delete(projects)
-    .where(and(eq(projects.user_id, userId), eq(projects.slug, slug)));
+    .update(userClimbs)
+    .set({ working: false, updated_at: new Date().toISOString() })
+    .where(
+      and(
+        eq(userClimbs.user_id, userId),
+        eq(userClimbs.name_key, nameKey),
+        eq(userClimbs.working, true)
+      )
+    );
   return result.meta.changes > 0;
+}
+
+export async function setUserClimbWorking(
+  db: D1Database,
+  userId: string,
+  id: string,
+  working: boolean
+): Promise<void> {
+  await drizzle(db)
+    .update(userClimbs)
+    .set({ working, updated_at: new Date().toISOString() })
+    .where(and(eq(userClimbs.user_id, userId), eq(userClimbs.id, id)));
+}
+
+export type ClimbRename = {
+  climb: UserClimbRow;
+  name: string;
+  nameKey: string;
+  /** Another of the user's climbs already under the new name, which this one merges into. */
+  into: UserClimbRow | null;
+  /** Manual sessions whose climbs now carry the surviving id. */
+  sessions: Array<{ fingerprint: string; climbs_json: string }>;
+};
+
+export async function renameUserClimb(
+  db: D1Database,
+  userId: string,
+  r: ClimbRename
+): Promise<void> {
+  const d = drizzle(db);
+  const now = new Date().toISOString();
+  const mine = (id: string): SQL | undefined =>
+    and(eq(userClimbs.user_id, userId), eq(userClimbs.id, id));
+  const record =
+    r.into === null
+      ? d
+          .update(userClimbs)
+          .set({ name: r.name, name_key: r.nameKey, updated_at: now })
+          .where(mine(r.climb.id))
+      : d.delete(userClimbs).where(mine(r.climb.id));
+  const survivor =
+    r.into === null
+      ? []
+      : [
+          d
+            .update(userClimbs)
+            .set({
+              working: r.into.working || r.climb.working,
+              area_climb_id: r.into.area_climb_id ?? r.climb.area_climb_id,
+              updated_at: now,
+            })
+            .where(mine(r.into.id)),
+        ];
+  const stamped = r.sessions.map((s) =>
+    d
+      .update(sessions)
+      .set({ climbs_json: s.climbs_json })
+      .where(and(eq(sessions.user_id, userId), eq(sessions.fingerprint, s.fingerprint)))
+  );
+  await d.batch([record, ...survivor, ...stamped]);
 }
 
 export type PostableSessionRow = {
@@ -1022,6 +1214,17 @@ export async function setStravaPosting(
   await drizzle(db)
     .update(stravaConnections)
     .set({ posting_enabled: postingEnabled ? 1 : 0, post_since: postSince })
+    .where(eq(stravaConnections.user_id, userId));
+}
+
+export async function setTrainingPosting(
+  db: D1Database,
+  userId: string,
+  enabled: boolean
+): Promise<void> {
+  await drizzle(db)
+    .update(stravaConnections)
+    .set({ post_training: enabled })
     .where(eq(stravaConnections.user_id, userId));
 }
 
@@ -1124,8 +1327,19 @@ export async function deleteUserData(db: D1Database, userId: string): Promise<vo
     d.delete(entrySessions).where(eq(entrySessions.user_id, userId)),
     d.delete(journalEntries).where(eq(journalEntries.user_id, userId)),
     d.delete(tags).where(eq(tags.user_id, userId)),
-    d.delete(projects).where(eq(projects.user_id, userId)),
+    d.delete(userClimbs).where(eq(userClimbs.user_id, userId)),
     d.delete(gyms).where(eq(gyms.user_id, userId)),
+    d.delete(hangGrips).where(eq(hangGrips.user_id, userId)),
+    d.delete(hangDefaultGrips).where(eq(hangDefaultGrips.user_id, userId)),
+    d.delete(hangLoads).where(eq(hangLoads.user_id, userId)),
+    d.delete(hangSessions).where(eq(hangSessions.user_id, userId)),
+    d.delete(hangSettings).where(eq(hangSettings.user_id, userId)),
+    d.delete(activities).where(eq(activities.user_id, userId)),
+    d.delete(memberships).where(eq(memberships.user_id, userId)),
+    d.delete(weekChanges).where(eq(weekChanges.user_id, userId)),
+    d.delete(trainingBlocks).where(eq(trainingBlocks.user_id, userId)),
+    d.delete(workouts).where(eq(workouts.user_id, userId)),
+    d.delete(exercises).where(eq(exercises.user_id, userId)),
     d.delete(sessions).where(eq(sessions.user_id, userId)),
     d.delete(stravaConnections).where(eq(stravaConnections.user_id, userId)),
     d.delete(storeEntitlements).where(eq(storeEntitlements.user_id, userId)),
@@ -1330,12 +1544,13 @@ export async function areasByIds(
 export async function childAreas(
   db: D1Database,
   viewer: Viewer,
-  parentId: string
+  parentId: string | null
 ): Promise<AreaRow[]> {
+  const under = parentId === null ? isNull(areas.parent_id) : eq(areas.parent_id, parentId);
   return drizzle(db)
     .select()
     .from(areas)
-    .where(and(eq(areas.parent_id, parentId), visibleTo(areas, viewer)))
+    .where(and(under, visibleTo(areas, viewer)))
     .orderBy(areas.name_key)
     .all();
 }
@@ -1710,7 +1925,7 @@ const liveArea = (d: Db, id: string, ...extra: (SQL | undefined)[]): SQL =>
 // its parent is live, so nothing active ever hangs under something hidden.
 export async function approveArea(
   db: D1Database,
-  row: { id: string; version: number; parentId: string }
+  row: { id: string; version: number; parentId: string | null }
 ): Promise<boolean> {
   const d = drizzle(db);
   const result = await d
@@ -1721,7 +1936,7 @@ export async function approveArea(
         eq(areas.id, row.id),
         eq(areas.status, "pending"),
         eq(areas.version, row.version),
-        liveArea(d, row.parentId)
+        row.parentId === null ? undefined : liveArea(d, row.parentId)
       )
     );
   return result.meta.changes > 0;
@@ -1781,7 +1996,7 @@ export async function movePendingArea(
     .update(areas)
     .set({
       path: sql`${`${a.parent.path}${a.id}/`} || substr(${areas.path}, ${a.path.length + 1})`,
-      depth: sql`${areas.depth} + ${a.parent.depth + 1 - a.depth}`,
+      depth: sql`${areas.depth} + ${(a.parent?.depth ?? -1) + 1 - a.depth}`,
     })
     .where(and(gte(areas.path, a.path), lt(areas.path, `${a.path.slice(0, -1)}0`), at, parent));
   const self = d
@@ -1920,7 +2135,7 @@ export async function approveAreaRevision(
   a: Approval & {
     path: string;
     depth: number;
-    parent: { id: string; path: string; depth: number };
+    parent: { id: string; path: string; depth: number } | null;
     write: AreaRevisionWrite;
   }
 ): Promise<boolean> {
@@ -1932,12 +2147,14 @@ export async function approveAreaRevision(
       .where(and(eq(areas.id, a.id), eq(areas.version, a.version), eq(areas.status, "active")))
   );
   const approved = revisionIs(d, a.revisionId, "approved");
-  const flip = markApproved(d, a, and(at, liveArea(d, a.parent.id, eq(areas.path, a.parent.path))));
+  const placed =
+    a.parent === null ? undefined : liveArea(d, a.parent.id, eq(areas.path, a.parent.path));
+  const flip = markApproved(d, a, and(at, placed));
   const update = d
     .update(areas)
     .set({ ...a.write, version: sql`${areas.version} + 1`, updated_at: stamp() })
     .where(and(eq(areas.id, a.id), eq(areas.version, a.version), approved));
-  const path = `${a.parent.path}${a.id}/`;
+  const path = `${a.parent?.path ?? "/"}${a.id}/`;
   if (path === a.path) {
     const [, result] = await d.batch([flip, update]);
     return result.meta.changes > 0;
@@ -1946,7 +2163,7 @@ export async function approveAreaRevision(
     .update(areas)
     .set({
       path: sql`${path} || substr(${areas.path}, ${a.path.length + 1})`,
-      depth: sql`${areas.depth} + ${a.parent.depth + 1 - a.depth}`,
+      depth: sql`${areas.depth} + ${(a.parent?.depth ?? -1) + 1 - a.depth}`,
     })
     .where(and(gte(areas.path, a.path), lt(areas.path, `${a.path.slice(0, -1)}0`), at, approved));
   const [, , result] = await d.batch([flip, move, update]);
@@ -2197,4 +2414,963 @@ export async function mergeAreaClimb(
       .where(and(openReport, eq(duplicateReports.keep_climb_id, m.duplicateId), merged)),
   ]);
   return result.meta.changes > 0;
+}
+
+export type HangGripRow = typeof hangGrips.$inferSelect;
+export type HangSessionRow = typeof hangSessions.$inferSelect;
+export type HangSettingsRow = typeof hangSettings.$inferSelect;
+
+export type HangRows = {
+  grips: HangGripRow[];
+  defaultGrips: Array<typeof hangDefaultGrips.$inferSelect>;
+  loads: Loads;
+  sessions: HangSessionRow[];
+  settings: HangSettingsRow | null;
+};
+
+const loadsOf = (rows: Array<typeof hangLoads.$inferSelect>): Loads =>
+  Object.fromEntries(rows.map((r) => [loadKey(r.workout_id, r.grip_id), r.kg]));
+
+// Everything the hangboard feature reads, in one round trip.
+export async function hangRows(db: D1Database, userId: string): Promise<HangRows> {
+  const d = drizzle(db);
+  const [grips, defaultGrips, loads, hang, settings] = await d.batch([
+    d.select().from(hangGrips).where(eq(hangGrips.user_id, userId)).orderBy(hangGrips.created_at),
+    d.select().from(hangDefaultGrips).where(eq(hangDefaultGrips.user_id, userId)),
+    d.select().from(hangLoads).where(eq(hangLoads.user_id, userId)),
+    d
+      .select()
+      .from(hangSessions)
+      .where(eq(hangSessions.user_id, userId))
+      .orderBy(desc(hangSessions.date), desc(hangSessions.created_at)),
+    d.select().from(hangSettings).where(eq(hangSettings.user_id, userId)),
+  ]);
+  return {
+    grips,
+    defaultGrips,
+    loads: loadsOf(loads),
+    sessions: hang,
+    settings: settings[0] ?? null,
+  };
+}
+
+export async function listHangGrips(db: D1Database, userId: string): Promise<HangGripRow[]> {
+  return drizzle(db).select().from(hangGrips).where(eq(hangGrips.user_id, userId)).all();
+}
+
+export async function findHangGripByKey(
+  db: D1Database,
+  userId: string,
+  nameKey: string
+): Promise<HangGripRow | null> {
+  const row = await drizzle(db)
+    .select()
+    .from(hangGrips)
+    .where(and(eq(hangGrips.user_id, userId), eq(hangGrips.name_key, nameKey)))
+    .get();
+  return row ?? null;
+}
+
+export async function getHangGrip(
+  db: D1Database,
+  userId: string,
+  id: string
+): Promise<HangGripRow | null> {
+  const row = await drizzle(db)
+    .select()
+    .from(hangGrips)
+    .where(and(eq(hangGrips.user_id, userId), eq(hangGrips.id, id)))
+    .get();
+  return row ?? null;
+}
+
+export async function saveHangGrip(
+  db: D1Database,
+  userId: string,
+  grip: { id: string; name: string; nameKey: string; measure?: GripMeasure }
+): Promise<void> {
+  const measure = grip.measure === undefined ? {} : { measure: grip.measure };
+  await drizzle(db)
+    .insert(hangGrips)
+    .values({
+      user_id: userId,
+      id: grip.id,
+      name: grip.name,
+      name_key: grip.nameKey,
+      hidden: false,
+      ...measure,
+      created_at: new Date().toISOString(),
+    })
+    .onConflictDoUpdate({
+      target: [hangGrips.user_id, hangGrips.id],
+      set: { name: grip.name, name_key: grip.nameKey, hidden: false, ...measure },
+    });
+}
+
+export async function showHangGrip(db: D1Database, userId: string, id: string): Promise<void> {
+  await drizzle(db)
+    .update(hangGrips)
+    .set({ hidden: false })
+    .where(and(eq(hangGrips.user_id, userId), eq(hangGrips.id, id)));
+}
+
+/**
+ * Frees a deleted grip's name for a rename. A gripKey never holds a newline, so
+ * the new key can never match a name again; the grip keeps its name for history.
+ */
+export async function releaseHangGripName(
+  db: D1Database,
+  userId: string,
+  grip: HangGripRow
+): Promise<void> {
+  await drizzle(db)
+    .update(hangGrips)
+    .set({ name_key: `${grip.name_key}\n${grip.id}` })
+    .where(and(eq(hangGrips.user_id, userId), eq(hangGrips.id, grip.id)));
+}
+
+/**
+ * Hides a grip from the pickers and drops its explicit default choices.
+ * A workout created with it still names it as `grip`; the app's model skips it.
+ * Sessions, schedules and loads keep pointing at it, so history keeps its name.
+ */
+export async function hideHangGrip(db: D1Database, userId: string, id: string): Promise<void> {
+  const d = drizzle(db);
+  await d.batch([
+    d
+      .update(hangGrips)
+      .set({ hidden: true })
+      .where(and(eq(hangGrips.user_id, userId), eq(hangGrips.id, id))),
+    d
+      .delete(hangDefaultGrips)
+      .where(and(eq(hangDefaultGrips.user_id, userId), eq(hangDefaultGrips.grip_id, id))),
+  ]);
+}
+
+export async function setHangDefaultGrip(
+  db: D1Database,
+  userId: string,
+  workoutId: string,
+  gripId: string
+): Promise<void> {
+  await drizzle(db)
+    .insert(hangDefaultGrips)
+    .values({ user_id: userId, workout_id: workoutId, grip_id: gripId })
+    .onConflictDoUpdate({
+      target: [hangDefaultGrips.user_id, hangDefaultGrips.workout_id],
+      set: { grip_id: gripId },
+    });
+}
+
+// D1 binds at most 100 parameters per statement, four per load.
+const LOADS_PER_STATEMENT = 25;
+
+export async function mergeHangLoads(db: D1Database, userId: string, loads: Loads): Promise<Loads> {
+  const d = drizzle(db);
+  const rows = Object.entries(loads).map(([key, kg]) => {
+    const [workoutId = "", gripId = ""] = key.split(":");
+    return { user_id: userId, workout_id: workoutId, grip_id: gripId, kg };
+  });
+  for (let i = 0; i < rows.length; i += LOADS_PER_STATEMENT) {
+    await d
+      .insert(hangLoads)
+      .values(rows.slice(i, i + LOADS_PER_STATEMENT))
+      .onConflictDoUpdate({
+        target: [hangLoads.user_id, hangLoads.workout_id, hangLoads.grip_id],
+        set: { kg: sql`excluded.kg` },
+      });
+  }
+  return loadsOf(await d.select().from(hangLoads).where(eq(hangLoads.user_id, userId)).all());
+}
+
+export async function getHangSession(
+  db: D1Database,
+  userId: string,
+  id: string
+): Promise<HangSessionRow | null> {
+  const row = await drizzle(db)
+    .select()
+    .from(hangSessions)
+    .where(and(eq(hangSessions.user_id, userId), eq(hangSessions.id, id)))
+    .get();
+  return row ?? null;
+}
+
+export async function listHangSessions(
+  db: D1Database,
+  userId: string,
+  limit: number
+): Promise<HangSessionRow[]> {
+  return drizzle(db)
+    .select()
+    .from(hangSessions)
+    .where(eq(hangSessions.user_id, userId))
+    .orderBy(desc(hangSessions.date), desc(hangSessions.created_at))
+    .limit(limit)
+    .all();
+}
+
+// The Strava columns are left alone: an edit keeps the activity it was posted as.
+export async function saveHangSession(
+  db: D1Database,
+  userId: string,
+  s: FocusOptional<HangSession>
+): Promise<HangSessionRow> {
+  const now = new Date().toISOString();
+  const fields = {
+    workout_id: s.workoutId,
+    grip_id: s.gripId,
+    date: s.date,
+    edge_mm: s.edgeMm,
+    load_kg: s.loadKg,
+    pct: s.pct,
+    misses: s.misses,
+    rpe: s.rpe,
+    protocol_json: JSON.stringify(s.protocol),
+    membership_id: s.membershipId,
+    week: s.week,
+    focus: s.focus,
+    done_json: JSON.stringify(s.done),
+    updated_at: now,
+  };
+  return drizzle(db)
+    .insert(hangSessions)
+    .values({ user_id: userId, id: s.id, ...fields, created_at: now })
+    .onConflictDoUpdate({ target: [hangSessions.user_id, hangSessions.id], set: fields })
+    .returning()
+    .get();
+}
+
+export async function deleteHangSession(
+  db: D1Database,
+  userId: string,
+  id: string
+): Promise<boolean> {
+  const result = await drizzle(db)
+    .delete(hangSessions)
+    .where(and(eq(hangSessions.user_id, userId), eq(hangSessions.id, id)));
+  return result.meta.changes > 0;
+}
+
+const hangSession = (userId: string, id: string): SQL | undefined =>
+  and(eq(hangSessions.user_id, userId), eq(hangSessions.id, id));
+
+export async function markHangPostPending(
+  db: D1Database,
+  userId: string,
+  id: string
+): Promise<void> {
+  await drizzle(db)
+    .update(hangSessions)
+    .set({ post_state: "pending", post_error: null })
+    .where(hangSession(userId, id));
+}
+
+export async function markHangPosted(
+  db: D1Database,
+  userId: string,
+  id: string,
+  activityId: number
+): Promise<void> {
+  await drizzle(db)
+    .update(hangSessions)
+    .set({
+      strava_activity_id: activityId,
+      posted_at: new Date().toISOString(),
+      post_state: "posted",
+      post_error: null,
+    })
+    .where(hangSession(userId, id));
+}
+
+export async function markHangPostFailed(
+  db: D1Database,
+  userId: string,
+  id: string,
+  error: string
+): Promise<void> {
+  await drizzle(db)
+    .update(hangSessions)
+    .set({ post_state: "failed", post_error: error })
+    .where(hangSession(userId, id));
+}
+
+export async function getHangSettings(
+  db: D1Database,
+  userId: string
+): Promise<HangSettingsRow | null> {
+  const row = await drizzle(db)
+    .select()
+    .from(hangSettings)
+    .where(eq(hangSettings.user_id, userId))
+    .get();
+  return row ?? null;
+}
+
+export async function saveHangSettings(
+  db: D1Database,
+  userId: string,
+  s: HangSettings
+): Promise<void> {
+  const fields = {
+    units: s.units,
+    theme: s.theme,
+    reminders: s.reminders,
+    reminder_time: s.reminderTime,
+    post_to_strava: s.postToStrava,
+    reminder_prompt_seen: s.reminderPromptSeen,
+    updated_at: new Date().toISOString(),
+  };
+  await drizzle(db)
+    .insert(hangSettings)
+    .values({ user_id: userId, ...fields })
+    .onConflictDoUpdate({ target: hangSettings.user_id, set: fields });
+}
+
+export type ActivityRow = typeof activities.$inferSelect;
+
+export async function listActivities(
+  db: D1Database,
+  userId: string,
+  range: { from?: string; to?: string },
+  limit: number
+): Promise<ActivityRow[]> {
+  return drizzle(db)
+    .select()
+    .from(activities)
+    .where(
+      and(
+        eq(activities.user_id, userId),
+        range.from === undefined ? undefined : gte(activities.date, range.from),
+        range.to === undefined ? undefined : lte(activities.date, range.to)
+      )
+    )
+    .orderBy(desc(activities.date), desc(activities.start_time), desc(activities.created_at))
+    .limit(limit)
+    .all();
+}
+
+export async function saveActivity(
+  db: D1Database,
+  userId: string,
+  id: string,
+  a: ActivityInput
+): Promise<ActivityRow> {
+  const now = new Date().toISOString();
+  const fields = {
+    kind: a.kind,
+    title: a.title,
+    date: a.date,
+    start_time: a.startTime,
+    minutes: a.minutes,
+    rpe: a.rpe,
+    notes: a.notes,
+    workout_id: a.workoutId,
+    membership_id: a.membershipId,
+    week: a.week,
+    focus: a.focus,
+    done_json: JSON.stringify(a.done),
+    updated_at: now,
+  };
+  const d = drizzle(db);
+  const [rows] = await d.batch([
+    d
+      .insert(activities)
+      .values({ user_id: userId, id, ...fields, created_at: now })
+      .onConflictDoUpdate({ target: [activities.user_id, activities.id], set: fields })
+      .returning(),
+    ...addExercises(
+      d,
+      userId,
+      a.done.map((e) => ({ name: e.exercise, kind: a.kind, measure: measureOf(a.kind, e.sets) }))
+    ),
+  ]);
+  return only(rows);
+}
+
+const activity = (userId: string, id: string): SQL | undefined =>
+  and(eq(activities.user_id, userId), eq(activities.id, id));
+
+export async function getActivity(
+  db: D1Database,
+  userId: string,
+  id: string
+): Promise<ActivityRow | null> {
+  const row = await drizzle(db).select().from(activities).where(activity(userId, id)).get();
+  return row ?? null;
+}
+
+export async function markActivityPostPending(
+  db: D1Database,
+  userId: string,
+  id: string
+): Promise<void> {
+  await drizzle(db)
+    .update(activities)
+    .set({ post_state: "pending", post_error: null })
+    .where(activity(userId, id));
+}
+
+export async function markActivityPosted(
+  db: D1Database,
+  userId: string,
+  id: string,
+  activityId: number
+): Promise<void> {
+  await drizzle(db)
+    .update(activities)
+    .set({
+      strava_activity_id: activityId,
+      posted_at: new Date().toISOString(),
+      post_state: "posted",
+      post_error: null,
+    })
+    .where(activity(userId, id));
+}
+
+export async function markActivityPostFailed(
+  db: D1Database,
+  userId: string,
+  id: string,
+  error: string
+): Promise<void> {
+  await drizzle(db)
+    .update(activities)
+    .set({ post_state: "failed", post_error: error })
+    .where(activity(userId, id));
+}
+
+export async function deleteActivity(db: D1Database, userId: string, id: string): Promise<boolean> {
+  const result = await drizzle(db)
+    .delete(activities)
+    .where(and(eq(activities.user_id, userId), eq(activities.id, id)));
+  return result.meta.changes > 0;
+}
+
+export type BlockRow = typeof trainingBlocks.$inferSelect;
+export type MembershipRow = typeof memberships.$inferSelect;
+export type WeekChangeRow = typeof weekChanges.$inferSelect;
+
+export type PlanRows = {
+  blocks: BlockRow[];
+  memberships: MembershipRow[];
+  weekChanges: WeekChangeRow[];
+};
+
+// Everything the plan reads, in one round trip.
+export async function planRows(db: D1Database, userId: string): Promise<PlanRows> {
+  const d = drizzle(db);
+  const [blocks, members, changes] = await d.batch([
+    d
+      .select()
+      .from(trainingBlocks)
+      .where(eq(trainingBlocks.user_id, userId))
+      .orderBy(desc(trainingBlocks.start), trainingBlocks.id),
+    d
+      .select()
+      .from(memberships)
+      .where(eq(memberships.user_id, userId))
+      .orderBy(memberships.start, memberships.id),
+    d
+      .select()
+      .from(weekChanges)
+      .where(eq(weekChanges.user_id, userId))
+      .orderBy(weekChanges.membership_id, weekChanges.week, weekChanges.dose, weekChanges.item),
+  ]);
+  return { blocks, memberships: members, weekChanges: changes };
+}
+
+export async function getBlock(
+  db: D1Database,
+  userId: string,
+  id: string
+): Promise<BlockRow | null> {
+  const row = await drizzle(db)
+    .select()
+    .from(trainingBlocks)
+    .where(and(eq(trainingBlocks.user_id, userId), eq(trainingBlocks.id, id)))
+    .get();
+  return row ?? null;
+}
+
+export async function saveBlock(
+  db: D1Database,
+  userId: string,
+  b: FocusOptional<Block>
+): Promise<BlockRow> {
+  const fields = {
+    name: b.name,
+    start: b.start,
+    weeks: b.weeks,
+    focus: b.focus,
+    updated_at: new Date().toISOString(),
+  };
+  return drizzle(db)
+    .insert(trainingBlocks)
+    .values({ user_id: userId, id: b.id, ...fields })
+    .onConflictDoUpdate({ target: [trainingBlocks.user_id, trainingBlocks.id], set: fields })
+    .returning()
+    .get();
+}
+
+const UNLINKED = { membership_id: null, week: null };
+
+/**
+ * Takes out the memberships `where` picks, with their week changes. Sessions logged
+ * against them keep what was done and lose only the link.
+ */
+function removeMemberships(d: DrizzleD1Database, userId: string, where: SQL | undefined) {
+  const ids = d.select({ id: memberships.id }).from(memberships).where(where);
+  const linked = <T extends typeof activities | typeof hangSessions | typeof sessions>(
+    table: T
+  ): SQL | undefined => and(eq(table.user_id, userId), inArray(table.membership_id, ids));
+  return [
+    d.update(activities).set(UNLINKED).where(linked(activities)),
+    d.update(hangSessions).set(UNLINKED).where(linked(hangSessions)),
+    d.update(sessions).set(UNLINKED).where(linked(sessions)),
+    d
+      .delete(weekChanges)
+      .where(and(eq(weekChanges.user_id, userId), inArray(weekChanges.membership_id, ids))),
+    d.delete(memberships).where(where),
+  ] as const;
+}
+
+/** The block goes with its memberships. */
+export async function deleteBlock(db: D1Database, userId: string, id: string): Promise<boolean> {
+  const d = drizzle(db);
+  const results = await d.batch([
+    ...removeMemberships(
+      d,
+      userId,
+      and(eq(memberships.user_id, userId), eq(memberships.block_id, id))
+    ),
+    d
+      .delete(trainingBlocks)
+      .where(and(eq(trainingBlocks.user_id, userId), eq(trainingBlocks.id, id))),
+  ]);
+  return results[5].meta.changes > 0;
+}
+
+export async function getMembership(
+  db: D1Database,
+  userId: string,
+  id: string
+): Promise<MembershipRow | null> {
+  const row = await drizzle(db)
+    .select()
+    .from(memberships)
+    .where(and(eq(memberships.user_id, userId), eq(memberships.id, id)))
+    .get();
+  return row ?? null;
+}
+
+export async function saveMembership(
+  db: D1Database,
+  userId: string,
+  m: Membership
+): Promise<MembershipRow> {
+  const fields = {
+    workout_id: m.workoutId,
+    block_id: m.blockId,
+    weekdays_json: JSON.stringify([...new Set(m.weekdays)].sort()),
+    start: m.start,
+    updated_at: new Date().toISOString(),
+  };
+  return drizzle(db)
+    .insert(memberships)
+    .values({ user_id: userId, id: m.id, ...fields })
+    .onConflictDoUpdate({ target: [memberships.user_id, memberships.id], set: fields })
+    .returning()
+    .get();
+}
+
+export async function deleteMembership(
+  db: D1Database,
+  userId: string,
+  id: string
+): Promise<boolean> {
+  const d = drizzle(db);
+  const results = await d.batch(
+    removeMemberships(d, userId, and(eq(memberships.user_id, userId), eq(memberships.id, id)))
+  );
+  return results[4].meta.changes > 0;
+}
+
+const weekChangeKey = (userId: string, c: Omit<WeekChange, "change">): SQL | undefined =>
+  and(
+    eq(weekChanges.user_id, userId),
+    eq(weekChanges.membership_id, c.membershipId),
+    eq(weekChanges.week, c.week),
+    eq(weekChanges.dose, c.dose),
+    eq(weekChanges.item, c.item)
+  );
+
+/** Sets what one week changes about one item; an empty change puts it back as written. */
+export async function saveWeekChange(db: D1Database, userId: string, c: WeekChange): Promise<void> {
+  const d = drizzle(db);
+  if (Object.keys(c.change).length === 0) {
+    await d.delete(weekChanges).where(weekChangeKey(userId, c));
+    return;
+  }
+  const change_json = JSON.stringify(c.change);
+  await d
+    .insert(weekChanges)
+    .values({
+      user_id: userId,
+      membership_id: c.membershipId,
+      week: c.week,
+      dose: c.dose,
+      item: c.item,
+      change_json,
+    })
+    .onConflictDoUpdate({
+      target: [
+        weekChanges.user_id,
+        weekChanges.membership_id,
+        weekChanges.week,
+        weekChanges.dose,
+        weekChanges.item,
+      ],
+      set: { change_json },
+    });
+}
+
+export type WorkoutRow = typeof workouts.$inferSelect;
+
+export async function listWorkouts(db: D1Database, userId: string): Promise<WorkoutRow[]> {
+  return drizzle(db)
+    .select()
+    .from(workouts)
+    .where(eq(workouts.user_id, userId))
+    .orderBy(workouts.created_at, workouts.id)
+    .all();
+}
+
+export async function saveWorkout(
+  db: D1Database,
+  userId: string,
+  w: FocusOptional<Workout>
+): Promise<WorkoutRow> {
+  const now = new Date().toISOString();
+  const fields = {
+    kind: w.kind,
+    name: w.name,
+    description: w.description === "" ? null : w.description,
+    minutes: w.minutes,
+    target_rpe: w.targetRpe,
+    items_json: JSON.stringify(w.items),
+    exercise_rest_s: w.exerciseRestS,
+    focus: w.focus,
+    updated_at: now,
+  };
+  const d = drizzle(db);
+  const [rows] = await d.batch([
+    d
+      .insert(workouts)
+      .values({ user_id: userId, id: w.id, ...fields, created_at: now })
+      .onConflictDoUpdate({ target: [workouts.user_id, workouts.id], set: fields })
+      .returning(),
+    ...addExercises(d, userId, workoutExercises(w)),
+  ]);
+  return only(rows);
+}
+
+/**
+ * The workout leaves every block: its memberships go with it. Works for a built-in
+ * too, which has no row of its own but can be planned.
+ */
+export async function deleteWorkout(db: D1Database, userId: string, id: string): Promise<boolean> {
+  const d = drizzle(db);
+  const results = await d.batch([
+    ...removeMemberships(
+      d,
+      userId,
+      and(eq(memberships.user_id, userId), eq(memberships.workout_id, id))
+    ),
+    d.delete(workouts).where(and(eq(workouts.user_id, userId), eq(workouts.id, id))),
+  ]);
+  return results[5].meta.changes > 0;
+}
+
+function only<T>(rows: readonly T[]): T {
+  const [row] = rows;
+  if (row === undefined) throw new Error("expected a returned row");
+  return row;
+}
+
+/**
+ * Plans the block again from `copy.start`: a new block of the same name and length
+ * with every membership and week change of the old one, shifted by the same days.
+ */
+export async function copyBlock(
+  db: D1Database,
+  userId: string,
+  source: BlockRow,
+  copy: Block
+): Promise<void> {
+  const d = drizzle(db);
+  const [members, changes] = await d.batch([
+    d
+      .select()
+      .from(memberships)
+      .where(and(eq(memberships.user_id, userId), eq(memberships.block_id, source.id))),
+    d
+      .select()
+      .from(weekChanges)
+      .where(
+        and(
+          eq(weekChanges.user_id, userId),
+          inArray(
+            weekChanges.membership_id,
+            d
+              .select({ id: memberships.id })
+              .from(memberships)
+              .where(and(eq(memberships.user_id, userId), eq(memberships.block_id, source.id)))
+          )
+        )
+      ),
+  ]);
+  const now = new Date().toISOString();
+  const shift = daysBetween(source.start, copy.start);
+  const ids = new Map(members.map((m) => [m.id, crypto.randomUUID()]));
+  await d.batch([
+    d.insert(trainingBlocks).values({ user_id: userId, ...copy, updated_at: now }),
+    ...members.map((m) =>
+      d.insert(memberships).values({
+        ...m,
+        id: ids.get(m.id) ?? m.id,
+        block_id: copy.id,
+        start: addDays(m.start, shift),
+        updated_at: now,
+      })
+    ),
+    ...changes.map((c) =>
+      d
+        .insert(weekChanges)
+        .values({ ...c, membership_id: ids.get(c.membership_id) ?? c.membership_id })
+    ),
+  ]);
+}
+
+export type ExerciseRow = typeof exercises.$inferSelect;
+
+export async function listExercises(db: D1Database, userId: string): Promise<ExerciseRow[]> {
+  return drizzle(db)
+    .select()
+    .from(exercises)
+    .where(eq(exercises.user_id, userId))
+    .orderBy(exercises.name_key)
+    .all();
+}
+
+export async function getExercise(
+  db: D1Database,
+  userId: string,
+  id: string
+): Promise<ExerciseRow | null> {
+  const row = await drizzle(db)
+    .select()
+    .from(exercises)
+    .where(and(eq(exercises.user_id, userId), eq(exercises.id, id)))
+    .get();
+  return row ?? null;
+}
+
+export async function findExerciseByName(
+  db: D1Database,
+  userId: string,
+  name: string
+): Promise<ExerciseRow | null> {
+  const row = await drizzle(db)
+    .select()
+    .from(exercises)
+    .where(and(eq(exercises.user_id, userId), eq(exercises.name_key, exerciseNameKey(name))))
+    .get();
+  return row ?? null;
+}
+
+// D1 binds at most 100 parameters a statement, and an exercise row takes 12.
+const EXERCISES_PER_INSERT = 8;
+
+const exerciseValues = (userId: string, id: string, e: ExerciseInput, now: string) => ({
+  user_id: userId,
+  id,
+  name: e.name.trim(),
+  name_key: exerciseNameKey(e.name),
+  kind: e.kind,
+  measure: e.measure ?? defaultMeasure(e.kind),
+  each_side: e.eachSide ?? false,
+  progress: e.progress ?? null,
+  built_in: e.builtIn ?? null,
+  archived: false,
+  created_at: now,
+  updated_at: now,
+});
+
+/** Adds the names not yet listed; a name already there, in any case, keeps its row. */
+function addExercises(d: DrizzleD1Database, userId: string, list: readonly ExerciseInput[]) {
+  const now = new Date().toISOString();
+  const rows = [
+    ...new Map(
+      list
+        .filter((e) => e.name.trim() !== "")
+        .map((e) => [exerciseNameKey(e.name), exerciseValues(userId, crypto.randomUUID(), e, now)])
+    ).values(),
+  ];
+  return Array.from({ length: Math.ceil(rows.length / EXERCISES_PER_INSERT) }, (_, i) =>
+    d
+      .insert(exercises)
+      .values(rows.slice(i * EXERCISES_PER_INSERT, (i + 1) * EXERCISES_PER_INSERT))
+      .onConflictDoNothing()
+  );
+}
+
+export async function createExercise(
+  db: D1Database,
+  userId: string,
+  id: string,
+  e: ExerciseInput
+): Promise<ExerciseRow> {
+  return drizzle(db)
+    .insert(exercises)
+    .values(exerciseValues(userId, id, e, new Date().toISOString()))
+    .returning()
+    .get();
+}
+
+/** Brings an archived exercise back into the lists. */
+export async function restoreExercise(
+  db: D1Database,
+  userId: string,
+  row: ExerciseRow
+): Promise<ExerciseRow> {
+  await drizzle(db)
+    .update(exercises)
+    .set({ archived: false, updated_at: new Date().toISOString() })
+    .where(and(eq(exercises.user_id, userId), eq(exercises.id, row.id)));
+  return { ...row, archived: false };
+}
+
+/** Whether any workout item or logged exercise names it, in any case. */
+async function exerciseInUse(d: DrizzleD1Database, userId: string, name: string): Promise<boolean> {
+  const key = exerciseNameKey(name);
+  const [ws, as] = await d.batch([
+    d.select({ json: workouts.items_json }).from(workouts).where(eq(workouts.user_id, userId)),
+    d.select({ json: activities.done_json }).from(activities).where(eq(activities.user_id, userId)),
+  ]);
+  return [...ws, ...as].some((row) =>
+    (JSON.parse(row.json) as { exercise: string }[]).some(
+      (x) => exerciseNameKey(x.exercise) === key
+    )
+  );
+}
+
+/** Deletes an exercise nothing uses; one in use is archived instead, keeping its history. */
+export async function removeExercise(
+  db: D1Database,
+  userId: string,
+  row: ExerciseRow
+): Promise<"deleted" | "archived"> {
+  const d = drizzle(db);
+  const where = and(eq(exercises.user_id, userId), eq(exercises.id, row.id));
+  if (await exerciseInUse(d, userId, row.name)) {
+    await d
+      .update(exercises)
+      .set({ archived: true, updated_at: new Date().toISOString() })
+      .where(where);
+    return "archived";
+  }
+  await d.delete(exercises).where(where);
+  return "deleted";
+}
+
+/**
+ * Writes `name` over every item and logged exercise named `from` in any case, in the
+ * user's workouts and activities, in one batch with `then`.
+ */
+async function renameEverywhere(
+  d: DrizzleD1Database,
+  userId: string,
+  from: string,
+  name: string,
+  then: BatchItem<"sqlite">
+): Promise<void> {
+  const key = exerciseNameKey(from);
+  const hit = (x: { exercise: string }): boolean => exerciseNameKey(x.exercise) === key;
+  const renamed = <T extends { exercise: string }>(x: T): T =>
+    hit(x) ? { ...x, exercise: name } : x;
+  const [ws, as] = await d.batch([
+    d
+      .select({ id: workouts.id, kind: workouts.kind, json: workouts.items_json })
+      .from(workouts)
+      .where(eq(workouts.user_id, userId)),
+    d
+      .select({ id: activities.id, json: activities.done_json })
+      .from(activities)
+      .where(eq(activities.user_id, userId)),
+  ]);
+  const now = new Date().toISOString();
+  const workoutWrites = ws.flatMap((w) => {
+    const items = JSON.parse(w.json) as Item[];
+    if (exerciseKindOf(w.kind) === null || !items.some(hit)) return [];
+    const json = JSON.stringify(items.map(renamed));
+    return [
+      d
+        .update(workouts)
+        .set({ items_json: json, updated_at: now })
+        .where(and(eq(workouts.user_id, userId), eq(workouts.id, w.id))),
+    ];
+  });
+  const activityWrites = as.flatMap((a) => {
+    const done = JSON.parse(a.json) as ItemDone[];
+    if (!done.some(hit)) return [];
+    return [
+      d
+        .update(activities)
+        .set({ done_json: JSON.stringify(done.map(renamed)), updated_at: now })
+        .where(and(eq(activities.user_id, userId), eq(activities.id, a.id))),
+    ];
+  });
+  await d.batch([then, ...workoutWrites, ...activityWrites]);
+}
+
+/** Saves the exercise, shown again if archived, and renames every workout and log that names it. */
+export async function updateExercise(
+  db: D1Database,
+  userId: string,
+  row: ExerciseRow,
+  e: ExerciseInput
+): Promise<ExerciseRow> {
+  const d = drizzle(db);
+  const where = and(eq(exercises.user_id, userId), eq(exercises.id, row.id));
+  const fields = {
+    name: e.name,
+    name_key: exerciseNameKey(e.name),
+    kind: e.kind,
+    measure: e.measure ?? row.measure,
+    each_side: e.eachSide ?? row.each_side,
+    progress: e.progress === undefined ? row.progress : e.progress,
+    built_in: e.builtIn === undefined ? row.built_in : e.builtIn,
+    archived: false,
+    updated_at: new Date().toISOString(),
+  };
+  await renameEverywhere(d, userId, row.name, e.name, d.update(exercises).set(fields).where(where));
+  return { ...row, ...fields };
+}
+
+/** Folds `from` into `into`: every workout and log naming it takes `into`'s name. */
+export async function mergeExercise(
+  db: D1Database,
+  userId: string,
+  from: ExerciseRow,
+  into: ExerciseRow
+): Promise<void> {
+  const d = drizzle(db);
+  await renameEverywhere(
+    d,
+    userId,
+    from.name,
+    into.name,
+    d.delete(exercises).where(and(eq(exercises.user_id, userId), eq(exercises.id, from.id)))
+  );
 }

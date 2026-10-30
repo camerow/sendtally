@@ -26,6 +26,7 @@ function session(fingerprint: string, tags: SessionTag[]): SessionRow {
     end_at: "2026-03-01T20:00:00.000Z",
     times: "both",
     climb_count: 10,
+    send_count: 0,
     top_grade: 6,
     top_send_grade: 5,
     top_grade_label: null,
@@ -38,6 +39,9 @@ function session(fingerprint: string, tags: SessionTag[]): SessionRow {
     posted_at: null,
     post_state: null,
     post_error: null,
+    membership_id: null,
+    week: null,
+    focus: null,
     tags,
   };
 }

@@ -18,6 +18,8 @@ export type SheetProps = {
   children: React.ReactNode;
   /** Pinned under the scrolling body, above the home indicator. */
   footer?: React.ReactNode;
+  /** False leaves the screen behind undimmed, for a sheet that edits something on it. */
+  dim?: boolean;
 };
 
 type FooterStore = { footer: React.ReactNode; listeners: Set<() => void> };
@@ -91,6 +93,7 @@ export function Sheet({
   closeLabel,
   children,
   footer,
+  dim = true,
 }: SheetProps): React.ReactElement | null {
   const ref = React.useRef<BottomSheetModal>(null);
   const insets = useSafeAreaInsets();
@@ -116,12 +119,12 @@ export function Sheet({
         {...props}
         appearsOnIndex={0}
         disappearsOnIndex={-1}
-        opacity={0.45}
+        opacity={dim ? 0.45 : 0}
         style={[props.style, { backgroundColor: colors.gunmetal }]}
         accessibilityLabel={closeLabel}
       />
     ),
-    [closeLabel]
+    [closeLabel, dim]
   );
 
   if (generation === 0) return <></>;

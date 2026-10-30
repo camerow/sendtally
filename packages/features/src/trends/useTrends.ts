@@ -1,5 +1,5 @@
 import React from "react";
-import type { Gym, SendtallyApi, SessionWithClimbs } from "@sendtally/api-client";
+import type { Gym, SendtallyApi, SessionLogWithClimbs } from "@sendtally/api-client";
 import { queries, useQueryPair, type QueryState } from "../query";
 import { daysVM } from "./days";
 import { enduranceVM } from "./endurance";
@@ -27,7 +27,7 @@ export type TrendsFeature = {
   setFilter: (next: (filter: TrendFilter) => TrendFilter) => void;
 };
 
-type Data = [SessionWithClimbs[], Gym[]];
+type Data = [SessionLogWithClimbs, Gym[]];
 
 function useTrendData(api: SendtallyApi): QueryState<Data> {
   return useQueryPair(queries.sessionsWithClimbs(api), queries.gyms(api)).state;
@@ -47,7 +47,16 @@ export function useTrends(
     (): QueryState<TrendsVM> =>
       raw.status !== "ready"
         ? raw
-        : { status: "ready", data: trendsVM(raw.data[0], raw.data[1], filter) },
+        : {
+            status: "ready",
+            data: trendsVM(
+              raw.data[0].sessions,
+              raw.data[1],
+              filter,
+              new Date(),
+              raw.data[0].hangSessions
+            ),
+          },
     [raw, filter]
   );
   const setFilter = React.useCallback(
@@ -68,7 +77,9 @@ export function useEnduranceTrends(api: SendtallyApi): EnduranceFeature {
   const [range, setRange] = React.useState<TrendRange>("1y");
   const state = React.useMemo(
     (): QueryState<EnduranceVM> =>
-      raw.status !== "ready" ? raw : { status: "ready", data: enduranceVM(raw.data[0], range) },
+      raw.status !== "ready"
+        ? raw
+        : { status: "ready", data: enduranceVM(raw.data[0].sessions, range) },
     [raw, range]
   );
   return { state, range, setRange };
@@ -78,7 +89,9 @@ export function useDaysTrends(api: SendtallyApi): QueryState<DaysVM> {
   const raw = useTrendData(api);
   return React.useMemo(
     (): QueryState<DaysVM> =>
-      raw.status !== "ready" ? raw : { status: "ready", data: daysVM(raw.data[0], raw.data[1]) },
+      raw.status !== "ready"
+        ? raw
+        : { status: "ready", data: daysVM(raw.data[0].sessions, raw.data[1]) },
     [raw]
   );
 }

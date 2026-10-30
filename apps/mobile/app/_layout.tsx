@@ -25,7 +25,9 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { colors } from "@sendtally/design/tokens";
 import { resolveLocale, setLocale } from "@sendtally/features/i18n";
 import { AnalyticsProvider } from "../features/analytics/AnalyticsProvider";
+import { AlreadyRunningSheet } from "../features/live-session/AlreadyRunningSheet";
 import { BillingProvider } from "../features/billing/BillingProvider";
+import { ReminderPromptProvider } from "../features/training/reminders/ReminderPromptProvider";
 import { CLERK_PUBLISHABLE_KEY } from "../lib/config";
 import { QueryProvider } from "../lib/QueryProvider";
 import { useFreshInstallUpdate } from "../features/app-update/useFreshInstallUpdate";
@@ -41,11 +43,41 @@ const SIGNED_IN_SCREENS = [
   "journal/new",
   "journal/[id]",
   "journal/[id]/edit",
-  "project/[slug]",
-  "trend/[page]",
+  "climb/[id]",
+  "climb/log",
   "gym/[id]",
   "account",
+  "profile",
   "membership",
+  "workout/[id]",
+  "workout/edit",
+  "workout/category",
+  "workout/checklist",
+  "plan/add",
+  "plan/schedule",
+  "plan/block/new",
+  "plan/block/edit",
+  "plan/block/[id]",
+  "plan/membership/[id]",
+  "activity/new",
+  "activity/[id]",
+  "activity/[id]/edit",
+  "exercise/[id]",
+  "exercise/edit",
+  "exercise/category",
+  "grip/[id]",
+  "grip/compare",
+  "plan/calendar",
+  "plan/day",
+];
+
+const FOCUS_SCREENS = [
+  "session/live",
+  "workout/timer",
+  "workout/done",
+  "workout/intervals",
+  "workout/sets",
+  "workout/tally",
 ];
 
 function InteractiveMarker(): React.ReactElement | null {
@@ -57,13 +89,25 @@ function AppStack(): React.ReactElement | null {
   const { isLoaded, isSignedIn } = useAuth();
   if (!isLoaded) return null;
   return (
-    <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.white } }}>
-      <Stack.Protected guard={isSignedIn}>
-        {SIGNED_IN_SCREENS.map((name) => (
-          <Stack.Screen key={name} name={name} />
-        ))}
-      </Stack.Protected>
-    </Stack>
+    <ReminderPromptProvider>
+      <Stack
+        screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.white } }}
+      >
+        <Stack.Protected guard={isSignedIn}>
+          {SIGNED_IN_SCREENS.map((name) => (
+            <Stack.Screen key={name} name={name} />
+          ))}
+          {FOCUS_SCREENS.map((name) => (
+            <Stack.Screen
+              key={name}
+              name={name}
+              options={{ gestureEnabled: false, animation: "fade" }}
+            />
+          ))}
+        </Stack.Protected>
+      </Stack>
+      {isSignedIn && <AlreadyRunningSheet />}
+    </ReminderPromptProvider>
   );
 }
 

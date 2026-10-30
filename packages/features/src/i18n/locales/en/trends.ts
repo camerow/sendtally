@@ -1,8 +1,5 @@
 export const trends = {
-  "trends.backToTrends": "← Trends",
   "trends.loadFailed": "Could not load trends. Refresh to retry.",
-  "trends.loadFailedMobile": "Could not load trends.",
-  "trends.loadFailedPull": "Could not load trends. Pull to retry.",
   "trends.details": "Details →",
   "trends.range7d": "Last 7 days",
   "trends.range1m": "Last month",
@@ -172,4 +169,5 @@ export const trends = {
   "trends.daysByTagCaption": "Days each tag was on a session",
   "trends.tagDays": "{tag} · {inside} inside · {outside} outside",
   "trends.calendar": "Climbing calendar",
+  "trends.freeRanges": "Free shows the last 7 days. Members see every range.",
 } as const;

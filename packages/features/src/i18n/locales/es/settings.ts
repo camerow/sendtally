@@ -8,7 +8,6 @@ export const settings = {
     "El acceso a Strava ha caducado. Vuelve a vincularlo y tus sesiones podrán publicarse de nuevo en tu feed.",
   "settings.stravaNotConnectedMobile":
     "Cada sesión registrada puede publicarse en tu feed como actividad Rock Climbing. Lo apruebas en strava.com y puedes revocarlo allí cuando quieras.",
-  "settings.postAutomatically": "Publicar sesiones automáticamente",
   "settings.postingOn":
     "Las sesiones registradas se publican en tu feed como actividades Rock Climbing.",
   "settings.postingOffMobile":
@@ -36,7 +35,6 @@ export const settings = {
   "settings.membershipPitch":
     "La suscripción desbloquea tendencias e ideas sobre tus hábitos de escalada.",
   "settings.billedThrough": "Se cobra a través de {store}. Gestiónala allí.",
-  "settings.tab": "Ajustes",
   "settings.openingStrava": "Abriendo Strava…",
   "settings.stravaUnreachable": "No se pudo conectar con Strava. Inténtalo de nuevo.",
   "settings.embeddedBundle": "Integrado",
@@ -49,4 +47,12 @@ export const settings = {
     "Llévate todo lo que has registrado aquí en un archivo CSV. La importación se hace en sendtally.com.",
   "settings.exportSaved": "Guardado en la carpeta que elegiste.",
   "settings.exportFailed": "La exportación no salió bien. Inténtalo de nuevo en un momento.",
+  "settings.weightUnit": "Unidad de peso",
+  "settings.weightUnitBody": "Las cargas se muestran en esta unidad.",
+  "settings.postClimbing": "Publicar sesiones de escalada",
+  "settings.postHangboard": "Publicar sesiones de multipresa",
+  "settings.postHangboardBody": "Cada sesión de multipresa se publica como Workout.",
+  "settings.postTraining": "Publicar otros entrenamientos",
+  "settings.postTrainingBody":
+    "Fuerza, carrera, yoga y movilidad se publican como actividades propias.",
 } as const;

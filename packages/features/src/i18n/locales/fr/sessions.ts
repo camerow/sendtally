@@ -2,6 +2,7 @@ export const sessions = {
   "sessions.unscored": "non évaluée",
   "sessions.back": "← Journal de bord",
   "sessions.onStrava": "Sur Strava",
+  "sessions.hangboardSession": "Séance de poutre",
   "sessions.loadFailed": "Impossible de joindre sendtally. Tire pour réessayer.",
   "sessions.noneForTags": "Aucune séance ne porte ces tags.",
   "sessions.monthMeta": "{year} · {sessions}",
@@ -14,6 +15,7 @@ export const sessions = {
   "sessions.posting": "Publication…",
   "sessions.createTag": "+ Créer « {name} »",
   "sessions.deleteTitle": "Supprimer la séance ?",
+  "sessions.deleteSession": "Supprimer la séance",
   "sessions.deleteBody": "La séance et son détail seront supprimés définitivement.",
   "sessions.deleteFailed": "Suppression impossible",
   "sessions.readOnlyBoard":
@@ -56,7 +58,7 @@ export const sessions = {
   "sessions.logClimb": "Voie",
   "sessions.moreWaysToLog": "Autres façons de consigner",
   "sessions.logAClimb": "Voie",
-  "sessions.logAClimbHint": "Consigner une seule voie. Démarre une séance en cours",
+  "sessions.logAClimbHint": "Lancer une séance en direct, voie par voie",
   "sessions.logFullSession": "Séance",
   "sessions.logFullSessionHint":
     "Regroupe des voies dans une séance avec un nom, des notes, une date, un lieu et un effort.",
@@ -65,4 +67,6 @@ export const sessions = {
   "sessions.saving": "Enregistrement…",
   "sessions.notSavedYet": "Pas encore enregistrée, nouvel essai à venir",
   "sessions.addDetails": "Ajouter des détails",
+  "sessions.topSend": "max {grade}",
+  "sessions.pastSession": "Séance passée",
 } as const;

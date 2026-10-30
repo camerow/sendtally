@@ -1,0 +1,83 @@
+import React from "react";
+import type {
+  Activity,
+  ClimbSummary,
+  SendtallyApi,
+  SessionWithClimbs,
+} from "@sendtally/api-client";
+import { t } from "../i18n";
+import { queries, useQueryPair, type QueryState } from "../query";
+import { logClimbOnDay } from "../log-session/dayClimb";
+import { climbDetailVM, type ClimbDetailVM } from "./overview";
+import { joinNotes, noteAttempt } from "./projects";
+
+/** The user's climbs and climbing sessions, and the training beside them, whose workouts log climbs too. */
+export type ClimbsData = {
+  climbs: ClimbSummary[];
+  sessions: SessionWithClimbs[];
+  activities: Activity[];
+};
+
+export type ClimbsFeature = { state: QueryState<ClimbsData>; reload: () => Promise<void> };
+
+export function useClimbs(api: SendtallyApi): ClimbsFeature {
+  const { state: loaded, reload } = useQueryPair(
+    queries.climbs(api),
+    queries.sessionsWithClimbs(api)
+  );
+  const state = React.useMemo((): QueryState<ClimbsData> => {
+    if (loaded.status !== "ready") return loaded;
+    const [climbs, { sessions, activities }] = loaded.data;
+    return { status: "ready", data: { climbs, sessions, activities } };
+  }, [loaded]);
+  return { state, reload };
+}
+
+export type ClimbFeature = {
+  state: QueryState<{ climb: ClimbSummary; vm: ClimbDetailVM }>;
+  setWorking: (working: boolean) => Promise<void>;
+  /** Resolves to the climb's id after the rename: another one's when it merged into it. */
+  rename: (name: string) => Promise<string>;
+  /** A note dated to a day: on that day's session of this climb, or on a new attempt there. */
+  addNote: (day: string, note: string) => Promise<void>;
+  reload: () => Promise<void>;
+};
+
+/** A climb by its id, or by the slug a web link carries. */
+export function useClimb(api: SendtallyApi, idOrSlug: string): ClimbFeature {
+  const { state: loaded, reload } = useClimbs(api);
+  const state = React.useMemo((): ClimbFeature["state"] => {
+    if (loaded.status !== "ready") return loaded;
+    const { climbs, sessions } = loaded.data;
+    const climb = climbs.find((c) => c.id === idOrSlug || c.slug === idOrSlug);
+    if (climb === undefined) return { status: "error", message: t("climbs.notFound") };
+    return { status: "ready", data: { climb, vm: climbDetailVM(climb, sessions) } };
+  }, [loaded, idOrSlug]);
+  const id = state.status === "ready" ? state.data.climb.id : null;
+
+  const setWorking = React.useCallback(
+    async (working: boolean): Promise<void> => {
+      if (id !== null) await api.updateClimb(id, { working });
+    },
+    [api, id]
+  );
+  const rename = React.useCallback(
+    async (name: string): Promise<string> => {
+      if (id === null) throw new Error("climb not loaded");
+      return (await api.updateClimb(id, { name })).id;
+    },
+    [api, id]
+  );
+  const addNote = React.useCallback(
+    async (day: string, note: string): Promise<void> => {
+      if (state.status !== "ready") throw new Error("climb not loaded");
+      const { climb, vm } = state.data;
+      const onDay = vm.sessions.find((s) => s.day === day);
+      if (onDay === undefined) await logClimbOnDay(api, noteAttempt(climb, note), day, []);
+      else await api.setClimbNote(onDay.fingerprint, climb.slug, joinNotes(onDay.note, note));
+      await reload();
+    },
+    [api, state, reload]
+  );
+  return { state, setWorking, rename, addNote, reload };
+}

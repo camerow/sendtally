@@ -1,4 +1,5 @@
 export const common = {
+  "common.duration": "Dauer",
   "common.effort": "Anstrengung",
   "common.effortValue": "Anstrengung {n} von 10",
   "common.route": "Route",
@@ -77,4 +78,10 @@ export const common = {
   "common.closeOptions": "{label}-Optionen schließen",
   "common.note": "Notiz",
   "common.back": "Zurück",
+  "common.next": "Weiter",
+  "common.deleteDigit": "Letzte Ziffer löschen",
+  "common.addAmount": "{amount} hinzufügen",
+  "common.subtractAmount": "{amount} abziehen",
+  "common.changeSign": "Vorzeichen wechseln",
+  "common.decimalPoint": "Dezimalkomma",
 } as const;

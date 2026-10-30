@@ -503,7 +503,7 @@ export function LogSessionForm({
             <Field
               label={
                 <>
-                  {t("areas.crag")}{" "}
+                  {t("areas.area")}{" "}
                   <span style={{ color: "rgba(64,63,76,0.45)" }}>{t("common.optional")}</span>
                 </>
               }
@@ -513,10 +513,10 @@ export function LogSessionForm({
                 crags
                 value={draft.area ?? null}
                 near={near}
-                placeholder={t("areas.searchCrags")}
+                placeholder={t("areas.searchAreas")}
                 className="log-session-control"
                 inputStyle={inputStyle}
-                addLabel={(name) => t("areas.addThisCrag", { name })}
+                addLabel={(name) => t("areas.addThisArea", { name })}
                 onPick={(area) =>
                   setDraft((d) => ({
                     ...d,

@@ -1,7 +1,13 @@
 import React from "react";
 import type { LinksFunction, LoaderFunctionArgs } from "react-router";
 import { useLoaderData } from "react-router";
-import type { ConnectionStatus, JournalEntry, SessionRow } from "@sendtally/api-client";
+import type {
+  ConnectionStatus,
+  Activity,
+  HangHistoryRow,
+  JournalEntry,
+  SessionRow,
+} from "@sendtally/api-client";
 import { requireApi } from "../lib/api.server";
 import { cloudflareContext } from "../lib/cloudflare-context";
 import { LogView } from "../sessions/components/LogView";
@@ -13,6 +19,8 @@ type LoaderData = {
   apiUrl: string;
   status: ConnectionStatus;
   sessions: SessionRow[];
+  hangSessions: HangHistoryRow[];
+  activities: Activity[];
   entries: JournalEntry[];
 };
 
@@ -33,6 +41,8 @@ export async function loader(args: LoaderFunctionArgs): Promise<LoaderData> {
     apiUrl: args.context.get(cloudflareContext).env.API_URL,
     status,
     sessions: sessions.sessions,
+    hangSessions: sessions.hangSessions,
+    activities: sessions.activities,
     entries: entries.entries,
   };
 }
@@ -40,12 +50,15 @@ export async function loader(args: LoaderFunctionArgs): Promise<LoaderData> {
 // The journal is the log with one filter applied - the same list, the same month
 // headers and jump rail, at a URL worth pointing someone at.
 export default function Journal(): React.ReactElement {
-  const { apiUrl, status, sessions, entries } = useLoaderData<typeof loader>();
+  const { apiUrl, status, sessions, hangSessions, activities, entries } =
+    useLoaderData<typeof loader>();
   return (
     <LogView
       apiUrl={apiUrl}
       status={status}
       sessions={sessions}
+      hangSessions={hangSessions}
+      activities={activities}
       entries={entries}
       scope="journal"
       basePath="/app/journal"

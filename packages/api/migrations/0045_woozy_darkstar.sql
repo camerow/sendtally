@@ -1,0 +1,1 @@
+ALTER TABLE `workouts` ADD `items_json` text DEFAULT '[]' NOT NULL;

@@ -2,22 +2,63 @@ import type { hc, InferRequestType, InferResponseType } from "hono/client";
 import type { AppType } from "@sendtally/api/app";
 
 export type {
+  Activity,
+  ActivityInput,
+  ActivityKind,
+  ActivityPostState,
+  ActivityRecord,
   Area,
   AreaClimb,
   AreaClimbInput,
   AreaInput,
   AreaSummary,
+  Block,
+  BlockInput,
   Circuit,
   CircuitColour,
+  Dose,
+  Exercise,
+  ExerciseInput,
   Gym,
   GymInput,
+  CalendarDate,
+  Grip,
+  HangData,
+  HangHistoryRow,
+  HangKind,
+  HangPostState,
+  HangSession,
+  HangSessionRecord,
+  HangSettings,
+  HangWorkout,
   ImportBody,
+  Item,
+  ItemDone,
+  Loads,
   LogClimbInput,
   LogSessionInput,
+  Membership,
+  MembershipInput,
+  Plan,
+  PlanLink,
   ProjectInput,
+  Protocol,
+  SessionItem,
+  SetDone,
+  ThemeName,
+  TimeUnit,
+  TimeUnits,
+  WeekChange,
+  WeekChangeInput,
+  WeightUnit,
+  Weekday,
+  Workout,
+  WorkoutInput,
+  WorkoutKind,
+  WorkoutRecord,
 } from "@sendtally/api/app";
 
-import type { LogClimbInput as ClimbInput } from "@sendtally/api/app";
+import type { Activity, HangHistoryRow, LogClimbInput as ClimbInput } from "@sendtally/api/app";
 
 export type CircuitRef = NonNullable<ClimbInput["circuit"]>;
 
@@ -28,12 +69,13 @@ type Ok<T> = InferResponseType<T, 200>;
 export type ConnectionStatus = Ok<Client["v1"]["status"]["$get"]>;
 
 export type GradeScales = ConnectionStatus["gradeScales"];
+export type TrainingReminderSettings = ConnectionStatus["trainingReminders"];
 
 export type Entitlements = Ok<Client["v1"]["entitlements"]["$get"]>;
 
-export type Membership = Entitlements["membership"];
+export type MembershipStatus = Entitlements["membership"];
 
-export type StoreMembership = NonNullable<Membership["store"]>;
+export type StoreMembership = NonNullable<MembershipStatus["store"]>;
 
 export type SessionDetail = Ok<Client["v1"]["sessions"][":fingerprint"]["$get"]>["session"];
 
@@ -42,6 +84,19 @@ export type SessionRow = Omit<Ok<Client["v1"]["sessions"]["$get"]>["sessions"][n
 export type SessionClimb = SessionDetail["climbs"][number];
 
 export type SessionWithClimbs = SessionRow & { climbs: SessionClimb[] };
+
+/** The log: climbing sessions, and hangboard sessions and other training beside them but never as them. */
+export type SessionLog = {
+  sessions: SessionRow[];
+  hangSessions: HangHistoryRow[];
+  activities: Activity[];
+};
+
+export type SessionLogWithClimbs = {
+  sessions: SessionWithClimbs[];
+  hangSessions: HangHistoryRow[];
+  activities: Activity[];
+};
 
 export type SessionTag = SessionDetail["tags"][number];
 

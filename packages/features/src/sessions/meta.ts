@@ -18,6 +18,24 @@ export function sessionMetaLabel(session: SessionRow): string {
   ].join(" · ");
 }
 
+/** The log row's line: how long, how many sent, and the hardest send unless shown beside it. */
+export function sessionTallyLabel(session: SessionRow, withTop = true): string {
+  const top =
+    !withTop || session.top_send_grade < 0
+      ? []
+      : [
+          t("sessions.topSend", {
+            grade: session.top_send_grade_label ?? `V${session.top_send_grade}`,
+          }),
+        ];
+  return [
+    ...(session.times === "both" ? [durationLabel(sessionMinutes(session))] : []),
+    t("tally.sentCount", { count: session.send_count }),
+    ...top,
+    ...(isUnscored(session) ? [t("sessions.unscored")] : []),
+  ].join(" · ");
+}
+
 export type SessionDay = { weekday: string; day: number };
 
 export function sessionDay(session: Pick<SessionRow, "start_at">): SessionDay {

@@ -1,5 +1,6 @@
 import type { Endurance } from "@sendtally/core";
 import type { CircuitColour } from "@sendtally/api-client";
+import type { PyramidRow } from "../climbs/pyramid";
 import { t } from "../i18n";
 
 export type ClimbResult = "onsight" | "flash" | "sent" | "project";
@@ -50,6 +51,14 @@ export type PostingStatus = { connected: boolean; active: boolean; since: string
 
 export type SessionDetailVM = {
   title: string;
+  /** The title without its date, for a screen that dates it in its meta line. */
+  name: string;
+  /** Indoor or Outdoor, then the gym or area; empty when the session says neither. */
+  place: string;
+  /** Day, start time and length. */
+  when: string;
+  length: string | null;
+  rpe: number | null;
   /** The session's UTC day, for anything that opens dated to it. */
   startDay: string;
   meta: string;
@@ -57,6 +66,7 @@ export type SessionDetailVM = {
   area: { name: string; slug: string } | null;
   stats: StatVM[];
   bars: GradeBarVM[];
+  pyramid: PyramidRow[];
   filterCounts: Record<ClimbFilter, number>;
   post: PostStatusVM;
   stravaUrl: string | null;

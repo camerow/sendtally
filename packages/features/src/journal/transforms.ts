@@ -1,12 +1,23 @@
-import type { EntryInput, JournalEntry, SessionRow } from "@sendtally/api-client";
+import type {
+  Activity,
+  EntryInput,
+  HangHistoryRow,
+  JournalEntry,
+  SessionRow,
+} from "@sendtally/api-client";
+import { activityAt } from "../activities/format";
+import { hangAt } from "../sessions/hang";
 import { formatDate, t, type MessageKey } from "../i18n";
 import {
   SPANNING_KINDS,
   type EntryDraft,
   type EntryKind,
   type LogItem,
+  type LogTraining,
   type TripSpan,
 } from "./types";
+import { addDays, blockEnd } from "@sendtally/core/hang";
+import { blockTagOf } from "../training/recap";
 
 const KIND_LABELS: Record<EntryKind, MessageKey> = {
   journal: "journal.kindJournal",
@@ -70,20 +81,70 @@ export function logScopeLabel(scope: LogScope): string {
 
 export function logScopeItems(items: LogItem[], scope: LogScope): LogItem[] {
   if (scope === "all") return items;
-  if (scope === "sessions") return items.filter((i) => i.type === "session");
+  if (scope === "sessions") return items.filter((i) => i.type !== "entry");
   if (scope === "journal") return items.filter((i) => i.type === "entry");
   const kind: EntryKind = scope === "trips" ? "trip" : "injury";
   return items.filter((i) => i.type === "entry" && i.entry.kind === kind);
 }
 
-export function logItems(sessions: SessionRow[], entries: JournalEntry[]): LogItem[] {
+/** The two halves of the log, and of Stats. */
+export type LogSegment = "climbing" | "training";
+
+/** Climbing sessions in one half, the rest of the training and its blocks in the other; entries in both. */
+export function logSegmentItems(items: LogItem[], segment: LogSegment): LogItem[] {
+  return items.filter(
+    (i) => i.type === "entry" || (i.type === "session") === (segment === "climbing")
+  );
+}
+
+const NO_TRAINING: LogTraining = { plan: { blocks: [], memberships: [] }, finished: [] };
+
+/** A block's last day, which its finished row sits on. */
+export const blockLastDay = (block: Parameters<typeof blockEnd>[0]): string =>
+  addDays(blockEnd(block), -1);
+
+export function logItems(
+  sessions: SessionRow[],
+  entries: JournalEntry[],
+  hangSessions: HangHistoryRow[] = [],
+  activities: Activity[] = [],
+  training: LogTraining = NO_TRAINING
+): LogItem[] {
+  const tagged = (membershipId: string | null, day: string): { blockTag?: string } => {
+    const tag = blockTagOf(training.plan, membershipId, day);
+    return tag === null ? {} : { blockTag: tag };
+  };
   const items: LogItem[] = [
     ...sessions.map((session): LogItem => ({
       key: `session:${session.fingerprint}`,
       at: session.start_at,
       tags: session.tags,
+      ...tagged(session.membership_id, isoDay(session.start_at)),
       type: "session",
       session,
+    })),
+    ...hangSessions.map((hang): LogItem => ({
+      key: `hang:${hang.id}`,
+      at: hangAt(hang),
+      tags: [],
+      ...tagged(hang.membershipId, hang.date),
+      type: "hang",
+      hang,
+    })),
+    ...activities.map((activity): LogItem => ({
+      key: `activity:${activity.id}`,
+      at: activityAt(activity),
+      tags: [],
+      ...tagged(activity.membershipId, activity.date),
+      type: "activity",
+      activity,
+    })),
+    ...training.finished.map((recap): LogItem => ({
+      key: `block:${recap.block.id}`,
+      at: `${blockLastDay(recap.block)}T23:59:59.999Z`,
+      tags: [],
+      type: "block",
+      recap,
     })),
     ...entries
       .filter((e) => !isThreadUpdate(e))
@@ -111,7 +172,10 @@ export function inTrip(day: string, trip: TripSpan, now: Date = new Date()): boo
 }
 
 export function logItemDay(item: LogItem): string {
-  return item.type === "session" ? isoDay(item.session.start_at) : item.entry.occurred_at;
+  if (item.type === "session") return isoDay(item.session.start_at);
+  if (item.type === "activity") return item.activity.date;
+  if (item.type === "block") return blockLastDay(item.recap.block);
+  return item.type === "hang" ? item.hang.date : item.entry.occurred_at;
 }
 
 /**
@@ -122,7 +186,7 @@ export function groupTrips(items: LogItem[], now: Date = new Date()): LogItem[] 
   const trips = items.filter((i) => i.type === "entry" && i.entry.kind === "trip");
   const owners = new Map<string, string>();
   for (const item of items) {
-    if (trips.includes(item)) continue;
+    if (trips.includes(item) || item.type === "block") continue;
     const day = logItemDay(item);
     const owner = trips.find((trip) => trip.type === "entry" && inTrip(day, trip.entry, now));
     if (owner !== undefined) owners.set(item.key, owner.key);

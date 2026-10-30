@@ -25,6 +25,8 @@ export type LiveSync = {
   remove: (fingerprint: string) => void;
   /** The screen is going away: push a change still waiting out the debounce now. */
   flush: () => void;
+  /** Pushes whatever is waiting and resolves once every request so far has finished. */
+  settle: () => Promise<void>;
 };
 
 export const LIVE_SYNC_DEBOUNCE_MS = 600;
@@ -58,6 +60,18 @@ export function createLiveSync(
     if (stored === null) return;
     const serialized = JSON.stringify(stored.draft);
     if (serialized === pushed) return;
+    if (stored.draft.climbs.length === 0) {
+      if (stored.fingerprint === undefined) return;
+      status("saving");
+      await api.deleteLoggedSession(stored.fingerprint).catch((error: unknown) => {
+        if (!gone(error)) throw error;
+      });
+      const current = parseStoredDraft(storage.read(), new Date());
+      if (current !== null) writeStoredDraft(storage, current.draft, new Date());
+      pushed = null;
+      status("idle");
+      return;
+    }
     status("saving");
     const input = stored.detailed
       ? toLogSessionInput(stored.draft)
@@ -130,6 +144,13 @@ export function createLiveSync(
       if (timer === null) return;
       cancel();
       schedulePush();
+    },
+    settle: () => {
+      if (timer !== null) {
+        cancel();
+        schedulePush();
+      }
+      return chain;
     },
   };
 }

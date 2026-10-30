@@ -1,6 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import React from "react";
 import type { JournalEntry, SendtallyApi, SessionTag } from "@sendtally/api-client";
+import { stravaState, type StravaState } from "../activities/post";
 import { climbsWorkedBefore } from "../climbs/transforms";
 import { t } from "../i18n";
 import { queries, useQuery, type QueryState } from "../query";
@@ -11,6 +12,8 @@ export type PostActionFeature = {
   busy: boolean;
   error: string | null;
   run: () => void;
+  /** The connection read again, after Strava was connected. */
+  refresh: () => Promise<void>;
 };
 
 export type SessionDetailFeature = {
@@ -19,6 +22,8 @@ export type SessionDetailFeature = {
     climbs: ClimbVM[];
     tags: SessionTag[];
     entries: JournalEntry[];
+    /** Where it stands with Strava; null for board history never posted, or until the connection is known. */
+    strava: StravaState | null;
     /** The first note on the session - what the log form's single field edits. */
     notes: string | null;
   }>;
@@ -27,6 +32,7 @@ export type SessionDetailFeature = {
   sort: ClimbSort;
   setSort: (s: ClimbSort) => void;
   post: PostActionFeature;
+  reload: () => Promise<void>;
 };
 
 export function useSessionDetail(api: SendtallyApi, fingerprint: string): SessionDetailFeature {
@@ -40,8 +46,10 @@ export function useSessionDetail(api: SendtallyApi, fingerprint: string): Sessio
   // Status decides whether the footer can offer a post action and the catalogue
   // tells a one-try send apart from a redpoint. The session never waits on
   // either: until they land, or if they fail, the screen renders without them.
-  const status = useQuery(queries.status(api)).state;
+  const statusQuery = useQuery(queries.status(api));
+  const status = statusQuery.state;
   const catalogue = useQuery(queries.climbs(api)).state;
+  const gyms = useQuery(queries.gyms(api)).state;
 
   const state = React.useMemo((): SessionDetailFeature["state"] => {
     const raw = session.state;
@@ -51,17 +59,35 @@ export function useSessionDetail(api: SendtallyApi, fingerprint: string): Sessio
       catalogue.status === "ready"
         ? climbsWorkedBefore(catalogue.data, raw.data.start_at)
         : new Set<string>();
+    const s = raw.data;
+    const gymName =
+      gyms.status === "ready" ? (gyms.data.find((g) => g.id === s.gym_id)?.name ?? null) : null;
+    const strava =
+      s.source === "manual" || s.strava_activity_id !== null
+        ? stravaState(
+            {
+              stravaActivityId: s.strava_activity_id === null ? null : String(s.strava_activity_id),
+              postState: s.post_state,
+              postError: s.post_error,
+              postedAt: s.posted_at,
+            },
+            postable,
+            posting,
+            postError
+          )
+        : null;
     return {
       status: "ready",
       data: {
-        vm: sessionDetailVM(raw.data, postable, workedBefore),
+        vm: sessionDetailVM(s, postable, workedBefore, gymName),
         climbs: filterAndSortClimbs(climbVMs(raw.data.climbs, workedBefore), filter, sort),
         tags: raw.data.tags,
         entries: raw.data.entries,
         notes: raw.data.notes,
+        strava,
       },
     };
-  }, [session.state, status, catalogue, filter, sort]);
+  }, [session.state, status, catalogue, gyms, filter, sort, posting, postError]);
 
   const run = React.useCallback(() => {
     setPosting(true);
@@ -84,6 +110,7 @@ export function useSessionDetail(api: SendtallyApi, fingerprint: string): Sessio
     setFilter,
     sort,
     setSort,
-    post: { busy: posting, error: postError, run },
+    post: { busy: posting, error: postError, run, refresh: statusQuery.reload },
+    reload: session.reload,
   };
 }

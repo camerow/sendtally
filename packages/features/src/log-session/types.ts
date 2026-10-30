@@ -5,7 +5,7 @@ import {
   type Endurance,
   type GradeScale,
 } from "@sendtally/core";
-import type { CircuitRef } from "@sendtally/api-client";
+import type { CircuitRef, PlanLink } from "@sendtally/api-client";
 import { t } from "../i18n";
 
 export type { ClimbStyle, Discipline, Endurance, GradeScale };
@@ -48,6 +48,27 @@ export type ClimbDraft = {
   endurance?: Endurance;
   /** The Areas climb this row is linked to, set by picking or adding one and cleared by retyping. */
   climbId?: string;
+  /** The user's own climb record this row is, once known; cleared by retyping the name. */
+  userClimbId?: string;
+  /** The workout item a climb logged on an exercise's tally belongs to, and its set from 1. */
+  item?: number;
+  set?: number;
+};
+
+/** The tally scoped to one exercise of a workout: its sets, what ends one, and where it is. */
+export type ExerciseTally = {
+  item: number;
+  name: string;
+  sets: number;
+  /** Climbs that end a set; none runs it until Done. */
+  climbs?: number;
+  /** Time on the wall that ends a set. */
+  onS?: number;
+  restS: number;
+  /** The set being climbed, from 1; past the last once every set is done. */
+  set: number;
+  /** When the set's time on the wall started, at its first grade. */
+  setStartedAt?: string;
 };
 
 /**
@@ -78,6 +99,8 @@ export type LogSessionDraft = {
   date: string;
   startTime: string;
   endTime: string;
+  /** When a live session started, to the second, for its running clock. */
+  startedAt?: string;
   location: "indoor" | "outdoor";
   gymId?: string;
   /** The crag an outdoor session was at, from Areas. */
@@ -86,4 +109,8 @@ export type LogSessionDraft = {
   notes: string;
   rpe: number | null;
   climbs: ClimbDraft[];
+  /** The planned day this session was started from. */
+  plan?: PlanLink;
+  /** The workout exercise it logs, which makes it part of that workout and never a session. */
+  exercise?: ExerciseTally;
 };

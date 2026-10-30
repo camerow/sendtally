@@ -1,10 +1,7 @@
-import { router } from "expo-router";
 import React from "react";
-import { Pressable, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import { membershipPanel, type MembershipPanelRow } from "@sendtally/features/billing";
-import { t } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
-import { press } from "../../lib/press";
 
 export const panelEyebrow = {
   fontFamily: fonts.monoMedium,
@@ -29,9 +26,18 @@ export const panelNote = {
   color: "rgba(64,63,76,0.88)",
 } as const;
 
-function LedgerRow({ row, link }: { row: MembershipPanelRow; link: boolean }): React.ReactElement {
-  const inner = (
-    <>
+function LedgerRow({ row }: { row: MembershipPanelRow }): React.ReactElement {
+  return (
+    <View
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 12,
+        paddingVertical: 8,
+        borderTopWidth: 1,
+        borderTopColor: "rgba(64,63,76,0.14)",
+      }}
+    >
       <View style={{ width: 44, height: 24, flexDirection: "row", alignItems: "flex-end", gap: 2 }}>
         {row.bars.map((value, i) => (
           <View
@@ -55,26 +61,7 @@ function LedgerRow({ row, link }: { row: MembershipPanelRow; link: boolean }): R
           {row.line}
         </Text>
       </View>
-      {link && <Text style={panelEyebrow}>{t("billing.openTrend")} →</Text>}
-    </>
-  );
-  const style = {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    paddingVertical: 8,
-    borderTopWidth: 1,
-    borderTopColor: "rgba(64,63,76,0.14)",
-  } as const;
-  if (!link) return <View style={style}>{inner}</View>;
-  return (
-    <Pressable
-      onPress={() => router.push(`/trend/${row.metric}`)}
-      accessibilityRole="link"
-      style={press(style)}
-    >
-      {inner}
-    </Pressable>
+    </View>
   );
 }
 
@@ -82,8 +69,6 @@ export type MembershipPanelProps = {
   eyebrow: string;
   title: string;
   body?: string;
-  /** Members get the ledger rows as links into the trends they unlock. */
-  linkRows?: boolean;
   /** The strip at the bottom: plans and purchase, or status and manage. */
   children?: React.ReactNode;
 };
@@ -93,7 +78,6 @@ export function MembershipPanel({
   eyebrow,
   title,
   body,
-  linkRows = false,
   children,
 }: MembershipPanelProps): React.ReactElement {
   return (
@@ -120,7 +104,7 @@ export function MembershipPanel({
       {body !== undefined && <Text style={panelNote}>{body}</Text>}
       <View>
         {membershipPanel().rows.map((row) => (
-          <LedgerRow key={row.metric} row={row} link={linkRows} />
+          <LedgerRow key={row.metric} row={row} />
         ))}
       </View>
       {children !== undefined && (

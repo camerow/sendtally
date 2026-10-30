@@ -147,7 +147,7 @@ The product was briefly named boardsync; that name was dropped because `boardsyn
 1. The user submits the log-session form (name, date, start/end time, location, climbs with grade, send/attempt, tries, optional RPE). Zod validates the body (`manualSessionBody`).
 2. The Worker assigns `fingerprint = manual-<uuid>` and builds the session with `buildManualSession`, scoring it against the user's other sessions with `@sendtally/core` to produce RPE, title, and summary.
 3. The row is written to `sessions` with `source = "manual"` and the climbs stored in `climbs_json`.
-4. If Strava posting is on, the session posts after the response via `waitUntil`: create the activity, record `strava_activity_id` immediately, then patch perceived exertion in a second call (the create endpoint ignores the field). Posting is gated on `posting_enabled` and `post_since`; an explicit request from the session page (`POST /v1/sessions/:fingerprint/strava`) bypasses both gates. Failures land in `post_state` / `post_error` and are retried from the session screen - there is no background retry.
+4. If Strava posting is on, the session posts after the response via `waitUntil`: create the activity and record `strava_activity_id` immediately. Effort goes in the description's first line ("RPE 7/10"): Strava's API accepts perceived exertion but silently drops it, so there is no second patch call. Posting is gated on `posting_enabled` and `post_since`; an explicit request from the session page (`POST /v1/sessions/:fingerprint/strava`) bypasses both gates. Failures land in `post_state` / `post_error` and are retried from the session screen - there is no background retry.
 
 Invariants:
 

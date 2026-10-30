@@ -258,28 +258,36 @@ describe("app", () => {
     const { climbs } = (await listed.json()) as { climbs: Array<Record<string, unknown>> };
     expect(climbs).toEqual([
       {
+        id: expect.any(String),
         slug: "cave-problem",
         name: "Cave Problem",
         grade: { scale: "v", value: 4 },
         discipline: "boulder",
         project: true,
+        area_climb_id: null,
+        area: null,
         sessions: 2,
         attempts: 7,
         sends: 1,
         first_at: "2026-08-20T18:00:00.000Z",
         last_at: "2026-08-22T18:00:00.000Z",
+        sent_at: "2026-08-20T18:00:00.000Z",
       },
       {
+        id: expect.any(String),
         slug: "warm-up",
         name: "Warm up",
         grade: { scale: "v", value: 1 },
         discipline: "boulder",
         project: false,
+        area_climb_id: null,
+        area: null,
         sessions: 1,
         attempts: 1,
         sends: 1,
         first_at: "2026-08-22T18:00:00.000Z",
         last_at: "2026-08-22T18:00:00.000Z",
+        sent_at: "2026-08-22T18:00:00.000Z",
       },
     ]);
 
@@ -315,6 +323,49 @@ describe("app", () => {
       env
     );
     expect(gone.status).toBe(404);
+  });
+
+  it("renames a climb, and merges it into one already under the new name", async () => {
+    const headers = { "x-test-user": "user_rename", "Content-Type": "application/json" };
+    await postSession(
+      "user_rename",
+      logBody({
+        climbs: [
+          { name: "Pinch", grade: { scale: "v", value: 7 }, kind: "attempt", tries: 3 },
+          { name: "Roof", grade: { scale: "v", value: 5 }, kind: "send", tries: 1 },
+        ],
+      })
+    );
+    const list = async () =>
+      (
+        (await (await testApp().request("/v1/climbs", { headers }, env)).json()) as {
+          climbs: Array<{ id: string; name: string; attempts: number; project: boolean }>;
+        }
+      ).climbs;
+    const before = await list();
+    const pinch = before.find((c) => c.name === "Pinch")!;
+    const roof = before.find((c) => c.name === "Roof")!;
+
+    const patch = (id: string, json: unknown) =>
+      testApp().request(
+        `/v1/climbs/${id}`,
+        { method: "PATCH", headers, body: JSON.stringify(json) },
+        env
+      );
+    expect(await (await patch(pinch.id, { name: "The Pinch", working: true })).json()).toEqual({
+      id: pinch.id,
+    });
+    expect((await list()).find((c) => c.id === pinch.id)).toMatchObject({
+      name: "The Pinch",
+      attempts: 3,
+      project: true,
+    });
+
+    expect(await (await patch(roof.id, { name: "the pinch" })).json()).toEqual({ id: pinch.id });
+    const merged = await list();
+    expect(merged).toHaveLength(1);
+    expect(merged[0]).toMatchObject({ id: pinch.id, name: "The Pinch", attempts: 4 });
+    expect((await patch("nope", { name: "x" })).status).toBe(404);
   });
 
   it("adds a project with no grade and keeps it on a re-post", async () => {
@@ -393,6 +444,39 @@ describe("app", () => {
       env
     );
     expect(rejected.status).toBe(400);
+  });
+
+  it("defaults training reminders off and saves partial changes", async () => {
+    const headers = { "x-test-user": "user_reminders", "Content-Type": "application/json" };
+    const put = async (json: unknown): Promise<Response> =>
+      testApp().request(
+        "/v1/preferences/training-reminders",
+        { method: "PUT", headers, body: JSON.stringify(json) },
+        env
+      );
+
+    const before = await testApp().request("/v1/status", { headers }, env);
+    expect(await before.json()).toMatchObject({
+      trainingReminders: { enabled: false, time: "08:00", promptSeen: false },
+    });
+
+    const saved = await put({ enabled: true, promptSeen: true });
+    expect(saved.status).toBe(200);
+    expect(await saved.json()).toEqual({
+      trainingReminders: { enabled: true, time: "08:00", promptSeen: true },
+    });
+
+    expect(await (await put({ time: "18:30" })).json()).toEqual({
+      trainingReminders: { enabled: true, time: "18:30", promptSeen: true },
+    });
+
+    const after = await testApp().request("/v1/status", { headers }, env);
+    expect(await after.json()).toMatchObject({
+      trainingReminders: { enabled: true, time: "18:30", promptSeen: true },
+    });
+
+    expect((await put({ time: "24:00" })).status).toBe(400);
+    expect((await put({ enabled: "yes" })).status).toBe(400);
   });
 
   it("keeps the grade a project was added with", async () => {
@@ -480,6 +564,31 @@ describe("app", () => {
     );
     const { sessions } = (await list.json()) as { sessions: Array<{ tags: Tag[] }> };
     expect(sessions[0]?.tags.map((t) => t.slug)).toEqual(["endurance", "home"]);
+  });
+
+  it("keeps the plan and focus a session ran, and an edit that sends neither keeps them", async () => {
+    const userId = "user_session_plan";
+    const plan = { membershipId: "m1", week: 2, focus: "power" };
+    const res = await postSession(userId, logBody(plan));
+    expect(res.status).toBe(201);
+    const { session } = (await res.json()) as { session: { fingerprint: string } };
+    expect(session).toMatchObject({ membership_id: "m1", week: 2, focus: "power" });
+    const edited = await testApp().request(
+      `/v1/sessions/${session.fingerprint}`,
+      {
+        method: "PUT",
+        headers: { "x-test-user": userId, "Content-Type": "application/json" },
+        body: JSON.stringify(logBody({ name: "Edited" })),
+      },
+      env
+    );
+    expect(await edited.json()).toMatchObject({
+      session: { name: "Edited", membership_id: "m1", week: 2, focus: "power" },
+    });
+    const logged = await postSession(userId, logBody());
+    expect(await logged.json()).toMatchObject({
+      session: { membership_id: null, week: null, focus: null },
+    });
   });
 
   it("reuses one tag row across sessions that spell it differently", async () => {
@@ -1024,6 +1133,16 @@ describe("app", () => {
     const { session } = (await res.json()) as ManualSessionResponse;
     expect(session.start_at).toBe("2026-08-20T23:00:00.000Z");
     expect(session.end_at).toBe("2026-08-21T01:00:00.000Z");
+  });
+
+  it("logs a session that ended in the minute it started as one minute long", async () => {
+    const res = await postSession(
+      "user_manual_minute",
+      logBody({ startTime: "14:39", endTime: "14:39" })
+    );
+    expect(res.status).toBe(201);
+    const { session } = (await res.json()) as ManualSessionResponse;
+    expect(session.end_at).toBe("2026-08-20T14:40:00.000Z");
   });
 
   it("defaults to a 90-minute session when no end time is given", async () => {

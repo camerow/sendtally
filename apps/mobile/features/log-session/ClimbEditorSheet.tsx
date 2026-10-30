@@ -1,6 +1,6 @@
-import { BottomSheetTextInput } from "@gorhom/bottom-sheet";
 import React from "react";
 import { Alert, Keyboard, Pressable, Text, View } from "react-native";
+import { TextInput } from "../../components/TextInput";
 import type { ClimbSummary } from "@sendtally/api-client";
 import {
   areaClimbGradeLabel,
@@ -455,7 +455,7 @@ export function ClimbEditorSheet({
                 </Text>
               )}
             </View>
-            <BottomSheetTextInput
+            <TextInput
               autoCorrect={false}
               spellCheck={false}
               autoComplete="off"
@@ -668,7 +668,7 @@ export function ClimbEditorSheet({
 
           <View style={{ gap: 9 }}>
             <Text style={label}>{t("logSession.noteOptional")}</Text>
-            <BottomSheetTextInput
+            <TextInput
               autoCorrect={false}
               spellCheck={false}
               autoComplete="off"

@@ -86,17 +86,35 @@ export function durationLabel(minutes: number): string {
   return m === 0 ? hours : `${hours} ${String(m).padStart(2, "0")}${t("sessions.minutesShort")}`;
 }
 
+const pad = (n: number): string => String(n).padStart(2, "0");
+
+/** A running clock, H:MM:SS with the leading zeros dropped: 0:42, 4:07, 1:04:07. */
+export function elapsedClock(seconds: number): string {
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor(seconds / 60) % 60;
+  const rest = pad(seconds % 60);
+  return hours === 0 ? `${minutes}:${rest}` : `${hours}:${pad(minutes)}:${rest}`;
+}
+
 export function countLabel(count: number): string {
   return t("sessions.sessionCount", { count });
 }
+
+/** What was logged: a finished block's row is not something logged. */
+const logged = (items: LogItem[]): LogItem[] =>
+  flatLog(items).filter((item) => item.type !== "block");
+
+/** Journal entries only: a hangboard session counts as a session. */
+const entryCount = (items: LogItem[]): number =>
+  flatLog(items).filter((item) => item.type === "entry").length;
 
 /**
  * What a log group carries, saying only what is actually in it: a month of
  * writing should not announce "0 sessions".
  */
 export function logCountLabel(items: LogItem[]): string {
-  const sessions = sessionsIn(items).length;
-  const entries = flatLog(items).length - sessions;
+  const entries = entryCount(items);
+  const sessions = logged(items).length - entries;
   const parts = [
     sessions === 0 && entries > 0 ? null : countLabel(sessions),
     entries === 0 ? null : t("journal.entryCount", { count: entries }),
@@ -107,8 +125,10 @@ export function logCountLabel(items: LogItem[]): string {
 export function logTotalsLabel(items: LogItem[]): string {
   const sessions = sessionsIn(items);
   if (sessions.length === 0) return logCountLabel(items);
-  const entries = flatLog(items).length - sessions.length;
-  const totals = totalsLabel(sessionTotals(sessions));
+  const entries = entryCount(items);
+  const hang = logged(items).length - entries - sessions.length;
+  const all = sessionTotals(sessions);
+  const totals = totalsLabel({ ...all, count: all.count + hang });
   return entries === 0 ? totals : `${totals} · ${t("journal.entryCount", { count: entries })}`;
 }
 

@@ -14,7 +14,7 @@ import { sessionTitle } from "@sendtally/features/sessions";
 import { climbMetaLabel, climbVMs } from "@sendtally/features/session-detail";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { SessionRow } from "../sessions/SessionRow";
-import { TrendTile } from "../trends/TrendTile";
+import { TrendTile } from "./TrendTile";
 import { EntryRow } from "./EntryRow";
 
 const label = {

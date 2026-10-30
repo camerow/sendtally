@@ -84,6 +84,7 @@ describe("live session", () => {
       write: () => true,
       remove: () => undefined,
       subscribe: () => () => undefined,
+      changed: () => undefined,
     });
     expect(readClimbKind(stored(null), [gym])).toBe("boulder");
     expect(readClimbKind(stored("nonsense"), [gym])).toBe("boulder");
@@ -168,6 +169,7 @@ describe("live session", () => {
   it("adopts a known climb's grade on a typed name and keeps it otherwise", () => {
     const climb = withQuickClimb(null, EVENING).draft.climbs[0]!;
     const known: ClimbSummary = {
+      id: "orange-crimp-arete",
       slug: "orange-crimp-arete",
       name: "Orange crimp arete",
       grade: { scale: "v", value: 6 },
@@ -178,6 +180,9 @@ describe("live session", () => {
       sends: 0,
       first_at: "2026-06-03T18:00:00.000Z",
       last_at: "2026-09-04T18:00:00.000Z",
+      area_climb_id: null,
+      area: null,
+      sent_at: null,
     };
     expect(withClimbName({ ...climb, project: true }, "Ora", undefined)).toMatchObject({
       name: "Ora",

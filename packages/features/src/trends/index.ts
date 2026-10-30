@@ -5,9 +5,11 @@ export { trendsVM } from "./overview";
 export { enduranceVM } from "./endurance";
 export { daysVM } from "./days";
 export {
+  gradeBins,
   gradeTap,
   isRefined,
   placeLabel,
+  presetsOf,
   refineSummary,
   resetFilter,
   scopeLabel,
@@ -22,6 +24,8 @@ export {
   DEFAULT_TREND_FILTER,
   ENDURANCE_RANGES,
   PREVIEW_TREND_RANGE,
+  isLockedRange,
+  shownRange,
   TREND_PAGES,
   TREND_RANGES,
   TREND_SCOPES,

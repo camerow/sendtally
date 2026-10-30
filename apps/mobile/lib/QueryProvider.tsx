@@ -12,6 +12,7 @@ import {
   useClearOnUserChange,
   worthPersisting,
 } from "@sendtally/features/query";
+import { setDraftOwner } from "./userDraftFile";
 
 export const queryClient = createQueryClient();
 
@@ -46,6 +47,9 @@ function ClearOnSignOut(): null {
   const restoring = useIsRestoring();
   const { isLoaded, userId } = useAuth();
   useClearOnUserChange(isLoaded && !restoring, userId);
+  React.useEffect(() => {
+    if (isLoaded) setDraftOwner(userId ?? null);
+  }, [isLoaded, userId]);
   return null;
 }
 

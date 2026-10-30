@@ -6,6 +6,9 @@ import { cors } from "hono/cors";
 import { z } from "zod";
 import { auth } from "./auth";
 import type { Env } from "./bindings";
+import { type AppEnv, captureEvent, invalidBody, postAfterResponse } from "./context";
+import { hang } from "./hang";
+import { activities, blocks, exercises, memberships, plan, workouts } from "./training";
 import { purgeAccount } from "./lib/account";
 import {
   areaBody,
@@ -54,12 +57,17 @@ import {
   climbCatalogue,
   climbNotesOf,
   climbSlug,
+  missingClimbs,
   projectBody,
+  renameBody,
+  restampedSessions,
   withClimbNotes,
 } from "./lib/climbs";
 import { decryptSecret, encryptSecret } from "./lib/crypto";
 import { buildEntry, entryBody, overlappingTrip, type EntryWrite } from "./lib/entries";
 import { exportCsv } from "./lib/export";
+import { activityOf } from "./lib/activities";
+import { hangHistoryOf } from "./lib/hang";
 import { dedupedWalls, gymBody, gymOf } from "./lib/gyms";
 import { importBody, importFingerprint, manualBodyOf } from "./lib/import";
 import { mirrorStoreEntitlements, resolveEntitlements } from "./lib/entitlements";
@@ -74,16 +82,12 @@ import {
   parseClimbs,
 } from "./lib/manual";
 import { allowedOrigin } from "./lib/origins";
-import { captureUserEvent, getPostHog, identifyUser } from "./lib/posthog";
+import { getPostHog, identifyUser } from "./lib/posthog";
 import { syncSessionToStrava } from "./lib/posting";
 import * as repo from "./lib/repo";
 import { RevenueCatClient, webhookBody, webhookUserIds } from "./lib/revenuecat";
 import { authorizeUrl, exchangeAuthCode, StravaUnauthorizedError } from "./lib/strava";
 import { sessionTagsBody, tagSlug } from "./lib/tags";
-
-type Vars = { userId: string; hasFeature: (feature: string) => boolean };
-
-type AppEnv = { Bindings: Env; Variables: Vars };
 
 const OAUTH_STATE_TTL_MS = 15 * 60 * 1000;
 const APP_SCHEME = "sendtally";
@@ -108,19 +112,6 @@ function sameSecret(presented: string | undefined, expected: string): boolean {
 const revenuecat = (env: Env): RevenueCatClient =>
   new RevenueCatClient(env.REVENUECAT_SECRET_API_KEY);
 
-// Without a distinct id posthog-node invents a random one per call, so every
-// event lands on its own anonymous person. The signed-in user id is the same
-// key the browser identifies with, which is what joins the two streams.
-const captureEvent = async (
-  c: Context<AppEnv>,
-  event: string,
-  properties: Record<string, string | number | boolean> = {},
-  distinctId: string | undefined = c.get("userId")
-): Promise<void> => {
-  if (distinctId === undefined) return;
-  await captureUserEvent(c.env, distinctId, event, properties);
-};
-
 const manualScoringHistory = async (
   db: D1Database,
   userId: string,
@@ -131,33 +122,6 @@ const manualScoringHistory = async (
     .filter((r) => r.fingerprint !== excludeFingerprint && r.rpe_source !== "none")
     .map(historySession)
     .filter((s): s is NonNullable<typeof s> => s !== null);
-};
-
-// Posting is two Strava calls plus a possible token refresh, so it runs after the
-// response rather than making the user wait for it. Failures land in post_state,
-// which the retry endpoint reads.
-const postAfterResponse = (c: Context<AppEnv>, userId: string, fingerprint: string): void => {
-  let ctx: Context<AppEnv>["executionCtx"];
-  try {
-    ctx = c.executionCtx;
-  } catch {
-    // No execution context means no background work: never start a promise that
-    // would outlive the request and write after it.
-    return;
-  }
-  ctx.waitUntil(
-    syncSessionToStrava(c.env, userId, fingerprint).then(
-      (result) => {
-        if (result.outcome === "failed") {
-          console.error(`strava post failed for ${fingerprint}: ${result.reason}`);
-        }
-      },
-      (err: unknown) => {
-        const message = err instanceof Error ? err.message : String(err);
-        console.error(`strava post threw for ${fingerprint}: ${message}`);
-      }
-    )
-  );
 };
 
 const sessionResponse = async (env: Env, userId: string, fingerprint: string) => {
@@ -261,11 +225,6 @@ const tripOverlap = async (
     : { id: trip.id, title: trip.title, occurred_at: trip.occurred_at, ends_at: trip.ends_at };
 };
 
-// Every validated body answers the same way, so the shape a client sees for a
-// rejected request does not depend on which endpoint rejected it.
-const invalidBody: Parameters<typeof zValidator>[2] = (result, c) =>
-  result.success ? undefined : c.json({ error: "invalid request body" }, 400);
-
 const viewerOf = (c: Context<AppEnv>): Promise<Viewer> => repo.getViewer(c.env.DB, c.get("userId"));
 
 type LatLon = { lat: number; lon: number };
@@ -280,7 +239,7 @@ const areaIdsOnPath = (path: string): string[] => path.split("/").filter((id) =>
 const similarAreas = async (
   db: D1Database,
   viewer: Viewer,
-  parentId: string,
+  parentId: string | null,
   name: string,
   at: LatLon | null,
   excludeId?: string
@@ -407,12 +366,9 @@ const creationsQueue = async (db: D1Database, env: Env, viewer: Viewer, limit: n
       area: areaOf(row, viewer),
       trail: trailOf(row),
       submitter: submitterOf(row.created_by),
-      candidates:
-        row.parent_id === null
-          ? []
-          : (await similarAreas(db, viewer, row.parent_id, row.name, latLonOf(row), row.id)).filter(
-              isOpen
-            ),
+      candidates: (
+        await similarAreas(db, viewer, row.parent_id, row.name, latLonOf(row), row.id)
+      ).filter(isOpen),
     }))
   );
   const climbItems = await Promise.all(
@@ -469,7 +425,6 @@ const approveCreation = async (
       ? null
       : { status: 409, error: "changed since you loaded it, or its area is not live" };
   }
-  if (row.parent_id === null) return missing;
   return (await repo.approveArea(db, { id: row.id, version, parentId: row.parent_id }))
     ? null
     : { status: 409, error: "changed since you loaded it, or its parent is not live" };
@@ -614,6 +569,17 @@ const AREA_NEARBY_KM = 50;
 const gradeScalesBody = z.object({
   boulder: z.enum(["v", "font"]).optional(),
   route: z.enum(["yds", "french"]).optional(),
+});
+
+const enabledBody = z.object({ enabled: z.boolean() });
+
+const trainingRemindersBody = z.object({
+  enabled: z.boolean().optional(),
+  time: z
+    .string()
+    .regex(/^([01]\d|2[0-3]):[0-5]\d$/)
+    .optional(),
+  promptSeen: z.boolean().optional(),
 });
 
 const stravaPostingBody = z.object({
@@ -804,10 +770,13 @@ const app = new Hono<AppEnv>()
   .get("/v1/sessions", async (c) => {
     const userId = c.get("userId");
     const includeClimbs = c.req.query("include") === "climbs";
-    const [rows, tagsBySession, notes] = await Promise.all([
+    const [rows, tagsBySession, notes, hangRows, hangGrips, activityRows] = await Promise.all([
       repo.listSessions(c.env.DB, userId, 200, includeClimbs),
       repo.tagsBySession(c.env.DB, userId),
       includeClimbs ? repo.listClimbNotes(c.env.DB, userId) : [],
+      repo.listHangSessions(c.env.DB, userId, 200),
+      repo.listHangGrips(c.env.DB, userId),
+      repo.listActivities(c.env.DB, userId, {}, 200),
     ]);
     const notesBySession = new Map<string, repo.ClimbNoteRow[]>();
     for (const note of notes) {
@@ -822,7 +791,11 @@ const app = new Hono<AppEnv>()
         ? withClimbNotes(parseClimbs(climbs_json), notesBySession.get(rest.fingerprint) ?? [])
         : undefined,
     }));
-    return c.json({ sessions });
+    // Hangboard sessions and other training live in their own tables and are
+    // listed beside the climbing ones, never as them: they carry the effort
+    // the user entered.
+    const hangSessions = hangRows.map((row) => hangHistoryOf(row, hangGrips));
+    return c.json({ sessions, hangSessions, activities: activityRows.map(activityOf) });
   })
 
   .get("/v1/entries", async (c) => {
@@ -884,16 +857,57 @@ const app = new Hono<AppEnv>()
     return c.json({ tags: await repo.listTags(c.env.DB, c.get("userId")) });
   })
 
-  // Every named climb the user has logged, with a project flag. Stats come
-  // from the session rows on read, so edits and deletions never leave a
-  // project count stale.
   .get("/v1/climbs", async (c) => {
     const userId = c.get("userId");
-    const [rows, projects] = await Promise.all([
-      repo.listSessions(c.env.DB, userId, 5000, true),
-      repo.listProjects(c.env.DB, userId),
+    const db = c.env.DB;
+    const [rows, known, links, viewer] = await Promise.all([
+      repo.listSessions(db, userId, 5000, true),
+      repo.listUserClimbs(db, userId),
+      repo.listSessionClimbLinks(db, userId),
+      repo.getViewer(db, userId),
     ]);
-    return c.json({ climbs: climbCatalogue(rows, projects) });
+    const missing = missingClimbs(rows, known, links);
+    if (missing.create.length > 0 || missing.link.length > 0) {
+      await repo.ensureUser(db, userId);
+      await repo.insertUserClimbs(db, userId, missing.create);
+      await repo.linkUserClimbs(db, userId, missing.link);
+    }
+    const records =
+      missing.create.length > 0 || missing.link.length > 0
+        ? await repo.listUserClimbs(db, userId)
+        : known;
+    const areaIds = [...new Set(rows.flatMap((r) => (r.area_id === null ? [] : [r.area_id])))];
+    const areaNames = new Map(
+      (await repo.areasByIds(db, viewer, areaIds)).map((a) => [a.id, a.name])
+    );
+    return c.json({ climbs: climbCatalogue(rows, records, areaNames) });
+  })
+
+  .patch("/v1/climbs/:id", zValidator("json", renameBody, invalidBody), async (c) => {
+    const userId = c.get("userId");
+    const db = c.env.DB;
+    const form = c.req.valid("json");
+    const records = await repo.listUserClimbs(db, userId);
+    const climb = records.find((r) => r.id === c.req.param("id"));
+    if (climb === undefined) return c.json({ error: "not found" }, 404);
+    if (form.working !== undefined) {
+      await repo.setUserClimbWorking(db, userId, climb.id, form.working);
+    }
+    if (form.name === undefined) return c.json({ id: climb.id });
+    const nameKey = climbSlug(form.name);
+    if (nameKey === "") return c.json({ error: "invalid request body" }, 400);
+    const into = records.find((r) => r.name_key === nameKey && r.id !== climb.id) ?? null;
+    const target = into?.id ?? climb.id;
+    const rows = await repo.listSessions(db, userId, 5000, true);
+    await repo.renameUserClimb(db, userId, {
+      climb: { ...climb, working: form.working ?? climb.working },
+      name: form.name,
+      nameKey,
+      into,
+      sessions: restampedSessions(rows, records, climb, target),
+    });
+    await captureEvent(c, into === null ? "climb_renamed" : "climb_merged", {});
+    return c.json({ id: target });
   })
 
   // Marking a project from the projects page rather than the log form: the
@@ -905,8 +919,8 @@ const app = new Hono<AppEnv>()
     if (slug === "") return c.json({ error: "invalid request body" }, 400);
     const userId = c.get("userId");
     await repo.ensureUser(c.env.DB, userId);
-    await repo.upsertProject(c.env.DB, userId, {
-      slug,
+    await repo.markWorking(c.env.DB, userId, {
+      name_key: slug,
       name,
       ...(form.discipline === undefined ? {} : { discipline: form.discipline }),
       ...(form.grade === undefined ? {} : { grade: form.grade }),
@@ -916,7 +930,7 @@ const app = new Hono<AppEnv>()
   })
 
   .delete("/v1/projects/:slug", async (c) => {
-    const deleted = await repo.deleteProject(c.env.DB, c.get("userId"), c.req.param("slug"));
+    const deleted = await repo.stopWorking(c.env.DB, c.get("userId"), c.req.param("slug"));
     if (!deleted) return c.json({ error: "not found" }, 404);
     await captureEvent(c, "project_unmarked", {});
     return c.json({ deleted: true });
@@ -1027,35 +1041,39 @@ const app = new Hono<AppEnv>()
     });
   })
 
-  // Regions are seeded, never created here: every created area has a parent,
-  // and one directly under a region has to say where it is.
+  // Regions are seeded, never created here. An area with no parent is a
+  // top-level one typed by name; one directly under a region has to say
+  // where it is.
   .post("/v1/areas", zValidator("json", areaBody, invalidBody), async (c) => {
     const form = c.req.valid("json");
     const userId = c.get("userId");
     await repo.ensureUser(c.env.DB, userId);
     const viewer = await viewerOf(c);
-    const parent = await repo.getArea(c.env.DB, viewer, form.parentId);
-    if (parent === null || !isOpen(parent)) {
+    const parent =
+      form.parentId === undefined ? null : await repo.getArea(c.env.DB, viewer, form.parentId);
+    if (form.parentId !== undefined && (parent === null || !isOpen(parent))) {
       return c.json({ error: "parent area not found" }, 400);
     }
     const at = latLonOf(form);
-    if (isRegion(parent) && at === null) {
+    if (parent !== null && isRegion(parent) && at === null) {
       return c.json({ error: "an area directly under a region needs coordinates" }, 400);
     }
     if (!form.confirmedNew) {
-      const candidates = await similarAreas(c.env.DB, viewer, parent.id, form.name, at);
+      const candidates = await similarAreas(c.env.DB, viewer, parent?.id ?? null, form.name, at);
       if (candidates.length > 0) return c.json({ error: "possible duplicates", candidates }, 409);
     }
     const id = crypto.randomUUID();
     const now = new Date().toISOString();
     await repo.insertArea(c.env.DB, {
       id,
-      parent_id: parent.id,
-      path: `${parent.path}${id}/`,
-      depth: parent.depth + 1,
+      parent_id: parent?.id ?? null,
+      path: `${parent?.path ?? "/"}${id}/`,
+      depth: parent === null ? 0 : parent.depth + 1,
       name: form.name,
       name_key: tagSlug(form.name),
-      slug: await uniqueSlug(form.name, parent.slug, (slug) => repo.areaSlugTaken(c.env.DB, slug)),
+      slug: await uniqueSlug(form.name, parent?.slug ?? null, (slug) =>
+        repo.areaSlugTaken(c.env.DB, slug)
+      ),
       description: form.description || null,
       lat: at?.lat ?? null,
       lon: at?.lon ?? null,
@@ -1064,7 +1082,7 @@ const app = new Hono<AppEnv>()
       created_at: now,
       updated_at: now,
     });
-    await captureEvent(c, "area_created", { under_region: isRegion(parent) });
+    await captureEvent(c, "area_created", { under_region: parent !== null && isRegion(parent) });
     const row = await repo.getArea(c.env.DB, viewer, id);
     return c.json({ area: row === null ? null : areaOf(row, viewer) }, 201);
   })
@@ -1219,11 +1237,15 @@ const app = new Hono<AppEnv>()
     }
     const next = areaDraftOf(row, form);
     if (next === null) return c.json({ error: "invalid request body" }, 400);
-    const parent = await repo.getArea(c.env.DB, viewer, next.parentId);
-    if (parent === null || !isOpen(parent) || parent.path.startsWith(row.path)) {
+    const parent =
+      next.parentId === undefined ? null : await repo.getArea(c.env.DB, viewer, next.parentId);
+    if (
+      next.parentId !== undefined &&
+      (parent === null || !isOpen(parent) || parent.path.startsWith(row.path))
+    ) {
       return c.json({ error: "parent area not found" }, 400);
     }
-    if (isRegion(parent) && latLonOf(next) === null) {
+    if (parent !== null && isRegion(parent) && latLonOf(next) === null) {
       return c.json({ error: "an area directly under a region needs coordinates" }, 400);
     }
     const draft = await saveDraft(c, "area", row, areaFieldsOf(next), changeSummary);
@@ -1504,12 +1526,14 @@ const app = new Hono<AppEnv>()
         const { entity, apply } = found;
         const next = areaDraftOf({ ...entity, ...apply }, {});
         if (next === null) return c.json({ error: "invalid request body" }, 400);
-        const parent = await repo.getArea(c.env.DB, viewer, next.parentId);
+        const parent =
+          next.parentId === undefined ? null : await repo.getArea(c.env.DB, viewer, next.parentId);
         if (
-          parent === null ||
-          parent.status !== "active" ||
-          parent.path.startsWith(entity.path) ||
-          (isRegion(parent) && latLonOf(next) === null)
+          next.parentId !== undefined &&
+          (parent === null ||
+            parent.status !== "active" ||
+            parent.path.startsWith(entity.path) ||
+            (isRegion(parent) && latLonOf(next) === null))
         ) {
           return c.json(placement, 409);
         }
@@ -1518,7 +1542,8 @@ const app = new Hono<AppEnv>()
           id: entity.id,
           path: entity.path,
           depth: entity.depth,
-          parent: { id: parent.id, path: parent.path, depth: parent.depth },
+          parent:
+            parent === null ? null : { id: parent.id, path: parent.path, depth: parent.depth },
           write: { ...areaFieldsOf(next), name_key: tagSlug(next.name) },
         });
         if (!approved) return c.json({ error: "changed since you loaded it" }, 409);
@@ -1665,7 +1690,7 @@ const app = new Hono<AppEnv>()
     await repo.setClimbNotes(c.env.DB, userId, fingerprint, climbNotesOf(form.climbs));
     await captureEvent(c, "manual_session_created", { session_source: "manual" });
     const body = { session: await sessionResponse(c.env, userId, fingerprint) };
-    postAfterResponse(c, userId, fingerprint);
+    postAfterResponse(c, fingerprint, () => syncSessionToStrava(c.env, userId, fingerprint));
     return c.json(body, 201);
   })
 
@@ -1763,7 +1788,7 @@ const app = new Hono<AppEnv>()
       await captureEvent(c, "manual_session_updated", { session_source: "manual" });
       const body = { session: await sessionResponse(c.env, userId, fingerprint) };
       // Already posted sessions get the activity patched, never a second one.
-      postAfterResponse(c, userId, fingerprint);
+      postAfterResponse(c, fingerprint, () => syncSessionToStrava(c.env, userId, fingerprint));
       return c.json(body);
     }
   )
@@ -1850,6 +1875,7 @@ const app = new Hono<AppEnv>()
     return c.json({
       gradeScales: { boulder: scales.boulder, route: scales.route },
       role: user?.role ?? "user",
+      trainingReminders: repo.trainingRemindersOf(user),
       strava:
         strava === null
           ? null
@@ -1858,6 +1884,7 @@ const app = new Hono<AppEnv>()
               status: strava.status,
               postingEnabled: strava.posting_enabled === 1,
               postSince: strava.post_since,
+              postTraining: strava.post_training,
             },
     });
   })
@@ -1890,6 +1917,22 @@ const app = new Hono<AppEnv>()
   )
 
   .put(
+    "/v1/preferences/training-reminders",
+    zValidator("json", trainingRemindersBody, invalidBody),
+    async (c) => {
+      const userId = c.get("userId");
+      await repo.ensureUser(c.env.DB, userId);
+      await repo.setTrainingReminders(c.env.DB, userId, c.req.valid("json"));
+      const reminders = repo.trainingRemindersOf(await repo.getUser(c.env.DB, userId));
+      await captureEvent(c, "training_reminders_updated", {
+        enabled: String(reminders.enabled),
+        time: reminders.time,
+      });
+      return c.json({ trainingReminders: reminders });
+    }
+  )
+
+  .put(
     "/v1/connections/strava/posting",
     zValidator("json", stravaPostingBody, invalidBody),
     async (c) => {
@@ -1905,6 +1948,21 @@ const app = new Hono<AppEnv>()
     }
   )
 
+  .put(
+    "/v1/connections/strava/training-posting",
+    zValidator("json", enabledBody, invalidBody),
+    async (c) => {
+      const { enabled } = c.req.valid("json");
+      const userId = c.get("userId");
+      if ((await repo.getStravaConnection(c.env.DB, userId)) === null) {
+        return c.json({ error: "strava not connected" }, 409);
+      }
+      await repo.setTrainingPosting(c.env.DB, userId, enabled);
+      await captureEvent(c, "strava_training_posting_updated", { enabled });
+      return c.json({ postTraining: enabled });
+    }
+  )
+
   .delete("/v1/account", async (c) => {
     const userId = c.get("userId");
     await purgeAccount(c.env, userId);
@@ -1917,7 +1975,15 @@ const app = new Hono<AppEnv>()
       return c.json({ error: "account data deleted but sign-in could not be removed" }, 502);
     }
     return c.json({ deleted: true });
-  });
+  })
+
+  .route("/v1/hang", hang)
+  .route("/v1/activities", activities)
+  .route("/v1/plan", plan)
+  .route("/v1/blocks", blocks)
+  .route("/v1/memberships", memberships)
+  .route("/v1/workouts", workouts)
+  .route("/v1/exercises", exercises);
 
 app.onError(async (error, c) => {
   // zValidator throws this for a body it cannot parse at all. Without this the
@@ -1941,7 +2007,49 @@ app.onError(async (error, c) => {
 export type AppType = typeof app;
 
 export type { ProjectInput } from "./lib/climbs";
-
+export type {
+  Activity,
+  ActivityInput,
+  ActivityKind,
+  ActivityPostState,
+  ActivityRecord,
+} from "./lib/activities";
+export type { Exercise, ExerciseInput } from "./lib/exercises";
+export type { HangData, HangHistoryRow, HangPostState, HangSessionRecord } from "./lib/hang";
+export type {
+  Block,
+  CalendarDate,
+  Dose,
+  Grip,
+  HangKind,
+  HangSession,
+  HangSettings,
+  HangWorkout,
+  Item,
+  ItemDone,
+  Loads,
+  Membership,
+  PlanLink,
+  Protocol,
+  SessionItem,
+  SetDone,
+  ThemeName,
+  TimeUnit,
+  TimeUnits,
+  WeekChange,
+  WeightUnit,
+  Weekday,
+  Workout,
+  WorkoutKind,
+} from "@sendtally/core/hang";
+export type {
+  BlockInput,
+  MembershipInput,
+  Plan,
+  WeekChangeInput,
+  WorkoutInput,
+  WorkoutRecord,
+} from "./lib/plan";
 export type { LogClimbInput, LogSessionInput } from "./lib/manual";
 export type { ImportBody } from "./lib/import";
 

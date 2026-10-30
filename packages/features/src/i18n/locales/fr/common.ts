@@ -1,4 +1,5 @@
 export const common = {
+  "common.duration": "Durée",
   "common.effort": "Effort",
   "common.effortValue": "Effort {n} sur 10",
   "common.route": "Voie",
@@ -44,8 +45,8 @@ export const common = {
   "common.grade": "Cotation",
   "common.recent": "Récents",
   "common.project": "Projet",
-  "common.climbCount_one": "{count} ligne",
-  "common.climbCount_other": "{count} lignes",
+  "common.climbCount_one": "{count} voie",
+  "common.climbCount_other": "{count} voies",
   "common.discardDraftTitle": "Abandonner ce brouillon ?",
   "common.discard": "Abandonner",
   "common.createAccount": "Créer un compte",
@@ -64,12 +65,12 @@ export const common = {
   "common.addATag": "Ajouter un tag",
   "common.removeTag": "Retirer {tag}",
   "common.settings": "Réglages",
-  "common.climbs": "Lignes",
+  "common.climbs": "Voies",
   "common.result": "Résultat",
   "common.discardDraftBody_one":
-    "{count} ligne enregistrée pour {day} sera supprimée de cet appareil. C'est irréversible.",
+    "{count} voie enregistrée pour {day} sera supprimée de cet appareil. C'est irréversible.",
   "common.discardDraftBody_other":
-    "Les {count} lignes enregistrées pour {day} seront supprimées de cet appareil. C'est irréversible.",
+    "Les {count} voies enregistrées pour {day} seront supprimées de cet appareil. C'est irréversible.",
   "common.createTag": "Créer « {name} »",
   "common.sectionsAria": "Sections",
   "common.optional": "· optionnel",
@@ -77,4 +78,10 @@ export const common = {
   "common.closeOptions": "Fermer les options {label}",
   "common.note": "Note",
   "common.back": "Retour",
+  "common.next": "Suivant",
+  "common.deleteDigit": "Effacer le dernier chiffre",
+  "common.addAmount": "Ajouter {amount}",
+  "common.subtractAmount": "Retirer {amount}",
+  "common.changeSign": "Changer le signe",
+  "common.decimalPoint": "Virgule décimale",
 } as const;

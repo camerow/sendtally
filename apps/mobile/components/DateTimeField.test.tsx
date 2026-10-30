@@ -21,11 +21,6 @@ jest.mock("@react-native-community/datetimepicker", () => {
   };
 });
 
-jest.mock(
-  "react-native-safe-area-context",
-  () => jest.requireActual<{ default: unknown }>("react-native-safe-area-context/jest/mock").default
-);
-
 const lastPicker = (): PickerProps => pickers[pickers.length - 1]!;
 
 async function renderTime(onChange: (v: string) => void): Promise<void> {

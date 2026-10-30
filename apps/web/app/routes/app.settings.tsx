@@ -2,7 +2,7 @@ import { useUser } from "@clerk/react-router";
 import React from "react";
 import type { LoaderFunctionArgs } from "react-router";
 import { useLoaderData } from "react-router";
-import type { Membership } from "@sendtally/api-client";
+import type { MembershipStatus } from "@sendtally/api-client";
 import { membershipVM } from "@sendtally/features/billing";
 import { useGyms } from "@sendtally/features/gyms";
 import { useGradeScales, useSettings, useStravaPosting } from "@sendtally/features/settings";
@@ -11,7 +11,7 @@ import { getMembership } from "../lib/billing.server";
 import { useClientApi } from "../lib/useClientApi";
 import { SettingsView } from "../settings/components/SettingsView";
 
-type LoaderData = { apiUrl: string; membership: Membership };
+type LoaderData = { apiUrl: string; membership: MembershipStatus };
 
 export async function loader(args: LoaderFunctionArgs): Promise<LoaderData> {
   return {

@@ -1,5 +1,6 @@
 import { climbDiscipline, climbRank, dominantDiscipline, isEndurance } from "@sendtally/core";
 import type { ConnectionStatus, SessionClimb, SessionDetail } from "@sendtally/api-client";
+import { sessionPyramid } from "../climbs/pyramid";
 import { climbKey } from "../climbs/transforms";
 import { formatDate, t } from "../i18n";
 import { sendStyleLabel } from "../log-session/types";
@@ -193,7 +194,8 @@ export function postStatusVM(
 export function sessionDetailVM(
   session: SessionDetail,
   posting: PostingStatus | null = null,
-  workedBefore: ReadonlySet<string> = new Set()
+  workedBefore: ReadonlySet<string> = new Set(),
+  gymName: string | null = null
 ): SessionDetailVM {
   const board = session.board;
   const climbs = climbVMs(session.climbs, workedBefore);
@@ -279,23 +281,32 @@ export function sessionDetailVM(
 
   const location =
     session.location === null
-      ? ""
-      : ` · ${t(session.location === "outdoor" ? "common.outdoor" : "common.indoor")}`;
+      ? null
+      : t(session.location === "outdoor" ? "common.outdoor" : "common.indoor");
+  const length = timed ? durationLabel(session.start_at, session.end_at) : null;
+  const when = [
+    `${weekday} ${dateLabel}`,
+    ...(hasStart(session) ? [time] : []),
+    ...(length === null ? [] : [length]),
+  ].join(" · ");
 
   return {
     title: `${titleLabel} - ${dateLabel}`,
+    name: titleLabel,
+    place: [location, gymName ?? session.area?.name ?? null].filter((p) => p !== null).join(" · "),
+    when,
+    length,
+    rpe: isUnscored(session) ? null : session.rpe,
     startDay: session.start_at.slice(0, 10),
-    meta: [
-      `${weekday} ${dateLabel}`,
-      ...(hasStart(session) ? [time] : []),
-      ...(timed ? [durationLabel(session.start_at, session.end_at)] : []),
-    ]
-      .join(" · ")
-      .concat(location, isUnscored(session) ? "" : ` · ${t("common.effort")} ${session.rpe}/10`),
+    meta: when.concat(
+      location === null ? "" : ` · ${location}`,
+      isUnscored(session) ? "" : ` · ${t("common.effort")} ${session.rpe}/10`
+    ),
     editable: session.source === "manual",
     area: session.area,
     stats,
     bars,
+    pyramid: sessionPyramid(session.climbs),
     filterCounts,
     post: postStatusVM(session, posting, start),
     stravaUrl:

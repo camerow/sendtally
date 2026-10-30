@@ -1,6 +1,6 @@
-import { BottomSheetTextInput } from "@gorhom/bottom-sheet";
 import React from "react";
-import { Keyboard, Pressable, Text, TextInput, View } from "react-native";
+import { Keyboard, Pressable, Text, View } from "react-native";
+import { TextInput } from "../../components/TextInput";
 import { useAreaSearch, type AreaSummary } from "@sendtally/features/areas";
 import { t } from "@sendtally/features/i18n";
 import { colors } from "@sendtally/design/tokens";
@@ -16,8 +16,6 @@ export type AreaSearchFieldProps = {
   placeholder: string;
   /** Only places to climb: regions are left out. */
   crags?: boolean;
-  /** Inside a sheet the input has to be the sheet's own, so it rides the keyboard. */
-  inSheet?: boolean;
   addLabel?: (typed: string) => string;
   onPick: (area: AreaSummary | null) => void;
   onAdd?: (typed: string) => void;
@@ -33,7 +31,6 @@ export function AreaSearchField({
   label,
   placeholder,
   crags = false,
-  inSheet = false,
   addLabel,
   onPick,
   onAdd,
@@ -47,11 +44,10 @@ export function AreaSearchField({
   const found = useAreaSearch(api, picked ? "" : query, null, { crags, enabled: focused });
   const results = found.filter((a) => a.id !== value?.id);
   const adding = onAdd !== undefined && addLabel !== undefined && !picked && query.trim() !== "";
-  const Input = inSheet ? BottomSheetTextInput : TextInput;
 
   return (
     <View style={{ gap: 7 }}>
-      <Input
+      <TextInput
         accessibilityLabel={label}
         autoCorrect={false}
         spellCheck={false}

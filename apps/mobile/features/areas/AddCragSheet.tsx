@@ -1,6 +1,6 @@
-import { BottomSheetTextInput } from "@gorhom/bottom-sheet";
 import React from "react";
 import { Text, View } from "react-native";
+import { TextInput } from "../../components/TextInput";
 import {
   areaFieldsOf,
   useDuplicateCheck,
@@ -73,7 +73,7 @@ function CragForm({
   }
 
   const coordinate = (field: "lat" | "lon", label: string): React.ReactElement => (
-    <BottomSheetTextInput
+    <TextInput
       accessibilityLabel={label}
       value={values[field]}
       placeholder={label}
@@ -87,11 +87,11 @@ function CragForm({
   return (
     <View style={{ gap: 14, paddingHorizontal: 18, paddingTop: 2, paddingBottom: 4 }}>
       <Text style={{ fontFamily: fonts.display, fontSize: 24, color: colors.gunmetal }}>
-        {t("areas.addACrag")}
+        {t("areas.addAnArea")}
       </Text>
       <View style={{ gap: 7 }}>
         <Text style={fieldLabel}>{t("areas.name")}</Text>
-        <BottomSheetTextInput
+        <TextInput
           accessibilityLabel={t("areas.name")}
           autoCorrect={false}
           autoComplete="off"
@@ -105,7 +105,6 @@ function CragForm({
       <View style={{ gap: 7 }}>
         <Text style={fieldLabel}>{t("areas.whereIsIt")}</Text>
         <AreaSearchField
-          inSheet
           value={parent}
           label={t("areas.whereIsIt")}
           placeholder={t("areas.searchRegions")}

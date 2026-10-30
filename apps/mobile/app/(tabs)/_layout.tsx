@@ -3,9 +3,11 @@ import { Redirect, Tabs } from "expo-router";
 import React from "react";
 import { View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { BottomTabBar } from "expo-router/tabs";
 import { t } from "@sendtally/features/i18n";
 import { colors, fonts } from "@sendtally/design/tokens";
 import { Icon, type IconName } from "../../components/Icon";
+import { LiveBar } from "../../features/live-session/LiveBar";
 
 const SELECTED_RULE_HEIGHT = 3;
 
@@ -38,12 +40,22 @@ function tabIcon(name: IconName): (props: { focused: boolean }) => React.ReactEl
 
 export default function TabsLayout(): React.ReactElement | null {
   const { isLoaded, isSignedIn } = useAuth();
-  const insets = useSafeAreaInsets();
   if (!isLoaded) return null;
   if (!isSignedIn) return <Redirect href="/sign-in" />;
+  return <SignedInTabs />;
+}
+
+function SignedInTabs(): React.ReactElement {
+  const insets = useSafeAreaInsets();
 
   return (
     <Tabs
+      tabBar={(props) => (
+        <View>
+          <LiveBar />
+          <BottomTabBar {...props} />
+        </View>
+      )}
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
@@ -65,20 +77,20 @@ export default function TabsLayout(): React.ReactElement | null {
       }}
     >
       <Tabs.Screen
+        name="today"
+        options={{ tabBarLabel: t("plan.tab"), tabBarIcon: tabIcon("today") }}
+      />
+      <Tabs.Screen
         name="sessions"
         options={{ tabBarLabel: t("journal.log"), tabBarIcon: tabIcon("sessions") }}
       />
       <Tabs.Screen
-        name="projects"
-        options={{ tabBarLabel: t("common.projects"), tabBarIcon: tabIcon("projects") }}
+        name="train"
+        options={{ tabBarLabel: t("training.train"), tabBarIcon: tabIcon("train") }}
       />
       <Tabs.Screen
-        name="trends"
-        options={{ tabBarLabel: t("common.trends"), tabBarIcon: tabIcon("trends") }}
-      />
-      <Tabs.Screen
-        name="settings"
-        options={{ tabBarLabel: t("settings.tab"), tabBarIcon: tabIcon("settings") }}
+        name="stats"
+        options={{ tabBarLabel: t("statistics.tab"), tabBarIcon: tabIcon("insights") }}
       />
     </Tabs>
   );

@@ -219,4 +219,17 @@ describe("live sync", () => {
     await settle();
     expect(api.calls).toEqual(["POST 1", "DELETE manual-1"]);
   });
+
+  it("takes the session off the server when an undo empties the draft, and keeps the draft", async () => {
+    const { api, storage, sync, log } = setup();
+    log(1);
+    await settle();
+    const stored = parseStoredDraft(storage.read(), NOW)!;
+    writeStoredDraft(storage, { ...stored.draft, climbs: [] }, NOW, stored);
+    sync.changed();
+    await settle();
+    expect(api.calls).toEqual(["POST 1", "DELETE manual-1"]);
+    expect(parseStoredDraft(storage.read(), NOW)).toMatchObject({ draft: { climbs: [] } });
+    expect(parseStoredDraft(storage.read(), NOW)?.fingerprint).toBeUndefined();
+  });
 });

@@ -1,6 +1,6 @@
-import { BottomSheetTextInput } from "@gorhom/bottom-sheet";
 import React from "react";
 import { Text, View } from "react-native";
+import { TextInput } from "../../components/TextInput";
 import type { GradeScales } from "@sendtally/api-client";
 import {
   CLIMB_TYPES,
@@ -59,7 +59,7 @@ function ClimbForm({
   async function submit(): Promise<void> {
     const fields = climbFieldsOf(values);
     if (fields.name === "") return setError(t("areas.nameRequired"));
-    if (area === null) return setError(t("areas.pickCrag"));
+    if (area === null) return setError(t("areas.pickArea"));
     const at = { id: area.id, name: area.name };
     setBusy(true);
     setError(null);
@@ -86,7 +86,7 @@ function ClimbForm({
       </Text>
       <View style={{ gap: 7 }}>
         <Text style={fieldLabel}>{t("areas.name")}</Text>
-        <BottomSheetTextInput
+        <TextInput
           accessibilityLabel={t("areas.name")}
           autoCorrect={false}
           autoComplete="off"
@@ -99,13 +99,12 @@ function ClimbForm({
       </View>
       {sessionArea === null && (
         <View style={{ gap: 7 }}>
-          <Text style={fieldLabel}>{t("areas.crag")}</Text>
+          <Text style={fieldLabel}>{t("areas.area")}</Text>
           <AreaSearchField
-            inSheet
             crags
             value={chosenArea}
-            label={t("areas.crag")}
-            placeholder={t("areas.searchCrags")}
+            label={t("areas.area")}
+            placeholder={t("areas.searchAreas")}
             onPick={setChosenArea}
           />
         </View>

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { JournalEntry, SessionRow } from "@sendtally/api-client";
+import type { Activity, JournalEntry, SessionRow } from "@sendtally/api-client";
 import {
   bodyPlaceholder,
   daysSince,
@@ -13,12 +13,16 @@ import {
   linkedSessions,
   logItems,
   logScopeItems,
+  logSegmentItems,
   openInjuries,
   overlappingTrip,
   sessionsInSpan,
   sessionsNearPoints,
   severitySeries,
 } from "./transforms";
+import { logCountLabel } from "../sessions/years";
+import type { LogTraining } from "./types";
+import type { Block } from "@sendtally/core/hang";
 
 function entry(overrides: Partial<JournalEntry> = {}): JournalEntry {
   return {
@@ -52,6 +56,7 @@ function session(fingerprint: string, startAt: string): SessionRow {
     end_at: startAt,
     times: "both",
     climb_count: 3,
+    send_count: 0,
     top_grade: 5,
     top_send_grade: 5,
     top_grade_label: null,
@@ -64,6 +69,9 @@ function session(fingerprint: string, startAt: string): SessionRow {
     posted_at: null,
     post_state: null,
     post_error: null,
+    membership_id: null,
+    week: null,
+    focus: null,
     tags: [],
   };
 }
@@ -88,6 +96,183 @@ describe("logItems", () => {
       [entry({ id: "e1", occurred_at: "2026-05-30" })]
     );
     expect(items.map((i) => i.key)).toEqual(["entry:e1", "session:a"]);
+  });
+});
+
+describe("hang sessions in the log", () => {
+  const hang = {
+    id: "h1",
+    workoutId: "rep73",
+    gripId: "half",
+    gripName: null,
+    date: "2026-05-28",
+    loadKg: 4,
+    pct: 100,
+    misses: 0,
+    rpe: 7,
+    edgeMm: 20,
+    protocol: {
+      name: "Repeaters 7:3",
+      kind: "hang" as const,
+      hangS: 7,
+      restS: 3,
+      reps: 6,
+      sets: 6,
+      setRestS: 180,
+    },
+    stravaActivityId: null,
+    membershipId: null,
+    week: null,
+    focus: null,
+    done: [],
+    postState: null,
+    postError: null,
+    updatedAt: "2026-05-28T19:00:00.000Z",
+  };
+
+  it("lists them among the sessions, in date order, and under the sessions scope", () => {
+    const items = logItems(
+      [session("a", "2026-05-26T18:00:00.000Z"), session("b", "2026-05-30T18:00:00.000Z")],
+      [entry({ id: "e1", occurred_at: "2026-05-27" })],
+      [hang]
+    );
+    expect(items.map((i) => i.key)).toEqual(["session:b", "hang:h1", "entry:e1", "session:a"]);
+    expect(logScopeItems(items, "sessions").map((i) => i.key)).toEqual([
+      "session:b",
+      "hang:h1",
+      "session:a",
+    ]);
+    expect(logCountLabel(items)).toBe("3 sessions · 1 entry");
+  });
+
+  it("folds one inside a trip's dates", () => {
+    const trip = entry({
+      id: "t1",
+      kind: "trip",
+      occurred_at: "2026-05-27",
+      ends_at: "2026-05-29",
+    });
+    const [grouped] = groupTrips(logItems([], [trip], [hang]));
+    expect(grouped?.type === "entry" ? grouped.inside.map((i) => i.key) : []).toEqual(["hang:h1"]);
+  });
+});
+
+describe("other training in the log", () => {
+  const activity: Activity = {
+    id: "a1",
+    kind: "strength",
+    title: "Leg day",
+    date: "2026-05-28",
+    startTime: "18:30",
+    minutes: 50,
+    rpe: 7,
+    notes: null,
+    workoutId: null,
+    membershipId: null,
+    week: null,
+    focus: null,
+    done: [],
+  };
+
+  it("sorts at its start time, counts as a session and folds inside a trip", () => {
+    const items = logItems(
+      [session("a", "2026-05-28T12:00:00.000Z")],
+      [],
+      [],
+      [activity, { ...activity, id: "a2", startTime: null, date: "2026-05-29" }]
+    );
+    expect(items.map((i) => i.key)).toEqual(["activity:a2", "activity:a1", "session:a"]);
+    expect(logScopeItems(items, "sessions")).toHaveLength(3);
+    expect(logCountLabel(items)).toBe("3 sessions");
+    const trip = entry({
+      id: "t1",
+      kind: "trip",
+      occurred_at: "2026-05-28",
+      ends_at: "2026-05-28",
+    });
+    const [grouped] = groupTrips(logItems([], [trip], [], [activity]));
+    expect(grouped?.type === "entry" ? grouped.inside.map((i) => i.key) : []).toEqual([
+      "activity:a1",
+    ]);
+  });
+
+  it("splits into climbing and training, with entries in both and a trip holding only its half", () => {
+    const trip = entry({
+      id: "t1",
+      kind: "trip",
+      occurred_at: "2026-05-27",
+      ends_at: "2026-05-29",
+    });
+    const items = logItems([session("a", "2026-05-28T12:00:00.000Z")], [trip], [], [activity]);
+    const inside = (segment: "climbing" | "training"): string[] =>
+      groupTrips(logSegmentItems(items, segment)).flatMap((i) =>
+        i.type === "entry" ? [i.key, ...i.inside.map((x) => x.key)] : [i.key]
+      );
+    expect(inside("climbing")).toEqual(["entry:t1", "session:a"]);
+    expect(inside("training")).toEqual(["entry:t1", "activity:a1"]);
+  });
+});
+
+describe("blocks in the log", () => {
+  const block: Block = {
+    id: "b1",
+    name: "Winter base",
+    start: "2026-05-04",
+    weeks: 4,
+    focus: null,
+  };
+  const recap = {
+    block,
+    done: 3,
+    planned: 4,
+    missed: 1,
+    soFar: { done: 3, planned: 4 },
+    effort: 7,
+    weeks: [],
+    workouts: [],
+  };
+  const training: LogTraining = {
+    plan: {
+      blocks: [block],
+      memberships: [
+        { id: "m1", workoutId: "w1", blockId: "b1", weekdays: [0], start: block.start },
+      ],
+    },
+    finished: [recap],
+  };
+  const linked = { ...session("a", "2026-05-25T18:00:00.000Z"), membership_id: "m1" };
+
+  it("puts a finished block on its last day and tags its sessions with block and week", () => {
+    const items = logItems(
+      [linked, session("b", "2026-06-02T18:00:00.000Z")],
+      [],
+      [],
+      [],
+      training
+    );
+    expect(items.map((i) => i.key)).toEqual(["session:b", "block:b1", "session:a"]);
+    expect(items.map((i) => i.blockTag)).toEqual([undefined, undefined, "Winter base · W4"]);
+    expect(logCountLabel(items)).toBe("2 sessions");
+  });
+
+  it("shows in the training log only", () => {
+    const items = logItems([linked], [], [], [], training);
+    expect(logSegmentItems(items, "climbing").map((i) => i.key)).toEqual(["session:a"]);
+    expect(logSegmentItems(items, "training").map((i) => i.key)).toEqual(["block:b1"]);
+  });
+
+  it("shows with sessions but not in the journal, and stays out of trips", () => {
+    const items = logItems([linked], [], [], [], training);
+    expect(logScopeItems(items, "sessions").map((i) => i.key)).toContain("block:b1");
+    expect(logScopeItems(items, "journal")).toHaveLength(0);
+    const trip = entry({
+      id: "t1",
+      kind: "trip",
+      occurred_at: "2026-05-30",
+      ends_at: "2026-06-01",
+    });
+    const grouped = groupTrips(logItems([], [trip], [], [], training));
+    expect(grouped.map((i) => i.key)).toEqual(["block:b1", "entry:t1"]);
   });
 });
 

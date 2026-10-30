@@ -29,4 +29,6 @@ export const sessionDetail = {
   "sessionDetail.editNote": "Edit note",
   "sessionDetail.backToSession": "Back to the session",
   "sessionDetail.backSession": "Session",
+  "sessionDetail.byGrade": "By grade",
+  "sessionDetail.notYet": "Not yet",
 } as const;

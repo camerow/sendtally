@@ -81,7 +81,20 @@ export {
 } from "./climbKind";
 export { useLiveSession, type LiveSession } from "./useLiveSession";
 export { useClimbEditor, type ClimbEditing, type ClimbEditor } from "./useClimbEditor";
-export { logClimbOnDay, sessionOnDay, type DayClimbApi } from "./dayClimb";
+export { logClimbOnDay, sessionOnDay, type ClimbPlace, type DayClimbApi } from "./dayClimb";
+export {
+  clockTime,
+  finishLiveSession,
+  newTallyClimb,
+  tallyDraft,
+  tallyElapsedSeconds,
+  tallySummary,
+  withTallyGo,
+  type FinishApi,
+  type TallyChoice,
+  type TallyGo,
+  type TallyStart,
+} from "./tally";
 export {
   LIVE_SYNC_DEBOUNCE_MS,
   createLiveSync,
@@ -116,9 +129,26 @@ export {
   sendStyleLabel,
   sendStylesFor,
 } from "./types";
+export {
+  allSetsDone,
+  exerciseLine,
+  exerciseSets,
+  nextSet,
+  setGroups,
+  setOver,
+  startExercise,
+  wallLeft,
+  withExerciseClimb,
+  withExerciseDone,
+  withSetEnded,
+  withWallStarted,
+  type ExerciseTallyStart,
+  type TallySetGroup,
+} from "./exerciseTally";
 export type {
   ClimbDraft,
   ClimbOutcome,
+  ExerciseTally,
   ClimbStyle,
   Discipline,
   GradePrefs,

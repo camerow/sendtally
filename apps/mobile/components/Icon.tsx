@@ -5,8 +5,7 @@ import Svg, { Circle, Path, Rect } from "react-native-svg";
 export type IconName =
   | "sessions"
   | "projects"
-  | "trends"
-  | "settings"
+  | "climbs"
   | "funnel"
   | "plus"
   | "chevron"
@@ -15,7 +14,19 @@ export type IconName =
   | "lock"
   | "refresh"
   | "endurance"
-  | "x";
+  | "today"
+  | "train"
+  | "climb"
+  | "hang"
+  | "pencil"
+  | "search"
+  | "more"
+  | "stop"
+  | "x"
+  | "insights"
+  | "star"
+  | "copy"
+  | "merge";
 
 const SHAPES: Record<IconName, React.ReactElement> = {
   sessions: (
@@ -25,14 +36,7 @@ const SHAPES: Record<IconName, React.ReactElement> = {
     </>
   ),
   projects: <Path d="M6 20.5V4h11.5l-3 4.5 3 4.5H6" />,
-  trends: <Path d="M4 16.8 9.2 10.4 13.2 13.6 20 5.8" />,
-  settings: (
-    <>
-      <Path d="M4 8h7.4M16.6 8H20M4 16h3.4M12.6 16H20" />
-      <Circle cx={14} cy={8} r={2.4} />
-      <Circle cx={10} cy={16} r={2.4} />
-    </>
-  ),
+  climbs: <Path d="M3 19l6.5-11 4 6.5 2.5-3.5L21 19z" />,
   funnel: <Path d="M4 5h16l-6.2 7.2V18.5l-3.6 1.8v-8.1z" />,
   plus: <Path d="M12 5v14M5 12h14" />,
   chevron: <Path d="M9 6l6 6-6 6" />,
@@ -50,7 +54,35 @@ const SHAPES: Record<IconName, React.ReactElement> = {
   endurance: (
     <Path d="M2 9c2.5-3 5-3 7.5 0S15 12 17.5 9 21 6 22 7M2 17c2.5-3 5-3 7.5 0s5 3 7.5 0 3.5-3 4.5-2" />
   ),
+  today: (
+    <Path d="M5 6.5h14a1 1 0 0 1 1 1V19a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7.5a1 1 0 0 1 1-1zM4 10.5h16M8.5 4v4M15.5 4v4" />
+  ),
+  train: <Path d="M3.5 5h17v5.5h-17zM7 7.75h3M14 7.75h3M9 10.5V20M15 10.5V20" />,
+  climb: (
+    <>
+      <Path d="M7 17 17 7" />
+      <Circle cx={7} cy={17} r={2.2} />
+      <Circle cx={12} cy={12} r={2.2} />
+      <Circle cx={17} cy={7} r={2.2} />
+    </>
+  ),
+  hang: (
+    <>
+      <Path d="M4 5h16M8 5v4M12 5v6M16 5v8" />
+      <Circle cx={8} cy={11} r={2} />
+      <Circle cx={12} cy={13} r={2} />
+      <Circle cx={16} cy={15} r={2} />
+    </>
+  ),
+  pencil: <Path d="M5 19h4L19 9l-4-4L5 15zM13.5 6.5l4 4" />,
+  search: <Path d="M11 5a6 6 0 1 1 0 12 6 6 0 0 1 0-12zM20 20l-4.5-4.5" />,
+  more: <Path d="M6 12h.01M12 12h.01M18 12h.01" />,
+  stop: <Rect x={7} y={7} width={10} height={10} rx={1.5} />,
   x: <Path d="M6 6l12 12M18 6L6 18" />,
+  insights: <Path d="M5 19V11M10 19V5M15 19v-6M20 19V8" />,
+  star: <Path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z" />,
+  copy: <Path d="M9 9h11v11H9zM5 15H4V4h11v1" />,
+  merge: <Path d="M7 4v5a5 5 0 0 0 5 5v6M17 4v5a5 5 0 0 1-5 5" />,
 };
 
 export type IconProps = {

@@ -8,7 +8,6 @@ export const settings = {
     "Strava access has lapsed. Re-link it and your sessions can post to your feed again.",
   "settings.stravaNotConnectedMobile":
     "Each logged session can post to your feed as a Rock Climbing activity. You approve it on strava.com and can revoke it there any time.",
-  "settings.postAutomatically": "Post sessions automatically",
   "settings.postingOn": "Logged sessions post to your feed as Rock Climbing activities.",
   "settings.postingOffMobile": "Off. Each session page keeps its own Post to Strava button.",
   "settings.postSince": "Post sessions logged from",
@@ -33,7 +32,6 @@ export const settings = {
     "Off. Sessions stay in sendtally, and each one keeps a Post to Strava action on its own page.",
   "settings.membershipPitch": "A membership unlocks trends and insights in your climbing habits.",
   "settings.billedThrough": "Billed through {store}. Manage it there.",
-  "settings.tab": "Settings",
   "settings.openingStrava": "Opening Strava…",
   "settings.stravaUnreachable": "Could not reach Strava. Try again.",
   "settings.embeddedBundle": "Embedded",
@@ -46,4 +44,11 @@ export const settings = {
     "Take everything you have logged here with you as a CSV file. Importing one happens on sendtally.com.",
   "settings.exportSaved": "Saved to the folder you picked.",
   "settings.exportFailed": "The export did not go through. Try again in a moment.",
+  "settings.weightUnit": "Weight units",
+  "settings.weightUnitBody": "Loads and lifts show in this unit.",
+  "settings.postClimbing": "Post climbing sessions",
+  "settings.postHangboard": "Post hangboard sessions",
+  "settings.postHangboardBody": "Each hangboard session posts as a Workout.",
+  "settings.postTraining": "Post other training",
+  "settings.postTrainingBody": "Strength, runs, yoga and mobility post as their own activities.",
 } as const;
