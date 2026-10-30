@@ -86,7 +86,9 @@ export const queries = {
           ? POST_POLL_INTERVAL
           : false,
     }),
-  plan: (api: SendtallyApi) => queryOptions({ queryKey: ["plan"], queryFn: () => api.plan() }),
+  /** Keyed past the persisted plans from before skips, moves and edited days. */
+  plan: (api: SendtallyApi) =>
+    queryOptions({ queryKey: ["plan", "days"], queryFn: () => api.plan() }),
   workouts: (api: SendtallyApi) =>
     queryOptions({
       queryKey: ["workouts"],
