@@ -1,15 +1,22 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import type { ClimbSummary, GradeScales } from "@sendtally/api-client";
-import { typicalGradeIndex, type GradeFilter } from "@sendtally/features/climbs";
+import {
+  climbGradeBins,
+  gradeFilterOf,
+  gradeRangeOf,
+  type GradeFilter,
+} from "@sendtally/features/climbs";
 import { t } from "@sendtally/features/i18n";
-import { disciplineLabel, disciplineOf, gradeOptions } from "@sendtally/features/log-session";
+import { disciplineLabel, disciplineOf } from "@sendtally/features/log-session";
+import { gradeTap, presetsOf, type GradeRange } from "@sendtally/features/trends";
 import { colors, fonts } from "@sendtally/design/tokens";
-import { GradeChips } from "../../components/GradeChips";
+import { Chip } from "../../components/Chip";
 import { Segmented } from "../../components/Segmented";
 import { Sheet } from "../../components/Sheet";
 import { press } from "../../lib/press";
 import { primaryButton, primaryButtonLabel } from "../../lib/styles";
+import { GradeHistogram } from "./GradeHistogram";
 
 export type GradeFilterSheetProps = {
   visible: boolean;
@@ -20,16 +27,10 @@ export type GradeFilterSheetProps = {
   onClose: () => void;
 };
 
-const label = {
-  paddingHorizontal: 18,
-  fontFamily: fonts.monoMedium,
-  fontSize: 11,
-  letterSpacing: 0.9,
-  textTransform: "uppercase",
-  color: colors.textSecondary,
-} as const;
+const same = (a: GradeRange | null, b: GradeRange | null): boolean =>
+  a?.lo === b?.lo && a?.hi === b?.hi;
 
-/** Boulder or route, then a from and a to on the grade chips Add climb uses. */
+/** Boulder or route, then the user's climbs per grade: tap one grade, then another for a range. */
 export function GradeFilterSheet({
   visible,
   value,
@@ -41,57 +42,41 @@ export function GradeFilterSheet({
   const [discipline, setDiscipline] = React.useState(
     value === null ? "boulder" : disciplineOf(value.scale)
   );
+  const [anchor, setAnchor] = React.useState<number | null>(null);
+  const close = (): void => {
+    setAnchor(null);
+    onClose();
+  };
   const scale = value?.scale ?? scales[discipline];
-  const chips = gradeOptions(scale).map((g) => ({ key: g, label: g }));
-  const start = typicalGradeIndex([...climbs], scale);
-  const end = (key: "from" | "to", grade: string): void =>
-    onChange({
-      scale,
-      from: key === "from" ? grade : (value?.from ?? grade),
-      to: key === "to" ? grade : (value?.to ?? grade),
-    });
+  const bins = climbGradeBins(climbs, scale);
+  const range = value === null ? null : gradeRangeOf(value);
+  const pick = (grade: GradeRange | null): void =>
+    onChange(grade === null ? null : gradeFilterOf(scale, grade));
+  const anchorLabel = bins.find((b) => b.rank === anchor)?.label;
 
   return (
     <Sheet
       visible={visible}
-      onClose={onClose}
+      onClose={close}
       closeLabel={t("common.close")}
       footer={
-        <Pressable onPress={onClose} accessibilityRole="button" style={press({ ...primaryButton })}>
+        <Pressable onPress={close} accessibilityRole="button" style={press({ ...primaryButton })}>
           <Text style={primaryButtonLabel}>{t("common.done")}</Text>
         </Pressable>
       }
     >
       <View style={{ gap: 14, paddingBottom: 8 }}>
-        <View
+        <Text
+          accessibilityRole="header"
           style={{
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "space-between",
             paddingHorizontal: 18,
+            fontFamily: fonts.sansSemiBold,
+            fontSize: 18,
+            color: colors.gunmetal,
           }}
         >
-          <Text
-            accessibilityRole="header"
-            style={{ fontFamily: fonts.sansSemiBold, fontSize: 18, color: colors.gunmetal }}
-          >
-            {t("common.grade")}
-          </Text>
-          {value !== null && (
-            <Pressable
-              onPress={() => onChange(null)}
-              accessibilityRole="button"
-              hitSlop={10}
-              style={press({})}
-            >
-              <Text
-                style={{ fontFamily: fonts.sansSemiBold, fontSize: 14, color: colors.azureInk }}
-              >
-                {t("common.clear")}
-              </Text>
-            </Pressable>
-          )}
-        </View>
+          {t("common.grade")}
+        </Text>
         <View style={{ paddingHorizontal: 18 }}>
           <Segmented
             soft
@@ -102,27 +87,52 @@ export function GradeFilterSheet({
               on: d === discipline,
               onPress: () => {
                 setDiscipline(d);
-                if (d !== discipline) onChange(null);
+                if (d === discipline) return;
+                setAnchor(null);
+                onChange(null);
               },
             }))}
           />
         </View>
-        <Text style={label}>{t("climbs.from")}</Text>
-        <GradeChips
-          light
-          chips={chips}
-          active={value?.from ?? null}
-          startIndex={start}
-          onPick={(g) => end("from", g)}
-        />
-        <Text style={label}>{t("climbs.to")}</Text>
-        <GradeChips
-          light
-          chips={chips}
-          active={value?.to ?? null}
-          startIndex={start}
-          onPick={(g) => end("to", g)}
-        />
+        {bins.length > 0 && (
+          <>
+            <Text
+              style={{
+                paddingHorizontal: 18,
+                fontFamily: fonts.sans,
+                fontSize: 13,
+                color: colors.textSecondary,
+              }}
+            >
+              {anchorLabel === undefined
+                ? t("trends.gradeHelp")
+                : t("trends.gradeHelpAnchor", { grade: anchorLabel })}
+            </Text>
+            <GradeHistogram
+              bins={bins}
+              range={range}
+              onTap={(rank) => {
+                const next = gradeTap(anchor, rank);
+                setAnchor(next.anchor);
+                pick(next.grade);
+              }}
+            />
+          </>
+        )}
+        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, paddingHorizontal: 18 }}>
+          {presetsOf(bins).map((p) => (
+            <Chip
+              key={p.key}
+              label={p.label}
+              active={same(p.grade, range)}
+              uppercase={false}
+              onPress={() => {
+                setAnchor(null);
+                pick(p.grade);
+              }}
+            />
+          ))}
+        </View>
       </View>
     </Sheet>
   );

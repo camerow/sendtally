@@ -465,7 +465,7 @@ export function trendsVM(
     groups,
     grades: bins,
     gradeLabel: gradeText,
-    presets: all ? [] : presetsOf(bins, ladder.label),
+    presets: all ? [] : presetsOf(bins),
     gyms: gyms
       .map((g) => ({ id: g.id, name: g.name, sessions: gymSessions(g.id) }))
       .sort((a, b) => b.sessions - a.sessions || a.name.localeCompare(b.name)),
