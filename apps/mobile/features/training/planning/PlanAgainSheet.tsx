@@ -1,15 +1,19 @@
 import { randomUUID } from "expo-crypto";
 import { router } from "expo-router";
 import React from "react";
-import { View } from "react-native";
+import { Text, View } from "react-native";
 import { addDays, weekStart, type Block } from "@sendtally/core/hang";
+import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
+import { blockMembers, useTrainingLog } from "@sendtally/features/training";
+import { useApi } from "../../../lib/api";
 import { Button } from "../components/Button";
 import { MonthCalendar } from "../components/MonthCalendar";
 import { SheetHeader } from "../components/SheetHeader";
 import { useHangData } from "../data/HangDataContext";
 import { HangSheet } from "../data/HangSheet";
 import { usePlanActions } from "../plan/usePlanActions";
+import { type } from "../type";
 
 export type PlanAgainSheetProps = { block: Block; onClose: () => void };
 
@@ -19,6 +23,13 @@ export function PlanAgainSheet({ block, onClose }: PlanAgainSheetProps): React.R
   const actions = usePlanActions();
   const [start, setStart] = React.useState(weekStart(today));
   const [busy, setBusy] = React.useState(false);
+  const { log } = useTrainingLog(useApi());
+  const dayless =
+    block.start === null
+      ? blockMembers(log.plan, block)
+          .filter((m) => m.weekdays.length === 0)
+          .flatMap((m) => log.workout(m.workoutId)?.name ?? [])
+      : [];
 
   const save = async (): Promise<void> => {
     setBusy(true);
@@ -47,6 +58,11 @@ export function PlanAgainSheet({ block, onClose }: PlanAgainSheetProps): React.R
           shaded={() => false}
           onPick={(d) => setStart(weekStart(d))}
         />
+        {dayless.length > 0 && (
+          <Text style={[type.body, { fontSize: 13, lineHeight: 19, color: colors.textSecondary }]}>
+            {t("plan.noDaysYet", { count: dayless.length, workouts: dayless.join(", ") })}
+          </Text>
+        )}
         <Button
           label={block.start === null ? t("plan.schedule") : t("plan.planAgain")}
           onPress={() => void save()}

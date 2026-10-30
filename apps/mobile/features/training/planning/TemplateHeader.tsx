@@ -95,7 +95,7 @@ export function TemplateHeader({
       <BlockWeekChips block={block} today={today} picked={week} onPick={onPickWeek} />
       <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
         <Text style={[type.mono, { fontSize: 12, color: colors.textSecondary }]}>
-          {`${t("calendar.weeks", { count: block.weeks })} · ${t("plan.notScheduled")}`}
+          {t("plan.notScheduled")}
         </Text>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
           {step("−", t("hang.decrease", { field: t("plan.weeks") }), -1)}

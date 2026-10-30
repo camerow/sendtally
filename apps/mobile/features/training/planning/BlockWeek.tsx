@@ -138,6 +138,7 @@ export function BlockWeek({
                 : undefined
           }
           dates={dates === null ? undefined : dates.map((d) => String(Number(d.slice(8))))}
+          columns={from === null ? undefined : DAYS.map((i) => weekday(addDays(from, i)))}
         />
       )}
       {template &&
@@ -147,7 +148,12 @@ export function BlockWeek({
         week !== undefined &&
         week > 1 &&
         rows.length > 0 &&
-        hint(t("plan.weekGold", { n: week }), colors.textSecondary)}
+        hint(
+          rows.some((r) => r.lines.some((l) => l.some((p) => p.changed === true)))
+            ? t("plan.weekGold", { n: week })
+            : t("plan.weekAsWritten", { n: week }),
+          colors.textSecondary
+        )}
       {canAdd && !(template && rows.length === 0) && add}
       <AddKindSheet
         flow={{ date: null, blockId: block.id }}

@@ -27,8 +27,8 @@ export type LoadTableProps = {
   unit: WeightUnit;
   /** This week of the block, drawn on the soft fill; null outside it. */
   current: number | null;
-  /** Each week's runs, done of planned; null for a week still to come. */
-  done: readonly (DoneCount | null)[];
+  /** Each week's runs, done of planned; null for a week still to come. None on a template. */
+  done: readonly (DoneCount | null)[] | null;
   onChange: (week: number, change: Partial<Dose>) => void;
 };
 
@@ -77,12 +77,12 @@ export function LoadTable({
         {columns.map((f) => (
           <React.Fragment key={f}>{head(headOf(f))}</React.Fragment>
         ))}
-        {head(t("plan.done"), DONE)}
+        {done !== null && head(t("plan.done"), DONE)}
       </View>
       {weeks.map((week) => {
         const change = changes[week - 1] ?? {};
         const dose = { ...written, ...change };
-        const ran = done[week - 1] ?? null;
+        const ran = done?.[week - 1] ?? null;
         return (
           <View
             key={week}
@@ -128,22 +128,24 @@ export function LoadTable({
                 />
               );
             })}
-            <Text
-              style={[
-                type.mono,
-                {
-                  width: DONE,
-                  fontSize: 12,
-                  textAlign: "center",
-                  color:
-                    ran !== null && ran.planned > 0 && ran.done >= ran.planned
-                      ? colors.fern
-                      : colors.textSecondary,
-                },
-              ]}
-            >
-              {ran === null || ran.planned === 0 ? "" : `${ran.done}/${ran.planned}`}
-            </Text>
+            {done !== null && (
+              <Text
+                style={[
+                  type.mono,
+                  {
+                    width: DONE,
+                    fontSize: 12,
+                    textAlign: "center",
+                    color:
+                      ran !== null && ran.planned > 0 && ran.done >= ran.planned
+                        ? colors.fern
+                        : colors.textSecondary,
+                  },
+                ]}
+              >
+                {ran === null || ran.planned === 0 ? "" : `${ran.done}/${ran.planned}`}
+              </Text>
+            )}
           </View>
         );
       })}

@@ -22,8 +22,10 @@ export type PlanGridProps = {
   lit?: string;
   /** Over the grid: Your week unless it says which. */
   title?: string;
-  /** A dated week's day numbers, Monday first, under the weekday letters. */
+  /** A dated week's day numbers by weekday, Monday first, under the weekday letters. */
   dates?: readonly string[];
+  /** The weekdays left to right: Monday first unless a dated week starts on another. */
+  columns?: readonly number[];
 };
 
 function Line({ parts, ink }: { parts: readonly GridPart[]; ink: string }): React.ReactElement {
@@ -53,6 +55,7 @@ export function PlanGrid({
   lit,
   title = t("plan.week"),
   dates,
+  columns = DAYS,
 }: PlanGridProps): React.ReactElement {
   return (
     <View
@@ -70,10 +73,10 @@ export function PlanGrid({
         <Label color={colors.gunmetal} style={{ flex: 1 }}>
           {title}
         </Label>
-        {weekdayLetters().map((letter, i) => (
+        {columns.map((i) => (
           <View key={i} style={{ width: CELL, alignItems: "center", gap: 1 }}>
             <Label small color={colors.textSecondary} style={{ textAlign: "center" }}>
-              {letter}
+              {weekdayLetters()[i]}
             </Label>
             {dates !== undefined && (
               <Text style={[type.mono, { fontSize: 11, color: colors.gunmetal }]}>{dates[i]}</Text>
@@ -96,7 +99,7 @@ export function PlanGrid({
           </View>
         );
         const { toggle } = row;
-        const cells = DAYS.map((day) => (
+        const cells = columns.map((day) => (
           <DayCell
             key={day}
             kind={row.kind}

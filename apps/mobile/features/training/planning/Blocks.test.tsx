@@ -181,7 +181,7 @@ describe("block card", () => {
 });
 
 describe("a dated week", () => {
-  it("puts each date under its weekday when the block starts mid-week", async () => {
+  it("starts its columns on the block's weekday when it starts mid-week", async () => {
     // Wednesday 23 September: week 2 runs Wednesday 30 to Tuesday 6 October.
     const midweek: Plan = {
       ...plan,
@@ -190,13 +190,13 @@ describe("a dated week", () => {
     await renderWithHang(<BlockScreen id="b1" />, hangData(), { workouts: [squat], plan: midweek });
     expect(screen.getByText(/^Week 1 · /)).toBeTruthy();
     expect(readingOrder("28", "29", "23", "24", "25", "26", "27")).toEqual([
-      "28",
-      "29",
       "23",
       "24",
       "25",
       "26",
       "27",
+      "28",
+      "29",
     ]);
   });
 });
@@ -287,12 +287,25 @@ describe("templates", () => {
       plan: withTemplate,
     });
     expect(screen.getByText("Template")).toBeTruthy();
-    expect(screen.getByText("6 weeks · not scheduled")).toBeTruthy();
+    expect(screen.getByText("Not scheduled")).toBeTruthy();
     expect(screen.queryByText("This week")).toBeNull();
     expect(screen.getByLabelText("Back squat")).toBeTruthy();
     await fireEvent.press(screen.getByText("Schedule"));
     await fireEvent.press(screen.getAllByText("Schedule")[0]!);
     expect(mockPlan.copyBlock).toHaveBeenCalledWith("t1", "b-new", "2026-09-28");
+  });
+
+  it("names the workouts a schedule leaves out for having no days", async () => {
+    const some: Plan = {
+      ...withTemplate,
+      memberships: [
+        ...withTemplate.memberships,
+        { id: "m10", workoutId: "squat", blockId: "t1", weekdays: [], start: "2026-09-01" },
+      ],
+    };
+    await renderWithHang(<BlockScreen id="t1" />, hangData(), { workouts: [squat], plan: some });
+    await fireEvent.press(screen.getByText("Schedule"));
+    expect(screen.getByText("Back squat has no days yet and won’t be scheduled.")).toBeTruthy();
   });
 
   it("saves any block as a template from its ··· menu", async () => {
@@ -338,11 +351,22 @@ describe("templates", () => {
       workouts: [squat],
       plan: changed,
     });
+    await fireEvent.press(screen.getByLabelText("Week 2"));
+    expect(screen.getByText("Week 2 runs as written.")).toBeTruthy();
     await fireEvent.press(screen.getByLabelText("Week 3"));
     expect(screen.getByText("1 changed")).toBeTruthy();
     expect(
       screen.getByText("Gold is where week 3 differs from as written. Tap a row to change it.")
     ).toBeTruthy();
+  });
+
+  it("leaves Done out of a template's weekly load, as nothing has run", async () => {
+    await renderWithHang(<LadderScreen id="m9" />, hangData(), {
+      workouts: [squat],
+      plan: withTemplate,
+    });
+    expect(screen.getByText("Weekly load")).toBeTruthy();
+    expect(screen.queryByText("Done")).toBeNull();
   });
 
   it("drops an untitled template left with nothing in it", async () => {

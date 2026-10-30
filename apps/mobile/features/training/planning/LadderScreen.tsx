@@ -88,9 +88,13 @@ export function LadderScreen({ id, back }: LadderScreenProps): React.ReactElemen
     dated === null
       ? undefined
       : blockRecap(log, dated, today).workouts.find((r) => r.membershipId === id)?.weeks;
-  const done = weeks.map((week) =>
-    ended || (current !== null && week <= current) ? (ran?.[week - 1] ?? null) : null
-  );
+  // A template has no runs to count.
+  const done =
+    dated === null
+      ? null
+      : weeks.map((week) =>
+          ended || (current !== null && week <= current) ? (ran?.[week - 1] ?? null) : null
+        );
   const lines =
     w.kind === "hangboard" ? (bodySummary(w)?.split(" · ") ?? []) : workoutLines(w, model);
   const mine = library?.source === "mine";

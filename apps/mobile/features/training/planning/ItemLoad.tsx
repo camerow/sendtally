@@ -21,7 +21,7 @@ export type ItemLoadProps = {
   changes: readonly Partial<Dose>[];
   unit: WeightUnit;
   current: number | null;
-  done: readonly (DoneCount | null)[];
+  done: readonly (DoneCount | null)[] | null;
   onChange: (week: number, change: Partial<Dose>) => void;
   /** Left of + Column, such as the table's heading. */
   header?: React.ReactNode;
