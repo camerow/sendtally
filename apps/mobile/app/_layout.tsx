@@ -71,10 +71,9 @@ const SIGNED_IN_SCREENS = [
   "plan/day",
 ];
 
-const FOCUS_SCREENS = [
+const LIVE_SCREENS = [
   "session/live",
   "workout/timer",
-  "workout/done",
   "workout/intervals",
   "workout/sets",
   "workout/tally",
@@ -97,13 +96,17 @@ function AppStack(): React.ReactElement | null {
           {SIGNED_IN_SCREENS.map((name) => (
             <Stack.Screen key={name} name={name} />
           ))}
-          {FOCUS_SCREENS.map((name) => (
+          {LIVE_SCREENS.map((name) => (
             <Stack.Screen
               key={name}
               name={name}
-              options={{ gestureEnabled: false, animation: "fade" }}
+              options={{ gestureEnabled: false, animation: "slide_from_bottom" }}
             />
           ))}
+          <Stack.Screen
+            name="workout/done"
+            options={{ gestureEnabled: false, animation: "fade" }}
+          />
         </Stack.Protected>
       </Stack>
       {isSignedIn && <AlreadyRunningSheet />}
