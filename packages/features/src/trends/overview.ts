@@ -17,10 +17,10 @@ import {
   type Slice,
   type Totals,
 } from "./slice";
+import { gradeBins, presetsOf } from "./filter";
 import { formatter, pointsOver, tile } from "./tile";
 import type {
   GradeBinVM,
-  GradePresetVM,
   GradeRange,
   TrendFilter,
   TrendGroupId,
@@ -119,7 +119,7 @@ function lifetimeStats(
   ];
 }
 
-function gradeBins(slice: Slice, start: number, end: number): GradeBinVM[] {
+function binsOf(slice: Slice, start: number, end: number): GradeBinVM[] {
   const counts = new Map<number, number>();
   const unfiltered: Slice = { ...slice, grade: null };
   for (const row of slice.rows) {
@@ -129,36 +129,7 @@ function gradeBins(slice: Slice, start: number, end: number): GradeBinVM[] {
       if (rank !== null) counts.set(rank, (counts.get(rank) ?? 0) + 1);
     }
   }
-  if (counts.size === 0) return [];
-  const ranks = [...counts.keys()];
-  const out: GradeBinVM[] = [];
-  for (let rank = Math.min(...ranks); rank <= Math.max(...ranks); rank++) {
-    out.push({ rank, label: slice.ladder.label(rank), count: counts.get(rank) ?? 0 });
-  }
-  return out;
-}
-
-function presetsOf(ladder: Ladder, bins: GradeBinVM[]): GradePresetVM[] {
-  const present = bins.filter((b) => b.count > 0);
-  const low = present[0]?.rank;
-  const top = present[present.length - 1]?.rank;
-  const any: GradePresetVM = { key: "any", label: t("trends.anyGrade"), grade: null };
-  if (low === undefined || top === undefined) return [any];
-  const limit = Math.max(low, top - 2);
-  const volume = Math.max(low, top - 3);
-  return [
-    any,
-    {
-      key: "limit",
-      label: t("trends.presetLimit", { grade: ladder.label(limit) }),
-      grade: { lo: limit, hi: top },
-    },
-    {
-      key: "volume",
-      label: t("trends.presetVolume", { grade: ladder.label(volume) }),
-      grade: { lo: low, hi: volume },
-    },
-  ];
+  return gradeBins(counts, slice.ladder.label);
 }
 
 export function trendsVM(
@@ -447,7 +418,7 @@ export function trendsVM(
       ? null
       : lifetimeStats(cur, life, slice.rows.filter(inWindow), rows, filter.range === "all");
 
-  const bins = all ? [] : gradeBins(slice, start, end);
+  const bins = all ? [] : binsOf(slice, start, end);
 
   const windowed = rows.filter(inWindow);
   const gymSessions = (id: string): number =>
@@ -494,7 +465,7 @@ export function trendsVM(
     groups,
     grades: bins,
     gradeLabel: gradeText,
-    presets: all ? [] : presetsOf(ladder, bins),
+    presets: all ? [] : presetsOf(bins, ladder.label),
     gyms: gyms
       .map((g) => ({ id: g.id, name: g.name, sessions: gymSessions(g.id) }))
       .sort((a, b) => b.sessions - a.sessions || a.name.localeCompare(b.name)),

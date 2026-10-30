@@ -2,6 +2,8 @@ import type { ClimbSummary, SessionWithClimbs } from "@sendtally/api-client";
 import { t } from "../i18n";
 import { disciplineOf, gradeOptions, utcDate } from "../log-session/transforms";
 import type { GradeScale } from "../log-session/types";
+import { gradeBins } from "../trends/filter";
+import type { GradeBinVM, GradeRange } from "../trends/types";
 import { monthKey, monthLabel, monthName } from "../sessions/months";
 import { sendStyleOf, sendStyleText } from "./overview";
 import { dateLabel } from "./projects";
@@ -53,6 +55,31 @@ export function gradeFilterLabel(filter: GradeFilter): string {
   return filter.from === filter.to
     ? filter.from
     : t("climbs.gradeRange", { from: filter.from, to: filter.to });
+}
+
+/** How many of the climbs sit at each grade of the scale's ladder; a bin's rank is its place on it. */
+export function climbGradeBins(climbs: readonly ClimbSummary[], scale: GradeScale): GradeBinVM[] {
+  const ladder = gradeOptions(scale);
+  const counts = new Map<number, number>();
+  for (const c of climbs) {
+    if (c.grade === null || c.discipline !== disciplineOf(scale)) continue;
+    const rank = ladder.indexOf(climbDraftGrade(c, scale));
+    if (rank >= 0) counts.set(rank, (counts.get(rank) ?? 0) + 1);
+  }
+  return gradeBins(counts, (rank) => ladder[rank] ?? "");
+}
+
+export function gradeFilterOf(scale: GradeScale, range: GradeRange): GradeFilter {
+  const ladder = gradeOptions(scale);
+  return { scale, from: ladder[range.lo] ?? "", to: ladder[range.hi] ?? "" };
+}
+
+export function gradeRangeOf(filter: GradeFilter): GradeRange {
+  const ladder = gradeOptions(filter.scale);
+  const [lo = -1, hi = -1] = [ladder.indexOf(filter.from), ladder.indexOf(filter.to)].sort(
+    (a, b) => a - b
+  );
+  return { lo, hi };
 }
 
 const isProject = (c: ClimbSummary): boolean => c.project && c.sent_at === null;

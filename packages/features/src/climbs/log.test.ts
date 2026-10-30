@@ -1,6 +1,14 @@
 import { describe, expect, it } from "vitest";
 import type { ClimbSummary, SessionClimb, SessionWithClimbs } from "@sendtally/api-client";
-import { climbLog, gradeFilterLabel, inGradeRange, matchesClimbSearch } from "./log";
+import {
+  climbGradeBins,
+  climbLog,
+  gradeFilterLabel,
+  gradeFilterOf,
+  gradeRangeOf,
+  inGradeRange,
+  matchesClimbSearch,
+} from "./log";
 
 const NOW = new Date("2026-10-27T12:00:00.000Z");
 
@@ -93,6 +101,26 @@ describe("inGradeRange", () => {
   it("says one grade or the range", () => {
     expect(gradeFilterLabel(range)).toBe("6B+ to 7A");
     expect(gradeFilterLabel({ ...range, to: "6B+" })).toBe("6B+");
+  });
+});
+
+describe("climbGradeBins", () => {
+  it("counts the scale's own discipline from lowest to highest grade, gaps included", () => {
+    const bins = climbGradeBins([climb({}), brad, roof, ramp], "font");
+    expect(bins.map((b) => [b.label, b.count])).toEqual([
+      ["6B+", 1],
+      ["6C", 1],
+      ["6C+", 0],
+      ["7A", 1],
+    ]);
+  });
+
+  it("turns a picked range of bins back into a grade filter and out again", () => {
+    const [low, , , top] = climbGradeBins([climb({}), brad, roof], "font");
+    const range = { lo: low?.rank ?? -1, hi: top?.rank ?? -1 };
+    const filter = gradeFilterOf("font", range);
+    expect(filter).toEqual({ scale: "font", from: "6B+", to: "7A" });
+    expect(gradeRangeOf({ ...filter, from: "7A", to: "6B+" })).toEqual(range);
   });
 });
 

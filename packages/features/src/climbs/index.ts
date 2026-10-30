@@ -77,9 +77,12 @@ export {
 export { sessionPyramid, type PyramidRow } from "./pyramid";
 export {
   CLIMB_STATUSES,
+  climbGradeBins,
   climbLog,
   climbStatus,
   gradeFilterLabel,
+  gradeFilterOf,
+  gradeRangeOf,
   inGradeRange,
   matchesClimbSearch,
   type ClimbLogGroupVM,
