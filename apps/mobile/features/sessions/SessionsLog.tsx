@@ -1,5 +1,6 @@
 import { router } from "expo-router";
 import React from "react";
+import { useSharedValue } from "react-native-reanimated";
 import { Text, View } from "react-native";
 import { useSettings } from "@sendtally/features/settings";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -17,7 +18,7 @@ import { UpdateReadyCard } from "../app-update/UpdateReadyCard";
 import { ClimbingLog } from "../climbs/ClimbingLog";
 import { LogFab } from "../live-session/LogFab";
 import { Segmented } from "../training/components/Segmented";
-import { SegmentSwipe } from "../../components/SegmentSwipe";
+import { SegmentPager } from "../../components/SegmentPager";
 import { SetupStack, type SetupCard } from "./SetupStack";
 import { TrainingLog } from "./TrainingLog";
 import { useStravaConnect } from "../settings/useStravaConnect";
@@ -89,12 +90,10 @@ export function SessionsLog(): React.ReactElement {
     () =>
       sessions === null
         ? null
-        : logSegmentItems(
-            logItems(sessions, entries ?? [], hangSessions ?? [], activities ?? [], blocks),
-            segment
-          ),
-    [sessions, entries, hangSessions, activities, blocks, segment]
+        : logItems(sessions, entries ?? [], hangSessions ?? [], activities ?? [], blocks),
+    [sessions, entries, hangSessions, activities, blocks]
   );
+  const progress = useSharedValue(segment === "climbing" ? 0 : 1);
 
   const sessionCount = sessions?.length;
   React.useEffect(() => {
@@ -116,30 +115,37 @@ export function SessionsLog(): React.ReactElement {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.white }} edges={["top"]}>
       <ScreenHeader title={t("journal.log")} right={<AccountButton />} />
-      <SegmentSwipe options={segments} value={segment} onChange={setSegment}>
-        <View style={{ paddingHorizontal: 18, paddingTop: 4, paddingBottom: 8 }}>
-          <Segmented value={segment} onChange={setSegment} options={segments} />
-        </View>
-        {error !== null && (
-          <Text
-            style={{
-              paddingHorizontal: 18,
-              paddingVertical: 8,
-              fontFamily: fonts.mono,
-              fontSize: 12,
-              color: colors.watermelonInk,
-            }}
-          >
-            {error}
-          </Text>
-        )}
-        {segment === "climbing" ? (
-          <ClimbingLog items={items} header={header} onRefresh={log.reload} />
-        ) : (
-          <TrainingLog items={items} header={header} onRefresh={log.reload} />
-        )}
-        <LogFab segment={segment} />
-      </SegmentSwipe>
+      <View style={{ paddingHorizontal: 18, paddingTop: 4, paddingBottom: 8 }}>
+        <Segmented value={segment} onChange={setSegment} options={segments} progress={progress} />
+      </View>
+      {error !== null && (
+        <Text
+          style={{
+            paddingHorizontal: 18,
+            paddingVertical: 8,
+            fontFamily: fonts.mono,
+            fontSize: 12,
+            color: colors.watermelonInk,
+          }}
+        >
+          {error}
+        </Text>
+      )}
+      <SegmentPager
+        options={segments}
+        value={segment}
+        onChange={setSegment}
+        progress={progress}
+        renderPage={(page) => {
+          const shown = items === null ? null : logSegmentItems(items, page);
+          return page === "climbing" ? (
+            <ClimbingLog items={shown} header={header} onRefresh={log.reload} />
+          ) : (
+            <TrainingLog items={shown} header={header} onRefresh={log.reload} />
+          );
+        }}
+      />
+      <LogFab segment={segment} />
     </SafeAreaView>
   );
 }

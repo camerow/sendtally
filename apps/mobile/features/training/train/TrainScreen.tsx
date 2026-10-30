@@ -1,5 +1,6 @@
 import { router } from "expo-router";
 import React from "react";
+import { useSharedValue } from "react-native-reanimated";
 import { ScrollView, View } from "react-native";
 import { t } from "@sendtally/features/i18n";
 import { Fab } from "../../../components/Fab";
@@ -7,7 +8,7 @@ import type { IconName } from "../../../components/Icon";
 import { Sheet } from "../../../components/Sheet";
 import { MenuRow } from "../../live-session/MenuRow";
 import { Segmented } from "../components/Segmented";
-import { SegmentSwipe } from "../../../components/SegmentSwipe";
+import { SegmentPager } from "../../../components/SegmentPager";
 import { HangDataProvider } from "../data/HangDataProvider";
 import { openExerciseEditor } from "../exercises/openExerciseEditor";
 import { NewWorkoutSheet } from "../library/NewWorkoutSheet";
@@ -57,27 +58,29 @@ export function TrainScreen(): React.ReactElement {
     { value: "workouts" as const, label: t("plan.tabWorkouts") },
     { value: "exercises" as const, label: t("plan.tabExercises") },
   ];
+  const progress = useSharedValue(VIEWS.indexOf(view));
   return (
     <View style={{ flex: 1 }}>
-      <SegmentSwipe options={views} value={view} onChange={setView}>
-        <ScrollView
-          contentContainerStyle={{
-            gap: 16,
-            paddingHorizontal: 18,
-            paddingTop: 4,
-            paddingBottom: 96,
-          }}
-        >
-          <Segmented<TrainView> value={view} onChange={setView} options={views} />
-          {view === "workouts" ? (
-            <WorkoutLibrary />
-          ) : (
-            <HangDataProvider>
-              {view === "blocks" ? <BlocksList /> : <ExerciseShelves />}
-            </HangDataProvider>
-          )}
-        </ScrollView>
-      </SegmentSwipe>
+      <View style={{ paddingHorizontal: 18, paddingTop: 4, paddingBottom: 16 }}>
+        <Segmented<TrainView> value={view} onChange={setView} options={views} progress={progress} />
+      </View>
+      <SegmentPager
+        options={views}
+        value={view}
+        onChange={setView}
+        progress={progress}
+        renderPage={(page) => (
+          <ScrollView contentContainerStyle={{ gap: 16, paddingHorizontal: 18, paddingBottom: 96 }}>
+            {page === "workouts" ? (
+              <WorkoutLibrary />
+            ) : (
+              <HangDataProvider>
+                {page === "blocks" ? <BlocksList /> : <ExerciseShelves />}
+              </HangDataProvider>
+            )}
+          </ScrollView>
+        )}
+      />
       <Fab
         label={label(view)}
         onPress={() => create(view)}
