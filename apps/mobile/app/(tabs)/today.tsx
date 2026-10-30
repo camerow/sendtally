@@ -9,11 +9,11 @@ import { IconButton } from "../../features/training/components/IconButton";
 import { HangDataProvider } from "../../features/training/data/HangDataProvider";
 import { TodayScreen } from "../../features/training/today/TodayScreen";
 
-export default function Today(): React.ReactElement {
+export default function Plan(): React.ReactElement {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.white }} edges={["top"]}>
       <ScreenHeader
-        title={t("training.today")}
+        title={t("plan.tab")}
         right={
           <>
             <IconButton

@@ -1,4 +1,5 @@
 export const plan = {
+  "plan.tab": "Plan",
   "plan.close": "Cerrar planificador",
   "plan.targetEffort": "Esfuerzo objetivo",
   "plan.targetValue": "Esfuerzo objetivo {n}",
