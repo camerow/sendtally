@@ -80,7 +80,7 @@ export const hang = {
   "hang.weight": "Poids",
   "hang.assistNote": "Négatif pour le poids retiré avec une poulie.",
   "hang.lastUsed": "Dernière fois",
-  "hang.setupEachTime": "Tu choisis la réglette et le poids à chaque départ.",
+  "hang.setupEachTime": "La réglette et le poids viennent de ton plan ; change-les pour aujourd’hui dans le minuteur.",
   "hang.lifts": "Tirages",
   "hang.rest": "Repos",
   "hang.statDuration": "Durée",

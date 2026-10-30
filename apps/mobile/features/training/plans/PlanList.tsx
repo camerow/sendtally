@@ -10,6 +10,7 @@ import { PlanRow } from "../components/PlanRow";
 import { useHangData } from "../data/HangDataContext";
 import { MiniWeek } from "../plan/MiniWeek";
 import { usePlanActions } from "../plan/usePlanActions";
+import { blockTag } from "../blocks/blockText";
 import { membershipTag, oneOffDate } from "./planText";
 import { confirmDestructive } from "../../../lib/confirmDestructive";
 
@@ -28,12 +29,15 @@ export function PlanList({ workoutId, name, kind }: PlanListProps): React.ReactE
       <Label color={colors.gunmetal}>{t("hang.planned")}</Label>
       {members.map((m) => {
         const block = blockOfMembership(plan, m);
+        const week = block === null ? null : blockTag(block.name, block, today);
         return (
           <PlanRow
             key={m.id}
-            tag={membershipTag(m, block, today)}
+            tag={week ?? membershipTag(m, block, today)}
             tagColor={m.start <= today ? colors.gunmetal : colors.petalInk}
-            meta={[...(block === null ? [] : [block.name]), ...oneOffDate(m)].join(" · ")}
+            meta={[...(block === null || week !== null ? [] : [block.name]), ...oneOffDate(m)].join(
+              " · "
+            )}
             trailing={<MiniWeek kind={kind} m={m} />}
             onRemove={() =>
               confirmDestructive({

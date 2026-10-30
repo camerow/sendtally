@@ -80,7 +80,7 @@ export const hang = {
   "hang.weight": "Weight",
   "hang.assistNote": "Negative for weight taken off with a pulley.",
   "hang.lastUsed": "Last used",
-  "hang.setupEachTime": "You choose the edge and weight each time you start.",
+  "hang.setupEachTime": "Edge and weight come from your plan; change them for today on the timer.",
   "hang.lifts": "Lifts",
   "hang.rest": "Rest",
   "hang.statDuration": "Duration",

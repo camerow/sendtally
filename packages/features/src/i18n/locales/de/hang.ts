@@ -81,7 +81,7 @@ export const hang = {
   "hang.weight": "Gewicht",
   "hang.assistNote": "Negativ für Gewicht, das ein Flaschenzug abnimmt.",
   "hang.lastUsed": "Zuletzt",
-  "hang.setupEachTime": "Leiste und Gewicht wählst du bei jedem Start.",
+  "hang.setupEachTime": "Leiste und Gewicht kommen aus deinem Plan; für heute änderst du sie im Timer.",
   "hang.lifts": "Züge",
   "hang.rest": "Pause",
   "hang.statDuration": "Dauer",

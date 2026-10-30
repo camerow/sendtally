@@ -80,7 +80,7 @@ export const hang = {
   "hang.weight": "Peso",
   "hang.assistNote": "Negativo para el peso que quitas con una polea.",
   "hang.lastUsed": "Última vez",
-  "hang.setupEachTime": "Eliges la regleta y el peso cada vez que empiezas.",
+  "hang.setupEachTime": "La regleta y el peso vienen de tu plan; cámbialos para hoy en el temporizador.",
   "hang.lifts": "Tirones",
   "hang.rest": "Descanso",
   "hang.statDuration": "Duración",
