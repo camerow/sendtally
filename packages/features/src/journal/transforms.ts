@@ -90,13 +90,10 @@ export function logScopeItems(items: LogItem[], scope: LogScope): LogItem[] {
 /** The two halves of the log, and of Stats. */
 export type LogSegment = "climbing" | "training";
 
-/** Climbing sessions in one half, the rest of the training in the other; entries and blocks in both. */
+/** Climbing sessions in one half, the rest of the training and its blocks in the other; entries in both. */
 export function logSegmentItems(items: LogItem[], segment: LogSegment): LogItem[] {
   return items.filter(
-    (i) =>
-      i.type === "entry" ||
-      i.type === "block" ||
-      (i.type === "session") === (segment === "climbing")
+    (i) => i.type === "entry" || (i.type === "session") === (segment === "climbing")
   );
 }
 
