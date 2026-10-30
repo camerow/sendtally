@@ -100,6 +100,28 @@ describe("Timer", () => {
     expect(screen.getByText("Set 1 of 6")).toBeTruthy();
   });
 
+  it("moves a whole set with the arrows, and replaying a set takes back what it logged", async () => {
+    await renderWithHang(
+      <TimerScreen workoutId="rep73" gripId="half" link={NO_PLAN} session={0} />
+    );
+    await fireEvent.press(screen.getByText("Start"));
+    expect(screen.getByLabelText("Previous set")).toBeDisabled();
+    await advance(5000 + 7100);
+    expect(screen.getByText("Rest")).toBeTruthy();
+
+    await fireEvent.press(screen.getByLabelText("Previous set"));
+    expect(screen.getByText("Get ready")).toBeTruthy();
+    await fireEvent.press(screen.getByLabelText("Next set"));
+    expect(screen.getByText("Set rest")).toBeTruthy();
+    expect(screen.getByText("Set 1 of 6")).toBeTruthy();
+    await fireEvent.press(screen.getByLabelText("Next set"));
+    expect(screen.getByText("Set 2 of 6")).toBeTruthy();
+
+    await fireEvent.press(screen.getByText("End"));
+    await advance(200);
+    expect(reviewed().run.off).toEqual(["0:0", "0:1", "0:2", "0:3", "0:4", "0:5"]);
+  });
+
   it("pauses the clock from the primary button", async () => {
     await renderWithHang(
       <TimerScreen workoutId="max10" gripId="half" link={NO_PLAN} session={0} />

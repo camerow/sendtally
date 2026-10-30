@@ -4,6 +4,8 @@ import {
   currentPhase,
   endRun,
   logLift,
+  nextSet,
+  previousSet,
   remainingInPhase,
   restartPhase,
   skip,
@@ -24,6 +26,8 @@ export type RunControls<P extends Phase = Phase> = {
   logLift: (ok: boolean) => void;
   skip: () => void;
   restart: () => void;
+  previousSet: () => void;
+  nextSet: () => void;
   end: () => void;
 };
 
@@ -58,6 +62,8 @@ export function useRun<P extends Phase>(start: (now: number) => Run<P>): RunCont
     logLift: (ok) => apply((r, now) => logLift(r, ok, now)),
     skip: () => apply((r, now) => skip(r, now)),
     restart: () => apply((r, now) => restartPhase(r, now)),
+    previousSet: () => apply((r, now) => previousSet(r, now)),
+    nextSet: () => apply((r, now) => nextSet(r, now)),
     end: () => apply((r, now) => endRun(r, now)),
   };
 }

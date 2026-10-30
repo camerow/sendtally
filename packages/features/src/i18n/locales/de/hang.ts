@@ -130,6 +130,8 @@ export const hang = {
   "hang.setsAhead_one": "Noch {count} Satz",
   "hang.setsAhead_other": "Noch {count} Sätze",
   "hang.setOf": "Satz {set} von {sets}",
+  "hang.previousSet": "Vorheriger Satz",
+  "hang.nextSet": "Nächster Satz",
   "hang.cameOffEarly": "Zu früh raus · {n} s gehalten",
   "hang.missedLift": "Zug verfehlt",
   "hang.next": "Als Nächstes",
