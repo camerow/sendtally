@@ -50,6 +50,7 @@ import { queries } from "@sendtally/features/query";
 import { climbKindStorage } from "../../lib/climbKindStorage";
 import { sessionDraftStorage } from "../../lib/sessionDraftStorage";
 import { confirmDiscardDraft } from "../../lib/confirmDiscardDraft";
+import { Button } from "../training/components/Button";
 import { DraftBanner } from "./DraftBanner";
 import { TagPicker } from "../sessions/TagPicker";
 import {
@@ -677,30 +678,14 @@ export function LogSessionForm({
             />
           ))}
         </View>
-        <Pressable
+        <Button
+          label={t("logSession.addClimb")}
           onPress={addClimb}
-          style={press({
-            minHeight: 48,
-            alignItems: "center",
-            justifyContent: "center",
-            borderWidth: 1,
-            borderStyle: "dashed",
-            borderColor: "rgba(64,63,76,0.25)",
-            borderRadius: radius.card,
-          })}
-        >
-          <Text
-            style={{
-              fontFamily: fonts.monoMedium,
-              fontSize: 10,
-              letterSpacing: 0.8,
-              textTransform: "uppercase",
-              color: colors.azureInk,
-            }}
-          >
-            {`+ ${t("logSession.addClimb")}`}
-          </Text>
-        </Pressable>
+          variant="outline"
+          icon="plus"
+          height={40}
+          style={{ alignSelf: "flex-start" }}
+        />
         <Text
           style={{
             fontFamily: fonts.monoMedium,
