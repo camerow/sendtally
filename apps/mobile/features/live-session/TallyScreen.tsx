@@ -41,11 +41,13 @@ import { queries, useQuery } from "@sendtally/features/query";
 import { useGradeScalePrefs } from "@sendtally/features/settings";
 import { colors, fonts } from "@sendtally/design/tokens";
 import { Icon } from "../../components/Icon";
+import { LIVE_HEADER, leaveLiveScreen, MinimiseButton } from "../../components/MinimiseButton";
 import { useApi } from "../../lib/api";
 import { climbKindStorage } from "../../lib/climbKindStorage";
 import { exerciseTallyStorage } from "../../lib/exerciseTallyStorage";
 import { liveSessionStorage } from "../../lib/liveSessionStorage";
 import { press } from "../../lib/press";
+import { Button } from "../training/components/Button";
 import { readPlanLink } from "../training/data/planLinkParams";
 import { useRest } from "../training/rest/useRest";
 import { ExerciseClock } from "./ExerciseClock";
@@ -161,11 +163,6 @@ export function TallyScreen({ exercise = false }: TallyScreenProps): React.React
     live.replace(settle(draft, now));
   }, [draft, open, now, live, settle]);
 
-  const leave = (): void => {
-    if (router.canGoBack()) router.back();
-    else router.replace("/(tabs)/sessions");
-  };
-
   if (draft === null || (exercise && draft.exercise === undefined)) {
     return <SafeAreaView style={{ flex: 1, backgroundColor: colors.gunmetal }} />;
   }
@@ -253,7 +250,7 @@ export function TallyScreen({ exercise = false }: TallyScreenProps): React.React
     finishLiveSession(api, liveSessionStorage, rpe).then(
       (fingerprint) => {
         setFinishing(false);
-        if (fingerprint === null) leave();
+        if (fingerprint === null) leaveLiveScreen();
         else router.replace({ pathname: "/session/[fingerprint]", params: { fingerprint } });
       },
       () => {
@@ -273,7 +270,7 @@ export function TallyScreen({ exercise = false }: TallyScreenProps): React.React
   const done = (): void => {
     rest.skip();
     live.replace(withExerciseDone(draft));
-    leave();
+    leaveLiveScreen();
   };
 
   const discard = (): void => {
@@ -285,7 +282,7 @@ export function TallyScreen({ exercise = false }: TallyScreenProps): React.React
         onPress: () => {
           live.discard();
           setFinishing(false);
-          leave();
+          leaveLiveScreen();
         },
       },
     ]);
@@ -302,53 +299,37 @@ export function TallyScreen({ exercise = false }: TallyScreenProps): React.React
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.gunmetal }} edges={["top", "bottom"]}>
       <StatusBar style="light" />
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "space-between",
-          paddingTop: 6,
-          paddingHorizontal: 8,
-        }}
-      >
-        <Pressable
-          onPress={leave}
-          accessibilityRole="button"
-          accessibilityLabel={t("tally.minimise")}
-          style={press({ width: 60, height: 44, alignItems: "center", justifyContent: "center" })}
-        >
-          <View style={{ transform: [{ rotate: "90deg" }] }}>
-            <Icon name="chevron" color={colors.white} size={22} strokeWidth={2.2} />
-          </View>
-        </Pressable>
-        <Pressable
-          onPress={() => setPicking(true)}
-          accessibilityRole="button"
-          accessibilityLabel={`${t("gyms.gym")}, ${gym?.name ?? t("gyms.noGym")}`}
-          style={press({ height: 44, flexDirection: "row", alignItems: "center", gap: 4 })}
-        >
-          <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 15, color: colors.white }}>
-            {gym?.name ?? t("gyms.noGym")}
-          </Text>
-          <View style={{ transform: [{ rotate: "90deg" }] }}>
-            <Icon name="chevron" color={colors.white} size={14} strokeWidth={2.2} />
-          </View>
-        </Pressable>
-        <Pressable
+      <View style={LIVE_HEADER}>
+        <MinimiseButton color={colors.white} />
+        <View style={{ flex: 1, alignItems: "center" }}>
+          <Pressable
+            onPress={() => setPicking(true)}
+            accessibilityRole="button"
+            accessibilityLabel={`${t("gyms.gym")}, ${gym?.name ?? t("gyms.noGym")}`}
+            style={press({ height: 44, flexDirection: "row", alignItems: "center", gap: 4 })}
+          >
+            <Text
+              numberOfLines={1}
+              style={{
+                flexShrink: 1,
+                fontFamily: fonts.sansSemiBold,
+                fontSize: 15,
+                color: colors.white,
+              }}
+            >
+              {gym?.name ?? t("gyms.noGym")}
+            </Text>
+            <View style={{ transform: [{ rotate: "90deg" }] }}>
+              <Icon name="chevron" color={colors.white} size={14} strokeWidth={2.2} />
+            </View>
+          </Pressable>
+        </View>
+        <Button
+          label={exercise ? t("common.done") : t("tally.finish")}
           onPress={exercise ? done : () => setFinishing(true)}
-          accessibilityRole="button"
-          style={press({
-            width: 76,
-            height: 44,
-            alignItems: "flex-end",
-            justifyContent: "center",
-            paddingRight: 10,
-          })}
-        >
-          <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 15, color: colors.gold }}>
-            {exercise ? t("common.done") : t("tally.finish")}
-          </Text>
-        </Pressable>
+          variant="goldText"
+          height={44}
+        />
       </View>
 
       {exercise ? (

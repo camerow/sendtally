@@ -2,6 +2,8 @@ import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals
 import { act, fireEvent, screen } from "@testing-library/react-native";
 import { router } from "expo-router";
 import React from "react";
+import { StyleSheet } from "react-native";
+import { colors } from "@sendtally/design/tokens";
 import type * as LogSession from "@sendtally/features/log-session";
 import { liveRunStorage } from "../../../lib/liveRunStorage";
 import { readLiveRun } from "../../live-session/liveRun";
@@ -10,7 +12,9 @@ import type { TimerRun } from "../done/doneParams";
 import { hangData, renderWithHang, TODAY } from "../data/renderWithHang";
 import { TimerScreen } from "./TimerScreen";
 
-jest.mock("expo-router", () => ({ router: { replace: jest.fn() } }));
+jest.mock("expo-router", () => ({
+  router: { replace: jest.fn(), back: jest.fn(), canGoBack: () => true },
+}));
 jest.mock("expo-keep-awake", () => ({ useKeepAwake: () => undefined }));
 jest.mock("../../../lib/liveRunStorage", () => {
   let value: string | null = null;
@@ -59,6 +63,9 @@ describe("Timer", () => {
     await fireEvent.press(screen.getByText("Start"));
     expect(screen.getByText("Get ready")).toBeTruthy();
     expect(screen.getByText("6 sets ahead")).toBeTruthy();
+    expect(StyleSheet.flatten(screen.getByText("End").props.style).color).toBe(colors.gold);
+    await fireEvent.press(screen.getByLabelText("Minimise"));
+    expect(router.back).toHaveBeenCalled();
 
     await advance(5000);
     expect(screen.getByText("Hang")).toBeTruthy();

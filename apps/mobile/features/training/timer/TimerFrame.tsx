@@ -17,7 +17,7 @@ export type TimerFrameProps<P extends Phase> = {
   children: React.ReactNode;
 };
 
-/** The dark timer screen: End, name and mute, the run's phase bar, the screen's own middle, and the controls. */
+/** The dark timer screen: the live header, the run's phase bar, the screen's own middle, and the controls. */
 export function TimerFrame<P extends Phase>({
   timer,
   name,
@@ -28,14 +28,14 @@ export function TimerFrame<P extends Phase>({
   return (
     <SafeAreaView edges={["top", "bottom"]} style={{ flex: 1, backgroundColor: colors.gunmetal }}>
       <StatusBar style="light" />
-      <View style={{ flex: 1, gap: 18, paddingHorizontal: 18, paddingTop: 16, paddingBottom: 10 }}>
-        <TimerHeader
-          name={name}
-          meta={meta}
-          muted={timer.muted}
-          onEnd={timer.end}
-          onToggleMute={timer.toggleMute}
-        />
+      <TimerHeader
+        name={name}
+        meta={meta}
+        muted={timer.muted}
+        onEnd={timer.end}
+        onToggleMute={timer.toggleMute}
+      />
+      <View style={{ flex: 1, gap: 18, paddingHorizontal: 18, paddingTop: 12, paddingBottom: 10 }}>
         <RunProgressBar run={timer.run} progress={timer.progress} />
         {children}
         <TimerControls {...controls} onRestart={timer.restart} onSkip={timer.skip} />

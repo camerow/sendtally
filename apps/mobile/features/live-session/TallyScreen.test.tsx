@@ -84,6 +84,11 @@ describe("The tally in exercise mode", () => {
     expect(router.push).toHaveBeenCalledWith("/workout/tally");
     expect(screen.getByRole("button", { name: "Done" })).toBeTruthy();
     expect(screen.getByText("4x4s · Set 1 of 2 · 0 of 2 climbs")).toBeTruthy();
+    const [, tallyMinimise] = screen.getAllByLabelText("Minimise");
+    if (tallyMinimise === undefined) throw new Error("The tally has no Minimise");
+    await fireEvent.press(tallyMinimise);
+    expect(router.back).toHaveBeenCalledTimes(1);
+    jest.mocked(router.back).mockClear();
 
     await go("V4", "Sent");
     await go("V3", "Fell");

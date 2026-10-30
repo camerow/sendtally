@@ -6,7 +6,9 @@ import { renderWithHang } from "../data/renderWithHang";
 import type { WorkoutRun } from "../data/workoutRunParams";
 import { ChecklistScreen } from "./ChecklistScreen";
 
-jest.mock("expo-router", () => ({ router: { replace: jest.fn(), back: jest.fn() } }));
+jest.mock("expo-router", () => ({
+  router: { replace: jest.fn(), back: jest.fn(), canGoBack: () => true },
+}));
 jest.mock("../../../lib/api", () => ({ useApi: () => undefined }));
 jest.mock("@sendtally/features/activities", () => ({
   ...jest.requireActual<object>("@sendtally/features/activities"),
@@ -32,6 +34,9 @@ describe("Checklist player", () => {
     jest.useFakeTimers({ now: new Date(2026, 9, 22, 7) });
     await renderWithHang(<ChecklistScreen run={run} />);
     expect(screen.getByText("Mobility · 12m")).toBeTruthy();
+    expect(screen.queryByText("Back")).toBeNull();
+    await fireEvent.press(screen.getByLabelText("Minimise"));
+    expect(router.back).toHaveBeenCalled();
     const catCow = screen.getByLabelText("Cat-cow, 2 sets");
     await fireEvent.press(catCow);
     expect(catCow.props.accessibilityState).toEqual({ checked: true });
