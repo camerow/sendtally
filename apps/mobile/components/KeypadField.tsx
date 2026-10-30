@@ -9,6 +9,8 @@ import type { FieldSlot } from "./useFieldOrder";
 export type KeypadFieldProps = FieldSlot & {
   /** Above the box, and on the keypad. */
   label: string;
+  /** A small box sized to its value with no label shown, for a value in a table row. */
+  compact?: boolean;
   /** What a screen reader and the keypad call it, when the label alone is not enough. */
   accessibilityLabel?: string;
   mode: KeypadMode;
@@ -38,6 +40,7 @@ export const keypadFieldLabel = {
  */
 export function KeypadField({
   label,
+  compact = false,
   accessibilityLabel = label,
   mode,
   value,
@@ -80,9 +83,11 @@ export function KeypadField({
 
   return (
     <View style={{ gap: 8 }}>
-      <Text numberOfLines={1} style={keypadFieldLabel}>
-        {label}
-      </Text>
+      {!compact && (
+        <Text numberOfLines={1} style={keypadFieldLabel}>
+          {label}
+        </Text>
+      )}
       <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
         {before}
         <Pressable
@@ -92,26 +97,38 @@ export function KeypadField({
           accessibilityLabel={accessibilityLabel}
           accessibilityValue={{ text: `${dim}${rest}${unit === undefined ? "" : ` ${unit}`}` }}
           accessibilityState={{ expanded: open }}
-          style={{
-            flex: 1,
-            minHeight: 46,
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: 6,
-            paddingHorizontal: open ? 11.3 : 12,
-            borderRadius: radius.control,
-            backgroundColor: colors.white,
-            borderWidth: open ? 2 : 1.3,
-            borderColor: open ? colors.gold : colors.lineOnLightStrong,
-          }}
+          style={[
+            {
+              flex: 1,
+              minHeight: 46,
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 6,
+              paddingHorizontal: open ? 11.3 : 12,
+              borderRadius: radius.control,
+              backgroundColor: colors.white,
+              borderWidth: open ? 2 : 1.3,
+              borderColor: open ? colors.gold : colors.lineOnLightStrong,
+            },
+            compact && {
+              flex: 0,
+              minHeight: 36,
+              minWidth: 36,
+              justifyContent: "center",
+              gap: 3,
+              paddingHorizontal: open ? 7 : 8,
+              borderRadius: 8,
+              borderWidth: open ? 2 : 1,
+            },
+          ]}
         >
           <Text
             numberOfLines={1}
             style={{
               flexShrink: 1,
               fontFamily: fonts.monoSemiBold,
-              fontSize: 17,
+              fontSize: compact ? 15 : 17,
               color: colors.gunmetal,
             }}
           >
@@ -119,7 +136,13 @@ export function KeypadField({
             {rest}
           </Text>
           {unit !== undefined && (
-            <Text style={{ fontFamily: fonts.mono, fontSize: 13, color: colors.textSecondary }}>
+            <Text
+              style={{
+                fontFamily: fonts.mono,
+                fontSize: compact ? 12 : 13,
+                color: colors.textSecondary,
+              }}
+            >
               {unit}
             </Text>
           )}

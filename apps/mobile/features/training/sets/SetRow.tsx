@@ -46,8 +46,6 @@ export function SetRow({
           minHeight: 48,
           borderRadius: 10,
           backgroundColor: current ? colors.surfaceSoft : undefined,
-          borderWidth: current ? 1.5 : 0,
-          borderColor: colors.gunmetal,
         },
       ]}
     >
@@ -74,7 +72,9 @@ export function SetRow({
             onChange={onChange}
           />
         ) : (
-          <Text style={[type.monoBold, { fontSize: 14, color: colors.textMuted }]}>-</Text>
+          <Text style={[type.monoBold, { fontSize: 14, color: colors.textMuted, paddingRight: 8 }]}>
+            -
+          </Text>
         )}
       </View>
       <Pressable

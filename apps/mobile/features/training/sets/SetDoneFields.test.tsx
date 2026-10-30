@@ -43,4 +43,24 @@ describe("SetDoneFields", () => {
       text: "−15 kg",
     });
   });
+
+  it.each<[string, SetDone, string[], string[]]>([
+    ["reps × weight", { reps: 5, weightKg: 60 }, ["Reps", "Weight"], ["×"]],
+    ["weight · time", { weightKg: 10, onS: 45 }, ["Weight", "Hold"], ["·"]],
+    ["reps", { reps: 12 }, ["Reps"], []],
+    ["time", { onS: 45 }, ["Hold"], []],
+  ])(
+    "lays %s on one line, joined as its target reads, with no labels shown",
+    async (_, set, names, joiners) => {
+      await render(<SetDoneFields set={set} unit="kg" label="Set 2" onChange={() => undefined} />);
+      expect(screen.getAllByRole("button").map((b) => b.props.accessibilityLabel)).toEqual(
+        names.map((n) => `Set 2 · ${n}`)
+      );
+      for (const name of names) expect(screen.queryByText(name)).toBeNull();
+      for (const mark of ["×", "·"])
+        expect(screen.queryAllByText(mark, { includeHiddenElements: true })).toHaveLength(
+          joiners.includes(mark) ? 1 : 0
+        );
+    }
+  );
 });

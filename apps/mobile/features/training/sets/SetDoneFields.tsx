@@ -1,10 +1,12 @@
 import React from "react";
-import { View } from "react-native";
+import { Text, View } from "react-native";
 import { fromUnit, toUnit, type SetDone, type WeightUnit } from "@sendtally/core/hang";
+import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
 import { TimeField } from "../../../components/TimeField";
 import { useFieldOrder } from "../../../components/useFieldOrder";
 import { NumberField } from "../components/NumberField";
+import { type } from "../type";
 
 export type SetDoneFieldsProps = {
   set: SetDone;
@@ -16,11 +18,21 @@ export type SetDoneFieldsProps = {
   onChange: (set: SetDone) => void;
 };
 
-const cell = { flexGrow: 1, minWidth: 64 } as const;
+function Joiner({ mark }: { mark: string }): React.ReactElement {
+  return (
+    <Text
+      accessibilityElementsHidden
+      importantForAccessibility="no"
+      style={[type.mono, { fontSize: 13, color: colors.textMuted }]}
+    >
+      {mark}
+    </Text>
+  );
+}
 
 /**
- * What one set did, editable: its reps, weight and hold, whichever the set has or lifting asks.
- * A negative weight is assistance.
+ * What one set did, editable on one line in its target's order: reps × weight · hold, whichever
+ * the set has or lifting asks. A negative weight is assistance.
  */
 export function SetDoneFields({
   set,
@@ -37,49 +49,46 @@ export function SetDoneFields({
     ...(weight ? ["weight"] : []),
     ...(hold ? ["hold"] : []),
   ]);
-  const named = (name: string): { label: string; accessibilityLabel: string } => ({
+  const named = (name: string): { label: string; accessibilityLabel: string; compact: true } => ({
     label: name,
     accessibilityLabel: `${label} · ${name}`,
+    compact: true,
   });
   return (
-    <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}>
+    <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
       {reps && (
-        <View style={cell}>
-          <NumberField
-            {...slot("reps")}
-            {...named(t("workouts.dose.reps"))}
-            value={set.reps ?? null}
-            onChange={(n) => onChange({ ...set, reps: n })}
-            step={1}
-            max={1000}
-          />
-        </View>
+        <NumberField
+          {...slot("reps")}
+          {...named(t("workouts.dose.reps"))}
+          value={set.reps ?? null}
+          onChange={(n) => onChange({ ...set, reps: n })}
+          step={1}
+          max={1000}
+        />
       )}
+      {reps && weight && <Joiner mark="×" />}
       {weight && (
-        <View style={[cell, { minWidth: 88 }]}>
-          <NumberField
-            {...slot("weight")}
-            {...named(t("hang.weight"))}
-            value={set.weightKg === undefined ? null : toUnit(set.weightKg, unit)}
-            onChange={(n) => onChange({ ...set, weightKg: fromUnit(n, unit) })}
-            unit={unit}
-            step={unit === "lb" ? 5 : 2.5}
-            min={toUnit(-200, unit)}
-            max={toUnit(1000, unit)}
-            decimals
-            signed
-          />
-        </View>
+        <NumberField
+          {...slot("weight")}
+          {...named(t("hang.weight"))}
+          value={set.weightKg === undefined ? null : toUnit(set.weightKg, unit)}
+          onChange={(n) => onChange({ ...set, weightKg: fromUnit(n, unit) })}
+          unit={unit}
+          step={unit === "lb" ? 5 : 2.5}
+          min={toUnit(-200, unit)}
+          max={toUnit(1000, unit)}
+          decimals
+          signed
+        />
       )}
+      {(reps || weight) && hold && <Joiner mark="·" />}
       {hold && (
-        <View style={[cell, { minWidth: 108 }]}>
-          <TimeField
-            {...slot("hold")}
-            {...named(t("workouts.dose.hold"))}
-            value={set.onS ?? 0}
-            onChange={(onS) => onChange({ ...set, onS })}
-          />
-        </View>
+        <TimeField
+          {...slot("hold")}
+          {...named(t("workouts.dose.hold"))}
+          value={set.onS ?? 0}
+          onChange={(onS) => onChange({ ...set, onS })}
+        />
       )}
     </View>
   );

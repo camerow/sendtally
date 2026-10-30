@@ -5,6 +5,6 @@ export const SET_COLUMNS = {
   row: { flexDirection: "row", alignItems: "center", gap: 8 },
   set: { width: 34, paddingLeft: 8 },
   target: { flex: 1 },
-  done: { flex: 1.3 },
+  done: { flexShrink: 0 },
   tick: { width: 44 },
 } satisfies Record<string, ViewStyle>;

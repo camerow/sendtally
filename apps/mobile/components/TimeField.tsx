@@ -5,6 +5,7 @@ import type { FieldSlot } from "./useFieldOrder";
 
 export type TimeFieldProps = FieldSlot & {
   label: string;
+  compact?: boolean;
   accessibilityLabel?: string;
   /** Seconds. */
   value: number;

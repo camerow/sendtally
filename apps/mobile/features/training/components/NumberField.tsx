@@ -6,7 +6,7 @@ import type { FieldSlot } from "../../../components/useFieldOrder";
 
 export type NumberFieldProps = FieldSlot &
   NumberLimits &
-  Pick<KeypadFieldProps, "label" | "accessibilityLabel" | "before" | "after"> & {
+  Pick<KeypadFieldProps, "label" | "compact" | "accessibilityLabel" | "before" | "after"> & {
     /** Null reads as the placeholder, and the keypad opens on zero. */
     value: number | null;
     /** Called on Done, Next or a tap outside, only when it changed. */
