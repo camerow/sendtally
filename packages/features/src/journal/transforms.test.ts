@@ -255,6 +255,12 @@ describe("blocks in the log", () => {
     expect(logCountLabel(items)).toBe("2 sessions");
   });
 
+  it("shows in the training log only", () => {
+    const items = logItems([linked], [], [], [], training);
+    expect(logSegmentItems(items, "climbing").map((i) => i.key)).toEqual(["session:a"]);
+    expect(logSegmentItems(items, "training").map((i) => i.key)).toEqual(["block:b1"]);
+  });
+
   it("shows with sessions but not in the journal, and stays out of trips", () => {
     const items = logItems([linked], [], [], [], training);
     expect(logScopeItems(items, "sessions").map((i) => i.key)).toContain("block:b1");
