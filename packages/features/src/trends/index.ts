@@ -5,9 +5,11 @@ export { trendsVM } from "./overview";
 export { enduranceVM } from "./endurance";
 export { daysVM } from "./days";
 export {
+  gradeBins,
   gradeTap,
   isRefined,
   placeLabel,
+  presetsOf,
   refineSummary,
   resetFilter,
   scopeLabel,
