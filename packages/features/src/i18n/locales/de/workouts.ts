@@ -1,5 +1,7 @@
 export const workouts = {
   "workouts.saveAsWorkout": "Als Workout speichern",
+  "workouts.logIt": "Eintragen",
+  "workouts.logItWithoutTimer": "Ohne Timer eintragen",
   "workouts.saveFailed":
     "Das Workout wurde nicht gespeichert. Prüf deine Verbindung und versuch es noch mal.",
   "workouts.search": "Workouts suchen",

@@ -27,6 +27,7 @@ import { ProtocolPanel } from "../workout-detail/ProtocolPanel";
 import { AddToPlanFooter } from "./AddToPlanFooter";
 import { BodyPreview } from "./BodyPreview";
 import { LibraryIntro } from "./LibraryIntro";
+import { LogItButton } from "./LogItButton";
 import { StartButton } from "./StartButton";
 import { useWorkoutDetailActions } from "./useWorkoutDetailActions";
 import { WorkoutOverTime } from "./WorkoutOverTime";
@@ -89,7 +90,16 @@ function Detail({ workout, use, grip, adding }: DetailProps): React.ReactElement
       action={adding === null && <DetailActions {...detailActions} />}
       footer={
         adding === null ? (
-          <AddToPlanFooter workoutId={workout.id}>{start}</AddToPlanFooter>
+          <View style={{ gap: 8 }}>
+            <AddToPlanFooter workoutId={workout.id}>{start}</AddToPlanFooter>
+            <LogItButton
+              workout={workout}
+              date={today}
+              label={t("workouts.logItWithoutTimer")}
+              gripId={hang === undefined ? undefined : gripId}
+              height={48}
+            />
+          </View>
         ) : (
           <Button
             label={t("plan.addToPlan")}

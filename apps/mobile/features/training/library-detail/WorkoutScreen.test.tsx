@@ -133,6 +133,18 @@ describe("Other workouts", () => {
       params: { workoutId: "legs" },
     });
   });
+
+  it("logs it without the timer on its review, every set as planned", async () => {
+    await renderWithHang(<WorkoutScreen id="legs" />, hangData(), { workouts: [legs] });
+    await fireEvent.press(screen.getByText("Log it without the timer"));
+    expect(router.push).toHaveBeenCalledWith({
+      pathname: "/activity/new",
+      params: expect.objectContaining({ kind: "strength", workoutId: "legs", session: "0" }),
+    });
+    expect(router.push).toHaveBeenCalledWith(
+      expect.not.objectContaining({ params: expect.objectContaining({ done: expect.anything() }) })
+    );
+  });
 });
 
 describe("Its length", () => {

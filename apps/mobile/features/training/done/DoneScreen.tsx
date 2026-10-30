@@ -12,7 +12,7 @@ import {
   type HangWorkout,
   type SetDone,
 } from "@sendtally/core/hang";
-import { loadLabel } from "@sendtally/features/hang";
+import { loadLabel, type HangModel } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import { Button } from "../components/Button";
 import { EffortField } from "../components/EffortField";
@@ -78,7 +78,7 @@ function Done({
         }),
       ],
     });
-    clearLiveRun();
+    if (!params.logIt) clearLiveRun();
     openStats("training");
   };
 
@@ -127,7 +127,7 @@ function Done({
                 body: t("hang.discardRunBody"),
                 action: t("hang.discard"),
                 onConfirm: () => {
-                  clearLiveRun();
+                  if (!params.logIt) clearLiveRun();
                   router.back();
                 },
               })
@@ -140,7 +140,35 @@ function Done({
   );
 }
 
+/** Logged without the timer: every item done as planned, on the setup it would start with. */
+function loggedParams(
+  params: DoneParams,
+  items: readonly [PlannedItem, ...PlannedItem[]],
+  model: HangModel
+): DoneParams {
+  const [first, ...rest] = items;
+  return {
+    ...params,
+    ...model.setup(first.workout, params.gripId, first.dose),
+    result: {
+      ended: false,
+      setsDone: first.workout.sets,
+      pct: 100,
+      work: plannedWork(first.workout),
+      misses: 0,
+      seconds: 0,
+    },
+    more: rest.map((i) => ({
+      ...model.setup(i.workout, i.workout.grip, i.dose),
+      setsDone: i.workout.sets,
+    })),
+  };
+}
+
 export function DoneScreen({ params }: { params: DoneParams }): React.ReactElement | null {
+  const { model } = useHangData();
   const planned = usePlannedRun(params.workoutId, params.link, params.session);
-  return planned === undefined ? null : <Done items={planned.items} params={params} />;
+  if (planned === undefined) return null;
+  const done = params.logIt ? loggedParams(params, planned.items, model) : params;
+  return <Done items={planned.items} params={done} />;
 }

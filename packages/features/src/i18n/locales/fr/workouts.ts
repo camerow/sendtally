@@ -1,5 +1,7 @@
 export const workouts = {
   "workouts.saveAsWorkout": "Enregistrer comme séance",
+  "workouts.logIt": "Noter",
+  "workouts.logItWithoutTimer": "Noter sans le minuteur",
   "workouts.saveFailed": "La séance n'a pas été enregistrée. Vérifie ta connexion et réessaie.",
   "workouts.search": "Chercher une séance",
   "workouts.mine": "Les miennes",

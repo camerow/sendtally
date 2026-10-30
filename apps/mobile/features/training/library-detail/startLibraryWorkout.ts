@@ -10,7 +10,7 @@ import { activityFormPath, runPath, type RunPlayer } from "../data/workoutRunPar
 import { startIntervals } from "../intervals/intervalsParams";
 import { startLive } from "../../live-session/startLive";
 import { startLiveSession } from "../../live-session/startLiveSession";
-import { startWorkout } from "../timer/startWorkout";
+import { startWorkout, timerParams } from "../timer/startWorkout";
 
 /**
  * One run of a workout: the plan it is in, if any, which session of the workout it is,
@@ -61,4 +61,34 @@ export function startLibraryWorkout(
   startLive(w.name, () =>
     router.push(runPath(player, { ...run, exerciseRestS: w.exerciseRestS, items: [...items] }))
   );
+}
+
+/**
+ * Logs a workout without running it: its review, with every set ticked at the planned dose.
+ * A hangboard workout logs on `gripId` when given, its first item's grip otherwise.
+ */
+export function logLibraryWorkout(
+  w: LibraryWorkout,
+  date: CalendarDate,
+  { link, session, items }: PlannedItems,
+  gripId?: string
+): void {
+  const kind = activityKindOf(w.kind);
+  if (kind === null) {
+    const grip = gripId ?? items[0]?.exercise ?? "";
+    router.push({
+      pathname: "/workout/done",
+      params: { ...timerParams(w.id, grip, session, link), logIt: "1" },
+    });
+    return;
+  }
+  const path = activityFormPath({
+    kind,
+    title: w.name,
+    date,
+    workoutId: w.id,
+    link,
+    minutes: w.minutes,
+  });
+  router.push({ ...path, params: { ...path.params, session: String(session) } });
 }

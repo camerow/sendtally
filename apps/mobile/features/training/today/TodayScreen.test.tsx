@@ -141,7 +141,6 @@ describe("Today", () => {
     await renderWithHang(<TodayScreen />, hangData(), { plan: plan("legs"), workouts: [legs] });
     expect(screen.getByText("Up today · Strength")).toBeTruthy();
     expect(screen.getByText("5 × 5")).toBeTruthy();
-    expect(screen.queryByText("Log it")).toBeNull();
     await fireEvent.press(screen.getByText("Start"));
     expect(router.push).toHaveBeenCalledWith({
       pathname: "/workout/sets",
@@ -155,6 +154,15 @@ describe("Today", () => {
         items: JSON.stringify([{ exercise: "Back squat", dose: { sets: 5, reps: 5 } }]),
         membershipId: "m1",
       },
+    });
+  });
+
+  it("logs today's workout without the timer, against the plan", async () => {
+    await renderWithHang(<TodayScreen />, hangData(), { plan: plan("legs"), workouts: [legs] });
+    await fireEvent.press(screen.getByText("Log it"));
+    expect(router.push).toHaveBeenCalledWith({
+      pathname: "/activity/new",
+      params: expect.objectContaining({ workoutId: "legs", membershipId: "m1", session: "0" }),
     });
   });
 

@@ -1,15 +1,14 @@
 import React from "react";
 import type { StyleProp, ViewStyle } from "react-native";
-import { sessionItems, type CalendarDate } from "@sendtally/core/hang";
+import type { CalendarDate } from "@sendtally/core/hang";
 import { eachSideOf, tallyMeasuresOf } from "@sendtally/features/exercises";
 import { t } from "@sendtally/features/i18n";
 import { useExercises } from "@sendtally/features/statistics";
 import type { LibraryWorkout } from "@sendtally/features/workouts";
 import { useApi } from "../../../lib/api";
 import { Button } from "../components/Button";
-import { NO_PLAN } from "../data/planLinkParams";
-import { useNextSession } from "../library/useLibrary";
 import { startLibraryWorkout, type PlannedItems } from "./startLibraryWorkout";
+import { usePlannedItems } from "./usePlannedItems";
 
 export type StartButtonProps = {
   workout: LibraryWorkout;
@@ -28,16 +27,11 @@ export function StartButton({
   height,
   style,
 }: StartButtonProps): React.ReactElement {
-  const session = useNextSession(workout.id);
   const exercises = useExercises(useApi()).state;
   const mine = exercises.status === "ready" ? exercises.data : [];
   const eachSide = eachSideOf(mine);
   const tally = tallyMeasuresOf(mine, workout.kind);
-  const run = planned ?? {
-    link: { ...NO_PLAN, focus: workout.focus },
-    session,
-    items: sessionItems(workout.items, session),
-  };
+  const run = usePlannedItems(workout, planned);
   const climbing = workout.kind === "climbing" && run.items.length === 0;
   return (
     <Button
