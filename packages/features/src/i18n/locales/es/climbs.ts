@@ -1,4 +1,5 @@
 export const climbs = {
+  "climbs.addClimbHint": "Una vía en su día, sin sesión",
   "climbs.thisWeek": "Esta semana",
   "climbs.weekCount_one": "{count} semana",
   "climbs.weekCount_other": "{count} semanas",
@@ -21,7 +22,6 @@ export const climbs = {
   "climbs.dayCount_one": "{count} día",
   "climbs.dayCount_other": "{count} días",
   "climbs.notFound": "Escalada no encontrada.",
-  "climbs.title": "Escaladas",
   "climbs.loadFailed": "No se pudieron cargar tus escaladas. Desliza para reintentar.",
   "climbs.hardestSend": "Encadenamiento más duro",
   "climbs.discipline": "Disciplina",

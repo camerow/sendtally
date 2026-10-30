@@ -1,4 +1,8 @@
 export const training = {
+  "training.logTrainingAction": "Noter un entraînement",
+  "training.logEmptyTitle": "Pas encore d’entraînement",
+  "training.logEmptyBody":
+    "Les séances, les suspensions et le reste de ton entraînement arrivent ici, du plus récent au plus ancien.",
   "training.today": "Aujourd'hui",
   "training.train": "Entraînement",
   "training.statistics": "Statistiques",

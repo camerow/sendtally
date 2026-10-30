@@ -176,7 +176,7 @@ describe("climbLog", () => {
     } as unknown as SessionWithClimbs;
     const vm = climbingSessionVM(bare, climbs);
     expect(vm.named).toBe(false);
-    expect(vm.climbs.map((r) => r.meta)).toEqual(["Stanage Plantation · 4 Sep · 3 tries"]);
+    expect(vm.climbs.map((r) => r.meta)).toEqual(["Stanage Plantation · 4 Sep"]);
     expect(climbingSessionVM({ ...bare, climbs: [] }, climbs).named).toBe(true);
   });
 

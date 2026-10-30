@@ -6,7 +6,7 @@ test.each([
   ["https://sendtally.com/app/sessions/manual-abc", "/session/manual-abc"],
   ["https://sendtally.com/app/sessions/manual-abc/edit?x=1", "/session/manual-abc/edit"],
   ["https://sendtally.com/app/sessions/new", "/session/new"],
-  ["https://sendtally.com/app/projects", "/(tabs)/climbs"],
+  ["https://sendtally.com/app/projects", "/(tabs)/sessions?segment=climbing"],
   ["https://sendtally.com/app/projects/the-slug/", "/climb/the-slug"],
   ["https://sendtally.com/app/trends", "/(tabs)/stats?segment=training"],
   ["https://sendtally.com/app/trends/days", "/(tabs)/stats?segment=training"],

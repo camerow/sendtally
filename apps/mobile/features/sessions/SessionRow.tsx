@@ -9,7 +9,6 @@ import { StravaMark } from "../../components/StravaMark";
 import { pressRow } from "../../lib/press";
 import { RowTags, ROW_TAGS_HEIGHT } from "./RowTags";
 import { DayColumn } from "./SessionRowParts";
-import { CategoryMark } from "../training/library/CategoryMark";
 
 export const SESSION_ROW_HEIGHT = 59;
 
@@ -30,8 +29,6 @@ export type SessionRowProps = {
   inset?: boolean;
   /** The hairline under the row, dropped on the last row of a group that has its own edge. */
   divider?: boolean;
-  /** Shows the climbing mark, so it lines up with training in the log. */
-  marked?: boolean;
   /** "Winter base · W4" when it ran one of a block's workouts. */
   blockTag?: string;
 };
@@ -43,7 +40,6 @@ export function SessionRow({
   trailing,
   inset = false,
   divider = true,
-  marked = false,
   blockTag,
 }: SessionRowProps): React.ReactElement {
   const { weekday, day } = sessionDay(session);
@@ -75,7 +71,6 @@ export function SessionRow({
       })}
     >
       <DayColumn weekday={weekday} day={day} />
-      {marked && <CategoryMark kind="climbing" size={28} />}
       <View style={{ flex: 1, gap: 3 }}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
           <Text numberOfLines={1} style={{ flexShrink: 1, ...rowTitle }}>

@@ -1,4 +1,5 @@
 export const climbs = {
+  "climbs.addClimbHint": "Une voie à sa date, sans séance",
   "climbs.thisWeek": "Cette semaine",
   "climbs.weekCount_one": "{count} semaine",
   "climbs.weekCount_other": "{count} semaines",
@@ -19,7 +20,6 @@ export const climbs = {
   "climbs.dayCount_one": "{count} jour",
   "climbs.dayCount_other": "{count} jours",
   "climbs.notFound": "Voie introuvable.",
-  "climbs.title": "Voies",
   "climbs.loadFailed": "Impossible de charger tes voies. Tire pour réessayer.",
   "climbs.hardestSend": "Enchaînement le plus dur",
   "climbs.discipline": "Discipline",
