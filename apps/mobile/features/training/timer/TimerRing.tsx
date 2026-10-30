@@ -21,6 +21,9 @@ const STROKE = 14;
 const RADIUS = 126;
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 
+/** Sized by length to fit inside the ring: "6" at full size, "10:00" smaller. */
+const bigSize = (big: string): number => (big.length <= 2 ? 92 : big.length <= 4 ? 72 : 58);
+
 export type TimerRingProps = {
   progress: SharedValue<number>;
   color: string;
@@ -98,9 +101,8 @@ export function TimerRing({
             entering={FadeIn.duration(220)}
             style={[
               type.monoBold,
-              { fontSize: 92, lineHeight: 100, letterSpacing: -4, color: ON_DARK },
+              { fontSize: bigSize(big), lineHeight: 100, letterSpacing: -4, color: ON_DARK },
             ]}
-            adjustsFontSizeToFit
             numberOfLines={1}
           >
             {big}
