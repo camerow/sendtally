@@ -35,9 +35,22 @@ const partial = {
   link: { membershipId: "m1", week: 3, focus: null },
   session: 0,
   more: [],
+  logIt: false,
 };
 
 describe("Session done", () => {
+  it("logs a workout without the timer as every set done at the planned dose", async () => {
+    const { actions } = await renderWithHang(
+      <DoneScreen
+        params={{ ...partial, link: { membershipId: null, week: null, focus: null }, logIt: true }}
+      />
+    );
+    await fireEvent.press(screen.getByText("Log session"));
+    const saved = jest.mocked(actions.saveSession).mock.calls[0]?.[0];
+    expect(saved).toMatchObject({ workoutId: "rep73", gripId: "half", pct: 100, misses: 0 });
+    expect(saved?.done[0]?.sets).toHaveLength(6);
+  });
+
   it("explains a partial and logs it with effort, a protocol snapshot and the sets done", async () => {
     const { actions } = await renderWithHang(<DoneScreen params={partial} />);
     expect(screen.getByText("Ended early · Half crimp")).toBeTruthy();
@@ -112,6 +125,7 @@ describe("Session done", () => {
           link: { membershipId: null, week: null, focus: null },
           session: 0,
           more: [{ edgeMm: 15, loadKg: 0, setsDone: 2 }],
+          logIt: false,
         }}
       />,
       hangData(),

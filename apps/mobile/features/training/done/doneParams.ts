@@ -13,6 +13,8 @@ export type DoneParams = {
   session: number;
   /** Each item after the first: its setup and the sets it finished. */
   more: ItemRun[];
+  /** Logged without the timer, every set as planned. */
+  logIt: boolean;
 };
 
 export type ItemRun = HangSetup & { setsDone: number };
@@ -29,7 +31,7 @@ export function donePath({
   link,
   session,
   more,
-}: DoneParams): Href {
+}: Omit<DoneParams, "logIt">): Href {
   return {
     pathname: "/workout/done",
     params: {
@@ -71,6 +73,7 @@ export function readDoneParams(p: RawParams): DoneParams {
     },
     link: readPlanLink(p),
     session: readSession(p),
+    logIt: str(p.logIt) === "1",
     more: str(p.more)
       .split(",")
       .filter(Boolean)

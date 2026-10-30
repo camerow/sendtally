@@ -12,6 +12,7 @@ import { Button } from "../components/Button";
 import { Label } from "../components/Label";
 import { Title } from "../components/Title";
 import { useHangData } from "../data/HangDataContext";
+import { LogItButton } from "../library-detail/LogItButton";
 import { StartButton } from "../library-detail/StartButton";
 import { type } from "../type";
 import { DayMark } from "./DayMark";
@@ -24,7 +25,7 @@ export type OccurrenceCardProps = { occurrence: Occurrence; workout: LibraryWork
 export function OccurrenceCard({ occurrence, workout }: OccurrenceCardProps): React.ReactElement {
   const { model } = useHangData();
   const o = occurrence;
-  const link = occurrenceLink(o);
+  const planned = { link: occurrenceLink(o), items: o.items, session: o.session };
   const minutes = workoutMinutes(workout);
   const run = useLiveRun();
   const running = run?.workoutId === workout.id ? run : null;
@@ -62,12 +63,23 @@ export function OccurrenceCard({ occurrence, workout }: OccurrenceCardProps): Re
         </View>
       </Pressable>
       {running === null ? (
-        <StartButton
-          workout={workout}
-          date={o.date}
-          planned={{ link, items: o.items, session: o.session }}
-          height={50}
-        />
+        <View style={{ flexDirection: "row", gap: 10 }}>
+          <StartButton
+            workout={workout}
+            date={o.date}
+            planned={planned}
+            height={50}
+            style={{ flex: 1 }}
+          />
+          <LogItButton
+            workout={workout}
+            date={o.date}
+            label={t("workouts.logIt")}
+            planned={planned}
+            height={50}
+            style={{ flex: 1 }}
+          />
+        </View>
       ) : (
         <Button
           label={t("hang.resume")}
