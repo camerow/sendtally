@@ -11,7 +11,6 @@ export type ButtonVariant =
   | "gold"
   | "goldText"
   | "outline"
-  | "dashed"
   | "danger"
   | "link"
   | "plain"
@@ -34,10 +33,6 @@ const LOOKS: Record<ButtonVariant, { box: ViewStyle; ink: string }> = {
   gold: { box: { backgroundColor: colors.gold }, ink: colors.gunmetal },
   goldText: { box: { paddingHorizontal: 8 }, ink: colors.gold },
   outline: { box: { borderWidth: 1, borderColor: colors.lineOnLightStrong }, ink: colors.gunmetal },
-  dashed: {
-    box: { borderWidth: 1.5, borderStyle: "dashed", borderColor: colors.gunmetal },
-    ink: colors.gunmetal,
-  },
   danger: { box: {}, ink: colors.watermelonInk },
   link: { box: {}, ink: colors.azureInk },
   plain: { box: {}, ink: colors.gunmetal },

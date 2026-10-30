@@ -68,7 +68,7 @@ export function AddPlanScreen({
         <Button
           label={t("workouts.newWorkout")}
           onPress={() => router.push({ pathname: "/workout/edit", params: { kind } })}
-          variant="dashed"
+          variant="primary"
           icon="plus"
           height={50}
         />

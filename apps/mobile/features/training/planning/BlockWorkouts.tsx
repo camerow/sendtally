@@ -38,7 +38,7 @@ export function BlockWorkouts({ block, highlight }: BlockWorkoutsProps): React.R
       <Button
         label={t("plan.addWorkout")}
         onPress={() => setAdding(true)}
-        variant="dashed"
+        variant="primary"
         icon="plus"
         height={50}
       />
