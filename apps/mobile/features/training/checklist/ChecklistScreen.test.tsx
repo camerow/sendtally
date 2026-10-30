@@ -57,7 +57,7 @@ describe("Checklist player", () => {
           { item: 1, exercise: "Wrist circles", sets: [{}] },
         ]),
         startTime: "07:00",
-        skipped: "[1]",
+        off: JSON.stringify(["1:0"]),
         live: "1",
       },
     });

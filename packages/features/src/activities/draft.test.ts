@@ -48,15 +48,15 @@ describe("activity drafts", () => {
     expect(activityFromDraft("a1", blank).done).toEqual([]);
   });
 
-  it("leaves out the items a checklist left unticked", () => {
+  it("leaves out the sets a player did not finish", () => {
     const done = [
       { item: 0, exercise: "Cat-cow", sets: [{}] },
       { item: 1, exercise: "Pigeon", sets: [{ onS: 60 }] },
     ];
-    const draft = newActivityDraft({ done: JSON.stringify(done), skipped: "[1]" }, "2026-10-22");
-    expect(draft.skipped).toEqual([1]);
+    const draft = newActivityDraft({ done: JSON.stringify(done), off: '["1:0"]' }, "2026-10-22");
+    expect(draft.off).toEqual(["1:0"]);
     expect(activityFromDraft("a1", draft).done).toEqual([done[0]]);
-    expect(newActivityDraft({ skipped: "[" }, "2026-10-22").skipped).toEqual([]);
+    expect(newActivityDraft({ off: "[" }, "2026-10-22").off).toEqual([]);
   });
 
   it("keeps a length typed in seconds as whole minutes, one to a day", () => {

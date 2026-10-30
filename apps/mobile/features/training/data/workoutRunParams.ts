@@ -81,15 +81,18 @@ export function readWorkoutRun(p: RawParams): WorkoutRun | null {
   };
 }
 
+/** What the activity a run logs is filed under. */
+export type RunFiling = Pick<WorkoutRun, "kind" | "title" | "link"> & { workoutId: string | null };
+
 /**
- * The activity form for a workout, with what was done in place of what it prescribes when given,
- * and the items of it a checklist left unticked.
+ * The review for a workout, with what was done in place of what it prescribes when given, and
+ * the sets of it a player did not finish.
  */
 export function activityFormPath(
-  r: Omit<WorkoutRun, "items" | "exerciseRestS">,
+  r: RunFiling & Pick<WorkoutRun, "date" | "minutes">,
   done?: readonly ItemDone[],
   startTime?: string,
-  skipped: readonly number[] = []
+  off: readonly string[] = []
 ): { pathname: "/activity/new"; params: Record<string, string> } {
   return {
     pathname: "/activity/new",
@@ -97,28 +100,28 @@ export function activityFormPath(
       kind: r.kind,
       title: r.title,
       date: r.date,
-      workoutId: r.workoutId,
+      ...(r.workoutId === null ? {} : { workoutId: r.workoutId }),
       ...minutesParam(r.minutes),
       ...planLinkParams(r.link),
       ...(done === undefined ? {} : { done: JSON.stringify(done) }),
       ...(startTime === undefined ? {} : { startTime }),
-      ...(skipped.length === 0 ? {} : { skipped: JSON.stringify(skipped) }),
+      ...(off.length === 0 ? {} : { off: JSON.stringify(off) }),
     },
   };
 }
 
 /**
- * Hands a finished run to the activity form, in place of the player, to take an effort and
- * save, timed by the player's clock from its start.
+ * Hands a finished run to its review, in place of the player, to check its sets, take an effort
+ * and save, timed by the player's clock from its start.
  */
 export function logRun(
-  r: WorkoutRun,
+  r: RunFiling,
   done: readonly ItemDone[],
   startedAt: number,
-  skipped: readonly number[] = []
+  off: readonly string[] = []
 ): void {
   const minutes = Math.max(1, Math.round((Date.now() - startedAt) / 60_000));
   const date = today(new Date(startedAt));
-  const path = activityFormPath({ ...r, date, minutes }, done, startTimeOf(startedAt), skipped);
+  const path = activityFormPath({ ...r, date, minutes }, done, startTimeOf(startedAt), off);
   router.replace({ ...path, params: { ...path.params, live: "1" } });
 }

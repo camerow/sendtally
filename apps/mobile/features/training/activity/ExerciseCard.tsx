@@ -4,16 +4,22 @@ import type { ItemDone, WeightUnit } from "@sendtally/core/hang";
 import { colors, radius } from "@sendtally/design/tokens";
 import { setChip } from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
-import { pressRow } from "../../../lib/press";
+import { press } from "../../../lib/press";
 import { Button } from "../components/Button";
 import { HangIcon } from "../components/HangIcon";
 import { type } from "../type";
+import { SetChip } from "./SetChip";
 
 export type ExerciseCardProps = {
   done: ItemDone;
   unit: WeightUnit;
-  /** Its sets to edit when open; folded, it reads as chips and opens on a tap. */
+  /** The kind's colour, on the mark beside its name. */
+  color: string;
+  /** Its sets to edit when open; folded, it reads as chips to tick, and the pencil opens it. */
   editor: React.ReactNode | null;
+  isOn: (set: number) => boolean;
+  shortOf: (set: number) => string | null;
+  onToggle: (set: number) => void;
   onOpen: () => void;
   onClose: () => void;
 };
@@ -22,18 +28,22 @@ const card = {
   gap: 8,
   paddingVertical: 12,
   paddingHorizontal: 14,
-  borderRadius: radius.card,
+  borderRadius: radius.cardLg,
   borderWidth: 1,
   borderColor: colors.lineOnLightStrong,
 } as const;
 
-const name = [type.bodyBold, { flex: 1, fontSize: 16, color: colors.gunmetal }];
+const name = [type.bodyBold, { flex: 1, fontSize: 15.5, color: colors.gunmetal }];
 
 /** One exercise done: its name, how many sets and in what unit, and a chip per set. */
 export function ExerciseCard({
   done,
   unit,
+  color,
   editor,
+  isOn,
+  shortOf,
+  onToggle,
   onOpen,
   onClose,
 }: ExerciseCardProps): React.ReactElement {
@@ -51,37 +61,33 @@ export function ExerciseCard({
   const weighted = done.sets.some((s) => s.weightKg);
   const count = t("activities.setCount", { count: done.sets.length });
   return (
-    <Pressable
-      onPress={onOpen}
-      accessibilityRole="button"
-      accessibilityLabel={t("activities.editSets", { exercise: done.exercise })}
-      style={pressRow(card)}
-    >
-      <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+    <View style={card}>
+      <Pressable
+        onPress={onOpen}
+        accessibilityRole="button"
+        accessibilityLabel={t("activities.editSets", { exercise: done.exercise })}
+        hitSlop={{ top: 8, bottom: 8 }}
+        style={press({ flexDirection: "row", alignItems: "center", gap: 8, minHeight: 28 })}
+      >
+        <View style={{ width: 10, height: 10, borderRadius: 3, backgroundColor: color }} />
         <Text style={name}>{done.exercise}</Text>
         <Text style={[type.mono, { fontSize: 12, color: colors.textSecondary }]}>
           {weighted ? `${count} · ${unit}` : count}
         </Text>
         <HangIcon name="edit" color={colors.textSecondary} size={16} strokeWidth={1.9} />
-      </View>
+      </Pressable>
       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}>
         {done.sets.map((set, i) => (
-          <View
+          <SetChip
             key={i}
-            style={{
-              height: 28,
-              paddingHorizontal: 9,
-              borderRadius: 8,
-              justifyContent: "center",
-              backgroundColor: colors.surfaceSoft,
-            }}
-          >
-            <Text style={[type.monoBold, { fontSize: 12.5, color: colors.gunmetal }]}>
-              {setChip(set, unit) || "✓"}
-            </Text>
-          </View>
+            text={setChip(set, unit)}
+            short={shortOf(i)}
+            on={isOn(i)}
+            label={t("activities.setOf", { exercise: done.exercise, n: i + 1 })}
+            onToggle={() => onToggle(i)}
+          />
         ))}
       </View>
-    </Pressable>
+    </View>
   );
 }

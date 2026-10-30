@@ -4,15 +4,17 @@ import { Text, View } from "react-native";
 import {
   currentPhase,
   isWork,
+  protocolDose,
   protocolOf,
-  resultOf,
-  setsDoneByItem,
+  setsHeld,
   startWorkoutRun,
   type HangPhase,
   type HangSetup,
   type PlanLink,
   type Run,
+  type SetDone,
 } from "@sendtally/core/hang";
+import { setKeyOf } from "@sendtally/features/activities";
 import { loadLabel, setupLabel } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import { ON_DARK_SOFT } from "../components/onDark";
@@ -94,20 +96,30 @@ function Timer({
   React.useEffect(() => {
     if (run.finished === null || sent.current) return;
     sent.current = true;
-    const [first = 0, ...rest] = setsDoneByItem(
-      run,
-      items.map((i) => i.workout.sets)
-    );
-    const [setup0 = { edgeMm: 0, loadKg: 0 }, ...more] = setups;
+    const doses = items.map((i) => protocolDose(i.workout));
+    const held = setsHeld(run, doses);
+    const planned = (item: number): SetDone => {
+      const { sets: _, ...dose } = doses[item] ?? { sets: 0 };
+      return dose;
+    };
     router.replace(
       donePath({
         workoutId: workout.id,
         gripId: grips[0] ?? workout.grip,
-        ...setup0,
-        result: { ...resultOf(run), setsDone: first },
         link,
         session,
-        more: more.map((s, k) => ({ ...s, setsDone: rest[k] ?? 0 })),
+        run: {
+          done: held.map((sets, item) => ({
+            item,
+            exercise: grips[item] ?? "",
+            sets: sets.map((s) => s ?? planned(item)),
+          })),
+          off: held.flatMap((sets, item) =>
+            sets.flatMap((s, set) => (s === null ? [setKeyOf(item, set)] : []))
+          ),
+          setups,
+          startedAt: run.startedAt,
+        },
       })
     );
   }, [run, items, workout, grips, setups, link, session]);

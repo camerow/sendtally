@@ -37,7 +37,6 @@ import {
   itemDone,
   restAfterTick,
   setKey,
-  tickedDone,
   withPrevious,
   type SetAt,
 } from "./setsRun";
@@ -123,10 +122,9 @@ export function SetsScreen({
   const finish = (): void =>
     logRun(
       run,
-      tickedDone(shown, ticked).map((d) =>
-        tallyOf(d.item) === null ? d : { ...d, sets: climbedSets(d.item) }
-      ),
-      startedAt
+      shown.map((d) => (tallyOf(d.item) === null ? d : { ...d, sets: climbedSets(d.item) })),
+      startedAt,
+      sets.map(setKey).filter((key) => !ticked.has(key))
     );
   const ending = React.useRef(end);
   const loaded = exercises.status !== "loading" && activities.status !== "loading";

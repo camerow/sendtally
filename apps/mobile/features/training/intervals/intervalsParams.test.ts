@@ -8,7 +8,6 @@ const run: IntervalsRun = {
   kind: "strength",
   title: "Kettlebell EMOM",
   date: "2026-10-22",
-  activityId: "a1",
   workoutId: null,
   link: { membershipId: "m1", week: null, focus: null },
   body: {

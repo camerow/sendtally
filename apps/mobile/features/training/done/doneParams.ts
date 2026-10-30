@@ -1,85 +1,58 @@
 import type { Href } from "expo-router";
-import type { HangSetup, PlanLink, RunResult } from "@sendtally/core/hang";
-import { planLinkParams, readPlanLink, readSession } from "../data/planLinkParams";
+import type { HangSetup, ItemDone, PlanLink } from "@sendtally/core/hang";
+import { readPlanLink, readSession } from "../data/planLinkParams";
+import { timerParams } from "../timer/startWorkout";
+
+/** What the timer saw: every set at what it held, those it never held off, and each item's setup. */
+export type TimerRun = { done: ItemDone[]; off: string[]; setups: HangSetup[]; startedAt: number };
 
 export type DoneParams = {
   workoutId: string;
   gripId: string;
-  edgeMm: number;
-  loadKg: number;
-  result: RunResult;
   link: PlanLink;
   /** How many sessions of the workout came before this one. */
   session: number;
-  /** Each item after the first: its setup and the sets it finished. */
-  more: ItemRun[];
-  /** Logged without the timer, every set as planned. */
-  logIt: boolean;
+  /** Null when it is logged without the timer, every set as planned. */
+  run: TimerRun | null;
 };
-
-export type ItemRun = HangSetup & { setsDone: number };
 
 type RawParams = Partial<Record<string, string | string[]>>;
 
-/** The finished run, carried to the Session done screen in its route params. */
-export function donePath({
-  workoutId,
-  gripId,
-  edgeMm,
-  loadKg,
-  result,
-  link,
-  session,
-  more,
-}: Omit<DoneParams, "logIt">): Href {
+/** A hangboard workout's review, carried in its route params. */
+export function donePath({ workoutId, gripId, link, session, run }: DoneParams): Href {
   return {
     pathname: "/workout/done",
     params: {
-      workoutId,
-      gripId,
-      edgeMm: String(edgeMm),
-      loadKg: String(loadKg),
-      ended: result.ended ? "1" : "0",
-      setsDone: String(result.setsDone),
-      pct: String(result.pct),
-      work: String(result.work),
-      misses: String(result.misses),
-      seconds: String(result.seconds),
-      session: String(session),
-      ...planLinkParams(link),
-      ...(more.length === 0
-        ? {}
-        : { more: more.map((m) => `${m.edgeMm}:${m.loadKg}:${m.setsDone}`).join(",") }),
+      ...timerParams(workoutId, gripId, session, link),
+      ...(run === null ? {} : { run: JSON.stringify(run) }),
     },
   };
 }
 
-const num = (v: string | string[] | undefined): number => Number(Array.isArray(v) ? v[0] : v) || 0;
 const str = (v: string | string[] | undefined): string => (Array.isArray(v) ? v[0] : v) ?? "";
+
+function parseRun(text: string): TimerRun | null {
+  try {
+    const run: unknown = JSON.parse(text);
+    if (typeof run !== "object" || run === null) return null;
+    const { done, off, setups, startedAt } = run as Partial<TimerRun>;
+    const valid =
+      Array.isArray(done) &&
+      Array.isArray(off) &&
+      Array.isArray(setups) &&
+      typeof startedAt === "number";
+    return valid ? (run as TimerRun) : null;
+  } catch {
+    return null;
+  }
+}
 
 export function readDoneParams(p: RawParams): DoneParams {
   return {
     workoutId: str(p.workoutId),
     gripId: str(p.gripId),
-    edgeMm: num(p.edgeMm),
-    loadKg: num(p.loadKg),
-    result: {
-      ended: str(p.ended) === "1",
-      setsDone: num(p.setsDone),
-      pct: num(p.pct),
-      work: num(p.work),
-      misses: num(p.misses),
-      seconds: num(p.seconds),
-    },
     link: readPlanLink(p),
     session: readSession(p),
-    logIt: str(p.logIt) === "1",
-    more: str(p.more)
-      .split(",")
-      .filter(Boolean)
-      .map((m) => {
-        const [edgeMm, loadKg, setsDone] = m.split(":");
-        return { edgeMm: num(edgeMm), loadKg: num(loadKg), setsDone: num(setsDone) };
-      }),
+    run: str(p.run) === "" ? null : parseRun(str(p.run)),
   };
 }

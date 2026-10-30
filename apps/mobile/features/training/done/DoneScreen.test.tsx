@@ -6,8 +6,11 @@ import type * as LogSession from "@sendtally/features/log-session";
 import { statsSegmentStorage } from "../../../lib/statsSegmentStorage";
 import { hangData, renderWithHang, TODAY } from "../data/renderWithHang";
 import { DoneScreen } from "./DoneScreen";
+import type { DoneParams } from "./doneParams";
 
-jest.mock("expo-router", () => ({ router: { dismissTo: jest.fn(), push: jest.fn() } }));
+jest.mock("expo-router", () => ({
+  router: { dismissTo: jest.fn(), push: jest.fn(), back: jest.fn() },
+}));
 jest.mock("../../../lib/statsSegmentStorage", () => {
   let value: string | null = null;
   return {
@@ -26,53 +29,50 @@ jest.mock("../../../lib/statsSegmentStorage", () => {
 });
 jest.mock("expo-crypto", () => ({ randomUUID: () => "session-1" }));
 
-const partial = {
+const set = { reps: 6, onS: 7, offS: 3, setRestS: 180 };
+
+const ended: DoneParams = {
   workoutId: "rep73",
   gripId: "half",
-  edgeMm: 20,
-  loadKg: 4,
-  result: { ended: true, setsDone: 2, pct: 30, work: 76, misses: 2, seconds: 312 },
   link: { membershipId: "m1", week: 3, focus: null },
   session: 0,
-  more: [],
-  logIt: false,
+  run: {
+    done: [{ item: 0, exercise: "half", sets: [set, set, set, { ...set, reps: 4 }, set, set] }],
+    off: ["0:4", "0:5"],
+    setups: [{ edgeMm: 20, loadKg: 4 }],
+    startedAt: new Date(`${TODAY}T18:00:00`).getTime(),
+  },
 };
 
-describe("Session done", () => {
-  it("logs a workout without the timer as every set done at the planned dose", async () => {
-    const { actions } = await renderWithHang(
-      <DoneScreen
-        params={{ ...partial, link: { membershipId: null, week: null, focus: null }, logIt: true }}
-      />
-    );
-    await fireEvent.press(screen.getByText("Log session"));
-    const saved = jest.mocked(actions.saveSession).mock.calls[0]?.[0];
-    expect(saved).toMatchObject({ workoutId: "rep73", gripId: "half", pct: 100, misses: 0 });
-    expect(saved?.done[0]?.sets).toHaveLength(6);
-  });
+describe("A hangboard workout's review", () => {
+  it("shows what the timer saw, and saves the sets as they were confirmed", async () => {
+    const { actions } = await renderWithHang(<DoneScreen params={ended} />);
+    expect(screen.getByText("Log workout")).toBeTruthy();
+    expect(screen.getByText("Fingers · Ended at set 4 of 6")).toBeTruthy();
+    expect(
+      screen.getByText(
+        "From the timer: 3 sets full, 1 partial, 2 not done. Fix anything before saving."
+      )
+    ).toBeTruthy();
+    expect(screen.getByText("4 of 6")).toBeTruthy();
+    expect(screen.getByLabelText("Half crimp, set 5").props.accessibilityState).toEqual({
+      checked: false,
+    });
 
-  it("explains a partial and logs it with effort, a protocol snapshot and the sets done", async () => {
-    const { actions } = await renderWithHang(<DoneScreen params={partial} />);
-    expect(screen.getByText("Ended early · Half crimp")).toBeTruthy();
-    expect(screen.getByText("5:12")).toBeTruthy();
-    expect(screen.getByText(/Came off early on 2 hangs\. Ended after 2 of 6 sets\./)).toBeTruthy();
-
+    await fireEvent.press(screen.getByLabelText("Half crimp, set 5"));
     await fireEvent.press(screen.getByLabelText("Shallower edge"));
-    await fireEvent.press(screen.getByLabelText("Added weight"));
-    await fireEvent.press(screen.getByLabelText("Add 1"));
-    await fireEvent.press(screen.getByLabelText("Done"));
     await fireEvent.press(screen.getByLabelText("Effort 8 of 10"));
-    expect(screen.getByText("Very hard")).toBeTruthy();
-    await fireEvent.press(screen.getByText("Log session"));
+    await fireEvent.press(screen.getByText("Save"));
 
+    const done = { edgeMm: 19, weightKg: 4 };
     expect(actions.saveSession).toHaveBeenCalledWith({
       id: "session-1",
       workoutId: "rep73",
       gripId: "half",
       date: TODAY,
       edgeMm: 19,
-      loadKg: 5,
-      pct: 30,
+      loadKg: 4,
+      pct: 78,
       misses: 2,
       rpe: 8,
       protocol: expect.objectContaining({ name: "Repeaters 7:3", hangS: 7, sets: 6 }),
@@ -83,14 +83,13 @@ describe("Session done", () => {
         {
           item: 0,
           exercise: "half",
-          sets: Array.from({ length: 2 }, () => ({
-            reps: 6,
-            onS: 7,
-            offS: 3,
-            setRestS: 180,
-            edgeMm: 19,
-            weightKg: 5,
-          })),
+          sets: [
+            { ...set, ...done },
+            { ...set, ...done },
+            { ...set, ...done },
+            { ...set, reps: 4, ...done },
+            { ...set, ...done },
+          ],
         },
       ],
     });
@@ -98,7 +97,7 @@ describe("Session done", () => {
     expect(statsSegmentStorage.read()).toBe("training");
   });
 
-  it("logs every item of a workout with more than one, each with its own setup", async () => {
+  it("logs it without the timer as every set of every item at the planned dose", async () => {
     const twoGrips = {
       id: "w-two",
       kind: "hangboard" as const,
@@ -119,49 +118,22 @@ describe("Session done", () => {
         params={{
           workoutId: "w-two",
           gripId: "half",
-          edgeMm: 20,
-          loadKg: 4,
-          result: { ended: true, setsDone: 2, pct: 80, work: 40, misses: 0, seconds: 400 },
           link: { membershipId: null, week: null, focus: null },
           session: 0,
-          more: [{ edgeMm: 15, loadKg: 0, setsDone: 2 }],
-          logIt: false,
+          run: null,
         }}
       />,
       hangData(),
       { workouts: [twoGrips] }
     );
-    expect(screen.getByText("40s / 50s")).toBeTruthy();
-    await fireEvent.press(screen.getByText("Log session"));
-    expect(actions.saveSession).toHaveBeenCalledWith(
-      expect.objectContaining({
-        workoutId: "w-two",
-        gripId: "half",
-        done: [
-          {
-            item: 0,
-            exercise: "half",
-            sets: Array.from({ length: 2 }, () => ({
-              reps: 1,
-              onS: 10,
-              setRestS: 60,
-              edgeMm: 20,
-              weightKg: 4,
-            })),
-          },
-          {
-            item: 1,
-            exercise: "open",
-            sets: Array.from({ length: 2 }, () => ({
-              reps: 1,
-              onS: 10,
-              setRestS: 60,
-              edgeMm: 15,
-              weightKg: 0,
-            })),
-          },
-        ],
-      })
-    );
+    expect(screen.getByText("Fingers · Logged, not timed")).toBeTruthy();
+    expect(screen.queryByText(/From the timer/)).toBeNull();
+    await fireEvent.press(screen.getByText("Save"));
+    const saved = jest.mocked(actions.saveSession).mock.calls[0]?.[0];
+    expect(saved).toMatchObject({ workoutId: "w-two", pct: 100, misses: 0 });
+    expect(saved?.done.map((d) => [d.exercise, d.sets.length])).toEqual([
+      ["half", 2],
+      ["open", 3],
+    ]);
   });
 });

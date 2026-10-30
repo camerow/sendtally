@@ -1,174 +1,138 @@
 import { randomUUID } from "expo-crypto";
-import { router } from "expo-router";
 import React from "react";
-import { Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors } from "@sendtally/design/tokens";
 import {
-  plannedWork,
+  doneAsPrescribed,
+  percentOf,
   protocolDose,
   protocolOf,
   type HangSetup,
-  type HangWorkout,
+  type SessionItem,
   type SetDone,
 } from "@sendtally/core/hang";
-import { loadLabel, type HangModel } from "@sendtally/features/hang";
-import { t } from "@sendtally/features/i18n";
-import { Button } from "../components/Button";
-import { EffortField } from "../components/EffortField";
-import { Label } from "../components/Label";
-import { StatGrid } from "../components/StatGrid";
-import { Title } from "../components/Title";
+import { keptSets, type ActivityDraft } from "@sendtally/features/activities";
+import { today as dayOf } from "@sendtally/features/journal";
+import { ActivityForm } from "../activity/ActivityForm";
 import { useHangData } from "../data/HangDataContext";
-import { usePlannedRun, type PlannedItem } from "../timer/usePlannedRun";
 import { SetupFields } from "../setup/SetupFields";
+import { usePlannedRun, type PlannedRun } from "../timer/usePlannedRun";
 import { openStats } from "../../stats/statsSegment";
-import { clearLiveRun } from "../../live-session/liveRun";
-import { type } from "../type";
 import type { DoneParams } from "./doneParams";
-import { doneStats, doneStatus, partialNote } from "./doneText";
-import { confirmDestructive } from "../../../lib/confirmDestructive";
-import { KeypadScrollView } from "../../../components/KeypadScrollView";
 
-/** The sets a run finished, each as the protocol ran it on the edge and weight it used. */
-function setsDone(w: HangWorkout, setup: HangSetup, count: number): SetDone[] {
-  const { sets: _, ...set } = protocolDose(w);
-  const done = {
-    ...set,
-    ...(w.kind === "hang" ? { edgeMm: setup.edgeMm } : {}),
-    weightKg: setup.loadKg,
-  };
-  return Array.from({ length: count }, () => ({ ...done }));
-}
+/** Seconds on the edge, or lifts, that sets hold. */
+const workOf = (sets: readonly SetDone[]): number =>
+  sets.reduce((n, s) => n + (s.reps ?? 1) * (s.onS ?? 1), 0);
 
-function Done({
-  items,
+function Review({
+  planned,
   params,
 }: {
-  items: readonly [PlannedItem, ...PlannedItem[]];
+  planned: PlannedRun;
   params: DoneParams;
 }): React.ReactElement {
-  const workout = items[0].workout;
   const { model, actions, today } = useHangData();
-  const [rpe, setRpe] = React.useState<number | null>(null);
-  const { result, gripId } = params;
-  const [setup, setSetup] = React.useState({ edgeMm: params.edgeMm, loadKg: params.loadKg });
-  const load = loadLabel(workout.kind, setup.loadKg, model.settings.units);
-  const partial = result.pct < 100;
+  const [id] = React.useState(randomUUID);
+  const { items } = planned;
+  const workout = items[0].workout;
+  const grips = items.map((i, k) => (k === 0 ? params.gripId : i.workout.grip));
+  const prescribed: SessionItem[] = items.map((i, k) => ({
+    exercise: grips[k] ?? i.workout.grip,
+    dose: protocolDose(i.workout),
+  }));
+  const { run } = params;
+  const [setups] = React.useState<HangSetup[]>(
+    () => run?.setups ?? items.map((i, k) => model.setup(i.workout, grips[k] ?? "", i.dose))
+  );
+  const [setup, setSetup] = React.useState(setups[0] ?? { edgeMm: 0, loadKg: 0 });
+  const [initial] = React.useState<ActivityDraft>(() => ({
+    kind: "other",
+    title: workout.name,
+    date: run === null ? today : dayOf(new Date(run.startedAt)),
+    startTime: "",
+    minutes: 0,
+    rpe: null,
+    notes: "",
+    workoutId: workout.id,
+    ...params.link,
+    done: (run?.done ?? doneAsPrescribed(prescribed)).map((d) => ({
+      ...d,
+      exercise: model.gripName(grips[d.item] ?? d.exercise),
+    })),
+    off: run?.off ?? [],
+  }));
 
-  const log = (): void => {
+  const save = (draft: ActivityDraft): void => {
+    const kept = keptSets(draft.done, draft.off);
+    const misses = kept.reduce(
+      (n, d) =>
+        n +
+        d.sets.reduce(
+          (m, s) => m + Math.max(0, (prescribed[d.item]?.dose.reps ?? 1) - (s.reps ?? 1)),
+          0
+        ),
+      0
+    );
+    const plannedWork = prescribed.reduce(
+      (n, p) => n + workOf(Array.from({ length: p.dose.sets }, () => p.dose)),
+      0
+    );
     void actions.saveSession({
-      id: randomUUID(),
+      id,
       workoutId: workout.id,
-      gripId,
-      date: today,
+      gripId: params.gripId,
+      date: draft.date,
       ...setup,
-      pct: result.pct,
-      misses: result.misses,
-      rpe,
+      pct: percentOf(
+        kept.reduce((n, d) => n + workOf(d.sets), 0),
+        plannedWork
+      ),
+      misses,
+      rpe: draft.rpe,
       protocol: protocolOf(workout),
-      ...params.link,
-      done: [
-        { item: 0, exercise: gripId, sets: setsDone(workout, setup, result.setsDone) },
-        ...params.more.flatMap((m, k) => {
-          const next = items[k + 1]?.workout;
-          return next === undefined
-            ? []
-            : [{ item: k + 1, exercise: next.grip, sets: setsDone(next, m, m.setsDone) }];
-        }),
-      ],
+      membershipId: draft.membershipId,
+      week: draft.week,
+      focus: draft.focus,
+      done: kept.map((d) => {
+        const at = d.item === 0 ? setup : (setups[d.item] ?? setup);
+        const hang = items[d.item]?.workout.kind === "hang";
+        return {
+          item: d.item,
+          exercise: grips[d.item] ?? d.exercise,
+          sets: d.sets.map((s) => ({
+            ...s,
+            ...(hang ? { edgeMm: at.edgeMm } : {}),
+            weightKg: at.loadKg,
+          })),
+        };
+      }),
     });
-    if (!params.logIt) clearLiveRun();
     openStats("training");
   };
 
   return (
-    <SafeAreaView edges={["top", "bottom"]} style={{ flex: 1, backgroundColor: colors.white }}>
-      <KeypadScrollView
-        contentContainerStyle={{
-          flexGrow: 1,
-          gap: 20,
-          paddingTop: 30,
-          paddingHorizontal: 18,
-          paddingBottom: 16,
-        }}
-      >
-        <View style={{ gap: 6 }}>
-          <Label color={colors.gunmetal}>
-            {t("hang.kicker", { status: doneStatus(result), grip: model.gripName(gripId) })}
-          </Label>
-          <Title size={40}>{workout.name}</Title>
-        </View>
-        <StatGrid
-          columns={2}
-          valueSize={22}
-          stats={doneStats(
-            workout,
-            result,
-            load,
-            items.reduce((sum, i) => sum + plannedWork(i.workout), 0)
-          )}
-        />
-        {partial && (
-          <Text style={[type.body, { fontSize: 14, lineHeight: 21, color: colors.textSecondary }]}>
-            {partialNote(workout, result, load)}
-          </Text>
-        )}
-        <SetupFields kind={workout.kind} setup={setup} onChange={setSetup} />
-        <EffortField value={rpe} onChange={setRpe} />
-        <View style={{ flex: 1 }} />
-        <View style={{ gap: 6 }}>
-          <Button label={t("hang.logSession")} onPress={log} variant="primary" height={54} />
-          <Button
-            label={t("hang.discard")}
-            onPress={() =>
-              confirmDestructive({
-                title: t("hang.discardRunTitle"),
-                body: t("hang.discardRunBody"),
-                action: t("hang.discard"),
-                onConfirm: () => {
-                  if (!params.logIt) clearLiveRun();
-                  router.back();
-                },
-              })
-            }
-            variant="danger"
-          />
-        </View>
-      </KeypadScrollView>
-    </SafeAreaView>
+    <ActivityForm
+      id={id}
+      initial={initial}
+      logged={null}
+      timed
+      kindSet
+      live={run !== null}
+      planned={prescribed}
+      hang={{
+        setup: <SetupFields kind={workout.kind} setup={setup} onChange={setSetup} />,
+        save,
+      }}
+    />
   );
 }
 
-/** Logged without the timer: every item done as planned, on the setup it would start with. */
-function loggedParams(
-  params: DoneParams,
-  items: readonly [PlannedItem, ...PlannedItem[]],
-  model: HangModel
-): DoneParams {
-  const [first, ...rest] = items;
-  return {
-    ...params,
-    ...model.setup(first.workout, params.gripId, first.dose),
-    result: {
-      ended: false,
-      setsDone: first.workout.sets,
-      pct: 100,
-      work: plannedWork(first.workout),
-      misses: 0,
-      seconds: 0,
-    },
-    more: rest.map((i) => ({
-      ...model.setup(i.workout, i.workout.grip, i.dose),
-      setsDone: i.workout.sets,
-    })),
-  };
-}
-
+/** A hangboard workout's review: what the timer saw, or every set as planned when logged without it. */
 export function DoneScreen({ params }: { params: DoneParams }): React.ReactElement | null {
-  const { model } = useHangData();
   const planned = usePlannedRun(params.workoutId, params.link, params.session);
-  if (planned === undefined) return null;
-  const done = params.logIt ? loggedParams(params, planned.items, model) : params;
-  return <Done items={planned.items} params={done} />;
+  return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.white }} edges={["top", "bottom"]}>
+      {planned !== undefined && <Review planned={planned} params={params} />}
+    </SafeAreaView>
+  );
 }

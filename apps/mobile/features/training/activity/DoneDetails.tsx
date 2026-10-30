@@ -1,42 +1,48 @@
 import React from "react";
-import { Text, View } from "react-native";
-import type { ItemDone, WeightUnit } from "@sendtally/core/hang";
-import { colors, radius } from "@sendtally/design/tokens";
+import { Text } from "react-native";
+import type { ItemDone, SetDone, WeightUnit } from "@sendtally/core/hang";
+import { colors } from "@sendtally/design/tokens";
 import {
   addSet,
   changeSet,
-  isChecklist,
+  offWithout,
   removeSet,
-  setsLine,
+  setKeyOf,
+  shortOf,
 } from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
 import { confirmDestructive } from "../../../lib/confirmDestructive";
 import { SheetSection } from "../components/SheetSection";
 import { type } from "../type";
-import { ChecklistItemRow } from "./ChecklistItemRow";
 import { ExerciseCard } from "./ExerciseCard";
 import { SetsEditor } from "./SetsEditor";
 
 export type DoneDetailsProps = {
   done: readonly ItemDone[];
-  /** Items of a checklist left unticked. */
-  skipped: readonly number[];
+  /** Sets toggled off, which do not save. */
+  off: readonly string[];
+  /** Each item's dose, which a set short of it reads against. */
+  planned: readonly (SetDone | undefined)[];
   unit: WeightUnit;
-  onChange: (done: ItemDone[]) => void;
-  onSkip: (skipped: number[]) => void;
+  /** The kind's colour, on each exercise's mark. */
+  color: string;
+  onChange: (done: ItemDone[], off: string[]) => void;
 };
 
-/** What was done, to review and fix before saving: a card per exercise, or a checklist to tick. */
+/** What was done, to review and fix before saving: a card per exercise, a chip per set to tick. */
 export function DoneDetails({
   done,
-  skipped,
+  off,
+  planned,
   unit,
+  color,
   onChange,
-  onSkip,
 }: DoneDetailsProps): React.ReactElement {
   const [open, setOpen] = React.useState<number | null>(null);
+  const edit = (next: ItemDone[]): void => onChange(next, [...off]);
   const remove = (d: ItemDone, set: number): void => {
-    const removed = (): void => onChange(removeSet(done, d.item, set));
+    const removed = (): void =>
+      onChange(removeSet(done, d.item, set), offWithout(off, d.item, set));
     if (d.sets.length > 1) {
       removed();
       return;
@@ -51,68 +57,44 @@ export function DoneDetails({
       },
     });
   };
-  const editor = (d: ItemDone): React.ReactNode =>
-    open === d.item ? (
-      <SetsEditor
-        done={d}
-        unit={unit}
-        onChange={(set, value) => onChange(changeSet(done, d.item, set, value))}
-        onRemove={(set) => remove(d, set)}
-        onAdd={() => onChange(addSet(done, d.item))}
-      />
-    ) : null;
-  const toggle = (item: number): void =>
-    onSkip(skipped.includes(item) ? skipped.filter((i) => i !== item) : [...skipped, item]);
+  const toggle = (item: number, set: number): void => {
+    const key = setKeyOf(item, set);
+    onChange([...done], off.includes(key) ? off.filter((k) => k !== key) : [...off, key]);
+  };
 
-  if (!isChecklist(done)) {
-    return (
-      <SheetSection label={t("activities.details")}>
-        {done.map((d) => (
-          <ExerciseCard
-            key={d.item}
-            done={d}
-            unit={unit}
-            editor={editor(d)}
-            onOpen={() => setOpen(d.item)}
-            onClose={() => setOpen(null)}
-          />
-        ))}
-      </SheetSection>
-    );
-  }
-  const ticked = done.filter((d) => !skipped.includes(d.item)).length;
   return (
     <SheetSection
-      label={t("activities.details")}
+      label={t("activities.sets")}
       aside={
-        <Text style={[type.mono, { fontSize: 12, color: colors.textSecondary }]}>
-          {t("plan.doneOf", { done: ticked, planned: done.length })}
+        <Text style={[type.mono, { fontSize: 11.5, color: colors.textMuted }]}>
+          {t("activities.setsHint")}
         </Text>
       }
     >
-      <View
-        style={{
-          paddingHorizontal: 14,
-          paddingVertical: 4,
-          borderRadius: radius.card,
-          borderWidth: 1,
-          borderColor: colors.lineOnLightStrong,
-        }}
-      >
-        {done.map((d) => (
-          <React.Fragment key={d.item}>
-            <ChecklistItemRow
-              name={d.exercise}
-              dose={setsLine(d.sets, unit)}
-              ticked={!skipped.includes(d.item)}
-              open={open === d.item}
-              onToggle={() => toggle(d.item)}
-              onOpen={() => setOpen(open === d.item ? null : d.item)}
-            />
-            {editor(d)}
-          </React.Fragment>
-        ))}
-      </View>
+      {done.map((d) => (
+        <ExerciseCard
+          key={d.item}
+          done={d}
+          unit={unit}
+          color={color}
+          editor={
+            open === d.item ? (
+              <SetsEditor
+                done={d}
+                unit={unit}
+                onChange={(set, value) => edit(changeSet(done, d.item, set, value))}
+                onRemove={(set) => remove(d, set)}
+                onAdd={() => edit(addSet(done, d.item))}
+              />
+            ) : null
+          }
+          isOn={(set) => !off.includes(setKeyOf(d.item, set))}
+          shortOf={(set) => shortOf(d.sets[set] ?? {}, planned[d.item])}
+          onToggle={(set) => toggle(d.item, set)}
+          onOpen={() => setOpen(d.item)}
+          onClose={() => setOpen(null)}
+        />
+      ))}
     </SheetSection>
   );
 }

@@ -132,8 +132,9 @@ describe("Sets player", () => {
             ],
           },
           { item: 1, exercise: "Row", sets: [{ reps: 8, weightKg: 60 }] },
-          { item: 2, exercise: "Plank", sets: [] },
+          { item: 2, exercise: "Plank", sets: [{ onS: 30 }] },
         ]),
+        off: JSON.stringify(["2:0"]),
       },
     });
   });

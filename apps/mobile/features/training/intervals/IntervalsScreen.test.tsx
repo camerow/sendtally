@@ -6,15 +6,11 @@ import { renderWithHang } from "../data/renderWithHang";
 import type { IntervalsRun } from "./intervalsParams";
 import { IntervalsScreen } from "./IntervalsScreen";
 
-const mockActions = { saveActivity: jest.fn(), deleteActivity: jest.fn() };
-
-jest.mock("expo-router", () => ({ router: { dismissAll: jest.fn(), back: jest.fn() } }));
-jest.mock("expo-crypto", () => ({ randomUUID: () => "activity-1" }));
+jest.mock("expo-router", () => ({ router: { replace: jest.fn(), back: jest.fn() } }));
 jest.mock("expo-keep-awake", () => ({ useKeepAwake: () => undefined }));
 jest.mock("../../../lib/api", () => ({ useApi: () => undefined }));
 jest.mock("@sendtally/features/activities", () => ({
   ...jest.requireActual<object>("@sendtally/features/activities"),
-  useActivityActions: () => mockActions,
   useWeightUnit: () => "kg",
 }));
 
@@ -22,7 +18,6 @@ const workout: IntervalsRun = {
   kind: "mobility",
   title: "Hip mobility flow",
   date: "2026-10-22",
-  activityId: null,
   workoutId: "w1",
   link: { membershipId: "m1", week: 2, focus: null },
   body: {
@@ -55,7 +50,7 @@ describe("Intervals player", () => {
     jest.useRealTimers();
   });
 
-  it("plays each side, waits for a counted step, and saves what was done", async () => {
+  it("plays each side, waits for a counted step, and hands what was done to the review", async () => {
     await renderWithHang(<IntervalsScreen workout={workout} />);
     expect(screen.getByText("Get ready")).toBeTruthy();
     expect(screen.getByText("0:45 · each side")).toBeTruthy();
@@ -73,29 +68,23 @@ describe("Intervals player", () => {
     expect(screen.getByText("× 15")).toBeTruthy();
     await fireEvent.press(screen.getAllByText("Done")[0]!);
 
-    expect(screen.getByText("Steps done")).toBeTruthy();
-    expect(screen.getByText("3/3")).toBeTruthy();
-    await fireEvent.press(screen.getByLabelText("Effort 6 of 10"));
-    await fireEvent.press(screen.getByText("Save activity"));
-
-    expect(mockActions.saveActivity).toHaveBeenCalledWith({
-      id: "activity-1",
-      kind: "mobility",
-      title: "Hip mobility flow",
-      date: "2026-10-22",
-      startTime: "18:05",
-      minutes: 1,
-      rpe: 6,
-      notes: null,
-      workoutId: "w1",
-      membershipId: "m1",
-      week: 2,
-      focus: null,
-      done: [
-        { item: 0, exercise: "Couch stretch", sets: [{ onS: 45 }, { onS: 20 }] },
-        { item: 1, exercise: "Swing", sets: [{ reps: 15, weightKg: 24 }] },
-      ],
+    expect(router.replace).toHaveBeenCalledWith({
+      pathname: "/activity/new",
+      params: {
+        kind: "mobility",
+        title: "Hip mobility flow",
+        date: "2026-10-22",
+        workoutId: "w1",
+        minutes: "1",
+        membershipId: "m1",
+        week: "2",
+        startTime: "18:05",
+        done: JSON.stringify([
+          { item: 0, exercise: "Couch stretch", sets: [{ onS: 45 }, { onS: 20 }] },
+          { item: 1, exercise: "Swing", sets: [{ reps: 15, weightKg: 24 }] },
+        ]),
+        live: "1",
+      },
     });
-    expect(router.dismissAll).toHaveBeenCalled();
   });
 });

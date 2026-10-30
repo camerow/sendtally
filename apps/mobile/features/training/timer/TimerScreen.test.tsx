@@ -6,6 +6,7 @@ import type * as LogSession from "@sendtally/features/log-session";
 import { liveRunStorage } from "../../../lib/liveRunStorage";
 import { readLiveRun } from "../../live-session/liveRun";
 import { NO_PLAN } from "../data/planLinkParams";
+import type { TimerRun } from "../done/doneParams";
 import { hangData, renderWithHang, TODAY } from "../data/renderWithHang";
 import { TimerScreen } from "./TimerScreen";
 
@@ -27,6 +28,14 @@ jest.mock("../../../lib/liveRunStorage", () => {
       }),
   };
 });
+
+/** What the timer handed its review. */
+const reviewed = (): { params: Record<string, string>; run: TimerRun } => {
+  const href = jest.mocked(router.replace).mock.calls.at(-1)?.[0] as {
+    params: Record<string, string>;
+  };
+  return { params: href.params, run: JSON.parse(href.params.run ?? "null") as TimerRun };
+};
 
 const advance = async (ms: number): Promise<void> => {
   await act(async () => {
@@ -62,17 +71,11 @@ describe("Timer", () => {
     await fireEvent.press(screen.getByText("End"));
     await advance(200);
     expect(router.replace).toHaveBeenCalledWith(
-      expect.objectContaining({
-        pathname: "/workout/done",
-        params: expect.objectContaining({
-          ended: "1",
-          work: "3",
-          misses: "1",
-          pct: "1",
-          setsDone: "0",
-        }),
-      })
+      expect.objectContaining({ pathname: "/workout/done" })
     );
+    const { run } = reviewed();
+    expect(run.done[0]?.sets).toHaveLength(6);
+    expect(run.off).toEqual(["0:0", "0:1", "0:2", "0:3", "0:4", "0:5"]);
   });
 
   it("keeps the run on disk, and picks it up past the setup where it was", async () => {
@@ -170,17 +173,10 @@ describe("Timer", () => {
     expect(screen.getByText("3 sets ahead")).toBeTruthy();
     await fireEvent.press(screen.getByText("End"));
     await advance(200);
-    expect(router.replace).toHaveBeenCalledWith(
-      expect.objectContaining({
-        params: expect.objectContaining({
-          edgeMm: "16",
-          loadKg: "8",
-          membershipId: "m1",
-          week: "1",
-          session: "0",
-        }),
-      })
-    );
+    const { params, run } = reviewed();
+    expect(params).toMatchObject({ membershipId: "m1", week: "1", session: "0" });
+    expect(run.setups).toEqual([{ edgeMm: 16, loadKg: 8 }]);
+    expect(run.done[0]?.sets).toHaveLength(3);
   });
 
   it("rests between exercises, runs the next grip, and carries every item to the done screen", async () => {
@@ -217,18 +213,13 @@ describe("Timer", () => {
     await advance(1000);
     expect(screen.getByText("Hang")).toBeTruthy();
     await advance(10_100);
-    expect(router.replace).toHaveBeenLastCalledWith(
-      expect.objectContaining({
-        pathname: "/workout/done",
-        params: expect.objectContaining({
-          workoutId: "w-two",
-          gripId: "half",
-          ended: "0",
-          pct: "100",
-          setsDone: "1",
-          more: expect.stringMatching(/^\d+:\d+:1$/),
-        }),
-      })
-    );
+    const { params, run } = reviewed();
+    expect(params).toMatchObject({ workoutId: "w-two", gripId: "half" });
+    expect(run.done).toEqual([
+      { item: 0, exercise: "half", sets: [{ reps: 1, onS: 10 }] },
+      { item: 1, exercise: "open", sets: [{ reps: 1, onS: 10 }] },
+    ]);
+    expect(run.off).toEqual([]);
+    expect(run.setups).toHaveLength(2);
   });
 });
