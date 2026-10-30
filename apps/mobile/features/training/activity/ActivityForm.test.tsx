@@ -8,6 +8,7 @@ import type * as Activities from "@sendtally/features/activities";
 import { activityFromDraft, newActivityDraft } from "@sendtally/features/activities";
 import { ActivityForm } from "./ActivityForm";
 
+let mockPrevious: Partial<ActivityRecord>[] = [];
 const mockActions = { saveActivity: jest.fn(), deleteActivity: jest.fn() };
 const mockWorkouts = { saveWorkout: jest.fn(), deleteWorkout: jest.fn() };
 
@@ -26,6 +27,7 @@ jest.mock("@sendtally/features/activities", () => {
   return {
     ...actual,
     useActivityActions: () => mockActions,
+    useActivities: () => ({ state: { status: "ready", data: mockPrevious } }),
     useWeightUnit: () => "kg",
   };
 });
@@ -94,6 +96,8 @@ describe("Log activity", () => {
     expect(screen.queryByText("Focus")).toBeNull();
     await fireEvent.press(screen.getByLabelText(/^Started, /));
     expect(screen.getByTestId("activity-time")).toBeTruthy();
+    expect(screen.getByText("Started")).toBeTruthy();
+    expect(screen.queryByLabelText("Clear")).toBeNull();
     await fireEvent.press(screen.getByText("Save"));
     expect(mockActions.saveActivity).toHaveBeenLastCalledWith(
       expect.objectContaining({ kind: "mobility", startTime: "07:00", minutes: 4 })
@@ -137,6 +141,28 @@ describe("Log activity", () => {
         ],
       })
     );
+  });
+
+  it("reads a lift's target against what the last run lifted when the workout sets no weight", async () => {
+    mockPrevious = [
+      {
+        workoutId: "w1",
+        done: [{ item: 0, exercise: "Back squat", sets: [{ reps: 5, weightKg: 80 }] }],
+      },
+    ];
+    const initial = newActivityDraft({ kind: "strength", workoutId: "w1" }, "2026-10-22", [
+      { exercise: "Back squat", dose: { sets: 1, reps: 5 } },
+    ]);
+    await render(
+      <ActivityForm
+        id="a1"
+        initial={initial}
+        logged={null}
+        planned={[{ exercise: "Back squat", dose: { sets: 1, reps: 5 } }]}
+      />
+    );
+    mockPrevious = [];
+    expect(screen.getByText("5 × 80 kg")).toBeTruthy();
   });
 
   it("edits the sets of one exercise at a time in place, and saves them", async () => {

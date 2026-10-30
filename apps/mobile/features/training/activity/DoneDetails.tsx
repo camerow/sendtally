@@ -31,6 +31,8 @@ export type DoneDetailsProps = {
   color: string;
   /** A hangboard workout: its sets are hang counts. */
   hangs?: boolean;
+  /** Each exercise's sets as the workout's last run did them, which a lift's target borrows. */
+  previous?: (exercise: string) => readonly SetDone[];
   /** Beside the first exercise's name, such as a hangboard run's edge and weight. */
   setup?: React.ReactNode;
   onChange: (done: ItemDone[], off: string[]) => void;
@@ -47,6 +49,7 @@ export function DoneDetails({
   unit,
   color,
   hangs = false,
+  previous = () => [],
   setup,
   onChange,
 }: DoneDetailsProps): React.ReactElement {
@@ -128,7 +131,14 @@ export function DoneDetails({
                 <ReviewSetRow
                   key={i}
                   n={i + 1}
-                  target={target}
+                  target={
+                    target === undefined || target.onS !== undefined
+                      ? target
+                      : {
+                          ...target,
+                          weightKg: target.weightKg ?? previous(d.exercise)[i]?.weightKg,
+                        }
+                  }
                   done={set}
                   hangs={hangs}
                   lifting={lifting}

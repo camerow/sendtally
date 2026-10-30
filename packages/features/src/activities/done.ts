@@ -74,7 +74,7 @@ export function setCounts(
   done: readonly ItemDone[],
   off: readonly string[],
   planned: readonly (SetDone | undefined)[]
-): SetCounts & { firstShort: number | null } {
+): SetCounts & { firstShort: number | null; lastReached: number } {
   const states = done.flatMap((d) =>
     d.sets.map((s, set) =>
       off.includes(setKeyOf(d.item, set))
@@ -92,6 +92,10 @@ export function setCounts(
     off: count("off"),
     total: states.length,
     firstShort: short === -1 ? null : short,
+    lastReached: Math.max(
+      0,
+      states.findLastIndex((s) => s !== "off")
+    ),
   };
 }
 
@@ -168,11 +172,13 @@ export function previousSets(
   return [];
 }
 
-/** How a run went, from its sets: complete, or where it first fell short. */
-export const runStatus = (c: SetCounts & { firstShort: number | null }): string =>
+/** How a run went, from its sets: complete, or the last set it reached. */
+export const runStatus = (
+  c: SetCounts & { firstShort: number | null; lastReached: number }
+): string =>
   c.firstShort === null
     ? t("hang.sessionComplete")
-    : t("activities.endedAtSet", { set: c.firstShort + 1, sets: c.total });
+    : t("activities.endedAtSet", { set: c.lastReached + 1, sets: c.total });
 
 /** The sets still off once one of an item's sets is removed: those after it move up one. */
 export function offWithout(off: readonly string[], item: number, set: number): string[] {

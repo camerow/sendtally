@@ -4,9 +4,16 @@ import React from "react";
 import { Alert, KeyboardAvoidingView, Platform, Text, TextInput, View } from "react-native";
 import type { ActivityRecord } from "@sendtally/api-client";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
-import { defaultExerciseRestS, type ItemDone, type SessionItem } from "@sendtally/core/hang";
+import {
+  defaultExerciseRestS,
+  type ItemDone,
+  type SessionItem,
+  type SetDone,
+} from "@sendtally/core/hang";
 import {
   activityFromDraft,
+  previousSets,
+  useActivities,
   fromTimerNote,
   kindLabel,
   minutesOf,
@@ -150,19 +157,27 @@ export function ActivityForm({
       />
     </SheetSection>
   );
+  // A measured start can be moved, never emptied.
+  const startLabel = timed ? t("activities.started") : t("activities.startTime");
   const startField = (
-    <SheetSection label={t("activities.startTime")}>
+    <SheetSection label={startLabel}>
       <DateTimeField
         testID="activity-time"
         mode="time"
         value={draft.startTime}
-        label={t("activities.startTime")}
+        label={startLabel}
         placeholder={t("activities.anyTime")}
         onChange={(startTime) => update({ startTime })}
-        onClear={() => update({ startTime: "" })}
+        onClear={timed ? undefined : () => update({ startTime: "" })}
       />
     </SheetSection>
   );
+  const activities = useActivities(api).state;
+  // A lift reads against what the last run lifted wherever the workout sets no weight, as the player does.
+  const previous = (exercise: string): SetDone[] =>
+    draft.kind === "strength" && draft.workoutId !== null && activities.status === "ready"
+      ? previousSets(activities.data, draft.workoutId, exercise)
+      : [];
   const durationField = (
     <TimeField
       label={t("common.duration")}
@@ -314,6 +329,7 @@ export function ActivityForm({
             unit={unit}
             color={KIND_LOOK[look].ink}
             hangs={hang !== undefined}
+            previous={previous}
             setup={hang?.setup}
             onChange={(done, off) => update({ done, off })}
           />
