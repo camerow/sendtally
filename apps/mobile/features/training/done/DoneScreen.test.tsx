@@ -45,6 +45,15 @@ const ended: DoneParams = {
 };
 
 describe("A hangboard workout's review", () => {
+  it("walks the hang counts down the sets with Next", async () => {
+    await renderWithHang(<DoneScreen params={ended} />);
+    await fireEvent.press(screen.getByLabelText("Half crimp, set 1 · Hangs"));
+    await fireEvent.press(screen.getByText("Next"));
+    expect(screen.getByLabelText("Half crimp, set 2 · Hangs")).toHaveProp("accessibilityState", {
+      expanded: true,
+    });
+  });
+
   it("shows what the timer saw, and saves the sets as they were confirmed", async () => {
     const { actions } = await renderWithHang(<DoneScreen params={ended} />);
     expect(screen.getByText("Log workout")).toBeTruthy();

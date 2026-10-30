@@ -4,7 +4,7 @@ import { fromUnit, toUnit, type SetDone, type WeightUnit } from "@sendtally/core
 import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
 import { TimeField } from "../../../components/TimeField";
-import { useFieldOrder } from "../../../components/useFieldOrder";
+import { useFieldOrder, type FieldSlot } from "../../../components/useFieldOrder";
 import { NumberField } from "../components/NumberField";
 import { type } from "../type";
 
@@ -19,6 +19,8 @@ export type SetDoneFieldsProps = {
   hangs?: boolean;
   /** Fell short of its target: the count it fell short on reads amber. */
   short?: boolean;
+  /** Where a hang count sits in its table's column, so Next walks to the next set. */
+  slot?: FieldSlot;
   onChange: (set: SetDone) => void;
 };
 
@@ -45,6 +47,7 @@ export function SetDoneFields({
   label,
   hangs = false,
   short = false,
+  slot: column,
   onChange,
 }: SetDoneFieldsProps): React.ReactElement {
   const reps = lifting || hangs || set.reps !== undefined;
@@ -64,7 +67,7 @@ export function SetDoneFields({
     <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
       {reps && (
         <NumberField
-          {...slot("reps")}
+          {...(hangs && column !== undefined ? column : slot("reps"))}
           {...named(hangs ? t("plan.colHangs") : t("workouts.dose.reps"))}
           short={short}
           value={set.reps ?? null}

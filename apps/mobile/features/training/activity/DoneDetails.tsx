@@ -11,6 +11,7 @@ import {
   shortOf,
 } from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
+import { useFieldOrder } from "../../../components/useFieldOrder";
 import { confirmDestructive } from "../../../lib/confirmDestructive";
 import { Button } from "../components/Button";
 import { Label } from "../components/Label";
@@ -50,6 +51,13 @@ export function DoneDetails({
   onChange,
 }: DoneDetailsProps): React.ReactElement {
   const edit = (next: ItemDone[]): void => onChange(next, [...off]);
+  const counts = useFieldOrder(
+    hangs
+      ? done.flatMap((d) =>
+          d.sets.flatMap((_, i) => (off.includes(setKeyOf(d.item, i)) ? [] : [setKeyOf(d.item, i)]))
+        )
+      : []
+  );
   const remove = (d: ItemDone, set: number): void => {
     const removed = (): void =>
       onChange(removeSet(done, d.item, set), offWithout(off, d.item, set));
@@ -128,6 +136,7 @@ export function DoneDetails({
                   on={on}
                   short={shortOf(set, target, hangs)}
                   label={t("activities.setOf", { exercise: d.exercise, n: i + 1 })}
+                  slot={hangs ? counts.slot(setKeyOf(d.item, i)) : undefined}
                   onChange={(value) => edit(changeSet(done, d.item, i, value))}
                   onToggle={() => toggle(d.item, i)}
                   onRemove={() => remove(d, i)}

@@ -5,6 +5,7 @@ import type { SetDone, WeightUnit } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { setText } from "@sendtally/features/activities";
 import { formatNumber, t } from "@sendtally/features/i18n";
+import type { FieldSlot } from "../../../components/useFieldOrder";
 import { press } from "../../../lib/press";
 import { CheckBox } from "../components/CheckBox";
 import { SET_COLUMNS } from "../sets/setColumns";
@@ -25,6 +26,8 @@ export type ReviewSetRowProps = {
   /** "4 of 6 hangs" when it fell short of its target. */
   short: string | null;
   label: string;
+  /** A hang count's place in its column, so Next walks to the next set. */
+  slot?: FieldSlot;
   onChange: (set: SetDone) => void;
   onToggle: () => void;
   onRemove: () => void;
@@ -47,6 +50,7 @@ export function ReviewSetRow({
   on,
   short,
   label,
+  slot,
   onChange,
   onToggle,
   onRemove,
@@ -106,6 +110,7 @@ export function ReviewSetRow({
               short={short !== null}
               unit={unit}
               label={label}
+              slot={slot}
               onChange={onChange}
             />
           ) : (
