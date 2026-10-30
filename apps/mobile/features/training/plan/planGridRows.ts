@@ -3,6 +3,7 @@ import type { Membership, Workout, WorkoutKind } from "@sendtally/core/hang";
 import { kindLabel } from "@sendtally/features/activities";
 import type { WorkoutLookup } from "@sendtally/features/training";
 import { durationLabel } from "@sendtally/features/sessions";
+import { t } from "@sendtally/features/i18n";
 import { bodySummary, workoutMinutes } from "@sendtally/features/workouts";
 import { openMembership } from "./openMembership";
 
@@ -10,20 +11,33 @@ export type PlanGridRow = {
   key: string;
   kind: WorkoutKind;
   name: string;
-  sub: string;
+  /** What it holds, a part a line. */
+  lines: readonly string[];
   days: readonly number[];
   open: () => void;
 };
 
-const minutesOr = (w: Workout): string => {
+/** Fingers: its grip and edge, or how many grips. Else what it holds and how long it takes. */
+export function workoutLines(w: Workout, gripName: (id: string) => string): string[] {
+  if (w.kind === "hangboard") {
+    const grips = [...new Set(w.items.map((i) => i.exercise))];
+    const [grip] = grips;
+    if (grip === undefined) return [kindLabel(w.kind)];
+    if (grips.length > 1) return [t("hang.gripCount", { count: grips.length })];
+    const edge = w.items[0]?.doses[0]?.edgeMm;
+    return [gripName(grip), ...(edge === undefined ? [] : [t("hang.edgeMm", { n: edge })])];
+  }
   const minutes = workoutMinutes(w);
-  return minutes === null ? kindLabel(w.kind) : durationLabel(minutes);
-};
+  const lines = [bodySummary(w), minutes === null ? null : durationLabel(minutes)];
+  const kept = [...new Set(lines.filter((l) => l !== null))];
+  return kept.length === 0 ? [kindLabel(w.kind)] : kept;
+}
 
 /** One row per membership for the week grid, with what its workout holds and where it opens. */
 export function planGridRows(
   members: readonly Membership[],
-  workout: WorkoutLookup
+  workout: WorkoutLookup,
+  gripName: (id: string) => string
 ): PlanGridRow[] {
   return members.flatMap((m): PlanGridRow[] => {
     const w = workout(m.workoutId);
@@ -33,7 +47,7 @@ export function planGridRows(
         key: m.id,
         kind: w.kind,
         name: w.name,
-        sub: bodySummary(w) ?? minutesOr(w),
+        lines: workoutLines(w, gripName),
         days: m.weekdays,
         open: () => openMembership(m),
       },

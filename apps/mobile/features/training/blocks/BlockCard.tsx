@@ -9,6 +9,7 @@ import { pressRow } from "../../../lib/press";
 import { Button } from "../components/Button";
 import { DashedPanel } from "../components/DashedPanel";
 import { Title } from "../components/Title";
+import { useHangData } from "../data/HangDataContext";
 import { AddKindSheet } from "../planning/AddKindSheet";
 import { PlanGrid } from "../plan/PlanGrid";
 import { planGridRows } from "../plan/planGridRows";
@@ -23,7 +24,8 @@ export type BlockCardProps = {
 
 /** A training block: where it is and what is in it. Tap to open it. */
 export function BlockCard({ block, members, workout }: BlockCardProps): React.ReactElement {
-  const rows = planGridRows(members, workout);
+  const { model } = useHangData();
+  const rows = planGridRows(members, workout, model.gripName);
   const [adding, setAdding] = React.useState(false);
   return (
     <View

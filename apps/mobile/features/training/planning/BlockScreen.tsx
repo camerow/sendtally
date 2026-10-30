@@ -4,7 +4,7 @@ import { Text, View } from "react-native";
 import { blockEnd } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
-import { blockRecap, usePlan, useTrainingLog } from "@sendtally/features/training";
+import { blockMembers, blockRecap, usePlan, useTrainingLog } from "@sendtally/features/training";
 import { ScreenFrame } from "../../../components/ScreenFrame";
 import { useApi } from "../../../lib/api";
 import { blockDates } from "../blocks/blockText";
@@ -20,6 +20,7 @@ import { useLit } from "../plan/useLit";
 import { type } from "../type";
 import { BlockOverview } from "./BlockOverview";
 import { BlockRecapView } from "./BlockRecapView";
+import { BlockWeek } from "./BlockWeek";
 import { PlanAgainSheet } from "./PlanAgainSheet";
 
 export type BlockScreenProps = {
@@ -81,7 +82,15 @@ export function BlockScreen({ id, highlight }: BlockScreenProps): React.ReactEle
         </Text>
       </View>
       {ended ? (
-        <BlockRecapView recap={recap} workout={log.workout} />
+        <>
+          <BlockRecapView recap={recap} workout={log.workout} />
+          <BlockWeek
+            block={block}
+            members={blockMembers(log.plan, block)}
+            workout={log.workout}
+            lit={lit}
+          />
+        </>
       ) : (
         <BlockOverview recap={recap} plan={log.plan} workout={log.workout} lit={lit} />
       )}

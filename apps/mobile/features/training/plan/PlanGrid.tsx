@@ -5,6 +5,7 @@ import { weekdayLetters } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import { pressRow } from "../../../lib/press";
 import { Label } from "../components/Label";
+import { GOLD_TINT } from "../components/tints";
 import { DayMark } from "../today/DayMark";
 import { KIND_LOOK } from "../today/kindLook";
 import { type } from "../type";
@@ -40,10 +41,12 @@ export type PlanGridProps = {
   rows: readonly PlanGridRow[];
   /** Off inside a card that already draws the frame. */
   framed?: boolean;
+  /** The key of a row just added, lit for a moment. */
+  lit?: string;
 };
 
 /** The week at a glance: a row per plan, a column per weekday, marked where it lands. Tap a row to open it. */
-export function PlanGrid({ rows, framed = true }: PlanGridProps): React.ReactElement {
+export function PlanGrid({ rows, framed = true, lit }: PlanGridProps): React.ReactElement {
   return (
     <View
       style={[
@@ -84,6 +87,7 @@ export function PlanGrid({ rows, framed = true }: PlanGridProps): React.ReactEle
             paddingVertical: 7,
             borderTopWidth: 1,
             borderTopColor: colors.lineOnLightSoft,
+            backgroundColor: row.key === lit ? GOLD_TINT : undefined,
           })}
         >
           <View style={{ flex: 1, minWidth: 0, gap: 1 }}>
@@ -93,12 +97,15 @@ export function PlanGrid({ rows, framed = true }: PlanGridProps): React.ReactEle
             >
               {row.name}
             </Text>
-            <Text
-              numberOfLines={2}
-              style={[type.mono, { fontSize: 11, color: KIND_LOOK[row.kind].ink }]}
-            >
-              {row.sub}
-            </Text>
+            {row.lines.map((line) => (
+              <Text
+                key={line}
+                numberOfLines={1}
+                style={[type.mono, { fontSize: 11, color: KIND_LOOK[row.kind].ink }]}
+              >
+                {line}
+              </Text>
+            ))}
           </View>
           {[0, 1, 2, 3, 4, 5, 6].map((day) => (
             <Cell key={day} row={row} day={day} />

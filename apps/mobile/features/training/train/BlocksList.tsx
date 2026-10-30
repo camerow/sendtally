@@ -30,13 +30,14 @@ function Group({
 
 /** Train > Blocks: the running block on top, then plans with no block, then upcoming and past blocks. */
 export function BlocksList(): React.ReactElement {
-  const { today } = useHangData();
+  const { today, model } = useHangData();
   const { log } = useTrainingLog(useApi());
   const { plan, workout } = log;
   const { current, upcoming, past } = blockGroups(plan.blocks, today);
   const ongoing = planGridRows(
     liveMembers(plan, today).filter((m) => m.blockId === null),
-    workout
+    workout,
+    model.gripName
   );
   const weeks = (n: number): string => t("calendar.weeks", { count: n });
   const nothing = plan.blocks.length === 0 && ongoing.length === 0;

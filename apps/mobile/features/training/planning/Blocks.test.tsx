@@ -149,13 +149,17 @@ describe("block overview", () => {
     expect(screen.getByText("So far")).toBeTruthy();
     expect(screen.getByText("0 of 4")).toBeTruthy();
     expect(screen.queryByText("Delete block")).toBeNull();
-    expect(screen.queryByText("Add a workout")).toBeNull();
+    expect(screen.getByText("Your week")).toBeTruthy();
+    expect(screen.getByText("1 exercise")).toBeTruthy();
+    expect(screen.getByText("45m")).toBeTruthy();
     expect(screen.queryByLabelText("Remove Back squat from your plan")).toBeNull();
-    await fireEvent.press(screen.getByText("Back squat"));
+    await fireEvent.press(screen.getByLabelText("Back squat"));
     expect(router.push).toHaveBeenCalledWith({
-      pathname: "/workout/[id]",
-      params: { id: "squat" },
+      pathname: "/plan/membership/[id]",
+      params: { id: "m1" },
     });
+    await fireEvent.press(screen.getByLabelText("Add to Winter base"));
+    expect(screen.getByText("What kind?")).toBeTruthy();
     await fireEvent.press(screen.getByText("Edit"));
     expect(router.push).toHaveBeenCalledWith({
       pathname: "/plan/block/edit",
@@ -197,11 +201,12 @@ describe("plan again", () => {
     expect(screen.getAllByText("0/1")).toHaveLength(4);
     expect(screen.getByText("W1")).toBeTruthy();
     expect(screen.getByText("0 of 4 done · -")).toBeTruthy();
-    await fireEvent.press(screen.getByText("Back squat"));
+    await fireEvent.press(screen.getByText("0 of 4 done · -"));
     expect(router.push).toHaveBeenCalledWith({
-      pathname: "/workout/[id]",
-      params: { id: "squat" },
+      pathname: "/plan/membership/[id]",
+      params: { id: "m3" },
     });
+    expect(screen.getByLabelText("Back squat")).toBeTruthy();
   });
 
   it("copies a past block from the week picked, then opens the copy", async () => {
@@ -271,7 +276,7 @@ describe("block weeks", () => {
 describe("week grid", () => {
   it("opens a plan's weeks inside a block and its workout outside one", async () => {
     const workout = (id: string): WorkoutRecord | undefined => (id === "squat" ? squat : undefined);
-    await renderWithHang(<PlanGrid rows={planGridRows(plan.memberships, workout)} />);
+    await renderWithHang(<PlanGrid rows={planGridRows(plan.memberships, workout, (id) => id)} />);
     const [inBlock, outside] = screen.getAllByLabelText("Back squat");
     await fireEvent.press(inBlock!);
     expect(router.push).toHaveBeenLastCalledWith({

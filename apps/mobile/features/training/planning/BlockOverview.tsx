@@ -1,20 +1,13 @@
-import { router } from "expo-router";
 import React from "react";
-import { View } from "react-native";
 import type { Plan } from "@sendtally/api-client";
 import { blockWeekOn } from "@sendtally/core/hang";
-import { kindLabel } from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
 import { blockMembers, type BlockRecap, type WorkoutLookup } from "@sendtally/features/training";
 import { BlockWeekChips } from "../blocks/BlockWeekChips";
 import { doneOfShort, effortText } from "../blocks/blockText";
-import { DashedPanel } from "../components/DashedPanel";
-import { PlanRow } from "../components/PlanRow";
 import { useHangData } from "../data/HangDataContext";
-import { membershipWhen } from "../plans/planText";
 import { SummaryTiles } from "../summary/SummaryTiles";
-import { DayMark } from "../today/DayMark";
-import { KIND_LOOK } from "../today/kindLook";
+import { BlockWeek } from "./BlockWeek";
 
 export type BlockOverviewProps = {
   recap: BlockRecap;
@@ -24,7 +17,7 @@ export type BlockOverviewProps = {
   lit?: string;
 };
 
-/** A block before it ends: its weeks, how this week and the block are going, and its workouts. */
+/** A block before it ends: its weeks, how this week and the block are going, and its week. */
 export function BlockOverview({
   recap,
   plan,
@@ -34,7 +27,6 @@ export function BlockOverview({
   const { today } = useHangData();
   const { block } = recap;
   const week = recap.weeks[(blockWeekOn(block, today) ?? 0) - 1];
-  const members = blockMembers(plan, block);
   return (
     <>
       <BlockWeekChips block={block} today={today} />
@@ -47,28 +39,7 @@ export function BlockOverview({
           ]}
         />
       )}
-      {members.length === 0 ? (
-        <DashedPanel body={t("plan.blockEmpty")} />
-      ) : (
-        <View style={{ gap: 8 }}>
-          {members.map((m) => {
-            const w = workout(m.workoutId);
-            if (w === undefined) return null;
-            return (
-              <PlanRow
-                key={m.id}
-                mark={<DayMark kind={w.kind} filled />}
-                tag={kindLabel(w.kind)}
-                tagColor={KIND_LOOK[w.kind].ink}
-                name={w.name}
-                meta={membershipWhen(m)}
-                onOpen={() => router.push({ pathname: "/workout/[id]", params: { id: w.id } })}
-                lit={m.id === lit}
-              />
-            );
-          })}
-        </View>
-      )}
+      <BlockWeek block={block} members={blockMembers(plan, block)} workout={workout} lit={lit} />
     </>
   );
 }

@@ -1,4 +1,3 @@
-import { router } from "expo-router";
 import React from "react";
 import { View } from "react-native";
 import { kindLabel } from "@sendtally/features/activities";
@@ -8,6 +7,7 @@ import { BlockWeekBars } from "../blocks/BlockWeekBars";
 import { doneOfShort, effortText } from "../blocks/blockText";
 import { PlanRow } from "../components/PlanRow";
 import { useHangData } from "../data/HangDataContext";
+import { openMembership } from "../plan/openMembership";
 import { SummaryTiles } from "../summary/SummaryTiles";
 import { changeText } from "../summary/summaryText";
 import { DayMark } from "../today/DayMark";
@@ -42,7 +42,9 @@ export function BlockRecapView({ recap, workout }: BlockRecapViewProps): React.R
               tagColor={KIND_LOOK[w.kind].ink}
               name={w.name}
               meta={`${t("plan.doneOf", { done: r.done, planned: r.planned })} · ${change}`}
-              onOpen={() => router.push({ pathname: "/workout/[id]", params: { id: w.id } })}
+              onOpen={() =>
+                openMembership({ id: r.membershipId, blockId: recap.block.id, workoutId: w.id })
+              }
             />
           );
         })}

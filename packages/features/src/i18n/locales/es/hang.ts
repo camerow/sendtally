@@ -88,6 +88,8 @@ export const hang = {
   "hang.history": "Historial · {count}",
   "hang.sessionCount_one": "{count} sesión",
   "hang.sessionCount_other": "{count} sesiones",
+  "hang.gripCount_one": "{count} agarre",
+  "hang.gripCount_other": "{count} agarres",
   "hang.showAll": "Ver las {n}",
   "hang.showFewer": "Ver menos",
 
