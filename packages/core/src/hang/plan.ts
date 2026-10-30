@@ -333,7 +333,8 @@ export const timeUnitsOf = (p: Pick<Protocol, "hangS" | "restS" | "setRestS">): 
 
 /**
  * Items run as a circuit: each round does every item once, for as many rounds as the most
- * sets. An exercise done on each side plays twice, left then right.
+ * sets, resting after each its rest, else its rest between sets. An exercise done on each side
+ * plays twice, left then right.
  */
 export function intervalsOf(
   items: readonly SessionItem[],
@@ -348,7 +349,7 @@ export function intervalsOf(
         ? { measure: "count" as const, count: i.dose.reps ?? 1 }
         : { measure: "time" as const, seconds: i.dose.onS }),
       ...(i.dose.weightKg === undefined ? {} : { loadKg: i.dose.weightKg }),
-      restAfter: i.dose.offS ?? 0,
+      restAfter: i.dose.offS ?? i.dose.setRestS ?? 0,
     })),
   };
 }

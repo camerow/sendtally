@@ -50,6 +50,31 @@ describe("Intervals player", () => {
     jest.useRealTimers();
   });
 
+  it("climbs for time in laps, Climb then Rest, asking no grade", async () => {
+    await renderWithHang(
+      <IntervalsScreen
+        workout={{
+          ...workout,
+          kind: "climbing",
+          title: "ARC laps",
+          body: {
+            rounds: 3,
+            steps: [{ label: "ARC", measure: "time", seconds: 600, restAfter: 180 }],
+          },
+        }}
+      />
+    );
+    expect(screen.getByText("Lap 1 of 3")).toBeTruthy();
+    await advance(5000);
+    expect(screen.getByText("Climb")).toBeTruthy();
+    await fireEvent.press(screen.getByLabelText("Next set"));
+    expect(screen.getAllByText("Rest").length).toBeGreaterThan(0);
+    expect(screen.queryByText("Climb")).toBeNull();
+    await fireEvent.press(screen.getByLabelText("Next set"));
+    expect(screen.getByText("Lap 2 of 3")).toBeTruthy();
+    expect(screen.getByText("Climb")).toBeTruthy();
+  });
+
   it("plays each side, waits for a counted step, and hands what was done to the review", async () => {
     await renderWithHang(<IntervalsScreen workout={workout} />);
     expect(screen.getByText("Get ready")).toBeTruthy();

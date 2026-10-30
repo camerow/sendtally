@@ -316,6 +316,12 @@ describe("intervalsOf", () => {
     });
   });
 
+  it("rests a step without its own rest for its rest between sets, as climbing laps do", () => {
+    expect(
+      intervalsOf([{ exercise: "ARC", dose: { sets: 3, onS: 1200, setRestS: 300 } }]).steps
+    ).toEqual([{ label: "ARC", measure: "time", seconds: 1200, restAfter: 300 }]);
+  });
+
   it("plays an exercise done on each side twice", () => {
     const body = intervalsOf(
       [{ exercise: "Pigeon", dose: { sets: 2, onS: 60 } }],

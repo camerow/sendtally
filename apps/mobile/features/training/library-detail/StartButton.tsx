@@ -36,7 +36,7 @@ export function StartButton({
   return (
     <Button
       label={climbing ? t("plan.logSession") : t("hang.start")}
-      onPress={() => startLibraryWorkout(workout, date, run, eachSide, (e) => tally(e) !== null)}
+      onPress={() => startLibraryWorkout(workout, date, run, eachSide, tally)}
       variant={climbing ? "gold" : "primary"}
       height={height}
       icon={climbing ? "plus" : "play"}

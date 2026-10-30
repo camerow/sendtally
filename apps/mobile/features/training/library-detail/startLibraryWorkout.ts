@@ -5,6 +5,7 @@ import {
   type PlanLink,
   type SessionItem,
 } from "@sendtally/core/hang";
+import type { TallyMeasure } from "@sendtally/features/exercises";
 import { activityKindOf, type LibraryWorkout } from "@sendtally/features/workouts";
 import { activityFormPath, runPath, type RunPlayer } from "../data/workoutRunParams";
 import { startIntervals } from "../intervals/intervalsParams";
@@ -24,18 +25,18 @@ const playerOf = (items: readonly SessionItem[]): RunPlayer =>
     : "/workout/checklist";
 
 /**
- * Runs a workout in the player its items call for: hangboard in the timer, any exercise
- * logged on the tally or with reps or weight in the sets player, all timed in the intervals
- * player, anything else as a checklist. A climbing workout with no items opens the live
- * session, and any other workout with none the activity form. An exercise done on each side
- * plays twice in the intervals player.
+ * Runs a workout in the player its items call for: hangboard in the timer, all timed in the
+ * intervals player (climbing measured in time too, as laps), any exercise logged in climbs on
+ * the tally or with reps or weight in the sets player, anything else as a checklist. A climbing
+ * workout with no items opens the live session, and any other workout with none the activity
+ * form. An exercise done on each side plays twice in the intervals player.
  */
 export function startLibraryWorkout(
   w: LibraryWorkout,
   date: CalendarDate,
   { link, session, items }: PlannedItems,
   eachSide: (exercise: string) => boolean,
-  tallied: (exercise: string) => boolean = () => false
+  tally: (exercise: string) => TallyMeasure | null = () => null
 ): void {
   const kind = activityKindOf(w.kind);
   const [first] = items;
@@ -52,8 +53,9 @@ export function startLibraryWorkout(
     router.push(activityFormPath(run));
     return;
   }
-  const onTally = items.some((i) => tallied(i.exercise));
-  if (!onTally && items.every((i) => i.dose.onS !== undefined)) {
+  const onTally = items.some((i) => tally(i.exercise) !== null);
+  const climbs = items.some((i) => tally(i.exercise) === "climbs");
+  if (!climbs && items.every((i) => i.dose.onS !== undefined)) {
     startIntervals({ ...run, body: intervalsOf(items, eachSide) });
     return;
   }
