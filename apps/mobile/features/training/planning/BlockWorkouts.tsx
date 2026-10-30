@@ -37,6 +37,7 @@ export function BlockWorkouts({ block, highlight }: BlockWorkoutsProps): React.R
       )}
       <Button
         label={t("plan.addWorkout")}
+        accessibilityLabel={t("plan.addToBlock", { name: block.name })}
         onPress={() => setAdding(true)}
         variant="primary"
         icon="plus"

@@ -50,7 +50,7 @@ export function BlockCard({ block, members, workout }: BlockCardProps): React.Re
           </Text>
         </Pressable>
         <Button
-          label={t("hang.add")}
+          label={t("plan.addWorkout")}
           accessibilityLabel={t("plan.addToBlock", { name: block.name })}
           onPress={() => setAdding(true)}
           variant="outline"

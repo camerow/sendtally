@@ -102,7 +102,7 @@ describe("blocks", () => {
 
   it("adds a workout from the editor and comes back to it", async () => {
     await renderWithHang(<BlockFormScreen id="b1" />, hangData(), { workouts: [squat], plan });
-    await fireEvent.press(screen.getByText("Add a workout"));
+    await fireEvent.press(screen.getByLabelText("Add a workout to Winter base"));
     await fireEvent.press(screen.getAllByText("Strength").at(-1)!);
     expect(router.push).toHaveBeenCalledWith({
       pathname: "/plan/add",
@@ -158,7 +158,7 @@ describe("block overview", () => {
       pathname: "/plan/membership/[id]",
       params: { id: "m1", back: "Winter base" },
     });
-    await fireEvent.press(screen.getByLabelText("Add to Winter base"));
+    await fireEvent.press(screen.getByLabelText("Add a workout to Winter base"));
     expect(screen.getByText("What kind?")).toBeTruthy();
     await fireEvent.press(screen.getByText("Edit"));
     expect(router.push).toHaveBeenCalledWith({
@@ -222,7 +222,7 @@ describe("plan again", () => {
       params: { id: "m3", back: "Summer base" },
     });
     expect(screen.getByLabelText("Back squat")).toBeTruthy();
-    expect(screen.queryByLabelText("Add to Summer base")).toBeNull();
+    expect(screen.queryByLabelText("Add a workout to Summer base")).toBeNull();
   });
 
   it("copies a past block from the week picked, then opens the copy", async () => {

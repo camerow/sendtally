@@ -46,7 +46,7 @@ export const plan = {
   "plan.blockNamePlaceholder": "Wintergrundlage",
   "plan.weeks": "Wochen",
   "plan.addWorkout": "Workout hinzufügen",
-  "plan.addToBlock": "Zu {name} hinzufügen",
+  "plan.addToBlock": "Ein Workout zu {name} hinzufügen",
   "plan.openBlock": "{name} öffnen",
   "plan.deleteBlock": "Block löschen",
   "plan.deleteBlockTitle": "{name} löschen?",
