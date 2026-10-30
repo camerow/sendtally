@@ -27,6 +27,7 @@ import { resolveLocale, setLocale } from "@sendtally/features/i18n";
 import { AnalyticsProvider } from "../features/analytics/AnalyticsProvider";
 import { AlreadyRunningSheet } from "../features/live-session/AlreadyRunningSheet";
 import { BillingProvider } from "../features/billing/BillingProvider";
+import { useRestTone } from "../features/training/rest/useRestTone";
 import { ReminderPromptProvider } from "../features/training/reminders/ReminderPromptProvider";
 import { CLERK_PUBLISHABLE_KEY } from "../lib/config";
 import { QueryProvider } from "../lib/QueryProvider";
@@ -86,6 +87,7 @@ function InteractiveMarker(): React.ReactElement | null {
 
 function AppStack(): React.ReactElement | null {
   const { isLoaded, isSignedIn } = useAuth();
+  useRestTone();
   if (!isLoaded) return null;
   return (
     <ReminderPromptProvider>

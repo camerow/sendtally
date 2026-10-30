@@ -14,7 +14,10 @@ export type RestRowProps = {
   onSkip: () => void;
 };
 
-/** A rest counting down inline: a gold fill drains with it, and it takes more time or a skip. */
+/**
+ * A rest counting down inline: a gold fill drains with it, and it takes more time or a skip. A
+ * row of the set table between sets, between the cards with what is next between exercises.
+ */
 export function RestRow({ rest, left, onMore, onSkip }: RestRowProps): React.ReactElement {
   const share = Math.min(1, left / rest.seconds);
   return (
@@ -27,7 +30,7 @@ export function RestRow({ rest, left, onMore, onSkip }: RestRowProps): React.Rea
         gap: 4,
         paddingLeft: 12,
         paddingRight: 6,
-        borderRadius: 12,
+        borderRadius: rest.next === null ? 10 : 12,
         overflow: "hidden",
         backgroundColor: colors.surfaceSoft,
       }}

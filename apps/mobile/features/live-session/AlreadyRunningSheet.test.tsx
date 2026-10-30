@@ -30,7 +30,7 @@ const memory = (): LogSession.DraftStorage => {
   });
 };
 jest.mock("../../lib/liveSessionStorage", () => ({ liveSessionStorage: memory() }));
-jest.mock("../../lib/liveRunStorage", () => ({ liveRunStorage: memory() }));
+jest.mock("../../lib/liveRunStorage");
 
 const HANGS: LiveRun = {
   title: "Max hangs",

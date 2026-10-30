@@ -1,9 +1,9 @@
-import { setAudioModeAsync, useAudioPlayer } from "expo-audio";
 import React from "react";
-import workSound from "../../../assets/sounds/work.wav";
+import { useLiveRun, writeRest } from "../../live-session/liveRun";
 import { restAfter, restLeft, withMoreRest, type Rest } from "./restCountdown";
 
 export type RestClock = {
+  /** The rest running, none once it is over. */
   rest: Rest | null;
   /** Whole seconds to go. */
   left: number;
@@ -13,44 +13,36 @@ export type RestClock = {
   skip: () => void;
 };
 
-/**
- * The one rest a player runs at a time. At zero it plays the hang timer's work tone, then
- * clears.
- */
-export function useRest(): RestClock {
-  const [rest, setRest] = React.useState<Rest | null>(null);
+/** Whole seconds left on a rest, counted down live; zero once it is over. */
+export function useRestLeft(rest: Rest | null): number {
   const [now, setNow] = React.useState(Date.now);
-  const work = useAudioPlayer(workSound);
-
+  const endsAt = rest?.endsAt;
   React.useEffect(() => {
-    void setAudioModeAsync({ playsInSilentMode: true, interruptionMode: "mixWithOthers" });
-  }, []);
-
-  React.useEffect(() => {
-    if (rest === null) return;
+    if (endsAt === undefined) return;
     const timer = setInterval(() => {
       const at = Date.now();
-      if (at < rest.endsAt) {
-        setNow(at);
-        return;
-      }
-      void work.seekTo(0);
-      work.play();
-      setRest(null);
+      setNow(at);
+      if (at >= endsAt) clearInterval(timer);
     }, 250);
     return () => clearInterval(timer);
-  }, [rest, work]);
+  }, [endsAt]);
+  return rest === null ? 0 : Math.min(rest.seconds, restLeft(rest, now));
+}
 
-  const left = rest === null ? 0 : restLeft(rest, now);
+/**
+ * The one rest a player runs at a time, kept with the live run so it outlasts the screen;
+ * `useRestTone` plays its end.
+ */
+export function useRest(): RestClock {
+  const stored = useLiveRun()?.rest ?? null;
+  const left = useRestLeft(stored);
   return {
-    rest,
+    rest: left > 0 ? stored : null,
     left,
-    tick: (at, seconds, next) => {
-      const started = Date.now();
-      setNow(started);
-      setRest(restAfter(at, seconds, next ?? null, started));
+    tick: (at, seconds, next) => writeRest(restAfter(at, seconds, next ?? null, Date.now())),
+    more: () => {
+      if (stored !== null) writeRest(withMoreRest(stored));
     },
-    more: () => setRest((r) => (r === null ? r : withMoreRest(r))),
-    skip: () => setRest(null),
+    skip: () => writeRest(null),
   };
 }

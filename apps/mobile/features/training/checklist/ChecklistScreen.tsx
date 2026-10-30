@@ -11,6 +11,7 @@ import { Button } from "../components/Button";
 import { PlayerHeader } from "../components/PlayerHeader";
 import { logRun, runParams, type WorkoutRun } from "../data/workoutRunParams";
 import { resumedRun, writeLiveRun } from "../../live-session/liveRun";
+import { RestPreview } from "../rest/RestPreview";
 import { RestRow } from "../rest/RestRow";
 import { useRest } from "../rest/useRest";
 import { afterKey, allSets, setKey } from "../sets/setsRun";
@@ -57,7 +58,8 @@ export function ChecklistScreen({
     if (!ticking || name === undefined) rest.skip();
     else rest.tick(afterKey(i), run.exerciseRestS, exerciseName(name));
   };
-  const finish = (): void =>
+  const finish = (): void => {
+    rest.skip();
     logRun(
       run,
       doneAsPrescribed(run.items),
@@ -66,6 +68,7 @@ export function ChecklistScreen({
         .filter((at) => !ticked.has(at.item))
         .map(setKey)
     );
+  };
   const ending = React.useRef(end);
   React.useEffect(() => {
     if (!ending.current) return;
@@ -93,8 +96,18 @@ export function ChecklistScreen({
                 ticked={ticked.has(i)}
                 onToggle={() => toggle(i)}
               />
-              {rest.rest?.at === afterKey(i) && (
-                <RestRow rest={rest.rest} left={rest.left} onMore={rest.more} onSkip={rest.skip} />
+              {rest.rest?.at === afterKey(i) ? (
+                <View style={{ paddingVertical: 6 }}>
+                  <RestRow
+                    rest={rest.rest}
+                    left={rest.left}
+                    onMore={rest.more}
+                    onSkip={rest.skip}
+                  />
+                </View>
+              ) : (
+                i < run.items.length - 1 &&
+                run.exerciseRestS > 0 && <RestPreview seconds={run.exerciseRestS} />
               )}
             </React.Fragment>
           ))}

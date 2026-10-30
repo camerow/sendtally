@@ -4,7 +4,6 @@ import { router } from "expo-router";
 import React from "react";
 import { StyleSheet } from "react-native";
 import { colors } from "@sendtally/design/tokens";
-import type * as LogSession from "@sendtally/features/log-session";
 import { liveRunStorage } from "../../../lib/liveRunStorage";
 import { readLiveRun } from "../../live-session/liveRun";
 import { NO_PLAN } from "../data/planLinkParams";
@@ -16,22 +15,7 @@ jest.mock("expo-router", () => ({
   router: { replace: jest.fn(), back: jest.fn(), canGoBack: () => true },
 }));
 jest.mock("expo-keep-awake", () => ({ useKeepAwake: () => undefined }));
-jest.mock("../../../lib/liveRunStorage", () => {
-  let value: string | null = null;
-  return {
-    liveRunStorage: jest
-      .requireActual<typeof LogSession>("@sendtally/features/log-session")
-      .draftStorage({
-        read: () => value,
-        write: (next) => {
-          value = next;
-        },
-        remove: () => {
-          value = null;
-        },
-      }),
-  };
-});
+jest.mock("../../../lib/liveRunStorage");
 
 /** What the timer handed its review. */
 const reviewed = (): { params: Record<string, string>; run: TimerRun } => {

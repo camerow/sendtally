@@ -2,14 +2,17 @@ import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals
 import { act, fireEvent, screen } from "@testing-library/react-native";
 import { router } from "expo-router";
 import React from "react";
-import { hangData, renderWithHang } from "../data/renderWithHang";
+import { liveRunStorage } from "../../../lib/liveRunStorage";
+import { hangData, readingOrder, renderWithHang } from "../data/renderWithHang";
 import type { WorkoutRun } from "../data/workoutRunParams";
+import { readLiveRun } from "../../live-session/liveRun";
 import { SetsScreen } from "./SetsScreen";
 
 jest.mock("expo-router", () => ({
   router: { replace: jest.fn(), back: jest.fn(), canGoBack: () => true },
 }));
 jest.mock("../../../lib/api", () => ({ useApi: () => undefined }));
+jest.mock("../../../lib/liveRunStorage");
 jest.mock("@sendtally/features/activities", () => ({
   ...jest.requireActual<object>("@sendtally/features/activities"),
   useWeightUnit: () => "kg",
@@ -53,16 +56,13 @@ const advance = async (ms: number): Promise<void> => {
 describe("Sets player", () => {
   beforeEach(() => {
     jest.useFakeTimers({ now: new Date(2026, 9, 22, 18, 5) });
+    liveRunStorage.remove();
   });
   afterEach(() => {
     jest.useRealTimers();
   });
 
   it("rests in line after each tick, folds a finished exercise, and logs the clock's minutes", async () => {
-    const { useAudioPlayer } = jest.requireMock<{ useAudioPlayer: () => { play: () => void } }>(
-      "expo-audio"
-    );
-    const tone = jest.spyOn(useAudioPlayer(), "play");
     await renderWithHang(<SetsScreen run={run} />, hangData(), {
       workouts: [
         {
@@ -90,8 +90,17 @@ describe("Sets player", () => {
     expect(screen.getByText("Last 8 × 60 kg")).toBeTruthy();
     expect(screen.getByText("8 × 60 kg")).toBeTruthy();
     expect(screen.getByText("1:30 rest")).toBeTruthy();
+    expect(screen.getAllByText("Rest 2:00")).toHaveLength(2);
     await fireEvent.press(screen.getByLabelText("Back squat, set 1"));
-    expect(screen.getByLabelText("Rest, 1:30 left")).toBeTruthy();
+    expect(
+      readingOrder("Back squat, set 1", "Rest, 1:30 left", "Back squat, set 2", "Rest 2:00")
+    ).toEqual([
+      "Back squat, set 1",
+      "Rest, 1:30 left",
+      "Back squat, set 2",
+      "Rest 2:00",
+      "Rest 2:00",
+    ]);
     await advance(30_000);
     expect(screen.getByLabelText("Rest, 1:00 left")).toBeTruthy();
     expect(screen.getByText("0:30")).toBeTruthy();
@@ -103,11 +112,12 @@ describe("Sets player", () => {
     expect(screen.queryByLabelText("Rest, 1:00 left")).toBeNull();
     expect(screen.getByLabelText("Back squat, 2 of 2 sets")).toBeTruthy();
     expect(screen.getByText("Next: Row")).toBeTruthy();
-    expect(screen.getByLabelText("Rest, 2:00 left")).toBeTruthy();
-    expect(tone).not.toHaveBeenCalled();
+    expect(
+      readingOrder("Back squat, 2 of 2 sets", "Rest, 2:00 left", "Row, set 1", "Rest 2:00")
+    ).toEqual(["Back squat, 2 of 2 sets", "Rest, 2:00 left", "Row, set 1", "Rest 2:00"]);
     await advance(120_000);
     expect(screen.queryByText("Next: Row")).toBeNull();
-    expect(tone).toHaveBeenCalledTimes(1);
+    expect(screen.getAllByText("Rest 2:00")).toHaveLength(2);
     expect(screen.getByLabelText("Row, set 1 · Weight").props.accessibilityValue).toEqual({
       text: "60 kg",
     });
@@ -141,6 +151,22 @@ describe("Sets player", () => {
         off: JSON.stringify(["2:0"]),
       },
     });
+  });
+
+  it("keeps a running rest when the player is minimised and opened again", async () => {
+    const view = await renderWithHang(<SetsScreen run={run} />, hangData());
+    await fireEvent.press(screen.getByLabelText("Back squat, set 1"));
+    await view.unmount();
+    await advance(30_000);
+    await renderWithHang(<SetsScreen run={run} />, hangData());
+    expect(readingOrder("Back squat, set 1", "Rest, 1:00 left", "Back squat, set 2")).toEqual([
+      "Back squat, set 1",
+      "Rest, 1:00 left",
+      "Back squat, set 2",
+    ]);
+    await fireEvent.press(screen.getByText("Skip"));
+    expect(screen.queryByLabelText("Rest, 1:00 left")).toBeNull();
+    expect(readLiveRun()?.rest).toBeUndefined();
   });
 
   it("shows which dose an alternating exercise runs, with its name when it has one", async () => {

@@ -8,6 +8,7 @@ import { t } from "@sendtally/features/i18n";
 import { colors, fonts } from "@sendtally/design/tokens";
 import { Icon, type IconName } from "../../components/Icon";
 import { LiveBar } from "../../features/live-session/LiveBar";
+import { RestStrip } from "../../features/live-session/RestStrip";
 
 const SELECTED_RULE_HEIGHT = 3;
 
@@ -53,6 +54,7 @@ function SignedInTabs(): React.ReactElement {
       tabBar={(props) => (
         <View>
           <LiveBar />
+          <RestStrip />
           <BottomTabBar {...props} />
         </View>
       )}

@@ -1,6 +1,6 @@
 import { jest } from "@jest/globals";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, type RenderResult } from "@testing-library/react-native";
+import { render, screen, type RenderResult } from "@testing-library/react-native";
 import React from "react";
 import type {
   ActivityRecord,
@@ -148,4 +148,23 @@ export async function renderWithHang(
     </QueryClientProvider>
   );
   return { ...result, actions };
+}
+
+/** The labels and texts on screen, top to bottom, kept to those named: where each one sits. */
+export function readingOrder(...named: string[]): string[] {
+  const read: string[] = [];
+  const walk = (node: unknown): void => {
+    if (typeof node === "string") read.push(node);
+    else if (Array.isArray(node)) node.forEach(walk);
+    else if (typeof node === "object" && node !== null) {
+      const { props, children } = node as {
+        props: { accessibilityLabel?: unknown };
+        children: unknown;
+      };
+      if (typeof props.accessibilityLabel === "string") read.push(props.accessibilityLabel);
+      walk(children);
+    }
+  };
+  walk(screen.toJSON());
+  return read.filter((text) => named.includes(text));
 }

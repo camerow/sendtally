@@ -2,7 +2,7 @@ import { describe, expect, it, jest } from "@jest/globals";
 import { act, fireEvent, screen } from "@testing-library/react-native";
 import { router } from "expo-router";
 import React from "react";
-import { renderWithHang } from "../data/renderWithHang";
+import { readingOrder, renderWithHang } from "../data/renderWithHang";
 import type { WorkoutRun } from "../data/workoutRunParams";
 import { ChecklistScreen } from "./ChecklistScreen";
 
@@ -10,6 +10,7 @@ jest.mock("expo-router", () => ({
   router: { replace: jest.fn(), back: jest.fn(), canGoBack: () => true },
 }));
 jest.mock("../../../lib/api", () => ({ useApi: () => undefined }));
+jest.mock("../../../lib/liveRunStorage");
 jest.mock("@sendtally/features/activities", () => ({
   ...jest.requireActual<object>("@sendtally/features/activities"),
   useWeightUnit: () => "kg",
@@ -26,6 +27,7 @@ const run: WorkoutRun = {
   items: [
     { exercise: "Cat-cow", dose: { sets: 2 } },
     { exercise: "Wrist circles", dose: { sets: 1 } },
+    { exercise: "Pigeon", dose: { sets: 1 } },
   ],
 };
 
@@ -37,10 +39,18 @@ describe("Checklist player", () => {
     expect(screen.queryByText("Back")).toBeNull();
     await fireEvent.press(screen.getByLabelText("Minimise"));
     expect(router.back).toHaveBeenCalled();
+    const order = (): string[] =>
+      readingOrder("Cat-cow, 2 sets", "Rest 1:00", "Next: Wrist circles", "Wrist circles, 1 set");
+    expect(order()).toEqual(["Cat-cow, 2 sets", "Rest 1:00", "Wrist circles, 1 set", "Rest 1:00"]);
     const catCow = screen.getByLabelText("Cat-cow, 2 sets");
     await fireEvent.press(catCow);
     expect(catCow.props.accessibilityState).toEqual({ checked: true });
-    expect(screen.getByText("Next: Wrist circles")).toBeTruthy();
+    expect(order()).toEqual([
+      "Cat-cow, 2 sets",
+      "Next: Wrist circles",
+      "Wrist circles, 1 set",
+      "Rest 1:00",
+    ]);
     await act(async () => {
       jest.advanceTimersByTime(4 * 60_000);
     });
@@ -60,9 +70,10 @@ describe("Checklist player", () => {
         done: JSON.stringify([
           { item: 0, exercise: "Cat-cow", sets: [{}, {}] },
           { item: 1, exercise: "Wrist circles", sets: [{}] },
+          { item: 2, exercise: "Pigeon", sets: [{}] },
         ]),
         startTime: "07:00",
-        off: JSON.stringify(["1:0"]),
+        off: JSON.stringify(["1:0", "2:0"]),
         live: "1",
       },
     });

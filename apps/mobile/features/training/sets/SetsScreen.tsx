@@ -25,6 +25,7 @@ import { Button } from "../components/Button";
 import { PlayerHeader } from "../components/PlayerHeader";
 import { logRun, runParams, type WorkoutRun } from "../data/workoutRunParams";
 import { resumedRun, writeLiveRun } from "../../live-session/liveRun";
+import { RestPreview } from "../rest/RestPreview";
 import { RestRow } from "../rest/RestRow";
 import { useRest } from "../rest/useRest";
 import { ClimbingCard } from "./ClimbingCard";
@@ -113,19 +114,26 @@ export function SetsScreen({
     rest.rest?.at === key && (
       <RestRow rest={rest.rest} left={rest.left} onMore={rest.more} onSkip={rest.skip} />
     );
+  const restBetween = (item: number): React.ReactNode =>
+    restAt(afterKey(item)) ||
+    (item < run.items.length - 1 && run.exerciseRestS > 0 && (
+      <RestPreview seconds={run.exerciseRestS} />
+    ));
   const climbedSets = (item: number): SetDone[] =>
     exerciseSets(
       climbs,
       item,
       tallyOf(item) === "wallTime" ? run.items[item]?.dose.onS : undefined
     );
-  const finish = (): void =>
+  const finish = (): void => {
+    rest.skip();
     logRun(
       run,
       shown.map((d) => (tallyOf(d.item) === null ? d : { ...d, sets: climbedSets(d.item) })),
       startedAt,
       sets.map(setKey).filter((key) => !ticked.has(key))
     );
+  };
   const ending = React.useRef(end);
   const loaded = exercises.status !== "loading" && activities.status !== "loading";
   React.useEffect(() => {
@@ -220,7 +228,7 @@ export function SetsScreen({
                     restUnder={(set) => restAt(setKey({ item: i, set }))}
                   />
                 )}
-                {restAt(afterKey(i))}
+                {restBetween(i)}
               </React.Fragment>
             );
           })}
