@@ -5,7 +5,7 @@ import type { GradeScale } from "../log-session/types";
 import { gradeBins } from "../trends/filter";
 import type { GradeBinVM, GradeRange } from "../trends/types";
 import { monthKey, monthLabel, monthName } from "../sessions/months";
-import { sendStyleOf, sendStyleText } from "./overview";
+import { isThisClimb, sendStyleOf, sendStyleText } from "./overview";
 import { dateLabel } from "./projects";
 import { climbDraftGrade, climbGradeLabel } from "./transforms";
 
@@ -110,6 +110,50 @@ function metaOf(climb: ClimbSummary, today: string): string {
         ? t("climbs.today")
         : dateLabel(climb.last_at);
   return climb.area === null ? when : `${climb.area.name} · ${when}`;
+}
+
+/** A session's climbs under its row, or loose by its day when the session has no name of its own. */
+export type ClimbingSessionVM = { named: boolean; climbs: ClimbLogRowVM[] };
+
+/**
+ * Each climb of one session once, and how it went that day. A bare session that only holds
+ * climbs added on their own reads as those climbs, so they carry its day.
+ */
+export function climbingSessionVM(
+  session: SessionWithClimbs,
+  climbs: readonly ClimbSummary[]
+): ClimbingSessionVM {
+  const found = [
+    ...new Set(session.climbs.flatMap((l) => climbs.find((c) => isThisClimb(c, l)) ?? [])),
+  ];
+  const named =
+    found.length === 0 || session.source !== "manual" || (session.name ?? "").trim() !== "";
+  const row = (c: ClimbSummary): ClimbLogRowVM => {
+    const logged = session.climbs.filter((l) => isThisClimb(c, l));
+    const tries = logged.reduce((n, l) => n + l.tries, 0);
+    const send = logged.find((l) => l.kind === "send");
+    const style = send?.style ?? "redpoint";
+    const pill: ClimbLogRowVM["pill"] =
+      send !== undefined
+        ? { kind: style === "redpoint" ? "sent" : style, label: sendStyleText(style) }
+        : isProject(c)
+          ? { kind: "project", label: t("common.project") }
+          : { kind: "tries", label: t("tally.tryCount", { count: tries }) };
+    return {
+      id: c.id,
+      gradeLabel: climbGradeLabel(c),
+      name: c.name,
+      meta: [
+        c.area?.name ?? null,
+        named ? null : dateLabel(session.start_at),
+        t("tally.tryCount", { count: tries }),
+      ]
+        .filter((part) => part !== null)
+        .join(" · "),
+      pill,
+    };
+  };
+  return { named, climbs: found.map(row) };
 }
 
 /**

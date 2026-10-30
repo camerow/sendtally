@@ -87,6 +87,19 @@ export function logScopeItems(items: LogItem[], scope: LogScope): LogItem[] {
   return items.filter((i) => i.type === "entry" && i.entry.kind === kind);
 }
 
+/** The two halves of the log, and of Stats. */
+export type LogSegment = "climbing" | "training";
+
+/** Climbing sessions in one half, the rest of the training in the other; entries and blocks in both. */
+export function logSegmentItems(items: LogItem[], segment: LogSegment): LogItem[] {
+  return items.filter(
+    (i) =>
+      i.type === "entry" ||
+      i.type === "block" ||
+      (i.type === "session") === (segment === "climbing")
+  );
+}
+
 const NO_TRAINING: LogTraining = { plan: { blocks: [], memberships: [] }, finished: [] };
 
 /** A block's last day, which its finished row sits on. */
