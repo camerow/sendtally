@@ -124,7 +124,7 @@ export function PlanGrid({
           borderTopColor: colors.lineOnLightSoft,
           backgroundColor: row.key === lit ? GOLD_TINT : undefined,
         } as const;
-        return toggle === undefined ? (
+        return toggle === undefined && row.press === undefined ? (
           <Pressable
             key={row.key}
             onPress={row.open}

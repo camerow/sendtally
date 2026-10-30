@@ -43,7 +43,12 @@ export function DayCell({
     borderRadius: size > 24 ? 8 : 7,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: status === "moved" ? colors.white : on ? look.tint : colors.surfaceSoft,
+    backgroundColor:
+      status === "moved"
+        ? colors.white
+        : on && status !== "skipped"
+          ? look.tint
+          : colors.surfaceSoft,
     borderWidth: asking ? 1.5 : status === "moved" ? 1 : 0,
     borderColor: status === "moved" ? colors.lineOnLightStrong : look.ink,
   } as const;
