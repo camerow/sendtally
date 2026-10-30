@@ -94,6 +94,10 @@ describe("blockRecap", () => {
     expect(w).toEqual({
       membershipId: "m1",
       workoutId: "w1",
+      weeks: [
+        { done: 2, planned: 2 },
+        { done: 1, planned: 2 },
+      ],
       done: 3,
       planned: 4,
       change: { metric: "load", by: 2.5 },

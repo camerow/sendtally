@@ -33,6 +33,10 @@ export type KeypadProps = {
   onNext?: () => void;
   /** Which field it types into; switching to another starts a fresh entry without closing. */
   field?: string;
+  /** Under the value, such as what the number was as written. */
+  note?: string;
+  /** Beside the note: closes without committing and calls this. */
+  onReset?: () => void;
 };
 
 type Entries = {
@@ -75,6 +79,8 @@ export function Keypad({
   onClose,
   onNext,
   field,
+  note,
+  onReset,
 }: KeypadProps): React.ReactElement | null {
   const limits = mode.kind === "number" ? mode : NUMBER_DEFAULTS;
   const open = (): Entries => ({
@@ -106,6 +112,11 @@ export function Keypad({
   const close = (): void => {
     finish();
     onClose();
+  };
+  const reset = (): void => {
+    setEntries((e) => ({ ...e, committed: true }));
+    onClose();
+    onReset?.();
   };
   const next = (): void => {
     close();
@@ -240,6 +251,36 @@ export function Keypad({
             {shown}
           </Text>
         </View>
+        {(note !== undefined || onReset !== undefined) && (
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 12,
+              minHeight: 36,
+              paddingHorizontal: 12,
+            }}
+          >
+            <Text style={{ fontFamily: fonts.mono, fontSize: 12, color: colors.textSecondary }}>
+              {note}
+            </Text>
+            {onReset !== undefined && (
+              <Pressable
+                onPress={reset}
+                accessibilityRole="button"
+                hitSlop={8}
+                style={press({ minHeight: 36, justifyContent: "center" })}
+              >
+                <Text
+                  style={{ fontFamily: fonts.sansSemiBold, fontSize: 14, color: colors.azureInk }}
+                >
+                  {t("common.reset")}
+                </Text>
+              </Pressable>
+            )}
+          </View>
+        )}
         {rows.map((row, i) => (
           <View key={i} style={{ flexDirection: "row", gap: 6 }}>
             {row}

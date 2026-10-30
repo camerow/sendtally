@@ -13,6 +13,9 @@ export type KeypadRequest = {
   commit: (value: number) => void;
   close: () => void;
   next: () => void;
+  /** Under the value, such as what the number was as written, with Reset beside it. */
+  note?: string;
+  reset?: () => void;
 };
 
 export type KeypadHost = {

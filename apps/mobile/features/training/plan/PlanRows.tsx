@@ -8,9 +8,10 @@ import { t } from "@sendtally/features/i18n";
 import { blockOfMembership, type WorkoutLookup } from "@sendtally/features/training";
 import { PlanRow } from "../components/PlanRow";
 import { useHangData } from "../data/HangDataContext";
-import { membershipTag, membershipWhen } from "../plans/planText";
+import { membershipTag, oneOffDate } from "../plans/planText";
 import { DayMark } from "../today/DayMark";
 import { KIND_LOOK } from "../today/kindLook";
+import { MiniWeek } from "./MiniWeek";
 import { openMembership } from "./openMembership";
 import { usePlanActions } from "./usePlanActions";
 import { confirmDestructive } from "../../../lib/confirmDestructive";
@@ -42,7 +43,8 @@ export function PlanRows({ plan, members, workout, highlight }: PlanRowsProps): 
             tag={membershipTag(m, blockOfMembership(plan, m), today)}
             tagColor={m.start <= today ? colors.gunmetal : KIND_LOOK[w.kind].ink}
             name={w.name}
-            meta={`${kindLabel(w.kind)} · ${membershipWhen(m)}`}
+            meta={[kindLabel(w.kind), ...oneOffDate(m)].join(" · ")}
+            trailing={<MiniWeek kind={w.kind} m={m} />}
             onOpen={() => openMembership(m)}
             lit={m.id === highlight}
             onRemove={() =>

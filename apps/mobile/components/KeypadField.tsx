@@ -11,6 +11,14 @@ export type KeypadFieldProps = FieldSlot & {
   label: string;
   /** A small box sized to its value with no label shown, for a value in a table row. */
   compact?: boolean;
+  /**
+   * A table cell filling its column, with no box until it opens: gold when `marked`. Implies
+   * no label, like `compact`.
+   */
+  cell?: { marked: boolean };
+  /** On the keypad under the value, with Reset when `onReset` is given. */
+  note?: string;
+  onReset?: () => void;
   /** What a screen reader and the keypad call it, when the label alone is not enough. */
   accessibilityLabel?: string;
   mode: KeypadMode;
@@ -24,6 +32,8 @@ export type KeypadFieldProps = FieldSlot & {
   after?: React.ReactNode;
   onChange: (value: number) => void;
 };
+
+const MARKED = "rgba(249,220,92,0.35)";
 
 /** The one label a typable number has, in the same voice as a form section's. */
 export const keypadFieldLabel = {
@@ -41,6 +51,9 @@ export const keypadFieldLabel = {
 export function KeypadField({
   label,
   compact = false,
+  cell,
+  note,
+  onReset,
   accessibilityLabel = label,
   mode,
   value,
@@ -60,9 +73,18 @@ export function KeypadField({
   const [openOwn, setOpenOwn] = React.useState(false);
   const open = openSlot ?? openOwn;
   const close = onClose ?? (() => setOpenOwn(false));
-  const latest = React.useRef({ accessibilityLabel, mode, value, onChange, close, onNext });
+  const latest = React.useRef({
+    accessibilityLabel,
+    mode,
+    value,
+    onChange,
+    close,
+    onNext,
+    note,
+    onReset,
+  });
   React.useEffect(() => {
-    latest.current = { accessibilityLabel, mode, value, onChange, close, onNext };
+    latest.current = { accessibilityLabel, mode, value, onChange, close, onNext, note, onReset };
   });
   React.useEffect(() => {
     if (!open || host === null) return;
@@ -77,13 +99,15 @@ export function KeypadField({
       commit: (typed) => latest.current.onChange(typed),
       close: () => latest.current.close(),
       next: () => latest.current.onNext?.(),
+      note: field.note,
+      reset: field.onReset === undefined ? undefined : () => latest.current.onReset?.(),
     });
     return () => host.close(id);
   }, [open, host, id]);
 
   return (
-    <View style={{ gap: 8 }}>
-      {!compact && (
+    <View style={[{ gap: 8 }, cell !== undefined && { flex: 1, minWidth: 0 }]}>
+      {!compact && cell === undefined && (
         <Text numberOfLines={1} style={keypadFieldLabel}>
           {label}
         </Text>
@@ -121,15 +145,25 @@ export function KeypadField({
               borderRadius: 8,
               borderWidth: open ? 2 : 1,
             },
+            cell !== undefined && {
+              flex: 1,
+              minHeight: 36,
+              minWidth: 0,
+              justifyContent: "center",
+              paddingHorizontal: 2,
+              borderRadius: 8,
+              borderWidth: open ? 2 : 0,
+              backgroundColor: open ? colors.white : cell.marked ? MARKED : "transparent",
+            },
           ]}
         >
           <Text
             numberOfLines={1}
             style={{
               flexShrink: 1,
-              fontFamily: fonts.monoSemiBold,
-              fontSize: compact ? 15 : 17,
-              color: colors.gunmetal,
+              fontFamily: cell?.marked === false && !open ? fonts.mono : fonts.monoSemiBold,
+              fontSize: cell !== undefined ? 14 : compact ? 15 : 17,
+              color: cell?.marked === false && !open ? colors.textSecondary : colors.gunmetal,
             }}
           >
             <Text style={{ color: colors.textFaint }}>{dim}</Text>
@@ -158,6 +192,8 @@ export function KeypadField({
           onCommit={onChange}
           onClose={close}
           onNext={onNext}
+          note={note}
+          onReset={onReset}
         />
       )}
     </View>

@@ -6,36 +6,12 @@ import { t } from "@sendtally/features/i18n";
 import { pressRow } from "../../../lib/press";
 import { Label } from "../components/Label";
 import { GOLD_TINT } from "../components/tints";
-import { DayMark } from "../today/DayMark";
 import { KIND_LOOK } from "../today/kindLook";
+import { DayCell } from "./DayCell";
 import { type } from "../type";
 import type { PlanGridRow } from "./planGridRows";
 
 const CELL = 24;
-
-function Cell({ row, day }: { row: PlanGridRow; day: number }): React.ReactElement {
-  const on = row.days.includes(day);
-  return (
-    <View
-      style={{
-        width: CELL,
-        height: CELL,
-        borderRadius: 7,
-        alignItems: "center",
-        justifyContent: "center",
-        backgroundColor: on ? KIND_LOOK[row.kind].tint : colors.surfaceSoft,
-      }}
-    >
-      {on ? (
-        <DayMark kind={row.kind} filled />
-      ) : (
-        <View
-          style={{ width: 3, height: 3, borderRadius: 2, backgroundColor: "rgba(64,63,76,0.25)" }}
-        />
-      )}
-    </View>
-  );
-}
 
 export type PlanGridProps = {
   rows: readonly PlanGridRow[];
@@ -108,7 +84,7 @@ export function PlanGrid({ rows, framed = true, lit }: PlanGridProps): React.Rea
             ))}
           </View>
           {[0, 1, 2, 3, 4, 5, 6].map((day) => (
-            <Cell key={day} row={row} day={day} />
+            <DayCell key={day} kind={row.kind} on={row.days.includes(day)} size={CELL} />
           ))}
         </Pressable>
       ))}

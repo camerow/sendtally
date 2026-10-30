@@ -1,5 +1,5 @@
 import {
-  DOSE_FIELDS,
+  type DOSE_FIELDS,
   gripMeasureOf,
   fromUnit,
   toUnit,
@@ -74,6 +74,8 @@ const MIN: Record<DoseField, number> = {
 
 const round = (n: number): number => Math.round(n * 100) / 100;
 
+const signed = (n: number): string => `${n > 0 ? "+" : "−"}${formatNumber(Math.abs(n))}`;
+
 /** A field's value as its stepper shows it: weight in the user's unit. */
 export function fieldValue(dose: Dose, field: DoseField, unit: WeightUnit): number {
   const value = dose[field] ?? 0;
@@ -110,59 +112,69 @@ export function stepped(dose: Dose, field: DoseField, direction: 1 | -1, unit: W
   return withField(dose, field, fieldValue(dose, field, unit) + direction * step, unit) ?? dose;
 }
 
-/** One difference of a week from the workout as written: more is gold, less is green. */
-export type WeekChip = { text: string; more: boolean };
+/** The rest fields, and on a hang its hangs per set: set by the dose, but left to + Column. */
+const quiet = (kind: WorkoutKind, dose: Dose, field: DoseField): boolean =>
+  field === "offS" ||
+  field === "setRestS" ||
+  (kind === "hangboard" && gripMeasureOf(dose) === "hang" && field === "reps");
 
-const signed = (n: number): string => `${n > 0 ? "+" : "−"}${formatNumber(Math.abs(n))}`;
+const LEAD: readonly DoseField[] = ["edgeMm", "weightKg", "sets", "onS"];
 
-function chipText(
+/**
+ * The columns of an item's weekly load, edge first on a hang: the numbers its dose sets, a
+ * hangboard's edge and load always, and any a week changes or the user added.
+ */
+export function loadColumns(
   kind: WorkoutKind,
-  written: Dose,
-  field: DoseField,
-  value: number,
-  unit: WeightUnit
-): string {
-  const delta = value - (written[field] ?? 0);
-  const count = Math.abs(delta);
+  dose: Dose,
+  changes: readonly Partial<Dose>[],
+  added: readonly DoseField[] = []
+): DoseField[] {
+  const fields = weekFields(kind, dose);
+  const ordered =
+    kind === "hangboard"
+      ? [...LEAD.filter((f) => fields.includes(f)), ...fields.filter((f) => !LEAD.includes(f))]
+      : fields;
+  const always = (f: DoseField): boolean =>
+    kind === "hangboard" && (f === "edgeMm" || f === "weightKg");
+  return ordered.filter(
+    (f) =>
+      always(f) ||
+      (dose[f] !== undefined && !quiet(kind, dose, f)) ||
+      added.includes(f) ||
+      changes.some((c) => c[f] !== undefined)
+  );
+}
+
+/** A weekly load column's heading: "Edge", "Load", "Sets". */
+export function columnLabel(kind: WorkoutKind, dose: Dose, field: DoseField): string {
+  const hang = kind === "hangboard";
   switch (field) {
-    case "sets":
-      return timed(kind, written)
-        ? t("plan.chipRounds", { count, delta: signed(delta) })
-        : t("plan.chipSets", { count, delta: signed(delta) });
-    case "reps":
-      return kind === "hangboard"
-        ? t("plan.chipHangs", { count, delta: signed(delta) })
-        : t("plan.chipReps", { count, delta: signed(delta) });
-    case "weightKg":
-      return `${signed(round(toUnit(delta, unit)))} ${unit}`;
-    case "onS":
-      return kind === "hangboard"
-        ? t("plan.chipHang", { value: humanDuration(value) })
-        : t("plan.chipWork", { value: humanDuration(value) });
-    case "offS":
-      return t("plan.chipRest", { value: humanDuration(value) });
     case "edgeMm":
-      return t("plan.chipEdge", { edge: t("hang.edgeMm", { n: value }) });
+      return t("plan.colEdge");
+    case "weightKg":
+      return hang ? t("hang.load") : t("hang.weight");
+    case "reps":
+      return hang ? t("plan.colHangs") : t("plan.colReps");
+    case "offS":
+      return t("plan.colRest");
     case "setRestS":
-      return t("plan.chipSetRest", { value: humanDuration(value) });
+      return t("plan.colSetRest");
+    default:
+      return fieldLabel(kind, dose, field);
   }
 }
 
-/** What a week changes about an item, as a coach writes it: "+2.5 kg", "−1 set", "8s hang". */
-export function weekChips(
+/** A weekly load cell: "+8" of added weight on a hang, "20", "7s"; "–" for a number not set. */
+export function cellText(
   kind: WorkoutKind,
-  written: Dose,
-  change: Partial<Dose>,
+  dose: Dose,
+  field: DoseField,
   unit: WeightUnit
-): WeekChip[] {
-  return DOSE_FIELDS.flatMap((field): WeekChip[] => {
-    const value = change[field];
-    if (value === undefined || value === written[field]) return [];
-    return [
-      {
-        text: chipText(kind, written, field, value, unit),
-        more: value > (written[field] ?? 0),
-      },
-    ];
-  });
+): string {
+  if (dose[field] === undefined) return "–";
+  const value = fieldValue(dose, field, unit);
+  if (field === "onS" || field === "offS" || field === "setRestS") return humanDuration(value);
+  if (field === "weightKg" && kind === "hangboard") return value === 0 ? "0" : signed(value);
+  return formatNumber(value);
 }

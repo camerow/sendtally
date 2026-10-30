@@ -48,15 +48,16 @@ export {
 export { usePlan } from "./usePlan";
 export { usePlanActions, type PlanActions } from "./usePlanActions";
 export {
+  cellText,
+  columnLabel,
   fieldLabel,
   fieldLimits,
   fieldValue,
+  loadColumns,
   stepped,
-  weekChips,
   weekFields,
   withField,
   type DoseField,
-  type WeekChip,
 } from "./weeks";
 export { useTrainingLog, type TrainingLogQuery } from "./useTrainingLog";
 export {

@@ -79,6 +79,7 @@ export const common = {
   "common.note": "Nota",
   "common.back": "Atrás",
   "common.next": "Siguiente",
+  "common.reset": "Restablecer",
   "common.deleteDigit": "Borrar el último dígito",
   "common.addAmount": "Sumar {amount}",
   "common.subtractAmount": "Restar {amount}",

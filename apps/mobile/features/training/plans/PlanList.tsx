@@ -1,5 +1,6 @@
 import React from "react";
 import { View } from "react-native";
+import type { WorkoutKind } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
 import { blockOfMembership, usePlan } from "@sendtally/features/training";
@@ -7,14 +8,15 @@ import { useApi } from "../../../lib/api";
 import { Label } from "../components/Label";
 import { PlanRow } from "../components/PlanRow";
 import { useHangData } from "../data/HangDataContext";
+import { MiniWeek } from "../plan/MiniWeek";
 import { usePlanActions } from "../plan/usePlanActions";
-import { membershipTag, membershipWhen } from "./planText";
+import { membershipTag, oneOffDate } from "./planText";
 import { confirmDestructive } from "../../../lib/confirmDestructive";
 
-export type PlanListProps = { workoutId: string; name: string };
+export type PlanListProps = { workoutId: string; name: string; kind: WorkoutKind };
 
 /** Where a workout is planned, by start date: × takes it out. Left out when it is planned nowhere. */
-export function PlanList({ workoutId, name }: PlanListProps): React.ReactElement | null {
+export function PlanList({ workoutId, name, kind }: PlanListProps): React.ReactElement | null {
   const { today } = useHangData();
   const { state } = usePlan(useApi());
   const actions = usePlanActions();
@@ -31,7 +33,8 @@ export function PlanList({ workoutId, name }: PlanListProps): React.ReactElement
             key={m.id}
             tag={membershipTag(m, block, today)}
             tagColor={m.start <= today ? colors.gunmetal : colors.petalInk}
-            meta={[block?.name, membershipWhen(m)].filter((p) => p !== undefined).join(" · ")}
+            meta={[...(block === null ? [] : [block.name]), ...oneOffDate(m)].join(" · ")}
+            trailing={<MiniWeek kind={kind} m={m} />}
             onRemove={() =>
               confirmDestructive({
                 title: t("plan.removeTitle", { title: name }),

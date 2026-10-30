@@ -139,7 +139,7 @@ function Detail({ workout, use, grip, adding }: DetailProps): React.ReactElement
       </View>
       <WorkoutOverTime workout={workout} gripId={hang === undefined ? null : gripId} />
       <HistoryList items={history} onOpen={openActivity} />
-      <PlanList workoutId={workout.id} name={workout.name} />
+      <PlanList workoutId={workout.id} name={workout.name} kind={workout.kind} />
       {hang !== undefined && (
         <GripPickerSheet
           visible={picker}

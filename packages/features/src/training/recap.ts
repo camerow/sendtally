@@ -34,6 +34,8 @@ export type BlockWeek = DoneCount & { week: number; effort: number | null };
  */
 export type BlockWorkout = DoneCount & {
   membershipId: string;
+  /** Its runs each block week, done of planned. */
+  weeks: DoneCount[];
   workoutId: string;
   change: SetChange | null;
   best: boolean;
@@ -128,10 +130,14 @@ export function blockRecap(log: TrainingLog, block: Block, today: CalendarDate):
     }),
     workouts: blockMembers(log.plan, block).map((m) => {
       const hang = hangProgress(log, m.id);
+      const mine = ran.filter((r) => r.o.membership.id === m.id);
       return {
         membershipId: m.id,
         workoutId: m.workoutId,
-        ...count(ran.filter((r) => r.o.membership.id === m.id)),
+        weeks: Array.from({ length: block.weeks }, (_, i) =>
+          count(mine.filter((r) => r.o.week === i + 1))
+        ),
+        ...count(mine),
         change: hang.change ?? progress(log, m.id),
         best: hang.best,
       };

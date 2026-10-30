@@ -23,6 +23,8 @@ export type PlanRowProps = {
   actionIcon?: HangIconName;
   /** Just added: drawn on gold. */
   lit?: boolean;
+  /** Drawn at the row's right, before its chevron or button. */
+  trailing?: React.ReactNode;
 };
 
 /** A planned workout: tap to open, × to remove where it can be. */
@@ -37,6 +39,7 @@ export function PlanRow({
   mark,
   actionIcon = "x",
   lit = false,
+  trailing,
 }: PlanRowProps): React.ReactElement {
   return (
     <View
@@ -72,8 +75,11 @@ export function PlanRow({
           {name !== undefined && (
             <Text style={[type.bodyBold, { fontSize: 15, color: colors.gunmetal }]}>{name}</Text>
           )}
-          <Text style={[type.mono, { fontSize: 12, color: colors.textSecondary }]}>{meta}</Text>
+          {meta !== "" && (
+            <Text style={[type.mono, { fontSize: 12, color: colors.textSecondary }]}>{meta}</Text>
+          )}
         </View>
+        {trailing}
         {onRemove === undefined && onOpen !== undefined && (
           <View style={{ paddingHorizontal: 8 }}>
             <HangIcon name="forward" color={colors.textSecondary} size={16} strokeWidth={2.2} />

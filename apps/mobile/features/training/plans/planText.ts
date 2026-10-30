@@ -1,5 +1,5 @@
 import { type Block, type CalendarDate, type Membership } from "@sendtally/core/hang";
-import { daysList, shortDate } from "@sendtally/features/hang";
+import { shortDate } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import { blockKicker } from "../blocks/blockText";
 
@@ -11,7 +11,7 @@ export function membershipTag(m: Membership, block: Block | null, today: Calenda
     : t("hang.statusOngoing");
 }
 
-/** "Mon, Thu", or the one date a one-off lands on. */
-export function membershipWhen(m: Pick<Membership, "weekdays" | "start">): string {
-  return m.weekdays.length === 0 ? shortDate(m.start) : daysList(m.weekdays);
+/** The one date a one-off lands on; nothing for a weekly plan, whose days its week row shows. */
+export function oneOffDate(m: Pick<Membership, "weekdays" | "start">): string[] {
+  return m.weekdays.length === 0 ? [shortDate(m.start)] : [];
 }

@@ -103,7 +103,7 @@ describe("blocks", () => {
   it("adds a workout from the editor and comes back to it", async () => {
     await renderWithHang(<BlockFormScreen id="b1" />, hangData(), { workouts: [squat], plan });
     await fireEvent.press(screen.getByText("Add a workout"));
-    await fireEvent.press(screen.getByText("Strength"));
+    await fireEvent.press(screen.getAllByText("Strength").at(-1)!);
     expect(router.push).toHaveBeenCalledWith({
       pathname: "/plan/add",
       params: { blockId: "b1", editing: "1", kind: "strength" },
@@ -229,41 +229,61 @@ describe("plan again", () => {
 });
 
 describe("block weeks", () => {
-  it("shows what each week changes from the workout as written", async () => {
+  it("lays the weeks out as a table, gold where a week differs from as written", async () => {
     await renderWithHang(<LadderScreen id="m1" />, hangData(), { workouts: [squat], plan });
-    expect(screen.getByLabelText("Week 3: +5 kg")).toBeTruthy();
-    expect(screen.getByLabelText("Week 2: As written")).toBeTruthy();
+    expect(screen.getByText("Weekly load")).toBeTruthy();
+    expect(screen.getByLabelText("Week 3, Weight")).toHaveProp("accessibilityValue", {
+      text: "105",
+    });
+    expect(screen.getByLabelText("Week 2, Weight")).toHaveProp("accessibilityValue", {
+      text: "100",
+    });
+    expect(screen.getByText("Winter base")).toBeTruthy();
   });
 
-  it("stores a week's change to any field, counted from the workout as written", async () => {
+  it("stores a week's change from its cell, Next walking down the column", async () => {
     await renderWithHang(<LadderScreen id="m1" />, hangData(), { workouts: [squat], plan });
-    await fireEvent.press(screen.getByLabelText("Week 3: +5 kg"));
-    await fireEvent.press(screen.getByLabelText("Weight"));
+    await fireEvent.press(screen.getByLabelText("Week 2, Weight"));
+    expect(screen.getByText("As written 100")).toBeTruthy();
     await fireEvent.press(screen.getByLabelText("Add 2.5"));
-    await fireEvent.press(screen.getByLabelText("Done"));
+    await fireEvent.press(screen.getByText("Next"));
     expect(mockPlan.saveWeekChange).toHaveBeenLastCalledWith({
       membershipId: "m1",
-      week: 3,
+      week: 2,
       dose: 0,
       item: 0,
-      change: { weightKg: 107.5 },
+      change: { weightKg: 102.5 },
     });
-    await fireEvent.press(screen.getByText("+ Sets"));
-    await fireEvent.press(screen.getByLabelText("Sets"));
-    await fireEvent.press(screen.getByLabelText("Subtract 1"));
-    await fireEvent.press(screen.getByLabelText("Done"));
-    expect(mockPlan.saveWeekChange).toHaveBeenLastCalledWith({
-      membershipId: "m1",
-      week: 3,
-      dose: 0,
-      item: 0,
-      change: { sets: 4, weightKg: 105 },
+    expect(screen.getByLabelText("Week 3, Weight")).toHaveProp("accessibilityState", {
+      expanded: true,
     });
   });
 
-  it("takes a workout out of its block from its weeks, once confirmed", async () => {
+  it("resets a changed week to as written", async () => {
+    await renderWithHang(<LadderScreen id="m1" />, hangData(), { workouts: [squat], plan });
+    await fireEvent.press(screen.getByLabelText("Week 3, Weight"));
+    await fireEvent.press(screen.getByText("Reset"));
+    expect(mockPlan.saveWeekChange).toHaveBeenLastCalledWith({
+      membershipId: "m1",
+      week: 3,
+      dose: 0,
+      item: 0,
+      change: {},
+    });
+  });
+
+  it("adds a column the dose does not show yet", async () => {
+    await renderWithHang(<LadderScreen id="m1" />, hangData(), { workouts: [squat], plan });
+    expect(screen.queryByLabelText("Week 1, Set rest")).toBeNull();
+    await fireEvent.press(screen.getByText("+ Column"));
+    await fireEvent.press(screen.getByText("Set rest"));
+    expect(screen.getByLabelText("Week 1, Set rest")).toBeTruthy();
+  });
+
+  it("takes a workout out of its block from its ··· menu, once confirmed", async () => {
     const alert = jest.spyOn(Alert, "alert").mockImplementation(() => undefined);
     await renderWithHang(<LadderScreen id="m1" />, hangData(), { workouts: [squat], plan });
+    await fireEvent.press(screen.getByLabelText("More"));
     await fireEvent.press(screen.getByText("Remove from block"));
     expect(mockPlan.deleteMembership).not.toHaveBeenCalled();
     const buttons = alert.mock.calls[0]?.[2] as AlertButton[];

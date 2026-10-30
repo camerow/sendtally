@@ -60,6 +60,8 @@ export function KeypadScrollView({
           onCommit={request.commit}
           onClose={request.close}
           onNext={request.hasNext ? request.next : undefined}
+          note={request.note}
+          onReset={request.reset}
         />
       )}
     </KeypadHostContext.Provider>

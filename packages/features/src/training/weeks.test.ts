@@ -1,34 +1,32 @@
 import { describe, expect, it } from "vitest";
 import type { Dose } from "@sendtally/core/hang";
-import { stepped, weekChips, weekFields, withField } from "./weeks";
+import { cellText, loadColumns, stepped, weekFields, withField } from "./weeks";
 
 const squat: Dose = { sets: 5, reps: 5, weightKg: 100 };
 const repeaters: Dose = { sets: 3, reps: 6, onS: 7, offS: 3, edgeMm: 20 };
 
-describe("weekChips", () => {
-  it("writes each difference from the workout as written, gold for more and green for less", () => {
-    expect(weekChips("strength", squat, { sets: 3, weightKg: 95 }, "kg")).toEqual([
-      { text: "−2 sets", more: false },
-      { text: "−5 kg", more: false },
-    ]);
-    expect(weekChips("strength", squat, { weightKg: 102.5 }, "kg")).toEqual([
-      { text: "+2.5 kg", more: true },
+describe("weekly load", () => {
+  it("leads a hang with edge and load, leaving rests and hangs per set to + Column", () => {
+    expect(loadColumns("hangboard", repeaters, [])).toEqual(["edgeMm", "weightKg", "sets", "onS"]);
+    expect(loadColumns("hangboard", repeaters, [{ offS: 4 }], ["reps"])).toEqual([
+      "edgeMm",
+      "weightKg",
+      "sets",
+      "onS",
+      "reps",
+      "offS",
     ]);
   });
 
-  it("names hangboard fields as a hangboard reads them", () => {
-    expect(
-      weekChips("hangboard", repeaters, { sets: 2, reps: 7, onS: 9, edgeMm: 18 }, "kg").map(
-        (c) => c.text
-      )
-    ).toEqual(["−1 set", "+1 hang", "9s hang", "18\u00A0mm edge"]);
+  it("shows what a lift sets", () => {
+    expect(loadColumns("strength", squat, [])).toEqual(["sets", "reps", "weightKg"]);
   });
 
-  it("counts timed sets as rounds and leaves out what matches", () => {
-    const tempo: Dose = { sets: 5, onS: 180, offS: 120 };
-    expect(weekChips("other", tempo, { sets: 6, offS: 120 }, "kg")).toEqual([
-      { text: "+1 round", more: true },
-    ]);
+  it("reads a cell as the table shows it", () => {
+    expect(cellText("hangboard", { ...repeaters, weightKg: 8 }, "weightKg", "kg")).toBe("+8");
+    expect(cellText("hangboard", repeaters, "weightKg", "kg")).toBe("–");
+    expect(cellText("hangboard", repeaters, "onS", "kg")).toBe("7s");
+    expect(cellText("strength", squat, "weightKg", "kg")).toBe("100");
   });
 });
 

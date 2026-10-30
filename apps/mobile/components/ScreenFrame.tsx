@@ -9,6 +9,8 @@ export type ScreenFrameProps = {
   children: React.ReactNode;
   /** Beside the back button, top right. */
   action?: React.ReactNode;
+  /** Where back goes, when it is worth naming. */
+  backLabel?: string;
   /** In place of the back button and action, as an editor's Cancel and Save. */
   header?: React.ReactNode;
   /** Pinned under the scrolling body, hidden while the keypad is up. */
@@ -19,6 +21,7 @@ export type ScreenFrameProps = {
 export function ScreenFrame({
   children,
   action,
+  backLabel,
   header,
   footer,
 }: ScreenFrameProps): React.ReactElement {
@@ -35,7 +38,7 @@ export function ScreenFrame({
             paddingTop: 6,
           }}
         >
-          <BackButton />
+          <BackButton label={backLabel} />
           {action}
         </View>
       )}
