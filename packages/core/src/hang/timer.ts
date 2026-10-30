@@ -173,6 +173,63 @@ export function restartPhase<P extends Phase>(run: Run<P>, now: number): Run<P> 
   };
 }
 
+/** Which set of which item a phase is in; a set's rests belong to it. */
+const setOf = (p: Phase): string => `${"item" in p ? String(p.item) : ""}:${p.set}`;
+
+/** The first phase of the set the phase at `index` is in. */
+function setStart(phases: readonly Phase[], index: number): number {
+  let i = index;
+  while (i > 0 && setOf(phases[i - 1] as Phase) === setOf(phases[i] as Phase)) i--;
+  return i;
+}
+
+/** Whether there is a set after the current one. */
+export const hasNextSet = (run: Run): boolean =>
+  run.phases.length > 0 &&
+  setOf(currentPhase(run)) !== setOf(run.phases[run.phases.length - 1] as Phase);
+
+/**
+ * Replays the set under way, or the one before when this one has not begun, from the rest that
+ * leads into it. Whatever the replayed phases logged goes.
+ */
+export function previousSet<P extends Phase>(run: Run<P>, now: number): Run<P> {
+  const at = Math.min(run.index, run.phases.length - 1);
+  const start = setStart(run.phases, at);
+  const first = at > start ? start : setStart(run.phases, Math.max(0, start - 1));
+  const before = run.phases[first - 1];
+  const index = before !== undefined && !isWork(before.kind) ? first - 1 : first;
+  const done = run.done.filter((d) => d.index < index);
+  // ponytail: work and misses are rebuilt from what was logged; a missed lift kept no mark to count.
+  const work = done.reduce((n, d) => {
+    const p = run.phases[d.index];
+    return n + (d.heldSeconds ?? (p === undefined ? 0 : p.taps || p.seconds));
+  }, 0);
+  return {
+    ...run,
+    index,
+    phaseStartedAt: now,
+    pausedAt: null,
+    taps: 0,
+    work,
+    misses: done.filter((d) => d.heldSeconds !== undefined).length,
+    marks: [],
+    done,
+    finished: null,
+  };
+}
+
+/** Skips the rest of the set under way, to the rest before the next one. */
+export function nextSet<P extends Phase>(run: Run<P>, now: number): Run<P> {
+  const set = setOf(currentPhase(run));
+  const leadsOn = (r: Run<P>): boolean => {
+    const next = r.phases[r.index + 1];
+    return !isWork(currentPhase(r).kind) && next !== undefined && setOf(next) !== set;
+  };
+  let r = skip(run, now);
+  while (r.finished === null && setOf(currentPhase(r)) === set && !leadsOn(r)) r = skip(r, now);
+  return r;
+}
+
 export function endRun<P extends Phase>(run: Run<P>, now: number): Run<P> {
   return { ...run, finished: { ended: true, at: now } };
 }

@@ -129,6 +129,8 @@ export const hang = {
   "hang.setsAhead_one": "{count} set ahead",
   "hang.setsAhead_other": "{count} sets ahead",
   "hang.setOf": "Set {set} of {sets}",
+  "hang.previousSet": "Previous set",
+  "hang.nextSet": "Next set",
   "hang.cameOffEarly": "Came off early · held {n}s",
   "hang.missedLift": "Missed lift",
   "hang.next": "Next",

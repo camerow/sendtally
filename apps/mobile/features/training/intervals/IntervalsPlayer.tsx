@@ -12,6 +12,7 @@ import { kindLabel } from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
 import { focusLabel } from "@sendtally/features/training";
 import { phaseLook } from "../timer/phaseLook";
+import { SetArrows } from "../timer/SetArrows";
 import { TimerFrame } from "../timer/TimerFrame";
 import { useTimer } from "../timer/useTimer";
 import { resumedRun, writeLiveRun } from "../../live-session/liveRun";
@@ -86,7 +87,6 @@ export function IntervalsPlayer({
       meta={[
         kindLabel(workout.kind),
         ...(workout.link.focus === null ? [] : [focusLabel(workout.link.focus)]),
-        t("activities.roundOf", { round: phase.set, rounds: body.rounds }),
         ...(targetRpe == null ? [] : [t("plan.targetValue", { n: targetRpe })]),
       ].join(" · ")}
       controls={{
@@ -104,6 +104,10 @@ export function IntervalsPlayer({
           color={look.fill}
           accessibilityLabel={primaryLabel}
           onPress={primary}
+        />
+        <SetArrows
+          timer={timer}
+          label={t("activities.roundOf", { round: phase.set, rounds: body.rounds })}
         />
         <UpNext items={upNext(run, body)} />
       </ScrollView>

@@ -1,6 +1,6 @@
 import { router } from "expo-router";
 import React from "react";
-import { Text, View } from "react-native";
+import { View } from "react-native";
 import {
   currentPhase,
   isWork,
@@ -17,13 +17,12 @@ import {
 import { setKeyOf } from "@sendtally/features/activities";
 import { loadLabel, setupLabel } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
-import { ON_DARK_SOFT } from "../components/onDark";
 import { useHangData } from "../data/HangDataContext";
 import { usePlannedRun, type PlannedRun } from "./usePlannedRun";
 import { donePath } from "../done/doneParams";
-import { type } from "../type";
 import { phaseLook } from "./phaseLook";
 import { RepDots } from "./RepDots";
+import { SetArrows } from "./SetArrows";
 import { SetupStep } from "./SetupStep";
 import { TimerFrame } from "./TimerFrame";
 import { TimerRing } from "./TimerRing";
@@ -163,7 +162,7 @@ function Timer({
           onPress={primary}
         />
         <View style={{ alignItems: "center", gap: 10 }}>
-          <Text style={[type.label, { color: ON_DARK_SOFT }]}>{text.setLine}</Text>
+          <SetArrows timer={timer} label={text.setLine} />
           <RepDots reps={current.reps} marks={run.marks} working={working} />
         </View>
       </View>
