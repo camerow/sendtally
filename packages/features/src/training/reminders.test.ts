@@ -32,6 +32,7 @@ const plan: Plan = {
     { id: "p1", workoutId: "legs", blockId: null, weekdays: [0, 3], start: "2026-09-28" },
   ],
   weekChanges: [],
+  planChanges: [],
 };
 
 const hang = (date: string): HangSessionRecord => ({

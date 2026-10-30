@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Activity, HangSessionRecord } from "@sendtally/api-client";
-import type { DatedBlock, Workout } from "@sendtally/core/hang";
+import type { DatedBlock, PlanChange, Workout } from "@sendtally/core/hang";
 import type { TrainingLog } from "./days";
 import { blockDone, blockRecap, blockTagOf } from "./recap";
 
@@ -57,6 +57,7 @@ const log = (activities: Activity[]): TrainingLog => ({
       { id: "m2", workoutId: "w1", blockId: null, weekdays: [0], start: block.start },
     ],
     weekChanges: [],
+    planChanges: [],
   },
   workout: (id) => (id === "w1" ? legs : undefined),
 });
@@ -81,6 +82,32 @@ describe("blockRecap", () => {
       { week: 2, done: 1, planned: 2, effort: 7 },
     ]);
     expect(blockRecap(log([]), block, "2026-10-30").weeks[0]?.effort).toBeNull();
+  });
+
+  it("leaves a skipped day out of planned, and counts a moved one in its own week", () => {
+    const skipped = (c: Partial<PlanChange>): TrainingLog => ({
+      ...done,
+      plan: {
+        ...done.plan,
+        planChanges: [
+          {
+            membershipId: "m1",
+            plannedOn: "2026-10-08",
+            kind: "skip",
+            movedTo: null,
+            reason: null,
+            note: null,
+            ...c,
+          },
+        ],
+      },
+    });
+    expect(blockRecap(skipped({}), block, "2026-10-30").weeks[1]).toMatchObject({
+      done: 1,
+      planned: 1,
+    });
+    const moved = blockRecap(skipped({ kind: "move", movedTo: "2026-10-09" }), block, "2026-10-30");
+    expect(moved.weeks[1]).toMatchObject({ planned: 2 });
   });
 
   it("counts so far up to today, while later days stay planned", () => {
@@ -152,6 +179,7 @@ describe("blockRecap on a hangboard workout", () => {
         { id: "m3", workoutId: "w2", blockId: "b1", weekdays: [1], start: block.start },
       ],
       weekChanges: [],
+      planChanges: [],
     },
     workout: (id) => (id === "w2" ? maxHangs : undefined),
   });

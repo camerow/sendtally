@@ -52,6 +52,7 @@ const plan: Plan = {
     { id: "m2", workoutId: "squat", blockId: null, weekdays: [2], start: "2026-09-01" },
   ],
   weekChanges: [{ membershipId: "m1", week: 3, dose: 0, item: 0, change: { weightKg: 105 } }],
+  planChanges: [],
 };
 
 beforeEach(() => {
@@ -136,6 +137,7 @@ describe("block overview", () => {
       { id: "m1", workoutId: "squat", blockId: "b1", weekdays: [0, 1], start: "2026-09-21" },
     ],
     weekChanges: [],
+    planChanges: [],
   };
 
   it("reads the running block: its weeks, how it is going and its workouts", async () => {

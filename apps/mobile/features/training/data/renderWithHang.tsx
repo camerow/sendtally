@@ -133,7 +133,10 @@ export async function renderWithHang(
   });
   client.setQueryData(["hang"], data);
   client.setQueryData(["workouts"], workouts);
-  client.setQueryData(["plan"], world.plan ?? { blocks: [], memberships: [], weekChanges: [] });
+  client.setQueryData(
+    ["plan"],
+    world.plan ?? { blocks: [], memberships: [], weekChanges: [], planChanges: [] }
+  );
   client.setQueryData(["activities"], world.activities ?? []);
   client.setQueryData(EXERCISES_KEY, [...(world.exercises ?? [])]);
   client.setQueryData(["sessions"], {

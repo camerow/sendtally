@@ -54,6 +54,7 @@ import {
   userClimbs,
   users,
   weekChanges,
+  planChanges,
   workouts,
 } from "../db/schema";
 import {
@@ -71,6 +72,7 @@ import {
   type ItemDone,
   type Loads,
   type Membership,
+  type PlanChange,
   type WeekChange,
   type Workout,
 } from "@sendtally/core/hang";
@@ -1337,6 +1339,7 @@ export async function deleteUserData(db: D1Database, userId: string): Promise<vo
     d.delete(activities).where(eq(activities.user_id, userId)),
     d.delete(memberships).where(eq(memberships.user_id, userId)),
     d.delete(weekChanges).where(eq(weekChanges.user_id, userId)),
+    d.delete(planChanges).where(eq(planChanges.user_id, userId)),
     d.delete(trainingBlocks).where(eq(trainingBlocks.user_id, userId)),
     d.delete(workouts).where(eq(workouts.user_id, userId)),
     d.delete(exercises).where(eq(exercises.user_id, userId)),
@@ -2850,17 +2853,19 @@ export async function deleteActivity(db: D1Database, userId: string, id: string)
 export type BlockRow = typeof trainingBlocks.$inferSelect;
 export type MembershipRow = typeof memberships.$inferSelect;
 export type WeekChangeRow = typeof weekChanges.$inferSelect;
+export type PlanChangeRow = typeof planChanges.$inferSelect;
 
 export type PlanRows = {
   blocks: BlockRow[];
   memberships: MembershipRow[];
   weekChanges: WeekChangeRow[];
+  planChanges: PlanChangeRow[];
 };
 
 // Everything the plan reads, in one round trip.
 export async function planRows(db: D1Database, userId: string): Promise<PlanRows> {
   const d = drizzle(db);
-  const [blocks, members, changes] = await d.batch([
+  const [blocks, members, changes, moved] = await d.batch([
     d
       .select()
       .from(trainingBlocks)
@@ -2876,8 +2881,13 @@ export async function planRows(db: D1Database, userId: string): Promise<PlanRows
       .from(weekChanges)
       .where(eq(weekChanges.user_id, userId))
       .orderBy(weekChanges.membership_id, weekChanges.week, weekChanges.dose, weekChanges.item),
+    d
+      .select()
+      .from(planChanges)
+      .where(eq(planChanges.user_id, userId))
+      .orderBy(planChanges.planned_on, planChanges.membership_id),
   ]);
-  return { blocks, memberships: members, weekChanges: changes };
+  return { blocks, memberships: members, weekChanges: changes, planChanges: moved };
 }
 
 export async function getBlock(
@@ -2931,6 +2941,9 @@ function removeMemberships(d: DrizzleD1Database, userId: string, where: SQL | un
     d
       .delete(weekChanges)
       .where(and(eq(weekChanges.user_id, userId), inArray(weekChanges.membership_id, ids))),
+    d
+      .delete(planChanges)
+      .where(and(eq(planChanges.user_id, userId), inArray(planChanges.membership_id, ids))),
     d.delete(memberships).where(where),
   ] as const;
 }
@@ -2948,7 +2961,7 @@ export async function deleteBlock(db: D1Database, userId: string, id: string): P
       .delete(trainingBlocks)
       .where(and(eq(trainingBlocks.user_id, userId), eq(trainingBlocks.id, id))),
   ]);
-  return results[5].meta.changes > 0;
+  return (results.at(-1)?.meta.changes ?? 0) > 0;
 }
 
 export async function getMembership(
@@ -2993,7 +3006,7 @@ export async function deleteMembership(
   const results = await d.batch(
     removeMemberships(d, userId, and(eq(memberships.user_id, userId), eq(memberships.id, id)))
   );
-  return results[4].meta.changes > 0;
+  return (results.at(-1)?.meta.changes ?? 0) > 0;
 }
 
 const weekChangeKey = (userId: string, c: Omit<WeekChange, "change">): SQL | undefined =>
@@ -3033,6 +3046,44 @@ export async function saveWeekChange(db: D1Database, userId: string, c: WeekChan
       ],
       set: { change_json },
     });
+}
+
+/** Skips or moves one planned day, replacing any change it had. */
+export async function savePlanChange(db: D1Database, userId: string, c: PlanChange): Promise<void> {
+  const fields = {
+    kind: c.kind,
+    moved_to: c.movedTo,
+    reason: c.reason,
+    note: c.note,
+    created_at: new Date().toISOString(),
+  };
+  await drizzle(db)
+    .insert(planChanges)
+    .values({ user_id: userId, membership_id: c.membershipId, planned_on: c.plannedOn, ...fields })
+    .onConflictDoUpdate({
+      target: [planChanges.user_id, planChanges.membership_id, planChanges.planned_on],
+      set: fields,
+    });
+}
+
+/** Undoes a skip or move: the day is planned as it was. */
+export async function deletePlanChange(
+  db: D1Database,
+  userId: string,
+  membershipId: string,
+  plannedOn: string
+): Promise<boolean> {
+  const rows = await drizzle(db)
+    .delete(planChanges)
+    .where(
+      and(
+        eq(planChanges.user_id, userId),
+        eq(planChanges.membership_id, membershipId),
+        eq(planChanges.planned_on, plannedOn)
+      )
+    )
+    .returning();
+  return rows.length > 0;
 }
 
 export type WorkoutRow = typeof workouts.$inferSelect;
@@ -3089,7 +3140,7 @@ export async function deleteWorkout(db: D1Database, userId: string, id: string):
     ),
     d.delete(workouts).where(and(eq(workouts.user_id, userId), eq(workouts.id, id))),
   ]);
-  return results[5].meta.changes > 0;
+  return (results.at(-1)?.meta.changes ?? 0) > 0;
 }
 
 function only<T>(rows: readonly T[]): T {

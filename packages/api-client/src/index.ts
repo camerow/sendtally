@@ -52,6 +52,7 @@ import type {
   SessionTag,
   TagSummary,
   TrainingReminderSettings,
+  PlanChange,
   WeekChange,
   WorkoutInput,
   WorkoutRecord,
@@ -522,6 +523,28 @@ export class SendtallyApi {
   saveWeekChange({ membershipId, ...change }: WeekChange): Promise<{ weekChange: WeekChange }> {
     return body(
       this.client.v1.memberships[":id"].changes.$put({ param: { id: membershipId }, json: change })
+    );
+  }
+
+  /** Skips or moves one day a membership is planned on. */
+  savePlanChange({ membershipId, plannedOn, ...change }: PlanChange): Promise<unknown> {
+    return body(
+      this.client.v1.memberships[":id"].days[":date"].$put({
+        param: { id: membershipId, date: plannedOn },
+        json:
+          change.kind === "skip"
+            ? { kind: "skip", reason: change.reason, note: change.note }
+            : { kind: "move", movedTo: change.movedTo ?? plannedOn },
+      })
+    );
+  }
+
+  /** Undoes a skip or move. */
+  deletePlanChange(membershipId: string, plannedOn: string): Promise<{ deleted: boolean }> {
+    return body(
+      this.client.v1.memberships[":id"].days[":date"].$delete({
+        param: { id: membershipId, date: plannedOn },
+      })
     );
   }
 

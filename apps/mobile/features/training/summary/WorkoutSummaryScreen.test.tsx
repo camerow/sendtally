@@ -107,6 +107,7 @@ const plan: Plan = {
   blocks: [{ id: "b1", name: "Strength block", start: "2026-10-13", weeks: 6, focus: null }],
   memberships: [{ id: "m1", workoutId: "legs", blockId: "b1", weekdays: [1], start: "2026-10-13" }],
   weekChanges: [],
+  planChanges: [],
 };
 
 const show = async (

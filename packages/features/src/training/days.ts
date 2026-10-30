@@ -112,7 +112,7 @@ export function dayMarks(day: TrainingDay): DayMarkSpec[] {
   return [
     ...day.logged.map((i) => ({ kind: loggedKind(i), filled: true })),
     ...day.plans
-      .filter((p) => p.status !== "done")
+      .filter((p) => p.status === "planned" || p.status === "missed")
       .flatMap((p) => (p.workout === undefined ? [] : [{ kind: p.workout.kind, filled: false }])),
   ];
 }

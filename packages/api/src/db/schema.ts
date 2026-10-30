@@ -14,6 +14,7 @@ import {
   EXERCISE_MEASURES,
   EXERCISE_PROGRESS,
   FOCI,
+  SKIP_REASONS,
   GRIP_MEASURES,
   WORKOUT_KINDS,
 } from "@sendtally/core/hang";
@@ -691,6 +692,25 @@ export const weekChanges = sqliteTable(
     change_json: text("change_json").notNull(),
   },
   (t) => [primaryKey({ columns: [t.user_id, t.membership_id, t.week, t.dose, t.item] })]
+);
+
+// One planned day changed: skipped, or moved to another day of its week. Undo deletes
+// the row; the day it was planned on is the key, so a day is changed once.
+export const planChanges = sqliteTable(
+  "plan_changes",
+  {
+    user_id: text("user_id")
+      .notNull()
+      .references(() => users.id),
+    membership_id: text("membership_id").notNull(),
+    planned_on: text("planned_on").notNull(),
+    kind: text("kind", { enum: ["skip", "move"] }).notNull(),
+    moved_to: text("moved_to"),
+    reason: text("reason", { enum: SKIP_REASONS }),
+    note: text("note"),
+    created_at: text("created_at").notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.user_id, t.membership_id, t.planned_on] })]
 );
 
 // Every exercise name the user's workouts and logs use, so one can be renamed or

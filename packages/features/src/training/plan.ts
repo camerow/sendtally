@@ -8,6 +8,7 @@ import {
   type Block,
   type CalendarDate,
   type Membership,
+  type PlanChange,
   type PlanLink,
   type SessionItem,
   type Workout,
@@ -15,8 +16,11 @@ import {
 } from "@sendtally/core/hang";
 import { workoutUsage } from "../workouts/library";
 
-/** Past and not done is missed; today and later, not done yet, is planned. */
-export type OccurrenceStatus = "done" | "missed" | "planned";
+/**
+ * Past and not done is missed; today and later, not done yet, is planned. A day skipped
+ * counts as neither, and a day moved away is planned where it landed instead.
+ */
+export type OccurrenceStatus = "done" | "missed" | "planned" | "skipped" | "moved";
 
 /** A session logged anywhere, as the plan reads it. */
 export type LoggedSession = {
@@ -41,6 +45,10 @@ export type Occurrence = {
   /** The items as this session runs them, with the week's changes laid over them. */
   items: SessionItem[];
   status: OccurrenceStatus;
+  /** The skip or move made on this day as planned. */
+  change: PlanChange | null;
+  /** Moved here: the day it was planned on, whose week's load it keeps. */
+  movedFrom: CalendarDate | null;
 };
 
 export type WorkoutLookup = (id: string) => Workout | undefined;
@@ -71,6 +79,15 @@ function doneBy(
   );
 }
 
+/** The skip or move made on the day a membership was planned. */
+const changeOn = (plan: Plan, m: Membership, d: CalendarDate): PlanChange | null =>
+  plan.planChanges.find((c) => c.membershipId === m.id && c.plannedOn === d) ?? null;
+
+/** Landing on a day as planned and left alone, or moved there from another day. */
+const lands = (plan: Plan, m: Membership, block: Block | null, d: CalendarDate): boolean =>
+  (occursOn(m, block, d) && changeOn(plan, m, d) === null) ||
+  plan.planChanges.some((c) => c.membershipId === m.id && c.kind === "move" && c.movedTo === d);
+
 /** How many sessions of the workout were logged before a date, or in all without one. */
 export const sessionsOf = (
   plan: Pick<Plan, "memberships">,
@@ -89,17 +106,19 @@ function occurrence(
   workout: Workout | undefined,
   logged: readonly LoggedSession[],
   date: CalendarDate,
-  today: CalendarDate
+  today: CalendarDate,
+  movedFrom: CalendarDate | null = null
 ): Occurrence {
   const block = blockOfMembership(plan, m);
-  const week = block === null ? null : blockWeekOn(block, date);
+  const week = block === null ? null : blockWeekOn(block, movedFrom ?? date);
+  const change = movedFrom === null ? changeOn(plan, m, date) : null;
   const done = doneBy(m, workout?.kind, logged, date);
   let session = sessionsOf(plan, m.workoutId, logged, date);
   if (done === undefined && date >= today) {
     // The next session follows every one logged; each open day before this one takes one more.
     session = sessionsOf(plan, m.workoutId, logged);
     for (let d = today; d < date; d = addDays(d, 1))
-      if (occursOn(m, block, d) && doneBy(m, workout?.kind, logged, d) === undefined) session++;
+      if (lands(plan, m, block, d) && doneBy(m, workout?.kind, logged, d) === undefined) session++;
   }
   return {
     membership: m,
@@ -112,7 +131,18 @@ function occurrence(
       workout === undefined
         ? []
         : prescription(plan.weekChanges, { workout, membershipId: m.id, session, week }),
-    status: done !== undefined ? "done" : date < today ? "missed" : "planned",
+    status:
+      change?.kind === "skip"
+        ? "skipped"
+        : change?.kind === "move"
+          ? "moved"
+          : done !== undefined
+            ? "done"
+            : date < today
+              ? "missed"
+              : "planned",
+    change,
+    movedFrom,
   };
 }
 
@@ -124,12 +154,19 @@ export function occurrencesOn(
   date: CalendarDate,
   today: CalendarDate
 ): Occurrence[] {
-  return plan.memberships
+  const planned = plan.memberships
     .filter((m) => {
       const block = blockOfMembership(plan, m);
       return (m.blockId === null || block !== null) && occursOn(m, block, date);
     })
     .map((m) => occurrence(plan, m, workout(m.workoutId), logged, date, today));
+  const movedIn = plan.planChanges.flatMap((c) => {
+    const m = plan.memberships.find((x) => x.id === c.membershipId);
+    return c.kind === "move" && c.movedTo === date && m !== undefined
+      ? [occurrence(plan, m, workout(m.workoutId), logged, date, today, c.plannedOn)]
+      : [];
+  });
+  return [...planned, ...movedIn];
 }
 
 /** The membership's next session from `today`: its date and what it prescribes. */
@@ -145,9 +182,11 @@ export function nextOccurrence(
   if (m.blockId !== null && block === null) return null;
   for (let i = 0; i < horizonDays; i++) {
     const d = addDays(today, i);
-    if (!occursOn(m, block, d)) continue;
-    const o = occurrence(plan, m, workout(m.workoutId), logged, d, today);
-    if (o.status === "planned") return o;
+    if (!lands(plan, m, block, d)) continue;
+    const o = occurrencesOn(plan, workout, logged, d, today).find(
+      (x) => x.membership.id === m.id && x.status === "planned"
+    );
+    if (o !== undefined) return o;
   }
   return null;
 }
@@ -159,6 +198,7 @@ function without(plan: Plan, drop: (m: Membership) => boolean): Plan {
     blocks: plan.blocks,
     memberships: plan.memberships.filter((m) => !gone.has(m.id)),
     weekChanges: plan.weekChanges.filter((c) => !gone.has(c.membershipId)),
+    planChanges: plan.planChanges.filter((c) => !gone.has(c.membershipId)),
   };
 }
 

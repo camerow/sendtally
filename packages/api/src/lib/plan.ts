@@ -10,11 +10,13 @@ import {
   type ItemDone,
   type Item,
   type Membership,
+  type PlanChange,
+  SKIP_REASONS,
   type WeekChange,
   type Workout,
 } from "@sendtally/core/hang";
 import { z } from "zod";
-import type { BlockRow, MembershipRow, WeekChangeRow, WorkoutRow } from "./repo";
+import type { BlockRow, MembershipRow, PlanChangeRow, WeekChangeRow, WorkoutRow } from "./repo";
 
 export const id = z.string().regex(/^[A-Za-z0-9_-]{1,64}$/);
 
@@ -140,6 +142,18 @@ export const membershipBody = z.object({
 });
 
 /** An empty change puts the item back as written for that week. */
+/** A day skipped, with why if it says, or moved to another day. */
+export const planChangeBody = z.discriminatedUnion("kind", [
+  z.object({
+    kind: z.literal("skip"),
+    reason: z.enum(SKIP_REASONS).nullable().default(null),
+    note: z.string().trim().max(280).nullable().default(null),
+  }),
+  z.object({ kind: z.literal("move"), movedTo: calendarDate }),
+]);
+
+export const planChangeParam = z.object({ id, date: calendarDate });
+
 export const weekChangeBody = z.object({
   week: blockWeek,
   dose: doseIndex,
@@ -192,7 +206,12 @@ export type MembershipInput = z.infer<typeof membershipBody>;
 
 export type WeekChangeInput = z.infer<typeof weekChangeBody>;
 
-export type Plan = { blocks: Block[]; memberships: Membership[]; weekChanges: WeekChange[] };
+export type Plan = {
+  blocks: Block[];
+  memberships: Membership[];
+  weekChanges: WeekChange[];
+  planChanges: PlanChange[];
+};
 
 /** A workout of the user's own, as the API returns it. */
 export type WorkoutRecord = Workout & { updatedAt: string };
@@ -232,6 +251,15 @@ export const weekChangeOf = (row: WeekChangeRow): WeekChange => ({
   dose: row.dose,
   item: row.item,
   change: JSON.parse(row.change_json) as Partial<Dose>,
+});
+
+export const planChangeOf = (row: PlanChangeRow): PlanChange => ({
+  membershipId: row.membership_id,
+  plannedOn: row.planned_on,
+  kind: row.kind,
+  movedTo: row.moved_to,
+  reason: row.reason,
+  note: row.note,
 });
 
 export const doneOf = (json: string): ItemDone[] => JSON.parse(json) as ItemDone[];

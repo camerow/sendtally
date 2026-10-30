@@ -112,7 +112,10 @@ export function blockRecap(log: TrainingLog, block: DatedBlock, today: CalendarD
     trainingDay(log, addDays(block.start, i), today)
   ).flatMap((day) =>
     day.plans
-      .filter((o) => o.membership.blockId === block.id)
+      // A skipped day leaves the count; a moved one counts where it landed, in its own week.
+      .filter(
+        (o) => o.membership.blockId === block.id && o.status !== "skipped" && o.status !== "moved"
+      )
       .map((o): Ran => {
         const by = o.status === "done" ? doneBy(day, o) : undefined;
         return { o, effort: by === undefined ? null : itemEffort(by) };

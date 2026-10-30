@@ -135,6 +135,7 @@ const plan: Plan = {
     { id: "c1", workoutId: "limit", blockId: null, weekdays: [2], start: "2026-09-28" },
   ],
   weekChanges: [],
+  planChanges: [],
 };
 
 const log = (overrides: Partial<TrainingLog> = {}): TrainingLog => ({
@@ -146,7 +147,7 @@ const log = (overrides: Partial<TrainingLog> = {}): TrainingLog => ({
   ...overrides,
 });
 
-const nothingPlanned: Plan = { blocks: [], memberships: [], weekChanges: [] };
+const nothingPlanned: Plan = { blocks: [], memberships: [], weekChanges: [], planChanges: [] };
 
 describe("trainingDay", () => {
   it("dates a climbing session by its wall-clock start", () => {

@@ -1,7 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import React from "react";
 import type { Plan, SendtallyApi } from "@sendtally/api-client";
-import type { Block, Membership, WeekChange } from "@sendtally/core/hang";
+import type { Block, Membership, PlanChange, WeekChange } from "@sendtally/core/hang";
 import { queries } from "../query";
 import { withoutBlock, withoutMembership } from "./plan";
 
@@ -14,6 +14,10 @@ export type PlanActions = {
   deleteMembership: (id: string) => Promise<void>;
   /** An empty change puts the item back as written for that week. */
   saveWeekChange: (change: WeekChange) => Promise<void>;
+  /** Skips or moves one planned day, replacing any change it had. */
+  savePlanChange: (change: PlanChange) => Promise<void>;
+  /** Undoes a skip or move: the day is planned as it was. */
+  undoPlanChange: (membershipId: string, plannedOn: string) => Promise<void>;
   /** Plans `from` again as block `to` from `start`, with its plans; false when it failed. */
   copyBlock: (from: string, to: string, start: string | null) => Promise<boolean>;
 };
@@ -82,6 +86,29 @@ export function usePlanActions(api: SendtallyApi, onError: (error: unknown) => v
         write(
           (p) => withChange(p, change),
           () => api.saveWeekChange(change)
+        ),
+      savePlanChange: (change) =>
+        write(
+          (p) => ({
+            ...p,
+            planChanges: [
+              ...p.planChanges.filter(
+                (c) => c.membershipId !== change.membershipId || c.plannedOn !== change.plannedOn
+              ),
+              change,
+            ],
+          }),
+          () => api.savePlanChange(change)
+        ),
+      undoPlanChange: (membershipId, plannedOn) =>
+        write(
+          (p) => ({
+            ...p,
+            planChanges: p.planChanges.filter(
+              (c) => c.membershipId !== membershipId || c.plannedOn !== plannedOn
+            ),
+          }),
+          () => api.deletePlanChange(membershipId, plannedOn)
         ),
       copyBlock: async (from, to, start) => {
         try {

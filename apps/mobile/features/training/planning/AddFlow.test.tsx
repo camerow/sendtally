@@ -59,6 +59,7 @@ const winter: Plan = {
   blocks: [{ id: "b1", name: "Winter base", start: "2026-10-05", weeks: 6, focus: null }],
   memberships: [],
   weekChanges: [],
+  planChanges: [],
 };
 
 // Today is Tuesday 29 September 2026; Thursday 1 October is the day asked from.

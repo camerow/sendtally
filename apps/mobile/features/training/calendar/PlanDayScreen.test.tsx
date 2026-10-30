@@ -32,6 +32,7 @@ const plan: Plan = {
     { id: "m1", workoutId: "legs", blockId: "b1", weekdays: [0, 1], start: "2026-09-28" },
   ],
   weekChanges: [],
+  planChanges: [],
 };
 const stretched: ActivityRecord = {
   id: "a1",

@@ -51,6 +51,7 @@ const plan: Plan = {
     { membershipId: "m1", week: 2, dose: 1, item: 0, change: { weightKg: 80 } },
     { membershipId: "m1", week: 3, dose: 0, item: 0, change: { sets: 3, weightKg: 95 } },
   ],
+  planChanges: [],
 };
 
 const workout = (id: string): Workout | undefined =>
@@ -161,6 +162,7 @@ describe("cache edits", () => {
       blocks: plan.blocks,
       memberships: [plan.memberships[1]],
       weekChanges: [],
+      planChanges: [],
     });
   });
 
@@ -169,11 +171,54 @@ describe("cache edits", () => {
       blocks: [],
       memberships: plan.memberships.slice(1),
       weekChanges: [],
+      planChanges: [],
     });
   });
 
   it("takes a deleted membership's week changes with it", () => {
     expect(withoutMembership(plan, "m1").weekChanges).toEqual([]);
     expect(withoutMembership(plan, "m2").weekChanges).toEqual(plan.weekChanges);
+  });
+});
+
+describe("skipped and moved days", () => {
+  // Tuesday 3 November is skipped; Friday 6 November moves to Saturday 7.
+  const changed: Plan = {
+    ...plan,
+    planChanges: [
+      {
+        membershipId: "m1",
+        plannedOn: "2026-11-03",
+        kind: "skip",
+        movedTo: null,
+        reason: "sick",
+        note: null,
+      },
+      {
+        membershipId: "m1",
+        plannedOn: "2026-11-06",
+        kind: "move",
+        movedTo: "2026-11-07",
+        reason: null,
+        note: null,
+      },
+    ],
+  };
+  const on = (date: string) =>
+    occurrencesOn(changed, workout, [], date, "2026-11-01").filter((o) => o.membership.id === "m1");
+
+  it("keeps a skipped day on its day, counted as skipped", () => {
+    expect(on("2026-11-03").map((o) => o.status)).toEqual(["skipped"]);
+  });
+
+  it("moves a day, keeping the week it was planned in", () => {
+    expect(on("2026-11-06").map((o) => o.status)).toEqual(["moved"]);
+    const [moved] = on("2026-11-07");
+    expect(moved).toMatchObject({ status: "planned", movedFrom: "2026-11-06", week: 1 });
+  });
+
+  it("finds the next session past a skip", () => {
+    const next = nextOccurrence(changed, changed.memberships[0]!, workout, [], "2026-11-03");
+    expect(next?.date).toBe("2026-11-07");
   });
 });

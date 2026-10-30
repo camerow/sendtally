@@ -21,6 +21,7 @@ describe("blockMembers", () => {
         { id: "m3", workoutId: "w1", blockId: "b2", weekdays: [0], start: block.start },
       ],
       weekChanges: [],
+      planChanges: [],
     };
     expect(blockMembers(plan, block).map((m) => m.id)).toEqual(["m1"]);
   });

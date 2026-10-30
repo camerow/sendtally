@@ -427,6 +427,7 @@ describe("blocks and memberships", () => {
         { id: "m1", ...membershipBody, weekdays: [1, 4] },
       ],
       weekChanges: [],
+      planChanges: [],
     });
   });
 
@@ -502,7 +503,12 @@ describe("blocks and memberships", () => {
     expect(await json(await call(userId, "DELETE", "/v1/memberships/m1"))).toEqual({
       deleted: true,
     });
-    expect(await plan(userId)).toEqual({ blocks: [], memberships: [], weekChanges: [] });
+    expect(await plan(userId)).toEqual({
+      blocks: [],
+      memberships: [],
+      weekChanges: [],
+      planChanges: [],
+    });
     const { activities } = await json<{ activities: Activity[] }>(
       await call(userId, "GET", "/v1/activities")
     );
@@ -579,6 +585,45 @@ describe("blocks and memberships", () => {
       { membershipId: copied[0]?.id, week: 2, dose: 0, item: 0, change: { sets: 3 } },
     ]);
     expect((await call(userId, "POST", "/v1/blocks/nope/copy", copy)).status).toBe(404);
+  });
+
+  it("skips or moves one planned day, undoes it, and drops it with its membership", async () => {
+    const userId = "user_plan_days";
+    await call(userId, "PUT", "/v1/blocks/b1", blockBody);
+    await call(userId, "PUT", "/v1/memberships/m1", membershipBody);
+    const skip = { kind: "skip", reason: "sick", note: "Head cold" };
+    expect((await call(userId, "PUT", "/v1/memberships/m1/days/2026-11-03", skip)).status).toBe(
+      200
+    );
+    await call(userId, "PUT", "/v1/memberships/m1/days/2026-11-06", {
+      kind: "move",
+      movedTo: "2026-11-07",
+    });
+    expect((await plan(userId)).planChanges).toEqual([
+      {
+        membershipId: "m1",
+        plannedOn: "2026-11-03",
+        kind: "skip",
+        movedTo: null,
+        reason: "sick",
+        note: "Head cold",
+      },
+      {
+        membershipId: "m1",
+        plannedOn: "2026-11-06",
+        kind: "move",
+        movedTo: "2026-11-07",
+        reason: null,
+        note: null,
+      },
+    ]);
+    expect(
+      (await call(userId, "PUT", "/v1/memberships/m1/days/2026-11-03", { kind: "move" })).status
+    ).toBe(400);
+    await call(userId, "DELETE", "/v1/memberships/m1/days/2026-11-03");
+    expect((await plan(userId)).planChanges).toHaveLength(1);
+    await call(userId, "DELETE", "/v1/memberships/m1");
+    expect((await plan(userId)).planChanges).toEqual([]);
   });
 
   it("saves a block as a template with no start, and schedules it from the week picked", async () => {

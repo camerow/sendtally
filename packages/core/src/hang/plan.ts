@@ -135,6 +135,24 @@ export type WeekChange = {
   change: Partial<Dose>;
 };
 
+/** Why a planned day was skipped, when the user says. */
+export const SKIP_REASONS = ["rest", "sick", "sore", "travel", "busy"] as const;
+export type SkipReason = (typeof SKIP_REASONS)[number];
+
+/**
+ * One planned day changed: skipped, so it counts neither done nor missed, or moved to another
+ * day of its week, keeping that week's load. Undoing it deletes it.
+ */
+export type PlanChange = {
+  membershipId: string;
+  plannedOn: CalendarDate;
+  kind: "skip" | "move";
+  /** Where a move lands; null for a skip. */
+  movedTo: CalendarDate | null;
+  reason: SkipReason | null;
+  note: string | null;
+};
+
 /** One item of a logged session: the sets done, named so history never needs the workout. */
 export type ItemDone = { item: number; exercise: string; sets: SetDone[] };
 

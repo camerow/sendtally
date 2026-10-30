@@ -1,5 +1,6 @@
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
+import type { PlanChange } from "@sendtally/core/hang";
 import { z } from "zod";
 import { type AppEnv, invalidBody, postAfterResponse } from "./context";
 import { activitiesQuery, activityBody, activityOf } from "./lib/activities";
@@ -12,6 +13,9 @@ import {
   membershipBody,
   membershipOf,
   trainingIdParam,
+  planChangeBody,
+  planChangeOf,
+  planChangeParam,
   weekChangeBody,
   weekChangeOf,
   workoutBody,
@@ -83,6 +87,7 @@ export const plan = new Hono<AppEnv>().get("/", async (c) => {
     blocks: rows.blocks.map(blockOf),
     memberships: rows.memberships.map(membershipOf),
     weekChanges: rows.weekChanges.map(weekChangeOf),
+    planChanges: rows.planChanges.map(planChangeOf),
   };
   return c.json(body);
 });
@@ -166,7 +171,41 @@ export const memberships = new Hono<AppEnv>()
       await repo.saveWeekChange(c.env.DB, userId, weekChange);
       return c.json({ weekChange });
     }
-  );
+  )
+
+  // Skips or moves one day it is planned on; the apps keep a move inside its week.
+  .put(
+    "/:id/days/:date",
+    zValidator("param", planChangeParam, invalidBody),
+    zValidator("json", planChangeBody, invalidBody),
+    async (c) => {
+      const { id, date } = c.req.valid("param");
+      const userId = c.get("userId");
+      if ((await repo.getMembership(c.env.DB, userId, id)) === null) {
+        return c.json({ error: "not found" }, 404);
+      }
+      const body = c.req.valid("json");
+      const planChange: PlanChange =
+        body.kind === "skip"
+          ? { membershipId: id, plannedOn: date, movedTo: null, ...body }
+          : {
+              membershipId: id,
+              plannedOn: date,
+              kind: "move",
+              movedTo: body.movedTo,
+              reason: null,
+              note: null,
+            };
+      await repo.savePlanChange(c.env.DB, userId, planChange);
+      return c.json({ planChange });
+    }
+  )
+
+  // Undoes a skip or move.
+  .delete("/:id/days/:date", zValidator("param", planChangeParam, invalidBody), async (c) => {
+    const { id, date } = c.req.valid("param");
+    return c.json({ deleted: await repo.deletePlanChange(c.env.DB, c.get("userId"), id, date) });
+  });
 
 // The user's own library workouts of every kind. Built-in workouts live in the
 // apps; a customised one is a copy saved here under a new id.
