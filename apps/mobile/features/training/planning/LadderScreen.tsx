@@ -97,7 +97,7 @@ export function LadderScreen({ id, back }: LadderScreenProps): React.ReactElemen
     ended || (current !== null && week <= current) ? (ran?.[week - 1] ?? null) : null
   );
   const lines =
-    w.kind === "hangboard" ? (bodySummary(w)?.split(" · ") ?? []) : workoutLines(w, model.gripName);
+    w.kind === "hangboard" ? (bodySummary(w)?.split(" · ") ?? []) : workoutLines(w, model);
   const mine = library?.source === "mine";
   const days: readonly number[] = m.weekdays;
 

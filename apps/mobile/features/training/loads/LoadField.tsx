@@ -8,7 +8,8 @@ import {
   type HangKind,
   type WeightUnit,
 } from "@sendtally/core/hang";
-import { NumberField } from "../components/NumberField";
+import { t } from "@sendtally/features/i18n";
+import { Stepper } from "../components/Stepper";
 import type { FieldSlot } from "../../../components/useFieldOrder";
 
 export type LoadFieldProps = FieldSlot & {
@@ -20,7 +21,7 @@ export type LoadFieldProps = FieldSlot & {
   children?: React.ReactNode;
 };
 
-/** A load kept in kg, typed in the chosen unit; a hang's can be negative, which is assistance. */
+/** A load kept in kg, typed or stepped in the chosen unit; a hang's can be negative, which is assistance. */
 export function LoadField({
   kind,
   kg,
@@ -30,17 +31,23 @@ export function LoadField({
   children,
   ...slot
 }: LoadFieldProps): React.ReactElement {
+  const step = loadStep(kind, unit);
+  const set = (n: number): void => onChange(clampLoad(kind, fromUnit(n, unit)));
   return (
     <View style={{ gap: 8 }}>
-      <NumberField
+      <Stepper
         {...slot}
         label={label}
         value={toUnit(kg, unit)}
-        onChange={(n) => onChange(clampLoad(kind, fromUnit(n, unit)))}
+        onChange={set}
+        onStep={(direction) => set(toUnit(kg, unit) + direction * step)}
         unit={unit}
-        step={loadStep(kind, unit)}
+        step={step}
         decimals
         signed={kind === "hang"}
+        decreaseLabel={t("hang.decrease", { field: label })}
+        increaseLabel={t("hang.increase", { field: label })}
+        surface="plain"
       />
       {children}
     </View>

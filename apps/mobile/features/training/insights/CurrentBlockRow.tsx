@@ -1,4 +1,3 @@
-import { router } from "expo-router";
 import React from "react";
 import { Pressable, Text } from "react-native";
 import { blockWeekOn } from "@sendtally/core/hang";
@@ -8,6 +7,7 @@ import { blockDone, blockGroups, useTrainingLog } from "@sendtally/features/trai
 import { useApi } from "../../../lib/api";
 import { pressRow } from "../../../lib/press";
 import { useHangData } from "../data/HangDataContext";
+import { openBlock } from "../blocks/openBlock";
 import { type } from "../type";
 
 /** The block running today, how far in and how much of it is done; nothing outside a block. */
@@ -23,7 +23,7 @@ export function CurrentBlockRow(): React.ReactElement | null {
   ].join(" · ");
   return (
     <Pressable
-      onPress={() => router.push({ pathname: "/plan/block/[id]", params: { id: block.id } })}
+      onPress={() => openBlock(block.id, t("statistics.tab"))}
       accessibilityRole="button"
       accessibilityLabel={`${block.name}, ${meta}`}
       style={pressRow({

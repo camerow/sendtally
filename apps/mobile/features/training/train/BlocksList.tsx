@@ -37,7 +37,7 @@ export function BlocksList(): React.ReactElement {
   const ongoing = planGridRows(
     liveMembers(plan, today).filter((m) => m.blockId === null),
     workout,
-    model.gripName
+    model
   );
   const weeks = (n: number): string => t("calendar.weeks", { count: n });
   const nothing = plan.blocks.length === 0 && ongoing.length === 0;
@@ -62,6 +62,7 @@ export function BlocksList(): React.ReactElement {
         <Group label={t("plan.upcoming")}>
           {upcoming.map((b) => (
             <BlockRow
+              back={t("training.train")}
               key={b.id}
               id={b.id}
               name={b.name}
@@ -74,6 +75,7 @@ export function BlocksList(): React.ReactElement {
         <Group label={t("plan.templates")}>
           {templates.map((b) => (
             <BlockRow
+              back={t("training.train")}
               key={b.id}
               id={b.id}
               name={b.name}
@@ -87,7 +89,15 @@ export function BlocksList(): React.ReactElement {
           {past.map((b) => {
             const done = blockDone(log, b, today);
             const meta = [weeks(b.weeks), ...(done.planned > 0 ? [t("plan.doneOf", done)] : [])];
-            return <BlockRow key={b.id} id={b.id} name={b.name} meta={meta.join(" · ")} />;
+            return (
+              <BlockRow
+                back={t("training.train")}
+                key={b.id}
+                id={b.id}
+                name={b.name}
+                meta={meta.join(" · ")}
+              />
+            );
           })}
         </Group>
       )}

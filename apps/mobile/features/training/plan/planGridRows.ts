@@ -3,6 +3,7 @@ import type { Membership, Workout, WorkoutKind } from "@sendtally/core/hang";
 import { kindLabel } from "@sendtally/features/activities";
 import type { WorkoutLookup } from "@sendtally/features/training";
 import { durationLabel } from "@sendtally/features/sessions";
+import type { HangModel } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import { bodySummary, workoutMinutes } from "@sendtally/features/workouts";
 import { openMembership } from "./openMembership";
@@ -17,15 +18,21 @@ export type PlanGridRow = {
   open: () => void;
 };
 
+/** How grips read: their names, and the grip a one-grip workout was set to. */
+export type GripNames = Pick<HangModel, "gripName" | "defaultGrip" | "workout">;
+
 /** Fingers: its grip and edge, or how many grips. Else what it holds and how long it takes. */
-export function workoutLines(w: Workout, gripName: (id: string) => string): string[] {
+export function workoutLines(w: Workout, grips: GripNames): string[] {
   if (w.kind === "hangboard") {
-    const grips = [...new Set(w.items.map((i) => i.exercise))];
-    const [grip] = grips;
+    const used = [...new Set(w.items.map((i) => i.exercise))];
+    const [grip] = used;
     if (grip === undefined) return [kindLabel(w.kind)];
-    if (grips.length > 1) return [t("hang.gripCount", { count: grips.length })];
-    const edge = w.items[0]?.doses[0]?.edgeMm;
-    return [gripName(grip), ...(edge === undefined ? [] : [t("hang.edgeMm", { n: edge })])];
+    if (used.length > 1) return [t("hang.gripCount", { count: used.length })];
+    const edges = new Set(w.items.flatMap((i) => i.doses.map((d) => d.edgeMm ?? 0)));
+    const [edge] = edges;
+    const one = edges.size === 1 && edge ? [t("hang.edgeMm", { n: edge })] : [];
+    const hang = grips.workout(w.id);
+    return [grips.gripName(hang === undefined ? grip : grips.defaultGrip(hang)), ...one];
   }
   const minutes = workoutMinutes(w);
   const lines = [bodySummary(w), minutes === null ? null : durationLabel(minutes)];
@@ -37,7 +44,7 @@ export function workoutLines(w: Workout, gripName: (id: string) => string): stri
 export function planGridRows(
   members: readonly Membership[],
   workout: WorkoutLookup,
-  gripName: (id: string) => string,
+  grips: GripNames,
   /** What back says on the screen a row opens: the screen the grid is on. */
   back?: string
 ): PlanGridRow[] {
@@ -49,7 +56,7 @@ export function planGridRows(
         key: m.id,
         kind: w.kind,
         name: w.name,
-        lines: workoutLines(w, gripName),
+        lines: workoutLines(w, grips),
         days: m.weekdays,
         open: () => openMembership(m, back),
       },

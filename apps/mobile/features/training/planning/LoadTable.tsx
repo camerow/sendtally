@@ -55,6 +55,11 @@ export function LoadTable({
 }: LoadTableProps): React.ReactElement {
   const weeks = changes.map((_, i) => i + 1);
   const { slot } = useFieldOrder(columns.flatMap((f) => weeks.map((w) => `${f}:${w}`)));
+  const headOf = (f: DoseField): string => {
+    const name = columnLabel(kind, written, f);
+    const shown = f === "weightKg" ? unit : f === "edgeMm" ? "mm" : null;
+    return shown === null ? name : `${name} · ${shown}`;
+  };
   const head = (text: string, width?: number): React.ReactElement => (
     <Label
       small
@@ -70,7 +75,7 @@ export function LoadTable({
       <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
         <View style={{ width: WEEK }} />
         {columns.map((f) => (
-          <React.Fragment key={f}>{head(columnLabel(kind, written, f))}</React.Fragment>
+          <React.Fragment key={f}>{head(headOf(f))}</React.Fragment>
         ))}
         {head(t("plan.done"), DONE)}
       </View>

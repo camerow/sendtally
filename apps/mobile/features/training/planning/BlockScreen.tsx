@@ -29,13 +29,15 @@ export type BlockScreenProps = {
   id: string;
   /** A plan just added, lit for a moment. */
   highlight?: string;
+  /** Where back goes, as that screen is called; plain Back without it. */
+  back?: string;
 };
 
 /**
  * One block, read only: how it is going while it runs, a recap and Plan again once it is over,
  * and for a template its weeks with Schedule. Edit changes it.
  */
-export function BlockScreen({ id, highlight }: BlockScreenProps): React.ReactElement | null {
+export function BlockScreen({ id, highlight, back }: BlockScreenProps): React.ReactElement | null {
   const lit = useLit(highlight);
   const { today } = useHangData();
   const api = useApi();
@@ -58,6 +60,7 @@ export function BlockScreen({ id, highlight }: BlockScreenProps): React.ReactEle
 
   return (
     <ScreenFrame
+      backLabel={back}
       action={
         <DetailActions
           onEdit={() => router.push({ pathname: "/plan/block/edit", params: { id } })}
@@ -113,7 +116,13 @@ export function BlockScreen({ id, highlight }: BlockScreenProps): React.ReactEle
       ) : ended ? (
         <>
           <BlockRecapView recap={blockRecap(log, dated, today)} workout={log.workout} />
-          <BlockWeek block={block} members={members} workout={log.workout} lit={lit} />
+          <BlockWeek
+            block={block}
+            members={members}
+            workout={log.workout}
+            lit={lit}
+            canAdd={false}
+          />
         </>
       ) : (
         <BlockOverview

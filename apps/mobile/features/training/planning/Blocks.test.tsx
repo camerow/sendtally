@@ -204,7 +204,7 @@ describe("plan again", () => {
     await fireEvent.press(screen.getByLabelText("Open Summer base"));
     expect(router.push).toHaveBeenCalledWith({
       pathname: "/plan/block/[id]",
-      params: { id: "b0" },
+      params: { id: "b0", back: "Train" },
     });
   });
 
@@ -222,6 +222,7 @@ describe("plan again", () => {
       params: { id: "m3", back: "Summer base" },
     });
     expect(screen.getByLabelText("Back squat")).toBeTruthy();
+    expect(screen.queryByLabelText("Add to Summer base")).toBeNull();
   });
 
   it("copies a past block from the week picked, then opens the copy", async () => {
@@ -364,7 +365,15 @@ describe("block weeks", () => {
 describe("week grid", () => {
   it("opens a plan's weeks inside a block and its workout outside one", async () => {
     const workout = (id: string): WorkoutRecord | undefined => (id === "squat" ? squat : undefined);
-    await renderWithHang(<PlanGrid rows={planGridRows(plan.memberships, workout, (id) => id)} />);
+    await renderWithHang(
+      <PlanGrid
+        rows={planGridRows(plan.memberships, workout, {
+          gripName: (id) => id,
+          defaultGrip: (w) => w.grip,
+          workout: () => undefined,
+        })}
+      />
+    );
     const [inBlock, outside] = screen.getAllByLabelText("Back squat");
     await fireEvent.press(inBlock!);
     expect(router.push).toHaveBeenLastCalledWith({

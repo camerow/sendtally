@@ -1,4 +1,3 @@
-import { router } from "expo-router";
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import type { DatedBlock, Membership } from "@sendtally/core/hang";
@@ -15,6 +14,7 @@ import { PlanGrid } from "../plan/PlanGrid";
 import { planGridRows } from "../plan/planGridRows";
 import { type } from "../type";
 import { blockDates } from "./blockText";
+import { openBlock } from "./openBlock";
 
 export type BlockCardProps = {
   block: DatedBlock;
@@ -25,7 +25,7 @@ export type BlockCardProps = {
 /** A training block: where it is and what is in it. Tap to open it. */
 export function BlockCard({ block, members, workout }: BlockCardProps): React.ReactElement {
   const { model } = useHangData();
-  const rows = planGridRows(members, workout, model.gripName, t("training.train"));
+  const rows = planGridRows(members, workout, model, t("training.train"));
   const [adding, setAdding] = React.useState(false);
   return (
     <View
@@ -39,7 +39,7 @@ export function BlockCard({ block, members, workout }: BlockCardProps): React.Re
     >
       <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 12 }}>
         <Pressable
-          onPress={() => router.push({ pathname: "/plan/block/[id]", params: { id: block.id } })}
+          onPress={() => openBlock(block.id, t("training.train"))}
           accessibilityRole="button"
           accessibilityLabel={t("plan.openBlock", { name: block.name })}
           style={pressRow({ flex: 1, gap: 4 })}

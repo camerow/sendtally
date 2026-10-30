@@ -93,6 +93,7 @@ export function TodayScreen(): React.ReactElement {
             </Label>
             {running.map((b) => (
               <BlockRow
+                back={t("plan.tab")}
                 key={b.id}
                 id={b.id}
                 name={b.name}

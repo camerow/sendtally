@@ -4,10 +4,14 @@ import { HangDataProvider } from "../../../features/training/data/HangDataProvid
 import { BlockScreen } from "../../../features/training/planning/BlockScreen";
 
 export default function BlockRoute(): React.ReactElement {
-  const { id, highlight } = useLocalSearchParams<{ id: string; highlight?: string }>();
+  const { id, highlight, back } = useLocalSearchParams<{
+    id: string;
+    highlight?: string;
+    back?: string;
+  }>();
   return (
     <HangDataProvider framed>
-      <BlockScreen id={id} highlight={highlight} />
+      <BlockScreen id={id} highlight={highlight} back={back} />
     </HangDataProvider>
   );
 }

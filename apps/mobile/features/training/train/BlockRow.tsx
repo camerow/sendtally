@@ -1,9 +1,9 @@
-import { router } from "expo-router";
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
 import { pressRow } from "../../../lib/press";
+import { openBlock } from "../blocks/openBlock";
 import { HangIcon } from "../components/HangIcon";
 import { type } from "../type";
 
@@ -11,13 +11,15 @@ export type BlockRowProps = {
   id: string;
   name: string;
   meta?: string;
+  /** What back says on the block: the screen the row is on. */
+  back: string;
 };
 
 /** A block in the list: its name and when, opening the block. */
-export function BlockRow({ id, name, meta }: BlockRowProps): React.ReactElement {
+export function BlockRow({ id, name, meta, back }: BlockRowProps): React.ReactElement {
   return (
     <Pressable
-      onPress={() => router.push({ pathname: "/plan/block/[id]", params: { id } })}
+      onPress={() => openBlock(id, back)}
       accessibilityRole="button"
       accessibilityLabel={t("plan.openBlock", { name })}
       style={pressRow({

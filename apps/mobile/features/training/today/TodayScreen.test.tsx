@@ -96,7 +96,7 @@ describe("Today", () => {
     await fireEvent.press(screen.getByText("Winter base"));
     expect(router.push).toHaveBeenCalledWith({
       pathname: "/plan/block/[id]",
-      params: { id: "b1" },
+      params: { id: "b1", back: "Plan" },
     });
   });
 

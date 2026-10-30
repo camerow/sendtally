@@ -1,5 +1,7 @@
 import { router } from "expo-router";
+import { t } from "@sendtally/features/i18n";
 import type { LogItem } from "@sendtally/features/journal";
+import { openBlock } from "../training/blocks/openBlock";
 
 export function openLogItem(item: LogItem): void {
   if (item.type === "session") {
@@ -10,7 +12,7 @@ export function openLogItem(item: LogItem): void {
   } else if (item.type === "entry") {
     router.push({ pathname: "/journal/[id]", params: { id: item.entry.id } });
   } else if (item.type === "block") {
-    router.push({ pathname: "/plan/block/[id]", params: { id: item.recap.block.id } });
+    openBlock(item.recap.block.id, t("journal.log"));
   } else {
     const id = item.type === "activity" ? item.activity.id : item.hang.id;
     router.push({ pathname: "/activity/[id]", params: { id } });
