@@ -1,6 +1,6 @@
 import { router } from "expo-router";
 import React from "react";
-import { View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import {
   currentPhase,
   isWork,
@@ -17,13 +17,20 @@ import {
 import { setKeyOf } from "@sendtally/features/activities";
 import { loadLabel, setupLabel } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
+import { blockTagOf, usePlan } from "@sendtally/features/training";
+import { Icon } from "../../../components/Icon";
+import { useApi } from "../../../lib/api";
+import { press } from "../../../lib/press";
+import { ON_DARK, ON_DARK_LINE, ON_DARK_SOFT } from "../components/onDark";
+import { WorkoutNotes } from "../components/WorkoutNotes";
+import { type } from "../type";
 import { useHangData } from "../data/HangDataContext";
 import { usePlannedRun, type PlannedRun } from "./usePlannedRun";
 import { donePath } from "../done/doneParams";
 import { phaseLook } from "./phaseLook";
 import { RepDots } from "./RepDots";
 import { SetArrows } from "./SetArrows";
-import { SetupStep } from "./SetupStep";
+import { ForTodaySheet, type TodayEntry } from "./ForTodaySheet";
 import { TimerFrame } from "./TimerFrame";
 import { TimerRing } from "./TimerRing";
 import { timerText } from "./timerText";
@@ -35,6 +42,8 @@ function Timer({
   planned,
   grips,
   setups,
+  entries,
+  onSetups,
   link,
   session,
   resumed,
@@ -43,6 +52,8 @@ function Timer({
   planned: PlannedRun;
   grips: readonly string[];
   setups: HangSetup[];
+  entries: readonly TodayEntry[];
+  onSetups: (setups: HangSetup[]) => void;
   link: PlanLink;
   session: number;
   /** Where the run was when it was minimised or the app closed. */
@@ -50,7 +61,9 @@ function Timer({
   /** Ends the run as it opens, for its review. */
   end: boolean;
 }): React.ReactElement {
-  const { model } = useHangData();
+  const { model, today } = useHangData();
+  const plan = usePlan(useApi()).state;
+  const [changing, setChanging] = React.useState(false);
   const { items, exerciseRestS } = planned;
   const workout = items[0].workout;
   const timer = useTimer(
@@ -133,7 +146,7 @@ function Timer({
     <TimerFrame
       timer={timer}
       name={workout.name}
-      meta={`${model.gripName(gripId)} · ${setupLabel(current.kind, setup, model.settings.units)}`}
+      meta={`${text.setLine} · ${text.label}`}
       controls={{
         color: look.fill,
         primary: pull
@@ -147,6 +160,29 @@ function Timer({
         onFail: pull ? () => lift(false) : timer.cameOffEarly,
       }}
     >
+      <View style={{ alignItems: "center", gap: 10 }}>
+        <Pressable
+          onPress={() => setChanging(true)}
+          accessibilityRole="button"
+          accessibilityLabel={t("hang.changeToday")}
+          style={press({
+            height: 36,
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 8,
+            paddingHorizontal: 14,
+            borderRadius: 18,
+            borderWidth: 1.5,
+            borderColor: ON_DARK_LINE,
+          })}
+        >
+          <Text style={[type.mono, { fontSize: 13, color: ON_DARK }]}>
+            {`${model.gripName(gripId)} · ${setupLabel(current.kind, setup, model.settings.units)}`}
+          </Text>
+          <Icon name="pencil" size={14} strokeWidth={2} color={ON_DARK_SOFT} />
+        </Pressable>
+        <WorkoutNotes workoutId={workout.id} dark />
+      </View>
       <View style={{ flex: 1, alignItems: "center", justifyContent: "center", gap: 22 }}>
         <TimerRing
           progress={progress}
@@ -166,6 +202,20 @@ function Timer({
           <RepDots reps={current.reps} marks={run.marks} working={working} />
         </View>
       </View>
+      {changing && (
+        <ForTodaySheet
+          kicker={[
+            model.gripName(grips[0] ?? workout.grip),
+            ...(plan.status === "ready"
+              ? [blockTagOf(plan.data, link.membershipId, today)].filter((x) => x !== null)
+              : []),
+          ].join(" · ")}
+          entries={entries}
+          setups={setups}
+          onChange={onSetups}
+          onClose={() => setChanging(false)}
+        />
+      )}
     </TimerFrame>
   );
 }
@@ -196,21 +246,18 @@ export function TimerScreen({
   const [setups, setSetups] = React.useState<HangSetup[] | null>(resumed?.setups ?? null);
   if (planned === undefined) return null;
   const grips = planned.items.map((item, i) => (i === 0 ? gripId : item.workout.grip));
-  return setups === null ? (
-    <SetupStep
-      name={planned.items[0].workout.name}
-      workoutId={workoutId}
-      entries={planned.items.map(({ workout, dose }, i) => {
-        const grip = i === 0 ? gripId : workout.grip;
-        return { gripId: grip, kind: workout.kind, initial: model.setup(workout, grip, dose) };
-      })}
-      onStart={setSetups}
-    />
-  ) : (
+  const entries = planned.items.map(({ workout, dose }, i): TodayEntry => ({
+    gripId: grips[i] ?? workout.grip,
+    kind: workout.kind,
+    planned: model.setup(workout, grips[i] ?? workout.grip, dose),
+  }));
+  return (
     <Timer
       planned={planned}
       grips={grips}
-      setups={setups}
+      setups={setups ?? entries.map((e) => e.planned)}
+      entries={entries}
+      onSetups={setSetups}
       link={link}
       session={session}
       resumed={(resumed?.run as Run<HangPhase> | undefined) ?? null}

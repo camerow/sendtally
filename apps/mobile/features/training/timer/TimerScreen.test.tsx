@@ -16,6 +16,10 @@ jest.mock("expo-router", () => ({
 }));
 jest.mock("expo-keep-awake", () => ({ useKeepAwake: () => undefined }));
 jest.mock("../../../lib/liveRunStorage");
+jest.mock("../../../components/Sheet", () => ({
+  Sheet: ({ visible, children }: { visible: boolean; children: React.ReactNode }) =>
+    visible ? children : null,
+}));
 
 /** What the timer handed its review. */
 const reviewed = (): { params: Record<string, string>; run: TimerRun } => {
@@ -44,7 +48,6 @@ describe("Timer", () => {
     await renderWithHang(
       <TimerScreen workoutId="rep73" gripId="half" link={NO_PLAN} session={0} />
     );
-    await fireEvent.press(screen.getByText("Start"));
     expect(screen.getByText("Get ready")).toBeTruthy();
     expect(screen.getByText("6 sets ahead")).toBeTruthy();
     expect(StyleSheet.flatten(screen.getByText("End").props.style).color).toBe(colors.gold);
@@ -73,7 +76,6 @@ describe("Timer", () => {
     const view = await renderWithHang(
       <TimerScreen workoutId="rep73" gripId="half" link={NO_PLAN} session={0} />
     );
-    await fireEvent.press(screen.getByText("Start"));
     await advance(5100);
     expect(readLiveRun()).toMatchObject({
       title: "Repeaters 7:3",
@@ -86,7 +88,6 @@ describe("Timer", () => {
     await renderWithHang(
       <TimerScreen workoutId="rep73" gripId="half" link={NO_PLAN} session={0} />
     );
-    expect(screen.queryByText("Start")).toBeNull();
     expect(screen.getByText("Hang")).toBeTruthy();
     expect(screen.getByText("Set 1 of 6")).toBeTruthy();
   });
@@ -95,7 +96,6 @@ describe("Timer", () => {
     await renderWithHang(
       <TimerScreen workoutId="rep73" gripId="half" link={NO_PLAN} session={0} />
     );
-    await fireEvent.press(screen.getByText("Start"));
     expect(screen.getByLabelText("Previous set")).toBeDisabled();
     await advance(5000 + 7100);
     expect(screen.getByText("Rest")).toBeTruthy();
@@ -117,7 +117,6 @@ describe("Timer", () => {
     await renderWithHang(
       <TimerScreen workoutId="max10" gripId="half" link={NO_PLAN} session={0} />
     );
-    await fireEvent.press(screen.getByText("Start"));
     await advance(5000);
     await fireEvent.press(screen.getByText("Pause"));
     await advance(60_000);
@@ -176,12 +175,16 @@ describe("Timer", () => {
       hangData({ sessions: [session] }),
       { plan }
     );
+    expect(screen.getByText("Half crimp · 15\u00A0mm · +8 kg")).toBeTruthy();
+    await fireEvent.press(screen.getByLabelText("Change today’s setup"));
+    expect(screen.getByText("For today")).toBeTruthy();
+    expect(screen.getByText("Half crimp · Winter base · W1")).toBeTruthy();
     expect(screen.getByLabelText("Edge depth").props.accessibilityValue).toEqual({ text: "15 mm" });
     expect(screen.getByLabelText("Added weight").props.accessibilityValue).toEqual({
       text: "8 kg",
     });
     await fireEvent.press(screen.getByLabelText("Deeper edge"));
-    await fireEvent.press(screen.getByText("Start"));
+    await fireEvent.press(screen.getByText("Done"));
     expect(screen.getByText("Half crimp · 16\u00A0mm · +8 kg")).toBeTruthy();
     expect(screen.getByText("3 sets ahead")).toBeTruthy();
     await fireEvent.press(screen.getByText("End"));
@@ -213,8 +216,7 @@ describe("Timer", () => {
       hangData(),
       { workouts: [twoGrips] }
     );
-    expect(screen.getByText("Set up · Half crimp · Open hand")).toBeTruthy();
-    await fireEvent.press(screen.getByText("Start"));
+    expect(screen.getByText(/^Half crimp · /)).toBeTruthy();
     await advance(5000);
     expect(screen.getByText("Rest 2:00, then the next exercise")).toBeTruthy();
     await advance(10_000);
