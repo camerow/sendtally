@@ -4,6 +4,7 @@ import Svg, { Path, Rect } from "react-native-svg";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
 import { press, tap } from "../lib/press";
+import { Icon, type IconName } from "./Icon";
 
 export type ChipProps = {
   label: string;
@@ -13,6 +14,7 @@ export type ChipProps = {
   uppercase?: boolean;
   /** Members-only: drawn dashed with a lock, still pressable so the press can explain itself. */
   locked?: boolean;
+  icon?: IconName;
   onPress: () => void;
 };
 
@@ -41,6 +43,7 @@ export function Chip({
   dashed = false,
   uppercase = true,
   locked = false,
+  icon,
   onPress,
 }: ChipProps): React.ReactElement {
   const dashedBorder = dashed || locked;
@@ -76,6 +79,7 @@ export function Chip({
       })}
     >
       {locked && <Lock color={textColor} />}
+      {icon !== undefined && <Icon name={icon} color={textColor} size={14} strokeWidth={2} />}
       <Text
         style={{
           fontFamily: fonts.monoMedium,
