@@ -22,7 +22,6 @@ export const plan = {
   "plan.blockEmpty":
     "Noch nichts in diesem Block. Füge Hangboard-Workouts, Klettern und das übrige Training hinzu, für das er gedacht ist.",
   "plan.addToPlan": "Zum Plan hinzufügen",
-  "plan.forDate": "Für {date}",
   "plan.howOften": "Wie oft?",
   "plan.repeatEvery": "Jede Woche",
   "plan.specificDays": "An bestimmten Tagen",
@@ -84,6 +83,7 @@ export const plan = {
   "plan.added": "Hinzugefügt",
   "plan.addNamed": "{name} hinzufügen",
   "plan.undoAdd": "{name} wieder entfernen",
+  "plan.tapEditDays": "Tippe auf Tage bearbeiten, um festzulegen, wann {workout} läuft",
   "plan.move": "Verschieben",
   "plan.moveHint": "Auf einen anderen Tag dieser Woche",
   "plan.skip": "Auslassen",

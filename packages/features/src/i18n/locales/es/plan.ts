@@ -21,7 +21,6 @@ export const plan = {
   "plan.blockEmpty":
     "Nada en este bloque todavía. Añade multipresa, escalada y el resto del entrenamiento para el que es.",
   "plan.addToPlan": "Añadir al plan",
-  "plan.forDate": "Para el {date}",
   "plan.howOften": "¿Con qué frecuencia?",
   "plan.repeatEvery": "Cada semana",
   "plan.specificDays": "Días concretos",
@@ -83,6 +82,7 @@ export const plan = {
   "plan.added": "Añadido",
   "plan.addNamed": "Añadir {name}",
   "plan.undoAdd": "Quitar {name}",
+  "plan.tapEditDays": "Toca Editar días para fijar cuándo va {workout}",
   "plan.move": "Mover",
   "plan.moveHint": "A otro día de esta semana",
   "plan.skip": "Saltar",

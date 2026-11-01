@@ -1,5 +1,5 @@
 import React from "react";
-import { Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import {
   addDays,
   blockWeekOn,
@@ -23,6 +23,7 @@ import {
 } from "@sendtally/features/training";
 import { Switch } from "../../../components/Switch";
 import { useApi } from "../../../lib/api";
+import { press } from "../../../lib/press";
 import { Button } from "../components/Button";
 import { DashedPanel } from "../components/DashedPanel";
 import { AMBER } from "../components/tints";
@@ -156,6 +157,7 @@ export function BlockWeek({
     const s = scheduleOf(log.plan, m);
     return s.weekdays.length === 0 && s.weeks.every((w) => w.weekdays.length === 0);
   });
+  const daylessNames = dayless.map((m) => workout(m.workoutId)?.name ?? "").join(", ");
   const [added, setAdded] = React.useState<readonly string[]>([]);
   React.useEffect(() => {
     if (added.length === 0) return;
@@ -267,12 +269,21 @@ export function BlockWeek({
         />
       )}
       {dayless.length > 0 &&
-        hint(
-          t("plan.tapDays", {
-            workout: dayless.map((m) => workout(m.workoutId)?.name ?? "").join(", "),
-          }),
-          AMBER
-        )}
+        !editing &&
+        (template || !editable) &&
+        hint(t("plan.tapDays", { workout: daylessNames }), AMBER)}
+      {dayless.length > 0 && !editing && !template && editable && (
+        <Pressable
+          onPress={() => {
+            setFollowing(false);
+            setEditing(true);
+          }}
+          accessibilityRole="button"
+          style={press({})}
+        >
+          {hint(t("plan.tapEditDays", { workout: daylessNames }), AMBER)}
+        </Pressable>
+      )}
       {template &&
         week !== undefined &&
         week > 1 &&

@@ -25,12 +25,12 @@ export function addFlowParams(flow: AddFlow): RawAddParams {
   };
 }
 
-/** What the add is for: the block, the day, or the plan. */
+/** Where the add goes, the sheet's title saying what it does: the day, or the block. */
 export function addKicker(flow: AddFlow, blocks: readonly Block[]): string {
   const block = flow.blockId === null ? undefined : blocks.find((b) => b.id === flow.blockId);
-  return block !== undefined
-    ? t("plan.addToBlock", { name: block.name })
-    : flow.date !== null
-      ? t("plan.forDate", { date: shortDate(flow.date) })
+  return flow.date !== null
+    ? shortDate(flow.date)
+    : block !== undefined
+      ? block.name || t("plan.untitled")
       : t("plan.addToPlan");
 }

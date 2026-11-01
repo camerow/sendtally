@@ -123,7 +123,7 @@ describe("Today", () => {
     await fireEvent.press(screen.getByLabelText(/^Monday/));
     await fireEvent.press(screen.getByText("Add to Mon"));
     expect(screen.getByText("Add workouts")).toBeTruthy();
-    expect(screen.getByText("For Mon, Sep 28")).toBeTruthy();
+    expect(screen.getByText("Mon, Sep 28")).toBeTruthy();
   });
 
   it("shows no blocks when none is running", async () => {

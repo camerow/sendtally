@@ -78,7 +78,7 @@ describe("adding to the plan", () => {
     await renderWithHang(<AddWorkoutsSheet flow={flow} visible onClose={onClose} />, hangData(), {
       workouts: [legs],
     });
-    expect(screen.getByText("For Thu, Oct 1")).toBeTruthy();
+    expect(screen.getByText("Thu, Oct 1")).toBeTruthy();
     expect(screen.getAllByText("Strength").length).toBeGreaterThan(1);
     expect(screen.getByText("General")).toBeTruthy();
     expect(screen.getByText("5x5 strength")).toBeTruthy();
