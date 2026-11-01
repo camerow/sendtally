@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { Block } from "@sendtally/core/hang";
-import { newSchedule, scheduledMemberships, scheduleReady, toggled } from "./schedule";
+import { blockDates, newSchedule, scheduledMemberships, scheduleReady, toggled } from "./schedule";
+import { daysInWeek } from "./weekDays";
 
 const TODAY = "2026-10-22";
 const block: Block = { id: "b1", name: "Winter base", start: "2026-11-02", weeks: 6, focus: null };
@@ -53,8 +54,10 @@ describe("scheduledMemberships", () => {
       { id: "m2", workoutId: "w1", blockId: null, weekdays: [], start: "2026-11-10" },
     ]);
     expect(scheduledMemberships(dates, "w1", block, ids())).toEqual([
-      { id: "m1", workoutId: "w1", blockId: "b1", weekdays: [], start: "2026-11-10" },
+      { id: "m1", workoutId: "w1", blockId: "b1", weekdays: [], start: "2026-11-02" },
     ]);
+    const days = blockDates("m1", block, ["2026-11-10", "2026-10-28", "2026-11-12"]);
+    expect([1, 2, 3].map((w) => daysInWeek(days, w))).toEqual([[], [1, 3], []]);
   });
 
   it("is ready once it says when", () => {

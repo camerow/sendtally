@@ -40,6 +40,7 @@ export {
 } from "./plan";
 export {
   newSchedule,
+  blockDates,
   scheduledMemberships,
   scheduleReady,
   toggled,

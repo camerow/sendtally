@@ -10,7 +10,6 @@ import {
   foldVariations,
   intervalPhases,
   intervalsOf,
-  occurrencesIn,
   occursOn,
   prescription,
   protocolDose,
@@ -95,39 +94,10 @@ describe("one-off days", () => {
     ["the day before", "2026-11-04", null, false],
     ["its day", "2026-11-05", null, true],
     ["the same weekday a week on", "2026-11-12", null, false],
-    ["its day inside its block", "2026-11-05", block, true],
+    ["its day inside a block, where no days is none yet", "2026-11-05", block, false],
     ["its day outside its block", "2026-11-05", { start: "2026-11-09", weeks: 2 }, false],
   ] as const)("lands on %s: %s", (_, date, inBlock, expected) => {
     expect(occursOn(once, inBlock, date)).toBe(expected);
-  });
-});
-
-describe("occurrencesIn", () => {
-  const memberships: Membership[] = [
-    { id: "weekly", workoutId: "squat", blockId: null, weekdays: [1, 4], start: "2026-11-03" },
-    { id: "once", workoutId: "rep73", blockId: null, weekdays: [], start: "2026-11-04" },
-    { id: "blocked", workoutId: "rep73", blockId: "b", weekdays: [0], start: "2026-11-02" },
-    { id: "orphan", workoutId: "rep73", blockId: "gone", weekdays: [0], start: "2026-11-02" },
-  ];
-
-  it("lists every planned date in the range, by date, the end left out", () => {
-    expect(occurrencesIn(memberships, [block], "2026-11-01", "2026-11-09")).toEqual([
-      { date: "2026-11-02", membershipId: "blocked", workoutId: "rep73", blockId: "b" },
-      { date: "2026-11-03", membershipId: "weekly", workoutId: "squat", blockId: null },
-      { date: "2026-11-04", membershipId: "once", workoutId: "rep73", blockId: null },
-      { date: "2026-11-06", membershipId: "weekly", workoutId: "squat", blockId: null },
-    ]);
-  });
-
-  it("stops a block's memberships at its end", () => {
-    const days = occurrencesIn(memberships, [block], "2026-12-07", "2026-12-22");
-    expect(days.filter((d) => d.membershipId === "blocked").map((d) => d.date)).toEqual([
-      "2026-12-07",
-    ]);
-  });
-
-  it("is empty for an empty range", () => {
-    expect(occurrencesIn(memberships, [block], "2026-11-09", "2026-11-09")).toEqual([]);
   });
 });
 

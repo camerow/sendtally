@@ -234,8 +234,8 @@ export function blockWeekOn(b: Pick<Block, "start" | "weeks">, d: CalendarDate):
 }
 
 /**
- * Whether the membership lands on a date, inside its block: one of its weekdays
- * from its start, or with no weekdays its start alone.
+ * Whether the membership lands on a date, inside its block: one of its weekdays from its
+ * start. Outside a block no weekdays is a one-off on its start; inside one it is no days yet.
  */
 export function occursOn(
   m: Pick<Membership, "weekdays" | "start">,
@@ -243,37 +243,10 @@ export function occursOn(
   d: CalendarDate
 ): boolean {
   const day =
-    m.weekdays.length === 0 ? d === m.start : d >= m.start && m.weekdays.includes(weekday(d));
+    m.weekdays.length === 0
+      ? block === null && d === m.start
+      : d >= m.start && m.weekdays.includes(weekday(d));
   return day && (block === null || blockWeekOn(block, d) !== null);
-}
-
-/** One date a membership lands on, as a calendar lists it. */
-export type PlannedDay = {
-  date: CalendarDate;
-  membershipId: string;
-  workoutId: string;
-  blockId: string | null;
-};
-
-/** Every date each membership lands on from `from` to `to` (exclusive), by date then membership order. */
-export function occurrencesIn(
-  memberships: readonly Membership[],
-  blocks: readonly Block[],
-  from: CalendarDate,
-  to: CalendarDate
-): PlannedDay[] {
-  const blockOf = (m: Membership): Block | null =>
-    m.blockId === null ? null : (blocks.find((b) => b.id === m.blockId) ?? null);
-  const days: PlannedDay[] = [];
-  for (let d = from; d < to; d = addDays(d, 1)) {
-    for (const m of memberships) {
-      // A membership whose block is gone plans nothing.
-      const block = blockOf(m);
-      if ((m.blockId !== null && block === null) || !occursOn(m, block, d)) continue;
-      days.push({ date: d, membershipId: m.id, workoutId: m.workoutId, blockId: m.blockId });
-    }
-  }
-  return days;
 }
 
 export type Prescribed = {

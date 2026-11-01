@@ -7,6 +7,7 @@ import {
   type Membership,
   type Weekday,
 } from "@sendtally/core/hang";
+import { daysInWeek, withWeekDays, type DaySchedule } from "./weekDays";
 
 /** Every week on some weekdays, or once on each of some dates. */
 export type ScheduleMode = "repeat" | "dates";
@@ -46,8 +47,9 @@ export function scheduleReady(d: ScheduleDraft, block: Block | null): boolean {
 }
 
 /**
- * What adding the workout on the schedule saves: one plan on its weekdays, or a
- * one-off plan per date. `newId` hands out the id of each.
+ * What adding the workout on the schedule saves: one plan on its weekdays, a one-off plan per
+ * date, or in a block one plan whose days are those dates' weeks (see `blockDates`). `newId`
+ * hands out the id of each.
  */
 export function scheduledMemberships(
   d: ScheduleDraft,
@@ -66,8 +68,34 @@ export function scheduledMemberships(
         start: block?.start ?? d.start,
       },
     ];
+  if (block !== null && block.start !== null)
+    return scheduleReady(d, block)
+      ? [{ id: newId(), workoutId, blockId, weekdays: [], start: block.start }]
+      : [];
   return d.dates
     .filter((date) => inside(block, date))
     .sort(ascending)
     .map((date) => ({ id: newId(), workoutId, blockId, weekdays: [], start: date }));
+}
+
+/** A block plan's days on some dates: each date's weekday in its week alone. */
+export function blockDates(
+  membershipId: string,
+  block: Block,
+  dates: readonly CalendarDate[]
+): DaySchedule {
+  return dates.reduce(
+    (schedule, date) => {
+      const week = blockWeekOn(block, date);
+      if (week === null) return schedule;
+      const days = daysInWeek(schedule, week);
+      return withWeekDays(schedule, {
+        week,
+        weekdays: [...days, weekday(date)],
+        following: false,
+        last: block.weeks,
+      });
+    },
+    { membershipId, weekdays: [], weeks: [] } as DaySchedule
+  );
 }

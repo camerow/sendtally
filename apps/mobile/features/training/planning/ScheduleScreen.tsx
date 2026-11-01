@@ -1,11 +1,12 @@
 import { randomUUID } from "expo-crypto";
 import React from "react";
 import { View } from "react-native";
-import { addDays, blockEnd, isDated, maxDate, type Block } from "@sendtally/core/hang";
+import { addDays, blockEnd, blockWeekOn, isDated, maxDate, type Block } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { daysList, shortDate } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import {
+  blockDates,
   newSchedule,
   scheduledMemberships,
   scheduleReady,
@@ -67,16 +68,23 @@ export function ScheduleScreen({
   const block: Block | null = template ?? blocks.find((b) => b.id === blockId) ?? null;
   const dated = block !== null && isDated(block) ? block : null;
   const planned = scheduledMemberships(draft, workoutId, block, () => "");
+  // In a block the dates are one plan's days; outside one, a plan each.
+  const days =
+    draft.mode === "dates" && dated !== null
+      ? draft.dates.filter((d) => blockWeekOn(dated, d) !== null).sort()
+      : planned.map((m) => m.start);
   const ready = scheduleReady(draft, block);
 
   const save = (): void => {
     const memberships = scheduledMemberships(draft, workoutId, block, randomUUID);
     memberships.forEach((m) => void actions.saveMembership(m));
     const [first] = memberships;
+    if (first !== undefined && draft.mode === "dates" && dated !== null)
+      void actions.saveSchedule(blockDates(first.id, dated, draft.dates));
     if (first !== undefined)
       backToPlan(
         block?.id ?? null,
-        first.start,
+        days[0] ?? first.start,
         first.id,
         flow.editing === true && block?.id === flow.blockId
       );
@@ -86,7 +94,7 @@ export function ScheduleScreen({
     <ScreenFrame
       footer={
         <Button
-          label={addLabel(draft, planned.length, planned[0]?.start)}
+          label={addLabel(draft, days.length, days[0])}
           onPress={save}
           disabled={!ready}
           variant="primary"

@@ -4,7 +4,7 @@ import type { Plan, SendtallyApi } from "@sendtally/api-client";
 import type { Block, Membership, PlanChange, Weekday, WeekChange } from "@sendtally/core/hang";
 import { queries } from "../query";
 import { withoutBlock, withoutMembership } from "./plan";
-import { daysInWeek, scheduleOf, usualDays, withWeekDays } from "./weekDays";
+import { daysInWeek, scheduleOf, usualDays, withWeekDays, type DaySchedule } from "./weekDays";
 
 export type PlanActions = {
   saveBlock: (block: Block) => Promise<void>;
@@ -17,6 +17,8 @@ export type PlanActions = {
   saveWeekChange: (change: WeekChange) => Promise<void>;
   /** Skips or moves one planned day, replacing any change it had. */
   savePlanChange: (change: PlanChange) => Promise<void>;
+  /** Replaces a membership's days: its own weekdays and each block week they change from. */
+  saveSchedule: (schedule: DaySchedule) => Promise<void>;
   /**
    * Turns one weekday on or off in a block week, for that week alone or for it and every
    * week after, reading the days as they are in the cache when it lands. `every` turns it
@@ -71,6 +73,20 @@ export function usePlanActions(api: SendtallyApi, onError: (error: unknown) => v
         await client.invalidateQueries({ queryKey: key });
       }
     };
+    const saveSchedule = (next: DaySchedule): Promise<void> =>
+      write(
+        (p) => ({
+          ...p,
+          memberships: p.memberships.map((x) =>
+            x.id === next.membershipId ? { ...x, weekdays: next.weekdays } : x
+          ),
+          membershipDays: [
+            ...p.membershipDays.filter((d) => d.membershipId !== next.membershipId),
+            ...next.weeks,
+          ],
+        }),
+        () => api.saveSchedule(next)
+      );
     return {
       saveBlock: (block) =>
         write(
@@ -110,30 +126,20 @@ export function usePlanActions(api: SendtallyApi, onError: (error: unknown) => v
           }),
           () => api.savePlanChange(change)
         ),
+      saveSchedule: (next) => saveSchedule(next),
       toggleWeekDay: async (membershipId, { week, day, following, last, every = false }) => {
         const plan = client.getQueryData<Plan>(key);
         const m = plan?.memberships.find((x) => x.id === membershipId);
         if (plan === undefined || m === undefined) return;
         const schedule = scheduleOf(plan, m);
         const days = every ? usualDays(schedule, week, last) : daysInWeek(schedule, week);
-        const next = withWeekDays(schedule, {
-          week,
-          weekdays: days.includes(day) ? days.filter((d) => d !== day) : [...days, day],
-          following: following || every,
-          last,
-        });
-        await write(
-          (p) => ({
-            ...p,
-            memberships: p.memberships.map((x) =>
-              x.id === membershipId ? { ...x, weekdays: next.weekdays } : x
-            ),
-            membershipDays: [
-              ...p.membershipDays.filter((d) => d.membershipId !== membershipId),
-              ...next.weeks,
-            ],
-          }),
-          () => api.saveSchedule(next)
+        await saveSchedule(
+          withWeekDays(schedule, {
+            week,
+            weekdays: days.includes(day) ? days.filter((d) => d !== day) : [...days, day],
+            following: following || every,
+            last,
+          })
         );
       },
       undoPlanChange: (membershipId, plannedOn) =>
