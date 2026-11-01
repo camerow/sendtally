@@ -75,8 +75,10 @@ export const plan = {
   "plan.past": "Passés",
   "plan.templates": "Modèles",
   "plan.editDays": "Modifier les jours",
-  "plan.editingDays":
-    "Jours modifiés à partir de S{n}. Touche les cases pour les régler ; OK revient à la semaine.",
+  "plan.alsoWeeks": "Aussi les semaines {from} à {to}",
+  "plan.alsoWeek": "Aussi la semaine {n}",
+  "plan.replacesWeeks": "Remplace les jours choisis pour {weeks}",
+  "plan.everyWeek": "Chaque semaine",
   "plan.move": "Déplacer",
   "plan.moveHint": "À un autre jour de cette semaine",
   "plan.skip": "Passer",

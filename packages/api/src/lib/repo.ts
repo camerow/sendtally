@@ -3085,25 +3085,35 @@ export async function savePlanChange(db: D1Database, userId: string, c: PlanChan
     });
 }
 
-/** Sets a block membership's weekdays from one block week on. */
-export async function saveMembershipDays(
+/** Replaces a membership's days: its own weekdays and every week they change from. */
+export async function saveSchedule(
   db: D1Database,
   userId: string,
-  m: MembershipDays
+  membershipId: string,
+  weekdays: readonly number[],
+  weeks: readonly MembershipDays[]
 ): Promise<void> {
-  const weekdays_json = JSON.stringify([...m.weekdays].sort((a, b) => a - b));
-  await drizzle(db)
-    .insert(membershipDays)
-    .values({
-      user_id: userId,
-      membership_id: m.membershipId,
-      from_week: m.fromWeek,
-      weekdays_json,
-    })
-    .onConflictDoUpdate({
-      target: [membershipDays.user_id, membershipDays.membership_id, membershipDays.from_week],
-      set: { weekdays_json },
-    });
+  const json = (days: readonly number[]): string => JSON.stringify([...days].sort((a, b) => a - b));
+  const d = drizzle(db);
+  const mine = and(
+    eq(membershipDays.user_id, userId),
+    eq(membershipDays.membership_id, membershipId)
+  );
+  await d.batch([
+    d
+      .update(memberships)
+      .set({ weekdays_json: json(weekdays), updated_at: new Date().toISOString() })
+      .where(and(eq(memberships.user_id, userId), eq(memberships.id, membershipId))),
+    d.delete(membershipDays).where(mine),
+    ...weeks.map((w) =>
+      d.insert(membershipDays).values({
+        user_id: userId,
+        membership_id: membershipId,
+        from_week: w.fromWeek,
+        weekdays_json: json(w.weekdays),
+      })
+    ),
+  ]);
 }
 
 /** Undoes a skip or move: the day is planned as it was. */
@@ -3191,7 +3201,7 @@ function only<T>(rows: readonly T[]): T {
 
 /**
  * Plans the block again from `copy.start`: a new block of the same name and length
- * with every membership and week change of the old one, shifted by the same days. A
+ * with every membership, week change and week's days of the old one, shifted by the same days. A
  * template has no dates to shift from, so its plans start with the copy; a copy with
  * no start is a template, keeping the dates it had.
  */
@@ -3202,7 +3212,11 @@ export async function copyBlock(
   copy: Block
 ): Promise<void> {
   const d = drizzle(db);
-  const [members, changes] = await d.batch([
+  const sourceIds = d
+    .select({ id: memberships.id })
+    .from(memberships)
+    .where(and(eq(memberships.user_id, userId), eq(memberships.block_id, source.id)));
+  const [members, changes, days] = await d.batch([
     d
       .select()
       .from(memberships)
@@ -3210,17 +3224,12 @@ export async function copyBlock(
     d
       .select()
       .from(weekChanges)
+      .where(and(eq(weekChanges.user_id, userId), inArray(weekChanges.membership_id, sourceIds))),
+    d
+      .select()
+      .from(membershipDays)
       .where(
-        and(
-          eq(weekChanges.user_id, userId),
-          inArray(
-            weekChanges.membership_id,
-            d
-              .select({ id: memberships.id })
-              .from(memberships)
-              .where(and(eq(memberships.user_id, userId), eq(memberships.block_id, source.id)))
-          )
-        )
+        and(eq(membershipDays.user_id, userId), inArray(membershipDays.membership_id, sourceIds))
       ),
   ]);
   const now = new Date().toISOString();
@@ -3249,6 +3258,13 @@ export async function copyBlock(
         d
           .insert(weekChanges)
           .values({ ...c, membership_id: ids.get(c.membership_id) ?? c.membership_id })
+      ),
+    ...days
+      .filter((w) => keptIds.has(w.membership_id))
+      .map((w) =>
+        d
+          .insert(membershipDays)
+          .values({ ...w, membership_id: ids.get(w.membership_id) ?? w.membership_id })
       ),
   ]);
 }

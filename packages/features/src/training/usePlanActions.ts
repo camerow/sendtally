@@ -1,15 +1,10 @@
 import { useQueryClient } from "@tanstack/react-query";
 import React from "react";
 import type { Plan, SendtallyApi } from "@sendtally/api-client";
-import type {
-  Block,
-  Membership,
-  MembershipDays,
-  PlanChange,
-  WeekChange,
-} from "@sendtally/core/hang";
+import type { Block, Membership, PlanChange, Weekday, WeekChange } from "@sendtally/core/hang";
 import { queries } from "../query";
 import { withoutBlock, withoutMembership } from "./plan";
+import { daysInWeek, scheduleOf, usualDays, withWeekDays } from "./weekDays";
 
 export type PlanActions = {
   saveBlock: (block: Block) => Promise<void>;
@@ -22,8 +17,15 @@ export type PlanActions = {
   saveWeekChange: (change: WeekChange) => Promise<void>;
   /** Skips or moves one planned day, replacing any change it had. */
   savePlanChange: (change: PlanChange) => Promise<void>;
-  /** Sets a block membership's weekdays from one block week on. */
-  saveMembershipDays: (days: MembershipDays) => Promise<void>;
+  /**
+   * Turns one weekday on or off in a block week, for that week alone or for it and every
+   * week after, reading the days as they are in the cache when it lands. `every` turns it
+   * on or off the days most weeks from it land on, for it and every week after.
+   */
+  toggleWeekDay: (
+    membershipId: string,
+    change: { week: number; day: Weekday; following: boolean; last: number; every?: boolean }
+  ) => Promise<void>;
   /** Undoes a skip or move: the day is planned as it was. */
   undoPlanChange: (membershipId: string, plannedOn: string) => Promise<void>;
   /** Plans `from` again as block `to` from `start`, with its plans; false when it failed. */
@@ -108,19 +110,32 @@ export function usePlanActions(api: SendtallyApi, onError: (error: unknown) => v
           }),
           () => api.savePlanChange(change)
         ),
-      saveMembershipDays: (days) =>
-        write(
+      toggleWeekDay: async (membershipId, { week, day, following, last, every = false }) => {
+        const plan = client.getQueryData<Plan>(key);
+        const m = plan?.memberships.find((x) => x.id === membershipId);
+        if (plan === undefined || m === undefined) return;
+        const schedule = scheduleOf(plan, m);
+        const days = every ? usualDays(schedule, week, last) : daysInWeek(schedule, week);
+        const next = withWeekDays(schedule, {
+          week,
+          weekdays: days.includes(day) ? days.filter((d) => d !== day) : [...days, day],
+          following: following || every,
+          last,
+        });
+        await write(
           (p) => ({
             ...p,
+            memberships: p.memberships.map((x) =>
+              x.id === membershipId ? { ...x, weekdays: next.weekdays } : x
+            ),
             membershipDays: [
-              ...p.membershipDays.filter(
-                (d) => d.membershipId !== days.membershipId || d.fromWeek !== days.fromWeek
-              ),
-              days,
+              ...p.membershipDays.filter((d) => d.membershipId !== membershipId),
+              ...next.weeks,
             ],
           }),
-          () => api.saveMembershipDays(days)
-        ),
+          () => api.saveSchedule(next)
+        );
+      },
       undoPlanChange: (membershipId, plannedOn) =>
         write(
           (p) => ({

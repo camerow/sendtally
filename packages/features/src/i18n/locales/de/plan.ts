@@ -75,8 +75,10 @@ export const plan = {
   "plan.past": "Vorbei",
   "plan.templates": "Vorlagen",
   "plan.editDays": "Tage bearbeiten",
-  "plan.editingDays":
-    "Tage ab W{n} bearbeiten. Tippe Felder an, um sie zu setzen; Fertig führt zurück zur Woche.",
+  "plan.alsoWeeks": "Auch Wochen {from} bis {to}",
+  "plan.alsoWeek": "Auch Woche {n}",
+  "plan.replacesWeeks": "Ersetzt die Tage von {weeks}",
+  "plan.everyWeek": "Jede Woche",
   "plan.move": "Verschieben",
   "plan.moveHint": "Auf einen anderen Tag dieser Woche",
   "plan.skip": "Auslassen",

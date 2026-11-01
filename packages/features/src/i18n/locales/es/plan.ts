@@ -74,8 +74,10 @@ export const plan = {
   "plan.past": "Anteriores",
   "plan.templates": "Plantillas",
   "plan.editDays": "Editar días",
-  "plan.editingDays":
-    "Editando días desde S{n}. Toca las casillas para fijarlos; Listo vuelve a la semana.",
+  "plan.alsoWeeks": "También las semanas {from} a {to}",
+  "plan.alsoWeek": "También la semana {n}",
+  "plan.replacesWeeks": "Sustituye los días fijados para {weeks}",
+  "plan.everyWeek": "Cada semana",
   "plan.move": "Mover",
   "plan.moveHint": "A otro día de esta semana",
   "plan.skip": "Saltar",

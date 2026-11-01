@@ -162,15 +162,16 @@ export const planChangeBody = z.discriminatedUnion("kind", [
 
 export const planChangeParam = z.object({ id, date: calendarDate });
 
-export const membershipDaysParam = z.object({
-  id,
-  week: z.coerce.number().int().min(1).max(MAX_BLOCK_WEEKS),
-});
+const weekdays = z
+  .array(z.literal([0, 1, 2, 3, 4, 5, 6]))
+  .refine((days) => new Set(days).size === days.length, "repeated weekday");
 
-export const membershipDaysBody = z.object({
-  weekdays: z
-    .array(z.literal([0, 1, 2, 3, 4, 5, 6]))
-    .refine((days) => new Set(days).size === days.length, "repeated weekday"),
+/** A membership's own weekdays, and each later block week its days change from. */
+export const scheduleBody = z.object({
+  weekdays,
+  weeks: z
+    .array(z.object({ fromWeek: z.number().int().min(2).max(MAX_BLOCK_WEEKS), weekdays }))
+    .refine((ws) => new Set(ws.map((w) => w.fromWeek)).size === ws.length, "repeated week"),
 });
 
 export const weekChangeBody = z.object({

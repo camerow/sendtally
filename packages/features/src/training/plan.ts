@@ -15,6 +15,7 @@ import {
   type WorkoutKind,
 } from "@sendtally/core/hang";
 import { workoutUsage } from "../workouts/library";
+import { daysInWeek, scheduleOf } from "./weekDays";
 
 /**
  * Past and not done is missed; today and later, not done yet, is planned. A day skipped
@@ -91,10 +92,7 @@ export function asOn(
 ): Membership {
   const week = block === null ? null : blockWeekOn(block, d);
   if (week === null) return m;
-  const edit = plan.membershipDays
-    .filter((x) => x.membershipId === m.id && x.fromWeek <= week)
-    .sort((a, b) => b.fromWeek - a.fromWeek)[0];
-  return edit === undefined ? m : { ...m, weekdays: edit.weekdays };
+  return { ...m, weekdays: daysInWeek(scheduleOf(plan, m), week) };
 }
 
 /** The skip or move made on the day a membership was planned. */

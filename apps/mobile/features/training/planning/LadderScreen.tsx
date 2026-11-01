@@ -13,7 +13,6 @@ import {
 } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { kindLabel } from "@sendtally/features/activities";
-import { weekdayLetters } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import {
   blockOfMembership,
@@ -32,13 +31,13 @@ import { Segmented } from "../components/Segmented";
 import { Title } from "../components/Title";
 import { useHangData } from "../data/HangDataContext";
 import { useRunWorkout } from "../library/useLibrary";
-import { DayCell } from "../plan/DayCell";
 import { workoutLines } from "../plan/planGridRows";
 import { usePlanActions } from "../plan/usePlanActions";
 import { KIND_LOOK } from "../today/kindLook";
 import { type } from "../type";
 import { LoadTable } from "./LoadTable";
 import { LoadSection } from "./LoadSection";
+import { WeekDaysGrid } from "./WeekDaysGrid";
 
 /** "changes W5, W6"; nothing when no week changes it. */
 const changedWeeks = (changes: readonly Partial<Dose>[]): string[] => {
@@ -101,7 +100,6 @@ export function LadderScreen({ id, back }: LadderScreenProps): React.ReactElemen
   const lines =
     w.kind === "hangboard" ? (bodySummary(w)?.split(" · ") ?? []) : workoutLines(w, model);
   const mine = library?.source === "mine";
-  const days: readonly number[] = m.weekdays;
 
   const loadOf = (index: number): React.ReactElement | null => {
     const item = items[index];
@@ -177,25 +175,7 @@ export function LadderScreen({ id, back }: LadderScreenProps): React.ReactElemen
           </Text>
         ))}
       </View>
-      <View style={{ gap: 3 }}>
-        <View style={{ flexDirection: "row", gap: 5 }}>
-          {weekdayLetters().map((letter, i) => (
-            <Label
-              key={i}
-              small
-              color={colors.textSecondary}
-              style={{ width: 30, textAlign: "center" }}
-            >
-              {letter}
-            </Label>
-          ))}
-        </View>
-        <View style={{ flexDirection: "row", gap: 5 }}>
-          {[0, 1, 2, 3, 4, 5, 6].map((day) => (
-            <DayCell key={day} kind={w.kind} on={days.includes(day)} size={30} />
-          ))}
-        </View>
-      </View>
+      <WeekDaysGrid block={block} membership={m} kind={w.kind} log={log} today={today} />
       {turns > 1 && (
         <Segmented<string>
           value={String(turn)}

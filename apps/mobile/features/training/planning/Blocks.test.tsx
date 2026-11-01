@@ -22,7 +22,7 @@ const mockPlan = {
   copyBlock: jest.fn(async () => true),
   savePlanChange: jest.fn(async () => undefined),
   undoPlanChange: jest.fn(async () => undefined),
-  saveMembershipDays: jest.fn(async () => undefined),
+  toggleWeekDay: jest.fn(async () => undefined),
 };
 
 jest.mock("../plan/usePlanActions", () => ({ usePlanActions: () => mockPlan }));
@@ -219,6 +219,29 @@ describe("a day on a scheduled block", () => {
     weekChanges: [],
   };
 
+  it("sets a workout's days for every week from this one, or for one week alone", async () => {
+    await renderWithHang(<LadderScreen id="m1" />, hangData(), {
+      workouts: [squat],
+      plan: running,
+    });
+    await fireEvent.press(screen.getByLabelText("Every week, Thursday"));
+    expect(mockPlan.toggleWeekDay).toHaveBeenLastCalledWith("m1", {
+      week: 2,
+      day: 3,
+      following: true,
+      last: 4,
+      every: true,
+    });
+    await fireEvent.press(screen.getByLabelText("W3, Thursday"));
+    expect(mockPlan.toggleWeekDay).toHaveBeenLastCalledWith("m1", {
+      week: 3,
+      day: 3,
+      following: false,
+      last: 4,
+    });
+    expect(screen.getByLabelText("W1, Monday")).not.toHaveProp("accessibilityRole", "checkbox");
+  });
+
   it("opens today's planned day to start, log, move, skip or open", async () => {
     await renderWithHang(<BlockScreen id="b1" />, hangData(), { workouts: [squat], plan: running });
     await fireEvent.press(screen.getByLabelText("Back squat, Tuesday"));
@@ -228,20 +251,22 @@ describe("a day on a scheduled block", () => {
     expect(screen.getByText("Skip it?")).toBeTruthy();
   });
 
-  it("edits the days from this block week on", async () => {
+  it("edits the picked week's days, and the weeks after it once switched on", async () => {
     await renderWithHang(<BlockScreen id="b1" />, hangData(), { workouts: [squat], plan: running });
     await fireEvent.press(screen.getByText("Edit days"));
-    expect(
-      screen.getByText(
-        "Editing days from W2 on. Tap cells to set them; Done goes back to the week."
-      )
-    ).toBeTruthy();
     await fireEvent.press(screen.getByLabelText("Back squat, Thursday"));
-    expect(mockPlan.saveMembershipDays).toHaveBeenCalledWith({
-      membershipId: "m1",
-      fromWeek: 2,
-      weekdays: [0, 1, 3],
+    expect(mockPlan.toggleWeekDay).toHaveBeenLastCalledWith("m1", {
+      week: 2,
+      day: 3,
+      following: false,
+      last: 4,
     });
+    await fireEvent.press(screen.getByRole("switch", { name: "Also weeks 3 to 4" }));
+    await fireEvent.press(screen.getByLabelText("Back squat, Thursday"));
+    expect(mockPlan.toggleWeekDay).toHaveBeenLastCalledWith(
+      "m1",
+      expect.objectContaining({ week: 2, following: true })
+    );
     await fireEvent.press(screen.getByText("Done"));
     expect(screen.getByText("Edit days")).toBeTruthy();
   });
@@ -398,9 +423,12 @@ describe("templates", () => {
     expect(screen.getByRole("button", { name: "Schedule" })).toBeDisabled();
     expect(screen.getByText("Tap the days Back squat runs")).toBeTruthy();
     await fireEvent.press(screen.getByLabelText("Back squat, Wednesday"));
-    expect(mockPlan.saveMembership).toHaveBeenCalledWith(
-      expect.objectContaining({ id: "m9", weekdays: [2] })
-    );
+    expect(mockPlan.toggleWeekDay).toHaveBeenLastCalledWith("m9", {
+      week: 1,
+      day: 2,
+      following: true,
+      last: 6,
+    });
     await fireEvent.changeText(screen.getByLabelText("Name"), " Peak ");
     await fireEvent(screen.getByLabelText("Name"), "blur");
     expect(mockPlan.saveBlock).toHaveBeenLastCalledWith(

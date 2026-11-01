@@ -628,18 +628,26 @@ describe("blocks and memberships", () => {
     expect((await plan(userId)).planChanges).toEqual([]);
   });
 
-  it("sets a membership's weekdays from a block week on, and drops them with it", async () => {
+  it("sets a membership's days for every week at once, and drops them with it", async () => {
     const userId = "user_plan_week_days";
     await call(userId, "PUT", "/v1/blocks/b1", blockBody);
     await call(userId, "PUT", "/v1/memberships/m1", membershipBody);
-    const res = await call(userId, "PUT", "/v1/memberships/m1/weeks/3", { weekdays: [4, 0] });
-    expect(res.status).toBe(200);
-    expect((await plan(userId)).membershipDays).toEqual([
-      { membershipId: "m1", fromWeek: 3, weekdays: [0, 4] },
-    ]);
-    expect((await call(userId, "PUT", "/v1/memberships/m1/weeks/0", { weekdays: [] })).status).toBe(
-      400
-    );
+    const schedule = (weeks: unknown): Promise<Response> =>
+      call(userId, "PUT", "/v1/memberships/m1/schedule", { weekdays: [2], weeks });
+    expect((await schedule([{ fromWeek: 3, weekdays: [4, 0] }])).status).toBe(200);
+    expect((await schedule([{ fromWeek: 4, weekdays: [1] }])).status).toBe(200);
+    const after = await plan(userId);
+    expect(after.memberships.find((m) => m.id === "m1")?.weekdays).toEqual([2]);
+    expect(after.membershipDays).toEqual([{ membershipId: "m1", fromWeek: 4, weekdays: [1] }]);
+    expect((await schedule([{ fromWeek: 1, weekdays: [] }])).status).toBe(400);
+    expect(
+      (
+        await schedule([
+          { fromWeek: 2, weekdays: [] },
+          { fromWeek: 2, weekdays: [1] },
+        ])
+      ).status
+    ).toBe(400);
     await call(userId, "DELETE", "/v1/memberships/m1");
     expect((await plan(userId)).membershipDays).toEqual([]);
   });
@@ -648,6 +656,10 @@ describe("blocks and memberships", () => {
     const userId = "user_templates";
     await call(userId, "PUT", "/v1/blocks/b1", blockBody);
     await call(userId, "PUT", "/v1/memberships/m1", { ...membershipBody, start: "2026-11-04" });
+    await call(userId, "PUT", "/v1/memberships/m1/schedule", {
+      weekdays: membershipBody.weekdays,
+      weeks: [{ fromWeek: 2, weekdays: [6] }],
+    });
     const saved = await call(userId, "POST", "/v1/blocks/b1/copy", { id: "t1", start: null });
     expect(await json(saved)).toEqual({
       block: { ...blockBody, focus: null, id: "t1", start: null },
@@ -661,6 +673,9 @@ describe("blocks and memberships", () => {
     });
     const scheduled = after.memberships.filter((m) => m.blockId === "b2");
     expect(scheduled.map((m) => m.start)).toEqual(["2027-01-04"]);
+    expect(after.membershipDays.filter((d) => d.membershipId === scheduled[0]?.id)).toEqual([
+      { membershipId: scheduled[0]?.id, fromWeek: 2, weekdays: [6] },
+    ]);
     const unnamed = { ...blockBody, name: "", start: null };
     expect((await call(userId, "PUT", "/v1/blocks/t2", unnamed)).status).toBe(200);
     await call(userId, "PUT", "/v1/memberships/m9", {

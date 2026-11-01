@@ -540,12 +540,23 @@ export class SendtallyApi {
     );
   }
 
-  /** Sets a block membership's weekdays from one block week on. */
-  saveMembershipDays({ membershipId, fromWeek, weekdays }: MembershipDays): Promise<unknown> {
+  /** Replaces a membership's days: its own weekdays and each block week they change from. */
+  saveSchedule({
+    membershipId,
+    weekdays,
+    weeks,
+  }: {
+    membershipId: string;
+    weekdays: Membership["weekdays"];
+    weeks: readonly MembershipDays[];
+  }): Promise<unknown> {
     return body(
-      this.client.v1.memberships[":id"].weeks[":week"].$put({
-        param: { id: membershipId, week: String(fromWeek) },
-        json: { weekdays },
+      this.client.v1.memberships[":id"].schedule.$put({
+        param: { id: membershipId },
+        json: {
+          weekdays,
+          weeks: weeks.map(({ fromWeek, weekdays: days }) => ({ fromWeek, weekdays: days })),
+        },
       })
     );
   }

@@ -23,6 +23,8 @@ export type DayCellProps = {
   opens?: boolean;
   /** Editing days: an off day reads as an empty white box to tap. */
   editing?: boolean;
+  /** Ringed in gold: one week set apart from every week. */
+  ring?: boolean;
   accessibilityLabel?: string;
 };
 
@@ -36,6 +38,7 @@ export function DayCell({
   onPress,
   opens = false,
   editing = false,
+  ring = false,
   accessibilityLabel,
 }: DayCellProps): React.ReactElement {
   const look = KIND_LOOK[kind];
@@ -51,8 +54,12 @@ export function DayCell({
         : on && status !== "skipped"
           ? look.tint
           : colors.surfaceSoft,
-    borderWidth: asking ? 1.5 : status === "moved" || (editing && !on) ? 1 : 0,
-    borderColor: status === "moved" || (editing && !on) ? colors.lineOnLightStrong : look.ink,
+    borderWidth: ring ? 2 : asking ? 1.5 : status === "moved" || (editing && !on) ? 1 : 0,
+    borderColor: ring
+      ? colors.gold
+      : status === "moved" || (editing && !on)
+        ? colors.lineOnLightStrong
+        : look.ink,
   } as const;
   const mark =
     status === "skipped" ? (
@@ -94,7 +101,13 @@ export function DayCell({
       />
     );
   return onPress === undefined ? (
-    <View style={box}>{mark}</View>
+    <View
+      style={box}
+      accessible={accessibilityLabel !== undefined}
+      accessibilityLabel={accessibilityLabel}
+    >
+      {mark}
+    </View>
   ) : (
     <Pressable
       onPress={onPress}

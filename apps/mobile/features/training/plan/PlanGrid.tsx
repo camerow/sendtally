@@ -26,10 +26,12 @@ export type PlanGridProps = {
   dates?: readonly string[];
   /** The weekdays left to right: Monday first unless a dated week starts on another. */
   columns?: readonly number[];
-  /** Under the title, such as Edit days. */
+  /** At the right of the title, on its own row over the weekdays, such as Edit days. */
   action?: React.ReactNode;
   /** Every cell a day to set: off cells read as white boxes. */
   editing?: boolean;
+  /** Under the rows, inside the frame, such as which weeks an edit reaches. */
+  footer?: React.ReactNode;
 };
 
 function Line({ parts, ink }: { parts: readonly GridPart[]; ink: string }): React.ReactElement {
@@ -62,6 +64,7 @@ export function PlanGrid({
   columns = DAYS,
   action,
   editing = false,
+  footer,
 }: PlanGridProps): React.ReactElement {
   return (
     <View
@@ -75,10 +78,17 @@ export function PlanGrid({
         },
       ]}
     >
-      <View style={{ flexDirection: "row", alignItems: "flex-end", gap: 5 }}>
-        <View style={{ flex: 1, flexDirection: "row", alignItems: "center", gap: 10 }}>
-          <Label color={colors.gunmetal}>{title}</Label>
+      {action !== undefined && (
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+          <Label color={colors.gunmetal} style={{ flex: 1 }}>
+            {title}
+          </Label>
           {action}
+        </View>
+      )}
+      <View style={{ flexDirection: "row", alignItems: "flex-end", gap: 5 }}>
+        <View style={{ flex: 1 }}>
+          {action === undefined && <Label color={colors.gunmetal}>{title}</Label>}
         </View>
         {columns.map((i) => (
           <View key={i} style={{ width: CELL, alignItems: "center", gap: 1 }}>
@@ -157,6 +167,7 @@ export function PlanGrid({
           </View>
         );
       })}
+      {footer}
     </View>
   );
 }

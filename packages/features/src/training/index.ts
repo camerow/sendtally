@@ -69,3 +69,11 @@ export {
   type TrainingReminder,
 } from "./reminders";
 export { focusBeside, focusLabel, focusMeaning, focusParam, readFocus } from "./focus";
+export {
+  daysInWeek,
+  ownWeeksAfter,
+  scheduleOf,
+  usualDays,
+  withWeekDays,
+  type DaySchedule,
+} from "./weekDays";

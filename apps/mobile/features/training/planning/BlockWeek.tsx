@@ -13,12 +13,15 @@ import { colors } from "@sendtally/design/tokens";
 import { dayMonth } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import {
-  asOn,
+  daysInWeek,
+  ownWeeksAfter,
+  scheduleOf,
   trainingDay,
   useTrainingLog,
   type Occurrence,
   type WorkoutLookup,
 } from "@sendtally/features/training";
+import { Switch } from "../../../components/Switch";
 import { useApi } from "../../../lib/api";
 import { Button } from "../components/Button";
 import { DashedPanel } from "../components/DashedPanel";
@@ -51,11 +54,6 @@ export type BlockWeekProps = {
 
 const DAYS = [0, 1, 2, 3, 4, 5, 6];
 
-const toggled = (days: readonly Weekday[], day: number): Weekday[] =>
-  days.includes(day as Weekday)
-    ? days.filter((d) => d !== day)
-    : [...days, day as Weekday].sort((a, b) => a - b);
-
 /**
  * A block's week, a row per workout opening it in the block, and + Add workout under it. On a
  * template a cell sets the workout's day; on a scheduled block a week shows its dates.
@@ -81,10 +79,10 @@ export function BlockWeek({
     libraryState.status === "ready" ? libraryState.data.workout(id) : undefined;
   const template = !isDated(block);
   const [editing, setEditing] = React.useState(false);
-  // Days edited on a scheduled block take effect from this block week on.
-  const editsFrom = blockWeekOn(block, today) ?? 1;
-  const editable = isDated(block) && canAdd;
-  const editWeekStart = isDated(block) ? addDays(block.start, (editsFrom - 1) * 7) : null;
+  const [following, setFollowing] = React.useState(false);
+  const shownWeek = week ?? 1;
+  // Days are edited from this block week on: a past week ran as it did.
+  const editable = isDated(block) && canAdd && shownWeek >= (blockWeekOn(block, today) ?? 1);
   const from = isDated(block) && week !== undefined ? addDays(block.start, (week - 1) * 7) : null;
   // A block week runs from its start's weekday, so each weekday column finds its own date.
   const dates = from === null ? null : DAYS.map((d) => addDays(from, (d - weekday(from) + 7) % 7));
@@ -93,10 +91,11 @@ export function BlockWeek({
     ? {
         back: block.name,
         toggle: (m: Membership, day: number) =>
-          void actions.saveMembershipDays({
-            membershipId: m.id,
-            fromWeek: editsFrom,
-            weekdays: toggled(m.weekdays, day),
+          void actions.toggleWeekDay(m.id, {
+            week: shownWeek,
+            day: day as Weekday,
+            following,
+            last: block.weeks,
           }),
       }
     : {
@@ -125,13 +124,24 @@ export function BlockWeek({
               : () => setDay({ occurrence: o, workout: w });
           },
         }),
+        // A template's day is set from the week shown on: from week 1, every week.
         ...(template && {
           toggle: (m: Membership, day: number) =>
-            void actions.saveMembership({ ...m, weekdays: toggled(m.weekdays, day) }),
+            void actions.toggleWeekDay(m.id, {
+              week: shownWeek,
+              day: day as Weekday,
+              following: true,
+              last: block.weeks,
+            }),
         }),
       };
-  const shown =
-    editWeekStart === null ? members : members.map((m) => asOn(log.plan, m, block, editWeekStart));
+  const shown = members.map((m) => ({
+    ...m,
+    weekdays: daysInWeek(scheduleOf(log.plan, m), shownWeek),
+  }));
+  const replaced = [
+    ...new Set(members.flatMap((m) => ownWeeksAfter(scheduleOf(log.plan, m), shownWeek))),
+  ].sort((a, b) => a - b);
   const rows = planGridRows(shown, workout, model, options);
   const dayless = rows.find((r) => r.days.length === 0);
   const add = (
@@ -182,31 +192,62 @@ export function BlockWeek({
             editable ? (
               <Button
                 label={editing ? t("common.done") : t("plan.editDays")}
-                onPress={() => setEditing(!editing)}
+                onPress={() => {
+                  setFollowing(false);
+                  setEditing(!editing);
+                }}
                 variant="link"
                 height={32}
-                style={{ alignSelf: "flex-start", paddingHorizontal: 0 }}
+                style={{ paddingHorizontal: 0 }}
               />
             ) : undefined
           }
           title={
-            editing
-              ? undefined
-              : from !== null && week !== undefined
-                ? t("plan.weekDated", { n: week, date: dayMonth(from) })
-                : template && week !== undefined && week > 1
-                  ? t("plan.weekNumber", { n: week })
-                  : undefined
+            from !== null && week !== undefined
+              ? t("plan.weekDated", { n: week, date: dayMonth(from) })
+              : template && week !== undefined && week > 1
+                ? t("plan.weekNumber", { n: week })
+                : undefined
           }
-          dates={
-            dates === null || editing ? undefined : dates.map((d) => String(Number(d.slice(8))))
-          }
-          columns={
-            from === null || editing ? undefined : DAYS.map((i) => weekday(addDays(from, i)))
+          dates={dates === null ? undefined : dates.map((d) => String(Number(d.slice(8))))}
+          columns={from === null ? undefined : DAYS.map((i) => weekday(addDays(from, i)))}
+          footer={
+            editing &&
+            shownWeek < block.weeks && (
+              <View
+                style={{
+                  gap: 6,
+                  paddingTop: 10,
+                  borderTopWidth: 1,
+                  borderTopColor: colors.lineOnLightSoft,
+                }}
+              >
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+                  <Text style={[type.body, { flex: 1, fontSize: 14, color: colors.gunmetal }]}>
+                    {shownWeek + 1 === block.weeks
+                      ? t("plan.alsoWeek", { n: block.weeks })
+                      : t("plan.alsoWeeks", { from: shownWeek + 1, to: block.weeks })}
+                  </Text>
+                  <Switch
+                    checked={following}
+                    onChange={setFollowing}
+                    disabled={false}
+                    label={t("plan.alsoWeeks", { from: shownWeek + 1, to: block.weeks })}
+                  />
+                </View>
+                {following &&
+                  replaced.length > 0 &&
+                  hint(
+                    t("plan.replacesWeeks", {
+                      weeks: replaced.map((n) => t("plan.weekShort", { n })).join(", "),
+                    }),
+                    AMBER
+                  )}
+              </View>
+            )
           }
         />
       )}
-      {editing && hint(t("plan.editingDays", { n: editsFrom }), colors.textSecondary)}
       {template &&
         dayless !== undefined &&
         hint(t("plan.tapDays", { workout: dayless.name }), AMBER)}

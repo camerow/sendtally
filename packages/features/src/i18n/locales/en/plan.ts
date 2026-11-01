@@ -74,8 +74,10 @@ export const plan = {
   "plan.past": "Past",
   "plan.templates": "Templates",
   "plan.editDays": "Edit days",
-  "plan.editingDays":
-    "Editing days from W{n} on. Tap cells to set them; Done goes back to the week.",
+  "plan.alsoWeeks": "Also weeks {from} to {to}",
+  "plan.alsoWeek": "Also week {n}",
+  "plan.replacesWeeks": "Replaces the days set for {weeks}",
+  "plan.everyWeek": "Every week",
   "plan.move": "Move",
   "plan.moveHint": "To another day this week",
   "plan.skip": "Skip",
