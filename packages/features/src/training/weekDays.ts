@@ -69,3 +69,7 @@ export function usualDays(schedule: DaySchedule, from: number, last: number): We
   const count = (days: readonly Weekday[]): number => weeks.filter((w) => same(w, days)).length;
   return weeks.reduce((best, days) => (count(days) > count(best) ? days : best));
 }
+
+/** Whether a schedule lands on any day in any week. */
+export const hasDays = (schedule: DaySchedule): boolean =>
+  schedule.weekdays.length > 0 || schedule.weeks.some((w) => w.weekdays.length > 0);

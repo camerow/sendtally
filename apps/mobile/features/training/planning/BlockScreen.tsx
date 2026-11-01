@@ -5,7 +5,14 @@ import { Text, View } from "react-native";
 import { blockEnd, blockWeekOn, isDated } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
-import { blockMembers, blockRecap, usePlan, useTrainingLog } from "@sendtally/features/training";
+import {
+  blockMembers,
+  blockRecap,
+  hasDays,
+  scheduleOf,
+  usePlan,
+  useTrainingLog,
+} from "@sendtally/features/training";
 import { ScreenFrame } from "../../../components/ScreenFrame";
 import { useApi } from "../../../lib/api";
 import { blockDates } from "../blocks/blockText";
@@ -23,7 +30,8 @@ import { BlockOverview } from "./BlockOverview";
 import { BlockRecapView } from "./BlockRecapView";
 import { BlockWeek } from "./BlockWeek";
 import { PlanAgainSheet } from "./PlanAgainSheet";
-import { TemplateHeader } from "./TemplateHeader";
+import { BlockHeader } from "./BlockHeader";
+import { MoveStartSheet } from "./MoveStartSheet";
 
 export type BlockScreenProps = {
   id: string;
@@ -36,8 +44,9 @@ export type BlockScreenProps = {
 };
 
 /**
- * One block: a template built in place and scheduled from here; a scheduled block's weeks
- * while it runs, Edit changing it; a recap and Plan again once it is over.
+ * One block, built in place: a template scheduled from here, or a scheduled block's weeks
+ * while it runs, its name, length and (until it starts) first day changed where they read;
+ * a recap and Plan again once it is over.
  */
 export function BlockScreen({
   id,
@@ -54,6 +63,7 @@ export function BlockScreen({
   const { log } = useTrainingLog(api);
   const actions = usePlanActions();
   const [again, setAgain] = React.useState(false);
+  const [moving, setMoving] = React.useState(false);
   const [week, setWeek] = React.useState<number | null>(null);
   const block = log.plan.blocks.find((b) => b.id === id);
   const members = block === undefined ? [] : blockMembers(log.plan, block);
@@ -77,7 +87,7 @@ export function BlockScreen({
   const dated = isDated(block) ? block : null;
   const ended = dated !== null && blockEnd(dated) <= today;
   const shown = week ?? (dated === null ? 1 : (blockWeekOn(dated, today) ?? 1));
-  const schedulable = members.some((m) => m.weekdays.length > 0);
+  const schedulable = members.some((m) => hasDays(scheduleOf(log.plan, m)));
   const saveAsTemplate = async (): Promise<void> => {
     const copy = randomUUID();
     if (await actions.copyBlock(id, copy, null))
@@ -89,11 +99,6 @@ export function BlockScreen({
       backLabel={backLabel}
       action={
         <DetailActions
-          onEdit={
-            dated === null
-              ? undefined
-              : () => router.push({ pathname: "/plan/block/edit", params: { id } })
-          }
           menu={[
             {
               icon: "copy",
@@ -125,38 +130,26 @@ export function BlockScreen({
         ) : undefined
       }
     >
-      {dated === null ? (
+      {dated === null || !ended ? (
         <>
-          <TemplateHeader
+          <BlockHeader
             block={block}
             today={today}
             autoFocus={fresh}
             week={shown}
             onPickWeek={setWeek}
             onSave={(b) => void actions.saveBlock(b)}
+            minWeeks={dated === null ? 1 : (blockWeekOn(dated, today) ?? 1)}
+            {...(dated !== null && today < dated.start && { onMoveStart: () => setMoving(true) })}
           />
-          <BlockWeek block={block} members={members} workout={log.workout} lit={lit} week={shown} />
-        </>
-      ) : (
-        <>
-          <View style={{ gap: 4 }}>
-            {ended && <Label color={colors.fern}>{t("plan.finished")}</Label>}
-            <Title size={34}>{block.name}</Title>
-            <Text style={[type.mono, { fontSize: 12, color: colors.textSecondary }]}>
-              {`${blockDates(dated)} · ${t("calendar.weeks", { count: block.weeks })}`}
-            </Text>
-          </View>
-          {ended ? (
-            <>
-              <BlockRecapView recap={blockRecap(log, dated, today)} workout={log.workout} />
-              <BlockWeek
-                block={block}
-                members={members}
-                workout={log.workout}
-                lit={lit}
-                canAdd={false}
-              />
-            </>
+          {dated === null ? (
+            <BlockWeek
+              block={block}
+              members={members}
+              workout={log.workout}
+              lit={lit}
+              week={shown}
+            />
           ) : (
             <BlockOverview
               recap={blockRecap(log, dated, today)}
@@ -164,10 +157,30 @@ export function BlockScreen({
               workout={log.workout}
               lit={lit}
               week={shown}
-              onPickWeek={setWeek}
             />
           )}
         </>
+      ) : (
+        <>
+          <View style={{ gap: 4 }}>
+            <Label color={colors.fern}>{t("plan.finished")}</Label>
+            <Title size={34}>{block.name}</Title>
+            <Text style={[type.mono, { fontSize: 12, color: colors.textSecondary }]}>
+              {`${blockDates(dated)} · ${t("calendar.weeks", { count: block.weeks })}`}
+            </Text>
+          </View>
+          <BlockRecapView recap={blockRecap(log, dated, today)} workout={log.workout} />
+          <BlockWeek
+            block={block}
+            members={members}
+            workout={log.workout}
+            lit={lit}
+            canAdd={false}
+          />
+        </>
+      )}
+      {moving && dated !== null && (
+        <MoveStartSheet block={dated} onClose={() => setMoving(false)} />
       )}
       {again && <PlanAgainSheet block={block} back={backLabel} onClose={() => setAgain(false)} />}
     </ScreenFrame>

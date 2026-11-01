@@ -3235,7 +3235,10 @@ export async function copyBlock(
   const now = new Date().toISOString();
   const { start: from } = source;
   // A template's workouts with no days yet have nothing to schedule.
-  const kept = from === null ? members.filter((m) => m.weekdays_json !== "[]") : members;
+  const hasDays = (m: (typeof members)[number]): boolean =>
+    m.weekdays_json !== "[]" ||
+    days.some((w) => w.membership_id === m.id && w.weekdays_json !== "[]");
+  const kept = from === null ? members.filter(hasDays) : members;
   const keptIds = new Set(kept.map((m) => m.id));
   const { start: to } = copy;
   const startOf = (start: string): string =>

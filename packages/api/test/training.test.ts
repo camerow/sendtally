@@ -683,9 +683,19 @@ describe("blocks and memberships", () => {
       blockId: "t1",
       weekdays: [],
     });
+    await call(userId, "PUT", "/v1/memberships/m8", {
+      ...membershipBody,
+      blockId: "t1",
+      weekdays: [],
+    });
+    await call(userId, "PUT", "/v1/memberships/m8/schedule", {
+      weekdays: [],
+      weeks: [{ fromWeek: 2, weekdays: [3] }],
+    });
     await call(userId, "POST", "/v1/blocks/t1/copy", { id: "b3", start: "2027-03-01" });
     const again = await plan(userId);
-    expect(again.memberships.filter((m) => m.blockId === "b3")).toHaveLength(1);
+    // m9 has no days in any week and stays behind; m8 has days from week 2 and goes.
+    expect(again.memberships.filter((m) => m.blockId === "b3")).toHaveLength(2);
   });
 });
 

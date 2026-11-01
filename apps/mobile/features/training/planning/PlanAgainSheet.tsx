@@ -6,7 +6,7 @@ import { addDays, weekday, type Block } from "@sendtally/core/hang";
 import { shortDate, weekdayLong } from "@sendtally/features/hang";
 import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
-import { blockMembers, useTrainingLog } from "@sendtally/features/training";
+import { blockMembers, hasDays, scheduleOf, useTrainingLog } from "@sendtally/features/training";
 import { useApi } from "../../../lib/api";
 import { Button } from "../components/Button";
 import { MonthCalendar } from "../components/MonthCalendar";
@@ -34,7 +34,7 @@ export function PlanAgainSheet({ block, back, onClose }: PlanAgainSheetProps): R
   const dayless =
     block.start === null
       ? blockMembers(log.plan, block)
-          .filter((m) => m.weekdays.length === 0)
+          .filter((m) => !hasDays(scheduleOf(log.plan, m)))
           .flatMap((m) => log.workout(m.workoutId)?.name ?? [])
       : [];
 

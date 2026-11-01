@@ -12,6 +12,6 @@ export function membershipTag(m: Membership, block: Block | null, today: Calenda
 }
 
 /** The one date a one-off lands on; nothing for a weekly plan, whose days its week row shows. */
-export function oneOffDate(m: Pick<Membership, "weekdays" | "start">): string[] {
-  return m.weekdays.length === 0 ? [shortDate(m.start)] : [];
+export function oneOffDate(m: Pick<Membership, "weekdays" | "start" | "blockId">): string[] {
+  return m.weekdays.length === 0 && m.blockId === null ? [shortDate(m.start)] : [];
 }

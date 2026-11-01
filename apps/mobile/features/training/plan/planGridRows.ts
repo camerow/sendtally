@@ -151,6 +151,6 @@ export function planGridRows(
   });
 }
 
-/** The memberships still to come: weekly ones, and one-offs from today. */
+/** The memberships still to come: weekly ones and block plans, and one-offs from today. */
 export const liveMembers = (plan: Plan, today: string): Membership[] =>
-  plan.memberships.filter((m) => m.weekdays.length > 0 || m.start >= today);
+  plan.memberships.filter((m) => m.weekdays.length > 0 || m.blockId !== null || m.start >= today);

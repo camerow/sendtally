@@ -14,6 +14,7 @@ import { dayMonth } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import {
   daysInWeek,
+  hasDays,
   ownWeeksAfter,
   scheduleOf,
   trainingDay,
@@ -153,10 +154,7 @@ export function BlockWeek({
   ].sort((a, b) => a - b);
   const rows = planGridRows(shown, workout, model, options);
   // Plans with no day in any week, such as ones just added: named, to tap their days in.
-  const dayless = members.filter((m) => {
-    const s = scheduleOf(log.plan, m);
-    return s.weekdays.length === 0 && s.weeks.every((w) => w.weekdays.length === 0);
-  });
+  const dayless = members.filter((m) => !hasDays(scheduleOf(log.plan, m)));
   const daylessNames = dayless.map((m) => workout(m.workoutId)?.name ?? "").join(", ");
   const [added, setAdded] = React.useState<readonly string[]>([]);
   React.useEffect(() => {

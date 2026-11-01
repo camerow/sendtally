@@ -72,6 +72,7 @@ export {
 export { focusBeside, focusLabel, focusMeaning, focusParam, readFocus } from "./focus";
 export {
   daysInWeek,
+  hasDays,
   ownWeeksAfter,
   scheduleOf,
   usualDays,

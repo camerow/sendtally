@@ -81,13 +81,7 @@ export function ScheduleScreen({
     const [first] = memberships;
     if (first !== undefined && draft.mode === "dates" && dated !== null)
       void actions.saveSchedule(blockDates(first.id, dated, draft.dates));
-    if (first !== undefined)
-      backToPlan(
-        block?.id ?? null,
-        days[0] ?? first.start,
-        first.id,
-        flow.editing === true && block?.id === flow.blockId
-      );
+    if (first !== undefined) backToPlan(block?.id ?? null, days[0] ?? first.start, first.id);
   };
 
   return (
