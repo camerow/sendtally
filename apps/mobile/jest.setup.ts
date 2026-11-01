@@ -82,6 +82,14 @@ timeoutManager.setTimeoutProvider({
 // as microtasks they flush inside the act() that caused them.
 notifyManager.setScheduler(queueMicrotask);
 
+// A page that mounts its neighbours a frame after first paint does it inside the same act(),
+// once worklets has put in its own frame timer.
+jest.requireMock("react-native-reanimated");
+global.requestAnimationFrame = (callback) => {
+  queueMicrotask(() => callback(performance.now()));
+  return 0;
+};
+
 // A swipe runs as a worklet on the UI thread, which jest has not got; a row renders as itself.
 jest.mock("react-native-gesture-handler/ReanimatedSwipeable", () => ({
   __esModule: true,

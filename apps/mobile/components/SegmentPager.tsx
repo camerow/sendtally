@@ -29,8 +29,9 @@ export type SegmentPagerProps<T extends string> = {
 };
 
 /**
- * A page's segments side by side, dragged with the finger. The page in view and its neighbours
- * are mounted, so a swipe shows what it is moving to; a page stays mounted once seen.
+ * A page's segments side by side, dragged with the finger. The page in view mounts first and
+ * its neighbours a frame later, so a swipe shows what it is moving to without slowing the first
+ * paint; a page stays mounted once seen.
  */
 export function SegmentPager<T extends string>({
   options,
@@ -43,8 +44,14 @@ export function SegmentPager<T extends string>({
   const last = options.length - 1;
   const width = useSharedValue(0);
   const near = options.filter((_, i) => Math.abs(i - index) <= 1).map((o) => o.value);
-  const [mounted, setMounted] = React.useState<ReadonlySet<T>>(() => new Set(near));
-  if (near.some((v) => !mounted.has(v))) setMounted(new Set([...mounted, ...near]));
+  const [mounted, setMounted] = React.useState<ReadonlySet<T>>(() => new Set([value]));
+  if (!mounted.has(value)) setMounted(new Set([...mounted, value]));
+  const unmounted = near.filter((v) => !mounted.has(v));
+  React.useEffect(() => {
+    if (unmounted.length === 0) return;
+    const frame = requestAnimationFrame(() => setMounted((was) => new Set([...was, ...unmounted])));
+    return () => cancelAnimationFrame(frame);
+  });
 
   React.useEffect(() => {
     progress.set(withTiming(index, { duration: SEGMENT_MS }));

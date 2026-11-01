@@ -1,5 +1,5 @@
 import { describe, expect, it, jest } from "@jest/globals";
-import { render, screen } from "@testing-library/react-native";
+import { act, render, screen } from "@testing-library/react-native";
 import React from "react";
 import { Text } from "react-native";
 import { State } from "react-native-gesture-handler";
@@ -57,10 +57,19 @@ describe("SegmentPager", () => {
     expect(await swipe("b", -40)).not.toHaveBeenCalled();
   });
 
-  it("mounts the page in view and its neighbours only", async () => {
+  it("mounts the page in view first and its neighbours a frame later, never further", async () => {
+    const frames: FrameRequestCallback[] = [];
+    jest.spyOn(global, "requestAnimationFrame").mockImplementation((callback) => {
+      frames.push(callback);
+      return frames.length;
+    });
     await pager("b");
-    const shown = (v: Page): boolean =>
-      screen.queryByText(`page ${v}`, { includeHiddenElements: true }) !== null;
-    expect(OPTIONS.map((o) => shown(o.value))).toEqual([true, true, true, false]);
+    const shown = (): boolean[] =>
+      OPTIONS.map(
+        (o) => screen.queryByText(`page ${o.value}`, { includeHiddenElements: true }) !== null
+      );
+    expect(shown()).toEqual([false, true, false, false]);
+    await act(async () => frames.forEach((frame) => frame(0)));
+    expect(shown()).toEqual([true, true, true, false]);
   });
 });
