@@ -117,18 +117,21 @@ export function PlanGrid({
         );
         const { toggle } = row;
         const cells = columns.map((day) => {
+          const set = toggle?.(day);
           const mark = row.marks?.[day] ?? null;
+          const marked = row.marks !== undefined && set === undefined;
           return (
             <DayCell
               key={day}
               kind={row.kind}
-              on={row.marks === undefined ? row.days.includes(day) : mark !== null}
+              on={marked ? mark !== null : row.days.includes(day)}
               size={CELL}
-              status={mark ?? undefined}
-              asking={toggle !== undefined && row.days.length === 0}
-              onPress={toggle === undefined ? row.press?.(day) : () => toggle(day)}
-              opens={toggle === undefined}
-              editing={editing}
+              status={marked ? (mark ?? undefined) : undefined}
+              asking={set !== undefined && row.days.length === 0}
+              onPress={set ?? row.press?.(day)}
+              opens={set === undefined}
+              editing={editing && set !== undefined}
+              ring={row.rings?.[day] === true}
               accessibilityLabel={`${row.name}, ${weekdayLong(day)}`}
             />
           );

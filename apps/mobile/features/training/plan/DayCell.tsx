@@ -21,7 +21,7 @@ export type DayCellProps = {
   /** Makes the cell a button: a weekday to toggle, or with `opens` a day to open. */
   onPress?: () => void;
   opens?: boolean;
-  /** Editing days: an off day reads as an empty white box to tap. */
+  /** A day to set: drawn as a field, white when off, tinted with the kind's line when on. */
   editing?: boolean;
   /** Ringed in gold: one week set apart from every week. */
   ring?: boolean;
@@ -54,12 +54,19 @@ export function DayCell({
         : on && status !== "skipped"
           ? look.tint
           : colors.surfaceSoft,
-    borderWidth: ring ? 2 : asking ? 1.5 : status === "moved" || (editing && !on) ? 1 : 0,
+    borderWidth: ring ? 2 : asking ? 1.5 : status === "moved" || editing ? 1 : 0,
     borderColor: ring
       ? colors.gold
       : status === "moved" || (editing && !on)
         ? colors.lineOnLightStrong
         : look.ink,
+    // A day to set reads as a field: a hairline shadow under its line.
+    ...(editing && {
+      shadowColor: colors.gunmetal,
+      shadowOpacity: 0.08,
+      shadowRadius: 1,
+      shadowOffset: { width: 0, height: 1 },
+    }),
   } as const;
   const mark =
     status === "skipped" ? (

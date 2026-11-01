@@ -70,9 +70,10 @@ export function BlockWeek({
   const { log } = useTrainingLog(useApi());
   const actions = usePlanActions();
   const [adding, setAdding] = React.useState(false);
-  const [day, setDay] = React.useState<{ occurrence: Occurrence; workout: LibraryWorkout } | null>(
-    null
-  );
+  const [open, setOpen] = React.useState<{
+    occurrence: Occurrence;
+    workout: LibraryWorkout;
+  } | null>(null);
   const changes = useDayChanges();
   const libraryState = useLibrary().state;
   const library = (id: string): LibraryWorkout | undefined =>
@@ -87,16 +88,31 @@ export function BlockWeek({
   // A block week runs from its start's weekday, so each weekday column finds its own date.
   const dates = from === null ? null : DAYS.map((d) => addDays(from, (d - weekday(from) + 7) % 7));
   const statuses = dates === null ? null : dates.map((date) => trainingDay(log, date, today).plans);
+  const marks =
+    statuses === null
+      ? undefined
+      : (m: Membership): (CellMark | null)[] =>
+          statuses.map((plans) => {
+            const o = plans.find((x) => x.membership.id === m.id);
+            return o === undefined
+              ? null
+              : o.movedFrom !== null && o.status === "planned"
+                ? "movedIn"
+                : o.status;
+          });
+  const toggleDay =
+    (m: Membership, day: number, change: { following: boolean; last: number }) => () =>
+      void actions.toggleWeekDay(m.id, { week: shownWeek, day: day as Weekday, ...change });
+  const firstWeek = (m: Membership): readonly number[] => daysInWeek(scheduleOf(log.plan, m), 1);
   const options: GridOptions = editing
     ? {
         back: block.name,
+        ...(marks !== undefined && { marks }),
+        // A day gone by keeps how it went; today and later are set.
         toggle: (m: Membership, day: number) =>
-          void actions.toggleWeekDay(m.id, {
-            week: shownWeek,
-            day: day as Weekday,
-            following,
-            last: block.weeks,
-          }),
+          dates !== null && (dates[day] ?? today) < today
+            ? undefined
+            : toggleDay(m, day, { following, last: block.weeks }),
       }
     : {
         back: block.name,
@@ -105,34 +121,26 @@ export function BlockWeek({
           week > 1 && {
             week: { n: week, changes: log.plan.weekChanges, unit: model.settings.units },
           }),
-        ...(statuses !== null && {
-          marks: (m: Membership): (CellMark | null)[] =>
-            statuses.map((plans) => {
-              const o = plans.find((x) => x.membership.id === m.id);
-              return o === undefined
-                ? null
-                : o.movedFrom !== null && o.status === "planned"
-                  ? "movedIn"
-                  : o.status;
-            }),
+        ...(marks !== undefined && {
+          marks,
           // A planned day from today on opens its day; anything else opens the workout.
           press: (m: Membership, day: number) => {
-            const o = statuses[day]?.find((x) => x.membership.id === m.id);
+            const o = statuses?.[day]?.find((x) => x.membership.id === m.id);
             const w = library(m.workoutId);
             return o === undefined || o.status !== "planned" || w === undefined
               ? undefined
-              : () => setDay({ occurrence: o, workout: w });
+              : () => setOpen({ occurrence: o, workout: w });
           },
         }),
-        // A template's day is set from the week shown on: from week 1, every week.
+        // On a template week 1 is as written, the days every week runs on unless one is set
+        // apart; a later week sets its own and reads gold where it differs from week 1.
         ...(template && {
           toggle: (m: Membership, day: number) =>
-            void actions.toggleWeekDay(m.id, {
-              week: shownWeek,
-              day: day as Weekday,
-              following: true,
-              last: block.weeks,
-            }),
+            toggleDay(m, day, { following: false, last: shownWeek === 1 ? 1 : block.weeks }),
+          ...(shownWeek > 1 && {
+            rings: (m: Membership) =>
+              DAYS.map((d) => m.weekdays.includes(d as Weekday) !== firstWeek(m).includes(d)),
+          }),
         }),
       };
   const shown = members.map((m) => ({
@@ -262,12 +270,12 @@ export function BlockWeek({
           colors.textSecondary
         )}
       {canAdd && !(template && rows.length === 0) && add}
-      {day !== null && (
+      {open !== null && (
         <DaySheet
-          occurrence={day.occurrence}
-          workout={day.workout}
-          onChange={(kind) => changes.open(kind, day.occurrence, day.workout.name)}
-          onClose={() => setDay(null)}
+          occurrence={open.occurrence}
+          workout={open.workout}
+          onChange={(kind) => changes.open(kind, open.occurrence, open.workout.name)}
+          onClose={() => setOpen(null)}
         />
       )}
       {changes.sheets}

@@ -426,8 +426,8 @@ describe("templates", () => {
     expect(mockPlan.toggleWeekDay).toHaveBeenLastCalledWith("m9", {
       week: 1,
       day: 2,
-      following: true,
-      last: 6,
+      following: false,
+      last: 1,
     });
     await fireEvent.changeText(screen.getByLabelText("Name"), " Peak ");
     await fireEvent(screen.getByLabelText("Name"), "blur");

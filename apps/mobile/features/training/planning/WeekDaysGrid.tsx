@@ -12,7 +12,7 @@ import {
   type WorkoutKind,
 } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
-import { weekdayLetters, weekdayLong } from "@sendtally/features/hang";
+import { dayMonth, weekdayLetters, weekdayLong } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import {
   daysInWeek,
@@ -39,9 +39,9 @@ export type WeekDaysGridProps = {
 };
 
 /**
- * A workout's days in its block: Every week on top, set from this week on (every week on a
- * template), then a row per week, each cell setting that week alone. A week ringed in gold
- * is set apart from every week; a day gone by shows how it went.
+ * A workout's days in its block: Every week on top, set from this week on (all weeks on a
+ * template), then a row per week, each cell setting that week alone. A day ringed in gold is
+ * set apart from every week, or on a template from week 1; a day gone by shows how it went.
  */
 export function WeekDaysGrid({
   block,
@@ -64,20 +64,31 @@ export function WeekDaysGrid({
     return o === undefined ? null : o.status === "planned" ? null : o.status;
   };
 
+  const current = dated === null ? null : blockWeekOn(dated, today);
   const row = (
     key: string,
-    label: string,
+    label: { name: string; sub?: string; bold?: boolean },
     days: readonly Weekday[],
     cell: (day: number) => { mark?: CellMark | null; onPress?: () => void },
     differs: (day: number) => boolean
   ): React.ReactElement => (
     <View key={key} style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
-      <Text
-        numberOfLines={1}
-        style={[type.mono, { flex: 1, fontSize: 12, color: colors.textSecondary }]}
-      >
-        {label}
-      </Text>
+      <View style={{ flex: 1, minWidth: 0 }}>
+        <Text
+          numberOfLines={1}
+          style={[
+            label.bold === true ? type.monoBold : type.mono,
+            { fontSize: 12, color: label.bold === true ? colors.gunmetal : colors.textSecondary },
+          ]}
+        >
+          {label.name}
+        </Text>
+        {label.sub !== undefined && (
+          <Text numberOfLines={1} style={[type.mono, { fontSize: 10.5, color: colors.textMuted }]}>
+            {label.sub}
+          </Text>
+        )}
+      </View>
       {columns.map((day) => {
         const { mark, onPress } = cell(day);
         return (
@@ -89,12 +100,15 @@ export function WeekDaysGrid({
             status={mark ?? undefined}
             ring={mark === undefined && differs(day)}
             onPress={onPress}
-            accessibilityLabel={`${label}, ${weekdayLong(day)}`}
+            editing={onPress !== undefined}
+            accessibilityLabel={`${label.name}, ${weekdayLong(day)}`}
           />
         );
       })}
     </View>
   );
+  // Gold where a week is set apart: from every week, or on a template from week 1.
+  const reference = dated === null ? daysInWeek(schedule, 1) : every;
 
   return (
     <View style={{ gap: 6 }}>
@@ -113,30 +127,49 @@ export function WeekDaysGrid({
           </Label>
         ))}
       </View>
-      {every !== null &&
-        everyFrom !== null &&
-        row(
-          "every",
-          t("plan.everyWeek"),
-          every,
-          (day) => ({
-            onPress: () =>
-              void actions.toggleWeekDay(membership.id, {
-                week: everyFrom,
-                day: day as Weekday,
-                following: true,
-                last: block.weeks,
-                every: true,
-              }),
-          }),
-          () => false
-        )}
+      {every !== null && everyFrom !== null && (
+        <View
+          style={{
+            paddingBottom: 6,
+            borderBottomWidth: 1,
+            borderBottomColor: colors.lineOnLightSoft,
+          }}
+        >
+          {row(
+            "every",
+            {
+              name: t("plan.everyWeek"),
+              sub:
+                dated === null
+                  ? t("plan.allWeeks", { count: block.weeks })
+                  : t("plan.fromWeekOn", { n: everyFrom }),
+              bold: true,
+            },
+            every,
+            (day) => ({
+              onPress: () =>
+                void actions.toggleWeekDay(membership.id, {
+                  week: everyFrom,
+                  day: day as Weekday,
+                  following: true,
+                  last: block.weeks,
+                  every: true,
+                }),
+            }),
+            () => false
+          )}
+        </View>
+      )}
       {weeks.map((week) => {
         const days = daysInWeek(schedule, week);
         const start = dated === null ? null : addDays(dated.start, (week - 1) * 7);
         return row(
           `w${week}`,
-          t("plan.weekShort", { n: week }),
+          {
+            name: t("plan.weekShort", { n: week }),
+            ...(start !== null && { sub: dayMonth(start) }),
+            bold: week === current,
+          },
           days,
           (day) => {
             const date = start === null ? null : addDays(start, (day - weekday(start) + 7) % 7);
@@ -147,14 +180,15 @@ export function WeekDaysGrid({
                   week,
                   day: day as Weekday,
                   following: false,
-                  last: block.weeks,
+                  // On a template week 1 is as written: weeks set apart keep their days.
+                  last: dated === null && week === 1 ? 1 : block.weeks,
                 }),
             };
           },
           (day) =>
-            every !== null &&
-            week >= (everyFrom ?? 1) &&
-            days.includes(day as Weekday) !== every.includes(day as Weekday)
+            reference !== null &&
+            week >= (dated === null ? 2 : (everyFrom ?? 1)) &&
+            days.includes(day as Weekday) !== reference.includes(day as Weekday)
         );
       })}
     </View>
