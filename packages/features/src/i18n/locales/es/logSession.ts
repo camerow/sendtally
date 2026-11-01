@@ -84,9 +84,9 @@ export const logSession = {
   "logSession.noteNeedsName": "Una vía necesita un nombre para llevar una nota",
   "logSession.nameUnlocksNote":
     "Una vía necesita un nombre para llevar una nota o marcarse como proyecto",
-  "logSession.defaultNameMorning": "Sesión de mañana, {date}",
-  "logSession.defaultNameAfternoon": "Sesión de tarde, {date}",
-  "logSession.defaultNameEvening": "Sesión de noche, {date}",
+  "logSession.defaultNameMorning": "Sesión de mañana",
+  "logSession.defaultNameAfternoon": "Sesión de tarde",
+  "logSession.defaultNameEvening": "Sesión de noche",
   "logSession.wrapUpTitle": "Cerrar sesión",
   "logSession.wrapUpSubtitle": "Los horarios salen de tus vías · el esfuerzo se puntúa al guardar",
   "logSession.noSendsYet": "Aún sin encadenes",

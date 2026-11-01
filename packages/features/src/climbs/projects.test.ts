@@ -83,8 +83,8 @@ describe("projectDetailVM", () => {
   it("reads the sessions invested newest first and the bars oldest first", () => {
     const vm = projectDetailVM(climb({}), sessions, NOW);
     expect(vm.sessions.map((s) => [s.dateLabel, s.attempts])).toEqual([
-      ["4 Sep", 7],
-      ["3 Jun", 4],
+      ["Sep 4", 7],
+      ["Jun 3", 4],
     ]);
     expect(vm.sessions[0]?.note).toBe("Stuck on the crossover");
     expect(vm.bars.map((b) => b.valueLabel)).toEqual(["4", "7"]);
@@ -93,7 +93,7 @@ describe("projectDetailVM", () => {
       ["Attempts", "11"],
       ["Sessions", "2"],
       ["Running", "14 weeks"],
-      ["Last tried", "4 Sep"],
+      ["Last tried", "Sep 4"],
     ]);
     expect(vm.storyLabel).toBeNull();
   });
@@ -103,12 +103,12 @@ describe("projectDetailVM", () => {
     expect(vm.notes).toEqual([
       {
         fingerprint: "fp-2026-09-04T18:00:00.000Z",
-        dateLabel: "4 Sep",
+        dateLabel: "Sep 4",
         note: "Stuck on the crossover",
       },
       {
         fingerprint: "fp-2026-06-03T18:00:00.000Z",
-        dateLabel: "3 Jun",
+        dateLabel: "Jun 3",
         note: "First look, every move goes",
       },
     ]);

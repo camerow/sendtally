@@ -143,7 +143,7 @@ describe("climbLog", () => {
     expect(rows.map((r) => [r.pill.label, r.meta])).toEqual([
       ["Project", "Burbage North · 3 days, 11 tries"],
       ["Flash", "Stanage Popular · today"],
-      ["3 tries", "Stanage Plantation · 4 Sep"],
+      ["3 tries", "Stanage Plantation · Sep 4"],
       ["Sent", "Stanage Popular · 2 days"],
     ]);
   });
@@ -176,7 +176,7 @@ describe("climbLog", () => {
     } as unknown as SessionWithClimbs;
     const vm = climbingSessionVM(bare, climbs);
     expect(vm.named).toBe(false);
-    expect(vm.climbs.map((r) => r.meta)).toEqual(["Stanage Plantation · 4 Sep"]);
+    expect(vm.climbs.map((r) => r.meta)).toEqual(["Stanage Plantation · Sep 4"]);
     expect(climbingSessionVM({ ...bare, climbs: [] }, climbs).named).toBe(true);
   });
 

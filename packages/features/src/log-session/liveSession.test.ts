@@ -18,9 +18,9 @@ const EVENING = new Date(2026, 8, 16, 18, 42);
 
 describe("live session", () => {
   it("names the session by time of day and date", () => {
-    expect(defaultSessionName(new Date(2026, 8, 12, 9, 0))).toBe("Morning session, 9/12/26");
-    expect(defaultSessionName(new Date(2026, 8, 12, 14, 0))).toBe("Afternoon session, 9/12/26");
-    expect(defaultSessionName(EVENING)).toBe("Evening session, 9/16/26");
+    expect(defaultSessionName(new Date(2026, 8, 12, 9, 0))).toBe("Morning session");
+    expect(defaultSessionName(new Date(2026, 8, 12, 14, 0))).toBe("Afternoon session");
+    expect(defaultSessionName(EVENING)).toBe("Evening session");
   });
 
   it("starts a session at the first climb, leaving its times to add later", () => {

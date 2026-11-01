@@ -66,13 +66,13 @@ describe("climbDetailVM", () => {
       ]),
     ]);
     expect(vm.kicker).toBe("Boulder · V7");
-    expect(vm.meta).toBe("Buttermilks · first tried 26 Sep");
+    expect(vm.meta).toBe("Buttermilks · first tried Sep 26");
     expect([vm.project, vm.days, vm.tries, vm.best]).toEqual([true, "3", "23", "-"]);
     expect(
       vm.sessions.map((v) => [v.dateLabel, v.name, v.meta, v.triesLabel, v.note, v.rpe])
     ).toEqual([
-      ["24 Oct", "Tuesday night session", "Buttermilks · Not yet", "8 tries", null, 7],
-      ["26 Sep", "Tuesday night session", "Buttermilks · Not yet", "6 tries", "First look.", 7],
+      ["Oct 24", "Tuesday night session", "Buttermilks · Not yet", "8 tries", null, 7],
+      ["Sep 26", "Tuesday night session", "Buttermilks · Not yet", "6 tries", "First look.", 7],
     ]);
   });
 

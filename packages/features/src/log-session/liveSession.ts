@@ -1,6 +1,6 @@
 import type { ClimbSummary } from "@sendtally/api-client";
 import { climbDraftGrade } from "../climbs/transforms";
-import { formatDate, t } from "../i18n";
+import { t } from "../i18n";
 import {
   parseStoredDraft,
   writeStoredDraft,
@@ -30,10 +30,9 @@ export function localDate(d: Date): string {
 
 export function defaultSessionName(now: Date): string {
   const hour = now.getHours();
-  const date = formatDate(now, { dateStyle: "short" });
-  if (hour < 12) return t("logSession.defaultNameMorning", { date });
-  if (hour < 17) return t("logSession.defaultNameAfternoon", { date });
-  return t("logSession.defaultNameEvening", { date });
+  if (hour < 12) return t("logSession.defaultNameMorning");
+  if (hour < 17) return t("logSession.defaultNameAfternoon");
+  return t("logSession.defaultNameEvening");
 }
 
 /** Starts at the first climb; times are the climber's to add later. */
