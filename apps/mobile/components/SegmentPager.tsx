@@ -71,8 +71,7 @@ export function SegmentPager<T extends string>({
     });
 
   const row = useAnimatedStyle(() => ({
-    opacity: width.get() === 0 ? 0 : 1,
-    transform: [{ translateX: -progress.get() * width.get() }],
+    transform: [{ translateX: `${(-progress.get() * 100) / options.length}%` }],
   }));
 
   return (
