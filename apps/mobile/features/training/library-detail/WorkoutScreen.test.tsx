@@ -98,18 +98,14 @@ describe("Hangboard workout", () => {
     expect(router.push).toHaveBeenCalledWith({ pathname: "/activity/[id]", params: { id: "h1" } });
   });
 
-  it("opened while adding, goes on to when instead of starting or changing it", async () => {
+  it("opened while adding, adds it instead of starting or changing it", async () => {
     await renderWithHang(
       <WorkoutScreen id="fingers-ab" adding={{ date: "2026-10-01", blockId: "b1" }} />
     );
     expect(screen.queryByText("Start")).toBeNull();
     expect(screen.queryByText("Customize")).toBeNull();
     expect(screen.queryByLabelText("More")).toBeNull();
-    await fireEvent.press(screen.getByText("Add to plan"));
-    expect(router.push).toHaveBeenCalledWith({
-      pathname: "/plan/schedule",
-      params: { workoutId: "fingers-ab", date: "2026-10-01", blockId: "b1" },
-    });
+    expect(screen.getByText("Add")).toBeTruthy();
   });
 });
 

@@ -11,7 +11,7 @@ import { SheetSection } from "../components/SheetSection";
 import { PlanRows } from "../plan/PlanRows";
 import { useLit } from "../plan/useLit";
 import { type } from "../type";
-import { AddKindSheet } from "./AddKindSheet";
+import { AddWorkoutsSheet } from "./AddWorkoutsSheet";
 
 export type BlockWorkoutsProps = {
   block: Block;
@@ -43,7 +43,7 @@ export function BlockWorkouts({ block, highlight }: BlockWorkoutsProps): React.R
         icon="plus"
         height={50}
       />
-      <AddKindSheet
+      <AddWorkoutsSheet
         flow={{ date: null, blockId: block.id, editing: true }}
         visible={adding}
         onClose={() => setAdding(false)}

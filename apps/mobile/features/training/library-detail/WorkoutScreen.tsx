@@ -19,8 +19,8 @@ import { GripPickerSheet } from "../grip-picker/GripPickerSheet";
 import { HistoryList } from "../history/HistoryList";
 import { activityItem, hangItem, ofWorkout } from "../history/historyItems";
 import { useLibrary, useNextSession } from "../library/useLibrary";
-import { addFlowParams, type AddFlow } from "../planning/flowParams";
-import { useAddToTemplate } from "../planning/useAddToTemplate";
+import type { AddFlow } from "../planning/flowParams";
+import { AddButton } from "../planning/AddButton";
 import { PlanList } from "../plans/PlanList";
 import { startWorkout } from "../timer/startWorkout";
 import { GripSetupCard } from "../workout-detail/GripSetupCard";
@@ -47,7 +47,6 @@ function Detail({ workout, use, grip, adding }: DetailProps): React.ReactElement
   const api = useApi();
   const { model, today, actions } = useHangData();
   const session = useNextSession(workout.id);
-  const addToTemplate = useAddToTemplate(adding);
   const exercises = useExercises(api).state;
   const activities = useActivities(api).state;
   const detailActions = useWorkoutDetailActions(workout);
@@ -103,20 +102,7 @@ function Detail({ workout, use, grip, adding }: DetailProps): React.ReactElement
             />
           </View>
         ) : (
-          <Button
-            label={t("plan.addToPlan")}
-            onPress={() =>
-              addToTemplate === null
-                ? router.push({
-                    pathname: "/plan/schedule",
-                    params: { workoutId: workout.id, ...addFlowParams(adding) },
-                  })
-                : addToTemplate(workout.id)
-            }
-            variant="primary"
-            height={54}
-            icon="plus"
-          />
+          <AddButton flow={adding} workoutId={workout.id} />
         )
       }
     >

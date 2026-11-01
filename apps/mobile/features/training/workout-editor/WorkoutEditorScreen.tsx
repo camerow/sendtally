@@ -39,6 +39,8 @@ import {
 } from "./editorState";
 import { doseMeasureOf } from "./doseFields";
 import { ItemEditor } from "./ItemEditor";
+import type { AddFlow } from "../planning/flowParams";
+import { useAddTo } from "../planning/useAddTo";
 import { confirmDestructive } from "../../../lib/confirmDestructive";
 import { KeypadScrollView } from "../../../components/KeypadScrollView";
 import { TimeField } from "../../../components/TimeField";
@@ -58,6 +60,8 @@ export type WorkoutEditorScreenProps = {
   kind?: WorkoutKind;
   /** A new workout's focus, from the shelf it was made on; General by default. */
   focus?: Focus | null;
+  /** Made from the add sheet: saved, it is added where the sheet adds. */
+  adding?: AddFlow;
 };
 
 const reportFailure = (): void => Alert.alert(t("workouts.saveFailed"));
@@ -77,11 +81,14 @@ function initialDraft(
 function Editor({
   id,
   initial,
+  adding,
 }: {
   id: string | undefined;
   initial: WorkoutDraft;
+  adding: AddFlow | undefined;
 }): React.ReactElement {
   const api = useApi();
+  const addTo = useAddTo(adding ?? { date: null, blockId: null });
   const actions = useWorkoutActions(api, reportFailure);
   const exercises = useExercises(api).state;
   const { model } = useHangData();
@@ -103,7 +110,9 @@ function Editor({
   };
 
   const save = (): void => {
-    void actions.saveWorkout(id ?? randomUUID(), draftOfEditor(state));
+    const saved = id ?? randomUUID();
+    void actions.saveWorkout(saved, draftOfEditor(state));
+    if (adding !== undefined && id === undefined) addTo.add(saved);
     router.back();
   };
 
@@ -221,5 +230,5 @@ export function WorkoutEditorScreen(props: WorkoutEditorScreenProps): React.Reac
   const { state, reload } = useLibrary();
   if (state.status !== "ready") return <LoadState state={state} onRetry={() => void reload()} />;
   const initial = initialDraft(state.data, props);
-  return initial === null ? null : <Editor id={props.id} initial={initial} />;
+  return initial === null ? null : <Editor id={props.id} initial={initial} adding={props.adding} />;
 }

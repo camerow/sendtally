@@ -53,8 +53,8 @@ function footerComponentFor(id: string): React.FC<BottomSheetFooterProps> {
       () => footerStore(id).footer
     );
     return (
-      <BottomSheetFooter {...props} bottomInset={Math.max(insets.bottom, 16)}>
-        <View style={footerFrame}>{content}</View>
+      <BottomSheetFooter {...props}>
+        <View style={[footerFrame, { paddingBottom: Math.max(insets.bottom, 16) }]}>{content}</View>
       </BottomSheetFooter>
     );
   };

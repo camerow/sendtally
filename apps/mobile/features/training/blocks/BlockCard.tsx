@@ -9,7 +9,7 @@ import { Button } from "../components/Button";
 import { DashedPanel } from "../components/DashedPanel";
 import { Title } from "../components/Title";
 import { useHangData } from "../data/HangDataContext";
-import { AddKindSheet } from "../planning/AddKindSheet";
+import { AddWorkoutsSheet } from "../planning/AddWorkoutsSheet";
 import { PlanGrid } from "../plan/PlanGrid";
 import { planGridRows } from "../plan/planGridRows";
 import { type } from "../type";
@@ -63,7 +63,7 @@ export function BlockCard({ block, members, workout }: BlockCardProps): React.Re
       ) : (
         <PlanGrid rows={rows} framed={false} />
       )}
-      <AddKindSheet
+      <AddWorkoutsSheet
         flow={{ date: null, blockId: block.id }}
         visible={adding}
         onClose={() => setAdding(false)}

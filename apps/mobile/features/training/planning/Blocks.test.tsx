@@ -31,6 +31,7 @@ jest.mock("../../../components/Sheet", () => ({
     visible ? children : null,
 }));
 jest.mock("expo-router", () => ({
+  useFocusEffect: jest.fn(),
   router: { push: jest.fn(), back: jest.fn(), replace: jest.fn(), dismiss: jest.fn() },
 }));
 jest.mock("expo-crypto", () => ({ randomUUID: () => "b-new" }));
@@ -105,11 +106,10 @@ describe("blocks", () => {
   it("adds a workout from the editor and comes back to it", async () => {
     await renderWithHang(<BlockFormScreen id="b1" />, hangData(), { workouts: [squat], plan });
     await fireEvent.press(screen.getByLabelText("Add a workout to Winter base"));
-    await fireEvent.press(screen.getAllByText("Strength").at(-1)!);
-    expect(router.push).toHaveBeenCalledWith({
-      pathname: "/plan/add",
-      params: { blockId: "b1", editing: "1", kind: "strength" },
-    });
+    await fireEvent.press(screen.getByLabelText("Add 5x5 strength"));
+    expect(mockPlan.saveMembership).toHaveBeenCalledWith(
+      expect.objectContaining({ workoutId: "strength-5x5", blockId: "b1", weekdays: [] })
+    );
   });
 
   it("edits the block without a Delete: that lives in its screen's menu", async () => {
@@ -163,7 +163,7 @@ describe("block overview", () => {
       params: { id: "m1", back: "Winter base" },
     });
     await fireEvent.press(screen.getByLabelText("Add a workout to Winter base"));
-    expect(screen.getByText("What kind?")).toBeTruthy();
+    expect(screen.getByText("Add workouts")).toBeTruthy();
     await fireEvent.press(screen.getByText("Edit"));
     expect(router.push).toHaveBeenCalledWith({
       pathname: "/plan/block/edit",

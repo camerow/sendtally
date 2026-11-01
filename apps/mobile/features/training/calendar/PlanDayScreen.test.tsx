@@ -10,7 +10,10 @@ jest.mock("../../../components/Sheet", () => ({
   Sheet: ({ visible, children }: { visible: boolean; children: React.ReactNode }) =>
     visible ? children : null,
 }));
-jest.mock("expo-router", () => ({ router: { push: jest.fn(), back: jest.fn() } }));
+jest.mock("expo-router", () => ({
+  useFocusEffect: jest.fn(),
+  router: { push: jest.fn(), back: jest.fn() },
+}));
 
 const legs: WorkoutRecord = {
   id: "legs",
@@ -116,10 +119,6 @@ describe("Plan day", () => {
   it("adds on the day inside its block from the footer", async () => {
     await renderWithHang(<PlanDayScreen date="2026-09-30" />, hangData(), world);
     await fireEvent.press(screen.getByText("Add to Wed"));
-    await fireEvent.press(screen.getByText("Mobility"));
-    expect(router.push).toHaveBeenCalledWith({
-      pathname: "/plan/add",
-      params: { date: "2026-09-30", blockId: "b1", kind: "mobility" },
-    });
+    expect(screen.getByText("Add workouts")).toBeTruthy();
   });
 });

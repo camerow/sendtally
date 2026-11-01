@@ -11,7 +11,7 @@ import { Button } from "../components/Button";
 import { Label } from "../components/Label";
 import { Title } from "../components/Title";
 import { useHangData } from "../data/HangDataContext";
-import { AddKindSheet } from "../planning/AddKindSheet";
+import { AddWorkoutsSheet } from "../planning/AddWorkoutsSheet";
 import { addOnDayLabel } from "../today/addOnDay";
 import { DaySection } from "../today/DaySection";
 import { daySummary } from "../today/daySummary";
@@ -49,7 +49,7 @@ export function PlanDayScreen({ date }: PlanDayScreenProps): React.ReactElement 
         </Text>
       </View>
       <DaySection day={day} onOpen={openLogged} heading={false} />
-      <AddKindSheet
+      <AddWorkoutsSheet
         flow={{ date, blockId: block?.id ?? null }}
         visible={adding}
         onClose={() => setAdding(false)}

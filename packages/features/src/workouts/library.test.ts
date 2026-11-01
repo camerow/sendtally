@@ -213,6 +213,13 @@ describe("libraryShelves", () => {
     const mine = library().filter((w) => w.source === "mine");
     expect(libraryShelves(mine, new Map()).map((s) => s.focus)).toEqual(["strength", null]);
   });
+
+  it("keeps the shelves a search finds something on, with only what it finds", () => {
+    const shelves = libraryShelves(library(), new Map(), "leg day");
+    expect(shelves.map((s) => [s.focus, s.workouts.map((w) => w.id)])).toEqual([
+      ["strength", ["w-legs"]],
+    ]);
+  });
 });
 
 describe("dose names", () => {

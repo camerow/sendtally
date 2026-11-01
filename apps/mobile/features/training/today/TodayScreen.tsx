@@ -24,7 +24,7 @@ import { Fab } from "../../../components/Fab";
 import { useApi } from "../../../lib/api";
 import { Label } from "../components/Label";
 import { useHangData } from "../data/HangDataContext";
-import { AddKindSheet } from "../planning/AddKindSheet";
+import { AddWorkoutsSheet } from "../planning/AddWorkoutsSheet";
 import { BlockRow } from "../train/BlockRow";
 import { addOnDayLabel } from "./addOnDay";
 import { DaySection } from "./DaySection";
@@ -105,7 +105,7 @@ export function TodayScreen(): React.ReactElement {
         <DaySection day={day} onOpen={openLogged} />
       </ScrollView>
       <Fab label={addOnDayLabel(selected, today)} onPress={() => setAdding(true)} />
-      <AddKindSheet
+      <AddWorkoutsSheet
         flow={{ date: selected, blockId: null }}
         visible={adding}
         onClose={() => setAdding(false)}

@@ -18,6 +18,7 @@ const mockPlanActions = {
 };
 jest.mock("../plan/usePlanActions", () => ({ usePlanActions: () => mockPlanActions }));
 jest.mock("expo-router", () => ({
+  useFocusEffect: jest.fn(),
   router: { push: jest.fn() },
   useLocalSearchParams: () => mockParams,
   useNavigation: () => ({ addListener: () => () => undefined }),
@@ -121,15 +122,8 @@ describe("Today", () => {
     expect(screen.getByText("Add to today")).toBeTruthy();
     await fireEvent.press(screen.getByLabelText(/^Monday/));
     await fireEvent.press(screen.getByText("Add to Mon"));
-    expect(screen.getByText("What kind?")).toBeTruthy();
-    expect(router.push).not.toHaveBeenCalledWith(
-      expect.objectContaining({ pathname: "/plan/add" })
-    );
-    await fireEvent.press(screen.getByText("Mobility"));
-    expect(router.push).toHaveBeenCalledWith({
-      pathname: "/plan/add",
-      params: { date: "2026-09-28", kind: "mobility" },
-    });
+    expect(screen.getByText("Add workouts")).toBeTruthy();
+    expect(screen.getByText("For Mon, Sep 28")).toBeTruthy();
   });
 
   it("shows no blocks when none is running", async () => {

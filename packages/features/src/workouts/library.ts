@@ -231,14 +231,15 @@ export function browseLibrary(
 }
 
 /**
- * One shelf per focus that has a workout, in the order a season runs and General last,
- * each as `browseLibrary` orders it.
+ * One shelf per focus that has a workout matching `text`, in the order a season runs and
+ * General last, each as `browseLibrary` orders it.
  */
 export function libraryShelves(
   library: readonly LibraryWorkout[],
-  usage: ReadonlyMap<string, WorkoutUse>
+  usage: ReadonlyMap<string, WorkoutUse>,
+  text = ""
 ): LibraryShelf[] {
   return [...FOCI, null]
-    .map((focus) => ({ focus, workouts: browseLibrary(library, { text: "", focus }, usage) }))
+    .map((focus) => ({ focus, workouts: browseLibrary(library, { text, focus }, usage) }))
     .filter((s) => s.workouts.length > 0);
 }

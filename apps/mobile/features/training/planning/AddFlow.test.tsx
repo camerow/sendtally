@@ -6,7 +6,7 @@ import { Alert, type AlertButton } from "react-native";
 import type { Plan, WorkoutRecord } from "@sendtally/api-client";
 import type * as Workouts from "@sendtally/features/workouts";
 import { hangData, renderWithHang } from "../data/renderWithHang";
-import { AddPlanScreen } from "./AddPlanScreen";
+import { AddWorkoutsSheet } from "./AddWorkoutsSheet";
 import { ScheduleScreen } from "./ScheduleScreen";
 import { WorkoutScreen } from "../library-detail/WorkoutScreen";
 
@@ -16,6 +16,7 @@ const mockPlan = {
   saveMembership: jest.fn(),
   deleteMembership: jest.fn(),
   saveWeekChange: jest.fn(),
+  saveSchedule: jest.fn(),
 };
 
 const mockWorkouts = { saveWorkout: jest.fn(), deleteWorkout: jest.fn() };
@@ -31,6 +32,7 @@ jest.mock("../../../components/Sheet", () => ({
 }));
 jest.mock("expo-router", () => ({
   router: { push: jest.fn(), back: jest.fn(), dismissTo: jest.fn() },
+  useFocusEffect: jest.fn(),
 }));
 jest.mock("expo-crypto", () => ({ randomUUID: () => "m-new" }));
 
@@ -71,17 +73,25 @@ beforeEach(() => {
 });
 
 describe("adding to the plan", () => {
-  it("asks the kind, then lists that kind's workouts in one list, the user's own first and labelled", async () => {
-    await renderWithHang(<AddPlanScreen flow={flow} />, hangData(), { workouts: [legs] });
-    expect(screen.getByText("What kind?")).toBeTruthy();
-    await fireEvent.press(screen.getByText("Strength"));
-    expect(screen.queryByText("What kind?")).toBeNull();
+  it("lists every workout under its focus, searched across all, each added with +", async () => {
+    const onClose = jest.fn();
+    await renderWithHang(<AddWorkoutsSheet flow={flow} visible onClose={onClose} />, hangData(), {
+      workouts: [legs],
+    });
     expect(screen.getByText("For Thu, Oct 1")).toBeTruthy();
-    expect(screen.getByText("Mine")).toBeTruthy();
+    expect(screen.getAllByText("Strength").length).toBeGreaterThan(1);
+    expect(screen.getByText("General")).toBeTruthy();
     expect(screen.getByText("5x5 strength")).toBeTruthy();
-    expect(screen.queryByText("Climber's yoga")).toBeNull();
     await fireEvent.changeText(screen.getByLabelText("Search workouts"), "legs");
     expect(screen.queryByText("5x5 strength")).toBeNull();
+    await fireEvent.press(screen.getByLabelText("Add Gym, legs"));
+    expect(mockPlan.saveMembership).toHaveBeenCalledWith({
+      id: "m-new",
+      workoutId: "legs",
+      blockId: null,
+      weekdays: [],
+      start: "2026-10-01",
+    });
     await fireEvent.press(screen.getByText("Gym, legs"));
     expect(router.push).toHaveBeenCalledWith({
       pathname: "/workout/[id]",
@@ -89,35 +99,28 @@ describe("adding to the plan", () => {
     });
   });
 
-  it("opens on the kind already picked, with no sheet", async () => {
-    await renderWithHang(<AddPlanScreen flow={flow} initialKind="strength" />, hangData(), {
-      workouts: [legs],
-    });
-    expect(screen.queryByText("What kind?")).toBeNull();
-    expect(screen.getByText("Strength")).toBeTruthy();
+  it("reads In block for a workout already there, and closes on Done", async () => {
+    const there = {
+      id: "m-old",
+      workoutId: "strength-5x5",
+      blockId: "b1",
+      weekdays: [],
+      start: "2026-10-05",
+    };
+    const onClose = jest.fn();
+    await renderWithHang(
+      <AddWorkoutsSheet flow={{ date: null, blockId: "b1" }} visible onClose={onClose} />,
+      hangData(),
+      { workouts: [legs], plan: { ...winter, memberships: [there] } }
+    );
+    expect(screen.getByText("Add workouts")).toBeTruthy();
+    expect(screen.getByText("In block")).toBeTruthy();
+    expect(screen.queryByLabelText("Add 5x5 strength")).toBeNull();
+    await fireEvent.press(screen.getByText("Done"));
+    expect(onClose).toHaveBeenCalledWith([]);
   });
 
-  it("goes back when the sheet closes with no kind picked", async () => {
-    await renderWithHang(<AddPlanScreen flow={flow} />, hangData());
-    await fireEvent.press(screen.getByText("Cancel"));
-    expect(router.back).toHaveBeenCalled();
-  });
-
-  it("makes a new workout of the kind, and changes kind without leaving", async () => {
-    await renderWithHang(<AddPlanScreen flow={flow} />, hangData(), { workouts: [legs] });
-    await fireEvent.press(screen.getByText("Mobility"));
-    await fireEvent.press(screen.getByText("New workout"));
-    expect(router.push).toHaveBeenCalledWith({
-      pathname: "/workout/edit",
-      params: { kind: "mobility" },
-    });
-    expect(router.back).not.toHaveBeenCalled();
-    await fireEvent.press(screen.getByText("Change type"));
-    await fireEvent.press(screen.getByText("Cancel"));
-    expect(router.back).not.toHaveBeenCalled();
-  });
-
-  it("shows the next session and what each exercise alternates with, then goes on to when", async () => {
+  it("shows the next session and what each exercise alternates with, and Add adds it as + does", async () => {
     await renderWithHang(<WorkoutScreen id="legs" adding={flow} />, hangData(), {
       workouts: [legs],
     });
@@ -126,11 +129,11 @@ describe("adding to the plan", () => {
     expect(screen.getByText("5 × 5")).toBeTruthy();
     expect(screen.getByText("Alternates: B is 3 × 8")).toBeTruthy();
     expect(screen.queryByText("Start")).toBeNull();
-    await fireEvent.press(screen.getByText("Add to plan"));
-    expect(router.push).toHaveBeenCalledWith({
-      pathname: "/plan/schedule",
-      params: { workoutId: "legs", date: "2026-10-01" },
-    });
+    await fireEvent.press(screen.getByText("Add"));
+    expect(mockPlan.saveMembership).toHaveBeenCalledWith(
+      expect.objectContaining({ workoutId: "legs", start: "2026-10-01", weekdays: [] })
+    );
+    expect(router.back).toHaveBeenCalled();
   });
 
   it("names each dose next to its letter when it has a name", async () => {
@@ -222,7 +225,7 @@ describe("adding to the plan", () => {
     });
   });
 
-  it("adds to a template with no days, straight back to its grid", async () => {
+  it("adds to a template with no days, straight back to the sheet", async () => {
     const template = {
       ...winter,
       blocks: [{ id: "t1", name: "Base to peak", start: null, weeks: 6, focus: null }],
@@ -232,8 +235,7 @@ describe("adding to the plan", () => {
       hangData(),
       { workouts: [legs], plan: template }
     );
-    await fireEvent.press(screen.getByText("Add to plan"));
-    expect(router.push).not.toHaveBeenCalled();
+    await fireEvent.press(screen.getByText("Add"));
     expect(mockPlan.saveMembership).toHaveBeenCalledWith({
       id: "m-new",
       workoutId: "legs",
@@ -241,10 +243,7 @@ describe("adding to the plan", () => {
       weekdays: [],
       start: "2026-09-29",
     });
-    expect(router.dismissTo).toHaveBeenCalledWith({
-      pathname: "/plan/block/[id]",
-      params: { id: "t1", highlight: "m-new" },
-    });
+    expect(router.back).toHaveBeenCalled();
   });
 
   it("goes back to the block's editor when the add started there", async () => {

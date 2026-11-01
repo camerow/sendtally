@@ -18,8 +18,8 @@ export type PlanGridProps = {
   rows: readonly PlanGridRow[];
   /** Off inside a card that already draws the frame. */
   framed?: boolean;
-  /** The key of a row just added, lit for a moment. */
-  lit?: string;
+  /** The keys of rows just added, lit for a moment. */
+  lit?: string | readonly string[];
   /** Over the grid: Your week unless it says which. */
   title?: string;
   /** A dated week's day numbers by weekday, Monday first, under the weekday letters. */
@@ -143,7 +143,7 @@ export function PlanGrid({
           paddingVertical: 7,
           borderTopWidth: 1,
           borderTopColor: colors.lineOnLightSoft,
-          backgroundColor: row.key === lit ? GOLD_TINT : undefined,
+          backgroundColor: [lit ?? []].flat().includes(row.key) ? GOLD_TINT : undefined,
         } as const;
         return toggle === undefined && row.press === undefined ? (
           <Pressable

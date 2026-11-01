@@ -1,17 +1,11 @@
-import {
-  isCalendarDate,
-  WORKOUT_KINDS,
-  type Block,
-  type CalendarDate,
-  type WorkoutKind,
-} from "@sendtally/core/hang";
+import { isCalendarDate, type Block, type CalendarDate } from "@sendtally/core/hang";
 import { shortDate } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 
 /** Where an add started: a day to schedule on, a block to add to, from its editor or not. */
 export type AddFlow = { date: CalendarDate | null; blockId: string | null; editing?: boolean };
 
-export type RawAddParams = { date?: string; blockId?: string; kind?: string; editing?: string };
+export type RawAddParams = { date?: string; blockId?: string; editing?: string };
 
 /** The add flow a route was opened with, ignoring what is not a real date. */
 export function addFlowOf(p: RawAddParams): AddFlow {
@@ -30,10 +24,6 @@ export function addFlowParams(flow: AddFlow): RawAddParams {
     ...(flow.editing === true && { editing: "1" }),
   };
 }
-
-/** The kind picked before the add screen opened, if one was. */
-export const addKindOf = (p: RawAddParams): WorkoutKind | null =>
-  WORKOUT_KINDS.find((k) => k === p.kind) ?? null;
 
 /** What the add is for: the block, the day, or the plan. */
 export function addKicker(flow: AddFlow, blocks: readonly Block[]): string {

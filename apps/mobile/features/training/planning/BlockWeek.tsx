@@ -35,7 +35,7 @@ import { useLibrary } from "../library/useLibrary";
 import type { LibraryWorkout } from "@sendtally/features/workouts";
 import { usePlanActions } from "../plan/usePlanActions";
 import { type } from "../type";
-import { AddKindSheet } from "./AddKindSheet";
+import { AddWorkoutsSheet } from "./AddWorkoutsSheet";
 
 export type BlockWeekProps = {
   block: Block;
@@ -151,7 +151,17 @@ export function BlockWeek({
     ...new Set(members.flatMap((m) => ownWeeksAfter(scheduleOf(log.plan, m), shownWeek))),
   ].sort((a, b) => a - b);
   const rows = planGridRows(shown, workout, model, options);
-  const dayless = rows.find((r) => r.days.length === 0);
+  // Plans with no day in any week, such as ones just added: named, to tap their days in.
+  const dayless = members.filter((m) => {
+    const s = scheduleOf(log.plan, m);
+    return s.weekdays.length === 0 && s.weeks.every((w) => w.weekdays.length === 0);
+  });
+  const [added, setAdded] = React.useState<readonly string[]>([]);
+  React.useEffect(() => {
+    if (added.length === 0) return;
+    const fade = setTimeout(() => setAdded([]), 2400);
+    return () => clearTimeout(fade);
+  }, [added]);
   const add = (
     <Button
       label={t("plan.addWorkout")}
@@ -194,7 +204,7 @@ export function BlockWeek({
       ) : (
         <PlanGrid
           rows={rows}
-          lit={lit}
+          lit={[...(lit === undefined ? [] : [lit]), ...added]}
           editing={editing}
           action={
             editable ? (
@@ -256,9 +266,13 @@ export function BlockWeek({
           }
         />
       )}
-      {template &&
-        dayless !== undefined &&
-        hint(t("plan.tapDays", { workout: dayless.name }), AMBER)}
+      {dayless.length > 0 &&
+        hint(
+          t("plan.tapDays", {
+            workout: dayless.map((m) => workout(m.workoutId)?.name ?? "").join(", "),
+          }),
+          AMBER
+        )}
       {template &&
         week !== undefined &&
         week > 1 &&
@@ -279,10 +293,13 @@ export function BlockWeek({
         />
       )}
       {changes.sheets}
-      <AddKindSheet
+      <AddWorkoutsSheet
         flow={{ date: null, blockId: block.id }}
         visible={adding}
-        onClose={() => setAdding(false)}
+        onClose={(ids) => {
+          setAdding(false);
+          setAdded(ids);
+        }}
       />
     </View>
   );
