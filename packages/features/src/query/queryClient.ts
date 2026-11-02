@@ -1,7 +1,7 @@
 import { QueryClient } from "@tanstack/react-query";
 import { ApiError } from "@sendtally/api-client";
 
-export const QUERY_CACHE_MAX_AGE = 7 * 24 * 60 * 60 * 1000;
+const QUERY_CACHE_MAX_AGE = 7 * 24 * 60 * 60 * 1000;
 
 /** A 4xx says the request itself is wrong; asking again a second later cannot change the answer. */
 function retry(failures: number, error: Error): boolean {

@@ -1,7 +1,7 @@
 import { queryOptions, type QueryKey } from "@tanstack/react-query";
 import type { SendtallyApi } from "@sendtally/api-client";
 
-/** One row is cheap to fetch again and is only worth keeping while its screen is near. */
+/** An area row is cheap to fetch again and is only worth keeping while its screen is near. */
 const ROW_GC_TIME = 5 * 60 * 1000;
 
 /** A Strava post runs after the log response, so a pending row is re-read until it settles. */
@@ -21,7 +21,6 @@ export const queries = {
     queryOptions({
       queryKey: ["session", fingerprint],
       queryFn: async () => (await api.session(fingerprint)).session,
-      gcTime: ROW_GC_TIME,
       refetchInterval: (query) =>
         query.state.data?.post_state === "pending" ? POST_POLL_INTERVAL : false,
     }),
@@ -31,7 +30,6 @@ export const queries = {
     queryOptions({
       queryKey: ["entry", id],
       queryFn: async () => (await api.entry(id)).entry,
-      gcTime: ROW_GC_TIME,
     }),
   climbs: (api: SendtallyApi) =>
     queryOptions({ queryKey: ["climbs"], queryFn: async () => (await api.climbs()).climbs }),
@@ -105,8 +103,6 @@ export const queries = {
 };
 
 const NOT_PERSISTED: readonly unknown[] = [
-  "session",
-  "entry",
   "entitlements",
   "area",
   "areaClimb",
@@ -116,8 +112,9 @@ const NOT_PERSISTED: readonly unknown[] = [
 ];
 
 /**
- * Lists are what a cold start opens on; single rows are neither needed then nor bounded in number,
- * and a restored entitlement would unlock member UI after the subscription lapsed.
+ * The user's own data stays on device, rows included, so a session or entry opened once opens offline.
+ * Area lookups belong to everyone and are online-only, and a restored entitlement would unlock member
+ * UI after the subscription lapsed.
  */
 export function worthPersisting(queryKey: QueryKey): boolean {
   return !NOT_PERSISTED.includes(queryKey[0]);

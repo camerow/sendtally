@@ -1,13 +1,18 @@
 import { useAuth } from "@clerk/clerk-expo";
 import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
-import { defaultShouldDehydrateQuery, focusManager, useIsRestoring } from "@tanstack/react-query";
+import {
+  defaultShouldDehydrateQuery,
+  focusManager,
+  onlineManager,
+  useIsRestoring,
+} from "@tanstack/react-query";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { File, Paths } from "expo-file-system";
+import * as Network from "expo-network";
 import * as Updates from "expo-updates";
 import React from "react";
 import { AppState } from "react-native";
 import {
-  QUERY_CACHE_MAX_AGE,
   createQueryClient,
   useClearOnUserChange,
   worthPersisting,
@@ -23,7 +28,14 @@ focusManager.setEventListener((setFocused) => {
   return () => subscription.remove();
 });
 
-const file = (): File => new File(Paths.cache, "query-cache.json");
+onlineManager.setEventListener((setOnline) => {
+  const online = (state: Network.NetworkState): void => setOnline(state.isConnected === true);
+  void Network.getNetworkStateAsync().then(online);
+  const subscription = Network.addNetworkStateListener(online);
+  return () => subscription.remove();
+});
+
+const file = (): File => new File(Paths.document, "query-cache.json");
 
 const persister = createAsyncStoragePersister({
   storage: {
@@ -53,15 +65,18 @@ function ClearOnSignOut(): null {
   return null;
 }
 
-/** The log opens on the last data it showed, from disk, while it revalidates behind it. */
+/**
+ * The log opens on the last data it showed, from disk, while it revalidates behind it. The copy never
+ * expires and only a native build discards it; a response whose shape changes gets a new query key.
+ */
 export function QueryProvider({ children }: { children: React.ReactNode }): React.ReactElement {
   return (
     <PersistQueryClientProvider
       client={queryClient}
       persistOptions={{
         persister,
-        maxAge: QUERY_CACHE_MAX_AGE,
-        buster: `${Updates.runtimeVersion ?? ""}:${Updates.updateId ?? "embedded"}`,
+        maxAge: Infinity,
+        buster: Updates.runtimeVersion ?? "",
         dehydrateOptions: {
           shouldDehydrateQuery: (query) =>
             defaultShouldDehydrateQuery(query) && worthPersisting(query.queryKey),
