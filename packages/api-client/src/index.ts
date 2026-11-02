@@ -18,6 +18,7 @@ import type {
   AreaSimilarInput,
   AreaSummary,
   ContentReportInput,
+  ClimbChange,
   ClimbSummary,
   EntryDetail,
   EntryInput,
@@ -211,7 +212,8 @@ export class SendtallyApi {
     );
   }
 
-  updateClimb(id: string, change: { name?: string; working?: boolean }): Promise<{ id: string }> {
+  /** Resolves to the climb's id after the change: another one's when a rename merged it. */
+  updateClimb(id: string, change: ClimbChange): Promise<{ id: string }> {
     return body(this.client.v1.climbs[":id"].$patch({ param: { id }, json: change }));
   }
 

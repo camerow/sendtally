@@ -18,6 +18,8 @@ const record = (id: string, name: string, overrides: Partial<UserClimbRow> = {})
   discipline: "boulder",
   grade_json: null,
   area_climb_id: null,
+  area_id: null,
+  edited_grade_json: null,
   working: false,
   created_at: "2026-08-01T00:00:00Z",
   updated_at: "2026-08-01T00:00:00Z",
@@ -109,6 +111,58 @@ describe("climbCatalogue", () => {
       [record("x", "New name")]
     );
     expect(catalogue.map((c) => [c.id, c.name])).toEqual([["x", "New name"]]);
+  });
+});
+
+describe("an edited climb", () => {
+  const names = new Map([
+    ["a1", "Stoney Point"],
+    ["a2", "Castle Rock"],
+  ]);
+  const logged = [
+    session(
+      "s1",
+      "2026-09-01T18:00:00Z",
+      [{ name: "Moonraker", grade: { scale: "v", value: 6 } }],
+      "a1"
+    ),
+  ];
+
+  it("shows the crag and grade it was edited to over its newest session's", () => {
+    const [climb] = climbCatalogue(
+      logged,
+      [
+        record("c1", "Moonraker", {
+          area_id: "a2",
+          edited_grade_json: JSON.stringify({ scale: "font", value: "7A" }),
+        }),
+      ],
+      names
+    );
+    expect(climb).toMatchObject({
+      area: { id: "a2", name: "Castle Rock" },
+      grade: { scale: "font", value: "7A" },
+      discipline: "boulder",
+    });
+  });
+
+  it("keeps an unlogged project's edited crag", () => {
+    const [climb] = climbCatalogue(
+      [],
+      [record("c1", "Moonraker", { working: true, area_id: "a2" })],
+      names
+    );
+    expect(climb?.area).toEqual({ id: "a2", name: "Castle Rock" });
+  });
+
+  it("is not relinked to an Areas climb by name once its crag was edited", () => {
+    const links = [{ climb_slug: "moonraker", climb_id: "ac-1" }];
+    expect(missingClimbs(logged, [record("c1", "Moonraker")], links).link).toEqual([
+      { id: "c1", area_climb_id: "ac-1" },
+    ]);
+    expect(
+      missingClimbs(logged, [record("c1", "Moonraker", { area_id: "a2" })], links).link
+    ).toEqual([]);
   });
 });
 

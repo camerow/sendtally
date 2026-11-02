@@ -9,7 +9,7 @@ const knownGrade =
   (value: string): boolean =>
     parseGrade(scale, value) !== undefined;
 
-const gradeSchema = z.union([
+export const gradeSchema = z.union([
   z.object({ scale: z.literal("v"), value: z.number().int().min(0).max(17) }),
   z.object({
     scale: z.literal("font"),

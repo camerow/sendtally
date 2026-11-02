@@ -36,8 +36,6 @@ export function useClimbs(api: SendtallyApi): ClimbsFeature {
 export type ClimbFeature = {
   state: QueryState<{ climb: ClimbSummary; vm: ClimbDetailVM }>;
   setWorking: (working: boolean) => Promise<void>;
-  /** Resolves to the climb's id after the rename: another one's when it merged into it. */
-  rename: (name: string) => Promise<string>;
   /** A note dated to a day: on that day's session of this climb, or on a new attempt there. */
   addNote: (day: string, note: string) => Promise<void>;
   reload: () => Promise<void>;
@@ -61,13 +59,6 @@ export function useClimb(api: SendtallyApi, idOrSlug: string): ClimbFeature {
     },
     [api, id]
   );
-  const rename = React.useCallback(
-    async (name: string): Promise<string> => {
-      if (id === null) throw new Error("climb not loaded");
-      return (await api.updateClimb(id, { name })).id;
-    },
-    [api, id]
-  );
   const addNote = React.useCallback(
     async (day: string, note: string): Promise<void> => {
       if (state.status !== "ready") throw new Error("climb not loaded");
@@ -79,5 +70,5 @@ export function useClimb(api: SendtallyApi, idOrSlug: string): ClimbFeature {
     },
     [api, state, reload]
   );
-  return { state, setWorking, rename, addNote, reload };
+  return { state, setWorking, addNote, reload };
 }

@@ -23,12 +23,14 @@ const go = (
 const session = (
   start_at: string,
   location: "indoor" | "outdoor",
-  climbs: SessionClimb[]
+  climbs: SessionClimb[],
+  area_id: string | null = "a1"
 ): SessionWithClimbs =>
   ({
     fingerprint: start_at,
     start_at,
     location,
+    area_id,
     climbs,
     name: "Tuesday night session",
     source: "manual",
@@ -74,6 +76,19 @@ describe("climbDetailVM", () => {
       ["Oct 24", "Tuesday night session", "Buttermilks · Not yet", "8 tries", null, 7],
       ["Sep 26", "Tuesday night session", "Buttermilks · Not yet", "6 tries", "First look.", 7],
     ]);
+  });
+
+  it("names a session's crag only when it is the climb's, as after moving the climb", () => {
+    const vm = climbDetailVM(climb({}), [
+      session("2026-10-24T18:00:00.000Z", "outdoor", [go(7, "attempt", { name: "The Pinch" })]),
+      session(
+        "2026-09-26T18:00:00.000Z",
+        "outdoor",
+        [go(7, "attempt", { name: "The Pinch" })],
+        "a2"
+      ),
+    ]);
+    expect(vm.sessions.map((v) => v.meta)).toEqual(["Buttermilks · Not yet", "Not yet"]);
   });
 
   it("names the best as how the first send went", () => {

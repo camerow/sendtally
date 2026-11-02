@@ -1059,6 +1059,32 @@ export async function setUserClimbWorking(
     .where(and(eq(userClimbs.user_id, userId), eq(userClimbs.id, id)));
 }
 
+export type ClimbPlace = {
+  area_id?: string | null;
+  area_climb_id?: string | null;
+  grade?: ClimbGrade;
+};
+
+/** What editing a climb sets on its record; its sessions keep what they were logged with. */
+export async function setUserClimbPlace(
+  db: D1Database,
+  userId: string,
+  id: string,
+  place: ClimbPlace
+): Promise<void> {
+  const set: Partial<typeof userClimbs.$inferInsert> = { updated_at: new Date().toISOString() };
+  if (place.area_id !== undefined) set.area_id = place.area_id;
+  if (place.area_climb_id !== undefined) set.area_climb_id = place.area_climb_id;
+  if (place.grade !== undefined) {
+    set.edited_grade_json = JSON.stringify(place.grade);
+    set.discipline = disciplineOf(place.grade.scale);
+  }
+  await drizzle(db)
+    .update(userClimbs)
+    .set(set)
+    .where(and(eq(userClimbs.user_id, userId), eq(userClimbs.id, id)));
+}
+
 export type ClimbRename = {
   climb: UserClimbRow;
   name: string;

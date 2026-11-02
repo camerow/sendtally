@@ -2,6 +2,7 @@ import { disciplineOf, type Discipline } from "@sendtally/core";
 import { z } from "zod";
 import * as repo from "./repo";
 import type { ClimbGrade, SessionRow, UserClimbRow } from "./repo";
+import { gradeSchema } from "./manual";
 import { tagSlug } from "./tags";
 
 export const MAX_CLIMB_NAME_LENGTH = 200;
@@ -160,13 +161,27 @@ export function missingClimbs(
   }
   const link = records.flatMap((r) => {
     const id = linkBySlug.get(r.name_key);
-    return r.area_climb_id === null && id !== undefined ? [{ id: r.id, area_climb_id: id }] : [];
+    return r.area_climb_id === null && r.area_id === null && id !== undefined
+      ? [{ id: r.id, area_climb_id: id }]
+      : [];
   });
   return { create: [...create.values()], link };
 }
 
 // Sessions arrive newest first, so the first sighting of a climb carries the
 // name and grade the user logged most recently, and the crag it was last at.
+const editedGrade = (record: UserClimbRow): ClimbGrade | null =>
+  record.edited_grade_json === null ? null : (JSON.parse(record.edited_grade_json) as ClimbGrade);
+
+const areaOf = (
+  id: string | null | undefined,
+  names: ReadonlyMap<string, string>
+): { id: string; name: string } | null => {
+  const name = id == null ? undefined : names.get(id);
+  return id == null || name === undefined ? null : { id, name };
+};
+
+/** A climb's crag and grade come from its newest session, unless the climb was edited to say. */
 export function climbCatalogue(
   sessions: CatalogueSession[],
   records: UserClimbRow[],
@@ -181,14 +196,10 @@ export function climbCatalogue(
       if (record === undefined) continue;
       const tries = climb.tries ?? 1;
       const sent = climb.kind !== "attempt";
-      const areaName = session.area_id == null ? undefined : areaNames.get(session.area_id);
-      const area =
-        session.area_id == null || areaName === undefined
-          ? null
-          : { id: session.area_id, name: areaName };
+      const area = areaOf(record.area_id ?? session.area_id, areaNames);
       const existing = byId.get(record.id);
       if (existing === undefined) {
-        const grade = storedGrade(climb);
+        const grade = editedGrade(record) ?? storedGrade(climb);
         byId.set(record.id, {
           id: record.id,
           slug: record.name_key,
@@ -218,7 +229,9 @@ export function climbCatalogue(
   }
   for (const record of records) {
     if (byId.has(record.id) || !record.working) continue;
-    const grade = record.grade_json === null ? null : (JSON.parse(record.grade_json) as ClimbGrade);
+    const grade =
+      editedGrade(record) ??
+      (record.grade_json === null ? null : (JSON.parse(record.grade_json) as ClimbGrade));
     byId.set(record.id, {
       id: record.id,
       slug: record.name_key,
@@ -227,7 +240,7 @@ export function climbCatalogue(
       discipline: grade === null ? record.discipline : disciplineOf(grade.scale),
       project: true,
       area_climb_id: record.area_climb_id,
-      area: null,
+      area: areaOf(record.area_id, areaNames),
       sessions: 0,
       attempts: 0,
       sends: 0,
@@ -239,9 +252,12 @@ export function climbCatalogue(
   return [...byId.values()].sort((a, b) => b.last_at.localeCompare(a.last_at));
 }
 
-export const renameBody = z.object({
+export const climbEditBody = z.object({
   name: z.string().trim().min(1).max(MAX_CLIMB_NAME_LENGTH).optional(),
   working: z.boolean().optional(),
+  areaId: z.string().min(1).max(64).nullable().optional(),
+  areaClimbId: z.string().min(1).max(64).nullable().optional(),
+  grade: gradeSchema.optional(),
 });
 
 // Every manual climb that is this one now carries the id of the climb it

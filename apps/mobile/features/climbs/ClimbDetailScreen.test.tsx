@@ -33,7 +33,6 @@ jest.mock("@sendtally/features/climbs", () => ({
       },
     },
     setWorking: jest.fn(),
-    rename: jest.fn(),
     addNote: mockAddNote,
   }),
 }));
@@ -55,6 +54,15 @@ describe("Climb detail", () => {
     expect(router.push).toHaveBeenCalledWith({
       pathname: "/climb/log",
       params: { climbId: "c1" },
+    });
+  });
+
+  it("edits the climb itself from the bar", async () => {
+    await render(<ClimbDetailScreen id="c1" />);
+    await fireEvent.press(screen.getByText("Edit"));
+    expect(router.push).toHaveBeenCalledWith({
+      pathname: "/climb/log",
+      params: { climbId: "c1", edit: "1" },
     });
   });
 

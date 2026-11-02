@@ -60,7 +60,7 @@ export type ClimbDetailVM = {
   sessions: ClimbSessionRowVM[];
 };
 
-/** Every session with this climb in it, newest first. */
+/** Every session with this climb in it, newest first, naming its crag only when it is the climb's. */
 export function climbSessions(
   climb: ClimbSummary,
   sessions: readonly SessionWithClimbs[]
@@ -78,7 +78,10 @@ export function climbSessions(
           name: sessionTitle(s),
           rpe: isUnscored(s) ? null : s.rpe,
           dateLabel: dateLabel(s.start_at),
-          meta: [climb.area?.name, sent ? t("common.sent") : t("sessionDetail.notYet")]
+          meta: [
+            s.area_id === climb.area?.id ? climb.area.name : undefined,
+            sent ? t("common.sent") : t("sessionDetail.notYet"),
+          ]
             .filter((p) => p !== undefined)
             .join(" · "),
           note: rows.find((c) => c.note !== null)?.note ?? null,
