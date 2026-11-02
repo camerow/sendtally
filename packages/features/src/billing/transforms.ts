@@ -59,9 +59,21 @@ function renewalLine(store: StoreMembership): string {
   return t(store.willRenew ? "billing.renews" : "billing.ends", { date });
 }
 
-export function membershipVM(entitlements: Entitlements | null): MembershipVM {
+/**
+ * A store membership whose paid period ended since it was cached, as one restored offline may
+ * have: the server would no longer call it active, so neither does the app.
+ */
+function lapsed(membership: Entitlements["membership"], now: Date): boolean {
+  const expiresAt = membership.store?.expiresAt ?? null;
+  return !membership.web && expiresAt !== null && Date.parse(expiresAt) <= now.getTime();
+}
+
+export function membershipVM(
+  entitlements: Entitlements | null,
+  now: Date = new Date()
+): MembershipVM {
   const membership = entitlements?.membership ?? null;
-  if (membership === null || !membership.active) {
+  if (membership === null || !membership.active || lapsed(membership, now)) {
     return {
       active: false,
       statusLabel: t("billing.notAMember"),

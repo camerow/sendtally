@@ -116,7 +116,6 @@ export const queries = {
 };
 
 const NOT_PERSISTED: readonly unknown[] = [
-  "entitlements",
   "area",
   "areaClimb",
   "areaSearch",
@@ -125,9 +124,9 @@ const NOT_PERSISTED: readonly unknown[] = [
 ];
 
 /**
- * The user's own data stays on device, rows included, so a session or entry opened once opens offline.
- * Area lookups belong to everyone and are online-only, and a restored entitlement would unlock member
- * UI after the subscription lapsed.
+ * The user's own data stays on device, rows and membership included, so the app opens offline as
+ * it last was. Area lookups belong to everyone and are online-only. A membership that has since
+ * lapsed is caught by `membershipVM`, which checks a store membership's paid period itself.
  */
 export function worthPersisting(queryKey: QueryKey): boolean {
   return !NOT_PERSISTED.includes(queryKey[0]);
