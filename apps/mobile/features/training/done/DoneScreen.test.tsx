@@ -73,6 +73,22 @@ describe("A hangboard workout's review", () => {
     });
   });
 
+  it("removes the last set quietly when empty, and a logged one with Undo", async () => {
+    await renderWithHang(<DoneScreen params={ended} />);
+    const rows = (): number => screen.getAllByTestId("review-set").length;
+    expect(rows()).toBe(6);
+    await fireEvent.press(screen.getByLabelText("Remove the last set from Half crimp"));
+    expect(rows()).toBe(5);
+    expect(screen.queryByText("Set 6 removed")).toBeNull();
+    await fireEvent(screen.getAllByTestId("review-set")[1], "accessibilityAction", {
+      nativeEvent: { actionName: "remove" },
+    });
+    expect(rows()).toBe(4);
+    expect(screen.getByText("Set 2 removed")).toBeTruthy();
+    await fireEvent.press(screen.getByText("Undo"));
+    expect(rows()).toBe(5);
+  });
+
   it("shows what the timer saw, and saves the sets as they were confirmed", async () => {
     const { actions } = await renderWithHang(<DoneScreen params={ended} />);
     expect(screen.getByText("Log workout")).toBeTruthy();

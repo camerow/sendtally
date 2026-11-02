@@ -24,6 +24,7 @@ import { KIND_LOOK } from "../today/kindLook";
 import { type } from "../type";
 import { hangCount } from "./hangCount";
 import { KeypadScrollView } from "../../../components/KeypadScrollView";
+import { Toast } from "../../../components/Toast";
 
 export type HangSessionFormProps = { session: HangSessionRecord };
 
@@ -36,6 +37,7 @@ export function HangSessionForm({ session }: HangSessionFormProps): React.ReactE
   const [draft, setDraft] = React.useState(session);
   const [calendar, setCalendar] = React.useState(false);
   const [picker, setPicker] = React.useState(false);
+  const [removed, setRemoved] = React.useState<{ message: string; undo: () => void } | null>(null);
   const update = (patch: Partial<HangSessionRecord>): void => setDraft((d) => ({ ...d, ...patch }));
   const workout = model.workout(session.workoutId) ?? {
     ...session.protocol,
@@ -151,6 +153,7 @@ export function HangSessionForm({ session }: HangSessionFormProps): React.ReactE
               onChange={(setup) => update(setup)}
             />
           }
+          onRemoved={(message, undo) => setRemoved({ message, undo })}
           onChange={(done, off) => setSets({ done, off })}
         />
         <Text style={[type.monoBold, { fontSize: 13, color: colors.gunmetal }]}>
@@ -159,6 +162,13 @@ export function HangSessionForm({ session }: HangSessionFormProps): React.ReactE
         <EffortField value={draft.rpe} onChange={(rpe) => update({ rpe })} />
         <FocusField value={draft.focus} onChange={(focus) => update({ focus })} />
       </KeypadScrollView>
+      {removed !== null && (
+        <Toast
+          message={removed.message}
+          action={{ label: t("tally.undo"), onPress: removed.undo }}
+          onHide={() => setRemoved(null)}
+        />
+      )}
       <GripPickerSheet
         visible={picker}
         workout={workout}

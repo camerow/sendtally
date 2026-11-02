@@ -26,6 +26,7 @@ import { durationLabel } from "@sendtally/features/sessions";
 import { useWorkoutActions } from "@sendtally/features/workouts";
 import { DateTimeField } from "../../../components/DateTimeField";
 import { KeypadScrollView } from "../../../components/KeypadScrollView";
+import { Toast } from "../../../components/Toast";
 import { TimeField } from "../../../components/TimeField";
 import { confirmDestructive } from "../../../lib/confirmDestructive";
 import { useApi } from "../../../lib/api";
@@ -99,6 +100,7 @@ export function ActivityForm({
   const api = useApi();
   const actions = useActivityActions(api, reportFailure);
   const [draft, setDraft] = React.useState(initial);
+  const [removed, setRemoved] = React.useState<{ message: string; undo: () => void } | null>(null);
   const update = (patch: Partial<ActivityDraft>): void => setDraft((d) => ({ ...d, ...patch }));
   const unit = useWeightUnit(api);
   const workouts = useWorkoutActions(api, reportFailure);
@@ -300,6 +302,7 @@ export function ActivityForm({
             previous={previous}
             setup={hang?.setup}
             {...(hang !== undefined && { hangLoadKg: hang.loadKg })}
+            onRemoved={(message, undo) => setRemoved({ message, undo })}
             onChange={(done, off) => update({ done, off })}
           />
         )}
@@ -324,6 +327,13 @@ export function ActivityForm({
           <Button label={t("workouts.saveAsWorkout")} onPress={saveAsWorkout} variant="link" />
         )}
       </KeypadScrollView>
+      {removed !== null && (
+        <Toast
+          message={removed.message}
+          action={{ label: t("tally.undo"), onPress: removed.undo }}
+          onHide={() => setRemoved(null)}
+        />
+      )}
     </KeyboardAvoidingView>
   );
 }

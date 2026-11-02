@@ -38,6 +38,8 @@ export type DoneDetailsProps = {
   /** Beside the first exercise's name, such as a hangboard run's edge and weight. */
   setup?: React.ReactNode;
   onChange: (done: ItemDone[], off: string[]) => void;
+  /** A set with values was removed: say so, with Undo putting it back. */
+  onRemoved?: (message: string, undo: () => void) => void;
 };
 
 /** Typing in a set records it, so it is ticked. */
@@ -59,6 +61,7 @@ export function DoneDetails({
   previous = () => [],
   setup,
   onChange,
+  onRemoved,
 }: DoneDetailsProps): React.ReactElement {
   const edit = (next: ItemDone[]): void => onChange(next, [...off]);
   // A hang set's count, then its load, then the next set's.
@@ -70,8 +73,14 @@ export function DoneDetails({
       : []
   );
   const remove = (d: ItemDone, set: number): void => {
-    const removed = (): void =>
+    const removed = (): void => {
       onChange(removeSet(done, d.item, set), offWithout(off, d.item, set));
+      // An unticked set holds nothing logged, so it goes quietly.
+      if (!off.includes(setKeyOf(d.item, set)))
+        onRemoved?.(t("activities.setRemoved", { n: set + 1 }), () =>
+          onChange([...done], [...off])
+        );
+    };
     if (d.sets.length > 1) {
       removed();
       return;
@@ -158,15 +167,26 @@ export function DoneDetails({
                 />
               );
             })}
-            <Button
-              label={t("activities.addSet")}
-              accessibilityLabel={t("activities.addSetTo", { exercise: d.exercise })}
-              onPress={() => edit(addSet(done, d.item))}
-              variant="outline"
-              icon="plus"
-              height={40}
-              style={{ alignSelf: "flex-start", marginTop: 6 }}
-            />
+            <View style={{ flexDirection: "row", gap: 8, marginTop: 6 }}>
+              <Button
+                label={t("activities.addSet")}
+                accessibilityLabel={t("activities.addSetTo", { exercise: d.exercise })}
+                onPress={() => edit(addSet(done, d.item))}
+                variant="outline"
+                icon="plus"
+                height={40}
+              />
+              {d.sets.length > 1 && (
+                <Button
+                  label={t("activities.removeLastSet")}
+                  accessibilityLabel={t("activities.removeLastSetFrom", { exercise: d.exercise })}
+                  onPress={() => remove(d, d.sets.length - 1)}
+                  variant="outline"
+                  icon="minus"
+                  height={40}
+                />
+              )}
+            </View>
           </View>
         );
       })}

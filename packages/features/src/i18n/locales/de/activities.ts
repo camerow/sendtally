@@ -67,6 +67,9 @@ export const activities = {
   "activities.addSetTo": "Einen Satz zu {exercise} hinzufügen",
   "activities.started": "Gestartet",
   "activities.removeSet": "Satz {n} entfernen",
+  "activities.removeLastSet": "Satz entfernen",
+  "activities.removeLastSetFrom": "Letzten Satz von {exercise} entfernen",
+  "activities.setRemoved": "Satz {n} entfernt",
   "activities.removeLastSetTitle": "{exercise} entfernen?",
   "activities.removeLastSetBody":
     "Das ist ihr letzter Satz, also fällt die Übung aus diesem Eintrag.",
