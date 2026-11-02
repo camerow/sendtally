@@ -1,4 +1,4 @@
-import { disciplineOf } from "@sendtally/core";
+import { disciplineOf, type ManualSessionRow } from "@sendtally/core";
 import {
   and,
   asc,
@@ -65,7 +65,6 @@ import {
   loadKey,
   measureOf,
   type Block,
-  type Focus,
   type GripMeasure,
   type HangSession,
   type HangSettings,
@@ -287,31 +286,7 @@ export async function replaceStoreEntitlements(
   ]);
 }
 
-export type ManualSessionInput = {
-  fingerprint: string;
-  /** Absent leaves the plan link as it was. */
-  membership_id?: string | null;
-  week?: number | null;
-  focus?: Focus | null;
-  location: "indoor" | "outdoor" | null;
-  gym_id: string | null;
-  area_id: string | null;
-  name: string | null;
-  start_at: string;
-  end_at: string;
-  times: "both" | "start" | "end" | "none";
-  climb_count: number;
-  send_count: number;
-  top_grade: number;
-  top_send_grade: number;
-  top_grade_label: string | null;
-  top_send_grade_label: string | null;
-  rpe: number;
-  rpe_source: "user" | "computed" | "none";
-  title: string;
-  summary: string;
-  climbs_json: string;
-};
+export type ManualSessionInput = ManualSessionRow;
 
 const insertLinks = (d: Db, userId: string, fingerprint: string, links: ClimbLink[]) =>
   d.insert(sessionClimbLinks).values(links.map((l) => ({ user_id: userId, fingerprint, ...l })));

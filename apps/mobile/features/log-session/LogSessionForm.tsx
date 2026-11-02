@@ -1,4 +1,3 @@
-import { useQueryClient } from "@tanstack/react-query";
 import { router, useLocalSearchParams } from "expo-router";
 import React from "react";
 import {
@@ -46,7 +45,7 @@ import { useGradeScalePrefs } from "@sendtally/features/settings";
 import { formatDate, t } from "@sendtally/features/i18n";
 import { colors, effortColor, fonts, radius } from "@sendtally/design/tokens";
 import { useApi } from "../../lib/api";
-import { queries } from "@sendtally/features/query";
+import { useSessions } from "../../lib/useSessions";
 import { climbKindStorage } from "../../lib/climbKindStorage";
 import { sessionDraftStorage } from "../../lib/sessionDraftStorage";
 import { confirmDiscardDraft } from "../../lib/confirmDiscardDraft";
@@ -149,7 +148,7 @@ export function LogSessionForm({
   editing?: { fingerprint: string; draft: LogSessionDraft };
 }): React.ReactElement {
   const api = useApi();
-  const client = useQueryClient();
+  const sessions = useSessions();
   const params = useLocalSearchParams<{ resume?: string; wrapUp?: string }>();
   const { resume, wrapUp } = params;
   const [plan] = React.useState(() => readPlanLink(params));
@@ -166,7 +165,6 @@ export function LogSessionForm({
   );
   const [addingTimes, setAddingTimes] = React.useState(false);
   const timesOpen = addingTimes || draft.startTime !== "" || draft.endTime !== "";
-  const [saving, setSaving] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
   const { suggestionsFor } = useTagVocabulary(api);
@@ -294,31 +292,15 @@ export function LogSessionForm({
     });
   }
 
-  async function save(): Promise<void> {
+  function save(): void {
     const problem = draftProblem(draft);
     if (problem !== null) {
       setError(problem);
       return;
     }
-    setSaving(true);
-    setError(null);
-    try {
-      const input = toLogSessionInput(draft);
-      const { session } =
-        editing === undefined
-          ? await api.logSession(input)
-          : await api.updateLoggedSession(editing.fingerprint, input);
-      // The response is written before a Strava post starts, so it opens the
-      // page at once but is stored stale for the page to re-read on mount.
-      client.setQueryData(queries.session(api, session.fingerprint).queryKey, session, {
-        updatedAt: 0,
-      });
-      autosave.clear();
-      router.replace(`/session/${encodeURIComponent(session.fingerprint)}`);
-    } catch {
-      setError(t("logSession.saveFailed"));
-      setSaving(false);
-    }
+    const fingerprint = sessions.save(toLogSessionInput(draft), editing?.fingerprint);
+    autosave.clear();
+    router.replace(`/session/${encodeURIComponent(fingerprint)}`);
   }
 
   function showCragResults(): void {
@@ -792,7 +774,6 @@ export function LogSessionForm({
         <View style={{ flexDirection: "row", gap: 10 }}>
           <Pressable
             onPress={cancel}
-            disabled={saving}
             style={press({
               flex: 1,
               minHeight: 50,
@@ -810,8 +791,7 @@ export function LogSessionForm({
             </Text>
           </Pressable>
           <Pressable
-            onPress={() => void save()}
-            disabled={saving}
+            onPress={save}
             style={{
               flex: 2,
               minHeight: 50,
@@ -819,15 +799,10 @@ export function LogSessionForm({
               justifyContent: "center",
               borderRadius: radius.control,
               backgroundColor: colors.azureInk,
-              opacity: saving ? 0.45 : 1,
             }}
           >
             <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 15, color: colors.white }}>
-              {saving
-                ? t("common.saving")
-                : editing === undefined
-                  ? t("common.done")
-                  : t("logSession.saveChanges")}
+              {editing === undefined ? t("common.done") : t("logSession.saveChanges")}
             </Text>
           </Pressable>
         </View>

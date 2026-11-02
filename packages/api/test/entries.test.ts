@@ -61,6 +61,16 @@ describe("journal entries", () => {
     expect(res.status).toBe(200);
   });
 
+  it("creates under the id the app chose, and a replay saves over it instead of adding one", async () => {
+    const entry = await created("u_entries_client_id", { ...note, id: "entry-1" });
+    expect(entry.id).toBe("entry-1");
+    const replay = await post("u_entries_client_id", { ...note, id: "entry-1", body: "Edited." });
+    expect(replay.status).toBe(200);
+    expect(((await replay.json()) as { entry: Entry }).entry.body).toBe("Edited.");
+    expect(await list("u_entries_client_id")).toHaveLength(1);
+    expect((await post("u_entries_client_id", { ...note, id: "not/an id" })).status).toBe(400);
+  });
+
   it("keeps one user's entries out of another's", async () => {
     await created("u_entries_mine", note);
     expect(await list("u_entries_theirs")).toEqual([]);

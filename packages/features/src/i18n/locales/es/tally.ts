@@ -17,7 +17,6 @@ export const tally = {
   "tally.finish": "Terminar",
   "tally.howHard": "¿Qué tan duro fue?",
   "tally.skipEffort": "Sáltalo y la sesión se valora sola.",
-  "tally.finishFailed": "No se pudo guardar la sesión. Inténtalo de nuevo.",
   "tally.discardSession": "Descartar sesión",
   "tally.discardTitle": "¿Descartar esta sesión?",
   "tally.discardBody": "Todas sus escaladas se van también.",

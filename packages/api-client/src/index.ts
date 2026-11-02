@@ -130,8 +130,9 @@ export class SendtallyApi {
     return body(this.client.v1.sessions[":fingerprint"].$get({ param: { fingerprint } }));
   }
 
-  logSession(input: LogSessionInput): Promise<{ session: SessionDetail }> {
-    return body(this.client.v1.sessions.$post({ json: input }));
+  /** `fingerprint` is the app's own, so a replay saves over the first instead of logging twice. */
+  logSession(input: LogSessionInput, fingerprint?: string): Promise<{ session: SessionDetail }> {
+    return body(this.client.v1.sessions.$post({ json: { ...input, fingerprint } }));
   }
 
   updateLoggedSession(
@@ -165,8 +166,8 @@ export class SendtallyApi {
     return body(this.client.v1.entries[":id"].$get({ param: { id } }));
   }
 
-  createEntry(input: EntryInput): Promise<{ entry: EntryDetail }> {
-    return body(this.client.v1.entries.$post({ json: input }));
+  createEntry(input: EntryInput, id?: string): Promise<{ entry: EntryDetail }> {
+    return body(this.client.v1.entries.$post({ json: { ...input, id } }));
   }
 
   updateEntry(id: string, input: EntryInput): Promise<{ entry: EntryDetail }> {
@@ -226,8 +227,8 @@ export class SendtallyApi {
     return body(this.client.v1.gyms.$get());
   }
 
-  createGym(input: GymInput): Promise<{ gym: Gym | null }> {
-    return body(this.client.v1.gyms.$post({ json: input }));
+  createGym(input: GymInput, id?: string): Promise<{ gym: Gym | null }> {
+    return body(this.client.v1.gyms.$post({ json: { ...input, id } }));
   }
 
   updateGym(id: string, input: GymInput): Promise<{ gym: Gym | null }> {

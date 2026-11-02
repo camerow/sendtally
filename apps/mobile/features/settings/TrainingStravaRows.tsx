@@ -1,5 +1,4 @@
 import React from "react";
-import { Alert } from "react-native";
 import { useHang, useHangActions } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import type { StravaPostingFeature } from "@sendtally/features/settings";
@@ -10,13 +9,11 @@ export type TrainingStravaRowsProps = {
   posting: StravaPostingFeature;
 };
 
-const reportFailure = (): void => Alert.alert(t("hang.saveFailed"));
-
 /** Training mode's own Strava switches: hangboard sessions, and every other kind of training. */
 export function TrainingStravaRows({ posting }: TrainingStravaRowsProps): React.ReactElement {
   const api = useApi();
   const hang = useHang(api).state;
-  const actions = useHangActions(api, reportFailure);
+  const actions = useHangActions(api);
   return (
     <>
       <SwitchRow

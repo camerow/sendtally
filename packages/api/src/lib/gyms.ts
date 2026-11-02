@@ -1,19 +1,9 @@
-import { boulderGradeFromV, formatGrade } from "@sendtally/core";
+import { boulderGradeFromV, CIRCUIT_COLOURS, formatGrade } from "@sendtally/core";
 import { z } from "zod";
+import { id } from "./plan";
 import type { GymRow } from "./repo";
 
-export const CIRCUIT_COLOURS = [
-  "red",
-  "orange",
-  "yellow",
-  "green",
-  "blue",
-  "purple",
-  "black",
-  "white",
-] as const;
-
-export type CircuitColour = (typeof CIRCUIT_COLOURS)[number];
+export { CIRCUIT_COLOURS, type CircuitColour } from "@sendtally/core";
 
 const circuitSchema = z
   .object({
@@ -31,6 +21,8 @@ export const gymBody = z.object({
   circuits: z.array(circuitSchema).max(30).default([]),
   walls: z.array(z.string().trim().min(1).max(40)).max(60).default([]),
 });
+
+export const newGymBody = gymBody.extend({ id: id.optional() });
 
 export type GymInput = z.input<typeof gymBody>;
 export type Circuit = z.infer<typeof circuitSchema>;

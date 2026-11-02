@@ -1,20 +1,5 @@
-import {
-  defaultEffortConfig,
-  disciplineOf,
-  effortGrade,
-  isEndurance,
-  parseGrade,
-  score,
-  topGradeLabel,
-  type Climb,
-  type ClimbKind,
-  type ClimbStyle,
-  type Endurance,
-  type Grade,
-  type Session,
-} from "@sendtally/core";
+import { disciplineOf, parseGrade, sessionMinutes } from "@sendtally/core";
 import { z } from "zod";
-import type { ManualSessionInput } from "./repo";
 import { CIRCUIT_COLOURS } from "./gyms";
 import { focus, id, MAX_BLOCK_WEEKS } from "./plan";
 import { tagNames, tagSlug } from "./tags";
@@ -188,6 +173,13 @@ export const manualSessionBody = manualSessionShape.superRefine((body, ctx) => {
   linksConsistent(body, ctx);
 });
 
+export const newManualSessionBody = manualSessionBody.safeExtend({
+  fingerprint: z
+    .string()
+    .regex(/^manual-[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/)
+    .optional(),
+});
+
 export type ClimbLink = { climb_slug: string; climb_id: string };
 
 export function climbLinksOf(climbs: ManualSessionBody["climbs"]): ClimbLink[] {
@@ -202,188 +194,13 @@ export function climbLinksOf(climbs: ManualSessionBody["climbs"]): ClimbLink[] {
 
 export type ManualSessionBody = z.infer<typeof manualSessionShape>;
 
-const DEFAULT_START = "12:00";
-const DEFAULT_DURATION_MINUTES = 90;
-
-function minutesOf(hhmm: string): number {
-  return Number(hhmm.slice(0, 2)) * 60 + Number(hhmm.slice(3, 5));
-}
-
-function sessionMinutes(body: {
-  startTime?: string | undefined;
-  endTime?: string | undefined;
-}): number {
-  if (body.startTime === undefined || body.endTime === undefined) return DEFAULT_DURATION_MINUTES;
-  const diff = minutesOf(body.endTime) - minutesOf(body.startTime);
-  return diff < 0 ? diff + 24 * 60 : Math.max(diff, 1);
-}
-
-type ManualGrade = z.infer<typeof gradeSchema>;
-
-function normalisedGrade(grade: ManualGrade): Grade {
-  if (grade.scale === "v") return grade;
-  return parseGrade(grade.scale, grade.value) ?? grade;
-}
-
-function timesOf(body: ManualSessionBody): ManualSessionInput["times"] {
-  if (body.startTime !== undefined) return body.endTime === undefined ? "start" : "both";
-  return body.endTime === undefined ? "none" : "end";
-}
-
-function locationOf(body: ManualSessionBody): ManualSessionInput["location"] {
-  if (body.location !== undefined) return body.location;
-  if (body.areaId !== undefined) return "outdoor";
-  return body.gymId === undefined ? null : "indoor";
-}
-
-function rpeSourceOf(body: ManualSessionBody): ManualSessionInput["rpe_source"] {
-  if (body.unscored === true) return "none";
-  return body.rpe === undefined ? "computed" : "user";
-}
-
-function toSession(body: ManualSessionBody): Session {
-  const durationMs = sessionMinutes(body) * 60_000;
-  const start =
-    body.startTime === undefined && body.endTime !== undefined
-      ? new Date(
-          Math.max(
-            Date.parse(`${body.date}T${body.endTime}:00Z`) - durationMs,
-            Date.parse(`${body.date}T00:00:00Z`)
-          )
-        )
-      : new Date(`${body.date}T${body.startTime ?? DEFAULT_START}:00Z`);
-  const end = new Date(start.getTime() + durationMs);
-  const step = durationMs / Math.max(body.climbs.length - 1, 1);
-  const climbs: Climb[] = body.climbs.map((c, i) => {
-    const grade = normalisedGrade(c.grade);
-    return {
-      time: new Date(start.getTime() + Math.round(step * i)),
-      vGrade: effortGrade(grade),
-      name: c.name,
-      kind: c.kind,
-      ...(c.style === undefined ? {} : { style: c.style }),
-      tries: c.tries,
-      grade,
-      ...(c.endurance === undefined ? {} : { endurance: c.endurance }),
-    };
-  });
-  return { start, end, climbs };
-}
-
-// The shape `climbs_json` holds: every climb the user logged, as written by
-// buildManualSession and read back by the session endpoints.
-export type StoredClimb = {
-  time: string;
-  name: string;
-  vGrade: number;
-  kind: ClimbKind;
-  style?: ClimbStyle;
-  tries: number;
-  angle: number | null;
-  grade?: Grade;
-  circuit?: CircuitRef;
-  wall?: string;
-  endurance?: Endurance;
-  userClimbId?: string;
-};
-
-export type CircuitRef = z.infer<typeof circuitRefSchema>;
-
-function placeOf(climb: ManualSessionBody["climbs"][number] | undefined): Partial<StoredClimb> {
-  if (climb === undefined) return {};
-  const wall = climb.wall?.trim() ?? "";
-  return {
-    ...(climb.circuit === undefined ? {} : { circuit: climb.circuit }),
-    ...(wall === "" ? {} : { wall }),
-    ...(climb.userClimbId === undefined ? {} : { userClimbId: climb.userClimbId }),
-  };
-}
-
-export function parseClimbs(climbsJson: string | null | undefined): StoredClimb[] {
-  return climbsJson == null ? [] : (JSON.parse(climbsJson) as StoredClimb[]);
-}
-
-export function historySession(row: {
-  start_at: string;
-  end_at: string;
-  climbs_json?: string | null;
-}): Session | null {
-  if (row.climbs_json == null) return null;
-  return {
-    start: new Date(row.start_at),
-    end: new Date(row.end_at),
-    climbs: parseClimbs(row.climbs_json).map((c) => ({
-      time: new Date(c.time),
-      vGrade: c.vGrade,
-      name: c.name,
-      kind: c.kind,
-      tries: c.tries,
-      ...(c.endurance === undefined ? {} : { endurance: c.endurance }),
-    })),
-  };
-}
-
-function planLinkOf(
-  body: ManualSessionBody
-): Pick<ManualSessionInput, "membership_id" | "week" | "focus"> {
-  return {
-    ...(body.membershipId === undefined
-      ? {}
-      : { membership_id: body.membershipId, week: body.week ?? null }),
-    ...(body.focus === undefined ? {} : { focus: body.focus }),
-  };
-}
-
-export function buildManualSession(
-  fingerprint: string,
-  body: ManualSessionBody,
-  history: Session[]
-): ManualSessionInput {
-  const session = toSession(body);
-  const result = score(session, history, defaultEffortConfig(), body.rpe);
-  const graded = session.climbs.filter((c) => !isEndurance(c));
-  const topGrade = graded.reduce((hi, c) => (c.vGrade > hi ? c.vGrade : hi), -1);
-  const topSendGrade = graded.reduce(
-    (hi, c) => (c.kind === "send" && c.vGrade > hi ? c.vGrade : hi),
-    -1
-  );
-  const sends = graded.filter((c) => c.kind === "send");
-  return {
-    fingerprint,
-    location: locationOf(body),
-    gym_id: body.gymId ?? null,
-    area_id: body.areaId ?? null,
-    name: body.name ?? null,
-    start_at: session.start.toISOString(),
-    end_at: session.end.toISOString(),
-    times: timesOf(body),
-    climb_count: session.climbs.length,
-    send_count: sends.length,
-    top_grade: topGrade,
-    top_send_grade: topSendGrade,
-    top_grade_label: topGradeLabel(graded) ?? null,
-    top_send_grade_label: topGradeLabel(sends) ?? null,
-    rpe: result.rpe,
-    rpe_source: rpeSourceOf(body),
-    title: body.name ?? result.title,
-    summary: result.summary,
-    ...planLinkOf(body),
-    climbs_json: JSON.stringify(
-      session.climbs.map((c, i): StoredClimb => ({
-        time: c.time.toISOString(),
-        name: c.name,
-        vGrade: c.vGrade,
-        kind: c.kind,
-        ...(c.style === undefined ? {} : { style: c.style }),
-        tries: c.tries,
-        angle: null,
-        grade: c.grade,
-        ...(c.endurance === undefined ? {} : { endurance: c.endurance }),
-        ...placeOf(body.climbs[i]),
-      }))
-    ),
-  };
-}
+export {
+  buildManualSession,
+  historySession,
+  parseClimbs,
+  type CircuitRef,
+  type StoredClimb,
+} from "@sendtally/core";
 
 // What the log-session form sends. Derived from the validator, so a schema
 // change reaches the apps as a type error rather than a runtime rejection.

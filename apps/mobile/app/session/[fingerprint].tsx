@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from "expo-router";
 import React from "react";
-import { Alert, Linking, ScrollView, Text, View } from "react-native";
+import { Linking, ScrollView, Text, View } from "react-native";
 import {
   CLIMB_SORTS,
   climbSortLabel,
@@ -33,6 +33,7 @@ import { stravaRow } from "../../features/training/summary/stravaRow";
 import { effortTile } from "../../features/training/summary/summaryText";
 import { SummaryTiles } from "../../features/training/summary/SummaryTiles";
 import { useApi } from "../../lib/api";
+import { useSessions } from "../../lib/useSessions";
 
 const RESULT_BADGES: Record<ClimbVM["result"], { bg: string; border: string; color: string }> = {
   onsight: { bg: colors.petalInk, border: colors.petalInk, color: colors.white },
@@ -44,6 +45,7 @@ const RESULT_BADGES: Record<ClimbVM["result"], { bg: string; border: string; col
 export default function SessionDetailScreen(): React.ReactElement {
   const { fingerprint } = useLocalSearchParams<{ fingerprint: string }>();
   const api = useApi();
+  const sessions = useSessions();
   const feature = useSessionDetail(api, fingerprint ?? "");
   const { state, filter, setFilter, sort, setSort } = feature;
   const { run, refresh } = feature.post;
@@ -67,12 +69,7 @@ export default function SessionDetailScreen(): React.ReactElement {
     title: t("sessions.deleteSession"),
     hint: strava?.kind === "posted" ? t("summary.deleteHintStrava") : t("summary.deleteHint"),
     confirm: { title: t("sessions.deleteTitle"), body: t("sessions.deleteBody") },
-    onDelete: () =>
-      void api
-        .deleteLoggedSession(fingerprint ?? "")
-        .catch(() =>
-          Alert.alert(t("sessions.deleteFailed"), t("common.somethingWentWrongTryAgain"))
-        ),
+    onDelete: () => sessions.remove(fingerprint ?? ""),
   });
   const onStrava = (): void => {
     if (strava?.kind === "posted") void Linking.openURL(strava.url);

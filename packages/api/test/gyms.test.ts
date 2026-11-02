@@ -56,6 +56,24 @@ describe("gyms", () => {
     expect(again.status).toBe(404);
   });
 
+  it("creates under the id the app chose, and a replay saves over it instead of adding one", async () => {
+    const user = { ...headers, "x-test-user": "user_gyms_client_id" };
+    const save = (name: string) =>
+      testApp().request(
+        "/v1/gyms",
+        { method: "POST", headers: user, body: JSON.stringify({ id: "gym-1", name }) },
+        env
+      );
+    const first = await save("Boulder Barn");
+    expect(first.status).toBe(201);
+    expect(((await first.json()) as { gym: { id: string } }).gym.id).toBe("gym-1");
+    const replay = await save("The Barn");
+    expect(replay.status).toBe(200);
+    const listed = await testApp().request("/v1/gyms", { headers: user }, env);
+    const { gyms } = (await listed.json()) as { gyms: Array<{ name: string }> };
+    expect(gyms.map((g) => g.name)).toEqual(["The Barn"]);
+  });
+
   it("rejects a backwards circuit range", async () => {
     const res = await testApp().request(
       "/v1/gyms",

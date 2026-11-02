@@ -53,3 +53,17 @@ export {
   type EffortResult,
 } from "./effort";
 export { DUPLICATE_THRESHOLD, isLikelyDuplicate, nameSimilarity } from "./similarity";
+export {
+  buildManualSession,
+  CIRCUIT_COLOURS,
+  historySession,
+  parseClimbs,
+  sessionMinutes,
+  type CircuitColour,
+  type CircuitRef,
+  type ManualClimbForm,
+  type ManualSessionForm,
+  type ManualSessionRow,
+  type StoredClimb,
+} from "./manual";
+export { normalizeTagName, tagSlug, type NormalizedTag } from "./tags";

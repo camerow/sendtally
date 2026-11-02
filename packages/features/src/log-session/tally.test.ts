@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import type { LocalSessions } from "./useLocalSessions";
 import type { Gym } from "../gyms/types";
 import { draftStorage, writeStoredDraft, type DraftStorage } from "./draftStore";
 import {
@@ -8,7 +9,6 @@ import {
   tallyElapsedSeconds,
   tallySummary,
   withTallyGo,
-  type FinishApi,
 } from "./tally";
 import { toLogSessionInput } from "./transforms";
 
@@ -61,7 +61,7 @@ describe("tally", () => {
     expect(tallyElapsedSeconds(older, new Date(2026, 9, 28, 1, 2, 31))).toBe(72 * 60);
   });
 
-  it("writes to the server once, on finish, with the end time and effort", async () => {
+  it("saves once, on finish, with the end time and effort", () => {
     let value: string | null = null;
     const storage: DraftStorage = draftStorage({
       read: () => value,
@@ -72,32 +72,22 @@ describe("tally", () => {
         value = null;
       },
     });
-    const session = { fingerprint: "manual-1" } as Awaited<
-      ReturnType<FinishApi["logSession"]>
-    >["session"];
-    const api: FinishApi = {
-      logSession: vi.fn(async () => ({ session })),
-      updateLoggedSession: vi.fn(async () => ({ session })),
-    };
+    const save = vi.fn<LocalSessions["save"]>(() => "manual-1");
     const { draft } = newTallyClimb(
       tallyDraft(NOW),
       { kind: "grade", scale: "v", grade: "V4" },
       "sent"
     );
     writeStoredDraft(storage, draft, NOW);
-    expect(await finishLiveSession(api, storage, 7, new Date(2026, 9, 27, 20, 5))).toBe("manual-1");
-    expect(api.logSession).toHaveBeenCalledTimes(1);
-    expect(vi.mocked(api.logSession).mock.calls[0]?.[0]).toMatchObject({
-      startTime: "18:30",
-      endTime: "20:05",
-      rpe: 7,
-    });
-    expect(api.updateLoggedSession).not.toHaveBeenCalled();
+    expect(finishLiveSession(save, storage, 7, new Date(2026, 9, 27, 20, 5))).toBe("manual-1");
+    expect(save).toHaveBeenCalledTimes(1);
+    expect(save.mock.calls[0]?.[0]).toMatchObject({ startTime: "18:30", endTime: "20:05", rpe: 7 });
+    expect(save.mock.calls[0]?.[1]).toBeUndefined();
     expect(value).toBeNull();
 
     writeStoredDraft(storage, tallyDraft(NOW), NOW);
-    expect(await finishLiveSession(api, storage, null, new Date(2026, 9, 27, 20, 10))).toBeNull();
-    expect(api.logSession).toHaveBeenCalledTimes(1);
+    expect(finishLiveSession(save, storage, null, new Date(2026, 9, 27, 20, 10))).toBeNull();
+    expect(save).toHaveBeenCalledTimes(1);
     expect(value).toBeNull();
   });
 });

@@ -17,7 +17,6 @@ export const tally = {
   "tally.finish": "Beenden",
   "tally.howHard": "Wie hart war es?",
   "tally.skipEffort": "Lass es weg, dann bewertet sich die Session selbst.",
-  "tally.finishFailed": "Die Session konnte nicht gespeichert werden. Versuch es noch einmal.",
   "tally.discardSession": "Session verwerfen",
   "tally.discardTitle": "Diese Session verwerfen?",
   "tally.discardBody": "Alle Klettereien darin gehen mit.",

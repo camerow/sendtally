@@ -90,7 +90,6 @@ export {
   tallyElapsedSeconds,
   tallySummary,
   withTallyGo,
-  type FinishApi,
   type TallyChoice,
   type TallyGo,
   type TallyStart,
@@ -156,3 +155,12 @@ export type {
   GradeScaleOption,
   LogSessionDraft,
 } from "./types";
+export {
+  formOf,
+  localSession,
+  sessionRowOf,
+  sessionWithClimbsOf,
+  withoutSession,
+  withSession,
+} from "./localSession";
+export { useLocalSessions, type LocalSessions } from "./useLocalSessions";

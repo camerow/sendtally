@@ -43,6 +43,7 @@ import { colors, fonts } from "@sendtally/design/tokens";
 import { Icon } from "../../components/Icon";
 import { LIVE_HEADER, leaveLiveScreen, MinimiseButton } from "../../components/MinimiseButton";
 import { useApi } from "../../lib/api";
+import { useSessions } from "../../lib/useSessions";
 import { climbKindStorage } from "../../lib/climbKindStorage";
 import { exerciseTallyStorage } from "../../lib/exerciseTallyStorage";
 import { liveSessionStorage } from "../../lib/liveSessionStorage";
@@ -91,6 +92,7 @@ export type TallyScreenProps = {
 /** The gym session as it happens: a grade starts a climb, then Fell or Sent for each go. */
 export function TallyScreen({ exercise = false }: TallyScreenProps): React.ReactElement {
   const api = useApi();
+  const localSessions = useSessions();
   const params = useLocalSearchParams();
   const plan = readPlanLink(params);
   const live = useLiveSession(exercise ? exerciseTallyStorage : liveSessionStorage);
@@ -108,8 +110,6 @@ export function TallyScreen({ exercise = false }: TallyScreenProps): React.React
   const [editing, setEditing] = React.useState<string | null>(null);
   const [picking, setPicking] = React.useState(false);
   const [finishing, setFinishing] = React.useState(params.finish === "1");
-  const [saving, setSaving] = React.useState(false);
-  const [failed, setFailed] = React.useState(false);
   const [discipline, setDiscipline] = React.useState<Discipline>(() =>
     readClimbKind(climbKindStorage, []) === "route" ? "route" : "boulder"
   );
@@ -245,19 +245,10 @@ export function TallyScreen({ exercise = false }: TallyScreenProps): React.React
   };
 
   const save = (rpe: number | null): void => {
-    setSaving(true);
-    setFailed(false);
-    finishLiveSession(api, liveSessionStorage, rpe).then(
-      (fingerprint) => {
-        setFinishing(false);
-        if (fingerprint === null) leaveLiveScreen();
-        else router.replace({ pathname: "/session/[fingerprint]", params: { fingerprint } });
-      },
-      () => {
-        setSaving(false);
-        setFailed(true);
-      }
-    );
+    const fingerprint = finishLiveSession(localSessions.save, liveSessionStorage, rpe);
+    setFinishing(false);
+    if (fingerprint === null) leaveLiveScreen();
+    else router.replace({ pathname: "/session/[fingerprint]", params: { fingerprint } });
   };
 
   const pick = (chip: string): void => {
@@ -554,8 +545,6 @@ export function TallyScreen({ exercise = false }: TallyScreenProps): React.React
       <FinishSheet
         visible={finishing}
         summary={finishSummary(draft, minutes)}
-        saving={saving}
-        failed={failed}
         onSave={save}
         onDiscard={discard}
         onClose={() => setFinishing(false)}
