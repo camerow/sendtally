@@ -9,8 +9,6 @@ import { press } from "../../lib/press";
 export type FinishSheetProps = {
   visible: boolean;
   summary: string;
-  saving: boolean;
-  failed: boolean;
   onSave: (rpe: number | null) => void;
   onDiscard: () => void;
   onClose: () => void;
@@ -22,8 +20,6 @@ const LEVELS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] as const;
 export function FinishSheet({
   visible,
   summary,
-  saving,
-  failed,
   onSave,
   onDiscard,
   onClose,
@@ -82,27 +78,19 @@ export function FinishSheet({
         <Text style={{ fontFamily: fonts.sans, fontSize: 14, color: colors.textSecondary }}>
           {hint}
         </Text>
-        {failed && (
-          <Text style={{ fontFamily: fonts.mono, fontSize: 12, color: colors.watermelonInk }}>
-            {t("tally.finishFailed")}
-          </Text>
-        )}
         <Pressable
           onPress={() => onSave(rpe)}
-          disabled={saving}
           accessibilityRole="button"
-          accessibilityState={{ disabled: saving }}
           style={press({
             height: 54,
             borderRadius: radius.card,
             alignItems: "center",
             justifyContent: "center",
             backgroundColor: colors.gunmetal,
-            opacity: saving ? 0.6 : 1,
           })}
         >
           <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 16, color: colors.white }}>
-            {saving ? t("common.saving") : t("common.save")}
+            {t("common.save")}
           </Text>
         </Pressable>
         <Pressable

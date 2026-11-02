@@ -17,7 +17,6 @@ export const tally = {
   "tally.finish": "Finish",
   "tally.howHard": "How hard was it?",
   "tally.skipEffort": "Skip it and the session rates itself.",
-  "tally.finishFailed": "Could not save the session. Try again.",
   "tally.discardSession": "Discard session",
   "tally.discardTitle": "Discard this session?",
   "tally.discardBody": "Every climb in it goes too.",

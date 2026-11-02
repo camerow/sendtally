@@ -3,11 +3,17 @@ import { draftStorage, type DraftStorage } from "@sendtally/features/log-session
 
 let owner: string | null = null;
 const stores: DraftStorage[] = [];
+const ownerListeners = new Set<() => void>();
 
 export function setDraftOwner(userId: string | null): void {
   if (userId === owner) return;
   owner = userId;
   stores.forEach((s) => s.changed());
+  ownerListeners.forEach((listener) => listener());
+}
+
+export function onDraftOwnerChange(listener: () => void): void {
+  ownerListeners.add(listener);
 }
 
 /** A draft in a file of the signed-in account's own, so another account on this phone never opens it. */

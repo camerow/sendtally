@@ -21,6 +21,9 @@ const mockApi = {
 };
 
 jest.mock("../../lib/api", () => ({ useApi: () => mockApi }));
+jest.mock("../../lib/useSessions", () => ({
+  useSessions: () => ({ save: () => "manual-1", remove: () => undefined }),
+}));
 jest.mock("../../lib/liveRunStorage");
 jest.mock("../../components/Sheet", () => ({
   Sheet: ({ visible, children }: { visible: boolean; children: React.ReactNode }) =>

@@ -1,8 +1,9 @@
-import type { LogSessionInput, PlanLink, SessionDetail } from "@sendtally/api-client";
+import type { PlanLink } from "@sendtally/api-client";
 import { withCircuit } from "../gyms/draft";
 import type { Circuit, Gym } from "../gyms/types";
 import { t } from "../i18n";
 import { parseStoredDraft, type DraftStorage } from "./draftStore";
+import type { LocalSessions } from "./useLocalSessions";
 import { liveDraft } from "./liveSession";
 import { newClimb, nextClimbKey, toLogSessionInput, withTries } from "./transforms";
 import type { ClimbDraft, GradeScale, LogSessionDraft } from "./types";
@@ -91,26 +92,17 @@ export function tallyElapsedSeconds(draft: LogSessionDraft, now: Date): number {
   return Math.max(0, Math.floor((now.getTime() - started) / 1000));
 }
 
-export type FinishApi = {
-  logSession: (input: LogSessionInput) => Promise<{ session: SessionDetail }>;
-  updateLoggedSession: (
-    fingerprint: string,
-    input: LogSessionInput
-  ) => Promise<{ session: SessionDetail }>;
-};
-
 /**
- * Ends the live session, its one write to the server: saved with its end time and the effort
- * given, or scored by the server when none was, and the device copy goes. A session with no
- * climbs is simply dropped. Resolves to the saved session's fingerprint, or null when there was
- * nothing to save.
+ * Ends the live session, its one write: saved with its end time and the effort given, or scored
+ * when none was, and the device copy goes. A session with no climbs is simply dropped. Returns
+ * the saved session's fingerprint, or null when there was nothing to save.
  */
-export async function finishLiveSession(
-  api: FinishApi,
+export function finishLiveSession(
+  save: LocalSessions["save"],
   storage: DraftStorage,
   rpe: number | null,
   now: Date = new Date()
-): Promise<string | null> {
+): string | null {
   const stored = parseStoredDraft(storage.read(), now);
   if (stored === null) return null;
   if (stored.draft.climbs.length === 0) {
@@ -118,10 +110,7 @@ export async function finishLiveSession(
     return null;
   }
   const input = toLogSessionInput({ ...stored.draft, endTime: clockTime(now), rpe });
-  const { session } =
-    stored.fingerprint === undefined
-      ? await api.logSession(input)
-      : await api.updateLoggedSession(stored.fingerprint, input);
+  const fingerprint = save(input, stored.fingerprint);
   storage.remove();
-  return session.fingerprint;
+  return fingerprint;
 }

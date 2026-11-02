@@ -86,4 +86,5 @@ export const common = {
   "common.subtractAmount": "{amount} abziehen",
   "common.changeSign": "Vorzeichen wechseln",
   "common.decimalPoint": "Dezimalkomma",
+  "common.changeRefused": "Eine Änderung ließ sich nicht speichern und wurde zurückgenommen.",
 } as const;

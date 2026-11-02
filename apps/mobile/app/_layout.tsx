@@ -24,6 +24,7 @@ import React from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { colors } from "@sendtally/design/tokens";
 import { resolveLocale, setLocale } from "@sendtally/features/i18n";
+import { OutboxProvider } from "@sendtally/features/outbox";
 import { AnalyticsProvider } from "../features/analytics/AnalyticsProvider";
 import { AlreadyRunningSheet } from "../features/live-session/AlreadyRunningSheet";
 import { BillingProvider } from "../features/billing/BillingProvider";
@@ -31,6 +32,7 @@ import { useLiveHold } from "../features/training/hold/useLiveHold";
 import { useRestTone } from "../features/training/rest/useRestTone";
 import { ReminderPromptProvider } from "../features/training/reminders/ReminderPromptProvider";
 import { CLERK_PUBLISHABLE_KEY } from "../lib/config";
+import { outbox } from "../lib/api";
 import { QueryProvider } from "../lib/QueryProvider";
 import { useFreshInstallUpdate } from "../features/app-update/useFreshInstallUpdate";
 import { useUpdateCheckOnForeground } from "../features/app-update/useUpdateCheckOnForeground";
@@ -134,15 +136,17 @@ function RootLayout(): React.ReactElement | null {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY} tokenCache={tokenCache}>
         <QueryProvider>
-          <AnalyticsProvider>
-            <BillingProvider>
-              <BottomSheetModalProvider>
-                <InteractiveMarker />
-                <StatusBar style="dark" />
-                <AppStack />
-              </BottomSheetModalProvider>
-            </BillingProvider>
-          </AnalyticsProvider>
+          <OutboxProvider outbox={outbox}>
+            <AnalyticsProvider>
+              <BillingProvider>
+                <BottomSheetModalProvider>
+                  <InteractiveMarker />
+                  <StatusBar style="dark" />
+                  <AppStack />
+                </BottomSheetModalProvider>
+              </BillingProvider>
+            </AnalyticsProvider>
+          </OutboxProvider>
         </QueryProvider>
       </ClerkProvider>
     </GestureHandlerRootView>

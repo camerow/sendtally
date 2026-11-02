@@ -6,9 +6,7 @@ import type { LogSessionInput } from "@sendtally/api-client";
 import type * as LogSession from "@sendtally/features/log-session";
 import { LogSessionForm } from "./LogSessionForm";
 
-const mockLogSession = jest.fn(async (input: LogSessionInput) => ({
-  session: { fingerprint: "manual-1", input },
-}));
+const mockLogSession = jest.fn((_input: LogSessionInput, _fingerprint?: string) => "manual-1");
 const mockReplace = jest.fn();
 
 jest.mock("expo-router", () => ({
@@ -17,7 +15,7 @@ jest.mock("expo-router", () => ({
 }));
 jest.mock("../../lib/api", () => {
   const api = new Proxy(
-    { logSession: (input: LogSessionInput) => mockLogSession(input) },
+    {},
     {
       get: (target, key) => {
         if (key in target) return target[key as keyof typeof target];
@@ -27,6 +25,9 @@ jest.mock("../../lib/api", () => {
   );
   return { useApi: () => api };
 });
+jest.mock("../../lib/useSessions", () => ({
+  useSessions: () => ({ save: mockLogSession, remove: jest.fn() }),
+}));
 jest.mock("@sendtally/features/settings", () => ({
   useGradeScalePrefs: () => ({
     scales: jest.requireActual<typeof LogSession>("@sendtally/features/log-session")

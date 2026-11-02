@@ -1,13 +1,9 @@
 import React from "react";
-import { Alert } from "react-native";
 import { useHang, useHangActions } from "@sendtally/features/hang";
-import { t } from "@sendtally/features/i18n";
 import { useApi } from "../../../lib/api";
 import { HangDataContext } from "./HangDataContext";
 import { LoadState } from "./LoadState";
 import { useToday } from "./useToday";
-
-const reportFailure = (): void => Alert.alert(t("hang.saveFailed"));
 
 export type HangDataProviderProps = {
   children: React.ReactNode;
@@ -20,7 +16,7 @@ export type HangDataProviderProps = {
 function Loader({ children, fallback, framed }: HangDataProviderProps): React.ReactElement {
   const api = useApi();
   const { state, reload } = useHang(api);
-  const actions = useHangActions(api, reportFailure);
+  const actions = useHangActions(api);
   const today = useToday();
   const model = state.status === "ready" ? state.data : null;
   const value = React.useMemo(

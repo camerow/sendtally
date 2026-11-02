@@ -1,5 +1,12 @@
 import { queryOptions, type QueryKey } from "@tanstack/react-query";
-import type { SendtallyApi } from "@sendtally/api-client";
+import type {
+  HangData,
+  SendtallyApi,
+  SessionDetail,
+  SessionLog,
+  SessionLogWithClimbs,
+} from "@sendtally/api-client";
+import { whileQueued } from "../outbox/held";
 
 /** An area row is cheap to fetch again and is only worth keeping while its screen is near. */
 const ROW_GC_TIME = 5 * 60 * 1000;
@@ -14,13 +21,19 @@ export const queries = {
   entitlements: (api: SendtallyApi) =>
     queryOptions({ queryKey: ["entitlements"], queryFn: () => api.entitlements() }),
   sessions: (api: SendtallyApi) =>
-    queryOptions({ queryKey: ["sessions"], queryFn: () => api.sessions() }),
+    queryOptions({
+      queryKey: ["sessions"],
+      queryFn: whileQueued<SessionLog>(() => api.sessions()),
+    }),
   sessionsWithClimbs: (api: SendtallyApi) =>
-    queryOptions({ queryKey: ["sessionsWithClimbs"], queryFn: () => api.sessionsWithClimbs() }),
+    queryOptions({
+      queryKey: ["sessionsWithClimbs"],
+      queryFn: whileQueued<SessionLogWithClimbs>(() => api.sessionsWithClimbs()),
+    }),
   session: (api: SendtallyApi, fingerprint: string) =>
     queryOptions({
       queryKey: ["session", fingerprint],
-      queryFn: async () => (await api.session(fingerprint)).session,
+      queryFn: whileQueued<SessionDetail>(async () => (await api.session(fingerprint)).session),
       refetchInterval: (query) =>
         query.state.data?.post_state === "pending" ? POST_POLL_INTERVAL : false,
     }),
@@ -69,7 +82,7 @@ export const queries = {
   hang: (api: SendtallyApi) =>
     queryOptions({
       queryKey: ["hang"],
-      queryFn: () => api.hang(),
+      queryFn: whileQueued<HangData>(() => api.hang()),
       refetchInterval: (query) =>
         query.state.data?.sessions.some((s) => s.postState === "pending") === true
           ? POST_POLL_INTERVAL

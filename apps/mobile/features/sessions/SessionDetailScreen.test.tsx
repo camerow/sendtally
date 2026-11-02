@@ -5,9 +5,8 @@ import React from "react";
 import { Alert, Linking, type AlertButton } from "react-native";
 import SessionDetailScreen from "../../app/session/[fingerprint]";
 
-const mockApi = {
-  deleteLoggedSession: jest.fn<(fingerprint: string) => Promise<unknown>>(),
-};
+const mockApi = {};
+const mockRemove = jest.fn<(fingerprint: string) => void>();
 const mockReload = jest.fn(async () => undefined);
 let mockState: unknown;
 let mockStrava: unknown = null;
@@ -19,6 +18,9 @@ jest.mock("expo-router", () => ({
   useLocalSearchParams: () => ({ fingerprint: "manual-1" }),
 }));
 jest.mock("../../lib/api", () => ({ useApi: () => mockApi }));
+jest.mock("../../lib/useSessions", () => ({
+  useSessions: () => ({ save: jest.fn(), remove: mockRemove }),
+}));
 jest.mock("../../components/Sheet", () => ({
   Sheet: ({ visible, children }: { visible: boolean; children: React.ReactNode }) =>
     visible ? children : null,
@@ -142,15 +144,14 @@ describe("Climbing session detail", () => {
 
   it("deletes only once confirmed, then goes back", async () => {
     const alert = jest.spyOn(Alert, "alert").mockImplementation(() => undefined);
-    mockApi.deleteLoggedSession.mockResolvedValue({ deleted: true });
     await render(<SessionDetailScreen />);
     await fireEvent.press(screen.getByLabelText("More"));
     await fireEvent.press(screen.getByText("Delete session"));
     expect(alert.mock.calls[0]?.[0]).toBe("Delete session?");
-    expect(mockApi.deleteLoggedSession).not.toHaveBeenCalled();
+    expect(mockRemove).not.toHaveBeenCalled();
     const buttons = (alert.mock.calls[0]?.[2] ?? []) as AlertButton[];
     await act(async () => buttons.find((b) => b.style === "destructive")?.onPress?.());
-    expect(mockApi.deleteLoggedSession).toHaveBeenCalledWith("manual-1");
+    expect(mockRemove).toHaveBeenCalledWith("manual-1");
     expect(router.back).toHaveBeenCalled();
     expect(router.replace).not.toHaveBeenCalled();
     alert.mockRestore();

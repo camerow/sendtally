@@ -2,6 +2,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import React from "react";
 import type { HangData, HangSessionRecord, SendtallyApi } from "@sendtally/api-client";
 import type { Grip, HangSession, HangSettings } from "@sendtally/core/hang";
+import { patch, useLocalWrite, type LocalOp } from "../outbox";
 import { queries } from "../query";
 
 export type HangActions = {
@@ -28,42 +29,28 @@ const pendingRecord = (session: HangSession, previous?: HangSessionRecord): Hang
   updatedAt: new Date().toISOString(),
 });
 
-// ponytail: one chain for every hangboard write, so two quick taps on a load
-// reach the server in the order they were made. Per-key queues if it ever lags.
-let chain: Promise<unknown> = Promise.resolve();
-
 /**
- * Writes apply to the cache at once and go to the server in order behind it.
- * A failed write refetches, so the screen falls back to what the server holds,
- * and is reported through `onError`; the returned promises never reject.
+ * Writes apply to the cache and the outbox at once; the outbox sends them in order, offline
+ * included, and reports one the server refuses.
  */
-export function useHangActions(api: SendtallyApi, onError: (error: unknown) => void): HangActions {
+export function useHangActions(api: SendtallyApi): HangActions {
   const client = useQueryClient();
+  const local = useLocalWrite();
   const key = React.useMemo(() => queries.hang(api).queryKey, [api]);
 
   return React.useMemo((): HangActions => {
-    const write = async (
-      patch: (data: HangData) => HangData,
-      request: () => Promise<unknown>
-    ): Promise<void> => {
-      client.setQueryData<HangData>(key, (data) => (data === undefined ? data : patch(data)));
-      await client.cancelQueries({ queryKey: key }, { revert: false });
-      const next = chain.then(request);
-      chain = next.catch(() => undefined);
-      try {
-        await next;
-      } catch (error) {
-        onError(error);
-        await client.invalidateQueries({ queryKey: key });
-      }
-    };
+    const write = async (update: (data: HangData) => HangData, op: LocalOp): Promise<void> =>
+      local(op, patch(key, update));
+    const known = (id: string): boolean =>
+      client.getQueryData<HangData>(key)?.sessions.some((s) => s.id === id) === true;
 
     return {
       saveGrip: (grip) =>
-        write(
-          (d) => ({ ...d, grips: upsert(d.grips, grip) }),
-          () => api.saveHangGrip(grip)
-        ),
+        write((d) => ({ ...d, grips: upsert(d.grips, grip) }), {
+          key: `hang:grip:${grip.id}`,
+          method: "saveHangGrip",
+          args: [grip],
+        }),
       archiveGrip: (grip) =>
         write(
           (d) => ({
@@ -73,13 +60,14 @@ export function useHangActions(api: SendtallyApi, onError: (error: unknown) => v
               Object.entries(d.defaultGrips).filter(([, gripId]) => gripId !== grip.id)
             ),
           }),
-          () => api.deleteHangGrip(grip.id)
+          { key: `hang:grip:${grip.id}`, kind: "delete", method: "deleteHangGrip", args: [grip.id] }
         ),
       setDefaultGrip: (workoutId, gripId) =>
-        write(
-          (d) => ({ ...d, defaultGrips: { ...d.defaultGrips, [workoutId]: gripId } }),
-          () => api.setHangDefaultGrip(workoutId, gripId)
-        ),
+        write((d) => ({ ...d, defaultGrips: { ...d.defaultGrips, [workoutId]: gripId } }), {
+          key: `hang:default-grip:${workoutId}`,
+          method: "setHangDefaultGrip",
+          args: [workoutId, gripId],
+        }),
       saveSession: (session) =>
         write(
           (d) => ({
@@ -92,23 +80,27 @@ export function useHangActions(api: SendtallyApi, onError: (error: unknown) => v
               )
             ),
           }),
-          async () => {
-            const saved = await api.saveHangSession(session);
-            client.setQueryData<HangData>(key, (d) =>
-              d === undefined ? d : { ...d, sessions: upsert(d.sessions, saved.session) }
-            );
+          {
+            key: `hang:session:${session.id}`,
+            kind: known(session.id) ? "update" : "create",
+            method: "saveHangSession",
+            args: [session],
           }
         ),
       deleteSession: (id) =>
-        write(
-          (d) => ({ ...d, sessions: d.sessions.filter((s) => s.id !== id) }),
-          () => api.deleteHangSession(id)
-        ),
+        write((d) => ({ ...d, sessions: d.sessions.filter((s) => s.id !== id) }), {
+          key: `hang:session:${id}`,
+          kind: "delete",
+          method: "deleteHangSession",
+          args: [id],
+        }),
+      // Settings save in part, so only a later save of the same fields replaces an unsent one.
       saveSettings: (settings) =>
-        write(
-          (d) => ({ ...d, settings: { ...d.settings, ...settings } }),
-          () => api.saveHangSettings(settings)
-        ),
+        write((d) => ({ ...d, settings: { ...d.settings, ...settings } }), {
+          key: `hang:settings:${Object.keys(settings).sort().join(",")}`,
+          method: "saveHangSettings",
+          args: [settings],
+        }),
     };
-  }, [api, client, key, onError]);
+  }, [client, key, local]);
 }

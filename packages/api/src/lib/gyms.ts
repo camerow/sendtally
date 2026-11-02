@@ -1,20 +1,9 @@
-import { boulderGradeFromV, formatGrade } from "@sendtally/core";
+import { boulderGradeFromV, CIRCUIT_COLOURS, formatGrade } from "@sendtally/core";
 import { z } from "zod";
 import { id } from "./plan";
 import type { GymRow } from "./repo";
 
-export const CIRCUIT_COLOURS = [
-  "red",
-  "orange",
-  "yellow",
-  "green",
-  "blue",
-  "purple",
-  "black",
-  "white",
-] as const;
-
-export type CircuitColour = (typeof CIRCUIT_COLOURS)[number];
+export { CIRCUIT_COLOURS, type CircuitColour } from "@sendtally/core";
 
 const circuitSchema = z
   .object({

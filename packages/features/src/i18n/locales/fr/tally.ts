@@ -17,7 +17,6 @@ export const tally = {
   "tally.finish": "Terminer",
   "tally.howHard": "C’était dur à quel point ?",
   "tally.skipEffort": "Passe et la séance s’évalue toute seule.",
-  "tally.finishFailed": "Impossible d’enregistrer la séance. Réessaie.",
   "tally.discardSession": "Supprimer la séance",
   "tally.discardTitle": "Supprimer cette séance ?",
   "tally.discardBody": "Toutes ses voies disparaissent aussi.",

@@ -86,4 +86,5 @@ export const common = {
   "common.subtractAmount": "Retirer {amount}",
   "common.changeSign": "Changer le signe",
   "common.decimalPoint": "Virgule décimale",
+  "common.changeRefused": "Une modification n’a pas pu être enregistrée, elle a été annulée.",
 } as const;
