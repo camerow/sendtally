@@ -1,11 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals";
-import { act, fireEvent, screen } from "@testing-library/react-native";
+import { act, fireEvent, renderHook, screen } from "@testing-library/react-native";
 import { router } from "expo-router";
 import React from "react";
 import { liveRunStorage } from "../../../lib/liveRunStorage";
 import { hangData, readingOrder, renderWithHang } from "../data/renderWithHang";
 import type { WorkoutRun } from "../data/workoutRunParams";
 import { readLiveRun } from "../../live-session/liveRun";
+import { useLiveHold } from "../hold/useLiveHold";
 import { SetsScreen } from "./SetsScreen";
 
 jest.mock("expo-router", () => ({
@@ -242,5 +243,29 @@ describe("Sets player", () => {
       checked: false,
     });
     expect(screen.getByLabelText("Start Plank, 0:30")).toBeTruthy();
+  });
+
+  it("records a timed set that reaches its target while minimised, and starts its rest", async () => {
+    const planks: WorkoutRun = {
+      ...run,
+      items: [{ exercise: "Plank", dose: { sets: 2, onS: 30, setRestS: 20 } }],
+    };
+    const root = await renderHook(() => useLiveHold());
+    const view = await renderWithHang(<SetsScreen run={planks} />, hangData());
+    await fireEvent.press(screen.getByLabelText("Start Plank, 0:30"));
+    await view.unmount();
+    await advance(35_000);
+    expect(readLiveRun()?.hold).toBeUndefined();
+    expect(readLiveRun()?.state).toMatchObject({
+      ticked: ["0:0"],
+      done: [{ sets: [{ onS: 30 }, {}] }],
+    });
+    expect(readLiveRun()?.rest).toMatchObject({ at: "0:0", seconds: 20 });
+    await renderWithHang(<SetsScreen run={planks} />, hangData());
+    expect(screen.getByLabelText("Plank, set 1")).toHaveProp("accessibilityState", {
+      checked: true,
+    });
+    expect(screen.getByLabelText("Rest, 0:18 left")).toBeTruthy();
+    await root.unmount();
   });
 });

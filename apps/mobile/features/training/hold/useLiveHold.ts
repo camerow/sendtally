@@ -3,8 +3,10 @@ import React from "react";
 import restSound from "../../../assets/sounds/rest.wav";
 import tickSound from "../../../assets/sounds/tick.wav";
 import workSound from "../../../assets/sounds/work.wav";
-import { useLiveRun } from "../../live-session/liveRun";
-import { COUNT_IN_S, SWITCH_S, type Hold } from "./holdClock";
+import { readLiveRun, useLiveRun, writeLiveRunAsIs } from "../../live-session/liveRun";
+import { finishedRun } from "./finishedRun";
+import { COUNT_IN_S, SWITCH_S, holdEndsAt, type Hold } from "./holdClock";
+import { playerHolds } from "./useHold";
 
 type Cue = { at: number; sound: "tick" | "work" | "rest" };
 
@@ -29,8 +31,11 @@ const cues = (h: Hold): Cue[] => {
   ];
 };
 
-/** Plays the live run's hold, open or minimised. Mounted once, at the app's root. */
-export function useHoldTone(): void {
+/**
+ * Plays the live run's hold, open or minimised, and records it at its target while no player is
+ * open, so its rest runs on the strip. Mounted once, at the app's root.
+ */
+export function useLiveHold(): void {
   const hold = useLiveRun()?.hold;
   const players = {
     tick: useAudioPlayer(tickSound),
@@ -58,6 +63,15 @@ export function useHoldTone(): void {
           Math.max(0, c.at - now)
         )
       );
-    return () => timers.forEach(clearTimeout);
+    const end = holdEndsAt(h);
+    const finish = setTimeout(
+      () => {
+        const live = readLiveRun();
+        if (playerHolds() || live?.hold === undefined) return;
+        writeLiveRunAsIs(finishedRun(live, h.targetS, end));
+      },
+      Math.max(0, end - now)
+    );
+    return () => [...timers, finish].forEach(clearTimeout);
   }, [key]);
 }

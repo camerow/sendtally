@@ -13,6 +13,11 @@ export type HoldClock = {
   stop: () => void;
 };
 
+let owners = 0;
+
+/** Whether a player is open to record its own hold. */
+export const playerHolds = (): boolean => owners > 0;
+
 /**
  * The live run's hold, with the time it is read at kept current; `onOver` hears when it reaches
  * its target, for the player to record it.
@@ -24,6 +29,14 @@ export function useHold(onOver?: (hold: Hold) => void): HoldClock {
   React.useEffect(() => {
     over.current = onOver;
   });
+  const owns = onOver !== undefined;
+  React.useEffect(() => {
+    if (!owns) return;
+    owners += 1;
+    return () => {
+      owners -= 1;
+    };
+  }, [owns]);
   React.useEffect(() => {
     if (hold === null || hold.pausedAt !== null) return;
     const timer = setInterval(() => {

@@ -70,6 +70,11 @@ export function writeLiveRun(run: LiveRun): void {
   );
 }
 
+/** Saves the run exactly as given, its rest and hold included. */
+export function writeLiveRunAsIs(run: LiveRun): void {
+  liveRunStorage.write(JSON.stringify(run));
+}
+
 /** Starts, changes or ends the live run's rest. */
 export function writeRest(rest: Rest | null): void {
   const live = readLiveRun();
