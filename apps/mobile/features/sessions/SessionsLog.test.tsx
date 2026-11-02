@@ -62,7 +62,6 @@ jest.mock("../../lib/review", () => ({ maybeAskForReview: () => undefined }));
 jest.mock("../../lib/setupPrompt", () => ({
   useSetupDismissed: () => ({ dismissed: true, dismiss: () => undefined }),
 }));
-jest.mock("../app-update/UpdateReadyCard", () => ({ UpdateReadyCard: () => null }));
 jest.mock("../climbs/GradeFilterSheet", () => ({ GradeFilterSheet: () => null }));
 jest.mock("../live-session/startLiveSession", () => ({ startLiveSession: () => undefined }));
 jest.mock("../settings/useStravaConnect", () => ({

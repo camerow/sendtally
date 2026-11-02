@@ -6,14 +6,17 @@ import { Icon } from "../../components/Icon";
 import { press } from "../../lib/press";
 import { useUpdateRestart } from "./useUpdateRestart";
 
+/** Mounted once for the whole app, so a dismissal holds on every screen. */
 export function UpdateReadyCard({
   liveSession,
+  hidden,
 }: {
   liveSession: boolean;
+  hidden: boolean;
 }): React.ReactElement | null {
   const { pendingUpdateId, restarting, restart } = useUpdateRestart();
   const [dismissedId, setDismissedId] = React.useState<string | null>(null);
-  if (pendingUpdateId === null || pendingUpdateId === dismissedId) return null;
+  if (hidden || pendingUpdateId === null || pendingUpdateId === dismissedId) return null;
 
   return (
     <View
@@ -31,6 +34,11 @@ export function UpdateReadyCard({
         borderWidth: 1,
         borderColor: colors.lineOnLightStrong,
         borderRadius: radius.card,
+        shadowColor: "#35343F",
+        shadowOpacity: 0.18,
+        shadowRadius: 12,
+        shadowOffset: { width: 0, height: 6 },
+        elevation: 6,
       }}
     >
       <View
