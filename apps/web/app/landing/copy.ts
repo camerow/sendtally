@@ -88,6 +88,7 @@ export const COPY = {
     signIn: "Sign in",
     createAccount: "Create account",
     openApp: "App →",
+    blog: "Blog",
   },
 
   hero: {
@@ -384,6 +385,7 @@ export const COPY = {
       "Google Play and the Google Play logo are trademarks of Google LLC. Apple and the Apple logo are trademarks of Apple Inc.",
     links: [
       { label: "Sign in", href: "/sign-in" },
+      { label: "Blog", href: "/blog" },
       { label: "Privacy", href: "/privacy" },
       { label: "Terms", href: "/terms" },
       { label: "Support", href: "/support" },
