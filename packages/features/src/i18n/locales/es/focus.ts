@@ -17,6 +17,5 @@ export const focus = {
   "focus.conditioningMeaning": "Forma física más allá de escalar: correr, bici, circuitos.",
   "focus.skillMeaning": "Movimiento y técnica, muy por debajo de tu límite.",
   "focus.recoveryMeaning": "Descargas, días suaves y movilidad, a propósito.",
-  "focus.sessionNote": "Solo cambia esta sesión. El entreno mantiene el suyo.",
   "focus.search": "Buscar en {focus}",
 } as const;

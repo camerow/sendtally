@@ -287,13 +287,7 @@ export function ActivityForm({
 
         <EffortField value={draft.rpe} onChange={(rpe) => update({ rpe })} />
 
-        {!timed && (
-          <FocusField
-            value={draft.focus}
-            onChange={(focus) => update({ focus })}
-            note={logged === null ? undefined : t("focus.sessionNote")}
-          />
-        )}
+        {!timed && <FocusField value={draft.focus} onChange={(focus) => update({ focus })} />}
 
         {draft.done.length > 0 && (
           <DoneDetails

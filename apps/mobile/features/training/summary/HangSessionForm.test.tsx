@@ -49,9 +49,12 @@ describe("Editing a hangboard session", () => {
       hangData({ sessions: [session] })
     );
     expect(screen.getByText("Edit workout")).toBeTruthy();
-    await fireEvent.press(screen.getByLabelText("Completion"));
-    await fireEvent.press(screen.getByLabelText("Subtract 5"));
-    await fireEvent.press(screen.getByLabelText("Done"));
+    expect(screen.getByText("18 of 18 hangs")).toBeTruthy();
+    await fireEvent.press(screen.getByLabelText("Set 2, 3"));
+    expect(screen.getByText("17 of 18 hangs")).toBeTruthy();
+    await fireEvent.press(screen.getByLabelText("Set 2"));
+    await fireEvent.press(screen.getByLabelText("Set 3"));
+    expect(screen.getByText("12 of 18 hangs")).toBeTruthy();
     await fireEvent.press(screen.getByText("Save"));
     const {
       stravaActivityId: _s,
@@ -60,7 +63,7 @@ describe("Editing a hangboard session", () => {
       updatedAt: _u,
       ...fields
     } = session;
-    expect(actions.saveSession).toHaveBeenCalledWith({ ...fields, pct: 95 });
+    expect(actions.saveSession).toHaveBeenCalledWith({ ...fields, pct: 67 });
     expect(router.back).toHaveBeenCalled();
   });
 

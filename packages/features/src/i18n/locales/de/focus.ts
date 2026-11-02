@@ -16,6 +16,5 @@ export const focus = {
   "focus.conditioningMeaning": "Fitness über das Klettern hinaus: Laufen, Radfahren, Zirkel.",
   "focus.skillMeaning": "Bewegung und Technik, deutlich unter dem Limit.",
   "focus.recoveryMeaning": "Deloads, lockere Tage und Mobilität, ganz bewusst.",
-  "focus.sessionNote": "Ändert nur diese Einheit. Das Workout behält seinen Fokus.",
   "focus.search": "{focus} durchsuchen",
 } as const;

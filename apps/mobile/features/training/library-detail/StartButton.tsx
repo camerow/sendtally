@@ -19,7 +19,7 @@ export type StartButtonProps = {
   style?: StyleProp<ViewStyle>;
 };
 
-/** Start, which opens the workout's player; a climbing workout with no exercises logs its session instead. */
+/** Start, which opens the workout's player; a climbing workout with no exercises opens the live tally. */
 export function StartButton({
   workout,
   date,
@@ -32,14 +32,13 @@ export function StartButton({
   const eachSide = eachSideOf(mine);
   const tally = tallyMeasuresOf(mine, workout.kind);
   const run = usePlannedItems(workout, planned);
-  const climbing = workout.kind === "climbing" && run.items.length === 0;
   return (
     <Button
-      label={climbing ? t("plan.logSession") : t("hang.start")}
+      label={t("hang.start")}
       onPress={() => startLibraryWorkout(workout, date, run, eachSide, tally)}
-      variant={climbing ? "gold" : "primary"}
+      variant="primary"
       height={height}
-      icon={climbing ? "plus" : "play"}
+      icon="play"
       style={style}
     />
   );

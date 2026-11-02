@@ -2,9 +2,9 @@ import { router } from "expo-router";
 import React from "react";
 import { KeyboardAvoidingView, Platform, Text, View } from "react-native";
 import type { HangSessionRecord } from "@sendtally/api-client";
-import { clamp } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { shortDate } from "@sendtally/features/hang";
+import { hangGrid } from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
 import { hangTitle } from "@sendtally/features/sessions";
 import { Button } from "../components/Button";
@@ -14,21 +14,19 @@ import { FocusField } from "../components/FocusField";
 import { MonthCalendar } from "../components/MonthCalendar";
 import { SelectField } from "../components/SelectField";
 import { SheetSection } from "../components/SheetSection";
-import { NumberField } from "../components/NumberField";
 import { Title } from "../components/Title";
 import { useHangData } from "../data/HangDataContext";
 import { GripPickerSheet } from "../grip-picker/GripPickerSheet";
 import { LoadField } from "../loads/LoadField";
 import { EdgeField } from "../setup/EdgeField";
 import { type } from "../type";
+import { HangGrid } from "./HangGrid";
 import { KeypadScrollView } from "../../../components/KeypadScrollView";
 import { useFieldOrder } from "../../../components/useFieldOrder";
 
-const PCT_STEP = 5;
-
 export type HangSessionFormProps = { session: HangSessionRecord };
 
-/** Edit a finished hangboard session: its day, grip, edge, weight, completion, effort and focus. */
+/** Edit a finished hangboard session: its day, grip, edge, weight, hangs, effort and focus. */
 export function HangSessionForm({ session }: HangSessionFormProps): React.ReactElement {
   const { model, actions, today } = useHangData();
   const [draft, setDraft] = React.useState(session);
@@ -44,10 +42,10 @@ export function HangSessionForm({ session }: HangSessionFormProps): React.ReactE
   };
   const kind = session.protocol.kind;
   const name = hangTitle(session);
-  const { slot } = useFieldOrder(
-    kind === "hang" ? ["edge", "load", "completion"] : ["load", "completion"]
-  );
-  const setPct = (pct: number): void => update({ pct: clamp(Math.round(pct), 0, 100) });
+  const { slot } = useFieldOrder(kind === "hang" ? ["edge", "load"] : ["load"]);
+  // ponytail: only the share held is stored, so the grid comes back with its hangs in order;
+  // keeping which ones were let go needs its own column.
+  const [rows, setRows] = React.useState(() => hangGrid(session).rows);
 
   const save = (): void => {
     const { stravaActivityId: _s, postState: _p, postError: _e, updatedAt: _u, ...fields } = draft;
@@ -122,21 +120,24 @@ export function HangSessionForm({ session }: HangSessionFormProps): React.ReactE
           label={t("hang.load")}
           onChange={(loadKg) => update({ loadKg })}
         />
-        <NumberField
-          {...slot("completion")}
-          label={t("hang.completion")}
-          value={draft.pct}
-          onChange={setPct}
-          unit="%"
-          step={PCT_STEP}
-          max={100}
-        />
+        <SheetSection label={t("summary.hangs")}>
+          <HangGrid
+            rows={rows}
+            onChange={(next) => {
+              setRows(next);
+              const held = next.flat().filter(Boolean).length;
+              update({ pct: Math.round((held / Math.max(1, next.flat().length)) * 100) });
+            }}
+          />
+          <Text style={[type.monoBold, { fontSize: 13, color: colors.gunmetal }]}>
+            {t("summary.hangsOf", {
+              held: rows.flat().filter(Boolean).length,
+              total: rows.flat().length,
+            })}
+          </Text>
+        </SheetSection>
         <EffortField value={draft.rpe} onChange={(rpe) => update({ rpe })} />
-        <FocusField
-          value={draft.focus}
-          onChange={(focus) => update({ focus })}
-          note={t("focus.sessionNote")}
-        />
+        <FocusField value={draft.focus} onChange={(focus) => update({ focus })} />
       </KeypadScrollView>
       <GripPickerSheet
         visible={picker}

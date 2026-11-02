@@ -11,12 +11,10 @@ import { SheetSection } from "./SheetSection";
 export type FocusFieldProps = {
   value: Focus | null;
   onChange: (focus: Focus | null) => void;
-  /** Said under the chips in place of what the picked focus means. */
-  note?: string;
 };
 
 /** Pick what something trains for: General first, then the seven in season order. */
-export function FocusField({ value, onChange, note }: FocusFieldProps): React.ReactElement {
+export function FocusField({ value, onChange }: FocusFieldProps): React.ReactElement {
   const options = [null, ...FOCI].map((f) => ({ value: focusParam(f), label: focusLabel(f) }));
   return (
     <SheetSection label={t("focus.label")}>
@@ -26,7 +24,7 @@ export function FocusField({ value, onChange, note }: FocusFieldProps): React.Re
         onChange={(picked) => onChange(readFocus(picked) ?? null)}
       />
       <Text style={[type.body, { fontSize: 13, lineHeight: 18, color: colors.textSecondary }]}>
-        {note ?? focusMeaning(value)}
+        {focusMeaning(value)}
       </Text>
     </SheetSection>
   );
