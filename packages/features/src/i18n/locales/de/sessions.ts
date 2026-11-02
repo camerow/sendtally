@@ -2,6 +2,7 @@ export const sessions = {
   "sessions.unscored": "ohne Bewertung",
   "sessions.back": "← Logbuch",
   "sessions.onStrava": "Auf Strava",
+  "sessions.hangboardSession": "Hangboard-Session",
   "sessions.loadFailed": "sendtally ist nicht erreichbar. Zum Neuladen ziehen.",
   "sessions.noneForTags": "Keine Sessions mit diesen Tags.",
   "sessions.monthMeta": "{year} · {sessions}",
@@ -14,6 +15,7 @@ export const sessions = {
   "sessions.posting": "Wird gepostet…",
   "sessions.createTag": "+ „{name}“ erstellen",
   "sessions.deleteTitle": "Session löschen?",
+  "sessions.deleteSession": "Session löschen",
   "sessions.deleteBody": "Das entfernt die Session und ihr Kletterprotokoll endgültig.",
   "sessions.deleteFailed": "Löschen fehlgeschlagen",
   "sessions.readOnlyBoard":
@@ -55,7 +57,7 @@ export const sessions = {
   "sessions.logClimb": "Kletterei",
   "sessions.moreWaysToLog": "Weitere Möglichkeiten zu loggen",
   "sessions.logAClimb": "Kletterei",
-  "sessions.logAClimbHint": "Eine einzelne Kletterei loggen. Startet eine Live-Session",
+  "sessions.logAClimbHint": "Eine Live-Session starten, Kletterei für Kletterei",
   "sessions.logFullSession": "Session",
   "sessions.logFullSessionHint":
     "Fasse Klettereien zu einer Session mit Name, Notizen, Datum, Ort und Anstrengung zusammen.",
@@ -64,4 +66,6 @@ export const sessions = {
   "sessions.saving": "Speichern…",
   "sessions.notSavedYet": "Noch nicht gespeichert, wird wiederholt",
   "sessions.addDetails": "Details hinzufügen",
+  "sessions.topSend": "top {grade}",
+  "sessions.pastSession": "Vergangene Session",
 } as const;

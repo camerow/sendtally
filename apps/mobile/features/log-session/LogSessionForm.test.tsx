@@ -39,11 +39,6 @@ jest.mock("../../lib/sessionDraftStorage", () => ({
     .requireActual<typeof LogSession>("@sendtally/features/log-session")
     .draftStorage({ read: () => null, write: () => undefined, remove: () => undefined }),
 }));
-jest.mock("../../lib/liveSessionStorage", () => ({
-  liveSessionStorage: jest
-    .requireActual<typeof LogSession>("@sendtally/features/log-session")
-    .draftStorage({ read: () => null, write: () => undefined, remove: () => undefined }),
-}));
 jest.mock("../../components/Sheet", () => ({
   Sheet: ({ visible, children }: { visible: boolean; children: React.ReactNode }) =>
     visible ? children : null,

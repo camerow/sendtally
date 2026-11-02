@@ -14,7 +14,7 @@ export function BackButton({ label }: { label?: string }): React.ReactElement {
       style={press({ minHeight: 44, flexDirection: "row", alignItems: "center", gap: 4 })}
     >
       <View style={{ transform: [{ rotate: "180deg" }] }}>
-        <Icon name="chevron" size={14} strokeWidth={2.2} color={colors.labelAccent} />
+        <Icon name="chevron" size={14} strokeWidth={2.2} color={colors.gunmetal} />
       </View>
       <Text
         style={{
@@ -22,7 +22,7 @@ export function BackButton({ label }: { label?: string }): React.ReactElement {
           fontSize: 12,
           letterSpacing: 0.5,
           textTransform: "uppercase",
-          color: colors.labelAccent,
+          color: colors.gunmetal,
         }}
       >
         {label ?? t("common.back")}

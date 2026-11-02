@@ -1,6 +1,6 @@
 import type { ClimbSummary } from "@sendtally/api-client";
 import { climbDraftGrade } from "../climbs/transforms";
-import { formatDate, t } from "../i18n";
+import { t } from "../i18n";
 import {
   parseStoredDraft,
   writeStoredDraft,
@@ -30,10 +30,9 @@ export function localDate(d: Date): string {
 
 export function defaultSessionName(now: Date): string {
   const hour = now.getHours();
-  const date = formatDate(now, { dateStyle: "short" });
-  if (hour < 12) return t("logSession.defaultNameMorning", { date });
-  if (hour < 17) return t("logSession.defaultNameAfternoon", { date });
-  return t("logSession.defaultNameEvening", { date });
+  if (hour < 12) return t("logSession.defaultNameMorning");
+  if (hour < 17) return t("logSession.defaultNameAfternoon");
+  return t("logSession.defaultNameEvening");
 }
 
 /** Starts at the first climb; times are the climber's to add later. */
@@ -87,7 +86,7 @@ export const LIVE_IDLE_MS = 6 * 60 * 60 * 1000;
  * live until it lands, however old: it is the only copy of those climbs.
  */
 export function isLive(entry: StoredSessionDraft, now: Date): boolean {
-  if (entry.fingerprint === undefined) return true;
+  if (entry.fingerprint === undefined && entry.draft.climbs.length > 0) return true;
   return (
     entry.draft.date === localDate(now) || now.getTime() - entry.savedAt.getTime() < LIVE_IDLE_MS
   );
@@ -132,7 +131,14 @@ export function withClimbName(
   known: ClimbSummary | undefined
 ): ClimbDraft {
   const grade = known === undefined ? "" : climbDraftGrade(known, climb.scale);
-  return { ...climb, name, project: undefined, ...(grade === "" ? {} : { grade }) };
+  const { userClimbId: _retyped, ...rest } = climb;
+  return {
+    ...rest,
+    name,
+    project: undefined,
+    ...(known === undefined ? {} : { userClimbId: known.id }),
+    ...(grade === "" ? {} : { grade }),
+  };
 }
 
 export function withPickedClimb(climb: ClimbDraft, known: ClimbSummary): ClimbDraft {

@@ -1,0 +1,56 @@
+import React from "react";
+import { View } from "react-native";
+import type { WorkoutKind } from "@sendtally/core/hang";
+import { colors } from "@sendtally/design/tokens";
+import { t } from "@sendtally/features/i18n";
+import { blockOfMembership, usePlan } from "@sendtally/features/training";
+import { useApi } from "../../../lib/api";
+import { Label } from "../components/Label";
+import { PlanRow } from "../components/PlanRow";
+import { useHangData } from "../data/HangDataContext";
+import { MiniWeek } from "../plan/MiniWeek";
+import { usePlanActions } from "../plan/usePlanActions";
+import { blockTag } from "../blocks/blockText";
+import { membershipTag, oneOffDate } from "./planText";
+import { confirmDestructive } from "../../../lib/confirmDestructive";
+
+export type PlanListProps = { workoutId: string; name: string; kind: WorkoutKind };
+
+/** Where a workout is planned, by start date: × takes it out. Left out when it is planned nowhere. */
+export function PlanList({ workoutId, name, kind }: PlanListProps): React.ReactElement | null {
+  const { today } = useHangData();
+  const { state } = usePlan(useApi());
+  const actions = usePlanActions();
+  const plan = state.status === "ready" ? state.data : null;
+  const members = plan?.memberships.filter((m) => m.workoutId === workoutId) ?? [];
+  if (plan === null || members.length === 0) return null;
+  return (
+    <View style={{ gap: 8 }}>
+      <Label color={colors.gunmetal}>{t("hang.planned")}</Label>
+      {members.map((m) => {
+        const block = blockOfMembership(plan, m);
+        const week = block === null ? null : blockTag(block.name, block, today);
+        return (
+          <PlanRow
+            key={m.id}
+            tag={week ?? membershipTag(m, block, today)}
+            tagColor={m.start <= today ? colors.gunmetal : colors.petalInk}
+            meta={[...(block === null || week !== null ? [] : [block.name]), ...oneOffDate(m)].join(
+              " · "
+            )}
+            trailing={<MiniWeek kind={kind} m={m} />}
+            onRemove={() =>
+              confirmDestructive({
+                title: t("plan.removeTitle", { title: name }),
+                body: t("plan.removeBody"),
+                action: t("plan.removeAction"),
+                onConfirm: () => void actions.deleteMembership(m.id),
+              })
+            }
+            removeLabel={t("plan.remove", { title: name })}
+          />
+        );
+      })}
+    </View>
+  );
+}

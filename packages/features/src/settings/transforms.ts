@@ -25,6 +25,7 @@ export function settingsVM(status: ConnectionStatus | null): SettingsVM {
     ),
     postingEnabled: strava?.postingEnabled ?? false,
     postSince: toDateInput(strava?.postSince ?? null),
+    postTraining: strava?.postTraining ?? false,
   };
 }
 

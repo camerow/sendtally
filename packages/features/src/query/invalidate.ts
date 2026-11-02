@@ -16,6 +16,17 @@ const LOG: QueryKey[] = [
   ["areaClimb"],
 ];
 
+/**
+ * The hangboard feature owns its own cache and updates it optimistically, so
+ * its writes stale only what the rest of sendtally reads from them: the log and the trends list hang
+ * sessions and name custom grips.
+ */
+function hangWriteStales(resource: string | undefined): QueryKey[] {
+  return resource === "sessions" || resource === "grips"
+    ? [["sessions"], ["sessionsWithClimbs"]]
+    : [];
+}
+
 /** Which cached reads a write can change, by the resource it hit. `null` is a path this map does not know, which stales everything. */
 export function writeEffect({ method, path }: ApiWrite): WriteEffect | null {
   const [, version, resource, id, child] = path.split("/");
@@ -56,6 +67,8 @@ export function writeEffect({ method, path }: ApiWrite): WriteEffect | null {
       };
     case "projects":
       return { stale: [["climbs"]], gone: null };
+    case "climbs":
+      return { stale: LOG, gone: null };
     case "preferences":
     case "connections":
       return { stale: [["status"]], gone: null };
@@ -63,6 +76,23 @@ export function writeEffect({ method, path }: ApiWrite): WriteEffect | null {
       return { stale: [["entitlements"]], gone: null };
     case "account":
       return { stale: [], gone: null };
+    case "hang":
+      return { stale: hangWriteStales(id), gone: null };
+    // Like hang, these own their caches; an activity also shows in the log, and
+    // its exercise names join the exercises list.
+    case "activities":
+      return { stale: [["sessions"], ["sessionsWithClimbs"], ["exercises"]], gone: null };
+    // These own their caches. Deleting a workout, block or membership unlinks the
+    // sessions logged against it on the server; a copied block is new to the plan.
+    case "blocks":
+    case "memberships":
+    case "workouts":
+      if (deleted) return { stale: [...LOG, ["activities"], ["hang"], ["plan"]], gone: null };
+      if (child === "copy") return { stale: [["plan"]], gone: null };
+      return { stale: resource === "workouts" ? [["exercises"]] : [], gone: null };
+    // Renaming or merging one rewrites the workouts and activities naming it.
+    case "exercises":
+      return { stale: [["exercises"], ["workouts"], ["activities"]], gone: null };
     default:
       return null;
   }

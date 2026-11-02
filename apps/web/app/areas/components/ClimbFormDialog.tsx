@@ -99,7 +99,7 @@ export function ClimbFormDialog(props: ClimbFormDialogProps): React.ReactElement
       }
       if (area === null) {
         setBusy(false);
-        return setError(t("areas.pickCrag"));
+        return setError(t("areas.pickArea"));
       }
       const areaId = area.id;
       const created = await check.save({
@@ -152,14 +152,14 @@ export function ClimbFormDialog(props: ClimbFormDialogProps): React.ReactElement
         />
       </Field>
       {askArea && (
-        <Field id="climb-area" label={t("areas.crag")}>
+        <Field id="climb-area" label={t("areas.area")}>
           <AreaPicker
             api={api}
             id="climb-area"
             crags
             value={chosenArea}
             near={near}
-            placeholder={t("areas.searchCrags")}
+            placeholder={t("areas.searchAreas")}
             inputStyle={inputStyle}
             onPick={setChosenArea}
             onFocus={locate}

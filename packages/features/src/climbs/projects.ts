@@ -1,10 +1,9 @@
 import { formatGrade, routeIndexOf, vFromFont, type Grade } from "@sendtally/core";
 import type { ClimbSummary, SessionWithClimbs } from "@sendtally/api-client";
-import { t } from "../i18n";
+import { formatDate, t } from "../i18n";
 import { utcDate } from "../log-session/transforms";
 import type { ClimbDraft } from "../log-session/types";
 import { isUnscored, sessionDay } from "../sessions/meta";
-import { monthShortName } from "../sessions/months";
 import { sessionTitle } from "../sessions/title";
 import { durationLabel, sessionMinutes } from "../sessions/years";
 import {
@@ -88,8 +87,7 @@ export function gradeRank(grade: Grade): number {
 // Months come from the shared table rather than the platform's locale data, so
 // a label reads the same in the Worker, the browser and the app.
 export function dateLabel(iso: string): string {
-  const d = new Date(iso);
-  return `${d.getUTCDate()} ${monthShortName(d.getUTCMonth() + 1)}`;
+  return formatDate(new Date(iso), { month: "short", day: "numeric", timeZone: "UTC" });
 }
 
 export function weeksBetween(fromIso: string, toIso: string): number {

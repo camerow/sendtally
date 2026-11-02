@@ -18,6 +18,7 @@ function session(fingerprint: string, startAt: string, tags: string[] = []): Ses
     end_at: startAt,
     times: "both",
     climb_count: 3,
+    send_count: 0,
     top_grade: 6,
     top_send_grade: 6,
     top_grade_label: null,
@@ -30,6 +31,9 @@ function session(fingerprint: string, startAt: string, tags: string[] = []): Ses
     posted_at: null,
     post_state: null,
     post_error: null,
+    membership_id: null,
+    week: null,
+    focus: null,
     tags: tags.map((name) => ({ id: name, slug: name, name })),
   };
 }

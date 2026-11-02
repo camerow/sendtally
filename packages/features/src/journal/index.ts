@@ -6,6 +6,7 @@ export {
   type EntryKind,
   type JournalEntry,
   type LogItem,
+  type LogTraining,
   type TripSpan,
 } from "./types";
 export {
@@ -37,9 +38,11 @@ export {
   logItems,
   logScopeItems,
   logScopeLabel,
+  logSegmentItems,
   LOG_SCOPES,
   sessionsNearPoints,
   type LogScope,
+  type LogSegment,
   openInjuries,
   sessionsInSpan,
   severitySeries,

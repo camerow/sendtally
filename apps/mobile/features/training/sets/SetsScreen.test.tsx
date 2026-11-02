@@ -1,0 +1,271 @@
+import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals";
+import { act, fireEvent, renderHook, screen } from "@testing-library/react-native";
+import { router } from "expo-router";
+import React from "react";
+import { liveRunStorage } from "../../../lib/liveRunStorage";
+import { hangData, readingOrder, renderWithHang } from "../data/renderWithHang";
+import type { WorkoutRun } from "../data/workoutRunParams";
+import { readLiveRun } from "../../live-session/liveRun";
+import { useLiveHold } from "../hold/useLiveHold";
+import { SetsScreen } from "./SetsScreen";
+
+jest.mock("expo-router", () => ({
+  router: { replace: jest.fn(), back: jest.fn(), canGoBack: () => true },
+}));
+jest.mock("../../../lib/api", () => ({ useApi: () => undefined }));
+jest.mock("../../../lib/liveRunStorage");
+jest.mock("@sendtally/features/activities", () => ({
+  ...jest.requireActual<object>("@sendtally/features/activities"),
+  useWeightUnit: () => "kg",
+  useActivities: () => ({
+    state: {
+      status: "ready",
+      data: [
+        {
+          workoutId: "w1",
+          done: [
+            { item: 0, exercise: "Back squat", sets: [{ reps: 5, weightKg: 97.5 }] },
+            { item: 1, exercise: "Row", sets: [{ reps: 8, weightKg: 60 }] },
+          ],
+        },
+      ],
+    },
+  }),
+}));
+
+const run: WorkoutRun = {
+  kind: "strength",
+  title: "Lower body A",
+  date: "2026-10-22",
+  workoutId: "w1",
+  link: { membershipId: "m1", week: 2, focus: null },
+  minutes: 45,
+  exerciseRestS: 120,
+  items: [
+    { exercise: "Back squat", dose: { sets: 2, reps: 5, weightKg: 100, setRestS: 90 } },
+    { exercise: "Row", dose: { sets: 1, reps: 8 } },
+    { exercise: "Plank", dose: { sets: 1, onS: 30 } },
+  ],
+};
+
+const advance = async (ms: number): Promise<void> => {
+  await act(async () => {
+    jest.advanceTimersByTime(ms);
+  });
+};
+
+describe("Sets player", () => {
+  beforeEach(() => {
+    jest.useFakeTimers({ now: new Date(2026, 9, 22, 18, 5) });
+    liveRunStorage.remove();
+  });
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  it("rests in line after each tick, folds a finished exercise, and logs the clock's minutes", async () => {
+    await renderWithHang(<SetsScreen run={run} />, hangData(), {
+      workouts: [
+        {
+          id: "w1",
+          kind: "strength",
+          name: "Lower body A",
+          description: "Heavy squats, then rows.",
+          minutes: 45,
+          targetRpe: 8,
+          items: run.items.map(({ exercise, dose }) => ({ exercise, doses: [dose] })),
+          exerciseRestS: 180,
+          focus: null,
+          updatedAt: "2026-10-01T00:00:00.000Z",
+        },
+      ],
+    });
+    expect(screen.getByText("Strength")).toBeTruthy();
+    await fireEvent.press(screen.getByLabelText("Minimize"));
+    expect(router.back).toHaveBeenCalled();
+    await fireEvent.press(screen.getByLabelText("About this workout"));
+    expect(screen.getByText("Heavy squats, then rows.")).toBeTruthy();
+    expect(screen.getByText("Target effort 8")).toBeTruthy();
+    expect(screen.getAllByText("5 × 100 kg")).toHaveLength(2);
+    expect(screen.getByText("30s")).toBeTruthy();
+    expect(screen.getByText("Last 5 × 97.5 kg")).toBeTruthy();
+    expect(screen.getByText("Last 8 × 60 kg")).toBeTruthy();
+    expect(screen.getByText("8 × 60 kg")).toBeTruthy();
+    expect(screen.getByText("1:30 rest")).toBeTruthy();
+    expect(screen.getAllByText("Rest 2:00")).toHaveLength(2);
+    expect(readingOrder("Back squat, set 1", "Rest 1:30", "Back squat, set 2")).toEqual([
+      "Back squat, set 1",
+      "Rest 1:30",
+      "Back squat, set 2",
+    ]);
+    await fireEvent.press(screen.getByLabelText("Back squat, set 1"));
+    expect(screen.queryByText("Rest 1:30")).toBeNull();
+    expect(
+      readingOrder("Back squat, set 1", "Rest, 1:30 left", "Back squat, set 2", "Rest 2:00")
+    ).toEqual([
+      "Back squat, set 1",
+      "Rest, 1:30 left",
+      "Back squat, set 2",
+      "Rest 2:00",
+      "Rest 2:00",
+    ]);
+    await advance(30_000);
+    expect(screen.getByLabelText("Rest, 1:00 left")).toBeTruthy();
+    expect(screen.getByText("0:30")).toBeTruthy();
+
+    await fireEvent.press(screen.getByLabelText("Back squat, set 2 · Reps"));
+    await fireEvent.press(screen.getByLabelText("4"));
+    await fireEvent.press(screen.getByLabelText("Done"));
+    await fireEvent.press(screen.getByLabelText("Back squat, set 2"));
+    expect(screen.queryByLabelText("Rest, 1:00 left")).toBeNull();
+    expect(screen.getByLabelText("Back squat, 2 of 2 sets")).toBeTruthy();
+    expect(screen.getByText("Next: Row")).toBeTruthy();
+    expect(
+      readingOrder("Back squat, 2 of 2 sets", "Rest, 2:00 left", "Row, set 1", "Rest 2:00")
+    ).toEqual(["Back squat, 2 of 2 sets", "Rest, 2:00 left", "Row, set 1", "Rest 2:00"]);
+    await advance(120_000);
+    expect(screen.queryByText("Next: Row")).toBeNull();
+    expect(screen.getAllByText("Rest 2:00")).toHaveLength(2);
+    expect(screen.getByLabelText("Row, set 1 · Weight").props.accessibilityValue).toEqual({
+      text: "60 kg",
+    });
+    await fireEvent.press(screen.getByLabelText("Row, set 1"));
+
+    await fireEvent.press(screen.getByText("Finish"));
+    expect(router.replace).toHaveBeenCalledWith({
+      pathname: "/activity/new",
+      params: {
+        kind: "strength",
+        title: "Lower body A",
+        date: "2026-10-22",
+        workoutId: "w1",
+        minutes: "3",
+        membershipId: "m1",
+        week: "2",
+        startTime: "18:05",
+        live: "1",
+        done: JSON.stringify([
+          {
+            item: 0,
+            exercise: "Back squat",
+            sets: [
+              { reps: 5, weightKg: 100, setRestS: 90 },
+              { reps: 4, weightKg: 100, setRestS: 90 },
+            ],
+          },
+          { item: 1, exercise: "Row", sets: [{ reps: 8, weightKg: 60 }] },
+          { item: 2, exercise: "Plank", sets: [{ onS: 30 }] },
+        ]),
+        off: JSON.stringify(["2:0"]),
+      },
+    });
+  });
+
+  it("keeps a running rest when the player is minimised and opened again", async () => {
+    const view = await renderWithHang(<SetsScreen run={run} />, hangData());
+    await fireEvent.press(screen.getByLabelText("Back squat, set 1"));
+    await view.unmount();
+    await advance(30_000);
+    await renderWithHang(<SetsScreen run={run} />, hangData());
+    expect(readingOrder("Back squat, set 1", "Rest, 1:00 left", "Back squat, set 2")).toEqual([
+      "Back squat, set 1",
+      "Rest, 1:00 left",
+      "Back squat, set 2",
+    ]);
+    await fireEvent.press(screen.getByText("Skip"));
+    expect(screen.queryByLabelText("Rest, 1:00 left")).toBeNull();
+    expect(readLiveRun()?.rest).toBeUndefined();
+  });
+
+  it("shows which dose an alternating exercise runs, with its name when it has one", async () => {
+    const alternating: WorkoutRun = {
+      ...run,
+      items: [
+        { exercise: "Back squat", dose: { sets: 3, reps: 10, name: "Light" }, turn: 1 },
+        { exercise: "Row", dose: { sets: 1, reps: 8 }, turn: 0 },
+        { exercise: "Plank", dose: { sets: 1, onS: 30 } },
+      ],
+    };
+    await renderWithHang(<SetsScreen run={alternating} />, hangData());
+    expect(screen.getByText("B")).toBeTruthy();
+    expect(screen.getByText("Light")).toBeTruthy();
+    expect(screen.getByText("A")).toBeTruthy();
+    expect(screen.queryByText("C")).toBeNull();
+  });
+
+  it("times a timed set in its row after a count-in, records what it held, and rests", async () => {
+    const planks: WorkoutRun = {
+      ...run,
+      items: [{ exercise: "Plank", dose: { sets: 2, onS: 30, setRestS: 20 } }],
+    };
+    await renderWithHang(<SetsScreen run={planks} />, hangData());
+    await fireEvent.press(screen.getByLabelText("Start Plank, 0:30"));
+    expect(screen.getByText("Ready")).toBeTruthy();
+    expect(screen.getByText("3")).toBeTruthy();
+    await advance(13_000);
+    expect(screen.getByText("0:10")).toBeTruthy();
+    expect(screen.getByText("of 0:30")).toBeTruthy();
+    expect(readLiveRun()?.hold?.name).toBe("Plank");
+    await fireEvent.press(screen.getByRole("button", { name: "Done" }));
+    expect(screen.getByLabelText("Plank, set 1")).toHaveProp("accessibilityState", {
+      checked: true,
+    });
+    expect(screen.getByLabelText("Rest, 0:20 left")).toBeTruthy();
+
+    await fireEvent.press(screen.getByLabelText("Start Plank, 0:30"));
+    expect(screen.queryByLabelText("Rest, 0:20 left")).toBeNull();
+    await advance(34_000);
+    expect(readLiveRun()?.hold).toBeUndefined();
+    expect(readLiveRun()?.state).toEqual({
+      player: "sets",
+      done: [
+        expect.objectContaining({
+          sets: [
+            { onS: 10, setRestS: 20 },
+            { onS: 30, setRestS: 20 },
+          ],
+        }),
+      ],
+      ticked: ["0:0", "0:1"],
+    });
+  });
+
+  it("cancels a timed set from its count-in without recording it", async () => {
+    const planks: WorkoutRun = {
+      ...run,
+      items: [{ exercise: "Plank", dose: { sets: 1, onS: 30 } }],
+    };
+    await renderWithHang(<SetsScreen run={planks} />, hangData());
+    await fireEvent.press(screen.getByLabelText("Start Plank, 0:30"));
+    await advance(1_000);
+    await fireEvent.press(screen.getByRole("button", { name: "Done" }));
+    expect(screen.getByLabelText("Plank, set 1")).toHaveProp("accessibilityState", {
+      checked: false,
+    });
+    expect(screen.getByLabelText("Start Plank, 0:30")).toBeTruthy();
+  });
+
+  it("records a timed set that reaches its target while minimised, and starts its rest", async () => {
+    const planks: WorkoutRun = {
+      ...run,
+      items: [{ exercise: "Plank", dose: { sets: 2, onS: 30, setRestS: 20 } }],
+    };
+    const root = await renderHook(() => useLiveHold());
+    const view = await renderWithHang(<SetsScreen run={planks} />, hangData());
+    await fireEvent.press(screen.getByLabelText("Start Plank, 0:30"));
+    await view.unmount();
+    await advance(35_000);
+    expect(readLiveRun()?.hold).toBeUndefined();
+    expect(readLiveRun()?.state).toMatchObject({
+      ticked: ["0:0"],
+      done: [{ sets: [{ onS: 30 }, {}] }],
+    });
+    expect(readLiveRun()?.rest).toMatchObject({ at: "0:0", seconds: 20 });
+    await renderWithHang(<SetsScreen run={planks} />, hangData());
+    expect(screen.getByLabelText("Plank, set 1")).toHaveProp("accessibilityState", {
+      checked: true,
+    });
+    expect(screen.getByLabelText("Rest, 0:18 left")).toBeTruthy();
+    await root.unmount();
+  });
+});

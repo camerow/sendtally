@@ -9,6 +9,7 @@ export type DraftStorage = {
   write: (value: string) => boolean;
   remove: () => void;
   subscribe: (listener: () => void) => () => void;
+  changed: () => void;
 };
 
 export type DraftStorageIo = {
@@ -65,6 +66,7 @@ export function draftStorage(io: DraftStorageIo): DraftStorage {
       listeners.add(listener);
       return () => listeners.delete(listener);
     },
+    changed: notify,
   };
 }
 

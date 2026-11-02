@@ -62,7 +62,7 @@ function Panel({
   const eyebrow = t("billing.memberVia", { store: storeChipName(vm.managedIn ?? "other") });
   if (vm.managedIn === "web") {
     return (
-      <MembershipPanel eyebrow={eyebrow} title={t("billing.trendsOpen")} linkRows>
+      <MembershipPanel eyebrow={eyebrow} title={t("billing.trendsOpen")}>
         <Text style={panelMono}>{t("billing.renewsOnWeb")}</Text>
         <Text style={panelNote}>{t("billing.webBody")}</Text>
       </MembershipPanel>
@@ -70,7 +70,7 @@ function Panel({
   }
   const inStore = vm.managedIn === "play_store" || vm.managedIn === "app_store";
   return (
-    <MembershipPanel eyebrow={eyebrow} title={t("billing.trendsOpen")} linkRows>
+    <MembershipPanel eyebrow={eyebrow} title={t("billing.trendsOpen")}>
       {vm.renewalLine !== null && <Text style={panelMono}>{vm.renewalLine}</Text>}
       <View style={{ flexDirection: "row", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
         {inStore && (

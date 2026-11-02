@@ -18,6 +18,9 @@ import { GradeSection } from "./GradeSection";
 import { GymsSection } from "./GymsSection";
 import { MembershipSection, type MembershipSectionProps } from "./MembershipSection";
 import { StravaPostingSection } from "./StravaPostingSection";
+import { TrainingRemindersSection } from "./TrainingRemindersSection";
+import { WeightUnitSection } from "./WeightUnitSection";
+import { BackButton } from "../../components/BackButton";
 import { bodyText, messageText, sectionCard, sectionLabel } from "../../lib/styles";
 import { press } from "../../lib/press";
 
@@ -70,6 +73,9 @@ export function SettingsView({
 }: SettingsViewProps): React.ReactElement {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.white }} edges={["top"]}>
+      <View style={{ paddingHorizontal: 18 }}>
+        <BackButton />
+      </View>
       <ScreenHeader title={t("common.settings")} />
       <ScrollView
         contentContainerStyle={{
@@ -79,6 +85,8 @@ export function SettingsView({
           gap: 14,
         }}
       >
+        <TrainingRemindersSection />
+        <WeightUnitSection />
         <GradeSection prefs={gradePrefs} onChange={onChangeGradePref} />
         <GymsSection gyms={gyms} />
 

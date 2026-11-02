@@ -1,8 +1,5 @@
 export const trends = {
-  "trends.backToTrends": "← Tendances",
   "trends.loadFailed": "Impossible de charger les tendances. Actualise pour réessayer.",
-  "trends.loadFailedMobile": "Impossible de charger les tendances.",
-  "trends.loadFailedPull": "Impossible de charger les tendances. Tire pour réessayer.",
   "trends.details": "Détails →",
   "trends.range7d": "7 derniers jours",
   "trends.range1m": "Dernier mois",

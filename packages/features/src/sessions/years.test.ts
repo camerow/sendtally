@@ -3,6 +3,7 @@ import type { SessionRow } from "@sendtally/api-client";
 import {
   countLabel,
   durationLabel,
+  elapsedClock,
   sessionMinutes,
   sessionTotals,
   logYearGroups,
@@ -28,6 +29,7 @@ function session(
     end_at: endAt,
     times: "both",
     climb_count: 3,
+    send_count: 0,
     top_grade: grades.top,
     top_send_grade: grades.send,
     top_grade_label: null,
@@ -40,6 +42,9 @@ function session(
     posted_at: null,
     post_state: null,
     post_error: null,
+    membership_id: null,
+    week: null,
+    focus: null,
     tags: [],
   };
 }
@@ -110,5 +115,17 @@ describe("labels", () => {
     expect(totalsLabel({ count: 1, minutes: 60, topGrade: 4, topGradeLabel: "5.12b" })).toBe(
       "1 session · 1h · TOP 5.12b"
     );
+  });
+});
+
+describe("elapsedClock", () => {
+  it("shows the clock as H:MM:SS without leading zeros", () => {
+    expect(elapsedClock(0)).toBe("0:00");
+    expect(elapsedClock(42)).toBe("0:42");
+    expect(elapsedClock(4 * 60 + 7)).toBe("4:07");
+    expect(elapsedClock(42 * 60 + 7)).toBe("42:07");
+    expect(elapsedClock(3599)).toBe("59:59");
+    expect(elapsedClock(3600)).toBe("1:00:00");
+    expect(elapsedClock(3600 + 4 * 60 + 7)).toBe("1:04:07");
   });
 });

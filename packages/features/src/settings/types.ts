@@ -7,6 +7,7 @@ export type SettingsVM = {
   stravaStatusLabel: string;
   postingEnabled: boolean;
   postSince: string;
+  postTraining: boolean;
 };
 
 export type DeleteAccountStatus = "idle" | "confirming" | "deleting" | "deleted";

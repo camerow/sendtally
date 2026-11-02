@@ -30,7 +30,7 @@ export default function Terms(): React.ReactElement {
       </p>
       <p>
         If you do not agree, do not use the service. If you are using sendtally on behalf of an
-        organisation, you confirm you can bind that organisation to these terms.
+        organization, you confirm you can bind that organization to these terms.
       </p>
 
       <h2>What sendtally does</h2>
@@ -69,10 +69,10 @@ export default function Terms(): React.ReactElement {
         enter. We claim no ownership of them.
       </p>
       <p>
-        You grant us a limited, non-exclusive, worldwide, royalty-free licence to store, copy,
+        You grant us a limited, non-exclusive, worldwide, royalty-free license to store, copy,
         process and display that content, solely so we can run the service for you: showing your
         logbook back to you, computing your effort scores and trends, and posting to Strava when you
-        have asked us to. The licence lasts as long as you keep the content in sendtally and ends
+        have asked us to. The license lasts as long as you keep the content in sendtally and ends
         when you delete it. We do not sell your logbook and we do not publish it.
       </p>
       <p>

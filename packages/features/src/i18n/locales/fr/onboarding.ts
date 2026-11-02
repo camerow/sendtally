@@ -4,14 +4,14 @@ export const onboarding = {
   "onboarding.log.eyebrow": "Carnet",
   "onboarding.log.title": "Une séance s'enregistre en une minute.",
   "onboarding.log.body":
-    "Date, horaires, cotations dans l'échelle qui te parle, croix et essais, nombre de tentatives, et un nom pour la ligne si tu veux.",
+    "Date, horaires, cotations dans l'échelle qui te parle, croix et essais, nombre de tentatives, et un nom pour la voie si tu veux.",
   "onboarding.effort.eyebrow": "Note d'effort",
   "onboarding.effort.title": "Une grosse soirée doit se lire comme une grosse soirée.",
   "onboarding.effort.body":
     "Chaque séance est notée de 1 à 10 par rapport à tes huit dernières semaines plutôt qu'à une échelle fixe, pour que le chiffre parle de toi.",
   "onboarding.strava.title": "Une activité par séance, jamais en double.",
   "onboarding.strava.body":
-    "Chaque séance est publiée comme une seule activité Rock Climbing, avec le détail des lignes et la note d'effort dans la description. Les séances portent une empreinte unique, une resynchronisation ne publie donc jamais deux fois.",
+    "Chaque séance est publiée comme une seule activité Rock Climbing, avec le détail des voies et la note d'effort dans la description. Les séances portent une empreinte unique, une resynchronisation ne publie donc jamais deux fois.",
   "onboarding.trends.title": "Vois ce que six mois donnent mis bout à bout.",
   "onboarding.trends.body":
     "Volume dans le temps, pyramide des cotations, croix la plus dure, taux de flash, cotation moyenne. Enregistrer et publier sur Strava est gratuit ; l'abonnement ajoute les tendances.",
@@ -30,7 +30,7 @@ export const onboarding = {
   "onboarding.art.triedGrade": "Essayé V7",
   "onboarding.art.stravaMeta": "14 blocs · RPE 8/10",
   "onboarding.art.stravaNote":
-    "Publiée une seule fois, avec le détail des lignes dans la description.",
+    "Publiée une seule fois, avec le détail des voies dans la description.",
   "onboarding.art.climbsPerWeek": "Blocs par semaine",
   "onboarding.art.lastEightWeeks": "8 dernières semaines",
   "onboarding.art.jul": "juil.",

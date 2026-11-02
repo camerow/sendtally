@@ -1,7 +1,7 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import type { SessionRow as SessionRowData } from "@sendtally/api-client";
-import { sessionDay, sessionGradeLabels, sessionMetaLabel } from "@sendtally/features/sessions";
+import { sessionDay, sessionTallyLabel } from "@sendtally/features/sessions";
 import { t } from "@sendtally/features/i18n";
 import { colors, fonts } from "@sendtally/design/tokens";
 import { Icon } from "../../components/Icon";
@@ -11,6 +11,9 @@ import { RowTags, ROW_TAGS_HEIGHT } from "./RowTags";
 import { DayColumn } from "./SessionRowParts";
 
 export const SESSION_ROW_HEIGHT = 59;
+
+/** The extra line naming the block and week a session of a block's workouts ran in. */
+export const BLOCK_TAG_HEIGHT = 17;
 
 export function sessionRowHeight(session: SessionRowData): number {
   return SESSION_ROW_HEIGHT + (session.tags.length > 0 ? ROW_TAGS_HEIGHT : 0);
@@ -26,6 +29,8 @@ export type SessionRowProps = {
   inset?: boolean;
   /** The hairline under the row, dropped on the last row of a group that has its own edge. */
   divider?: boolean;
+  /** "Winter base · W4" when it ran one of a block's workouts. */
+  blockTag?: string;
 };
 
 export function SessionRow({
@@ -35,11 +40,18 @@ export function SessionRow({
   trailing,
   inset = false,
   divider = true,
+  blockTag,
 }: SessionRowProps): React.ReactElement {
   const { weekday, day } = sessionDay(session);
-  const meta = sessionMetaLabel(session);
+  const meta = sessionTallyLabel(session);
   const onStrava = session.strava_activity_id !== null;
-  const spoken = [title, `${weekday} ${day}`, meta, onStrava ? t("sessions.postedToStrava") : null]
+  const spoken = [
+    title,
+    `${weekday} ${day}`,
+    meta,
+    blockTag ?? null,
+    onStrava ? t("sessions.postedToStrava") : null,
+  ]
     .filter((part) => part !== null)
     .join(", ");
 
@@ -69,23 +81,12 @@ export function SessionRow({
         <Text numberOfLines={1} style={rowMeta}>
           {meta}
         </Text>
-        <RowTags tags={session.tags} />
-      </View>
-      <View style={{ alignItems: "flex-end", gap: 2 }}>
-        {sessionGradeLabels(session).map((g) => (
-          <Text
-            key={g.kind}
-            style={{
-              fontFamily: g.kind === "sent" ? fonts.monoSemiBold : fonts.monoMedium,
-              fontSize: 11,
-              lineHeight: 13,
-              letterSpacing: 0.44,
-              color: g.kind === "sent" ? colors.labelAccent : colors.textMuted,
-            }}
-          >
-            {g.label}
+        {blockTag !== undefined && (
+          <Text numberOfLines={1} style={rowMeta}>
+            {blockTag}
           </Text>
-        ))}
+        )}
+        <RowTags tags={session.tags} />
       </View>
       {trailing ?? <Icon name="chevron" size={12} strokeWidth={2} color="rgba(64,63,76,0.35)" />}
     </Pressable>

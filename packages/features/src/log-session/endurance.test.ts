@@ -236,6 +236,7 @@ describe("the endurance climb kind", () => {
       write: () => true,
       remove: () => {},
       subscribe: () => () => {},
+      changed: () => {},
     };
     expect(readClimbKind(storage, [])).toBe("endurance");
   });

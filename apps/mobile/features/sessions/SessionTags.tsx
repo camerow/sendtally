@@ -31,7 +31,7 @@ export function SessionTags({
   return (
     <View style={{ gap: 12 }}>
       <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-        <Text style={{ ...heading, color: colors.watermelonInk }}>{t("common.tags")}</Text>
+        <Text style={{ ...heading, color: colors.gunmetal }}>{t("common.tags")}</Text>
         {saving && (
           <Text style={{ ...heading, color: colors.textFaint }}>{t("common.saving")}</Text>
         )}

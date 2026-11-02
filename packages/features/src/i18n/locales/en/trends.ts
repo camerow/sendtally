@@ -1,8 +1,5 @@
 export const trends = {
-  "trends.backToTrends": "← Trends",
   "trends.loadFailed": "Could not load trends. Refresh to retry.",
-  "trends.loadFailedMobile": "Could not load trends.",
-  "trends.loadFailedPull": "Could not load trends. Pull to retry.",
   "trends.details": "Details →",
   "trends.range7d": "Last 7 days",
   "trends.range1m": "Last month",
@@ -21,7 +18,7 @@ export const trends = {
   "trends.scopeMore": "More",
   "trends.gymGrades": "Gym grades",
   "trends.gymGradesBody":
-    "Gyms where you log on their own circuit colours. Trends read in those colours, never converted to V.",
+    "Gyms where you log on their own circuit colors. Trends read in those colors, never converted to V.",
   "trends.place": "Place",
   "trends.everywhere": "Everywhere",
   "trends.inside": "Inside",

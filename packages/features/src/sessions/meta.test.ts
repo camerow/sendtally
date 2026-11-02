@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { SessionRow } from "@sendtally/api-client";
-import { climbCountLabel, sessionDay, sessionMetaLabel } from "./meta";
+import { climbCountLabel, sessionDay, sessionMetaLabel, sessionTallyLabel } from "./meta";
 
 function session(overrides: Partial<SessionRow> = {}): SessionRow {
   return {
@@ -15,6 +15,7 @@ function session(overrides: Partial<SessionRow> = {}): SessionRow {
     end_at: "2026-09-07T19:40:00.000Z",
     times: "both",
     climb_count: 14,
+    send_count: 0,
     top_grade: 7,
     top_send_grade: 6,
     top_grade_label: null,
@@ -27,6 +28,9 @@ function session(overrides: Partial<SessionRow> = {}): SessionRow {
     posted_at: null,
     post_state: null,
     post_error: null,
+    membership_id: null,
+    week: null,
+    focus: null,
     tags: [],
     ...overrides,
   };
@@ -44,6 +48,24 @@ describe("sessionMetaLabel", () => {
   it("omits the duration of a session saved without both times", () => {
     expect(sessionMetaLabel(session({ times: "none" }))).toBe("14 climbs");
     expect(sessionMetaLabel(session({ times: "start" }))).toBe("14 climbs");
+  });
+});
+
+describe("sessionTallyLabel", () => {
+  it("reads duration, sends and the top send", () => {
+    expect(
+      sessionTallyLabel(session({ send_count: 6, top_send_grade: 6, top_send_grade_label: "V6" }))
+    ).toBe("1h 40m · 6 sent · top V6");
+    expect(sessionTallyLabel(session({ times: "none", top_send_grade: -1 }))).toBe("0 sent");
+  });
+
+  it("leaves out the top send where the row shows it beside", () => {
+    expect(
+      sessionTallyLabel(
+        session({ send_count: 6, top_send_grade: 6, top_send_grade_label: "V6" }),
+        false
+      )
+    ).toBe("1h 40m · 6 sent");
   });
 });
 

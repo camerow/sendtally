@@ -26,7 +26,7 @@ export function moderationTabLabel(tab: ModerationTab): string {
 
 const FIELD_LABELS: Record<string, string> = {
   parent_id: "Parent area",
-  area_id: "Crag",
+  area_id: "Area",
   name: "Name",
   description: "Description",
   lat: "Latitude",

@@ -1,0 +1,130 @@
+import React from "react";
+import { Pressable, Text, View } from "react-native";
+import type { WorkoutKind } from "@sendtally/core/hang";
+import { colors } from "@sendtally/design/tokens";
+import { press } from "../../../lib/press";
+import { DayMark } from "../today/DayMark";
+import { KIND_LOOK } from "../today/kindLook";
+import type { CellMark } from "./planGridRows";
+
+export type DayCellProps = {
+  kind: WorkoutKind;
+  on: boolean;
+  size: number;
+  /**
+   * On a dated day: done fills the mark, planned outlines it, missed greys it, skipped is
+   * slashed, moved away is outlined with an arrow, and moved in carries an azure dot.
+   */
+  status?: CellMark;
+  /** A plan with no days yet: outlined in its kind's colour, asking for one. */
+  asking?: boolean;
+  /** Makes the cell a button: a weekday to toggle, or with `opens` a day to open. */
+  onPress?: () => void;
+  opens?: boolean;
+  /** A day to set: drawn as a field, white when off, tinted with the kind's line when on. */
+  editing?: boolean;
+  /** Ringed in gold: one week set apart from every week. */
+  ring?: boolean;
+  accessibilityLabel?: string;
+};
+
+/** One weekday of a plan's week: its kind's mark where it lands, a dot where it does not. */
+export function DayCell({
+  kind,
+  on,
+  size,
+  status,
+  asking = false,
+  onPress,
+  opens = false,
+  editing = false,
+  ring = false,
+  accessibilityLabel,
+}: DayCellProps): React.ReactElement {
+  const look = KIND_LOOK[kind];
+  const box = {
+    width: size,
+    height: size,
+    borderRadius: size > 24 ? 8 : 7,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor:
+      status === "moved" || (editing && !on)
+        ? colors.white
+        : on && status !== "skipped"
+          ? look.tint
+          : colors.surfaceSoft,
+    borderWidth: ring ? 2 : asking ? 1.5 : status === "moved" || editing ? 1 : 0,
+    borderColor: ring
+      ? colors.gold
+      : status === "moved" || (editing && !on)
+        ? colors.lineOnLightStrong
+        : look.ink,
+    // A day to set reads as a field: a hairline shadow under its line.
+    ...(editing && {
+      shadowColor: colors.gunmetal,
+      shadowOpacity: 0.08,
+      shadowRadius: 1,
+      shadowOffset: { width: 0, height: 1 },
+    }),
+  } as const;
+  const mark =
+    status === "skipped" ? (
+      <View
+        style={{
+          width: size * 0.55,
+          height: 1.5,
+          borderRadius: 1,
+          backgroundColor: colors.textFaint,
+          transform: [{ rotate: "-45deg" }],
+        }}
+      />
+    ) : status === "moved" ? (
+      <Text style={{ fontSize: 13, lineHeight: 15, color: "rgba(64,63,76,0.32)" }}>→</Text>
+    ) : on ? (
+      <>
+        <DayMark
+          kind={kind}
+          filled={status === undefined || status === "done"}
+          missed={status === "missed"}
+        />
+        {status === "movedIn" && (
+          <View
+            style={{
+              position: "absolute",
+              top: 3,
+              right: 3,
+              width: 5,
+              height: 5,
+              borderRadius: 3,
+              backgroundColor: colors.azure,
+            }}
+          />
+        )}
+      </>
+    ) : (
+      <View
+        style={{ width: 3, height: 3, borderRadius: 2, backgroundColor: "rgba(64,63,76,0.25)" }}
+      />
+    );
+  return onPress === undefined ? (
+    <View
+      style={box}
+      accessible={accessibilityLabel !== undefined}
+      accessibilityLabel={accessibilityLabel}
+    >
+      {mark}
+    </View>
+  ) : (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole={opens ? "button" : "checkbox"}
+      accessibilityState={opens ? undefined : { checked: on }}
+      accessibilityLabel={accessibilityLabel}
+      hitSlop={{ top: 10, bottom: 10, left: 2, right: 2 }}
+      style={press(box)}
+    >
+      {mark}
+    </Pressable>
+  );
+}

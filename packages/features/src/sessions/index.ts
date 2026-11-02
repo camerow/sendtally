@@ -9,7 +9,14 @@ export {
   type RouteScale,
   type SessionGradeLabel,
 } from "./grades";
-export { climbCountLabel, isUnscored, sessionDay, sessionMetaLabel, type SessionDay } from "./meta";
+export {
+  climbCountLabel,
+  isUnscored,
+  sessionDay,
+  sessionMetaLabel,
+  sessionTallyLabel,
+  type SessionDay,
+} from "./meta";
 export {
   monthShortName,
   monthKey,
@@ -34,6 +41,7 @@ export {
   type TagOption,
 } from "./tags";
 export { sessionTitle } from "./title";
+export { hangAt, hangEffortLabel, hangGripLabel, hangMetaLabel, hangTitle } from "./hang";
 export { useSessionTags, type SessionTagsEditor } from "./useSessionTags";
 export { useTagVocabulary, type TagVocabulary } from "./useTagVocabulary";
 export {
@@ -41,6 +49,7 @@ export {
   logCountLabel,
   logTotalsLabel,
   durationLabel,
+  elapsedClock,
   sessionMinutes,
   sessionTotals,
   logYearGroups,

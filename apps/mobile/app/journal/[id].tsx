@@ -37,7 +37,7 @@ const action = {
   fontSize: 12,
   letterSpacing: 0.5,
   textTransform: "uppercase",
-  color: colors.labelAccent,
+  color: colors.gunmetal,
 } as const;
 
 const cardLabel = {

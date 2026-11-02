@@ -475,6 +475,7 @@ function session(overrides: Partial<SessionDetail> = {}): SessionDetail {
     end_at: "2026-08-26T20:00:00.000Z",
     times: "both",
     climb_count: 2,
+    send_count: 0,
     top_grade: 6,
     top_send_grade: 4,
     top_grade_label: null,
@@ -488,6 +489,9 @@ function session(overrides: Partial<SessionDetail> = {}): SessionDetail {
     posted_at: null,
     post_state: null,
     post_error: null,
+    membership_id: null,
+    week: null,
+    focus: null,
     tags: [{ id: "t1", name: "Endurance", slug: "endurance" }],
     climbs: [
       {

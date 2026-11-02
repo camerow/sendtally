@@ -8,7 +8,6 @@ export const settings = {
     "Der Strava-Zugang ist abgelaufen. Verbinde es neu und deine Sessions landen wieder in deinem Feed.",
   "settings.stravaNotConnectedMobile":
     "Jede geloggte Session kann als Rock-Climbing-Aktivität in deinem Feed landen. Du bestätigst das auf strava.com und kannst es dort jederzeit widerrufen.",
-  "settings.postAutomatically": "Sessions automatisch posten",
   "settings.postingOn":
     "Eingetragene Sessions landen als Rock Climbing-Aktivitäten in deinem Feed.",
   "settings.postingOffMobile":
@@ -36,7 +35,6 @@ export const settings = {
   "settings.membershipPitch":
     "Die Mitgliedschaft schaltet Trends und Einblicke in deine Klettergewohnheiten frei.",
   "settings.billedThrough": "Abrechnung über {store}. Verwalte sie dort.",
-  "settings.tab": "Mehr",
   "settings.openingStrava": "Strava wird geöffnet…",
   "settings.stravaUnreachable": "Strava ist nicht erreichbar. Versuch es noch einmal.",
   "settings.embeddedBundle": "Eingebettet",
@@ -49,4 +47,12 @@ export const settings = {
     "Nimm alles, was du hier eingetragen hast, als CSV-Datei mit. Importieren geht auf sendtally.com.",
   "settings.exportSaved": "Im gewählten Ordner gespeichert.",
   "settings.exportFailed": "Der Export hat nicht geklappt. Versuch es gleich noch einmal.",
+  "settings.weightUnit": "Gewichtseinheit",
+  "settings.weightUnitBody": "Zusatzgewichte und Lasten werden in dieser Einheit angezeigt.",
+  "settings.postClimbing": "Klettersessions posten",
+  "settings.postHangboard": "Hangboard-Sessions posten",
+  "settings.postHangboardBody": "Jede Hangboard-Session wird als Workout gepostet.",
+  "settings.postTraining": "Anderes Training posten",
+  "settings.postTrainingBody":
+    "Kraft, Läufe, Yoga und Mobility werden als eigene Aktivitäten gepostet.",
 } as const;

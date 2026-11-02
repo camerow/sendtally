@@ -21,7 +21,6 @@ import {
 } from "@sendtally/features/areas";
 import { findClimb, useClimbVocabulary } from "@sendtally/features/climbs";
 import {
-  adoptSavedDetails,
   draftProblem,
   draftSummary,
   disciplineOf,
@@ -49,9 +48,9 @@ import { colors, effortColor, fonts, radius } from "@sendtally/design/tokens";
 import { useApi } from "../../lib/api";
 import { queries } from "@sendtally/features/query";
 import { climbKindStorage } from "../../lib/climbKindStorage";
-import { liveSessionStorage } from "../../lib/liveSessionStorage";
 import { sessionDraftStorage } from "../../lib/sessionDraftStorage";
 import { confirmDiscardDraft } from "../../lib/confirmDiscardDraft";
+import { Button } from "../training/components/Button";
 import { DraftBanner } from "./DraftBanner";
 import { TagPicker } from "../sessions/TagPicker";
 import {
@@ -67,6 +66,7 @@ import { SelectRow } from "../../components/SelectRow";
 import { AddClimbSheet } from "../areas/AddClimbSheet";
 import { AddCragSheet } from "../areas/AddCragSheet";
 import { AreaSearchField } from "../areas/AreaSearchField";
+import { readPlanLink } from "../training/data/planLinkParams";
 import { ClimbEditorSheet } from "./ClimbEditorSheet";
 import { NewGymSheet } from "../gyms/NewGymSheet";
 import { Icon } from "../../components/Icon";
@@ -150,12 +150,19 @@ export function LogSessionForm({
 }): React.ReactElement {
   const api = useApi();
   const client = useQueryClient();
-  const { resume, wrapUp } = useLocalSearchParams<{ resume?: string; wrapUp?: string }>();
+  const params = useLocalSearchParams<{ resume?: string; wrapUp?: string }>();
+  const { resume, wrapUp } = params;
+  const [plan] = React.useState(() => readPlanLink(params));
   const { scales: gradePrefs, ready: prefsReady } = useGradeScalePrefs(api);
   // Opened by tapping the draft itself: start on it rather than offering it back.
   const [picked] = React.useState(() => (resume === "1" ? storedDraft(sessionDraftStorage) : null));
   const [draft, setDraft] = React.useState<LogSessionDraft>(
-    () => editing?.draft ?? picked ?? emptyDraft(new Date(), gradePrefs)
+    () =>
+      editing?.draft ??
+      picked ?? {
+        ...emptyDraft(new Date(), gradePrefs),
+        ...(plan.membershipId === null ? {} : { plan }),
+      }
   );
   const [addingTimes, setAddingTimes] = React.useState(false);
   const timesOpen = addingTimes || draft.startTime !== "" || draft.endTime !== "";
@@ -307,9 +314,6 @@ export function LogSessionForm({
         updatedAt: 0,
       });
       autosave.clear();
-      if (editing !== undefined) {
-        adoptSavedDetails(liveSessionStorage, editing.fingerprint, draft, new Date());
-      }
       router.replace(`/session/${encodeURIComponent(session.fingerprint)}`);
     } catch {
       setError(t("logSession.saveFailed"));
@@ -486,13 +490,13 @@ export function LogSessionForm({
               cragY.current = e.nativeEvent.layout.y;
             }}
           >
-            <LabelText>{`${t("areas.crag")} ${t("common.optional")}`}</LabelText>
+            <LabelText>{`${t("areas.area")} ${t("common.optional")}`}</LabelText>
             <AreaSearchField
               crags
               value={draft.area ?? null}
-              label={t("areas.crag")}
-              placeholder={t("areas.searchCrags")}
-              addLabel={(name) => t("areas.addThisCrag", { name })}
+              label={t("areas.area")}
+              placeholder={t("areas.searchAreas")}
+              addLabel={(name) => t("areas.addThisArea", { name })}
               onPick={(area) =>
                 setDraft((d) => ({
                   ...d,
@@ -674,30 +678,14 @@ export function LogSessionForm({
             />
           ))}
         </View>
-        <Pressable
+        <Button
+          label={t("logSession.addClimb")}
           onPress={addClimb}
-          style={press({
-            minHeight: 48,
-            alignItems: "center",
-            justifyContent: "center",
-            borderWidth: 1,
-            borderStyle: "dashed",
-            borderColor: "rgba(64,63,76,0.25)",
-            borderRadius: radius.card,
-          })}
-        >
-          <Text
-            style={{
-              fontFamily: fonts.monoMedium,
-              fontSize: 10,
-              letterSpacing: 0.8,
-              textTransform: "uppercase",
-              color: colors.azureInk,
-            }}
-          >
-            {`+ ${t("logSession.addClimb")}`}
-          </Text>
-        </Pressable>
+          variant="outline"
+          icon="plus"
+          height={40}
+          style={{ alignSelf: "flex-start" }}
+        />
         <Text
           style={{
             fontFamily: fonts.monoMedium,

@@ -141,6 +141,27 @@
       "when": 1790217154761,
       "tag": "0024_ordinary_mach_iv",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "6",
+      "when": 1793641379974,
+      "tag": "0025_training",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "6",
+      "when": 1793641388641,
+      "tag": "0026_backfill_user_climbs",
+      "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "6",
+      "when": 1793641389225,
+      "tag": "0027_drop_projects",
+      "breakpoints": true
     }
   ]
 }

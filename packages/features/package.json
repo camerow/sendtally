@@ -14,11 +14,17 @@
     "./session-detail": "./src/session-detail/index.ts",
     "./sessions": "./src/sessions/index.ts",
     "./trends": "./src/trends/index.ts",
+    "./statistics": "./src/statistics/index.ts",
     "./settings": "./src/settings/index.ts",
     "./journal": "./src/journal/index.ts",
     "./i18n": "./src/i18n/index.ts",
     "./import": "./src/import/index.ts",
-    "./query": "./src/query/index.ts"
+    "./query": "./src/query/index.ts",
+    "./hang": "./src/hang/index.ts",
+    "./training": "./src/training/index.ts",
+    "./activities": "./src/activities/index.ts",
+    "./workouts": "./src/workouts/index.ts",
+    "./exercises": "./src/exercises/index.ts"
   },
   "scripts": {
     "test": "vitest run",

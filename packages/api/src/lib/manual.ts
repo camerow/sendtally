@@ -16,6 +16,7 @@ import {
 import { z } from "zod";
 import type { ManualSessionInput } from "./repo";
 import { CIRCUIT_COLOURS } from "./gyms";
+import { focus, id, MAX_BLOCK_WEEKS } from "./plan";
 import { tagNames, tagSlug } from "./tags";
 
 const knownGrade =
@@ -54,6 +55,7 @@ const climbSchema = z
   .object({
     name: z.string().max(200).default(""),
     climbId: z.string().min(1).max(64).optional(),
+    userClimbId: z.string().min(1).max(64).optional(),
     grade: gradeSchema,
     circuit: circuitRefSchema.optional(),
     wall: z.string().trim().max(40).optional(),
@@ -143,6 +145,11 @@ export const manualSessionShape = z.object({
   tags: tagNames.optional(),
   notes: sessionNote,
   climbs: z.array(climbSchema).min(1).max(300),
+  // The plan the session ran; absent on an edit keeps the link it had.
+  membershipId: id.nullable().optional(),
+  week: z.number().int().min(1).max(MAX_BLOCK_WEEKS).nullable().optional(),
+  // Absent on an edit keeps the focus it had.
+  focus,
 });
 
 export function sessionTooLong(
@@ -208,7 +215,7 @@ function sessionMinutes(body: {
 }): number {
   if (body.startTime === undefined || body.endTime === undefined) return DEFAULT_DURATION_MINUTES;
   const diff = minutesOf(body.endTime) - minutesOf(body.startTime);
-  return diff > 0 ? diff : diff + 24 * 60;
+  return diff < 0 ? diff + 24 * 60 : Math.max(diff, 1);
 }
 
 type ManualGrade = z.infer<typeof gradeSchema>;
@@ -277,6 +284,7 @@ export type StoredClimb = {
   circuit?: CircuitRef;
   wall?: string;
   endurance?: Endurance;
+  userClimbId?: string;
 };
 
 export type CircuitRef = z.infer<typeof circuitRefSchema>;
@@ -287,6 +295,7 @@ function placeOf(climb: ManualSessionBody["climbs"][number] | undefined): Partia
   return {
     ...(climb.circuit === undefined ? {} : { circuit: climb.circuit }),
     ...(wall === "" ? {} : { wall }),
+    ...(climb.userClimbId === undefined ? {} : { userClimbId: climb.userClimbId }),
   };
 }
 
@@ -314,6 +323,17 @@ export function historySession(row: {
   };
 }
 
+function planLinkOf(
+  body: ManualSessionBody
+): Pick<ManualSessionInput, "membership_id" | "week" | "focus"> {
+  return {
+    ...(body.membershipId === undefined
+      ? {}
+      : { membership_id: body.membershipId, week: body.week ?? null }),
+    ...(body.focus === undefined ? {} : { focus: body.focus }),
+  };
+}
+
 export function buildManualSession(
   fingerprint: string,
   body: ManualSessionBody,
@@ -338,6 +358,7 @@ export function buildManualSession(
     end_at: session.end.toISOString(),
     times: timesOf(body),
     climb_count: session.climbs.length,
+    send_count: sends.length,
     top_grade: topGrade,
     top_send_grade: topSendGrade,
     top_grade_label: topGradeLabel(graded) ?? null,
@@ -346,6 +367,7 @@ export function buildManualSession(
     rpe_source: rpeSourceOf(body),
     title: body.name ?? result.title,
     summary: result.summary,
+    ...planLinkOf(body),
     climbs_json: JSON.stringify(
       session.climbs.map((c, i): StoredClimb => ({
         time: c.time.toISOString(),

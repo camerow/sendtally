@@ -1,6 +1,12 @@
 import React from "react";
 import { Link, useRevalidator, useSearchParams } from "react-router";
-import type { ConnectionStatus, JournalEntry, SessionRow } from "@sendtally/api-client";
+import type {
+  ConnectionStatus,
+  Activity,
+  HangHistoryRow,
+  JournalEntry,
+  SessionRow,
+} from "@sendtally/api-client";
 import { Logo } from "@sendtally/design";
 import { t } from "@sendtally/features/i18n";
 import {
@@ -63,6 +69,8 @@ export function LogView({
   apiUrl,
   status,
   sessions,
+  hangSessions,
+  activities,
   entries,
   scope,
   basePath,
@@ -70,6 +78,8 @@ export function LogView({
   apiUrl: string;
   status: ConnectionStatus;
   sessions: SessionRow[];
+  hangSessions: HangHistoryRow[];
+  activities: Activity[];
   entries: JournalEntry[];
   scope: LogScope;
   basePath: string;
@@ -119,7 +129,10 @@ export function LogView({
   const grouping: SessionGrouping = searchParams.get("group") === "tag" ? "tag" : "month";
   const selectedTags = searchParams.getAll("tag");
 
-  const all = React.useMemo(() => logItems(sessions, entries), [sessions, entries]);
+  const all = React.useMemo(
+    () => logItems(sessions, entries, hangSessions, activities),
+    [sessions, entries, hangSessions, activities]
+  );
   const inScope = React.useMemo(() => logScopeItems(all, scope), [all, scope]);
 
   const tagOptions = React.useMemo(() => sessionTagOptions(inScope), [inScope]);

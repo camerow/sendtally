@@ -1,14 +1,13 @@
 export const settings = {
   "settings.grades": "Cotations",
   "settings.gradesBody":
-    "L'échelle dans laquelle tu enregistres. Les lignes déjà enregistrées gardent leur échelle d'origine.",
+    "L'échelle dans laquelle tu enregistres. Les voies déjà enregistrées gardent leur échelle d'origine.",
   "settings.stravaActive":
     "Lié à ton compte Strava. Les séances que tu enregistres peuvent être publiées dans ton fil comme activités Rock Climbing.",
   "settings.stravaLapsedMobile":
     "L’accès Strava a expiré. Relie-le à nouveau et tes sessions pourront de nouveau être publiées dans ton fil.",
   "settings.stravaNotConnectedMobile":
     "Chaque session enregistrée peut être publiée dans ton fil comme activité Rock Climbing. Tu l’approuves sur strava.com et peux la révoquer là-bas à tout moment.",
-  "settings.postAutomatically": "Publier les séances automatiquement",
   "settings.postingOn":
     "Les séances enregistrées sont publiées dans ton fil comme activités Rock Climbing.",
   "settings.postingOffMobile":
@@ -35,7 +34,6 @@ export const settings = {
   "settings.membershipPitch":
     "L'abonnement débloque les tendances et des analyses de tes habitudes d'escalade.",
   "settings.billedThrough": "Facturé via {store}. Gère-le là-bas.",
-  "settings.tab": "Réglages",
   "settings.openingStrava": "Ouverture de Strava…",
   "settings.stravaUnreachable": "Impossible de joindre Strava. Réessaie.",
   "settings.embeddedBundle": "Intégré",
@@ -48,4 +46,12 @@ export const settings = {
     "Emporte tout ce que tu as enregistré ici dans un fichier CSV. L'import se fait sur sendtally.com.",
   "settings.exportSaved": "Enregistré dans le dossier choisi.",
   "settings.exportFailed": "L'export n'a pas abouti. Réessaie dans un instant.",
+  "settings.weightUnit": "Unité de poids",
+  "settings.weightUnitBody": "Les charges s'affichent dans cette unité.",
+  "settings.postClimbing": "Publier les séances d’escalade",
+  "settings.postHangboard": "Publier les séances de poutre",
+  "settings.postHangboardBody": "Chaque séance de poutre est publiée comme Workout.",
+  "settings.postTraining": "Publier les autres entraînements",
+  "settings.postTrainingBody":
+    "Renfo, course, yoga et mobilité sont publiés comme activités à part.",
 } as const;

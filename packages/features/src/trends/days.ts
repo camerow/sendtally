@@ -1,7 +1,7 @@
 import type { Gym, SessionWithClimbs } from "@sendtally/api-client";
 import { formatDate, formatNumber, t } from "../i18n";
 import { isUnscored } from "../sessions/meta";
-import { DAY_MS, bucketsFor, dayStart } from "./buckets";
+import { DAY_MS, bucketsFor, dayStart, wallClock } from "./buckets";
 import { ALL_LADDER } from "./slice";
 import { formatter, tile } from "./tile";
 import type { DayCellVM, DayTagVM, DaysVM } from "./types";
@@ -46,7 +46,7 @@ function dayDetail(day: Day | undefined, gyms: Map<string, string>): string {
 
 /** The last 52 weeks of climbing days, whatever the filters say: a calendar is the whole picture. */
 export function daysVM(sessions: SessionWithClimbs[], gyms: Gym[], now: Date = new Date()): DaysVM {
-  const today = dayStart(now.getTime());
+  const today = dayStart(wallClock(now));
   const firstDay = today - (YEAR_DAYS - 1) * DAY_MS;
   const gridStart = firstDay - weekday(firstDay) * DAY_MS;
   const gymNames = new Map(gyms.map((g) => [g.id, g.name]));

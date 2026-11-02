@@ -70,7 +70,7 @@ export const billing = {
   "billing.trendsOpen": "Your trends are open.",
   "billing.trendsOpenUntil": "Your trends are open until {date}.",
   "billing.freeTrialEnds": "Free trial · ends {date}",
-  "billing.cancelledEnds": "Cancelled · ends {date}",
+  "billing.cancelledEnds": "Canceled · ends {date}",
   "billing.perMonthBilledYearly": "/mo billed yearly",
   "billing.cancelAnyTime": "cancel any time",
   "billing.yearlyPrice": "Yearly · {price}",

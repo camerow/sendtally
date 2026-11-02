@@ -1,7 +1,7 @@
 import React from "react";
 import type { LoaderFunctionArgs } from "react-router";
 import { useLoaderData, useSearchParams } from "react-router";
-import type { Membership } from "@sendtally/api-client";
+import type { MembershipStatus } from "@sendtally/api-client";
 import { Badge } from "@sendtally/design";
 import { membershipPanel, membershipVM, storeChipName } from "@sendtally/features/billing";
 import { t } from "@sendtally/features/i18n";
@@ -16,7 +16,7 @@ import {
 import { capture } from "../lib/analytics";
 import { getMembership } from "../lib/billing.server";
 
-type LoaderData = { membership: Membership };
+type LoaderData = { membership: MembershipStatus };
 
 /** Fires once for the checkout redirect, then drops the marker so a reload cannot double count. */
 function useSubscribedRedirect(): void {

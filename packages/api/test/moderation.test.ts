@@ -151,6 +151,37 @@ describe("moderating creations", () => {
     ).toBe(409);
   });
 
+  it("approves a top-level area, then files it under a region by an edit", async () => {
+    await setRole("mod", "moderator");
+    const area = await createArea("user_a", { name: "Burbage Valley North" });
+    const approved = await call("mod", `/v1/moderation/areas/${area.id}/approve`, {
+      body: { version: 1 },
+    });
+    expect(approved.body["area"]).toMatchObject({ status: "active", version: 2 });
+
+    await call("user_b", `/v1/areas/${area.id}/draft`, {
+      method: "PUT",
+      body: { description: "Gritstone edges" },
+    });
+    const [kept] = await revisions();
+    const edited = await call("mod", `/v1/moderation/revisions/${kept?.id}/approve`, {
+      body: { version: 2 },
+    });
+    expect(edited.status).toBe(200);
+    expect(await areaRow(area.id)).toMatchObject({ path: `/${area.id}/`, depth: 0 });
+
+    await call("user_b", `/v1/areas/${area.id}/draft`, {
+      method: "PUT",
+      body: { parentId: "region-gb", lat: 53.35, lon: -1.62 },
+    });
+    const [filed] = await revisions();
+    const moved = await call("mod", `/v1/moderation/revisions/${filed?.id}/approve`, {
+      body: { version: 3 },
+    });
+    expect(moved.status).toBe(200);
+    expect(await areaRow(area.id)).toMatchObject({ path: `/region-gb/${area.id}/`, depth: 1 });
+  });
+
   it("bulk approves a nested chain in tree order and skips what changed", async () => {
     await setRole("mod", "moderator");
     const area = await createArea("user_a", buttermilks);
@@ -512,6 +543,12 @@ describe("account deletion", () => {
     );
     expect(res.status).toBe(200);
   };
+
+  it("drops a pending top-level area with its creator", async () => {
+    const area = await createArea("user_a", { name: "Burbage Valley North" });
+    await deleteAccount("user_a");
+    expect(await count("areas WHERE id = ?", area.id)).toBe(0);
+  });
 
   it("keeps approved contributions without their author and drops the rest", async () => {
     await setRole("mod", "moderator");

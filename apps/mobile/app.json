@@ -103,7 +103,14 @@
         }
       ],
       "./plugins/with-android-play-compliance.js",
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#403f4c"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": false

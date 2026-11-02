@@ -129,7 +129,7 @@ export function AreaFormDialog(props: AreaFormDialogProps): React.ReactElement {
   const title =
     props.mode === "create"
       ? props.parent === null
-        ? t("areas.addACrag")
+        ? t("areas.addAnArea")
         : t("areas.addAreaIn", { name: props.parent.name })
       : t("areas.suggestEditsTo", { name: props.area.name });
 

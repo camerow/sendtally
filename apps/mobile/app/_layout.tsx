@@ -25,7 +25,11 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { colors } from "@sendtally/design/tokens";
 import { resolveLocale, setLocale } from "@sendtally/features/i18n";
 import { AnalyticsProvider } from "../features/analytics/AnalyticsProvider";
+import { AlreadyRunningSheet } from "../features/live-session/AlreadyRunningSheet";
 import { BillingProvider } from "../features/billing/BillingProvider";
+import { useLiveHold } from "../features/training/hold/useLiveHold";
+import { useRestTone } from "../features/training/rest/useRestTone";
+import { ReminderPromptProvider } from "../features/training/reminders/ReminderPromptProvider";
 import { CLERK_PUBLISHABLE_KEY } from "../lib/config";
 import { QueryProvider } from "../lib/QueryProvider";
 import { useFreshInstallUpdate } from "../features/app-update/useFreshInstallUpdate";
@@ -41,11 +45,37 @@ const SIGNED_IN_SCREENS = [
   "journal/new",
   "journal/[id]",
   "journal/[id]/edit",
-  "project/[slug]",
-  "trend/[page]",
+  "climb/[id]",
+  "climb/log",
   "gym/[id]",
   "account",
+  "profile",
   "membership",
+  "workout/[id]",
+  "workout/edit",
+  "workout/category",
+  "workout/checklist",
+  "plan/schedule",
+  "plan/block/[id]",
+  "plan/membership/[id]",
+  "activity/new",
+  "activity/[id]",
+  "activity/[id]/edit",
+  "exercise/[id]",
+  "exercise/edit",
+  "exercise/category",
+  "grip/[id]",
+  "grip/compare",
+  "plan/calendar",
+  "plan/day",
+];
+
+const LIVE_SCREENS = [
+  "session/live",
+  "workout/timer",
+  "workout/intervals",
+  "workout/sets",
+  "workout/tally",
 ];
 
 function InteractiveMarker(): React.ReactElement | null {
@@ -55,15 +85,33 @@ function InteractiveMarker(): React.ReactElement | null {
 
 function AppStack(): React.ReactElement | null {
   const { isLoaded, isSignedIn } = useAuth();
+  useRestTone();
+  useLiveHold();
   if (!isLoaded) return null;
   return (
-    <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.white } }}>
-      <Stack.Protected guard={isSignedIn}>
-        {SIGNED_IN_SCREENS.map((name) => (
-          <Stack.Screen key={name} name={name} />
-        ))}
-      </Stack.Protected>
-    </Stack>
+    <ReminderPromptProvider>
+      <Stack
+        screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.white } }}
+      >
+        <Stack.Protected guard={isSignedIn}>
+          {SIGNED_IN_SCREENS.map((name) => (
+            <Stack.Screen key={name} name={name} />
+          ))}
+          {LIVE_SCREENS.map((name) => (
+            <Stack.Screen
+              key={name}
+              name={name}
+              options={{ gestureEnabled: false, animation: "slide_from_bottom" }}
+            />
+          ))}
+          <Stack.Screen
+            name="workout/done"
+            options={{ gestureEnabled: false, animation: "fade" }}
+          />
+        </Stack.Protected>
+      </Stack>
+      {isSignedIn && <AlreadyRunningSheet />}
+    </ReminderPromptProvider>
   );
 }
 

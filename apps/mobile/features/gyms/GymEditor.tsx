@@ -1,4 +1,4 @@
-import { BottomSheetTextInput } from "@gorhom/bottom-sheet";
+import { useBottomSheetInternal } from "@gorhom/bottom-sheet";
 import React from "react";
 import {
   Alert,
@@ -7,9 +7,9 @@ import {
   Pressable,
   ScrollView,
   Text,
-  TextInput,
   View,
 } from "react-native";
+import { TextInput } from "../../components/TextInput";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
   customStart,
@@ -60,7 +60,6 @@ export type GymEditorProps = {
   error: string | null;
   onSave: (draft: GymDraft) => void;
   onDelete: (() => void) | null;
-  inSheet?: boolean;
 };
 
 /** One screen for a new gym and for editing one; nothing is written until Save. */
@@ -70,13 +69,12 @@ export function GymEditor({
   error,
   onSave,
   onDelete,
-  inSheet = false,
 }: GymEditorProps): React.ReactElement {
   const [draft, setDraft] = React.useState<GymDraft>(initial);
   const [mode, setMode] = React.useState<CircuitMode>("standard");
   const [wall, setWall] = React.useState("");
   const [problem, setProblem] = React.useState<string | null>(null);
-  const Input = inSheet ? BottomSheetTextInput : TextInput;
+  const inSheet = useBottomSheetInternal(true) !== null;
 
   const setCircuits = (circuits: Circuit[]): void => setDraft((d) => ({ ...d, circuits }));
   const changeMode = (next: CircuitMode): void => {
@@ -116,7 +114,7 @@ export function GymEditor({
 
       <View style={{ gap: 7 }}>
         <Text style={sectionLabel}>{t("gyms.gymName")}</Text>
-        <Input
+        <TextInput
           value={draft.name}
           placeholder={t("gyms.gymName")}
           placeholderTextColor={colors.textFaint}
@@ -182,7 +180,6 @@ export function GymEditor({
             key={circuit.id}
             circuit={circuit}
             scale={draft.scale}
-            inSheet={inSheet}
             onChange={(next) =>
               setCircuits(draft.circuits.map((c) => (c.id === next.id ? next : c)))
             }
@@ -253,7 +250,7 @@ export function GymEditor({
           ))}
         </View>
         <View style={{ flexDirection: "row", gap: 10 }}>
-          <Input
+          <TextInput
             value={wall}
             placeholder={t("gyms.wallPlaceholder")}
             placeholderTextColor={colors.textFaint}

@@ -47,7 +47,6 @@ export function NewGymSheet({
         error={error}
         onSave={onSave}
         onDelete={null}
-        inSheet
       />
     </Sheet>
   );

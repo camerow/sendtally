@@ -1,0 +1,184 @@
+import { describe, expect, it, jest } from "@jest/globals";
+import { fireEvent, screen } from "@testing-library/react-native";
+import { router } from "expo-router";
+import React from "react";
+import type * as LogSession from "@sendtally/features/log-session";
+import { statsSegmentStorage } from "../../../lib/statsSegmentStorage";
+import { hangData, renderWithHang, TODAY } from "../data/renderWithHang";
+import { DoneScreen } from "./DoneScreen";
+import type { DoneParams } from "./doneParams";
+
+jest.mock("expo-router", () => ({
+  router: { dismissTo: jest.fn(), push: jest.fn(), back: jest.fn() },
+}));
+jest.mock("../../../lib/statsSegmentStorage", () => {
+  let value: string | null = null;
+  return {
+    statsSegmentStorage: jest
+      .requireActual<typeof LogSession>("@sendtally/features/log-session")
+      .draftStorage({
+        read: () => value,
+        write: (next) => {
+          value = next;
+        },
+        remove: () => {
+          value = null;
+        },
+      }),
+  };
+});
+jest.mock("expo-crypto", () => ({ randomUUID: () => "session-1" }));
+
+const set = { reps: 6, onS: 7, offS: 3, setRestS: 180 };
+
+const ended: DoneParams = {
+  workoutId: "rep73",
+  gripId: "half",
+  link: { membershipId: "m1", week: 3, focus: null },
+  session: 0,
+  run: {
+    done: [{ item: 0, exercise: "half", sets: [set, set, set, { ...set, reps: 4 }, set, set] }],
+    off: ["0:4", "0:5"],
+    setups: [{ edgeMm: 20, loadKg: 4 }],
+    startedAt: new Date(`${TODAY}T18:00:00`).getTime(),
+  },
+};
+
+describe("A hangboard workout's review", () => {
+  it("walks each set's hangs then load down the sets with Next", async () => {
+    await renderWithHang(<DoneScreen params={ended} />);
+    await fireEvent.press(screen.getByLabelText("Half crimp, set 1 · Hangs"));
+    await fireEvent.press(screen.getByText("Next"));
+    expect(screen.getByLabelText("Half crimp, set 1 · Load")).toHaveProp("accessibilityState", {
+      expanded: true,
+    });
+    await fireEvent.press(screen.getByLabelText("Next"));
+    expect(screen.getByLabelText("Half crimp, set 2 · Hangs")).toHaveProp("accessibilityState", {
+      expanded: true,
+    });
+  });
+
+  it("keeps an unticked set's fields live, and ticks it once a value is typed", async () => {
+    await renderWithHang(<DoneScreen params={ended} />);
+    const set5 = (): unknown => screen.getByLabelText("Half crimp, set 5").props.accessibilityState;
+    expect(set5()).toEqual({ checked: false });
+    await fireEvent.press(screen.getByLabelText("Half crimp, set 5 · Hangs"));
+    await fireEvent.press(screen.getByLabelText("3"));
+    await fireEvent.press(screen.getByLabelText("Done"));
+    expect(set5()).toEqual({ checked: true });
+    await fireEvent.press(screen.getByLabelText("Half crimp, set 5 · Load"));
+    await fireEvent.press(screen.getByLabelText("Previous"));
+    expect(screen.getByLabelText("Half crimp, set 5 · Hangs")).toHaveProp("accessibilityState", {
+      expanded: true,
+    });
+  });
+
+  it("removes the last set quietly when empty, and a logged one with Undo", async () => {
+    await renderWithHang(<DoneScreen params={ended} />);
+    const rows = (): number => screen.getAllByTestId("review-set").length;
+    expect(rows()).toBe(6);
+    await fireEvent.press(screen.getByLabelText("Remove the last set from Half crimp"));
+    expect(rows()).toBe(5);
+    expect(screen.queryByText("Set 6 removed")).toBeNull();
+    const second = screen.getAllByTestId("review-set")[1];
+    if (second === undefined) throw new Error("no second set");
+    await fireEvent(second, "accessibilityAction", {
+      nativeEvent: { actionName: "remove" },
+    });
+    expect(rows()).toBe(4);
+    expect(screen.getByText("Set 2 removed")).toBeTruthy();
+    await fireEvent.press(screen.getByText("Undo"));
+    expect(rows()).toBe(5);
+  });
+
+  it("shows what the timer saw, and saves the sets as they were confirmed", async () => {
+    const { actions } = await renderWithHang(<DoneScreen params={ended} />);
+    expect(screen.getByText("Log workout")).toBeTruthy();
+    expect(screen.getByText("Fingers")).toBeTruthy();
+    expect(screen.queryByText(/^From the timer/)).toBeNull();
+    expect(screen.getByText("4 of 6 hangs")).toBeTruthy();
+    expect(screen.queryByText("Started")).toBeNull();
+    expect(screen.queryByText("Focus")).toBeNull();
+    expect(screen.getByLabelText("Half crimp, set 5").props.accessibilityState).toEqual({
+      checked: false,
+    });
+
+    await fireEvent.press(screen.getByLabelText("Half crimp, set 5"));
+    await fireEvent.press(screen.getByLabelText("Change edge and weight"));
+    await fireEvent.press(screen.getByLabelText("Shallower edge"));
+    await fireEvent.press(screen.getByLabelText("Effort 8 of 10"));
+    await fireEvent.press(screen.getByText("Save"));
+
+    const done = { edgeMm: 19, weightKg: 4 };
+    expect(actions.saveSession).toHaveBeenCalledWith({
+      id: "session-1",
+      workoutId: "rep73",
+      gripId: "half",
+      date: TODAY,
+      edgeMm: 19,
+      loadKg: 4,
+      pct: 78,
+      misses: 2,
+      rpe: 8,
+      protocol: expect.objectContaining({ name: "Repeaters 7:3", hangS: 7, sets: 6 }),
+      membershipId: "m1",
+      week: 3,
+      focus: null,
+      done: [
+        {
+          item: 0,
+          exercise: "half",
+          sets: [
+            { ...set, ...done },
+            { ...set, ...done },
+            { ...set, ...done },
+            { ...set, reps: 4, ...done },
+            { ...set, ...done },
+          ],
+        },
+      ],
+    });
+    expect(router.dismissTo).toHaveBeenCalledWith("/(tabs)/stats");
+    expect(statsSegmentStorage.read()).toBe("training");
+  });
+
+  it("logs it without the timer as every set of every item at the planned dose", async () => {
+    const twoGrips = {
+      id: "w-two",
+      kind: "hangboard" as const,
+      name: "Two grips",
+      description: "",
+      minutes: null,
+      targetRpe: null,
+      items: [
+        { exercise: "half", doses: [{ sets: 2, reps: 1, onS: 10, setRestS: 60 }] },
+        { exercise: "open", doses: [{ sets: 3, reps: 1, onS: 10, setRestS: 60 }] },
+      ],
+      exerciseRestS: 120,
+      focus: null,
+      updatedAt: "t",
+    };
+    const { actions } = await renderWithHang(
+      <DoneScreen
+        params={{
+          workoutId: "w-two",
+          gripId: "half",
+          link: { membershipId: null, week: null, focus: null },
+          session: 0,
+          run: null,
+        }}
+      />,
+      hangData(),
+      { workouts: [twoGrips] }
+    );
+    expect(screen.getByText("Fingers")).toBeTruthy();
+    expect(screen.queryByText(/From the timer/)).toBeNull();
+    await fireEvent.press(screen.getByText("Save"));
+    const saved = jest.mocked(actions.saveSession).mock.calls[0]?.[0];
+    expect(saved).toMatchObject({ workoutId: "w-two", pct: 100, misses: 0 });
+    expect(saved?.done.map((d) => [d.exercise, d.sets.length])).toEqual([
+      ["half", 2],
+      ["open", 3],
+    ]);
+  });
+});

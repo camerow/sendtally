@@ -84,9 +84,9 @@ export const logSession = {
   "logSession.noteNeedsName": "Eine Kletterei braucht einen Namen, um eine Notiz zu haben",
   "logSession.nameUnlocksNote":
     "Eine Kletterei braucht einen Namen, um eine Notiz zu haben oder als Projekt markiert zu werden",
-  "logSession.defaultNameMorning": "Morgensession, {date}",
-  "logSession.defaultNameAfternoon": "Nachmittagssession, {date}",
-  "logSession.defaultNameEvening": "Abendsession, {date}",
+  "logSession.defaultNameMorning": "Morgensession",
+  "logSession.defaultNameAfternoon": "Nachmittagssession",
+  "logSession.defaultNameEvening": "Abendsession",
   "logSession.wrapUpTitle": "Abschließen",
   "logSession.wrapUpSubtitle":
     "Zeiten kommen von deinen Kletterversuchen · Effort wird beim Speichern bewertet",

@@ -168,11 +168,11 @@ export default function Privacy(): React.ReactElement {
       <p>
         Deleting your account removes every session, tag and effort score we hold for you, revokes
         and deletes your Strava tokens, deletes your record at RevenueCat, and closes your sign-in.
-        A subscription bought through an app store is cancelled from that store, not by deleting
-        your account. It happens the same day, with no soft-delete or recovery window. Residual
-        copies may persist in encrypted backups for a short period before they roll off. If you
-        delete your account from Clerk&rsquo;s own portal instead, a webhook triggers the same purge
-        on our side.
+        A subscription bought through an app store is canceled from that store, not by deleting your
+        account. It happens the same day, with no soft-delete or recovery window. Residual copies
+        may persist in encrypted backups for a short period before they roll off. If you delete your
+        account from Clerk&rsquo;s own portal instead, a webhook triggers the same purge on our
+        side.
       </p>
       <p>
         Contributions to Areas are the one exception. Areas and climbs a moderator has approved, and
@@ -213,7 +213,7 @@ export default function Privacy(): React.ReactElement {
         within thirty days.
       </p>
       <p>
-        We do not sell personal information, and we do not share it for cross-context behavioural
+        We do not sell personal information, and we do not share it for cross-context behavioral
         advertising.
       </p>
 
