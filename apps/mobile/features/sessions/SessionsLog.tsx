@@ -10,11 +10,8 @@ import { queries, useQueryPair } from "@sendtally/features/query";
 import { colors, fonts } from "@sendtally/design/tokens";
 import { AccountButton } from "../../components/AccountButton";
 import { ScreenHeader } from "../../components/ScreenHeader";
-import { useLiveSession } from "@sendtally/features/log-session";
-import { liveSessionStorage } from "../../lib/liveSessionStorage";
 import { logSegmentStorage } from "../../lib/logSegmentStorage";
 import { useStoredSegment } from "../../lib/storedSegment";
-import { UpdateReadyCard } from "../app-update/UpdateReadyCard";
 import { ClimbingLog } from "../climbs/ClimbingLog";
 import { LogFab } from "../live-session/LogFab";
 import { Segmented } from "../training/components/Segmented";
@@ -40,7 +37,6 @@ export function SessionsLog(): React.ReactElement {
   const error = log.state.status === "error" || log.refreshFailed ? t("sessions.loadFailed") : null;
   // ponytail: a second status() read per mount, to know if Strava is live; a Strava-status context across tabs if it ever matters
   const settings = useSettings(api);
-  const live = useLiveSession(liveSessionStorage);
   const connect = useStravaConnect(api, settings.reload);
   const gyms = useGyms(api);
   const gymPrompt = useSetupDismissed("gym");
@@ -102,7 +98,6 @@ export function SessionsLog(): React.ReactElement {
 
   const header = (
     <>
-      <UpdateReadyCard liveSession={live.stored !== null} />
       <SetupStack cards={setupCards} total={2} />
     </>
   );

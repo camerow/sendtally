@@ -19,7 +19,7 @@ import {
 import { useFonts } from "expo-font";
 import { getLocales } from "expo-localization";
 import { Observe, ObserveInteractiveMarker, ObserveRoot } from "expo-observe";
-import { Stack } from "expo-router";
+import { Stack, usePathname } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -28,6 +28,7 @@ import { resolveLocale, setLocale } from "@sendtally/features/i18n";
 import { OutboxProvider } from "@sendtally/features/outbox";
 import { AnalyticsProvider } from "../features/analytics/AnalyticsProvider";
 import { AlreadyRunningSheet } from "../features/live-session/AlreadyRunningSheet";
+import { UpdateReadyOverlay } from "../features/app-update/UpdateReadyOverlay";
 import { BillingProvider } from "../features/billing/BillingProvider";
 import { useLiveHold } from "../features/training/hold/useLiveHold";
 import { useRestTone } from "../features/training/rest/useRestTone";
@@ -88,6 +89,7 @@ function InteractiveMarker(): React.ReactElement | null {
 
 function AppStack(): React.ReactElement | null {
   const { isLoaded, isSignedIn } = useAuth();
+  const pathname = usePathname();
   useRestTone();
   useLiveHold();
   if (!isLoaded) return null;
@@ -114,6 +116,9 @@ function AppStack(): React.ReactElement | null {
         </Stack.Protected>
       </Stack>
       {isSignedIn && <AlreadyRunningSheet />}
+      {isSignedIn && (
+        <UpdateReadyOverlay hidden={LIVE_SCREENS.some((name) => pathname === `/${name}`)} />
+      )}
     </ReminderPromptProvider>
   );
 }
