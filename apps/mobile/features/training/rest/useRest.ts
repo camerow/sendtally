@@ -31,7 +31,7 @@ export function useRestLeft(rest: Rest | null): number {
 
 /**
  * The one rest a player runs at a time, kept with the live run so it outlasts the screen;
- * `useRestTone` plays its end.
+ * the native timer plays its end.
  */
 export function useRest(): RestClock {
   const stored = useLiveRun()?.rest ?? null;

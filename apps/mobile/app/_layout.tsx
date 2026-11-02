@@ -29,9 +29,9 @@ import { OutboxProvider } from "@sendtally/features/outbox";
 import { AnalyticsProvider } from "../features/analytics/AnalyticsProvider";
 import { AlreadyRunningSheet } from "../features/live-session/AlreadyRunningSheet";
 import { UpdateReadyOverlay } from "../features/app-update/UpdateReadyOverlay";
+import { useNativeTimer } from "../features/live-session/useNativeTimer";
 import { BillingProvider } from "../features/billing/BillingProvider";
 import { useLiveHold } from "../features/training/hold/useLiveHold";
-import { useRestTone } from "../features/training/rest/useRestTone";
 import { ReminderPromptProvider } from "../features/training/reminders/ReminderPromptProvider";
 import { CLERK_PUBLISHABLE_KEY } from "../lib/config";
 import { outbox } from "../lib/api";
@@ -90,7 +90,7 @@ function InteractiveMarker(): React.ReactElement | null {
 function AppStack(): React.ReactElement | null {
   const { isLoaded, isSignedIn } = useAuth();
   const pathname = usePathname();
-  useRestTone();
+  useNativeTimer();
   useLiveHold();
   if (!isLoaded) return null;
   return (
@@ -109,6 +109,7 @@ function AppStack(): React.ReactElement | null {
               options={{ gestureEnabled: false, animation: "slide_from_bottom" }}
             />
           ))}
+          <Stack.Screen name="live" options={{ animation: "none" }} />
           <Stack.Screen
             name="workout/done"
             options={{ gestureEnabled: false, animation: "fade" }}

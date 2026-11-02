@@ -57,6 +57,15 @@ jest.mock("expo-network", () => ({
   addNetworkStateListener: () => ({ remove: () => undefined }),
   useNetworkState: () => ({ isConnected: true }),
 }));
+// The system timer is native only; tests read what was handed to it.
+jest.mock("./modules/native-timer", () => ({
+  sync: jest.fn(),
+  areActivitiesEnabled: () => false,
+}));
+jest.mock("expo-keep-awake", () => ({
+  activateKeepAwakeAsync: jest.fn(() => Promise.resolve()),
+  deactivateKeepAwake: jest.fn(() => Promise.resolve()),
+}));
 // Importing the real Clerk SDK holds a handle open, so a lone test file's run never exits.
 jest.mock("@clerk/clerk-expo", () => ({
   ClerkProvider: ({ children }: { children: unknown }) => children,

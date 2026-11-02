@@ -4,6 +4,7 @@ import { t } from "@sendtally/features/i18n";
 import type { TrainingReminder } from "@sendtally/features/training";
 
 const CHANNEL = "reminders";
+const TIMER_CHANNEL = "timer";
 
 Notifications.setNotificationHandler({
   handleNotification: () =>
@@ -46,4 +47,21 @@ export async function replaceReminders(reminders: readonly TrainingReminder[]): 
 
 export function cancelReminders(): Promise<void> {
   return Notifications.cancelAllScheduledNotificationsAsync();
+}
+
+/**
+ * Android only: the quiet channel the running timer posts to, and the permission to show it,
+ * asked the first time a timer starts. Declined is fine: the timer still runs and plays its cues.
+ */
+export async function prepareTimerNotifications(): Promise<void> {
+  if (Platform.OS !== "android") return;
+  await Notifications.setNotificationChannelAsync(TIMER_CHANNEL, {
+    name: t("training.timerChannel"),
+    importance: Notifications.AndroidImportance.LOW,
+    sound: null,
+    enableVibrate: false,
+    showBadge: false,
+  });
+  const { granted, canAskAgain } = await Notifications.getPermissionsAsync();
+  if (!granted && canAskAgain) await Notifications.requestPermissionsAsync();
 }
