@@ -413,11 +413,23 @@ describe("templates", () => {
     expect(screen.getByText("Back squat has no days yet and won’t be scheduled.")).toBeTruthy();
   });
 
-  it("saves any block as a template from its ··· menu", async () => {
+  it("saves any block as a named template from its ··· menu, and stays on the block", async () => {
     await renderWithHang(<BlockScreen id="b1" />, hangData(), { workouts: [squat], plan });
     await fireEvent.press(screen.getByLabelText("More"));
     await fireEvent.press(screen.getByText("Save as template"));
+    expect(mockPlan.copyBlock).not.toHaveBeenCalled();
+    await fireEvent.changeText(screen.getByLabelText("Name"), "Base again");
+    await fireEvent.press(screen.getByText("Save template"));
     expect(mockPlan.copyBlock).toHaveBeenCalledWith("b1", "b-new", null);
+    expect(mockPlan.saveBlock).toHaveBeenCalledWith(
+      expect.objectContaining({ id: "b-new", start: null, name: "Base again" })
+    );
+    expect(router.push).not.toHaveBeenCalled();
+    await fireEvent.press(screen.getByText("View"));
+    expect(router.push).toHaveBeenCalledWith({
+      pathname: "/plan/block/[id]",
+      params: { id: "b-new", back: expect.any(String) },
+    });
   });
 
   it("builds a template in place: its name, its weeks and its workouts' days", async () => {

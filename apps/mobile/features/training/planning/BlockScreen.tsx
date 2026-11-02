@@ -14,6 +14,7 @@ import {
   useTrainingLog,
 } from "@sendtally/features/training";
 import { ScreenFrame } from "../../../components/ScreenFrame";
+import { Toast } from "../../../components/Toast";
 import { useApi } from "../../../lib/api";
 import { blockDates } from "../blocks/blockText";
 import { Button } from "../components/Button";
@@ -21,6 +22,7 @@ import { DetailActions } from "../components/DetailActions";
 import { EditorHeader } from "../components/EditorHeader";
 import { deleteRow } from "../components/deleteRow";
 import { Label } from "../components/Label";
+import { NameSheet } from "../components/NameSheet";
 import { Title } from "../components/Title";
 import { useHangData } from "../data/HangDataContext";
 import { LoadState } from "../data/LoadState";
@@ -66,6 +68,8 @@ export function BlockScreen({
   const actions = usePlanActions();
   const [again, setAgain] = React.useState(false);
   const [moving, setMoving] = React.useState(false);
+  const [naming, setNaming] = React.useState(false);
+  const [template, setTemplate] = React.useState<{ id: string; name: string } | null>(null);
   const [week, setWeek] = React.useState<number | null>(null);
   // A new block opens in Edit mode, its name typed first.
   const draft = usePlanDraft(log.plan, fresh);
@@ -103,10 +107,11 @@ export function BlockScreen({
     onPickWeek: setWeek,
     ...(!ended && { onEditDays: draft.begin }),
   };
-  const saveAsTemplate = async (): Promise<void> => {
+  const saveAsTemplate = async (name: string): Promise<void> => {
     const copy = randomUUID();
-    if (await actions.copyBlock(id, copy, null))
-      router.push({ pathname: "/plan/block/[id]", params: { id: copy } });
+    if (!(await actions.copyBlock(id, copy, null))) return;
+    if (name !== saved.name) await actions.saveBlock({ ...saved, id: copy, start: null, name });
+    setTemplate({ id: copy, name });
   };
 
   return (
@@ -130,7 +135,7 @@ export function BlockScreen({
               icon: "copy",
               title: t("plan.saveAsTemplate"),
               hint: t("plan.saveAsTemplateHint"),
-              onPress: () => void saveAsTemplate(),
+              onPress: () => setNaming(true),
             },
             deleteRow({
               title: t("plan.deleteBlock"),
@@ -143,6 +148,22 @@ export function BlockScreen({
             }),
           ]}
         />
+      }
+      overlay={
+        template !== null && (
+          <Toast
+            message={t("plan.savedAsTemplate", { name: template.name })}
+            action={{
+              label: t("plan.viewTemplate"),
+              onPress: () =>
+                router.push({
+                  pathname: "/plan/block/[id]",
+                  params: { id: template.id, back: block.name || t("plan.untitled") },
+                }),
+            }}
+            onHide={() => setTemplate(null)}
+          />
+        )
       }
       footer={
         !editing && (ended || dated === null) ? (
@@ -214,6 +235,15 @@ export function BlockScreen({
           block={dated}
           onPick={(start) => draft.setBlock({ ...dated, start })}
           onClose={() => setMoving(false)}
+        />
+      )}
+      {naming && (
+        <NameSheet
+          title={t("plan.saveAsTemplate")}
+          name={saved.name}
+          action={t("plan.saveTemplate")}
+          onSave={(name) => void saveAsTemplate(name)}
+          onClose={() => setNaming(false)}
         />
       )}
       {again && <PlanAgainSheet block={block} back={backLabel} onClose={() => setAgain(false)} />}

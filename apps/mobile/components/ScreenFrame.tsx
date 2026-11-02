@@ -15,6 +15,8 @@ export type ScreenFrameProps = {
   header?: React.ReactNode;
   /** Pinned under the scrolling body, hidden while the keypad is up. */
   footer?: React.ReactNode;
+  /** Over the whole screen, as a toast is. */
+  overlay?: React.ReactNode;
 };
 
 /** A full screen, planning or detail: back, a scrolling body that keeps a field being typed in above the keys, and a footer. */
@@ -24,6 +26,7 @@ export function ScreenFrame({
   backLabel,
   header,
   footer,
+  overlay,
 }: ScreenFrameProps): React.ReactElement {
   const [keypad, setKeypad] = React.useState(false);
   return (
@@ -71,6 +74,7 @@ export function ScreenFrame({
           </View>
         )}
       </KeyboardAvoidingView>
+      {overlay}
     </SafeAreaView>
   );
 }
