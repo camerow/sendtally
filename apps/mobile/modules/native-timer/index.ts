@@ -31,6 +31,8 @@ export type NativeTimerPayload = {
   steps: NativeTimerStep[];
   /** Set while paused: the current step frozen with this many seconds left. */
   pausedLeftS: number | null;
+  /** Set while paused: 0 to 1 through the current step, for a frozen bar. */
+  pausedShare: number | null;
   /** "Paused", shown in place of the label while paused. */
   pausedText: string;
   /** "Next", the kicker over the next step's label. */

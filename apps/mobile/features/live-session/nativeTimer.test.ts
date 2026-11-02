@@ -74,6 +74,7 @@ describe("the system timer's payload", () => {
     const payload = nativeTimerOf(live({ player: "timer", run, muted: true }), T + 60_000);
     expect(payload?.muted).toBe(true);
     expect(payload?.pausedLeftS).toBe(6);
+    expect(payload?.pausedShare).toBeCloseTo(1 / 7);
     expect(payload?.steps).toHaveLength(1);
     expect(payload?.steps[0]).toMatchObject({ label: "Hang", endsAt: null });
   });
@@ -136,6 +137,7 @@ describe("the system timer's payload", () => {
     ]);
     const paused = nativeTimerOf({ ...sets, hold: pauseHold(hold, T + 13_000) }, T + 50_000);
     expect(paused?.pausedLeftS).toBe(20);
+    expect(paused?.pausedShare).toBeCloseTo(1 / 3);
     expect(paused?.steps).toEqual([expect.objectContaining({ label: "Side plank", endsAt: null })]);
   });
 

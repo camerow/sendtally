@@ -2,6 +2,7 @@ import {
   currentPhase,
   isWork,
   phasesSeconds,
+  phaseProgress,
   remainingInPhase,
   upcomingPhases,
   type Phase,
@@ -43,7 +44,13 @@ export function nativeTimerOf(live: LiveRun | null, now: number): NativeTimerPay
   if (live.hold !== undefined && now < holdEndsAt(live.hold))
     return { ...base, muted: false, ...holdSteps(live.hold, now) };
   if (live.rest !== undefined && now < live.rest.endsAt)
-    return { ...base, muted: false, steps: restSteps(live.rest), pausedLeftS: null };
+    return {
+      ...base,
+      muted: false,
+      steps: restSteps(live.rest),
+      pausedLeftS: null,
+      pausedShare: null,
+    };
   if (live.state.player !== "timer") return null;
   const { run, muted = false, laps = false } = live.state;
   return {
@@ -52,6 +59,7 @@ export function nativeTimerOf(live: LiveRun | null, now: number): NativeTimerPay
     muted,
     steps: runSteps(run, now, laps),
     pausedLeftS: run.pausedAt === null ? null : Math.ceil(remainingInPhase(run, now)),
+    pausedShare: run.pausedAt === null ? null : phaseProgress(run, now),
   };
 }
 
@@ -164,7 +172,10 @@ export const holdCues = (h: Hold): Cue[] => {
 
 type Part = Pick<NativeTimerStep, "look" | "label" | "setLine" | "startsAt"> & { endsAt: number };
 
-function holdSteps(h: Hold, now: number): Pick<NativeTimerPayload, "steps" | "pausedLeftS"> {
+function holdSteps(
+  h: Hold,
+  now: number
+): Pick<NativeTimerPayload, "steps" | "pausedLeftS" | "pausedShare"> {
   const s = (n: number): number => h.zeroAt + n * 1000;
   const part = (
     look: Part["look"],
@@ -207,9 +218,10 @@ function holdSteps(h: Hold, now: number): Pick<NativeTimerPayload, "steps" | "pa
   };
   const [current] = steps;
   if (h.pausedAt === null || current === undefined)
-    return { steps: [...steps, over], pausedLeftS: null };
+    return { steps: [...steps, over], pausedLeftS: null, pausedShare: null };
   return {
     steps: [{ ...current, endsAt: null, cues: [] }],
     pausedLeftS: Math.ceil(((current.endsAt ?? at) - at) / 1000),
+    pausedShare: (at - current.startsAt) / ((current.endsAt ?? at) - current.startsAt),
   };
 }
