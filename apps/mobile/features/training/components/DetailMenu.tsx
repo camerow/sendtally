@@ -8,11 +8,22 @@ import { Button } from "./Button";
 import { IconButton } from "./IconButton";
 import type { DetailMenuRow } from "./types";
 
-export type DetailMenuProps = { rows: readonly DetailMenuRow[] };
+export type DetailMenuProps = {
+  rows: readonly DetailMenuRow[];
+  /** Opened from elsewhere too, as a card tapped anywhere. */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+};
 
 /** A detail screen's ··· button and the sheet of its rarer actions, the destructive one last. */
-export function DetailMenu({ rows }: DetailMenuProps): React.ReactElement {
-  const [open, setOpen] = React.useState(false);
+export function DetailMenu({
+  rows,
+  open: shown,
+  onOpenChange,
+}: DetailMenuProps): React.ReactElement {
+  const [own, setOwn] = React.useState(false);
+  const open = shown ?? own;
+  const setOpen = onOpenChange ?? setOwn;
   const close = (): void => setOpen(false);
   return (
     <>

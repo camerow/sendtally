@@ -94,7 +94,7 @@ describe("blocks", () => {
     expect(screen.getByText("Edit block")).toBeTruthy();
     await fireEvent.changeText(screen.getByLabelText("Name"), " Winter power ");
     await fireEvent.press(screen.getByLabelText("Decrease Weeks"));
-    await fireEvent.press(screen.getByLabelText("Move the first day"));
+    await fireEvent.press(screen.getByLabelText("Reschedule the first day"));
     await fireEvent.press(screen.getAllByLabelText(/Oct 6/)[0]!);
     await fireEvent.press(screen.getByText("Start on Tue, Oct 6"));
     expect(screen.getByText("Tue, Oct 6 to Mon, Oct 26")).toBeTruthy();

@@ -101,26 +101,19 @@ function Detail({ workout, use, grip, adding, run }: DetailProps): React.ReactEl
       style={{ flex: 1 }}
     />
   );
-  const start =
-    run !== undefined ? (
-      // A missed run is done today; any other on its day.
-      <StartButton
-        workout={workout}
-        date={missed ? today : run.date}
-        planned={planned}
-        height={54}
-      />
-    ) : hang === undefined ? (
-      <StartButton workout={workout} date={today} height={54} />
-    ) : (
-      <Button
-        label={t("hang.start")}
-        onPress={() => startWorkout(workout.name, workout.id, gripId, session)}
-        variant="primary"
-        height={54}
-        icon="play"
-      />
-    );
+  const start = missed ? null : run !== undefined ? (
+    <StartButton workout={workout} date={run.date} planned={planned} height={54} />
+  ) : hang === undefined ? (
+    <StartButton workout={workout} date={today} height={54} />
+  ) : (
+    <Button
+      label={t("hang.start")}
+      onPress={() => startWorkout(workout.name, workout.id, gripId, session)}
+      variant="primary"
+      height={54}
+      icon="play"
+    />
+  );
   const secondary =
     run === undefined ? (
       <AddToPlanFooter workoutId={workout.id}>{logIt}</AddToPlanFooter>
@@ -128,7 +121,7 @@ function Detail({ workout, use, grip, adding, run }: DetailProps): React.ReactEl
       <View style={{ flexDirection: "row", gap: 10 }}>
         {logIt}
         <Button
-          label={t("plan.reschedule")}
+          label={t("plan.move")}
           onPress={() => changes.open("move", run, workout.name)}
           variant="outline"
           height={48}

@@ -63,11 +63,15 @@ describe("Today", () => {
     });
   });
 
-  it("shows a past planned day as missed, with Start to catch it up", async () => {
+  it("shows a past planned day as missed, to log, reschedule or skip but not start", async () => {
     await renderWithHang(<TodayScreen />, hangData(), { plan: plan("max10") });
     await fireEvent.press(screen.getByLabelText(/^Monday.*0 done, 1 planned$/));
     expect(screen.getByText("Missed")).toBeTruthy();
-    expect(screen.getByText("Start")).toBeTruthy();
+    expect(screen.queryByText("Start")).toBeNull();
+    await fireEvent.press(screen.getByText("Max hangs"));
+    expect(screen.getByText("Record it as done")).toBeTruthy();
+    expect(screen.getByText("Reschedule")).toBeTruthy();
+    expect(screen.getByText("Not counted as missed")).toBeTruthy();
   });
 
   it("shows a planned workout once it is done, under Done, as its logged session", async () => {
@@ -214,13 +218,13 @@ describe("Today", () => {
     expect(mockPlanActions.undoPlanChange).toHaveBeenCalledWith("m1", "2026-09-29");
   });
 
-  it("moves today's workout to any later day picked on the calendar", async () => {
+  it("reschedules today's workout to any later day picked on the calendar", async () => {
     await renderWithHang(<TodayScreen />, hangData(), { plan: plan("max10") });
     await fireEvent.press(screen.getByLabelText("More"));
-    await fireEvent.press(screen.getByText("Move"));
+    await fireEvent.press(screen.getByText("Reschedule"));
     await fireEvent.press(screen.getByLabelText("Next month"));
     await fireEvent.press(screen.getByLabelText("Wednesday Oct 7"));
-    await fireEvent.press(screen.getByText("Move to Wed, Oct 7"));
+    await fireEvent.press(screen.getByText("Reschedule to Wed, Oct 7"));
     expect(mockPlanActions.savePlanChange).toHaveBeenLastCalledWith(
       expect.objectContaining({ kind: "move", plannedOn: "2026-09-29", movedTo: "2026-10-07" })
     );

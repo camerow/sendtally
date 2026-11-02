@@ -87,16 +87,16 @@ describe("Plan day", () => {
     });
   });
 
-  it("shows a past day's workout as missed with Start, and opens the workout", async () => {
+  it("shows a past day's workout as missed, and logs it on that day from its sheet", async () => {
     await renderWithHang(<PlanDayScreen date="2026-09-28" />, hangData(), world);
     expect(screen.getByText("Monday")).toBeTruthy();
     expect(screen.getByText("Missed")).toBeTruthy();
-    expect(screen.getByText("Start")).toBeTruthy();
+    expect(screen.queryByText("Start")).toBeNull();
     await fireEvent.press(screen.getByText("Gym, legs"));
-    expect(router.push).toHaveBeenCalledWith({
-      pathname: "/workout/[id]",
-      params: expect.objectContaining({ id: "legs", date: "2026-09-28" }),
-    });
+    await fireEvent.press(screen.getByText("Log it"));
+    expect(router.push).toHaveBeenCalledWith(
+      expect.objectContaining({ params: expect.objectContaining({ date: "2026-09-28" }) })
+    );
   });
 
   it("leaves Start off a workout still to come", async () => {

@@ -10,7 +10,7 @@ import { Label } from "../components/Label";
 import { dayRows } from "../plan-days/dayRows";
 import { useDayChanges } from "../plan-days/useDayChanges";
 import { useHangData } from "../data/HangDataContext";
-import { StartButton } from "../library-detail/StartButton";
+import { logLibraryWorkout } from "../library-detail/startLibraryWorkout";
 import { type } from "../type";
 import { openOccurrence } from "./openOccurrence";
 import { DayMark } from "./DayMark";
@@ -19,12 +19,22 @@ import { occurrenceMeta, occurrenceTag } from "./occurrenceText";
 
 export type OccurrenceRowProps = { occurrence: Occurrence; workout: LibraryWorkout };
 
-/** A planned workout on a day that is not today's to start: done, missed with Start to catch it up, or still to come. */
+/**
+ * A planned workout on a day that is not today's to start: done, still to come, or missed, which
+ * the card and its ··· open the sheet to log, reschedule or skip.
+ */
 export function OccurrenceRow({ occurrence, workout }: OccurrenceRowProps): React.ReactElement {
   const { model } = useHangData();
   const { status } = occurrence;
   const done = status === "done";
+  const missed = status === "missed";
   const changes = useDayChanges();
+  const [menu, setMenu] = React.useState(false);
+  const planned = {
+    link: occurrenceLink(occurrence),
+    items: occurrence.items,
+    session: occurrence.session,
+  };
   const tag =
     status === "done"
       ? t("plan.done")
@@ -46,7 +56,7 @@ export function OccurrenceRow({ occurrence, workout }: OccurrenceRowProps): Reac
     >
       <DayMark kind={workout.kind} filled={done} />
       <Pressable
-        onPress={() => openOccurrence(occurrence)}
+        onPress={() => (missed ? setMenu(true) : openOccurrence(occurrence))}
         accessibilityRole="button"
         style={pressRow({ flex: 1, gap: 3, paddingVertical: 10 })}
       >
@@ -63,22 +73,17 @@ export function OccurrenceRow({ occurrence, workout }: OccurrenceRowProps): Reac
           {occurrenceMeta(occurrence, model.settings.units)}
         </Text>
       </Pressable>
-      {status === "planned" && (
-        <DetailMenu rows={dayRows((kind) => changes.open(kind, occurrence, workout.name))} />
-      )}
-      {changes.sheets}
-      {status === "missed" && (
-        <StartButton
-          workout={workout}
-          date={occurrence.date}
-          planned={{
-            link: occurrenceLink(occurrence),
-            items: occurrence.items,
-            session: occurrence.session,
-          }}
-          height={36}
+      {(status === "planned" || missed) && (
+        <DetailMenu
+          open={menu}
+          onOpenChange={setMenu}
+          rows={dayRows(
+            (kind) => changes.open(kind, occurrence, workout.name),
+            missed ? () => logLibraryWorkout(workout, occurrence.date, planned) : undefined
+          )}
         />
       )}
+      {changes.sheets}
     </View>
   );
 }
