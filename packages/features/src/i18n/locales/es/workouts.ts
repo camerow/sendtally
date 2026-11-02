@@ -1,6 +1,7 @@
 export const workouts = {
   "workouts.saveAsWorkout": "Guardar como entreno",
   "workouts.logIt": "Registrar",
+  "workouts.about": "Sobre este entreno",
   "workouts.saveFailed": "El entreno no se guardó. Revisa tu conexión y vuelve a intentarlo.",
   "workouts.search": "Buscar entrenos",
   "workouts.mine": "Míos",

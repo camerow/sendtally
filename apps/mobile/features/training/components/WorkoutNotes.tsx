@@ -8,11 +8,11 @@ import { ON_DARK_SOFT } from "./onDark";
 
 export type WorkoutNotesProps = {
   workoutId: string;
-  /** On the dark timer: softer ink, and a long description cut to two lines. */
+  /** On the dark timer, in softer ink. */
   dark?: boolean;
 };
 
-/** What a workout says about itself while it runs: its description, then its target effort. */
+/** A running workout's target effort. */
 export function WorkoutNotes({
   workoutId,
   dark = false,
@@ -22,18 +22,6 @@ export function WorkoutNotes({
   const ink = dark ? ON_DARK_SOFT : colors.textSecondary;
   return (
     <>
-      {workout.description !== "" && (
-        <Text
-          numberOfLines={dark ? 2 : undefined}
-          style={[
-            type.body,
-            { fontSize: dark ? 14 : 15, lineHeight: dark ? 20 : 22, color: ink },
-            dark && { textAlign: "center" },
-          ]}
-        >
-          {workout.description}
-        </Text>
-      )}
       {workout.targetRpe !== null && (
         <Text style={[type.mono, { fontSize: 12, color: ink }, dark && { textAlign: "center" }]}>
           {t("plan.targetValue", { n: workout.targetRpe })}

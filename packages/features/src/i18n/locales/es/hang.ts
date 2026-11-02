@@ -155,7 +155,6 @@ export const hang = {
   "hang.logLift": "Registrar un tirón",
 
   "hang.clear": "Borrar",
-  "hang.effortHint": "El esfuerzo es lo que da sentido a la tendencia de carga.",
   "hang.effort1": "Casi sin esfuerzo",
   "hang.effort2": "Muy fácil",
   "hang.effort3": "Fácil",

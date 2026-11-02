@@ -24,12 +24,8 @@ export const tally = {
   "tally.startSession": "Start session",
   "tally.finishSession": "Finish session",
   "tally.alreadyRunning": "Already running",
+  "tally.record": "Record",
   "tally.stillGoing": "{name} is still going",
-  "tally.oneAtATime":
-    "One session runs at a time. Resume it, record it, or discard it to start {next}.",
-  "tally.resumeName": "Resume {name}",
-  "tally.recordName": "Record {name}",
-  "tally.discardName": "Discard {name}",
   "tally.inProgress": "In progress",
   "tally.setOf": "Set {set} of {sets}",
   "tally.setNext": "Set {set} of {sets} next",

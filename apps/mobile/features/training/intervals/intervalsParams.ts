@@ -35,7 +35,7 @@ export function intervalsPath(r: IntervalsRun): Href {
 
 /** Runs it in the intervals player, once whatever already runs is dealt with. */
 export function startIntervals(r: IntervalsRun): void {
-  startLive(r.title, () => router.push(intervalsPath(r)));
+  startLive(() => router.push(intervalsPath(r)));
 }
 
 const parseBody = (text: string): Intervals | null => {

@@ -9,7 +9,6 @@ export const activities = {
   "activities.sets": "Sätze",
   "activities.shortHangs": "{done} von {of} Hangs",
   "activities.shortReps": "{done} von {of} Wdh.",
-  "activities.setsHint": "hake ab, was du gemacht hast",
   "activities.kind": "Art",
   "activities.title": "Titel",
   "activities.date": "Datum",
@@ -37,6 +36,7 @@ export const activities = {
   "activities.upNext": "Als Nächstes",
   "activities.roundOf": "Runde {round} von {rounds}",
   "activities.stoppedEarly": "Früher aufgehört · {n} s gehalten",
+  "activities.stopHere": "Hier aufhören · {time}",
   "activities.tapWhenDone": "Tippe auf Fertig, wenn die Wiederholungen sitzen",
   "activities.nextStep": "Danach: {step}",
   "activities.colSet": "Satz",
@@ -59,7 +59,6 @@ export const activities = {
   "activities.addSet": "Satz hinzufügen",
   "activities.addSetTo": "Einen Satz zu {exercise} hinzufügen",
   "activities.started": "Gestartet",
-  "activities.measured": "vom Timer",
   "activities.removeSet": "Satz {n} entfernen",
   "activities.removeLastSetTitle": "{exercise} entfernen?",
   "activities.removeLastSetBody":

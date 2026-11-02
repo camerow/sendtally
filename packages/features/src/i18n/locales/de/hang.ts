@@ -156,7 +156,6 @@ export const hang = {
   "hang.logLift": "Zug eintragen",
 
   "hang.clear": "Löschen",
-  "hang.effortHint": "Erst die Anstrengung macht den Lasttrend aussagekräftig.",
   "hang.effort1": "Kaum Arbeit",
   "hang.effort2": "Sehr leicht",
   "hang.effort3": "Leicht",

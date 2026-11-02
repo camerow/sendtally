@@ -2,6 +2,7 @@ import React from "react";
 import { Text, View } from "react-native";
 import { fromUnit, toUnit, type SetDone, type WeightUnit } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
+import { setSeconds } from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
 import { TimeField } from "../../../components/TimeField";
 import { useFieldOrder, type FieldSlot } from "../../../components/useFieldOrder";
@@ -93,7 +94,7 @@ export function SetDoneFields({
       )}
       {hangs && set.onS !== undefined && (
         <Text style={[type.mono, { fontSize: 13, color: colors.textSecondary }]}>
-          {`× ${t("hang.seconds", { n: set.onS })}`}
+          {`× ${setSeconds(set.onS)}`}
         </Text>
       )}
       {(reps || weight) && hold && <Joiner mark="·" />}

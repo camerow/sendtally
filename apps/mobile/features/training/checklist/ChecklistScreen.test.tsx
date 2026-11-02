@@ -35,7 +35,7 @@ describe("Checklist player", () => {
   it("ticks lines off, rests before the next, and logs the ticked ones on the clock, the rest unticked", async () => {
     jest.useFakeTimers({ now: new Date(2026, 9, 22, 7) });
     await renderWithHang(<ChecklistScreen run={run} />);
-    expect(screen.getByText("Mobility · 12m")).toBeTruthy();
+    expect(screen.getByText("Mobility")).toBeTruthy();
     expect(screen.queryByText("Back")).toBeNull();
     await fireEvent.press(screen.getByLabelText("Minimize"));
     expect(router.back).toHaveBeenCalled();

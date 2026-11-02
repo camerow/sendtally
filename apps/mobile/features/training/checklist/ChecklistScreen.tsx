@@ -81,9 +81,7 @@ export function ChecklistScreen({
       <ScrollView contentContainerStyle={{ flexGrow: 1, gap: 16, paddingHorizontal: 18 }}>
         <PlayerHeader
           kind={run.kind}
-          focus={run.link.focus}
           title={run.title}
-          minutes={run.minutes}
           workoutId={run.workoutId}
           startedAt={startedAt}
         />

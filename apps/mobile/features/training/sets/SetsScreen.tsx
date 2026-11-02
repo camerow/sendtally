@@ -175,9 +175,7 @@ export function SetsScreen({
         >
           <PlayerHeader
             kind={run.kind}
-            focus={run.link.focus}
             title={run.title}
-            minutes={run.minutes}
             workoutId={run.workoutId}
             startedAt={startedAt}
           />

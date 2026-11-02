@@ -60,7 +60,7 @@ describe("A hangboard workout's review", () => {
     expect(screen.getByText("Fingers")).toBeTruthy();
     expect(screen.queryByText(/^From the timer/)).toBeNull();
     expect(screen.getByText("4 of 6 hangs")).toBeTruthy();
-    expect(screen.getByText("Started")).toBeTruthy();
+    expect(screen.queryByText("Started")).toBeNull();
     expect(screen.queryByText("Focus")).toBeNull();
     expect(screen.getByLabelText("Half crimp, set 5").props.accessibilityState).toEqual({
       checked: false,

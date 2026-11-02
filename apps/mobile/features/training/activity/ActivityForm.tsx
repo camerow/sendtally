@@ -254,26 +254,26 @@ export function ActivityForm({
                 onEdit={() => setOpened("date")}
               />
             )}
-            {opened === "start" && hang === undefined ? (
-              startField
-            ) : (
-              <ReadRow
-                label={t("activities.started")}
-                value={draft.startTime === "" ? "-" : timeOfDay(draft.startTime)}
-                note={t("activities.measured")}
-                onEdit={hang === undefined ? () => setOpened("start") : undefined}
-              />
-            )}
-            {opened === "duration" && hang === undefined ? (
-              durationField
-            ) : (
-              <ReadRow
-                label={t("common.duration")}
-                value={durationLabel(draft.minutes)}
-                note={t("activities.measured")}
-                onEdit={hang === undefined ? () => setOpened("duration") : undefined}
-              />
-            )}
+            {hang === undefined &&
+              (opened === "start" ? (
+                startField
+              ) : (
+                <ReadRow
+                  label={t("activities.started")}
+                  value={draft.startTime === "" ? "-" : timeOfDay(draft.startTime)}
+                  onEdit={() => setOpened("start")}
+                />
+              ))}
+            {hang === undefined &&
+              (opened === "duration" ? (
+                durationField
+              ) : (
+                <ReadRow
+                  label={t("common.duration")}
+                  value={durationLabel(draft.minutes)}
+                  onEdit={() => setOpened("duration")}
+                />
+              ))}
           </View>
         ) : (
           <>

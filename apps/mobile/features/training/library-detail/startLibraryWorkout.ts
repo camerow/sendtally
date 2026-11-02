@@ -60,7 +60,7 @@ export function startLibraryWorkout(
     return;
   }
   const player = onTally ? "/workout/sets" : playerOf(items);
-  startLive(w.name, () =>
+  startLive(() =>
     router.push(runPath(player, { ...run, exerciseRestS: w.exerciseRestS, items: [...items] }))
   );
 }

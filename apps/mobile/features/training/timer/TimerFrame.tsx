@@ -13,6 +13,7 @@ export type TimerFrameProps<P extends Phase> = {
   timer: Timer<P>;
   name: string;
   meta: string;
+  workoutId: string | null;
   controls: Omit<TimerControlsProps, "onRestart" | "onSkip">;
   children: React.ReactNode;
 };
@@ -22,6 +23,7 @@ export function TimerFrame<P extends Phase>({
   timer,
   name,
   meta,
+  workoutId,
   controls,
   children,
 }: TimerFrameProps<P>): React.ReactElement {
@@ -31,6 +33,7 @@ export function TimerFrame<P extends Phase>({
       <TimerHeader
         name={name}
         meta={meta}
+        workoutId={workoutId}
         muted={timer.muted}
         onEnd={timer.end}
         onToggleMute={timer.toggleMute}

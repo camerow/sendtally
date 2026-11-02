@@ -172,5 +172,4 @@ export const trends = {
   "trends.daysByTagCaption": "Tage, an denen ein Tag an einer Session hing",
   "trends.tagDays": "{tag} · {inside} drinnen · {outside} draußen",
   "trends.calendar": "Kletterkalender",
-  "trends.freeRanges": "Kostenlos siehst du die letzten 7 Tage. Mitglieder sehen jeden Zeitraum.",
 } as const;

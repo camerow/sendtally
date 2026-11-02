@@ -29,6 +29,7 @@ export {
   exerciseNames,
   exerciseSuggestions,
   previousSets,
+  setSeconds,
   setText,
   weightValue,
 } from "./done";

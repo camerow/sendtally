@@ -1,6 +1,7 @@
 export const workouts = {
   "workouts.saveAsWorkout": "Save as workout",
   "workouts.logIt": "Log it",
+  "workouts.about": "About this workout",
   "workouts.saveFailed": "That workout did not save. Check your connection and try again.",
   "workouts.search": "Search workouts",
   "workouts.mine": "Mine",

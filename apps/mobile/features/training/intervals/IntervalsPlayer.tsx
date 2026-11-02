@@ -10,7 +10,7 @@ import {
 } from "@sendtally/core/hang";
 import { kindLabel } from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
-import { focusBeside } from "@sendtally/features/training";
+import { elapsedClock } from "@sendtally/features/sessions";
 import { phaseLook } from "../timer/phaseLook";
 import { SetArrows } from "../timer/SetArrows";
 import { TimerFrame } from "../timer/TimerFrame";
@@ -20,7 +20,6 @@ import { intervalsParams, type IntervalsRun } from "./intervalsParams";
 import { stepText, upNext } from "./intervalsText";
 import { StepCard } from "./StepCard";
 import { UpNext } from "./UpNext";
-import { useRunWorkout } from "../library/useLibrary";
 
 export type IntervalsPlayerProps = {
   workout: IntervalsRun;
@@ -38,7 +37,6 @@ export function IntervalsPlayer({
   onFinish,
 }: IntervalsPlayerProps): React.ReactElement {
   const { body } = workout;
-  const targetRpe = useRunWorkout(workout.workoutId)?.targetRpe;
   const timer = useTimer((now) => {
     const state = resumedRun("/workout/intervals", workout.workoutId)?.state;
     return state?.player === "timer"
@@ -85,16 +83,18 @@ export function IntervalsPlayer({
     <TimerFrame
       timer={timer}
       name={workout.title}
-      meta={[
-        kindLabel(workout.kind),
-        ...focusBeside(kindLabel(workout.kind), workout.link.focus),
-        ...(targetRpe == null ? [] : [t("plan.targetValue", { n: targetRpe })]),
-      ].join(" · ")}
+      meta={kindLabel(workout.kind)}
+      workoutId={workout.workoutId}
       controls={{
         color: look.fill,
         primary: primaryLabel,
         next: null,
-        fail: working && !tapped && !paused ? t("activities.stoppedEarly", { n: held }) : null,
+        fail:
+          working && !tapped && !paused
+            ? climbing
+              ? t("activities.stopHere", { time: elapsedClock(held) })
+              : t("activities.stoppedEarly", { n: held })
+            : null,
         onPrimary: primary,
         onFail: timer.cameOffEarly,
       }}

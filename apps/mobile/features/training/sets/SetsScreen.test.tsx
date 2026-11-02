@@ -79,9 +79,10 @@ describe("Sets player", () => {
         },
       ],
     });
-    expect(screen.getByText("Strength · 45m")).toBeTruthy();
+    expect(screen.getByText("Strength")).toBeTruthy();
     await fireEvent.press(screen.getByLabelText("Minimize"));
     expect(router.back).toHaveBeenCalled();
+    await fireEvent.press(screen.getByLabelText("About this workout"));
     expect(screen.getByText("Heavy squats, then rows.")).toBeTruthy();
     expect(screen.getByText("Target effort 8")).toBeTruthy();
     expect(screen.getAllByText("5 × 100 kg")).toHaveLength(2);

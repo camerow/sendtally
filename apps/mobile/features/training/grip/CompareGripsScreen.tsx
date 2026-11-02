@@ -4,6 +4,7 @@ import { Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { isPullSetup, setupsOf, type GripSetup } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
+import { kindLabel } from "@sendtally/features/activities";
 import { compareGrips, loadLabel } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import { BackButton } from "../../../components/BackButton";
@@ -41,7 +42,7 @@ export function CompareGripsScreen(): React.ReactElement {
         contentContainerStyle={{ gap: 18, paddingTop: 8, paddingHorizontal: 18, paddingBottom: 24 }}
       >
         <View style={{ gap: 8 }}>
-          <Label color={KIND_LOOK.hangboard.ink}>{t("statistics.hangboard")}</Label>
+          <Label color={KIND_LOOK.hangboard.ink}>{kindLabel("hangboard")}</Label>
           <Title size={38}>{t("hang.compareGrips")}</Title>
         </View>
         {setups.length > 1 && (

@@ -60,14 +60,13 @@ describe("starting while something runs", () => {
     });
   });
 
-  it("asks first, naming both, and resumes the running workout", async () => {
+  it("asks first, naming the running workout, and resumes it", async () => {
     writeLiveRun(HANGS);
     const start = jest.fn();
     await render(<AlreadyRunningSheet />);
-    await act(async () => startLive("Pull and core", start));
+    await act(async () => startLive(start));
     expect(screen.getByText("Max hangs is still going")).toBeTruthy();
-    expect(screen.getByText(/to start Pull and core/)).toBeTruthy();
-    await fireEvent.press(screen.getByText("Resume Max hangs"));
+    await fireEvent.press(screen.getByText("Resume"));
     expect(router.push).toHaveBeenCalledWith({ pathname: "/workout/timer", params: HANGS.params });
     expect(start).not.toHaveBeenCalled();
     expect(screen.queryByText("Max hangs is still going")).toBeNull();
@@ -77,8 +76,8 @@ describe("starting while something runs", () => {
     writeLiveRun(HANGS);
     const start = jest.fn();
     await render(<AlreadyRunningSheet />);
-    await act(async () => startLive("Pull and core", start));
-    await fireEvent.press(screen.getByText("Record Max hangs"));
+    await act(async () => startLive(start));
+    await fireEvent.press(screen.getByText("Record"));
     expect(router.push).toHaveBeenCalledWith({
       pathname: "/workout/timer",
       params: { ...HANGS.params, end: "1" },
@@ -92,8 +91,8 @@ describe("starting while something runs", () => {
     writeStoredDraft(liveSessionStorage, tallyDraft(new Date()), new Date());
     const start = jest.fn();
     await render(<AlreadyRunningSheet />);
-    await act(async () => startLive("Pull and core", start));
-    await fireEvent.press(screen.getByText(/^Discard /));
+    await act(async () => startLive(start));
+    await fireEvent.press(screen.getByText("Discard"));
     expect(start).not.toHaveBeenCalled();
     await act(async () =>
       lastButtons()
@@ -108,7 +107,7 @@ describe("starting while something runs", () => {
     writeLiveRun(HANGS);
     const start = jest.fn();
     await render(<AlreadyRunningSheet />);
-    await act(async () => startLive("Pull and core", start));
+    await act(async () => startLive(start));
     await fireEvent.press(screen.getByText("Cancel"));
     expect(start).not.toHaveBeenCalled();
     expect(readLiveRun()).toEqual(HANGS);

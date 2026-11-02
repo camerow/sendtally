@@ -1,39 +1,32 @@
 import React from "react";
 import { View } from "react-native";
 import type { ActivityKind } from "@sendtally/api-client";
-import type { Focus } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { kindLabel } from "@sendtally/features/activities";
-import { durationLabel } from "@sendtally/features/sessions";
-import { focusBeside } from "@sendtally/features/training";
 import { LiveClock } from "../../../components/LiveClock";
 import { LIVE_HEADER, MinimiseButton } from "../../../components/MinimiseButton";
 import { KIND_LOOK } from "../today/kindLook";
 import { type } from "../type";
 import { Label } from "./Label";
 import { Title } from "./Title";
+import { WorkoutInfo } from "./WorkoutInfo";
 import { WorkoutNotes } from "./WorkoutNotes";
 
 export type PlayerHeaderProps = {
   kind: ActivityKind;
-  /** What the run records it trained for. */
-  focus: Focus | null;
   title: string;
-  minutes: number | null;
   workoutId: string;
   /** When the player started, which its clock counts from. */
   startedAt: number;
 };
 
 /**
- * Minimise and the clock from Start, then the workout's kind, focus and length, its name and notes: the
- * top of the sets and checklist players.
+ * Minimise and the clock from Start, then the workout's kind, its name with its description
+ * behind an info button, and its target effort: the top of the sets and checklist players.
  */
 export function PlayerHeader({
   kind,
-  focus,
   title,
-  minutes,
   workoutId,
   startedAt,
 }: PlayerHeaderProps): React.ReactElement {
@@ -50,16 +43,13 @@ export function PlayerHeader({
         </View>
       </View>
       <View style={{ gap: 4 }}>
-        <Label color={KIND_LOOK[kind].ink}>
-          {[
-            kindLabel(kind),
-            ...focusBeside(kindLabel(kind), focus),
-            minutes === null ? null : durationLabel(minutes),
-          ]
-            .filter((p) => p !== null)
-            .join(" · ")}
-        </Label>
-        <Title size={32}>{title}</Title>
+        <Label color={KIND_LOOK[kind].ink}>{kindLabel(kind)}</Label>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+          <Title size={32} style={{ flexShrink: 1 }}>
+            {title}
+          </Title>
+          <WorkoutInfo workoutId={workoutId} color={colors.textMuted} />
+        </View>
         <WorkoutNotes workoutId={workoutId} />
       </View>
     </View>

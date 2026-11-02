@@ -41,7 +41,7 @@ export function StepCard({
       >
         {text.title}
       </Text>
-      <View style={{ flexDirection: "row", alignItems: "baseline", gap: 12 }}>
+      <View>
         <Text
           adjustsFontSizeToFit
           numberOfLines={1}

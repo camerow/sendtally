@@ -2,12 +2,11 @@ import { router } from "expo-router";
 import React from "react";
 import { Pressable, View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
-import { useWeightUnit } from "@sendtally/features/activities";
+import { kindLabel, useWeightUnit } from "@sendtally/features/activities";
 import { canCompareGrips } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import {
   exerciseKey,
-  kindName,
   useExercises,
   type ExerciseGroupKind,
   type ExerciseGroupVM,
@@ -60,7 +59,7 @@ export function ExerciseGroups({
               }}
             >
               <Label small color={KIND_LOOK.hangboard.ink}>
-                {kindName(g.kind)}
+                {kindLabel(g.kind)}
               </Label>
               {canCompareGrips(model.sessions) && (
                 <Pressable
@@ -84,7 +83,7 @@ export function ExerciseGroups({
             </View>
           ) : (
             <Label small color={colors.textSecondary}>
-              {kindName(g.kind)}
+              {kindLabel(g.kind)}
             </Label>
           )}
           {g.rows.map((row) => (

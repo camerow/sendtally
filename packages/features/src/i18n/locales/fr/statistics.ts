@@ -2,7 +2,6 @@ export const statistics = {
   "statistics.climbing": "Escalade",
   "statistics.training": "Entraînement",
   "statistics.tab": "Stats",
-  "statistics.hangboard": "Poutre",
   "statistics.sessions": "Séances",
   "statistics.empty": "Note une séance et tes semaines se rempliront ici.",
   "statistics.exercisesEmpty":

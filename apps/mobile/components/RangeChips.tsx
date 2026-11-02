@@ -59,11 +59,6 @@ export function RangeChips({ member, shown, onPick }: RangeChipsProps): React.Re
           );
         })}
       </View>
-      {member !== true && (
-        <Text style={{ fontFamily: fonts.sans, fontSize: 12, color: colors.textSecondary }}>
-          {t("trends.freeRanges")}
-        </Text>
-      )}
     </View>
   );
 }

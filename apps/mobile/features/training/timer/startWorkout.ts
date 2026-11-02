@@ -27,7 +27,7 @@ export function startWorkout(
   session: number,
   link: PlanLink = NO_PLAN
 ): void {
-  startLive(name, () =>
+  startLive(() =>
     router.push({
       pathname: "/workout/timer",
       params: timerParams(workoutId, gripId, session, link),

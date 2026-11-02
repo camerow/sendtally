@@ -1,6 +1,5 @@
 import React from "react";
-import { Text, View } from "react-native";
-import { colors } from "@sendtally/design/tokens";
+import { View } from "react-native";
 import { t } from "@sendtally/features/i18n";
 import { Sheet } from "../../components/Sheet";
 import { confirmDestructive } from "../../lib/confirmDestructive";
@@ -10,11 +9,10 @@ import { Button } from "../training/components/Button";
 import { Label } from "../training/components/Label";
 import { AMBER } from "../training/components/tints";
 import { Title } from "../training/components/Title";
-import { type } from "../training/type";
 import { askingStore, type Asking } from "./startLive";
 
 function Body({ asking }: { asking: Asking }): React.ReactElement {
-  const { running, next, start } = asking;
+  const { running, start } = asking;
   const name = { name: running.name };
   const discard = (): void =>
     confirmDestructive({
@@ -31,11 +29,8 @@ function Body({ asking }: { asking: Asking }): React.ReactElement {
     <View style={{ gap: 12, paddingHorizontal: 18, paddingBottom: 8 }}>
       <Label color={AMBER}>{t("tally.alreadyRunning")}</Label>
       <Title size={26}>{t("tally.stillGoing", name)}</Title>
-      <Text style={[type.body, { fontSize: 14.5, lineHeight: 21, color: colors.textSecondary }]}>
-        {t("tally.oneAtATime", { next })}
-      </Text>
       <Button
-        label={t("tally.resumeName", name)}
+        label={t("hang.resume")}
         onPress={() => {
           askingStore.close();
           running.resume();
@@ -44,13 +39,13 @@ function Body({ asking }: { asking: Asking }): React.ReactElement {
         height={50}
       />
       <Button
-        label={t("tally.recordName", name)}
+        label={t("tally.record")}
         onPress={() => askingStore.record(asking)}
         variant="outline"
         height={50}
       />
       <Button
-        label={t("tally.discardName", name)}
+        label={t("hang.discard")}
         onPress={discard}
         variant="danger"
         height={50}

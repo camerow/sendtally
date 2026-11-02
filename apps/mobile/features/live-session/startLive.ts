@@ -14,7 +14,7 @@ export type Running = {
 };
 
 /** Something asked to start while another runs. */
-export type Asking = { running: Running; next: string; start: () => void };
+export type Asking = { running: Running; start: () => void };
 
 export function running(): Running | null {
   const session = liveStoredDraft(liveSessionStorage, new Date());
@@ -67,9 +67,9 @@ export const askingStore = {
   },
 };
 
-/** Starts `next`, unless something already runs: then the climber picks what happens to it first. */
-export function startLive(next: string, start: () => void): void {
+/** Starts a run, unless something already runs: then the climber picks what happens to it first. */
+export function startLive(start: () => void): void {
   const current = running();
   if (current === null) start();
-  else setAsking({ running: current, next, start });
+  else setAsking({ running: current, start });
 }

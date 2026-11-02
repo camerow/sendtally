@@ -3,6 +3,10 @@ import { clock, toUnit, type ItemDone, type SetDone, type WeightUnit } from "@se
 import { formatNumber, t } from "../i18n";
 import { climbingSetText } from "./climbing";
 
+/** A set's time: "45s", or "20:00" past a minute. */
+export const setSeconds = (seconds: number): string =>
+  seconds > 60 ? clock(seconds, true) : t("hang.seconds", { n: seconds });
+
 const MAX_SUGGESTIONS = 5;
 
 /** A weight in the user's unit, an assisted one with a true minus: "−20". */
@@ -30,7 +34,7 @@ export function setText(set: SetDone, unit: WeightUnit): string {
   const work = [set.reps === undefined ? undefined : formatNumber(set.reps), load]
     .filter((p) => p !== undefined)
     .join(" × ");
-  return [work, set.onS === undefined ? "" : t("hang.seconds", { n: set.onS })]
+  return [work, set.onS === undefined ? "" : setSeconds(set.onS)]
     .filter((p) => p !== "")
     .join(" · ");
 }
@@ -42,7 +46,7 @@ export function setChip(set: SetDone, unit: WeightUnit): string {
   const work = [set.reps === undefined ? undefined : formatNumber(set.reps), weight]
     .filter((p) => p !== undefined)
     .join(" × ");
-  return [work, set.onS === undefined ? "" : t("hang.seconds", { n: set.onS })]
+  return [work, set.onS === undefined ? "" : setSeconds(set.onS)]
     .filter((p) => p !== "")
     .join(" · ");
 }

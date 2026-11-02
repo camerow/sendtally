@@ -14,7 +14,7 @@ import {
   type Run,
   type SetDone,
 } from "@sendtally/core/hang";
-import { setKeyOf } from "@sendtally/features/activities";
+import { kindLabel, setKeyOf } from "@sendtally/features/activities";
 import { loadLabel, setupLabel } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import { blockTagOf, usePlan } from "@sendtally/features/training";
@@ -146,7 +146,8 @@ function Timer({
     <TimerFrame
       timer={timer}
       name={workout.name}
-      meta={`${text.setLine} · ${text.label}`}
+      meta={kindLabel("hangboard")}
+      workoutId={workout.id}
       controls={{
         color: look.fill,
         primary: pull

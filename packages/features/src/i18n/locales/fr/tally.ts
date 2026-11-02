@@ -24,12 +24,8 @@ export const tally = {
   "tally.startSession": "Commencer une séance",
   "tally.finishSession": "Terminer la séance",
   "tally.alreadyRunning": "Déjà en cours",
+  "tally.record": "Enregistrer",
   "tally.stillGoing": "{name} est toujours en cours",
-  "tally.oneAtATime":
-    "Une seule séance à la fois. Reprends-la, enregistre-la ou supprime-la pour commencer {next}.",
-  "tally.resumeName": "Reprendre {name}",
-  "tally.recordName": "Enregistrer {name}",
-  "tally.discardName": "Supprimer {name}",
   "tally.inProgress": "En cours",
   "tally.setOf": "Série {set} sur {sets}",
   "tally.setNext": "Ensuite série {set} sur {sets}",

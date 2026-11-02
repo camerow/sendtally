@@ -1,6 +1,5 @@
 import { router } from "expo-router";
 import type { PlanLink } from "@sendtally/core/hang";
-import { defaultSessionName } from "@sendtally/features/log-session";
 import { planLinkParams } from "../training/data/planLinkParams";
 import { startLive } from "./startLive";
 
@@ -9,7 +8,7 @@ import { startLive } from "./startLive";
  * whatever already runs is dealt with.
  */
 export function startLiveSession(link?: PlanLink, name?: string): void {
-  startLive(name ?? defaultSessionName(new Date()), () =>
+  startLive(() =>
     router.push({
       pathname: "/session/live",
       params: {

@@ -81,14 +81,7 @@ export function DoneDetails({
   };
 
   return (
-    <SheetSection
-      label={t("activities.sets")}
-      aside={
-        <Text style={[type.mono, { fontSize: 11.5, color: colors.textMuted }]}>
-          {t("activities.setsHint")}
-        </Text>
-      }
-    >
+    <SheetSection label={t("activities.sets")}>
       {done.map((d, index) => {
         const target = planned[d.item];
         const lifting = d.sets.some((s) => s.weightKg !== undefined) && !hangs;

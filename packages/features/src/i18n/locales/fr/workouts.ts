@@ -1,6 +1,7 @@
 export const workouts = {
   "workouts.saveAsWorkout": "Enregistrer comme séance",
   "workouts.logIt": "Noter",
+  "workouts.about": "À propos de cette séance",
   "workouts.saveFailed": "La séance n'a pas été enregistrée. Vérifie ta connexion et réessaie.",
   "workouts.search": "Chercher une séance",
   "workouts.mine": "Les miennes",

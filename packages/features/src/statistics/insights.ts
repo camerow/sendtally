@@ -8,7 +8,8 @@ import { isUnscored } from "../sessions/meta";
 import { DAY_MS, bucketsFor, windowOf } from "../trends/buckets";
 import type { TrendRange } from "../trends/types";
 import { exerciseSeries, type ExerciseMetric } from "./exercises";
-import { ACTIVITY_KINDS, kindName, oneDecimal, type ActivityKind } from "./overview";
+import { kindLabel } from "../activities/format";
+import { ACTIVITY_KINDS, oneDecimal, type ActivityKind } from "./overview";
 
 type Done = {
   kind: ActivityKind;
@@ -227,7 +228,7 @@ export function trainingInsightsVM(
       const inside = shown.filter((d) => d.at >= b.start && d.at < b.end);
       return { label: b.label, axis: b.axis, sessions: inside.length, effort: effortOf(inside) };
     }),
-    trained: mix(shown, ACTIVITY_KINDS, (d) => d.kind, kindName).map(({ key, ...k }) => ({
+    trained: mix(shown, ACTIVITY_KINDS, (d) => d.kind, kindLabel).map(({ key, ...k }) => ({
       ...k,
       kind: key,
     })),

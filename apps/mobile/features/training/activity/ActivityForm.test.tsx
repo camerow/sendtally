@@ -92,7 +92,6 @@ describe("Log activity", () => {
     await render(<ActivityForm id="a1" initial={initial} logged={null} timed kindSet />);
     expect(screen.queryByTestId("activity-date")).toBeNull();
     expect(screen.queryByTestId("activity-time")).toBeNull();
-    expect(screen.getAllByText("from the timer")).toHaveLength(2);
     expect(screen.queryByText("Focus")).toBeNull();
     await fireEvent.press(screen.getByLabelText(/^Started, /));
     expect(screen.getByTestId("activity-time")).toBeTruthy();
