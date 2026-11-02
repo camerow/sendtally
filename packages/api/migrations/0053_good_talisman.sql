@@ -1,1 +1,0 @@
-ALTER TABLE `hang_grips` ADD `measure` text DEFAULT 'hang' NOT NULL;

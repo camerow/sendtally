@@ -1,1 +1,0 @@
-ALTER TABLE `workouts` ADD `exercise_rest_s` integer DEFAULT 180 NOT NULL;

@@ -1,1 +1,0 @@
-ALTER TABLE `hang_grips` ADD `hidden` integer DEFAULT false NOT NULL;
