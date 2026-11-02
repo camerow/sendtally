@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { id } from "./plan";
 import { tagNames } from "./tags";
 
 export const ENTRY_BODY_MAX = 10000;
@@ -60,6 +61,8 @@ export const entryBody = z
       });
     }
   });
+
+export const newEntryBody = entryBody.safeExtend({ id: id.optional() });
 
 export type EntryBody = z.infer<typeof entryBody>;
 

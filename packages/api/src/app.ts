@@ -64,11 +64,18 @@ import {
   withClimbNotes,
 } from "./lib/climbs";
 import { decryptSecret, encryptSecret } from "./lib/crypto";
-import { buildEntry, entryBody, overlappingTrip, type EntryWrite } from "./lib/entries";
+import {
+  buildEntry,
+  entryBody,
+  newEntryBody,
+  overlappingTrip,
+  type EntryBody,
+  type EntryWrite,
+} from "./lib/entries";
 import { exportCsv } from "./lib/export";
 import { activityOf } from "./lib/activities";
 import { hangHistoryOf } from "./lib/hang";
-import { dedupedWalls, gymBody, gymOf } from "./lib/gyms";
+import { dedupedWalls, gymBody, gymOf, newGymBody } from "./lib/gyms";
 import { importBody, importFingerprint, manualBodyOf } from "./lib/import";
 import { mirrorStoreEntitlements, resolveEntitlements } from "./lib/entitlements";
 import {
@@ -77,6 +84,7 @@ import {
   climbNoteBody,
   historySession,
   manualSessionBody,
+  newManualSessionBody,
   normalisedNote,
   type ManualSessionBody,
   parseClimbs,
@@ -223,6 +231,74 @@ const tripOverlap = async (
   return trip === null
     ? null
     : { id: trip.id, title: trip.title, occurred_at: trip.occurred_at, ends_at: trip.ends_at };
+};
+
+// Creating and editing share one save, so a create replayed under the same id saves over the
+// first instead of adding a second row.
+const saveEntry = async (
+  c: Context<AppEnv>,
+  id: string,
+  form: EntryBody,
+  existing: repo.EntryRow | null
+) => {
+  const userId = c.get("userId");
+  const entry = buildEntry(form);
+  const overlap = await tripOverlap(c.env, userId, existing, entry);
+  if (overlap !== null) return { overlap };
+  if (existing === null) await repo.insertEntry(c.env.DB, userId, id, entry);
+  else await repo.updateEntry(c.env.DB, userId, id, entry);
+  await repo.setEntryTags(c.env.DB, userId, id, form.tags ?? []);
+  const linked = await repo.setEntrySessions(c.env.DB, userId, id, form.fingerprints ?? []);
+  await captureEvent(
+    c,
+    existing === null ? "journal_entry_created" : "journal_entry_updated",
+    existing === null
+      ? { entry_kind: form.kind, session_count: String(linked.length) }
+      : { entry_kind: form.kind }
+  );
+  return { entry: await entryResponse(c.env, userId, id) };
+};
+
+const saveGym = async (c: Context<AppEnv>, id: string, form: z.output<typeof gymBody>) => {
+  const userId = c.get("userId");
+  const gym = {
+    name: form.name,
+    scale: form.scale,
+    circuits_json: JSON.stringify(form.circuits),
+    walls_json: JSON.stringify(dedupedWalls(form.walls)),
+  };
+  const created = (await repo.getGym(c.env.DB, userId, id)) === null;
+  if (created) await repo.insertGym(c.env.DB, userId, id, gym);
+  else await repo.updateGym(c.env.DB, userId, id, gym);
+  if (created) await captureEvent(c, "gym_created", { circuits: String(form.circuits.length) });
+  const row = await repo.getGym(c.env.DB, userId, id);
+  return { created, gym: row === null ? null : gymOf(row) };
+};
+
+const saveManualSession = async (
+  c: Context<AppEnv>,
+  fingerprint: string,
+  form: ManualSessionBody,
+  created: boolean
+) => {
+  const db = c.env.DB;
+  const userId = c.get("userId");
+  const history = await manualScoringHistory(db, userId, fingerprint);
+  const input = buildManualSession(fingerprint, form, history);
+  const links = climbLinksOf(form.climbs);
+  if (created) await repo.insertManualSession(db, userId, input, links);
+  else await repo.updateManualSession(db, userId, input, links);
+  await repo.upsertSessionNote(db, userId, fingerprint, form.date, normalisedNote(form.notes));
+  await repo.setSessionTags(db, userId, fingerprint, form.tags ?? []);
+  await applyProjectFlags(db, userId, form.climbs);
+  await repo.setClimbNotes(db, userId, fingerprint, climbNotesOf(form.climbs));
+  await captureEvent(c, created ? "manual_session_created" : "manual_session_updated", {
+    session_source: "manual",
+  });
+  const body = { session: await sessionResponse(c.env, userId, fingerprint) };
+  // Already posted sessions get the activity patched, never a second one.
+  postAfterResponse(c, fingerprint, () => syncSessionToStrava(c.env, userId, fingerprint));
+  return body;
 };
 
 const viewerOf = (c: Context<AppEnv>): Promise<Viewer> => repo.getViewer(c.env.DB, c.get("userId"));
@@ -802,22 +878,17 @@ const app = new Hono<AppEnv>()
     return c.json({ entries: await entriesResponse(c.env, c.get("userId")) });
   })
 
-  .post("/v1/entries", zValidator("json", entryBody, invalidBody), async (c) => {
-    const form = c.req.valid("json");
+  // The app may choose the id, so a create replayed after a lost response saves over the first.
+  .post("/v1/entries", zValidator("json", newEntryBody, invalidBody), async (c) => {
+    const { id = crypto.randomUUID(), ...form } = c.req.valid("json");
     const userId = c.get("userId");
     await repo.ensureUser(c.env.DB, userId);
-    const entry = buildEntry(form);
-    const overlap = await tripOverlap(c.env, userId, null, entry);
-    if (overlap !== null) return c.json({ error: "trip dates overlap", trip: overlap }, 409);
-    const id = crypto.randomUUID();
-    await repo.insertEntry(c.env.DB, userId, id, entry);
-    if (form.tags !== undefined) await repo.setEntryTags(c.env.DB, userId, id, form.tags);
-    const linked = await repo.setEntrySessions(c.env.DB, userId, id, form.fingerprints ?? []);
-    await captureEvent(c, "journal_entry_created", {
-      entry_kind: form.kind,
-      session_count: String(linked.length),
-    });
-    return c.json({ entry: await entryResponse(c.env, userId, id) }, 201);
+    const existing = await repo.getEntry(c.env.DB, userId, id);
+    const saved = await saveEntry(c, id, form, existing);
+    if ("overlap" in saved) {
+      return c.json({ error: "trip dates overlap", trip: saved.overlap }, 409);
+    }
+    return existing === null ? c.json(saved, 201) : c.json(saved);
   })
 
   .get("/v1/entries/:id", async (c) => {
@@ -827,20 +898,14 @@ const app = new Hono<AppEnv>()
   })
 
   .put("/v1/entries/:id", zValidator("json", entryBody, invalidBody), async (c) => {
-    const form = c.req.valid("json");
-    const userId = c.get("userId");
     const id = c.req.param("id");
-    const entry = buildEntry(form);
-    const existing = await repo.getEntry(c.env.DB, userId, id);
+    const existing = await repo.getEntry(c.env.DB, c.get("userId"), id);
     if (existing === null) return c.json({ error: "not found" }, 404);
-    const overlap = await tripOverlap(c.env, userId, existing, entry);
-    if (overlap !== null) return c.json({ error: "trip dates overlap", trip: overlap }, 409);
-    const updated = await repo.updateEntry(c.env.DB, userId, id, entry);
-    if (!updated) return c.json({ error: "not found" }, 404);
-    await repo.setEntryTags(c.env.DB, userId, id, form.tags ?? []);
-    await repo.setEntrySessions(c.env.DB, userId, id, form.fingerprints ?? []);
-    await captureEvent(c, "journal_entry_updated", { entry_kind: form.kind });
-    return c.json({ entry: await entryResponse(c.env, userId, id) });
+    const saved = await saveEntry(c, id, c.req.valid("json"), existing);
+    if ("overlap" in saved) {
+      return c.json({ error: "trip dates overlap", trip: saved.overlap }, 409);
+    }
+    return c.json(saved);
   })
 
   .delete("/v1/entries/:id", async (c) => {
@@ -943,35 +1008,21 @@ const app = new Hono<AppEnv>()
     return c.json({ gyms: rows.map(gymOf) });
   })
 
-  .post("/v1/gyms", zValidator("json", gymBody, invalidBody), async (c) => {
-    const form = c.req.valid("json");
-    const userId = c.get("userId");
-    await repo.ensureUser(c.env.DB, userId);
-    const id = crypto.randomUUID();
-    await repo.insertGym(c.env.DB, userId, id, {
-      name: form.name,
-      scale: form.scale,
-      circuits_json: JSON.stringify(form.circuits),
-      walls_json: JSON.stringify(dedupedWalls(form.walls)),
-    });
-    await captureEvent(c, "gym_created", { circuits: String(form.circuits.length) });
-    const row = await repo.getGym(c.env.DB, userId, id);
-    return c.json({ gym: row === null ? null : gymOf(row) }, 201);
+  // The app may choose the id, so a create replayed after a lost response saves over the first.
+  .post("/v1/gyms", zValidator("json", newGymBody, invalidBody), async (c) => {
+    const { id = crypto.randomUUID(), ...form } = c.req.valid("json");
+    await repo.ensureUser(c.env.DB, c.get("userId"));
+    const { created, gym } = await saveGym(c, id, form);
+    return created ? c.json({ gym }, 201) : c.json({ gym });
   })
 
   .put("/v1/gyms/:id", zValidator("json", gymBody, invalidBody), async (c) => {
-    const form = c.req.valid("json");
-    const userId = c.get("userId");
     const id = c.req.param("id");
-    const updated = await repo.updateGym(c.env.DB, userId, id, {
-      name: form.name,
-      scale: form.scale,
-      circuits_json: JSON.stringify(form.circuits),
-      walls_json: JSON.stringify(dedupedWalls(form.walls)),
-    });
-    if (!updated) return c.json({ error: "not found" }, 404);
-    const row = await repo.getGym(c.env.DB, userId, id);
-    return c.json({ gym: row === null ? null : gymOf(row) });
+    if ((await repo.getGym(c.env.DB, c.get("userId"), id)) === null) {
+      return c.json({ error: "not found" }, 404);
+    }
+    const { gym } = await saveGym(c, id, c.req.valid("json"));
+    return c.json({ gym });
   })
 
   // Sessions logged at the gym keep their circuit snapshots and gym_id; only
@@ -1666,32 +1717,17 @@ const app = new Hono<AppEnv>()
     return c.json({ session });
   })
 
-  .post("/v1/sessions", zValidator("json", manualSessionBody, invalidBody), async (c) => {
-    const form = c.req.valid("json");
+  // The app may choose the fingerprint, so a log replayed after a lost response saves over the
+  // first and never posts a second Strava activity.
+  .post("/v1/sessions", zValidator("json", newManualSessionBody, invalidBody), async (c) => {
+    const { fingerprint = `manual-${crypto.randomUUID()}`, ...form } = c.req.valid("json");
     const userId = c.get("userId");
     await repo.ensureUser(c.env.DB, userId);
     const invalid = await invalidLinks(c.env.DB, userId, form);
     if (invalid !== null) return c.json({ error: invalid }, 400);
-    const fingerprint = `manual-${crypto.randomUUID()}`;
-    const history = await manualScoringHistory(c.env.DB, userId);
-    const input = buildManualSession(fingerprint, form, history);
-    await repo.insertManualSession(c.env.DB, userId, input, climbLinksOf(form.climbs));
-    await repo.upsertSessionNote(
-      c.env.DB,
-      userId,
-      fingerprint,
-      form.date,
-      normalisedNote(form.notes)
-    );
-    if (form.tags !== undefined) {
-      await repo.setSessionTags(c.env.DB, userId, fingerprint, form.tags);
-    }
-    await applyProjectFlags(c.env.DB, userId, form.climbs);
-    await repo.setClimbNotes(c.env.DB, userId, fingerprint, climbNotesOf(form.climbs));
-    await captureEvent(c, "manual_session_created", { session_source: "manual" });
-    const body = { session: await sessionResponse(c.env, userId, fingerprint) };
-    postAfterResponse(c, fingerprint, () => syncSessionToStrava(c.env, userId, fingerprint));
-    return c.json(body, 201);
+    const existing = await repo.getSession(c.env.DB, userId, fingerprint);
+    if (existing === null) return c.json(await saveManualSession(c, fingerprint, form, true), 201);
+    return c.json(await saveManualSession(c, fingerprint, form, false));
   })
 
   // A batch of sessions from a CSV. Scored oldest first so each one sees the
@@ -1772,24 +1808,7 @@ const app = new Hono<AppEnv>()
       }
       const invalid = await invalidLinks(c.env.DB, userId, form);
       if (invalid !== null) return c.json({ error: invalid }, 400);
-      const history = await manualScoringHistory(c.env.DB, userId, fingerprint);
-      const input = buildManualSession(fingerprint, form, history);
-      await repo.updateManualSession(c.env.DB, userId, input, climbLinksOf(form.climbs));
-      await repo.upsertSessionNote(
-        c.env.DB,
-        userId,
-        fingerprint,
-        form.date,
-        normalisedNote(form.notes)
-      );
-      await repo.setSessionTags(c.env.DB, userId, fingerprint, form.tags ?? []);
-      await applyProjectFlags(c.env.DB, userId, form.climbs);
-      await repo.setClimbNotes(c.env.DB, userId, fingerprint, climbNotesOf(form.climbs));
-      await captureEvent(c, "manual_session_updated", { session_source: "manual" });
-      const body = { session: await sessionResponse(c.env, userId, fingerprint) };
-      // Already posted sessions get the activity patched, never a second one.
-      postAfterResponse(c, fingerprint, () => syncSessionToStrava(c.env, userId, fingerprint));
-      return c.json(body);
+      return c.json(await saveManualSession(c, fingerprint, form, false));
     }
   )
 

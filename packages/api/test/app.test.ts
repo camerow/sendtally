@@ -1152,6 +1152,29 @@ describe("app", () => {
     expect(session.end_at).toBe("2026-08-20T19:30:00.000Z");
   });
 
+  it("logs under the fingerprint the app chose, and a replay saves over it instead of adding one", async () => {
+    const userId = "user_manual_client_id";
+    const fingerprint = "manual-0b7c6a52-3f1e-4d2a-9c4b-5e6f7a8b9c0d";
+    const first = await postSession(userId, { ...logBody(), fingerprint });
+    expect(first.status).toBe(201);
+    expect(((await first.json()) as ManualSessionResponse).session.fingerprint).toBe(fingerprint);
+
+    const replay = await postSession(userId, {
+      ...logBody({ climbs: [{ grade: { scale: "v", value: 7 }, kind: "send" }] }),
+      fingerprint,
+    });
+    expect(replay.status).toBe(200);
+    expect(((await replay.json()) as ManualSessionResponse).session.climb_count).toBe(1);
+    const rows = await env.DB.prepare("SELECT COUNT(*) AS n FROM sessions WHERE user_id = ?")
+      .bind(userId)
+      .first<{ n: number }>();
+    expect(rows?.n).toBe(1);
+
+    expect((await postSession(userId, { ...logBody(), fingerprint: "board-123" })).status).toBe(
+      400
+    );
+  });
+
   it("updates a manual session and re-scores it", async () => {
     const userId = "user_manual_edit";
     const created = await postSession(userId, logBody());

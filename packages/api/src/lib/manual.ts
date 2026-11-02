@@ -188,6 +188,13 @@ export const manualSessionBody = manualSessionShape.superRefine((body, ctx) => {
   linksConsistent(body, ctx);
 });
 
+export const newManualSessionBody = manualSessionBody.safeExtend({
+  fingerprint: z
+    .string()
+    .regex(/^manual-[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/)
+    .optional(),
+});
+
 export type ClimbLink = { climb_slug: string; climb_id: string };
 
 export function climbLinksOf(climbs: ManualSessionBody["climbs"]): ClimbLink[] {
