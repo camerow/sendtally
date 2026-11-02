@@ -83,6 +83,12 @@ private struct Shown {
     }
   }
 
+  /// A paused step's time left, which never moves, so plain text: "0:41".
+  var pausedClock: String {
+    let left = state.pausedLeftS ?? 0
+    return String(format: "%d:%02d", left / 60, left % 60)
+  }
+
   var kickerColor: Color {
     if case .stale = mode { return .onDarkMuted }
     return look.label
@@ -192,8 +198,8 @@ private struct Big: View {
         .foregroundStyle(.white)
         .frame(width: size * 2.6, alignment: .leading)
         .contentTransition(.numericText())
-    case .paused(let range, _):
-      Text(timerInterval: range, pauseTime: range.lowerBound, countsDown: true)
+    case .paused:
+      Text(shown.pausedClock)
         .font(.mono(size, semibold: true))
         .monospacedDigit()
         .foregroundStyle(Color.onDarkMuted)
@@ -347,8 +353,8 @@ private struct CompactTrailing: View {
         .monospacedDigit()
         .foregroundStyle(shown.look.label)
         .frame(width: 44, alignment: .trailing)
-    case .paused(let range, _):
-      Text(timerInterval: range, pauseTime: range.lowerBound, countsDown: true)
+    case .paused:
+      Text(shown.pausedClock)
         .font(.mono(15, semibold: true))
         .monospacedDigit()
         .foregroundStyle(Color.onDarkMuted)
