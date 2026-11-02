@@ -1,5 +1,6 @@
 import { ClerkProvider, useAuth } from "@clerk/clerk-expo";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
+import { resourceCache } from "@clerk/clerk-expo/resource-cache";
 import { tokenCache } from "@clerk/clerk-expo/token-cache";
 import {
   BricolageGrotesque_700Bold,
@@ -134,7 +135,11 @@ function RootLayout(): React.ReactElement | null {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY} tokenCache={tokenCache}>
+      <ClerkProvider
+        publishableKey={CLERK_PUBLISHABLE_KEY}
+        tokenCache={tokenCache}
+        __experimental_resourceCache={resourceCache}
+      >
         <QueryProvider>
           <OutboxProvider outbox={outbox}>
             <AnalyticsProvider>

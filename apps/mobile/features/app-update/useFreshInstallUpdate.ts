@@ -1,3 +1,4 @@
+import * as Network from "expo-network";
 import * as Updates from "expo-updates";
 import React from "react";
 import { restartIntoUpdate } from "./restartIntoUpdate";
@@ -9,9 +10,11 @@ const holdsSplash = Updates.isEnabled && Updates.isEmbeddedLaunch && !Updates.is
  * A fresh install runs the bundle embedded in the store build, which is usually behind the
  * production channel. On that launch only, keep the splash up while expo-updates checks and
  * downloads, then reload straight into the update instead of waiting for the next cold start.
+ * Offline there is nothing to wait for, so the app opens at once.
  */
 export function useFreshInstallUpdate(): boolean {
   const { isStartupProcedureRunning, isUpdatePending } = Updates.useUpdates();
+  const { isConnected } = Network.useNetworkState();
   const [gaveUp, setGaveUp] = React.useState(false);
 
   React.useEffect(() => {
@@ -26,5 +29,10 @@ export function useFreshInstallUpdate(): boolean {
     }
   }, [isUpdatePending, gaveUp]);
 
-  return !holdsSplash || gaveUp || (!isStartupProcedureRunning && !isUpdatePending);
+  return (
+    !holdsSplash ||
+    gaveUp ||
+    isConnected === false ||
+    (!isStartupProcedureRunning && !isUpdatePending)
+  );
 }
