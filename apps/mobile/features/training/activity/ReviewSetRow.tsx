@@ -21,13 +21,17 @@ export type ReviewSetRowProps = {
   hangs: boolean;
   lifting: boolean;
   unit: WeightUnit;
-  /** Ticked, it counts; off, it does not save. */
+  /** Ticked, it counts; off, it does not save, though its fields stay live and typing ticks it. */
   on: boolean;
   /** "4 of 6 hangs" when it fell short of its target. */
   short: string | null;
   label: string;
   /** A hang count's place in its column, so Next walks to the next set. */
   slot?: FieldSlot;
+  /** A hang set's load, after its count. */
+  loadSlot?: FieldSlot;
+  /** The load a hang set shows while it has none of its own. */
+  defaultLoadKg?: number;
   onChange: (set: SetDone) => void;
   onToggle: () => void;
   onRemove: () => void;
@@ -51,6 +55,8 @@ export function ReviewSetRow({
   short,
   label,
   slot,
+  loadSlot,
+  defaultLoadKg,
   onChange,
   onToggle,
   onRemove,
@@ -85,16 +91,24 @@ export function ReviewSetRow({
         onAccessibilityAction={(e) => {
           if (e.nativeEvent.actionName === "remove") onRemove();
         }}
-        style={[
-          SET_COLUMNS.row,
-          { minHeight: 48, backgroundColor: colors.white, opacity: on ? 1 : 0.5 },
-        ]}
+        style={[SET_COLUMNS.row, { minHeight: 48, backgroundColor: colors.white }]}
       >
-        <Text style={[type.monoBold, SET_COLUMNS.set, { fontSize: 14, color: colors.gunmetal }]}>
+        <Text
+          style={[
+            type.monoBold,
+            SET_COLUMNS.set,
+            { fontSize: 14, color: on ? colors.gunmetal : colors.textMuted },
+          ]}
+        >
           {formatNumber(n)}
         </Text>
         <View style={[SET_COLUMNS.target, { gap: 2 }]}>
-          <Text style={[type.mono, { fontSize: 14, color: colors.textSecondary }]}>
+          <Text
+            style={[
+              type.mono,
+              { fontSize: 14, color: on ? colors.textSecondary : colors.textMuted },
+            ]}
+          >
             {target === undefined ? "-" : targetText(target, hangs, unit) || "-"}
           </Text>
           {on && short !== null && (
@@ -102,22 +116,24 @@ export function ReviewSetRow({
           )}
         </View>
         <View style={SET_COLUMNS.done}>
-          {on && done.climbs === undefined ? (
+          {done.climbs === undefined ? (
             <SetDoneFields
               set={done}
               lifting={lifting}
               hangs={hangs}
-              short={short !== null}
+              short={on && short !== null}
               unit={unit}
               label={label}
               slot={slot}
+              loadSlot={loadSlot}
+              defaultLoadKg={defaultLoadKg}
               onChange={onChange}
             />
           ) : (
             <Text
               style={[type.monoBold, { fontSize: 14, color: colors.textMuted, paddingRight: 8 }]}
             >
-              {on ? setText(done, unit) : "-"}
+              {setText(done, unit)}
             </Text>
           )}
         </View>

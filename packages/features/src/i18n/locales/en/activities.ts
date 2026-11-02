@@ -43,6 +43,7 @@ export const activities = {
   "activities.colTarget": "Target",
   "activities.previousSet": "Last {set}",
   "activities.colDone": "Done",
+  "activities.colHangsLoad": "Hangs × load",
   "activities.finish": "Finish",
   "activities.setOf": "{exercise}, set {n}",
   "activities.restLeft": "Rest, {time} left",

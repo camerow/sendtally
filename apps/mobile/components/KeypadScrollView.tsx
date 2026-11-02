@@ -60,6 +60,7 @@ export function KeypadScrollView({
           onCommit={request.commit}
           onClose={request.close}
           onNext={request.hasNext ? request.next : undefined}
+          onPrev={request.hasPrev ? request.prev : undefined}
           note={request.note}
           onReset={request.reset}
         />

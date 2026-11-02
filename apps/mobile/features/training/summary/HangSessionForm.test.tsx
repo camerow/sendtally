@@ -43,18 +43,21 @@ const session: HangSessionRecord = {
 };
 
 describe("Editing a hangboard session", () => {
-  it("saves what changed from the header, without its Strava fields", async () => {
+  it("saves each set's hangs and load, and the share held, without its Strava fields", async () => {
     const { actions } = await renderWithHang(
       <HangSessionForm session={session} />,
       hangData({ sessions: [session] })
     );
     expect(screen.getByText("Edit workout")).toBeTruthy();
-    expect(screen.getByText("18 of 18 hangs")).toBeTruthy();
-    await fireEvent.press(screen.getByLabelText("Set 2, 3"));
-    expect(screen.getByText("17 of 18 hangs")).toBeTruthy();
-    await fireEvent.press(screen.getByLabelText("Set 2"));
-    await fireEvent.press(screen.getByLabelText("Set 3"));
-    expect(screen.getByText("12 of 18 hangs")).toBeTruthy();
+    expect(screen.getByText("18 of 18 hangs · top load +10 kg")).toBeTruthy();
+    await fireEvent.press(screen.getByLabelText("half-crimp, set 2 · Hangs"));
+    await fireEvent.press(screen.getByLabelText("5"));
+    await fireEvent.press(screen.getByLabelText("Done"));
+    await fireEvent.press(screen.getByLabelText("half-crimp, set 3 · Load"));
+    await fireEvent.press(screen.getByLabelText("1"));
+    await fireEvent.press(screen.getByLabelText("5"));
+    await fireEvent.press(screen.getByLabelText("Done"));
+    expect(screen.getByText("17 of 18 hangs · top load +15 kg")).toBeTruthy();
     await fireEvent.press(screen.getByText("Save"));
     const {
       stravaActivityId: _s,
@@ -63,7 +66,13 @@ describe("Editing a hangboard session", () => {
       updatedAt: _u,
       ...fields
     } = session;
-    expect(actions.saveSession).toHaveBeenCalledWith({ ...fields, pct: 67 });
+    const set = (reps: number, weightKg: number): object => ({ reps, edgeMm: 20, weightKg });
+    expect(actions.saveSession).toHaveBeenCalledWith({
+      ...fields,
+      pct: 94,
+      misses: 1,
+      done: [{ item: 0, exercise: "half-crimp", sets: [set(6, 10), set(5, 10), set(6, 15)] }],
+    });
     expect(router.back).toHaveBeenCalled();
   });
 

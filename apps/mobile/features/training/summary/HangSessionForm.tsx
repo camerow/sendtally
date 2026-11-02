@@ -4,7 +4,8 @@ import { KeyboardAvoidingView, Platform, Text, View } from "react-native";
 import type { HangSessionRecord } from "@sendtally/api-client";
 import { colors } from "@sendtally/design/tokens";
 import { shortDate } from "@sendtally/features/hang";
-import { hangGrid } from "@sendtally/features/activities";
+import { percentOf, protocolDose, type ItemDone } from "@sendtally/core/hang";
+import { hangGrid, hangSets, keptSets } from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
 import { hangTitle } from "@sendtally/features/sessions";
 import { Button } from "../components/Button";
@@ -17,16 +18,19 @@ import { SheetSection } from "../components/SheetSection";
 import { Title } from "../components/Title";
 import { useHangData } from "../data/HangDataContext";
 import { GripPickerSheet } from "../grip-picker/GripPickerSheet";
-import { LoadField } from "../loads/LoadField";
-import { EdgeField } from "../setup/EdgeField";
+import { DoneDetails } from "../activity/DoneDetails";
+import { SetupPill } from "../done/SetupPill";
+import { KIND_LOOK } from "../today/kindLook";
 import { type } from "../type";
-import { HangGrid } from "./HangGrid";
+import { hangCount } from "./hangCount";
 import { KeypadScrollView } from "../../../components/KeypadScrollView";
-import { useFieldOrder } from "../../../components/useFieldOrder";
 
 export type HangSessionFormProps = { session: HangSessionRecord };
 
-/** Edit a finished hangboard session: its day, grip, edge, weight, hangs, effort and focus. */
+/**
+ * Edit a finished hangboard session: its day, grip, each set's hangs and load under the pill
+ * that sets the edge and every set's load not changed by hand, effort and focus.
+ */
 export function HangSessionForm({ session }: HangSessionFormProps): React.ReactElement {
   const { model, actions, today } = useHangData();
   const [draft, setDraft] = React.useState(session);
@@ -42,14 +46,40 @@ export function HangSessionForm({ session }: HangSessionFormProps): React.ReactE
   };
   const kind = session.protocol.kind;
   const name = hangTitle(session);
-  const { slot } = useFieldOrder(kind === "hang" ? ["edge", "load"] : ["load"]);
-  // ponytail: only the share held is stored, so the grid comes back with its hangs in order;
-  // keeping which ones were let go needs its own column.
-  const [rows, setRows] = React.useState(() => hangGrid(session).rows);
+  const unit = model.settings.units;
+  // A set at the session's load follows the pill; one changed by hand keeps its own.
+  const [sets, setSets] = React.useState<{ done: ItemDone[]; off: string[] }>(() => ({
+    done: [
+      {
+        item: 0,
+        exercise: session.gripId,
+        sets: hangSets(session).map(({ weightKg, ...set }) =>
+          weightKg === undefined || weightKg === session.loadKg ? set : { ...set, weightKg }
+        ),
+      },
+    ],
+    off: [],
+  }));
+  const kept = keptSets(sets.done, sets.off).map((d) => ({
+    ...d,
+    exercise: draft.gripId,
+    sets: d.sets.map((set) => ({
+      ...set,
+      ...(kind === "hang" && { edgeMm: draft.edgeMm }),
+      weightKg: set.weightKg ?? draft.loadKg,
+    })),
+  }));
+  const grid = hangGrid({ ...draft, done: kept });
 
   const save = (): void => {
     const { stravaActivityId: _s, postState: _p, postError: _e, updatedAt: _u, ...fields } = draft;
-    void actions.saveSession(fields);
+    const planned = session.protocol.sets * session.protocol.reps;
+    void actions.saveSession({
+      ...fields,
+      done: kept,
+      pct: percentOf(grid.held, planned),
+      misses: Math.max(0, planned - grid.held),
+    });
     router.back();
   };
 
@@ -105,37 +135,27 @@ export function HangSessionForm({ session }: HangSessionFormProps): React.ReactE
             onPress={() => setPicker(true)}
           />
         </SheetSection>
-        {kind === "hang" && (
-          <EdgeField
-            {...slot("edge")}
-            edgeMm={draft.edgeMm}
-            onChange={(edgeMm) => update({ edgeMm })}
-          />
-        )}
-        <LoadField
-          {...slot("load")}
-          kind={kind}
-          kg={draft.loadKg}
-          unit={model.settings.units}
-          label={t("hang.load")}
-          onChange={(loadKg) => update({ loadKg })}
+        <DoneDetails
+          done={sets.done.map((d) => ({ ...d, exercise: model.gripName(draft.gripId) }))}
+          off={sets.off}
+          planned={[protocolDose(session.protocol)]}
+          unit={unit}
+          color={KIND_LOOK.hangboard.ink}
+          hangs
+          hangLoadKg={draft.loadKg}
+          setup={
+            <SetupPill
+              kind={kind}
+              setup={{ edgeMm: draft.edgeMm, loadKg: draft.loadKg }}
+              kicker={model.gripName(draft.gripId)}
+              onChange={(setup) => update(setup)}
+            />
+          }
+          onChange={(done, off) => setSets({ done, off })}
         />
-        <SheetSection label={t("summary.hangs")}>
-          <HangGrid
-            rows={rows}
-            onChange={(next) => {
-              setRows(next);
-              const held = next.flat().filter(Boolean).length;
-              update({ pct: Math.round((held / Math.max(1, next.flat().length)) * 100) });
-            }}
-          />
-          <Text style={[type.monoBold, { fontSize: 13, color: colors.gunmetal }]}>
-            {t("summary.hangsOf", {
-              held: rows.flat().filter(Boolean).length,
-              total: rows.flat().length,
-            })}
-          </Text>
-        </SheetSection>
+        <Text style={[type.monoBold, { fontSize: 13, color: colors.gunmetal }]}>
+          {hangCount(grid, unit)}
+        </Text>
         <EffortField value={draft.rpe} onChange={(rpe) => update({ rpe })} />
         <FocusField value={draft.focus} onChange={(focus) => update({ focus })} />
       </KeypadScrollView>

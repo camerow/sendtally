@@ -29,14 +29,20 @@ export type DoneDetailsProps = {
   unit: WeightUnit;
   /** The kind's colour, on each exercise's mark. */
   color: string;
-  /** A hangboard workout: its sets are hang counts. */
+  /** A hangboard workout: its sets are hang counts and loads. */
   hangs?: boolean;
+  /** The load a hang set shows while it has none of its own: the session's. */
+  hangLoadKg?: number;
   /** Each exercise's sets as the workout's last run did them, which a lift's target borrows. */
   previous?: (exercise: string) => readonly SetDone[];
   /** Beside the first exercise's name, such as a hangboard run's edge and weight. */
   setup?: React.ReactNode;
   onChange: (done: ItemDone[], off: string[]) => void;
 };
+
+/** Typing in a set records it, so it is ticked. */
+const offWithoutKey = (off: readonly string[], item: number, set: number): string[] =>
+  off.filter((k) => k !== setKeyOf(item, set));
 
 /**
  * What was done, to review before saving: each exercise as its sets' table, ticked when it
@@ -49,15 +55,17 @@ export function DoneDetails({
   unit,
   color,
   hangs = false,
+  hangLoadKg = 0,
   previous = () => [],
   setup,
   onChange,
 }: DoneDetailsProps): React.ReactElement {
   const edit = (next: ItemDone[]): void => onChange(next, [...off]);
+  // A hang set's count, then its load, then the next set's.
   const counts = useFieldOrder(
     hangs
       ? done.flatMap((d) =>
-          d.sets.flatMap((_, i) => (off.includes(setKeyOf(d.item, i)) ? [] : [setKeyOf(d.item, i)]))
+          d.sets.flatMap((_, i) => [setKeyOf(d.item, i), `${setKeyOf(d.item, i)}:load`])
         )
       : []
   );
@@ -114,7 +122,7 @@ export function DoneDetails({
                 {t("activities.colTarget")}
               </Label>
               <Label small color={colors.textSecondary} style={SET_COLUMNS.done}>
-                {t("activities.colDone")}
+                {hangs ? t("activities.colHangsLoad") : t("activities.colDone")}
               </Label>
               <View style={SET_COLUMNS.tick} />
             </View>
@@ -140,7 +148,11 @@ export function DoneDetails({
                   short={shortOf(set, target, hangs)}
                   label={t("activities.setOf", { exercise: d.exercise, n: i + 1 })}
                   slot={hangs ? counts.slot(setKeyOf(d.item, i)) : undefined}
-                  onChange={(value) => edit(changeSet(done, d.item, i, value))}
+                  loadSlot={hangs ? counts.slot(`${setKeyOf(d.item, i)}:load`) : undefined}
+                  defaultLoadKg={hangLoadKg}
+                  onChange={(value) =>
+                    onChange(changeSet(done, d.item, i, value), offWithoutKey(off, d.item, i))
+                  }
                   onToggle={() => toggle(d.item, i)}
                   onRemove={() => remove(d, i)}
                 />

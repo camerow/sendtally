@@ -7,6 +7,8 @@ export type FieldSlot = {
   onClose?: () => void;
   /** Shows Next on the keypad, which commits and then calls this. */
   onNext?: () => void;
+  /** Steps back to the field before, where the keypad has ‹ ›. */
+  onPrev?: () => void;
 };
 
 /**
@@ -20,11 +22,13 @@ export function useFieldOrder(keys: readonly string[]): {
   const [open, setOpen] = React.useState<string | null>(null);
   const slot = (key: string): FieldSlot => {
     const next = keys[keys.indexOf(key) + 1];
+    const prev = keys[keys.indexOf(key) - 1];
     return {
       open: open === key,
       onOpen: () => setOpen(key),
       onClose: () => setOpen((current) => (current === key ? null : current)),
       onNext: next === undefined ? undefined : () => setOpen(next),
+      onPrev: prev === undefined ? undefined : () => setOpen(prev),
     };
   };
   return { slot, open };

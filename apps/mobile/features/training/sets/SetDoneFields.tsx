@@ -2,8 +2,8 @@ import React from "react";
 import { Text, View } from "react-native";
 import { fromUnit, toUnit, type SetDone, type WeightUnit } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
-import { setSeconds } from "@sendtally/features/activities";
-import { t } from "@sendtally/features/i18n";
+import { formatNumber, t } from "@sendtally/features/i18n";
+import { KeypadField } from "../../../components/KeypadField";
 import { TimeField } from "../../../components/TimeField";
 import { useFieldOrder, type FieldSlot } from "../../../components/useFieldOrder";
 import { NumberField } from "../components/NumberField";
@@ -26,6 +26,10 @@ export type SetDoneFieldsProps = {
   holdShort?: boolean;
   /** Where a hang count sits in its table's column, so Next walks to the next set. */
   slot?: FieldSlot;
+  /** A hang set's load, where Next walks after its count. */
+  loadSlot?: FieldSlot;
+  /** The load a hang set shows while it has none of its own: the session's. */
+  defaultLoadKg?: number;
   onChange: (set: SetDone) => void;
 };
 
@@ -53,6 +57,8 @@ export function SetDoneFields({
   hangs = false,
   short = false,
   slot: column,
+  loadSlot,
+  defaultLoadKg = 0,
   go,
   holdShort = false,
   onChange,
@@ -98,10 +104,15 @@ export function SetDoneFields({
           signed
         />
       )}
-      {hangs && set.onS !== undefined && (
-        <Text style={[type.mono, { fontSize: 13, color: colors.textSecondary }]}>
-          {`× ${setSeconds(set.onS)}`}
-        </Text>
+      {hangs && <Joiner mark="×" />}
+      {hangs && (
+        <LoadValue
+          slot={loadSlot}
+          kg={set.weightKg ?? defaultLoadKg}
+          unit={unit}
+          {...named(t("hang.load"))}
+          onChange={(weightKg) => onChange({ ...set, weightKg })}
+        />
       )}
       {(reps || weight) && hold && <Joiner mark="·" />}
       {hold && go}
@@ -115,5 +126,47 @@ export function SetDoneFields({
         />
       )}
     </View>
+  );
+}
+
+/** A hang set's added load: "+10 lb", "−5 lb" assisted, "BW" at none. */
+function LoadValue({
+  slot,
+  kg,
+  unit,
+  label,
+  accessibilityLabel,
+  onChange,
+}: {
+  slot: FieldSlot | undefined;
+  kg: number;
+  unit: WeightUnit;
+  label: string;
+  accessibilityLabel: string;
+  onChange: (kg: number) => void;
+}): React.ReactElement {
+  const value = toUnit(kg, unit);
+  const text =
+    value === 0 ? t("hang.bw") : `${value > 0 ? "+" : "−"}${formatNumber(Math.abs(value))}`;
+  return (
+    <KeypadField
+      {...slot}
+      label={label}
+      accessibilityLabel={accessibilityLabel}
+      compact
+      mode={{
+        kind: "number",
+        unit,
+        step: unit === "lb" ? 5 : 2.5,
+        min: toUnit(-200, unit),
+        max: toUnit(1000, unit),
+        decimals: true,
+        signed: true,
+      }}
+      value={value}
+      text={["", text]}
+      {...(value !== 0 && { unit })}
+      onChange={(n) => onChange(fromUnit(n, unit))}
+    />
   );
 }

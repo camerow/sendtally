@@ -79,6 +79,7 @@ export const common = {
   "common.note": "Note",
   "common.back": "Back",
   "common.next": "Next",
+  "common.previous": "Previous",
   "common.reset": "Reset",
   "common.deleteDigit": "Delete last digit",
   "common.addAmount": "Add {amount}",

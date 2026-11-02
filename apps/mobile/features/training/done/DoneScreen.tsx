@@ -59,9 +59,15 @@ function Review({
     notes: "",
     workoutId: workout.id,
     ...params.link,
+    // A first-grip set at the session's load follows the pill; one the timer ran heavier or lighter keeps its own.
     done: (run?.done ?? doneAsPrescribed(prescribed)).map((d) => ({
       ...d,
       exercise: model.gripName(grips[d.item] ?? d.exercise),
+      sets: d.sets.map(({ weightKg, ...s }) =>
+        d.item === 0 && (weightKg === undefined || weightKg === setup.loadKg)
+          ? s
+          : { ...s, weightKg: weightKg ?? (setups[d.item] ?? setup).loadKg }
+      ),
     })),
     off: run?.off ?? [],
   }));
@@ -106,7 +112,7 @@ function Review({
           sets: d.sets.map((s) => ({
             ...s,
             ...(hang ? { edgeMm: at.edgeMm } : {}),
-            weightKg: at.loadKg,
+            weightKg: s.weightKg ?? at.loadKg,
           })),
         };
       }),
@@ -132,6 +138,7 @@ function Review({
             onChange={setSetup}
           />
         ),
+        loadKg: setup.loadKg,
         save,
       }}
     />

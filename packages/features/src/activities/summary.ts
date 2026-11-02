@@ -127,25 +127,40 @@ export function seriesPoint(series: ExerciseSeries, activityId: string): SeriesP
   };
 }
 
-/** Each hang of each set, held or let go: the hangs held fill from the first set on. */
-export type HangGrid = { rows: boolean[][]; held: number; total: number };
+type HangLog = Pick<HangSession, "protocol" | "pct" | "loadKg"> & {
+  done?: HangSession["done"];
+};
 
-export function hangGrid({ protocol, pct }: Pick<HangSession, "protocol" | "pct">): HangGrid {
-  const total = protocol.sets * protocol.reps;
-  const held = Math.round((total * pct) / 100);
-  const rows = Array.from({ length: protocol.sets }, (_, s) =>
-    Array.from({ length: protocol.reps }, (_, r) => s * protocol.reps + r < held)
-  );
-  return { rows, held, total };
+/**
+ * Each set's hangs and load: as the session saved them, else spread from its share held, the
+ * hangs filling from the first set on, every set at the session's load.
+ */
+export function hangSets({ protocol, pct, loadKg, done = [] }: HangLog): SetDone[] {
+  const saved = done.find((d) => d.item === 0)?.sets;
+  if (saved !== undefined && saved.length > 0) return saved;
+  const held = Math.round((protocol.sets * protocol.reps * pct) / 100);
+  return Array.from({ length: protocol.sets }, (_, s) => ({
+    reps: Math.max(0, Math.min(protocol.reps, held - s * protocol.reps)),
+    weightKg: loadKg,
+  }));
+}
+
+/** Each hang of each set, held or let go, with each set's load: hangs fill from the left. */
+export type HangGrid = { rows: boolean[][]; loads: number[]; held: number; total: number };
+
+export function hangGrid(session: HangLog): HangGrid {
+  const { reps } = session.protocol;
+  const sets = hangSets(session);
+  const rows = sets.map((s) => Array.from({ length: reps }, (_, r) => r < (s.reps ?? reps)));
+  return {
+    rows,
+    loads: sets.map((s) => s.weightKg ?? session.loadKg),
+    held: rows.flat().filter(Boolean).length,
+    total: rows.flat().length,
+  };
 }
 
 type Hang = Dated & Pick<HangSession, "workoutId" | "gripId" | "loadKg" | "protocol">;
-
-/** The session of the same workout on the same grip before this one. */
-export const previousHang = <T extends Hang>(session: T, all: readonly T[]): T | undefined =>
-  before(session.id, all).find(
-    (s) => s.workoutId === session.workoutId && s.gripId === session.gripId
-  );
 
 /** Every session on this grip of the same kind, oldest first: the added weight over time. */
 export const gripSessions = <T extends Hang>(session: T, all: readonly T[]): T[] =>

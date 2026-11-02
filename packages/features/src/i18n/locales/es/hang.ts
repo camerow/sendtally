@@ -168,6 +168,7 @@ export const hang = {
 
   "hang.date": "Fecha",
   "hang.load": "Carga",
+  "hang.bw": "PC",
   "hang.addedLoadCompleted": "Lastre · completado",
   "hang.weightCompleted": "Peso levantado · completado",
   "hang.delta": "{arrow} {value} {unit}",

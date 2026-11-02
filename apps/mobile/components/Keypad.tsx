@@ -31,6 +31,8 @@ export type KeypadProps = {
   onClose: () => void;
   /** Shows a Next key that commits, closes and calls this. */
   onNext?: () => void;
+  /** With ± in Next's place, ‹ › beside the label step back and on instead. */
+  onPrev?: () => void;
   /** Which field it types into; switching to another starts a fresh entry without closing. */
   field?: string;
   /** Under the value, such as what the number was as written. */
@@ -78,6 +80,7 @@ export function Keypad({
   onCommit,
   onClose,
   onNext,
+  onPrev,
   field,
   note,
   onReset,
@@ -121,6 +124,10 @@ export function Keypad({
   const next = (): void => {
     close();
     onNext?.();
+  };
+  const prev = (): void => {
+    close();
+    onPrev?.();
   };
 
   const [zeros, shown] =
@@ -168,6 +175,26 @@ export function Keypad({
         </Text>
       </Pressable>
     );
+  const walk = (glyph: string, a11y: string, onPress: (() => void) | null): React.ReactElement => (
+    <Pressable
+      onPress={onPress ?? noop}
+      disabled={onPress === null}
+      accessibilityRole="button"
+      accessibilityLabel={a11y}
+      accessibilityState={{ disabled: onPress === null }}
+      style={press({
+        width: 36,
+        height: 36,
+        alignItems: "center",
+        justifyContent: "center",
+        opacity: onPress === null ? 0.3 : 1,
+      })}
+    >
+      <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 22, color: colors.gunmetal }}>
+        {glyph}
+      </Text>
+    </Pressable>
+  );
   const send = (action: EntryAction) => (): void => setEntries((e) => reduce(e, action));
   const digit = (d: string): React.ReactElement => key(d, send({ type: "digit", digit: d }));
   const signed = mode.kind === "number" && mode.signed === true;
@@ -229,9 +256,16 @@ export function Keypad({
             backgroundColor: colors.surfaceSoft,
           }}
         >
+          {signed && (onPrev !== undefined || onNext !== undefined) && (
+            <View style={{ flexDirection: "row", gap: 2, marginLeft: -8 }}>
+              {walk("‹", t("common.previous"), onPrev === undefined ? null : prev)}
+              {walk("›", t("common.next"), onNext === undefined ? null : next)}
+            </View>
+          )}
           <Text
             numberOfLines={1}
             style={{
+              flex: 1,
               flexShrink: 1,
               fontFamily: fonts.monoMedium,
               fontSize: 10,

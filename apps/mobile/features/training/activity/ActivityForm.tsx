@@ -59,7 +59,7 @@ export type ActivityFormProps = {
   /** What the workout prescribes, which a set short of its dose reads against. */
   planned?: readonly SessionItem[];
   /** A hangboard workout, which saves as a hang session with its setup and no notes or times. */
-  hang?: { setup: React.ReactNode; save: (draft: ActivityDraft) => void };
+  hang?: { setup: React.ReactNode; loadKg: number; save: (draft: ActivityDraft) => void };
 };
 
 const input = {
@@ -299,6 +299,7 @@ export function ActivityForm({
             hangs={hang !== undefined}
             previous={previous}
             setup={hang?.setup}
+            {...(hang !== undefined && { hangLoadKg: hang.loadKg })}
             onChange={(done, off) => update({ done, off })}
           />
         )}

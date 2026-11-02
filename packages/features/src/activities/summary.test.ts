@@ -6,7 +6,6 @@ import {
   gripSessions,
   hangGrid,
   pastSessions,
-  previousHang,
   seriesPoint,
   setChange,
 } from "./summary";
@@ -135,14 +134,24 @@ describe("hang sessions", () => {
   });
 
   it("fills the hangs held from the first set, the rest let go", () => {
-    const grid = hangGrid({ protocol, pct: 94 });
+    const grid = hangGrid({ protocol, pct: 94, loadKg: 0 });
     expect(grid.held).toBe(17);
     expect(grid.total).toBe(18);
     expect(grid.rows[2]).toEqual([true, true, true, true, true, false]);
     expect(grid.rows[0]?.every(Boolean)).toBe(true);
+    expect(grid.loads).toEqual([0, 0, 0]);
   });
 
-  it("finds the previous session of the workout on the grip, and every session on the grip", () => {
+  it("reads each set's hangs and load as saved, hangs filling from the left", () => {
+    const done = [{ item: 0, exercise: "half", sets: [{ reps: 6 }, { reps: 4, weightKg: 5 }] }];
+    const grid = hangGrid({ protocol, pct: 0, loadKg: 2, done });
+    expect(grid.rows[1]).toEqual([true, true, true, true, false, false]);
+    expect(grid.loads).toEqual([2, 5]);
+    expect(grid.held).toBe(10);
+    expect(grid.total).toBe(12);
+  });
+
+  it("finds every session on the grip", () => {
     const all = [
       hang("1", "2026-10-20", "half", 10),
       hang("2", "2026-10-22", "open", 4),
@@ -151,7 +160,6 @@ describe("hang sessions", () => {
     ];
     const today = all[3];
     if (today === undefined) throw new Error("no session");
-    expect(previousHang(today, all)?.id).toBe("1");
     expect(gripSessions(today, all).map((s) => s.id)).toEqual(["1", "3", "4"]);
   });
 });

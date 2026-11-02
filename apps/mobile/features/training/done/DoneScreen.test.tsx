@@ -45,11 +45,30 @@ const ended: DoneParams = {
 };
 
 describe("A hangboard workout's review", () => {
-  it("walks the hang counts down the sets with Next", async () => {
+  it("walks each set's hangs then load down the sets with Next", async () => {
     await renderWithHang(<DoneScreen params={ended} />);
     await fireEvent.press(screen.getByLabelText("Half crimp, set 1 · Hangs"));
     await fireEvent.press(screen.getByText("Next"));
+    expect(screen.getByLabelText("Half crimp, set 1 · Load")).toHaveProp("accessibilityState", {
+      expanded: true,
+    });
+    await fireEvent.press(screen.getByLabelText("Next"));
     expect(screen.getByLabelText("Half crimp, set 2 · Hangs")).toHaveProp("accessibilityState", {
+      expanded: true,
+    });
+  });
+
+  it("keeps an unticked set's fields live, and ticks it once a value is typed", async () => {
+    await renderWithHang(<DoneScreen params={ended} />);
+    const set5 = (): unknown => screen.getByLabelText("Half crimp, set 5").props.accessibilityState;
+    expect(set5()).toEqual({ checked: false });
+    await fireEvent.press(screen.getByLabelText("Half crimp, set 5 · Hangs"));
+    await fireEvent.press(screen.getByLabelText("3"));
+    await fireEvent.press(screen.getByLabelText("Done"));
+    expect(set5()).toEqual({ checked: true });
+    await fireEvent.press(screen.getByLabelText("Half crimp, set 5 · Load"));
+    await fireEvent.press(screen.getByLabelText("Previous"));
+    expect(screen.getByLabelText("Half crimp, set 5 · Hangs")).toHaveProp("accessibilityState", {
       expanded: true,
     });
   });

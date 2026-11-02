@@ -10,9 +10,11 @@ export type KeypadRequest = {
   value: number;
   box: React.RefObject<View | null>;
   hasNext: boolean;
+  hasPrev: boolean;
   commit: (value: number) => void;
   close: () => void;
   next: () => void;
+  prev: () => void;
   /** Under the value, such as what the number was as written, with Reset beside it. */
   note?: string;
   reset?: () => void;

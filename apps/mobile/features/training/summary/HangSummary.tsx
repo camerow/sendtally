@@ -3,7 +3,7 @@ import React from "react";
 import { kindLabel } from "@sendtally/features/activities";
 import type { HangSessionRecord } from "@sendtally/api-client";
 import { clock, totalSeconds } from "@sendtally/core/hang";
-import { gripSessions, hangGrid, pastSessions, previousHang } from "@sendtally/features/activities";
+import { gripSessions, hangGrid, pastSessions } from "@sendtally/features/activities";
 import { newBestOf, type HangActions, type HangModel } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import { hangTitle } from "@sendtally/features/sessions";
@@ -50,12 +50,7 @@ export function HangSummary({
       onDelete={() => void actions.deleteSession(session.id)}
     >
       {best !== null && <NewBestCard best={best} />}
-      <HangResultCard
-        session={session}
-        previous={previousHang(session, all)}
-        gripName={model.gripName(session.gripId)}
-        unit={unit}
-      />
+      <HangResultCard session={session} gripName={model.gripName(session.gripId)} unit={unit} />
       <GripTrend sessions={gripSessions(session, all)} currentId={session.id} unit={unit} />
       <HistoryList
         items={pastSessions(session, all).map((s) => hangItem(s, model, session.id))}

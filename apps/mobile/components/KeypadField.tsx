@@ -69,6 +69,7 @@ export function KeypadField({
   onOpen,
   onClose,
   onNext,
+  onPrev,
 }: KeypadFieldProps): React.ReactElement {
   const host = React.useContext(KeypadHostContext);
   const id = React.useId();
@@ -83,11 +84,22 @@ export function KeypadField({
     onChange,
     close,
     onNext,
+    onPrev,
     note,
     onReset,
   });
   React.useEffect(() => {
-    latest.current = { accessibilityLabel, mode, value, onChange, close, onNext, note, onReset };
+    latest.current = {
+      accessibilityLabel,
+      mode,
+      value,
+      onChange,
+      close,
+      onNext,
+      onPrev,
+      note,
+      onReset,
+    };
   });
   React.useEffect(() => {
     if (!open || host === null) return;
@@ -99,9 +111,11 @@ export function KeypadField({
       value: field.value,
       box,
       hasNext: field.onNext !== undefined,
+      hasPrev: field.onPrev !== undefined,
       commit: (typed) => latest.current.onChange(typed),
       close: () => latest.current.close(),
       next: () => latest.current.onNext?.(),
+      prev: () => latest.current.onPrev?.(),
       note: field.note,
       reset: field.onReset === undefined ? undefined : () => latest.current.onReset?.(),
     });
@@ -205,6 +219,7 @@ export function KeypadField({
           onCommit={onChange}
           onClose={close}
           onNext={onNext}
+          onPrev={onPrev}
           note={note}
           onReset={onReset}
         />

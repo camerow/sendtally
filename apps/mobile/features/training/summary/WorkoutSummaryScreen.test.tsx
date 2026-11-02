@@ -205,7 +205,7 @@ describe("A finished workout's summary", () => {
     });
   });
 
-  it("shows a fingers session's hangs held and the weight against last time", async () => {
+  it("shows a fingers session's hangs held and each set's load", async () => {
     const protocol = {
       name: "Repeaters 7/3",
       kind: "hang" as const,
@@ -238,8 +238,9 @@ describe("A finished workout's summary", () => {
     await show("h2", [], [hang("h1", "2026-10-23", 10, 100), hang("h2", "2026-10-27", 12, 94)]);
     expect(screen.getByText("17/18")).toBeTruthy();
     expect(screen.getByText("hangs held")).toBeTruthy();
-    expect(screen.getByText("+2 kg vs last")).toBeTruthy();
-    expect(screen.getAllByText("+12 kg · 17 of 18 hangs")).toHaveLength(2);
+    expect(screen.getAllByText("+12 kg")).toHaveLength(3);
+    expect(screen.getByText("17 of 18 hangs · top load +12 kg")).toBeTruthy();
+    expect(screen.getByText("+12 kg · 17 of 18 hangs")).toBeTruthy();
     expect(screen.getByText("Added weight on this exercise")).toBeTruthy();
     expect(screen.getByText("+10 kg · 18 of 18 hangs")).toBeTruthy();
     expect(screen.queryByText("New best")).toBeNull();
