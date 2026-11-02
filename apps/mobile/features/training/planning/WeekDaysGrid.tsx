@@ -1,5 +1,6 @@
 import React from "react";
 import { Text, View } from "react-native";
+import type { Plan } from "@sendtally/api-client";
 import {
   addDays,
   blockWeekOn,
@@ -19,12 +20,12 @@ import {
   scheduleOf,
   trainingDay,
   usualDays,
+  type DayToggle,
   type TrainingLog,
 } from "@sendtally/features/training";
 import { Label } from "../components/Label";
 import { DayCell } from "../plan/DayCell";
 import type { CellMark } from "../plan/planGridRows";
-import { usePlanActions } from "../plan/usePlanActions";
 import { type } from "../type";
 
 const CELL = 28;
@@ -35,23 +36,30 @@ export type WeekDaysGridProps = {
   membership: Membership;
   kind: WorkoutKind;
   log: TrainingLog;
+  /** The plan with any draft applied, which the days read from. */
+  plan: Plan;
   today: CalendarDate;
+  /** Every week on top and each day from today on a field, set through `onToggle`. */
+  editing: boolean;
+  onToggle: (change: DayToggle) => void;
 };
 
 /**
- * A workout's days in its block: Every week on top, set from this week on (all weeks on a
- * template), then a row per week, each cell setting that week alone. A day ringed in gold is
- * set apart from every week, or on a template from week 1; a day gone by shows how it went.
+ * A workout's days in its block, a row per week. A day ringed in gold is set apart from every
+ * week, or on a template from week 1; a day gone by shows how it went. Editing, Every week on
+ * top sets them from this week on (all weeks on a template), and each cell sets its week alone.
  */
 export function WeekDaysGrid({
   block,
   membership,
   kind,
   log,
+  plan,
   today,
+  editing,
+  onToggle,
 }: WeekDaysGridProps): React.ReactElement {
-  const actions = usePlanActions();
-  const schedule = scheduleOf(log.plan, membership);
+  const schedule = scheduleOf(plan, membership);
   const dated = isDated(block) ? block : null;
   // From this week on; none once the block has ended.
   const everyFrom = dated === null ? 1 : today < dated.start ? 1 : blockWeekOn(dated, today);
@@ -127,7 +135,7 @@ export function WeekDaysGrid({
           </Label>
         ))}
       </View>
-      {every !== null && everyFrom !== null && (
+      {editing && every !== null && everyFrom !== null && (
         <View
           style={{
             paddingBottom: 6,
@@ -148,7 +156,7 @@ export function WeekDaysGrid({
             every,
             (day) => ({
               onPress: () =>
-                void actions.toggleWeekDay(membership.id, {
+                onToggle({
                   week: everyFrom,
                   day: day as Weekday,
                   following: true,
@@ -166,7 +174,7 @@ export function WeekDaysGrid({
         return row(
           `w${week}`,
           {
-            name: t("plan.weekShort", { n: week }),
+            name: t("plan.weekNumber", { n: week }),
             ...(start !== null && { sub: dayMonth(start) }),
             bold: week === current,
           },
@@ -174,9 +182,10 @@ export function WeekDaysGrid({
           (day) => {
             const date = start === null ? null : addDays(start, (day - weekday(start) + 7) % 7);
             if (date !== null && date < today) return { mark: markOn(date) };
+            if (!editing) return {};
             return {
               onPress: () =>
-                void actions.toggleWeekDay(membership.id, {
+                onToggle({
                   week,
                   day: day as Weekday,
                   following: false,

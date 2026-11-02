@@ -1,10 +1,11 @@
 import { useQueryClient } from "@tanstack/react-query";
 import React from "react";
 import type { Plan, SendtallyApi } from "@sendtally/api-client";
-import type { Block, Membership, PlanChange, Weekday, WeekChange } from "@sendtally/core/hang";
+import type { Block, Membership, PlanChange, WeekChange } from "@sendtally/core/hang";
 import { queries } from "../query";
 import { withoutBlock, withoutMembership } from "./plan";
-import { daysInWeek, scheduleOf, usualDays, withWeekDays, type DaySchedule } from "./weekDays";
+import { changedSchedules, movedWith, withChange, withSchedule, type PlanDraft } from "./planDraft";
+import type { DaySchedule } from "./weekDays";
 
 export type PlanActions = {
   saveBlock: (block: Block) => Promise<void>;
@@ -19,15 +20,8 @@ export type PlanActions = {
   savePlanChange: (change: PlanChange) => Promise<void>;
   /** Replaces a membership's days: its own weekdays and each block week they change from. */
   saveSchedule: (schedule: DaySchedule) => Promise<void>;
-  /**
-   * Turns one weekday on or off in a block week, for that week alone or for it and every
-   * week after, reading the days as they are in the cache when it lands. `every` turns it
-   * on or off the days most weeks from it land on, for it and every week after.
-   */
-  toggleWeekDay: (
-    membershipId: string,
-    change: { week: number; day: Weekday; following: boolean; last: number; every?: boolean }
-  ) => Promise<void>;
+  /** Saves what a draft holds: the block, the plans that move with it, days and load. */
+  saveDraft: (draft: PlanDraft) => Promise<void>;
   /** Undoes a skip or move: the day is planned as it was. */
   undoPlanChange: (membershipId: string, plannedOn: string) => Promise<void>;
   /** Plans `from` again as block `to` from `start`, with its plans; false when it failed. */
@@ -38,15 +32,6 @@ const upsert = <T extends { id: string }>(list: readonly T[], item: T): T[] =>
   list.some((x) => x.id === item.id)
     ? list.map((x) => (x.id === item.id ? item : x))
     : [...list, item];
-
-const sameRung = (a: WeekChange, b: WeekChange): boolean =>
-  a.membershipId === b.membershipId && a.week === b.week && a.dose === b.dose && a.item === b.item;
-
-function withChange(plan: Plan, change: WeekChange): Plan {
-  const rest = plan.weekChanges.filter((c) => !sameRung(c, change));
-  const empty = Object.keys(change.change).length === 0;
-  return { ...plan, weekChanges: empty ? rest : [...rest, change] };
-}
 
 // ponytail: one chain for every plan write, as in useHangActions, so quick taps
 // reach the server in the order they were made.
@@ -75,44 +60,38 @@ export function usePlanActions(api: SendtallyApi, onError: (error: unknown) => v
     };
     const saveSchedule = (next: DaySchedule): Promise<void> =>
       write(
-        (p) => ({
-          ...p,
-          memberships: p.memberships.map((x) =>
-            x.id === next.membershipId ? { ...x, weekdays: next.weekdays } : x
-          ),
-          membershipDays: [
-            ...p.membershipDays.filter((d) => d.membershipId !== next.membershipId),
-            ...next.weeks,
-          ],
-        }),
+        (p) => withSchedule(p, next),
         () => api.saveSchedule(next)
       );
+    const saveBlock = (block: Block): Promise<void> =>
+      write(
+        (p) => ({ ...p, blocks: upsert(p.blocks, block) }),
+        () => api.saveBlock(block)
+      );
+    const saveMembership = (membership: Membership): Promise<void> =>
+      write(
+        (p) => ({ ...p, memberships: upsert(p.memberships, membership) }),
+        () => api.saveMembership(membership)
+      );
+    const saveWeekChange = (change: WeekChange): Promise<void> =>
+      write(
+        (p) => withChange(p, change),
+        () => api.saveWeekChange(change)
+      );
     return {
-      saveBlock: (block) =>
-        write(
-          (p) => ({ ...p, blocks: upsert(p.blocks, block) }),
-          () => api.saveBlock(block)
-        ),
+      saveBlock,
       deleteBlock: (id) =>
         write(
           (p) => withoutBlock(p, id),
           () => api.deleteBlock(id)
         ),
-      saveMembership: (membership) =>
-        write(
-          (p) => ({ ...p, memberships: upsert(p.memberships, membership) }),
-          () => api.saveMembership(membership)
-        ),
+      saveMembership,
       deleteMembership: (id) =>
         write(
           (p) => withoutMembership(p, id),
           () => api.deleteMembership(id)
         ),
-      saveWeekChange: (change) =>
-        write(
-          (p) => withChange(p, change),
-          () => api.saveWeekChange(change)
-        ),
+      saveWeekChange,
       savePlanChange: (change) =>
         write(
           (p) => ({
@@ -127,20 +106,16 @@ export function usePlanActions(api: SendtallyApi, onError: (error: unknown) => v
           () => api.savePlanChange(change)
         ),
       saveSchedule: (next) => saveSchedule(next),
-      toggleWeekDay: async (membershipId, { week, day, following, last, every = false }) => {
+      saveDraft: async (draft) => {
         const plan = client.getQueryData<Plan>(key);
-        const m = plan?.memberships.find((x) => x.id === membershipId);
-        if (plan === undefined || m === undefined) return;
-        const schedule = scheduleOf(plan, m);
-        const days = every ? usualDays(schedule, week, last) : daysInWeek(schedule, week);
-        await saveSchedule(
-          withWeekDays(schedule, {
-            week,
-            weekdays: days.includes(day) ? days.filter((d) => d !== day) : [...days, day],
-            following: following || every,
-            last,
-          })
-        );
+        if (plan === undefined) return;
+        const moved = draft.block === null ? [] : movedWith(plan, draft.block);
+        await Promise.all([
+          ...(draft.block === null ? [] : [saveBlock(draft.block)]),
+          ...moved.map(saveMembership),
+          ...changedSchedules(plan, draft).map(saveSchedule),
+          ...draft.weekChanges.map(saveWeekChange),
+        ]);
       },
       undoPlanChange: (membershipId, plannedOn) =>
         write(

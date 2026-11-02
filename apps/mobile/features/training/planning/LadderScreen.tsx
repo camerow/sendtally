@@ -25,7 +25,8 @@ import { ScreenFrame } from "../../../components/ScreenFrame";
 import { useApi } from "../../../lib/api";
 import { confirmDestructive } from "../../../lib/confirmDestructive";
 import { Button } from "../components/Button";
-import { DetailMenu } from "../components/DetailMenu";
+import { DetailActions } from "../components/DetailActions";
+import { EditorHeader } from "../components/EditorHeader";
 import { Label } from "../components/Label";
 import { Segmented } from "../components/Segmented";
 import { Title } from "../components/Title";
@@ -37,6 +38,7 @@ import { KIND_LOOK } from "../today/kindLook";
 import { type } from "../type";
 import { LoadTable } from "./LoadTable";
 import { LoadSection } from "./LoadSection";
+import { usePlanDraft } from "./usePlanDraft";
 import { WeekDaysGrid } from "./WeekDaysGrid";
 
 /** "changes W5, W6"; nothing when no week changes it. */
@@ -54,17 +56,19 @@ export type LadderScreenProps = {
 };
 
 /**
- * A workout in its block: its week, and its weekly load as a table of the block's weeks,
- * each changing only what differs from the workout as written.
+ * A workout in its block: its days by week, and its weekly load as a table of the block's
+ * weeks, each changing only what differs from the workout as written. Edit changes both,
+ * saved together.
  */
 export function LadderScreen({ id, back }: LadderScreenProps): React.ReactElement | null {
   const { model, today } = useHangData();
   const unit = model.settings.units;
   const { log } = useTrainingLog(useApi());
   const actions = usePlanActions();
+  const draft = usePlanDraft(log.plan);
   const [turn, setTurn] = React.useState(0);
   const [open, setOpen] = React.useState<readonly number[]>([0]);
-  const { plan } = log;
+  const { plan } = draft;
   const m = plan.memberships.find((x) => x.id === id);
   const block = m === undefined ? null : blockOfMembership(plan, m);
   const w = m === undefined ? undefined : log.workout(m.workoutId);
@@ -100,6 +104,7 @@ export function LadderScreen({ id, back }: LadderScreenProps): React.ReactElemen
   const lines =
     w.kind === "hangboard" ? (bodySummary(w)?.split(" · ") ?? []) : workoutLines(w, model);
   const mine = library?.source === "mine";
+  const editing = draft.editing && !ended;
 
   const loadOf = (index: number): React.ReactElement | null => {
     const item = items[index];
@@ -115,8 +120,9 @@ export function LadderScreen({ id, back }: LadderScreenProps): React.ReactElemen
         unit={unit}
         current={current}
         done={done}
+        editing={editing}
         onChange={(week, change) =>
-          void actions.saveWeekChange({
+          draft.setChange({
             membershipId: id,
             week,
             dose: doseOf(index),
@@ -142,9 +148,20 @@ export function LadderScreen({ id, back }: LadderScreenProps): React.ReactElemen
   return (
     <ScreenFrame
       backLabel={back}
+      {...(editing && {
+        header: (
+          <EditorHeader
+            title={t("plan.editInBlock", { block: block.name })}
+            onCancel={draft.cancel}
+            onSave={draft.save}
+            solid
+          />
+        ),
+      })}
       action={
-        <DetailMenu
-          rows={[
+        <DetailActions
+          {...(!ended && { onEdit: draft.begin })}
+          menu={[
             {
               icon: "pencil",
               title: t("hang.editWorkout"),
@@ -175,7 +192,16 @@ export function LadderScreen({ id, back }: LadderScreenProps): React.ReactElemen
           </Text>
         ))}
       </View>
-      <WeekDaysGrid block={block} membership={m} kind={w.kind} log={log} today={today} />
+      <WeekDaysGrid
+        block={block}
+        membership={m}
+        kind={w.kind}
+        log={log}
+        plan={plan}
+        today={today}
+        editing={editing}
+        onToggle={(change) => draft.toggle(m.id, change)}
+      />
       {turns > 1 && (
         <Segmented<string>
           value={String(turn)}
@@ -226,9 +252,6 @@ export function LadderScreen({ id, back }: LadderScreenProps): React.ReactElemen
             ))}
           </>
         )}
-        <Text style={[type.body, { fontSize: 13, lineHeight: 19, color: colors.textSecondary }]}>
-          {t("plan.loadHint")}
-        </Text>
       </View>
     </ScreenFrame>
   );

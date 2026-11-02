@@ -1,36 +1,34 @@
 import React from "react";
 import { Text, View } from "react-native";
-import { addDays, weekday, type DatedBlock } from "@sendtally/core/hang";
+import { addDays, weekday, type CalendarDate, type DatedBlock } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { shortDate, weekdayLong } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
-import { usePlan } from "@sendtally/features/training";
-import { useApi } from "../../../lib/api";
 import { Button } from "../components/Button";
 import { MonthCalendar } from "../components/MonthCalendar";
 import { SheetHeader } from "../components/SheetHeader";
 import { useHangData } from "../data/HangDataContext";
 import { HangSheet } from "../data/HangSheet";
-import { usePlanActions } from "../plan/usePlanActions";
 import { type } from "../type";
 
-export type MoveStartSheetProps = { block: DatedBlock; onClose: () => void };
+export type MoveStartSheetProps = {
+  block: DatedBlock;
+  onPick: (start: CalendarDate) => void;
+  onClose: () => void;
+};
 
-/** Moving a block that has not started to another first day, its plans moving with it. */
-export function MoveStartSheet({ block, onClose }: MoveStartSheetProps): React.ReactElement {
+/** Picking another first day for a block that has not started; its plans move with it. */
+export function MoveStartSheet({
+  block,
+  onPick,
+  onClose,
+}: MoveStartSheetProps): React.ReactElement {
   const { today } = useHangData();
-  const plan = usePlan(useApi()).state;
-  const actions = usePlanActions();
   const [start, setStart] = React.useState(block.start);
   const last = addDays(start, block.weeks * 7 - 1);
 
   const save = (): void => {
-    void actions.saveBlock({ ...block, start });
-    // Its plans start with it; their days are block weeks, so they move as they are.
-    if (plan.status === "ready")
-      plan.data.memberships
-        .filter((m) => m.blockId === block.id && m.start === block.start)
-        .forEach((m) => void actions.saveMembership({ ...m, start }));
+    onPick(start);
     onClose();
   };
 

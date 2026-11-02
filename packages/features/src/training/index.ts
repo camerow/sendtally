@@ -75,7 +75,10 @@ export {
   hasDays,
   ownWeeksAfter,
   scheduleOf,
+  toggleDay,
   usualDays,
   withWeekDays,
   type DaySchedule,
+  type DayToggle,
 } from "./weekDays";
+export { applyDraft, draftChange, draftSchedule, emptyDraft, type PlanDraft } from "./planDraft";

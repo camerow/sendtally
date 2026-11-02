@@ -15,6 +15,7 @@ import {
 import { KeypadField } from "../../../components/KeypadField";
 import { useFieldOrder } from "../../../components/useFieldOrder";
 import { Label } from "../components/Label";
+import { GOLD_TINT } from "../components/tints";
 import { type } from "../type";
 
 export type LoadTableProps = {
@@ -29,6 +30,8 @@ export type LoadTableProps = {
   current: number | null;
   /** Each week's runs, done of planned; null for a week still to come. None on a template. */
   done: readonly (DoneCount | null)[] | null;
+  /** Each cell a field on the keypad; plain numbers while reading. */
+  editing: boolean;
   onChange: (week: number, change: Partial<Dose>) => void;
 };
 
@@ -41,7 +44,8 @@ const without = (change: Partial<Dose>, field: DoseField): Partial<Dose> =>
 
 /**
  * An item's weeks in a block as a table: a row per week, a column per number, gold where a
- * week differs from the workout as written. A cell types on the keypad; Next walks down its column.
+ * week differs from the workout as written. Editing, a cell types on the keypad and Next walks
+ * down its column.
  */
 export function LoadTable({
   kind,
@@ -51,6 +55,7 @@ export function LoadTable({
   unit,
   current,
   done,
+  editing,
   onChange,
 }: LoadTableProps): React.ReactElement {
   const weeks = changes.map((_, i) => i + 1);
@@ -101,6 +106,26 @@ export function LoadTable({
             {columns.map((f) => {
               const name = columnLabel(kind, written, f);
               const marked = change[f] !== undefined && change[f] !== written[f];
+              if (!editing)
+                return (
+                  <View key={f} style={{ flex: 1, alignItems: "center" }}>
+                    <Text
+                      style={[
+                        type.mono,
+                        {
+                          fontSize: 13,
+                          paddingHorizontal: 4,
+                          borderRadius: 4,
+                          overflow: "hidden",
+                          color: colors.gunmetal,
+                          backgroundColor: marked ? GOLD_TINT : undefined,
+                        },
+                      ]}
+                    >
+                      {cellText(kind, dose, f, unit)}
+                    </Text>
+                  </View>
+                );
               return (
                 <KeypadField
                   key={f}

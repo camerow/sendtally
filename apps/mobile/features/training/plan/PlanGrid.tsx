@@ -26,8 +26,8 @@ export type PlanGridProps = {
   dates?: readonly string[];
   /** The weekdays left to right: Monday first unless a dated week starts on another. */
   columns?: readonly number[];
-  /** At the right of the title, on its own row over the weekdays, such as Edit days. */
-  action?: React.ReactNode;
+  /** In place of the title, on its own row over the weekdays, such as a block's week arrows. */
+  head?: React.ReactNode;
   /** Every cell a day to set: off cells read as white boxes. */
   editing?: boolean;
   /** Under the rows, inside the frame, such as which weeks an edit reaches. */
@@ -62,7 +62,7 @@ export function PlanGrid({
   title = t("plan.week"),
   dates,
   columns = DAYS,
-  action,
+  head,
   editing = false,
   footer,
 }: PlanGridProps): React.ReactElement {
@@ -78,17 +78,10 @@ export function PlanGrid({
         },
       ]}
     >
-      {action !== undefined && (
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-          <Label color={colors.gunmetal} style={{ flex: 1 }}>
-            {title}
-          </Label>
-          {action}
-        </View>
-      )}
+      {head}
       <View style={{ flexDirection: "row", alignItems: "flex-end", gap: 5 }}>
         <View style={{ flex: 1 }}>
-          {action === undefined && <Label color={colors.gunmetal}>{title}</Label>}
+          {head === undefined && <Label color={colors.gunmetal}>{title}</Label>}
         </View>
         {columns.map((i) => (
           <View key={i} style={{ width: CELL, alignItems: "center", gap: 1 }}>

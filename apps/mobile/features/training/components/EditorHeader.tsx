@@ -10,6 +10,8 @@ export type EditorHeaderProps = {
   onCancel: () => void;
   onSave: () => void;
   saveDisabled?: boolean;
+  /** Save as a solid button, for an Edit mode on a detail screen. */
+  solid?: boolean;
 };
 
 /** A full-screen editor's top: Cancel, what is being edited, and Save. */
@@ -18,6 +20,7 @@ export function EditorHeader({
   onCancel,
   onSave,
   saveDisabled,
+  solid = false,
 }: EditorHeaderProps): React.ReactElement {
   return (
     <View
@@ -34,8 +37,8 @@ export function EditorHeader({
       <Button
         label={t("hang.save")}
         onPress={onSave}
-        variant="link"
-        height={44}
+        variant={solid ? "primary" : "link"}
+        height={solid ? 40 : 44}
         disabled={saveDisabled}
       />
     </View>

@@ -96,7 +96,7 @@ describe("tally", () => {
     expect(value).toBeNull();
 
     writeStoredDraft(storage, tallyDraft(NOW), NOW);
-    expect(await finishLiveSession(api, storage, null)).toBeNull();
+    expect(await finishLiveSession(api, storage, null, new Date(2026, 9, 27, 20, 10))).toBeNull();
     expect(api.logSession).toHaveBeenCalledTimes(1);
     expect(value).toBeNull();
   });

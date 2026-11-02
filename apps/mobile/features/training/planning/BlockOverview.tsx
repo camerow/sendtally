@@ -2,7 +2,12 @@ import React from "react";
 import type { Plan } from "@sendtally/api-client";
 import { blockWeekOn } from "@sendtally/core/hang";
 import { t } from "@sendtally/features/i18n";
-import { blockMembers, type BlockRecap, type WorkoutLookup } from "@sendtally/features/training";
+import {
+  blockMembers,
+  type BlockRecap,
+  type DayToggle,
+  type WorkoutLookup,
+} from "@sendtally/features/training";
 import { doneOfShort, effortText } from "../blocks/blockText";
 import { useHangData } from "../data/HangDataContext";
 import { SummaryTiles } from "../summary/SummaryTiles";
@@ -10,12 +15,17 @@ import { BlockWeek } from "./BlockWeek";
 
 export type BlockOverviewProps = {
   recap: BlockRecap;
+  /** The plan with any draft applied. */
   plan: Plan;
   workout: WorkoutLookup;
   /** A plan just added, lit for a moment. */
   lit?: string;
   /** The week its chips picked, this week when it opened. */
   week: number;
+  editing: boolean;
+  onToggle: (membershipId: string, change: DayToggle) => void;
+  onPickWeek: (week: number) => void;
+  onEditDays?: () => void;
 };
 
 /** A block before it ends: how the picked week and the block are going, and that week. */
@@ -25,9 +35,10 @@ export function BlockOverview({
   workout,
   lit,
   week,
+  ...edit
 }: BlockOverviewProps): React.ReactElement {
   const { today } = useHangData();
-  const { block } = recap;
+  const block = plan.blocks.find((b) => b.id === recap.block.id) ?? recap.block;
   const picked = recap.weeks[week - 1];
   const current = blockWeekOn(block, today);
   return (
@@ -50,6 +61,8 @@ export function BlockOverview({
         workout={workout}
         lit={lit}
         week={week}
+        plan={plan}
+        {...edit}
       />
     </>
   );

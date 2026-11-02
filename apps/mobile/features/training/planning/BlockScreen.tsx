@@ -18,6 +18,7 @@ import { useApi } from "../../../lib/api";
 import { blockDates } from "../blocks/blockText";
 import { Button } from "../components/Button";
 import { DetailActions } from "../components/DetailActions";
+import { EditorHeader } from "../components/EditorHeader";
 import { deleteRow } from "../components/deleteRow";
 import { Label } from "../components/Label";
 import { Title } from "../components/Title";
@@ -32,6 +33,7 @@ import { BlockWeek } from "./BlockWeek";
 import { PlanAgainSheet } from "./PlanAgainSheet";
 import { BlockHeader } from "./BlockHeader";
 import { MoveStartSheet } from "./MoveStartSheet";
+import { usePlanDraft } from "./usePlanDraft";
 
 export type BlockScreenProps = {
   id: string;
@@ -44,9 +46,9 @@ export type BlockScreenProps = {
 };
 
 /**
- * One block, built in place: a template scheduled from here, or a scheduled block's weeks
- * while it runs, its name, length and (until it starts) first day changed where they read;
- * a recap and Plan again once it is over.
+ * One block: a template scheduled from here, or a scheduled block's weeks while it runs, and
+ * Edit to change its name, length, days and (until it starts) first day, saved together; a
+ * recap and Plan again once it is over.
  */
 export function BlockScreen({
   id,
@@ -65,11 +67,14 @@ export function BlockScreen({
   const [again, setAgain] = React.useState(false);
   const [moving, setMoving] = React.useState(false);
   const [week, setWeek] = React.useState<number | null>(null);
-  const block = log.plan.blocks.find((b) => b.id === id);
-  const members = block === undefined ? [] : blockMembers(log.plan, block);
+  // A new block opens in Edit mode, its name typed first.
+  const draft = usePlanDraft(log.plan, fresh);
+  const saved = log.plan.blocks.find((b) => b.id === id);
+  const block = draft.plan.blocks.find((b) => b.id === id);
+  const members = block === undefined ? [] : blockMembers(draft.plan, block);
 
   // An untitled template left with nothing in it was never really made.
-  const empty = block !== undefined && !isDated(block) && block.name === "" && members.length === 0;
+  const empty = saved !== undefined && !isDated(saved) && saved.name === "" && members.length === 0;
   const left = React.useRef({ empty, remove: actions.deleteBlock });
   React.useEffect(() => {
     left.current = { empty, remove: actions.deleteBlock };
@@ -83,11 +88,20 @@ export function BlockScreen({
 
   if (plan.state.status !== "ready")
     return <LoadState state={plan.state} onRetry={() => void plan.reload()} framed />;
-  if (block === undefined) return null;
+  if (block === undefined || saved === undefined) return null;
   const dated = isDated(block) ? block : null;
   const ended = dated !== null && blockEnd(dated) <= today;
-  const shown = week ?? (dated === null ? 1 : (blockWeekOn(dated, today) ?? 1));
+  const current = dated === null ? null : blockWeekOn(dated, today);
+  const shown = Math.min(block.weeks, week ?? current ?? 1);
   const schedulable = members.some((m) => hasDays(scheduleOf(log.plan, m)));
+  const editing = draft.editing && !ended;
+  const weekProps = {
+    plan: draft.plan,
+    editing,
+    onToggle: draft.toggle,
+    onPickWeek: setWeek,
+    ...(!ended && { onEditDays: draft.begin }),
+  };
   const saveAsTemplate = async (): Promise<void> => {
     const copy = randomUUID();
     if (await actions.copyBlock(id, copy, null))
@@ -97,8 +111,19 @@ export function BlockScreen({
   return (
     <ScreenFrame
       backLabel={backLabel}
+      {...(editing && {
+        header: (
+          <EditorHeader
+            title={t("plan.editBlock")}
+            onCancel={draft.cancel}
+            onSave={draft.save}
+            solid
+          />
+        ),
+      })}
       action={
         <DetailActions
+          {...(!ended && { onEdit: draft.begin })}
           menu={[
             {
               icon: "copy",
@@ -119,7 +144,7 @@ export function BlockScreen({
         />
       }
       footer={
-        ended || dated === null ? (
+        !editing && (ended || dated === null) ? (
           <Button
             label={dated === null ? t("plan.schedule") : t("plan.planAgain")}
             onPress={() => setAgain(true)}
@@ -133,13 +158,16 @@ export function BlockScreen({
       {dated === null || !ended ? (
         <>
           <BlockHeader
+            key={editing ? "edit" : "read"}
             block={block}
             today={today}
+            editing={editing}
+            savedName={saved.name}
             autoFocus={fresh}
             week={shown}
             onPickWeek={setWeek}
-            onSave={(b) => void actions.saveBlock(b)}
-            minWeeks={dated === null ? 1 : (blockWeekOn(dated, today) ?? 1)}
+            onSave={draft.setBlock}
+            minWeeks={current ?? 1}
             {...(dated !== null && today < dated.start && { onMoveStart: () => setMoving(true) })}
           />
           {dated === null ? (
@@ -149,14 +177,15 @@ export function BlockScreen({
               workout={log.workout}
               lit={lit}
               week={shown}
+              {...weekProps}
             />
           ) : (
             <BlockOverview
               recap={blockRecap(log, dated, today)}
-              plan={log.plan}
               workout={log.workout}
               lit={lit}
               week={shown}
+              {...weekProps}
             />
           )}
         </>
@@ -180,7 +209,11 @@ export function BlockScreen({
         </>
       )}
       {moving && dated !== null && (
-        <MoveStartSheet block={dated} onClose={() => setMoving(false)} />
+        <MoveStartSheet
+          block={dated}
+          onPick={(start) => draft.setBlock({ ...dated, start })}
+          onClose={() => setMoving(false)}
+        />
       )}
       {again && <PlanAgainSheet block={block} back={backLabel} onClose={() => setAgain(false)} />}
     </ScreenFrame>

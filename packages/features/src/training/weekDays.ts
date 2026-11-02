@@ -73,3 +73,27 @@ export function usualDays(schedule: DaySchedule, from: number, last: number): We
 /** Whether a schedule lands on any day in any week. */
 export const hasDays = (schedule: DaySchedule): boolean =>
   schedule.weekdays.length > 0 || schedule.weeks.some((w) => w.weekdays.length > 0);
+
+/** A day change as a tap makes it: a week's day on or off, alone or from it on. */
+export type DayToggle = {
+  week: number;
+  day: Weekday;
+  following: boolean;
+  last: number;
+  /** On or off the days most weeks from `week` land on, for it and every week after. */
+  every?: boolean;
+};
+
+/** The schedule with one day turned on or off. */
+export function toggleDay(
+  schedule: DaySchedule,
+  { week, day, following, last, every = false }: DayToggle
+): DaySchedule {
+  const days = every ? usualDays(schedule, week, last) : daysInWeek(schedule, week);
+  return withWeekDays(schedule, {
+    week,
+    weekdays: days.includes(day) ? days.filter((d) => d !== day) : [...days, day],
+    following: following || every,
+    last,
+  });
+}

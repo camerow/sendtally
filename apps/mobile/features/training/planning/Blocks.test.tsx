@@ -4,6 +4,7 @@ import { router } from "expo-router";
 import React from "react";
 import { Alert, type AlertButton } from "react-native";
 import type { Plan, WorkoutRecord } from "@sendtally/api-client";
+import type { PlanDraft } from "@sendtally/features/training";
 import { hangData, readingOrder, renderWithHang } from "../data/renderWithHang";
 import { PlanGrid } from "../plan/PlanGrid";
 import { planGridRows } from "../plan/planGridRows";
@@ -21,7 +22,7 @@ const mockPlan = {
   copyBlock: jest.fn(async () => true),
   savePlanChange: jest.fn(async () => undefined),
   undoPlanChange: jest.fn(async () => undefined),
-  toggleWeekDay: jest.fn(async () => undefined),
+  saveDraft: jest.fn(async (_draft: PlanDraft) => undefined),
 };
 
 jest.mock("../plan/usePlanActions", () => ({ usePlanActions: () => mockPlan }));
@@ -79,24 +80,39 @@ describe("blocks", () => {
     });
   });
 
-  it("edits a block that has not started in place: its name, weeks and first day", async () => {
+  it("reads a block until Edit, then saves its name, weeks and first day together", async () => {
     await renderWithHang(<BlockScreen id="b1" />, hangData(), { workouts: [squat], plan });
     expect(screen.getByText("Scheduled")).toBeTruthy();
-    expect(screen.queryByText("Edit")).toBeNull();
+    expect(screen.queryByLabelText("Name")).toBeNull();
+    expect(screen.queryByLabelText("Decrease Weeks")).toBeNull();
+    await fireEvent.press(screen.getByText("Edit"));
+    expect(screen.getByText("Edit block")).toBeTruthy();
     await fireEvent.changeText(screen.getByLabelText("Name"), " Winter power ");
-    await fireEvent(screen.getByLabelText("Name"), "blur");
-    expect(mockPlan.saveBlock).toHaveBeenLastCalledWith(
-      expect.objectContaining({ id: "b1", name: "Winter power" })
+    await fireEvent.press(screen.getByLabelText("Decrease Weeks"));
+    await fireEvent.press(screen.getByLabelText("Move the first day"));
+    await fireEvent.press(screen.getAllByLabelText(/Oct 6/)[0]!);
+    await fireEvent.press(screen.getByText("Start on Tue, Oct 6"));
+    expect(screen.getByText("Tue, Oct 6 to Mon, Oct 26")).toBeTruthy();
+    expect(mockPlan.saveBlock).not.toHaveBeenCalled();
+    await fireEvent.press(screen.getByText("Save"));
+    expect(mockPlan.saveDraft).toHaveBeenCalledWith(
+      expect.objectContaining({
+        block: { id: "b1", name: "Winter power", start: "2026-10-06", weeks: 3, focus: null },
+      })
     );
-    jest.clearAllMocks();
+    expect(screen.getByText("Edit")).toBeTruthy();
+  });
+
+  it("keeps a scheduled block's name when the field is emptied, and drops edits on Cancel", async () => {
+    await renderWithHang(<BlockScreen id="b1" />, hangData(), { workouts: [squat], plan });
+    await fireEvent.press(screen.getByText("Edit"));
     await fireEvent.changeText(screen.getByLabelText("Name"), "  ");
     await fireEvent(screen.getByLabelText("Name"), "blur");
-    expect(mockPlan.saveBlock).not.toHaveBeenCalled();
     expect(screen.getByLabelText("Name")).toHaveProp("value", "Winter base");
-    await fireEvent.press(screen.getByLabelText("Decrease Weeks"));
-    expect(mockPlan.saveBlock).toHaveBeenLastCalledWith(expect.objectContaining({ weeks: 3 }));
-    await fireEvent.press(screen.getByLabelText("Move the first day"));
-    expect(screen.getByText("When does it start?")).toBeTruthy();
+    await fireEvent.press(screen.getByLabelText("Increase Weeks"));
+    await fireEvent.press(screen.getByText("Cancel"));
+    expect(screen.getByText("Mon, Oct 5 to Sun, Nov 1")).toBeTruthy();
+    expect(mockPlan.saveDraft).not.toHaveBeenCalled();
   });
 
   it("keeps a running block's weeks to no fewer than it has run, and its first day", async () => {
@@ -105,6 +121,7 @@ describe("blocks", () => {
       blocks: [{ id: "b1", name: "Winter base", start: "2026-09-21", weeks: 2, focus: null }],
     };
     await renderWithHang(<BlockScreen id="b1" />, hangData(), { workouts: [squat], plan: running });
+    await fireEvent.press(screen.getByText("Edit"));
     expect(screen.getByLabelText("Decrease Weeks")).toBeDisabled();
     expect(screen.queryByLabelText("Move the first day")).toBeNull();
   });
@@ -140,13 +157,15 @@ describe("block overview", () => {
   it("reads the running block: its weeks, how it is going and its workouts", async () => {
     await renderWithHang(<BlockScreen id="b1" />, hangData(), { workouts: [squat], plan: running });
     expect(screen.getByText("Mon, Sep 21 to Sun, Oct 18")).toBeTruthy();
-    expect(screen.getByText("4 weeks")).toBeTruthy();
     expect(screen.getByText("W4")).toBeTruthy();
     expect(screen.getByText("This week")).toBeTruthy();
     expect(screen.getByText("So far")).toBeTruthy();
     expect(screen.getByText("0 of 4")).toBeTruthy();
     expect(screen.queryByText("Delete block")).toBeNull();
-    expect(screen.getByText(/^Week 2 · /)).toBeTruthy();
+    expect(screen.getAllByText("Week 2").length).toBeGreaterThan(0);
+    await fireEvent.press(screen.getByLabelText("Next week"));
+    expect(screen.getAllByText("Week 3").length).toBeGreaterThan(0);
+    await fireEvent.press(screen.getByLabelText("Previous week"));
     expect(screen.getByText("1 exercise")).toBeTruthy();
     expect(screen.getByText("45m")).toBeTruthy();
     expect(screen.queryByLabelText("Remove Back squat from your plan")).toBeNull();
@@ -157,7 +176,6 @@ describe("block overview", () => {
     });
     await fireEvent.press(screen.getByLabelText("Add a workout to Winter base"));
     expect(screen.getByText("Add workouts")).toBeTruthy();
-    expect(screen.queryByText("Edit")).toBeNull();
   });
 });
 
@@ -184,7 +202,6 @@ describe("a dated week", () => {
       blocks: [{ id: "b1", name: "Winter base", start: "2026-09-23", weeks: 4, focus: null }],
     };
     await renderWithHang(<BlockScreen id="b1" />, hangData(), { workouts: [squat], plan: midweek });
-    expect(screen.getByText(/^Week 1 · /)).toBeTruthy();
     expect(readingOrder("28", "29", "23", "24", "25", "26", "27")).toEqual([
       "23",
       "24",
@@ -213,28 +230,24 @@ describe("a day on a scheduled block", () => {
       workouts: [squat],
       plan: running,
     });
+    expect(screen.queryByLabelText("Every week, Thursday")).toBeNull();
+    await fireEvent.press(screen.getByText("Edit"));
+    expect(screen.getByText("Edit workout in Winter base")).toBeTruthy();
     await fireEvent.press(screen.getByLabelText("Every week, Thursday"));
-    expect(mockPlan.toggleWeekDay).toHaveBeenLastCalledWith("m1", {
-      week: 2,
-      day: 3,
-      following: true,
-      last: 4,
-      every: true,
-    });
-    await fireEvent.press(screen.getByLabelText("W3, Thursday"));
-    expect(mockPlan.toggleWeekDay).toHaveBeenLastCalledWith("m1", {
-      week: 3,
-      day: 3,
-      following: false,
-      last: 4,
-    });
-    expect(screen.getByLabelText("W1, Monday")).not.toHaveProp("accessibilityRole", "checkbox");
+    await fireEvent.press(screen.getByLabelText("Week 3, Friday"));
+    expect(screen.getByLabelText("Week 1, Monday")).not.toHaveProp("accessibilityRole", "checkbox");
+    await fireEvent.press(screen.getByText("Save"));
+    const draft = mockPlan.saveDraft.mock.calls[0]?.[0];
+    expect(draft?.schedules[0]?.weeks).toEqual([
+      { membershipId: "m1", fromWeek: 2, weekdays: [0, 1, 3] },
+      { membershipId: "m1", fromWeek: 3, weekdays: [0, 1, 3, 4] },
+      { membershipId: "m1", fromWeek: 4, weekdays: [0, 1, 3] },
+    ]);
   });
 
   it("opens today's planned day to start, log, move, skip or open", async () => {
     await renderWithHang(<BlockScreen id="b1" />, hangData(), { workouts: [squat], plan: running });
     await fireEvent.press(screen.getByLabelText("Back squat, Tuesday"));
-    expect(screen.getByText("Tue · Winter base · W2")).toBeTruthy();
     expect(screen.getByText("Open workout")).toBeTruthy();
     await fireEvent.press(screen.getByText("Skip"));
     expect(screen.getByText("Skip it?")).toBeTruthy();
@@ -242,22 +255,16 @@ describe("a day on a scheduled block", () => {
 
   it("edits the picked week's days, and the weeks after it once switched on", async () => {
     await renderWithHang(<BlockScreen id="b1" />, hangData(), { workouts: [squat], plan: running });
-    await fireEvent.press(screen.getByText("Edit days"));
+    await fireEvent.press(screen.getByText("Edit"));
     await fireEvent.press(screen.getByLabelText("Back squat, Thursday"));
-    expect(mockPlan.toggleWeekDay).toHaveBeenLastCalledWith("m1", {
-      week: 2,
-      day: 3,
-      following: false,
-      last: 4,
-    });
     await fireEvent.press(screen.getByRole("switch", { name: "Also weeks 3 to 4" }));
-    await fireEvent.press(screen.getByLabelText("Back squat, Thursday"));
-    expect(mockPlan.toggleWeekDay).toHaveBeenLastCalledWith(
-      "m1",
-      expect.objectContaining({ week: 2, following: true })
-    );
-    await fireEvent.press(screen.getByText("Done"));
-    expect(screen.getByText("Edit days")).toBeTruthy();
+    await fireEvent.press(screen.getByLabelText("Back squat, Saturday"));
+    await fireEvent.press(screen.getByText("Save"));
+    const draft = mockPlan.saveDraft.mock.calls[0]?.[0];
+    expect(draft?.schedules[0]?.weeks).toEqual([
+      { membershipId: "m1", fromWeek: 2, weekdays: [0, 1, 3, 5] },
+    ]);
+    expect(screen.getByText("Edit")).toBeTruthy();
   });
 
   it("marks a skipped day and leaves it out of Done", async () => {
@@ -410,22 +417,28 @@ describe("templates", () => {
       plan: dayless,
     });
     expect(screen.getByRole("button", { name: "Schedule" })).toBeDisabled();
+    await fireEvent.press(screen.getByText("Tap Edit to set when Back squat runs"));
     expect(screen.getByText("Tap the days Back squat runs")).toBeTruthy();
+    expect(screen.queryByText("Schedule")).toBeNull();
     await fireEvent.press(screen.getByLabelText("Back squat, Wednesday"));
-    expect(mockPlan.toggleWeekDay).toHaveBeenLastCalledWith("m9", {
-      week: 1,
-      day: 2,
-      following: false,
-      last: 1,
-    });
     await fireEvent.changeText(screen.getByLabelText("Name"), " Peak ");
-    await fireEvent(screen.getByLabelText("Name"), "blur");
-    expect(mockPlan.saveBlock).toHaveBeenLastCalledWith(
-      expect.objectContaining({ id: "t1", name: "Peak" })
-    );
     await fireEvent.press(screen.getByLabelText("Increase Weeks"));
-    expect(mockPlan.saveBlock).toHaveBeenLastCalledWith(expect.objectContaining({ weeks: 7 }));
-    expect(screen.queryByText("Edit")).toBeNull();
+    await fireEvent.press(screen.getByText("Save"));
+    expect(mockPlan.saveDraft).toHaveBeenCalledWith({
+      block: { id: "t1", name: "Peak", start: null, weeks: 7, focus: null },
+      schedules: [{ membershipId: "m9", weekdays: [2], weeks: [] }],
+      weekChanges: [],
+    });
+  });
+
+  it("opens a new template in Edit mode with its name being typed", async () => {
+    await renderWithHang(<BlockScreen id="t1" fresh />, hangData(), {
+      workouts: [squat],
+      plan: withTemplate,
+    });
+    expect(screen.getByLabelText("Name")).toHaveProp("autoFocus", true);
+    await fireEvent.press(screen.getByText("Save"));
+    expect(screen.getByText("Edit")).toBeTruthy();
   });
 
   it("reads a picked week's numbers, gold where they change", async () => {
@@ -437,13 +450,8 @@ describe("templates", () => {
       workouts: [squat],
       plan: changed,
     });
-    await fireEvent.press(screen.getByLabelText("Week 2"));
-    expect(screen.getByText("Week 2 runs as written.")).toBeTruthy();
     await fireEvent.press(screen.getByLabelText("Week 3"));
     expect(screen.getByText("1 changed")).toBeTruthy();
-    expect(
-      screen.getByText("Gold is where week 3 differs from as written. Tap a row to change it.")
-    ).toBeTruthy();
   });
 
   it("leaves Done out of a template's weekly load, as nothing has run", async () => {
@@ -471,44 +479,50 @@ describe("block weeks", () => {
   it("lays the weeks out as a table, gold where a week differs from as written", async () => {
     await renderWithHang(<LadderScreen id="m1" />, hangData(), { workouts: [squat], plan });
     expect(screen.getByText("Weekly load")).toBeTruthy();
+    expect(screen.getByText("105")).toBeTruthy();
+    expect(screen.queryByLabelText("Week 3, Weight")).toBeNull();
+    await fireEvent.press(screen.getByText("Edit"));
     expect(screen.getByLabelText("Week 3, Weight")).toHaveProp("accessibilityValue", {
       text: "105",
     });
     expect(screen.getByLabelText("Week 2, Weight")).toHaveProp("accessibilityValue", {
       text: "100",
     });
-    expect(screen.getByText("Back")).toBeTruthy();
+    expect(screen.getByText("Cancel")).toBeTruthy();
   });
 
   it("stores a week's change from its cell, Next walking down the column", async () => {
     await renderWithHang(<LadderScreen id="m1" />, hangData(), { workouts: [squat], plan });
+    await fireEvent.press(screen.getByText("Edit"));
     await fireEvent.press(screen.getByLabelText("Week 2, Weight"));
     expect(screen.getByText("As written 100")).toBeTruthy();
     await fireEvent.press(screen.getByLabelText("Add 2.5"));
     await fireEvent.press(screen.getByText("Next"));
-    expect(mockPlan.saveWeekChange).toHaveBeenLastCalledWith({
-      membershipId: "m1",
-      week: 2,
-      dose: 0,
-      item: 0,
-      change: { weightKg: 102.5 },
-    });
     expect(screen.getByLabelText("Week 3, Weight")).toHaveProp("accessibilityState", {
       expanded: true,
     });
+    expect(mockPlan.saveWeekChange).not.toHaveBeenCalled();
+    await fireEvent.press(screen.getByText("Save"));
+    expect(mockPlan.saveDraft).toHaveBeenCalledWith(
+      expect.objectContaining({
+        weekChanges: [
+          { membershipId: "m1", week: 2, dose: 0, item: 0, change: { weightKg: 102.5 } },
+        ],
+      })
+    );
   });
 
   it("resets a changed week to as written", async () => {
     await renderWithHang(<LadderScreen id="m1" />, hangData(), { workouts: [squat], plan });
+    await fireEvent.press(screen.getByText("Edit"));
     await fireEvent.press(screen.getByLabelText("Week 3, Weight"));
     await fireEvent.press(screen.getByText("Reset"));
-    expect(mockPlan.saveWeekChange).toHaveBeenLastCalledWith({
-      membershipId: "m1",
-      week: 3,
-      dose: 0,
-      item: 0,
-      change: {},
-    });
+    await fireEvent.press(screen.getByText("Save"));
+    expect(mockPlan.saveDraft).toHaveBeenCalledWith(
+      expect.objectContaining({
+        weekChanges: [{ membershipId: "m1", week: 3, dose: 0, item: 0, change: {} }],
+      })
+    );
   });
 
   it("gives each exercise its own section, saying which weeks change it", async () => {
@@ -519,6 +533,7 @@ describe("block weeks", () => {
     await renderWithHang(<LadderScreen id="m1" />, hangData(), { workouts: [pair], plan });
     expect(screen.getByText("5 × 5 · 100 kg · changes W3")).toBeTruthy();
     expect(screen.getByText("3 × 5")).toBeTruthy();
+    await fireEvent.press(screen.getByText("Edit"));
     expect(screen.getAllByLabelText("Week 1, Sets")).toHaveLength(1);
     await fireEvent.press(screen.getByText("Open all"));
     expect(screen.getAllByLabelText("Week 1, Sets")).toHaveLength(2);
