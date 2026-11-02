@@ -74,7 +74,6 @@ export const hang = {
   "hang.statusStarts": "Beginnt {date}",
   "hang.statusOngoing": "Laufend",
 
-  "hang.gripTapToChange": "Übung · zum Ändern tippen",
   "hang.edgeDepth": "Leistentiefe",
   "hang.shallowerEdge": "Flachere Leiste",
   "hang.deeperEdge": "Tiefere Leiste",
@@ -82,8 +81,6 @@ export const hang = {
   "hang.weight": "Gewicht",
   "hang.assistNote": "Negativ für Gewicht, das ein Flaschenzug abnimmt.",
   "hang.lastUsed": "Zuletzt",
-  "hang.setupEachTime":
-    "Leiste und Gewicht kommen aus deinem Plan; für heute änderst du sie im Timer.",
   "hang.lifts": "Züge",
   "hang.rest": "Pause",
   "hang.statDuration": "Dauer",

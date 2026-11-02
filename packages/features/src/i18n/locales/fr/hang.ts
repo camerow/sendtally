@@ -73,7 +73,6 @@ export const hang = {
   "hang.statusStarts": "Commence le {date}",
   "hang.statusOngoing": "En cours",
 
-  "hang.gripTapToChange": "Exercice · touche pour changer",
   "hang.edgeDepth": "Profondeur de réglette",
   "hang.shallowerEdge": "Réglette moins profonde",
   "hang.deeperEdge": "Réglette plus profonde",
@@ -81,8 +80,6 @@ export const hang = {
   "hang.weight": "Poids",
   "hang.assistNote": "Négatif pour le poids retiré avec une poulie.",
   "hang.lastUsed": "Dernière fois",
-  "hang.setupEachTime":
-    "La réglette et le poids viennent de ton plan ; change-les pour aujourd’hui dans le minuteur.",
   "hang.lifts": "Tirages",
   "hang.rest": "Repos",
   "hang.statDuration": "Durée",

@@ -21,7 +21,6 @@ import { DetailActions } from "../components/DetailActions";
 import { Label } from "../components/Label";
 import { useHangData } from "../data/HangDataContext";
 import { LoadState } from "../data/LoadState";
-import { GripPickerSheet } from "../grip-picker/GripPickerSheet";
 import { HistoryList } from "../history/HistoryList";
 import { activityItem, hangItem, ofWorkout } from "../history/historyItems";
 import { useLibrary, useNextSession } from "../library/useLibrary";
@@ -57,17 +56,14 @@ type DetailProps = {
 
 function Detail({ workout, use, grip, adding, run }: DetailProps): React.ReactElement {
   const api = useApi();
-  const { model, today, actions } = useHangData();
+  const { model, today } = useHangData();
   const session = useNextSession(workout.id);
   const exercises = useExercises(api).state;
   const activities = useActivities(api).state;
   const detailActions = useWorkoutDetailActions(workout);
   const hang = workout.kind === "hangboard" ? model.workout(workout.id) : undefined;
   const next = hang === undefined ? undefined : (hangWorkoutOf(workout, session) ?? hang);
-  const [gripId, setGripId] = React.useState(
-    grip ?? (hang === undefined ? "" : model.defaultGrip(hang))
-  );
-  const [picker, setPicker] = React.useState(false);
+  const gripId = grip ?? (hang === undefined ? "" : model.defaultGrip(hang));
   const changes = useDayChanges();
 
   const openExercise = (name: string): (() => void) | undefined => {
@@ -173,7 +169,7 @@ function Detail({ workout, use, grip, adding, run }: DetailProps): React.ReactEl
           />
         ) : (
           <>
-            <GripSetupCard workout={next} gripId={gripId} onChooseGrip={() => setPicker(true)} />
+            <GripSetupCard workout={next} gripId={gripId} />
             <ProtocolPanel workout={next} minutes={workoutMinutes(workout, session)} />
           </>
         )}
@@ -182,19 +178,6 @@ function Detail({ workout, use, grip, adding, run }: DetailProps): React.ReactEl
       <HistoryList items={history} onOpen={openActivity} />
       <PlanList workoutId={workout.id} name={workout.name} kind={workout.kind} />
       {changes.sheets}
-      {hang !== undefined && (
-        <GripPickerSheet
-          visible={picker}
-          workout={hang}
-          multi={false}
-          selected={[gripId]}
-          onPick={(id) => {
-            setGripId(id);
-            void actions.setDefaultGrip(workout.id, id);
-          }}
-          onClose={() => setPicker(false)}
-        />
-      )}
     </ScreenFrame>
   );
 }

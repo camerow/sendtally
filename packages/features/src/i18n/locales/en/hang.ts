@@ -73,7 +73,6 @@ export const hang = {
   "hang.statusStarts": "Starts {date}",
   "hang.statusOngoing": "Ongoing",
 
-  "hang.gripTapToChange": "Exercise · tap to change",
   "hang.edgeDepth": "Edge depth",
   "hang.shallowerEdge": "Shallower edge",
   "hang.deeperEdge": "Deeper edge",
@@ -81,7 +80,6 @@ export const hang = {
   "hang.weight": "Weight",
   "hang.assistNote": "Negative for weight taken off with a pulley.",
   "hang.lastUsed": "Last used",
-  "hang.setupEachTime": "Edge and weight come from your plan; change them for today on the timer.",
   "hang.lifts": "Lifts",
   "hang.rest": "Rest",
   "hang.statDuration": "Duration",
