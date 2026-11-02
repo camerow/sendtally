@@ -80,7 +80,9 @@ describe("A hangboard workout's review", () => {
     await fireEvent.press(screen.getByLabelText("Remove the last set from Half crimp"));
     expect(rows()).toBe(5);
     expect(screen.queryByText("Set 6 removed")).toBeNull();
-    await fireEvent(screen.getAllByTestId("review-set")[1], "accessibilityAction", {
+    const second = screen.getAllByTestId("review-set")[1];
+    if (second === undefined) throw new Error("no second set");
+    await fireEvent(second, "accessibilityAction", {
       nativeEvent: { actionName: "remove" },
     });
     expect(rows()).toBe(4);
