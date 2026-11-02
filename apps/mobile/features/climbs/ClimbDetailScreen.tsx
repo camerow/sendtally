@@ -55,7 +55,7 @@ export function ClimbDetailScreen({ id }: { id: string }): React.ReactElement {
     >
       <ClimbingHero
         kind={vm.kicker}
-        title={vm.name}
+        title={vm.title}
         meta={vm.meta}
         aside={
           <Pressable
