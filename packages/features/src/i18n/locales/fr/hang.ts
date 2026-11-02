@@ -73,7 +73,6 @@ export const hang = {
   "hang.statusStarts": "Commence le {date}",
   "hang.statusOngoing": "En cours",
 
-  "hang.customise": "Personnaliser",
   "hang.gripTapToChange": "Exercice · touche pour changer",
   "hang.edgeDepth": "Profondeur de réglette",
   "hang.shallowerEdge": "Réglette moins profonde",

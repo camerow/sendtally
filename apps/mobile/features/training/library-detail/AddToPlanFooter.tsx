@@ -6,7 +6,7 @@ import { Button } from "../components/Button";
 
 export type AddToPlanFooterProps = { workoutId: string; children: React.ReactNode };
 
-/** A workout's footer: Add to plan beside its start button. */
+/** Add to plan, beside another of a workout's actions. */
 export function AddToPlanFooter({ workoutId, children }: AddToPlanFooterProps): React.ReactElement {
   return (
     <View style={{ flexDirection: "row", gap: 10 }}>
@@ -14,7 +14,8 @@ export function AddToPlanFooter({ workoutId, children }: AddToPlanFooterProps): 
         label={t("plan.addToPlan")}
         onPress={() => router.push({ pathname: "/plan/schedule", params: { workoutId } })}
         variant="outline"
-        height={54}
+        height={48}
+        style={{ flex: 1 }}
       />
       {children}
     </View>

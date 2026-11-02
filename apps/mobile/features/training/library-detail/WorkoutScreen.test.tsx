@@ -132,9 +132,26 @@ describe("Other workouts", () => {
     });
   });
 
+  it("opened from a missed run, names its day and logs it on that day", async () => {
+    await renderWithHang(
+      <WorkoutScreen id="legs" run={{ date: "2026-09-28", membershipId: "m1" }} />,
+      hangData(),
+      { workouts: [legs], plan: planned }
+    );
+    expect(screen.getByText("Missed Mon, Sep 28")).toBeTruthy();
+    expect(screen.getByText("Reschedule")).toBeTruthy();
+    expect(screen.queryByText("Add to plan")).toBeNull();
+    expect(screen.queryByText("Edit")).toBeNull();
+    await fireEvent.press(screen.getByText("Log it"));
+    expect(router.push).toHaveBeenCalledWith({
+      pathname: "/activity/new",
+      params: expect.objectContaining({ date: "2026-09-28", membershipId: "m1" }),
+    });
+  });
+
   it("logs it without the timer on its review, every set as planned", async () => {
     await renderWithHang(<WorkoutScreen id="legs" />, hangData(), { workouts: [legs] });
-    await fireEvent.press(screen.getByText("Log it without the timer"));
+    await fireEvent.press(screen.getByText("Log it"));
     expect(router.push).toHaveBeenCalledWith({
       pathname: "/activity/new",
       params: expect.objectContaining({ kind: "strength", workoutId: "legs", session: "0" }),

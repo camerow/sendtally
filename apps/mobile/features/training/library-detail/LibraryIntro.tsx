@@ -12,10 +12,22 @@ import { CategoryMark } from "../library/CategoryMark";
 import { KIND_LOOK } from "../today/kindLook";
 import { type } from "../type";
 
-export type LibraryIntroProps = { workout: LibraryWorkout; use: WorkoutUse | undefined };
+export type LibraryIntroProps = {
+  workout: LibraryWorkout;
+  use: WorkoutUse | undefined;
+  /** In place of the kind's kicker, such as the block a planned run is in. */
+  kicker?: string;
+  /** Under the name, such as a planned run's day. */
+  day?: React.ReactNode;
+};
 
 /** A workout's kicker (kind, focus, and Mine for the user's own), name, what it is for, and its length, effort and use. */
-export function LibraryIntro({ workout, use }: LibraryIntroProps): React.ReactElement {
+export function LibraryIntro({
+  workout,
+  use,
+  kicker: shown,
+  day,
+}: LibraryIntroProps): React.ReactElement {
   const minutes = workoutMinutes(workout, use?.count ?? 0);
   const kicker = [
     kindLabel(workout.kind),
@@ -33,9 +45,10 @@ export function LibraryIntro({ workout, use }: LibraryIntroProps): React.ReactEl
     <View style={{ gap: 8 }}>
       <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
         <CategoryMark kind={workout.kind} size={28} />
-        <Label color={KIND_LOOK[workout.kind].ink}>{kicker}</Label>
+        <Label color={KIND_LOOK[workout.kind].ink}>{shown ?? kicker}</Label>
       </View>
       <Title size={38}>{workout.name}</Title>
+      {day}
       {workout.description !== "" && (
         <Text style={[type.body, { fontSize: 15, lineHeight: 22, color: colors.textSecondary }]}>
           {workout.description}

@@ -248,9 +248,19 @@ describe("a day on a scheduled block", () => {
   it("opens today's planned day to start, log, move, skip or open", async () => {
     await renderWithHang(<BlockScreen id="b1" />, hangData(), { workouts: [squat], plan: running });
     await fireEvent.press(screen.getByLabelText("Back squat, Tuesday"));
-    expect(screen.getByText("Open workout")).toBeTruthy();
+    expect(screen.getByText("Week 2 · Tue, Sep 29")).toBeTruthy();
     await fireEvent.press(screen.getByText("Skip"));
     expect(screen.getByText("Skip it?")).toBeTruthy();
+  });
+
+  it("opens the workout in its block from the day's title", async () => {
+    await renderWithHang(<BlockScreen id="b1" />, hangData(), { workouts: [squat], plan: running });
+    await fireEvent.press(screen.getByLabelText("Back squat, Tuesday"));
+    await fireEvent.press(screen.getByRole("link"));
+    expect(router.push).toHaveBeenCalledWith({
+      pathname: "/plan/membership/[id]",
+      params: { id: "m1", back: "Winter base" },
+    });
   });
 
   it("edits the picked week's days, and the weeks after it once switched on", async () => {

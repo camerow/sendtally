@@ -95,7 +95,7 @@ describe("Plan day", () => {
     await fireEvent.press(screen.getByText("Gym, legs"));
     expect(router.push).toHaveBeenCalledWith({
       pathname: "/workout/[id]",
-      params: { id: "legs" },
+      params: expect.objectContaining({ id: "legs", date: "2026-09-28" }),
     });
   });
 

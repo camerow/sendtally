@@ -1,4 +1,3 @@
-import { router } from "expo-router";
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
@@ -13,6 +12,7 @@ import { useDayChanges } from "../plan-days/useDayChanges";
 import { useHangData } from "../data/HangDataContext";
 import { StartButton } from "../library-detail/StartButton";
 import { type } from "../type";
+import { openOccurrence } from "./openOccurrence";
 import { DayMark } from "./DayMark";
 import { KIND_LOOK } from "./kindLook";
 import { occurrenceMeta, occurrenceTag } from "./occurrenceText";
@@ -46,7 +46,7 @@ export function OccurrenceRow({ occurrence, workout }: OccurrenceRowProps): Reac
     >
       <DayMark kind={workout.kind} filled={done} />
       <Pressable
-        onPress={() => router.push({ pathname: "/workout/[id]", params: { id: workout.id } })}
+        onPress={() => openOccurrence(occurrence)}
         accessibilityRole="button"
         style={pressRow({ flex: 1, gap: 3, paddingVertical: 10 })}
       >

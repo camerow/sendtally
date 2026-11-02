@@ -18,6 +18,7 @@ import { useHangData } from "../data/HangDataContext";
 import { LogItButton } from "../library-detail/LogItButton";
 import { StartButton } from "../library-detail/StartButton";
 import { type } from "../type";
+import { openOccurrence } from "./openOccurrence";
 import { DayMark } from "./DayMark";
 import { KIND_LOOK } from "./kindLook";
 import { occurrenceMeta, occurrenceTag } from "./occurrenceText";
@@ -46,7 +47,7 @@ export function OccurrenceCard({ occurrence, workout }: OccurrenceCardProps): Re
       }}
     >
       <Pressable
-        onPress={() => router.push({ pathname: "/workout/[id]", params: { id: workout.id } })}
+        onPress={() => openOccurrence(o)}
         accessibilityRole="button"
         style={({ pressed }) => ({ gap: 12, opacity: pressed ? 0.7 : 1 })}
       >

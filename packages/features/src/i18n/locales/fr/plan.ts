@@ -78,6 +78,8 @@ export const plan = {
   "plan.addNamed": "Ajouter {name}",
   "plan.undoAdd": "Retirer {name}",
   "plan.tapEditDays": "Touche Modifier pour choisir quand {workout} a lieu",
+  "plan.missedOn": "Manqué {day}",
+  "plan.reschedule": "Reprogrammer",
   "plan.editBlock": "Modifier le bloc",
   "plan.editInBlock": "Modifier la séance dans {block}",
   "plan.scheduled": "Planifié",
@@ -87,9 +89,6 @@ export const plan = {
   "plan.moveHint": "À un autre jour de cette semaine",
   "plan.skip": "Passer",
   "plan.skipHint": "Pas compté comme manqué",
-  "plan.openWorkout": "Ouvrir l’entraînement",
-  "plan.openWorkoutHint": "Ses semaines et sa charge dans ce bloc",
-  "plan.dayKicker": "{day} · {block} · S{n}",
   "plan.moveTitle": "Déplacer à quel jour ?",
   "plan.moveCopyBlock":
     "Ne déplace que cette semaine. La semaine {next} reste le {days}, et la charge reste celle de la semaine {n} où qu’elle tombe.",

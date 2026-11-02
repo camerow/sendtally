@@ -74,7 +74,6 @@ export const hang = {
   "hang.statusStarts": "Beginnt {date}",
   "hang.statusOngoing": "Laufend",
 
-  "hang.customise": "Anpassen",
   "hang.gripTapToChange": "Übung · zum Ändern tippen",
   "hang.edgeDepth": "Leistentiefe",
   "hang.shallowerEdge": "Flachere Leiste",

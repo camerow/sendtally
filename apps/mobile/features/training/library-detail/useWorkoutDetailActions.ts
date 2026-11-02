@@ -15,7 +15,7 @@ import type { DetailMenuRow } from "../components/types";
 
 const reportFailure = (): void => Alert.alert(t("workouts.saveFailed"));
 
-/** A workout's bar: Edit for the user's own or Customise for a built-in, Duplicate, and Delete. */
+/** A workout's bar: Edit, Duplicate and Delete for the user's own; Duplicate for a built-in. */
 export function useWorkoutDetailActions(workout: LibraryWorkout): DetailActionsProps {
   const actions = useWorkoutActions(useApi(), reportFailure);
   const mine = workout.source === "mine";
@@ -38,13 +38,10 @@ export function useWorkoutDetailActions(workout: LibraryWorkout): DetailActionsP
     },
     onDelete: () => void actions.deleteWorkout(workout.id),
   });
-  return {
-    editLabel: mine ? t("common.edit") : t("hang.customise"),
-    onEdit: () =>
-      router.push({
-        pathname: "/workout/edit",
-        params: mine ? { id: workout.id } : { from: workout.id },
-      }),
-    menu: mine ? [duplicate, remove] : [duplicate],
-  };
+  return mine
+    ? {
+        onEdit: () => router.push({ pathname: "/workout/edit", params: { id: workout.id } }),
+        menu: [duplicate, remove],
+      }
+    : { menu: [duplicate] };
 }
