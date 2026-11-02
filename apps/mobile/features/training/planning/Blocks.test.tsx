@@ -2,13 +2,13 @@ import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { fireEvent, screen } from "@testing-library/react-native";
 import { router } from "expo-router";
 import React from "react";
-import { Alert, type AlertButton } from "react-native";
+import { Alert, Text, type AlertButton } from "react-native";
 import type { Plan, WorkoutRecord } from "@sendtally/api-client";
 import type { PlanDraft } from "@sendtally/features/training";
 import { hangData, readingOrder, renderWithHang } from "../data/renderWithHang";
 import { PlanGrid } from "../plan/PlanGrid";
 import { planGridRows } from "../plan/planGridRows";
-import { NewBlock } from "./NewBlock";
+import { useNewBlock } from "./useNewBlock";
 import { BlockScreen } from "./BlockScreen";
 import { BlocksList } from "../train/BlocksList";
 import { LadderScreen } from "./LadderScreen";
@@ -65,8 +65,13 @@ beforeEach(() => {
 });
 
 describe("blocks", () => {
-  it("makes a new block as an untitled four-week template and opens it to name", async () => {
+  it("makes a new block as an untitled four-week template and opens it at once to name", async () => {
+    const NewBlock = (): React.ReactElement => {
+      const make = useNewBlock();
+      return <Text onPress={make}>New block</Text>;
+    };
     await renderWithHang(<NewBlock />);
+    await fireEvent.press(screen.getByText("New block"));
     expect(mockPlan.saveBlock).toHaveBeenCalledWith({
       id: "b-new",
       name: "",
@@ -74,7 +79,7 @@ describe("blocks", () => {
       weeks: 4,
       focus: null,
     });
-    expect(router.replace).toHaveBeenCalledWith({
+    expect(router.push).toHaveBeenCalledWith({
       pathname: "/plan/block/[id]",
       params: { id: "b-new", fresh: "1", back: "Train" },
     });

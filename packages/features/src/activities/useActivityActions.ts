@@ -57,8 +57,8 @@ export function useActivityActions(
       patch: (data: T) => T,
       request: () => Promise<unknown>
     ): Promise<void> => {
-      await client.cancelQueries({ queryKey: key });
       client.setQueryData<T>(key, (data) => (data === undefined ? data : patch(data)));
+      await client.cancelQueries({ queryKey: key }, { revert: false });
       const next = chain.then(request);
       chain = next.catch(() => undefined);
       try {

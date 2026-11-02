@@ -6,7 +6,7 @@ import { BackButton } from "./BackButton";
 import { KeypadScrollView } from "./KeypadScrollView";
 
 export type ScreenFrameProps = {
-  children: React.ReactNode;
+  children?: React.ReactNode;
   /** Beside the back button, top right. */
   action?: React.ReactNode;
   /** Where back goes, when it is worth naming. */

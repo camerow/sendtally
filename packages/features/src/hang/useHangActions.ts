@@ -46,8 +46,8 @@ export function useHangActions(api: SendtallyApi, onError: (error: unknown) => v
       patch: (data: HangData) => HangData,
       request: () => Promise<unknown>
     ): Promise<void> => {
-      await client.cancelQueries({ queryKey: key });
       client.setQueryData<HangData>(key, (data) => (data === undefined ? data : patch(data)));
+      await client.cancelQueries({ queryKey: key }, { revert: false });
       const next = chain.then(request);
       chain = next.catch(() => undefined);
       try {

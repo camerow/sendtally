@@ -27,10 +27,10 @@ export function useWorkoutActions(
       patch: (list: WorkoutRecord[]) => WorkoutRecord[],
       request: () => Promise<unknown>
     ): Promise<void> => {
-      await client.cancelQueries({ queryKey: key });
       client.setQueryData<WorkoutRecord[]>(key, (list) =>
         list === undefined ? list : patch(list)
       );
+      await client.cancelQueries({ queryKey: key }, { revert: false });
       try {
         await request();
       } catch (error) {

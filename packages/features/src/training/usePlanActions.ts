@@ -47,8 +47,10 @@ export function usePlanActions(api: SendtallyApi, onError: (error: unknown) => v
   return React.useMemo((): PlanActions => {
     const key = queries.plan(api).queryKey;
     const write = async (patch: (plan: Plan) => Plan, request: () => Promise<unknown>) => {
-      await client.cancelQueries({ queryKey: key });
+      // Patched before anything awaits, so a screen opened with the write already reads it; a
+      // fetch in flight is stopped without putting back what it started from.
       client.setQueryData<Plan>(key, (plan) => (plan === undefined ? plan : patch(plan)));
+      await client.cancelQueries({ queryKey: key }, { revert: false });
       const next = chain.then(request);
       chain = next.catch(() => undefined);
       try {

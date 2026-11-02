@@ -55,7 +55,7 @@ export function BlockScreen({
   highlight,
   back,
   fresh = false,
-}: BlockScreenProps): React.ReactElement | null {
+}: BlockScreenProps): React.ReactElement {
   const lit = useLit(highlight);
   // Coming back from an add replaces the route's params, so keep where back went first.
   const [backLabel] = React.useState(back);
@@ -88,7 +88,8 @@ export function BlockScreen({
 
   if (plan.state.status !== "ready")
     return <LoadState state={plan.state} onRetry={() => void plan.reload()} framed />;
-  if (block === undefined || saved === undefined) return null;
+  // Gone, deleted elsewhere: Back still leaves.
+  if (block === undefined || saved === undefined) return <ScreenFrame backLabel={backLabel} />;
   const dated = isDated(block) ? block : null;
   const ended = dated !== null && blockEnd(dated) <= today;
   const current = dated === null ? null : blockWeekOn(dated, today);

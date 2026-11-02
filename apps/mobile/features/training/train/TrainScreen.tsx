@@ -13,6 +13,7 @@ import { HangDataProvider } from "../data/HangDataProvider";
 import { openExerciseEditor } from "../exercises/openExerciseEditor";
 import { NewWorkoutSheet } from "../library/NewWorkoutSheet";
 import { WorkoutLibrary } from "../library/WorkoutLibrary";
+import { useNewBlock } from "../planning/useNewBlock";
 import { BlocksList } from "./BlocksList";
 import { ExerciseShelves } from "./ExerciseShelves";
 
@@ -49,8 +50,9 @@ export function TrainScreen(): React.ReactElement {
   const [adding, setAdding] = React.useState<"workout" | "exercise" | null>(null);
   const [menuOpen, setMenuOpen] = React.useState(false);
   const picked = React.useRef<TrainView | null>(null);
+  const newBlock = useNewBlock();
   const create = (v: TrainView): void => {
-    if (v === "blocks") router.push("/plan/block/new");
+    if (v === "blocks") newBlock();
     else setAdding(v === "workouts" ? "workout" : "exercise");
   };
   const views = [
