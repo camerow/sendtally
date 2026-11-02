@@ -37,7 +37,13 @@ describe("withWeekDays", () => {
     expect(ownWeeksAfter(own, 3)).toEqual([5]);
   });
 
-  it("makes a change from week 1 the workout's own days, and drops changes that repeat", () => {
+  it("sets week 1 alone apart from the pattern, the weeks after keeping it", () => {
+    const one = withWeekDays(schedule(), { week: 1, weekdays: [1], following: false, last: 6 });
+    expect(one.weekdays).toEqual(MON_THU);
+    expect(weeksOf(one)).toEqual([[1], MON_THU, MON_THU, MON_THU, MON_THU, MON_THU]);
+  });
+
+  it("makes a change from week 1 on the workout's own days, and drops changes that repeat", () => {
     const every = withWeekDays(schedule([[4, [6]]]), {
       week: 1,
       weekdays: [5, 2],

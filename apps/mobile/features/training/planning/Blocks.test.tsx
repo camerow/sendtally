@@ -436,7 +436,16 @@ describe("templates", () => {
     await fireEvent.press(screen.getByText("Save"));
     expect(mockPlan.saveDraft).toHaveBeenCalledWith({
       block: { id: "t1", name: "Peak", start: null, weeks: 7, focus: null },
-      schedules: [{ membershipId: "m9", weekdays: [2], weeks: [] }],
+      schedules: [
+        {
+          membershipId: "m9",
+          weekdays: [],
+          weeks: [
+            { membershipId: "m9", fromWeek: 1, weekdays: [2] },
+            { membershipId: "m9", fromWeek: 2, weekdays: [] },
+          ],
+        },
+      ],
       weekChanges: [],
     });
   });

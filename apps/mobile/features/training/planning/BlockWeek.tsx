@@ -16,6 +16,7 @@ import {
   hasDays,
   scheduleOf,
   trainingDay,
+  usualDays,
   useTrainingLog,
   type DayToggle,
   type Occurrence,
@@ -117,16 +118,15 @@ export function BlockWeek({
                 ? "movedIn"
                 : o.status;
           });
-  const asWritten = template && shownWeek === 1;
-  const firstWeek = (m: Membership): readonly number[] => daysInWeek(scheduleOf(plan, m), 1);
-  // On a template a later week reads gold where its days differ from week 1.
-  const rings =
-    template && shownWeek > 1
-      ? {
-          rings: (m: Membership) =>
-            DAYS.map((d) => m.weekdays.includes(d as Weekday) !== firstWeek(m).includes(d)),
-        }
-      : {};
+  const pattern = (m: Membership): readonly number[] =>
+    usualDays(scheduleOf(plan, m), 1, block.weeks);
+  // On a template a week reads gold where its days differ from the weeks' pattern.
+  const rings = template
+    ? {
+        rings: (m: Membership) =>
+          DAYS.map((d) => m.weekdays.includes(d as Weekday) !== pattern(m).includes(d)),
+      }
+    : {};
   const options: GridOptions = editing
     ? {
         back: block.name,
@@ -140,9 +140,8 @@ export function BlockWeek({
                 onToggle?.(m.id, {
                   week: shownWeek,
                   day: day as Weekday,
-                  following: following && !asWritten,
-                  // A template's week 1 is as written: weeks not set apart follow it.
-                  last: asWritten ? 1 : block.weeks,
+                  following,
+                  last: block.weeks,
                 }),
       }
     : {
@@ -232,7 +231,6 @@ export function BlockWeek({
           columns={from === null ? undefined : DAYS.map((i) => weekday(addDays(from, i)))}
           footer={
             editing &&
-            !asWritten &&
             shownWeek < block.weeks && (
               <View
                 style={{

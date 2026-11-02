@@ -46,8 +46,8 @@ export type WeekDaysGridProps = {
 
 /**
  * A workout's days in its block, a row per week. A day ringed in gold is set apart from every
- * week, or on a template from week 1; a day gone by shows how it went. Editing, Every week on
- * top sets them from this week on (all weeks on a template), and each cell sets its week alone.
+ * week; a day gone by shows how it went. Editing, Every week on top sets them from this week
+ * on (all weeks on a template), and each cell sets its week alone.
  */
 export function WeekDaysGrid({
   block,
@@ -115,8 +115,6 @@ export function WeekDaysGrid({
       })}
     </View>
   );
-  // Gold where a week is set apart: from every week, or on a template from week 1.
-  const reference = dated === null ? daysInWeek(schedule, 1) : every;
 
   return (
     <View style={{ gap: 6 }}>
@@ -185,19 +183,13 @@ export function WeekDaysGrid({
             if (!editing) return {};
             return {
               onPress: () =>
-                onToggle({
-                  week,
-                  day: day as Weekday,
-                  following: false,
-                  // On a template week 1 is as written: weeks set apart keep their days.
-                  last: dated === null && week === 1 ? 1 : block.weeks,
-                }),
+                onToggle({ week, day: day as Weekday, following: false, last: block.weeks }),
             };
           },
           (day) =>
-            reference !== null &&
-            week >= (dated === null ? 2 : (everyFrom ?? 1)) &&
-            days.includes(day as Weekday) !== reference.includes(day as Weekday)
+            every !== null &&
+            week >= (everyFrom ?? 1) &&
+            days.includes(day as Weekday) !== every.includes(day as Weekday)
         );
       })}
     </View>

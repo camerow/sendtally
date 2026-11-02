@@ -170,7 +170,7 @@ const weekdays = z
 export const scheduleBody = z.object({
   weekdays,
   weeks: z
-    .array(z.object({ fromWeek: z.number().int().min(2).max(MAX_BLOCK_WEEKS), weekdays }))
+    .array(z.object({ fromWeek: z.number().int().min(1).max(MAX_BLOCK_WEEKS), weekdays }))
     .refine((ws) => new Set(ws.map((w) => w.fromWeek)).size === ws.length, "repeated week"),
 });
 

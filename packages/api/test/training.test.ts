@@ -639,7 +639,7 @@ describe("blocks and memberships", () => {
     const after = await plan(userId);
     expect(after.memberships.find((m) => m.id === "m1")?.weekdays).toEqual([2]);
     expect(after.membershipDays).toEqual([{ membershipId: "m1", fromWeek: 4, weekdays: [1] }]);
-    expect((await schedule([{ fromWeek: 1, weekdays: [] }])).status).toBe(400);
+    expect((await schedule([{ fromWeek: 0, weekdays: [] }])).status).toBe(400);
     expect(
       (
         await schedule([

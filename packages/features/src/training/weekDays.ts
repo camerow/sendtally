@@ -26,8 +26,9 @@ const sorted = (days: readonly Weekday[]): Weekday[] => [...new Set(days)].sort(
 
 /**
  * The schedule with one week's days set, for that week alone or for it and every week after.
- * Alone, the week after keeps the days it had, up to the block's `last` week. A change from
- * week 1 becomes the membership's own weekdays, and one repeating the week before is dropped.
+ * Alone, the week after keeps the days it had, up to the block's `last` week. Set from week 1
+ * on, they become the workout's own weekdays, the pattern every week runs; a week set alone,
+ * week 1 too, only ever sets itself apart. A change repeating the week before it is dropped.
  */
 export function withWeekDays(
   schedule: DaySchedule,
@@ -39,6 +40,7 @@ export function withWeekDays(
   }: { week: number; weekdays: readonly Weekday[]; following: boolean; last: number }
 ): DaySchedule {
   const { membershipId } = schedule;
+  if (following && week <= 1) return { membershipId, weekdays: sorted(weekdays), weeks: [] };
   const kept = schedule.weeks.filter((d) => d.fromWeek < week || (!following && d.fromWeek > week));
   const keepNext = !following && week < last && !kept.some((d) => d.fromWeek === week + 1);
   const changes = [
@@ -48,13 +50,10 @@ export function withWeekDays(
       ? [{ membershipId, fromWeek: week + 1, weekdays: daysInWeek(schedule, week + 1) }]
       : []),
   ].sort((a, b) => a.fromWeek - b.fromWeek);
-  let base = schedule.weekdays;
   const weeks: MembershipDays[] = [];
-  for (const change of changes) {
-    if (change.fromWeek <= 1) base = change.weekdays;
-    else if (!same(change.weekdays, weeks.at(-1)?.weekdays ?? base)) weeks.push(change);
-  }
-  return { membershipId, weekdays: base, weeks };
+  for (const change of changes)
+    if (!same(change.weekdays, weeks.at(-1)?.weekdays ?? schedule.weekdays)) weeks.push(change);
+  return { membershipId, weekdays: schedule.weekdays, weeks };
 }
 
 /** The weeks after `week` with days of their own, which setting it for every week replaces. */
