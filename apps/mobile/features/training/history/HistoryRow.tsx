@@ -3,13 +3,13 @@ import { Pressable, Text, View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
 import { pressRow } from "../../../lib/press";
 import { EffortMark } from "../components/EffortMark";
-import { GOLD_TINT } from "../components/tints";
+import { AMBER } from "../components/tints";
 import { type } from "../type";
 import type { HistoryItem } from "./types";
 
 export type HistoryRowProps = { item: HistoryItem; onPress: () => void };
 
-/** A past session: its date, name and one line of what mattered, with its effort. */
+/** A past session: its date, name and one line of what mattered, with its effort; the one open marked by a gold bar. */
 export function HistoryRow({ item, onPress }: HistoryRowProps): React.ReactElement {
   return (
     <Pressable
@@ -25,9 +25,21 @@ export function HistoryRow({ item, onPress }: HistoryRowProps): React.ReactEleme
         paddingHorizontal: 8,
         marginHorizontal: -8,
         borderRadius: 10,
-        backgroundColor: item.current === true ? GOLD_TINT : undefined,
       })}
     >
+      {item.current === true && (
+        <View
+          style={{
+            position: "absolute",
+            left: 0,
+            top: 10,
+            bottom: 10,
+            width: 3,
+            borderRadius: 2,
+            backgroundColor: AMBER,
+          }}
+        />
+      )}
       <Text style={[type.mono, { width: 52, fontSize: 12, color: colors.textSecondary }]}>
         {item.date}
       </Text>
