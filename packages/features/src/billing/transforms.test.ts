@@ -92,6 +92,24 @@ describe("membershipVM", () => {
     expect(vm.managedIn).toBe("play_store");
   });
 
+  it("calls a cached store membership lapsed once its paid period has ended", () => {
+    const store = {
+      store: "app_store",
+      productId: "monthly",
+      expiresAt: "2026-10-01T00:00:00Z",
+      willRenew: true,
+    };
+    const cached = { membership: { active: true, web: false, store } };
+    expect(membershipVM(cached, new Date("2026-09-30T00:00:00Z")).active).toBe(true);
+    expect(membershipVM(cached, new Date("2026-10-02T00:00:00Z")).active).toBe(false);
+    expect(
+      membershipVM(
+        { membership: { ...cached.membership, web: true } },
+        new Date("2026-10-02T00:00:00Z")
+      ).active
+    ).toBe(true);
+  });
+
   it("reads a web-only membership as managed on the web", () => {
     expect(membershipVM({ membership: { active: true, web: true, store: null } })).toEqual({
       active: true,
