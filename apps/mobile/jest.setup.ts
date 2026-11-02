@@ -55,6 +55,7 @@ jest.mock("expo-notifications", () => ({
 jest.mock("expo-network", () => ({
   getNetworkStateAsync: () => Promise.resolve({ isConnected: true }),
   addNetworkStateListener: () => ({ remove: () => undefined }),
+  useNetworkState: () => ({ isConnected: true }),
 }));
 // Importing the real Clerk SDK holds a handle open, so a lone test file's run never exits.
 jest.mock("@clerk/clerk-expo", () => ({
