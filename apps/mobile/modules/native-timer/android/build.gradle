@@ -1,0 +1,17 @@
+plugins {
+  id 'com.android.library'
+  id 'expo-module-gradle-plugin'
+}
+
+group = 'com.sendtally'
+version = '1.0.0'
+
+android {
+  namespace "com.sendtally.nativetimer"
+  defaultConfig {
+    versionCode 1
+    versionName "1.0.0"
+  }
+  // The cue sounds the app already ships, one copy for both platforms.
+  sourceSets.main.assets.srcDirs += ["$projectDir/../../../assets/sounds"]
+}
