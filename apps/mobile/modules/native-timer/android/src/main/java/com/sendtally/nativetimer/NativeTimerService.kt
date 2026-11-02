@@ -182,7 +182,6 @@ class NativeTimerService : Service() {
   private fun notification(p: Payload, now: Long): Notification {
     val index = p.current(now)
     val step = p.steps.getOrNull(index)
-    val next = p.steps.getOrNull(index + 1)
     val open = PendingIntent.getActivity(
       this, 0,
       Intent(Intent.ACTION_VIEW, Uri.parse("sendtally://live")).setPackage(packageName)
@@ -200,6 +199,7 @@ class NativeTimerService : Service() {
       .setCategory(NotificationCompat.CATEGORY_STOPWATCH)
       .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
       .setRequestPromotedOngoing(true)
+      .setShowWhen(false)
     if (step == null) return builder.build()
     val line = listOf(step.label, step.setLine).filter { it.isNotEmpty() }.joinToString(" · ")
     val end = step.endsAt
@@ -220,7 +220,7 @@ class NativeTimerService : Service() {
       }
       else -> {
         builder.setContentTitle(line)
-        next?.let { builder.setContentText("${p.nextText}: ${it.label}") }
+        step.next?.let { builder.setContentText("${p.nextText}: $it") }
         builder.setWhen(end).setShowWhen(true).setUsesChronometer(true)
           .setChronometerCountDown(true)
       }
@@ -252,5 +252,6 @@ class NativeTimerService : Service() {
     return if (id != 0) id else applicationInfo.icon
   }
 
-  private fun clock(seconds: Int): String = "%d:%02d".format(seconds / 60, seconds % 60)
+  /** As the system chronometer reads, which cannot be formatted: "00:41". */
+  private fun clock(seconds: Int): String = "%02d:%02d".format(seconds / 60, seconds % 60)
 }
