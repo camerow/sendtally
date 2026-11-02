@@ -196,7 +196,7 @@ export function ActivityForm({
         }}
       >
         {live ? (
-          <Button label={t("hang.discard")} onPress={discard} variant="muted" />
+          <Button label={t("hang.discard")} onPress={discard} variant="danger" />
         ) : (
           <Button label={t("common.cancel")} onPress={() => router.back()} variant="muted" />
         )}

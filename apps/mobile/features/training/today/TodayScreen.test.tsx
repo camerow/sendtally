@@ -214,14 +214,15 @@ describe("Today", () => {
     expect(mockPlanActions.undoPlanChange).toHaveBeenCalledWith("m1", "2026-09-29");
   });
 
-  it("moves today's workout to another day of its week, which then shows it moved", async () => {
+  it("moves today's workout to any later day picked on the calendar", async () => {
     await renderWithHang(<TodayScreen />, hangData(), { plan: plan("max10") });
     await fireEvent.press(screen.getByLabelText("More"));
     await fireEvent.press(screen.getByText("Move"));
-    await fireEvent.press(screen.getByLabelText("Wed"));
-    await fireEvent.press(screen.getByText("Move to Wed"));
+    await fireEvent.press(screen.getByLabelText("Next month"));
+    await fireEvent.press(screen.getByLabelText("Wednesday Oct 7"));
+    await fireEvent.press(screen.getByText("Move to Wed, Oct 7"));
     expect(mockPlanActions.savePlanChange).toHaveBeenLastCalledWith(
-      expect.objectContaining({ kind: "move", plannedOn: "2026-09-29", movedTo: "2026-09-30" })
+      expect.objectContaining({ kind: "move", plannedOn: "2026-09-29", movedTo: "2026-10-07" })
     );
   });
 });

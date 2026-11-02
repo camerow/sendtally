@@ -1,5 +1,5 @@
 import React from "react";
-import { Text } from "react-native";
+import { Text, View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
 import { kindLabel } from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
@@ -29,21 +29,18 @@ export function WorkoutInfo({ workoutId, color }: WorkoutInfoProps): React.React
         iconSize={18}
       />
       <Sheet visible={open} onClose={close} closeLabel={t("common.done")}>
-        <SheetHeader
-          kicker={kindLabel(workout.kind)}
-          kickerColor={KIND_LOOK[workout.kind].ink}
-          title={workout.name}
-          action={t("common.done")}
-          onAction={close}
-        />
-        <Text
-          style={[
-            type.body,
-            { fontSize: 15, lineHeight: 22, color: colors.textSecondary, paddingVertical: 12 },
-          ]}
-        >
-          {workout.description}
-        </Text>
+        <View style={{ gap: 12, paddingHorizontal: 18, paddingBottom: 12 }}>
+          <SheetHeader
+            kicker={kindLabel(workout.kind)}
+            kickerColor={KIND_LOOK[workout.kind].ink}
+            title={workout.name}
+            action={t("common.done")}
+            onAction={close}
+          />
+          <Text style={[type.body, { fontSize: 15, lineHeight: 22, color: colors.textSecondary }]}>
+            {workout.description}
+          </Text>
+        </View>
       </Sheet>
     </>
   );
