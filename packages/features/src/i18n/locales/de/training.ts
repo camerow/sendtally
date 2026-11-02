@@ -12,6 +12,7 @@ export const training = {
   "training.logTraining": "Training",
   "training.logTrainingBody": "Kraft, Mobilität, Laufen und mehr.",
   "training.reminders": "Trainingserinnerungen",
+  "training.timerChannel": "Trainingstimer",
   "training.remindersNote":
     "Eine Mitteilung an Tagen mit geplantem Training, mit allem, was ansteht.",
   "training.remindersBlocked":
