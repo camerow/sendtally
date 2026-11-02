@@ -59,6 +59,8 @@ class NativeTimerService : Service() {
   private val fired = mutableSetOf<String>()
   private var sounds: SoundPool? = null
   private val soundIds = mutableMapOf<String, Int>()
+  private val loaded = mutableSetOf<Int>()
+  private val waiting = mutableMapOf<Int, Long>()
   private var foreground = false
 
   override fun onBind(intent: Intent?): IBinder? = null
@@ -74,6 +76,12 @@ class NativeTimerService : Service() {
           .build()
       )
       .build()
+    pool.setOnLoadCompleteListener { p, id, status ->
+      if (status != 0) return@setOnLoadCompleteListener
+      loaded += id
+      val due = waiting.remove(id) ?: return@setOnLoadCompleteListener
+      if (System.currentTimeMillis() - due <= LATE_MS) p.play(id, 1f, 1f, 1, 0, 1f)
+    }
     for (name in SOUNDS.split(" ")) {
       runCatching { assets.openFd("$name.wav").use { soundIds[name] = pool.load(it, 1) } }
     }
@@ -131,7 +139,7 @@ class NativeTimerService : Service() {
         if (key in fired) continue
         if (cue.at <= now + 15) {
           fired += key
-          if (cue.at >= now - LATE_MS) play(cue.sound)
+          if (cue.at >= now - LATE_MS) play(cue.sound, cue.at)
         } else {
           ahead = minOf(ahead ?: cue.at, cue.at)
         }
@@ -153,9 +161,10 @@ class NativeTimerService : Service() {
     handler.postAtTime({ step() }, SystemClock.uptimeMillis() + (next - now).coerceAtLeast(0))
   }
 
-  private fun play(sound: String) {
+  /** A cue whose sound is still loading plays once it is, unless it is too late by then. */
+  private fun play(sound: String, at: Long) {
     val id = soundIds[sound] ?: return
-    sounds?.play(id, 1f, 1f, 1, 0, 1f)
+    if (id in loaded) sounds?.play(id, 1f, 1f, 1, 0, 1f) else waiting[id] = at
   }
 
   private fun ensureChannel(name: String) {
