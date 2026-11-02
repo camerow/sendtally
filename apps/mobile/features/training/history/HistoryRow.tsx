@@ -3,13 +3,12 @@ import { Pressable, Text, View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
 import { pressRow } from "../../../lib/press";
 import { EffortMark } from "../components/EffortMark";
-import { AMBER } from "../components/tints";
 import { type } from "../type";
 import type { HistoryItem } from "./types";
 
 export type HistoryRowProps = { item: HistoryItem; onPress: () => void };
 
-/** A past session: its date, name and one line of what mattered, with its effort; the one open marked by a gold bar. */
+/** A past session: its date, name and one line of what mattered, with its effort; the one open marked by a blue bar. */
 export function HistoryRow({ item, onPress }: HistoryRowProps): React.ReactElement {
   return (
     <Pressable
@@ -36,7 +35,7 @@ export function HistoryRow({ item, onPress }: HistoryRowProps): React.ReactEleme
             bottom: 10,
             width: 3,
             borderRadius: 2,
-            backgroundColor: AMBER,
+            backgroundColor: colors.azure,
           }}
         />
       )}

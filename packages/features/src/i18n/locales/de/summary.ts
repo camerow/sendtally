@@ -15,7 +15,7 @@ export const summary = {
   "summary.bestSet": "Bester Satz",
   "summary.bestYet": "Bestwert",
   "summary.addedWeight": "Zusatzgewicht bei dieser Übung",
-  "summary.thisSession": "Diese Einheit",
+  "summary.thisSession": "{name} (diese Einheit)",
   "summary.hangsOf": "{held} von {total} Hangs",
   "summary.topLoad": "höchste Last {load}",
   "summary.load": "Last",

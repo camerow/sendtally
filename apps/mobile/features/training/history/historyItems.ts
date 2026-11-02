@@ -15,7 +15,7 @@ export function ofWorkout<T extends { workoutId: string | null; date: CalendarDa
 }
 
 const named = (name: string, current: boolean): string =>
-  current ? t("summary.thisSession") : name;
+  current ? t("summary.thisSession", { name }) : name;
 
 /** A finished workout: its first exercise's best set and how long it took. */
 export function activityItem(a: ActivityRecord, unit: WeightUnit, currentId?: string): HistoryItem {

@@ -15,7 +15,7 @@ export const summary = {
   "summary.bestSet": "Mejor serie",
   "summary.bestYet": "tu mejor marca",
   "summary.addedWeight": "Lastre en este ejercicio",
-  "summary.thisSession": "Esta sesión",
+  "summary.thisSession": "{name} (esta sesión)",
   "summary.hangsOf": "{held} de {total} suspensiones",
   "summary.topLoad": "carga máx. {load}",
   "summary.load": "Carga",

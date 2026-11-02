@@ -153,7 +153,7 @@ describe("A finished workout's summary", () => {
   it("lists the workout's past sessions with this one marked, each opening its summary", async () => {
     await show("a1", [today, before]);
     expect(screen.getByText("History · 2 sessions")).toBeTruthy();
-    expect(screen.getByText("This session")).toBeTruthy();
+    expect(screen.getByText(/ \(this session\)$/)).toBeTruthy();
     await fireEvent.press(screen.getByText("Back squat 5 × 80 kg · 41 min"));
     expect(router.push).toHaveBeenCalledWith({ pathname: "/activity/[id]", params: { id: "a0" } });
   });
