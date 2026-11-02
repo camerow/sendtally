@@ -4,13 +4,13 @@ import { router } from "expo-router";
 import React from "react";
 import { startRun } from "@sendtally/core/hang";
 import { useLiveSession } from "@sendtally/features/log-session";
-import { liveRunStorage } from "../lib/liveRunStorage";
-import { writeLiveRun } from "../features/live-session/liveRun";
-import Live from "./live";
+import { liveRunStorage } from "../../lib/liveRunStorage";
+import { writeLiveRun } from "./liveRun";
+import { LiveLink } from "./LiveLink";
 
 jest.mock("expo-router", () => ({ router: { dismissTo: jest.fn() } }));
-jest.mock("../lib/liveRunStorage");
-jest.mock("../lib/liveSessionStorage", () => ({ liveSessionStorage: {} }));
+jest.mock("../../lib/liveRunStorage");
+jest.mock("../../lib/liveSessionStorage", () => ({ liveSessionStorage: {} }));
 jest.mock("@sendtally/features/log-session", () => ({
   ...jest.requireActual<object>("@sendtally/features/log-session"),
   useLiveSession: jest.fn(),
@@ -46,7 +46,7 @@ describe("the system timer's link", () => {
         ),
       },
     });
-    await render(<Live />);
+    await render(<LiveLink />);
     expect(router.dismissTo).toHaveBeenCalledWith({
       pathname: "/workout/timer",
       params: { workoutId: "w1" },
@@ -55,12 +55,12 @@ describe("the system timer's link", () => {
 
   it("opens the live climbing session", async () => {
     session({ climbs: [] });
-    await render(<Live />);
+    await render(<LiveLink />);
     expect(router.dismissTo).toHaveBeenCalledWith("/session/live");
   });
 
   it("goes home when nothing is live", async () => {
-    await render(<Live />);
+    await render(<LiveLink />);
     expect(router.dismissTo).toHaveBeenCalledWith("/(tabs)/today");
   });
 });
