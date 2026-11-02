@@ -56,7 +56,8 @@ export function timerText(
   };
 }
 
-function nextText(next: Phase | undefined, loadText: string): string {
+/** What comes after, as the Next row reads it: "Rest 3s", "Set rest 3:00", "Hang 7s · set 2". */
+export function nextText(next: Phase | undefined, loadText: string): string {
   if (next === undefined) return t("hang.nextFinish");
   switch (next.kind) {
     case "hang":

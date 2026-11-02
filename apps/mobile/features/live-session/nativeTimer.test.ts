@@ -48,6 +48,17 @@ describe("the system timer's payload", () => {
       ["work", "Hang", "Set 2 of 2"],
       ["done", "Done", ""],
     ]);
+    expect(steps.map((s) => s.next)).toEqual([
+      "Hang 7s · set 1",
+      "Rest 3s",
+      "Hang 7s · set 1",
+      "Set rest 1:00",
+      "Hang 7s · set 2",
+      "Rest 3s",
+      "Hang 7s · set 2",
+      "Finish",
+      null,
+    ]);
     expect(steps[0]?.cues.map((c) => [c.at - T, c.sound])).toEqual([
       [2000, "tick"],
       [3000, "tick"],
@@ -89,7 +100,12 @@ describe("the system timer's payload", () => {
       T + 6000
     )?.steps;
     expect(steps).toHaveLength(1);
-    expect(steps?.[0]).toMatchObject({ label: "Lift", hint: "Tap to log", endsAt: null });
+    expect(steps?.[0]).toMatchObject({
+      label: "Lift",
+      hint: "Tap to log",
+      endsAt: null,
+      next: "Set rest 1:00",
+    });
   });
 
   it("reads laps for a climbing intervals run", () => {
@@ -113,6 +129,7 @@ describe("the system timer's payload", () => {
       ["work", "Pull-ups", "", null],
     ]);
     expect(payload?.steps[1]?.cues).toEqual([{ at: T + 90_000, sound: "work" }]);
+    expect(payload?.steps.map((s) => s.next)).toEqual(["Pull-ups", null]);
     expect(nativeTimerOf({ ...sets, rest: rest ?? undefined }, T + 90_000)).toBeNull();
   });
 

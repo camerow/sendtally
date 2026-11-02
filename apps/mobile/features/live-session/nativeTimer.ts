@@ -14,6 +14,7 @@ import type { CueSound, NativeTimerPayload, NativeTimerStep } from "../../module
 import { COUNT_IN_S, SWITCH_S, holdEndsAt, type Hold } from "../training/hold/holdClock";
 import type { Rest } from "../training/rest/restCountdown";
 import { restThen } from "../training/rest/restThen";
+import { nextText } from "../training/timer/timerText";
 import type { LiveRun } from "./liveRun";
 
 type Cue = { at: number; sound: CueSound };
@@ -42,22 +43,22 @@ export function nativeTimerOf(live: LiveRun | null, now: number): NativeTimerPay
     openHint: t("hang.staleOpen"),
   };
   if (live.hold !== undefined && now < holdEndsAt(live.hold))
-    return { ...base, muted: false, ...holdSteps(live.hold, now) };
+    return withNextOf({ ...base, muted: false, ...holdSteps(live.hold, now) });
   if (live.rest !== undefined && now < live.rest.endsAt)
     return {
       ...base,
       muted: false,
-      steps: restSteps(live.rest),
+      steps: withNext(restSteps(live.rest)),
       pausedLeftS: null,
       pausedShare: null,
     };
   if (live.state.player !== "timer") return null;
-  const { run, muted = false, laps = false } = live.state;
+  const { run, muted = false, laps = false, loads = [] } = live.state;
   return {
     ...base,
     meta: live.meta ?? kindLabel(laps ? "climbing" : "hangboard"),
     muted,
-    steps: runSteps(run, now, laps),
+    steps: runSteps(run, now, laps, loads),
     pausedLeftS: run.pausedAt === null ? null : Math.ceil(remainingInPhase(run, now)),
     pausedShare: run.pausedAt === null ? null : phaseProgress(run, now),
   };
@@ -90,7 +91,28 @@ function phaseCues(index: number, phase: Phase, startsAt: number, endsAt: number
   return [...start, ...ticks];
 }
 
-function runSteps(run: Run, now: number, laps: boolean): NativeTimerStep[] {
+/** The app's Next row for the phase after; a lift with no load known reads only Lift. */
+function nextOf(run: Run, index: number, loads: readonly string[]): string {
+  const next = run.phases[index + 1];
+  const load = next === undefined ? "" : (loads["item" in next ? Number(next.item) : 0] ?? "");
+  if (next?.kind === "pull" && next.taps > 0 && load === "") return t("hang.phaseLift");
+  return nextText(next, load);
+}
+
+/** Each step names the one after it, for steps with no Next row of their own. */
+const withNext = (steps: Omit<NativeTimerStep, "next">[]): NativeTimerStep[] =>
+  steps.map((step, i) => ({ ...step, next: steps[i + 1]?.label ?? null }));
+
+const withNextOf = <T extends { steps: Omit<NativeTimerStep, "next">[] }>(
+  p: T
+): Omit<T, "steps"> & { steps: NativeTimerStep[] } => ({ ...p, steps: withNext(p.steps) });
+
+function runSteps(
+  run: Run,
+  now: number,
+  laps: boolean,
+  loads: readonly string[]
+): NativeTimerStep[] {
   const { phases, finishesAt } = upcomingPhases(run, now);
   const total = phasesSeconds(run.phases);
   const share = (index: number): number =>
@@ -99,6 +121,7 @@ function runSteps(run: Run, now: number, laps: boolean): NativeTimerStep[] {
     look: lookOf(index, phase),
     label: phaseLabel(index, phase, laps),
     hint: endsAt === null && phase.taps > 0 ? t("hang.tapToLog") : null,
+    next: nextOf(run, index, loads),
     setLine:
       index === 0
         ? t("hang.setsAhead", { count: run.sets })
@@ -117,6 +140,7 @@ const doneStep = (at: number): NativeTimerStep => ({
   look: "done",
   label: t("common.done"),
   hint: t("hang.openToSave"),
+  next: null,
   setLine: "",
   startsAt: at,
   endsAt: null,
@@ -124,7 +148,7 @@ const doneStep = (at: number): NativeTimerStep => ({
   cues: [{ at, sound: "finish" }],
 });
 
-function restSteps(rest: Rest): NativeTimerStep[] {
+function restSteps(rest: Rest): Omit<NativeTimerStep, "next">[] {
   return [
     {
       look: "rest",
@@ -175,7 +199,9 @@ type Part = Pick<NativeTimerStep, "look" | "label" | "setLine" | "startsAt"> & {
 function holdSteps(
   h: Hold,
   now: number
-): Pick<NativeTimerPayload, "steps" | "pausedLeftS" | "pausedShare"> {
+): Pick<NativeTimerPayload, "pausedLeftS" | "pausedShare"> & {
+  steps: Omit<NativeTimerStep, "next">[];
+} {
   const s = (n: number): number => h.zeroAt + n * 1000;
   const part = (
     look: Part["look"],
@@ -199,14 +225,14 @@ function holdSteps(
   const at = h.pausedAt ?? now;
   const steps = parts
     .filter((p) => p.endsAt > at)
-    .map((p): NativeTimerStep => ({
+    .map((p): Omit<NativeTimerStep, "next"> => ({
       ...p,
       hint: null,
       runShare: 0,
       cues: cues.filter((c) => c.at >= p.startsAt && c.at < p.endsAt),
     }));
   const end = holdEndsAt(h);
-  const over: NativeTimerStep = {
+  const over: Omit<NativeTimerStep, "next"> = {
     look: "done",
     label: t("common.done"),
     hint: t("hang.staleOpen"),

@@ -83,6 +83,11 @@ function Timer({
   const pull = phase.taps > 0;
   const working = isWork(phase.kind);
   const load = loadLabel(current.kind, setup.loadKg, model.settings.units);
+  const units = model.settings.units;
+  const loads = React.useMemo(
+    () => items.map((item, i) => loadLabel(item.workout.kind, setups[i]?.loadKg ?? 0, units)),
+    [items, setups, units]
+  );
   const text = timerText(run, secondsLeft, load, current.sets);
   const look = phaseLook(working, phase.kind === "ready" && run.index === 0);
 
@@ -94,9 +99,9 @@ function Timer({
       pathname: "/workout/timer",
       params: timerParams(workout.id, grips[0] ?? workout.grip, session, link),
       startedAt: run.startedAt,
-      state: { player: "timer", run, setups, muted: timer.muted },
+      state: { player: "timer", run, setups, muted: timer.muted, loads },
     });
-  }, [run, workout, grips, session, link, setups, timer.muted]);
+  }, [run, workout, grips, session, link, setups, timer.muted, loads]);
 
   const ending = React.useRef(end);
   React.useEffect(() => {

@@ -11,7 +11,15 @@ import { phaseLabel } from "../training/timer/timerText";
 
 /** Where a player is: the timer's run, or the sets and items ticked so far. */
 export type RunState =
-  | { player: "timer"; run: Run; setups?: HangSetup[]; laps?: boolean; muted?: boolean }
+  | {
+      player: "timer";
+      run: Run;
+      setups?: HangSetup[];
+      laps?: boolean;
+      muted?: boolean;
+      /** Each item's load as its Next row names it, for the system timer: "20 kg". */
+      loads?: string[];
+    }
   | { player: "sets"; done: ItemDone[]; ticked: string[] }
   | { player: "checklist"; ticked: number[]; count: number };
 

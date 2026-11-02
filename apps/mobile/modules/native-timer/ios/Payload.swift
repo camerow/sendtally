@@ -11,6 +11,7 @@ struct Payload: Decodable, Equatable {
     let look: String
     let label: String
     let hint: String?
+    let next: String?
     let setLine: String
     let startsAt: Double
     let endsAt: Double?

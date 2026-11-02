@@ -10,6 +10,8 @@ export type NativeTimerStep = {
   label: string;
   /** In place of the countdown for a step with no clock: "Tap to log", "Open to save". */
   hint: string | null;
+  /** What comes after it, as the app's Next row reads: "Rest 3s", "Hang 7s · set 2". */
+  next: string | null;
   /** "Set 2 of 6", "Lap 3 of 5", "then Pull-ups". */
   setLine: string;
   startsAt: number;

@@ -93,11 +93,10 @@ final class TimerController {
       let index = payload.current(at: now)
     else { return }
     let step = payload.steps[index]
-    let next = payload.steps.indices.contains(index + 1) ? payload.steps[index + 1] : nil
     var state = NativeTimerAttributes.ContentState(
       look: step.look, label: step.label, hint: step.hint, setLine: step.setLine,
       startsAt: date(step.startsAt), endsAt: step.endsAt.map(date), runShare: step.runShare,
-      nextLabel: next?.label, pausedLeftS: payload.pausedLeftS, pausedShare: payload.pausedShare,
+      nextLabel: step.next, pausedLeftS: payload.pausedLeftS, pausedShare: payload.pausedShare,
       pausedText: payload.pausedText, nextText: payload.nextText, openHint: payload.openHint)
     if let left = payload.pausedLeftS {
       state.startsAt = syncedAt
