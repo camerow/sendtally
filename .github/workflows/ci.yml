@@ -98,7 +98,7 @@ jobs:
           set -euo pipefail
           changed=$(git diff --name-only "$BASE" "$HEAD" -- \
             apps/mobile packages/core packages/design packages/features \
-            packages/api-client pnpm-lock.yaml)
+            packages/api-client packages/auth-native pnpm-lock.yaml)
           if [ -n "$changed" ]; then echo "yes=true"; else echo "yes=false"; fi >> "$GITHUB_OUTPUT"
 
       - uses: pnpm/action-setup@v4
