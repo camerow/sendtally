@@ -87,4 +87,5 @@ export const common = {
   "common.changeSign": "Changer le signe",
   "common.decimalPoint": "Virgule décimale",
   "common.changeRefused": "Une modification n’a pas pu être enregistrée, elle a été annulée.",
+  "common.offline": "Hors ligne",
 } as const;

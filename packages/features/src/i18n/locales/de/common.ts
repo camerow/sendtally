@@ -87,4 +87,5 @@ export const common = {
   "common.changeSign": "Vorzeichen wechseln",
   "common.decimalPoint": "Dezimalkomma",
   "common.changeRefused": "Eine Änderung ließ sich nicht speichern und wurde zurückgenommen.",
+  "common.offline": "Offline",
 } as const;
