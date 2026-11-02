@@ -1,6 +1,6 @@
 import { router } from "expo-router";
 import React from "react";
-import { KeyboardAvoidingView, Platform, View } from "react-native";
+import { KeyboardAvoidingView, Platform, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { doneAsPrescribed, type ItemDone, type SetDone } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
@@ -13,8 +13,8 @@ import {
   useWeightUnit,
   wallLine,
 } from "@sendtally/features/activities";
-import { tallyMeasuresOf, type TallyMeasure } from "@sendtally/features/exercises";
-import { t } from "@sendtally/features/i18n";
+import { eachSideOf, tallyMeasuresOf, type TallyMeasure } from "@sendtally/features/exercises";
+import { formatNumber, t } from "@sendtally/features/i18n";
 import { exerciseSets, startExercise, useLiveSession } from "@sendtally/features/log-session";
 import { useExercises } from "@sendtally/features/statistics";
 import { exerciseName } from "@sendtally/features/workouts";
@@ -24,12 +24,18 @@ import { exerciseTallyStorage } from "../../../lib/exerciseTallyStorage";
 import { Button } from "../components/Button";
 import { PlayerHeader } from "../components/PlayerHeader";
 import { logRun, runParams, type WorkoutRun } from "../data/workoutRunParams";
-import { resumedRun, writeLiveRun } from "../../live-session/liveRun";
+import { resumedRun, writeHold, writeLiveRun } from "../../live-session/liveRun";
+import { HoldButton } from "../hold/HoldButton";
+import { heldSeconds, type Hold } from "../hold/holdClock";
+import { HoldRow } from "../hold/HoldRow";
+import { useHold } from "../hold/useHold";
 import { RestPreview } from "../rest/RestPreview";
+import { type } from "../type";
 import { RestRow } from "../rest/RestRow";
 import { useRest } from "../rest/useRest";
 import { ClimbingCard } from "./ClimbingCard";
 import { FoldedSetsCard } from "./FoldedSetsCard";
+import { SET_COLUMNS } from "./setColumns";
 import { SetsCard } from "./SetsCard";
 import {
   afterKey,
@@ -110,6 +116,54 @@ export function SetsScreen({
   };
   const change = (item: number, set: number, value: SetDone): void =>
     setDone((all) => changeSet(all, item, set, value));
+  const sided = eachSideOf(exercises.status === "ready" ? exercises.data : []);
+  // What the hold counted is what the set records, and it ticks itself.
+  const endHold = (h: Hold, seconds: number | null): void => {
+    writeHold(null);
+    const at = sets.find((x) => setKey(x) === h.at);
+    const set = at === undefined ? undefined : shown[at.item]?.sets[at.set];
+    if (at === undefined || set === undefined || seconds === null) return;
+    change(at.item, at.set, { ...set, onS: seconds });
+    if (!ticked.has(h.at)) toggle(at);
+  };
+  const hold = useHold((h) => endHold(h, h.targetS));
+
+  const holdRow = (at: SetAt): React.ReactNode =>
+    hold.hold?.at === setKey(at) && (
+      <HoldRow
+        hold={hold.hold}
+        now={hold.now}
+        lead={
+          <Text style={[type.monoBold, SET_COLUMNS.set, { fontSize: 14, color: colors.gunmetal }]}>
+            {formatNumber(at.set + 1)}
+          </Text>
+        }
+        onPause={hold.pause}
+        onResume={hold.resume}
+        onDone={() => {
+          if (hold.hold !== null) endHold(hold.hold, heldSeconds(hold.hold, Date.now()));
+        }}
+      />
+    );
+  const go = (at: SetAt): React.ReactNode => {
+    const targetS = run.items[at.item]?.dose.onS;
+    const name = nameOf(at.item);
+    return (
+      hold.hold === null &&
+      current?.item === at.item &&
+      current.set === at.set &&
+      targetS !== undefined &&
+      targetS > 0 && (
+        <HoldButton
+          name={name}
+          targetS={targetS}
+          onPress={() =>
+            hold.start(setKey(at), name, targetS, sided(run.items[at.item]?.exercise ?? ""))
+          }
+        />
+      )
+    );
+  };
   const restAt = (key: string): React.ReactNode =>
     rest.rest?.at === key && (
       <RestRow rest={rest.rest} left={rest.left} onMore={rest.more} onSkip={rest.skip} />
@@ -127,6 +181,7 @@ export function SetsScreen({
     );
   const finish = (): void => {
     rest.skip();
+    hold.stop();
     logRun(
       run,
       shown.map((d) => (tallyOf(d.item) === null ? d : { ...d, sets: climbedSets(d.item) })),
@@ -223,6 +278,8 @@ export function SetsScreen({
                     unit={unit}
                     onChange={(set, value) => change(i, set, value)}
                     onToggle={(set) => toggle({ item: i, set })}
+                    holdRow={(set) => holdRow({ item: i, set })}
+                    go={(set) => go({ item: i, set })}
                     restUnder={(set) => restAt(setKey({ item: i, set }))}
                   />
                 )}

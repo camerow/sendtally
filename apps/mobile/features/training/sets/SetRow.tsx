@@ -20,6 +20,8 @@ export type SetRowProps = {
   current: boolean;
   unit: WeightUnit;
   label: string;
+  /** ▶ in the Done cell, for the current set when it is timed. */
+  go?: React.ReactNode;
   onChange: (set: SetDone) => void;
   onToggle: () => void;
 };
@@ -35,6 +37,7 @@ export function SetRow({
   current,
   unit,
   label,
+  go,
   onChange,
   onToggle,
 }: SetRowProps): React.ReactElement {
@@ -69,6 +72,8 @@ export function SetRow({
             lifting={lifting}
             unit={unit}
             label={label}
+            {...(!ticked && go !== undefined && { go })}
+            holdShort={ticked && target.onS !== undefined && (done.onS ?? 0) < target.onS}
             onChange={onChange}
           />
         ) : (

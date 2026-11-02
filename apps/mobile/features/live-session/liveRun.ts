@@ -5,6 +5,7 @@ import { t } from "@sendtally/features/i18n";
 import { exerciseName } from "@sendtally/features/workouts";
 import { exerciseTallyStorage } from "../../lib/exerciseTallyStorage";
 import { liveRunStorage } from "../../lib/liveRunStorage";
+import type { Hold } from "../training/hold/holdClock";
 import type { Rest } from "../training/rest/restCountdown";
 import { phaseLabel } from "../training/timer/timerText";
 
@@ -33,6 +34,8 @@ export type LiveRun = {
   state: RunState;
   /** The rest counting down between sets or items, kept while the player is minimised. */
   rest?: Rest;
+  /** The timed set or line running in its row; never at once with a rest. */
+  hold?: Hold;
 };
 
 export function parseLiveRun(raw: string | null): LiveRun | null {
@@ -55,10 +58,16 @@ export function parseLiveRun(raw: string | null): LiveRun | null {
 
 export const readLiveRun = (): LiveRun | null => parseLiveRun(liveRunStorage.read());
 
-/** Saves where a player is, keeping the rest it has running. */
+/** Saves where a player is, keeping the rest or hold it has running. */
 export function writeLiveRun(run: LiveRun): void {
-  const rest = resumedRun(run.pathname, run.workoutId)?.rest;
-  liveRunStorage.write(JSON.stringify(rest === undefined ? run : { ...run, rest }));
+  const { rest, hold } = resumedRun(run.pathname, run.workoutId) ?? {};
+  liveRunStorage.write(
+    JSON.stringify({
+      ...run,
+      ...(rest !== undefined && { rest }),
+      ...(hold !== undefined && { hold }),
+    })
+  );
 }
 
 /** Starts, changes or ends the live run's rest. */
@@ -67,6 +76,14 @@ export function writeRest(rest: Rest | null): void {
   if (live === null) return;
   const { rest: _, ...run } = live;
   liveRunStorage.write(JSON.stringify(rest === null ? run : { ...run, rest }));
+}
+
+/** Starts, pauses or ends the live run's hold. */
+export function writeHold(hold: Hold | null): void {
+  const live = readLiveRun();
+  if (live === null) return;
+  const { hold: _, ...run } = live;
+  liveRunStorage.write(JSON.stringify(hold === null ? run : { ...run, hold }));
 }
 
 /** The stored run of the player at `pathname` for this workout, to pick up where it was. */

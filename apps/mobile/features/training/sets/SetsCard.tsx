@@ -29,6 +29,10 @@ export type SetsCardProps = {
   unit: WeightUnit;
   onChange: (set: number, value: SetDone) => void;
   onToggle: (set: number) => void;
+  /** A set running on its timer, in place of its row. */
+  holdRow: (set: number) => React.ReactNode;
+  /** ▶ for a set, when it is the current one and timed. */
+  go: (set: number) => React.ReactNode;
   /** What shows under a set: the rest its tick started, if it is running, else its rest to come. */
   restUnder: (set: number) => React.ReactNode;
 };
@@ -44,6 +48,8 @@ export function SetsCard({
   unit,
   onChange,
   onToggle,
+  holdRow,
+  go,
   restUnder,
 }: SetsCardProps): React.ReactElement {
   const name = exerciseName(item.exercise);
@@ -92,21 +98,24 @@ export function SetsCard({
       </View>
       {done.sets.map((set, i) => (
         <React.Fragment key={i}>
-          <SetRow
-            n={i + 1}
-            target={
-              lifting ? { ...target, weightKg: target.weightKg ?? previous[i]?.weightKg } : target
-            }
-            done={set}
-            previous={previous[i]}
-            lifting={lifting}
-            ticked={ticked.has(setKey({ item: done.item, set: i }))}
-            current={current?.item === done.item && current.set === i}
-            unit={unit}
-            label={t("activities.setOf", { exercise: name, n: i + 1 })}
-            onChange={(value) => onChange(i, value)}
-            onToggle={() => onToggle(i)}
-          />
+          {holdRow(i) || (
+            <SetRow
+              n={i + 1}
+              target={
+                lifting ? { ...target, weightKg: target.weightKg ?? previous[i]?.weightKg } : target
+              }
+              done={set}
+              previous={previous[i]}
+              lifting={lifting}
+              ticked={ticked.has(setKey({ item: done.item, set: i }))}
+              current={current?.item === done.item && current.set === i}
+              unit={unit}
+              label={t("activities.setOf", { exercise: name, n: i + 1 })}
+              onChange={(value) => onChange(i, value)}
+              onToggle={() => onToggle(i)}
+              go={go(i) || undefined}
+            />
+          )}
           {restUnder(i) ||
             (i < done.sets.length - 1 && target.setRestS !== undefined && target.setRestS > 0 && (
               <RestPreview seconds={target.setRestS} />

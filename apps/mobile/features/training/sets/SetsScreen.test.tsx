@@ -191,4 +191,56 @@ describe("Sets player", () => {
     expect(screen.getByText("A")).toBeTruthy();
     expect(screen.queryByText("C")).toBeNull();
   });
+
+  it("times a timed set in its row after a count-in, records what it held, and rests", async () => {
+    const planks: WorkoutRun = {
+      ...run,
+      items: [{ exercise: "Plank", dose: { sets: 2, onS: 30, setRestS: 20 } }],
+    };
+    await renderWithHang(<SetsScreen run={planks} />, hangData());
+    await fireEvent.press(screen.getByLabelText("Start Plank, 0:30"));
+    expect(screen.getByText("Ready")).toBeTruthy();
+    expect(screen.getByText("3")).toBeTruthy();
+    await advance(13_000);
+    expect(screen.getByText("0:10")).toBeTruthy();
+    expect(screen.getByText("of 0:30")).toBeTruthy();
+    expect(readLiveRun()?.hold?.name).toBe("Plank");
+    await fireEvent.press(screen.getByRole("button", { name: "Done" }));
+    expect(screen.getByLabelText("Plank, set 1")).toHaveProp("accessibilityState", {
+      checked: true,
+    });
+    expect(screen.getByLabelText("Rest, 0:20 left")).toBeTruthy();
+
+    await fireEvent.press(screen.getByLabelText("Start Plank, 0:30"));
+    expect(screen.queryByLabelText("Rest, 0:20 left")).toBeNull();
+    await advance(34_000);
+    expect(readLiveRun()?.hold).toBeUndefined();
+    expect(readLiveRun()?.state).toEqual({
+      player: "sets",
+      done: [
+        expect.objectContaining({
+          sets: [
+            { onS: 10, setRestS: 20 },
+            { onS: 30, setRestS: 20 },
+          ],
+        }),
+      ],
+      ticked: ["0:0", "0:1"],
+    });
+  });
+
+  it("cancels a timed set from its count-in without recording it", async () => {
+    const planks: WorkoutRun = {
+      ...run,
+      items: [{ exercise: "Plank", dose: { sets: 1, onS: 30 } }],
+    };
+    await renderWithHang(<SetsScreen run={planks} />, hangData());
+    await fireEvent.press(screen.getByLabelText("Start Plank, 0:30"));
+    await advance(1_000);
+    await fireEvent.press(screen.getByRole("button", { name: "Done" }));
+    expect(screen.getByLabelText("Plank, set 1")).toHaveProp("accessibilityState", {
+      checked: false,
+    });
+    expect(screen.getByLabelText("Start Plank, 0:30")).toBeTruthy();
+  });
 });

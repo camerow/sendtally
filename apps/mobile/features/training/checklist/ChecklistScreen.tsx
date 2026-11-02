@@ -4,13 +4,19 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { doneAsPrescribed } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { useWeightUnit } from "@sendtally/features/activities";
+import { eachSideOf } from "@sendtally/features/exercises";
 import { t } from "@sendtally/features/i18n";
+import { useExercises } from "@sendtally/features/statistics";
 import { doseSummary, exerciseName } from "@sendtally/features/workouts";
 import { useApi } from "../../../lib/api";
 import { Button } from "../components/Button";
 import { PlayerHeader } from "../components/PlayerHeader";
 import { logRun, runParams, type WorkoutRun } from "../data/workoutRunParams";
-import { resumedRun, writeLiveRun } from "../../live-session/liveRun";
+import { resumedRun, writeHold, writeLiveRun } from "../../live-session/liveRun";
+import { HoldButton } from "../hold/HoldButton";
+import { heldSeconds, type Hold } from "../hold/holdClock";
+import { HoldRow } from "../hold/HoldRow";
+import { useHold } from "../hold/useHold";
 import { RestPreview } from "../rest/RestPreview";
 import { RestRow } from "../rest/RestRow";
 import { useRest } from "../rest/useRest";
@@ -30,7 +36,10 @@ export function ChecklistScreen({
   /** Finishes the running workout as it opens, straight to its review. */
   end?: boolean;
 }): React.ReactElement {
-  const unit = useWeightUnit(useApi());
+  const api = useApi();
+  const unit = useWeightUnit(api);
+  const exercises = useExercises(api).state;
+  const sided = eachSideOf(exercises.status === "ready" ? exercises.data : []);
   const [resumed] = React.useState(() => {
     const live = resumedRun("/workout/checklist", run.workoutId);
     return live?.state.player === "checklist" ? { ...live.state, startedAt: live.startedAt } : null;
@@ -58,8 +67,17 @@ export function ChecklistScreen({
     if (!ticking || name === undefined) rest.skip();
     else rest.tick(afterKey(i), run.exerciseRestS, exerciseName(name));
   };
+  // A timed line ticks itself once its hold is done; Done in the count-in only cancels.
+  const endHold = (h: Hold, seconds: number | null): void => {
+    writeHold(null);
+    const i = Number(h.at);
+    if (seconds !== null && !ticked.has(i)) toggle(i);
+  };
+  const hold = useHold((h) => endHold(h, h.targetS));
+
   const finish = (): void => {
     rest.skip();
+    hold.stop();
     logRun(
       run,
       doneAsPrescribed(run.items),
@@ -88,12 +106,50 @@ export function ChecklistScreen({
         <View>
           {run.items.map((item, i) => (
             <React.Fragment key={i}>
-              <ChecklistRow
-                name={exerciseName(item.exercise)}
-                dose={doseSummary(run.kind, item.dose, unit)}
-                ticked={ticked.has(i)}
-                onToggle={() => toggle(i)}
-              />
+              {hold.hold?.at === String(i) ? (
+                <View style={{ gap: 4, paddingTop: 6, paddingBottom: 6 }}>
+                  <Text style={[type.bodyBold, { fontSize: 15, color: colors.gunmetal }]}>
+                    {exerciseName(item.exercise)}
+                  </Text>
+                  <HoldRow
+                    hold={hold.hold}
+                    now={hold.now}
+                    onPause={hold.pause}
+                    onResume={hold.resume}
+                    onDone={() => {
+                      if (hold.hold !== null)
+                        endHold(hold.hold, heldSeconds(hold.hold, Date.now()));
+                    }}
+                  />
+                </View>
+              ) : (
+                <ChecklistRow
+                  name={exerciseName(item.exercise)}
+                  dose={doseSummary(run.kind, item.dose, unit, sided(item.exercise))}
+                  ticked={ticked.has(i)}
+                  onToggle={() => toggle(i)}
+                  go={
+                    !ticked.has(i) &&
+                    hold.hold === null &&
+                    item.dose.reps === undefined &&
+                    item.dose.onS !== undefined &&
+                    item.dose.onS > 0 && (
+                      <HoldButton
+                        name={exerciseName(item.exercise)}
+                        targetS={item.dose.onS}
+                        onPress={() =>
+                          hold.start(
+                            String(i),
+                            exerciseName(item.exercise),
+                            item.dose.onS ?? 0,
+                            sided(item.exercise)
+                          )
+                        }
+                      />
+                    )
+                  }
+                />
+              )}
               {rest.rest?.at === afterKey(i) ? (
                 <View style={{ paddingVertical: 6 }}>
                   <RestRow

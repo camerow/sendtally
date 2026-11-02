@@ -20,6 +20,10 @@ export type SetDoneFieldsProps = {
   hangs?: boolean;
   /** Fell short of its target: the count it fell short on reads amber. */
   short?: boolean;
+  /** In place of the hold field: ▶ to time it. */
+  go?: React.ReactNode;
+  /** Held less than its target: the hold reads amber. */
+  holdShort?: boolean;
   /** Where a hang count sits in its table's column, so Next walks to the next set. */
   slot?: FieldSlot;
   onChange: (set: SetDone) => void;
@@ -49,6 +53,8 @@ export function SetDoneFields({
   hangs = false,
   short = false,
   slot: column,
+  go,
+  holdShort = false,
   onChange,
 }: SetDoneFieldsProps): React.ReactElement {
   const reps = lifting || hangs || set.reps !== undefined;
@@ -98,10 +104,12 @@ export function SetDoneFields({
         </Text>
       )}
       {(reps || weight) && hold && <Joiner mark="·" />}
-      {hold && (
+      {hold && go}
+      {hold && go === undefined && (
         <TimeField
           {...slot("hold")}
           {...named(t("workouts.dose.hold"))}
+          short={holdShort}
           value={set.onS ?? 0}
           onChange={(onS) => onChange({ ...set, onS })}
         />
