@@ -46,7 +46,7 @@ describe("the system timer's payload", () => {
       ["work", "Hang", "Set 2 of 2"],
       ["rest", "Rest", "Set 2 of 2"],
       ["work", "Hang", "Set 2 of 2"],
-      ["done", "Done", ""],
+      ["done", "Done", "2 of 2 sets"],
     ]);
     expect(steps.map((s) => s.next)).toEqual([
       "Hang 7s · set 1",

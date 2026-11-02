@@ -4,6 +4,7 @@ import {
   phasesSeconds,
   phaseProgress,
   remainingInPhase,
+  resultOf,
   upcomingPhases,
   type Phase,
   type Run,
@@ -133,15 +134,17 @@ function runSteps(
     runShare: share(index),
     cues: phaseCues(index, phase, startsAt, endsAt),
   }));
-  return finishesAt === null ? steps : [...steps, doneStep(finishesAt)];
+  if (finishesAt === null) return steps;
+  const done = run.finished === null ? run.sets : resultOf(run).setsDone;
+  return [...steps, doneStep(finishesAt, done, run.sets)];
 }
 
-const doneStep = (at: number): NativeTimerStep => ({
+const doneStep = (at: number, done: number, sets: number): NativeTimerStep => ({
   look: "done",
   label: t("common.done"),
   hint: t("hang.openToSave"),
   next: null,
-  setLine: "",
+  setLine: t("activities.setsDoneOf", { done, count: sets }),
   startsAt: at,
   endsAt: null,
   runShare: 1,

@@ -105,22 +105,23 @@ struct NativeTimerLiveActivity: Widget {
     } dynamicIsland: { context in
       let shown = Shown(context.state, stale: context.isStale)
       return DynamicIsland {
-        DynamicIslandExpandedRegion(.leading) {
-          VStack(alignment: .leading, spacing: 2) {
-            Kicker(text: shown.kicker, color: shown.kickerColor)
-            Text(shown.state.setLine)
-              .font(.mono(13))
-              .foregroundStyle(Color.onDarkMuted)
-              .lineLimit(1)
-          }
-          .padding(.leading, 6)
-        }
-        DynamicIslandExpandedRegion(.trailing) {
-          Big(shown: shown, size: 40, hintSize: 20)
-            .padding(.trailing, 6)
-        }
+        // One bottom region sized to its content: leading and trailing regions are as tall as
+        // the system makes them, which left a gap above the bar.
         DynamicIslandExpandedRegion(.bottom) {
-          VStack(spacing: 8) {
+          VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .center) {
+              VStack(alignment: .leading, spacing: 2) {
+                Kicker(text: shown.kicker, color: shown.kickerColor)
+                if !shown.state.setLine.isEmpty {
+                  Text(shown.state.setLine)
+                    .font(.mono(13))
+                    .foregroundStyle(Color.onDarkMuted)
+                    .lineLimit(1)
+                }
+              }
+              Spacer(minLength: 8)
+              Big(shown: shown, size: 40, hintSize: 20)
+            }
             Bar(shown: shown)
             NextRow(shown: shown, inline: true)
           }
@@ -322,8 +323,9 @@ private struct Ring: View {
       Circle().stroke(Color.onDarkTrack, lineWidth: 3).padding(1.5)
     case .done:
       ZStack {
-        Circle().fill(.white)
-        Check().stroke(Color.gunmetal, style: StrokeStyle(lineWidth: 2.4, lineCap: .round, lineJoin: .round))
+        Circle().stroke(.white, lineWidth: 3).padding(1.5)
+        Check()
+          .stroke(.white, style: StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round))
           .padding(4)
       }
     }
@@ -364,8 +366,7 @@ private struct CompactTrailing: View {
         .font(.mono(15, semibold: true))
         .foregroundStyle(shown.look.label)
         .lineLimit(1)
-        .minimumScaleFactor(0.7)
-        .frame(maxWidth: 52, alignment: .trailing)
+        .fixedSize()
     case .stale:
       EmptyView()
     }
