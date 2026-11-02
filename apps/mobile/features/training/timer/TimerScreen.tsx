@@ -89,13 +89,14 @@ function Timer({
   React.useEffect(() => {
     writeLiveRun({
       title: workout.name,
+      meta: kindLabel("hangboard"),
       workoutId: workout.id,
       pathname: "/workout/timer",
       params: timerParams(workout.id, grips[0] ?? workout.grip, session, link),
       startedAt: run.startedAt,
-      state: { player: "timer", run, setups },
+      state: { player: "timer", run, setups, muted: timer.muted },
     });
-  }, [run, workout, grips, session, link, setups]);
+  }, [run, workout, grips, session, link, setups, timer.muted]);
 
   const ending = React.useRef(end);
   React.useEffect(() => {
