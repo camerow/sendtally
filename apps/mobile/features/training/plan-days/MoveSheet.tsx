@@ -34,7 +34,9 @@ export function MoveSheet({ occurrence: o, name, onClose }: MoveSheetProps): Rea
   const [to, setTo] = React.useState<CalendarDate | null>(
     week.find((d) => canMoveTo(o, d, today, plansOn)) ?? null
   );
-  const last = o.block !== null && isDated(o.block) ? addDays(blockEnd(o.block), -1) : null;
+  const dated = o.block !== null && isDated(o.block) ? o.block : null;
+  const last = dated === null ? null : addDays(blockEnd(dated), -1);
+  const first = dated !== null && dated.start > today ? dated.start : today;
   const weekly = daysList(o.membership.weekdays);
   return (
     <HangSheet visible onClose={onClose} closeLabel={t("common.cancel")}>
@@ -48,7 +50,7 @@ export function MoveSheet({ occurrence: o, name, onClose }: MoveSheetProps): Rea
         <MonthCalendar
           selected={to ?? plannedOn(o)}
           picked={to === null ? [] : [to]}
-          min={today}
+          min={first}
           {...(last !== null && { max: last })}
           today={today}
           shaded={() => false}

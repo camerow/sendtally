@@ -87,7 +87,7 @@ export const plan = {
   "plan.moveStart": "Ersten Tag verschieben",
   "plan.startOn": "Am {day} beginnen",
   "plan.move": "Verschieben",
-  "plan.moveHint": "Auf einen anderen Tag dieser Woche",
+  "plan.moveHint": "Auf einen anderen Tag",
   "plan.skip": "Auslassen",
   "plan.skipHint": "Zählt nicht als verpasst",
   "plan.moveTitle": "Auf welchen Tag verschieben?",

@@ -92,7 +92,13 @@ describe("Sets player", () => {
     expect(screen.getByText("8 × 60 kg")).toBeTruthy();
     expect(screen.getByText("1:30 rest")).toBeTruthy();
     expect(screen.getAllByText("Rest 2:00")).toHaveLength(2);
+    expect(readingOrder("Back squat, set 1", "Rest 1:30", "Back squat, set 2")).toEqual([
+      "Back squat, set 1",
+      "Rest 1:30",
+      "Back squat, set 2",
+    ]);
     await fireEvent.press(screen.getByLabelText("Back squat, set 1"));
+    expect(screen.queryByText("Rest 1:30")).toBeNull();
     expect(
       readingOrder("Back squat, set 1", "Rest, 1:30 left", "Back squat, set 2", "Rest 2:00")
     ).toEqual([

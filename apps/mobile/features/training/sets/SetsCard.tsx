@@ -12,6 +12,7 @@ import { t } from "@sendtally/features/i18n";
 import { exerciseName } from "@sendtally/features/workouts";
 import { Label } from "../components/Label";
 import { LetterBadge } from "../components/LetterBadge";
+import { RestPreview } from "../rest/RestPreview";
 import { type } from "../type";
 import { SET_COLUMNS } from "./setColumns";
 import { SetRow } from "./SetRow";
@@ -28,7 +29,7 @@ export type SetsCardProps = {
   unit: WeightUnit;
   onChange: (set: number, value: SetDone) => void;
   onToggle: (set: number) => void;
-  /** What shows under a set: the rest its tick started, if it is running. */
+  /** What shows under a set: the rest its tick started, if it is running, else its rest to come. */
   restUnder: (set: number) => React.ReactNode;
 };
 
@@ -106,7 +107,10 @@ export function SetsCard({
             onChange={(value) => onChange(i, value)}
             onToggle={() => onToggle(i)}
           />
-          {restUnder(i)}
+          {restUnder(i) ||
+            (i < done.sets.length - 1 && target.setRestS !== undefined && target.setRestS > 0 && (
+              <RestPreview seconds={target.setRestS} />
+            ))}
         </React.Fragment>
       ))}
     </View>

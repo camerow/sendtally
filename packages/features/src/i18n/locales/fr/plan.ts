@@ -86,7 +86,7 @@ export const plan = {
   "plan.moveStart": "Déplacer le premier jour",
   "plan.startOn": "Commencer le {day}",
   "plan.move": "Déplacer",
-  "plan.moveHint": "À un autre jour de cette semaine",
+  "plan.moveHint": "À un autre jour",
   "plan.skip": "Passer",
   "plan.skipHint": "Pas compté comme manqué",
   "plan.moveTitle": "Déplacer à quel jour ?",
