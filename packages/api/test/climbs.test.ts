@@ -32,7 +32,7 @@ const record = (id: string, name: string, overrides: Partial<UserClimbRow> = {})
 });
 
 describe("climbCatalogue", () => {
-  it("groups climbs by their record across sessions, newest grade and crag winning", () => {
+  it("groups climbs by their record across sessions, newest grade winning", () => {
     const catalogue = climbCatalogue(
       [
         session(
@@ -50,7 +50,7 @@ describe("climbCatalogue", () => {
           { name: "Warm up", vGrade: 2, kind: "send", tries: 1 },
         ]),
       ],
-      [record("m", "Moonraker"), record("w", "Warm up")],
+      [record("m", "Moonraker", { area_id: "a1" }), record("w", "Warm up")],
       new Map([["a1", "Buttermilks"]])
     );
     expect(catalogue).toEqual([
@@ -135,9 +135,11 @@ describe("an edited climb", () => {
     ),
   ];
 
-  it("shows the crag it was edited to over its newest session's", () => {
-    const [climb] = climbCatalogue(logged, [record("c1", "Moonraker", { area_id: "a2" })], names);
-    expect(climb?.area).toEqual({ id: "a2", name: "Castle Rock" });
+  it("shows the climb's own crag, never a session's", () => {
+    const [moved] = climbCatalogue(logged, [record("c1", "Moonraker", { area_id: "a2" })], names);
+    expect(moved?.area).toEqual({ id: "a2", name: "Castle Rock" });
+    const [none] = climbCatalogue(logged, [record("c1", "Moonraker")], names);
+    expect(none?.area).toBeNull();
   });
 
   it("keeps an unlogged project's edited crag", () => {
@@ -149,14 +151,14 @@ describe("an edited climb", () => {
     expect(climb?.area).toEqual({ id: "a2", name: "Castle Rock" });
   });
 
-  it("is not relinked to an Areas climb by name once its crag was edited", () => {
-    const links = [{ climb_slug: "moonraker", climb_id: "ac-1" }];
-    expect(missingClimbs(logged, [record("c1", "Moonraker")], links).link).toEqual([
+  it("is linked to an Areas climb by name only at that climb's crag", () => {
+    const links = [{ climb_slug: "moonraker", climb_id: "ac-1", area_id: "a1" }];
+    const update = (r: UserClimbRow) => missingClimbs(logged, [r], links).update;
+    expect(update(record("c1", "Moonraker", { area_id: "a1" }))).toEqual([
       { id: "c1", area_climb_id: "ac-1" },
     ]);
-    expect(
-      missingClimbs(logged, [record("c1", "Moonraker", { area_id: "a2" })], links).link
-    ).toEqual([]);
+    expect(update(record("c1", "Moonraker", { area_id: "a2" }))).toEqual([]);
+    expect(update(record("c1", "Moonraker", { area_id: "a1", area_climb_id: "ac-2" }))).toEqual([]);
   });
 });
 
@@ -223,19 +225,20 @@ describe("a deleted climb", () => {
 });
 
 describe("missingClimbs", () => {
-  it("creates a record per unrecorded name and links records to their Areas climb", () => {
+  it("creates a record per unrecorded name at its newest crag, linked to its Areas climb", () => {
     const missing = missingClimbs(
       [
-        session("s1", "2026-09-01T18:00:00Z", [
+        session("s2", "2026-09-02T18:00:00Z", [
           { name: "The Pinch", grade: { scale: "v", value: 7 } },
           { name: "the pinch", grade: { scale: "v", value: 6 } },
           { name: "Known", vGrade: 2 },
         ]),
+        session("s1", "2026-09-01T18:00:00Z", [{ name: "The Pinch", vGrade: 5 }], "a1"),
       ],
-      [record("k", "Known")],
+      [record("k", "Known", { area_id: "a9" })],
       [
-        { climb_slug: "the-pinch", climb_id: "ac1" },
-        { climb_slug: "known", climb_id: "ac2" },
+        { climb_slug: "the-pinch", climb_id: "ac1", area_id: "a1" },
+        { climb_slug: "known", climb_id: "ac2", area_id: "a9" },
       ]
     );
     expect(missing).toEqual({
@@ -245,11 +248,36 @@ describe("missingClimbs", () => {
           name_key: "the-pinch",
           discipline: "boulder",
           grade_json: '{"scale":"v","value":7}',
+          area_id: "a1",
           area_climb_id: "ac1",
         },
       ],
-      link: [{ id: "k", area_climb_id: "ac2" }],
+      update: [{ id: "k", area_climb_id: "ac2" }],
     });
+  });
+
+  it("puts a climb logged with no crag at its Areas climb's crag", () => {
+    const { create } = missingClimbs(
+      [session("s1", "2026-09-01T18:00:00Z", [{ name: "Arete", vGrade: 3 }])],
+      [],
+      [{ climb_slug: "arete", climb_id: "ac1", area_id: "a1" }]
+    );
+    expect(create[0]).toMatchObject({ area_id: "a1", area_climb_id: "ac1" });
+  });
+
+  it("gives a record with no crag the crag of the newest session it was logged at one in", () => {
+    const sessions = [
+      session("s3", "2026-09-03T18:00:00Z", [{ name: "Arete" }]),
+      session("s2", "2026-09-02T18:00:00Z", [{ name: "Arete" }], "a2"),
+      session("s1", "2026-09-01T18:00:00Z", [{ name: "Arete" }], "a1"),
+      session("s0", "2026-09-01T18:00:00Z", [{ name: "Gym" }]),
+    ];
+    const records = [
+      record("a", "Arete"),
+      record("g", "Gym"),
+      record("p", "Placed", { area_id: "a1" }),
+    ];
+    expect(missingClimbs(sessions, records, []).update).toEqual([{ id: "a", area_id: "a2" }]);
   });
 });
 

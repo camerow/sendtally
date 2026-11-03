@@ -648,10 +648,15 @@ export async function setSessionTags(
 export async function listSessionClimbLinks(
   db: D1Database,
   userId: string
-): Promise<Array<{ climb_slug: string; climb_id: string }>> {
+): Promise<Array<{ climb_slug: string; climb_id: string; area_id: string }>> {
   return drizzle(db)
-    .select({ climb_slug: sessionClimbLinks.climb_slug, climb_id: sessionClimbLinks.climb_id })
+    .select({
+      climb_slug: sessionClimbLinks.climb_slug,
+      climb_id: sessionClimbLinks.climb_id,
+      area_id: areaClimbs.area_id,
+    })
     .from(sessionClimbLinks)
+    .innerJoin(areaClimbs, eq(areaClimbs.id, sessionClimbLinks.climb_id))
     .where(eq(sessionClimbLinks.user_id, userId))
     .all();
 }
@@ -997,6 +1002,7 @@ export type UserClimbInput = {
   name_key: string;
   discipline: Discipline;
   grade_json: string | null;
+  area_id: string | null;
   area_climb_id: string | null;
 };
 
@@ -1018,17 +1024,17 @@ export async function insertUserClimbs(
   if (first !== undefined) await d.batch([first, ...rest]);
 }
 
-export async function linkUserClimbs(
+export async function updateUserClimbs(
   db: D1Database,
   userId: string,
-  links: Array<{ id: string; area_climb_id: string }>
+  fixes: Array<{ id: string; area_id?: string; area_climb_id?: string }>
 ): Promise<void> {
   const d = drizzle(db);
-  const updates = links.map((l) =>
+  const updates = fixes.map(({ id, ...set }) =>
     d
       .update(userClimbs)
-      .set({ area_climb_id: l.area_climb_id })
-      .where(and(eq(userClimbs.user_id, userId), eq(userClimbs.id, l.id)))
+      .set(set)
+      .where(and(eq(userClimbs.user_id, userId), eq(userClimbs.id, id)))
   );
   const [first, ...rest] = updates;
   if (first !== undefined) await d.batch([first, ...rest]);
@@ -1039,6 +1045,7 @@ export type WorkingInput = {
   name: string;
   grade?: ClimbGrade;
   discipline?: Discipline;
+  area_id?: string | null;
 };
 
 // The log form knows the grade and the Climbs tab knows the discipline, and
@@ -1069,6 +1076,7 @@ export async function markWorking(
       name_key: climb.name_key,
       grade_json,
       discipline,
+      area_id: climb.area_id ?? null,
       area_climb_id: null,
       working: true,
       created_at: now,

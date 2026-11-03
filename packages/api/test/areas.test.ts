@@ -443,3 +443,41 @@ describe("editing a climb", () => {
     expect((await climbs())[0]).toMatchObject({ area: null, area_climb_id: null });
   });
 });
+
+describe("a climb's crag", () => {
+  const logAt = (user: string, areaId: string, date: string, project?: boolean) =>
+    call(user, "/v1/sessions", {
+      body: {
+        date,
+        location: "outdoor",
+        areaId,
+        climbs: [{ name: "Arete", grade: { scale: "v", value: 4 }, project }],
+      },
+    });
+  const arete = async (user: string): Promise<Record<string, unknown> | undefined> =>
+    ((await call(user, "/v1/climbs")).body["climbs"] as Array<Record<string, unknown>>).find(
+      (c) => c["name"] === "Arete"
+    );
+
+  it("is the crag it was first logged at, and stays there", async () => {
+    const user = "user_crag_first";
+    const first = await createArea(user, { ...buttermilks, name: "First Crag" });
+    const second = await createArea(user, { ...buttermilks, name: "Second Crag" });
+    expect((await logAt(user, first.id, "2026-09-01", true)).status).toBe(201);
+    const stored = await env.DB.prepare("SELECT area_id FROM user_climbs WHERE user_id = ?")
+      .bind(user)
+      .first<{ area_id: string | null }>();
+    expect(stored?.area_id).toBe(first.id);
+
+    expect((await logAt(user, second.id, "2026-09-02")).status).toBe(201);
+    expect((await arete(user))?.["area"]).toEqual({ id: first.id, name: "First Crag" });
+  });
+
+  it("is filled in from its newest session for a climb recorded without one", async () => {
+    const user = "user_crag_backfill";
+    const crag = await createArea(user, { ...buttermilks, name: "Backfill Crag" });
+    expect((await call(user, "/v1/projects", { body: { name: "Arete" } })).status).toBe(200);
+    expect((await logAt(user, crag.id, "2026-09-01")).status).toBe(201);
+    expect((await arete(user))?.["area"]).toEqual({ id: crag.id, name: "Backfill Crag" });
+  });
+});
