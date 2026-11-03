@@ -14,6 +14,7 @@ import {
   logItems,
   logScopeItems,
   logSegmentItems,
+  logWorkoutItems,
   openInjuries,
   overlappingTrip,
   sessionsInSpan,
@@ -538,5 +539,43 @@ describe("bodyPlaceholder", () => {
       "Summarize how your injury is doing today."
     );
     expect(bodyPlaceholder(emptyDraft("journal", "2026-05-30"))).toBe("Reflect on your climbing");
+  });
+});
+
+describe("logWorkoutItems", () => {
+  const lift = (id: string, over: Partial<Activity> = {}): Activity => ({
+    id,
+    kind: "strength",
+    title: "Leg day",
+    date: "2026-05-28",
+    startTime: null,
+    minutes: 50,
+    rpe: 7,
+    notes: null,
+    workoutId: "legs",
+    membershipId: null,
+    week: null,
+    focus: null,
+    done: [],
+    ...over,
+  });
+  const items = logItems(
+    [session("a", "2026-05-22T09:00:00.000Z")],
+    [entry({ id: "note", kind: "journal" })],
+    [],
+    [
+      lift("a1"),
+      lift("a2", { title: "Arm day", workoutId: "arms" }),
+      lift("a3", { workoutId: null, title: "Pull and core " }),
+      lift("a4", { workoutId: null, title: "pull and core" }),
+    ]
+  );
+
+  it("keeps only that workout's sessions, by library id", () => {
+    expect(logWorkoutItems(items, "legs").map((i) => i.key)).toEqual(["activity:a1"]);
+  });
+
+  it("knows one logged without the library by its title", () => {
+    expect(logWorkoutItems(items, "title:pull and core")).toHaveLength(2);
   });
 });

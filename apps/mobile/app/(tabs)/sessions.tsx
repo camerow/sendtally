@@ -5,7 +5,7 @@ import { logSegmentStorage } from "../../lib/logSegmentStorage";
 import { useSegmentParam } from "../../lib/storedSegment";
 
 export default function Log(): React.ReactElement {
-  const { segment } = useLocalSearchParams<{ segment?: string }>();
+  const { segment, workout } = useLocalSearchParams<{ segment?: string; workout?: string }>();
   useSegmentParam(logSegmentStorage, segment);
-  return <SessionsLog />;
+  return <SessionsLog workout={workout ?? null} />;
 }

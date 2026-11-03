@@ -10,6 +10,7 @@ import type { TrendRange } from "../trends/types";
 import { exerciseSeries, type ExerciseMetric } from "./exercises";
 import { kindLabel } from "../activities/format";
 import { ACTIVITY_KINDS, oneDecimal, type ActivityKind } from "./overview";
+import { workoutsDone, type WorkoutsDoneVM } from "./workouts";
 
 type Done = {
   kind: ActivityKind;
@@ -60,6 +61,7 @@ export type TrainingInsightsVM = {
   byFocus: TrainedFocusVM[];
   total: string;
   exercises: ExerciseGroupVM[];
+  workouts: WorkoutsDoneVM;
 };
 
 const minutesBetween = (start: string, end: string): number =>
@@ -242,5 +244,6 @@ export function trainingInsightsVM(
       ...(minutes === 0 ? [] : [durationLabel(minutes)]),
     ].join(" · "),
     exercises: groups.filter((g) => g.rows.length > 0),
+    workouts: workoutsDone(log, within, kinds),
   };
 }

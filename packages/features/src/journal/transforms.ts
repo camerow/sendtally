@@ -6,7 +6,8 @@ import type {
   SessionRow,
 } from "@sendtally/api-client";
 import { activityAt } from "../activities/format";
-import { hangAt } from "../sessions/hang";
+import { hangAt, hangTitle } from "../sessions/hang";
+import { workoutKeyOf } from "../statistics/workoutKey";
 import { formatDate, t, type MessageKey } from "../i18n";
 import {
   SPANNING_KINDS,
@@ -86,6 +87,22 @@ export function logScopeItems(items: LogItem[], scope: LogScope): LogItem[] {
   const kind: EntryKind = scope === "trips" ? "trip" : "injury";
   return items.filter((i) => i.type === "entry" && i.entry.kind === kind);
 }
+
+/** A logged workout's name and key, which Stats links to the log by; nothing for the rest. */
+export function logItemWorkout(item: LogItem): { key: string; name: string } | null {
+  if (item.type === "hang") {
+    const name = hangTitle(item.hang);
+    return { key: workoutKeyOf({ workoutId: item.hang.workoutId, title: name }), name };
+  }
+  if (item.type === "activity") {
+    return { key: workoutKeyOf(item.activity), name: item.activity.title.trim() };
+  }
+  return null;
+}
+
+/** Only the sessions of one workout, by its key. */
+export const logWorkoutItems = (items: LogItem[], key: string): LogItem[] =>
+  items.filter((i) => logItemWorkout(i)?.key === key);
 
 /** The two halves of the log, and of Stats. */
 export type LogSegment = "climbing" | "training";
