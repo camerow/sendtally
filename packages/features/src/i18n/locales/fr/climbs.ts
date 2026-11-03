@@ -28,9 +28,6 @@ export const climbs = {
   "climbs.name": "Nom",
   "climbs.namePlaceholder": "Son nom",
   "climbs.saveFailed": "Impossible d’enregistrer la voie. Réessaie.",
-  "climbs.rename": "Renommer",
-  "climbs.renameHint": "Reprendre le nom d’une autre de tes voies fusionne les deux.",
-  "climbs.renameFailed": "Impossible de renommer la voie. Réessaie.",
   "climbs.gym": "Salle",
   "climbs.sendsWord_one": "réussite",
   "climbs.sendsWord_other": "réussites",
@@ -57,6 +54,7 @@ export const climbs = {
   "climbs.anyGrade": "Toute cotation",
   "climbs.noMatches": "Aucune voie ne correspond.",
   "climbs.addClimb": "Ajouter une voie",
+  "climbs.editClimb": "Modifier la voie",
   "climbs.empty":
     "Chaque voie que tu ajoutes arrive ici, la plus récente d’abord. Ajoutes-en une pour commencer.",
   "climbs.yoursShort": "À toi",

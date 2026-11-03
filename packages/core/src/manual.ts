@@ -211,20 +211,69 @@ function planLinkOf(
   };
 }
 
+type Scored = Pick<
+  ManualSessionRow,
+  | "climb_count"
+  | "send_count"
+  | "top_grade"
+  | "top_send_grade"
+  | "top_grade_label"
+  | "top_send_grade_label"
+  | "rpe"
+  | "title"
+  | "summary"
+>;
+
+function scored(session: Session, history: Session[], rpe?: number): Scored {
+  const result = score(session, history, defaultEffortConfig(), rpe);
+  const graded = session.climbs.filter((c) => !isEndurance(c));
+  const sends = graded.filter((c) => c.kind === "send");
+  return {
+    climb_count: session.climbs.length,
+    send_count: sends.length,
+    top_grade: graded.reduce((hi, c) => (c.vGrade > hi ? c.vGrade : hi), -1),
+    top_send_grade: sends.reduce((hi, c) => (c.vGrade > hi ? c.vGrade : hi), -1),
+    top_grade_label: topGradeLabel(graded) ?? null,
+    top_send_grade_label: topGradeLabel(sends) ?? null,
+    rpe: result.rpe,
+    title: result.title,
+    summary: result.summary,
+  };
+}
+
+/** A stored climb at another grade, scored at it from then on. */
+export function withGrade<T extends StoredClimb>(climb: T, grade: Grade): T {
+  const normalised = normalisedGrade(grade);
+  return { ...climb, grade: normalised, vGrade: effortGrade(normalised) };
+}
+
+/** A stored session scored again from its climbs, as after one of them was regraded. */
+export function rescoredSession(
+  row: Pick<
+    ManualSessionRow,
+    "start_at" | "end_at" | "name" | "rpe" | "rpe_source" | "climbs_json"
+  >,
+  history: Session[]
+): Scored {
+  const session: Session = {
+    start: new Date(row.start_at),
+    end: new Date(row.end_at),
+    climbs: parseClimbs(row.climbs_json).map(({ time, angle: _angle, ...c }) => ({
+      ...c,
+      time: new Date(time),
+    })),
+  };
+  const result = scored(session, history, row.rpe_source === "user" ? row.rpe : undefined);
+  return { ...result, title: row.name ?? result.title };
+}
+
 export function buildManualSession(
   fingerprint: string,
   body: ManualSessionForm,
   history: Session[]
 ): ManualSessionRow {
   const session = toSession(body);
-  const result = score(session, history, defaultEffortConfig(), body.rpe);
-  const graded = session.climbs.filter((c) => !isEndurance(c));
-  const topGrade = graded.reduce((hi, c) => (c.vGrade > hi ? c.vGrade : hi), -1);
-  const topSendGrade = graded.reduce(
-    (hi, c) => (c.kind === "send" && c.vGrade > hi ? c.vGrade : hi),
-    -1
-  );
-  const sends = graded.filter((c) => c.kind === "send");
+  const result = scored(session, history, body.rpe);
   return {
     fingerprint,
     location: locationOf(body),
@@ -234,16 +283,9 @@ export function buildManualSession(
     start_at: session.start.toISOString(),
     end_at: session.end.toISOString(),
     times: timesOf(body),
-    climb_count: session.climbs.length,
-    send_count: sends.length,
-    top_grade: topGrade,
-    top_send_grade: topSendGrade,
-    top_grade_label: topGradeLabel(graded) ?? null,
-    top_send_grade_label: topGradeLabel(sends) ?? null,
-    rpe: result.rpe,
+    ...result,
     rpe_source: rpeSourceOf(body),
     title: body.name ?? result.title,
-    summary: result.summary,
     ...planLinkOf(body),
     climbs_json: JSON.stringify(
       session.climbs.map((c, i): StoredClimb => ({
