@@ -132,6 +132,22 @@ describe("Workout editor", () => {
     expect(router.back).toHaveBeenCalled();
   });
 
+  it("adds and removes a third alternate from the exercise's menu sheet", async () => {
+    await renderWithHang(<WorkoutEditorScreen kind="strength" />, hangData(), world);
+    await pick("Back squat");
+    await fireEvent.press(screen.getByLabelText("Alternate sessions: Back squat"));
+
+    await fireEvent.press(screen.getByLabelText("More for this exercise"));
+    await fireEvent.press(screen.getByText("Add C"));
+    expect(screen.getByLabelText("Name C")).toBeTruthy();
+
+    await fireEvent.press(screen.getByLabelText("More for this exercise"));
+    expect(screen.getByText("Swap exercise")).toBeTruthy();
+    expect(screen.getByText("Remove Back squat")).toBeTruthy();
+    await fireEvent.press(screen.getByText("Remove C"));
+    expect(screen.queryByLabelText("Name C")).toBeNull();
+  });
+
   it("fills a dose row on one keypad, Next walking Sets, Reps, Weight and the rest", async () => {
     await renderWithHang(<WorkoutEditorScreen kind="strength" />, hangData(), world);
     await pick("Back squat");

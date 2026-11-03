@@ -128,6 +128,10 @@ export const workouts = {
     "Cada entreno y registro que nombra {from} pasará a nombrar {into}.",
   "workouts.merge": "Fusionar",
   "workouts.exerciseMore": "Más de este ejercicio",
+  "workouts.swapExerciseHint": "Poner otro ejercicio en su lugar",
+  "workouts.addDoseHint": "Una serie de valores más para alternar entre sesiones",
+  "workouts.removeDoseHint": "Las sesiones dejan de alternar con {letter}",
+  "workouts.removeExerciseHint": "Quitarlo de este entreno",
   "workouts.exerciseNothingLogged":
     "Aún no hay nada registrado. Tus series aparecen aquí en cuanto las registres.",
   "workouts.newExercise": "Nuevo ejercicio",

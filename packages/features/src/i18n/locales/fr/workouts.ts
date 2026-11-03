@@ -129,6 +129,10 @@ export const workouts = {
     "Chaque séance et chaque entrée qui nomme {from} nommera {into} à la place.",
   "workouts.merge": "Fusionner",
   "workouts.exerciseMore": "Plus pour cet exercice",
+  "workouts.swapExerciseHint": "Mettre un autre exercice à sa place",
+  "workouts.addDoseHint": "Une série de valeurs de plus, en alternance entre les séances",
+  "workouts.removeDoseHint": "Les séances n’alternent plus sur {letter}",
+  "workouts.removeExerciseHint": "Le retirer de cette séance",
   "workouts.exerciseNothingLogged":
     "Rien d'enregistré pour l'instant. Tes séries apparaîtront ici dès que tu les notes.",
   "workouts.newExercise": "Nouvel exercice",

@@ -126,6 +126,10 @@ export const workouts = {
   "workouts.mergeExerciseBody": "Jedes Workout und jeder Eintrag mit {from} heißt dann {into}.",
   "workouts.merge": "Zusammenführen",
   "workouts.exerciseMore": "Mehr zu dieser Übung",
+  "workouts.swapExerciseHint": "Eine andere Übung an ihre Stelle setzen",
+  "workouts.addDoseHint": "Noch ein Satz Werte, den die Einheiten abwechselnd nutzen",
+  "workouts.removeDoseHint": "Die Einheiten wechseln nicht mehr auf {letter}",
+  "workouts.removeExerciseHint": "Aus diesem Workout nehmen",
   "workouts.exerciseNothingLogged":
     "Noch nichts eingetragen. Deine Sätze erscheinen hier, sobald du sie einträgst.",
   "workouts.newExercise": "Neue Übung",
