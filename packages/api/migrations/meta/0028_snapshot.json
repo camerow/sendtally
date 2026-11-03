@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "3e1db700-ff2c-407e-989b-2e36d88cfc15",
+  "id": "70e41bdf-2c27-4cdb-9359-e867ef9b680e",
   "prevId": "040b6896-1dd3-4706-bf32-7dd451464c85",
   "tables": {
     "activities": {
@@ -1821,73 +1821,6 @@
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
-    "item_week_changes": {
-      "name": "item_week_changes",
-      "columns": {
-        "user_id": {
-          "name": "user_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "membership_id": {
-          "name": "membership_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "week": {
-          "name": "week",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "dose": {
-          "name": "dose",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "item_id": {
-          "name": "item_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "change_json": {
-          "name": "change_json",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "item_week_changes_user_id_users_id_fk": {
-          "name": "item_week_changes_user_id_users_id_fk",
-          "tableFrom": "item_week_changes",
-          "tableTo": "users",
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {
-        "item_week_changes_user_id_membership_id_week_dose_item_id_pk": {
-          "columns": ["user_id", "membership_id", "week", "dose", "item_id"],
-          "name": "item_week_changes_user_id_membership_id_week_dose_item_id_pk"
-        }
-      },
-      "uniqueConstraints": {},
-      "checkConstraints": {}
-    },
     "journal_entries": {
       "name": "journal_entries",
       "columns": {
@@ -2970,6 +2903,13 @@
         },
         "area_climb_id": {
           "name": "area_climb_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "area_id": {
+          "name": "area_id",
           "type": "text",
           "primaryKey": false,
           "notNull": false,

@@ -3,7 +3,8 @@ import type { CircuitColour } from "@sendtally/api-client";
 import type { PyramidRow } from "../climbs/pyramid";
 import { t } from "../i18n";
 
-export type ClimbResult = "onsight" | "flash" | "sent" | "project";
+/** `project` is a named climb not sent yet; an unnamed one is only an `attempt`. */
+export type ClimbResult = "onsight" | "flash" | "sent" | "project" | "attempt";
 
 export type ClimbVM = {
   n: number;

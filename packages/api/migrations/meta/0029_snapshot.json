@@ -1,8 +1,8 @@
 {
-  "id": "9f014651-6930-439f-9919-ff24380c5eb6",
-  "prevId": "3e1db700-ff2c-407e-989b-2e36d88cfc15",
   "version": "6",
   "dialect": "sqlite",
+  "id": "fd2e5a86-6d75-4b10-a337-fa04277b6322",
+  "prevId": "70e41bdf-2c27-4cdb-9359-e867ef9b680e",
   "tables": {
     "activities": {
       "name": "activities",
@@ -160,11 +160,11 @@
         "activities_user_id_users_id_fk": {
           "name": "activities_user_id_users_id_fk",
           "tableFrom": "activities",
-          "columnsFrom": ["user_id"],
           "tableTo": "users",
+          "columnsFrom": ["user_id"],
           "columnsTo": ["id"],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {
@@ -672,11 +672,11 @@
         "board_connections_user_id_users_id_fk": {
           "name": "board_connections_user_id_users_id_fk",
           "tableFrom": "board_connections",
-          "columnsFrom": ["user_id"],
           "tableTo": "users",
+          "columnsFrom": ["user_id"],
           "columnsTo": ["id"],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {
@@ -774,11 +774,11 @@
         "climb_notes_user_id_users_id_fk": {
           "name": "climb_notes_user_id_users_id_fk",
           "tableFrom": "climb_notes",
-          "columnsFrom": ["user_id"],
           "tableTo": "users",
+          "columnsFrom": ["user_id"],
           "columnsTo": ["id"],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {
@@ -978,8 +978,8 @@
         "idx_content_revisions_one_draft": {
           "name": "idx_content_revisions_one_draft",
           "columns": ["submitted_by", "entity_type", "entity_id"],
-          "where": "\"content_revisions\".\"status\" = 'pending'",
-          "isUnique": true
+          "isUnique": true,
+          "where": "\"content_revisions\".\"status\" = 'pending'"
         }
       },
       "foreignKeys": {},
@@ -1070,8 +1070,8 @@
         "idx_duplicate_reports_open": {
           "name": "idx_duplicate_reports_open",
           "columns": ["duplicate_climb_id", "reporter_id"],
-          "where": "\"duplicate_reports\".\"status\" = 'open'",
-          "isUnique": true
+          "isUnique": true,
+          "where": "\"duplicate_reports\".\"status\" = 'open'"
         }
       },
       "foreignKeys": {},
@@ -1115,11 +1115,11 @@
         "entry_sessions_user_id_users_id_fk": {
           "name": "entry_sessions_user_id_users_id_fk",
           "tableFrom": "entry_sessions",
-          "columnsFrom": ["user_id"],
           "tableTo": "users",
+          "columnsFrom": ["user_id"],
           "columnsTo": ["id"],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {
@@ -1167,11 +1167,11 @@
         "entry_tags_user_id_users_id_fk": {
           "name": "entry_tags_user_id_users_id_fk",
           "tableFrom": "entry_tags",
-          "columnsFrom": ["user_id"],
           "tableTo": "users",
+          "columnsFrom": ["user_id"],
           "columnsTo": ["id"],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {
@@ -1285,11 +1285,11 @@
         "exercises_user_id_users_id_fk": {
           "name": "exercises_user_id_users_id_fk",
           "tableFrom": "exercises",
-          "columnsFrom": ["user_id"],
           "tableTo": "users",
+          "columnsFrom": ["user_id"],
           "columnsTo": ["id"],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {
@@ -1373,11 +1373,11 @@
         "gyms_user_id_users_id_fk": {
           "name": "gyms_user_id_users_id_fk",
           "tableFrom": "gyms",
-          "columnsFrom": ["user_id"],
           "tableTo": "users",
+          "columnsFrom": ["user_id"],
           "columnsTo": ["id"],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -1414,11 +1414,11 @@
         "hang_default_grips_user_id_users_id_fk": {
           "name": "hang_default_grips_user_id_users_id_fk",
           "tableFrom": "hang_default_grips",
-          "columnsFrom": ["user_id"],
           "tableTo": "users",
+          "columnsFrom": ["user_id"],
           "columnsTo": ["id"],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {
@@ -1496,11 +1496,11 @@
         "hang_grips_user_id_users_id_fk": {
           "name": "hang_grips_user_id_users_id_fk",
           "tableFrom": "hang_grips",
-          "columnsFrom": ["user_id"],
           "tableTo": "users",
+          "columnsFrom": ["user_id"],
           "columnsTo": ["id"],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {
@@ -1549,11 +1549,11 @@
         "hang_loads_user_id_users_id_fk": {
           "name": "hang_loads_user_id_users_id_fk",
           "tableFrom": "hang_loads",
-          "columnsFrom": ["user_id"],
           "tableTo": "users",
+          "columnsFrom": ["user_id"],
           "columnsTo": ["id"],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {
@@ -1729,11 +1729,11 @@
         "hang_sessions_user_id_users_id_fk": {
           "name": "hang_sessions_user_id_users_id_fk",
           "tableFrom": "hang_sessions",
-          "columnsFrom": ["user_id"],
           "tableTo": "users",
+          "columnsFrom": ["user_id"],
           "columnsTo": ["id"],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {
@@ -1810,11 +1810,11 @@
         "hang_settings_user_id_users_id_fk": {
           "name": "hang_settings_user_id_users_id_fk",
           "tableFrom": "hang_settings",
-          "columnsFrom": ["user_id"],
           "tableTo": "users",
+          "columnsFrom": ["user_id"],
           "columnsTo": ["id"],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -1872,11 +1872,11 @@
         "item_week_changes_user_id_users_id_fk": {
           "name": "item_week_changes_user_id_users_id_fk",
           "tableFrom": "item_week_changes",
-          "columnsFrom": ["user_id"],
           "tableTo": "users",
+          "columnsFrom": ["user_id"],
           "columnsTo": ["id"],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {
@@ -1992,11 +1992,11 @@
         "journal_entries_user_id_users_id_fk": {
           "name": "journal_entries_user_id_users_id_fk",
           "tableFrom": "journal_entries",
-          "columnsFrom": ["user_id"],
           "tableTo": "users",
+          "columnsFrom": ["user_id"],
           "columnsTo": ["id"],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {
@@ -2045,11 +2045,11 @@
         "membership_days_user_id_users_id_fk": {
           "name": "membership_days_user_id_users_id_fk",
           "tableFrom": "membership_days",
-          "columnsFrom": ["user_id"],
           "tableTo": "users",
+          "columnsFrom": ["user_id"],
           "columnsTo": ["id"],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {
@@ -2119,11 +2119,11 @@
         "memberships_user_id_users_id_fk": {
           "name": "memberships_user_id_users_id_fk",
           "tableFrom": "memberships",
-          "columnsFrom": ["user_id"],
           "tableTo": "users",
+          "columnsFrom": ["user_id"],
           "columnsTo": ["id"],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {
@@ -2200,11 +2200,11 @@
         "plan_changes_user_id_users_id_fk": {
           "name": "plan_changes_user_id_users_id_fk",
           "tableFrom": "plan_changes",
-          "columnsFrom": ["user_id"],
           "tableTo": "users",
+          "columnsFrom": ["user_id"],
           "columnsTo": ["id"],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {
@@ -2259,11 +2259,11 @@
         "session_climb_links_user_id_users_id_fk": {
           "name": "session_climb_links_user_id_users_id_fk",
           "tableFrom": "session_climb_links",
-          "columnsFrom": ["user_id"],
           "tableTo": "users",
+          "columnsFrom": ["user_id"],
           "columnsTo": ["id"],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {
@@ -2311,11 +2311,11 @@
         "session_tags_user_id_users_id_fk": {
           "name": "session_tags_user_id_users_id_fk",
           "tableFrom": "session_tags",
-          "columnsFrom": ["user_id"],
           "tableTo": "users",
+          "columnsFrom": ["user_id"],
           "columnsTo": ["id"],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {
@@ -2557,11 +2557,11 @@
         "sessions_user_id_users_id_fk": {
           "name": "sessions_user_id_users_id_fk",
           "tableFrom": "sessions",
-          "columnsFrom": ["user_id"],
           "tableTo": "users",
+          "columnsFrom": ["user_id"],
           "columnsTo": ["id"],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {
@@ -2632,11 +2632,11 @@
         "store_entitlements_user_id_users_id_fk": {
           "name": "store_entitlements_user_id_users_id_fk",
           "tableFrom": "store_entitlements",
-          "columnsFrom": ["user_id"],
           "tableTo": "users",
+          "columnsFrom": ["user_id"],
           "columnsTo": ["id"],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {
@@ -2730,11 +2730,11 @@
         "strava_connections_user_id_users_id_fk": {
           "name": "strava_connections_user_id_users_id_fk",
           "tableFrom": "strava_connections",
-          "columnsFrom": ["user_id"],
           "tableTo": "users",
+          "columnsFrom": ["user_id"],
           "columnsTo": ["id"],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -2771,11 +2771,11 @@
         "sync_state_user_id_users_id_fk": {
           "name": "sync_state_user_id_users_id_fk",
           "tableFrom": "sync_state",
-          "columnsFrom": ["user_id"],
           "tableTo": "users",
+          "columnsFrom": ["user_id"],
           "columnsTo": ["id"],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -2832,11 +2832,11 @@
         "tags_user_id_users_id_fk": {
           "name": "tags_user_id_users_id_fk",
           "tableFrom": "tags",
-          "columnsFrom": ["user_id"],
           "tableTo": "users",
+          "columnsFrom": ["user_id"],
           "columnsTo": ["id"],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {
@@ -2906,11 +2906,11 @@
         "training_blocks_user_id_users_id_fk": {
           "name": "training_blocks_user_id_users_id_fk",
           "tableFrom": "training_blocks",
-          "columnsFrom": ["user_id"],
           "tableTo": "users",
+          "columnsFrom": ["user_id"],
           "columnsTo": ["id"],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {
@@ -2975,6 +2975,13 @@
           "notNull": false,
           "autoincrement": false
         },
+        "area_id": {
+          "name": "area_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
         "working": {
           "name": "working",
           "type": "integer",
@@ -3009,11 +3016,11 @@
         "user_climbs_user_id_users_id_fk": {
           "name": "user_climbs_user_id_users_id_fk",
           "tableFrom": "user_climbs",
-          "columnsFrom": ["user_id"],
           "tableTo": "users",
+          "columnsFrom": ["user_id"],
           "columnsTo": ["id"],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {
@@ -3164,11 +3171,11 @@
         "week_changes_user_id_users_id_fk": {
           "name": "week_changes_user_id_users_id_fk",
           "tableFrom": "week_changes",
-          "columnsFrom": ["user_id"],
           "tableTo": "users",
+          "columnsFrom": ["user_id"],
           "columnsTo": ["id"],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {
@@ -3276,11 +3283,11 @@
         "workouts_user_id_users_id_fk": {
           "name": "workouts_user_id_users_id_fk",
           "tableFrom": "workouts",
-          "columnsFrom": ["user_id"],
           "tableTo": "users",
+          "columnsFrom": ["user_id"],
           "columnsTo": ["id"],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {
@@ -3296,9 +3303,9 @@
   "views": {},
   "enums": {},
   "_meta": {
-    "columns": {},
     "schemas": {},
-    "tables": {}
+    "tables": {},
+    "columns": {}
   },
   "internal": {
     "indexes": {}

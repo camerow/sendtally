@@ -30,10 +30,6 @@ export const climbs = {
   "climbs.name": "Name",
   "climbs.namePlaceholder": "Wie sie heißt",
   "climbs.saveFailed": "Die Kletterei konnte nicht gespeichert werden. Versuch es noch einmal.",
-  "climbs.rename": "Umbenennen",
-  "climbs.renameHint":
-    "Mit dem Namen einer anderen deiner Klettereien werden beide zusammengeführt.",
-  "climbs.renameFailed": "Die Kletterei konnte nicht umbenannt werden. Versuch es noch einmal.",
   "climbs.gym": "Halle",
   "climbs.sendsWord_one": "Durchstieg",
   "climbs.sendsWord_other": "Durchstiege",
@@ -60,6 +56,7 @@ export const climbs = {
   "climbs.anyGrade": "Jeder Grad",
   "climbs.noMatches": "Keine Kletterei passt.",
   "climbs.addClimb": "Kletterei hinzufügen",
+  "climbs.editClimb": "Kletterei bearbeiten",
   "climbs.empty":
     "Jede Kletterei, die du hinzufügst, landet hier, die neueste zuerst. Füg eine hinzu, um anzufangen.",
   "climbs.yoursShort": "Deine",

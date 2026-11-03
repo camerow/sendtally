@@ -51,6 +51,8 @@ export type ClimbDetailVM = {
   name: string;
   /** Its discipline, then its grade when it has one. */
   kicker: string;
+  /** The name with its grade after it: the grade is the climb, the kicker only its kind. */
+  title: string;
   /** Where it is, then the day it was first tried. */
   meta: string;
   project: boolean;
@@ -95,10 +97,8 @@ export function climbDetailVM(
   return {
     id: climb.id,
     name: climb.name,
-    kicker: [
-      t(climb.discipline === "route" ? "common.route" : "common.boulder"),
-      ...(climb.grade === null ? [] : [climbGradeLabel(climb)]),
-    ].join(" · "),
+    kicker: t(climb.discipline === "route" ? "common.route" : "common.boulder"),
+    title: climb.grade === null ? climb.name : `${climb.name}, ${climbGradeLabel(climb)}`,
     meta: [
       ...(climb.area?.name === undefined ? [] : [climb.area.name]),
       t("climbs.firstTried", { date: dateLabel(climb.first_at) }),

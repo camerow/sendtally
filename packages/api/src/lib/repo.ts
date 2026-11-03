@@ -81,6 +81,7 @@ import {
 import type { ActivityInput } from "./activities";
 import { exerciseKindOf, exerciseNameKey, workoutExercises, type ExerciseInput } from "./exercises";
 import type { ContentEntity, Viewer } from "./areas";
+import type { RegradedSession } from "./climbs";
 import type { ClimbLink } from "./manual";
 import type { FocusOptional } from "./plan";
 import type { EntryWrite } from "./entries";
@@ -1058,6 +1059,50 @@ export async function setUserClimbWorking(
     .update(userClimbs)
     .set({ working, updated_at: new Date().toISOString() })
     .where(and(eq(userClimbs.user_id, userId), eq(userClimbs.id, id)));
+}
+
+export type ClimbPlace = {
+  area_id?: string | null;
+  area_climb_id?: string | null;
+};
+
+/** Where editing a climb puts it; its sessions keep the crag they were logged at. */
+export async function setUserClimbPlace(
+  db: D1Database,
+  userId: string,
+  id: string,
+  place: ClimbPlace
+): Promise<void> {
+  await drizzle(db)
+    .update(userClimbs)
+    .set({ ...place, updated_at: new Date().toISOString() })
+    .where(and(eq(userClimbs.user_id, userId), eq(userClimbs.id, id)));
+}
+
+/** A climb's new grade, on its record and on every session it was logged in, scored again. */
+export async function regradeUserClimb(
+  db: D1Database,
+  userId: string,
+  id: string,
+  grade: ClimbGrade,
+  regraded: readonly RegradedSession[]
+): Promise<void> {
+  const d = drizzle(db);
+  const record = d
+    .update(userClimbs)
+    .set({
+      grade_json: JSON.stringify(grade),
+      discipline: disciplineOf(grade.scale),
+      updated_at: new Date().toISOString(),
+    })
+    .where(and(eq(userClimbs.user_id, userId), eq(userClimbs.id, id)));
+  const rescored = regraded.map(({ fingerprint, ...columns }) =>
+    d
+      .update(sessions)
+      .set(columns)
+      .where(and(eq(sessions.user_id, userId), eq(sessions.fingerprint, fingerprint)))
+  );
+  await d.batch([record, ...rescored]);
 }
 
 export type ClimbRename = {

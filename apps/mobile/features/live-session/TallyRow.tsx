@@ -46,8 +46,9 @@ export function TallyRow({ climb, selected, onPress, onEdit }: TallyRowProps): R
     >
       <View
         style={{
-          width: 44,
+          minWidth: 56,
           height: 40,
+          paddingHorizontal: 6,
           borderRadius: 10,
           alignItems: "center",
           justifyContent: "center",
@@ -58,7 +59,10 @@ export function TallyRow({ climb, selected, onPress, onEdit }: TallyRowProps): R
         }}
       >
         {climb.circuit === undefined && (
-          <Text style={{ fontFamily: fonts.monoSemiBold, fontSize: 15, color: colors.white }}>
+          <Text
+            numberOfLines={1}
+            style={{ fontFamily: fonts.monoSemiBold, fontSize: 15, color: colors.white }}
+          >
             {climb.grade}
           </Text>
         )}

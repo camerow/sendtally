@@ -166,15 +166,22 @@
     {
       "idx": 28,
       "version": "6",
-      "when": 1793741480860,
-      "tag": "0028_item_week_changes",
+      "when": 1793721988670,
+      "tag": "0028_edit_climb",
       "breakpoints": true
     },
     {
       "idx": 29,
       "version": "6",
-      "when": 1793741482674,
-      "tag": "0029_copy_week_changes_by_item_id",
+      "when": 1793742142782,
+      "tag": "0029_item_week_changes",
+      "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "6",
+      "when": 1793742143288,
+      "tag": "0030_copy_week_changes_by_item_id",
       "breakpoints": true
     }
   ]
