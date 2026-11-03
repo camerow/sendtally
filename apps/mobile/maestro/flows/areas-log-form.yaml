@@ -47,7 +47,7 @@ name: areas-log-form
 - assertNotVisible: "2 OF 2"
 - scrollUntilVisible:
     element:
-      text: "← LOG"
+      text: "LOG"
     direction: UP
-- tapOn: "← LOG"
+- tapOn: "LOG"
 - runFlow: ../helpers/discard-live-session.yaml

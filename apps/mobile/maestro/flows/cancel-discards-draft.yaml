@@ -33,6 +33,6 @@ name: cancel-discards-draft
 - assertNotVisible: "You have an unfinished session.*"
 - scrollUntilVisible:
     element:
-      text: "← LOG"
+      text: "LOG"
     direction: UP
-- tapOn: "← LOG"
+- tapOn: "LOG"

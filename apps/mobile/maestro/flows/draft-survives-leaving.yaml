@@ -30,9 +30,9 @@ name: draft-survives-leaving
 - tapOn: "Save"
 - scrollUntilVisible:
     element:
-      text: "← LOG"
+      text: "LOG"
     direction: UP
-- tapOn: "← LOG"
+- tapOn: "LOG"
 - runFlow: ../helpers/open-log-form.yaml
 - assertVisible: "You have an unfinished session.*"
 - assertVisible: "3 CLIMBS.*"
@@ -44,6 +44,6 @@ name: draft-survives-leaving
     direction: DOWN
 - scrollUntilVisible:
     element:
-      text: "← LOG"
+      text: "LOG"
     direction: UP
-- tapOn: "← LOG"
+- tapOn: "LOG"

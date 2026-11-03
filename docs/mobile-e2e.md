@@ -129,7 +129,7 @@ Never point the flows at production keys: the address does not exist there and t
 - Swipes differ by platform. On iOS only a bare `direction: DOWN` reaches React Native's responder system; coordinate and element swipes go through a press-and-drag RN never sees. On Android a coordinate swipe works and is the one that starts on the sheet rather than the scrim. Split with `runFlow: when: platform:`.
 - Keyboards differ by platform. On iOS `hideKeyboard` fails on these inputs; press `Enter` on a single-line field before swiping. On Android the keyboard covers the submit button and a tap on its stale position opens Gboard's settings, so run `helpers/hide-keyboard.yaml` after every `inputText`.
 - A climb ledger row is one accessible element, so match it by its accessibility text, for example `V3 Cascade.*`, not by the name alone.
-- The log-session form is longer than the screen; `scrollUntilVisible` to `Add climb` before tapping it, and back up to `← LOG` to leave.
+- The log-session form is longer than the screen; `scrollUntilVisible` to `Add climb` before tapping it, and back up to the `LOG` back button to leave.
 - Maestro matches a selector against the whole spoken string, so a row reads date-first and a tab reads `Log, tab, 2 of 4` on iOS but just `Log` on Android, so tap tabs with `Log(, tab.*)?`; wrap the part you know in `.*`.
 - Matching ignores case, so `Log(, tab.*)?` also finds the onboarding carousel's `LOG` eyebrow; the helpers know the app is signed in by the header's `Account and settings` button instead.
 - Wait for a sheet to settle before tapping into it (`assertVisible: "2 OF 2"`), and for a pushed screen's own content before tapping its header: a tap during the slide lands nowhere and the text typed after it is lost.
