@@ -676,6 +676,24 @@ export const memberships = sqliteTable(
   (t) => [primaryKey({ columns: [t.user_id, t.id] })]
 );
 
+// The week changes table before they were keyed by item id: nothing reads it now. It stays
+// until every deployed API reads item_week_changes, because a shared staging database is
+// also read by branches built before the move. Dropped in a follow-up.
+export const weekChanges = sqliteTable(
+  "week_changes",
+  {
+    user_id: text("user_id")
+      .notNull()
+      .references(() => users.id),
+    membership_id: text("membership_id").notNull(),
+    week: integer("week").notNull(),
+    dose: integer("variation").notNull(),
+    item: integer("item").notNull(),
+    change_json: text("change_json").notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.user_id, t.membership_id, t.week, t.dose, t.item] })]
+);
+
 // What one block week changes about one dose of one item of a membership's workout, as a
 // partial dose counted from the workout as written. The item is its id, so a change follows
 // it when the workout's items move.

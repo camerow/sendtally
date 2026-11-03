@@ -183,6 +183,13 @@
       "when": 1793730604210,
       "tag": "0030_drop_week_changes",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "6",
+      "when": 1793732887808,
+      "tag": "0031_restore_week_changes",
+      "breakpoints": true
     }
   ]
 }
