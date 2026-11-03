@@ -56,6 +56,23 @@ export function withWeekDays(
   return { membershipId, weekdays: schedule.weekdays, weeks };
 }
 
+/** The schedule with `week`'s days carried through every week after it. */
+export const withFollowing = (schedule: DaySchedule, week: number, last: number): DaySchedule =>
+  withWeekDays(schedule, { week, weekdays: daysInWeek(schedule, week), following: true, last });
+
+/** The schedule with the weeks after `week` back on the days `before` gave them. */
+export function withoutFollowing(
+  schedule: DaySchedule,
+  before: DaySchedule,
+  week: number,
+  last: number
+): DaySchedule {
+  let next = schedule;
+  for (let w = week + 1; w <= last; w++)
+    next = withWeekDays(next, { week: w, weekdays: daysInWeek(before, w), following: false, last });
+  return next;
+}
+
 /** The weeks after `week` with days of their own, which setting it for every week replaces. */
 export const ownWeeksAfter = (schedule: DaySchedule, week: number): number[] =>
   schedule.weeks.filter((d) => d.fromWeek > week).map((d) => d.fromWeek);

@@ -30,5 +30,5 @@ export const sessionDetail = {
   "sessionDetail.backToSession": "Back to the session",
   "sessionDetail.backSession": "Session",
   "sessionDetail.byGrade": "By grade",
-  "sessionDetail.notYet": "Not yet",
+  "sessionDetail.notYet": "Attempted",
 } as const;

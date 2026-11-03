@@ -22,6 +22,8 @@ export type ClimbLogRowVM = {
   id: string;
   gradeLabel: string;
   name: string;
+  /** How many climbs the row stands for, when it is several logged without names. */
+  count?: number;
   meta: string;
   pill: { kind: ClimbPillKind; label: string };
 };

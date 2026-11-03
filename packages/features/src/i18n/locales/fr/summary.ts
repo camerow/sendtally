@@ -1,5 +1,7 @@
 export const summary = {
   "summary.length": "durée",
+  "summary.climbs": "voies",
+  "summary.sent": "enchaînées",
   "summary.effort": "effort",
   "summary.effortAimed": "effort · visé {n}",
   "summary.sets": "séries",

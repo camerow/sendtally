@@ -1,5 +1,5 @@
 import React from "react";
-import { Text, View } from "react-native";
+import { View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
 import { weekTitle } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
@@ -8,15 +8,12 @@ import { dayMarks, type TrainingDay } from "@sendtally/features/training";
 import type { CalendarDate } from "@sendtally/core/hang";
 import { IconButton } from "../components/IconButton";
 import { Label } from "../components/Label";
-import { type } from "../type";
 import { DayCell } from "./DayCell";
 import { StripLegend } from "./StripLegend";
 
 export type WeekStripProps = {
   offset: number;
   days: readonly TrainingDay[];
-  /** "2 of 6 done" for the week. */
-  done: string;
   selected: CalendarDate;
   onSelect: (date: CalendarDate) => void;
   onOffset: (offset: number) => void;
@@ -25,7 +22,6 @@ export type WeekStripProps = {
 export function WeekStrip({
   offset,
   days,
-  done,
   selected,
   onSelect,
   onOffset,
@@ -52,7 +48,6 @@ export function WeekStrip({
         <Label color={colors.gunmetal} style={{ flex: 1 }}>
           {weekTitle(offset)}
         </Label>
-        <Text style={[type.mono, { fontSize: 12, color: colors.textSecondary }]}>{done}</Text>
         <IconButton
           icon="back"
           label={t("hang.previousWeek")}

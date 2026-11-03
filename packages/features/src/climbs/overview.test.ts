@@ -71,8 +71,8 @@ describe("climbDetailVM", () => {
     expect(
       vm.sessions.map((v) => [v.dateLabel, v.name, v.meta, v.triesLabel, v.note, v.rpe])
     ).toEqual([
-      ["Oct 24", "Tuesday night session", "Buttermilks · Not yet", "8 tries", null, 7],
-      ["Sep 26", "Tuesday night session", "Buttermilks · Not yet", "6 tries", "First look.", 7],
+      ["Oct 24", "Tuesday night session", "Buttermilks · Attempted", "8 tries", null, 7],
+      ["Sep 26", "Tuesday night session", "Buttermilks · Attempted", "6 tries", "First look.", 7],
     ]);
   });
 

@@ -10,6 +10,7 @@ export const plan = {
   "plan.removeBody":
     "Seine wöchentlichen Änderungen gehen mit. Deine eingetragenen Einheiten bleiben.",
   "plan.removeAction": "Entfernen",
+  "plan.unscheduleHint": "Dieses Training austragen",
   "plan.tabWorkouts": "Workouts",
   "plan.empty":
     "Noch nichts geplant. Plane Klettern, Hangboard und den Rest deines Trainings in deine Woche.",
@@ -66,8 +67,7 @@ export const plan = {
   "plan.upcoming": "Demnächst",
   "plan.past": "Vorbei",
   "plan.templates": "Vorlagen",
-  "plan.alsoWeeks": "Auch Wochen {from} bis {to}",
-  "plan.alsoWeek": "Auch Woche {n}",
+  "plan.applyFollowing": "Auf folgende Wochen anwenden",
   "plan.everyWeek": "Jede Woche",
   "plan.fromWeekOn": "Ab Woche {n}",
   "plan.allWeeks_one": "1 Woche",

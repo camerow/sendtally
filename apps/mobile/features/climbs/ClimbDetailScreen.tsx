@@ -34,14 +34,6 @@ export function ClimbDetailScreen({ id }: { id: string }): React.ReactElement {
           onEdit={() =>
             router.push({ pathname: "/climb/log", params: { climbId: climb.id, edit: "1" } })
           }
-          menu={[
-            {
-              icon: "journal",
-              title: t("climbs.addNote"),
-              hint: t("climbs.addNoteHint"),
-              onPress: () => setNoting(true),
-            },
-          ]}
         />
       }
       footer={
@@ -90,6 +82,8 @@ export function ClimbDetailScreen({ id }: { id: string }): React.ReactElement {
         ]}
       />
       <HistoryList
+        title={t("climbs.notes")}
+        onAdd={{ label: t("climbs.addNote"), onPress: () => setNoting(true) }}
         items={vm.sessions.map((s) => ({
           id: s.fingerprint,
           date: s.dateLabel,

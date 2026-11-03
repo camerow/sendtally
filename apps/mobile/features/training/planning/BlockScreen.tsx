@@ -104,6 +104,7 @@ export function BlockScreen({
     plan: draft.plan,
     editing,
     onToggle: draft.toggle,
+    onSchedules: draft.setSchedules,
     onPickWeek: setWeek,
     ...(!ended && { onEditDays: draft.begin }),
   };

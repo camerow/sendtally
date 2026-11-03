@@ -35,7 +35,7 @@ export function TrendTile({ tile }: { tile: TrendTileVM }): React.ReactElement {
 
   return (
     <View style={{ paddingVertical: 18, paddingHorizontal: 18, gap: 6 }}>
-      <Text style={{ ...monoLabel, fontSize: 13, letterSpacing: 1, color: colors.labelAccent }}>
+      <Text style={{ ...monoLabel, fontSize: 13, letterSpacing: 1, color: colors.gunmetal }}>
         {tile.title}
       </Text>
       <View

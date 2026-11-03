@@ -3,8 +3,7 @@ import type { CircuitColour } from "@sendtally/api-client";
 import type { PyramidRow } from "../climbs/pyramid";
 import { t } from "../i18n";
 
-/** `project` is a named climb not sent yet; an unnamed one is only an `attempt`. */
-export type ClimbResult = "onsight" | "flash" | "sent" | "project" | "attempt";
+export type ClimbResult = "onsight" | "flash" | "sent" | "project";
 
 export type ClimbVM = {
   n: number;
@@ -58,7 +57,6 @@ export type SessionDetailVM = {
   place: string;
   /** Day, start time and length. */
   when: string;
-  length: string | null;
   rpe: number | null;
   /** The session's UTC day, for anything that opens dated to it. */
   startDay: string;

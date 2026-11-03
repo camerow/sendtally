@@ -1,13 +1,11 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
-import { kindLabel } from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
 import type { LibraryWorkout } from "@sendtally/features/workouts";
 import { Icon } from "../../../components/Icon";
-import { press, pressRow } from "../../../lib/press";
-import { CategoryMark } from "../library/CategoryMark";
-import { KIND_LOOK } from "../today/kindLook";
+import { press } from "../../../lib/press";
+import { CategoryRow } from "../components/CategoryRow";
 import { type } from "../type";
 
 /** Where the workout stands: addable, just added here, or already there. */
@@ -34,37 +32,11 @@ export function AddWorkoutRow({
   onOpen,
   onToggle,
 }: AddWorkoutRowProps): React.ReactElement {
-  const look = KIND_LOOK[workout.kind];
   return (
-    <View style={{ flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 8 }}>
-      <Pressable
-        onPress={onOpen}
-        accessibilityRole="button"
-        accessibilityLabel={workout.name}
-        style={pressRow({
-          flex: 1,
-          minWidth: 0,
-          flexDirection: "row",
-          alignItems: "center",
-          gap: 12,
-        })}
-      >
-        <CategoryMark kind={workout.kind} size={36} />
-        <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
-          <Text numberOfLines={1} style={[type.bodyBold, { fontSize: 15, color: colors.gunmetal }]}>
-            {workout.name}
-          </Text>
-          <Text
-            numberOfLines={1}
-            style={[type.mono, { fontSize: 11.5, color: colors.textSecondary }]}
-          >
-            <Text style={{ color: look.ink, textTransform: "uppercase" }}>
-              {kindLabel(workout.kind)}
-            </Text>
-            {dose !== null && ` · ${dose}`}
-          </Text>
-        </View>
-      </Pressable>
+    <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+      <View style={{ flex: 1, minWidth: 0 }}>
+        <CategoryRow kind={workout.kind} name={workout.name} meta={dose} onPress={onOpen} />
+      </View>
       {state === "there" ? (
         <Text style={[type.mono, { fontSize: 12, color: colors.textMuted }]}>{thereLabel}</Text>
       ) : state === "added" ? (

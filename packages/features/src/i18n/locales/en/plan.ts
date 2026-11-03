@@ -9,6 +9,7 @@ export const plan = {
   "plan.removeTitle": "Remove {title} from your plan?",
   "plan.removeBody": "Its weekly changes go with it. The sessions you logged stay.",
   "plan.removeAction": "Remove",
+  "plan.unscheduleHint": "Unschedule this workout",
   "plan.tabWorkouts": "Workouts",
   "plan.empty":
     "Nothing planned yet. Put climbing, hangboard and the rest of your training on your week.",
@@ -65,8 +66,7 @@ export const plan = {
   "plan.upcoming": "Upcoming",
   "plan.past": "Past",
   "plan.templates": "Templates",
-  "plan.alsoWeeks": "Also weeks {from} to {to}",
-  "plan.alsoWeek": "Also week {n}",
+  "plan.applyFollowing": "Apply to following weeks",
   "plan.everyWeek": "Every week",
   "plan.fromWeekOn": "From week {n} on",
   "plan.allWeeks_one": "1 week",

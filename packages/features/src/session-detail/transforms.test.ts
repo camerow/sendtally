@@ -102,17 +102,6 @@ describe("climbVMs", () => {
     expect(sessionDetailVM({ ...detail, area }).area).toEqual(area);
   });
 
-  it("never calls an unnamed climb a project, nor counts it under Projects or Sent", () => {
-    const unnamed = { ...detail.climbs[2]!, name: "", tries: 2, time: "2099-01-01T00:00:00Z" };
-    const vms = climbVMs([...detail.climbs, unnamed]);
-    expect(vms[4]).toMatchObject({ result: "attempt", resultLabel: "Not yet" });
-    expect(filterAndSortClimbs(vms, "project", "order").map((c) => c.name)).toEqual(["Mind Meld"]);
-    expect(filterAndSortClimbs(vms, "sent", "order")).toHaveLength(3);
-    expect(
-      sessionDetailVM({ ...detail, climbs: [...detail.climbs, unnamed] }).filterCounts
-    ).toEqual({ all: 5, sent: 3, flash: 2, project: 1 });
-  });
-
   it("reads a one-try send of an earlier project as a send, not a flash", () => {
     const vms = climbVMs(detail.climbs, new Set(["jug life"]));
     expect(vms.map((c) => c.result)).toEqual(["sent", "sent", "project", "flash"]);
@@ -206,7 +195,8 @@ describe("sessionDetailVM", () => {
     expect(vm.name).toBe("Tuesday night session");
     expect(vm.place).toBe("Indoor · The Depot");
     expect(vm.when).toMatch(/^Wed Jul 1 · \S.* · 1h 35m$/);
-    expect([vm.length, vm.rpe]).toEqual(["1h 35m", 7]);
+    expect(vm.when).toContain("1h 35m");
+    expect(vm.rpe).toBe(7);
   });
 
   const unposted = {

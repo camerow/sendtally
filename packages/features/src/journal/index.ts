@@ -40,6 +40,7 @@ export {
   logScopeLabel,
   logSegmentItems,
   LOG_SCOPES,
+  TRAINING_LOG_SCOPES,
   sessionsNearPoints,
   type LogScope,
   type LogSegment,

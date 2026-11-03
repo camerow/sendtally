@@ -15,9 +15,12 @@ import {
   daysInWeek,
   hasDays,
   scheduleOf,
+  withFollowing,
+  withoutFollowing,
   trainingDay,
   usualDays,
   useTrainingLog,
+  type DaySchedule,
   type DayToggle,
   type Occurrence,
   type WorkoutLookup,
@@ -57,6 +60,8 @@ export type BlockWeekProps = {
   /** Every day from today on a field, set through `onToggle`. */
   editing?: boolean;
   onToggle?: (membershipId: string, change: DayToggle) => void;
+  /** Sets workouts' days at once, as Apply to following weeks does. */
+  onSchedules?: (schedules: readonly DaySchedule[]) => void;
   /** Arrows to the week before and after, beside the title. */
   onPickWeek?: (week: number) => void;
   /** Turns on Edit mode, from the hint naming workouts with no days. */
@@ -66,7 +71,7 @@ export type BlockWeekProps = {
 const DAYS = [0, 1, 2, 3, 4, 5, 6];
 
 /**
- * A block's week, a row per workout opening it in the block, and + Add workout under it. On a
+ * A block's week, a row per workout opening it in the block, and + Add workout under it in Edit mode. On a
  * scheduled block a week shows its dates; in Edit mode a cell sets the workout's day.
  */
 export function BlockWeek({
@@ -79,6 +84,7 @@ export function BlockWeek({
   plan: drafted,
   editing = false,
   onToggle,
+  onSchedules,
   onPickWeek,
   onEditDays,
 }: BlockWeekProps): React.ReactElement {
@@ -95,13 +101,26 @@ export function BlockWeek({
   const library = (id: string): LibraryWorkout | undefined =>
     libraryState.status === "ready" ? libraryState.data.workout(id) : undefined;
   const template = !isDated(block);
-  const [following, setFollowing] = React.useState(false);
-  const [wasEditing, setWasEditing] = React.useState(editing);
-  if (editing !== wasEditing) {
-    setWasEditing(editing);
-    setFollowing(false);
-  }
   const shownWeek = week ?? 1;
+  // The days before Apply to following weeks went on, which turning it off puts back.
+  const [before, setBefore] = React.useState<readonly DaySchedule[] | null>(null);
+  const [wasShowing, setWasShowing] = React.useState({ editing, shownWeek });
+  if (editing !== wasShowing.editing || shownWeek !== wasShowing.shownWeek) {
+    setWasShowing({ editing, shownWeek });
+    setBefore(null);
+  }
+  const following = before !== null;
+  const setFollowing = (on: boolean): void => {
+    const now = members.map((m) => scheduleOf(plan, m));
+    onSchedules?.(
+      now.map((s, i) =>
+        on
+          ? withFollowing(s, shownWeek, block.weeks)
+          : withoutFollowing(s, before?.[i] ?? s, shownWeek, block.weeks)
+      )
+    );
+    setBefore(on ? now : null);
+  };
   const from = isDated(block) && week !== undefined ? addDays(block.start, (week - 1) * 7) : null;
   // A block week runs from its start's weekday, so each weekday column finds its own date.
   const dates = from === null ? null : DAYS.map((d) => addDays(from, (d - weekday(from) + 7) % 7));
@@ -188,6 +207,15 @@ export function BlockWeek({
       height={template && rows.length === 0 ? 44 : 48}
     />
   );
+  const edit = onEditDays !== undefined && (
+    <Button
+      label={t("common.edit")}
+      onPress={onEditDays}
+      variant="primary"
+      height={template && rows.length === 0 ? 44 : 48}
+    />
+  );
+  const action = editing ? add : edit;
   const hint = (text: string, color: string): React.ReactElement => (
     <Text style={[type.mono, { fontSize: 11.5, lineHeight: 16, color }]}>{text}</Text>
   );
@@ -213,7 +241,7 @@ export function BlockWeek({
           >
             {t("plan.templateEmpty")}
           </Text>
-          {add}
+          {action}
         </View>
       ) : rows.length === 0 ? (
         <DashedPanel body={t("plan.blockEmpty")} />
@@ -243,15 +271,13 @@ export function BlockWeek({
                 }}
               >
                 <Text style={[type.body, { flex: 1, fontSize: 14, color: colors.gunmetal }]}>
-                  {shownWeek + 1 === block.weeks
-                    ? t("plan.alsoWeek", { n: block.weeks })
-                    : t("plan.alsoWeeks", { from: shownWeek + 1, to: block.weeks })}
+                  {t("plan.applyFollowing")}
                 </Text>
                 <Switch
                   checked={following}
                   onChange={setFollowing}
                   disabled={false}
-                  label={t("plan.alsoWeeks", { from: shownWeek + 1, to: block.weeks })}
+                  label={t("plan.applyFollowing")}
                 />
               </View>
             )
@@ -266,7 +292,7 @@ export function BlockWeek({
           {hint(t("plan.tapEditDays", { workout: daylessNames }), AMBER)}
         </Pressable>
       )}
-      {canAdd && !(template && rows.length === 0) && add}
+      {canAdd && !(template && rows.length === 0) && (editing || rows.length === 0) && action}
       {open !== null && (
         <DaySheet
           occurrence={open.occurrence}

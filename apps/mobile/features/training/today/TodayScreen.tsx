@@ -15,10 +15,8 @@ import { t } from "@sendtally/features/i18n";
 import {
   blockGroups,
   blockMembers,
-  trainingDay,
   trainingWeek,
   useTrainingLog,
-  weekDone,
 } from "@sendtally/features/training";
 import { Fab } from "../../../components/Fab";
 import { useApi } from "../../../lib/api";
@@ -65,7 +63,13 @@ export function TodayScreen(): React.ReactElement {
 
   const monday = addDays(weekStart(today), offset * 7);
   const days = trainingWeek(log, monday, today);
-  const day = trainingDay(log, selected, today);
+  const scroll = React.useRef<ScrollView>(null);
+  const tops = React.useRef(new Map<CalendarDate, number>());
+  const pick = (date: CalendarDate): void => {
+    setSelected(date);
+    const y = tops.current.get(date);
+    if (y !== undefined) scroll.current?.scrollTo({ y, animated: true });
+  };
   const running = blockGroups(log.plan.blocks, today).current;
 
   const changeWeek = (next: number): void => {
@@ -75,15 +79,15 @@ export function TodayScreen(): React.ReactElement {
   return (
     <View style={{ flex: 1 }}>
       <ScrollView
+        ref={scroll}
         contentContainerStyle={{ gap: 16, paddingHorizontal: 18, paddingTop: 4, paddingBottom: 96 }}
       >
         <Label color={colors.gunmetal}>{longDate(today)}</Label>
         <WeekStrip
           offset={offset}
           days={days}
-          done={t("plan.doneOf", weekDone(days))}
           selected={selected}
-          onSelect={setSelected}
+          onSelect={pick}
           onOffset={changeWeek}
         />
         {running.length > 0 && (
@@ -102,7 +106,11 @@ export function TodayScreen(): React.ReactElement {
             ))}
           </View>
         )}
-        <DaySection day={day} onOpen={openLogged} />
+        {days.map((d) => (
+          <View key={d.date} onLayout={(e) => tops.current.set(d.date, e.nativeEvent.layout.y)}>
+            <DaySection day={d} onOpen={openLogged} quiet />
+          </View>
+        ))}
       </ScrollView>
       <Fab label={addOnDayLabel(selected, today)} onPress={() => setAdding(true)} />
       <AddWorkoutsSheet

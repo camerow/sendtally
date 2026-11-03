@@ -179,6 +179,8 @@ describe("block overview", () => {
       pathname: "/plan/membership/[id]",
       params: { id: "m1", back: "Winter base" },
     });
+    expect(screen.queryByLabelText("Add a workout to Winter base")).toBeNull();
+    await fireEvent.press(screen.getByText("Edit"));
     await fireEvent.press(screen.getByLabelText("Add a workout to Winter base"));
     expect(screen.getByText("Add workouts")).toBeTruthy();
   });
@@ -272,7 +274,7 @@ describe("a day on a scheduled block", () => {
     await renderWithHang(<BlockScreen id="b1" />, hangData(), { workouts: [squat], plan: running });
     await fireEvent.press(screen.getByText("Edit"));
     await fireEvent.press(screen.getByLabelText("Back squat, Thursday"));
-    await fireEvent.press(screen.getByRole("switch", { name: "Also weeks 3 to 4" }));
+    await fireEvent.press(screen.getByRole("switch", { name: "Apply to following weeks" }));
     await fireEvent.press(screen.getByLabelText("Back squat, Saturday"));
     await fireEvent.press(screen.getByText("Save"));
     const draft = mockPlan.saveDraft.mock.calls[0]?.[0];
@@ -280,6 +282,21 @@ describe("a day on a scheduled block", () => {
       { membershipId: "m1", fromWeek: 2, weekdays: [0, 1, 3, 5] },
     ]);
     expect(screen.getByText("Edit")).toBeTruthy();
+  });
+
+  it("applies the week to the following weeks as it is switched on, and takes it back off", async () => {
+    await renderWithHang(<BlockScreen id="b1" />, hangData(), { workouts: [squat], plan: running });
+    await fireEvent.press(screen.getByText("Edit"));
+    await fireEvent.press(screen.getByLabelText("Back squat, Thursday"));
+    const following = (): ReturnType<typeof screen.getByRole> =>
+      screen.getByRole("switch", { name: "Apply to following weeks" });
+    await fireEvent.press(following());
+    await fireEvent.press(following());
+    await fireEvent.press(screen.getByText("Save"));
+    expect(mockPlan.saveDraft.mock.calls[0]?.[0]?.schedules[0]?.weeks).toEqual([
+      { membershipId: "m1", fromWeek: 2, weekdays: [0, 1, 3] },
+      { membershipId: "m1", fromWeek: 3, weekdays: [0, 1] },
+    ]);
   });
 
   it("marks a skipped day and leaves it out of Done", async () => {

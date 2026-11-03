@@ -17,7 +17,6 @@ export const logSession = {
   "logSession.tooLong": "Sessions über 12 Stunden können nicht eingetragen werden.",
   "logSession.needClimb": "Füg mindestens eine Kletterei hinzu.",
   "logSession.needGrade": "Jede Kletterei braucht einen Grad.",
-  "logSession.backToSession": "← Session",
   "logSession.editTitle": "Session bearbeiten",
   "logSession.sessionNameOptional": "Sessionname · optional",
   "logSession.sessionNamePlaceholder": "Dienstagabend-Session",

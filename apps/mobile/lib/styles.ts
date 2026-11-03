@@ -15,7 +15,7 @@ export const sectionLabel: TextStyle = {
   fontSize: 10,
   letterSpacing: 0.8,
   textTransform: "uppercase",
-  color: colors.labelAccent,
+  color: colors.gunmetal,
 };
 
 export const bodyText: TextStyle = {

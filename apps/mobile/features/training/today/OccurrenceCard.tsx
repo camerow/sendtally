@@ -60,7 +60,13 @@ export function OccurrenceCard({ occurrence, workout }: OccurrenceCardProps): Re
           </Label>
           {minutes !== null && <Label color={colors.textSecondary}>{durationLabel(minutes)}</Label>}
           {running === null && (
-            <DetailMenu rows={dayRows((kind) => changes.open(kind, o, workout.name))} />
+            <DetailMenu
+              rows={dayRows(
+                (kind) => changes.open(kind, o, workout.name),
+                undefined,
+                changes.remove(o)
+              )}
+            />
           )}
         </View>
         <View style={{ gap: 4 }}>

@@ -24,7 +24,6 @@ export const common = {
   "common.somethingWentWrong": "Algo salió mal.",
   "common.indoor": "Interior",
   "common.outdoor": "Exterior",
-  "common.backToSettings": "← Ajustes",
   "common.account": "Cuenta",
   "common.signOut": "Cerrar sesión",
   "common.deleting": "Eliminando…",

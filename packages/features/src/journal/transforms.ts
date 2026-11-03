@@ -90,12 +90,17 @@ export function logScopeItems(items: LogItem[], scope: LogScope): LogItem[] {
 /** The two halves of the log, and of Stats. */
 export type LogSegment = "climbing" | "training";
 
-/** Climbing sessions in one half, the rest of the training and its blocks in the other; entries in both. */
+/** Climbing sessions in one half, the rest of the training and its blocks in the other; entries in both but trips, which are climbing's. */
 export function logSegmentItems(items: LogItem[], segment: LogSegment): LogItem[] {
-  return items.filter(
-    (i) => i.type === "entry" || (i.type === "session") === (segment === "climbing")
+  return items.filter((i) =>
+    i.type === "entry"
+      ? segment === "climbing" || i.entry.kind !== "trip"
+      : (i.type === "session") === (segment === "climbing")
   );
 }
+
+/** What the training half can be narrowed to: everything but trips, which it leaves out. */
+export const TRAINING_LOG_SCOPES: LogScope[] = LOG_SCOPES.filter((s) => s !== "trips");
 
 const NO_TRAINING: LogTraining = { plan: { blocks: [], memberships: [] }, finished: [] };
 

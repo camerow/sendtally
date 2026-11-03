@@ -1,6 +1,14 @@
 import { describe, expect, it } from "vitest";
 import type { Weekday } from "@sendtally/core/hang";
-import { daysInWeek, ownWeeksAfter, usualDays, withWeekDays, type DaySchedule } from "./weekDays";
+import {
+  daysInWeek,
+  ownWeeksAfter,
+  usualDays,
+  withFollowing,
+  withoutFollowing,
+  withWeekDays,
+  type DaySchedule,
+} from "./weekDays";
 
 const MON_THU: Weekday[] = [0, 3];
 const schedule = (weeks: [number, Weekday[]][] = []): DaySchedule => ({
@@ -73,5 +81,41 @@ describe("withWeekDays", () => {
     ]);
     expect(usualDays(apart, 1, 4)).toEqual(MON_THU);
     expect(usualDays(schedule([[3, [6]]]), 1, 4)).toEqual(MON_THU);
+  });
+});
+
+describe("withFollowing and withoutFollowing", () => {
+  const before = schedule([
+    [3, [1]],
+    [5, [6]],
+  ]);
+
+  it("carries a week's days through the end of the block", () => {
+    expect(weeksOf(withFollowing(before, 3, 6))).toEqual([MON_THU, MON_THU, [1], [1], [1], [1]]);
+  });
+
+  it("makes week 1's days the workout's own", () => {
+    expect(withFollowing(before, 1, 6)).toEqual({
+      membershipId: "m",
+      weekdays: MON_THU,
+      weeks: [],
+    });
+  });
+
+  it("puts the weeks after back as they were, keeping the week itself", () => {
+    const applied = withWeekDays(withFollowing(before, 3, 6), {
+      week: 3,
+      weekdays: [2],
+      following: true,
+      last: 6,
+    });
+    expect(weeksOf(withoutFollowing(applied, before, 3, 6))).toEqual([
+      MON_THU,
+      MON_THU,
+      [2],
+      [1],
+      [6],
+      [6],
+    ]);
   });
 });

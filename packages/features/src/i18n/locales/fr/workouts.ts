@@ -116,6 +116,7 @@ export const workouts = {
   "workouts.moveUp": "Monter {name}",
   "workouts.moveDown": "Descendre {name}",
   "workouts.seeAll": "Tout voir",
+  "workouts.seeAllCount": "Tout voir ({n})",
   "workouts.seeAllOf": "Tout voir : {kind}",
   "workouts.exerciseBest": "Meilleur {value}",
   "workouts.exerciseBestBodyweight": "Meilleur poids du corps",
@@ -187,7 +188,7 @@ export const workouts = {
   "workouts.archiveExerciseBody":
     "Il quitte le sélecteur et les exercices mais garde son historique. Le recréer le fait revenir.",
   "workouts.measure.climbs": "Voies",
-  "workouts.measure.wallTime": "Temps sur le mur",
+  "workouts.measure.wallTime": "Temps",
   "workouts.advanced": "Avancé",
   "workouts.preview": "Aperçu",
   "workouts.previewHint": "Voici comment vous mesurerez cet exercice",

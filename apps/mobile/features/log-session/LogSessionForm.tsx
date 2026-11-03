@@ -34,13 +34,10 @@ import {
   withClimbName,
   withClimbScale,
   withPickedClimb,
-  withStartTime,
-  withTag,
-  withoutTag,
   type ClimbDraft,
   type LogSessionDraft,
 } from "@sendtally/features/log-session";
-import { SESSION_NOTE_MAX, useTagVocabulary } from "@sendtally/features/sessions";
+import { SESSION_NOTE_MAX } from "@sendtally/features/sessions";
 import { useGradeScalePrefs } from "@sendtally/features/settings";
 import { formatDate, t } from "@sendtally/features/i18n";
 import { colors, effortColor, fonts, radius } from "@sendtally/design/tokens";
@@ -51,7 +48,6 @@ import { sessionDraftStorage } from "../../lib/sessionDraftStorage";
 import { confirmDiscardDraft } from "../../lib/confirmDiscardDraft";
 import { Button } from "../training/components/Button";
 import { DraftBanner } from "./DraftBanner";
-import { TagPicker } from "../sessions/TagPicker";
 import {
   circuitGym,
   gymOfDraft,
@@ -72,6 +68,7 @@ import { Icon } from "../../components/Icon";
 import { ClimbLedgerRow } from "./ClimbLedgerRow";
 import { DateTimeField } from "../../components/DateTimeField";
 import { press, tap } from "../../lib/press";
+import { BackButton } from "../../components/BackButton";
 
 function LabelText({ children }: { children: React.ReactNode }): React.ReactElement {
   return (
@@ -163,11 +160,8 @@ export function LogSessionForm({
         ...(plan.membershipId === null ? {} : { plan }),
       }
   );
-  const [addingTimes, setAddingTimes] = React.useState(false);
-  const timesOpen = addingTimes || draft.startTime !== "" || draft.endTime !== "";
   const [error, setError] = React.useState<string | null>(null);
 
-  const { suggestionsFor } = useTagVocabulary(api);
   const vocabulary = useClimbVocabulary(api);
   const gyms = useGyms(api);
   const circuitChoices = draft.location === "indoor" ? circuitGyms(gyms.gyms) : [];
@@ -323,22 +317,9 @@ export function LogSessionForm({
         automaticallyAdjustKeyboardInsets
         contentContainerStyle={{ paddingHorizontal: 18, paddingTop: 8, paddingBottom: 24, gap: 14 }}
       >
-        <Pressable
-          onPress={() => router.back()}
-          style={{ minHeight: 32, justifyContent: "center" }}
-        >
-          <Text
-            style={{
-              fontFamily: fonts.monoMedium,
-              fontSize: 11,
-              letterSpacing: 0.4,
-              textTransform: "uppercase",
-              color: colors.labelAccent,
-            }}
-          >
-            {editing === undefined ? t("sessions.back") : t("logSession.backToSession")}
-          </Text>
-        </Pressable>
+        <BackButton
+          label={editing === undefined ? t("journal.log") : t("sessionDetail.backSession")}
+        />
         <View style={{ gap: 4 }}>
           <Text
             style={{
@@ -404,50 +385,6 @@ export function LogSessionForm({
             />
           </View>
         </View>
-
-        {timesOpen ? (
-          <View style={{ gap: 7 }}>
-            <View style={{ flexDirection: "row", gap: 8 }}>
-              <View style={{ flex: 1, gap: 7 }}>
-                <LabelText>{t("logSession.start")}</LabelText>
-                <DateTimeField
-                  mode="time"
-                  value={draft.startTime}
-                  label={t("logSession.start")}
-                  placeholder="-"
-                  testID="start-time"
-                  onChange={(startTime) => setDraft((d) => withStartTime(d, startTime))}
-                  onClear={() => setDraft((d) => ({ ...d, startTime: "" }))}
-                />
-              </View>
-              <View style={{ flex: 1, gap: 7 }}>
-                <LabelText>{t("logSession.end")}</LabelText>
-                <DateTimeField
-                  mode="time"
-                  value={draft.endTime}
-                  label={t("logSession.end")}
-                  placeholder="-"
-                  testID="end-time"
-                  onChange={(endTime) => setDraft((d) => ({ ...d, endTime }))}
-                  onClear={() => setDraft((d) => ({ ...d, endTime: "" }))}
-                />
-              </View>
-            </View>
-            <Text style={{ fontFamily: fonts.mono, fontSize: 11, color: colors.textMuted }}>
-              {t("logSession.timesHint")}
-            </Text>
-          </View>
-        ) : (
-          <Pressable
-            onPress={() => setAddingTimes(true)}
-            accessibilityRole="button"
-            style={press({ minHeight: 44, justifyContent: "center", alignSelf: "flex-start" })}
-          >
-            <Text style={{ fontFamily: fonts.monoMedium, fontSize: 12, color: colors.azureInk }}>
-              {t("logSession.addTimes")}
-            </Text>
-          </Pressable>
-        )}
 
         <View style={{ gap: 7 }}>
           <LabelText>{t("logSession.location")}</LabelText>
@@ -548,17 +485,6 @@ export function LogSessionForm({
           </View>
         )}
 
-        <View style={{ gap: 7 }}>
-          <LabelText>{t("logSession.tagsOptional")}</LabelText>
-          <TagPicker
-            tags={draft.tags}
-            suggestions={suggestionsFor(draft.tags)}
-            placeholder={t("logSession.tagsPlaceholder")}
-            onAdd={(name) => setDraft((d) => withTag(d, name))}
-            onRemove={(name) => setDraft((d) => withoutTag(d, name))}
-          />
-        </View>
-
         <View style={{ gap: 8 }}>
           <View
             style={{
@@ -643,7 +569,7 @@ export function LogSessionForm({
               fontSize: 10,
               letterSpacing: 0.8,
               textTransform: "uppercase",
-              color: colors.labelAccent,
+              color: colors.gunmetal,
             }}
           >
             {t("logSession.climbsCount", { n: draft.climbs.length })}

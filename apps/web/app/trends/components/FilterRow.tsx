@@ -2,14 +2,12 @@ import React from "react";
 import { t } from "@sendtally/features/i18n";
 import {
   PREVIEW_TREND_RANGE,
-  TREND_RANGES,
   isRefined,
   placeLabel,
   refineSummary,
   resetFilter,
-  tagsLabel,
+  trendRanges,
   withPlace,
-  withTag,
   type TrendsFeature,
   type TrendsVM,
 } from "@sendtally/features/trends";
@@ -19,7 +17,6 @@ import { GradePicker } from "./GradePicker";
 import { PlacePicker } from "./PlacePicker";
 import { RangeChips } from "./RangeChips";
 import { RefineSheet } from "./RefineSheet";
-import { TagChecklist } from "./TagChecklist";
 
 export function FilterRow({
   feature,
@@ -40,7 +37,7 @@ export function FilterRow({
   return (
     <div className="trend-filter-row">
       <RangeChips
-        ranges={TREND_RANGES}
+        ranges={trendRanges(vm.years)}
         range={filter.range}
         onChange={(range) => setFilter((f) => ({ ...f, range }))}
         isLocked={(r) => preview && r !== PREVIEW_TREND_RANGE}
@@ -102,22 +99,6 @@ export function FilterRow({
                 gymId={vm.scope === "circuit" ? null : filter.gymId}
                 gyms={vm.gyms}
                 onChange={(setting, gymId) => setFilter((f) => withPlace(f, setting, gymId))}
-              />
-            )}
-          </DropButton>
-          <DropButton
-            label={t("common.tags")}
-            value={tagsLabel(filter, vm.tags)}
-            active={filter.tags.length > 0}
-            disabled={vm.tags.length === 0 && filter.tags.length === 0}
-            width={320}
-          >
-            {() => (
-              <TagChecklist
-                tags={vm.tags}
-                selected={filter.tags}
-                onToggle={(slug) => setFilter((f) => withTag(f, slug))}
-                onClear={() => setFilter((f) => ({ ...f, tags: [] }))}
               />
             )}
           </DropButton>

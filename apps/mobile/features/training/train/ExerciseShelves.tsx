@@ -41,11 +41,11 @@ export function ExerciseShelves(): React.ReactElement {
 
   const workouts = library.status === "ready" ? library.data.workouts : [];
   const logged = series.status === "ready" ? series.data : [];
-  const metaOf = (name: string, kind: WorkoutKind): string => {
+  const metaOf = (name: string, kind: WorkoutKind): string | null => {
     const s = logged.find((x) => x.key === exerciseKey(name));
     const best = s === undefined ? null : exerciseSummary(s, today)?.best;
     if (kind === "climbing") {
-      if (s === undefined || best === undefined || best === null) return t("workouts.notDoneYet");
+      if (s === undefined || best === undefined || best === null) return null;
       const reads = isGradeMetric(s.metric)
         ? t("workouts.exerciseBest", { value: metricText(best.value, s.metric, unit, s.grades) })
         : t("common.climbs");
@@ -56,17 +56,19 @@ export function ExerciseShelves(): React.ReactElement {
     const using = workoutsUsing(workouts, name)[0];
     const dose = using?.items.find((i) => exerciseKey(i.exercise) === exerciseKey(name))?.doses[0];
     return using === undefined || dose === undefined
-      ? ""
+      ? null
       : t("workouts.exerciseLast", { value: doseSummary(using.kind, dose, unit) });
   };
 
+  const notDone = (meta: string): string | null =>
+    meta === t("workouts.notDoneYet") ? null : meta;
   const grips = model.grips
     .filter((g) => !g.hidden)
     .map((g): ShelfCard => ({
       key: g.id,
       kind: "hangboard",
       name: g.name,
-      meta: gripMeta(model.sessions, g.id, today, model.settings.units),
+      meta: notDone(gripMeta(model.sessions, g.id, today, model.settings.units)),
       open: () => router.push({ pathname: "/grip/[id]", params: { id: g.id } }),
     }));
   const mine = exercises.state.data
