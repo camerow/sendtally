@@ -585,11 +585,17 @@ describe("blocks and memberships", () => {
     });
     await call(userId, "PUT", "/v1/activities/a1", activityBody);
     await call(userId, "PUT", "/v1/workouts/w1", squatWorkout);
+    await env.DB.prepare(
+      "INSERT INTO week_changes (user_id, membership_id, week, variation, item, change_json) VALUES (?, 'm1', 1, 0, 0, '{}')"
+    )
+      .bind(userId)
+      .run();
     expect((await call(userId, "DELETE", "/v1/account")).status).toBe(200);
     for (const table of [
       "activities",
       "memberships",
       "item_week_changes",
+      "week_changes",
       "training_blocks",
       "workouts",
       "exercises",
