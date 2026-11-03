@@ -1,16 +1,13 @@
 import React from "react";
-import { Pressable, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import { router } from "expo-router";
 import type { GradeClimbTarget, GradeClimbsVM } from "@sendtally/features/climbs";
 import { t } from "@sendtally/features/i18n";
 import { colors, fonts } from "@sendtally/design/tokens";
-import { Icon } from "../../components/Icon";
-import { pressRow } from "../../lib/press";
+import { ExpandableRow } from "../../components/ExpandableRow";
 import { ClimbLogRow } from "./ClimbLogRow";
 import { GradeBadge } from "./GradeBadge";
 import { sectionLabel } from "./sectionLabel";
-
-const GUTTER = 18;
 
 const opener = (target: GradeClimbTarget | null): (() => void) | null => {
   if (target === null) return null;
@@ -51,47 +48,23 @@ export function ClimbsByGrade({
       {grades.map((g) => {
         const expanded = g.key === open;
         return (
-          <React.Fragment key={g.key}>
-            <Pressable
-              onPress={() => setOpen(expanded ? null : g.key)}
-              accessibilityRole="button"
-              accessibilityState={{ expanded }}
-              accessibilityLabel={`${g.gradeLabel}, ${g.split}`}
-              style={pressRow({
-                minHeight: 52,
-                marginHorizontal: -GUTTER,
-                paddingHorizontal: GUTTER,
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 12,
-                borderBottomWidth: 1,
-                borderBottomColor: colors.lineOnLightSoft,
-                backgroundColor: expanded ? colors.surfaceSoft : undefined,
-              })}
+          <ExpandableRow
+            key={g.key}
+            expanded={expanded}
+            onToggle={() => setOpen(expanded ? null : g.key)}
+            accessibilityLabel={`${g.gradeLabel}, ${g.split}`}
+            indent={56}
+            body={g.climbs.map((c) => (
+              <ClimbLogRow key={c.key} row={c.row} showGrade={false} onPress={opener(c.target)} />
+            ))}
+          >
+            <GradeBadge label={g.gradeLabel} onSoft={expanded} />
+            <Text
+              style={{ flex: 1, fontFamily: fonts.mono, fontSize: 12.5, color: colors.gunmetal }}
             >
-              <GradeBadge label={g.gradeLabel} onSoft={expanded} />
-              <Text
-                style={{ flex: 1, fontFamily: fonts.mono, fontSize: 12.5, color: colors.gunmetal }}
-              >
-                {g.split}
-              </Text>
-              <View style={{ transform: [{ rotate: expanded ? "90deg" : "0deg" }] }}>
-                <Icon name="chevron" color={colors.textSecondary} size={18} />
-              </View>
-            </Pressable>
-            {expanded && (
-              <View style={{ paddingLeft: 56 }}>
-                {g.climbs.map((c) => (
-                  <ClimbLogRow
-                    key={c.key}
-                    row={c.row}
-                    showGrade={false}
-                    onPress={opener(c.target)}
-                  />
-                ))}
-              </View>
-            )}
-          </React.Fragment>
+              {g.split}
+            </Text>
+          </ExpandableRow>
         );
       })}
     </View>

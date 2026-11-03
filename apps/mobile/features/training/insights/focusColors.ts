@@ -11,6 +11,6 @@ const FOCUS_COLORS: Record<Focus, string> = {
   recovery: colors.dataAzureSoft,
 };
 
-/** The one place focus wears colour: the insights mix and its legend. General is the empty grey. */
+/** The one place focus wears colour: the insights mix and its legend. General is gunmetal, faded. */
 export const focusColor = (focus: Focus | null): string =>
-  focus === null ? colors.dataBarEmpty : FOCUS_COLORS[focus];
+  focus === null ? colors.textFaint : FOCUS_COLORS[focus];

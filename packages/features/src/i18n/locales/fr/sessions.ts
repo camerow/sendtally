@@ -68,4 +68,5 @@ export const sessions = {
   "sessions.addDetails": "Ajouter des détails",
   "sessions.topSend": "max {grade}",
   "sessions.pastSession": "Séance passée",
+  "sessions.onlyWorkout": "Seulement {name}",
 } as const;

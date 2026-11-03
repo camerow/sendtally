@@ -11,6 +11,16 @@ export {
 } from "./insights";
 export { useTrainingInsights } from "./useTrainingInsights";
 export {
+  focusKey,
+  pickedWorkouts,
+  workoutsDone,
+  type TrainedBy,
+  type WorkoutDoneVM,
+  type WorkoutGroupVM,
+  type WorkoutSessionVM,
+  type WorkoutsDoneVM,
+} from "./workouts";
+export {
   epley,
   exerciseKey,
   exerciseSeries,

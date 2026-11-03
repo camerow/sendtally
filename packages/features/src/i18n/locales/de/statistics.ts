@@ -40,4 +40,8 @@ export const statistics = {
   "statistics.exercisesMostDone": "Übungen · die häufigsten zuerst",
   "statistics.timesCount_one": "{count}-mal",
   "statistics.timesCount_other": "{count}-mal",
+  "statistics.workoutsMostDone": "Workouts · die häufigsten zuerst",
+  "statistics.workoutsOf": "Workouts · {name}",
+  "statistics.allInLog": "Alle {n} im Logbuch",
+  "statistics.noWorkoutsPicked": "Keine {name}-Workouts in diesem Zeitraum",
 } as const;
