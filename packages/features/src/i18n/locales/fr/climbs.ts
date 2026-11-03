@@ -69,7 +69,7 @@ export const climbs = {
   "climbs.new": "Nouvelle",
   "climbs.newArea": "Pas encore dans Secteurs. Il est ajouté quand tu enregistres.",
   "climbs.projectHint": "Épinglée en haut jusqu’à ce que tu la réussisses",
-  "climbs.notesPlaceholder": "Notes : méthode, conditions, ressenti",
+  "climbs.notesPlaceholder": "Méthode, conditions, ressenti",
   "climbs.days": "Jours",
   "climbs.firstTried": "premier essai le {date}",
   "climbs.logSession": "Noter une séance",

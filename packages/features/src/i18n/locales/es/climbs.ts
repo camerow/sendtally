@@ -70,7 +70,7 @@ export const climbs = {
   "climbs.new": "Nueva",
   "climbs.newArea": "Aún no está en Zonas. Se añade al guardar.",
   "climbs.projectHint": "Fijada arriba hasta que la encadenes",
-  "climbs.notesPlaceholder": "Notas: beta, condiciones, cómo te sentiste",
+  "climbs.notesPlaceholder": "Beta, condiciones, cómo te sentiste",
   "climbs.days": "Días",
   "climbs.firstTried": "primer intento el {date}",
   "climbs.logSession": "Registrar sesión",

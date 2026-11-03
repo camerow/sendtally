@@ -70,7 +70,7 @@ export const climbs = {
   "climbs.new": "Neu",
   "climbs.newArea": "Noch nicht in den Gebieten. Es wird beim Speichern hinzugefügt.",
   "climbs.projectHint": "Oben angeheftet, bis du sie schaffst",
-  "climbs.notesPlaceholder": "Notizen: Beta, Bedingungen, wie es sich anfühlte",
+  "climbs.notesPlaceholder": "Beta, Bedingungen, wie es sich anfühlte",
   "climbs.days": "Tage",
   "climbs.firstTried": "zuerst versucht am {date}",
   "climbs.logSession": "Session eintragen",
