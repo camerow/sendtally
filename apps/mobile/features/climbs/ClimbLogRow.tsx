@@ -15,21 +15,33 @@ const PILLS: Record<ClimbPillKind, { fill: string; ink: string; line?: string }>
   tries: { fill: "transparent", ink: colors.textSecondary, line: colors.lineOnLightStrong },
 };
 
-/** One climb in the log: its grade, name, crag and when, and how it went. One with no screen of its own does not open. */
+export type ClimbLogRowProps = {
+  row: ClimbLogRowVM;
+  /** Off under a heading that already names the grade. */
+  showGrade?: boolean;
+  /** Replaces opening the climb; null for a row with nowhere to go. */
+  onPress?: (() => void) | null;
+};
+
+/** One climb in the log: its grade, name, crag and when, and how it went. */
 export function ClimbLogRow({
   row,
-  opens = true,
-}: {
-  row: ClimbLogRowVM;
-  opens?: boolean;
-}): React.ReactElement {
+  showGrade = true,
+  onPress,
+}: ClimbLogRowProps): React.ReactElement {
+  const open =
+    onPress === undefined
+      ? () => router.push({ pathname: "/climb/[id]", params: { id: row.id } })
+      : onPress;
   const pill = PILLS[row.pill.kind];
+  const count = (row.count ?? 1) > 1 ? row.count : undefined;
+  const name = count === undefined ? row.name : `${row.name} ×${count}`;
   return (
     <Pressable
-      onPress={() => router.push({ pathname: "/climb/[id]", params: { id: row.id } })}
-      disabled={!opens}
-      accessibilityRole={opens ? "button" : "text"}
-      accessibilityLabel={`${row.gradeLabel}, ${row.name}, ${row.meta}, ${row.pill.label}`}
+      onPress={open ?? undefined}
+      disabled={open === null}
+      accessibilityRole={open === null ? "text" : "button"}
+      accessibilityLabel={`${row.gradeLabel}, ${name}, ${row.meta}, ${row.pill.label}`}
       style={pressRow({
         minHeight: 60,
         flexDirection: "row",
@@ -39,13 +51,18 @@ export function ClimbLogRow({
         borderBottomColor: colors.lineOnLightSoft,
       })}
     >
-      <GradeBadge label={row.gradeLabel} />
+      {showGrade && <GradeBadge label={row.gradeLabel} />}
       <View style={{ flex: 1, minWidth: 0, gap: 3 }}>
         <Text
           numberOfLines={1}
           style={{ fontFamily: fonts.sansSemiBold, fontSize: 15, color: colors.gunmetal }}
         >
           {row.name}
+          {count !== undefined && (
+            <Text style={{ fontFamily: fonts.mono, fontSize: 13, color: colors.textSecondary }}>
+              {` ×${count}`}
+            </Text>
+          )}
         </Text>
         <Text
           numberOfLines={1}

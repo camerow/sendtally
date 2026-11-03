@@ -37,6 +37,8 @@ export type ClimbingInsightsFilter = {
   discipline: Discipline;
   place: ClimbPlaceFilter;
   boulderScale: BoulderScale;
+  /** Gym names by id, for the gym climbs a session logged without names. */
+  gyms?: ReadonlyMap<string, string>;
 };
 
 /** How the climber reads boulder grades. */
@@ -52,8 +54,11 @@ export type ClimbingInsightsVM = {
   byGrade: GradeClimbsVM[];
 };
 
-/** A climb under its grade; `opens` is false for one with no name, which has no screen. */
-export type GradeClimbVM = { key: string; opens: boolean; row: ClimbLogRowVM };
+/** Where a row under a grade opens: the climb, or for unnamed climbs the session or workout that logged them. */
+export type GradeClimbTarget = { kind: "climb" | "session" | "activity"; id: string };
+
+/** A named climb, or one session's unnamed climbs at that grade together. */
+export type GradeClimbVM = { key: string; target: GradeClimbTarget | null; row: ClimbLogRowVM };
 
 /** One grade's climbs, newest first, and how many of them went. */
 export type GradeClimbsVM = {
@@ -75,6 +80,7 @@ type Tried = {
   tries: number;
   days: number;
   lastAt: string;
+  session: InsightsSession;
 };
 
 type InsightsClimb = Pick<
@@ -82,9 +88,11 @@ type InsightsClimb = Pick<
   "name" | "kind" | "style" | "vGrade" | "grade" | "endurance" | "tries" | "userClimbId"
 >;
 
-/** What the insights read of a session: where and when, and its climbs. */
+/** What the insights read of a session: where and when, and its climbs. `workout` marks a workout's tally. */
 export type InsightsSession = Pick<SessionWithClimbs, "fingerprint" | "start_at" | "location"> & {
   climbs: readonly InsightsClimb[];
+  gym_id?: string | null;
+  workout?: boolean;
 };
 
 const insightsClimb = (c: SetClimb): InsightsClimb => ({
@@ -108,6 +116,7 @@ export function workoutClimbSessions(
         fingerprint: a.id,
         start_at: activityAt(a),
         location: "indoor" as const,
+        workout: true,
         climbs: climbs.map(insightsClimb),
       },
     ];
@@ -152,6 +161,7 @@ function triedIn(sessions: readonly InsightsSession[], discipline: Discipline): 
         tries: (held?.tries ?? 0) + c.tries,
         days: (held?.days ?? 0) + (held?.lastAt === s.start_at ? 0 : 1),
         lastAt: s.start_at,
+        session: s,
       });
     });
   }
@@ -174,30 +184,58 @@ export function avgSendLabel(
   return boulder === undefined ? format.label(rank) : formatGrade(boulder);
 }
 
-function gradeClimb(c: Tried, climbs: readonly ClimbSummary[], gradeLabel: string): GradeClimbVM {
-  const found =
-    c.name === ""
-      ? undefined
-      : climbs.find((x) =>
-          c.userClimbId === undefined ? climbKey(x.name) === c.key : x.id === c.userClimbId
-        );
+const tryPill = (tries: number): ClimbLogRowVM["pill"] => ({
+  kind: "tries",
+  label: t("tally.tryCount", { count: tries }),
+});
+
+function namedClimb(c: Tried, climbs: readonly ClimbSummary[], gradeLabel: string): GradeClimbVM {
+  const found = climbs.find((x) =>
+    c.userClimbId === undefined ? climbKey(x.name) === c.key : x.id === c.userClimbId
+  );
   const pill: ClimbLogRowVM["pill"] =
     c.style !== null
       ? { kind: c.style === "redpoint" ? "sent" : c.style, label: sendStyleText(c.style) }
       : found?.project === true
         ? { kind: "project", label: t("common.project") }
-        : { kind: "tries", label: t("tally.tryCount", { count: c.tries }) };
+        : tryPill(c.tries);
   const area = found?.area?.name;
   const when = c.days > 1 ? t("climbs.dayCount", { count: c.days }) : dateLabel(c.lastAt);
   return {
     key: c.key,
-    opens: found !== undefined,
+    target: found === undefined ? null : { kind: "climb", id: found.id },
     row: {
       id: found?.id ?? c.key,
       gradeLabel,
-      name: found?.name ?? (c.name === "" ? t("logSession.unnamed") : c.name),
+      name: found?.name ?? c.name,
       meta: area === undefined ? when : `${area} · ${when}`,
       pill,
+    },
+  };
+}
+
+function sessionClimbs(
+  group: readonly Tried[],
+  gyms: ReadonlyMap<string, string>,
+  gradeLabel: string
+): GradeClimbVM | null {
+  const [first] = group;
+  if (first === undefined) return null;
+  const { session } = first;
+  const gym = gyms.get(session.gym_id ?? "");
+  const when = dateLabel(session.start_at);
+  return {
+    key: `${session.fingerprint}:${first.rank}`,
+    target: { kind: session.workout === true ? "activity" : "session", id: session.fingerprint },
+    row: {
+      id: session.fingerprint,
+      gradeLabel,
+      name: t(session.location === "outdoor" ? "climbs.unnamedClimbs" : "climbs.gymClimbs"),
+      count: group.length,
+      meta: gym === undefined ? when : `${gym} · ${when}`,
+      pill: group.some((c) => c.sent)
+        ? { kind: "sent", label: t("common.sent") }
+        : tryPill(group.reduce((n, c) => n + c.tries, 0)),
     },
   };
 }
@@ -208,23 +246,36 @@ function gradeSplit(sent: number, attempted: number): string {
   return t("climbs.gradeSplit", { sent, attempted });
 }
 
-/** The climbs tried, one group per grade, hardest first, each grade's climbs newest first. */
+/**
+ * The climbs tried, one group per grade, hardest first. Under a grade each named climb is a
+ * row, and each session's unnamed climbs share one, newest first.
+ */
 function climbsByGrade(
   tried: readonly Tried[],
   climbs: readonly ClimbSummary[],
+  gyms: ReadonlyMap<string, string>,
   label: (rank: number) => string
 ): GradeClimbsVM[] {
   const ranks = [...new Set(tried.map((c) => c.rank))].sort((a, b) => b - a);
   return ranks.map((rank) => {
-    const mine = tried
-      .filter((c) => c.rank === rank)
-      .sort((a, b) => b.lastAt.localeCompare(a.lastAt));
+    const mine = tried.filter((c) => c.rank === rank);
+    const named = mine.filter((c) => c.name !== "");
+    const bySession = new Map<string, Tried[]>();
+    for (const c of mine.filter((x) => x.name === ""))
+      bySession.set(c.session.fingerprint, [...(bySession.get(c.session.fingerprint) ?? []), c]);
+    const rows = [
+      ...named.map((c) => ({ at: c.lastAt, vm: namedClimb(c, climbs, label(rank)) })),
+      ...[...bySession.values()].flatMap((g) => {
+        const vm = sessionClimbs(g, gyms, label(rank));
+        return vm === null ? [] : [{ at: g[0]?.lastAt ?? "", vm }];
+      }),
+    ].sort((a, b) => b.at.localeCompare(a.at));
     const sent = mine.filter((c) => c.sent).length;
     return {
       key: String(rank),
       gradeLabel: label(rank),
       split: gradeSplit(sent, mine.length - sent),
-      climbs: mine.map((c) => gradeClimb(c, climbs, label(rank))),
+      climbs: rows.map((r) => r.vm),
     };
   });
 }
@@ -277,6 +328,6 @@ export function climbingInsightsVM(
             name: hardest.name === "" ? null : hardest.name,
             dateLabel: dayMonth((hardest.sentAt ?? "").slice(0, 10)),
           },
-    byGrade: climbsByGrade(tried, climbs, format.label),
+    byGrade: climbsByGrade(tried, climbs, filter.gyms ?? new Map(), format.label),
   };
 }

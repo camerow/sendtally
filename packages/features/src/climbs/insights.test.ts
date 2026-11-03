@@ -130,12 +130,12 @@ describe("climbs by grade", () => {
     ]);
   });
 
-  it("reads a named climb across its days and opens it, and a nameless one does not open", () => {
+  it("reads a named climb across its days and opens it", () => {
     const vm = climbingInsightsVM(sessions, [pinch], all, NOW);
     expect(vm.byGrade[0]?.climbs).toEqual([
       {
         key: "the pinch",
-        opens: true,
+        target: { kind: "climb", id: "c-pinch" },
         row: {
           id: "c-pinch",
           gradeLabel: "V7",
@@ -145,22 +145,80 @@ describe("climbs by grade", () => {
         },
       },
     ]);
-    expect(vm.byGrade[2]?.climbs[0]).toMatchObject({
-      opens: false,
-      row: { name: "Unnamed", meta: "Oct 26", pill: { kind: "tries", label: "1 try" } },
-    });
-    expect(vm.byGrade[3]?.climbs[0]?.row.pill).toEqual({ kind: "flash", label: "Flash" });
   });
 
-  it("splits a grade's sends from its attempts, newest climb first", () => {
-    const day = session("2026-10-27T09:00:00.000Z", "indoor", [
+  it("puts a session's unnamed climbs at a grade on one row that opens the session", () => {
+    const gym = session("2026-10-27T09:00:00.000Z", "indoor", [
+      go(5, "attempt", { tries: 2 }),
+      go(5, "attempt", { tries: 3 }),
+      go(5, "attempt"),
+    ]);
+    const withGym = { ...gym, gym_id: "g1" };
+    const vm = climbingInsightsVM(
+      [...sessions, withGym],
+      [],
+      { ...all, gyms: new Map([["g1", "Mission Cliffs"]]) },
+      NOW
+    );
+    const v5 = vm.byGrade.find((g) => g.gradeLabel === "V5");
+    expect(v5?.split).toBe("4 attempted");
+    expect(v5?.climbs).toEqual([
+      {
+        key: "2026-10-27T09:00:00.000Z:5",
+        target: { kind: "session", id: "2026-10-27T09:00:00.000Z" },
+        row: {
+          id: "2026-10-27T09:00:00.000Z",
+          gradeLabel: "V5",
+          name: "Gym climbs",
+          count: 3,
+          meta: "Mission Cliffs · Oct 27",
+          pill: { kind: "tries", label: "6 tries" },
+        },
+      },
+      expect.objectContaining({ row: expect.objectContaining({ count: 1, meta: "Oct 26" }) }),
+    ]);
+  });
+
+  it("reads a group as sent when any of it went, and opens a workout's tally climbs on the workout", () => {
+    const tally = workoutClimbSessions([
+      {
+        id: "a1",
+        date: "2026-10-27",
+        startTime: "19:00",
+        done: [
+          {
+            item: 0,
+            exercise: "Limit boulders",
+            sets: [
+              {
+                climbs: [
+                  { grade: "V6", scale: "v", tries: 2, sent: false },
+                  { grade: "V6", scale: "v", tries: 1, sent: true },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+    ]);
+    const vm = climbingInsightsVM([...sessions, ...tally], [], all, NOW);
+    const v6 = vm.byGrade.find((g) => g.gradeLabel === "V6");
+    expect(v6?.split).toBe("2 sent · 1 attempted");
+    expect(v6?.climbs[0]).toMatchObject({
+      target: { kind: "activity", id: "a1" },
+      row: { name: "Gym climbs", count: 2, pill: { kind: "sent", label: "Sent" } },
+    });
+  });
+
+  it("lists named climbs and grouped ones together, newest first", () => {
+    const day = session("2026-10-27T09:00:00.000Z", "outdoor", [
       go(5, "send", { name: "Blue arete" }),
       go(5, "attempt", { name: "Red roof", tries: 3 }),
     ]);
     const vm = climbingInsightsVM([...sessions, day], [], all, NOW);
     const v5 = vm.byGrade.find((g) => g.gradeLabel === "V5");
     expect(v5?.split).toBe("1 sent · 2 attempted");
-    expect(v5?.climbs.map((c) => c.row.name)).toEqual(["Blue arete", "Red roof", "Unnamed"]);
+    expect(v5?.climbs.map((c) => c.row.name)).toEqual(["Blue arete", "Red roof", "Gym climbs"]);
     expect(v5?.climbs[1]?.row.pill.label).toBe("3 tries");
   });
 

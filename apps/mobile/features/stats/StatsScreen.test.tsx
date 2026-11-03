@@ -40,6 +40,9 @@ jest.mock("../../lib/statsSegmentStorage", () => {
       }),
   };
 });
+jest.mock("@sendtally/features/gyms", () => ({
+  useGyms: () => ({ state: { status: "ready", data: [] } }),
+}));
 jest.mock("@sendtally/features/settings", () => ({
   useGradeScalePrefs: () => ({ scales: { boulder: "font", route: "yds" }, ready: true }),
 }));

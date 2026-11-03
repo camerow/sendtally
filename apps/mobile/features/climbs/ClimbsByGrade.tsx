@@ -1,6 +1,7 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
-import type { GradeClimbsVM } from "@sendtally/features/climbs";
+import { router } from "expo-router";
+import type { GradeClimbTarget, GradeClimbsVM } from "@sendtally/features/climbs";
 import { t } from "@sendtally/features/i18n";
 import { colors, fonts } from "@sendtally/design/tokens";
 import { Icon } from "../../components/Icon";
@@ -11,14 +12,25 @@ import { sectionLabel } from "./sectionLabel";
 
 const GUTTER = 18;
 
-/** Every grade tried with how many went; one grade at a time opens in place to list its climbs. */
+const opener = (target: GradeClimbTarget | null): (() => void) | null => {
+  if (target === null) return null;
+  const { kind, id } = target;
+  if (kind === "climb") return () => router.push({ pathname: "/climb/[id]", params: { id } });
+  if (kind === "activity") return () => router.push({ pathname: "/activity/[id]", params: { id } });
+  return () => router.push({ pathname: "/session/[fingerprint]", params: { fingerprint: id } });
+};
+
+/** Every grade tried with how many went; one grade at a time opens in place to list its climbs, its name lined up with the counts. */
 export function ClimbsByGrade({
   grades,
 }: {
   grades: readonly GradeClimbsVM[];
 }): React.ReactElement {
   const [open, setOpen] = React.useState<string | null>(null);
-  const total = grades.reduce((n, g) => n + g.climbs.length, 0);
+  const total = grades.reduce(
+    (n, g) => n + g.climbs.reduce((m, c) => m + (c.row.count ?? 1), 0),
+    0
+  );
   return (
     <View>
       <View
@@ -70,7 +82,12 @@ export function ClimbsByGrade({
             {expanded && (
               <View style={{ paddingLeft: 56 }}>
                 {g.climbs.map((c) => (
-                  <ClimbLogRow key={c.key} row={c.row} opens={c.opens} />
+                  <ClimbLogRow
+                    key={c.key}
+                    row={c.row}
+                    showGrade={false}
+                    onPress={opener(c.target)}
+                  />
                 ))}
               </View>
             )}
