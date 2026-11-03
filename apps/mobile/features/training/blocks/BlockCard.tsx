@@ -5,11 +5,9 @@ import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
 import type { WorkoutLookup } from "@sendtally/features/training";
 import { pressRow } from "../../../lib/press";
-import { Button } from "../components/Button";
 import { DashedPanel } from "../components/DashedPanel";
 import { Title } from "../components/Title";
 import { useHangData } from "../data/HangDataContext";
-import { AddWorkoutsSheet } from "../planning/AddWorkoutsSheet";
 import { PlanGrid } from "../plan/PlanGrid";
 import { planGridRows } from "../plan/planGridRows";
 import { type } from "../type";
@@ -26,7 +24,6 @@ export type BlockCardProps = {
 export function BlockCard({ block, members, workout }: BlockCardProps): React.ReactElement {
   const { model } = useHangData();
   const rows = planGridRows(members, workout, model, { back: t("training.train") });
-  const [adding, setAdding] = React.useState(false);
   return (
     <View
       style={{
@@ -37,37 +34,22 @@ export function BlockCard({ block, members, workout }: BlockCardProps): React.Re
         borderColor: colors.lineOnLightStrong,
       }}
     >
-      <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 12 }}>
-        <Pressable
-          onPress={() => openBlock(block.id, t("training.train"))}
-          accessibilityRole="button"
-          accessibilityLabel={t("plan.openBlock", { name: block.name })}
-          style={pressRow({ flex: 1, gap: 4 })}
-        >
-          <Title size={26}>{block.name}</Title>
-          <Text style={[type.mono, { fontSize: 12, color: colors.textSecondary }]}>
-            {blockDates(block)}
-          </Text>
-        </Pressable>
-        <Button
-          label={t("plan.addWorkout")}
-          accessibilityLabel={t("plan.addToBlock", { name: block.name })}
-          onPress={() => setAdding(true)}
-          variant="outline"
-          icon="plus"
-          height={40}
-        />
-      </View>
+      <Pressable
+        onPress={() => openBlock(block.id, t("training.train"))}
+        accessibilityRole="button"
+        accessibilityLabel={t("plan.openBlock", { name: block.name })}
+        style={pressRow({ gap: 4 })}
+      >
+        <Title size={26}>{block.name}</Title>
+        <Text style={[type.mono, { fontSize: 12, color: colors.textSecondary }]}>
+          {blockDates(block)}
+        </Text>
+      </Pressable>
       {rows.length === 0 ? (
         <DashedPanel body={t("plan.blockEmpty")} />
       ) : (
         <PlanGrid rows={rows} framed={false} />
       )}
-      <AddWorkoutsSheet
-        flow={{ date: null, blockId: block.id }}
-        visible={adding}
-        onClose={() => setAdding(false)}
-      />
     </View>
   );
 }

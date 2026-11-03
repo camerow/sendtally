@@ -12,6 +12,7 @@ export {
   letterName,
   newWorkoutDraft,
   turnName,
+  estimatedMinutes,
   workoutMinutes,
   workoutUsage,
 } from "./library";

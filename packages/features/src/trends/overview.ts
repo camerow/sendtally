@@ -3,7 +3,8 @@ import { circuitRangeLabel } from "../gyms/transforms";
 import { formatNumber, t } from "../i18n";
 import { disciplineLabel } from "../log-session/types";
 import { UNTAGGED_KEY, untaggedLabel } from "../sessions/tags";
-import { bucketsFor, rangeLabel, windowOf } from "./buckets";
+import { bucketsFor, priorWindow, rangeLabel, windowOf } from "./buckets";
+import { yearsOf } from "./types";
 import {
   climbsIn,
   hangEffortsOf,
@@ -149,7 +150,8 @@ export function trendsVM(
   const buckets = bucketsFor(filter.range, now, Number.isFinite(first) ? first : null);
   const { start, end } = windowOf(buckets);
   const cur = totals(slice, start, end);
-  const prior = filter.range === "all" ? null : totals(slice, start - (end - start), start);
+  const before = priorWindow(filter.range, { start, end });
+  const prior = before === null ? null : totals(slice, before.start, before.end);
   const per = buckets.map((b) => totals(slice, b.start, b.end));
   const gradeText = slice.grade === null ? null : gradeRangeLabel(ladder, slice.grade);
   const cap = (what: string): string => captioned(what, gradeText, range);
@@ -452,6 +454,7 @@ export function trendsVM(
   return {
     scope,
     rangeLabel: range,
+    years: yearsOf([...sessions.map((s) => s.start_at), ...hang.map((h) => h.date)]),
     sessions: cur.sessions,
     sessionsLine: `${t("sessions.sessionCount", { count: cur.sessions })} · ${range}`,
     insight: all

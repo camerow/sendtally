@@ -301,6 +301,19 @@ describe("grade axis ticks", () => {
   });
 });
 
+describe("count axis ticks", () => {
+  it("never repeats a tick on a chart of one or two", () => {
+    const vm = trendsVM(
+      [session("2026-08-04T18:00:00.000Z", [{ vGrade: 3 }])],
+      [],
+      filter({ range: "7d" }),
+      NOW
+    );
+    const pyramid = tileOf(vm, "pyramid");
+    expect(pyramid.ticks).toEqual(["2", "1", "0"]);
+  });
+});
+
 describe("filter helpers", () => {
   it("builds a range from two taps", () => {
     const first = gradeTap(null, 6);

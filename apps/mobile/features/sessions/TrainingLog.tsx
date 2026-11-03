@@ -7,20 +7,11 @@ import {
   type SectionListData,
   type ViewToken,
 } from "react-native";
-import {
-  filterSessionsByTags,
-  monthScopeItems,
-  sessionTagGroups,
-  sessionTagOptions,
-  logCountLabel,
-  logYearGroups,
-  tagScopeItems,
-} from "@sendtally/features/sessions";
-import { groupTrips, logScopeItems, type LogItem } from "@sendtally/features/journal";
+import { monthScopeItems, logCountLabel, logYearGroups } from "@sendtally/features/sessions";
+import { logScopeItems, type LogItem } from "@sendtally/features/journal";
 import { t } from "@sendtally/features/i18n";
-import { colors, fonts } from "@sendtally/design/tokens";
+import { colors } from "@sendtally/design/tokens";
 import { EntryRow, entryRowHeight } from "../journal/EntryRow";
-import { TripGroup, tripGroupHeight } from "../journal/TripGroup";
 import { DEFAULT_FILTERS, FilterSheet, type SessionFilters } from "./FilterSheet";
 import { ScopeBar } from "./ScopeBar";
 import { SECTION_HEADER_HEIGHT, SectionHeader } from "./SectionHeader";
@@ -40,7 +31,7 @@ const rowHeight = (item: LogItem): number => {
   if (item.type === "hang") return HANG_ROW_HEIGHT + blockLine(item);
   if (item.type === "activity") return ACTIVITY_ROW_HEIGHT + blockLine(item);
   if (item.type === "block") return BLOCK_DONE_ROW_HEIGHT;
-  return item.inside.length > 0 ? tripGroupHeight(item) : entryRowHeight(item.entry);
+  return entryRowHeight(item.entry);
 };
 
 function itemLayout(
@@ -82,30 +73,9 @@ export function TrainingLog({ items, header, onRefresh }: TrainingLogProps): Rea
   const all = React.useMemo(() => items ?? [], [items]);
 
   const inScope = React.useMemo(() => logScopeItems(all, filters.scope), [all, filters.scope]);
-  const tagOptions = React.useMemo(() => sessionTagOptions(inScope), [inScope]);
-  const untaggedCount = React.useMemo(
-    () => inScope.filter((i) => i.tags.length === 0).length,
-    [inScope]
-  );
-  const visible = React.useMemo(
-    () => filterSessionsByTags(inScope, filters.tags),
-    [inScope, filters.tags]
-  );
 
   const { sections, scopeItems } = React.useMemo(() => {
-    if (filters.grouping === "tag") {
-      const groups = sessionTagGroups(visible);
-      return {
-        sections: groups.map((g): Section => ({
-          key: g.key,
-          title: g.label,
-          meta: logCountLabel(g.items),
-          data: g.items,
-        })),
-        scopeItems: tagScopeItems(groups),
-      };
-    }
-    const years = logYearGroups(filters.scope === "all" ? groupTrips(visible) : visible);
+    const years = logYearGroups(inScope);
     return {
       sections: years.flatMap((year) =>
         year.months.map((m): Section => ({
@@ -117,7 +87,7 @@ export function TrainingLog({ items, header, onRefresh }: TrainingLogProps): Rea
       ),
       scopeItems: monthScopeItems(years),
     };
-  }, [filters.grouping, filters.scope, visible]);
+  }, [inScope]);
 
   const viewability = React.useMemo(
     () => [
@@ -148,8 +118,7 @@ export function TrainingLog({ items, header, onRefresh }: TrainingLogProps): Rea
     list.current?.scrollToLocation({ sectionIndex: 0, itemIndex: 0, animated: false });
   };
 
-  const filtersActive =
-    filters.tags.length > 0 || filters.grouping === "tag" || filters.scope !== "all";
+  const filtersActive = filters.scope !== "all";
 
   return (
     <>
@@ -182,29 +151,16 @@ export function TrainingLog({ items, header, onRefresh }: TrainingLogProps): Rea
           />
         }
         ListEmptyComponent={
-          items === null ? null : inScope.length === 0 && filters.scope === "journal" ? (
+          items === null || inScope.length > 0 ? null : filters.scope === "journal" ? (
             <View style={{ alignItems: "center", gap: 8, paddingHorizontal: 28, paddingTop: 44 }}>
               <Text style={emptyLabel}>{t("journal.emptyTitle")}</Text>
               <Text style={emptyBody}>{t("journal.emptyBody")}</Text>
             </View>
-          ) : inScope.length === 0 ? (
+          ) : (
             <View style={{ alignItems: "center", gap: 8, paddingHorizontal: 28, paddingTop: 44 }}>
               <Text style={emptyLabel}>{t("training.logEmptyTitle")}</Text>
               <Text style={emptyBody}>{t("training.logEmptyBody")}</Text>
             </View>
-          ) : (
-            <Text
-              style={{
-                padding: 28,
-                textAlign: "center",
-                fontFamily: fonts.mono,
-                fontSize: 13,
-                lineHeight: 20,
-                color: colors.textMuted,
-              }}
-            >
-              {t("sessions.noneForTags")}
-            </Text>
           )
         }
         renderSectionHeader={({ section }) => (
@@ -221,8 +177,6 @@ export function TrainingLog({ items, header, onRefresh }: TrainingLogProps): Rea
             />
           ) : item.type === "block" ? (
             <BlockDoneRow recap={item.recap} onPress={() => openLogItem(item)} />
-          ) : item.inside.length > 0 ? (
-            <TripGroup item={item} onOpen={openLogItem} />
           ) : (
             <EntryRow entry={item.entry} onPress={() => openLogItem(item)} />
           )
@@ -231,8 +185,6 @@ export function TrainingLog({ items, header, onRefresh }: TrainingLogProps): Rea
       <FilterSheet
         visible={filtersOpen}
         items={all}
-        tagOptions={tagOptions}
-        untaggedCount={untaggedCount}
         filters={filters}
         onApply={applyFilters}
         onClose={() => setFiltersOpen(false)}

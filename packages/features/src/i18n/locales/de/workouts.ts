@@ -178,7 +178,7 @@ export const workouts = {
   "workouts.archiveExerciseBody":
     "Sie verschwindet aus der Auswahl und den Übungen, ihr Verlauf bleibt. Legst du sie neu an, ist sie wieder da.",
   "workouts.measure.climbs": "Klettereien",
-  "workouts.measure.wallTime": "Zeit an der Wand",
+  "workouts.measure.wallTime": "Zeit",
   "workouts.advanced": "Erweitert",
   "workouts.preview": "Vorschau",
   "workouts.previewHint": "So misst du diese Übung",

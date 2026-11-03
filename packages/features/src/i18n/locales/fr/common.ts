@@ -24,7 +24,6 @@ export const common = {
   "common.somethingWentWrong": "Une erreur s'est produite.",
   "common.indoor": "En salle",
   "common.outdoor": "En extérieur",
-  "common.backToSettings": "← Réglages",
   "common.account": "Compte",
   "common.signOut": "Se déconnecter",
   "common.deleting": "Suppression…",

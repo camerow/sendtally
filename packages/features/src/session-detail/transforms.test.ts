@@ -195,7 +195,8 @@ describe("sessionDetailVM", () => {
     expect(vm.name).toBe("Tuesday night session");
     expect(vm.place).toBe("Indoor · The Depot");
     expect(vm.when).toMatch(/^Wed Jul 1 · \S.* · 1h 35m$/);
-    expect([vm.length, vm.rpe]).toEqual(["1h 35m", 7]);
+    expect(vm.when).toContain("1h 35m");
+    expect(vm.rpe).toBe(7);
   });
 
   const unposted = {

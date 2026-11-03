@@ -89,7 +89,9 @@ function domainOf(
     return [lo, hi + ((hi - lo) % 2)];
   }
   const max = Math.max(0, ...values);
-  return [0, Math.max(1, chart === "line" ? max * 1.15 : max)];
+  const top = Math.max(1, chart === "line" ? max * 1.15 : max);
+  // Whole counts get an even top, so the middle tick is a whole number too.
+  return [0, kind === "count" || kind === "hours" ? Math.ceil(top / 2) * 2 : top];
 }
 
 export type TileSpec = {

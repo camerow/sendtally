@@ -1,15 +1,8 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
+import { logCountLabel } from "@sendtally/features/sessions";
 import {
-  UNTAGGED_KEY,
-  untaggedLabel,
-  filterSessionsByTags,
-  logCountLabel,
-  type SessionGrouping,
-  type TagOption,
-} from "@sendtally/features/sessions";
-import {
-  LOG_SCOPES,
+  TRAINING_LOG_SCOPES,
   logScopeItems,
   logScopeLabel,
   type LogItem,
@@ -21,15 +14,13 @@ import { Chip } from "../../components/Chip";
 import { Sheet } from "../../components/Sheet";
 import { press } from "../../lib/press";
 
-export type SessionFilters = { scope: LogScope; grouping: SessionGrouping; tags: string[] };
+export type SessionFilters = { scope: LogScope };
 
-export const DEFAULT_FILTERS: SessionFilters = { scope: "all", grouping: "month", tags: [] };
+export const DEFAULT_FILTERS: SessionFilters = { scope: "all" };
 
 export type FilterSheetProps = {
   visible: boolean;
   items: LogItem[];
-  tagOptions: TagOption[];
-  untaggedCount: number;
   filters: SessionFilters;
   onApply: (filters: SessionFilters) => void;
   onClose: () => void;
@@ -47,8 +38,6 @@ const label = {
 export function FilterSheet({
   visible,
   items,
-  tagOptions,
-  untaggedCount,
   filters,
   onApply,
   onClose,
@@ -63,12 +52,7 @@ export function FilterSheet({
     if (visible) setDraft(filters);
   }
 
-  const toggleTag = (slug: string): void =>
-    setDraft((prev) => ({
-      ...prev,
-      tags: prev.tags.includes(slug) ? prev.tags.filter((s) => s !== slug) : [...prev.tags, slug],
-    }));
-  const count = filterSessionsByTags(logScopeItems(items, draft.scope), draft.tags);
+  const count = logScopeItems(items, draft.scope);
 
   return (
     <Sheet visible={visible} onClose={onClose} closeLabel={t("common.closeFilters")}>
@@ -108,51 +92,16 @@ export function FilterSheet({
         <View style={{ gap: 9 }}>
           <Text style={label}>{t("journal.show")}</Text>
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-            {LOG_SCOPES.map((value) => (
+            {TRAINING_LOG_SCOPES.map((value) => (
               <Chip
                 key={value}
                 label={logScopeLabel(value)}
                 active={draft.scope === value}
-                onPress={() => setDraft((prev) => ({ ...prev, scope: value }))}
+                onPress={() => setDraft({ scope: value })}
               />
             ))}
           </View>
         </View>
-        <View style={{ gap: 9 }}>
-          <Text style={label}>{t("sessions.groupBy")}</Text>
-          <View style={{ flexDirection: "row", gap: 8 }}>
-            {(["month", "tag"] as const).map((value) => (
-              <Chip
-                key={value}
-                label={value === "month" ? t("sessions.groupMonth") : t("sessions.groupTag")}
-                active={draft.grouping === value}
-                onPress={() => setDraft((prev) => ({ ...prev, grouping: value }))}
-              />
-            ))}
-          </View>
-        </View>
-        {tagOptions.length > 0 && (
-          <View style={{ gap: 9 }}>
-            <Text style={label}>{t("common.tags")}</Text>
-            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-              {tagOptions.map((tag) => (
-                <Chip
-                  key={tag.slug}
-                  label={`${tag.name} ${tag.count}`}
-                  active={draft.tags.includes(tag.slug)}
-                  onPress={() => toggleTag(tag.slug)}
-                />
-              ))}
-              {untaggedCount > 0 && (
-                <Chip
-                  label={`${untaggedLabel()} ${untaggedCount}`}
-                  active={draft.tags.includes(UNTAGGED_KEY)}
-                  onPress={() => toggleTag(UNTAGGED_KEY)}
-                />
-              )}
-            </View>
-          </View>
-        )}
         <Pressable
           onPress={() => onApply(draft)}
           accessibilityRole="button"

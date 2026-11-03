@@ -1,5 +1,7 @@
 export const summary = {
   "summary.length": "length",
+  "summary.climbs": "climbs",
+  "summary.sent": "sent",
   "summary.effort": "effort",
   "summary.effortAimed": "effort · aimed {n}",
   "summary.sets": "sets",

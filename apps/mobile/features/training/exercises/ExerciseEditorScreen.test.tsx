@@ -50,12 +50,12 @@ describe("exercise editor", () => {
     });
   });
 
-  it("measures climbing in climbs or time on the wall, never by side", async () => {
+  it("measures climbing in climbs or time, never by side", async () => {
     mockApi.saveExercise.mockResolvedValue({ exercise: anExercise("new-id", "4x4s", "climbing") });
     await renderWithHang(<ExerciseEditorScreen kind="climbing" />);
     expect(screen.getByText("Climbing")).toBeTruthy();
     expect(checked("Climbs")).toBe(true);
-    expect(screen.getByRole("radio", { name: "Time on the wall" })).toBeTruthy();
+    expect(screen.getByRole("radio", { name: "Time" })).toBeTruthy();
     expect(screen.queryByRole("radio", { name: "Rounds" })).toBeNull();
     expect(screen.queryByLabelText("Each side")).toBeNull();
     await fireEvent.changeText(screen.getByLabelText("Name"), "4x4s");

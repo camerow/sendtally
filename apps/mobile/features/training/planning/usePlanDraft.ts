@@ -8,6 +8,7 @@ import {
   emptyDraft,
   scheduleOf,
   toggleDay,
+  type DaySchedule,
   type DayToggle,
   type PlanDraft,
 } from "@sendtally/features/training";
@@ -23,6 +24,7 @@ export type PlanDraftState = {
   save: () => void;
   setBlock: (block: Block) => void;
   toggle: (membershipId: string, change: DayToggle) => void;
+  setSchedules: (schedules: readonly DaySchedule[]) => void;
   setChange: (change: WeekChange) => void;
 };
 
@@ -48,6 +50,7 @@ export function usePlanDraft(plan: Plan, startEditing = false): PlanDraftState {
         const m = now.memberships.find((x) => x.id === membershipId);
         return m === undefined ? d : draftSchedule(d, toggleDay(scheduleOf(now, m), change));
       }),
+    setSchedules: (schedules) => edit((d) => schedules.reduce(draftSchedule, d)),
     setChange: (change) => edit((d) => draftChange(d, change)),
   };
 }

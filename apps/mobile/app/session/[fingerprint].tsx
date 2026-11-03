@@ -5,7 +5,6 @@ import {
   CLIMB_SORTS,
   climbSortLabel,
   useSessionDetail,
-  type ClimbFilter,
   type ClimbVM,
   climbMetaLabel,
 } from "@sendtally/features/session-detail";
@@ -22,7 +21,6 @@ import { Pyramid } from "../../components/Pyramid";
 import { ScreenFrame } from "../../components/ScreenFrame";
 import { PyramidLegend } from "../../components/PyramidLegend";
 import { SessionJournal } from "../../features/journal/SessionJournal";
-import { SessionTags } from "../../features/sessions/SessionTags";
 import { useStravaConnect } from "../../features/settings/useStravaConnect";
 import { DetailActions } from "../../features/training/components/DetailActions";
 import { deleteRow } from "../../features/training/components/deleteRow";
@@ -47,7 +45,7 @@ export default function SessionDetailScreen(): React.ReactElement {
   const api = useApi();
   const sessions = useSessions();
   const feature = useSessionDetail(api, fingerprint ?? "");
-  const { state, filter, setFilter, sort, setSort } = feature;
+  const { state, sort, setSort } = feature;
   const { run, refresh } = feature.post;
   const connected = React.useCallback(() => {
     void refresh();
@@ -93,9 +91,9 @@ export default function SessionDetailScreen(): React.ReactElement {
       <ClimbingHero kind={kindLabel("climbing")} state={vm.place} title={vm.name} meta={vm.when} />
       <SummaryTiles
         stats={[
-          { value: vm.length ?? "–", label: t("summary.length") },
+          { value: String(vm.filterCounts.all), label: t("summary.climbs") },
           effortTile(vm.rpe, null),
-          { value: String(vm.filterCounts.sent), label: t("common.sent") },
+          { value: String(vm.filterCounts.sent), label: t("summary.sent") },
         ]}
       />
       {strava !== null && <StravaStatusRow state={strava} />}
@@ -123,8 +121,6 @@ export default function SessionDetailScreen(): React.ReactElement {
         </View>
       )}
 
-      <SessionTags api={api} fingerprint={fingerprint ?? ""} initial={state.data.tags} />
-
       <SessionJournal
         fingerprint={fingerprint ?? ""}
         date={vm.startDay}
@@ -133,27 +129,6 @@ export default function SessionDetailScreen(): React.ReactElement {
 
       <View style={{ gap: 12 }}>
         <Label color={colors.gunmetal}>{`${t("common.climbs")} · ${vm.filterCounts.all}`}</Label>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ gap: 8 }}
-        >
-          {(
-            [
-              ["all", t("sessions.filterAll", { n: vm.filterCounts.all })],
-              ["sent", t("sessions.filterSent", { n: vm.filterCounts.sent })],
-              ["flash", t("sessions.filterFlashed", { n: vm.filterCounts.flash })],
-              ["project", t("sessions.filterProjects", { n: vm.filterCounts.project })],
-            ] as Array<[ClimbFilter, string]>
-          ).map(([value, label]) => (
-            <Chip
-              key={value}
-              label={label}
-              active={filter === value}
-              onPress={() => setFilter(value)}
-            />
-          ))}
-        </ScrollView>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}

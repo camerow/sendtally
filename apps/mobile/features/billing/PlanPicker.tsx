@@ -73,7 +73,7 @@ export function PlanPicker({
                 fontSize: 10,
                 letterSpacing: 0.8,
                 textTransform: "uppercase",
-                color: colors.labelAccent,
+                color: colors.gunmetal,
                 paddingTop: 4,
               }}
             >

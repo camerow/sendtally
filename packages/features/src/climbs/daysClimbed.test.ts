@@ -12,6 +12,12 @@ describe("daysClimbed", () => {
     expect(daysClimbed([], "1y", NOW).weeks).toHaveLength(53);
   });
 
+  it("draws a past calendar year ending on its own last week", () => {
+    const year = daysClimbed([at("2025-12-30T18:00:00Z", "outdoor")], "y2025", NOW);
+    expect(year.weeks.length).toBeGreaterThanOrEqual(52);
+    expect(year.weeks.at(-1)!.days).toContain("outside");
+  });
+
   it("colours each day by where the climbing was, outside winning a day with both", () => {
     const vm = daysClimbed(
       [

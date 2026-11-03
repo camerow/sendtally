@@ -9,6 +9,7 @@ export const plan = {
   "plan.removeTitle": "Retirer {title} de ton plan ?",
   "plan.removeBody": "Ses changements par semaine partent avec. Les séances notées restent.",
   "plan.removeAction": "Retirer",
+  "plan.unscheduleHint": "Retirer cette séance du planning",
   "plan.tabWorkouts": "Séances",
   "plan.empty":
     "Rien de planifié pour l'instant. Place l'escalade, la poutre et le reste de ton entraînement dans ta semaine.",
@@ -65,8 +66,7 @@ export const plan = {
   "plan.upcoming": "À venir",
   "plan.past": "Passés",
   "plan.templates": "Modèles",
-  "plan.alsoWeeks": "Aussi les semaines {from} à {to}",
-  "plan.alsoWeek": "Aussi la semaine {n}",
+  "plan.applyFollowing": "Appliquer aux semaines suivantes",
   "plan.everyWeek": "Chaque semaine",
   "plan.fromWeekOn": "À partir de la semaine {n}",
   "plan.allWeeks_one": "1 semaine",

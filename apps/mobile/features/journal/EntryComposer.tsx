@@ -19,13 +19,11 @@ import {
   useEntryComposer,
   type EntryDraft,
 } from "@sendtally/features/journal";
-import { useTagVocabulary } from "@sendtally/features/sessions";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { BackButton } from "../../components/BackButton";
 import { DateTimeField } from "../../components/DateTimeField";
 import { press } from "../../lib/press";
 import { primaryButton, primaryButtonLabel } from "../../lib/styles";
-import { TagPicker } from "../sessions/TagPicker";
 import { SessionPicker } from "./SessionPicker";
 import { SeverityPicker } from "./SeverityPicker";
 import { TripPreview } from "./TripPreview";
@@ -70,6 +68,7 @@ export function EntryComposer({
   initial,
   editing,
   heading,
+  saveLabel = t("journal.saveEntry"),
   sessions,
   entries,
 }: {
@@ -77,6 +76,8 @@ export function EntryComposer({
   initial: EntryDraft;
   editing?: string;
   heading: string;
+  /** The save button, when the doorway names the entry differently, such as a session's note. */
+  saveLabel?: string;
   sessions: SessionRow[];
   entries: JournalEntry[];
 }): React.ReactElement {
@@ -98,7 +99,6 @@ export function EntryComposer({
     entries,
     onSaved,
   });
-  const { suggestionsFor } = useTagVocabulary(api);
   const spanning = spansDates(draft.kind);
   const update = isUpdateDraft(draft);
 
@@ -226,19 +226,6 @@ export function EntryComposer({
           />
         </Field>
 
-        {!update && (
-          <Field name={t("common.tags")}>
-            <TagPicker
-              tags={draft.tags}
-              suggestions={suggestionsFor(draft.tags)}
-              onAdd={(name) => setDraft((d) => ({ ...d, tags: [...d.tags, name] }))}
-              onRemove={(name) =>
-                setDraft((d) => ({ ...d, tags: d.tags.filter((x) => x !== name) }))
-              }
-            />
-          </Field>
-        )}
-
         {draft.kind === "trip" ? (
           trip !== null && <TripPreview trip={trip} />
         ) : (
@@ -261,9 +248,7 @@ export function EntryComposer({
           disabled={saving || overlap !== null}
           style={press({ ...primaryButton, opacity: saving || overlap !== null ? 0.6 : 1 })}
         >
-          <Text style={primaryButtonLabel}>
-            {saving ? t("common.saving") : t("journal.saveEntry")}
-          </Text>
+          <Text style={primaryButtonLabel}>{saving ? t("common.saving") : saveLabel}</Text>
         </Pressable>
       </ScrollView>
     </KeyboardAvoidingView>

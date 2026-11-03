@@ -176,7 +176,7 @@ export const workouts = {
   "workouts.archiveExerciseBody":
     "It leaves the picker and Exercises but keeps its history. Making it again brings it back.",
   "workouts.measure.climbs": "Climbs",
-  "workouts.measure.wallTime": "Time on the wall",
+  "workouts.measure.wallTime": "Time",
   "workouts.advanced": "Advanced",
   "workouts.preview": "Preview",
   "workouts.previewHint": "This is how you will measure this exercise",
