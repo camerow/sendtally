@@ -64,11 +64,6 @@ const RESULT_BADGES: Record<ClimbVM["result"], { bg: string; border: string; col
     border: "rgba(64,63,76,0.15)",
     color: "rgba(64,63,76,0.45)",
   },
-  attempt: {
-    bg: "transparent",
-    border: "rgba(64,63,76,0.15)",
-    color: "rgba(64,63,76,0.45)",
-  },
 };
 
 const GRID = "34px 1.9fr 62px 62px 70px 92px";
