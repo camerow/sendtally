@@ -114,6 +114,7 @@ export const workouts = {
   "workouts.exerciseRest": "Repos entre exercices",
   "workouts.removeExercise": "Retirer {name}",
   "workouts.seeAll": "Tout voir",
+  "workouts.seeAllCount": "Tout voir ({n})",
   "workouts.seeAllOf": "Tout voir : {kind}",
   "workouts.exerciseBest": "Meilleur {value}",
   "workouts.exerciseBestBodyweight": "Meilleur poids du corps",

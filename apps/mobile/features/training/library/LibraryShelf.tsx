@@ -1,61 +1,53 @@
 import React from "react";
-import { ScrollView, View } from "react-native";
+import { View } from "react-native";
 import { t } from "@sendtally/features/i18n";
 import { focusLabel } from "@sendtally/features/training";
-import type {
-  LibraryShelf as Shelf,
-  LibraryWorkout,
-  WorkoutUse,
-} from "@sendtally/features/workouts";
+import type { LibraryShelf as Shelf, LibraryWorkout } from "@sendtally/features/workouts";
+import { CategoryRow } from "../components/CategoryRow";
 import { ShelfHeader } from "../components/ShelfHeader";
-import { LibraryCard } from "./LibraryCard";
+import { useHangData } from "../data/HangDataContext";
+import { workoutLines } from "../plan/planGridRows";
+
+/** How many workouts a focus shows before See all. */
+export const SHELF_ROWS = 3;
 
 export type LibraryShelfProps = {
   shelf: Shelf;
-  usage: ReadonlyMap<string, WorkoutUse>;
   onPick: (workout: LibraryWorkout) => void;
   onSeeAll: () => void;
   /** Makes a new workout in the shelf's focus. */
   onAdd: () => void;
-  /** The host column's side padding, which the row bleeds through to the screen's edges. */
-  gutter: number;
 };
 
-/** One focus: its name, which opens all of it, and a plus, over a sideways row of its workouts. */
+/** One focus: its name, See all when it holds more than it shows, a plus, and its first workouts. */
 export function LibraryShelf({
   shelf,
-  usage,
   onPick,
   onSeeAll,
   onAdd,
-  gutter,
 }: LibraryShelfProps): React.ReactElement {
+  const { model } = useHangData();
   const label = focusLabel(shelf.focus);
+  const more = shelf.workouts.length > SHELF_ROWS;
   return (
-    <View style={{ gap: 10 }}>
+    <View style={{ gap: 2 }}>
       <ShelfHeader
         title={label}
         muted={shelf.focus === null}
-        onSeeAll={onSeeAll}
+        onSeeAll={more ? onSeeAll : undefined}
+        count={shelf.workouts.length}
         addLabel={t("workouts.newWorkoutIn", { focus: label })}
         onAdd={onAdd}
       />
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={{ marginHorizontal: -gutter }}
-        contentContainerStyle={{ gap: 12, paddingHorizontal: gutter }}
-      >
-        {shelf.workouts.map((w) => (
-          <LibraryCard
-            key={w.id}
-            workout={w}
-            use={usage.get(w.id)}
-            width={264}
-            onPress={() => onPick(w)}
-          />
-        ))}
-      </ScrollView>
+      {shelf.workouts.slice(0, SHELF_ROWS).map((w) => (
+        <CategoryRow
+          key={w.id}
+          kind={w.kind}
+          name={w.name}
+          meta={workoutLines(w, model)[0] ?? null}
+          onPress={() => onPick(w)}
+        />
+      ))}
     </View>
   );
 }

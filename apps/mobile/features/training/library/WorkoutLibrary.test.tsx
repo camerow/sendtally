@@ -43,15 +43,16 @@ const show = (ui: React.ReactElement): Promise<unknown> =>
   renderWithHang(ui, hangData(), { workouts: [legs] });
 
 describe("Workout library", () => {
-  it("shelves every focus with the user's own mixed in and labelled, General last", async () => {
+  it("lists the first three of every focus, with See all only where there are more", async () => {
     await show(<WorkoutLibrary />);
     const shelves = ["Strength", "Power", "Power endurance", "Endurance", "Conditioning"];
     for (const focus of [...shelves, "Recovery", "General"])
-      expect(screen.getByLabelText(`See all ${focus}`)).toBeTruthy();
-    expect(screen.queryByLabelText("See all Skill")).toBeNull();
-    expect(screen.getByText("Leg day")).toBeTruthy();
+      expect(screen.getByLabelText(`New workout in ${focus}`)).toBeTruthy();
+    expect(screen.queryByLabelText("New workout in Skill")).toBeNull();
+    expect(screen.getByLabelText("See all Strength")).toBeTruthy();
+    expect(screen.getByText("See all 7")).toBeTruthy();
+    expect(screen.queryByLabelText("See all Power")).toBeNull();
     expect(screen.getByText("Max hangs")).toBeTruthy();
-    expect(screen.getAllByText("Mine")).toHaveLength(1);
     expect(screen.queryByText(/Built in/)).toBeNull();
 
     await fireEvent.press(screen.getByText("Max hangs"));

@@ -2,8 +2,14 @@ import React from "react";
 import { Text, View } from "react-native";
 import { colors, fonts } from "@sendtally/design/tokens";
 
-/** A climb's grade in a soft box at the head of its row. */
-export function GradeBadge({ label }: { label: string }): React.ReactElement {
+/** A climb's grade in a soft box at the head of its row; white on a row that is soft itself. */
+export function GradeBadge({
+  label,
+  onSoft = false,
+}: {
+  label: string;
+  onSoft?: boolean;
+}): React.ReactElement {
   return (
     <View
       style={{
@@ -13,7 +19,7 @@ export function GradeBadge({ label }: { label: string }): React.ReactElement {
         borderRadius: 9,
         alignItems: "center",
         justifyContent: "center",
-        backgroundColor: colors.surfaceSoft,
+        backgroundColor: onSoft ? colors.white : colors.surfaceSoft,
       }}
     >
       <Text

@@ -44,7 +44,7 @@ describe("exercise shelves", () => {
     expect(router.push).toHaveBeenCalledWith({ pathname: "/exercise/[id]", params: { id: "e2" } });
   });
 
-  it("shows every category with a hint when empty, See all when not, and a plus for each", async () => {
+  it("shows every category with a hint when empty, See all past three, and a plus for each", async () => {
     await renderWithHang(<ExerciseShelves />, hangData(), {
       exercises: [
         anExercise("e1", "Plank", "strength"),
@@ -54,18 +54,18 @@ describe("exercise shelves", () => {
     for (const kind of ["Fingers", "Climbing", "Strength", "Mobility", "Other"])
       expect(screen.getByText(kind)).toBeTruthy();
     expect(screen.queryByText("Pigeon")).toBeNull();
-    expect(screen.getByText("Sloper")).toBeTruthy();
+    expect(screen.getByLabelText("See all Fingers")).toBeTruthy();
     expect(screen.getAllByText("Not done yet").length).toBeGreaterThan(0);
     expect(screen.getByText("A stretch or a hold, like Pancake.")).toBeTruthy();
     expect(screen.queryByText("1")).toBeNull();
-    expect(screen.getByLabelText("See all Strength")).toBeTruthy();
+    expect(screen.queryByLabelText("See all Strength")).toBeNull();
     expect(screen.queryByLabelText("See all Climbing")).toBeNull();
     expect(screen.queryByLabelText("See all Mobility")).toBeNull();
 
-    await fireEvent.press(screen.getByLabelText("See all Strength"));
+    await fireEvent.press(screen.getByLabelText("See all Fingers"));
     expect(router.push).toHaveBeenLastCalledWith({
       pathname: "/exercise/category",
-      params: { kind: "strength" },
+      params: { kind: "hangboard" },
     });
     await fireEvent.press(screen.getByLabelText("New exercise in Climbing"));
     expect(router.push).toHaveBeenLastCalledWith({
