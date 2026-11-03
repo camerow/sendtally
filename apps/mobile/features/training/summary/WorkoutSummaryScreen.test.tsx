@@ -166,7 +166,7 @@ describe("A finished workout's summary", () => {
     expect(screen.getByText("effort")).toBeTruthy();
   });
 
-  it("reads a climbing workout's climbs per set and its time on the wall, against last time", async () => {
+  it("reads a climbing workout's climbs per set and its time, against last time", async () => {
     const v = (grade: string, sent = true) => ({ grade, scale: "v" as const, tries: 1, sent });
     const green = { ...v("V1"), circuit: { id: "g", label: "Green", colour: "green" } };
     const climbing = (id: string, date: string, sends: boolean[], laps: number) =>
@@ -189,7 +189,7 @@ describe("A finished workout's summary", () => {
     expect(screen.getByText("Climbing")).toBeTruthy();
     expect(screen.getByText("+2 sent vs last")).toBeTruthy();
     expect(screen.getByText("4 climbs · 3 sent · top V4")).toBeTruthy();
-    expect(screen.getAllByLabelText("V4, Not yet")).toHaveLength(1);
+    expect(screen.getAllByLabelText("V4, Attempted")).toHaveLength(1);
     expect(screen.getByText("+3 laps vs last")).toBeTruthy();
     expect(screen.getByText("20:00 · 18 laps")).toBeTruthy();
     expect(screen.getByText("20:00 on the wall · Green circuit")).toBeTruthy();

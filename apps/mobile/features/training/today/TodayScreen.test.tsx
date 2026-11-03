@@ -15,6 +15,7 @@ let mockParams: Record<string, string> = {};
 const mockPlanActions = {
   savePlanChange: jest.fn(async () => undefined),
   undoPlanChange: jest.fn(async () => undefined),
+  deleteMembership: jest.fn(async () => undefined),
 };
 jest.mock("../plan/usePlanActions", () => ({ usePlanActions: () => mockPlanActions }));
 jest.mock("expo-router", () => ({
@@ -67,8 +68,9 @@ describe("Today", () => {
     await renderWithHang(<TodayScreen />, hangData(), { plan: plan("max10") });
     await fireEvent.press(screen.getByLabelText(/^Monday.*0 done, 1 planned$/));
     expect(screen.getByText("Missed")).toBeTruthy();
-    expect(screen.queryByText("Start")).toBeNull();
-    await fireEvent.press(screen.getByText("Max hangs"));
+    // Only today's card starts; Monday's row is the first Max hangs in the week.
+    expect(screen.getAllByText("Start")).toHaveLength(1);
+    await fireEvent.press(screen.getAllByText("Max hangs")[0]!);
     expect(screen.getByText("Record it as done")).toBeTruthy();
     expect(screen.getByText("Reschedule")).toBeTruthy();
     expect(screen.getByText("Not counted as missed")).toBeTruthy();
@@ -78,14 +80,17 @@ describe("Today", () => {
     const hang = aHang({ workoutId: "max10", date: "2026-09-28", membershipId: "m1" });
     await renderWithHang(<TodayScreen />, hangData({ sessions: [hang] }), { plan: plan("max10") });
     await fireEvent.press(screen.getByLabelText(/^Monday.*1 done, 0 planned$/));
-    expect(screen.getByText("1 done")).toBeTruthy();
     expect(screen.getAllByText("Done")).toHaveLength(1);
-    expect(screen.getAllByText("Max hangs")).toHaveLength(1);
+    // Monday's logged hang, and today's card: Monday's plan is not listed again.
+    expect(screen.getAllByText("Max hangs")).toHaveLength(2);
   });
 
-  it("counts the week as done of planned", async () => {
+  it("lists every day of the week, an empty one as its date alone", async () => {
     await renderWithHang(<TodayScreen />, hangData(), { plan: plan("max10") });
-    expect(screen.getByText("0 of 2 done")).toBeTruthy();
+    expect(screen.queryByText(/of \d+ done$/)).toBeNull();
+    expect(screen.getByText("Wednesday Sep 30")).toBeTruthy();
+    expect(screen.getByText("Sunday Oct 4")).toBeTruthy();
+    expect(screen.queryByText("Rest day")).toBeNull();
   });
 
   it("lists every block in progress with its workouts, leaving out a finished one", async () => {
@@ -145,7 +150,7 @@ describe("Today", () => {
   it("starts today's lifting workout in the sets player with what it prescribes", async () => {
     await renderWithHang(<TodayScreen />, hangData(), { plan: plan("legs"), workouts: [legs] });
     expect(screen.getByText("Up today · Strength")).toBeTruthy();
-    expect(screen.getByText("5 × 5")).toBeTruthy();
+    expect(screen.getAllByText("5 × 5").length).toBeGreaterThan(0);
     await fireEvent.press(screen.getByText("Start"));
     expect(router.push).toHaveBeenCalledWith({
       pathname: "/workout/sets",
@@ -182,7 +187,7 @@ describe("Today", () => {
 
   it("skips today's workout from its ··· menu, with why", async () => {
     await renderWithHang(<TodayScreen />, hangData(), { plan: plan("max10") });
-    await fireEvent.press(screen.getByLabelText("More"));
+    await fireEvent.press(screen.getAllByLabelText("More").at(-1)!);
     await fireEvent.press(screen.getByText("Skip"));
     expect(screen.getByText("Skip it?")).toBeTruthy();
     await fireEvent.press(screen.getByText("Sore"));
@@ -218,9 +223,29 @@ describe("Today", () => {
     expect(mockPlanActions.undoPlanChange).toHaveBeenCalledWith("m1", "2026-09-29");
   });
 
+  it("removes a one-off from its ··· menu", async () => {
+    const oneOff: Plan = {
+      ...plan("max10"),
+      memberships: [
+        { id: "m1", workoutId: "max10", blockId: null, weekdays: [], start: "2026-09-29" },
+      ],
+    };
+    await renderWithHang(<TodayScreen />, hangData(), { plan: oneOff });
+    await fireEvent.press(screen.getByLabelText("More"));
+    expect(screen.getByText("Unschedule this workout")).toBeTruthy();
+    await fireEvent.press(screen.getByText("Remove"));
+    expect(mockPlanActions.deleteMembership).toHaveBeenCalledWith("m1");
+  });
+
+  it("leaves Remove off a repeating plan, which Skip covers", async () => {
+    await renderWithHang(<TodayScreen />, hangData(), { plan: plan("max10") });
+    await fireEvent.press(screen.getAllByLabelText("More").at(-1)!);
+    expect(screen.queryByText("Remove")).toBeNull();
+  });
+
   it("reschedules today's workout to any later day picked on the calendar", async () => {
     await renderWithHang(<TodayScreen />, hangData(), { plan: plan("max10") });
-    await fireEvent.press(screen.getByLabelText("More"));
+    await fireEvent.press(screen.getAllByLabelText("More").at(-1)!);
     await fireEvent.press(screen.getByText("Reschedule"));
     await fireEvent.press(screen.getByLabelText("Next month"));
     await fireEvent.press(screen.getByLabelText("Wednesday Oct 7"));

@@ -37,8 +37,6 @@ export function useClimbs(api: SendtallyApi): ClimbsFeature {
 export type ClimbFeature = {
   state: QueryState<{ climb: ClimbSummary; vm: ClimbDetailVM }>;
   setWorking: (working: boolean) => Promise<void>;
-  /** Resolves to the climb's id after the rename: another one's when it merged into it. */
-  rename: (name: string) => Promise<string>;
   /** Writes a note on the climb's page, a new one when it has no id yet; saved on the phone first. */
   saveNote: (note: Omit<ClimbNote, "id"> & { id?: string }) => void;
   deleteNote: (id: string) => void;
@@ -61,13 +59,6 @@ export function useClimb(api: SendtallyApi, idOrSlug: string, newId: () => strin
   const setWorking = React.useCallback(
     async (working: boolean): Promise<void> => {
       if (id !== null) await api.updateClimb(id, { working });
-    },
-    [api, id]
-  );
-  const rename = React.useCallback(
-    async (name: string): Promise<string> => {
-      if (id === null) throw new Error("climb not loaded");
-      return (await api.updateClimb(id, { name })).id;
     },
     [api, id]
   );
@@ -104,5 +95,5 @@ export function useClimb(api: SendtallyApi, idOrSlug: string, newId: () => strin
     },
     [api, id, local]
   );
-  return { state, setWorking, rename, saveNote, deleteNote, reload };
+  return { state, setWorking, saveNote, deleteNote, reload };
 }

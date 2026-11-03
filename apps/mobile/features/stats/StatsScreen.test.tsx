@@ -23,7 +23,21 @@ const mockClimb = (vGrade: number, kind: "send" | "attempt"): object => ({
 
 jest.mock("expo-router", () => ({ router: { push: jest.fn() } }));
 jest.mock("../../lib/api", () => ({ useApi: () => undefined }));
-jest.mock("../billing/useBilling", () => ({ useCanSeeInsights: () => true }));
+let mockMember: boolean | null = true;
+jest.mock("../billing/useBilling", () => ({ useCanSeeInsights: () => mockMember }));
+jest.mock("@sendtally/features/query", () => ({
+  ...jest.requireActual<object>("@sendtally/features/query"),
+  useQuery: () => ({
+    state: {
+      status: "ready",
+      data: {
+        sessions: [{ start_at: "2026-10-01T18:00:00Z" }, { start_at: "2023-04-01T18:00:00Z" }],
+        hangSessions: [{ date: "2025-02-01" }],
+        activities: [],
+      },
+    },
+  }),
+}));
 jest.mock("../../lib/statsSegmentStorage", () => {
   let value: string | null = null;
   return {
@@ -40,6 +54,9 @@ jest.mock("../../lib/statsSegmentStorage", () => {
       }),
   };
 });
+jest.mock("@sendtally/features/gyms", () => ({
+  useGyms: () => ({ state: { status: "ready", data: [] } }),
+}));
 jest.mock("@sendtally/features/settings", () => ({
   useGradeScalePrefs: () => ({ scales: { boulder: "font", route: "yds" }, ready: true }),
 }));
@@ -76,7 +93,10 @@ jest.mock("../training/insights/TrainingInsights", () => ({
 }));
 
 describe("Stats", () => {
-  beforeEach(() => statsSegmentStorage.remove());
+  beforeEach(() => {
+    statsSegmentStorage.remove();
+    mockMember = true;
+  });
 
   it("opens on Climbing: the pyramid, then the average send in the climber's scale, then the days", async () => {
     await render(<StatsScreen />);
@@ -84,9 +104,7 @@ describe("Stats", () => {
     expect(screen.getByLabelText("6C avg send")).toBeTruthy();
     expect(screen.getByLabelText("3 sends")).toBeTruthy();
     expect(screen.queryByText(/days? outside/)).toBeNull();
-    expect(
-      screen.getByLabelText("Days climbing, Last 7 days: 1 outside, 0 in the gym.")
-    ).toBeTruthy();
+    expect(screen.getByLabelText("Days climbing, All time: 1 outside, 0 in the gym.")).toBeTruthy();
   });
 
   it("keeps the range across segments and remembers the segment on the device", async () => {
@@ -101,6 +119,33 @@ describe("Stats", () => {
   it("opens on the segment last shown", async () => {
     statsSegmentStorage.write("training");
     await render(<StatsScreen />);
+    expect(screen.getByText("Training over all")).toBeTruthy();
+  });
+
+  it("offers All, then a chip per year with sessions newest first, then the trailing ranges", async () => {
+    statsSegmentStorage.write("training");
+    await render(<StatsScreen />);
+    const chips = screen.getAllByRole("button").map((b) => b.props.accessibilityLabel as string);
+    expect(chips.slice(chips.indexOf("All"), chips.indexOf("7D") + 1)).toEqual([
+      "All",
+      "2026",
+      "2025",
+      "2023",
+      "1Y",
+      "6M",
+      "3M",
+      "1M",
+      "7D",
+    ]);
+    await fireEvent.press(screen.getByLabelText("2025"));
+    expect(screen.getByText("Training over y2025")).toBeTruthy();
+  });
+
+  it("opens a non-member on the free 7D, every other range locked", async () => {
+    mockMember = false;
+    statsSegmentStorage.write("training");
+    await render(<StatsScreen />);
     expect(screen.getByText("Training over 7d")).toBeTruthy();
+    expect(screen.getByLabelText("2026, members only")).toBeTruthy();
   });
 });

@@ -11,6 +11,7 @@ import {
 } from "@sendtally/features/climbs";
 import { t } from "@sendtally/features/i18n";
 import { disciplineLabel, type Discipline } from "@sendtally/features/log-session";
+import { useGyms } from "@sendtally/features/gyms";
 import { useGradeScalePrefs } from "@sendtally/features/settings";
 import type { TrendRange } from "@sendtally/features/trends";
 import { colors, fonts } from "@sendtally/design/tokens";
@@ -18,6 +19,7 @@ import { Pyramid } from "../../components/Pyramid";
 import { PyramidLegend } from "../../components/PyramidLegend";
 import { Segmented } from "../../components/Segmented";
 import { useApi } from "../../lib/api";
+import { ClimbsByGrade } from "./ClimbsByGrade";
 import { CountTile } from "./CountTile";
 import { DaysClimbing } from "./DaysClimbing";
 import { GradeBadge } from "./GradeBadge";
@@ -40,6 +42,11 @@ export function ClimbingInsights({ range }: { range: TrendRange }): React.ReactE
   const boulderScale = useGradeScalePrefs(api).scales.boulder === "font" ? "font" : "v";
   const [discipline, setDiscipline] = React.useState<Discipline | null>(null);
   const [place, setPlace] = React.useState<ClimbPlaceFilter>("all");
+  const gymList = useGyms(api).state;
+  const gyms = React.useMemo(
+    () => new Map(gymList.status === "ready" ? gymList.data.map((g) => [g.id, g.name]) : []),
+    [gymList]
+  );
   const ready = state.status === "ready" ? state.data : null;
   const sessions = React.useMemo(
     () => (ready === null ? [] : [...ready.sessions, ...workoutClimbSessions(ready.activities)]),
@@ -55,15 +62,16 @@ export function ClimbingInsights({ range }: { range: TrendRange }): React.ReactE
             discipline: shownDiscipline,
             place,
             boulderScale,
+            gyms,
           }),
-    [ready, sessions, range, shownDiscipline, place, boulderScale]
+    [ready, sessions, range, shownDiscipline, place, boulderScale, gyms]
   );
   const days = React.useMemo(() => daysClimbed(sessions, range), [sessions, range]);
 
   return (
     <>
       <View style={{ flexDirection: "row", gap: 8 }}>
-        <View style={{ flex: 1 }}>
+        <View style={{ flex: 2 }}>
           <Segmented
             soft
             label={t("climbs.discipline")}
@@ -75,7 +83,7 @@ export function ClimbingInsights({ range }: { range: TrendRange }): React.ReactE
             }))}
           />
         </View>
-        <View style={{ flex: 1 }}>
+        <View style={{ flex: CLIMB_PLACES.length }}>
           <Segmented
             soft
             label={t("climbs.where")}
@@ -130,6 +138,7 @@ export function ClimbingInsights({ range }: { range: TrendRange }): React.ReactE
               />
             )}
           </View>
+          {vm.byGrade.length > 0 && <ClimbsByGrade grades={vm.byGrade} />}
           <View style={{ flexDirection: "row", gap: 6 }}>
             <CountTile value={vm.avgSend ?? "–"} label={t("climbs.avgSendWord")} />
             <CountTile value={vm.sends} label={t("climbs.sendsWord", { count: vm.sends })} />

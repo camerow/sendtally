@@ -7,10 +7,12 @@ import { gripMeasureOf, type Focus, type Item, type WorkoutKind } from "@sendtal
 import { colors } from "@sendtally/design/tokens";
 import { exerciseLabel } from "@sendtally/features/exercises";
 import { t } from "@sendtally/features/i18n";
+import { durationLabel } from "@sendtally/features/sessions";
 import { exerciseKey, useExercises } from "@sendtally/features/statistics";
 import {
   copyName,
   draftOf,
+  estimatedMinutes,
   newWorkoutDraft,
   useWorkoutActions,
   workoutMinutes,
@@ -35,6 +37,8 @@ import {
   withExerciseSwapped,
   withItem,
   withItemsAdded,
+  withEditorIds,
+  withItemMoved,
   withoutItem,
 } from "./editorState";
 import { doseMeasureOf } from "./doseFields";
@@ -72,7 +76,7 @@ function initialDraft(
 ): WorkoutDraft | null {
   const base = library.workout(id ?? from ?? "");
   if (base !== undefined) {
-    const draft = draftOf(base);
+    const draft = withEditorIds(draftOf(base));
     return id === undefined ? { ...draft, name: copyName(draft.name) } : draft;
   }
   return kind === undefined ? null : startingDraft({ ...newWorkoutDraft(kind), focus });
@@ -93,6 +97,7 @@ function Editor({
   const exercises = useExercises(api).state;
   const { model } = useHangData();
   const [state, setState] = React.useState(initial);
+  const estimate = estimatedMinutes(state);
   const [untouched] = React.useState(initial);
   const [picking, setPicking] = React.useState<{ swap: number } | "add" | null>(null);
   const exerciseNamed = (name: string) =>
@@ -166,7 +171,7 @@ function Editor({
           />
           {state.items.map((item, i) => (
             <ItemEditor
-              key={i}
+              key={item.id ?? i}
               kind={state.kind}
               item={item}
               name={nameOf(item.exercise)}
@@ -175,6 +180,10 @@ function Editor({
               onChange={(next) => setState((s) => withItem(s, i, next))}
               onRemove={() => setState((s) => withoutItem(s, i))}
               onSwap={() => setPicking({ swap: i })}
+              {...(i > 0 && { onMoveUp: () => setState((s) => withItemMoved(s, i, i - 1)) })}
+              {...(i < state.items.length - 1 && {
+                onMoveDown: () => setState((s) => withItemMoved(s, i, i + 1)),
+              })}
             />
           ))}
           <TimeField
@@ -197,6 +206,7 @@ function Editor({
               label={t("common.duration")}
               value={(state.minutes ?? 0) * 60}
               max={MAX_MINUTES * 60}
+              {...(estimate !== null && { placeholder: `~${durationLabel(estimate)}` })}
               onChange={(seconds) => setState((s) => ({ ...s, minutes: usualMinutes(seconds) }))}
             />
           )}

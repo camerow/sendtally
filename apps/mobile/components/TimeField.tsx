@@ -15,16 +15,28 @@ export type TimeFieldProps = FieldSlot & {
   onChange: (seconds: number) => void;
   min?: number;
   max?: number;
+  /** Dimmed in the box while the value is zero, such as an estimate. */
+  placeholder?: string;
 };
 
 /** A length of time read as HH:MM:SS with its leading zeros dimmed, typed on the in-app keypad. */
-export function TimeField({ value, min, max, ...field }: TimeFieldProps): React.ReactElement {
+export function TimeField({
+  value,
+  min,
+  max,
+  placeholder,
+  ...field
+}: TimeFieldProps): React.ReactElement {
   return (
     <KeypadField
       {...field}
       mode={{ kind: "time", min, max }}
       value={value}
-      text={timeText(openTime(value, { min, max }))}
+      text={
+        placeholder !== undefined && value === 0
+          ? [placeholder, ""]
+          : timeText(openTime(value, { min, max }))
+      }
     />
   );
 }

@@ -10,8 +10,6 @@ import {
   useEntryComposer,
   type EntryDraft,
 } from "@sendtally/features/journal";
-import { useTagVocabulary } from "@sendtally/features/sessions";
-import { TagPicker } from "../../components/TagPicker";
 import { SessionPicker } from "./SessionPicker";
 import { SeverityPicker } from "./SeverityPicker";
 import { TripPreview } from "./TripPreview";
@@ -58,6 +56,7 @@ export function EntryComposer({
   initial,
   editing,
   heading,
+  saveLabel = t("journal.saveEntry"),
   sessions,
   entries,
 }: {
@@ -65,6 +64,7 @@ export function EntryComposer({
   initial: EntryDraft;
   editing?: string;
   heading: string;
+  saveLabel?: string;
   sessions: SessionRow[];
   entries: JournalEntry[];
 }): React.ReactElement {
@@ -81,7 +81,6 @@ export function EntryComposer({
     entries,
     onSaved,
   });
-  const { suggestionsFor } = useTagVocabulary(api);
   const spanning = spansDates(draft.kind);
   // An update belongs to its thread: it never picks a kind, and it is the one
   // place the number matters more than the words.
@@ -160,17 +159,6 @@ export function EntryComposer({
         />
       </Field>
 
-      {!update && (
-        <Field name={t("common.tags")}>
-          <TagPicker
-            tags={draft.tags}
-            suggestions={suggestionsFor(draft.tags)}
-            onAdd={(name) => setDraft((d) => ({ ...d, tags: [...d.tags, name] }))}
-            onRemove={(name) => setDraft((d) => ({ ...d, tags: d.tags.filter((x) => x !== name) }))}
-          />
-        </Field>
-      )}
-
       {draft.kind === "trip" ? (
         trip !== null && <TripPreview trip={trip} />
       ) : (
@@ -196,7 +184,7 @@ export function EntryComposer({
           disabled={saving || overlap !== null}
           className="journal-save"
         >
-          {saving ? t("common.saving") : t("journal.saveEntry")}
+          {saving ? t("common.saving") : saveLabel}
         </button>
       </div>
     </div>

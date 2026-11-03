@@ -5,7 +5,7 @@ import { formatNumber, t } from "../i18n";
 import { durationLabel } from "../log-session/transforms";
 import { focusLabel } from "../training/focus";
 import { isUnscored } from "../sessions/meta";
-import { DAY_MS, bucketsFor, windowOf } from "../trends/buckets";
+import { DAY_MS, bucketsFor, priorWindow, windowOf } from "../trends/buckets";
 import type { TrendRange } from "../trends/types";
 import { exerciseSeries, type ExerciseMetric } from "./exercises";
 import { kindLabel } from "../activities/format";
@@ -194,7 +194,8 @@ export function trainingInsightsVM(
   const { start, end } = windowOf(buckets);
   const within = (ms: number): boolean => ms >= start && ms < end;
   const shown = all.filter((d) => within(d.at));
-  const before = all.filter((d) => d.at >= start - (end - start) && d.at < start);
+  const prior = priorWindow(range, { start, end }) ?? { start: start - (end - start), end: start };
+  const before = all.filter((d) => d.at >= prior.start && d.at < prior.end);
   const weeks = Math.max(1, (end - start) / (7 * DAY_MS));
   const minutes = shown.reduce((n, d) => n + d.minutes, 0);
   const line = [

@@ -17,7 +17,6 @@ export const logSession = {
   "logSession.tooLong": "Sessions longer than 12 hours can't be logged.",
   "logSession.needClimb": "Add at least one climb.",
   "logSession.needGrade": "Every climb needs a grade.",
-  "logSession.backToSession": "← Session",
   "logSession.editTitle": "Edit session",
   "logSession.sessionNameOptional": "Session name · optional",
   "logSession.sessionNamePlaceholder": "Tuesday night session",

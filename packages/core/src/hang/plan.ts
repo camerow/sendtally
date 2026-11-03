@@ -71,7 +71,27 @@ export type SetDone = Omit<Dose, "sets" | "name"> & { climbs?: SetClimb[] };
  * One exercise of a workout. One dose is the same every session; with more, sessions
  * take them in turn. A hangboard item's exercise is its grip id.
  */
-export type Item = { exercise: string; doses: Dose[] };
+export type Item = { id?: string; exercise: string; doses: Dose[] };
+
+/** An item's id, which week changes follow when items move. One saved before ids is its place. */
+export const itemIdOf = (item: Pick<Item, "id">, index: number): string => item.id ?? String(index);
+
+/**
+ * Every item with an id of its own. Items saved before ids take their place, which is what
+ * their week changes were saved against; any other missing or repeated id gets a new one.
+ */
+export function withItemIds<T extends Pick<Item, "id">>(
+  items: readonly T[],
+  newId: () => string
+): T[] {
+  if (items.every((i) => i.id === undefined)) return items.map((i, n) => ({ ...i, id: String(n) }));
+  const seen = new Set<string>();
+  return items.map((i) => {
+    const id = i.id === undefined || seen.has(i.id) ? newId() : i.id;
+    seen.add(id);
+    return { ...i, id };
+  });
+}
 
 /** One exercise as one session runs it: the dose that session takes, and its turn when it alternates. */
 export type SessionItem = { exercise: string; dose: Dose; turn?: number };
@@ -131,7 +151,7 @@ export type WeekChange = {
   membershipId: string;
   week: number;
   dose: number;
-  item: number;
+  itemId: string;
   change: Partial<Dose>;
 };
 
@@ -261,6 +281,7 @@ export type Prescribed = {
 /** The items as the session runs them, with that week's changes laid over each dose. */
 export function prescription(changes: readonly WeekChange[], p: Prescribed): SessionItem[] {
   return p.workout.items.map((item, i) => {
+    const itemId = itemIdOf(item, i);
     const dose = doseIndex(item, p.session);
     const run = sessionItem(item, p.session);
     const change =
@@ -271,7 +292,7 @@ export function prescription(changes: readonly WeekChange[], p: Prescribed): Ses
               c.membershipId === p.membershipId &&
               c.week === p.week &&
               c.dose === dose &&
-              c.item === i
+              c.itemId === itemId
           );
     return change === undefined ? run : { ...run, dose: { ...run.dose, ...change.change } };
   });

@@ -57,7 +57,6 @@ export type SessionDetailVM = {
   place: string;
   /** Day, start time and length. */
   when: string;
-  length: string | null;
   rpe: number | null;
   /** The session's UTC day, for anything that opens dated to it. */
   startDay: string;

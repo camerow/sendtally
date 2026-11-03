@@ -59,7 +59,8 @@ import {
   climbSlug,
   missingClimbs,
   projectBody,
-  renameBody,
+  climbEditBody,
+  regradedSessions,
   restampedSessions,
   withClimbNotes,
 } from "./lib/climbs";
@@ -301,6 +302,24 @@ const saveManualSession = async (
   // Already posted sessions get the activity patched, never a second one.
   postAfterResponse(c, fingerprint, () => syncSessionToStrava(c.env, userId, fingerprint));
   return body;
+};
+
+// A climb can sit only at a live crag the user can see, and link only to a live climb there.
+const invalidClimbPlace = async (
+  db: D1Database,
+  userId: string,
+  areaId: string | null,
+  areaClimbId: string | null
+): Promise<string | null> => {
+  if (areaId === null && areaClimbId === null) return null;
+  const viewer = await repo.getViewer(db, userId);
+  if (areaId !== null) {
+    const area = await repo.getArea(db, viewer, areaId);
+    if (area === null || isRegion(area) || !isOpen(area)) return "unknown area";
+  }
+  if (areaClimbId === null) return null;
+  const [linked] = (await repo.areaClimbsByIds(db, viewer, [areaClimbId])).filter(isOpen);
+  return linked === undefined ? "unknown climb" : null;
 };
 
 const viewerOf = (c: Context<AppEnv>): Promise<Viewer> => repo.getViewer(c.env.DB, c.get("userId"));
@@ -943,7 +962,9 @@ const app = new Hono<AppEnv>()
       missing.create.length > 0 || missing.link.length > 0
         ? await repo.listUserClimbs(db, userId)
         : known;
-    const areaIds = [...new Set(rows.flatMap((r) => (r.area_id === null ? [] : [r.area_id])))];
+    const areaIds = [
+      ...new Set([...rows, ...records].flatMap((r) => (r.area_id === null ? [] : [r.area_id]))),
+    ];
     const areaNames = new Map(
       (await repo.areasByIds(db, viewer, areaIds)).map((a) => [a.id, a.name])
     );
@@ -981,30 +1002,54 @@ const app = new Hono<AppEnv>()
     }
   )
 
-  .patch("/v1/climbs/:id", zValidator("json", renameBody, invalidBody), async (c) => {
+  // Renames (or merges into the climb already called that), and sets the crag and its Areas climb
+  // on the climb itself, where logged sessions keep theirs. A new grade is written into every
+  // session the climb was logged in, and those sessions are scored again.
+  .patch("/v1/climbs/:id", zValidator("json", climbEditBody, invalidBody), async (c) => {
     const userId = c.get("userId");
     const db = c.env.DB;
-    const form = c.req.valid("json");
+    const { name, working, areaId, areaClimbId, grade } = c.req.valid("json");
     const records = await repo.listUserClimbs(db, userId);
     const climb = records.find((r) => r.id === c.req.param("id"));
     if (climb === undefined) return c.json({ error: "not found" }, 404);
-    if (form.working !== undefined) {
-      await repo.setUserClimbWorking(db, userId, climb.id, form.working);
+    const invalid = await invalidClimbPlace(db, userId, areaId ?? null, areaClimbId ?? null);
+    if (invalid !== null) return c.json({ error: invalid }, 400);
+    if (working !== undefined) {
+      await repo.setUserClimbWorking(db, userId, climb.id, working);
     }
-    if (form.name === undefined) return c.json({ id: climb.id });
-    const nameKey = climbSlug(form.name);
-    if (nameKey === "") return c.json({ error: "invalid request body" }, 400);
-    const into = records.find((r) => r.name_key === nameKey && r.id !== climb.id) ?? null;
-    const target = into?.id ?? climb.id;
-    const rows = await repo.listSessions(db, userId, 5000, true);
-    await repo.renameUserClimb(db, userId, {
-      climb: { ...climb, working: form.working ?? climb.working },
-      name: form.name,
-      nameKey,
-      into,
-      sessions: restampedSessions(rows, records, climb, target),
-    });
-    await captureEvent(c, into === null ? "climb_renamed" : "climb_merged", {});
+    let target = climb.id;
+    if (name !== undefined) {
+      const nameKey = climbSlug(name);
+      if (nameKey === "") return c.json({ error: "invalid request body" }, 400);
+      const into = records.find((r) => r.name_key === nameKey && r.id !== climb.id) ?? null;
+      target = into?.id ?? climb.id;
+      const rows = await repo.listSessions(db, userId, 5000, true);
+      await repo.renameUserClimb(db, userId, {
+        climb: { ...climb, working: working ?? climb.working },
+        name,
+        nameKey,
+        into,
+        sessions: restampedSessions(rows, records, climb, target),
+      });
+      await captureEvent(c, into === null ? "climb_renamed" : "climb_merged", {});
+    }
+    if (areaId !== undefined || areaClimbId !== undefined) {
+      await repo.setUserClimbPlace(db, userId, target, {
+        ...(areaId === undefined ? {} : { area_id: areaId }),
+        ...(areaClimbId === undefined ? {} : { area_climb_id: areaClimbId }),
+      });
+    }
+    if (grade !== undefined) {
+      const [rows, now] = await Promise.all([
+        repo.listSessions(db, userId, 5000, true),
+        repo.listUserClimbs(db, userId),
+      ]);
+      const regraded = regradedSessions(rows, now, target, grade);
+      await repo.regradeUserClimb(db, userId, target, grade, regraded);
+    }
+    if (areaId !== undefined || areaClimbId !== undefined || grade !== undefined) {
+      await captureEvent(c, "climb_edited", {});
+    }
     return c.json({ id: target });
   })
 

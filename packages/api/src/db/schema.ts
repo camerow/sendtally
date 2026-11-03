@@ -307,6 +307,8 @@ export const userClimbs = sqliteTable(
       .default("boulder"),
     grade_json: text("grade_json"),
     area_climb_id: text("area_climb_id"),
+    // Set only by editing the climb, and then it wins over the crag its sessions were at.
+    area_id: text("area_id"),
     working: integer("working", { mode: "boolean" }).notNull().default(false),
     created_at: text("created_at").notNull(),
     updated_at: text("updated_at").notNull(),
@@ -697,9 +699,9 @@ export const memberships = sqliteTable(
   (t) => [primaryKey({ columns: [t.user_id, t.id] })]
 );
 
-// What one block week changes about one dose of one item of a membership's
-// workout, as a partial dose counted from the workout as written. The `variation`
-// column holds the dose index: a variation index became one when items took turns.
+// The week changes table before they were keyed by item id: nothing reads it now. It stays
+// until every deployed API reads item_week_changes, because a shared staging database is
+// also read by branches built before the move. Dropped in a follow-up.
 export const weekChanges = sqliteTable(
   "week_changes",
   {
@@ -713,6 +715,24 @@ export const weekChanges = sqliteTable(
     change_json: text("change_json").notNull(),
   },
   (t) => [primaryKey({ columns: [t.user_id, t.membership_id, t.week, t.dose, t.item] })]
+);
+
+// What one block week changes about one dose of one item of a membership's workout, as a
+// partial dose counted from the workout as written. The item is its id, so a change follows
+// it when the workout's items move.
+export const itemWeekChanges = sqliteTable(
+  "item_week_changes",
+  {
+    user_id: text("user_id")
+      .notNull()
+      .references(() => users.id),
+    membership_id: text("membership_id").notNull(),
+    week: integer("week").notNull(),
+    dose: integer("dose").notNull(),
+    item_id: text("item_id").notNull(),
+    change_json: text("change_json").notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.user_id, t.membership_id, t.week, t.dose, t.item_id] })]
 );
 
 // A block membership's weekdays from one block week on, set when its days are edited

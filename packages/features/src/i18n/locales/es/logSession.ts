@@ -17,7 +17,6 @@ export const logSession = {
   "logSession.tooLong": "No se pueden registrar sesiones de más de 12 horas.",
   "logSession.needClimb": "Añade al menos una vía o bloque.",
   "logSession.needGrade": "Cada vía o bloque necesita un grado.",
-  "logSession.backToSession": "← Sesión",
   "logSession.editTitle": "Editar sesión",
   "logSession.sessionNameOptional": "Nombre de la sesión · opcional",
   "logSession.sessionNamePlaceholder": "Sesión del martes por la noche",

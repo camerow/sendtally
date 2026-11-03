@@ -130,6 +130,13 @@ export type ClimbSummary = Ok<Client["v1"]["climbs"]["$get"]>["climbs"][number];
 
 /** A note on a climb's page with no session behind it. */
 export type ClimbNote = ClimbSummary["notes"][number];
+export type ClimbChange = {
+  name?: string;
+  working?: boolean;
+  areaId?: string | null;
+  areaClimbId?: string | null;
+  grade?: NonNullable<ClimbSummary["grade"]>;
+};
 
 export type ClimbGrade = NonNullable<ClimbSummary["grade"]>;
 

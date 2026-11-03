@@ -429,6 +429,57 @@ describe("app", () => {
     expect((await list()).find((c) => c.id === pinchId)?.notes).toEqual([]);
   });
 
+  it("regrades a climb in every session it was logged in, and scores those again", async () => {
+    const user = "user_regrade";
+    const headers = { "x-test-user": user, "Content-Type": "application/json" };
+    const logged = (await (
+      await postSession(
+        user,
+        logBody({
+          climbs: [
+            { name: "Pinch", grade: { scale: "v", value: 3 }, kind: "send", tries: 1 },
+            { name: "Roof", grade: { scale: "v", value: 1 }, kind: "send", tries: 1 },
+          ],
+        })
+      )
+    ).json()) as { session: { fingerprint: string } };
+    const { climbs } = (await (await testApp().request("/v1/climbs", { headers }, env)).json()) as {
+      climbs: Array<{ id: string; name: string }>;
+    };
+    const pinch = climbs.find((c) => c.name === "Pinch")!;
+
+    const patched = await testApp().request(
+      `/v1/climbs/${pinch.id}`,
+      {
+        method: "PATCH",
+        headers,
+        body: JSON.stringify({ grade: { scale: "v", value: 9 } }),
+      },
+      env
+    );
+    expect(patched.status).toBe(200);
+    const { session } = (await (
+      await testApp().request(`/v1/sessions/${logged.session.fingerprint}`, { headers }, env)
+    ).json()) as {
+      session: {
+        top_grade_label: string;
+        climbs: Array<{ name: string; grade: unknown }>;
+      };
+    };
+    expect(session.top_grade_label).toBe("V9");
+    expect(session.climbs.map((c) => [c.name, c.grade])).toEqual([
+      ["Pinch", { scale: "v", value: 9 }],
+      ["Roof", { scale: "v", value: 1 }],
+    ]);
+    const stored = await env.DB.prepare(
+      "SELECT top_send_grade, summary FROM sessions WHERE fingerprint = ?"
+    )
+      .bind(logged.session.fingerprint)
+      .first<{ top_send_grade: number; summary: string }>();
+    expect(stored?.top_send_grade).toBe(9);
+    expect(stored?.summary).toContain("✓ V9 Pinch");
+  });
+
   it("adds a project with no grade and keeps it on a re-post", async () => {
     const headers = { "x-test-user": "user_addproject", "Content-Type": "application/json" };
     const created = await testApp().request(

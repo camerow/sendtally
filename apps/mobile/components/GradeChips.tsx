@@ -8,7 +8,7 @@ export type GradeChip = { key: string; label: string; colour?: string };
 export type GradeChipsProps = {
   chips: readonly GradeChip[];
   active: string | null;
-  /** The chip the row opens at, so the user's range is in view. */
+  /** The chip the row opens at, so the user's range is in view; a pick never scrolls it. */
   startIndex: number;
   /** Grey chips on white, for a form; the tally's own are on its dark ground. */
   light?: boolean;
@@ -27,9 +27,10 @@ export function GradeChips({
 }: GradeChipsProps): React.ReactElement {
   const scroller = React.useRef<ScrollView>(null);
   const first = chips[0]?.key;
-  React.useEffect(() => {
+  const open = React.useEffectEvent(() => {
     scroller.current?.scrollTo({ x: Math.max(0, startIndex - 1) * (CHIP + GAP), animated: false });
-  }, [first, startIndex]);
+  });
+  React.useEffect(() => open(), [first]);
   return (
     <ScrollView
       ref={scroller}

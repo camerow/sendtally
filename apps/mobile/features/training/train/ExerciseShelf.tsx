@@ -1,11 +1,12 @@
 import React from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import type { WorkoutKind } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { kindLabel } from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
-import { pressRow } from "../../../lib/press";
+import { CategoryRow } from "../components/CategoryRow";
 import { ShelfHeader } from "../components/ShelfHeader";
+import { SHELF_ROWS } from "../library/LibraryShelf";
 import { type } from "../type";
 import type { ShelfCard } from "./types";
 
@@ -16,17 +17,7 @@ export type ExerciseShelfProps = {
   onSeeAll: () => void;
 };
 
-const card = {
-  width: 184,
-  minHeight: 96,
-  padding: 14,
-  gap: 8,
-  borderRadius: 16,
-  borderWidth: 1,
-  borderColor: colors.lineOnLight,
-} as const;
-
-/** One category: its heading and plus, then its exercises, or a hint when it has none. */
+/** One category: its heading and plus, then its first exercises, done ones first, or a hint when it has none. */
 export function ExerciseShelf({
   kind,
   cards,
@@ -35,20 +26,22 @@ export function ExerciseShelf({
 }: ExerciseShelfProps): React.ReactElement {
   const label = kindLabel(kind);
   return (
-    <View style={{ gap: 10 }}>
+    <View style={{ gap: 2 }}>
       <ShelfHeader
         title={label}
         kind={kind}
-        onSeeAll={cards.length === 0 ? undefined : onSeeAll}
+        onSeeAll={cards.length > SHELF_ROWS ? onSeeAll : undefined}
+        count={cards.length}
         addLabel={t("workouts.newExerciseIn", { category: label })}
         onAdd={onAdd}
       />
       {cards.length === 0 ? (
         <View
           style={{
-            ...card,
-            width: undefined,
             minHeight: 72,
+            marginTop: 8,
+            padding: 14,
+            borderRadius: 16,
             justifyContent: "center",
             borderWidth: 1.5,
             borderStyle: "dashed",
@@ -60,29 +53,20 @@ export function ExerciseShelf({
           </Text>
         </View>
       ) : (
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={{ marginHorizontal: -18 }}
-          contentContainerStyle={{ gap: 12, paddingHorizontal: 18 }}
-        >
-          {cards.map((c) => (
-            <Pressable
+        [...cards]
+          .sort((a, b) => Number(a.meta === null) - Number(b.meta === null))
+          .slice(0, SHELF_ROWS)
+          .map((c) => (
+            <CategoryRow
               key={c.key}
+              kind={kind}
+              name={c.name}
+              meta={c.meta ?? t("workouts.notDoneYet")}
+              faded={c.meta === null}
+              showKind={false}
               onPress={c.open}
-              disabled={c.open === undefined}
-              accessibilityRole="button"
-              style={pressRow(card)}
-            >
-              <Text style={[type.bodyBold, { fontSize: 15, color: colors.gunmetal }]}>
-                {c.name}
-              </Text>
-              <Text style={[type.mono, { fontSize: 12, color: colors.textSecondary }]}>
-                {c.meta}
-              </Text>
-            </Pressable>
-          ))}
-        </ScrollView>
+            />
+          ))
       )}
     </View>
   );

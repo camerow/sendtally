@@ -2,6 +2,7 @@ import { router } from "expo-router";
 import React from "react";
 import { Text, View } from "react-native";
 import {
+  itemIdOf,
   blockEnd,
   blockWeekOn,
   doseIndex,
@@ -77,6 +78,7 @@ export function LadderScreen({ id, back }: LadderScreenProps): React.ReactElemen
   const look = KIND_LOOK[w.kind];
   const turns = turnsOf(w.items);
   const items = sessionItems(w.items, turn);
+  const itemIdAt = (index: number): string => itemIdOf(w.items[index] ?? {}, index);
   const doseOf = (index: number): number => doseIndex(w.items[index] ?? { doses: [] }, turn);
   const weeks = Array.from({ length: block.weeks }, (_, i) => i + 1);
   const changesOf = (index: number): Partial<Dose>[] =>
@@ -84,7 +86,10 @@ export function LadderScreen({ id, back }: LadderScreenProps): React.ReactElemen
       (week) =>
         plan.weekChanges.find(
           (c) =>
-            c.membershipId === id && c.week === week && c.dose === doseOf(index) && c.item === index
+            c.membershipId === id &&
+            c.week === week &&
+            c.dose === doseOf(index) &&
+            c.itemId === itemIdAt(index)
         )?.change ?? {}
     );
   const current = blockWeekOn(block, today);
@@ -126,7 +131,7 @@ export function LadderScreen({ id, back }: LadderScreenProps): React.ReactElemen
             membershipId: id,
             week,
             dose: doseOf(index),
-            item: index,
+            itemId: itemIdAt(index),
             change,
           })
         }

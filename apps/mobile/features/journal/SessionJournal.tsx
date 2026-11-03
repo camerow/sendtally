@@ -37,7 +37,7 @@ export function SessionJournal({
       }}
     >
       <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-        <Text style={{ ...heading, color: colors.gunmetal }}>{t("journal.title")}</Text>
+        <Text style={{ ...heading, color: colors.gunmetal }}>{t("common.notes")}</Text>
         <Pressable
           onPress={() =>
             router.push({
@@ -47,7 +47,7 @@ export function SessionJournal({
           }
           style={press({ minHeight: 32, justifyContent: "center" })}
         >
-          <Text style={{ ...heading, color: colors.azureInk }}>{t("journal.journalEntry")}</Text>
+          <Text style={{ ...heading, color: colors.azureInk }}>{t("climbs.addNote")}</Text>
         </Pressable>
       </View>
       {entries.length === 0 && (

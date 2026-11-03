@@ -116,9 +116,3 @@ export function dayMarks(day: TrainingDay): DayMarkSpec[] {
       .flatMap((p) => (p.workout === undefined ? [] : [{ kind: p.workout.kind, filled: false }])),
   ];
 }
-
-/** The week's logged marks out of every mark: what was logged plus everything still open. */
-export function weekDone(days: readonly TrainingDay[]): { done: number; planned: number } {
-  const marks = days.flatMap(dayMarks);
-  return { done: marks.filter((m) => m.filled).length, planned: marks.length };
-}

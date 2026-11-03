@@ -25,7 +25,8 @@ jest.mock("@sendtally/features/climbs", () => ({
         vm: {
           id: "c1",
           name: "The Arete",
-          kicker: "Boulder · V5",
+          kicker: "Boulder",
+          title: "The Arete, V5",
           meta: "The Depot · first tried 2 Sep",
           project: false,
           days: "6",
@@ -37,7 +38,6 @@ jest.mock("@sendtally/features/climbs", () => ({
       },
     },
     setWorking: jest.fn(),
-    rename: jest.fn(),
     saveNote: mockSaveNote,
     deleteNote: mockDeleteNote,
   }),
@@ -46,8 +46,8 @@ jest.mock("@sendtally/features/climbs", () => ({
 describe("Climb detail", () => {
   it("introduces the climb and reads its days, tries and best as tiles", async () => {
     await render(<ClimbDetailScreen id="c1" />);
-    expect(screen.getByText("Boulder · V5")).toBeTruthy();
-    expect(screen.getByText("The Arete")).toBeTruthy();
+    expect(screen.getByText("Boulder")).toBeTruthy();
+    expect(screen.getByText("The Arete, V5")).toBeTruthy();
     expect(screen.getByText("The Depot · first tried 2 Sep")).toBeTruthy();
     for (const text of ["6", "Days", "23", "Tries", "Flash", "Best"]) {
       expect(screen.getByText(text)).toBeTruthy();
@@ -63,11 +63,20 @@ describe("Climb detail", () => {
     });
   });
 
-  it("adds a dated note to the climb from the menu", async () => {
+  it("edits the climb itself from the bar", async () => {
+    await render(<ClimbDetailScreen id="c1" />);
+    await fireEvent.press(screen.getByText("Edit"));
+    expect(router.push).toHaveBeenCalledWith({
+      pathname: "/climb/log",
+      params: { climbId: "c1", edit: "1" },
+    });
+  });
+
+  it("adds a dated note to the climb from the + beside Notes", async () => {
     await render(<ClimbDetailScreen id="c1" />);
     expect(screen.queryByText("Add a note")).toBeNull();
-    await fireEvent.press(screen.getByLabelText("More"));
-    await fireEvent.press(screen.getByText("Add a note"));
+    expect(screen.queryByLabelText("More")).toBeNull();
+    await fireEvent.press(screen.getByLabelText("Add a note"));
     await fireEvent.changeText(
       screen.getByPlaceholderText("What happened, what to try next"),
       "Heel on the left"

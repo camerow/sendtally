@@ -1,7 +1,17 @@
-import { disciplineOf, type Discipline } from "@sendtally/core";
+import {
+  disciplineOf,
+  historySession,
+  parseClimbs,
+  rescoredSession,
+  withGrade,
+  type Discipline,
+  type Grade,
+  type ManualSessionRow,
+} from "@sendtally/core";
 import { z } from "zod";
 import * as repo from "./repo";
 import type { ClimbGrade, SessionRow, UserClimbRow } from "./repo";
+import { gradeSchema } from "./manual";
 import { tagSlug } from "./tags";
 
 export const MAX_CLIMB_NAME_LENGTH = 200;
@@ -164,13 +174,24 @@ export function missingClimbs(
   }
   const link = records.flatMap((r) => {
     const id = linkBySlug.get(r.name_key);
-    return r.area_climb_id === null && id !== undefined ? [{ id: r.id, area_climb_id: id }] : [];
+    return r.area_climb_id === null && r.area_id === null && id !== undefined
+      ? [{ id: r.id, area_climb_id: id }]
+      : [];
   });
   return { create: [...create.values()], link };
 }
 
 // Sessions arrive newest first, so the first sighting of a climb carries the
 // name and grade the user logged most recently, and the crag it was last at.
+const areaOf = (
+  id: string | null | undefined,
+  names: ReadonlyMap<string, string>
+): { id: string; name: string } | null => {
+  const name = id == null ? undefined : names.get(id);
+  return id == null || name === undefined ? null : { id, name };
+};
+
+/** A climb's grade comes from its newest session, and its crag too unless the climb was edited to say. */
 export function climbCatalogue(
   sessions: CatalogueSession[],
   records: UserClimbRow[],
@@ -188,11 +209,7 @@ export function climbCatalogue(
       if (record === undefined) continue;
       const tries = climb.tries ?? 1;
       const sent = climb.kind !== "attempt";
-      const areaName = session.area_id == null ? undefined : areaNames.get(session.area_id);
-      const area =
-        session.area_id == null || areaName === undefined
-          ? null
-          : { id: session.area_id, name: areaName };
+      const area = areaOf(record.area_id ?? session.area_id, areaNames);
       const existing = byId.get(record.id);
       if (existing === undefined) {
         const grade = storedGrade(climb);
@@ -236,7 +253,7 @@ export function climbCatalogue(
       discipline: grade === null ? record.discipline : disciplineOf(grade.scale),
       project: record.working,
       area_climb_id: record.area_climb_id,
-      area: null,
+      area: areaOf(record.area_id, areaNames),
       sessions: 0,
       attempts: 0,
       sends: 0,
@@ -249,9 +266,12 @@ export function climbCatalogue(
   return [...byId.values()].sort((a, b) => b.last_at.localeCompare(a.last_at));
 }
 
-export const renameBody = z.object({
+export const climbEditBody = z.object({
   name: z.string().trim().min(1).max(MAX_CLIMB_NAME_LENGTH).optional(),
   working: z.boolean().optional(),
+  areaId: z.string().min(1).max(64).nullable().optional(),
+  areaClimbId: z.string().min(1).max(64).nullable().optional(),
+  grade: gradeSchema.optional(),
 });
 
 // Every manual climb that is this one now carries the id of the climb it
@@ -274,5 +294,63 @@ export function restampedSessions(
       return { ...c, userClimbId: toId };
     });
     return changed ? [{ fingerprint: session.fingerprint, climbs_json: JSON.stringify(next) }] : [];
+  });
+}
+
+/** The scoring history the log form scores a session against: the user's latest, less itself. */
+const SCORING_HISTORY = 200;
+
+export type RegradedSession = Pick<
+  ManualSessionRow,
+  | "fingerprint"
+  | "climbs_json"
+  | "climb_count"
+  | "send_count"
+  | "top_grade"
+  | "top_send_grade"
+  | "top_grade_label"
+  | "top_send_grade_label"
+  | "rpe"
+  | "title"
+  | "summary"
+>;
+
+type ScorableSession = Pick<
+  ManualSessionRow,
+  "fingerprint" | "start_at" | "end_at" | "name" | "rpe" | "rpe_source"
+> & { source: string; climbs_json?: string | null };
+
+// Every manual session the climb was logged in, at the new grade and scored again
+// against the history as it reads after the change. Board rows are never touched.
+export function regradedSessions(
+  sessions: ScorableSession[],
+  records: UserClimbRow[],
+  climbId: string,
+  grade: Grade
+): RegradedSession[] {
+  const resolve = climbResolver(records);
+  const changed = new Set<string>();
+  const next = sessions.map((session) => {
+    if (session.source !== "manual" || session.climbs_json == null) return session;
+    let hit = false;
+    const climbs = parseClimbs(session.climbs_json).map((c) => {
+      if (climbSlug(c.name) === "" || resolve({ ...c, name: c.name.trim() })?.id !== climbId)
+        return c;
+      hit = true;
+      return withGrade(c, grade);
+    });
+    if (!hit) return session;
+    changed.add(session.fingerprint);
+    return { ...session, climbs_json: JSON.stringify(climbs) };
+  });
+  const latest = next.slice(0, SCORING_HISTORY);
+  return next.flatMap((session) => {
+    if (!changed.has(session.fingerprint) || session.climbs_json == null) return [];
+    const history = latest
+      .filter((r) => r.fingerprint !== session.fingerprint && r.rpe_source !== "none")
+      .map(historySession)
+      .filter((h) => h !== null);
+    const { fingerprint, climbs_json } = session;
+    return [{ fingerprint, climbs_json, ...rescoredSession({ ...session, climbs_json }, history) }];
   });
 }

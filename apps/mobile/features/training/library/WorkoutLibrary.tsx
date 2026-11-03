@@ -25,7 +25,6 @@ function Library(): React.ReactElement {
             <LibraryShelf
               key={focusParam(shelf.focus)}
               shelf={shelf}
-              usage={state.data.usage}
               onPick={open}
               onSeeAll={() =>
                 router.push({
@@ -34,7 +33,6 @@ function Library(): React.ReactElement {
                 })
               }
               onAdd={() => setAdding({ focus: shelf.focus })}
-              gutter={18}
             />
           ))}
         </LibraryBrowser>
@@ -58,7 +56,7 @@ function Library(): React.ReactElement {
 }
 
 /**
- * Every workout, built in and the user's own, on one sideways shelf per focus, to search,
+ * Every workout, built in and the user's own, listed by focus, to search,
  * open, see a focus whole, or make a new one in it. It lays out as a plain column for the
  * host screen's own scroll view and loads its own data.
  */

@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { climbCatalogue, missingClimbs, restampedSessions } from "../src/lib/climbs";
+import {
+  climbCatalogue,
+  missingClimbs,
+  regradedSessions,
+  restampedSessions,
+} from "../src/lib/climbs";
 import type { UserClimbRow } from "../src/lib/repo";
 
 const session = (fingerprint: string, start_at: string, climbs: unknown[], area_id?: string) => ({
@@ -18,6 +23,7 @@ const record = (id: string, name: string, overrides: Partial<UserClimbRow> = {})
   discipline: "boulder",
   grade_json: null,
   area_climb_id: null,
+  area_id: null,
   working: false,
   created_at: "2026-08-01T00:00:00Z",
   updated_at: "2026-08-01T00:00:00Z",
@@ -111,6 +117,98 @@ describe("climbCatalogue", () => {
       [record("x", "New name")]
     );
     expect(catalogue.map((c) => [c.id, c.name])).toEqual([["x", "New name"]]);
+  });
+});
+
+describe("an edited climb", () => {
+  const names = new Map([
+    ["a1", "Stoney Point"],
+    ["a2", "Castle Rock"],
+  ]);
+  const logged = [
+    session(
+      "s1",
+      "2026-09-01T18:00:00Z",
+      [{ name: "Moonraker", grade: { scale: "v", value: 6 } }],
+      "a1"
+    ),
+  ];
+
+  it("shows the crag it was edited to over its newest session's", () => {
+    const [climb] = climbCatalogue(logged, [record("c1", "Moonraker", { area_id: "a2" })], names);
+    expect(climb?.area).toEqual({ id: "a2", name: "Castle Rock" });
+  });
+
+  it("keeps an unlogged project's edited crag", () => {
+    const [climb] = climbCatalogue(
+      [],
+      [record("c1", "Moonraker", { working: true, area_id: "a2" })],
+      names
+    );
+    expect(climb?.area).toEqual({ id: "a2", name: "Castle Rock" });
+  });
+
+  it("is not relinked to an Areas climb by name once its crag was edited", () => {
+    const links = [{ climb_slug: "moonraker", climb_id: "ac-1" }];
+    expect(missingClimbs(logged, [record("c1", "Moonraker")], links).link).toEqual([
+      { id: "c1", area_climb_id: "ac-1" },
+    ]);
+    expect(
+      missingClimbs(logged, [record("c1", "Moonraker", { area_id: "a2" })], links).link
+    ).toEqual([]);
+  });
+});
+
+describe("regradedSessions", () => {
+  const scored = (fingerprint: string, start_at: string, climbs: unknown[], rpe = 5) => ({
+    ...session(fingerprint, start_at, climbs),
+    end_at: start_at.replace("T18", "T20"),
+    name: null,
+    rpe,
+    rpe_source: "computed" as const,
+  });
+  const go = (name: string, value: number) => ({
+    time: "2026-09-01T18:30:00Z",
+    name,
+    vGrade: value,
+    grade: { scale: "v", value },
+    kind: "send",
+    tries: 1,
+    angle: null,
+  });
+
+  it("writes the grade into every session the climb was in, and scores those again", () => {
+    const rows = [
+      scored("s2", "2026-09-02T18:00:00Z", [go("Moonraker", 3), go("Warm up", 1)]),
+      scored("s1", "2026-09-01T18:00:00Z", [go("Warm up", 1)]),
+      { ...scored("b1", "2026-08-30T18:00:00Z", [go("Moonraker", 3)]), source: "board" },
+    ];
+    const regraded = regradedSessions(
+      rows,
+      [record("m", "Moonraker"), record("w", "Warm up")],
+      "m",
+      { scale: "font", value: "7A" }
+    );
+    expect(regraded.map((r) => r.fingerprint)).toEqual(["s2"]);
+    const [s2] = regraded;
+    expect(JSON.parse(s2?.climbs_json ?? "[]")).toMatchObject([
+      { name: "Moonraker", grade: { scale: "font", value: "7A" }, vGrade: 6 },
+      { name: "Warm up", grade: { scale: "v", value: 1 } },
+    ]);
+    expect(s2).toMatchObject({ top_grade: 6, top_send_grade: 6, top_grade_label: "7A" });
+  });
+
+  it("keeps the effort the climber gave and the name they gave the session", () => {
+    const row = {
+      ...scored("s1", "2026-09-01T18:00:00Z", [go("Moonraker", 3)], 9),
+      name: "Crag day",
+      rpe_source: "user" as const,
+    };
+    const [s1] = regradedSessions([row], [record("m", "Moonraker")], "m", {
+      scale: "v",
+      value: 8,
+    });
+    expect(s1).toMatchObject({ rpe: 9, title: "Crag day" });
   });
 });
 

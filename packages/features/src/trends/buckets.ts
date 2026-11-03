@@ -1,5 +1,5 @@
 import { formatDate, t, type MessageKey } from "../i18n";
-import type { TrendRange } from "./types";
+import { isYearRange, yearOf, type TrendRange, type YearRange } from "./types";
 
 export const DAY_MS = 24 * 3_600_000;
 const WEEK_MS = 7 * DAY_MS;
@@ -7,18 +7,17 @@ const WEEK_MS = 7 * DAY_MS;
 /** `label` names the whole bucket for the readout, `axis` is the short tick under it. */
 export type Bucket = { start: number; end: number; axis: string; label: string };
 
-const RANGE_KEYS: Record<TrendRange, MessageKey> = {
+const RANGE_KEYS: Record<Exclude<TrendRange, YearRange>, MessageKey> = {
   "7d": "trends.range7d",
   "1m": "trends.range1m",
   "3m": "trends.range3m",
   "6m": "trends.range6m",
-  ytd: "trends.rangeYtd",
   "1y": "trends.range1y",
   all: "trends.rangeAll",
 };
 
 export function rangeLabel(range: TrendRange): string {
-  return t(RANGE_KEYS[range]);
+  return isYearRange(range) ? String(yearOf(range)) : t(RANGE_KEYS[range]);
 }
 
 const utc = (options: Intl.DateTimeFormatOptions): Intl.DateTimeFormatOptions => ({
@@ -104,6 +103,11 @@ function yearsFrom(firstMs: number, now: Date): Bucket[] {
 /** Session times are the climber's wall clock stored as UTC, so every bucket is cut in UTC. */
 export function bucketsFor(range: TrendRange, clock: Date, firstMs: number | null): Bucket[] {
   const now = new Date(wallClock(clock));
+  if (isYearRange(range)) {
+    const year = yearOf(range);
+    const last = year < now.getUTCFullYear() ? new Date(Date.UTC(year, 11, 1)) : now;
+    return monthsFrom(Date.UTC(year, 0, 1), last);
+  }
   switch (range) {
     case "7d":
       return trailingDays(now, 7);
@@ -113,8 +117,6 @@ export function bucketsFor(range: TrendRange, clock: Date, firstMs: number | nul
       return trailingWeeks(now, 13);
     case "6m":
       return trailingMonths(now, 6);
-    case "ytd":
-      return trailingMonths(now, now.getUTCMonth() + 1);
     case "1y":
       return trailingMonths(now, 12);
     case "all": {
@@ -125,7 +127,25 @@ export function bucketsFor(range: TrendRange, clock: Date, firstMs: number | nul
   }
 }
 
-/** The window the buckets cover, and the same length just before it for the delta. */
+/** The window the buckets cover. */
 export function windowOf(buckets: Bucket[]): { start: number; end: number } {
   return { start: buckets[0]?.start ?? 0, end: buckets[buckets.length - 1]?.end ?? 0 };
+}
+
+const yearBefore = (ms: number): number => {
+  const d = new Date(ms);
+  return Date.UTC(d.getUTCFullYear() - 1, d.getUTCMonth(), d.getUTCDate());
+};
+
+/**
+ * What a window's delta compares against: the same months of the year before for a calendar
+ * year, else the same length just before it. All time has nothing before it.
+ */
+export function priorWindow(
+  range: TrendRange,
+  { start, end }: { start: number; end: number }
+): { start: number; end: number } | null {
+  if (range === "all") return null;
+  if (isYearRange(range)) return { start: yearBefore(start), end: yearBefore(end) };
+  return { start: start - (end - start), end: start };
 }

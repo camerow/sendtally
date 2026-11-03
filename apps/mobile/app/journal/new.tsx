@@ -36,8 +36,14 @@ export default function NewEntryScreen(): React.ReactElement {
     [params.kind, params.date, params.session, params.parent]
   );
 
+  // A session's Notes card adds a note, as a climb's does.
+  const note = params.session !== undefined && initial.kind === "journal";
   const heading =
-    params.parent !== undefined ? t("journal.addUpdate") : newEntryHeading(initial.kind);
+    params.parent !== undefined
+      ? t("journal.addUpdate")
+      : note
+        ? t("climbs.addNote")
+        : newEntryHeading(initial.kind);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.white }} edges={["top", "bottom"]}>
@@ -46,6 +52,7 @@ export default function NewEntryScreen(): React.ReactElement {
           api={api}
           initial={initial}
           heading={heading}
+          {...(note && { saveLabel: t("common.save") })}
           sessions={state.data.sessions}
           entries={state.data.entries}
         />

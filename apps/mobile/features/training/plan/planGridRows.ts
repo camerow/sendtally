@@ -1,11 +1,12 @@
 import type { Plan } from "@sendtally/api-client";
-import type {
-  Dose,
-  Membership,
-  WeekChange,
-  WeightUnit,
-  Workout,
-  WorkoutKind,
+import {
+  itemIdOf,
+  type Dose,
+  type Membership,
+  type WeekChange,
+  type WeightUnit,
+  type Workout,
+  type WorkoutKind,
 } from "@sendtally/core/hang";
 import { kindLabel } from "@sendtally/features/activities";
 import type { OccurrenceStatus, WorkoutLookup } from "@sendtally/features/training";
@@ -126,9 +127,13 @@ export function planGridRows(
     if (w === undefined) return [];
     const changes = (n: number): Partial<Dose>[] =>
       w.items.map(
-        (_, item) =>
+        (item, i) =>
           week?.changes.find(
-            (c) => c.membershipId === m.id && c.week === n && c.dose === 0 && c.item === item
+            (c) =>
+              c.membershipId === m.id &&
+              c.week === n &&
+              c.dose === 0 &&
+              c.itemId === itemIdOf(item, i)
           )?.change ?? {}
       );
     return [

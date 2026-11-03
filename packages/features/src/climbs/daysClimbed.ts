@@ -1,6 +1,6 @@
 import { formatDate, t } from "../i18n";
 import { bucketsFor, DAY_MS, dayStart, rangeLabel, wallClock, windowOf } from "../trends/buckets";
-import type { TrendRange } from "../trends/types";
+import { isYearRange, type TrendRange } from "../trends/types";
 import type { InsightsSession } from "./insights";
 
 const WEEK_MS = 7 * DAY_MS;
@@ -48,7 +48,9 @@ export function daysClimbed(
   const { start, end } = windowOf(bucketsFor(range, now, first));
   const columns = Math.max(1, Math.ceil((end - start) / WEEK_MS));
   const today = dayStart(wallClock(now));
-  const monday = today - ((new Date(today).getUTCDay() + 6) % 7) * DAY_MS;
+  // A past calendar year ends on its own last day, not today.
+  const last = isYearRange(range) ? Math.min(today, end - DAY_MS) : today;
+  const monday = last - ((new Date(last).getUTCDay() + 6) % 7) * DAY_MS;
   const from = monday - (columns - 1) * WEEK_MS;
 
   const climbed = new Map<number, ClimbingDay>();

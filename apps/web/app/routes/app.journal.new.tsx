@@ -51,8 +51,14 @@ export default function NewEntry(): React.ReactElement {
     };
   }, [searchParams]);
 
+  // A session's Notes card adds a note, as a climb's does.
+  const note = initial.fingerprints.length > 0 && initial.kind === "journal";
   const heading =
-    searchParams.get("parent") !== null ? t("journal.addUpdate") : newEntryHeading(initial.kind);
+    searchParams.get("parent") !== null
+      ? t("journal.addUpdate")
+      : note
+        ? t("climbs.addNote")
+        : newEntryHeading(initial.kind);
 
   return (
     <div>
@@ -61,6 +67,7 @@ export default function NewEntry(): React.ReactElement {
         api={api}
         initial={initial}
         heading={heading}
+        {...(note && { saveLabel: t("common.save") })}
         sessions={sessions}
         entries={entries}
       />

@@ -3,7 +3,7 @@ import type { CircuitColour, SessionWithClimbs } from "@sendtally/api-client";
 import { climbKey } from "../climbs/transforms";
 import { formatNumber, t } from "../i18n";
 import { enduranceAmountLabel } from "../log-session/endurance";
-import { bucketsFor, rangeLabel, windowOf } from "./buckets";
+import { bucketsFor, priorWindow, rangeLabel, windowOf } from "./buckets";
 import { ALL_LADDER } from "./slice";
 import { delta, formatter, pointsOver, tile } from "./tile";
 import { type EnduranceCircuitVM, type EnduranceVM, type TrendRange } from "./types";
@@ -80,10 +80,11 @@ export function enduranceVM(
   const { start, end } = windowOf(buckets);
   const inRange = all.filter((s) => s.time >= start && s.time < end);
   const cur = tally(inRange);
+  const before = priorWindow(range, { start, end });
   const prior =
-    range === "all"
+    before === null
       ? null
-      : tally(all.filter((s) => s.time >= start - (end - start) && s.time < start));
+      : tally(all.filter((s) => s.time >= before.start && s.time < before.end));
   const per = buckets.map((b) => tally(inRange.filter((s) => s.time >= b.start && s.time < b.end)));
   const label = rangeLabel(range);
   const ladder = ALL_LADDER;

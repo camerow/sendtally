@@ -47,8 +47,15 @@ export function RangeChips({
   isLocked?: (range: TrendRange) => boolean;
   onLocked?: () => void;
 }): React.ReactElement {
+  const row = React.useRef<HTMLDivElement>(null);
+  React.useEffect(() => {
+    const el = row.current;
+    const chip = el?.querySelector<HTMLElement>('[aria-pressed="true"]');
+    if (el && chip)
+      el.scrollLeft = chip.offsetLeft - el.offsetLeft - (el.clientWidth - chip.offsetWidth) / 2;
+  }, [range]);
   return (
-    <div role="group" aria-label={t("trends.timeRange")} className="trend-ranges">
+    <div ref={row} role="group" aria-label={t("trends.timeRange")} className="trend-ranges">
       {ranges.map((r) => {
         const locked = isLocked(r);
         return (
@@ -60,7 +67,7 @@ export function RangeChips({
             aria-label={locked ? t("common.membersOnly", { label: trendRangeLabel(r) }) : undefined}
             style={chipStyle(range === r, {
               height: 32,
-              padding: "0 14px",
+              padding: "0 12px",
               ...(locked ? lockedChip : {}),
             })}
           >

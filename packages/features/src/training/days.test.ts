@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { Activity, HangSessionRecord, Plan, SessionRow } from "@sendtally/api-client";
 import type { Protocol, Workout } from "@sendtally/core/hang";
-import { dayMarks, trainingDay, trainingWeek, weekDone, type TrainingLog } from "./days";
+import { dayMarks, trainingDay, trainingWeek, type TrainingLog } from "./days";
 
 const TODAY = "2026-10-01";
 
@@ -148,14 +148,6 @@ const log = (overrides: Partial<TrainingLog> = {}): TrainingLog => ({
   ...overrides,
 });
 
-const nothingPlanned: Plan = {
-  blocks: [],
-  memberships: [],
-  weekChanges: [],
-  planChanges: [],
-  membershipDays: [],
-};
-
 describe("trainingDay", () => {
   it("dates a climbing session by its wall-clock start", () => {
     const day = trainingDay(
@@ -200,40 +192,6 @@ describe("trainingWeek", () => {
     ]);
     expect(week.map((d) => d.isPast)).toEqual([true, true, true, false, false, false, false]);
     expect(week.map((d) => d.plans.length)).toEqual([1, 1, 1, 2, 0, 0, 0]);
-  });
-});
-
-describe("weekDone", () => {
-  const done = (l: TrainingLog): { done: number; planned: number } =>
-    weekDone(trainingWeek(l, "2026-09-28", TODAY));
-
-  it("counts logged against logged plus open", () => {
-    const stats = done(
-      log({
-        climbs: [
-          climb("2026-09-30T18:00:00.000Z"),
-          climb("2026-09-29T18:00:00.000Z", { rpe_source: "none", rpe: 1 }),
-          climb("2026-09-22T18:00:00.000Z"),
-        ],
-        hangs: [hang("2026-09-28", { rpe: 7, membershipId: "h1" })],
-      })
-    );
-    // Logged: two climbs and a hang. Open: legs Tuesday (missed), hangs and legs Thursday.
-    expect(stats).toEqual({ done: 3, planned: 6 });
-  });
-
-  it("counts other training toward the week", () => {
-    const stats = done(
-      log({
-        plan: nothingPlanned,
-        activities: [activity("2026-09-29", { rpe: 5 }), activity("2026-09-21")],
-      })
-    );
-    expect(stats).toEqual({ done: 1, planned: 1 });
-  });
-
-  it("is nothing of nothing on an empty week", () => {
-    expect(done(log({ plan: nothingPlanned }))).toEqual({ done: 0, planned: 0 });
   });
 });
 

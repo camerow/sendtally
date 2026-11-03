@@ -134,7 +134,7 @@ describe("Timer", () => {
         { id: "m1", workoutId: "max10", blockId: "b1", weekdays: [1 as const], start: TODAY },
       ],
       weekChanges: [
-        { membershipId: "m1", week: 1, dose: 0, item: 0, change: { sets: 3, edgeMm: 15 } },
+        { membershipId: "m1", week: 1, dose: 0, itemId: "0", change: { sets: 3, edgeMm: 15 } },
       ],
       planChanges: [],
       membershipDays: [],
