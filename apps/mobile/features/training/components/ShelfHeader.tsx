@@ -16,8 +16,10 @@ export type ShelfHeaderProps = {
   kind?: WorkoutKind;
   /** Greyed, for the shelf of what has no category. */
   muted?: boolean;
-  /** Opens the whole shelf; left out on an empty one, which offers only the plus. */
+  /** Opens the whole shelf; left out when the shelf already shows all of it. */
   onSeeAll?: () => void;
+  /** How many See all opens. */
+  count?: number;
   addLabel: string;
   onAdd: () => void;
 };
@@ -28,6 +30,7 @@ export function ShelfHeader({
   kind,
   muted = false,
   onSeeAll,
+  count,
   addLabel,
   onAdd,
 }: ShelfHeaderProps): React.ReactElement {
@@ -44,7 +47,9 @@ export function ShelfHeader({
         </Title>
         {onSeeAll !== undefined && (
           <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-            <Label color={colors.textSecondary}>{t("workouts.seeAll")}</Label>
+            <Label color={colors.textSecondary}>
+              {count === undefined ? t("workouts.seeAll") : t("workouts.seeAllCount", { n: count })}
+            </Label>
             <HangIcon name="forward" color={colors.textSecondary} size={14} strokeWidth={2.2} />
           </View>
         )}
