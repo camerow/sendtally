@@ -84,6 +84,31 @@ export function workoutMinutes(
   return timed ? roundMinutes(itemsSeconds(items)) : null;
 }
 
+/** A guess at one rep: a climb takes minutes, a lift or a move a few seconds. */
+const repSeconds = (kind: WorkoutKind): number => (kind === "climbing" ? 180 : 4);
+
+/**
+ * How long a workout with no minutes set should take, read from its sets, reps and rests, for
+ * the editor to offer before the user types one. Timed doses count as the timer runs them.
+ */
+export function estimatedMinutes(
+  w: Pick<Workout, "kind" | "items" | "exerciseRestS">,
+  session = 0
+): number | null {
+  const items = sessionItems(w.items, session);
+  if (items.length === 0) return null;
+  const seconds = items.reduce(
+    (sum, i) =>
+      sum +
+      (i.dose.onS !== undefined
+        ? itemsSeconds([i])
+        : i.dose.sets * (i.dose.reps ?? 1) * repSeconds(w.kind) +
+          Math.max(0, i.dose.sets - 1) * (i.dose.setRestS ?? 0)),
+    0
+  );
+  return roundMinutes(seconds + Math.max(0, items.length - 1) * w.exerciseRestS);
+}
+
 /** An item's exercise as the user reads it: a built-in grip in their language. */
 export function exerciseName(exercise: string, gripName?: (id: string) => string): string {
   if (gripName !== undefined) return gripName(exercise);

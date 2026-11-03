@@ -4,12 +4,38 @@ import { t } from "../i18n";
 
 export type { Discipline };
 
-export type TrendRange = "7d" | "1m" | "3m" | "6m" | "ytd" | "1y" | "all";
+/** One calendar year, such as `y2025`. */
+export type YearRange = `y${number}`;
+
+export type TrendRange = "7d" | "1m" | "3m" | "6m" | "1y" | "all" | YearRange;
+
+export const isYearRange = (range: TrendRange): range is YearRange => range.startsWith("y");
+
+export const yearRange = (year: number): YearRange => `y${year}`;
+
+export const yearOf = (range: YearRange): number => Number(range.slice(1));
 
 /** The one range a non-member can see; every longer range is the membership. */
 export const PREVIEW_TREND_RANGE: TrendRange = "7d";
 
-export const TREND_RANGES: readonly TrendRange[] = ["7d", "1m", "3m", "6m", "ytd", "1y", "all"];
+export const TREND_RANGES: readonly TrendRange[] = ["all", "1y", "6m", "3m", "1m", "7d"];
+
+/** Longest first: All, each calendar year with sessions in it newest first, then the trailing ranges. */
+export const trendRanges = (years: readonly number[]): TrendRange[] => [
+  "all",
+  ...years.map(yearRange),
+  ...TREND_RANGES.slice(1),
+];
+
+/** The years anything was logged in, newest first, from timestamps or calendar dates. */
+export const yearsOf = (dates: readonly string[]): number[] =>
+  [...new Set(dates.map((d) => Number(d.slice(0, 4))))]
+    .filter(Number.isFinite)
+    .sort((a, b) => b - a);
+
+/** Everything for a member; the one unlocked range for anyone else. */
+export const defaultRange = (member: boolean | null): TrendRange =>
+  member === true ? "all" : PREVIEW_TREND_RANGE;
 
 /** Every range but the preview is the membership; unknown membership counts as free. */
 export const isLockedRange = (member: boolean | null, range: TrendRange): boolean =>
@@ -22,7 +48,7 @@ export const shownRange = (member: boolean | null, picked: TrendRange): TrendRan
 export const ENDURANCE_RANGES: readonly TrendRange[] = ["3m", "6m", "1y", "all"];
 
 export function trendRangeLabel(range: TrendRange): string {
-  if (range === "ytd") return t("trends.rangeShortYtd");
+  if (isYearRange(range)) return String(yearOf(range));
   if (range === "1y") return t("trends.rangeShort1y");
   if (range === "all") return t("trends.rangeShortAll");
   return range.toUpperCase();
@@ -56,7 +82,7 @@ export type TrendFilter = {
 
 export const DEFAULT_TREND_FILTER: TrendFilter = {
   scope: null,
-  range: "3m",
+  range: "all",
   grade: null,
   setting: "all",
   gymId: null,
@@ -166,6 +192,8 @@ export type TrendTagVM = { slug: string; name: string; sessions: number };
 export type TrendsVM = {
   scope: TrendScope;
   rangeLabel: string;
+  /** Every year with a session or a hang in it, newest first, each its own range. */
+  years: number[];
   sessions: number;
   sessionsLine: string;
   insight: string | null;

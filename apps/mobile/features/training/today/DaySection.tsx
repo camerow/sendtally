@@ -9,7 +9,6 @@ import { Label } from "../components/Label";
 import { Title } from "../components/Title";
 import { useHangData } from "../data/HangDataContext";
 import { useLibrary } from "../library/useLibrary";
-import { daySummary } from "./daySummary";
 import { LoggedRow } from "./LoggedRow";
 import { loggedRowText } from "./loggedRowText";
 import { OccurrenceCard } from "./OccurrenceCard";
@@ -21,6 +20,8 @@ export type DaySectionProps = {
   onOpen: (item: LoggedItem) => void;
   /** Off where the screen's hero already names the day. */
   heading?: boolean;
+  /** An empty day as a quiet date line, as the week list shows it, not a rest-day panel. */
+  quiet?: boolean;
 };
 
 const loggedKey = (item: LoggedItem): string => {
@@ -29,12 +30,24 @@ const loggedKey = (item: LoggedItem): string => {
 };
 
 /** The selected day: what is planned on it, missed or still to come, then what was done under Done. */
-export function DaySection({ day, onOpen, heading = true }: DaySectionProps): React.ReactElement {
+export function DaySection({
+  day,
+  onOpen,
+  heading = true,
+  quiet = false,
+}: DaySectionProps): React.ReactElement {
   const { model } = useHangData();
   const library = useLibrary().state;
   const workout = (id: string) =>
     library.status === "ready" ? library.data.workout(id) : undefined;
   const empty = day.logged.length === 0 && day.plans.length === 0;
+  const title = day.isToday ? t("training.today") : dayTitle(day.date);
+  if (empty && quiet)
+    return (
+      <View style={{ minHeight: 44, justifyContent: "center" }}>
+        <Label color={colors.textSecondary}>{title}</Label>
+      </View>
+    );
   return (
     <View style={{ gap: 12 }}>
       {heading && (
@@ -47,8 +60,7 @@ export function DaySection({ day, onOpen, heading = true }: DaySectionProps): Re
             paddingTop: 4,
           }}
         >
-          <Title size={26}>{day.isToday ? t("training.today") : dayTitle(day.date)}</Title>
-          <Label color={colors.textSecondary}>{daySummary(day)}</Label>
+          <Title size={26}>{title}</Title>
         </View>
       )}
       {day.plans.map((o) => {

@@ -56,7 +56,7 @@ export const climbs = {
   "climbs.statusAll": "Alle {n}",
   "climbs.statusProjects": "Projekte {n}",
   "climbs.statusSent": "Geschafft {n}",
-  "climbs.statusNotYet": "Noch nicht {n}",
+  "climbs.statusNotYet": "Versucht {n}",
   "climbs.anyGrade": "Jeder Grad",
   "climbs.noMatches": "Keine Kletterei passt.",
   "climbs.addClimb": "Kletterei hinzufügen",
@@ -69,6 +69,5 @@ export const climbs = {
   "climbs.notesPlaceholder": "Notizen: Beta, Bedingungen, wie es sich anfühlte",
   "climbs.days": "Tage",
   "climbs.firstTried": "zuerst versucht am {date}",
-  "climbs.addNoteHint": "Eine datierte Zeile im Verlauf",
   "climbs.logSession": "Session eintragen",
 } as const;

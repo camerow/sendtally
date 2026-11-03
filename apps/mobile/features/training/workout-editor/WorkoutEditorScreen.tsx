@@ -7,10 +7,12 @@ import { gripMeasureOf, type Focus, type Item, type WorkoutKind } from "@sendtal
 import { colors } from "@sendtally/design/tokens";
 import { exerciseLabel } from "@sendtally/features/exercises";
 import { t } from "@sendtally/features/i18n";
+import { durationLabel } from "@sendtally/features/sessions";
 import { exerciseKey, useExercises } from "@sendtally/features/statistics";
 import {
   copyName,
   draftOf,
+  estimatedMinutes,
   newWorkoutDraft,
   useWorkoutActions,
   workoutMinutes,
@@ -93,6 +95,7 @@ function Editor({
   const exercises = useExercises(api).state;
   const { model } = useHangData();
   const [state, setState] = React.useState(initial);
+  const estimate = estimatedMinutes(state);
   const [untouched] = React.useState(initial);
   const [picking, setPicking] = React.useState<{ swap: number } | "add" | null>(null);
   const exerciseNamed = (name: string) =>
@@ -197,6 +200,7 @@ function Editor({
               label={t("common.duration")}
               value={(state.minutes ?? 0) * 60}
               max={MAX_MINUTES * 60}
+              {...(estimate !== null && { placeholder: `~${durationLabel(estimate)}` })}
               onChange={(seconds) => setState((s) => ({ ...s, minutes: usualMinutes(seconds) }))}
             />
           )}

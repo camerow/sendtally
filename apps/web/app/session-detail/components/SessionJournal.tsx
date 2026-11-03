@@ -22,10 +22,10 @@ export function SessionJournal({
   return (
     <section className="session-journal">
       <div className="session-journal-head">
-        <span className="journal-card-label">{t("journal.title")}</span>
+        <span className="journal-card-label">{t("common.notes")}</span>
         <div style={{ flex: 1 }} />
         <Link to={newEntryHref} className="journal-action">
-          {t("journal.journalEntry")}
+          {t("climbs.addNote")}
         </Link>
       </div>
       {entries.length === 0 && <p className="journal-muted">{t("journal.emptyTitle")}</p>}

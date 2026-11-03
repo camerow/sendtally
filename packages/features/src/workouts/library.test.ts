@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from "vitest";
 import type { WorkoutRecord } from "@sendtally/api-client";
-import { WORKOUT_KINDS } from "@sendtally/core/hang";
+import { WORKOUT_KINDS, type Dose, type Item } from "@sendtally/core/hang";
 import { setLocale } from "../i18n";
 import { BUILT_IN_WORKOUT_IDS, builtInWorkouts } from "./builtIns";
 import {
@@ -14,6 +14,7 @@ import {
   libraryShelves,
   newWorkoutDraft,
   turnName,
+  estimatedMinutes,
   workoutMinutes,
   workoutUsage,
 } from "./library";
@@ -291,6 +292,21 @@ describe("summaries", () => {
     expect(workoutMinutes({ ...byId("run-tempo"), minutes: null })).toBe(25);
     expect(workoutMinutes(byId("w-legs"))).toBe(50);
     expect(workoutMinutes({ ...byId("w-legs"), minutes: null })).toBeNull();
+  });
+
+  it("estimates a length from sets, reps and rests", () => {
+    const item = (dose: Dose): Item => ({ exercise: "Squat", doses: [dose] });
+    expect(
+      estimatedMinutes({
+        kind: "strength",
+        exerciseRestS: 120,
+        items: [item({ sets: 3, reps: 5, setRestS: 180 }), item({ sets: 2, reps: 10 })],
+      })
+    ).toBe(10);
+    expect(
+      estimatedMinutes({ kind: "climbing", exerciseRestS: 0, items: [item({ sets: 1, reps: 5 })] })
+    ).toBe(15);
+    expect(estimatedMinutes({ kind: "strength", exerciseRestS: 0, items: [] })).toBeNull();
   });
 
   it("counts a hangboard workout's length from its items and the rest between them", () => {

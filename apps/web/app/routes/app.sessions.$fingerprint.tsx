@@ -8,14 +8,12 @@ import {
   CLIMB_SORTS,
   climbSortLabel,
   useSessionDetail,
-  type ClimbFilter,
   type ClimbVM,
 } from "@sendtally/features/session-detail";
 import { cloudflareContext } from "../lib/cloudflare-context";
 import { requireApi } from "../lib/api.server";
 import { liveSessionStorage } from "../lib/liveSessionStorage";
 import { useClientApi } from "../lib/useClientApi";
-import { SessionTags } from "../sessions/components/SessionTags";
 import { EnduranceLaps } from "../session-detail/components/EnduranceLaps";
 import { PostStatusBar } from "../session-detail/components/PostStatusBar";
 import { SessionJournal } from "../session-detail/components/SessionJournal";
@@ -44,20 +42,6 @@ const monoLabel: React.CSSProperties = {
   letterSpacing: "0.08em",
   color: "var(--text-label-accent)",
 };
-
-const chipStyle = (active: boolean): React.CSSProperties => ({
-  fontFamily: "var(--font-mono)",
-  textTransform: "uppercase",
-  fontWeight: 500,
-  fontSize: 11,
-  letterSpacing: "0.06em",
-  padding: "7px 12px",
-  borderRadius: "var(--radius-pill)",
-  cursor: "pointer",
-  background: active ? "var(--bs-gold)" : "transparent",
-  color: active ? "var(--bs-gunmetal)" : "rgba(64,63,76,0.65)",
-  border: active ? "1px solid var(--bs-gold)" : "1px solid rgba(64,63,76,0.18)",
-});
 
 const RESULT_BADGES: Record<ClimbVM["result"], { bg: string; border: string; color: string }> = {
   onsight: {
@@ -202,7 +186,7 @@ export default function SessionDetailRoute(): React.ReactElement {
   const params = useParams();
   const api = useClientApi(apiUrl);
   const feature = useSessionDetail(api, params.fingerprint ?? "");
-  const { state, filter, setFilter, sort, setSort } = feature;
+  const { state, sort, setSort } = feature;
 
   if (state.status === "loading") {
     return (
@@ -216,14 +200,7 @@ export default function SessionDetailRoute(): React.ReactElement {
       </span>
     );
   }
-  const { vm, climbs, tags, entries } = state.data;
-
-  const filters: Array<[ClimbFilter, string]> = [
-    ["all", t("sessions.filterAll", { n: vm.filterCounts.all })],
-    ["sent", t("sessions.filterSent", { n: vm.filterCounts.sent })],
-    ["flash", t("sessions.filterFlashed", { n: vm.filterCounts.flash })],
-    ["project", t("sessions.filterProjects", { n: vm.filterCounts.project })],
-  ];
+  const { vm, climbs, entries } = state.data;
 
   return (
     <div>
@@ -282,8 +259,6 @@ export default function SessionDetailRoute(): React.ReactElement {
           stravaUrl={vm.stravaUrl}
         />
       </div>
-
-      <SessionTags api={api} fingerprint={params.fingerprint ?? ""} initial={tags} />
 
       <div
         style={{
@@ -389,11 +364,6 @@ export default function SessionDetailRoute(): React.ReactElement {
           margin: "22px 0 4px",
         }}
       >
-        {filters.map(([value, label]) => (
-          <button key={value} onClick={() => setFilter(value)} style={chipStyle(filter === value)}>
-            {label}
-          </button>
-        ))}
         <div style={{ flex: 1 }} />
         <select
           value={sort}

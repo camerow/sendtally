@@ -58,11 +58,11 @@ describe("Climb detail", () => {
     });
   });
 
-  it("adds a dated note to the climb from the menu", async () => {
+  it("adds a dated note to the climb from the + beside Notes", async () => {
     await render(<ClimbDetailScreen id="c1" />);
     expect(screen.queryByText("Add a note")).toBeNull();
-    await fireEvent.press(screen.getByLabelText("More"));
-    await fireEvent.press(screen.getByText("Add a note"));
+    expect(screen.queryByLabelText("More")).toBeNull();
+    await fireEvent.press(screen.getByLabelText("Add a note"));
     await fireEvent.changeText(
       screen.getByPlaceholderText("What happened, what to try next"),
       "Heel on the left"

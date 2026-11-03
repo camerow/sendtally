@@ -180,7 +180,7 @@ export const workouts = {
   "workouts.archiveExerciseBody":
     "Sale del selector y de Ejercicios, pero conserva su historial. Crearlo de nuevo lo recupera.",
   "workouts.measure.climbs": "Escaladas",
-  "workouts.measure.wallTime": "Tiempo en la pared",
+  "workouts.measure.wallTime": "Tiempo",
   "workouts.advanced": "Avanzado",
   "workouts.preview": "Vista previa",
   "workouts.previewHint": "Así medirás este ejercicio",

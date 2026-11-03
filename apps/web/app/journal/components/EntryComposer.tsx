@@ -10,8 +10,6 @@ import {
   useEntryComposer,
   type EntryDraft,
 } from "@sendtally/features/journal";
-import { useTagVocabulary } from "@sendtally/features/sessions";
-import { TagPicker } from "../../components/TagPicker";
 import { SessionPicker } from "./SessionPicker";
 import { SeverityPicker } from "./SeverityPicker";
 import { TripPreview } from "./TripPreview";
@@ -81,7 +79,6 @@ export function EntryComposer({
     entries,
     onSaved,
   });
-  const { suggestionsFor } = useTagVocabulary(api);
   const spanning = spansDates(draft.kind);
   // An update belongs to its thread: it never picks a kind, and it is the one
   // place the number matters more than the words.
@@ -159,17 +156,6 @@ export function EntryComposer({
           style={{ ...input, lineHeight: 1.6, resize: "vertical" }}
         />
       </Field>
-
-      {!update && (
-        <Field name={t("common.tags")}>
-          <TagPicker
-            tags={draft.tags}
-            suggestions={suggestionsFor(draft.tags)}
-            onAdd={(name) => setDraft((d) => ({ ...d, tags: [...d.tags, name] }))}
-            onRemove={(name) => setDraft((d) => ({ ...d, tags: d.tags.filter((x) => x !== name) }))}
-          />
-        </Field>
-      )}
 
       {draft.kind === "trip" ? (
         trip !== null && <TripPreview trip={trip} />

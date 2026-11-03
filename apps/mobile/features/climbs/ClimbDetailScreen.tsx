@@ -48,19 +48,7 @@ export function ClimbDetailScreen({ id }: { id: string }): React.ReactElement {
 
   return (
     <ScreenFrame
-      action={
-        <DetailActions
-          onEdit={() => setRenaming((n) => n + 1)}
-          menu={[
-            {
-              icon: "journal",
-              title: t("climbs.addNote"),
-              hint: t("climbs.addNoteHint"),
-              onPress: () => setNoting(true),
-            },
-          ]}
-        />
-      }
+      action={<DetailActions onEdit={() => setRenaming((n) => n + 1)} />}
       footer={
         <Button
           label={t("climbs.logSession")}
@@ -107,6 +95,8 @@ export function ClimbDetailScreen({ id }: { id: string }): React.ReactElement {
         ]}
       />
       <HistoryList
+        title={t("climbs.notes")}
+        onAdd={{ label: t("climbs.addNote"), onPress: () => setNoting(true) }}
         items={vm.sessions.map((s) => ({
           id: s.fingerprint,
           date: s.dateLabel,

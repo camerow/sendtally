@@ -79,7 +79,8 @@ export function OccurrenceRow({ occurrence, workout }: OccurrenceRowProps): Reac
           onOpenChange={setMenu}
           rows={dayRows(
             (kind) => changes.open(kind, occurrence, workout.name),
-            missed ? () => logLibraryWorkout(workout, occurrence.date, planned) : undefined
+            missed ? () => logLibraryWorkout(workout, occurrence.date, planned) : undefined,
+            changes.remove(occurrence)
           )}
         />
       )}

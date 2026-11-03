@@ -31,18 +31,14 @@ import {
   toLogSessionInput,
   useDraftAutosave,
   withClimbScale,
-  withStartTime,
-  withTag,
-  withoutTag,
   type ClimbDraft,
   type LogSessionDraft,
 } from "@sendtally/features/log-session";
-import { SESSION_NOTE_MAX, useTagVocabulary } from "@sendtally/features/sessions";
+import { SESSION_NOTE_MAX } from "@sendtally/features/sessions";
 import { queries } from "@sendtally/features/query";
 import { useGradeScalePrefs } from "@sendtally/features/settings";
 import { formatDate, t } from "@sendtally/features/i18n";
 import { DiscardDraftDialog } from "../../components/DiscardDraftDialog";
-import { TagPicker } from "../../components/TagPicker";
 import { useIsNarrow } from "../../lib/useIsNarrow";
 import { climbKindStorage } from "../../lib/climbKindStorage";
 import { liveSessionStorage } from "../../lib/liveSessionStorage";
@@ -177,12 +173,9 @@ export function LogSessionForm({
   const [draft, setDraft] = React.useState<LogSessionDraft>(
     () => editing?.draft ?? picked ?? emptyDraft(new Date(), prefs.scales)
   );
-  const [addingTimes, setAddingTimes] = React.useState(false);
-  const timesOpen = addingTimes || draft.startTime !== "" || draft.endTime !== "";
   const [saving, setSaving] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [confirmingCancel, setConfirmingCancel] = React.useState(false);
-  const { suggestionsFor } = useTagVocabulary(api);
 
   const vocabulary = useClimbVocabulary(api);
   const gyms = useGyms(api);
@@ -413,41 +406,6 @@ export function LogSessionForm({
               style={inputStyle}
             />
           </Field>
-          {timesOpen ? (
-            <div className="log-session-times-block">
-              <div className="log-session-times">
-                <Field label={t("logSession.startTime")}>
-                  <input
-                    type="time"
-                    value={draft.startTime}
-                    onChange={(e) => setDraft((d) => withStartTime(d, e.target.value))}
-                    className="log-session-control"
-                    style={inputStyle}
-                  />
-                </Field>
-                <Field label={t("logSession.endTime")}>
-                  <input
-                    type="time"
-                    value={draft.endTime}
-                    onChange={(e) => setDraft({ ...draft, endTime: e.target.value })}
-                    className="log-session-control"
-                    style={inputStyle}
-                  />
-                </Field>
-              </div>
-              <span style={{ ...monoLabel, textTransform: "none", letterSpacing: 0 }}>
-                {t("logSession.timesHint")}
-              </span>
-            </div>
-          ) : (
-            <button
-              type="button"
-              className="log-session-add-times"
-              onClick={() => setAddingTimes(true)}
-            >
-              {t("logSession.addTimes")}
-            </button>
-          )}
           <Field label={t("logSession.location")}>
             <div style={{ display: "flex", gap: 8 }}>
               {(["indoor", "outdoor"] as const).map((loc) => (
@@ -528,22 +486,6 @@ export function LogSessionForm({
               />
             </Field>
           )}
-          <Field
-            label={
-              <>
-                {t("common.tags")}{" "}
-                <span style={{ color: "rgba(64,63,76,0.45)" }}>{t("common.optional")}</span>
-              </>
-            }
-          >
-            <TagPicker
-              tags={draft.tags}
-              suggestions={suggestionsFor(draft.tags)}
-              placeholder={t("logSession.tagsPlaceholder")}
-              onAdd={(name) => setDraft((d) => withTag(d, name))}
-              onRemove={(name) => setDraft((d) => withoutTag(d, name))}
-            />
-          </Field>
           <RpePicker rpe={draft.rpe} onChange={(rpe) => setDraft({ ...draft, rpe })} />
           <Field
             label={

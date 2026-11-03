@@ -14,7 +14,6 @@ import { useHangData } from "../data/HangDataContext";
 import { AddWorkoutsSheet } from "../planning/AddWorkoutsSheet";
 import { addOnDayLabel } from "../today/addOnDay";
 import { DaySection } from "../today/DaySection";
-import { daySummary } from "../today/daySummary";
 import { openLogged } from "../today/openLogged";
 import { type } from "../type";
 import { blockOn } from "./calendarGrid";
@@ -45,7 +44,7 @@ export function PlanDayScreen({ date }: PlanDayScreenProps): React.ReactElement 
         {kicker !== null && <Label color={colors.gunmetal}>{kicker}</Label>}
         <Title size={34}>{weekdayLong(weekday(date))}</Title>
         <Text style={[type.mono, { fontSize: 12, color: colors.textSecondary }]}>
-          {`${dayMonth(date)} · ${daySummary(day)}`}
+          {dayMonth(date)}
         </Text>
       </View>
       <DaySection day={day} onOpen={openLogged} heading={false} />

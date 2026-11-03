@@ -2,11 +2,11 @@ import React from "react";
 import { t } from "@sendtally/features/i18n";
 import {
   PREVIEW_TREND_RANGE,
-  TREND_RANGES,
   isRefined,
   placeLabel,
   refineSummary,
   resetFilter,
+  trendRanges,
   tagsLabel,
   withPlace,
   withTag,
@@ -40,7 +40,7 @@ export function FilterRow({
   return (
     <div className="trend-filter-row">
       <RangeChips
-        ranges={TREND_RANGES}
+        ranges={trendRanges(vm.years)}
         range={filter.range}
         onChange={(range) => setFilter((f) => ({ ...f, range }))}
         isLocked={(r) => preview && r !== PREVIEW_TREND_RANGE}

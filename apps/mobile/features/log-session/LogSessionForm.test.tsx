@@ -67,15 +67,14 @@ async function renderForm(): Promise<void> {
   );
 }
 
-/** The sheet's Done confirms the picker; the form's own Done is the save button. */
-const pickerDone = () => screen.getAllByText("Done")[0]!;
+/** The form's own Done is the save button. */
 const saveButton = () => screen.getAllByText("Done").at(-1)!;
 
 describe("saving a new session", () => {
-  it("saves with no times, offered under the date rather than filled in", async () => {
+  it("saves with a date and no start or end time", async () => {
     await renderForm();
     expect(screen.queryByLabelText("Start")).toBeNull();
-    screen.getByText("+ Add start and end time");
+    expect(screen.queryByText("+ Add start and end time")).toBeNull();
 
     await fireEvent.press(saveButton());
 
@@ -83,20 +82,5 @@ describe("saving a new session", () => {
     expect(mockLogSession.mock.calls[0]![0]).not.toHaveProperty("startTime");
     expect(mockLogSession.mock.calls[0]![0]).not.toHaveProperty("endTime");
     expect(mockReplace).toHaveBeenCalledWith("/session/manual-1");
-  });
-
-  it("saves after opening both time pickers but only confirming the start", async () => {
-    await renderForm();
-    await fireEvent.press(screen.getByText("+ Add start and end time"));
-    await fireEvent.press(screen.getByLabelText("Start"));
-    await fireEvent.press(pickerDone());
-    await fireEvent.press(screen.getByLabelText("End"));
-
-    await fireEvent.press(saveButton());
-
-    expect(screen.queryByText("End time is before the start time.")).toBeNull();
-    expect(mockLogSession).toHaveBeenCalledTimes(1);
-    expect(mockLogSession.mock.calls[0]![0].startTime).toMatch(/^\d{2}:\d{2}$/);
-    expect(mockLogSession.mock.calls[0]![0]).not.toHaveProperty("endTime");
   });
 });

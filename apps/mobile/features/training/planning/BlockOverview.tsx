@@ -5,6 +5,7 @@ import { t } from "@sendtally/features/i18n";
 import {
   blockMembers,
   type BlockRecap,
+  type DaySchedule,
   type DayToggle,
   type WorkoutLookup,
 } from "@sendtally/features/training";
@@ -24,6 +25,7 @@ export type BlockOverviewProps = {
   week: number;
   editing: boolean;
   onToggle: (membershipId: string, change: DayToggle) => void;
+  onSchedules: (schedules: readonly DaySchedule[]) => void;
   onPickWeek: (week: number) => void;
   onEditDays?: () => void;
 };

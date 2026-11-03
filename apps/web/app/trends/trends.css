@@ -140,7 +140,18 @@
 .trend-ranges {
   display: flex;
   gap: 8px;
-  flex-wrap: wrap;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.trend-ranges::-webkit-scrollbar {
+  display: none;
+}
+
+.trend-ranges > button {
+  flex-shrink: 0;
 }
 
 .trend-drops {

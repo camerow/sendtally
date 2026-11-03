@@ -181,7 +181,7 @@ export const workouts = {
   "workouts.archiveExerciseBody":
     "Il quitte le sélecteur et les exercices mais garde son historique. Le recréer le fait revenir.",
   "workouts.measure.climbs": "Voies",
-  "workouts.measure.wallTime": "Temps sur le mur",
+  "workouts.measure.wallTime": "Temps",
   "workouts.advanced": "Avancé",
   "workouts.preview": "Aperçu",
   "workouts.previewHint": "Voici comment vous mesurerez cet exercice",
