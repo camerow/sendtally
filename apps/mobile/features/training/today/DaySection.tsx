@@ -20,7 +20,7 @@ export type DaySectionProps = {
   onOpen: (item: LoggedItem) => void;
   /** Off where the screen's hero already names the day. */
   heading?: boolean;
-  /** An empty day as a quiet date line, as the week list shows it, not a rest-day panel. */
+  /** As the week list shows a day: a date line but on Today, and an empty day as nothing more. */
   quiet?: boolean;
 };
 
@@ -42,27 +42,21 @@ export function DaySection({
     library.status === "ready" ? library.data.workout(id) : undefined;
   const empty = day.logged.length === 0 && day.plans.length === 0;
   const title = day.isToday ? t("training.today") : dayTitle(day.date);
-  if (empty && quiet)
-    return (
+  // The week list keeps display size for Today; every other day reads as a quiet date line.
+  const head =
+    quiet && !day.isToday ? (
       <View style={{ minHeight: 44, justifyContent: "center" }}>
         <Label color={colors.textSecondary}>{title}</Label>
       </View>
+    ) : (
+      <View style={{ paddingTop: 4 }}>
+        <Title size={26}>{title}</Title>
+      </View>
     );
+  if (empty && quiet) return head;
   return (
     <View style={{ gap: 12 }}>
-      {heading && (
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "baseline",
-            justifyContent: "space-between",
-            gap: 12,
-            paddingTop: 4,
-          }}
-        >
-          <Title size={26}>{title}</Title>
-        </View>
-      )}
+      {heading && head}
       {day.plans.map((o) => {
         const w = workout(o.membership.workoutId);
         if (w === undefined || o.status === "done" || o.status === "moved") return null;

@@ -92,9 +92,9 @@ export default function SessionDetailScreen(): React.ReactElement {
       <ClimbingHero kind={kindLabel("climbing")} state={vm.place} title={vm.name} meta={vm.when} />
       <SummaryTiles
         stats={[
-          { value: vm.length ?? "–", label: t("summary.length") },
+          { value: String(vm.filterCounts.all), label: t("summary.climbs") },
           effortTile(vm.rpe, null),
-          { value: String(vm.filterCounts.sent), label: t("common.sent") },
+          { value: String(vm.filterCounts.sent), label: t("summary.sent") },
         ]}
       />
       {strava !== null && <StravaStatusRow state={strava} />}

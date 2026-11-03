@@ -569,7 +569,7 @@ export function LogSessionForm({
               fontSize: 10,
               letterSpacing: 0.8,
               textTransform: "uppercase",
-              color: colors.labelAccent,
+              color: colors.gunmetal,
             }}
           >
             {t("logSession.climbsCount", { n: draft.climbs.length })}

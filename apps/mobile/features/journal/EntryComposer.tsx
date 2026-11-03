@@ -68,6 +68,7 @@ export function EntryComposer({
   initial,
   editing,
   heading,
+  saveLabel = t("journal.saveEntry"),
   sessions,
   entries,
 }: {
@@ -75,6 +76,8 @@ export function EntryComposer({
   initial: EntryDraft;
   editing?: string;
   heading: string;
+  /** The save button, when the doorway names the entry differently, such as a session's note. */
+  saveLabel?: string;
   sessions: SessionRow[];
   entries: JournalEntry[];
 }): React.ReactElement {
@@ -245,9 +248,7 @@ export function EntryComposer({
           disabled={saving || overlap !== null}
           style={press({ ...primaryButton, opacity: saving || overlap !== null ? 0.6 : 1 })}
         >
-          <Text style={primaryButtonLabel}>
-            {saving ? t("common.saving") : t("journal.saveEntry")}
-          </Text>
+          <Text style={primaryButtonLabel}>{saving ? t("common.saving") : saveLabel}</Text>
         </Pressable>
       </ScrollView>
     </KeyboardAvoidingView>

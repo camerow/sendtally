@@ -63,7 +63,7 @@ export function ClimbingInsights({ range }: { range: TrendRange }): React.ReactE
   return (
     <>
       <View style={{ flexDirection: "row", gap: 8 }}>
-        <View style={{ flex: 1 }}>
+        <View style={{ flex: 2 }}>
           <Segmented
             soft
             label={t("climbs.discipline")}
@@ -75,7 +75,7 @@ export function ClimbingInsights({ range }: { range: TrendRange }): React.ReactE
             }))}
           />
         </View>
-        <View style={{ flex: 1 }}>
+        <View style={{ flex: CLIMB_PLACES.length }}>
           <Segmented
             soft
             label={t("climbs.where")}

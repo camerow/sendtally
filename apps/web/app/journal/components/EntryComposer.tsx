@@ -56,6 +56,7 @@ export function EntryComposer({
   initial,
   editing,
   heading,
+  saveLabel = t("journal.saveEntry"),
   sessions,
   entries,
 }: {
@@ -63,6 +64,7 @@ export function EntryComposer({
   initial: EntryDraft;
   editing?: string;
   heading: string;
+  saveLabel?: string;
   sessions: SessionRow[];
   entries: JournalEntry[];
 }): React.ReactElement {
@@ -182,7 +184,7 @@ export function EntryComposer({
           disabled={saving || overlap !== null}
           className="journal-save"
         >
-          {saving ? t("common.saving") : t("journal.saveEntry")}
+          {saving ? t("common.saving") : saveLabel}
         </button>
       </div>
     </div>

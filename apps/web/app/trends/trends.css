@@ -442,51 +442,6 @@
   border: 5px solid var(--bs-azure-ink);
 }
 
-.trend-check {
-  width: 16px;
-  height: 16px;
-  flex: none;
-  box-sizing: border-box;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--bs-white);
-  border: 1.5px solid rgba(64, 63, 76, 0.35);
-}
-
-.trend-check svg {
-  opacity: 0;
-}
-
-.trend-option[aria-checked="true"] .trend-check {
-  background: var(--bs-azure-ink);
-  border-color: var(--bs-azure-ink);
-}
-
-.trend-option[aria-checked="true"] .trend-check svg {
-  opacity: 1;
-}
-
-.trend-search {
-  width: 100%;
-  box-sizing: border-box;
-  height: 42px;
-  padding: 0 12px;
-  border-radius: var(--radius-control);
-  border: 1px solid var(--line-on-light-strong);
-  font-family: var(--font-sans);
-  font-size: 14px;
-  color: var(--bs-gunmetal);
-  background: var(--bs-white);
-}
-
-.trend-tag-list {
-  margin-top: 8px;
-  max-height: 280px;
-  overflow-y: auto;
-}
-
 .trend-ladder {
   display: flex;
   gap: 4px;

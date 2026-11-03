@@ -298,7 +298,6 @@ export function sessionDetailVM(
     name: titleLabel,
     place: [location, gymName ?? session.area?.name ?? null].filter((p) => p !== null).join(" · "),
     when,
-    length,
     rpe: isUnscored(session) ? null : session.rpe,
     startDay: session.start_at.slice(0, 10),
     meta: when.concat(

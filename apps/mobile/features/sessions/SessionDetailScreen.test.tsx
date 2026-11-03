@@ -50,7 +50,6 @@ const ready = (): unknown => ({
       name: "Tuesday night session",
       place: "Indoor · The Depot",
       when: "Tue 21 Oct · 19:00 · 2h",
-      length: "2h",
       rpe: 7,
       pyramid: [],
       editable: true,
@@ -82,16 +81,16 @@ describe("Climbing session detail", () => {
     expect(mockReload).toHaveBeenCalled();
   });
 
-  it("introduces itself as climbing, then reads its length, effort and sends as tiles", async () => {
+  it("introduces itself as climbing, then reads its climbs, effort and sends as tiles", async () => {
     await render(<SessionDetailScreen />);
     expect(screen.getByText("Climbing")).toBeTruthy();
     expect(screen.getByText("· Indoor · The Depot")).toBeTruthy();
     expect(screen.getByText("Tuesday night session")).toBeTruthy();
     expect(screen.getByText("Tue 21 Oct · 19:00 · 2h")).toBeTruthy();
     for (const [value, label] of [
-      ["2h", "length"],
+      ["14", "climbs"],
       ["7", "effort"],
-      ["9", "Sent"],
+      ["9", "sent"],
     ]) {
       expect(screen.getByText(value ?? "")).toBeTruthy();
       expect(screen.getByText(label ?? "")).toBeTruthy();
