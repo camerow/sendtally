@@ -29,7 +29,7 @@ export function gradeLabel(vGrade: number): string {
 }
 
 function resultOf(c: SessionClimb, firstEncounter: boolean): ClimbResult {
-  if (c.kind === "attempt") return "project";
+  if (c.kind === "attempt") return c.name.trim() === "" ? "attempt" : "project";
   // A climb already worked is no longer a first go, whatever the row claims.
   if (!firstEncounter) return "sent";
   if (c.style === "onsight") return "onsight";
@@ -40,8 +40,11 @@ function resultOf(c: SessionClimb, firstEncounter: boolean): ClimbResult {
 
 function resultLabelOf(c: SessionClimb, result: ClimbResult): string {
   if (result === "project") return t("common.project");
+  if (result === "attempt") return t("sessionDetail.notYet");
   return sendStyleLabel(climbDiscipline(c), result === "sent" ? "redpoint" : result);
 }
+
+const unsent = (result: ClimbResult): boolean => result === "project" || result === "attempt";
 
 /** Flash and onsight are both first-go sends; only the beta differs. */
 function firstGo(result: ClimbResult): boolean {
@@ -107,7 +110,7 @@ export function climbMetaLabel(c: Pick<ClimbVM, "angleLabel" | "attempts">): str
 
 const FILTERS: Record<ClimbFilter, (c: ClimbVM) => boolean> = {
   all: () => true,
-  sent: (c) => c.result !== "project",
+  sent: (c) => !unsent(c.result),
   flash: (c) => firstGo(c.result),
   project: (c) => c.result === "project",
 };
@@ -200,7 +203,7 @@ export function sessionDetailVM(
   const board = session.board;
   const climbs = climbVMs(session.climbs, workedBefore);
   const start = new Date(session.start_at);
-  const sends = climbs.filter((c) => c.result !== "project");
+  const sends = climbs.filter((c) => !unsent(c.result));
   const flashes = climbs.filter((c) => firstGo(c.result));
   // A felt-like grade on a circuit of laps is not a top-grade statistic.
   const scored = session.climbs.filter((c) => !isEndurance(c));
