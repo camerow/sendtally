@@ -27,12 +27,10 @@ export function GradeChips({
 }: GradeChipsProps): React.ReactElement {
   const scroller = React.useRef<ScrollView>(null);
   const first = chips[0]?.key;
-  const start = React.useRef(startIndex);
-  start.current = startIndex;
-  React.useEffect(() => {
-    const x = Math.max(0, start.current - 1) * (CHIP + GAP);
-    scroller.current?.scrollTo({ x, animated: false });
-  }, [first]);
+  const open = React.useEffectEvent(() => {
+    scroller.current?.scrollTo({ x: Math.max(0, startIndex - 1) * (CHIP + GAP), animated: false });
+  });
+  React.useEffect(() => open(), [first]);
   return (
     <ScrollView
       ref={scroller}
