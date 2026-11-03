@@ -64,14 +64,16 @@ export function ClimbDetailScreen({ id }: { id: string }): React.ReactElement {
               gap: 6,
               paddingHorizontal: 12,
               borderRadius: 18,
-              backgroundColor: vm.project ? colors.gold : colors.surfaceSoft,
+              borderWidth: 1,
+              borderColor: vm.project ? colors.gold : colors.lineOnLight,
+              backgroundColor: vm.project ? colors.gold : colors.white,
             })}
           >
             <Icon name="star" color={colors.gunmetal} size={15} strokeWidth={2} />
             <Text
               style={{ fontFamily: fonts.sansSemiBold, fontSize: 13.5, color: colors.gunmetal }}
             >
-              {t("common.project")}
+              {vm.project ? t("common.project") : t("logSession.markAsProject")}
             </Text>
           </Pressable>
         }
