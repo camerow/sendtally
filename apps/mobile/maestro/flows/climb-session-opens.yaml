@@ -1,9 +1,9 @@
 appId: com.sendtally.app
-name: project-session-opens
-# The sessions a project lists are links to those sessions, and had the same dead View-inside-a-
-# Link as the project rows. Logging a session on the climb project-opens made is what puts a row
-# there to tap, so this runs after it. The session is deleted at the end so the account does not
-# grow one per run.
+name: climb-session-opens
+# A climb row on the Log opens the climb, and the sessions the climb lists open those sessions:
+# both are links, and a View inside a Link once rendered them dead on a device with nothing
+# off-device noticing. Logging a session on a climb named for this flow is what puts both rows
+# there to tap, and the session is deleted at the end so the account does not grow one per run.
 ---
 - runFlow: ../helpers/open-dev-client.yaml
 - runFlow: ../helpers/ensure-signed-in.yaml
@@ -13,83 +13,63 @@ name: project-session-opens
       visible: "Start fresh"
     commands:
       - tapOn: "Start fresh"
-      - tapOn: "Discard"
+      - tapOn:
+          text: "Discard"
+          rightOf: "Cancel"
 - scrollUntilVisible:
     element:
-      text: "\\+ ADD CLIMB"
+      text: "Add climb"
     direction: DOWN
     centerElement: true
-- tapOn: "\\+ ADD CLIMB"
+- tapOn: "Add climb"
+- assertVisible: "2 OF 2"
 - tapOn: "Name (optional)"
-# The climb rolls up by its name, so typing the project's name is what files this session under
-# it. iOS keeps the keyboard over the rest of the sheet and hideKeyboard does not take on these
-# inputs; Enter on a single-line field does.
-# Enter blurs the field and puts Save back on screen, so no hideKeyboard here: that is the back
-# key on Android, and with the keyboard already gone it dismisses the sheet and leaves the form.
+# The climb rolls up by its name, which is what files this session under it. Enter blurs the
+# field and puts Save back on screen; hideKeyboard is the back key on Android, and with the
+# keyboard already gone it would dismiss the sheet and leave the form.
 - inputText: "Maestro Arete"
 - pressKey: Enter
 - tapOn: "Save"
-- scrollUntilVisible:
-    element:
-      text: "Done"
-    direction: DOWN
 - tapOn: "Done"
+# Saving opens the session it made; its way back is the Log.
 - extendedWaitUntil:
-    visible: "← LOG"
+    visible: "Logged session"
     timeout: 30000
-- tapOn: "← LOG"
-- tapOn: "Projects(, tab.*)?"
+- tapOn: "BACK"
 - extendedWaitUntil:
-    visible: ".*, Maestro Arete, .*"
-    timeout: 30000
-- tapOn: ".*, Maestro Arete, .*"
-- extendedWaitUntil:
-    visible: "ATTEMPTS PER SESSION"
+    visible: "Account and settings"
     timeout: 20000
 - scrollUntilVisible:
     element:
-      text: "(?i)sessions invested"
+      text: ".*, Maestro Arete, .*"
     direction: DOWN
-    centerElement: true
-- assertNotVisible: "NOT TRIED YET"
-# The session row is one accessible element too, spoken date-first, so it is matched by the
-# session title in the middle of it.
-- tapOn: ".*Logged session.*"
-- extendedWaitUntil:
-    visible: "← LOG"
-    timeout: 20000
-- tapOn: "← LOG"
-- assertVisible: "(?i)sessions invested"
-# Back lands on the project page still scrolled to its sessions, and the page's way back is at
-# the top of that scroll view.
-- scrollUntilVisible:
-    element:
-      text: "Projects(, tab.*)?"
-    direction: UP
-- tapOn: "Projects(, tab.*)?"
-- assertVisible: "New project"
 - tapOn: ".*, Maestro Arete, .*"
 - extendedWaitUntil:
-    visible: "ATTEMPTS PER SESSION"
+    visible: "Log session"
     timeout: 20000
+# A session row is one accessible element, spoken date-first, so it is matched by the session
+# title in the middle of it.
 - scrollUntilVisible:
     element:
-      text: "(?i)sessions invested"
+      text: ".*Logged session.*"
     direction: DOWN
     centerElement: true
 - tapOn: ".*Logged session.*"
 - extendedWaitUntil:
-    visible: "Delete"
+    visible: "Logged session"
     timeout: 20000
-- tapOn: "Delete"
+# A tap on the header's menu while the screen is still sliding in does nothing.
+- waitForAnimationToEnd
+- tapOn: "More"
+- tapOn: "Delete session, .*"
 - extendedWaitUntil:
     visible: "Delete session?"
     timeout: 10000
-# iOS keeps the header's Delete in the tree under the alert and Android does not, so the alert's
-# is found by its place beside Cancel.
 - tapOn:
     text: "Delete"
     rightOf: "Cancel"
+# Deleting goes back to where the session was opened from, the climb.
 - extendedWaitUntil:
-    visible: "Climb"
+    visible: "Log session"
     timeout: 20000
+- assertNotVisible: "Delete session?"

@@ -1,33 +1,49 @@
 appId: com.sendtally.app
 name: result-sheet-stays-open
-# The result picker is a sheet opened from inside the climb editor sheet. Both must stay open
+# The type picker is a sheet opened from inside the climb editor sheet. Both must stay open
 # once the options show; the outer sheet must not be dismissed when the inner one presents.
+# The live tally's own Boulder | Route switch sits under both sheets, so the picker's options
+# are the second match.
 ---
 - runFlow: ../helpers/open-dev-client.yaml
 - runFlow: ../helpers/ensure-signed-in.yaml
 - runFlow: ../helpers/discard-live-session.yaml
-- tapOn: "Climb"
+- tapOn: "Start session"
+- assertVisible: "Pick a grade to start a climb."
+# The grade rail scrolls to where this climber usually is; any grade will do, but not the
+# leftmost chip, which a development build's floating menu button sits over.
+- tapOn:
+    text: "^V[0-9]+$"
+    index: 2
+# A fall keeps the climb selected, which is what puts its edit button on the row.
+- tapOn: "Fell"
+- tapOn: "Edit climb"
 - assertVisible: "1 OF 1"
 - repeat:
     times: 6
     commands:
-      - tapOn: "Result, .*"
-      - assertVisible: ".*Attempt, .*"
+      - tapOn: "Type, .*"
+      - assertVisible: "Endurance, Moves / Time"
       - extendedWaitUntil:
-          visible: ".*Attempt, .*"
+          visible: "Endurance, Moves / Time"
           timeout: 1500
-      - assertVisible: ".*Attempt, .*"
-      - assertVisible: "RESULT"
-      - tapOn: ".*Attempt, .*"
       - assertVisible: "1 OF 1"
-      - tapOn: "Result, .*"
-      - assertVisible: "Sent, .*"
+      - tapOn:
+          text: "Route"
+          index: 1
+      - assertVisible: "Type, Route"
+      - assertVisible: "1 OF 1"
+      - tapOn: "Type, .*"
+      - assertVisible: "Endurance, Moves / Time"
       - extendedWaitUntil:
-          visible: "Sent, .*"
+          visible: "Endurance, Moves / Time"
           timeout: 1500
-      - assertVisible: "Sent, .*"
-      - tapOn: "Sent, .*"
+      - tapOn:
+          text: "Boulder"
+          index: 1
+      - assertVisible: "Type, Boulder"
       - assertVisible: "1 OF 1"
 - tapOn: "Save"
 - assertNotVisible: "1 OF 1"
+- tapOn: "Minimize"
 - runFlow: ../helpers/discard-live-session.yaml

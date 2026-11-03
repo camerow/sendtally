@@ -17,9 +17,11 @@ appId: com.sendtally.app
             visible: "Open"
           commands:
             - tapOn: "Open"
+      # The developer menu slides up a moment after the first screen renders on a fresh
+      # simulator, so wait for it or the app's own first screen rather than for anything.
       - extendedWaitUntil:
           visible:
-            text: ".*"
+            text: "This is the developer menu.*|Sign in|Account and settings"
           timeout: 30000
       - runFlow:
           when:

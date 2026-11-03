@@ -7,23 +7,31 @@ name: climb-note
 - runFlow: ../helpers/open-dev-client.yaml
 - runFlow: ../helpers/ensure-signed-in.yaml
 - runFlow: ../helpers/open-log-form.yaml
+- runFlow:
+    when:
+      visible: "Start fresh"
+    commands:
+      - tapOn: "Start fresh"
+      - tapOn:
+          text: "Discard"
+          rightOf: "Cancel"
 - scrollUntilVisible:
     element:
-      text: "\\+ ADD CLIMB"
+      text: "Add climb"
     direction: DOWN
     centerElement: true
-- tapOn: "\\+ ADD CLIMB"
+- tapOn: "Add climb"
 - assertVisible: "2 OF 2"
-- assertVisible: "NOTE · CLIMB MUST HAVE A NAME TO HAVE A NOTE"
-- assertNotVisible: "How it went, what to try next"
+- assertVisible: "A climb must have a name to have a note.*"
 - tapOn: "Name (optional)"
 - inputText: "Maestro Arete"
+- pressKey: Enter
 - runFlow: ../helpers/hide-keyboard.yaml
-- assertVisible: "NOTE · OPTIONAL"
+- assertNotVisible: "A climb must have a name to have a note.*"
+- assertVisible: "Kept on Maestro Arete, with every other session on it"
 - tapOn: "How it went, what to try next"
 - inputText: "Heel slipped off the crux again."
 - runFlow: ../helpers/hide-keyboard.yaml
-- assertVisible: "Kept on Maestro Arete, with every other session on it"
 - assertVisible: "Heel slipped off the crux again."
 - tapOn: "Save"
-- assertVisible: "Maestro Arete"
+- assertVisible: "V3 Maestro Arete.*"
