@@ -234,6 +234,10 @@ export class SendtallyApi {
     return body(this.client.v1.climbs[":id"].$patch({ param: { id }, json: change }));
   }
 
+  deleteClimb(id: string): Promise<{ deleted: boolean }> {
+    return body(this.client.v1.climbs[":id"].$delete({ param: { id } }));
+  }
+
   saveProject(project: ProjectInput): Promise<{ slug: string }> {
     return body(this.client.v1.projects.$post({ json: project }));
   }

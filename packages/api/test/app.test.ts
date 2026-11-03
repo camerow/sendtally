@@ -429,6 +429,50 @@ describe("app", () => {
     expect((await list()).find((c) => c.id === pinchId)?.notes).toEqual([]);
   });
 
+  it("deletes a climb for good, sessions as logged, until its name is logged again", async () => {
+    const user = "user_delete_climb";
+    const headers = { "x-test-user": user, "Content-Type": "application/json" };
+    const pinch = { name: "Pinch", grade: { scale: "v", value: 3 }, kind: "send", tries: 2 };
+    const logged = (await (await postSession(user, logBody({ climbs: [pinch] }))).json()) as {
+      session: { fingerprint: string };
+    };
+    await testApp().request(
+      "/v1/projects",
+      { method: "POST", headers, body: JSON.stringify({ name: "Roof" }) },
+      env
+    );
+    const list = async () =>
+      (
+        (await (await testApp().request("/v1/climbs", { headers }, env)).json()) as {
+          climbs: Array<{ id: string; name: string; attempts: number; project: boolean }>;
+        }
+      ).climbs;
+    const remove = (id: string) =>
+      testApp().request(`/v1/climbs/${id}`, { method: "DELETE", headers }, env);
+    const before = await list();
+    const pinchId = before.find((c) => c.name === "Pinch")!.id;
+    await testApp().request(
+      `/v1/climbs/${pinchId}`,
+      { method: "PATCH", headers, body: JSON.stringify({ working: true }) },
+      env
+    );
+
+    for (const climb of before) expect((await remove(climb.id)).status).toBe(200);
+
+    expect(await list()).toEqual([]);
+    expect(await list()).toEqual([]);
+    const { session } = (await (
+      await testApp().request(`/v1/sessions/${logged.session.fingerprint}`, { headers }, env)
+    ).json()) as { session: { climbs: Array<{ name: string }> } };
+    expect(session.climbs.map((c) => c.name)).toEqual(["Pinch"]);
+    expect((await remove(pinchId)).status).toBe(404);
+
+    await postSession(user, logBody({ date: "2026-09-12", climbs: [{ ...pinch, tries: 3 }] }));
+    expect(await list()).toEqual([
+      expect.objectContaining({ id: pinchId, name: "Pinch", attempts: 5, project: false }),
+    ]);
+  });
+
   it("regrades a climb in every session it was logged in, and scores those again", async () => {
     const user = "user_regrade";
     const headers = { "x-test-user": user, "Content-Type": "application/json" };
@@ -1503,6 +1547,12 @@ describe("app", () => {
     )
       .bind(userId)
       .run();
+    await env.DB.prepare(
+      `INSERT INTO user_climbs (user_id, id, name, name_key, deleted_at, created_at, updated_at)
+       VALUES (?, 'climb_x', 'Pinch', 'pinch', '2025-01-02T00:00:00Z', '', '')`
+    )
+      .bind(userId)
+      .run();
 
     const { fetchImpl, calls } = makeFakeFetch([
       {
@@ -1528,6 +1578,7 @@ describe("app", () => {
       "board_connections",
       "sync_state",
       "sessions",
+      "user_climbs",
     ]) {
       const column = table === "users" ? "id" : "user_id";
       const row = await env.DB.prepare(`SELECT COUNT(*) AS n FROM ${table} WHERE ${column} = ?`)

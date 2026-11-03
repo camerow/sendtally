@@ -293,6 +293,10 @@ const saveManualSession = async (
   else await repo.updateManualSession(db, userId, input, links);
   await repo.upsertSessionNote(db, userId, fingerprint, form.date, normalisedNote(form.notes));
   await repo.setSessionTags(db, userId, fingerprint, form.tags ?? []);
+  await repo.restoreUserClimbs(db, userId, {
+    nameKeys: form.climbs.map((climb) => climbSlug(climb.name)).filter((key) => key !== ""),
+    ids: form.climbs.flatMap((climb) => climb.userClimbId ?? []),
+  });
   await applyProjectFlags(db, userId, form.climbs);
   await repo.setClimbNotes(db, userId, fingerprint, climbNotesOf(form.climbs));
   await captureEvent(c, created ? "manual_session_created" : "manual_session_updated", {
@@ -1010,7 +1014,7 @@ const app = new Hono<AppEnv>()
     const db = c.env.DB;
     const { name, working, areaId, areaClimbId, grade } = c.req.valid("json");
     const records = await repo.listUserClimbs(db, userId);
-    const climb = records.find((r) => r.id === c.req.param("id"));
+    const climb = records.find((r) => r.id === c.req.param("id") && r.deleted_at === null);
     if (climb === undefined) return c.json({ error: "not found" }, 404);
     const invalid = await invalidClimbPlace(db, userId, areaId ?? null, areaClimbId ?? null);
     if (invalid !== null) return c.json({ error: invalid }, 400);
@@ -1051,6 +1055,15 @@ const app = new Hono<AppEnv>()
       await captureEvent(c, "climb_edited", {});
     }
     return c.json({ id: target });
+  })
+
+  // The climb and its project flag go, its sessions stay as logged. The row stays
+  // as a tombstone so those sessions do not recreate it; logging its name again restores it.
+  .delete("/v1/climbs/:id", async (c) => {
+    const deleted = await repo.deleteUserClimb(c.env.DB, c.get("userId"), c.req.param("id"));
+    if (!deleted) return c.json({ error: "not found" }, 404);
+    await captureEvent(c, "climb_deleted", {});
+    return c.json({ deleted: true });
   })
 
   // Marking a project from the projects page rather than the log form: the

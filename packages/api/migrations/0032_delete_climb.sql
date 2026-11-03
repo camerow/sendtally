@@ -1,0 +1,1 @@
+ALTER TABLE `user_climbs` ADD `deleted_at` text;

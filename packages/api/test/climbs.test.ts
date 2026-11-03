@@ -25,6 +25,7 @@ const record = (id: string, name: string, overrides: Partial<UserClimbRow> = {})
   area_climb_id: null,
   area_id: null,
   working: false,
+  deleted_at: null,
   created_at: "2026-08-01T00:00:00Z",
   updated_at: "2026-08-01T00:00:00Z",
   ...overrides,
@@ -209,6 +210,15 @@ describe("regradedSessions", () => {
       value: 8,
     });
     expect(s1).toMatchObject({ rpe: 9, title: "Crag day" });
+  });
+});
+
+describe("a deleted climb", () => {
+  it("is left out of the catalogue, and its sessions do not create it again", () => {
+    const logged = [session("s1", "2026-09-01T18:00:00Z", [{ name: "Moonraker", vGrade: 6 }])];
+    const deleted = [record("m", "Moonraker", { deleted_at: "2026-09-02T00:00:00Z" })];
+    expect(climbCatalogue(logged, deleted)).toEqual([]);
+    expect(missingClimbs(logged, deleted, []).create).toEqual([]);
   });
 });
 

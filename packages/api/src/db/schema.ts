@@ -310,6 +310,9 @@ export const userClimbs = sqliteTable(
     // Set only by editing the climb, and then it wins over the crag its sessions were at.
     area_id: text("area_id"),
     working: integer("working", { mode: "boolean" }).notNull().default(false),
+    // A deleted climb stays as a tombstone so its sessions do not bring it back;
+    // logging its name again clears it.
+    deleted_at: text("deleted_at"),
     created_at: text("created_at").notNull(),
     updated_at: text("updated_at").notNull(),
   },

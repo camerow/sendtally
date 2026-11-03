@@ -190,6 +190,13 @@
       "when": 1793745266533,
       "tag": "0031_user_climb_notes",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "6",
+      "when": 1793763780302,
+      "tag": "0032_delete_climb",
+      "breakpoints": true
     }
   ]
 }
