@@ -15,13 +15,20 @@ const PILLS: Record<ClimbPillKind, { fill: string; ink: string; line?: string }>
   tries: { fill: "transparent", ink: colors.textSecondary, line: colors.lineOnLightStrong },
 };
 
-/** One climb in the log: its grade, name, crag and when, and how it went. */
-export function ClimbLogRow({ row }: { row: ClimbLogRowVM }): React.ReactElement {
+/** One climb in the log: its grade, name, crag and when, and how it went. One with no screen of its own does not open. */
+export function ClimbLogRow({
+  row,
+  opens = true,
+}: {
+  row: ClimbLogRowVM;
+  opens?: boolean;
+}): React.ReactElement {
   const pill = PILLS[row.pill.kind];
   return (
     <Pressable
       onPress={() => router.push({ pathname: "/climb/[id]", params: { id: row.id } })}
-      accessibilityRole="button"
+      disabled={!opens}
+      accessibilityRole={opens ? "button" : "text"}
       accessibilityLabel={`${row.gradeLabel}, ${row.name}, ${row.meta}, ${row.pill.label}`}
       style={pressRow({
         minHeight: 60,

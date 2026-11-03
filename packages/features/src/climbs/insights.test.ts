@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { SessionClimb, SessionWithClimbs } from "@sendtally/api-client";
+import type { ClimbSummary, SessionClimb, SessionWithClimbs } from "@sendtally/api-client";
 import { gradeFormatter } from "../sessions/grades";
 import { avgSendLabel, climbingInsightsVM, mainDiscipline, workoutClimbSessions } from "./insights";
 
@@ -108,6 +108,77 @@ describe("climbingInsightsVM", () => {
     expect([vm.sends, vm.flashed]).toEqual([4, 2]);
     expect(vm.hardest?.gradeLabel).toBe("V8");
     expect(vm.pyramid.find((r) => r.gradeLabel === "V5")).toMatchObject({ inner: 0, outer: 2 });
+  });
+});
+
+describe("climbs by grade", () => {
+  const all = { range: "7d", discipline: "boulder", place: "all", boulderScale: "v" } as const;
+  const pinch = {
+    id: "c-pinch",
+    name: "The Pinch",
+    project: false,
+    area: { id: "a1", name: "Bishop" },
+  } as ClimbSummary;
+
+  it("groups the climbs tried hardest grade first, counted the same as the pyramid", () => {
+    const vm = climbingInsightsVM(sessions, [pinch], all, NOW);
+    expect(vm.byGrade.map((g) => [g.gradeLabel, g.split])).toEqual([
+      ["V7", "1 sent"],
+      ["V6", "1 sent"],
+      ["V5", "1 attempted"],
+      ["V4", "1 sent"],
+    ]);
+  });
+
+  it("reads a named climb across its days and opens it, and a nameless one does not open", () => {
+    const vm = climbingInsightsVM(sessions, [pinch], all, NOW);
+    expect(vm.byGrade[0]?.climbs).toEqual([
+      {
+        key: "the pinch",
+        opens: true,
+        row: {
+          id: "c-pinch",
+          gradeLabel: "V7",
+          name: "The Pinch",
+          meta: "Bishop · 2 days",
+          pill: { kind: "sent", label: "Sent" },
+        },
+      },
+    ]);
+    expect(vm.byGrade[2]?.climbs[0]).toMatchObject({
+      opens: false,
+      row: { name: "Unnamed", meta: "Oct 26", pill: { kind: "tries", label: "1 try" } },
+    });
+    expect(vm.byGrade[3]?.climbs[0]?.row.pill).toEqual({ kind: "flash", label: "Flash" });
+  });
+
+  it("splits a grade's sends from its attempts, newest climb first", () => {
+    const day = session("2026-10-27T09:00:00.000Z", "indoor", [
+      go(5, "send", { name: "Blue arete" }),
+      go(5, "attempt", { name: "Red roof", tries: 3 }),
+    ]);
+    const vm = climbingInsightsVM([...sessions, day], [], all, NOW);
+    const v5 = vm.byGrade.find((g) => g.gradeLabel === "V5");
+    expect(v5?.split).toBe("1 sent · 2 attempted");
+    expect(v5?.climbs.map((c) => c.row.name)).toEqual(["Blue arete", "Red roof", "Unnamed"]);
+    expect(v5?.climbs[1]?.row.pill.label).toBe("3 tries");
+  });
+
+  it("shows a climb flagged as a project and not yet sent as a project", () => {
+    const day = session("2026-10-27T09:00:00.000Z", "outdoor", [
+      go(8, "attempt", { name: "Roof" }),
+    ]);
+    const roof = { ...pinch, id: "c-roof", name: "Roof", project: true, area: null };
+    const vm = climbingInsightsVM([...sessions, day], [roof], all, NOW);
+    expect(vm.byGrade[0]?.climbs[0]?.row).toMatchObject({
+      meta: "Oct 27",
+      pill: { kind: "project", label: "Project" },
+    });
+  });
+
+  it("follows the place filter", () => {
+    const vm = climbingInsightsVM(sessions, [], { ...all, place: "indoor" }, NOW);
+    expect(vm.byGrade.map((g) => g.gradeLabel)).toEqual(["V6", "V5"]);
   });
 });
 

@@ -18,6 +18,7 @@ import { Pyramid } from "../../components/Pyramid";
 import { PyramidLegend } from "../../components/PyramidLegend";
 import { Segmented } from "../../components/Segmented";
 import { useApi } from "../../lib/api";
+import { ClimbsByGrade } from "./ClimbsByGrade";
 import { CountTile } from "./CountTile";
 import { DaysClimbing } from "./DaysClimbing";
 import { GradeBadge } from "./GradeBadge";
@@ -130,6 +131,7 @@ export function ClimbingInsights({ range }: { range: TrendRange }): React.ReactE
               />
             )}
           </View>
+          {vm.byGrade.length > 0 && <ClimbsByGrade grades={vm.byGrade} />}
           <View style={{ flexDirection: "row", gap: 6 }}>
             <CountTile value={vm.avgSend ?? "–"} label={t("climbs.avgSendWord")} />
             <CountTile value={vm.sends} label={t("climbs.sendsWord", { count: vm.sends })} />

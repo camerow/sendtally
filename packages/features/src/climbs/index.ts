@@ -42,6 +42,8 @@ export {
   type ClimbPlaceFilter,
   type ClimbingInsightsFilter,
   type ClimbingInsightsVM,
+  type GradeClimbVM,
+  type GradeClimbsVM,
   type InsightsSession,
 } from "./insights";
 export {
