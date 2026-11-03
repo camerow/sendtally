@@ -87,4 +87,5 @@ export const common = {
   "common.changeSign": "Change sign",
   "common.decimalPoint": "Decimal point",
   "common.changeRefused": "A change could not be saved, so it was undone.",
+  "common.offline": "Offline",
 } as const;

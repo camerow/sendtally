@@ -2,6 +2,7 @@ import React from "react";
 import { Text, View } from "react-native";
 import { colors, fonts } from "@sendtally/design/tokens";
 import { LogoMark } from "./Logo";
+import { OfflinePill } from "./OfflinePill";
 
 export const SCREEN_HEADER_HEIGHT = 44;
 
@@ -51,6 +52,7 @@ export function ScreenHeader({
           {caption}
         </Text>
       )}
+      <OfflinePill />
       {right}
     </View>
   );

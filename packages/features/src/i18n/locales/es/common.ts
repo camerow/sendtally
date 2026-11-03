@@ -87,4 +87,5 @@ export const common = {
   "common.changeSign": "Cambiar el signo",
   "common.decimalPoint": "Separador decimal",
   "common.changeRefused": "Un cambio no se pudo guardar y se ha deshecho.",
+  "common.offline": "Sin conexión",
 } as const;
