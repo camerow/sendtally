@@ -25,8 +25,8 @@ import { useSetupDismissed } from "../../lib/setupPrompt";
 import { useGyms } from "@sendtally/features/gyms";
 import { blockGroups, blockRecap, useTrainingLog } from "@sendtally/features/training";
 
-/** The log in two halves, Climbing and Training, each with its own way to add to it. */
-export function SessionsLog(): React.ReactElement {
+/** The log in two halves, Climbing and Training, each with its own way to add to it; Training can be narrowed to one workout by its key. */
+export function SessionsLog({ workout = null }: { workout?: string | null }): React.ReactElement {
   const api = useApi();
   const [segment, setSegment] = useStoredSegment(logSegmentStorage);
   const log = useQueryPair(queries.sessions(api), queries.entries(api));
@@ -136,7 +136,13 @@ export function SessionsLog(): React.ReactElement {
           return page === "climbing" ? (
             <ClimbingLog items={shown} header={header} onRefresh={log.reload} />
           ) : (
-            <TrainingLog items={shown} header={header} onRefresh={log.reload} />
+            <TrainingLog
+              items={shown}
+              header={workout === null ? header : null}
+              onRefresh={log.reload}
+              workout={workout}
+              onClearWorkout={() => router.setParams({ workout: undefined })}
+            />
           );
         }}
       />

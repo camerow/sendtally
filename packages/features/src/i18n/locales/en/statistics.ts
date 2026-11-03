@@ -39,4 +39,8 @@ export const statistics = {
   "statistics.exercisesMostDone": "Exercises · most done first",
   "statistics.timesCount_one": "{count} time",
   "statistics.timesCount_other": "{count} times",
+  "statistics.workoutsMostDone": "Workouts · most done first",
+  "statistics.workoutsOf": "Workouts · {name}",
+  "statistics.allInLog": "All {n} in Log",
+  "statistics.noWorkoutsPicked": "No {name} workouts in this range",
 } as const;

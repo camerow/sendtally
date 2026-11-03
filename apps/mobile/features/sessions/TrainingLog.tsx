@@ -8,7 +8,12 @@ import {
   type ViewToken,
 } from "react-native";
 import { monthScopeItems, logCountLabel, logYearGroups } from "@sendtally/features/sessions";
-import { logScopeItems, type LogItem } from "@sendtally/features/journal";
+import {
+  logItemWorkout,
+  logScopeItems,
+  logWorkoutItems,
+  type LogItem,
+} from "@sendtally/features/journal";
 import { t } from "@sendtally/features/i18n";
 import { colors } from "@sendtally/design/tokens";
 import { EntryRow, entryRowHeight } from "../journal/EntryRow";
@@ -21,6 +26,7 @@ import { BLOCK_TAG_HEIGHT } from "./SessionRow";
 import { BLOCK_DONE_ROW_HEIGHT, BlockDoneRow } from "./BlockDoneRow";
 import { emptyBody, emptyLabel } from "./emptyStyles";
 import { openLogItem } from "./openLogItem";
+import { WorkoutFilterBar } from "./WorkoutFilterBar";
 
 type Section = { key: string; title: string; meta: string; data: LogItem[] };
 
@@ -61,10 +67,19 @@ export type TrainingLogProps = {
   items: LogItem[] | null;
   header: React.ReactNode;
   onRefresh: () => Promise<void>;
+  /** One workout's key to narrow to, from a Stats link. */
+  workout?: string | null;
+  onClearWorkout?: () => void;
 };
 
 /** Workouts, hangs and other training by month, with the journal between them. */
-export function TrainingLog({ items, header, onRefresh }: TrainingLogProps): React.ReactElement {
+export function TrainingLog({
+  items,
+  header,
+  onRefresh,
+  workout = null,
+  onClearWorkout,
+}: TrainingLogProps): React.ReactElement {
   const list = React.useRef<SectionList<LogItem, Section>>(null);
   const [refreshing, setRefreshing] = React.useState(false);
   const [filters, setFilters] = React.useState<SessionFilters>(DEFAULT_FILTERS);
@@ -72,7 +87,17 @@ export function TrainingLog({ items, header, onRefresh }: TrainingLogProps): Rea
   const [currentKey, setCurrentKey] = React.useState<string | null>(null);
   const all = React.useMemo(() => items ?? [], [items]);
 
-  const inScope = React.useMemo(() => logScopeItems(all, filters.scope), [all, filters.scope]);
+  const inScope = React.useMemo(() => {
+    const scoped = logScopeItems(all, filters.scope);
+    return workout === null ? scoped : logWorkoutItems(scoped, workout);
+  }, [all, filters.scope, workout]);
+  const workoutName = React.useMemo(
+    () =>
+      workout === null
+        ? null
+        : (all.map(logItemWorkout).find((w) => w?.key === workout)?.name ?? null),
+    [all, workout]
+  );
 
   const { sections, scopeItems } = React.useMemo(() => {
     const years = logYearGroups(inScope);
@@ -118,7 +143,7 @@ export function TrainingLog({ items, header, onRefresh }: TrainingLogProps): Rea
     list.current?.scrollToLocation({ sectionIndex: 0, itemIndex: 0, animated: false });
   };
 
-  const filtersActive = filters.scope !== "all";
+  const filtersActive = filters.scope !== "all" || workout !== null;
 
   return (
     <>
@@ -130,6 +155,9 @@ export function TrainingLog({ items, header, onRefresh }: TrainingLogProps): Rea
           filtersActive={filtersActive}
           onOpenFilters={() => setFiltersOpen(true)}
         />
+      )}
+      {workoutName !== null && (
+        <WorkoutFilterBar name={workoutName} onClear={() => onClearWorkout?.()} />
       )}
       <SectionList
         ref={list}

@@ -16,7 +16,7 @@ export type CategoryRowProps = {
   faded?: boolean;
   /** Off where the list already names the category. */
   showKind?: boolean;
-  /** Left out on a row with nowhere to go. */
+  /** Left out on a row with nowhere to go, or one inside something that presses. */
   onPress?: () => void;
 };
 
@@ -29,14 +29,9 @@ export function CategoryRow({
   showKind = true,
   onPress,
 }: CategoryRowProps): React.ReactElement {
-  return (
-    <Pressable
-      onPress={onPress}
-      disabled={onPress === undefined}
-      accessibilityRole="button"
-      accessibilityLabel={name}
-      style={pressRow({ flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 8 })}
-    >
+  const row = { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 8 } as const;
+  const content = (
+    <>
       <CategoryMark kind={kind} size={36} />
       <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
         <Text numberOfLines={1} style={[type.bodyBold, { fontSize: 15, color: colors.gunmetal }]}>
@@ -57,6 +52,17 @@ export function CategoryRow({
           {showKind ? (meta === null || meta === "" ? null : ` · ${meta}`) : meta}
         </Text>
       </View>
+    </>
+  );
+  if (onPress === undefined) return <View style={row}>{content}</View>;
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={name}
+      style={pressRow(row)}
+    >
+      {content}
     </Pressable>
   );
 }

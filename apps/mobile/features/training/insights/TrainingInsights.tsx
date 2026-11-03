@@ -2,7 +2,13 @@ import React from "react";
 import { ActivityIndicator, Text } from "react-native";
 import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
-import { ACTIVITY_KINDS, useTrainingInsights } from "@sendtally/features/statistics";
+import {
+  ACTIVITY_KINDS,
+  focusKey,
+  pickedWorkouts,
+  useTrainingInsights,
+  type TrainedBy,
+} from "@sendtally/features/statistics";
 import type { TrendRange } from "@sendtally/features/trends";
 import { useApi } from "../../../lib/api";
 import { DashedPanel } from "../components/DashedPanel";
@@ -12,12 +18,15 @@ import { CurrentBlockRow } from "./CurrentBlockRow";
 import { ExerciseGroups } from "./ExerciseGroups";
 import { InsightsChart } from "./InsightsChart";
 import { TrainedMix } from "./TrainedMix";
+import { WorkoutsDone } from "./WorkoutsDone";
 
 /** How hard and how often, what was trained, the block running, and every exercise's trend. */
 export function TrainingInsights({ range }: { range: TrendRange }): React.ReactElement {
   const api = useApi();
   const { model } = useHangData();
   const state = useTrainingInsights(api, range, ACTIVITY_KINDS, model.gripName);
+  const [by, setBy] = React.useState<TrainedBy>("category");
+  const [pick, setPick] = React.useState<string | null>(null);
 
   if (state.status === "loading")
     return <ActivityIndicator color={colors.gunmetal} style={{ alignSelf: "flex-start" }} />;
@@ -28,6 +37,11 @@ export function TrainingInsights({ range }: { range: TrendRange }): React.ReactE
       </Text>
     );
   if (state.data.sessions === 0) return <DashedPanel body={t("statistics.empty")} />;
+  const legend =
+    by === "category"
+      ? state.data.trained.map((k) => ({ key: k.kind, name: k.name }))
+      : state.data.byFocus.map((f) => ({ key: focusKey(f.focus), name: f.name }));
+  const picked = legend.find((r) => r.key === pick) ?? null;
   return (
     <>
       <Text style={[type.mono, { fontSize: 12.5, color: colors.textSecondary }]}>
@@ -38,8 +52,20 @@ export function TrainingInsights({ range }: { range: TrendRange }): React.ReactE
         trained={state.data.trained}
         byFocus={state.data.byFocus}
         total={state.data.total}
+        by={by}
+        onBy={(next) => {
+          setBy(next);
+          setPick(null);
+        }}
+        picked={picked?.key ?? null}
+        onPick={setPick}
       />
       <CurrentBlockRow />
+      <WorkoutsDone
+        groups={pickedWorkouts(state.data.workouts[by], picked?.key ?? null)}
+        picked={picked?.name ?? null}
+        onClear={() => setPick(null)}
+      />
       <ExerciseGroups groups={state.data.exercises} />
     </>
   );
