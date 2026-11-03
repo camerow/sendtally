@@ -55,7 +55,7 @@ const plan: Plan = {
     { id: "m1", workoutId: "squat", blockId: "b1", weekdays: [1, 4], start: "2026-10-05" },
     { id: "m2", workoutId: "squat", blockId: null, weekdays: [2], start: "2026-09-01" },
   ],
-  weekChanges: [{ membershipId: "m1", week: 3, dose: 0, item: 0, change: { weightKg: 105 } }],
+  weekChanges: [{ membershipId: "m1", week: 3, dose: 0, itemId: "0", change: { weightKg: 105 } }],
   planChanges: [],
   membershipDays: [],
 };
@@ -497,7 +497,7 @@ describe("templates", () => {
   it("reads a picked week's numbers, gold where they change", async () => {
     const changed: Plan = {
       ...withTemplate,
-      weekChanges: [{ membershipId: "m9", week: 3, dose: 0, item: 0, change: { sets: 3 } }],
+      weekChanges: [{ membershipId: "m9", week: 3, dose: 0, itemId: "0", change: { sets: 3 } }],
     };
     await renderWithHang(<BlockScreen id="t1" />, hangData(), {
       workouts: [squat],
@@ -559,7 +559,7 @@ describe("block weeks", () => {
     expect(mockPlan.saveDraft).toHaveBeenCalledWith(
       expect.objectContaining({
         weekChanges: [
-          { membershipId: "m1", week: 2, dose: 0, item: 0, change: { weightKg: 102.5 } },
+          { membershipId: "m1", week: 2, dose: 0, itemId: "0", change: { weightKg: 102.5 } },
         ],
       })
     );
@@ -573,7 +573,7 @@ describe("block weeks", () => {
     await fireEvent.press(screen.getByText("Save"));
     expect(mockPlan.saveDraft).toHaveBeenCalledWith(
       expect.objectContaining({
-        weekChanges: [{ membershipId: "m1", week: 3, dose: 0, item: 0, change: {} }],
+        weekChanges: [{ membershipId: "m1", week: 3, dose: 0, itemId: "0", change: {} }],
       })
     );
   });

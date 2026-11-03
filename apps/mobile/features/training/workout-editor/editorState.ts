@@ -1,4 +1,11 @@
-import { BUILT_IN_GRIPS, gripMeasureOf, type Dose, type Item } from "@sendtally/core/hang";
+import { randomUUID } from "expo-crypto";
+import {
+  BUILT_IN_GRIPS,
+  gripMeasureOf,
+  withItemIds,
+  type Dose,
+  type Item,
+} from "@sendtally/core/hang";
 import { t } from "@sendtally/features/i18n";
 import type { WorkoutDraft } from "@sendtally/features/workouts";
 import type { Picked } from "../exercise-picker/types";
@@ -17,11 +24,14 @@ const fitsGrip = (item: Item, measure?: DoseMeasure): boolean =>
  */
 export function withItemsAdded(s: WorkoutDraft, picked: readonly Picked[]): WorkoutDraft {
   const last = s.items[s.items.length - 1];
-  const items = picked.map(({ exercise, measure, dose }): Item =>
-    s.kind === "hangboard" && last !== undefined && fitsGrip(last, measure)
-      ? { exercise, doses: last.doses.map((d) => ({ ...d })) }
-      : { exercise, doses: [dose === undefined ? newDoseFor(s.kind, measure) : { ...dose }] }
-  );
+  const items = picked.map(({ exercise, measure, dose }): Item => ({
+    id: randomUUID(),
+    exercise,
+    doses:
+      s.kind === "hangboard" && last !== undefined && fitsGrip(last, measure)
+        ? last.doses.map((d) => ({ ...d }))
+        : [dose === undefined ? newDoseFor(s.kind, measure) : { ...dose }],
+  }));
   return { ...s, items: [...s.items, ...items] };
 }
 
@@ -43,7 +53,7 @@ export const withExerciseSwapped = (
     i !== at
       ? x
       : s.kind === "hangboard" && !fitsGrip(x, measure)
-        ? { exercise, doses: [newDoseFor(s.kind, measure)] }
+        ? { ...x, exercise, doses: [newDoseFor(s.kind, measure)] }
         : { ...x, exercise }
   ),
 });
@@ -52,6 +62,20 @@ export const withItem = (s: WorkoutDraft, at: number, item: Item): WorkoutDraft 
   ...s,
   items: s.items.map((x, i) => (i === at ? item : x)),
 });
+
+/** Every item with an id before anything moves, so a block's week changes follow their item. */
+export const withEditorIds = (s: WorkoutDraft): WorkoutDraft => ({
+  ...s,
+  items: withItemIds(s.items, randomUUID),
+});
+
+/** The item at `from` swapped with its neighbour at `to`. */
+export function withItemMoved(s: WorkoutDraft, from: number, to: number): WorkoutDraft {
+  const a = s.items[from];
+  const b = s.items[to];
+  if (a === undefined || b === undefined) return s;
+  return { ...s, items: s.items.map((x, i) => (i === from ? b : i === to ? a : x)) };
+}
 
 export const withoutItem = (s: WorkoutDraft, at: number): WorkoutDraft => ({
   ...s,

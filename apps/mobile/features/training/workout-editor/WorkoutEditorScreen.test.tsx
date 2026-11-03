@@ -1,8 +1,10 @@
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { act, fireEvent, screen } from "@testing-library/react-native";
+import { randomUUID } from "expo-crypto";
 import { router } from "expo-router";
 import React from "react";
 import { Alert } from "react-native";
+import type { WorkoutRecord } from "@sendtally/api-client";
 import type * as Workouts from "@sendtally/features/workouts";
 import { aHang, anExercise, hangData, renderWithHang } from "../data/renderWithHang";
 import { ExerciseEditorScreen } from "../exercises/ExerciseEditorScreen";
@@ -39,7 +41,7 @@ jest.mock("../../../components/Sheet", () => {
   };
 });
 jest.mock("expo-router", () => ({ router: { back: jest.fn(), push: jest.fn() } }));
-jest.mock("expo-crypto", () => ({ randomUUID: () => "w-new" }));
+jest.mock("expo-crypto", () => ({ randomUUID: jest.fn() }));
 jest.mock("@sendtally/features/workouts", () => ({
   ...jest.requireActual<typeof Workouts>("@sendtally/features/workouts"),
   useWorkoutActions: () => mockWorkouts,
@@ -50,6 +52,7 @@ const world = { exercises: [squat] };
 
 beforeEach(() => {
   jest.clearAllMocks();
+  jest.mocked(randomUUID).mockReturnValue("w-new");
   jest.spyOn(Alert, "alert").mockImplementation(() => undefined);
 });
 
@@ -115,6 +118,7 @@ describe("Workout editor", () => {
       targetRpe: null,
       items: [
         {
+          id: "w-new",
           exercise: "Back squat",
           doses: [
             { sets: 3, reps: 5, weightKg: 100, setRestS: 120, name: "Heavy" },
@@ -126,6 +130,22 @@ describe("Workout editor", () => {
       focus: null,
     });
     expect(router.back).toHaveBeenCalled();
+  });
+
+  it("adds and removes a third alternate from the exercise's menu sheet", async () => {
+    await renderWithHang(<WorkoutEditorScreen kind="strength" />, hangData(), world);
+    await pick("Back squat");
+    await fireEvent.press(screen.getByLabelText("Alternate sessions: Back squat"));
+
+    await fireEvent.press(screen.getByLabelText("More for this exercise"));
+    await fireEvent.press(screen.getByText("Add C"));
+    expect(screen.getByLabelText("Name C")).toBeTruthy();
+
+    await fireEvent.press(screen.getByLabelText("More for this exercise"));
+    expect(screen.getByText("Swap exercise")).toBeTruthy();
+    expect(screen.getByText("Remove Back squat")).toBeTruthy();
+    await fireEvent.press(screen.getByText("Remove C"));
+    expect(screen.queryByLabelText("Name C")).toBeNull();
   });
 
   it("fills a dose row on one keypad, Next walking Sets, Reps, Weight and the rest", async () => {
@@ -192,8 +212,8 @@ describe("Workout editor", () => {
         minutes: null,
         exerciseRestS: 120,
         items: [
-          { exercise: "open", doses: [{ sets: 5, reps: 1, onS: 12, setRestS: 180 }] },
-          { exercise: "open", doses: [{ sets: 5, reps: 1, onS: 12, setRestS: 180 }] },
+          { id: "0", exercise: "open", doses: [{ sets: 5, reps: 1, onS: 12, setRestS: 180 }] },
+          { id: "w-new", exercise: "open", doses: [{ sets: 5, reps: 1, onS: 12, setRestS: 180 }] },
         ],
       })
     );
@@ -212,10 +232,46 @@ describe("Workout editor", () => {
     });
   });
 
+  it("moves an exercise up and down, each keeping its id so a block's week changes follow it", async () => {
+    const legs: WorkoutRecord = {
+      id: "legs",
+      kind: "strength",
+      name: "Legs",
+      description: "",
+      minutes: null,
+      targetRpe: null,
+      items: [
+        { exercise: "Back squat", doses: [{ sets: 5, reps: 5 }] },
+        { exercise: "Deadlift", doses: [{ sets: 3, reps: 5 }] },
+        { exercise: "Lunge", doses: [{ sets: 3, reps: 10 }] },
+      ],
+      exerciseRestS: 180,
+      focus: null,
+      updatedAt: "2026-11-01T00:00:00.000Z",
+    };
+    await renderWithHang(<WorkoutEditorScreen id="legs" />, hangData(), {
+      ...world,
+      workouts: [legs],
+    });
+    expect(screen.queryByLabelText("Move Back squat up")).toBeNull();
+    expect(screen.queryByLabelText("Move Lunge down")).toBeNull();
+    await fireEvent.press(screen.getByLabelText("Move Lunge up"));
+    await fireEvent.press(screen.getByLabelText("Move Back squat down"));
+    await fireEvent.press(screen.getByText("Save"));
+    const [, saved] = mockWorkouts.saveWorkout.mock.calls[0] as [string, Workouts.WorkoutDraft];
+    expect(saved.items.map((i) => [i.id, i.exercise])).toEqual([
+      ["2", "Lunge"],
+      ["0", "Back squat"],
+      ["1", "Deadlift"],
+    ]);
+  });
+
   it("adds ticked exercises in tick order, a built-in made the user's own, the ones it has tagged", async () => {
     mockApi.saveExercise.mockResolvedValue({
       exercise: anExercise("new-id", "Bench press", "strength", { builtIn: "benchPress" }),
     });
+    let uuids = 0;
+    jest.mocked(randomUUID).mockImplementation(() => (uuids++ === 0 ? "w-new" : `item-${uuids}`));
     await renderWithHang(<WorkoutEditorScreen kind="mobility" />, hangData(), world);
     await fireEvent.press(screen.getByText("Add exercises"));
     expect(screen.queryByRole("checkbox", { name: "Back squat" })).toBeNull();

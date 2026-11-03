@@ -17,7 +17,10 @@ const upsert = <T extends { id: string }>(list: readonly T[], item: T): T[] =>
     : [...list, item];
 
 const sameRung = (a: WeekChange, b: WeekChange): boolean =>
-  a.membershipId === b.membershipId && a.week === b.week && a.dose === b.dose && a.item === b.item;
+  a.membershipId === b.membershipId &&
+  a.week === b.week &&
+  a.dose === b.dose &&
+  a.itemId === b.itemId;
 
 /** The plan with a week's load change; an empty one puts the item back as written. */
 export function withChange(plan: Plan, change: WeekChange): Plan {

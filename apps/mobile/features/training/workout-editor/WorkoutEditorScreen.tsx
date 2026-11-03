@@ -37,6 +37,8 @@ import {
   withExerciseSwapped,
   withItem,
   withItemsAdded,
+  withEditorIds,
+  withItemMoved,
   withoutItem,
 } from "./editorState";
 import { doseMeasureOf } from "./doseFields";
@@ -74,7 +76,7 @@ function initialDraft(
 ): WorkoutDraft | null {
   const base = library.workout(id ?? from ?? "");
   if (base !== undefined) {
-    const draft = draftOf(base);
+    const draft = withEditorIds(draftOf(base));
     return id === undefined ? { ...draft, name: copyName(draft.name) } : draft;
   }
   return kind === undefined ? null : startingDraft({ ...newWorkoutDraft(kind), focus });
@@ -169,7 +171,7 @@ function Editor({
           />
           {state.items.map((item, i) => (
             <ItemEditor
-              key={i}
+              key={item.id ?? i}
               kind={state.kind}
               item={item}
               name={nameOf(item.exercise)}
@@ -178,6 +180,10 @@ function Editor({
               onChange={(next) => setState((s) => withItem(s, i, next))}
               onRemove={() => setState((s) => withoutItem(s, i))}
               onSwap={() => setPicking({ swap: i })}
+              {...(i > 0 && { onMoveUp: () => setState((s) => withItemMoved(s, i, i - 1)) })}
+              {...(i < state.items.length - 1 && {
+                onMoveDown: () => setState((s) => withItemMoved(s, i, i + 1)),
+              })}
             />
           ))}
           <TimeField

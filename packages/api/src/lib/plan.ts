@@ -15,6 +15,7 @@ import {
   SKIP_REASONS,
   type WeekChange,
   type Workout,
+  withItemIds,
 } from "@sendtally/core/hang";
 import { z } from "zod";
 import type {
@@ -62,7 +63,14 @@ const MAX_DOSE_NAME = 24;
 
 const namedDose = dose.extend({ name: z.string().trim().min(1).max(MAX_DOSE_NAME).optional() });
 
-const item = z.object({ exercise, doses: z.array(namedDose).min(1).max(MAX_DOSES) });
+const itemId = z.string().trim().min(1).max(64);
+
+const item = z.object({
+  // Older app builds send none; saving gives every item one.
+  id: itemId.optional(),
+  exercise,
+  doses: z.array(namedDose).min(1).max(MAX_DOSES),
+});
 
 const doseIndex = z
   .number()
@@ -174,12 +182,13 @@ export const scheduleBody = z.object({
     .refine((ws) => new Set(ws.map((w) => w.fromWeek)).size === ws.length, "repeated week"),
 });
 
-export const weekChangeBody = z.object({
-  week: blockWeek,
-  dose: doseIndex,
-  item: itemIndex,
-  change: dose.partial(),
-});
+const weekChangeFields = { week: blockWeek, dose: doseIndex, change: dose.partial() };
+
+/** Older app builds name the item by its place in the workout, which the route reads as its id. */
+export const weekChangeBody = z.union([
+  z.object({ ...weekChangeFields, itemId }),
+  z.object({ ...weekChangeFields, item: itemIndex }),
+]);
 
 // A climb logged on the session tally, in the set it was climbed in.
 const setClimb = z.object({
@@ -244,7 +253,7 @@ export const workoutOf = (row: WorkoutRow): WorkoutRecord => ({
   description: row.description ?? "",
   minutes: row.minutes,
   targetRpe: row.target_rpe,
-  items: JSON.parse(row.items_json) as Item[],
+  items: withItemIds(JSON.parse(row.items_json) as Item[], () => crypto.randomUUID()),
   exerciseRestS: row.exercise_rest_s,
   focus: row.focus,
   updatedAt: row.updated_at,
@@ -266,11 +275,16 @@ export const membershipOf = (row: MembershipRow): Membership => ({
   start: row.start,
 });
 
-export const weekChangeOf = (row: WeekChangeRow): WeekChange => ({
+/** A week change as the API returns it: older app builds read the item by its place. */
+export type WeekChangeRecord = WeekChange & { item: number };
+
+export const weekChangeOf = (row: WeekChangeRow): WeekChangeRecord => ({
   membershipId: row.membership_id,
   week: row.week,
   dose: row.dose,
-  item: row.item,
+  itemId: row.item_id,
+  // An item saved before ids is named by its place; one with an id of its own matches none.
+  item: /^\d+$/.test(row.item_id) ? Number(row.item_id) : -1,
   change: JSON.parse(row.change_json) as Partial<Dose>,
 });
 

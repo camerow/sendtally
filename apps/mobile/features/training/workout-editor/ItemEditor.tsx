@@ -1,10 +1,12 @@
 import React from "react";
-import { Alert, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import { letterOf, type Item, type WeightUnit, type WorkoutKind } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
 import { Switch } from "../../../components/Switch";
+import { DetailMenu } from "../components/DetailMenu";
 import { IconButton } from "../components/IconButton";
+import type { DetailMenuRow } from "../components/types";
 import { type } from "../type";
 import { DoseNameTile } from "./DoseNameTile";
 import { DoseInput } from "./DoseInput";
@@ -33,6 +35,10 @@ export type ItemEditorProps = {
   onChange: (item: Item) => void;
   onRemove: () => void;
   onSwap: () => void;
+  /** Absent for the first item. */
+  onMoveUp?: () => void;
+  /** Absent for the last item. */
+  onMoveDown?: () => void;
 };
 
 /**
@@ -49,6 +55,8 @@ export function ItemEditor({
   onChange,
   onRemove,
   onSwap,
+  onMoveUp,
+  onMoveDown,
 }: ItemEditorProps): React.ReactElement {
   const alternating = item.doses.length > 1;
   const next = letterOf(item.doses.length);
@@ -58,32 +66,41 @@ export function ItemEditor({
     ...item.doses.flatMap((_, d) => fields.map((f) => `${d}.${f.key}`)),
     "setRest",
   ]);
-  const more = (): void =>
-    Alert.alert(name, undefined, [
-      { text: t("workouts.swapExercise"), onPress: onSwap },
-      ...(alternating && item.doses.length < MAX_DOSES
-        ? [
-            {
-              text: t("workouts.addDose", { letter: next }),
-              onPress: () => onChange(withDoseAdded(item)),
-            },
-          ]
-        : []),
-      ...(item.doses.length > 2
-        ? [
-            {
-              text: t("workouts.removeDose", { letter: last }),
-              onPress: () => onChange(withoutLastDose(item)),
-            },
-          ]
-        : []),
-      {
-        text: t("workouts.removeExercise", { name }),
-        style: "destructive",
-        onPress: onRemove,
-      },
-      { text: t("common.cancel"), style: "cancel" },
-    ]);
+  const menu: DetailMenuRow[] = [
+    {
+      icon: "refresh",
+      title: t("workouts.swapExercise"),
+      hint: t("workouts.swapExerciseHint"),
+      onPress: onSwap,
+    },
+    ...(item.doses.length < MAX_DOSES
+      ? [
+          {
+            icon: "plus" as const,
+            title: t("workouts.addDose", { letter: next }),
+            hint: t("workouts.addDoseHint"),
+            onPress: () => onChange(withDoseAdded(item)),
+          },
+        ]
+      : []),
+    ...(item.doses.length > 2
+      ? [
+          {
+            icon: "x" as const,
+            title: t("workouts.removeDose", { letter: last }),
+            hint: t("workouts.removeDoseHint", { letter: last }),
+            onPress: () => onChange(withoutLastDose(item)),
+          },
+        ]
+      : []),
+    {
+      icon: "trash",
+      title: t("workouts.removeExercise", { name }),
+      hint: t("workouts.removeExerciseHint"),
+      danger: true,
+      onPress: onRemove,
+    },
+  ];
 
   return (
     <View
@@ -100,14 +117,35 @@ export function ItemEditor({
         <Text style={[type.bodyBold, { flex: 1, fontSize: 16, color: colors.gunmetal }]}>
           {name}
         </Text>
-        {alternating ? (
+        {onMoveUp !== undefined && (
           <IconButton
-            icon="more"
-            label={t("workouts.exerciseMore")}
-            onPress={more}
+            icon="up"
+            label={t("workouts.moveUp", { name })}
+            onPress={onMoveUp}
             color={colors.textSecondary}
             size={36}
-            iconSize={20}
+            iconSize={18}
+          />
+        )}
+        {onMoveDown !== undefined && (
+          <IconButton
+            icon="down"
+            label={t("workouts.moveDown", { name })}
+            onPress={onMoveDown}
+            color={colors.textSecondary}
+            size={36}
+            iconSize={18}
+          />
+        )}
+        {alternating ? (
+          <DetailMenu
+            rows={menu}
+            button={{
+              label: t("workouts.exerciseMore"),
+              color: colors.textSecondary,
+              size: 36,
+              iconSize: 20,
+            }}
           />
         ) : (
           <>

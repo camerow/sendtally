@@ -49,8 +49,8 @@ const plan: Plan = {
     { id: "once", workoutId: "squat", blockId: null, weekdays: [], start: "2026-11-12" },
   ],
   weekChanges: [
-    { membershipId: "m1", week: 2, dose: 1, item: 0, change: { weightKg: 80 } },
-    { membershipId: "m1", week: 3, dose: 0, item: 0, change: { sets: 3, weightKg: 95 } },
+    { membershipId: "m1", week: 2, dose: 1, itemId: "0", change: { weightKg: 80 } },
+    { membershipId: "m1", week: 3, dose: 0, itemId: "0", change: { sets: 3, weightKg: 95 } },
   ],
   planChanges: [],
   membershipDays: [],

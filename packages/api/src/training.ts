@@ -82,6 +82,18 @@ export const activities = new Hono<AppEnv>()
     return c.json({ outcome: result.outcome, reason: result.reason, activity: activityOf(row) });
   });
 
+// A built-in workout is not stored; its items are never moved, so their place is their id.
+const itemIdAt = async (
+  db: D1Database,
+  userId: string,
+  workoutId: string,
+  at: number
+): Promise<string> => {
+  const row = (await repo.listWorkouts(db, userId)).find((w) => w.id === workoutId);
+  const item = row === undefined ? undefined : workoutOf(row).items[at];
+  return item?.id ?? String(at);
+};
+
 // Blocks, memberships and their week changes, in one read.
 export const plan = new Hono<AppEnv>().get("/", async (c) => {
   const rows = await repo.planRows(c.env.DB, c.get("userId"));
@@ -167,10 +179,14 @@ export const memberships = new Hono<AppEnv>()
     async (c) => {
       const { id } = c.req.valid("param");
       const userId = c.get("userId");
-      if ((await repo.getMembership(c.env.DB, userId, id)) === null) {
-        return c.json({ error: "not found" }, 404);
-      }
-      const weekChange = { membershipId: id, ...c.req.valid("json") };
+      const membership = await repo.getMembership(c.env.DB, userId, id);
+      if (membership === null) return c.json({ error: "not found" }, 404);
+      const { week, dose, change, ...item } = c.req.valid("json");
+      const itemId =
+        "itemId" in item
+          ? item.itemId
+          : await itemIdAt(c.env.DB, userId, membership.workout_id, item.item);
+      const weekChange = { membershipId: id, week, dose, itemId, change };
       await repo.saveWeekChange(c.env.DB, userId, weekChange);
       return c.json({ weekChange });
     }
