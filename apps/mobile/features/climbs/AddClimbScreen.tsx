@@ -126,11 +126,6 @@ export function AddClimbScreen(): React.ReactElement {
     setFailed(true);
   };
 
-  const unlinked = (): ClimbDraft => {
-    const { climbId: _link, ...rest } = climb;
-    return rest;
-  };
-
   const saveEdit = (id: string): void => {
     const name = climb.name.trim();
     const original = mine.find((c) => c.id === id);
@@ -242,7 +237,7 @@ export function AddClimbScreen(): React.ReactElement {
             onChangeText={(text) => {
               setAreaText(text);
               setArea(null);
-              if (editing) setClimb(unlinked());
+              if (editing) setClimb(({ climbId: _link, ...rest }) => rest);
             }}
             onPick={(id) => {
               const picked = areas.find((a) => a.id === id);
@@ -284,67 +279,75 @@ export function AddClimbScreen(): React.ReactElement {
             </View>
           </View>
           {!editing && (
-            <ResultFields climb={climb} known={knownOf(mine, climb) ?? null} onChange={setClimb} />
-          )}
-          {!editing && !sent && (
-            <View style={row}>
-              <View style={{ flex: 1, gap: 2 }}>
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-                  <Icon name="star" color={colors.gunmetal} size={16} strokeWidth={1.8} />
-                  <Text style={{ fontFamily: fonts.sans, fontSize: 15, color: colors.gunmetal }}>
-                    {t("common.project")}
-                  </Text>
-                </View>
-                <Text
-                  style={{ fontFamily: fonts.sans, fontSize: 12.5, color: colors.textSecondary }}
-                >
-                  {t("climbs.projectHint")}
-                </Text>
-              </View>
-              <Switch
-                checked={project}
-                onChange={setProject}
-                disabled={false}
-                label={t("common.project")}
+            <>
+              <ResultFields
+                climb={climb}
+                known={knownOf(mine, climb) ?? null}
+                onChange={setClimb}
               />
-            </View>
-          )}
-          {!editing && (
-            <View style={row}>
-              <Text style={{ fontFamily: fonts.sans, fontSize: 15, color: colors.gunmetal }}>
-                {t("logSession.date")}
-              </Text>
-              <View style={{ width: 150 }}>
-                <DateTimeField
-                  mode="date"
-                  value={date}
-                  max={localDate(new Date())}
-                  label={t("logSession.date")}
-                  onChange={setDate}
-                />
+              {!sent && (
+                <View style={row}>
+                  <View style={{ flex: 1, gap: 2 }}>
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                      <Icon name="star" color={colors.gunmetal} size={16} strokeWidth={1.8} />
+                      <Text
+                        style={{ fontFamily: fonts.sans, fontSize: 15, color: colors.gunmetal }}
+                      >
+                        {t("common.project")}
+                      </Text>
+                    </View>
+                    <Text
+                      style={{
+                        fontFamily: fonts.sans,
+                        fontSize: 12.5,
+                        color: colors.textSecondary,
+                      }}
+                    >
+                      {t("climbs.projectHint")}
+                    </Text>
+                  </View>
+                  <Switch
+                    checked={project}
+                    onChange={setProject}
+                    disabled={false}
+                    label={t("common.project")}
+                  />
+                </View>
+              )}
+              <View style={row}>
+                <Text style={{ fontFamily: fonts.sans, fontSize: 15, color: colors.gunmetal }}>
+                  {t("logSession.date")}
+                </Text>
+                <View style={{ width: 150 }}>
+                  <DateTimeField
+                    mode="date"
+                    value={date}
+                    max={localDate(new Date())}
+                    label={t("logSession.date")}
+                    onChange={setDate}
+                  />
+                </View>
               </View>
-            </View>
-          )}
-          {!editing && (
-            <TextInput
-              value={climb.note}
-              onChangeText={(note) => setClimb({ ...climb, note })}
-              multiline
-              placeholder={t("climbs.notesPlaceholder")}
-              placeholderTextColor={colors.textFaint}
-              accessibilityLabel={t("common.notes")}
-              style={{
-                minHeight: 76,
-                paddingHorizontal: 14,
-                paddingTop: 14,
-                borderRadius: radius.control + 2,
-                backgroundColor: colors.surfaceSoft,
-                fontFamily: fonts.sans,
-                fontSize: 15,
-                color: colors.gunmetal,
-                textAlignVertical: "top",
-              }}
-            />
+              <TextInput
+                value={climb.note}
+                onChangeText={(note) => setClimb({ ...climb, note })}
+                multiline
+                placeholder={t("climbs.notesPlaceholder")}
+                placeholderTextColor={colors.textFaint}
+                accessibilityLabel={t("common.notes")}
+                style={{
+                  minHeight: 76,
+                  paddingHorizontal: 14,
+                  paddingTop: 14,
+                  borderRadius: radius.control + 2,
+                  backgroundColor: colors.surfaceSoft,
+                  fontFamily: fonts.sans,
+                  fontSize: 15,
+                  color: colors.gunmetal,
+                  textAlignVertical: "top",
+                }}
+              />
+            </>
           )}
         </ScrollView>
         <View
