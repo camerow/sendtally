@@ -2,7 +2,7 @@ import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { logCountLabel } from "@sendtally/features/sessions";
 import {
-  LOG_SCOPES,
+  TRAINING_LOG_SCOPES,
   logScopeItems,
   logScopeLabel,
   type LogItem,
@@ -92,7 +92,7 @@ export function FilterSheet({
         <View style={{ gap: 9 }}>
           <Text style={label}>{t("journal.show")}</Text>
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-            {LOG_SCOPES.map((value) => (
+            {TRAINING_LOG_SCOPES.map((value) => (
               <Chip
                 key={value}
                 label={logScopeLabel(value)}

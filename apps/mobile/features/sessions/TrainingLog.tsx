@@ -8,11 +8,10 @@ import {
   type ViewToken,
 } from "react-native";
 import { monthScopeItems, logCountLabel, logYearGroups } from "@sendtally/features/sessions";
-import { groupTrips, logScopeItems, type LogItem } from "@sendtally/features/journal";
+import { logScopeItems, type LogItem } from "@sendtally/features/journal";
 import { t } from "@sendtally/features/i18n";
 import { colors } from "@sendtally/design/tokens";
 import { EntryRow, entryRowHeight } from "../journal/EntryRow";
-import { TripGroup, tripGroupHeight } from "../journal/TripGroup";
 import { DEFAULT_FILTERS, FilterSheet, type SessionFilters } from "./FilterSheet";
 import { ScopeBar } from "./ScopeBar";
 import { SECTION_HEADER_HEIGHT, SectionHeader } from "./SectionHeader";
@@ -32,7 +31,7 @@ const rowHeight = (item: LogItem): number => {
   if (item.type === "hang") return HANG_ROW_HEIGHT + blockLine(item);
   if (item.type === "activity") return ACTIVITY_ROW_HEIGHT + blockLine(item);
   if (item.type === "block") return BLOCK_DONE_ROW_HEIGHT;
-  return item.inside.length > 0 ? tripGroupHeight(item) : entryRowHeight(item.entry);
+  return entryRowHeight(item.entry);
 };
 
 function itemLayout(
@@ -76,7 +75,7 @@ export function TrainingLog({ items, header, onRefresh }: TrainingLogProps): Rea
   const inScope = React.useMemo(() => logScopeItems(all, filters.scope), [all, filters.scope]);
 
   const { sections, scopeItems } = React.useMemo(() => {
-    const years = logYearGroups(filters.scope === "all" ? groupTrips(inScope) : inScope);
+    const years = logYearGroups(inScope);
     return {
       sections: years.flatMap((year) =>
         year.months.map((m): Section => ({
@@ -88,7 +87,7 @@ export function TrainingLog({ items, header, onRefresh }: TrainingLogProps): Rea
       ),
       scopeItems: monthScopeItems(years),
     };
-  }, [filters.scope, inScope]);
+  }, [inScope]);
 
   const viewability = React.useMemo(
     () => [
@@ -178,8 +177,6 @@ export function TrainingLog({ items, header, onRefresh }: TrainingLogProps): Rea
             />
           ) : item.type === "block" ? (
             <BlockDoneRow recap={item.recap} onPress={() => openLogItem(item)} />
-          ) : item.inside.length > 0 ? (
-            <TripGroup item={item} onOpen={openLogItem} />
           ) : (
             <EntryRow entry={item.entry} onPress={() => openLogItem(item)} />
           )

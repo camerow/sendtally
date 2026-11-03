@@ -196,7 +196,7 @@ describe("other training in the log", () => {
     ]);
   });
 
-  it("splits into climbing and training, with entries in both and a trip holding only its half", () => {
+  it("splits into climbing and training, with entries in both and trips only in climbing", () => {
     const trip = entry({
       id: "t1",
       kind: "trip",
@@ -209,7 +209,7 @@ describe("other training in the log", () => {
         i.type === "entry" ? [i.key, ...i.inside.map((x) => x.key)] : [i.key]
       );
     expect(inside("climbing")).toEqual(["entry:t1", "session:a"]);
-    expect(inside("training")).toEqual(["entry:t1", "activity:a1"]);
+    expect(inside("training")).toEqual(["activity:a1"]);
   });
 });
 
