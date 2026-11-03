@@ -218,6 +218,13 @@
       "when": 1793810742210,
       "tag": "0035_membership_position",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "6",
+      "when": 1793829572689,
+      "tag": "0036_backfill_climb_crags",
+      "breakpoints": true
     }
   ]
 }

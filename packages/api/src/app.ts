@@ -967,13 +967,13 @@ const app = new Hono<AppEnv>()
       repo.getViewer(db, userId),
     ]);
     const missing = missingClimbs(rows, known, links);
-    if (missing.create.length > 0 || missing.update.length > 0) {
+    if (missing.create.length > 0 || missing.link.length > 0) {
       await repo.ensureUser(db, userId);
       await repo.insertUserClimbs(db, userId, missing.create);
-      await repo.updateUserClimbs(db, userId, missing.update);
+      await repo.linkUserClimbs(db, userId, missing.link);
     }
     const records =
-      missing.create.length > 0 || missing.update.length > 0
+      missing.create.length > 0 || missing.link.length > 0
         ? await repo.listUserClimbs(db, userId)
         : known;
     const areaIds = [...new Set(records.flatMap((r) => (r.area_id === null ? [] : [r.area_id])))];

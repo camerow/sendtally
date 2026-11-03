@@ -151,13 +151,14 @@ export function climbResolver(records: UserClimbRow[]): ClimbResolver {
 
 export type ClimbLink = { climb_slug: string; climb_id: string; area_id: string };
 
-export type ClimbFix = { id: string; area_id?: string; area_climb_id?: string };
+export type MissingClimbs = {
+  create: repo.UserClimbInput[];
+  link: Array<{ id: string; area_climb_id: string }>;
+};
 
-export type MissingClimbs = { create: repo.UserClimbInput[]; update: ClimbFix[] };
-
-// Named climbs logged before records existed get one. Every climb holds its crag: the
-// newest one it was logged at, else its Areas climb's, and a record without one is
-// given it the same way. A record picks up the Areas climb it was logged against at its crag.
+// Named climbs logged before records existed get one, at the newest crag they were
+// logged at, else their Areas climb's. After that a record's crag is only ever the
+// user's, and it picks up the Areas climb it was logged against only at that crag.
 export function missingClimbs(
   sessions: CatalogueSession[],
   records: UserClimbRow[],
@@ -166,16 +167,10 @@ export function missingClimbs(
   const resolve = climbResolver(records);
   const linkBySlug = new Map(links.map((l) => [l.climb_slug, l]));
   const create = new Map<string, repo.UserClimbInput>();
-  const cragById = new Map<string, string>();
   for (const session of sessions) {
     for (const climb of namedClimbs(session)) {
       const key = climbSlug(climb.name);
-      const record = resolve(climb);
-      if (record !== undefined) {
-        if (session.area_id != null && !cragById.has(record.id))
-          cragById.set(record.id, session.area_id);
-        continue;
-      }
+      if (resolve(climb) !== undefined) continue;
       const known = create.get(key);
       if (known !== undefined) {
         known.area_id ??= session.area_id ?? null;
@@ -193,16 +188,13 @@ export function missingClimbs(
     }
   }
   for (const c of create.values()) c.area_id ??= linkBySlug.get(c.name_key)?.area_id ?? null;
-  const update = records.flatMap((r) => {
-    const link = linkBySlug.get(r.name_key);
-    const crag = r.area_id ?? cragById.get(r.id) ?? link?.area_id ?? null;
-    const fix: ClimbFix = { id: r.id };
-    if (r.area_id === null && crag !== null) fix.area_id = crag;
-    if (r.area_climb_id === null && link !== undefined && link.area_id === crag)
-      fix.area_climb_id = link.climb_id;
-    return Object.keys(fix).length > 1 ? [fix] : [];
+  const link = records.flatMap((r) => {
+    const l = linkBySlug.get(r.name_key);
+    return r.area_climb_id === null && l !== undefined && l.area_id === r.area_id
+      ? [{ id: r.id, area_climb_id: l.climb_id }]
+      : [];
   });
-  return { create: [...create.values()], update };
+  return { create: [...create.values()], link };
 }
 
 const areaOf = (

@@ -473,11 +473,105 @@ describe("a climb's crag", () => {
     expect((await arete(user))?.["area"]).toEqual({ id: first.id, name: "First Crag" });
   });
 
-  it("is filled in from its newest session for a climb recorded without one", async () => {
-    const user = "user_crag_backfill";
-    const crag = await createArea(user, { ...buttermilks, name: "Backfill Crag" });
-    expect((await call(user, "/v1/projects", { body: { name: "Arete" } })).status).toBe(200);
-    expect((await logAt(user, crag.id, "2026-09-01")).status).toBe(201);
-    expect((await arete(user))?.["area"]).toEqual({ id: crag.id, name: "Backfill Crag" });
+  it("stays cleared once its crag is emptied", async () => {
+    const user = "user_crag_cleared";
+    const crag = await createArea(user, { ...buttermilks, name: "Cleared Crag" });
+    expect((await logAt(user, crag.id, "2026-09-01", true)).status).toBe(201);
+    const id = String((await arete(user))?.["id"]);
+    const cleared = await call(user, `/v1/climbs/${id}`, {
+      method: "PATCH",
+      body: { areaId: null, areaClimbId: null },
+    });
+    expect(cleared.status).toBe(200);
+    expect((await arete(user))?.["area"]).toBeNull();
+    expect((await arete(user))?.["area"]).toBeNull();
+  });
+});
+
+// The backfill is a one-shot production data move, so it is exercised here
+// against the same SQL the migration applies.
+describe("climb crag backfill", () => {
+  const backfill = async (): Promise<void> => {
+    const sql = await import("../migrations/0036_backfill_climb_crags.sql?raw");
+    for (const statement of sql.default.split("--> statement-breakpoint")) {
+      await env.DB.prepare(statement).run();
+    }
+  };
+  const seedSession = (
+    user: string,
+    fingerprint: string,
+    startAt: string,
+    areaId: string | null,
+    climbs: unknown[]
+  ) =>
+    env.DB.batch([
+      env.DB.prepare(
+        `INSERT OR IGNORE INTO users (id, timezone, created_at) VALUES (?, 'UTC', '')`
+      ).bind(user),
+      env.DB.prepare(
+        `INSERT INTO sessions (user_id, fingerprint, source, start_at, end_at, climb_count, top_grade, top_send_grade, rpe, title, summary, area_id, climbs_json)
+         VALUES (?, ?, 'manual', ?, ?, 1, 3, 3, 5, 'Session', 's', ?, ?)`
+      ).bind(user, fingerprint, startAt, startAt, areaId, JSON.stringify(climbs)),
+    ]);
+  const seedClimb = (
+    user: string,
+    id: string,
+    name: string,
+    place: { area_id?: string; area_climb_id?: string } = {}
+  ) =>
+    env.DB.prepare(
+      `INSERT INTO user_climbs (user_id, id, name, name_key, discipline, area_id, area_climb_id, working, created_at, updated_at)
+       VALUES (?, ?, ?, ?, 'boulder', ?, ?, 0, '', '')`
+    )
+      .bind(
+        user,
+        id,
+        name,
+        name.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+        place.area_id ?? null,
+        place.area_climb_id ?? null
+      )
+      .run();
+  const cragOf = async (id: string): Promise<string | null | undefined> =>
+    (
+      await env.DB.prepare("SELECT area_id FROM user_climbs WHERE id = ?")
+        .bind(id)
+        .first<{ area_id: string | null }>()
+    )?.area_id;
+
+  it("gives a climb the crag of the newest session it was logged at one in", async () => {
+    const user = "u_crag_backfill";
+    await seedSession(user, "fp_gym", "2026-09-03T18:00:00Z", null, [{ name: "ARETE" }]);
+    await seedSession(user, "fp_new", "2026-09-02T18:00:00Z", "crag-new", [{ name: "arete " }]);
+    await seedSession(user, "fp_old", "2026-09-01T18:00:00Z", "crag-old", [{ name: "Arete" }]);
+    await seedSession(user, "fp_stamped", "2026-09-04T18:00:00Z", "crag-other", [
+      { name: "Arete", userClimbId: "uc-other" },
+      { name: "Old name", userClimbId: "uc-renamed" },
+    ]);
+    await seedClimb(user, "uc-arete", "Arete");
+    await seedClimb(user, "uc-renamed", "New name");
+    await seedClimb(user, "uc-placed", "Placed", { area_id: "crag-kept" });
+    await seedSession(user, "fp_placed", "2026-09-05T18:00:00Z", "crag-new", [{ name: "Placed" }]);
+
+    await backfill();
+    await backfill();
+
+    expect(await cragOf("uc-arete")).toBe("crag-new");
+    expect(await cragOf("uc-renamed")).toBe("crag-other");
+    expect(await cragOf("uc-placed")).toBe("crag-kept");
+  });
+
+  it("falls back to the crag of the Areas climb it is linked to", async () => {
+    const user = "u_crag_backfill_link";
+    const area = await createArea(user, { ...buttermilks, name: "Linked Crag" });
+    const linked = await createClimb(user, mandala(area.id));
+    await seedSession(user, "fp_gym_link", "2026-09-01T18:00:00Z", null, [{ name: "The Mandala" }]);
+    await seedClimb(user, "uc-linked", "The Mandala", { area_climb_id: linked.id });
+    await seedClimb(user, "uc-nowhere", "Nowhere");
+
+    await backfill();
+
+    expect(await cragOf("uc-linked")).toBe(area.id);
+    expect(await cragOf("uc-nowhere")).toBeNull();
   });
 });

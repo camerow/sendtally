@@ -1024,17 +1024,17 @@ export async function insertUserClimbs(
   if (first !== undefined) await d.batch([first, ...rest]);
 }
 
-export async function updateUserClimbs(
+export async function linkUserClimbs(
   db: D1Database,
   userId: string,
-  fixes: Array<{ id: string; area_id?: string; area_climb_id?: string }>
+  links: Array<{ id: string; area_climb_id: string }>
 ): Promise<void> {
   const d = drizzle(db);
-  const updates = fixes.map(({ id, ...set }) =>
+  const updates = links.map((l) =>
     d
       .update(userClimbs)
-      .set(set)
-      .where(and(eq(userClimbs.user_id, userId), eq(userClimbs.id, id)))
+      .set({ area_climb_id: l.area_climb_id })
+      .where(and(eq(userClimbs.user_id, userId), eq(userClimbs.id, l.id)))
   );
   const [first, ...rest] = updates;
   if (first !== undefined) await d.batch([first, ...rest]);
