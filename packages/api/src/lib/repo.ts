@@ -29,6 +29,7 @@ import {
   areas,
   boardConnections,
   climbNotes,
+  userClimbNotes,
   contentReports,
   contentRevisions,
   duplicateReports,
@@ -660,6 +661,49 @@ export async function listClimbNotes(db: D1Database, userId: string): Promise<Cl
   return drizzle(db).select().from(climbNotes).where(eq(climbNotes.user_id, userId)).all();
 }
 
+export type UserClimbNoteRow = typeof userClimbNotes.$inferSelect;
+
+export type UserClimbNote = Pick<UserClimbNoteRow, "id" | "climb_id" | "day" | "note">;
+
+export async function listUserClimbNotes(
+  db: D1Database,
+  userId: string
+): Promise<UserClimbNoteRow[]> {
+  return drizzle(db)
+    .select()
+    .from(userClimbNotes)
+    .where(eq(userClimbNotes.user_id, userId))
+    .orderBy(desc(userClimbNotes.day), desc(userClimbNotes.created_at))
+    .all();
+}
+
+/** Writes the note under the id the app chose, so sending it twice keeps one. */
+export async function saveUserClimbNote(
+  db: D1Database,
+  userId: string,
+  n: UserClimbNote
+): Promise<void> {
+  const now = new Date().toISOString();
+  await drizzle(db)
+    .insert(userClimbNotes)
+    .values({ user_id: userId, ...n, created_at: now, updated_at: now })
+    .onConflictDoUpdate({
+      target: [userClimbNotes.user_id, userClimbNotes.id],
+      set: { day: n.day, note: n.note, updated_at: now },
+    });
+}
+
+export async function deleteUserClimbNote(
+  db: D1Database,
+  userId: string,
+  id: string
+): Promise<boolean> {
+  const result = await drizzle(db)
+    .delete(userClimbNotes)
+    .where(and(eq(userClimbNotes.user_id, userId), eq(userClimbNotes.id, id)));
+  return result.meta.changes > 0;
+}
+
 export async function getSessionClimbNotes(
   db: D1Database,
   userId: string,
@@ -1104,7 +1148,18 @@ export async function renameUserClimb(
       .set({ climbs_json: s.climbs_json })
       .where(and(eq(sessions.user_id, userId), eq(sessions.fingerprint, s.fingerprint)))
   );
-  await d.batch([record, ...survivor, ...stamped]);
+  const notes =
+    r.into === null
+      ? []
+      : [
+          d
+            .update(userClimbNotes)
+            .set({ climb_id: r.into.id })
+            .where(
+              and(eq(userClimbNotes.user_id, userId), eq(userClimbNotes.climb_id, r.climb.id))
+            ),
+        ];
+  await d.batch([record, ...survivor, ...stamped, ...notes]);
 }
 
 export type PostableSessionRow = {
@@ -1301,6 +1356,7 @@ export async function deleteUserData(db: D1Database, userId: string): Promise<vo
   await d.batch([
     d.delete(sessionTags).where(eq(sessionTags.user_id, userId)),
     d.delete(climbNotes).where(eq(climbNotes.user_id, userId)),
+    d.delete(userClimbNotes).where(eq(userClimbNotes.user_id, userId)),
     d.delete(sessionClimbLinks).where(eq(sessionClimbLinks.user_id, userId)),
     d.delete(entryTags).where(eq(entryTags.user_id, userId)),
     d.delete(entrySessions).where(eq(entrySessions.user_id, userId)),

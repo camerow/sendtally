@@ -128,6 +128,9 @@ export type TagSummary = Ok<Client["v1"]["tags"]["$get"]>["tags"][number];
 
 export type ClimbSummary = Ok<Client["v1"]["climbs"]["$get"]>["climbs"][number];
 
+/** A note on a climb's page with no session behind it. */
+export type ClimbNote = ClimbSummary["notes"][number];
+
 export type ClimbGrade = NonNullable<ClimbSummary["grade"]>;
 
 export type GradeScale = ClimbGrade["scale"];

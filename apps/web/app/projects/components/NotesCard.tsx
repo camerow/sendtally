@@ -1,13 +1,13 @@
 import React from "react";
-import type { ProjectNoteVM, ProjectSessionVM } from "@sendtally/features/climbs";
+import type { ProjectNoteVM } from "@sendtally/features/climbs";
 import { t } from "@sendtally/features/i18n";
 import { Icon } from "../../components/Icon";
 import { AddNoteSheet } from "./AddNoteSheet";
 
 export type NotesCardProps = {
   notes: ProjectNoteVM[];
-  sessions: ProjectSessionVM[];
-  onSave: (fingerprint: string, note: string) => Promise<void>;
+  /** With no text, a session's note is cleared and a page note deleted. */
+  onSave: (note: ProjectNoteVM, text: string) => Promise<void>;
   onAdd: (day: string, note: string) => Promise<void>;
 };
 
@@ -40,24 +40,24 @@ const linkButton: React.CSSProperties = {
 
 // The notes are the beta: the newest one is what the climber knows now, and the
 // ones under it are how they got there, each tied to the session it came from.
-export function NotesCard({ notes, sessions, onSave, onAdd }: NotesCardProps): React.ReactElement {
+export function NotesCard({ notes, onSave, onAdd }: NotesCardProps): React.ReactElement {
   const [editing, setEditing] = React.useState<string | null>(null);
   const [adding, setAdding] = React.useState(false);
   const [draft, setDraft] = React.useState("");
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
-  const open = (fingerprint: string, note: string): void => {
-    setEditing(fingerprint);
-    setDraft(note);
+  const open = (note: ProjectNoteVM): void => {
+    setEditing(note.id);
+    setDraft(note.note);
     setError(null);
   };
 
-  async function save(fingerprint: string): Promise<void> {
+  async function save(note: ProjectNoteVM): Promise<void> {
     setBusy(true);
     setError(null);
     try {
-      await onSave(fingerprint, draft.trim());
+      await onSave(note, draft.trim());
       setBusy(false);
       setEditing(null);
     } catch {
@@ -68,7 +68,7 @@ export function NotesCard({ notes, sessions, onSave, onAdd }: NotesCardProps): R
 
   const [latest, ...older] = notes;
 
-  const editor = (fingerprint: string): React.ReactElement => (
+  const editor = (note: ProjectNoteVM): React.ReactElement => (
     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
       <textarea
         value={draft}
@@ -103,12 +103,7 @@ export function NotesCard({ notes, sessions, onSave, onAdd }: NotesCardProps): R
         >
           {t("common.cancel")}
         </button>
-        <button
-          type="button"
-          style={linkButton}
-          disabled={busy}
-          onClick={() => void save(fingerprint)}
-        >
+        <button type="button" style={linkButton} disabled={busy} onClick={() => void save(note)}>
           {busy ? t("common.saving") : t("common.save")}
         </button>
       </div>
@@ -130,14 +125,10 @@ export function NotesCard({ notes, sessions, onSave, onAdd }: NotesCardProps): R
       </div>
 
       {latest !== undefined &&
-        (editing === latest.fingerprint ? (
-          editor(latest.fingerprint)
+        (editing === latest.id ? (
+          editor(latest)
         ) : (
-          <button
-            type="button"
-            className="climb-note-latest"
-            onClick={() => open(latest.fingerprint, latest.note)}
-          >
+          <button type="button" className="climb-note-latest" onClick={() => open(latest)}>
             <span style={{ ...meta, color: "var(--text-on-light-secondary)" }}>
               {t("climbs.noteLatest", { date: latest.dateLabel })}
             </span>
@@ -154,16 +145,16 @@ export function NotesCard({ notes, sessions, onSave, onAdd }: NotesCardProps): R
       )}
 
       {older.map((note) =>
-        editing === note.fingerprint ? (
-          <div key={note.fingerprint} className="climb-note-row">
-            {editor(note.fingerprint)}
+        editing === note.id ? (
+          <div key={note.id} className="climb-note-row">
+            {editor(note)}
           </div>
         ) : (
           <button
-            key={note.fingerprint}
+            key={note.id}
             type="button"
             className="climb-note-row climb-note-row--button"
-            onClick={() => open(note.fingerprint, note.note)}
+            onClick={() => open(note)}
           >
             <span
               style={{
@@ -181,9 +172,7 @@ export function NotesCard({ notes, sessions, onSave, onAdd }: NotesCardProps): R
           </button>
         )
       )}
-      {adding && (
-        <AddNoteSheet sessions={sessions} onSave={onAdd} onClose={() => setAdding(false)} />
-      )}
+      {adding && <AddNoteSheet onSave={onAdd} onClose={() => setAdding(false)} />}
     </div>
   );
 }

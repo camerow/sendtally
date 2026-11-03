@@ -6,6 +6,8 @@ export type HistoryItem = {
   meta: string;
   rpe: number | null;
   note?: string | null;
+  /** A note with no session behind it, left out of the count. */
+  kind?: "note";
   /** The session whose screen this is, on gold and not opened again. */
   current?: boolean;
 };

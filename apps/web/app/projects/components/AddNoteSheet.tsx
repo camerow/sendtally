@@ -1,15 +1,13 @@
 import React from "react";
-import type { ProjectSessionVM } from "@sendtally/features/climbs";
 import { t } from "@sendtally/features/i18n";
 import { localDate } from "@sendtally/features/log-session";
 
 export type AddNoteSheetProps = {
-  sessions: ProjectSessionVM[];
   onSave: (day: string, note: string) => Promise<void>;
   onClose: () => void;
 };
 
-export function AddNoteSheet({ sessions, onSave, onClose }: AddNoteSheetProps): React.ReactElement {
+export function AddNoteSheet({ onSave, onClose }: AddNoteSheetProps): React.ReactElement {
   const [day, setDay] = React.useState(() => localDate(new Date()));
   const [draft, setDraft] = React.useState("");
   const [busy, setBusy] = React.useState(false);
@@ -48,9 +46,6 @@ export function AddNoteSheet({ sessions, onSave, onClose }: AddNoteSheetProps): 
             className="note-sheet-input"
           />
         </label>
-        {day !== "" && !sessions.some((s) => s.day === day) && (
-          <span className="note-sheet-hint">{t("climbs.noteNewDayHint")}</span>
-        )}
         <textarea
           value={draft}
           rows={5}

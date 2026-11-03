@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { ClimbSummary, SessionWithClimbs } from "@sendtally/api-client";
-import { joinNotes, noteAttempt, projectDetailVM, projectsOverview } from "./projects";
+import { projectDetailVM, projectsOverview, withClimbNote, withoutClimbNote } from "./projects";
 
 const NOW = new Date("2026-09-11T12:00:00.000Z");
 
@@ -19,6 +19,7 @@ const climb = (overrides: Partial<ClimbSummary>): ClimbSummary => ({
   area_climb_id: null,
   area: null,
   sent_at: null,
+  notes: [],
   ...overrides,
 });
 
@@ -102,12 +103,16 @@ describe("projectDetailVM", () => {
     const vm = projectDetailVM(climb({}), sessions, NOW);
     expect(vm.notes).toEqual([
       {
-        fingerprint: "fp-2026-09-04T18:00:00.000Z",
+        id: "fp-2026-09-04T18:00:00.000Z",
+        source: "session",
+        day: "2026-09-04",
         dateLabel: "Sep 4",
         note: "Stuck on the crossover",
       },
       {
-        fingerprint: "fp-2026-06-03T18:00:00.000Z",
+        id: "fp-2026-06-03T18:00:00.000Z",
+        source: "session",
+        day: "2026-06-03",
         dateLabel: "Jun 3",
         note: "First look, every move goes",
       },
@@ -187,21 +192,21 @@ describe("projectsOverview", () => {
   });
 });
 
-describe("noteAttempt", () => {
-  it("carries the note on one attempt at the project", () => {
-    expect(noteAttempt(climb({}), "heel hook")).toMatchObject({
-      name: "Moonraker",
-      scale: "v",
-      grade: "V7",
-      kind: "attempt",
-      tries: 1,
-      note: "heel hook",
-      project: true,
-    });
+describe("page notes", () => {
+  const note = { id: "n1", day: "2026-10-30", note: "heel hook left" };
+
+  it("writes a note in, replacing one with its id, and takes it out again", () => {
+    const written = withClimbNote([climb({})], climb({}).id, note);
+    expect(written[0]?.notes).toEqual([note]);
+    const rewritten = withClimbNote(written, climb({}).id, { ...note, note: "toe hook" });
+    expect(rewritten[0]?.notes.map((n) => n.note)).toEqual(["toe hook"]);
+    expect(withoutClimbNote(rewritten, climb({}).id, "n1")[0]?.notes).toEqual([]);
   });
 
-  it("keeps a second note after the first", () => {
-    expect(joinNotes(null, "a")).toBe("a");
-    expect(joinNotes("a", "b")).toBe("a\n\nb");
+  it("lists page notes with the session notes, newest day first", () => {
+    const vm = projectDetailVM(climb({ notes: [note] }), []);
+    expect(vm.notes).toEqual([
+      { id: "n1", source: "page", day: "2026-10-30", dateLabel: "Oct 30", note: "heel hook left" },
+    ]);
   });
 });

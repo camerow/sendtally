@@ -1,13 +1,11 @@
 import { formatGrade, routeIndexOf, vFromFont, type Grade } from "@sendtally/core";
-import type { ClimbSummary, SessionWithClimbs } from "@sendtally/api-client";
+import type { ClimbNote, ClimbSummary, SessionWithClimbs } from "@sendtally/api-client";
 import { formatDate, t } from "../i18n";
 import { utcDate } from "../log-session/transforms";
-import type { ClimbDraft } from "../log-session/types";
 import { isUnscored, sessionDay } from "../sessions/meta";
 import { sessionTitle } from "../sessions/title";
 import { durationLabel, sessionMinutes } from "../sessions/years";
 import {
-  climbDraftGrade,
   climbKey,
   projectMetaLabel,
   projectStatus,
@@ -40,8 +38,11 @@ export type ProjectSessionVM = {
   note: string | null;
 };
 
+/** A note on a session of the climb, or one written on its page with no session. */
 export type ProjectNoteVM = {
-  fingerprint: string;
+  id: string;
+  source: "session" | "page";
+  day: string;
   dateLabel: string;
   note: string;
 };
@@ -199,9 +200,18 @@ export function projectDetailVM(
     stats,
     bars: bars(ordered),
     sessions: newestFirst,
-    notes: newestFirst.flatMap(({ fingerprint, dateLabel, note }) =>
-      note === null ? [] : [{ fingerprint, dateLabel, note }]
-    ),
+    notes: [
+      ...newestFirst.flatMap(({ fingerprint, day, dateLabel, note }): ProjectNoteVM[] =>
+        note === null ? [] : [{ id: fingerprint, source: "session", day, dateLabel, note }]
+      ),
+      ...climb.notes.map(({ id, day, note }): ProjectNoteVM => ({
+        id,
+        source: "page",
+        day,
+        dateLabel: dateLabel(day),
+        note,
+      })),
+    ].sort((a, b) => b.day.localeCompare(a.day)),
   };
 }
 
@@ -246,22 +256,30 @@ export function projectsOverview(
   };
 }
 
-/** A day with no session of this project yet logs one attempt, which is what carries the note. */
-export function noteAttempt(climb: ClimbSummary, note: string): Omit<ClimbDraft, "key"> {
-  const scale = climb.grade?.scale ?? (climb.discipline === "route" ? "yds" : "v");
-  return {
-    scale,
-    grade: climbDraftGrade(climb, scale),
-    name: climb.name,
-    kind: "attempt",
-    style: "redpoint",
-    tries: 1,
-    note,
-    project: true,
-  };
+/** The climbs with one page note written in, in place of any with its id, newest day first. */
+export function withClimbNote(
+  climbs: readonly ClimbSummary[],
+  climbId: string,
+  note: ClimbNote
+): ClimbSummary[] {
+  return climbs.map((c) =>
+    c.id !== climbId
+      ? c
+      : {
+          ...c,
+          notes: [...c.notes.filter((n) => n.id !== note.id), note].sort((a, b) =>
+            b.day.localeCompare(a.day)
+          ),
+        }
+  );
 }
 
-/** A second note on a day reads after the first rather than replacing it. */
-export function joinNotes(existing: string | null, note: string): string {
-  return existing === null ? note : `${existing}\n\n${note}`;
+export function withoutClimbNote(
+  climbs: readonly ClimbSummary[],
+  climbId: string,
+  noteId: string
+): ClimbSummary[] {
+  return climbs.map((c) =>
+    c.id !== climbId ? c : { ...c, notes: c.notes.filter((n) => n.id !== noteId) }
+  );
 }

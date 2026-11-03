@@ -111,6 +111,15 @@ describe("planImport", () => {
     expect(planStats(plan.sessions)).toEqual({ sessions: 5, climbs: 7, topGrade: "V9" });
   });
 
+  it("passes by a climb page note, which an export writes with no session", () => {
+    const plan = planImport(
+      `${sendtally}2023-01-06,,,,,,,,,Lindners Roof,,note,,,Heel hook\n`,
+      "UTC"
+    );
+    expect(plan.sessions).toHaveLength(5);
+    expect(plan.issues).toEqual(planImport(sendtally, "UTC").issues);
+  });
+
   it("adds tags chosen at review to the file's own tags", () => {
     const { sessions } = planImport(sendtally, "UTC");
     expect(sessionNames(sessions)).toEqual([

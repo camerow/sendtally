@@ -19,7 +19,9 @@ export function HistoryList({ items, onOpen }: HistoryListProps): React.ReactEle
   return (
     <View style={{ gap: 2 }}>
       <Label color={colors.gunmetal}>
-        {t("hang.history", { count: t("hang.sessionCount", { count: items.length }) })}
+        {t("hang.history", {
+          count: t("hang.sessionCount", { count: items.filter((i) => i.kind !== "note").length }),
+        })}
       </Label>
       {shown.map((item) => (
         <HistoryRow key={item.id} item={item} onPress={() => onOpen(item.id)} />

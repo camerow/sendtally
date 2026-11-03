@@ -4,15 +4,13 @@ import { t } from "../i18n";
 import { queries, useQueryPair, type QueryState } from "../query";
 import {
   projectBars,
-  joinNotes,
-  noteAttempt,
   projectDetailVM,
   projectsOverview,
   type ProjectBar,
   type ProjectDetailVM,
+  type ProjectNoteVM,
   type ProjectsOverviewVM,
 } from "./projects";
-import { logClimbOnDay } from "../log-session/dayClimb";
 import { projectStatus, projectsOf } from "./transforms";
 
 export type ProjectListItem = { climb: ClimbSummary; bars: ProjectBar[] };
@@ -64,47 +62,43 @@ export function useProjects(api: SendtallyApi): ProjectsFeature {
 
 export type ProjectFeature = {
   state: QueryState<ProjectDetailVM>;
-  saveNote: (fingerprint: string, note: string) => Promise<void>;
-  /** A note dated to a day: on that day's session of this project, or on a new attempt there. */
+  /** Rewrites a note; with no text a session's note is cleared and a page note deleted. */
+  saveNote: (note: ProjectNoteVM, text: string) => Promise<void>;
+  /** A note on the project's page, dated to a day, with no session behind it. */
   addNote: (day: string, note: string) => Promise<void>;
   unmark: () => Promise<void>;
 };
 
 // The detail screen reads the sessions it links to anyway, so the attempts and
 // the notes come from the same fetch rather than a project-specific endpoint.
-export function useProject(api: SendtallyApi, slug: string): ProjectFeature {
-  const { state: loaded } = useClimbsAndSessions(api);
+export function useProject(api: SendtallyApi, slug: string, newId: () => string): ProjectFeature {
+  const { state: loaded, reload } = useClimbsAndSessions(api);
+  const climb = loaded.status === "ready" ? loaded.data[0].find((c) => c.slug === slug) : undefined;
 
   const state = React.useMemo((): QueryState<ProjectDetailVM> => {
     if (loaded.status !== "ready") return loaded;
-    const [climbs, { sessions }] = loaded.data;
-    const climb = climbs.find((c) => c.slug === slug);
     if (climb === undefined) return { status: "error", message: t("climbs.projectNotFound") };
-    return { status: "ready", data: projectDetailVM(climb, sessions) };
-  }, [loaded, slug]);
+    return { status: "ready", data: projectDetailVM(climb, loaded.data[1].sessions) };
+  }, [loaded, climb]);
 
   const saveNote = React.useCallback(
-    async (fingerprint: string, note: string): Promise<void> => {
-      if (state.status !== "ready") return;
-      await api.setClimbNote(fingerprint, state.data.slug, note);
+    async ({ id, source, day }: ProjectNoteVM, text: string): Promise<void> => {
+      if (climb === undefined) throw new Error("project not loaded");
+      if (source === "session") await api.setClimbNote(id, slug, text);
+      else if (text === "") await api.deleteClimbNote(climb.id, id);
+      else await api.saveClimbNote(climb.id, { id, day, note: text });
+      await reload();
     },
-    [api, state]
+    [api, slug, climb, reload]
   );
 
   const addNote = React.useCallback(
     async (day: string, note: string): Promise<void> => {
-      if (state.status !== "ready" || loaded.status !== "ready")
-        throw new Error("project not loaded");
-      const onDay = state.data.sessions.find((s) => s.day === day);
-      if (onDay !== undefined) {
-        await api.setClimbNote(onDay.fingerprint, slug, joinNotes(onDay.note, note));
-        return;
-      }
-      const climb = loaded.data[0].find((c) => c.slug === slug);
-      if (climb === undefined) throw new Error("project not found");
-      await logClimbOnDay(api, noteAttempt(climb, note), day, []);
+      if (climb === undefined) throw new Error("project not loaded");
+      await api.saveClimbNote(climb.id, { id: newId(), day, note });
+      await reload();
     },
-    [api, slug, state, loaded]
+    [api, climb, newId, reload]
   );
 
   const unmark = React.useCallback(async (): Promise<void> => {
