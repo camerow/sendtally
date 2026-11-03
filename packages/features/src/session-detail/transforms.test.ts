@@ -105,7 +105,7 @@ describe("climbVMs", () => {
   it("never calls an unnamed climb a project, nor counts it under Projects or Sent", () => {
     const unnamed = { ...detail.climbs[2]!, name: "", tries: 2, time: "2099-01-01T00:00:00Z" };
     const vms = climbVMs([...detail.climbs, unnamed]);
-    expect(vms[4]).toMatchObject({ result: "attempt", resultLabel: "Not yet" });
+    expect(vms[4]).toMatchObject({ result: "attempt", resultLabel: "Attempted" });
     expect(filterAndSortClimbs(vms, "project", "order").map((c) => c.name)).toEqual(["Mind Meld"]);
     expect(filterAndSortClimbs(vms, "sent", "order")).toHaveLength(3);
     expect(
