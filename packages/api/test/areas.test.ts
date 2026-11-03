@@ -414,3 +414,32 @@ describe("suggested edits", () => {
     expect(await draftCount(area.id)).toBe(1);
   });
 });
+
+describe("editing a climb", () => {
+  it("moves a climb to a crag, links it to a climb there, and regrades it", async () => {
+    const user = "user_edit_climb";
+    const area = await createArea(user, { ...buttermilks, name: "Edit Crag" });
+    const linked = await createClimb(user, mandala(area.id));
+    expect((await call(user, "/v1/projects", { body: { name: "Mandala" } })).status).toBe(200);
+    const climbs = async () =>
+      (await call(user, "/v1/climbs")).body["climbs"] as Array<Record<string, unknown>>;
+    const [climb] = await climbs();
+
+    const edit = (body: unknown) =>
+      call(user, `/v1/climbs/${String(climb?.["id"])}`, { method: "PATCH", body });
+    expect(
+      (await edit({ areaId: area.id, areaClimbId: linked.id, grade: { scale: "v", value: 12 } }))
+        .status
+    ).toBe(200);
+    expect((await climbs())[0]).toMatchObject({
+      area: { id: area.id, name: "Edit Crag" },
+      area_climb_id: linked.id,
+      grade: { scale: "v", value: 12 },
+    });
+
+    expect((await edit({ areaId: "nowhere" })).status).toBe(400);
+    expect((await edit({ areaClimbId: "no-such-climb" })).status).toBe(400);
+    expect((await edit({ areaId: null, areaClimbId: null })).status).toBe(200);
+    expect((await climbs())[0]).toMatchObject({ area: null, area_climb_id: null });
+  });
+});

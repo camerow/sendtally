@@ -15,42 +15,25 @@ import { HistoryList } from "../training/history/HistoryList";
 import { SummaryTiles } from "../training/summary/SummaryTiles";
 import { AddNoteSheet } from "./AddNoteSheet";
 import { ClimbingHero } from "./ClimbingHero";
-import { RenameSheet } from "./RenameSheet";
 
 /** One climb: a Project chip to mark it, its days, tries and best, every session on it, and Log session. */
 export function ClimbDetailScreen({ id }: { id: string }): React.ReactElement {
   const api = useApi();
-  const { state, setWorking, rename, addNote, reload } = useClimb(api, id);
+  const { state, setWorking, addNote, reload } = useClimb(api, id);
   const [noting, setNoting] = React.useState(false);
-  const [renaming, setRenaming] = React.useState(0);
-  const [saving, setSaving] = React.useState(false);
-  const [failed, setFailed] = React.useState(false);
 
   if (state.status !== "ready")
     return <LoadState state={state} onRetry={() => void reload()} framed />;
 
   const { climb, vm } = state.data;
-  const save = (name: string): void => {
-    setSaving(true);
-    setFailed(false);
-    rename(name).then(
-      (next) => {
-        setSaving(false);
-        setRenaming(0);
-        if (next !== climb.id) router.replace({ pathname: "/climb/[id]", params: { id: next } });
-      },
-      () => {
-        setSaving(false);
-        setFailed(true);
-      }
-    );
-  };
 
   return (
     <ScreenFrame
       action={
         <DetailActions
-          onEdit={() => setRenaming((n) => n + 1)}
+          onEdit={() =>
+            router.push({ pathname: "/climb/log", params: { climbId: climb.id, edit: "1" } })
+          }
           menu={[
             {
               icon: "journal",
@@ -72,7 +55,7 @@ export function ClimbDetailScreen({ id }: { id: string }): React.ReactElement {
     >
       <ClimbingHero
         kind={vm.kicker}
-        title={vm.name}
+        title={vm.title}
         meta={vm.meta}
         aside={
           <Pressable
@@ -124,15 +107,6 @@ export function ClimbDetailScreen({ id }: { id: string }): React.ReactElement {
         sessions={vm.sessions}
         onSave={addNote}
         onClose={() => setNoting(false)}
-      />
-      <RenameSheet
-        key={renaming}
-        visible={renaming > 0}
-        name={vm.name}
-        saving={saving}
-        failed={failed}
-        onSave={save}
-        onClose={() => setRenaming(0)}
       />
     </ScreenFrame>
   );

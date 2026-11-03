@@ -1,0 +1,1 @@
+ALTER TABLE `user_climbs` ADD `area_id` text;

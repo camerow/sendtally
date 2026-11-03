@@ -30,9 +30,6 @@ export const climbs = {
   "climbs.name": "Nombre",
   "climbs.namePlaceholder": "Cómo se llama",
   "climbs.saveFailed": "No se pudo guardar la escalada. Inténtalo de nuevo.",
-  "climbs.rename": "Renombrar",
-  "climbs.renameHint": "Usar el nombre de otra de tus escaladas las fusiona.",
-  "climbs.renameFailed": "No se pudo renombrar la escalada. Inténtalo de nuevo.",
   "climbs.gym": "Rocódromo",
   "climbs.sendsWord_one": "encadene",
   "climbs.sendsWord_other": "encadenes",
@@ -59,6 +56,7 @@ export const climbs = {
   "climbs.anyGrade": "Cualquier grado",
   "climbs.noMatches": "Ninguna vía coincide.",
   "climbs.addClimb": "Añadir vía",
+  "climbs.editClimb": "Editar vía",
   "climbs.empty":
     "Cada vía que añades llega aquí, la más reciente primero. Añade una para empezar.",
   "climbs.yoursShort": "Tuya",
