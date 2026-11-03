@@ -1,0 +1,1 @@
+../../modules/native-timer/ios/NativeTimerAttributes.swift

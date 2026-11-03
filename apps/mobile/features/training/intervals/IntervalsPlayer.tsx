@@ -54,14 +54,15 @@ export function IntervalsPlayer({
   React.useEffect(() => {
     writeLiveRun({
       title: workout.title,
+      meta: kindLabel(workout.kind),
       workoutId: workout.workoutId,
       pathname: "/workout/intervals",
       params: intervalsParams(workout),
       startedAt: run.startedAt,
-      state: { player: "timer", run, ...(climbing ? { laps: true } : {}) },
+      state: { player: "timer", run, muted: timer.muted, ...(climbing ? { laps: true } : {}) },
     });
     if (run.finished !== null) onFinish(run);
-  }, [run, workout, climbing, onFinish]);
+  }, [run, workout, climbing, onFinish, timer.muted]);
 
   const ending = React.useRef(end);
   React.useEffect(() => {

@@ -11,6 +11,7 @@ export const training = {
   "training.logTraining": "Training",
   "training.logTrainingBody": "Strength, mobility, running and more.",
   "training.reminders": "Training reminders",
+  "training.timerChannel": "Workout timer",
   "training.remindersNote": "One notification on days with something planned, listing what is on.",
   "training.remindersBlocked":
     "Notifications are off for sendtally. Turn them on in your phone's settings.",

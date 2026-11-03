@@ -12,6 +12,7 @@ export const training = {
   "training.logTraining": "Entrenamiento",
   "training.logTrainingBody": "Fuerza, movilidad, carrera y más.",
   "training.reminders": "Recordatorios de entreno",
+  "training.timerChannel": "Temporizador de entrenamiento",
   "training.remindersNote": "Una notificación los días con algo previsto, con todo lo que toca.",
   "training.remindersBlocked":
     "Las notificaciones de sendtally están desactivadas. Actívalas en los ajustes del móvil.",

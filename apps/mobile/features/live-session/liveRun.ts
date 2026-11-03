@@ -11,7 +11,15 @@ import { phaseLabel } from "../training/timer/timerText";
 
 /** Where a player is: the timer's run, or the sets and items ticked so far. */
 export type RunState =
-  | { player: "timer"; run: Run; setups?: HangSetup[]; laps?: boolean }
+  | {
+      player: "timer";
+      run: Run;
+      setups?: HangSetup[];
+      laps?: boolean;
+      muted?: boolean;
+      /** Each item's load as its Next row names it, for the system timer: "20 kg". */
+      loads?: string[];
+    }
   | { player: "sets"; done: ItemDone[]; ticked: string[] }
   | { player: "checklist"; ticked: number[]; count: number };
 
@@ -27,6 +35,8 @@ export type PlayerPath = (typeof PLAYERS)[number];
 /** The one workout running in a player, and the route that opens it again. */
 export type LiveRun = {
   title: string;
+  /** The kind under the title on the system timer: "Hangboard", "Climbing". */
+  meta?: string;
   workoutId: string | null;
   pathname: PlayerPath;
   params: Record<string, string>;

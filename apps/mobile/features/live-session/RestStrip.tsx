@@ -3,18 +3,11 @@ import { Text, View } from "react-native";
 import { colors, fonts } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
 import { elapsedClock } from "@sendtally/features/sessions";
-import type { Rest } from "../training/rest/restCountdown";
+import { restThen } from "../training/rest/restThen";
 import { holdNow } from "../training/hold/holdClock";
 import { useHold } from "../training/hold/useHold";
 import { useRestLeft } from "../training/rest/useRest";
 import { useLiveRun } from "./liveRun";
-
-/** What a rest is before: the exercise it names, else the set after the one it sits under. */
-const restThen = (rest: Rest): string | null => {
-  if (rest.next !== null) return t("activities.restThen", { name: rest.next });
-  const set = /^\d+:(\d+)$/.exec(rest.at)?.[1];
-  return set === undefined ? null : t("activities.restThenSet", { set: Number(set) + 2 });
-};
 
 const text = { fontFamily: fonts.monoSemiBold, fontSize: 11.5, color: colors.white };
 

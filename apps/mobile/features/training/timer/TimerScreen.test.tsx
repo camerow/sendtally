@@ -14,7 +14,6 @@ import { TimerScreen } from "./TimerScreen";
 jest.mock("expo-router", () => ({
   router: { replace: jest.fn(), back: jest.fn(), canGoBack: () => true },
 }));
-jest.mock("expo-keep-awake", () => ({ useKeepAwake: () => undefined }));
 jest.mock("../../../lib/liveRunStorage");
 jest.mock("../../../components/Sheet", () => ({
   Sheet: ({ visible, children }: { visible: boolean; children: React.ReactNode }) =>

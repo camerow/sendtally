@@ -7,6 +7,7 @@ export * from "./loads";
 export * from "./parse";
 export * from "./plan";
 export * from "./protocol";
+export * from "./schedule";
 export * from "./setup";
 export * from "./timer";
 export * from "./trends";

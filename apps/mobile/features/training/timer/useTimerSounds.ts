@@ -1,26 +1,19 @@
 import { setAudioModeAsync, useAudioPlayer } from "expo-audio";
 import React from "react";
-import { currentPhase, isWork, type Run } from "@sendtally/core/hang";
+import type { Run } from "@sendtally/core/hang";
 import finishSound from "../../../assets/sounds/finish.wav";
 import liftSound from "../../../assets/sounds/lift.wav";
 import missSound from "../../../assets/sounds/miss.wav";
-import restSound from "../../../assets/sounds/rest.wav";
-import tickSound from "../../../assets/sounds/tick.wav";
-import workSound from "../../../assets/sounds/work.wav";
 
-const COUNTDOWN_FROM = 3;
-
-export type Sound = "tick" | "work" | "rest" | "lift" | "miss" | "finish";
+export type Sound = "lift" | "miss" | "finish";
 
 /**
- * Ticks on the last three seconds, a tone on every phase change and at the
- * finish. Plays alongside the user's music and through the silent switch.
+ * The sounds a tap makes: a lift, a miss, and the finish when the run is ended by hand.
+ * The scheduled cues (ticks, phase tones, a finish on time) play from the native timer.
+ * Plays alongside the user's music and through the silent switch.
  */
-export function useTimerSounds(run: Run, secondsLeft: number, muted: boolean): (s: Sound) => void {
+export function useTimerSounds(run: Run, muted: boolean): (s: Sound) => void {
   const players = {
-    tick: useAudioPlayer(tickSound),
-    work: useAudioPlayer(workSound),
-    rest: useAudioPlayer(restSound),
     lift: useAudioPlayer(liftSound),
     miss: useAudioPlayer(missSound),
     finish: useAudioPlayer(finishSound),
@@ -41,20 +34,9 @@ export function useTimerSounds(run: Run, secondsLeft: number, muted: boolean): (
     void setAudioModeAsync({ playsInSilentMode: true, interruptionMode: "mixWithOthers" });
   }, []);
 
-  const phase = currentPhase(run);
-  const paused = run.pausedAt !== null;
   React.useEffect(() => {
-    if (run.index > 0 && run.finished === null) play(isWork(phase.kind) ? "work" : "rest");
-  }, [run.index, run.finished, phase.kind, play]);
-
-  React.useEffect(() => {
-    if (run.finished !== null) play("finish");
+    if (run.finished?.ended === true) play("finish");
   }, [run.finished, play]);
-
-  React.useEffect(() => {
-    if (!paused && phase.taps === 0 && secondsLeft > 0 && secondsLeft <= COUNTDOWN_FROM)
-      play("tick");
-  }, [secondsLeft, paused, phase.taps, play]);
 
   return play;
 }

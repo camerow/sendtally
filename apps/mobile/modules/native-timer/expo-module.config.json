@@ -1,0 +1,5 @@
+{
+  "platforms": ["apple", "android"],
+  "apple": { "modules": ["NativeTimerModule"] },
+  "android": { "modules": ["com.sendtally.nativetimer.NativeTimerModule"] }
+}
