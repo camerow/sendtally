@@ -60,6 +60,7 @@ import {
   missingClimbs,
   projectBody,
   climbEditBody,
+  regradedSessions,
   restampedSessions,
   withClimbNotes,
 } from "./lib/climbs";
@@ -968,8 +969,9 @@ const app = new Hono<AppEnv>()
     return c.json({ climbs: climbCatalogue(rows, records, areaNames) });
   })
 
-  // Renames (or merges into the climb already called that), and sets the crag, its Areas climb
-  // and the grade on the climb itself. Logged sessions keep what they were logged with.
+  // Renames (or merges into the climb already called that), and sets the crag and its Areas climb
+  // on the climb itself, where logged sessions keep theirs. A new grade is written into every
+  // session the climb was logged in, and those sessions are scored again.
   .patch("/v1/climbs/:id", zValidator("json", climbEditBody, invalidBody), async (c) => {
     const userId = c.get("userId");
     const db = c.env.DB;
@@ -998,12 +1000,21 @@ const app = new Hono<AppEnv>()
       });
       await captureEvent(c, into === null ? "climb_renamed" : "climb_merged", {});
     }
-    if (areaId !== undefined || areaClimbId !== undefined || grade !== undefined) {
+    if (areaId !== undefined || areaClimbId !== undefined) {
       await repo.setUserClimbPlace(db, userId, target, {
         ...(areaId === undefined ? {} : { area_id: areaId }),
         ...(areaClimbId === undefined ? {} : { area_climb_id: areaClimbId }),
-        ...(grade === undefined ? {} : { grade }),
       });
+    }
+    if (grade !== undefined) {
+      const [rows, now] = await Promise.all([
+        repo.listSessions(db, userId, 5000, true),
+        repo.listUserClimbs(db, userId),
+      ]);
+      const regraded = regradedSessions(rows, now, target, grade);
+      await repo.regradeUserClimb(db, userId, target, grade, regraded);
+    }
+    if (areaId !== undefined || areaClimbId !== undefined || grade !== undefined) {
       await captureEvent(c, "climb_edited", {});
     }
     return c.json({ id: target });

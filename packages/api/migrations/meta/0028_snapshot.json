@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "9f381e9c-7ef9-4f1c-a240-190f002bed97",
+  "id": "70e41bdf-2c27-4cdb-9359-e867ef9b680e",
   "prevId": "040b6896-1dd3-4706-bf32-7dd451464c85",
   "tables": {
     "activities": {
@@ -2910,13 +2910,6 @@
         },
         "area_id": {
           "name": "area_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "edited_grade_json": {
-          "name": "edited_grade_json",
           "type": "text",
           "primaryKey": false,
           "notNull": false,

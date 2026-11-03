@@ -80,6 +80,7 @@ import {
 import type { ActivityInput } from "./activities";
 import { exerciseKindOf, exerciseNameKey, workoutExercises, type ExerciseInput } from "./exercises";
 import type { ContentEntity, Viewer } from "./areas";
+import type { RegradedSession } from "./climbs";
 import type { ClimbLink } from "./manual";
 import type { FocusOptional } from "./plan";
 import type { EntryWrite } from "./entries";
@@ -1062,27 +1063,45 @@ export async function setUserClimbWorking(
 export type ClimbPlace = {
   area_id?: string | null;
   area_climb_id?: string | null;
-  grade?: ClimbGrade;
 };
 
-/** What editing a climb sets on its record; its sessions keep what they were logged with. */
+/** Where editing a climb puts it; its sessions keep the crag they were logged at. */
 export async function setUserClimbPlace(
   db: D1Database,
   userId: string,
   id: string,
   place: ClimbPlace
 ): Promise<void> {
-  const set: Partial<typeof userClimbs.$inferInsert> = { updated_at: new Date().toISOString() };
-  if (place.area_id !== undefined) set.area_id = place.area_id;
-  if (place.area_climb_id !== undefined) set.area_climb_id = place.area_climb_id;
-  if (place.grade !== undefined) {
-    set.edited_grade_json = JSON.stringify(place.grade);
-    set.discipline = disciplineOf(place.grade.scale);
-  }
   await drizzle(db)
     .update(userClimbs)
-    .set(set)
+    .set({ ...place, updated_at: new Date().toISOString() })
     .where(and(eq(userClimbs.user_id, userId), eq(userClimbs.id, id)));
+}
+
+/** A climb's new grade, on its record and on every session it was logged in, scored again. */
+export async function regradeUserClimb(
+  db: D1Database,
+  userId: string,
+  id: string,
+  grade: ClimbGrade,
+  regraded: readonly RegradedSession[]
+): Promise<void> {
+  const d = drizzle(db);
+  const record = d
+    .update(userClimbs)
+    .set({
+      grade_json: JSON.stringify(grade),
+      discipline: disciplineOf(grade.scale),
+      updated_at: new Date().toISOString(),
+    })
+    .where(and(eq(userClimbs.user_id, userId), eq(userClimbs.id, id)));
+  const rescored = regraded.map(({ fingerprint, ...columns }) =>
+    d
+      .update(sessions)
+      .set(columns)
+      .where(and(eq(sessions.user_id, userId), eq(sessions.fingerprint, fingerprint)))
+  );
+  await d.batch([record, ...rescored]);
 }
 
 export type ClimbRename = {

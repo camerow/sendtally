@@ -71,7 +71,7 @@ describe("editing a climb", () => {
     }
   });
 
-  it("saves the new grade on the climb, keeps its crag and link, and goes back to it", async () => {
+  it("saves a new grade, keeps its crag and link, and goes back to the climb", async () => {
     await renderEdit();
     await fireEvent.press(screen.getByText("V6"));
     await fireEvent.press(screen.getByText("Save"));
@@ -87,14 +87,13 @@ describe("editing a climb", () => {
     });
   });
 
-  it("drops the Areas climb link when the crag is cleared", async () => {
+  it("drops the Areas climb link when the crag is cleared, sending no unchanged grade", async () => {
     await renderEdit();
     await fireEvent.changeText(screen.getByDisplayValue("The Depot"), "");
     await fireEvent.press(screen.getByText("Save"));
     expect(mockUpdateClimb).toHaveBeenLastCalledWith("c1", {
       areaId: null,
       areaClimbId: null,
-      grade: { scale: "v", value: 5 },
     });
   });
 });

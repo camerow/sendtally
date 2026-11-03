@@ -1,4 +1,13 @@
-import { disciplineOf, type Discipline } from "@sendtally/core";
+import {
+  disciplineOf,
+  historySession,
+  parseClimbs,
+  rescoredSession,
+  withGrade,
+  type Discipline,
+  type Grade,
+  type ManualSessionRow,
+} from "@sendtally/core";
 import { z } from "zod";
 import * as repo from "./repo";
 import type { ClimbGrade, SessionRow, UserClimbRow } from "./repo";
@@ -170,9 +179,6 @@ export function missingClimbs(
 
 // Sessions arrive newest first, so the first sighting of a climb carries the
 // name and grade the user logged most recently, and the crag it was last at.
-const editedGrade = (record: UserClimbRow): ClimbGrade | null =>
-  record.edited_grade_json === null ? null : (JSON.parse(record.edited_grade_json) as ClimbGrade);
-
 const areaOf = (
   id: string | null | undefined,
   names: ReadonlyMap<string, string>
@@ -181,7 +187,7 @@ const areaOf = (
   return id == null || name === undefined ? null : { id, name };
 };
 
-/** A climb's crag and grade come from its newest session, unless the climb was edited to say. */
+/** A climb's grade comes from its newest session, and its crag too unless the climb was edited to say. */
 export function climbCatalogue(
   sessions: CatalogueSession[],
   records: UserClimbRow[],
@@ -199,7 +205,7 @@ export function climbCatalogue(
       const area = areaOf(record.area_id ?? session.area_id, areaNames);
       const existing = byId.get(record.id);
       if (existing === undefined) {
-        const grade = editedGrade(record) ?? storedGrade(climb);
+        const grade = storedGrade(climb);
         byId.set(record.id, {
           id: record.id,
           slug: record.name_key,
@@ -229,9 +235,7 @@ export function climbCatalogue(
   }
   for (const record of records) {
     if (byId.has(record.id) || !record.working) continue;
-    const grade =
-      editedGrade(record) ??
-      (record.grade_json === null ? null : (JSON.parse(record.grade_json) as ClimbGrade));
+    const grade = record.grade_json === null ? null : (JSON.parse(record.grade_json) as ClimbGrade);
     byId.set(record.id, {
       id: record.id,
       slug: record.name_key,
@@ -280,5 +284,63 @@ export function restampedSessions(
       return { ...c, userClimbId: toId };
     });
     return changed ? [{ fingerprint: session.fingerprint, climbs_json: JSON.stringify(next) }] : [];
+  });
+}
+
+/** The scoring history the log form scores a session against: the user's latest, less itself. */
+const SCORING_HISTORY = 200;
+
+export type RegradedSession = Pick<
+  ManualSessionRow,
+  | "fingerprint"
+  | "climbs_json"
+  | "climb_count"
+  | "send_count"
+  | "top_grade"
+  | "top_send_grade"
+  | "top_grade_label"
+  | "top_send_grade_label"
+  | "rpe"
+  | "title"
+  | "summary"
+>;
+
+type ScorableSession = Pick<
+  ManualSessionRow,
+  "fingerprint" | "start_at" | "end_at" | "name" | "rpe" | "rpe_source"
+> & { source: string; climbs_json?: string | null };
+
+// Every manual session the climb was logged in, at the new grade and scored again
+// against the history as it reads after the change. Board rows are never touched.
+export function regradedSessions(
+  sessions: ScorableSession[],
+  records: UserClimbRow[],
+  climbId: string,
+  grade: Grade
+): RegradedSession[] {
+  const resolve = climbResolver(records);
+  const changed = new Set<string>();
+  const next = sessions.map((session) => {
+    if (session.source !== "manual" || session.climbs_json == null) return session;
+    let hit = false;
+    const climbs = parseClimbs(session.climbs_json).map((c) => {
+      if (climbSlug(c.name) === "" || resolve({ ...c, name: c.name.trim() })?.id !== climbId)
+        return c;
+      hit = true;
+      return withGrade(c, grade);
+    });
+    if (!hit) return session;
+    changed.add(session.fingerprint);
+    return { ...session, climbs_json: JSON.stringify(climbs) };
+  });
+  const latest = next.slice(0, SCORING_HISTORY);
+  return next.flatMap((session) => {
+    if (!changed.has(session.fingerprint) || session.climbs_json == null) return [];
+    const history = latest
+      .filter((r) => r.fingerprint !== session.fingerprint && r.rpe_source !== "none")
+      .map(historySession)
+      .filter((h) => h !== null);
+    const { fingerprint, climbs_json } = session;
+    return [{ fingerprint, climbs_json, ...rescoredSession({ ...session, climbs_json }, history) }];
   });
 }

@@ -2,7 +2,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import React from "react";
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import type { ClimbChange, ClimbSummary } from "@sendtally/api-client";
+import type { ClimbChange, ClimbGrade, ClimbSummary } from "@sendtally/api-client";
 import {
   useAreaClimbSearch,
   useAreaSearch,
@@ -68,10 +68,13 @@ const row = {
 const knownOf = (climbs: readonly ClimbSummary[], climb: ClimbDraft): ClimbSummary | undefined =>
   climbs.find((c) => c.id === climb.userClimbId) ?? findClimb([...climbs], climb.name);
 
+const sameGrade = (a: ClimbGrade, b: ClimbGrade | null | undefined): boolean =>
+  b != null && a.scale === b.scale && String(a.value) === String(b.value);
+
 /**
  * One screen for a climb: its name and area autocomplete, and anything not found is created.
  * It saves into that day's session at the area, or starts one there. With `edit`, it edits the
- * climb itself instead (name, crag, grade), and the sessions it was logged in keep theirs.
+ * climb itself instead: its name and grade everywhere it was logged, and its crag on the climb.
  */
 export function AddClimbScreen(): React.ReactElement {
   const api = useApi();
@@ -136,7 +139,7 @@ export function AddClimbScreen(): React.ReactElement {
           ...(name === original?.name ? {} : { name }),
           areaId: place?.id ?? null,
           areaClimbId: climb.climbId ?? null,
-          ...(grade === undefined ? {} : { grade }),
+          ...(grade === undefined || sameGrade(grade, original?.grade) ? {} : { grade }),
         };
         return api.updateClimb(id, change);
       })

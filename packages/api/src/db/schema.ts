@@ -286,9 +286,8 @@ export const userClimbs = sqliteTable(
       .default("boulder"),
     grade_json: text("grade_json"),
     area_climb_id: text("area_climb_id"),
-    // Set only by editing the climb, and then it wins over what its sessions say.
+    // Set only by editing the climb, and then it wins over the crag its sessions were at.
     area_id: text("area_id"),
-    edited_grade_json: text("edited_grade_json"),
     working: integer("working", { mode: "boolean" }).notNull().default(false),
     created_at: text("created_at").notNull(),
     updated_at: text("updated_at").notNull(),
