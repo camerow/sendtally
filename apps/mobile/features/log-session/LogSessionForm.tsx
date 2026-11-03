@@ -68,6 +68,7 @@ import { Icon } from "../../components/Icon";
 import { ClimbLedgerRow } from "./ClimbLedgerRow";
 import { DateTimeField } from "../../components/DateTimeField";
 import { press, tap } from "../../lib/press";
+import { BackButton } from "../../components/BackButton";
 
 function LabelText({ children }: { children: React.ReactNode }): React.ReactElement {
   return (
@@ -316,22 +317,9 @@ export function LogSessionForm({
         automaticallyAdjustKeyboardInsets
         contentContainerStyle={{ paddingHorizontal: 18, paddingTop: 8, paddingBottom: 24, gap: 14 }}
       >
-        <Pressable
-          onPress={() => router.back()}
-          style={{ minHeight: 32, justifyContent: "center" }}
-        >
-          <Text
-            style={{
-              fontFamily: fonts.monoMedium,
-              fontSize: 11,
-              letterSpacing: 0.4,
-              textTransform: "uppercase",
-              color: colors.labelAccent,
-            }}
-          >
-            {editing === undefined ? t("sessions.back") : t("logSession.backToSession")}
-          </Text>
-        </Pressable>
+        <BackButton
+          label={editing === undefined ? t("journal.log") : t("sessionDetail.backSession")}
+        />
         <View style={{ gap: 4 }}>
           <Text
             style={{

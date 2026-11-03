@@ -6,10 +6,16 @@ import { colors, fonts } from "@sendtally/design/tokens";
 import { press } from "../lib/press";
 import { Icon } from "./Icon";
 
-export function BackButton({ label }: { label?: string }): React.ReactElement {
+export function BackButton({
+  label,
+  onPress = () => router.back(),
+}: {
+  label?: string;
+  onPress?: () => void;
+}): React.ReactElement {
   return (
     <Pressable
-      onPress={() => router.back()}
+      onPress={onPress}
       accessibilityRole="button"
       style={press({ minHeight: 44, flexDirection: "row", alignItems: "center", gap: 4 })}
     >

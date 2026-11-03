@@ -22,6 +22,7 @@ import { PurchaseControls } from "./PurchaseControls";
 import { storeBillingAvailable, storeLabel, subscriptionManagementUrl } from "./store";
 import type { PurchaseFeature } from "./usePurchase";
 import { press } from "../../lib/press";
+import { BackButton } from "../../components/BackButton";
 
 export type MembershipViewProps = {
   membership: MembershipFeature;
@@ -143,19 +144,7 @@ export function MembershipView({
           gap: 16,
         }}
       >
-        <Pressable onPress={onBack} style={press({ minHeight: 44, justifyContent: "center" })}>
-          <Text
-            style={{
-              fontFamily: fonts.monoMedium,
-              fontSize: 12,
-              letterSpacing: 0.5,
-              textTransform: "uppercase",
-              color: colors.labelAccent,
-            }}
-          >
-            {t("common.backToSettings")}
-          </Text>
-        </Pressable>
+        <BackButton label={t("common.settings")} onPress={onBack} />
         <View style={{ gap: 8 }}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
             <Text

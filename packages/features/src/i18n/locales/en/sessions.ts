@@ -1,6 +1,5 @@
 export const sessions = {
   "sessions.unscored": "unscored",
-  "sessions.back": "← Log",
   "sessions.onStrava": "On Strava",
   "sessions.hangboardSession": "Hangboard session",
   "sessions.loadFailed": "Could not reach sendtally. Pull to retry.",

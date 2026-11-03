@@ -101,9 +101,7 @@ describe("Stats", () => {
     expect(screen.getByLabelText("6C avg send")).toBeTruthy();
     expect(screen.getByLabelText("3 sends")).toBeTruthy();
     expect(screen.queryByText(/days? outside/)).toBeNull();
-    expect(
-      screen.getByLabelText("Days climbing, All time: 1 outside, 0 in the gym.")
-    ).toBeTruthy();
+    expect(screen.getByLabelText("Days climbing, All time: 1 outside, 0 in the gym.")).toBeTruthy();
   });
 
   it("keeps the range across segments and remembers the segment on the device", async () => {

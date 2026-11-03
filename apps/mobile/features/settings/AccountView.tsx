@@ -7,6 +7,7 @@ import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { press } from "../../lib/press";
 import { bodyText, sectionCard, sectionLabel } from "../../lib/styles";
 import { DeleteAccountSection } from "./DeleteAccountSection";
+import { BackButton } from "../../components/BackButton";
 
 export type AccountViewProps = {
   email: string;
@@ -33,23 +34,7 @@ export function AccountView({
           gap: 14,
         }}
       >
-        <Pressable
-          onPress={onBack}
-          accessibilityRole="button"
-          style={press({ minHeight: 44, justifyContent: "center", alignSelf: "flex-start" })}
-        >
-          <Text
-            style={{
-              fontFamily: fonts.monoMedium,
-              fontSize: 12,
-              letterSpacing: 0.5,
-              textTransform: "uppercase",
-              color: colors.labelAccent,
-            }}
-          >
-            {t("common.backToSettings")}
-          </Text>
-        </Pressable>
+        <BackButton label={t("common.settings")} onPress={onBack} />
 
         <Text
           style={{

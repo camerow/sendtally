@@ -17,7 +17,6 @@ export const logSession = {
   "logSession.tooLong": "Impossible d'enregistrer une séance de plus de 12 heures.",
   "logSession.needClimb": "Ajoute au moins une voie.",
   "logSession.needGrade": "Chaque voie doit avoir une cotation.",
-  "logSession.backToSession": "← Séance",
   "logSession.editTitle": "Modifier la séance",
   "logSession.sessionNameOptional": "Nom de la séance · optionnel",
   "logSession.sessionNamePlaceholder": "Séance du mardi soir",

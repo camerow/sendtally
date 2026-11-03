@@ -23,13 +23,17 @@ export type RangeChipsProps = {
 /** The ranges, longest first, in a row that scrolls; past the free one each wears a lock and opens the membership. */
 export function RangeChips({ member, shown, onPick, years }: RangeChipsProps): React.ReactElement {
   const scroll = React.useRef<ScrollView>(null);
-  const lefts = React.useRef(new Map<TrendRange, number>());
+  const chips = React.useRef(new Map<TrendRange, { x: number; width: number }>());
   const [width, setWidth] = React.useState(0);
-  const reveal = (range: TrendRange): void => {
-    const x = lefts.current.get(range);
-    if (x !== undefined)
-      scroll.current?.scrollTo({ x: Math.max(0, x - width / 2), animated: false });
-  };
+  const reveal = React.useCallback((): void => {
+    const chip = chips.current.get(shown);
+    if (chip === undefined || width === 0) return;
+    scroll.current?.scrollTo({
+      x: Math.max(0, chip.x - (width - chip.width) / 2),
+      animated: false,
+    });
+  }, [shown, width]);
+  React.useEffect(reveal, [reveal]);
   return (
     <ScrollView
       ref={scroll}
@@ -47,8 +51,9 @@ export function RangeChips({ member, shown, onPick, years }: RangeChipsProps): R
           <Pressable
             key={range}
             onLayout={(e) => {
-              lefts.current.set(range, e.nativeEvent.layout.x);
-              if (on) reveal(range);
+              const { x, width: w } = e.nativeEvent.layout;
+              chips.current.set(range, { x, width: w });
+              if (on) reveal();
             }}
             onPress={tap(() => (locked ? router.push("/membership") : onPick(range)))}
             accessibilityRole="button"
