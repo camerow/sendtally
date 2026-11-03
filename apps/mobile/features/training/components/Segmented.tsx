@@ -39,12 +39,17 @@ export function Segmented<T extends string>({
   const at = progress ?? own;
   const [inner, setInner] = React.useState(0);
   const slot = inner / options.length;
-  const pill = useAnimatedStyle(() => ({ transform: [{ translateX: at.get() * slot }] }));
+  const width = useSharedValue(0);
+  const pill = useAnimatedStyle(() => ({ transform: [{ translateX: at.get() * width.get() }] }));
 
   return (
     <View
       accessibilityRole="tablist"
-      onLayout={(e) => setInner(e.nativeEvent.layout.width - PAD * 2)}
+      onLayout={(e) => {
+        const next = e.nativeEvent.layout.width - PAD * 2;
+        setInner(next);
+        width.set(next / options.length);
+      }}
       style={{
         flexDirection: "row",
         padding: PAD,
