@@ -40,6 +40,7 @@ const RESULT_BADGES: Record<ClimbVM["result"], { bg: string; border: string; col
   flash: { bg: colors.gold, border: colors.gold, color: colors.gunmetal },
   sent: { bg: "transparent", border: "rgba(64,63,76,0.25)", color: colors.textSecondary },
   project: { bg: "transparent", border: "rgba(64,63,76,0.15)", color: colors.textFaint },
+  attempt: { bg: "transparent", border: "rgba(64,63,76,0.15)", color: colors.textFaint },
 };
 
 export default function SessionDetailScreen(): React.ReactElement {
