@@ -74,4 +74,6 @@ export const climbs = {
   "climbs.days": "Días",
   "climbs.firstTried": "primer intento el {date}",
   "climbs.logSession": "Registrar sesión",
+  "climbs.deleteClimb": "Eliminar vía",
+  "climbs.deleteConfirm": "¿Eliminar {name}? Sus sesiones quedan como se registraron.",
 } as const;

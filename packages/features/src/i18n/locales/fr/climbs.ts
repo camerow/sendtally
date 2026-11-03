@@ -73,4 +73,6 @@ export const climbs = {
   "climbs.days": "Jours",
   "climbs.firstTried": "premier essai le {date}",
   "climbs.logSession": "Noter une séance",
+  "climbs.deleteClimb": "Supprimer la voie",
+  "climbs.deleteConfirm": "Supprimer {name} ? Ses séances restent telles quelles.",
 } as const;

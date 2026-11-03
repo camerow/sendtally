@@ -1,6 +1,14 @@
 import { router, useLocalSearchParams } from "expo-router";
 import React from "react";
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from "react-native";
+import {
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  Text,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import type { ClimbChange, ClimbGrade, ClimbSummary } from "@sendtally/api-client";
 import {
@@ -12,6 +20,7 @@ import {
 import {
   areaChoice,
   climbSuggestions,
+  climbTitle,
   findClimb,
   isNewClimb,
   placeOf,
@@ -41,6 +50,7 @@ import { Switch } from "../../components/Switch";
 import { TextInput } from "../../components/TextInput";
 import { useApi } from "../../lib/api";
 import { press } from "../../lib/press";
+import { dangerButton, dangerButtonLabel } from "../../lib/styles";
 import { ResultFields } from "../log-session/ResultFields";
 import { SuggestField } from "./SuggestField";
 
@@ -80,6 +90,7 @@ export function AddClimbScreen(): React.ReactElement {
   const api = useApi();
   const { climbId, edit } = useLocalSearchParams<{ climbId?: string; edit?: string }>();
   const editing = edit === "1" && climbId !== undefined;
+  const logging = climbId !== undefined && !editing;
   const { state } = useClimbs(api);
   const { scales } = useGradeScalePrefs(api);
   const mine = state.status === "ready" ? state.data.climbs : [];
@@ -118,6 +129,12 @@ export function AddClimbScreen(): React.ReactElement {
     if (known !== undefined) pickMine(known);
   }
 
+  const existing = mine.find((c) => c.id === climbId);
+  const title = editing
+    ? t("climbs.editClimb")
+    : existing === undefined
+      ? t("climbs.addClimb")
+      : climbTitle(existing);
   const discipline = disciplineOf(climb.scale);
   const ladder = gradeOptions(climb.scale);
   const at = ladder.indexOf(climb.grade);
@@ -162,7 +179,7 @@ export function AddClimbScreen(): React.ReactElement {
       .then((place) =>
         logClimbOnDay(
           api,
-          { ...draft, name: draft.name.trim(), project: sent ? undefined : project },
+          { ...draft, name: draft.name.trim(), project: sent || logging ? undefined : project },
           date,
           [],
           { area: place }
@@ -170,6 +187,38 @@ export function AddClimbScreen(): React.ReactElement {
       )
       .then(() => router.back(), fail);
   };
+
+  const confirmDelete = (id: string): void => {
+    Alert.alert(t("climbs.deleteClimb"), t("climbs.deleteConfirm", { name: climb.name.trim() }), [
+      { text: t("common.cancel"), style: "cancel" },
+      {
+        text: t("climbs.deleteClimb"),
+        style: "destructive",
+        onPress: () => {
+          setSaving(true);
+          setFailed(false);
+          api.deleteClimb(id).then(() => router.dismissTo("/(tabs)/sessions"), fail);
+        },
+      },
+    ]);
+  };
+
+  const dateRow = (
+    <View style={row}>
+      <Text style={{ fontFamily: fonts.sans, fontSize: 15, color: colors.gunmetal }}>
+        {t("logSession.date")}
+      </Text>
+      <View style={{ width: 150 }}>
+        <DateTimeField
+          mode="date"
+          value={date}
+          max={localDate(new Date())}
+          label={t("logSession.date")}
+          onChange={setDate}
+        />
+      </View>
+    </View>
+  );
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.white }} edges={["top", "bottom"]}>
@@ -198,9 +247,15 @@ export function AddClimbScreen(): React.ReactElement {
         </Pressable>
         <Text
           accessibilityRole="header"
-          style={{ fontFamily: fonts.sansSemiBold, fontSize: 15, color: colors.gunmetal }}
+          numberOfLines={1}
+          style={{
+            flexShrink: 1,
+            fontFamily: fonts.sansSemiBold,
+            fontSize: 15,
+            color: colors.gunmetal,
+          }}
         >
-          {editing ? t("climbs.editClimb") : t("climbs.addClimb")}
+          {title}
         </Text>
         <View style={{ minWidth: 72 }} />
       </View>
@@ -217,70 +272,75 @@ export function AddClimbScreen(): React.ReactElement {
               {t("climbs.saveFailed")}
             </Text>
           )}
-          <SuggestField
-            label={t("climbs.climb")}
-            value={climb.name}
-            placeholder={t("climbs.namePlaceholder")}
-            suggestions={suggestions}
-            isNew={isNewClimb(climb.name, mine, areaClimbs)}
-            onChangeText={(name) => setClimb(withTypedName(climb, name))}
-            onPick={(key) => {
-              const s = suggestions.find((x) => x.key === key);
-              if (s?.kind === "areas") setClimb(withAreaClimb(climb, s.climb));
-              if (s?.kind === "mine") pickMine(s.climb);
-            }}
-          />
-          <SuggestField
-            label={t("areas.area")}
-            value={areaText}
-            placeholder={t("areas.searchAreas")}
-            suggestions={areas.map((a) => ({ key: a.id, name: a.name, meta: "" }))}
-            isNew={choice?.kind === "new"}
-            hint={choice?.kind === "new" ? t("climbs.newArea") : null}
-            onChangeText={(text) => {
-              setAreaText(text);
-              setArea(null);
-              if (editing) setClimb(({ climbId: _link, ...rest }) => rest);
-            }}
-            onPick={(id) => {
-              const picked = areas.find((a) => a.id === id);
-              if (picked === undefined) return;
-              setArea({ id: picked.id, name: picked.name });
-              setAreaText(picked.name);
-            }}
-          />
-          <View style={{ gap: 8 }}>
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "space-between",
-              }}
-            >
-              <Text style={label}>{t("common.grade")}</Text>
-              <View style={{ width: 180 }}>
-                <Segmented
-                  soft
-                  label={t("climbs.discipline")}
-                  segments={(["boulder", "route"] as const).map((d) => ({
-                    key: d,
-                    label: disciplineLabel(d),
-                    on: d === discipline,
-                    onPress: () => setClimb(withClimbDiscipline(climb, d, scales)),
-                  }))}
-                />
-              </View>
-            </View>
-            <View style={{ marginHorizontal: -18 }}>
-              <GradeChips
-                light
-                chips={ladder.map((g) => ({ key: g, label: g }))}
-                active={at < 0 ? null : climb.grade}
-                startIndex={at < 0 ? typicalGradeIndex(mine, climb.scale) : at}
-                onPick={(grade) => setClimb({ ...climb, grade })}
+          {!logging && (
+            <>
+              <SuggestField
+                label={t("climbs.climb")}
+                value={climb.name}
+                placeholder={t("climbs.namePlaceholder")}
+                suggestions={suggestions}
+                isNew={isNewClimb(climb.name, mine, areaClimbs)}
+                onChangeText={(name) => setClimb(withTypedName(climb, name))}
+                onPick={(key) => {
+                  const s = suggestions.find((x) => x.key === key);
+                  if (s?.kind === "areas") setClimb(withAreaClimb(climb, s.climb));
+                  if (s?.kind === "mine") pickMine(s.climb);
+                }}
               />
-            </View>
-          </View>
+              <SuggestField
+                label={t("areas.area")}
+                value={areaText}
+                placeholder={t("areas.searchAreas")}
+                suggestions={areas.map((a) => ({ key: a.id, name: a.name, meta: "" }))}
+                isNew={choice?.kind === "new"}
+                hint={choice?.kind === "new" ? t("climbs.newArea") : null}
+                onChangeText={(text) => {
+                  setAreaText(text);
+                  setArea(null);
+                  if (editing) setClimb(({ climbId: _link, ...rest }) => rest);
+                }}
+                onPick={(id) => {
+                  const picked = areas.find((a) => a.id === id);
+                  if (picked === undefined) return;
+                  setArea({ id: picked.id, name: picked.name });
+                  setAreaText(picked.name);
+                }}
+              />
+              <View style={{ gap: 8 }}>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <Text style={label}>{t("common.grade")}</Text>
+                  <View style={{ width: 180 }}>
+                    <Segmented
+                      soft
+                      label={t("climbs.discipline")}
+                      segments={(["boulder", "route"] as const).map((d) => ({
+                        key: d,
+                        label: disciplineLabel(d),
+                        on: d === discipline,
+                        onPress: () => setClimb(withClimbDiscipline(climb, d, scales)),
+                      }))}
+                    />
+                  </View>
+                </View>
+                <View style={{ marginHorizontal: -18 }}>
+                  <GradeChips
+                    light
+                    chips={ladder.map((g) => ({ key: g, label: g }))}
+                    active={at < 0 ? null : climb.grade}
+                    startIndex={at < 0 ? typicalGradeIndex(mine, climb.scale) : at}
+                    onPick={(grade) => setClimb({ ...climb, grade })}
+                  />
+                </View>
+              </View>
+            </>
+          )}
+          {logging && dateRow}
           {!editing && (
             <>
               <ResultFields
@@ -288,7 +348,7 @@ export function AddClimbScreen(): React.ReactElement {
                 known={knownOf(mine, climb) ?? null}
                 onChange={setClimb}
               />
-              {!sent && (
+              {!sent && !logging && (
                 <View style={row}>
                   <View style={{ flex: 1, gap: 2 }}>
                     <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
@@ -317,40 +377,40 @@ export function AddClimbScreen(): React.ReactElement {
                   />
                 </View>
               )}
-              <View style={row}>
-                <Text style={{ fontFamily: fonts.sans, fontSize: 15, color: colors.gunmetal }}>
-                  {t("logSession.date")}
-                </Text>
-                <View style={{ width: 150 }}>
-                  <DateTimeField
-                    mode="date"
-                    value={date}
-                    max={localDate(new Date())}
-                    label={t("logSession.date")}
-                    onChange={setDate}
-                  />
-                </View>
+              {!logging && dateRow}
+              <View style={{ gap: 8 }}>
+                <Text style={label}>{t("common.notes")}</Text>
+                <TextInput
+                  value={climb.note}
+                  onChangeText={(note) => setClimb({ ...climb, note })}
+                  multiline
+                  placeholder={t("climbs.notesPlaceholder")}
+                  placeholderTextColor={colors.textFaint}
+                  accessibilityLabel={t("common.notes")}
+                  style={{
+                    minHeight: 76,
+                    paddingHorizontal: 14,
+                    paddingTop: 14,
+                    borderRadius: radius.control + 2,
+                    backgroundColor: colors.surfaceSoft,
+                    fontFamily: fonts.sans,
+                    fontSize: 15,
+                    color: colors.gunmetal,
+                    textAlignVertical: "top",
+                  }}
+                />
               </View>
-              <TextInput
-                value={climb.note}
-                onChangeText={(note) => setClimb({ ...climb, note })}
-                multiline
-                placeholder={t("climbs.notesPlaceholder")}
-                placeholderTextColor={colors.textFaint}
-                accessibilityLabel={t("common.notes")}
-                style={{
-                  minHeight: 76,
-                  paddingHorizontal: 14,
-                  paddingTop: 14,
-                  borderRadius: radius.control + 2,
-                  backgroundColor: colors.surfaceSoft,
-                  fontFamily: fonts.sans,
-                  fontSize: 15,
-                  color: colors.gunmetal,
-                  textAlignVertical: "top",
-                }}
-              />
             </>
+          )}
+          {editing && (
+            <Pressable
+              onPress={() => confirmDelete(climbId)}
+              disabled={saving}
+              accessibilityRole="button"
+              style={press({ ...dangerButton, marginTop: 8 })}
+            >
+              <Text style={dangerButtonLabel}>{t("climbs.deleteClimb")}</Text>
+            </Pressable>
           )}
         </ScrollView>
         <View
