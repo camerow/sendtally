@@ -21,6 +21,7 @@ import {
   type Membership,
   type WeekChange,
   type Workout,
+  withItemIds,
 } from ".";
 
 const block: DatedBlock = {
@@ -55,7 +56,7 @@ const change = (over: Partial<WeekChange> & Pick<WeekChange, "change">): WeekCha
   membershipId: "m",
   week: 4,
   dose: 0,
-  item: 0,
+  itemId: "0",
   ...over,
 });
 
@@ -126,6 +127,20 @@ describe("prescription", () => {
   ] as const)("%s", (_, changes, week, session, weightKg, sets) => {
     const [item] = prescription(changes, { workout: squat, membershipId: "m", session, week });
     expect(item?.dose).toMatchObject({ weightKg, sets });
+  });
+
+  it("follows an item that moved", () => {
+    const pull = { id: "pull", exercise: "Pull-up", doses: [{ sets: 3, reps: 8 }] };
+    const moved = { ...squat, items: [pull, ...withItemIds(squat.items, () => "x")] };
+    const changes = [change({ change: { sets: 2 } })];
+    const [first, second] = prescription(changes, {
+      workout: moved,
+      membershipId: "m",
+      session: 0,
+      week: 4,
+    });
+    expect(first?.dose.sets).toBe(3);
+    expect(second?.dose.sets).toBe(2);
   });
 });
 
@@ -323,6 +338,19 @@ describe("doneAsPrescribed", () => {
         sets: Array.from({ length: 5 }, () => ({ reps: 5, weightKg: 100 })),
       },
     ]);
+  });
+});
+
+describe("withItemIds", () => {
+  const ids = (items: { id?: string }[]): (string | undefined)[] =>
+    withItemIds(items, () => "new").map((i) => i.id);
+
+  it("gives items saved before ids their place", () => {
+    expect(ids([{}, {}])).toEqual(["0", "1"]);
+  });
+
+  it("keeps ids and gives a missing or repeated one a new id", () => {
+    expect(ids([{ id: "a" }, {}, { id: "a" }])).toEqual(["a", "new", "new"]);
   });
 });
 

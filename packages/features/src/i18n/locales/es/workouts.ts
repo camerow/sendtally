@@ -112,6 +112,8 @@ export const workouts = {
   "workouts.totalTime": "Tiempo total",
   "workouts.exerciseRest": "Descanso entre ejercicios",
   "workouts.removeExercise": "Quitar {name}",
+  "workouts.moveUp": "Subir {name}",
+  "workouts.moveDown": "Bajar {name}",
   "workouts.seeAll": "Ver todo",
   "workouts.seeAllOf": "Ver todo: {kind}",
   "workouts.exerciseBest": "Mejor {value}",

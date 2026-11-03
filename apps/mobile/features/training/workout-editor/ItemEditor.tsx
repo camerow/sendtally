@@ -33,6 +33,10 @@ export type ItemEditorProps = {
   onChange: (item: Item) => void;
   onRemove: () => void;
   onSwap: () => void;
+  /** Absent for the first item. */
+  onMoveUp?: () => void;
+  /** Absent for the last item. */
+  onMoveDown?: () => void;
 };
 
 /**
@@ -49,6 +53,8 @@ export function ItemEditor({
   onChange,
   onRemove,
   onSwap,
+  onMoveUp,
+  onMoveDown,
 }: ItemEditorProps): React.ReactElement {
   const alternating = item.doses.length > 1;
   const next = letterOf(item.doses.length);
@@ -100,6 +106,26 @@ export function ItemEditor({
         <Text style={[type.bodyBold, { flex: 1, fontSize: 16, color: colors.gunmetal }]}>
           {name}
         </Text>
+        {onMoveUp !== undefined && (
+          <IconButton
+            icon="up"
+            label={t("workouts.moveUp", { name })}
+            onPress={onMoveUp}
+            color={colors.textSecondary}
+            size={36}
+            iconSize={18}
+          />
+        )}
+        {onMoveDown !== undefined && (
+          <IconButton
+            icon="down"
+            label={t("workouts.moveDown", { name })}
+            onPress={onMoveDown}
+            color={colors.textSecondary}
+            size={36}
+            iconSize={18}
+          />
+        )}
         {alternating ? (
           <IconButton
             icon="more"

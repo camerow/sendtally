@@ -53,7 +53,7 @@ import {
   trainingBlocks,
   userClimbs,
   users,
-  weekChanges,
+  itemWeekChanges,
   planChanges,
   membershipDays,
   workouts,
@@ -76,6 +76,7 @@ import {
   type PlanChange,
   type WeekChange,
   type Workout,
+  withItemIds,
 } from "@sendtally/core/hang";
 import type { ActivityInput } from "./activities";
 import { exerciseKindOf, exerciseNameKey, workoutExercises, type ExerciseInput } from "./exercises";
@@ -1315,7 +1316,7 @@ export async function deleteUserData(db: D1Database, userId: string): Promise<vo
     d.delete(hangSettings).where(eq(hangSettings.user_id, userId)),
     d.delete(activities).where(eq(activities.user_id, userId)),
     d.delete(memberships).where(eq(memberships.user_id, userId)),
-    d.delete(weekChanges).where(eq(weekChanges.user_id, userId)),
+    d.delete(itemWeekChanges).where(eq(itemWeekChanges.user_id, userId)),
     d.delete(planChanges).where(eq(planChanges.user_id, userId)),
     d.delete(membershipDays).where(eq(membershipDays.user_id, userId)),
     d.delete(trainingBlocks).where(eq(trainingBlocks.user_id, userId)),
@@ -2830,7 +2831,7 @@ export async function deleteActivity(db: D1Database, userId: string, id: string)
 
 export type BlockRow = typeof trainingBlocks.$inferSelect;
 export type MembershipRow = typeof memberships.$inferSelect;
-export type WeekChangeRow = typeof weekChanges.$inferSelect;
+export type WeekChangeRow = typeof itemWeekChanges.$inferSelect;
 export type PlanChangeRow = typeof planChanges.$inferSelect;
 export type MembershipDaysRow = typeof membershipDays.$inferSelect;
 
@@ -2858,9 +2859,14 @@ export async function planRows(db: D1Database, userId: string): Promise<PlanRows
       .orderBy(memberships.start, memberships.id),
     d
       .select()
-      .from(weekChanges)
-      .where(eq(weekChanges.user_id, userId))
-      .orderBy(weekChanges.membership_id, weekChanges.week, weekChanges.dose, weekChanges.item),
+      .from(itemWeekChanges)
+      .where(eq(itemWeekChanges.user_id, userId))
+      .orderBy(
+        itemWeekChanges.membership_id,
+        itemWeekChanges.week,
+        itemWeekChanges.dose,
+        itemWeekChanges.item_id
+      ),
     d
       .select()
       .from(planChanges)
@@ -2930,8 +2936,8 @@ function removeMemberships(d: DrizzleD1Database, userId: string, where: SQL | un
     d.update(hangSessions).set(UNLINKED).where(linked(hangSessions)),
     d.update(sessions).set(UNLINKED).where(linked(sessions)),
     d
-      .delete(weekChanges)
-      .where(and(eq(weekChanges.user_id, userId), inArray(weekChanges.membership_id, ids))),
+      .delete(itemWeekChanges)
+      .where(and(eq(itemWeekChanges.user_id, userId), inArray(itemWeekChanges.membership_id, ids))),
     d
       .delete(planChanges)
       .where(and(eq(planChanges.user_id, userId), inArray(planChanges.membership_id, ids))),
@@ -3005,38 +3011,38 @@ export async function deleteMembership(
 
 const weekChangeKey = (userId: string, c: Omit<WeekChange, "change">): SQL | undefined =>
   and(
-    eq(weekChanges.user_id, userId),
-    eq(weekChanges.membership_id, c.membershipId),
-    eq(weekChanges.week, c.week),
-    eq(weekChanges.dose, c.dose),
-    eq(weekChanges.item, c.item)
+    eq(itemWeekChanges.user_id, userId),
+    eq(itemWeekChanges.membership_id, c.membershipId),
+    eq(itemWeekChanges.week, c.week),
+    eq(itemWeekChanges.dose, c.dose),
+    eq(itemWeekChanges.item_id, c.itemId)
   );
 
 /** Sets what one week changes about one item; an empty change puts it back as written. */
 export async function saveWeekChange(db: D1Database, userId: string, c: WeekChange): Promise<void> {
   const d = drizzle(db);
   if (Object.keys(c.change).length === 0) {
-    await d.delete(weekChanges).where(weekChangeKey(userId, c));
+    await d.delete(itemWeekChanges).where(weekChangeKey(userId, c));
     return;
   }
   const change_json = JSON.stringify(c.change);
   await d
-    .insert(weekChanges)
+    .insert(itemWeekChanges)
     .values({
       user_id: userId,
       membership_id: c.membershipId,
       week: c.week,
       dose: c.dose,
-      item: c.item,
+      item_id: c.itemId,
       change_json,
     })
     .onConflictDoUpdate({
       target: [
-        weekChanges.user_id,
-        weekChanges.membership_id,
-        weekChanges.week,
-        weekChanges.dose,
-        weekChanges.item,
+        itemWeekChanges.user_id,
+        itemWeekChanges.membership_id,
+        itemWeekChanges.week,
+        itemWeekChanges.dose,
+        itemWeekChanges.item_id,
       ],
       set: { change_json },
     });
@@ -3134,7 +3140,7 @@ export async function saveWorkout(
     description: w.description === "" ? null : w.description,
     minutes: w.minutes,
     target_rpe: w.targetRpe,
-    items_json: JSON.stringify(w.items),
+    items_json: JSON.stringify(withItemIds(w.items, () => crypto.randomUUID())),
     exercise_rest_s: w.exerciseRestS,
     focus: w.focus,
     updated_at: now,
@@ -3198,8 +3204,10 @@ export async function copyBlock(
       .where(and(eq(memberships.user_id, userId), eq(memberships.block_id, source.id))),
     d
       .select()
-      .from(weekChanges)
-      .where(and(eq(weekChanges.user_id, userId), inArray(weekChanges.membership_id, sourceIds))),
+      .from(itemWeekChanges)
+      .where(
+        and(eq(itemWeekChanges.user_id, userId), inArray(itemWeekChanges.membership_id, sourceIds))
+      ),
     d
       .select()
       .from(membershipDays)
@@ -3234,7 +3242,7 @@ export async function copyBlock(
       .filter((c) => keptIds.has(c.membership_id))
       .map((c) =>
         d
-          .insert(weekChanges)
+          .insert(itemWeekChanges)
           .values({ ...c, membership_id: ids.get(c.membership_id) ?? c.membership_id })
       ),
     ...days

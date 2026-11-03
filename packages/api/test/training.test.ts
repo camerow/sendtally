@@ -463,17 +463,55 @@ describe("blocks and memberships", () => {
     const userId = "user_plan_weeks";
     await call(userId, "PUT", "/v1/blocks/b1", blockBody);
     await call(userId, "PUT", "/v1/memberships/m1", membershipBody);
-    const change = { week: 4, dose: 0, item: 0, change: { sets: 3, weightKg: 95 } };
+    const change = { week: 4, dose: 0, itemId: "sq", change: { sets: 3, weightKg: 95 } };
     const res = await call(userId, "PUT", "/v1/memberships/m1/changes", change);
     expect(await json(res)).toEqual({ weekChange: { membershipId: "m1", ...change } });
     await call(userId, "PUT", "/v1/memberships/m1/changes", { ...change, change: { sets: 2 } });
     await call(userId, "PUT", "/v1/memberships/m1/changes", { ...change, week: 5 });
     expect((await plan(userId)).weekChanges).toEqual([
-      { membershipId: "m1", ...change, change: { sets: 2 } },
-      { membershipId: "m1", ...change, week: 5 },
+      { membershipId: "m1", ...change, item: -1, change: { sets: 2 } },
+      { membershipId: "m1", ...change, item: -1, week: 5 },
     ]);
     await call(userId, "PUT", "/v1/memberships/m1/changes", { ...change, change: {} });
     expect((await plan(userId)).weekChanges.map((c) => c.week)).toEqual([5]);
+  });
+
+  it("keeps a week change on its item when the workout's items move", async () => {
+    const userId = "user_plan_weeks_moved";
+    const pull = { exercise: "Pull-up", doses: [{ sets: 3, reps: 8 }] };
+    await call(userId, "PUT", "/v1/workouts/w1", {
+      ...squatWorkout,
+      items: [...squatWorkout.items, pull],
+    });
+    const [squat, pullUp] =
+      (
+        await json<{ workouts: { items: { id: string }[] }[] }>(
+          await call(userId, "GET", "/v1/workouts")
+        )
+      ).workouts[0]?.items ?? [];
+    expect([squat?.id, pullUp?.id]).toEqual(["0", "1"]);
+    await call(userId, "PUT", "/v1/blocks/b1", blockBody);
+    await call(userId, "PUT", "/v1/memberships/m1", membershipBody);
+    // An older app build names the item by its place.
+    await call(userId, "PUT", "/v1/memberships/m1/changes", {
+      week: 2,
+      dose: 0,
+      item: 1,
+      change: { sets: 4 },
+    });
+    await call(userId, "PUT", "/v1/workouts/w1", { ...squatWorkout, items: [pullUp, squat] });
+    expect((await plan(userId)).weekChanges).toEqual([
+      { membershipId: "m1", week: 2, dose: 0, itemId: "1", item: 1, change: { sets: 4 } },
+    ]);
+    const moved = (
+      await json<{ workouts: { items: { id: string; exercise: string }[] }[] }>(
+        await call(userId, "GET", "/v1/workouts")
+      )
+    ).workouts[0]?.items;
+    expect(moved?.map((i) => [i.id, i.exercise])).toEqual([
+      ["1", "Pull-up"],
+      ["0", "Back squat"],
+    ]);
   });
 
   it("404s a week change for a membership that does not exist, and rejects one out of shape", async () => {
@@ -551,7 +589,7 @@ describe("blocks and memberships", () => {
     for (const table of [
       "activities",
       "memberships",
-      "week_changes",
+      "item_week_changes",
       "training_blocks",
       "workouts",
       "exercises",
@@ -571,7 +609,7 @@ describe("blocks and memberships", () => {
     await call(userId, "PUT", "/v1/memberships/m1/changes", {
       week: 2,
       dose: 0,
-      item: 0,
+      itemId: "0",
       change: { sets: 3 },
     });
     const copy = { id: "b2", start: "2027-01-04" };
@@ -584,7 +622,7 @@ describe("blocks and memberships", () => {
       ["w1", "2027-01-06", [1, 4]],
     ]);
     expect(after.weekChanges.filter((c) => c.membershipId === copied[0]?.id)).toEqual([
-      { membershipId: copied[0]?.id, week: 2, dose: 0, item: 0, change: { sets: 3 } },
+      { membershipId: copied[0]?.id, week: 2, dose: 0, itemId: "0", item: 0, change: { sets: 3 } },
     ]);
     expect((await call(userId, "POST", "/v1/blocks/nope/copy", copy)).status).toBe(404);
   });
