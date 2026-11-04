@@ -183,6 +183,13 @@
       "when": 1793742143288,
       "tag": "0030_copy_week_changes_by_item_id",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "6",
+      "when": 1793745266533,
+      "tag": "0031_user_climb_notes",
+      "breakpoints": true
     }
   ]
 }

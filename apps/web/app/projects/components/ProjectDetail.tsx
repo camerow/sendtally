@@ -35,7 +35,7 @@ const cardLabel: React.CSSProperties = {
 export function ProjectDetail({ apiUrl, slug }: ProjectDetailProps): React.ReactElement {
   const api = useClientApi(apiUrl);
   const navigate = useNavigate();
-  const project = useProject(api, slug);
+  const project = useProject(api, slug, () => crypto.randomUUID());
   const [unmarking, setUnmarking] = React.useState(false);
   const { state } = project;
 
@@ -142,8 +142,7 @@ export function ProjectDetail({ apiUrl, slug }: ProjectDetailProps): React.React
 
         <NotesCard
           notes={vm.notes}
-          sessions={vm.sessions}
-          onSave={(fingerprint, note) => project.saveNote(fingerprint, note)}
+          onSave={(note, text) => project.saveNote(note, text)}
           onAdd={(day, note) => project.addNote(day, note)}
         />
       </div>

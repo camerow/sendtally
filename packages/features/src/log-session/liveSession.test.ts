@@ -183,6 +183,7 @@ describe("live session", () => {
       area_climb_id: null,
       area: null,
       sent_at: null,
+      notes: [],
     };
     expect(withClimbName({ ...climb, project: true }, "Ora", undefined)).toMatchObject({
       name: "Ora",

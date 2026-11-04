@@ -253,6 +253,27 @@ export const climbNotes = sqliteTable(
   ]
 );
 
+// A note about one of the user's climbs on a day, written from the climb's page with no
+// session behind it. It follows the climb's id, so a rename or merge keeps it.
+export const userClimbNotes = sqliteTable(
+  "user_climb_notes",
+  {
+    user_id: text("user_id")
+      .notNull()
+      .references(() => users.id),
+    id: text("id").notNull(),
+    climb_id: text("climb_id").notNull(),
+    day: text("day").notNull(),
+    note: text("note").notNull(),
+    created_at: text("created_at").notNull(),
+    updated_at: text("updated_at").notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.user_id, t.id] }),
+    index("idx_user_climb_notes_climb").on(t.user_id, t.climb_id),
+  ]
+);
+
 export const gyms = sqliteTable(
   "gyms",
   {

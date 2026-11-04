@@ -68,6 +68,7 @@ describe("climbCatalogue", () => {
         first_at: "2026-09-01T18:00:00Z",
         last_at: "2026-09-02T18:00:00Z",
         sent_at: "2026-09-02T18:00:00Z",
+        notes: [],
       },
       {
         id: "w",
@@ -84,6 +85,7 @@ describe("climbCatalogue", () => {
         first_at: "2026-09-01T18:00:00Z",
         last_at: "2026-09-01T18:00:00Z",
         sent_at: "2026-09-01T18:00:00Z",
+        notes: [],
       },
     ]);
   });

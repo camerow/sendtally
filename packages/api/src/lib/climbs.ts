@@ -46,7 +46,11 @@ export type ClimbSummary = {
   first_at: string;
   last_at: string;
   sent_at: string | null;
+  /** Notes written on its page with no session behind them, newest day first. */
+  notes: ClimbNote[];
 };
+
+export type ClimbNote = { id: string; day: string; note: string };
 
 export const climbSlug = tagSlug;
 
@@ -191,9 +195,12 @@ const areaOf = (
 export function climbCatalogue(
   sessions: CatalogueSession[],
   records: UserClimbRow[],
-  areaNames: ReadonlyMap<string, string> = new Map()
+  areaNames: ReadonlyMap<string, string> = new Map(),
+  notes: readonly repo.UserClimbNoteRow[] = []
 ): ClimbSummary[] {
   const resolve = climbResolver(records);
+  const notesOf = (id: string): ClimbNote[] =>
+    notes.filter((n) => n.climb_id === id).map(({ id, day, note }) => ({ id, day, note }));
   const byId = new Map<string, ClimbSummary>();
   for (const session of sessions) {
     const seen = new Set<string>();
@@ -221,6 +228,7 @@ export function climbCatalogue(
           first_at: session.start_at,
           last_at: session.start_at,
           sent_at: sent ? session.start_at : null,
+          notes: notesOf(record.id),
         });
       } else {
         existing.attempts += tries;
@@ -234,7 +242,8 @@ export function climbCatalogue(
     }
   }
   for (const record of records) {
-    if (byId.has(record.id) || !record.working) continue;
+    const noted = notesOf(record.id);
+    if (byId.has(record.id) || (!record.working && noted.length === 0)) continue;
     const grade = record.grade_json === null ? null : (JSON.parse(record.grade_json) as ClimbGrade);
     byId.set(record.id, {
       id: record.id,
@@ -242,7 +251,7 @@ export function climbCatalogue(
       name: record.name,
       grade,
       discipline: grade === null ? record.discipline : disciplineOf(grade.scale),
-      project: true,
+      project: record.working,
       area_climb_id: record.area_climb_id,
       area: areaOf(record.area_id, areaNames),
       sessions: 0,
@@ -251,6 +260,7 @@ export function climbCatalogue(
       first_at: record.created_at,
       last_at: record.created_at,
       sent_at: null,
+      notes: noted,
     });
   }
   return [...byId.values()].sort((a, b) => b.last_at.localeCompare(a.last_at));

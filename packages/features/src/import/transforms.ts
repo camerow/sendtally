@@ -171,6 +171,8 @@ function groupSessions(records: Record[]): { sessions: ImportSession[]; issues: 
   const sessions = new Map<string, ImportSession>();
   let current: ImportSession | undefined;
   for (const r of records) {
+    // A note from a climb's page, which an export writes with no session.
+    if (r.kind?.toLowerCase() === "note") continue;
     const continues = r.date === undefined && r.session === undefined && current !== undefined;
     const date = continues ? current!.date : r.date;
     if (date === undefined) {

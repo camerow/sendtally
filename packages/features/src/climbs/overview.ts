@@ -1,4 +1,4 @@
-import type { ClimbSummary, SessionWithClimbs } from "@sendtally/api-client";
+import type { ClimbNote, ClimbSummary, SessionWithClimbs } from "@sendtally/api-client";
 import { t } from "../i18n";
 import type { ClimbStyle } from "../log-session/types";
 import { utcDate } from "../log-session/transforms";
@@ -60,6 +60,8 @@ export type ClimbDetailVM = {
   tries: string;
   best: string;
   sessions: ClimbSessionRowVM[];
+  /** Notes written on its page with no session behind them, newest day first. */
+  notes: Array<ClimbNote & { dateLabel: string }>;
 };
 
 /** Every session with this climb in it, newest first. */
@@ -108,5 +110,6 @@ export function climbDetailVM(
     tries: String(climb.attempts),
     best: climb.sent_at === null ? "-" : sendStyleText(sendStyleOf(climb, sessions)),
     sessions: climbSessions(climb, sessions),
+    notes: climb.notes.map((n) => ({ ...n, dateLabel: dateLabel(n.day) })),
   };
 }

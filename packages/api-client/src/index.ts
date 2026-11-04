@@ -18,6 +18,7 @@ import type {
   AreaSimilarInput,
   AreaSummary,
   ContentReportInput,
+  ClimbNote,
   ClimbChange,
   ClimbSummary,
   EntryDetail,
@@ -209,6 +210,22 @@ export class SendtallyApi {
         param: { fingerprint, slug },
         json: { note },
       })
+    );
+  }
+
+  /** Writes a note on the climb's page under the id the app chose; sending it again keeps one. */
+  saveClimbNote(climbId: string, { id, ...note }: ClimbNote): Promise<{ note: ClimbNote }> {
+    return body(
+      this.client.v1.climbs[":id"].notes[":noteId"].$put({
+        param: { id: climbId, noteId: id },
+        json: note,
+      })
+    );
+  }
+
+  deleteClimbNote(climbId: string, noteId: string): Promise<{ deleted: boolean }> {
+    return body(
+      this.client.v1.climbs[":id"].notes[":noteId"].$delete({ param: { id: climbId, noteId } })
     );
   }
 

@@ -272,6 +272,7 @@ describe("app", () => {
         first_at: "2026-08-20T18:00:00.000Z",
         last_at: "2026-08-22T18:00:00.000Z",
         sent_at: "2026-08-20T18:00:00.000Z",
+        notes: [],
       },
       {
         id: expect.any(String),
@@ -288,6 +289,7 @@ describe("app", () => {
         first_at: "2026-08-22T18:00:00.000Z",
         last_at: "2026-08-22T18:00:00.000Z",
         sent_at: "2026-08-22T18:00:00.000Z",
+        notes: [],
       },
     ]);
 
@@ -366,6 +368,65 @@ describe("app", () => {
     expect(merged).toHaveLength(1);
     expect(merged[0]).toMatchObject({ id: pinch.id, name: "The Pinch", attempts: 4 });
     expect((await patch("nope", { name: "x" })).status).toBe(404);
+  });
+
+  it("keeps a page note with no session, through a rewrite, a merge and the export, until deleted", async () => {
+    const user = "user_page_notes";
+    const headers = { "x-test-user": user, "Content-Type": "application/json" };
+    await postSession(
+      user,
+      logBody({
+        climbs: [
+          { name: "Pinch", grade: { scale: "v", value: 7 }, kind: "attempt", tries: 3 },
+          { name: "Roof", grade: { scale: "v", value: 5 }, kind: "send", tries: 1 },
+        ],
+      })
+    );
+    const list = async () =>
+      (
+        (await (await testApp().request("/v1/climbs", { headers }, env)).json()) as {
+          climbs: Array<{ id: string; name: string; attempts: number; notes: unknown[] }>;
+        }
+      ).climbs;
+    const before = await list();
+    const pinchId = before.find((c) => c.name === "Pinch")!.id;
+    const roofId = before.find((c) => c.name === "Roof")!.id;
+    const put = (climbId: string, noteId: string, json: unknown) =>
+      testApp().request(
+        `/v1/climbs/${climbId}/notes/${noteId}`,
+        { method: "PUT", headers, body: JSON.stringify(json) },
+        env
+      );
+
+    const note = { day: "2026-10-30", note: "  Heel hook left  " };
+    expect(await (await put(roofId, "n1", note)).json()).toEqual({
+      note: { id: "n1", day: "2026-10-30", note: "Heel hook left" },
+    });
+    expect((await put(roofId, "n1", { ...note, note: "Toe hook" })).status).toBe(200);
+    expect((await put("nope", "n2", note)).status).toBe(404);
+    expect((await put(roofId, "n2", { ...note, day: "30/10" })).status).toBe(400);
+    expect((await put(roofId, "n2", { ...note, note: " " })).status).toBe(400);
+
+    const roofNotes = (await list()).find((c) => c.id === roofId)?.notes;
+    expect(roofNotes).toEqual([{ id: "n1", day: "2026-10-30", note: "Toe hook" }]);
+    const listed = (await list()).find((c) => c.id === roofId);
+    expect(listed?.attempts).toBe(1);
+
+    await testApp().request(
+      `/v1/climbs/${roofId}`,
+      { method: "PATCH", headers, body: JSON.stringify({ name: "pinch" }) },
+      env
+    );
+    expect((await list()).find((c) => c.id === pinchId)?.notes).toEqual(roofNotes);
+
+    const csv = await (await testApp().request("/v1/export.csv", { headers }, env)).text();
+    expect(csv).toContain("2026-10-30,,,,,,,,,Pinch,,note,,,,Toe hook,,,,");
+
+    const del = () =>
+      testApp().request(`/v1/climbs/${pinchId}/notes/n1`, { method: "DELETE", headers }, env);
+    expect(await (await del()).json()).toEqual({ deleted: true });
+    expect(await (await del()).json()).toEqual({ deleted: false });
+    expect((await list()).find((c) => c.id === pinchId)?.notes).toEqual([]);
   });
 
   it("regrades a climb in every session it was logged in, and scores those again", async () => {

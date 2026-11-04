@@ -28,6 +28,7 @@ const climb = (over: Partial<ClimbSummary>): ClimbSummary => ({
   first_at: "2026-10-27T10:00:00.000Z",
   last_at: "2026-10-27T10:00:00.000Z",
   sent_at: "2026-10-27T10:00:00.000Z",
+  notes: [],
   ...over,
 });
 
@@ -43,6 +44,7 @@ const ramp = climb({
   sends: 0,
   last_at: "2026-10-18T10:00:00.000Z",
   sent_at: null,
+  notes: [],
 });
 
 const brad = climb({
@@ -54,6 +56,7 @@ const brad = climb({
   sends: 0,
   last_at: "2026-09-04T10:00:00.000Z",
   sent_at: null,
+  notes: [],
 });
 
 const roof = climb({
@@ -63,6 +66,7 @@ const roof = climb({
   sessions: 2,
   last_at: "2025-12-01T10:00:00.000Z",
   sent_at: "2025-12-01T10:00:00.000Z",
+  notes: [],
 });
 
 const sessions = [

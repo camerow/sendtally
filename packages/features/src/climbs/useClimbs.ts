@@ -1,15 +1,16 @@
 import React from "react";
 import type {
   Activity,
+  ClimbNote,
   ClimbSummary,
   SendtallyApi,
   SessionWithClimbs,
 } from "@sendtally/api-client";
 import { t } from "../i18n";
 import { queries, useQueryPair, type QueryState } from "../query";
-import { logClimbOnDay } from "../log-session/dayClimb";
+import { patch, useLocalWrite } from "../outbox";
 import { climbDetailVM, type ClimbDetailVM } from "./overview";
-import { joinNotes, noteAttempt } from "./projects";
+import { withClimbNote, withoutClimbNote } from "./projects";
 
 /** The user's climbs and climbing sessions, and the training beside them, whose workouts log climbs too. */
 export type ClimbsData = {
@@ -36,14 +37,16 @@ export function useClimbs(api: SendtallyApi): ClimbsFeature {
 export type ClimbFeature = {
   state: QueryState<{ climb: ClimbSummary; vm: ClimbDetailVM }>;
   setWorking: (working: boolean) => Promise<void>;
-  /** A note dated to a day: on that day's session of this climb, or on a new attempt there. */
-  addNote: (day: string, note: string) => Promise<void>;
+  /** Writes a note on the climb's page, a new one when it has no id yet; saved on the phone first. */
+  saveNote: (note: Omit<ClimbNote, "id"> & { id?: string }) => void;
+  deleteNote: (id: string) => void;
   reload: () => Promise<void>;
 };
 
 /** A climb by its id, or by the slug a web link carries. */
-export function useClimb(api: SendtallyApi, idOrSlug: string): ClimbFeature {
+export function useClimb(api: SendtallyApi, idOrSlug: string, newId: () => string): ClimbFeature {
   const { state: loaded, reload } = useClimbs(api);
+  const local = useLocalWrite();
   const state = React.useMemo((): ClimbFeature["state"] => {
     if (loaded.status !== "ready") return loaded;
     const { climbs, sessions } = loaded.data;
@@ -59,16 +62,38 @@ export function useClimb(api: SendtallyApi, idOrSlug: string): ClimbFeature {
     },
     [api, id]
   );
-  const addNote = React.useCallback(
-    async (day: string, note: string): Promise<void> => {
-      if (state.status !== "ready") throw new Error("climb not loaded");
-      const { climb, vm } = state.data;
-      const onDay = vm.sessions.find((s) => s.day === day);
-      if (onDay === undefined) await logClimbOnDay(api, noteAttempt(climb, note), day, []);
-      else await api.setClimbNote(onDay.fingerprint, climb.slug, joinNotes(onDay.note, note));
-      await reload();
+  const saveNote = React.useCallback(
+    ({ id: noteId, ...rest }: Omit<ClimbNote, "id"> & { id?: string }): void => {
+      if (id === null) throw new Error("climb not loaded");
+      const note = { id: noteId ?? newId(), ...rest };
+      local(
+        {
+          key: `climb-note:${note.id}`,
+          kind: noteId === undefined ? "create" : "update",
+          method: "saveClimbNote",
+          args: [id, note],
+        },
+        patch<ClimbSummary[]>(queries.climbs(api).queryKey, (list) => withClimbNote(list, id, note))
+      );
     },
-    [api, state, reload]
+    [api, id, local, newId]
   );
-  return { state, setWorking, addNote, reload };
+  const deleteNote = React.useCallback(
+    (noteId: string): void => {
+      if (id === null) throw new Error("climb not loaded");
+      local(
+        {
+          key: `climb-note:${noteId}`,
+          kind: "delete",
+          method: "deleteClimbNote",
+          args: [id, noteId],
+        },
+        patch<ClimbSummary[]>(queries.climbs(api).queryKey, (list) =>
+          withoutClimbNote(list, id, noteId)
+        )
+      );
+    },
+    [api, id, local]
+  );
+  return { state, setWorking, saveNote, deleteNote, reload };
 }

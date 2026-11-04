@@ -26,6 +26,7 @@ const climb = (overrides: Partial<ClimbSummary>): ClimbSummary => ({
   area_climb_id: null,
   area: null,
   sent_at: null,
+  notes: [],
   ...overrides,
 });
 

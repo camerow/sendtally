@@ -34,6 +34,8 @@ export type ExportInput = {
   notesBySession: Map<string, string>;
   climbNotes: ClimbNoteRow[];
   gyms: GymRow[];
+  /** Notes written on a climb's page with no session, by the climb's name. */
+  pageNotes?: Array<{ day: string; climb: string; note: string }>;
 };
 
 const cell = (v: string | number | null | undefined): string => {
@@ -80,6 +82,21 @@ export function exportCsv(input: ExportInput): string {
       ];
       lines.push(row.map(cell).join(","));
     }
+  }
+  // A page note has no session; its kind tells the importer to pass it by.
+  for (const n of [...(input.pageNotes ?? [])].sort((a, b) => a.day.localeCompare(b.day))) {
+    const row = EXPORT_COLUMNS.map((column) =>
+      column === "date"
+        ? n.day
+        : column === "climb"
+          ? n.climb
+          : column === "kind"
+            ? "note"
+            : column === "climb_notes"
+              ? n.note
+              : ""
+    );
+    lines.push(row.map(cell).join(","));
   }
   return lines.join("\r\n") + "\r\n";
 }

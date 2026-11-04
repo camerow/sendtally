@@ -617,14 +617,9 @@
   resize: vertical;
 }
 
-.note-sheet-hint,
 .note-sheet-error {
   font-family: var(--font-mono);
   font-size: 11px;
-  color: rgba(64, 63, 76, 0.55);
-}
-
-.note-sheet-error {
   color: var(--text-label-accent);
 }
 

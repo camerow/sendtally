@@ -1,7 +1,7 @@
 import { disciplineOf, parseGrade, sessionMinutes } from "@sendtally/core";
 import { z } from "zod";
 import { CIRCUIT_COLOURS } from "./gyms";
-import { focus, id, MAX_BLOCK_WEEKS } from "./plan";
+import { calendarDate, focus, id, MAX_BLOCK_WEEKS } from "./plan";
 import { tagNames, tagSlug } from "./tags";
 
 const knownGrade =
@@ -99,6 +99,13 @@ export const NOTE_MAX = 2000;
 const sessionNote = z.string().max(NOTE_MAX).optional();
 
 export const climbNoteBody = z.object({ note: z.string().max(CLIMB_NOTE_MAX).optional() });
+
+export const userClimbNoteParam = z.object({ id, noteId: id });
+
+export const userClimbNoteBody = z.object({
+  day: calendarDate,
+  note: z.string().trim().min(1).max(CLIMB_NOTE_MAX),
+});
 
 export function normalisedNote(notes: string | undefined): string | null {
   const trimmed = notes?.trim() ?? "";

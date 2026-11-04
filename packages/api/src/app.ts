@@ -84,6 +84,8 @@ import {
   climbLinksOf,
   climbNoteBody,
   historySession,
+  userClimbNoteBody,
+  userClimbNoteParam,
   manualSessionBody,
   newManualSessionBody,
   normalisedNote,
@@ -966,8 +968,39 @@ const app = new Hono<AppEnv>()
     const areaNames = new Map(
       (await repo.areasByIds(db, viewer, areaIds)).map((a) => [a.id, a.name])
     );
-    return c.json({ climbs: climbCatalogue(rows, records, areaNames) });
+    const notes = await repo.listUserClimbNotes(db, userId);
+    return c.json({ climbs: climbCatalogue(rows, records, areaNames, notes) });
   })
+
+  // A note on a climb's page with no session behind it, under the id the app chose.
+  .put(
+    "/v1/climbs/:id/notes/:noteId",
+    zValidator("param", userClimbNoteParam, invalidBody),
+    zValidator("json", userClimbNoteBody, invalidBody),
+    async (c) => {
+      const userId = c.get("userId");
+      const db = c.env.DB;
+      const { id: climbId, noteId } = c.req.valid("param");
+      if (!(await repo.listUserClimbs(db, userId)).some((r) => r.id === climbId)) {
+        return c.json({ error: "not found" }, 404);
+      }
+      const note = { id: noteId, climb_id: climbId, ...c.req.valid("json") };
+      await repo.saveUserClimbNote(db, userId, note);
+      await captureEvent(c, "climb_note_updated", { cleared: "false" });
+      return c.json({ note: { id: note.id, day: note.day, note: note.note } });
+    }
+  )
+
+  .delete(
+    "/v1/climbs/:id/notes/:noteId",
+    zValidator("param", userClimbNoteParam, invalidBody),
+    async (c) => {
+      const { noteId } = c.req.valid("param");
+      const deleted = await repo.deleteUserClimbNote(c.env.DB, c.get("userId"), noteId);
+      if (deleted) await captureEvent(c, "climb_note_updated", { cleared: "true" });
+      return c.json({ deleted });
+    }
+  )
 
   // Renames (or merges into the climb already called that), and sets the crag and its Areas climb
   // on the climb itself, where logged sessions keep theirs. A new grade is written into every
@@ -1821,22 +1854,33 @@ const app = new Hono<AppEnv>()
   // Everything the user logged, one row per climb, in the importer's format.
   .get("/v1/export.csv", async (c) => {
     const userId = c.get("userId");
-    const [sessions, tagsBySession, climbNotes, gyms, entries] = await Promise.all([
+    const [sessions, tagsBySession, climbNotes, gyms, entries, notes, records] = await Promise.all([
       repo.listSessions(c.env.DB, userId, 5000, true),
       repo.tagsBySession(c.env.DB, userId),
       repo.listClimbNotes(c.env.DB, userId),
       repo.listGyms(c.env.DB, userId),
       entriesResponse(c.env, userId, (e) => e.kind === "journal" && e.parent_id === null),
+      repo.listUserClimbNotes(c.env.DB, userId),
+      repo.listUserClimbs(c.env.DB, userId),
     ]);
+    const climbName = new Map(records.map((r) => [r.id, r.name]));
+    const pageNotes = notes.flatMap((n) => {
+      const climb = climbName.get(n.climb_id);
+      return climb === undefined ? [] : [{ day: n.day, climb, note: n.note }];
+    });
     const notesBySession = new Map<string, string>();
     for (const e of entries) {
       for (const fp of e.fingerprints) if (!notesBySession.has(fp)) notesBySession.set(fp, e.body);
     }
     await captureEvent(c, "sessions_exported", { session_count: String(sessions.length) });
-    return c.body(exportCsv({ sessions, tagsBySession, notesBySession, climbNotes, gyms }), 200, {
-      "Content-Type": "text/csv; charset=utf-8",
-      "Content-Disposition": 'attachment; filename="sendtally-export.csv"',
-    });
+    return c.body(
+      exportCsv({ sessions, tagsBySession, notesBySession, climbNotes, gyms, pageNotes }),
+      200,
+      {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": 'attachment; filename="sendtally-export.csv"',
+      }
+    );
   })
 
   .put(

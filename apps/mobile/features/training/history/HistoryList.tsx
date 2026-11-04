@@ -32,7 +32,12 @@ export function HistoryList({
     <View style={{ gap: 2 }}>
       <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
         <Label color={colors.gunmetal}>
-          {title ?? t("hang.history", { count: t("hang.sessionCount", { count: items.length }) })}
+          {title ??
+            t("hang.history", {
+              count: t("hang.sessionCount", {
+                count: items.filter((i) => i.kind !== "note").length,
+              }),
+            })}
         </Label>
         {onAdd && (
           <Pressable

@@ -1,18 +1,22 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { TextInput } from "../../components/TextInput";
-import type { ClimbSessionRowVM } from "@sendtally/features/climbs";
+import type { ClimbNote } from "@sendtally/api-client";
 import { t } from "@sendtally/features/i18n";
 import { localDate } from "@sendtally/features/log-session";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { DateTimeField } from "../../components/DateTimeField";
 import { Sheet } from "../../components/Sheet";
+import { confirmDestructive } from "../../lib/confirmDestructive";
 import { primaryButton, primaryButtonLabel } from "../../lib/styles";
+import { Button } from "../training/components/Button";
 
 export type AddNoteSheetProps = {
-  visible: boolean;
-  sessions: readonly ClimbSessionRowVM[];
-  onSave: (day: string, note: string) => Promise<void>;
+  /** The note to edit, "new" to write one, or null when closed. */
+  note: ClimbNote | "new" | null;
+  /** Saved on the phone first, so the sheet closes at once. */
+  onSave: (day: string, note: string) => void;
+  onDelete: (id: string) => void;
   onClose: () => void;
 };
 
@@ -26,42 +30,41 @@ const label = {
 } as const;
 
 export function AddNoteSheet({
-  visible,
-  sessions,
+  note,
   onSave,
+  onDelete,
   onClose,
 }: AddNoteSheetProps): React.ReactElement {
+  const editing = note !== "new" && note !== null ? note : null;
   const [day, setDay] = React.useState(() => localDate(new Date()));
   const [draft, setDraft] = React.useState("");
-  const [busy, setBusy] = React.useState(false);
-  const [error, setError] = React.useState<string | null>(null);
 
-  const [wasVisible, setWasVisible] = React.useState(false);
-  if (visible !== wasVisible) {
-    setWasVisible(visible);
-    if (visible) {
-      setDay(localDate(new Date()));
-      setDraft("");
-      setError(null);
-    }
+  const [wasOpen, setWasOpen] = React.useState<AddNoteSheetProps["note"]>(null);
+  if (note !== wasOpen) {
+    setWasOpen(note);
+    setDay(editing?.day ?? localDate(new Date()));
+    setDraft(editing?.note ?? "");
   }
 
-  const save = async (): Promise<void> => {
+  const save = (): void => {
     if (draft.trim() === "") return;
-    setBusy(true);
-    setError(null);
-    try {
-      await onSave(day, draft.trim());
-      setBusy(false);
-      onClose();
-    } catch {
-      setBusy(false);
-      setError(t("climbs.noteSaveFailed"));
-    }
+    onSave(day, draft.trim());
+    onClose();
+  };
+  const remove = (): void => {
+    if (editing === null) return;
+    confirmDestructive({
+      title: t("climbs.deleteNote"),
+      action: t("common.delete"),
+      onConfirm: () => {
+        onDelete(editing.id);
+        onClose();
+      },
+    });
   };
 
   return (
-    <Sheet visible={visible} onClose={onClose} closeLabel={t("common.cancel")}>
+    <Sheet visible={note !== null} onClose={onClose} closeLabel={t("common.cancel")}>
       <View style={{ gap: 16, paddingTop: 2, paddingHorizontal: 18, paddingBottom: 18 }}>
         <Text
           style={{
@@ -72,7 +75,7 @@ export function AddNoteSheet({
             color: colors.gunmetal,
           }}
         >
-          {t("climbs.addNote")}
+          {editing === null ? t("climbs.addNote") : t("climbs.editNote")}
         </Text>
 
         <View style={{ gap: 9 }}>
@@ -84,11 +87,6 @@ export function AddNoteSheet({
             label={t("climbs.noteDate")}
             onChange={setDay}
           />
-          {!sessions.some((s) => s.day === day) && (
-            <Text style={{ fontFamily: fonts.mono, fontSize: 11, color: colors.textMuted }}>
-              {t("climbs.noteNewDayHint")}
-            </Text>
-          )}
         </View>
 
         <TextInput
@@ -114,20 +112,17 @@ export function AddNoteSheet({
           }}
         />
 
-        {error !== null && (
-          <Text style={{ fontFamily: fonts.mono, fontSize: 11, color: colors.watermelonInk }}>
-            {error}
-          </Text>
-        )}
-
         <Pressable
-          onPress={() => void save()}
-          disabled={busy || draft.trim() === ""}
+          onPress={save}
+          disabled={draft.trim() === ""}
           accessibilityRole="button"
-          style={{ ...primaryButton, opacity: busy || draft.trim() === "" ? 0.45 : 1 }}
+          style={{ ...primaryButton, opacity: draft.trim() === "" ? 0.45 : 1 }}
         >
-          <Text style={primaryButtonLabel}>{busy ? t("common.saving") : t("common.save")}</Text>
+          <Text style={primaryButtonLabel}>{t("common.save")}</Text>
         </Pressable>
+        {editing !== null && (
+          <Button label={t("climbs.deleteNote")} onPress={remove} variant="danger" />
+        )}
       </View>
     </Sheet>
   );

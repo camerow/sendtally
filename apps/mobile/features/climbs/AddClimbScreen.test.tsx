@@ -21,6 +21,7 @@ const arete: ClimbSummary = {
   first_at: "2026-09-01T18:00:00Z",
   last_at: "2026-09-08T18:00:00Z",
   sent_at: "2026-09-08T18:00:00Z",
+  notes: [],
 };
 
 const mockUpdateClimb = jest.fn(async (_id: string, _change: ClimbChange) => ({ id: "c1" }));
