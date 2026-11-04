@@ -50,7 +50,7 @@ const plan = (workoutId: string, weekdays: (0 | 1)[] = [0, 1]): Plan => ({
 describe("Today", () => {
   it("starts today's planned hangboard workout on its grip, against its plan", async () => {
     await renderWithHang(<TodayScreen />, hangData(), { plan: plan("max10") });
-    expect(screen.getByText("Up today · Fingers")).toBeTruthy();
+    expect(screen.getByText("Up\u00A0today · Fingers")).toBeTruthy();
     await fireEvent.press(screen.getByText("Start"));
     expect(router.push).toHaveBeenCalledWith({
       pathname: "/workout/timer",
@@ -156,7 +156,7 @@ describe("Today", () => {
 
   it("starts today's lifting workout in the sets player with what it prescribes", async () => {
     await renderWithHang(<TodayScreen />, hangData(), { plan: plan("legs"), workouts: [legs] });
-    expect(screen.getByText("Up today · Strength")).toBeTruthy();
+    expect(screen.getByText("Up\u00A0today · Strength")).toBeTruthy();
     expect(screen.getAllByText("5 × 5").length).toBeGreaterThan(0);
     await fireEvent.press(screen.getByText("Start"));
     expect(router.push).toHaveBeenCalledWith({

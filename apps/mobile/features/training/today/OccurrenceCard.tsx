@@ -21,7 +21,7 @@ import { type } from "../type";
 import { openOccurrence } from "./openOccurrence";
 import { DayMark } from "./DayMark";
 import { KIND_LOOK } from "./kindLook";
-import { occurrenceMeta, occurrenceTag } from "./occurrenceText";
+import { occurrenceMeta, occurrenceTag, unbrokenSegments } from "./occurrenceText";
 
 export type OccurrenceCardProps = { occurrence: Occurrence; workout: LibraryWorkout };
 
@@ -54,9 +54,11 @@ export function OccurrenceCard({ occurrence, workout }: OccurrenceCardProps): Re
         <View style={{ flexDirection: "row", alignItems: "center", gap: 7 }}>
           <DayMark kind={workout.kind} filled />
           <Label color={KIND_LOOK[workout.kind].ink} style={{ flex: 1 }}>
-            {running === null
-              ? t("hang.upToday", { kind: tag })
-              : `${t("tally.inProgress")} · ${tag}`}
+            {unbrokenSegments(
+              running === null
+                ? t("hang.upToday", { kind: tag })
+                : `${t("tally.inProgress")} · ${tag}`
+            )}
           </Label>
           {minutes !== null && <Label color={colors.textSecondary}>{durationLabel(minutes)}</Label>}
           {running === null && (
