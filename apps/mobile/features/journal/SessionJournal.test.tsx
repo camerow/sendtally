@@ -17,18 +17,17 @@ const entry = {
 
 describe("SessionJournal", () => {
   it("is a Notes section with a round + and one muted line when empty", async () => {
-    await render(<SessionJournal fingerprint="s1" date="2026-11-04" entries={[]} />);
+    const onAdd = jest.fn();
+    await render(<SessionJournal entries={[]} onAdd={onAdd} />);
     expect(screen.getByText("Notes")).toBeTruthy();
     expect(screen.getByText("Nothing written yet")).toBeTruthy();
     await fireEvent.press(screen.getByLabelText("Add a note"));
-    expect(router.push).toHaveBeenCalledWith({
-      pathname: "/journal/new",
-      params: { kind: "journal", date: "2026-11-04", session: "s1" },
-    });
+    expect(onAdd).toHaveBeenCalled();
+    expect(router.push).not.toHaveBeenCalled();
   });
 
   it("lists a note by its date and text, opening it on a tap", async () => {
-    await render(<SessionJournal fingerprint="s1" date="2026-11-04" entries={[entry]} />);
+    await render(<SessionJournal entries={[entry]} onAdd={jest.fn()} />);
     expect(screen.getByText("Nov 4")).toBeTruthy();
     await fireEvent.press(screen.getByText("Cold and greasy after 3."));
     expect(router.push).toHaveBeenCalledWith({ pathname: "/journal/[id]", params: { id: "e1" } });

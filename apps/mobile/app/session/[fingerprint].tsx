@@ -5,6 +5,7 @@ import { useSessionDetail } from "@sendtally/features/session-detail";
 import { kindLabel } from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
 import { colors } from "@sendtally/design/tokens";
+import { AddNoteSheet } from "../../components/AddNoteSheet";
 import { ClimbingHero } from "../../features/climbs/ClimbingHero";
 import { ClimbLogRow } from "../../features/climbs/ClimbLogRow";
 import { EnduranceLaps } from "../../features/sessions/EnduranceLaps";
@@ -29,6 +30,7 @@ export default function SessionDetailScreen(): React.ReactElement {
   const api = useApi();
   const sessions = useSessions();
   const feature = useSessionDetail(api, fingerprint ?? "");
+  const [noting, setNoting] = React.useState<"new" | null>(null);
   const { state } = feature;
   const { run, refresh } = feature.post;
   const connected = React.useCallback(() => {
@@ -111,10 +113,22 @@ export default function SessionDetailScreen(): React.ReactElement {
           ))}
         </View>
       </View>
-      <SessionJournal
-        fingerprint={fingerprint ?? ""}
-        date={vm.startDay}
-        entries={state.data.entries}
+      <SessionJournal entries={state.data.entries} onAdd={() => setNoting("new")} />
+      <AddNoteSheet
+        note={noting}
+        day={vm.startDay}
+        onSave={(day, body) =>
+          void api
+            .createEntry({
+              kind: "journal",
+              occurred_at: day,
+              body,
+              fingerprints: [fingerprint ?? ""],
+            })
+            .then(() => feature.reload())
+        }
+        onDelete={() => undefined}
+        onClose={() => setNoting(null)}
       />
     </ScreenFrame>
   );

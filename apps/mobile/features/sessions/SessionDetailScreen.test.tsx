@@ -3,9 +3,11 @@ import { act, fireEvent, render, screen } from "@testing-library/react-native";
 import { router } from "expo-router";
 import React from "react";
 import { Alert, Linking, type AlertButton } from "react-native";
+import type * as ReactNative from "react-native";
 import SessionDetailScreen from "../../app/session/[fingerprint]";
 
-const mockApi = {};
+const mockCreateEntry = jest.fn(async (_input: unknown) => ({ entry: {} }));
+const mockApi = { createEntry: (input: unknown) => mockCreateEntry(input) };
 const mockRemove = jest.fn<(fingerprint: string) => void>();
 const mockReload = jest.fn(async () => undefined);
 let mockState: unknown;
@@ -29,7 +31,21 @@ jest.mock("./SessionTags", () => ({ SessionTags: () => null }));
 jest.mock("../settings/useStravaConnect", () => ({
   useStravaConnect: () => ({ connect: mockConnect, busy: false, error: null }),
 }));
-jest.mock("../journal/SessionJournal", () => ({ SessionJournal: () => null }));
+jest.mock("../journal/SessionJournal", () => ({
+  SessionJournal: ({ onAdd }: { onAdd: () => void }) => {
+    const { Pressable, Text } = jest.requireActual<typeof ReactNative>("react-native");
+    return (
+      <Pressable onPress={onAdd}>
+        <Text>Add a note</Text>
+      </Pressable>
+    );
+  },
+}));
+jest.mock("@react-native-community/datetimepicker", () => ({
+  __esModule: true,
+  default: () => null,
+  DateTimePickerAndroid: { open: jest.fn() },
+}));
 jest.mock("@sendtally/features/session-detail", () => ({
   ...jest.requireActual<object>("@sendtally/features/session-detail"),
   useSessionDetail: () => ({
@@ -175,6 +191,22 @@ describe("Climbing session detail", () => {
     await fireEvent.press(screen.getByText("Boulder ×2"));
     expect(router.push).not.toHaveBeenCalled();
     expect(screen.getByLabelText("V4, Boulder ×2, 5 tries, Sent")).toBeTruthy();
+  });
+
+  it("writes a note in a sheet on the session's day, attached to the session", async () => {
+    await render(<SessionDetailScreen />);
+    await fireEvent.press(screen.getByText("Add a note"));
+    await fireEvent.changeText(
+      screen.getByPlaceholderText("What happened, what to try next"),
+      "Cold and greasy"
+    );
+    await fireEvent.press(screen.getByText("Save"));
+    expect(mockCreateEntry).toHaveBeenCalledWith({
+      kind: "journal",
+      occurred_at: "2026-10-21",
+      body: "Cold and greasy",
+      fingerprints: ["manual-1"],
+    });
   });
 
   it("edits from the first row of the ··· menu, not the bar", async () => {

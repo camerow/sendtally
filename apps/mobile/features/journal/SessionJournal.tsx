@@ -7,28 +7,20 @@ import { colors, fonts } from "@sendtally/design/tokens";
 import { NoteRow } from "../../components/NoteRow";
 import { SectionHeading } from "../../components/SectionHeading";
 
-/** A session's notes, a plain section: each one opens on a tap, and + writes another on its day. */
+/** A session's notes, a plain section: each one opens on a tap, and + writes another. */
 export function SessionJournal({
-  fingerprint,
-  date,
   entries,
+  onAdd,
 }: {
-  fingerprint: string;
-  date: string;
   entries: JournalEntry[];
+  /** Opens the note sheet, which writes on the session's day. */
+  onAdd: () => void;
 }): React.ReactElement {
   return (
     <View style={{ gap: 2 }}>
       <SectionHeading
         title={t("common.notes")}
-        add={{
-          label: t("climbs.addNote"),
-          onPress: () =>
-            router.push({
-              pathname: "/journal/new",
-              params: { kind: "journal", date, session: fingerprint },
-            }),
-        }}
+        add={{ label: t("climbs.addNote"), onPress: onAdd }}
       />
       {entries.length === 0 && (
         <Text style={{ fontFamily: fonts.sans, fontSize: 14, color: colors.textSecondary }}>

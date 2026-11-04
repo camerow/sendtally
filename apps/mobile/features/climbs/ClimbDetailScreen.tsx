@@ -15,7 +15,7 @@ import { deleteRow } from "../training/components/deleteRow";
 import { LoadState } from "../training/data/LoadState";
 import { HistoryList } from "../training/history/HistoryList";
 import { SummaryTiles } from "../training/summary/SummaryTiles";
-import { AddNoteSheet } from "./AddNoteSheet";
+import { AddNoteSheet } from "../../components/AddNoteSheet";
 import { ClimbingHero } from "./ClimbingHero";
 import { ClimbPill } from "./ClimbPill";
 
