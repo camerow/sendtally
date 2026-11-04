@@ -114,4 +114,25 @@ describe("import", () => {
     });
     expect(res.status).toBe(400);
   });
+
+  it("lists the whole log, however long", async () => {
+    const day = (i: number) =>
+      new Date(Date.UTC(2015, 0, 1) + i * 86_400_000).toISOString().slice(0, 10);
+    const many = Array.from({ length: 250 }, (_, i) => ({
+      date: day(i),
+      location: "indoor",
+      climbs: [{ grade: v(3), kind: "send", tries: 1 }],
+    }));
+    const longLog = { ...headers, "x-test-user": "user_long_log" };
+    for (const batch of [many.slice(0, 125), many.slice(125)]) {
+      const res = await testApp().request(
+        "/v1/sessions/import",
+        { method: "POST", headers: longLog, body: JSON.stringify({ sessions: batch }) },
+        env
+      );
+      expect(res.status).toBe(201);
+    }
+    const list = await testApp().request("/v1/sessions", { headers: longLog }, env);
+    expect(((await list.json()) as { sessions: unknown[] }).sessions).toHaveLength(250);
+  });
 });

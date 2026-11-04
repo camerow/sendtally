@@ -23,7 +23,14 @@ export const captureEvent = async (
   distinctId: string | undefined = c.get("userId")
 ): Promise<void> => {
   if (distinctId === undefined) return;
-  await captureUserEvent(c.env, distinctId, event, properties);
+  const capture = captureUserEvent(c.env, distinctId, event, properties);
+  try {
+    c.executionCtx.waitUntil(
+      capture.catch((err: unknown) => console.error(`capture ${event}`, err))
+    );
+  } catch {
+    await capture;
+  }
 };
 
 // Posting is a Strava call or two plus a possible token refresh, so it runs

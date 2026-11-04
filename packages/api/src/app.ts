@@ -128,7 +128,7 @@ const manualScoringHistory = async (
   userId: string,
   excludeFingerprint?: string
 ) => {
-  const rows = await repo.listSessions(db, userId, 200, true);
+  const rows = await repo.listSessions(db, userId, true);
   return rows
     .filter((r) => r.fingerprint !== excludeFingerprint && r.rpe_source !== "none")
     .map(historySession)
@@ -136,10 +136,12 @@ const manualScoringHistory = async (
 };
 
 const sessionResponse = async (env: Env, userId: string, fingerprint: string) => {
-  const row = await repo.getSession(env.DB, userId, fingerprint);
+  const [row, viewer] = await Promise.all([
+    repo.getSession(env.DB, userId, fingerprint),
+    repo.getViewer(env.DB, userId),
+  ]);
   if (row === null) return null;
   const { climbs_json, notes: _legacyNotes, ...rest } = row;
-  const viewer = await repo.getViewer(env.DB, userId);
   const [tags, entries, climbNotes, links] = await Promise.all([
     repo.getSessionTags(env.DB, userId, fingerprint),
     entriesResponse(env, userId, (e) => e.fingerprints.includes(fingerprint)),
@@ -291,14 +293,18 @@ const saveManualSession = async (
   const links = climbLinksOf(form.climbs);
   if (created) await repo.insertManualSession(db, userId, input, links);
   else await repo.updateManualSession(db, userId, input, links);
-  await repo.upsertSessionNote(db, userId, fingerprint, form.date, normalisedNote(form.notes));
-  await repo.setSessionTags(db, userId, fingerprint, form.tags ?? []);
-  await repo.restoreUserClimbs(db, userId, {
-    nameKeys: form.climbs.map((climb) => climbSlug(climb.name)).filter((key) => key !== ""),
-    ids: form.climbs.flatMap((climb) => climb.userClimbId ?? []),
-  });
-  await applyProjectFlags(db, userId, form.climbs);
-  await repo.setClimbNotes(db, userId, fingerprint, climbNotesOf(form.climbs));
+  // The rows around a session live in their own tables, so they are written side by side.
+  await Promise.all([
+    repo.upsertSessionNote(db, userId, fingerprint, form.date, normalisedNote(form.notes)),
+    repo.setSessionTags(db, userId, fingerprint, form.tags ?? []),
+    repo
+      .restoreUserClimbs(db, userId, {
+        nameKeys: form.climbs.map((climb) => climbSlug(climb.name)).filter((key) => key !== ""),
+        ids: form.climbs.flatMap((climb) => climb.userClimbId ?? []),
+      })
+      .then(() => applyProjectFlags(db, userId, form.climbs)),
+    repo.setClimbNotes(db, userId, fingerprint, climbNotesOf(form.climbs)),
+  ]);
   await captureEvent(c, created ? "manual_session_created" : "manual_session_updated", {
     session_source: "manual",
   });
@@ -872,12 +878,12 @@ const app = new Hono<AppEnv>()
     const userId = c.get("userId");
     const includeClimbs = c.req.query("include") === "climbs";
     const [rows, tagsBySession, notes, hangRows, hangGrips, activityRows] = await Promise.all([
-      repo.listSessions(c.env.DB, userId, 200, includeClimbs),
+      repo.listSessions(c.env.DB, userId, includeClimbs),
       repo.tagsBySession(c.env.DB, userId),
       includeClimbs ? repo.listClimbNotes(c.env.DB, userId) : [],
-      repo.listHangSessions(c.env.DB, userId, 200),
+      repo.listHangSessions(c.env.DB, userId),
       repo.listHangGrips(c.env.DB, userId),
-      repo.listActivities(c.env.DB, userId, {}, 200),
+      repo.listActivities(c.env.DB, userId, {}),
     ]);
     const notesBySession = new Map<string, repo.ClimbNoteRow[]>();
     for (const note of notes) {
@@ -951,7 +957,7 @@ const app = new Hono<AppEnv>()
     const userId = c.get("userId");
     const db = c.env.DB;
     const [rows, known, links, viewer] = await Promise.all([
-      repo.listSessions(db, userId, 5000, true),
+      repo.listSessions(db, userId, true),
       repo.listUserClimbs(db, userId),
       repo.listSessionClimbLinks(db, userId),
       repo.getViewer(db, userId),
@@ -1031,7 +1037,7 @@ const app = new Hono<AppEnv>()
       if (nameKey === "") return c.json({ error: "invalid request body" }, 400);
       const into = records.find((r) => r.name_key === nameKey && r.id !== climb.id) ?? null;
       target = into?.id ?? climb.id;
-      const rows = await repo.listSessions(db, userId, 5000, true);
+      const rows = await repo.listSessions(db, userId, true);
       await repo.renameUserClimb(db, userId, {
         climb: { ...climb, working: working ?? climb.working },
         name,
@@ -1049,7 +1055,7 @@ const app = new Hono<AppEnv>()
     }
     if (grade !== undefined) {
       const [rows, now] = await Promise.all([
-        repo.listSessions(db, userId, 5000, true),
+        repo.listSessions(db, userId, true),
         repo.listUserClimbs(db, userId),
       ]);
       const regraded = regradedSessions(rows, now, target, grade);
@@ -1817,10 +1823,12 @@ const app = new Hono<AppEnv>()
   .post("/v1/sessions", zValidator("json", newManualSessionBody, invalidBody), async (c) => {
     const { fingerprint = `manual-${crypto.randomUUID()}`, ...form } = c.req.valid("json");
     const userId = c.get("userId");
-    await repo.ensureUser(c.env.DB, userId);
-    const invalid = await invalidLinks(c.env.DB, userId, form);
+    const [, invalid, existing] = await Promise.all([
+      repo.ensureUser(c.env.DB, userId),
+      invalidLinks(c.env.DB, userId, form),
+      repo.getSession(c.env.DB, userId, fingerprint),
+    ]);
     if (invalid !== null) return c.json({ error: invalid }, 400);
-    const existing = await repo.getSession(c.env.DB, userId, fingerprint);
     if (existing === null) return c.json(await saveManualSession(c, fingerprint, form, true), 201);
     return c.json(await saveManualSession(c, fingerprint, form, false));
   })
@@ -1872,7 +1880,7 @@ const app = new Hono<AppEnv>()
   .get("/v1/export.csv", async (c) => {
     const userId = c.get("userId");
     const [sessions, tagsBySession, climbNotes, gyms, entries, notes, records] = await Promise.all([
-      repo.listSessions(c.env.DB, userId, 5000, true),
+      repo.listSessions(c.env.DB, userId, true),
       repo.tagsBySession(c.env.DB, userId),
       repo.listClimbNotes(c.env.DB, userId),
       repo.listGyms(c.env.DB, userId),
@@ -1907,12 +1915,14 @@ const app = new Hono<AppEnv>()
       const form = c.req.valid("json");
       const userId = c.get("userId");
       const fingerprint = c.req.param("fingerprint");
-      const existing = await repo.getSession(c.env.DB, userId, fingerprint);
+      const [existing, invalid] = await Promise.all([
+        repo.getSession(c.env.DB, userId, fingerprint),
+        invalidLinks(c.env.DB, userId, form),
+      ]);
       if (existing === null) return c.json({ error: "not found" }, 404);
       if (existing.source !== "manual") {
         return c.json({ error: "only manually logged sessions can be edited" }, 409);
       }
-      const invalid = await invalidLinks(c.env.DB, userId, form);
       if (invalid !== null) return c.json({ error: invalid }, 400);
       return c.json(await saveManualSession(c, fingerprint, form, false));
     }

@@ -1348,18 +1348,13 @@ export async function setTrainingPosting(
 export async function listSessions(
   db: D1Database,
   userId: string,
-  limit: number,
   includeClimbs = false
 ): Promise<Array<SessionRow & { climbs_json?: string | null }>> {
   const d = drizzle(db);
   const query = includeClimbs
     ? d.select({ ...sessionListColumns, climbs_json: sessions.climbs_json }).from(sessions)
     : d.select(sessionListColumns).from(sessions);
-  return query
-    .where(eq(sessions.user_id, userId))
-    .orderBy(desc(sessions.start_at))
-    .limit(limit)
-    .all();
+  return query.where(eq(sessions.user_id, userId)).orderBy(desc(sessions.start_at)).all();
 }
 
 export async function getSession(
@@ -2716,17 +2711,12 @@ export async function getHangSession(
   return row ?? null;
 }
 
-export async function listHangSessions(
-  db: D1Database,
-  userId: string,
-  limit: number
-): Promise<HangSessionRow[]> {
+export async function listHangSessions(db: D1Database, userId: string): Promise<HangSessionRow[]> {
   return drizzle(db)
     .select()
     .from(hangSessions)
     .where(eq(hangSessions.user_id, userId))
     .orderBy(desc(hangSessions.date), desc(hangSessions.created_at))
-    .limit(limit)
     .all();
 }
 
@@ -2852,8 +2842,7 @@ export type ActivityRow = typeof activities.$inferSelect;
 export async function listActivities(
   db: D1Database,
   userId: string,
-  range: { from?: string; to?: string },
-  limit: number
+  range: { from?: string; to?: string }
 ): Promise<ActivityRow[]> {
   return drizzle(db)
     .select()
@@ -2866,7 +2855,6 @@ export async function listActivities(
       )
     )
     .orderBy(desc(activities.date), desc(activities.start_time), desc(activities.created_at))
-    .limit(limit)
     .all();
 }
 
