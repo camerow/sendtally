@@ -4,7 +4,6 @@ export const logSession = {
   "logSession.hintRedpoint": "Sent after working it",
   "logSession.hintFlash": "First go, with beta",
   "logSession.hintOnsight": "First go, no beta",
-  "logSession.hintAttempt": "Not sent yet",
   "logSession.styleRedpoint": "Redpoint",
   "logSession.styleFlash": "Flash",
   "logSession.styleOnsight": "Onsight",
