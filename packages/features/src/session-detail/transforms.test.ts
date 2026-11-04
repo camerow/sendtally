@@ -107,6 +107,27 @@ describe("climbVMs", () => {
     expect(climbVMs(climbs).map((c) => c.area)).toEqual([null, "Buttermilks", null, null]);
   });
 
+  it("calls an unsent climb a project only when it is one, and counts its tries otherwise", () => {
+    const vms = climbVMs(detail.climbs, new Set(), new Set(["mind meld"]));
+    expect(vms.map((c) => [c.pill, c.resultLabel])).toEqual([
+      ["flash", "Flash"],
+      ["sent", "Sent"],
+      ["project", "Project"],
+      ["flash", "Flash"],
+    ]);
+    const tried = climbVMs(detail.climbs);
+    expect([tried[2]?.pill, tried[2]?.resultLabel]).toEqual(["tries", "4 tries"]);
+  });
+
+  it("reads the Top tile as a plain dash when nothing was sent", () => {
+    const unsent = {
+      ...detail,
+      climbs: detail.climbs.map((c) => ({ ...c, kind: "attempt" as const })),
+    };
+    const top = sessionDetailVM(unsent).stats.find((s) => s.label === "Top");
+    expect(top).toEqual({ label: "Top", value: "-", accent: false });
+  });
+
   it("lists every area, and names a climb's area on a two-area day or indoors", () => {
     const at = (id: string, name: string) => ({ id, name, slug: id });
     const two = [at("a1", "Stanage Popular"), at("a2", "Stanage Plantation")];

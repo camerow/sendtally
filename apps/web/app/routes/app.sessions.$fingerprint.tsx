@@ -43,26 +43,16 @@ const monoLabel: React.CSSProperties = {
   color: "var(--text-label-accent)",
 };
 
-const RESULT_BADGES: Record<ClimbVM["result"], { bg: string; border: string; color: string }> = {
-  onsight: {
-    bg: "var(--bs-petal-ink)",
-    border: "var(--bs-petal-ink)",
-    color: "var(--bs-white)",
-  },
-  flash: {
-    bg: "var(--bs-gold)",
-    border: "var(--bs-gold)",
-    color: "var(--bs-gunmetal)",
-  },
-  sent: {
+// The log's pills, so a climb reads the same here as in the app.
+const RESULT_BADGES: Record<ClimbVM["pill"], { bg: string; border: string; color: string }> = {
+  flash: { bg: "var(--bs-gold)", border: "var(--bs-gold)", color: "var(--bs-gunmetal)" },
+  onsight: { bg: "rgba(21,127,82,0.14)", border: "transparent", color: "var(--bs-fern)" },
+  sent: { bg: "rgba(64,63,76,0.08)", border: "transparent", color: "var(--bs-gunmetal)" },
+  project: { bg: "var(--bs-gunmetal)", border: "var(--bs-gunmetal)", color: "var(--bs-gold)" },
+  tries: {
     bg: "transparent",
-    border: "rgba(64,63,76,0.25)",
-    color: "rgba(64,63,76,0.72)",
-  },
-  project: {
-    bg: "transparent",
-    border: "rgba(64,63,76,0.15)",
-    color: "rgba(64,63,76,0.45)",
+    border: "rgba(64,63,76,0.22)",
+    color: "var(--text-on-white-secondary)",
   },
 };
 
@@ -414,7 +404,7 @@ export default function SessionDetailRoute(): React.ReactElement {
           </div>
           <div style={{ display: "flex", flexDirection: "column" }}>
             {climbs.map((c) => {
-              const badge = RESULT_BADGES[c.result]!;
+              const badge = RESULT_BADGES[c.pill];
               const endurance = c.endurance !== undefined;
               return (
                 <div

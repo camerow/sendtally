@@ -1,5 +1,6 @@
 import type { Endurance } from "@sendtally/core";
 import type { CircuitColour } from "@sendtally/api-client";
+import type { ClimbPillKind } from "../climbs/log";
 import type { PyramidRow } from "../climbs/pyramid";
 import { t } from "../i18n";
 
@@ -16,6 +17,8 @@ export type ClimbVM = {
   angleLabel: string | null;
   attempts: number;
   result: ClimbResult;
+  /** How its result pill reads, as in the log: an unsent climb is a project only when it is one. */
+  pill: ClimbPillKind;
   /** A send reads in its own discipline's words: boulders are SENT, routes REDPOINT. */
   resultLabel: string;
   /** What the climber wrote about this climb that session. Named climbs only. */
