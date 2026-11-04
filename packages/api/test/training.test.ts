@@ -60,6 +60,7 @@ const membershipBody = {
   blockId: "b1",
   weekdays: [4, 1],
   start: "2026-11-02",
+  position: 0,
 };
 
 async function call(
@@ -452,9 +453,29 @@ describe("blocks and memberships", () => {
     }
   });
 
+  it("reads a block's workouts in their order, kept when a body leaves it out", async () => {
+    const userId = "user_plan_order";
+    await call(userId, "PUT", "/v1/blocks/b1", blockBody);
+    await call(userId, "PUT", "/v1/memberships/m1", { ...membershipBody, position: 1 });
+    await call(userId, "PUT", "/v1/memberships/m2", membershipBody);
+    const { position: _, ...older } = membershipBody;
+    await call(userId, "PUT", "/v1/memberships/m1", older);
+    const { memberships } = (await json(await call(userId, "GET", "/v1/plan"))) as Plan;
+    expect(memberships.map((m) => [m.id, m.position])).toEqual([
+      ["m2", 0],
+      ["m1", 1],
+    ]);
+  });
+
   it("keeps a one-off as a membership with no weekdays", async () => {
     const userId = "user_plan_once";
-    const once = { workoutId: "rep73", blockId: null, weekdays: [], start: "2026-11-05" };
+    const once = {
+      workoutId: "rep73",
+      blockId: null,
+      weekdays: [],
+      start: "2026-11-05",
+      position: 0,
+    };
     const res = await call(userId, "PUT", "/v1/memberships/m1", once);
     expect(await json(res)).toEqual({ membership: { id: "m1", ...once } });
   });

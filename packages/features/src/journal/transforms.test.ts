@@ -236,7 +236,14 @@ describe("blocks in the log", () => {
     plan: {
       blocks: [block],
       memberships: [
-        { id: "m1", workoutId: "w1", blockId: "b1", weekdays: [0], start: block.start },
+        {
+          id: "m1",
+          workoutId: "w1",
+          blockId: "b1",
+          weekdays: [0],
+          start: block.start,
+          position: 0,
+        },
       ],
     },
     finished: [recap],

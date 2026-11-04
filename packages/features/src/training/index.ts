@@ -12,7 +12,7 @@ export {
   type TrainingDay,
   type TrainingLog,
 } from "./days";
-export { blockGroups, blockMembers, type BlockGroups } from "./blocks";
+export { blockGroups, blockMembers, nextPosition, type BlockGroups } from "./blocks";
 export {
   blockDone,
   blockRecap,
@@ -82,4 +82,11 @@ export {
   type DaySchedule,
   type DayToggle,
 } from "./weekDays";
-export { applyDraft, draftChange, draftSchedule, emptyDraft, type PlanDraft } from "./planDraft";
+export {
+  applyDraft,
+  draftChange,
+  draftMove,
+  draftSchedule,
+  emptyDraft,
+  type PlanDraft,
+} from "./planDraft";

@@ -52,8 +52,22 @@ const squat: WorkoutRecord = {
 const plan: Plan = {
   blocks: [{ id: "b1", name: "Winter base", start: "2026-10-05", weeks: 4, focus: null }],
   memberships: [
-    { id: "m1", workoutId: "squat", blockId: "b1", weekdays: [1, 4], start: "2026-10-05" },
-    { id: "m2", workoutId: "squat", blockId: null, weekdays: [2], start: "2026-09-01" },
+    {
+      id: "m1",
+      workoutId: "squat",
+      blockId: "b1",
+      weekdays: [1, 4],
+      start: "2026-10-05",
+      position: 0,
+    },
+    {
+      id: "m2",
+      workoutId: "squat",
+      blockId: null,
+      weekdays: [2],
+      start: "2026-09-01",
+      position: 0,
+    },
   ],
   weekChanges: [{ membershipId: "m1", week: 3, dose: 0, itemId: "0", change: { weightKg: 105 } }],
   planChanges: [],
@@ -108,6 +122,43 @@ describe("blocks", () => {
     expect(screen.getByText("Edit")).toBeTruthy();
   });
 
+  it("orders a block's workouts in Edit, saved with the rest and dropped on Cancel", async () => {
+    const hang = { ...squat, id: "hang", kind: "hangboard" as const, name: "Max hangs" };
+    const two: Plan = {
+      ...plan,
+      memberships: [
+        ...plan.memberships,
+        {
+          id: "m3",
+          workoutId: "hang",
+          blockId: "b1",
+          weekdays: [3],
+          start: "2026-10-05",
+          position: 1,
+        },
+      ],
+    };
+    await renderWithHang(<BlockScreen id="b1" />, hangData(), {
+      workouts: [squat, hang],
+      plan: two,
+    });
+    expect(screen.queryByText("Order")).toBeNull();
+    await fireEvent.press(screen.getByText("Edit"));
+    expect(screen.getByLabelText("Move Back squat up")).toBeDisabled();
+    expect(screen.getByLabelText("Move Max hangs down")).toBeDisabled();
+    await fireEvent.press(screen.getByLabelText("Move Max hangs up"));
+    expect(screen.getByLabelText("Move Max hangs up")).toBeDisabled();
+    await fireEvent.press(screen.getByText("Cancel"));
+    expect(mockPlan.saveDraft).not.toHaveBeenCalled();
+    await fireEvent.press(screen.getByText("Edit"));
+    expect(screen.getByLabelText("Move Back squat up")).toBeDisabled();
+    await fireEvent.press(screen.getByLabelText("Move Back squat down"));
+    await fireEvent.press(screen.getByText("Save"));
+    expect(mockPlan.saveDraft).toHaveBeenCalledWith(
+      expect.objectContaining({ order: ["m3", "m1"] })
+    );
+  });
+
   it("keeps a scheduled block's name when the field is emptied, and drops edits on Cancel", async () => {
     await renderWithHang(<BlockScreen id="b1" />, hangData(), { workouts: [squat], plan });
     await fireEvent.press(screen.getByText("Edit"));
@@ -152,7 +203,14 @@ describe("block overview", () => {
     ...plan,
     blocks: [{ id: "b1", name: "Winter base", start: "2026-09-21", weeks: 4, focus: null }],
     memberships: [
-      { id: "m1", workoutId: "squat", blockId: "b1", weekdays: [0, 1], start: "2026-09-21" },
+      {
+        id: "m1",
+        workoutId: "squat",
+        blockId: "b1",
+        weekdays: [0, 1],
+        start: "2026-09-21",
+        position: 0,
+      },
     ],
     weekChanges: [],
     planChanges: [],
@@ -227,7 +285,14 @@ describe("a day on a scheduled block", () => {
     ...plan,
     blocks: [{ id: "b1", name: "Winter base", start: "2026-09-21", weeks: 4, focus: null }],
     memberships: [
-      { id: "m1", workoutId: "squat", blockId: "b1", weekdays: [0, 1], start: "2026-09-21" },
+      {
+        id: "m1",
+        workoutId: "squat",
+        blockId: "b1",
+        weekdays: [0, 1],
+        start: "2026-09-21",
+        position: 0,
+      },
     ],
     weekChanges: [],
   };
@@ -330,7 +395,14 @@ describe("plan again", () => {
     ],
     memberships: [
       ...plan.memberships,
-      { id: "m3", workoutId: "squat", blockId: "b0", weekdays: [0], start: "2026-08-03" },
+      {
+        id: "m3",
+        workoutId: "squat",
+        blockId: "b0",
+        weekdays: [0],
+        start: "2026-08-03",
+        position: 0,
+      },
     ],
   };
 
@@ -393,7 +465,14 @@ describe("templates", () => {
     ],
     memberships: [
       ...plan.memberships,
-      { id: "m9", workoutId: "squat", blockId: "t1", weekdays: [0], start: "2026-09-01" },
+      {
+        id: "m9",
+        workoutId: "squat",
+        blockId: "t1",
+        weekdays: [0],
+        start: "2026-09-01",
+        position: 0,
+      },
     ],
   };
 
@@ -422,7 +501,14 @@ describe("templates", () => {
       ...withTemplate,
       memberships: [
         ...withTemplate.memberships,
-        { id: "m10", workoutId: "squat", blockId: "t1", weekdays: [], start: "2026-09-01" },
+        {
+          id: "m10",
+          workoutId: "squat",
+          blockId: "t1",
+          weekdays: [],
+          start: "2026-09-01",
+          position: 0,
+        },
       ],
     };
     await renderWithHang(<BlockScreen id="t1" />, hangData(), { workouts: [squat], plan: some });
@@ -481,6 +567,7 @@ describe("templates", () => {
         },
       ],
       weekChanges: [],
+      order: [],
     });
   });
 

@@ -50,7 +50,9 @@ const ran = (id: string, date: string, rpe: number | null): ActivityRecord => ({
 
 const planned: Plan = {
   blocks: [],
-  memberships: [{ id: "m1", workoutId: "legs", blockId: null, weekdays: [0], start: "2026-09-28" }],
+  memberships: [
+    { id: "m1", workoutId: "legs", blockId: null, weekdays: [0], start: "2026-09-28", position: 0 },
+  ],
   weekChanges: [],
   planChanges: [],
   membershipDays: [],

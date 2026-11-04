@@ -130,9 +130,30 @@ const workouts: Workout[] = [
 const plan: Plan = {
   blocks: [],
   memberships: [
-    { id: "h1", workoutId: "rep73", blockId: null, weekdays: [0, 3], start: "2026-09-28" },
-    { id: "p1", workoutId: "legs", blockId: null, weekdays: [1, 3], start: "2026-09-28" },
-    { id: "c1", workoutId: "limit", blockId: null, weekdays: [2], start: "2026-09-28" },
+    {
+      id: "h1",
+      workoutId: "rep73",
+      blockId: null,
+      weekdays: [0, 3],
+      start: "2026-09-28",
+      position: 0,
+    },
+    {
+      id: "p1",
+      workoutId: "legs",
+      blockId: null,
+      weekdays: [1, 3],
+      start: "2026-09-28",
+      position: 0,
+    },
+    {
+      id: "c1",
+      workoutId: "limit",
+      blockId: null,
+      weekdays: [2],
+      start: "2026-09-28",
+      position: 0,
+    },
   ],
   weekChanges: [],
   planChanges: [],

@@ -28,6 +28,7 @@ export type BlockOverviewProps = {
   onSchedules: (schedules: readonly DaySchedule[]) => void;
   onPickWeek: (week: number) => void;
   onEditDays?: () => void;
+  onMove: (membershipId: string, by: -1 | 1) => void;
 };
 
 /** A block before it ends: how the picked week and the block are going, and that week. */

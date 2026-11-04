@@ -39,22 +39,29 @@ describe("scheduledMemberships", () => {
 
   it("saves one weekly plan, from the block's start inside a block", () => {
     const weekly = { ...draft, weekdays: [3, 0] as (0 | 3)[] };
-    expect(scheduledMemberships(weekly, "w1", null, ids())).toEqual([
-      { id: "m1", workoutId: "w1", blockId: null, weekdays: [0, 3], start: TODAY },
+    expect(scheduledMemberships(weekly, "w1", null, ids(), 0)).toEqual([
+      { id: "m1", workoutId: "w1", blockId: null, weekdays: [0, 3], start: TODAY, position: 0 },
     ]);
-    expect(scheduledMemberships(weekly, "w1", block, ids())).toEqual([
-      { id: "m1", workoutId: "w1", blockId: "b1", weekdays: [0, 3], start: "2026-11-02" },
+    expect(scheduledMemberships(weekly, "w1", block, ids(), 0)).toEqual([
+      {
+        id: "m1",
+        workoutId: "w1",
+        blockId: "b1",
+        weekdays: [0, 3],
+        start: "2026-11-02",
+        position: 0,
+      },
     ]);
   });
 
   it("saves a one-off per date, leaving out dates the block does not hold", () => {
     const dates = { ...draft, mode: "dates" as const, dates: ["2026-11-10", "2026-10-28"] };
-    expect(scheduledMemberships(dates, "w1", null, ids())).toEqual([
-      { id: "m1", workoutId: "w1", blockId: null, weekdays: [], start: "2026-10-28" },
-      { id: "m2", workoutId: "w1", blockId: null, weekdays: [], start: "2026-11-10" },
+    expect(scheduledMemberships(dates, "w1", null, ids(), 0)).toEqual([
+      { id: "m1", workoutId: "w1", blockId: null, weekdays: [], start: "2026-10-28", position: 0 },
+      { id: "m2", workoutId: "w1", blockId: null, weekdays: [], start: "2026-11-10", position: 0 },
     ]);
-    expect(scheduledMemberships(dates, "w1", block, ids())).toEqual([
-      { id: "m1", workoutId: "w1", blockId: "b1", weekdays: [], start: "2026-11-02" },
+    expect(scheduledMemberships(dates, "w1", block, ids(), 0)).toEqual([
+      { id: "m1", workoutId: "w1", blockId: "b1", weekdays: [], start: "2026-11-02", position: 0 },
     ]);
     const days = blockDates("m1", block, ["2026-11-10", "2026-10-28", "2026-11-12"]);
     expect([1, 2, 3].map((w) => daysInWeek(days, w))).toEqual([[], [1, 3], []]);

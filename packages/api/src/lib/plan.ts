@@ -155,6 +155,8 @@ export const membershipBody = z.object({
     .array(z.literal([0, 1, 2, 3, 4, 5, 6]))
     .refine((days) => new Set(days).size === days.length, "repeated weekday"),
   start: calendarDate,
+  // Where it sits among its block's workouts; older builds send none and keep the stored one.
+  position: z.number().int().min(0).optional(),
 });
 
 /** An empty change puts the item back as written for that week. */
@@ -273,6 +275,7 @@ export const membershipOf = (row: MembershipRow): Membership => ({
   blockId: row.block_id,
   weekdays: JSON.parse(row.weekdays_json) as Membership["weekdays"],
   start: row.start,
+  position: row.position,
 });
 
 /** A week change as the API returns it: older app builds read the item by its place. */

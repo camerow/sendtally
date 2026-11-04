@@ -55,7 +55,8 @@ export function scheduledMemberships(
   d: ScheduleDraft,
   workoutId: string,
   block: Block | null,
-  newId: () => string
+  newId: () => string,
+  position: number
 ): Membership[] {
   const blockId = block?.id ?? null;
   if (d.mode === "repeat")
@@ -66,16 +67,17 @@ export function scheduledMemberships(
         blockId,
         weekdays: [...d.weekdays].sort(ascending),
         start: block?.start ?? d.start,
+        position,
       },
     ];
   if (block !== null && block.start !== null)
     return scheduleReady(d, block)
-      ? [{ id: newId(), workoutId, blockId, weekdays: [], start: block.start }]
+      ? [{ id: newId(), workoutId, blockId, weekdays: [], start: block.start, position }]
       : [];
   return d.dates
     .filter((date) => inside(block, date))
     .sort(ascending)
-    .map((date) => ({ id: newId(), workoutId, blockId, weekdays: [], start: date }));
+    .map((date) => ({ id: newId(), workoutId, blockId, weekdays: [], start: date, position }));
 }
 
 /** A block plan's days on some dates: each date's weekday in its week alone. */

@@ -1,6 +1,11 @@
 import { randomUUID } from "expo-crypto";
 import { isDated, type Membership } from "@sendtally/core/hang";
-import { blockDates, trainingDay, useTrainingLog } from "@sendtally/features/training";
+import {
+  blockDates,
+  nextPosition,
+  trainingDay,
+  useTrainingLog,
+} from "@sendtally/features/training";
 import { useApi } from "../../../lib/api";
 import { useHangData } from "../data/HangDataContext";
 import { usePlanActions } from "../plan/usePlanActions";
@@ -37,6 +42,7 @@ export function useAddTo(flow: AddFlow): AddTo {
           blockId: null,
           weekdays: [],
           start: day ?? today,
+          position: 0,
         });
       else {
         void actions.saveMembership({
@@ -45,6 +51,7 @@ export function useAddTo(flow: AddFlow): AddTo {
           blockId: block.id,
           weekdays: [],
           start: block.start ?? today,
+          position: nextPosition(log.plan, block.id),
         });
         // A day in a scheduled block: that day's weekday in its week.
         if (day !== null && isDated(block)) void actions.saveSchedule(blockDates(id, block, [day]));

@@ -144,6 +144,8 @@ export type Membership = {
   blockId: string | null;
   weekdays: Weekday[];
   start: CalendarDate;
+  /** Where it sits among its block's workouts, first at 0. */
+  position: number;
 };
 
 /** What one block week changes about one dose of one item, counted from the workout as written. */
