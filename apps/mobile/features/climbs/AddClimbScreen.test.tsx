@@ -1,11 +1,16 @@
 import { describe, expect, it, jest } from "@jest/globals";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { act, fireEvent, render, screen } from "@testing-library/react-native";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react-native";
 import { router } from "expo-router";
 import React from "react";
 import { Alert } from "react-native";
 import type { ClimbChange, ClimbSummary } from "@sendtally/api-client";
+import { queries } from "@sendtally/features/query";
+import type { SendtallyApi } from "@sendtally/api-client";
 import { AddClimbScreen } from "./AddClimbScreen";
+
+/** Query keys do not depend on the client, so any stands in for building one. */
+const mockApiForKeys = {} as SendtallyApi;
 
 const arete: ClimbSummary = {
   id: "c1",
@@ -27,6 +32,7 @@ const arete: ClimbSummary = {
 
 const mockUpdateClimb = jest.fn(async (_id: string, _change: ClimbChange) => ({ id: "c1" }));
 const mockLogSession = jest.fn();
+let mockServerClimb: ClimbSummary = arete;
 const mockDeleteClimb = jest.fn(async (_id: string) => ({ deleted: true }));
 let mockParams: { climbId?: string; edit?: string } = { climbId: "c1", edit: "1" };
 
@@ -37,7 +43,7 @@ jest.mock("expo-router", () => ({
 jest.mock("../../lib/api", () => {
   const api = new Proxy(
     {
-      climbs: async () => ({ climbs: [arete] }),
+      climbs: async () => ({ climbs: [mockServerClimb] }),
       sessionsWithClimbs: async () => ({ sessions: [], hangSessions: [], activities: [] }),
       updateClimb: (id: string, change: ClimbChange) => mockUpdateClimb(id, change),
       logSession: mockLogSession,
@@ -56,8 +62,9 @@ jest.mock("@sendtally/features/settings", () => ({
   useGradeScalePrefs: () => ({ scales: { boulder: "v", route: "yds" }, ready: true }),
 }));
 
-const renderScreen = async (): Promise<void> => {
+const renderScreen = async (seed?: (client: QueryClient) => void): Promise<void> => {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  seed?.(client);
   await render(
     <QueryClientProvider client={client}>
       <AddClimbScreen />
@@ -81,6 +88,28 @@ describe("editing a climb", () => {
     expect(screen.getByRole("switch", { name: "Project" }).props.accessibilityState).toMatchObject({
       checked: false,
     });
+  });
+
+  it("never saves a stale project flag back over the climb's own", async () => {
+    mockServerClimb = { ...arete, project: true };
+    mockParams = { climbId: "c1", edit: "1" };
+    await renderScreen((client) => {
+      client.setQueryData(queries.climbs(mockApiForKeys).queryKey, [arete], { updatedAt: 0 });
+      client.setQueryData(
+        queries.sessionsWithClimbs(mockApiForKeys).queryKey,
+        { sessions: [], hangSessions: [], activities: [] },
+        { updatedAt: 0 }
+      );
+    });
+    await screen.findByDisplayValue("The Arete");
+    await waitFor(() =>
+      expect(
+        screen.getByRole("switch", { name: "Project" }).props.accessibilityState
+      ).toMatchObject({ checked: true })
+    );
+    await fireEvent.press(screen.getByText("Save"));
+    expect(mockUpdateClimb.mock.calls.at(-1)?.[1]).not.toHaveProperty("working");
+    mockServerClimb = arete;
   });
 
   it("marks a sent climb as a project with the edit", async () => {

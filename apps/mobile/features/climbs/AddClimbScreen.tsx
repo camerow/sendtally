@@ -50,7 +50,7 @@ import { Switch } from "../../components/Switch";
 import { TextInput } from "../../components/TextInput";
 import { useApi } from "../../lib/api";
 import { press } from "../../lib/press";
-import { dangerOutlineButton, dangerOutlineButtonLabel } from "../../lib/styles";
+import { dangerButton, dangerButtonLabel } from "../../lib/styles";
 import { ResultFields } from "../log-session/ResultFields";
 import { SuggestField } from "./SuggestField";
 
@@ -98,7 +98,10 @@ export function AddClimbScreen(): React.ReactElement {
     ...newClimb("climb-1", scales.boulder),
     grade: "",
   }));
-  const [project, setProject] = React.useState(true);
+  // Untouched (null), Edit shows the climb's own flag as it is now, never one read from a stale list.
+  const [touched, setProject] = React.useState<boolean | null>(null);
+  const project =
+    touched ?? (editing ? (mine.find((c) => c.id === climbId)?.project ?? false) : true);
   const [date, setDate] = React.useState(localDate(new Date()));
   const [areaText, setAreaText] = React.useState("");
   const [area, setArea] = React.useState<Area | null>(null);
@@ -162,7 +165,6 @@ export function AddClimbScreen(): React.ReactElement {
     setPreset(true);
     const known = mine.find((c) => c.id === climbId);
     if (known !== undefined) pickMine(known);
-    if (known !== undefined && editing) setProject(known.project);
   }
 
   const existing = mine.find((c) => c.id === climbId);
@@ -193,7 +195,7 @@ export function AddClimbScreen(): React.ReactElement {
           areaId: place?.id ?? null,
           areaClimbId: climb.climbId ?? null,
           ...(grade === undefined || sameGrade(grade, original?.grade) ? {} : { grade }),
-          ...(original === undefined || original.project === project ? {} : { working: project }),
+          ...(touched === null || original?.project === touched ? {} : { working: touched }),
         };
         return api.updateClimb(id, change);
       })
@@ -419,9 +421,9 @@ export function AddClimbScreen(): React.ReactElement {
               onPress={() => confirmDelete(climbId)}
               disabled={saving}
               accessibilityRole="button"
-              style={press({ ...dangerOutlineButton, marginTop: 8 })}
+              style={press({ ...dangerButton, marginTop: 8 })}
             >
-              <Text style={dangerOutlineButtonLabel}>{t("climbs.deleteClimb")}</Text>
+              <Text style={dangerButtonLabel}>{t("climbs.deleteClimb")}</Text>
             </Pressable>
           )}
         </ScrollView>
