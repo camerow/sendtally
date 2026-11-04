@@ -2,6 +2,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import React from "react";
 import {
   Alert,
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -104,6 +105,14 @@ export function AddClimbScreen(): React.ReactElement {
   const [area, setArea] = React.useState<Area | null>(null);
   const [saving, setSaving] = React.useState(false);
   const [failed, setFailed] = React.useState(false);
+  const scroll = React.useRef<ScrollView>(null);
+  const revealNotes = (): void => {
+    if (Keyboard.isVisible()) return scroll.current?.scrollToEnd();
+    const shown = Keyboard.addListener("keyboardDidShow", () => {
+      shown.remove();
+      scroll.current?.scrollToEnd();
+    });
+  };
 
   const areaClimbs = useAreaClimbSearch(api, climb.name, area?.id ?? null, true).found;
   const areas = useAreaSearch(api, area === null ? areaText : "", null, {
@@ -264,6 +273,7 @@ export function AddClimbScreen(): React.ReactElement {
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
         <ScrollView
+          ref={scroll}
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={{ gap: 16, padding: 18, paddingTop: 12, paddingBottom: 32 }}
         >
@@ -383,6 +393,7 @@ export function AddClimbScreen(): React.ReactElement {
                 <TextInput
                   value={climb.note}
                   onChangeText={(note) => setClimb({ ...climb, note })}
+                  onFocus={revealNotes}
                   multiline
                   placeholder={t("climbs.notesPlaceholder")}
                   placeholderTextColor={colors.textFaint}
