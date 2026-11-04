@@ -1,9 +1,8 @@
 import React from "react";
-import { Pressable, View } from "react-native";
+import { View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
-import { Icon } from "../../../components/Icon";
-import { press } from "../../../lib/press";
+import { AddButton } from "../../../components/AddButton";
 import { Button } from "../components/Button";
 import { Label } from "../components/Label";
 import { HistoryRow } from "./HistoryRow";
@@ -39,17 +38,7 @@ export function HistoryList({
               }),
             })}
         </Label>
-        {onAdd && (
-          <Pressable
-            onPress={onAdd.onPress}
-            accessibilityRole="button"
-            accessibilityLabel={onAdd.label}
-            hitSlop={8}
-            style={press({ width: 32, height: 32, alignItems: "center", justifyContent: "center" })}
-          >
-            <Icon name="plus" color={colors.gunmetal} size={18} strokeWidth={2.2} />
-          </Pressable>
-        )}
+        {onAdd && <AddButton label={onAdd.label} onPress={onAdd.onPress} />}
       </View>
       {shown.map((item) => (
         <HistoryRow key={item.id} item={item} onPress={() => onOpen(item.id)} />

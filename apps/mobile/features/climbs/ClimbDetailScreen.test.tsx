@@ -85,7 +85,13 @@ describe("Climb detail", () => {
     });
   });
 
-  it("adds a dated note to the climb from the + beside Notes", async () => {
+  it("heads its sessions and notes as History, and adds a note from the + beside it", async () => {
+    await render(<ClimbDetailScreen id="c1" />);
+    expect(screen.getByText("History · 0 sessions")).toBeTruthy();
+    expect(screen.queryByText("Notes")).toBeNull();
+  });
+
+  it("adds a dated note to the climb from the + beside History", async () => {
     await render(<ClimbDetailScreen id="c1" />);
     expect(screen.queryByText("Add a note")).toBeNull();
     expect(screen.queryByLabelText("More")).toBeNull();

@@ -3,6 +3,7 @@ import { Pressable, Text, View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
 import type { LibraryWorkout } from "@sendtally/features/workouts";
+import { AddButton } from "../../../components/AddButton";
 import { Icon } from "../../../components/Icon";
 import { press } from "../../../lib/press";
 import { CategoryRow } from "../components/CategoryRow";
@@ -61,22 +62,7 @@ export function AddWorkoutRow({
           </Text>
         </Pressable>
       ) : (
-        <Pressable
-          onPress={onToggle}
-          accessibilityRole="button"
-          accessibilityLabel={t("plan.addNamed", { name: workout.name })}
-          hitSlop={6}
-          style={press({
-            width: 36,
-            height: 36,
-            alignItems: "center",
-            justifyContent: "center",
-            borderRadius: 18,
-            backgroundColor: colors.gunmetal,
-          })}
-        >
-          <Icon name="plus" color={colors.white} size={18} strokeWidth={2.5} />
-        </Pressable>
+        <AddButton label={t("plan.addNamed", { name: workout.name })} onPress={onToggle} />
       )}
     </View>
   );

@@ -1,11 +1,10 @@
 import { router, useLocalSearchParams } from "expo-router";
 import React from "react";
-import { Linking, ScrollView, View } from "react-native";
-import { CLIMB_SORTS, climbSortLabel, useSessionDetail } from "@sendtally/features/session-detail";
+import { Linking, View } from "react-native";
+import { useSessionDetail } from "@sendtally/features/session-detail";
 import { kindLabel } from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
 import { colors } from "@sendtally/design/tokens";
-import { Chip } from "../../components/Chip";
 import { ClimbingHero } from "../../features/climbs/ClimbingHero";
 import { ClimbLogRow } from "../../features/climbs/ClimbLogRow";
 import { EnduranceLaps } from "../../features/sessions/EnduranceLaps";
@@ -30,7 +29,7 @@ export default function SessionDetailScreen(): React.ReactElement {
   const api = useApi();
   const sessions = useSessions();
   const feature = useSessionDetail(api, fingerprint ?? "");
-  const { state, sort, setSort } = feature;
+  const { state } = feature;
   const { run, refresh } = feature.post;
   const connected = React.useCallback(() => {
     void refresh();
@@ -84,15 +83,7 @@ export default function SessionDetailScreen(): React.ReactElement {
       {strava !== null && <StravaStatusRow state={strava} />}
 
       {vm.pyramid.length > 0 && (
-        <View
-          style={{
-            gap: 8,
-            padding: 14,
-            borderRadius: 16,
-            borderWidth: 1,
-            borderColor: colors.lineOnLight,
-          }}
-        >
+        <View style={{ gap: 8 }}>
           <View
             style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}
           >
@@ -114,20 +105,6 @@ export default function SessionDetailScreen(): React.ReactElement {
 
       <View style={{ gap: 12 }}>
         <Label color={colors.gunmetal}>{`${t("common.climbs")} · ${vm.filterCounts.all}`}</Label>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ gap: 8 }}
-        >
-          {CLIMB_SORTS.map((s) => (
-            <Chip
-              key={s}
-              label={climbSortLabel(s)}
-              active={sort === s}
-              onPress={() => setSort(s)}
-            />
-          ))}
-        </ScrollView>
 
         <View>
           {state.data.rows.map((row) => (

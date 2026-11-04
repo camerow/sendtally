@@ -1,11 +1,12 @@
 import { router } from "expo-router";
 import React from "react";
+import { AddButton } from "../../components/AddButton";
 import { Pressable, Text, View } from "react-native";
 import type { JournalEntry } from "@sendtally/api-client";
 import { formatDate, t } from "@sendtally/features/i18n";
 import { entryTitle } from "@sendtally/features/journal";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
-import { press, pressRow } from "../../lib/press";
+import { pressRow } from "../../lib/press";
 import { EntryKindChip } from "./EntryKindChip";
 
 const heading = {
@@ -38,17 +39,15 @@ export function SessionJournal({
     >
       <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
         <Text style={{ ...heading, color: colors.gunmetal }}>{t("common.notes")}</Text>
-        <Pressable
+        <AddButton
+          label={t("climbs.addNote")}
           onPress={() =>
             router.push({
               pathname: "/journal/new",
               params: { kind: "journal", date, session: fingerprint },
             })
           }
-          style={press({ minHeight: 32, justifyContent: "center" })}
-        >
-          <Text style={{ ...heading, color: colors.azureInk }}>{t("climbs.addNote")}</Text>
-        </Pressable>
+        />
       </View>
       {entries.length === 0 && (
         <Text style={{ fontFamily: fonts.sans, fontSize: 14, color: colors.textSecondary }}>

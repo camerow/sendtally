@@ -58,7 +58,6 @@ export function ClimbDetailScreen({ id }: { id: string }): React.ReactElement {
         ]}
       />
       <HistoryList
-        title={t("climbs.notes")}
         onAdd={{ label: t("climbs.addNote"), onPress: () => setNoting("new") }}
         items={[
           ...vm.sessions.map((s) => ({

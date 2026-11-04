@@ -164,6 +164,7 @@ describe("Climbing session detail", () => {
 
   it("lists its climbs as the log does, opening only a climb with a page", async () => {
     await render(<SessionDetailScreen />);
+    expect(screen.queryByText("Order climbed")).toBeNull();
     expect(screen.getByText("Stanage Popular · 4 tries")).toBeTruthy();
     expect(screen.getByText("Project")).toBeTruthy();
     expect(screen.getByText("3 laps · 2 clean")).toBeTruthy();
