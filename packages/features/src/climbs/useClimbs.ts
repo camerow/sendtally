@@ -36,8 +36,6 @@ export function useClimbs(api: SendtallyApi): ClimbsFeature {
 
 export type ClimbFeature = {
   state: QueryState<{ climb: ClimbSummary; vm: ClimbDetailVM }>;
-  /** Marks or unmarks it as a project; saved on the phone first. */
-  setWorking: (working: boolean) => void;
   /** Writes a note on the climb's page, a new one when it has no id yet; saved on the phone first. */
   saveNote: (note: Omit<ClimbNote, "id"> & { id?: string }) => void;
   deleteNote: (id: string) => void;
@@ -57,18 +55,6 @@ export function useClimb(api: SendtallyApi, idOrSlug: string, newId: () => strin
   }, [loaded, idOrSlug]);
   const id = state.status === "ready" ? state.data.climb.id : null;
 
-  const setWorking = React.useCallback(
-    (working: boolean): void => {
-      if (id === null) return;
-      local(
-        { key: `climb-working:${id}`, method: "updateClimb", args: [id, { working }] },
-        patch<ClimbSummary[]>(queries.climbs(api).queryKey, (list) =>
-          list.map((c) => (c.id === id ? { ...c, project: working } : c))
-        )
-      );
-    },
-    [api, id, local]
-  );
   const saveNote = React.useCallback(
     ({ id: noteId, ...rest }: Omit<ClimbNote, "id"> & { id?: string }): void => {
       if (id === null) throw new Error("climb not loaded");
@@ -102,5 +88,5 @@ export function useClimb(api: SendtallyApi, idOrSlug: string, newId: () => strin
     },
     [api, id, local]
   );
-  return { state, setWorking, saveNote, deleteNote, reload };
+  return { state, saveNote, deleteNote, reload };
 }

@@ -131,11 +131,40 @@ export function AddClimbScreen(): React.ReactElement {
     }
   };
 
+  const projectRow = (
+    <View style={row}>
+      <View style={{ flex: 1, gap: 2 }}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+          <Icon name="star" color={colors.gunmetal} size={16} strokeWidth={1.8} />
+          <Text style={{ fontFamily: fonts.sans, fontSize: 15, color: colors.gunmetal }}>
+            {t("common.project")}
+          </Text>
+        </View>
+        <Text
+          style={{
+            fontFamily: fonts.sans,
+            fontSize: 12.5,
+            color: colors.textSecondary,
+          }}
+        >
+          {t("climbs.projectHint")}
+        </Text>
+      </View>
+      <Switch
+        checked={project}
+        onChange={setProject}
+        disabled={false}
+        label={t("common.project")}
+      />
+    </View>
+  );
+
   const [preset, setPreset] = React.useState(false);
   if (!preset && state.status !== "loading") {
     setPreset(true);
     const known = mine.find((c) => c.id === climbId);
     if (known !== undefined) pickMine(known);
+    if (known !== undefined && editing) setProject(known.project);
   }
 
   const existing = mine.find((c) => c.id === climbId);
@@ -166,6 +195,7 @@ export function AddClimbScreen(): React.ReactElement {
           areaId: place?.id ?? null,
           areaClimbId: climb.climbId ?? null,
           ...(grade === undefined || sameGrade(grade, original?.grade) ? {} : { grade }),
+          ...(original === undefined || original.project === project ? {} : { working: project }),
         };
         return api.updateClimb(id, change);
       })
@@ -348,6 +378,7 @@ export function AddClimbScreen(): React.ReactElement {
                   />
                 </View>
               </View>
+              {editing && projectRow}
             </>
           )}
           {logging && dateRow}
@@ -358,35 +389,7 @@ export function AddClimbScreen(): React.ReactElement {
                 known={knownOf(mine, climb) ?? null}
                 onChange={setClimb}
               />
-              {!sent && !logging && (
-                <View style={row}>
-                  <View style={{ flex: 1, gap: 2 }}>
-                    <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-                      <Icon name="star" color={colors.gunmetal} size={16} strokeWidth={1.8} />
-                      <Text
-                        style={{ fontFamily: fonts.sans, fontSize: 15, color: colors.gunmetal }}
-                      >
-                        {t("common.project")}
-                      </Text>
-                    </View>
-                    <Text
-                      style={{
-                        fontFamily: fonts.sans,
-                        fontSize: 12.5,
-                        color: colors.textSecondary,
-                      }}
-                    >
-                      {t("climbs.projectHint")}
-                    </Text>
-                  </View>
-                  <Switch
-                    checked={project}
-                    onChange={setProject}
-                    disabled={false}
-                    label={t("common.project")}
-                  />
-                </View>
-              )}
+              {!sent && !logging && projectRow}
               {!logging && dateRow}
               <View style={{ gap: 8 }}>
                 <Text style={label}>{t("common.notes")}</Text>

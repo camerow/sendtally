@@ -8,6 +8,7 @@ import { ClimbDetailScreen } from "./ClimbDetailScreen";
 const mockSaveNote = jest.fn();
 const mockDeleteNote = jest.fn();
 
+let mockProject = false;
 jest.mock("expo-router", () => ({ router: { push: jest.fn(), replace: jest.fn() } }));
 jest.mock("expo-crypto", () => ({ randomUUID: () => "n-new" }));
 jest.mock("../../lib/api", () => ({ useApi: () => undefined }));
@@ -28,7 +29,7 @@ jest.mock("@sendtally/features/climbs", () => ({
           kicker: "Boulder",
           title: "The Arete, V5",
           meta: "The Depot · first tried 2 Sep",
-          project: false,
+          project: mockProject,
           days: "6",
           tries: "23",
           best: "Flash",
@@ -37,7 +38,6 @@ jest.mock("@sendtally/features/climbs", () => ({
         },
       },
     },
-    setWorking: jest.fn(),
     saveNote: mockSaveNote,
     deleteNote: mockDeleteNote,
   }),
@@ -54,10 +54,17 @@ describe("Climb detail", () => {
     }
   });
 
-  it("offers to mark a climb that is not a project, rather than reading as one", async () => {
+  it("reads Project as status only, set from Edit climb", async () => {
     await render(<ClimbDetailScreen id="c1" />);
-    expect(screen.getByRole("switch", { name: "Project" })).toBeTruthy();
-    expect(screen.getByText("Mark as project")).toBeTruthy();
+    expect(screen.queryByText("Project")).toBeNull();
+    expect(screen.queryByText("Mark as project")).toBeNull();
+
+    mockProject = true;
+    await render(<ClimbDetailScreen id="c1" />);
+    expect(screen.getByText("Project")).toBeTruthy();
+    expect(screen.queryByRole("switch")).toBeNull();
+    expect(screen.queryByRole("button", { name: "Project" })).toBeNull();
+    mockProject = false;
   });
 
   it("logs a session on it from the footer", async () => {

@@ -1,15 +1,11 @@
 import { router } from "expo-router";
 import React from "react";
-import { Pressable, Text } from "react-native";
 import { randomUUID } from "expo-crypto";
 import type { ClimbNote } from "@sendtally/api-client";
 import { useClimb } from "@sendtally/features/climbs";
 import { t } from "@sendtally/features/i18n";
-import { colors, fonts } from "@sendtally/design/tokens";
-import { Icon } from "../../components/Icon";
 import { ScreenFrame } from "../../components/ScreenFrame";
 import { useApi } from "../../lib/api";
-import { press } from "../../lib/press";
 import { Button } from "../training/components/Button";
 import { DetailActions } from "../training/components/DetailActions";
 import { LoadState } from "../training/data/LoadState";
@@ -17,11 +13,12 @@ import { HistoryList } from "../training/history/HistoryList";
 import { SummaryTiles } from "../training/summary/SummaryTiles";
 import { AddNoteSheet } from "./AddNoteSheet";
 import { ClimbingHero } from "./ClimbingHero";
+import { ClimbPill } from "./ClimbPill";
 
-/** One climb: a Project chip to mark it, its days, tries and best, every session on it, and Log session. */
+/** One climb: Project when it is one, its days, tries and best, every session on it, and Log session. */
 export function ClimbDetailScreen({ id }: { id: string }): React.ReactElement {
   const api = useApi();
-  const { state, setWorking, saveNote, deleteNote, reload } = useClimb(api, id, randomUUID);
+  const { state, saveNote, deleteNote, reload } = useClimb(api, id, randomUUID);
   const [noting, setNoting] = React.useState<ClimbNote | "new" | null>(null);
 
   if (state.status !== "ready")
@@ -51,32 +48,7 @@ export function ClimbDetailScreen({ id }: { id: string }): React.ReactElement {
         kind={vm.kicker}
         title={vm.title}
         meta={vm.meta}
-        aside={
-          <Pressable
-            onPress={() => setWorking(!vm.project)}
-            accessibilityRole="switch"
-            accessibilityState={{ checked: vm.project }}
-            accessibilityLabel={t("common.project")}
-            style={press({
-              height: 36,
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 6,
-              paddingHorizontal: 12,
-              borderRadius: 18,
-              borderWidth: 1,
-              borderColor: vm.project ? colors.gold : colors.lineOnLight,
-              backgroundColor: vm.project ? colors.gold : colors.white,
-            })}
-          >
-            <Icon name="star" color={colors.gunmetal} size={15} strokeWidth={2} />
-            <Text
-              style={{ fontFamily: fonts.sansSemiBold, fontSize: 13.5, color: colors.gunmetal }}
-            >
-              {vm.project ? t("common.project") : t("logSession.markAsProject")}
-            </Text>
-          </Pressable>
-        }
+        aside={vm.project ? <ClimbPill kind="project" label={t("common.project")} /> : undefined}
       />
       <SummaryTiles
         stats={[

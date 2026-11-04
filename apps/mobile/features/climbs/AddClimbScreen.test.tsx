@@ -72,13 +72,25 @@ const renderEdit = async (): Promise<void> => {
 };
 
 describe("editing a climb", () => {
-  it("edits only the climb itself: name, crag and grade, nothing a session holds", async () => {
+  it("edits only the climb itself: name, crag, grade and project, nothing a session holds", async () => {
     await renderEdit();
     expect(screen.getByText("Edit climb")).toBeTruthy();
     expect(screen.getByDisplayValue("The Depot")).toBeTruthy();
-    for (const sessionOnly of ["Date", "Project"]) {
-      expect(screen.queryByText(sessionOnly)).toBeNull();
-    }
+    expect(screen.queryByText("Date")).toBeNull();
+    expect(screen.getByRole("switch", { name: "Project" }).props.accessibilityState).toMatchObject({
+      checked: false,
+    });
+  });
+
+  it("marks a sent climb as a project with the edit", async () => {
+    await renderEdit();
+    await fireEvent.press(screen.getByRole("switch", { name: "Project" }));
+    await fireEvent.press(screen.getByText("Save"));
+    expect(mockUpdateClimb).toHaveBeenLastCalledWith("c1", {
+      areaId: "a1",
+      areaClimbId: "ac-1",
+      working: true,
+    });
   });
 
   it("saves a new grade, keeps its crag and link, and goes back to the climb", async () => {
