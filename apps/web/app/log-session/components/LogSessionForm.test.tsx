@@ -130,8 +130,7 @@ describe("LogSessionForm with Areas", () => {
     expect(nameInput().value).toBe("The Mandala");
     await save();
     const [, input] = api.updateLoggedSession.mock.calls[0]!;
-    expect(input.areaId).toBe("a1");
-    expect(input.climbs[0]).toMatchObject({ name: "The Mandala", climbId: "c1" });
+    expect(input.climbs[0]).toMatchObject({ name: "The Mandala", climbId: "c1", areaId: "a1" });
   });
 
   it("drops the link when the name is retyped, keeping it as free text", async () => {

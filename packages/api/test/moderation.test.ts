@@ -601,8 +601,14 @@ describe("account deletion", () => {
       body: {
         date: "2026-09-12",
         location: "outdoor",
-        areaId: area.id,
-        climbs: [{ name: "The Mandala", climbId: climb.id, grade: { scale: "v", value: 12 } }],
+        climbs: [
+          {
+            name: "The Mandala",
+            climbId: climb.id,
+            areaId: area.id,
+            grade: { scale: "v", value: 12 },
+          },
+        ],
       },
     });
     expect(logged.status).toBe(201);
@@ -699,8 +705,7 @@ describe("duplicate climbs", () => {
       body: {
         date: "2026-09-12",
         location: "outdoor",
-        areaId,
-        climbs: [{ name: "Mandala", climbId, grade: { scale: "v", value: 12 } }],
+        climbs: [{ name: "Mandala", climbId, areaId, grade: { scale: "v", value: 12 } }],
       },
     });
     expect(res.status).toBe(201);

@@ -278,6 +278,7 @@ export function toLogSessionInput(draft: LogSessionDraft): LogSessionInput {
     ...(c.circuit === undefined ? {} : { circuit: c.circuit }),
     ...(c.wall === undefined || c.wall.trim() === "" ? {} : { wall: c.wall.trim() }),
     ...(outdoor && c.climbId !== undefined ? { climbId: c.climbId } : {}),
+    ...(outdoor && draft.area !== undefined ? { areaId: draft.area.id } : {}),
     ...(c.userClimbId === undefined ? {} : { userClimbId: c.userClimbId }),
   }));
   return {
@@ -288,7 +289,6 @@ export function toLogSessionInput(draft: LogSessionDraft): LogSessionInput {
     ...(draft.rpe === null ? {} : { rpe: draft.rpe }),
     location: draft.location,
     ...(draft.gymId === undefined ? {} : { gymId: draft.gymId }),
-    ...(outdoor && draft.area !== undefined ? { areaId: draft.area.id } : {}),
     ...(draft.tags.length === 0 ? {} : { tags: draft.tags }),
     ...(draft.notes.trim() === "" ? {} : { notes: draft.notes.trim() }),
     ...(draft.plan === undefined || draft.plan.membershipId === null

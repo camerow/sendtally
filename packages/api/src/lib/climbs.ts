@@ -56,14 +56,44 @@ export const climbSlug = tagSlug;
 
 type FlaggedClimb = { name: string; grade: ClimbGrade; project?: boolean | undefined };
 
+type PlacedClimb = FlaggedClimb & {
+  userClimbId?: string | undefined;
+  climbId?: string | undefined;
+  areaId?: string | undefined;
+};
+
+export async function placeLoggedClimbs(
+  db: D1Database,
+  userId: string,
+  climbs: PlacedClimb[]
+): Promise<void> {
+  await repo.placeLoggedClimbs(
+    db,
+    userId,
+    climbs.flatMap((climb) => {
+      const name = climb.name.trim();
+      const name_key = climbSlug(name);
+      if (name_key === "" || climb.areaId === undefined) return [];
+      return [
+        {
+          name,
+          name_key,
+          user_climb_id: climb.userClimbId ?? null,
+          grade: climb.grade,
+          area_id: climb.areaId,
+          area_climb_id: climb.climbId ?? null,
+        },
+      ];
+    })
+  );
+}
+
 // A climb's project flag rides along with the session it was logged in and is
 // only sent when the user touched it, so an untouched form never unmarks.
-// A climb first recorded here holds the session's crag.
 export async function applyProjectFlags(
   db: D1Database,
   userId: string,
-  climbs: FlaggedClimb[],
-  areaId: string | null
+  climbs: FlaggedClimb[]
 ): Promise<void> {
   const last = new Map<string, FlaggedClimb>();
   for (const climb of climbs) {

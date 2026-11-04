@@ -316,6 +316,7 @@ describe("send styles", () => {
             angle: null,
             grade: { scale: "v", value: 4 },
             note: null,
+            area: null,
             link: null,
           },
         ],
@@ -470,6 +471,7 @@ function session(overrides: Partial<SessionDetail> = {}): SessionDetail {
     gym_id: null,
     area_id: null,
     area: null,
+    areas: [],
     name: "Tuesday board night",
     start_at: "2026-08-26T18:30:00.000Z",
     end_at: "2026-08-26T20:00:00.000Z",
@@ -503,6 +505,7 @@ function session(overrides: Partial<SessionDetail> = {}): SessionDetail {
         angle: null,
         grade: { scale: "v", value: 4 },
         note: null,
+        area: null,
         link: null,
       },
       {
@@ -514,6 +517,7 @@ function session(overrides: Partial<SessionDetail> = {}): SessionDetail {
         angle: null,
         grade: { scale: "v", value: 6 },
         note: null,
+        area: null,
         link: null,
       },
     ],
@@ -766,6 +770,7 @@ describe("endurance climbs", () => {
           angle: null,
           grade: { scale: "v", value: 3 },
           note: null,
+          area: null,
           link: null,
           endurance,
         },
@@ -788,14 +793,14 @@ describe("outdoor crag and climb links", () => {
 
   it("sends the crag and each linked climb", () => {
     const input = toLogSessionInput(outdoor());
-    expect(input.areaId).toBe("a1");
+    expect(input.climbs.map((c) => c.areaId)).toEqual(input.climbs.map(() => "a1"));
     expect(input.climbs[0]?.climbId).toBe("c1");
     expect(input.climbs[1]).not.toHaveProperty("climbId");
   });
 
   it("leaves them out of an indoor session", () => {
     const input = toLogSessionInput({ ...outdoor(), location: "indoor" });
-    expect(input).not.toHaveProperty("areaId");
+    expect(input.climbs[0]).not.toHaveProperty("areaId");
     expect(input.climbs[0]).not.toHaveProperty("climbId");
   });
 

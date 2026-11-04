@@ -54,6 +54,8 @@ import {
 } from "./lib/areas";
 import {
   applyProjectFlags,
+  climbResolver,
+  placeLoggedClimbs,
   climbCatalogue,
   climbNotesOf,
   climbSlug,
@@ -142,12 +144,27 @@ const sessionResponse = async (env: Env, userId: string, fingerprint: string) =>
   ]);
   if (row === null) return null;
   const { climbs_json, notes: _legacyNotes, ...rest } = row;
-  const [tags, entries, climbNotes, links] = await Promise.all([
+  const [tags, entries, climbNotes, links, records] = await Promise.all([
     repo.getSessionTags(env.DB, userId, fingerprint),
     entriesResponse(env, userId, (e) => e.fingerprints.includes(fingerprint)),
     repo.getSessionClimbNotes(env.DB, userId, fingerprint),
     repo.getSessionLinks(env.DB, viewer, fingerprint, row.area_id),
+    repo.listUserClimbs(env.DB, userId),
   ]);
+  const record = climbResolver(records.filter((r) => r.deleted_at === null));
+  const climbs = parseClimbs(climbs_json);
+  const areaIdOf = (climb: (typeof climbs)[number]): string | null =>
+    climbSlug(climb.name.trim()) === "" ? null : (record(climb)?.area_id ?? null);
+  const places = new Map(
+    (await repo.areasByIds(env.DB, viewer, [...new Set(climbs.flatMap((c) => areaIdOf(c) ?? []))]))
+      .filter(isOpen)
+      .map((a) => [a.id, { id: a.id, name: a.name, slug: a.slug }])
+  );
+  const placeOf = (climb: (typeof climbs)[number]) => places.get(areaIdOf(climb) ?? "") ?? null;
+  const climbAreas = [
+    ...new Map(climbs.flatMap((c) => placeOf(c) ?? []).map((a) => [a.id, a])).values(),
+  ];
+  const areas = climbAreas.length > 0 ? climbAreas : links.area === null ? [] : [links.area];
   // `notes` is the log form's single field, now the session's first note entry.
   // Kept on the response so the session page and the edit form need no change.
   const notes = entries.find((e) => e.kind === "journal" && e.parent_id === null)?.body ?? null;
@@ -156,29 +173,42 @@ const sessionResponse = async (env: Env, userId: string, fingerprint: string) =>
     notes,
     tags,
     entries,
-    area: links.area,
-    climbs: withClimbNotes(parseClimbs(climbs_json), climbNotes).map((climb) => ({
+    areas,
+    area: areas[0] ?? null,
+    climbs: withClimbNotes(climbs, climbNotes).map((climb) => ({
       ...climb,
+      area: placeOf(climb),
       link: links.climbs.get(climbSlug(climb.name.trim())) ?? null,
     })),
   };
 };
 
-// The crag must be a live, visible area below the regions, and every linked
+// Every area must be a live, visible area below the regions, and every linked
 // climb live and visible, so nobody links to someone else's pending creation.
-const invalidLinks = async (
+// A linked climb sits at its Areas climb's area, and nowhere else.
+const placedClimbs = async (
   db: D1Database,
   userId: string,
   form: ManualSessionBody
-): Promise<string | null> => {
+): Promise<{ error: string } | { form: ManualSessionBody }> => {
   const viewer = await repo.getViewer(db, userId);
-  if (form.areaId !== undefined) {
-    const area = await repo.getArea(db, viewer, form.areaId);
-    if (area === null || isRegion(area) || !isOpen(area)) return "unknown area";
-  }
+  const areaIds = [...new Set(form.climbs.flatMap((climb) => climb.areaId ?? []))];
+  const areas = (await repo.areasByIds(db, viewer, areaIds)).filter(
+    (area) => !isRegion(area) && isOpen(area)
+  );
+  if (areas.length !== areaIds.length) return { error: "unknown area" };
   const ids = [...new Set(climbLinksOf(form.climbs).map((l) => l.climb_id))];
   const found = (await repo.areaClimbsByIds(db, viewer, ids)).filter(isOpen);
-  return found.length === ids.length ? null : "unknown climb";
+  if (found.length !== ids.length) return { error: "unknown climb" };
+  const areaOfClimb = new Map(found.map((climb) => [climb.id, climb.area_id]));
+  const climbs = form.climbs.map((climb) => {
+    const at = climb.climbId === undefined ? undefined : areaOfClimb.get(climb.climbId);
+    return at === undefined ? climb : { ...climb, areaId: climb.areaId ?? at };
+  });
+  const misplaced = climbs.some(
+    (climb) => climb.climbId !== undefined && climb.areaId !== areaOfClimb.get(climb.climbId)
+  );
+  return misplaced ? { error: "climb is at another area" } : { form: { ...form, climbs } };
 };
 
 // One read of the user's entries, tagged, filtered in memory. There are never
@@ -304,6 +334,7 @@ const saveManualSession = async (
         nameKeys: form.climbs.map((climb) => climbSlug(climb.name)).filter((key) => key !== ""),
         ids: form.climbs.flatMap((climb) => climb.userClimbId ?? []),
       })
+      .then(() => placeLoggedClimbs(db, userId, form.climbs))
       .then(() => applyProjectFlags(db, userId, form.climbs)),
     repo.setClimbNotes(db, userId, fingerprint, climbNotesOf(form.climbs)),
   ]);
@@ -1825,14 +1856,16 @@ const app = new Hono<AppEnv>()
   .post("/v1/sessions", zValidator("json", newManualSessionBody, invalidBody), async (c) => {
     const { fingerprint = `manual-${crypto.randomUUID()}`, ...form } = c.req.valid("json");
     const userId = c.get("userId");
-    const [, invalid, existing] = await Promise.all([
+    const [, placed, existing] = await Promise.all([
       repo.ensureUser(c.env.DB, userId),
-      invalidLinks(c.env.DB, userId, form),
+      placedClimbs(c.env.DB, userId, form),
       repo.getSession(c.env.DB, userId, fingerprint),
     ]);
-    if (invalid !== null) return c.json({ error: invalid }, 400);
-    if (existing === null) return c.json(await saveManualSession(c, fingerprint, form, true), 201);
-    return c.json(await saveManualSession(c, fingerprint, form, false));
+    if ("error" in placed) return c.json({ error: placed.error }, 400);
+    if (existing === null) {
+      return c.json(await saveManualSession(c, fingerprint, placed.form, true), 201);
+    }
+    return c.json(await saveManualSession(c, fingerprint, placed.form, false));
   })
 
   // A batch of sessions from a CSV. Scored oldest first so each one sees the
@@ -1917,16 +1950,16 @@ const app = new Hono<AppEnv>()
       const form = c.req.valid("json");
       const userId = c.get("userId");
       const fingerprint = c.req.param("fingerprint");
-      const [existing, invalid] = await Promise.all([
+      const [existing, placed] = await Promise.all([
         repo.getSession(c.env.DB, userId, fingerprint),
-        invalidLinks(c.env.DB, userId, form),
+        placedClimbs(c.env.DB, userId, form),
       ]);
       if (existing === null) return c.json({ error: "not found" }, 404);
       if (existing.source !== "manual") {
         return c.json({ error: "only manually logged sessions can be edited" }, 409);
       }
-      if (invalid !== null) return c.json({ error: invalid }, 400);
-      return c.json(await saveManualSession(c, fingerprint, form, false));
+      if ("error" in placed) return c.json({ error: placed.error }, 400);
+      return c.json(await saveManualSession(c, fingerprint, placed.form, false));
     }
   )
 

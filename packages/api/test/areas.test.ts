@@ -204,10 +204,9 @@ describe("session links", () => {
   const session = (areaId: string, climbId: string): Record<string, unknown> => ({
     date: "2026-09-12",
     location: "outdoor",
-    areaId,
     climbs: [
-      { name: "The Mandala", climbId, grade: { scale: "v", value: 12 } },
-      { name: "Warm up", grade: { scale: "v", value: 3 } },
+      { name: "The Mandala", climbId, areaId, grade: { scale: "v", value: 12 } },
+      { name: "Warm up", areaId, grade: { scale: "v", value: 3 } },
     ],
   });
 
@@ -238,7 +237,7 @@ describe("session links", () => {
     ]);
   });
 
-  it("refuses someone else's pending climb, a region, and a crag on an indoor session", async () => {
+  it("refuses someone else's pending climb, a region, and an unnamed climb's crag indoors", async () => {
     const area = await createArea("user_a", buttermilks);
     const climb = await createClimb("user_a", mandala(area.id));
     const other = await createArea("user_b", { ...buttermilks, name: "Happy Boulders" });
@@ -252,8 +251,13 @@ describe("session links", () => {
     expect(
       (await call("user_a", "/v1/sessions", { body: session("region-us-ca", climb.id) })).status
     ).toBe(400);
-    const indoor = { ...session(area.id, climb.id), location: "indoor" };
-    expect((await call("user_a", "/v1/sessions", { body: indoor })).status).toBe(400);
+    const indoor = (name: string) => ({
+      date: "2026-09-12",
+      location: "indoor",
+      climbs: [{ name, areaId: area.id, grade: { scale: "v", value: 3 } }],
+    });
+    expect((await call("user_a", "/v1/sessions", { body: indoor("") })).status).toBe(400);
+    expect((await call("user_a", "/v1/sessions", { body: indoor("Arete") })).status).toBe(201);
   });
 
   it("replaces links on edit and removes them on delete", async () => {
@@ -272,7 +276,7 @@ describe("session links", () => {
     });
     expect(edited.status).toBe(200);
     const linked = await read("user_a", fingerprint);
-    expect(linked.area).toBeNull();
+    expect(linked.area).toEqual({ id: area.id, name: "Buttermilks", slug: "buttermilks" });
     expect(linked.climbs.map((c) => c.link?.id)).toEqual([climb.id]);
     expect(await linkCount(fingerprint)).toBe(1);
 
@@ -450,8 +454,7 @@ describe("a climb's crag", () => {
       body: {
         date,
         location: "outdoor",
-        areaId,
-        climbs: [{ name: "Arete", grade: { scale: "v", value: 4 }, project }],
+        climbs: [{ name: "Arete", areaId, grade: { scale: "v", value: 4 }, project }],
       },
     });
   const arete = async (user: string): Promise<Record<string, unknown> | undefined> =>
@@ -485,6 +488,163 @@ describe("a climb's crag", () => {
     expect(cleared.status).toBe(200);
     expect((await arete(user))?.["area"]).toBeNull();
     expect((await arete(user))?.["area"]).toBeNull();
+  });
+});
+
+describe("each climb's area", () => {
+  type Place = { id: string; name: string; slug: string };
+  type Saved = {
+    fingerprint: string;
+    area: Place | null;
+    areas: Place[];
+    climbs: Array<{ name: string; area: Place | null }>;
+  };
+  const v = (value: number) => ({ scale: "v", value });
+  const log = async (user: string, body: Record<string, unknown>): Promise<Saved> => {
+    const res = await call(user, "/v1/sessions", { body: { date: "2026-09-12", ...body } });
+    expect(res.status).toBe(201);
+    return res.body["session"] as Saved;
+  };
+  const read = async (user: string, fingerprint: string): Promise<Saved> =>
+    (await call(user, `/v1/sessions/${fingerprint}`)).body["session"] as Saved;
+  const place = (row: Row) => ({ id: row.id, name: row.name, slug: row.slug });
+  const crags = async (user: string): Promise<[Row, Row]> => [
+    await createArea(user, { ...buttermilks, name: "Stanage Popular" }),
+    await createArea(user, { ...buttermilks, name: "Stanage Plantation" }),
+  ];
+
+  it("saves a two-area day with each climb at its own area", async () => {
+    const user = "user_two_areas";
+    const [popular, plantation] = await crags(user);
+    const saved = await log(user, {
+      location: "outdoor",
+      climbs: [
+        { name: "Flying Buttress", areaId: popular.id, grade: v(1) },
+        { name: "Crack and Slab", areaId: plantation.id, grade: v(2) },
+        { name: "Flying Buttress", areaId: popular.id, grade: v(1), kind: "attempt" },
+      ],
+    });
+    expect(saved.areas).toEqual([place(popular), place(plantation)]);
+    expect(saved.area).toEqual(place(popular));
+    expect(saved.climbs.map((c) => c.area?.id)).toEqual([popular.id, plantation.id, popular.id]);
+  });
+
+  it("fills a climb's empty area and never moves one that has an area", async () => {
+    const user = "user_fill_area";
+    const [popular, plantation] = await crags(user);
+    await log(user, { location: "outdoor", climbs: [{ name: "Arete", grade: v(4) }] });
+    const first = await log(user, {
+      location: "outdoor",
+      climbs: [{ name: "Arete", areaId: popular.id, grade: v(4) }],
+    });
+    const second = await log(user, {
+      location: "outdoor",
+      climbs: [{ name: "arete", areaId: plantation.id, grade: v(4) }],
+    });
+    expect(second.areas).toEqual([place(popular)]);
+    expect((await read(user, first.fingerprint)).climbs[0]?.area?.id).toBe(popular.id);
+  });
+
+  it("refills a cleared climb when it is next logged at an area", async () => {
+    const user = "user_refill_area";
+    const [popular, plantation] = await crags(user);
+    await log(user, {
+      location: "outdoor",
+      climbs: [{ name: "Arete", areaId: popular.id, grade: v(4) }],
+    });
+    const [record] = (await call(user, "/v1/climbs")).body["climbs"] as Row[];
+    await call(user, `/v1/climbs/${String(record?.id)}`, {
+      method: "PATCH",
+      body: { areaId: null, areaClimbId: null },
+    });
+    await log(user, { location: "outdoor", climbs: [{ name: "Arete", grade: v(4) }] });
+    expect((await call(user, "/v1/climbs")).body["climbs"]).toMatchObject([{ area: null }]);
+
+    const again = await log(user, {
+      location: "outdoor",
+      climbs: [{ name: "Arete", areaId: plantation.id, grade: v(4) }],
+    });
+    expect(again.areas).toEqual([place(plantation)]);
+  });
+
+  it("gives a climb added from Projects its area the first time it is logged", async () => {
+    const user = "user_project_area";
+    const [popular] = await crags(user);
+    expect((await call(user, "/v1/projects", { body: { name: "Arete" } })).status).toBe(200);
+    await log(user, {
+      location: "outdoor",
+      climbs: [{ name: "Arete", areaId: popular.id, grade: v(4) }],
+    });
+    expect((await call(user, "/v1/climbs")).body["climbs"]).toMatchObject([
+      { name: "Arete", area: { id: popular.id }, project: true },
+    ]);
+  });
+
+  it("keeps a named climb's area in an Indoor session, the gym day and crag as one", async () => {
+    const user = "user_indoor_area";
+    const [popular] = await crags(user);
+    const saved = await log(user, {
+      location: "indoor",
+      climbs: [
+        { name: "", grade: v(3) },
+        { name: "Arete", areaId: popular.id, grade: v(4) },
+      ],
+    });
+    expect(saved.areas).toEqual([place(popular)]);
+    expect(saved.climbs.map((c) => c.area?.id ?? null)).toEqual([null, popular.id]);
+  });
+
+  it("puts a linked climb at its Areas climb's area, and refuses one at another area", async () => {
+    const user = "user_linked_area";
+    const [popular, plantation] = await crags(user);
+    const climb = await createClimb(user, mandala(popular.id));
+    const linked = { name: "The Mandala", climbId: climb.id, grade: v(12) };
+    const saved = await log(user, { location: "outdoor", climbs: [linked] });
+    expect(saved.areas).toEqual([place(popular)]);
+    const elsewhere = await call(user, "/v1/sessions", {
+      body: {
+        date: "2026-09-13",
+        location: "outdoor",
+        climbs: [{ ...linked, areaId: plantation.id }],
+      },
+    });
+    expect(elsewhere.status).toBe(400);
+  });
+
+  it("keeps a grade-only day's area on the session, and only on such a day", async () => {
+    const user = "user_grade_only_area";
+    const [popular, plantation] = await crags(user);
+    const gradeOnly = await log(user, {
+      location: "outdoor",
+      climbs: [{ areaId: popular.id, grade: v(3) }],
+    });
+    expect(gradeOnly.areas).toEqual([place(popular)]);
+    expect(gradeOnly.climbs[0]?.area).toBeNull();
+
+    const mixed = await log(user, {
+      location: "outdoor",
+      climbs: [
+        { areaId: popular.id, grade: v(3) },
+        { name: "Arete", areaId: plantation.id, grade: v(4) },
+      ],
+    });
+    expect(mixed.areas).toEqual([place(plantation)]);
+    const stored = await env.DB.prepare("SELECT area_id FROM sessions WHERE fingerprint = ?")
+      .bind(mixed.fingerprint)
+      .first<{ area_id: string | null }>();
+    expect(stored?.area_id).toBeNull();
+  });
+
+  it("ignores a session-level area from an older app", async () => {
+    const user = "user_session_area";
+    const [popular] = await crags(user);
+    const saved = await log(user, {
+      location: "outdoor",
+      areaId: popular.id,
+      climbs: [{ name: "Arete", grade: v(4) }],
+    });
+    expect(saved.areas).toEqual([]);
+    expect(saved.area).toBeNull();
   });
 });
 

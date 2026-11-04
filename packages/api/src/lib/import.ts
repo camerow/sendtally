@@ -6,9 +6,19 @@ export const IMPORT_BATCH_MAX = 200;
 // The log form's body with the gym as a name: a CSV cannot know our ids, so
 // the Worker matches it against the user's gyms. Areas are not imported.
 const importSessionShape = manualSessionShape
-  .omit({ gymId: true, areaId: true })
+  .omit({ gymId: true })
   .extend({ gym: z.string().trim().min(1).max(80).optional() })
-  .superRefine(sessionTooLong);
+  .superRefine((body, ctx) => {
+    sessionTooLong(body, ctx);
+    body.climbs.forEach((climb, i) => {
+      if (climb.areaId === undefined) return;
+      ctx.addIssue({
+        code: "custom",
+        path: ["climbs", i, "areaId"],
+        message: "areas are not imported",
+      });
+    });
+  });
 
 export const importBody = z.object({
   sessions: z.array(importSessionShape).min(1).max(IMPORT_BATCH_MAX),

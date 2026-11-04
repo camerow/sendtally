@@ -11,6 +11,7 @@ const row = (over: Partial<SessionDetail>): SessionDetail => ({
   gym_id: null,
   area_id: null,
   area: null,
+  areas: [],
   name: "Tuesday night session",
   start_at: "2026-09-27T18:00:00.000Z",
   end_at: "2026-09-27T19:30:00.000Z",
@@ -43,6 +44,7 @@ const row = (over: Partial<SessionDetail>): SessionDetail => ({
       tries: 1,
       angle: null,
       note: null,
+      area: null,
       link: null,
       grade: { scale: "v", value: 4 },
     },
@@ -122,11 +124,11 @@ describe("logClimbOnDay", () => {
     });
   });
 
-  it("joins only a session at the same crag, and starts one outdoors there otherwise", async () => {
+  it("joins the day's outdoor session whatever its areas, never the gym one", async () => {
     const crag = { id: "a1", name: "Buttermilks" };
     const sessions = [
       row({ fingerprint: "gym", start_at: "2026-09-27T20:00:00.000Z" }),
-      row({ fingerprint: "crag", location: "outdoor", area_id: "a1" }),
+      row({ fingerprint: "crag", location: "outdoor", area_id: null }),
     ];
     const there = fakeApi(sessions);
     await logClimbOnDay(there, climb, "2026-09-27", [], { area: crag });
@@ -136,7 +138,8 @@ describe("logClimbOnDay", () => {
     await logClimbOnDay(elsewhere, climb, "2026-09-27", [], { area: crag });
     const [[method, input]] = elsewhere.sent as [[string, LogSessionInput]];
     expect(method).toBe("POST");
-    expect(input).toMatchObject({ areaId: "a1", unscored: true });
+    expect(input).toMatchObject({ unscored: true });
+    expect(input.climbs[0]?.areaId).toBe("a1");
   });
 
   it("with no crag, joins only a session with no location", async () => {

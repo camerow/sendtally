@@ -18,6 +18,7 @@ const go = (
   style: "redpoint",
   angle: null,
   note: null,
+  area: null,
   link: null,
   grade: { scale: "v", value: v },
   ...over,

@@ -135,6 +135,7 @@ describe("tripPyramid", () => {
       style: "flash" as const,
       angle: null,
       note: null,
+      area: null,
       link: null,
       vGrade,
     });

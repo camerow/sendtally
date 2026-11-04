@@ -15,6 +15,7 @@ const go = (
   tries: 1,
   angle: null,
   note: null,
+  area: null,
   link: null,
   grade: { scale: "v", value: v },
   ...over,

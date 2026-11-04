@@ -41,6 +41,7 @@ const climbSchema = z
     name: z.string().max(200).default(""),
     climbId: z.string().min(1).max(64).optional(),
     userClimbId: z.string().min(1).max(64).optional(),
+    areaId: z.string().min(1).max(64).optional(),
     grade: gradeSchema,
     circuit: circuitRefSchema.optional(),
     wall: z.string().trim().max(40).optional(),
@@ -133,7 +134,6 @@ export const manualSessionShape = z.object({
   location: z.enum(["indoor", "outdoor"]).optional(),
   unscored: z.boolean().optional(),
   gymId: z.string().min(1).max(40).optional(),
-  areaId: z.string().min(1).max(64).optional(),
   tags: tagNames.optional(),
   notes: sessionNote,
   climbs: z.array(climbSchema).min(1).max(300),
@@ -154,17 +154,23 @@ export function sessionTooLong(
 }
 
 // A link is keyed by the slug of the logged name, so a linked climb needs a
-// name and two rows with one name cannot point at different climbs.
+// name and two rows with one name cannot point at different climbs. A named
+// climb with an area was outdoors whatever the session says; a grade-only one
+// can only leave its area on an outdoor day.
 function linksConsistent(body: ManualSessionBody, ctx: z.RefinementCtx): void {
-  if (body.areaId !== undefined && body.location === "indoor") {
-    ctx.addIssue({
-      code: "custom",
-      path: ["areaId"],
-      message: "only outdoor sessions have a crag",
-    });
-  }
   const idBySlug = new Map<string, string>();
   body.climbs.forEach((climb, i) => {
+    if (
+      body.location === "indoor" &&
+      climb.areaId !== undefined &&
+      tagSlug(climb.name.trim()) === ""
+    ) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["climbs", i, "areaId"],
+        message: "an unnamed climb indoors has no area",
+      });
+    }
     if (climb.climbId === undefined) return;
     const slug = tagSlug(climb.name.trim());
     const seen = idBySlug.get(slug);
