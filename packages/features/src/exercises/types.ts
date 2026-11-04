@@ -1,8 +1,8 @@
 import type { Exercise } from "@sendtally/api-client";
 import type { ExerciseKind, ExerciseMeasure, Grip, WorkoutKind } from "@sendtally/core/hang";
 
-/** How a climbing exercise logs on the session tally: climbs per set, or time on the wall. */
-export type TallyMeasure = "climbs" | "wallTime";
+/** How a climbing exercise logs on the session tally: climbs per set, time on the wall, or circuit laps. */
+export type TallyMeasure = "climbs" | "wallTime" | "laps";
 
 export type CategoryShelf<T> = { kind: WorkoutKind; entries: T[] };
 

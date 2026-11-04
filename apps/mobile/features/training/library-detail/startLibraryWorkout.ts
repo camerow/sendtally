@@ -54,7 +54,7 @@ export function startLibraryWorkout(
     return;
   }
   const onTally = items.some((i) => tally(i.exercise) !== null);
-  const climbs = items.some((i) => tally(i.exercise) === "climbs");
+  const climbs = items.some((i) => ["climbs", "laps"].includes(tally(i.exercise) ?? ""));
   if (!climbs && items.every((i) => i.dose.onS !== undefined)) {
     startIntervals({ ...run, body: intervalsOf(items, eachSide) });
     return;

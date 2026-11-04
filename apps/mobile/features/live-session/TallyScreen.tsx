@@ -55,6 +55,7 @@ import { ExerciseClock } from "./ExerciseClock";
 import { FinishSheet } from "./FinishSheet";
 import { GradeChips, type GradeChip } from "../../components/GradeChips";
 import { GymSheet } from "./GymSheet";
+import { LapsTally } from "./LapsTally";
 import { LiveClimbEditor } from "./LiveClimbEditor";
 import { LiveClock } from "../../components/LiveClock";
 import { TallyRow } from "./TallyRow";
@@ -169,6 +170,25 @@ export function TallyScreen({ exercise = false }: TallyScreenProps): React.React
 
   const gym = gymOfDraft(gyms.gyms, draft.gymId);
   const circuitGym = liveGymOfDraft(gyms.gyms, draft.gymId);
+  if (exercise && draft.exercise?.lap !== undefined) {
+    return (
+      <LapsTally
+        draft={draft}
+        live={live}
+        rest={rest}
+        now={now}
+        gymName={gym?.name ?? t("gyms.noGym")}
+        prefs={scales}
+        vocabulary={vocabulary}
+        gyms={circuitGym === null ? [] : [circuitGym]}
+        onDone={() => {
+          rest.skip();
+          live.replace(withExerciseDone(draft));
+          leaveLiveScreen();
+        }}
+      />
+    );
+  }
   const scale = scales[discipline];
   const segment: Segment = circuitGym !== null && onCircuit ? "circuit" : discipline;
   const segments: Segment[] =

@@ -198,4 +198,9 @@ export const workouts = {
   "workouts.dose.climbs": "Klettereien",
   "workouts.dose.time": "Zeit",
   "workouts.dose.anyClimbs": "Beliebig",
+  "workouts.exercise.circuitLaps": "Zirkelrunden",
+  "workouts.measure.laps": "Runden",
+  "workouts.dose.laps": "Runden",
+  "workouts.dose.moves": "Züge",
+  "workouts.lapRest": "Pause zwischen Runden",
 } as const;
