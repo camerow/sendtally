@@ -2,7 +2,7 @@ import * as Updates from "expo-updates";
 import React from "react";
 import { AppState } from "react-native";
 
-const MIN_CHECK_INTERVAL_MS = 30 * 60_000;
+const MIN_CHECK_INTERVAL_MS = 60_000;
 
 /**
  * expo-updates only checks on a cold start, and phones keep apps alive for days. Checking again
