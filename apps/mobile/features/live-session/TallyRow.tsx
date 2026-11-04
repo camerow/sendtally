@@ -21,22 +21,11 @@ export function TallyRow({ climb, selected, onPress, onEdit }: TallyRowProps): R
   const grade = climb.circuit === undefined ? climb.grade : climb.circuit.label;
   const name = climb.name.trim();
   return (
-    <Pressable
-      onPress={onPress}
-      accessibilityRole="button"
-      accessibilityState={{ selected }}
-      accessibilityLabel={[
-        grade,
-        ...(name === "" ? [] : [name]),
-        t("tally.fallCount", { count: falls }),
-        ...(sent ? [t("common.sent")] : []),
-      ].join(", ")}
+    <View
       style={{
         minHeight: 56,
         flexDirection: "row",
         alignItems: "center",
-        gap: 12,
-        paddingLeft: 8,
         paddingRight: 6,
         borderRadius: 14,
         borderWidth: 2,
@@ -44,59 +33,79 @@ export function TallyRow({ climb, selected, onPress, onEdit }: TallyRowProps): R
         backgroundColor: selected ? "rgba(249,220,92,0.08)" : "rgba(255,255,255,0.05)",
       }}
     >
-      <View
+      <Pressable
+        onPress={onPress}
+        accessibilityRole="button"
+        accessibilityState={{ selected }}
+        accessibilityLabel={[
+          grade,
+          ...(name === "" ? [] : [name]),
+          t("tally.fallCount", { count: falls }),
+          ...(sent ? [t("common.sent")] : []),
+        ].join(", ")}
         style={{
-          minWidth: 56,
-          height: 40,
-          paddingHorizontal: 6,
-          borderRadius: 10,
+          flex: 1,
+          minHeight: 52,
+          flexDirection: "row",
           alignItems: "center",
-          justifyContent: "center",
-          backgroundColor:
-            climb.circuit === undefined
-              ? "rgba(255,255,255,0.12)"
-              : CIRCUIT_HEX[climb.circuit.colour],
+          gap: 12,
+          paddingLeft: 8,
         }}
       >
-        {climb.circuit === undefined && (
-          <Text
-            numberOfLines={1}
-            style={{ fontFamily: fonts.monoSemiBold, fontSize: 15, color: colors.white }}
-          >
-            {climb.grade}
-          </Text>
-        )}
-      </View>
-      <View
-        style={{ flex: 1, flexDirection: "row", alignItems: "center", gap: 5, flexWrap: "wrap" }}
-      >
-        {name !== "" && (
-          <Text
-            numberOfLines={1}
-            style={{
-              fontFamily: fonts.sansMedium,
-              fontSize: 14,
-              color: colors.white,
-              marginRight: 4,
-            }}
-          >
-            {name}
-          </Text>
-        )}
-        {Array.from({ length: falls }, (_, i) => (
-          <View
-            key={i}
-            style={{
-              width: 12,
-              height: 12,
-              borderRadius: 6,
-              borderWidth: 2,
-              borderColor: "rgba(255,255,255,0.7)",
-            }}
-          />
-        ))}
-        {sent && <Icon name="check" color={colors.gold} size={20} strokeWidth={3} />}
-      </View>
+        <View
+          style={{
+            minWidth: 56,
+            height: 40,
+            paddingHorizontal: 6,
+            borderRadius: 10,
+            alignItems: "center",
+            justifyContent: "center",
+            backgroundColor:
+              climb.circuit === undefined
+                ? "rgba(255,255,255,0.12)"
+                : CIRCUIT_HEX[climb.circuit.colour],
+          }}
+        >
+          {climb.circuit === undefined && (
+            <Text
+              numberOfLines={1}
+              style={{ fontFamily: fonts.monoSemiBold, fontSize: 15, color: colors.white }}
+            >
+              {climb.grade}
+            </Text>
+          )}
+        </View>
+        <View
+          style={{ flex: 1, flexDirection: "row", alignItems: "center", gap: 5, flexWrap: "wrap" }}
+        >
+          {name !== "" && (
+            <Text
+              numberOfLines={1}
+              style={{
+                fontFamily: fonts.sansMedium,
+                fontSize: 14,
+                color: colors.white,
+                marginRight: 4,
+              }}
+            >
+              {name}
+            </Text>
+          )}
+          {Array.from({ length: falls }, (_, i) => (
+            <View
+              key={i}
+              style={{
+                width: 12,
+                height: 12,
+                borderRadius: 6,
+                borderWidth: 2,
+                borderColor: "rgba(255,255,255,0.7)",
+              }}
+            />
+          ))}
+          {sent && <Icon name="check" color={colors.gold} size={20} strokeWidth={3} />}
+        </View>
+      </Pressable>
       {selected && (
         <Pressable
           onPress={onEdit}
@@ -107,6 +116,6 @@ export function TallyRow({ climb, selected, onPress, onEdit }: TallyRowProps): R
           <Icon name="pencil" color={colors.white} size={18} strokeWidth={1.9} />
         </Pressable>
       )}
-    </Pressable>
+    </View>
   );
 }

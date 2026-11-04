@@ -4,20 +4,18 @@ import { t } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { Icon } from "../../components/Icon";
 import { press } from "../../lib/press";
-import { useUpdateRestart } from "./useUpdateRestart";
 
-/** Mounted once for the whole app, so a dismissal holds on every screen. */
 export function UpdateReadyCard({
   liveSession,
-  hidden,
+  restarting,
+  onRestart,
+  onDismiss,
 }: {
   liveSession: boolean;
-  hidden: boolean;
-}): React.ReactElement | null {
-  const { pendingUpdateId, restarting, restart } = useUpdateRestart();
-  const [dismissedId, setDismissedId] = React.useState<string | null>(null);
-  if (hidden || pendingUpdateId === null || pendingUpdateId === dismissedId) return null;
-
+  restarting: boolean;
+  onRestart: () => void;
+  onDismiss: () => void;
+}): React.ReactElement {
   return (
     <View
       style={{
@@ -76,7 +74,7 @@ export function UpdateReadyCard({
         </Text>
       </View>
       <Pressable
-        onPress={restart}
+        onPress={onRestart}
         disabled={restarting}
         accessibilityRole="button"
         style={press({
@@ -94,7 +92,7 @@ export function UpdateReadyCard({
         </Text>
       </Pressable>
       <Pressable
-        onPress={() => setDismissedId(pendingUpdateId)}
+        onPress={onDismiss}
         accessibilityRole="button"
         accessibilityLabel={t("sessions.notNow")}
         style={press({ width: 36, minHeight: 44, alignItems: "center", justifyContent: "center" })}

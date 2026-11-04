@@ -1,34 +1,18 @@
 appId: com.sendtally.app
 name: gym-circuits
-# A gym with the color circuits and a wall, added from the Log tab's setup card, saved with
-# an explicit Save, then a climb logged on a circuit from the live session. Cleans up after
-# itself so the account has no gym for the next run.
+# A gym with the color circuits and a wall, added from Settings and saved with an explicit
+# Save, then a climb logged on a circuit from a live session. Cleans up after itself so the
+# account has no gym for the next run.
 ---
 - runFlow: ../helpers/open-dev-client.yaml
 - runFlow: ../helpers/ensure-signed-in.yaml
 - runFlow: ../helpers/discard-live-session.yaml
 - runFlow: ../helpers/delete-maestro-gym.yaml
-- tapOn: "Log(, tab.*)?"
-- runFlow:
-    when:
-      visible: "Add your gym"
-    commands:
-      - tapOn: "Add gym"
-- runFlow:
-    when:
-      notVisible: "New gym"
-    commands:
-      - tapOn: "Settings(, tab.*)?"
-      # Looking for a leftover gym left Settings scrolled to wherever that search ended.
-      - scrollUntilVisible:
-          element: "Add gym"
-          direction: UP
-          timeout: 8000
-          optional: true
-      - scrollUntilVisible:
-          element: "Add gym"
-          direction: DOWN
-      - tapOn: "Add gym"
+- tapOn: "Account and settings"
+- scrollUntilVisible:
+    element: "Add gym"
+    direction: DOWN
+- tapOn: "Add gym"
 - assertVisible: "New gym"
 - assertVisible: "Circuits, Color circuits"
 - tapOn:
@@ -44,27 +28,23 @@ name: gym-circuits
 - pressKey: Enter
 - assertVisible: "Remove wall: Cave"
 - tapOn: "Save gym"
-- tapOn: "Log(, tab.*)?"
-- assertNotVisible: "Add your gym"
-- tapOn: "Climb"
+- assertVisible: "Maestro Barn.*"
+- tapOn: "BACK"
+- tapOn: "Start session"
+- tapOn: "Gym, No gym"
+- tapOn: "Maestro Barn"
+- assertVisible: "Gym, Maestro Barn"
+- tapOn: "Yellow"
+- tapOn: "Fell"
+- tapOn: "Edit climb"
 - assertVisible: "1 OF 1"
-- tapOn: "Type, .*"
-- tapOn: "Maestro Barn circuits"
-- tapOn: "Grade, .*"
-- tapOn: "Yellow.*V1–V2"
+- assertVisible: "Type, Maestro Barn circuits"
 - assertVisible: "Grade, Yellow · V1–V2"
 - tapOn: "Cave"
 - tapOn: "V2"
-- scrollUntilVisible:
-    element: "Save"
-    direction: DOWN
 - tapOn: "Save"
-# Looking for a live session to discard left the list scrolled down, and the live card is at the
-# top of it.
-- scrollUntilVisible:
-    element: ".*In progress for .* · Maestro Barn.*"
-    direction: UP
-    centerElement: true
-- assertVisible: "Yellow V2 Yellow · Cave, attempt, 1 try"
+- assertNotVisible: "1 OF 1"
+- assertVisible: "Yellow, 1 fall"
+- tapOn: "Minimize"
 - runFlow: ../helpers/discard-live-session.yaml
 - runFlow: ../helpers/delete-maestro-gym.yaml

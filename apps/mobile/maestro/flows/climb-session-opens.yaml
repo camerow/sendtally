@@ -1,0 +1,75 @@
+appId: com.sendtally.app
+name: climb-session-opens
+# A climb row on the Log opens the climb, and the sessions the climb lists open those sessions:
+# both are links, and a View inside a Link once rendered them dead on a device with nothing
+# off-device noticing. Logging a session on a climb named for this flow is what puts both rows
+# there to tap, and the session is deleted at the end so the account does not grow one per run.
+---
+- runFlow: ../helpers/open-dev-client.yaml
+- runFlow: ../helpers/ensure-signed-in.yaml
+- runFlow: ../helpers/open-log-form.yaml
+- runFlow:
+    when:
+      visible: "Start fresh"
+    commands:
+      - tapOn: "Start fresh"
+      - tapOn:
+          text: "Discard"
+          rightOf: "Cancel"
+- scrollUntilVisible:
+    element:
+      text: "Add climb"
+    direction: DOWN
+    centerElement: true
+- tapOn: "Add climb"
+- assertVisible: "2 OF 2"
+- tapOn: "Name (optional)"
+# The climb rolls up by its name, which is what files this session under it. Enter blurs the
+# field and puts Save back on screen; hideKeyboard is the back key on Android, and with the
+# keyboard already gone it would dismiss the sheet and leave the form.
+- inputText: "Maestro Arete"
+- pressKey: Enter
+- tapOn: "Save"
+- tapOn: "Done"
+# Saving opens the session it made; its way back is the Log.
+- extendedWaitUntil:
+    visible: "Logged session"
+    timeout: 30000
+- tapOn: "BACK"
+- extendedWaitUntil:
+    visible: "Account and settings"
+    timeout: 20000
+- scrollUntilVisible:
+    element:
+      text: ".*, Maestro Arete, .*"
+    direction: DOWN
+- tapOn: ".*, Maestro Arete, .*"
+- extendedWaitUntil:
+    visible: "Log session"
+    timeout: 20000
+# A session row is one accessible element, spoken date-first, so it is matched by the session
+# title in the middle of it.
+- scrollUntilVisible:
+    element:
+      text: ".*Logged session.*"
+    direction: DOWN
+    centerElement: true
+- tapOn: ".*Logged session.*"
+- extendedWaitUntil:
+    visible: "Logged session"
+    timeout: 20000
+# A tap on the header's menu while the screen is still sliding in does nothing.
+- waitForAnimationToEnd
+- tapOn: "More"
+- tapOn: "Delete session, .*"
+- extendedWaitUntil:
+    visible: "Delete session?"
+    timeout: 10000
+- tapOn:
+    text: "Delete"
+    rightOf: "Cancel"
+# Deleting goes back to where the session was opened from, the climb.
+- extendedWaitUntil:
+    visible: "Log session"
+    timeout: 20000
+- assertNotVisible: "Delete session?"

@@ -1,8 +1,7 @@
 appId: com.sendtally.app
 name: draft-survives-leaving
 # A climb added right before leaving the form must be there when the form is opened again,
-# the session list must offer the draft back, and tapping that offer must open the form
-# already on the draft rather than asking again.
+# offered as the unfinished draft, and picking it up must bring every climb back.
 ---
 - runFlow: ../helpers/open-dev-client.yaml
 - runFlow: ../helpers/ensure-signed-in.yaml
@@ -12,42 +11,39 @@ name: draft-survives-leaving
       visible: "Start fresh"
     commands:
       - tapOn: "Start fresh"
-      - tapOn: "Discard"
+      - tapOn:
+          text: "Discard"
+          rightOf: "Cancel"
 - scrollUntilVisible:
     element:
-      text: "\\+ ADD CLIMB"
+      text: "Add climb"
     direction: DOWN
     centerElement: true
-- tapOn: "\\+ ADD CLIMB"
+- tapOn: "Add climb"
 - tapOn: "Save"
 - scrollUntilVisible:
     element:
-      text: "\\+ ADD CLIMB"
+      text: "Add climb"
     direction: DOWN
     centerElement: true
-- tapOn: "\\+ ADD CLIMB"
+- tapOn: "Add climb"
 - tapOn: "Save"
 - scrollUntilVisible:
     element:
-      text: "← LOG"
+      text: "LOG"
     direction: UP
-- tapOn: "← LOG"
-- assertVisible: "Unfinished session.*"
+- tapOn: "LOG"
 - runFlow: ../helpers/open-log-form.yaml
 - assertVisible: "You have an unfinished session.*"
 - assertVisible: "3 CLIMBS.*"
 - tapOn: "Pick up"
-- assertVisible: "3 CLIMBS.*"
-- scrollUntilVisible:
-    element:
-      text: "← LOG"
-    direction: UP
-- tapOn: "← LOG"
-- tapOn: "Unfinished session.*"
-- assertVisible: "3 CLIMBS.*"
 - assertNotVisible: "You have an unfinished session.*"
 - scrollUntilVisible:
     element:
-      text: "← LOG"
+      text: "CLIMBS · 3"
+    direction: DOWN
+- scrollUntilVisible:
+    element:
+      text: "LOG"
     direction: UP
-- tapOn: "← LOG"
+- tapOn: "LOG"

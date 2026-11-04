@@ -9,6 +9,14 @@ name: areas-log-form
 - runFlow: ../helpers/ensure-signed-in.yaml
 - runFlow: ../helpers/discard-live-session.yaml
 - runFlow: ../helpers/open-log-form.yaml
+- runFlow:
+    when:
+      visible: "Start fresh"
+    commands:
+      - tapOn: "Start fresh"
+      - tapOn:
+          text: "Discard"
+          rightOf: "Cancel"
 - tapOn: "OUTDOOR"
 - tapOn: "Search areas"
 - inputText: "Qzx never added"
@@ -20,27 +28,26 @@ name: areas-log-form
 - assertNotVisible: "Add an area"
 - scrollUntilVisible:
     element:
-      text: "\\+ ADD CLIMB"
+      text: "Add climb"
     direction: DOWN
     centerElement: true
-- tapOn: "\\+ ADD CLIMB"
+- tapOn: "Add climb"
 - assertVisible: "2 OF 2"
 - tapOn: "Name (optional)"
 - inputText: "Qzx never added"
 - tapOn: "\\+ Add “Qzx never added” to Areas"
 - assertVisible: "Add a climb"
-# The climb sheet is as tall as a sheet gets, so on a small screen the scrim is only the strip
-# above its top inset. Its licence line is below the fold there and is the area sheet's own,
-# checked above; scrolling a stacked sheet for it is what leaves the one underneath closed.
+# The Areas climb sheet stops short of the climb editor's top, so the strip between them is
+# the scrim that closes it and leaves the editor underneath open.
 - tapOn:
-    point: "50%,6%"
+    point: "50%,15%"
 - assertNotVisible: "Add a climb"
 - assertVisible: "2 OF 2"
 - tapOn: "Save"
 - assertNotVisible: "2 OF 2"
 - scrollUntilVisible:
     element:
-      text: "← LOG"
+      text: "LOG"
     direction: UP
-- tapOn: "← LOG"
+- tapOn: "LOG"
 - runFlow: ../helpers/discard-live-session.yaml

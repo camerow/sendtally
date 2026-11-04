@@ -1,5 +1,5 @@
 appId: com.sendtally.app
-# The full form sits behind the chevron half of the log button.
+# The full form sits behind the chevron half of the log button on the Log's climbing half.
 ---
 - tapOn: "More ways to log"
-- tapOn: "Session, Group climbs.*"
+- tapOn: "Past session, .*"

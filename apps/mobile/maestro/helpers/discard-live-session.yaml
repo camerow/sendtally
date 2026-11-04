@@ -1,24 +1,17 @@
 appId: com.sendtally.app
-# A live session left behind by an earlier flow would take the next climb, so discard it from its form.
-# Setup cards can push the live card below the fold, so scroll for it first.
+# A live session left behind by an earlier flow would take the next climb, so discard it from
+# the live bar above the tabs.
 ---
-- scrollUntilVisible:
-    element:
-      text: ".*In progress for.*"
-    direction: DOWN
-    timeout: 5000
-    centerElement: true
-    optional: true
 - runFlow:
     when:
-      visible: ".*In progress for.*"
+      visible: "Finish session"
     commands:
-      - tapOn: ".*In progress for.*"
-      - tapOn: "Discard"
-      - assertVisible: "Discard this draft.*"
+      - tapOn: "Finish session"
+      - tapOn: "Discard session"
+      - assertVisible: "Discard this session?"
       - tapOn:
           text: "Discard"
           rightOf: "Cancel"
       - extendedWaitUntil:
-          visible: "Climb"
+          notVisible: "Finish session"
           timeout: 15000

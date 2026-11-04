@@ -14,12 +14,15 @@ The test script lives in the root `package.json` for the same fingerprint reason
 - Install Maestro: `curl -Ls https://get.maestro.mobile.dev | bash` (lands in `~/.maestro/bin`).
 - Maestro needs a Java runtime and this machine has none on PATH; Android Studio's bundled one works: `export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"`.
 - Build the development client onto a simulator once: `npx expo run:ios --device <udid> --no-bundler` from `apps/mobile` (about ten minutes; the watchman stub and Homebrew `pod` notes in `docs/mobile-release.md` apply).
+- Hide the development build's floating tools button once per simulator: `xcrun simctl spawn <udid> defaults write com.sendtally.app EXDevMenuShowFloatingActionButton -bool false`.
+  It is draggable and remembers where it was left, and wherever that is it swallows the taps meant for what is underneath, such as a detail screen's `···` menu.
 - To check a language, `infra/scripts/sim-language.sh de` (or `fr`, `es`, an explicit locale like `fr fr_CA`, or `reset`) sets the simulator language and reboots it; it takes the device from `SIM_UDID`, `--udid`, or the booted simulator. Relaunch the app afterwards.
 
 ## Running
 
 1. Start the local API from `packages/api` with `npx wrangler dev`.
-2. Start Metro from `apps/mobile` with `npx expo start --port 8081 --clear`.
+2. Start Metro from `apps/mobile` with `EXPO_PUBLIC_E2E=true npx expo start --port 8081 --clear`.
+   The flag is what the CI build sets: PostHog gets nothing and the App Store review prompt never opens over a flow once the test account passes five sessions.
    A debug bundle defaults to the local API (`localhost:8787`, or `10.0.2.2:8787` on the Android emulator) and the Clerk development instance; `EXPO_PUBLIC_API_URL` and `EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY` still override both, for a physical phone or staging.
    The flows deep-link the development client to `localhost:8081` themselves.
 3. `pnpm run mobile:e2e` from the repo root, or `maestro test maestro/flows/<flow>.yaml` from `apps/mobile` for one flow.
@@ -51,7 +54,7 @@ eas build:list --platform android --profile e2e --status finished \
 When a finished `e2e` build carries the hash, the job downloads its APK, publishes the branch as an EAS Update, and installs the two together.
 That is the whole saving: the Gradle release build this replaced took sixteen of the job's twenty minutes.
 
-The Gradle fallback is a way to get a run at all, not a trustworthy one: the APK it builds segfaults in Hermes on launch on the emulator, in two of three runs when this was last exercised (17 Sep 2026), which reads as flows failing on "Sign in|Climb" with the device on its home screen.
+The Gradle fallback is a way to get a run at all, not a trustworthy one: the APK it builds segfaults in Hermes on launch on the emulator, in two of three runs when this was last exercised (17 Sep 2026), which reads as flows failing on "Sign in|Account and settings" with the device on its home screen.
 So when a branch moves the fingerprint, warm it with `eas build --profile e2e --platform android` from `apps/mobile` before trusting a red run.
 
 The `e2e` build profile exists for this job alone: it extends `preview`, so it is the same staging API and development Clerk instance, but it ships on its own `e2e` channel.
@@ -126,8 +129,11 @@ Never point the flows at production keys: the address does not exist there and t
 - Swipes differ by platform. On iOS only a bare `direction: DOWN` reaches React Native's responder system; coordinate and element swipes go through a press-and-drag RN never sees. On Android a coordinate swipe works and is the one that starts on the sheet rather than the scrim. Split with `runFlow: when: platform:`.
 - Keyboards differ by platform. On iOS `hideKeyboard` fails on these inputs; press `Enter` on a single-line field before swiping. On Android the keyboard covers the submit button and a tap on its stale position opens Gboard's settings, so run `helpers/hide-keyboard.yaml` after every `inputText`.
 - A climb ledger row is one accessible element, so match it by its accessibility text, for example `V3 Cascade.*`, not by the name alone.
-- The log-session form is longer than the screen; `scrollUntilVisible` to `\+ ADD CLIMB` before tapping it, and back up to `← LOG` to leave.
-- Maestro matches a selector against the whole spoken string, so a row reads date-first and a tab reads `Projects, tab, 2 of 4` on iOS but just `Projects` on Android, so tap tabs with `Projects(, tab.*)?`; wrap the part you know in `.*`.
-- A development build parks its floating menu button over the bottom-left corner, which is where the first chip of a grade rail sits. Tapping `index: 0` there opens the developer menu instead, and every later tap lands on it.
+- The log-session form is longer than the screen; `scrollUntilVisible` to `Add climb` before tapping it, and back up to the `LOG` back button to leave.
+- Maestro matches a selector against the whole spoken string, so a row reads date-first and a tab reads `Log, tab, 2 of 4` on iOS but just `Log` on Android, so tap tabs with `Log(, tab.*)?`; wrap the part you know in `.*`.
+- Matching ignores case, so `Log(, tab.*)?` also finds the onboarding carousel's `LOG` eyebrow; the helpers know the app is signed in by the header's `Account and settings` button instead.
+- Wait for a sheet to settle before tapping into it (`assertVisible: "2 OF 2"`), and for a pushed screen's own content before tapping its header: a tap during the slide lands nowhere and the text typed after it is lost.
+- An alert's title can repeat its button's label (`Delete gym`), so pin the button with `below:` the message as well as `rightOf: "Cancel"`.
 - A list that is still loading answers "no" to every `notVisible`, so a flow that creates its own fixture when one is missing has to wait for the screen to settle first or it makes a second one on every run.
-- `project-opens` leaves its project on the test account on purpose and finds it again next run, scrolling for it because a row below the fold is not missing. `project-session-opens` deletes the session it logs.
+- `climb-session-opens` logs a session on its own climb, `Maestro Arete`, and deletes that session at the end; the climb itself stays on the test account.
+- An always-mounted `FullWindowOverlay` hides every screen under it from XCUITest, so Maestro sees an empty app while axe sees everything. Mount one only while it has something to show, as `UpdateReadyOverlay` does.

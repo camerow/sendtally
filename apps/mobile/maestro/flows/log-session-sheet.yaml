@@ -7,12 +7,20 @@ name: log-session-sheet
 - runFlow: ../helpers/ensure-signed-in.yaml
 - runFlow: ../helpers/discard-live-session.yaml
 - runFlow: ../helpers/open-log-form.yaml
+- runFlow:
+    when:
+      visible: "Start fresh"
+    commands:
+      - tapOn: "Start fresh"
+      - tapOn:
+          text: "Discard"
+          rightOf: "Cancel"
 - scrollUntilVisible:
     element:
-      text: "\\+ ADD CLIMB"
+      text: "Add climb"
     direction: DOWN
     centerElement: true
-- tapOn: "\\+ ADD CLIMB"
+- tapOn: "Add climb"
 - assertVisible: "2 OF 2"
 - tapOn: "Name (optional)"
 - inputText: "Cascade"
@@ -41,7 +49,7 @@ name: log-session-sheet
 - assertVisible: "V3 Cascade.*"
 - scrollUntilVisible:
     element:
-      text: "← LOG"
+      text: "LOG"
     direction: UP
-- tapOn: "← LOG"
+- tapOn: "LOG"
 - runFlow: ../helpers/discard-live-session.yaml

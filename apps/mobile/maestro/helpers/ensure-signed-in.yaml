@@ -7,11 +7,11 @@ env:
 ---
 - extendedWaitUntil:
     visible:
-      text: "Sign in|Climb"
+      text: "Sign in|Account and settings"
     timeout: 30000
 - runFlow:
     when:
-      notVisible: "Climb"
+      notVisible: "Account and settings"
     commands:
       - tapOn: "Sign in"
       - tapOn: "you@email.com"
@@ -37,8 +37,11 @@ env:
       - tapOn:
           text: "Sign in|Create account"
 - extendedWaitUntil:
-    visible: "Climb"
+    visible: "Account and settings"
     timeout: 20000
+# Every flow starts on the climbing half of the Log, which keeps its segment across launches.
+- tapOn: "Log(, tab.*)?"
+- tapOn: "Climbing"
 # The setup cards sit above everything the flows look at on the log, including the live
 # session card, so dismiss them once. "Not now" keeps them dismissed on the device.
 - repeat:
