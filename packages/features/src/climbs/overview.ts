@@ -92,6 +92,11 @@ export function climbSessions(
     });
 }
 
+/** "Name, grade", as the climb page and its log page head it. */
+export function climbTitle(climb: Pick<ClimbSummary, "name" | "grade">): string {
+  return climb.grade === null ? climb.name : `${climb.name}, ${climbGradeLabel(climb)}`;
+}
+
 export function climbDetailVM(
   climb: ClimbSummary,
   sessions: readonly SessionWithClimbs[]
@@ -100,7 +105,7 @@ export function climbDetailVM(
     id: climb.id,
     name: climb.name,
     kicker: t(climb.discipline === "route" ? "common.route" : "common.boulder"),
-    title: climb.grade === null ? climb.name : `${climb.name}, ${climbGradeLabel(climb)}`,
+    title: climbTitle(climb),
     meta: [
       ...(climb.area?.name === undefined ? [] : [climb.area.name]),
       t("climbs.firstTried", { date: dateLabel(climb.first_at) }),

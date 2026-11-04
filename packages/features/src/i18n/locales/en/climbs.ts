@@ -68,8 +68,10 @@ export const climbs = {
   "climbs.new": "New",
   "climbs.newArea": "Not in Areas yet. It is added when you save.",
   "climbs.projectHint": "Pinned to the top until you send it",
-  "climbs.notesPlaceholder": "Notes: beta, conditions, how it felt",
+  "climbs.notesPlaceholder": "Beta, conditions, how it felt",
   "climbs.days": "Days",
   "climbs.firstTried": "first tried {date}",
   "climbs.logSession": "Log session",
+  "climbs.deleteClimb": "Delete climb",
+  "climbs.deleteConfirm": "Delete {name}? Its sessions stay as logged.",
 } as const;

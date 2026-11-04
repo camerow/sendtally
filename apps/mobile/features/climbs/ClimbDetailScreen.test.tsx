@@ -54,6 +54,12 @@ describe("Climb detail", () => {
     }
   });
 
+  it("offers to mark a climb that is not a project, rather than reading as one", async () => {
+    await render(<ClimbDetailScreen id="c1" />);
+    expect(screen.getByRole("switch", { name: "Project" })).toBeTruthy();
+    expect(screen.getByText("Mark as project")).toBeTruthy();
+  });
+
   it("logs a session on it from the footer", async () => {
     await render(<ClimbDetailScreen id="c1" />);
     await fireEvent.press(screen.getByText("Log session"));

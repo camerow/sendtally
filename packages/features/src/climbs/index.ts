@@ -72,6 +72,7 @@ export {
 } from "./useProjects";
 export {
   climbDetailVM,
+  climbTitle,
   climbSessions,
   isThisClimb,
   type ClimbDetailVM,

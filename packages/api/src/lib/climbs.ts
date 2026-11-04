@@ -206,7 +206,7 @@ export function climbCatalogue(
     const seen = new Set<string>();
     for (const climb of namedClimbs(session)) {
       const record = resolve(climb);
-      if (record === undefined) continue;
+      if (record === undefined || record.deleted_at !== null) continue;
       const tries = climb.tries ?? 1;
       const sent = climb.kind !== "attempt";
       const area = areaOf(record.area_id ?? session.area_id, areaNames);
@@ -243,7 +243,12 @@ export function climbCatalogue(
   }
   for (const record of records) {
     const noted = notesOf(record.id);
-    if (byId.has(record.id) || (!record.working && noted.length === 0)) continue;
+    if (
+      byId.has(record.id) ||
+      record.deleted_at !== null ||
+      (!record.working && noted.length === 0)
+    )
+      continue;
     const grade = record.grade_json === null ? null : (JSON.parse(record.grade_json) as ClimbGrade);
     byId.set(record.id, {
       id: record.id,

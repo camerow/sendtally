@@ -9,6 +9,7 @@ import {
   getTableColumns,
   gte,
   inArray,
+  isNotNull,
   isNull,
   like,
   lt,
@@ -1055,6 +1056,7 @@ export async function markWorking(
   const set: Partial<typeof userClimbs.$inferInsert> = {
     name: climb.name,
     working: true,
+    deleted_at: null,
     updated_at: now,
   };
   if (grade_json !== null) set.grade_json = grade_json;
@@ -1104,6 +1106,40 @@ export async function setUserClimbWorking(
     .update(userClimbs)
     .set({ working, updated_at: new Date().toISOString() })
     .where(and(eq(userClimbs.user_id, userId), eq(userClimbs.id, id)));
+}
+
+export async function deleteUserClimb(
+  db: D1Database,
+  userId: string,
+  id: string
+): Promise<boolean> {
+  const now = new Date().toISOString();
+  const result = await drizzle(db)
+    .update(userClimbs)
+    .set({ deleted_at: now, working: false, updated_at: now })
+    .where(
+      and(eq(userClimbs.user_id, userId), eq(userClimbs.id, id), isNull(userClimbs.deleted_at))
+    );
+  return result.meta.changes > 0;
+}
+
+/** Logging a deleted climb again brings it back, by its name or the id it was picked as. */
+export async function restoreUserClimbs(
+  db: D1Database,
+  userId: string,
+  climbs: { nameKeys: string[]; ids: string[] }
+): Promise<void> {
+  if (climbs.nameKeys.length === 0 && climbs.ids.length === 0) return;
+  await drizzle(db)
+    .update(userClimbs)
+    .set({ deleted_at: null, updated_at: new Date().toISOString() })
+    .where(
+      and(
+        eq(userClimbs.user_id, userId),
+        isNotNull(userClimbs.deleted_at),
+        or(inArray(userClimbs.name_key, climbs.nameKeys), inArray(userClimbs.id, climbs.ids))
+      )
+    );
 }
 
 export type ClimbPlace = {
@@ -1184,6 +1220,7 @@ export async function renameUserClimb(
             .update(userClimbs)
             .set({
               working: r.into.working || r.climb.working,
+              deleted_at: null,
               area_climb_id: r.into.area_climb_id ?? r.climb.area_climb_id,
               updated_at: now,
             })
