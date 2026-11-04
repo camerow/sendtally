@@ -74,12 +74,12 @@ describe("exercise editor", () => {
   it("makes a grip in Fingers, measured as hangs", async () => {
     const { actions } = await renderWithHang(<ExerciseEditorScreen kind="hangboard" />);
     expect(screen.getByRole("radio", { name: "Hang × weight" })).toBeChecked();
-    await fireEvent.changeText(screen.getByLabelText("Name"), "Mono");
+    await fireEvent.changeText(screen.getByLabelText("Name"), "Pocket");
     await fireEvent.press(screen.getByText("Save"));
     await act(async () => undefined);
     expect(actions.saveGrip).toHaveBeenCalledWith({
       id: "new-id",
-      name: "Mono",
+      name: "Pocket",
       custom: true,
       hidden: false,
     });
@@ -104,7 +104,7 @@ describe("exercise editor", () => {
 
   it("edits a grip of the user's own, but not onto another exercise's name", async () => {
     const grips = [
-      { id: "g1", name: "Mono", custom: true, hidden: false },
+      { id: "g1", name: "Pocket", custom: true, hidden: false },
       { id: "g2", name: "Block", custom: true, hidden: false, measure: "secondsWeight" as const },
     ];
     const { actions } = await renderWithHang(
@@ -117,12 +117,12 @@ describe("exercise editor", () => {
     await fireEvent.press(screen.getByText("Save"));
     expect(actions.saveGrip).not.toHaveBeenCalled();
 
-    await fireEvent.changeText(screen.getByLabelText("Name"), "Front 3");
+    await fireEvent.changeText(screen.getByLabelText("Name"), "Narrow pinch");
     await fireEvent.press(screen.getByText("Reps × weight"));
     await fireEvent.press(screen.getByText("Save"));
     expect(actions.saveGrip).toHaveBeenCalledWith({
       id: "g1",
-      name: "Front 3",
+      name: "Narrow pinch",
       custom: true,
       hidden: false,
       measure: "repsWeight",

@@ -51,6 +51,7 @@ describe("pickerEntries", () => {
     expect(names({ category: "all", text: "CURL" })).toEqual([
       "Jefferson curl",
       "Reverse wrist curls",
+      "Wrist curls",
     ]);
     expect(names({ category: "all", text: "nothing like this" })).toEqual([]);
   });
