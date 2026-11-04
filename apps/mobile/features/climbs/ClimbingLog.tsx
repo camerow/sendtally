@@ -6,7 +6,6 @@ import {
   climbingSessionVM,
   gradeFilterLabel,
   useClimbs,
-  type ClimbLogRowVM,
   type ClimbStatusFilter,
   type GradeFilter,
 } from "@sendtally/features/climbs";
@@ -19,17 +18,13 @@ import { Chip } from "../../components/Chip";
 import { Icon } from "../../components/Icon";
 import { TextInput } from "../../components/TextInput";
 import { useApi } from "../../lib/api";
-import { EntryRow } from "../journal/EntryRow";
-import { TripGroup } from "../journal/TripGroup";
-import { BlockDoneRow } from "../sessions/BlockDoneRow";
-import { ClimbingSessionRows } from "../sessions/ClimbingSessionRows";
 import { SectionHeader } from "../sessions/SectionHeader";
 import { emptyBody, emptyLabel } from "../sessions/emptyStyles";
-import { openLogItem } from "../sessions/openLogItem";
-import { ClimbLogRow } from "./ClimbLogRow";
+import { ClimbingLogCell } from "./ClimbingLogCell";
 import { GradeFilterSheet } from "./GradeFilterSheet";
+import type { ClimbingLogRow } from "./types";
 
-type Row = LogItem | { type: "climb"; key: string; row: ClimbLogRowVM };
+type Row = ClimbingLogRow;
 
 /** `meta` is null on the flat climbs list, whose groups are labelled lightly or not at all. */
 type Section = { key: string; title: string | null; meta: string | null; data: Row[] };
@@ -84,6 +79,11 @@ export function ClimbingLog({ items, header, onRefresh }: ClimbingLogProps): Rea
         ])
       ),
     [ready]
+  );
+
+  const renderItem = React.useCallback(
+    ({ item }: { item: Row }) => <ClimbingLogCell item={item} nested={nested} />,
+    [nested]
   );
 
   const sections = React.useMemo((): Section[] => {
@@ -222,26 +222,7 @@ export function ClimbingLog({ items, header, onRefresh }: ClimbingLogProps): Rea
             </Text>
           ) : null
         }
-        renderItem={({ item }) =>
-          item.type === "climb" ? (
-            <View style={{ paddingHorizontal: 18 }}>
-              <ClimbLogRow row={item.row} />
-            </View>
-          ) : item.type === "session" ? (
-            <ClimbingSessionRows
-              session={item.session}
-              vm={nested.get(item.session.fingerprint)}
-              blockTag={item.blockTag}
-              onPress={() => openLogItem(item)}
-            />
-          ) : item.type === "block" ? (
-            <BlockDoneRow recap={item.recap} onPress={() => openLogItem(item)} />
-          ) : item.type === "entry" && item.inside.length > 0 ? (
-            <TripGroup item={item} onOpen={openLogItem} climbing={nested} />
-          ) : item.type === "entry" ? (
-            <EntryRow entry={item.entry} onPress={() => openLogItem(item)} />
-          ) : null
-        }
+        renderItem={renderItem}
       />
       <GradeFilterSheet
         visible={picking}

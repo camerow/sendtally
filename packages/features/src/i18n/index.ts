@@ -63,10 +63,27 @@ export function t(key: MessageKey, vars?: Vars): string {
   );
 }
 
+const formatters = new Map<string, Intl.DateTimeFormat | Intl.NumberFormat>();
+
+/** Building an Intl formatter is slow on Hermes, and a long log formats a date per row. */
+function formatter<F extends Intl.DateTimeFormat | Intl.NumberFormat>(
+  kind: string,
+  options: object | undefined,
+  make: (locale: string) => F
+): F {
+  const key = `${kind}|${getLocale()}|${JSON.stringify(options ?? {})}`;
+  let f = formatters.get(key) as F | undefined;
+  if (f === undefined) {
+    f = make(getLocale());
+    formatters.set(key, f);
+  }
+  return f;
+}
+
 export function formatDate(date: Date, options: Intl.DateTimeFormatOptions): string {
-  return new Intl.DateTimeFormat(getLocale(), options).format(date);
+  return formatter("date", options, (l) => new Intl.DateTimeFormat(l, options)).format(date);
 }
 
 export function formatNumber(n: number, options?: Intl.NumberFormatOptions): string {
-  return new Intl.NumberFormat(getLocale(), options).format(n);
+  return formatter("number", options, (l) => new Intl.NumberFormat(l, options)).format(n);
 }

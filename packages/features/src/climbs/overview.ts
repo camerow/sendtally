@@ -17,16 +17,65 @@ export function isThisClimb(
     : logged.userClimbId === climb.id;
 }
 
+type ByIdAndName<T> = { byId: Map<string, T>; byName: Map<string, T> };
+
+/** Built once per list and looked up after, so a log of hundreds of sessions is not rescanned per row. */
+function indexed<L extends object, T>(
+  cache: WeakMap<L, ByIdAndName<T>>,
+  list: L,
+  build: (add: (id: string | undefined, name: string, value: T) => void) => void
+): ByIdAndName<T> {
+  const known = cache.get(list);
+  if (known !== undefined) return known;
+  const index: ByIdAndName<T> = { byId: new Map(), byName: new Map() };
+  build((id, name, value) => {
+    if (id !== undefined && !index.byId.has(id)) index.byId.set(id, value);
+    const key = climbKey(name);
+    if (id === undefined && !index.byName.has(key)) index.byName.set(key, value);
+  });
+  cache.set(list, index);
+  return index;
+}
+
+const climbIndexes = new WeakMap<readonly ClimbSummary[], ByIdAndName<ClimbSummary>>();
+
+/** The climb a logged one is, by the same rule as `isThisClimb`; the first in the list wins. */
+export function climbOf(
+  climbs: readonly ClimbSummary[],
+  logged: { name: string; userClimbId?: string | undefined }
+): ClimbSummary | undefined {
+  const index = indexed(climbIndexes, climbs, (add) => {
+    for (const c of climbs) {
+      add(c.id, c.name, c);
+      add(undefined, c.name, c);
+    }
+  });
+  return logged.userClimbId === undefined
+    ? index.byName.get(climbKey(logged.name))
+    : index.byId.get(logged.userClimbId);
+}
+
+type FirstSend = { order: number; style: ClimbStyle | undefined };
+
+const firstSends = new WeakMap<readonly SessionWithClimbs[], ByIdAndName<FirstSend>>();
+
 /** How the first send went: a flash or onsight is named, any other send is just sent. */
 export function sendStyleOf(
   climb: ClimbSummary,
   sessions: readonly SessionWithClimbs[]
 ): ClimbStyle {
-  const send = [...sessions]
-    .sort((a, b) => a.start_at.localeCompare(b.start_at))
-    .flatMap((s) => s.climbs)
-    .find((c) => c.kind === "send" && isThisClimb(climb, c));
-  return send?.style ?? "redpoint";
+  const index = indexed(firstSends, sessions, (add) => {
+    const sends = [...sessions]
+      .sort((a, b) => a.start_at.localeCompare(b.start_at))
+      .flatMap((s) => s.climbs);
+    sends.forEach((c, order) => {
+      if (c.kind === "send") add(c.userClimbId, c.name, { order, style: c.style });
+    });
+  });
+  const [stamped, named] = [index.byId.get(climb.id), index.byName.get(climbKey(climb.name))];
+  const first =
+    stamped === undefined || (named !== undefined && named.order < stamped.order) ? named : stamped;
+  return first?.style ?? "redpoint";
 }
 
 export function sendStyleText(style: ClimbStyle): string {
