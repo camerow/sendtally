@@ -201,13 +201,23 @@ const placedClimbs = async (
   const found = (await repo.areaClimbsByIds(db, viewer, ids)).filter(isOpen);
   if (found.length !== ids.length) return { error: "unknown climb" };
   const areaOfClimb = new Map(found.map((climb) => [climb.id, climb.area_id]));
-  const climbs = form.climbs.map((climb) => {
-    const at = climb.climbId === undefined ? undefined : areaOfClimb.get(climb.climbId);
-    return at === undefined ? climb : { ...climb, areaId: climb.areaId ?? at };
+  const linkedAreas = await repo.areasByIds(db, viewer, [...new Set(areaOfClimb.values())]);
+  const pathOf = new Map(linkedAreas.map((area) => [area.id, areaIdsOnPath(area.path)]));
+  // Areas search covers the sectors under the picked area, so a climb found in one sits there.
+  const linkedAt = (climb: ManualSessionBody["climbs"][number]): string | undefined =>
+    climb.climbId === undefined ? undefined : areaOfClimb.get(climb.climbId);
+  const misplaced = form.climbs.some((climb) => {
+    const at = linkedAt(climb);
+    return (
+      at !== undefined &&
+      climb.areaId !== undefined &&
+      !(pathOf.get(at) ?? [at]).includes(climb.areaId)
+    );
   });
-  const misplaced = climbs.some(
-    (climb) => climb.climbId !== undefined && climb.areaId !== areaOfClimb.get(climb.climbId)
-  );
+  const climbs = form.climbs.map((climb) => {
+    const at = linkedAt(climb);
+    return at === undefined ? climb : { ...climb, areaId: at };
+  });
   return misplaced ? { error: "climb is at another area" } : { form: { ...form, climbs } };
 };
 

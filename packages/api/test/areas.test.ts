@@ -611,6 +611,18 @@ describe("each climb's area", () => {
     expect(elsewhere.status).toBe(400);
   });
 
+  it("places a climb linked in a sector under the picked area at that sector", async () => {
+    const user = "user_sector_area";
+    const [popular] = await crags(user);
+    const sector = await createArea(user, { parentId: popular.id, name: "Flying Buttress Area" });
+    const climb = await createClimb(user, mandala(sector.id));
+    const saved = await log(user, {
+      location: "outdoor",
+      climbs: [{ name: "The Mandala", climbId: climb.id, areaId: popular.id, grade: v(12) }],
+    });
+    expect(saved.areas).toEqual([place(sector)]);
+  });
+
   it("keeps a grade-only day's area on the session, and only on such a day", async () => {
     const user = "user_grade_only_area";
     const [popular, plantation] = await crags(user);
