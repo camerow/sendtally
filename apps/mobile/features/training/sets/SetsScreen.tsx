@@ -8,6 +8,8 @@ import {
   changeSet,
   climbingLastTime,
   climbsLine,
+  lapPlanOf,
+  lapsLine,
   previousSets,
   useActivities,
   useWeightUnit,
@@ -15,7 +17,12 @@ import {
 } from "@sendtally/features/activities";
 import { eachSideOf, tallyMeasuresOf, type TallyMeasure } from "@sendtally/features/exercises";
 import { formatNumber, t } from "@sendtally/features/i18n";
-import { exerciseSets, startExercise, useLiveSession } from "@sendtally/features/log-session";
+import {
+  exerciseSets,
+  lapSets,
+  startExercise,
+  useLiveSession,
+} from "@sendtally/features/log-session";
 import { useExercises } from "@sendtally/features/statistics";
 import { exerciseName } from "@sendtally/features/workouts";
 import { KeypadScrollView } from "../../../components/KeypadScrollView";
@@ -174,11 +181,13 @@ export function SetsScreen({
       <RestPreview seconds={run.exerciseRestS} />
     ));
   const climbedSets = (item: number): SetDone[] =>
-    exerciseSets(
-      climbs,
-      item,
-      tallyOf(item) === "wallTime" ? run.items[item]?.dose.onS : undefined
-    );
+    tallyOf(item) === "laps"
+      ? lapSets(climbs, item)
+      : exerciseSets(
+          climbs,
+          item,
+          tallyOf(item) === "wallTime" ? run.items[item]?.dose.onS : undefined
+        );
   const finish = (): void => {
     rest.skip();
     hold.stop();
@@ -209,6 +218,7 @@ export function SetsScreen({
             sets: at.dose.sets,
             ...(measure === "climbs" && at.dose.reps !== undefined ? { climbs: at.dose.reps } : {}),
             ...(measure === "wallTime" ? { onS: at.dose.onS ?? 0 } : {}),
+            ...(measure === "laps" ? { lap: lapPlanOf(at.dose) } : {}),
             restS: at.dose.setRestS ?? 0,
           },
           new Date()
@@ -245,13 +255,15 @@ export function SetsScreen({
                   key={i}
                   item={item}
                   measure={measure}
-                  lastTime={climbingLastTime(previous(d.exercise), measure)}
+                  lastTime={climbingLastTime(previous(d.exercise), measure, item.dose)}
                   logged={
                     logged.length === 0
                       ? null
-                      : measure === "wallTime"
-                        ? wallLine(logged)
-                        : climbsLine(logged)
+                      : measure === "laps"
+                        ? lapsLine(logged, item.dose)
+                        : measure === "wallTime"
+                          ? wallLine(logged)
+                          : climbsLine(logged)
                   }
                   live={tally.stored?.draft.exercise?.item === i}
                   onStart={() => startClimbing(i, measure)}

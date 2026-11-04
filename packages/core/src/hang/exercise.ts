@@ -7,6 +7,7 @@ export const EXERCISE_MEASURES = [
   "seconds",
   "secondsWeight",
   "rounds",
+  "laps",
 ] as const;
 
 export type ExerciseMeasure = (typeof EXERCISE_MEASURES)[number];
@@ -25,10 +26,18 @@ export const GRIP_MEASURES = ["hang", "repsWeight", "secondsWeight"] as const;
 export type GripMeasure = (typeof GRIP_MEASURES)[number];
 
 /**
- * What a climbing exercise can be measured in: climbs per set, or time on the wall per set,
- * both logged on the session tally. Rounds stays readable on climbing exercises logged in it.
+ * What a climbing exercise can be measured in: climbs per set, time on the wall per set, or
+ * laps of an endurance circuit, all logged on the session tally. Rounds stays readable on
+ * climbing exercises logged in it.
  */
-export const CLIMBING_MEASURES = ["reps", "seconds"] as const satisfies readonly ExerciseMeasure[];
+export const CLIMBING_MEASURES = [
+  "reps",
+  "seconds",
+  "laps",
+] as const satisfies readonly ExerciseMeasure[];
+
+/** What an exercise of any other category can be measured in: laps are climbing's own. */
+const OTHER_MEASURES = EXERCISE_MEASURES.filter((m) => m !== "laps");
 
 /**
  * What a climbing exercise's trend follows: the climbs completed, the average or highest
@@ -40,11 +49,7 @@ export type ExerciseProgress = (typeof EXERCISE_PROGRESS)[number];
 
 /** The measures a new or edited exercise of a category offers. */
 export const measuresFor = (kind: WorkoutKind): readonly (ExerciseMeasure | GripMeasure)[] =>
-  kind === "hangboard"
-    ? GRIP_MEASURES
-    : kind === "climbing"
-      ? CLIMBING_MEASURES
-      : EXERCISE_MEASURES;
+  kind === "hangboard" ? GRIP_MEASURES : kind === "climbing" ? CLIMBING_MEASURES : OTHER_MEASURES;
 
 const DEFAULT_MEASURE: Record<ExerciseKind, ExerciseMeasure> = {
   climbing: "reps",

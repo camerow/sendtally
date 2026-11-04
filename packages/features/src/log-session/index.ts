@@ -146,6 +146,21 @@ export {
   type ExerciseTallyStart,
   type TallySetGroup,
 } from "./exerciseTally";
+export {
+  allLapsDone,
+  lapClockLabel,
+  lapElapsed,
+  lapLine,
+  lapsClimb,
+  lapsDone,
+  lapSets,
+  lapsPlanned,
+  withLapAdded,
+  withLapLogged,
+  withLapRest,
+  withLapStarted,
+  type LapPlan,
+} from "./exerciseLaps";
 export type {
   ClimbArea,
   ClimbDraft,

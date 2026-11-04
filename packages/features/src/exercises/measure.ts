@@ -16,6 +16,7 @@ export function tallyMeasureOf(
 ): TallyMeasure | null {
   if (e?.kind !== "climbing") return null;
   if (e.measure === "reps") return "climbs";
+  if (e.measure === "laps") return "laps";
   return e.measure === "seconds" ? "wallTime" : null;
 }
 

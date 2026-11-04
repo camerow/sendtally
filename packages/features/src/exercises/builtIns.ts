@@ -43,6 +43,7 @@ const BUILT_IN_EXERCISES: readonly Spec[] = [
   spec("climbing", "reps", "workouts.exercise.silentFeet"),
   spec("climbing", "reps", "workouts.exercise.downclimbing"),
   spec("climbing", "reps", "workouts.exercise.hoverHands"),
+  spec("climbing", "laps", "workouts.exercise.circuitLaps"),
   spec("strength", "repsWeight", "workouts.exercise.backSquat"),
   spec("strength", "repsWeight", "workouts.exercise.benchPress"),
   spec("strength", "repsWeight", "workouts.exercise.barbellRow"),
