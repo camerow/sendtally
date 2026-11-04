@@ -197,6 +197,20 @@
       "when": 1793763780302,
       "tag": "0032_delete_climb",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "6",
+      "when": 1793808844705,
+      "tag": "0033_recopy_week_changes",
+      "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "6",
+      "when": 1793808852135,
+      "tag": "0034_drop_week_changes",
+      "breakpoints": true
     }
   ]
 }
