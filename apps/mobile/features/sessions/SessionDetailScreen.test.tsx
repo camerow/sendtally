@@ -177,9 +177,11 @@ describe("Climbing session detail", () => {
     expect(screen.getByLabelText("V4, Boulder ×2, 5 tries, Sent")).toBeTruthy();
   });
 
-  it("edits from the bar", async () => {
+  it("edits from the first row of the ··· menu, not the bar", async () => {
     await render(<SessionDetailScreen />);
-    await fireEvent.press(screen.getByText("Edit"));
+    expect(screen.queryByText("Edit")).toBeNull();
+    await fireEvent.press(screen.getByLabelText("More"));
+    await fireEvent.press(screen.getByText("Edit session"));
     expect(router.push).toHaveBeenCalledWith("/session/manual-1/edit");
   });
 

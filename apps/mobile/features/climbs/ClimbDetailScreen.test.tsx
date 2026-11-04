@@ -1,5 +1,5 @@
 import { describe, expect, it, jest } from "@jest/globals";
-import { fireEvent, render, screen } from "@testing-library/react-native";
+import { act, fireEvent, render, screen } from "@testing-library/react-native";
 import { router } from "expo-router";
 import React from "react";
 import { Alert, type AlertButton } from "react-native";
@@ -9,7 +9,10 @@ const mockSaveNote = jest.fn();
 const mockDeleteNote = jest.fn();
 
 let mockProject = false;
-jest.mock("expo-router", () => ({ router: { push: jest.fn(), replace: jest.fn() } }));
+const mockRemove = jest.fn();
+jest.mock("expo-router", () => ({
+  router: { push: jest.fn(), replace: jest.fn(), back: jest.fn() },
+}));
 jest.mock("expo-crypto", () => ({ randomUUID: () => "n-new" }));
 jest.mock("../../lib/api", () => ({ useApi: () => undefined }));
 jest.mock("../../components/BackButton", () => ({ BackButton: () => null }));
@@ -39,10 +42,27 @@ jest.mock("@sendtally/features/climbs", () => ({
     },
     saveNote: mockSaveNote,
     deleteNote: mockDeleteNote,
+    remove: mockRemove,
   }),
 }));
 
 describe("Climb detail", () => {
+  it("deletes the climb from the last row of its ··· menu, once confirmed", async () => {
+    const alert = jest.spyOn(Alert, "alert").mockImplementation(() => undefined);
+    await render(<ClimbDetailScreen id="c1" />);
+    await fireEvent.press(screen.getByLabelText("More"));
+    await fireEvent.press(screen.getByText("Delete climb"));
+    expect(alert.mock.calls[0]?.slice(0, 2)).toEqual([
+      "Delete climb",
+      "Delete The Arete? Its sessions stay as logged.",
+    ]);
+    expect(mockRemove).not.toHaveBeenCalled();
+    const buttons = (alert.mock.calls[0]?.[2] ?? []) as AlertButton[];
+    await act(async () => buttons.find((b) => b.style === "destructive")?.onPress?.());
+    expect(mockRemove).toHaveBeenCalled();
+    alert.mockRestore();
+  });
+
   it("introduces the climb and reads its days, tries and best as tiles", async () => {
     await render(<ClimbDetailScreen id="c1" />);
     expect(screen.queryByText("Boulder")).toBeNull();
@@ -77,7 +97,9 @@ describe("Climb detail", () => {
 
   it("edits the climb itself from the bar", async () => {
     await render(<ClimbDetailScreen id="c1" />);
-    await fireEvent.press(screen.getByText("Edit"));
+    expect(screen.queryByText("Edit")).toBeNull();
+    await fireEvent.press(screen.getByLabelText("More"));
+    await fireEvent.press(screen.getByText("Edit climb"));
     expect(router.push).toHaveBeenCalledWith({
       pathname: "/climb/log",
       params: { climbId: "c1", edit: "1" },
@@ -94,7 +116,6 @@ describe("Climb detail", () => {
   it("adds a dated note to the climb from the + beside Notes", async () => {
     await render(<ClimbDetailScreen id="c1" />);
     expect(screen.queryByText("Add a note")).toBeNull();
-    expect(screen.queryByLabelText("More")).toBeNull();
     await fireEvent.press(screen.getByLabelText("Add a note"));
     await fireEvent.changeText(
       screen.getByPlaceholderText("What happened, what to try next"),

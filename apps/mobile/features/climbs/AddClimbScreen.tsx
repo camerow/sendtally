@@ -1,7 +1,6 @@
 import { router, useLocalSearchParams } from "expo-router";
 import React from "react";
 import {
-  Alert,
   Keyboard,
   KeyboardAvoidingView,
   Platform,
@@ -50,7 +49,6 @@ import { Switch } from "../../components/Switch";
 import { TextInput } from "../../components/TextInput";
 import { useApi } from "../../lib/api";
 import { press } from "../../lib/press";
-import { dangerButton, dangerButtonLabel } from "../../lib/styles";
 import { ResultFields } from "../log-session/ResultFields";
 import { SuggestField } from "./SuggestField";
 
@@ -227,21 +225,6 @@ export function AddClimbScreen(): React.ReactElement {
       .then(() => router.back(), fail);
   };
 
-  const confirmDelete = (id: string): void => {
-    Alert.alert(t("climbs.deleteClimb"), t("climbs.deleteConfirm", { name: climb.name.trim() }), [
-      { text: t("common.cancel"), style: "cancel" },
-      {
-        text: t("climbs.deleteClimb"),
-        style: "destructive",
-        onPress: () => {
-          setSaving(true);
-          setFailed(false);
-          api.deleteClimb(id).then(() => router.dismissTo("/(tabs)/sessions"), fail);
-        },
-      },
-    ]);
-  };
-
   const dateRow = (
     <View style={row}>
       <Text style={{ fontFamily: fonts.sans, fontSize: 15, color: colors.gunmetal }}>
@@ -415,16 +398,6 @@ export function AddClimbScreen(): React.ReactElement {
                 />
               </View>
             </>
-          )}
-          {editing && (
-            <Pressable
-              onPress={() => confirmDelete(climbId)}
-              disabled={saving}
-              accessibilityRole="button"
-              style={press({ ...dangerButton, marginTop: 8 })}
-            >
-              <Text style={dangerButtonLabel}>{t("climbs.deleteClimb")}</Text>
-            </Pressable>
           )}
         </ScrollView>
         <View

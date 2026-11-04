@@ -11,18 +11,18 @@ export type ClimbingHeroProps = {
   /** The kicker beside the climbing mark; none leaves the title to lead. */
   kind?: string;
   title: string;
-  /** Right under the title, as a climb's Project pill. */
-  status?: React.ReactNode;
+  /** In the kicker's place above the title, as a climb's Project pill. */
+  kicker?: React.ReactNode;
   /** Where it was, between the title and the meta line. */
   place?: string;
   meta: string;
 };
 
-/** A climbing detail screen's top: the climbing mark and kicker, the title, its status, where, and a meta line. */
+/** A climbing detail screen's top: the climbing mark and kicker or a status in its place, the title, where, and a meta line. */
 export function ClimbingHero({
   kind,
   title,
-  status,
+  kicker,
   place = "",
   meta,
 }: ClimbingHeroProps): React.ReactElement {
@@ -34,8 +34,8 @@ export function ClimbingHero({
           <Label color={KIND_LOOK.climbing.ink}>{kind}</Label>
         </View>
       )}
+      {kicker !== undefined && <View style={{ alignSelf: "flex-start" }}>{kicker}</View>}
       <Title size={34}>{title}</Title>
-      {status !== undefined && <View style={{ alignSelf: "flex-start" }}>{status}</View>}
       {place !== "" && (
         <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 16, color: colors.gunmetal }}>
           {place}

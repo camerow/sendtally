@@ -53,6 +53,12 @@ export default function SessionDetailScreen(): React.ReactElement {
     confirm: { title: t("sessions.deleteTitle"), body: t("sessions.deleteBody") },
     onDelete: () => sessions.remove(fingerprint ?? ""),
   });
+  const editRow = {
+    icon: "pencil" as const,
+    title: t("logSession.editTitle"),
+    hint: t("sessionDetail.editHint"),
+    onPress: () => router.push(`/session/${encodeURIComponent(fingerprint ?? "")}/edit`),
+  };
   const onStrava = (): void => {
     if (strava?.kind === "posted") void Linking.openURL(strava.url);
     else if (strava?.kind === "connect") connect.connect();
@@ -63,12 +69,11 @@ export default function SessionDetailScreen(): React.ReactElement {
     <ScreenFrame
       action={
         <DetailActions
-          onEdit={
-            vm.editable
-              ? () => router.push(`/session/${encodeURIComponent(fingerprint ?? "")}/edit`)
-              : undefined
-          }
-          menu={strava === null ? [remove] : [stravaRow(strava, vm.rpe, onStrava), remove]}
+          menu={[
+            ...(vm.editable ? [editRow] : []),
+            ...(strava === null ? [] : [stravaRow(strava, vm.rpe, onStrava)]),
+            remove,
+          ]}
         />
       }
     >

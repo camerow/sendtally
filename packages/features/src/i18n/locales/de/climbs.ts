@@ -64,6 +64,7 @@ export const climbs = {
   "climbs.noMatches": "Keine Kletterei passt.",
   "climbs.addClimb": "Kletterei hinzufügen",
   "climbs.editClimb": "Kletterei bearbeiten",
+  "climbs.editClimbHint": "Name, Gebiet, Grad und Projekt",
   "climbs.empty":
     "Jede Kletterei, die du hinzufügst, landet hier, die neueste zuerst. Füg eine hinzu, um anzufangen.",
   "climbs.yoursShort": "Deine",
@@ -76,4 +77,5 @@ export const climbs = {
   "climbs.logSession": "Session eintragen",
   "climbs.deleteClimb": "Kletterei löschen",
   "climbs.deleteConfirm": "{name} löschen? Ihre Sessions bleiben wie eingetragen.",
+  "climbs.deleteClimbHint": "Ihre Sessions bleiben wie eingetragen",
 } as const;

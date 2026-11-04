@@ -39,6 +39,8 @@ export type ClimbFeature = {
   /** Writes a note on the climb's page, a new one when it has no id yet; saved on the phone first. */
   saveNote: (note: Omit<ClimbNote, "id"> & { id?: string }) => void;
   deleteNote: (id: string) => void;
+  /** Deletes the climb, leaving its sessions as logged. */
+  remove: () => void;
   reload: () => Promise<void>;
 };
 
@@ -88,5 +90,9 @@ export function useClimb(api: SendtallyApi, idOrSlug: string, newId: () => strin
     },
     [api, id, local]
   );
-  return { state, saveNote, deleteNote, reload };
+  const remove = React.useCallback((): void => {
+    if (id === null) return;
+    void api.deleteClimb(id).then(reload, reload);
+  }, [api, id, reload]);
+  return { state, saveNote, deleteNote, remove, reload };
 }

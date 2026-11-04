@@ -63,6 +63,7 @@ export const climbs = {
   "climbs.noMatches": "No climbs match.",
   "climbs.addClimb": "Add climb",
   "climbs.editClimb": "Edit climb",
+  "climbs.editClimbHint": "Its name, area, grade and project",
   "climbs.empty": "Every climb you add lands here, newest first. Add one to start.",
   "climbs.yoursShort": "Yours",
   "climbs.new": "New",
@@ -74,4 +75,5 @@ export const climbs = {
   "climbs.logSession": "Log session",
   "climbs.deleteClimb": "Delete climb",
   "climbs.deleteConfirm": "Delete {name}? Its sessions stay as logged.",
+  "climbs.deleteClimbHint": "Its sessions stay as logged",
 } as const;

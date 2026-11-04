@@ -11,6 +11,7 @@ import { SectionHeading } from "../../components/SectionHeading";
 import { useApi } from "../../lib/api";
 import { Button } from "../training/components/Button";
 import { DetailActions } from "../training/components/DetailActions";
+import { deleteRow } from "../training/components/deleteRow";
 import { LoadState } from "../training/data/LoadState";
 import { HistoryList } from "../training/history/HistoryList";
 import { SummaryTiles } from "../training/summary/SummaryTiles";
@@ -21,7 +22,7 @@ import { ClimbPill } from "./ClimbPill";
 /** One climb: Project when it is one, its days, tries and best, every session on it, and Log session. */
 export function ClimbDetailScreen({ id }: { id: string }): React.ReactElement {
   const api = useApi();
-  const { state, saveNote, deleteNote, reload } = useClimb(api, id, randomUUID);
+  const { state, saveNote, deleteNote, remove, reload } = useClimb(api, id, randomUUID);
   const [noting, setNoting] = React.useState<ClimbNote | "new" | null>(null);
 
   if (state.status !== "ready")
@@ -33,9 +34,24 @@ export function ClimbDetailScreen({ id }: { id: string }): React.ReactElement {
     <ScreenFrame
       action={
         <DetailActions
-          onEdit={() =>
-            router.push({ pathname: "/climb/log", params: { climbId: climb.id, edit: "1" } })
-          }
+          menu={[
+            {
+              icon: "pencil",
+              title: t("climbs.editClimb"),
+              hint: t("climbs.editClimbHint"),
+              onPress: () =>
+                router.push({ pathname: "/climb/log", params: { climbId: climb.id, edit: "1" } }),
+            },
+            deleteRow({
+              title: t("climbs.deleteClimb"),
+              hint: t("climbs.deleteClimbHint"),
+              confirm: {
+                title: t("climbs.deleteClimb"),
+                body: t("climbs.deleteConfirm", { name: vm.name }),
+              },
+              onDelete: remove,
+            }),
+          ]}
         />
       }
       footer={
@@ -50,7 +66,7 @@ export function ClimbDetailScreen({ id }: { id: string }): React.ReactElement {
       <ClimbingHero
         title={vm.title}
         meta={vm.meta}
-        status={vm.project ? <ClimbPill kind="project" label={t("common.project")} /> : undefined}
+        kicker={vm.project ? <ClimbPill kind="project" label={t("common.project")} /> : undefined}
       />
       <SummaryTiles
         stats={[

@@ -1,9 +1,8 @@
 import { describe, expect, it, jest } from "@jest/globals";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react-native";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react-native";
 import { router } from "expo-router";
 import React from "react";
-import { Alert } from "react-native";
 import type { ClimbChange, ClimbSummary } from "@sendtally/api-client";
 import { queries } from "@sendtally/features/query";
 import type { SendtallyApi } from "@sendtally/api-client";
@@ -84,6 +83,7 @@ describe("editing a climb", () => {
     expect(screen.getByText("Edit climb")).toBeTruthy();
     expect(screen.getByDisplayValue("The Depot")).toBeTruthy();
     expect(screen.queryByText("Date")).toBeNull();
+    expect(screen.queryByText("Delete climb")).toBeNull();
     expect(screen.queryByText("Pinned to the top until you send it")).toBeNull();
     expect(screen.getByRole("switch", { name: "Project" }).props.accessibilityState).toMatchObject({
       checked: false,
@@ -147,24 +147,6 @@ describe("editing a climb", () => {
       areaId: null,
       areaClimbId: null,
     });
-  });
-});
-
-describe("deleting a climb", () => {
-  it("asks first, then deletes only the climb and goes back to the log", async () => {
-    const alert = jest.spyOn(Alert, "alert");
-    await renderEdit();
-    await fireEvent.press(screen.getByText("Delete climb"));
-    expect(alert).toHaveBeenCalledWith(
-      "Delete climb",
-      "Delete The Arete? Its sessions stay as logged.",
-      expect.any(Array)
-    );
-    const buttons = alert.mock.calls[0]![2]!;
-    expect(mockDeleteClimb).not.toHaveBeenCalled();
-    await act(async () => buttons.find((b) => b.style === "destructive")!.onPress!());
-    expect(mockDeleteClimb).toHaveBeenCalledWith("c1");
-    expect(router.dismissTo).toHaveBeenCalledWith("/(tabs)/sessions");
   });
 });
 
