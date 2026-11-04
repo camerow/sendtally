@@ -1,11 +1,8 @@
 import React from "react";
-import { Pressable, View } from "react-native";
-import { colors } from "@sendtally/design/tokens";
+import { View } from "react-native";
 import { t } from "@sendtally/features/i18n";
-import { Icon } from "../../../components/Icon";
-import { press } from "../../../lib/press";
+import { SectionHeading } from "../../../components/SectionHeading";
 import { Button } from "../components/Button";
-import { Label } from "../components/Label";
 import { HistoryRow } from "./HistoryRow";
 import type { HistoryItem } from "./types";
 
@@ -30,27 +27,17 @@ export function HistoryList({
   const shown = all ? items : items.slice(0, SHOWN);
   return (
     <View style={{ gap: 2 }}>
-      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-        <Label color={colors.gunmetal}>
-          {title ??
-            t("hang.history", {
-              count: t("hang.sessionCount", {
-                count: items.filter((i) => i.kind !== "note").length,
-              }),
-            })}
-        </Label>
-        {onAdd && (
-          <Pressable
-            onPress={onAdd.onPress}
-            accessibilityRole="button"
-            accessibilityLabel={onAdd.label}
-            hitSlop={8}
-            style={press({ width: 32, height: 32, alignItems: "center", justifyContent: "center" })}
-          >
-            <Icon name="plus" color={colors.gunmetal} size={18} strokeWidth={2.2} />
-          </Pressable>
-        )}
-      </View>
+      <SectionHeading
+        title={
+          title ??
+          t("hang.history", {
+            count: t("hang.sessionCount", {
+              count: items.filter((i) => i.kind !== "note").length,
+            }),
+          })
+        }
+        add={onAdd}
+      />
       {shown.map((item) => (
         <HistoryRow key={item.id} item={item} onPress={() => onOpen(item.id)} />
       ))}

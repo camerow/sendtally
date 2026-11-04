@@ -1,7 +1,6 @@
 import { router, useLocalSearchParams } from "expo-router";
 import React from "react";
 import {
-  Alert,
   Keyboard,
   KeyboardAvoidingView,
   Platform,
@@ -45,13 +44,11 @@ import { useGradeScalePrefs } from "@sendtally/features/settings";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { DateTimeField } from "../../components/DateTimeField";
 import { GradeChips } from "../../components/GradeChips";
-import { Icon } from "../../components/Icon";
 import { Segmented } from "../../components/Segmented";
 import { Switch } from "../../components/Switch";
 import { TextInput } from "../../components/TextInput";
 import { useApi } from "../../lib/api";
 import { press } from "../../lib/press";
-import { dangerButton, dangerButtonLabel } from "../../lib/styles";
 import { ResultFields } from "../log-session/ResultFields";
 import { SuggestField } from "./SuggestField";
 
@@ -99,7 +96,10 @@ export function AddClimbScreen(): React.ReactElement {
     ...newClimb("climb-1", scales.boulder),
     grade: "",
   }));
-  const [project, setProject] = React.useState(true);
+  // Untouched (null), Edit shows the climb's own flag as it is now, never one read from a stale list.
+  const [touched, setProject] = React.useState<boolean | null>(null);
+  const project =
+    touched ?? (editing ? (mine.find((c) => c.id === climbId)?.project ?? false) : true);
   const [date, setDate] = React.useState(localDate(new Date()));
   const [areaText, setAreaText] = React.useState("");
   const [area, setArea] = React.useState<Area | null>(null);
@@ -130,6 +130,33 @@ export function AddClimbScreen(): React.ReactElement {
       setAreaText(c.area.name);
     }
   };
+
+  const projectRow = (
+    <View style={row}>
+      <View style={{ flex: 1, gap: 2 }}>
+        <Text style={{ fontFamily: fonts.sans, fontSize: 15, color: colors.gunmetal }}>
+          {t("common.project")}
+        </Text>
+        {!editing && (
+          <Text
+            style={{
+              fontFamily: fonts.sans,
+              fontSize: 12.5,
+              color: colors.textSecondary,
+            }}
+          >
+            {t("climbs.projectHint")}
+          </Text>
+        )}
+      </View>
+      <Switch
+        checked={project}
+        onChange={setProject}
+        disabled={false}
+        label={t("common.project")}
+      />
+    </View>
+  );
 
   const [preset, setPreset] = React.useState(false);
   if (!preset && state.status !== "loading") {
@@ -166,6 +193,7 @@ export function AddClimbScreen(): React.ReactElement {
           areaId: place?.id ?? null,
           areaClimbId: climb.climbId ?? null,
           ...(grade === undefined || sameGrade(grade, original?.grade) ? {} : { grade }),
+          ...(touched === null || original?.project === touched ? {} : { working: touched }),
         };
         return api.updateClimb(id, change);
       })
@@ -195,21 +223,6 @@ export function AddClimbScreen(): React.ReactElement {
         )
       )
       .then(() => router.back(), fail);
-  };
-
-  const confirmDelete = (id: string): void => {
-    Alert.alert(t("climbs.deleteClimb"), t("climbs.deleteConfirm", { name: climb.name.trim() }), [
-      { text: t("common.cancel"), style: "cancel" },
-      {
-        text: t("climbs.deleteClimb"),
-        style: "destructive",
-        onPress: () => {
-          setSaving(true);
-          setFailed(false);
-          api.deleteClimb(id).then(() => router.dismissTo("/(tabs)/sessions"), fail);
-        },
-      },
-    ]);
   };
 
   const dateRow = (
@@ -348,6 +361,7 @@ export function AddClimbScreen(): React.ReactElement {
                   />
                 </View>
               </View>
+              {editing && projectRow}
             </>
           )}
           {logging && dateRow}
@@ -358,35 +372,7 @@ export function AddClimbScreen(): React.ReactElement {
                 known={knownOf(mine, climb) ?? null}
                 onChange={setClimb}
               />
-              {!sent && !logging && (
-                <View style={row}>
-                  <View style={{ flex: 1, gap: 2 }}>
-                    <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-                      <Icon name="star" color={colors.gunmetal} size={16} strokeWidth={1.8} />
-                      <Text
-                        style={{ fontFamily: fonts.sans, fontSize: 15, color: colors.gunmetal }}
-                      >
-                        {t("common.project")}
-                      </Text>
-                    </View>
-                    <Text
-                      style={{
-                        fontFamily: fonts.sans,
-                        fontSize: 12.5,
-                        color: colors.textSecondary,
-                      }}
-                    >
-                      {t("climbs.projectHint")}
-                    </Text>
-                  </View>
-                  <Switch
-                    checked={project}
-                    onChange={setProject}
-                    disabled={false}
-                    label={t("common.project")}
-                  />
-                </View>
-              )}
+              {!sent && !logging && projectRow}
               {!logging && dateRow}
               <View style={{ gap: 8 }}>
                 <Text style={label}>{t("common.notes")}</Text>
@@ -412,16 +398,6 @@ export function AddClimbScreen(): React.ReactElement {
                 />
               </View>
             </>
-          )}
-          {editing && (
-            <Pressable
-              onPress={() => confirmDelete(climbId)}
-              disabled={saving}
-              accessibilityRole="button"
-              style={press({ ...dangerButton, marginTop: 8 })}
-            >
-              <Text style={dangerButtonLabel}>{t("climbs.deleteClimb")}</Text>
-            </Pressable>
           )}
         </ScrollView>
         <View

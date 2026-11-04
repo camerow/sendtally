@@ -1,10 +1,11 @@
 import { useQueryClient } from "@tanstack/react-query";
 import React from "react";
-import type { JournalEntry, SendtallyApi, SessionTag } from "@sendtally/api-client";
+import type { ClimbSummary, JournalEntry, SendtallyApi, SessionTag } from "@sendtally/api-client";
 import { stravaState, type StravaState } from "../activities/post";
-import { climbsWorkedBefore } from "../climbs/transforms";
+import { climbKey, climbsWorkedBefore } from "../climbs/transforms";
 import { t } from "../i18n";
 import { queries, useQuery, type QueryState } from "../query";
+import { sessionClimbRows, sortClimbRows, type SessionClimbRowVM } from "./rows";
 import { climbVMs, filterAndSortClimbs, postingStatus, sessionDetailVM } from "./transforms";
 import type { ClimbFilter, ClimbSort, ClimbVM, SessionDetailVM } from "./types";
 
@@ -20,6 +21,8 @@ export type SessionDetailFeature = {
   state: QueryState<{
     vm: SessionDetailVM;
     climbs: ClimbVM[];
+    /** The climbs as the log draws them, one row per climb. */
+    rows: SessionClimbRowVM[];
     tags: SessionTag[];
     entries: JournalEntry[];
     /** Where it stands with Strava; null for board history never posted, or until the connection is known. */
@@ -34,6 +37,14 @@ export type SessionDetailFeature = {
   post: PostActionFeature;
   reload: () => Promise<void>;
 };
+
+/** The names of climbs still being worked, so a session calls only those a project. */
+function openProjects(catalogue: QueryState<ClimbSummary[]>): Set<string> {
+  if (catalogue.status !== "ready") return new Set();
+  return new Set(
+    catalogue.data.filter((c) => c.project && c.sent_at === null).map((c) => climbKey(c.name))
+  );
+}
 
 export function useSessionDetail(api: SendtallyApi, fingerprint: string): SessionDetailFeature {
   const [filter, setFilter] = React.useState<ClimbFilter>("all");
@@ -80,7 +91,15 @@ export function useSessionDetail(api: SendtallyApi, fingerprint: string): Sessio
       status: "ready",
       data: {
         vm: sessionDetailVM(s, postable, workedBefore, gymName),
-        climbs: filterAndSortClimbs(climbVMs(raw.data.climbs, workedBefore), filter, sort),
+        climbs: filterAndSortClimbs(
+          climbVMs(raw.data.climbs, workedBefore, openProjects(catalogue)),
+          filter,
+          sort
+        ),
+        rows: sortClimbRows(
+          sessionClimbRows(s, catalogue.status === "ready" ? catalogue.data : []),
+          sort
+        ),
         tags: raw.data.tags,
         entries: raw.data.entries,
         notes: raw.data.notes,

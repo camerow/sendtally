@@ -51,10 +51,12 @@ const variants: Record<string, Variant> = {
     hover: "var(--surface-soft)",
     border: "1px solid var(--line-on-light-strong)",
   },
+  // Every destructive action reads as a red outline, never the loudest thing on the page.
   danger: {
-    background: "var(--bs-watermelon-ink)",
-    color: "var(--bs-white)",
-    hover: "var(--bs-watermelon-ink-press)",
+    background: "transparent",
+    color: "var(--bs-watermelon-ink)",
+    hover: "var(--surface-soft)",
+    border: "1px solid var(--bs-watermelon-ink)",
   },
 };
 

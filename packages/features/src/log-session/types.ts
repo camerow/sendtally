@@ -33,6 +33,8 @@ export function disciplineLabel(discipline: Discipline): string {
   return t(discipline === "route" ? "common.route" : "common.boulder");
 }
 
+export type ClimbArea = { id: string; name: string };
+
 export type ClimbDraft = {
   key: string;
   scale: GradeScale;
@@ -50,6 +52,8 @@ export type ClimbDraft = {
   climbId?: string;
   /** The user's own climb record this row is, once known; cleared by retyping the name. */
   userClimbId?: string;
+  /** The area the climb was at; a named climb with one was outdoors even in an Indoor session. */
+  area?: ClimbArea;
   /** The workout item a climb logged on an exercise's tally belongs to, and its set from 1. */
   item?: number;
   set?: number;
@@ -103,8 +107,6 @@ export type LogSessionDraft = {
   startedAt?: string;
   location: "indoor" | "outdoor";
   gymId?: string;
-  /** The crag an outdoor session was at, from Areas. */
-  area?: { id: string; name: string };
   tags: string[];
   notes: string;
   rpe: number | null;

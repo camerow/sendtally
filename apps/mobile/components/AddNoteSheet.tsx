@@ -1,19 +1,20 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
-import { TextInput } from "../../components/TextInput";
-import type { ClimbNote } from "@sendtally/api-client";
+import { TextInput } from "./TextInput";
 import { t } from "@sendtally/features/i18n";
 import { localDate } from "@sendtally/features/log-session";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
-import { DateTimeField } from "../../components/DateTimeField";
-import { Sheet } from "../../components/Sheet";
-import { confirmDestructive } from "../../lib/confirmDestructive";
-import { primaryButton, primaryButtonLabel } from "../../lib/styles";
-import { Button } from "../training/components/Button";
+import { DateTimeField } from "./DateTimeField";
+import { Sheet } from "./Sheet";
+import { confirmDestructive } from "../lib/confirmDestructive";
+import { primaryButton, primaryButtonLabel } from "../lib/styles";
+import { Button } from "../features/training/components/Button";
 
 export type AddNoteSheetProps = {
   /** The note to edit, "new" to write one, or null when closed. */
-  note: ClimbNote | "new" | null;
+  note: { id: string; day: string; note: string } | "new" | null;
+  /** The day a new note starts on; today when not given. */
+  day?: string;
   /** Saved on the phone first, so the sheet closes at once. */
   onSave: (day: string, note: string) => void;
   onDelete: (id: string) => void;
@@ -31,6 +32,7 @@ const label = {
 
 export function AddNoteSheet({
   note,
+  day: startDay,
   onSave,
   onDelete,
   onClose,
@@ -42,7 +44,7 @@ export function AddNoteSheet({
   const [wasOpen, setWasOpen] = React.useState<AddNoteSheetProps["note"]>(null);
   if (note !== wasOpen) {
     setWasOpen(note);
-    setDay(editing?.day ?? localDate(new Date()));
+    setDay(editing?.day ?? startDay ?? localDate(new Date()));
     setDraft(editing?.note ?? "");
   }
 

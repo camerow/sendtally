@@ -56,6 +56,38 @@ export const climbSlug = tagSlug;
 
 type FlaggedClimb = { name: string; grade: ClimbGrade; project?: boolean | undefined };
 
+type PlacedClimb = FlaggedClimb & {
+  userClimbId?: string | undefined;
+  climbId?: string | undefined;
+  areaId?: string | undefined;
+};
+
+export async function placeLoggedClimbs(
+  db: D1Database,
+  userId: string,
+  climbs: PlacedClimb[]
+): Promise<void> {
+  await repo.placeLoggedClimbs(
+    db,
+    userId,
+    climbs.flatMap((climb) => {
+      const name = climb.name.trim();
+      const name_key = climbSlug(name);
+      if (name_key === "" || climb.areaId === undefined) return [];
+      return [
+        {
+          name,
+          name_key,
+          user_climb_id: climb.userClimbId ?? null,
+          grade: climb.grade,
+          area_id: climb.areaId,
+          area_climb_id: climb.climbId ?? null,
+        },
+      ];
+    })
+  );
+}
+
 // A climb's project flag rides along with the session it was logged in and is
 // only sent when the user touched it, so an untouched form never unmarks.
 export async function applyProjectFlags(
@@ -147,55 +179,64 @@ export function climbResolver(records: UserClimbRow[]): ClimbResolver {
     byKey.get(climbSlug(climb.name));
 }
 
+export type ClimbLink = { climb_slug: string; climb_id: string; area_id: string };
+
 export type MissingClimbs = {
   create: repo.UserClimbInput[];
   link: Array<{ id: string; area_climb_id: string }>;
 };
 
-// Named climbs logged before records existed get one, and a record logged
-// against an Areas climb picks up that link.
+// Named climbs logged before records existed get one, at the newest crag they were
+// logged at, else their Areas climb's. After that a record's crag is only ever the
+// user's, and it picks up the Areas climb it was logged against only at that crag.
 export function missingClimbs(
   sessions: CatalogueSession[],
   records: UserClimbRow[],
-  links: Array<{ climb_slug: string; climb_id: string }>
+  links: ClimbLink[]
 ): MissingClimbs {
   const resolve = climbResolver(records);
-  const linkBySlug = new Map(links.map((l) => [l.climb_slug, l.climb_id]));
+  const linkBySlug = new Map(links.map((l) => [l.climb_slug, l]));
   const create = new Map<string, repo.UserClimbInput>();
   for (const session of sessions) {
     for (const climb of namedClimbs(session)) {
       const key = climbSlug(climb.name);
-      if (resolve(climb) !== undefined || create.has(key)) continue;
+      if (resolve(climb) !== undefined) continue;
+      const known = create.get(key);
+      if (known !== undefined) {
+        known.area_id ??= session.area_id ?? null;
+        continue;
+      }
       const grade = storedGrade(climb);
       create.set(key, {
         name: climb.name,
         name_key: key,
         discipline: disciplineOf(grade.scale),
         grade_json: JSON.stringify(grade),
-        area_climb_id: linkBySlug.get(key) ?? null,
+        area_id: session.area_id ?? null,
+        area_climb_id: linkBySlug.get(key)?.climb_id ?? null,
       });
     }
   }
+  for (const c of create.values()) c.area_id ??= linkBySlug.get(c.name_key)?.area_id ?? null;
   const link = records.flatMap((r) => {
-    const id = linkBySlug.get(r.name_key);
-    return r.area_climb_id === null && r.area_id === null && id !== undefined
-      ? [{ id: r.id, area_climb_id: id }]
+    const l = linkBySlug.get(r.name_key);
+    return r.area_climb_id === null && l !== undefined && l.area_id === r.area_id
+      ? [{ id: r.id, area_climb_id: l.climb_id }]
       : [];
   });
   return { create: [...create.values()], link };
 }
 
-// Sessions arrive newest first, so the first sighting of a climb carries the
-// name and grade the user logged most recently, and the crag it was last at.
 const areaOf = (
-  id: string | null | undefined,
+  id: string | null,
   names: ReadonlyMap<string, string>
 ): { id: string; name: string } | null => {
-  const name = id == null ? undefined : names.get(id);
-  return id == null || name === undefined ? null : { id, name };
+  const name = id === null ? undefined : names.get(id);
+  return id === null || name === undefined ? null : { id, name };
 };
 
-/** A climb's grade comes from its newest session, and its crag too unless the climb was edited to say. */
+// Sessions arrive newest first, so the first sighting of a climb carries the
+// name and grade the user logged most recently. The crag is the climb's own.
 export function climbCatalogue(
   sessions: CatalogueSession[],
   records: UserClimbRow[],
@@ -213,7 +254,6 @@ export function climbCatalogue(
       if (record === undefined || record.deleted_at !== null) continue;
       const tries = climb.tries ?? 1;
       const sent = climb.kind !== "attempt";
-      const area = areaOf(record.area_id ?? session.area_id, areaNames);
       const existing = byId.get(record.id);
       if (existing === undefined) {
         const grade = storedGrade(climb);
@@ -225,7 +265,7 @@ export function climbCatalogue(
           discipline: disciplineOf(grade.scale),
           project: record.working,
           area_climb_id: record.area_climb_id,
-          area,
+          area: areaOf(record.area_id, areaNames),
           sessions: 1,
           attempts: tries,
           sends: sent ? 1 : 0,
@@ -238,7 +278,6 @@ export function climbCatalogue(
         existing.attempts += tries;
         existing.sends += sent ? 1 : 0;
         existing.first_at = session.start_at;
-        existing.area ??= area;
         if (sent) existing.sent_at = session.start_at;
         if (!seen.has(record.id)) existing.sessions += 1;
       }

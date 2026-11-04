@@ -1,5 +1,6 @@
 import type { Endurance } from "@sendtally/core";
 import type { CircuitColour } from "@sendtally/api-client";
+import type { ClimbPillKind } from "../climbs/log";
 import type { PyramidRow } from "../climbs/pyramid";
 import { t } from "../i18n";
 
@@ -16,12 +17,16 @@ export type ClimbVM = {
   angleLabel: string | null;
   attempts: number;
   result: ClimbResult;
+  /** How its result pill reads, as in the log: an unsent climb is a project only when it is one. */
+  pill: ClimbPillKind;
   /** A send reads in its own discipline's words: boulders are SENT, routes REDPOINT. */
   resultLabel: string;
   /** What the climber wrote about this climb that session. Named climbs only. */
   note: string | null;
   /** The Areas climb this one is linked to, for a link to its page. */
   climbSlug: string | null;
+  /** The name of the area the climb was at. */
+  area: string | null;
   /** Present on a circuit of laps, which reads as per-lap bars rather than a result badge. */
   endurance?: Endurance;
 };
@@ -53,7 +58,7 @@ export type SessionDetailVM = {
   title: string;
   /** The title without its date, for a screen that dates it in its meta line. */
   name: string;
-  /** Indoor or Outdoor, then the gym or area; empty when the session says neither. */
+  /** Where the session was: its areas outdoors, its gym indoors; empty when neither is known. */
   place: string;
   /** Day, start time and length. */
   when: string;
@@ -62,7 +67,10 @@ export type SessionDetailVM = {
   startDay: string;
   meta: string;
   editable: boolean;
-  area: { name: string; slug: string } | null;
+  /** Each distinct area its climbs were at, for a link to each. */
+  areas: Array<{ name: string; slug: string }>;
+  /** Whether a climb names its area: on a day with two or more, or indoors, where it marks one outdoor. */
+  climbAreas: boolean;
   stats: StatVM[];
   bars: GradeBarVM[];
   pyramid: PyramidRow[];

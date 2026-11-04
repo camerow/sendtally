@@ -6,6 +6,7 @@ import type {
   SessionDetail,
   SessionLog,
   SessionLogWithClimbs,
+  SessionArea,
   TagSummary,
 } from "@sendtally/api-client";
 import { patch, put, useLocalWrite, type CachePatch } from "../outbox";
@@ -20,7 +21,12 @@ import {
 
 export type LocalSessions = {
   /** Logs a session, or edits the one `fingerprint` names, and returns its fingerprint at once. */
-  save: (input: LogSessionInput, fingerprint?: string) => string;
+  /** `places` names the areas the input's climbs are at, for the copy shown before the server's. */
+  save: (
+    input: LogSessionInput,
+    fingerprint?: string,
+    places?: readonly Pick<SessionArea, "id" | "name">[]
+  ) => string;
   remove: (fingerprint: string) => void;
 };
 
@@ -49,7 +55,7 @@ export function useLocalSessions(api: SendtallyApi, newId: () => string): LocalS
     ];
 
     return {
-      save: (input, editing) => {
+      save: (input, editing, places) => {
         const fingerprint = editing ?? `manual-${newId()}`;
         const detail = queries.session(api, fingerprint).queryKey;
         const session = localSession(
@@ -57,7 +63,8 @@ export function useLocalSessions(api: SendtallyApi, newId: () => string): LocalS
           input,
           client.getQueryData<SessionLogWithClimbs>(logWithClimbs)?.sessions ?? [],
           client.getQueryData<TagSummary[]>(queries.tags(api).queryKey) ?? [],
-          editing === undefined ? undefined : client.getQueryData<SessionDetail>(detail)
+          editing === undefined ? undefined : client.getQueryData<SessionDetail>(detail),
+          places
         );
         const key = `session:${fingerprint}`;
         local(

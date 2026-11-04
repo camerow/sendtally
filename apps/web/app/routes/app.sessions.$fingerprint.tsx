@@ -43,26 +43,16 @@ const monoLabel: React.CSSProperties = {
   color: "var(--text-label-accent)",
 };
 
-const RESULT_BADGES: Record<ClimbVM["result"], { bg: string; border: string; color: string }> = {
-  onsight: {
-    bg: "var(--bs-petal-ink)",
-    border: "var(--bs-petal-ink)",
-    color: "var(--bs-white)",
-  },
-  flash: {
-    bg: "var(--bs-gold)",
-    border: "var(--bs-gold)",
-    color: "var(--bs-gunmetal)",
-  },
-  sent: {
+// The log's pills, so a climb reads the same here as in the app.
+const RESULT_BADGES: Record<ClimbVM["pill"], { bg: string; border: string; color: string }> = {
+  flash: { bg: "var(--bs-gold)", border: "var(--bs-gold)", color: "var(--bs-gunmetal)" },
+  onsight: { bg: "rgba(21,127,82,0.14)", border: "transparent", color: "var(--bs-fern)" },
+  sent: { bg: "rgba(64,63,76,0.08)", border: "transparent", color: "var(--bs-gunmetal)" },
+  project: { bg: "var(--bs-gunmetal)", border: "var(--bs-gunmetal)", color: "var(--bs-gold)" },
+  tries: {
     bg: "transparent",
-    border: "rgba(64,63,76,0.25)",
-    color: "rgba(64,63,76,0.72)",
-  },
-  project: {
-    bg: "transparent",
-    border: "rgba(64,63,76,0.15)",
-    color: "rgba(64,63,76,0.45)",
+    border: "rgba(64,63,76,0.22)",
+    color: "var(--text-on-white-secondary)",
   },
 };
 
@@ -144,9 +134,8 @@ function SessionActions({
               disabled={deleting}
               style={{
                 ...actionButton,
-                background: "var(--bs-watermelon-ink)",
-                borderColor: "transparent",
-                color: "var(--bs-white)",
+                borderColor: "var(--bs-watermelon-ink)",
+                color: "var(--bs-watermelon-ink)",
                 opacity: deleting ? 0.45 : 1,
               }}
             >
@@ -232,19 +221,24 @@ export default function SessionDetailRoute(): React.ReactElement {
           >
             {vm.meta}
           </span>
-          {vm.area !== null && (
-            <Link
-              to={`/app/areas/${vm.area.slug}`}
-              style={{
-                ...monoLabel,
-                fontSize: 11,
-                letterSpacing: "0.06em",
-                color: "var(--bs-azure-ink)",
-                textDecoration: "none",
-              }}
-            >
-              {vm.area.name} ›
-            </Link>
+          {vm.areas.length > 0 && (
+            <span style={{ display: "flex", flexWrap: "wrap", gap: "4px 14px" }}>
+              {vm.areas.map((area) => (
+                <Link
+                  key={area.slug}
+                  to={`/app/areas/${area.slug}`}
+                  style={{
+                    ...monoLabel,
+                    fontSize: 11,
+                    letterSpacing: "0.06em",
+                    color: "var(--bs-azure-ink)",
+                    textDecoration: "none",
+                  }}
+                >
+                  {area.name} ›
+                </Link>
+              ))}
+            </span>
           )}
         </div>
         <SessionActions
@@ -409,7 +403,7 @@ export default function SessionDetailRoute(): React.ReactElement {
           </div>
           <div style={{ display: "flex", flexDirection: "column" }}>
             {climbs.map((c) => {
-              const badge = RESULT_BADGES[c.result]!;
+              const badge = RESULT_BADGES[c.pill];
               const endurance = c.endurance !== undefined;
               return (
                 <div
@@ -461,6 +455,11 @@ export default function SessionDetailRoute(): React.ReactElement {
                         )}
                       </span>
                     </span>
+                    {vm.climbAreas && c.area !== null && (
+                      <span style={{ fontSize: 12.5, color: "var(--text-on-white-secondary)" }}>
+                        {c.area}
+                      </span>
+                    )}
                     {c.note !== null && (
                       <span
                         style={{

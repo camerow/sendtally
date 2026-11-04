@@ -33,6 +33,27 @@ const past = (fingerprint: string, start: string, vGrade: number): SessionWithCl
   }) as SessionWithClimbs;
 
 describe("localSession", () => {
+  it("names each climb's area and the session's areas before the server answers", () => {
+    const popular = { id: "a1", name: "Stanage Popular", slug: "stanage-popular" };
+    const session = localSession(
+      "manual-1",
+      input({
+        location: "outdoor",
+        climbs: [
+          { name: "Arete", areaId: "a1", grade: { scale: "v", value: 4 } },
+          { areaId: "a1", grade: { scale: "v", value: 2 } },
+        ],
+      }),
+      [],
+      [],
+      undefined,
+      [popular]
+    );
+    expect(session.climbs.map((c) => c.area)).toEqual([popular, null]);
+    expect(session.areas).toEqual([popular]);
+    expect(session.area).toEqual(popular);
+  });
+
   it("scores and stores the session the way the server will", () => {
     const session = localSession("manual-1", input(), [], []);
     expect(session).toMatchObject({

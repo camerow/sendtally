@@ -66,6 +66,7 @@ function session(
       style: "redpoint",
       angle: null,
       note: null,
+      area: null,
       link: null,
       ...c,
     })),

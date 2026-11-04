@@ -1,6 +1,7 @@
 import { climbDiscipline, climbRank, dominantDiscipline, isEndurance } from "@sendtally/core";
 import type { ConnectionStatus, SessionClimb, SessionDetail } from "@sendtally/api-client";
 import { sessionPyramid } from "../climbs/pyramid";
+import type { ClimbPillKind } from "../climbs/log";
 import { climbKey } from "../climbs/transforms";
 import { formatDate, t } from "../i18n";
 import { sendStyleLabel } from "../log-session/types";
@@ -19,6 +20,7 @@ import type {
   StatVM,
 } from "./types";
 import { BOARD_LABELS } from "./types";
+import { namesClimbAreas } from "./rows";
 
 export function durationLabel(startAt: string, endAt: string): string {
   return minutesLabel(Math.max(0, Math.round((Date.parse(endAt) - Date.parse(startAt)) / 60_000)));
@@ -38,9 +40,16 @@ function resultOf(c: SessionClimb, firstEncounter: boolean): ClimbResult {
   return c.style === undefined && c.tries <= 1 ? "flash" : "sent";
 }
 
-function resultLabelOf(c: SessionClimb, result: ClimbResult): string {
-  if (result === "project") return t("common.project");
-  return sendStyleLabel(climbDiscipline(c), result === "sent" ? "redpoint" : result);
+/** An unsent climb is a project only when it is one; otherwise it reads as its tries, as in the log. */
+function pillOf(c: SessionClimb, result: ClimbResult, project: boolean): ClimbPillKind {
+  if (result !== "project") return result;
+  return project ? "project" : "tries";
+}
+
+function resultLabelOf(c: SessionClimb, pill: ClimbPillKind): string {
+  if (pill === "project") return t("common.project");
+  if (pill === "tries") return t("tally.tryCount", { count: c.tries });
+  return sendStyleLabel(climbDiscipline(c), pill === "sent" ? "redpoint" : pill);
 }
 
 /** Flash and onsight are both first-go sends; only the beta differs. */
@@ -69,7 +78,8 @@ function climbName(c: SessionClimb): string {
 
 export function climbVMs(
   climbs: SessionClimb[],
-  workedBefore: ReadonlySet<string> = new Set()
+  workedBefore: ReadonlySet<string> = new Set(),
+  projects: ReadonlySet<string> = new Set()
 ): ClimbVM[] {
   const ordered = [...climbs].sort((a, b) => Date.parse(a.time) - Date.parse(b.time));
   const seen = new Set(workedBefore);
@@ -81,6 +91,7 @@ export function climbVMs(
     const firstEncounter = key === "" || !seen.has(key);
     if (key !== "") seen.add(key);
     const result = resultOf(c, firstEncounter);
+    const pill = pillOf(c, result, key !== "" && projects.has(key));
     return {
       n: i + 1,
       name: climbName(c),
@@ -92,9 +103,11 @@ export function climbVMs(
       angleLabel: c.angle !== null ? `${c.angle}°` : null,
       attempts: c.tries,
       result,
-      resultLabel: resultLabelOf(c, result),
+      pill,
+      resultLabel: resultLabelOf(c, pill),
       note: c.note,
       climbSlug: c.link?.slug ?? null,
+      area: c.area?.name ?? null,
       ...(c.endurance === undefined ? {} : { endurance: c.endurance }),
     };
   });
@@ -214,7 +227,9 @@ export function sessionDetailVM(
   const topLabel =
     top >= 0
       ? format.label(top)
-      : (session.top_send_grade_label ?? gradeLabel(session.top_send_grade));
+      : session.send_count > 0
+        ? (session.top_send_grade_label ?? gradeLabel(session.top_send_grade))
+        : null;
 
   const titleLabel =
     session.name !== null && session.name !== ""
@@ -248,7 +263,7 @@ export function sessionDetailVM(
     ...(isUnscored(session)
       ? []
       : [{ label: t("common.effort"), value: `${session.rpe}/10`, accent: false }]),
-    { label: t("sessionDetail.statTop"), value: topLabel, accent: true },
+    { label: t("sessionDetail.statTop"), value: topLabel ?? "-", accent: topLabel !== null },
   ];
 
   const grades = graded.map((c) => climbRank(c));
@@ -293,7 +308,10 @@ export function sessionDetailVM(
   return {
     title: `${titleLabel} - ${dateLabel}`,
     name: titleLabel,
-    place: [location, gymName ?? session.area?.name ?? null].filter((p) => p !== null).join(" · "),
+    place:
+      session.location === "indoor"
+        ? (gymName ?? "")
+        : session.areas.map((area) => area.name).join(", "),
     when,
     rpe: isUnscored(session) ? null : session.rpe,
     startDay: session.start_at.slice(0, 10),
@@ -302,7 +320,8 @@ export function sessionDetailVM(
       isUnscored(session) ? "" : ` · ${t("common.effort")} ${session.rpe}/10`
     ),
     editable: session.source === "manual",
-    area: session.area,
+    areas: session.areas,
+    climbAreas: namesClimbAreas(session),
     stats,
     bars,
     pyramid: sessionPyramid(session.climbs),

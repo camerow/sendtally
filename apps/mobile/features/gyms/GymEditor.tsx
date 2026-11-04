@@ -27,6 +27,7 @@ import { scaleLabel } from "@sendtally/features/log-session";
 import { t } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { BackButton } from "../../components/BackButton";
+import { AddButton } from "../../components/AddButton";
 import { Icon } from "../../components/Icon";
 import { OptionRow } from "../../components/OptionRow";
 import { SelectRow } from "../../components/SelectRow";
@@ -262,24 +263,7 @@ export function GymEditor({
             onSubmitEditing={addWall}
             style={{ ...input, flex: 1 }}
           />
-          <Pressable
-            onPress={addWall}
-            disabled={wall.trim() === ""}
-            accessibilityRole="button"
-            accessibilityLabel={t("gyms.addWall")}
-            style={press({
-              width: 46,
-              height: 46,
-              alignItems: "center",
-              justifyContent: "center",
-              borderRadius: radius.control,
-              borderWidth: 1,
-              borderColor: colors.lineOnLightStrong,
-              opacity: wall.trim() === "" ? 0.4 : 1,
-            })}
-          >
-            <Icon name="plus" color={colors.gunmetal} size={16} strokeWidth={2.2} />
-          </Pressable>
+          <AddButton label={t("gyms.addWall")} onPress={addWall} disabled={wall.trim() === ""} />
         </View>
       </View>
 

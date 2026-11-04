@@ -1,21 +1,13 @@
 import { router, useLocalSearchParams } from "expo-router";
 import React from "react";
-import { Linking, ScrollView, Text, View } from "react-native";
-import {
-  CLIMB_SORTS,
-  climbSortLabel,
-  useSessionDetail,
-  type ClimbVM,
-  climbMetaLabel,
-} from "@sendtally/features/session-detail";
+import { Linking, View } from "react-native";
+import { useSessionDetail } from "@sendtally/features/session-detail";
 import { kindLabel } from "@sendtally/features/activities";
-import { enduranceLapCountLabel, enduranceSummaryLabel } from "@sendtally/features/log-session";
 import { t } from "@sendtally/features/i18n";
-import { colors, fonts, radius } from "@sendtally/design/tokens";
-import { Chip } from "../../components/Chip";
-import { CircuitDot } from "../../components/CircuitDot";
+import { colors } from "@sendtally/design/tokens";
+import { AddNoteSheet } from "../../components/AddNoteSheet";
 import { ClimbingHero } from "../../features/climbs/ClimbingHero";
-import { Icon } from "../../components/Icon";
+import { ClimbLogRow } from "../../features/climbs/ClimbLogRow";
 import { EnduranceLaps } from "../../features/sessions/EnduranceLaps";
 import { Pyramid } from "../../components/Pyramid";
 import { ScreenFrame } from "../../components/ScreenFrame";
@@ -33,19 +25,13 @@ import { SummaryTiles } from "../../features/training/summary/SummaryTiles";
 import { useApi } from "../../lib/api";
 import { useSessions } from "../../lib/useSessions";
 
-const RESULT_BADGES: Record<ClimbVM["result"], { bg: string; border: string; color: string }> = {
-  onsight: { bg: colors.petalInk, border: colors.petalInk, color: colors.white },
-  flash: { bg: colors.gold, border: colors.gold, color: colors.gunmetal },
-  sent: { bg: "transparent", border: "rgba(64,63,76,0.25)", color: colors.textSecondary },
-  project: { bg: "transparent", border: "rgba(64,63,76,0.15)", color: colors.textFaint },
-};
-
 export default function SessionDetailScreen(): React.ReactElement {
   const { fingerprint } = useLocalSearchParams<{ fingerprint: string }>();
   const api = useApi();
   const sessions = useSessions();
   const feature = useSessionDetail(api, fingerprint ?? "");
-  const { state, sort, setSort } = feature;
+  const [noting, setNoting] = React.useState<"new" | null>(null);
+  const { state } = feature;
   const { run, refresh } = feature.post;
   const connected = React.useCallback(() => {
     void refresh();
@@ -69,6 +55,11 @@ export default function SessionDetailScreen(): React.ReactElement {
     confirm: { title: t("sessions.deleteTitle"), body: t("sessions.deleteBody") },
     onDelete: () => sessions.remove(fingerprint ?? ""),
   });
+  const editRow = {
+    icon: "pencil" as const,
+    title: t("logSession.editTitle"),
+    onPress: () => router.push(`/session/${encodeURIComponent(fingerprint ?? "")}/edit`),
+  };
   const onStrava = (): void => {
     if (strava?.kind === "posted") void Linking.openURL(strava.url);
     else if (strava?.kind === "connect") connect.connect();
@@ -79,16 +70,15 @@ export default function SessionDetailScreen(): React.ReactElement {
     <ScreenFrame
       action={
         <DetailActions
-          onEdit={
-            vm.editable
-              ? () => router.push(`/session/${encodeURIComponent(fingerprint ?? "")}/edit`)
-              : undefined
-          }
-          menu={strava === null ? [remove] : [stravaRow(strava, vm.rpe, onStrava), remove]}
+          menu={[
+            ...(vm.editable ? [editRow] : []),
+            ...(strava === null ? [] : [stravaRow(strava, vm.rpe, onStrava)]),
+            remove,
+          ]}
         />
       }
     >
-      <ClimbingHero kind={kindLabel("climbing")} state={vm.place} title={vm.name} meta={vm.when} />
+      <ClimbingHero kind={kindLabel("climbing")} title={vm.name} place={vm.place} meta={vm.when} />
       <SummaryTiles
         stats={[
           { value: String(vm.filterCounts.all), label: t("summary.climbs") },
@@ -99,19 +89,8 @@ export default function SessionDetailScreen(): React.ReactElement {
       {strava !== null && <StravaStatusRow state={strava} />}
 
       {vm.pyramid.length > 0 && (
-        <View
-          style={{
-            gap: 8,
-            padding: 14,
-            borderRadius: 16,
-            borderWidth: 1,
-            borderColor: colors.lineOnLight,
-          }}
-        >
-          <View
-            style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}
-          >
-            <Label color={colors.gunmetal}>{t("sessionDetail.byGrade")}</Label>
+        <View style={{ gap: 8 }}>
+          <View style={{ flexDirection: "row", justifyContent: "flex-end" }}>
             <PyramidLegend inner={t("common.sent")} outer={t("sessionDetail.notYet")} />
           </View>
           <Pyramid
@@ -121,123 +100,36 @@ export default function SessionDetailScreen(): React.ReactElement {
         </View>
       )}
 
-      <SessionJournal
-        fingerprint={fingerprint ?? ""}
-        date={vm.startDay}
-        entries={state.data.entries}
-      />
-
       <View style={{ gap: 12 }}>
         <Label color={colors.gunmetal}>{`${t("common.climbs")} · ${vm.filterCounts.all}`}</Label>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ gap: 8 }}
-        >
-          {CLIMB_SORTS.map((s) => (
-            <Chip
-              key={s}
-              label={climbSortLabel(s)}
-              active={sort === s}
-              onPress={() => setSort(s)}
-            />
-          ))}
-        </ScrollView>
 
         <View>
-          {state.data.climbs.map((c) => {
-            const badge = RESULT_BADGES[c.result];
-            return (
-              <View
-                key={c.n}
-                style={{
-                  gap: 8,
-                  paddingVertical: 12,
-                  borderTopWidth: 1,
-                  borderTopColor: colors.lineOnLight,
-                }}
-              >
-                <View
-                  style={{
-                    flexDirection: "row",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    gap: 12,
-                  }}
-                >
-                  <View style={{ flex: 1, gap: 4, minWidth: 0 }}>
-                    <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-                      {c.colour !== undefined && <CircuitDot colour={c.colour} size={12} />}
-                      {c.endurance !== undefined && (
-                        <Icon
-                          name="endurance"
-                          color={colors.petalInk}
-                          size={14}
-                          strokeWidth={2.4}
-                        />
-                      )}
-                      <Text
-                        numberOfLines={1}
-                        style={{
-                          flexShrink: 1,
-                          fontFamily: fonts.sansMedium,
-                          fontSize: 15,
-                          color: colors.gunmetal,
-                        }}
-                      >
-                        {c.name}
-                      </Text>
-                    </View>
-                    <Text
-                      style={{
-                        fontFamily: fonts.mono,
-                        fontSize: 11,
-                        color: "rgba(64,63,76,0.6)",
-                      }}
-                    >
-                      {c.endurance === undefined
-                        ? climbMetaLabel(c)
-                        : `${enduranceLapCountLabel(c.endurance.laps.length)} · ${enduranceSummaryLabel(c.endurance)}`}
-                    </Text>
-                  </View>
-                  <View style={{ alignItems: "flex-end", gap: 5 }}>
-                    <Text
-                      style={{
-                        fontFamily: fonts.monoSemiBold,
-                        fontSize: 14,
-                        color: colors.gunmetal,
-                      }}
-                    >
-                      {c.gradeLabel}
-                    </Text>
-                    {c.endurance === undefined && (
-                      <Text
-                        style={{
-                          fontFamily: fonts.monoMedium,
-                          fontSize: 9,
-                          letterSpacing: 0.7,
-                          textTransform: "uppercase",
-                          borderRadius: radius.pill,
-                          paddingHorizontal: 8,
-                          paddingVertical: 3,
-                          overflow: "hidden",
-                          backgroundColor: badge.bg,
-                          borderWidth: 1,
-                          borderColor: badge.border,
-                          color: badge.color,
-                        }}
-                      >
-                        {c.resultLabel}
-                      </Text>
-                    )}
-                  </View>
-                </View>
-                {c.endurance !== undefined && <EnduranceLaps endurance={c.endurance} />}
-              </View>
-            );
-          })}
+          {state.data.rows.map((row) => (
+            <ClimbLogRow key={row.n} row={row}>
+              {row.endurance === undefined ? undefined : (
+                <EnduranceLaps endurance={row.endurance} />
+              )}
+            </ClimbLogRow>
+          ))}
         </View>
       </View>
+      <SessionJournal entries={state.data.entries} onAdd={() => setNoting("new")} />
+      <AddNoteSheet
+        note={noting}
+        day={vm.startDay}
+        onSave={(day, body) =>
+          void api
+            .createEntry({
+              kind: "journal",
+              occurred_at: day,
+              body,
+              fingerprints: [fingerprint ?? ""],
+            })
+            .then(() => feature.reload())
+        }
+        onDelete={() => undefined}
+        onClose={() => setNoting(null)}
+      />
     </ScreenFrame>
   );
 }

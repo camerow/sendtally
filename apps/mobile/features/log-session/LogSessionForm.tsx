@@ -2,7 +2,6 @@ import { router, useLocalSearchParams } from "expo-router";
 import React from "react";
 import {
   AppState,
-  Keyboard,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -33,7 +32,10 @@ import {
   useDraftAutosave,
   withClimbName,
   withClimbScale,
+  withKnownArea,
+  withLocation,
   withPickedClimb,
+  type ClimbArea,
   type ClimbDraft,
   type LogSessionDraft,
 } from "@sendtally/features/log-session";
@@ -60,7 +62,6 @@ import { OptionRow } from "../../components/OptionRow";
 import { SelectRow } from "../../components/SelectRow";
 import { AddClimbSheet } from "../areas/AddClimbSheet";
 import { AddCragSheet } from "../areas/AddCragSheet";
-import { AreaSearchField } from "../areas/AreaSearchField";
 import { readPlanLink } from "../training/data/planLinkParams";
 import { ClimbEditorSheet } from "./ClimbEditorSheet";
 import { NewGymSheet } from "../gyms/NewGymSheet";
@@ -184,7 +185,7 @@ export function LogSessionForm({
   const editingIndex = draft.climbs.findIndex((c) => c.key === editingKey);
   const editingClimb = editingIndex < 0 ? null : draft.climbs[editingIndex]!;
   const outdoor = draft.location === "outdoor";
-  const [addingCrag, setAddingCrag] = React.useState<string | null>(null);
+  const [addingCrag, setAddingCrag] = React.useState<{ key: string; name: string } | null>(null);
   const [addingClimb, setAddingClimb] = React.useState<{
     key: string;
     initial: ClimbFormValues;
@@ -195,7 +196,6 @@ export function LogSessionForm({
   // back up, and anything already graded, keeps the scale it was written in.
   const adopted = React.useRef(editing !== undefined || picked !== null);
   const scroll = React.useRef<ScrollView>(null);
-  const cragY = React.useRef(0);
   const resumeDraft = React.useCallback((resumed: LogSessionDraft) => {
     adopted.current = true;
     setDraft(resumed);
@@ -239,7 +239,20 @@ export function LogSessionForm({
   }
 
   function pickClimb(key: string, known: ClimbSummary): void {
-    updateClimb(key, (c) => withPickedClimb(withTypedName(c, known.name), known));
+    updateClimb(key, (c) => {
+      const picked = withPickedClimb(withTypedName(c, known.name), known);
+      return outdoor ? withKnownArea(picked, known) : picked;
+    });
+  }
+
+  /** A new area drops a link to an Areas climb somewhere else. */
+  function setClimbArea(key: string, area: ClimbArea | null): void {
+    updateClimb(key, ({ area: was, ...c }) => {
+      if (area === null) return c;
+      if (was?.id === area.id) return { ...c, area };
+      const { climbId: _link, ...unlinked } = c;
+      return { ...unlinked, area };
+    });
   }
 
   function removeClimb(key: string): void {
@@ -254,13 +267,16 @@ export function LogSessionForm({
       ...draft,
       climbs: [
         ...draft.climbs,
-        newClimbOfKind(
-          key,
-          readClimbKind(climbKindStorage, circuitChoices),
-          gradePrefs,
-          circuitChoices,
-          previous
-        ),
+        {
+          ...newClimbOfKind(
+            key,
+            readClimbKind(climbKindStorage, circuitChoices),
+            gradePrefs,
+            circuitChoices,
+            previous
+          ),
+          ...(outdoor && previous?.area !== undefined ? { area: previous.area } : {}),
+        },
       ],
     });
     setEditingKey(key);
@@ -292,18 +308,13 @@ export function LogSessionForm({
       setError(problem);
       return;
     }
-    const fingerprint = sessions.save(toLogSessionInput(draft), editing?.fingerprint);
+    const fingerprint = sessions.save(
+      toLogSessionInput(draft),
+      editing?.fingerprint,
+      draft.climbs.flatMap((c) => c.area ?? [])
+    );
     autosave.clear();
     router.replace(`/session/${encodeURIComponent(fingerprint)}`);
-  }
-
-  function showCragResults(): void {
-    const reveal = (): void => scroll.current?.scrollTo({ y: cragY.current - 12 });
-    reveal();
-    const shown = Keyboard.addListener("keyboardDidShow", () => {
-      shown.remove();
-      reveal();
-    });
   }
 
   return (
@@ -392,41 +403,15 @@ export function LogSessionForm({
             <Chip
               label={t("common.indoor")}
               active={draft.location === "indoor"}
-              onPress={() => setDraft({ ...draft, location: "indoor" })}
+              onPress={() => setDraft(withLocation(draft, "indoor"))}
             />
             <Chip
               label={t("common.outdoor")}
               active={draft.location === "outdoor"}
-              onPress={() => setDraft({ ...draft, location: "outdoor" })}
+              onPress={() => setDraft(withLocation(draft, "outdoor"))}
             />
           </View>
         </View>
-
-        {outdoor && (
-          <View
-            style={{ gap: 7 }}
-            onLayout={(e) => {
-              cragY.current = e.nativeEvent.layout.y;
-            }}
-          >
-            <LabelText>{`${t("areas.area")} ${t("common.optional")}`}</LabelText>
-            <AreaSearchField
-              crags
-              value={draft.area ?? null}
-              label={t("areas.area")}
-              placeholder={t("areas.searchAreas")}
-              addLabel={(name) => t("areas.addThisArea", { name })}
-              onPick={(area) =>
-                setDraft((d) => ({
-                  ...d,
-                  area: area === null ? undefined : { id: area.id, name: area.name },
-                }))
-              }
-              onAdd={setAddingCrag}
-              onFocus={showCragResults}
-            />
-          </View>
-        )}
 
         {draft.location === "indoor" && (!gyms.ready || gyms.gyms.length > 0) && (
           <View style={{ gap: 7 }}>
@@ -639,10 +624,12 @@ export function LogSessionForm({
           if (editingClimb !== null) pickClimb(editingClimb.key, known);
         }}
         areas={
-          !outdoor || editingClimb === null
+          editingClimb === null || (!outdoor && editingClimb.name.trim() === "")
             ? undefined
             : {
-                areaId: draft.area?.id ?? null,
+                area: editingClimb.area ?? null,
+                onArea: (area) => setClimbArea(editingClimb.key, area),
+                onAddArea: (name) => setAddingCrag({ key: editingClimb.key, name }),
                 onPickArea: (picked) =>
                   updateClimb(editingClimb.key, (c) => withAreaClimb(c, picked)),
                 onAdd: () =>
@@ -662,9 +649,9 @@ export function LogSessionForm({
       />
 
       <AddCragSheet
-        name={addingCrag}
+        name={addingCrag?.name ?? null}
         onCreated={(area) => {
-          setDraft((d) => ({ ...d, area }));
+          if (addingCrag !== null) setClimbArea(addingCrag.key, area);
           setAddingCrag(null);
         }}
         onClose={() => setAddingCrag(null)}
@@ -672,14 +659,15 @@ export function LogSessionForm({
 
       <AddClimbSheet
         initial={addingClimb?.initial ?? null}
-        area={draft.area ?? null}
+        area={editingClimb?.area ?? null}
         scales={gradePrefs}
         onCreated={(created, area) => {
           const key = addingClimb?.key;
           setDraft((d) => ({
             ...d,
-            area: d.area ?? area,
-            climbs: d.climbs.map((c) => (c.key === key ? withAreaClimb(c, created) : c)),
+            climbs: d.climbs.map((c) =>
+              c.key === key ? { ...withAreaClimb(c, created), area: c.area ?? area } : c
+            ),
           }));
           setAddingClimb(null);
         }}

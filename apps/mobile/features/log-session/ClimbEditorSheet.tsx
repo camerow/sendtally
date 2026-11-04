@@ -25,15 +25,19 @@ import { Icon } from "../../components/Icon";
 import { DateTimeField } from "../../components/DateTimeField";
 import { Sheet } from "../../components/Sheet";
 import { ClimbGradePicker, ClimbKindPicker } from "./ClimbKindPicker";
+import { AreaSearchField, type PickedArea } from "../areas/AreaSearchField";
 import { EnduranceFields } from "./EnduranceFields";
 import { ResultFields } from "./ResultFields";
 import { useApi } from "../../lib/api";
 import { press, pressRow, tap } from "../../lib/press";
 import { primaryButton, primaryButtonLabel } from "../../lib/styles";
 
-/** Where an outdoor row looks for Areas climbs, and what picking or adding one does. */
+/** The climb's area, which scopes its Areas name search, and what picking or adding does. */
 export type ClimbAreas = {
-  areaId: string | null;
+  area: PickedArea | null;
+  onArea: (area: PickedArea | null) => void;
+  /** Starts a new area from the typed name. */
+  onAddArea: (typed: string) => void;
   onPickArea: (climb: AreaClimb) => void;
   onAdd: () => void;
 };
@@ -53,7 +57,7 @@ export type ClimbEditorSheetProps = {
   onChange: (climb: ClimbDraft) => void;
   onChangeName: (name: string) => void;
   onPick: (climb: ClimbSummary) => void;
-  /** Set for an outdoor session, where the name also searches Areas. */
+  /** Set when the climb can have an area, which the name then also searches Areas in. */
   areas?: ClimbAreas;
   onToggleProject: () => void;
   onRemove: () => void;
@@ -363,7 +367,7 @@ export function ClimbEditorSheet({
   const search = useAreaClimbSearch(
     useApi(),
     climb?.name ?? "",
-    areas?.areaId ?? null,
+    areas?.area?.id ?? null,
     areas !== undefined && nameFocused
   );
   const options = climbOptions(suggestions, search.found, climb?.climbId);
@@ -439,6 +443,23 @@ export function ClimbEditorSheet({
                 max={date.max}
                 label={t("logSession.date")}
                 onChange={date.onChange}
+              />
+            </View>
+          )}
+
+          {areas !== undefined && (
+            <View style={{ gap: 7 }}>
+              <Text style={label}>{t("areas.area")}</Text>
+              <AreaSearchField
+                crags
+                value={areas.area}
+                label={t("areas.area")}
+                placeholder={t("areas.searchAreas")}
+                addLabel={(name) => t("areas.addThisArea", { name })}
+                onPick={(area) =>
+                  areas.onArea(area === null ? null : { id: area.id, name: area.name })
+                }
+                onAdd={areas.onAddArea}
               />
             </View>
           )}

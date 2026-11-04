@@ -10,6 +10,7 @@ const detail: SessionDetail = {
   gym_id: null,
   area_id: null,
   area: null,
+  areas: [],
   name: null,
   start_at: "2026-07-01T17:50:00.000Z",
   end_at: "2026-07-01T19:25:00.000Z",
@@ -42,6 +43,7 @@ const detail: SessionDetail = {
       tries: 1,
       angle: 40,
       note: null,
+      area: null,
       link: null,
     },
     {
@@ -52,6 +54,7 @@ const detail: SessionDetail = {
       tries: 3,
       angle: 40,
       note: null,
+      area: null,
       link: null,
     },
     {
@@ -62,6 +65,7 @@ const detail: SessionDetail = {
       tries: 4,
       angle: 45,
       note: null,
+      area: null,
       link: null,
     },
     {
@@ -72,6 +76,7 @@ const detail: SessionDetail = {
       tries: 1,
       angle: null,
       note: null,
+      area: null,
       link: null,
     },
   ],
@@ -94,12 +99,43 @@ describe("climbVMs", () => {
     expect(climbMetaLabel({ angleLabel: null, attempts: 1 })).toBe("1 attempt");
   });
 
-  it("carries the Areas link of a linked climb, and the session's crag", () => {
+  it("carries the Areas link of a linked climb, and each climb's area", () => {
     const link = { id: "c1", name: "Crimp Reaper", slug: "crimp-reaper" };
-    const climbs = detail.climbs.map((c, i) => (i === 1 ? { ...c, link } : c));
-    expect(climbVMs(climbs).map((c) => c.climbSlug)).toEqual([null, "crimp-reaper", null, null]);
     const area = { id: "a1", name: "Buttermilks", slug: "buttermilks" };
-    expect(sessionDetailVM({ ...detail, area }).area).toEqual(area);
+    const climbs = detail.climbs.map((c, i) => (i === 1 ? { ...c, link, area } : c));
+    expect(climbVMs(climbs).map((c) => c.climbSlug)).toEqual([null, "crimp-reaper", null, null]);
+    expect(climbVMs(climbs).map((c) => c.area)).toEqual([null, "Buttermilks", null, null]);
+  });
+
+  it("calls an unsent climb a project only when it is one, and counts its tries otherwise", () => {
+    const vms = climbVMs(detail.climbs, new Set(), new Set(["mind meld"]));
+    expect(vms.map((c) => [c.pill, c.resultLabel])).toEqual([
+      ["flash", "Flash"],
+      ["sent", "Sent"],
+      ["project", "Project"],
+      ["flash", "Flash"],
+    ]);
+    const tried = climbVMs(detail.climbs);
+    expect([tried[2]?.pill, tried[2]?.resultLabel]).toEqual(["tries", "4 tries"]);
+  });
+
+  it("reads the Top tile as a plain dash when nothing was sent", () => {
+    const unsent = {
+      ...detail,
+      climbs: detail.climbs.map((c) => ({ ...c, kind: "attempt" as const })),
+    };
+    const top = sessionDetailVM(unsent).stats.find((s) => s.label === "Top");
+    expect(top).toEqual({ label: "Top", value: "-", accent: false });
+  });
+
+  it("lists every area, and names a climb's area on a two-area day or indoors", () => {
+    const at = (id: string, name: string) => ({ id, name, slug: id });
+    const two = [at("a1", "Stanage Popular"), at("a2", "Stanage Plantation")];
+    const outdoor = { ...detail, location: "outdoor" as const };
+    expect(sessionDetailVM({ ...outdoor, areas: two }).areas).toEqual(two);
+    expect(sessionDetailVM({ ...outdoor, areas: two }).climbAreas).toBe(true);
+    expect(sessionDetailVM({ ...outdoor, areas: [two[0]!] }).climbAreas).toBe(false);
+    expect(sessionDetailVM({ ...detail, location: "indoor", areas: [] }).climbAreas).toBe(true);
   });
 
   it("reads a one-try send of an earlier project as a send, not a flash", () => {
@@ -185,6 +221,16 @@ describe("sessionDetailVM", () => {
     expect(vm.post.label).toBe("Logged manually");
   });
 
+  it("places an outdoor day at its areas, joined", () => {
+    const at = (id: string, name: string) => ({ id, name, slug: id });
+    const vm = sessionDetailVM({
+      ...detail,
+      location: "outdoor",
+      areas: [at("a1", "Stanage Popular"), at("a2", "Stanage Plantation")],
+    });
+    expect(vm.place).toBe("Stanage Popular, Stanage Plantation");
+  });
+
   it("names it without its date, places it in its gym and dates it on its own line", () => {
     const vm = sessionDetailVM(
       { ...detail, name: "Tuesday night session", location: "indoor", gym_id: "g1" },
@@ -193,7 +239,7 @@ describe("sessionDetailVM", () => {
       "The Depot"
     );
     expect(vm.name).toBe("Tuesday night session");
-    expect(vm.place).toBe("Indoor · The Depot");
+    expect(vm.place).toBe("The Depot");
     expect(vm.when).toMatch(/^Wed Jul 1 · \S.* · 1h 35m$/);
     expect(vm.when).toContain("1h 35m");
     expect(vm.rpe).toBe(7);
@@ -287,6 +333,7 @@ describe("route sessions", () => {
         angle: null,
         grade: { scale: "yds", value: "5.10a" },
         note: null,
+        area: null,
         link: null,
       },
       {
@@ -298,6 +345,7 @@ describe("route sessions", () => {
         angle: null,
         grade: { scale: "yds", value: "5.11d" },
         note: null,
+        area: null,
         link: null,
       },
       {
@@ -309,6 +357,7 @@ describe("route sessions", () => {
         angle: null,
         grade: { scale: "yds", value: "5.12a" },
         note: null,
+        area: null,
         link: null,
       },
     ],

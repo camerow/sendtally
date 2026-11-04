@@ -37,6 +37,7 @@ export type ManualClimbForm = {
   style?: ClimbStyle | undefined;
   tries: number;
   userClimbId?: string | undefined;
+  areaId?: string | undefined;
   endurance?: Endurance | undefined;
 };
 
@@ -49,7 +50,6 @@ export type ManualSessionForm = {
   location?: "indoor" | "outdoor" | undefined;
   unscored?: boolean | undefined;
   gymId?: string | undefined;
-  areaId?: string | undefined;
   climbs: ManualClimbForm[];
   membershipId?: string | null | undefined;
   week?: number | null | undefined;
@@ -111,7 +111,7 @@ function timesOf(body: ManualSessionForm): ManualSessionRow["times"] {
 
 function locationOf(body: ManualSessionForm): ManualSessionRow["location"] {
   if (body.location !== undefined) return body.location;
-  if (body.areaId !== undefined) return "outdoor";
+  if (body.climbs.some((c) => c.areaId !== undefined)) return "outdoor";
   return body.gymId === undefined ? null : "indoor";
 }
 
@@ -267,6 +267,14 @@ export function rescoredSession(
   return { ...result, title: row.name ?? result.title };
 }
 
+const named = (climb: ManualClimbForm): boolean => climb.name.trim() !== "";
+
+/** A grade-only climb has no record to hold its area, so its day keeps it, unless a named climb places the day. */
+function gradeOnlyArea(climbs: ManualClimbForm[]): string | null {
+  if (climbs.some((c) => named(c) && c.areaId !== undefined)) return null;
+  return climbs.find((c) => !named(c) && c.areaId !== undefined)?.areaId ?? null;
+}
+
 export function buildManualSession(
   fingerprint: string,
   body: ManualSessionForm,
@@ -278,7 +286,7 @@ export function buildManualSession(
     fingerprint,
     location: locationOf(body),
     gym_id: body.gymId ?? null,
-    area_id: body.areaId ?? null,
+    area_id: gradeOnlyArea(body.climbs),
     name: body.name ?? null,
     start_at: session.start.toISOString(),
     end_at: session.end.toISOString(),

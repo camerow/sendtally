@@ -648,10 +648,15 @@ export async function setSessionTags(
 export async function listSessionClimbLinks(
   db: D1Database,
   userId: string
-): Promise<Array<{ climb_slug: string; climb_id: string }>> {
+): Promise<Array<{ climb_slug: string; climb_id: string; area_id: string }>> {
   return drizzle(db)
-    .select({ climb_slug: sessionClimbLinks.climb_slug, climb_id: sessionClimbLinks.climb_id })
+    .select({
+      climb_slug: sessionClimbLinks.climb_slug,
+      climb_id: sessionClimbLinks.climb_id,
+      area_id: areaClimbs.area_id,
+    })
     .from(sessionClimbLinks)
+    .innerJoin(areaClimbs, eq(areaClimbs.id, sessionClimbLinks.climb_id))
     .where(eq(sessionClimbLinks.user_id, userId))
     .all();
 }
@@ -997,6 +1002,7 @@ export type UserClimbInput = {
   name_key: string;
   discipline: Discipline;
   grade_json: string | null;
+  area_id: string | null;
   area_climb_id: string | null;
 };
 
@@ -1034,11 +1040,64 @@ export async function linkUserClimbs(
   if (first !== undefined) await d.batch([first, ...rest]);
 }
 
+export type LoggedClimbPlace = {
+  name: string;
+  name_key: string;
+  user_climb_id: string | null;
+  grade: ClimbGrade;
+  area_id: string;
+  area_climb_id: string | null;
+};
+
+/** A climb logged at an area fills its record's empty area, recording it if new; a set area never moves. */
+export async function placeLoggedClimbs(
+  db: D1Database,
+  userId: string,
+  climbs: LoggedClimbPlace[]
+): Promise<void> {
+  const now = new Date().toISOString();
+  const d = drizzle(db);
+  const writes = climbs.map((c) =>
+    c.user_climb_id !== null
+      ? d
+          .update(userClimbs)
+          .set({ area_id: c.area_id, updated_at: now })
+          .where(
+            and(
+              eq(userClimbs.user_id, userId),
+              eq(userClimbs.id, c.user_climb_id),
+              isNull(userClimbs.area_id)
+            )
+          )
+      : d
+          .insert(userClimbs)
+          .values({
+            user_id: userId,
+            id: crypto.randomUUID(),
+            name: c.name,
+            name_key: c.name_key,
+            discipline: disciplineOf(c.grade.scale),
+            grade_json: JSON.stringify(c.grade),
+            area_id: c.area_id,
+            area_climb_id: c.area_climb_id,
+            created_at: now,
+            updated_at: now,
+          })
+          .onConflictDoUpdate({
+            target: [userClimbs.user_id, userClimbs.name_key],
+            set: { area_id: sql`coalesce(${userClimbs.area_id}, excluded.area_id)` },
+          })
+  );
+  const [first, ...rest] = writes;
+  if (first !== undefined) await d.batch([first, ...rest]);
+}
+
 export type WorkingInput = {
   name_key: string;
   name: string;
   grade?: ClimbGrade;
   discipline?: Discipline;
+  area_id?: string | null;
 };
 
 // The log form knows the grade and the Climbs tab knows the discipline, and
@@ -1069,6 +1128,7 @@ export async function markWorking(
       name_key: climb.name_key,
       grade_json,
       discipline,
+      area_id: climb.area_id ?? null,
       area_climb_id: null,
       working: true,
       created_at: now,

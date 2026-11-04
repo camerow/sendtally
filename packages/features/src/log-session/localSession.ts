@@ -7,6 +7,7 @@ import {
 } from "@sendtally/core";
 import type {
   LogSessionInput,
+  SessionArea,
   SessionDetail,
   SessionRow,
   SessionTag,
@@ -67,7 +68,8 @@ export function localSession(
   input: LogSessionInput,
   history: readonly SessionWithClimbs[],
   knownTags: readonly SessionTag[],
-  previous?: SessionDetail
+  previous?: SessionDetail,
+  places: readonly Pick<SessionArea, "id" | "name">[] = []
 ): SessionDetail {
   const {
     climbs_json,
@@ -75,6 +77,24 @@ export function localSession(
     ...row
   } = buildManualSession(fingerprint, formOf(input), historyOf(history, fingerprint));
   const links = new Map(previous?.climbs.map((c) => [c.name.trim(), c.link]));
+  const known = new Map(
+    [
+      ...(previous?.areas ?? []),
+      ...(previous?.climbs ?? []).flatMap((c) => c.area ?? []),
+      ...places.map((p) => ({ slug: "", ...p })),
+    ].map((a) => [a.id, a])
+  );
+  const placed = parseClimbs(climbs_json).map((climb, i) => ({
+    ...climb,
+    area: climb.name.trim() === "" ? null : (known.get(input.climbs[i]?.areaId ?? "") ?? null),
+    note: input.climbs[i]?.note?.trim() || null,
+    link: links.get(climb.name.trim()) ?? null,
+  }));
+  const climbAreas = [
+    ...new Map(placed.flatMap((c) => c.area ?? []).map((a) => [a.id, a])).values(),
+  ];
+  const dayArea = known.get(row.area_id ?? "");
+  const areas = climbAreas.length > 0 ? climbAreas : dayArea === undefined ? [] : [dayArea];
   return {
     source: "manual",
     board: null,
@@ -90,12 +110,9 @@ export function localSession(
     notes: input.notes?.trim() || null,
     tags: tagsOf(input.tags ?? [], [...(previous?.tags ?? []), ...knownTags]),
     entries: previous?.entries ?? [],
-    area: previous?.area?.id === input.areaId ? (previous?.area ?? null) : null,
-    climbs: parseClimbs(climbs_json).map((climb, i) => ({
-      ...climb,
-      note: input.climbs[i]?.note?.trim() || null,
-      link: links.get(climb.name.trim()) ?? null,
-    })),
+    areas,
+    area: areas[0] ?? null,
+    climbs: placed,
   };
 }
 

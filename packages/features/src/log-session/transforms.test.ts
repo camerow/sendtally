@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { SessionDetail } from "@sendtally/api-client";
+import type { ClimbSummary, SessionDetail } from "@sendtally/api-client";
 import {
   convertGrade,
   draftFromSession,
@@ -20,6 +20,8 @@ import {
   withoutTag,
   withClimbOutcome,
   withTries,
+  withKnownArea,
+  withLocation,
   withStartTime,
 } from "./transforms";
 import { DEFAULT_GRADE_PREFS, sendStyleLabel, sendStylesFor } from "./types";
@@ -316,6 +318,7 @@ describe("send styles", () => {
             angle: null,
             grade: { scale: "v", value: 4 },
             note: null,
+            area: null,
             link: null,
           },
         ],
@@ -470,6 +473,7 @@ function session(overrides: Partial<SessionDetail> = {}): SessionDetail {
     gym_id: null,
     area_id: null,
     area: null,
+    areas: [],
     name: "Tuesday board night",
     start_at: "2026-08-26T18:30:00.000Z",
     end_at: "2026-08-26T20:00:00.000Z",
@@ -503,6 +507,7 @@ function session(overrides: Partial<SessionDetail> = {}): SessionDetail {
         angle: null,
         grade: { scale: "v", value: 4 },
         note: null,
+        area: null,
         link: null,
       },
       {
@@ -514,6 +519,7 @@ function session(overrides: Partial<SessionDetail> = {}): SessionDetail {
         angle: null,
         grade: { scale: "v", value: 6 },
         note: null,
+        area: null,
         link: null,
       },
     ],
@@ -766,6 +772,7 @@ describe("endurance climbs", () => {
           angle: null,
           grade: { scale: "v", value: 3 },
           note: null,
+          area: null,
           link: null,
           endurance,
         },
@@ -780,38 +787,78 @@ describe("endurance climbs", () => {
   });
 });
 
-describe("outdoor crag and climb links", () => {
+describe("each climb's area", () => {
+  const popular = { id: "a1", name: "Stanage Popular" };
+  const plantation = { id: "a2", name: "Stanage Plantation" };
   const outdoor = (): LogSessionDraft => {
-    const base = draft({ location: "outdoor", area: { id: "a1", name: "Buttermilks" } });
-    return { ...base, climbs: base.climbs.map((c, i) => (i === 0 ? { ...c, climbId: "c1" } : c)) };
+    const base = draft({ location: "outdoor" });
+    return {
+      ...base,
+      climbs: base.climbs.map((c, i) =>
+        i === 0 ? { ...c, climbId: "c1", area: popular } : { ...c, area: plantation }
+      ),
+    };
   };
 
-  it("sends the crag and each linked climb", () => {
+  it("sends each climb's own area and each linked climb", () => {
     const input = toLogSessionInput(outdoor());
-    expect(input.areaId).toBe("a1");
+    expect(input.climbs.map((c) => c.areaId)).toEqual(["a1", "a2"]);
     expect(input.climbs[0]?.climbId).toBe("c1");
     expect(input.climbs[1]).not.toHaveProperty("climbId");
-  });
-
-  it("leaves them out of an indoor session", () => {
-    const input = toLogSessionInput({ ...outdoor(), location: "indoor" });
     expect(input).not.toHaveProperty("areaId");
-    expect(input.climbs[0]).not.toHaveProperty("climbId");
   });
 
-  it("prefills the crag and links when editing", () => {
+  it("keeps a named climb's area and link in an Indoor session, never a grade-only one's", () => {
+    const input = toLogSessionInput({ ...outdoor(), location: "indoor" });
+    expect(input.climbs[0]).toMatchObject({ areaId: "a1", climbId: "c1" });
+    expect(input.climbs[1]).not.toHaveProperty("areaId");
+    const { area: _area, ...unplaced } = outdoor().climbs[0]!;
+    const gym = toLogSessionInput({ ...outdoor(), location: "indoor", climbs: [unplaced] });
+    expect(gym.climbs[0]).not.toHaveProperty("climbId");
+  });
+
+  it("drops every climb's area when the session switches to Indoor", () => {
+    const indoor = withLocation(outdoor(), "indoor");
+    expect(indoor.location).toBe("indoor");
+    expect(indoor.climbs.map((c) => c.area)).toEqual([undefined, undefined]);
+    expect(withLocation(outdoor(), "outdoor").climbs[0]?.area).toEqual(popular);
+  });
+
+  it("takes a known climb's area, keeping the one it had when the climb has none", () => {
+    const known = (area: { id: string; name: string; slug: string } | null) =>
+      ({ id: "k", name: "Arete", area }) as ClimbSummary;
+    const [first] = outdoor().climbs;
+    expect(withKnownArea(first!, known({ ...plantation, slug: "p" })).area).toEqual(plantation);
+    expect(withKnownArea(first!, known(null)).area).toEqual(popular);
+  });
+
+  it("reads each climb's area back when editing, a grade-only day's from the session", () => {
     const base = session();
-    const edited = draftFromSession({
+    const at = (a: { id: string; name: string }) => ({ ...a, slug: "s" });
+    const twoAreas = draftFromSession({
       ...base,
       location: "outdoor",
-      area_id: "a1",
-      area: { id: "a1", name: "Buttermilks", slug: "buttermilks" },
+      areas: [at(popular), at(plantation)],
       climbs: base.climbs.map((c, i) =>
-        i === 0 ? { ...c, link: { id: "c1", name: "Cave traverse", slug: "cave-traverse" } } : c
+        i === 0
+          ? {
+              ...c,
+              area: at(popular),
+              link: { id: "c1", name: "Cave traverse", slug: "cave-traverse" },
+            }
+          : c
       ),
     });
-    expect(edited.area).toEqual({ id: "a1", name: "Buttermilks" });
-    expect(edited.climbs[0]?.climbId).toBe("c1");
-    expect(edited.climbs[1]).not.toHaveProperty("climbId");
+    expect(twoAreas).not.toHaveProperty("area");
+    expect(twoAreas.climbs.map((c) => c.area)).toEqual([popular, undefined]);
+    expect(twoAreas.climbs[0]?.climbId).toBe("c1");
+
+    const gradeOnly = draftFromSession({
+      ...base,
+      location: "outdoor",
+      areas: [at(plantation)],
+      climbs: base.climbs.map((c) => ({ ...c, name: "" })),
+    });
+    expect(gradeOnly.climbs.map((c) => c.area)).toEqual([plantation, plantation]);
   });
 });

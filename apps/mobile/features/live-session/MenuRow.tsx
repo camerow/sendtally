@@ -10,7 +10,8 @@ import { EntryKindIcon } from "../journal/EntryKindIcon";
 export type MenuRowProps = {
   icon: IconName | EntryKind | "strava";
   title: string;
-  hint: string;
+  /** A line under the title; left out when the title says it all. */
+  hint?: string;
   onPress: () => void;
   /** Red, for what removes something. */
   danger?: boolean;
@@ -73,11 +74,18 @@ export function MenuRow({
         >
           {title}
         </Text>
-        <Text
-          style={{ fontFamily: fonts.sans, fontSize: 13, lineHeight: 18, color: colors.textMuted }}
-        >
-          {hint}
-        </Text>
+        {hint !== undefined && (
+          <Text
+            style={{
+              fontFamily: fonts.sans,
+              fontSize: 13,
+              lineHeight: 18,
+              color: colors.textMuted,
+            }}
+          >
+            {hint}
+          </Text>
+        )}
       </View>
       {busy ? (
         <ActivityIndicator color={colors.gunmetal} />

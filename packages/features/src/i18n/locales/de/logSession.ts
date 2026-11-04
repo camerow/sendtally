@@ -4,7 +4,6 @@ export const logSession = {
   "logSession.hintRedpoint": "Nach Ausbouldern geschafft",
   "logSession.hintFlash": "Erster Versuch, mit Beta",
   "logSession.hintOnsight": "Erster Versuch, ohne Beta",
-  "logSession.hintAttempt": "Noch nicht geschafft",
   "logSession.styleRedpoint": "Rotpunkt",
   "logSession.styleFlash": "Flash",
   "logSession.styleOnsight": "Onsight",

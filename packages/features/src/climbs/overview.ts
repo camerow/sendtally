@@ -98,8 +98,6 @@ export type ClimbSessionRowVM = {
 export type ClimbDetailVM = {
   id: string;
   name: string;
-  /** Its discipline, then its grade when it has one. */
-  kicker: string;
   /** The name with its grade after it: the grade is the climb, the kicker only its kind. */
   title: string;
   /** Where it is, then the day it was first tried. */
@@ -131,9 +129,7 @@ export function climbSessions(
           name: sessionTitle(s),
           rpe: isUnscored(s) ? null : s.rpe,
           dateLabel: dateLabel(s.start_at),
-          meta: [climb.area?.name, sent ? t("common.sent") : t("sessionDetail.notYet")]
-            .filter((p) => p !== undefined)
-            .join(" · "),
+          meta: sent ? t("common.sent") : t("sessionDetail.notYet"),
           note: rows.find((c) => c.note !== null)?.note ?? null,
           triesLabel: t("tally.tryCount", { count: rows.reduce((n, c) => n + c.tries, 0) }),
         },
@@ -153,7 +149,6 @@ export function climbDetailVM(
   return {
     id: climb.id,
     name: climb.name,
-    kicker: t(climb.discipline === "route" ? "common.route" : "common.boulder"),
     title: climbTitle(climb),
     meta: [
       ...(climb.area?.name === undefined ? [] : [climb.area.name]),

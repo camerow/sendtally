@@ -3,9 +3,11 @@ import { act, fireEvent, render, screen } from "@testing-library/react-native";
 import { router } from "expo-router";
 import React from "react";
 import { Alert, Linking, type AlertButton } from "react-native";
+import type * as ReactNative from "react-native";
 import SessionDetailScreen from "../../app/session/[fingerprint]";
 
-const mockApi = {};
+const mockCreateEntry = jest.fn(async (_input: unknown) => ({ entry: {} }));
+const mockApi = { createEntry: (input: unknown) => mockCreateEntry(input) };
 const mockRemove = jest.fn<(fingerprint: string) => void>();
 const mockReload = jest.fn(async () => undefined);
 let mockState: unknown;
@@ -29,7 +31,21 @@ jest.mock("./SessionTags", () => ({ SessionTags: () => null }));
 jest.mock("../settings/useStravaConnect", () => ({
   useStravaConnect: () => ({ connect: mockConnect, busy: false, error: null }),
 }));
-jest.mock("../journal/SessionJournal", () => ({ SessionJournal: () => null }));
+jest.mock("../journal/SessionJournal", () => ({
+  SessionJournal: ({ onAdd }: { onAdd: () => void }) => {
+    const { Pressable, Text } = jest.requireActual<typeof ReactNative>("react-native");
+    return (
+      <Pressable onPress={onAdd}>
+        <Text>Add a note</Text>
+      </Pressable>
+    );
+  },
+}));
+jest.mock("@react-native-community/datetimepicker", () => ({
+  __esModule: true,
+  default: () => null,
+  DateTimePickerAndroid: { open: jest.fn() },
+}));
 jest.mock("@sendtally/features/session-detail", () => ({
   ...jest.requireActual<object>("@sendtally/features/session-detail"),
   useSessionDetail: () => ({
@@ -48,7 +64,7 @@ const ready = (): unknown => ({
   data: {
     vm: {
       name: "Tuesday night session",
-      place: "Indoor · The Depot",
+      place: "The Depot",
       when: "Tue 21 Oct · 19:00 · 2h",
       rpe: 7,
       pyramid: [],
@@ -57,6 +73,43 @@ const ready = (): unknown => ({
       filterCounts: { all: 14, sent: 9, flash: 2, project: 5 },
     },
     climbs: [],
+    rows: [
+      {
+        id: "p",
+        gradeLabel: "V5",
+        name: "The Prow",
+        count: 1,
+        meta: "Stanage Popular · 4 tries",
+        pill: { kind: "project", label: "Project" },
+        n: 1,
+        rank: 5,
+        tries: 4,
+      },
+      {
+        id: null,
+        gradeLabel: "V4",
+        name: "Boulder",
+        count: 2,
+        meta: "5 tries",
+        pill: { kind: "sent", label: "Sent" },
+        colour: "blue",
+        n: 2,
+        rank: 4,
+        tries: 5,
+      },
+      {
+        id: "g",
+        gradeLabel: "V2",
+        name: "Green circuit laps",
+        count: 1,
+        meta: "3 laps · 2 clean",
+        pill: null,
+        endurance: { unit: "moves", target: 40, laps: [40, 40, 28] },
+        n: 3,
+        rank: 2,
+        tries: 1,
+      },
+    ],
     tags: [],
     entries: [],
     notes: null,
@@ -84,7 +137,8 @@ describe("Climbing session detail", () => {
   it("introduces itself as climbing, then reads its climbs, effort and sends as tiles", async () => {
     await render(<SessionDetailScreen />);
     expect(screen.getByText("Climbing")).toBeTruthy();
-    expect(screen.getByText("· Indoor · The Depot")).toBeTruthy();
+    expect(screen.getByText("The Depot")).toBeTruthy();
+    expect(screen.queryByText(/Indoor/)).toBeNull();
     expect(screen.getByText("Tuesday night session")).toBeTruthy();
     expect(screen.getByText("Tue 21 Oct · 19:00 · 2h")).toBeTruthy();
     for (const [value, label] of [
@@ -124,9 +178,42 @@ describe("Climbing session detail", () => {
     expect(mockConnect).toHaveBeenCalled();
   });
 
-  it("edits from the bar", async () => {
+  it("lists its climbs as the log does, opening only a climb with a page", async () => {
     await render(<SessionDetailScreen />);
-    await fireEvent.press(screen.getByText("Edit"));
+    expect(screen.queryByText("Order climbed")).toBeNull();
+    expect(screen.getByText("Stanage Popular · 4 tries")).toBeTruthy();
+    expect(screen.getByText("Project")).toBeTruthy();
+    expect(screen.getByText("3 laps · 2 clean")).toBeTruthy();
+    expect(screen.getAllByText(/28/).length).toBeGreaterThan(0);
+    await fireEvent.press(screen.getByText("The Prow"));
+    expect(router.push).toHaveBeenCalledWith({ pathname: "/climb/[id]", params: { id: "p" } });
+    jest.mocked(router.push).mockClear();
+    await fireEvent.press(screen.getByText("Boulder ×2"));
+    expect(router.push).not.toHaveBeenCalled();
+    expect(screen.getByLabelText("V4, Boulder ×2, 5 tries, Sent")).toBeTruthy();
+  });
+
+  it("writes a note in a sheet on the session's day, attached to the session", async () => {
+    await render(<SessionDetailScreen />);
+    await fireEvent.press(screen.getByText("Add a note"));
+    await fireEvent.changeText(
+      screen.getByPlaceholderText("What happened, what to try next"),
+      "Cold and greasy"
+    );
+    await fireEvent.press(screen.getByText("Save"));
+    expect(mockCreateEntry).toHaveBeenCalledWith({
+      kind: "journal",
+      occurred_at: "2026-10-21",
+      body: "Cold and greasy",
+      fingerprints: ["manual-1"],
+    });
+  });
+
+  it("edits from the first row of the ··· menu, not the bar", async () => {
+    await render(<SessionDetailScreen />);
+    expect(screen.queryByText("Edit")).toBeNull();
+    await fireEvent.press(screen.getByLabelText("More"));
+    await fireEvent.press(screen.getByText("Edit session"));
     expect(router.push).toHaveBeenCalledWith("/session/manual-1/edit");
   });
 

@@ -6,7 +6,7 @@ import { t } from "@sendtally/features/i18n";
 import { press } from "../../../lib/press";
 import { CategoryMark } from "../library/CategoryMark";
 import { HangIcon } from "./HangIcon";
-import { IconButton } from "./IconButton";
+import { AddButton } from "../../../components/AddButton";
 import { Label } from "./Label";
 import { Title } from "./Title";
 
@@ -78,14 +78,7 @@ export function ShelfHeader({
         </Pressable>
       )}
       <View style={{ flex: 1 }} />
-      <IconButton
-        icon="plus"
-        label={addLabel}
-        onPress={onAdd}
-        color={colors.gunmetal}
-        border={colors.lineOnLightStrong}
-        size={30}
-      />
+      <AddButton label={addLabel} onPress={onAdd} />
     </View>
   );
 }

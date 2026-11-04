@@ -10,6 +10,7 @@ import {
   type Grade,
 } from "@sendtally/core";
 import type {
+  ClimbSummary,
   LogClimbInput,
   LogSessionInput,
   SessionClimb,
@@ -268,6 +269,28 @@ function climbOutcomeInput(
   };
 }
 
+/** A named climb keeps its area whatever the session; a grade-only one only on an outdoor day. */
+function areaInput(c: ClimbDraft, draft: LogSessionDraft): Pick<LogClimbInput, "areaId"> {
+  const outdoor = draft.location === "outdoor";
+  if (c.area === undefined || (!outdoor && c.name.trim() === "")) return {};
+  return { areaId: c.area.id };
+}
+
+/** Indoors a climb starts with no area: switching there drops every climb's. */
+export function withLocation(
+  draft: LogSessionDraft,
+  location: LogSessionDraft["location"]
+): LogSessionDraft {
+  if (location === "outdoor") return { ...draft, location };
+  return { ...draft, location, climbs: draft.climbs.map(({ area: _area, ...c }) => c) };
+}
+
+/** A known climb brings its area; one with none leaves the climb's as it was. */
+export function withKnownArea(climb: ClimbDraft, known: ClimbSummary | undefined): ClimbDraft {
+  const area = known?.area;
+  return area == null ? climb : { ...climb, area: { id: area.id, name: area.name } };
+}
+
 export function toLogSessionInput(draft: LogSessionDraft): LogSessionInput {
   const outdoor = draft.location === "outdoor";
   const climbs: LogClimbInput[] = draft.climbs.map((c) => ({
@@ -277,7 +300,8 @@ export function toLogSessionInput(draft: LogSessionDraft): LogSessionInput {
     ...(c.name.trim() === "" || c.note.trim() === "" ? {} : { note: c.note.trim() }),
     ...(c.circuit === undefined ? {} : { circuit: c.circuit }),
     ...(c.wall === undefined || c.wall.trim() === "" ? {} : { wall: c.wall.trim() }),
-    ...(outdoor && c.climbId !== undefined ? { climbId: c.climbId } : {}),
+    ...((outdoor || c.area !== undefined) && c.climbId !== undefined ? { climbId: c.climbId } : {}),
+    ...areaInput(c, draft),
     ...(c.userClimbId === undefined ? {} : { userClimbId: c.userClimbId }),
   }));
   return {
@@ -288,7 +312,6 @@ export function toLogSessionInput(draft: LogSessionDraft): LogSessionInput {
     ...(draft.rpe === null ? {} : { rpe: draft.rpe }),
     location: draft.location,
     ...(draft.gymId === undefined ? {} : { gymId: draft.gymId }),
-    ...(outdoor && draft.area !== undefined ? { areaId: draft.area.id } : {}),
     ...(draft.tags.length === 0 ? {} : { tags: draft.tags }),
     ...(draft.notes.trim() === "" ? {} : { notes: draft.notes.trim() }),
     ...(draft.plan === undefined || draft.plan.membershipId === null
@@ -335,6 +358,12 @@ function storedStyle(climb: SessionClimb): ClimbStyle {
 
 export function draftFromSession(session: SessionDetail): LogSessionDraft {
   const climbs = [...session.climbs].sort((a, b) => Date.parse(a.time) - Date.parse(b.time));
+  const outdoor = session.location === "outdoor";
+  const dayArea = climbs.some((c) => c.area !== null) ? undefined : session.areas[0];
+  const areaOf = (c: SessionDetail["climbs"][number]) => {
+    const area = c.area ?? (outdoor && c.name.trim() === "" ? dayArea : undefined);
+    return area == null ? {} : { area: { id: area.id, name: area.name } };
+  };
   return {
     name: session.name ?? "",
     date: utcDate(session.start_at),
@@ -342,7 +371,6 @@ export function draftFromSession(session: SessionDetail): LogSessionDraft {
     endTime: hasEnd(session) ? utcTime(session.end_at) : "",
     location: session.location ?? "indoor",
     ...(session.gym_id === null ? {} : { gymId: session.gym_id }),
-    ...(session.area ? { area: { id: session.area.id, name: session.area.name } } : {}),
     tags: session.tags.map((t) => t.name),
     notes: session.notes ?? "",
     rpe: isUnscored(session) ? null : session.rpe,
@@ -357,6 +385,7 @@ export function draftFromSession(session: SessionDetail): LogSessionDraft {
         ...(c.circuit === undefined ? {} : { circuit: c.circuit }),
         ...(c.wall === undefined ? {} : { wall: c.wall }),
         ...(c.link ? { climbId: c.link.id } : {}),
+        ...areaOf(c),
         ...(c.userClimbId === undefined ? {} : { userClimbId: c.userClimbId }),
         ...(c.endurance === undefined
           ? { kind: c.kind, style: storedStyle(c), tries: c.tries }

@@ -29,6 +29,5 @@ export const sessionDetail = {
   "sessionDetail.editNote": "Modifier la note",
   "sessionDetail.backToSession": "Retour à la séance",
   "sessionDetail.backSession": "Séance",
-  "sessionDetail.byGrade": "Par cotation",
   "sessionDetail.notYet": "Tentés",
 } as const;

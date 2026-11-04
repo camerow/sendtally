@@ -15,7 +15,11 @@ jest.mock("expo-router", () => ({
 }));
 jest.mock("../../lib/api", () => {
   const api = new Proxy(
-    {},
+    {
+      searchAreas: async () => ({
+        areas: [{ id: "a1", name: "Stanage Popular", slug: "stanage-popular", region_code: null }],
+      }),
+    },
     {
       get: (target, key) => {
         if (key in target) return target[key as keyof typeof target];
@@ -41,8 +45,21 @@ jest.mock("../../lib/sessionDraftStorage", () => ({
     .draftStorage({ read: () => null, write: () => undefined, remove: () => undefined }),
 }));
 jest.mock("../../components/Sheet", () => ({
-  Sheet: ({ visible, children }: { visible: boolean; children: React.ReactNode }) =>
-    visible ? children : null,
+  Sheet: ({
+    visible,
+    children,
+    footer,
+  }: {
+    visible: boolean;
+    children: React.ReactNode;
+    footer?: React.ReactNode;
+  }) =>
+    visible ? (
+      <>
+        {children}
+        {footer}
+      </>
+    ) : null,
 }));
 jest.mock("@react-native-community/datetimepicker", () => ({
   __esModule: true,
@@ -82,5 +99,53 @@ describe("saving a new session", () => {
     expect(mockLogSession.mock.calls[0]![0]).not.toHaveProperty("startTime");
     expect(mockLogSession.mock.calls[0]![0]).not.toHaveProperty("endTime");
     expect(mockReplace).toHaveBeenCalledWith("/session/manual-1");
+  });
+});
+
+describe("each climb's area", () => {
+  /** The form's Add climb, not the open sheet's heading. */
+  const addClimb = () => screen.getAllByText("Add climb")[0]!;
+  const pickArea = async (): Promise<void> => {
+    await fireEvent(screen.getByLabelText("Area"), "focus");
+    await fireEvent.changeText(screen.getByLabelText("Area"), "Stan");
+    await fireEvent.press(await screen.findByLabelText("Stanage Popular"));
+  };
+
+  it("leaves the form and sits in the climb sheet, outdoors for every climb", async () => {
+    await renderForm();
+    await fireEvent.press(screen.getByText("Outdoor"));
+    expect(screen.queryByLabelText("Area")).toBeNull();
+    await fireEvent.press(addClimb());
+    await pickArea();
+    await fireEvent.press(screen.getByText("Save"));
+
+    await fireEvent.press(addClimb());
+    expect(screen.getByLabelText("Area").props.value).toBe("Stanage Popular");
+    await fireEvent.press(screen.getByText("Save"));
+    await fireEvent.press(saveButton());
+
+    const input = mockLogSession.mock.calls[0]![0];
+    expect(input.climbs.map((c) => c.areaId)).toEqual([undefined, "a1", "a1"]);
+    expect(input).not.toHaveProperty("areaId");
+  });
+
+  it("indoors, offers an area only to a named climb, empty, and drops them on switching", async () => {
+    await renderForm();
+    await fireEvent.press(screen.getByText("Outdoor"));
+    await fireEvent.press(addClimb());
+    await pickArea();
+    await fireEvent.press(screen.getByText("Save"));
+    await fireEvent.press(screen.getByText("Indoor"));
+
+    await fireEvent.press(addClimb());
+    expect(screen.queryByLabelText("Area")).toBeNull();
+    await fireEvent.changeText(screen.getByPlaceholderText(/name/i), "Arete");
+    expect(screen.getByLabelText("Area").props.value).toBe("");
+    await pickArea();
+    await fireEvent.press(screen.getByText("Save"));
+    await fireEvent.press(saveButton());
+
+    const input = mockLogSession.mock.calls[0]![0];
+    expect(input.climbs.map((c) => c.areaId)).toEqual([undefined, undefined, "a1"]);
   });
 });

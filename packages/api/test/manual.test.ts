@@ -109,17 +109,19 @@ describe("unscored sessions", () => {
     expect(
       manualSessionBody.safeParse({ date: "2026-09-16", unscored: true, climbs }).success
     ).toBe(true);
+    const atCrag = [{ ...climbs[0], areaId: "crag" }];
+    expect(manualSessionBody.safeParse({ date: "2026-09-16", climbs: atCrag }).success).toBe(true);
     expect(
-      manualSessionBody.safeParse({ date: "2026-09-16", areaId: "crag", climbs }).success
-    ).toBe(true);
+      manualSessionBody.safeParse({ date: "2026-09-16", location: "indoor", climbs: atCrag })
+        .success
+    ).toBe(false);
     expect(
       manualSessionBody.safeParse({
         date: "2026-09-16",
         location: "indoor",
-        areaId: "crag",
-        climbs,
+        climbs: [{ ...atCrag[0], name: "Arete" }],
       }).success
-    ).toBe(false);
+    ).toBe(true);
   });
 
   it.each([
@@ -127,8 +129,8 @@ describe("unscored sessions", () => {
     [{ rpe: 7 }, "user", null],
     [{ unscored: true, rpe: 7 }, "none", null],
     [{ unscored: true, gymId: "gym" }, "none", "indoor"],
-    [{ areaId: "crag" }, "computed", "outdoor"],
-    [{ location: "indoor", areaId: undefined }, "computed", "indoor"],
+    [{ climbs: [{ ...climbs[0], areaId: "crag" }] }, "computed", "outdoor"],
+    [{ location: "indoor" }, "computed", "indoor"],
   ] as const)(
     "records the rpe source and derives the location for %j",
     (extra, source, location) => {

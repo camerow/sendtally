@@ -1,27 +1,28 @@
 import { router } from "expo-router";
 import React from "react";
-import { Pressable, Text } from "react-native";
+import { View } from "react-native";
 import { randomUUID } from "expo-crypto";
 import type { ClimbNote } from "@sendtally/api-client";
 import { useClimb } from "@sendtally/features/climbs";
 import { t } from "@sendtally/features/i18n";
-import { colors, fonts } from "@sendtally/design/tokens";
-import { Icon } from "../../components/Icon";
+import { NoteRow } from "../../components/NoteRow";
 import { ScreenFrame } from "../../components/ScreenFrame";
+import { SectionHeading } from "../../components/SectionHeading";
 import { useApi } from "../../lib/api";
-import { press } from "../../lib/press";
 import { Button } from "../training/components/Button";
 import { DetailActions } from "../training/components/DetailActions";
+import { deleteRow } from "../training/components/deleteRow";
 import { LoadState } from "../training/data/LoadState";
 import { HistoryList } from "../training/history/HistoryList";
 import { SummaryTiles } from "../training/summary/SummaryTiles";
-import { AddNoteSheet } from "./AddNoteSheet";
+import { AddNoteSheet } from "../../components/AddNoteSheet";
 import { ClimbingHero } from "./ClimbingHero";
+import { ClimbPill } from "./ClimbPill";
 
-/** One climb: a Project chip to mark it, its days, tries and best, every session on it, and Log session. */
+/** One climb: Project when it is one, its days, tries and best, every session on it, and Log session. */
 export function ClimbDetailScreen({ id }: { id: string }): React.ReactElement {
   const api = useApi();
-  const { state, setWorking, saveNote, deleteNote, reload } = useClimb(api, id, randomUUID);
+  const { state, saveNote, deleteNote, remove, reload } = useClimb(api, id, randomUUID);
   const [noting, setNoting] = React.useState<ClimbNote | "new" | null>(null);
 
   if (state.status !== "ready")
@@ -33,9 +34,22 @@ export function ClimbDetailScreen({ id }: { id: string }): React.ReactElement {
     <ScreenFrame
       action={
         <DetailActions
-          onEdit={() =>
-            router.push({ pathname: "/climb/log", params: { climbId: climb.id, edit: "1" } })
-          }
+          menu={[
+            {
+              icon: "pencil",
+              title: t("climbs.editClimb"),
+              onPress: () =>
+                router.push({ pathname: "/climb/log", params: { climbId: climb.id, edit: "1" } }),
+            },
+            deleteRow({
+              title: t("climbs.deleteClimb"),
+              confirm: {
+                title: t("climbs.deleteClimb"),
+                body: t("climbs.deleteConfirm", { name: vm.name }),
+              },
+              onDelete: remove,
+            }),
+          ]}
         />
       }
       footer={
@@ -48,35 +62,9 @@ export function ClimbDetailScreen({ id }: { id: string }): React.ReactElement {
       }
     >
       <ClimbingHero
-        kind={vm.kicker}
         title={vm.title}
         meta={vm.meta}
-        aside={
-          <Pressable
-            onPress={() => setWorking(!vm.project)}
-            accessibilityRole="switch"
-            accessibilityState={{ checked: vm.project }}
-            accessibilityLabel={t("common.project")}
-            style={press({
-              height: 36,
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 6,
-              paddingHorizontal: 12,
-              borderRadius: 18,
-              borderWidth: 1,
-              borderColor: vm.project ? colors.gold : colors.lineOnLight,
-              backgroundColor: vm.project ? colors.gold : colors.white,
-            })}
-          >
-            <Icon name="star" color={colors.gunmetal} size={15} strokeWidth={2} />
-            <Text
-              style={{ fontFamily: fonts.sansSemiBold, fontSize: 13.5, color: colors.gunmetal }}
-            >
-              {vm.project ? t("common.project") : t("logSession.markAsProject")}
-            </Text>
-          </Pressable>
-        }
+        kicker={vm.project ? <ClimbPill kind="project" label={t("common.project")} /> : undefined}
       />
       <SummaryTiles
         stats={[
@@ -85,41 +73,27 @@ export function ClimbDetailScreen({ id }: { id: string }): React.ReactElement {
           { value: vm.best, label: t("statistics.best") },
         ]}
       />
+      <View style={{ gap: 2 }}>
+        <SectionHeading
+          title={t("common.notes")}
+          add={{ label: t("climbs.addNote"), onPress: () => setNoting("new") }}
+        />
+        {vm.notes.map((n) => (
+          <NoteRow key={n.id} date={n.dateLabel} body={n.note} onPress={() => setNoting(n)} />
+        ))}
+      </View>
       <HistoryList
-        title={t("climbs.notes")}
-        onAdd={{ label: t("climbs.addNote"), onPress: () => setNoting("new") }}
-        items={[
-          ...vm.sessions.map((s) => ({
-            day: s.day,
-            item: {
-              id: s.fingerprint,
-              date: s.dateLabel,
-              name: s.name,
-              meta: `${s.meta} · ${s.triesLabel}`,
-              rpe: s.rpe,
-              note: s.note,
-            },
-          })),
-          ...vm.notes.map((n) => ({
-            day: n.day,
-            item: {
-              id: n.id,
-              date: n.dateLabel,
-              name: t("climbs.note"),
-              meta: "",
-              rpe: null,
-              note: n.note,
-              kind: "note" as const,
-            },
-          })),
-        ]
-          .sort((a, b) => b.day.localeCompare(a.day))
-          .map((row) => row.item)}
-        onOpen={(rowId) => {
-          const note = vm.notes.find((n) => n.id === rowId);
-          if (note !== undefined) setNoting(note);
-          else router.push({ pathname: "/session/[fingerprint]", params: { fingerprint: rowId } });
-        }}
+        items={vm.sessions.map((s) => ({
+          id: s.fingerprint,
+          date: s.dateLabel,
+          name: s.name,
+          meta: `${s.meta} · ${s.triesLabel}`,
+          rpe: s.rpe,
+          note: s.note,
+        }))}
+        onOpen={(fingerprint) =>
+          router.push({ pathname: "/session/[fingerprint]", params: { fingerprint } })
+        }
       />
       <AddNoteSheet
         note={noting}

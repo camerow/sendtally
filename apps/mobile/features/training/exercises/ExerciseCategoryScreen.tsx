@@ -7,7 +7,7 @@ import { kindLabel } from "@sendtally/features/activities";
 import { pickerEntries, type PickerEntry } from "@sendtally/features/exercises";
 import { t } from "@sendtally/features/i18n";
 import { DashedPanel } from "../components/DashedPanel";
-import { IconButton } from "../components/IconButton";
+import { AddButton } from "../../../components/AddButton";
 import { Title } from "../components/Title";
 import { PickerRow } from "../exercise-picker/PickerRow";
 import { usePickerWorld } from "../exercise-picker/usePickerWorld";
@@ -41,13 +41,9 @@ export function ExerciseCategoryScreen({ kind }: ExerciseCategoryScreenProps): R
   return (
     <ScreenFrame
       action={
-        <IconButton
-          icon="plus"
+        <AddButton
           label={t("workouts.newExerciseIn", { category: label })}
           onPress={() => openExerciseEditor(kind)}
-          color={colors.gunmetal}
-          border={colors.lineOnLightStrong}
-          size={30}
         />
       }
     >
