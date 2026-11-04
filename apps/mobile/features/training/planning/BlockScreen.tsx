@@ -106,6 +106,7 @@ export function BlockScreen({
     onToggle: draft.toggle,
     onSchedules: draft.setSchedules,
     onPickWeek: setWeek,
+    onMove: (membershipId: string, by: -1 | 1) => draft.move(id, membershipId, by),
     ...(!ended && { onEditDays: draft.begin }),
   };
   const saveAsTemplate = async (name: string): Promise<void> => {

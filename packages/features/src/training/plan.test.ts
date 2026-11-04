@@ -44,9 +44,30 @@ const plan: Plan = {
   blocks: [{ id: "b1", name: "Winter base", start: "2026-11-02", weeks: 6, focus: null }],
   memberships: [
     // Tuesdays and Fridays.
-    { id: "m1", workoutId: "squat", blockId: "b1", weekdays: [1, 4], start: "2026-11-02" },
-    { id: "m2", workoutId: "limit", blockId: null, weekdays: [2], start: "2026-11-02" },
-    { id: "once", workoutId: "squat", blockId: null, weekdays: [], start: "2026-11-12" },
+    {
+      id: "m1",
+      workoutId: "squat",
+      blockId: "b1",
+      weekdays: [1, 4],
+      start: "2026-11-02",
+      position: 0,
+    },
+    {
+      id: "m2",
+      workoutId: "limit",
+      blockId: null,
+      weekdays: [2],
+      start: "2026-11-02",
+      position: 0,
+    },
+    {
+      id: "once",
+      workoutId: "squat",
+      blockId: null,
+      weekdays: [],
+      start: "2026-11-12",
+      position: 0,
+    },
   ],
   weekChanges: [
     { membershipId: "m1", week: 2, dose: 1, itemId: "0", change: { weightKg: 80 } },
@@ -76,6 +97,23 @@ const on = (date: string, sessions: LoggedSession[] = []) =>
   }));
 
 describe("occurrencesOn", () => {
+  it("lists a day's block workouts in the block's order", () => {
+    const ordered: Plan = {
+      ...plan,
+      memberships: [
+        { ...plan.memberships[0]!, position: 1 },
+        { ...plan.memberships[0]!, id: "m3", workoutId: "limit", position: 0 },
+      ],
+    };
+    const ids = (p: Plan): string[] =>
+      occurrencesOn(p, workout, [], "2026-11-10", TODAY).map((o) => o.membership.id);
+    expect(ids(ordered)).toEqual(["m3", "m1"]);
+    expect(ids({ ...ordered, memberships: [...ordered.memberships].reverse() })).toEqual([
+      "m3",
+      "m1",
+    ]);
+  });
+
   it("lists what lands on a day with the week it falls in and its prescription", () => {
     expect(on("2026-11-10")).toEqual([
       {

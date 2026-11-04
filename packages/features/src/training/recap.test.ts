@@ -53,8 +53,15 @@ const log = (activities: Activity[]): TrainingLog => ({
   plan: {
     blocks: [block],
     memberships: [
-      { id: "m1", workoutId: "w1", blockId: "b1", weekdays: [0, 3], start: block.start },
-      { id: "m2", workoutId: "w1", blockId: null, weekdays: [0], start: block.start },
+      {
+        id: "m1",
+        workoutId: "w1",
+        blockId: "b1",
+        weekdays: [0, 3],
+        start: block.start,
+        position: 0,
+      },
+      { id: "m2", workoutId: "w1", blockId: null, weekdays: [0], start: block.start, position: 0 },
     ],
     weekChanges: [],
     planChanges: [],
@@ -177,7 +184,14 @@ describe("blockRecap on a hangboard workout", () => {
     plan: {
       blocks: [block],
       memberships: [
-        { id: "m3", workoutId: "w2", blockId: "b1", weekdays: [1], start: block.start },
+        {
+          id: "m3",
+          workoutId: "w2",
+          blockId: "b1",
+          weekdays: [1],
+          start: block.start,
+          position: 0,
+        },
       ],
       weekChanges: [],
       planChanges: [],

@@ -16,9 +16,30 @@ describe("blockMembers", () => {
     const plan: Plan = {
       blocks: [block],
       memberships: [
-        { id: "m1", workoutId: "w1", blockId: "b1", weekdays: [0], start: block.start },
-        { id: "m2", workoutId: "w1", blockId: null, weekdays: [0], start: block.start },
-        { id: "m3", workoutId: "w1", blockId: "b2", weekdays: [0], start: block.start },
+        {
+          id: "m1",
+          workoutId: "w1",
+          blockId: "b1",
+          weekdays: [0],
+          start: block.start,
+          position: 0,
+        },
+        {
+          id: "m2",
+          workoutId: "w1",
+          blockId: null,
+          weekdays: [0],
+          start: block.start,
+          position: 0,
+        },
+        {
+          id: "m3",
+          workoutId: "w1",
+          blockId: "b2",
+          weekdays: [0],
+          start: block.start,
+          position: 0,
+        },
       ],
       weekChanges: [],
       planChanges: [],

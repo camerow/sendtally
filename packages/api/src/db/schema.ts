@@ -697,6 +697,7 @@ export const memberships = sqliteTable(
     block_id: text("block_id"),
     weekdays_json: text("weekdays_json").notNull(),
     start: text("start").notNull(),
+    position: integer("position").notNull().default(0),
     updated_at: text("updated_at").notNull(),
   },
   (t) => [primaryKey({ columns: [t.user_id, t.id] })]

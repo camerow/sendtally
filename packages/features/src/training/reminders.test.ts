@@ -28,8 +28,22 @@ const workouts = [
 const plan: Plan = {
   blocks: [],
   memberships: [
-    { id: "s1", workoutId: "rep73", blockId: null, weekdays: [0, 2], start: "2026-09-28" },
-    { id: "p1", workoutId: "legs", blockId: null, weekdays: [0, 3], start: "2026-09-28" },
+    {
+      id: "s1",
+      workoutId: "rep73",
+      blockId: null,
+      weekdays: [0, 2],
+      start: "2026-09-28",
+      position: 0,
+    },
+    {
+      id: "p1",
+      workoutId: "legs",
+      blockId: null,
+      weekdays: [0, 3],
+      start: "2026-09-28",
+      position: 0,
+    },
   ],
   weekChanges: [],
   planChanges: [],
@@ -107,7 +121,14 @@ describe("trainingReminders", () => {
   });
 
   it("reminds about a one-off on its day only", () => {
-    const once = { id: "o1", workoutId: "legs", blockId: null, weekdays: [], start: "2026-10-09" };
+    const once = {
+      id: "o1",
+      workoutId: "legs",
+      blockId: null,
+      weekdays: [],
+      start: "2026-10-09",
+      position: 0,
+    };
     const l = log({ plan: { ...plan, memberships: [once] } });
     expect(remind(l)).toEqual([{ date: "2026-10-09", body: "Gym, legs" }]);
   });

@@ -131,7 +131,14 @@ describe("Timer", () => {
     const plan = {
       blocks: [{ id: "b1", name: "Winter base", start: TODAY, weeks: 4, focus: null }],
       memberships: [
-        { id: "m1", workoutId: "max10", blockId: "b1", weekdays: [1 as const], start: TODAY },
+        {
+          id: "m1",
+          workoutId: "max10",
+          blockId: "b1",
+          weekdays: [1 as const],
+          start: TODAY,
+          position: 0,
+        },
       ],
       weekChanges: [
         { membershipId: "m1", week: 1, dose: 0, itemId: "0", change: { sets: 3, edgeMm: 15 } },

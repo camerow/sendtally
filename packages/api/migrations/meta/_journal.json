@@ -211,6 +211,13 @@
       "when": 1793808852135,
       "tag": "0034_drop_week_changes",
       "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "6",
+      "when": 1793810742210,
+      "tag": "0035_membership_position",
+      "breakpoints": true
     }
   ]
 }

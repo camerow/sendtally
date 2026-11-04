@@ -2994,7 +2994,7 @@ export async function planRows(db: D1Database, userId: string): Promise<PlanRows
       .select()
       .from(memberships)
       .where(eq(memberships.user_id, userId))
-      .orderBy(memberships.start, memberships.id),
+      .orderBy(memberships.position, memberships.start, memberships.id),
     d
       .select()
       .from(itemWeekChanges)
@@ -3118,13 +3118,14 @@ export async function getMembership(
 export async function saveMembership(
   db: D1Database,
   userId: string,
-  m: Membership
+  m: Omit<Membership, "position"> & { position?: number | undefined }
 ): Promise<MembershipRow> {
   const fields = {
     workout_id: m.workoutId,
     block_id: m.blockId,
     weekdays_json: JSON.stringify([...new Set(m.weekdays)].sort()),
     start: m.start,
+    ...(m.position !== undefined && { position: m.position }),
     updated_at: new Date().toISOString(),
   };
   return drizzle(db)

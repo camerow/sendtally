@@ -91,6 +91,7 @@ describe("adding to the plan", () => {
       blockId: null,
       weekdays: [],
       start: "2026-10-01",
+      position: 0,
     });
     await fireEvent.press(screen.getByText("Gym, legs"));
     expect(router.push).toHaveBeenCalledWith({
@@ -106,6 +107,7 @@ describe("adding to the plan", () => {
       blockId: "b1",
       weekdays: [],
       start: "2026-10-05",
+      position: 0,
     };
     const onClose = jest.fn();
     await renderWithHang(
@@ -196,6 +198,7 @@ describe("adding to the plan", () => {
       blockId: null,
       weekdays: [0, 3],
       start: "2026-10-01",
+      position: 0,
     });
     expect(router.dismissTo).toHaveBeenCalledWith({
       pathname: "/(tabs)/today",
@@ -218,6 +221,7 @@ describe("adding to the plan", () => {
       blockId: "b1",
       weekdays: [1],
       start: "2026-10-05",
+      position: 0,
     });
     expect(router.dismissTo).toHaveBeenCalledWith({
       pathname: "/plan/block/[id]",
@@ -242,6 +246,7 @@ describe("adding to the plan", () => {
       blockId: "t1",
       weekdays: [],
       start: "2026-09-29",
+      position: 0,
     });
     expect(router.back).toHaveBeenCalled();
   });
@@ -257,8 +262,22 @@ describe("adding to the plan", () => {
     await fireEvent.press(screen.getByLabelText("Saturday Oct 3"));
     await fireEvent.press(screen.getByText("Add on 2 days"));
     expect(mockPlan.saveMembership.mock.calls.map(([m]) => m)).toEqual([
-      { id: "m-new", workoutId: "legs", blockId: null, weekdays: [], start: "2026-10-01" },
-      { id: "m-new", workoutId: "legs", blockId: null, weekdays: [], start: "2026-10-03" },
+      {
+        id: "m-new",
+        workoutId: "legs",
+        blockId: null,
+        weekdays: [],
+        start: "2026-10-01",
+        position: 0,
+      },
+      {
+        id: "m-new",
+        workoutId: "legs",
+        blockId: null,
+        weekdays: [],
+        start: "2026-10-03",
+        position: 0,
+      },
     ]);
   });
 });

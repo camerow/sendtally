@@ -41,7 +41,7 @@ const legs: WorkoutRecord = {
 // Mondays and Tuesdays; today is Tuesday 29 September.
 const plan = (workoutId: string, weekdays: (0 | 1)[] = [0, 1]): Plan => ({
   blocks: [],
-  memberships: [{ id: "m1", workoutId, blockId: null, weekdays, start: "2026-09-28" }],
+  memberships: [{ id: "m1", workoutId, blockId: null, weekdays, start: "2026-09-28", position: 0 }],
   weekChanges: [],
   planChanges: [],
   membershipDays: [],
@@ -102,7 +102,14 @@ describe("Today", () => {
         { id: "b0", name: "Summer base", start: "2026-08-03", weeks: 4, focus: null },
       ],
       memberships: [
-        { id: "m1", workoutId: "max10", blockId: "b1", weekdays: [0, 1], start: "2026-09-21" },
+        {
+          id: "m1",
+          workoutId: "max10",
+          blockId: "b1",
+          weekdays: [0, 1],
+          start: "2026-09-21",
+          position: 0,
+        },
       ],
     };
     await renderWithHang(<TodayScreen />, hangData(), { plan: inBlocks });
@@ -227,7 +234,14 @@ describe("Today", () => {
     const oneOff: Plan = {
       ...plan("max10"),
       memberships: [
-        { id: "m1", workoutId: "max10", blockId: null, weekdays: [], start: "2026-09-29" },
+        {
+          id: "m1",
+          workoutId: "max10",
+          blockId: null,
+          weekdays: [],
+          start: "2026-09-29",
+          position: 0,
+        },
       ],
     };
     await renderWithHang(<TodayScreen />, hangData(), { plan: oneOff });

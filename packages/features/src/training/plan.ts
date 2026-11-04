@@ -15,6 +15,7 @@ import {
   type WorkoutKind,
 } from "@sendtally/core/hang";
 import { workoutUsage } from "../workouts/library";
+import { byPosition } from "./blocks";
 import { daysInWeek, scheduleOf } from "./weekDays";
 
 /**
@@ -177,6 +178,7 @@ export function occurrencesOn(
         (m.blockId === null || block !== null) && occursOn(asOn(plan, m, block, date), block, date)
       );
     })
+    .sort(byPosition)
     .map((m) => occurrence(plan, m, workout(m.workoutId), logged, date, today));
   const movedIn = plan.planChanges.flatMap((c) => {
     const m = plan.memberships.find((x) => x.id === c.membershipId);

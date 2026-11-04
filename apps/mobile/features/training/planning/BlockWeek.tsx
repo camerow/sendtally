@@ -40,6 +40,7 @@ import { useLibrary } from "../library/useLibrary";
 import type { LibraryWorkout } from "@sendtally/features/workouts";
 import { type } from "../type";
 import { AddWorkoutsSheet } from "./AddWorkoutsSheet";
+import { BlockOrder } from "./BlockOrder";
 import { WeekNav } from "./WeekNav";
 
 export type BlockWeekProps = {
@@ -66,6 +67,8 @@ export type BlockWeekProps = {
   onPickWeek?: (week: number) => void;
   /** Turns on Edit mode, from the hint naming workouts with no days. */
   onEditDays?: () => void;
+  /** Moves a workout a place in the block, from the Order list in Edit mode. */
+  onMove?: (membershipId: string, by: -1 | 1) => void;
 };
 
 const DAYS = [0, 1, 2, 3, 4, 5, 6];
@@ -87,6 +90,7 @@ export function BlockWeek({
   onSchedules,
   onPickWeek,
   onEditDays,
+  onMove,
 }: BlockWeekProps): React.ReactElement {
   const { model, today } = useHangData();
   const { log } = useTrainingLog(useApi());
@@ -293,6 +297,16 @@ export function BlockWeek({
         </Pressable>
       )}
       {canAdd && !(template && rows.length === 0) && (editing || rows.length === 0) && action}
+      {editing && onMove !== undefined && members.length > 1 && (
+        <BlockOrder
+          members={members}
+          workout={workout}
+          onMove={(id, by) => {
+            onMove(id, by);
+            setAdded([id]);
+          }}
+        />
+      )}
       {open !== null && (
         <DaySheet
           occurrence={open.occurrence}

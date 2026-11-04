@@ -80,6 +80,7 @@ export const plan = {
   "plan.tapEditDays": "Tap Edit to set when {workout} runs",
   "plan.missedOn": "Missed {day}",
   "plan.editBlock": "Edit block",
+  "plan.order": "Order",
   "plan.editInBlock": "Edit workout in {block}",
   "plan.scheduled": "Scheduled",
   "plan.moveStart": "Reschedule the first day",

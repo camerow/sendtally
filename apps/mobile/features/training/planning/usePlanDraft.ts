@@ -4,6 +4,7 @@ import type { Block, WeekChange } from "@sendtally/core/hang";
 import {
   applyDraft,
   draftChange,
+  draftMove,
   draftSchedule,
   emptyDraft,
   scheduleOf,
@@ -26,6 +27,8 @@ export type PlanDraftState = {
   toggle: (membershipId: string, change: DayToggle) => void;
   setSchedules: (schedules: readonly DaySchedule[]) => void;
   setChange: (change: WeekChange) => void;
+  /** Moves a workout a place within its block. */
+  move: (blockId: string, membershipId: string, by: -1 | 1) => void;
 };
 
 export function usePlanDraft(plan: Plan, startEditing = false): PlanDraftState {
@@ -52,5 +55,7 @@ export function usePlanDraft(plan: Plan, startEditing = false): PlanDraftState {
       }),
     setSchedules: (schedules) => edit((d) => schedules.reduce(draftSchedule, d)),
     setChange: (change) => edit((d) => draftChange(d, change)),
+    move: (blockId, membershipId, by) =>
+      edit((d) => draftMove(d, plan, { id: blockId }, membershipId, by)),
   };
 }

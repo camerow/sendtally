@@ -32,7 +32,14 @@ const legs: WorkoutRecord = {
 const plan: Plan = {
   blocks: [{ id: "b1", name: "Autumn power", start: "2026-09-28", weeks: 4, focus: null }],
   memberships: [
-    { id: "m1", workoutId: "legs", blockId: "b1", weekdays: [0, 1], start: "2026-09-28" },
+    {
+      id: "m1",
+      workoutId: "legs",
+      blockId: "b1",
+      weekdays: [0, 1],
+      start: "2026-09-28",
+      position: 0,
+    },
   ],
   weekChanges: [],
   planChanges: [],

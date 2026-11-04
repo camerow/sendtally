@@ -4,7 +4,13 @@ import type { Plan, SendtallyApi } from "@sendtally/api-client";
 import type { Block, Membership, PlanChange, WeekChange } from "@sendtally/core/hang";
 import { queries } from "../query";
 import { withoutBlock, withoutMembership } from "./plan";
-import { changedSchedules, movedWith, withChange, withSchedule, type PlanDraft } from "./planDraft";
+import {
+  changedSchedules,
+  movedMemberships,
+  withChange,
+  withSchedule,
+  type PlanDraft,
+} from "./planDraft";
 import type { DaySchedule } from "./weekDays";
 
 export type PlanActions = {
@@ -111,10 +117,9 @@ export function usePlanActions(api: SendtallyApi, onError: (error: unknown) => v
       saveDraft: async (draft) => {
         const plan = client.getQueryData<Plan>(key);
         if (plan === undefined) return;
-        const moved = draft.block === null ? [] : movedWith(plan, draft.block);
         await Promise.all([
           ...(draft.block === null ? [] : [saveBlock(draft.block)]),
-          ...moved.map(saveMembership),
+          ...movedMemberships(plan, draft).map(saveMembership),
           ...changedSchedules(plan, draft).map(saveSchedule),
           ...draft.weekChanges.map(saveWeekChange),
         ]);

@@ -8,8 +8,23 @@ import {
   type Membership,
 } from "@sendtally/core/hang";
 
+/** The block's workouts in its order. */
 export const blockMembers = (plan: Plan, block: Pick<Block, "id">): Membership[] =>
-  plan.memberships.filter((m) => m.blockId === block.id);
+  plan.memberships.filter((m) => m.blockId === block.id).sort(byPosition);
+
+export const byPosition = (
+  a: Pick<Membership, "position">,
+  b: Pick<Membership, "position">
+): number => a.position - b.position;
+
+/** Where a workout added to the block goes: after the rest. */
+export const nextPosition = (plan: Plan, blockId: string | null): number =>
+  blockId === null
+    ? 0
+    : Math.max(
+        -1,
+        ...plan.memberships.filter((m) => m.blockId === blockId).map((m) => m.position)
+      ) + 1;
 
 /**
  * Blocks running today, then those still to start (soonest first), then templates with no

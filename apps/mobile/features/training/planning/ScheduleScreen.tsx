@@ -8,6 +8,7 @@ import { t } from "@sendtally/features/i18n";
 import {
   blockDates,
   newSchedule,
+  nextPosition,
   scheduledMemberships,
   scheduleReady,
   toggled,
@@ -67,7 +68,7 @@ export function ScheduleScreen({
     template === undefined ? all.filter(isDated).filter((b) => blockEnd(b) > today) : [];
   const block: Block | null = template ?? blocks.find((b) => b.id === blockId) ?? null;
   const dated = block !== null && isDated(block) ? block : null;
-  const planned = scheduledMemberships(draft, workoutId, block, () => "");
+  const planned = scheduledMemberships(draft, workoutId, block, () => "", 0);
   // In a block the dates are one plan's days; outside one, a plan each.
   const days =
     draft.mode === "dates" && dated !== null
@@ -76,7 +77,8 @@ export function ScheduleScreen({
   const ready = scheduleReady(draft, block);
 
   const save = (): void => {
-    const memberships = scheduledMemberships(draft, workoutId, block, randomUUID);
+    const position = plan.status === "ready" ? nextPosition(plan.data, block?.id ?? null) : 0;
+    const memberships = scheduledMemberships(draft, workoutId, block, randomUUID, position);
     memberships.forEach((m) => void actions.saveMembership(m));
     const [first] = memberships;
     if (first !== undefined && draft.mode === "dates" && dated !== null)

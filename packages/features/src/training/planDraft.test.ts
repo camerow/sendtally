@@ -1,15 +1,24 @@
 import { describe, expect, it } from "vitest";
 import type { Plan } from "@sendtally/api-client";
 import type { DatedBlock } from "@sendtally/core/hang";
-import { applyDraft, changedSchedules, draftSchedule, emptyDraft, movedWith } from "./planDraft";
+import { blockMembers } from "./blocks";
+import {
+  applyDraft,
+  changedSchedules,
+  draftMove,
+  draftSchedule,
+  emptyDraft,
+  movedMemberships,
+  movedWith,
+} from "./planDraft";
 import { scheduleOf, toggleDay } from "./weekDays";
 
 const block: DatedBlock = { id: "b", name: "Base", start: "2026-11-09", weeks: 4, focus: null };
 const plan: Plan = {
   blocks: [block],
   memberships: [
-    { id: "m1", workoutId: "w", blockId: "b", weekdays: [0], start: block.start },
-    { id: "m2", workoutId: "w", blockId: "b", weekdays: [2], start: "2026-11-16" },
+    { id: "m1", workoutId: "w", blockId: "b", weekdays: [0], start: block.start, position: 0 },
+    { id: "m2", workoutId: "w", blockId: "b", weekdays: [2], start: "2026-11-16", position: 0 },
   ],
   weekChanges: [],
   planChanges: [],
@@ -37,5 +46,15 @@ describe("applyDraft", () => {
     expect(changedSchedules(plan, draft)).toEqual([tapped]);
     const back = toggleDay(tapped, { week: 2, day: 4, following: false, last: 4 });
     expect(changedSchedules(plan, draftSchedule(draft, back))).toEqual([]);
+  });
+
+  it("moves a workout within its block, saving each plan once with its new place and day", () => {
+    const down = draftMove(emptyDraft, plan, block, "m1", 1);
+    expect(blockMembers(applyDraft(plan, down), block).map((m) => m.id)).toEqual(["m2", "m1"]);
+    expect(draftMove(down, plan, block, "m1", 1)).toBe(down);
+    const draft = { ...down, block: { ...block, start: "2026-11-23" } };
+    expect(movedMemberships(plan, draft).map((m) => [m.id, m.start, m.position])).toEqual([
+      ["m1", "2026-11-23", 1],
+    ]);
   });
 });
