@@ -3,6 +3,7 @@ import {
   type ClimbStyle,
   type Discipline,
   type Endurance,
+  type EnduranceUnit,
   type GradeScale,
 } from "@sendtally/core";
 import type { CircuitRef, PlanLink } from "@sendtally/api-client";
@@ -64,6 +65,10 @@ export type ExerciseTally = {
   climbs?: number;
   /** Time on the wall that ends a set. */
   onS?: number;
+  /** Set for a circuit: each set is a lap of this many moves or seconds. */
+  lap?: { unit: EnduranceUnit; target: number };
+  /** The rest taken after each lap, by lap. */
+  rests?: number[];
   restS: number;
   /** The set being climbed, from 1; past the last once every set is done. */
   set: number;

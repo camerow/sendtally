@@ -201,4 +201,9 @@ export const workouts = {
   "workouts.dose.climbs": "Voies",
   "workouts.dose.time": "Durée",
   "workouts.dose.anyClimbs": "Libre",
+  "workouts.exercise.circuitLaps": "Tours de circuit",
+  "workouts.measure.laps": "Tours",
+  "workouts.dose.laps": "Tours",
+  "workouts.dose.moves": "Mouvements",
+  "workouts.lapRest": "Repos entre les tours",
 } as const;
