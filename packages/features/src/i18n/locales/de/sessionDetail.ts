@@ -31,6 +31,5 @@ export const sessionDetail = {
   "sessionDetail.editNote": "Notiz bearbeiten",
   "sessionDetail.backToSession": "Zurück zur Session",
   "sessionDetail.backSession": "Session",
-  "sessionDetail.byGrade": "Nach Grad",
   "sessionDetail.notYet": "Versucht",
 } as const;

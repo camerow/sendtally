@@ -1,10 +1,13 @@
 import { router } from "expo-router";
 import React from "react";
+import { View } from "react-native";
 import { randomUUID } from "expo-crypto";
 import type { ClimbNote } from "@sendtally/api-client";
 import { useClimb } from "@sendtally/features/climbs";
 import { t } from "@sendtally/features/i18n";
+import { NoteRow } from "../../components/NoteRow";
 import { ScreenFrame } from "../../components/ScreenFrame";
+import { SectionHeading } from "../../components/SectionHeading";
 import { useApi } from "../../lib/api";
 import { Button } from "../training/components/Button";
 import { DetailActions } from "../training/components/DetailActions";
@@ -45,10 +48,9 @@ export function ClimbDetailScreen({ id }: { id: string }): React.ReactElement {
       }
     >
       <ClimbingHero
-        kind={vm.kicker}
         title={vm.title}
         meta={vm.meta}
-        aside={vm.project ? <ClimbPill kind="project" label={t("common.project")} /> : undefined}
+        status={vm.project ? <ClimbPill kind="project" label={t("common.project")} /> : undefined}
       />
       <SummaryTiles
         stats={[
@@ -57,40 +59,27 @@ export function ClimbDetailScreen({ id }: { id: string }): React.ReactElement {
           { value: vm.best, label: t("statistics.best") },
         ]}
       />
+      <View style={{ gap: 2 }}>
+        <SectionHeading
+          title={t("common.notes")}
+          add={{ label: t("climbs.addNote"), onPress: () => setNoting("new") }}
+        />
+        {vm.notes.map((n) => (
+          <NoteRow key={n.id} date={n.dateLabel} body={n.note} onPress={() => setNoting(n)} />
+        ))}
+      </View>
       <HistoryList
-        onAdd={{ label: t("climbs.addNote"), onPress: () => setNoting("new") }}
-        items={[
-          ...vm.sessions.map((s) => ({
-            day: s.day,
-            item: {
-              id: s.fingerprint,
-              date: s.dateLabel,
-              name: s.name,
-              meta: `${s.meta} · ${s.triesLabel}`,
-              rpe: s.rpe,
-              note: s.note,
-            },
-          })),
-          ...vm.notes.map((n) => ({
-            day: n.day,
-            item: {
-              id: n.id,
-              date: n.dateLabel,
-              name: t("climbs.note"),
-              meta: "",
-              rpe: null,
-              note: n.note,
-              kind: "note" as const,
-            },
-          })),
-        ]
-          .sort((a, b) => b.day.localeCompare(a.day))
-          .map((row) => row.item)}
-        onOpen={(rowId) => {
-          const note = vm.notes.find((n) => n.id === rowId);
-          if (note !== undefined) setNoting(note);
-          else router.push({ pathname: "/session/[fingerprint]", params: { fingerprint: rowId } });
-        }}
+        items={vm.sessions.map((s) => ({
+          id: s.fingerprint,
+          date: s.dateLabel,
+          name: s.name,
+          meta: `${s.meta} · ${s.triesLabel}`,
+          rpe: s.rpe,
+          note: s.note,
+        }))}
+        onOpen={(fingerprint) =>
+          router.push({ pathname: "/session/[fingerprint]", params: { fingerprint } })
+        }
       />
       <AddNoteSheet
         note={noting}

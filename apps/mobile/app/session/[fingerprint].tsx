@@ -84,10 +84,7 @@ export default function SessionDetailScreen(): React.ReactElement {
 
       {vm.pyramid.length > 0 && (
         <View style={{ gap: 8 }}>
-          <View
-            style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}
-          >
-            <Label color={colors.gunmetal}>{t("sessionDetail.byGrade")}</Label>
+          <View style={{ flexDirection: "row", justifyContent: "flex-end" }}>
             <PyramidLegend inner={t("common.sent")} outer={t("sessionDetail.notYet")} />
           </View>
           <Pyramid
@@ -96,12 +93,6 @@ export default function SessionDetailScreen(): React.ReactElement {
           />
         </View>
       )}
-
-      <SessionJournal
-        fingerprint={fingerprint ?? ""}
-        date={vm.startDay}
-        entries={state.data.entries}
-      />
 
       <View style={{ gap: 12 }}>
         <Label color={colors.gunmetal}>{`${t("common.climbs")} · ${vm.filterCounts.all}`}</Label>
@@ -116,6 +107,11 @@ export default function SessionDetailScreen(): React.ReactElement {
           ))}
         </View>
       </View>
+      <SessionJournal
+        fingerprint={fingerprint ?? ""}
+        date={vm.startDay}
+        entries={state.data.entries}
+      />
     </ScreenFrame>
   );
 }

@@ -1,22 +1,13 @@
 import { router } from "expo-router";
 import React from "react";
-import { AddButton } from "../../components/AddButton";
-import { Pressable, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import type { JournalEntry } from "@sendtally/api-client";
 import { formatDate, t } from "@sendtally/features/i18n";
-import { entryTitle } from "@sendtally/features/journal";
-import { colors, fonts, radius } from "@sendtally/design/tokens";
-import { pressRow } from "../../lib/press";
-import { EntryKindChip } from "./EntryKindChip";
+import { colors, fonts } from "@sendtally/design/tokens";
+import { NoteRow } from "../../components/NoteRow";
+import { SectionHeading } from "../../components/SectionHeading";
 
-const heading = {
-  fontFamily: fonts.monoMedium,
-  fontSize: 10,
-  letterSpacing: 0.7,
-  textTransform: "uppercase",
-} as const;
-
-/** A session takes as many entries as the user writes. */
+/** A session's notes, a plain section: each one opens on a tap, and + writes another on its day. */
 export function SessionJournal({
   fingerprint,
   date,
@@ -27,72 +18,35 @@ export function SessionJournal({
   entries: JournalEntry[];
 }): React.ReactElement {
   return (
-    <View
-      style={{
-        gap: 12,
-        backgroundColor: colors.white,
-        borderWidth: 1,
-        borderColor: colors.lineOnLight,
-        borderRadius: radius.card,
-        padding: 16,
-      }}
-    >
-      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-        <Text style={{ ...heading, color: colors.gunmetal }}>{t("common.notes")}</Text>
-        <AddButton
-          label={t("climbs.addNote")}
-          onPress={() =>
+    <View style={{ gap: 2 }}>
+      <SectionHeading
+        title={t("common.notes")}
+        add={{
+          label: t("climbs.addNote"),
+          onPress: () =>
             router.push({
               pathname: "/journal/new",
               params: { kind: "journal", date, session: fingerprint },
-            })
-          }
-        />
-      </View>
+            }),
+        }}
+      />
       {entries.length === 0 && (
         <Text style={{ fontFamily: fonts.sans, fontSize: 14, color: colors.textSecondary }}>
           {t("journal.emptyTitle")}
         </Text>
       )}
-      {entries.map((entry, i) => (
-        <Pressable
+      {entries.map((entry) => (
+        <NoteRow
           key={entry.id}
-          onPress={() => router.push({ pathname: "/journal/[id]", params: { id: entry.id } })}
-          accessibilityRole="button"
-          style={pressRow({
-            gap: 6,
-            paddingTop: i === 0 ? 0 : 12,
-            borderTopWidth: i === 0 ? 0 : 1,
-            borderTopColor: colors.lineOnLightSoft,
+          date={formatDate(new Date(`${entry.occurred_at}T00:00:00Z`), {
+            day: "numeric",
+            month: "short",
+            timeZone: "UTC",
           })}
-        >
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-            <EntryKindChip kind={entry.kind} />
-            <Text style={{ ...heading, color: colors.textMuted }}>
-              {formatDate(new Date(`${entry.occurred_at}T00:00:00Z`), {
-                day: "numeric",
-                month: "short",
-                timeZone: "UTC",
-              })}
-            </Text>
-          </View>
-          <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 15, color: colors.gunmetal }}>
-            {entryTitle(entry)}
-          </Text>
-          {entry.title !== null && entry.body.trim() !== "" && (
-            <Text
-              numberOfLines={4}
-              style={{
-                fontFamily: fonts.sans,
-                fontSize: 14,
-                lineHeight: 21,
-                color: colors.textSecondary,
-              }}
-            >
-              {entry.body}
-            </Text>
-          )}
-        </Pressable>
+          title={entry.title}
+          body={entry.body}
+          onPress={() => router.push({ pathname: "/journal/[id]", params: { id: entry.id } })}
+        />
       ))}
     </View>
   );

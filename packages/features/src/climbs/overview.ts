@@ -98,8 +98,6 @@ export type ClimbSessionRowVM = {
 export type ClimbDetailVM = {
   id: string;
   name: string;
-  /** Its discipline, then its grade when it has one. */
-  kicker: string;
   /** The name with its grade after it: the grade is the climb, the kicker only its kind. */
   title: string;
   /** Where it is, then the day it was first tried. */
@@ -151,7 +149,6 @@ export function climbDetailVM(
   return {
     id: climb.id,
     name: climb.name,
-    kicker: t(climb.discipline === "route" ? "common.route" : "common.boulder"),
     title: climbTitle(climb),
     meta: [
       ...(climb.area?.name === undefined ? [] : [climb.area.name]),

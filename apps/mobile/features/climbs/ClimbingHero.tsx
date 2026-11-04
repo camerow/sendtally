@@ -8,36 +8,34 @@ import { KIND_LOOK } from "../training/today/kindLook";
 import { type } from "../training/type";
 
 export type ClimbingHeroProps = {
-  kind: string;
-  state?: string;
-  /** At the end of the kicker row, as a climb's Project chip. */
-  aside?: React.ReactNode;
+  /** The kicker beside the climbing mark; none leaves the title to lead. */
+  kind?: string;
   title: string;
+  /** Right under the title, as a climb's Project pill. */
+  status?: React.ReactNode;
   /** Where it was, between the title and the meta line. */
   place?: string;
   meta: string;
 };
 
-/** A climbing detail screen's top: the climbing mark and kicker, the title, where, and a meta line. */
+/** A climbing detail screen's top: the climbing mark and kicker, the title, its status, where, and a meta line. */
 export function ClimbingHero({
   kind,
-  state = "",
-  aside,
   title,
+  status,
   place = "",
   meta,
 }: ClimbingHeroProps): React.ReactElement {
   return (
     <View style={{ gap: 8 }}>
-      <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-        <CategoryMark kind="climbing" size={28} />
-        <View style={{ flex: 1, flexDirection: "row", flexWrap: "wrap", gap: 6 }}>
+      {kind !== undefined && (
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+          <CategoryMark kind="climbing" size={28} />
           <Label color={KIND_LOOK.climbing.ink}>{kind}</Label>
-          {state !== "" && <Label color={colors.textSecondary}>{`· ${state}`}</Label>}
         </View>
-        {aside}
-      </View>
+      )}
       <Title size={34}>{title}</Title>
+      {status !== undefined && <View style={{ alignSelf: "flex-start" }}>{status}</View>}
       {place !== "" && (
         <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 16, color: colors.gunmetal }}>
           {place}

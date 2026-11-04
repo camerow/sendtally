@@ -26,7 +26,6 @@ jest.mock("@sendtally/features/climbs", () => ({
         vm: {
           id: "c1",
           name: "The Arete",
-          kicker: "Boulder",
           title: "The Arete, V5",
           meta: "The Depot · first tried 2 Sep",
           project: mockProject,
@@ -46,7 +45,7 @@ jest.mock("@sendtally/features/climbs", () => ({
 describe("Climb detail", () => {
   it("introduces the climb and reads its days, tries and best as tiles", async () => {
     await render(<ClimbDetailScreen id="c1" />);
-    expect(screen.getByText("Boulder")).toBeTruthy();
+    expect(screen.queryByText("Boulder")).toBeNull();
     expect(screen.getByText("The Arete, V5")).toBeTruthy();
     expect(screen.getByText("The Depot · first tried 2 Sep")).toBeTruthy();
     for (const text of ["6", "Days", "23", "Tries", "Flash", "Best"]) {
@@ -85,13 +84,14 @@ describe("Climb detail", () => {
     });
   });
 
-  it("heads its sessions and notes as History, and adds a note from the + beside it", async () => {
+  it("leads with its own Notes, the only place to add one, and no History without a session", async () => {
     await render(<ClimbDetailScreen id="c1" />);
-    expect(screen.getByText("History · 0 sessions")).toBeTruthy();
-    expect(screen.queryByText("Notes")).toBeNull();
+    expect(screen.getByText("Notes")).toBeTruthy();
+    expect(screen.getAllByLabelText("Add a note")).toHaveLength(1);
+    expect(screen.queryByText(/History/)).toBeNull();
   });
 
-  it("adds a dated note to the climb from the + beside History", async () => {
+  it("adds a dated note to the climb from the + beside Notes", async () => {
     await render(<ClimbDetailScreen id="c1" />);
     expect(screen.queryByText("Add a note")).toBeNull();
     expect(screen.queryByLabelText("More")).toBeNull();
@@ -107,7 +107,7 @@ describe("Climb detail", () => {
     });
   });
 
-  it("lists a note with no session in its history, and rewrites or deletes it there", async () => {
+  it("lists a note under Notes, and rewrites or deletes it there", async () => {
     await render(<ClimbDetailScreen id="c1" />);
     await fireEvent.press(screen.getByText("Toe hook"));
     await fireEvent.changeText(screen.getByDisplayValue("Toe hook"), "Toe hook right");
