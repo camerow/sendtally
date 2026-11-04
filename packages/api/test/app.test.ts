@@ -466,6 +466,12 @@ describe("app", () => {
     ).json()) as { session: { climbs: Array<{ name: string }> } };
     expect(session.climbs.map((c) => c.name)).toEqual(["Pinch"]);
     expect((await remove(pinchId)).status).toBe(404);
+    const noted = await testApp().request(
+      `/v1/climbs/${pinchId}/notes/n1`,
+      { method: "PUT", headers, body: JSON.stringify({ day: "2026-09-11", note: "Crimp" }) },
+      env
+    );
+    expect(noted.status).toBe(404);
 
     await postSession(user, logBody({ date: "2026-09-12", climbs: [{ ...pinch, tries: 3 }] }));
     expect(await list()).toEqual([

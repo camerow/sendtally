@@ -985,7 +985,11 @@ const app = new Hono<AppEnv>()
       const userId = c.get("userId");
       const db = c.env.DB;
       const { id: climbId, noteId } = c.req.valid("param");
-      if (!(await repo.listUserClimbs(db, userId)).some((r) => r.id === climbId)) {
+      if (
+        !(await repo.listUserClimbs(db, userId)).some(
+          (r) => r.id === climbId && r.deleted_at === null
+        )
+      ) {
         return c.json({ error: "not found" }, 404);
       }
       const note = { id: noteId, climb_id: climbId, ...c.req.valid("json") };
