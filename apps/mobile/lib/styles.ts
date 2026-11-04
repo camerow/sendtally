@@ -96,3 +96,16 @@ export const dangerButtonLabel: TextStyle = {
   fontSize: 15,
   color: colors.white,
 };
+
+/** A quieter destructive action, for a screen where deleting is not the point. */
+export const dangerOutlineButton: ViewStyle = {
+  ...dangerButton,
+  backgroundColor: "transparent",
+  borderWidth: 1,
+  borderColor: colors.watermelonInk,
+};
+
+export const dangerOutlineButtonLabel: TextStyle = {
+  ...dangerButtonLabel,
+  color: colors.watermelonInk,
+};

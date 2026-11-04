@@ -50,7 +50,7 @@ import { Switch } from "../../components/Switch";
 import { TextInput } from "../../components/TextInput";
 import { useApi } from "../../lib/api";
 import { press } from "../../lib/press";
-import { dangerButton, dangerButtonLabel } from "../../lib/styles";
+import { dangerOutlineButton, dangerOutlineButtonLabel } from "../../lib/styles";
 import { ResultFields } from "../log-session/ResultFields";
 import { SuggestField } from "./SuggestField";
 
@@ -136,15 +136,17 @@ export function AddClimbScreen(): React.ReactElement {
         <Text style={{ fontFamily: fonts.sans, fontSize: 15, color: colors.gunmetal }}>
           {t("common.project")}
         </Text>
-        <Text
-          style={{
-            fontFamily: fonts.sans,
-            fontSize: 12.5,
-            color: colors.textSecondary,
-          }}
-        >
-          {t("climbs.projectHint")}
-        </Text>
+        {!editing && (
+          <Text
+            style={{
+              fontFamily: fonts.sans,
+              fontSize: 12.5,
+              color: colors.textSecondary,
+            }}
+          >
+            {t("climbs.projectHint")}
+          </Text>
+        )}
       </View>
       <Switch
         checked={project}
@@ -417,9 +419,9 @@ export function AddClimbScreen(): React.ReactElement {
               onPress={() => confirmDelete(climbId)}
               disabled={saving}
               accessibilityRole="button"
-              style={press({ ...dangerButton, marginTop: 8 })}
+              style={press({ ...dangerOutlineButton, marginTop: 8 })}
             >
-              <Text style={dangerButtonLabel}>{t("climbs.deleteClimb")}</Text>
+              <Text style={dangerOutlineButtonLabel}>{t("climbs.deleteClimb")}</Text>
             </Pressable>
           )}
         </ScrollView>

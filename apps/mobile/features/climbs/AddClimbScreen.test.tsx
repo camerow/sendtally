@@ -77,6 +77,7 @@ describe("editing a climb", () => {
     expect(screen.getByText("Edit climb")).toBeTruthy();
     expect(screen.getByDisplayValue("The Depot")).toBeTruthy();
     expect(screen.queryByText("Date")).toBeNull();
+    expect(screen.queryByText("Pinned to the top until you send it")).toBeNull();
     expect(screen.getByRole("switch", { name: "Project" }).props.accessibilityState).toMatchObject({
       checked: false,
     });
