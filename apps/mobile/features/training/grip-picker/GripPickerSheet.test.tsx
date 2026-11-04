@@ -20,8 +20,8 @@ const repeaters = {
   source: "library" as const,
   name: "Repeaters 7:3",
 };
-const mono: Grip = { id: "g1", name: "Mono", custom: true, hidden: false };
-const gone: Grip = { id: "g2", name: "Front 3", custom: true, hidden: true };
+const mono: Grip = { id: "g1", name: "Pocket", custom: true, hidden: false };
+const gone: Grip = { id: "g2", name: "Narrow pinch", custom: true, hidden: true };
 
 const renderPicker = (
   onPick = jest.fn<(id: string) => void>(),
@@ -44,8 +44,8 @@ const renderPicker = (
 describe("Grip picker", () => {
   it("lists archived exercises no more, each with its best and last day or not done yet", async () => {
     await renderPicker(jest.fn(), ["half"], [aHang({ gripId: "g1", loadKg: 5 })]);
-    expect(screen.getByText("Mono")).toBeTruthy();
-    expect(screen.queryByText("Front 3")).toBeNull();
+    expect(screen.getByText("Pocket")).toBeTruthy();
+    expect(screen.queryByText("Narrow pinch")).toBeNull();
     expect(screen.getByText(/Best \+5\skg · Sep 20/)).toBeTruthy();
     expect(screen.getAllByText("Not done yet").length).toBeGreaterThan(0);
   });
@@ -59,7 +59,7 @@ describe("Grip picker", () => {
       pathname: "/exercise/edit",
       params: { kind: "hangboard", id: "half" },
     });
-    await fireEvent.press(screen.getByLabelText("Edit Mono"));
+    await fireEvent.press(screen.getByLabelText("Edit Pocket"));
     expect(router.push).toHaveBeenLastCalledWith({
       pathname: "/exercise/edit",
       params: { kind: "hangboard", id: "g1" },
@@ -69,7 +69,7 @@ describe("Grip picker", () => {
   it("brings a deleted grip back when its name is added again", async () => {
     const onPick = jest.fn<(id: string) => void>();
     const { actions } = await renderPicker(onPick);
-    await fireEvent.changeText(screen.getByLabelText("New exercise name"), "front 3");
+    await fireEvent.changeText(screen.getByLabelText("New exercise name"), "narrow pinch");
     await fireEvent.press(screen.getByText("Add"));
     expect(actions.saveGrip).toHaveBeenCalledWith({ ...gone, hidden: false });
     expect(onPick).toHaveBeenCalledWith("g2");

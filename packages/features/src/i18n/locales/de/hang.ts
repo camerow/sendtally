@@ -44,6 +44,10 @@ export const hang = {
   "hang.grip.pinch": "Pinch",
   "hang.grip.front2": "Front 2",
   "hang.grip.back2": "Back 2",
+  "hang.grip.front3": "Front 3",
+  "hang.grip.back3": "Back 3",
+  "hang.grip.middle2": "Middle 2",
+  "hang.grip.mono": "Mono",
 
   "hang.weekThis": "Diese Woche",
   "hang.weekLast": "Letzte Woche",

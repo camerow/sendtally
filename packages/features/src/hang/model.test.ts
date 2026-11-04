@@ -9,8 +9,8 @@ afterEach(() => setLocale("en"));
 
 const data = (overrides: Partial<HangData> = {}): HangData => ({
   grips: [
-    { id: "g1", name: "Mono", custom: true, hidden: true },
-    { id: "g2", name: "Mono 2", custom: true, hidden: false },
+    { id: "g1", name: "Pocket", custom: true, hidden: true },
+    { id: "g2", name: "Pocket 2", custom: true, hidden: false },
   ],
   defaultGrips: {},
   loads: {},
@@ -62,13 +62,13 @@ describe("grips", () => {
 
 describe("renameClash", () => {
   it("lets a rename take a deleted grip's name", () => {
-    expect(renameClash(model().grips, "g2", "mono")).toBeUndefined();
+    expect(renameClash(model().grips, "g2", "pocket")).toBeUndefined();
   });
 
   it("blocks a visible grip's name, but not the grip's own", () => {
     const { grips } = model();
-    expect(renameClash(grips, "g1", "MONO 2")?.id).toBe("g2");
-    expect(renameClash(grips, "g2", "mono 2")).toBeUndefined();
+    expect(renameClash(grips, "g1", "POCKET 2")?.id).toBe("g2");
+    expect(renameClash(grips, "g2", "pocket 2")).toBeUndefined();
   });
 
   it("blocks a built-in under its shown name and its English one", () => {

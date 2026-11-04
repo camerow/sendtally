@@ -8,8 +8,12 @@ export const BUILT_IN_GRIPS = [
   "drag",
   "sloper",
   "pinch",
+  "front3",
+  "back3",
   "front2",
+  "middle2",
   "back2",
+  "mono",
 ] as const;
 
 export type BuiltInGrip = (typeof BUILT_IN_GRIPS)[number];
@@ -22,8 +26,12 @@ export const BUILT_IN_GRIP_NAMES: Record<BuiltInGrip, string> = {
   drag: "3-finger drag",
   sloper: "Sloper",
   pinch: "Pinch",
+  front3: "Front 3",
+  back3: "Back 3",
   front2: "Front 2",
+  middle2: "Middle 2",
   back2: "Back 2",
+  mono: "Mono",
 };
 
 export const isBuiltInGrip = (id: string): id is BuiltInGrip =>

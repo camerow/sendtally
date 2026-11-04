@@ -9,8 +9,12 @@ const GRIP_KEYS: Record<BuiltInGrip, MessageKey> = {
   drag: "hang.grip.drag",
   sloper: "hang.grip.sloper",
   pinch: "hang.grip.pinch",
+  front3: "hang.grip.front3",
+  back3: "hang.grip.back3",
   front2: "hang.grip.front2",
+  middle2: "hang.grip.middle2",
   back2: "hang.grip.back2",
+  mono: "hang.grip.mono",
 };
 
 export function builtInGripName(id: BuiltInGrip): string {
