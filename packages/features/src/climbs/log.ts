@@ -5,7 +5,7 @@ import type { GradeScale } from "../log-session/types";
 import { gradeBins } from "../trends/filter";
 import type { GradeBinVM, GradeRange } from "../trends/types";
 import { monthKey, monthLabel, monthName } from "../sessions/months";
-import { isThisClimb, sendStyleOf, sendStyleText } from "./overview";
+import { climbOf, isThisClimb, sendStyleOf, sendStyleText } from "./overview";
 import { dateLabel, disciplineLabel } from "./projects";
 import { climbDraftGrade, climbGradeLabel } from "./transforms";
 
@@ -125,9 +125,7 @@ export function climbingSessionVM(
   session: SessionWithClimbs,
   climbs: readonly ClimbSummary[]
 ): ClimbingSessionVM {
-  const found = [
-    ...new Set(session.climbs.flatMap((l) => climbs.find((c) => isThisClimb(c, l)) ?? [])),
-  ];
+  const found = [...new Set(session.climbs.flatMap((l) => climbOf(climbs, l) ?? []))];
   const named =
     found.length === 0 || session.source !== "manual" || (session.name ?? "").trim() !== "";
   const row = (c: ClimbSummary): ClimbLogRowVM => {

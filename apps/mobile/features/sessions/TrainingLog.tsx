@@ -1,12 +1,5 @@
 import React from "react";
-import {
-  RefreshControl,
-  SectionList,
-  Text,
-  View,
-  type SectionListData,
-  type ViewToken,
-} from "react-native";
+import { RefreshControl, SectionList, Text, View, type ViewToken } from "react-native";
 import { monthScopeItems, logCountLabel, logYearGroups } from "@sendtally/features/sessions";
 import {
   logItemWorkout,
@@ -16,16 +9,16 @@ import {
 } from "@sendtally/features/journal";
 import { t } from "@sendtally/features/i18n";
 import { colors } from "@sendtally/design/tokens";
-import { EntryRow, entryRowHeight } from "../journal/EntryRow";
+import { entryRowHeight } from "../journal/EntryRow";
 import { DEFAULT_FILTERS, FilterSheet, type SessionFilters } from "./FilterSheet";
 import { ScopeBar } from "./ScopeBar";
 import { SECTION_HEADER_HEIGHT, SectionHeader } from "./SectionHeader";
-import { ACTIVITY_ROW_HEIGHT, ActivityRow } from "./ActivityRow";
-import { HANG_ROW_HEIGHT, HangRow } from "./HangRow";
+import { ACTIVITY_ROW_HEIGHT } from "./ActivityRow";
+import { HANG_ROW_HEIGHT } from "./HangRow";
 import { BLOCK_TAG_HEIGHT } from "./SessionRow";
-import { BLOCK_DONE_ROW_HEIGHT, BlockDoneRow } from "./BlockDoneRow";
+import { BLOCK_DONE_ROW_HEIGHT } from "./BlockDoneRow";
 import { emptyBody, emptyLabel } from "./emptyStyles";
-import { openLogItem } from "./openLogItem";
+import { TrainingLogCell } from "./TrainingLogCell";
 import { WorkoutFilterBar } from "./WorkoutFilterBar";
 
 type Section = { key: string; title: string; meta: string; data: LogItem[] };
@@ -40,27 +33,25 @@ const rowHeight = (item: LogItem): number => {
   return entryRowHeight(item.entry);
 };
 
-function itemLayout(
-  sections: ReadonlyArray<SectionListData<LogItem, Section>> | null,
-  index: number
-): { length: number; offset: number; index: number } {
+/** Every header, row and footer's place in the list, worked out once per set of sections. */
+function sectionLayouts(sections: readonly Section[]): { length: number; offset: number }[] {
+  const layouts: { length: number; offset: number }[] = [];
   let offset = 0;
-  let cursor = 0;
-  for (const section of sections ?? []) {
-    if (cursor === index) return { length: SECTION_HEADER_HEIGHT, offset, index };
-    offset += SECTION_HEADER_HEIGHT;
-    cursor += 1;
-    for (const item of section.data) {
-      const length = rowHeight(item);
-      if (cursor === index) return { length, offset, index };
-      offset += length;
-      cursor += 1;
-    }
-    if (cursor === index) return { length: 0, offset, index };
-    cursor += 1;
+  const add = (length: number): void => {
+    layouts.push({ length, offset });
+    offset += length;
+  };
+  for (const section of sections) {
+    add(SECTION_HEADER_HEIGHT);
+    section.data.forEach((item) => add(rowHeight(item)));
+    add(0);
   }
-  return { length: 0, offset, index };
+  return layouts;
 }
+
+const renderItem = ({ item }: { item: LogItem }): React.ReactElement => (
+  <TrainingLogCell item={item} />
+);
 
 export type TrainingLogProps = {
   /** The training half of the log, null until it loads. */
@@ -113,6 +104,12 @@ export function TrainingLog({
       scopeItems: monthScopeItems(years),
     };
   }, [inScope]);
+
+  const layouts = React.useMemo(() => sectionLayouts(sections), [sections]);
+  const itemLayout = React.useCallback(
+    (_: unknown, index: number) => ({ ...(layouts[index] ?? { length: 0, offset: 0 }), index }),
+    [layouts]
+  );
 
   const viewability = React.useMemo(
     () => [
@@ -194,21 +191,7 @@ export function TrainingLog({
         renderSectionHeader={({ section }) => (
           <SectionHeader title={section.title} meta={section.meta} />
         )}
-        renderItem={({ item }) =>
-          item.type === "session" ? null : item.type === "hang" ? (
-            <HangRow hang={item.hang} blockTag={item.blockTag} onPress={() => openLogItem(item)} />
-          ) : item.type === "activity" ? (
-            <ActivityRow
-              activity={item.activity}
-              blockTag={item.blockTag}
-              onPress={() => openLogItem(item)}
-            />
-          ) : item.type === "block" ? (
-            <BlockDoneRow recap={item.recap} onPress={() => openLogItem(item)} />
-          ) : (
-            <EntryRow entry={item.entry} onPress={() => openLogItem(item)} />
-          )
-        }
+        renderItem={renderItem}
       />
       <FilterSheet
         visible={filtersOpen}

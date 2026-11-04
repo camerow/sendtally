@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { ClimbSummary, SessionClimb, SessionWithClimbs } from "@sendtally/api-client";
-import { climbDetailVM } from "./overview";
+import { climbDetailVM, climbOf, sendStyleOf } from "./overview";
 import { sessionPyramid } from "./pyramid";
 
 const go = (
@@ -96,5 +96,29 @@ describe("sessionPyramid", () => {
         { gradeLabel: "V4", inner: 2, outer: 0, countLabel: "2/2" },
       ]
     );
+  });
+});
+
+describe("climb lookups", () => {
+  const roof = climb({ id: "c9", name: "The Roof" });
+  const sessions = [
+    session("2026-10-03T18:00:00.000Z", "indoor", [
+      go(5, "send", { name: "the roof ", userClimbId: "c9", style: "redpoint" }),
+    ]),
+    session("2026-10-01T18:00:00.000Z", "indoor", [
+      go(5, "send", { name: "The Roof", style: "flash" }),
+    ]),
+  ];
+
+  it("takes the earliest send, whether it was stamped with the climb's id or only its name", () => {
+    expect(sendStyleOf(roof, sessions)).toBe("flash");
+    expect(sendStyleOf(roof, sessions.slice(0, 1))).toBe("redpoint");
+  });
+
+  it("finds a logged climb by id when stamped, by name otherwise", () => {
+    const climbs = [climb({ id: "c1", name: "Other" }), roof];
+    expect(climbOf(climbs, { name: "x", userClimbId: "c9" })).toBe(roof);
+    expect(climbOf(climbs, { name: " THE ROOF" })).toBe(roof);
+    expect(climbOf(climbs, { name: "The Roof", userClimbId: "gone" })).toBeUndefined();
   });
 });
