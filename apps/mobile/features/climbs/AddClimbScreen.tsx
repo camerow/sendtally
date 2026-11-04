@@ -45,7 +45,6 @@ import { useGradeScalePrefs } from "@sendtally/features/settings";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { DateTimeField } from "../../components/DateTimeField";
 import { GradeChips } from "../../components/GradeChips";
-import { Icon } from "../../components/Icon";
 import { Segmented } from "../../components/Segmented";
 import { Switch } from "../../components/Switch";
 import { TextInput } from "../../components/TextInput";
@@ -134,12 +133,9 @@ export function AddClimbScreen(): React.ReactElement {
   const projectRow = (
     <View style={row}>
       <View style={{ flex: 1, gap: 2 }}>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-          <Icon name="star" color={colors.gunmetal} size={16} strokeWidth={1.8} />
-          <Text style={{ fontFamily: fonts.sans, fontSize: 15, color: colors.gunmetal }}>
-            {t("common.project")}
-          </Text>
-        </View>
+        <Text style={{ fontFamily: fonts.sans, fontSize: 15, color: colors.gunmetal }}>
+          {t("common.project")}
+        </Text>
         <Text
           style={{
             fontFamily: fonts.sans,

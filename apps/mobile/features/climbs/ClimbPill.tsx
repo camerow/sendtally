@@ -2,7 +2,6 @@ import React from "react";
 import { Text, View } from "react-native";
 import type { ClimbPillKind } from "@sendtally/features/climbs";
 import { colors, fonts } from "@sendtally/design/tokens";
-import { Icon } from "../../components/Icon";
 
 const PILLS: Record<ClimbPillKind, { fill: string; ink: string; line?: string }> = {
   flash: { fill: colors.gold, ink: colors.gunmetal },
@@ -12,7 +11,7 @@ const PILLS: Record<ClimbPillKind, { fill: string; ink: string; line?: string }>
   tries: { fill: "transparent", ink: colors.textSecondary, line: colors.lineOnLightStrong },
 };
 
-/** How a climb went, as a small status pill: a project carries its star. */
+/** How a climb went, as a small status pill. */
 export function ClimbPill({
   kind,
   label,
@@ -35,7 +34,6 @@ export function ClimbPill({
         borderColor: look.line,
       }}
     >
-      {kind === "project" && <Icon name="star" color={colors.gold} size={12} strokeWidth={2.2} />}
       <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 12, color: look.ink }}>{label}</Text>
     </View>
   );
