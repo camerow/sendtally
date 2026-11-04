@@ -63,15 +63,19 @@ export async function applyProjectFlags(
   userId: string,
   climbs: FlaggedClimb[]
 ): Promise<void> {
+  const last = new Map<string, FlaggedClimb>();
   for (const climb of climbs) {
-    if (climb.project === undefined) continue;
     const name = climb.name.trim();
     const slug = climbSlug(name);
-    if (slug === "") continue;
-    if (climb.project)
-      await repo.markWorking(db, userId, { name_key: slug, name, grade: climb.grade });
-    else await repo.stopWorking(db, userId, slug);
+    if (climb.project !== undefined && slug !== "") last.set(slug, { ...climb, name });
   }
+  await Promise.all(
+    [...last].map(([slug, climb]) =>
+      climb.project
+        ? repo.markWorking(db, userId, { name_key: slug, name: climb.name, grade: climb.grade })
+        : repo.stopWorking(db, userId, slug)
+    )
+  );
 }
 
 type NotedClimb = { name: string; note?: string | undefined };

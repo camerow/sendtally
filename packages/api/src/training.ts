@@ -27,18 +27,11 @@ import {
 import { syncActivityToStrava } from "./lib/posting";
 import * as repo from "./lib/repo";
 
-const ACTIVITY_LIST_LIMIT = 1000;
-
 // Training other than climbing and hangboarding. The app generates every id,
 // so each write is an idempotent PUT it can retry or replay offline.
 export const activities = new Hono<AppEnv>()
   .get("/", zValidator("query", activitiesQuery, invalidBody), async (c) => {
-    const rows = await repo.listActivities(
-      c.env.DB,
-      c.get("userId"),
-      c.req.valid("query"),
-      ACTIVITY_LIST_LIMIT
-    );
+    const rows = await repo.listActivities(c.env.DB, c.get("userId"), c.req.valid("query"));
     return c.json({ activities: rows.map(activityOf) });
   })
 
