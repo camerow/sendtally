@@ -252,8 +252,10 @@ const saveEntry = async (
   if (overlap !== null) return { overlap };
   if (existing === null) await repo.insertEntry(c.env.DB, userId, id, entry);
   else await repo.updateEntry(c.env.DB, userId, id, entry);
-  await repo.setEntryTags(c.env.DB, userId, id, form.tags ?? []);
-  const linked = await repo.setEntrySessions(c.env.DB, userId, id, form.fingerprints ?? []);
+  const [, linked] = await Promise.all([
+    repo.setEntryTags(c.env.DB, userId, id, form.tags ?? []),
+    repo.setEntrySessions(c.env.DB, userId, id, form.fingerprints ?? []),
+  ]);
   await captureEvent(
     c,
     existing === null ? "journal_entry_created" : "journal_entry_updated",
@@ -913,8 +915,10 @@ const app = new Hono<AppEnv>()
   .post("/v1/entries", zValidator("json", newEntryBody, invalidBody), async (c) => {
     const { id = crypto.randomUUID(), ...form } = c.req.valid("json");
     const userId = c.get("userId");
-    await repo.ensureUser(c.env.DB, userId);
-    const existing = await repo.getEntry(c.env.DB, userId, id);
+    const [, existing] = await Promise.all([
+      repo.ensureUser(c.env.DB, userId),
+      repo.getEntry(c.env.DB, userId, id),
+    ]);
     const saved = await saveEntry(c, id, form, existing);
     if ("overlap" in saved) {
       return c.json({ error: "trip dates overlap", trip: saved.overlap }, 409);
