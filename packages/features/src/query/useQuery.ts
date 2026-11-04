@@ -17,6 +17,12 @@ export type Query<T> = {
   reload: () => Promise<void>;
 };
 
+/**
+ * Whether the screen a read sits on is the one showing. A hidden screen's reads leave the cache
+ * alone, so a write refetches only what is on screen, and catch up when their screen comes back.
+ */
+export const ScreenFocusContext = React.createContext<() => boolean>(() => true);
+
 const messageOf = (error: Error): string => error.message || t("common.somethingWentWrong");
 
 /**
@@ -27,7 +33,11 @@ const messageOf = (error: Error): string => error.message || t("common.something
 export function useQuery<TFn, TData, K extends QueryKey>(
   options: UseQueryOptions<TFn, Error, TData, K>
 ): Query<TData> {
-  const { data, error, refetch } = useTanstackQuery(options);
+  const focused = React.useContext(ScreenFocusContext)();
+  const { data, error, refetch } = useTanstackQuery({
+    ...options,
+    subscribed: options.subscribed !== false && focused,
+  });
   const reload = React.useCallback(async () => {
     await refetch();
   }, [refetch]);
