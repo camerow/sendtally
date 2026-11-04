@@ -38,13 +38,11 @@ export function ClimbDetailScreen({ id }: { id: string }): React.ReactElement {
             {
               icon: "pencil",
               title: t("climbs.editClimb"),
-              hint: t("climbs.editClimbHint"),
               onPress: () =>
                 router.push({ pathname: "/climb/log", params: { climbId: climb.id, edit: "1" } }),
             },
             deleteRow({
               title: t("climbs.deleteClimb"),
-              hint: t("climbs.deleteClimbHint"),
               confirm: {
                 title: t("climbs.deleteClimb"),
                 body: t("climbs.deleteConfirm", { name: vm.name }),

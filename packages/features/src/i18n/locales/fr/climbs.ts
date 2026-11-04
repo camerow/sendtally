@@ -63,7 +63,6 @@ export const climbs = {
   "climbs.noMatches": "Aucune voie ne correspond.",
   "climbs.addClimb": "Ajouter une voie",
   "climbs.editClimb": "Modifier la voie",
-  "climbs.editClimbHint": "Nom, secteur, cotation et projet",
   "climbs.empty":
     "Chaque voie que tu ajoutes arrive ici, la plus récente d’abord. Ajoutes-en une pour commencer.",
   "climbs.yoursShort": "À toi",
@@ -76,5 +75,4 @@ export const climbs = {
   "climbs.logSession": "Noter une séance",
   "climbs.deleteClimb": "Supprimer la voie",
   "climbs.deleteConfirm": "Supprimer {name} ? Ses séances restent telles quelles.",
-  "climbs.deleteClimbHint": "Ses séances restent telles quelles",
 } as const;

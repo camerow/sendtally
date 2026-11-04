@@ -51,6 +51,7 @@ describe("Climb detail", () => {
     const alert = jest.spyOn(Alert, "alert").mockImplementation(() => undefined);
     await render(<ClimbDetailScreen id="c1" />);
     await fireEvent.press(screen.getByLabelText("More"));
+    expect(screen.queryByText("Its sessions stay as logged")).toBeNull();
     await fireEvent.press(screen.getByText("Delete climb"));
     expect(alert.mock.calls[0]?.slice(0, 2)).toEqual([
       "Delete climb",

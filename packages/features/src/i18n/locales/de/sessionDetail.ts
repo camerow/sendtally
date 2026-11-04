@@ -29,7 +29,6 @@ export const sessionDetail = {
   "sessionDetail.colAttempts": "Versuche",
   "sessionDetail.noteCounter": "{n} / {max}",
   "sessionDetail.editNote": "Notiz bearbeiten",
-  "sessionDetail.editHint": "Klettereien, Zeiten und Anstrengung",
   "sessionDetail.backToSession": "Zurück zur Session",
   "sessionDetail.backSession": "Session",
   "sessionDetail.notYet": "Versucht",

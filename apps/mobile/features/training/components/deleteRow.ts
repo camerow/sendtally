@@ -5,8 +5,8 @@ import type { DetailMenuRow } from "./types";
 
 export type DeleteRow = {
   title: string;
-  /** What goes with it, or what stays. */
-  hint: string;
+  /** What goes with it, or what stays; none when the title says it all. */
+  hint?: string;
   confirm: Omit<ConfirmDestructive, "onConfirm" | "action"> & { action?: string };
   onDelete: () => void;
 };
@@ -16,7 +16,7 @@ export function deleteRow({ title, hint, confirm, onDelete }: DeleteRow): Detail
   return {
     icon: "trash",
     title,
-    hint,
+    ...(hint === undefined ? {} : { hint }),
     danger: true,
     onPress: () =>
       confirmDestructive({

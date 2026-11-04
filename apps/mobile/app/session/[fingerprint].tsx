@@ -56,7 +56,6 @@ export default function SessionDetailScreen(): React.ReactElement {
   const editRow = {
     icon: "pencil" as const,
     title: t("logSession.editTitle"),
-    hint: t("sessionDetail.editHint"),
     onPress: () => router.push(`/session/${encodeURIComponent(fingerprint ?? "")}/edit`),
   };
   const onStrava = (): void => {

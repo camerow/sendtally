@@ -27,7 +27,6 @@ export const sessionDetail = {
   "sessionDetail.colAttempts": "Attempts",
   "sessionDetail.noteCounter": "{n} / {max}",
   "sessionDetail.editNote": "Edit note",
-  "sessionDetail.editHint": "Its climbs, times and effort",
   "sessionDetail.backToSession": "Back to the session",
   "sessionDetail.backSession": "Session",
   "sessionDetail.notYet": "Attempted",
