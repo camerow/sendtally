@@ -5,6 +5,7 @@ import { stravaState, type StravaState } from "../activities/post";
 import { climbsWorkedBefore } from "../climbs/transforms";
 import { t } from "../i18n";
 import { queries, useQuery, type QueryState } from "../query";
+import { sessionClimbRows, sortClimbRows, type SessionClimbRowVM } from "./rows";
 import { climbVMs, filterAndSortClimbs, postingStatus, sessionDetailVM } from "./transforms";
 import type { ClimbFilter, ClimbSort, ClimbVM, SessionDetailVM } from "./types";
 
@@ -20,6 +21,8 @@ export type SessionDetailFeature = {
   state: QueryState<{
     vm: SessionDetailVM;
     climbs: ClimbVM[];
+    /** The climbs as the log draws them, one row per climb. */
+    rows: SessionClimbRowVM[];
     tags: SessionTag[];
     entries: JournalEntry[];
     /** Where it stands with Strava; null for board history never posted, or until the connection is known. */
@@ -81,6 +84,10 @@ export function useSessionDetail(api: SendtallyApi, fingerprint: string): Sessio
       data: {
         vm: sessionDetailVM(s, postable, workedBefore, gymName),
         climbs: filterAndSortClimbs(climbVMs(raw.data.climbs, workedBefore), filter, sort),
+        rows: sortClimbRows(
+          sessionClimbRows(s, catalogue.status === "ready" ? catalogue.data : []),
+          sort
+        ),
         tags: raw.data.tags,
         entries: raw.data.entries,
         notes: raw.data.notes,

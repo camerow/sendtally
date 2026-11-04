@@ -132,7 +132,9 @@ describe("logClimbOnDay", () => {
     ];
     const there = fakeApi(sessions);
     await logClimbOnDay(there, climb, "2026-09-27", [], { area: crag });
-    expect((there.sent[0] as [string, string])[1]).toBe("crag");
+    const [, fingerprint, joined] = there.sent[0] as [string, string, LogSessionInput];
+    expect(fingerprint).toBe("crag");
+    expect(joined.climbs.at(-1)?.areaId).toBe("a1");
 
     const elsewhere = fakeApi([sessions[0]!]);
     await logClimbOnDay(elsewhere, climb, "2026-09-27", [], { area: crag });

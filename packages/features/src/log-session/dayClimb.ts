@@ -62,21 +62,22 @@ export async function logClimbOnDay(
 ): Promise<void> {
   const { sessions } = await api.sessions();
   const row = sessionOnDay(sessions, date, place);
+  const area = place?.area ?? null;
+  const placed = area === null ? climb : { ...climb, area: { id: area.id, name: area.name } };
   if (row === null) {
-    const area = place?.area ?? null;
     const draft: LogSessionDraft = {
       ...liveDraft(new Date()),
       name: "",
       date,
-      ...(area === null ? {} : { location: "outdoor" as const, area }),
-      climbs: [{ ...climb, key: "climb-1" }],
+      ...(area === null ? {} : { location: "outdoor" as const }),
+      climbs: [{ ...placed, key: "climb-1" }],
     };
     await api.logSession(toLiveSessionInput(withGymAdopted(draft, gyms)));
     return;
   }
   const { session } = await api.session(row.fingerprint);
   const existing = draftFromSession(session);
-  const climbs = [...existing.climbs, { ...climb, key: nextClimbKey(existing.climbs) }];
+  const climbs = [...existing.climbs, { ...placed, key: nextClimbKey(existing.climbs) }];
   const draft = withGymAdopted({ ...existing, climbs }, gyms);
   await api.updateLoggedSession(row.fingerprint, dayInput(session, draft));
 }

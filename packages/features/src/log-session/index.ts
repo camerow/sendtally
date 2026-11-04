@@ -19,6 +19,8 @@ export {
   scaleOptionsFor,
   toLiveSessionInput,
   toLogSessionInput,
+  withKnownArea,
+  withLocation,
   vGradeOf,
   withClimbDiscipline,
   withClimbOutcome,
@@ -145,6 +147,7 @@ export {
   type TallySetGroup,
 } from "./exerciseTally";
 export type {
+  ClimbArea,
   ClimbDraft,
   ClimbOutcome,
   ExerciseTally,

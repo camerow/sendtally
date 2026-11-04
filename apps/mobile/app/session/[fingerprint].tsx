@@ -1,21 +1,13 @@
 import { router, useLocalSearchParams } from "expo-router";
 import React from "react";
-import { Linking, ScrollView, Text, View } from "react-native";
-import {
-  CLIMB_SORTS,
-  climbSortLabel,
-  useSessionDetail,
-  type ClimbVM,
-  climbMetaLabel,
-} from "@sendtally/features/session-detail";
+import { Linking, ScrollView, View } from "react-native";
+import { CLIMB_SORTS, climbSortLabel, useSessionDetail } from "@sendtally/features/session-detail";
 import { kindLabel } from "@sendtally/features/activities";
-import { enduranceLapCountLabel, enduranceSummaryLabel } from "@sendtally/features/log-session";
 import { t } from "@sendtally/features/i18n";
-import { colors, fonts, radius } from "@sendtally/design/tokens";
+import { colors } from "@sendtally/design/tokens";
 import { Chip } from "../../components/Chip";
-import { CircuitDot } from "../../components/CircuitDot";
 import { ClimbingHero } from "../../features/climbs/ClimbingHero";
-import { Icon } from "../../components/Icon";
+import { ClimbLogRow } from "../../features/climbs/ClimbLogRow";
 import { EnduranceLaps } from "../../features/sessions/EnduranceLaps";
 import { Pyramid } from "../../components/Pyramid";
 import { ScreenFrame } from "../../components/ScreenFrame";
@@ -32,13 +24,6 @@ import { effortTile } from "../../features/training/summary/summaryText";
 import { SummaryTiles } from "../../features/training/summary/SummaryTiles";
 import { useApi } from "../../lib/api";
 import { useSessions } from "../../lib/useSessions";
-
-const RESULT_BADGES: Record<ClimbVM["result"], { bg: string; border: string; color: string }> = {
-  onsight: { bg: colors.petalInk, border: colors.petalInk, color: colors.white },
-  flash: { bg: colors.gold, border: colors.gold, color: colors.gunmetal },
-  sent: { bg: "transparent", border: "rgba(64,63,76,0.25)", color: colors.textSecondary },
-  project: { bg: "transparent", border: "rgba(64,63,76,0.15)", color: colors.textFaint },
-};
 
 export default function SessionDetailScreen(): React.ReactElement {
   const { fingerprint } = useLocalSearchParams<{ fingerprint: string }>();
@@ -88,7 +73,7 @@ export default function SessionDetailScreen(): React.ReactElement {
         />
       }
     >
-      <ClimbingHero kind={kindLabel("climbing")} state={vm.place} title={vm.name} meta={vm.when} />
+      <ClimbingHero kind={kindLabel("climbing")} title={vm.name} place={vm.place} meta={vm.when} />
       <SummaryTiles
         stats={[
           { value: String(vm.filterCounts.all), label: t("summary.climbs") },
@@ -145,97 +130,13 @@ export default function SessionDetailScreen(): React.ReactElement {
         </ScrollView>
 
         <View>
-          {state.data.climbs.map((c) => {
-            const badge = RESULT_BADGES[c.result];
-            return (
-              <View
-                key={c.n}
-                style={{
-                  gap: 8,
-                  paddingVertical: 12,
-                  borderTopWidth: 1,
-                  borderTopColor: colors.lineOnLight,
-                }}
-              >
-                <View
-                  style={{
-                    flexDirection: "row",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    gap: 12,
-                  }}
-                >
-                  <View style={{ flex: 1, gap: 4, minWidth: 0 }}>
-                    <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-                      {c.colour !== undefined && <CircuitDot colour={c.colour} size={12} />}
-                      {c.endurance !== undefined && (
-                        <Icon
-                          name="endurance"
-                          color={colors.petalInk}
-                          size={14}
-                          strokeWidth={2.4}
-                        />
-                      )}
-                      <Text
-                        numberOfLines={1}
-                        style={{
-                          flexShrink: 1,
-                          fontFamily: fonts.sansMedium,
-                          fontSize: 15,
-                          color: colors.gunmetal,
-                        }}
-                      >
-                        {c.name}
-                      </Text>
-                    </View>
-                    <Text
-                      style={{
-                        fontFamily: fonts.mono,
-                        fontSize: 11,
-                        color: "rgba(64,63,76,0.6)",
-                      }}
-                    >
-                      {c.endurance === undefined
-                        ? climbMetaLabel(c)
-                        : `${enduranceLapCountLabel(c.endurance.laps.length)} · ${enduranceSummaryLabel(c.endurance)}`}
-                    </Text>
-                  </View>
-                  <View style={{ alignItems: "flex-end", gap: 5 }}>
-                    <Text
-                      style={{
-                        fontFamily: fonts.monoSemiBold,
-                        fontSize: 14,
-                        color: colors.gunmetal,
-                      }}
-                    >
-                      {c.gradeLabel}
-                    </Text>
-                    {c.endurance === undefined && (
-                      <Text
-                        style={{
-                          fontFamily: fonts.monoMedium,
-                          fontSize: 9,
-                          letterSpacing: 0.7,
-                          textTransform: "uppercase",
-                          borderRadius: radius.pill,
-                          paddingHorizontal: 8,
-                          paddingVertical: 3,
-                          overflow: "hidden",
-                          backgroundColor: badge.bg,
-                          borderWidth: 1,
-                          borderColor: badge.border,
-                          color: badge.color,
-                        }}
-                      >
-                        {c.resultLabel}
-                      </Text>
-                    )}
-                  </View>
-                </View>
-                {c.endurance !== undefined && <EnduranceLaps endurance={c.endurance} />}
-              </View>
-            );
-          })}
+          {state.data.rows.map((row) => (
+            <ClimbLogRow key={row.n} row={row}>
+              {row.endurance === undefined ? undefined : (
+                <EnduranceLaps endurance={row.endurance} />
+              )}
+            </ClimbLogRow>
+          ))}
         </View>
       </View>
     </ScreenFrame>

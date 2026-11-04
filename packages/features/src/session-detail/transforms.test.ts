@@ -190,6 +190,16 @@ describe("sessionDetailVM", () => {
     expect(vm.post.label).toBe("Logged manually");
   });
 
+  it("places an outdoor day at its areas, joined", () => {
+    const at = (id: string, name: string) => ({ id, name, slug: id });
+    const vm = sessionDetailVM({
+      ...detail,
+      location: "outdoor",
+      areas: [at("a1", "Stanage Popular"), at("a2", "Stanage Plantation")],
+    });
+    expect(vm.place).toBe("Stanage Popular, Stanage Plantation");
+  });
+
   it("names it without its date, places it in its gym and dates it on its own line", () => {
     const vm = sessionDetailVM(
       { ...detail, name: "Tuesday night session", location: "indoor", gym_id: "g1" },
@@ -198,7 +208,7 @@ describe("sessionDetailVM", () => {
       "The Depot"
     );
     expect(vm.name).toBe("Tuesday night session");
-    expect(vm.place).toBe("Indoor · The Depot");
+    expect(vm.place).toBe("The Depot");
     expect(vm.when).toMatch(/^Wed Jul 1 · \S.* · 1h 35m$/);
     expect(vm.when).toContain("1h 35m");
     expect(vm.rpe).toBe(7);

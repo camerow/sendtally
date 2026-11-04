@@ -1,6 +1,6 @@
 import React from "react";
 import { Text, View } from "react-native";
-import { colors } from "@sendtally/design/tokens";
+import { colors, fonts } from "@sendtally/design/tokens";
 import { Label } from "../training/components/Label";
 import { Title } from "../training/components/Title";
 import { CategoryMark } from "../training/library/CategoryMark";
@@ -13,15 +13,18 @@ export type ClimbingHeroProps = {
   /** At the end of the kicker row, as a climb's Project chip. */
   aside?: React.ReactNode;
   title: string;
+  /** Where it was, between the title and the meta line. */
+  place?: string;
   meta: string;
 };
 
-/** A climbing detail screen's top: the climbing mark and kicker, the title, and one meta line. */
+/** A climbing detail screen's top: the climbing mark and kicker, the title, where, and a meta line. */
 export function ClimbingHero({
   kind,
   state = "",
   aside,
   title,
+  place = "",
   meta,
 }: ClimbingHeroProps): React.ReactElement {
   return (
@@ -35,6 +38,11 @@ export function ClimbingHero({
         {aside}
       </View>
       <Title size={34}>{title}</Title>
+      {place !== "" && (
+        <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 16, color: colors.gunmetal }}>
+          {place}
+        </Text>
+      )}
       <Text style={[type.mono, { fontSize: 12, color: colors.textSecondary }]}>{meta}</Text>
     </View>
   );

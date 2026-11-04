@@ -103,6 +103,8 @@ export type SessionLogWithClimbs = {
 
 export type SessionTag = SessionDetail["tags"][number];
 
+export type SessionArea = SessionDetail["areas"][number];
+
 export type JournalEntry = Ok<Client["v1"]["entries"]["$get"]>["entries"][number];
 
 export type EntryDetail = Ok<Client["v1"]["entries"][":id"]["$get"]>["entry"];

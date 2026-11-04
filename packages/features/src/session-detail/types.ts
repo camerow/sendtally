@@ -53,7 +53,7 @@ export type SessionDetailVM = {
   title: string;
   /** The title without its date, for a screen that dates it in its meta line. */
   name: string;
-  /** Indoor or Outdoor, then the gym or area; empty when the session says neither. */
+  /** Where the session was: its areas outdoors, its gym indoors; empty when neither is known. */
   place: string;
   /** Day, start time and length. */
   when: string;

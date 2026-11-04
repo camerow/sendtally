@@ -131,9 +131,7 @@ export function climbSessions(
           name: sessionTitle(s),
           rpe: isUnscored(s) ? null : s.rpe,
           dateLabel: dateLabel(s.start_at),
-          meta: [climb.area?.name, sent ? t("common.sent") : t("sessionDetail.notYet")]
-            .filter((p) => p !== undefined)
-            .join(" · "),
+          meta: sent ? t("common.sent") : t("sessionDetail.notYet"),
           note: rows.find((c) => c.note !== null)?.note ?? null,
           triesLabel: t("tally.tryCount", { count: rows.reduce((n, c) => n + c.tries, 0) }),
         },

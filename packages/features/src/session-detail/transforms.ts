@@ -293,7 +293,10 @@ export function sessionDetailVM(
   return {
     title: `${titleLabel} - ${dateLabel}`,
     name: titleLabel,
-    place: [location, gymName ?? session.area?.name ?? null].filter((p) => p !== null).join(" · "),
+    place:
+      session.location === "indoor"
+        ? (gymName ?? "")
+        : session.areas.map((area) => area.name).join(", "),
     when,
     rpe: isUnscored(session) ? null : session.rpe,
     startDay: session.start_at.slice(0, 10),

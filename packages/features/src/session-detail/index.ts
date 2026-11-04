@@ -3,6 +3,7 @@ export {
   type PostActionFeature,
   type SessionDetailFeature,
 } from "./useSessionDetail";
+export { sessionClimbRows, sortClimbRows, type SessionClimbRowVM } from "./rows";
 export {
   climbMetaLabel,
   climbVMs,
