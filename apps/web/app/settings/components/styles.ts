@@ -54,13 +54,14 @@ export const messageText: React.CSSProperties = {
   color: "rgba(64,63,76,0.6)",
 };
 
+/** Every delete reads as a red outline: present, never the loudest thing on the page. */
 export const dangerButton: React.CSSProperties = {
   fontFamily: "var(--font-sans)",
   fontWeight: 600,
   fontSize: 14,
-  color: "var(--bs-white)",
-  background: "var(--bs-watermelon-ink)",
-  border: "none",
+  color: "var(--bs-watermelon-ink)",
+  background: "none",
+  border: "1px solid var(--bs-watermelon-ink)",
   borderRadius: "var(--radius-control)",
   padding: "12px 18px",
   cursor: "pointer",

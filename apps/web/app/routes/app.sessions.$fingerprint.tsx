@@ -134,9 +134,8 @@ function SessionActions({
               disabled={deleting}
               style={{
                 ...actionButton,
-                background: "var(--bs-watermelon-ink)",
-                borderColor: "transparent",
-                color: "var(--bs-white)",
+                borderColor: "var(--bs-watermelon-ink)",
+                color: "var(--bs-watermelon-ink)",
                 opacity: deleting ? 0.45 : 1,
               }}
             >

@@ -82,8 +82,10 @@ export const chipButtonLabel: TextStyle = {
   color: colors.white,
 };
 
+/** Every delete reads as a red outline: present, never the loudest thing on the screen. */
 export const dangerButton: ViewStyle = {
-  backgroundColor: colors.watermelonInk,
+  borderWidth: 1,
+  borderColor: colors.watermelonInk,
   borderRadius: radius.control,
   paddingVertical: 14,
   minHeight: 48,
@@ -94,18 +96,5 @@ export const dangerButton: ViewStyle = {
 export const dangerButtonLabel: TextStyle = {
   fontFamily: fonts.sansSemiBold,
   fontSize: 15,
-  color: colors.white,
-};
-
-/** A quieter destructive action, for a screen where deleting is not the point. */
-export const dangerOutlineButton: ViewStyle = {
-  ...dangerButton,
-  backgroundColor: "transparent",
-  borderWidth: 1,
-  borderColor: colors.watermelonInk,
-};
-
-export const dangerOutlineButtonLabel: TextStyle = {
-  ...dangerButtonLabel,
   color: colors.watermelonInk,
 };
