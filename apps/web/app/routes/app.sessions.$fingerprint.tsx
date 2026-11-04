@@ -232,19 +232,24 @@ export default function SessionDetailRoute(): React.ReactElement {
           >
             {vm.meta}
           </span>
-          {vm.area !== null && (
-            <Link
-              to={`/app/areas/${vm.area.slug}`}
-              style={{
-                ...monoLabel,
-                fontSize: 11,
-                letterSpacing: "0.06em",
-                color: "var(--bs-azure-ink)",
-                textDecoration: "none",
-              }}
-            >
-              {vm.area.name} ›
-            </Link>
+          {vm.areas.length > 0 && (
+            <span style={{ display: "flex", flexWrap: "wrap", gap: "4px 14px" }}>
+              {vm.areas.map((area) => (
+                <Link
+                  key={area.slug}
+                  to={`/app/areas/${area.slug}`}
+                  style={{
+                    ...monoLabel,
+                    fontSize: 11,
+                    letterSpacing: "0.06em",
+                    color: "var(--bs-azure-ink)",
+                    textDecoration: "none",
+                  }}
+                >
+                  {area.name} ›
+                </Link>
+              ))}
+            </span>
           )}
         </div>
         <SessionActions
@@ -461,6 +466,11 @@ export default function SessionDetailRoute(): React.ReactElement {
                         )}
                       </span>
                     </span>
+                    {vm.climbAreas && c.area !== null && (
+                      <span style={{ fontSize: 12.5, color: "var(--text-on-white-secondary)" }}>
+                        {c.area}
+                      </span>
+                    )}
                     {c.note !== null && (
                       <span
                         style={{

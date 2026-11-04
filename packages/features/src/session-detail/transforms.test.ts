@@ -99,12 +99,22 @@ describe("climbVMs", () => {
     expect(climbMetaLabel({ angleLabel: null, attempts: 1 })).toBe("1 attempt");
   });
 
-  it("carries the Areas link of a linked climb, and the session's crag", () => {
+  it("carries the Areas link of a linked climb, and each climb's area", () => {
     const link = { id: "c1", name: "Crimp Reaper", slug: "crimp-reaper" };
-    const climbs = detail.climbs.map((c, i) => (i === 1 ? { ...c, link } : c));
-    expect(climbVMs(climbs).map((c) => c.climbSlug)).toEqual([null, "crimp-reaper", null, null]);
     const area = { id: "a1", name: "Buttermilks", slug: "buttermilks" };
-    expect(sessionDetailVM({ ...detail, area }).area).toEqual(area);
+    const climbs = detail.climbs.map((c, i) => (i === 1 ? { ...c, link, area } : c));
+    expect(climbVMs(climbs).map((c) => c.climbSlug)).toEqual([null, "crimp-reaper", null, null]);
+    expect(climbVMs(climbs).map((c) => c.area)).toEqual([null, "Buttermilks", null, null]);
+  });
+
+  it("lists every area, and names a climb's area on a two-area day or indoors", () => {
+    const at = (id: string, name: string) => ({ id, name, slug: id });
+    const two = [at("a1", "Stanage Popular"), at("a2", "Stanage Plantation")];
+    const outdoor = { ...detail, location: "outdoor" as const };
+    expect(sessionDetailVM({ ...outdoor, areas: two }).areas).toEqual(two);
+    expect(sessionDetailVM({ ...outdoor, areas: two }).climbAreas).toBe(true);
+    expect(sessionDetailVM({ ...outdoor, areas: [two[0]!] }).climbAreas).toBe(false);
+    expect(sessionDetailVM({ ...detail, location: "indoor", areas: [] }).climbAreas).toBe(true);
   });
 
   it("reads a one-try send of an earlier project as a send, not a flash", () => {

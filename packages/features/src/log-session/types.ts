@@ -107,8 +107,6 @@ export type LogSessionDraft = {
   startedAt?: string;
   location: "indoor" | "outdoor";
   gymId?: string;
-  /** The web form's one area for its outdoor climbs, until each of its rows picks its own. */
-  area?: ClimbArea;
   tags: string[];
   notes: string;
   rpe: number | null;

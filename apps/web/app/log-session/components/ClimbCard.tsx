@@ -22,6 +22,7 @@ import {
 } from "./EnduranceFields";
 import { ClimbGradeSelect, ClimbKindSelect } from "./ClimbKindSelect";
 import { AreaClimbNameField, type ClimbAreas } from "./AreaClimbNameField";
+import { ClimbAreaField } from "./ClimbAreaField";
 import { ClimbNameField, type ClimbNameFieldProps } from "./ClimbNameField";
 import { ClimbNoteField } from "./ClimbNoteField";
 import { DisciplineToggle } from "./DisciplineToggle";
@@ -94,6 +95,12 @@ export function ClimbCard({
   };
   return (
     <div className="climb-card">
+      {areas?.pickable === true && (
+        <div className="climb-card-cell">
+          <span style={columnHead}>{t("areas.area")}</span>
+          <ClimbAreaField areas={areas} />
+        </div>
+      )}
       <div className="climb-card-main">
         <div className="climb-card-cell">
           <span style={columnHead}>{endurance ? t("endurance.oneLapIs") : t("common.grade")}</span>

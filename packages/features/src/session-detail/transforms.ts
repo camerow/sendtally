@@ -19,6 +19,7 @@ import type {
   StatVM,
 } from "./types";
 import { BOARD_LABELS } from "./types";
+import { namesClimbAreas } from "./rows";
 
 export function durationLabel(startAt: string, endAt: string): string {
   return minutesLabel(Math.max(0, Math.round((Date.parse(endAt) - Date.parse(startAt)) / 60_000)));
@@ -95,6 +96,7 @@ export function climbVMs(
       resultLabel: resultLabelOf(c, result),
       note: c.note,
       climbSlug: c.link?.slug ?? null,
+      area: c.area?.name ?? null,
       ...(c.endurance === undefined ? {} : { endurance: c.endurance }),
     };
   });
@@ -305,7 +307,8 @@ export function sessionDetailVM(
       isUnscored(session) ? "" : ` · ${t("common.effort")} ${session.rpe}/10`
     ),
     editable: session.source === "manual",
-    area: session.area,
+    areas: session.areas,
+    climbAreas: namesClimbAreas(session),
     stats,
     bars,
     pyramid: sessionPyramid(session.climbs),

@@ -22,6 +22,8 @@ export type ClimbVM = {
   note: string | null;
   /** The Areas climb this one is linked to, for a link to its page. */
   climbSlug: string | null;
+  /** The name of the area the climb was at. */
+  area: string | null;
   /** Present on a circuit of laps, which reads as per-lap bars rather than a result badge. */
   endurance?: Endurance;
 };
@@ -62,7 +64,10 @@ export type SessionDetailVM = {
   startDay: string;
   meta: string;
   editable: boolean;
-  area: { name: string; slug: string } | null;
+  /** Each distinct area its climbs were at, for a link to each. */
+  areas: Array<{ name: string; slug: string }>;
+  /** Whether a climb names its area: on a day with two or more, or indoors, where it marks one outdoor. */
+  climbAreas: boolean;
   stats: StatVM[];
   bars: GradeBarVM[];
   pyramid: PyramidRow[];

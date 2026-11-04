@@ -79,6 +79,11 @@ function rowOf(group: Group, n: number, showArea: boolean): SessionClimbRowVM {
   return { ...base, pill, meta: meta.filter((part) => part !== null).join(" · ") };
 }
 
+/** A climb names its area on a day with two or more, or indoors, where an area marks it outdoor. */
+export function namesClimbAreas(session: Pick<SessionDetail, "areas" | "location">): boolean {
+  return session.areas.length >= 2 || session.location === "indoor";
+}
+
 /**
  * The session's climbs as the log draws them: a climb logged more than once is one row with its
  * tries summed, and so are unnamed climbs at one grade or on one circuit. A row names its area
@@ -98,7 +103,7 @@ export function sessionClimbRows(
     group.logged.push(c);
     groups.set(key, group);
   });
-  const showArea = session.areas.length >= 2 || session.location === "indoor";
+  const showArea = namesClimbAreas(session);
   return [...groups.values()].map((group, i) => rowOf(group, i + 1, showArea));
 }
 

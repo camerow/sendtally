@@ -20,6 +20,7 @@ import {
 } from "./EnduranceFields";
 import { ClimbGradeSelect, ClimbKindSelect } from "./ClimbKindSelect";
 import { AreaClimbNameField, type ClimbAreas } from "./AreaClimbNameField";
+import { ClimbAreaField } from "./ClimbAreaField";
 import { ClimbNameField, type ClimbNameFieldProps } from "./ClimbNameField";
 import { ClimbNoteField } from "./ClimbNoteField";
 import { DisciplineToggle } from "./DisciplineToggle";
@@ -187,6 +188,14 @@ export function ClimbEditorSheet({
               className="log-session-control"
               style={inputStyle}
             />
+          </div>
+        )}
+        {areas?.pickable === true && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
+            <label htmlFor="climb-area" style={monoLabel}>
+              {t("areas.area")}
+            </label>
+            <ClimbAreaField id="climb-area" areas={areas} />
           </div>
         )}
         <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>

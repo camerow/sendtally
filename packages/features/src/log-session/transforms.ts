@@ -272,9 +272,8 @@ function climbOutcomeInput(
 /** A named climb keeps its area whatever the session; a grade-only one only on an outdoor day. */
 function areaInput(c: ClimbDraft, draft: LogSessionDraft): Pick<LogClimbInput, "areaId"> {
   const outdoor = draft.location === "outdoor";
-  const area = c.area ?? (outdoor ? draft.area : undefined);
-  if (area === undefined || (!outdoor && c.name.trim() === "")) return {};
-  return { areaId: area.id };
+  if (c.area === undefined || (!outdoor && c.name.trim() === "")) return {};
+  return { areaId: c.area.id };
 }
 
 /** Indoors a climb starts with no area: switching there drops every climb's. */

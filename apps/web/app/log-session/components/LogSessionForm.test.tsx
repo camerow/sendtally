@@ -30,7 +30,6 @@ const draft: LogSessionDraft = {
   startTime: "10:00",
   endTime: "12:00",
   location: "outdoor",
-  area: { id: "a1", name: "Buttermilks" },
   tags: [],
   notes: "",
   rpe: null,
@@ -44,6 +43,7 @@ const draft: LogSessionDraft = {
       style: "redpoint",
       tries: 1,
       note: "",
+      area: { id: "a1", name: "Buttermilks" },
     },
   ],
 };
@@ -90,13 +90,13 @@ afterEach(() => {
   container.remove();
 });
 
-function render(api: SendtallyApi): void {
+function render(api: SendtallyApi, editing: LogSessionDraft = draft): void {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   act(() =>
     root.render(
       <QueryClientProvider client={client}>
         <MemoryRouter>
-          <LogSessionForm api={api} editing={{ fingerprint: "manual-1", draft }} />
+          <LogSessionForm api={api} editing={{ fingerprint: "manual-1", draft: editing }} />
         </MemoryRouter>
       </QueryClientProvider>
     )
@@ -141,5 +141,37 @@ describe("LogSessionForm with Areas", () => {
     const [, input] = api.updateLoggedSession.mock.calls[0]!;
     expect(input.climbs[0].name).toBe("The Mandala sit");
     expect(input.climbs[0]).not.toHaveProperty("climbId");
+  });
+});
+
+describe("each climb's area", () => {
+  const areaInputs = (): HTMLInputElement[] => [
+    ...container.querySelectorAll<HTMLInputElement>('input[placeholder="Search areas"]'),
+  ];
+  const chip = (label: string): HTMLButtonElement =>
+    [...container.querySelectorAll("button")].find((b) => b.textContent === label)!;
+
+  it("sits on each climb, never on the session", async () => {
+    render(fakeApi());
+    await settle();
+    expect(areaInputs()).toHaveLength(1);
+    expect(areaInputs()[0]!.value).toBe("Buttermilks");
+    expect(container.textContent).not.toContain("Area optional");
+  });
+
+  it("indoors, is offered to a named climb only, empty, keeping the name field focused", async () => {
+    const api = fakeApi();
+    render(api);
+    await settle();
+    act(() => chip("Indoor").click());
+    expect(areaInputs()).toHaveLength(0);
+    act(() => nameInput().focus());
+    type(nameInput(), "Arete");
+    expect(areaInputs()).toHaveLength(1);
+    expect(areaInputs()[0]!.value).toBe("");
+    expect(document.activeElement).toBe(nameInput());
+    await save();
+    const [, input] = api.updateLoggedSession.mock.calls[0]!;
+    expect(input.climbs[0]).not.toHaveProperty("areaId");
   });
 });
