@@ -53,7 +53,7 @@ export function ClimbDetailScreen({ id }: { id: string }): React.ReactElement {
         meta={vm.meta}
         aside={
           <Pressable
-            onPress={() => void setWorking(!vm.project)}
+            onPress={() => setWorking(!vm.project)}
             accessibilityRole="switch"
             accessibilityState={{ checked: vm.project }}
             accessibilityLabel={t("common.project")}

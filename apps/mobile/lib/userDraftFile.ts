@@ -12,6 +12,8 @@ export function setDraftOwner(userId: string | null): void {
   ownerListeners.forEach((listener) => listener());
 }
 
+export const draftOwner = (): string | null => owner;
+
 export function onDraftOwnerChange(listener: () => void): void {
   ownerListeners.add(listener);
 }
