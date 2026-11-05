@@ -50,7 +50,7 @@ export function TrainScreen(): React.ReactElement {
   const [adding, setAdding] = React.useState<"workout" | "exercise" | null>(null);
   const [menuOpen, setMenuOpen] = React.useState(false);
   const picked = React.useRef<TrainView | null>(null);
-  const newBlock = useNewBlock();
+  const newBlock = useNewBlock(t("training.train"));
   const create = (v: TrainView): void => {
     if (v === "blocks") newBlock();
     else setAdding(v === "workouts" ? "workout" : "exercise");

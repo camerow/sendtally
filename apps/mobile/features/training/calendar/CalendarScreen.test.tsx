@@ -31,13 +31,13 @@ describe("Calendar", () => {
     await renderWithHang(<CalendarScreen />, hangData(), { plan });
     expect(screen.getByText("September 2026")).toBeTruthy();
     expect(screen.getByText("Autumn power · 1/4")).toBeTruthy();
-    expect(screen.getByLabelText("Monday Sep 28: 1 planned")).toBeTruthy();
-    expect(screen.getByLabelText("Wednesday Sep 30: 0 planned")).toBeTruthy();
+    expect(screen.getByLabelText("Monday, Sep 28: 1 planned")).toBeTruthy();
+    expect(screen.getByLabelText("Wednesday, Sep 30: 0 planned")).toBeTruthy();
   });
 
   it("opens a day", async () => {
     await renderWithHang(<CalendarScreen />, hangData(), { plan });
-    await fireEvent.press(screen.getByLabelText("Tuesday Sep 29: 1 planned"));
+    await fireEvent.press(screen.getByLabelText("Tuesday, Sep 29: 1 planned"));
     expect(router.push).toHaveBeenCalledWith({
       pathname: "/plan/day",
       params: { date: "2026-09-29" },
@@ -56,7 +56,7 @@ describe("Calendar", () => {
   it("opens a tapped day, and makes no block from the calendar", async () => {
     await renderWithHang(<CalendarScreen />, hangData(), { plan });
     expect(screen.queryByText("New block")).toBeNull();
-    await fireEvent.press(screen.getByLabelText("Thursday Sep 17: 0 planned"));
+    await fireEvent.press(screen.getByLabelText("Thursday, Sep 17: 0 planned"));
     expect(router.push).toHaveBeenCalledWith({
       pathname: "/plan/day",
       params: { date: "2026-09-17" },

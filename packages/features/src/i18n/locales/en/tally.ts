@@ -25,7 +25,6 @@ export const tally = {
   "tally.alreadyRunning": "Already running",
   "tally.record": "Record",
   "tally.stillGoing": "{name} is still going",
-  "tally.inProgress": "In progress",
   "tally.setOf": "Set {set} of {sets}",
   "tally.setNext": "Set {set} of {sets} next",
   "tally.setLabel": "Set {set}",

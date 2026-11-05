@@ -11,13 +11,6 @@ export function occurrenceTag(label: string, o: Occurrence): string {
   return o.block === null ? label : (blockTag(label, o.block, o.date) ?? label);
 }
 
-/** A kicker that wraps only between its " · " segments, never inside one. */
-export const unbrokenSegments = (text: string): string =>
-  text
-    .split(" · ")
-    .map((s) => s.replace(/ /g, "\u00A0"))
-    .join(" · ");
-
 /** Where a moved run came from, then the session's letter when the workout alternates, then what its first item asks for. */
 export function occurrenceMeta(o: Occurrence, unit: WeightUnit): string {
   const w = o.workout;

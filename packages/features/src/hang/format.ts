@@ -4,7 +4,6 @@ import {
   isTimed,
   toLocalDate,
   toUnit,
-  weekday,
   type CalendarDate,
   type GripSetup,
   type HangKind,
@@ -49,9 +48,9 @@ export function longDate(d: CalendarDate): string {
   return formatDate(toLocalDate(d), { weekday: "long", day: "numeric", month: "long" });
 }
 
-/** "Wednesday 30 Sep" */
+/** "Wednesday, Sep 30" */
 export function dayTitle(d: CalendarDate): string {
-  return `${weekdayLong(weekday(d))} ${dayMonth(d)}`;
+  return formatDate(toLocalDate(d), { weekday: "long", day: "numeric", month: "short" });
 }
 
 /** "September 2026" */

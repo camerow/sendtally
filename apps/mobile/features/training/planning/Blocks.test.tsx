@@ -81,7 +81,7 @@ beforeEach(() => {
 describe("blocks", () => {
   it("makes a new block as an untitled four-week template and opens it at once to name", async () => {
     const NewBlock = (): React.ReactElement => {
-      const make = useNewBlock();
+      const make = useNewBlock("Train");
       return <Text onPress={make}>New block</Text>;
     };
     await renderWithHang(<NewBlock />);

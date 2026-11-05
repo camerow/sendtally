@@ -3,7 +3,7 @@ import { View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
 import { shortDate } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
-import { blockDone, blockGroups, blockMembers, useTrainingLog } from "@sendtally/features/training";
+import { blockGroups, blockMembers, useTrainingLog } from "@sendtally/features/training";
 import { useApi } from "../../../lib/api";
 import { BlockCard } from "../blocks/BlockCard";
 import { DashedPanel } from "../components/DashedPanel";
@@ -12,6 +12,7 @@ import { useHangData } from "../data/HangDataContext";
 import { PlanGrid } from "../plan/PlanGrid";
 import { liveMembers, planGridRows } from "../plan/planGridRows";
 import { BlockRow } from "./BlockRow";
+import { pastMeta, templateMeta } from "./blockMeta";
 
 function Group({
   label,
@@ -79,26 +80,22 @@ export function BlocksList(): React.ReactElement {
               key={b.id}
               id={b.id}
               name={b.name || t("plan.untitled")}
-              meta={`${weeks(b.weeks)} · ${t("plan.workoutCount", { count: blockMembers(plan, b).length })}`}
+              meta={templateMeta(log, b)}
             />
           ))}
         </Group>
       )}
       {past.length > 0 && (
         <Group label={t("plan.past")}>
-          {past.map((b) => {
-            const done = blockDone(log, b, today);
-            const meta = [weeks(b.weeks), ...(done.planned > 0 ? [t("plan.doneOf", done)] : [])];
-            return (
-              <BlockRow
-                back={t("training.train")}
-                key={b.id}
-                id={b.id}
-                name={b.name}
-                meta={meta.join(" · ")}
-              />
-            );
-          })}
+          {past.map((b) => (
+            <BlockRow
+              back={t("training.train")}
+              key={b.id}
+              id={b.id}
+              name={b.name}
+              meta={pastMeta(log, b, today)}
+            />
+          ))}
         </Group>
       )}
     </View>

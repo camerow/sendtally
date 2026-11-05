@@ -42,7 +42,7 @@ export function DayCell({ day, selected, onPress }: DayCellProps): React.ReactEl
       })}
       style={press({
         flex: 1,
-        height: 70,
+        height: 58,
         borderRadius: 12,
         alignItems: "center",
         justifyContent: "center",
