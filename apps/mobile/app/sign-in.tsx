@@ -113,7 +113,6 @@ export default function SignIn(): React.ReactElement | null {
                 style={{
                   fontFamily: fonts.mono,
                   fontSize: 18,
-                  letterSpacing: 6,
                   color: colors.gunmetal,
                   backgroundColor: colors.surfaceSoft,
                   borderWidth: 1,
