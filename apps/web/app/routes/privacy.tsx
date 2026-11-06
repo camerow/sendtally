@@ -60,11 +60,11 @@ export default function Privacy(): React.ReactElement {
         Cloudflare keeps for the sites and API it serves us. Once you sign in, PostHog records your
         account identifier and email address against that usage, so we can tell how many people are
         using a feature rather than how many browsers are. PostHog also records screen replays of
-        app sessions and the errors your browser hits, so we can see what broke. Form fields are
-        masked in those replays, so what you type is not captured. Adding to Areas and moderating it
-        are recorded as events too, such as an area created, an edit suggested, or a report
-        resolved, carrying only the kind of action and a few labels, such as whether it was an area
-        or a climb, never what you wrote.
+        app sessions and the errors your browser hits, so we can see what broke. Those replays show
+        what you type, except passwords; in the mobile app photos and system pickers stay masked.
+        Adding to Areas and moderating it are recorded as events too, such as an area created, an
+        edit suggested, or a report resolved, carrying only the kind of action and a few labels,
+        such as whether it was an area or a climb, never what you wrote.
       </p>
 
       <h2>What we never collect</h2>
