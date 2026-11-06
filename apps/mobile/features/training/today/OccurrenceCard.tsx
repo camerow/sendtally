@@ -2,17 +2,14 @@ import { router } from "expo-router";
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
-import { kindLabel } from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
-import { durationLabel } from "@sendtally/features/sessions";
 import { occurrenceLink, type Occurrence } from "@sendtally/features/training";
-import { workoutMinutes, type LibraryWorkout } from "@sendtally/features/workouts";
+import type { LibraryWorkout } from "@sendtally/features/workouts";
 import { liveRunHref, useLiveRun } from "../../live-session/liveRun";
 import { Button } from "../components/Button";
 import { DetailMenu } from "../components/DetailMenu";
 import { dayRows } from "../plan-days/dayRows";
 import { useDayChanges } from "../plan-days/useDayChanges";
-import { Label } from "../components/Label";
 import { Title } from "../components/Title";
 import { useHangData } from "../data/HangDataContext";
 import { LogItButton } from "../library-detail/LogItButton";
@@ -20,20 +17,17 @@ import { StartButton } from "../library-detail/StartButton";
 import { type } from "../type";
 import { openOccurrence } from "./openOccurrence";
 import { DayMark } from "./DayMark";
-import { KIND_LOOK } from "./kindLook";
-import { occurrenceMeta, occurrenceTag, unbrokenSegments } from "./occurrenceText";
+import { occurrenceMeta } from "./occurrenceText";
 
 export type OccurrenceCardProps = { occurrence: Occurrence; workout: LibraryWorkout };
 
-/** A workout due today: the card opens the workout, Start runs what it prescribes, Resume goes back to it running. */
+/** A workout due today, its kind marked by its name: the card opens the workout, Start runs what it prescribes, Resume goes back to it running. */
 export function OccurrenceCard({ occurrence, workout }: OccurrenceCardProps): React.ReactElement {
   const { model } = useHangData();
   const o = occurrence;
   const planned = { link: occurrenceLink(o), items: o.items, session: o.session };
-  const minutes = workoutMinutes(workout);
   const run = useLiveRun();
   const running = run?.workoutId === workout.id ? run : null;
-  const tag = occurrenceTag(kindLabel(workout.kind), o);
   const changes = useDayChanges();
   return (
     <View
@@ -51,31 +45,34 @@ export function OccurrenceCard({ occurrence, workout }: OccurrenceCardProps): Re
         accessibilityRole="button"
         style={({ pressed }) => ({ gap: 12, opacity: pressed ? 0.7 : 1 })}
       >
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 7 }}>
-          <DayMark kind={workout.kind} filled />
-          <Label color={KIND_LOOK[workout.kind].ink} style={{ flex: 1 }}>
-            {unbrokenSegments(
-              running === null
-                ? t("hang.upToday", { kind: tag })
-                : `${t("tally.inProgress")} · ${tag}`
-            )}
-          </Label>
-          {minutes !== null && <Label color={colors.textSecondary}>{durationLabel(minutes)}</Label>}
-          {running === null && (
-            <DetailMenu
-              rows={dayRows(
-                (kind) => changes.open(kind, o, workout.name),
-                undefined,
-                changes.remove(o)
-              )}
-            />
-          )}
-        </View>
         <View style={{ gap: 4 }}>
-          <Title size={28}>{workout.name}</Title>
-          <Text style={[type.body, { fontSize: 14, lineHeight: 20, color: colors.textSecondary }]}>
-            {occurrenceMeta(o, model.settings.units)}
-          </Text>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+            <Title size={28} style={{ flex: 1 }}>
+              {workout.name}
+            </Title>
+            {running === null && (
+              <View style={{ marginVertical: -8 }}>
+                <DetailMenu
+                  rows={dayRows(
+                    (kind) => changes.open(kind, o, workout.name),
+                    undefined,
+                    changes.remove(o)
+                  )}
+                />
+              </View>
+            )}
+          </View>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+            <DayMark kind={workout.kind} filled />
+            <Text
+              style={[
+                type.body,
+                { flex: 1, fontSize: 14, lineHeight: 20, color: colors.textSecondary },
+              ]}
+            >
+              {occurrenceMeta(o, model.settings.units)}
+            </Text>
+          </View>
         </View>
       </Pressable>
       {running === null ? (

@@ -14,19 +14,19 @@ import { logLibraryWorkout } from "../library-detail/startLibraryWorkout";
 import { type } from "../type";
 import { openOccurrence } from "./openOccurrence";
 import { DayMark } from "./DayMark";
+import { KindCircle } from "./KindCircle";
 import { KIND_LOOK } from "./kindLook";
 import { occurrenceMeta, occurrenceTag } from "./occurrenceText";
 
 export type OccurrenceRowProps = { occurrence: Occurrence; workout: LibraryWorkout };
 
 /**
- * A planned workout on a day that is not today's to start: done, still to come, or missed, which
- * the card and its ··· open the sheet to log, reschedule or skip.
+ * A planned workout on a day that is not today's to start: still to come, or missed, crossed
+ * on its kind's mark, which the card and its ··· open the sheet to log, reschedule or skip.
  */
 export function OccurrenceRow({ occurrence, workout }: OccurrenceRowProps): React.ReactElement {
   const { model } = useHangData();
   const { status } = occurrence;
-  const done = status === "done";
   const missed = status === "missed";
   const changes = useDayChanges();
   const [menu, setMenu] = React.useState(false);
@@ -35,12 +35,7 @@ export function OccurrenceRow({ occurrence, workout }: OccurrenceRowProps): Reac
     items: occurrence.items,
     session: occurrence.session,
   };
-  const tag =
-    status === "done"
-      ? t("plan.done")
-      : status === "missed"
-        ? t("hang.missed")
-        : occurrenceTag(t("hang.planned"), occurrence);
+  const tag = occurrenceTag(t("hang.planned"), occurrence);
   return (
     <View
       style={{
@@ -54,18 +49,22 @@ export function OccurrenceRow({ occurrence, workout }: OccurrenceRowProps): Reac
         overflow: "hidden",
       }}
     >
-      <DayMark kind={workout.kind} filled={done} />
+      {missed ? (
+        <KindCircle kind={workout.kind} badge="missed" />
+      ) : (
+        <DayMark kind={workout.kind} filled={false} />
+      )}
       <Pressable
         onPress={() => (missed ? setMenu(true) : openOccurrence(occurrence))}
         accessibilityRole="button"
-        style={pressRow({ flex: 1, gap: 3, paddingVertical: 10 })}
+        accessibilityLabel={missed ? `${t("hang.missed")}: ${workout.name}` : undefined}
+        style={pressRow({ flex: 1, gap: 3, paddingVertical: missed ? 12 : 10 })}
       >
-        <Label
-          small
-          color={status === "missed" ? colors.watermelonInk : KIND_LOOK[workout.kind].ink}
-        >
-          {tag}
-        </Label>
+        {!missed && (
+          <Label small color={KIND_LOOK[workout.kind].ink}>
+            {tag}
+          </Label>
+        )}
         <Text style={[type.bodyBold, { fontSize: 15, color: colors.gunmetal }]}>
           {workout.name}
         </Text>

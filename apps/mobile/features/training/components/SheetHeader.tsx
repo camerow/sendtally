@@ -1,9 +1,11 @@
 import React from "react";
 import { Pressable, View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
+import { t } from "@sendtally/features/i18n";
 import { press } from "../../../lib/press";
 import { Button } from "./Button";
 import { HangIcon } from "./HangIcon";
+import { IconButton } from "./IconButton";
 import { Label } from "./Label";
 import { Title } from "./Title";
 
@@ -17,6 +19,8 @@ export type SheetHeaderProps = {
   onTitle?: () => void;
   /** Under the title, such as a planned run's day. */
   under?: React.ReactNode;
+  /** A step inside the sheet: a chevron back to the one before it. */
+  onBack?: () => void;
 };
 
 export function SheetHeader({
@@ -27,6 +31,7 @@ export function SheetHeader({
   onAction,
   onTitle,
   under,
+  onBack,
 }: SheetHeaderProps): React.ReactElement {
   return (
     <View
@@ -38,6 +43,16 @@ export function SheetHeader({
         paddingTop: 6,
       }}
     >
+      {onBack !== undefined && (
+        <View style={{ marginLeft: -10 }}>
+          <IconButton
+            icon="back"
+            label={t("common.back")}
+            onPress={onBack}
+            color={colors.gunmetal}
+          />
+        </View>
+      )}
       <View style={{ flex: 1, gap: 4 }}>
         <Label color={kickerColor}>{kicker}</Label>
         {onTitle === undefined ? (

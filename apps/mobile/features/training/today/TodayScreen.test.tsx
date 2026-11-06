@@ -7,15 +7,30 @@ import { aHang, renderWithHang, hangData } from "../data/renderWithHang";
 import { TodayScreen } from "./TodayScreen";
 
 jest.mock("../../../components/Sheet", () => ({
-  Sheet: ({ visible, children }: { visible: boolean; children: React.ReactNode }) =>
-    visible ? children : null,
+  Sheet: ({
+    visible,
+    children,
+    footer,
+  }: {
+    visible: boolean;
+    children: React.ReactNode;
+    footer?: React.ReactNode;
+  }) =>
+    visible ? (
+      <>
+        {children}
+        {footer}
+      </>
+    ) : null,
 }));
+jest.mock("expo-crypto", () => ({ randomUUID: () => "b-new" }));
 let mockParams: Record<string, string> = {};
 
 const mockPlanActions = {
   savePlanChange: jest.fn(async () => undefined),
   undoPlanChange: jest.fn(async () => undefined),
   deleteMembership: jest.fn(async () => undefined),
+  copyBlock: jest.fn(async () => true),
 };
 jest.mock("../plan/usePlanActions", () => ({ usePlanActions: () => mockPlanActions }));
 jest.mock("expo-router", () => ({
@@ -50,7 +65,6 @@ const plan = (workoutId: string, weekdays: (0 | 1)[] = [0, 1]): Plan => ({
 describe("Today", () => {
   it("starts today's planned hangboard workout on its grip, against its plan", async () => {
     await renderWithHang(<TodayScreen />, hangData(), { plan: plan("max10") });
-    expect(screen.getByText("Up\u00A0today · Fingers")).toBeTruthy();
     await fireEvent.press(screen.getByText("Start"));
     expect(router.push).toHaveBeenCalledWith({
       pathname: "/workout/timer",
@@ -67,7 +81,7 @@ describe("Today", () => {
   it("shows a past planned day as missed, to log, reschedule or skip but not start", async () => {
     await renderWithHang(<TodayScreen />, hangData(), { plan: plan("max10") });
     await fireEvent.press(screen.getByLabelText(/^Monday.*0 done, 1 planned$/));
-    expect(screen.getByText("Missed")).toBeTruthy();
+    expect(screen.getByLabelText("Missed: Max hangs")).toBeTruthy();
     // Only today's card starts; Monday's row is the first Max hangs in the week.
     expect(screen.getAllByText("Start")).toHaveLength(1);
     await fireEvent.press(screen.getAllByText("Max hangs")[0]!);
@@ -76,11 +90,11 @@ describe("Today", () => {
     expect(screen.getByText("Not counted as missed")).toBeTruthy();
   });
 
-  it("shows a planned workout once it is done, under Done, as its logged session", async () => {
+  it("shows a planned workout once it is done in its place, as its logged session", async () => {
     const hang = aHang({ workoutId: "max10", date: "2026-09-28", membershipId: "m1" });
     await renderWithHang(<TodayScreen />, hangData({ sessions: [hang] }), { plan: plan("max10") });
     await fireEvent.press(screen.getByLabelText(/^Monday.*1 done, 0 planned$/));
-    expect(screen.getAllByText("Done")).toHaveLength(1);
+    expect(screen.queryByText("Done")).toBeNull();
     // Monday's logged hang, and today's card: Monday's plan is not listed again.
     expect(screen.getAllByText("Max hangs")).toHaveLength(2);
   });
@@ -88,8 +102,8 @@ describe("Today", () => {
   it("lists every day of the week, an empty one as its date alone", async () => {
     await renderWithHang(<TodayScreen />, hangData(), { plan: plan("max10") });
     expect(screen.queryByText(/of \d+ done$/)).toBeNull();
-    expect(screen.getByText("Wednesday Sep 30")).toBeTruthy();
-    expect(screen.getByText("Sunday Oct 4")).toBeTruthy();
+    expect(screen.getByText("Wednesday, Sep 30")).toBeTruthy();
+    expect(screen.getByText("Sunday, Oct 4")).toBeTruthy();
     expect(screen.queryByText("Rest day")).toBeNull();
   });
 
@@ -133,13 +147,59 @@ describe("Today", () => {
     expect(screen.getByText("Block in progress")).toBeTruthy();
   });
 
-  it("adds to the day picked, naming it", async () => {
+  it("schedules on the day picked, naming it", async () => {
     await renderWithHang(<TodayScreen />, hangData(), { plan: plan("max10") });
-    expect(screen.getByText("Add to today")).toBeTruthy();
     await fireEvent.press(screen.getByLabelText(/^Monday/));
-    await fireEvent.press(screen.getByText("Add to Mon"));
-    expect(screen.getByText("Add workouts")).toBeTruthy();
+    await fireEvent.press(screen.getByText("Schedule"));
+    expect(screen.getAllByText("Schedule")).toHaveLength(2);
     expect(screen.getByText("Mon, Sep 28")).toBeTruthy();
+    expect(screen.getByText("New workout")).toBeTruthy();
+  });
+
+  it("schedules a template or a past block from the day picked, staying on Plan", async () => {
+    const blocks: Plan = {
+      ...plan("max10"),
+      blocks: [
+        { id: "t1", name: "Peak weekend", start: null, weeks: 1, focus: null },
+        { id: "p1", name: "Summer base", start: "2026-08-03", weeks: 4, focus: null },
+        { id: "r1", name: "Winter base", start: "2026-09-21", weeks: 4, focus: null },
+        { id: "u1", name: "Spring power", start: "2026-11-02", weeks: 2, focus: null },
+      ],
+    };
+    await renderWithHang(<TodayScreen />, hangData(), { plan: blocks });
+    await fireEvent.press(screen.getByLabelText(/^Wednesday/));
+    await fireEvent.press(screen.getByText("Schedule"));
+    await fireEvent.press(screen.getByText("Block"));
+    expect(screen.getByText("Summer base")).toBeTruthy();
+    expect(screen.queryByText("Spring power")).toBeNull();
+    expect(screen.getAllByText("Winter base")).toHaveLength(1);
+    expect(screen.getByText("New block")).toBeTruthy();
+    await fireEvent.press(screen.getByText("Peak weekend"));
+    expect(screen.getByText("When does it start?")).toBeTruthy();
+    await fireEvent.press(screen.getByText("Schedule from Wed, Sep 30"));
+    expect(mockPlanActions.copyBlock).toHaveBeenCalledWith("t1", "b-new", "2026-09-30");
+    expect(screen.queryByText("When does it start?")).toBeNull();
+    await fireEvent.press(screen.getByText("View"));
+    expect(router.push).toHaveBeenCalledWith({
+      pathname: "/plan/block/[id]",
+      params: { id: "b-new", back: "Plan" },
+    });
+  });
+
+  it("starts a block no earlier than today when a past day is picked", async () => {
+    const blocks: Plan = {
+      ...plan("max10"),
+      blocks: [{ id: "t1", name: "Peak weekend", start: null, weeks: 1, focus: null }],
+    };
+    await renderWithHang(<TodayScreen />, hangData(), { plan: blocks });
+    await fireEvent.press(screen.getByLabelText(/^Monday/));
+    await fireEvent.press(screen.getByText("Schedule"));
+    await fireEvent.press(screen.getByText("Block"));
+    await fireEvent.press(screen.getByText("Peak weekend"));
+    expect(screen.getByText("Schedule from Tue, Sep 29")).toBeTruthy();
+    await fireEvent.press(screen.getByLabelText("Back"));
+    expect(screen.getByText("Peak weekend")).toBeTruthy();
+    expect(screen.queryByText("When does it start?")).toBeNull();
   });
 
   it("shows no blocks when none is running", async () => {
@@ -156,7 +216,7 @@ describe("Today", () => {
 
   it("starts today's lifting workout in the sets player with what it prescribes", async () => {
     await renderWithHang(<TodayScreen />, hangData(), { plan: plan("legs"), workouts: [legs] });
-    expect(screen.getByText("Up\u00A0today · Strength")).toBeTruthy();
+    expect(screen.queryByText(/^Up today/)).toBeNull();
     expect(screen.getAllByText("5 × 5").length).toBeGreaterThan(0);
     await fireEvent.press(screen.getByText("Start"));
     expect(router.push).toHaveBeenCalledWith({
@@ -262,7 +322,7 @@ describe("Today", () => {
     await fireEvent.press(screen.getAllByLabelText("More").at(-1)!);
     await fireEvent.press(screen.getByText("Reschedule"));
     await fireEvent.press(screen.getByLabelText("Next month"));
-    await fireEvent.press(screen.getByLabelText("Wednesday Oct 7"));
+    await fireEvent.press(screen.getByLabelText("Wednesday, Oct 7"));
     await fireEvent.press(screen.getByText("Reschedule to Wed, Oct 7"));
     expect(mockPlanActions.savePlanChange).toHaveBeenLastCalledWith(
       expect.objectContaining({ kind: "move", plannedOn: "2026-09-29", movedTo: "2026-10-07" })

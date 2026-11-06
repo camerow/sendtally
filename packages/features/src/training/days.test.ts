@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { Activity, HangSessionRecord, Plan, SessionRow } from "@sendtally/api-client";
 import type { Protocol, Workout } from "@sendtally/core/hang";
-import { dayMarks, trainingDay, trainingWeek, type TrainingLog } from "./days";
+import { dayEntries, dayMarks, trainingDay, trainingWeek, type TrainingLog } from "./days";
 
 const TODAY = "2026-10-01";
 
@@ -246,6 +246,97 @@ describe("plans on a day", () => {
     expect(dayMarks(thursday!)).toEqual([
       { kind: "hangboard", filled: false },
       { kind: "strength", filled: false },
+    ]);
+  });
+});
+
+describe("dayEntries", () => {
+  const shape = (date: string, l: TrainingLog) =>
+    dayEntries(trainingDay(l, date, TODAY)).map((e) =>
+      e.kind === "logged"
+        ? ["logged", e.item.kind === "activity" ? e.item.activity.id : e.item.kind]
+        : [e.kind, e.occurrence.membership.id]
+    );
+
+  it("keeps a done plan in its slot, before an open one", () => {
+    const l = log({ hangs: [hang("2026-10-01", { membershipId: "h1" })] });
+    expect(dayEntries(trainingDay(l, TODAY, TODAY)).map((e) => e.kind)).toEqual(["done", "plan"]);
+  });
+
+  it("lists what no plan claims after the plan, oldest first", () => {
+    const l = log({
+      hangs: [hang("2026-10-01", { membershipId: "h1" })],
+      activities: [
+        activity("2026-10-01", { id: "late", kind: "mobility", startTime: "19:00" }),
+        activity("2026-10-01", { id: "early", kind: "mobility", startTime: "07:00" }),
+      ],
+    });
+    expect(shape(TODAY, l)).toEqual([
+      ["done", "h1"],
+      ["plan", "p1"],
+      ["logged", "early"],
+      ["logged", "late"],
+    ]);
+  });
+
+  it("pairs each session logged on its own with one plan of its kind", () => {
+    const twice: Plan = {
+      ...plan,
+      memberships: [
+        {
+          id: "x1",
+          workoutId: "legs",
+          blockId: null,
+          weekdays: [3],
+          start: "2026-09-28",
+          position: 0,
+        },
+        {
+          id: "x2",
+          workoutId: "legs",
+          blockId: null,
+          weekdays: [3],
+          start: "2026-09-28",
+          position: 0,
+        },
+      ],
+    };
+    const l = log({
+      plan: twice,
+      activities: [activity("2026-10-01", { id: "one" }), activity("2026-10-01", { id: "two" })],
+    });
+    const done = dayEntries(trainingDay(l, TODAY, TODAY)).flatMap((e) =>
+      e.kind === "done" && e.item.kind === "activity" ? [e.item.activity.id] : []
+    );
+    expect(done).toEqual(["one", "two"]);
+  });
+
+  it("shows the one session again when two plans of its kind both count it", () => {
+    const twice: Plan = {
+      ...plan,
+      memberships: [
+        {
+          id: "x1",
+          workoutId: "legs",
+          blockId: null,
+          weekdays: [3],
+          start: "2026-09-28",
+          position: 0,
+        },
+        {
+          id: "x2",
+          workoutId: "legs",
+          blockId: null,
+          weekdays: [3],
+          start: "2026-09-28",
+          position: 0,
+        },
+      ],
+    };
+    const l = log({ plan: twice, activities: [activity("2026-10-01", { id: "one" })] });
+    expect(shape(TODAY, l)).toEqual([
+      ["done", "x1"],
+      ["done", "x2"],
     ]);
   });
 });

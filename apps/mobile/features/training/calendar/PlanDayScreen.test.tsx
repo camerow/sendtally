@@ -76,7 +76,6 @@ describe("Plan day", () => {
     await renderWithHang(<PlanDayScreen date="2026-09-29" />, hangData(), world);
     expect(screen.getByText("Autumn power · week 1 of 4")).toBeTruthy();
     expect(screen.getByText("Gym, legs")).toBeTruthy();
-    expect(screen.getByText(/^Up today/)).toBeTruthy();
     await fireEvent.press(screen.getByText("Start"));
     expect(router.push).toHaveBeenCalledWith({
       pathname: "/workout/sets",
@@ -97,7 +96,7 @@ describe("Plan day", () => {
   it("shows a past day's workout as missed, and logs it on that day from its sheet", async () => {
     await renderWithHang(<PlanDayScreen date="2026-09-28" />, hangData(), world);
     expect(screen.getByText("Monday")).toBeTruthy();
-    expect(screen.getByText("Missed")).toBeTruthy();
+    expect(screen.getByLabelText("Missed: Gym, legs")).toBeTruthy();
     expect(screen.queryByText("Start")).toBeNull();
     await fireEvent.press(screen.getByText("Gym, legs"));
     await fireEvent.press(screen.getByText("Log it"));
@@ -123,9 +122,10 @@ describe("Plan day", () => {
     });
   });
 
-  it("adds on the day inside its block from the footer", async () => {
+  it("schedules on the day from the footer", async () => {
     await renderWithHang(<PlanDayScreen date="2026-09-30" />, hangData(), world);
-    await fireEvent.press(screen.getByText("Add to Wed"));
-    expect(screen.getByText("Add workouts")).toBeTruthy();
+    await fireEvent.press(screen.getByText("Schedule"));
+    expect(screen.getAllByText("Schedule")).toHaveLength(2);
+    expect(screen.getByText("Block")).toBeTruthy();
   });
 });

@@ -2,19 +2,16 @@ import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
 import type { WorkoutKind } from "@sendtally/core/hang";
-import { Icon } from "../../../components/Icon";
 import { pressRow } from "../../../lib/press";
 import { EffortMark } from "../components/EffortMark";
 import { type } from "../type";
-import { DayMark } from "./DayMark";
-import { KIND_LOOK } from "./kindLook";
+import { KindCircle } from "./KindCircle";
 import type { LoggedRowText } from "./loggedRowText";
 
 export type LoggedRowProps = { kind: WorkoutKind; text: LoggedRowText; onPress: () => void };
 
-/** A session or activity logged on the selected day, with its effort. */
+/** A session or activity logged on the day, checked on its kind's mark, with its effort. */
 export function LoggedRow({ kind, text, onPress }: LoggedRowProps): React.ReactElement {
-  const look = KIND_LOOK[kind];
   return (
     <Pressable
       onPress={onPress}
@@ -31,27 +28,7 @@ export function LoggedRow({ kind, text, onPress }: LoggedRowProps): React.ReactE
         backgroundColor: colors.white,
       })}
     >
-      <View
-        style={{
-          width: 38,
-          height: 38,
-          borderRadius: 19,
-          alignItems: "center",
-          justifyContent: "center",
-          backgroundColor: look.tint,
-        }}
-      >
-        {kind === "climbing" || kind === "hangboard" ? (
-          <Icon
-            name={kind === "climbing" ? "climb" : "hang"}
-            color={look.ink}
-            size={20}
-            strokeWidth={1.9}
-          />
-        ) : (
-          <DayMark kind={kind} filled scale={1.5} />
-        )}
-      </View>
+      <KindCircle kind={kind} badge="done" />
       <View style={{ flex: 1, gap: 3 }}>
         <Text numberOfLines={1} style={[type.bodyBold, { fontSize: 15, color: colors.gunmetal }]}>
           {text.name}

@@ -3,13 +3,11 @@ import { View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
 import { weekTitle } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
-import type { WorkoutKind } from "@sendtally/core/hang";
-import { dayMarks, type TrainingDay } from "@sendtally/features/training";
+import type { TrainingDay } from "@sendtally/features/training";
 import type { CalendarDate } from "@sendtally/core/hang";
 import { IconButton } from "../components/IconButton";
 import { Label } from "../components/Label";
 import { DayCell } from "./DayCell";
-import { StripLegend } from "./StripLegend";
 
 export type WeekStripProps = {
   offset: number;
@@ -26,13 +24,6 @@ export function WeekStrip({
   onSelect,
   onOffset,
 }: WeekStripProps): React.ReactElement {
-  const kinds = [
-    ...new Set<WorkoutKind>([
-      "climbing",
-      "hangboard",
-      ...days.flatMap(dayMarks).map((m) => m.kind),
-    ]),
-  ];
   return (
     <View
       style={{
@@ -73,7 +64,6 @@ export function WeekStrip({
           />
         ))}
       </View>
-      <StripLegend kinds={kinds} />
     </View>
   );
 }

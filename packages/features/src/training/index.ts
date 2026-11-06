@@ -1,5 +1,6 @@
 export {
   climbDate,
+  dayEntries,
   dayMarks,
   itemEffort,
   loggedFocus,
@@ -7,6 +8,7 @@ export {
   loggedSessions,
   trainingDay,
   trainingWeek,
+  type DayEntry,
   type DayMarkSpec,
   type LoggedItem,
   type TrainingDay,

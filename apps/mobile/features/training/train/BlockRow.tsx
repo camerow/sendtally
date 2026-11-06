@@ -13,13 +13,15 @@ export type BlockRowProps = {
   meta?: string;
   /** What back says on the block: the screen the row is on. */
   back: string;
+  /** In place of opening the block. */
+  onPress?: () => void;
 };
 
 /** A block in the list: its name and when, opening the block. */
-export function BlockRow({ id, name, meta, back }: BlockRowProps): React.ReactElement {
+export function BlockRow({ id, name, meta, back, onPress }: BlockRowProps): React.ReactElement {
   return (
     <Pressable
-      onPress={() => openBlock(id, back)}
+      onPress={onPress ?? (() => openBlock(id, back))}
       accessibilityRole="button"
       accessibilityLabel={t("plan.openBlock", { name })}
       style={pressRow({

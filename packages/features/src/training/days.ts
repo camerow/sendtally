@@ -116,3 +116,60 @@ export function dayMarks(day: TrainingDay): DayMarkSpec[] {
       .flatMap((p) => (p.workout === undefined ? [] : [{ kind: p.workout.kind, filled: false }])),
   ];
 }
+
+/** The plan a logged item was logged against, if any. */
+export const membershipOf = (item: LoggedItem): string | null =>
+  item.kind === "climb"
+    ? item.session.membership_id
+    : item.kind === "hang"
+      ? item.session.membershipId
+      : item.activity.membershipId;
+
+/** A day's list in plan order: each done plan as the session that did it, then what no plan claims. */
+export type DayEntry =
+  | { kind: "plan"; occurrence: Occurrence }
+  | { kind: "done"; occurrence: Occurrence; item: LoggedItem }
+  | { kind: "logged"; item: LoggedItem };
+
+const startOf = (item: LoggedItem): string =>
+  item.kind === "climb"
+    ? item.session.start_at.slice(11, 16)
+    : item.kind === "activity"
+      ? (item.activity.startTime ?? "~")
+      : "~";
+
+/**
+ * Sessions logged against a plan pair with it first, then sessions logged on their own go to
+ * the plans of their kind in plan order, one each. A plan done with none left over shows the
+ * session that did it again rather than nothing.
+ */
+export function dayEntries(day: TrainingDay): DayEntry[] {
+  const done = day.plans.filter((o) => o.status === "done");
+  const by = new Map<Occurrence, LoggedItem>();
+  for (const o of done) {
+    const item = day.logged.find((i) => membershipOf(i) === o.membership.id);
+    if (item !== undefined) by.set(o, item);
+  }
+  const claimed = new Set(by.values());
+  for (const o of done.filter((d) => !by.has(d))) {
+    const own = day.logged.filter(
+      (i) => membershipOf(i) === null && loggedKind(i) === o.workout?.kind
+    );
+    const item = own.find((i) => !claimed.has(i)) ?? own[0];
+    if (item === undefined) continue;
+    by.set(o, item);
+    claimed.add(item);
+  }
+  return [
+    ...day.plans.flatMap((o): DayEntry[] => {
+      if (o.status === "moved") return [];
+      if (o.status !== "done") return [{ kind: "plan", occurrence: o }];
+      const item = by.get(o);
+      return item === undefined ? [] : [{ kind: "done", occurrence: o, item }];
+    }),
+    ...day.logged
+      .filter((i) => !claimed.has(i))
+      .sort((a, b) => startOf(a).localeCompare(startOf(b)))
+      .map((item): DayEntry => ({ kind: "logged", item })),
+  ];
+}

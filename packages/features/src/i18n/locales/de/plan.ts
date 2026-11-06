@@ -131,8 +131,10 @@ export const plan = {
   "plan.planAgainStart": "Wann beginnt er?",
   "plan.startsRange": "{start} bis {end}. Jede Blockwoche läuft von {from} bis {to}.",
   "plan.scheduleFrom": "Ab {day} einplanen",
-  "plan.addToToday": "Zu heute hinzufügen",
-  "plan.addToDay": "Zu {day} hinzufügen",
+  "plan.workout": "Workout",
+  "plan.scheduledName": "{name} eingeplant",
+  "plan.noBlocksToSchedule":
+    "Noch keine Vorlagen oder vergangenen Blöcke. Neuer Block legt einen an.",
   "plan.blocksInProgress_one": "Laufender Block",
   "plan.blocksInProgress_other": "Laufende Blöcke",
   "plan.workoutCount_one": "{count} Workout",

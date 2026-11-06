@@ -15,6 +15,7 @@ import { exerciseSeries } from "../statistics/exercises";
 import {
   itemEffort,
   loggedKind,
+  membershipOf,
   trainingDay,
   type LoggedItem,
   type TrainingDay,
@@ -50,13 +51,6 @@ export type BlockRecap = DoneCount & {
   weeks: BlockWeek[];
   workouts: BlockWorkout[];
 };
-
-const membershipOf = (item: LoggedItem): string | null =>
-  item.kind === "climb"
-    ? item.session.membership_id
-    : item.kind === "hang"
-      ? item.session.membershipId
-      : item.activity.membershipId;
 
 /** The session that did a plan: logged against it, else logged on its own as its kind. */
 const doneBy = (day: TrainingDay, o: Occurrence): LoggedItem | undefined =>
