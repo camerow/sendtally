@@ -27,7 +27,15 @@ export function AnalyticsProvider({ children }: { children: React.ReactNode }): 
   return (
     <PostHogProvider
       apiKey={POSTHOG_API_KEY}
-      options={{ host: POSTHOG_HOST, enableSessionReplay: true }}
+      options={{
+        host: POSTHOG_HOST,
+        enableSessionReplay: true,
+        sessionReplayConfig: {
+          maskAllTextInputs: false,
+          maskAllImages: true,
+          maskAllSandboxedViews: true,
+        },
+      }}
       autocapture={{ captureTouches: true, captureScreens: false }}
     >
       <IdentifyUser />
