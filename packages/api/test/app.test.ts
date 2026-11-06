@@ -429,6 +429,48 @@ describe("app", () => {
     expect((await list()).find((c) => c.id === pinchId)?.notes).toEqual([]);
   });
 
+  it("deleting a climb clears it from the untitled sessions that only held it", async () => {
+    const user = "user_delete_holder";
+    const headers = { "x-test-user": user, "Content-Type": "application/json" };
+    const climb = (name: string) => ({ name, grade: { scale: "v", value: 4 }, kind: "send" });
+    const holder = (date: string, names: string[]) =>
+      postSession(
+        user,
+        logBody({
+          name: undefined,
+          startTime: undefined,
+          endTime: undefined,
+          date,
+          unscored: true,
+          location: undefined,
+          climbs: names.map(climb),
+        })
+      );
+    const fingerprintOf = async (res: Response) =>
+      ((await res.json()) as { session: { fingerprint: string } }).session.fingerprint;
+    const alone = await fingerprintOf(await holder("2026-09-01", ["Busta Pinch"]));
+    const shared = await fingerprintOf(await holder("2026-09-02", ["Busta Pinch", "Test"]));
+    const named = await fingerprintOf(
+      await postSession(user, logBody({ date: "2026-09-03", climbs: [climb("Busta Pinch")] }))
+    );
+    const { climbs } = (await (await testApp().request("/v1/climbs", { headers }, env)).json()) as {
+      climbs: Array<{ id: string; name: string }>;
+    };
+    const id = climbs.find((c) => c.name === "Busta Pinch")!.id;
+
+    const res = await testApp().request(`/v1/climbs/${id}`, { method: "DELETE", headers }, env);
+
+    expect(res.status).toBe(200);
+    const get = (fp: string) => testApp().request(`/v1/sessions/${fp}`, { headers }, env);
+    expect((await get(alone)).status).toBe(404);
+    const names = async (fp: string) =>
+      (
+        (await (await get(fp)).json()) as { session: { climbs: Array<{ name: string }> } }
+      ).session.climbs.map((c) => c.name);
+    expect(await names(shared)).toEqual(["Test"]);
+    expect(await names(named)).toEqual(["Busta Pinch"]);
+  });
+
   it("deletes a climb for good, sessions as logged, until its name is logged again", async () => {
     const user = "user_delete_climb";
     const headers = { "x-test-user": user, "Content-Type": "application/json" };
