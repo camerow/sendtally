@@ -175,6 +175,7 @@ describe("climbLog", () => {
     const bare = {
       source: "manual",
       name: "",
+      rpe_source: "none",
       start_at: "2026-09-04T10:00:00.000Z",
       climbs: [{ name: "Brad Pit", kind: "attempt", tries: 3 }],
     } as unknown as SessionWithClimbs;

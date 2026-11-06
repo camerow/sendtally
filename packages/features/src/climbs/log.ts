@@ -4,6 +4,7 @@ import { disciplineOf, gradeOptions, utcDate } from "../log-session/transforms";
 import type { GradeScale } from "../log-session/types";
 import { gradeBins } from "../trends/filter";
 import type { GradeBinVM, GradeRange } from "../trends/types";
+import { isClimbHolder } from "../sessions/meta";
 import { monthKey, monthLabel, monthName } from "../sessions/months";
 import { climbOf, isThisClimb, sendStyleOf, sendStyleText } from "./overview";
 import { dateLabel, disciplineLabel } from "./projects";
@@ -126,8 +127,7 @@ export function climbingSessionVM(
   climbs: readonly ClimbSummary[]
 ): ClimbingSessionVM {
   const found = [...new Set(session.climbs.flatMap((l) => climbOf(climbs, l) ?? []))];
-  const named =
-    found.length === 0 || session.source !== "manual" || (session.name ?? "").trim() !== "";
+  const named = found.length === 0 || !isClimbHolder(session);
   const row = (c: ClimbSummary): ClimbLogRowVM => {
     const logged = session.climbs.filter((l) => isThisClimb(c, l));
     const tries = logged.reduce((n, l) => n + l.tries, 0);

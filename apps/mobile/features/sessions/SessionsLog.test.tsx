@@ -54,7 +54,7 @@ const mockSummary = (id: string, name: string, at: string, sent: boolean): objec
 });
 
 const mockNamed = mockSession("s1", "Tuesday night session", "2026-10-21T18:00:00.000Z");
-const mockBare = mockSession("s2", "", "2026-10-12T10:00:00.000Z");
+const mockBare = { ...mockSession("s2", "", "2026-10-12T10:00:00.000Z"), rpe_source: "none" };
 
 jest.mock("expo-router", () => ({ router: { push: jest.fn() } }));
 jest.mock("../../lib/api", () => ({ useApi: () => undefined }));
