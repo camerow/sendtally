@@ -171,7 +171,7 @@ describe("climbLog", () => {
     ]);
   });
 
-  it("reads a bare session of climbs added on their own as those climbs, on its day", () => {
+  it("reads a bare session of climbs added on their own as those climbs, its day left to the row", () => {
     const bare = {
       source: "manual",
       name: "",
@@ -181,7 +181,7 @@ describe("climbLog", () => {
     } as unknown as SessionWithClimbs;
     const vm = climbingSessionVM(bare, climbs);
     expect(vm.named).toBe(false);
-    expect(vm.climbs.map((r) => r.meta)).toEqual(["Stanage Plantation · Sep 4"]);
+    expect(vm.climbs.map((r) => r.meta)).toEqual(["Stanage Plantation"]);
     expect(climbingSessionVM({ ...bare, climbs: [] }, climbs).named).toBe(true);
   });
 

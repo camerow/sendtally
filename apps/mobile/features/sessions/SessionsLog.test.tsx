@@ -159,7 +159,7 @@ describe("Log", () => {
     await render(<SessionsLog />);
     expect(screen.getByLabelText(/^Tuesday night session, /)).toBeTruthy();
     expect(screen.getByLabelText("V4, Pocket Rocket, 1 try, Flash")).toBeTruthy();
-    expect(screen.getByLabelText("V4, Brad Pit, Oct 12, 3 tries")).toBeTruthy();
+    expect(screen.getByLabelText("V4, Brad Pit, Boulder, 3 tries")).toBeTruthy();
     expect(screen.queryByText("Logged session")).toBeNull();
     expect(screen.queryByText("Leg day")).toBeNull();
     expect(screen.getByText("Start session")).toBeTruthy();
