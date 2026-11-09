@@ -36,7 +36,16 @@ jest.mock("@sendtally/features/climbs", () => ({
           tries: "23",
           best: "Flash",
           sessions: [],
-          notes: [{ id: "n1", day: "2026-10-30", dateLabel: "Oct 30", note: "Toe hook" }],
+          notes: [
+            { id: "n1", source: "page", day: "2026-10-30", dateLabel: "Oct 30", note: "Toe hook" },
+            {
+              id: "manual-9",
+              source: "session",
+              day: "2026-10-12",
+              dateLabel: "Oct 12",
+              note: "Wet top out",
+            },
+          ],
         },
       },
     },
@@ -136,6 +145,7 @@ describe("Climb detail", () => {
     await fireEvent.press(screen.getByText("Save"));
     expect(mockSaveNote).toHaveBeenCalledWith({
       id: "n1",
+      source: "page",
       day: "2026-10-30",
       note: "Toe hook right",
     });
@@ -147,6 +157,22 @@ describe("Climb detail", () => {
       );
     await fireEvent.press(screen.getByText("Toe hook"));
     await fireEvent.press(screen.getByText("Delete note"));
-    expect(mockDeleteNote).toHaveBeenCalledWith("n1");
+    expect(mockDeleteNote).toHaveBeenCalledWith(
+      expect.objectContaining({ id: "n1", source: "page" })
+    );
+  });
+
+  it("edits a note written in a session from the same sheet, rewritten on that session", async () => {
+    await render(<ClimbDetailScreen id="c1" />);
+    await fireEvent.press(screen.getByText("Wet top out"));
+    expect(screen.getByText("Edit note")).toBeTruthy();
+    await fireEvent.changeText(screen.getByDisplayValue("Wet top out"), "Wet top out, dry by 2");
+    await fireEvent.press(screen.getByText("Save"));
+    expect(mockSaveNote).toHaveBeenCalledWith({
+      id: "manual-9",
+      source: "session",
+      day: "2026-10-12",
+      note: "Wet top out, dry by 2",
+    });
   });
 });

@@ -10,7 +10,7 @@ import { t } from "../i18n";
 import { queries, useQueryPair, type QueryState } from "../query";
 import { patch, useLocalWrite } from "../outbox";
 import { climbDetailVM, type ClimbDetailVM } from "./overview";
-import { withClimbNote, withoutClimbNote } from "./projects";
+import { withClimbNote, withoutClimbNote, type ProjectNoteVM } from "./projects";
 
 /** The user's climbs and climbing sessions, and the training beside them, whose workouts log climbs too. */
 export type ClimbsData = {
@@ -36,9 +36,13 @@ export function useClimbs(api: SendtallyApi): ClimbsFeature {
 
 export type ClimbFeature = {
   state: QueryState<{ climb: ClimbSummary; vm: ClimbDetailVM }>;
-  /** Writes a note on the climb's page, a new one when it has no id yet; saved on the phone first. */
-  saveNote: (note: Omit<ClimbNote, "id"> & { id?: string }) => void;
-  deleteNote: (id: string) => void;
+  /**
+   * Writes a note: a new page note when it has no id, saved on the phone first; a session's note
+   * is rewritten on that session, on its day.
+   */
+  saveNote: (note: Omit<ClimbNote, "id"> & Partial<Pick<ProjectNoteVM, "id" | "source">>) => void;
+  /** Deletes a page note; a session's note is cleared. */
+  deleteNote: (note: Pick<ProjectNoteVM, "id" | "source">) => void;
   /** Deletes the climb, leaving its sessions as logged. */
   remove: () => void;
   reload: () => Promise<void>;
@@ -56,11 +60,24 @@ export function useClimb(api: SendtallyApi, idOrSlug: string, newId: () => strin
     return { status: "ready", data: { climb, vm: climbDetailVM(climb, sessions) } };
   }, [loaded, idOrSlug]);
   const id = state.status === "ready" ? state.data.climb.id : null;
+  const slug = state.status === "ready" ? state.data.climb.slug : null;
 
+  const setSessionNote = React.useCallback(
+    (fingerprint: string, note: string): void => {
+      if (slug === null) throw new Error("climb not loaded");
+      void api.setClimbNote(fingerprint, slug, note).then(reload, reload);
+    },
+    [api, slug, reload]
+  );
   const saveNote = React.useCallback(
-    ({ id: noteId, ...rest }: Omit<ClimbNote, "id"> & { id?: string }): void => {
+    ({
+      id: noteId,
+      source,
+      ...rest
+    }: Omit<ClimbNote, "id"> & Partial<Pick<ProjectNoteVM, "id" | "source">>): void => {
       if (id === null) throw new Error("climb not loaded");
-      const note = { id: noteId ?? newId(), ...rest };
+      if (source === "session" && noteId !== undefined) return setSessionNote(noteId, rest.note);
+      const note = { id: noteId ?? newId(), day: rest.day, note: rest.note };
       local(
         {
           key: `climb-note:${note.id}`,
@@ -71,11 +88,12 @@ export function useClimb(api: SendtallyApi, idOrSlug: string, newId: () => strin
         patch<ClimbSummary[]>(queries.climbs(api).queryKey, (list) => withClimbNote(list, id, note))
       );
     },
-    [api, id, local, newId]
+    [api, id, local, newId, setSessionNote]
   );
   const deleteNote = React.useCallback(
-    (noteId: string): void => {
+    ({ id: noteId, source }: Pick<ProjectNoteVM, "id" | "source">): void => {
       if (id === null) throw new Error("climb not loaded");
+      if (source === "session") return setSessionNote(noteId, "");
       local(
         {
           key: `climb-note:${noteId}`,
@@ -88,7 +106,7 @@ export function useClimb(api: SendtallyApi, idOrSlug: string, newId: () => strin
         )
       );
     },
-    [api, id, local]
+    [api, id, local, setSessionNote]
   );
   const remove = React.useCallback((): void => {
     if (id === null) return;
