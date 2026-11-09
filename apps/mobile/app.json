@@ -6,7 +6,10 @@
     "scheme": "sendtally",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
-    "platforms": ["ios", "android"],
+    "platforms": [
+      "ios",
+      "android"
+    ],
     "icon": "./assets/icon.png",
     "primaryColor": "#f9dc5c",
     "ios": {
@@ -15,10 +18,17 @@
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "CFBundleDevelopmentRegion": "en",
-        "CFBundleLocalizations": ["en", "de", "fr", "es"]
+        "CFBundleLocalizations": [
+          "en",
+          "de",
+          "fr",
+          "es"
+        ]
       },
       "usesAppleSignIn": true,
-      "associatedDomains": ["applinks:sendtally.com"]
+      "associatedDomains": [
+        "applinks:sendtally.com"
+      ]
     },
     "android": {
       "package": "com.sendtally.app",
@@ -30,7 +40,10 @@
         {
           "action": "VIEW",
           "autoVerify": true,
-          "category": ["BROWSABLE", "DEFAULT"],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ],
           "data": [
             {
               "scheme": "https",
@@ -110,7 +123,8 @@
           "icon": "./assets/notification-icon.png",
           "color": "#403f4c"
         }
-      ]
+      ],
+      "expo-asset"
     ],
     "experiments": {
       "typedRoutes": false
