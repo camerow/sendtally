@@ -53,6 +53,14 @@ const legs: WorkoutRecord = {
   updatedAt: "t",
 };
 
+const bouldering: WorkoutRecord = {
+  ...legs,
+  id: "bouldering",
+  kind: "climbing",
+  name: "Bouldering",
+  items: [],
+};
+
 // Mondays and Tuesdays; today is Tuesday 29 September.
 const plan = (workoutId: string, weekdays: (0 | 1)[] = [0, 1]): Plan => ({
   blocks: [],
@@ -85,9 +93,7 @@ describe("Today", () => {
     // Only today's card starts; Monday's row is the first Max hangs in the week.
     expect(screen.getAllByText("Start")).toHaveLength(1);
     await fireEvent.press(screen.getAllByText("Max hangs")[0]!);
-    expect(screen.getByText("Record it as done")).toBeTruthy();
     expect(screen.getByText("Reschedule")).toBeTruthy();
-    expect(screen.getByText("Not counted as missed")).toBeTruthy();
   });
 
   it("shows a planned workout once it is done in its place, as its logged session", async () => {
@@ -243,13 +249,24 @@ describe("Today", () => {
     });
   });
 
-  it("starts a planned climbing day as a live session linked to the plan", async () => {
-    await renderWithHang(<TodayScreen />, hangData(), { plan: plan("climb-limit") });
+  it("starts a planned climbing day with no items as a live session linked to the plan", async () => {
+    await renderWithHang(<TodayScreen />, hangData(), {
+      plan: plan("bouldering"),
+      workouts: [bouldering],
+    });
     await fireEvent.press(screen.getByText("Start"));
     expect(router.push).toHaveBeenCalledWith({
       pathname: "/session/live",
       params: expect.objectContaining({ membershipId: "m1" }),
     });
+  });
+
+  it("plays a built-in climbing workout's sets", async () => {
+    await renderWithHang(<TodayScreen />, hangData(), { plan: plan("climb-limit") });
+    await fireEvent.press(screen.getByText("Start"));
+    expect(router.push).toHaveBeenCalledWith(
+      expect.objectContaining({ pathname: "/workout/sets" })
+    );
   });
 
   it("skips today's workout from its ··· menu, with why", async () => {
@@ -306,7 +323,6 @@ describe("Today", () => {
     };
     await renderWithHang(<TodayScreen />, hangData(), { plan: oneOff });
     await fireEvent.press(screen.getByLabelText("More"));
-    expect(screen.getByText("Unschedule this workout")).toBeTruthy();
     await fireEvent.press(screen.getByText("Remove"));
     expect(mockPlanActions.deleteMembership).toHaveBeenCalledWith("m1");
   });

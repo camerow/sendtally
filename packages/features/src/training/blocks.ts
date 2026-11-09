@@ -1,6 +1,7 @@
 import type { Plan } from "@sendtally/api-client";
 import {
   blockEnd,
+  blockEnded,
   isDated,
   type Block,
   type CalendarDate,
@@ -43,6 +44,6 @@ export function blockGroups(blocks: readonly Block[], today: CalendarDate): Bloc
     templates: blocks.filter((b) => !isDated(b)).sort((a, b) => a.name.localeCompare(b.name)),
     current: byStart.filter((b) => b.start <= today && today < blockEnd(b)),
     upcoming: byStart.filter((b) => b.start > today),
-    past: byStart.filter((b) => blockEnd(b) <= today).reverse(),
+    past: byStart.filter((b) => blockEnded(b, today)).reverse(),
   };
 }

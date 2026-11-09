@@ -2,7 +2,7 @@ import { randomUUID } from "expo-crypto";
 import { router } from "expo-router";
 import React from "react";
 import { Text, View } from "react-native";
-import { blockEnd, blockWeekOn, isDated } from "@sendtally/core/hang";
+import { blockEnded, blockWeekOn, isDated } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
 import {
@@ -16,7 +16,7 @@ import {
 import { ScreenFrame } from "../../../components/ScreenFrame";
 import { Toast } from "../../../components/Toast";
 import { useApi } from "../../../lib/api";
-import { blockDates } from "../blocks/blockText";
+import { blockDateRange } from "../blocks/blockText";
 import { Button } from "../components/Button";
 import { DetailActions } from "../components/DetailActions";
 import { EditorHeader } from "../components/EditorHeader";
@@ -95,7 +95,7 @@ export function BlockScreen({
   // Gone, deleted elsewhere: Back still leaves.
   if (block === undefined || saved === undefined) return <ScreenFrame backLabel={backLabel} />;
   const dated = isDated(block) ? block : null;
-  const ended = dated !== null && blockEnd(dated) <= today;
+  const ended = blockEnded(block, today);
   const current = dated === null ? null : blockWeekOn(dated, today);
   const shown = Math.min(block.weeks, week ?? current ?? 1);
   const schedulable = members.some((m) => hasDays(scheduleOf(log.plan, m)));
@@ -133,15 +133,17 @@ export function BlockScreen({
         <DetailActions
           {...(!ended && { onEdit: draft.begin })}
           menu={[
-            {
-              icon: "copy",
-              title: t("plan.saveAsTemplate"),
-              hint: t("plan.saveAsTemplateHint"),
-              onPress: () => setNaming(true),
-            },
+            ...(dated === null
+              ? []
+              : [
+                  {
+                    icon: "copy" as const,
+                    title: t("plan.saveAsTemplate"),
+                    onPress: () => setNaming(true),
+                  },
+                ]),
             deleteRow({
               title: t("plan.deleteBlock"),
-              hint: t("plan.deleteBlockBody"),
               confirm: {
                 title: t("plan.deleteBlockTitle", { name: block.name || t("plan.untitled") }),
                 body: t("plan.deleteBlockBody"),
@@ -219,7 +221,7 @@ export function BlockScreen({
             <Label color={colors.fern}>{t("plan.finished")}</Label>
             <Title size={34}>{block.name}</Title>
             <Text style={[type.mono, { fontSize: 12, color: colors.textSecondary }]}>
-              {`${blockDates(dated)} · ${t("calendar.weeks", { count: block.weeks })}`}
+              {`${blockDateRange(dated)} · ${t("calendar.weeks", { count: block.weeks })}`}
             </Text>
           </View>
           <BlockRecapView recap={blockRecap(log, dated, today)} workout={log.workout} />

@@ -87,4 +87,6 @@ export const common = {
   "common.decimalPoint": "Dezimalkomma",
   "common.changeRefused": "Eine Änderung ließ sich nicht speichern und wurde zurückgenommen.",
   "common.offline": "Offline",
+  "common.addedTo": "Zu „{name}“ hinzugefügt",
+  "common.view": "Ansehen",
 } as const;

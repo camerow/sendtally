@@ -1,7 +1,14 @@
 import { randomUUID } from "expo-crypto";
 import React from "react";
 import { View } from "react-native";
-import { addDays, blockEnd, blockWeekOn, isDated, maxDate, type Block } from "@sendtally/core/hang";
+import {
+  blockEnded,
+  blockLastDay,
+  blockWeekOn,
+  isDated,
+  maxDate,
+  type Block,
+} from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { daysList, shortDate } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
@@ -65,7 +72,7 @@ export function ScheduleScreen({
   const all = plan.status === "ready" ? plan.data.blocks : [];
   const template = all.find((b) => b.id === flow.blockId && !isDated(b));
   const blocks =
-    template === undefined ? all.filter(isDated).filter((b) => blockEnd(b) > today) : [];
+    template === undefined ? all.filter(isDated).filter((b) => !blockEnded(b, today)) : [];
   const block: Block | null = template ?? blocks.find((b) => b.id === blockId) ?? null;
   const dated = block !== null && isDated(block) ? block : null;
   const planned = scheduledMemberships(draft, workoutId, block, () => "", 0);
@@ -125,7 +132,7 @@ export function ScheduleScreen({
           selected={draft.dates[0] ?? maxDate(block?.start ?? today, today)}
           picked={draft.dates}
           min={maxDate(block?.start ?? today, today)}
-          max={dated === null ? undefined : addDays(blockEnd(dated), -1)}
+          max={dated === null ? undefined : blockLastDay(dated)}
           today={today}
           shaded={() => false}
           blocks={blocks}

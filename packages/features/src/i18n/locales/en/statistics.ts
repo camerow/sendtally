@@ -35,7 +35,6 @@ export const statistics = {
   "statistics.sessionCount_other": "{count} sessions",
   "statistics.chartLabel": "Effort and sessions over the range",
   "statistics.whatYouTrained": "What you trained",
-  "statistics.blockWeek": "Week {at} of {of}",
   "statistics.exercisesMostDone": "Exercises · most done first",
   "statistics.timesCount_one": "{count} time",
   "statistics.timesCount_other": "{count} times",

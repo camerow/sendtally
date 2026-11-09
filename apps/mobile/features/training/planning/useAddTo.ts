@@ -1,5 +1,5 @@
 import { randomUUID } from "expo-crypto";
-import { isDated, type Membership } from "@sendtally/core/hang";
+import { isDated, type Block, type CalendarDate, type Membership } from "@sendtally/core/hang";
 import {
   blockDates,
   nextPosition,
@@ -24,6 +24,22 @@ export type AddTo = {
   plans: Membership[];
 };
 
+/** A workout in a block with no days yet, starting when the block does. */
+export const blockMembership = (
+  id: string,
+  workoutId: string,
+  block: Block,
+  today: CalendarDate,
+  position: number
+): Membership => ({
+  id,
+  workoutId,
+  blockId: block.id,
+  weekdays: [],
+  start: block.start ?? today,
+  position,
+});
+
 /** Adding workouts to a block or a day, as the add sheet and a workout's preview both do. */
 export function useAddTo(flow: AddFlow): AddTo {
   const { today } = useHangData();
@@ -45,14 +61,9 @@ export function useAddTo(flow: AddFlow): AddTo {
           position: 0,
         });
       else {
-        void actions.saveMembership({
-          id,
-          workoutId,
-          blockId: block.id,
-          weekdays: [],
-          start: block.start ?? today,
-          position: nextPosition(log.plan, block.id),
-        });
+        void actions.saveMembership(
+          blockMembership(id, workoutId, block, today, nextPosition(log.plan, block.id))
+        );
         // A day in a scheduled block: that day's weekday in its week.
         if (day !== null && isDated(block)) void actions.saveSchedule(blockDates(id, block, [day]));
       }

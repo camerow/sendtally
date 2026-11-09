@@ -4,7 +4,7 @@ import { View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
 import { useActivities } from "@sendtally/features/activities";
 import { tallyMeasuresOf } from "@sendtally/features/exercises";
-import { hangWorkoutOf } from "@sendtally/features/hang";
+import { hangWorkoutOf, setupLabel } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import { exerciseKey, useExercises } from "@sendtally/features/statistics";
 import {
@@ -15,7 +15,9 @@ import {
 } from "@sendtally/features/training";
 import { workoutMinutes, type LibraryWorkout, type WorkoutUse } from "@sendtally/features/workouts";
 import { ScreenFrame } from "../../../components/ScreenFrame";
+import { Toast } from "../../../components/Toast";
 import { useApi } from "../../../lib/api";
+import { AddToSheet } from "../components/AddToSheet";
 import { Button } from "../components/Button";
 import { DetailActions } from "../components/DetailActions";
 import { Label } from "../components/Label";
@@ -29,8 +31,8 @@ import { AddButton } from "../planning/AddButton";
 import { useDayChanges } from "../plan-days/useDayChanges";
 import { PlanList } from "../plans/PlanList";
 import { startWorkout } from "../timer/startWorkout";
-import { GripSetupCard } from "../workout-detail/GripSetupCard";
 import { ProtocolPanel } from "../workout-detail/ProtocolPanel";
+import { PreviewRow } from "./PreviewRow";
 import { AddToPlanFooter } from "./AddToPlanFooter";
 import { BodyPreview } from "./BodyPreview";
 import { DayLine } from "./DayLine";
@@ -60,11 +62,16 @@ function Detail({ workout, use, grip, adding, run }: DetailProps): React.ReactEl
   const session = useNextSession(workout.id);
   const exercises = useExercises(api).state;
   const activities = useActivities(api).state;
-  const detailActions = useWorkoutDetailActions(workout);
+  const { bar, addToBlock } = useWorkoutDetailActions(workout, { planned: run !== undefined });
   const hang = workout.kind === "hangboard" ? model.workout(workout.id) : undefined;
   const next = hang === undefined ? undefined : (hangWorkoutOf(workout, session) ?? hang);
   const gripId = grip ?? (hang === undefined ? "" : model.defaultGrip(hang));
   const changes = useDayChanges();
+  const last = next === undefined ? null : model.lastUsed(next, gripId);
+  const lastUsed =
+    next === undefined || last === null
+      ? undefined
+      : t("hang.lastUsedValue", { setup: setupLabel(next.kind, last, model.settings.units) });
 
   const openExercise = (name: string): (() => void) | undefined => {
     const found =
@@ -130,11 +137,8 @@ function Detail({ workout, use, grip, adding, run }: DetailProps): React.ReactEl
 
   return (
     <ScreenFrame
-      action={
-        adding === null && (
-          <DetailActions {...(run === undefined ? detailActions : { menu: detailActions.menu })} />
-        )
-      }
+      overlay={addToBlock.toast && <Toast {...addToBlock.toast} />}
+      action={adding === null && <DetailActions {...bar} />}
       footer={
         adding === null ? (
           <View style={{ gap: 8 }}>
@@ -168,16 +172,17 @@ function Detail({ workout, use, grip, adding, run }: DetailProps): React.ReactEl
             openExercise={openExercise}
           />
         ) : (
-          <>
-            <GripSetupCard workout={next} gripId={gripId} />
-            <ProtocolPanel workout={next} minutes={workoutMinutes(workout, session)} />
-          </>
+          <PreviewRow title={model.gripName(gripId)} detail="" note={lastUsed} />
         )}
       </View>
+      {next !== undefined && (
+        <ProtocolPanel workout={next} minutes={workoutMinutes(workout, session)} />
+      )}
       <WorkoutOverTime workout={workout} gripId={hang === undefined ? null : gripId} />
       <HistoryList items={history} onOpen={openActivity} />
       <PlanList workoutId={workout.id} name={workout.name} kind={workout.kind} />
       {changes.sheets}
+      {addToBlock.sheet && <AddToSheet {...addToBlock.sheet} />}
     </ScreenFrame>
   );
 }

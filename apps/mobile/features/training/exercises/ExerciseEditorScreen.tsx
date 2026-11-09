@@ -19,7 +19,7 @@ import { confirmDestructive } from "../../../lib/confirmDestructive";
 import { pressRow } from "../../../lib/press";
 import { ChipRow } from "../components/ChipRow";
 import { EditorHeader } from "../components/EditorHeader";
-import { KindNameField } from "../components/KindNameField";
+import { NameField } from "../components/NameField";
 import { SheetSection } from "../components/SheetSection";
 import { useHangData } from "../data/HangDataContext";
 import { LoadState } from "../data/LoadState";
@@ -129,8 +129,7 @@ function Form({
         />
       }
     >
-      <KindNameField
-        kind={kind}
+      <NameField
         value={form.name}
         onChange={(name) => setForm((f) => ({ ...f, name }))}
         onSubmit={save}
@@ -197,7 +196,7 @@ function Form({
         <Text style={[type.body, { fontSize: 12.5, color: colors.textSecondary }]}>
           {t("workouts.previewHint")}
         </Text>
-        <View accessible pointerEvents="none">
+        <View accessible pointerEvents="none" style={{ opacity: 0.4 }}>
           <ItemEditor
             kind={kind}
             item={{ exercise: previewName, doses: [newDoseFor(kind, doseMeasure)] }}
@@ -207,6 +206,7 @@ function Form({
             onChange={noop}
             onRemove={noop}
             onSwap={noop}
+            preview
           />
         </View>
       </SheetSection>

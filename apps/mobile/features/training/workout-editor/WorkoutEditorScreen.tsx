@@ -23,7 +23,7 @@ import { useApi } from "../../../lib/api";
 import { Button } from "../components/Button";
 import { EditorHeader } from "../components/EditorHeader";
 import { FocusField } from "../components/FocusField";
-import { KindNameField } from "../components/KindNameField";
+import { NameField } from "../components/NameField";
 import { useHangData } from "../data/HangDataContext";
 import { LoadState } from "../data/LoadState";
 import { ExercisePickerSheet } from "../exercise-picker/ExercisePickerSheet";
@@ -150,8 +150,7 @@ function Editor({
             paddingBottom: 28,
           }}
         >
-          <KindNameField
-            kind={state.kind}
+          <NameField
             value={state.name}
             onChange={(name) => setState((s) => ({ ...s, name }))}
             placeholder={t("workouts.namePlaceholder")}

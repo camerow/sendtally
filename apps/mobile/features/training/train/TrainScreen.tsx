@@ -29,21 +29,14 @@ const icon: Record<TrainView, IconName> = {
 
 const label = (v: TrainView): string =>
   v === "blocks"
-    ? t("plan.newBlock")
+    ? t("plan.createBlock")
     : v === "workouts"
-      ? t("workouts.newWorkout")
-      : t("workouts.newExercise");
-
-const hint = (v: TrainView): string =>
-  v === "blocks"
-    ? t("plan.newBlockHint")
-    : v === "workouts"
-      ? t("workouts.newWorkoutHint")
-      : t("workouts.newExerciseHint");
+      ? t("workouts.createWorkout")
+      : t("workouts.createExercise");
 
 /**
- * The Train tab: blocks, the workout library, and exercises. New makes the one in view, its
- * menu any of them; a workout or an exercise asks its category first.
+ * The Train tab: blocks, the workout library, and exercises. Create opens a sheet to make any
+ * of them; a workout or an exercise asks its category first.
  */
 export function TrainScreen(): React.ReactElement {
   const [view, setView] = React.useState<TrainView>("blocks");
@@ -83,11 +76,7 @@ export function TrainScreen(): React.ReactElement {
           </ScrollView>
         )}
       />
-      <Fab
-        label={label(view)}
-        onPress={() => create(view)}
-        menu={{ label: t("plan.createMenu"), onPress: () => setMenuOpen(true) }}
-      />
+      <Fab label={t("plan.create")} onPress={() => setMenuOpen(true)} />
       <Sheet
         visible={menuOpen}
         onClose={() => {
@@ -103,7 +92,6 @@ export function TrainScreen(): React.ReactElement {
               key={v}
               icon={icon[v]}
               title={label(v)}
-              hint={hint(v)}
               onPress={() => {
                 picked.current = v;
                 setMenuOpen(false);

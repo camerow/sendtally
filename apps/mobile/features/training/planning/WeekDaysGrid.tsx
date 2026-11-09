@@ -45,8 +45,7 @@ export type WeekDaysGridProps = {
 };
 
 /**
- * A workout's days in its block, a row per week. A day ringed in gold is set apart from every
- * week; a day gone by shows how it went. Editing, Every week on top sets them from this week
+ * A workout's days in its block, a row per week. A day gone by shows how it went. Editing, Every week on top sets them from this week
  * on (all weeks on a template), and each cell sets its week alone.
  */
 export function WeekDaysGrid({
@@ -77,8 +76,7 @@ export function WeekDaysGrid({
     key: string,
     label: { name: string; sub?: string; bold?: boolean },
     days: readonly Weekday[],
-    cell: (day: number) => { mark?: CellMark | null; onPress?: () => void },
-    differs: (day: number) => boolean
+    cell: (day: number) => { mark?: CellMark | null; onPress?: () => void }
   ): React.ReactElement => (
     <View key={key} style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
       <View style={{ flex: 1, minWidth: 0 }}>
@@ -106,7 +104,6 @@ export function WeekDaysGrid({
             on={mark === undefined ? days.includes(day as Weekday) : mark !== null}
             size={CELL}
             status={mark ?? undefined}
-            ring={mark === undefined && differs(day)}
             onPress={onPress}
             editing={onPress !== undefined}
             accessibilityLabel={`${label.name}, ${weekdayLong(day)}`}
@@ -161,8 +158,7 @@ export function WeekDaysGrid({
                   last: block.weeks,
                   every: true,
                 }),
-            }),
-            () => false
+            })
           )}
         </View>
       )}
@@ -185,11 +181,7 @@ export function WeekDaysGrid({
               onPress: () =>
                 onToggle({ week, day: day as Weekday, following: false, last: block.weeks }),
             };
-          },
-          (day) =>
-            every !== null &&
-            week >= (everyFrom ?? 1) &&
-            days.includes(day as Weekday) !== every.includes(day as Weekday)
+          }
         );
       })}
     </View>

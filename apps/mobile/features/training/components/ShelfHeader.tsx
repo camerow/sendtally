@@ -14,8 +14,6 @@ export type ShelfHeaderProps = {
   title: string;
   /** The category whose mark leads the title. */
   kind?: WorkoutKind;
-  /** Greyed, for the shelf of what has no category. */
-  muted?: boolean;
   /** Opens the whole shelf; left out when the shelf already shows all of it. */
   onSeeAll?: () => void;
   /** How many See all opens. */
@@ -28,7 +26,6 @@ export type ShelfHeaderProps = {
 export function ShelfHeader({
   title,
   kind,
-  muted = false,
   onSeeAll,
   count,
   addLabel,
@@ -38,11 +35,7 @@ export function ShelfHeader({
     <>
       {kind !== undefined && <CategoryMark kind={kind} size={28} />}
       <View style={{ flexShrink: 1, flexDirection: "row", alignItems: "baseline", gap: 10 }}>
-        <Title
-          size={26}
-          color={muted ? colors.textMuted : colors.gunmetal}
-          style={{ flexShrink: 1 }}
-        >
+        <Title size={26} color={colors.gunmetal} style={{ flexShrink: 1 }}>
           {title}
         </Title>
         {onSeeAll !== undefined && (

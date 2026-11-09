@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from "vitest";
 import type { WorkoutRecord } from "@sendtally/api-client";
-import { WORKOUT_KINDS, type Dose, type Item } from "@sendtally/core/hang";
+import { FOCI, WORKOUT_KINDS, type Dose, type Item } from "@sendtally/core/hang";
 import { setLocale } from "../i18n";
 import { BUILT_IN_WORKOUT_IDS, builtInWorkouts } from "./builtIns";
 import {
@@ -86,6 +86,10 @@ describe("libraryOf", () => {
     expect(builtIns.every((w) => w.description !== "")).toBe(true);
     setLocale("de");
     expect(builtInWorkouts().find((w) => w.id === "strength-5x5")?.name).toBe("5x5 Kraft");
+  });
+
+  it("gives every built-in something to play", () => {
+    expect(builtInWorkouts().filter((w) => w.items.length === 0)).toEqual([]);
   });
 
   it("shows alternation with built-ins whose exercises take turns by session", () => {
@@ -215,8 +219,14 @@ describe("libraryShelves", () => {
     expect(libraryShelves(mine, new Map()).map((s) => s.focus)).toEqual(["strength", null]);
   });
 
+  it("keeps every focus when asked, an empty one with no workouts", () => {
+    const shelves = libraryShelves([], new Map(), { empty: true });
+    expect(shelves.map((s) => s.focus)).toEqual([...FOCI, null]);
+    expect(shelves.every((s) => s.workouts.length === 0)).toBe(true);
+  });
+
   it("keeps the shelves a search finds something on, with only what it finds", () => {
-    const shelves = libraryShelves(library(), new Map(), "leg day");
+    const shelves = libraryShelves(library(), new Map(), { text: "leg day" });
     expect(shelves.map((s) => [s.focus, s.workouts.map((w) => w.id)])).toEqual([
       ["strength", ["w-legs"]],
     ]);
@@ -253,7 +263,10 @@ describe("summaries", () => {
     expect(bodySummary(byId("strength-5x5"))).toBe("3 exercises");
     expect(bodySummary(byId("w-stretch"))).toBe("1 exercise");
     expect(bodySummary(byId("h-mine"))).toBe("6 × 7s on / 3s off · 3 sets · 3:00 rest");
-    expect(bodySummary(byId("climb-limit"))).toBeNull();
+    expect(bodySummary(byId("climb-limit"))).toBe("5 sets");
+    expect(bodySummary(byId("climb-4x4"))).toBe("4 sets of 4 climbs");
+    expect(bodySummary(byId("climb-arc"))).toBe("2 × 20:00 on the wall");
+    expect(bodySummary({ kind: "climbing", items: [] })).toBeNull();
     expect(
       bodySummary({
         kind: "climbing",

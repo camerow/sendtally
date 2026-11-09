@@ -3,15 +3,14 @@ import { View } from "react-native";
 import type { WorkoutKind } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
-import { blockOfMembership, usePlan } from "@sendtally/features/training";
+import { blockOfMembership, daysThisWeek, usePlan } from "@sendtally/features/training";
 import { useApi } from "../../../lib/api";
 import { Label } from "../components/Label";
 import { PlanRow } from "../components/PlanRow";
 import { useHangData } from "../data/HangDataContext";
 import { MiniWeek } from "../plan/MiniWeek";
 import { usePlanActions } from "../plan/usePlanActions";
-import { blockTag } from "../blocks/blockText";
-import { membershipTag, oneOffDate } from "./planText";
+import { plannedIn } from "./planText";
 import { confirmDestructive } from "../../../lib/confirmDestructive";
 
 export type PlanListProps = { workoutId: string; name: string; kind: WorkoutKind };
@@ -26,19 +25,18 @@ export function PlanList({ workoutId, name, kind }: PlanListProps): React.ReactE
   if (plan === null || members.length === 0) return null;
   return (
     <View style={{ gap: 8 }}>
-      <Label color={colors.gunmetal}>{t("hang.planned")}</Label>
+      <Label color={colors.gunmetal}>{t("plan.plannedIn")}</Label>
       {members.map((m) => {
         const block = blockOfMembership(plan, m);
-        const week = block === null ? null : blockTag(block.name, block, today);
+        const { name: where, meta } = plannedIn(m, block, today);
         return (
           <PlanRow
             key={m.id}
-            tag={week ?? membershipTag(m, block, today)}
-            tagColor={m.start <= today ? colors.gunmetal : colors.petalInk}
-            meta={[...(block === null || week !== null ? [] : [block.name]), ...oneOffDate(m)].join(
-              " · "
-            )}
-            trailing={<MiniWeek kind={kind} m={m} />}
+            name={where}
+            meta={meta}
+            trailing={
+              <MiniWeek kind={kind} m={{ ...m, weekdays: daysThisWeek(plan, m, block, today) }} />
+            }
             onRemove={() =>
               confirmDestructive({
                 title: t("plan.removeTitle", { title: name }),

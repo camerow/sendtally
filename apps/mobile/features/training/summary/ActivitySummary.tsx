@@ -55,7 +55,6 @@ export function ActivitySummary({
         { value: String(sets), label: t("summary.sets") },
       ]}
       target={{ kind: "activity", record: activity }}
-      rpe={activity.rpe}
       onDelete={() => void actions.deleteActivity(activity.id)}
     >
       {results.length > 0 && (

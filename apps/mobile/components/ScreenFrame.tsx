@@ -4,6 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { colors } from "@sendtally/design/tokens";
 import { BackButton } from "./BackButton";
 import { KeypadScrollView } from "./KeypadScrollView";
+import { ToastFooter } from "./Toast";
 
 export type ScreenFrameProps = {
   children?: React.ReactNode;
@@ -15,7 +16,7 @@ export type ScreenFrameProps = {
   header?: React.ReactNode;
   /** Pinned under the scrolling body, hidden while the keypad is up. */
   footer?: React.ReactNode;
-  /** Over the whole screen, as a toast is. */
+  /** Over the whole screen, as a toast is, which sits above the footer. */
   overlay?: React.ReactNode;
 };
 
@@ -29,6 +30,8 @@ export function ScreenFrame({
   overlay,
 }: ScreenFrameProps): React.ReactElement {
   const [keypad, setKeypad] = React.useState(false);
+  const [footerHeight, setFooterHeight] = React.useState(0);
+  const shown = footer !== undefined && !keypad;
   return (
     <SafeAreaView edges={["top", "bottom"]} style={{ flex: 1, backgroundColor: colors.white }}>
       {header ?? (
@@ -60,8 +63,10 @@ export function ScreenFrame({
         >
           {children}
         </KeypadScrollView>
-        {footer !== undefined && !keypad && (
+        {shown && (
           <View
+            testID="screen-footer"
+            onLayout={(e) => setFooterHeight(e.nativeEvent.layout.height)}
             style={{
               paddingTop: 12,
               paddingHorizontal: 18,
@@ -74,7 +79,7 @@ export function ScreenFrame({
           </View>
         )}
       </KeyboardAvoidingView>
-      {overlay}
+      <ToastFooter.Provider value={shown ? footerHeight : 0}>{overlay}</ToastFooter.Provider>
     </SafeAreaView>
   );
 }

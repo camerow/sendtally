@@ -12,6 +12,7 @@ const mockApi = {
   saveExercise: jest.fn<(...args: unknown[]) => Promise<unknown>>(),
   mergeExercise: jest.fn<(...args: unknown[]) => Promise<unknown>>(),
   removeExercise: jest.fn<(...args: unknown[]) => Promise<unknown>>(),
+  saveWorkout: jest.fn<(...args: unknown[]) => Promise<unknown>>(),
 };
 
 jest.mock("../../../lib/api", () => ({ useApi: () => mockApi }));
@@ -173,12 +174,45 @@ describe("exercise screen", () => {
 
     await renderWithHang(<ExerciseScreen id="e2" />, hangData(), world);
     await fireEvent.press(screen.getByLabelText("More"));
-    expect(screen.getByText("Nothing uses it, so it goes for good.")).toBeTruthy();
     await fireEvent.press(screen.getByText("Delete"));
     expect(Alert.alert).toHaveBeenLastCalledWith(
       "Delete Squat?",
       "Nothing uses it, so it goes for good.",
       expect.anything()
     );
+  });
+
+  it("adds itself to the end of one of the user's workouts from ···, then says where it went", async () => {
+    mockApi.saveWorkout.mockResolvedValue({ workout: legs });
+    await renderWithHang(<ExerciseScreen id="e2" />, hangData(), world);
+    await fireEvent.press(screen.getByLabelText("More"));
+    await fireEvent.press(screen.getByText("Add to workout"));
+    await fireEvent.press(screen.getByRole("radio", { name: "Gym, legs" }));
+    await act(async () => undefined);
+    expect(mockApi.saveWorkout).toHaveBeenCalledWith(
+      "legs",
+      expect.objectContaining({
+        items: [
+          expect.objectContaining({ exercise: "back squat" }),
+          expect.objectContaining({ exercise: "Squat", doses: [expect.anything()] }),
+        ],
+      })
+    );
+    expect(screen.getByText("Added to Gym, legs")).toBeTruthy();
+    await fireEvent.press(screen.getByText("View"));
+    expect(router.push).toHaveBeenLastCalledWith({
+      pathname: "/workout/[id]",
+      params: { id: "legs" },
+    });
+  });
+
+  it("shows a workout that already has it as checked, and adds nothing on a tap", async () => {
+    await renderWithHang(<ExerciseScreen id="e1" />, hangData(), world);
+    await fireEvent.press(screen.getByLabelText("More"));
+    await fireEvent.press(screen.getByText("Add to workout"));
+    const row = screen.getByRole("radio", { name: "Gym, legs" });
+    expect(row.props.accessibilityState).toEqual({ checked: true });
+    await fireEvent.press(row);
+    expect(mockApi.saveWorkout).not.toHaveBeenCalled();
   });
 });

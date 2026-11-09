@@ -21,7 +21,7 @@ function Library(): React.ReactElement {
     <View style={{ gap: 14 }}>
       {state.status === "ready" ? (
         <LibraryBrowser library={state.data} onPick={open}>
-          {libraryShelves(state.data.workouts, state.data.usage).map((shelf) => (
+          {libraryShelves(state.data.workouts, state.data.usage, { empty: true }).map((shelf) => (
             <LibraryShelf
               key={focusParam(shelf.focus)}
               shelf={shelf}

@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   blockEnd,
+  blockEnded,
+  blockLastDay,
   blockWeekOn,
   changeFrom,
   doneAsPrescribed,
@@ -70,6 +72,13 @@ describe("blocks", () => {
     expect.soft(blockWeekOn(block, "2026-11-09")).toBe(2);
     expect.soft(blockWeekOn(block, "2026-12-13")).toBe(6);
     expect.soft(blockWeekOn(block, "2026-12-14")).toBeNull();
+  });
+
+  it("ends after its last day, and a template never does", () => {
+    expect(blockLastDay(block)).toBe("2026-12-13");
+    expect.soft(blockEnded(block, "2026-12-13")).toBe(false);
+    expect.soft(blockEnded(block, "2026-12-14")).toBe(true);
+    expect.soft(blockEnded({ ...block, start: null }, "2099-01-01")).toBe(false);
   });
 });
 

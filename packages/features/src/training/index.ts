@@ -76,6 +76,7 @@ export {
   hasDays,
   ownWeeksAfter,
   scheduleOf,
+  daysThisWeek,
   toggleDay,
   usualDays,
   withFollowing,

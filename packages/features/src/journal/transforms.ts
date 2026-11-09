@@ -17,7 +17,7 @@ import {
   type LogTraining,
   type TripSpan,
 } from "./types";
-import { addDays, blockEnd } from "@sendtally/core/hang";
+import { blockLastDay } from "@sendtally/core/hang";
 import { blockTagOf } from "../training/recap";
 
 const KIND_LABELS: Record<EntryKind, MessageKey> = {
@@ -120,10 +120,6 @@ export function logSegmentItems(items: LogItem[], segment: LogSegment): LogItem[
 export const TRAINING_LOG_SCOPES: LogScope[] = LOG_SCOPES.filter((s) => s !== "trips");
 
 const NO_TRAINING: LogTraining = { plan: { blocks: [], memberships: [] }, finished: [] };
-
-/** A block's last day, which its finished row sits on. */
-export const blockLastDay = (block: Parameters<typeof blockEnd>[0]): string =>
-  addDays(blockEnd(block), -1);
 
 export function logItems(
   sessions: SessionRow[],

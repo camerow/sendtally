@@ -21,7 +21,6 @@ export type SummaryFrameProps = {
   title: string;
   tiles: readonly Stat[];
   target: PostTarget;
-  rpe: number | null;
   onDelete: () => void;
   children: React.ReactNode;
 };
@@ -33,7 +32,6 @@ export function SummaryFrame({
   title,
   tiles,
   target,
-  rpe,
   onDelete,
   children,
 }: SummaryFrameProps): React.ReactElement {
@@ -55,8 +53,10 @@ export function SummaryFrame({
   };
   const remove = deleteRow({
     title: t("summary.deleteWorkout"),
-    hint: post.state?.kind === "posted" ? t("summary.deleteHintStrava") : t("summary.deleteHint"),
-    confirm: { title: t("workouts.deleteTitle", { name: title }) },
+    confirm: {
+      title: t("workouts.deleteTitle", { name: title }),
+      ...(post.state?.kind === "posted" && { body: t("summary.deleteHintStrava") }),
+    },
     onDelete,
   });
 
@@ -65,7 +65,7 @@ export function SummaryFrame({
       action={
         <DetailActions
           onEdit={() => router.push({ pathname: "/activity/[id]/edit", params: { id } })}
-          menu={post.state === null ? [remove] : [stravaRow(post.state, rpe, onStrava), remove]}
+          menu={post.state === null ? [remove] : [stravaRow(post.state, onStrava), remove]}
         />
       }
     >

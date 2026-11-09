@@ -36,8 +36,6 @@ export type PlanGridRow = {
   press?: (day: number) => (() => void) | undefined;
   /** Sets or clears a weekday; a day it gives nothing for reads its mark instead. */
   toggle?: (day: number) => (() => void) | undefined;
-  /** Ringed in gold where a week's day is set apart from the first week. */
-  rings?: readonly boolean[];
 };
 
 /** What a grid shows of its rows beyond the workouts: a week's numbers, a dated week, days to tap. */
@@ -49,7 +47,6 @@ export type GridOptions = {
   marks?: (m: Membership) => readonly (CellMark | null)[];
   press?: (m: Membership, day: number) => (() => void) | undefined;
   toggle?: (m: Membership, day: number) => (() => void) | undefined;
-  rings?: (m: Membership) => readonly boolean[];
 };
 
 /** How grips read: their names, and the grip a one-grip workout was set to. */
@@ -121,7 +118,7 @@ export function planGridRows(
   grips: GripNames,
   options: GridOptions = {}
 ): PlanGridRow[] {
-  const { back, week, marks, toggle, press, rings } = options;
+  const { back, week, marks, toggle, press } = options;
   return members.flatMap((m): PlanGridRow[] => {
     const w = workout(m.workoutId);
     if (w === undefined) return [];
@@ -149,7 +146,6 @@ export function planGridRows(
         ...(marks !== undefined && { marks: marks(m) }),
         open: () => openMembership(m, back),
         ...(toggle !== undefined && { toggle: (day: number) => toggle(m, day) }),
-        ...(rings !== undefined && { rings: rings(m) }),
         ...(press !== undefined && { press: (day: number) => press(m, day) }),
       },
     ];
