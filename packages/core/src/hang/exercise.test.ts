@@ -21,9 +21,10 @@ describe("measureOf", () => {
     expect(defaultMeasure("climbing")).toBe("reps");
   });
 
-  it("offers climbing only climbs and time on the wall", () => {
-    expect(measuresFor("climbing")).toEqual(["reps", "seconds"]);
+  it("offers climbing climbs, time on the wall and laps, and laps to nothing else", () => {
+    expect(measuresFor("climbing")).toEqual(["reps", "seconds", "laps"]);
     expect(measuresFor("strength")).toHaveLength(5);
+    expect(measuresFor("strength")).not.toContain("laps");
     expect(measuresFor("hangboard")).toEqual(["hang", "repsWeight", "secondsWeight"]);
   });
 });

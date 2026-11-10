@@ -79,4 +79,8 @@ export const activities = {
   "activities.lastTimeLine": "La dernière fois : {summary}",
   "activities.circuitNamed": "Circuit {name}",
   "activities.resume": "Reprendre",
+  "activities.lapsOf_one": "{count} tour de {amount}",
+  "activities.lapsOf_other": "{count} tours de {amount}",
+  "activities.lapsClean_one": "{count} tour · {clean} propre",
+  "activities.lapsClean_other": "{count} tours · {clean} propres",
 } as const;

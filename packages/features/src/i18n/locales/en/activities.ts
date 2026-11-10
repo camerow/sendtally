@@ -79,4 +79,8 @@ export const activities = {
   "activities.lastTimeLine": "Last time: {summary}",
   "activities.circuitNamed": "{name} circuit",
   "activities.resume": "Resume",
+  "activities.lapsOf_one": "{count} lap of {amount}",
+  "activities.lapsOf_other": "{count} laps of {amount}",
+  "activities.lapsClean_one": "{count} lap · {clean} clean",
+  "activities.lapsClean_other": "{count} laps · {clean} clean",
 } as const;

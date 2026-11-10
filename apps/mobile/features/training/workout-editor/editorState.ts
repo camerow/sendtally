@@ -1,6 +1,7 @@
 import { randomUUID } from "expo-crypto";
 import { gripMeasureOf, withItemIds, type Dose, type Item } from "@sendtally/core/hang";
 import { t } from "@sendtally/features/i18n";
+import type { EnduranceUnit } from "@sendtally/features/log-session";
 import type { WorkoutDraft } from "@sendtally/features/workouts";
 import type { Picked } from "../exercise-picker/types";
 import { fingersMeasure, newDoseFor, type DoseMeasure } from "./doseFields";
@@ -106,6 +107,14 @@ function savedName(dose: Dose): Dose {
 /** The last dose dropped, while two are left to take turns. */
 export const withoutLastDose = (item: Item): Item =>
   item.doses.length > 2 ? { ...item, doses: item.doses.slice(0, -1) } : item;
+
+/** What a circuit's lap is, the same on every dose: moves, or a time on the wall. */
+export const withLapUnit = (item: Item, unit: EnduranceUnit): Item => ({
+  ...item,
+  doses: item.doses.map(({ reps, onS, ...dose }) =>
+    unit === "seconds" ? { ...dose, onS: onS ?? 240 } : { ...dose, reps: reps ?? 40 }
+  ),
+});
 
 /** The rest between sets, the same on every dose; none at zero. */
 export const withSetRest = (item: Item, seconds: number): Item => ({

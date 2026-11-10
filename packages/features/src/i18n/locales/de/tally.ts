@@ -35,4 +35,11 @@ export const tally = {
   "tally.restClock": "Pause {time}",
   "tally.timeLeft": "noch {time}",
   "tally.skipRest": "Pause überspringen",
+  "tally.lapLabel": "Runde {lap}",
+  "tally.allLapsDone": "Alle Runden geschafft",
+  "tally.onTheWall": "In der Wand",
+  "tally.addLap": "+ Runde hinzufügen",
+  "tally.startLap": "Runde starten",
+  "tally.restTook": "Pause {time}",
+  "tally.startRest": "Pause starten",
 } as const;

@@ -40,6 +40,8 @@ export {
   climbsLine,
   climbsTotal,
   isClimbingSets,
+  lapPlanOf,
+  lapsLine,
   wallChip,
   wallLine,
   type ClimbsTotal,

@@ -69,6 +69,7 @@ export const DOSE_FIELDS_BY_MEASURE: Record<Exclude<DoseMeasure, "hang">, readon
     { ...count("reps", "workouts.dose.climbs"), placeholder: "workouts.dose.anyClimbs" },
   ],
   wallTime: [count("sets", "workouts.dose.sets"), time("onS", "workouts.dose.time")],
+  laps: [count("sets", "workouts.dose.laps"), count("reps", "workouts.dose.moves")],
   reps: [count("sets", "workouts.dose.sets"), count("reps", "workouts.dose.reps")],
   repsWeight: [count("sets", "workouts.dose.sets"), count("reps", "workouts.dose.reps"), weight],
   seconds: [count("sets", "workouts.dose.sets"), time("onS", "workouts.dose.hold")],
@@ -100,6 +101,7 @@ const NEW_FINGERS_DOSE: Record<GripMeasure, Dose> = {
 const NEW_DOSE_BY_MEASURE: Record<Exclude<DoseMeasure, "hang">, Dose> = {
   climbs: { sets: 4, reps: 4, setRestS: 240 },
   wallTime: { sets: 2, onS: 1200, setRestS: 300 },
+  laps: { sets: 3, reps: 40, setRestS: 240 },
   reps: { sets: 3, reps: 10 },
   repsWeight: { sets: 3, reps: 8 },
   seconds: { sets: 1, onS: 60 },
@@ -122,9 +124,20 @@ export const doseMeasureOf = (
   e: { kind: ExerciseKind; measure: ExerciseMeasure } | undefined
 ): DoseMeasure | undefined => tallyMeasureOf(e) ?? e?.measure;
 
-/** The fields an item asks for: a grip's on the hangboard, else its exercise's measure, else its workout kind's. */
-export const doseFieldsFor = (kind: WorkoutKind, measure?: DoseMeasure): readonly DoseField[] => {
+/** A circuit's laps timed: each lap is a time on the wall rather than a number of moves. */
+const TIMED_LAP_FIELDS = [count("sets", "workouts.dose.laps"), time("onS", "workouts.dose.time")];
+
+/**
+ * The fields an item asks for: a grip's on the hangboard, else its exercise's measure, else
+ * its workout kind's. A circuit's laps are moves, or time when its first dose holds a time.
+ */
+export const doseFieldsFor = (
+  kind: WorkoutKind,
+  measure?: DoseMeasure,
+  dose?: Dose
+): readonly DoseField[] => {
   if (kind === "hangboard") return FINGERS_FIELDS[fingersMeasure(measure)];
+  if (measure === "laps" && dose?.onS !== undefined) return TIMED_LAP_FIELDS;
   return byMeasure(kind, measure) ? DOSE_FIELDS_BY_MEASURE[measure] : DOSE_FIELDS_OF[kind];
 };
 
