@@ -1,6 +1,11 @@
 appId: com.sendtally.app
-# The full form sits in the Log button's sheet.
+# The full form sits in the Log button's sheet, or on the empty log itself before the first session.
 ---
-- tapOn:
-    id: "fab"
-- tapOn: "Log session, .*"
+- runFlow:
+    when:
+      visible:
+        id: "fab"
+    commands:
+      - tapOn:
+          id: "fab"
+- tapOn: "Log session(, .*)?"

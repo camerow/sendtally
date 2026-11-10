@@ -76,4 +76,5 @@ export const climbs = {
   "climbs.logSession": "Session eintragen",
   "climbs.deleteClimb": "Kletterei löschen",
   "climbs.deleteConfirm": "{name} löschen? Ihre Sessions bleiben wie eingetragen.",
+  "climbs.importLog": "Logbuch importieren",
 } as const;

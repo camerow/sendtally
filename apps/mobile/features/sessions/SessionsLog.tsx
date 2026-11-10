@@ -89,6 +89,10 @@ export function SessionsLog({ workout = null }: { workout?: string | null }): Re
         : logItems(sessions, entries ?? [], hangSessions ?? [], activities ?? [], blocks),
     [sessions, entries, hangSessions, activities, blocks]
   );
+  const empty =
+    items !== null &&
+    logSegmentItems(items, segment).length === 0 &&
+    (segment === "climbing" || workout === null);
   const progress = useSharedValue(segment === "climbing" ? 0 : 1);
 
   const sessionCount = sessions?.length;
@@ -146,7 +150,7 @@ export function SessionsLog({ workout = null }: { workout?: string | null }): Re
           );
         }}
       />
-      <LogFab />
+      {!empty && <LogFab />}
     </SafeAreaView>
   );
 }

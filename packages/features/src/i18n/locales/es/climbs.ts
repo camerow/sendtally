@@ -76,4 +76,5 @@ export const climbs = {
   "climbs.logSession": "Registrar sesión",
   "climbs.deleteClimb": "Eliminar vía",
   "climbs.deleteConfirm": "¿Eliminar {name}? Sus sesiones quedan como se registraron.",
+  "climbs.importLog": "Importar un registro",
 } as const;

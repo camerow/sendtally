@@ -38,8 +38,18 @@ const label = (v: TrainView): string =>
  * The Train tab: blocks, the workout library, and exercises. Create opens a sheet to make any
  * of them; a workout or an exercise asks its category first.
  */
-export function TrainScreen(): React.ReactElement {
+export function TrainScreen({
+  requested = null,
+}: {
+  /** A link's `view` param, opened once and then cleared. */
+  requested?: string | null;
+}): React.ReactElement {
   const [view, setView] = React.useState<TrainView>("blocks");
+  const asked = VIEWS.find((v) => v === requested);
+  if (asked !== undefined && asked !== view) setView(asked);
+  React.useEffect(() => {
+    if (asked !== undefined) router.setParams({ view: undefined });
+  }, [asked]);
   const [adding, setAdding] = React.useState<"workout" | "exercise" | null>(null);
   const [menuOpen, setMenuOpen] = React.useState(false);
   const picked = React.useRef<TrainView | null>(null);

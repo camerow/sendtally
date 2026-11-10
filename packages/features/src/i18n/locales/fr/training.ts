@@ -15,4 +15,11 @@ export const training = {
     "Les notifications sont désactivées pour sendtally. Active-les dans les réglages de ton téléphone.",
   "training.reminderPromptBody":
     "Une notification à {time} les jours où quelque chose est prévu. Modifiable à tout moment dans les réglages.",
+  "training.firstWorkout": "Première séance",
+  "training.startWorkout": "Commencer une séance",
+  "training.logWorkout": "Noter une séance",
+  "training.exampleHangs": "Suspensions max",
+  "training.exampleHangsMeta": "25m · 2 prises",
+  "training.examplePull": "Tirage et gainage",
+  "training.examplePullMeta": "50m · 4 exercices",
 } as const;

@@ -18,6 +18,7 @@ import { HANG_ROW_HEIGHT } from "./HangRow";
 import { BLOCK_TAG_HEIGHT } from "./SessionRow";
 import { BLOCK_DONE_ROW_HEIGHT } from "./BlockDoneRow";
 import { emptyBody, emptyLabel } from "./emptyStyles";
+import { TrainingEmpty } from "./TrainingEmpty";
 import { TrainingLogCell } from "./TrainingLogCell";
 import { WorkoutFilterBar } from "./WorkoutFilterBar";
 
@@ -176,7 +177,9 @@ export function TrainingLog({
           />
         }
         ListEmptyComponent={
-          items === null || inScope.length > 0 ? null : filters.scope === "journal" ? (
+          items === null || inScope.length > 0 ? null : all.length === 0 && workout === null ? (
+            <TrainingEmpty />
+          ) : filters.scope === "journal" ? (
             <View style={{ alignItems: "center", gap: 8, paddingHorizontal: 28, paddingTop: 44 }}>
               <Text style={emptyLabel}>{t("journal.emptyTitle")}</Text>
               <Text style={emptyBody}>{t("journal.emptyBody")}</Text>

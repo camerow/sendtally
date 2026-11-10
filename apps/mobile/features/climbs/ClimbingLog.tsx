@@ -19,7 +19,7 @@ import { Icon } from "../../components/Icon";
 import { TextInput } from "../../components/TextInput";
 import { useApi } from "../../lib/api";
 import { SectionHeader } from "../sessions/SectionHeader";
-import { emptyBody, emptyLabel } from "../sessions/emptyStyles";
+import { ClimbingEmpty } from "./ClimbingEmpty";
 import { ClimbingLogCell } from "./ClimbingLogCell";
 import { GradeFilterSheet } from "./GradeFilterSheet";
 import type { ClimbingLogRow } from "./types";
@@ -65,6 +65,7 @@ export function ClimbingLog({ items, header, onRefresh }: ClimbingLogProps): Rea
   const [refreshing, setRefreshing] = React.useState(false);
   const ready = state.status === "ready" ? state.data : null;
   const filtered = query.trim() !== "" || grade !== null || status !== "all";
+  const searchable = filtered || state.status === "error" || (ready?.climbs.length ?? 0) > 0;
   const log = React.useMemo(
     () =>
       ready === null ? null : climbLog(ready.climbs, ready.sessions, { query, grade, status }),
@@ -111,10 +112,7 @@ export function ClimbingLog({ items, header, onRefresh }: ClimbingLogProps): Rea
         {ready.climbs.length === 0 ? t("climbs.empty") : t("climbs.noMatches")}
       </Text>
     ) : !filtered && items !== null ? (
-      <View style={{ alignItems: "center", gap: 8, paddingHorizontal: 28, paddingTop: 44 }}>
-        <Text style={emptyLabel}>{t("sessions.firstSessionLabel")}</Text>
-        <Text style={emptyBody}>{t("sessions.firstSessionBody")}</Text>
-      </View>
+      <ClimbingEmpty />
     ) : null;
 
   return (
@@ -138,66 +136,70 @@ export function ClimbingLog({ items, header, onRefresh }: ClimbingLogProps): Rea
         ListHeaderComponent={
           <>
             {header}
-            <View style={{ gap: 10, paddingHorizontal: 18, paddingTop: 4, paddingBottom: 6 }}>
-              <View
-                style={{
-                  minHeight: 50,
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: 8,
-                  paddingHorizontal: 14,
-                  borderRadius: radius.control + 2,
-                  backgroundColor: colors.surfaceSoft,
-                }}
-              >
-                <Icon name="search" color={colors.textSecondary} size={18} strokeWidth={2} />
-                <TextInput
-                  value={query}
-                  onChangeText={setQuery}
-                  autoCorrect={false}
-                  autoCapitalize="none"
-                  placeholder={t("climbs.search")}
-                  placeholderTextColor={colors.textFaint}
-                  accessibilityLabel={t("climbs.search")}
+            {searchable && (
+              <View style={{ gap: 10, paddingHorizontal: 18, paddingTop: 4, paddingBottom: 6 }}>
+                <View
                   style={{
-                    flex: 1,
-                    minHeight: 48,
-                    fontFamily: fonts.sans,
-                    fontSize: 15,
-                    color: colors.gunmetal,
+                    minHeight: 50,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 8,
+                    paddingHorizontal: 14,
+                    borderRadius: radius.control + 2,
+                    backgroundColor: colors.surfaceSoft,
                   }}
-                />
-              </View>
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                keyboardShouldPersistTaps="handled"
-                style={{ marginHorizontal: -18 }}
-                contentContainerStyle={{ gap: 8, paddingHorizontal: 18 }}
-              >
-                <Chip
-                  label={grade === null ? t("climbs.anyGrade") : gradeFilterLabel(grade)}
-                  active={grade !== null}
-                  uppercase={false}
-                  icon="insights"
-                  onPress={() => setPicking(true)}
-                />
-                {CLIMB_STATUSES.map((s) => (
-                  <Chip
-                    key={s}
-                    label={t(STATUS_LABELS[s], { n: log?.counts[s] ?? 0 })}
-                    active={s === status}
-                    uppercase={false}
-                    onPress={() => setStatus(s)}
+                >
+                  <Icon name="search" color={colors.textSecondary} size={18} strokeWidth={2} />
+                  <TextInput
+                    value={query}
+                    onChangeText={setQuery}
+                    autoCorrect={false}
+                    autoCapitalize="none"
+                    placeholder={t("climbs.search")}
+                    placeholderTextColor={colors.textFaint}
+                    accessibilityLabel={t("climbs.search")}
+                    style={{
+                      flex: 1,
+                      minHeight: 48,
+                      fontFamily: fonts.sans,
+                      fontSize: 15,
+                      color: colors.gunmetal,
+                    }}
                   />
-                ))}
-              </ScrollView>
-              {state.status === "error" && (
-                <Text style={{ fontFamily: fonts.mono, fontSize: 12, color: colors.watermelonInk }}>
-                  {t("climbs.loadFailed")}
-                </Text>
-              )}
-            </View>
+                </View>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  keyboardShouldPersistTaps="handled"
+                  style={{ marginHorizontal: -18 }}
+                  contentContainerStyle={{ gap: 8, paddingHorizontal: 18 }}
+                >
+                  <Chip
+                    label={grade === null ? t("climbs.anyGrade") : gradeFilterLabel(grade)}
+                    active={grade !== null}
+                    uppercase={false}
+                    icon="insights"
+                    onPress={() => setPicking(true)}
+                  />
+                  {CLIMB_STATUSES.map((s) => (
+                    <Chip
+                      key={s}
+                      label={t(STATUS_LABELS[s], { n: log?.counts[s] ?? 0 })}
+                      active={s === status}
+                      uppercase={false}
+                      onPress={() => setStatus(s)}
+                    />
+                  ))}
+                </ScrollView>
+                {state.status === "error" && (
+                  <Text
+                    style={{ fontFamily: fonts.mono, fontSize: 12, color: colors.watermelonInk }}
+                  >
+                    {t("climbs.loadFailed")}
+                  </Text>
+                )}
+              </View>
+            )}
           </>
         }
         ListEmptyComponent={empty}
