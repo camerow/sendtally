@@ -3,6 +3,7 @@ import type { SessionRow } from "@sendtally/api-client";
 import { sessionDay, sessionGradeLabels, sessionMetaLabel } from "@sendtally/features/sessions";
 import { formatDate } from "@sendtally/features/i18n";
 import { StravaMark } from "../../components/StravaMark";
+import { useDisplayScales } from "@sendtally/features/settings";
 
 /**
  * A session row's four cells. The trailing cell is the caller's: a chevron in
@@ -17,6 +18,7 @@ export function SessionRowBody({
   title: string;
 }): React.ReactElement {
   const { weekday, day } = sessionDay(session);
+  const scales = useDisplayScales();
   const month = formatDate(new Date(session.start_at), { month: "short", timeZone: "UTC" });
   const onStrava = session.strava_activity_id !== null;
   return (
@@ -45,7 +47,7 @@ export function SessionRowBody({
         )}
       </span>
       <span className="session-row-stats">
-        {sessionGradeLabels(session).map((g) => (
+        {sessionGradeLabels(session, scales).map((g) => (
           <span
             key={g.kind}
             style={{

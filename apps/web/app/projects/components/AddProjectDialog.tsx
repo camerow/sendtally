@@ -94,7 +94,7 @@ export function AddProjectDialog({
       : grade
     : picked === null
       ? "-"
-      : climbGradeLabel(picked);
+      : climbGradeLabel(picked, scales);
 
   // Opening the rail at the bottom of the ladder hides every grade the user
   // would pick, so it starts where they climb.
@@ -206,7 +206,7 @@ export function AddProjectDialog({
                         minWidth: 42,
                       }}
                     >
-                      {climbGradeLabel(climb)}
+                      {climbGradeLabel(climb, scales)}
                     </span>
                     <span style={{ fontWeight: 600, fontSize: 14 }}>{climb.name}</span>
                     <span style={{ flex: 1 }} />

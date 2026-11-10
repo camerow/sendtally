@@ -8,6 +8,7 @@ import {
   tripPyramid,
   tripStats,
 } from "./trips";
+import { DEFAULT_GRADE_SCALES as SCALES } from "../settings/transforms";
 
 function entry(overrides: Partial<JournalEntry>): JournalEntry {
   return {
@@ -106,11 +107,11 @@ describe("tripDays", () => {
   });
 
   it("sums the trip up from its sessions", () => {
-    expect(tripStats(tripDays(trip, sessions, entries, now)).map((s) => s.value)).toEqual([
+    expect(tripStats(tripDays(trip, sessions, entries, now), SCALES).map((s) => s.value)).toEqual([
       "2/3",
       "2",
       "20",
-      "7A",
+      "V6",
       "6.0",
     ]);
   });
@@ -144,14 +145,14 @@ describe("tripPyramid", () => {
       session("after", "2026-05-25T09:00:00.000Z", { climbs: [sends(8)] }),
     ];
     const days = tripDays(trip, climbed, entries, now);
-    expect(tripPyramid(days)?.points.map((p) => [p.axis, p.b])).toEqual([
+    expect(tripPyramid(days, SCALES)?.points.map((p) => [p.axis, p.b])).toEqual([
       ["V3", 2],
       ["V4", 1],
     ]);
   });
 
   it("is absent when nothing was sent", () => {
-    expect(tripPyramid(tripDays(trip, sessions, entries, now))).toBeNull();
+    expect(tripPyramid(tripDays(trip, sessions, entries, now), SCALES)).toBeNull();
   });
 });
 

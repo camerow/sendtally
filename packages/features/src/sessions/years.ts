@@ -1,5 +1,6 @@
 import type { SessionRow } from "@sendtally/api-client";
 import { t } from "../i18n";
+import { sessionGradeLabel, type GradeScales } from "./grades";
 import { flatLog } from "../journal/transforms";
 import type { LogItem } from "../journal/types";
 import { climbCountLabel, isClimbHolder } from "./meta";
@@ -134,7 +135,7 @@ export function logCountLabel(items: LogItem[]): string {
   return parts.join(" · ");
 }
 
-export function logTotalsLabel(items: LogItem[]): string {
+export function logTotalsLabel(items: LogItem[], scales: GradeScales): string {
   const sessions = sessionsIn(items);
   const holders = holdersIn(items);
   if (sessions.length === holders.length) return logCountLabel(items);
@@ -142,7 +143,7 @@ export function logTotalsLabel(items: LogItem[]): string {
   const hang = logged(items).length - entries - sessions.length;
   const all = sessionTotals(sessions);
   return [
-    totalsLabel({ ...all, count: all.count - holders.length + hang }),
+    totalsLabel({ ...all, count: all.count - holders.length + hang }, scales),
     holderClimbs(holders),
     entries === 0 ? null : t("journal.entryCount", { count: entries }),
   ]
@@ -150,11 +151,12 @@ export function logTotalsLabel(items: LogItem[]): string {
     .join(" · ");
 }
 
-export function totalsLabel(totals: SessionGroupTotals): string {
+export function totalsLabel(totals: SessionGroupTotals, scales: GradeScales): string {
   const parts = [countLabel(totals.count)];
   if (totals.minutes > 0) parts.push(durationLabel(totals.minutes));
   if (totals.topGrade >= 0) {
-    parts.push(t("sessions.topGrade", { grade: totals.topGradeLabel ?? `V${totals.topGrade}` }));
+    const grade = sessionGradeLabel(totals.topGradeLabel, totals.topGrade, scales);
+    parts.push(t("sessions.topGrade", { grade }));
   }
   return parts.join(" · ");
 }

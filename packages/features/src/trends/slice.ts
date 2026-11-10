@@ -5,7 +5,7 @@ import { climbKey } from "../climbs/transforms";
 import { circuitLabel } from "../gyms/transforms";
 import { isUnscored } from "../sessions/meta";
 import { UNTAGGED_KEY } from "../sessions/tags";
-import { gradeFormatterFor } from "../sessions/grades";
+import { gradeFormatter, type GradeScales } from "../sessions/grades";
 import { isRefined } from "./filter";
 import type { GradeRange, TrendFilter, TrendScope, TrendSetting } from "./types";
 
@@ -97,11 +97,8 @@ export type Ladder = {
   average: (rank: number) => string;
 };
 
-function disciplineLadder(discipline: Discipline, rows: Row[]): Ladder {
-  const format = gradeFormatterFor(
-    rows.flatMap((r) => r.graded.map((g) => g.climb)),
-    discipline
-  );
+function disciplineLadder(discipline: Discipline, scales: GradeScales): Ladder {
+  const format = gradeFormatter(discipline, scales);
   return {
     scope: discipline,
     includes: (rec) => rec.discipline === discipline,
@@ -156,7 +153,12 @@ export function disciplinesBySends(rows: Row[]): Discipline[] {
     .sort((a, b) => counts[b] - counts[a]);
 }
 
-export function ladderFor(filter: TrendFilter, rows: Row[], gyms: Gym[]): Ladder {
+export function ladderFor(
+  filter: TrendFilter,
+  rows: Row[],
+  gyms: Gym[],
+  scales: GradeScales
+): Ladder {
   const scope = filter.scope;
   if (scope === "all") return ALL_LADDER;
   if (scope === "circuit") {
@@ -165,7 +167,7 @@ export function ladderFor(filter: TrendFilter, rows: Row[], gyms: Gym[]): Ladder
   }
   const discipline =
     scope === "boulder" || scope === "route" ? scope : (disciplinesBySends(rows)[0] ?? "boulder");
-  return disciplineLadder(discipline, rows);
+  return disciplineLadder(discipline, scales);
 }
 
 /** A hangboard session's effort: it has no climbs, place or tags, only the RPE the user gave it. */
@@ -188,9 +190,10 @@ export function sliceOf(
   filter: TrendFilter,
   rows: Row[],
   gyms: Gym[],
+  scales: GradeScales,
   hang: HangEffort[] = []
 ): Slice {
-  const ladder = ladderFor(filter, rows, gyms);
+  const ladder = ladderFor(filter, rows, gyms, scales);
   const unrefined = !isRefined(filter) && filter.gymId === null;
   return {
     rows: rows.filter(

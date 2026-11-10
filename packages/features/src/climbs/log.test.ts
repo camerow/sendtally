@@ -10,6 +10,7 @@ import {
   inGradeRange,
   matchesClimbSearch,
 } from "./log";
+import { DEFAULT_GRADE_SCALES as SCALES } from "../settings/transforms";
 
 const NOW = new Date("2026-10-27T12:00:00.000Z");
 
@@ -76,15 +77,16 @@ const sessions = [
   },
 ] as unknown as SessionWithClimbs[];
 
-const all = { query: "", grade: null, status: "all" } as const;
+const all = { query: "", grade: null, status: "all", scales: SCALES } as const;
 
 describe("matchesClimbSearch", () => {
   it("finds a climb by its name, crag or grade, in any case", () => {
-    expect(matchesClimbSearch(climb({}), "rocket")).toBe(true);
-    expect(matchesClimbSearch(climb({}), "stanage")).toBe(true);
-    expect(matchesClimbSearch(climb({}), "6b+")).toBe(true);
-    expect(matchesClimbSearch(climb({}), "6C")).toBe(false);
-    expect(matchesClimbSearch(climb({}), "  ")).toBe(true);
+    expect(matchesClimbSearch(climb({}), "rocket", SCALES)).toBe(true);
+    expect(matchesClimbSearch(climb({}), "stanage", SCALES)).toBe(true);
+    expect(matchesClimbSearch(climb({}), "6b+", SCALES)).toBe(true);
+    expect(matchesClimbSearch(climb({}), "6C", SCALES)).toBe(false);
+    expect(matchesClimbSearch(climb({}), "V4", SCALES)).toBe(true);
+    expect(matchesClimbSearch(climb({}), "  ", SCALES)).toBe(true);
   });
 });
 
@@ -163,7 +165,7 @@ describe("climbLog", () => {
         { name: "The Ramp", kind: "attempt", tries: 2 },
       ],
     } as unknown as SessionWithClimbs;
-    const vm = climbingSessionVM(day, climbs);
+    const vm = climbingSessionVM(day, climbs, SCALES);
     expect(vm.named).toBe(true);
     expect(vm.climbs.map((r) => [r.name, r.pill.label, r.meta])).toEqual([
       ["The Ramp", "Project", "Burbage North · 6 tries"],
@@ -179,10 +181,10 @@ describe("climbLog", () => {
       start_at: "2026-09-04T10:00:00.000Z",
       climbs: [{ name: "Brad Pit", kind: "attempt", tries: 3 }],
     } as unknown as SessionWithClimbs;
-    const vm = climbingSessionVM(bare, climbs);
+    const vm = climbingSessionVM(bare, climbs, SCALES);
     expect(vm.named).toBe(false);
     expect(vm.climbs.map((r) => r.meta)).toEqual(["Stanage Plantation"]);
-    expect(climbingSessionVM({ ...bare, climbs: [] }, climbs).named).toBe(true);
+    expect(climbingSessionVM({ ...bare, climbs: [] }, climbs, SCALES).named).toBe(true);
   });
 
   it("counts each status inside the search and picks one", () => {

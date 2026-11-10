@@ -38,7 +38,6 @@ export {
   climbingInsightsVM,
   mainDiscipline,
   workoutClimbSessions,
-  type BoulderScale,
   type ClimbPlaceFilter,
   type ClimbingInsightsFilter,
   type ClimbingInsightsVM,

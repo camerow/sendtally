@@ -1,4 +1,5 @@
 import type { ClimbSummary, SessionWithClimbs } from "@sendtally/api-client";
+import { formatGrade } from "@sendtally/core";
 import { t } from "../i18n";
 import { disciplineOf, gradeOptions, utcDate } from "../log-session/transforms";
 import type { GradeScale } from "../log-session/types";
@@ -9,6 +10,7 @@ import { monthKey, monthLabel, monthName } from "../sessions/months";
 import { climbOf, isThisClimb, sendStyleOf, sendStyleText } from "./overview";
 import { dateLabel, disciplineLabel } from "./projects";
 import { climbDraftGrade, climbGradeLabel } from "./transforms";
+import type { GradeScales } from "../sessions/grades";
 
 export type ClimbStatusFilter = "all" | "projects" | "sent" | "notYet";
 
@@ -34,13 +36,30 @@ export type ClimbLogGroupVM = { key: string; label: string | null; rows: ClimbLo
 
 export type ClimbLogVM = { counts: Record<ClimbStatusFilter, number>; groups: ClimbLogGroupVM[] };
 
-export type ClimbLogQuery = { query: string; grade: GradeFilter | null; status: ClimbStatusFilter };
+export type ClimbLogQuery = {
+  query: string;
+  grade: GradeFilter | null;
+  status: ClimbStatusFilter;
+  scales: GradeScales;
+};
 
-/** Typing finds a climb by its name, its crag or its grade: "6b+" finds the 6B+ climbs. */
-export function matchesClimbSearch(climb: ClimbSummary, query: string): boolean {
+/**
+ * Typing finds a climb by its name, its crag or its grade, as shown or as logged: "6b+" finds
+ * the 6B+ climbs whichever boulder scale they are shown in.
+ */
+export function matchesClimbSearch(
+  climb: ClimbSummary,
+  query: string,
+  scales: GradeScales
+): boolean {
   const q = query.trim().toLowerCase();
   if (q === "") return true;
-  return [climb.name, climb.area?.name ?? "", climb.grade === null ? "" : climbGradeLabel(climb)]
+  return [
+    climb.name,
+    climb.area?.name ?? "",
+    climb.grade === null ? "" : climbGradeLabel(climb, scales),
+    climb.grade === null ? "" : formatGrade(climb.grade),
+  ]
     .map((s) => s.toLowerCase())
     .some((s) => s.includes(q));
 }
@@ -124,7 +143,8 @@ export type ClimbingSessionVM = { named: boolean; climbs: ClimbLogRowVM[] };
  */
 export function climbingSessionVM(
   session: SessionWithClimbs,
-  climbs: readonly ClimbSummary[]
+  climbs: readonly ClimbSummary[],
+  scales: GradeScales
 ): ClimbingSessionVM {
   const found = [...new Set(session.climbs.flatMap((l) => climbOf(climbs, l) ?? []))];
   const named = found.length === 0 || !isClimbHolder(session);
@@ -145,7 +165,7 @@ export function climbingSessionVM(
     ].filter((part) => part !== null);
     return {
       id: c.id,
-      gradeLabel: climbGradeLabel(c),
+      gradeLabel: climbGradeLabel(c, scales),
       name: c.name,
       meta: meta.length > 0 ? meta.join(" · ") : disciplineLabel(c),
       pill,
@@ -161,18 +181,18 @@ export function climbingSessionVM(
 export function climbLog(
   climbs: readonly ClimbSummary[],
   sessions: readonly SessionWithClimbs[],
-  { query, grade, status }: ClimbLogQuery,
+  { query, grade, status, scales }: ClimbLogQuery,
   now: Date = new Date()
 ): ClimbLogVM {
   const found = climbs.filter(
-    (c) => matchesClimbSearch(c, query) && (grade === null || inGradeRange(c, grade))
+    (c) => matchesClimbSearch(c, query, scales) && (grade === null || inGradeRange(c, grade))
   );
   const counts = { all: found.length, projects: 0, sent: 0, notYet: 0 };
   for (const c of found) counts[climbStatus(c)] += 1;
   const today = utcDate(now.toISOString());
   const row = (c: ClimbSummary): ClimbLogRowVM => ({
     id: c.id,
-    gradeLabel: climbGradeLabel(c),
+    gradeLabel: climbGradeLabel(c, scales),
     name: c.name,
     meta: metaOf(c, today),
     pill: pillOf(c, sessions),

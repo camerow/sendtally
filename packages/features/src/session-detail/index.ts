@@ -9,7 +9,6 @@ export {
   climbVMs,
   durationLabel,
   filterAndSortClimbs,
-  gradeLabel,
   postingStatus,
   postStatusVM,
   sessionDetailVM,

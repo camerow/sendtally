@@ -8,6 +8,7 @@ import type {
 } from "@sendtally/api-client";
 import { t } from "../i18n";
 import { queries, useQueryPair, type QueryState } from "../query";
+import { useGradeScalePrefs } from "../settings/useGradeScales";
 import { patch, useLocalWrite } from "../outbox";
 import { climbDetailVM, type ClimbDetailVM } from "./overview";
 import { withClimbNote, withoutClimbNote, type ProjectNoteVM } from "./projects";
@@ -52,13 +53,14 @@ export type ClimbFeature = {
 export function useClimb(api: SendtallyApi, idOrSlug: string, newId: () => string): ClimbFeature {
   const { state: loaded, reload } = useClimbs(api);
   const local = useLocalWrite();
+  const { scales } = useGradeScalePrefs(api);
   const state = React.useMemo((): ClimbFeature["state"] => {
     if (loaded.status !== "ready") return loaded;
     const { climbs, sessions } = loaded.data;
     const climb = climbs.find((c) => c.id === idOrSlug || c.slug === idOrSlug);
     if (climb === undefined) return { status: "error", message: t("climbs.notFound") };
-    return { status: "ready", data: { climb, vm: climbDetailVM(climb, sessions) } };
-  }, [loaded, idOrSlug]);
+    return { status: "ready", data: { climb, vm: climbDetailVM(climb, sessions, scales) } };
+  }, [loaded, idOrSlug, scales]);
   const id = state.status === "ready" ? state.data.climb.id : null;
   const slug = state.status === "ready" ? state.data.climb.slug : null;
 

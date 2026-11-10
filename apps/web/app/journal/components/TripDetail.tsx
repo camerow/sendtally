@@ -14,6 +14,7 @@ import { EntryRowItem } from "../../sessions/components/EntryRowItem";
 import { SessionRowItem } from "../../sessions/components/SessionRowItem";
 import { TrendTile } from "../../trends/components/TrendTile";
 import { TripClimbs } from "./TripClimbs";
+import { useDisplayScales } from "@sendtally/features/settings";
 
 /** Everything logged inside a trip's dates, a day at a time. */
 export function TripDetail({
@@ -28,7 +29,8 @@ export function TripDetail({
   const days = React.useMemo(() => tripDays(trip, sessions, entries), [trip, sessions, entries]);
   const logged = days.filter((d) => d.sessions.length + d.entries.length + d.updates.length > 0);
   const carriedIn = injuriesCarriedIn(trip, entries);
-  const pyramid = tripPyramid(days);
+  const scales = useDisplayScales();
+  const pyramid = tripPyramid(days, scales);
   const parentTitle = (update: JournalEntry): string => {
     const parent = entries.find((e) => e.id === update.parent_id);
     return t("journal.updateOn", { title: parent === undefined ? "" : entryTitle(parent) });
@@ -37,7 +39,7 @@ export function TripDetail({
   return (
     <>
       <div style={{ marginTop: 24 }}>
-        <StatStrip stats={tripStats(days)} />
+        <StatStrip stats={tripStats(days, scales)} />
       </div>
       {pyramid !== null && (
         <div className="trends trip-pyramid">

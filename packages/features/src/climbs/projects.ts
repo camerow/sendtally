@@ -1,4 +1,5 @@
-import { formatGrade, routeIndexOf, vFromFont, type Grade } from "@sendtally/core";
+import { routeIndexOf, vFromFont, type Grade } from "@sendtally/core";
+import { displayGrade, type GradeScales } from "../sessions/grades";
 import type { ClimbNote, ClimbSummary, SessionWithClimbs } from "@sendtally/api-client";
 import { formatDate, t } from "../i18n";
 import { utcDate } from "../log-session/transforms";
@@ -156,6 +157,7 @@ function bars(rows: ProjectSessionVM[]): ProjectBar[] {
 export function projectDetailVM(
   climb: ClimbSummary,
   sessions: SessionWithClimbs[],
+  scales: GradeScales,
   now: Date = new Date()
 ): ProjectDetailVM {
   const ordered = projectSessions(climb, sessions);
@@ -180,7 +182,7 @@ export function projectDetailVM(
   return {
     slug: climb.slug,
     name: climb.name,
-    gradeLabel: climb.grade === null ? null : formatGrade(climb.grade),
+    gradeLabel: climb.grade === null ? null : displayGrade(climb.grade, scales),
     disciplineLabel: disciplineLabel(climb),
     status,
     storyLabel:
@@ -225,6 +227,7 @@ export function climbNotes(
 
 export function projectsOverview(
   climbs: ClimbSummary[],
+  scales: GradeScales,
   now: Date = new Date()
 ): ProjectsOverviewVM {
   const projects = projectsOf(climbs);
@@ -260,7 +263,7 @@ export function projectsOverview(
       busiest === undefined || busiest.sessions === 0
         ? null
         : { name: busiest.name, slug: busiest.slug, value: String(busiest.sessions) },
-    hardestSentLabel: hardest === undefined ? null : formatGrade(hardest.grade),
+    hardestSentLabel: hardest === undefined ? null : displayGrade(hardest.grade, scales),
   };
 }
 

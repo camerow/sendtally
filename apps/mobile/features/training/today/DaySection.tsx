@@ -19,6 +19,7 @@ import { loggedRowText } from "./loggedRowText";
 import { OccurrenceCard } from "./OccurrenceCard";
 import { OccurrenceRow } from "./OccurrenceRow";
 import { SkippedRow } from "./SkippedRow";
+import { useDisplayScales } from "@sendtally/features/settings";
 
 export type DaySectionProps = {
   day: TrainingDay;
@@ -42,6 +43,7 @@ export function DaySection({
   quiet = false,
 }: DaySectionProps): React.ReactElement {
   const { model } = useHangData();
+  const scales = useDisplayScales();
   const library = useLibrary().state;
   const workout = (id: string) =>
     library.status === "ready" ? library.data.workout(id) : undefined;
@@ -73,7 +75,7 @@ export function DaySection({
                   : loggedKey(item)
               }
               kind={loggedKind(item)}
-              text={loggedRowText(item, model)}
+              text={loggedRowText(item, model, scales)}
               onPress={() => onOpen(item)}
             />
           );

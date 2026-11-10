@@ -9,6 +9,7 @@ import {
   type ProjectListItem,
 } from "@sendtally/features/climbs";
 import { t } from "@sendtally/features/i18n";
+import { useDisplayScales } from "@sendtally/features/settings";
 
 const MAX_SPARK_BARS = 6;
 
@@ -25,6 +26,7 @@ function metaLabel({ climb }: ProjectListItem): string {
 
 export function ProjectRow({ item }: { item: ProjectListItem }): React.ReactElement {
   const { climb, bars } = item;
+  const scales = useDisplayScales();
   const sent = projectStatus(climb) === "sent";
   const spark = bars.slice(-MAX_SPARK_BARS);
 
@@ -33,7 +35,7 @@ export function ProjectRow({ item }: { item: ProjectListItem }): React.ReactElem
       <span
         className={climb.grade === null ? "project-grade project-grade--none" : "project-grade"}
       >
-        {climb.grade === null ? "–" : climbGradeLabel(climb)}
+        {climb.grade === null ? "–" : climbGradeLabel(climb, scales)}
       </span>
       <span className="project-main">
         <span className="project-name">{climb.name}</span>

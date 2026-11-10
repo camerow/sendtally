@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { ClimbSummary, SessionWithClimbs } from "@sendtally/api-client";
 import { projectDetailVM, projectsOverview, withClimbNote, withoutClimbNote } from "./projects";
+import { DEFAULT_GRADE_SCALES as SCALES } from "../settings/transforms";
 
 const NOW = new Date("2026-09-11T12:00:00.000Z");
 
@@ -83,7 +84,7 @@ describe("projectDetailVM", () => {
   ];
 
   it("reads the sessions invested newest first and the bars oldest first", () => {
-    const vm = projectDetailVM(climb({}), sessions, NOW);
+    const vm = projectDetailVM(climb({}), sessions, SCALES, NOW);
     expect(vm.sessions.map((s) => [s.dateLabel, s.attempts])).toEqual([
       ["Sep 4", 7],
       ["Jun 3", 4],
@@ -101,7 +102,7 @@ describe("projectDetailVM", () => {
   });
 
   it("rolls the per-climb notes up newest first, ignoring other climbs' notes", () => {
-    const vm = projectDetailVM(climb({}), sessions, NOW);
+    const vm = projectDetailVM(climb({}), sessions, SCALES, NOW);
     expect(vm.notes).toEqual([
       {
         id: "fp-2026-09-04T18:00:00.000Z",
@@ -124,6 +125,7 @@ describe("projectDetailVM", () => {
     const vm = projectDetailVM(
       climb({}),
       [session("2026-09-04T18:00:00.000Z", [{ name: "Moonraker" }])],
+      SCALES,
       NOW
     );
     expect(vm.notes).toEqual([]);
@@ -131,7 +133,12 @@ describe("projectDetailVM", () => {
   });
 
   it("tells the send story once it goes", () => {
-    const vm = projectDetailVM(climb({ sends: 1, attempts: 42, sessions: 7 }), sessions, NOW);
+    const vm = projectDetailVM(
+      climb({ sends: 1, attempts: 42, sessions: 7 }),
+      sessions,
+      SCALES,
+      NOW
+    );
     expect(vm.status).toBe("sent");
     expect(vm.storyLabel).toBe("42 attempts over 7 sessions");
     expect(vm.stats[2]).toEqual({ label: "Took", value: "13 weeks" });
@@ -141,6 +148,7 @@ describe("projectDetailVM", () => {
     const vm = projectDetailVM(
       climb({ grade: null, discipline: "route", sessions: 0, attempts: 0 }),
       [],
+      SCALES,
       NOW
     );
     expect(vm.gradeLabel).toBeNull();
@@ -167,6 +175,7 @@ describe("projectsOverview", () => {
         }),
         climb({ slug: "unflagged", name: "Unflagged", project: false }),
       ],
+      SCALES,
       NOW
     );
     expect(vm.open).toBe(2);
@@ -180,7 +189,7 @@ describe("projectsOverview", () => {
   });
 
   it("has nothing to say without projects", () => {
-    const vm = projectsOverview([climb({ project: false })], NOW);
+    const vm = projectsOverview([climb({ project: false })], SCALES, NOW);
     expect(vm).toMatchObject({
       open: 0,
       sent: 0,
@@ -205,7 +214,7 @@ describe("page notes", () => {
   });
 
   it("lists page notes with the session notes, newest day first", () => {
-    const vm = projectDetailVM(climb({ notes: [note] }), []);
+    const vm = projectDetailVM(climb({ notes: [note] }), [], SCALES);
     expect(vm.notes).toEqual([
       { id: "n1", source: "page", day: "2026-10-30", dateLabel: "Oct 30", note: "heel hook left" },
     ]);

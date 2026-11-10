@@ -39,7 +39,7 @@ const PLACE_LABELS: Record<ClimbPlaceFilter, () => string> = {
 export function ClimbingInsights({ range }: { range: TrendRange }): React.ReactElement {
   const api = useApi();
   const { state } = useClimbs(api);
-  const boulderScale = useGradeScalePrefs(api).scales.boulder === "font" ? "font" : "v";
+  const { scales } = useGradeScalePrefs(api);
   const [discipline, setDiscipline] = React.useState<Discipline | null>(null);
   const [place, setPlace] = React.useState<ClimbPlaceFilter>("all");
   const gymList = useGyms(api).state;
@@ -61,10 +61,10 @@ export function ClimbingInsights({ range }: { range: TrendRange }): React.ReactE
             range,
             discipline: shownDiscipline,
             place,
-            boulderScale,
+            scales,
             gyms,
           }),
-    [ready, sessions, range, shownDiscipline, place, boulderScale, gyms]
+    [ready, sessions, range, shownDiscipline, place, scales, gyms]
   );
   const days = React.useMemo(() => daysClimbed(sessions, range), [sessions, range]);
 

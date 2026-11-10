@@ -1,5 +1,6 @@
 import type { SessionRow } from "@sendtally/api-client";
 import { formatDate, t } from "../i18n";
+import { sessionGradeLabel, type GradeScales } from "./grades";
 import { durationLabel, sessionMinutes } from "./years";
 
 export function climbCountLabel(count: number): string {
@@ -26,13 +27,17 @@ export function sessionMetaLabel(session: SessionRow): string {
 }
 
 /** The log row's line: how long, how many sent, and the hardest send unless shown beside it. */
-export function sessionTallyLabel(session: SessionRow, withTop = true): string {
+export function sessionTallyLabel(
+  session: SessionRow,
+  scales: GradeScales,
+  withTop = true
+): string {
   const top =
     !withTop || session.top_send_grade < 0
       ? []
       : [
           t("sessions.topSend", {
-            grade: session.top_send_grade_label ?? `V${session.top_send_grade}`,
+            grade: sessionGradeLabel(session.top_send_grade_label, session.top_send_grade, scales),
           }),
         ];
   return [

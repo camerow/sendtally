@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { ClimbSummary, SessionClimb, SessionWithClimbs } from "@sendtally/api-client";
 import { gradeFormatter } from "../sessions/grades";
 import { avgSendLabel, climbingInsightsVM, mainDiscipline, workoutClimbSessions } from "./insights";
+import { DEFAULT_GRADE_SCALES as SCALES } from "../settings/transforms";
 
 const NOW = new Date("2026-10-27T12:00:00.000Z");
 
@@ -42,7 +43,7 @@ const sessions = [
 ];
 
 describe("climbingInsightsVM", () => {
-  const all = { range: "7d", discipline: "boulder", place: "all", boulderScale: "v" } as const;
+  const all = { range: "7d", discipline: "boulder", place: "all", scales: SCALES } as const;
 
   it("counts a named climb once across sessions, sent when any of them sent it", () => {
     const vm = climbingInsightsVM(sessions, [], all, NOW);
@@ -63,7 +64,12 @@ describe("climbingInsightsVM", () => {
   });
 
   it("reads the average send in Font for a climber who grades in Font", () => {
-    const vm = climbingInsightsVM(sessions, [], { ...all, boulderScale: "font" }, NOW);
+    const vm = climbingInsightsVM(
+      sessions,
+      [],
+      { ...all, scales: { ...SCALES, boulder: "font" } },
+      NOW
+    );
     expect(vm.avgSend).toBe("6C");
   });
 
@@ -113,7 +119,7 @@ describe("climbingInsightsVM", () => {
 });
 
 describe("climbs by grade", () => {
-  const all = { range: "7d", discipline: "boulder", place: "all", boulderScale: "v" } as const;
+  const all = { range: "7d", discipline: "boulder", place: "all", scales: SCALES } as const;
   const pinch = {
     id: "c-pinch",
     name: "The Pinch",
@@ -242,23 +248,26 @@ describe("climbs by grade", () => {
 });
 
 describe("avgSendLabel", () => {
-  const boulder = gradeFormatter("boulder", "yds");
+  const boulder = gradeFormatter("boulder", SCALES);
 
   it("rounds the mean of the sends down to a grade", () => {
-    expect(avgSendLabel([4, 6, 7], boulder, "v")).toBe("V5");
-    expect(avgSendLabel([3, 4], boulder, "v")).toBe("V3");
+    expect(avgSendLabel([4, 6, 7], boulder)).toBe("V5");
+    expect(avgSendLabel([3, 4], boulder)).toBe("V3");
   });
 
   it("reads boulders in Font when the climber does", () => {
-    expect(avgSendLabel([4, 6, 7], boulder, "font")).toBe("6C");
+    expect(avgSendLabel([4, 6, 7], gradeFormatter("boulder", { ...SCALES, boulder: "font" }))).toBe(
+      "6C"
+    );
   });
 
-  it("reads routes in the scale they were logged in, whatever the boulder scale", () => {
-    expect(avgSendLabel([10, 11], gradeFormatter("route", "french"), "font")).toBe("6c");
-    expect(avgSendLabel([10, 11], gradeFormatter("route", "yds"), "v")).toBe("5.11b");
+  it("reads routes in the climber's route scale", () => {
+    const french = gradeFormatter("route", { ...SCALES, route: "french" });
+    expect(avgSendLabel([10, 11], french)).toBe("6c");
+    expect(avgSendLabel([10, 11], gradeFormatter("route", SCALES))).toBe("5.11b");
   });
 
   it("has nothing to say without a send", () => {
-    expect(avgSendLabel([], boulder, "v")).toBeNull();
+    expect(avgSendLabel([], boulder)).toBeNull();
   });
 });

@@ -16,6 +16,7 @@ import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { SessionRow } from "../sessions/SessionRow";
 import { TrendTile } from "./TrendTile";
 import { EntryRow } from "./EntryRow";
+import { useDisplayScales } from "@sendtally/features/settings";
 
 const label = {
   fontFamily: fonts.monoMedium,
@@ -53,8 +54,9 @@ export function TripBody({
   const days = React.useMemo(() => tripDays(trip, sessions, entries), [trip, sessions, entries]);
   const logged = days.filter((d) => d.sessions.length + d.entries.length + d.updates.length > 0);
   const carriedIn = injuriesCarriedIn(trip, entries);
-  const pyramid = tripPyramid(days);
-  const stats = tripStats(days);
+  const scales = useDisplayScales();
+  const pyramid = tripPyramid(days, scales);
+  const stats = tripStats(days, scales);
   const updateOn = (update: JournalEntry): string => {
     const parent = entries.find((e) => e.id === update.parent_id);
     return t("journal.updateOn", { title: parent === undefined ? "" : entryTitle(parent) });
@@ -176,7 +178,7 @@ export function TripBody({
                 title={sessionTitle(session)}
                 onPress={() => openSession(session)}
               />
-              {climbVMs(session.climbs).map((c) => (
+              {climbVMs(session.climbs, scales).map((c) => (
                 <View
                   key={c.n}
                   style={{

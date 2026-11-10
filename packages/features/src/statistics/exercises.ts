@@ -15,7 +15,8 @@ import {
   type Workout,
 } from "@sendtally/core/hang";
 import { draftGrade } from "../log-session/transforms";
-import { gradeFormatterFor, type GradeFormatter } from "../sessions/grades";
+import { gradeFormatter, type GradeFormatter, type GradeScales } from "../sessions/grades";
+import { DEFAULT_GRADE_SCALES } from "../settings/transforms";
 
 /**
  * What an exercise's best set is judged on: the heaviest load, the longest hold, or the most
@@ -193,7 +194,8 @@ const chronological = (a: Logged, b: Logged): number =>
  */
 export function exerciseSeries(
   activities: readonly Logged[],
-  progressOf: (key: string) => ExerciseProgress | null | undefined = () => undefined
+  progressOf: (key: string) => ExerciseProgress | null | undefined = () => undefined,
+  scales: GradeScales = DEFAULT_GRADE_SCALES
 ): ExerciseSeries[] {
   const found = new Map<string, { name: string; logs: { activity: Logged; sets: SetDone[] }[] }>();
   for (const activity of [...activities].sort(chronological)) {
@@ -218,7 +220,7 @@ export function exerciseSeries(
       const sessions = logs
         .map((l) => sessionOf(l.activity, l.sets, metric, discipline))
         .filter((s) => s !== null);
-      const grades = isGradeMetric(metric) ? gradeFormatterFor(sends, discipline) : undefined;
+      const grades = isGradeMetric(metric) ? gradeFormatter(discipline, scales) : undefined;
       return {
         key,
         name,

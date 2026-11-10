@@ -12,6 +12,7 @@ import { enduranceVM } from "./endurance";
 import { gradeTap, isRefined, resetFilter, withPlace, withScope } from "./filter";
 import { trendsVM } from "./overview";
 import { DEFAULT_TREND_FILTER, type TrendFilter, type TrendTileVM, type TrendsVM } from "./types";
+import { DEFAULT_GRADE_SCALES as SCALES } from "../settings/transforms";
 
 const NOW = new Date("2026-08-06T12:00:00.000Z");
 
@@ -133,7 +134,7 @@ describe("trendsVM", () => {
   ];
 
   it("reads the discipline with the most sends when none is picked", () => {
-    const vm = trendsVM(rows, [], filter({ range: "1m" }), NOW);
+    const vm = trendsVM(rows, [], filter({ range: "1m" }), SCALES, NOW);
     expect(vm.scope).toBe("boulder");
     expect(tileOf(vm, "hardest").total).toBe(6);
     expect(tileOf(vm, "volume").total).toBe(5);
@@ -142,7 +143,7 @@ describe("trendsVM", () => {
   });
 
   it("groups the tiles and hides a section with nothing in it", () => {
-    const vm = trendsVM(rows, [], filter({ range: "1m" }), NOW);
+    const vm = trendsVM(rows, [], filter({ range: "1m" }), SCALES, NOW);
     expect(vm.groups.map((g) => g.id)).toEqual(["grade", "volume", "technique"]);
     expect(vm.groups[1]!.tiles.map((t) => t.id)).toEqual(["days", "volume", "effort"]);
   });
@@ -152,6 +153,7 @@ describe("trendsVM", () => {
       rows,
       [],
       filter({ range: "1m", scope: "boulder", grade: { lo: 5, hi: 7 } }),
+      SCALES,
       NOW
     );
     expect(tileOf(vm, "volume").total).toBe(3);
@@ -159,7 +161,7 @@ describe("trendsVM", () => {
   });
 
   it("offers the range's climbs per grade for the picker, whatever grade is set", () => {
-    const vm = trendsVM(rows, [], filter({ range: "1m", grade: { lo: 6, hi: 6 } }), NOW);
+    const vm = trendsVM(rows, [], filter({ range: "1m", grade: { lo: 6, hi: 6 } }), SCALES, NOW);
     expect(vm.grades.map((b) => [b.label, b.count])).toEqual([
       ["V3", 1],
       ["V4", 1],
@@ -171,9 +173,9 @@ describe("trendsVM", () => {
   });
 
   it("filters to outside sessions and to tags", () => {
-    const outside = trendsVM(rows, [], filter({ range: "1m", setting: "outdoor" }), NOW);
+    const outside = trendsVM(rows, [], filter({ range: "1m", setting: "outdoor" }), SCALES, NOW);
     expect(tileOf(outside, "volume").total).toBe(2);
-    const tagged = trendsVM(rows, [], filter({ range: "1m", tags: ["bishop"] }), NOW);
+    const tagged = trendsVM(rows, [], filter({ range: "1m", tags: ["bishop"] }), SCALES, NOW);
     expect(tileOf(tagged, "days").total).toBe(1);
     expect(tileOf(tagged, "effort").total).toBe(8);
   });
@@ -183,28 +185,28 @@ describe("trendsVM", () => {
       rpe: 10,
       rpe_source: "none",
     });
-    const scored = trendsVM(rows, [], filter({ range: "1m" }), NOW);
-    const vm = trendsVM([...rows, unscored], [], filter({ range: "1m" }), NOW);
+    const scored = trendsVM(rows, [], filter({ range: "1m" }), SCALES, NOW);
+    const vm = trendsVM([...rows, unscored], [], filter({ range: "1m" }), SCALES, NOW);
     expect(tileOf(vm, "effort").total).toBe(tileOf(scored, "effort").total);
     expect(tileOf(vm, "volume").total).toBe((tileOf(scored, "volume").total ?? 0) + 1);
   });
 
   it("averages hangboard effort into the effort tile until a filter narrows to climbing", () => {
     const hang = [hangRow("h1", "2026-07-25", 10), hangRow("h2", "2026-07-26", null)];
-    const vm = trendsVM(rows, [], filter({ range: "1m" }), NOW, hang);
+    const vm = trendsVM(rows, [], filter({ range: "1m" }), SCALES, NOW, hang);
     expect(tileOf(vm, "effort").total).toBe(8);
     expect(tileOf(vm, "days").total).toBe(2);
-    const tagged = trendsVM(rows, [], filter({ range: "1m", tags: ["bishop"] }), NOW, hang);
+    const tagged = trendsVM(rows, [], filter({ range: "1m", tags: ["bishop"] }), SCALES, NOW, hang);
     expect(tileOf(tagged, "effort").total).toBe(8);
   });
 
   it("splits days inside and outside", () => {
-    const vm = trendsVM(rows, [], filter({ range: "1m" }), NOW);
+    const vm = trendsVM(rows, [], filter({ range: "1m" }), SCALES, NOW);
     expect(tileOf(vm, "days").sub).toBe("1 inside · 1 outside");
   });
 
   it("drops grade tiles and shows lifetime numbers in All", () => {
-    const vm = trendsVM(rows, [], filter({ range: "1m", scope: "all" }), NOW);
+    const vm = trendsVM(rows, [], filter({ range: "1m", scope: "all" }), SCALES, NOW);
     expect(vm.groups.map((g) => g.id)).toEqual(["volume", "technique"]);
     expect(tileOf(vm, "volume").sub).toBe("5 boulders · 1 route");
     expect(tileOf(vm, "hours").total).toBe(6);
@@ -220,6 +222,7 @@ describe("trendsVM", () => {
       rows,
       [],
       filter({ range: "1m", scope: "all", grade: { lo: 9, hi: 9 } }),
+      SCALES,
       NOW
     );
     expect(tileOf(vm, "volume").total).toBe(6);
@@ -228,7 +231,7 @@ describe("trendsVM", () => {
 
   it("compares against the period just before", () => {
     const withPrior = [...rows, session("2026-06-20T18:00:00.000Z", [{ vGrade: 4 }])];
-    const vm = trendsVM(withPrior, [], filter({ range: "1m", scope: "boulder" }), NOW);
+    const vm = trendsVM(withPrior, [], filter({ range: "1m", scope: "boulder" }), SCALES, NOW);
     expect(tileOf(vm, "hardest").delta).toBe("▲ 2 grades vs prior period");
     expect(tileOf(vm, "volume").delta).toBe("▲ 400% vs prior period");
   });
@@ -242,7 +245,7 @@ describe("trendsVM", () => {
         { vGrade: 4, tries: 1, style: undefined, name: "Arete" },
       ]),
     ];
-    const vm = trendsVM(legacy, [], filter({ range: "1m" }), NOW);
+    const vm = trendsVM(legacy, [], filter({ range: "1m" }), SCALES, NOW);
     expect(tileOf(vm, "flash").total).toBe(50);
   });
 
@@ -268,7 +271,13 @@ describe("trendsVM", () => {
         }
       ),
     ];
-    const vm = trendsVM(gymRows, [gym], withScope(filter({ range: "1m" }), "circuit", "g1"), NOW);
+    const vm = trendsVM(
+      gymRows,
+      [gym],
+      withScope(filter({ range: "1m" }), "circuit", "g1"),
+      SCALES,
+      NOW
+    );
     expect(vm.scope).toBe("circuit");
     expect(tileOf(vm, "hardest").format(1)).toBe("Purple");
     expect(tileOf(vm, "pyramid").points.map((p) => p.axis)).toEqual(["Red", "Purple"]);
@@ -282,7 +291,7 @@ describe("grade axis ticks", () => {
     vm.groups.flatMap((g) => g.tiles).filter((t) => t.id === "hardest" || t.id === "avggrade");
 
   it("labels an empty grade chart with three different grades", () => {
-    const vm = trendsVM([], [], filter({ range: "7d" }), NOW);
+    const vm = trendsVM([], [], filter({ range: "7d" }), SCALES, NOW);
     expect(tileOf(vm, "hardest").ticks).toEqual(["V2", "V1", "V0"]);
   });
 
@@ -291,6 +300,7 @@ describe("grade axis ticks", () => {
       [session("2026-08-04T18:00:00.000Z", [{ vGrade: 3 }, { vGrade: 4 }])],
       [],
       filter({ range: "7d" }),
+      SCALES,
       NOW
     );
     expect(gradeTiles(vm)).toHaveLength(2);
@@ -308,6 +318,7 @@ describe("count axis ticks", () => {
       [session("2026-08-04T18:00:00.000Z", [{ vGrade: 3 }])],
       [],
       filter({ range: "7d" }),
+      SCALES,
       NOW
     );
     const pyramid = tileOf(vm, "pyramid");

@@ -2,6 +2,7 @@ import type { Gym, HangHistoryRow, SessionWithClimbs } from "@sendtally/api-clie
 import { circuitRangeLabel } from "../gyms/transforms";
 import { formatNumber, t } from "../i18n";
 import { disciplineLabel } from "../log-session/types";
+import type { GradeScales } from "../sessions/grades";
 import { UNTAGGED_KEY, untaggedLabel } from "../sessions/tags";
 import { bucketsFor, priorWindow, rangeLabel, windowOf } from "./buckets";
 import { yearsOf } from "./types";
@@ -49,14 +50,16 @@ function lifetimeStats(
   life: Totals,
   curRows: Row[],
   lifeRows: Row[],
-  all: boolean
+  all: boolean,
+  scales: GradeScales
 ): TrendStatVM[] {
   const count = (n: number): string => formatNumber(n);
   const hardest = (rows: Row[], discipline: "boulder" | "route"): string => {
     const ladder = ladderFor(
       { scope: discipline, range: "all", grade: null, setting: "all", gymId: null, tags: [] },
       rows,
-      []
+      [],
+      scales
     );
     const ranks = rows.flatMap((r) =>
       r.graded.flatMap((rec) => {
@@ -137,11 +140,12 @@ export function trendsVM(
   sessions: SessionWithClimbs[],
   gyms: Gym[],
   filter: TrendFilter,
+  scales: GradeScales,
   now: Date = new Date(),
   hang: HangHistoryRow[] = []
 ): TrendsVM {
   const rows = rowsOf(sessions);
-  const slice = sliceOf(filter, rows, gyms, hangEffortsOf(hang));
+  const slice = sliceOf(filter, rows, gyms, scales, hangEffortsOf(hang));
   const { ladder } = slice;
   const scope = ladder.scope;
   const all = scope === "all";
@@ -418,7 +422,7 @@ export function trendsVM(
   const stats =
     life === null
       ? null
-      : lifetimeStats(cur, life, slice.rows.filter(inWindow), rows, filter.range === "all");
+      : lifetimeStats(cur, life, slice.rows.filter(inWindow), rows, filter.range === "all", scales);
 
   const bins = all ? [] : binsOf(slice, start, end);
 

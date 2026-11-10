@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { ClimbSummary, SessionClimb, SessionDetail } from "@sendtally/api-client";
 import { sessionClimbRows } from "./rows";
+import { DEFAULT_GRADE_SCALES as SCALES } from "../settings/transforms";
 
 const popular = { id: "a1", name: "Stanage Popular", slug: "stanage-popular" };
 const plantation = { id: "a2", name: "Stanage Plantation", slug: "stanage-plantation" };
@@ -40,7 +41,8 @@ describe("sessionClimbRows", () => {
         climb({ name: "The Prow", kind: "attempt", tries: 3 }),
         climb({ name: "the prow", kind: "attempt", tries: 1 }),
       ]),
-      [record("p", "The Prow", { project: true })]
+      [record("p", "The Prow", { project: true })],
+      SCALES
     );
     expect(rows).toEqual([
       expect.objectContaining({
@@ -59,7 +61,8 @@ describe("sessionClimbRows", () => {
         climb({ tries: 3 }),
         climb({ grade: { scale: "french", value: "6b+" }, vGrade: 4, style: "flash" }),
       ]),
-      []
+      [],
+      SCALES
     );
     expect(rows.map((r) => [r.id, r.name, r.count, r.meta, r.pill?.label])).toEqual([
       [null, "Boulder", 2, "5 tries", "Sent"],
@@ -73,7 +76,8 @@ describe("sessionClimbRows", () => {
       session([climb({ circuit: blue, tries: 2 }), climb({ circuit: blue, vGrade: 3 })], {
         location: "indoor",
       }),
-      []
+      [],
+      SCALES
     );
     expect(rows).toEqual([
       expect.objectContaining({
@@ -88,9 +92,11 @@ describe("sessionClimbRows", () => {
 
   it("keeps an endurance climb's laps under its row, without a result pill", () => {
     const endurance = { unit: "moves" as const, target: 40, laps: [40, 40, 28] };
-    const [row] = sessionClimbRows(session([climb({ name: "Green circuit laps", endurance })]), [
-      record("g", "Green circuit laps"),
-    ]);
+    const [row] = sessionClimbRows(
+      session([climb({ name: "Green circuit laps", endurance })]),
+      [record("g", "Green circuit laps")],
+      SCALES
+    );
     expect(row).toMatchObject({ id: "g", endurance, pill: null });
     expect(row?.meta).toMatch(/^3 laps · /);
   });
@@ -101,18 +107,23 @@ describe("sessionClimbRows", () => {
       climb({ name: "Crack and Slab", area: plantation }),
     ];
     const records = [record("f", "Flying Buttress"), record("c", "Crack and Slab")];
-    const two = sessionClimbRows(session(climbs, { areas: [popular, plantation] }), records);
+    const two = sessionClimbRows(
+      session(climbs, { areas: [popular, plantation] }),
+      records,
+      SCALES
+    );
     expect(two.map((r) => r.meta)).toEqual([
       "Stanage Popular · 1 try",
       "Stanage Plantation · 1 try",
     ]);
 
-    const one = sessionClimbRows(session([climbs[0]!], { areas: [popular] }), records);
+    const one = sessionClimbRows(session([climbs[0]!], { areas: [popular] }), records, SCALES);
     expect(one[0]?.meta).toBe("1 try");
 
     const gym = sessionClimbRows(
       session([climbs[0]!, climb({ tries: 2 })], { location: "indoor", areas: [popular] }),
-      records
+      records,
+      SCALES
     );
     expect(gym.map((r) => r.meta)).toEqual(["Stanage Popular · 1 try", "2 tries"]);
   });

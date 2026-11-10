@@ -5,7 +5,7 @@ import {
   isEndurance,
   type GradedClimb,
 } from "@sendtally/core";
-import { gradeFormatterFor } from "../sessions/grades";
+import { gradeFormatter, type GradeScales } from "../sessions/grades";
 
 /** One grade of a centred bar: `inner` drawn dark in the middle, `outer` split either side. */
 export type PyramidRow = { gradeLabel: string; inner: number; outer: number; countLabel: string };
@@ -40,11 +40,12 @@ const graded = <T extends GradedClimb>(climbs: readonly T[]): T[] =>
 
 /** A session's climbs by grade in its main discipline: sent in the middle, not yet either side. */
 export function sessionPyramid(
-  climbs: ReadonlyArray<GradedClimb & { kind: "send" | "attempt" }>
+  climbs: ReadonlyArray<GradedClimb & { kind: "send" | "attempt" }>,
+  scales: GradeScales
 ): PyramidRow[] {
   const discipline = dominantDiscipline(climbs);
   const mine = graded(climbs).filter((c) => climbDiscipline(c) === discipline);
-  const format = gradeFormatterFor(mine, discipline);
+  const format = gradeFormatter(discipline, scales);
   return rowsOf(
     mine.map((c) => ({ rank: climbRank(c), inner: c.kind === "send" })),
     format.label,

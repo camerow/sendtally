@@ -157,7 +157,9 @@ Invariants:
 - Unknown grades are `-1` and score conservatively as V1.
 - Grades carry their scale: `v` and `font` are boulders, `yds` and `french` are routes.
   Route grades map to a shared route ladder plus a V-equivalent (both tables in `packages/core/src/grades.ts`), and the effort engine scores every climb through that V-equivalent.
-  Display never converts across disciplines: boulders read as V, routes read in the scale they were logged in, and the persisted `top_grade_label` / `top_send_grade_label` columns hold that label for the session list.
+  Display never converts across disciplines, but within one it follows the climber's grade scale preference (`gradeScales`: V or Font, YDS or French).
+  Every grade label goes through `displayGrade` / `sessionGradeLabel` in `packages/features/src/sessions/grades.ts` with those scales; the apps read them from `useDisplayScales()` (a provider at each app root) or, inside a feature hook, `useGradeScalePrefs(api)`.
+  The persisted `top_grade_label` / `top_send_grade_label` columns hold the label in the scale it was logged in and are converted at display time, never rewritten.
   A mixed session reports stats for its dominant discipline.
 - Keep the "created by https://sendtally.com" attribution line in activity descriptions (Strava attribution expectations).
 - Legacy `source = "board"` rows are read-only history: never re-scored, never re-posted, never edited.

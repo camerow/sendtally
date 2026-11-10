@@ -5,7 +5,12 @@ import type { ClimbPillKind } from "../climbs/log";
 import { climbKey } from "../climbs/transforms";
 import { formatDate, t } from "../i18n";
 import { sendStyleLabel } from "../log-session/types";
-import { climbGradeLabel, gradeFormatterFor } from "../sessions/grades";
+import {
+  climbGradeLabel,
+  gradeFormatter,
+  sessionGradeLabel,
+  type GradeScales,
+} from "../sessions/grades";
 import { isUnscored } from "../sessions/meta";
 import { durationLabel as minutesLabel, hasStart } from "../sessions/years";
 import type {
@@ -24,10 +29,6 @@ import { namesClimbAreas } from "./rows";
 
 export function durationLabel(startAt: string, endAt: string): string {
   return minutesLabel(Math.max(0, Math.round((Date.parse(endAt) - Date.parse(startAt)) / 60_000)));
-}
-
-export function gradeLabel(vGrade: number): string {
-  return vGrade >= 0 ? `V${vGrade}` : "V?";
 }
 
 function resultOf(c: SessionClimb, firstEncounter: boolean): ClimbResult {
@@ -78,6 +79,7 @@ function climbName(c: SessionClimb): string {
 
 export function climbVMs(
   climbs: SessionClimb[],
+  scales: GradeScales,
   workedBefore: ReadonlySet<string> = new Set(),
   projects: ReadonlySet<string> = new Set()
 ): ClimbVM[] {
@@ -96,7 +98,7 @@ export function climbVMs(
       n: i + 1,
       name: climbName(c),
       ...(c.circuit === undefined ? {} : { colour: c.circuit.colour }),
-      gradeLabel: climbGradeLabel(c),
+      gradeLabel: climbGradeLabel(c, scales),
       grade: c.vGrade,
       isTopSend:
         c.kind === "send" && rank >= 0 && climbDiscipline(c) === discipline && rank === top,
@@ -206,19 +208,20 @@ export function postStatusVM(
 
 export function sessionDetailVM(
   session: SessionDetail,
+  scales: GradeScales,
   posting: PostingStatus | null = null,
   workedBefore: ReadonlySet<string> = new Set(),
   gymName: string | null = null
 ): SessionDetailVM {
   const board = session.board;
-  const climbs = climbVMs(session.climbs, workedBefore);
+  const climbs = climbVMs(session.climbs, scales, workedBefore);
   const start = new Date(session.start_at);
   const sends = climbs.filter((c) => c.result !== "project");
   const flashes = climbs.filter((c) => firstGo(c.result));
   // A felt-like grade on a circuit of laps is not a top-grade statistic.
   const scored = session.climbs.filter((c) => !isEndurance(c));
   const discipline = dominantDiscipline(session.climbs);
-  const format = gradeFormatterFor(scored, discipline);
+  const format = gradeFormatter(discipline, scales);
   const inDiscipline = scored.filter((c) => climbDiscipline(c) === discipline);
   const graded = inDiscipline.filter((c) => climbRank(c) >= 0);
   const avg =
@@ -228,7 +231,7 @@ export function sessionDetailVM(
     top >= 0
       ? format.label(top)
       : session.send_count > 0
-        ? (session.top_send_grade_label ?? gradeLabel(session.top_send_grade))
+        ? sessionGradeLabel(session.top_send_grade_label, session.top_send_grade, scales)
         : null;
 
   const titleLabel =
@@ -324,7 +327,7 @@ export function sessionDetailVM(
     climbAreas: namesClimbAreas(session),
     stats,
     bars,
-    pyramid: sessionPyramid(session.climbs),
+    pyramid: sessionPyramid(session.climbs, scales),
     filterCounts,
     post: postStatusVM(session, posting, start),
     stravaUrl:

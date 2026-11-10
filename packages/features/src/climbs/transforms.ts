@@ -1,6 +1,7 @@
 import type { ClimbSummary } from "@sendtally/api-client";
 import { disciplineOf, formatGrade, type Grade, type GradeScale } from "@sendtally/core";
 import { t } from "../i18n";
+import { displayGrade, type GradeScales } from "../sessions/grades";
 import { convertGrade, gradeOptions } from "../log-session/transforms";
 
 export const MAX_CLIMB_SUGGESTIONS = 4;
@@ -61,8 +62,8 @@ export function climbsWorkedBefore(catalogue: ClimbSummary[], startAt: string): 
   );
 }
 
-export function climbGradeLabel(climb: Pick<ClimbSummary, "grade">): string {
-  return climb.grade === null ? "-" : formatGrade(climb.grade);
+export function climbGradeLabel(climb: Pick<ClimbSummary, "grade">, scales: GradeScales): string {
+  return climb.grade === null ? "-" : displayGrade(climb.grade, scales);
 }
 
 export function projectStatus(climb: ClimbSummary): ProjectStatus {

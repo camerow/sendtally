@@ -1,8 +1,6 @@
 import {
-  boulderGradeFromV,
   climbDiscipline,
   climbRank,
-  formatGrade,
   isEndurance,
   type ClimbStyle,
   type Discipline,
@@ -16,7 +14,7 @@ import type {
 import type { SetClimb } from "@sendtally/core/hang";
 import { activityAt } from "../activities/format";
 import { draftGrade, vGradeOf } from "../log-session/transforms";
-import { gradeFormatterFor, type GradeFormatter } from "../sessions/grades";
+import { gradeFormatter, type GradeFormatter, type GradeScales } from "../sessions/grades";
 import { bucketsFor, windowOf } from "../trends/buckets";
 import type { TrendRange } from "../trends/types";
 import { dayMonth } from "../hang/format";
@@ -36,13 +34,10 @@ export type ClimbingInsightsFilter = {
   range: TrendRange;
   discipline: Discipline;
   place: ClimbPlaceFilter;
-  boulderScale: BoulderScale;
+  scales: GradeScales;
   /** Gym names by id, for the gym climbs a session logged without names. */
   gyms?: ReadonlyMap<string, string>;
 };
-
-/** How the climber reads boulder grades. */
-export type BoulderScale = "v" | "font";
 
 export type ClimbingInsightsVM = {
   avgSend: string | null;
@@ -168,20 +163,10 @@ function triedIn(sessions: readonly InsightsSession[], discipline: Discipline): 
   return [...byKey.values()];
 }
 
-/**
- * The mean grade of the sends on the grade ladder, rounded down to a grade: boulders in the
- * climber's scale, routes in the scale they were logged in.
- */
-export function avgSendLabel(
-  ranks: readonly number[],
-  format: GradeFormatter,
-  boulderScale: BoulderScale
-): string | null {
+/** The mean grade of the sends on the grade ladder, rounded down to a grade. */
+export function avgSendLabel(ranks: readonly number[], format: GradeFormatter): string | null {
   if (ranks.length === 0) return null;
-  const rank = Math.floor(ranks.reduce((sum, r) => sum + r, 0) / ranks.length);
-  const boulder =
-    format.discipline === "boulder" ? boulderGradeFromV(boulderScale, rank) : undefined;
-  return boulder === undefined ? format.label(rank) : formatGrade(boulder);
+  return format.label(Math.floor(ranks.reduce((sum, r) => sum + r, 0) / ranks.length));
 }
 
 const tryPill = (tries: number): ClimbLogRowVM["pill"] => ({
@@ -297,18 +282,14 @@ export function climbingInsightsVM(
   const shown = inRange.filter((s) => placed(s, filter.place));
   const tried = triedIn(shown, filter.discipline);
   const sent = tried.filter((c) => c.sent);
-  const format = gradeFormatterFor(
-    shown.flatMap((s) => s.climbs),
-    filter.discipline
-  );
+  const format = gradeFormatter(filter.discipline, filter.scales);
   const hardest = [...sent].sort(
     (a, b) => b.rank - a.rank || (a.sentAt ?? "").localeCompare(b.sentAt ?? "")
   )[0];
   return {
     avgSend: avgSendLabel(
       sent.map((c) => c.rank),
-      format,
-      filter.boulderScale
+      format
     ),
     sends: sent.length,
     flashed: sent.filter((c) => c.flashed).length,

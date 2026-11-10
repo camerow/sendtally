@@ -11,7 +11,7 @@ import { disciplineLabel } from "../log-session/types";
 import { climbKey } from "../climbs/transforms";
 import { t } from "../i18n";
 import { enduranceLapCountLabel, enduranceSummaryLabel } from "../log-session/endurance";
-import { climbGradeLabel } from "../sessions/grades";
+import { climbGradeLabel, type GradeScales } from "../sessions/grades";
 import type { ClimbSort } from "./types";
 
 /**
@@ -32,13 +32,18 @@ export type SessionClimbRowVM = Omit<ClimbLogRowVM, "id" | "pill"> & {
 
 type Group = { key: string; record: ClimbSummary | undefined; logged: SessionClimb[] };
 
-function groupKey(c: SessionClimb, record: ClimbSummary | undefined, i: number): string {
+function groupKey(
+  c: SessionClimb,
+  record: ClimbSummary | undefined,
+  i: number,
+  scales: GradeScales
+): string {
   if (c.endurance !== undefined) return `endurance:${i}`;
   if (record !== undefined) return `climb:${record.id}`;
   const name = climbKey(c.name);
   if (name !== "") return `name:${name}`;
   if (c.circuit !== undefined) return `circuit:${c.circuit.id}`;
-  return `grade:${climbDiscipline(c)}:${climbGradeLabel(c)}`;
+  return `grade:${climbDiscipline(c)}:${climbGradeLabel(c, scales)}`;
 }
 
 function pillOf(group: Group, tries: number): ClimbLogRowVM["pill"] {
@@ -53,7 +58,7 @@ function pillOf(group: Group, tries: number): ClimbLogRowVM["pill"] {
   return { kind: "tries", label: t("tally.tryCount", { count: tries }) };
 }
 
-function rowOf(group: Group, n: number, showArea: boolean): SessionClimbRowVM {
+function rowOf(group: Group, n: number, showArea: boolean, scales: GradeScales): SessionClimbRowVM {
   const [first] = group.logged as [SessionClimb, ...SessionClimb[]];
   const tries = group.logged.reduce((sum, l) => sum + l.tries, 0);
   const count = group.logged.length;
@@ -61,7 +66,7 @@ function rowOf(group: Group, n: number, showArea: boolean): SessionClimbRowVM {
   const name = named ? (group.record?.name ?? first.name) : disciplineLabel(climbDiscipline(first));
   const base = {
     id: named ? (group.record?.id ?? null) : null,
-    gradeLabel: climbGradeLabel(first),
+    gradeLabel: climbGradeLabel(first, scales),
     name,
     count,
     n,
@@ -91,20 +96,21 @@ export function namesClimbAreas(session: Pick<SessionDetail, "areas" | "location
  */
 export function sessionClimbRows(
   session: Pick<SessionDetail, "climbs" | "areas" | "location">,
-  catalogue: readonly ClimbSummary[]
+  catalogue: readonly ClimbSummary[],
+  scales: GradeScales
 ): SessionClimbRowVM[] {
   const ordered = [...session.climbs].sort((a, b) => Date.parse(a.time) - Date.parse(b.time));
   const groups = new Map<string, Group>();
   ordered.forEach((c, i) => {
     const record =
       climbKey(c.name) === "" ? undefined : catalogue.find((known) => isThisClimb(known, c));
-    const key = groupKey(c, record, i);
+    const key = groupKey(c, record, i, scales);
     const group = groups.get(key) ?? { key, record, logged: [] };
     group.logged.push(c);
     groups.set(key, group);
   });
   const showArea = namesClimbAreas(session);
-  return [...groups.values()].map((group, i) => rowOf(group, i + 1, showArea));
+  return [...groups.values()].map((group, i) => rowOf(group, i + 1, showArea, scales));
 }
 
 const SORTS: Record<ClimbSort, (a: SessionClimbRowVM, b: SessionClimbRowVM) => number> = {

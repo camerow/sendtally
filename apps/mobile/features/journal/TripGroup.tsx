@@ -10,7 +10,13 @@ import {
   type LogItem,
 } from "@sendtally/features/journal";
 import type { ClimbingSessionVM } from "@sendtally/features/climbs";
-import { logCountLabel, sessionTotals, sessionsIn } from "@sendtally/features/sessions";
+import {
+  logCountLabel,
+  sessionGradeLabel,
+  sessionTotals,
+  sessionsIn,
+  type GradeScales,
+} from "@sendtally/features/sessions";
 import { t } from "@sendtally/features/i18n";
 import { colors, fonts } from "@sendtally/design/tokens";
 import { Icon } from "../../components/Icon";
@@ -22,6 +28,7 @@ import { HANG_ROW_HEIGHT, HangRow } from "../sessions/HangRow";
 import { BLOCK_TAG_HEIGHT, sessionRowHeight } from "../sessions/SessionRow";
 import { ClimbingSessionRows } from "../sessions/ClimbingSessionRows";
 import { ROW_TAGS_HEIGHT, RowTags } from "../sessions/RowTags";
+import { useDisplayScales } from "@sendtally/features/settings";
 
 type TripItem = Extract<LogItem, { type: "entry" }>;
 
@@ -62,10 +69,11 @@ const sessionsOf = (items: LogItem[]): SessionRowData[] =>
   items.flatMap((i) => (i.type === "session" ? [i.session] : []));
 
 /** What the trip holds and the hardest thing in it - the duration would not fit beside them. */
-const tripMeta = (inside: LogItem[]): string => {
+const tripMeta = (inside: LogItem[], scales: GradeScales): string => {
   const totals = sessionTotals(sessionsIn(inside));
   if (totals.topGrade < 0) return logCountLabel(inside);
-  const grade = t("sessions.topGrade", { grade: totals.topGradeLabel ?? `V${totals.topGrade}` });
+  const label = sessionGradeLabel(totals.topGradeLabel, totals.topGrade, scales);
+  const grade = t("sessions.topGrade", { grade: label });
   return `${logCountLabel(inside)} · ${grade}`;
 };
 
@@ -105,6 +113,7 @@ export function TripGroup({
   /** Each session's climbs, set in under it in the climbing log. */
   climbing?: ReadonlyMap<string, ClimbingSessionVM>;
 }): React.ReactElement {
+  const scales = useDisplayScales();
   const last = item.inside.length - 1;
   return (
     <View
@@ -122,7 +131,7 @@ export function TripGroup({
           entryKindLabel("trip"),
           entryTitle(item.entry),
           spanLabel(item.entry.occurred_at, item.entry.ends_at),
-          tripMeta(item.inside),
+          tripMeta(item.inside, scales),
         ].join(", ")}
         style={press({
           flexDirection: "row",
@@ -174,7 +183,7 @@ export function TripGroup({
               color: colors.textSecondary,
             }}
           >
-            {tripMeta(item.inside)}
+            {tripMeta(item.inside, scales)}
           </Text>
           <RowTags tags={item.entry.tags} />
         </View>

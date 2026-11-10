@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { SessionDetail } from "@sendtally/api-client";
 import { climbMetaLabel, climbVMs, filterAndSortClimbs, sessionDetailVM } from "./transforms";
+import { DEFAULT_GRADE_SCALES as SCALES } from "../settings/transforms";
 
 const detail: SessionDetail = {
   fingerprint: "42-1",
@@ -84,7 +85,7 @@ const detail: SessionDetail = {
 
 describe("climbVMs", () => {
   it("derives result and top-send flags in climb order", () => {
-    const vms = climbVMs(detail.climbs);
+    const vms = climbVMs(detail.climbs, SCALES);
     expect(vms.map((c) => c.result)).toEqual(["flash", "sent", "project", "flash"]);
     expect(vms[1]?.isTopSend).toBe(true);
     expect(vms[2]?.isTopSend).toBe(false);
@@ -103,19 +104,24 @@ describe("climbVMs", () => {
     const link = { id: "c1", name: "Crimp Reaper", slug: "crimp-reaper" };
     const area = { id: "a1", name: "Buttermilks", slug: "buttermilks" };
     const climbs = detail.climbs.map((c, i) => (i === 1 ? { ...c, link, area } : c));
-    expect(climbVMs(climbs).map((c) => c.climbSlug)).toEqual([null, "crimp-reaper", null, null]);
-    expect(climbVMs(climbs).map((c) => c.area)).toEqual([null, "Buttermilks", null, null]);
+    expect(climbVMs(climbs, SCALES).map((c) => c.climbSlug)).toEqual([
+      null,
+      "crimp-reaper",
+      null,
+      null,
+    ]);
+    expect(climbVMs(climbs, SCALES).map((c) => c.area)).toEqual([null, "Buttermilks", null, null]);
   });
 
   it("calls an unsent climb a project only when it is one, and counts its tries otherwise", () => {
-    const vms = climbVMs(detail.climbs, new Set(), new Set(["mind meld"]));
+    const vms = climbVMs(detail.climbs, SCALES, new Set(), new Set(["mind meld"]));
     expect(vms.map((c) => [c.pill, c.resultLabel])).toEqual([
       ["flash", "Flash"],
       ["sent", "Sent"],
       ["project", "Project"],
       ["flash", "Flash"],
     ]);
-    const tried = climbVMs(detail.climbs);
+    const tried = climbVMs(detail.climbs, SCALES);
     expect([tried[2]?.pill, tried[2]?.resultLabel]).toEqual(["tries", "4 tries"]);
   });
 
@@ -124,7 +130,7 @@ describe("climbVMs", () => {
       ...detail,
       climbs: detail.climbs.map((c) => ({ ...c, kind: "attempt" as const })),
     };
-    const top = sessionDetailVM(unsent).stats.find((s) => s.label === "Top");
+    const top = sessionDetailVM(unsent, SCALES).stats.find((s) => s.label === "Top");
     expect(top).toEqual({ label: "Top", value: "-", accent: false });
   });
 
@@ -132,21 +138,23 @@ describe("climbVMs", () => {
     const at = (id: string, name: string) => ({ id, name, slug: id });
     const two = [at("a1", "Stanage Popular"), at("a2", "Stanage Plantation")];
     const outdoor = { ...detail, location: "outdoor" as const };
-    expect(sessionDetailVM({ ...outdoor, areas: two }).areas).toEqual(two);
-    expect(sessionDetailVM({ ...outdoor, areas: two }).climbAreas).toBe(true);
-    expect(sessionDetailVM({ ...outdoor, areas: [two[0]!] }).climbAreas).toBe(false);
-    expect(sessionDetailVM({ ...detail, location: "indoor", areas: [] }).climbAreas).toBe(true);
+    expect(sessionDetailVM({ ...outdoor, areas: two }, SCALES).areas).toEqual(two);
+    expect(sessionDetailVM({ ...outdoor, areas: two }, SCALES).climbAreas).toBe(true);
+    expect(sessionDetailVM({ ...outdoor, areas: [two[0]!] }, SCALES).climbAreas).toBe(false);
+    expect(sessionDetailVM({ ...detail, location: "indoor", areas: [] }, SCALES).climbAreas).toBe(
+      true
+    );
   });
 
   it("reads a one-try send of an earlier project as a send, not a flash", () => {
-    const vms = climbVMs(detail.climbs, new Set(["jug life"]));
+    const vms = climbVMs(detail.climbs, SCALES, new Set(["jug life"]));
     expect(vms.map((c) => c.result)).toEqual(["sent", "sent", "project", "flash"]);
   });
 });
 
 describe("filterAndSortClimbs", () => {
   it("filters by result and sorts by grade", () => {
-    const vms = climbVMs(detail.climbs);
+    const vms = climbVMs(detail.climbs, SCALES);
     expect(filterAndSortClimbs(vms, "flash", "order").map((c) => c.n)).toEqual([1, 4]);
     expect(filterAndSortClimbs(vms, "all", "gradeDesc").map((c) => c.gradeLabel)).toEqual([
       "V8",
@@ -160,7 +168,7 @@ describe("filterAndSortClimbs", () => {
 
 describe("sessionDetailVM", () => {
   it("builds the stats grid and grade bars", () => {
-    const vm = sessionDetailVM(detail);
+    const vm = sessionDetailVM(detail, SCALES);
     const byLabel = Object.fromEntries(vm.stats.map((s) => [s.label, s.value]));
     expect(byLabel["Time"]).toBe("1h 35m");
     expect(byLabel["Climbs"]).toBe("4");
@@ -179,43 +187,49 @@ describe("sessionDetailVM", () => {
   });
 
   it("marks a settled, unposted board session as read-only history", () => {
-    const vm = sessionDetailVM({
-      ...detail,
-      strava_activity_id: null,
-      posted_at: null,
-      post_state: null,
-      post_error: null,
-      membership_id: null,
-      week: null,
-      focus: null,
-    });
+    const vm = sessionDetailVM(
+      {
+        ...detail,
+        strava_activity_id: null,
+        posted_at: null,
+        post_state: null,
+        post_error: null,
+        membership_id: null,
+        week: null,
+        focus: null,
+      },
+      SCALES
+    );
     expect(vm.post.kind).toBe("legacy");
     expect(vm.post.label).toBe("Tension Board · read-only history");
     expect(vm.post.action).toBeNull();
   });
 
   it("shows On Strava for a posted session", () => {
-    const vm = sessionDetailVM(detail);
+    const vm = sessionDetailVM(detail, SCALES);
     expect(vm.post.label).toBe("On Strava · posted Jul 2");
   });
 
   it("titles a manual session by its name and shows its location", () => {
-    const vm = sessionDetailVM({
-      ...detail,
-      source: "manual",
-      board: null,
-      name: "Tuesday board night",
-      location: "indoor",
-      gym_id: null,
-      area_id: null,
-      strava_activity_id: null,
-      posted_at: null,
-      post_state: null,
-      post_error: null,
-      membership_id: null,
-      week: null,
-      focus: null,
-    });
+    const vm = sessionDetailVM(
+      {
+        ...detail,
+        source: "manual",
+        board: null,
+        name: "Tuesday board night",
+        location: "indoor",
+        gym_id: null,
+        area_id: null,
+        strava_activity_id: null,
+        posted_at: null,
+        post_state: null,
+        post_error: null,
+        membership_id: null,
+        week: null,
+        focus: null,
+      },
+      SCALES
+    );
     expect(vm.title).toContain("Tuesday board night");
     expect(vm.meta).toContain("· Indoor ·");
     expect(vm.post.label).toBe("Logged manually");
@@ -223,17 +237,21 @@ describe("sessionDetailVM", () => {
 
   it("places an outdoor day at its areas, joined", () => {
     const at = (id: string, name: string) => ({ id, name, slug: id });
-    const vm = sessionDetailVM({
-      ...detail,
-      location: "outdoor",
-      areas: [at("a1", "Stanage Popular"), at("a2", "Stanage Plantation")],
-    });
+    const vm = sessionDetailVM(
+      {
+        ...detail,
+        location: "outdoor",
+        areas: [at("a1", "Stanage Popular"), at("a2", "Stanage Plantation")],
+      },
+      SCALES
+    );
     expect(vm.place).toBe("Stanage Popular, Stanage Plantation");
   });
 
   it("names it without its date, places it in its gym and dates it on its own line", () => {
     const vm = sessionDetailVM(
       { ...detail, name: "Tuesday night session", location: "indoor", gym_id: "g1" },
+      SCALES,
       null,
       new Set(),
       "The Depot"
@@ -260,19 +278,21 @@ describe("sessionDetailVM", () => {
   const connected = { connected: true, active: true, since: null };
 
   it("offers a post action only when Strava is connected and active", () => {
-    expect(sessionDetailVM(unposted, connected).post.action).toBe("post");
+    expect(sessionDetailVM(unposted, SCALES, connected).post.action).toBe("post");
     expect(
-      sessionDetailVM(unposted, { connected: true, active: false, since: null }).post.action
+      sessionDetailVM(unposted, SCALES, { connected: true, active: false, since: null }).post.action
     ).toBeNull();
     expect(
-      sessionDetailVM(unposted, { connected: false, active: false, since: null }).post.action
+      sessionDetailVM(unposted, SCALES, { connected: false, active: false, since: null }).post
+        .action
     ).toBeNull();
-    expect(sessionDetailVM(unposted, null).post.action).toBeNull();
+    expect(sessionDetailVM(unposted, SCALES, null).post.action).toBeNull();
   });
 
   it("surfaces the failure reason with a retry action", () => {
     const vm = sessionDetailVM(
       { ...unposted, post_state: "failed", post_error: "strava rate limit hit, not posted yet" },
+      SCALES,
       connected
     );
     expect(vm.post.kind).toBe("failed");
@@ -282,14 +302,14 @@ describe("sessionDetailVM", () => {
   });
 
   it("reports a pending post without an action", () => {
-    const vm = sessionDetailVM({ ...unposted, post_state: "pending" }, connected);
+    const vm = sessionDetailVM({ ...unposted, post_state: "pending" }, SCALES, connected);
     expect(vm.post.kind).toBe("pending");
     expect(vm.post.label).toBe("Posting to Strava");
     expect(vm.post.action).toBeNull();
   });
 
   it("explains a session that starts before the posting start date", () => {
-    const vm = sessionDetailVM(unposted, {
+    const vm = sessionDetailVM(unposted, SCALES, {
       connected: true,
       active: true,
       since: "2026-08-01T00:00:00Z",
@@ -300,7 +320,7 @@ describe("sessionDetailVM", () => {
   });
 
   it("does not call a session before-start when it starts after the date", () => {
-    const vm = sessionDetailVM(unposted, {
+    const vm = sessionDetailVM(unposted, SCALES, {
       connected: true,
       active: true,
       since: "2026-01-01T00:00:00Z",
@@ -309,7 +329,7 @@ describe("sessionDetailVM", () => {
   });
 
   it("falls back to a generic title for an unnamed manual session", () => {
-    const vm = sessionDetailVM({ ...detail, source: "manual", board: null, name: null });
+    const vm = sessionDetailVM({ ...detail, source: "manual", board: null, name: null }, SCALES);
     expect(vm.title).toContain("Logged session");
   });
 });
@@ -364,13 +384,13 @@ describe("route sessions", () => {
   };
 
   it("labels climbs in the route scale and flags the top route send", () => {
-    const vms = climbVMs(routes.climbs);
+    const vms = climbVMs(routes.climbs, SCALES);
     expect(vms.map((c) => c.gradeLabel)).toEqual(["5.10a", "5.11d", "5.12a"]);
     expect(vms.map((c) => c.isTopSend)).toEqual([false, true, false]);
   });
 
   it("reports stats and grade bars in the route scale", () => {
-    const vm = sessionDetailVM(routes);
+    const vm = sessionDetailVM(routes, SCALES);
     const stat = (label: string): string | undefined =>
       vm.stats.find((s) => s.label === label)?.value;
     expect(stat("Top")).toBe("5.11d");
@@ -385,9 +405,9 @@ describe("route sessions", () => {
       ...routes,
       climbs: [...routes.climbs, { ...detail.climbs[0]!, grade: { scale: "v", value: 4 } }],
     };
-    const vm = sessionDetailVM(mixed);
+    const vm = sessionDetailVM(mixed, SCALES);
     expect(vm.stats.find((s) => s.label === "Top")?.value).toBe("5.11d");
-    expect(climbVMs(mixed.climbs).map((c) => c.gradeLabel)).toEqual([
+    expect(climbVMs(mixed.climbs, SCALES).map((c) => c.gradeLabel)).toEqual([
       "5.10a",
       "V4",
       "5.11d",
