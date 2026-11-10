@@ -47,6 +47,11 @@
       ],
       "footer-max-line-length": [
         0
+      ],
+      "header-max-length": [
+        2,
+        "always",
+        180
       ]
     }
   }

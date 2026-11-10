@@ -282,7 +282,7 @@ Avoid comments in code; make code short, composable, and obviously named.
   CI enforces this with commitlint on every commit in a pull request and on the pull request title, since a squash merge lands the title instead.
   The mobile release derives its semantic version from these subjects, so an unconventional commit silently downgrades a release to a patch bump.
   Config lives under the `commitlint` key in the root `package.json`.
-  `subject-case` and the body and footer line-length rules are off: proper nouns start real subjects here, and bodies carry prose and session URLs past 100 characters.
+  `subject-case` and the body and footer line-length rules are off: proper nouns start real subjects here, and bodies carry prose and session URLs past 100 characters. Headers may run to 180 characters (`header-max-length`): a subject that says what changed in plain words often passes 100.
 - Branch naming: `feat|chore|bug|refactor/<feature-name>` off `main`. No agent names or AI metadata in branch names.
 - No AI co-author trailers in commit messages.
 - PR descriptions: short clear paragraphs, bullet lists for completed tasks, `Closes #123` where an issue exists.
