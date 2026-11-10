@@ -1,0 +1,5 @@
+appId: com.sendtally.app
+---
+- tapOn:
+    id: "fab"
+- tapOn: "Live session, .*"

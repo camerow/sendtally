@@ -35,6 +35,7 @@ export function Fab({ label, onPress, menu }: FabProps): React.ReactElement {
       <Pressable
         onPress={onPress}
         accessibilityRole="button"
+        testID="fab"
         style={press({
           height: 52,
           flexDirection: "row",

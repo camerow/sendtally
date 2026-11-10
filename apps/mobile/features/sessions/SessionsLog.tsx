@@ -146,7 +146,7 @@ export function SessionsLog({ workout = null }: { workout?: string | null }): Re
           );
         }}
       />
-      <LogFab segment={segment} />
+      <LogFab />
     </SafeAreaView>
   );
 }

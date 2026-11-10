@@ -20,7 +20,6 @@ export const tally = {
   "tally.discardSession": "Supprimer la séance",
   "tally.discardTitle": "Supprimer cette séance ?",
   "tally.discardBody": "Toutes ses voies disparaissent aussi.",
-  "tally.startSession": "Commencer une séance",
   "tally.finishSession": "Terminer la séance",
   "tally.alreadyRunning": "Déjà en cours",
   "tally.record": "Enregistrer",
