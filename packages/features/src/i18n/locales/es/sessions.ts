@@ -71,4 +71,9 @@ export const sessions = {
   "sessions.addDetails": "Añadir detalles",
   "sessions.topSend": "máx. {grade}",
   "sessions.onlyWorkout": "Solo {name}",
+  "sessions.example": "Ejemplo",
+  "sessions.exampleEvening": "Sesión de tarde",
+  "sessions.exampleEveningMeta": "1h 50m · 6 encadenadas · máx V5",
+  "sessions.exampleCrag": "Sábado en la escuela",
+  "sessions.exampleCragMeta": "3h 10m · 4 encadenadas · máx 5.11a",
 } as const;

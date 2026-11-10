@@ -1,5 +1,11 @@
 appId: com.sendtally.app
+# The Log button's sheet holds it, or the empty log shows it before the first session.
 ---
-- tapOn:
-    id: "fab"
-- tapOn: "Live session, .*"
+- runFlow:
+    when:
+      visible:
+        id: "fab"
+    commands:
+      - tapOn:
+          id: "fab"
+- tapOn: "Live session(, .*)?"

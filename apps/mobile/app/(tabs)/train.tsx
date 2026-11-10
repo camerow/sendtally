@@ -1,3 +1,4 @@
+import { useLocalSearchParams } from "expo-router";
 import React from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors } from "@sendtally/design/tokens";
@@ -7,10 +8,11 @@ import { ScreenHeader } from "../../components/ScreenHeader";
 import { TrainScreen } from "../../features/training/train/TrainScreen";
 
 export default function Train(): React.ReactElement {
+  const { view } = useLocalSearchParams<{ view?: string }>();
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.white }} edges={["top"]}>
       <ScreenHeader title={t("training.train")} right={<AccountButton />} />
-      <TrainScreen />
+      <TrainScreen requested={view ?? null} />
     </SafeAreaView>
   );
 }

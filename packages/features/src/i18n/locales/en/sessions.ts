@@ -70,4 +70,9 @@ export const sessions = {
   "sessions.addDetails": "Add details",
   "sessions.topSend": "top {grade}",
   "sessions.onlyWorkout": "Only {name}",
+  "sessions.example": "Example",
+  "sessions.exampleEvening": "Evening session",
+  "sessions.exampleEveningMeta": "1h 50m · 6 sent · top V5",
+  "sessions.exampleCrag": "Saturday at the crag",
+  "sessions.exampleCragMeta": "3h 10m · 4 sent · top 5.11a",
 } as const;

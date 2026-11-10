@@ -17,6 +17,8 @@ export type MenuRowProps = {
   danger?: boolean;
   /** Under way: a spinner in place of the chevron, and no second press. */
   busy?: boolean;
+  /** Leaves the app: an arrow out in place of the chevron. */
+  external?: boolean;
 };
 
 const iconOf = (icon: MenuRowProps["icon"], ink: string): React.ReactElement => {
@@ -34,6 +36,7 @@ export function MenuRow({
   onPress,
   danger = false,
   busy = false,
+  external = false,
 }: MenuRowProps): React.ReactElement {
   const ink = danger ? colors.watermelonInk : colors.gunmetal;
   return (
@@ -90,7 +93,12 @@ export function MenuRow({
       {busy ? (
         <ActivityIndicator color={colors.gunmetal} />
       ) : (
-        <Icon name="chevron" size={12} strokeWidth={2} color="rgba(64,63,76,0.35)" />
+        <Icon
+          name={external ? "external" : "chevron"}
+          size={external ? 14 : 12}
+          strokeWidth={2}
+          color="rgba(64,63,76,0.35)"
+        />
       )}
     </Pressable>
   );

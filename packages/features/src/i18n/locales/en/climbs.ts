@@ -74,4 +74,5 @@ export const climbs = {
   "climbs.logSession": "Log session",
   "climbs.deleteClimb": "Delete climb",
   "climbs.deleteConfirm": "Delete {name}? Its sessions stay as logged.",
+  "climbs.importLog": "Import a log",
 } as const;

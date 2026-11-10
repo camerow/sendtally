@@ -75,4 +75,5 @@ export const climbs = {
   "climbs.logSession": "Noter une séance",
   "climbs.deleteClimb": "Supprimer la voie",
   "climbs.deleteConfirm": "Supprimer {name} ? Ses séances restent telles quelles.",
+  "climbs.importLog": "Importer un carnet",
 } as const;

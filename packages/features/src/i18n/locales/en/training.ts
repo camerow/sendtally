@@ -13,4 +13,11 @@ export const training = {
     "Notifications are off for sendtally. Turn them on in your phone's settings.",
   "training.reminderPromptBody":
     "One notification at {time} on days with something planned. Change it any time in Settings.",
+  "training.firstWorkout": "First workout",
+  "training.startWorkout": "Start a workout",
+  "training.logWorkout": "Log a workout",
+  "training.exampleHangs": "Max hangs",
+  "training.exampleHangsMeta": "25m · 2 grips",
+  "training.examplePull": "Pull and core",
+  "training.examplePullMeta": "50m · 4 exercises",
 } as const;
