@@ -33,7 +33,6 @@ import { EditorTextField } from "./EditorTextField";
 import { HangboardTiming } from "./HangboardTiming";
 import {
   draftOfEditor,
-  startingDraft,
   withExerciseSwapped,
   withItem,
   withItemsAdded,
@@ -79,7 +78,7 @@ function initialDraft(
     const draft = withEditorIds(draftOf(base));
     return id === undefined ? { ...draft, name: copyName(draft.name) } : draft;
   }
-  return kind === undefined ? null : startingDraft({ ...newWorkoutDraft(kind), focus });
+  return kind === undefined ? null : { ...newWorkoutDraft(kind), focus };
 }
 
 function Editor({

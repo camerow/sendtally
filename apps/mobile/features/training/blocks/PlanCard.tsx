@@ -1,26 +1,27 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
+import { Icon } from "../../../components/Icon";
 import { pressRow } from "../../../lib/press";
 import { Title } from "../components/Title";
 import { type } from "../type";
 
 export type PlanCardProps = {
   title: string;
-  /** Under the title, when it has dates. */
-  dates?: string;
+  /** Under the title: a block's dates, or what the plans in no block do. */
+  subtitle?: string;
   /** Makes the title a button. */
   open?: { label: string; onPress: () => void };
   children: React.ReactNode;
 };
 
 /** A framed set of plans under a title: a block, or the plans in no block. */
-export function PlanCard({ title, dates, open, children }: PlanCardProps): React.ReactElement {
+export function PlanCard({ title, subtitle, open, children }: PlanCardProps): React.ReactElement {
   const head = (
     <>
       <Title size={20}>{title}</Title>
-      {dates !== undefined && (
-        <Text style={[type.mono, { fontSize: 12, color: colors.textSecondary }]}>{dates}</Text>
+      {subtitle !== undefined && (
+        <Text style={[type.mono, { fontSize: 12, color: colors.textSecondary }]}>{subtitle}</Text>
       )}
     </>
   );
@@ -41,9 +42,10 @@ export function PlanCard({ title, dates, open, children }: PlanCardProps): React
           onPress={open.onPress}
           accessibilityRole="button"
           accessibilityLabel={open.label}
-          style={pressRow({ gap: 4 })}
+          style={pressRow({ flexDirection: "row", alignItems: "center", gap: 12 })}
         >
-          {head}
+          <View style={{ flex: 1, gap: 4 }}>{head}</View>
+          <Icon name="chevron" size={14} strokeWidth={2} color="rgba(64,63,76,0.45)" />
         </Pressable>
       )}
       {children}

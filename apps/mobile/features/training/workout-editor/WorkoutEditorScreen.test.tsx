@@ -78,9 +78,7 @@ async function type(label: string, digits: string, index = 0): Promise<void> {
 describe("Workout editor", () => {
   it("starts on General and saves the focus picked, saying what it means", async () => {
     await renderWithHang(<WorkoutEditorScreen kind="climbing" />, hangData(), world);
-    expect(screen.getByRole("radio", { name: "General" }).props.accessibilityState).toEqual({
-      checked: true,
-    });
+    await fireEvent.press(screen.getByRole("button", { name: "Focus, General" }));
     await fireEvent.press(screen.getByRole("radio", { name: "Power endurance" }));
     expect(screen.getByText("Hard efforts of one to a few minutes with short rests.")).toBeTruthy();
     await fireEvent.press(screen.getByText("Save"));
@@ -90,9 +88,12 @@ describe("Workout editor", () => {
 
   it("starts on the focus of the shelf it was made from", async () => {
     await renderWithHang(<WorkoutEditorScreen kind="strength" focus="power" />, hangData(), world);
-    expect(screen.getByRole("radio", { name: "Power" }).props.accessibilityState).toEqual({
-      checked: true,
-    });
+    expect(screen.getByRole("button", { name: "Focus, Power" })).toBeTruthy();
+  });
+
+  it("starts a new fingers workout with no exercises", async () => {
+    await renderWithHang(<WorkoutEditorScreen kind="hangboard" />, hangData(), world);
+    expect(screen.queryByText("Half crimp")).toBeNull();
   });
 
   it("makes a strength workout whose squat alternates a named A and B, resting between sets", async () => {

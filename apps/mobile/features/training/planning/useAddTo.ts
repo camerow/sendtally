@@ -9,6 +9,7 @@ import {
 import { useApi } from "../../../lib/api";
 import { useHangData } from "../data/HangDataContext";
 import { usePlanActions } from "../plan/usePlanActions";
+import { ongoingMembers } from "../plan/planGridRows";
 import type { AddFlow } from "./flowParams";
 
 /** Where an add puts a workout, and whether a plan is already there. */
@@ -73,6 +74,8 @@ export function useAddTo(flow: AddFlow): AddTo {
     plans:
       day !== null
         ? trainingDay(log, day, today).plans.map((o) => o.membership)
-        : log.plan.memberships.filter((m) => m.blockId === block?.id),
+        : flow.blockId === null
+          ? ongoingMembers(log.plan, today)
+          : log.plan.memberships.filter((m) => m.blockId === flow.blockId),
   };
 }

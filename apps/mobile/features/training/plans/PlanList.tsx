@@ -39,8 +39,8 @@ export function PlanList({ workoutId, name, kind }: PlanListProps): React.ReactE
             }
             onRemove={() =>
               confirmDestructive({
-                title: t("plan.removeTitle", { title: name }),
-                body: t("plan.removeBody"),
+                title: t("plan.removeFromTitle", { title: name, block: where }),
+                body: t("plan.removeHistoryKept"),
                 action: t("plan.removeAction"),
                 onConfirm: () => void actions.deleteMembership(m.id),
               })

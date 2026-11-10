@@ -23,7 +23,7 @@ export function BlockCard({ block, members, workout }: BlockCardProps): React.Re
   return (
     <PlanCard
       title={block.name}
-      dates={blockDateRange(block)}
+      subtitle={blockDateRange(block)}
       open={{
         label: t("plan.openBlock", { name: block.name }),
         onPress: () => openBlock(block.id, t("training.train")),

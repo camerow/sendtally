@@ -587,6 +587,7 @@ describe("templates", () => {
       ],
       weekChanges: [],
       order: [],
+      removed: [],
     });
   });
 

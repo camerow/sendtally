@@ -89,6 +89,7 @@ export {
   applyDraft,
   draftChange,
   draftMove,
+  draftRemove,
   draftSchedule,
   emptyDraft,
   type PlanDraft,

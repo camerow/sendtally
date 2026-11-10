@@ -150,8 +150,7 @@ export const workouts = {
     "Sets you logged keep their numbers. New sets ask for the new fields.",
   "workouts.changeMeasure": "Change",
   "workouts.editExercise": "Edit exercise",
-  "workouts.builtInNameLocked":
-    "Built-in names stay as they are, so they read right in every language.",
+  "workouts.builtInNameLocked": "Built-in exercise names cannot be changed",
   "workouts.exercise.fourByFours": "4x4s",
   "workouts.exercise.limitBouldering": "Limit bouldering",
   "workouts.exercise.campusLadders": "Campus ladders",

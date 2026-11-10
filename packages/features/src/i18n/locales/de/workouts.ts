@@ -152,8 +152,7 @@ export const workouts = {
     "Eingetragene Sätze behalten ihre Werte. Neue Sätze fragen nach den neuen Feldern.",
   "workouts.changeMeasure": "Ändern",
   "workouts.editExercise": "Übung bearbeiten",
-  "workouts.builtInNameLocked":
-    "Eingebaute Namen bleiben, wie sie sind, damit sie in jeder Sprache stimmen.",
+  "workouts.builtInNameLocked": "Namen eingebauter Übungen lassen sich nicht ändern",
   "workouts.exercise.fourByFours": "4x4",
   "workouts.exercise.limitBouldering": "Limit-Bouldern",
   "workouts.exercise.campusLadders": "Campus-Leitern",

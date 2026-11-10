@@ -131,9 +131,7 @@ describe("exercise editor", () => {
   it("keeps a built-in's name but changes what it is measured in", async () => {
     const { actions } = await renderWithHang(<ExerciseEditorScreen kind="hangboard" id="half" />);
     expect(screen.getByLabelText("Name").props.editable).toBe(false);
-    expect(
-      screen.getByText("Built-in names stay as they are, so they read right in every language.")
-    ).toBeTruthy();
+    expect(screen.getByText("Built-in exercise names cannot be changed")).toBeTruthy();
     await fireEvent.press(screen.getByText("Time × weight"));
     await fireEvent.press(screen.getByText("Save"));
     expect(actions.saveGrip).toHaveBeenCalledWith({

@@ -196,7 +196,13 @@ export function AddWorkoutsSheet({
                         workout={w}
                         dose={doseOf(w)}
                         state={now}
-                        thereLabel={flow.date !== null ? t("plan.onDay") : t("plan.inBlock")}
+                        thereLabel={
+                          flow.date !== null
+                            ? t("plan.onDay")
+                            : flow.blockId === null
+                              ? t("plan.ongoing")
+                              : t("plan.inBlock")
+                        }
                         onOpen={() => leave("/workout/[id]", { id: w.id })}
                         onToggle={() =>
                           now === "added"

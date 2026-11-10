@@ -1,3 +1,4 @@
+import { router } from "expo-router";
 import React from "react";
 import { View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
@@ -16,7 +17,7 @@ import { DashedPanel } from "../components/DashedPanel";
 import { Title } from "../components/Title";
 import { useHangData } from "../data/HangDataContext";
 import { PlanGrid } from "../plan/PlanGrid";
-import { liveMembers, planGridRows } from "../plan/planGridRows";
+import { ongoingMembers, planGridRows } from "../plan/planGridRows";
 import { BlockRow } from "./BlockRow";
 import { pastMeta, templateMeta } from "./blockMeta";
 
@@ -48,11 +49,7 @@ export function BlocksList(): React.ReactElement {
   const { log } = useTrainingLog(useApi());
   const { plan, workout } = log;
   const { current, upcoming, templates, past } = blockGroups(plan.blocks, today);
-  const ongoing = planGridRows(
-    liveMembers(plan, today).filter((m) => m.blockId === null),
-    workout,
-    model
-  );
+  const ongoing = planGridRows(ongoingMembers(plan, today), workout, model);
   const weeks = (n: number): string => t("calendar.weeks", { count: n });
   const nothing = plan.blocks.length === 0 && ongoing.length === 0;
 
@@ -73,7 +70,15 @@ export function BlocksList(): React.ReactElement {
             />
           ))}
           {ongoing.length > 0 && (
-            <PlanCard title={t("plan.ongoing")}>
+            <PlanCard
+              title={t("plan.ongoing")}
+              subtitle={t("plan.ongoingRepeats")}
+              open={{
+                label: t("plan.openBlock", { name: t("plan.ongoing") }),
+                onPress: () =>
+                  router.push({ pathname: "/plan/ongoing", params: { back: t("training.train") } }),
+              }}
+            >
               <PlanGrid rows={ongoing} framed={false} />
             </PlanCard>
           )}

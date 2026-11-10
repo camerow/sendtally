@@ -155,8 +155,7 @@ export const workouts = {
     "Les séries notées gardent leurs valeurs. Les nouvelles demandent les nouveaux champs.",
   "workouts.changeMeasure": "Changer",
   "workouts.editExercise": "Modifier l’exercice",
-  "workouts.builtInNameLocked":
-    "Les noms intégrés restent tels quels, pour se lire juste dans chaque langue.",
+  "workouts.builtInNameLocked": "Les noms des exercices intégrés ne peuvent pas être modifiés",
   "workouts.exercise.fourByFours": "4x4",
   "workouts.exercise.limitBouldering": "Bloc à la limite",
   "workouts.exercise.campusLadders": "Échelles au campus",

@@ -154,8 +154,7 @@ export const workouts = {
     "Las series anotadas conservan sus valores. Las nuevas piden los campos nuevos.",
   "workouts.changeMeasure": "Cambiar",
   "workouts.editExercise": "Editar ejercicio",
-  "workouts.builtInNameLocked":
-    "Los nombres integrados se quedan como están, para leerse bien en cada idioma.",
+  "workouts.builtInNameLocked": "Los nombres de los ejercicios integrados no se pueden cambiar",
   "workouts.exercise.fourByFours": "4x4",
   "workouts.exercise.limitBouldering": "Bloque al límite",
   "workouts.exercise.campusLadders": "Escaleras en campus",

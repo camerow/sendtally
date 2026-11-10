@@ -3,16 +3,27 @@ import type { Block, Membership, WeekChange } from "@sendtally/core/hang";
 import { blockMembers } from "./blocks";
 import { scheduleOf, type DaySchedule } from "./weekDays";
 
-/** Edits held until Save: the block as typed, days as tapped, load as set, workouts as ordered. */
+/**
+ * Edits held until Save: the block as typed, days as tapped, load as set, workouts as ordered
+ * and taken out.
+ */
 export type PlanDraft = {
   block: Block | null;
   schedules: readonly DaySchedule[];
   weekChanges: readonly WeekChange[];
   /** Membership ids in their new order; none while the order is untouched. */
   order: readonly string[];
+  /** Memberships taken out on Save. */
+  removed: readonly string[];
 };
 
-export const emptyDraft: PlanDraft = { block: null, schedules: [], weekChanges: [], order: [] };
+export const emptyDraft: PlanDraft = {
+  block: null,
+  schedules: [],
+  weekChanges: [],
+  order: [],
+  removed: [],
+};
 
 /** The plan with memberships placed as `order` lists them. */
 const withOrder = (plan: Plan, order: readonly string[]): Plan => ({
@@ -66,10 +77,14 @@ export function movedWith(plan: Plan, block: Block): Membership[] {
 
 /** The plan as the draft would leave it. */
 export function applyDraft(plan: Plan, draft: PlanDraft): Plan {
-  const next = withOrder(
+  const ordered = withOrder(
     draft.weekChanges.reduce(withChange, draft.schedules.reduce(withSchedule, plan)),
     draft.order
   );
+  const next = {
+    ...ordered,
+    memberships: ordered.memberships.filter((m) => !draft.removed.includes(m.id)),
+  };
   const { block } = draft;
   if (block === null) return next;
   const moved = new Set(movedWith(plan, block).map((m) => m.id));
@@ -92,6 +107,15 @@ export const draftSchedule = (draft: PlanDraft, schedule: DaySchedule): PlanDraf
 export const draftChange = (draft: PlanDraft, change: WeekChange): PlanDraft => ({
   ...draft,
   weekChanges: [...draft.weekChanges.filter((c) => !sameRung(c, change)), change],
+});
+
+/** The draft with a membership taken out, and nothing else of it left to save. */
+export const draftRemove = (draft: PlanDraft, membershipId: string): PlanDraft => ({
+  ...draft,
+  schedules: draft.schedules.filter((s) => s.membershipId !== membershipId),
+  weekChanges: draft.weekChanges.filter((c) => c.membershipId !== membershipId),
+  order: draft.order.filter((id) => id !== membershipId),
+  removed: [...draft.removed, membershipId],
 });
 
 /** The draft with one of the block's workouts moved `by` places, as the plan shows it now. */
