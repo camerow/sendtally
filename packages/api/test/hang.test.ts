@@ -174,42 +174,42 @@ describe("hangboard", () => {
     expect(await (await call(userId, "PUT", "/grips/g1", { name: "HALF crimp" })).json()).toEqual({
       grip: { id: "half", name: "Half crimp", custom: false, hidden: false },
     });
-    await call(userId, "PUT", "/grips/g2", { name: "Mono" });
-    expect(await (await call(userId, "PUT", "/grips/g3", { name: " mono " })).json()).toEqual({
-      grip: { id: "g2", name: "Mono", custom: true, hidden: false },
+    await call(userId, "PUT", "/grips/g2", { name: "Pocket" });
+    expect(await (await call(userId, "PUT", "/grips/g3", { name: " pocket " })).json()).toEqual({
+      grip: { id: "g2", name: "Pocket", custom: true, hidden: false },
     });
-    expect(await (await call(userId, "PUT", "/grips/g2", { name: "MONO" })).json()).toEqual({
-      grip: { id: "g2", name: "MONO", custom: true, hidden: false },
+    expect(await (await call(userId, "PUT", "/grips/g2", { name: "POCKET" })).json()).toEqual({
+      grip: { id: "g2", name: "POCKET", custom: true, hidden: false },
     });
     expect((await read(userId)).grips).toEqual([
-      { id: "g2", name: "MONO", custom: true, hidden: false },
+      { id: "g2", name: "POCKET", custom: true, hidden: false },
     ]);
   });
 
   it("renames a grip, but not onto a name another grip has", async () => {
     const userId = "user_hang_grip_rename";
-    await call(userId, "PUT", "/grips/g1", { name: "Mono" });
+    await call(userId, "PUT", "/grips/g1", { name: "Pocket" });
     await call(userId, "PUT", "/grips/g2", { name: "Wide pinch" });
-    expect((await call(userId, "PUT", "/grips/g1", { name: "Front 3" })).status).toBe(200);
+    expect((await call(userId, "PUT", "/grips/g1", { name: "Narrow pinch" })).status).toBe(200);
     expect((await call(userId, "PUT", "/grips/g1", { name: "wide PINCH" })).status).toBe(409);
     expect((await call(userId, "PUT", "/grips/g1", { name: "Sloper" })).status).toBe(409);
-    expect((await read(userId)).grips.map((g) => g.name)).toEqual(["Front 3", "Wide pinch"]);
+    expect((await read(userId)).grips.map((g) => g.name)).toEqual(["Narrow pinch", "Wide pinch"]);
   });
 
   it("hides a deleted grip, keeps its history, and shows it again when re-added", async () => {
     const userId = "user_hang_grip_delete";
-    await call(userId, "PUT", "/grips/g1", { name: "Mono" });
+    await call(userId, "PUT", "/grips/g1", { name: "Pocket" });
     await call(userId, "PUT", "/default-grips/rep73", { gripId: "g1" });
     await call(userId, "PUT", "/sessions/h1", { ...sessionBody, gripId: "g1" });
 
     expect(await (await call(userId, "DELETE", "/grips/g1")).json()).toEqual({ deleted: true });
     const hidden = await read(userId);
-    expect(hidden.grips).toEqual([{ id: "g1", name: "Mono", custom: true, hidden: true }]);
+    expect(hidden.grips).toEqual([{ id: "g1", name: "Pocket", custom: true, hidden: true }]);
     expect(hidden.defaultGrips).toEqual({});
     expect(hidden.sessions.map((s) => s.gripId)).toEqual(["g1"]);
 
-    expect(await (await call(userId, "PUT", "/grips/g9", { name: "mono" })).json()).toEqual({
-      grip: { id: "g1", name: "Mono", custom: true, hidden: false },
+    expect(await (await call(userId, "PUT", "/grips/g9", { name: "pocket" })).json()).toEqual({
+      grip: { id: "g1", name: "Pocket", custom: true, hidden: false },
     });
     expect((await read(userId)).grips[0]?.hidden).toBe(false);
     expect(await (await call(userId, "DELETE", "/grips/nope")).json()).toEqual({ deleted: false });
@@ -230,7 +230,7 @@ describe("hangboard", () => {
     expect(archived.grips).toEqual([{ ...half, hidden: true, measure: "repsWeight" }]);
     expect(archived.defaultGrips).toEqual({});
 
-    await call(userId, "PUT", "/grips/g1", { name: "Mono" });
+    await call(userId, "PUT", "/grips/g1", { name: "Pocket" });
     expect((await call(userId, "PUT", "/grips/g1", { name: "half CRIMP" })).status).toBe(409);
     expect(await (await call(userId, "PUT", "/grips/g2", { name: "half crimp" })).json()).toEqual({
       grip: { ...half, measure: "repsWeight" },
@@ -246,16 +246,16 @@ describe("hangboard", () => {
 
   it("renames a grip onto a deleted grip's name, which keeps its own for history", async () => {
     const userId = "user_hang_grip_rename_hidden";
-    await call(userId, "PUT", "/grips/g1", { name: "Mono" });
-    await call(userId, "PUT", "/grips/g2", { name: "Mono 2" });
+    await call(userId, "PUT", "/grips/g1", { name: "Pocket" });
+    await call(userId, "PUT", "/grips/g2", { name: "Pocket 2" });
     await call(userId, "DELETE", "/grips/g1");
-    expect((await call(userId, "PUT", "/grips/g2", { name: "mono" })).status).toBe(200);
-    expect(await (await call(userId, "PUT", "/grips/g9", { name: "MONO" })).json()).toEqual({
-      grip: { id: "g2", name: "mono", custom: true, hidden: false },
+    expect((await call(userId, "PUT", "/grips/g2", { name: "pocket" })).status).toBe(200);
+    expect(await (await call(userId, "PUT", "/grips/g9", { name: "POCKET" })).json()).toEqual({
+      grip: { id: "g2", name: "pocket", custom: true, hidden: false },
     });
     expect((await read(userId)).grips).toEqual([
-      { id: "g1", name: "Mono", custom: true, hidden: true },
-      { id: "g2", name: "mono", custom: true, hidden: false },
+      { id: "g1", name: "Pocket", custom: true, hidden: true },
+      { id: "g2", name: "pocket", custom: true, hidden: false },
     ]);
   });
 

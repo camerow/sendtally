@@ -1,0 +1,407 @@
+<title>Training Library Editor</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+  /* Layout: gunmetal header band, then list (left) and editor (right); stacks under 860px. sendtally tokens. */
+  :root {
+    --page: #f7f6f3;
+    --card: #ffffff;
+    --ink: #403f4c;
+    --ink-2: rgba(64, 63, 76, 0.72);
+    --line: rgba(64, 63, 76, 0.12);
+    --line-strong: rgba(64, 63, 76, 0.26);
+    --band: #403f4c;
+    --band-ink: #ffffff;
+    --band-2: rgba(238, 211, 248, 0.88);
+    --gold: #f9dc5c;
+    --gold-ink: #403f4c;
+    --accent: #1b62ce;
+    --danger: #c4303d;
+    --ok: #157f52;
+    --soft: rgba(64, 63, 76, 0.05);
+    --display: "Bricolage Grotesque", system-ui, sans-serif;
+    --sans: "IBM Plex Sans", system-ui, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --page: #2b2a33; --card: #35343f; --ink: #f1eff6; --ink-2: rgba(238, 236, 246, 0.72);
+      --line: rgba(238, 211, 248, 0.14); --line-strong: rgba(238, 211, 248, 0.3);
+      --band: #232229; --band-ink: #ffffff; --band-2: rgba(238, 211, 248, 0.8);
+      --accent: #7fb0ff; --danger: #ff7f8a; --ok: #6fd3a5; --soft: rgba(238, 211, 248, 0.06);
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --page: #2b2a33; --card: #35343f; --ink: #f1eff6; --ink-2: rgba(238, 236, 246, 0.72);
+    --line: rgba(238, 211, 248, 0.14); --line-strong: rgba(238, 211, 248, 0.3);
+    --band: #232229; --band-ink: #ffffff; --band-2: rgba(238, 211, 248, 0.8);
+    --accent: #7fb0ff; --danger: #ff7f8a; --ok: #6fd3a5; --soft: rgba(238, 211, 248, 0.06);
+    color-scheme: dark;
+  }
+  body { background: var(--page); color: var(--ink); font-family: var(--sans); font-size: 14px; }
+  .gutter { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  header { background: var(--band); color: var(--band-ink); }
+  header .inner { max-width: 1180px; margin: 0 auto; padding-block: 20px 18px; display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: end; justify-content: space-between; }
+  .kicker { font: 500 11px/1 var(--mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--gold); }
+  h1 { font: 800 28px/1.1 var(--display); margin: 6px 0 0; text-wrap: balance; }
+  .pending-bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; color: var(--band-2); }
+  .pending-bar strong { color: var(--band-ink); }
+  main { max-width: 1180px; margin: 0 auto; padding-block: 20px 48px; display: grid; grid-template-columns: minmax(0, 380px) minmax(0, 1fr); gap: 20px; align-items: start; }
+  @media (max-width: 860px) { main { grid-template-columns: minmax(0, 1fr); } #editorWrap { order: -1; } }
+  .panel { background: var(--card); border: 1px solid var(--line); border-radius: 14px; }
+  .tabs { display: flex; gap: 4px; padding: 6px; background: var(--soft); border-radius: 10px; }
+  .tabs button { flex: 1; border: 0; background: transparent; color: var(--ink-2); font: 600 13px var(--sans); padding: 8px; border-radius: 7px; cursor: pointer; }
+  .tabs button[aria-selected="true"] { background: var(--card); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,0.08); }
+  .listHead { padding: 12px; display: grid; gap: 10px; border-bottom: 1px solid var(--line); }
+  .row2 { display: flex; gap: 8px; }
+  .row2 > * { flex: 1; min-width: 0; }
+  .group { font: 500 11px var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-2); padding: 14px 14px 6px; }
+  .item { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; border: 0; border-top: 1px solid var(--line); background: transparent; color: var(--ink); padding: 10px 14px; cursor: pointer; font: inherit; }
+  .group + .item { border-top: 0; }
+  .item:hover { background: var(--soft); }
+  .item[aria-current="true"] { background: var(--soft); box-shadow: inset 3px 0 0 var(--accent); }
+  .item .name { flex: 1; min-width: 0; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .item .meta { font: 12px var(--mono); color: var(--ink-2); white-space: nowrap; }
+  .chip { font: 600 10px/1 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; padding: 4px 6px; border-radius: 5px; background: var(--gold); color: var(--gold-ink); white-space: nowrap; }
+  .listBody { max-height: calc(100vh - 230px); overflow-y: auto; padding-bottom: 6px; }
+  @media (max-width: 860px) { .listBody { max-height: none; } }
+  .empty { padding: 28px 18px; color: var(--ink-2); line-height: 1.5; }
+  .editor { padding: 20px; display: grid; gap: 18px; }
+  .editor h2 { font: 700 22px/1.2 var(--display); margin: 0; }
+  .fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px 14px; }
+  label { display: grid; gap: 5px; font: 500 12px var(--sans); color: var(--ink-2); }
+  label.wide { grid-column: 1 / -1; }
+  input, select, textarea { font: 14px var(--sans); color: var(--ink); background: var(--card); border: 1px solid var(--line-strong); border-radius: 8px; padding: 8px 10px; min-width: 0; width: 100%; box-sizing: border-box; }
+  textarea { resize: vertical; min-height: 64px; line-height: 1.45; }
+  input:disabled { background: var(--soft); color: var(--ink-2); }
+  input.mono { font-family: var(--mono); font-size: 13px; }
+  :is(input, select, textarea, button):focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(49, 133, 252, 0.35); border-color: var(--accent); }
+  .btn { border: 1px solid var(--line-strong); background: var(--card); color: var(--ink); font: 600 13px var(--sans); padding: 8px 14px; border-radius: 10px; cursor: pointer; white-space: nowrap; }
+  .btn.primary { background: #403f4c; border-color: #403f4c; color: #fff; }
+  .btn.gold { background: var(--gold); border-color: var(--gold); color: var(--gold-ink); }
+  .btn.danger { color: var(--danger); }
+  .btn.small { padding: 5px 10px; font-size: 12px; border-radius: 8px; }
+  .btn:disabled { opacity: 0.5; cursor: default; }
+  .actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .actions .spacer { flex: 1; }
+  .section-label { font: 500 11px var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-2); }
+  .wItem { border: 1px solid var(--line); border-radius: 10px; padding: 12px; display: grid; gap: 10px; background: var(--soft); }
+  .wItemHead { display: flex; gap: 8px; align-items: center; }
+  .wItemHead select { flex: 1; }
+  .doses { overflow-x: auto; }
+  .doses table { border-collapse: collapse; width: 100%; min-width: 480px; }
+  .doses th { font: 500 11px var(--mono); color: var(--ink-2); text-align: left; padding: 0 4px 4px; text-transform: uppercase; letter-spacing: 0.06em; }
+  .doses td { padding: 2px 4px; }
+  .doses input { padding: 6px 8px; font-family: var(--mono); font-variant-numeric: tabular-nums; }
+  .doses td.letter { font: 600 12px var(--mono); color: var(--ink-2); width: 18px; }
+  .hint { color: var(--ink-2); font-size: 13px; line-height: 1.5; margin: 0; }
+  .err { color: var(--danger); font-size: 13px; margin: 0; }
+  .status { font-size: 13px; color: var(--ok); }
+  .iconBtn { border: 0; background: transparent; color: var(--ink-2); cursor: pointer; font: 16px/1 var(--sans); padding: 6px 8px; border-radius: 6px; }
+  .iconBtn:hover { background: var(--card); color: var(--ink); }
+  code { font-family: var(--mono); font-size: 12.5px; }
+  @media (prefers-reduced-motion: no-preference) { .item, .btn { transition: background 0.12s; } }
+</style>
+
+<header class="gutter">
+  <div class="inner">
+    <div>
+      <div class="kicker">sendtally · built-in library</div>
+      <h1>Training library editor</h1>
+    </div>
+    <div class="pending-bar" id="pendingBar"></div>
+  </div>
+</header>
+
+<main class="gutter">
+  <section class="panel" aria-label="Library">
+    <div class="listHead">
+      <div class="tabs" role="tablist">
+        <button role="tab" id="tabExercises" aria-selected="true">Exercises</button>
+        <button role="tab" id="tabWorkouts" aria-selected="false">Workouts</button>
+      </div>
+      <div class="row2">
+        <input id="search" type="search" placeholder="Search" aria-label="Search">
+        <button class="btn gold" id="newBtn">+ New</button>
+      </div>
+    </div>
+    <div class="listBody" id="list"><p class="empty">Loading the library…</p></div>
+  </section>
+  <section class="panel" id="editorWrap" aria-label="Editor">
+    <div class="editor" id="editor">
+      <h2>Pick something to edit</h2>
+      <p class="hint">Edits and new entries are saved here as pending changes.
+        Run <code>/library-add apply</code> in Claude Code and Claude writes them into the code, translates the names, runs the checks and marks them built.</p>
+    </div>
+  </section>
+</main>
+
+<script>
+const EXERCISE_KINDS = ["climbing", "strength", "mobility", "other"];
+const MEASURES = ["reps", "repsWeight", "seconds", "secondsWeight", "rounds"];
+const MEASURE_LABEL = { reps: "Reps", repsWeight: "Reps × weight", seconds: "Seconds", secondsWeight: "Seconds × weight", rounds: "Rounds" };
+const WORKOUT_KINDS = ["hangboard", "climbing", "strength", "mobility", "other"];
+const FOCI = ["strength", "power", "power_endurance", "endurance", "conditioning", "skill", "recovery"];
+const GRIPS = { half: "Half crimp", full: "Full crimp", open: "Open hand", drag: "3-finger drag", sloper: "Sloper", pinch: "Pinch", front3: "Front 3", back3: "Back 3", front2: "Front 2", middle2: "Middle 2", back2: "Back 2", mono: "Mono" };
+const STEPS = { hard: "Hard", easy: "Easy" };
+const DOSE_FIELDS = [["sets", "Sets"], ["reps", "Reps"], ["onS", "On s"], ["offS", "Off s"], ["setRestS", "Set rest s"]];
+const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1).replace(/_/g, " ");
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+const camel = (s) => s.toLowerCase().replace(/[^a-z0-9]+(.)?/g, (_, c) => (c ? c.toUpperCase() : "")).replace(/^[0-9]+/, "");
+const kebab = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+const docId = (e) => (e.type === "exercise" ? "ex-" : "wo-") + e.id;
+
+let db = null;
+let entries = new Map();
+let tab = "exercise";
+let selected = null;
+let draft = null;
+let message = "";
+
+const $ = (id) => document.getElementById(id);
+
+function renderPending() {
+  const pending = [...entries.values()].filter((e) => e.status === "pending").length;
+  $("pendingBar").innerHTML = pending
+    ? `<span><strong>${pending}</strong> pending ${pending === 1 ? "change" : "changes"}</span><button class="btn gold small" id="copyCmd">Copy /library-add apply</button>`
+    : `<span>Everything here is in the code</span>`;
+  $("copyCmd")?.addEventListener("click", async (ev) => {
+    try { await navigator.clipboard.writeText("/library-add apply"); ev.target.textContent = "Copied"; }
+    catch { ev.target.textContent = "/library-add apply"; }
+  });
+}
+
+function renderList() {
+  const q = $("search").value.trim().toLowerCase();
+  const kinds = tab === "exercise" ? EXERCISE_KINDS : WORKOUT_KINDS;
+  const rows = [...entries.values()].filter((e) => e.type === tab && (!q || e.name.toLowerCase().includes(q) || e.id.toLowerCase().includes(q)));
+  if (!entries.size) {
+    $("list").innerHTML = `<p class="empty">The library has not been loaded into this editor yet. Run <code>/library-add sync</code> in Claude Code to load what is in the code.</p>`;
+    return;
+  }
+  let html = "";
+  for (const kind of kinds) {
+    const inKind = rows.filter((e) => e.kind === kind);
+    if (!inKind.length) continue;
+    html += `<div class="group">${esc(cap(kind))} · ${inKind.length}</div>`;
+    for (const e of inKind) {
+      const meta = e.type === "exercise" ? MEASURE_LABEL[e.measure] ?? e.measure : e.focus ? cap(e.focus) : "General";
+      const chip = e.status === "pending" ? `<span class="chip">${e.isNew ? "New" : "Edited"}</span>` : "";
+      html += `<button class="item" data-key="${esc(docId(e))}" aria-current="${selected === docId(e)}"><span class="name">${esc(e.name)}</span>${chip}<span class="meta">${esc(meta)}</span></button>`;
+    }
+  }
+  $("list").innerHTML = html || `<p class="empty">Nothing matches.</p>`;
+  $("list").querySelectorAll(".item").forEach((b) => b.addEventListener("click", () => open(b.dataset.key)));
+}
+
+function open(key) {
+  selected = key;
+  draft = structuredClone(entries.get(key));
+  message = "";
+  renderList();
+  renderEditor();
+  if (matchMedia("(max-width: 860px)").matches) $("editorWrap").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function startNew() {
+  selected = null;
+  message = "";
+  draft = tab === "exercise"
+    ? { type: "exercise", id: "", name: "", kind: "strength", measure: "reps", startSets: null, note: "", status: "pending", isNew: true }
+    : { type: "workout", id: "", name: "", blurb: "", kind: "strength", focus: null, minutes: 30, targetRpe: 7, items: [], note: "", status: "pending", isNew: true };
+  renderList();
+  renderEditor();
+}
+
+function exerciseOptions(kind, current) {
+  if (kind === "hangboard") {
+    return Object.entries(GRIPS).map(([id, n]) => `<option value="grip:${id}" ${current === "grip:" + id ? "selected" : ""}>${esc(n)}</option>`).join("");
+  }
+  const exs = [...entries.values()].filter((e) => e.type === "exercise").sort((a, b) => a.name.localeCompare(b.name));
+  let html = `<option value="">Choose an exercise</option>`;
+  for (const k of EXERCISE_KINDS) {
+    const opts = exs.filter((e) => e.kind === k).map((e) => `<option value="${esc(e.id)}" ${current === e.id ? "selected" : ""}>${esc(e.name)}${e.status === "pending" && e.isNew ? " (new)" : ""}</option>`).join("");
+    if (opts) html += `<optgroup label="${esc(cap(k))}">${opts}</optgroup>`;
+  }
+  html += `<optgroup label="Interval steps">${Object.entries(STEPS).map(([id, n]) => `<option value="step:${id}" ${current === "step:" + id ? "selected" : ""}>${n}</option>`).join("")}</optgroup>`;
+  return html;
+}
+
+function renderEditor() {
+  const d = draft;
+  if (!d) return;
+  const locked = !d.isNew;
+  const sel = (id, opts, value, label) => `<select id="${id}">${opts.map((o) => `<option value="${o}" ${o === value ? "selected" : ""}>${esc(label ? label(o) : cap(o))}</option>`).join("")}</select>`;
+  let html = `<div><div class="section-label">${d.type === "exercise" ? "Exercise" : "Workout"} · ${d.isNew ? "new" : d.status === "pending" ? "edited, not in the code yet" : "in the code"}</div><h2>${esc(d.name || (d.type === "exercise" ? "New exercise" : "New workout"))}</h2></div><div class="fields">`;
+  html += `<label>Name (English)<input id="f-name" value="${esc(d.name)}" autocomplete="off"></label>`;
+  html += `<label>ID ${locked ? "(fixed forever)" : ""}<input id="f-id" class="mono" value="${esc(d.id)}" ${locked ? "disabled" : ""} placeholder="${d.type === "exercise" ? "pullUps" : "strength-pyramid"}"></label>`;
+  if (d.type === "exercise") {
+    const measures = d.kind === "climbing" ? ["reps", "seconds"] : MEASURES;
+    html += `<label>Kind${sel("f-kind", EXERCISE_KINDS, d.kind)}</label>`;
+    html += `<label>Measure${sel("f-measure", measures, d.measure, (m) => MEASURE_LABEL[m])}</label>`;
+    html += `<label>Starting sets (optional)<input id="f-startSets" type="number" min="1" inputmode="numeric" value="${d.startSets ?? ""}" placeholder="Measure default"></label>`;
+  } else {
+    html += `<label>Kind${sel("f-kind", WORKOUT_KINDS, d.kind)}</label>`;
+    html += `<label>Focus<select id="f-focus"><option value="">General</option>${FOCI.map((f) => `<option value="${f}" ${d.focus === f ? "selected" : ""}>${cap(f)}</option>`).join("")}</select></label>`;
+    if (d.kind !== "hangboard") {
+      html += `<label>Minutes<input id="f-minutes" type="number" min="1" inputmode="numeric" value="${d.minutes ?? ""}"></label>`;
+      html += `<label>Target RPE (1-10)<input id="f-targetRpe" type="number" min="1" max="10" inputmode="numeric" value="${d.targetRpe ?? ""}"></label>`;
+    }
+    html += `<label class="wide">Description (one sentence)<textarea id="f-blurb" rows="2">${esc(d.blurb)}</textarea></label>`;
+  }
+  html += `<label class="wide">Note to Claude (optional)<textarea id="f-note" rows="2" placeholder="Anything the form cannot say">${esc(d.note)}</textarea></label></div>`;
+
+  if (d.type === "workout") {
+    if (d.kind === "climbing") {
+      html += `<p class="hint">Climbing workouts have no items; the session tally does the logging.</p>`;
+    } else {
+      html += `<div class="section-label">Items</div>`;
+      d.items.forEach((it, i) => {
+        html += `<div class="wItem"><div class="wItemHead"><select data-item="${i}" class="f-ref" aria-label="Exercise ${i + 1}">${exerciseOptions(d.kind, it.ref)}</select>
+          <button class="iconBtn" data-up="${i}" aria-label="Move up" ${i === 0 ? "disabled" : ""}>↑</button>
+          <button class="iconBtn" data-down="${i}" aria-label="Move down" ${i === d.items.length - 1 ? "disabled" : ""}>↓</button>
+          <button class="iconBtn" data-rm="${i}" aria-label="Remove item">✕</button></div>
+          <div class="doses"><table><thead><tr><th></th>${DOSE_FIELDS.map(([, l]) => `<th>${l}</th>`).join("")}<th></th></tr></thead><tbody>`;
+        it.doses.forEach((dose, j) => {
+          html += `<tr><td class="letter">${it.doses.length > 1 ? String.fromCharCode(65 + j) : ""}</td>${DOSE_FIELDS.map(([f]) => `<td><input type="number" min="0" inputmode="numeric" data-dose="${i}.${j}.${f}" value="${dose[f] ?? ""}" aria-label="${f}"></td>`).join("")}
+            <td>${it.doses.length > 1 ? `<button class="iconBtn" data-rmdose="${i}.${j}" aria-label="Remove dose">✕</button>` : ""}</td></tr>`;
+        });
+        html += `</tbody></table></div><div><button class="btn small" data-adddose="${i}">+ Alternate dose</button></div></div>`;
+      });
+      html += `<div><button class="btn small" id="addItem">+ Add item</button></div>`;
+      html += `<p class="hint">Two doses on one item alternate (A/B). ${d.kind === "hangboard" ? "Edge depth and added weight are picked per use, so they are not set here." : "Leave a field empty when it does not apply."}</p>`;
+    }
+  }
+
+  html += `<p class="err" id="err"></p><div class="actions"><button class="btn primary" id="save">Save as pending</button>`;
+  if (d.status === "pending" && !d.isNew && d.orig) html += `<button class="btn" id="revert">Revert to code</button>`;
+  if (d.isNew && selected) html += `<button class="btn danger" id="delete">Delete draft</button>`;
+  html += `<span class="spacer"></span><span class="status">${esc(message)}</span></div>`;
+  $("editor").innerHTML = html;
+  bindEditor();
+}
+
+function bindEditor() {
+  const d = draft;
+  const val = (id) => $(id)?.value;
+  const num = (v) => (v === "" || v == null ? null : Number(v));
+  $("f-name").addEventListener("input", () => {
+    d.name = val("f-name");
+    if (d.isNew && !d.idTouched) { d.id = d.type === "exercise" ? camel(d.name) : kebab(d.name) && `${d.kind === "climbing" ? "climb" : d.kind}-${kebab(d.name)}`; $("f-id").value = d.id; }
+  });
+  $("f-id").addEventListener("input", () => { d.id = val("f-id").trim(); d.idTouched = true; });
+  $("f-kind").addEventListener("change", () => {
+    d.kind = val("f-kind");
+    if (d.type === "exercise" && d.kind === "climbing" && !["reps", "seconds"].includes(d.measure)) d.measure = "reps";
+    if (d.type === "workout") {
+      d.items = [];
+      if (d.kind === "hangboard") { d.minutes = null; d.targetRpe = null; }
+      if (d.isNew && !d.idTouched && d.name) d.id = `${d.kind === "climbing" ? "climb" : d.kind}-${kebab(d.name)}`;
+    }
+    renderEditor();
+  });
+  $("f-note").addEventListener("input", () => (d.note = val("f-note")));
+  if (d.type === "exercise") {
+    $("f-measure").addEventListener("change", () => (d.measure = val("f-measure")));
+    $("f-startSets").addEventListener("input", () => (d.startSets = num(val("f-startSets"))));
+  } else {
+    $("f-focus").addEventListener("change", () => (d.focus = val("f-focus") || null));
+    $("f-blurb").addEventListener("input", () => (d.blurb = val("f-blurb")));
+    $("f-minutes")?.addEventListener("input", () => (d.minutes = num(val("f-minutes"))));
+    $("f-targetRpe")?.addEventListener("input", () => (d.targetRpe = num(val("f-targetRpe"))));
+    $("addItem")?.addEventListener("click", () => { d.items.push({ ref: d.kind === "hangboard" ? "grip:half" : "", doses: [{ sets: 3 }] }); renderEditor(); });
+    document.querySelectorAll(".f-ref").forEach((s) => s.addEventListener("change", () => (d.items[+s.dataset.item].ref = s.value)));
+    document.querySelectorAll("[data-dose]").forEach((inp) => inp.addEventListener("input", () => {
+      const [i, j, f] = inp.dataset.dose.split(".");
+      const v = num(inp.value);
+      if (v == null) delete d.items[i].doses[j][f]; else d.items[i].doses[j][f] = v;
+    }));
+    const on = (attr, fn) => document.querySelectorAll(`[${attr}]`).forEach((b) => b.addEventListener("click", () => { fn(b.getAttribute(attr)); renderEditor(); }));
+    on("data-rm", (i) => d.items.splice(+i, 1));
+    on("data-up", (i) => d.items.splice(+i - 1, 0, d.items.splice(+i, 1)[0]));
+    on("data-down", (i) => d.items.splice(+i + 1, 0, d.items.splice(+i, 1)[0]));
+    on("data-adddose", (i) => d.items[+i].doses.push({ ...d.items[+i].doses.at(-1) }));
+    on("data-rmdose", (k) => { const [i, j] = k.split(".").map(Number); d.items[i].doses.splice(j, 1); });
+  }
+  $("save").addEventListener("click", save);
+  $("revert")?.addEventListener("click", revert);
+  $("delete")?.addEventListener("click", removeDraft);
+}
+
+function validate(d) {
+  if (!d.name.trim()) return "Give it a name.";
+  const pattern = d.type === "exercise" ? /^[a-z][a-zA-Z0-9]*$/ : /^[a-z0-9]+(-[a-z0-9]+)*$/;
+  if (!pattern.test(d.id)) return d.type === "exercise" ? "The ID is camelCase letters and digits, like pullUps." : "The ID is kebab-case, like strength-pyramid.";
+  const clash = entries.get(docId(d));
+  if (d.isNew && clash && docId(clash) !== selected) return "That ID is already taken. IDs are never reused.";
+  if (d.type === "workout") {
+    if (!d.blurb.trim()) return "Add a one-sentence description.";
+    if (d.kind !== "climbing" && !d.items.length) return "Add at least one item.";
+    if (d.items.some((it) => !it.ref)) return "Every item needs an exercise.";
+    if (d.items.some((it) => it.doses.some((x) => !(x.sets >= 1)))) return "Every dose needs at least one set.";
+    if (d.targetRpe != null && !(d.targetRpe >= 1 && d.targetRpe <= 10)) return "Target RPE is 1 to 10.";
+  }
+  return "";
+}
+
+const strip = ({ idTouched, ...rest }) => rest;
+
+async function save() {
+  const d = draft;
+  const problem = validate(d);
+  $("err").textContent = problem;
+  if (problem || !db) { if (!db) $("err").textContent = "Saving needs the artifact's storage, which this view cannot reach."; return; }
+  const before = selected ? entries.get(selected) : null;
+  const body = strip({ ...d, status: "pending", updatedAt: new Date().toISOString() });
+  if (before && before.status === "built") body.orig = strip({ ...before });
+  delete body.orig?.orig;
+  $("save").disabled = true;
+  try {
+    await db.collection("entries").doc(docId(d)).set(body);
+    if (selected && selected !== docId(d)) await db.collection("entries").doc(selected).delete();
+    selected = docId(d);
+    message = "Saved as pending";
+  } catch (e) {
+    $("err").textContent = e?.code === "quota_exceeded" ? "Storage is full. Apply or delete some changes first." : "Saving failed. Try again.";
+  } finally { renderEditor(); }
+}
+
+async function revert() {
+  const orig = draft.orig;
+  await db.collection("entries").doc(selected).set({ ...orig, status: "built" });
+  draft = structuredClone({ ...orig, status: "built" });
+  message = "Reverted";
+  renderEditor();
+}
+
+async function removeDraft() {
+  if (!$("delete").dataset.confirm) { $("delete").dataset.confirm = "1"; $("delete").textContent = "Click again to delete"; return; }
+  await db.collection("entries").doc(selected).delete();
+  selected = null; draft = null;
+  $("editor").innerHTML = `<h2>Draft deleted</h2>`;
+}
+
+$("tabExercises").addEventListener("click", () => switchTab("exercise"));
+$("tabWorkouts").addEventListener("click", () => switchTab("workout"));
+$("search").addEventListener("input", renderList);
+$("newBtn").addEventListener("click", startNew);
+function switchTab(t) {
+  tab = t;
+  $("tabExercises").setAttribute("aria-selected", t === "exercise");
+  $("tabWorkouts").setAttribute("aria-selected", t === "workout");
+  renderList();
+}
+
+(async () => {
+  db = await window.claude?.use?.("db");
+  if (!db) { $("list").innerHTML = `<p class="empty">This view cannot reach the editor's storage. Open the artifact on claude.ai while signed in.</p>`; return; }
+  const timer = setTimeout(() => { if (!entries.size) $("list").innerHTML = `<p class="empty">The library cannot be reached yet. It will appear when the connection comes back.</p>`; }, 10000);
+  db.collection("entries").onSnapshot((snap) => {
+    if (!snap.metadata.fromCache) clearTimeout(timer);
+    entries = new Map(snap.docs.map((doc) => [doc.id, doc.data()]));
+    renderPending();
+    renderList();
+  }, () => { clearTimeout(timer); $("list").innerHTML = `<p class="empty">The library could not be loaded. Reload the page to try again.</p>`; });
+})();
+</script>

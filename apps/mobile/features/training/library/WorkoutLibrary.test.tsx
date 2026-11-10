@@ -50,7 +50,7 @@ describe("Workout library", () => {
       expect(screen.getByLabelText(`New workout in ${focus}`)).toBeTruthy();
     expect(screen.getByText("Movement and technique, well within your limit.")).toBeTruthy();
     expect(screen.getByLabelText("See all Strength")).toBeTruthy();
-    expect(screen.getByText("See all 7")).toBeTruthy();
+    expect(screen.getByText("See all 9")).toBeTruthy();
     expect(screen.queryByLabelText("See all Power")).toBeNull();
     expect(screen.getByText("Max hangs")).toBeTruthy();
     expect(screen.queryByText(/Built in/)).toBeNull();
