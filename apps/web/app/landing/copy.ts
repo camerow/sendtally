@@ -1,373 +1,289 @@
-// Every string on the landing page lives here. Edit freely; components only read from it.
-// Uppercase eyebrows and footnotes render in the mono label style, so keep them short.
+// Every string a visitor reads on sendtally.com and sendtally.com/pricing lives here,
+// in page order. Components only read from it. Labels (eyebrows) render uppercase in
+// the mono label style, so write them in natural case and keep them short.
 
-export type TrendCopy = {
-  eyebrow: string;
-  headline: string;
-  meta: string;
-  body: string;
-  memberLine: string;
-};
+import type { MediaKey, PhotoKey } from "./media";
 
-export type HeroFeatureCopy = {
-  key: "trends" | "tags" | "effort" | "pyramid" | "projects" | "strava";
-  eyebrow: string;
-  cardTitle: string;
-  cardCaption: string;
-  chartLabel?: string;
-};
+export type MediaCopy = { key: MediaKey; alt: string };
 
-export type HeroFacesCopy = {
-  stats: {
-    climbs: string;
-    avgGrade: string;
-    flash: string;
-    top: string;
-    tags: string;
-    sessions: string;
-    topTag: string;
-    avgRpe: string;
-    hardest: string;
-    sends: string;
-    avg: string;
-    open: string;
-    attempts: string;
-    time: string;
-    grades: string;
-  };
-  tags: [string, string, string, string];
-  weekPrefix: string;
-  projects: [string, string, string];
-  rpeLastSession: string;
-  via: string;
-  rockClimbing: string;
-  stravaTitle: string;
-  projectMeta: string;
-};
-
-export type SessionSampleCopy = {
-  title: string;
-  meta: string;
-  stats: {
-    time: string;
-    climbs: string;
-    sends: string;
-    avgGrade: string;
-    flashes: string;
-    attempts: string;
-    top: string;
-  };
-  headings: [string, string, string, string, string];
-  burn: string;
-  burns: string;
-  results: { FLASH: string; SENT: string; PROJECT: string };
-  climbs: [string, string, string, string, string, string];
-};
-
-export type FreeFeatureCopy = {
+export type FeatureCopy = {
+  id: "log" | "train" | "plan" | "live" | "hangboard" | "stats";
   eyebrow: string;
   title: string;
   body: string;
-  short: string;
+  points: string[];
+  media: [MediaCopy, MediaCopy];
+  photo?: { key: PhotoKey; alt: string };
 };
+
+export type CompareCell = boolean | string;
 
 export const COPY = {
   meta: {
-    title: "sendtally - log your climbing sessions and see your climbing trends",
+    title: "sendtally - a climbing log and training app",
     description:
-      "Log every climbing session - grades, sends, attempts and an effort score - then watch your trends. Free, with Strava posting.",
+      "Log every climb, plan your training, run each workout on a timer and see it add up in Stats. Start with 30 days of everything, then keep logging for free.",
   },
 
   nav: {
+    home: "sendtally home",
     sections: [
-      { label: "Trends", href: "#insights" },
-      { label: "Sessions", href: "#session" },
-      { label: "Strava", href: "#strava" },
-      { label: "Membership", href: "#price" },
+      { label: "Log", href: "#log" },
+      { label: "Train", href: "#train" },
+      { label: "Plan", href: "#plan" },
+      { label: "Stats", href: "#stats" },
     ],
+    pricing: "Pricing",
     signIn: "Sign in",
     createAccount: "Create account",
+    getApp: "Get the app",
     openApp: "App →",
   },
 
   hero: {
-    features: [
-      {
-        key: "trends",
-        eyebrow: "TREND INSIGHTS",
-        cardTitle: "Trends",
-        cardCaption: "LAST 3 MONTHS · 31 SESSIONS",
-        chartLabel: "CLIMBS PER WEEK",
-      },
-      {
-        key: "tags",
-        eyebrow: "TAGS & FILTERS",
-        cardTitle: "Tags",
-        cardCaption: "4 TAGS · 31 SESSIONS",
-        chartLabel: "SESSIONS PER TAG",
-      },
-      {
-        key: "effort",
-        eyebrow: "EFFORT SCORE",
-        cardTitle: "Effort",
-        cardCaption: "EFFORT · LAST 8 WEEKS",
-        chartLabel: "EFFORT PER SESSION",
-      },
-      {
-        key: "pyramid",
-        eyebrow: "GRADE PYRAMID",
-        cardTitle: "Pyramid",
-        cardCaption: "LAST 3 MONTHS · 90 SENDS",
-        chartLabel: "SENDS BY GRADE",
-      },
-      {
-        key: "projects",
-        eyebrow: "PROJECT TRACKING",
-        cardTitle: "Projects",
-        cardCaption: "3 OPEN · 1 SENT",
-      },
-      {
-        key: "strava",
-        eyebrow: "STRAVA POSTING",
-        cardTitle: "Posted to Strava",
-        cardCaption: "TODAY AT 6:42 PM",
-        chartLabel: "SENDS BY GRADE",
-      },
-    ] satisfies [HeroFeatureCopy, ...HeroFeatureCopy[]],
-    faces: {
-      stats: {
-        climbs: "CLIMBS",
-        avgGrade: "AVG GRADE",
-        flash: "FLASH",
-        top: "TOP",
-        tags: "TAGS",
-        sessions: "SESSIONS",
-        topTag: "TOP TAG",
-        avgRpe: "AVG EFFORT",
-        hardest: "HARDEST",
-        sends: "SENDS",
-        avg: "AVG",
-        open: "OPEN",
-        attempts: "ATTEMPTS",
-        time: "TIME",
-        grades: "GRADES",
-      },
-      tags: ["Gym", "Board", "Outdoor", "Power"],
-      weekPrefix: "W",
-      projects: ["The Arete", "Slab Problem", "Roof Traverse"],
-      rpeLastSession: "EFFORT LAST SESSION",
-      via: "via sendtally",
-      rockClimbing: "ROCK CLIMBING",
-      stravaTitle: "Solid climbing session - 18 climbs, top V7",
-      projectMeta: "{sessions} sessions · {attempts} tries",
-    } satisfies HeroFacesCopy,
-    title: "Your new favorite climbing journal",
-    body: "Quickly and easily log your sessions - grades, sends, attempts. Use the effort score to track how hard your climbing feels over time. Post to Strava to see your climbing with your other activities. Membership adds trends and insight: volume, grade pyramid, hardest send, flash rate and average grade.",
+    eyebrow: "Climbing log and training app",
+    title: "Log your climbing. Plan your training.",
+    body: "Tally a gym session as you climb, build a training block, run each workout on a timer, and watch it all add up in Stats. Start with 30 days of everything, then keep logging for free.",
+    webAccount: "Or create a free account on the web",
+    photoAlt: "A climber high on a streaked red sandstone wall in a narrow canyon",
+    phone: {
+      key: "logClimbing",
+      alt: "The Log tab: this week's climbing sessions with their climbs, and a climb logged on its own",
+    } as MediaCopy,
   },
 
-  free: {
-    title: "Most of sendtally costs nothing.",
-    features: [
-      {
-        eyebrow: "SESSIONS",
-        title: "Log as much as you want",
-        body: "Date, start and end, indoor or outdoor, and every climb with its grade, send or attempt, and tries.",
-        short: "Unlimited sessions with every climb, grade and try",
-      },
-      {
-        eyebrow: "EFFORT",
-        title: "An effort score for every session",
-        body: "Each session is rated 1-10 against your own rolling eight weeks, so you can see your training load. Set it yourself or leave it on auto.",
-        short: "Effort score, 1-10, against your own last eight weeks",
-      },
-      {
-        eyebrow: "TRENDS",
-        title: "Every session, climb by climb",
-        body: "Time, climbs, sends, flashes, attempts, top grade and average grade, plus the full climb list, kept for every session you log.",
-        short: "Session breakdown: time, sends, flashes, attempts, top and average grade",
-      },
-      {
-        eyebrow: "TAGS",
-        title: "Group and filter",
-        body: "Tag sessions by gym, board or training block and filter the logbook by them. Tags carry into the trend screens for members.",
-        short: "Tags to group and filter the logbook",
-      },
-      {
-        eyebrow: "STRAVA",
-        title: "Posted to Strava, never doubled",
-        body: "One Rock Climbing activity per session with duration, sends, attempts and grades filled in. Optional, and never paywalled.",
-        short: "Strava posting, one activity per session",
-      },
-      {
-        eyebrow: "GRADES",
-        title: "V-scale or Font, YDS or French",
-        body: "Grade in either scale. Sport climbing or bouldering.",
-        short: "V-scale or Font",
-      },
-    ] satisfies FreeFeatureCopy[],
-    footnote: "Free to log · no card on file",
-    cta: "Start logging for free →",
-  },
+  tabs: [
+    { label: "Plan", title: "Your week, today first", href: "#plan" },
+    { label: "Log", title: "Every climb and workout", href: "#log" },
+    { label: "Train", title: "Blocks, workouts, exercises", href: "#train" },
+    { label: "Stats", title: "Climbing and training over time", href: "#stats" },
+  ],
 
-  band: {
-    eyebrow: "MEMBERSHIP",
-    title: "Six months from now, you will want to know what changed.",
-    body: "Logging your sessions over time creates a powerful history full of insights. Become a member to see your climbing trends.",
-    cta: "See what members see ↓",
-  },
-
-  trends: {
-    title: "Five screens only members see.",
-    blurb: "Built from the sessions you already log, over any range from a month to all-time.",
-    rangeLabel: "RANGE",
-    memberTag: "MEMBER",
-    cards: {
-      volume: {
-        eyebrow: "VOLUME",
-        headline: "328 climbs",
-        meta: "22 SESSIONS · LAST 12 WEEKS",
-        body: "One empty week in July was travel, not a slump. Volume has held near thirty climbs a week since May.",
-        memberLine: "Climbs and sessions per week, month or year - and the weeks you missed.",
-      },
-      pyramid: {
-        eyebrow: "GRADE PYRAMID",
-        headline: "111 sends",
-        meta: "ALL-TIME · BY GRADE",
-        body: "A V4 base with 28 V5s behind it and two V7s on top. The shape says V6 volume is what feeds the next grade.",
-        memberLine:
-          "Every send stacked by grade, so you can see which grade is holding the next one up.",
-      },
-      hardest: {
-        eyebrow: "HARDEST SEND",
-        headline: "V7",
-        meta: "JUL 30 · THREAD THE NEEDLE",
-        body: "Twelve weeks from the first V6 to the first V7, and both V7s came inside three weeks of each other.",
-        memberLine: "Your ceiling by period, with the climb and the date that set it.",
-      },
-      flash: {
-        eyebrow: "FLASH RATE",
-        headline: "36%",
-        meta: "UP FROM 22% IN MARCH",
-        body: "Are you overtraining, overreaching, or not trying hard enough? Flash rate can help you figure out if you are in the proximal zone of development.",
-        memberLine:
-          "The share you get first go, tracked over time - movement skill before grades move.",
-      },
-      avggrade: {
-        eyebrow: "AVG SEND GRADE",
-        headline: "V4.9 this week",
-        meta: "+0.7 SINCE MID-MAY",
-        body: "Average send grade has drifted up about V0.7 over twelve weeks - steady, not a spike, which tracks with the volume behind it. A logbook can tell you what you climbed on Tuesday; it can't tell you this.",
-        memberLine:
-          "The slow line through everything you send - the one number a logbook can never show you.",
-      },
-    } satisfies Record<string, TrendCopy>,
-  },
-
-  session: {
-    title: "Every session, climb by climb.",
-    blurb: "Grades, attempts and results - kept for every climb over time.",
-    footnote: "6 OF 12 CLIMBS SHOWN · FILTER BY SENT, FLASHED OR PROJECT IN THE APP",
-    sample: {
-      title: "Tuesday night - Jul 30",
-      meta: "THU JUL 30 · 7:02 PM · INDOOR · 1H 28M",
-      stats: {
-        time: "TIME",
-        climbs: "CLIMBS",
-        sends: "SENDS",
-        avgGrade: "AVG GRADE",
-        flashes: "FLASHES",
-        attempts: "ATTEMPTS",
-        top: "TOP",
-      },
-      headings: ["#", "CLIMB", "GRADE", "ATTEMPTS", "RESULT"],
-      burn: " attempt",
-      burns: " attempts",
-      results: { FLASH: "FLASH", SENT: "SENT", PROJECT: "PROJECT" },
-      climbs: [
-        "Static Cling",
-        "Pinch Point",
-        "Dead Point Drill",
-        "Cutting Loose",
-        "Thread the Needle",
-        "Full Value",
+  features: [
+    {
+      id: "log",
+      eyebrow: "Log",
+      title: "Count every climb as you climb it.",
+      body: "Start a gym session, pick a grade, then tap Fell or Sent. Named sessions keep their climbs together, and a single climb can go in on its own.",
+      points: [
+        "Gym circuits by color, crags and areas outdoors",
+        "A page for every climb, with notes and a Project flag",
+        "Journal entries for trips and injuries",
+        "V, Font, YDS and French grades",
       ],
-    } satisfies SessionSampleCopy,
-  },
+      media: [
+        {
+          key: "liveTally",
+          alt: "A live gym session: pick a grade, then tap Fell or Sent for each climb",
+        },
+        {
+          key: "climbPage",
+          alt: "A climb's page with the Project label, its days, tries and dated notes",
+        },
+      ],
+      photo: {
+        key: "desertCrag",
+        alt: "Climbers at the base of a tall limestone crag in the desert",
+      },
+    },
+    {
+      id: "train",
+      eyebrow: "Train",
+      title: "Build a block, or start from the library.",
+      body: "A block is weeks of workouts, with the days set for each week and the load for each week in one table.",
+      points: [
+        "Workouts grouped by focus, with built-ins like limit bouldering, 4x4s and ARC",
+        "An exercise library, Fingers exercises included",
+        "Ongoing workouts that repeat every week",
+        "Save a block as a template and schedule it again",
+      ],
+      media: [
+        {
+          key: "block",
+          alt: "A training block: week chips, this week's numbers and the week grid",
+        },
+        { key: "trainWorkouts", alt: "Train, Workouts: the library grouped by focus" },
+      ],
+    },
+    {
+      id: "plan",
+      eyebrow: "Plan",
+      title: "Your week, opened on today.",
+      body: "Schedule a workout or a whole block. Done workouts get a check where they were planned, missed ones show, and any day can be rescheduled or skipped.",
+      points: [
+        "A calendar for the months ahead and behind",
+        "Skip with a reason: rest, sick, sore, travel or busy",
+      ],
+      media: [
+        {
+          key: "plan",
+          alt: "The Plan tab: the week strip, today's workout and the Schedule button",
+        },
+        {
+          key: "calendar",
+          alt: "The calendar: a month with a block running, done and missed days marked",
+        },
+      ],
+      photo: { key: "pineFace", alt: "A climber on a gray face above the pines" },
+    },
+    {
+      id: "live",
+      eyebrow: "Live workouts",
+      title: "Press Start and the workout runs itself.",
+      body: "Sets, timers, intervals and checklists, with rests in line. Minimize it and it waits on a bar above the tabs. At the end, tick what you did and it is logged.",
+      points: ["Did it without the timer? Log it", "Circuits and laps counted in moves or time"],
+      media: [
+        {
+          key: "setsPlayer",
+          alt: "The sets player: a set ticked, then the rest counting down in line",
+        },
+        { key: "livebar", alt: "A live workout minimized on the bar above the tabs" },
+      ],
+    },
+    {
+      id: "hangboard",
+      eyebrow: "Hangboard",
+      title: "A hang timer that keeps your load.",
+      body: "Rep dots count every hang. Each set keeps its added weight, and each exercise gets a progress chart over time.",
+      points: ["Compare exercises: best loads side by side"],
+      media: [
+        { key: "hangTimer", alt: "The hang timer: count-in, a hang, then the rest between sets" },
+        { key: "fingersProgress", alt: "A Fingers exercise's added load over months of sessions" },
+      ],
+      photo: { key: "limestoneWall", alt: "A climber on a tall gray limestone wall" },
+    },
+    {
+      id: "stats",
+      eyebrow: "Stats",
+      title: "See what changed.",
+      body: "Climbing shows your grade pyramid, climbs by grade, average send and every day you climbed. Training shows what you trained by category or focus, the workouts you did most, and hangboard progress.",
+      points: [],
+      media: [
+        {
+          key: "statsClimbing",
+          alt: "Stats, Climbing: the sends-by-grade pyramid and climbs by grade",
+        },
+        {
+          key: "statsTraining",
+          alt: "Stats, Training: effort and sessions over time, and what you trained",
+        },
+      ],
+    },
+  ] as FeatureCopy[],
 
-  strava: {
-    eyebrow: "ALSO: STRAVA · FREE",
-    title: "We'll sync with Strava, if you're into that.",
-    body: "Each logged session becomes one Rock Climbing activity, with duration, sends, attempts and grades already filled in. It is free for everyone and always will be - we do not charge for Strava syncing. Turn it off and sendtally is still yours for the numbers alone.",
-    cta: "Create your account →",
-    preview: { meta: "Today at 6:42 PM · Rock Climbing", chartLabel: "SENDS BY GRADE" },
-  },
+  extras: [
+    {
+      eyebrow: "Effort",
+      title: "An effort score for every session",
+      body: "Rate it 1 to 10, or leave it and sendtally scores it against your own last eight weeks.",
+    },
+    {
+      eyebrow: "Strava",
+      title: "Posted to Strava, if you want",
+      body: "One Rock Climbing activity per session, free for everyone.",
+    },
+    {
+      eyebrow: "No signal",
+      title: "Log at the crag",
+      body: "Saves on your phone and syncs when you are back online.",
+    },
+  ],
 
-  how: {
-    title: "A minute after you climb.",
-    blurb:
-      "No accounts to link, no importers to babysit. Log the session and the effort score and Strava post follow from it for free; the trends build themselves for members.",
-    steps: [
-      {
-        title: "Log your session",
-        body: "Date, times, indoor or outdoor, and the climbs - V-scale or Font grades, sends and attempts, tries. About a minute, right after you climb.",
-      },
-      {
-        title: "Get an effort score",
-        body: "Every session is scored 1-10 against your own last eight weeks, so a big night reads as a big night - not just a list of grades.",
-      },
-      {
-        title: "Authorise Strava",
-        body: "Standard OAuth, scoped to activities and nothing else. We never see your password, we only ever write the sessions you log, and you can revoke it from Strava at any time.",
-      },
+  made: {
+    eyebrow: "Made by",
+    title: "Made by Will Cameron",
+    paragraphs: [
+      "I'm Will. I built sendtally because I wanted my climbing and my training in one place: what I sent, what I trained, and whether any of it is working.",
+      "Questions, ideas or a bug? Write to me from the support page.",
     ],
+    link: "Contact support",
+    photoAlt: "Will Cameron at a desert boulder field, carrying two crash pads",
   },
 
-  details: {
-    title: "Details",
-    rows: [
-      {
-        label: "KEPT PER CLIMB",
-        body: "Grade in V-scale or Font, send or attempt, tries, and the climb's name if you give it one",
-      },
-      {
-        label: "EFFORT",
-        body: "Every session scored 1-10 against your own rolling eight weeks - set it yourself or leave it on auto",
-      },
-      {
-        label: "TRENDS",
-        body: "Volume, grade pyramid, hardest send, flash rate and average grade, weekly or all-time - the membership half",
-      },
-      {
-        label: "STRAVA",
-        body: "Optional and free for everyone. One Rock Climbing activity per session, fingerprinted so it never doubles up",
-      },
-      {
-        label: "LEAVING",
-        body: "Delete your account and every session and token goes with it the same day",
-      },
-    ],
+  start: {
+    eyebrow: "Free to start",
+    title: "Start with 30 days of everything.",
+    body: "Then keep logging, built-in workouts and Strava posting for free.",
+    webAccount: "Or create a free account on the web",
+    pricing: "See pricing ›",
   },
 
-  price: {
-    eyebrow: "MEMBERSHIP",
-    title: "Logging is free. Membership gives you the trends.",
-    lead: "Two dollars a month, billed yearly, turns the log into deep insights into your climbing trends.",
+  pricing: {
+    meta: {
+      title: "Pricing - sendtally",
+      description:
+        "Start with 30 days of everything. Then keep logging for free, or stay a member for $23.99 a year or $2.99 a month.",
+    },
+    eyebrow: "Pricing",
+    title: "Start with 30 days of everything.",
+    body: "Then keep logging for free, or stay a member for $23.99 a year or $2.99 a month.",
     free: {
       name: "Free",
       amount: "$0",
       suffix: " forever",
-      footnote: "NO CARD · NO TRIAL · NO SESSION CAP",
-      cta: "Create your account →",
+      sub: "Logging, built-in training and Strava",
+      points: [
+        "Everything you log, live or after",
+        "The built-in workouts and exercises",
+        "Stats for the last 7 days",
+      ],
+      webAccount: "Or create a free account on the web",
     },
     member: {
       name: "Member",
-      amount: "$2",
-      suffix: "/mo billed yearly · or $3 month to month",
-      roadmapEyebrow: "EVERYTHING IN FREE, PLUS THE ROADMAP",
-      roadmapBody:
-        "Members say what gets built next - the people paying for the server get first call.",
-      footnote: "CANCEL ANY TIME",
-      cta: "Become a member →",
+      amount: "$23.99",
+      suffix: "/year",
+      sub: "or $2.99 a month · cancel any time",
+      points: [
+        "Everything in Free",
+        "Your own exercises, workouts and blocks",
+        "All of your climbing and training Stats",
+      ],
+      cta: "Start your 30 days",
+      note: "Your trial starts with your account",
+    },
+    compare: {
+      title: "Free and Member, side by side",
+      columns: ["Free", "Member"] as [string, string],
+      included: "Included",
+      notIncluded: "Not included",
+      rows: [
+        { label: "Log climbs and sessions, live or after", free: true, member: true },
+        { label: "Live workouts, players and the hang timer", free: true, member: true },
+        { label: "The built-in workout library", free: true, member: true },
+        { label: "Plan a day with built-in workouts", free: true, member: true },
+        { label: "Strava posting", free: true, member: true },
+        { label: "Your own exercises", free: false, member: true },
+        { label: "Your own workouts", free: false, member: true },
+        { label: "Blocks and templates", free: false, member: true },
+        { label: "Climbing and training Stats", free: "Last 7 days", member: "All time" },
+      ] as Array<{ label: string; free: CompareCell; member: CompareCell }>,
+      note: "For your first 30 days you get the Member column.",
+    },
+    faq: {
+      title: "Questions",
+      items: [
+        {
+          q: "Do I need a card for the trial?",
+          a: "No. The 30 days start when you create your account.",
+        },
+        {
+          q: "What happens when the trial ends?",
+          a: "Logging, live workouts, Plan and Strava posting stay free. Your own exercises, workouts and blocks stay in your account with a lock, and membership opens them again. Nothing is deleted.",
+        },
+        {
+          q: "Where do I pay?",
+          a: "In the App Store, on Google Play or on sendtally.com. One membership works in the app and on the web.",
+        },
+        {
+          q: "Can I cancel?",
+          a: "Any time, where you subscribed. You keep membership until the period you paid for ends.",
+        },
+      ],
+    },
+    closing: {
+      title: "Start your 30 days.",
+      webAccount: "Or create a free account on the web",
     },
   },
 
@@ -383,6 +299,7 @@ export const COPY = {
     trademarks:
       "Google Play and the Google Play logo are trademarks of Google LLC. Apple and the Apple logo are trademarks of Apple Inc.",
     links: [
+      { label: "Pricing", href: "/pricing" },
       { label: "Sign in", href: "/sign-in" },
       { label: "Privacy", href: "/privacy" },
       { label: "Terms", href: "/terms" },
