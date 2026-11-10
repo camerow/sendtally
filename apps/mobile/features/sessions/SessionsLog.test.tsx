@@ -54,7 +54,7 @@ const mockSummary = (id: string, name: string, at: string, sent: boolean): objec
 });
 
 const mockNamed = mockSession("s1", "Tuesday night session", "2026-10-21T18:00:00.000Z");
-const mockBare = mockSession("s2", "", "2026-10-12T10:00:00.000Z");
+const mockBare = { ...mockSession("s2", "", "2026-10-12T10:00:00.000Z"), rpe_source: "none" };
 
 jest.mock("expo-router", () => ({ router: { push: jest.fn() } }));
 jest.mock("../../lib/api", () => ({ useApi: () => undefined }));
@@ -159,10 +159,9 @@ describe("Log", () => {
     await render(<SessionsLog />);
     expect(screen.getByLabelText(/^Tuesday night session, /)).toBeTruthy();
     expect(screen.getByLabelText("V4, Pocket Rocket, 1 try, Flash")).toBeTruthy();
-    expect(screen.getByLabelText("V4, Brad Pit, Oct 12, 3 tries")).toBeTruthy();
+    expect(screen.getByLabelText("V4, Brad Pit, Boulder, 3 tries")).toBeTruthy();
     expect(screen.queryByText("Logged session")).toBeNull();
     expect(screen.queryByText("Leg day")).toBeNull();
-    expect(screen.getByText("Start session")).toBeTruthy();
   });
 
   it("turns into the flat climbs list once searched", async () => {
@@ -173,16 +172,12 @@ describe("Log", () => {
     expect(screen.getByText("Brad Pit")).toBeTruthy();
   });
 
-  it("switches to Training, with its own button, and remembers it on the device", async () => {
+  it("switches to Training and remembers it on the device", async () => {
     await render(<SessionsLog />);
     await fireEvent.press(screen.getByText("Training"));
     expect(screen.getByText("Leg day")).toBeTruthy();
     expect(screen.queryByLabelText(/^Tuesday night session, /)).toBeNull();
-    expect(screen.getByText("Log training")).toBeTruthy();
     expect(logSegmentStorage.read()).toBe("training");
-    await fireEvent.press(screen.getByLabelText("More ways to log"));
-    expect(screen.getByText("Journal")).toBeTruthy();
-    expect(screen.queryByText("Add climb")).toBeNull();
   });
 
   it("opens on the segment last shown", async () => {
@@ -191,11 +186,15 @@ describe("Log", () => {
     expect(screen.getByText("Leg day")).toBeTruthy();
   });
 
-  it("holds Past session and Add climb behind Climbing's arrow", async () => {
+  it("holds every way to log, climbing and training, behind one Log button", async () => {
     await render(<SessionsLog />);
-    await fireEvent.press(screen.getByLabelText("More ways to log"));
-    expect(screen.getByText("Past session")).toBeTruthy();
+    await fireEvent.press(screen.getByTestId("fab"));
+    expect(screen.getByText("Live session")).toBeTruthy();
+    expect(screen.getByText("Log session")).toBeTruthy();
     expect(screen.getByText("Add climb")).toBeTruthy();
-    expect(screen.queryByText("Journal")).toBeNull();
+    expect(screen.getByText("Trip")).toBeTruthy();
+    expect(screen.getByText("Journal")).toBeTruthy();
+    expect(screen.getByText("Injury")).toBeTruthy();
+    expect(screen.queryByText("Past session")).toBeNull();
   });
 });

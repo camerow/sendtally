@@ -86,6 +86,11 @@ export function usePlanActions(api: SendtallyApi, onError: (error: unknown) => v
         (p) => withChange(p, change),
         () => api.saveWeekChange(change)
       );
+    const deleteMembership = (id: string): Promise<void> =>
+      write(
+        (p) => withoutMembership(p, id),
+        () => api.deleteMembership(id)
+      );
     return {
       saveBlock,
       deleteBlock: (id) =>
@@ -94,11 +99,7 @@ export function usePlanActions(api: SendtallyApi, onError: (error: unknown) => v
           () => api.deleteBlock(id)
         ),
       saveMembership,
-      deleteMembership: (id) =>
-        write(
-          (p) => withoutMembership(p, id),
-          () => api.deleteMembership(id)
-        ),
+      deleteMembership,
       saveWeekChange,
       savePlanChange: (change) =>
         write(
@@ -122,6 +123,7 @@ export function usePlanActions(api: SendtallyApi, onError: (error: unknown) => v
           ...movedMemberships(plan, draft).map(saveMembership),
           ...changedSchedules(plan, draft).map(saveSchedule),
           ...draft.weekChanges.map(saveWeekChange),
+          ...draft.removed.map(deleteMembership),
         ]);
       },
       undoPlanChange: (membershipId, plannedOn) =>

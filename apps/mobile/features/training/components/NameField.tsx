@@ -1,17 +1,12 @@
 import React from "react";
 import { Text, View } from "react-native";
-import type { WorkoutKind } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
-import { kindLabel } from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
 import { Icon } from "../../../components/Icon";
 import { TextInput } from "../../../components/TextInput";
-import { KIND_LOOK } from "../today/kindLook";
 import { type } from "../type";
-import { Label } from "./Label";
 
-export type KindNameFieldProps = {
-  kind: WorkoutKind;
+export type NameFieldProps = {
   value: string;
   onChange: (name: string) => void;
   placeholder: string;
@@ -24,9 +19,8 @@ export type KindNameFieldProps = {
   error?: string;
 };
 
-/** An editor's name: its category in the category's ink over a big field. */
-export function KindNameField({
-  kind,
+/** An editor's name in a big field. */
+export function NameField({
   value,
   onChange,
   placeholder,
@@ -35,10 +29,9 @@ export function KindNameField({
   onSubmit,
   locked,
   error,
-}: KindNameFieldProps): React.ReactElement {
+}: NameFieldProps): React.ReactElement {
   return (
     <View style={{ gap: 4 }}>
-      <Label color={KIND_LOOK[kind].ink}>{kindLabel(kind)}</Label>
       <TextInput
         value={value}
         onChangeText={onChange}
@@ -54,7 +47,13 @@ export function KindNameField({
         returnKeyType="done"
         style={[
           type.display,
-          { fontSize: 30, lineHeight: 34, paddingVertical: 4, color: colors.gunmetal },
+          {
+            fontSize: 30,
+            lineHeight: 34,
+            paddingVertical: 4,
+            paddingHorizontal: 0,
+            color: colors.gunmetal,
+          },
         ]}
       />
       {locked !== undefined && (

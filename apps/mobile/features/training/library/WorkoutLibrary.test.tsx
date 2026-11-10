@@ -43,12 +43,12 @@ const show = (ui: React.ReactElement): Promise<unknown> =>
   renderWithHang(ui, hangData(), { workouts: [legs] });
 
 describe("Workout library", () => {
-  it("lists the first three of every focus, with See all only where there are more", async () => {
+  it("lists every focus and its first three, an empty one saying what it trains, with See all only where there are more", async () => {
     await show(<WorkoutLibrary />);
     const shelves = ["Strength", "Power", "Power endurance", "Endurance", "Conditioning"];
-    for (const focus of [...shelves, "Recovery", "General"])
+    for (const focus of [...shelves, "Skill", "Recovery", "General"])
       expect(screen.getByLabelText(`New workout in ${focus}`)).toBeTruthy();
-    expect(screen.queryByLabelText("New workout in Skill")).toBeNull();
+    expect(screen.getByText("Movement and technique, well within your limit.")).toBeTruthy();
     expect(screen.getByLabelText("See all Strength")).toBeTruthy();
     expect(screen.getByText("See all 7")).toBeTruthy();
     expect(screen.queryByLabelText("See all Power")).toBeNull();

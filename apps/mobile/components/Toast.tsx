@@ -13,9 +13,13 @@ export type ToastProps = {
 
 const SHOWN_MS = 4000;
 
-/** A short word on what just happened, over the foot of the screen, gone after a few seconds. */
+/** The height of the footer a toast must clear, so it never hides the screen's main action. */
+export const ToastFooter = React.createContext(0);
+
+/** A short word on what just happened, at the foot of the screen above any footer, gone after a few seconds. */
 export function Toast({ message, action, onHide }: ToastProps): React.ReactElement {
   const insets = useSafeAreaInsets();
+  const footer = React.useContext(ToastFooter);
   const hide = React.useRef(onHide);
   React.useEffect(() => {
     hide.current = onHide;
@@ -26,12 +30,13 @@ export function Toast({ message, action, onHide }: ToastProps): React.ReactEleme
   }, [message]);
   return (
     <View
+      testID="toast"
       accessibilityLiveRegion="polite"
       style={{
         position: "absolute",
         left: 18,
         right: 18,
-        bottom: insets.bottom + 8,
+        bottom: insets.bottom + (footer > 0 ? footer + 12 : 8),
         height: 52,
         borderRadius: 14,
         flexDirection: "row",

@@ -62,6 +62,7 @@ import {
   missingClimbs,
   projectBody,
   climbEditBody,
+  clearedHolders,
   regradedSessions,
   restampedSessions,
   withClimbNotes,
@@ -1112,9 +1113,23 @@ const app = new Hono<AppEnv>()
 
   // The climb and its project flag go, its sessions stay as logged. The row stays
   // as a tombstone so those sessions do not recreate it; logging its name again restores it.
+  // The untitled sessions that only held climbs added on their own lose it, or go when empty.
   .delete("/v1/climbs/:id", async (c) => {
-    const deleted = await repo.deleteUserClimb(c.env.DB, c.get("userId"), c.req.param("id"));
+    const userId = c.get("userId");
+    const db = c.env.DB;
+    const id = c.req.param("id");
+    const [rows, records] = await Promise.all([
+      repo.listSessions(db, userId, true),
+      repo.listUserClimbs(db, userId),
+    ]);
+    const deleted = await repo.deleteUserClimb(db, userId, id);
     if (!deleted) return c.json({ error: "not found" }, 404);
+    const { emptied, trimmed } = clearedHolders(rows, records, id);
+    await repo.rewriteSessions(db, userId, trimmed);
+    for (const fingerprint of emptied) {
+      await repo.deleteSession(db, userId, fingerprint);
+      await repo.unlinkSession(db, userId, fingerprint);
+    }
     await captureEvent(c, "climb_deleted", {});
     return c.json({ deleted: true });
   })

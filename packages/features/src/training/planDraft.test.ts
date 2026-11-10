@@ -6,6 +6,7 @@ import {
   applyDraft,
   changedSchedules,
   draftMove,
+  draftRemove,
   draftSchedule,
   emptyDraft,
   movedMemberships,
@@ -56,5 +57,13 @@ describe("applyDraft", () => {
     expect(movedMemberships(plan, draft).map((m) => [m.id, m.start, m.position])).toEqual([
       ["m1", "2026-11-23", 1],
     ]);
+  });
+
+  it("takes a workout out, dropping its other edits so nothing of it is saved", () => {
+    const tapped = toggleDay(scheduleOf(plan, m1), { week: 1, day: 4, following: false, last: 4 });
+    const draft = draftRemove(draftSchedule(emptyDraft, tapped), "m1");
+    expect(applyDraft(plan, draft).memberships.map((m) => m.id)).toEqual(["m2"]);
+    expect(draft.schedules).toEqual([]);
+    expect(draft.removed).toEqual(["m1"]);
   });
 });

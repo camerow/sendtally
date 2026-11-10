@@ -1,5 +1,11 @@
 import type { MembershipDays, Plan } from "@sendtally/api-client";
-import type { Membership, Weekday } from "@sendtally/core/hang";
+import {
+  blockWeekOn,
+  type Block,
+  type CalendarDate,
+  type Membership,
+  type Weekday,
+} from "@sendtally/core/hang";
 
 /** A membership's days: its own weekdays, then each block week its days changed from. */
 export type DaySchedule = { membershipId: string; weekdays: Weekday[]; weeks: MembershipDays[] };
@@ -18,6 +24,15 @@ export function daysInWeek(schedule: DaySchedule, week: number): Weekday[] {
   const edit = schedule.weeks.filter((d) => d.fromWeek <= week).at(-1);
   return edit === undefined ? schedule.weekdays : edit.weekdays;
 }
+
+/** The days a plan lands on this week: its block's first week when the block is not running. */
+export const daysThisWeek = (
+  plan: Pick<Plan, "membershipDays">,
+  m: Membership,
+  block: Pick<Block, "start" | "weeks"> | null,
+  today: CalendarDate
+): Weekday[] =>
+  daysInWeek(scheduleOf(plan, m), block === null ? 1 : (blockWeekOn(block, today) ?? 1));
 
 const same = (a: readonly Weekday[], b: readonly Weekday[]): boolean =>
   a.length === b.length && a.every((d) => b.includes(d));

@@ -3,7 +3,7 @@ import { Pressable, Text, View } from "react-native";
 import type { SessionRow as SessionRowData } from "@sendtally/api-client";
 import { formatDate, t } from "@sendtally/features/i18n";
 import { isoDay } from "@sendtally/features/journal";
-import { sessionTitle } from "@sendtally/features/sessions";
+import { isClimbHolder, sessionTitle } from "@sendtally/features/sessions";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { Icon } from "../../components/Icon";
 import { Sheet } from "../../components/Sheet";
@@ -76,7 +76,7 @@ export function SessionPicker({
     .filter((s) => value.includes(s.fingerprint))
     .sort((a, b) => b.start_at.localeCompare(a.start_at));
   const available = sessions
-    .filter((s) => !value.includes(s.fingerprint))
+    .filter((s) => !value.includes(s.fingerprint) && !isClimbHolder(s))
     .sort((a, b) => b.start_at.localeCompare(a.start_at));
 
   if (sessions.length === 0) return null;

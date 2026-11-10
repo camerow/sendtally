@@ -4,6 +4,7 @@ import { disciplineOf, gradeOptions, utcDate } from "../log-session/transforms";
 import type { GradeScale } from "../log-session/types";
 import { gradeBins } from "../trends/filter";
 import type { GradeBinVM, GradeRange } from "../trends/types";
+import { isClimbHolder } from "../sessions/meta";
 import { monthKey, monthLabel, monthName } from "../sessions/months";
 import { climbOf, isThisClimb, sendStyleOf, sendStyleText } from "./overview";
 import { dateLabel, disciplineLabel } from "./projects";
@@ -114,20 +115,19 @@ function metaOf(climb: ClimbSummary, today: string): string {
   return climb.area === null ? when : `${climb.area.name} · ${when}`;
 }
 
-/** A session's climbs under its row, or loose by its day when the session has no name of its own. */
+/** A session's climbs under its row, or each a row of its own when the session has no name. */
 export type ClimbingSessionVM = { named: boolean; climbs: ClimbLogRowVM[] };
 
 /**
  * Each climb of one session once, and how it went that day. A bare session that only holds
- * climbs added on their own reads as those climbs, so they carry its day.
+ * climbs added on their own reads as those climbs, each set by its day.
  */
 export function climbingSessionVM(
   session: SessionWithClimbs,
   climbs: readonly ClimbSummary[]
 ): ClimbingSessionVM {
   const found = [...new Set(session.climbs.flatMap((l) => climbOf(climbs, l) ?? []))];
-  const named =
-    found.length === 0 || session.source !== "manual" || (session.name ?? "").trim() !== "";
+  const named = found.length === 0 || !isClimbHolder(session);
   const row = (c: ClimbSummary): ClimbLogRowVM => {
     const logged = session.climbs.filter((l) => isThisClimb(c, l));
     const tries = logged.reduce((n, l) => n + l.tries, 0);
@@ -141,7 +141,6 @@ export function climbingSessionVM(
           : { kind: "tries", label: t("tally.tryCount", { count: tries }) };
     const meta = [
       c.area?.name ?? null,
-      named ? null : dateLabel(session.start_at),
       pill.kind === "tries" ? null : t("tally.tryCount", { count: tries }),
     ].filter((part) => part !== null);
     return {

@@ -46,7 +46,6 @@ export function HangSummary({
         { value: `${grid.held}/${grid.total}`, label: t("summary.hangsHeld") },
       ]}
       target={{ kind: "hang", record: session }}
-      rpe={session.rpe}
       onDelete={() => void actions.deleteSession(session.id)}
     >
       {best !== null && <NewBestCard best={best} />}

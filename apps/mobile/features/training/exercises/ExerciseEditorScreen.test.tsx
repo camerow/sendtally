@@ -28,7 +28,6 @@ describe("exercise editor", () => {
     mockApi.saveExercise.mockResolvedValue({ exercise: anExercise("new-id", "Dips", "strength") });
     await renderWithHang(<ExerciseEditorScreen kind="strength" />);
     expect(screen.getByText("New exercise")).toBeTruthy();
-    expect(screen.getByText("Strength")).toBeTruthy();
     expect(screen.queryByText("Category")).toBeNull();
     expect(screen.queryByRole("radio", { name: "Mobility" })).toBeNull();
     expect(checked("Reps × weight")).toBe(true);
@@ -53,7 +52,6 @@ describe("exercise editor", () => {
   it("measures climbing in climbs or time, never by side", async () => {
     mockApi.saveExercise.mockResolvedValue({ exercise: anExercise("new-id", "4x4s", "climbing") });
     await renderWithHang(<ExerciseEditorScreen kind="climbing" />);
-    expect(screen.getByText("Climbing")).toBeTruthy();
     expect(checked("Climbs")).toBe(true);
     expect(screen.getByRole("radio", { name: "Time" })).toBeTruthy();
     expect(screen.queryByRole("radio", { name: "Rounds" })).toBeNull();
@@ -133,9 +131,7 @@ describe("exercise editor", () => {
   it("keeps a built-in's name but changes what it is measured in", async () => {
     const { actions } = await renderWithHang(<ExerciseEditorScreen kind="hangboard" id="half" />);
     expect(screen.getByLabelText("Name").props.editable).toBe(false);
-    expect(
-      screen.getByText("Built-in names stay as they are, so they read right in every language.")
-    ).toBeTruthy();
+    expect(screen.getByText("Built-in exercise names cannot be changed")).toBeTruthy();
     await fireEvent.press(screen.getByText("Time × weight"));
     await fireEvent.press(screen.getByText("Save"));
     expect(actions.saveGrip).toHaveBeenCalledWith({

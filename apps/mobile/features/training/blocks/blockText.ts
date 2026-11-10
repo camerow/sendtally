@@ -1,6 +1,5 @@
 import {
-  addDays,
-  blockEnd,
+  blockLastDay,
   blockWeekOn,
   type Block,
   type CalendarDate,
@@ -11,12 +10,8 @@ import { formatNumber, t } from "@sendtally/features/i18n";
 import type { DoneCount } from "@sendtally/features/training";
 
 /** "28 Sep to 25 Oct": first and last day, both inclusive. */
-export function blockDates(block: Pick<DatedBlock, "start" | "weeks">): string {
-  return t("plan.blockDates", {
-    start: shortDate(block.start),
-    last: shortDate(addDays(blockEnd(block), -1)),
-  });
-}
+export const blockDateRange = (block: Pick<DatedBlock, "start" | "weeks">): string =>
+  t("plan.blockDates", { start: shortDate(block.start), last: shortDate(blockLastDay(block)) });
 
 /** "Training block · week 2 of 4" while it runs, when it starts before then; a template says so. */
 export function blockKicker(block: Block, today: CalendarDate): string {

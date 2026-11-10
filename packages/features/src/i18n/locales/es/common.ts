@@ -87,4 +87,6 @@ export const common = {
   "common.decimalPoint": "Separador decimal",
   "common.changeRefused": "Un cambio no se pudo guardar y se ha deshecho.",
   "common.offline": "Sin conexión",
+  "common.addedTo": "Añadido a «{name}»",
+  "common.view": "Ver",
 } as const;

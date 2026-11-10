@@ -248,6 +248,14 @@ export function foldVariations({ variations }: VariationsWorkout): Item[] | null
 export const blockEnd = (b: Pick<DatedBlock, "start" | "weeks">): CalendarDate =>
   addDays(b.start, b.weeks * 7);
 
+/** Inclusive. */
+export const blockLastDay = (b: Pick<DatedBlock, "start" | "weeks">): CalendarDate =>
+  addDays(blockEnd(b), -1);
+
+/** Whether a block is over by `today`; a template never is. */
+export const blockEnded = (b: Block, today: CalendarDate): boolean =>
+  isDated(b) && blockEnd(b) <= today;
+
 /** 1-based week of the block a date falls in, or null outside it or for a template. */
 export function blockWeekOn(b: Pick<Block, "start" | "weeks">, d: CalendarDate): number | null {
   const { start, weeks } = b;

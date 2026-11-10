@@ -252,9 +252,13 @@ describe("Climbing session detail", () => {
     const open = jest.spyOn(Linking, "openURL").mockResolvedValue(true);
     await render(<SessionDetailScreen />);
     await fireEvent.press(screen.getByLabelText("More"));
-    expect(screen.getByText("Removes it here; the Strava activity stays")).toBeTruthy();
     await fireEvent.press(screen.getByText("View on Strava"));
     expect(open).toHaveBeenCalledWith("https://www.strava.com/activities/9");
+    const alert = jest.spyOn(Alert, "alert").mockImplementation(() => undefined);
+    await fireEvent.press(screen.getByLabelText("More"));
+    await fireEvent.press(screen.getByText("Delete session"));
+    expect(alert.mock.calls[0]?.[1]).toBe("Removes it here; the Strava activity stays");
+    alert.mockRestore();
   });
 
   it("deletes only once confirmed, then goes back", async () => {

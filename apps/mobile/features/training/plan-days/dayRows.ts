@@ -17,19 +17,17 @@ export const dayRows = (
         {
           icon: "check" as const,
           title: t("workouts.logIt"),
-          hint: t("plan.logItHint"),
           onPress: logIt,
         },
       ]),
-  { icon: "today", title: t("plan.move"), hint: t("plan.moveHint"), onPress: () => open("move") },
-  { icon: "x", title: t("plan.skip"), hint: t("plan.skipHint"), onPress: () => open("skip") },
+  { icon: "today", title: t("plan.move"), onPress: () => open("move") },
+  { icon: "x", title: t("plan.skip"), onPress: () => open("skip") },
   ...(remove === undefined
     ? []
     : [
         {
           icon: "trash" as const,
           title: t("plan.removeAction"),
-          hint: t("plan.unscheduleHint"),
           onPress: remove,
           danger: true,
         },

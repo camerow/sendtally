@@ -20,7 +20,6 @@ export const tally = {
   "tally.discardSession": "Descartar sesión",
   "tally.discardTitle": "¿Descartar esta sesión?",
   "tally.discardBody": "Todas sus escaladas se van también.",
-  "tally.startSession": "Empezar sesión",
   "tally.finishSession": "Terminar sesión",
   "tally.alreadyRunning": "Ya en marcha",
   "tally.record": "Registrar",

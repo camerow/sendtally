@@ -13,8 +13,8 @@ export function HistoryRow({ item, onPress }: HistoryRowProps): React.ReactEleme
   return (
     <Pressable
       onPress={onPress}
-      disabled={item.current === true}
-      accessibilityRole="button"
+      disabled={item.current === true || item.opens === false}
+      accessibilityRole={item.opens === false ? "text" : "button"}
       style={pressRow({
         minHeight: 56,
         flexDirection: "row",

@@ -86,8 +86,9 @@ export function ClimbDetailScreen({ id }: { id: string }): React.ReactElement {
           id: s.fingerprint,
           date: s.dateLabel,
           name: s.name,
-          meta: `${s.meta} · ${s.triesLabel}`,
+          meta: [s.meta, s.triesLabel].filter((p) => p !== "").join(" · "),
           rpe: s.rpe,
+          opens: s.opens,
         }))}
         onOpen={(fingerprint) =>
           router.push({ pathname: "/session/[fingerprint]", params: { fingerprint } })

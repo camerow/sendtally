@@ -2,7 +2,7 @@ import type { ClimbSummary, SessionWithClimbs } from "@sendtally/api-client";
 import { t } from "../i18n";
 import type { ClimbStyle } from "../log-session/types";
 import { utcDate } from "../log-session/transforms";
-import { isUnscored } from "../sessions/meta";
+import { isClimbHolder, isUnscored } from "../sessions/meta";
 import { sessionTitle } from "../sessions/title";
 import { climbNotes, dateLabel, type ProjectNoteVM } from "./projects";
 import { climbGradeLabel, climbKey } from "./transforms";
@@ -93,6 +93,8 @@ export type ClimbSessionRowVM = {
   meta: string;
   note: string | null;
   triesLabel: string;
+  /** Off for the untitled session a climb added on its own is filed in, which has nothing to show. */
+  opens: boolean;
 };
 
 export type ClimbDetailVM = {
@@ -121,15 +123,19 @@ export function climbSessions(
     .flatMap((s) => {
       const rows = s.climbs.filter((c) => isThisClimb(climb, c));
       if (rows.length === 0) return [];
-      const sent = rows.some((c) => c.kind === "send");
+      const result = rows.some((c) => c.kind === "send")
+        ? t("common.sent")
+        : t("sessionDetail.notYet");
+      const holder = isClimbHolder(s);
       return [
         {
           fingerprint: s.fingerprint,
           day: utcDate(s.start_at),
-          name: sessionTitle(s),
+          name: holder ? result : sessionTitle(s),
           rpe: isUnscored(s) ? null : s.rpe,
           dateLabel: dateLabel(s.start_at),
-          meta: sent ? t("common.sent") : t("sessionDetail.notYet"),
+          meta: holder ? "" : result,
+          opens: !holder,
           note: rows.find((c) => c.note !== null)?.note ?? null,
           triesLabel: t("tally.tryCount", { count: rows.reduce((n, c) => n + c.tries, 0) }),
         },

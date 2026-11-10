@@ -9,8 +9,9 @@ import { Label } from "./Label";
 import { GOLD_TINT } from "./tints";
 
 export type PlanRowProps = {
-  tag: string;
-  tagColor: string;
+  /** A small label over the row. */
+  tag?: string;
+  tagColor?: string;
   name?: string;
   meta: string;
   /** Without it the row only shows the plan. */
@@ -30,7 +31,7 @@ export type PlanRowProps = {
 /** A planned workout: tap to open, × to remove where it can be. */
 export function PlanRow({
   tag,
-  tagColor,
+  tagColor = colors.gunmetal,
   name,
   meta,
   onOpen,
@@ -69,9 +70,11 @@ export function PlanRow({
       >
         {mark}
         <View style={{ flex: 1, gap: 3 }}>
-          <Label small color={tagColor}>
-            {tag}
-          </Label>
+          {tag !== undefined && (
+            <Label small color={tagColor}>
+              {tag}
+            </Label>
+          )}
           {name !== undefined && (
             <Text style={[type.bodyBold, { fontSize: 15, color: colors.gunmetal }]}>{name}</Text>
           )}

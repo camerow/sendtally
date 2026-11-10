@@ -256,15 +256,15 @@ export function browseLibrary(
 }
 
 /**
- * One shelf per focus that has a workout matching `text`, in the order a season runs and
- * General last, each as `browseLibrary` orders it.
+ * One shelf per focus in the order a season runs and General last, each as `browseLibrary`
+ * orders it. A focus with no workout matching `text` is left out unless `empty` keeps it.
  */
 export function libraryShelves(
   library: readonly LibraryWorkout[],
   usage: ReadonlyMap<string, WorkoutUse>,
-  text = ""
+  { text = "", empty = false }: { text?: string; empty?: boolean } = {}
 ): LibraryShelf[] {
   return [...FOCI, null]
     .map((focus) => ({ focus, workouts: browseLibrary(library, { text, focus }, usage) }))
-    .filter((s) => s.workouts.length > 0);
+    .filter((s) => empty || s.workouts.length > 0);
 }

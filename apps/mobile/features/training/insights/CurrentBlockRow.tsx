@@ -18,7 +18,7 @@ export function CurrentBlockRow(): React.ReactElement | null {
   if (block === undefined) return null;
   const done = blockDone(log, block, today);
   const meta = [
-    t("statistics.blockWeek", { at: blockWeekOn(block, today) ?? 1, of: block.weeks }),
+    t("plan.blockWeek", { at: blockWeekOn(block, today) ?? 1, of: block.weeks }),
     ...(done.planned > 0 ? [t("plan.doneOf", done)] : []),
   ].join(" · ");
   return (

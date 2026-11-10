@@ -5,7 +5,7 @@ import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
 import { press } from "../../../lib/press";
 import { BlockWeekChips } from "../blocks/BlockWeekChips";
-import { blockDates } from "../blocks/blockText";
+import { blockDateRange } from "../blocks/blockText";
 import { Label } from "../components/Label";
 import { Title } from "../components/Title";
 import { type } from "../type";
@@ -87,7 +87,7 @@ export function BlockHeader({
   };
   const when = (
     <Text style={[type.mono, { fontSize: 12, color: colors.textSecondary }]}>
-      {dated === null ? t("plan.notScheduled") : blockDates(dated)}
+      {dated === null ? t("plan.notScheduled") : blockDateRange(dated)}
     </Text>
   );
 
@@ -141,7 +141,15 @@ export function BlockHeader({
           ]}
         />
       </View>
-      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+      <View
+        style={{
+          flexDirection: "row",
+          flexWrap: "wrap",
+          alignItems: "center",
+          justifyContent: "space-between",
+          rowGap: 10,
+        }}
+      >
         {onMoveStart === undefined ? (
           when
         ) : (

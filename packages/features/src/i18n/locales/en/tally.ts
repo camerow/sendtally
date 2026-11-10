@@ -20,7 +20,6 @@ export const tally = {
   "tally.discardSession": "Discard session",
   "tally.discardTitle": "Discard this session?",
   "tally.discardBody": "Every climb in it goes too.",
-  "tally.startSession": "Start session",
   "tally.finishSession": "Finish session",
   "tally.alreadyRunning": "Already running",
   "tally.record": "Record",

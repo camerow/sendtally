@@ -20,7 +20,6 @@ export const tally = {
   "tally.discardSession": "Session verwerfen",
   "tally.discardTitle": "Diese Session verwerfen?",
   "tally.discardBody": "Alle Klettereien darin gehen mit.",
-  "tally.startSession": "Session starten",
   "tally.finishSession": "Session beenden",
   "tally.alreadyRunning": "Läuft schon",
   "tally.record": "Aufzeichnen",

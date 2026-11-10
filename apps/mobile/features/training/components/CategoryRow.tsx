@@ -16,6 +16,8 @@ export type CategoryRowProps = {
   faded?: boolean;
   /** Off where the list already names the category. */
   showKind?: boolean;
+  /** Off under a heading that already carries the category's mark. */
+  showMark?: boolean;
   /** Left out on a row with nowhere to go, or one inside something that presses. */
   onPress?: () => void;
 };
@@ -27,12 +29,13 @@ export function CategoryRow({
   meta,
   faded = false,
   showKind = true,
+  showMark = true,
   onPress,
 }: CategoryRowProps): React.ReactElement {
   const row = { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 8 } as const;
   const content = (
     <>
-      <CategoryMark kind={kind} size={36} />
+      {showMark && <CategoryMark kind={kind} size={36} />}
       <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
         <Text numberOfLines={1} style={[type.bodyBold, { fontSize: 15, color: colors.gunmetal }]}>
           {name}

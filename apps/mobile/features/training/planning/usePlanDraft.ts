@@ -5,6 +5,7 @@ import {
   applyDraft,
   draftChange,
   draftMove,
+  draftRemove,
   draftSchedule,
   emptyDraft,
   scheduleOf,
@@ -29,6 +30,8 @@ export type PlanDraftState = {
   setChange: (change: WeekChange) => void;
   /** Moves a workout a place within its block. */
   move: (blockId: string, membershipId: string, by: -1 | 1) => void;
+  /** Takes a workout out on Save. */
+  remove: (membershipId: string) => void;
 };
 
 export function usePlanDraft(plan: Plan, startEditing = false): PlanDraftState {
@@ -57,5 +60,6 @@ export function usePlanDraft(plan: Plan, startEditing = false): PlanDraftState {
     setChange: (change) => edit((d) => draftChange(d, change)),
     move: (blockId, membershipId, by) =>
       edit((d) => draftMove(d, plan, { id: blockId }, membershipId, by)),
+    remove: (membershipId) => edit((d) => draftRemove(d, membershipId)),
   };
 }

@@ -376,16 +376,51 @@ export function regradedSessions(
   climbId: string,
   grade: Grade
 ): RegradedSession[] {
+  return rewrittenSessions(sessions, records, climbId, (c) => withGrade(c, grade));
+}
+
+/** The untitled session a climb added on its own is filed in. */
+const isHolder = (s: ScorableSession): boolean =>
+  s.source === "manual" && (s.name ?? "").trim() === "" && s.rpe_source === "none";
+
+export type ClearedHolders = { emptied: string[]; trimmed: RegradedSession[] };
+
+// A deleted climb leaves the sessions it was logged in as they were, except the
+// untitled ones that only existed to hold climbs added on their own: it leaves
+// those, and one left with no climbs goes too.
+export function clearedHolders(
+  sessions: ScorableSession[],
+  records: UserClimbRow[],
+  climbId: string
+): ClearedHolders {
+  const rewritten = rewrittenSessions(sessions, records, climbId, () => null, isHolder);
+  const empty = (s: RegradedSession): boolean => parseClimbs(s.climbs_json).length === 0;
+  return {
+    emptied: rewritten.filter(empty).map((s) => s.fingerprint),
+    trimmed: rewritten.filter((s) => !empty(s)),
+  };
+}
+
+function rewrittenSessions(
+  sessions: ScorableSession[],
+  records: UserClimbRow[],
+  climbId: string,
+  edit: (
+    c: ReturnType<typeof parseClimbs>[number]
+  ) => ReturnType<typeof parseClimbs>[number] | null,
+  only: (s: ScorableSession) => boolean = () => true
+): RegradedSession[] {
   const resolve = climbResolver(records);
   const changed = new Set<string>();
   const next = sessions.map((session) => {
-    if (session.source !== "manual" || session.climbs_json == null) return session;
+    if (session.source !== "manual" || session.climbs_json == null || !only(session))
+      return session;
     let hit = false;
-    const climbs = parseClimbs(session.climbs_json).map((c) => {
+    const climbs = parseClimbs(session.climbs_json).flatMap((c) => {
       if (climbSlug(c.name) === "" || resolve({ ...c, name: c.name.trim() })?.id !== climbId)
-        return c;
+        return [c];
       hit = true;
-      return withGrade(c, grade);
+      return edit(c) ?? [];
     });
     if (!hit) return session;
     changed.add(session.fingerprint);

@@ -43,7 +43,7 @@ export function NewWorkoutSheet({
     >
       <View style={{ gap: 14, paddingHorizontal: 18, paddingTop: 4, paddingBottom: 4 }}>
         <SheetHeader
-          kicker={workout ? t("workouts.newWorkout") : t("workouts.newExercise")}
+          kicker={workout ? t("workouts.createWorkout") : t("workouts.createExercise")}
           title={workout ? t("workouts.pickCategory") : t("workouts.pickExerciseCategory")}
           action={t("hang.cancel")}
           onAction={() => setOpen(false)}

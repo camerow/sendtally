@@ -117,7 +117,7 @@ const BUILT_INS: readonly BuiltIn[] = [
     description: "workouts.builtIn.limit.blurb",
     minutes: 90,
     targetRpe: 9,
-    items: [],
+    items: [lift("workouts.exercise.limitBouldering", { sets: 5, setRestS: 180 })],
   },
   {
     id: "climb-4x4",
@@ -127,7 +127,7 @@ const BUILT_INS: readonly BuiltIn[] = [
     description: "workouts.builtIn.fourByFour.blurb",
     minutes: 60,
     targetRpe: 8,
-    items: [],
+    items: [lift("workouts.exercise.fourByFours", { sets: 4, reps: 4, setRestS: 240 })],
   },
   {
     id: "climb-arc",
@@ -137,7 +137,7 @@ const BUILT_INS: readonly BuiltIn[] = [
     description: "workouts.builtIn.arc.blurb",
     minutes: 45,
     targetRpe: 4,
-    items: [],
+    items: [lift("workouts.exercise.arc", { sets: 2, onS: 1200, setRestS: 600 })],
   },
   {
     id: "strength-squat",

@@ -3,7 +3,7 @@ import React from "react";
 import { Text, View } from "react-native";
 import {
   itemIdOf,
-  blockEnd,
+  blockEnded,
   blockWeekOn,
   doseIndex,
   isDated,
@@ -94,7 +94,7 @@ export function LadderScreen({ id, back }: LadderScreenProps): React.ReactElemen
     );
   const current = blockWeekOn(block, today);
   const dated = isDated(block) ? block : null;
-  const ended = dated !== null && blockEnd(dated) <= today;
+  const ended = blockEnded(block, today);
   const ran =
     dated === null
       ? undefined
@@ -170,7 +170,6 @@ export function LadderScreen({ id, back }: LadderScreenProps): React.ReactElemen
             {
               icon: "pencil",
               title: t("hang.editWorkout"),
-              hint: t("plan.editWorkoutHint"),
               onPress: () =>
                 router.push({
                   pathname: "/workout/edit",
@@ -180,7 +179,6 @@ export function LadderScreen({ id, back }: LadderScreenProps): React.ReactElemen
             {
               icon: "trash",
               title: t("plan.removeFromBlock"),
-              hint: t("plan.removeFromBlockHint"),
               danger: true,
               onPress: remove,
             },

@@ -1,6 +1,7 @@
 import React from "react";
 import type { SendtallyApi } from "@sendtally/api-client";
 import { queries, useQuery } from "../query";
+import { isClimbHolder } from "../sessions/meta";
 import { libraryOf } from "../workouts/library";
 import { useWorkouts } from "../workouts/useWorkouts";
 import type { TrainingLog } from "./days";
@@ -30,7 +31,10 @@ export function useTrainingLog(api: SendtallyApi): TrainingLogQuery {
     const byId = new Map(libraryOf(mine.status === "ready" ? mine.data : []).map((w) => [w.id, w]));
     return {
       log: {
-        climbs: sessions.status === "ready" ? sessions.data.sessions : [],
+        climbs:
+          sessions.status === "ready"
+            ? sessions.data.sessions.filter((s) => !isClimbHolder(s))
+            : [],
         activities: sessions.status === "ready" ? sessions.data.activities : [],
         hangs: hang.status === "ready" ? hang.data.sessions : [],
         plan: plan.status === "ready" ? plan.data : EMPTY_PLAN,

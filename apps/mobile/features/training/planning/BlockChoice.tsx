@@ -2,7 +2,7 @@ import React from "react";
 import { View } from "react-native";
 import type { DatedBlock } from "@sendtally/core/hang";
 import { t } from "@sendtally/features/i18n";
-import { blockDates } from "../blocks/blockText";
+import { blockDateRange } from "../blocks/blockText";
 import { RadioRow } from "./RadioRow";
 
 export type BlockChoiceProps = {
@@ -19,7 +19,7 @@ export function BlockChoice({ blocks, value, onChange }: BlockChoiceProps): Reac
         <RadioRow
           key={b.id}
           title={b.name}
-          sub={blockDates(b)}
+          sub={blockDateRange(b)}
           on={value === b.id}
           onPress={() => onChange(b.id)}
         />

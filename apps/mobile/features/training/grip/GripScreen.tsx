@@ -14,6 +14,8 @@ import { kindLabel } from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
 import { LinkRow } from "../../../components/LinkRow";
 import { ScreenFrame } from "../../../components/ScreenFrame";
+import { Toast } from "../../../components/Toast";
+import { AddToSheet } from "../components/AddToSheet";
 import { DashedPanel } from "../components/DashedPanel";
 import { DetailActions } from "../components/DetailActions";
 import { deleteRow } from "../components/deleteRow";
@@ -21,7 +23,9 @@ import { Label } from "../components/Label";
 import { Title } from "../components/Title";
 import type { DetailMenuRow } from "../components/types";
 import { useHangData } from "../data/HangDataContext";
+import { pickedOf } from "../exercise-picker/usePick";
 import { openGripEditor } from "../exercises/openExerciseEditor";
+import { useAddToWorkout } from "../exercises/useAddToWorkout";
 import { CategoryMark } from "../library/CategoryMark";
 import { useLibrary } from "../library/useLibrary";
 import { SummaryTiles } from "../summary/SummaryTiles";
@@ -63,19 +67,23 @@ export function GripScreen({ id }: GripScreenProps): React.ReactElement {
         )
       : [];
 
-  const menu: DetailMenuRow[] = [];
+  const addTo = useAddToWorkout({
+    name,
+    picked: grip === undefined ? { exercise: id } : pickedOf({ grip }),
+    fingers: true,
+    usedIn,
+  });
+  const menu: DetailMenuRow[] = addTo.row === null || grip?.hidden === true ? [] : [addTo.row];
   if (canCompareGrips(model.sessions))
     menu.push({
       icon: "insights",
       title: t("hang.compareGrips"),
-      hint: t("hang.compareGripsHint"),
       onPress: () => router.push("/grip/compare"),
     });
   if (grip !== undefined && !grip.hidden)
     menu.push(
       deleteRow({
         title: t("workouts.archiveExercise"),
-        hint: t("workouts.archiveExerciseBody"),
         confirm: {
           title: t("workouts.archiveExerciseTitle", { name }),
           body: t("workouts.archiveExerciseBody"),
@@ -87,6 +95,7 @@ export function GripScreen({ id }: GripScreenProps): React.ReactElement {
 
   return (
     <ScreenFrame
+      overlay={addTo.toast && <Toast {...addTo.toast} />}
       action={
         <DetailActions
           onEdit={grip === undefined ? undefined : () => openGripEditor(id)}
@@ -138,6 +147,7 @@ export function GripScreen({ id }: GripScreenProps): React.ReactElement {
           ))}
         </View>
       )}
+      {addTo.sheet && <AddToSheet {...addTo.sheet} />}
     </ScreenFrame>
   );
 }

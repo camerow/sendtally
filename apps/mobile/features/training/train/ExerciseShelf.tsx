@@ -64,6 +64,7 @@ export function ExerciseShelf({
               meta={c.meta ?? t("workouts.notDoneYet")}
               faded={c.meta === null}
               showKind={false}
+              showMark={false}
               onPress={c.open}
             />
           ))

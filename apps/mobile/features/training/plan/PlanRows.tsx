@@ -5,7 +5,7 @@ import type { Membership } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { kindLabel } from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
-import { blockOfMembership, type WorkoutLookup } from "@sendtally/features/training";
+import { blockOfMembership, daysThisWeek, type WorkoutLookup } from "@sendtally/features/training";
 import { PlanRow } from "../components/PlanRow";
 import { useHangData } from "../data/HangDataContext";
 import { membershipTag, oneOffDate } from "../plans/planText";
@@ -36,15 +36,18 @@ export function PlanRows({ plan, members, workout, highlight }: PlanRowsProps): 
       {members.map((m) => {
         const w = workout(m.workoutId);
         if (w === undefined) return null;
+        const block = blockOfMembership(plan, m);
         return (
           <PlanRow
             key={m.id}
             mark={<DayMark kind={w.kind} filled />}
-            tag={membershipTag(m, blockOfMembership(plan, m), today)}
+            tag={membershipTag(m, block, today)}
             tagColor={m.start <= today ? colors.gunmetal : KIND_LOOK[w.kind].ink}
             name={w.name}
             meta={[kindLabel(w.kind), ...oneOffDate(m)].join(" · ")}
-            trailing={<MiniWeek kind={w.kind} m={m} />}
+            trailing={
+              <MiniWeek kind={w.kind} m={{ ...m, weekdays: daysThisWeek(plan, m, block, today) }} />
+            }
             onOpen={() => openMembership(m)}
             lit={m.id === highlight}
             onRemove={() =>

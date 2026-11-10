@@ -186,7 +186,6 @@ describe("blocks", () => {
     const alert = jest.spyOn(Alert, "alert").mockImplementation(() => undefined);
     await renderWithHang(<BlockScreen id="b1" />, hangData(), { workouts: [squat], plan });
     await fireEvent.press(screen.getByLabelText("More"));
-    expect(screen.getAllByText("Its plans go with it. What you logged stays.")).toHaveLength(1);
     await fireEvent.press(screen.getByText("Delete block"));
     expect(alert.mock.calls[0]?.[0]).toBe("Delete Winter base?");
     expect(mockPlan.deleteBlock).not.toHaveBeenCalled();
@@ -406,9 +405,19 @@ describe("plan again", () => {
     ],
   };
 
-  it("lists the blocks: plans with no block, then upcoming and past", async () => {
+  it("with nothing planned, shows only the empty panel", async () => {
+    const none: Plan = { ...plan, blocks: [], memberships: [] };
+    await renderWithHang(<BlocksList />, hangData(), { workouts: [squat], plan: none });
+    expect(screen.getByText(/^Nothing planned yet/)).toBeTruthy();
+    for (const section of ["Active", "Upcoming", "Templates", "Completed"])
+      expect(screen.queryByText(section)).toBeNull();
+  });
+
+  it("lists the blocks: what is active, then upcoming and completed", async () => {
     await renderWithHang(<BlocksList />, hangData(), { workouts: [squat], plan: past });
-    expect(screen.getByText("Ongoing")).toBeTruthy();
+    for (const section of ["Active", "Ongoing", "Upcoming", "Completed"])
+      expect(screen.getByText(section)).toBeTruthy();
+    expect(screen.queryByText("Your week")).toBeNull();
     expect(screen.getByText("Starts Mon, Oct 5 · 4 weeks")).toBeTruthy();
     expect(screen.getByText("4 weeks · 0 of 4 done")).toBeTruthy();
     await fireEvent.press(screen.getByLabelText("Open Summer base"));
@@ -516,6 +525,16 @@ describe("templates", () => {
     expect(screen.getByText("Back squat has no days yet and won’t be scheduled.")).toBeTruthy();
   });
 
+  it("offers no Save as template on a template", async () => {
+    await renderWithHang(<BlockScreen id="t1" />, hangData(), {
+      workouts: [squat],
+      plan: withTemplate,
+    });
+    await fireEvent.press(screen.getByLabelText("More"));
+    expect(screen.getByText("Delete block")).toBeTruthy();
+    expect(screen.queryByText("Save as template")).toBeNull();
+  });
+
   it("saves any block as a named template from its ··· menu, and stays on the block", async () => {
     await renderWithHang(<BlockScreen id="b1" />, hangData(), { workouts: [squat], plan });
     await fireEvent.press(screen.getByLabelText("More"));
@@ -547,7 +566,7 @@ describe("templates", () => {
       plan: dayless,
     });
     expect(screen.getByRole("button", { name: "Schedule" })).toBeDisabled();
-    await fireEvent.press(screen.getByText("Tap Edit to set when Back squat runs"));
+    await fireEvent.press(screen.getByRole("button", { name: "Edit" }));
     expect(screen.getByText("Tap the days Back squat runs")).toBeTruthy();
     expect(screen.queryByText("Schedule")).toBeNull();
     await fireEvent.press(screen.getByLabelText("Back squat, Wednesday"));
@@ -568,6 +587,7 @@ describe("templates", () => {
       ],
       weekChanges: [],
       order: [],
+      removed: [],
     });
   });
 

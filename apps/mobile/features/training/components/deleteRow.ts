@@ -5,18 +5,15 @@ import type { DetailMenuRow } from "./types";
 
 export type DeleteRow = {
   title: string;
-  /** What goes with it, or what stays; none when the title says it all. */
-  hint?: string;
   confirm: Omit<ConfirmDestructive, "onConfirm" | "action"> & { action?: string };
   onDelete: () => void;
 };
 
 /** The red last row of a ··· sheet: asks first, then goes back and removes the thing. */
-export function deleteRow({ title, hint, confirm, onDelete }: DeleteRow): DetailMenuRow {
+export function deleteRow({ title, confirm, onDelete }: DeleteRow): DetailMenuRow {
   return {
     icon: "trash",
     title,
-    ...(hint === undefined ? {} : { hint }),
     danger: true,
     onPress: () =>
       confirmDestructive({
