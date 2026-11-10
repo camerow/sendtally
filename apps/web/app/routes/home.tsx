@@ -6,25 +6,22 @@ import type { Locale } from "@sendtally/features/i18n";
 import { isSignedIn } from "../auth/session.server";
 import { landingLocale } from "../lib/locale";
 import { landingPath, pageMeta, SITE_URL } from "../lib/seo";
-import { Details } from "../landing/components/Details";
+import { Extras } from "../landing/components/Extras";
+import { FeatureSection } from "../landing/components/FeatureSection";
 import { Footer } from "../landing/components/Footer";
-import { FreeSection } from "../landing/components/FreeSection";
 import { Hero } from "../landing/components/Hero";
-import { HowItWorks } from "../landing/components/HowItWorks";
-import { Insights } from "../landing/components/Insights";
+import { MadeBy } from "../landing/components/MadeBy";
 import { Nav } from "../landing/components/Nav";
-import { PhotoBand } from "../landing/components/PhotoBand";
-import { PricePanel } from "../landing/components/PricePanel";
-import { SessionBreakdown } from "../landing/components/SessionBreakdown";
-import { StravaSection } from "../landing/components/StravaSection";
+import { StartSection } from "../landing/components/StartSection";
+import { TabsStrip } from "../landing/components/TabsStrip";
 import { COPIES } from "../landing/copies";
 import { LandingProvider } from "../landing/LandingContext";
 import landingStyles from "../landing/landing.css?url";
-import { LANDING_PHOTOS } from "../landing/photos";
+import { PHOTOS } from "../landing/media";
 
 export const links: LinksFunction = () => [
   { rel: "stylesheet", href: landingStyles },
-  { rel: "preload", as: "image", href: LANDING_PHOTOS.hero.src },
+  { rel: "preload", as: "image", href: PHOTOS.sandstoneWall },
 ];
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
@@ -71,15 +68,16 @@ export default function Home(): React.ReactElement {
     <LandingProvider signedIn={signedIn} locale={loaderData.locale}>
       <Nav />
       <Hero />
-      <FreeSection />
-      <PhotoBand />
-      <Insights />
-      <SessionBreakdown />
-      <StravaSection />
-      <HowItWorks />
-      <Details />
-      <PricePanel />
-      <Footer />
+      <TabsStrip />
+      <main>
+        {COPIES[loaderData.locale].features.map((feature, i) => (
+          <FeatureSection key={feature.id} feature={feature} flip={i % 2 === 1} />
+        ))}
+        <Extras />
+        <MadeBy />
+        <StartSection />
+      </main>
+      <Footer stores={false} />
     </LandingProvider>
   );
 }

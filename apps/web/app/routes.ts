@@ -5,6 +5,7 @@ export default [
   route("de", "routes/home.tsx", { id: "home-de" }),
   route("fr", "routes/home.tsx", { id: "home-fr" }),
   route("es", "routes/home.tsx", { id: "home-es" }),
+  route("pricing", "routes/pricing.tsx"),
   route("sign-in", "routes/sign-in.tsx"),
   route("sign-in/verify", "routes/sign-in.verify.tsx"),
   route("sign-up", "routes/sign-up.tsx"),

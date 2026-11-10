@@ -183,6 +183,9 @@ Three layers; the tokens file is the contract between platforms.
 
 `bg-primary` must mean the same color on both platforms.
 
+Red (watermelon) is only for destructive actions, and those use the `danger` red outline Button.
+A call to action that is not destructive (Become a member, Create account, Save) uses the blue `azure` Button, never a red fill.
+
 Mobile form standard: a focused input always stays visible when the keyboard comes up.
 Wrap the screen's scroll view in `KeyboardAvoidingView` (`behavior="padding"` on iOS) and give the scroll view `keyboardShouldPersistTaps="handled"`; `GymEditor` and `EntryComposer` are the reference.
 Design work (Claude-generated or otherwise) targets the token vocabulary; each platform implements idiomatically.
