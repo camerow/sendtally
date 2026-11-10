@@ -6,6 +6,7 @@ import { isClimbHolder, isUnscored } from "../sessions/meta";
 import { sessionTitle } from "../sessions/title";
 import { climbNotes, dateLabel, type ProjectNoteVM } from "./projects";
 import { climbGradeLabel, climbKey } from "./transforms";
+import type { GradeScales } from "../sessions/grades";
 
 /** A logged climb is this one when stamped with its id, or, unstamped, when it carries its name. */
 export function isThisClimb(
@@ -144,19 +145,23 @@ export function climbSessions(
 }
 
 /** "Name, grade", as the climb page and its log page head it. */
-export function climbTitle(climb: Pick<ClimbSummary, "name" | "grade">): string {
-  return climb.grade === null ? climb.name : `${climb.name}, ${climbGradeLabel(climb)}`;
+export function climbTitle(
+  climb: Pick<ClimbSummary, "name" | "grade">,
+  scales: GradeScales
+): string {
+  return climb.grade === null ? climb.name : `${climb.name}, ${climbGradeLabel(climb, scales)}`;
 }
 
 export function climbDetailVM(
   climb: ClimbSummary,
-  sessions: readonly SessionWithClimbs[]
+  sessions: readonly SessionWithClimbs[],
+  scales: GradeScales
 ): ClimbDetailVM {
   const rows = climbSessions(climb, sessions);
   return {
     id: climb.id,
     name: climb.name,
-    title: climbTitle(climb),
+    title: climbTitle(climb, scales),
     meta: [
       ...(climb.area?.name === undefined ? [] : [climb.area.name]),
       t("climbs.firstTried", { date: dateLabel(climb.first_at) }),

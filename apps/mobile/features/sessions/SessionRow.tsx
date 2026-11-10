@@ -9,6 +9,7 @@ import { StravaMark } from "../../components/StravaMark";
 import { pressRow } from "../../lib/press";
 import { RowTags, ROW_TAGS_HEIGHT } from "./RowTags";
 import { DayColumn } from "./SessionRowParts";
+import { useDisplayScales } from "@sendtally/features/settings";
 
 export const SESSION_ROW_HEIGHT = 59;
 
@@ -43,7 +44,7 @@ export function SessionRow({
   blockTag,
 }: SessionRowProps): React.ReactElement {
   const { weekday, day } = sessionDay(session);
-  const meta = sessionTallyLabel(session);
+  const meta = sessionTallyLabel(session, useDisplayScales());
   const onStrava = session.strava_activity_id !== null;
   const spoken = [
     title,

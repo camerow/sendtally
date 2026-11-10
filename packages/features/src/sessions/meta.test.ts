@@ -7,6 +7,7 @@ import {
   sessionMetaLabel,
   sessionTallyLabel,
 } from "./meta";
+import { DEFAULT_GRADE_SCALES as SCALES } from "../settings/transforms";
 
 function session(overrides: Partial<SessionRow> = {}): SessionRow {
   return {
@@ -60,15 +61,21 @@ describe("sessionMetaLabel", () => {
 describe("sessionTallyLabel", () => {
   it("reads duration, sends and the top send", () => {
     expect(
-      sessionTallyLabel(session({ send_count: 6, top_send_grade: 6, top_send_grade_label: "V6" }))
+      sessionTallyLabel(
+        session({ send_count: 6, top_send_grade: 6, top_send_grade_label: "V6" }),
+        SCALES
+      )
     ).toBe("1h 40m · 6 sent · top V6");
-    expect(sessionTallyLabel(session({ times: "none", top_send_grade: -1 }))).toBe("0 sent");
+    expect(sessionTallyLabel(session({ times: "none", top_send_grade: -1 }), SCALES)).toBe(
+      "0 sent"
+    );
   });
 
   it("leaves out the top send where the row shows it beside", () => {
     expect(
       sessionTallyLabel(
         session({ send_count: 6, top_send_grade: 6, top_send_grade_label: "V6" }),
+        SCALES,
         false
       )
     ).toBe("1h 40m · 6 sent");

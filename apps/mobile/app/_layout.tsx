@@ -26,6 +26,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { colors } from "@sendtally/design/tokens";
 import { resolveLocale, setLocale } from "@sendtally/features/i18n";
 import { OutboxProvider } from "@sendtally/features/outbox";
+import { GradeScalesProvider } from "@sendtally/features/settings";
 import { AnalyticsProvider } from "../features/analytics/AnalyticsProvider";
 import { AlreadyRunningSheet } from "../features/live-session/AlreadyRunningSheet";
 import { UpdateReadyOverlay } from "../features/app-update/UpdateReadyOverlay";
@@ -36,6 +37,7 @@ import { ReminderPromptProvider } from "../features/training/reminders/ReminderP
 import { CLERK_PUBLISHABLE_KEY } from "../lib/config";
 import { outbox } from "../lib/api";
 import { QueryProvider } from "../lib/QueryProvider";
+import { useApi } from "../lib/api";
 import { useFreshInstallUpdate } from "../features/app-update/useFreshInstallUpdate";
 import { useUpdateCheckOnForeground } from "../features/app-update/useUpdateCheckOnForeground";
 
@@ -93,34 +95,37 @@ function AppStack(): React.ReactElement | null {
   const pathname = usePathname();
   useRestTone();
   useLiveHold();
+  const api = useApi();
   if (!isLoaded) return null;
   return (
-    <ReminderPromptProvider>
-      <Stack
-        screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.white } }}
-      >
-        <Stack.Protected guard={isSignedIn}>
-          {SIGNED_IN_SCREENS.map((name) => (
-            <Stack.Screen key={name} name={name} />
-          ))}
-          {LIVE_SCREENS.map((name) => (
+    <GradeScalesProvider api={api}>
+      <ReminderPromptProvider>
+        <Stack
+          screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.white } }}
+        >
+          <Stack.Protected guard={isSignedIn}>
+            {SIGNED_IN_SCREENS.map((name) => (
+              <Stack.Screen key={name} name={name} />
+            ))}
+            {LIVE_SCREENS.map((name) => (
+              <Stack.Screen
+                key={name}
+                name={name}
+                options={{ gestureEnabled: false, animation: "slide_from_bottom" }}
+              />
+            ))}
             <Stack.Screen
-              key={name}
-              name={name}
-              options={{ gestureEnabled: false, animation: "slide_from_bottom" }}
+              name="workout/done"
+              options={{ gestureEnabled: false, animation: "fade" }}
             />
-          ))}
-          <Stack.Screen
-            name="workout/done"
-            options={{ gestureEnabled: false, animation: "fade" }}
-          />
-        </Stack.Protected>
-      </Stack>
-      {isSignedIn && <AlreadyRunningSheet />}
-      {isSignedIn && (
-        <UpdateReadyOverlay hidden={LIVE_SCREENS.some((name) => pathname === `/${name}`)} />
-      )}
-    </ReminderPromptProvider>
+          </Stack.Protected>
+        </Stack>
+        {isSignedIn && <AlreadyRunningSheet />}
+        {isSignedIn && (
+          <UpdateReadyOverlay hidden={LIVE_SCREENS.some((name) => pathname === `/${name}`)} />
+        )}
+      </ReminderPromptProvider>
+    </GradeScalesProvider>
   );
 }
 

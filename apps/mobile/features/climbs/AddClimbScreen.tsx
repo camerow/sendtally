@@ -170,7 +170,7 @@ export function AddClimbScreen(): React.ReactElement {
     ? t("climbs.editClimb")
     : existing === undefined
       ? t("climbs.addClimb")
-      : climbTitle(existing);
+      : climbTitle(existing, scales);
   const discipline = disciplineOf(climb.scale);
   const ladder = gradeOptions(climb.scale);
   const at = ladder.indexOf(climb.grade);

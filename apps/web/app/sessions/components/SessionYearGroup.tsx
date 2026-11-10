@@ -2,8 +2,10 @@ import React from "react";
 import { logTotalsLabel, type SessionYear } from "@sendtally/features/sessions";
 import { yearAnchorId } from "../anchors";
 import { SessionMonthGroup } from "./SessionMonthGroup";
+import { useDisplayScales } from "@sendtally/features/settings";
 
 export function SessionYearGroup({ year }: { year: SessionYear }): React.ReactElement {
+  const scales = useDisplayScales();
   return (
     <section>
       <h2 className="sessions-year" id={yearAnchorId(year.year)}>
@@ -28,7 +30,10 @@ export function SessionYearGroup({ year }: { year: SessionYear }): React.ReactEl
             color: "rgba(64,63,76,0.55)",
           }}
         >
-          {logTotalsLabel(year.months.flatMap((m) => m.items))}
+          {logTotalsLabel(
+            year.months.flatMap((m) => m.items),
+            scales
+          )}
         </span>
       </h2>
       {year.months.map((month) => (

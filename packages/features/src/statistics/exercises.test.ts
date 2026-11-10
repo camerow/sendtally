@@ -132,10 +132,13 @@ describe("grade metrics", () => {
     expect(series?.sessions).toHaveLength(2);
   });
 
-  it("ranks routes on their own ladder and reads them in the scale logged", () => {
+  it("ranks routes on their own ladder and reads them in the climber's route scale", () => {
     const routes = limit(climb("6a", true, "french"), climb("V9"), climb("6c", true, "french"));
-    const [series] = exerciseSeries([logged("a", "2026-10-01", [routes])], () => "topGrade");
-    expect(series?.grades?.label(series.sessions[0]?.value ?? -1)).toBe("6c");
+    const log = [logged("a", "2026-10-01", [routes])];
+    const [yds] = exerciseSeries(log, () => "topGrade");
+    expect(yds?.grades?.label(yds.sessions[0]?.value ?? -1)).toBe("5.11b");
+    const [french] = exerciseSeries(log, () => "topGrade", { boulder: "v", route: "french" });
+    expect(french?.grades?.label(french.sessions[0]?.value ?? -1)).toBe("6c");
   });
 
   it("drops a session with nothing sent at a grade", () => {

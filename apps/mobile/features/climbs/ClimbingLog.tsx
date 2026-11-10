@@ -68,18 +68,20 @@ export function ClimbingLog({ items, header, onRefresh }: ClimbingLogProps): Rea
   const searchable = filtered || state.status === "error" || (ready?.climbs.length ?? 0) > 0;
   const log = React.useMemo(
     () =>
-      ready === null ? null : climbLog(ready.climbs, ready.sessions, { query, grade, status }),
-    [ready, query, grade, status]
+      ready === null
+        ? null
+        : climbLog(ready.climbs, ready.sessions, { query, grade, status, scales }),
+    [ready, query, grade, status, scales]
   );
   const nested = React.useMemo(
     () =>
       new Map(
         (ready?.sessions ?? []).map((s) => [
           s.fingerprint,
-          climbingSessionVM(s, ready?.climbs ?? []),
+          climbingSessionVM(s, ready?.climbs ?? [], scales),
         ])
       ),
-    [ready]
+    [ready, scales]
   );
 
   const renderItem = React.useCallback(

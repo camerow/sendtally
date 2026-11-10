@@ -1,5 +1,6 @@
 import type { JournalEntry, SessionRow, SessionWithClimbs } from "@sendtally/api-client";
 import { formatNumber, t } from "../i18n";
+import { sessionGradeLabel, type GradeScales } from "../sessions/grades";
 import { isUnscored } from "../sessions/meta";
 import { trendsVM } from "../trends/overview";
 import type { TrendTileVM } from "../trends/types";
@@ -92,11 +93,15 @@ export function tripEffort(days: TripDay[]): Array<number | null> {
 }
 
 /** The trends grade pyramid, over only the sends logged inside the trip. */
-export function tripPyramid(days: Array<TripDay<SessionWithClimbs>>): TrendTileVM | null {
+export function tripPyramid(
+  days: Array<TripDay<SessionWithClimbs>>,
+  scales: GradeScales
+): TrendTileVM | null {
   const { groups } = trendsVM(
     days.flatMap((d) => d.sessions),
     [],
-    { scope: null, range: "all", grade: null, setting: "all", gymId: null, tags: [] }
+    { scope: null, range: "all", grade: null, setting: "all", gymId: null, tags: [] },
+    scales
   );
   const tile = groups.flatMap((g) => g.tiles).find((x) => x.id === "pyramid");
   return tile === undefined || tile.points.length === 0
@@ -104,7 +109,7 @@ export function tripPyramid(days: Array<TripDay<SessionWithClimbs>>): TrendTileV
     : { ...tile, caption: t("trends.sendsByGrade") };
 }
 
-export function tripStats(days: TripDay[]): TripStat[] {
+export function tripStats(days: TripDay[], scales: GradeScales): TripStat[] {
   const sessions = days.flatMap((d) => d.sessions);
   const climbed = days.filter((d) => d.sessions.length > 0).length;
   const climbs = sessions.reduce((sum, s) => sum + s.climb_count, 0);
@@ -124,7 +129,10 @@ export function tripStats(days: TripDay[]): TripStat[] {
     { label: t("common.climbs"), value: formatNumber(climbs) },
     {
       label: t("trends.hardestSend"),
-      value: top === null ? "-" : (top.top_send_grade_label ?? `V${top.top_send_grade}`),
+      value:
+        top === null
+          ? "-"
+          : sessionGradeLabel(top.top_send_grade_label, top.top_send_grade, scales),
     },
     {
       label: t("journal.tripAverageRpe"),

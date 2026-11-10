@@ -85,9 +85,11 @@ function mockMemoryStorage(): unknown {
 }
 jest.mock("../../lib/logSegmentStorage", () => ({ logSegmentStorage: mockMemoryStorage() }));
 jest.mock("../../lib/liveSessionStorage", () => ({ liveSessionStorage: mockMemoryStorage() }));
+let mockScales = { boulder: "v", route: "yds" };
 jest.mock("@sendtally/features/settings", () => ({
   useSettings: () => ({ ready: false, vm: {}, reload: () => undefined }),
-  useGradeScalePrefs: () => ({ scales: { boulder: "v", route: "yds" }, ready: true }),
+  useGradeScalePrefs: () => ({ scales: mockScales, ready: true }),
+  useDisplayScales: () => mockScales,
 }));
 jest.mock("@sendtally/features/gyms", () => ({ useGyms: () => ({ ready: false, gyms: [] }) }));
 jest.mock("@sendtally/features/training", () => ({
@@ -153,7 +155,10 @@ jest.mock("@sendtally/features/climbs", () => ({
 }));
 
 describe("Log", () => {
-  beforeEach(() => logSegmentStorage.remove());
+  beforeEach(() => {
+    logSegmentStorage.remove();
+    mockScales = { boulder: "v", route: "yds" };
+  });
 
   it("opens on Climbing: a named session with its climbs under it, a lone climb on its day", async () => {
     await render(<SessionsLog />);
@@ -162,6 +167,15 @@ describe("Log", () => {
     expect(screen.getByLabelText("V4, Brad Pit, Boulder, 3 tries")).toBeTruthy();
     expect(screen.queryByText("Logged session")).toBeNull();
     expect(screen.queryByText("Leg day")).toBeNull();
+  });
+
+  it("shows every grade in the scale picked in settings", async () => {
+    mockScales = { boulder: "font", route: "yds" };
+    await render(<SessionsLog />);
+    expect(screen.getByLabelText("6B, Pocket Rocket, 1 try, Flash")).toBeTruthy();
+    expect(screen.getByLabelText("6B, Brad Pit, Boulder, 3 tries")).toBeTruthy();
+    expect(screen.getByLabelText(/^Tuesday night session, .* top 6C$/)).toBeTruthy();
+    expect(screen.queryByText("V4")).toBeNull();
   });
 
   it("turns into the flat climbs list once searched", async () => {

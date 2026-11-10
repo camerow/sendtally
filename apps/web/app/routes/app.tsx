@@ -17,6 +17,7 @@ import { Icon, type IconName } from "../components/Icon";
 import { requireApi } from "../lib/api.server";
 import { cloudflareContext } from "../lib/cloudflare-context";
 import { useClientApi } from "../lib/useClientApi";
+import { GradeScalesProvider } from "@sendtally/features/settings";
 import appShellStyles from "../styles/app-shell.css?url";
 import { pageMeta } from "../lib/seo";
 
@@ -143,10 +144,14 @@ function Shell({ children }: { children: React.ReactNode }): React.ReactElement 
 }
 
 export default function AppLayout(): React.ReactElement {
+  const apiUrl = useRouteLoaderData<typeof loader>("routes/app")?.apiUrl ?? "";
+  const api = useClientApi(apiUrl);
   return (
-    <Shell>
-      <Outlet />
-    </Shell>
+    <GradeScalesProvider api={api}>
+      <Shell>
+        <Outlet />
+      </Shell>
+    </GradeScalesProvider>
   );
 }
 

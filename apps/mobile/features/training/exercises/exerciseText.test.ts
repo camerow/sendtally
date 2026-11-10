@@ -5,7 +5,7 @@ import { headlineLabel, metricText } from "./exerciseText";
 
 describe("grade metrics", () => {
   it("read a value as a grade in its discipline", () => {
-    const boulders = gradeFormatter("boulder", "yds");
+    const boulders = gradeFormatter("boulder", { boulder: "v", route: "yds" });
     expect(metricText(5, "topGrade", "kg", boulders)).toBe("V5");
     expect(metricText(4.25, "averageGrade", "kg", boulders)).toBe("V4.3");
     expect(headlineLabel("averageGrade")).toBe("Average send grade");

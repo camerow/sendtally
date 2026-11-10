@@ -8,15 +8,17 @@ import {
   type TripContents,
 } from "@sendtally/features/journal";
 import { sessionGradeLabels, sessionTitle } from "@sendtally/features/sessions";
+import { useDisplayScales } from "@sendtally/features/settings";
 
 /** What a trip draft's dates take in, so the grouping is seen before it is saved. */
 export function TripPreview({ trip }: { trip: TripContents }): React.ReactElement {
+  const scales = useDisplayScales();
   const rows = [
     ...trip.sessions.map((s) => ({
       key: s.fingerprint,
       day: isoDay(s.start_at),
       title: sessionTitle(s),
-      kind: sessionGradeLabels(s)[0]?.label ?? "",
+      kind: sessionGradeLabels(s, scales)[0]?.label ?? "",
     })),
     ...trip.entries.map((e) => ({
       key: e.id,

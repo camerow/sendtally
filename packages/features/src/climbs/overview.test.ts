@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { ClimbSummary, SessionClimb, SessionWithClimbs } from "@sendtally/api-client";
 import { climbDetailVM, climbOf, sendStyleOf } from "./overview";
 import { sessionPyramid } from "./pyramid";
+import { DEFAULT_GRADE_SCALES as SCALES } from "../settings/transforms";
 
 const go = (
   v: number,
@@ -58,15 +59,19 @@ const climb = (over: Partial<ClimbSummary>): ClimbSummary => ({
 
 describe("climbDetailVM", () => {
   it("lists every session newest first, matching by id or by name", () => {
-    const vm = climbDetailVM(climb({}), [
-      session("2026-09-26T18:00:00.000Z", "outdoor", [
-        go(7, "attempt", { name: "the pinch", tries: 6, note: "First look." }),
-      ]),
-      session("2026-10-24T18:00:00.000Z", "outdoor", [
-        go(7, "attempt", { name: "Renamed", userClimbId: "c1", tries: 8 }),
-        go(7, "attempt", { name: "The Pinch", userClimbId: "other", tries: 1 }),
-      ]),
-    ]);
+    const vm = climbDetailVM(
+      climb({}),
+      [
+        session("2026-09-26T18:00:00.000Z", "outdoor", [
+          go(7, "attempt", { name: "the pinch", tries: 6, note: "First look." }),
+        ]),
+        session("2026-10-24T18:00:00.000Z", "outdoor", [
+          go(7, "attempt", { name: "Renamed", userClimbId: "c1", tries: 8 }),
+          go(7, "attempt", { name: "The Pinch", userClimbId: "other", tries: 1 }),
+        ]),
+      ],
+      SCALES
+    );
     expect(vm.title).toBe("The Pinch, V7");
     expect(vm.meta).toBe("Buttermilks · first tried Sep 26");
     expect([vm.project, vm.days, vm.tries, vm.best]).toEqual([true, "3", "23", "-"]);
@@ -80,12 +85,16 @@ describe("climbDetailVM", () => {
 
   it("lists every note on the climb, from its sessions and its page, newest first", () => {
     const withPageNote = climb({ notes: [{ id: "n1", day: "2026-10-10", note: "Heel left." }] });
-    const vm = climbDetailVM(withPageNote, [
-      session("2026-09-26T18:00:00.000Z", "outdoor", [
-        go(7, "attempt", { name: "The Pinch", note: "First look." }),
-      ]),
-      session("2026-10-24T18:00:00.000Z", "outdoor", [go(7, "attempt", { name: "The Pinch" })]),
-    ]);
+    const vm = climbDetailVM(
+      withPageNote,
+      [
+        session("2026-09-26T18:00:00.000Z", "outdoor", [
+          go(7, "attempt", { name: "The Pinch", note: "First look." }),
+        ]),
+        session("2026-10-24T18:00:00.000Z", "outdoor", [go(7, "attempt", { name: "The Pinch" })]),
+      ],
+      SCALES
+    );
     expect(vm.notes.map((n) => [n.source, n.id, n.day, n.note])).toEqual([
       ["page", "n1", "2026-10-10", "Heel left."],
       ["session", "2026-09-26T18:00:00.000Z", "2026-09-26", "First look."],
@@ -94,11 +103,15 @@ describe("climbDetailVM", () => {
 
   it("names the best as how the first send went", () => {
     const sent = climb({ sent_at: "2026-10-24T18:00:00.000Z" });
-    const vm = climbDetailVM(sent, [
-      session("2026-10-24T18:00:00.000Z", "outdoor", [
-        go(7, "send", { name: "The Pinch", style: "flash" }),
-      ]),
-    ]);
+    const vm = climbDetailVM(
+      sent,
+      [
+        session("2026-10-24T18:00:00.000Z", "outdoor", [
+          go(7, "send", { name: "The Pinch", style: "flash" }),
+        ]),
+      ],
+      SCALES
+    );
     expect(vm.best).toBe("Flash");
   });
 
@@ -110,7 +123,7 @@ describe("climbDetailVM", () => {
       name: "",
       rpe_source: "none",
     } as SessionWithClimbs;
-    const [visit] = climbDetailVM(climb({}), [holder]).sessions;
+    const [visit] = climbDetailVM(climb({}), [holder], SCALES).sessions;
     expect([visit?.name, visit?.meta, visit?.triesLabel, visit?.rpe, visit?.opens]).toEqual([
       "Sent",
       "",
@@ -123,12 +136,12 @@ describe("climbDetailVM", () => {
 
 describe("sessionPyramid", () => {
   it("puts sends in the middle and not-yet either side, hardest first", () => {
-    expect(sessionPyramid([go(4, "send"), go(5, "attempt"), go(5, "send"), go(4, "send")])).toEqual(
-      [
-        { gradeLabel: "V5", inner: 1, outer: 1, countLabel: "1/2" },
-        { gradeLabel: "V4", inner: 2, outer: 0, countLabel: "2/2" },
-      ]
-    );
+    expect(
+      sessionPyramid([go(4, "send"), go(5, "attempt"), go(5, "send"), go(4, "send")], SCALES)
+    ).toEqual([
+      { gradeLabel: "V5", inner: 1, outer: 1, countLabel: "1/2" },
+      { gradeLabel: "V4", inner: 2, outer: 0, countLabel: "2/2" },
+    ]);
   });
 });
 

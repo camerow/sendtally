@@ -6,6 +6,7 @@ import { climbKey, climbsWorkedBefore } from "../climbs/transforms";
 import { draftFromEntry, entryInput } from "../journal/transforms";
 import { t } from "../i18n";
 import { queries, useQuery, type QueryState } from "../query";
+import { useGradeScalePrefs } from "../settings/useGradeScales";
 import { sessionClimbRows, sortClimbRows, type SessionClimbRowVM } from "./rows";
 import { climbVMs, filterAndSortClimbs, postingStatus, sessionDetailVM } from "./transforms";
 import type { ClimbFilter, ClimbSort, ClimbVM, SessionDetailVM } from "./types";
@@ -63,6 +64,7 @@ export function useSessionDetail(api: SendtallyApi, fingerprint: string): Sessio
   // either: until they land, or if they fail, the screen renders without them.
   const statusQuery = useQuery(queries.status(api));
   const status = statusQuery.state;
+  const { scales } = useGradeScalePrefs(api);
   const catalogue = useQuery(queries.climbs(api)).state;
   const gyms = useQuery(queries.gyms(api)).state;
 
@@ -94,14 +96,14 @@ export function useSessionDetail(api: SendtallyApi, fingerprint: string): Sessio
     return {
       status: "ready",
       data: {
-        vm: sessionDetailVM(s, postable, workedBefore, gymName),
+        vm: sessionDetailVM(s, scales, postable, workedBefore, gymName),
         climbs: filterAndSortClimbs(
-          climbVMs(raw.data.climbs, workedBefore, openProjects(catalogue)),
+          climbVMs(raw.data.climbs, scales, workedBefore, openProjects(catalogue)),
           filter,
           sort
         ),
         rows: sortClimbRows(
-          sessionClimbRows(s, catalogue.status === "ready" ? catalogue.data : []),
+          sessionClimbRows(s, catalogue.status === "ready" ? catalogue.data : [], scales),
           sort
         ),
         tags: raw.data.tags,
@@ -110,7 +112,7 @@ export function useSessionDetail(api: SendtallyApi, fingerprint: string): Sessio
         strava,
       },
     };
-  }, [session.state, status, catalogue, gyms, filter, sort, posting, postError]);
+  }, [session.state, status, scales, catalogue, gyms, filter, sort, posting, postError]);
 
   const run = React.useCallback(() => {
     setPosting(true);

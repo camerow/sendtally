@@ -1,10 +1,11 @@
 export { SESSION_NOTE_MAX } from "./notes";
 export {
   climbGradeLabel,
+  displayGrade,
   gradeFormatter,
-  gradeFormatterFor,
-  routeScaleOf,
+  sessionGradeLabel,
   sessionGradeLabels,
+  type GradeScales,
   type GradeFormatter,
   type RouteScale,
   type SessionGradeLabel,

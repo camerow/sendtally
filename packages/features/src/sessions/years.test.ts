@@ -12,6 +12,7 @@ import {
   totalsLabel,
 } from "./years";
 import { logItems } from "../journal/transforms";
+import { DEFAULT_GRADE_SCALES as SCALES } from "../settings/transforms";
 
 function session(
   fingerprint: string,
@@ -105,10 +106,10 @@ describe("labels", () => {
   });
 
   it("drops the top grade when it is unknown", () => {
-    expect(totalsLabel({ count: 2, minutes: 90, topGrade: -1, topGradeLabel: null })).toBe(
+    expect(totalsLabel({ count: 2, minutes: 90, topGrade: -1, topGradeLabel: null }, SCALES)).toBe(
       "2 sessions · 1h 30m"
     );
-    expect(totalsLabel({ count: 2, minutes: 90, topGrade: 6, topGradeLabel: null })).toBe(
+    expect(totalsLabel({ count: 2, minutes: 90, topGrade: 6, topGradeLabel: null }, SCALES)).toBe(
       "2 sessions · 1h 30m · TOP V6"
     );
   });
@@ -123,13 +124,13 @@ describe("labels", () => {
     const items = logItems([...sessions.slice(0, 2), holder("h1", 1), holder("h2", 2)], [], []);
     expect(logCountLabel(items)).toBe("2 sessions · 3 climbs");
     expect(logCountLabel(logItems([holder("h1", 1)], [], []))).toBe("1 climb");
-    expect(logTotalsLabel(items)).toBe("2 sessions · 2h 30m · TOP V7 · 3 climbs");
+    expect(logTotalsLabel(items, SCALES)).toBe("2 sessions · 2h 30m · TOP V7 · 3 climbs");
   });
 
   it("shows the stored label for the hardest session, route grades included", () => {
-    expect(totalsLabel({ count: 1, minutes: 60, topGrade: 4, topGradeLabel: "5.12b" })).toBe(
-      "1 session · 1h · TOP 5.12b"
-    );
+    expect(
+      totalsLabel({ count: 1, minutes: 60, topGrade: 4, topGradeLabel: "5.12b" }, SCALES)
+    ).toBe("1 session · 1h · TOP 5.12b");
   });
 });
 

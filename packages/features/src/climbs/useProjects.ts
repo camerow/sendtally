@@ -2,6 +2,7 @@ import React from "react";
 import type { ClimbSummary, ProjectInput, SendtallyApi } from "@sendtally/api-client";
 import { t } from "../i18n";
 import { queries, useQueryPair, type QueryState } from "../query";
+import { useGradeScalePrefs } from "../settings/useGradeScales";
 import {
   projectBars,
   projectDetailVM,
@@ -32,6 +33,7 @@ const useClimbsAndSessions = (api: SendtallyApi) =>
 
 export function useProjects(api: SendtallyApi): ProjectsFeature {
   const { state: loaded, reload } = useClimbsAndSessions(api);
+  const { scales } = useGradeScalePrefs(api);
 
   const state = React.useMemo((): QueryState<ProjectsData> => {
     if (loaded.status !== "ready") return loaded;
@@ -43,12 +45,12 @@ export function useProjects(api: SendtallyApi): ProjectsFeature {
     return {
       status: "ready",
       data: {
-        overview: projectsOverview(climbs),
+        overview: projectsOverview(climbs, scales),
         open: items.filter((i) => projectStatus(i.climb) === "open"),
         sent: items.filter((i) => projectStatus(i.climb) === "sent"),
       },
     };
-  }, [loaded]);
+  }, [loaded, scales]);
 
   const save = React.useCallback(
     async (input: ProjectInput): Promise<void> => {
@@ -73,13 +75,14 @@ export type ProjectFeature = {
 // the notes come from the same fetch rather than a project-specific endpoint.
 export function useProject(api: SendtallyApi, slug: string, newId: () => string): ProjectFeature {
   const { state: loaded, reload } = useClimbsAndSessions(api);
+  const { scales } = useGradeScalePrefs(api);
   const climb = loaded.status === "ready" ? loaded.data[0].find((c) => c.slug === slug) : undefined;
 
   const state = React.useMemo((): QueryState<ProjectDetailVM> => {
     if (loaded.status !== "ready") return loaded;
     if (climb === undefined) return { status: "error", message: t("climbs.projectNotFound") };
-    return { status: "ready", data: projectDetailVM(climb, loaded.data[1].sessions) };
-  }, [loaded, climb]);
+    return { status: "ready", data: projectDetailVM(climb, loaded.data[1].sessions, scales) };
+  }, [loaded, climb, scales]);
 
   const saveNote = React.useCallback(
     async ({ id, source, day }: ProjectNoteVM, text: string): Promise<void> => {

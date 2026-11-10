@@ -1,6 +1,7 @@
 import React from "react";
 import type { Gym, SendtallyApi, SessionLogWithClimbs } from "@sendtally/api-client";
 import { queries, useQueryPair, type QueryState } from "../query";
+import { useGradeScalePrefs } from "../settings/useGradeScales";
 import { daysVM } from "./days";
 import { enduranceVM } from "./endurance";
 import { trendsVM } from "./overview";
@@ -38,6 +39,7 @@ export function useTrends(
   { preview = false }: TrendsOptions = {}
 ): TrendsFeature {
   const raw = useTrendData(api);
+  const { scales } = useGradeScalePrefs(api);
   const [chosen, setChosen] = React.useState<TrendFilter>(DEFAULT_TREND_FILTER);
   const filter = React.useMemo(
     (): TrendFilter => (preview ? { ...chosen, range: PREVIEW_TREND_RANGE } : chosen),
@@ -53,11 +55,12 @@ export function useTrends(
               raw.data[0].sessions,
               raw.data[1],
               filter,
+              scales,
               new Date(),
               raw.data[0].hangSessions
             ),
           },
-    [raw, filter]
+    [raw, filter, scales]
   );
   const setFilter = React.useCallback(
     (next: (filter: TrendFilter) => TrendFilter): void => setChosen(next),
