@@ -1,5 +1,5 @@
 import React from "react";
-import { Pressable, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import type { Plan } from "@sendtally/api-client";
 import {
   addDays,
@@ -18,7 +18,6 @@ import {
   withFollowing,
   withoutFollowing,
   trainingDay,
-  usualDays,
   useTrainingLog,
   type DaySchedule,
   type DayToggle,
@@ -27,7 +26,6 @@ import {
 } from "@sendtally/features/training";
 import { Switch } from "../../../components/Switch";
 import { useApi } from "../../../lib/api";
-import { press } from "../../../lib/press";
 import { Button } from "../components/Button";
 import { DashedPanel } from "../components/DashedPanel";
 import { AMBER } from "../components/tints";
@@ -141,20 +139,11 @@ export function BlockWeek({
                 ? "movedIn"
                 : o.status;
           });
-  const pattern = (m: Membership): readonly number[] =>
-    usualDays(scheduleOf(plan, m), 1, block.weeks);
-  // On a template a week reads gold where its days differ from the weeks' pattern.
-  const rings = template
-    ? {
-        rings: (m: Membership) =>
-          DAYS.map((d) => m.weekdays.includes(d as Weekday) !== pattern(m).includes(d)),
-      }
-    : {};
+  const picksWeek = onPickWeek !== undefined && week !== undefined;
   const options: GridOptions = editing
     ? {
         back: block.name,
         ...(marks !== undefined && { marks }),
-        ...rings,
         // A day gone by keeps how it went; today and later are set.
         toggle: (m: Membership, day: number) =>
           dates !== null && (dates[day] ?? today) < today
@@ -169,7 +158,6 @@ export function BlockWeek({
       }
     : {
         back: block.name,
-        ...rings,
         ...(template &&
           week !== undefined &&
           week > 1 && {
@@ -254,10 +242,9 @@ export function BlockWeek({
           rows={rows}
           lit={[...(lit === undefined ? [] : [lit]), ...added]}
           editing={editing}
+          title={picksWeek ? undefined : t("plan.week")}
           head={
-            onPickWeek !== undefined && week !== undefined ? (
-              <WeekNav week={week} weeks={block.weeks} onPick={onPickWeek} />
-            ) : undefined
+            picksWeek ? <WeekNav week={week} weeks={block.weeks} onPick={onPickWeek} /> : undefined
           }
           dates={dates === null ? undefined : dates.map((d) => String(Number(d.slice(8))))}
           columns={from === null ? undefined : DAYS.map((i) => weekday(addDays(from, i)))}
@@ -291,11 +278,6 @@ export function BlockWeek({
       {dayless.length > 0 &&
         (editing || onEditDays === undefined) &&
         hint(t("plan.tapDays", { workout: daylessNames }), AMBER)}
-      {dayless.length > 0 && !editing && onEditDays !== undefined && (
-        <Pressable onPress={onEditDays} accessibilityRole="button" style={press({})}>
-          {hint(t("plan.tapEditDays", { workout: daylessNames }), AMBER)}
-        </Pressable>
-      )}
       {canAdd && !(template && rows.length === 0) && (editing || rows.length === 0) && action}
       {editing && onMove !== undefined && members.length > 1 && (
         <BlockOrder

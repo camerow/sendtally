@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { Weekday } from "@sendtally/core/hang";
 import {
   daysInWeek,
+  daysThisWeek,
   ownWeeksAfter,
   usualDays,
   withFollowing,
@@ -18,6 +19,35 @@ const schedule = (weeks: [number, Weekday[]][] = []): DaySchedule => ({
 });
 const weeksOf = (s: DaySchedule, last = 6): Weekday[][] =>
   Array.from({ length: last }, (_, i) => daysInWeek(s, i + 1));
+
+describe("daysThisWeek", () => {
+  const m = {
+    id: "m",
+    workoutId: "w",
+    blockId: "b",
+    weekdays: [],
+    start: "2026-09-21",
+    position: 0,
+  };
+  const membershipDays = [{ membershipId: "m", fromWeek: 2, weekdays: [1] as Weekday[] }];
+  const block = { start: "2026-09-21", weeks: 4 };
+
+  it("reads the week the block is on", () => {
+    expect(daysThisWeek({ membershipDays }, m, block, "2026-09-30")).toEqual([1]);
+    expect(daysThisWeek({ membershipDays }, m, block, "2026-09-22")).toEqual([]);
+  });
+
+  it("reads the first week of a block not running, and a plan in no block", () => {
+    const set = [{ membershipId: "m", fromWeek: 1, weekdays: [4] as Weekday[] }];
+    expect(daysThisWeek({ membershipDays: set }, m, block, "2026-09-01")).toEqual([4]);
+    expect(
+      daysThisWeek({ membershipDays: set }, m, { start: null, weeks: 4 }, "2026-09-30")
+    ).toEqual([4]);
+    expect(
+      daysThisWeek({ membershipDays: [] }, { ...m, weekdays: [2] }, null, "2026-09-30")
+    ).toEqual([2]);
+  });
+});
 
 describe("withWeekDays", () => {
   it("sets one week alone, the weeks after keeping the days they had", () => {

@@ -21,7 +21,7 @@ export type LibraryIntroProps = {
   day?: React.ReactNode;
 };
 
-/** A workout's kicker (kind, focus, and Mine for the user's own), name, what it is for, and its length, effort and use. */
+/** A workout's kicker (kind and focus), name, what it is for, and its length, effort and use. */
 export function LibraryIntro({
   workout,
   use,
@@ -32,7 +32,6 @@ export function LibraryIntro({
   const kicker = [
     kindLabel(workout.kind),
     ...focusBeside(kindLabel(workout.kind), workout.focus),
-    ...(workout.source === "mine" ? [t("workouts.mine")] : []),
   ].join(" · ");
   const meta = [
     ...(minutes === null ? [] : [durationLabel(minutes)]),

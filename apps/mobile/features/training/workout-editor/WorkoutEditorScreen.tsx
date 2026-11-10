@@ -23,7 +23,7 @@ import { useApi } from "../../../lib/api";
 import { Button } from "../components/Button";
 import { EditorHeader } from "../components/EditorHeader";
 import { FocusField } from "../components/FocusField";
-import { KindNameField } from "../components/KindNameField";
+import { NameField } from "../components/NameField";
 import { useHangData } from "../data/HangDataContext";
 import { LoadState } from "../data/LoadState";
 import { ExercisePickerSheet } from "../exercise-picker/ExercisePickerSheet";
@@ -33,7 +33,6 @@ import { EditorTextField } from "./EditorTextField";
 import { HangboardTiming } from "./HangboardTiming";
 import {
   draftOfEditor,
-  startingDraft,
   withExerciseSwapped,
   withItem,
   withItemsAdded,
@@ -79,7 +78,7 @@ function initialDraft(
     const draft = withEditorIds(draftOf(base));
     return id === undefined ? { ...draft, name: copyName(draft.name) } : draft;
   }
-  return kind === undefined ? null : startingDraft({ ...newWorkoutDraft(kind), focus });
+  return kind === undefined ? null : { ...newWorkoutDraft(kind), focus };
 }
 
 function Editor({
@@ -150,8 +149,7 @@ function Editor({
             paddingBottom: 28,
           }}
         >
-          <KindNameField
-            kind={state.kind}
+          <NameField
             value={state.name}
             onChange={(name) => setState((s) => ({ ...s, name }))}
             placeholder={t("workouts.namePlaceholder")}

@@ -1,5 +1,5 @@
 import { randomUUID } from "expo-crypto";
-import { isDated, type Membership } from "@sendtally/core/hang";
+import { isDated, type Block, type CalendarDate, type Membership } from "@sendtally/core/hang";
 import {
   blockDates,
   nextPosition,
@@ -9,6 +9,7 @@ import {
 import { useApi } from "../../../lib/api";
 import { useHangData } from "../data/HangDataContext";
 import { usePlanActions } from "../plan/usePlanActions";
+import { ongoingMembers } from "../plan/planGridRows";
 import type { AddFlow } from "./flowParams";
 
 /** Where an add puts a workout, and whether a plan is already there. */
@@ -23,6 +24,22 @@ export type AddTo = {
   /** Every plan where the add goes: in the block, or landing on the day. */
   plans: Membership[];
 };
+
+/** A workout in a block with no days yet, starting when the block does. */
+export const blockMembership = (
+  id: string,
+  workoutId: string,
+  block: Block,
+  today: CalendarDate,
+  position: number
+): Membership => ({
+  id,
+  workoutId,
+  blockId: block.id,
+  weekdays: [],
+  start: block.start ?? today,
+  position,
+});
 
 /** Adding workouts to a block or a day, as the add sheet and a workout's preview both do. */
 export function useAddTo(flow: AddFlow): AddTo {
@@ -45,14 +62,9 @@ export function useAddTo(flow: AddFlow): AddTo {
           position: 0,
         });
       else {
-        void actions.saveMembership({
-          id,
-          workoutId,
-          blockId: block.id,
-          weekdays: [],
-          start: block.start ?? today,
-          position: nextPosition(log.plan, block.id),
-        });
+        void actions.saveMembership(
+          blockMembership(id, workoutId, block, today, nextPosition(log.plan, block.id))
+        );
         // A day in a scheduled block: that day's weekday in its week.
         if (day !== null && isDated(block)) void actions.saveSchedule(blockDates(id, block, [day]));
       }
@@ -62,6 +74,8 @@ export function useAddTo(flow: AddFlow): AddTo {
     plans:
       day !== null
         ? trainingDay(log, day, today).plans.map((o) => o.membership)
-        : log.plan.memberships.filter((m) => m.blockId === block?.id),
+        : flow.blockId === null
+          ? ongoingMembers(log.plan, today)
+          : log.plan.memberships.filter((m) => m.blockId === flow.blockId),
   };
 }

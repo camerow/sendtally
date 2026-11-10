@@ -60,7 +60,7 @@ const planned: Plan = {
 
 const labels = (): string[] =>
   screen
-    .getAllByText(/^(Exercises|Over time|History · .*|Planned)$/)
+    .getAllByText(/^(Exercises|Over time|History · .*|Planned in)$/)
     .map((n) => String(n.props.children));
 
 beforeEach(() => {
@@ -85,6 +85,15 @@ describe("Hangboard workout", () => {
     await renderWithHang(<WorkoutScreen id="fingers-ab" />, hangData({ sessions: [logged] }));
     await fireEvent.press(screen.getByText("Half crimp progress"));
     expect(router.push).toHaveBeenCalledWith({ pathname: "/grip/[id]", params: { id: "half" } });
+  });
+
+  it("lists its grip as an exercise, with what it last used once it has", async () => {
+    await renderWithHang(<WorkoutScreen id="fingers-ab" />);
+    expect(screen.getByText("Half crimp")).toBeTruthy();
+    expect(screen.queryByText("Grip")).toBeNull();
+    expect(screen.queryByText(/^Last used/)).toBeNull();
+    await renderWithHang(<WorkoutScreen id="fingers-ab" />, hangData({ sessions: [logged] }));
+    expect(screen.getByText(/^Last used .+/)).toBeTruthy();
   });
 
   it("never run, holds only its exercises", async () => {
@@ -112,13 +121,35 @@ describe("Hangboard workout", () => {
 });
 
 describe("Other workouts", () => {
-  it("reads Exercises, Over time, History, then Planned", async () => {
+  it("shows a block plan's days for the week the block is on", async () => {
+    await renderWithHang(<WorkoutScreen id="legs" />, hangData(), {
+      workouts: [legs],
+      plan: {
+        ...planned,
+        blocks: [{ id: "b1", name: "Base", start: "2026-09-21", weeks: 4, focus: null }],
+        memberships: [
+          {
+            id: "m1",
+            workoutId: "legs",
+            blockId: "b1",
+            weekdays: [],
+            start: "2026-09-21",
+            position: 0,
+          },
+        ],
+        membershipDays: [{ membershipId: "m1", fromWeek: 2, weekdays: [1] }],
+      },
+    });
+    expect(screen.getByLabelText("Tue")).toBeTruthy();
+  });
+
+  it("reads Exercises, Over time, History, then Planned in", async () => {
     await renderWithHang(<WorkoutScreen id="legs" />, hangData(), {
       workouts: [legs],
       activities: [ran("a1", "2026-09-20", 6), ran("a2", "2026-09-27", 8)],
       plan: planned,
     });
-    expect(labels()).toEqual(["Exercises", "Over time", "History · 2 sessions", "Planned"]);
+    expect(labels()).toEqual(["Exercises", "Over time", "History · 2 sessions", "Planned in"]);
     expect(screen.getByText("RPE 8")).toBeTruthy();
     await fireEvent.press(screen.getAllByText("Back squat 5 × 80 kg · 45 min")[0]!);
     expect(router.push).toHaveBeenCalledWith({ pathname: "/activity/[id]", params: { id: "a2" } });
@@ -187,9 +218,10 @@ describe("A climbing workout", () => {
     focus: "power",
   };
 
-  it("names its kind, focus and that it is the user's own in its kicker", async () => {
+  it("names only its kind and focus in its kicker, even for the user's own", async () => {
     await renderWithHang(<WorkoutScreen id="boulders" />, hangData(), { workouts: [boulders] });
-    expect(screen.getByText("Climbing · Power · Mine")).toBeTruthy();
+    expect(screen.getByText("Climbing · Power")).toBeTruthy();
+    expect(screen.queryByText(/Mine/)).toBeNull();
   });
 
   it("reads an exercise the library does not know in climbs, as the player does", async () => {

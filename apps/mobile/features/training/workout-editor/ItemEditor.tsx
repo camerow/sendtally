@@ -35,6 +35,8 @@ export type ItemEditorProps = {
   onChange: (item: Item) => void;
   onRemove: () => void;
   onSwap: () => void;
+  /** Only shows the card, as the exercise editor previews it: no move, swap or remove. */
+  preview?: boolean;
   /** Absent for the first item. */
   onMoveUp?: () => void;
   /** Absent for the last item. */
@@ -57,6 +59,7 @@ export function ItemEditor({
   onSwap,
   onMoveUp,
   onMoveDown,
+  preview = false,
 }: ItemEditorProps): React.ReactElement {
   const alternating = item.doses.length > 1;
   const next = letterOf(item.doses.length);
@@ -70,7 +73,6 @@ export function ItemEditor({
     {
       icon: "refresh",
       title: t("workouts.swapExercise"),
-      hint: t("workouts.swapExerciseHint"),
       onPress: onSwap,
     },
     ...(item.doses.length < MAX_DOSES
@@ -78,7 +80,6 @@ export function ItemEditor({
           {
             icon: "plus" as const,
             title: t("workouts.addDose", { letter: next }),
-            hint: t("workouts.addDoseHint"),
             onPress: () => onChange(withDoseAdded(item)),
           },
         ]
@@ -88,7 +89,6 @@ export function ItemEditor({
           {
             icon: "x" as const,
             title: t("workouts.removeDose", { letter: last }),
-            hint: t("workouts.removeDoseHint", { letter: last }),
             onPress: () => onChange(withoutLastDose(item)),
           },
         ]
@@ -96,7 +96,6 @@ export function ItemEditor({
     {
       icon: "trash",
       title: t("workouts.removeExercise", { name }),
-      hint: t("workouts.removeExerciseHint"),
       danger: true,
       onPress: onRemove,
     },
@@ -137,7 +136,7 @@ export function ItemEditor({
             iconSize={18}
           />
         )}
-        {alternating ? (
+        {preview ? null : alternating ? (
           <DetailMenu
             rows={menu}
             button={{

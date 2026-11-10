@@ -1,9 +1,10 @@
 import React from "react";
 import { View } from "react-native";
 import { t } from "@sendtally/features/i18n";
-import { focusLabel } from "@sendtally/features/training";
+import { focusLabel, focusMeaning } from "@sendtally/features/training";
 import type { LibraryShelf as Shelf, LibraryWorkout } from "@sendtally/features/workouts";
 import { CategoryRow } from "../components/CategoryRow";
+import { DashedPanel } from "../components/DashedPanel";
 import { ShelfHeader } from "../components/ShelfHeader";
 import { useHangData } from "../data/HangDataContext";
 import { workoutLines } from "../plan/planGridRows";
@@ -19,7 +20,7 @@ export type LibraryShelfProps = {
   onAdd: () => void;
 };
 
-/** One focus: its name, See all when it holds more than it shows, a plus, and its first workouts. */
+/** One focus: its name, See all when it holds more than it shows, a plus, and its first workouts or what it trains. */
 export function LibraryShelf({
   shelf,
   onPick,
@@ -33,12 +34,16 @@ export function LibraryShelf({
     <View style={{ gap: 2 }}>
       <ShelfHeader
         title={label}
-        muted={shelf.focus === null}
         onSeeAll={more ? onSeeAll : undefined}
         count={shelf.workouts.length}
         addLabel={t("workouts.newWorkoutIn", { focus: label })}
         onAdd={onAdd}
       />
+      {shelf.workouts.length === 0 && (
+        <View style={{ marginTop: 8 }}>
+          <DashedPanel body={focusMeaning(shelf.focus)} />
+        </View>
+      )}
       {shelf.workouts.slice(0, SHELF_ROWS).map((w) => (
         <CategoryRow
           key={w.id}

@@ -23,8 +23,6 @@ export type DayCellProps = {
   opens?: boolean;
   /** A day to set: drawn as a field, white when off, tinted with the kind's line when on. */
   editing?: boolean;
-  /** Ringed in gold: one week set apart from every week. */
-  ring?: boolean;
   accessibilityLabel?: string;
 };
 
@@ -38,7 +36,6 @@ export function DayCell({
   onPress,
   opens = false,
   editing = false,
-  ring = false,
   accessibilityLabel,
 }: DayCellProps): React.ReactElement {
   const look = KIND_LOOK[kind];
@@ -54,12 +51,8 @@ export function DayCell({
         : on && status !== "skipped"
           ? look.tint
           : colors.surfaceSoft,
-    borderWidth: ring ? 2 : asking ? 1.5 : status === "moved" || editing ? 1 : 0,
-    borderColor: ring
-      ? colors.gold
-      : status === "moved" || (editing && !on)
-        ? colors.lineOnLightStrong
-        : look.ink,
+    borderWidth: asking ? 1.5 : status === "moved" || editing ? 1 : 0,
+    borderColor: status === "moved" || (editing && !on) ? colors.lineOnLightStrong : look.ink,
     // A day to set reads as a field: a hairline shadow under its line.
     ...(editing && {
       shadowColor: colors.gunmetal,

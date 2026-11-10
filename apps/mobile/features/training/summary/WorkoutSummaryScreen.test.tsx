@@ -274,10 +274,7 @@ describe("The ··· menu", () => {
     mockApi.postActivityToStrava.mockReturnValue(new Promise((r) => (resolve = r)));
     await show("a1", [today]);
     await pressMenu();
-    expect(
-      await screen.findByText("As a workout, with RPE 7 and your sets in the description")
-    ).toBeTruthy();
-    await fireEvent.press(screen.getByText("Post to Strava"));
+    await fireEvent.press(await screen.findByText("Post to Strava"));
     expect(mockApi.postActivityToStrava).toHaveBeenCalledWith("a1");
     expect(screen.getAllByText("Posting to Strava…").length).toBe(2);
     await act(async () => resolve({ activity: { ...today, stravaActivityId: "9" } }));
@@ -289,9 +286,13 @@ describe("The ··· menu", () => {
     await show("a1", [{ ...today, stravaActivityId: "9", postedAt: "2026-10-28T20:42:00Z" }]);
     expect(screen.getByText("On Strava")).toBeTruthy();
     await pressMenu();
-    expect(screen.getByText("Removes it here; the Strava activity stays")).toBeTruthy();
     await fireEvent.press(screen.getByText("View on Strava"));
     expect(open).toHaveBeenCalledWith("https://www.strava.com/activities/9");
+    const alert = jest.spyOn(Alert, "alert").mockImplementation(() => undefined);
+    await pressMenu();
+    await fireEvent.press(screen.getByText("Delete workout"));
+    expect(alert.mock.calls[0]?.[1]).toBe("Removes it here; the Strava activity stays");
+    alert.mockRestore();
   });
 
   it("offers another go after a failed post, with Strava's reason", async () => {
@@ -312,7 +313,6 @@ describe("The ··· menu", () => {
     mockApi.deleteActivity.mockResolvedValue({ deleted: true });
     await show("a1", [today]);
     await pressMenu();
-    expect(screen.getByText("Removes it from your log and trends")).toBeTruthy();
     await fireEvent.press(screen.getByText("Delete workout"));
     expect(alert.mock.calls[0]?.[0]).toBe("Delete Lower body strength?");
     expect(alert.mock.calls[0]?.[1]).toBeUndefined();

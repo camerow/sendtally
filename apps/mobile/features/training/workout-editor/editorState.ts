@@ -1,11 +1,5 @@
 import { randomUUID } from "expo-crypto";
-import {
-  BUILT_IN_GRIPS,
-  gripMeasureOf,
-  withItemIds,
-  type Dose,
-  type Item,
-} from "@sendtally/core/hang";
+import { gripMeasureOf, withItemIds, type Dose, type Item } from "@sendtally/core/hang";
 import { t } from "@sendtally/features/i18n";
 import type { WorkoutDraft } from "@sendtally/features/workouts";
 import type { Picked } from "../exercise-picker/types";
@@ -33,13 +27,6 @@ export function withItemsAdded(s: WorkoutDraft, picked: readonly Picked[]): Work
         : [dose === undefined ? newDoseFor(s.kind, measure) : { ...dose }],
   }));
   return { ...s, items: [...s.items, ...items] };
-}
-
-/** A new hangboard workout starts on the first grip; anything else starts empty, to pick into. */
-export function startingDraft(draft: WorkoutDraft): WorkoutDraft {
-  return draft.items.length === 0 && draft.kind === "hangboard"
-    ? withItemsAdded(draft, [{ exercise: BUILT_IN_GRIPS[0] }])
-    : draft;
 }
 
 /** Another exercise in the item's place, keeping its doses unless a grip is measured another way. */

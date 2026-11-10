@@ -1,66 +1,91 @@
+import { router } from "expo-router";
 import React from "react";
 import { View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
 import { shortDate } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
-import { blockGroups, blockMembers, useTrainingLog } from "@sendtally/features/training";
+import {
+  blockGroups,
+  blockMembers,
+  daysThisWeek,
+  useTrainingLog,
+} from "@sendtally/features/training";
 import { useApi } from "../../../lib/api";
 import { BlockCard } from "../blocks/BlockCard";
+import { PlanCard } from "../blocks/PlanCard";
 import { DashedPanel } from "../components/DashedPanel";
-import { Label } from "../components/Label";
+import { Title } from "../components/Title";
 import { useHangData } from "../data/HangDataContext";
 import { PlanGrid } from "../plan/PlanGrid";
-import { liveMembers, planGridRows } from "../plan/planGridRows";
+import { ongoingMembers, planGridRows } from "../plan/planGridRows";
 import { BlockRow } from "./BlockRow";
 import { pastMeta, templateMeta } from "./blockMeta";
 
-function Group({
-  label,
+function Section({
+  title,
+  gap = 4,
   children,
 }: {
-  label: string;
+  title: string;
+  /** Between what is in it. */
+  gap?: number;
   children: React.ReactNode;
 }): React.ReactElement {
   return (
-    <View style={{ gap: 4 }}>
-      <Label color={colors.textSecondary}>{label}</Label>
-      {children}
+    <View style={{ gap: 8 }}>
+      <View style={{ minHeight: 44, justifyContent: "center" }}>
+        <Title size={26} color={colors.gunmetal}>
+          {title}
+        </Title>
+      </View>
+      <View style={{ gap }}>{children}</View>
     </View>
   );
 }
 
-/** Train > Blocks: the running block on top, then plans with no block, then upcoming blocks, templates and past blocks. */
+/** Train > Blocks: what is active (running blocks, then plans in no block), then upcoming blocks, templates and completed ones. */
 export function BlocksList(): React.ReactElement {
   const { today, model } = useHangData();
   const { log } = useTrainingLog(useApi());
   const { plan, workout } = log;
   const { current, upcoming, templates, past } = blockGroups(plan.blocks, today);
-  const ongoing = planGridRows(
-    liveMembers(plan, today).filter((m) => m.blockId === null),
-    workout,
-    model
-  );
+  const ongoing = planGridRows(ongoingMembers(plan, today), workout, model);
   const weeks = (n: number): string => t("calendar.weeks", { count: n });
   const nothing = plan.blocks.length === 0 && ongoing.length === 0;
 
   return (
-    <View style={{ gap: 20 }}>
-      {current.map((block) => (
-        <BlockCard
-          key={block.id}
-          block={block}
-          members={blockMembers(plan, block)}
-          workout={workout}
-        />
-      ))}
+    <View style={{ gap: 28 }}>
       {nothing && <DashedPanel body={t("plan.empty")} />}
-      {ongoing.length > 0 && (
-        <Group label={t("plan.ongoing")}>
-          <PlanGrid rows={ongoing} />
-        </Group>
+      {(current.length > 0 || ongoing.length > 0) && (
+        <Section title={t("plan.active")} gap={12}>
+          {current.map((block) => (
+            <BlockCard
+              key={block.id}
+              block={block}
+              members={blockMembers(plan, block).map((m) => ({
+                ...m,
+                weekdays: daysThisWeek(plan, m, block, today),
+              }))}
+              workout={workout}
+            />
+          ))}
+          {ongoing.length > 0 && (
+            <PlanCard
+              title={t("plan.ongoing")}
+              subtitle={t("plan.ongoingRepeats")}
+              open={{
+                label: t("plan.openBlock", { name: t("plan.ongoing") }),
+                onPress: () =>
+                  router.push({ pathname: "/plan/ongoing", params: { back: t("training.train") } }),
+              }}
+            >
+              <PlanGrid rows={ongoing} framed={false} />
+            </PlanCard>
+          )}
+        </Section>
       )}
       {upcoming.length > 0 && (
-        <Group label={t("plan.upcoming")}>
+        <Section title={t("plan.upcoming")}>
           {upcoming.map((b) => (
             <BlockRow
               back={t("training.train")}
@@ -70,10 +95,10 @@ export function BlocksList(): React.ReactElement {
               meta={`${t("plan.startsOn", { date: shortDate(b.start) })} · ${weeks(b.weeks)}`}
             />
           ))}
-        </Group>
+        </Section>
       )}
       {templates.length > 0 && (
-        <Group label={t("plan.templates")}>
+        <Section title={t("plan.templates")}>
           {templates.map((b) => (
             <BlockRow
               back={t("training.train")}
@@ -83,10 +108,10 @@ export function BlocksList(): React.ReactElement {
               meta={templateMeta(log, b)}
             />
           ))}
-        </Group>
+        </Section>
       )}
       {past.length > 0 && (
-        <Group label={t("plan.past")}>
+        <Section title={t("plan.completed")}>
           {past.map((b) => (
             <BlockRow
               back={t("training.train")}
@@ -96,7 +121,7 @@ export function BlocksList(): React.ReactElement {
               meta={pastMeta(log, b, today)}
             />
           ))}
-        </Group>
+        </Section>
       )}
     </View>
   );

@@ -24,7 +24,7 @@ export function ScheduleBlocks({ onPick }: ScheduleBlocksProps): React.ReactElem
       rows: templates.map((block) => ({ block, meta: templateMeta(log, block) })),
     },
     {
-      label: t("plan.past"),
+      label: t("plan.completed"),
       rows: past.map((block) => ({ block, meta: pastMeta(log, block, today) })),
     },
   ].filter((g) => g.rows.length > 0);

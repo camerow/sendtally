@@ -51,8 +51,10 @@ export default function SessionDetailScreen(): React.ReactElement {
   const { vm, strava } = state.data;
   const remove = deleteRow({
     title: t("sessions.deleteSession"),
-    hint: strava?.kind === "posted" ? t("summary.deleteHintStrava") : t("summary.deleteHint"),
-    confirm: { title: t("sessions.deleteTitle"), body: t("sessions.deleteBody") },
+    confirm: {
+      title: t("sessions.deleteTitle"),
+      body: strava?.kind === "posted" ? t("summary.deleteHintStrava") : t("sessions.deleteBody"),
+    },
     onDelete: () => sessions.remove(fingerprint ?? ""),
   });
   const editRow = {
@@ -72,7 +74,7 @@ export default function SessionDetailScreen(): React.ReactElement {
         <DetailActions
           menu={[
             ...(vm.editable ? [editRow] : []),
-            ...(strava === null ? [] : [stravaRow(strava, vm.rpe, onStrava)]),
+            ...(strava === null ? [] : [stravaRow(strava, onStrava)]),
             remove,
           ]}
         />

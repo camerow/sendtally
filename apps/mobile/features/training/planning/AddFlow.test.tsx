@@ -122,6 +122,48 @@ describe("adding to the plan", () => {
     expect(onClose).toHaveBeenCalledWith([]);
   });
 
+  it("adds a workout to a block from its ···, a block it is in checked, an ended one left out", async () => {
+    const plan: Plan = {
+      ...winter,
+      blocks: [
+        ...winter.blocks,
+        { id: "t1", name: "Power phase", start: null, weeks: 4, focus: null },
+        { id: "old", name: "Summer", start: "2026-06-01", weeks: 4, focus: null },
+      ],
+      memberships: [
+        {
+          id: "m-old",
+          workoutId: "legs",
+          blockId: "t1",
+          weekdays: [],
+          start: "2026-09-29",
+          position: 0,
+        },
+      ],
+    };
+    await renderWithHang(<WorkoutScreen id="legs" />, hangData(), { workouts: [legs], plan });
+    await fireEvent.press(screen.getByLabelText("More"));
+    await fireEvent.press(screen.getByText("Add to block"));
+    expect(screen.queryByText("Summer")).toBeNull();
+    expect(
+      screen.getByRole("radio", { name: "Power phase, Template" }).props.accessibilityState
+    ).toEqual({ checked: true });
+    await fireEvent.press(screen.getByRole("radio", { name: /^Winter base/ }));
+    expect(mockPlan.saveMembership).toHaveBeenCalledWith({
+      id: "m-new",
+      workoutId: "legs",
+      blockId: "b1",
+      weekdays: [],
+      start: "2026-10-05",
+      position: 0,
+    });
+    await fireEvent.press(screen.getByText("View"));
+    expect(router.push).toHaveBeenLastCalledWith({
+      pathname: "/plan/block/[id]",
+      params: { id: "b1" },
+    });
+  });
+
   it("shows the next session and what each exercise alternates with, and Add adds it as + does", async () => {
     await renderWithHang(<WorkoutScreen id="legs" adding={flow} />, hangData(), {
       workouts: [legs],

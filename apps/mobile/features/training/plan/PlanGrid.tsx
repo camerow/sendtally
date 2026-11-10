@@ -2,7 +2,6 @@ import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
 import { weekdayLetters, weekdayLong } from "@sendtally/features/hang";
-import { t } from "@sendtally/features/i18n";
 import { pressRow } from "../../../lib/press";
 import { Label } from "../components/Label";
 import { GOLD_TINT } from "../components/tints";
@@ -20,7 +19,7 @@ export type PlanGridProps = {
   framed?: boolean;
   /** The keys of rows just added, lit for a moment. */
   lit?: string | readonly string[];
-  /** Over the grid: Your week unless it says which. */
+  /** Over the grid, left of the weekdays. */
   title?: string;
   /** A dated week's day numbers by weekday, Monday first, under the weekday letters. */
   dates?: readonly string[];
@@ -59,7 +58,7 @@ export function PlanGrid({
   rows,
   framed = true,
   lit,
-  title = t("plan.week"),
+  title,
   dates,
   columns = DAYS,
   head,
@@ -81,7 +80,7 @@ export function PlanGrid({
       {head}
       <View style={{ flexDirection: "row", alignItems: "flex-end", gap: 5 }}>
         <View style={{ flex: 1 }}>
-          {head === undefined && <Label color={colors.gunmetal}>{title}</Label>}
+          {title !== undefined && <Label color={colors.gunmetal}>{title}</Label>}
         </View>
         {columns.map((i) => (
           <View key={i} style={{ width: CELL, alignItems: "center", gap: 1 }}>
@@ -124,7 +123,6 @@ export function PlanGrid({
               onPress={set ?? row.press?.(day)}
               opens={set === undefined}
               editing={editing && set !== undefined}
-              ring={row.rings?.[day] === true}
               accessibilityLabel={`${row.name}, ${weekdayLong(day)}`}
             />
           );

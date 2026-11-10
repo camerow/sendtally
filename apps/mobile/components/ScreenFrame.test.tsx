@@ -3,6 +3,7 @@ import React from "react";
 import { Text } from "react-native";
 import { fireEvent, render, screen } from "@testing-library/react-native";
 import { ScreenFrame } from "./ScreenFrame";
+import { Toast } from "./Toast";
 import { TimeField } from "./TimeField";
 import { useFieldOrder } from "./useFieldOrder";
 
@@ -36,6 +37,17 @@ describe("ScreenFrame", () => {
     await press("Done");
     expect(screen.getByText("Start")).toBeTruthy();
     expect(screen.queryByTestId("keypad-room")).toBeNull();
+  });
+
+  it("lifts a toast above its footer, and leaves it at the foot without one", async () => {
+    const toast = <Toast message="Added to Winter base" onHide={() => undefined} />;
+    await render(<ScreenFrame overlay={toast} />);
+    expect(screen.getByTestId("toast")).toHaveStyle({ bottom: 8 });
+    await render(<ScreenFrame footer={<Text>Start</Text>} overlay={toast} />);
+    await fireEvent(screen.getByTestId("screen-footer"), "layout", {
+      nativeEvent: { layout: { x: 0, y: 0, width: 400, height: 76 } },
+    });
+    expect(screen.getByTestId("toast")).toHaveStyle({ bottom: 88 });
   });
 
   it("walks its fields on one keypad that switches field in place on Next", async () => {

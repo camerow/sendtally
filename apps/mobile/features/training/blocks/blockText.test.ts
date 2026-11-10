@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@jest/globals";
 import type { DatedBlock } from "@sendtally/core/hang";
-import { blockDates, blockTag } from "./blockText";
+import { blockDateRange, blockTag } from "./blockText";
 
 const block: DatedBlock = {
   id: "b1",
@@ -18,6 +18,6 @@ describe("block text", () => {
   });
 
   it("gives the first and last day", () => {
-    expect(blockDates(block)).toBe("Mon, Sep 28 to Sun, Oct 18");
+    expect(blockDateRange(block)).toBe("Mon, Sep 28 to Sun, Oct 18");
   });
 });
