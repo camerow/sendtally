@@ -200,19 +200,27 @@ export function projectDetailVM(
     stats,
     bars: bars(ordered),
     sessions: newestFirst,
-    notes: [
-      ...newestFirst.flatMap(({ fingerprint, day, dateLabel, note }): ProjectNoteVM[] =>
-        note === null ? [] : [{ id: fingerprint, source: "session", day, dateLabel, note }]
-      ),
-      ...climb.notes.map(({ id, day, note }): ProjectNoteVM => ({
-        id,
-        source: "page",
-        day,
-        dateLabel: dateLabel(day),
-        note,
-      })),
-    ].sort((a, b) => b.day.localeCompare(a.day)),
+    notes: climbNotes(climb, newestFirst),
   };
+}
+
+/** Every note on a climb, newest day first: those written on its sessions and those on its page. */
+export function climbNotes(
+  climb: Pick<ClimbSummary, "notes">,
+  sessions: readonly { fingerprint: string; day: string; dateLabel: string; note: string | null }[]
+): ProjectNoteVM[] {
+  return [
+    ...sessions.flatMap(({ fingerprint, day, dateLabel, note }): ProjectNoteVM[] =>
+      note === null ? [] : [{ id: fingerprint, source: "session", day, dateLabel, note }]
+    ),
+    ...climb.notes.map(({ id, day, note }): ProjectNoteVM => ({
+      id,
+      source: "page",
+      day,
+      dateLabel: dateLabel(day),
+      note,
+    })),
+  ].sort((a, b) => b.day.localeCompare(a.day));
 }
 
 export function projectsOverview(

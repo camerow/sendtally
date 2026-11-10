@@ -1,10 +1,10 @@
-import type { ClimbNote, ClimbSummary, SessionWithClimbs } from "@sendtally/api-client";
+import type { ClimbSummary, SessionWithClimbs } from "@sendtally/api-client";
 import { t } from "../i18n";
 import type { ClimbStyle } from "../log-session/types";
 import { utcDate } from "../log-session/transforms";
 import { isClimbHolder, isUnscored } from "../sessions/meta";
 import { sessionTitle } from "../sessions/title";
-import { dateLabel } from "./projects";
+import { climbNotes, dateLabel, type ProjectNoteVM } from "./projects";
 import { climbGradeLabel, climbKey } from "./transforms";
 
 /** A logged climb is this one when stamped with its id, or, unstamped, when it carries its name. */
@@ -109,8 +109,8 @@ export type ClimbDetailVM = {
   tries: string;
   best: string;
   sessions: ClimbSessionRowVM[];
-  /** Notes written on its page with no session behind them, newest day first. */
-  notes: Array<ClimbNote & { dateLabel: string }>;
+  /** Every note on it, from its sessions and its page, newest day first. */
+  notes: ProjectNoteVM[];
 };
 
 /** Every session with this climb in it, newest first. */
@@ -152,6 +152,7 @@ export function climbDetailVM(
   climb: ClimbSummary,
   sessions: readonly SessionWithClimbs[]
 ): ClimbDetailVM {
+  const rows = climbSessions(climb, sessions);
   return {
     id: climb.id,
     name: climb.name,
@@ -164,7 +165,7 @@ export function climbDetailVM(
     days: String(climb.sessions),
     tries: String(climb.attempts),
     best: climb.sent_at === null ? "-" : sendStyleText(sendStyleOf(climb, sessions)),
-    sessions: climbSessions(climb, sessions),
-    notes: climb.notes.map((n) => ({ ...n, dateLabel: dateLabel(n.day) })),
+    sessions: rows,
+    notes: climbNotes(climb, rows),
   };
 }

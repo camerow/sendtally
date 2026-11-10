@@ -1,6 +1,7 @@
 import { router, useLocalSearchParams } from "expo-router";
 import React from "react";
 import { Linking, View } from "react-native";
+import type { JournalEntry } from "@sendtally/api-client";
 import { useSessionDetail } from "@sendtally/features/session-detail";
 import { kindLabel } from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
@@ -30,7 +31,9 @@ export default function SessionDetailScreen(): React.ReactElement {
   const api = useApi();
   const sessions = useSessions();
   const feature = useSessionDetail(api, fingerprint ?? "");
-  const [noting, setNoting] = React.useState<"new" | null>(null);
+  const [noting, setNoting] = React.useState<
+    { id: string; day: string; note: string; entry: JournalEntry } | "new" | null
+  >(null);
   const { state } = feature;
   const { run, refresh } = feature.post;
   const connected = React.useCallback(() => {
@@ -115,21 +118,24 @@ export default function SessionDetailScreen(): React.ReactElement {
           ))}
         </View>
       </View>
-      <SessionJournal entries={state.data.entries} onAdd={() => setNoting("new")} />
+      <SessionJournal
+        entries={state.data.entries}
+        onAdd={() => setNoting("new")}
+        onOpen={(entry) =>
+          setNoting({ id: entry.id, day: entry.occurred_at, note: entry.body, entry })
+        }
+      />
       <AddNoteSheet
         note={noting}
         day={vm.startDay}
         onSave={(day, body) =>
-          void api
-            .createEntry({
-              kind: "journal",
-              occurred_at: day,
-              body,
-              fingerprints: [fingerprint ?? ""],
-            })
-            .then(() => feature.reload())
+          void feature.saveNote(
+            day,
+            body,
+            noting === "new" || noting === null ? undefined : noting.entry
+          )
         }
-        onDelete={() => undefined}
+        onDelete={(id) => void feature.deleteNote(id)}
         onClose={() => setNoting(null)}
       />
     </ScreenFrame>

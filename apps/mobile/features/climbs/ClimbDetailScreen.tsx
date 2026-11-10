@@ -2,8 +2,7 @@ import { router } from "expo-router";
 import React from "react";
 import { View } from "react-native";
 import { randomUUID } from "expo-crypto";
-import type { ClimbNote } from "@sendtally/api-client";
-import { useClimb } from "@sendtally/features/climbs";
+import { useClimb, type ProjectNoteVM } from "@sendtally/features/climbs";
 import { t } from "@sendtally/features/i18n";
 import { NoteRow } from "../../components/NoteRow";
 import { ScreenFrame } from "../../components/ScreenFrame";
@@ -23,7 +22,7 @@ import { ClimbPill } from "./ClimbPill";
 export function ClimbDetailScreen({ id }: { id: string }): React.ReactElement {
   const api = useApi();
   const { state, saveNote, deleteNote, remove, reload } = useClimb(api, id, randomUUID);
-  const [noting, setNoting] = React.useState<ClimbNote | "new" | null>(null);
+  const [noting, setNoting] = React.useState<ProjectNoteVM | "new" | null>(null);
 
   if (state.status !== "ready")
     return <LoadState state={state} onRetry={() => void reload()} framed />;
@@ -89,7 +88,6 @@ export function ClimbDetailScreen({ id }: { id: string }): React.ReactElement {
           name: s.name,
           meta: [s.meta, s.triesLabel].filter((p) => p !== "").join(" · "),
           rpe: s.rpe,
-          note: s.note,
           opens: s.opens,
         }))}
         onOpen={(fingerprint) =>
@@ -99,9 +97,13 @@ export function ClimbDetailScreen({ id }: { id: string }): React.ReactElement {
       <AddNoteSheet
         note={noting}
         onSave={(day, note) =>
-          saveNote({ ...(noting !== "new" && noting !== null && { id: noting.id }), day, note })
+          saveNote({
+            ...(noting !== "new" && noting !== null && { id: noting.id, source: noting.source }),
+            day,
+            note,
+          })
         }
-        onDelete={deleteNote}
+        onDelete={() => noting !== "new" && noting !== null && deleteNote(noting)}
         onClose={() => setNoting(null)}
       />
     </ScreenFrame>

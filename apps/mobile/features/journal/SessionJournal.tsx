@@ -1,4 +1,3 @@
-import { router } from "expo-router";
 import React from "react";
 import { Text, View } from "react-native";
 import type { JournalEntry } from "@sendtally/api-client";
@@ -7,14 +6,16 @@ import { colors, fonts } from "@sendtally/design/tokens";
 import { NoteRow } from "../../components/NoteRow";
 import { SectionHeading } from "../../components/SectionHeading";
 
-/** A session's notes, a plain section: each one opens on a tap, and + writes another. */
+/** A session's notes, a plain section: a tap edits one in the note sheet, and + writes another. */
 export function SessionJournal({
   entries,
   onAdd,
+  onOpen,
 }: {
   entries: JournalEntry[];
   /** Opens the note sheet, which writes on the session's day. */
   onAdd: () => void;
+  onOpen: (entry: JournalEntry) => void;
 }): React.ReactElement {
   return (
     <View style={{ gap: 2 }}>
@@ -37,7 +38,7 @@ export function SessionJournal({
           })}
           title={entry.title}
           body={entry.body}
-          onPress={() => router.push({ pathname: "/journal/[id]", params: { id: entry.id } })}
+          onPress={() => onOpen(entry)}
         />
       ))}
     </View>

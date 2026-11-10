@@ -3,6 +3,7 @@ import React from "react";
 import type { ClimbSummary, JournalEntry, SendtallyApi, SessionTag } from "@sendtally/api-client";
 import { stravaState, type StravaState } from "../activities/post";
 import { climbKey, climbsWorkedBefore } from "../climbs/transforms";
+import { draftFromEntry, entryInput } from "../journal/transforms";
 import { t } from "../i18n";
 import { queries, useQuery, type QueryState } from "../query";
 import { sessionClimbRows, sortClimbRows, type SessionClimbRowVM } from "./rows";
@@ -35,6 +36,9 @@ export type SessionDetailFeature = {
   sort: ClimbSort;
   setSort: (s: ClimbSort) => void;
   post: PostActionFeature;
+  /** Writes a note on the session, or rewrites the text and day of one already on it. */
+  saveNote: (day: string, body: string, entry?: JournalEntry) => Promise<void>;
+  deleteNote: (id: string) => Promise<void>;
   reload: () => Promise<void>;
 };
 
@@ -123,6 +127,27 @@ export function useSessionDetail(api: SendtallyApi, fingerprint: string): Sessio
       });
   }, [api, client, fingerprint]);
 
+  const reload = session.reload;
+  const saveNote = React.useCallback(
+    async (day: string, body: string, entry?: JournalEntry): Promise<void> => {
+      await (entry === undefined
+        ? api.createEntry({ kind: "journal", occurred_at: day, body, fingerprints: [fingerprint] })
+        : api.updateEntry(
+            entry.id,
+            entryInput({ ...draftFromEntry(entry), occurredAt: day, body })
+          ));
+      await reload();
+    },
+    [api, fingerprint, reload]
+  );
+  const deleteNote = React.useCallback(
+    async (id: string): Promise<void> => {
+      await api.deleteEntry(id);
+      await reload();
+    },
+    [api, reload]
+  );
+
   return {
     state,
     filter,
@@ -130,6 +155,8 @@ export function useSessionDetail(api: SendtallyApi, fingerprint: string): Sessio
     sort,
     setSort,
     post: { busy: posting, error: postError, run, refresh: statusQuery.reload },
-    reload: session.reload,
+    saveNote,
+    deleteNote,
+    reload,
   };
 }

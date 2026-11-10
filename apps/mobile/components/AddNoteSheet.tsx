@@ -11,8 +11,8 @@ import { primaryButton, primaryButtonLabel } from "../lib/styles";
 import { Button } from "../features/training/components/Button";
 
 export type AddNoteSheetProps = {
-  /** The note to edit, "new" to write one, or null when closed. */
-  note: { id: string; day: string; note: string } | "new" | null;
+  /** The note to edit, "new" to write one, or null when closed. A session's note keeps its session's day. */
+  note: { id: string; day: string; note: string; source?: "session" | "page" } | "new" | null;
   /** The day a new note starts on; today when not given. */
   day?: string;
   /** Saved on the phone first, so the sheet closes at once. */
@@ -87,6 +87,7 @@ export function AddNoteSheet({
             value={day}
             max={localDate(new Date())}
             label={t("climbs.noteDate")}
+            disabled={editing?.source === "session"}
             onChange={setDay}
           />
         </View>

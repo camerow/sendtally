@@ -2,7 +2,7 @@ import { Keyboard, type StyleProp, type ViewStyle } from "react-native";
 
 type PressState = { pressed: boolean };
 
-const PRESSED_TINT = "rgba(64,63,76,0.03)";
+const PRESSED_TINT = "rgba(64,63,76,0.07)";
 
 /** Dims a control while it is held. For buttons, chips, icons and anything with its own fill. */
 export function press(style: StyleProp<ViewStyle>): (state: PressState) => StyleProp<ViewStyle> {

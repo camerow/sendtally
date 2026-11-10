@@ -6,8 +6,16 @@ import { Alert, Linking, type AlertButton } from "react-native";
 import type * as ReactNative from "react-native";
 import SessionDetailScreen from "../../app/session/[fingerprint]";
 
-const mockCreateEntry = jest.fn(async (_input: unknown) => ({ entry: {} }));
-const mockApi = { createEntry: (input: unknown) => mockCreateEntry(input) };
+const mockSaveNote = jest.fn(async (..._args: unknown[]) => undefined);
+const mockDeleteNote = jest.fn(async (_id: string) => undefined);
+const mockApi = {};
+const mockEntry = {
+  id: "e1",
+  kind: "journal",
+  occurred_at: "2026-10-21",
+  body: "Greasy",
+  title: null,
+};
 const mockRemove = jest.fn<(fingerprint: string) => void>();
 const mockReload = jest.fn(async () => undefined);
 let mockState: unknown;
@@ -32,12 +40,17 @@ jest.mock("../settings/useStravaConnect", () => ({
   useStravaConnect: () => ({ connect: mockConnect, busy: false, error: null }),
 }));
 jest.mock("../journal/SessionJournal", () => ({
-  SessionJournal: ({ onAdd }: { onAdd: () => void }) => {
+  SessionJournal: ({ onAdd, onOpen }: { onAdd: () => void; onOpen: (e: unknown) => void }) => {
     const { Pressable, Text } = jest.requireActual<typeof ReactNative>("react-native");
     return (
-      <Pressable onPress={onAdd}>
-        <Text>Add a note</Text>
-      </Pressable>
+      <>
+        <Pressable onPress={onAdd}>
+          <Text>Add a note</Text>
+        </Pressable>
+        <Pressable onPress={() => onOpen(mockEntry)}>
+          <Text>Greasy</Text>
+        </Pressable>
+      </>
     );
   },
 }));
@@ -55,6 +68,8 @@ jest.mock("@sendtally/features/session-detail", () => ({
     sort: "order",
     setSort: jest.fn(),
     post: { busy: false, error: null, run: mockRun, refresh: jest.fn() },
+    saveNote: mockSaveNote,
+    deleteNote: mockDeleteNote,
     reload: mockReload,
   }),
 }));
@@ -201,12 +216,26 @@ describe("Climbing session detail", () => {
       "Cold and greasy"
     );
     await fireEvent.press(screen.getByText("Save"));
-    expect(mockCreateEntry).toHaveBeenCalledWith({
-      kind: "journal",
-      occurred_at: "2026-10-21",
-      body: "Cold and greasy",
-      fingerprints: ["manual-1"],
-    });
+    expect(mockSaveNote).toHaveBeenCalledWith("2026-10-21", "Cold and greasy", undefined);
+  });
+
+  it("edits a note in the same sheet on a tap, and deletes it once confirmed", async () => {
+    await render(<SessionDetailScreen />);
+    await fireEvent.press(screen.getByText("Greasy"));
+    expect(screen.getByText("Edit note")).toBeTruthy();
+    await fireEvent.changeText(screen.getByDisplayValue("Greasy"), "Greasy, cold by 5");
+    await fireEvent.press(screen.getByText("Save"));
+    expect(mockSaveNote).toHaveBeenCalledWith("2026-10-21", "Greasy, cold by 5", mockEntry);
+
+    const alert = jest
+      .spyOn(Alert, "alert")
+      .mockImplementation((_title, _body, buttons?: AlertButton[]) =>
+        buttons?.find((b) => b.style === "destructive")?.onPress?.()
+      );
+    await fireEvent.press(screen.getByText("Greasy"));
+    await fireEvent.press(screen.getByText("Delete note"));
+    expect(mockDeleteNote).toHaveBeenCalledWith("e1");
+    alert.mockRestore();
   });
 
   it("edits from the first row of the ··· menu, not the bar", async () => {

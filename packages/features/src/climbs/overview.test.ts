@@ -78,6 +78,20 @@ describe("climbDetailVM", () => {
     ]);
   });
 
+  it("lists every note on the climb, from its sessions and its page, newest first", () => {
+    const withPageNote = climb({ notes: [{ id: "n1", day: "2026-10-10", note: "Heel left." }] });
+    const vm = climbDetailVM(withPageNote, [
+      session("2026-09-26T18:00:00.000Z", "outdoor", [
+        go(7, "attempt", { name: "The Pinch", note: "First look." }),
+      ]),
+      session("2026-10-24T18:00:00.000Z", "outdoor", [go(7, "attempt", { name: "The Pinch" })]),
+    ]);
+    expect(vm.notes.map((n) => [n.source, n.id, n.day, n.note])).toEqual([
+      ["page", "n1", "2026-10-10", "Heel left."],
+      ["session", "2026-09-26T18:00:00.000Z", "2026-09-26", "First look."],
+    ]);
+  });
+
   it("names the best as how the first send went", () => {
     const sent = climb({ sent_at: "2026-10-24T18:00:00.000Z" });
     const vm = climbDetailVM(sent, [
