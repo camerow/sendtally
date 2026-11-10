@@ -171,16 +171,17 @@ describe("climbLog", () => {
     ]);
   });
 
-  it("reads a bare session of climbs added on their own as those climbs, on its day", () => {
+  it("reads a bare session of climbs added on their own as those climbs, its day left to the row", () => {
     const bare = {
       source: "manual",
       name: "",
+      rpe_source: "none",
       start_at: "2026-09-04T10:00:00.000Z",
       climbs: [{ name: "Brad Pit", kind: "attempt", tries: 3 }],
     } as unknown as SessionWithClimbs;
     const vm = climbingSessionVM(bare, climbs);
     expect(vm.named).toBe(false);
-    expect(vm.climbs.map((r) => r.meta)).toEqual(["Stanage Plantation · Sep 4"]);
+    expect(vm.climbs.map((r) => r.meta)).toEqual(["Stanage Plantation"]);
     expect(climbingSessionVM({ ...bare, climbs: [] }, climbs).named).toBe(true);
   });
 

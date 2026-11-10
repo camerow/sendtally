@@ -6,6 +6,13 @@ export function climbCountLabel(count: number): string {
   return t("common.climbCount", { count });
 }
 
+/** The untitled, unscored session a climb added on its own is filed in: it reads as those climbs, never as a session. */
+export function isClimbHolder(
+  session: Pick<SessionRow, "source" | "name" | "rpe_source">
+): boolean {
+  return session.source === "manual" && (session.name ?? "").trim() === "" && isUnscored(session);
+}
+
 export function isUnscored(session: Pick<SessionRow, "rpe_source">): boolean {
   return session.rpe_source === "none";
 }

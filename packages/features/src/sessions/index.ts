@@ -12,6 +12,7 @@ export {
 export {
   climbCountLabel,
   isUnscored,
+  isClimbHolder,
   sessionDay,
   sessionMetaLabel,
   sessionTallyLabel,

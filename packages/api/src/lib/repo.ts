@@ -1182,6 +1182,22 @@ export async function deleteUserClimb(
   return result.meta.changes > 0;
 }
 
+export async function rewriteSessions(
+  db: D1Database,
+  userId: string,
+  rewritten: readonly RegradedSession[]
+): Promise<void> {
+  if (rewritten.length === 0) return;
+  const d = drizzle(db);
+  const [first, ...rest] = rewritten.map(({ fingerprint, ...columns }) =>
+    d
+      .update(sessions)
+      .set(columns)
+      .where(and(eq(sessions.user_id, userId), eq(sessions.fingerprint, fingerprint)))
+  );
+  await d.batch([first!, ...rest]);
+}
+
 /** Logging a deleted climb again brings it back, by its name or the id it was picked as. */
 export async function restoreUserClimbs(
   db: D1Database,

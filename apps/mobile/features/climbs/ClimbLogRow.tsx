@@ -22,6 +22,8 @@ export type ClimbLogRowProps = {
   onPress?: (() => void) | null;
   /** Under the row, as a circuit's laps. */
   children?: React.ReactNode;
+  /** Set before the grade, such as the day of a climb that stands in the log on its own. */
+  leading?: React.ReactNode;
 };
 
 /** One climb in the log: its grade, name, crag and when, and how it went. */
@@ -30,6 +32,7 @@ export function ClimbLogRow({
   showGrade = true,
   onPress,
   children,
+  leading,
 }: ClimbLogRowProps): React.ReactElement {
   const id = row.id;
   const open =
@@ -59,6 +62,7 @@ export function ClimbLogRow({
           : {}),
       })}
     >
+      {leading}
       {showGrade && <GradeBadge label={row.gradeLabel} colour={row.colour} />}
       <View style={{ flex: 1, minWidth: 0, gap: 3 }}>
         <Text

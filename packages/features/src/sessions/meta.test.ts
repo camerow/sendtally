@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import type { SessionRow } from "@sendtally/api-client";
-import { climbCountLabel, sessionDay, sessionMetaLabel, sessionTallyLabel } from "./meta";
+import {
+  climbCountLabel,
+  isClimbHolder,
+  sessionDay,
+  sessionMetaLabel,
+  sessionTallyLabel,
+} from "./meta";
 
 function session(overrides: Partial<SessionRow> = {}): SessionRow {
   return {
@@ -83,5 +89,15 @@ describe("sessionDay", () => {
       weekday: "Wed",
       day: 31,
     });
+  });
+});
+
+describe("isClimbHolder", () => {
+  it("is an untitled, unscored manual session, which a climb added on its own is filed in", () => {
+    expect(isClimbHolder(session({ name: "", rpe_source: "none" }))).toBe(true);
+    expect(isClimbHolder(session({ name: null, rpe_source: "none" }))).toBe(true);
+    expect(isClimbHolder(session({ name: null }))).toBe(false);
+    expect(isClimbHolder(session({ name: "Tuesday night session" }))).toBe(false);
+    expect(isClimbHolder(session({ name: "", rpe_source: "none", source: "board" }))).toBe(false);
   });
 });

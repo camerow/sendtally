@@ -3,6 +3,8 @@ import type { SessionRow } from "@sendtally/api-client";
 import {
   countLabel,
   durationLabel,
+  logCountLabel,
+  logTotalsLabel,
   elapsedClock,
   sessionMinutes,
   sessionTotals,
@@ -109,6 +111,19 @@ describe("labels", () => {
     expect(totalsLabel({ count: 2, minutes: 90, topGrade: 6, topGradeLabel: null })).toBe(
       "2 sessions · 1h 30m · TOP V6"
     );
+  });
+
+  it("counts the climbs added on their own as climbs, not sessions", () => {
+    const holder = (fingerprint: string, count: number): SessionRow => ({
+      ...session(fingerprint, "2026-08-21T12:00:00.000Z", "2026-08-21T12:00:00.000Z"),
+      times: "none",
+      rpe_source: "none",
+      climb_count: count,
+    });
+    const items = logItems([...sessions.slice(0, 2), holder("h1", 1), holder("h2", 2)], [], []);
+    expect(logCountLabel(items)).toBe("2 sessions · 3 climbs");
+    expect(logCountLabel(logItems([holder("h1", 1)], [], []))).toBe("1 climb");
+    expect(logTotalsLabel(items)).toBe("2 sessions · 2h 30m · TOP V7 · 3 climbs");
   });
 
   it("shows the stored label for the hardest session, route grades included", () => {

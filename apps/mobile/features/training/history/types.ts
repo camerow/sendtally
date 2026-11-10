@@ -10,4 +10,6 @@ export type HistoryItem = {
   kind?: "note";
   /** The session whose screen this is, on gold and not opened again. */
   current?: boolean;
+  /** Off for a row with nothing behind it to open. */
+  opens?: boolean;
 };

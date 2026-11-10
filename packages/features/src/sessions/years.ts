@@ -2,6 +2,7 @@ import type { SessionRow } from "@sendtally/api-client";
 import { t } from "../i18n";
 import { flatLog } from "../journal/transforms";
 import type { LogItem } from "../journal/types";
+import { climbCountLabel, isClimbHolder } from "./meta";
 import { logMonths, type SessionMonth } from "./months";
 
 export type SessionGroupTotals = {
@@ -108,15 +109,26 @@ const logged = (items: LogItem[]): LogItem[] =>
 const entryCount = (items: LogItem[]): number =>
   flatLog(items).filter((item) => item.type === "entry").length;
 
+/** The untitled sessions climbs added on their own are filed in, which count as those climbs. */
+const holdersIn = (items: LogItem[]): SessionRow[] => sessionsIn(items).filter(isClimbHolder);
+
+const holderClimbs = (holders: SessionRow[]): string | null => {
+  const count = holders.reduce((n, s) => n + s.climb_count, 0);
+  return count === 0 ? null : climbCountLabel(count);
+};
+
 /**
  * What a log group carries, saying only what is actually in it: a month of
  * writing should not announce "0 sessions".
  */
 export function logCountLabel(items: LogItem[]): string {
   const entries = entryCount(items);
-  const sessions = logged(items).length - entries;
+  const holders = holdersIn(items);
+  const climbs = holderClimbs(holders);
+  const sessions = logged(items).length - entries - holders.length;
   const parts = [
-    sessions === 0 && entries > 0 ? null : countLabel(sessions),
+    sessions === 0 && (entries > 0 || climbs !== null) ? null : countLabel(sessions),
+    climbs,
     entries === 0 ? null : t("journal.entryCount", { count: entries }),
   ].filter((part) => part !== null);
   return parts.join(" · ");
@@ -124,12 +136,18 @@ export function logCountLabel(items: LogItem[]): string {
 
 export function logTotalsLabel(items: LogItem[]): string {
   const sessions = sessionsIn(items);
-  if (sessions.length === 0) return logCountLabel(items);
+  const holders = holdersIn(items);
+  if (sessions.length === holders.length) return logCountLabel(items);
   const entries = entryCount(items);
   const hang = logged(items).length - entries - sessions.length;
   const all = sessionTotals(sessions);
-  const totals = totalsLabel({ ...all, count: all.count + hang });
-  return entries === 0 ? totals : `${totals} · ${t("journal.entryCount", { count: entries })}`;
+  return [
+    totalsLabel({ ...all, count: all.count - holders.length + hang }),
+    holderClimbs(holders),
+    entries === 0 ? null : t("journal.entryCount", { count: entries }),
+  ]
+    .filter((part) => part !== null)
+    .join(" · ");
 }
 
 export function totalsLabel(totals: SessionGroupTotals): string {

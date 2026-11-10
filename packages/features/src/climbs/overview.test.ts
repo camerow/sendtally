@@ -87,6 +87,24 @@ describe("climbDetailVM", () => {
     ]);
     expect(vm.best).toBe("Flash");
   });
+
+  it("names a day the climb was added on its own by how it went, with nothing to open", () => {
+    const holder = {
+      ...session("2026-11-05T12:00:00.000Z", "outdoor", [
+        go(8, "send", { name: "The Pinch", tries: 8 }),
+      ]),
+      name: "",
+      rpe_source: "none",
+    } as SessionWithClimbs;
+    const [visit] = climbDetailVM(climb({}), [holder]).sessions;
+    expect([visit?.name, visit?.meta, visit?.triesLabel, visit?.rpe, visit?.opens]).toEqual([
+      "Sent",
+      "",
+      "8 tries",
+      null,
+      false,
+    ]);
+  });
 });
 
 describe("sessionPyramid", () => {

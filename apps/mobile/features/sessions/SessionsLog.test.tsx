@@ -54,7 +54,7 @@ const mockSummary = (id: string, name: string, at: string, sent: boolean): objec
 });
 
 const mockNamed = mockSession("s1", "Tuesday night session", "2026-10-21T18:00:00.000Z");
-const mockBare = mockSession("s2", "", "2026-10-12T10:00:00.000Z");
+const mockBare = { ...mockSession("s2", "", "2026-10-12T10:00:00.000Z"), rpe_source: "none" };
 
 jest.mock("expo-router", () => ({ router: { push: jest.fn() } }));
 jest.mock("../../lib/api", () => ({ useApi: () => undefined }));
@@ -159,7 +159,7 @@ describe("Log", () => {
     await render(<SessionsLog />);
     expect(screen.getByLabelText(/^Tuesday night session, /)).toBeTruthy();
     expect(screen.getByLabelText("V4, Pocket Rocket, 1 try, Flash")).toBeTruthy();
-    expect(screen.getByLabelText("V4, Brad Pit, Oct 12, 3 tries")).toBeTruthy();
+    expect(screen.getByLabelText("V4, Brad Pit, Boulder, 3 tries")).toBeTruthy();
     expect(screen.queryByText("Logged session")).toBeNull();
     expect(screen.queryByText("Leg day")).toBeNull();
     expect(screen.getByText("Start session")).toBeTruthy();
