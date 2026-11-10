@@ -1,5 +1,4 @@
 export const training = {
-  "training.logTrainingAction": "Log training",
   "training.logEmptyTitle": "No training yet",
   "training.logEmptyBody": "Workouts, hangs and the rest of your training land here, newest first.",
   "training.today": "Today",
@@ -8,8 +7,6 @@ export const training = {
   "training.account": "Account and settings",
   "training.climbing": "Climbing",
   "training.dayAria": "{day}: {logged} done, {planned} planned",
-  "training.logTraining": "Training",
-  "training.logTrainingBody": "Strength, mobility, running and more.",
   "training.reminders": "Training reminders",
   "training.remindersNote": "One notification on days with something planned, listing what is on.",
   "training.remindersBlocked":

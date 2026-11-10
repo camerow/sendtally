@@ -8,7 +8,7 @@ name: result-sheet-stays-open
 - runFlow: ../helpers/open-dev-client.yaml
 - runFlow: ../helpers/ensure-signed-in.yaml
 - runFlow: ../helpers/discard-live-session.yaml
-- tapOn: "Start session"
+- runFlow: ../helpers/start-live-session.yaml
 - assertVisible: "Pick a grade to start a climb."
 # The grade rail scrolls to where this climber usually is; any grade will do, but not the
 # leftmost chip, which a development build's floating menu button sits over.

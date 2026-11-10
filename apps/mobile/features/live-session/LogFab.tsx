@@ -1,18 +1,15 @@
 import { router, type Href } from "expo-router";
 import React from "react";
-import { View } from "react-native";
+import { Text, View } from "react-native";
+import { colors, fonts } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
-import {
-  ENTRY_KINDS,
-  entryKindLabel,
-  today,
-  type EntryKind,
-  type LogSegment,
-} from "@sendtally/features/journal";
+import { entryKindLabel, today, type EntryKind } from "@sendtally/features/journal";
 import { Fab } from "../../components/Fab";
 import { Sheet } from "../../components/Sheet";
 import { MenuRow, type MenuRowProps } from "./MenuRow";
 import { startLiveSession } from "./startLiveSession";
+
+type Row = Pick<MenuRowProps, "icon" | "title" | "hint"> & { key: string; go: () => void };
 
 const ENTRY_HINTS: Record<
   EntryKind,
@@ -23,68 +20,84 @@ const ENTRY_HINTS: Record<
   injury: "journal.hintInjury",
 };
 
-type Row = Pick<MenuRowProps, "icon" | "title" | "hint"> & { key: string; href: Href };
+const entryRow = (kind: EntryKind): Row => ({
+  key: kind,
+  icon: kind,
+  title: entryKindLabel(kind),
+  hint: t(ENTRY_HINTS[kind]),
+  go: () => router.push({ pathname: "/journal/new", params: { kind, date: today() } }),
+});
 
-const trainingHref = (): Href => ({ pathname: "/activity/new", params: { date: today() } });
+const push = (href: Href) => (): void => router.push(href);
 
-const rows = (segment: LogSegment): Row[] =>
-  segment === "climbing"
-    ? [
-        {
-          key: "session",
-          icon: "sessions",
-          title: t("sessions.pastSession"),
-          hint: t("sessions.logFullSessionHint"),
-          href: "/session/new",
-        },
-        {
-          key: "climb",
-          icon: "climbs",
-          title: t("climbs.addClimb"),
-          hint: t("climbs.addClimbHint"),
-          href: "/climb/log",
-        },
-      ]
-    : [
-        {
-          key: "activity",
-          icon: "train",
-          title: t("training.logTraining"),
-          hint: t("training.logTrainingBody"),
-          href: trainingHref(),
-        },
-        ...ENTRY_KINDS.map((kind): Row => ({
-          key: kind,
-          icon: kind,
-          title: entryKindLabel(kind),
-          hint: t(ENTRY_HINTS[kind]),
-          href: { pathname: "/journal/new", params: { kind, date: today() } },
-        })),
-      ];
+const groups = (): { title: string; rows: Row[] }[] => [
+  {
+    title: t("statistics.climbing"),
+    rows: [
+      {
+        key: "live",
+        icon: "climb",
+        title: t("sessions.liveSession"),
+        hint: t("sessions.liveSessionHint"),
+        go: () => startLiveSession(),
+      },
+      {
+        key: "session",
+        icon: "sessions",
+        title: t("climbs.logSession"),
+        hint: t("sessions.logFullSessionHint"),
+        go: push("/session/new"),
+      },
+      {
+        key: "climb",
+        icon: "climbs",
+        title: t("climbs.addClimb"),
+        hint: t("climbs.addClimbHint"),
+        go: push("/climb/log"),
+      },
+      entryRow("trip"),
+    ],
+  },
+  { title: t("statistics.training"), rows: [entryRow("journal"), entryRow("injury")] },
+];
 
-/** Each half's frequent action; the arrow holds the slower ways to log there. */
-export function LogFab({ segment }: { segment: LogSegment }): React.ReactElement {
-  const [menuOpen, setMenuOpen] = React.useState(false);
+/** Every way to log, climbing and training, behind one button. */
+export function LogFab(): React.ReactElement {
+  const [open, setOpen] = React.useState(false);
   return (
     <>
-      <Fab
-        label={segment === "climbing" ? t("tally.startSession") : t("training.logTrainingAction")}
-        onPress={() => (segment === "climbing" ? startLiveSession() : router.push(trainingHref()))}
-        menu={{ label: t("sessions.moreWaysToLog"), onPress: () => setMenuOpen(true) }}
-      />
-      <Sheet visible={menuOpen} onClose={() => setMenuOpen(false)} closeLabel={t("common.cancel")}>
-        <View style={{ gap: 4, paddingTop: 4, paddingHorizontal: 12, paddingBottom: 4 }}>
-          {rows(segment).map((row) => (
-            <MenuRow
-              key={row.key}
-              icon={row.icon}
-              title={row.title}
-              hint={row.hint}
-              onPress={() => {
-                setMenuOpen(false);
-                router.push(row.href);
-              }}
-            />
+      <Fab label={t("sessions.logAction")} onPress={() => setOpen(true)} />
+      <Sheet visible={open} onClose={() => setOpen(false)} closeLabel={t("common.cancel")}>
+        <View style={{ gap: 12, paddingTop: 4, paddingHorizontal: 12, paddingBottom: 4 }}>
+          {groups().map((group) => (
+            <View key={group.title} style={{ gap: 4 }}>
+              <Text
+                accessibilityRole="header"
+                style={{
+                  paddingHorizontal: 14,
+                  fontFamily: fonts.monoMedium,
+                  fontSize: 10,
+                  lineHeight: 13,
+                  letterSpacing: 0.8,
+                  textTransform: "uppercase",
+                  color: colors.textMuted,
+                }}
+              >
+                {group.title}
+              </Text>
+              {group.rows.map((row) => (
+                <MenuRow
+                  key={row.key}
+                  icon={row.icon}
+                  title={row.title}
+                  hint={row.hint}
+                  onPress={() => {
+                    setOpen(false);
+                    row.go();
+                  }}
+                />
+              ))}
+            </View>
           ))}
         </View>
       </Sheet>

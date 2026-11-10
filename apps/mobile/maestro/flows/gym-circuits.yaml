@@ -30,7 +30,7 @@ name: gym-circuits
 - tapOn: "Save gym"
 - assertVisible: "Maestro Barn.*"
 - tapOn: "BACK"
-- tapOn: "Start session"
+- runFlow: ../helpers/start-live-session.yaml
 - tapOn: "Gym, No gym"
 - tapOn: "Maestro Barn"
 - assertVisible: "Gym, Maestro Barn"
