@@ -6,11 +6,11 @@ import { t } from "@sendtally/features/i18n";
 import {
   cellText,
   columnLabel,
-  fieldLimits,
-  fieldValue,
-  withField,
+  weekFieldLimits,
+  weekFieldValue,
+  withWeekField,
   type DoneCount,
-  type DoseField,
+  type WeekField,
 } from "@sendtally/features/training";
 import { KeypadField } from "../../../components/KeypadField";
 import { useFieldOrder } from "../../../components/useFieldOrder";
@@ -24,7 +24,7 @@ export type LoadTableProps = {
   written: Dose;
   /** Each block week's change to it, first week first. */
   changes: readonly Partial<Dose>[];
-  columns: readonly DoseField[];
+  columns: readonly WeekField[];
   unit: WeightUnit;
   /** This week of the block, drawn on the soft fill; null outside it. */
   current: number | null;
@@ -37,9 +37,9 @@ export type LoadTableProps = {
 
 const WEEK = 34;
 const DONE = 44;
-const TIMES: readonly DoseField[] = ["onS", "offS", "setRestS"];
+const TIMES: readonly WeekField[] = ["onS", "offS", "setRestS"];
 
-const without = (change: Partial<Dose>, field: DoseField): Partial<Dose> =>
+const without = (change: Partial<Dose>, field: WeekField): Partial<Dose> =>
   Object.fromEntries(Object.entries(change).filter(([k]) => k !== field));
 
 /**
@@ -60,7 +60,7 @@ export function LoadTable({
 }: LoadTableProps): React.ReactElement {
   const weeks = changes.map((_, i) => i + 1);
   const { slot } = useFieldOrder(columns.flatMap((f) => weeks.map((w) => `${f}:${w}`)));
-  const headOf = (f: DoseField): string => {
+  const headOf = (f: WeekField): string => {
     const name = columnLabel(kind, written, f);
     const shown = f === "weightKg" ? unit : f === "edgeMm" ? "mm" : null;
     return shown === null ? name : `${name} · ${shown}`;
@@ -139,15 +139,15 @@ export function LoadTable({
                       : {
                           kind: "number",
                           unit: f === "weightKg" ? unit : f === "edgeMm" ? "mm" : undefined,
-                          ...fieldLimits(f, unit),
+                          ...weekFieldLimits(f, unit),
                         }
                   }
-                  value={fieldValue(dose, f, unit)}
+                  value={weekFieldValue(dose, f, unit)}
                   text={["", cellText(kind, dose, f, unit)]}
                   note={`${t("plan.asWritten")} ${cellText(kind, written, f, unit)}`}
                   onReset={marked ? () => onChange(week, without(change, f)) : undefined}
                   onChange={(typed) => {
-                    const next = withField(dose, f, typed, unit);
+                    const next = withWeekField(dose, f, typed, unit);
                     if (next !== null) onChange(week, changeFrom(written, next));
                   }}
                 />

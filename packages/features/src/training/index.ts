@@ -55,13 +55,13 @@ export {
   cellText,
   columnLabel,
   fieldLabel,
-  fieldLimits,
-  fieldValue,
+  weekFieldLimits,
+  weekFieldValue,
   loadColumns,
   stepped,
   weekFields,
-  withField,
-  type DoseField,
+  withWeekField,
+  type WeekField,
 } from "./weeks";
 export { useTrainingLog, type TrainingLogQuery } from "./useTrainingLog";
 export {
@@ -92,7 +92,7 @@ export {
   draftMove,
   draftRemove,
   draftSchedule,
-  emptyDraft,
+  emptyPlanDraft,
   type PlanDraft,
 } from "./planDraft";
 export {

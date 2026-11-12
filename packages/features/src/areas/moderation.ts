@@ -43,7 +43,7 @@ export function fieldLabel(field: string): string {
   return FIELD_LABELS[field] ?? field;
 }
 
-export function fieldValue(field: string, value: unknown): string {
+function fieldValue(field: string, value: unknown): string {
   if (value === null || value === undefined || value === "") return "-";
   if (field === "type") return climbTypeLabel(value as ClimbType);
   if (typeof value === "number") return formatNumber(value, { maximumFractionDigits: 6 });

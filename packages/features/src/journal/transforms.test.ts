@@ -7,7 +7,7 @@ import {
   daysSince,
   draftFromEntry,
   draftIsEmpty,
-  emptyDraft,
+  emptyEntryDraft,
   entryHasTitle,
   entryInput,
   entryTitle,
@@ -422,14 +422,14 @@ describe("drafts", () => {
   });
 
   it("drops an end date when the kind cannot span one", () => {
-    const draft = { ...emptyDraft("journal", "2026-05-30"), endsAt: "2026-06-01", body: "x" };
+    const draft = { ...emptyEntryDraft("journal", "2026-05-30"), endsAt: "2026-06-01", body: "x" };
     expect(entryInput(draft).ends_at).toBeNull();
   });
 
   it("refuses an empty draft but accepts an update carrying only a number", () => {
-    expect(draftIsEmpty(emptyDraft("journal", "2026-05-30"))).toBe(true);
+    expect(draftIsEmpty(emptyEntryDraft("journal", "2026-05-30"))).toBe(true);
     expect(
-      draftIsEmpty({ ...emptyDraft("journal", "2026-05-30"), parentId: "i1", severity: 0 })
+      draftIsEmpty({ ...emptyEntryDraft("journal", "2026-05-30"), parentId: "i1", severity: 0 })
     ).toBe(false);
   });
 });
@@ -544,10 +544,12 @@ describe("entryHasTitle", () => {
 
 describe("bodyPlaceholder", () => {
   it("asks an injury about the injury and a journal entry about climbing", () => {
-    expect(bodyPlaceholder(emptyDraft("injury", "2026-05-30"))).toBe(
+    expect(bodyPlaceholder(emptyEntryDraft("injury", "2026-05-30"))).toBe(
       "Summarize how your injury is doing today."
     );
-    expect(bodyPlaceholder(emptyDraft("journal", "2026-05-30"))).toBe("Reflect on your climbing");
+    expect(bodyPlaceholder(emptyEntryDraft("journal", "2026-05-30"))).toBe(
+      "Reflect on your climbing"
+    );
   });
 });
 

@@ -7,7 +7,7 @@ import {
   draftMove,
   draftRemove,
   draftSchedule,
-  emptyDraft,
+  emptyPlanDraft,
   scheduleOf,
   toggleDay,
   type DaySchedule,
@@ -36,14 +36,14 @@ export type PlanDraftState = {
 
 export function usePlanDraft(plan: Plan, startEditing = false): PlanDraftState {
   const actions = usePlanActions();
-  const [draft, setDraft] = React.useState<PlanDraft | null>(startEditing ? emptyDraft : null);
+  const [draft, setDraft] = React.useState<PlanDraft | null>(startEditing ? emptyPlanDraft : null);
   const shown = draft === null ? plan : applyDraft(plan, draft);
   const edit = (change: (d: PlanDraft) => PlanDraft): void =>
-    setDraft((d) => change(d ?? emptyDraft));
+    setDraft((d) => change(d ?? emptyPlanDraft));
   return {
     editing: draft !== null,
     plan: shown,
-    begin: () => setDraft(emptyDraft),
+    begin: () => setDraft(emptyPlanDraft),
     cancel: () => setDraft(null),
     save: () => {
       if (draft !== null) void actions.saveDraft(draft);

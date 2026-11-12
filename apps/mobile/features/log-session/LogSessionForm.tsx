@@ -17,7 +17,7 @@ import {
   draftProblem,
   draftSummary,
   disciplineOf,
-  emptyDraft,
+  emptySessionDraft,
   circuitGyms,
   isFormProject,
   nextFormClimb,
@@ -143,7 +143,7 @@ export function LogSessionForm({
   const [draft, setDraft] = React.useState<LogSessionDraft>(
     () =>
       editing?.draft ?? {
-        ...emptyDraft(new Date(), gradePrefs),
+        ...emptySessionDraft(new Date(), gradePrefs),
         ...(plan.membershipId === null ? {} : { plan }),
       }
   );

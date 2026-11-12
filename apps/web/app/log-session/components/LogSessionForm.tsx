@@ -11,7 +11,7 @@ import {
   draftProblem,
   draftSummary,
   disciplineOf,
-  emptyDraft,
+  emptySessionDraft,
   circuitGyms,
   isFormProject,
   nextFormClimb,
@@ -161,7 +161,7 @@ export function LogSessionForm({
   const client = useQueryClient();
   const prefs = useGradeScalePrefs(api);
   const [draft, setDraft] = React.useState<LogSessionDraft>(
-    () => editing?.draft ?? emptyDraft(new Date(), prefs.scales)
+    () => editing?.draft ?? emptySessionDraft(new Date(), prefs.scales)
   );
   const [saving, setSaving] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
