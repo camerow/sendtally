@@ -16,8 +16,8 @@ import { SetArrows } from "../timer/SetArrows";
 import { TimerFrame } from "../timer/TimerFrame";
 import { useTimer } from "../timer/useTimer";
 import { resumedRun, writeLiveRun } from "../../live-session/liveRun";
-import { intervalsParams, type IntervalsRun } from "./intervalsParams";
-import { stepText, upNext } from "./intervalsText";
+import { intervalsParams, type IntervalsRun } from "@sendtally/features/workouts";
+import { stepText, upNext } from "@sendtally/features/activities";
 import { StepCard } from "./StepCard";
 import { UpNext } from "./UpNext";
 

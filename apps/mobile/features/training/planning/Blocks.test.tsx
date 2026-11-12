@@ -4,10 +4,10 @@ import { router } from "expo-router";
 import React from "react";
 import { Alert, Text, type AlertButton } from "react-native";
 import type { Plan, WorkoutRecord } from "@sendtally/api-client";
-import type { PlanDraft } from "@sendtally/features/training";
+import { type PlanDraft, planGridRows } from "@sendtally/features/training";
 import { hangData, readingOrder, renderWithHang } from "../data/renderWithHang";
 import { PlanGrid } from "../plan/PlanGrid";
-import { planGridRows } from "../plan/planGridRows";
+import { openMembership } from "../plan/openMembership";
 import { useNewBlock } from "./useNewBlock";
 import { BlockScreen } from "./BlockScreen";
 import { BlocksList } from "../train/BlocksList";
@@ -717,11 +717,16 @@ describe("week grid", () => {
     const workout = (id: string): WorkoutRecord | undefined => (id === "squat" ? squat : undefined);
     await renderWithHang(
       <PlanGrid
-        rows={planGridRows(plan.memberships, workout, {
-          gripName: (id) => id,
-          defaultGrip: (w) => w.grip,
-          workout: () => undefined,
-        })}
+        rows={planGridRows(
+          plan.memberships,
+          workout,
+          {
+            gripName: (id) => id,
+            defaultGrip: (w) => w.grip,
+            workout: () => undefined,
+          },
+          { open: (m) => openMembership(m) }
+        )}
       />
     );
     const [inBlock, outside] = screen.getAllByLabelText("Back squat");

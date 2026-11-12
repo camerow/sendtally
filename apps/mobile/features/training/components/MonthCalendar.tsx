@@ -10,7 +10,7 @@ import {
 } from "@sendtally/core/hang";
 import { dayTitle, monthTitle, weekdayLetters } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
-import { bandOn, monthWeeks } from "../calendar/calendarGrid";
+import { bandOn, monthWeeks } from "@sendtally/features/training";
 import { type } from "../type";
 import { BlockBand } from "./BlockBand";
 import { IconButton } from "./IconButton";

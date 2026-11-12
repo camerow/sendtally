@@ -28,7 +28,7 @@ import { LIVE_HEADER, MinimiseButton } from "../../components/MinimiseButton";
 import { press } from "../../lib/press";
 import { Button } from "../training/components/Button";
 import { RestRow } from "../training/rest/RestRow";
-import { MORE_REST_S } from "../training/rest/restCountdown";
+import { MORE_REST_S } from "@sendtally/features/workouts";
 import type { RestClock } from "../training/rest/useRest";
 import { LiveClimbEditor } from "./LiveClimbEditor";
 

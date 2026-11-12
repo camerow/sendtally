@@ -1,68 +1,46 @@
 import { router } from "expo-router";
-import {
-  intervalsOf,
-  type CalendarDate,
-  type PlanLink,
-  type SessionItem,
-} from "@sendtally/core/hang";
+import type { CalendarDate } from "@sendtally/core/hang";
 import type { TallyMeasure } from "@sendtally/features/exercises";
-import { activityKindOf, type LibraryWorkout } from "@sendtally/features/workouts";
-import { activityFormPath, runPath, type RunPlayer } from "../data/workoutRunParams";
+import {
+  activityKindOf,
+  timerParams,
+  workoutStart,
+  type LibraryWorkout,
+  type PlannedItems,
+} from "@sendtally/features/workouts";
+import { activityFormPath, runPath } from "../data/workoutRunParams";
 import { startIntervals } from "../intervals/intervalsParams";
 import { startLive } from "../../live-session/startLive";
 import { startLiveSession } from "../../live-session/startLiveSession";
-import { startWorkout, timerParams } from "../timer/startWorkout";
+import { startWorkout } from "../timer/startWorkout";
 
-/**
- * One run of a workout: the plan it is in, if any, which session of the workout it is,
- * and what that session prescribes.
- */
-export type PlannedItems = { link: PlanLink; session: number; items: readonly SessionItem[] };
+export type { PlannedItems };
 
-const playerOf = (items: readonly SessionItem[]): RunPlayer =>
-  items.some((i) => i.dose.reps !== undefined || i.dose.weightKg !== undefined)
-    ? "/workout/sets"
-    : "/workout/checklist";
-
-/**
- * Runs a workout in the player its items call for: hangboard in the timer, all timed in the
- * intervals player (climbing measured in time too, as laps), any exercise logged in climbs on
- * the tally or with reps or weight in the sets player, anything else as a checklist. A climbing
- * workout with no items opens the live session, and any other workout with none the activity
- * form. An exercise done on each side plays twice in the intervals player.
- */
+/** Runs a workout in the player its items call for (see `workoutStart`). */
 export function startLibraryWorkout(
   w: LibraryWorkout,
   date: CalendarDate,
-  { link, session, items }: PlannedItems,
+  planned: PlannedItems,
   eachSide: (exercise: string) => boolean,
-  tally: (exercise: string) => TallyMeasure | null = () => null
+  tally?: (exercise: string) => TallyMeasure | null
 ): void {
-  const kind = activityKindOf(w.kind);
-  const [first] = items;
-  if (w.kind === "hangboard" && first !== undefined) {
-    startWorkout(w.name, w.id, first.exercise, session, link);
-    return;
+  const { link, session } = planned;
+  const start = workoutStart(w, date, planned, eachSide, tally);
+  switch (start.open) {
+    case "timer":
+      return startWorkout(w.name, w.id, start.gripId, session, link);
+    case "liveSession":
+      return startLiveSession(link.membershipId === null ? undefined : link, w.name);
+    case "form":
+      return router.push(activityFormPath(start.run));
+    case "intervals":
+      return startIntervals(start.run);
+    default: {
+      const { run } = start;
+      const player = start.open === "sets" ? "/workout/sets" : "/workout/checklist";
+      return startLive(() => router.push(runPath(player, run)));
+    }
   }
-  if (kind === null || (kind === "climbing" && first === undefined)) {
-    startLiveSession(link.membershipId === null ? undefined : link, w.name);
-    return;
-  }
-  const run = { kind, title: w.name, date, workoutId: w.id, link, minutes: w.minutes };
-  if (first === undefined) {
-    router.push(activityFormPath(run));
-    return;
-  }
-  const onTally = items.some((i) => tally(i.exercise) !== null);
-  const climbs = items.some((i) => ["climbs", "laps"].includes(tally(i.exercise) ?? ""));
-  if (!climbs && items.every((i) => i.dose.onS !== undefined)) {
-    startIntervals({ ...run, body: intervalsOf(items, eachSide) });
-    return;
-  }
-  const player = onTally ? "/workout/sets" : playerOf(items);
-  startLive(() =>
-    router.push(runPath(player, { ...run, exerciseRestS: w.exerciseRestS, items: [...items] }))
-  );
 }
 
 /**

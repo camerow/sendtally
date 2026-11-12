@@ -5,7 +5,7 @@ import { kindLabel } from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
 import { Sheet } from "../../../components/Sheet";
 import { useRunWorkout } from "../library/useLibrary";
-import { KIND_LOOK } from "../today/kindLook";
+import { KIND_LOOK } from "@sendtally/features/training";
 import { type } from "../type";
 import { IconButton } from "./IconButton";
 import { SheetHeader } from "./SheetHeader";

@@ -6,7 +6,7 @@ import { pressRow } from "../../../lib/press";
 import { EffortMark } from "../components/EffortMark";
 import { type } from "../type";
 import { KindCircle } from "./KindCircle";
-import type { LoggedRowText } from "./loggedRowText";
+import type { LoggedRowText } from "@sendtally/features/training";
 
 export type LoggedRowProps = { kind: WorkoutKind; text: LoggedRowText; onPress: () => void };
 

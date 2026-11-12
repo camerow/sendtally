@@ -12,7 +12,7 @@ import { StatGrid } from "../components/StatGrid";
 import { type } from "../type";
 import { ExerciseTrendCard } from "./ExerciseTrendCard";
 import { ExerciseHistory } from "./ExerciseHistory";
-import { exerciseInsight, exerciseStats } from "./exerciseText";
+import { exerciseInsight, exerciseStats } from "@sendtally/features/exercises";
 import type { ExerciseChartMetric } from "./types";
 
 export type ExerciseTrendsProps = {

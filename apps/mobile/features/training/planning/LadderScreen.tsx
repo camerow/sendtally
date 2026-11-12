@@ -20,6 +20,8 @@ import {
   blockRecap,
   loadColumns,
   useTrainingLog,
+  workoutLines,
+  KIND_LOOK,
 } from "@sendtally/features/training";
 import { bodySummary, doseSummary, exerciseName } from "@sendtally/features/workouts";
 import { ScreenFrame } from "../../../components/ScreenFrame";
@@ -33,9 +35,7 @@ import { Segmented } from "../components/Segmented";
 import { Title } from "../components/Title";
 import { useHangData } from "../data/HangDataContext";
 import { useRunWorkout } from "../library/useLibrary";
-import { workoutLines } from "../plan/planGridRows";
 import { usePlanActions } from "../plan/usePlanActions";
-import { KIND_LOOK } from "../today/kindLook";
 import { type } from "../type";
 import { LoadTable } from "./LoadTable";
 import { LoadSection } from "./LoadSection";

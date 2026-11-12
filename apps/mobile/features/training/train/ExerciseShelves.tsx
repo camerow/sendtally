@@ -18,7 +18,7 @@ import { doseSummary } from "@sendtally/features/workouts";
 import { useApi } from "../../../lib/api";
 import { useHangData } from "../data/HangDataContext";
 import { LoadState } from "../data/LoadState";
-import { metricText } from "../exercises/exerciseText";
+import { metricText } from "@sendtally/features/exercises";
 import { openExerciseEditor } from "../exercises/openExerciseEditor";
 import { useLibrary } from "../library/useLibrary";
 import { ExerciseShelf } from "./ExerciseShelf";

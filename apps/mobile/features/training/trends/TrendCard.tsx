@@ -11,7 +11,7 @@ import { type } from "../type";
 import { EffortLine } from "./EffortLine";
 import { Legend } from "./Legend";
 import { LoadChart } from "./LoadChart";
-import { changeOf } from "./trendText";
+import { changeOf } from "@sendtally/features/hang";
 
 export type TrendCardProps = {
   /** What the chart is read out as. */

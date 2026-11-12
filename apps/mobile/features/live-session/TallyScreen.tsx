@@ -47,7 +47,7 @@ import { exerciseTallyStorage } from "../../lib/exerciseTallyStorage";
 import { liveSessionStorage } from "../../lib/liveSessionStorage";
 import { press } from "../../lib/press";
 import { Button } from "../training/components/Button";
-import { readPlanLink } from "../training/data/planLinkParams";
+import { readPlanLink } from "@sendtally/features/training";
 import { useRest } from "../training/rest/useRest";
 import { ExerciseClock } from "./ExerciseClock";
 import { FinishSheet } from "./FinishSheet";

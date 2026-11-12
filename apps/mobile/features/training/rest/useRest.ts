@@ -1,6 +1,6 @@
 import React from "react";
 import { useLiveRun, writeRest } from "../../live-session/liveRun";
-import { restAfter, restLeft, withMoreRest, type Rest } from "./restCountdown";
+import { restAfter, restLeft, withMoreRest, type Rest } from "@sendtally/features/workouts";
 
 export type RestClock = {
   /** The rest running, none once it is over. */

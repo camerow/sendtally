@@ -33,10 +33,10 @@ import { SetArrows } from "./SetArrows";
 import { ForTodaySheet, type TodayEntry } from "./ForTodaySheet";
 import { TimerFrame } from "./TimerFrame";
 import { TimerRing } from "./TimerRing";
-import { timerText } from "./timerText";
+import { timerText } from "@sendtally/features/hang";
 import { useTimer } from "./useTimer";
 import { resumedRun, writeLiveRun } from "../../live-session/liveRun";
-import { timerParams } from "./startWorkout";
+import { timerParams } from "@sendtally/features/workouts";
 
 function Timer({
   planned,

@@ -53,7 +53,7 @@ import { OptionRow } from "../../components/OptionRow";
 import { SelectRow } from "../../components/SelectRow";
 import { AddClimbSheet } from "../areas/AddClimbSheet";
 import { AddCragSheet } from "../areas/AddCragSheet";
-import { readPlanLink } from "../training/data/planLinkParams";
+import { readPlanLink } from "@sendtally/features/training";
 import { ClimbEditorSheet } from "./ClimbEditorSheet";
 import { NewGymSheet } from "../gyms/NewGymSheet";
 import { Icon } from "../../components/Icon";
