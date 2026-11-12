@@ -53,8 +53,10 @@ export function StravaPostingSection({ posting }: StravaPostingSectionProps): Re
         <>
           <div style={rowDivider} />
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            <span style={{ fontWeight: 600, fontSize: 13 }}>{t("settings.postSince")}</span>
-            <p style={bodyText}>{t("settings.postSinceBody")}</p>
+            <span style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+              <span style={{ fontWeight: 600, fontSize: 13 }}>{t("settings.postSince")}</span>
+              <p style={bodyText}>{t("settings.postSinceBody")}</p>
+            </span>
             <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
               <input
                 type="date"
