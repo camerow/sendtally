@@ -871,7 +871,7 @@ const app = new Hono<AppEnv>()
         "X-POSTHOG-DISTINCT-ID",
         "X-POSTHOG-SESSION-ID",
       ],
-      allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+      allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     })(c, next)
   )
 

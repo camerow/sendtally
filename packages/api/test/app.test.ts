@@ -59,6 +59,18 @@ describe("app", () => {
     expect(await preflight("https://evil.example")).toBeNull();
   });
 
+  it("lets the web app send every method the API routes take, PATCH included", async () => {
+    const res = await testApp().request(
+      "/v1/climbs/c1",
+      {
+        method: "OPTIONS",
+        headers: { Origin: "https://sendtally.test", "Access-Control-Request-Method": "PATCH" },
+      },
+      env
+    );
+    expect(res.headers.get("Access-Control-Allow-Methods")?.split(",")).toContain("PATCH");
+  });
+
   it("rejects /v1 routes without a verified user", async () => {
     const res = await testApp().request("/v1/sessions", {}, env);
     expect(res.status).toBe(401);

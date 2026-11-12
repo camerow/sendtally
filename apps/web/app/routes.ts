@@ -29,6 +29,8 @@ export default [
     route("projects/:slug", "routes/app.projects.$slug.tsx"),
     route("areas/:slug", "routes/app.areas.$slug.tsx"),
     route("climbs/:slug", "routes/app.climbs.$slug.tsx"),
+    route("log/climbs/new", "routes/app.log.climbs.new.tsx"),
+    route("log/climbs/:id", "routes/app.log.climbs.$id.tsx"),
     route("trends", "routes/app.trends._index.tsx"),
     route("trends/:page", "routes/app.trends.$page.tsx"),
     route("settings", "routes/app.settings.tsx"),
