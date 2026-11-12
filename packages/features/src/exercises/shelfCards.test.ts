@@ -7,7 +7,7 @@ const exercise = (id: string, name: string, extra: Partial<Exercise> = {}): Exer
   id,
   name,
   kind: "strength",
-  measure: "weight_reps",
+  measure: "repsWeight",
   eachSide: false,
   progress: null,
   builtIn: null,
