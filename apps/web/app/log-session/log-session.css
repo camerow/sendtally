@@ -589,14 +589,6 @@ body:has(.climb-sheet[open]) {
   color: var(--bs-watermelon-ink-press);
 }
 
-.climb-sheet-panel .segmented {
-  display: flex;
-}
-
-.climb-sheet-panel .segmented-option {
-  flex: 1;
-}
-
 .climb-sheet-done {
   flex: 1;
   height: 50px;

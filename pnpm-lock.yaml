@@ -407,6 +407,9 @@ importers:
       '@sendtally/api-client':
         specifier: workspace:*
         version: link:../../packages/api-client
+      '@sendtally/core':
+        specifier: workspace:*
+        version: link:../../packages/core
       '@sendtally/design':
         specifier: workspace:*
         version: link:../../packages/design

@@ -33,6 +33,8 @@ export type SettingsViewProps = {
   scales: GradeScalesFeature;
   gyms: Gym[];
   gymsReady: boolean;
+  /** At 375 the tab bar has no room for Moderation, so it is a row here. */
+  moderator?: boolean;
 };
 
 export function SettingsView({
@@ -43,6 +45,7 @@ export function SettingsView({
   scales,
   gyms,
   gymsReady,
+  moderator = false,
 }: SettingsViewProps): React.ReactElement {
   return (
     <div style={{ maxWidth: 640, display: "flex", flexDirection: "column", gap: 14 }}>
@@ -135,6 +138,20 @@ export function SettingsView({
           </ChevronRow>
         </Section>
       </Link>
+
+      {moderator && (
+        <Link
+          to="/app/moderation"
+          className="narrow-only"
+          style={{ textDecoration: "none", color: "inherit" }}
+        >
+          <Section>
+            <ChevronRow>
+              <span style={sectionLabel}>Moderation</span>
+            </ChevronRow>
+          </Section>
+        </Link>
+      )}
     </div>
   );
 }

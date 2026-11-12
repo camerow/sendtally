@@ -2,7 +2,7 @@ import { draftStorage, type DraftStorage } from "@sendtally/features/log-session
 
 const available = (): boolean => typeof localStorage !== "undefined";
 
-const localStore = (key: string): DraftStorage =>
+export const localStore = (key: string): DraftStorage =>
   draftStorage({
     read: () => (available() ? localStorage.getItem(key) : null),
     write: (value) => {

@@ -55,6 +55,7 @@ import { SessionYearGroup } from "./SessionYearGroup";
 import { SetupStack, type SetupCard } from "./SetupStack";
 import { useDismissed } from "../../lib/useDismissed";
 import { useVisibleSection } from "../useVisibleSection";
+import { AccountButton } from "../../components/AccountButton";
 
 const muted: React.CSSProperties = {
   padding: 36,
@@ -205,6 +206,7 @@ export function LogView({
         <span className="sessions-head-action">
           <LogMenu variant="header" onLogClimb={logClimb} />
         </span>
+        <AccountButton />
       </div>
       <SetupStack cards={setupCards} total={2} />
       {live.stored !== null && (
