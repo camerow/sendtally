@@ -15,6 +15,7 @@ import { PricingClosing } from "../landing/components/PricingClosing";
 import { PricingHeader } from "../landing/components/PricingHeader";
 import { COPIES } from "../landing/copies";
 import { LandingProvider } from "../landing/LandingContext";
+import { storePlatform, type StorePlatform } from "../lib/stores";
 import landingStyles from "../landing/landing.css?url";
 
 export const links: LinksFunction = () => [{ rel: "stylesheet", href: landingStyles }];
@@ -29,10 +30,14 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
   });
 };
 
-type LoaderData = { signedIn: boolean; locale: Locale };
+type LoaderData = { signedIn: boolean; locale: Locale; platform: StorePlatform };
 
 export async function loader(args: LoaderFunctionArgs): Promise<LoaderData> {
-  return { signedIn: await isSignedIn(args), locale: requestLocale(args.request) };
+  return {
+    signedIn: await isSignedIn(args),
+    locale: requestLocale(args.request),
+    platform: storePlatform(args.request.headers.get("user-agent")),
+  };
 }
 
 export default function Pricing(): React.ReactElement {
@@ -40,7 +45,7 @@ export default function Pricing(): React.ReactElement {
   const auth = useAuth();
   const signedIn = loaderData.signedIn || auth.isSignedIn === true;
   return (
-    <LandingProvider signedIn={signedIn} locale={loaderData.locale}>
+    <LandingProvider signedIn={signedIn} locale={loaderData.locale} platform={loaderData.platform}>
       <Nav />
       <main>
         <PricingHeader />

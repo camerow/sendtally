@@ -2,6 +2,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import React, { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { AppStores } from "./AppStores";
+import { LandingProvider } from "../LandingContext";
+import { STORE_LINKS, type StorePlatform } from "../../lib/stores";
 
 declare global {
   var IS_REACT_ACT_ENVIRONMENT: boolean;
@@ -36,4 +38,23 @@ describe("AppStores", () => {
       transport_type: "beacon",
     });
   });
+
+  it.each([
+    ["ios", [STORE_LINKS.ios]],
+    ["android", [STORE_LINKS.android]],
+    [null, [STORE_LINKS.android, STORE_LINKS.ios]],
+  ] as const)(
+    "shows the %s visitor only the badges for their phone",
+    (platform: StorePlatform, links) => {
+      act(() =>
+        root.render(
+          <LandingProvider signedIn={false} locale="en" platform={platform}>
+            <AppStores />
+          </LandingProvider>
+        )
+      );
+      const hrefs = [...container.querySelectorAll("a.l-store")].map((a) => a.getAttribute("href"));
+      expect(hrefs).toEqual(links);
+    }
+  );
 });
