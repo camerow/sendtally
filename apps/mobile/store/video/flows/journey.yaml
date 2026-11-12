@@ -1,0 +1,10 @@
+appId: com.sendtally.app
+# The whole take, beat by beat. Each beat records itself to <beat>.mp4, which capture.sh
+# copies out of Maestro's debug output into the takes folder.
+---
+- runFlow: train.yaml
+- runFlow: trip.yaml
+- runFlow: live.yaml
+- runFlow: hang.yaml
+- runFlow: hang-end.yaml
+- runFlow: stats.yaml
