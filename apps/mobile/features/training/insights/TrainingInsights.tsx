@@ -3,7 +3,7 @@ import { ActivityIndicator, Text } from "react-native";
 import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
 import {
-  ACTIVITY_KINDS,
+  TRAINED_KINDS,
   focusKey,
   pickedWorkouts,
   useTrainingInsights,
@@ -24,7 +24,7 @@ import { WorkoutsDone } from "./WorkoutsDone";
 export function TrainingInsights({ range }: { range: TrendRange }): React.ReactElement {
   const api = useApi();
   const { model } = useHangData();
-  const state = useTrainingInsights(api, range, ACTIVITY_KINDS, model.gripName);
+  const state = useTrainingInsights(api, range, TRAINED_KINDS, model.gripName);
   const [by, setBy] = React.useState<TrainedBy>("category");
   const [pick, setPick] = React.useState<string | null>(null);
 

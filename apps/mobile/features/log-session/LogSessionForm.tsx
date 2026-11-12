@@ -17,7 +17,7 @@ import {
   draftProblem,
   draftSummary,
   disciplineOf,
-  emptyDraft,
+  emptySessionDraft,
   storedDraft,
   circuitGyms,
   isFormProject,
@@ -148,7 +148,7 @@ export function LogSessionForm({
     () =>
       editing?.draft ??
       picked ?? {
-        ...emptyDraft(new Date(), gradePrefs),
+        ...emptySessionDraft(new Date(), gradePrefs),
         ...(plan.membershipId === null ? {} : { plan }),
       }
   );

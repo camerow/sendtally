@@ -7,7 +7,7 @@ export { sessionClimbRows, sortClimbRows, type SessionClimbRowVM } from "./rows"
 export {
   climbMetaLabel,
   climbVMs,
-  durationLabel,
+  spanLabel,
   filterAndSortClimbs,
   postingStatus,
   postStatusVM,

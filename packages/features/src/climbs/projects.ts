@@ -3,6 +3,7 @@ import { displayGrade, type GradeScales } from "../sessions/grades";
 import type { ClimbNote, ClimbSummary, SessionWithClimbs } from "@sendtally/api-client";
 import { formatDate, t } from "../i18n";
 import { utcDate } from "../log-session/transforms";
+import { disciplineLabel } from "../log-session/types";
 import { isUnscored, sessionDay } from "../sessions/meta";
 import { sessionTitle } from "../sessions/title";
 import { durationLabel, sessionMinutes } from "../sessions/years";
@@ -102,10 +103,6 @@ function spanLabel(weeks: number): string {
   return t("climbs.weekCount", { count: weeks });
 }
 
-export function disciplineLabel(climb: ClimbSummary): string {
-  return t(climb.discipline === "route" ? "common.route" : "common.boulder");
-}
-
 // Every session the climb appears in, oldest first: the attempts that went into
 // it, and the note the user wrote about this climb that night.
 export function projectSessions(
@@ -183,7 +180,7 @@ export function projectDetailVM(
     slug: climb.slug,
     name: climb.name,
     gradeLabel: climb.grade === null ? null : displayGrade(climb.grade, scales),
-    disciplineLabel: disciplineLabel(climb),
+    disciplineLabel: disciplineLabel(climb.discipline),
     status,
     storyLabel:
       status === "sent"

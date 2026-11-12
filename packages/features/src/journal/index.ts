@@ -16,7 +16,7 @@ export {
   displayKind,
   draftFromEntry,
   draftIsEmpty,
-  emptyDraft,
+  emptyEntryDraft,
   entriesForSession,
   entryInput,
   entryKindLabel,

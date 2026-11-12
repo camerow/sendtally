@@ -62,7 +62,7 @@ export function climbsWorkedBefore(catalogue: ClimbSummary[], startAt: string): 
   );
 }
 
-export function climbGradeLabel(climb: Pick<ClimbSummary, "grade">, scales: GradeScales): string {
+export function summaryGradeLabel(climb: Pick<ClimbSummary, "grade">, scales: GradeScales): string {
   return climb.grade === null ? "-" : displayGrade(climb.grade, scales);
 }
 

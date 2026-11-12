@@ -1,9 +1,9 @@
 import type { ActivityKind as TrainingKind } from "@sendtally/api-client";
 import { colors } from "@sendtally/design/tokens";
-import type { ActivityKind } from "@sendtally/features/statistics";
+import type { WorkoutKind } from "@sendtally/core/hang";
 
 /** Validated as a categorical set: gunmetal is the one grey, gold needs the labels it always has. */
-export const KIND_COLORS: Record<ActivityKind, string> = {
+export const KIND_COLORS: Record<WorkoutKind, string> = {
   climbing: colors.azure,
   hangboard: colors.petalInk,
   strength: colors.fern,

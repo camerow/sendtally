@@ -1,14 +1,14 @@
 import React from "react";
 import { Link } from "react-router";
 import {
-  climbGradeLabel,
+  summaryGradeLabel,
   dateLabel,
-  disciplineLabel,
   projectMetaLabel,
   projectStatus,
   type ProjectListItem,
 } from "@sendtally/features/climbs";
 import { t } from "@sendtally/features/i18n";
+import { disciplineLabel } from "@sendtally/features/log-session";
 import { useDisplayScales } from "@sendtally/features/settings";
 
 const MAX_SPARK_BARS = 6;
@@ -16,7 +16,7 @@ const MAX_SPARK_BARS = 6;
 function metaLabel({ climb }: ProjectListItem): string {
   if (climb.sessions === 0) {
     return t("projects.rowMetaNew", {
-      discipline: disciplineLabel(climb),
+      discipline: disciplineLabel(climb.discipline),
       date: dateLabel(climb.first_at),
     });
   }
@@ -35,7 +35,7 @@ export function ProjectRow({ item }: { item: ProjectListItem }): React.ReactElem
       <span
         className={climb.grade === null ? "project-grade project-grade--none" : "project-grade"}
       >
-        {climb.grade === null ? "–" : climbGradeLabel(climb, scales)}
+        {climb.grade === null ? "–" : summaryGradeLabel(climb, scales)}
       </span>
       <span className="project-main">
         <span className="project-name">{climb.name}</span>

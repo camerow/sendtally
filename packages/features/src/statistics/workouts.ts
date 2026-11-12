@@ -1,12 +1,18 @@
 import type { SessionLogWithClimbs } from "@sendtally/api-client";
-import { FOCI, totalSeconds, type CalendarDate, type Focus } from "@sendtally/core/hang";
+import {
+  FOCI,
+  totalSeconds,
+  type CalendarDate,
+  type Focus,
+  type WorkoutKind,
+} from "@sendtally/core/hang";
 import { kindLabel } from "../activities/format";
 import { shortDate } from "../hang/format";
 import { t } from "../i18n";
-import { durationLabel } from "../log-session/transforms";
+import { durationLabel } from "../sessions/years";
 import { hangTitle } from "../sessions/hang";
 import { focusLabel } from "../training/focus";
-import { ACTIVITY_KINDS, type ActivityKind } from "./overview";
+import { TRAINED_KINDS } from "./overview";
 import { workoutKeyOf } from "./workoutKey";
 
 /** How the training mix and the workouts are grouped. */
@@ -22,7 +28,7 @@ export type WorkoutSessionVM = {
 export type WorkoutDoneVM = {
   key: string;
   name: string;
-  kind: ActivityKind;
+  kind: WorkoutKind;
   /** "14 times" in range. */
   meta: string;
   /** The last three in range, newest first. */
@@ -35,7 +41,7 @@ export type WorkoutDoneVM = {
 export type WorkoutGroupVM = {
   key: string;
   label: string;
-  kind: ActivityKind | null;
+  kind: WorkoutKind | null;
   rows: WorkoutDoneVM[];
 };
 
@@ -45,7 +51,7 @@ type Done = {
   id: string;
   key: string;
   name: string;
-  kind: ActivityKind;
+  kind: WorkoutKind;
   focus: Focus | null;
   date: CalendarDate;
   minutes: number;
@@ -112,14 +118,14 @@ function rowsOf(shown: readonly Done[], totals: ReadonlyMap<string, number>): Wo
 export function workoutsDone(
   log: Pick<SessionLogWithClimbs, "hangSessions" | "activities">,
   within: (ms: number) => boolean,
-  kinds: readonly ActivityKind[]
+  kinds: readonly WorkoutKind[]
 ): WorkoutsDoneVM {
   const all = workoutsOf(log).filter((d) => kinds.includes(d.kind));
   const totals = new Map<string, number>();
   for (const d of all) totals.set(d.key, (totals.get(d.key) ?? 0) + 1);
   const shown = all.filter((d) => within(Date.parse(d.date)));
   return {
-    category: ACTIVITY_KINDS.map((kind) => ({
+    category: TRAINED_KINDS.map((kind) => ({
       key: kind,
       label: kindLabel(kind),
       kind,

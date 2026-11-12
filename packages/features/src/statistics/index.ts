@@ -1,4 +1,4 @@
-export { ACTIVITY_KINDS, type ActivityKind } from "./overview";
+export { TRAINED_KINDS } from "./overview";
 export {
   trainingInsightsVM,
   type ExerciseGroupKind,

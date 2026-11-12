@@ -273,7 +273,7 @@ export function openInjuries(entries: JournalEntry[]): JournalEntry[] {
   return entries.filter((e) => e.kind === "injury" && e.status === "ongoing");
 }
 
-export function emptyDraft(kind: EntryKind, occurredAt: string): EntryDraft {
+export function emptyEntryDraft(kind: EntryKind, occurredAt: string): EntryDraft {
   return {
     kind,
     occurredAt,

@@ -1,7 +1,7 @@
 export {
   MAX_CLIMB_SUGGESTIONS,
   climbDraftGrade,
-  climbGradeLabel,
+  summaryGradeLabel,
   climbKey,
   climbsWorkedBefore,
   findClimb,
@@ -15,7 +15,6 @@ export {
 } from "./transforms";
 export {
   dateLabel,
-  disciplineLabel,
   gradeRank,
   withClimbNote,
   withoutClimbNote,
