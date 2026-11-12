@@ -1,18 +1,7 @@
 import { toUnit, type WeightUnit } from "@sendtally/core/hang";
-import { setText } from "../activities/done";
-import { shortDate } from "../hang/format";
 import { formatNumber, t } from "../i18n";
 import type { GradeFormatter } from "../sessions";
-import {
-  isGradeMetric,
-  type ExerciseMetric,
-  type ExerciseSeries,
-  type ExerciseSession,
-  type ExerciseSummary,
-} from "../statistics";
-import type { Stat } from "../activities/types";
-
-const DASH = "–";
+import type { ExerciseMetric } from "../statistics";
 
 export function loadText(kg: number, unit: WeightUnit): string {
   return t("hang.loadPlain", {
@@ -53,54 +42,4 @@ export function headlineLabel(metric: ExerciseMetric): string {
   if (metric === "sends") return t("common.sent");
   if (metric === "laps") return t("summary.laps");
   return metric === "seconds" ? t("statistics.longestDone") : t("statistics.mostRepsDone");
-}
-
-export function exerciseInsight(
-  series: ExerciseSeries,
-  summary: ExerciseSummary,
-  unit: WeightUnit
-): string {
-  const [first] = series.sessions;
-  if (first === undefined || summary.best === null)
-    return t("statistics.insightAttempted", { set: setText(summary.latest.best, unit) });
-  const exercise = series.name;
-  const date = shortDate(first.date);
-  const change = isGradeMetric(series.metric)
-    ? gradesText(summary.change)
-    : metricText(Math.abs(summary.change), series.metric, unit);
-  const line =
-    summary.change > 0
-      ? t("statistics.insightUp", { exercise, change, date })
-      : summary.change < 0
-        ? t("statistics.insightDown", { exercise, change, date })
-        : t("statistics.insightHeld", {
-            exercise,
-            value: metricText(first.value, series.metric, unit, series.grades),
-            date,
-          });
-  const e1rm =
-    summary.e1rmKg === null
-      ? ""
-      : t("statistics.insightE1rm", { value: loadText(summary.e1rmKg, unit) });
-  return [line, e1rm].filter((p) => p !== "").join(" ");
-}
-
-export function exerciseStats(
-  series: ExerciseSeries,
-  summary: ExerciseSummary,
-  unit: WeightUnit
-): Stat[] {
-  const shown = (s: ExerciseSession): string =>
-    isGradeMetric(series.metric)
-      ? metricText(s.value, series.metric, unit, series.grades)
-      : setText(s.best, unit);
-  return [
-    { label: t("statistics.sessions"), value: String(summary.sessions) },
-    { label: t("statistics.best"), value: summary.best === null ? DASH : shown(summary.best) },
-    { label: t("statistics.latest"), value: shown(summary.latest) },
-    {
-      label: t("statistics.volumeThisMonth"),
-      value: series.metric === "load" ? loadText(summary.volumeThisMonthKg, unit) : DASH,
-    },
-  ];
 }

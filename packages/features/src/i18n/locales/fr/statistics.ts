@@ -2,7 +2,6 @@ export const statistics = {
   "statistics.climbing": "Escalade",
   "statistics.training": "Entraînement",
   "statistics.tab": "Stats",
-  "statistics.sessions": "Séances",
   "statistics.empty": "Note une séance et tes semaines se rempliront ici.",
   "statistics.exercisesEmpty":
     "Note des séries sur une séance d’entraînement et chaque exercice aura sa tendance ici.",
@@ -18,15 +17,7 @@ export const statistics = {
   "statistics.legendDone": "Réussi",
   "statistics.exerciseSessions_one": "{count} séance · dernière",
   "statistics.exerciseSessions_other": "Les {count} séances · dernière",
-  "statistics.insightUp": "{exercise} a progressé de {change} depuis le {date}.",
-  "statistics.insightDown": "{exercise} a baissé de {change} depuis le {date}.",
-  "statistics.insightHeld": "{exercise} se maintient à {value} depuis le {date}.",
-  "statistics.insightAttempted":
-    "Rien n’est encore coché comme réussi ; ton meilleur essai est {set}.",
-  "statistics.insightE1rm": "Ton maximum estimé sur une répétition est de {value}.",
   "statistics.best": "Meilleur",
-  "statistics.latest": "Dernier",
-  "statistics.volumeThisMonth": "Volume ce mois-ci",
   "statistics.effortIs": "Effort {effort}",
   "statistics.effortUp": "Effort {effort}, en hausse de {change}",
   "statistics.effortDown": "Effort {effort}, en baisse de {change}",
