@@ -1,5 +1,5 @@
 import React from "react";
-import { Text, View } from "react-native";
+import { Text, View, type ViewStyle } from "react-native";
 import type { PyramidRow } from "@sendtally/features/climbs";
 import { colors, fonts } from "@sendtally/design/tokens";
 
@@ -10,44 +10,49 @@ export type PyramidProps = {
 
 const ROW_HEIGHT = 27;
 const BAR_HEIGHT = 12;
+const GAP = 8;
 
-/** One centred bar per grade, hardest on top: the inner count dark, the rest split either side. */
+const cell: ViewStyle = {
+  height: ROW_HEIGHT,
+  justifyContent: "center",
+  borderBottomWidth: 1,
+  borderBottomColor: colors.lineOnLightSoft,
+};
+
+/** One centred bar per grade, hardest on top: the inner count dark, the rest split either side; the counts share a column as wide as the widest. */
 export function Pyramid({ rows, label }: PyramidProps): React.ReactElement {
   const [width, setWidth] = React.useState(0);
   const widest = Math.max(1, ...rows.map((r) => r.inner + r.outer));
   const unit = width === 0 ? 0 : (width - 2) / widest;
   return (
-    <View accessible accessibilityRole="image" accessibilityLabel={label}>
-      {rows.map((r) => (
-        <View
-          key={r.gradeLabel}
-          style={{
-            height: ROW_HEIGHT,
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 8,
-            borderBottomWidth: 1,
-            borderBottomColor: colors.lineOnLightSoft,
-          }}
-        >
-          <Text
-            style={{
-              width: 38,
-              fontFamily: fonts.monoSemiBold,
-              fontSize: 12,
-              color: colors.gunmetal,
-            }}
-          >
-            {r.gradeLabel}
-          </Text>
+    <View
+      accessible
+      accessibilityRole="image"
+      accessibilityLabel={label}
+      style={{ flexDirection: "row" }}
+    >
+      <View>
+        {rows.map((r) => (
+          <View key={r.gradeLabel} style={[cell, { width: 38 + GAP }]}>
+            <Text style={{ fontFamily: fonts.monoSemiBold, fontSize: 12, color: colors.gunmetal }}>
+              {r.gradeLabel}
+            </Text>
+          </View>
+        ))}
+      </View>
+      <View style={{ flex: 1 }} onLayout={(e) => setWidth(e.nativeEvent.layout.width)}>
+        {rows.map((r) => (
           <View
-            onLayout={(e) => setWidth(e.nativeEvent.layout.width)}
-            style={{
-              flex: 1,
-              flexDirection: "row",
-              justifyContent: "center",
-              gap: r.inner > 0 && r.outer > 0 ? 1 : 0,
-            }}
+            key={r.gradeLabel}
+            style={[
+              cell,
+              {
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: r.inner > 0 && r.outer > 0 ? 1 : 0,
+              },
+            ]}
           >
             {r.outer > 0 && <Side width={(r.outer / 2) * unit} left />}
             {r.inner > 0 && (
@@ -62,19 +67,20 @@ export function Pyramid({ rows, label }: PyramidProps): React.ReactElement {
             )}
             {r.outer > 0 && <Side width={(r.outer / 2) * unit} left={false} />}
           </View>
-          <Text
-            style={{
-              width: 34,
-              textAlign: "right",
-              fontFamily: fonts.mono,
-              fontSize: 11,
-              color: colors.textSecondary,
-            }}
-          >
-            {r.countLabel}
-          </Text>
-        </View>
-      ))}
+        ))}
+      </View>
+      <View>
+        {rows.map((r) => (
+          <View key={r.gradeLabel} style={[cell, { paddingLeft: GAP, alignItems: "flex-end" }]}>
+            <Text
+              numberOfLines={1}
+              style={{ fontFamily: fonts.mono, fontSize: 11, color: colors.textSecondary }}
+            >
+              {r.countLabel}
+            </Text>
+          </View>
+        ))}
+      </View>
     </View>
   );
 }
