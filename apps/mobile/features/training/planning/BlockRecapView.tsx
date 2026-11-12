@@ -14,7 +14,7 @@ import { PlanRow } from "../components/PlanRow";
 import { useHangData } from "../data/HangDataContext";
 import { openMembership } from "../plan/openMembership";
 import { SummaryTiles } from "../summary/SummaryTiles";
-import { changeText } from "../summary/summaryText";
+import { changeText } from "@sendtally/features/activities";
 import { DayMark } from "../today/DayMark";
 
 export type BlockRecapViewProps = { recap: BlockRecap; workout: WorkoutLookup };

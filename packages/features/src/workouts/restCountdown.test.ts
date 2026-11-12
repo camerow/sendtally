@@ -1,4 +1,4 @@
-import { describe, expect, it } from "@jest/globals";
+import { describe, expect, it } from "vitest";
 import { restAfter, restLeft, withMoreRest } from "./restCountdown";
 
 const T0 = 1_000_000;

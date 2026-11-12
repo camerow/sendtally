@@ -4,7 +4,7 @@ import { colors } from "@sendtally/design/tokens";
 import { Label } from "../components/Label";
 import { ON_DARK, ON_DARK_MUTED, ON_DARK_SOFT } from "../components/onDark";
 import { type } from "../type";
-import type { StepText } from "./intervalsText";
+import type { StepText } from "@sendtally/features/activities";
 
 export type StepCardProps = {
   text: StepText;

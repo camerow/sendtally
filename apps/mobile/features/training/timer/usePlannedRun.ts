@@ -1,9 +1,8 @@
 import type { Dose, HangWorkout, PlanLink } from "@sendtally/core/hang";
 import { hangWorkoutFromItem } from "@sendtally/features/hang";
-import { useWorkoutLibrary } from "@sendtally/features/workouts";
+import { usePrescribed, useWorkoutLibrary } from "@sendtally/features/workouts";
 import { useApi } from "../../../lib/api";
 import { useHangData } from "../data/HangDataContext";
-import { usePrescribed } from "../data/usePrescribed";
 
 /** One item as the timer runs it. */
 export type PlannedItem = { workout: HangWorkout; dose: Dose | undefined };
@@ -21,8 +20,9 @@ export function usePlannedRun(
   session: number
 ): PlannedRun | undefined {
   const { model } = useHangData();
-  const library = useWorkoutLibrary(useApi()).state;
-  const items = usePrescribed(workoutId, link, session);
+  const api = useApi();
+  const library = useWorkoutLibrary(api).state;
+  const items = usePrescribed(api, workoutId, link, session);
   const written = model.workout(workoutId);
   if (written === undefined || items === undefined) return undefined;
   const exerciseRestS =

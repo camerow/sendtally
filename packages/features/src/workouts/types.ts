@@ -1,5 +1,6 @@
+import type { DoseMeasure } from "./doseFields";
 import type { WorkoutInput } from "@sendtally/api-client";
-import type { CalendarDate, Focus, Workout } from "@sendtally/core/hang";
+import type { CalendarDate, Dose, Focus, Workout } from "@sendtally/core/hang";
 
 export type LibrarySource = "library" | "mine";
 
@@ -13,3 +14,9 @@ export type WorkoutUse = { count: number; last: CalendarDate | null };
 
 /** One focus's row in the library, General for none. */
 export type LibraryShelf = { focus: Focus | null; workouts: LibraryWorkout[] };
+
+/**
+ * An exercise picked for a workout, as its item names it, how it is measured when it is the
+ * user's own or a grip that pulls, and the dose a built-in it came from starts at.
+ */
+export type Picked = { exercise: string; measure?: DoseMeasure; dose?: Dose };

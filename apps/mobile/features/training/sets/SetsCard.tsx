@@ -16,7 +16,7 @@ import { RestPreview } from "../rest/RestPreview";
 import { type } from "../type";
 import { SET_COLUMNS } from "./setColumns";
 import { SetRow } from "./SetRow";
-import { setKey, type SetAt } from "./setsRun";
+import { setKey, type SetAt } from "@sendtally/features/workouts";
 
 export type SetsCardProps = {
   item: SessionItem;

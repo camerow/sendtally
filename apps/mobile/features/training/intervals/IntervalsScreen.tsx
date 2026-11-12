@@ -3,7 +3,7 @@ import { stepsDone, type IntervalPhase, type Run } from "@sendtally/core/hang";
 import { doneOfRun, useWeightUnit } from "@sendtally/features/activities";
 import { useApi } from "../../../lib/api";
 import { logRun } from "../data/workoutRunParams";
-import type { IntervalsRun } from "./intervalsParams";
+import type { IntervalsRun } from "@sendtally/features/workouts";
 import { IntervalsPlayer } from "./IntervalsPlayer";
 
 /** The intervals player, which hands what it ran to the review once it finishes or is ended. */

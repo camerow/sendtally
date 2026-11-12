@@ -1,8 +1,8 @@
 import { builtInDose, type PickerSource } from "@sendtally/features/exercises";
 import type { MadeExercise } from "../exercises/types";
-import { doseMeasureOf } from "../workout-editor/doseFields";
+import { doseMeasureOf } from "@sendtally/features/workouts";
 import { useMakeExercise } from "../exercises/useMakeExercise";
-import type { Picked } from "./types";
+import type { Picked } from "@sendtally/features/workouts";
 
 /** A grip, or one of the user's exercises, as a workout item names it. */
 export function pickedOf(made: MadeExercise): Picked {

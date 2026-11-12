@@ -5,8 +5,8 @@ import {
   type TrendSummary,
   type WeightUnit,
 } from "@sendtally/core/hang";
-import { dayMonth, loadLabel } from "@sendtally/features/hang";
-import { formatNumber, t } from "@sendtally/features/i18n";
+import { dayMonth, loadLabel } from "./format";
+import { formatNumber, t } from "../i18n";
 
 export type TrendContext = {
   workout: string;

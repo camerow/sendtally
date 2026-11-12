@@ -1,4 +1,4 @@
-import { describe, expect, it } from "@jest/globals";
+import { describe, expect, it } from "vitest";
 import { heldSeconds, holdEndsAt, holdNow, pauseHold, resumeHold, startHold } from "./holdClock";
 
 const s = (n: number): number => n * 1000;

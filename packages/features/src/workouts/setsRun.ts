@@ -1,6 +1,6 @@
 import type { ActivityKind } from "@sendtally/api-client";
 import type { SessionItem, ItemDone, SetDone } from "@sendtally/core/hang";
-import { setKeyOf } from "@sendtally/features/activities";
+import { setKeyOf } from "../activities/done";
 
 /** One set of one item, by position. */
 export type SetAt = { item: number; set: number };

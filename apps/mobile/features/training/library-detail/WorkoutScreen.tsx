@@ -24,7 +24,7 @@ import { Label } from "../components/Label";
 import { useHangData } from "../data/HangDataContext";
 import { LoadState } from "../data/LoadState";
 import { HistoryList } from "../history/HistoryList";
-import { activityItem, hangItem, ofWorkout } from "../history/historyItems";
+import { activityItem, hangItem, ofWorkout } from "@sendtally/features/activities";
 import { useLibrary, useNextSession } from "../library/useLibrary";
 import type { AddFlow } from "../planning/flowParams";
 import { AddButton } from "../planning/AddButton";

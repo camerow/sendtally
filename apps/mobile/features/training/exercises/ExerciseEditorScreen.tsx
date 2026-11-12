@@ -26,7 +26,7 @@ import { LoadState } from "../data/LoadState";
 import { ScreenFrame } from "../../../components/ScreenFrame";
 import { type } from "../type";
 import { ItemEditor } from "../workout-editor/ItemEditor";
-import { newDoseFor } from "../workout-editor/doseFields";
+import { newDoseFor } from "@sendtally/features/workouts";
 import { forgetOpener, openerOf } from "./openExerciseEditor";
 import { ProgressChips } from "./ProgressChips";
 import { takenBy } from "./takenBy";

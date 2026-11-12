@@ -15,7 +15,7 @@ import { t } from "@sendtally/features/i18n";
 import { Label } from "../components/Label";
 import { type } from "../type";
 import { ClimbBadge } from "./ClimbBadge";
-import { changeText } from "./summaryText";
+import { changeText } from "@sendtally/features/activities";
 
 export type ExerciseResultCardProps = { result: ExerciseResult; unit: WeightUnit };
 

@@ -14,11 +14,11 @@ import { type TrainingLog, KIND_LOOK } from "@sendtally/features/training";
 import type { WeightUnit } from "@sendtally/core/hang";
 import { Label } from "../components/Label";
 import { HistoryList } from "../history/HistoryList";
-import { activityItem } from "../history/historyItems";
+import { activityItem } from "@sendtally/features/activities";
 import { ExerciseResultCard } from "./ExerciseResultCard";
 import { OverTime } from "./OverTime";
 import { SummaryFrame } from "./SummaryFrame";
-import { effortTile } from "./summaryText";
+import { effortTile } from "@sendtally/features/activities";
 
 export type ActivitySummaryProps = {
   activity: ActivityRecord;

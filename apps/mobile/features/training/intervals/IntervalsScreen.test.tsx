@@ -3,7 +3,7 @@ import { act, fireEvent, screen } from "@testing-library/react-native";
 import { router } from "expo-router";
 import React from "react";
 import { renderWithHang } from "../data/renderWithHang";
-import type { IntervalsRun } from "./intervalsParams";
+import type { IntervalsRun } from "@sendtally/features/workouts";
 import { IntervalsScreen } from "./IntervalsScreen";
 
 jest.mock("expo-router", () => ({ router: { replace: jest.fn(), back: jest.fn() } }));

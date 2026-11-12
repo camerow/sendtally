@@ -1,9 +1,7 @@
-import { randomUUID } from "expo-crypto";
 import { gripMeasureOf, withItemIds, type Dose, type Item } from "@sendtally/core/hang";
-import { t } from "@sendtally/features/i18n";
-import type { EnduranceUnit } from "@sendtally/features/log-session";
-import type { WorkoutDraft } from "@sendtally/features/workouts";
-import type { Picked } from "../exercise-picker/types";
+import { t } from "../i18n";
+import type { EnduranceUnit } from "../log-session";
+import type { Picked, WorkoutDraft } from "./types";
 import { fingersMeasure, newDoseFor, type DoseMeasure } from "./doseFields";
 
 export const MAX_DOSES = 10;
@@ -17,10 +15,14 @@ const fitsGrip = (item: Item, measure?: DoseMeasure): boolean =>
  * when they are measured the same, anything else the dose its built-in starts at, else its
  * measure's starting dose.
  */
-export function withItemsAdded(s: WorkoutDraft, picked: readonly Picked[]): WorkoutDraft {
+export function withItemsAdded(
+  s: WorkoutDraft,
+  picked: readonly Picked[],
+  newId: () => string
+): WorkoutDraft {
   const last = s.items[s.items.length - 1];
   const items = picked.map(({ exercise, measure, dose }): Item => ({
-    id: randomUUID(),
+    id: newId(),
     exercise,
     doses:
       s.kind === "hangboard" && last !== undefined && fitsGrip(last, measure)
@@ -52,9 +54,9 @@ export const withItem = (s: WorkoutDraft, at: number, item: Item): WorkoutDraft 
 });
 
 /** Every item with an id before anything moves, so a block's week changes follow their item. */
-export const withEditorIds = (s: WorkoutDraft): WorkoutDraft => ({
+export const withEditorIds = (s: WorkoutDraft, newId: () => string): WorkoutDraft => ({
   ...s,
-  items: withItemIds(s.items, randomUUID),
+  items: withItemIds(s.items, newId),
 });
 
 /** The item at `from` swapped with its neighbour at `to`. */

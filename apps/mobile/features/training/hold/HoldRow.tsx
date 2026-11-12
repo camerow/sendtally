@@ -5,7 +5,7 @@ import { t } from "@sendtally/features/i18n";
 import { elapsedClock } from "@sendtally/features/sessions";
 import { Button } from "../components/Button";
 import { type } from "../type";
-import { holdNow, type Hold } from "./holdClock";
+import { holdNow, type Hold } from "@sendtally/features/workouts";
 
 export type HoldRowProps = {
   hold: Hold;

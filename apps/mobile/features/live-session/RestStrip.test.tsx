@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals
 import { act, render, screen } from "@testing-library/react-native";
 import React from "react";
 import { liveRunStorage } from "../../lib/liveRunStorage";
-import { restAfter } from "../training/rest/restCountdown";
+import { restAfter } from "@sendtally/features/workouts";
 import { writeLiveRun, writeRest } from "./liveRun";
 import { RestStrip } from "./RestStrip";
 

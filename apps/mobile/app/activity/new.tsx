@@ -12,7 +12,8 @@ import {
 import { today } from "@sendtally/features/journal";
 import { ActivityForm } from "../../features/training/activity/ActivityForm";
 import { readPlanLink, readSession } from "@sendtally/features/training";
-import { usePrescribed } from "../../features/training/data/usePrescribed";
+import { usePrescribed } from "@sendtally/features/workouts";
+import { useApi } from "../../lib/api";
 
 // A plan or a library workout opens this with what it already knows: the kind, its title,
 // the day, itself and the plan it ran. What it prescribes starts as done, so the form
@@ -21,6 +22,7 @@ export default function NewActivityScreen(): React.ReactElement {
   const params = useLocalSearchParams<ActivityPrefill & { live?: string }>();
   const [id] = React.useState(randomUUID);
   const prescribed = usePrescribed(
+    useApi(),
     params.workoutId ?? null,
     readPlanLink(params),
     readSession(params)

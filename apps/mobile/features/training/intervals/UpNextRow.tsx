@@ -10,7 +10,7 @@ import {
   REST_TRACK,
 } from "../components/onDark";
 import { type } from "../type";
-import type { UpNextItem } from "./intervalsText";
+import type { UpNextItem } from "@sendtally/features/activities";
 
 /** One coming phase: a side badge, the step or Rest, and how long or how many. */
 export function UpNextRow({ item }: { item: UpNextItem }): React.ReactElement {
