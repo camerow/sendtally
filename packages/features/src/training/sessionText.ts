@@ -1,5 +1,6 @@
 import type { HangSessionRecord } from "@sendtally/api-client";
-import { setupLabel, type HangModel } from "@sendtally/features/hang";
+import { setupLabel } from "../hang/format";
+import type { HangModel } from "../hang/model";
 
 export type SessionText = { name: string; grip: string; load: string };
 

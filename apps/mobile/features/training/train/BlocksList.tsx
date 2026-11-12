@@ -9,6 +9,8 @@ import {
   blockMembers,
   daysThisWeek,
   useTrainingLog,
+  ongoingMembers,
+  planGridRows,
 } from "@sendtally/features/training";
 import { useApi } from "../../../lib/api";
 import { BlockCard } from "../blocks/BlockCard";
@@ -17,7 +19,7 @@ import { DashedPanel } from "../components/DashedPanel";
 import { Title } from "../components/Title";
 import { useHangData } from "../data/HangDataContext";
 import { PlanGrid } from "../plan/PlanGrid";
-import { ongoingMembers, planGridRows } from "../plan/planGridRows";
+import { openMembership } from "../plan/openMembership";
 import { BlockRow } from "./BlockRow";
 import { pastMeta, templateMeta } from "./blockMeta";
 
@@ -49,7 +51,9 @@ export function BlocksList(): React.ReactElement {
   const { log } = useTrainingLog(useApi());
   const { plan, workout } = log;
   const { current, upcoming, templates, past } = blockGroups(plan.blocks, today);
-  const ongoing = planGridRows(ongoingMembers(plan, today), workout, model);
+  const ongoing = planGridRows(ongoingMembers(plan, today), workout, model, {
+    open: (m) => openMembership(m),
+  });
   const weeks = (n: number): string => t("calendar.weeks", { count: n });
   const nothing = plan.blocks.length === 0 && ongoing.length === 0;
 

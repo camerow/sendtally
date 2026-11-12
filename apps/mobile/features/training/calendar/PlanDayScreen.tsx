@@ -4,12 +4,11 @@ import { weekday, type CalendarDate } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { dayMonth, weekdayLong } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
-import { trainingDay, useTrainingLog } from "@sendtally/features/training";
+import { trainingDay, useTrainingLog, blockTag, blockOn } from "@sendtally/features/training";
 import { ScreenFrame } from "../../../components/ScreenFrame";
 import { Toast } from "../../../components/Toast";
 import { useApi } from "../../../lib/api";
 import { openBlock } from "../blocks/openBlock";
-import { blockTag } from "../blocks/blockText";
 import { Button } from "../components/Button";
 import { Label } from "../components/Label";
 import { Title } from "../components/Title";
@@ -18,7 +17,6 @@ import { AddWorkoutsSheet, type Scheduled } from "../planning/AddWorkoutsSheet";
 import { DaySection } from "../today/DaySection";
 import { openLogged } from "../today/openLogged";
 import { type } from "../type";
-import { blockOn } from "./calendarGrid";
 
 export type PlanDayScreenProps = { date: CalendarDate };
 

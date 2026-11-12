@@ -23,6 +23,9 @@ import {
   type DayToggle,
   type Occurrence,
   type WorkoutLookup,
+  planGridRows,
+  type CellMark,
+  type GridOptions,
 } from "@sendtally/features/training";
 import { Switch } from "../../../components/Switch";
 import { useApi } from "../../../lib/api";
@@ -31,7 +34,7 @@ import { DashedPanel } from "../components/DashedPanel";
 import { AMBER } from "../components/tints";
 import { useHangData } from "../data/HangDataContext";
 import { PlanGrid } from "../plan/PlanGrid";
-import { planGridRows, type CellMark, type GridOptions } from "../plan/planGridRows";
+import { openMembership } from "../plan/openMembership";
 import { DaySheet } from "../plan-days/DaySheet";
 import { useDayChanges } from "../plan-days/useDayChanges";
 import { useLibrary } from "../library/useLibrary";
@@ -142,7 +145,7 @@ export function BlockWeek({
   const picksWeek = onPickWeek !== undefined && week !== undefined;
   const options: GridOptions = editing
     ? {
-        back: block.name,
+        open: (m) => openMembership(m, block.name),
         ...(marks !== undefined && { marks }),
         // A day gone by keeps how it went; today and later are set.
         toggle: (m: Membership, day: number) =>
@@ -157,7 +160,7 @@ export function BlockWeek({
                 }),
       }
     : {
-        back: block.name,
+        open: (m) => openMembership(m, block.name),
         ...(template &&
           week !== undefined &&
           week > 1 && {

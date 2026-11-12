@@ -22,10 +22,10 @@ import {
   usualDays,
   type DayToggle,
   type TrainingLog,
+  type CellMark,
 } from "@sendtally/features/training";
 import { Label } from "../components/Label";
 import { DayCell } from "../plan/DayCell";
-import type { CellMark } from "../plan/planGridRows";
 import { type } from "../type";
 
 const CELL = 28;

@@ -235,3 +235,6 @@ export const withoutBlock = (plan: Plan, blockId: string): Plan => {
 
 export const withoutMembership = (plan: Plan, id: string): Plan =>
   without(plan, (m) => m.id === id);
+
+/** A one-off, the only plan Remove takes away whole: a repeat or a block day is skipped instead. */
+export const isOneOff = (m: Membership): boolean => m.blockId === null && m.weekdays.length === 0;

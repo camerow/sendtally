@@ -1,13 +1,12 @@
 import React from "react";
 import { View } from "react-native";
 import { t } from "@sendtally/features/i18n";
-import { focusLabel, focusMeaning } from "@sendtally/features/training";
+import { focusLabel, focusMeaning, workoutLines } from "@sendtally/features/training";
 import type { LibraryShelf as Shelf, LibraryWorkout } from "@sendtally/features/workouts";
 import { CategoryRow } from "../components/CategoryRow";
 import { DashedPanel } from "../components/DashedPanel";
 import { ShelfHeader } from "../components/ShelfHeader";
 import { useHangData } from "../data/HangDataContext";
-import { workoutLines } from "../plan/planGridRows";
 
 /** How many workouts a focus shows before See all. */
 export const SHELF_ROWS = 3;
