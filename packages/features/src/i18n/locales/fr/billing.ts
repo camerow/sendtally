@@ -12,11 +12,6 @@ export const billing = {
   "billing.notAMember": "Non abonné",
   "billing.memberVia": "Abonné · {store}",
   "billing.memberWeb": "Abonné · web",
-  "billing.pointVolume": "Volume - ce que tu as vraiment grimpé, semaine après semaine",
-  "billing.pointRpe": "Effort - la difficulté ressentie de tes séances dans le temps",
-  "billing.pointAvgGrade": "Cotation moyenne enchaînée - la dérive qu'un carnet ne montre jamais",
-  "billing.pointFlashRate":
-    "Taux de flash - la première chose qui bouge quand ta lecture progresse",
   "billing.period.week": "semaine",
   "billing.period.month": "mois",
   "billing.plan.twoMonths": "2 mois",

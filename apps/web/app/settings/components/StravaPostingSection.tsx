@@ -1,76 +1,86 @@
 import React from "react";
 import type { StravaPostingFeature } from "@sendtally/features/settings";
-import { bodyText, messageText, rowDivider } from "./styles";
 import { t } from "@sendtally/features/i18n";
-import { Switch } from "./Switch";
+import { Icon } from "../../components/Icon";
+import { bodyText, messageText, rowDivider } from "./styles";
+import { SwitchRow } from "./SwitchRow";
+import { TrainingStravaRows } from "./TrainingStravaRows";
 
 export type StravaPostingSectionProps = {
   posting: StravaPostingFeature;
 };
 
-const rowTitle: React.CSSProperties = { fontWeight: 600, fontSize: 13 };
+const dateInput: React.CSSProperties = {
+  fontFamily: "var(--font-mono)",
+  fontWeight: 500,
+  fontSize: 13,
+  color: "var(--bs-gunmetal)",
+  background: "var(--bs-white)",
+  border: "1px solid var(--line-on-light-strong)",
+  borderRadius: "var(--radius-control)",
+  padding: "0 12px",
+  height: 44,
+  boxSizing: "border-box",
+  flex: 1,
+  minWidth: 0,
+  maxWidth: 220,
+};
 
-function Row({ children }: { children: React.ReactNode }): React.ReactElement {
-  return (
-    <div
-      style={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        gap: 16,
-        flexWrap: "wrap",
-      }}
-    >
-      {children}
-    </div>
-  );
-}
+const clearButton: React.CSSProperties = {
+  width: 44,
+  height: 44,
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  background: "none",
+  border: "none",
+  color: "rgba(64,63,76,0.55)",
+  cursor: "pointer",
+};
 
 export function StravaPostingSection({ posting }: StravaPostingSectionProps): React.ReactElement {
   return (
     <>
-      <div style={rowDivider} />
-      <Row>
-        <span style={{ display: "flex", flexDirection: "column", gap: 3, maxWidth: 380 }}>
-          <span style={rowTitle}>{t("settings.postToStrava")}</span>
-          {!posting.enabled && <p style={bodyText}>{t("settings.postingOff")}</p>}
-        </span>
-        <Switch
-          checked={posting.enabled}
-          onChange={posting.setEnabled}
-          disabled={posting.busy}
-          label={t("settings.postToStrava")}
-        />
-      </Row>
+      <SwitchRow
+        title={t("settings.postClimbing")}
+        body={posting.enabled ? t("settings.postingOn") : t("settings.postingOff")}
+        checked={posting.enabled}
+        disabled={posting.busy}
+        onChange={posting.setEnabled}
+      />
 
       {posting.enabled && (
         <>
           <div style={rowDivider} />
-          <Row>
-            <span style={{ display: "flex", flexDirection: "column", gap: 3, maxWidth: 380 }}>
-              <span style={rowTitle}>{t("settings.postSince")}</span>
-              <p style={bodyText}>{t("settings.postSinceBody")}</p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <span style={{ fontWeight: 600, fontSize: 13 }}>{t("settings.postSince")}</span>
+            <p style={bodyText}>{t("settings.postSinceBody")}</p>
+            <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+              <input
+                type="date"
+                aria-label={t("settings.postSince")}
+                value={posting.since}
+                disabled={posting.busy}
+                onChange={(e) => posting.setSince(e.target.value)}
+                style={dateInput}
+              />
+              {posting.since !== "" && (
+                <button
+                  type="button"
+                  aria-label={t("common.clear")}
+                  disabled={posting.busy}
+                  onClick={() => posting.setSince("")}
+                  style={clearButton}
+                >
+                  <Icon name="x" size={16} />
+                </button>
+              )}
             </span>
-            <input
-              type="date"
-              value={posting.since}
-              disabled={posting.busy}
-              onChange={(e) => posting.setSince(e.target.value)}
-              style={{
-                fontFamily: "var(--font-mono)",
-                fontWeight: 500,
-                fontSize: 12,
-                letterSpacing: "0.04em",
-                color: "var(--bs-gunmetal)",
-                background: "var(--bs-white)",
-                border: "1px solid var(--line-on-light-strong)",
-                borderRadius: "var(--radius-control)",
-                padding: "9px 12px",
-              }}
-            />
-          </Row>
+          </div>
         </>
       )}
+
+      <TrainingStravaRows posting={posting} />
 
       {posting.error !== null && <span style={messageText}>{posting.error}</span>}
     </>
