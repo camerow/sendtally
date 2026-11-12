@@ -1,6 +1,7 @@
 import React from "react";
 import { useLanding } from "../LandingContext";
 import { STORE_LINKS } from "../../lib/stores";
+import { adsConversion } from "../../lib/analytics";
 
 export type AppStoresProps = {
   prominent?: boolean;
@@ -23,7 +24,7 @@ function Badge({ href, src, alt, pending }: BadgeProps): React.ReactElement {
       </span>
     );
   return (
-    <a className="l-store" href={href}>
+    <a className="l-store" href={href} onClick={() => adsConversion("storeClick")}>
       {image}
     </a>
   );

@@ -4,7 +4,7 @@ import React from "react";
 import { useNavigate } from "react-router";
 import type { EmailCodeFactor, SignInSecondFactor } from "@clerk/types";
 import { AuthShell, StepBody, StepCard, StepTitle } from "./AuthShell";
-import { capture } from "../../lib/analytics";
+import { adsConversion, capture } from "../../lib/analytics";
 import { PRIVACY_PATH, TERMS_PATH } from "../../legal/constants";
 import type { AuthIntent } from "../types";
 import { t } from "@sendtally/features/i18n";
@@ -407,6 +407,7 @@ export function AuthForm({ intent }: { intent: AuthIntent }): React.ReactElement
         }
         if (signUp.status === "complete" && signUp.createdSessionId !== null) {
           capture("signup_completed", { method: "email_code" });
+          adsConversion("signUp");
           await clerk.setActive({ session: signUp.createdSessionId });
           await navigate("/app");
           return;

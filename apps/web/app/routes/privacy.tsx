@@ -19,7 +19,7 @@ export default function Privacy(): React.ReactElement {
   return (
     <LegalPage
       title="Privacy policy"
-      updated="18 SEPTEMBER 2026"
+      updated="12 NOVEMBER 2026"
       lede="sendtally holds the climbing sessions you type in and almost nothing else. This page lists every piece of data it keeps, who else touches it, and how to get it all deleted."
     >
       <h2>Who this covers</h2>
@@ -124,8 +124,10 @@ export default function Privacy(): React.ReactElement {
           does not read your Strava activities.
         </li>
         <li>
-          <strong>Google Analytics</strong> - aggregate web analytics on sendtally.com. There is no
-          advertising network and no retargeting.
+          <strong>Google Analytics and Google Ads</strong> - aggregate web analytics on
+          sendtally.com, and, for visitors who arrive from one of our ads, whether they go on to tap
+          an app store badge or create an account. Ad personalization is turned off, so there is no
+          retargeting.
         </li>
         <li>
           <strong>PostHog</strong> - product analytics, session replay and error reports, including
@@ -197,8 +199,9 @@ export default function Privacy(): React.ReactElement {
       </p>
       <p>
         Google Analytics and PostHog set cookies to count visits and sessions and to join the pages
-        you visit into one session. We do not run advertising cookies, retargeting pixels, or
-        third-party trackers beyond the analytics described here.
+        you visit into one session. When you arrive from one of our ads, Google Ads sets a cookie
+        holding that ad click, so a later store badge tap or sign-up can be counted against the ad.
+        We do not run retargeting pixels or third-party trackers beyond what is described here.
       </p>
 
       <h2>Your rights</h2>

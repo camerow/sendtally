@@ -78,7 +78,11 @@ function GoogleTag({ ids }: { ids: string[] }): React.ReactElement {
             "window.dataLayer=window.dataLayer||[];",
             "function gtag(){dataLayer.push(arguments);}",
             "gtag('js',new Date());",
-            ...ids.map((id) => `gtag('config',${JSON.stringify(id)});`),
+            ...ids.map((id) =>
+              id.startsWith("AW-")
+                ? `gtag('config',${JSON.stringify(id)},{allow_ad_personalization_signals:false});`
+                : `gtag('config',${JSON.stringify(id)});`
+            ),
           ].join(""),
         }}
       />
