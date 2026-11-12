@@ -80,6 +80,7 @@ export function AddNoteSheet({
         value={draft}
         rows={5}
         maxLength={2000}
+        data-autofocus
         aria-label={t("common.notes")}
         placeholder={t("climbs.notePlaceholder")}
         onChange={(e) => setDraft(e.target.value)}

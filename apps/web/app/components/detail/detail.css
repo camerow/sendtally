@@ -3,7 +3,8 @@
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  min-height: calc(100vh - 108px);
+  min-height: calc(100vh - 36px);
+  margin-bottom: -72px;
 }
 
 .detail-bar {
@@ -238,6 +239,7 @@
 }
 
 .note-row {
+  min-height: 0;
   align-items: flex-start;
 }
 
@@ -277,7 +279,8 @@
 
 @media (max-width: 767px) {
   .detail {
-    min-height: calc(100vh - 119px - env(safe-area-inset-bottom));
+    min-height: calc(100vh - 95px - env(safe-area-inset-bottom));
+    margin-bottom: -24px;
   }
 
   .detail-footer {

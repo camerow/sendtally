@@ -228,6 +228,7 @@
 @media (max-width: 767px) {
   .app-content--focused .detail {
     min-height: calc(100vh - 22px);
+    margin-bottom: 0;
   }
 
   .add-climb-grade-chips {
