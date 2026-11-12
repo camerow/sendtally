@@ -1,27 +1,38 @@
 import React from "react";
-import { useSearchParams } from "react-router";
 import { adsConversion, capture } from "../lib/analytics";
 
-export const GOOGLE_SIGN_UP_PARAM = "signup";
+const NEW_ACCOUNT_WINDOW_MS = 10 * 60 * 1000;
 
-// Clerk sends a brand new Google account to its sign-up redirect, which carries this
-// parameter, and a returning one to the plain sign-in redirect.
-export function useReportGoogleSignUp(): void {
-  const [params, setParams] = useSearchParams();
+type SignedUpUser = {
+  id: string;
+  createdAt: Date | null;
+  externalAccounts: readonly { provider: string }[];
+};
+
+function claimReport(userId: string): boolean {
+  const key = `sendtally.signup-reported.${userId}`;
+  try {
+    if (localStorage.getItem(key) !== null) return false;
+    localStorage.setItem(key, "1");
+  } catch {
+    // Storage blocked: the ref in the hook still keeps it to once per page load.
+  }
+  return true;
+}
+
+// Google sign-up finishes on Clerk's redirect, which lands on /app whichever page it started
+// from, so a just-created Google account is the only reliable sign that this was a sign-up.
+export function useReportGoogleSignUp(user: SignedUpUser | null | undefined): void {
   const reported = React.useRef(false);
-  const isNewGoogleAccount = params.get(GOOGLE_SIGN_UP_PARAM) === "google";
 
   React.useEffect(() => {
-    if (!isNewGoogleAccount || reported.current) return;
+    if (user == null || user.createdAt == null || reported.current) return;
+    const isNew = Date.now() - user.createdAt.getTime() < NEW_ACCOUNT_WINDOW_MS;
+    const viaGoogle = user.externalAccounts.some((account) => account.provider === "google");
+    if (!isNew || !viaGoogle) return;
     reported.current = true;
+    if (!claimReport(user.id)) return;
     capture("signup_completed", { method: "google" });
     adsConversion("signUp");
-    setParams(
-      (current) => {
-        current.delete(GOOGLE_SIGN_UP_PARAM);
-        return current;
-      },
-      { replace: true }
-    );
-  }, [isNewGoogleAccount, setParams]);
+  }, [user]);
 }

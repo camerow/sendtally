@@ -16,7 +16,7 @@ export default function SsoCallback(): React.ReactElement {
         <StepBody>{t("auth.ssoBody")}</StepBody>
         <AuthenticateWithRedirectCallback
           signInForceRedirectUrl="/app"
-          signUpForceRedirectUrl="/app?signup=google"
+          signUpForceRedirectUrl="/app"
         />
       </StepCard>
     </AuthShell>

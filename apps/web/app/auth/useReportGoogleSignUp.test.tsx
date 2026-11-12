@@ -1,7 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import React, { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { MemoryRouter, useLocation } from "react-router";
 import { useReportGoogleSignUp } from "./useReportGoogleSignUp";
 
 const analytics = vi.hoisted(() => ({ capture: vi.fn(), adsConversion: vi.fn() }));
@@ -11,9 +10,19 @@ declare global {
   var IS_REACT_ACT_ENVIRONMENT: boolean;
 }
 
-function Probe(): React.ReactElement {
-  useReportGoogleSignUp();
-  return <output>{useLocation().search}</output>;
+type User = Parameters<typeof useReportGoogleSignUp>[0];
+
+function userWith(minutesOld: number, provider: string | null): User {
+  return {
+    id: `user_${minutesOld}_${provider ?? "email"}`,
+    createdAt: new Date(Date.now() - minutesOld * 60_000),
+    externalAccounts: provider === null ? [] : [{ provider }],
+  } as unknown as User;
+}
+
+function Probe({ user }: { user: User }): null {
+  useReportGoogleSignUp(user);
+  return null;
 }
 
 describe("useReportGoogleSignUp", () => {
@@ -30,31 +39,32 @@ describe("useReportGoogleSignUp", () => {
   afterEach(() => {
     act(() => root.unmount());
     container.remove();
+    localStorage.clear();
     analytics.capture.mockReset();
     analytics.adsConversion.mockReset();
   });
 
-  function visit(url: string): void {
-    act(() =>
-      root.render(
-        <MemoryRouter initialEntries={[url]}>
-          <Probe />
-        </MemoryRouter>
-      )
-    );
+  function visit(user: User): void {
+    act(() => root.render(<Probe user={user} />));
   }
 
-  it("reports a new Google account once and clears the marker", () => {
-    visit("/app?signup=google&tab=log");
+  it("reports a just-created Google account once, across reloads", () => {
+    const user = userWith(1, "google");
+    visit(user);
+    act(() => root.unmount());
+    root = createRoot(container);
+    visit(user);
     expect(analytics.capture).toHaveBeenCalledTimes(1);
     expect(analytics.capture).toHaveBeenCalledWith("signup_completed", { method: "google" });
     expect(analytics.adsConversion).toHaveBeenCalledTimes(1);
     expect(analytics.adsConversion).toHaveBeenCalledWith("signUp");
-    expect(container.querySelector("output")?.textContent).toBe("?tab=log");
   });
 
-  it("stays quiet for a returning sign-in", () => {
-    visit("/app");
+  it.each([
+    ["a returning Google account", userWith(60, "google")],
+    ["a new email account, which the sign-up form reports", userWith(1, null)],
+  ])("stays quiet for %s", (_, user) => {
+    visit(user);
     expect(analytics.capture).not.toHaveBeenCalled();
     expect(analytics.adsConversion).not.toHaveBeenCalled();
   });

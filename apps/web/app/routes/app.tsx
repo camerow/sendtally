@@ -68,7 +68,7 @@ function Shell({ children }: { children: React.ReactNode }): React.ReactElement 
   const email = user?.primaryEmailAddress?.emailAddress ?? "";
   const focused = FOCUSED_ROUTES.includes(pathname);
   const navItems = useNavItems();
-  useReportGoogleSignUp();
+  useReportGoogleSignUp(user);
 
   const signOut = (
     <button onClick={() => void clerk.signOut(() => navigate("/"))} className="app-sign-out">
