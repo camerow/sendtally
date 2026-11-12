@@ -13,6 +13,7 @@ import { useClientApi } from "../../lib/useClientApi";
 import { useGradeScalePrefs } from "@sendtally/features/settings";
 import { AddProjectDialog } from "./AddProjectDialog";
 import { ProjectRow } from "./ProjectRow";
+import { AccountButton } from "../../components/AccountButton";
 import { monoMuted } from "../../components/styles";
 
 export type ProjectsListProps = {
@@ -110,7 +111,7 @@ export function ProjectsList({ apiUrl }: ProjectsListProps): React.ReactElement 
         </span>
         <h1 className="sessions-title">{t("common.projects")}</h1>
         {ready !== null && (
-          <span style={monoMuted}>
+          <span className="projects-count" style={monoMuted}>
             {t("projects.openSentCount", {
               open: ready.overview.open,
               sent: ready.overview.sent,
@@ -121,6 +122,7 @@ export function ProjectsList({ apiUrl }: ProjectsListProps): React.ReactElement 
         <Button variant="azure" size="sm" onClick={() => setAdding(true)}>
           {t("projects.newProject")}
         </Button>
+        <AccountButton />
       </div>
 
       {state.status === "loading" && (

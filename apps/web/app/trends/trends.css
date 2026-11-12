@@ -1195,6 +1195,19 @@
     font-size: 34px;
   }
 
+  .trends-head > * {
+    flex: 1 1 100%;
+  }
+
+  .trends-title-row {
+    flex-wrap: nowrap;
+    align-items: center;
+  }
+
+  .trends-title-row .account-button {
+    margin-left: auto;
+  }
+
   .trend-scopes {
     width: 100%;
     box-sizing: border-box;

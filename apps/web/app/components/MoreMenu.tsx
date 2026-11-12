@@ -1,16 +1,21 @@
 import React from "react";
 import { createPortal } from "react-dom";
-import { t } from "@sendtally/features/i18n";
-import { Icon } from "../../components/Icon";
-import { useIsNarrow } from "../../lib/useIsNarrow";
+import { Icon } from "./Icon";
+import { useIsNarrow } from "../lib/useIsNarrow";
 
-export type AreaMenuItem = { label: string; onSelect: () => void; disabled?: boolean };
+export type MoreMenuItem = {
+  label: string;
+  onSelect: () => void;
+  /** Red text, for a delete; the confirm it opens is the caller's. */
+  destructive?: boolean;
+  disabled?: boolean;
+};
 
 function Items({
   items,
   onPick,
 }: {
-  items: AreaMenuItem[];
+  items: readonly MoreMenuItem[];
   onPick: () => void;
 }): React.ReactElement {
   return (
@@ -20,7 +25,7 @@ function Items({
           key={item.label}
           type="button"
           role="menuitem"
-          className="area-menu-item"
+          className={item.destructive === true ? "more-item more-item--danger" : "more-item"}
           disabled={item.disabled}
           onClick={() => {
             onPick();
@@ -34,20 +39,27 @@ function Items({
   );
 }
 
-/** The page's "…" menu: anchored to the button on desktop, a bottom sheet on the phone. */
-export function AreaMenu({ items }: { items: AreaMenuItem[] }): React.ReactElement {
+/** The ··· menu: a dropdown anchored to its button on desktop, a bottom sheet at 375. */
+export function MoreMenu({
+  label,
+  items,
+}: {
+  /** What the button and its menu are called to a screen reader. */
+  label: string;
+  items: readonly MoreMenuItem[];
+}): React.ReactElement {
   const [open, setOpen] = React.useState(false);
   const narrow = useIsNarrow();
   const wrap = React.useRef<HTMLDivElement>(null);
   const close = React.useCallback(() => setOpen(false), []);
 
   React.useEffect(() => {
-    if (!open || narrow) return;
+    if (!open) return;
     const onKey = (e: KeyboardEvent): void => {
       if (e.key === "Escape") setOpen(false);
     };
     const onDown = (e: PointerEvent): void => {
-      if (wrap.current?.contains(e.target as Node) !== true) setOpen(false);
+      if (!narrow && wrap.current?.contains(e.target as Node) !== true) setOpen(false);
     };
     document.addEventListener("keydown", onKey);
     document.addEventListener("pointerdown", onDown);
@@ -58,34 +70,33 @@ export function AreaMenu({ items }: { items: AreaMenuItem[] }): React.ReactEleme
   }, [open, narrow]);
 
   return (
-    <div className="area-more-wrap" ref={wrap}>
+    <div className="more-wrap" ref={wrap}>
       <button
         type="button"
-        className="area-more"
+        className="more-button"
         aria-haspopup="menu"
         aria-expanded={open}
-        aria-label={t("areas.moreActions")}
+        aria-label={label}
         onClick={() => setOpen((was) => !was)}
       >
         <Icon name="more" size={20} strokeWidth={3} />
       </button>
       {open && !narrow && (
-        <div className="area-menu" role="menu" aria-label={t("areas.moreActions")}>
+        <div className="more-menu" role="menu" aria-label={label}>
           <Items items={items} onPick={close} />
         </div>
       )}
       {open &&
         narrow &&
         createPortal(
-          <div className="sessions-sheet-backdrop" onClick={close}>
+          <div className="more-sheet-scrim" onClick={close}>
             <div
-              className="sessions-sheet"
+              className="more-sheet"
               role="menu"
-              aria-label={t("areas.moreActions")}
+              aria-label={label}
               onClick={(event) => event.stopPropagation()}
-              style={{ gap: 8 }}
             >
-              <div className="sessions-sheet-handle" />
+              <div className="sheet-handle" />
               <Items items={items} onPick={close} />
             </div>
           </div>,

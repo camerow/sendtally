@@ -8,6 +8,7 @@ import { FilterRow } from "./FilterRow";
 import { ScopeControl } from "./ScopeControl";
 import { TrendSection } from "./TrendSection";
 import { TrendStats } from "./TrendStats";
+import { AccountButton } from "../../components/AccountButton";
 
 export type TrendsOverviewProps = {
   apiUrl: string;
@@ -39,6 +40,7 @@ export function TrendsOverview({
                 {state.data.sessionsLine}
               </span>
             )}
+            <AccountButton />
           </div>
           {state.status === "ready" && state.data.insight !== null && (
             <p className="trends-insight">{state.data.insight}</p>
