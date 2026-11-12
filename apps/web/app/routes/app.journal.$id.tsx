@@ -18,6 +18,7 @@ import {
 import { sessionTitle } from "@sendtally/features/sessions";
 import { SessionRowItem } from "../sessions/components/SessionRowItem";
 import { BackLink } from "../components/BackLink";
+import { Sheet } from "../components/Sheet";
 import { SeverityChart } from "../journal/components/SeverityChart";
 import { TripDetail } from "../journal/components/TripDetail";
 import journalStyles from "../journal/journal.css?url";
@@ -57,6 +58,7 @@ export default function EntryDetailRoute(): React.ReactElement {
   const { apiUrl, entry, sessions, entries } = useLoaderData<typeof loader>();
   const api = useClientApi(apiUrl);
   const navigate = useNavigate();
+  const [confirming, setConfirming] = React.useState(false);
   const [deleting, setDeleting] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
@@ -75,6 +77,7 @@ export default function EntryDetailRoute(): React.ReactElement {
   const sessionsPerPoint = sessionsNearPoints(sessions, points);
 
   const remove = (): void => {
+    setConfirming(false);
     setDeleting(true);
     setError(null);
     api
@@ -104,7 +107,12 @@ export default function EntryDetailRoute(): React.ReactElement {
           <Link to={`/app/journal/${encodeURIComponent(entry.id)}/edit`} className="journal-action">
             {t("common.edit")}
           </Link>
-          <button type="button" onClick={remove} disabled={deleting} className="journal-action">
+          <button
+            type="button"
+            onClick={() => setConfirming(true)}
+            disabled={deleting}
+            className="journal-action"
+          >
             {deleting ? t("common.deleting") : t("common.delete")}
           </button>
         </div>
@@ -125,6 +133,15 @@ export default function EntryDetailRoute(): React.ReactElement {
         )}
         {error !== null && <span className="journal-error">{error}</span>}
       </div>
+
+      <Sheet
+        open={confirming}
+        title={t("journal.deleteTitle")}
+        onClose={() => setConfirming(false)}
+        action={{ label: t("common.delete"), onPress: remove, danger: true }}
+      >
+        <p className="sheet-body">{t("journal.deleteBody")}</p>
+      </Sheet>
 
       {entry.body.trim() !== "" && <p className="journal-body">{entry.body.trim()}</p>}
 
