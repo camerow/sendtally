@@ -1,10 +1,12 @@
 import React from "react";
+import { Link } from "react-router";
+import { activityPath } from "../../training/log/paths";
 import type { Activity } from "@sendtally/api-client";
 import { activityAt, activityEffortLabel, activityMetaLabel } from "@sendtally/features/activities";
 import { formatDate } from "@sendtally/features/i18n";
 import { sessionDay } from "@sendtally/features/sessions";
 
-/** Other training in the log. It opens nowhere: the app is where it is logged and edited. */
+/** Other training in the log, opening its page. */
 export function ActivityRowItem({ activity }: { activity: Activity }): React.ReactElement {
   const at = activityAt(activity);
   const { weekday, day } = sessionDay({ start_at: at });
@@ -12,9 +14,9 @@ export function ActivityRowItem({ activity }: { activity: Activity }): React.Rea
   const meta = activityMetaLabel(activity);
   const effort = activityEffortLabel(activity);
   return (
-    <div
+    <Link
+      to={activityPath(activity.id)}
       className="session-row"
-      role="group"
       aria-label={[activity.title, `${weekday} ${month} ${day}`, meta, effort]
         .filter((part) => part !== null)
         .join(", ")}
@@ -46,6 +48,6 @@ export function ActivityRowItem({ activity }: { activity: Activity }): React.Rea
       </span>
       <span className="session-row-badge" />
       <span />
-    </div>
+    </Link>
   );
 }

@@ -24,10 +24,9 @@ import { ExerciseTrendCard } from "../components/ExerciseTrendCard";
 import { UsedIn } from "../components/UsedIn";
 import { LoadState } from "../data/LoadState";
 import { useLibrary } from "../library/useLibrary";
+import { activityPath } from "../log/paths";
 import { EXERCISES_VIEW } from "./paths";
 import { useExerciseMenu } from "./useExerciseMenu";
-
-const nowhere = (): string => "";
 
 function Detail({
   exercise,
@@ -52,13 +51,10 @@ function Detail({
     all.filter((e) => e.id !== exercise.id),
     usedIn.length > 0 || logged !== undefined
   );
-  // ponytail: rows open nothing until the activity pages land (#278).
   const history =
     logged === undefined
       ? []
-      : exerciseItems(logged, activities.status === "ready" ? activities.data : [], unit).map(
-          (item) => ({ ...item, opens: false })
-        );
+      : exerciseItems(logged, activities.status === "ready" ? activities.data : [], unit);
 
   return (
     <DetailFrame
@@ -77,7 +73,7 @@ function Detail({
       ) : (
         <>
           {logged.untracked !== true && <ExerciseTrendCard series={logged} unit={unit} />}
-          <HistoryList items={history} to={nowhere} />
+          <HistoryList items={history} to={activityPath} />
         </>
       )}
       <UsedIn workouts={usedIn} />

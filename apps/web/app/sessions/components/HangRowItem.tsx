@@ -1,4 +1,6 @@
 import React from "react";
+import { Link } from "react-router";
+import { activityPath } from "../../training/log/paths";
 import type { HangHistoryRow } from "@sendtally/api-client";
 import { formatDate, t } from "@sendtally/features/i18n";
 import {
@@ -10,7 +12,7 @@ import {
 } from "@sendtally/features/sessions";
 import { StravaMark } from "../../components/StravaMark";
 
-/** A hangboard session in the log. It opens nowhere: the mobile app is where it is edited. */
+/** A hangboard session in the log, opening its page. */
 export function HangRowItem({ hang }: { hang: HangHistoryRow }): React.ReactElement {
   const at = hangAt(hang);
   const { weekday, day } = sessionDay({ start_at: at });
@@ -20,9 +22,9 @@ export function HangRowItem({ hang }: { hang: HangHistoryRow }): React.ReactElem
   const effort = hangEffortLabel(hang);
   const onStrava = hang.stravaActivityId !== null;
   return (
-    <div
+    <Link
+      to={activityPath(hang.id)}
       className="session-row"
-      role="group"
       aria-label={[
         title,
         `${weekday} ${month} ${day}`,
@@ -63,6 +65,6 @@ export function HangRowItem({ hang }: { hang: HangHistoryRow }): React.ReactElem
       </span>
       <span className="session-row-badge" />
       <span />
-    </div>
+    </Link>
   );
 }
