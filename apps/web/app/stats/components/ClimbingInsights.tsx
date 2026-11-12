@@ -14,12 +14,13 @@ import { disciplineLabel, type Discipline } from "@sendtally/features/log-sessio
 import { useGradeScalePrefs } from "@sendtally/features/settings";
 import type { TrendRange } from "@sendtally/features/trends";
 import { GradeBadge } from "../../climbs/components/GradeBadge";
+import { Pyramid } from "../../components/Pyramid";
+import { PyramidLegend } from "../../components/PyramidLegend";
 import { Segmented } from "../../components/Segmented";
 import { useAppApi } from "../../lib/useAppApi";
 import { ClimbsByGrade } from "./ClimbsByGrade";
 import { CountTile } from "./CountTile";
 import { DaysClimbing } from "./DaysClimbing";
-import { Pyramid } from "./Pyramid";
 
 const PLACE_LABELS: Record<ClimbPlaceFilter, () => string> = {
   all: () => t("trends.scopeAll"),
@@ -97,16 +98,7 @@ export function ClimbingInsights({ range }: { range: TrendRange }): React.ReactE
           <section className="stats-card">
             <div className="stats-card-head">
               <h2 className="stats-label">{t("climbs.sendsByGrade")}</h2>
-              <span className="pyramid-legend">
-                <span className="pyramid-key">
-                  <span className="pyramid-swatch" />
-                  {t("common.sent")}
-                </span>
-                <span className="pyramid-key">
-                  <span className="pyramid-swatch pyramid-swatch--soft" />
-                  {t("sessionDetail.notYet")}
-                </span>
-              </span>
+              <PyramidLegend inner={t("common.sent")} outer={t("sessionDetail.notYet")} />
             </div>
             {vm.pyramid.length === 0 ? (
               <p className="stats-empty">{t("climbs.insightsEmpty")}</p>
