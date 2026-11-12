@@ -5,6 +5,7 @@ import React from "react";
 import { t } from "@sendtally/features/i18n";
 import { copyFor, swapFor } from "./copy";
 import { errorCode, errorMessage } from "./errors";
+import { oauthOutcome } from "./outcome";
 import type { Phase, SignInFlow, SignInFlowOptions } from "./types";
 
 WebBrowser.maybeCompleteAuthSession();
@@ -33,7 +34,7 @@ export function useSignInFlow({ intent, onSignedIn }: SignInFlowOptions): SignIn
     const session = clerk.client.signedInSessions[0];
     if (session === undefined) return false;
     await clerk.setActive({ session: session.id });
-    onSignedIn();
+    onSignedIn("signed-in");
     return true;
   }
 
@@ -50,7 +51,7 @@ export function useSignInFlow({ intent, onSignedIn }: SignInFlowOptions): SignIn
       });
       if (result.createdSessionId !== null && result.setActive !== undefined) {
         await result.setActive({ session: result.createdSessionId });
-        onSignedIn();
+        onSignedIn(oauthOutcome(result));
         return;
       }
       if (await adoptExistingSession()) return;
@@ -69,7 +70,7 @@ export function useSignInFlow({ intent, onSignedIn }: SignInFlowOptions): SignIn
       const result = await startAppleAuthenticationFlow();
       if (result.createdSessionId !== null && result.setActive !== undefined) {
         await result.setActive({ session: result.createdSessionId });
-        onSignedIn();
+        onSignedIn(oauthOutcome(result));
         return;
       }
     } catch (err) {
@@ -179,7 +180,7 @@ export function useSignInFlow({ intent, onSignedIn }: SignInFlowOptions): SignIn
         });
         if (result.status === "complete" && setActive !== undefined) {
           await setActive({ session: result.createdSessionId });
-          onSignedIn();
+          onSignedIn("signed-in");
           return;
         }
       } else if (phase.mode === "sign-in") {
@@ -189,7 +190,7 @@ export function useSignInFlow({ intent, onSignedIn }: SignInFlowOptions): SignIn
         });
         if (result.status === "complete" && setActive !== undefined) {
           await setActive({ session: result.createdSessionId });
-          onSignedIn();
+          onSignedIn("signed-in");
           return;
         }
         if (
@@ -204,7 +205,7 @@ export function useSignInFlow({ intent, onSignedIn }: SignInFlowOptions): SignIn
         const result = await signUp.attemptEmailAddressVerification({ code: code.trim() });
         if (result.status === "complete" && result.createdSessionId !== null) {
           await clerk.setActive({ session: result.createdSessionId });
-          onSignedIn();
+          onSignedIn("signed-up");
           return;
         }
       }
@@ -227,7 +228,7 @@ export function useSignInFlow({ intent, onSignedIn }: SignInFlowOptions): SignIn
       const result = await signIn.attemptFirstFactor({ strategy: "password", password });
       if (result.status === "complete" && setActive !== undefined) {
         await setActive({ session: result.createdSessionId });
-        onSignedIn();
+        onSignedIn("signed-in");
         return;
       }
       if (
