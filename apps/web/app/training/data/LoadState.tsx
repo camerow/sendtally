@@ -17,7 +17,7 @@ export function LoadState({ state, onRetry, title }: LoadStateProps): React.Reac
       {state.status === "error" ? (
         <>
           <strong className="load-state-title">{title ?? t("hang.loadFailed")}</strong>
-          <span className="load-state-message">{state.message}</span>
+          {state.message !== title && <span className="load-state-message">{state.message}</span>}
           <Button variant="azure" onClick={onRetry}>
             {t("hang.retry")}
           </Button>
