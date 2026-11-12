@@ -1,20 +1,16 @@
 import React from "react";
 import { Link, useNavigate } from "react-router";
-import {
-  useActivityPost,
-  type PostTarget,
-  type Stat,
-  type StravaState,
-} from "@sendtally/features/activities";
+import { useActivityPost, type PostTarget, type Stat } from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
 import { MoreMenu, type MoreMenuItem } from "../../components/MoreMenu";
 import { Sheet } from "../../components/Sheet";
 import { DetailFrame } from "../../components/detail/DetailFrame";
+import { StravaStatusRow } from "../../components/detail/StravaStatusRow";
 import { SummaryTiles } from "../../components/detail/SummaryTiles";
+import { stravaMenuItem } from "../../components/detail/stravaMenuItem";
 import { useAppApi } from "../../lib/useAppApi";
 import { useGoBack } from "../components/useGoBack";
 import { activityEditPath } from "../log/paths";
-import { StravaStatusRow } from "./StravaStatusRow";
 
 export type SummaryFrameProps = {
   kicker: string;
@@ -24,21 +20,6 @@ export type SummaryFrameProps = {
   target: PostTarget;
   onDelete: () => void;
   children: React.ReactNode;
-};
-
-const stravaLabel = (state: StravaState): string => {
-  switch (state.kind) {
-    case "connect":
-      return t("summary.connectStrava");
-    case "post":
-      return t("sessionDetail.postToStrava");
-    case "posting":
-      return t("summary.posting");
-    case "posted":
-      return t("summary.viewOnStrava");
-    case "failed":
-      return t("summary.tryAgain");
-  }
 };
 
 /** What every finished workout shares: Back, Edit and the menu, its kicker, title, its tiles and Strava. */
@@ -62,9 +43,7 @@ export function SummaryFrame({
     else post.run();
   };
   const menu: MoreMenuItem[] = [
-    ...(state === null
-      ? []
-      : [{ label: stravaLabel(state), onSelect: onStrava, disabled: state.kind === "posting" }]),
+    ...(state === null ? [] : [stravaMenuItem(state, onStrava)]),
     { label: t("summary.deleteWorkout"), onSelect: () => setDeleting(true), destructive: true },
   ];
   return (
