@@ -6,7 +6,7 @@ import { elapsedClock } from "@sendtally/features/sessions";
 import { Button } from "../components/Button";
 import { IconButton } from "../components/IconButton";
 import { type } from "../type";
-import type { Rest } from "./restCountdown";
+import type { Rest } from "@sendtally/features/workouts";
 
 export type RestRowProps =
   | { rest: Rest; left: number; onMore: () => void; onSkip: () => void }

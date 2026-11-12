@@ -10,8 +10,9 @@ import {
   type WeightUnit,
   type WorkoutKind,
 } from "@sendtally/core/hang";
-import { tallyMeasureOf, type TallyMeasure } from "@sendtally/features/exercises";
-import type { MessageKey } from "@sendtally/features/i18n";
+import { tallyMeasureOf } from "../exercises/measure";
+import type { TallyMeasure } from "../exercises/types";
+import type { MessageKey } from "../i18n";
 
 export type DoseKey = Exclude<keyof Dose, "edgeMm" | "name">;
 

@@ -1,5 +1,5 @@
-import { describe, expect, it } from "@jest/globals";
-import type { WorkoutDraft } from "@sendtally/features/workouts";
+import { describe, expect, it } from "vitest";
+import type { WorkoutDraft } from "./types";
 import {
   draftOfEditor,
   withAlternates,
@@ -31,10 +31,11 @@ describe("workout editor state", () => {
       kind: "hangboard",
       items: [{ exercise: "half", doses: [hang] }],
     };
-    const added = withItemsAdded(fingers, [
-      { exercise: "open" },
-      { exercise: "block", measure: "secondsWeight" },
-    ]);
+    const added = withItemsAdded(
+      fingers,
+      [{ exercise: "open" }, { exercise: "block", measure: "secondsWeight" }],
+      () => "id"
+    );
     expect(added.items.map((i) => i.doses)).toEqual([
       [hang],
       [hang],

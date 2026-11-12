@@ -1,18 +1,18 @@
 import { prescription, sessionItems, type PlanLink, type SessionItem } from "@sendtally/core/hang";
-import { usePlan } from "@sendtally/features/training";
-import { useWorkoutLibrary } from "@sendtally/features/workouts";
-import { useApi } from "../../../lib/api";
+import type { SendtallyApi } from "@sendtally/api-client";
+import { usePlan } from "../training/usePlan";
+import { useWorkoutLibrary } from "./useWorkoutLibrary";
 
 /**
  * What a run of a workout asks for: the doses its session takes, with a plan that week's
  * prescription. Undefined while it loads; empty without a workout.
  */
 export function usePrescribed(
+  api: SendtallyApi,
   workoutId: string | null,
   link: PlanLink,
   session: number
 ): SessionItem[] | undefined {
-  const api = useApi();
   const library = useWorkoutLibrary(api).state;
   const plan = usePlan(api).state;
   if (workoutId === null) return [];

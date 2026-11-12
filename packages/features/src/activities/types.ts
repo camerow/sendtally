@@ -1,3 +1,5 @@
+export type Stat = { label: string; value: string };
+
 /** One past session in a history list: what the screen showing it cares about goes in meta. */
 export type HistoryItem = {
   id: string;

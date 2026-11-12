@@ -1,5 +1,5 @@
 import { clock, currentPhase, type Phase, type Run } from "@sendtally/core/hang";
-import { t, type MessageKey } from "@sendtally/features/i18n";
+import { t, type MessageKey } from "../i18n";
 
 const PHASE_LABELS: Record<Phase["kind"], MessageKey> = {
   ready: "hang.phaseReady",

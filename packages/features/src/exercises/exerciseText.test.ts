@@ -1,6 +1,6 @@
-import { describe, expect, it } from "@jest/globals";
-import { gradeFormatter } from "@sendtally/features/sessions";
-import { changeText } from "../summary/summaryText";
+import { describe, expect, it } from "vitest";
+import { gradeFormatter } from "../sessions";
+import { changeText } from "../activities/summaryText";
 import { headlineLabel, metricText } from "./exerciseText";
 
 describe("grade metrics", () => {

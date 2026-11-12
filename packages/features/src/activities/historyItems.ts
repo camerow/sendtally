@@ -1,9 +1,11 @@
 import type { ActivityRecord, HangSessionRecord } from "@sendtally/api-client";
 import type { CalendarDate, WeightUnit } from "@sendtally/core/hang";
-import { bestSet, hangGrid, setText } from "@sendtally/features/activities";
-import { dayMonth, loadLabel, type HangModel } from "@sendtally/features/hang";
-import { t } from "@sendtally/features/i18n";
-import type { ExerciseSeries } from "@sendtally/features/statistics";
+import { setText } from "./done";
+import { bestSet, hangGrid } from "./summary";
+import { dayMonth, loadLabel } from "../hang/format";
+import type { HangModel } from "../hang/model";
+import { t } from "../i18n";
+import type { ExerciseSeries } from "../statistics";
 import type { HistoryItem } from "./types";
 
 /** A workout's sessions, newest first. */

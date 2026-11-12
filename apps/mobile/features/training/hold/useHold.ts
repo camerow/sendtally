@@ -1,6 +1,12 @@
 import React from "react";
 import { useLiveRun, writeHold, writeRest } from "../../live-session/liveRun";
-import { holdEndsAt, pauseHold, resumeHold, startHold, type Hold } from "./holdClock";
+import {
+  holdEndsAt,
+  pauseHold,
+  resumeHold,
+  startHold,
+  type Hold,
+} from "@sendtally/features/workouts";
 
 export type HoldClock = {
   hold: Hold | null;

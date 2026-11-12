@@ -1,7 +1,7 @@
 import { toUnit, type WeightUnit } from "@sendtally/core/hang";
-import type { SetChange } from "@sendtally/features/activities";
-import { formatDate, formatNumber, t } from "@sendtally/features/i18n";
-import type { Stat } from "../components/types";
+import type { SetChange } from "./summary";
+import { formatDate, formatNumber, t } from "../i18n";
+import type { Stat } from "./types";
 import { gradesText } from "../exercises/exerciseText";
 
 /** "+5 lb", "+1 rep", "−10s", or "Same". */

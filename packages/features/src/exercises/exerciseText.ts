@@ -1,16 +1,16 @@
 import { toUnit, type WeightUnit } from "@sendtally/core/hang";
-import { setText } from "@sendtally/features/activities";
-import { shortDate } from "@sendtally/features/hang";
-import { formatNumber, t } from "@sendtally/features/i18n";
-import type { GradeFormatter } from "@sendtally/features/sessions";
+import { setText } from "../activities/done";
+import { shortDate } from "../hang/format";
+import { formatNumber, t } from "../i18n";
+import type { GradeFormatter } from "../sessions";
 import {
   isGradeMetric,
   type ExerciseMetric,
   type ExerciseSeries,
   type ExerciseSession,
   type ExerciseSummary,
-} from "@sendtally/features/statistics";
-import type { Stat } from "../components/types";
+} from "../statistics";
+import type { Stat } from "../activities/types";
 
 const DASH = "–";
 

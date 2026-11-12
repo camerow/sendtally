@@ -7,8 +7,8 @@ import {
   type Run,
   type WeightUnit,
 } from "@sendtally/core/hang";
-import { stepDose } from "@sendtally/features/activities";
-import { formatNumber, t } from "@sendtally/features/i18n";
+import { stepDose } from "./intervals";
+import { formatNumber, t } from "../i18n";
 
 export type StepText = {
   kicker: string;

@@ -1,21 +1,36 @@
-import { exerciseName } from "@sendtally/features/workouts";
-import type { LiveRun } from "../../live-session/liveRun";
-import { readWorkoutRun } from "../data/workoutRunParams";
-import { restAfter } from "../rest/restCountdown";
-import { afterKey, allSets, restAfterTick, setKey } from "../sets/setsRun";
+import type { ItemDone } from "@sendtally/core/hang";
+import type { Hold } from "./holdClock";
+import { exerciseName } from "./library";
+import { restAfter, type Rest } from "./restCountdown";
+import { readWorkoutRun } from "./runParams";
+import { afterKey, allSets, restAfterTick, setKey } from "./setsRun";
+
+/** A player's live run as far as a hold needs it: its params, where it is, and its rest or hold. */
+export type HeldRun = {
+  params: Record<string, string>;
+  state:
+    | { player: "timer" }
+    | { player: "sets"; done: ItemDone[]; ticked: string[] }
+    | { player: "checklist"; ticked: number[]; count: number };
+  rest?: Rest;
+  hold?: Hold;
+};
 
 /**
  * The live run with its hold recorded while no player is open: the set or line ticked with
- * what it held, and the rest that tick starts, from `now`.
+ * what it held, and the rest that tick starts, from `now`. Every other field of the run is kept.
  */
-export function finishedRun(live: LiveRun, held: number, now: number): LiveRun {
+export const finishedRun = <R extends HeldRun>(live: R, held: number, now: number): R =>
+  finished(live, held, now) as R;
+
+function finished(live: HeldRun, held: number, now: number): HeldRun {
   const { hold, rest: _, ...rest } = live;
   const run = readWorkoutRun(live.params);
   if (hold === undefined || run === null) return live;
   const { state } = live;
   const name = (i: number | null): string | null =>
     i === null ? null : exerciseName(run.items[i]?.exercise ?? "");
-  const withRest = (next: LiveRun, at: string, seconds: number, before: number | null): LiveRun => {
+  const withRest = (next: HeldRun, at: string, seconds: number, before: number | null): HeldRun => {
     const r = restAfter(at, seconds, name(before), now);
     return r === null ? next : { ...next, rest: r };
   };

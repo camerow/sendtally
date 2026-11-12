@@ -1,7 +1,7 @@
 import { Redirect, useLocalSearchParams } from "expo-router";
 import React from "react";
 import { IntervalsScreen } from "../../features/training/intervals/IntervalsScreen";
-import { readIntervalsParams } from "../../features/training/intervals/intervalsParams";
+import { readIntervalsParams } from "@sendtally/features/workouts";
 
 export default function IntervalsRoute(): React.ReactElement {
   const params = useLocalSearchParams();

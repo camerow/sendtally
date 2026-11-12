@@ -4,28 +4,23 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { colors } from "@sendtally/design/tokens";
 import {
   doneAsPrescribed,
-  percentOf,
   protocolDose,
   protocolOf,
   type HangSetup,
   type SessionItem,
-  type SetDone,
 } from "@sendtally/core/hang";
 import { keptSets, type ActivityDraft } from "@sendtally/features/activities";
+import { hangResult } from "@sendtally/features/hang";
 import { today as dayOf } from "@sendtally/features/journal";
 import { ActivityForm } from "../activity/ActivityForm";
 import { useHangData } from "../data/HangDataContext";
 import { SetupPill } from "./SetupPill";
 import { usePlannedRun, type PlannedRun } from "../timer/usePlannedRun";
 import { openStats } from "../../stats/statsSegment";
-import type { DoneParams } from "./doneParams";
+import type { DoneParams } from "@sendtally/features/workouts";
 
 const clockOf = (d: Date): string =>
   `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
-
-/** Seconds on the edge, or lifts, that sets hold. */
-const workOf = (sets: readonly SetDone[]): number =>
-  sets.reduce((n, s) => n + (s.reps ?? 1) * (s.onS ?? 1), 0);
 
 function Review({
   planned,
@@ -73,49 +68,25 @@ function Review({
   }));
 
   const save = (draft: ActivityDraft): void => {
-    const kept = keptSets(draft.done, draft.off);
-    const misses = kept.reduce(
-      (n, d) =>
-        n +
-        d.sets.reduce(
-          (m, s) => m + Math.max(0, (prescribed[d.item]?.dose.reps ?? 1) - (s.reps ?? 1)),
-          0
-        ),
-      0
-    );
-    const plannedWork = prescribed.reduce(
-      (n, p) => n + workOf(Array.from({ length: p.dose.sets }, () => p.dose)),
-      0
-    );
+    const result = hangResult(keptSets(draft.done, draft.off), prescribed, (d) => ({
+      exercise: grips[d.item] ?? d.exercise,
+      setup: d.item === 0 ? setup : (setups[d.item] ?? setup),
+      hang: items[d.item]?.workout.kind === "hang",
+    }));
     void actions.saveSession({
       id,
       workoutId: workout.id,
       gripId: params.gripId,
       date: draft.date,
       ...setup,
-      pct: percentOf(
-        kept.reduce((n, d) => n + workOf(d.sets), 0),
-        plannedWork
-      ),
-      misses,
+      pct: result.pct,
+      misses: result.misses,
       rpe: draft.rpe,
       protocol: protocolOf(workout),
       membershipId: draft.membershipId,
       week: draft.week,
       focus: draft.focus,
-      done: kept.map((d) => {
-        const at = d.item === 0 ? setup : (setups[d.item] ?? setup);
-        const hang = items[d.item]?.workout.kind === "hang";
-        return {
-          item: d.item,
-          exercise: grips[d.item] ?? d.exercise,
-          sets: d.sets.map((s) => ({
-            ...s,
-            ...(hang ? { edgeMm: at.edgeMm } : {}),
-            weightKg: s.weightKg ?? at.loadKg,
-          })),
-        };
-      }),
+      done: result.done,
     });
     openStats("training");
   };
