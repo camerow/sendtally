@@ -4,8 +4,8 @@ import restSound from "../../../assets/sounds/rest.wav";
 import tickSound from "../../../assets/sounds/tick.wav";
 import workSound from "../../../assets/sounds/work.wav";
 import { readLiveRun, useLiveRun, writeLiveRunAsIs } from "../../live-session/liveRun";
-import { finishedRun } from "./finishedRun";
-import { COUNT_IN_S, SWITCH_S, holdEndsAt, type Hold } from "./holdClock";
+import { finishedRun } from "@sendtally/features/workouts";
+import { COUNT_IN_S, SWITCH_S, holdEndsAt, type Hold } from "@sendtally/features/workouts";
 import { playerHolds } from "./useHold";
 
 type Cue = { at: number; sound: "tick" | "work" | "rest" };

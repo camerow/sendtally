@@ -1,12 +1,13 @@
+import { randomUUID } from "expo-crypto";
 import { router } from "expo-router";
 import { Alert } from "react-native";
 import { t } from "@sendtally/features/i18n";
 import { draftOf, useWorkoutActions } from "@sendtally/features/workouts";
 import { useApi } from "../../../lib/api";
 import { useAddToMenu, type AddToMenu } from "../components/useAddToMenu";
-import type { Picked } from "../exercise-picker/types";
+import type { Picked } from "@sendtally/features/workouts";
 import { useLibrary } from "../library/useLibrary";
-import { withEditorIds, withItemsAdded } from "../workout-editor/editorState";
+import { withEditorIds, withItemsAdded } from "@sendtally/features/workouts";
 
 const failed = (): void => Alert.alert(t("workouts.saveFailed"));
 
@@ -40,7 +41,10 @@ export function useAddToWorkout({ name, picked, fingers, usedIn }: AddToWorkoutA
     add: (id) => {
       const w = workouts.find((x) => x.id === id);
       if (w !== undefined)
-        void actions.saveWorkout(id, withItemsAdded(withEditorIds(draftOf(w)), [picked]));
+        void actions.saveWorkout(
+          id,
+          withItemsAdded(withEditorIds(draftOf(w), randomUUID), [picked], randomUUID)
+        );
     },
     view: (id) => router.push({ pathname: "/workout/[id]", params: { id } }),
   });

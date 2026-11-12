@@ -8,8 +8,9 @@ import {
   type DaySchedule,
   type DayToggle,
   type WorkoutLookup,
+  doneOfShort,
+  effortText,
 } from "@sendtally/features/training";
-import { doneOfShort, effortText } from "../blocks/blockText";
 import { useHangData } from "../data/HangDataContext";
 import { SummaryTiles } from "../summary/SummaryTiles";
 import { BlockWeek } from "./BlockWeek";

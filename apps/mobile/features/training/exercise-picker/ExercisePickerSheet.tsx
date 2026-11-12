@@ -18,7 +18,7 @@ import { KIND_COLORS } from "../insights/kindColors";
 import { NewWorkoutSheet } from "../library/NewWorkoutSheet";
 import { type } from "../type";
 import { PickerRow } from "./PickerRow";
-import type { Picked } from "./types";
+import type { Picked } from "@sendtally/features/workouts";
 import { pickedOf, usePick } from "./usePick";
 import { usePickerWorld } from "./usePickerWorld";
 

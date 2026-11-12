@@ -2,7 +2,7 @@ import React from "react";
 import { View } from "react-native";
 import type { DatedBlock } from "@sendtally/core/hang";
 import { t } from "@sendtally/features/i18n";
-import { blockDateRange } from "../blocks/blockText";
+import { blockDateRange } from "@sendtally/features/training";
 import { RadioRow } from "./RadioRow";
 
 export type BlockChoiceProps = {

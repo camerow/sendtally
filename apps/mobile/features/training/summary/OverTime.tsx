@@ -15,10 +15,10 @@ import {
 import { Chip } from "../../../components/Chip";
 import { Label } from "../components/Label";
 import { Title } from "../components/Title";
-import { headlineLabel, metricText } from "../exercises/exerciseText";
+import { headlineLabel, metricText } from "@sendtally/features/exercises";
 import { SeriesChart } from "../trends/SeriesChart";
 import { type } from "../type";
-import { changeText } from "./summaryText";
+import { changeText } from "@sendtally/features/activities";
 
 export type OverTimeProps = {
   /** The series of the exercises this session did, in its order. */

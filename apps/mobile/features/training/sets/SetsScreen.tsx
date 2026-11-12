@@ -30,10 +30,11 @@ import { useApi } from "../../../lib/api";
 import { exerciseTallyStorage } from "../../../lib/exerciseTallyStorage";
 import { Button } from "../components/Button";
 import { PlayerHeader } from "../components/PlayerHeader";
-import { logRun, runParams, type WorkoutRun } from "../data/workoutRunParams";
+import { runParams, type WorkoutRun } from "@sendtally/features/workouts";
+import { logRun } from "../data/workoutRunParams";
 import { resumedRun, writeHold, writeLiveRun } from "../../live-session/liveRun";
 import { HoldButton } from "../hold/HoldButton";
-import { heldSeconds, type Hold } from "../hold/holdClock";
+import { heldSeconds, type Hold } from "@sendtally/features/workouts";
 import { HoldRow } from "../hold/HoldRow";
 import { useHold } from "../hold/useHold";
 import { RestPreview } from "../rest/RestPreview";
@@ -53,7 +54,7 @@ import {
   setKey,
   withPrevious,
   type SetAt,
-} from "./setsRun";
+} from "@sendtally/features/workouts";
 
 /**
  * A lifting workout as a set table on a clock from Start: tick each set as it is done, rest

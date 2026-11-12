@@ -7,7 +7,7 @@ import { t } from "@sendtally/features/i18n";
 import type { ExerciseTrendVM } from "@sendtally/features/statistics";
 import { Icon } from "../../../components/Icon";
 import { pressRow } from "../../../lib/press";
-import { metricText } from "../exercises/exerciseText";
+import { metricText } from "@sendtally/features/exercises";
 import { dots, plot, polyline } from "../trends/chartGeometry";
 import { type } from "../type";
 

@@ -4,7 +4,7 @@ import { router } from "expo-router";
 import React from "react";
 import { liveRunStorage } from "../../../lib/liveRunStorage";
 import { hangData, readingOrder, renderWithHang } from "../data/renderWithHang";
-import type { WorkoutRun } from "../data/workoutRunParams";
+import type { WorkoutRun } from "@sendtally/features/workouts";
 import { readLiveRun } from "../../live-session/liveRun";
 import { useLiveHold } from "../hold/useLiveHold";
 import { SetsScreen } from "./SetsScreen";

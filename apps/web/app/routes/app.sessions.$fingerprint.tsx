@@ -4,6 +4,7 @@ import { CircuitDot } from "../components/CircuitDot";
 import { Icon } from "../components/Icon";
 import { Link, useLoaderData, useNavigate, useParams } from "react-router";
 import type { SendtallyApi } from "@sendtally/api-client";
+import { climbPills } from "@sendtally/design/tokens";
 import {
   CLIMB_SORTS,
   climbSortLabel,
@@ -12,7 +13,7 @@ import {
 } from "@sendtally/features/session-detail";
 import { cloudflareContext } from "../lib/cloudflare-context";
 import { requireApi } from "../lib/api.server";
-import { liveSessionStorage } from "../lib/liveSessionStorage";
+import { liveSessionStorage } from "../lib/localStorages";
 import { useClientApi } from "../lib/useClientApi";
 import { EnduranceLaps } from "../session-detail/components/EnduranceLaps";
 import { PostStatusBar } from "../session-detail/components/PostStatusBar";
@@ -43,18 +44,8 @@ const monoLabel: React.CSSProperties = {
   color: "var(--text-label-accent)",
 };
 
-// The log's pills, so a climb reads the same here as in the app.
-const RESULT_BADGES: Record<ClimbVM["pill"], { bg: string; border: string; color: string }> = {
-  flash: { bg: "var(--bs-gold)", border: "var(--bs-gold)", color: "var(--bs-gunmetal)" },
-  onsight: { bg: "rgba(21,127,82,0.14)", border: "transparent", color: "var(--bs-fern)" },
-  sent: { bg: "rgba(64,63,76,0.08)", border: "transparent", color: "var(--bs-gunmetal)" },
-  project: { bg: "var(--bs-gunmetal)", border: "var(--bs-gunmetal)", color: "var(--bs-gold)" },
-  tries: {
-    bg: "transparent",
-    border: "rgba(64,63,76,0.22)",
-    color: "var(--text-on-white-secondary)",
-  },
-};
+const RESULT_BADGES: Record<ClimbVM["pill"], { fill: string; ink: string; line?: string }> =
+  climbPills;
 
 const GRID = "34px 1.9fr 62px 62px 70px 92px";
 
@@ -511,9 +502,9 @@ export default function SessionDetailRoute(): React.ReactElement {
                         textTransform: "uppercase",
                         borderRadius: "var(--radius-pill)",
                         padding: "3px 9px",
-                        background: badge.bg,
-                        border: `1px solid ${badge.border}`,
-                        color: badge.color,
+                        background: badge.fill,
+                        border: `1px solid ${badge.line ?? "transparent"}`,
+                        color: badge.ink,
                       }}
                     >
                       {c.resultLabel}

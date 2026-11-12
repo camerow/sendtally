@@ -2,13 +2,7 @@ import React from "react";
 import { Pressable, Text, View } from "react-native";
 import type { JournalEntry } from "@sendtally/api-client";
 import { formatDate } from "@sendtally/features/i18n";
-import {
-  displayKind,
-  entryKindLabel,
-  entryTitle,
-  spanLabel,
-  spansDates,
-} from "@sendtally/features/journal";
+import { displayKind, entryKindLabel, entryRowMeta, entryTitle } from "@sendtally/features/journal";
 import { colors } from "@sendtally/design/tokens";
 import { Icon } from "../../components/Icon";
 import { pressRow } from "../../lib/press";
@@ -42,13 +36,7 @@ export function EntryRow({
   const weekday = formatDate(at, { weekday: "short", timeZone: "UTC" });
   const day = formatDate(at, { day: "numeric", timeZone: "UTC" });
   const title = entryTitle(entry);
-  // An untitled entry borrows its first line as a title, so the excerpt would just repeat it.
-  const titled = (entry.title?.trim() ?? "") !== "";
-  const meta = spansDates(entry.kind)
-    ? spanLabel(entry.occurred_at, entry.ends_at)
-    : titled && detail === undefined
-      ? (entry.body.trim().split("\n")[0] ?? "")
-      : (detail ?? "");
+  const meta = entryRowMeta(entry, detail);
 
   return (
     <Pressable

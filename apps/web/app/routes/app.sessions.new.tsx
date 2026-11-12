@@ -4,7 +4,7 @@ import { useLoaderData, useSearchParams } from "react-router";
 import { cloudflareContext } from "../lib/cloudflare-context";
 import { requireApi } from "../lib/api.server";
 import { useClientApi } from "../lib/useClientApi";
-import { sessionDraftStorage } from "../lib/sessionDraftStorage";
+import { sessionDraftStorage } from "../lib/localStorages";
 import { useHydrated } from "../lib/useHydrated";
 import { storedDraft } from "@sendtally/features/log-session";
 import { LogSessionForm } from "../log-session/components/LogSessionForm";

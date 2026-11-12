@@ -5,9 +5,9 @@ import { t } from "@sendtally/features/i18n";
 import { exerciseName } from "@sendtally/features/workouts";
 import { exerciseTallyStorage } from "../../lib/exerciseTallyStorage";
 import { liveRunStorage } from "../../lib/liveRunStorage";
-import type { Hold } from "../training/hold/holdClock";
-import type { Rest } from "../training/rest/restCountdown";
-import { phaseLabel } from "../training/timer/timerText";
+import type { Hold } from "@sendtally/features/workouts";
+import type { Rest } from "@sendtally/features/workouts";
+import { phaseLabel } from "@sendtally/features/hang";
 
 /** Where a player is: the timer's run, or the sets and items ticked so far. */
 export type RunState =

@@ -17,3 +17,4 @@ export type {
   PickerSource,
   TallyMeasure,
 } from "./types";
+export * from "./exerciseText";

@@ -5,11 +5,11 @@ import {
   nextPosition,
   trainingDay,
   useTrainingLog,
+  ongoingMembers,
 } from "@sendtally/features/training";
 import { useApi } from "../../../lib/api";
 import { useHangData } from "../data/HangDataContext";
 import { usePlanActions } from "../plan/usePlanActions";
-import { ongoingMembers } from "../plan/planGridRows";
 import type { AddFlow } from "./flowParams";
 
 /** Where an add puts a workout, and whether a plan is already there. */

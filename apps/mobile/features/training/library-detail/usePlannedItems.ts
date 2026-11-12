@@ -1,6 +1,6 @@
 import { sessionItems } from "@sendtally/core/hang";
 import type { LibraryWorkout } from "@sendtally/features/workouts";
-import { NO_PLAN } from "../data/planLinkParams";
+import { NO_PLAN } from "@sendtally/features/training";
 import { useNextSession } from "../library/useLibrary";
 import type { PlannedItems } from "./startLibraryWorkout";
 

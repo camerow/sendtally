@@ -3,7 +3,7 @@ import { act, renderHook } from "@testing-library/react-native";
 import { useAudioPlayer } from "expo-audio";
 import { liveRunStorage } from "../../../lib/liveRunStorage";
 import { writeLiveRun, writeRest } from "../../live-session/liveRun";
-import { restAfter } from "./restCountdown";
+import { restAfter } from "@sendtally/features/workouts";
 import { useRestTone } from "./useRestTone";
 
 jest.mock("../../../lib/liveRunStorage");

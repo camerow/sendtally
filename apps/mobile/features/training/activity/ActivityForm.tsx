@@ -36,7 +36,7 @@ import { FocusField } from "../components/FocusField";
 import { Label } from "../components/Label";
 import { SheetSection } from "../components/SheetSection";
 import { Title } from "../components/Title";
-import { KIND_LOOK } from "../today/kindLook";
+import { KIND_LOOK } from "@sendtally/features/training";
 import { type } from "../type";
 import { clearLiveRun } from "../../live-session/liveRun";
 import { DoneDetails } from "./DoneDetails";

@@ -10,7 +10,7 @@ import {
   type GradePrefs,
 } from "@sendtally/features/log-session";
 import { t } from "@sendtally/features/i18n";
-import { climbKindStorage } from "../../lib/climbKindStorage";
+import { climbKindStorage } from "../../lib/localStorages";
 import { inputStyle } from "./styles";
 
 const selectStyle: React.CSSProperties = { ...inputStyle, height: 46 };

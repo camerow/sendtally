@@ -5,10 +5,9 @@ import { weekdayLetters, weekdayLong } from "@sendtally/features/hang";
 import { pressRow } from "../../../lib/press";
 import { Label } from "../components/Label";
 import { GOLD_TINT } from "../components/tints";
-import { KIND_LOOK } from "../today/kindLook";
+import { KIND_LOOK, type GridPart, type PlanGridRow } from "@sendtally/features/training";
 import { DayCell } from "./DayCell";
 import { type } from "../type";
-import type { GridPart, PlanGridRow } from "./planGridRows";
 
 const CELL = 24;
 const DAYS = [0, 1, 2, 3, 4, 5, 6];
