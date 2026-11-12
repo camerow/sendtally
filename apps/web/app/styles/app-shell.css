@@ -201,6 +201,25 @@
   color: var(--bs-white);
 }
 
+.segmented--soft {
+  max-width: none;
+  border: none;
+  border-radius: 10px;
+  background: var(--surface-soft);
+}
+
+.segmented--soft .segmented-option {
+  height: 38px;
+  border-radius: 8px;
+  padding: 0 6px;
+  font-size: 13px;
+}
+
+.segmented--soft .segmented-option[aria-checked="true"] {
+  background: var(--bs-white);
+  color: var(--bs-gunmetal);
+}
+
 @media (max-width: 767px) {
   .segmented {
     max-width: none;

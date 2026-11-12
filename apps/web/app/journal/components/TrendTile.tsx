@@ -38,9 +38,7 @@ export function TrendTile({
   const stacked = tile.chart === "stack";
   const [first, second] = tile.series;
   const clear = (): void => setHover(null);
-  const open =
-    onLockedLink ??
-    (tile.link !== null ? () => void navigate(`/app/trends/${tile.link}`) : onExpand);
+  const open = onLockedLink ?? (tile.link !== null ? () => void navigate("/app/stats") : onExpand);
 
   return (
     <div
@@ -61,7 +59,7 @@ export function TrendTile({
         <span className="trend-tile-title">{tile.title}</span>
         {tile.link !== null && (
           <Link
-            to={`/app/trends/${tile.link}`}
+            to="/app/stats"
             className="trend-tile-link"
             onClick={
               onLockedLink === undefined
