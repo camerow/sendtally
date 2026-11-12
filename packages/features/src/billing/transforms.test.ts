@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { formatRenewalDate, managedInOf, membershipVM, planOf, storeName } from "./transforms";
+import {
+  formatRenewalDate,
+  managedInOf,
+  membershipSummary,
+  membershipVM,
+  planOf,
+  storeName,
+} from "./transforms";
+import type { MembershipVM } from "./types";
 
 const FUTURE = "2099-01-01T00:00:00Z";
 
@@ -150,5 +158,43 @@ describe("store names", () => {
     expect(managedInOf("RC_TEST_STORE")).toBe("test_store");
     expect(storeName("test_store")).toBe("the test store");
     expect(storeName("web")).toBe("sendtally.com");
+  });
+});
+
+describe("membershipSummary", () => {
+  const member = (vm: Partial<MembershipVM>): MembershipVM => ({
+    active: true,
+    statusLabel: "Member",
+    managedIn: null,
+    plan: null,
+    renewalLine: null,
+    ...vm,
+  });
+
+  it("pitches the trends to someone who is not a member", () => {
+    expect(membershipSummary(member({ active: false }))).toBe(
+      "Logging is free. Membership adds the trends."
+    );
+  });
+
+  it("names the plan and the store a store membership is billed through", () => {
+    expect(membershipSummary(member({ managedIn: "play_store", plan: "yearly" }))).toBe(
+      "Yearly plan, billed through Google Play."
+    );
+    expect(membershipSummary(member({ managedIn: "app_store" }))).toBe(
+      "Membership, billed through the App Store."
+    );
+  });
+
+  it("says a web membership was bought on sendtally.com", () => {
+    expect(membershipSummary(member({ managedIn: "web" }))).toBe(
+      "Bought on sendtally.com. It unlocks the trends here too."
+    );
+  });
+
+  it("falls back to the account for any other store", () => {
+    expect(membershipSummary(member({ managedIn: "other" }))).toBe(
+      "Your membership is active on this account."
+    );
   });
 });

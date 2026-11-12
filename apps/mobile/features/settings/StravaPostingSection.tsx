@@ -23,7 +23,7 @@ export function StravaPostingSection({ posting }: StravaPostingSectionProps): Re
     <>
       <SwitchRow
         title={t("settings.postClimbing")}
-        body={posting.enabled ? t("settings.postingOn") : t("settings.postingOffMobile")}
+        body={posting.enabled ? t("settings.postingOn") : t("settings.postingOff")}
         checked={posting.enabled}
         disabled={posting.busy}
         onChange={posting.setEnabled}

@@ -8,7 +8,7 @@ import type {
 import type { MembershipVM } from "@sendtally/features/billing";
 import type { Gym } from "@sendtally/features/gyms";
 import { GymsSection } from "../../gyms/components/GymsSection";
-import { bodyText, linkAction, monoMuted, pageTitle, secondaryButton } from "./styles";
+import { bodyText, monoMuted, pageTitle, secondaryButton } from "./styles";
 import { t } from "@sendtally/features/i18n";
 import { ChevronRow } from "./ChevronRow";
 import { GradeScaleSection } from "./GradeScaleSection";
@@ -16,6 +16,7 @@ import { MembershipSection } from "./MembershipSection";
 import { Section } from "./Section";
 import { StatusPill } from "./StatusPill";
 import { StravaPostingSection } from "./StravaPostingSection";
+import { WeightUnitSection } from "./WeightUnitSection";
 import { sectionLabel } from "../../components/styles";
 
 const dataButton: React.CSSProperties = {
@@ -51,8 +52,11 @@ export function SettingsView({
     <div style={{ maxWidth: 640, display: "flex", flexDirection: "column", gap: 14 }}>
       <h1 style={pageTitle}>{t("common.settings")}</h1>
 
+      <WeightUnitSection />
+
       <Section>
         <span style={sectionLabel}>{t("settings.grades")}</span>
+        <p style={bodyText}>{t("settings.gradesBody")}</p>
         <GradeScaleSection scales={scales} />
       </Section>
 
@@ -70,35 +74,34 @@ export function SettingsView({
           }}
         >
           <span style={sectionLabel}>Strava</span>
-          <span style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <StatusPill label={vm.stravaStatusLabel} active={vm.stravaActive} />
-            {vm.stravaActive && (
-              <Link to="/app/setup" style={linkAction}>
-                {t("settings.relink")}
-              </Link>
-            )}
-          </span>
+          <StatusPill label={vm.stravaStatusLabel} active={vm.stravaActive} />
         </div>
+        <p style={bodyText}>
+          {vm.stravaActive
+            ? t("settings.stravaActive")
+            : vm.stravaConnected
+              ? t("settings.stravaLapsed")
+              : t("settings.stravaConnectBody")}
+        </p>
         {vm.stravaActive ? (
           <StravaPostingSection posting={posting} />
         ) : (
-          <>
-            <p style={bodyText}>
-              {vm.stravaConnected ? t("settings.stravaLapsed") : t("settings.stravaConnectBody")}
-            </p>
-            <Link
-              to="/app/setup"
-              style={{
-                ...secondaryButton,
-                fontSize: 14,
-                textDecoration: "none",
-                alignSelf: "flex-start",
-              }}
-            >
-              {vm.stravaConnected ? t("settings.relinkStrava") : t("sessions.connectStrava")}
-            </Link>
-          </>
+          <Link
+            to="/app/setup"
+            style={{
+              ...secondaryButton,
+              fontSize: 15,
+              textDecoration: "none",
+              textAlign: "center",
+            }}
+          >
+            {vm.stravaConnected ? t("settings.relinkStrava") : t("sessions.connectStrava")}
+          </Link>
         )}
+      </Section>
+
+      <Section>
+        <MembershipSection membership={membership} />
       </Section>
 
       <Section>
@@ -112,10 +115,6 @@ export function SettingsView({
             {t("settings.exportCsv")}
           </a>
         </div>
-      </Section>
-
-      <Section>
-        <MembershipSection membership={membership} />
       </Section>
 
       <Link to="/app/account" style={{ textDecoration: "none", color: "inherit" }}>

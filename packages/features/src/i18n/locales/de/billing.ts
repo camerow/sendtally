@@ -12,11 +12,6 @@ export const billing = {
   "billing.notAMember": "Kein Mitglied",
   "billing.memberVia": "Mitglied · {store}",
   "billing.memberWeb": "Mitglied · Web",
-  "billing.pointVolume": "Volumen - wie viel du wirklich geklettert bist, Woche für Woche",
-  "billing.pointRpe": "Anstrengung - wie hart sich deine Sessions über die Zeit angefühlt haben",
-  "billing.pointAvgGrade":
-    "Durchschnittlicher Begehungsgrad - die Drift, die ein Logbuch dir nie zeigen kann",
-  "billing.pointFlashRate": "Flash-Quote - das Erste, was sich bewegt, wenn du besser liest",
   "billing.period.week": "Woche",
   "billing.period.month": "Monat",
   "billing.plan.twoMonths": "2 Monate",

@@ -1,8 +1,9 @@
-export { memberPoints, membershipPanel } from "./benefits";
+export { membershipPanel } from "./benefits";
 export type { MembershipPanel, MembershipPanelRow } from "./benefits";
 export {
   formatRenewalDate,
   managedInOf,
+  membershipSummary,
   membershipVM,
   planLabel,
   planOf,
