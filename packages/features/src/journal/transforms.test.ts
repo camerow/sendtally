@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import type { Activity, JournalEntry, SessionRow } from "@sendtally/api-client";
 import {
+  entryRowMeta,
+  spanLabel,
   bodyPlaceholder,
   daysSince,
   draftFromEntry,
@@ -584,5 +586,22 @@ describe("logWorkoutItems", () => {
 
   it("knows one logged without the library by its title", () => {
     expect(logWorkoutItems(items, "title:pull and core")).toHaveLength(2);
+  });
+});
+
+describe("entryRowMeta", () => {
+  it("shows a trip's dates", () => {
+    const trip = entry({ kind: "trip", occurred_at: "2026-05-22", ends_at: "2026-05-26" });
+    expect(entryRowMeta(trip, "3 sessions")).toBe(spanLabel("2026-05-22", "2026-05-26"));
+  });
+
+  it("shows the first line of a titled entry, or the detail it is given", () => {
+    const titled = entry({ title: "Fingers", body: "Sore today.\nRested." });
+    expect(entryRowMeta(titled)).toBe("Sore today.");
+    expect(entryRowMeta(titled, "On: Pulley")).toBe("On: Pulley");
+  });
+
+  it("leaves an untitled entry's line empty, since its title already is that line", () => {
+    expect(entryRowMeta(entry())).toBe("");
   });
 });

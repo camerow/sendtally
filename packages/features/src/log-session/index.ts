@@ -182,3 +182,21 @@ export {
   withSession,
 } from "./localSession";
 export { useLocalSessions, type LocalSessions } from "./useLocalSessions";
+export {
+  isFormProject,
+  nextFormClimb,
+  withClimb,
+  withClimbArea,
+  withGym,
+  withProjectToggled,
+  withSuggestedClimb,
+  withTypedClimbName,
+} from "./formClimbs";
+export {
+  finishSummary,
+  tallyGradeOf,
+  tallyStep,
+  type TallySelection,
+  type TallyStep,
+  type TallyUndo,
+} from "./tallySelection";

@@ -86,3 +86,12 @@ export const severityNoneTint = "rgba(41,174,112,0.18)";
 export function severityColor(level: number): string {
   return level <= 0 ? severityNone : effortColor(level);
 }
+
+/** How a climb went, as a pill: the same look in the log, on the session page and in the app. */
+export const climbPills = {
+  flash: { fill: colors.gold, ink: colors.gunmetal },
+  onsight: { fill: "rgba(21,127,82,0.14)", ink: colors.fern },
+  sent: { fill: colors.lineOnLightSoft, ink: colors.gunmetal },
+  project: { fill: colors.gunmetal, ink: colors.gold },
+  tries: { fill: "transparent", ink: colors.textSecondary, line: colors.lineOnLightStrong },
+} as const satisfies Record<string, { fill: string; ink: string; line?: string }>;

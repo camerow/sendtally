@@ -1,11 +1,12 @@
 import type { JournalEntry, SessionRow, SessionWithClimbs } from "@sendtally/api-client";
 import { formatNumber, t } from "../i18n";
 import { sessionGradeLabel, type GradeScales } from "../sessions/grades";
-import { isUnscored } from "../sessions/meta";
+import { logCountLabel, sessionTotals, sessionsIn } from "../sessions/years";
+import { isClimbHolder, isUnscored } from "../sessions/meta";
 import { trendsVM } from "../trends/overview";
 import type { TrendTileVM } from "../trends/types";
 import { inTrip, isoDay, tripEnd } from "./transforms";
-import type { TripSpan } from "./types";
+import type { LogItem, TripSpan } from "./types";
 
 export type TripDay<S extends SessionRow = SessionRow> = {
   day: string;
@@ -142,4 +143,38 @@ export function tripStats(days: TripDay[], scales: GradeScales): TripStat[] {
           : formatNumber(rpe, { minimumFractionDigits: 1, maximumFractionDigits: 1 }),
     },
   ];
+}
+
+/** What the trip holds and the hardest thing in it - the duration would not fit beside them. */
+export function tripMeta(inside: LogItem[], scales: GradeScales): string {
+  const totals = sessionTotals(sessionsIn(inside));
+  if (totals.topGrade < 0) return logCountLabel(inside);
+  const label = sessionGradeLabel(totals.topGradeLabel, totals.topGrade, scales);
+  return `${logCountLabel(inside)} · ${t("sessions.topGrade", { grade: label })}`;
+}
+
+/**
+ * The session picker on an entry: what is linked, then what could be, split into the sessions
+ * on the entry's own dates and the rest. A climb holder is never offered.
+ */
+export function sessionChoices(
+  sessions: readonly SessionRow[],
+  linked: readonly string[],
+  occurredAt: string,
+  endsAt: string
+): { linked: SessionRow[]; inSpan: SessionRow[]; recent: SessionRow[] } {
+  const newest = (a: SessionRow, b: SessionRow): number => b.start_at.localeCompare(a.start_at);
+  const available = sessions
+    .filter((s) => !linked.includes(s.fingerprint) && !isClimbHolder(s))
+    .sort(newest);
+  const to = endsAt === "" ? occurredAt : endsAt;
+  const inSpan = available.filter((s) => {
+    const day = isoDay(s.start_at);
+    return day >= occurredAt && day <= to;
+  });
+  return {
+    linked: sessions.filter((s) => linked.includes(s.fingerprint)).sort(newest),
+    inSpan,
+    recent: available.filter((s) => !inSpan.includes(s)),
+  };
 }

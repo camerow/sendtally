@@ -31,8 +31,7 @@ import {
 } from "@sendtally/features/log-session";
 import { useGradeScalePrefs } from "@sendtally/features/settings";
 import { useClientApi } from "../../lib/useClientApi";
-import { climbKindStorage } from "../../lib/climbKindStorage";
-import { liveSessionStorage } from "../../lib/liveSessionStorage";
+import { climbKindStorage, liveSessionStorage } from "../../lib/localStorages";
 import {
   filterSessionsByTags,
   logYearGroups,

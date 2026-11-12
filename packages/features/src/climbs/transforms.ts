@@ -18,7 +18,7 @@ export function sameClimbName(a: string, b: string): boolean {
   return climbKey(a) === climbKey(b);
 }
 
-export function findClimb(climbs: ClimbSummary[], name: string): ClimbSummary | undefined {
+export function findClimb(climbs: readonly ClimbSummary[], name: string): ClimbSummary | undefined {
   return name.trim() === "" ? undefined : climbs.find((c) => sameClimbName(c.name, name));
 }
 

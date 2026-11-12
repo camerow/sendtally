@@ -14,28 +14,26 @@ import {
 import { t } from "@sendtally/features/i18n";
 import {
   disciplineLabel,
-  durationLabel,
   finishLiveSession,
+  finishSummary,
   gradeOptions,
-  newTallyClimb,
   readClimbKind,
   setGroups,
   setOver,
   tallyDraft,
   tallyElapsedSeconds,
+  tallyStep,
   tallySummary,
   useLiveSession,
-  vGradeOf,
-  withExerciseClimb,
   withExerciseDone,
   withSetEnded,
-  withTallyGo,
   withWallStarted,
-  type ClimbDraft,
   type Discipline,
   type LogSessionDraft,
   type TallyChoice,
   type TallyGo,
+  type TallySelection,
+  type TallyUndo,
 } from "@sendtally/features/log-session";
 import { queries, useQuery } from "@sendtally/features/query";
 import { useGradeScalePrefs } from "@sendtally/features/settings";
@@ -61,26 +59,7 @@ import { LiveClock } from "../../components/LiveClock";
 import { TallyRow } from "./TallyRow";
 import { UndoSnackbar } from "./UndoSnackbar";
 
-type Selection = { kind: "row"; key: string } | { kind: "pending"; chip: string } | null;
-
 type Segment = Discipline | "circuit";
-
-type Snack = { id: number; message: string; draft: LogSessionDraft; selection: Selection };
-
-const gradeOf = (climb: ClimbDraft): string =>
-  climb.circuit === undefined ? climb.grade : circuitLabel(climb.circuit);
-
-function finishSummary(draft: LogSessionDraft, minutes: number): string {
-  const sends = draft.climbs.filter((c) => c.kind === "send");
-  const top = [...sends].sort(
-    (a, b) => (vGradeOf(b.grade, b.scale) ?? -1) - (vGradeOf(a.grade, a.scale) ?? -1)
-  )[0];
-  return [
-    durationLabel(minutes),
-    t("tally.sentCount", { count: sends.length }),
-    ...(top === undefined ? [] : [t("sessions.topSend", { grade: gradeOf(top) })]),
-  ].join(" · ");
-}
 
 export type TallyScreenProps = {
   /**
@@ -103,11 +82,11 @@ export function TallyScreen({ exercise = false }: TallyScreenProps): React.React
   const vocabulary = useClimbVocabulary(api);
   const { scales } = useGradeScalePrefs(api);
   const sessions = useQuery(queries.sessions(api)).state;
-  const [held, setHeld] = React.useState<{ set: number | undefined; selection: Selection }>({
+  const [held, setHeld] = React.useState<{ set: number | undefined; selection: TallySelection }>({
     set: undefined,
     selection: null,
   });
-  const [snack, setSnack] = React.useState<Snack | null>(null);
+  const [snack, setSnack] = React.useState<TallyUndo | null>(null);
   const [editing, setEditing] = React.useState<string | null>(null);
   const [picking, setPicking] = React.useState(false);
   const [finishing, setFinishing] = React.useState(params.finish === "1");
@@ -121,7 +100,7 @@ export function TallyScreen({ exercise = false }: TallyScreenProps): React.React
   const draft = live.stored?.draft ?? null;
   const set = draft?.exercise?.set;
   const selection = held.set === set ? held.selection : null;
-  const setSelection = (next: Selection, of: number | undefined = set): void =>
+  const setSelection = (next: TallySelection, of: number | undefined = set): void =>
     setHeld({ set: of, selection: next });
   React.useEffect(() => {
     if (started.current || !settled) return;
@@ -211,32 +190,11 @@ export function TallyScreen({ exercise = false }: TallyScreenProps): React.React
   const commit = (next: LogSessionDraft): void => live.replace(settle(next, new Date()));
 
   const go = (g: TallyGo): void => {
-    let climb: ClimbDraft | undefined;
-    if (selection?.kind === "pending") {
-      const choice = choiceOf(selection.chip);
-      if (choice === null) return;
-      const next = newTallyClimb(draft, choice, g);
-      setSelection(g === "fell" ? { kind: "row", key: next.key } : null);
-      commit(withExerciseClimb(next.draft, next.key));
-      climb = next.draft.climbs.find((c) => c.key === next.key);
-    } else if (selection?.kind === "row") {
-      climb = draft.climbs.find((c) => c.key === selection.key);
-      if (climb === undefined) return;
-      const key = selection.key;
-      if (g === "sent") setSelection(null);
-      commit({
-        ...draft,
-        climbs: draft.climbs.map((c) => (c.key === key ? withTallyGo(c, g) : c)),
-      });
-    }
-    if (climb === undefined) return;
-    const grade = gradeOf(climb);
-    setSnack({
-      id: (snack?.id ?? 0) + 1,
-      message: g === "fell" ? t("tally.fellOn", { grade }) : t("tally.sentGrade", { grade }),
-      draft,
-      selection,
-    });
+    const step = tallyStep(draft, selection, g, choiceOf, snack);
+    if (step === null) return;
+    setSelection(step.selection);
+    commit(step.draft);
+    setSnack(step.undo);
   };
 
   const undo = (): void => {
