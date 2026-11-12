@@ -4,7 +4,7 @@ import type { AreaSummary } from "@sendtally/features/areas";
 import { AreaDialog } from "../../areas/components/AreaDialog";
 import { AreaPicker } from "../../areas/components/AreaPicker";
 import { Field } from "../../areas/components/Field";
-import { inputStyle } from "../../areas/styles";
+import { inputStyle } from "../../components/styles";
 
 export type MoveDialogProps = {
   api: SendtallyApi;

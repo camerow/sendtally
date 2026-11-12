@@ -8,19 +8,11 @@ import { NotesCard } from "./NotesCard";
 import { ProjectChart } from "./ProjectChart";
 import { UnmarkProjectDialog } from "./UnmarkProjectDialog";
 import { BackLink } from "../../components/BackLink";
+import { monoMuted } from "../../components/styles";
 
 export type ProjectDetailProps = {
   apiUrl: string;
   slug: string;
-};
-
-const monoMuted: React.CSSProperties = {
-  fontFamily: "var(--font-mono)",
-  textTransform: "uppercase",
-  fontWeight: 500,
-  fontSize: 11,
-  letterSpacing: "0.06em",
-  color: "rgba(64,63,76,0.55)",
 };
 
 const cardLabel: React.CSSProperties = {

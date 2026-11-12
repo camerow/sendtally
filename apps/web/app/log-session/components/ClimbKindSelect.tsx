@@ -11,7 +11,7 @@ import {
 } from "@sendtally/features/log-session";
 import { t } from "@sendtally/features/i18n";
 import { climbKindStorage } from "../../lib/localStorages";
-import { inputStyle } from "./styles";
+import { inputStyle } from "../../components/styles";
 
 const selectStyle: React.CSSProperties = { ...inputStyle, height: 46 };
 

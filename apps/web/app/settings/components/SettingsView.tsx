@@ -8,14 +8,7 @@ import type {
 import type { MembershipVM } from "@sendtally/features/billing";
 import type { Gym } from "@sendtally/features/gyms";
 import { GymsSection } from "../../gyms/components/GymsSection";
-import {
-  bodyText,
-  linkAction,
-  monoMuted,
-  pageTitle,
-  secondaryButton,
-  sectionLabel,
-} from "./styles";
+import { bodyText, linkAction, monoMuted, pageTitle, secondaryButton } from "./styles";
 import { t } from "@sendtally/features/i18n";
 import { ChevronRow } from "./ChevronRow";
 import { GradeScaleSection } from "./GradeScaleSection";
@@ -23,6 +16,7 @@ import { MembershipSection } from "./MembershipSection";
 import { Section } from "./Section";
 import { StatusPill } from "./StatusPill";
 import { StravaPostingSection } from "./StravaPostingSection";
+import { sectionLabel } from "../../components/styles";
 
 const dataButton: React.CSSProperties = {
   ...secondaryButton,

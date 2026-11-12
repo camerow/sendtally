@@ -26,7 +26,7 @@ import { ClimbNoteField } from "./ClimbNoteField";
 import { DisciplineToggle } from "./DisciplineToggle";
 import { ProjectToggle } from "./ProjectToggle";
 import { SentResultControl } from "./SentResultControl";
-import { inputStyle, monoLabel } from "./styles";
+import { inputStyle, monoLabel } from "../../components/styles";
 
 const DISMISS_DISTANCE = 80;
 const DISMISS_VELOCITY = 0.6;

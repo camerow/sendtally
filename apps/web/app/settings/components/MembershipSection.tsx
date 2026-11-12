@@ -3,8 +3,9 @@ import { Link } from "react-router";
 import { memberPoints, storeName, type MembershipVM } from "@sendtally/features/billing";
 import { t } from "@sendtally/features/i18n";
 import { ChevronRow } from "./ChevronRow";
-import { bodyText, monoMuted, rowDivider, sectionLabel } from "./styles";
+import { bodyText, monoMuted, rowDivider } from "./styles";
 import { StatusPill } from "./StatusPill";
+import { sectionLabel } from "../../components/styles";
 
 export type MembershipSectionProps = {
   membership: MembershipVM;

@@ -2,8 +2,9 @@ import React from "react";
 import { CONVERSION_PROMPT } from "@sendtally/features/import";
 import { t } from "@sendtally/features/i18n";
 import { Section } from "../../settings/components/Section";
-import { bodyText, secondaryButton, sectionLabel } from "../../settings/components/styles";
+import { bodyText, secondaryButton } from "../../settings/components/styles";
 import { code } from "../styles";
+import { sectionLabel } from "../../components/styles";
 
 export function ConversionPrompt(): React.ReactElement {
   const [copied, setCopied] = React.useState(false);

@@ -85,8 +85,6 @@ export const logSession = {
   "logSession.defaultNameMorning": "Sesión de mañana",
   "logSession.defaultNameAfternoon": "Sesión de tarde",
   "logSession.defaultNameEvening": "Sesión de noche",
-  "logSession.wrapUpTitle": "Cerrar sesión",
-  "logSession.wrapUpSubtitle": "Los horarios salen de tus vías · el esfuerzo se puntúa al guardar",
   "logSession.noSendsYet": "Aún sin encadenes",
   "logSession.sendStyle": "Estilo",
   "logSession.removeClimbTitle": "¿Quitar esta vía?",

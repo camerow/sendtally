@@ -83,8 +83,6 @@ export const logSession = {
   "logSession.defaultNameMorning": "Morning session",
   "logSession.defaultNameAfternoon": "Afternoon session",
   "logSession.defaultNameEvening": "Evening session",
-  "logSession.wrapUpTitle": "Wrap up",
-  "logSession.wrapUpSubtitle": "Times come from your climbs · effort is scored when you save",
   "logSession.noSendsYet": "No sends yet",
   "logSession.sendStyle": "Style",
   "logSession.removeClimbTitle": "Remove this climb?",

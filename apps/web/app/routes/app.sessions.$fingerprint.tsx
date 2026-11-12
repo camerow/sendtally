@@ -24,6 +24,7 @@ import { t } from "@sendtally/features/i18n";
 import { forgetLiveSession } from "@sendtally/features/log-session";
 
 import sessionsStyles from "../sessions/sessions.css?url";
+import { sectionLabel } from "../components/styles";
 
 export const links: LinksFunction = () => [
   { rel: "stylesheet", href: sessionsStyles },
@@ -34,15 +35,6 @@ export async function loader(args: LoaderFunctionArgs): Promise<{ apiUrl: string
   await requireApi(args);
   return { apiUrl: args.context.get(cloudflareContext).env.API_URL };
 }
-
-const monoLabel: React.CSSProperties = {
-  fontFamily: "var(--font-mono)",
-  textTransform: "uppercase",
-  fontWeight: 500,
-  fontSize: 10,
-  letterSpacing: "0.08em",
-  color: "var(--text-label-accent)",
-};
 
 const RESULT_BADGES: Record<ClimbVM["pill"], { fill: string; ink: string; line?: string }> =
   climbPills;
@@ -108,7 +100,7 @@ function SessionActions({
         )}
         {confirming && (
           <>
-            <span style={{ ...monoLabel, alignSelf: "center", fontSize: 11 }}>
+            <span style={{ ...sectionLabel, alignSelf: "center", fontSize: 11 }}>
               {t("sessions.deleteTitle")}
             </span>
             <button
@@ -143,7 +135,7 @@ function SessionActions({
       {error !== null && (
         <span
           style={{
-            ...monoLabel,
+            ...sectionLabel,
             textTransform: "none",
             fontSize: 11,
             color: "var(--text-label-accent)",
@@ -165,12 +157,12 @@ export default function SessionDetailRoute(): React.ReactElement {
 
   if (state.status === "loading") {
     return (
-      <span style={{ ...monoLabel, color: "rgba(64,63,76,0.55)" }}>{t("common.loading")}</span>
+      <span style={{ ...sectionLabel, color: "rgba(64,63,76,0.55)" }}>{t("common.loading")}</span>
     );
   }
   if (state.status === "error") {
     return (
-      <span style={{ ...monoLabel, textTransform: "none" }}>
+      <span style={{ ...sectionLabel, textTransform: "none" }}>
         {t("sessionDetail.loadFailed")} <Link to="/app">{t("sessionDetail.backToSessions")}</Link>
       </span>
     );
@@ -204,7 +196,7 @@ export default function SessionDetailRoute(): React.ReactElement {
           </h1>
           <span
             style={{
-              ...monoLabel,
+              ...sectionLabel,
               fontSize: 11,
               color: "rgba(64,63,76,0.55)",
               letterSpacing: "0.06em",
@@ -219,7 +211,7 @@ export default function SessionDetailRoute(): React.ReactElement {
                   key={area.slug}
                   to={`/app/areas/${area.slug}`}
                   style={{
-                    ...monoLabel,
+                    ...sectionLabel,
                     fontSize: 11,
                     letterSpacing: "0.06em",
                     color: "var(--bs-azure-ink)",
@@ -262,7 +254,7 @@ export default function SessionDetailRoute(): React.ReactElement {
               padding: "13px 16px",
             }}
           >
-            <span style={{ ...monoLabel, color: "rgba(64,63,76,0.55)" }}>{st.label}</span>
+            <span style={{ ...sectionLabel, color: "rgba(64,63,76,0.55)" }}>{st.label}</span>
             <span
               style={{
                 fontFamily: "var(--font-mono)",
@@ -292,7 +284,7 @@ export default function SessionDetailRoute(): React.ReactElement {
             gap: 12,
           }}
         >
-          <span style={{ ...monoLabel, fontSize: 11 }}>{t("trends.sendsByGrade")}</span>
+          <span style={{ ...sectionLabel, fontSize: 11 }}>{t("trends.sendsByGrade")}</span>
           <div style={{ display: "flex", alignItems: "flex-end", gap: 6, height: 84 }}>
             {vm.bars.map((b) => (
               <div
@@ -387,7 +379,7 @@ export default function SessionDetailRoute(): React.ReactElement {
               t("sessionDetail.colAttempts"),
               t("common.result"),
             ].map((h) => (
-              <span key={h} style={monoLabel}>
+              <span key={h} style={sectionLabel}>
                 {h}
               </span>
             ))}
