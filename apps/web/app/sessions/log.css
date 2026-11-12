@@ -34,6 +34,15 @@
   color: rgba(64, 63, 76, 0.55);
 }
 
+.log-page .sessions-setup-stack {
+  margin: 0 0 16px;
+}
+
+.log-page .sessions-setup {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
 .climbing-filters {
   display: flex;
   flex-direction: column;
@@ -565,6 +574,10 @@
 }
 
 @media (max-width: 767px) {
+  .log-page .sessions-setup {
+    flex: 0 0 86%;
+  }
+
   .log-page-title {
     font-size: 26px;
   }

@@ -51,12 +51,7 @@ export function GradeFilterSheet({
   const anchorLabel = bins.find((b) => b.rank === anchor)?.label;
 
   return (
-    <Sheet
-      open={open}
-      title={t("common.grade")}
-      onClose={close}
-      action={{ label: t("common.done"), onPress: close }}
-    >
+    <Sheet open={open} title={t("common.grade")} onClose={close}>
       <Segmented
         label={t("climbs.discipline")}
         options={(["boulder", "route"] as const).map((d) => ({
@@ -101,6 +96,11 @@ export function GradeFilterSheet({
             }}
           />
         ))}
+      </div>
+      <div className="sheet-footer">
+        <button type="button" className="sheet-action" onClick={close}>
+          {t("common.done")}
+        </button>
       </div>
     </Sheet>
   );
