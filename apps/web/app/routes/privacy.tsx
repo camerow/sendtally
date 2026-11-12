@@ -86,8 +86,9 @@ export default function Privacy(): React.ReactElement {
         We do not import your climbing from any third party. Your logbook contains only what you
         entered yourself. We do not track your location in the background, read your contacts, or
         collect health data from other apps. We do not sell your data or share it with data brokers.
-        The only thing an advertising platform learns from the apps is whether an install, a new
-        account or a membership followed one of our own ads, as described under Google below.
+        The only thing an advertising platform learns from sendtally is whether a store badge tap,
+        an install, a new account or a membership followed one of our own ads, as described under
+        Google below.
       </p>
 
       <h2>Why we hold it</h2>
