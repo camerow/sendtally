@@ -34,6 +34,8 @@ export function GradeHistogram({ bins, range, onTap }: GradeHistogramProps): Rea
             style={{ flex: 1, height: "100%", justifyContent: "flex-end", gap: 6 }}
           >
             <Text
+              numberOfLines={1}
+              adjustsFontSizeToFit
               style={{
                 fontFamily: fonts.mono,
                 fontSize: 10,
