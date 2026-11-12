@@ -20,6 +20,7 @@ import { useClientApi } from "../lib/useClientApi";
 import { GradeScalesProvider } from "@sendtally/features/settings";
 import appShellStyles from "../styles/app-shell.css?url";
 import { pageMeta } from "../lib/seo";
+import { useReportGoogleSignUp } from "../auth/useReportGoogleSignUp";
 
 export function meta(): Array<Record<string, string>> {
   return pageMeta({ title: "sendtally", path: "/app", noindex: true });
@@ -67,6 +68,7 @@ function Shell({ children }: { children: React.ReactNode }): React.ReactElement 
   const email = user?.primaryEmailAddress?.emailAddress ?? "";
   const focused = FOCUSED_ROUTES.includes(pathname);
   const navItems = useNavItems();
+  useReportGoogleSignUp();
 
   const signOut = (
     <button onClick={() => void clerk.signOut(() => navigate("/"))} className="app-sign-out">

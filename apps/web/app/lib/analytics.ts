@@ -25,3 +25,17 @@ export function identify(distinctId: string, properties?: Properties): void {
 export function resetIdentity(): void {
   client()?.reset();
 }
+
+type Gtag = (...args: unknown[]) => void;
+
+const ADS_CONVERSIONS = {
+  storeClick: "AW-18445754475/8C92CK_fpLcdEOvAz9tE",
+  signUp: "AW-18445754475/rAZcCKzfpLcdEOvAz9tE",
+} as const;
+
+// The Google tag only loads in production, so this is a no-op everywhere else.
+export function adsConversion(name: keyof typeof ADS_CONVERSIONS): void {
+  if (typeof window === "undefined") return;
+  const gtag = (window as unknown as { gtag?: Gtag }).gtag;
+  gtag?.("event", "conversion", { send_to: ADS_CONVERSIONS[name], transport_type: "beacon" });
+}
