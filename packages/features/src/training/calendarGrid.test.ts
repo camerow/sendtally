@@ -1,4 +1,4 @@
-import { describe, expect, it } from "@jest/globals";
+import { describe, expect, it } from "vitest";
 import type { Block } from "@sendtally/core/hang";
 import { bandOn, blockOn, monthWeeks } from "./calendarGrid";
 

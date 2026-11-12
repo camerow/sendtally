@@ -12,11 +12,11 @@ import {
   scheduleOf,
   usePlan,
   useTrainingLog,
+  blockDateRange,
 } from "@sendtally/features/training";
 import { ScreenFrame } from "../../../components/ScreenFrame";
 import { Toast } from "../../../components/Toast";
 import { useApi } from "../../../lib/api";
-import { blockDateRange } from "../blocks/blockText";
 import { Button } from "../components/Button";
 import { DetailActions } from "../components/DetailActions";
 import { EditorHeader } from "../components/EditorHeader";

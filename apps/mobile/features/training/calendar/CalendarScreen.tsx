@@ -5,7 +5,7 @@ import { addMonths, monthStart, type CalendarDate } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { monthTitle, weekdayLetters } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
-import { trainingWeek, useTrainingLog } from "@sendtally/features/training";
+import { trainingWeek, useTrainingLog, bandOn, monthWeeks } from "@sendtally/features/training";
 import { BackButton } from "../../../components/BackButton";
 import { useApi } from "../../../lib/api";
 import { Button } from "../components/Button";
@@ -15,7 +15,6 @@ import { Title } from "../components/Title";
 import { useHangData } from "../data/HangDataContext";
 import { CalendarLegend } from "./CalendarLegend";
 import { CalendarWeek } from "./CalendarWeek";
-import { bandOn, monthWeeks } from "./calendarGrid";
 
 /** The plan a month at a time: blocks as bands, a mark per planned workout; tap a day to open it. */
 export function CalendarScreen(): React.ReactElement {

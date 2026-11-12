@@ -11,7 +11,7 @@ import {
 } from "@sendtally/features/activities";
 import { today } from "@sendtally/features/journal";
 import { ActivityForm } from "../../features/training/activity/ActivityForm";
-import { readPlanLink, readSession } from "../../features/training/data/planLinkParams";
+import { readPlanLink, readSession } from "@sendtally/features/training";
 import { usePrescribed } from "../../features/training/data/usePrescribed";
 
 // A plan or a library workout opens this with what it already knows: the kind, its title,

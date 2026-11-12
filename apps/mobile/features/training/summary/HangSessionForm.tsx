@@ -20,7 +20,7 @@ import { useHangData } from "../data/HangDataContext";
 import { GripPickerSheet } from "../grip-picker/GripPickerSheet";
 import { DoneDetails } from "../activity/DoneDetails";
 import { SetupPill } from "../done/SetupPill";
-import { KIND_LOOK } from "../today/kindLook";
+import { KIND_LOOK } from "@sendtally/features/training";
 import { type } from "../type";
 import { hangCount } from "./hangCount";
 import { KeypadScrollView } from "../../../components/KeypadScrollView";

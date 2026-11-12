@@ -5,7 +5,7 @@ import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
 import { press } from "../../../lib/press";
 import { BlockWeekChips } from "../blocks/BlockWeekChips";
-import { blockDateRange } from "../blocks/blockText";
+import { blockDateRange } from "@sendtally/features/training";
 import { Label } from "../components/Label";
 import { Title } from "../components/Title";
 import { type } from "../type";

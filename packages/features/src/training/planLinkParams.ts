@@ -1,5 +1,5 @@
 import type { PlanLink } from "@sendtally/core/hang";
-import { readFocus } from "@sendtally/features/training";
+import { readFocus } from "./focus";
 
 type RawParams = Partial<Record<string, string | string[]>>;
 

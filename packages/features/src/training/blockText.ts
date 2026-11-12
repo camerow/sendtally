@@ -5,9 +5,9 @@ import {
   type CalendarDate,
   type DatedBlock,
 } from "@sendtally/core/hang";
-import { shortDate } from "@sendtally/features/hang";
-import { formatNumber, t } from "@sendtally/features/i18n";
-import type { DoneCount } from "@sendtally/features/training";
+import { shortDate } from "../hang/format";
+import { formatNumber, t } from "../i18n";
+import type { DoneCount } from "./recap";
 
 /** "28 Sep to 25 Oct": first and last day, both inclusive. */
 export const blockDateRange = (block: Pick<DatedBlock, "start" | "weeks">): string =>

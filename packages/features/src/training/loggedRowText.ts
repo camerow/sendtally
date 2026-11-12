@@ -1,14 +1,11 @@
 import type { SessionRow } from "@sendtally/api-client";
-import type { HangModel } from "@sendtally/features/hang";
-import {
-  sessionGradeLabel,
-  sessionTallyLabel,
-  sessionTitle,
-  type GradeScales,
-} from "@sendtally/features/sessions";
-import { activityMetaLabel, kindLabel } from "@sendtally/features/activities";
-import { itemEffort, type LoggedItem } from "@sendtally/features/training";
-import { sessionText } from "../sessions/sessionText";
+import type { HangModel } from "../hang/model";
+import { sessionGradeLabel, type GradeScales } from "../sessions/grades";
+import { sessionTallyLabel } from "../sessions/meta";
+import { sessionTitle } from "../sessions/title";
+import { activityMetaLabel, kindLabel } from "../activities/format";
+import { itemEffort, type LoggedItem } from "./days";
+import { sessionText } from "./sessionText";
 
 export type LoggedRowText = { name: string; meta: string; right: string; rpe: number | null };
 

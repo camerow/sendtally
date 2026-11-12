@@ -1,10 +1,10 @@
 import { letterOf, turnsOf, weekday, type WeightUnit } from "@sendtally/core/hang";
-import { weekdayShort } from "@sendtally/features/hang";
-import { t } from "@sendtally/features/i18n";
-import { kindLabel } from "@sendtally/features/activities";
-import type { Occurrence } from "@sendtally/features/training";
-import { doseSummary } from "@sendtally/features/workouts";
-import { blockTag } from "../blocks/blockText";
+import { weekdayShort } from "../hang/format";
+import { t } from "../i18n";
+import { kindLabel } from "../activities/format";
+import type { Occurrence } from "./plan";
+import { doseSummary } from "../workouts/library";
+import { blockTag } from "./blockText";
 
 /** "Hangboard · week 2 of 6" in a block, else the label alone. */
 export function occurrenceTag(label: string, o: Occurrence): string {

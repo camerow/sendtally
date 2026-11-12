@@ -3,7 +3,7 @@ import { View } from "react-native";
 import Svg, { Path } from "react-native-svg";
 import type { WorkoutKind } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
-import { KIND_LOOK } from "./kindLook";
+import { KIND_LOOK } from "@sendtally/features/training";
 
 export type DayMarkProps = {
   kind: WorkoutKind;
