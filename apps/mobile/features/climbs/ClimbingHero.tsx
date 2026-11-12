@@ -4,7 +4,7 @@ import { colors, fonts } from "@sendtally/design/tokens";
 import { Label } from "../training/components/Label";
 import { Title } from "../training/components/Title";
 import { CategoryMark } from "../training/library/CategoryMark";
-import { KIND_LOOK } from "../training/today/kindLook";
+import { KIND_LOOK } from "@sendtally/features/training";
 import { type } from "../training/type";
 
 export type ClimbingHeroProps = {

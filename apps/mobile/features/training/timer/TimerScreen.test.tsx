@@ -6,7 +6,7 @@ import { StyleSheet } from "react-native";
 import { colors } from "@sendtally/design/tokens";
 import { liveRunStorage } from "../../../lib/liveRunStorage";
 import { readLiveRun } from "../../live-session/liveRun";
-import { NO_PLAN } from "../data/planLinkParams";
+import { NO_PLAN } from "@sendtally/features/training";
 import type { TimerRun } from "../done/doneParams";
 import { hangData, renderWithHang, TODAY } from "../data/renderWithHang";
 import { TimerScreen } from "./TimerScreen";

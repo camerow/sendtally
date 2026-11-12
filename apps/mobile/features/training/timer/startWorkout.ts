@@ -1,7 +1,7 @@
 import { router } from "expo-router";
 import type { PlanLink } from "@sendtally/core/hang";
 import { startLive } from "../../live-session/startLive";
-import { NO_PLAN, planLinkParams } from "../data/planLinkParams";
+import { NO_PLAN, planLinkParams } from "@sendtally/features/training";
 
 /** The timer's route params for a hangboard workout's `session`th session. */
 export const timerParams = (

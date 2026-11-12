@@ -2,16 +2,20 @@ import React from "react";
 import { View } from "react-native";
 import { kindLabel } from "@sendtally/features/activities";
 import { formatNumber, t } from "@sendtally/features/i18n";
-import type { BlockRecap, WorkoutLookup } from "@sendtally/features/training";
+import {
+  type BlockRecap,
+  type WorkoutLookup,
+  doneOfShort,
+  effortText,
+  KIND_LOOK,
+} from "@sendtally/features/training";
 import { BlockWeekBars } from "../blocks/BlockWeekBars";
-import { doneOfShort, effortText } from "../blocks/blockText";
 import { PlanRow } from "../components/PlanRow";
 import { useHangData } from "../data/HangDataContext";
 import { openMembership } from "../plan/openMembership";
 import { SummaryTiles } from "../summary/SummaryTiles";
 import { changeText } from "../summary/summaryText";
 import { DayMark } from "../today/DayMark";
-import { KIND_LOOK } from "../today/kindLook";
 
 export type BlockRecapViewProps = { recap: BlockRecap; workout: WorkoutLookup };
 

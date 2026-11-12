@@ -3,7 +3,7 @@ import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
-import { occurrenceLink, type Occurrence } from "@sendtally/features/training";
+import { occurrenceLink, type Occurrence, occurrenceMeta } from "@sendtally/features/training";
 import type { LibraryWorkout } from "@sendtally/features/workouts";
 import { liveRunHref, useLiveRun } from "../../live-session/liveRun";
 import { Button } from "../components/Button";
@@ -17,7 +17,6 @@ import { StartButton } from "../library-detail/StartButton";
 import { type } from "../type";
 import { openOccurrence } from "./openOccurrence";
 import { DayMark } from "./DayMark";
-import { occurrenceMeta } from "./occurrenceText";
 
 export type OccurrenceCardProps = { occurrence: Occurrence; workout: LibraryWorkout };
 

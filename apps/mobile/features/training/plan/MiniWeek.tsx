@@ -3,7 +3,7 @@ import { View } from "react-native";
 import { weekday, type Membership, type WorkoutKind } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { daysList } from "@sendtally/features/hang";
-import { KIND_LOOK } from "../today/kindLook";
+import { KIND_LOOK } from "@sendtally/features/training";
 
 export type MiniWeekProps = {
   kind: WorkoutKind;

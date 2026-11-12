@@ -4,8 +4,7 @@ import type { WorkoutKind } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { press } from "../../../lib/press";
 import { DayMark } from "../today/DayMark";
-import { KIND_LOOK } from "../today/kindLook";
-import type { CellMark } from "./planGridRows";
+import { KIND_LOOK, type CellMark } from "@sendtally/features/training";
 
 export type DayCellProps = {
   kind: WorkoutKind;

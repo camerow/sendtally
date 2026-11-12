@@ -31,6 +31,12 @@ export const colors = {
   dataBarEmpty: "rgba(64,63,76,0.14)",
   dataAzureSoft: "#A9C9FD",
   dataFernSoft: "#9FCFB8",
+  textOnDarkSecondary: "rgba(238,211,248,0.88)",
+  climbingTint: "rgba(27,98,206,0.1)",
+  hangboardTint: "rgba(140,31,181,0.1)",
+  strengthTint: "rgba(21,127,82,0.1)",
+  mobilityTint: "rgba(64,63,76,0.1)",
+  otherTint: "rgba(64,63,76,0.06)",
 } as const;
 
 export const radius = {

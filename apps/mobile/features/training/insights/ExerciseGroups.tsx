@@ -16,7 +16,7 @@ import { press } from "../../../lib/press";
 import { HangIcon } from "../components/HangIcon";
 import { Label } from "../components/Label";
 import { useHangData } from "../data/HangDataContext";
-import { KIND_LOOK } from "../today/kindLook";
+import { KIND_LOOK } from "@sendtally/features/training";
 import { ExerciseTrendRow } from "./ExerciseTrendRow";
 
 /** Every exercise in range, grouped by kind, the most done first; each opens its trend, a grip its own screen. */

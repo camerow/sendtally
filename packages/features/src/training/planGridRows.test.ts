@@ -1,4 +1,4 @@
-import { describe, expect, it } from "@jest/globals";
+import { describe, expect, it } from "vitest";
 import type { Workout } from "@sendtally/core/hang";
 import { weekLines, workoutLines, type GripNames } from "./planGridRows";
 

@@ -4,7 +4,7 @@ import type { CalendarDate, ItemDone, PlanLink, SessionItem } from "@sendtally/c
 import { ACTIVITY_KINDS } from "@sendtally/features/activities";
 import { today } from "@sendtally/features/journal";
 import { startTimeOf } from "../intervals/intervalsText";
-import { planLinkParams, readPlanLink } from "./planLinkParams";
+import { planLinkParams, readPlanLink } from "@sendtally/features/training";
 
 /** A workout run in the sets or checklist player, and what the activity it logs is filed under. */
 export type WorkoutRun = {

@@ -8,13 +8,13 @@ import {
   type Workout,
   type WorkoutKind,
 } from "@sendtally/core/hang";
-import { kindLabel } from "@sendtally/features/activities";
-import type { OccurrenceStatus, WorkoutLookup } from "@sendtally/features/training";
-import { durationLabel } from "@sendtally/features/sessions";
-import { humanDuration, loadLabel, type HangModel } from "@sendtally/features/hang";
-import { t } from "@sendtally/features/i18n";
-import { bodySummary, workoutMinutes } from "@sendtally/features/workouts";
-import { openMembership } from "./openMembership";
+import { kindLabel } from "../activities/format";
+import type { OccurrenceStatus, WorkoutLookup } from "./plan";
+import { durationLabel } from "../sessions/years";
+import { humanDuration, loadLabel } from "../hang/format";
+import type { HangModel } from "../hang/model";
+import { t } from "../i18n";
+import { bodySummary, workoutMinutes } from "../workouts/library";
 
 /** How a dated day went for a row: an occurrence's status, or moved in from another day. */
 export type CellMark = OccurrenceStatus | "movedIn";
@@ -40,8 +40,8 @@ export type PlanGridRow = {
 
 /** What a grid shows of its rows beyond the workouts: a week's numbers, a dated week, days to tap. */
 export type GridOptions = {
-  /** What back says on the screen a row opens: the screen the grid is on. */
-  back?: string;
+  /** Opens a row: its weeks inside a block, its workout outside one. */
+  open: (m: Membership) => void;
   /** A block week past the first, its changes read in gold. */
   week?: { n: number; changes: readonly WeekChange[]; unit: WeightUnit };
   marks?: (m: Membership) => readonly (CellMark | null)[];
@@ -116,9 +116,9 @@ export function planGridRows(
   members: readonly Membership[],
   workout: WorkoutLookup,
   grips: GripNames,
-  options: GridOptions = {}
+  options: GridOptions
 ): PlanGridRow[] {
-  const { back, week, marks, toggle, press } = options;
+  const { open, week, marks, toggle, press } = options;
   return members.flatMap((m): PlanGridRow[] => {
     const w = workout(m.workoutId);
     if (w === undefined) return [];
@@ -144,7 +144,7 @@ export function planGridRows(
             : weekLines(w, changes(week.n), grips, week.unit),
         days: m.weekdays,
         ...(marks !== undefined && { marks: marks(m) }),
-        open: () => openMembership(m, back),
+        open: () => open(m),
         ...(toggle !== undefined && { toggle: (day: number) => toggle(m, day) }),
         ...(press !== undefined && { press: (day: number) => press(m, day) }),
       },

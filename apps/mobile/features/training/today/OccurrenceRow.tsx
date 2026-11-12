@@ -2,7 +2,13 @@ import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
-import { occurrenceLink, type Occurrence } from "@sendtally/features/training";
+import {
+  occurrenceLink,
+  type Occurrence,
+  KIND_LOOK,
+  occurrenceMeta,
+  occurrenceTag,
+} from "@sendtally/features/training";
 import type { LibraryWorkout } from "@sendtally/features/workouts";
 import { pressRow } from "../../../lib/press";
 import { DetailMenu } from "../components/DetailMenu";
@@ -15,8 +21,6 @@ import { type } from "../type";
 import { openOccurrence } from "./openOccurrence";
 import { DayMark } from "./DayMark";
 import { KindCircle } from "./KindCircle";
-import { KIND_LOOK } from "./kindLook";
-import { occurrenceMeta, occurrenceTag } from "./occurrenceText";
 
 export type OccurrenceRowProps = { occurrence: Occurrence; workout: LibraryWorkout };
 

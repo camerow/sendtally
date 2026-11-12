@@ -10,6 +10,8 @@ import {
   scheduleOf,
   usePlan,
   useTrainingLog,
+  ongoingMembers,
+  planGridRows,
 } from "@sendtally/features/training";
 import { ScreenFrame } from "../../../components/ScreenFrame";
 import { useApi } from "../../../lib/api";
@@ -20,7 +22,7 @@ import { Title } from "../components/Title";
 import { useHangData } from "../data/HangDataContext";
 import { LoadState } from "../data/LoadState";
 import { PlanGrid } from "../plan/PlanGrid";
-import { ongoingMembers, planGridRows } from "../plan/planGridRows";
+import { openMembership } from "../plan/openMembership";
 import { type } from "../type";
 import { AddWorkoutsSheet } from "./AddWorkoutsSheet";
 import { OngoingWorkouts } from "./OngoingWorkouts";
@@ -57,11 +59,11 @@ export function OngoingScreen({ back }: OngoingScreenProps): React.ReactElement 
     model,
     draft.editing
       ? {
-          back: name,
+          open: (m) => openMembership(m, name),
           toggle: (m, day) => () =>
             draft.toggle(m.id, { week: 1, day: day as Weekday, following: true, last: 1 }),
         }
-      : { back: name }
+      : { open: (m) => openMembership(m, name) }
   );
   const dayless = members.filter((m) => !hasDays(scheduleOf(draft.plan, m)));
   const save = (): void => {

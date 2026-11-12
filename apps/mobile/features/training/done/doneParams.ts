@@ -1,6 +1,6 @@
 import type { Href } from "expo-router";
 import type { HangSetup, ItemDone, PlanLink } from "@sendtally/core/hang";
-import { readPlanLink, readSession } from "../data/planLinkParams";
+import { readPlanLink, readSession } from "@sendtally/features/training";
 import { timerParams } from "../timer/startWorkout";
 
 /** What the timer saw: every set at what it held, those it never held off, and each item's setup. */

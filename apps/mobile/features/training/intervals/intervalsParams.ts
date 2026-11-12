@@ -3,7 +3,7 @@ import type { ActivityKind } from "@sendtally/api-client";
 import type { CalendarDate, Intervals, PlanLink } from "@sendtally/core/hang";
 import { ACTIVITY_KINDS } from "@sendtally/features/activities";
 import { startLive } from "../../live-session/startLive";
-import { planLinkParams, readPlanLink } from "../data/planLinkParams";
+import { planLinkParams, readPlanLink } from "@sendtally/features/training";
 
 /** What the intervals player runs, and what the activity it logs is filed under. */
 export type IntervalsRun = {
