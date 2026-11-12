@@ -11,12 +11,7 @@ import {
   View,
 } from "react-native";
 import type { ClimbSummary } from "@sendtally/api-client";
-import {
-  climbFormFromDraft,
-  withAreaClimb,
-  withTypedName,
-  type ClimbFormValues,
-} from "@sendtally/features/areas";
+import { climbFormFromDraft, withAreaClimb, type ClimbFormValues } from "@sendtally/features/areas";
 import { findClimb, useClimbVocabulary } from "@sendtally/features/climbs";
 import {
   draftProblem,
@@ -25,16 +20,19 @@ import {
   emptyDraft,
   storedDraft,
   circuitGyms,
-  newClimbOfKind,
-  nextClimbKey,
+  isFormProject,
+  nextFormClimb,
   readClimbKind,
   toLogSessionInput,
   useDraftAutosave,
-  withClimbName,
+  withClimb,
+  withClimbArea,
   withClimbScale,
-  withKnownArea,
+  withGym,
   withLocation,
-  withPickedClimb,
+  withProjectToggled,
+  withSuggestedClimb,
+  withTypedClimbName,
   type ClimbArea,
   type ClimbDraft,
   type LogSessionDraft,
@@ -50,14 +48,7 @@ import { sessionDraftStorage } from "../../lib/sessionDraftStorage";
 import { confirmDiscardDraft } from "../../lib/confirmDiscardDraft";
 import { Button } from "../training/components/Button";
 import { DraftBanner } from "./DraftBanner";
-import {
-  circuitGym,
-  gymOfDraft,
-  useGyms,
-  withCircuit,
-  withoutCircuit,
-  type Gym,
-} from "@sendtally/features/gyms";
+import { gymOfDraft, useGyms, type Gym } from "@sendtally/features/gyms";
 import { OptionRow } from "../../components/OptionRow";
 import { SelectRow } from "../../components/SelectRow";
 import { AddClimbSheet } from "../areas/AddClimbSheet";
@@ -166,20 +157,7 @@ export function LogSessionForm({
   const vocabulary = useClimbVocabulary(api);
   const gyms = useGyms(api);
   const circuitChoices = draft.location === "indoor" ? circuitGyms(gyms.gyms) : [];
-  // Changing the gym re-places every climb: onto the new gym's first circuit, or off circuits.
-  const setGym = (next: Gym | null): void => {
-    const at = circuitGym(next);
-    const first = at?.circuits[0];
-    setDraft({
-      ...draft,
-      ...(next === null ? { gymId: undefined } : { gymId: next.id }),
-      climbs: draft.climbs.map((c) =>
-        at === null || first === undefined
-          ? withoutCircuit(c)
-          : withCircuit(c, at.circuits.find((x) => x.id === c.circuit?.id) ?? first, at)
-      ),
-    });
-  };
+  const setGym = (next: Gym | null): void => setDraft(withGym(draft, next));
   const [addingGym, setAddingGym] = React.useState(false);
   const [editingKey, setEditingKey] = React.useState<string | null>(null);
   const editingIndex = draft.climbs.findIndex((c) => c.key === editingKey);
@@ -229,30 +207,19 @@ export function LogSessionForm({
   }, [flush]);
 
   function updateClimb(key: string, patch: (climb: ClimbDraft) => ClimbDraft): void {
-    setDraft((d) => ({ ...d, climbs: d.climbs.map((c) => (c.key === key ? patch(c) : c)) }));
+    setDraft((d) => withClimb(d, key, patch));
   }
 
   function updateClimbName(key: string, name: string): void {
-    updateClimb(key, (c) =>
-      withClimbName(withTypedName(c, name), name, findClimb(vocabulary.climbs, name))
-    );
+    updateClimb(key, (c) => withTypedClimbName(c, name, vocabulary.climbs));
   }
 
   function pickClimb(key: string, known: ClimbSummary): void {
-    updateClimb(key, (c) => {
-      const picked = withPickedClimb(withTypedName(c, known.name), known);
-      return outdoor ? withKnownArea(picked, known) : picked;
-    });
+    updateClimb(key, (c) => withSuggestedClimb(c, known, outdoor));
   }
 
-  /** A new area drops a link to an Areas climb somewhere else. */
   function setClimbArea(key: string, area: ClimbArea | null): void {
-    updateClimb(key, ({ area: was, ...c }) => {
-      if (area === null) return c;
-      if (was?.id === area.id) return { ...c, area };
-      const { climbId: _link, ...unlinked } = c;
-      return { ...unlinked, area };
-    });
+    updateClimb(key, (c) => withClimbArea(c, area));
   }
 
   function removeClimb(key: string): void {
@@ -261,33 +228,16 @@ export function LogSessionForm({
   }
 
   function addClimb(): void {
-    const key = nextClimbKey(draft.climbs);
-    const previous = draft.climbs[draft.climbs.length - 1];
-    setDraft({
-      ...draft,
-      climbs: [
-        ...draft.climbs,
-        {
-          ...newClimbOfKind(
-            key,
-            readClimbKind(climbKindStorage, circuitChoices),
-            gradePrefs,
-            circuitChoices,
-            previous
-          ),
-          ...(outdoor && previous?.area !== undefined ? { area: previous.area } : {}),
-        },
-      ],
-    });
-    setEditingKey(key);
+    const kind = readClimbKind(climbKindStorage, circuitChoices);
+    const climb = nextFormClimb(draft, kind, gradePrefs, circuitChoices);
+    setDraft({ ...draft, climbs: [...draft.climbs, climb] });
+    setEditingKey(climb.key);
   }
 
-  function isProject(climb: ClimbDraft): boolean {
-    return climb.project ?? vocabulary.isProject(climb.name);
-  }
+  const isProject = (climb: ClimbDraft): boolean => isFormProject(climb, vocabulary.isProject);
 
   function toggleProject(climb: ClimbDraft): void {
-    updateClimb(climb.key, (c) => ({ ...c, project: !isProject(c) }));
+    updateClimb(climb.key, (c) => withProjectToggled(c, vocabulary.isProject));
   }
 
   /** Cancel abandons the draft, so it only leaves one behind after a confirmation. */

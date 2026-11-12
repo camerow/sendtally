@@ -1,10 +1,13 @@
 import { describe, expect, it } from "vitest";
 import type { JournalEntry, SessionWithClimbs } from "@sendtally/api-client";
+import type { LogItem } from "./types";
 import {
   injuriesCarriedIn,
+  sessionChoices,
   tripContents,
   tripDays,
   tripEffort,
+  tripMeta,
   tripPyramid,
   tripStats,
 } from "./trips";
@@ -159,5 +162,52 @@ describe("tripPyramid", () => {
 describe("injuriesCarriedIn", () => {
   it("names injuries still going when the trip started", () => {
     expect(injuriesCarriedIn(trip, entries).map((e) => e.id)).toEqual(["a2"]);
+  });
+});
+
+describe("sessionChoices", () => {
+  const holder = session("holder", "2026-05-23T10:00:00.000Z", { rpe_source: "none" });
+  const all = [
+    session("before", "2026-05-01T10:00:00.000Z"),
+    session("in-a", "2026-05-22T10:00:00.000Z"),
+    session("in-b", "2026-05-24T10:00:00.000Z"),
+    session("linked", "2026-05-23T09:00:00.000Z"),
+    holder,
+  ];
+  const ids = (rows: { fingerprint: string }[]): string[] => rows.map((s) => s.fingerprint);
+
+  it("splits what could be linked into the entry's dates and the rest, newest first", () => {
+    const choices = sessionChoices(all, ["linked"], "2026-05-22", "2026-05-24");
+    expect(ids(choices.linked)).toEqual(["linked"]);
+    expect(ids(choices.inSpan)).toEqual(["in-b", "in-a"]);
+    expect(ids(choices.recent)).toEqual(["before"]);
+  });
+
+  it("reads a single day when the entry has no end", () => {
+    expect(ids(sessionChoices(all, [], "2026-05-22", "").inSpan)).toEqual(["in-a"]);
+  });
+});
+
+describe("tripMeta", () => {
+  const item = (s: SessionWithClimbs): LogItem => ({
+    key: s.fingerprint,
+    at: s.start_at,
+    tags: [],
+    type: "session",
+    session: s,
+  });
+
+  it("says what the trip holds and its hardest grade", () => {
+    const inside = [
+      item(session("a", "2026-05-22T10:00:00.000Z", { top_grade: 6, top_send_grade: 6 })),
+    ];
+    expect(tripMeta(inside, SCALES)).toBe("1 session · TOP V6");
+  });
+
+  it("leaves the grade off when nothing was graded", () => {
+    const inside = [
+      item(session("a", "2026-05-22T10:00:00.000Z", { top_grade: -1, top_send_grade: -1 })),
+    ];
+    expect(tripMeta(inside, SCALES)).toBe("1 session");
   });
 });

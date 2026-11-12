@@ -3,20 +3,9 @@ import React from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import type { ClimbSummary, SendtallyApi } from "@sendtally/api-client";
 import { effortColor } from "@sendtally/design/tokens";
-import {
-  climbFormFromDraft,
-  withAreaClimb,
-  withTypedName,
-  type AreaClimb,
-} from "@sendtally/features/areas";
-import { climbDraftGrade, findClimb, useClimbVocabulary } from "@sendtally/features/climbs";
-import {
-  circuitGym,
-  useGyms,
-  withCircuit,
-  withoutCircuit,
-  type Gym,
-} from "@sendtally/features/gyms";
+import { climbFormFromDraft, withAreaClimb, type AreaClimb } from "@sendtally/features/areas";
+import { useClimbVocabulary } from "@sendtally/features/climbs";
+import { useGyms, type Gym } from "@sendtally/features/gyms";
 import {
   adoptSavedDetails,
   draftProblem,
@@ -24,15 +13,20 @@ import {
   disciplineOf,
   emptyDraft,
   storedDraft,
-  newClimbOfKind,
   circuitGyms,
-  nextClimbKey,
+  isFormProject,
+  nextFormClimb,
   readClimbKind,
   toLogSessionInput,
   useDraftAutosave,
+  withClimb,
+  withClimbArea,
   withClimbScale,
-  withKnownArea,
+  withGym,
   withLocation,
+  withProjectToggled,
+  withSuggestedClimb,
+  withTypedClimbName,
   type ClimbArea,
   type ClimbDraft,
   type LogSessionDraft,
@@ -43,9 +37,7 @@ import { useGradeScalePrefs } from "@sendtally/features/settings";
 import { formatDate, t } from "@sendtally/features/i18n";
 import { DiscardDraftDialog } from "../../components/DiscardDraftDialog";
 import { useIsNarrow } from "../../lib/useIsNarrow";
-import { climbKindStorage } from "../../lib/climbKindStorage";
-import { liveSessionStorage } from "../../lib/liveSessionStorage";
-import { sessionDraftStorage } from "../../lib/sessionDraftStorage";
+import { climbKindStorage, liveSessionStorage, sessionDraftStorage } from "../../lib/localStorages";
 import { AreaFormDialog } from "../../areas/components/AreaFormDialog";
 import { ClimbFormDialog } from "../../areas/components/ClimbFormDialog";
 import { useDeviceLocation } from "../../areas/useDeviceLocation";
@@ -231,85 +223,30 @@ export function LogSessionForm({
     else setConfirmingCancel(true);
   }
 
-  /** Changing the gym re-places every climb: onto the new gym's first circuit, or off circuits. */
   function setGym(next: Gym | null): void {
-    const at = circuitGym(next);
-    const first = at?.circuits[0];
-    setDraft((d) => ({
-      ...d,
-      gymId: next?.id,
-      climbs: d.climbs.map((c) =>
-        at === null || first === undefined
-          ? withoutCircuit(c)
-          : withCircuit(c, at.circuits.find((x) => x.id === c.circuit?.id) ?? first, at)
-      ),
-    }));
+    setDraft((d) => withGym(d, next));
   }
 
   function updateClimb(key: string, climb: ClimbDraft): void {
-    setDraft((d) => ({ ...d, climbs: d.climbs.map((c) => (c.key === key ? climb : c)) }));
+    setDraft((d) => withClimb(d, key, () => climb));
   }
 
   function updateClimbName(key: string, name: string): void {
-    const known = findClimb(vocabulary.climbs, name);
-    setDraft((d) => ({
-      ...d,
-      climbs: d.climbs.map((c) =>
-        c.key !== key
-          ? c
-          : {
-              ...withTypedName(c, name),
-              project: undefined,
-              // A project added from the projects page has no grade yet, so the
-              // one the user already picked in the form stands.
-              ...(known === undefined || climbDraftGrade(known, c.scale) === ""
-                ? {}
-                : { grade: climbDraftGrade(known, c.scale) }),
-            }
-      ),
-    }));
+    setDraft((d) => withClimb(d, key, (c) => withTypedClimbName(c, name, vocabulary.climbs)));
   }
 
   function pickClimb(key: string, known: ClimbSummary): void {
-    setDraft((d) => ({
-      ...d,
-      climbs: d.climbs.map((c) =>
-        c.key !== key
-          ? c
-          : withKnownArea(
-              {
-                ...withTypedName(c, known.name),
-                project: undefined,
-                ...(climbDraftGrade(known, c.scale) === ""
-                  ? {}
-                  : { grade: climbDraftGrade(known, c.scale) }),
-              },
-              d.location === "outdoor" ? known : undefined
-            )
-      ),
-    }));
+    setDraft((d) =>
+      withClimb(d, key, (c) => withSuggestedClimb(c, known, d.location === "outdoor"))
+    );
   }
 
-  /** A new area drops a link to an Areas climb somewhere else. */
   function setClimbArea(key: string, area: ClimbArea | null): void {
-    setDraft((d) => ({
-      ...d,
-      climbs: d.climbs.map((c) => {
-        if (c.key !== key) return c;
-        const { area: was, ...rest } = c;
-        if (area === null) return rest;
-        if (was?.id === area.id) return { ...rest, area };
-        const { climbId: _link, ...unlinked } = rest;
-        return { ...unlinked, area };
-      }),
-    }));
+    setDraft((d) => withClimb(d, key, (c) => withClimbArea(c, area)));
   }
 
   function pickAreaClimb(key: string, picked: AreaClimb): void {
-    setDraft((d) => ({
-      ...d,
-      climbs: d.climbs.map((c) => (c.key === key ? withAreaClimb(c, picked) : c)),
-    }));
+    setDraft((d) => withClimb(d, key, (c) => withAreaClimb(c, picked)));
   }
 
   function climbAreas(climb: ClimbDraft): ClimbAreas {
@@ -342,33 +279,16 @@ export function LogSessionForm({
   }
 
   function addClimb(): void {
-    const key = nextClimbKey(draft.climbs);
-    const previous = draft.climbs[draft.climbs.length - 1];
-    setDraft({
-      ...draft,
-      climbs: [
-        ...draft.climbs,
-        {
-          ...newClimbOfKind(
-            key,
-            readClimbKind(climbKindStorage, circuitChoices),
-            prefs.scales,
-            circuitChoices,
-            previous
-          ),
-          ...(outdoor && previous?.area !== undefined ? { area: previous.area } : {}),
-        },
-      ],
-    });
-    if (narrow) setEditingKey(key);
+    const kind = readClimbKind(climbKindStorage, circuitChoices);
+    const climb = nextFormClimb(draft, kind, prefs.scales, circuitChoices);
+    setDraft({ ...draft, climbs: [...draft.climbs, climb] });
+    if (narrow) setEditingKey(climb.key);
   }
 
-  function isProject(climb: ClimbDraft): boolean {
-    return climb.project ?? vocabulary.isProject(climb.name);
-  }
+  const isProject = (climb: ClimbDraft): boolean => isFormProject(climb, vocabulary.isProject);
 
   function toggleProject(climb: ClimbDraft): void {
-    updateClimb(climb.key, { ...climb, project: !isProject(climb) });
+    updateClimb(climb.key, withProjectToggled(climb, vocabulary.isProject));
   }
 
   async function save(): Promise<void> {
@@ -653,17 +573,12 @@ export function LogSessionForm({
           area={addingClimb.area ?? null}
           initial={climbFormFromDraft(addingClimb, prefs.scales)}
           onCreated={(created, area) => {
-            setDraft((d) => ({
-              ...d,
-              climbs: d.climbs.map((c) =>
-                c.key === addingClimb.key
-                  ? {
-                      ...withAreaClimb(c, created),
-                      area: c.area ?? { id: area.id, name: area.name },
-                    }
-                  : c
-              ),
-            }));
+            setDraft((d) =>
+              withClimb(d, addingClimb.key, (c) => ({
+                ...withAreaClimb(c, created),
+                area: c.area ?? { id: area.id, name: area.name },
+              }))
+            );
             setAdding(null);
           }}
           onClose={() => setAdding(null)}

@@ -10,7 +10,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import type { ClimbChange, ClimbGrade, ClimbSummary } from "@sendtally/api-client";
+import type { ClimbSummary } from "@sendtally/api-client";
 import {
   useAreaClimbSearch,
   useAreaSearch,
@@ -19,10 +19,11 @@ import {
 } from "@sendtally/features/areas";
 import {
   areaChoice,
+  climbChange,
   climbSuggestions,
   climbTitle,
-  findClimb,
   isNewClimb,
+  knownOf,
   placeOf,
   typicalGradeIndex,
   useClimbs,
@@ -71,13 +72,6 @@ const row = {
   borderBottomWidth: 1,
   borderBottomColor: colors.lineOnLightSoft,
 } as const;
-
-/** Mine by the id it was picked as, else by its name. */
-const knownOf = (climbs: readonly ClimbSummary[], climb: ClimbDraft): ClimbSummary | undefined =>
-  climbs.find((c) => c.id === climb.userClimbId) ?? findClimb([...climbs], climb.name);
-
-const sameGrade = (a: ClimbGrade, b: ClimbGrade | null | undefined): boolean =>
-  b != null && a.scale === b.scale && String(a.value) === String(b.value);
 
 /**
  * One screen for a climb: its name and area autocomplete, and anything not found is created.
@@ -183,20 +177,9 @@ export function AddClimbScreen(): React.ReactElement {
   };
 
   const saveEdit = (id: string): void => {
-    const name = climb.name.trim();
     const original = mine.find((c) => c.id === id);
-    const grade = draftGrade(climb.grade, climb.scale);
     placeOf(api, choice)
-      .then((place) => {
-        const change: ClimbChange = {
-          ...(name === original?.name ? {} : { name }),
-          areaId: place?.id ?? null,
-          areaClimbId: climb.climbId ?? null,
-          ...(grade === undefined || sameGrade(grade, original?.grade) ? {} : { grade }),
-          ...(touched === null || original?.project === touched ? {} : { working: touched }),
-        };
-        return api.updateClimb(id, change);
-      })
+      .then((place) => api.updateClimb(id, climbChange(original, climb, place, touched)))
       .then(
         ({ id: next }) => router.dismissTo({ pathname: "/climb/[id]", params: { id: next } }),
         fail

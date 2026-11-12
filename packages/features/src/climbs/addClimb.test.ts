@@ -1,6 +1,14 @@
 import { describe, expect, it } from "vitest";
 import type { AreaClimb, AreaSummary, ClimbSummary } from "@sendtally/api-client";
-import { areaChoice, climbSuggestions, isNewClimb, placeOf } from "./addClimb";
+import { newClimb } from "../log-session/transforms";
+import {
+  areaChoice,
+  climbChange,
+  climbSuggestions,
+  isNewClimb,
+  knownOf,
+  placeOf,
+} from "./addClimb";
 
 const mine = (name: string, sessions = 2): ClimbSummary =>
   ({ id: `m-${name}`, name, sessions }) as unknown as ClimbSummary;
@@ -89,5 +97,39 @@ describe("placeOf", () => {
     expect(await placeOf(fake, { kind: "area", area: picked })).toBe(picked);
     expect(await placeOf(fake, null)).toBeNull();
     expect(fake.sent).toEqual([]);
+  });
+});
+
+describe("climb edit", () => {
+  const original = {
+    ...mine("The Prow"),
+    grade: { scale: "v", value: 6 },
+    project: true,
+  } as ClimbSummary;
+  const draft = { ...newClimb("climb-1", "v"), name: "The Prow", grade: "V6" };
+
+  it("finds the climb by the id it was picked as before its name", () => {
+    const other = mine("Renamed");
+    expect(knownOf([original, other], { ...draft, userClimbId: other.id })).toBe(other);
+    expect(knownOf([original, other], draft)).toBe(original);
+  });
+
+  it("sends only what changed, and the place always", () => {
+    expect(climbChange(original, draft, null, null)).toEqual({ areaId: null, areaClimbId: null });
+    expect(
+      climbChange(
+        original,
+        { ...draft, name: " The Prow Direct ", grade: "V7", climbId: "ac-1" },
+        { id: "a1", name: "Stanage" },
+        false
+      )
+    ).toEqual({
+      name: "The Prow Direct",
+      areaId: "a1",
+      areaClimbId: "ac-1",
+      grade: { scale: "v", value: 7 },
+      working: false,
+    });
+    expect(climbChange(original, draft, null, true)).not.toHaveProperty("working");
   });
 });

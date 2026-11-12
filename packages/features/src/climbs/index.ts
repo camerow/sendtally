@@ -54,8 +54,10 @@ export {
 } from "./daysClimbed";
 export {
   areaChoice,
+  climbChange,
   climbSuggestions,
   isNewClimb,
+  knownOf,
   placeOf,
   type AreaChoice,
   type ClimbSuggestion,

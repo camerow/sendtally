@@ -365,6 +365,17 @@ export function entryWhen(entry: JournalEntry): string {
     : longDayLabel(entry.occurred_at);
 }
 
+/**
+ * The line under an entry in the log: its dates when it spans some, else the detail it is
+ * given. A titled entry with no detail shows its first line; an untitled one already borrows
+ * that line as its title.
+ */
+export function entryRowMeta(entry: JournalEntry, detail?: string): string {
+  if (spansDates(entry.kind)) return spanLabel(entry.occurred_at, entry.ends_at);
+  const titled = (entry.title?.trim() ?? "") !== "";
+  return titled && detail === undefined ? (entry.body.trim().split("\n")[0] ?? "") : (detail ?? "");
+}
+
 /** "22 - 26 May", "From 18 May" while it is still going. */
 export function spanLabel(from: string, to: string | null): string {
   if (to === null) return t("journal.spanOpen", { from: dayLabel(from) });
