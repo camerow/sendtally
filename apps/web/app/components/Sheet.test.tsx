@@ -69,6 +69,18 @@ describe("Sheet", () => {
     expect(onSave).toHaveBeenCalledOnce();
   });
 
+  it("focuses the child marked data-autofocus once open", () => {
+    act(() =>
+      root.render(
+        <Sheet open title="Note" onClose={() => {}}>
+          <input aria-label="Date" />
+          <textarea aria-label="Note" data-autofocus />
+        </Sheet>
+      )
+    );
+    expect(document.activeElement).toBe(container.querySelector("textarea"));
+  });
+
   it("stays open for a click that started inside it", () => {
     const onClose = vi.fn();
     const dialog = mount(true, onClose)!;

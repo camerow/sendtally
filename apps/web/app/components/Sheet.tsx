@@ -20,7 +20,8 @@ export type SheetProps = {
 
 /**
  * Anything typed into: a centred dialog on desktop, the bottom sheet at 375. Escape and the
- * scrim close it.
+ * scrim close it. A child marked `data-autofocus` takes focus on open; React's `autoFocus`
+ * fires before the dialog opens, so the dialog would move focus to its first field instead.
  */
 export function Sheet({ open, ...props }: SheetProps): React.ReactElement | null {
   return open ? <OpenSheet {...props} /> : null;
@@ -38,7 +39,9 @@ function OpenSheet({
 
   React.useEffect(() => {
     const el = dialog.current;
-    if (el !== null && !el.open) el.showModal();
+    if (el === null || el.open) return;
+    el.showModal();
+    el.querySelector<HTMLElement>("[data-autofocus]")?.focus();
   }, []);
 
   return (
