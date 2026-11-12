@@ -1,6 +1,6 @@
 import type { AuthedUser } from "../auth";
 import type { Env } from "../bindings";
-import { INSIGHTS_FEATURE, STORE_ENTITLEMENT } from "../features";
+import { INSIGHTS_FEATURE, STORE_ENTITLEMENT, TRIAL_DAYS, TRIAL_FLOOR } from "../features";
 import { captureUserEvent } from "./posthog";
 import * as repo from "./repo";
 import type { RevenueCatClient, StoreEntitlement } from "./revenuecat";
@@ -18,7 +18,21 @@ export type Membership = {
   store: StoreMembership | null;
 };
 
-export type Entitlements = { membership: Membership };
+export type Trial = { endsAt: string };
+
+export type Entitlements = { membership: Membership; trial: Trial };
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+export function trialEndsAt(createdAt: string): string {
+  const start = Math.max(Date.parse(createdAt), Date.parse(TRIAL_FLOOR));
+  return new Date(start + TRIAL_DAYS * DAY_MS).toISOString();
+}
+
+/** What every member gate asks: a live membership, or a trial still running. */
+export function hasAccess(entitlements: Entitlements, now = new Date()): boolean {
+  return entitlements.membership.active || Date.parse(entitlements.trial.endsAt) > now.getTime();
+}
 
 /**
  * A renewal, a transfer and a plain refresh all re-send the entitlement the
@@ -61,7 +75,11 @@ export async function resolveEntitlements(
   user: AuthedUser,
   now = new Date()
 ): Promise<Entitlements> {
-  const rows = await repo.listStoreEntitlements(env.DB, user.userId);
+  await repo.ensureUser(env.DB, user.userId);
+  const [rows, account] = await Promise.all([
+    repo.listStoreEntitlements(env.DB, user.userId),
+    repo.getUser(env.DB, user.userId),
+  ]);
   const row = rows.find((r) => r.entitlement === STORE_ENTITLEMENT && isLive(r.expires_at, now));
   const web = user.hasFeature(INSIGHTS_FEATURE);
   const store =
@@ -73,5 +91,8 @@ export async function resolveEntitlements(
           expiresAt: row.expires_at,
           willRenew: row.will_renew === 1,
         };
-  return { membership: { active: web || store !== null, web, store } };
+  return {
+    membership: { active: web || store !== null, web, store },
+    trial: { endsAt: trialEndsAt(account?.created_at ?? now.toISOString()) },
+  };
 }

@@ -1,7 +1,7 @@
 import { env } from "cloudflare:test";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { newlyGranted } from "../src/lib/entitlements";
-import { INSIGHTS_FEATURE, STORE_ENTITLEMENT } from "../src/features";
+import { hasAccess, newlyGranted, trialEndsAt } from "../src/lib/entitlements";
+import { INSIGHTS_FEATURE, STORE_ENTITLEMENT, TRIAL_FLOOR } from "../src/features";
 import { storeEntitlementsOf, webhookUserIds } from "../src/lib/revenuecat";
 import { jsonResponse, makeFakeFetch, type RecordedCall } from "./fakes";
 import { testApp } from "./harness";
@@ -90,6 +90,7 @@ async function entitlements(app: ReturnType<typeof testApp>, userId: string, fea
         willRenew: boolean;
       } | null;
     };
+    trial: { endsAt: string };
   };
 }
 
@@ -343,5 +344,51 @@ describe("newlyGranted", () => {
 
   it("ignores entitlements that are not the membership", () => {
     expect(newlyGranted([], [{ ...row, entitlement: "something_else" }])).toEqual([]);
+  });
+});
+
+describe("trial", () => {
+  const LATER = "2027-03-10T12:00:00.000Z";
+
+  it("runs 30 days from sign-up", () => {
+    expect(trialEndsAt(LATER)).toBe("2027-04-09T12:00:00.000Z");
+  });
+
+  it("gives an account older than the trial 30 days from the floor", () => {
+    expect(trialEndsAt("2026-01-01T00:00:00.000Z")).toBe(trialEndsAt(TRIAL_FLOOR));
+    expect(trialEndsAt(TRIAL_FLOOR)).toBe("2026-12-31T00:00:00.000Z");
+  });
+
+  it("grants access while the trial runs and not from the moment it ends", () => {
+    const free = {
+      membership: { active: false, web: false, store: null },
+      trial: { endsAt: LATER },
+    };
+    expect(hasAccess(free, new Date("2027-03-10T11:59:59.999Z"))).toBe(true);
+    expect(hasAccess(free, new Date(LATER))).toBe(false);
+  });
+
+  it("grants access to a member whose trial is long over", () => {
+    const member = {
+      membership: { active: true, web: true, store: null },
+      trial: { endsAt: PAST },
+    };
+    expect(hasAccess(member, new Date(LATER))).toBe(true);
+  });
+
+  it("answers the trial end from the account's sign-up", async () => {
+    const { fetchImpl } = revenueCatFetch({});
+    await env.DB.prepare(`INSERT INTO users (id, created_at) VALUES ('user_trial_1', ?)`)
+      .bind(LATER)
+      .run();
+    const body = await entitlements(testApp(fetchImpl), "user_trial_1");
+    expect(body.trial).toEqual({ endsAt: "2027-04-09T12:00:00.000Z" });
+    expect(body.membership.active).toBe(false);
+  });
+
+  it("starts the clock for a user the database has not seen yet", async () => {
+    const { fetchImpl } = revenueCatFetch({});
+    const { trial } = await entitlements(testApp(fetchImpl), "user_trial_new");
+    expect(Date.parse(trial.endsAt)).toBeGreaterThan(Date.now());
   });
 });
