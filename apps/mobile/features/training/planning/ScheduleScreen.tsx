@@ -34,6 +34,7 @@ import { useHangData } from "../data/HangDataContext";
 import { LoadState } from "../data/LoadState";
 import { useLibrary } from "../library/useLibrary";
 import { usePlanActions } from "../plan/usePlanActions";
+import { useReminderPrompt } from "../reminders/ReminderPromptProvider";
 import { backToPlan } from "./backToPlan";
 import { BlockChoice } from "./BlockChoice";
 import type { AddFlow } from "./flowParams";
@@ -61,6 +62,7 @@ export function ScheduleScreen({
   const library = useLibrary();
   const plan = usePlan(useApi()).state;
   const actions = usePlanActions();
+  const prompt = useReminderPrompt();
   const [draft, setDraft] = React.useState(() => newSchedule(flow.date, today));
   const [blockId, setBlockId] = React.useState(flow.blockId);
   const update = (patch: Partial<ScheduleDraft>): void => setDraft((d) => ({ ...d, ...patch }));
@@ -90,7 +92,9 @@ export function ScheduleScreen({
     const [first] = memberships;
     if (first !== undefined && draft.mode === "dates" && dated !== null)
       void actions.saveSchedule(blockDates(first.id, dated, draft.dates));
-    if (first !== undefined) backToPlan(block?.id ?? null, days[0] ?? first.start, first.id);
+    if (first === undefined) return;
+    prompt();
+    backToPlan(block?.id ?? null, days[0] ?? first.start, first.id);
   };
 
   return (

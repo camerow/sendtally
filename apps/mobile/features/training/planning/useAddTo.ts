@@ -10,6 +10,7 @@ import {
 import { useApi } from "../../../lib/api";
 import { useHangData } from "../data/HangDataContext";
 import { usePlanActions } from "../plan/usePlanActions";
+import { useReminderPrompt } from "../reminders/ReminderPromptProvider";
 import type { AddFlow } from "./flowParams";
 
 /** Where an add puts a workout, and whether a plan is already there. */
@@ -46,6 +47,7 @@ export function useAddTo(flow: AddFlow): AddTo {
   const { today } = useHangData();
   const { log } = useTrainingLog(useApi());
   const actions = usePlanActions();
+  const prompt = useReminderPrompt();
   const block =
     flow.blockId === null ? undefined : log.plan.blocks.find((b) => b.id === flow.blockId);
   const day = flow.date;
@@ -68,6 +70,7 @@ export function useAddTo(flow: AddFlow): AddTo {
         // A day in a scheduled block: that day's weekday in its week.
         if (day !== null && isDated(block)) void actions.saveSchedule(blockDates(id, block, [day]));
       }
+      prompt();
       return id;
     },
     undo: (membershipId) => void actions.deleteMembership(membershipId),
