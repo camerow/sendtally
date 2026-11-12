@@ -11,7 +11,7 @@ import {
   draftProblem,
   draftSummary,
   disciplineOf,
-  emptyDraft,
+  emptySessionDraft,
   storedDraft,
   circuitGyms,
   isFormProject,
@@ -165,7 +165,7 @@ export function LogSessionForm({
     searchParams.get("resume") === "1" ? storedDraft(sessionDraftStorage) : null
   );
   const [draft, setDraft] = React.useState<LogSessionDraft>(
-    () => editing?.draft ?? picked ?? emptyDraft(new Date(), prefs.scales)
+    () => editing?.draft ?? picked ?? emptySessionDraft(new Date(), prefs.scales)
   );
   const [saving, setSaving] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);

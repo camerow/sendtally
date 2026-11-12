@@ -7,7 +7,7 @@ import {
   writeStoredDraft,
   type DraftStorage,
 } from "./draftStore";
-import { emptyDraft } from "./transforms";
+import { emptySessionDraft } from "./transforms";
 
 function memory(initial: string | null = null): DraftStorage {
   let value = initial;
@@ -27,14 +27,14 @@ const NOW = new Date(2026, 7, 26, 20, 2);
 describe("session draft store", () => {
   it("round-trips a draft", () => {
     const storage = memory();
-    const draft = emptyDraft(NOW);
+    const draft = emptySessionDraft(NOW);
     writeStoredDraft(storage, draft, NOW);
     expect(parseStoredDraft(storage.read(), NOW)).toEqual({ draft, savedAt: NOW });
   });
 
   it("carries the server fingerprint of a live draft, and reads a file written without one", () => {
     const storage = memory();
-    const draft = emptyDraft(NOW);
+    const draft = emptySessionDraft(NOW);
     writeStoredDraft(storage, draft, NOW, { fingerprint: "manual-7" });
     expect(parseStoredDraft(storage.read(), NOW)).toEqual({
       draft,
@@ -51,20 +51,20 @@ describe("session draft store", () => {
 
   it("drops a draft older than the time to live", () => {
     const storage = memory();
-    writeStoredDraft(storage, emptyDraft(NOW), NOW);
+    writeStoredDraft(storage, emptySessionDraft(NOW), NOW);
     const later = new Date(NOW.getTime() + DRAFT_TTL_MS + 1);
     expect(parseStoredDraft(storage.read(), later)).toBeNull();
   });
 
   it("keeps a draft still inside the time to live", () => {
     const storage = memory();
-    writeStoredDraft(storage, emptyDraft(NOW), NOW);
+    writeStoredDraft(storage, emptySessionDraft(NOW), NOW);
     const later = new Date(NOW.getTime() + DRAFT_TTL_MS - 1);
     expect(parseStoredDraft(storage.read(), later)).not.toBeNull();
   });
 
   it("fills in a climb field the build that wrote the draft did not have", () => {
-    const draft = emptyDraft(NOW);
+    const draft = emptySessionDraft(NOW);
     const stored = JSON.stringify({
       draft: {
         ...draft,
@@ -85,7 +85,7 @@ describe("session draft store", () => {
     const storage = memory();
     const listener = vi.fn();
     const unsubscribe = storage.subscribe(listener);
-    writeStoredDraft(storage, emptyDraft(NOW), NOW);
+    writeStoredDraft(storage, emptySessionDraft(NOW), NOW);
     storage.remove();
     expect(listener).toHaveBeenCalledTimes(2);
     unsubscribe();
@@ -96,7 +96,7 @@ describe("session draft store", () => {
   it("hands back the stored draft for a form opened to pick it up", () => {
     const storage = memory();
     expect(storedDraft(storage)).toBeNull();
-    const draft = { ...emptyDraft(NOW), name: "Tuesday night session" };
+    const draft = { ...emptySessionDraft(NOW), name: "Tuesday night session" };
     writeStoredDraft(storage, draft, new Date());
     expect(storedDraft(storage)?.name).toBe("Tuesday night session");
   });
@@ -116,7 +116,7 @@ describe("session draft store", () => {
     const listener = vi.fn();
     broken.subscribe(listener);
     expect(broken.read()).toBeNull();
-    expect(writeStoredDraft(broken, emptyDraft(NOW), NOW)).toBeNull();
+    expect(writeStoredDraft(broken, emptySessionDraft(NOW), NOW)).toBeNull();
     expect(() => broken.remove()).not.toThrow();
     expect(listener).toHaveBeenCalledTimes(1);
   });

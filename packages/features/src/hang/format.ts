@@ -58,10 +58,6 @@ export function monthTitle(d: CalendarDate): string {
   return formatDate(toLocalDate(d), { month: "long", year: "numeric" });
 }
 
-export function monthName(d: CalendarDate): string {
-  return formatDate(toLocalDate(d), { month: "short" });
-}
-
 export function weekTitle(offset: number): string {
   if (offset === 0) return t("hang.weekThis");
   if (offset === -1) return t("hang.weekLast");
@@ -114,10 +110,6 @@ export function protocolSummary(p: Protocol, units: TimeUnits): string {
       ? t("hang.summaryRepeats", { reps: p.reps, on, off: timeText(p.restS, units.restS) })
       : t(p.kind === "hang" ? "hang.summarySingle" : "hang.summaryTimedPull", { on });
   return t("hang.summaryHang", { core, sets: p.sets, setRest });
-}
-
-export function kindLabel(kind: HangKind): string {
-  return kind === "hang" ? t("hang.kindHang") : t("hang.kindPull");
 }
 
 export function daysList(days: readonly number[]): string {

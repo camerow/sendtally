@@ -2,7 +2,8 @@ import { circuitLabel } from "../gyms/transforms";
 import { t } from "../i18n";
 import { withExerciseClimb } from "./exerciseTally";
 import { newTallyClimb, withTallyGo, type TallyChoice, type TallyGo } from "./tally";
-import { durationLabel, vGradeOf } from "./transforms";
+import { durationLabel } from "../sessions/years";
+import { vGradeOf } from "./transforms";
 import type { ClimbDraft, LogSessionDraft } from "./types";
 
 /** What Fell and Sent act on: a climb already on the list, or a grade picked for a new one. */

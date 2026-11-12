@@ -8,8 +8,9 @@ import type { GradeBinVM, GradeRange } from "../trends/types";
 import { isClimbHolder } from "../sessions/meta";
 import { monthKey, monthLabel, monthName } from "../sessions/months";
 import { climbOf, isThisClimb, sendStyleOf, sendStyleText } from "./overview";
-import { dateLabel, disciplineLabel } from "./projects";
-import { climbDraftGrade, climbGradeLabel } from "./transforms";
+import { disciplineLabel } from "../log-session/types";
+import { dateLabel } from "./projects";
+import { climbDraftGrade, summaryGradeLabel } from "./transforms";
 import type { GradeScales } from "../sessions/grades";
 
 export type ClimbStatusFilter = "all" | "projects" | "sent" | "notYet";
@@ -57,7 +58,7 @@ export function matchesClimbSearch(
   return [
     climb.name,
     climb.area?.name ?? "",
-    climb.grade === null ? "" : climbGradeLabel(climb, scales),
+    climb.grade === null ? "" : summaryGradeLabel(climb, scales),
     climb.grade === null ? "" : formatGrade(climb.grade),
   ]
     .map((s) => s.toLowerCase())
@@ -165,9 +166,9 @@ export function climbingSessionVM(
     ].filter((part) => part !== null);
     return {
       id: c.id,
-      gradeLabel: climbGradeLabel(c, scales),
+      gradeLabel: summaryGradeLabel(c, scales),
       name: c.name,
-      meta: meta.length > 0 ? meta.join(" · ") : disciplineLabel(c),
+      meta: meta.length > 0 ? meta.join(" · ") : disciplineLabel(c.discipline),
       pill,
     };
   };
@@ -192,7 +193,7 @@ export function climbLog(
   const today = utcDate(now.toISOString());
   const row = (c: ClimbSummary): ClimbLogRowVM => ({
     id: c.id,
-    gradeLabel: climbGradeLabel(c, scales),
+    gradeLabel: summaryGradeLabel(c, scales),
     name: c.name,
     meta: metaOf(c, today),
     pill: pillOf(c, sessions),

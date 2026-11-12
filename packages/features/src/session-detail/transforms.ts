@@ -12,7 +12,7 @@ import {
   type GradeScales,
 } from "../sessions/grades";
 import { isUnscored } from "../sessions/meta";
-import { durationLabel as minutesLabel, hasStart } from "../sessions/years";
+import { durationLabel, hasStart } from "../sessions/years";
 import type {
   ClimbFilter,
   ClimbResult,
@@ -27,8 +27,9 @@ import type {
 import { BOARD_LABELS } from "./types";
 import { namesClimbAreas } from "./rows";
 
-export function durationLabel(startAt: string, endAt: string): string {
-  return minutesLabel(Math.max(0, Math.round((Date.parse(endAt) - Date.parse(startAt)) / 60_000)));
+/** How long a session ran, from its start to its end: "1h 30m". */
+export function spanLabel(startAt: string, endAt: string): string {
+  return durationLabel(Math.max(0, Math.round((Date.parse(endAt) - Date.parse(startAt)) / 60_000)));
 }
 
 function resultOf(c: SessionClimb, firstEncounter: boolean): ClimbResult {
@@ -250,7 +251,7 @@ export function sessionDetailVM(
       ? [
           {
             label: t("sessionDetail.statTime"),
-            value: durationLabel(session.start_at, session.end_at),
+            value: spanLabel(session.start_at, session.end_at),
             accent: false,
           },
         ]
@@ -301,7 +302,7 @@ export function sessionDetailVM(
     session.location === null
       ? null
       : t(session.location === "outdoor" ? "common.outdoor" : "common.indoor");
-  const length = timed ? durationLabel(session.start_at, session.end_at) : null;
+  const length = timed ? spanLabel(session.start_at, session.end_at) : null;
   const when = [
     `${weekday} ${dateLabel}`,
     ...(hasStart(session) ? [time] : []),

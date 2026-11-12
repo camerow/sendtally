@@ -5,9 +5,8 @@ import {
   draftFromSession,
   draftProblem,
   draftSummary,
-  durationLabel,
   durationMinutes,
-  emptyDraft,
+  emptySessionDraft,
   gradeOptions,
   newClimb,
   nextClimbKey,
@@ -336,17 +335,11 @@ describe("durationMinutes", () => {
     expect(durationMinutes("09:00", "00:30")).toBeUndefined();
     expect(durationMinutes("18:00", "18:00")).toBeUndefined();
   });
-
-  it("labels durations", () => {
-    expect(durationLabel(90)).toBe("1h 30m");
-    expect(durationLabel(60)).toBe("1h");
-    expect(durationLabel(45)).toBe("45m");
-  });
 });
 
-describe("emptyDraft", () => {
+describe("emptySessionDraft", () => {
   it("starts on today with no times", () => {
-    const d = emptyDraft(new Date(2026, 7, 26, 20, 2));
+    const d = emptySessionDraft(new Date(2026, 7, 26, 20, 2));
     expect(d.date).toBe("2026-08-26");
     expect(d.startTime).toBe("");
     expect(d.endTime).toBe("");
@@ -630,7 +623,7 @@ describe("draftFromSession", () => {
 describe("toLogSessionInput climb notes", () => {
   it("sends a note only for a named climb, trimmed", () => {
     const withNotes: LogSessionDraft = {
-      ...emptyDraft(new Date("2026-09-09T19:00:00")),
+      ...emptySessionDraft(new Date("2026-09-09T19:00:00")),
       climbs: [
         {
           key: "a",
@@ -685,7 +678,7 @@ describe("toLogSessionInput climb notes", () => {
 describe("toLogSessionInput project flags", () => {
   it("sends the flag only for climbs the user toggled", () => {
     const draft: LogSessionDraft = {
-      ...emptyDraft(new Date("2026-09-09T19:00:00")),
+      ...emptySessionDraft(new Date("2026-09-09T19:00:00")),
       climbs: [
         {
           key: "a",

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Activity, HangHistoryRow } from "@sendtally/api-client";
-import { ACTIVITY_KINDS } from "./overview";
+import { TRAINED_KINDS } from "./overview";
 import { pickedWorkouts, workoutsDone } from "./workouts";
 
 const hang = (date: string, over: Partial<HangHistoryRow> = {}): HangHistoryRow => ({
@@ -81,7 +81,7 @@ const october = (ms: number): boolean =>
   ms >= Date.parse("2026-10-01") && ms < Date.parse("2026-11-02");
 
 describe("workoutsDone", () => {
-  const vm = workoutsDone(log, october, ACTIVITY_KINDS);
+  const vm = workoutsDone(log, october, TRAINED_KINDS);
 
   it("groups by category in the mix's order, the most done first", () => {
     expect(vm.category.map((g) => [g.key, g.rows.map((r) => [r.name, r.meta])])).toEqual([
@@ -135,7 +135,7 @@ describe("workoutsDone", () => {
 });
 
 describe("pickedWorkouts", () => {
-  const { focus } = workoutsDone(log, october, ACTIVITY_KINDS);
+  const { focus } = workoutsDone(log, october, TRAINED_KINDS);
 
   it("shows every group with nothing picked", () => {
     expect(pickedWorkouts(focus, null)).toHaveLength(3);

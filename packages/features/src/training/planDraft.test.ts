@@ -8,7 +8,7 @@ import {
   draftMove,
   draftRemove,
   draftSchedule,
-  emptyDraft,
+  emptyPlanDraft,
   movedMemberships,
   movedWith,
 } from "./planDraft";
@@ -31,14 +31,14 @@ describe("applyDraft", () => {
   it("moves the block and the plans that start with it, and nothing else", () => {
     const moved = { ...block, start: "2026-11-23" };
     expect(movedWith(plan, moved).map((m) => m.id)).toEqual(["m1"]);
-    const next = applyDraft(plan, { ...emptyDraft, block: moved });
+    const next = applyDraft(plan, { ...emptyPlanDraft, block: moved });
     expect(next.blocks[0]?.start).toBe("2026-11-23");
     expect(next.memberships.map((m) => m.start)).toEqual(["2026-11-23", "2026-11-16"]);
   });
 
   it("shows days as tapped, and saves only schedules that changed", () => {
     const tapped = toggleDay(scheduleOf(plan, m1), { week: 2, day: 4, following: false, last: 4 });
-    const draft = draftSchedule(emptyDraft, tapped);
+    const draft = draftSchedule(emptyPlanDraft, tapped);
     const next = applyDraft(plan, draft);
     expect(next.membershipDays.map((d) => [d.fromWeek, d.weekdays])).toEqual([
       [2, [0, 4]],
@@ -50,7 +50,7 @@ describe("applyDraft", () => {
   });
 
   it("moves a workout within its block, saving each plan once with its new place and day", () => {
-    const down = draftMove(emptyDraft, plan, block, "m1", 1);
+    const down = draftMove(emptyPlanDraft, plan, block, "m1", 1);
     expect(blockMembers(applyDraft(plan, down), block).map((m) => m.id)).toEqual(["m2", "m1"]);
     expect(draftMove(down, plan, block, "m1", 1)).toBe(down);
     const draft = { ...down, block: { ...block, start: "2026-11-23" } };
@@ -61,7 +61,7 @@ describe("applyDraft", () => {
 
   it("takes a workout out, dropping its other edits so nothing of it is saved", () => {
     const tapped = toggleDay(scheduleOf(plan, m1), { week: 1, day: 4, following: false, last: 4 });
-    const draft = draftRemove(draftSchedule(emptyDraft, tapped), "m1");
+    const draft = draftRemove(draftSchedule(emptyPlanDraft, tapped), "m1");
     expect(applyDraft(plan, draft).memberships.map((m) => m.id)).toEqual(["m2"]);
     expect(draft.schedules).toEqual([]);
     expect(draft.removed).toEqual(["m1"]);
