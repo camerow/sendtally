@@ -7,7 +7,7 @@ import { t } from "@sendtally/features/i18n";
 import { type } from "../type";
 import { HangGrid } from "./HangGrid";
 import { Label } from "../components/Label";
-import { hangCount } from "./hangCount";
+import { hangCount } from "@sendtally/features/activities";
 
 type Hang = Pick<HangSession, "protocol" | "pct" | "loadKg" | "edgeMm" | "done">;
 
