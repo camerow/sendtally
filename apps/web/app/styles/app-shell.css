@@ -687,3 +687,107 @@
   letter-spacing: 0.06em;
   color: rgba(64, 63, 76, 0.55);
 }
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.field-label {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-on-white-secondary);
+}
+
+.field-input {
+  min-height: 50px;
+  box-sizing: border-box;
+  width: 100%;
+  padding: 0 14px;
+  border: 1.5px solid transparent;
+  border-radius: calc(var(--radius-control) + 2px);
+  background: var(--surface-soft);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  color: var(--bs-gunmetal);
+  outline: none;
+}
+
+.field-input:focus {
+  border-color: var(--bs-gunmetal);
+  background: var(--bs-white);
+}
+
+.field-input:disabled {
+  color: var(--text-on-white-secondary);
+}
+
+.field-input::placeholder {
+  color: rgba(64, 63, 76, 0.45);
+}
+
+.field-input--area {
+  min-height: 110px;
+  padding: 14px;
+  line-height: 22px;
+  resize: vertical;
+}
+
+.danger-outline {
+  min-height: 48px;
+  border: 1px solid var(--bs-watermelon-ink);
+  border-radius: var(--radius-control);
+  background: var(--bs-white);
+  color: var(--bs-watermelon-ink);
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.sheet-body {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 22px;
+  color: var(--text-on-white-secondary);
+}
+
+.grade-chips {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.grade-chips::-webkit-scrollbar {
+  display: none;
+}
+
+.grade-chip {
+  flex: none;
+  min-width: 56px;
+  height: 44px;
+  padding: 0 10px;
+  border: none;
+  border-radius: 12px;
+  background: var(--surface-soft);
+  color: var(--bs-gunmetal);
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.grade-chip:hover {
+  background: rgba(64, 63, 76, 0.1);
+}
+
+.grade-chip[aria-checked="true"] {
+  background: var(--bs-gunmetal);
+  color: var(--bs-white);
+}

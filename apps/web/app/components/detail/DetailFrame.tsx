@@ -1,6 +1,6 @@
 import React from "react";
-import { useNavigate } from "react-router";
 import { t } from "@sendtally/features/i18n";
+import { useGoBack } from "../../lib/useGoBack";
 import { Icon } from "../Icon";
 
 export type DetailFrameProps = {
@@ -22,11 +22,7 @@ export function DetailFrame({
   footer,
   children,
 }: DetailFrameProps): React.ReactElement {
-  const navigate = useNavigate();
-  const back = (): void => {
-    const idx = (window.history.state as { idx?: number } | null)?.idx ?? 0;
-    void (idx > 0 ? navigate(-1) : navigate(backTo));
-  };
+  const back = useGoBack(backTo);
   return (
     <div className="detail">
       <div className="detail-bar">

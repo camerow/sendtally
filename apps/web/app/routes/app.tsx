@@ -44,7 +44,7 @@ const MODERATION_ITEM: NavItem = {
 };
 
 /** Screens reached by a back link, whose own action bar owns the bottom edge. */
-const FOCUSED_ROUTES = ["/app/sessions/new"];
+const FOCUSED_ROUTES = ["/app/sessions/new", "/app/log/climbs/new"];
 
 function Shell({ children }: { children: React.ReactNode }): React.ReactElement {
   const { pathname } = useLocation();

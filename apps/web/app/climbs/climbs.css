@@ -1,0 +1,240 @@
+.climb-pill {
+  align-self: flex-start;
+  height: 24px;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 8px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 12px;
+}
+
+.climbing-hero {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.climbing-hero-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 34px;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  color: var(--bs-gunmetal);
+}
+
+.climbing-hero-meta {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-on-white-secondary);
+}
+
+.suggest-box {
+  min-height: 50px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 14px;
+  border: 1.5px solid transparent;
+  border-radius: calc(var(--radius-control) + 2px);
+  background: var(--surface-soft);
+}
+
+.suggest-box--focused {
+  border-color: var(--bs-gunmetal);
+  background: var(--bs-white);
+}
+
+.suggest-input {
+  flex: 1;
+  min-width: 0;
+  min-height: 46px;
+  border: none;
+  background: none;
+  outline: none;
+  padding: 0;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--bs-gunmetal);
+}
+
+.suggest-input::placeholder {
+  font-weight: 400;
+  color: rgba(64, 63, 76, 0.45);
+}
+
+.suggest-new {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--bs-fern);
+}
+
+.suggest-hint {
+  padding-left: 2px;
+  margin-top: -2px;
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  color: var(--text-on-white-secondary);
+}
+
+.suggest-list {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--line-on-light);
+  border-radius: calc(var(--radius-control) + 2px);
+  background: var(--bs-white);
+  overflow: hidden;
+}
+
+.suggest-row {
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 0 14px;
+  border: none;
+  border-top: 1px solid var(--line-on-light-soft);
+  background: none;
+  text-align: left;
+  cursor: pointer;
+}
+
+.suggest-row:first-child {
+  border-top: none;
+}
+
+.suggest-row:hover {
+  background: var(--surface-soft);
+}
+
+.suggest-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-sans);
+  font-size: 14.5px;
+  color: var(--bs-gunmetal);
+}
+
+.suggest-meta {
+  flex: none;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-on-white-secondary);
+}
+
+.editor-bar {
+  min-height: 44px;
+  display: grid;
+  grid-template-columns: 72px 1fr 72px;
+  align-items: center;
+}
+
+.editor-cancel {
+  justify-self: start;
+  min-height: 44px;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-size: 15px;
+  color: var(--text-on-white-secondary);
+}
+
+.editor-title {
+  margin: 0;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--bs-gunmetal);
+}
+
+.add-climb-body {
+  gap: 16px;
+}
+
+.add-climb-error {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--bs-watermelon-ink);
+}
+
+.add-climb-grade-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.add-climb-grade-head .segmented {
+  width: 180px;
+}
+
+.add-climb-grade-head .segmented-option {
+  height: 34px;
+  font-size: 13px;
+}
+
+.add-climb-row {
+  min-height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid var(--line-on-light-soft);
+}
+
+.add-climb-row-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-family: var(--font-sans);
+  font-size: 15px;
+  color: var(--bs-gunmetal);
+}
+
+.add-climb-row-hint {
+  font-size: 12.5px;
+  color: var(--text-on-white-secondary);
+}
+
+.add-climb-date {
+  width: 160px;
+  min-height: 44px;
+}
+
+.app-content--focused .detail-footer {
+  bottom: 0;
+}
+
+@media (max-width: 767px) {
+  .app-content--focused .detail {
+    min-height: calc(100vh - 22px);
+  }
+
+  .add-climb-grade-chips {
+    margin: 0 -18px;
+  }
+
+  .add-climb-grade-chips .grade-chips {
+    padding: 0 18px;
+  }
+}
