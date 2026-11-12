@@ -1,14 +1,5 @@
 import type React from "react";
 
-export const sectionLabel: React.CSSProperties = {
-  fontFamily: "var(--font-mono)",
-  fontWeight: 500,
-  fontSize: 10,
-  letterSpacing: "0.08em",
-  textTransform: "uppercase",
-  color: "var(--text-label-accent)",
-};
-
 export const bodyText: React.CSSProperties = {
   fontSize: 13,
   lineHeight: 1.5,

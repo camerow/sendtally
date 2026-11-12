@@ -1,9 +1,9 @@
 import React from "react";
 import type { SendtallyApi } from "@sendtally/api-client";
 import { t } from "@sendtally/features/i18n";
-import { inputStyle } from "../styles";
 import { AreaDialog } from "./AreaDialog";
 import { Field } from "./Field";
+import { inputStyle } from "../../components/styles";
 
 export type ReportIssueDialogProps = {
   api: SendtallyApi;

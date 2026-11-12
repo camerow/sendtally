@@ -16,7 +16,6 @@ import { t } from "@sendtally/features/i18n";
 import { BackLink } from "../../components/BackLink";
 import { chipStyle } from "../../components/chip";
 import { Icon } from "../../components/Icon";
-import { inputStyle } from "../../log-session/components/styles";
 import { Section } from "../../settings/components/Section";
 import {
   bodyText,
@@ -24,10 +23,10 @@ import {
   messageText,
   pageTitle,
   secondaryButton,
-  sectionLabel,
   underlineButton,
 } from "../../settings/components/styles";
 import { CircuitRow } from "./CircuitRow";
+import { inputStyle, sectionLabel } from "../../components/styles";
 
 const control: React.CSSProperties = { ...inputStyle, height: 44, padding: "0 12px" };
 

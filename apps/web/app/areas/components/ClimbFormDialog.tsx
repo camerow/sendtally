@@ -18,13 +18,13 @@ import { t } from "@sendtally/features/i18n";
 import { gradeOptions, scaleLabel, scaleOptionsFor } from "@sendtally/features/log-session";
 import { queries, useQuery } from "@sendtally/features/query";
 import { chipStyle } from "../../components/chip";
-import { inputStyle } from "../styles";
 import { useDraftForm } from "../useDraftForm";
 import { useDeviceLocation } from "../useDeviceLocation";
 import { AreaDialog } from "./AreaDialog";
 import { AreaPicker } from "./AreaPicker";
 import { Candidates } from "./Candidates";
 import { Field } from "./Field";
+import { inputStyle } from "../../components/styles";
 
 export type ClimbFormDialogProps = {
   api: SendtallyApi;

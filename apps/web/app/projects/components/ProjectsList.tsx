@@ -13,18 +13,10 @@ import { useClientApi } from "../../lib/useClientApi";
 import { useGradeScalePrefs } from "@sendtally/features/settings";
 import { AddProjectDialog } from "./AddProjectDialog";
 import { ProjectRow } from "./ProjectRow";
+import { monoMuted } from "../../components/styles";
 
 export type ProjectsListProps = {
   apiUrl: string;
-};
-
-const monoMuted: React.CSSProperties = {
-  fontFamily: "var(--font-mono)",
-  textTransform: "uppercase",
-  fontWeight: 500,
-  fontSize: 11,
-  letterSpacing: "0.06em",
-  color: "rgba(64,63,76,0.55)",
 };
 
 const muted: React.CSSProperties = {

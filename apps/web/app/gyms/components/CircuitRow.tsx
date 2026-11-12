@@ -14,7 +14,8 @@ import {
 import { t } from "@sendtally/features/i18n";
 import { CircuitDot } from "../../components/CircuitDot";
 import { Icon } from "../../components/Icon";
-import { columnHead, inputStyle } from "../../log-session/components/styles";
+import { columnHead } from "../../log-session/components/styles";
+import { inputStyle } from "../../components/styles";
 
 const grades = Array.from({ length: MAX_CIRCUIT_GRADE + 1 }, (_, v) => v);
 

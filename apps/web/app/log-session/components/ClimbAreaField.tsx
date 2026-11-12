@@ -2,7 +2,7 @@ import React from "react";
 import { t } from "@sendtally/features/i18n";
 import { AreaPicker } from "../../areas/components/AreaPicker";
 import type { ClimbAreas } from "./AreaClimbNameField";
-import { inputStyle } from "./styles";
+import { inputStyle } from "../../components/styles";
 
 /** The area a climb was at, which also scopes its name's search of Areas. */
 export function ClimbAreaField({

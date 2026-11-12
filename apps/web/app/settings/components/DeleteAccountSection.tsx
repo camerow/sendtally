@@ -1,7 +1,8 @@
 import React from "react";
 import { DELETE_CONFIRMATION_WORD, type DeleteAccountFeature } from "@sendtally/features/settings";
 import { t } from "@sendtally/features/i18n";
-import { bodyText, dangerButton, messageText, sectionLabel, underlineButton } from "./styles";
+import { bodyText, dangerButton, messageText, underlineButton } from "./styles";
+import { sectionLabel } from "../../components/styles";
 
 export type DeleteAccountSectionProps = {
   deletion: DeleteAccountFeature;

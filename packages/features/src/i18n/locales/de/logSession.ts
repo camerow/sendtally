@@ -85,9 +85,6 @@ export const logSession = {
   "logSession.defaultNameMorning": "Morgensession",
   "logSession.defaultNameAfternoon": "Nachmittagssession",
   "logSession.defaultNameEvening": "Abendsession",
-  "logSession.wrapUpTitle": "Abschließen",
-  "logSession.wrapUpSubtitle":
-    "Zeiten kommen von deinen Kletterversuchen · Effort wird beim Speichern bewertet",
   "logSession.noSendsYet": "Noch keine Begehungen",
   "logSession.sendStyle": "Stil",
   "logSession.removeClimbTitle": "Diese Kletterei entfernen?",

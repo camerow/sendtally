@@ -1,7 +1,7 @@
 import { CheckoutButton, usePlans } from "@clerk/react/experimental";
 import React from "react";
 import { useRevalidator } from "react-router";
-import { colors, radius } from "@sendtally/design/tokens";
+import { clerkAppearance } from "./clerkAppearance";
 import { formatNumber, t } from "@sendtally/features/i18n";
 import { Segmented } from "../../components/Segmented";
 import { panelButton, panelMono } from "./MembershipPanel";
@@ -12,15 +12,6 @@ export const MEMBER_PLAN_SLUG = "member";
 type Period = "annual" | "month";
 type Plan = ReturnType<typeof usePlans>["data"][number];
 type Money = NonNullable<Plan["fee"]>;
-
-const appearance = {
-  variables: {
-    colorPrimary: colors.azureInk,
-    colorBackground: colors.white,
-    colorForeground: colors.gunmetal,
-    borderRadius: `${radius.control}px`,
-  },
-} as const;
 
 function money(amount: Money): string {
   return formatNumber(amount.amount / 100, {
@@ -107,7 +98,7 @@ export function MembershipCheckout(): React.ReactElement {
       <CheckoutButton
         planId={plan.id}
         planPeriod={period}
-        checkoutProps={{ appearance }}
+        checkoutProps={{ appearance: clerkAppearance }}
         newSubscriptionRedirectUrl={`/app/membership?${SUBSCRIBED_PARAM}=1`}
         onSubscriptionComplete={() => void revalidate()}
       >

@@ -1,6 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
 import React from "react";
-import { useNavigate, useSearchParams } from "react-router";
+import { useNavigate } from "react-router";
 import type { ClimbSummary, SendtallyApi } from "@sendtally/api-client";
 import { effortColor } from "@sendtally/design/tokens";
 import { climbFormFromDraft, withAreaClimb, type AreaClimb } from "@sendtally/features/areas";
@@ -12,7 +12,6 @@ import {
   draftSummary,
   disciplineOf,
   emptySessionDraft,
-  storedDraft,
   circuitGyms,
   isFormProject,
   nextFormClimb,
@@ -49,7 +48,9 @@ import { NewGymDialog } from "../../gyms/components/NewGymDialog";
 import { ClimbEditorSheet } from "./ClimbEditorSheet";
 import { ClimbLedgerRow } from "./ClimbLedgerRow";
 import { Glyph } from "./Glyph";
-import { CHECK, PLUS, chipStyle, columnHead, inputStyle, monoLabel } from "./styles";
+import { CHECK, PLUS, columnHead } from "./styles";
+import { chipStyle } from "../../components/chip";
+import { inputStyle, monoLabel } from "../../components/styles";
 
 function hhmm(at: Date): string {
   return formatDate(at, { hour: "2-digit", minute: "2-digit" });
@@ -158,14 +159,9 @@ export function LogSessionForm({
 }): React.ReactElement {
   const navigate = useNavigate();
   const client = useQueryClient();
-  const [searchParams] = useSearchParams();
   const prefs = useGradeScalePrefs(api);
-  // Opened by tapping the draft itself: start on it rather than offering it back.
-  const [picked] = React.useState(() =>
-    searchParams.get("resume") === "1" ? storedDraft(sessionDraftStorage) : null
-  );
   const [draft, setDraft] = React.useState<LogSessionDraft>(
-    () => editing?.draft ?? picked ?? emptySessionDraft(new Date(), prefs.scales)
+    () => editing?.draft ?? emptySessionDraft(new Date(), prefs.scales)
   );
   const [saving, setSaving] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
@@ -186,7 +182,7 @@ export function LogSessionForm({
   // The preference query resolves after the first render, so a new draft adopts the user's
   // scale once, per discipline and only where no grade has been typed yet. A draft picked
   // back up, and anything already graded, keeps the scale it was written in.
-  const adopted = React.useRef(editing !== undefined || picked !== null);
+  const adopted = React.useRef(editing !== undefined);
   const resumeDraft = React.useCallback((resumed: LogSessionDraft) => {
     adopted.current = true;
     setDraft(resumed);
@@ -194,8 +190,7 @@ export function LogSessionForm({
   const autosave = useDraftAutosave(
     editing === undefined ? sessionDraftStorage : null,
     draft,
-    resumeDraft,
-    picked !== null
+    resumeDraft
   );
 
   React.useEffect(() => {
@@ -365,7 +360,7 @@ export function LogSessionForm({
                   type="button"
                   onClick={() => setDraft(withLocation(draft, loc))}
                   className="log-session-chip"
-                  style={chipStyle(draft.location === loc)}
+                  style={chipStyle(draft.location === loc, { padding: "10px 16px" })}
                 >
                   {t(loc === "indoor" ? "common.indoor" : "common.outdoor")}
                 </button>
@@ -396,7 +391,7 @@ export function LogSessionForm({
                 onClick={() => setAddingGym(true)}
                 className="log-session-chip"
                 style={{
-                  ...chipStyle(false),
+                  ...chipStyle(false, { padding: "10px 16px" }),
                   alignSelf: "flex-start",
                   display: "inline-flex",
                   alignItems: "center",

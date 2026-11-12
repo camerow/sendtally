@@ -20,6 +20,7 @@ import { LibrarySearch } from "../library/LibrarySearch";
 import { NewWorkoutSheet } from "../library/NewWorkoutSheet";
 import { useLibrary } from "../library/useLibrary";
 import { usePlanActions } from "../plan/usePlanActions";
+import { useReminderPrompt } from "../reminders/ReminderPromptProvider";
 import { AddWorkoutRow, type AddState } from "./AddWorkoutRow";
 import { addFlowParams, addKicker, type AddFlow } from "./flowParams";
 import { PlanAgainStart } from "./PlanAgainStart";
@@ -51,6 +52,7 @@ export function AddWorkoutsSheet({
 }: AddWorkoutsSheetProps): React.ReactElement {
   const { model, today } = useHangData();
   const actions = usePlanActions();
+  const prompt = useReminderPrompt();
   const newBlock = useNewBlock(t("plan.tab"));
   const [mode, setMode] = React.useState<"workout" | "block">("workout");
   const [picked, setPicked] = React.useState<Block | null>(null);
@@ -104,6 +106,7 @@ export function AddWorkoutsSheet({
     const made = await actions.copyBlock(b.id, id, start);
     setBusy(false);
     if (!made) return;
+    prompt();
     close();
     onScheduled?.({ id, name: b.name || t("plan.untitled"), start });
   };
