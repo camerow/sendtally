@@ -1,13 +1,16 @@
-import { env } from "cloudflare:test";
+import { createExecutionContext, env, waitOnExecutionContext } from "cloudflare:test";
+import { PostHog } from "posthog-node";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Env } from "../src/bindings";
 import type * as harness from "./harness";
 import type * as posthog from "../src/lib/posthog";
 
 const captureUserEvent = vi.hoisted(() => vi.fn(async () => undefined));
+const posthogClient = vi.hoisted(() => ({ current: null as PostHog | null }));
 vi.mock("../src/lib/posthog", async (importOriginal) => ({
   ...(await importOriginal<typeof posthog>()),
   captureUserEvent,
+  getPostHog: () => posthogClient.current,
 }));
 
 // The pool loads the Worker's modules before this file's mock exists, so the app
@@ -25,8 +28,9 @@ const rpc = async (
   params: unknown,
   user?: string,
   bindings: Env = env
-): Promise<Response> =>
-  testApp().request(
+): Promise<Response> => {
+  const ctx = createExecutionContext();
+  const res = await testApp().request(
     "https://api.sendtally.test/mcp",
     {
       method: "POST",
@@ -37,8 +41,12 @@ const rpc = async (
       },
       body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }),
     },
-    bindings
+    bindings,
+    ctx
   );
+  await waitOnExecutionContext(ctx);
+  return res;
+};
 
 const callTool = async (
   user: string,
@@ -125,14 +133,36 @@ describe("connector", () => {
     expect(await sessionsOf("user_other")).toEqual([]);
   });
 
-  it("records each tool call against the user and the assistant that made it", async () => {
-    await callTool("user_mcp");
-    expect(captureUserEvent).toHaveBeenCalledWith(
-      expect.anything(),
+  it("records each tool call against the user, without the logbook", async () => {
+    await put(
       "user_mcp",
-      "connector_tool_called",
-      { tool: "list_sessions", client: "test-client" }
+      "/v1/sessions",
+      session("2026-10-01", [
+        { name: "Crimp line", grade: { scale: "v", value: 3 }, kind: "send", tries: 2 },
+      ])
     );
+    const client = new PostHog("phc_test", {
+      host: "https://us.i.posthog.com",
+      fetch: async () => new Response("{}"),
+    });
+    const capture = vi.spyOn(client, "capture");
+    posthogClient.current = client;
+    try {
+      await callTool("user_mcp", env, "list_sessions", { from: "2026-10-01", includeClimbs: true });
+    } finally {
+      posthogClient.current = null;
+    }
+
+    const toolCall = capture.mock.calls.find(([e]) => e.event === "$mcp_tool_call")?.[0];
+    expect(toolCall).toMatchObject({
+      distinctId: "user_mcp",
+      properties: { $mcp_tool_name: "list_sessions", $mcp_is_error: false },
+    });
+    const sent = JSON.stringify(capture.mock.calls);
+    expect(sent).not.toContain("Crimp line");
+    expect(sent).not.toContain("2026-10-01");
+    expect(toolCall?.properties).not.toHaveProperty("$mcp_parameters");
+    expect(toolCall?.properties).not.toHaveProperty("$mcp_response");
   });
 
   it("turns away a user over the rate limit without running the tool", async () => {
@@ -145,7 +175,6 @@ describe("connector", () => {
       isError: true,
       content: [{ text: expect.stringMatching(/Wait a minute/) }],
     });
-    expect(captureUserEvent).not.toHaveBeenCalled();
   });
 
   it("lists sessions in a date range, with their climbs when asked", async () => {
