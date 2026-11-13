@@ -24,7 +24,7 @@ export const listSessions: ConnectorTool<typeof inputSchema> = {
   name: "list_sessions",
   title: "List climbing sessions",
   description:
-    "The user's logged climbing sessions, newest first, each with its date, title, effort (RPE 1-10) and top grades. Pass from and to to pick a date range, and includeClimbs to see each climb's grade, whether it was a send or an attempt, and its tries. Call get_climbing_summary first for an overview.",
+    "The user's logged climbing sessions, newest first, each with its id, date, title, effort (RPE 1-10) and top grades. Pass from and to to pick a date range, and includeClimbs to see each climb's grade, whether it was a send or an attempt, and its tries. Call get_climbing_summary first for an overview.",
   inputSchema,
   annotations: { readOnlyHint: true, destructiveHint: false },
   run: async ({ from, to, includeClimbs, limit }, { env, userId }) => {
@@ -37,6 +37,7 @@ export const listSessions: ConnectorTool<typeof inputSchema> = {
       )
       .slice(0, limit)
       .map((row) => ({
+        id: row.fingerprint,
         startAt: row.start_at,
         title: row.title,
         rpe: row.rpe,

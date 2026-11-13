@@ -41,6 +41,7 @@ export type ImportReviewProps = {
   duplicates: LikelyDuplicate[];
   importAnyway: number[];
   onImportAnyway: (index: number) => void;
+  importing: number;
   suggestionsFor: (applied: string[]) => TagOption[];
   onAddTag: (indexes: number[], tag: string) => void;
   onRemoveTag: (indexes: number[], tag: string) => void;
@@ -57,6 +58,7 @@ export function ImportReview({
   duplicates,
   importAnyway,
   onImportAnyway,
+  importing,
   suggestionsFor,
   onAddTag,
   onRemoveTag,
@@ -91,8 +93,6 @@ export function ImportReview({
   const shown = showAll ? newestFirst : newestFirst.slice(0, PREVIEW_ROWS);
   const matchOf = (index: number): LikelyDuplicate["logged"] | undefined =>
     duplicates.find((d) => d.index === index)?.logged;
-  const importing =
-    plan.sessions.length - duplicates.filter((d) => !importAnyway.includes(d.index)).length;
   const first = plan.sessions[0];
   const last = plan.sessions[plan.sessions.length - 1];
 

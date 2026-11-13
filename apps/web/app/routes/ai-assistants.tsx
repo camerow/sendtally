@@ -33,14 +33,17 @@ export default function AiAssistants(): React.ReactElement {
       <p>
         The assistant can read your sessions, your training library and your plan. Ask it to look at
         what you have been climbing and put together exercises, workouts or a training block that
-        fits, and it saves them to your library ready to use.
+        fits, and it saves them to your library ready to use. It can also change or delete your
+        exercises, workouts and training blocks when you ask, and is told to check with you before
+        deleting anything. Deleting a block or workout keeps the sessions you already logged, and an
+        exercise your workouts or logs use is archived rather than deleted.
       </p>
 
       <h2>What it cannot do</h2>
       <p>
-        A connected assistant can add to your account but never edit or delete anything already
-        there. It works only with files you give it: sendtally never fetches your data from another
-        service.
+        A connected assistant can add sessions to your logbook but never change or delete one
+        already there; do that in the app. It works only with files you give it: sendtally never
+        fetches your data from another service.
       </p>
 
       <h2>Connect</h2>

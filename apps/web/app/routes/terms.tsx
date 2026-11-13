@@ -146,12 +146,13 @@ export default function Terms(): React.ReactElement {
       <h2>Connecting an AI assistant</h2>
       <p>
         Connecting Claude, ChatGPT or another assistant is optional. While it is connected, you are
-        instructing us to let it read your sessions, training library and plan, and to add the
-        sessions, exercises, workouts and training blocks it creates on your behalf. It cannot edit
-        or delete anything, and sendtally never fetches data from another service for it. You are
-        responsible for what you ask it to add. Remove sendtally from the assistant&rsquo;s own
-        connector settings to end its access. Your use of an assistant is governed by its
-        provider&rsquo;s terms, not ours.
+        instructing us to let it read your sessions, training library and plan, to add the sessions,
+        exercises, workouts and training blocks it creates on your behalf, and to change or delete
+        your exercises, workouts and training blocks when you ask it to. It cannot change or delete
+        your logged sessions, and sendtally never fetches data from another service for it. You are
+        responsible for what you ask it to add, change or delete. Remove sendtally from the
+        assistant&rsquo;s own connector settings to end its access. Your use of an assistant is
+        governed by its provider&rsquo;s terms, not ours.
       </p>
 
       <h2>How you may use the service</h2>

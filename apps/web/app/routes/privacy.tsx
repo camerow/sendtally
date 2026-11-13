@@ -58,11 +58,12 @@ export default function Privacy(): React.ReactElement {
         <strong>Your AI assistant connection, only if you make one.</strong> If you connect Claude,
         ChatGPT or another assistant, you sign in to sendtally from it and it gets a token from
         Clerk; we store no new credential. The assistant can read your sessions, training library
-        and plan, and can add sessions, exercises, workouts and training blocks. It cannot edit or
-        delete anything. What it reads goes to that assistant&rsquo;s provider and is governed by
-        their privacy policy. It works only with files you give it: we never fetch your data from
-        another service. Each time it uses the connection, PostHog records the action as described
-        under Usage below, never the content. Remove sendtally from the assistant&rsquo;s connector
+        and plan, can add sessions, exercises, workouts and training blocks, and can change or
+        delete your exercises, workouts and training blocks. It cannot change or delete your logged
+        sessions. What it reads goes to that assistant&rsquo;s provider and is governed by their
+        privacy policy. It works only with files you give it: we never fetch your data from another
+        service. Each time it uses the connection, PostHog records the action as described under
+        Usage below, never the content. Remove sendtally from the assistant&rsquo;s connector
         settings to end its access.
       </p>
       <p>

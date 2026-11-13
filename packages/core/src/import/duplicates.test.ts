@@ -120,6 +120,18 @@ describe("likelyDuplicates", () => {
       flagged: false,
     },
     {
+      name: "an unnamed climb never takes the logged climb a named one needs",
+      plan: planned(day, [
+        ["", v(4)],
+        ["Arete", v(4)],
+      ]),
+      log: logged(day, [
+        ["Arete", v(4)],
+        ["Crimp", v(4)],
+      ]),
+      flagged: true,
+    },
+    {
       name: "same value in another scale",
       plan: planned(day, [["", { scale: "yds", value: "5.10a" }]]),
       log: logged(day, [["", { scale: "french", value: "6a" }]]),
