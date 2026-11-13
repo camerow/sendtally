@@ -4,6 +4,8 @@ export const importCsv = {
   "import.stepReview": "2 Revisar",
   "import.stepDone": "3 Listo",
   "import.dropLabel": "Suelta un CSV aquí o elige un archivo",
+  "import.exportFrom": "Dónde exportar",
+  "import.chooseFile": "Elegir un archivo CSV",
   "import.dropHint":
     "Las exportaciones de estas apps se reconocen automáticamente. Todo lo demás usa el formato CSV de Sendtally de abajo. No se guarda nada hasta que confirmes en el siguiente paso.",
   "import.formatLabel": "Formato CSV de Sendtally",

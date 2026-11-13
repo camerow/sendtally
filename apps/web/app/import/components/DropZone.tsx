@@ -1,10 +1,12 @@
 import React from "react";
+import { Button } from "@sendtally/design";
 import { t } from "@sendtally/features/i18n";
 import { monoMuted } from "../../settings/components/styles";
 import { ServiceLinks } from "./ServiceLinks";
 
 export function DropZone({ onFile }: { onFile: (file: File) => void }): React.ReactElement {
   const [over, setOver] = React.useState(false);
+  const input = React.useRef<HTMLInputElement>(null);
   return (
     <div
       onDragOver={(e) => {
@@ -48,15 +50,20 @@ export function DropZone({ onFile }: { onFile: (file: File) => void }): React.Re
       <label htmlFor="import-file" style={{ fontWeight: 600, fontSize: 15 }}>
         {t("import.dropLabel")}
       </label>
+      <Button variant="azure" onClick={() => input.current?.click()}>
+        {t("import.chooseFile")}
+      </Button>
       <input
+        ref={input}
         id="import-file"
+        className="visually-hidden"
+        tabIndex={-1}
         type="file"
         accept=".csv,text/csv"
         onChange={(e) => {
           const file = e.target.files?.[0];
           if (file !== undefined) onFile(file);
         }}
-        style={{ fontSize: 12, color: "rgba(64,63,76,0.6)" }}
       />
       <span style={{ ...monoMuted, textAlign: "center", maxWidth: 480 }}>
         {t("import.dropHint")}
