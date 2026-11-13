@@ -11,6 +11,8 @@ export type SegmentedProps<T extends string> = {
   onChange: (value: T) => void;
   /** A locked option wears a lock and calls this instead of being chosen. */
   onLocked?: (value: T) => void;
+  /** The chosen option white on a soft track, for a switch inside a card or filter row. */
+  soft?: boolean;
 };
 
 /** Mobile's switch: the chosen option dark on a white track. */
@@ -20,9 +22,14 @@ export function Segmented<T extends string>({
   value,
   onChange,
   onLocked,
+  soft = false,
 }: SegmentedProps<T>): React.ReactElement {
   return (
-    <div role="radiogroup" aria-label={label} className="segmented">
+    <div
+      role="radiogroup"
+      aria-label={label}
+      className={soft ? "segmented segmented--soft" : "segmented"}
+    >
       {options.map((option) => {
         const locked = option.locked === true;
         return (

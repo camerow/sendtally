@@ -19,11 +19,22 @@ afterEach(() => {
   container.remove();
 });
 
-function mount(mode: NumberFieldMode, value: number, onChange = vi.fn()): HTMLInputElement {
+function mount(
+  mode: NumberFieldMode,
+  value: number | null,
+  onChange = vi.fn(),
+  placeholder?: string
+): HTMLInputElement {
   act(() =>
     root.render(
       <>
-        <NumberField label="Hang" mode={mode} value={value} onChange={onChange} />
+        <NumberField
+          label="Hang"
+          mode={mode}
+          value={value}
+          onChange={onChange}
+          placeholder={placeholder}
+        />
         <NumberField label="Rest" mode={mode} value={value} onChange={() => {}} />
       </>
     )
@@ -88,6 +99,27 @@ describe("NumberField", () => {
     const input = mount({ kind: "time" }, 180, onChange);
     key(input, "ArrowUp");
     expect(onChange).toHaveBeenCalledWith(210);
+  });
+
+  it("shows the placeholder while there is no value, and takes a typed one", () => {
+    const onChange = vi.fn();
+    const input = mount({ kind: "number", step: 2.5, decimals: true }, null, onChange, "BW");
+    expect(input.value).toBe("");
+    expect(input.placeholder).toBe("BW");
+    act(() => input.focus());
+    act(() => input.blur());
+    expect(onChange).not.toHaveBeenCalled();
+    type(input, "10");
+    act(() => input.blur());
+    expect(onChange).toHaveBeenCalledWith(10);
+  });
+
+  it("steps an empty field from zero, with a dash by default", () => {
+    const onChange = vi.fn();
+    const input = mount({ kind: "number", step: 2.5, decimals: true }, null, onChange);
+    expect(input.placeholder).toBe("–");
+    key(input, "ArrowUp");
+    expect(onChange).toHaveBeenCalledWith(2.5);
   });
 
   it("moves to the next field on Enter, committing what was typed", () => {
