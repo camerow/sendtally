@@ -1,4 +1,4 @@
-import { useAuth } from "@clerk/react-router";
+import { useAuth, useUser } from "@clerk/react-router";
 import React from "react";
 import type { LinksFunction, LoaderFunctionArgs } from "react-router";
 import { NavLink, Outlet, useLocation, useRouteError } from "react-router";
@@ -85,7 +85,7 @@ function Shell({ children }: { children: React.ReactNode }): React.ReactElement 
   const run = useLiveRun(useLiveRunStore());
   const live = session !== null || run !== null;
   const moderator = useIsModerator();
-  useReportGoogleSignUp();
+  useReportGoogleSignUp(useUser().user);
 
   return (
     <div className="app-shell">
