@@ -11,8 +11,16 @@ export function CategoryMark({ kind, size = 36 }: CategoryMarkProps): React.Reac
   return (
     <span
       aria-hidden="true"
-      className="category-mark"
-      style={{ width: size, height: size, background: tint }}
+      style={{
+        width: size,
+        height: size,
+        flex: "none",
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        borderRadius: "50%",
+        background: tint,
+      }}
     >
       <span
         style={{
