@@ -1,10 +1,14 @@
 import React from "react";
 import { isDated, type Block, type CalendarDate } from "@sendtally/core/hang";
 import { t } from "@sendtally/features/i18n";
-import { blockDateRange, blockName } from "@sendtally/features/training";
+import {
+  blockDateRange,
+  blockName,
+  canStepWeeks,
+  clampWeeks,
+  keptName,
+} from "@sendtally/features/training";
 import { BlockWeekChips } from "./BlockWeekChips";
-
-const MAX_WEEKS = 16;
 
 export type BlockHeaderProps = {
   block: Block;
@@ -43,10 +47,9 @@ export function BlockHeader({
 }: BlockHeaderProps): React.ReactElement {
   const dated = isDated(block) ? block : null;
   const [name, setName] = React.useState(block.name);
-  // A scheduled block keeps a name: an emptied one goes back to what it was.
-  const kept = (typed: string): string => (typed === "" && dated !== null ? savedName : typed);
+  const kept = (typed: string): string => keptName(typed, block, savedName);
   const weeks = (n: number): void => {
-    const next = Math.min(MAX_WEEKS, Math.max(minWeeks, n));
+    const next = clampWeeks(n, minWeeks);
     if (next !== block.weeks) onSave({ ...block, weeks: next });
     if (week > next) onPickWeek(next);
   };
@@ -55,7 +58,7 @@ export function BlockHeader({
       type="button"
       className="weeks-step"
       aria-label={label}
-      disabled={by < 0 ? block.weeks <= minWeeks : block.weeks >= MAX_WEEKS}
+      disabled={!canStepWeeks(block, by, minWeeks)}
       onClick={() => weeks(block.weeks + by)}
     >
       {glyph}

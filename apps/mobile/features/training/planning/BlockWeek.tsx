@@ -22,6 +22,7 @@ import {
   planGridRows,
   type CellMark,
   type GridOptions,
+  useLit,
 } from "@sendtally/features/training";
 import { Switch } from "../../../components/Switch";
 import { useApi } from "../../../lib/api";
@@ -170,12 +171,7 @@ export function BlockWeek({
   // Plans with no day in any week, such as ones just added: named, to tap their days in.
   const dayless = members.filter((m) => !hasDays(scheduleOf(plan, m)));
   const daylessNames = dayless.map((m) => workout(m.workoutId)?.name ?? "").join(", ");
-  const [added, setAdded] = React.useState<readonly string[]>([]);
-  React.useEffect(() => {
-    if (added.length === 0) return;
-    const fade = setTimeout(() => setAdded([]), 2400);
-    return () => clearTimeout(fade);
-  }, [added]);
+  const [added, setAdded] = useLit();
   const add = (
     <Button
       label={t("plan.addWorkout")}

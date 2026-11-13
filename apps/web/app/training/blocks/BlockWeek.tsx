@@ -21,6 +21,7 @@ import {
   type GridOptions,
   type Occurrence,
   type WorkoutLookup,
+  useLit,
 } from "@sendtally/features/training";
 import type { LibraryWorkout } from "@sendtally/features/workouts";
 import { Icon } from "../../components/Icon";
@@ -62,8 +63,6 @@ export type BlockWeekProps = {
   /** Moves a workout a place in the block, from the Order list in Edit mode. */
   onMove?: (membershipId: string, by: -1 | 1) => void;
 };
-
-const LIT_MS = 2400;
 
 /**
  * A block's week, a row per workout opening it in the block, and + Add workout under it in Edit
@@ -168,12 +167,7 @@ export function BlockWeek({
   // Plans with no day in any week, such as ones just added: named, to click their days in.
   const dayless = members.filter((m) => !hasDays(scheduleOf(plan, m)));
   const daylessNames = dayless.map((m) => workout(m.workoutId)?.name ?? "").join(", ");
-  const [added, setAdded] = React.useState<readonly string[]>([]);
-  React.useEffect(() => {
-    if (added.length === 0) return;
-    const fade = setTimeout(() => setAdded([]), LIT_MS);
-    return () => clearTimeout(fade);
-  }, [added]);
+  const [added, setAdded] = useLit();
   const empty = template && rows.length === 0;
   const add = (
     <button

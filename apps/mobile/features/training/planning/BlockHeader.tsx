@@ -5,12 +5,16 @@ import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
 import { press } from "../../../lib/press";
 import { BlockWeekChips } from "../blocks/BlockWeekChips";
-import { blockDateRange, blockName } from "@sendtally/features/training";
+import {
+  blockDateRange,
+  blockName,
+  canStepWeeks,
+  clampWeeks,
+  keptName,
+} from "@sendtally/features/training";
 import { Label } from "../components/Label";
 import { Title } from "../components/Title";
 import { type } from "../type";
-
-const MAX_WEEKS = 16;
 
 export type BlockHeaderProps = {
   block: Block;
@@ -50,19 +54,18 @@ export function BlockHeader({
   const dated = isDated(block) ? block : null;
   const [name, setName] = React.useState(block.name);
   const [focused, setFocused] = React.useState(autoFocus);
-  // A scheduled block keeps a name: an emptied one goes back to what it was.
-  const kept = (typed: string): string => (typed === "" && dated !== null ? savedName : typed);
+  const kept = (typed: string): string => keptName(typed, block, savedName);
   const typeName = (text: string): void => {
     setName(text);
     onSave({ ...block, name: kept(text.trim()) });
   };
   const weeks = (n: number): void => {
-    const next = Math.min(MAX_WEEKS, Math.max(minWeeks, n));
+    const next = clampWeeks(n, minWeeks);
     if (next !== block.weeks) onSave({ ...block, weeks: next });
     if (week > next) onPickWeek(next);
   };
   const step = (glyph: string, label: string, by: number): React.ReactElement => {
-    const disabled = by < 0 ? block.weeks <= minWeeks : block.weeks >= MAX_WEEKS;
+    const disabled = !canStepWeeks(block, by, minWeeks);
     return (
       <Pressable
         onPress={() => weeks(block.weeks + by)}

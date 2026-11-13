@@ -1,12 +1,13 @@
 import { randomUUID } from "expo-crypto";
 import { router } from "expo-router";
-import { blockEnded, isDated } from "@sendtally/core/hang";
+import { isDated } from "@sendtally/core/hang";
 import { t } from "@sendtally/features/i18n";
 import {
   nextPosition,
   useTrainingLog,
   blockDateRange,
   blockName,
+  addToBlockOptions,
 } from "@sendtally/features/training";
 import type { LibraryWorkout } from "@sendtally/features/workouts";
 import { useApi } from "../../../lib/api";
@@ -22,18 +23,18 @@ export function useAddToBlock(workout: LibraryWorkout): AddToMenu {
   const { plan } = useTrainingLog(useApi()).log;
   const actions = usePlanActions();
   const prompt = useReminderPrompt();
-  const blocks = plan.blocks.filter((b) => !blockEnded(b, today));
+  const options = addToBlockOptions(plan, workout.id, today);
   return useAddToMenu({
     title: t("plan.addToBlockMenu"),
     name: workout.name,
-    options: blocks.map((b) => ({
+    options: options.map(({ block: b, there }) => ({
       id: b.id,
       label: blockName(b),
       detail: isDated(b) ? blockDateRange(b) : t("plan.template"),
-      there: plan.memberships.some((m) => m.blockId === b.id && m.workoutId === workout.id),
+      there,
     })),
     add: (id) => {
-      const block = blocks.find((b) => b.id === id);
+      const block = options.find((o) => o.block.id === id)?.block;
       if (block === undefined) return;
       void actions.saveMembership(
         blockMembership(randomUUID(), workout.id, block, today, nextPosition(plan, block.id))
