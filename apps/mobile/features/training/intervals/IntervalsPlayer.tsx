@@ -1,23 +1,17 @@
 import React from "react";
 import { ScrollView } from "react-native";
 import {
-  currentPhase,
-  isWork,
   startIntervalsRun,
   type IntervalPhase,
   type Run,
   type WeightUnit,
 } from "@sendtally/core/hang";
 import { kindLabel } from "@sendtally/features/activities";
-import { t } from "@sendtally/features/i18n";
-import { elapsedClock } from "@sendtally/features/sessions";
-import { phaseLook } from "../timer/phaseLook";
 import { SetArrows } from "../timer/SetArrows";
 import { TimerFrame } from "../timer/TimerFrame";
 import { useTimer } from "../timer/useTimer";
 import { resumedRun, writeLiveRun } from "../../live-session/liveRun";
-import { intervalsParams, type IntervalsRun } from "@sendtally/features/workouts";
-import { stepText, upNext } from "@sendtally/features/activities";
+import { intervalsParams, intervalsView, type IntervalsRun } from "@sendtally/features/workouts";
 import { StepCard } from "./StepCard";
 import { UpNext } from "./UpNext";
 
@@ -44,12 +38,8 @@ export function IntervalsPlayer({
       : startIntervalsRun(body, now);
   });
   const { run, secondsLeft } = timer;
-  const phase = currentPhase(run);
-  const tapped = phase.taps > 0;
-  const working = isWork(phase.kind);
-  const paused = run.pausedAt !== null;
-  const look = phaseLook(working, phase.kind === "ready");
   const climbing = workout.kind === "climbing";
+  const view = intervalsView(run, body, secondsLeft, unit, climbing);
 
   React.useEffect(() => {
     writeLiveRun({
@@ -70,15 +60,6 @@ export function IntervalsPlayer({
     timer.end();
   }, [timer]);
 
-  const primary = tapped
-    ? () => {
-        timer.play("lift");
-        timer.logLift(true);
-      }
-    : timer.togglePause;
-  const primaryLabel = tapped ? t("common.done") : paused ? t("hang.resume") : t("hang.pause");
-  const held = Math.max(0, phase.seconds - secondsLeft);
-
   return (
     <TimerFrame
       timer={timer}
@@ -86,35 +67,23 @@ export function IntervalsPlayer({
       meta={kindLabel(workout.kind)}
       workoutId={workout.workoutId}
       controls={{
-        color: look.fill,
-        primary: primaryLabel,
+        color: view.look.fill,
+        primary: view.primary,
         next: null,
-        fail:
-          working && !tapped && !paused
-            ? climbing
-              ? t("activities.stopHere", { time: elapsedClock(held) })
-              : t("activities.stoppedEarly", { n: held })
-            : null,
-        onPrimary: primary,
-        onFail: timer.cameOffEarly,
+        fail: view.fail,
+        onPrimary: timer.primary,
+        onFail: timer.fail,
       }}
     >
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ gap: 18 }}>
         <StepCard
-          text={stepText(run, body, secondsLeft, unit, climbing)}
-          color={look.fill}
-          accessibilityLabel={primaryLabel}
-          onPress={primary}
+          text={view.step}
+          color={view.look.fill}
+          accessibilityLabel={view.primary}
+          onPress={timer.primary}
         />
-        <SetArrows
-          timer={timer}
-          label={
-            climbing
-              ? t("tally.lapOf", { set: phase.set, sets: body.rounds })
-              : t("activities.roundOf", { round: phase.set, rounds: body.rounds })
-          }
-        />
-        <UpNext items={upNext(run, body)} />
+        <SetArrows timer={timer} label={view.round} />
+        <UpNext items={view.upNext} />
       </ScrollView>
     </TimerFrame>
   );
