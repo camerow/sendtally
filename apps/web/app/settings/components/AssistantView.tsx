@@ -1,10 +1,11 @@
 import React from "react";
 import { Link } from "react-router";
+import { Button } from "@sendtally/design";
 import { t } from "@sendtally/features/i18n";
 import { BackLink } from "../../components/BackLink";
 import { sectionLabel } from "../../components/styles";
 import { code } from "../../import/styles";
-import { bodyText, linkAction, monoMuted, pageTitle, secondaryButton } from "./styles";
+import { bodyText, linkAction, monoMuted, pageTitle } from "./styles";
 import { Section } from "./Section";
 
 export function AssistantView({ url }: { url: string }): React.ReactElement {
@@ -24,9 +25,9 @@ export function AssistantView({ url }: { url: string }): React.ReactElement {
         <pre style={{ ...code, margin: 0, overflowWrap: "anywhere", whiteSpace: "pre-wrap" }}>
           {url}
         </pre>
-        <button type="button" onClick={() => void copy()} style={secondaryButton}>
+        <Button variant="azure" onClick={() => void copy()}>
           {copied ? t("common.copied") : t("settings.copyUrl")}
-        </button>
+        </Button>
       </Section>
 
       <Section>
