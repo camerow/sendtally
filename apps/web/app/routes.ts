@@ -49,6 +49,8 @@ export default [
       route("workout/sets", "routes/app.workout.sets.tsx"),
       route("workout/checklist", "routes/app.workout.checklist.tsx"),
       route("workout/tally", "routes/app.workout.tally.tsx"),
+      route("workout/timer", "routes/app.workout.timer.tsx"),
+      route("workout/intervals", "routes/app.workout.intervals.tsx"),
     ]),
     route("journal", "routes/app.journal._index.tsx"),
     route("journal/new", "routes/app.journal.new.tsx"),

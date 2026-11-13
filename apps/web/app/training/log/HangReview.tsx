@@ -1,15 +1,14 @@
 import React from "react";
 import { useNavigate } from "react-router";
+import type { ActivityDraft } from "@sendtally/features/activities";
 import {
-  doneAsPrescribed,
-  protocolDose,
-  protocolOf,
-  type HangSetup,
-  type SessionItem,
-} from "@sendtally/core/hang";
-import { keptSets, type ActivityDraft } from "@sendtally/features/activities";
-import { hangResult } from "@sendtally/features/hang";
-import { usePlannedRun, type DoneParams, type PlannedRun } from "@sendtally/features/workouts";
+  hangReview,
+  hangReviewDraft,
+  hangSessionOf,
+  usePlannedRun,
+  type DoneParams,
+  type PlannedRun,
+} from "@sendtally/features/workouts";
 import { useAppApi } from "../../lib/useAppApi";
 import { useHangData } from "../data/HangDataContext";
 import { ActivityForm } from "./ActivityForm";
@@ -26,60 +25,15 @@ function Review({
   const navigate = useNavigate();
   const { model, actions, today } = useHangData();
   const [id] = React.useState(() => crypto.randomUUID());
-  const { items } = planned;
-  const workout = items[0].workout;
-  const grips = items.map((i, k) => (k === 0 ? params.gripId : i.workout.grip));
-  const prescribed: SessionItem[] = items.map((i, k) => ({
-    exercise: grips[k] ?? i.workout.grip,
-    dose: protocolDose(i.workout),
-  }));
-  const [setups] = React.useState<HangSetup[]>(() =>
-    items.map((i, k) => model.setup(i.workout, grips[k] ?? "", i.dose))
+  const [review] = React.useState(() => hangReview(params, planned, model));
+  const [setup, setSetup] = React.useState(review.setups[0] ?? { edgeMm: 0, loadKg: 0 });
+  const [initial] = React.useState<ActivityDraft>(() =>
+    hangReviewDraft(review, setup, model, today, Date.now())
   );
-  const [setup, setSetup] = React.useState(setups[0] ?? { edgeMm: 0, loadKg: 0 });
-  const [initial] = React.useState<ActivityDraft>(() => ({
-    kind: "other",
-    title: workout.name,
-    date: today,
-    startTime: "",
-    minutes: 0,
-    rpe: null,
-    notes: "",
-    workoutId: workout.id,
-    ...params.link,
-    done: doneAsPrescribed(prescribed).map((d) => ({
-      ...d,
-      exercise: model.gripName(grips[d.item] ?? d.exercise),
-      sets: d.sets.map(({ weightKg, ...s }) =>
-        d.item === 0 && (weightKg === undefined || weightKg === setup.loadKg)
-          ? s
-          : { ...s, weightKg: weightKg ?? (setups[d.item] ?? setup).loadKg }
-      ),
-    })),
-    off: [],
-  }));
+  const workout = planned.items[0].workout;
 
   const save = (draft: ActivityDraft): void => {
-    const result = hangResult(keptSets(draft.done, draft.off), prescribed, (d) => ({
-      exercise: grips[d.item] ?? d.exercise,
-      setup: d.item === 0 ? setup : (setups[d.item] ?? setup),
-      hang: items[d.item]?.workout.kind === "hang",
-    }));
-    void actions.saveSession({
-      id,
-      workoutId: workout.id,
-      gripId: params.gripId,
-      date: draft.date,
-      ...setup,
-      pct: result.pct,
-      misses: result.misses,
-      rpe: draft.rpe,
-      protocol: protocolOf(workout),
-      membershipId: draft.membershipId,
-      week: draft.week,
-      focus: draft.focus,
-      done: result.done,
-    });
+    void actions.saveSession(hangSessionOf(review, setup, draft, id));
     void navigate(activityPath(id), { replace: true });
   };
 
@@ -88,8 +42,9 @@ function Review({
       id={id}
       initial={initial}
       logged={null}
+      live={params.run !== null}
       kindSet
-      planned={prescribed}
+      planned={review.prescribed}
       hang={{
         setup: (
           <SetupPill
@@ -106,7 +61,7 @@ function Review({
   );
 }
 
-/** A hangboard workout logged without the timer: every set as planned, to review and save. */
+/** A hangboard workout's review: what the timer saw, or every set as planned when logged without it. */
 export function HangReview({ params }: { params: DoneParams }): React.ReactElement | null {
   const { model } = useHangData();
   const planned = usePlannedRun(useAppApi(), model, params.workoutId, params.link, params.session);

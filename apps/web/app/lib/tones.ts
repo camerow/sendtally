@@ -1,4 +1,6 @@
-export type Tone = "tick" | "work" | "rest";
+import type { Sound } from "@sendtally/features/workouts";
+
+export type Tone = Sound;
 
 let context: AudioContext | null = null;
 const buffers = new Map<Tone, Promise<AudioBuffer>>();

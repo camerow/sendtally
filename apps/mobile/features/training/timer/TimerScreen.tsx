@@ -1,14 +1,7 @@
 import { router } from "expo-router";
 import React from "react";
 import { Pressable, Text, View } from "react-native";
-import {
-  protocolOf,
-  startWorkoutRun,
-  type HangPhase,
-  type HangSetup,
-  type PlanLink,
-  type Run,
-} from "@sendtally/core/hang";
+import type { HangSetup, PlanLink } from "@sendtally/core/hang";
 import { kindLabel } from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
 import { blockTagOf, usePlan } from "@sendtally/features/training";
@@ -26,16 +19,18 @@ import { ForTodaySheet } from "./ForTodaySheet";
 import { TimerFrame } from "./TimerFrame";
 import { TimerRing } from "./TimerRing";
 import { useTimer } from "./useTimer";
+import { useTimerSounds } from "./useTimerSounds";
 import { liveRun } from "../../live-session/liveRun";
 import {
   ON_DARK,
   ON_DARK_LINE,
   ON_DARK_SOFT,
   forToday,
-  hangRunDone,
-  timerParams,
+  resumedTimer,
   timerView,
+  useHangTimerPlayer,
   type ForToday,
+  type ResumedTimer,
 } from "@sendtally/features/workouts";
 
 function Timer({
@@ -55,23 +50,27 @@ function Timer({
   link: PlanLink;
   session: number;
   /** Where the run was when it was minimised or the app closed. */
-  resumed: Run<HangPhase> | null;
+  resumed: ResumedTimer | null;
   /** Ends the run as it opens, for its review. */
   end: boolean;
 }): React.ReactElement {
   const { model } = useHangData();
   const [changing, setChanging] = React.useState(false);
-  const { items, exerciseRestS } = planned;
-  const workout = items[0].workout;
-  const timer = useTimer(
-    (now) =>
-      resumed ??
-      startWorkoutRun(
-        items.map((i) => protocolOf(i.workout)),
-        exerciseRestS,
-        now
-      )
-  );
+  const workout = planned.items[0].workout;
+  const playSound = useTimerSounds();
+  const player = useHangTimerPlayer({
+    planned,
+    grips,
+    setups,
+    link,
+    session,
+    resumed,
+    store: liveRun,
+    playSound,
+    end,
+    onFinish: (review) => router.replace(donePath(review)),
+  });
+  const timer = useTimer(player);
   const { run, secondsLeft, progress } = timer;
   const view = timerView(run, secondsLeft, {
     planned,
@@ -79,39 +78,6 @@ function Timer({
     setups,
     unit: model.settings.units,
   });
-
-  React.useEffect(() => {
-    liveRun.write({
-      title: workout.name,
-      workoutId: workout.id,
-      pathname: "/workout/timer",
-      params: timerParams(workout.id, grips[0] ?? workout.grip, session, link),
-      startedAt: run.startedAt,
-      state: { player: "timer", run, setups },
-    });
-  }, [run, workout, grips, session, link, setups]);
-
-  const ending = React.useRef(end);
-  React.useEffect(() => {
-    if (!ending.current) return;
-    ending.current = false;
-    timer.end();
-  }, [timer]);
-
-  const sent = React.useRef(false);
-  React.useEffect(() => {
-    if (run.finished === null || sent.current) return;
-    sent.current = true;
-    router.replace(
-      donePath({
-        workoutId: workout.id,
-        gripId: grips[0] ?? workout.grip,
-        link,
-        session,
-        run: hangRunDone(run, planned, grips, setups),
-      })
-    );
-  }, [run, planned, workout, grips, setups, link, session]);
 
   return (
     <TimerFrame
@@ -201,10 +167,7 @@ export function TimerScreen({
   const { model, today } = useHangData();
   const plan = usePlan(useApi()).state;
   const planned = usePlannedRun(workoutId, link, session);
-  const [resumed] = React.useState(() => {
-    const state = liveRun.resumed("/workout/timer", workoutId)?.state;
-    return state?.player === "timer" ? state : null;
-  });
+  const [resumed] = React.useState(() => resumedTimer(liveRun, "/workout/timer", workoutId));
   const [setups, setSetups] = React.useState<HangSetup[] | null>(resumed?.setups ?? null);
   if (planned === undefined) return null;
   const forRun = forToday(
@@ -221,7 +184,7 @@ export function TimerScreen({
       onSetups={setSetups}
       link={link}
       session={session}
-      resumed={(resumed?.run as Run<HangPhase> | undefined) ?? null}
+      resumed={resumed}
       end={end}
     />
   );
