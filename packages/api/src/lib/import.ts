@@ -1,3 +1,4 @@
+import type { ImportSession } from "@sendtally/core/import";
 import { z } from "zod";
 import { manualSessionShape, sessionTooLong, type ManualSessionBody } from "./manual";
 
@@ -27,6 +28,15 @@ export const importBody = z.object({
 export type ImportSessionBody = z.infer<typeof importSessionShape>;
 
 export type ImportBody = z.input<typeof importBody>;
+
+type Agrees<T extends U, U> = T;
+
+// The core planner's sessions, less their row numbers, are what this endpoint
+// takes, whether /app/import or the connector planned them.
+export type PlannedImportSession = Agrees<
+  Omit<ImportSession, "rows">,
+  ImportBody["sessions"][number]
+>;
 
 // The same rows produce the same fingerprint, so importing a file twice adds
 // nothing the second time. The user's edits afterwards do not change it.

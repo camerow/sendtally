@@ -1,4 +1,5 @@
-import type { LogClimbInput } from "@sendtally/api-client";
+import type { ClimbKind, ClimbStyle } from "../effort";
+import type { Grade } from "../grades";
 
 export type ImportFormat = "kaya" | "sendtally";
 
@@ -22,7 +23,12 @@ export type ImportIssue = {
   climb?: string;
 };
 
-export type ImportClimb = Pick<LogClimbInput, "name" | "grade" | "kind" | "style" | "tries"> & {
+export type ImportClimb = {
+  name: string;
+  grade: Grade;
+  kind: ClimbKind;
+  style?: ClimbStyle;
+  tries: number;
   wall?: string;
   note?: string;
 };
