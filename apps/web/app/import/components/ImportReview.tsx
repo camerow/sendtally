@@ -191,7 +191,7 @@ export function ImportReview({
       {unrecognised ? (
         <>
           <p style={bodyText}>{t("import.nothingFound")}</p>
-          <ConversionPrompt />
+          <ConversionPrompt showApps />
         </>
       ) : (
         <div

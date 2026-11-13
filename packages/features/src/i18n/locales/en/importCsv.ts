@@ -4,8 +4,9 @@ export const importCsv = {
   "import.stepReview": "2 Review",
   "import.stepDone": "3 Done",
   "import.dropLabel": "Drop a CSV here, or choose a file",
+  "import.exportFrom": "Where to export",
   "import.dropHint":
-    "Exports from {services} are recognized automatically. Anything else uses the Sendtally CSV format below. Nothing is saved until you confirm on the next step.",
+    "Exports from these apps are recognized automatically. Anything else uses the Sendtally CSV format below. Nothing is saved until you confirm on the next step.",
   "import.formatLabel": "Sendtally CSV format",
   "import.downloadTemplate": "Download template",
   "import.formatBody":
@@ -28,7 +29,7 @@ export const importCsv = {
   "import.convertTitle": "Convert a spreadsheet with an AI assistant",
   "import.convertHelp":
     "Paste this into Claude or ChatGPT together with your spreadsheet (export it as CSV first). Check the result for a session or two, then import the file it gives you.",
-  "import.exportSkip": "Exported from {services}? Skip this and upload the export as it is.",
+  "import.exportSkip": "Exported from one of these apps? Skip this and upload the export as it is.",
   "import.reviewTitle": "Review before importing",
   "import.chooseAnother": "Choose a different file",
   "import.formatExport": "{service} export",

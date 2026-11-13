@@ -4,8 +4,9 @@ export const importCsv = {
   "import.stepReview": "2 Revisar",
   "import.stepDone": "3 Listo",
   "import.dropLabel": "Suelta un CSV aquí o elige un archivo",
+  "import.exportFrom": "Dónde exportar",
   "import.dropHint":
-    "Las exportaciones de {services} se reconocen automáticamente. Todo lo demás usa el formato CSV de Sendtally de abajo. No se guarda nada hasta que confirmes en el siguiente paso.",
+    "Las exportaciones de estas apps se reconocen automáticamente. Todo lo demás usa el formato CSV de Sendtally de abajo. No se guarda nada hasta que confirmes en el siguiente paso.",
   "import.formatLabel": "Formato CSV de Sendtally",
   "import.downloadTemplate": "Descargar plantilla",
   "import.formatBody":
@@ -30,7 +31,8 @@ export const importCsv = {
   "import.convertTitle": "Convertir una hoja de cálculo con un asistente de IA",
   "import.convertHelp":
     "Pega esto en Claude o ChatGPT junto con tu hoja (expórtala primero como CSV). Revisa una o dos sesiones del resultado y luego importa el archivo que te dé.",
-  "import.exportSkip": "¿Exportado desde {services}? Sáltate esto y sube la exportación tal cual.",
+  "import.exportSkip":
+    "¿Exportado desde una de estas apps? Sáltate esto y sube la exportación tal cual.",
   "import.reviewTitle": "Revisar antes de importar",
   "import.chooseAnother": "Elegir otro archivo",
   "import.formatExport": "Exportación de {service}",
