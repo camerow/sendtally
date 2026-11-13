@@ -5,7 +5,7 @@ export const importCsv = {
   "import.stepDone": "3 Terminé",
   "import.dropLabel": "Dépose un CSV ici, ou choisis un fichier",
   "import.dropHint":
-    "Les exports de {services} sont reconnus automatiquement. Tout le reste utilise le format CSV Sendtally ci-dessous. Rien n'est enregistré avant ta confirmation à l'étape suivante.",
+    "Les exports de ces apps sont reconnus automatiquement. Tout le reste utilise le format CSV Sendtally ci-dessous. Rien n'est enregistré avant ta confirmation à l'étape suivante.",
   "import.formatLabel": "Format CSV Sendtally",
   "import.downloadTemplate": "Télécharger le modèle",
   "import.formatBody":
@@ -31,7 +31,8 @@ export const importCsv = {
   "import.convertTitle": "Convertir un tableur avec un assistant IA",
   "import.convertHelp":
     "Colle ceci dans Claude ou ChatGPT avec ton tableur (exporte-le d'abord en CSV). Vérifie une ou deux séances dans le résultat, puis importe le fichier obtenu.",
-  "import.exportSkip": "Un export de {services} ? Passe cette étape et importe l'export tel quel.",
+  "import.exportSkip":
+    "Un export d'une de ces apps ? Passe cette étape et importe l'export tel quel.",
   "import.reviewTitle": "Vérifier avant d'importer",
   "import.chooseAnother": "Choisir un autre fichier",
   "import.formatExport": "Export {service}",

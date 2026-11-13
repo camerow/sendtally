@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { parseCsv, toCsv } from "./csv";
-import { gradeFromText, planImport } from "./plan";
+import { exportPageUrl, gradeFromText, planImport } from "./plan";
 
 const kaya = `date,stiffness,rating,ascent_type,attempts,grade,color,climb_name,gym,location,country
 Fri Nov 05 2021 03:49:59 GMT+0000 (GMT+00:00),0,,Flash,1,5.10c,,Scrum Felcher,,Sun City,United States
@@ -155,5 +155,12 @@ describe("csv", () => {
       ["a", "b"],
       ["1", "2"],
     ]);
+  });
+});
+
+describe("exportPageUrl", () => {
+  it("links a confirmed page or falls back to a search", () => {
+    expect(exportPageUrl("theCrag")).toBe("https://www.thecrag.com/en/article/exportlogbook");
+    expect(exportPageUrl("kaya")).toBe("https://www.google.com/search?q=Kaya%20data%20export");
   });
 });

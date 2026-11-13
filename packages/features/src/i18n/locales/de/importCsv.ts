@@ -5,7 +5,7 @@ export const importCsv = {
   "import.stepDone": "3 Fertig",
   "import.dropLabel": "CSV hier ablegen oder eine Datei wählen",
   "import.dropHint":
-    "Exporte aus {services} werden automatisch erkannt. Alles andere nutzt das Sendtally-CSV-Format unten. Gespeichert wird erst, wenn du im nächsten Schritt bestätigst.",
+    "Exporte aus diesen Apps werden automatisch erkannt. Alles andere nutzt das Sendtally-CSV-Format unten. Gespeichert wird erst, wenn du im nächsten Schritt bestätigst.",
   "import.formatLabel": "Sendtally-CSV-Format",
   "import.downloadTemplate": "Vorlage herunterladen",
   "import.formatBody":
@@ -32,7 +32,7 @@ export const importCsv = {
   "import.convertHelp":
     "Füge das zusammen mit deiner Tabelle (vorher als CSV exportieren) in Claude oder ChatGPT ein. Prüfe ein, zwei Sessions im Ergebnis und importiere dann die Datei, die du bekommst.",
   "import.exportSkip":
-    "Export aus {services}? Überspring das und lade den Export so hoch, wie er ist.",
+    "Export aus einer dieser Apps? Überspring das und lade den Export so hoch, wie er ist.",
   "import.reviewTitle": "Vor dem Import prüfen",
   "import.chooseAnother": "Andere Datei wählen",
   "import.formatExport": "{service}-Export",
