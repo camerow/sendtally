@@ -61,14 +61,13 @@ jest.mock("../../lib/statsSegmentStorage", () => {
       }),
   };
 });
-jest.mock("@sendtally/features/gyms", () => ({
+jest.mock("../../../../packages/features/src/gyms/useGyms", () => ({
   useGyms: () => ({ state: { status: "ready", data: [] } }),
 }));
-jest.mock("@sendtally/features/settings", () => ({
+jest.mock("../../../../packages/features/src/settings/useGradeScales", () => ({
   useGradeScalePrefs: () => ({ scales: { boulder: "font", route: "yds" }, ready: true }),
 }));
-jest.mock("@sendtally/features/climbs", () => ({
-  ...jest.requireActual<object>("@sendtally/features/climbs"),
+jest.mock("../../../../packages/features/src/climbs/useClimbs", () => ({
   useClimbs: () => ({
     state: {
       status: "ready",

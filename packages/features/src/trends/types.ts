@@ -33,6 +33,18 @@ export const yearsOf = (dates: readonly string[]): number[] =>
     .filter(Number.isFinite)
     .sort((a, b) => b - a);
 
+/** The years Stats can show: anything climbed, hung or otherwise trained in, newest first. */
+export const statsYears = (logged: {
+  sessions: readonly { start_at: string }[];
+  hangSessions: readonly { date: string }[];
+  activities: readonly { date: string }[];
+}): number[] =>
+  yearsOf([
+    ...logged.sessions.map((s) => s.start_at),
+    ...logged.hangSessions.map((h) => h.date),
+    ...logged.activities.map((a) => a.date),
+  ]);
+
 /** Everything for a member; the one unlocked range for anyone else. */
 export const defaultRange = (member: boolean | null): TrendRange =>
   member === true ? "all" : PREVIEW_TREND_RANGE;

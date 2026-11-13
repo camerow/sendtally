@@ -1,18 +1,8 @@
 import React from "react";
 import { ActivityIndicator, Text, View } from "react-native";
-import {
-  CLIMB_PLACES,
-  climbingInsightsVM,
-  daysClimbed,
-  mainDiscipline,
-  useClimbs,
-  workoutClimbSessions,
-  type ClimbPlaceFilter,
-} from "@sendtally/features/climbs";
+import { CLIMB_PLACES, climbPlaceLabel, useClimbingInsights } from "@sendtally/features/climbs";
 import { t } from "@sendtally/features/i18n";
-import { disciplineLabel, type Discipline } from "@sendtally/features/log-session";
-import { useGyms } from "@sendtally/features/gyms";
-import { useGradeScalePrefs } from "@sendtally/features/settings";
+import { disciplineLabel } from "@sendtally/features/log-session";
 import type { TrendRange } from "@sendtally/features/trends";
 import { colors, fonts } from "@sendtally/design/tokens";
 import { Pyramid } from "../../components/Pyramid";
@@ -25,48 +15,16 @@ import { DaysClimbing } from "./DaysClimbing";
 import { GradeBadge } from "./GradeBadge";
 import { sectionLabel } from "./sectionLabel";
 
-const PLACE_LABELS: Record<ClimbPlaceFilter, () => string> = {
-  all: () => t("trends.scopeAll"),
-  outdoor: () => t("trends.outside"),
-  indoor: () => t("climbs.gym"),
-};
-
 /**
  * The pyramid of what was sent, the average send, sends, flashes and projects, the days
  * climbed and the top send, counting the climbs workouts logged on the tally alongside the
  * sessions.
  */
 export function ClimbingInsights({ range }: { range: TrendRange }): React.ReactElement {
-  const api = useApi();
-  const { state } = useClimbs(api);
-  const { scales } = useGradeScalePrefs(api);
-  const [discipline, setDiscipline] = React.useState<Discipline | null>(null);
-  const [place, setPlace] = React.useState<ClimbPlaceFilter>("all");
-  const gymList = useGyms(api).state;
-  const gyms = React.useMemo(
-    () => new Map(gymList.status === "ready" ? gymList.data.map((g) => [g.id, g.name]) : []),
-    [gymList]
+  const { state, vm, days, discipline, setDiscipline, place, setPlace } = useClimbingInsights(
+    useApi(),
+    range
   );
-  const ready = state.status === "ready" ? state.data : null;
-  const sessions = React.useMemo(
-    () => (ready === null ? [] : [...ready.sessions, ...workoutClimbSessions(ready.activities)]),
-    [ready]
-  );
-  const shownDiscipline = discipline ?? mainDiscipline(sessions);
-  const vm = React.useMemo(
-    () =>
-      ready === null
-        ? null
-        : climbingInsightsVM(sessions, ready.climbs, {
-            range,
-            discipline: shownDiscipline,
-            place,
-            scales,
-            gyms,
-          }),
-    [ready, sessions, range, shownDiscipline, place, scales, gyms]
-  );
-  const days = React.useMemo(() => daysClimbed(sessions, range), [sessions, range]);
 
   return (
     <>
@@ -78,7 +36,7 @@ export function ClimbingInsights({ range }: { range: TrendRange }): React.ReactE
             segments={(["boulder", "route"] as const).map((d) => ({
               key: d,
               label: disciplineLabel(d),
-              on: d === shownDiscipline,
+              on: d === discipline,
               onPress: () => setDiscipline(d),
             }))}
           />
@@ -89,7 +47,7 @@ export function ClimbingInsights({ range }: { range: TrendRange }): React.ReactE
             label={t("climbs.where")}
             segments={CLIMB_PLACES.map((p) => ({
               key: p,
-              label: PLACE_LABELS[p](),
+              label: climbPlaceLabel(p),
               on: p === place,
               onPress: () => setPlace(p),
             }))}
@@ -138,7 +96,7 @@ export function ClimbingInsights({ range }: { range: TrendRange }): React.ReactE
               />
             )}
           </View>
-          {vm.byGrade.length > 0 && <ClimbsByGrade grades={vm.byGrade} />}
+          {vm.byGrade.length > 0 && <ClimbsByGrade grades={vm.byGrade} total={vm.byGradeTotal} />}
           <View style={{ flexDirection: "row", gap: 6 }}>
             <CountTile value={vm.avgSend ?? "–"} label={t("climbs.avgSendWord")} />
             <CountTile value={vm.sends} label={t("climbs.sendsWord", { count: vm.sends })} />

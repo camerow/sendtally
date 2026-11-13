@@ -3,7 +3,7 @@ import { ScrollView, View } from "react-native";
 import { useSharedValue } from "react-native-reanimated";
 import { t } from "@sendtally/features/i18n";
 import { queries, useQuery } from "@sendtally/features/query";
-import { defaultRange, shownRange, yearsOf, type TrendRange } from "@sendtally/features/trends";
+import { defaultRange, shownRange, statsYears, type TrendRange } from "@sendtally/features/trends";
 import { useApi } from "../../lib/api";
 import { RangeChips } from "../../components/RangeChips";
 import { useCanSeeInsights } from "../billing/useBilling";
@@ -22,14 +22,7 @@ export function StatsScreen(): React.ReactElement {
   const range = shownRange(member, picked ?? defaultRange(member));
   const { state } = useQuery(queries.sessionsWithClimbs(useApi()));
   const years = React.useMemo(
-    () =>
-      state.status !== "ready"
-        ? []
-        : yearsOf([
-            ...state.data.sessions.map((s) => s.start_at),
-            ...state.data.hangSessions.map((h) => h.date),
-            ...state.data.activities.map((a) => a.date),
-          ]),
+    () => (state.status === "ready" ? statsYears(state.data) : []),
     [state]
   );
   const segments = [

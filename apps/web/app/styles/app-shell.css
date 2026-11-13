@@ -304,6 +304,10 @@
   display: flex;
 }
 
+.sheet:focus {
+  outline: none;
+}
+
 .sheet::backdrop {
   background: rgba(64, 63, 76, 0.45);
 }

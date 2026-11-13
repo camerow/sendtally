@@ -37,7 +37,7 @@ import { usePlanActions } from "../plan/usePlanActions";
 import { useReminderPrompt } from "../reminders/ReminderPromptProvider";
 import { backToPlan } from "./backToPlan";
 import { BlockChoice } from "./BlockChoice";
-import type { AddFlow } from "./flowParams";
+import type { AddFlow } from "@sendtally/features/training";
 import { ScreenFrame } from "../../../components/ScreenFrame";
 import { StartField } from "./StartField";
 import { WeekdayChips } from "./WeekdayChips";
