@@ -59,6 +59,7 @@ const library = (): WorkoutLibrary => {
   };
 };
 
+vi.mock("@clerk/react-router", () => ({ useAuth: () => ({ userId: "u1" }) }));
 vi.mock("../library/useLibrary", async (actual) => ({
   ...(await actual<typeof T_useLibrary>()),
   useLibrary: () => ({ state: { status: "ready", data: library() }, reload: vi.fn() }),

@@ -12,6 +12,7 @@ import type * as T_settings from "@sendtally/features/settings";
 import type * as T_training from "@sendtally/features/training";
 import type * as T_useLibrary from "../library/useLibrary";
 import { hangData } from "../data/testHang";
+import type * as T_statistics from "@sendtally/features/statistics";
 
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -55,6 +56,11 @@ const library = (): WorkoutLibrary => {
   return { workouts, usage: new Map(), workout: (id) => workouts.find((w) => w.id === id) };
 };
 
+vi.mock("@sendtally/features/statistics", async (actual) => ({
+  ...(await actual<typeof T_statistics>()),
+  useExercises: () => ({ state: { status: "ready", data: [] } }),
+}));
+vi.mock("@clerk/react-router", () => ({ useAuth: () => ({ userId: "u1" }) }));
 vi.mock("../library/useLibrary", async (actual) => ({
   ...(await actual<typeof T_useLibrary>()),
   useLibrary: () => ({ state: { status: "ready", data: library() }, reload: vi.fn() }),

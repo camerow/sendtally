@@ -84,4 +84,24 @@ describe("starting while a session runs", () => {
     expect(storage.read()).toBeNull();
     expect(start).toHaveBeenCalled();
   });
+
+  it("records a running workout through its player, and starts the new one once it is saved", () => {
+    const { store } = liveRunOf("u1");
+    store.write({
+      title: "Leg day",
+      workoutId: "w1",
+      pathname: "/workout/sets",
+      params: { title: "Leg day" },
+      startedAt: Date.now(),
+      state: { player: "sets", done: [], ticked: [] },
+    });
+    const start = vi.fn();
+    act(() => startLive(running(storage, store, go), start));
+    expect(document.body.textContent).toContain("Leg day");
+    act(() => button("Record").click());
+    expect(went).toEqual(["/app/workout/sets?title=Leg+day&end=1"]);
+    expect(start).not.toHaveBeenCalled();
+    act(() => store.clear());
+    expect(start).toHaveBeenCalled();
+  });
 });

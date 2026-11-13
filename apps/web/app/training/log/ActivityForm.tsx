@@ -23,7 +23,9 @@ import { useWorkoutActions } from "@sendtally/features/workouts";
 import { NumberField } from "../../components/NumberField";
 import { useToast } from "../../components/Toast";
 import { DetailFrame } from "../../components/detail/DetailFrame";
+import { Sheet } from "../../components/Sheet";
 import { useAppApi } from "../../lib/useAppApi";
+import { useLiveRunStore } from "../../lib/useLiveRun";
 import { useGoBack } from "../../lib/useGoBack";
 import { useHangData } from "../data/HangDataContext";
 import { workoutPath } from "../library/useLibrary";
@@ -41,6 +43,8 @@ export type ActivityFormProps = {
   kindSet?: boolean;
   /** What the workout prescribes, which a set short of its dose reads against. */
   planned?: readonly SessionItem[];
+  /** It reviews the workout running live, which saving or discarding ends. */
+  live?: boolean;
   /** A hangboard workout, which saves as a hang session with its setup and no notes or times. */
   hang?: { setup: React.ReactNode; loadKg: number; save: (draft: ActivityDraft) => void };
 };
@@ -60,6 +64,7 @@ export function ActivityForm({
   initial,
   logged,
   kindSet = false,
+  live = false,
   planned = [],
   hang,
 }: ActivityFormProps): React.ReactElement {
@@ -67,6 +72,8 @@ export function ActivityForm({
   const navigate = useNavigate();
   const back = useGoBack("/app");
   const toast = useToast();
+  const liveRun = useLiveRunStore();
+  const [discarding, setDiscarding] = React.useState(false);
   const { today } = useHangData();
   const failed = React.useCallback(
     () => toast.show({ message: t("activities.saveFailed") }),
@@ -94,6 +101,7 @@ export function ActivityForm({
       ? previousSets(activities.data, draft.workoutId, exercise)
       : [];
   const save = (): void => {
+    if (live) liveRun.clear();
     if (hang !== undefined) {
       hang.save(draft);
       return;
@@ -120,7 +128,8 @@ export function ActivityForm({
   return (
     <DetailFrame
       backTo="/app"
-      backLabel={t("common.cancel")}
+      backLabel={live ? t("hang.discard") : t("common.cancel")}
+      {...(live && { onBack: () => setDiscarding(true) })}
       footer={
         <button type="button" className="detail-primary" onClick={save}>
           {t("common.save")}
@@ -240,6 +249,22 @@ export function ActivityForm({
           {t("workouts.saveAsWorkout")}
         </button>
       )}
+      <Sheet
+        open={discarding}
+        title={t("hang.discardRunTitle")}
+        onClose={() => setDiscarding(false)}
+        action={{
+          label: t("hang.discard"),
+          danger: true,
+          onPress: () => {
+            setDiscarding(false);
+            liveRun.clear();
+            back();
+          },
+        }}
+      >
+        <p className="sheet-body">{t("hang.discardRunBody")}</p>
+      </Sheet>
     </DetailFrame>
   );
 }

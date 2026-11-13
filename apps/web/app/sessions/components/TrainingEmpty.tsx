@@ -1,11 +1,14 @@
 import React from "react";
 import { t } from "@sendtally/features/i18n";
 import { entryKindLabel, today } from "@sendtally/features/journal";
+import { useNavigate } from "react-router";
 import { LogWorkoutSheet } from "../../training/library-detail/LogWorkoutSheet";
+import { WORKOUTS_VIEW } from "../../training/library/useLibrary";
 import { LogEmpty } from "./LogEmpty";
 
-/** The training log before its first workout: a preview, and the ways in the web has so far. */
+/** The training log before its first workout: a preview, Start a workout, and the other ways in. */
 export function TrainingEmpty(): React.ReactElement {
+  const navigate = useNavigate();
   const [picking, setPicking] = React.useState(false);
   return (
     <>
@@ -16,6 +19,7 @@ export function TrainingEmpty(): React.ReactElement {
           { daysAgo: 4, title: t("training.examplePull"), meta: t("training.examplePullMeta") },
         ]}
         title={t("training.firstWorkout")}
+        primary={{ label: t("training.startWorkout"), onPress: () => void navigate(WORKOUTS_VIEW) }}
         actions={[
           {
             key: "workout",

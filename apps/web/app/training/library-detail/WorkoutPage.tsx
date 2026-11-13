@@ -5,7 +5,12 @@ import { tallyMeasuresOf } from "@sendtally/features/exercises";
 import { hangWorkoutOf, setupLabel } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import { useExercises } from "@sendtally/features/statistics";
-import { workoutMinutes, type LibraryWorkout, type WorkoutUse } from "@sendtally/features/workouts";
+import {
+  unplannedItems,
+  workoutMinutes,
+  type LibraryWorkout,
+  type WorkoutUse,
+} from "@sendtally/features/workouts";
 import { MoreMenu } from "../../components/MoreMenu";
 import { DetailFrame } from "../../components/detail/DetailFrame";
 import { HistoryList } from "../../components/detail/HistoryList";
@@ -15,7 +20,9 @@ import { useHangData } from "../data/HangDataContext";
 import { LoadState } from "../data/LoadState";
 import { editWorkoutPath } from "../editor/paths";
 import { WORKOUTS_VIEW, useLibrary } from "../library/useLibrary";
+import { StartButton } from "../components/StartButton";
 import { logLink } from "../log/logLink";
+import { useWorkoutStart } from "./useWorkoutStart";
 import { activityPath } from "../log/paths";
 import { BodyPreview } from "./BodyPreview";
 import { LibraryIntro } from "./LibraryIntro";
@@ -40,6 +47,7 @@ function Detail({
   const activities = useActivities(api).state;
   const menu = useWorkoutMenu(workout);
   const logIt = logLink(workout, today, session);
+  const start = useWorkoutStart(workout, today, unplannedItems(workout, session));
   const hang = workout.kind === "hangboard" ? model.workout(workout.id) : undefined;
   const next = hang === undefined ? undefined : (hangWorkoutOf(workout, session) ?? hang);
   const gripId = hang === undefined ? "" : model.defaultGrip(hang);
@@ -69,15 +77,18 @@ function Detail({
         </span>
       }
       footer={
-        <div className="footer-row">
-          <Link to={schedulePath(workout.id)} className="footer-outline">
-            {t("plan.addToPlan")}
-          </Link>
-          {logIt !== null && (
-            <Link to={logIt} className="footer-outline">
-              {t("workouts.logIt")}
+        <div className="footer-stack">
+          {start !== null && <StartButton start={start} />}
+          <div className="footer-row">
+            <Link to={schedulePath(workout.id)} className="footer-outline">
+              {t("plan.addToPlan")}
             </Link>
-          )}
+            {logIt !== null && (
+              <Link to={logIt} className="footer-outline">
+                {t("workouts.logIt")}
+              </Link>
+            )}
+          </div>
         </div>
       }
     >

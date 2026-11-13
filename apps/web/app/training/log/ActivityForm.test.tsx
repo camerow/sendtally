@@ -6,6 +6,7 @@ import type { ActivityDraft } from "@sendtally/features/activities";
 import type * as Activities from "@sendtally/features/activities";
 import type * as Workouts from "@sendtally/features/workouts";
 import { ToastProvider } from "../../components/Toast";
+import { liveRunOf } from "../../lib/useLiveRun";
 import { WithHang } from "../data/testHang";
 import { ActivityForm } from "./ActivityForm";
 
@@ -22,6 +23,7 @@ const writes = vi.hoisted(() => ({
   deleteWorkout: vi.fn(async () => undefined),
 }));
 
+vi.mock("@clerk/react-router", () => ({ useAuth: () => ({ userId: "u1" }) }));
 vi.mock("../../lib/useAppApi", () => ({ useAppApi: () => ({}) }));
 vi.mock("@sendtally/features/activities", async (actual) => ({
   ...(await actual<typeof Activities>()),
@@ -65,13 +67,13 @@ afterEach(() => {
   container.remove();
 });
 
-const mount = (): void =>
+const mount = (live = false): void =>
   act(() =>
     root.render(
       <ToastProvider>
         <MemoryRouter>
           <WithHang>
-            <ActivityForm id="a1" initial={review} logged={null} kindSet />
+            <ActivityForm id="a1" initial={review} logged={null} kindSet live={live} />
           </WithHang>
         </MemoryRouter>
       </ToastProvider>
@@ -93,6 +95,28 @@ describe("ActivityForm", () => {
     save();
     expect(writes.saveActivity).toHaveBeenCalledOnce();
     expect(saved()[0]?.sets).toHaveLength(2);
+  });
+
+  it("ends the live run it reviews when saved, and only after asking when discarded", () => {
+    const { store } = liveRunOf("u1");
+    const running = (): void =>
+      store.write({
+        title: "Gym, legs",
+        workoutId: "w1",
+        pathname: "/workout/sets",
+        params: {},
+        startedAt: 0,
+        state: { player: "sets", done: [], ticked: [] },
+      });
+    running();
+    mount(true);
+    click(container.querySelector(".detail-back"));
+    expect(store.read()).not.toBeNull();
+    click(document.querySelector(".sheet-action--danger"));
+    expect(store.read()).toBeNull();
+    running();
+    save();
+    expect(store.read()).toBeNull();
   });
 
   it("removes a set with an Undo that puts it back", () => {

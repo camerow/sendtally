@@ -409,3 +409,16 @@
     padding: 0 6px;
   }
 }
+
+.start-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.footer-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}

@@ -12,6 +12,7 @@ import { BlockPage } from "./BlockPage";
 
 import type * as T_training from "@sendtally/features/training";
 import type * as T_useLibrary from "../library/useLibrary";
+import type * as T_statistics from "@sendtally/features/statistics";
 
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -49,6 +50,11 @@ const library = (): WorkoutLibrary => {
   return { workouts, usage: new Map(), workout: (id) => workouts.find((w) => w.id === id) };
 };
 
+vi.mock("@sendtally/features/statistics", async (actual) => ({
+  ...(await actual<typeof T_statistics>()),
+  useExercises: () => ({ state: { status: "ready", data: [] } }),
+}));
+vi.mock("@clerk/react-router", () => ({ useAuth: () => ({ userId: "u1" }) }));
 vi.mock("../library/useLibrary", async (actual) => ({
   ...(await actual<typeof T_useLibrary>()),
   useLibrary: () => ({ state: { status: "ready", data: library() }, reload: vi.fn() }),
@@ -223,7 +229,7 @@ describe("BlockPage", () => {
     expect(state.deleteBlock).toHaveBeenCalledWith("b1");
   });
 
-  it("opens a planned day of a running block, with Reschedule, Skip and Log it", () => {
+  it("opens a planned day of a running block: Start, then Log it, Reschedule and Skip", () => {
     state.plan = withBlock(running);
     mount();
     expect(container.querySelector(".detail-tiles")?.textContent).toContain("This week");
@@ -231,10 +237,13 @@ describe("BlockPage", () => {
     const sheet = document.querySelector("dialog")!;
     expect(sheet.querySelector(".sheet-title")?.textContent).toBe("Gym, legs");
     expect([...sheet.querySelectorAll(".more-item")].map((b) => b.textContent)).toEqual([
+      "Log it",
       "Reschedule",
       "Skip",
     ]);
-    expect(sheet.querySelector(".sheet-action")?.textContent).toBe("Log it");
+    expect(sheet.querySelector(".sheet-action")?.textContent).toBe("Start");
+    click(sheet.querySelector(".sheet-action"));
+    expect(at.path).toBe("/app/workout/sets");
   });
 
   it("saves a scheduled block as a template under a name, with View in the toast", async () => {

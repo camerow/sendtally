@@ -1001,3 +1001,32 @@ button.grid-cell:hover {
   color: var(--text-on-white-secondary);
   cursor: pointer;
 }
+
+.plan-card-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.plan-card-actions > * {
+  flex: 1;
+}
+
+.plan-card-start {
+  height: 50px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: none;
+  border-radius: var(--radius-control);
+  background: var(--bs-azure-ink);
+  color: var(--bs-white);
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.plan-card-start:hover {
+  background: var(--bs-azure-ink-press);
+}
