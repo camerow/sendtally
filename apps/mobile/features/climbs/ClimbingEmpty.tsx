@@ -1,9 +1,7 @@
 import { router } from "expo-router";
-import * as WebBrowser from "expo-web-browser";
 import React from "react";
 import { countLabel } from "@sendtally/features/sessions";
 import { t } from "@sendtally/features/i18n";
-import { WEB_URL } from "../../lib/config";
 import { startLiveSession } from "../live-session/startLiveSession";
 import { LogEmpty } from "../sessions/LogEmpty";
 
@@ -35,8 +33,7 @@ export function ClimbingEmpty(): React.ReactElement {
           key: "import",
           icon: "import",
           title: t("climbs.importLog"),
-          external: true,
-          onPress: () => void WebBrowser.openBrowserAsync(`${WEB_URL}/app/import`),
+          onPress: () => router.push("/import"),
         },
       ]}
     />
