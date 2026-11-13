@@ -9,6 +9,7 @@ import {
   useTrainingLog,
   workoutLines,
   type AddFlow,
+  blockName,
 } from "@sendtally/features/training";
 import { libraryShelves, type LibraryWorkout } from "@sendtally/features/workouts";
 import { Icon } from "../../components/Icon";
@@ -84,7 +85,7 @@ export function AddWorkoutsSheet({
     setBusy(false);
     if (!made) return;
     close();
-    onScheduled?.({ id, name: b.name || t("plan.untitled"), start });
+    onScheduled?.({ id, name: blockName(b), start });
   };
   const action: SheetAction =
     picked !== null
@@ -113,7 +114,7 @@ export function AddWorkoutsSheet({
     return (
       <Sheet
         open
-        kicker={picked.name || t("plan.untitled")}
+        kicker={blockName(picked)}
         title={t("plan.planAgainStart")}
         onBack={() => setPicked(null)}
         onClose={close}

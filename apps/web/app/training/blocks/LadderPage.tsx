@@ -1,28 +1,18 @@
 import React from "react";
-import {
-  blockEnded,
-  blockWeekOn,
-  doseIndex,
-  itemIdOf,
-  letterOf,
-  sessionItems,
-  turnsOf,
-} from "@sendtally/core/hang";
+import { letterOf, type Dose } from "@sendtally/core/hang";
 import { kindLabel } from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
 import {
-  blockOfMembership,
-  changedWeeks,
   KIND_LOOK,
-  ladderDone,
   loadColumns,
   usePlan,
   usePlanDraft,
   useTrainingLog,
-  weekChangesOf,
-  workoutLines,
+  ladderView,
+  loadSummary,
+  toggleIn,
 } from "@sendtally/features/training";
-import { bodySummary, doseSummary, exerciseName } from "@sendtally/features/workouts";
+import { exerciseName } from "@sendtally/features/workouts";
 import { MoreMenu } from "../../components/MoreMenu";
 import { Segmented } from "../../components/Segmented";
 import { Sheet } from "../../components/Sheet";
@@ -61,9 +51,7 @@ export function LadderPage({ id }: { id: string }): React.ReactElement {
   const [open, setOpen] = React.useState<readonly number[]>([0]);
   const [removing, setRemoving] = React.useState(false);
   const { plan } = draft;
-  const m = plan.memberships.find((x) => x.id === id);
-  const block = m === undefined ? null : blockOfMembership(plan, m);
-  const w = m === undefined ? undefined : log.workout(m.workoutId);
+  const view = ladderView(plan, log, model, id, turn, today);
 
   if (loaded.state.status !== "ready")
     return (
@@ -72,25 +60,11 @@ export function LadderPage({ id }: { id: string }): React.ReactElement {
       </DetailFrame>
     );
   // Gone, removed elsewhere: Back still leaves.
-  if (m === undefined || w === undefined || block === null) return <DetailFrame backTo={BACK_TO} />;
+  if (view === null) return <DetailFrame backTo={BACK_TO} />;
 
+  const { membership: m, block, workout: w, turns, items, current, ended, done, lines } = view;
   const look = KIND_LOOK[w.kind];
-  const turns = turnsOf(w.items);
-  const items = sessionItems(w.items, turn);
-  const itemIdAt = (index: number): string => itemIdOf(w.items[index] ?? {}, index);
-  const doseOf = (index: number): number => doseIndex(w.items[index] ?? { doses: [] }, turn);
-  const changesOf = (index: number): ReturnType<typeof weekChangesOf> =>
-    weekChangesOf(plan, {
-      membershipId: id,
-      weeks: block.weeks,
-      dose: doseOf(index),
-      itemId: itemIdAt(index),
-    });
-  const current = blockWeekOn(block, today);
-  const ended = blockEnded(block, today);
-  const done = ladderDone(log, block, id, today);
-  const lines =
-    w.kind === "hangboard" ? (bodySummary(w)?.split(" · ") ?? []) : workoutLines(w, model);
+  const changesOf = (index: number): Partial<Dose>[] => view.changes[index] ?? [];
   const mine =
     libraryState.status === "ready" && libraryState.data.workout(w.id)?.source === "mine";
   const editing = draft.editing && !ended;
@@ -114,8 +88,7 @@ export function LadderPage({ id }: { id: string }): React.ReactElement {
           draft.setChange({
             membershipId: id,
             week,
-            dose: doseOf(index),
-            itemId: itemIdAt(index),
+            ...view.at(index),
             change,
           })
         }
@@ -216,13 +189,9 @@ export function LadderPage({ id }: { id: string }): React.ReactElement {
               <LoadSection
                 key={`${turn}:${i}`}
                 name={exerciseName(it.exercise, model.gripName)}
-                summary={[doseSummary(w.kind, it.dose, unit), ...changedWeeks(changesOf(i))].join(
-                  " · "
-                )}
+                summary={loadSummary(w.kind, it.dose, unit, changesOf(i))}
                 open={open.includes(i)}
-                onToggle={() =>
-                  setOpen(open.includes(i) ? open.filter((x) => x !== i) : [...open, i])
-                }
+                onToggle={() => setOpen(toggleIn(open, i))}
               >
                 {loadOf(i)}
               </LoadSection>

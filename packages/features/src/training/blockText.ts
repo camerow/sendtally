@@ -11,6 +11,9 @@ import { blockGroups } from "./blocks";
 import type { TrainingLog } from "./days";
 import { blockDone, type DoneCount } from "./recap";
 
+/** A block's name, or Untitled for a template not named yet. */
+export const blockName = (block: Pick<Block, "name">): string => block.name || t("plan.untitled");
+
 /** "28 Sep to 25 Oct": first and last day, both inclusive. */
 export const blockDateRange = (block: Pick<DatedBlock, "start" | "weeks">): string =>
   t("plan.blockDates", { start: shortDate(block.start), last: shortDate(blockLastDay(block)) });

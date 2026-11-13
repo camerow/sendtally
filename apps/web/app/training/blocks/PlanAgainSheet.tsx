@@ -8,6 +8,7 @@ import { useHangData } from "../data/HangDataContext";
 import { usePlanActions } from "../data/usePlanActions";
 import { PlanAgainStart } from "./PlanAgainStart";
 import { blockPath } from "./paths";
+import { blockName } from "@sendtally/features/training";
 
 export type PlanAgainSheetProps = { block: Block; onClose: () => void };
 
@@ -32,7 +33,7 @@ export function PlanAgainSheet({ block, onClose }: PlanAgainSheetProps): React.R
   return (
     <Sheet
       open
-      kicker={block.name || t("plan.untitled")}
+      kicker={blockName(block)}
       title={t("plan.planAgainStart")}
       onClose={onClose}
       action={{

@@ -9,6 +9,11 @@ import {
   withWeekField,
   type DoneCount,
   type WeekField,
+  doneAll,
+  doneText,
+  isTimeField,
+  weekFieldMarked,
+  weekFieldUnit,
 } from "@sendtally/features/training";
 import { NumberField } from "../../components/NumberField";
 
@@ -29,8 +34,6 @@ export type LoadTableProps = {
   onChange: (week: number, change: Partial<Dose>) => void;
 };
 
-const TIMES: readonly WeekField[] = ["onS", "offS", "setRestS"];
-
 /**
  * An item's weeks in a block as a table: a row per week, a column per number, gold where a
  * week differs from the workout as written. Editing, each cell is typed or stepped with ↑ ↓.
@@ -46,8 +49,7 @@ export function LoadTable({
   editing,
   onChange,
 }: LoadTableProps): React.ReactElement {
-  const unitOf = (f: WeekField): string | null =>
-    f === "weightKg" ? unit : f === "edgeMm" ? "mm" : null;
+  const unitOf = (f: WeekField): string | null => weekFieldUnit(f, unit);
   const headOf = (f: WeekField): string => {
     const name = columnLabel(kind, written, f);
     const shown = unitOf(f);
@@ -81,7 +83,7 @@ export function LoadTable({
                 {t("plan.weekShort", { n: week })}
               </th>
               {columns.map((f) => {
-                const marked = change[f] !== undefined && change[f] !== written[f];
+                const marked = weekFieldMarked(change, written, f);
                 const text = cellText(kind, dose, f, unit);
                 const unitShown = unitOf(f);
                 return (
@@ -103,7 +105,7 @@ export function LoadTable({
                         })}
                         value={weekFieldValue(dose, f, unit)}
                         mode={
-                          TIMES.includes(f)
+                          isTimeField(f)
                             ? { kind: "time" }
                             : { kind: "number", ...weekFieldLimits(f, unit) }
                         }
@@ -120,14 +122,8 @@ export function LoadTable({
                 );
               })}
               {done !== null && (
-                <td
-                  className={
-                    ran !== null && ran.planned > 0 && ran.done >= ran.planned
-                      ? "load-done load-done--all"
-                      : "load-done"
-                  }
-                >
-                  {ran === null || ran.planned === 0 ? "" : `${ran.done}/${ran.planned}`}
+                <td className={doneAll(ran) ? "load-done load-done--all" : "load-done"}>
+                  {doneText(ran)}
                 </td>
               )}
             </tr>

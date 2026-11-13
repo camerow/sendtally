@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
-import { fireEvent, screen } from "@testing-library/react-native";
+import { fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { router } from "expo-router";
 import React from "react";
 import { Alert, Text, type AlertButton } from "react-native";
@@ -631,7 +631,7 @@ describe("templates", () => {
     const view = await renderWithHang(<BlockScreen id="t2" />, hangData(), { plan: bare });
     expect(screen.getByText("Add the workouts this block repeats each week.")).toBeTruthy();
     await view.unmount();
-    expect(mockPlan.deleteBlock).toHaveBeenCalledWith("t2");
+    await waitFor(() => expect(mockPlan.deleteBlock).toHaveBeenCalledWith("t2"));
   });
 });
 

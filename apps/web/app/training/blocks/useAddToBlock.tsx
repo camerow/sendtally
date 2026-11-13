@@ -1,12 +1,14 @@
 import React from "react";
 import { useNavigate } from "react-router";
-import { blockEnded, isDated } from "@sendtally/core/hang";
+import { isDated } from "@sendtally/core/hang";
 import { t } from "@sendtally/features/i18n";
 import {
   blockDateRange,
   blockMembership,
   nextPosition,
   useTrainingLog,
+  blockName,
+  addToBlockOptions,
 } from "@sendtally/features/training";
 import type { LibraryWorkout } from "@sendtally/features/workouts";
 import { Icon } from "../../components/Icon";
@@ -31,18 +33,15 @@ export function useAddToBlock(workout: LibraryWorkout): AddToBlock {
   const toast = useToast();
   const navigate = useNavigate();
   const [open, setOpen] = React.useState(false);
-  const blocks = plan.blocks.filter((b) => !blockEnded(b, today));
+  const options = addToBlockOptions(plan, workout.id, today);
   const title = t("plan.addToBlockMenu");
   return {
-    item: blocks.length === 0 ? null : { label: title, onSelect: () => setOpen(true) },
+    item: options.length === 0 ? null : { label: title, onSelect: () => setOpen(true) },
     sheet: (
       <Sheet open={open} kicker={workout.name} title={title} onClose={() => setOpen(false)}>
         <div className="option-list">
-          {blocks.map((b) => {
-            const name = b.name || t("plan.untitled");
-            const there = plan.memberships.some(
-              (m) => m.blockId === b.id && m.workoutId === workout.id
-            );
+          {options.map(({ block: b, there }) => {
+            const name = blockName(b);
             return (
               <button
                 key={b.id}

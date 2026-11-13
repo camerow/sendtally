@@ -1,10 +1,15 @@
 import React from "react";
 import { isDated, type Block, type CalendarDate } from "@sendtally/core/hang";
 import { t } from "@sendtally/features/i18n";
-import { blockDateRange } from "@sendtally/features/training";
+import {
+  blockDateRange,
+  blockName,
+  canStepWeeks,
+  clampWeeks,
+  keptName,
+} from "@sendtally/features/training";
+import { BlockHead } from "./BlockHead";
 import { BlockWeekChips } from "./BlockWeekChips";
-
-const MAX_WEEKS = 16;
 
 export type BlockHeaderProps = {
   block: Block;
@@ -43,10 +48,9 @@ export function BlockHeader({
 }: BlockHeaderProps): React.ReactElement {
   const dated = isDated(block) ? block : null;
   const [name, setName] = React.useState(block.name);
-  // A scheduled block keeps a name: an emptied one goes back to what it was.
-  const kept = (typed: string): string => (typed === "" && dated !== null ? savedName : typed);
+  const kept = (typed: string): string => keptName(typed, block, savedName);
   const weeks = (n: number): void => {
-    const next = Math.min(MAX_WEEKS, Math.max(minWeeks, n));
+    const next = clampWeeks(n, minWeeks);
     if (next !== block.weeks) onSave({ ...block, weeks: next });
     if (week > next) onPickWeek(next);
   };
@@ -55,29 +59,24 @@ export function BlockHeader({
       type="button"
       className="weeks-step"
       aria-label={label}
-      disabled={by < 0 ? block.weeks <= minWeeks : block.weeks >= MAX_WEEKS}
+      disabled={!canStepWeeks(block, by, minWeeks)}
       onClick={() => weeks(block.weeks + by)}
     >
       {glyph}
     </button>
   );
-  const when = (
-    <span className="block-when">
-      {dated === null ? t("plan.notScheduled") : blockDateRange(dated)}
-    </span>
-  );
+  const whenText = dated === null ? t("plan.notScheduled") : blockDateRange(dated);
+  const when = <span className="block-when">{whenText}</span>;
   const chips = <BlockWeekChips block={block} today={today} picked={week} onPick={onPickWeek} />;
 
   if (!editing)
     return (
       <>
-        <div className="block-head">
-          <span className="train-label">
-            {dated === null ? t("plan.template") : t("plan.scheduled")}
-          </span>
-          <h1 className="block-title">{block.name || t("plan.untitled")}</h1>
-          {when}
-        </div>
+        <BlockHead
+          kicker={dated === null ? t("plan.template") : t("plan.scheduled")}
+          title={blockName(block)}
+          when={whenText}
+        />
         {chips}
       </>
     );

@@ -11,6 +11,7 @@ import {
   usePlan,
   usePlanDraft,
   useTrainingLog,
+  useLit,
 } from "@sendtally/features/training";
 import { DetailFrame } from "../../components/detail/DetailFrame";
 import { Icon } from "../../components/Icon";
@@ -32,12 +33,7 @@ export function OngoingPage(): React.ReactElement {
   const { log } = useTrainingLog(api);
   const draft = usePlanDraft(log.plan, usePlanActions());
   const [adding, setAdding] = React.useState(false);
-  const [added, setAdded] = React.useState<readonly string[]>([]);
-  React.useEffect(() => {
-    if (added.length === 0) return;
-    const fade = setTimeout(() => setAdded([]), 2400);
-    return () => clearTimeout(fade);
-  }, [added]);
+  const [added, setAdded] = useLit();
 
   if (plan.state.status !== "ready")
     return <LoadState state={plan.state} onRetry={() => void plan.reload()} />;
