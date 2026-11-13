@@ -13,6 +13,9 @@ import { LiveBar } from "../components/LiveBar";
 import { AlreadyRunningSheet } from "../live-session/components/AlreadyRunningSheet";
 import { LIVE_PATH } from "../live-session/startLive";
 import { useLiveSessionStorage } from "../lib/useLiveSessionStorage";
+import { useLiveRunStore } from "../lib/useLiveRun";
+import { useLiveRun } from "@sendtally/features/workouts";
+import { LiveRunTones } from "../components/LiveRunTones";
 import { useLiveSession } from "@sendtally/features/log-session";
 import { ToastProvider } from "../components/Toast";
 import { useAppApi } from "../lib/useAppApi";
@@ -50,13 +53,32 @@ const MODERATION_ITEM: NavItem = {
 };
 
 /** Screens reached by a back link, whose own action bar owns the bottom edge. */
-const FOCUSED_ROUTES = ["/app/sessions/new", "/app/log/climbs/new", "/app/sessions/live"];
+const FOCUSED_ROUTES = [
+  "/app/sessions/new",
+  "/app/log/climbs/new",
+  "/app/sessions/live",
+  "/app/workout/sets",
+  "/app/workout/checklist",
+  "/app/workout/tally",
+];
+
+/** Pages that are the live thing itself, where the live bar would only point back at them; so is a live run's review. */
+const LIVE_ROUTES = [
+  LIVE_PATH,
+  "/app/workout/sets",
+  "/app/workout/checklist",
+  "/app/workout/tally",
+];
 
 function Shell({ children }: { children: React.ReactNode }): React.ReactElement {
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
   const focused = FOCUSED_ROUTES.includes(pathname);
-  const onLive = pathname === LIVE_PATH;
-  const live = useLiveSession(useLiveSessionStorage()).stored !== null;
+  const onLive =
+    LIVE_ROUTES.includes(pathname) ||
+    (pathname === "/app/activity/new" && new URLSearchParams(search).get("live") === "1");
+  const session = useLiveSession(useLiveSessionStorage()).stored;
+  const run = useLiveRun(useLiveRunStore());
+  const live = session !== null || run !== null;
   const moderator = useIsModerator();
   useReportGoogleSignUp();
 
@@ -107,7 +129,7 @@ function Shell({ children }: { children: React.ReactNode }): React.ReactElement 
         className={
           focused
             ? "app-content app-content--focused"
-            : live
+            : live && !onLive
               ? "app-content app-content--live"
               : "app-content"
         }
@@ -116,7 +138,7 @@ function Shell({ children }: { children: React.ReactNode }): React.ReactElement 
       </div>
       {!focused && (
         <div className="app-bottom">
-          <LiveBar />
+          {!onLive && <LiveBar />}
           <nav className="app-tabbar" aria-label={t("common.sectionsAria")}>
             {NAV_ITEMS.map(({ label, to, icon }) => (
               <NavLink key={to} to={to} end={to === "/app"} className="app-tab">
@@ -128,6 +150,7 @@ function Shell({ children }: { children: React.ReactNode }): React.ReactElement 
         </div>
       )}
       <AlreadyRunningSheet />
+      <LiveRunTones />
     </div>
   );
 }

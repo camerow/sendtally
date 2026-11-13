@@ -1,9 +1,9 @@
-import { sessionItems, type CalendarDate } from "@sendtally/core/hang";
-import { NO_PLAN } from "@sendtally/features/training";
+import type { CalendarDate } from "@sendtally/core/hang";
 import {
   activityFormParams,
   activityKindOf,
   timerParams,
+  unplannedItems,
   type LibraryWorkout,
   type PlannedItems,
 } from "@sendtally/features/workouts";
@@ -13,11 +13,7 @@ import {
  * at the dose. None for a workout with nothing in it. A hangboard workout logs on its first grip.
  */
 export function logLink(w: LibraryWorkout, date: CalendarDate, session: number): string | null {
-  return plannedLogLink(w, date, {
-    link: { ...NO_PLAN, focus: w.focus },
-    session,
-    items: sessionItems(w.items, session),
-  });
+  return plannedLogLink(w, date, unplannedItems(w, session));
 }
 
 /** Where Log it goes for one planned run: its review with what the plan prescribes ticked. */

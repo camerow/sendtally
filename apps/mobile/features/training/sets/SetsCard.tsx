@@ -21,6 +21,8 @@ import { setKey, type SetAt } from "@sendtally/features/workouts";
 export type SetsCardProps = {
   item: SessionItem;
   done: ItemDone;
+  /** What each set asks. */
+  target: (set: number) => SetDone;
   /** Each set as the last run of this workout did it. */
   previous: readonly SetDone[];
   lifting: boolean;
@@ -41,6 +43,7 @@ export type SetsCardProps = {
 export function SetsCard({
   item,
   done,
+  target: targetOf,
   previous,
   lifting,
   ticked,
@@ -53,7 +56,7 @@ export function SetsCard({
   restUnder,
 }: SetsCardProps): React.ReactElement {
   const name = exerciseName(item.exercise);
-  const { sets: _, name: doseName, ...target } = item.dose;
+  const { name: doseName, setRestS } = item.dose;
   return (
     <View
       style={{
@@ -78,9 +81,9 @@ export function SetsCard({
             )}
           </View>
         )}
-        {target.setRestS !== undefined && target.setRestS > 0 && (
+        {setRestS !== undefined && setRestS > 0 && (
           <Text style={[type.body, { fontSize: 13, color: colors.textSecondary }]}>
-            {t("plan.chipRest", { value: clock(target.setRestS) })}
+            {t("plan.chipRest", { value: clock(setRestS) })}
           </Text>
         )}
       </View>
@@ -101,9 +104,7 @@ export function SetsCard({
           {holdRow(i) || (
             <SetRow
               n={i + 1}
-              target={
-                lifting ? { ...target, weightKg: target.weightKg ?? previous[i]?.weightKg } : target
-              }
+              target={targetOf(i)}
               done={set}
               previous={previous[i]}
               lifting={lifting}
@@ -117,8 +118,8 @@ export function SetsCard({
             />
           )}
           {restUnder(i) ||
-            (i < done.sets.length - 1 && target.setRestS !== undefined && target.setRestS > 0 && (
-              <RestPreview seconds={target.setRestS} />
+            (i < done.sets.length - 1 && setRestS !== undefined && setRestS > 0 && (
+              <RestPreview seconds={setRestS} />
             ))}
         </React.Fragment>
       ))}

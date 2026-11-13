@@ -1,27 +1,28 @@
 import React from "react";
 import { ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { doneAsPrescribed } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { useWeightUnit } from "@sendtally/features/activities";
 import { eachSideOf } from "@sendtally/features/exercises";
 import { t } from "@sendtally/features/i18n";
 import { useExercises } from "@sendtally/features/statistics";
-import { doseSummary, exerciseName } from "@sendtally/features/workouts";
+import {
+  afterKey,
+  doseSummary,
+  exerciseName,
+  heldSeconds,
+  useChecklistPlayer,
+  type WorkoutRun,
+} from "@sendtally/features/workouts";
 import { useApi } from "../../../lib/api";
+import { liveRun } from "../../live-session/liveRun";
 import { Button } from "../components/Button";
 import { PlayerHeader } from "../components/PlayerHeader";
-import { runParams, type WorkoutRun } from "@sendtally/features/workouts";
 import { logRun } from "../data/workoutRunParams";
-import { resumedRun, writeHold, writeLiveRun } from "../../live-session/liveRun";
 import { HoldButton } from "../hold/HoldButton";
-import { heldSeconds, type Hold } from "@sendtally/features/workouts";
 import { HoldRow } from "../hold/HoldRow";
-import { useHold } from "../hold/useHold";
 import { RestPreview } from "../rest/RestPreview";
 import { RestRow } from "../rest/RestRow";
-import { useRest } from "../rest/useRest";
-import { afterKey, allSets, setKey } from "@sendtally/features/workouts";
 import { type } from "../type";
 import { ChecklistRow } from "./ChecklistRow";
 
@@ -41,52 +42,12 @@ export function ChecklistScreen({
   const unit = useWeightUnit(api);
   const exercises = useExercises(api).state;
   const sided = eachSideOf(exercises.status === "ready" ? exercises.data : []);
-  const [resumed] = React.useState(() => {
-    const live = resumedRun("/workout/checklist", run.workoutId);
-    return live?.state.player === "checklist" ? { ...live.state, startedAt: live.startedAt } : null;
-  });
-  const [startedAt] = React.useState(() => resumed?.startedAt ?? Date.now());
-  const [ticked, setTicked] = React.useState<ReadonlySet<number>>(() => new Set(resumed?.ticked));
-  React.useEffect(() => {
-    writeLiveRun({
-      title: run.title,
-      workoutId: run.workoutId,
-      pathname: "/workout/checklist",
-      params: runParams(run),
-      startedAt,
-      state: { player: "checklist", ticked: [...ticked], count: run.items.length },
-    });
-  }, [run, startedAt, ticked]);
-  const rest = useRest();
-  const toggle = (i: number): void => {
-    const next = new Set(ticked);
-    const ticking = !next.delete(i);
-    if (ticking) next.add(i);
-    setTicked(next);
-    const following = run.items.findIndex((_, j) => j > i && !next.has(j));
-    const name = run.items[following]?.exercise;
-    if (!ticking || name === undefined) rest.skip();
-    else rest.tick(afterKey(i), run.exerciseRestS, exerciseName(name));
-  };
-  // A timed line ticks itself once its hold is done; Done in the count-in only cancels.
-  const endHold = (h: Hold, seconds: number | null): void => {
-    writeHold(null);
-    const i = Number(h.at);
-    if (seconds !== null && !ticked.has(i)) toggle(i);
-  };
-  const hold = useHold((h) => endHold(h, h.targetS));
+  const player = useChecklistPlayer(run, liveRun, sided);
+  const { startedAt, ticked, rest, hold, toggle, endHold } = player;
 
   const finish = (): void => {
-    rest.skip();
-    hold.stop();
-    logRun(
-      run,
-      doneAsPrescribed(run.items),
-      startedAt,
-      allSets(run.items)
-        .filter((at) => !ticked.has(at.item))
-        .map(setKey)
-    );
+    const { done, off } = player.finished();
+    logRun(run, done, startedAt, off);
   };
   const ending = React.useRef(end);
   React.useEffect(() => {
@@ -129,26 +90,18 @@ export function ChecklistScreen({
                   dose={doseSummary(run.kind, item.dose, unit, sided(item.exercise))}
                   ticked={ticked.has(i)}
                   onToggle={() => toggle(i)}
-                  go={
-                    !ticked.has(i) &&
-                    hold.hold === null &&
-                    item.dose.reps === undefined &&
-                    item.dose.onS !== undefined &&
-                    item.dose.onS > 0 && (
-                      <HoldButton
-                        name={exerciseName(item.exercise)}
-                        targetS={item.dose.onS}
-                        onPress={() =>
-                          hold.start(
-                            String(i),
-                            exerciseName(item.exercise),
-                            item.dose.onS ?? 0,
-                            sided(item.exercise)
-                          )
-                        }
-                      />
-                    )
-                  }
+                  go={(() => {
+                    const targetS = player.holdTarget(i);
+                    return (
+                      targetS !== null && (
+                        <HoldButton
+                          name={exerciseName(item.exercise)}
+                          targetS={targetS}
+                          onPress={() => player.startHold(i)}
+                        />
+                      )
+                    );
+                  })()}
                 />
               )}
               {rest.rest?.at === afterKey(i) ? (

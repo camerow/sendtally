@@ -242,16 +242,7 @@
   min-height: 44px;
 }
 
-.app-content--focused .detail-footer {
-  bottom: 0;
-}
-
 @media (max-width: 767px) {
-  .app-content--focused .detail {
-    min-height: calc(100vh - 22px);
-    margin-bottom: 0;
-  }
-
   .add-climb-grade-chips {
     margin: 0 -18px;
   }

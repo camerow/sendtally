@@ -44,4 +44,12 @@
     font-size: 15px;
     box-shadow: 0 8px 20px rgba(53, 52, 63, 0.3);
   }
+
+  .app-content--live .page-action-wrap {
+    bottom: calc(145px + env(safe-area-inset-bottom));
+  }
+
+  .app-shell:has(.rest-strip) .app-content--live .page-action-wrap {
+    bottom: calc(169px + env(safe-area-inset-bottom));
+  }
 }

@@ -3,10 +3,11 @@ import { useNavigate } from "react-router";
 import { kindLabel } from "@sendtally/features/activities";
 import { shortDate } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
-import type { Occurrence } from "@sendtally/features/training";
+import { plannedItems, type Occurrence } from "@sendtally/features/training";
 import type { LibraryWorkout } from "@sendtally/features/workouts";
 import type { MoreMenuItem } from "../../components/MoreMenu";
 import { Sheet } from "../../components/Sheet";
+import { useWorkoutStart } from "../library-detail/useWorkoutStart";
 import { occurrenceLogLink } from "../plan-week/planLinks";
 import { membershipPath } from "./paths";
 
@@ -19,8 +20,8 @@ export type DaySheetProps = {
 };
 
 /**
- * One planned day of a block's week: reschedule or skip it, or log it; a missed one is logged
- * from its rows. Its name opens the workout.
+ * One planned day of a block's week: start it, reschedule or skip it, or log it; Log it moves to
+ * the rows when the day can be started or was missed. Its name opens the workout.
  */
 export function DaySheet({
   occurrence: o,
@@ -31,6 +32,7 @@ export function DaySheet({
   const navigate = useNavigate();
   const missed = o.status === "missed";
   const logIt = occurrenceLogLink(workout, o);
+  const start = useWorkoutStart(workout, o.date, plannedItems(o));
   const day = shortDate(o.date);
   return (
     <Sheet
@@ -45,13 +47,15 @@ export function DaySheet({
         </span>
       }
       onClose={onClose}
+      {...(!missed && start !== null && { action: { label: start.label, onPress: start.onPress } })}
       {...(!missed &&
+        start === null &&
         logIt !== null && {
           action: { label: t("workouts.logIt"), onPress: () => void navigate(logIt) },
         })}
     >
       <div className="day-sheet-rows">
-        {rows(missed ? logIt : null).map((item) => (
+        {rows(missed || start !== null ? logIt : null).map((item) => (
           <button
             key={item.label}
             type="button"

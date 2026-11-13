@@ -4,36 +4,15 @@ import React from "react";
 import { Alert, Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { typicalGradeIndex, useClimbVocabulary } from "@sendtally/features/climbs";
-import {
-  CIRCUIT_HEX,
-  circuitLabel,
-  gymOfDraft,
-  liveGymOfDraft,
-  useGyms,
-} from "@sendtally/features/gyms";
+import { useGyms } from "@sendtally/features/gyms";
 import { t } from "@sendtally/features/i18n";
 import {
-  disciplineLabel,
   finishLiveSession,
   finishSummary,
-  gradeOptions,
-  readClimbKind,
-  setGroups,
-  setOver,
-  tallyDraft,
   tallyElapsedSeconds,
-  tallyStep,
   tallySummary,
   useLiveSession,
-  withExerciseDone,
-  withSetEnded,
-  withWallStarted,
-  type Discipline,
-  type LogSessionDraft,
-  type TallyChoice,
-  type TallyGo,
-  type TallySelection,
-  type TallyUndo,
+  useTally,
 } from "@sendtally/features/log-session";
 import { queries, useQuery } from "@sendtally/features/query";
 import { useGradeScalePrefs } from "@sendtally/features/settings";
@@ -51,15 +30,13 @@ import { readPlanLink } from "@sendtally/features/training";
 import { useRest } from "../training/rest/useRest";
 import { ExerciseClock } from "./ExerciseClock";
 import { FinishSheet } from "./FinishSheet";
-import { GradeChips, type GradeChip } from "../../components/GradeChips";
+import { GradeChips } from "../../components/GradeChips";
 import { GymSheet } from "./GymSheet";
 import { LapsTally } from "./LapsTally";
 import { LiveClimbEditor } from "./LiveClimbEditor";
 import { LiveClock } from "../../components/LiveClock";
 import { TallyRow } from "./TallyRow";
 import { UndoSnackbar } from "./UndoSnackbar";
-
-type Segment = Discipline | "circuit";
 
 export type TallyScreenProps = {
   /**
@@ -77,78 +54,35 @@ export function TallyScreen({ exercise = false }: TallyScreenProps): React.React
   const plan = readPlanLink(params);
   const live = useLiveSession(exercise ? exerciseTallyStorage : liveSessionStorage);
   const rest = useRest();
-  const [now, setNow] = React.useState(() => new Date());
   const gyms = useGyms(api);
   const vocabulary = useClimbVocabulary(api);
   const { scales } = useGradeScalePrefs(api);
   const sessions = useQuery(queries.sessions(api)).state;
-  const [held, setHeld] = React.useState<{ set: number | undefined; selection: TallySelection }>({
-    set: undefined,
-    selection: null,
-  });
-  const [snack, setSnack] = React.useState<TallyUndo | null>(null);
   const [editing, setEditing] = React.useState<string | null>(null);
   const [picking, setPicking] = React.useState(false);
   const [finishing, setFinishing] = React.useState(params.finish === "1");
-  const [discipline, setDiscipline] = React.useState<Discipline>(() =>
-    readClimbKind(climbKindStorage, []) === "route" ? "route" : "boulder"
-  );
-  const [onCircuit, setOnCircuit] = React.useState(true);
-
-  const started = React.useRef(false);
-  const settled = sessions.status !== "loading" && gyms.state.status !== "loading";
-  const draft = live.stored?.draft ?? null;
-  const set = draft?.exercise?.set;
-  const selection = held.set === set ? held.selection : null;
-  const setSelection = (next: TallySelection, of: number | undefined = set): void =>
-    setHeld({ set: of, selection: next });
-  React.useEffect(() => {
-    if (started.current || !settled) return;
-    started.current = true;
-    const lastGym =
+  const name = typeof params.name === "string" ? params.name : undefined;
+  const tally = useTally({
+    live,
+    rest,
+    exercise,
+    gyms: gyms.gyms,
+    settled: sessions.status !== "loading" && gyms.state.status !== "loading",
+    lastGymId:
       sessions.status === "ready"
-        ? sessions.data.sessions.find((s) => s.gym_id !== null)?.gym_id
-        : undefined;
-    const gymId = gyms.gyms.some((g) => g.id === lastGym) ? (lastGym ?? undefined) : undefined;
-    if (exercise) {
-      if (draft !== null && draft.gymId === undefined && draft.climbs.length === 0 && gymId)
-        live.replace({ ...draft, gymId });
-      return;
-    }
-    if (draft !== null) return;
-    const name = typeof params.name === "string" ? params.name : undefined;
-    live.start(tallyDraft(new Date(), { gymId, plan, name }));
-  }, [settled, draft, live, plan, params.name, sessions, gyms.gyms, exercise]);
-
-  React.useEffect(() => {
-    if (!exercise) return;
-    const timer = setInterval(() => setNow(new Date()), 1000);
-    return () => clearInterval(timer);
-  }, [exercise]);
-
-  /** A set over ends, and its rest starts. */
-  const settle = React.useCallback(
-    (next: LogSessionDraft, at: Date): LogSessionDraft => {
-      if (!setOver(next, at)) return next;
-      const ended = withSetEnded(next);
-      if (ended.restS > 0) rest.tick("tally", ended.restS);
-      return ended.draft;
-    },
-    [rest]
-  );
-
-  const open = selection?.kind === "pending";
-  React.useEffect(() => {
-    if (draft === null || open || !setOver(draft, now)) return;
-    live.replace(settle(draft, now));
-  }, [draft, open, now, live, settle]);
+        ? (sessions.data.sessions.find((s) => s.gym_id !== null)?.gym_id ?? undefined)
+        : undefined,
+    scales,
+    kindStorage: climbKindStorage,
+    typicalIndex: (scale) => typicalGradeIndex(vocabulary.climbs, scale),
+    start: { plan, name },
+  });
+  const { draft, gym, circuitGym, selection, snack, now } = tally;
 
   if (draft === null || (exercise && draft.exercise === undefined)) {
     return <SafeAreaView style={{ flex: 1, backgroundColor: colors.gunmetal }} />;
   }
 
-  const gym = gymOfDraft(gyms.gyms, draft.gymId);
-  const circuitGym = liveGymOfDraft(gyms.gyms, draft.gymId);
   if (exercise && draft.exercise?.lap !== undefined) {
     return (
       <LapsTally
@@ -161,66 +95,12 @@ export function TallyScreen({ exercise = false }: TallyScreenProps): React.React
         vocabulary={vocabulary}
         gyms={circuitGym === null ? [] : [circuitGym]}
         onDone={() => {
-          rest.skip();
-          live.replace(withExerciseDone(draft));
+          tally.done();
           leaveLiveScreen();
         }}
       />
     );
   }
-  const scale = scales[discipline];
-  const segment: Segment = circuitGym !== null && onCircuit ? "circuit" : discipline;
-  const segments: Segment[] =
-    circuitGym === null ? ["boulder", "route"] : ["boulder", "route", "circuit"];
-  const chips: GradeChip[] =
-    segment === "circuit" && circuitGym !== null
-      ? circuitGym.circuits.map((c) => ({
-          key: c.id,
-          label: circuitLabel(c),
-          colour: CIRCUIT_HEX[c.colour],
-        }))
-      : gradeOptions(scale).map((g) => ({ key: g, label: g }));
-
-  const choiceOf = (chip: string): TallyChoice | null => {
-    if (segment !== "circuit" || circuitGym === null) return { kind: "grade", scale, grade: chip };
-    const circuit = circuitGym.circuits.find((c) => c.id === chip);
-    return circuit === undefined ? null : { kind: "circuit", gym: circuitGym, circuit };
-  };
-
-  const commit = (next: LogSessionDraft): void => live.replace(settle(next, new Date()));
-
-  const go = (g: TallyGo): void => {
-    const step = tallyStep(draft, selection, g, choiceOf, snack);
-    if (step === null) return;
-    setSelection(step.selection);
-    commit(step.draft);
-    setSnack(step.undo);
-  };
-
-  const undo = (): void => {
-    if (snack === null) return;
-    if (snack.draft.exercise?.set !== draft.exercise?.set) rest.skip();
-    live.replace(snack.draft);
-    setSelection(snack.selection, snack.draft.exercise?.set);
-    setSnack(null);
-  };
-
-  const pickGym = (gymId: string | undefined): void => {
-    const { gymId: _gym, ...rest } = draft;
-    live.replace(gymId === undefined ? rest : { ...rest, gymId });
-    setOnCircuit(true);
-    setSelection(null);
-    setPicking(false);
-  };
-
-  const pickSegment = (next: Segment): void => {
-    setOnCircuit(next === "circuit");
-    if (next !== "circuit") {
-      setDiscipline(next);
-      climbKindStorage.write(next);
-    }
-    setSelection(null);
-  };
 
   const save = (rpe: number | null): void => {
     const fingerprint = finishLiveSession(localSessions.save, liveSessionStorage, rpe);
@@ -229,16 +109,8 @@ export function TallyScreen({ exercise = false }: TallyScreenProps): React.React
     else router.replace({ pathname: "/session/[fingerprint]", params: { fingerprint } });
   };
 
-  const pick = (chip: string): void => {
-    rest.skip();
-    setSelection({ kind: "pending", chip });
-    const wall = withWallStarted(draft, new Date());
-    if (wall !== draft) live.replace(wall);
-  };
-
   const done = (): void => {
-    rest.skip();
-    live.replace(withExerciseDone(draft));
+    tally.done();
     leaveLiveScreen();
   };
 
@@ -258,12 +130,8 @@ export function TallyScreen({ exercise = false }: TallyScreenProps): React.React
   };
 
   const minutes = Math.floor(tallyElapsedSeconds(draft, new Date()) / 60);
-  const groups = exercise
-    ? setGroups(draft)
-    : [{ set: 0, label: "", climbs: [...draft.climbs].reverse() }];
+  const { groups, segment, segments, chips, active, off } = tally;
   const editingClimb = draft.climbs.find((c) => c.key === editing) ?? null;
-  const active = selection?.kind === "pending" ? selection.chip : null;
-  const off = selection === null;
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.gunmetal }} edges={["top", "bottom"]}>
@@ -302,7 +170,7 @@ export function TallyScreen({ exercise = false }: TallyScreenProps): React.React
       </View>
 
       {exercise ? (
-        <ExerciseClock draft={draft} rest={rest} now={now} />
+        <ExerciseClock clock={tally.clock} rest={rest} />
       ) : (
         <View style={{ alignItems: "center", gap: 2, paddingTop: 4, paddingBottom: 12 }}>
           <LiveClock
@@ -368,13 +236,7 @@ export function TallyScreen({ exercise = false }: TallyScreenProps): React.React
                     key={climb.key}
                     climb={climb}
                     selected={selection?.kind === "row" && selection.key === climb.key}
-                    onPress={() =>
-                      setSelection(
-                        selection?.kind === "row" && selection.key === climb.key
-                          ? null
-                          : { kind: "row", key: climb.key }
-                      )
-                    }
+                    onPress={() => tally.toggleRow(climb.key)}
                     onEdit={() => setEditing(climb.key)}
                   />
                 ))}
@@ -387,8 +249,8 @@ export function TallyScreen({ exercise = false }: TallyScreenProps): React.React
             id={snack.id}
             message={snack.message}
             bottom={12}
-            onUndo={undo}
-            onExpire={() => setSnack(null)}
+            onUndo={tally.undo}
+            onExpire={tally.clearSnack}
           />
         )}
       </View>
@@ -416,7 +278,7 @@ export function TallyScreen({ exercise = false }: TallyScreenProps): React.React
           {segments.map((d) => (
             <Pressable
               key={d}
-              onPress={() => pickSegment(d)}
+              onPress={() => tally.pickSegment(d)}
               accessibilityRole="radio"
               accessibilityState={{ checked: d === segment }}
               style={{
@@ -435,7 +297,7 @@ export function TallyScreen({ exercise = false }: TallyScreenProps): React.React
                   color: d === segment ? colors.gunmetal : "rgba(255,255,255,0.75)",
                 }}
               >
-                {d === "circuit" ? t("gyms.circuit") : disciplineLabel(d)}
+                {tally.segmentLabel(d)}
               </Text>
             </Pressable>
           ))}
@@ -443,12 +305,12 @@ export function TallyScreen({ exercise = false }: TallyScreenProps): React.React
         <GradeChips
           chips={chips}
           active={active}
-          startIndex={segment === "circuit" ? 0 : typicalGradeIndex(vocabulary.climbs, scale)}
-          onPick={pick}
+          startIndex={tally.startIndex}
+          onPick={tally.pick}
         />
         <View style={{ flexDirection: "row", gap: 10, paddingHorizontal: 18 }}>
           <Pressable
-            onPress={() => go("fell")}
+            onPress={() => tally.go("fell")}
             disabled={off}
             accessibilityRole="button"
             accessibilityState={{ disabled: off }}
@@ -468,7 +330,7 @@ export function TallyScreen({ exercise = false }: TallyScreenProps): React.React
             </Text>
           </Pressable>
           <Pressable
-            onPress={() => go("sent")}
+            onPress={() => tally.go("sent")}
             disabled={off}
             accessibilityRole="button"
             accessibilityState={{ disabled: off }}
@@ -508,7 +370,7 @@ export function TallyScreen({ exercise = false }: TallyScreenProps): React.React
         onRemove={() => {
           if (editing !== null)
             live.replace({ ...draft, climbs: draft.climbs.filter((c) => c.key !== editing) });
-          setSelection(null);
+          tally.clearSelection();
           setEditing(null);
         }}
         onClose={() => setEditing(null)}
@@ -517,7 +379,10 @@ export function TallyScreen({ exercise = false }: TallyScreenProps): React.React
         visible={picking}
         gyms={gyms.gyms}
         gymId={draft.gymId}
-        onPick={pickGym}
+        onPick={(gymId) => {
+          tally.pickGym(gymId);
+          setPicking(false);
+        }}
         onClose={() => setPicking(false)}
       />
       <FinishSheet

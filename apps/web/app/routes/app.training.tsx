@@ -6,6 +6,7 @@ import stravaStyles from "../components/detail/strava.css?url";
 import pageActionStyles from "../components/page-action.css?url";
 import { HangDataProvider } from "../training/data/HangDataProvider";
 import blockStyles from "../training/blocks/blocks.css?url";
+import playerStyles from "../training/players/players.css?url";
 import trainingStyles from "../training/training.css?url";
 
 export const links: LinksFunction = () => [
@@ -14,6 +15,7 @@ export const links: LinksFunction = () => [
   { rel: "stylesheet", href: pageActionStyles },
   { rel: "stylesheet", href: trainingStyles },
   { rel: "stylesheet", href: blockStyles },
+  { rel: "stylesheet", href: playerStyles },
 ];
 
 /** Every training page below Train: their stylesheets, and the training loaded once for all of them. */

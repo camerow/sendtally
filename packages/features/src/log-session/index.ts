@@ -189,3 +189,11 @@ export {
   type TallyStep,
   type TallyUndo,
 } from "./tallySelection";
+export { useLapsTally, type LapRow, type LapsTally } from "./useLapsTally";
+export {
+  useTally,
+  type Tally,
+  type TallyChip,
+  type TallyInputs,
+  type TallySegment,
+} from "./useTally";

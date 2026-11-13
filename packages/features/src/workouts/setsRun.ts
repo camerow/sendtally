@@ -65,3 +65,7 @@ export const withPrevious = (
         }
       : d
   );
+
+/** A ticked set held for less than it asked. */
+export const holdShort = (target: SetDone, done: SetDone, ticked: boolean): boolean =>
+  ticked && target.onS !== undefined && (done.onS ?? 0) < target.onS;

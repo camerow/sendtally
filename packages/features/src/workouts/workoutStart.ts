@@ -1,10 +1,12 @@
 import type { TallyMeasure } from "../exercises/types";
 import {
   intervalsOf,
+  sessionItems,
   type CalendarDate,
   type PlanLink,
   type SessionItem,
 } from "@sendtally/core/hang";
+import { NO_PLAN } from "../training/planLinkParams";
 import { activityKindOf } from "./library";
 import type { IntervalsRun, WorkoutRun } from "./runParams";
 import type { LibraryWorkout } from "./types";
@@ -14,6 +16,13 @@ import type { LibraryWorkout } from "./types";
  * and what that session prescribes.
  */
 export type PlannedItems = { link: PlanLink; session: number; items: readonly SessionItem[] };
+
+/** A workout's `session`th run outside any plan, as the workout writes it. */
+export const unplannedItems = (w: LibraryWorkout, session: number): PlannedItems => ({
+  link: { ...NO_PLAN, focus: w.focus },
+  session,
+  items: sessionItems(w.items, session),
+});
 
 /** Where a workout opens when started, with what that place needs. */
 export type WorkoutStart =

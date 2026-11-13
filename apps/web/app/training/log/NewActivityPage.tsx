@@ -17,7 +17,7 @@ import { ActivityForm } from "./ActivityForm";
 export function NewActivityPage({
   params,
 }: {
-  params: ActivityPrefill;
+  params: ActivityPrefill & { live?: string };
 }): React.ReactElement | null {
   const { today } = useHangData();
   const [id] = React.useState(() => crypto.randomUUID());
@@ -36,6 +36,7 @@ export function NewActivityPage({
       initial={initial}
       logged={null}
       kindSet={params.kind !== undefined}
+      live={params.live === "1"}
       planned={prescribed}
     />
   );

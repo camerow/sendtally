@@ -290,4 +290,21 @@
   .detail-footer {
     bottom: calc(73px + env(safe-area-inset-bottom));
   }
+
+  .app-content--focused .detail {
+    min-height: calc(100vh - 22px);
+    margin-bottom: 0;
+  }
+
+  .app-content--focused .detail-footer {
+    bottom: 0;
+  }
+
+  .app-content--live .detail-footer {
+    bottom: calc(129px + env(safe-area-inset-bottom));
+  }
+
+  .app-shell:has(.rest-strip) .app-content--live .detail-footer {
+    bottom: calc(153px + env(safe-area-inset-bottom));
+  }
 }

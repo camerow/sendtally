@@ -1,27 +1,30 @@
 import React from "react";
 import { t } from "@sendtally/features/i18n";
 import { Sheet } from "../../components/Sheet";
+import { useLiveRunStore } from "../../lib/useLiveRun";
 import { useLiveSessionStorage } from "../../lib/useLiveSessionStorage";
 import { askingStore, type Asking } from "../startLive";
 
 /**
- * Asks what happens to the session already running before another starts, and starts the
+ * Asks what happens to the session or workout already running before another starts, and starts the
  * waiting one once a recorded session is saved or thrown away.
  */
 export function AlreadyRunningSheet(): React.ReactElement | null {
   const asking = React.useSyncExternalStore(askingStore.subscribe, askingStore.read, () => null);
   const storage = useLiveSessionStorage();
   const session = React.useSyncExternalStore(storage.subscribe, storage.read, () => null);
+  const runs = useLiveRunStore().storage;
+  const run = React.useSyncExternalStore(runs.subscribe, runs.read, () => null);
   const [confirming, setConfirming] = React.useState<Asking | null>(null);
   React.useEffect(() => {
-    if (session === null) askingStore.settled();
-  }, [session]);
+    if (session === null && run === null) askingStore.settled();
+  }, [session, run]);
 
   if (confirming !== null) {
     return (
       <Sheet
         open
-        title={t("tally.discardTitle")}
+        title={confirming.running.climbing ? t("tally.discardTitle") : t("hang.discardRunTitle")}
         onClose={() => setConfirming(null)}
         action={{
           label: t("hang.discard"),
@@ -34,7 +37,9 @@ export function AlreadyRunningSheet(): React.ReactElement | null {
           },
         }}
       >
-        <p className="sheet-body">{t("tally.discardBody")}</p>
+        <p className="sheet-body">
+          {confirming.running.climbing ? t("tally.discardBody") : t("hang.discardRunBody")}
+        </p>
       </Sheet>
     );
   }
