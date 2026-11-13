@@ -234,18 +234,21 @@ export function AuthForm({ intent }: { intent: AuthIntent }): React.ReactElement
   // Clerk answers a challenged credential with a second-factor status instead of throwing.
   // This form finishes an email code; any other step (authenticator app, SMS) goes to
   // Clerk's hosted page for it. A code already sent is reused unless the user asks again.
-  const secondFactorStarted = React.useRef(false);
   async function startSecondFactor(signIn: SignIn, resend = false): Promise<void> {
-    secondFactorStarted.current = true;
     const factor = signIn.supportedSecondFactors?.find(
       (f): f is EmailCodeFactor => f.strategy === "email_code"
     );
     if (factor === undefined) {
-      const step = signIn.status === "needs_second_factor" ? "factor-two" : "client-trust";
-      await clerk.navigate(`${clerk.buildSignInUrl()}#/${step}`);
+      const hosted = new URL(clerk.buildSignInUrl());
+      hosted.hash = signIn.status === "needs_second_factor" ? "/factor-two" : "/client-trust";
+      await clerk.navigate(hosted.href);
       return;
     }
-    const sent = signIn.secondFactorVerification.strategy === "email_code";
+    const verification = signIn.secondFactorVerification;
+    const sent =
+      verification.strategy === "email_code" &&
+      verification.status === "unverified" &&
+      (verification.expireAt?.getTime() ?? 0) > Date.now();
     if (resend || !sent) {
       await signIn.prepareSecondFactor({
         strategy: "email_code",
@@ -257,28 +260,29 @@ export function AuthForm({ intent }: { intent: AuthIntent }): React.ReactElement
     setPhase({ name: "code", mode: "second-factor" });
   }
 
-  const fromCallback =
-    clerk.loaded &&
-    new URLSearchParams(window.location.search).has(SSO_RETURN_PARAM) &&
-    clerk.client !== undefined;
-  const resumeSecondFactor = React.useEffectEvent(() => {
-    const signIn = clerk.client?.signIn;
-    if (!fromCallback || signIn === undefined || secondFactorStarted.current) return;
-    if (!needsSecondFactor(signIn.status)) return;
-    startSecondFactor(signIn).catch((err: unknown) => setError(clerkErrorMessage(err)));
+  // The callback marks its return with ?sso. The marker is read once and stripped, so Back,
+  // a refresh or a shared link never resumes, and only a sign-in started with Google is
+  // resumed, never an older password attempt the browser still holds.
+  const resumeFromCallback = React.useEffectEvent(() => {
+    const url = new URL(window.location.href);
+    if (!url.searchParams.has(SSO_RETURN_PARAM) || clerk.client === undefined) return;
+    url.searchParams.delete(SSO_RETURN_PARAM);
+    window.history.replaceState(window.history.state, "", url);
+    const { signIn, signUp } = clerk.client;
+    const viaOAuth = signIn.firstFactorVerification.strategy?.startsWith("oauth_") === true;
+    if (viaOAuth && needsSecondFactor(signIn.status)) {
+      startSecondFactor(signIn).catch((err: unknown) => setError(clerkErrorMessage(err)));
+      return;
+    }
+    const failure =
+      (viaOAuth ? signIn.firstFactorVerification.error : null) ??
+      signUp.verifications.externalAccount.error;
+    if (failure !== null) setError(failure.longMessage ?? failure.message);
   });
-  // eslint-disable-next-line react-hooks/set-state-in-effect -- the pending sign-in only exists once Clerk loads in the browser
-  React.useEffect(() => resumeSecondFactor(), [clerk.loaded]);
-  const callbackFailure = fromCallback
-    ? (clerk.client?.signIn.firstFactorVerification.error ??
-      clerk.client?.signUp.verifications.externalAccount.error ??
-      null)
-    : null;
-  const shownError =
-    error ??
-    (phase.name === "email" && callbackFailure !== null
-      ? (callbackFailure.longMessage ?? callbackFailure.message)
-      : null);
+  React.useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- the pending sign-in only exists once Clerk loads in the browser
+    if (clerk.loaded) resumeFromCallback();
+  }, [clerk.loaded]);
 
   async function signInWithPassword(): Promise<void> {
     if (!clerk.loaded || clerk.client === undefined || phase.name !== "password") return;
@@ -515,7 +519,7 @@ export function AuthForm({ intent }: { intent: AuthIntent }): React.ReactElement
               }}
               style={inputStyle}
             />
-            {shownError !== null && <span style={errorText}>{shownError}</span>}
+            {error !== null && <span style={errorText}>{error}</span>}
             <button
               onClick={() => void signInWithPassword()}
               disabled={busy}
@@ -577,7 +581,7 @@ export function AuthForm({ intent }: { intent: AuthIntent }): React.ReactElement
               }}
               style={{ ...inputStyle, fontFamily: "var(--font-mono)", letterSpacing: "0.2em" }}
             />
-            {shownError !== null && <span style={errorText}>{shownError}</span>}
+            {error !== null && <span style={errorText}>{error}</span>}
             <button
               onClick={() => void verifyCode()}
               disabled={busy}
@@ -633,7 +637,7 @@ export function AuthForm({ intent }: { intent: AuthIntent }): React.ReactElement
             }}
             style={inputStyle}
           />
-          {shownError !== null && <span style={errorText}>{shownError}</span>}
+          {error !== null && <span style={errorText}>{error}</span>}
           <button
             onClick={() => void sendCode()}
             disabled={busy}
