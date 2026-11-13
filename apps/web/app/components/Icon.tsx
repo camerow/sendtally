@@ -15,7 +15,6 @@ export type IconName =
   | "more"
   | "moderation"
   | "search"
-  | "insights"
   | "climbs"
   | "import"
   | "external"
@@ -48,7 +47,6 @@ const SHAPES: Record<IconName, React.ReactElement> = {
   x: <path d="M6 6l12 12M18 6L6 18" />,
   more: <path d="M5 12h.01M12 12h.01M19 12h.01" />,
   search: <path d="M11 5a6 6 0 1 1 0 12 6 6 0 0 1 0-12zM20 20l-4.5-4.5" />,
-  insights: <path d="M5 19V11M10 19V5M15 19v-6M20 19V8" />,
   climbs: <path d="M3 19l6.5-11 4 6.5 2.5-3.5L21 19z" />,
   import: <path d="M12 4v10M7.5 9.5 12 14l4.5-4.5M4.5 15v4.5h15V15" />,
   external: <path d="M14 5h5v5M19 5l-8 8M17 14v5H5V7h5" />,
