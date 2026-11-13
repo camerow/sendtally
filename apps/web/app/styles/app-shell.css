@@ -1107,16 +1107,6 @@
   font-weight: 600;
 }
 
-.already-running-kicker {
-  margin-top: -6px;
-  font-family: var(--font-mono);
-  font-weight: 500;
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: #c27c0e;
-}
-
 .already-running-actions {
   display: flex;
   flex-direction: column;

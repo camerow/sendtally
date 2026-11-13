@@ -42,10 +42,10 @@ export function AlreadyRunningSheet(): React.ReactElement | null {
   return (
     <Sheet
       open
+      kicker={t("tally.alreadyRunning")}
       title={t("tally.stillGoing", { name: asking.running.name })}
       onClose={askingStore.close}
     >
-      <span className="already-running-kicker">{t("tally.alreadyRunning")}</span>
       <div className="already-running-actions">
         <button
           type="button"
