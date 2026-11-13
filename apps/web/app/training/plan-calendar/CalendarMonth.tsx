@@ -1,16 +1,16 @@
 import React from "react";
-import { addMonths, type CalendarDate } from "@sendtally/core/hang";
-import { dayTitle, monthTitle, weekdayLetters } from "@sendtally/features/hang";
+import type { CalendarDate } from "@sendtally/core/hang";
+import { dayTitle } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import {
-  bandOn,
+  bandText,
   monthWeeks,
   trainingWeek,
   useTrainingLog,
   type TrainingDay,
 } from "@sendtally/features/training";
-import { Icon } from "../../components/Icon";
 import { useAppApi } from "../../lib/useAppApi";
+import { MonthHead } from "../components/MonthHead";
 import { useHangData } from "../data/HangDataContext";
 import { DayMark } from "../plan-week/DayMark";
 
@@ -67,42 +67,11 @@ export function CalendarMonth({
 }): React.ReactElement {
   const { today } = useHangData();
   const { log } = useTrainingLog(useAppApi());
-  const bandOf = (monday: CalendarDate): string | null => {
-    const band = bandOn(log.plan.blocks, monday);
-    return band === null
-      ? null
-      : t("calendar.band", { name: band.block.name, at: band.week, of: band.block.weeks });
-  };
   return (
     <div className="calendar-month">
-      <div className="calendar-month-head">
-        <button
-          type="button"
-          className="month-calendar-step"
-          aria-label={t("hang.previousMonth")}
-          onClick={() => onMonth(addMonths(month, -1))}
-        >
-          <Icon name="back" size={20} strokeWidth={2} />
-        </button>
-        <h2 className="calendar-month-title">{monthTitle(month)}</h2>
-        <button
-          type="button"
-          className="month-calendar-step"
-          aria-label={t("hang.nextMonth")}
-          onClick={() => onMonth(addMonths(month, 1))}
-        >
-          <Icon name="forward" size={20} strokeWidth={2} />
-        </button>
-      </div>
-      <div className="calendar-letters">
-        {weekdayLetters().map((letter, i) => (
-          <span key={i} className="plan-label-small plan-label--muted">
-            {letter}
-          </span>
-        ))}
-      </div>
+      <MonthHead month={month} onMonth={onMonth} large />
       {monthWeeks(month).map((monday) => {
-        const band = bandOf(monday);
+        const band = bandText(log.plan.blocks, monday);
         return (
           <div key={monday}>
             <span className={band === null ? "block-band" : "block-band block-band--on"}>

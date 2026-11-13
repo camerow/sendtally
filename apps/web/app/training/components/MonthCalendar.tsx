@@ -1,15 +1,9 @@
 import React from "react";
-import {
-  addDays,
-  addMonths,
-  monthStart,
-  type Block,
-  type CalendarDate,
-} from "@sendtally/core/hang";
-import { dayTitle, monthTitle, weekdayLetters } from "@sendtally/features/hang";
+import { addDays, monthStart, type Block, type CalendarDate } from "@sendtally/core/hang";
+import { dayTitle } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import { bandText, calendarDay, monthWeeks } from "@sendtally/features/training";
-import { Icon } from "../../components/Icon";
+import { MonthHead } from "./MonthHead";
 
 export type MonthCalendarProps = {
   /** The date it opens on, marked as picked unless `picked` lists several. */
@@ -40,32 +34,7 @@ export function MonthCalendar({
   const inMonth = (d: CalendarDate): boolean => d.slice(0, 7) === month.slice(0, 7);
   return (
     <div className="month-calendar">
-      <div className="month-calendar-head">
-        <button
-          type="button"
-          className="month-calendar-step"
-          aria-label={t("hang.previousMonth")}
-          onClick={() => setMonth(addMonths(month, -1))}
-        >
-          <Icon name="back" size={18} strokeWidth={2} />
-        </button>
-        <span className="month-calendar-title">{monthTitle(month)}</span>
-        <button
-          type="button"
-          className="month-calendar-step"
-          aria-label={t("hang.nextMonth")}
-          onClick={() => setMonth(addMonths(month, 1))}
-        >
-          <Icon name="forward" size={18} strokeWidth={2} />
-        </button>
-      </div>
-      <div className="month-calendar-row">
-        {weekdayLetters().map((letter, i) => (
-          <span key={i} className="month-calendar-letter">
-            {letter}
-          </span>
-        ))}
-      </div>
+      <MonthHead month={month} onMonth={setMonth} />
       {monthWeeks(month).map((monday) => {
         const band = blocks === undefined ? null : bandText(blocks, monday);
         return (
