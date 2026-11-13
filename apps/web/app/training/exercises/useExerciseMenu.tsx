@@ -7,7 +7,7 @@ import type { MoreMenuItem } from "../../components/MoreMenu";
 import { Sheet } from "../../components/Sheet";
 import { useToast } from "../../components/Toast";
 import { useAppApi } from "../../lib/useAppApi";
-import { useGoBack } from "../components/useGoBack";
+import { useGoBack } from "../../lib/useGoBack";
 import { EXERCISES_VIEW, exercisePath } from "./paths";
 
 export type ExerciseMenu = { items: MoreMenuItem[]; sheets: React.ReactNode };

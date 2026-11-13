@@ -11,10 +11,12 @@ export type ShelfHeaderProps = {
   kind?: WorkoutKind;
   /** Opens the whole shelf; left out when the shelf already shows all of it. */
   seeAll?: { to: string; count: number };
+  /** A round plus making a new one in the shelf. */
+  add?: { label: string; onPress: () => void };
 };
 
 /** A shelf's heading: its mark, name and See all as one link. */
-export function ShelfHeader({ title, kind, seeAll }: ShelfHeaderProps): React.ReactElement {
+export function ShelfHeader({ title, kind, seeAll, add }: ShelfHeaderProps): React.ReactElement {
   const heading = (
     <>
       {kind !== undefined && <CategoryMark kind={kind} size={28} />}
@@ -29,15 +31,26 @@ export function ShelfHeader({ title, kind, seeAll }: ShelfHeaderProps): React.Re
       </span>
     </>
   );
-  return seeAll === undefined ? (
-    <div className="shelf-head">{heading}</div>
-  ) : (
-    <Link
-      to={seeAll.to}
-      className="shelf-head shelf-head--link"
-      aria-label={t("workouts.seeAllOf", { kind: title })}
-    >
-      {heading}
-    </Link>
+  const head =
+    seeAll === undefined ? (
+      <div className="shelf-head">{heading}</div>
+    ) : (
+      <Link
+        to={seeAll.to}
+        className="shelf-head shelf-head--link"
+        aria-label={t("workouts.seeAllOf", { kind: title })}
+      >
+        {heading}
+      </Link>
+    );
+  return (
+    <div className="shelf-head-row">
+      {head}
+      {add !== undefined && (
+        <button type="button" className="detail-add" aria-label={add.label} onClick={add.onPress}>
+          <Icon name="plus" size={18} strokeWidth={2.5} />
+        </button>
+      )}
+    </div>
   );
 }

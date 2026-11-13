@@ -8,12 +8,20 @@ import { CompareGripsPage } from "./CompareGripsPage";
 
 import type * as T_useLibrary from "../library/useLibrary";
 
+import type * as T_workouts from "@sendtally/features/workouts";
+import { ToastProvider } from "../../components/Toast";
+
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
 HTMLDialogElement.prototype.showModal = function showModal(this: HTMLDialogElement) {
   this.setAttribute("open", "");
 };
 
+vi.mock("../../lib/useAppApi", () => ({ useAppApi: () => ({}) }));
+vi.mock("@sendtally/features/workouts", async (actual) => ({
+  ...(await actual<typeof T_workouts>()),
+  useWorkoutActions: () => ({ saveWorkout: vi.fn(), deleteWorkout: vi.fn() }),
+}));
 vi.mock("../library/useLibrary", async (actual) => ({
   ...(await actual<typeof T_useLibrary>()),
   useLibrary: () => ({ state: { status: "loading" }, reload: vi.fn() }),
@@ -52,14 +60,16 @@ const archiveGrip = vi.fn(async () => undefined);
 function mount(page: React.ReactNode): void {
   act(() =>
     root.render(
-      <MemoryRouter initialEntries={["/app/train", "/page"]} initialIndex={1}>
-        <WithHang data={hangData({ sessions })} actions={{ archiveGrip }}>
-          <Routes>
-            <Route path="/page" element={page} />
-            <Route path="*" element={<p data-left>left</p>} />
-          </Routes>
-        </WithHang>
-      </MemoryRouter>
+      <ToastProvider>
+        <MemoryRouter initialEntries={["/app/train", "/page"]} initialIndex={1}>
+          <WithHang data={hangData({ sessions })} actions={{ archiveGrip }}>
+            <Routes>
+              <Route path="/page" element={page} />
+              <Route path="*" element={<p data-left>left</p>} />
+            </Routes>
+          </WithHang>
+        </MemoryRouter>
+      </ToastProvider>
     )
   );
 }
