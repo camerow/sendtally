@@ -2,7 +2,7 @@ import React from "react";
 import { t } from "@sendtally/features/i18n";
 import {
   TRAINED_KINDS,
-  focusKey,
+  mixRows,
   pickedWorkouts,
   useTrainingInsights,
   type TrainedBy,
@@ -28,11 +28,7 @@ export function TrainingInsights({ range }: { range: TrendRange }): React.ReactE
     return <span className="load-state-loading">{t("common.loading")}</span>;
   if (state.status === "error") return <span className="stats-error">{state.message}</span>;
   if (state.data.sessions === 0) return <DashedPanel body={t("statistics.empty")} />;
-  const legend =
-    by === "category"
-      ? state.data.trained.map((k) => ({ key: k.kind, name: k.name }))
-      : state.data.byFocus.map((f) => ({ key: focusKey(f.focus), name: f.name }));
-  const picked = legend.find((r) => r.key === pick) ?? null;
+  const picked = mixRows(state.data, by).find((r) => r.key === pick) ?? null;
   return (
     <div className="stats-grid">
       <p className="stats-summary stats-wide">{state.data.line}</p>

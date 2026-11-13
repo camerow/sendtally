@@ -1,13 +1,11 @@
 import React from "react";
 import { t } from "@sendtally/features/i18n";
 import {
-  focusColor,
-  focusKey,
+  mixRows,
   type TrainedBy,
   type TrainedFocusVM,
   type TrainedKindVM,
 } from "@sendtally/features/statistics";
-import { KIND_COLORS } from "@sendtally/features/training";
 import { Icon } from "../../../components/Icon";
 import { Segmented } from "../../../components/Segmented";
 
@@ -32,10 +30,7 @@ export function TrainedMix({
   picked,
   onPick,
 }: TrainedMixProps): React.ReactElement {
-  const rows =
-    by === "category"
-      ? trained.map((k) => ({ ...k, key: k.kind, color: KIND_COLORS[k.kind] }))
-      : byFocus.map((f) => ({ ...f, key: focusKey(f.focus), color: focusColor(f.focus) }));
+  const rows = mixRows({ trained, byFocus }, by);
   return (
     <section className="stats-card">
       <div className="stats-card-head">
