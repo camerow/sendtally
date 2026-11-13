@@ -10,6 +10,7 @@ const video = (name: string): Media => ({
 });
 
 export const MEDIA = {
+  heroLoop: video("hero-loop"),
   logClimbing: still("log-climbing"),
   liveTally: video("live-tally"),
   climbPage: still("climb-page"),

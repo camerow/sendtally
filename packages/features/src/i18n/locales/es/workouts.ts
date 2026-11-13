@@ -26,35 +26,66 @@ export const workouts = {
   "workouts.deleteBody": "Sus planes se van con él. Las sesiones registradas se quedan.",
   "workouts.discardChangesTitle": "¿Descartar los cambios?",
 
-  "workouts.builtIn.fiveByFive.name": "Fuerza 5x5",
-  "workouts.builtIn.fiveByFive.blurb":
-    "Tres ejercicios grandes, cinco series de cinco. Un poco más de peso cada semana mientras cada repetición siga limpia.",
-  "workouts.builtIn.antagonist.name": "Antagonistas: empuje",
-  "workouts.builtIn.antagonist.blurb":
-    "Los músculos de empuje que la escalada deja de lado, para unos hombros equilibrados y sanos.",
-  "workouts.builtIn.extensors.name": "Rutina de extensores de dedos",
-  "workouts.builtIn.extensors.blurb":
-    "Trabaja los músculos que abren la mano, para compensar tanto agarre. Ligero y a menudo.",
-  "workouts.builtIn.hips.name": "Movilidad de cadera",
-  "workouts.builtIn.hips.blurb": "Abre la cadera para pies altos, bavaresas y ganchos de talón.",
-  "workouts.builtIn.yoga.name": "Yoga para escaladores",
-  "workouts.builtIn.yoga.blurb":
-    "Estiramientos lentos de hombros, espalda y cadera para un día de descanso.",
-  "workouts.builtIn.tempo.name": "Intervalos de tempo",
-  "workouts.builtIn.tempo.blurb":
-    "Tres minutos fuerte, dos suave, cinco veces. Fuerte quiere decir que aún puedes decir unas palabras.",
-  "workouts.builtIn.core.name": "Circuito de core",
-  "workouts.builtIn.core.blurb":
-    "Tres rondas para la tensión que mantiene los pies en el desplome.",
-  "workouts.builtIn.limit.name": "Bloque al límite",
-  "workouts.builtIn.limit.blurb":
+  "workouts.builtIn.rep73.name": "Repeaters 7:3",
+  "workouts.builtIn.rep73.blurb":
+    "El clásico de fuerza-resistencia. Seis suspensiones por serie con descansos cortos, para que los antebrazos nunca se recuperen del todo.",
+  "workouts.builtIn.max10.name": "Suspensiones máximas",
+  "workouts.builtIn.max10.blurb":
+    "Carga casi máxima, muy poco volumen, descansos largos. Lo básico para la fuerza de dedos pura.",
+  "workouts.builtIn.fingers-ab.name": "Dedos A/B",
+  "workouts.builtIn.fingers-ab.blurb":
+    "Dos sesiones de dedos que se turnan de una sesión a otra: suspensiones máximas para la fuerza y repeticiones para la resistencia en bloques largos. La que no hiciste la última vez es la siguiente, aunque te saltes un día.",
+  "workouts.builtIn.block.name": "Tirones de bloque",
+  "workouts.builtIn.block.blurb":
+    "Levanta un bloque lastrado del suelo. Trabajo de pinza pesado sin plafón, y una carga fácil de ajustar con precisión.",
+  "workouts.builtIn.density.name": "Suspensiones de densidad",
+  "workouts.builtIn.density.blurb":
+    "Suspensiones largas y suaves a baja intensidad. Buen estímulo para los tendones que puedes hacer a menudo.",
+  "workouts.builtIn.assist.name": "Un brazo asistido",
+  "workouts.builtIn.assist.blurb":
+    "Peso quitado con una polea. Alterna los brazos en cada serie y quita menos peso con el tiempo.",
+  "workouts.builtIn.lowpull.name": "Tirones ligeros diarios",
+  "workouts.builtIn.lowpull.blurb":
+    "Muchos tirones ligeros, casi todos los días de la semana. Riego para los tendones, no un entreno duro.",
+  "workouts.builtIn.min-edge.name": "Suspensiones en regleta mínima",
+  "workouts.builtIn.min-edge.blurb":
+    "Suspensiones con tu peso en la regleta más pequeña que aguantes diez segundos. Regletas más pequeñas con el tiempo, sin lastre.",
+  "workouts.builtIn.seven-53.name": "Suspensiones 7:53",
+  "workouts.builtIn.seven-53.blurb":
+    "Tres suspensiones pesadas de siete segundos por serie, con casi un minuto entre cada una. Fuerza de suspensiones máximas con más tiempo bajo carga.",
+  "workouts.builtIn.climb-limit.name": "Bloque al límite",
+  "workouts.builtIn.climb-limit.blurb":
     "Unos pocos bloques a tu límite, descansos completos, todo en cada intento. Para cuando los movimientos se ensucien.",
-  "workouts.builtIn.fourByFour.name": "4x4",
-  "workouts.builtIn.fourByFour.blurb":
+  "workouts.builtIn.climb-4x4.name": "4x4",
+  "workouts.builtIn.climb-4x4.blurb":
     "Cuatro bloques seguidos, cuatro veces, con unos minutos de descanso entre rondas.",
-  "workouts.builtIn.arc.name": "ARC",
-  "workouts.builtIn.arc.blurb":
+  "workouts.builtIn.climb-arc.name": "ARC",
+  "workouts.builtIn.climb-arc.blurb":
     "Escalada fácil sin parar durante 20 a 40 minutos. Un bombeo ligero, nunca quemazón.",
+  "workouts.builtIn.strength-squat.name": "Sentadilla alterna",
+  "workouts.builtIn.strength-squat.blurb":
+    "Alterna cinco series de cinco con tres series de diez. Cada sesión hace la siguiente, así que un día perdido solo la desplaza.",
+  "workouts.builtIn.strength-5x5.name": "Fuerza 5x5",
+  "workouts.builtIn.strength-5x5.blurb":
+    "Tres ejercicios grandes, cinco series de cinco. Un poco más de peso cada semana mientras cada repetición siga limpia.",
+  "workouts.builtIn.strength-antagonist.name": "Antagonistas: empuje",
+  "workouts.builtIn.strength-antagonist.blurb":
+    "Los músculos de empuje que la escalada deja de lado, para unos hombros equilibrados y sanos.",
+  "workouts.builtIn.strength-extensors.name": "Rutina de extensores de dedos",
+  "workouts.builtIn.strength-extensors.blurb":
+    "Trabaja los músculos que abren la mano, para compensar tanto agarre. Ligero y a menudo.",
+  "workouts.builtIn.mobility-hips.name": "Movilidad de cadera",
+  "workouts.builtIn.mobility-hips.blurb":
+    "Abre la cadera para pies altos, bavaresas y ganchos de talón.",
+  "workouts.builtIn.yoga-climbers.name": "Yoga para escaladores",
+  "workouts.builtIn.yoga-climbers.blurb":
+    "Estiramientos lentos de hombros, espalda y cadera para un día de descanso.",
+  "workouts.builtIn.run-tempo.name": "Intervalos de tempo",
+  "workouts.builtIn.run-tempo.blurb":
+    "Tres minutos fuerte, dos suave, cinco veces. Fuerte quiere decir que aún puedes decir unas palabras.",
+  "workouts.builtIn.other-core.name": "Circuito de core",
+  "workouts.builtIn.other-core.blurb":
+    "Tres rondas para la tensión que mantiene los pies en el desplome.",
 
   "workouts.exercise.backSquat": "Sentadilla",
   "workouts.exercise.benchPress": "Press de banca",
@@ -67,35 +98,23 @@ export const workouts = {
   "workouts.exercise.reverseWristCurls": "Curl de muñeca invertido",
   "workouts.exercise.riceBucket": "Cubo de arroz",
 
-  "workouts.item.ninetyNinety": "Cambios 90/90",
-  "workouts.item.couchStretch": "Estiramiento del sofá, cada lado",
-  "workouts.item.frogStretch": "Postura de la rana",
-  "workouts.item.pigeon": "Paloma, cada lado",
-  "workouts.item.hipFlexorLunge": "Zancada de flexores de cadera, cada lado",
-  "workouts.item.deepSquat": "Sentadilla profunda mantenida",
-  "workouts.item.sunSalutation": "Saludo al sol",
-  "workouts.item.downwardDog": "Perro boca abajo",
-  "workouts.item.threadNeedle": "Enhebrar la aguja, cada lado",
-  "workouts.item.lizard": "Lagarto, cada lado",
-  "workouts.item.childsPose": "Postura del niño",
+  "workouts.exercise.ninetyNinety": "Cambios 90/90",
+  "workouts.exercise.couchStretch": "Estiramiento del sofá, cada lado",
+  "workouts.exercise.frogStretch": "Postura de la rana",
+  "workouts.exercise.pigeon": "Paloma, cada lado",
+  "workouts.exercise.hipFlexorLunge": "Zancada de flexores de cadera, cada lado",
+  "workouts.exercise.deepSquat": "Sentadilla profunda mantenida",
+  "workouts.exercise.sunSalutation": "Saludo al sol",
+  "workouts.exercise.downwardDog": "Perro boca abajo",
+  "workouts.exercise.threadNeedle": "Enhebrar la aguja, cada lado",
+  "workouts.exercise.lizard": "Lagarto, cada lado",
+  "workouts.exercise.childsPose": "Postura del niño",
 
   "workouts.step.hard": "Fuerte",
   "workouts.step.easy": "Suave",
-  "workouts.step.plank": "Plancha",
-  "workouts.step.hollowHold": "Hollow hold",
-  "workouts.step.kneeRaises": "Elevaciones de rodillas colgado",
-  "workouts.builtIn.fingersAb.name": "Dedos A/B",
-  "workouts.builtIn.fingersAb.blurb":
-    "Dos sesiones de dedos que se turnan de una sesión a otra: suspensiones máximas para la fuerza y repeticiones para la resistencia en bloques largos. La que no hiciste la última vez es la siguiente, aunque te saltes un día.",
-  "workouts.builtIn.squat.name": "Sentadilla alterna",
-  "workouts.builtIn.squat.blurb":
-    "Alterna cinco series de cinco con tres series de diez. Cada sesión hace la siguiente, así que un día perdido solo la desplaza.",
-  "workouts.builtIn.minEdge.name": "Suspensiones en regleta mínima",
-  "workouts.builtIn.minEdge.blurb":
-    "Suspensiones con tu peso en la regleta más pequeña que aguantes diez segundos. Regletas más pequeñas con el tiempo, sin lastre.",
-  "workouts.builtIn.sevenFiftyThree.name": "Suspensiones 7:53",
-  "workouts.builtIn.sevenFiftyThree.blurb":
-    "Tres suspensiones pesadas de siete segundos por serie, con casi un minuto entre cada una. Fuerza de suspensiones máximas con más tiempo bajo carga.",
+  "workouts.exercise.plank": "Plancha",
+  "workouts.exercise.hollowHold": "Hollow hold",
+  "workouts.exercise.kneeRaises": "Elevaciones de rodillas colgado",
   "workouts.dose.sets": "Series",
   "workouts.dose.reps": "Reps",
   "workouts.dose.hangs": "Suspensiones",

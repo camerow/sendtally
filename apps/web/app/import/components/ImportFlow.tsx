@@ -1,13 +1,8 @@
 import React from "react";
 import { Link } from "react-router";
 import type { SendtallyApi } from "@sendtally/api-client";
-import {
-  planImport,
-  withAddedTags,
-  withTag,
-  type ImportPlan,
-  type ImportSession,
-} from "@sendtally/features/import";
+import { planImport, type ImportPlan, type ImportSession } from "@sendtally/core/import";
+import { withAddedTags, withTag } from "@sendtally/features/import";
 import { sameTagName, useTagVocabulary } from "@sendtally/features/sessions";
 import { t } from "@sendtally/features/i18n";
 import { BackLink, backLinkStyle } from "../../components/BackLink";

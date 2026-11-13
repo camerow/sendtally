@@ -47,8 +47,8 @@ export const COPY = {
     webAccount: "Or create a free account on the web",
     photoAlt: "A climber high on a streaked red sandstone wall in a narrow canyon",
     phone: {
-      key: "logClimbing",
-      alt: "The Log tab: this week's climbing sessions with their climbs, and a climb logged on its own",
+      key: "heroLoop",
+      alt: "A tour of the app: the Plan tab for this week, the Log, tallying climbs in a live session, starting a hang workout from Train, and the Stats tab",
     } as MediaCopy,
   },
 

@@ -26,36 +26,66 @@ export const workouts = {
   "workouts.deleteBody": "Ses plans partent avec elle. Les séances notées restent.",
   "workouts.discardChangesTitle": "Abandonner tes modifications ?",
 
-  "workouts.builtIn.fiveByFive.name": "Force 5x5",
-  "workouts.builtIn.fiveByFive.blurb":
-    "Trois gros mouvements, cinq séries de cinq. Un peu plus lourd chaque semaine, tant que chaque répétition reste propre.",
-  "workouts.builtIn.antagonist.name": "Antagonistes : poussée",
-  "workouts.builtIn.antagonist.blurb":
-    "Les muscles de poussée que l'escalade délaisse, pour des épaules équilibrées et en bonne santé.",
-  "workouts.builtIn.extensors.name": "Routine extenseurs des doigts",
-  "workouts.builtIn.extensors.blurb":
-    "Travaille les muscles qui ouvrent la main, pour compenser toutes les prises. Léger, et souvent.",
-  "workouts.builtIn.hips.name": "Mobilité des hanches",
-  "workouts.builtIn.hips.blurb":
-    "Ouvre les hanches pour les pieds hauts, les lolottes et les crochets talon.",
-  "workouts.builtIn.yoga.name": "Yoga du grimpeur",
-  "workouts.builtIn.yoga.blurb":
-    "Des étirements lents pour les épaules, le dos et les hanches un jour de repos.",
-  "workouts.builtIn.tempo.name": "Fractionné tempo",
-  "workouts.builtIn.tempo.blurb":
-    "Trois minutes dur, deux minutes facile, cinq fois. Dur veut dire que tu peux encore dire quelques mots.",
-  "workouts.builtIn.core.name": "Circuit gainage",
-  "workouts.builtIn.core.blurb":
-    "Trois tours pour le gainage qui garde les pieds en place dans le dévers.",
-  "workouts.builtIn.limit.name": "Bloc à la limite",
-  "workouts.builtIn.limit.blurb":
+  "workouts.builtIn.rep73.name": "Repeaters 7:3",
+  "workouts.builtIn.rep73.blurb":
+    "Le classique de la force-endurance. Six suspensions par série avec des repos courts, pour que les avant-bras ne récupèrent jamais complètement.",
+  "workouts.builtIn.max10.name": "Suspensions max",
+  "workouts.builtIn.max10.blurb":
+    "Charge quasi maximale, très peu de volume, longs repos. La base pour la force de doigts pure.",
+  "workouts.builtIn.fingers-ab.name": "Doigts A/B",
+  "workouts.builtIn.fingers-ab.blurb":
+    "Deux séances de doigts qui alternent d'une séance à l'autre : suspensions max pour la force, puis répétitions pour l'endurance sur les longs blocs. Celle que tu n'as pas faite la dernière fois vient ensuite, même après un jour manqué.",
+  "workouts.builtIn.block.name": "Tirages au bloc",
+  "workouts.builtIn.block.blurb":
+    "Soulève un bloc lesté du sol. Du travail de pince lourd sans pan, et une charge facile à doser.",
+  "workouts.builtIn.density.name": "Suspensions densité",
+  "workouts.builtIn.density.blurb":
+    "Suspensions longues et faciles, à faible intensité. Un bon stimulus pour les tendons, à faire souvent.",
+  "workouts.builtIn.assist.name": "Un bras assisté",
+  "workouts.builtIn.assist.blurb":
+    "Poids retiré avec une poulie. Alterne les bras à chaque série et retire moins de poids au fil du temps.",
+  "workouts.builtIn.lowpull.name": "Tirages légers quotidiens",
+  "workouts.builtIn.lowpull.blurb":
+    "Beaucoup de tirages légers, la plupart des jours de la semaine. De la circulation pour les tendons, pas une séance dure.",
+  "workouts.builtIn.min-edge.name": "Suspensions sur réglette mini",
+  "workouts.builtIn.min-edge.blurb":
+    "Suspensions au poids du corps sur la plus petite réglette que tu tiens dix secondes. Des réglettes plus petites avec le temps, sans lest.",
+  "workouts.builtIn.seven-53.name": "Suspensions 7:53",
+  "workouts.builtIn.seven-53.blurb":
+    "Trois suspensions lourdes de sept secondes par série, avec presque une minute entre chacune. La force des suspensions max, avec plus de temps sous charge.",
+  "workouts.builtIn.climb-limit.name": "Bloc à la limite",
+  "workouts.builtIn.climb-limit.blurb":
     "Quelques blocs à ta limite, repos complets, engagement total à chaque essai. Arrête quand les mouvements se dégradent.",
-  "workouts.builtIn.fourByFour.name": "4x4",
-  "workouts.builtIn.fourByFour.blurb":
+  "workouts.builtIn.climb-4x4.name": "4x4",
+  "workouts.builtIn.climb-4x4.blurb":
     "Quatre blocs enchaînés, quatre fois, avec quelques minutes de repos entre les tours.",
-  "workouts.builtIn.arc.name": "ARC",
-  "workouts.builtIn.arc.blurb":
+  "workouts.builtIn.climb-arc.name": "ARC",
+  "workouts.builtIn.climb-arc.blurb":
     "De la grimpe facile sans s'arrêter pendant 20 à 40 minutes. Une légère conti, jamais de brûlure.",
+  "workouts.builtIn.strength-squat.name": "Squat en alternance",
+  "workouts.builtIn.strength-squat.blurb":
+    "Alterne cinq séries de cinq et trois séries de dix. Chaque séance fait la suivante : un jour manqué la décale simplement.",
+  "workouts.builtIn.strength-5x5.name": "Force 5x5",
+  "workouts.builtIn.strength-5x5.blurb":
+    "Trois gros mouvements, cinq séries de cinq. Un peu plus lourd chaque semaine, tant que chaque répétition reste propre.",
+  "workouts.builtIn.strength-antagonist.name": "Antagonistes : poussée",
+  "workouts.builtIn.strength-antagonist.blurb":
+    "Les muscles de poussée que l'escalade délaisse, pour des épaules équilibrées et en bonne santé.",
+  "workouts.builtIn.strength-extensors.name": "Routine extenseurs des doigts",
+  "workouts.builtIn.strength-extensors.blurb":
+    "Travaille les muscles qui ouvrent la main, pour compenser toutes les prises. Léger, et souvent.",
+  "workouts.builtIn.mobility-hips.name": "Mobilité des hanches",
+  "workouts.builtIn.mobility-hips.blurb":
+    "Ouvre les hanches pour les pieds hauts, les lolottes et les crochets talon.",
+  "workouts.builtIn.yoga-climbers.name": "Yoga du grimpeur",
+  "workouts.builtIn.yoga-climbers.blurb":
+    "Des étirements lents pour les épaules, le dos et les hanches un jour de repos.",
+  "workouts.builtIn.run-tempo.name": "Fractionné tempo",
+  "workouts.builtIn.run-tempo.blurb":
+    "Trois minutes dur, deux minutes facile, cinq fois. Dur veut dire que tu peux encore dire quelques mots.",
+  "workouts.builtIn.other-core.name": "Circuit gainage",
+  "workouts.builtIn.other-core.blurb":
+    "Trois tours pour le gainage qui garde les pieds en place dans le dévers.",
 
   "workouts.exercise.backSquat": "Squat",
   "workouts.exercise.benchPress": "Développé couché",
@@ -68,35 +98,23 @@ export const workouts = {
   "workouts.exercise.reverseWristCurls": "Flexions de poignet inversées",
   "workouts.exercise.riceBucket": "Seau de riz",
 
-  "workouts.item.ninetyNinety": "Bascules 90/90",
-  "workouts.item.couchStretch": "Étirement du canapé, de chaque côté",
-  "workouts.item.frogStretch": "Posture de la grenouille",
-  "workouts.item.pigeon": "Pigeon, de chaque côté",
-  "workouts.item.hipFlexorLunge": "Fente des fléchisseurs de hanche, de chaque côté",
-  "workouts.item.deepSquat": "Squat profond tenu",
-  "workouts.item.sunSalutation": "Salutation au soleil",
-  "workouts.item.downwardDog": "Chien tête en bas",
-  "workouts.item.threadNeedle": "Aiguille qu'on enfile, de chaque côté",
-  "workouts.item.lizard": "Lézard, de chaque côté",
-  "workouts.item.childsPose": "Posture de l'enfant",
+  "workouts.exercise.ninetyNinety": "Bascules 90/90",
+  "workouts.exercise.couchStretch": "Étirement du canapé, de chaque côté",
+  "workouts.exercise.frogStretch": "Posture de la grenouille",
+  "workouts.exercise.pigeon": "Pigeon, de chaque côté",
+  "workouts.exercise.hipFlexorLunge": "Fente des fléchisseurs de hanche, de chaque côté",
+  "workouts.exercise.deepSquat": "Squat profond tenu",
+  "workouts.exercise.sunSalutation": "Salutation au soleil",
+  "workouts.exercise.downwardDog": "Chien tête en bas",
+  "workouts.exercise.threadNeedle": "Aiguille qu'on enfile, de chaque côté",
+  "workouts.exercise.lizard": "Lézard, de chaque côté",
+  "workouts.exercise.childsPose": "Posture de l'enfant",
 
   "workouts.step.hard": "Dur",
   "workouts.step.easy": "Facile",
-  "workouts.step.plank": "Planche",
-  "workouts.step.hollowHold": "Hollow hold",
-  "workouts.step.kneeRaises": "Relevés de genoux suspendu",
-  "workouts.builtIn.fingersAb.name": "Doigts A/B",
-  "workouts.builtIn.fingersAb.blurb":
-    "Deux séances de doigts qui alternent d'une séance à l'autre : suspensions max pour la force, puis répétitions pour l'endurance sur les longs blocs. Celle que tu n'as pas faite la dernière fois vient ensuite, même après un jour manqué.",
-  "workouts.builtIn.squat.name": "Squat en alternance",
-  "workouts.builtIn.squat.blurb":
-    "Alterne cinq séries de cinq et trois séries de dix. Chaque séance fait la suivante : un jour manqué la décale simplement.",
-  "workouts.builtIn.minEdge.name": "Suspensions sur réglette mini",
-  "workouts.builtIn.minEdge.blurb":
-    "Suspensions au poids du corps sur la plus petite réglette que tu tiens dix secondes. Des réglettes plus petites avec le temps, sans lest.",
-  "workouts.builtIn.sevenFiftyThree.name": "Suspensions 7:53",
-  "workouts.builtIn.sevenFiftyThree.blurb":
-    "Trois suspensions lourdes de sept secondes par série, avec presque une minute entre chacune. La force des suspensions max, avec plus de temps sous charge.",
+  "workouts.exercise.plank": "Planche",
+  "workouts.exercise.hollowHold": "Hollow hold",
+  "workouts.exercise.kneeRaises": "Relevés de genoux suspendu",
   "workouts.dose.sets": "Séries",
   "workouts.dose.reps": "Rép.",
   "workouts.dose.hangs": "Suspensions",
