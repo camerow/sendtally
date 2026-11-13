@@ -737,3 +737,48 @@
     display: none;
   }
 }
+
+.session-areas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin-top: -12px;
+}
+
+.session-area {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--bs-azure-ink);
+  text-decoration: none;
+}
+
+.session-pyramid {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.session-pyramid .pyramid-legend {
+  align-self: flex-end;
+}
+
+.session-climb-grid {
+  display: grid;
+  grid-template-columns: 34px 1.9fr 62px 62px 70px 92px;
+  gap: 12px;
+}
+
+@media (max-width: 767px) {
+  .session-climb-grid {
+    grid-template-columns: 20px minmax(0, 1fr) 36px 76px;
+    gap: 10px;
+  }
+
+  .session-climb-wide {
+    display: none;
+  }
+}

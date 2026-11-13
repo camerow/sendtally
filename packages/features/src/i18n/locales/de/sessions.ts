@@ -11,7 +11,6 @@ export const sessions = {
   "sessions.showCount": "{label} anzeigen",
   "sessions.jumpToLabel": "Springe zu {label}",
   "sessions.postedToStrava": "auf Strava gepostet",
-  "sessions.posting": "Wird gepostet…",
   "sessions.createTag": "+ „{name}“ erstellen",
   "sessions.deleteTitle": "Session löschen?",
   "sessions.deleteSession": "Session löschen",

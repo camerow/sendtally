@@ -32,6 +32,23 @@
   color: var(--bs-gunmetal);
 }
 
+.climbing-hero-kind {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.climbing-hero-place {
+  font-weight: 600;
+  font-size: 16px;
+  color: var(--bs-gunmetal);
+}
+
 .climbing-hero-meta {
   font-family: var(--font-mono);
   font-size: 12px;

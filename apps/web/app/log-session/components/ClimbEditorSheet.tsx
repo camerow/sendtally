@@ -10,6 +10,7 @@ import {
 } from "@sendtally/features/log-session";
 import { t } from "@sendtally/features/i18n";
 import { Icon } from "../../components/Icon";
+import { Sheet } from "../../components/Sheet";
 import { CircuitFields } from "../../gyms/components/CircuitFields";
 import {
   EnduranceLapOutcome,
@@ -121,6 +122,7 @@ export function ClimbEditorSheet({
   const dialog = React.useRef<HTMLDialogElement>(null);
   const panel = React.useRef<HTMLDivElement>(null);
   const pressedBackdrop = React.useRef(false);
+  const [removing, setRemoving] = React.useState(false);
 
   React.useEffect(() => {
     const el = dialog.current;
@@ -305,7 +307,7 @@ export function ClimbEditorSheet({
           {removable && (
             <button
               type="button"
-              onClick={onRemove}
+              onClick={() => setRemoving(true)}
               className="climb-sheet-remove"
               aria-label={t("logSession.removeClimb")}
             >
@@ -317,6 +319,26 @@ export function ClimbEditorSheet({
           </button>
         </div>
       </div>
+      <Sheet
+        open={removing}
+        title={t("logSession.removeClimbTitle")}
+        onClose={() => setRemoving(false)}
+        action={{
+          label: t("logSession.remove"),
+          danger: true,
+          onPress: () => {
+            setRemoving(false);
+            onRemove();
+          },
+        }}
+      >
+        <p className="sheet-body">
+          {t("logSession.removeClimbBody", {
+            name: named ? climb.name.trim() : t("logSession.unnamed"),
+            grade: climb.circuit === undefined ? climb.grade : climb.circuit.label,
+          })}
+        </p>
+      </Sheet>
     </dialog>
   );
 }
