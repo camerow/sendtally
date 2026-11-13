@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { oauthOutcome } from "./outcome";
 
 describe("oauthOutcome", () => {
-  it("is a sign-up when the session came from a transferred sign-up", () => {
+  it("is a sign-up when Clerk transferred an unknown Google or Apple identity to a sign-up", () => {
     expect(
       oauthOutcome({ createdSessionId: "sess_1", signUp: { createdSessionId: "sess_1" } })
     ).toBe("signed-up");

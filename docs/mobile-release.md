@@ -309,7 +309,10 @@ None of this can be done from the repository; it needs the Google consoles.
 9. **Play Console declarations, before that release build uploads.** App content, Advertising ID: make sure it answers Yes, for Analytics and Advertising or marketing.
    Play blocks a release that carries the `AD_ID` permission while that declaration says No.
    Data safety: add Device or other IDs, App interactions and Approximate location, each collected for Analytics and Advertising or marketing, encrypted in transit, and not shared, since Google processes it on our behalf.
-10. **App Store privacy label.** App Store Connect, App Privacy: add Device ID, Product Interaction and Coarse Location, each for Analytics and Developer's Advertising or Marketing, not linked to the user's identity, and answer No to "used to track you".
+10. **App Store privacy label.** App Store Connect, App Privacy: add Device ID, Product Interaction and Coarse Location, each for Analytics and Developer's Advertising or Marketing.
+    Device ID is not linked to the user's identity.
+    Product Interaction and Coarse Location are linked, because PostHog records screens and approximate region against the signed-in account.
+    Answer No to "used to track you" for all three.
     That answer is only true while the app has no IDFA and no on-device conversion measurement with email or phone; revisit it if either changes.
 11. **Campaign.** Create the App campaign for each store listing and choose the in-app actions it optimizes for.
 
