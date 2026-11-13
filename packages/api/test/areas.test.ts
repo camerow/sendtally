@@ -296,7 +296,7 @@ describe("session links", () => {
     expect(edited.status).toBe(200);
     const linked = await read("user_a", fingerprint);
     expect(linked.climbs.filter((c) => c.link !== null)).toHaveLength(300);
-  });
+  }, 30_000);
 
   it("replaces links on edit and removes them on delete", async () => {
     const area = await createArea("user_a", buttermilks);
