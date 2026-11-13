@@ -22,6 +22,7 @@ import { requestLocale } from "./lib/locale";
 import { identify, resetIdentity } from "./lib/analytics";
 import { createQueryClient, useClearOnUserChange } from "@sendtally/features/query";
 import { cloudflareContext } from "./lib/cloudflare-context";
+import { APP_STORE_ID } from "./lib/stores";
 
 export const links: LinksFunction = () => [
   { rel: "stylesheet", href: designStyles },
@@ -97,6 +98,7 @@ export function Layout({ children }: { children: React.ReactNode }): React.React
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="apple-itunes-app" content={`app-id=${APP_STORE_ID}`} />
         {data && data.gtagIds.length > 0 ? <GoogleTag ids={data.gtagIds} /> : null}
         {data?.posthog ? <PostHog {...data.posthog} /> : null}
         <Meta />

@@ -16,6 +16,7 @@ import { StartSection } from "../landing/components/StartSection";
 import { TabsStrip } from "../landing/components/TabsStrip";
 import { COPIES } from "../landing/copies";
 import { LandingProvider } from "../landing/LandingContext";
+import { storePlatform, type StorePlatform } from "../lib/stores";
 import landingStyles from "../landing/landing.css?url";
 import { PHOTOS } from "../landing/media";
 
@@ -51,12 +52,13 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
   ];
 };
 
-type LoaderData = { signedIn: boolean; locale: Locale };
+type LoaderData = { signedIn: boolean; locale: Locale; platform: StorePlatform };
 
 export async function loader(args: LoaderFunctionArgs): Promise<LoaderData> {
   return {
     signedIn: await isSignedIn(args),
     locale: landingLocale(new URL(args.request.url).pathname) ?? "en",
+    platform: storePlatform(args.request.headers.get("user-agent")),
   };
 }
 
@@ -65,7 +67,7 @@ export default function Home(): React.ReactElement {
   const auth = useAuth();
   const signedIn = loaderData.signedIn || auth.isSignedIn === true;
   return (
-    <LandingProvider signedIn={signedIn} locale={loaderData.locale}>
+    <LandingProvider signedIn={signedIn} locale={loaderData.locale} platform={loaderData.platform}>
       <Nav />
       <Hero />
       <TabsStrip />
